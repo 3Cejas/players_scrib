@@ -1,0 +1,88 @@
+<html lang="es"> 
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+		<meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+		<link rel="stylesheet" type="text/css" href="index.css"> 
+
+
+
+
+	</head>
+	
+	<body>
+    <div class="ascii">
+    <pre id="containerascii" >
+
+  _____  _____ _____  ____  
+ / ____|/ ____|  __ \|  _ \ 
+| (___ | |    | |__) | |_) |
+ \___ \| |    |  _  /|  _ < 
+ ____) | |____| | \ \| |_) |
+|_____/ \_____|_|  \_\____/ 
+                                 
+<center>Escribe<br>powered by 3 Cejas</center>                                              
+   </pre>
+
+   <script src="./index.js"></script>
+   <!--
+   <pre class="neon">
+  _____  _____ _____  ____  
+ / ____|/ ____|  __ \|  _ \ 
+| (___ | |    | |__) | |_) |
+ \___ \| |    |  _  /|  _ < 
+ ____) | |____| | \ \| |_) |
+|_____/ \_____|_|  \_\____/ 
+                                   
+  </pre>
+   <script>var tx = document.querySelector(".neon");
+    var change = 0
+    function changeColor(){
+      if(change == 0){
+        tx.style.color= '#FE575F';
+        change = 1
+      }
+      else{
+        tx.style.color= '#000000';
+        change = 0
+      }
+    }
+    
+    setInterval(changeColor,2500);</script>-->
+    <button onclick= "temp()">ESCRIBIR</button>
+          <div id="contenedor">
+          <div>
+            <h1>PLAYER 1</h1>
+              <textarea disabled id = "texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
+          <br><br>
+
+          <center>
+          <table class="right"><tr>
+          <th id="puntos">0 puntos</th>
+          <th id="nivel">nivel 0</th>
+          </tr></table>
+          <p id="palabra"></p></center>
+        </div>
+        <div>
+          <h1>PLAYER 2 </h1>
+          <textarea disabled id = "texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow1(this)" onkeyup="countChars1(this);" onkeydown="countChars1(this);" onkeypress="process1(event, this)"></textarea>
+          <br><br>
+          <center>
+          <table class="right"><tr>
+          <th id="puntos1">0 puntos</th>
+          <th id="nivel1">nivel 0</th>
+          </tr></table>
+          <p id="palabra1"></p></center>
+          </div>
+          </div>
+          <p id="tiempo"></p>
+
+          
+
+
+    
+    </body>
+    <script src="socket.io-client/dist/socket.io.js"></script>
+    <script src="./client.js"></script>
+</html>

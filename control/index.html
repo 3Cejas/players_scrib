@@ -1,0 +1,103 @@
+<html lang="es"> 
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+		<meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+		<link rel="stylesheet" type="text/css" href="index.css"> 
+
+
+
+
+	</head>
+	
+	<body>
+    <script src="./index.js"></script>
+    <div class="ascii">
+    <pre id="containerascii" >
+       __     _____    _____   _____    _____    __       ____  
+      / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+     / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+    < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
+     \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+      \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
+                                                                                                 
+</pre>
+ <br>
+  <center>
+    <table class="default">
+      <tr>
+        <td> <center>
+          <button onclick= "temp()" class="bn54">
+            <span class="bn54span">ESCRIBIR</span></button><br></center></td>
+        <td> <center>
+
+          <button onclick= "vote()" class="bn54">
+          <span class="bn54span">VOTAR</span></button><br></center></td>
+        <td> <center>
+
+            <button onclick= "temas()" class="bn54">
+            <span class="bn54span">ELEGIR TEMA</span></button><br></center></td>
+            <td> <center>
+
+              <button onclick= "subir()" class="bn54">
+              <span class="bn54span">⬆️ SCROLL </span></button><br></center></td>
+      </tr>
+      <tr>
+        <td>    <center>
+          <button onclick= "exit()" class="bn54">
+          <span class="bn54span">CERRAR</span></button></center></td>
+        <td>    <center>
+              <button onclick= "limpiar()" class="bn54">
+                <span class="bn54span">LIMPIAR</span></button>
+          </center></td>
+          <td> <center>Temas<div class="container">
+            <input type="text" id="temas" size="10">
+          </div></center></td>
+          <td> <br><center>
+            <button onclick= "bajar()" class="bn54">
+            <span class="bn54span">⬇️ SCROLL</span></button><br></center></td>
+      </tr>
+    </table>
+  </center>
+
+          <div id="contenedor">
+          <div>
+            <input id="nombre"class= "nombre" value="ESCRITXR 1"></input>
+          <br><br>
+              <textarea disabled id = "texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
+          <br><br>
+
+          <center>
+          <table class="right"><tr>
+          <th id="puntos">0 puntos</th>
+          <th id="nivel">nivel 0</th>
+          </tr></table>
+          </center>
+        </div>
+        <div>
+          <input id="nombre1" class= "nombre" value="ESCRITXR 2"></input>
+          <br><br>
+          <textarea disabled id = "texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow1(this)" onkeyup="countChars1(this);" onkeydown="countChars1(this);" onkeypress="process1(event, this)"></textarea>
+          <br><br>
+          <br><br>
+          <center>
+          <table class="right"><tr>
+          <th id="puntos1">0 puntos</th>
+          <th id="nivel1">nivel 0</th>
+          </tr></table>
+        </br>
+        </center>
+          </div>
+          </div>
+          <p id="tiempo"></p>
+        <center>
+          <table><tr>
+            <th> <p id="palabra" class= palabra></p></th>
+             </tr></table>
+           <div class= "definicion"><p id="definicion"></p></div>
+          </center>
+    </body>
+    <script src="socket.io-client/dist/socket.io.js"></script>
+    <script src="./client.js"></script>
+</html>

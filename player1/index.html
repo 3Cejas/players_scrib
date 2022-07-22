@@ -1,0 +1,91 @@
+<html lang="es"> 
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+		<meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+		<link rel="stylesheet" type="text/css" href="index.css"> 
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+
+
+	</head>	
+	<body>
+    <script src="./index.js"></script>
+    <center>
+      <pre class="neon">
+        __     _____    _____   _____    _____    __       ____  
+       / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+      / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+     < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
+      \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
+                                                                                                  
+   </pre>
+<!-- <pre class="ascii" data-title="ABC">
+       __     _____    _____   _____    _____    __       ____  
+      / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+     / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+    < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
+     \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+      \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
+                                                                                                 
+</pre>-->
+      <center>Escribe<br><p class="sub">powered by</p><img src="logo.png" alt="" width="80"/></center>                                            
+   <script>var tx = document.querySelector(".neon");
+    var change = 0
+    function changeColor(){
+      if(change == 0){
+        tx.style.color= 'blue';
+        change = 1
+      }
+      else{
+        tx.style.color= 'white';
+        change = 0
+      }
+    }
+    setInterval(changeColor,2500);</script>
+    <div class="container"></div>
+      <p><span id="myWords"></span>
+      </p>
+    </div>
+          <div id="contenedor">
+          <div>
+            <input disabled id="nombre"class= "nombre" value="ESCRITXR 1"></input>
+          <br><br>
+              <textarea disabled id = "texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
+          <br><br>
+          <center>
+          <table class="right"><tr>
+          <th id="puntos">0 puntos</th>
+          <th id="nivel">nivel 0</th>
+          </tr></table>
+        </center>
+        </br>
+        </div>
+        <div>
+          <input disabled id="nombre1" class= "nombre" value="ESCRITXR 2"></input>
+          <br><br>
+          <textarea disabled id = "texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow1(this)" onkeyup="countChars1(this);" onkeydown="countChars1(this);" onkeypress="process1(event, this)"></textarea>
+          <br><br>
+          <center>
+          <table class="right"><tr>
+          <th id="puntos1">0 puntos</th>
+          <th id="nivel1">nivel 0</th>
+          </tr></table>
+        </br>
+        </center>
+          </div>
+          </div>
+          <p id="tiempo"></p>
+
+          <table><tr>
+            <th> <p id="palabra" class= palabra></p></th>
+             </tr></table>
+           <div class= "definicion"><p id="definicion"></p></div> 
+
+    </body>
+    <script src="socket.io-client/dist/socket.io.js"></script>
+    <script src="./client.js"></script>
+    
+</html>
