@@ -99,6 +99,8 @@ socket.on('nombre2', data => {
 });
 
 socket.on('compartir_palabra', data => {
-    document.getElementById("palabra").innerHTML ='(+50 pts) palabra: ' + data.value[0];
-    definicion.innerHTML = data.value[1];
+    palabra_actual = data.palabra_bonus[0];
+    document.getElementById("palabra").innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
+    definicion.innerHTML = data.palabra_bonus[1];
+    puntuacion = data.puntuacion;
 });

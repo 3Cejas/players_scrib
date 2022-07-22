@@ -21,7 +21,13 @@ let nivel2 = getEl("nivel1");
 let objetivo2 = getEl("objetivo1");
 
 // Temas aleatorios de la ronda.
+
 let temas;
+
+// Variables del modo letra prohibida.
+
+let modo_letra_prohibida = false;
+let letra_prohibida = "";
 
 // Cuando jugador 1 pulsa una tecla en su texto, envía los datos de jugador 1 al resto.
 
@@ -211,7 +217,7 @@ socket.on('bajar', data => {
     window.scrollBy(0,20);
 });
 
-// Recibe la palabra bonus.
+// Recibe y activa la palabra y el modo bonus.
 
 socket.on('compartir_palabra', data => {
     asignada = true;
@@ -221,6 +227,14 @@ socket.on('compartir_palabra', data => {
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
     indice_buscar_palabra = document.getElementById("texto").value.length -1;
+});
+
+//Recibe y activa el modo letra prohibida.
+
+socket.on('letra_prohibida', data => {
+    modo_letra_prohibida = true
+    letra_prohibida = data;
+    document.getElementById("palabra").innerHTML = "letra prohibida: "+letra_prohibida;
 });
 
 // FUNCIONES AUXILIARES PARA LA ELECCIÓN ALEATORIA DEL TEMA.
