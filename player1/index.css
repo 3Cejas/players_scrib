@@ -138,6 +138,11 @@ html, body {
   cursor: none;
   }
 
+.explicación{
+    font-size: 15pt;
+    font-family: monospace;
+    color: white;
+  }
 .definicion{
   font-size: 10pt;
   font-family: monospace;

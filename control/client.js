@@ -45,7 +45,7 @@ socket.on('texto1', data => {
 
 socket.on('count', data => {
     document.getElementById("tiempo").innerHTML =  data
-    if(data == "¡Terminado!"){
+    if(data == "¡Tiempo!"){
         document.getElementById("texto1").disabled=true;
         document.getElementById("texto").disabled=true;
         clearTimeout(borrado);
@@ -100,7 +100,16 @@ socket.on('nombre2', data => {
 
 socket.on('compartir_palabra', data => {
     palabra_actual = data.palabra_bonus[0];
+    document.getElementById("explicación").innerHTML = "MODO PALABRAS BONUS";
     document.getElementById("palabra").innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
     definicion.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
+});
+
+socket.on('letra_prohibida', data => {
+    modo_letra_prohibida = true
+    letra_prohibida = data;
+    document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
+    document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
+    document.getElementById("definicion").innerHTML = "";
 });

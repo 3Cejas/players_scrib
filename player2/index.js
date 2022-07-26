@@ -205,7 +205,7 @@ function countChars(obj){
 // Función recursiva temporal que es llamada para cambiar de palabra bonus cada 30 segundos.
 
 function cambiar_palabra(){
-    if(document.getElementById("tiempo").innerHTML == "¡Terminado!" || document.getElementById("tiempo").innerHTML == "" ){
+    if(document.getElementById("tiempo").innerHTML == "¡Tiempo!" || document.getElementById("tiempo").innerHTML == "" ){
         clearTimeout(cambio_palabra);
     }
     else{

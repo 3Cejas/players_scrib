@@ -7,9 +7,10 @@ let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
 let objetivo1 = getEl("objetivo");
+
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
-
+let explicación = getEl("explicación");
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 
@@ -27,7 +28,7 @@ let temas;
 // Variables del modo letra prohibida.
 
 let modo_letra_prohibida = false;
-let letra_prohibida = "";
+var letra_prohibida = "";
 
 // Cuando jugador 1 pulsa una tecla en su texto, envía los datos de jugador 1 al resto.
 
@@ -104,7 +105,7 @@ pausa el cambio de palabra.
 socket.on('count', data => {
     texto1.focus();
     tiempo.innerHTML =  data
-    if(data == "¡Terminado!"){
+    if(data == "¡Tiempo!"){
         texto2.classList.remove('textarea_blur');
         texto1.classList.remove('textarea_blur');
         texto2.disabled=true;
@@ -117,7 +118,12 @@ socket.on('count', data => {
         blurreado = false;
         clearTimeout(borrado);
         clearTimeout(cambio_palabra);
-        palabra_actual = ""; // Variable que almacena la palabra bonus actual.        
+        palabra_actual = ""; // Variable que almacena la palabra bonus actual.
+        let a = document.createElement("a");
+        a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"}));
+        blob = new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"});
+        a.download = 'sesión_player1.txt';
+        a.click();
     }
 });
 
@@ -167,6 +173,7 @@ socket.on('inicio', data => {
     texto2.classList.remove('textarea_blur');
     texto1.classList.remove('textarea_blur');
     definicion1.innerHTML = "";
+    explicación.innerHTML = "";
     terminado = false;
 });
 
@@ -174,6 +181,7 @@ socket.on('inicio', data => {
 
 socket.on('limpiar', data => {
     definicion1.innerHTML = "";
+    explicación.innerHTML = "";
     nombre1.value="ESCRITXR 1";
     nombre2.value="ESCRITXR 2";
     nombre1.disabled=true;
@@ -220,13 +228,16 @@ socket.on('bajar', data => {
 // Recibe y activa la palabra y el modo bonus.
 
 socket.on('compartir_palabra', data => {
+    if(data.modo_actual = "palabras bonus"){
     asignada = true;
     activar_palabras = true;
     palabra_actual = data.palabra_bonus[0];
+    document.getElementById("explicación").innerHTML = "MODO PALABRAS BONUS";
     document.getElementById("palabra").innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
     indice_buscar_palabra = document.getElementById("texto").value.length -1;
+    }
 });
 
 //Recibe y activa el modo letra prohibida.
@@ -234,7 +245,10 @@ socket.on('compartir_palabra', data => {
 socket.on('letra_prohibida', data => {
     modo_letra_prohibida = true
     letra_prohibida = data;
-    document.getElementById("palabra").innerHTML = "letra prohibida: "+letra_prohibida;
+    document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
+    document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
+    document.getElementById("definicion").innerHTML = "";
+    socket.emit('')
 });
 
 // FUNCIONES AUXILIARES PARA LA ELECCIÓN ALEATORIA DEL TEMA.

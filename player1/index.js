@@ -144,7 +144,12 @@ function countChars(obj){
         rapidez_borrado = 3000;
         rapidez_inicio_borrado = 3000
     }
- 
+
+    if( modo_letra_prohibida == true){
+        if((document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1) == letra_prohibida || (document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1) == letra_prohibida.toUpperCase()){
+            document.getElementById("texto").value = (document.getElementById("texto").value).substring(0, document.getElementById("texto").value.length -1);
+        }
+    }
     if(asignada == true){
         if(document.getElementById("texto").value.substring(indice_buscar_palabra, document.getElementById("texto").value.length -1 ).toLowerCase().includes(palabra_actual)){
             asignada = false;
