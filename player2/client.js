@@ -20,6 +20,10 @@ let puntos2 = getEl("puntos1");
 let nivel2 = getEl("nivel1");
 let objetivo2 = getEl("objetivo1");
 
+let modo_letra_prohibida = false;
+let modo_texto_borroso = false;
+var letra_prohibida = "";
+
 // Cuando jugador 2 pulsa una tecla en su texto, envía los datos de jugador 2 al resto.
 
 texto2.addEventListener("keydown", evt => {
@@ -165,6 +169,8 @@ socket.on('limpiar', data => {
     rapidez_inicio_borrado = 3000;
     clearTimeout(borrado)
     clearTimeout(cambio_palabra);
+    modo_letra_prohibida = false;
+    modo_texto_borroso = false;
 });
 
 //Recibe los temas (que elije el jugador 1) con jugador 1 y los coloca en su sitio.
@@ -196,4 +202,31 @@ socket.on('letra_prohibida', data => {
     document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
     document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
     document.getElementById("definicion").innerHTML = "";
+});
+
+socket.on('texto_borroso', data => {
+    modo_texto_borroso = true;
+    document.getElementById("explicación").innerHTML = "MODO TEXTO BORROSO";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
+    if( data == 1){
+        document.getElementById("texto").classList.add('textarea_blur');
+        setTimeout(function() { 
+            document.getElementById("texto").classList.remove('textarea_blur'); 
+            document.getElementById("texto1").classList.add('textarea_blur');; }, 1000);
+        }
+        if(data == 2){
+        document.getElementById("texto1").classList.add('textarea_blur');
+        setTimeout(function() { 
+            document.getElementById("texto1").classList.remove('textarea_blur'); 
+            document.getElementById("texto").classList.add('textarea_blur');; }, 1000);
+        }
+    //socket.emit('')
+});
+
+socket.on('limpiar_texto_borroso', data => {
+    modo_texto_borroso = false;
+    document.getElementById("texto").classList.remove('textarea_blur'); 
+    document.getElementById("texto1").classList.remove('textarea_blur'); 
+    //socket.emit('')
 });

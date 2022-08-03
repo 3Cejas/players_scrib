@@ -28,6 +28,7 @@ let temas;
 // Variables del modo letra prohibida.
 
 let modo_letra_prohibida = false;
+let modo_texto_borroso = false;
 var letra_prohibida = "";
 
 // Cuando jugador 1 pulsa una tecla en su texto, envía los datos de jugador 1 al resto.
@@ -211,6 +212,8 @@ socket.on('limpiar', data => {
     rapidez_inicio_borrado = 3000;
     clearTimeout(borrado)
     clearTimeout(cambio_palabra);
+    modo_letra_prohibida = false;
+    modo_texto_borroso = false;
 });
 
 // Realiza scroll hacia arriba.
@@ -248,7 +251,34 @@ socket.on('letra_prohibida', data => {
     document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
     document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
     document.getElementById("definicion").innerHTML = "";
-    socket.emit('')
+    //socket.emit('')
+});
+
+socket.on('texto_borroso', data => {
+    modo_texto_borroso = true;
+    document.getElementById("explicación").innerHTML = "MODO TEXTO BORROSO";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
+    if( data == 1){
+    document.getElementById("texto").classList.add('textarea_blur');
+    setTimeout(function() { 
+        document.getElementById("texto").classList.remove('textarea_blur'); 
+        document.getElementById("texto1").classList.add('textarea_blur');; }, 1000);
+    }
+    if(data == 2){
+    document.getElementById("texto1").classList.add('textarea_blur');
+    setTimeout(function() { 
+        document.getElementById("texto1").classList.remove('textarea_blur'); 
+        document.getElementById("texto").classList.add('textarea_blur');; }, 1000);
+    }
+    //socket.emit('')
+});
+
+socket.on('limpiar_texto_borroso', data => {
+    modo_texto_borroso = false;
+    document.getElementById("texto").classList.remove('textarea_blur'); 
+    document.getElementById("texto1").classList.remove('textarea_blur'); 
+    //socket.emit('')
 });
 
 // FUNCIONES AUXILIARES PARA LA ELECCIÓN ALEATORIA DEL TEMA.

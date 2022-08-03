@@ -107,9 +107,33 @@ socket.on('compartir_palabra', data => {
 });
 
 socket.on('letra_prohibida', data => {
-    modo_letra_prohibida = true
     letra_prohibida = data;
     document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
     document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
     document.getElementById("definicion").innerHTML = "";
+});
+
+socket.on('texto_borroso', data => {
+    document.getElementById("explicación").innerHTML = "MODO TEXTO BORROSO";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
+    if( data == 1){
+        document.getElementById("texto").classList.add('textarea_blur');
+        setTimeout(function() { 
+            document.getElementById("texto").classList.remove('textarea_blur'); 
+            document.getElementById("texto1").classList.add('textarea_blur');; }, 1000);
+        }
+        if(data == 2){
+        document.getElementById("texto1").classList.add('textarea_blur');
+        setTimeout(function() { 
+            document.getElementById("texto1").classList.remove('textarea_blur'); 
+            document.getElementById("texto").classList.add('textarea_blur');; }, 1000);
+        } 
+    //socket.emit('')
+});
+
+socket.on('limpiar_texto_borroso', data => {
+    document.getElementById("texto").classList.remove('textarea_blur'); 
+    document.getElementById("texto1").classList.remove('textarea_blur'); 
+    //socket.emit('')
 });

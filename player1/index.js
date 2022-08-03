@@ -42,25 +42,6 @@ function borrar(obj){
         blurreado = false
     }
     else{
-        var puntos_enem = (document.getElementById("puntos1").innerHTML).replace(/\D/g, "");
-        var puntos_mios = obj.value.length+ puntos_palabra
-
-        if(puntos_mios- puntos_enem > 300 && !blurreado){
-            document.getElementById("texto").classList.add('textarea_blur');
-            setTimeout(
-                function() {
-                document.getElementById("texto").classList.remove('textarea_blur');  
-            }, 30000);
-            blurreado = true;
-        }
-        if(puntos_mios- puntos_enem < -300 && !blurreado){
-            document.getElementById("texto1").classList.add('textarea_blur');
-            setTimeout(
-                function() {
-                document.getElementById("texto1").classList.remove('textarea_blur');  
-            }, 30000);
-            blurreado = true;
-        }
         /*if(Math.abs(puntos_mios- puntos_enem)==300){
             document.getElementById("texto1").classList.remove('textarea_blur');
             document.getElementById("texto").classList.remove('textarea_blur');
@@ -115,25 +96,6 @@ function countChars(obj){
         blurreado = false
     }
     else{
-        var puntos_enem = (document.getElementById("puntos1").innerHTML).replace(/\D/g, "");
-        var puntos_mios = obj.value.length+ puntos_palabra;
-
-        if(puntos_mios- puntos_enem > 300 && !blurreado){
-            document.getElementById("texto").classList.add('textarea_blur');
-            setTimeout(
-                function() {
-                document.getElementById("texto").classList.remove('textarea_blur');  
-            }, 30000);
-            blurreado = true;
-        }
-        if(puntos_mios- puntos_enem < -300 && !blurreado){
-            document.getElementById("texto1").classList.add('textarea_blur');
-            setTimeout(
-                function() {
-                document.getElementById("texto1").classList.remove('textarea_blur');  
-            }, 30000);
-            blurreado = true;
-        }
         /*if(Math.abs(puntos_mios- puntos_enem)==300){
             document.getElementById("texto1").classList.remove('textarea_blur');
             document.getElementById("texto").classList.remove('textarea_blur');
@@ -144,9 +106,9 @@ function countChars(obj){
         rapidez_borrado = 3000;
         rapidez_inicio_borrado = 3000
     }
-
-    if( modo_letra_prohibida == true){
-        if((document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1) == letra_prohibida || (document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1) == letra_prohibida.toUpperCase()){
+    
+    if(modo_letra_prohibida == true){
+        if((toNormalForm(document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1)) == letra_prohibida || (toNormalForm(document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1)) == letra_prohibida.toUpperCase()){
             document.getElementById("texto").value = (document.getElementById("texto").value).substring(0, document.getElementById("texto").value.length -1);
         }
     }
@@ -203,4 +165,8 @@ function countChars(obj){
         },
     rapidez_inicio_borrado);
 }
+}
+
+function toNormalForm(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }

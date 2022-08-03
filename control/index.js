@@ -8,6 +8,7 @@ let puntos_palabra = 0
 let terminado = false
 let countInterval;
 
+
 function paddedFormat(num) {
     return num < 10 ? "0" + num : num; 
 }
@@ -48,7 +49,7 @@ function temp () {
     clearInterval(countInterval);
     
     let time_minutes = 0; // Value in minutes
-    let time_seconds = 20; // Value in seconds
+    let time_seconds = 10; // Value in seconds
 
 
     socket.emit('inicio',time_minutes);
@@ -92,6 +93,8 @@ function limpiar () {
     socket.emit('limpiar',"nada");
     clearInterval(countInterval); 
     document.getElementById("tiempo").innerHTML = "";
+    document.getElementById("texto").classList.remove('textarea_blur');
+    document.getElementById("texto1").classList.remove('textarea_blur');
     socket.emit('count',"");
 };
 
