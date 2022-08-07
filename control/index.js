@@ -48,8 +48,8 @@ function temp () {
     document.getElementById("definicion").innerHTML = "";
     clearInterval(countInterval);
     
-    let time_minutes = 0; // Value in minutes
-    let time_seconds = 10; // Value in seconds
+    let time_minutes = 5; // Value in minutes
+    let time_seconds = 0; // Value in seconds
 
 
     socket.emit('inicio',time_minutes);
@@ -91,7 +91,8 @@ function limpiar () {
     document.getElementById("definicion").innerHTML = "";
     document.getElementById("explicación").innerHTML = "";
     socket.emit('limpiar',"nada");
-    clearInterval(countInterval); 
+    clearInterval(countInterval);
+    clearTimeout(tempo_text_borroso);
     document.getElementById("tiempo").innerHTML = "";
     document.getElementById("texto").classList.remove('textarea_blur');
     document.getElementById("texto1").classList.remove('textarea_blur');

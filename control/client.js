@@ -19,6 +19,8 @@ let puntos1 = getEl("puntos1");
 let nivel1 = getEl("nivel1");
 let objetivo1 = getEl("objetivo1");
 
+let tempo_text_borroso;
+
 socket.on('nombre2', data => {
     nombre1.value = data;
 });
@@ -99,6 +101,7 @@ socket.on('nombre2', data => {
 });
 
 socket.on('compartir_palabra', data => {
+    animacion_modo()
     palabra_actual = data.palabra_bonus[0];
     document.getElementById("explicación").innerHTML = "MODO PALABRAS BONUS";
     document.getElementById("palabra").innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
@@ -107,6 +110,7 @@ socket.on('compartir_palabra', data => {
 });
 
 socket.on('letra_prohibida', data => {
+    animacion_modo()
     letra_prohibida = data;
     document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
     document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
@@ -114,20 +118,21 @@ socket.on('letra_prohibida', data => {
 });
 
 socket.on('texto_borroso', data => {
+    animacion_modo()
     document.getElementById("explicación").innerHTML = "MODO TEXTO BORROSO";
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
     if( data == 1){
         document.getElementById("texto").classList.add('textarea_blur');
-        setTimeout(function() { 
+        tempo_text_borroso = setTimeout(function() { 
             document.getElementById("texto").classList.remove('textarea_blur'); 
-            document.getElementById("texto1").classList.add('textarea_blur');; }, 1000);
+            document.getElementById("texto1").classList.add('textarea_blur');; }, 30000);
         }
         if(data == 2){
         document.getElementById("texto1").classList.add('textarea_blur');
-        setTimeout(function() { 
+        tempo_text_borroso = setTimeout(function() { 
             document.getElementById("texto1").classList.remove('textarea_blur'); 
-            document.getElementById("texto").classList.add('textarea_blur');; }, 1000);
+            document.getElementById("texto").classList.add('textarea_blur');; }, 30000);
         } 
     //socket.emit('')
 });
@@ -137,3 +142,49 @@ socket.on('limpiar_texto_borroso', data => {
     document.getElementById("texto1").classList.remove('textarea_blur'); 
     //socket.emit('')
 });
+
+socket.on('psicodélico', data => {
+    animacion_modo()
+    document.getElementById("explicación").innerHTML = "MODO PSICODÉLICO";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
+
+});
+
+socket.on('texto_inverso', data => {
+    animacion_modo();
+    document.getElementById("explicación").innerHTML = "MODO TEXTO INVERSO";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
+    document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
+    document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
+});
+
+socket.on('limpiar_texto_inverso', data => {
+    document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
+    document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
+
+});
+
+function animacion_modo(){
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+    // We create a Promise and return it
+    new Promise((resolve, reject) => {
+      const animationName = `${prefix}${animation}`;
+      const node = document.querySelector(element);
+  
+      node.classList.add(`${prefix}animated`, animationName);
+  
+      // When the animation ends, we clean the classes and resolve the Promise
+      function handleAnimationEnd(event) {
+        event.stopPropagation();
+        node.classList.remove(`${prefix}animated`, animationName);
+        resolve('Animation ended');
+      }
+  
+      node.addEventListener('animationend', handleAnimationEnd, {once: true});
+    });
+    animateCSS(".explicación", "bounceInLeft");
+    animateCSS(".palabra", "bounceInLeft");
+    animateCSS(".definicion", "bounceInLeft");
+}

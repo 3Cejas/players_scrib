@@ -10,6 +10,8 @@ let cambio_palabra; // Variable que almacena el identificador de la función tem
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
 let activar_palabras = false; // Variable booleana que activa las palabras bonus.
 let puntuacion = 0; //Variable entera que almacena la puntuación de la palabra bonus.
+let delay_animacion; 
+var socket = io('http://localhost:3000');
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe  enter en el texto.
 
@@ -41,20 +43,20 @@ function borrar(obj){
         document.getElementById("texto1").classList.remove('textarea_blur');
         blurreado = false
     }
-    else{
+    else if(!modo_texto_inverso){
         /*if(Math.abs(puntos_mios- puntos_enem)==300){
             document.getElementById("texto1").classList.remove('textarea_blur');
             document.getElementById("texto").classList.remove('textarea_blur');
         }*/
         document.getElementById("texto").value = (document.getElementById("texto").value).substring(0, document.getElementById("texto").value.length -1);
         document.getElementById("puntos").innerHTML = obj.value.length + puntos_palabra+' puntos';
-        var socket = io('http://localhost:3000');
         let  editor = getEl("texto");
         let puntos = getEl("puntos");
         let nivel = getEl("nivel");
         let text = editor.value;
         let points = puntos.textContent;
         let level = nivel.textContent;
+        var socket = io('http://localhost:3000');
         socket.emit('texto1',{text, points, level});
 
         if( 249 == obj.value.length){
@@ -107,9 +109,51 @@ function countChars(obj){
         rapidez_inicio_borrado = 3000
     }
     
+
     if(modo_letra_prohibida == true){
+        clearTimeout(delay_animacion)
         if((toNormalForm(document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1)) == letra_prohibida || (toNormalForm(document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1)) == letra_prohibida.toUpperCase()){
             document.getElementById("texto").value = (document.getElementById("texto").value).substring(0, document.getElementById("texto").value.length -1);
+            puntos_palabra = puntos_palabra - 50;
+            document.getElementById("puntos").innerHTML = obj.value.length+ puntos_palabra+ ' puntos';
+            var feedback = document.querySelector(".feedback1")
+            feedback.innerHTML = "-50 pts";
+            /*feedback.classList.add('animate__animated', 'animate__bounceInLeft');
+            feedback.addEventListener('animationend', () => {
+                feedback.classList.remove('animate__animated', 'animate__bounceInLeft');
+                feedback.classList.add('animate__animated', 'animate__bounceOutRight');
+                feedback.addEventListener('animationend', () => {
+                    feedback.classList.remove('animate__animated', 'animate__bounceOutRight');
+                  });
+              });*/
+              const animateCSS = (element, animation, prefix = 'animate__') =>
+  // We create a Promise and return it
+  new Promise((resolve, reject) => {
+    const animationName = `${prefix}${animation}`;
+    const node = document.querySelector(element);
+
+    node.classList.add(`${prefix}animated`, animationName);
+
+    // When the animation ends, we clean the classes and resolve the Promise
+    function handleAnimationEnd(event) {
+      event.stopPropagation();
+      node.classList.remove(`${prefix}animated`, animationName);
+      resolve('Animation ended');
+    }
+
+    node.addEventListener('animationend', handleAnimationEnd, {once: true});
+  });
+  var socket = io('http://localhost:3000');
+  socket.emit('feedback_de_j1', -50);
+              animateCSS(".feedback1", "bounceInLeft");
+              animateCSS('.feedback1', 'bounceInLeft').then((message) => {
+                delay_animacion = setTimeout(function(){
+                    feedback.innerHTML = "";
+                }, 2000);
+              });
+              
+
+
         }
     }
     if(asignada == true){
@@ -119,6 +163,43 @@ function countChars(obj){
             socket.emit('nueva_palabra', true);
             puntos_palabra = puntos_palabra + puntuacion;
             document.getElementById("puntos").innerHTML =obj.value.length+ puntos_palabra+' puntos';
+            var feedback = document.querySelector(".feedback1")
+            feedback.innerHTML = "+"+puntuacion +" pts";
+            /*feedback.classList.add('animate__animated', 'animate__bounceInLeft');
+            feedback.addEventListener('animationend', () => {
+                feedback.classList.remove('animate__animated', 'animate__bounceInLeft');
+                feedback.classList.add('animate__animated', 'animate__bounceOutRight');
+                feedback.addEventListener('animationend', () => {
+                    feedback.classList.remove('animate__animated', 'animate__bounceOutRight');
+                  });
+              });*/
+              const animateCSS = (element, animation, prefix = 'animate__') =>
+  // We create a Promise and return it
+  new Promise((resolve, reject) => {
+    const animationName = `${prefix}${animation}`;
+    const node = document.querySelector(element);
+
+    node.classList.add(`${prefix}animated`, animationName);
+
+    // When the animation ends, we clean the classes and resolve the Promise
+    function handleAnimationEnd(event) {
+      event.stopPropagation();
+      node.classList.remove(`${prefix}animated`, animationName);
+      resolve('Animation ended');
+    }
+
+    node.addEventListener('animationend', handleAnimationEnd, {once: true});
+  });
+  var socket = io('http://localhost:3000');
+  socket.emit('feedback_de_j1', puntuacion);
+            clearTimeout(delay_animacion);
+              animateCSS(".feedback1", "bounceInLeft");
+              animateCSS('.feedback1', 'bounceInLeft').then((message) => {
+                delay_animacion = setTimeout(function(){
+                    feedback.innerHTML = "";
+                }, 2000);
+              });
+              
 
         }
     }

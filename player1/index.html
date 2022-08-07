@@ -4,8 +4,16 @@
     <title>SCRB</title>
 		<meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
 		<link rel="stylesheet" type="text/css" href="index.css"> 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+
+		<!-- highlight-within-textarea CSS/JS -->
+		<script src="jquery.highlight-within-textarea.js"></script>
 
 
 
@@ -53,13 +61,32 @@
           <div>
             <input disabled id="nombre"class= "nombre" value="ESCRITXR 1"></input>
           <br><br>
-              <textarea disabled id = "texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
+              <textarea disabled class="texto" id = "texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
           <br><br>
+          <script>
+            $('.texto').highlightWithinTextarea({
+    highlight: [
+        {
+            highlight: 'strawberry',
+            className: 'red'
+        },
+        {
+            highlight: 'blueberry',
+            className: 'blue'
+        },
+        {
+            highlight: /ba(na)*/gi,
+            className: 'yellow'
+        }
+    ]
+});
+                  </script>
           <center>
           <table class="right"><tr>
           <th id="puntos">0 puntos</th>
           <th id="nivel">nivel 0</th>
           </tr></table>
+          <h1  id ="feedback1" class ="feedback1"></h1>
         </center>
         </br>
         </div>
@@ -73,6 +100,7 @@
           <th id="puntos1">0 puntos</th>
           <th id="nivel1">nivel 0</th>
           </tr></table>
+          <h1  id ="feedback2" class="feedback2"></h1>
         </br>
         </center>
           </div>

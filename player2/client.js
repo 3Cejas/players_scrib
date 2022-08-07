@@ -9,7 +9,7 @@ let nivel1 = getEl("nivel");
 let objetivo1 = getEl("objetivo");
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
-
+let explicación = getEl("explicación");
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 
@@ -22,14 +22,20 @@ let objetivo2 = getEl("objetivo1");
 
 let modo_letra_prohibida = false;
 let modo_texto_borroso = false;
+let modo_psicodélico = false;
+let modo_texto_inverso = false;
 var letra_prohibida = "";
 
+let tempo_text_borroso;
 // Cuando jugador 2 pulsa una tecla en su texto, envía los datos de jugador 2 al resto.
 
 texto2.addEventListener("keydown", evt => {
     let text1 = texto2.value;
     let points1 = puntos2.textContent;
     let level1 = nivel2.textContent;
+    if(modo_psicodélico == true){
+        socket.emit('psico_de_j2');
+    }
     socket.emit('texto2',{text1, points1, level1});
 });
 
@@ -140,6 +146,7 @@ socket.on('inicio', data => {
 
 socket.on('limpiar', data => {
     definicion1.innerHTML = "";
+    explicación.innerHTML = "";
     puntos_palabra = 0;
     asignada = false;
     palabra_actual = ""; // Variable que almacena la palabra bonus actual.
@@ -171,6 +178,25 @@ socket.on('limpiar', data => {
     clearTimeout(cambio_palabra);
     modo_letra_prohibida = false;
     modo_texto_borroso = false;
+    modo_psicodélico = false;
+    modo_texto_inverso = false;
+    letra_prohibida = "";
+    definicion1.innerHTML = "";
+    explicación.innerHTML = "";
+    var text = document.getElementById("texto");
+    var text1 = document.getElementById("texto1");
+    text.style.fontFamily = "monospace";
+    text.style.color = "white";
+    text.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    text.style.textAlign = "justify";
+    text1.style.fontFamily = "monospace";
+    text1.style.color = "white";
+    text1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    text1.style.textAlign = "justify";
+    document.body.style.backgroundColor = "black";
+    document.getElementById("texto").style.height = document.getElementById("texto").scrollHeight + "px";
+    document.getElementById("texto1").style.height = document.getElementById("texto1").scrollHeight + "px";
+    clearTimeout(tempo_text_borroso);
 });
 
 //Recibe los temas (que elije el jugador 1) con jugador 1 y los coloca en su sitio.
@@ -182,6 +208,7 @@ socket.on('recibe_temas', data => {
 // Recibe la palabra bonus.
 
 socket.on('compartir_palabra', data => {
+    animacion_modo();
     if(data.modo_actual = "palabras bonus"){
     asignada = true;
     activar_palabras = true;
@@ -197,6 +224,7 @@ socket.on('compartir_palabra', data => {
 //Recibe y activa el modo letra prohibida.
 
 socket.on('letra_prohibida', data => {
+    animacion_modo();
     modo_letra_prohibida = true
     letra_prohibida = data;
     document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
@@ -204,22 +232,28 @@ socket.on('letra_prohibida', data => {
     document.getElementById("definicion").innerHTML = "";
 });
 
+socket.on('limpiar_letra_prohibida', data => {
+    modo_letra_prohibida = false;
+    letra_prohibida = "";
+});
+
 socket.on('texto_borroso', data => {
+    animacion_modo();
     modo_texto_borroso = true;
     document.getElementById("explicación").innerHTML = "MODO TEXTO BORROSO";
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
     if( data == 1){
         document.getElementById("texto").classList.add('textarea_blur');
-        setTimeout(function() { 
+        tempo_text_borroso = setTimeout(function() { 
             document.getElementById("texto").classList.remove('textarea_blur'); 
-            document.getElementById("texto1").classList.add('textarea_blur');; }, 1000);
+            document.getElementById("texto1").classList.add('textarea_blur');; }, 30000);
         }
         if(data == 2){
         document.getElementById("texto1").classList.add('textarea_blur');
-        setTimeout(function() { 
+        tempo_text_borroso = setTimeout(function() { 
             document.getElementById("texto1").classList.remove('textarea_blur'); 
-            document.getElementById("texto").classList.add('textarea_blur');; }, 1000);
+            document.getElementById("texto").classList.add('textarea_blur');; }, 30000);
         }
     //socket.emit('')
 });
@@ -230,3 +264,141 @@ socket.on('limpiar_texto_borroso', data => {
     document.getElementById("texto1").classList.remove('textarea_blur'); 
     //socket.emit('')
 });
+
+socket.on('psicodélico', data => {
+    animacion_modo();
+    modo_psicodélico = true;
+    document.getElementById("explicación").innerHTML = "MODO PSICODÉLICO";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
+
+});
+
+socket.on('limpiar_psicodélico', data => {
+    modo_psicodélico = false;
+    var text = document.getElementById("texto");
+    var text1 = document.getElementById("texto1");
+    text.style.fontFamily = "monospace";
+    text.style.color = "white";
+    text.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    text.style.textAlign = "justify";
+    text1.style.fontFamily = "monospace";
+    text1.style.color = "white";
+    text1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    text1.style.textAlign = "justify";
+    document.body.style.backgroundColor = "black";
+    document.getElementById("texto").style.height = document.getElementById("texto").scrollHeight + "px";
+    document.getElementById("texto1").style.height = document.getElementById("texto1").scrollHeight + "px";
+});
+
+socket.on('psico_a_j2', data => {
+    stylize();
+
+});
+
+socket.on('texto_inverso', data => {
+    modo_texto_inverso = true;
+    animacion_modo();
+    document.getElementById("explicación").innerHTML = "MODO TEXTO INVERSO";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
+    document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
+    document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
+});
+
+socket.on('limpiar_texto_inverso', data => {
+    modo_texto_inverso = false;
+    document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
+    document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
+
+});
+
+socket.on('feedback_a_j2', data => {
+    var feedback = document.querySelector(".feedback1")
+    feedback.innerHTML = data +" pts";
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+    // We create a Promise and return it
+    new Promise((resolve, reject) => {
+      const animationName = `${prefix}${animation}`;
+      const node = document.querySelector(element);
+  
+      node.classList.add(`${prefix}animated`, animationName);
+  
+      // When the animation ends, we clean the classes and resolve the Promise
+      function handleAnimationEnd(event) {
+        event.stopPropagation();
+        node.classList.remove(`${prefix}animated`, animationName);
+        resolve('Animation ended');
+      }
+  
+      node.addEventListener('animationend', handleAnimationEnd, {once: true});
+    });
+    animateCSS(".feedback1", "bounceInLeft");
+    animateCSS('.feedback1', 'bounceInLeft').then((message) => {
+      delay_animacion = setTimeout(function(){
+          feedback.innerHTML = "";
+      }, 2000);
+    });
+});
+
+function getRandColor() {
+    var hex = "01234567890ABCDEF",
+      res = "#";
+    for (var i = 0; i < 6; i += 1) {
+      res += hex[Math.floor(Math.random() * hex.length)];
+    }
+    return res;
+  }
+  
+  function getRandNumber(s, e) {
+    return Math.floor(Math.random() * (e - s + 1)) + s;
+  }
+  
+  function getRandFontFamily() {
+    var fontFamilies = ["Impact", "Georgia", "Tahoma", "Verdana", "Impact", "Marlet"]; // Add more
+    return fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
+  }
+
+  function getTextAlign() {
+    var aligns = ["center", "left", "right", "justify"]; // Add more
+    return aligns[Math.floor(Math.random() * aligns.length)];
+  }
+  
+  function stylize() {
+    var text = document.getElementById("texto");
+    var text1 = document.getElementById("texto1");
+    text.style.fontFamily += getRandFontFamily();
+    text.style.color = getRandColor();
+    text.style.fontSize = getRandNumber(7, 35) + "px"; // Font sizes between 15px and 35px
+    text.style.textAlign = getTextAlign();
+    text1.style.textAlign = getTextAlign();
+    text1.style.fontFamily += getRandFontFamily();
+    text1.style.color = getRandColor();
+    text1.style.fontSize = getRandNumber(7, 35) + "px"; // Font sizes between 15px and 35px
+    document.body.style.backgroundColor = getRandColor();
+    document.getElementById("texto").style.height = document.getElementById("texto").scrollHeight + "px";
+    document.getElementById("texto1").style.height = document.getElementById("texto").scrollHeight + "px";
+  }
+
+  function animacion_modo(){
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+    // We create a Promise and return it
+    new Promise((resolve, reject) => {
+      const animationName = `${prefix}${animation}`;
+      const node = document.querySelector(element);
+  
+      node.classList.add(`${prefix}animated`, animationName);
+  
+      // When the animation ends, we clean the classes and resolve the Promise
+      function handleAnimationEnd(event) {
+        event.stopPropagation();
+        node.classList.remove(`${prefix}animated`, animationName);
+        resolve('Animation ended');
+      }
+  
+      node.addEventListener('animationend', handleAnimationEnd, {once: true});
+    });
+    animateCSS(".explicación", "bounceInLeft");
+    animateCSS(".palabra", "bounceInLeft");
+    animateCSS(".definicion", "bounceInLeft");
+}
