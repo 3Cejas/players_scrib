@@ -27,9 +27,9 @@ font-size: 10;
   }
 
   .explicación{
-    font-size: 15pt;
+    font-size: 23pt;
     font-family: monospace;
-    color: white;
+    color: red;
   }
   
   .definicion{
@@ -74,7 +74,7 @@ textarea{
     outline:0px !important;
     -webkit-appearance:none;
     box-shadow: none !important;
-    color: white
+    color: rgb(155, 155, 155)
   }
 .textarea_blur{
 filter: blur(5px);
@@ -93,7 +93,7 @@ overflow: hidden;
   outline:0px !important;
   -webkit-appearance:none;
   box-shadow: none !important;
-  color: white
+  color: rgb(155, 155, 155)
 }
 
 .nombre{

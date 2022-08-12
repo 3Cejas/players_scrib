@@ -185,11 +185,13 @@ html, body {
 * {
   cursor: none;
   }
-
+.tiempo{
+  font-size: 18;
+}
 .explicación{
-    font-size: 15pt;
+    font-size: 23pt;
     font-family: monospace;
-    color: white;
+    color: red;
   }
 .definicion{
   font-size: 10pt;
@@ -231,7 +233,7 @@ position:sticky;
     outline:0px !important;
     -webkit-appearance:none;
     box-shadow: none !important;
-    color: rgb(255, 255, 255)
+    color: rgb(155, 155, 155)
 }
 
 .textarea_blur{
@@ -251,7 +253,7 @@ position:sticky;
     outline:0px !important;
     -webkit-appearance:none;
     box-shadow: none !important;
-    color: white
+    color: rgb(155, 155, 155)
   }
 
 .temas{

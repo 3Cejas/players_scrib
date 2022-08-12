@@ -11,6 +11,7 @@ let blurreado = false; // Variable booleana que si alguno de los dos textos ha s
 let activar_palabras = false; // Variable booleana que activa las palabras bonus.
 let puntuacion = 0; //Variable entera que almacena la puntuación de la palabra bonus.
 let delay_animacion; 
+let envio_puntos;
 // Función que aumenta de tamaño el texto del jugador 2 cuando el jugador 2 escribe  enter en el texto.
 
 function process(e) {
@@ -113,7 +114,8 @@ function countChars(obj){
         if((toNormalForm(document.getElementById("texto1").value).charAt((document.getElementById("texto1").value).length - 1)) == letra_prohibida || (toNormalForm(document.getElementById("texto1").value).charAt((document.getElementById("texto1").value).length - 1)) == letra_prohibida.toUpperCase()){
             document.getElementById("texto1").value = (document.getElementById("texto1").value).substring(0, document.getElementById("texto1").value.length -1);
             puntos_palabra = puntos_palabra - 50;
-            var feedback = document.querySelector(".feedback2")
+            var feedback = document.querySelector(".feedback2");
+            feedback.style.color = "red";
             feedback.innerHTML = "-50 pts";
             /*feedback.classList.add('animate__animated', 'animate__bounceInLeft');
             feedback.addEventListener('animationend', () => {
@@ -141,7 +143,9 @@ function countChars(obj){
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
   var socket = io('http://localhost:3000');
-  socket.emit('feedback_de_j2', -50);
+  envio_puntos = -50;
+  let color = "red";
+  socket.emit('feedback_de_j2', {color, envio_puntos});
             clearTimeout(delay_animacion)
               animateCSS(".feedback2", "bounceInRight");
               animateCSS('.feedback2', 'bounceInRight').then((message) => {
@@ -162,7 +166,8 @@ function countChars(obj){
             socket.emit('nueva_palabra', asignada);
             puntos_palabra = puntos_palabra + puntuacion;
             document.getElementById("puntos1").innerHTML =obj.value.length+ puntos_palabra+' puntos';
-            var feedback = document.querySelector(".feedback2")
+            var feedback = document.querySelector(".feedback2");
+            feedback.style.color = "green";
             feedback.innerHTML = "+"+puntuacion +" pts";
             /*feedback.classList.add('animate__animated', 'animate__bounceInLeft');
             feedback.addEventListener('animationend', () => {
@@ -190,7 +195,9 @@ function countChars(obj){
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
   var socket = io('http://localhost:3000');
-  socket.emit('feedback_de_j2', puntuacion);
+  let color = "green"
+  envio_puntos = "+"+puntuacion;
+  socket.emit('feedback_de_j2', {color, envio_puntos});
               animateCSS(".feedback2", "bounceInRight");
               animateCSS('.feedback2', 'bounceInRight').then((message) => {
                 delay_animacion = setTimeout(function(){

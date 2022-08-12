@@ -10,7 +10,8 @@ let cambio_palabra; // Variable que almacena el identificador de la función tem
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
 let activar_palabras = false; // Variable booleana que activa las palabras bonus.
 let puntuacion = 0; //Variable entera que almacena la puntuación de la palabra bonus.
-let delay_animacion; 
+let delay_animacion;
+let envio_puntos;
 var socket = io('http://localhost:3000');
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe  enter en el texto.
@@ -117,6 +118,7 @@ function countChars(obj){
             puntos_palabra = puntos_palabra - 50;
             document.getElementById("puntos").innerHTML = obj.value.length+ puntos_palabra+ ' puntos';
             var feedback = document.querySelector(".feedback1")
+            feedback.style.color = "red";
             feedback.innerHTML = "-50 pts";
             /*feedback.classList.add('animate__animated', 'animate__bounceInLeft');
             feedback.addEventListener('animationend', () => {
@@ -144,7 +146,9 @@ function countChars(obj){
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
   var socket = io('http://localhost:3000');
-  socket.emit('feedback_de_j1', -50);
+  let envio_puntos = -50;
+  let color = "red";
+  socket.emit('feedback_de_j1', {color, envio_puntos});
               animateCSS(".feedback1", "bounceInLeft");
               animateCSS('.feedback1', 'bounceInLeft').then((message) => {
                 delay_animacion = setTimeout(function(){
@@ -164,6 +168,7 @@ function countChars(obj){
             puntos_palabra = puntos_palabra + puntuacion;
             document.getElementById("puntos").innerHTML =obj.value.length+ puntos_palabra+' puntos';
             var feedback = document.querySelector(".feedback1")
+            feedback.style.color = "green";
             feedback.innerHTML = "+"+puntuacion +" pts";
             /*feedback.classList.add('animate__animated', 'animate__bounceInLeft');
             feedback.addEventListener('animationend', () => {
@@ -191,7 +196,9 @@ function countChars(obj){
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
   var socket = io('http://localhost:3000');
-  socket.emit('feedback_de_j1', puntuacion);
+  let color = "green";
+  envio_puntos = "+"+puntuacion;
+  socket.emit('feedback_de_j1', {color,envio_puntos});
             clearTimeout(delay_animacion);
               animateCSS(".feedback1", "bounceInLeft");
               animateCSS('.feedback1', 'bounceInLeft').then((message) => {

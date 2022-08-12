@@ -39,7 +39,7 @@
       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                  
 </pre>-->
-      <center>Escribe<br><p class="sub">powered by</p><img src="logo.png" alt="" width="80"/></center>                                            
+      <center><p class="sub">powered by</p><img src="logo.png" alt="" width="80"/></center>                                            
    <script>var tx = document.querySelector(".neon");
     var change = 0
     function changeColor(){
@@ -63,24 +63,6 @@
           <br><br>
               <textarea disabled class="texto" id = "texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
           <br><br>
-          <script>
-            $('.texto').highlightWithinTextarea({
-    highlight: [
-        {
-            highlight: 'strawberry',
-            className: 'red'
-        },
-        {
-            highlight: 'blueberry',
-            className: 'blue'
-        },
-        {
-            highlight: /ba(na)*/gi,
-            className: 'yellow'
-        }
-    ]
-});
-                  </script>
           <center>
           <table class="right"><tr>
           <th id="puntos">0 puntos</th>
@@ -105,7 +87,7 @@
         </center>
           </div>
           </div>
-          <p id="tiempo"></p>
+          <p id="tiempo" class = "tiempo"></p>
 
           <table><tr>
             <tr><th><p id="explicación" class= explicación></p></th></tr>

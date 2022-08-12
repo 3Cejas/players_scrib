@@ -118,6 +118,11 @@ html, body {
     text-align: center;
     position: static;
 }
+.explicación{
+  font-size: 23pt;
+  font-family: monospace;
+  color: red;
+}
 .definicion{
   font-size: 10pt;
   font-family: monospace;
@@ -158,7 +163,7 @@ position:sticky;
     outline:0px !important;
     -webkit-appearance:none;
     box-shadow: none !important;
-    color: white
+    color: rgb(155, 155, 155)
 }
 
 .nombre{
@@ -361,7 +366,7 @@ table{
           outline:0px !important;
           -webkit-appearance:none;
           box-shadow: none !important;
-          color: white
+          color: rgb(155, 155, 155)
       }
       .textarea_blur{
         filter: blur(5px);
@@ -380,6 +385,6 @@ table{
           outline:0px !important;
           -webkit-appearance:none;
           box-shadow: none !important;
-          color: white
+          color: rgb(155, 155, 155)
         }
   }

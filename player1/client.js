@@ -7,6 +7,7 @@ let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
 let objetivo1 = getEl("objetivo");
+let feedback1 = getEl("feedback1");
 
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
@@ -20,6 +21,7 @@ let texto2 = getEl("texto1");
 let puntos2 = getEl("puntos1");
 let nivel2 = getEl("nivel1");
 let objetivo2 = getEl("objetivo1");
+let feedback2 = getEl("feedback2");
 
 let tempo_text_borroso;
 // Temas aleatorios de la ronda.
@@ -126,11 +128,11 @@ socket.on('count', data => {
         clearTimeout(borrado);
         clearTimeout(cambio_palabra);
         palabra_actual = ""; // Variable que almacena la palabra bonus actual.
-        let a = document.createElement("a");
+        /*let a = document.createElement("a");
         a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"}));
         blob = new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"});
         a.download = 'sesión_player1.txt';
-        a.click();
+        a.click();*/
     }
 });
 
@@ -187,6 +189,8 @@ socket.on('inicio', data => {
 // Resetea el tablero de juego.
 
 socket.on('limpiar', data => {
+    feedback1.innerHTML = "";
+    feedback2.innerHTML = "";
     definicion1.innerHTML = "";
     explicación.innerHTML = "";
     nombre1.value="ESCRITXR 1";
@@ -226,11 +230,11 @@ socket.on('limpiar', data => {
     var text = document.getElementById("texto");
     var text1 = document.getElementById("texto1");
     text.style.fontFamily = "monospace";
-    text.style.color = "white";
+    text.style.color = "rgb(155, 155, 155)";
     text.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
     text.style.textAlign = "justify";
     text1.style.fontFamily = "monospace";
-    text1.style.color = "white";
+    text1.style.color = "rgb(155, 155, 155)";
     text1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
     text1.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
@@ -265,6 +269,10 @@ socket.on('compartir_palabra', data => {
     puntuacion = data.puntuacion;
     indice_buscar_palabra = document.getElementById("texto").value.length -1;
     }
+});
+
+socket.on('limpiar_palabras_bonus', data => {
+    asignada = false;
 });
 
 //Recibe y activa el modo letra prohibida.
@@ -325,11 +333,11 @@ socket.on('limpiar_psicodélico', data => {
     var text = document.getElementById("texto");
     var text1 = document.getElementById("texto1");
     text.style.fontFamily = "monospace";
-    text.style.color = "white";
+    text.style.color = "rgb(155, 155, 155)";
     text.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
     text.style.textAlign = "justify";
     text1.style.fontFamily = "monospace";
-    text1.style.color = "white";
+    text1.style.color = "rgb(155, 155, 155)";
     text1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
     text1.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
@@ -361,7 +369,8 @@ socket.on('limpiar_texto_inverso', data => {
 
 socket.on('feedback_a_j1', data => {
     var feedback = document.querySelector(".feedback2")
-    feedback.innerHTML = data +" pts";
+    feedback.style.color = data.color;
+    feedback.innerHTML = data.envio_puntos + " pts";
     const animateCSS = (element, animation, prefix = 'animate__') =>
     // We create a Promise and return it
     new Promise((resolve, reject) => {

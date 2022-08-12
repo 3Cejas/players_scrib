@@ -10,6 +10,7 @@ let nivel = getEl("nivel");
 let objetivo = getEl("objetivo");
 let palabra = getEl("palabra");
 let tiempo = getEl("tiempo");
+let feedback1 = getEl("feedback1");
 
 let definicion = getEl("definicion");
 
@@ -18,6 +19,7 @@ let editor1 = getEl("texto1");
 let puntos1 = getEl("puntos1");
 let nivel1 = getEl("nivel1");
 let objetivo1 = getEl("objetivo1");
+let feedback2 = getEl("feedback2");
 
 let tempo_text_borroso;
 
