@@ -1,4 +1,4 @@
-var socket = io('https://scriptbe.herokuapp.com/');
+var socket = io('http://localhost:3000');
 const log = console.log;
 
 const getEl = id => document.getElementById(id);
@@ -166,6 +166,12 @@ socket.on('limpiar_texto_inverso', data => {
     document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
     document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
 
+});
+
+socket.on('modo_emplatar', data => {
+    document.getElementById("explicación").innerHTML = "MODO EMPLATAR";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
 });
 
 function animacion_modo(){

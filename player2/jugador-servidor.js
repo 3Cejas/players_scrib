@@ -1,4 +1,4 @@
-var socket = io('https://scriptbe.herokuapp.com/'); // Se establece la conexión con el servidor.
+var socket = io('http://localhost:3000'); // Se establece la conexión con el servidor.
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -12,6 +12,7 @@ let feedback1 = getEl("feedback1");
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
 let explicación = getEl("explicación");
+
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 
@@ -23,10 +24,11 @@ let nivel2 = getEl("nivel1");
 let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 
+// Variables de los modos.
 let modo_letra_prohibida = false;
 let modo_texto_borroso = false;
 let modo_psicodélico = false;
-let modo_texto_inverso = false;
+let desactivar_borrar = false;
 var letra_prohibida = "";
 
 let tempo_text_borroso;
@@ -184,7 +186,7 @@ socket.on('limpiar', data => {
     modo_letra_prohibida = false;
     modo_texto_borroso = false;
     modo_psicodélico = false;
-    modo_texto_inverso = false;
+    desactivar_borrar = false;
     letra_prohibida = "";
     definicion1.innerHTML = "";
     explicación.innerHTML = "";
@@ -306,7 +308,7 @@ socket.on('psico_a_j2', data => {
 });
 
 socket.on('texto_inverso', data => {
-    modo_texto_inverso = true;
+    desactivar_borrar = true;
     animacion_modo();
     document.getElementById("explicación").innerHTML = "MODO TEXTO INVERSO";
     document.getElementById("palabra").innerHTML = "";
@@ -316,10 +318,17 @@ socket.on('texto_inverso', data => {
 });
 
 socket.on('limpiar_texto_inverso', data => {
-    modo_texto_inverso = false;
+    desactivar_borrar = false;
     document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
     document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
 
+});
+
+socket.on('modo_emplatar', data => {
+    desactivar_borrar = true;
+    document.getElementById("explicación").innerHTML = "MODO EMPLATAR";
+    document.getElementById("palabra").innerHTML = "";
+    document.getElementById("definicion").innerHTML = "";
 });
 
 socket.on('feedback_a_j2', data => {

@@ -16,8 +16,8 @@ function paddedFormat(num) {
 function startCountDown(duration, element) {
 
     let secondsRemaining = duration;
-    let min = 5;
-    let sec = 30;
+    let min;
+    let sec;
 
     countInterval = setInterval(function () {
 
@@ -49,7 +49,7 @@ function temp () {
     clearInterval(countInterval);
     
     let time_minutes = 1; // Value in minutes
-    let time_seconds = 0; // Value in seconds
+    let time_seconds = 30; // Value in seconds
 
 
     socket.emit('inicio',time_minutes);

@@ -12,8 +12,8 @@ let activar_palabras = false; // Variable booleana que activa las palabras bonus
 let puntuacion = 0; //Variable entera que almacena la puntuación de la palabra bonus.
 let delay_animacion; 
 let envio_puntos;
-// Función que aumenta de tamaño el texto del jugador 2 cuando el jugador 2 escribe  enter en el texto.
 
+// Función que aumenta de tamaño el texto del jugador 2 cuando el jugador 2 escribe  enter en el texto.
 function process(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if (code == 13) { //Enter keycode
@@ -23,7 +23,6 @@ function process(e) {
 }
 
 // Función que aumenta de tamaño el texto del jugador 2 cuando el jugador 2 escribe cualquier carácter en el texto.
-
 function auto_grow(element) {
     element.style.height = "5px";
     element.style.height = (element.scrollHeight)+"px";
@@ -33,7 +32,6 @@ function auto_grow(element) {
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
-
 function borrar(obj){
     if(terminado == true){
         clearTimeout(borrado)
@@ -42,14 +40,9 @@ function borrar(obj){
         document.getElementById("texto1").classList.remove('textarea_blur');
         blurreado = false;
     }
-    else if(!modo_texto_inverso){
-        /*if(Math.abs(puntos_mios- puntos_enem)==300 && !blurreado){
-            document.getElementById("texto1").classList.remove('textarea_blur');
-            document.getElementById("texto").classList.remove('textarea_blur');
-        }*/
+    else if(!desactivar_borrar){
         document.getElementById("texto1").value = (document.getElementById("texto1").value).substring(0, document.getElementById("texto1").value.length -1);
         document.getElementById("puntos1").innerHTML = obj.value.length + puntos_palabra+' puntos';
-        var socket = io('https://scriptbe.herokuapp.com/');
         let  editor1 = getEl("texto1");
         let puntos1 = getEl("puntos1");
         let nivel1 = getEl("nivel1");
@@ -88,7 +81,6 @@ function borrar(obj){
 }
 
 //Función que modifica el comportamiento del juego.
-
 function countChars(obj){
     if (terminado == true) {
         clearTimeout(borrado)
@@ -142,7 +134,6 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('https://scriptbe.herokuapp.com/');
   envio_puntos = -50;
   let color = "red";
   socket.emit('feedback_de_j2', {color, envio_puntos});
@@ -152,17 +143,12 @@ function countChars(obj){
                 delay_animacion = setTimeout(function(){
                     feedback.innerHTML = "";
                 }, 2000);
-              });
-              
-
-
-        
+              });   
         }
     }
     if(asignada == true){
         if(document.getElementById("texto1").value.substring(indice_buscar_palabra, document.getElementById("texto1").value.length -1 ).toLowerCase().includes(palabra_actual)){
             asignada = false;
-            var socket = io('https://scriptbe.herokuapp.com/');
             socket.emit('nueva_palabra', asignada);
             puntos_palabra = puntos_palabra + puntuacion;
             document.getElementById("puntos1").innerHTML =obj.value.length+ puntos_palabra+' puntos';
@@ -194,7 +180,6 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('https://scriptbe.herokuapp.com/');
   let color = "green"
   envio_puntos = "+"+puntuacion;
   socket.emit('feedback_de_j2', {color, envio_puntos});
@@ -204,11 +189,7 @@ function countChars(obj){
                     feedback.innerHTML = "";
                 }, 2000);
               });
-              
-
-        }
-
-        
+        }      
     }
 
     if(obj.value.length == 250){
@@ -245,36 +226,15 @@ function countChars(obj){
     }
     clearTimeout(borrado)
     borrado = setTimeout(
-        function() {
-                borrar(obj)
-                
-                
-            
-        
-    }, rapidez_inicio_borrado);
+                        function() {
+                                    borrar(obj)      
+                                    },
+                        rapidez_inicio_borrado
+                        );
 }
 }
 
-// Función recursiva temporal que es llamada para cambiar de palabra bonus cada 30 segundos.
-
-function cambiar_palabra(){
-    if(document.getElementById("tiempo").innerHTML == "¡Tiempo!" || document.getElementById("tiempo").innerHTML == "" ){
-        clearTimeout(cambio_palabra);
-    }
-    else{
-    cambio_palabra = setTimeout(
-    function(){
-        palabra_actual = lista_palabras[Math.floor(Math.random() * lista_palabras.length)]
-        //var socket = io('https://scriptbe.herokuapp.com/');
-        //socket.emit('envia_palabra2', palabra_actual);
-        document.getElementById("palabra1").innerHTML ='(+50 pts) palabra: ' + palabra_actual;
-        indice_buscar_palabra = document.getElementById("texto1").value.length -1
-        asignada = true
-        cambiar_palabra();
-    }, 60000);
-}
-}
-
+//Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.
 function toNormalForm(str) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }

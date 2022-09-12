@@ -16,7 +16,7 @@
 	</head>
 	
 	<body>
-    <script src="./index.js"></script>
+    <script src="./juego.js"></script>
     <div class="ascii">
     <pre id="containerascii" >
        __     _____    _____   _____    _____    __       ____  
@@ -33,15 +33,15 @@
       <tr>
         <td> <center>
           <button onclick= "temp()" class="bn54">
-            <span class="bn54span">ESCRIBIR</span></button><br></center></td>
+            <span class="bn54span">✍️ ESCRIBIR</span></button><br></center></td>
         <td> <center>
 
           <button onclick= "vote()" class="bn54">
-          <span class="bn54span">VOTAR</span></button><br></center></td>
+          <span class="bn54span">🗳️ VOTAR</span></button><br></center></td>
         <td> <center>
 
             <button onclick= "temas()" class="bn54">
-            <span class="bn54span">ELEGIR TEMA</span></button><br></center></td>
+            <span class="bn54span">🎨 ELEGIR TEMA</span></button><br></center></td>
             <td> <center>
 
               <button onclick= "subir()" class="bn54">
@@ -54,10 +54,10 @@
       <tr>
         <td>    <center>
           <button onclick= "exit()" class="bn54">
-          <span class="bn54span">CERRAR</span></button></center></td>
+          <span class="bn54span">❌ CERRAR</span></button></center></td>
         <td>    <center>
               <button onclick= "limpiar()" class="bn54">
-                <span class="bn54span">LIMPIAR</span></button>
+                <span class="bn54span">🧹 LIMPIAR</span></button>
           </center></td>
           <td> <center>Temas<div class="container">
             <input type="text" id="temas" size="10">
@@ -108,5 +108,5 @@
           </center>
     </body>
     <script src="socket.io-client/dist/socket.io.js"></script>
-    <script src="./client.js"></script>
+    <script src="./jugador-servidor.js"></script>
 </html>

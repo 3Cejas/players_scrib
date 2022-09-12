@@ -5,17 +5,15 @@ let asignada = false; // Variable boolena que dice si hay una palabra bonus asig
 let palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 let puntos_palabra = 0; // Variable que almacena los puntos obtenidos por meter palabras bonus.
 let terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
-let countInterval; // Variable que almacena el identificador de la función que será ejecutada cada x segundos para uso para actualizar el contador. 
+let countInterval; // Variable que almacena el 3000identificador de la función que será ejecutada cada x segundos para uso para actualizar el contador. 
 let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
 let activar_palabras = false; // Variable booleana que activa las palabras bonus.
 let puntuacion = 0; //Variable entera que almacena la puntuación de la palabra bonus.
 let delay_animacion;
 let envio_puntos;
-var socket = io('https://scriptbe.herokuapp.com/');
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe  enter en el texto.
-
 function process(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if (code == 13) { //Enter keycode
@@ -25,7 +23,6 @@ function process(e) {
 }
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe cualquier carácter en el texto.
-
 function auto_grow(element) {
     element.style.height = "5px";
     element.style.height = (element.scrollHeight)+"px";
@@ -35,7 +32,6 @@ function auto_grow(element) {
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
-
 function borrar(obj){
     if(terminado == true){
         clearTimeout(borrado)
@@ -44,11 +40,7 @@ function borrar(obj){
         document.getElementById("texto1").classList.remove('textarea_blur');
         blurreado = false
     }
-    else if(!modo_texto_inverso){
-        /*if(Math.abs(puntos_mios- puntos_enem)==300){
-            document.getElementById("texto1").classList.remove('textarea_blur');
-            document.getElementById("texto").classList.remove('textarea_blur');
-        }*/
+    else if(!desactivar_borrar){
         document.getElementById("texto").value = (document.getElementById("texto").value).substring(0, document.getElementById("texto").value.length -1);
         document.getElementById("puntos").innerHTML = obj.value.length + puntos_palabra+' puntos';
         let  editor = getEl("texto");
@@ -57,7 +49,6 @@ function borrar(obj){
         let text = editor.value;
         let points = puntos.textContent;
         let level = nivel.textContent;
-        var socket = io('https://scriptbe.herokuapp.com/');
         socket.emit('texto1',{text, points, level});
 
         if( 249 == obj.value.length){
@@ -99,16 +90,12 @@ function countChars(obj){
         blurreado = false
     }
     else{
-        /*if(Math.abs(puntos_mios- puntos_enem)==300){
-            document.getElementById("texto1").classList.remove('textarea_blur');
-            document.getElementById("texto").classList.remove('textarea_blur');
-        }*/
-    document.getElementById("puntos").innerHTML = obj.value.length+ puntos_palabra+ ' puntos';
-    if(obj.value.length < 250){
-        document.getElementById("nivel").innerHTML ='nivel 0';
-        rapidez_borrado = 3000;
-        rapidez_inicio_borrado = 3000
-    }
+        document.getElementById("puntos").innerHTML = obj.value.length+ puntos_palabra+ ' puntos';
+        if(obj.value.length < 250){
+            document.getElementById("nivel").innerHTML ='nivel 0';
+            rapidez_borrado = 3000;
+            rapidez_inicio_borrado = 3000
+        }
     
 
     if(modo_letra_prohibida == true){
@@ -145,7 +132,6 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('https://scriptbe.herokuapp.com/');
   let envio_puntos = -50;
   let color = "red";
   socket.emit('feedback_de_j1', {color, envio_puntos});
@@ -163,7 +149,6 @@ function countChars(obj){
     if(asignada == true){
         if(document.getElementById("texto").value.substring(indice_buscar_palabra, document.getElementById("texto").value.length -1 ).toLowerCase().includes(palabra_actual)){
             asignada = false;
-            var socket = io('https://scriptbe.herokuapp.com/');
             socket.emit('nueva_palabra', true);
             puntos_palabra = puntos_palabra + puntuacion;
             document.getElementById("puntos").innerHTML =obj.value.length+ puntos_palabra+' puntos';
@@ -195,7 +180,6 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('https://scriptbe.herokuapp.com/');
   let color = "green";
   envio_puntos = "+"+puntuacion;
   socket.emit('feedback_de_j1', {color,envio_puntos});
@@ -206,8 +190,6 @@ function countChars(obj){
                     feedback.innerHTML = "";
                 }, 2000);
               });
-              
-
         }
     }
     if(obj.value.length == 250){
@@ -249,12 +231,14 @@ function countChars(obj){
     clearTimeout(borrado)
     borrado = setTimeout(
         function() {
-                borrar(obj)
-        },
-    rapidez_inicio_borrado);
+                    borrar(obj)      
+                    },
+        rapidez_inicio_borrado
+        );
 }
 }
 
+//Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.
 function toNormalForm(str) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
