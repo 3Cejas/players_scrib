@@ -17,7 +17,7 @@ function startCountDown(duration, element) {
 
     let secondsRemaining = duration;
     let min = 5;
-    let sec = 0;
+    let sec = 30;
 
     countInterval = setInterval(function () {
 
@@ -34,9 +34,9 @@ function startCountDown(duration, element) {
             socket.emit('count',"¡Tiempo!");
             
             var a = document.createElement("a");
-            a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"}));
+            a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\r\n"+document.getElementById("puntos").innerHTML +"\r\n"+document.getElementById("texto").value +"\r\n"+ document.getElementById("nombre1").value +"\r\n"+document.getElementById("puntos1").innerHTML +"\r\n"+document.getElementById("texto1").value ], {type: "text/plain"}));
             blob = new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"});
-            a.download = 'sesión_control.txt';
+            a.download = document.getElementById("nombre").value +' VS '+ document.getElementById("nombre1").value+ '.txt'  ;
             a.click();
         };
 
@@ -48,8 +48,8 @@ function temp () {
     document.getElementById("definicion").innerHTML = "";
     clearInterval(countInterval);
     
-    let time_minutes = 0; // Value in minutes
-    let time_seconds = 10; // Value in seconds
+    let time_minutes = 1; // Value in minutes
+    let time_seconds = 0; // Value in seconds
 
 
     socket.emit('inicio',time_minutes);
@@ -107,4 +107,8 @@ function subir () {
 
 function bajar () {
     socket.emit('bajar', 'nada');
+};
+
+function limpiar_psico () {
+    socket.emit('limpiar_psico', 'nada');
 };

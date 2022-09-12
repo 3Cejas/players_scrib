@@ -49,7 +49,7 @@ function borrar(obj){
         }*/
         document.getElementById("texto1").value = (document.getElementById("texto1").value).substring(0, document.getElementById("texto1").value.length -1);
         document.getElementById("puntos1").innerHTML = obj.value.length + puntos_palabra+' puntos';
-        var socket = io('http://localhost:3000');
+        var socket = io('https://scriptbe.herokuapp.com/');
         let  editor1 = getEl("texto1");
         let puntos1 = getEl("puntos1");
         let nivel1 = getEl("nivel1");
@@ -142,7 +142,7 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('http://localhost:3000');
+  var socket = io('https://scriptbe.herokuapp.com/');
   envio_puntos = -50;
   let color = "red";
   socket.emit('feedback_de_j2', {color, envio_puntos});
@@ -162,7 +162,7 @@ function countChars(obj){
     if(asignada == true){
         if(document.getElementById("texto1").value.substring(indice_buscar_palabra, document.getElementById("texto1").value.length -1 ).toLowerCase().includes(palabra_actual)){
             asignada = false;
-            var socket = io('http://localhost:3000');
+            var socket = io('https://scriptbe.herokuapp.com/');
             socket.emit('nueva_palabra', asignada);
             puntos_palabra = puntos_palabra + puntuacion;
             document.getElementById("puntos1").innerHTML =obj.value.length+ puntos_palabra+' puntos';
@@ -194,7 +194,7 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('http://localhost:3000');
+  var socket = io('https://scriptbe.herokuapp.com/');
   let color = "green"
   envio_puntos = "+"+puntuacion;
   socket.emit('feedback_de_j2', {color, envio_puntos});
@@ -265,7 +265,7 @@ function cambiar_palabra(){
     cambio_palabra = setTimeout(
     function(){
         palabra_actual = lista_palabras[Math.floor(Math.random() * lista_palabras.length)]
-        //var socket = io('http://localhost:3000');
+        //var socket = io('https://scriptbe.herokuapp.com/');
         //socket.emit('envia_palabra2', palabra_actual);
         document.getElementById("palabra1").innerHTML ='(+50 pts) palabra: ' + palabra_actual;
         indice_buscar_palabra = document.getElementById("texto1").value.length -1

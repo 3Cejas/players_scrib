@@ -1,4 +1,4 @@
-var socket = io('http://localhost:3000'); // Se establece la conexión con el servidor.
+var socket = io('https://scriptbe.herokuapp.com/'); // Se establece la conexión con el servidor.
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -325,7 +325,7 @@ socket.on('limpiar_texto_inverso', data => {
 socket.on('feedback_a_j2', data => {
     var feedback = document.querySelector(".feedback1");
     feedback.style.color = data.color;
-    feedback.innerHTML = data.envio_puntos +" pts";
+    feedback.innerHTML = data.envio_puntos.toString() +" pts";
     const animateCSS = (element, animation, prefix = 'animate__') =>
     // We create a Promise and return it
     new Promise((resolve, reject) => {

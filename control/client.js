@@ -1,4 +1,4 @@
-var socket = io('http://localhost:3000');
+var socket = io('https://scriptbe.herokuapp.com/');
 const log = console.log;
 
 const getEl = id => document.getElementById(id);

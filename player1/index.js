@@ -12,7 +12,7 @@ let activar_palabras = false; // Variable booleana que activa las palabras bonus
 let puntuacion = 0; //Variable entera que almacena la puntuación de la palabra bonus.
 let delay_animacion;
 let envio_puntos;
-var socket = io('http://localhost:3000');
+var socket = io('https://scriptbe.herokuapp.com/');
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe  enter en el texto.
 
@@ -57,7 +57,7 @@ function borrar(obj){
         let text = editor.value;
         let points = puntos.textContent;
         let level = nivel.textContent;
-        var socket = io('http://localhost:3000');
+        var socket = io('https://scriptbe.herokuapp.com/');
         socket.emit('texto1',{text, points, level});
 
         if( 249 == obj.value.length){
@@ -145,7 +145,7 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('http://localhost:3000');
+  var socket = io('https://scriptbe.herokuapp.com/');
   let envio_puntos = -50;
   let color = "red";
   socket.emit('feedback_de_j1', {color, envio_puntos});
@@ -163,7 +163,7 @@ function countChars(obj){
     if(asignada == true){
         if(document.getElementById("texto").value.substring(indice_buscar_palabra, document.getElementById("texto").value.length -1 ).toLowerCase().includes(palabra_actual)){
             asignada = false;
-            var socket = io('http://localhost:3000');
+            var socket = io('https://scriptbe.herokuapp.com/');
             socket.emit('nueva_palabra', true);
             puntos_palabra = puntos_palabra + puntuacion;
             document.getElementById("puntos").innerHTML =obj.value.length+ puntos_palabra+' puntos';
@@ -195,7 +195,7 @@ function countChars(obj){
 
     node.addEventListener('animationend', handleAnimationEnd, {once: true});
   });
-  var socket = io('http://localhost:3000');
+  var socket = io('https://scriptbe.herokuapp.com/');
   let color = "green";
   envio_puntos = "+"+puntuacion;
   socket.emit('feedback_de_j1', {color,envio_puntos});
