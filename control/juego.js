@@ -48,8 +48,8 @@ function temp () {
     document.getElementById("definicion").innerHTML = "";
     clearInterval(countInterval);
     
-    let time_minutes = 1; // Value in minutes
-    let time_seconds = 30; // Value in seconds
+    let time_minutes = 6; // Value in minutes
+    let time_seconds = 0; // Value in seconds
 
 
     socket.emit('inicio',time_minutes);

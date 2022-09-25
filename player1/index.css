@@ -1,6 +1,8 @@
 
 @charset"utf-8";
-
+#pie {
+  flex: 0 0 auto;
+}
 .hwt-container {
   display: inline-block;
   position: relative;
@@ -161,6 +163,7 @@ html, body {
     text-align: center;
     ms-overflow-style: none; /* for Internet Explorer, Edge */
     scrollbar-width: none; /* for Firefox */
+    /*scroll-behavior: smooth;*/
     overflow-y: scroll;
 }
 .sub{
@@ -219,7 +222,7 @@ label{
     font-size: 13pt;
 }
 textarea{
-position:sticky;
+  position:sticky;
   font-size: 16pt;
   border-color: currentcolor;
   outline-color: currentcolor;
@@ -234,7 +237,7 @@ position:sticky;
     -webkit-appearance:none;
     box-shadow: none !important;
     color: rgb(155, 155, 155)
-}
+  }
 
 .textarea_blur{
   filter: blur(5px);

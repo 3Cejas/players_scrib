@@ -61,6 +61,7 @@
           <div>
             <input disabled id="nombre"class= "nombre" value="ESCRITXR 1"></input>
           <br><br>
+          <p id="alineador1"></p>
               <textarea disabled class="texto" id = "texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
           <br><br>
           <center>
@@ -73,9 +74,10 @@
         </br>
         </div>
         <div>
-          <input disabled id="nombre1" class= "nombre" value="ESCRITXR 2"></input>
+            <input disabled id="nombre1" class= "nombre" value="ESCRITXR 2"></input>
           <br><br>
-          <textarea disabled id = "texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow1(this)" onkeyup="countChars1(this);" onkeydown="countChars1(this);" onkeypress="process1(event, this)"></textarea>
+          <p id="alineador2"></p>
+            <textarea disabled id = "texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false" oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);" onkeypress="process(event, this)"></textarea>
           <br><br>
           <center>
           <table class="right"><tr>
@@ -87,14 +89,12 @@
         </center>
           </div>
           </div>
-          <p id="tiempo" class = "tiempo"></p>
-
-          <table><tr>
+          <div id="pie"><table><tr>
             <tr><th><p id="explicación" class= explicación></p></th></tr>
             <th> <p id="palabra" class= palabra></p></th>
              </tr>
              <tr><th><p id="definicion" class= definicion></p></th></tr>
-            </table> 
+            </table> </div>
 
     </body>
     <script src="socket.io-client/dist/socket.io.js"></script>

@@ -8,6 +8,7 @@ let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
 let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
+let alineador1 = getEl("alineador1");
 
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
@@ -22,6 +23,7 @@ let puntos2 = getEl("puntos1");
 let nivel2 = getEl("nivel1");
 let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
+let alineador2 = getEl("alineador2");
 
 let tempo_text_borroso;
 // Temas aleatorios de la ronda.
@@ -33,7 +35,9 @@ let temas;
 let modo_letra_prohibida = false;
 let modo_texto_borroso = false;
 let modo_psicodélico = false;
+let modo_emplatar = false;
 let desactivar_borrar = false;
+
 var letra_prohibida = "";
 
 // Cuando jugador 1 pulsa una tecla en su texto, envía los datos de jugador 1 al resto.
@@ -101,7 +105,23 @@ socket.on('texto2', data => {
     texto2.value = data.text1;
     puntos2.innerHTML =   data.points1;
     nivel2.innerHTML =  data.level1;
-    texto2.style.height = (texto2.scrollHeight)+"px";
+    if(texto2.scrollHeight >= texto1.scrollHeight){
+        while(texto2.scrollHeight > texto1.scrollHeight){
+            saltos_línea_alineacion_1 += 1;
+            texto1.value = "\n" + texto1.value
+
+        }
+    }
+    else{
+        while(texto2.scrollHeight < texto1.scrollHeight){
+            saltos_línea_alineacion_2 += 1;
+            texto2.value = "\n" + texto2.value
+        }
+    }
+    texto1.style.height = (texto1.scrollHeight)+"px";
+    texto2.style.height = (texto1.scrollHeight)+"px";
+    window.scrollTo(0, document.body.scrollHeight);
+    (window).on('scroll', onScroll);
 });
 
 
@@ -110,11 +130,18 @@ Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
 limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
-
 socket.on('count', data => {
     texto1.focus();
     tiempo.innerHTML =  data
     if(data == "¡Tiempo!"){
+        texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
+        texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
+        modo_letra_prohibida = false;
+        modo_texto_borroso = false;
+        modo_psicodélico = false;
+        modo_emplatar = false;
+        desactivar_borrar = false;
+        letra_prohibida = "";
         texto2.classList.remove('textarea_blur');
         texto1.classList.remove('textarea_blur');
         texto2.disabled=true;
@@ -128,9 +155,17 @@ socket.on('count', data => {
         clearTimeout(borrado);
         clearTimeout(cambio_palabra);
         palabra_actual = ""; // Variable que almacena la palabra bonus actual.
+        texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+        texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
+        
+        texto1.style.height = "auto";
+        texto2.style.height = "auto";
+        texto1.style.height = (texto1.scrollHeight)+"px"; //Reajustamos el tamaño del área de texto del j1.
+        texto2.style.height = (texto2.scrollHeight)+"px";// Reajustamos el tamaño del área de texto del j2.
+        
         /*let a = document.createElement("a");
-        a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"}));
-        blob = new Blob([document.getElementById("nombre").value +"\n"+document.getElementById("texto").value +"\n"+ document.getElementById("nombre1").value +"\n"+document.getElementById("texto1").value ], {type: "text/plain"});
+        a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"}));
+        blob = new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"});
         a.download = 'sesión_player1.txt';
         a.click();*/
     }
@@ -173,7 +208,7 @@ socket.on('inicio', data => {
     nivel1.innerHTML = "nivel 0";
     nivel2.innerHTML = "nivel 0";
     palabra1.innerHTML = "";
-    texto.style.height = "40";
+    texto1.style.height = "40";
     texto1.style.height = (texto1.scrollHeight)+"px";
     texto2.style.height = "40";
     texto2.style.height = (texto2.scrollHeight)+"px";
@@ -184,6 +219,10 @@ socket.on('inicio', data => {
     definicion1.innerHTML = "";
     explicación.innerHTML = "";
     terminado = false;
+    puntos_palabra = 0;
+    puntos_neg_por_emplatar = 0;
+    saltos_línea_alineacion_1 = 0;
+    saltos_línea_alineacion_2 = 0;
 });
 
 // Resetea el tablero de juego.
@@ -202,6 +241,7 @@ socket.on('limpiar', data => {
     texto1.disabled=true;
     texto2.disabled=true;
     puntos_palabra = 0;
+    puntos_neg_por_emplatar = 0;
     asignada = false;
     palabra_actual = ""; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
@@ -225,22 +265,13 @@ socket.on('limpiar', data => {
     modo_letra_prohibida = false;
     modo_texto_borroso = false;
     modo_psicodélico = false;
+    modo_emplatar = false;
     desactivar_borrar = false;
     letra_prohibida = "";
-    var text = document.getElementById("texto");
-    var text1 = document.getElementById("texto1");
-    text.style.fontFamily = "monospace";
-    text.style.color = "rgb(155, 155, 155)";
-    text.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    text.style.textAlign = "justify";
-    text1.style.fontFamily = "monospace";
-    text1.style.color = "rgb(155, 155, 155)";
-    text1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    text1.style.textAlign = "justify";
-    document.body.style.backgroundColor = "black";
-    document.getElementById("texto").style.height = document.getElementById("texto").scrollHeight + "px";
-    document.getElementById("texto1").style.height = document.getElementById("texto1").scrollHeight + "px";
+    restablecer_estilo();
     clearTimeout(tempo_text_borroso);
+    saltos_línea_alineacion_1 = 0;
+    saltos_línea_alineacion_2 = 0;
 });
 
 // Realiza scroll hacia arriba.
@@ -263,11 +294,11 @@ socket.on('compartir_palabra', data => {
     asignada = true;
     activar_palabras = true;
     palabra_actual = data.palabra_bonus[0];
-    document.getElementById("explicación").innerHTML = "MODO PALABRAS BONUS";
-    document.getElementById("palabra").innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
+    explicación.innerHTML = "MODO PALABRAS BONUS";
+    palabra1.innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
-    indice_buscar_palabra = document.getElementById("texto").value.length -1;
+    indice_buscar_palabra = texto1.value.length -1;
     }
 });
 
@@ -276,14 +307,13 @@ socket.on('limpiar_palabras_bonus', data => {
 });
 
 //Recibe y activa el modo letra prohibida.
-
 socket.on('letra_prohibida', data => {
     animacion_modo();
     modo_letra_prohibida = true
     letra_prohibida = data;
-    document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
-    document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
-    document.getElementById("definicion").innerHTML = "";
+    explicación.innerHTML = "MODO LETRA PROHIBIDA";
+    palabra1.innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
+    definicion1.innerHTML = "";
     //socket.emit('')
 });
 
@@ -295,54 +325,42 @@ socket.on('limpiar_letra_prohibida', data => {
 socket.on('texto_borroso', data => {
     animacion_modo();
     modo_texto_borroso = true;
-    document.getElementById("explicación").innerHTML = "MODO TEXTO BORROSO";
-    document.getElementById("palabra").innerHTML = "";
-    document.getElementById("definicion").innerHTML = "";
+    explicación.innerHTML = "MODO TEXTO BORROSO";
+    palabra1.innerHTML = "";
+    definicion1.innerHTML = "";
     if( data == 1){
-    document.getElementById("texto").classList.add('textarea_blur');
+    texto1.classList.add('textarea_blur');
     tempo_text_borroso = setTimeout(function() { 
-        document.getElementById("texto").classList.remove('textarea_blur'); 
-        document.getElementById("texto1").classList.add('textarea_blur');; }, 30000);
+        texto1.classList.remove('textarea_blur'); 
+        texto2.classList.add('textarea_blur');; }, 30000);
     }
     if(data == 2){
-    document.getElementById("texto1").classList.add('textarea_blur');
+    texto2.classList.add('textarea_blur');
     tempo_text_borroso = setTimeout(function() { 
-        document.getElementById("texto1").classList.remove('textarea_blur'); 
-        document.getElementById("texto").classList.add('textarea_blur');; }, 30000);
+        texto2.classList.remove('textarea_blur'); 
+        texto1.classList.add('textarea_blur');; }, 30000);
     }
     //socket.emit('')
 });
 
 socket.on('limpiar_texto_borroso', data => {
     modo_texto_borroso = false;
-    document.getElementById("texto").classList.remove('textarea_blur'); 
-    document.getElementById("texto1").classList.remove('textarea_blur');
+    texto1.classList.remove('textarea_blur'); 
+    texto2.classList.remove('textarea_blur');
 });
 
 socket.on('psicodélico', data => {
     modo_psicodélico = true;
-    document.getElementById("explicación").innerHTML = "MODO PSICODÉLICO";
-    document.getElementById("palabra").innerHTML = "";
-    document.getElementById("definicion").innerHTML = "";
+    explicación.innerHTML = "MODO PSICODÉLICO";
+    palabra1.innerHTML = "";
+    definicion1.innerHTML = "";
     animacion_modo();
 
 });
 
 socket.on('limpiar_psicodélico', data => {
     modo_psicodélico = false;
-    var text = document.getElementById("texto");
-    var text1 = document.getElementById("texto1");
-    text.style.fontFamily = "monospace";
-    text.style.color = "rgb(155, 155, 155)";
-    text.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    text.style.textAlign = "justify";
-    text1.style.fontFamily = "monospace";
-    text1.style.color = "rgb(155, 155, 155)";
-    text1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    text1.style.textAlign = "justify";
-    document.body.style.backgroundColor = "black";
-    document.getElementById("texto").style.height = document.getElementById("texto").scrollHeight + "px";
-    document.getElementById("texto1").style.height = document.getElementById("texto1").scrollHeight + "px";
+    restablecer_estilo();
 });
 
 socket.on('psico_a_j1', data => {
@@ -353,25 +371,26 @@ socket.on('psico_a_j1', data => {
 socket.on('texto_inverso', data => {
     animacion_modo();
     desactivar_borrar = true;
-    document.getElementById("explicación").innerHTML = "MODO TEXTO INVERSO";
-    document.getElementById("palabra").innerHTML = "";
-    document.getElementById("definicion").innerHTML = "";
-    document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
-    document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
+    explicación.innerHTML = "MODO TEXTO INVERSO";
+    palabra1.innerHTML = "";
+    definicion1.innerHTML = "";
+    texto1.value = texto1.value.split("").reverse().join("").split(" ").reverse().join(" ")
+    texto2.value = texto2.value.split("").reverse().join("").split(" ").reverse().join(" ")
 });
 
 socket.on('limpiar_texto_inverso', data => {
     desactivar_borrar = false;
-    document.getElementById("texto").value = document.getElementById("texto").value.split("").reverse().join("").split(" ").reverse().join(" ")
-    document.getElementById("texto1").value = document.getElementById("texto1").value.split("").reverse().join("").split(" ").reverse().join(" ")
+    texto1.value = texto1.value.split("").reverse().join("").split(" ").reverse().join(" ")
+    texto2.value = texto2.value.split("").reverse().join("").split(" ").reverse().join(" ")
 
 });
 
 socket.on('modo_emplatar', data => {
     desactivar_borrar = true;
-    document.getElementById("explicación").innerHTML = "MODO EMPLATAR";
-    document.getElementById("palabra").innerHTML = "";
-    document.getElementById("definicion").innerHTML = "";
+    modo_emplatar = true;
+    explicación.innerHTML = "MODO EMPLATAR";
+    palabra1.innerHTML = "";
+    definicion1.innerHTML = "";
 });
 
 socket.on('feedback_a_j1', data => {
@@ -426,19 +445,18 @@ function getRandColor() {
     return aligns[Math.floor(Math.random() * aligns.length)];
   }
   function stylize() {
-    var text = document.getElementById("texto");
-    var text1 = document.getElementById("texto1");
-    text.style.fontFamily += getRandFontFamily();
-    text.style.color = getRandColor();
-    text.style.fontSize = getRandNumber(7, 35) + "px"; // Font sizes between 15px and 35px
-    text.style.textAlign = getTextAlign();
-    text1.style.textAlign = getTextAlign();
-    text1.style.fontFamily += getRandFontFamily();
-    text1.style.color = getRandColor();
-    text1.style.fontSize = getRandNumber(7, 35) + "px"; // Font sizes between 15px and 35px
+    texto1.style.fontFamily += getRandFontFamily();
+    texto1.style.color = getRandColor();
+    //var tamaño_letra = getRandNumber(7, 35) 
+    //text.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    texto1.style.textAlign = getTextAlign();
+    texto2.style.textAlign = getTextAlign();
+    texto2.style.fontFamily += getRandFontFamily();
+    texto2.style.color = getRandColor();
+    //text1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();
-    document.getElementById("texto").style.height = document.getElementById("texto").scrollHeight + "px";
-    document.getElementById("texto1").style.height = document.getElementById("texto").scrollHeight + "px";
+    texto1.style.height = texto1.scrollHeight + "px";
+    texto2.style.height = texto2.scrollHeight + "px";
   }
 
 // FUNCIONES AUXILIARES PARA LA ELECCIÓN ALEATORIA DEL TEMA.
@@ -493,7 +511,7 @@ function getRandColor() {
 
                     socket.emit('envia_temas',array[listItem]);
                     cont.html("<span id='temas' class='temas'><span>" + array[listItem] + "</span></span>");
-                    document.getElementById("texto").focus();
+                    texto1.focus();
 
                     if (settings.randomize) {
                         //remove printed element from array
@@ -608,4 +626,28 @@ function animacion_modo(){
     animateCSS(".explicación", "bounceInLeft");
     animateCSS(".palabra", "bounceInLeft");
     animateCSS(".definicion", "bounceInLeft");
+}
+
+//Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
+function restablecer_estilo(){
+    texto1.style.fontFamily = "monospace";
+    texto1.style.color = "rgb(155, 155, 155)";
+    texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    texto1.style.textAlign = "justify";
+    texto2.style.fontFamily = "monospace";
+    texto2.style.color = "rgb(155, 155, 155)";
+    texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    texto2.style.textAlign = "justify";
+    document.body.style.backgroundColor = "black";
+    texto1.style.height = texto1.scrollHeight + "px";
+    texto2.style.height = texto2.scrollHeight + "px";
+}
+
+// Función auxiliar que elimina los saltos de línea al principio de un string.
+function eliminar_saltos_de_linea(texto){
+    var i = 0;
+    while(texto[i] == "\n"){
+        i++;
+    }
+    return (texto.substring(i, texto.length));
 }

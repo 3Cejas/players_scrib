@@ -4,31 +4,52 @@ let rapidez_inicio_borrado = 3000; // Variable que almacena el tiempo de espera 
 let asignada = false; // Variable boolena que dice si hay una palabra bonus asignada.
 let palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 let puntos_palabra = 0; // Variable que almacena los puntos obtenidos por meter palabras bonus.
+let puntos_neg_por_emplatar = 0; // Variable que almacena los puntos negativos por emplatar el texto.
 let terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
 let countInterval; // Variable que almacena el 3000identificador de la función que será ejecutada cada x segundos para uso para actualizar el contador. 
 let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
 let activar_palabras = false; // Variable booleana que activa las palabras bonus.
-let puntuacion = 0; //Variable entera que almacena la puntuación de la palabra bonus.
+let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra bonus.
 let delay_animacion;
 let envio_puntos;
+let saltos_línea_alineacion_1 = 0; // Variable entera que almacena los saltos de línea del jugador 1 para alínear los textos.
+let saltos_línea_alineacion_2 = 0; // Variable entera que almacena los saltos de línea del jugador 2 para alínear los textos.
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe  enter en el texto.
-function process(e) {
+/*function process(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if (code == 13) { //Enter keycode
         window.scrollTo(0, document.body.scrollHeight); 
-        (window).on('scroll', onScroll); 
+        (window).on('scroll', onScroll);
+        texto1.value = "z"+(texto1.value)
     }
-}
+}*/
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe cualquier carácter en el texto.
 function auto_grow(element) {
     element.style.height = "5px";
     element.style.height = (element.scrollHeight)+"px";
+    element.style.height = "5px";
+    element.style.height = (element.scrollHeight)+"px";
+    if(texto2.scrollHeight >= texto1.scrollHeight){
+        while(texto2.scrollHeight > texto1.scrollHeight){
+            saltos_línea_alineacion_1 += 1;
+            texto1.value = "\n" + texto1.value;
+        }
+        texto1.style.height = (texto2.scrollHeight)+"px";
+        texto2.style.height = (texto2.scrollHeight)+"px";
+    }
+    else{
+        while(texto2.scrollHeight < texto1.scrollHeight){
+            saltos_línea_alineacion_2 += 1;
+            texto2.value = "\n" + texto2.value
+        }
+        texto1.style.height = (texto1.scrollHeight)+"px";
+        texto2.style.height = (texto1.scrollHeight)+"px";
+    }
     window.scrollTo(0, document.body.scrollHeight);
-    (window).on('scroll', onScroll); 
-
+    (window).on('scroll', onScroll);
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
@@ -36,43 +57,40 @@ function borrar(obj){
     if(terminado == true){
         clearTimeout(borrado)
         clearTimeout(cambio_palabra);
-        document.getElementById("texto").classList.remove('textarea_blur');
-        document.getElementById("texto1").classList.remove('textarea_blur');
+        texto1.classList.remove('textarea_blur');
+        texto2.classList.remove('textarea_blur');
         blurreado = false
     }
     else if(!desactivar_borrar){
-        document.getElementById("texto").value = (document.getElementById("texto").value).substring(0, document.getElementById("texto").value.length -1);
-        document.getElementById("puntos").innerHTML = obj.value.length + puntos_palabra+' puntos';
-        let  editor = getEl("texto");
-        let puntos = getEl("puntos");
-        let nivel = getEl("nivel");
-        let text = editor.value;
-        let points = puntos.textContent;
-        let level = nivel.textContent;
+        texto1.value = (texto1.value).substring(0, texto1.value.length -1);
+        puntos1.innerHTML = obj.value.length + puntos_palabra - saltos_línea_alineacion_1 +' puntos';
+        text = texto1.value;
+        points = puntos1.textContent;
+        level = nivel1.textContent;
         socket.emit('texto1',{text, points, level});
 
         if( 249 == obj.value.length){
-            document.getElementById("nivel").innerHTML ='nivel 0';
+            nivel1.innerHTML ='nivel 0';
             rapidez_inicio_borrado = 3000
             rapidez_borrado = 3000;
         }
         if( 250 == obj.value.length){
-            document.getElementById("nivel").innerHTML ='nivel 1';
-            document.getElementById("palabra").innerHTML ='';
+            nivel1.innerHTML ='nivel 1';
+            palabra1.innerHTML ='';
             rapidez_inicio_borrado = 1800
             rapidez_borrado = 1800;
         }
         if( 500 == obj.value.length){
-            document.getElementById("nivel").innerHTML ='nivel 2';
+            nivel1.innerHTML ='nivel 2';
             asignada = false
         }
         if( 750 == obj.value.length){
-            document.getElementById("nivel").innerHTML ='nivel 3';
+            nivel1.innerHTML ='nivel 3';
             rapidez_borrado = 1200;
             rapidez_inicio_borrado = 1200;
         }
         if( 1000 == obj.value.length){
-            document.getElementById("nivel").innerHTML ='nivel 4';
+            nivel1.innerHTML ='nivel 4';
             rapidez_borrado = 500;
             rapidez_inicio_borrado = 500;
         }
@@ -80,19 +98,22 @@ function borrar(obj){
         }      
 }
 
-//Función que modifica el comportamiento del juego cuando 
+//Función que modifica el comportamiento del juego cuando escribe el jugador 1.
 function countChars(obj){
     if (terminado == true) {
         clearTimeout(borrado);
         clearTimeout(cambio_palabra);
-        document.getElementById("texto1").classList.remove('textarea_blur');
-        document.getElementById("texto").classList.remove('textarea_blur');
+        texto2.classList.remove('textarea_blur');
+        texto1.classList.remove('textarea_blur');
         blurreado = false
     }
     else{
-        document.getElementById("puntos").innerHTML = obj.value.length+ puntos_palabra+ ' puntos';
+        if(modo_emplatar == true){
+            puntos_neg_por_emplatar += 1;
+        }
+        puntos1.innerHTML = obj.value.length+ puntos_palabra- puntos_neg_por_emplatar - saltos_línea_alineacion_1 + ' puntos';
         if(obj.value.length < 250){
-            document.getElementById("nivel").innerHTML ='nivel 0';
+            nivel1.innerHTML ='nivel 0';
             rapidez_borrado = 3000;
             rapidez_inicio_borrado = 3000
         }
@@ -100,10 +121,10 @@ function countChars(obj){
 
     if(modo_letra_prohibida == true){
         clearTimeout(delay_animacion)
-        if((toNormalForm(document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1)) == letra_prohibida || (toNormalForm(document.getElementById("texto").value).charAt((document.getElementById("texto").value).length - 1)) == letra_prohibida.toUpperCase()){
-            document.getElementById("texto").value = (document.getElementById("texto").value).substring(0, document.getElementById("texto").value.length -1);
+        if((toNormalForm(texto1.value).charAt((texto1.value).length - 1)) == letra_prohibida || (toNormalForm(texto1.value).charAt((texto1.value).length - 1)) == letra_prohibida.toUpperCase()){
+            texto1.value = (texto1.value).substring(0, texto1.value.length -1);
             puntos_palabra = puntos_palabra - 50;
-            document.getElementById("puntos").innerHTML = obj.value.length+ puntos_palabra+ ' puntos';
+            puntos1.innerHTML = obj.value.length+ puntos_palabra -saltos_línea_alineacion_1 + ' puntos';
             var feedback = document.querySelector(".feedback1")
             feedback.style.color = "red";
             feedback.innerHTML = "-50 pts";
@@ -147,11 +168,11 @@ function countChars(obj){
         }
     }
     if(asignada == true){
-        if(document.getElementById("texto").value.substring(indice_buscar_palabra, document.getElementById("texto").value.length -1 ).toLowerCase().includes(palabra_actual)){
+        if(texto1.value.substring(indice_buscar_palabra, texto1.value.length -1 ).toLowerCase().includes(palabra_actual)){
             asignada = false;
             socket.emit('nueva_palabra', true);
             puntos_palabra = puntos_palabra + puntuacion;
-            document.getElementById("puntos").innerHTML =obj.value.length+ puntos_palabra+' puntos';
+            puntos1.innerHTML =obj.value.length+ puntos_palabra- saltos_línea_alineacion_1 +' puntos';
             var feedback = document.querySelector(".feedback1")
             feedback.style.color = "green";
             feedback.innerHTML = "+"+puntuacion +" pts";
@@ -193,38 +214,38 @@ function countChars(obj){
         }
     }
     if(obj.value.length == 250){
-        document.getElementById("nivel").innerHTML ='nivel 1';
+        nivel1.innerHTML ='nivel 1';
         rapidez_borrado = 1800;
         rapidez_inicio_borrado = 1800;
     }
     
     if( obj.value.length == 499){
-        document.getElementById("nivel").innerHTML ='nivel 1';
+        nivel1.innerHTML ='nivel 1';
         asignada = false
           
     }
     if(obj.value.length ==  500){
         
-        document.getElementById("nivel").innerHTML ='nivel 2';    
+        nivel1.innerHTML ='nivel 2';    
     }
 
     if(obj.value.length == 750){
-        document.getElementById("nivel").innerHTML ='nivel 3';
+        nivel1.innerHTML ='nivel 3';
         rapidez_borrado = 1200;
         rapidez_inicio_borrado = 1200;
     }
     if( obj.value.length == 749){
-        document.getElementById("nivel").innerHTML ='nivel 2';
+        nivel1.innerHTML ='nivel 2';
         rapidez_borrado = 1800;
         rapidez_inicio_borrado = 1800;
     }
     if(obj.value.length == 1000){
-        document.getElementById("nivel").innerHTML ='nivel 4';
+        nivel1.innerHTML ='nivel 4';
         rapidez_borrado = 500;
         rapidez_inicio_borrado = 500;
     }
     if( obj.value.length == 999){
-        document.getElementById("nivel").innerHTML ='nivel 3';
+        nivel1.innerHTML ='nivel 3';
         rapidez_borrado = 1200;
         rapidez_inicio_borrado = 1200;
     }
