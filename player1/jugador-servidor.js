@@ -1,4 +1,5 @@
-var socket = io('http://localhost:3000'); // Se establece la conexión con el servidor.
+//var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
+var socket = io('http://localhost:3000/');
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -120,8 +121,10 @@ socket.on('texto2', data => {
     }
     texto1.style.height = (texto1.scrollHeight)+"px";
     texto2.style.height = (texto1.scrollHeight)+"px";
+    if(modo_emplatar != true){
     window.scrollTo(0, document.body.scrollHeight);
     (window).on('scroll', onScroll);
+    }
 });
 
 
@@ -364,8 +367,9 @@ socket.on('limpiar_psicodélico', data => {
 });
 
 socket.on('psico_a_j1', data => {
+    if(modo_psicodélico == true){
     stylize();
-
+    }
 });
 
 socket.on('texto_inverso', data => {
@@ -374,14 +378,14 @@ socket.on('texto_inverso', data => {
     explicación.innerHTML = "MODO TEXTO INVERSO";
     palabra1.innerHTML = "";
     definicion1.innerHTML = "";
-    texto1.value = texto1.value.split("").reverse().join("").split(" ").reverse().join(" ")
-    texto2.value = texto2.value.split("").reverse().join("").split(" ").reverse().join(" ")
+    texto1.value = crear_n_saltos_de_linea(saltos_línea_alineacion_1) + eliminar_saltos_de_linea(texto1.value);
+    texto2.value = crear_n_saltos_de_linea(saltos_línea_alineacion_2) + eliminar_saltos_de_linea(texto2.value);
 });
 
 socket.on('limpiar_texto_inverso', data => {
     desactivar_borrar = false;
-    texto1.value = texto1.value.split("").reverse().join("").split(" ").reverse().join(" ")
-    texto2.value = texto2.value.split("").reverse().join("").split(" ").reverse().join(" ")
+    texto1.value = crear_n_saltos_de_linea(saltos_línea_alineacion_1) + eliminar_saltos_de_linea(texto1.value).split("").reverse().join("").split(" ").reverse().join(" ");
+    texto2.value = crear_n_saltos_de_linea(saltos_línea_alineacion_2) + eliminar_saltos_de_linea(texto2.value).split("").reverse().join("").split(" ").reverse().join(" ");
 
 });
 
@@ -650,4 +654,15 @@ function eliminar_saltos_de_linea(texto){
         i++;
     }
     return (texto.substring(i, texto.length));
+}
+
+// Función auxiliar que genera un string con n saltos de línea.
+function crear_n_saltos_de_linea(n){
+    var saltos = "";
+    var cont = 0;
+    while(cont <= n){
+        saltos += "\n";
+        cont++;
+    }
+    return saltos;
 }

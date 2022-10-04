@@ -48,8 +48,8 @@ function temp () {
     document.getElementById("definicion").innerHTML = "";
     clearInterval(countInterval);
     
-    let time_minutes = 6; // Value in minutes
-    let time_seconds = 0; // Value in seconds
+    let time_minutes = 0; // Value in minutes
+    let time_seconds = 45 ; // Value in seconds
 
 
     socket.emit('inicio',time_minutes);
@@ -111,4 +111,8 @@ function bajar () {
 
 function limpiar_psico () {
     socket.emit('limpiar_psico', 'nada');
+};
+
+function limpiar_inverso () {
+    socket.emit('limpiar_inverso', 'nada');
 };

@@ -109,8 +109,15 @@ function countChars(obj){
         blurreado = false;
     }
     else{
-        if(modo_emplatar == true){
-            puntos_neg_por_emplatar += 1;
+        var key = window.event.keyCode;
+
+        // If the user has pressed enter
+        if ((key > 47 && key < 58) || // numeric (0-9)
+            (key > 64 && key < 91) || // upper alpha (A-Z)
+            (key > 96 && key < 123)) { // lower alpha (a-z)
+            if(modo_emplatar == true){
+                puntos_neg_por_emplatar += 1;
+            }
         }
     puntos2.innerHTML = obj.value.length+ puntos_palabra - puntos_neg_por_emplatar - saltos_línea_alineacion_2  + ' puntos';
     if(obj.value.length < 250){
@@ -120,7 +127,7 @@ function countChars(obj){
     }
 
     if(modo_letra_prohibida == true){
-        if((toNormalForm(texto2.value).charAt((texto2.value).length - 1)) == letra_prohibida || (toNormalForm(texto2.value).charAt((texto2.value).length - 1)) == letra_prohibida.toUpperCase()){
+        if((toNormalForm(texto2.value.charAt((texto2.value).length - 1))) == letra_prohibida || (toNormalForm(texto2.value.charAt((texto2.value).length - 1))) == letra_prohibida.toUpperCase()){
             texto2.value = (texto2.value).substring(0, texto2.value.length -1);
             puntos_palabra = puntos_palabra - 50;
             var feedback = document.querySelector(".feedback2");
@@ -253,5 +260,6 @@ function countChars(obj){
 
 //Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.
 function toNormalForm(str) {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return  str.normalize('NFD').replace(/([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi,"$1")
+
 }

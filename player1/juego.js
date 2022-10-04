@@ -27,6 +27,7 @@ let saltos_línea_alineacion_2 = 0; // Variable entera que almacena los saltos d
 }*/
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe cualquier carácter en el texto.
+
 function auto_grow(element) {
     element.style.height = "5px";
     element.style.height = (element.scrollHeight)+"px";
@@ -108,9 +109,16 @@ function countChars(obj){
         blurreado = false
     }
     else{
+        var key = window.event.keyCode;
+
+    // If the user has pressed enter
+    if ((key > 47 && key < 58) || // numeric (0-9)
+        (key > 64 && key < 91) || // upper alpha (A-Z)
+        (key > 96 && key < 123)) { // lower alpha (a-z)
         if(modo_emplatar == true){
             puntos_neg_por_emplatar += 1;
         }
+    }
         puntos1.innerHTML = obj.value.length+ puntos_palabra- puntos_neg_por_emplatar - saltos_línea_alineacion_1 + ' puntos';
         if(obj.value.length < 250){
             nivel1.innerHTML ='nivel 0';
@@ -121,7 +129,7 @@ function countChars(obj){
 
     if(modo_letra_prohibida == true){
         clearTimeout(delay_animacion)
-        if((toNormalForm(texto1.value).charAt((texto1.value).length - 1)) == letra_prohibida || (toNormalForm(texto1.value).charAt((texto1.value).length - 1)) == letra_prohibida.toUpperCase()){
+        if((toNormalForm(texto1.value.charAt((texto1.value).length - 1))) == letra_prohibida || (toNormalForm(texto1.value.charAt((texto1.value).length - 1))) == letra_prohibida.toUpperCase()){
             texto1.value = (texto1.value).substring(0, texto1.value.length -1);
             puntos_palabra = puntos_palabra - 50;
             puntos1.innerHTML = obj.value.length+ puntos_palabra -saltos_línea_alineacion_1 + ' puntos';
@@ -261,5 +269,6 @@ function countChars(obj){
 
 //Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.
 function toNormalForm(str) {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return  str.normalize('NFD').replace(/([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi,"$1")
+
 }
