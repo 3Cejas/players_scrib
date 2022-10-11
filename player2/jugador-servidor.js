@@ -1,5 +1,5 @@
-//var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-var socket = io('http://localhost:3000/');
+var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
+//var socket = io('http://localhost:3000/');
 
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
@@ -266,7 +266,7 @@ socket.on('compartir_palabra', data => {
     palabra1.innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
-    indice_buscar_palabra = texto2.value.length -1;
+    indice_buscar_palabra = texto2.value.length -5;
     }
 });
 
@@ -330,6 +330,7 @@ socket.on('psicodélico', data => {
 socket.on('limpiar_psicodélico', data => {
     modo_psicodélico = false;
     restablecer_estilo();
+    setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
 });
 
 socket.on('psico_a_j2', data => {

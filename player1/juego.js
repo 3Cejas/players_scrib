@@ -178,7 +178,7 @@ function countChars(obj){
     if(asignada == true){
         if(texto1.value.substring(indice_buscar_palabra, texto1.value.length -1 ).toLowerCase().includes(palabra_actual)){
             asignada = false;
-            socket.emit('nueva_palabra', true);
+            socket.emit('nueva_palabra', asignada);
             puntos_palabra = puntos_palabra + puntuacion;
             puntos1.innerHTML =obj.value.length+ puntos_palabra- saltos_línea_alineacion_1 +' puntos';
             var feedback = document.querySelector(".feedback1")

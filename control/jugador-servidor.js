@@ -1,4 +1,4 @@
-//var socket = io('https://scri-b.up.railway.app/');
+var socket = io('https://scri-b.up.railway.app/');
 var socket = io('http://localhost:3000/');
 const log = console.log;
 
