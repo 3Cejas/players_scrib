@@ -102,11 +102,11 @@ function limpiar () {
 };
 
 function subir () {
-    socket.emit('subir', 'nada');
+    socket.emit('scroll', 'arriba');
 };
 
 function bajar () {
-    socket.emit('bajar', 'nada');
+    socket.emit('scroll', 'abajo');
 };
 
 function limpiar_psico () {

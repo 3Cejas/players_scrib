@@ -4,7 +4,6 @@ let rapidez_inicio_borrado = 3000; // Variable que almacena el tiempo de espera 
 let asignada = false; // Variable boolena que dice si hay una palabra bonus asignada.
 let palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 let puntos_palabra = 0; // Variable que almacena los puntos obtenidos por meter palabras bonus.
-let puntos_neg_por_emplatar = 0; // Variable que almacena los puntos negativos por emplatar el texto.
 let terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
 let countInterval; // Variable que almacena el 3000identificador de la función que será ejecutada cada x segundos para uso para actualizar el contador. 
 let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
@@ -109,17 +108,7 @@ function countChars(obj){
         blurreado = false
     }
     else{
-        var key = window.event.keyCode;
-
-    // If the user has pressed enter
-    if ((key > 47 && key < 58) || // numeric (0-9)
-        (key > 64 && key < 91) || // upper alpha (A-Z)
-        (key > 96 && key < 123)) { // lower alpha (a-z)
-        if(modo_emplatar == true){
-            puntos_neg_por_emplatar += 1;
-        }
-    }
-        puntos1.innerHTML = obj.value.length+ puntos_palabra- puntos_neg_por_emplatar - saltos_línea_alineacion_1 + ' puntos';
+        puntos1.innerHTML = obj.value.length+ puntos_palabra - saltos_línea_alineacion_1 + ' puntos';
         if(obj.value.length < 250){
             nivel1.innerHTML ='nivel 0';
             rapidez_borrado = 3000;

@@ -33,6 +33,7 @@ let temas;
 
 // Variables de los modos.
 
+let modo_actual = "";
 let modo_letra_prohibida = false;
 let modo_texto_borroso = false;
 let modo_psicodélico = false;
@@ -40,6 +41,111 @@ let modo_emplatar = false;
 let desactivar_borrar = false;
 
 var letra_prohibida = "";
+
+const MODOS = {
+
+    // Recibe y activa la palabra y el modo bonus.
+    'palabras bonus': function(data){
+        asignada = true;
+        activar_palabras = true;
+        palabra_actual = data.palabra_bonus[0];
+        explicación.innerHTML = "MODO PALABRAS BONUS";
+        palabra1.innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
+        definicion1.innerHTML = data.palabra_bonus[1];
+        puntuacion = data.puntuacion;
+        indice_buscar_palabra = texto1.value.length -5;
+    },
+
+    //Recibe y activa el modo letra prohibida.
+    'letra prohibida' : function(data)
+        {
+        modo_letra_prohibida = true
+        letra_prohibida = data.letra_prohibida;
+        explicación.innerHTML = "MODO LETRA PROHIBIDA";
+        palabra1.innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
+        definicion1.innerHTML = "";
+        },
+
+    'texto borroso' : function(data)
+        {
+        modo_texto_borroso = true;
+        explicación.innerHTML = "MODO TEXTO BORROSO";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        if(data.jugador == 1){
+            texto1.classList.add('textarea_blur');
+            tempo_text_borroso = setTimeout(function() { 
+            texto1.classList.remove('textarea_blur'); 
+            texto2.classList.add('textarea_blur');; }, 30000);
+        }
+        if(data.jugador == 2){
+            texto2.classList.add('textarea_blur');
+            tempo_text_borroso = setTimeout(function() { 
+            texto2.classList.remove('textarea_blur'); 
+            texto1.classList.add('textarea_blur');; }, 30000);
+        }
+            
+        },
+
+    'psicodélico' : function(data)
+        {
+        modo_psicodélico = true;
+        explicación.innerHTML = "MODO PSICODÉLICO";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        socket.on('psico_a_j1', data => {
+            if(modo_psicodélico == true){
+            stylize();
+            }
+        });
+        },
+
+    'texto inverso' : function(data)
+        {
+        desactivar_borrar = true;
+        explicación.innerHTML = "MODO TEXTO INVERSO";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        texto1.value = crear_n_saltos_de_linea(saltos_línea_alineacion_1) + eliminar_saltos_de_linea(texto1.value).split("").reverse().join("").split(" ").reverse().join(" ");
+        texto2.value = crear_n_saltos_de_linea(saltos_línea_alineacion_2) + eliminar_saltos_de_linea(texto2.value).split("").reverse().join("").split(" ").reverse().join(" ");
+           
+        }
+}
+const LIMPIEZAS = {
+    'palabras bonus': function() 
+    {
+        asignada = false
+    },
+    'letra prohibida' : function()
+        {
+        modo_letra_prohibida = false;
+        letra_prohibida = "";
+        },
+
+    'texto borroso' : function()
+        {
+        modo_texto_borroso = false;
+        texto1.classList.remove('textarea_blur'); 
+        texto2.classList.remove('textarea_blur');    
+        },
+
+    'psicodélico' : function()
+        {
+        modo_psicodélico = false;
+        restablecer_estilo();
+        //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
+        },
+
+    'texto inverso' : function()
+        {
+        desactivar_borrar = false;
+        texto1.value = crear_n_saltos_de_linea(saltos_línea_alineacion_1) + eliminar_saltos_de_linea(texto1.value).split("").reverse().join("").split(" ").reverse().join(" ");
+        texto2.value = crear_n_saltos_de_linea(saltos_línea_alineacion_2) + eliminar_saltos_de_linea(texto2.value).split("").reverse().join("").split(" ").reverse().join(" ");
+        },
+    '' : function(){
+
+    }
+}
 
 // Cuando jugador 1 pulsa una tecla en su texto, envía los datos de jugador 1 al resto.
 
@@ -49,9 +155,9 @@ texto1.addEventListener("keydown", evt => {
     let level = nivel1.textContent;
     let word = palabra1.textContent;
     let definicion = definicion1.textContent;
-    if(modo_psicodélico == true){
+    
         socket.emit('psico_de_j1');
-    }
+    
     socket.emit('texto1',{text, points, level, word, definicion});
 });
 
@@ -88,20 +194,10 @@ texto1.addEventListener("keypress", evt => {
     socket.emit('texto1',{text, points, level, word, definicion});
 });
 
-// Recibe el nombre del jugador 2 y lo coloca en su sitio.
-
-socket.on('nombre2', data => {
-    nombre2.value = data;
-});
-
-// Recibe el nombre del jugador 1 y lo coloca en su sitio.
-
-socket.on('nombre1', data => {
-    nombre1.value = data;
-});
+//activar los sockets extratextuales.
+activar_sockets_extratextuales();
 
 // Recibe los datos del jugador 2 y los coloca.
-
 socket.on('texto2', data => {
     texto2.value = data.text1;
     puntos2.innerHTML =   data.points1;
@@ -137,8 +233,11 @@ socket.on('count', data => {
     texto1.focus();
     tiempo.innerHTML =  data
     if(data == "¡Tiempo!"){
+        activar_sockets_extratextuales();
         texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
         texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
+        
+        // Desactiva, por seguridad, todos los modos.
         modo_letra_prohibida = false;
         modo_texto_borroso = false;
         modo_psicodélico = false;
@@ -174,32 +273,17 @@ socket.on('count', data => {
     }
 });
 
-// Abre la votación de los textos.
-
-socket.on('vote', data => {
-    ventana = window.open("https://www.mentimeter.com/s/0f9582fcdbab7e15216ee66df67113d6/f14a05785a97", '_blank')
-    
-});
-
-// Ciera la votación de los textos.
-
-socket.on('exit', data => {
-    ventana.close();
-});
-
-/*
-Recibe los temas y llama a la función erm() para
-elegir uno aleatoriamente.
-*/
-
-socket.on('temasj1', data => {
-    temas = data;
-    erm();
-});
-
 // Inicia el juego.
 
 socket.on('inicio', data => {
+
+    socket.off('nombre1');
+    socket.off('nombre2');
+    socket.off('vote');
+    socket.off('exit');
+    socket.off('scroll');
+    socket.off('temasj1');
+
     nombre1.disabled=true;
     nombre2.disabled=true;
     texto1.value = "";
@@ -228,9 +312,21 @@ socket.on('inicio', data => {
     saltos_línea_alineacion_2 = 0;
 });
 
-// Resetea el tablero de juego.
+    // Resetea el tablero de juego.
 
-socket.on('limpiar', data => {
+    socket.on('limpiar', data => {
+        // Recibe el nombre del jugador 2 y lo coloca en su sitio.
+
+        socket.on('nombre2', data => {
+            nombre2.value = data;
+        });
+
+        // Recibe el nombre del jugador 1 y lo coloca en su sitio.
+
+        socket.on('nombre1', data => {
+            nombre1.value = data;
+        });
+
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
     definicion1.innerHTML = "";
@@ -277,119 +373,15 @@ socket.on('limpiar', data => {
     saltos_línea_alineacion_2 = 0;
 });
 
-// Realiza scroll hacia arriba.
-
-socket.on('subir', data => {
-    window.scrollBy(0,-20);
-});
-
-// Realiza scroll hacia abajo.
-
-socket.on('bajar', data => {
-    window.scrollBy(0,20);
-});
-
-// Recibe y activa la palabra y el modo bonus.
-
-socket.on('compartir_palabra', data => {
+socket.on('activar_modo', data => {
     animacion_modo();
-    if(data.modo_actual = "palabras bonus"){
-    asignada = true;
-    activar_palabras = true;
-    palabra_actual = data.palabra_bonus[0];
-    explicación.innerHTML = "MODO PALABRAS BONUS";
-    palabra1.innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
-    definicion1.innerHTML = data.palabra_bonus[1];
-    puntuacion = data.puntuacion;
-    indice_buscar_palabra = texto1.value.length -5;
-    }
+    console.log(modo_actual)
+    LIMPIEZAS[modo_actual];
+    modo_actual = data.modo_actual;
+    MODOS[modo_actual](data);
 });
 
-socket.on('limpiar_palabras_bonus', data => {
-    asignada = false;
-});
-
-//Recibe y activa el modo letra prohibida.
-socket.on('letra_prohibida', data => {
-    animacion_modo();
-    modo_letra_prohibida = true
-    letra_prohibida = data;
-    explicación.innerHTML = "MODO LETRA PROHIBIDA";
-    palabra1.innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
-    definicion1.innerHTML = "";
-    //socket.emit('')
-});
-
-socket.on('limpiar_letra_prohibida', data => {
-    modo_letra_prohibida = false;
-    letra_prohibida = "";
-});
-
-socket.on('texto_borroso', data => {
-    animacion_modo();
-    modo_texto_borroso = true;
-    explicación.innerHTML = "MODO TEXTO BORROSO";
-    palabra1.innerHTML = "";
-    definicion1.innerHTML = "";
-    if( data == 1){
-    texto1.classList.add('textarea_blur');
-    tempo_text_borroso = setTimeout(function() { 
-        texto1.classList.remove('textarea_blur'); 
-        texto2.classList.add('textarea_blur');; }, 30000);
-    }
-    if(data == 2){
-    texto2.classList.add('textarea_blur');
-    tempo_text_borroso = setTimeout(function() { 
-        texto2.classList.remove('textarea_blur'); 
-        texto1.classList.add('textarea_blur');; }, 30000);
-    }
-    //socket.emit('')
-});
-
-socket.on('limpiar_texto_borroso', data => {
-    modo_texto_borroso = false;
-    texto1.classList.remove('textarea_blur'); 
-    texto2.classList.remove('textarea_blur');
-});
-
-socket.on('psicodélico', data => {
-    modo_psicodélico = true;
-    explicación.innerHTML = "MODO PSICODÉLICO";
-    palabra1.innerHTML = "";
-    definicion1.innerHTML = "";
-    animacion_modo();
-
-});
-
-socket.on('limpiar_psicodélico', data => {
-    modo_psicodélico = false;
-    restablecer_estilo();
-    setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
-});
-
-socket.on('psico_a_j1', data => {
-    if(modo_psicodélico == true){
-    stylize();
-    }
-});
-
-socket.on('texto_inverso', data => {
-    animacion_modo();
-    desactivar_borrar = true;
-    explicación.innerHTML = "MODO TEXTO INVERSO";
-    palabra1.innerHTML = "";
-    definicion1.innerHTML = "";
-    texto1.value = crear_n_saltos_de_linea(saltos_línea_alineacion_1) + eliminar_saltos_de_linea(texto1.value);
-    texto2.value = crear_n_saltos_de_linea(saltos_línea_alineacion_2) + eliminar_saltos_de_linea(texto2.value);
-});
-
-socket.on('limpiar_texto_inverso', data => {
-    desactivar_borrar = false;
-    texto1.value = crear_n_saltos_de_linea(saltos_línea_alineacion_1) + eliminar_saltos_de_linea(texto1.value).split("").reverse().join("").split(" ").reverse().join(" ");
-    texto2.value = crear_n_saltos_de_linea(saltos_línea_alineacion_2) + eliminar_saltos_de_linea(texto2.value).split("").reverse().join("").split(" ").reverse().join(" ");
-
-});
-
+/*
 socket.on('modo_emplatar', data => {
     desactivar_borrar = true;
     modo_emplatar = true;
@@ -397,7 +389,7 @@ socket.on('modo_emplatar', data => {
     palabra1.innerHTML = "";
     definicion1.innerHTML = "";
 });
-
+*/
 socket.on('feedback_a_j1', data => {
     var feedback = document.querySelector(".feedback2")
     feedback.style.color = data.color;
@@ -426,6 +418,54 @@ socket.on('feedback_a_j1', data => {
       }, 2000);
     });
 });
+
+//FUNCIONES AUXILIARES.
+
+function activar_sockets_extratextuales(){
+    // Abre la votación de los textos.
+
+    socket.on('vote', data => {
+    
+        ventana = window.open("https://www.mentimeter.com/s/0f9582fcdbab7e15216ee66df67113d6/f14a05785a97", '_blank')
+
+        });
+
+        // Ciera la votación de los textos.
+        socket.on('exit', data => {
+
+            ventana.close();
+        
+        });
+
+        // Realiza el scroll.
+        socket.on('scroll', data => {
+            if(data == "arriba"){
+            window.scrollBy(0,-20);
+            }
+            else{
+                window.scrollBy(0,20);
+            }
+        });
+
+        // Recibe el nombre del jugador 2 y lo coloca en su sitio.
+        socket.on('nombre2', data => {
+            nombre2.value = data;
+        });
+
+        // Recibe el nombre del jugador 1 y lo coloca en su sitio.
+        socket.on('nombre1', data => {
+            nombre1.value = data;
+        });
+
+        /*
+        Recibe los temas y llama a la función erm() para
+        elegir uno aleatoriamente.
+        */
+        socket.on('temasj1', data => {
+            temas = data;
+            erm();
+        });
+}
 
 function getRandColor() {
     var hex = "01234567890ABCDEF",

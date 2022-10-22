@@ -163,7 +163,7 @@ html, body {
     text-align: center;
     ms-overflow-style: none; /* for Internet Explorer, Edge */
     scrollbar-width: none; /* for Firefox */
-    /*scroll-behavior: smooth;*/
+    scroll-behavior: smooth;
     overflow-y: scroll;
 }
 .sub{
