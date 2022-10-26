@@ -1,3 +1,5 @@
+/* Esto se hace en j1 solo, así que está sin usar */
+
 (function ($) {
 
     $.fn.wordsrotator = function (options) {
@@ -10,9 +12,8 @@
             animationIn: "flipInY",
             animationOut: "flipOutY",
             speed: 40,
-            onRotate: function () {},//you add these 2 methods to allow the effetct
-            stopRotate: function () {}
-
+            onRotate: function () { },//you add these 2 methods to allow the effetct
+            stopRotate: function () { }
         };
         var settings = $.extend({}, defaults, options);
         var listItem
@@ -35,7 +36,6 @@
                 //In random order, need a copy of array
                 if (settings.randomize) array_bak = $.extend(true, [], array);
 
-
                 listItem = 0
                 //if randomize pick a random value for the list item
                 if (settings.randomize) listItem = Math.floor(Math.random() * array.length)
@@ -43,10 +43,8 @@
                 //init value into container
                 cont.html(array[listItem]);
 
-
                 // animation option
                 var rotate = function () {
-
 
                     cont.html("<span class='wordsrotator_wordOut'><span>" + array[listItem] + "</span></span>");
 
@@ -89,7 +87,6 @@
                     }
                 };
 
-
                 t = setTimeout(function () {
                     rotate()
                 }, settings.speed, function () {
@@ -101,8 +98,6 @@
                         return false;
                     };
                 });
-
-
 
             };
 
@@ -121,10 +116,8 @@ function eventFire(el, etype) {
     }
 }
 
-
-function erm() {
-    var cont = $("#myWords");
-
+// no se usa creo
+/* function erm() {
     $(function () {
         $("#myWords").wordsrotator({
             animationIn: "fadeOutIn", //css class for entrace animation
@@ -133,7 +126,7 @@ function erm() {
             stopOnHover: false, //stop animation on hover
             words: document.getElementById('temas').value.split(','),
             onRotate: function () {
-              //on each rotate you make the timeout longer, until it's slow enough
+                //on each rotate you make the timeout longer, until it's slow enough
                 if (this.speed < 600) {
                     this.speed += 20;
                 } else {
@@ -141,10 +134,8 @@ function erm() {
                 }
             }
 
-
         });
 
     });
     eventFire(document.getElementById('myWords'), 'click');
-
-}
+}*/

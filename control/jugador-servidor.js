@@ -30,10 +30,10 @@ socket.on('nombre2', data => {
 
 socket.on('texto2', data => {
     editor1.value = data.text1;
-    document.getElementById("puntos1").innerHTML =   data.points1;
-    document.getElementById("nivel1").innerHTML =  data.level1;
+    document.getElementById("puntos1").innerHTML = data.points1;
+    document.getElementById("nivel1").innerHTML = data.level1;
     editor1.style.height = "5px";
-    editor1.style.height = (editor1.scrollHeight)+"px";
+    editor1.style.height = (editor1.scrollHeight) + "px";
 });
 
 socket.on('nombre1', data => {
@@ -42,22 +42,21 @@ socket.on('nombre1', data => {
 
 socket.on('texto1', data => {
     editor.value = data.text;
-    document.getElementById("puntos").innerHTML =  data.points;
-    document.getElementById("nivel").innerHTML =  data.level;
+    document.getElementById("puntos").innerHTML = data.points;
+    document.getElementById("nivel").innerHTML = data.level;
     editor.style.height = "5px";
-    editor.style.height = (editor.scrollHeight)+"px";
+    editor.style.height = (editor.scrollHeight) + "px";
 });
 
 socket.on('count', data => {
-    document.getElementById("tiempo").innerHTML =  data
-    if(data == "¡Tiempo!"){
-        document.getElementById("texto1").disabled=true;
-        document.getElementById("texto").disabled=true;
+    document.getElementById("tiempo").innerHTML = data
+    if (data == "¡Tiempo!") {
+        document.getElementById("texto1").disabled = true;
+        document.getElementById("texto").disabled = true;
         clearTimeout(borrado);
         clearTimeout(borrado1);
     }
 });
-
 
 nombre1.addEventListener("keydown", evt => {
     let name1 = nombre1.value;
@@ -107,7 +106,7 @@ socket.on('compartir_palabra', data => {
     animacion_modo()
     palabra_actual = data.palabra_bonus[0];
     document.getElementById("explicación").innerHTML = "MODO PALABRAS BONUS";
-    document.getElementById("palabra").innerHTML ='(+'+ data.puntuacion+ ' pts) palabra: ' + data.palabra_bonus[0];
+    document.getElementById("palabra").innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
     definicion.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
 });
@@ -116,7 +115,7 @@ socket.on('letra_prohibida', data => {
     animacion_modo()
     letra_prohibida = data;
     document.getElementById("explicación").innerHTML = "MODO LETRA PROHIBIDA";
-    document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: "+letra_prohibida;
+    document.getElementById("palabra").innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
     document.getElementById("definicion").innerHTML = "";
 });
 
@@ -125,24 +124,26 @@ socket.on('texto_borroso', data => {
     document.getElementById("explicación").innerHTML = "MODO TEXTO BORROSO";
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
-    if( data == 1){
+    if (data == 1) {
         document.getElementById("texto").classList.add('textarea_blur');
-        tempo_text_borroso = setTimeout(function() { 
-            document.getElementById("texto").classList.remove('textarea_blur'); 
-            document.getElementById("texto1").classList.add('textarea_blur');; }, 30000);
-        }
-        if(data == 2){
+        tempo_text_borroso = setTimeout(function () {
+            document.getElementById("texto").classList.remove('textarea_blur');
+            document.getElementById("texto1").classList.add('textarea_blur');;
+        }, 30000);
+    }
+    if (data == 2) {
         document.getElementById("texto1").classList.add('textarea_blur');
-        tempo_text_borroso = setTimeout(function() { 
-            document.getElementById("texto1").classList.remove('textarea_blur'); 
-            document.getElementById("texto").classList.add('textarea_blur');; }, 30000);
-        } 
+        tempo_text_borroso = setTimeout(function () {
+            document.getElementById("texto1").classList.remove('textarea_blur');
+            document.getElementById("texto").classList.add('textarea_blur');;
+        }, 30000);
+    }
     //socket.emit('')
 });
 
 socket.on('limpiar_texto_borroso', data => {
-    document.getElementById("texto").classList.remove('textarea_blur'); 
-    document.getElementById("texto1").classList.remove('textarea_blur'); 
+    document.getElementById("texto").classList.remove('textarea_blur');
+    document.getElementById("texto1").classList.remove('textarea_blur');
     //socket.emit('')
 });
 
@@ -169,30 +170,24 @@ socket.on('limpiar_texto_inverso', data => {
 
 });
 
-socket.on('modo_emplatar', data => {
-    document.getElementById("explicación").innerHTML = "MODO EMPLATAR";
-    document.getElementById("palabra").innerHTML = "";
-    document.getElementById("definicion").innerHTML = "";
-});
-
-function animacion_modo(){
+function animacion_modo() {
     const animateCSS = (element, animation, prefix = 'animate__') =>
-    // We create a Promise and return it
-    new Promise((resolve, reject) => {
-      const animationName = `${prefix}${animation}`;
-      const node = document.querySelector(element);
-  
-      node.classList.add(`${prefix}animated`, animationName);
-  
-      // When the animation ends, we clean the classes and resolve the Promise
-      function handleAnimationEnd(event) {
-        event.stopPropagation();
-        node.classList.remove(`${prefix}animated`, animationName);
-        resolve('Animation ended');
-      }
-  
-      node.addEventListener('animationend', handleAnimationEnd, {once: true});
-    });
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
     animateCSS(".explicación", "bounceInLeft");
     animateCSS(".palabra", "bounceInLeft");
     animateCSS(".definicion", "bounceInLeft");
