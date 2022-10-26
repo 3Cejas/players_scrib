@@ -203,6 +203,8 @@ socket.on('count', data => {
     texto2.focus();
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
+        LIMPIEZAS[modo_actual](data);
+        modo_actual = "";
         activar_sockets_extratextuales();
         texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
         texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
@@ -434,13 +436,13 @@ function getTextAlign() {
 }
 
 function stylize() {
-    texto1.style.fontFamily += getRandFontFamily();
+    texto1.style.fontFamily = getRandFontFamily();
     texto1.style.color = getRandColor();
     //var tamaño_letra = getRandNumber(7, 35) 
     //text.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     texto1.style.textAlign = getTextAlign();
     texto2.style.textAlign = getTextAlign();
-    texto2.style.fontFamily += getRandFontFamily();
+    texto2.style.fontFamily = getRandFontFamily();
     texto2.style.color = getRandColor();
     //text1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();

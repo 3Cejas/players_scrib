@@ -1,7 +1,7 @@
 # ARREGLOS PENDIENTES:
 
 ## URGENTE:
-- modo psico no cambia fuente
+- ~~modo psico no cambia fuente~~
 - mete enter cada 5 segundos
 
 ## FUTURO:
