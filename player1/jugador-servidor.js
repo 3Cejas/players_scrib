@@ -288,16 +288,16 @@ socket.on('inicio', data => {
 socket.on('limpiar', data => {
 
     // Recibe el nombre del jugador 2 y lo coloca en su sitio.
-
     socket.on('nombre2', data => {
         nombre2.value = data;
     });
 
     // Recibe el nombre del jugador 1 y lo coloca en su sitio.
-
     socket.on('nombre1', data => {
         nombre1.value = data;
     });
+    LIMPIEZAS[modo_actual](data);
+    modo_actual = "";
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
     definicion1.innerHTML = "";
