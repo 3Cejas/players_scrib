@@ -1,5 +1,5 @@
-var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-//var socket = io('http://localhost:3000/');
+//var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
+var socket = io('http://localhost:3000/');
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -256,10 +256,6 @@ socket.on('inicio', data => {
 
     socket.off('nombre1');
     socket.off('nombre2');
-    socket.off('vote');
-    socket.off('exit');
-    socket.off('scroll');
-    socket.off('temasj1');
 
     nombre1.disabled = true;
     nombre2.disabled = true;
@@ -354,8 +350,7 @@ socket.on('activar_modo', data => {
     MODOS[modo_actual](data);
 });
 
-//Recibe los temas (que elije el jugador 1) con jugador 1 y los coloca en su sitio.
-
+//Recibe los temas (que elije Espectador) y los coloca en su sitio.
 socket.on('recibe_temas', data => {
     temas.innerHTML = data;
 });
