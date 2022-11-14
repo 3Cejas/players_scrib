@@ -111,9 +111,9 @@ socket.on('texto1', data => {
 });
 
 socket.on('texto2', data => {
-    texto2.value = data.text1;
-    puntos2.innerHTML = data.points1;
-    nivel2.innerHTML = data.level1;
+    texto2.value = data.text;
+    puntos2.innerHTML = data.points;
+    nivel2.innerHTML = data.level;
     if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
