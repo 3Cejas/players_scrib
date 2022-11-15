@@ -7,7 +7,6 @@ let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
-let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 
@@ -24,7 +23,6 @@ let nombre2 = getEl("nombre1");
 let texto2 = getEl("texto1");
 let puntos2 = getEl("puntos1");
 let nivel2 = getEl("nivel1");
-let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
@@ -32,18 +30,18 @@ let tempo_text_borroso;
 
 // Variables de los modos.
 let modo_actual = "";
-let modo_letra_prohibida = false;
 let modo_texto_borroso = false;
 let modo_psicodélico = false;
 let desactivar_borrar = false;
 
 var letra_prohibida = "";
+let listener_modo;
 
 const MODOS = {
   // Recibe y activa la palabra y el modo bonus.
-  "palabras bonus": function (data) {
+  "palabras bonus": function (data, socket) {
+    activar_socket_feedback()
     asignada = true;
-    activar_palabras = true;
     palabra_actual = data.palabra_bonus[0];
     explicación.innerHTML = "MODO PALABRAS BONUS";
     palabra1.innerHTML =
@@ -51,18 +49,24 @@ const MODOS = {
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
     indice_buscar_palabra = texto1.value.length - 5;
+    texto2.removeEventListener("keyup", listener_modo);
+    listener_modo = function(){modo_palabras_bonus()};
+    texto2.addEventListener("keyup", listener_modo);
   },
 
   //Recibe y activa el modo letra prohibida.
-  "letra prohibida": function (data) {
-    modo_letra_prohibida = true;
+  "letra prohibida": function (data, socket) {
+    activar_socket_feedback();
     letra_prohibida = data.letra_prohibida;
+    //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
+    listener_modo = function(e){modo_letra_prohibida(e)};
+    texto2.addEventListener("keyup", listener_modo);
     explicación.innerHTML = "MODO LETRA PROHIBIDA";
     palabra1.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
     definicion1.innerHTML = "";
   },
 
-  "texto borroso": function (data) {
+  "texto borroso": function (data, socket) {
     modo_texto_borroso = true;
     explicación.innerHTML = "MODO TEXTO BORROSO";
     palabra1.innerHTML = "";
@@ -83,7 +87,7 @@ const MODOS = {
     }
   },
 
-  psicodélico: function (data) {
+  psicodélico: function (data, socket) {
     modo_psicodélico = true;
     explicación.innerHTML = "MODO PSICODÉLICO";
     palabra1.innerHTML = "";
@@ -95,7 +99,7 @@ const MODOS = {
     });
   },
 
-  "texto inverso": function (data) {
+  "texto inverso": function (data, socket) {
     desactivar_borrar = true;
     explicación.innerHTML = "MODO TEXTO INVERSO";
     palabra1.innerHTML = "";
@@ -125,11 +129,14 @@ const MODOS = {
 
 const LIMPIEZAS = {
   "palabras bonus": function (data) {
+    socket.off('feedback_a_j2');
     asignada = false;
+    texto2.removeEventListener("keyup", listener_modo);
   },
 
   "letra prohibida": function (data) {
-    modo_letra_prohibida = false;
+    socket.off('feedback_a_j2');
+    texto2.removeEventListener("keyup", listener_modo);
     letra_prohibida = "";
   },
 
@@ -140,10 +147,11 @@ const LIMPIEZAS = {
   },
 
   psicodélico: function (data) {
+    socket.off('psico_a_j1');
     modo_psicodélico = false;
     restablecer_estilo();
     //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
-  },
+    },
 
   "texto inverso": function (data) {
     desactivar_borrar = false;
@@ -172,8 +180,8 @@ const LIMPIEZAS = {
 
 // Cuando el texto del jugador 2 cambia, envía los datos de jugador 2 al resto.
 texto2.addEventListener("input", (evt) => {
-  sendText();
   countChars(texto2);
+  sendText();
   auto_grow(texto2);
 });
 
@@ -223,10 +231,10 @@ socket.on("count", (data) => {
     );
 
     // Desactiva, por seguridad, todos los modos.
-    modo_letra_prohibida = false;
     modo_texto_borroso = false;
     modo_psicodélico = false;
     desactivar_borrar = false;
+    letra_prohibida = "";
 
     // Desactiva el blur de ambos textos.
     texto2.classList.remove("textarea_blur");
@@ -256,6 +264,7 @@ socket.on("count", (data) => {
     texto1.style.height = texto1.scrollHeight + "px"; //Reajustamos el tamaño del área de texto del j1.
     texto2.style.height = texto2.scrollHeight + "px"; // Reajustamos el tamaño del área de texto del j2.
 
+    puntos = 0;
     /*let a = document.createElement("a");
         a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"}));
         blob = new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"});
@@ -290,6 +299,7 @@ socket.on("inicio", (data) => {
   texto2.classList.remove("textarea_blur");
   texto1.classList.remove("textarea_blur");
   definicion1.innerHTML = "";
+  explicación.innerHTML = "";
   terminado = false;
   puntos_palabra = 0;
   saltos_línea_alineacion_1 = 0;
@@ -307,6 +317,7 @@ socket.on("limpiar", (data) => {
   socket.on("nombre1", (data) => {
     nombre1.value = data;
   });
+  
   LIMPIEZAS[modo_actual](data);
   modo_actual = "";
   feedback1.innerHTML = "";
@@ -314,6 +325,7 @@ socket.on("limpiar", (data) => {
   definicion1.innerHTML = "";
   explicación.innerHTML = "";
   puntos_palabra = 0;
+  puntos = 0;
   asignada = false;
   palabra_actual = ""; // Variable que almacena la palabra bonus actual.
   terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
@@ -342,7 +354,6 @@ socket.on("limpiar", (data) => {
   rapidez_inicio_borrado = 3000;
   clearTimeout(borrado);
   clearTimeout(cambio_palabra);
-  modo_letra_prohibida = false;
   modo_texto_borroso = false;
   modo_psicodélico = false;
   desactivar_borrar = false;
@@ -367,16 +378,6 @@ socket.on("recibe_temas", (data) => {
   temas.innerHTML = data;
 });
 
-socket.on("feedback_a_j2", (data) => {
-  feedback1.style.color = data.color;
-  feedback1.innerHTML = data.envio_puntos.toString() + " pts";
-  animateCSS(".feedback1", "bounceInLeft").then((message) => {
-    delay_animacion = setTimeout(function () {
-      feedback1.innerHTML = "";
-    }, 2000);
-  });
-});
-
 //FUNCIONES AUXILIARES.
 
 // Función para enviar texto al otro jugador y a control
@@ -396,6 +397,18 @@ function activar_sockets_extratextuales() {
   // Recibe el nombre del jugador 1 y lo coloca en su sitio.
   socket.on("nombre1", (data) => {
     nombre1.value = data;
+  });
+}
+
+function activar_socket_feedback(){
+  socket.on("feedback_a_j2", (data) => {
+    feedback1.style.color = data.color;
+    feedback1.innerHTML = data.envio_puntos.toString() + " pts";
+    animateCSS(".feedback1", "bounceInLeft").then((message) => {
+      delay_animacion = setTimeout(function () {
+        feedback1.innerHTML = "";
+      }, 2000);
+    });
   });
 }
 
@@ -500,4 +513,60 @@ function crear_n_saltos_de_linea(n) {
     cont++;
   }
   return saltos;
+}
+
+//Función auxiliar que comprueba que se inserta la palabra bonus.
+function modo_palabras_bonus(){
+  if (asignada == true) {
+    if (
+      texto2.value
+        .substring(indice_buscar_palabra, texto2.value.length)
+        .toLowerCase()
+        .includes(palabra_actual)
+    ) {
+      asignada = false;
+      socket.emit("nueva_palabra", asignada);
+      puntos_palabra += puntuacion;
+      puntos += puntos_palabra;
+      puntos2.innerHTML = puntos + " puntos";
+      feedback2.style.color = color_positivo;
+      feedback2.innerHTML = "+" + puntuacion + " pts";
+      color = color_positivo;
+      envio_puntos = "+" + puntuacion;
+      socket.emit("feedback_de_j2", { color, envio_puntos });
+      clearTimeout(delay_animacion);
+      animateCSS(".feedback2", "bounceInLeft").then(() => {
+        delay_animacion = setTimeout(function () {
+          feedback2.innerHTML = "";
+        }, 2000);
+      });
+    }
+  }
+}
+
+function modo_letra_prohibida(e){
+letra = e.key
+if (
+  toNormalForm(letra) ==
+    letra_prohibida ||
+  toNormalForm(letra) ==
+    letra_prohibida.toUpperCase()
+) {
+  position = e.target.selectionStart;
+  texto2.value = texto2.value.substring(0, position-1) + texto2.value.substring(position+1);
+  puntos -= 50;
+  puntos2.innerHTML = puntos + " puntos";
+  sendText();
+  feedback2.style.color = color_negativo;
+  feedback2.innerHTML = "-50 pts";
+  color = color_negativo;
+  envio_puntos = -50;
+  socket.emit("feedback_de_j2", { color, envio_puntos });
+  clearTimeout(delay_animacion);
+  animateCSS(".feedback2", "bounceInRight").then(() => {
+    delay_animacion = setTimeout(function () {
+      feedback2.innerHTML = "";
+    }, 2000);
+  });
+}
 }

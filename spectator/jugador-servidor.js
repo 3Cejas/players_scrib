@@ -7,7 +7,6 @@ let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
-let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 
@@ -24,7 +23,6 @@ let nombre2 = getEl("nombre1");
 let texto2 = getEl("texto1");
 let puntos2 = getEl("puntos1");
 let nivel2 = getEl("nivel1");
-let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 

@@ -43,7 +43,7 @@ function auto_grow(element) {
 function borrar(obj) {
   if (!desactivar_borrar) {
     texto1.value = texto1.value.substring(0, texto1.value.length - 1);
-    puntos -=1;
+    puntos -= 1;
     puntos1.innerHTML = puntos + " puntos";
     sendText();
     cambio_nivel(puntos);

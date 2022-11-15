@@ -1,44 +1,132 @@
 //var socket = io('https://scri-b.up.railway.app/');
 var socket = io('http://localhost:3000/');
-const log = console.log;
-
 const getEl = id => document.getElementById(id);
 
-let nombre = getEl("nombre");
-let editor = getEl("texto");
-let puntos = getEl("puntos");
-let nivel = getEl("nivel");
-let objetivo = getEl("objetivo");
-let palabra = getEl("palabra");
-let tiempo = getEl("tiempo");
+// COMPONENTES DEL JUGADOR 1
+let nombre1 = getEl("nombre");
+let texto1 = getEl("texto");
+let puntos1 = getEl("puntos");
+let nivel1 = getEl("nivel");
+let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
+let alineador1 = getEl("alineador1");
 
-let definicion = getEl("definicion");
+let palabra1 = getEl("palabra");
+let definicion1 = getEl("definicion");
+let explicación = getEl("explicación");
 
-let nombre1 = getEl("nombre1");
-let editor1 = getEl("texto1");
-let puntos1 = getEl("puntos1");
-let nivel1 = getEl("nivel1");
-let objetivo1 = getEl("objetivo1");
+// Tiempo restante de la ronda.
+let tiempo = getEl("tiempo");
+
+// COMPONENTES DEL JUGADOR 2
+let nombre2 = getEl("nombre1");
+let texto2 = getEl("texto1");
+let puntos2 = getEl("puntos1");
+let nivel2 = getEl("nivel1");
+let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
+let alineador2 = getEl("alineador2");
 
 let tempo_text_borroso;
 
+const MODOS = {
 
-socket.on('texto2', data => {
-    editor1.value = data.text1;
-    document.getElementById("puntos1").innerHTML = data.points1;
-    document.getElementById("nivel1").innerHTML = data.level1;
-    editor1.style.height = "5px";
-    editor1.style.height = (editor1.scrollHeight) + "px";
+    // Recibe y activa la palabra y el modo bonus.
+    'palabras bonus': function (data) {
+        explicación.innerHTML = "MODO PALABRAS BONUS";
+        palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
+        definicion1.innerHTML = data.palabra_bonus[1];
+    },
+
+    //Recibe y activa el modo letra prohibida.
+    'letra prohibida': function (data) {
+        explicación.innerHTML = "MODO LETRA PROHIBIDA";
+        palabra1.innerHTML = "LETRA PROHIBIDA: " + data.letra_prohibida;
+        definicion1.innerHTML = "";
+    },
+
+    'texto borroso': function (data) {
+        explicación.innerHTML = "MODO TEXTO BORROSO";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        if (data.jugador == 1) {
+            texto1.classList.add('textarea_blur');
+            tempo_text_borroso = setTimeout(function () {
+                texto1.classList.remove('textarea_blur');
+                texto2.classList.add('textarea_blur');;
+            }, 30000);
+        }
+        if (data.jugador == 2) {
+            texto2.classList.add('textarea_blur');
+            tempo_text_borroso = setTimeout(function () {
+                texto2.classList.remove('textarea_blur');
+                texto1.classList.add('textarea_blur');;
+            }, 30000);
+        }
+    },
+
+    'psicodélico': function (data) {
+        explicación.innerHTML = "MODO PSICODÉLICO";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        socket.on('psico_a_j2', data => {
+                stylize();
+        });
+        socket.on('psico_a_j1', data => {
+                stylize();
+        });
+    },
+
+    'texto inverso': function (data) {
+        explicación.innerHTML = "MODO TEXTO INVERSO";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+    },
+
+    '': function (data) {
+    }    
+};
+
+// Recibe los datos del jugador 1 y los coloca.
+socket.on('texto1', data => {
+    texto1.value = data.text;
+    puntos1.innerHTML = data.points;
+    nivel1.innerHTML = data.level;
+    if (texto2.scrollHeight >= texto1.scrollHeight) {
+        while (texto2.scrollHeight > texto1.scrollHeight) {
+            saltos_línea_alineacion_1 += 1;
+            texto1.value = "\n" + texto1.value;
+        }
+    }
+    else {
+        while (texto2.scrollHeight < texto1.scrollHeight) {
+            saltos_línea_alineacion_2 += 1;
+            texto2.value = "\n" + texto2.value;
+        }
+    }
+    texto1.style.height = (texto1.scrollHeight) + "px";
+    texto2.style.height = (texto1.scrollHeight) + "px";
 });
 
-socket.on('texto1', data => {
-    editor.value = data.text;
-    document.getElementById("puntos").innerHTML = data.points;
-    document.getElementById("nivel").innerHTML = data.level;
-    editor.style.height = "5px";
-    editor.style.height = (editor.scrollHeight) + "px";
+socket.on('texto2', data => {
+    texto2.value = data.text;
+    puntos2.innerHTML = data.points;
+    nivel2.innerHTML = data.level;
+    if (texto2.scrollHeight >= texto1.scrollHeight) {
+        while (texto2.scrollHeight > texto1.scrollHeight) {
+            saltos_línea_alineacion_1 += 1;
+            texto1.value = "\n" + texto1.value
+
+        }
+    }
+    else {
+        while (texto2.scrollHeight < texto1.scrollHeight) {
+            saltos_línea_alineacion_2 += 1;
+            texto2.value = "\n" + texto2.value
+        }
+    }
+    texto1.style.height = (texto1.scrollHeight) + "px";
+    texto2.style.height = (texto1.scrollHeight) + "px";
 });
 
 socket.on('count', data => {
@@ -61,10 +149,69 @@ nombre.addEventListener("input", evt => {
     socket.emit('nombre1', name);
 });
 
-socket.on('nombre2', data => {
-    nombre1.value = data;
+socket.on('activar_modo', data => {
+    animacion_modo();
+    modo_actual = data.modo_actual;
+    MODOS[modo_actual](data);
 });
 
+socket.on('feedback_a_j2', data => {
+    var feedback = document.querySelector(".feedback1");
+    feedback.style.color = data.color;
+    feedback.innerHTML = data.envio_puntos.toString() + " pts";
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
+    animateCSS(".feedback1", "bounceInLeft");
+    animateCSS('.feedback1', 'bounceInLeft').then((message) => {
+        delay_animacion = setTimeout(function () {
+            feedback.innerHTML = "";
+        }, 2000);
+    });
+});
+
+socket.on('feedback_a_j1', data => {
+    var feedback1 = document.querySelector(".feedback2");
+    feedback1.style.color = data.color;
+    feedback1.innerHTML = data.envio_puntos.toString() + " pts";
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
+    animateCSS(".feedback2", "bounceInLeft");
+    animateCSS('.feedback2', 'bounceInLeft').then((message) => {
+        delay_animacion = setTimeout(function () {
+            feedback1.innerHTML = "";
+        }, 2000);
+    });
+});
 function animacion_modo() {
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it

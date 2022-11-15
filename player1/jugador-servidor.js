@@ -7,7 +7,6 @@ let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
-let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 
@@ -24,7 +23,6 @@ let nombre2 = getEl("nombre1");
 let texto2 = getEl("texto1");
 let puntos2 = getEl("puntos1");
 let nivel2 = getEl("nivel1");
-let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
@@ -237,16 +235,18 @@ socket.on("count", (data) => {
     modo_psicodélico = false;
     desactivar_borrar = false;
     letra_prohibida = "";
+
     // Desactiva el blur de ambos textos.
     texto2.classList.remove("textarea_blur");
     texto1.classList.remove("textarea_blur");
+
     // Impide que se pueda escribir en los dos textos.
     texto2.disabled = true;
     texto1.disabled = true;
-    clearTimeout(borrado);
-    clearTimeout(cambio_palabra);
 
-    terminado = true; // Variable booleana que dice si la ronda ha terminado o no.
+    // Variable booleana que dice si la ronda ha terminado o no.
+    terminado = true;
+
     // Restablece la rápidez del borrado.
     rapidez_borrado = 3000;
     rapidez_inicio_borrado = 3000;
@@ -411,6 +411,7 @@ function activar_socket_feedback(){
     });
   });
 }
+
 function getRandColor() {
   var hex = "01234567890ABCDEF",
     res = "#";

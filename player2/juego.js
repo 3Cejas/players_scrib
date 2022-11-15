@@ -8,7 +8,6 @@ let terminado = false; // Variable booleana que dice si la ronda ha terminado o 
 let countInterval; // Variable que almacena el identificador de la función que será ejecutada cada x segundos para uso para actualizar el contador.
 let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
-let activar_palabras = false; // Variable booleana que activa las palabras bonus.
 let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra bonus.
 let puntos = 0; // Puntos del jugador 2.
 let delay_animacion;
@@ -44,12 +43,9 @@ function auto_grow(element) {
 function borrar(obj) {
   if (!desactivar_borrar) {
     texto2.value = texto2.value.substring(0, texto2.value.length - 1);
-    puntos = obj.value.length + puntos_palabra - saltos_línea_alineacion_2;
+    puntos -= 1;
     puntos2.innerHTML = puntos + " puntos";
-    text = texto2.value;
-    points = puntos2.textContent;
-    level = nivel2.textContent;
-    socket.emit("texto2", { text, points, level });
+    sendText();
     cambio_nivel(puntos);
     borrado = setTimeout(() => {
       borrar(obj);
@@ -59,57 +55,8 @@ function borrar(obj) {
 
 //Función que modifica el comportamiento del juego.
 function countChars(obj) {
-  puntos = obj.value.length + puntos_palabra - saltos_línea_alineacion_2;
+  puntos += 1;
   puntos2.innerHTML = puntos + " puntos";
-  if (modo_letra_prohibida == true) {
-    if (
-      toNormalForm(texto2.value.charAt(texto2.value.length - 1)) ==
-        letra_prohibida ||
-      toNormalForm(texto2.value.charAt(texto2.value.length - 1)) ==
-        letra_prohibida.toUpperCase()
-    ) {
-      texto2.value = texto2.value.substring(0, texto2.value.length - 1);
-      puntos -= 50;
-      puntos2.innerHTML = puntos + " puntos";
-      feedback2.style.color = color_negativo;
-      feedback2.innerHTML = "-50 pts";
-      color = color_negativo;
-      envio_puntos = -50;
-      socket.emit("feedback_de_j2", { color, envio_puntos });
-      clearTimeout(delay_animacion);
-      animateCSS(".feedback2", "bounceInRight").then(() => {
-        delay_animacion = setTimeout(function () {
-          feedback2.innerHTML = "";
-        }, 2000);
-      });
-    }
-  }
-  if (asignada == true) {
-    if (
-      texto2.value
-        .substring(indice_buscar_palabra, texto2.value.length - 1)
-        .toLowerCase()
-        .includes(palabra_actual)
-    ) {
-      asignada = false;
-      socket.emit("nueva_palabra", asignada);
-      puntos_palabra = puntos_palabra + puntuacion;
-      puntos = obj.value.length + puntos_palabra - saltos_línea_alineacion_2;
-      puntos2.innerHTML = puntos + " puntos";
-      feedback2.style.color = color_positivo;
-      feedback2.innerHTML = "+" + puntuacion + " pts";
-      color = color_positivo;
-      envio_puntos = "+" + puntuacion;
-      socket.emit("feedback_de_j2", { color, envio_puntos });
-      clearTimeout(delay_animacion);
-      animateCSS(".feedback2", "bounceInRight");
-      animateCSS(".feedback2", "bounceInRight").then((message) => {
-        delay_animacion = setTimeout(function () {
-          feedback2.innerHTML = "";
-        }, 2000);
-      });
-    }
-  }
   cambio_nivel(puntos);
   clearTimeout(borrado);
   borrado = setTimeout(function () {

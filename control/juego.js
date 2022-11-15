@@ -1,11 +1,3 @@
-let borrado
-let rapidez_borrado = 3000
-let rapidez_inicio_borrado = 3000
-let palabras_objetivo = 99999999
-let asignada = false
-let palabra_actual = ""
-let puntos_palabra = 0
-let terminado = false
 let countInterval;
 
 function paddedFormat(num) {
