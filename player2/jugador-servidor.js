@@ -1,5 +1,5 @@
 //var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-var socket = io("http://localhost:3000/");
+let socket = io("http://localhost:3000/");
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -31,7 +31,6 @@ let tempo_text_borroso;
 // Variables de los modos.
 let modo_actual = "";
 let modo_texto_borroso = false;
-let modo_psicodélico = false;
 let desactivar_borrar = false;
 
 var letra_prohibida = "";
@@ -39,7 +38,7 @@ let listener_modo;
 
 const MODOS = {
   // Recibe y activa la palabra y el modo bonus.
-  "palabras bonus": function (data, socket) {
+  "palabras bonus": function (data) {
     activar_socket_feedback()
     asignada = true;
     palabra_actual = data.palabra_bonus[0];
@@ -55,7 +54,7 @@ const MODOS = {
   },
 
   //Recibe y activa el modo letra prohibida.
-  "letra prohibida": function (data, socket) {
+  "letra prohibida": function (data) {
     activar_socket_feedback();
     letra_prohibida = data.letra_prohibida;
     //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
@@ -66,7 +65,7 @@ const MODOS = {
     definicion1.innerHTML = "";
   },
 
-  "texto borroso": function (data, socket) {
+  "texto borroso": function (data) {
     modo_texto_borroso = true;
     explicación.innerHTML = "MODO TEXTO BORROSO";
     palabra1.innerHTML = "";
@@ -87,19 +86,18 @@ const MODOS = {
     }
   },
 
-  psicodélico: function (data, socket) {
-    modo_psicodélico = true;
+  psicodélico: function (data) {
     explicación.innerHTML = "MODO PSICODÉLICO";
     palabra1.innerHTML = "";
     definicion1.innerHTML = "";
+    listener_modo = function(){modo_psicodélico()};
+    texto2.addEventListener("keyup", listener_modo);
     socket.on("psico_a_j2", (data) => {
-      if (modo_psicodélico == true) {
         stylize();
-      }
     });
   },
 
-  "texto inverso": function (data, socket) {
+  "texto inverso": function (data) {
     desactivar_borrar = true;
     explicación.innerHTML = "MODO TEXTO INVERSO";
     palabra1.innerHTML = "";
@@ -148,7 +146,7 @@ const LIMPIEZAS = {
 
   psicodélico: function (data) {
     socket.off('psico_a_j1');
-    modo_psicodélico = false;
+    texto2.removeEventListener("keyup", listener_modo);
     restablecer_estilo();
     //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
     },
@@ -232,7 +230,6 @@ socket.on("count", (data) => {
 
     // Desactiva, por seguridad, todos los modos.
     modo_texto_borroso = false;
-    modo_psicodélico = false;
     desactivar_borrar = false;
     letra_prohibida = "";
 
@@ -355,7 +352,6 @@ socket.on("limpiar", (data) => {
   clearTimeout(borrado);
   clearTimeout(cambio_palabra);
   modo_texto_borroso = false;
-  modo_psicodélico = false;
   desactivar_borrar = false;
   letra_prohibida = "";
   restablecer_estilo();
@@ -569,4 +565,8 @@ if (
     }, 2000);
   });
 }
+}
+
+function modo_psicodélico(){
+  socket.emit("psico", 2);
 }
