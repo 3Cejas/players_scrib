@@ -92,9 +92,9 @@ const MODOS = {
     definicion1.innerHTML = "";
     listener_modo = function(){modo_psicodélico()};
     texto1.addEventListener("keyup", listener_modo);
-    socket.on("psico_a_j1", (data) => {
+    /*socket.on("psico_a_j1", (data) => {
         stylize();
-    });
+    });*/
   },
 
   "texto inverso": function (data) {
@@ -145,7 +145,7 @@ const LIMPIEZAS = {
   },
 
   psicodélico: function (data) {
-    socket.off('psico_a_j1');
+    //socket.off('psico_a_j1');
     texto2.removeEventListener("keyup", listener_modo);
 
     restablecer_estilo();
@@ -569,5 +569,6 @@ function modo_letra_prohibida(e){
 }
 
 function modo_psicodélico(){
-  socket.emit("psico", 1);
+  //socket.emit("psico", 1);
+  stylize();
 }

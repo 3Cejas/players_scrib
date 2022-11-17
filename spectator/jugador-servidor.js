@@ -26,7 +26,11 @@ let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
+// Variables de los modos.
+let modo_actual = "";
 let tempo_text_borroso;
+let listener_modo;
+let jugador_psico;
 
 const MODOS = {
 
@@ -68,12 +72,13 @@ const MODOS = {
         explicación.innerHTML = "MODO PSICODÉLICO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
-        socket.on('psico_a_j2', data => {
+        listener_modo = function(){stylize()};
+        /*socket.on('psico_a_j2', data => {
                 stylize();
         });
         socket.on('psico_a_j1', data => {
                 stylize();
-        });
+        });*/
     },
 
     'texto inverso': function (data) {
@@ -86,11 +91,45 @@ const MODOS = {
     }    
 };
 
+const LIMPIEZAS = {
+    "palabras bonus": function (data) {
+    },
+  
+    "letra prohibida": function (data) {
+      
+    },
+  
+    "texto borroso": function (data) {
+      texto1.classList.remove("textarea_blur");
+      texto2.classList.remove("textarea_blur");
+    },
+  
+    psicodélico: function (data) {
+        if(jugador_psico == 1){
+            texto1.removeEventListener("input", listener_modo);
+        }
+        else{
+            texto2.removeEventListener("input", listener_modo);
+        }
+      restablecer_estilo();
+      //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
+      },
+  
+    "texto inverso": function (data) {
+
+    },
+  
+    "": function (data) {},
+  };
+
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
     texto1.value = data.text;
     puntos1.innerHTML = data.points;
     nivel1.innerHTML = data.level;
+    if(jugador_psico == 1){
+       stylize();
+    }
     if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
@@ -112,6 +151,9 @@ socket.on('texto2', data => {
     texto2.value = data.text;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
+    if(jugador_psico == 2){
+        stylize();
+     }
     if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
@@ -163,7 +205,6 @@ socket.on('count', data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-
     socket.off('nombre1');
     socket.off('nombre2');
     socket.off('vote');
@@ -177,6 +218,8 @@ socket.on('inicio', data => {
     texto2.style.height = "40";
     texto2.style.height = (texto2.scrollHeight) + "px";
     definicion1.innerHTML = "";
+
+    jugador_psico = Math.floor(Math.random() * 2 + 1);
 });
 
 // Resetea el tablero de juego.
@@ -217,6 +260,7 @@ socket.on('limpiar', data => {
 
 socket.on('activar_modo', data => {
     animacion_modo();
+    LIMPIEZAS[modo_actual](data);
     modo_actual = data.modo_actual;
     MODOS[modo_actual](data);
 });
