@@ -75,6 +75,7 @@ const MODOS = {
         explicación.innerHTML = "MODO PSICODÉLICO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
+        jugador_psico = Math.floor(Math.random() * 2 + 1);
     },
 
     'texto inverso': function (data) {
@@ -207,8 +208,6 @@ socket.on('inicio', data => {
     texto2.style.height = "40";
     texto2.style.height = (texto2.scrollHeight) + "px";
     definicion1.innerHTML = "";
-
-    jugador_psico = Math.floor(Math.random() * 2 + 1);
 });
 
 // Resetea el tablero de juego.
@@ -511,7 +510,7 @@ function crear_n_saltos_de_linea(n) {
 
                 // animation option
                 var rotate = function () {
-
+                    data = array[listItem]
                     socket.emit('envia_temas', array[listItem]);
                     cont.html("<span id='temas'><span>" + array[listItem] + "</span></span>");
                     texto1.focus();

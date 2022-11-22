@@ -186,13 +186,14 @@ const LIMPIEZAS = {
 texto1.addEventListener("keyup", (evt) => {
   countChars(texto1);
   sendText();
-  auto_grow(texto1);
+  auto_grow(texto1);d
 });
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
 texto1.addEventListener("keydown", (evt) => {
   countChars(texto1);
   sendText();
   auto_grow(texto1);
+  focalizador.scrollIntoView({block: "end"});
 });
 
 //activar los sockets extratextuales.
@@ -216,7 +217,7 @@ socket.on("texto2", (data) => {
   }*/
   texto2.style.height = texto2.scrollHeight + "px";
   //window.scrollTo(0, document.body.scrollHeight);
-  focalizador.scrollIntoView(true);
+  focalizador.scrollIntoView({block: "end"});
 });
 
 /* 

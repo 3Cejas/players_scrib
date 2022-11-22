@@ -40,7 +40,7 @@ function auto_grow(element) {
   texto1.style.height = texto1.scrollHeight + "px";
   texto2.style.height = texto2.scrollHeight + "px";
   //window.scrollTo(0, document.body.scrollHeight);
-  focalizador.scrollIntoView(true);
+  focalizador.scrollIntoView({block: "end"});
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
