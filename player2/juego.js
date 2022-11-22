@@ -4,6 +4,7 @@ let rapidez_inicio_borrado = 3000; // Variable que almacena el tiempo de espera 
 let asignada = false; // Variable boolena que dice si hay una palabra bonus asignada.
 let palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 let puntos_palabra = 0; // Variable que almacena los puntos obtenidos por meter palabras bonus.
+let puntos_letra_prohibida = 0; // Variable que almacena los puntos obtenidos por meter palabras bonus.
 let terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
 let countInterval; // Variable que almacena el identificador de la función que será ejecutada cada x segundos para uso para actualizar el contador.
 let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
@@ -43,10 +44,10 @@ function auto_grow(element) {
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
-function borrar(obj) {
+function borrar(texto) {
   if (!desactivar_borrar) {
-    texto2.value = texto2.value.substring(0, texto2.value.length - 1);
-    puntos -= 1;
+    texto2.value = texto.value.substring(0, texto2.value.length - 1);
+    puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
     puntos2.innerHTML = puntos + " puntos";
     sendText();
     cambio_nivel(puntos);
@@ -57,20 +58,14 @@ function borrar(obj) {
 }
 
 //Función que modifica el comportamiento del juego.
-function countChars(texto, evt) {
-  if (evt.key.length == 1){
-  puntos += 1;
+function countChars(texto) {
+  puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida;
   puntos2.innerHTML = puntos + " puntos";
   cambio_nivel(puntos);
   clearTimeout(borrado);
   borrado = setTimeout(function () {
     borrar(texto);
   }, rapidez_inicio_borrado);
-  }
-  else if (evt.key == "Backspace"){
-    puntos -= 1;
-    puntos2.innerHTML = puntos + " puntos";
-  }
 }
 
 //Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.

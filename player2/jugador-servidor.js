@@ -184,7 +184,14 @@ const LIMPIEZAS = {
 
 // Cuando el texto del jugador 2 cambia, envía los datos de jugador 2 al resto.
 texto2.addEventListener("keyup", (evt) => {
-  countChars(texto2,evt);
+  countChars(texto2);
+  sendText();
+  auto_grow(texto2);
+});
+
+// Cuando el texto del jugador 2 cambia, envía los datos de jugador 2 al resto.
+texto2.addEventListener("keydown", (evt) => {
+  countChars(texto2);
   sendText();
   auto_grow(texto2);
 });
@@ -267,7 +274,9 @@ socket.on("count", (data) => {
     texto1.style.height = texto1.scrollHeight + "px"; //Reajustamos el tamaño del área de texto del j1.
     texto2.style.height = texto2.scrollHeight + "px"; // Reajustamos el tamaño del área de texto del j2.
 
+    puntos_palabra = 0;
     puntos = 0;
+    puntos_letra_prohibida = 0;
     /*let a = document.createElement("a");
         a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"}));
         blob = new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"});
@@ -305,6 +314,8 @@ socket.on("inicio", (data) => {
   explicación.innerHTML = "";
   terminado = false;
   puntos_palabra = 0;
+  puntos = 0;
+  puntos_letra_prohibida = 0;
   saltos_línea_alineacion_1 = 0;
   saltos_línea_alineacion_2 = 0;
 });
@@ -329,6 +340,7 @@ socket.on("limpiar", (data) => {
   explicación.innerHTML = "";
   puntos_palabra = 0;
   puntos = 0;
+  puntos_letra_prohibida = 0;
   asignada = false;
   palabra_actual = ""; // Variable que almacena la palabra bonus actual.
   terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
@@ -529,7 +541,7 @@ function modo_palabras_bonus(){
       asignada = false;
       socket.emit("nueva_palabra", asignada);
       puntos_palabra += puntuacion;
-      puntos += puntos_palabra;
+      puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
       puntos2.innerHTML = puntos + " puntos";
       feedback2.style.color = color_positivo;
       feedback2.innerHTML = "+" + puntuacion + " pts";
@@ -556,7 +568,8 @@ if (
 ) {
   position = e.target.selectionStart;
   texto2.value = texto2.value.substring(0, position-1) + texto2.value.substring(position+1);
-  puntos -= 50;
+  puntos_letra_prohibida += 50;
+  puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
   puntos2.innerHTML = puntos + " puntos";
   sendText();
   feedback2.style.color = color_negativo;
