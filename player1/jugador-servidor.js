@@ -26,6 +26,8 @@ let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
+let focalizador = getEl("focalizador");
+
 let tempo_text_borroso;
 
 // Variables de los modos.
@@ -103,8 +105,9 @@ const MODOS = {
     palabra1.innerHTML = "";
     definicion1.innerHTML = "";
     texto1.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-      eliminar_saltos_de_linea(texto1.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
+      //eliminar_saltos_de_linea(texto1.value)
+      texto1.value
         .split("")
         .reverse()
         .join("")
@@ -112,8 +115,9 @@ const MODOS = {
         .reverse()
         .join(" ");
     texto2.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-      eliminar_saltos_de_linea(texto2.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+      //eliminar_saltos_de_linea(texto2.value)
+      texto2.value
         .split("")
         .reverse()
         .join("")
@@ -146,8 +150,7 @@ const LIMPIEZAS = {
 
   psicodélico: function (data) {
     //socket.off('psico_a_j1');
-    texto2.removeEventListener("keyup", listener_modo);
-
+    texto1.removeEventListener("keyup", listener_modo);
     restablecer_estilo();
     //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
   },
@@ -155,8 +158,9 @@ const LIMPIEZAS = {
   "texto inverso": function (data) {
     desactivar_borrar = false;
     texto1.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-      eliminar_saltos_de_linea(texto1.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
+      //eliminar_saltos_de_linea(texto1.value)
+      texto1.value
         .split("")
         .reverse()
         .join("")
@@ -164,8 +168,9 @@ const LIMPIEZAS = {
         .reverse()
         .join(" ");
     texto2.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-      eliminar_saltos_de_linea(texto2.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+      //eliminar_saltos_de_linea(texto2.value)
+      texto2.value
         .split("")
         .reverse()
         .join("")
@@ -179,7 +184,7 @@ const LIMPIEZAS = {
 
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
 texto1.addEventListener("keyup", (evt) => {
-  countChars(texto1);
+  countChars(texto1, evt);
   sendText();
   auto_grow(texto1);
 });
@@ -192,7 +197,7 @@ socket.on("texto2", (data) => {
   texto2.value = data.text;
   puntos2.innerHTML = data.points;
   nivel2.innerHTML = data.level;
-  if (texto2.scrollHeight >= texto1.scrollHeight) {
+  /*if (texto2.scrollHeight >= texto1.scrollHeight) {
     while (texto2.scrollHeight > texto1.scrollHeight) {
       saltos_línea_alineacion_1 += 1;
       texto1.value = "\n" + texto1.value;
@@ -202,10 +207,10 @@ socket.on("texto2", (data) => {
       saltos_línea_alineacion_2 += 1;
       texto2.value = "\n" + texto2.value;
     }
-  }
-  texto1.style.height = texto1.scrollHeight + "px";
-  texto2.style.height = texto1.scrollHeight + "px";
-  window.scrollTo(0, document.body.scrollHeight);
+  }*/
+  texto2.style.height = texto2.scrollHeight + "px";
+  //window.scrollTo(0, document.body.scrollHeight);
+  focalizador.scrollIntoView(true);
 });
 
 /* 
@@ -254,8 +259,8 @@ socket.on("count", (data) => {
     clearTimeout(cambio_palabra);
     palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 
-    texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-    texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
+    //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+    //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
     texto1.style.height = "auto";
     texto2.style.height = "auto";

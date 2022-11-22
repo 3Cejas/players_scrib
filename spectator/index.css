@@ -3,11 +3,16 @@
 
 #pie {
   flex: 0 0 auto;
-}
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, -0%);
+  width: auto;
+  }
 
-::selection {
-  background: #f7d07e;
-}
+  ::selection {
+    background: #f7d07e;
+  }
 
 html,
 body {
@@ -51,6 +56,7 @@ body {
 }
 
 .palabra {
+  font-size: 16pt;
   color: black;
   background-color: yellow;
 }
@@ -74,7 +80,7 @@ label {
 
 textarea {
   position: sticky;
-  font-size: 16pt;
+  font-size: 25pt;
   border-color: currentcolor;
   outline-color: currentcolor;
   background-color: transparent;
@@ -87,14 +93,15 @@ textarea {
   outline: 0px !important;
   -webkit-appearance: none;
   box-shadow: none !important;
-  color: rgb(155, 155, 155)
+  color: rgb(155, 155, 155);
+  width: 50%;
 }
 
 .textarea_blur {
   filter: blur(5px);
   -webkit-filter: blur(5px);
   position: sticky;
-  font-size: 16pt;
+  font-size: 25pt;
   border-color: currentcolor;
   outline-color: currentcolor;
   background-color: transparent;

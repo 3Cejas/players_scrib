@@ -92,7 +92,7 @@ socket.on('texto1', data => {
     texto1.value = data.text;
     puntos1.innerHTML = data.points;
     nivel1.innerHTML = data.level;
-    if (texto2.scrollHeight >= texto1.scrollHeight) {
+    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
             texto1.value = "\n" + texto1.value;
@@ -103,16 +103,15 @@ socket.on('texto1', data => {
             saltos_línea_alineacion_2 += 1;
             texto2.value = "\n" + texto2.value;
         }
-    }
+    }*/
     texto1.style.height = (texto1.scrollHeight) + "px";
-    texto2.style.height = (texto1.scrollHeight) + "px";
 });
 
 socket.on('texto2', data => {
     texto2.value = data.text;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
-    if (texto2.scrollHeight >= texto1.scrollHeight) {
+    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
             texto1.value = "\n" + texto1.value
@@ -124,9 +123,9 @@ socket.on('texto2', data => {
             saltos_línea_alineacion_2 += 1;
             texto2.value = "\n" + texto2.value
         }
-    }
-    texto1.style.height = (texto1.scrollHeight) + "px";
+    }*/
     texto2.style.height = (texto1.scrollHeight) + "px";
+    
 });
 
 socket.on('count', data => {
@@ -141,12 +140,12 @@ socket.on('count', data => {
 
 nombre1.addEventListener("input", evt => {
     let name1 = nombre1.value;
-    socket.emit('nombre2', name1);
+    socket.emit('envío_nombre1', name1);
 });
 
-nombre.addEventListener("input", evt => {
-    let name = nombre.value;
-    socket.emit('nombre1', name);
+nombre2.addEventListener("input", evt => {
+    let name = nombre2.value;
+    socket.emit('envío_nombre2', name);
 });
 
 socket.on('activar_modo', data => {

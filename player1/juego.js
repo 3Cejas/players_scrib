@@ -12,8 +12,8 @@ let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra
 let puntos = 0; // Puntos del jugador 1.
 let delay_animacion;
 let envio_puntos;
-let saltos_línea_alineacion_1 = 0; // Variable entera que almacena los saltos de línea del jugador 1 para alínear los textos.
-let saltos_línea_alineacion_2 = 0; // Variable entera que almacena los saltos de línea del jugador 2 para alínear los textos.
+//let saltos_línea_alineacion_1 = 0; // Variable entera que almacena los saltos de línea del jugador 1 para alínear los textos.
+//let saltos_línea_alineacion_2 = 0; // Variable entera que almacena los saltos de línea del jugador 2 para alínear los textos.
 const color_negativo = "red";
 const color_positivo = "green";
 
@@ -21,7 +21,7 @@ const color_positivo = "green";
 function auto_grow(element) {
   element.style.height = "5px";
   element.style.height = element.scrollHeight + "px";
-  if (texto2.scrollHeight >= texto1.scrollHeight) {
+  /*if (texto2.scrollHeight >= texto1.scrollHeight) {
     while (texto2.scrollHeight > texto1.scrollHeight) {
       saltos_línea_alineacion_1 += 1;
       texto1.value = "\n" + texto1.value;
@@ -35,8 +35,11 @@ function auto_grow(element) {
     }
     texto1.style.height = texto1.scrollHeight + "px";
     texto2.style.height = texto1.scrollHeight + "px";
-  }
-  window.scrollTo(0, document.body.scrollHeight);
+  }*/
+  texto1.style.height = texto1.scrollHeight + "px";
+  texto2.style.height = texto2.scrollHeight + "px";
+  //window.scrollTo(0, document.body.scrollHeight);
+  focalizador.scrollIntoView(true);
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
@@ -54,14 +57,20 @@ function borrar(obj) {
 }
 
 //Función que modifica el comportamiento del juego.
-function countChars(obj) {
+function countChars(texto, evt) {
+  if (evt.key.length == 1){
   puntos += 1;
   puntos1.innerHTML = puntos + " puntos";
   cambio_nivel(puntos);
   clearTimeout(borrado);
   borrado = setTimeout(function () {
-    borrar(obj);
+    borrar(texto);
   }, rapidez_inicio_borrado);
+  }
+  else if (evt.key == "Backspace" && texto.value.length != 0){
+    puntos -= 1;
+    puntos1.innerHTML = puntos + " puntos";
+  }
 }
 
 //Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.

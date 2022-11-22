@@ -26,6 +26,9 @@ let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
+let focalizador = getEl("focalizador1");
+let focalizador_id = 1;
+
 // Variables de los modos.
 let modo_actual = "";
 let tempo_text_borroso;
@@ -72,13 +75,6 @@ const MODOS = {
         explicación.innerHTML = "MODO PSICODÉLICO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
-        listener_modo = function(){stylize()};
-        /*socket.on('psico_a_j2', data => {
-                stylize();
-        });
-        socket.on('psico_a_j1', data => {
-                stylize();
-        });*/
     },
 
     'texto inverso': function (data) {
@@ -105,12 +101,7 @@ const LIMPIEZAS = {
     },
   
     psicodélico: function (data) {
-        if(jugador_psico == 1){
-            texto1.removeEventListener("input", listener_modo);
-        }
-        else{
-            texto2.removeEventListener("input", listener_modo);
-        }
+        jugador_psico = 0;
       restablecer_estilo();
       //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
       },
@@ -130,7 +121,7 @@ socket.on('texto1', data => {
     if(jugador_psico == 1){
        stylize();
     }
-    if (texto2.scrollHeight >= texto1.scrollHeight) {
+    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
             texto1.value = "\n" + texto1.value;
@@ -141,10 +132,9 @@ socket.on('texto1', data => {
             saltos_línea_alineacion_2 += 1;
             texto2.value = "\n" + texto2.value;
         }
-    }
+    }*/
     texto1.style.height = (texto1.scrollHeight) + "px";
-    texto2.style.height = (texto1.scrollHeight) + "px";
-    window.scrollTo(0, document.body.scrollHeight);
+    focalizador.scrollIntoView(false);
 });
 
 socket.on('texto2', data => {
@@ -154,7 +144,7 @@ socket.on('texto2', data => {
     if(jugador_psico == 2){
         stylize();
      }
-    if (texto2.scrollHeight >= texto1.scrollHeight) {
+    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
             texto1.value = "\n" + texto1.value
@@ -166,10 +156,9 @@ socket.on('texto2', data => {
             saltos_línea_alineacion_2 += 1;
             texto2.value = "\n" + texto2.value
         }
-    }
-    texto1.style.height = (texto1.scrollHeight) + "px";
-    texto2.style.height = (texto1.scrollHeight) + "px";
-    window.scrollTo(0, document.body.scrollHeight);
+    }*/
+    texto2.style.height = (texto2.scrollHeight) + "px";
+    focalizador.scrollIntoView(false);
 });
 
 activar_sockets_extratextuales()
@@ -256,6 +245,7 @@ socket.on('limpiar', data => {
     restablecer_estilo();
     clearTimeout(tempo_text_borroso);
     activar_sockets_extratextuales();
+    LIMPIEZAS[modo_actual](data);
 });
 
 socket.on('activar_modo', data => {
@@ -323,6 +313,18 @@ socket.on('feedback_a_j1', data => {
     });
 });
 
+socket.on('cambia_vista', data => {
+    if(focalizador_id == 1){
+        focalizador = getEl("focalizador2");
+        focalizador.scrollIntoView(false);
+        focalizador_id = 2;
+    }
+    else{
+        focalizador = getEl("focalizador1");
+        focalizador.scrollIntoView(false);
+        focalizador_id = 1;
+    }
+});
 //FUNCIONES AUXILIARES.
 
 function activar_sockets_extratextuales() {
@@ -431,11 +433,11 @@ function animacion_modo() {
 function restablecer_estilo() {
     texto1.style.fontFamily = "monospace";
     texto1.style.color = "rgb(155, 155, 155)";
-    texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    texto1.style.fontSize = 25 + "pt"; // Font sizes between 15px and 35px
     texto1.style.textAlign = "justify";
     texto2.style.fontFamily = "monospace";
     texto2.style.color = "rgb(155, 155, 155)";
-    texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    texto2.style.fontSize = 25 + "pt"; // Font sizes between 15px and 35px
     texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
     texto1.style.height = texto1.scrollHeight + "px";

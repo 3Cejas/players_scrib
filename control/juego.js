@@ -106,8 +106,8 @@ function bajar() {
     socket.emit('scroll', 'abajo');
 };
 
-function limpiar_psico() {
-    socket.emit('limpiar_psico', 'nada');
+function cambiar_vista() {
+    socket.emit('cambiar_vista', 'nada');
 };
 
 function limpiar_inverso() {

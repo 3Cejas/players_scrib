@@ -26,6 +26,8 @@ let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
+let focalizador = getEl("focalizador");
+
 let tempo_text_borroso;
 
 // Variables de los modos.
@@ -103,8 +105,9 @@ const MODOS = {
     palabra1.innerHTML = "";
     definicion1.innerHTML = "";
     texto1.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-      eliminar_saltos_de_linea(texto1.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
+      //eliminar_saltos_de_linea(texto1.value)
+      texto1.value
         .split("")
         .reverse()
         .join("")
@@ -112,8 +115,9 @@ const MODOS = {
         .reverse()
         .join(" ");
     texto2.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-      eliminar_saltos_de_linea(texto2.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+      //eliminar_saltos_de_linea(texto2.value)
+      texto2.value
         .split("")
         .reverse()
         .join("")
@@ -154,8 +158,9 @@ const LIMPIEZAS = {
   "texto inverso": function (data) {
     desactivar_borrar = false;
     texto1.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-      eliminar_saltos_de_linea(texto1.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
+      //eliminar_saltos_de_linea(texto1.value)
+      texto1.value
         .split("")
         .reverse()
         .join("")
@@ -163,8 +168,9 @@ const LIMPIEZAS = {
         .reverse()
         .join(" ");
     texto2.value =
-      crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-      eliminar_saltos_de_linea(texto2.value)
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+      //eliminar_saltos_de_linea(texto2.value)
+      texto2.value
         .split("")
         .reverse()
         .join("")
@@ -177,8 +183,8 @@ const LIMPIEZAS = {
 };
 
 // Cuando el texto del jugador 2 cambia, envía los datos de jugador 2 al resto.
-texto2.addEventListener("input", (evt) => {
-  countChars(texto2);
+texto2.addEventListener("keyup", (evt) => {
+  countChars(texto2,evt);
   sendText();
   auto_grow(texto2);
 });
@@ -191,7 +197,7 @@ socket.on("texto1", (data) => {
   texto1.value = data.text;
   puntos1.innerHTML = data.points;
   nivel1.innerHTML = data.level;
-  if (texto2.scrollHeight >= texto1.scrollHeight) {
+  /*if (texto2.scrollHeight >= texto1.scrollHeight) {
     while (texto2.scrollHeight > texto1.scrollHeight) {
       saltos_línea_alineacion_1 += 1;
       texto1.value = "\n" + texto1.value;
@@ -201,10 +207,10 @@ socket.on("texto1", (data) => {
       saltos_línea_alineacion_2 += 1;
       texto2.value = "\n" + texto2.value;
     }
-  }
+  }*/
   texto1.style.height = texto1.scrollHeight + "px";
-  texto2.style.height = texto1.scrollHeight + "px";
-  window.scrollTo(0, document.body.scrollHeight);
+  //window.scrollTo(0, document.body.scrollHeight);
+  focalizador.scrollIntoView(true);
 });
 
 /* 
@@ -253,8 +259,8 @@ socket.on("count", (data) => {
     clearTimeout(cambio_palabra);
     palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 
-    texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-    texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
+    //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+    //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
     texto1.style.height = "auto";
     texto2.style.height = "auto";
