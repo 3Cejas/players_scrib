@@ -1,5 +1,5 @@
-//var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-let socket = io("http://localhost:3000/");
+var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
+//let socket = io("http://localhost:3000/");
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -186,7 +186,7 @@ const LIMPIEZAS = {
 texto1.addEventListener("keyup", (evt) => {
   countChars(texto1);
   sendText();
-  auto_grow(texto1);d
+  auto_grow(texto1);
 });
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
 texto1.addEventListener("keydown", (evt) => {
@@ -289,7 +289,7 @@ socket.on("count", (data) => {
 socket.on("inicio", (data) => {
   socket.off("nombre1");
   socket.off("nombre2");
-  socket.off("recibe_temas");
+  //socket.off("recibe_temas");
 
   nombre1.disabled = true;
   nombre2.disabled = true;
@@ -387,11 +387,6 @@ socket.on("activar_modo", (data) => {
   MODOS[modo_actual](data, socket);
 });
 
-//Recibe los temas (que elige Espectador) y los coloca en su sitio.
-socket.on("recibe_temas", (data) => {
-  temas.innerHTML = data;
-});
-
 //FUNCIONES AUXILIARES.
 
 // Función para enviar texto al otro jugador y a control
@@ -412,6 +407,11 @@ function activar_sockets_extratextuales() {
   socket.on("nombre1", (data) => {
     nombre1.value = data;
   });
+
+  //Recibe los temas (que elige Espectador) y los coloca en su sitio.
+socket.on("recibe_temas", (data) => {
+  temas.innerHTML = data;
+});
 }
 
 function activar_socket_feedback(){

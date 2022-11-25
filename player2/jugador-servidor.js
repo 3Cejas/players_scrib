@@ -1,5 +1,5 @@
-//var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-let socket = io("http://localhost:3000/");
+var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
+//let socket = io("http://localhost:3000/");
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -194,6 +194,7 @@ texto2.addEventListener("keydown", (evt) => {
   countChars(texto2);
   sendText();
   auto_grow(texto2);
+  focalizador.scrollIntoView({block: "end"});
 });
 
 //activar los sockets extratextuales.
@@ -387,10 +388,7 @@ socket.on("activar_modo", (data) => {
   MODOS[modo_actual](data);
 });
 
-//Recibe los temas (que elige Espectador) y los coloca en su sitio.
-socket.on("recibe_temas", (data) => {
-  temas.innerHTML = data;
-});
+
 
 //FUNCIONES AUXILIARES.
 
@@ -412,6 +410,11 @@ function activar_sockets_extratextuales() {
   socket.on("nombre1", (data) => {
     nombre1.value = data;
   });
+  
+  //Recibe los temas (que elige Espectador) y los coloca en su sitio.
+socket.on("recibe_temas", (data) => {
+  temas.innerHTML = data;
+});
 }
 
 function activar_socket_feedback(){

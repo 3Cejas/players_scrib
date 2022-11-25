@@ -39,7 +39,7 @@ function temp() {
     document.getElementById("definicion").innerHTML = "";
     clearInterval(countInterval);
 
-    let time_minutes = 5; // Value in minutes
+    let time_minutes = 6; // Value in minutes
     let time_seconds = 0; // Value in seconds
 
 
