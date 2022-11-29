@@ -1,5 +1,5 @@
-var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-//var socket = io('http://localhost:3000/');
+//var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
+var socket = io('http://localhost:3000/');
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -108,7 +108,27 @@ const LIMPIEZAS = {
       },
   
     "texto inverso": function (data) {
+        texto1.value =
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+      //eliminar_saltos_de_linea(texto2.value)
+      texto1.value
+        .split("")
+        .reverse()
+        .join("")
+        .split(" ")
+        .reverse()
+        .join(" ");
 
+    texto2.value =
+      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+      //eliminar_saltos_de_linea(texto2.value)
+      texto2.value
+        .split("")
+        .reverse()
+        .join("")
+        .split(" ")
+        .reverse()
+        .join(" ");
     },
   
     "": function (data) {},
@@ -172,19 +192,19 @@ pausa el cambio de palabra.
 socket.on('count', data => {
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
+        LIMPIEZAS[modo_actual](data);
         activar_sockets_extratextuales();
-        texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
-        texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
+        //texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
+        //texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
 
         // Desactiva el blur de ambos textos.
-        texto2.classList.remove('textarea_blur');
-        texto1.classList.remove('textarea_blur');
-
+        //texto2.classList.remove('textarea_blur');
+        //texto1.classList.remove('textarea_blur');
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
 
-        texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-        texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
+        //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+        //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
         texto1.style.height = "auto";
         texto2.style.height = "auto";
@@ -244,7 +264,6 @@ socket.on('limpiar', data => {
     restablecer_estilo();
     clearTimeout(tempo_text_borroso);
     activar_sockets_extratextuales();
-    LIMPIEZAS[modo_actual](data);
 });
 
 socket.on('activar_modo', data => {

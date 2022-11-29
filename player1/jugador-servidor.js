@@ -1,5 +1,5 @@
-var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-//let socket = io("http://localhost:3000/");
+//var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
+let socket = io("http://localhost:3000/");
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
