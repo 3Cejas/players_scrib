@@ -43,18 +43,8 @@ let listener_modo;
 const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     "palabras bonus": function (data) {
-        activar_socket_feedback()
-        asignada = true;
-        palabra_actual = data.palabra_bonus[0];
+        activar_socket_feedback();
         explicación.innerHTML = "MODO PALABRAS BONUS";
-        palabra1.innerHTML =
-            "(+" + data.puntuacion + " pts) palabra: " + data.palabra_bonus[0];
-        definicion1.innerHTML = data.palabra_bonus[1];
-        puntuacion = data.puntuacion;
-        indice_buscar_palabra = texto1.value.length - 5;
-        texto2.removeEventListener("keyup", listener_modo);
-        listener_modo = function () { modo_palabras_bonus() };
-        texto2.addEventListener("keyup", listener_modo);
     },
 
     //Recibe y activa el modo letra prohibida.
@@ -134,6 +124,7 @@ const MODOS = {
 const LIMPIEZAS = {
     "palabras bonus": function (data) {
         socket.off('feedback_a_j2');
+        socket.off("enviar_palabra");
         asignada = false;
         texto2.removeEventListener("keyup", listener_modo);
     },
@@ -405,7 +396,23 @@ socket.on("activar_modo", (data) => {
     MODOS[modo_actual](data);
 });
 
+socket.on('enviar_palabra', data => {
+    recibir_palabra(data);
+});
 
+function recibir_palabra(data) {
+    animacion_modo();
+    asignada = true;
+    palabra_actual = data.palabra_bonus[0];
+    palabra1.innerHTML =
+        "(+" + data.puntuacion + " pts) palabra: " + data.palabra_bonus[0];
+    definicion1.innerHTML = data.palabra_bonus[1];
+    puntuacion = data.puntuacion;
+    indice_buscar_palabra = texto1.value.length - 5;
+    texto2.removeEventListener("keyup", listener_modo);
+    listener_modo = function () { modo_palabras_bonus() };
+    texto2.addEventListener("keyup", listener_modo);
+}
 
 //FUNCIONES AUXILIARES.
 

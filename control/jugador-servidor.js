@@ -45,8 +45,6 @@ const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         explicación.innerHTML = "MODO PALABRAS BONUS";
-        palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
-        definicion1.innerHTML = data.palabra_bonus[1];
     },
 
     //Recibe y activa el modo letra prohibida.
@@ -94,8 +92,7 @@ const MODOS = {
         definicion1.innerHTML = "";
     },
 
-    '': function (data) {
-    }
+    '': function (data) { }
 };
 
 // Recibe los datos del jugador 1 y los coloca.
@@ -167,11 +164,22 @@ socket.on('activar_modo', data => {
 
 socket.on("recibir_postgame1", (data) => {
     postgame2 = "\n🖋️ Caracteres escritos = " + data.longitud + "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n\n";
-})
+});
 
 socket.on("recibir_postgame2", (data) => {
     postgame1 = "\n🖋️ Caracteres escritos = " + data.longitud + "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n";
-})
+});
+
+socket.on('enviar_palabra', data => {
+    recibir_palabra(data);
+});
+
+function recibir_palabra(data) {
+    animacion_modo();
+    palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
+    definicion1.innerHTML = data.palabra_bonus[1];
+}
+
 socket.on('feedback_a_j2', data => {
     var feedback = document.querySelector(".feedback1");
     feedback.style.color = data.color;
@@ -229,6 +237,7 @@ socket.on('feedback_a_j1', data => {
         }, 2000);
     });
 });
+
 function animacion_modo() {
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it

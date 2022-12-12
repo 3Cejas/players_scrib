@@ -41,8 +41,6 @@ const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         explicación.innerHTML = "MODO PALABRAS BONUS";
-        palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
-        definicion1.innerHTML = data.palabra_bonus[1];
     },
 
     //Recibe y activa el modo letra prohibida.
@@ -90,12 +88,9 @@ const MODOS = {
 };
 
 const LIMPIEZAS = {
-    "palabras bonus": function (data) {
-    },
+    "palabras bonus": function (data) { },
 
-    "letra prohibida": function (data) {
-
-    },
+    "letra prohibida": function (data) { },
 
     "texto borroso": function (data) {
         texto1.classList.remove("textarea_blur");
@@ -291,6 +286,16 @@ socket.on('activar_modo', data => {
     modo_actual = data.modo_actual;
     MODOS[modo_actual](data);
 });
+
+socket.on('enviar_palabra', data => {
+    recibir_palabra(data);
+});
+
+function recibir_palabra(data) {
+    animacion_modo();
+    palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
+    definicion1.innerHTML = data.palabra_bonus[1];
+}
 
 socket.on('feedback_a_j2', data => {
     var feedback = document.querySelector(".feedback1");
