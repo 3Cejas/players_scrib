@@ -16,7 +16,7 @@ let explicación = getEl("explicación");
 
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
-let temas = getEl("temas");
+let tema = getEl("temas");
 
 // COMPONENTES DEL JUGADOR 2
 let nombre2 = getEl("nombre1");
@@ -26,7 +26,8 @@ let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
-let focalizador = getEl("focalizador1");
+let focalizador1 = getEl("focalizador1");
+let focalizador2 = getEl("focalizador2");
 let focalizador_id = 1;
 
 // Variables de los modos.
@@ -138,6 +139,7 @@ const LIMPIEZAS = {
 socket.on('texto1', data => {
     texto1.value = data.text;
     puntos1.innerHTML = data.points;
+    cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
     if(jugador_psico == 1){
        stylize();
@@ -155,12 +157,13 @@ socket.on('texto1', data => {
         }
     }*/
     texto1.style.height = (texto1.scrollHeight) + "px";
-    focalizador.scrollIntoView(false);
+    focalizador1.scrollIntoView(false);
 });
 
 socket.on('texto2', data => {
     texto2.value = data.text;
     puntos2.innerHTML = data.points;
+    cambiar_color_puntuación()
     nivel2.innerHTML = data.level;
     if(jugador_psico == 2){
         stylize();
@@ -179,7 +182,7 @@ socket.on('texto2', data => {
         }
     }*/
     texto2.style.height = (texto2.scrollHeight) + "px";
-    focalizador.scrollIntoView(false);
+    focalizador2.scrollIntoView(false);
 });
 
 activar_sockets_extratextuales()
@@ -190,8 +193,15 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on('count', data => {
+    if(data == "00:20"){
+        tiempo.style.color = "yellow"
+    }
+      if(data == "00:10"){
+          tiempo.style.color = "red"
+    }
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
+        tiempo.style.color = "white"
         LIMPIEZAS[modo_actual](data);
         activar_sockets_extratextuales();
         //texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
@@ -215,12 +225,17 @@ socket.on('count', data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    tiempo.style.color = "white"
+    
     socket.off('nombre1');
     socket.off('nombre2');
     socket.off('vote');
     socket.off('exit');
     socket.off('scroll');
     socket.off('temas_jugadores');
+    socket.off('recibir_comentario');
+    socket.off('recibir_postgame1');
+    socket.off('recibir_postgame2');
 
     palabra1.innerHTML = "";
     texto1.style.height = "40";
@@ -261,9 +276,13 @@ socket.on('limpiar', data => {
     texto2.style.height = (texto2.scrollHeight) + "px";
     texto2.classList.remove('textarea_blur');
     texto1.classList.remove('textarea_blur');
+    focalizador1.innerHTML = "";
+    focalizador2.innerHTML = "";
     restablecer_estilo();
     clearTimeout(tempo_text_borroso);
     activar_sockets_extratextuales();
+    puntos1.style.color = "white";
+    puntos2.style.color = "white";
 });
 
 socket.on('activar_modo', data => {
@@ -333,13 +352,11 @@ socket.on('feedback_a_j1', data => {
 
 socket.on('cambia_vista', data => {
     if(focalizador_id == 1){
-        focalizador = getEl("focalizador2");
-        focalizador.scrollIntoView(false);
+        focalizador2.scrollIntoView(false);
         focalizador_id = 2;
     }
     else{
-        focalizador = getEl("focalizador1");
-        focalizador.scrollIntoView(false);
+        focalizador1.scrollIntoView(false);
         focalizador_id = 1;
     }
 });
@@ -384,6 +401,18 @@ function activar_sockets_extratextuales() {
         temas = data;
         erm();
     });
+
+    socket.on('recibir_comentario', data => {
+        tema.innerHTML = data;
+    });
+
+    socket.on("recibir_postgame1", (data) => {
+        focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud+ "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+      });
+
+    socket.on("recibir_postgame2", (data) => {
+      focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud+ "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+    });
 }
 
 function getRandColor() {
@@ -412,13 +441,13 @@ function getTextAlign() {
 function stylize() {
     texto1.style.fontFamily = getRandFontFamily();
     texto1.style.color = getRandColor();
-    //var tamaño_letra = getRandNumber(7, 35) 
-    //text.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    var tamaño_letra = getRandNumber(7, 35) 
+    texto1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     texto1.style.textAlign = getTextAlign();
     texto2.style.textAlign = getTextAlign();
     texto2.style.fontFamily = getRandFontFamily();
     texto2.style.color = getRandColor();
-    //text1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    texto2.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();
     texto1.style.height = texto1.scrollHeight + "px";
     texto2.style.height = texto2.scrollHeight + "px";
@@ -451,11 +480,11 @@ function animacion_modo() {
 function restablecer_estilo() {
     texto1.style.fontFamily = "monospace";
     texto1.style.color = "rgb(155, 155, 155)";
-    texto1.style.fontSize = 25 + "pt"; // Font sizes between 15px and 35px
+    texto1.style.fontSize = 20 + "pt"; // Font sizes between 15px and 35px
     texto1.style.textAlign = "justify";
     texto2.style.fontFamily = "monospace";
     texto2.style.color = "rgb(155, 155, 155)";
-    texto2.style.fontSize = 25 + "pt"; // Font sizes between 15px and 35px
+    texto2.style.fontSize = 20 + "pt"; // Font sizes between 15px and 35px
     texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
     texto1.style.height = texto1.scrollHeight + "px";
@@ -616,3 +645,17 @@ function erm() {
     });
     eventFire(document.getElementById('temas'), 'click');
 }
+
+function cambiar_color_puntuación(){
+    if(puntos1.innerHTML.match(/\d+/g) > puntos2.innerHTML.match(/\d+/g)){
+      puntos1.style.color = "green";
+      puntos2.style.color = "red";
+    if(puntos1.innerHTML.match(/\d+/g) == puntos2.innerHTML.match(/\d+/g)){
+        puntos2.style.color = "green";
+      }
+    }
+    else{
+      puntos1.style.color = "red";
+      puntos2.style.color = "green";
+    }
+  }

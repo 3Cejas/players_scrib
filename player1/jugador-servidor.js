@@ -26,7 +26,10 @@ let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
-let focalizador = getEl("focalizador");
+let focalizador1 = getEl("focalizador1");
+let focalizador2 = getEl("focalizador2");
+
+
 
 let tempo_text_borroso;
 
@@ -193,7 +196,7 @@ texto1.addEventListener("keydown", (evt) => {
   countChars(texto1);
   sendText();
   auto_grow(texto1);
-  focalizador.scrollIntoView({block: "end"});
+  focalizador1.scrollIntoView({block: "end"});
 });
 
 //activar los sockets extratextuales.
@@ -217,7 +220,7 @@ socket.on("texto2", (data) => {
   }*/
   texto2.style.height = texto2.scrollHeight + "px";
   //window.scrollTo(0, document.body.scrollHeight);
-  focalizador.scrollIntoView({block: "end"});
+  focalizador1.scrollIntoView({block: "end"});
 });
 
 /* 
@@ -227,8 +230,15 @@ pausa el cambio de palabra.
 */
 socket.on("count", (data) => {
   texto1.focus();
+  if(data == "00:20"){
+    tiempo.style.color = "yellow"
+  }
+  if(data == "00:10"){
+      tiempo.style.color = "red"
+  }
   tiempo.innerHTML = data;
   if (data == "¡Tiempo!") {
+    tiempo.style.color = "white"
     LIMPIEZAS[modo_actual](data);
     modo_actual = "";
     activar_sockets_extratextuales();
@@ -265,7 +275,10 @@ socket.on("count", (data) => {
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
     palabra_actual = ""; // Variable que almacena la palabra bonus actual.
-
+    socket.on("recibir_postgame1", (data) => {
+      focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud+ "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+    });
+    setTimeout(postgame, 1000);
     //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
     //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
@@ -287,6 +300,8 @@ socket.on("count", (data) => {
 
 // Inicia el juego.
 socket.on("inicio", (data) => {
+  tiempo.style.color = "white"
+  
   socket.off("nombre1");
   socket.off("nombre2");
   //socket.off("recibe_temas");
@@ -376,6 +391,10 @@ socket.on("limpiar", (data) => {
   clearTimeout(tempo_text_borroso);
   saltos_línea_alineacion_1 = 0;
   saltos_línea_alineacion_2 = 0;
+  focalizador1.innerHTML = "";
+  focalizador2.innerHTML = "";
+  puntos1.style.color = "white";
+  puntos2.style.color = "white";
 });
 
 socket.on("activar_modo", (data) => {
@@ -542,6 +561,7 @@ function modo_palabras_bonus(){
         socket.emit("nueva_palabra", asignada);
         puntos_palabra += puntuacion;
         puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida;
+        cambiar_color_puntuación();
         puntos1.innerHTML = puntos + " puntos";
         feedback1.style.color = color_positivo;
         feedback1.innerHTML = "+" + puntuacion + " pts";
@@ -570,6 +590,7 @@ function modo_letra_prohibida(e){
     texto1.value = texto1.value.substring(0, position-1) + texto1.value.substring(position+1);
     puntos_letra_prohibida += 50;
     puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida;
+    cambiar_color_puntuación();
     puntos1.innerHTML = puntos + " puntos";
     sendText();
     feedback1.style.color = color_negativo;
@@ -589,4 +610,40 @@ function modo_letra_prohibida(e){
 function modo_psicodélico(){
   //socket.emit("psico", 1);
   stylize();
+}
+
+function postgame(){
+  actualizar_puntuación();
+  longitud = texto1.value.length;
+  if(puntos_letra_prohibida != 0){
+    puntos_letra_prohibida = -puntos_letra_prohibida;
+  }
+  socket.emit("enviar_postgame1", { longitud, puntos_palabra, puntos_letra_prohibida });
+  focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + texto1.value.length + "<br>📚 Palabras bonus = " + puntos_palabra + "<br>❌ Letra prohibida = " + puntos_letra_prohibida;
+  puntos_palabra = 0;
+  puntos = 0;
+  puntos_letra_prohibida = 0;
+}
+
+function actualizar_puntuación(){
+  puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida;
+  puntos1.innerHTML = puntos + " puntos";
+  cambio_nivel(puntos);
+  sendText();
+  auto_grow(texto1);
+  cambiar_color_puntuación();
+}
+
+function cambiar_color_puntuación(){
+  if(puntos >= puntos2.innerHTML.match(/\d+/g)){
+    puntos1.style.color = "green";
+    puntos2.style.color = "red";
+    if(puntos == puntos2.innerHTML.match(/\d+/g)){
+      puntos2.style.color = "green";
+    }
+  }
+  else{
+    puntos1.style.color = "red";
+    puntos2.style.color = "green";
+  }
 }

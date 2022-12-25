@@ -1,5 +1,5 @@
-//var socket = io('https://scri-b.up.railway.app/');
-var socket = io('http://localhost:3000/');
+//let socket = io('https://scri-b.up.railway.app/');
+let socket = io('http://localhost:3000/');
 const getEl = id => document.getElementById(id);
 
 // COMPONENTES DEL JUGADOR 1
@@ -18,6 +18,10 @@ let explicación = getEl("explicación");
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 
+let tema = getEl("temas");
+
+let temporizador = getEl("temporizador");
+
 // COMPONENTES DEL JUGADOR 2
 let nombre2 = getEl("nombre1");
 let texto2 = getEl("texto1");
@@ -29,6 +33,13 @@ let alineador2 = getEl("alineador2");
 
 let tempo_text_borroso;
 
+let postgame1;
+let postgame2;
+
+/*new Picker(document.querySelector('.js-inline-picker'), {
+    controls: true,
+    inline: true,
+  });*/
 const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
@@ -154,6 +165,13 @@ socket.on('activar_modo', data => {
     MODOS[modo_actual](data);
 });
 
+socket.on("recibir_postgame1", (data) => {
+    postgame2 = "\n🖋️ Caracteres escritos = " + data.longitud+ "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n\n";
+  })
+
+socket.on("recibir_postgame2", (data) => {
+    postgame1 = "\n🖋️ Caracteres escritos = " + data.longitud+ "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n";
+  })
 socket.on('feedback_a_j2', data => {
     var feedback = document.querySelector(".feedback1");
     feedback.style.color = data.color;
@@ -232,4 +250,11 @@ function animacion_modo() {
     animateCSS(".explicación", "bounceInLeft");
     animateCSS(".palabra", "bounceInLeft");
     animateCSS(".definicion", "bounceInLeft");
+}
+
+function descargar_textos(){
+    var a = document.createElement("a");
+    a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value + "\r\n\n" + document.getElementById("puntos").innerHTML + "\r\n\n" + document.getElementById("texto").value + "\r\n" + postgame1 + "\n\n"+ document.getElementById("nombre1").value + "\r\n\n" + document.getElementById("puntos1").innerHTML + "\r\n\n" + document.getElementById("texto1").value + "\n" + postgame2], { type: "text/plain" }));
+    a.download = document.getElementById("nombre").value + ' VS ' + document.getElementById("nombre1").value + '.txt';
+    a.click();
 }

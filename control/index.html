@@ -7,8 +7,11 @@
   <meta http-equiv="X-UA-Compatible" content="chrome=1" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
   <link rel="stylesheet" type="text/css" href="index.css">
+  <link rel="stylesheet" href="./node_modules/mtr-datepicker/dist/mtr-datepicker.min.css">
+  <link rel="stylesheet" href="./node_modules/mtr-datepicker/dist/mtr-datepicker.default-theme.min.css">
 </head>
-
+<script src="./node_modules/mtr-datepicker/dist/mtr-datepicker-timezones.min.js"></script>
+<script src="./node_modules/mtr-datepicker/dist/mtr-datepicker.min.js"></script>
 <body>
   <script src="./juego.js"></script>
   <div class="ascii">
@@ -21,7 +24,7 @@
       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                 
     </pre>
-    <br>
+    <br>           
     <center>
       <table class="default">
         <tr>
@@ -77,9 +80,9 @@
             </center>
           </td>
           <td>
-            <center>Temas
+            <center>
               <div class="container">
-                <input type="text" id="temas" size="10">
+                <input type="text" id="temas" size="10" placeholder="Temas / Coment.">
               </div>
             </center>
           </td>
@@ -92,11 +95,46 @@
           </td>
           <td><br>
             <center>
-              <button onclick="limpiar_inverso()" class="bn54">
-                <span class="bn54span">LIMPIAR INVERSO</span>
+              <button onclick="enviar_comentario()" class="bn54">
+                <span class="bn54span">💬 ENVIAR COMENTARIO</span>
               </button><br>
             </center>
           </td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+          <td>
+            <center>
+              Tiempo de partida:
+              <div id="first-mtr-datepicker"></div>
+              <script>
+                var config = {
+            target:     'first-mtr-datepicker',         // ID of HTML element
+            timestamp:  "9/17/2016, 26:00:34",    // Starting date
+            future:     false,                // Only dates in the future,
+            smartHours: false,                // Make a smart switch from AM to PM
+            animations: true,                 // NOTE: thew version with disabled animations is not stable
+            disableAmPm: true,
+            datepicker: ['seconds', 'hours', 'minutes'],
+          hours: {
+            min: 0,
+            max: 59,
+            step: 2,
+            maxlength: 2
+          },
+            minutes: {
+              min: 0,
+              max: 59,
+              step: 1
+            },
+          };
+                var myDatepicker = new MtrDatepicker(config);
+              </script>
+              </td>
+            </center>
+            <td></td>
+            <td></td>
         </tr>
       </table>
     </center>
@@ -161,5 +199,6 @@
 </body>
 <script src="socket.io-client/dist/socket.io.js"></script>
 <script src="./jugador-servidor.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js" integrity="sha512-ux1VHIyaPxawuad8d1wr1i9l4mTwukRq5B3s8G3nEmdENnKF5wKfOV6MEUH0k/rNT4mFr/yL+ozoDiwhUQekTg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 </html>

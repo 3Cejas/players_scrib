@@ -1,6 +1,11 @@
 
 @charset"utf-8";
 
+.focalizador{
+  font-size: 15;
+  text-align: center;
+}
+
 #pie {
   flex: 0 0 auto;
   position: fixed;
@@ -80,7 +85,7 @@ label {
 
 textarea {
   position: sticky;
-  font-size: 25pt;
+  font-size: 20pt;
   border-color: currentcolor;
   outline-color: currentcolor;
   background-color: transparent;
