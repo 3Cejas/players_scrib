@@ -26,7 +26,9 @@ let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 
-let focalizador = getEl("focalizador");
+let focalizador1 = getEl("focalizador1");
+let focalizador2 = getEl("focalizador2");
+
 
 let tempo_text_borroso;
 
@@ -194,7 +196,7 @@ texto2.addEventListener("keydown", (evt) => {
   countChars(texto2);
   sendText();
   auto_grow(texto2);
-  focalizador.scrollIntoView({block: "end"});
+  focalizador2.scrollIntoView({block: "end"});
 });
 
 //activar los sockets extratextuales.
@@ -218,7 +220,7 @@ socket.on("texto1", (data) => {
   }*/
   texto1.style.height = texto1.scrollHeight + "px";
   //window.scrollTo(0, document.body.scrollHeight);
-  focalizador.scrollIntoView({block: "end"});
+  focalizador2.scrollIntoView({block: "end"});
 });
 
 /* 
@@ -228,8 +230,15 @@ pausa el cambio de palabra.
 */
 socket.on("count", (data) => {
   texto2.focus();
+  if(data == "00:20"){
+    tiempo.style.color = "yellow"
+  }
+  if(data == "00:10"){
+      tiempo.style.color = "red"
+  }
   tiempo.innerHTML = data;
   if (data == "¡Tiempo!") {
+    tiempo.style.color = "white"
     LIMPIEZAS[modo_actual](data);
     modo_actual = "";
     activar_sockets_extratextuales();
@@ -267,6 +276,11 @@ socket.on("count", (data) => {
     clearTimeout(cambio_palabra);
     palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 
+    socket.on("recibir_postgame2", (data) => {
+      focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud+ "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+    });
+    setTimeout(postgame, 1000);
+
     //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
     //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
@@ -275,9 +289,6 @@ socket.on("count", (data) => {
     texto1.style.height = texto1.scrollHeight + "px"; //Reajustamos el tamaño del área de texto del j1.
     texto2.style.height = texto2.scrollHeight + "px"; // Reajustamos el tamaño del área de texto del j2.
 
-    puntos_palabra = 0;
-    puntos = 0;
-    puntos_letra_prohibida = 0;
     /*let a = document.createElement("a");
         a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"}));
         blob = new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"});
@@ -288,6 +299,8 @@ socket.on("count", (data) => {
 
 // Inicia el juego.
 socket.on("inicio", (data) => {
+  tiempo.style.color = "white"
+
   socket.off("nombre1");
   socket.off("nombre2");
   socket.off("recibe_temas");
@@ -377,6 +390,10 @@ socket.on("limpiar", (data) => {
   clearTimeout(tempo_text_borroso);
   saltos_línea_alineacion_1 = 0;
   saltos_línea_alineacion_2 = 0;
+  focalizador1.innerHTML = "";
+  focalizador2.innerHTML = "";
+  puntos1.style.color = "white";
+  puntos2.style.color = "white";
 });
 
 socket.on("activar_modo", (data) => {
@@ -545,6 +562,7 @@ function modo_palabras_bonus(){
       socket.emit("nueva_palabra", asignada);
       puntos_palabra += puntuacion;
       puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
+      cambiar_color_puntuación();
       puntos2.innerHTML = puntos + " puntos";
       feedback2.style.color = color_positivo;
       feedback2.innerHTML = "+" + puntuacion + " pts";
@@ -573,6 +591,7 @@ if (
   texto2.value = texto2.value.substring(0, position-1) + texto2.value.substring(position+1);
   puntos_letra_prohibida += 50;
   puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
+  cambiar_color_puntuación();
   puntos2.innerHTML = puntos + " puntos";
   sendText();
   feedback2.style.color = color_negativo;
@@ -592,4 +611,41 @@ if (
 function modo_psicodélico(){
   //socket.emit("psico", 2);
   stylize();
+}
+
+function postgame(){
+  actualizar_puntuación();
+  longitud = texto2.value.length;
+  if(puntos_letra_prohibida != 0){
+    puntos_letra_prohibida = -puntos_letra_prohibida;
+  }
+  socket.emit("enviar_postgame2", { longitud, puntos_palabra, puntos_letra_prohibida });
+  focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + texto2.value.length + "<br>📚 Palabras bonus = " + puntos_palabra + "<br>❌ Letra prohibida = " + puntos_letra_prohibida;
+  puntos_palabra = 0;
+  puntos = 0;
+  puntos_letra_prohibida = 0;
+}
+
+function actualizar_puntuación(){
+  puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
+  puntos2.innerHTML = puntos + " puntos";
+  cambio_nivel(puntos);
+  sendText();
+  auto_grow(texto2);
+  cambiar_color_puntuación();
+}
+
+function cambiar_color_puntuación(){
+  if(puntos > puntos1.innerHTML.match(/\d+/g)){
+    puntos2.style.color = "green";
+    puntos1.style.color = "red";
+  if(puntos == puntos1.innerHTML.match(/\d+/g)){
+    puntos1.style.color = "green";
+  }
+  }
+
+  else{
+    puntos2.style.color = "red";
+    puntos1.style.color = "green";
+  }
 }

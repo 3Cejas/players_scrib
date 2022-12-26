@@ -40,7 +40,7 @@ function auto_grow(element) {
   texto1.style.height = texto1.scrollHeight + "px";
   texto2.style.height = texto2.scrollHeight + "px";
   //window.scrollTo(0, document.body.scrollHeight);
-focalizador.scrollIntoView({block: "end"});
+focalizador2.scrollIntoView({block: "end"});
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
@@ -48,6 +48,7 @@ function borrar(texto) {
   if (!desactivar_borrar) {
     texto2.value = texto.value.substring(0, texto2.value.length - 1);
     puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
+    cambiar_color_puntuación()
     puntos2.innerHTML = puntos + " puntos";
     sendText();
     cambio_nivel(puntos);
@@ -60,6 +61,7 @@ function borrar(texto) {
 //Función que modifica el comportamiento del juego.
 function countChars(texto) {
   puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida;
+  cambiar_color_puntuación();
   puntos2.innerHTML = puntos + " puntos";
   cambio_nivel(puntos);
   clearTimeout(borrado);

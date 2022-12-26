@@ -1,4 +1,6 @@
 let countInterval;
+let time_minutes; // Value in minutes
+let time_seconds; // Value in seconds
 
 function paddedFormat(num) {
     return num < 10 ? "0" + num : num;
@@ -18,17 +20,20 @@ function startCountDown(duration, element) {
         element.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         socket.emit('count', count);
+        if(secondsRemaining == 20){
+            tiempo.style.color = "yellow"
+        }
+        if(secondsRemaining == 10){
+            tiempo.style.color = "red"
+        }
         secondsRemaining = secondsRemaining - 1;
+        console.log(secondsRemaining)
         if (secondsRemaining < 0) {
             clearInterval(countInterval);
+            tiempo.style.color = "white"
             document.getElementById("tiempo").innerHTML = "¡Tiempo!";
             socket.emit('count', "¡Tiempo!");
-
-            var a = document.createElement("a");
-            a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value + "\r\n" + document.getElementById("puntos").innerHTML + "\r\n" + document.getElementById("texto").value + "\r\n" + document.getElementById("nombre1").value + "\r\n" + document.getElementById("puntos1").innerHTML + "\r\n" + document.getElementById("texto1").value], { type: "text/plain" }));
-            blob = new Blob([document.getElementById("nombre").value + "\n" + document.getElementById("texto").value + "\n" + document.getElementById("nombre1").value + "\n" + document.getElementById("texto1").value], { type: "text/plain" });
-            a.download = document.getElementById("nombre").value + ' VS ' + document.getElementById("nombre1").value + '.txt';
-            a.click();
+            setTimeout(descargar_textos, 5000);
         };
 
     }, 1000);
@@ -37,14 +42,15 @@ function startCountDown(duration, element) {
 function temp() {
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
+    tiempo.style.color = "white"
     clearInterval(countInterval);
 
-    let time_minutes = 0; // Value in minutes
-    let time_seconds = 6; // Value in seconds
-
-
-    socket.emit('inicio', time_minutes);
+    var date = new Date(myDatepicker);
+    time_minutes = date.getHours();
+    time_seconds = date.getMinutes();
     let duration = time_minutes * 60 + time_seconds;
+
+    socket.emit('inicio', duration);
 
     element = document.querySelector('#tiempo');
     element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
@@ -63,7 +69,7 @@ function exit() {
 };
 
 function temas() {
-    palabras = document.getElementById("temas").value.split(",")
+    palabras = tema.value.split(",")
     socket.emit('temas', palabras);
 };
 
@@ -110,6 +116,7 @@ function cambiar_vista() {
     socket.emit('cambiar_vista', 'nada');
 };
 
-function limpiar_inverso() {
-    socket.emit('limpiar_inverso', 'nada');
+function enviar_comentario() {
+    palabras = tema.value;
+    socket.emit('enviar_comentario', palabras);
 };

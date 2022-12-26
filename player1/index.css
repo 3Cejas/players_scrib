@@ -1,6 +1,11 @@
 
 @charset"utf-8";
 
+.focalizador{
+  font-size: 15;
+  text-align: center;
+}
+
 #pie {
   flex: 0 0 auto;
   position: fixed;
