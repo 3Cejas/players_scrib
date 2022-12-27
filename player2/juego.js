@@ -20,109 +20,109 @@ const color_positivo = "green";
 
 // Función que aumenta de tamaño el texto del jugador 2 cuando el jugador 2 escribe cualquier carácter en el texto.
 function auto_grow(element) {
-  element.style.height = "5px";
-  element.style.height = element.scrollHeight + "px";
-  /*if (texto2.scrollHeight >= texto1.scrollHeight) {
-    while (texto2.scrollHeight > texto1.scrollHeight) {
-      saltos_línea_alineacion_1 += 1;
-      texto1.value = "\n" + texto1.value;
-    }
-    texto1.style.height = texto2.scrollHeight + "px";
-    texto2.style.height = texto2.scrollHeight + "px";
-  } else {
-    while (texto2.scrollHeight < texto1.scrollHeight) {
-      saltos_línea_alineacion_2 += 1;
-      texto2.value = "\n" + texto2.value;
-    }
+    element.style.height = "5px";
+    element.style.height = element.scrollHeight + "px";
+    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
+      while (texto2.scrollHeight > texto1.scrollHeight) {
+        saltos_línea_alineacion_1 += 1;
+        texto1.value = "\n" + texto1.value;
+      }
+      texto1.style.height = texto2.scrollHeight + "px";
+      texto2.style.height = texto2.scrollHeight + "px";
+    } else {
+      while (texto2.scrollHeight < texto1.scrollHeight) {
+        saltos_línea_alineacion_2 += 1;
+        texto2.value = "\n" + texto2.value;
+      }
+      texto1.style.height = texto1.scrollHeight + "px";
+      texto2.style.height = texto1.scrollHeight + "px";
+    }*/
     texto1.style.height = texto1.scrollHeight + "px";
-    texto2.style.height = texto1.scrollHeight + "px";
-  }*/
-  texto1.style.height = texto1.scrollHeight + "px";
-  texto2.style.height = texto2.scrollHeight + "px";
-  //window.scrollTo(0, document.body.scrollHeight);
-focalizador2.scrollIntoView({block: "end"});
+    texto2.style.height = texto2.scrollHeight + "px";
+    //window.scrollTo(0, document.body.scrollHeight);
+    focalizador2.scrollIntoView({ block: "end" });
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
 function borrar(texto) {
-  if (!desactivar_borrar) {
-    texto2.value = texto.value.substring(0, texto2.value.length - 1);
-    puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
-    cambiar_color_puntuación()
-    puntos2.innerHTML = puntos + " puntos";
-    sendText();
-    cambio_nivel(puntos);
-    borrado = setTimeout(() => {
-      borrar(texto);
-    }, rapidez_borrado);
-  }
+    if (!desactivar_borrar) {
+        texto2.value = texto.value.substring(0, texto2.value.length - 1);
+        puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida;
+        cambiar_color_puntuación()
+        puntos2.innerHTML = puntos + " puntos";
+        sendText();
+        cambio_nivel(puntos);
+        borrado = setTimeout(() => {
+            borrar(texto);
+        }, rapidez_borrado);
+    }
 }
 
 //Función que modifica el comportamiento del juego.
 function countChars(texto) {
-  puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida;
-  cambiar_color_puntuación();
-  puntos2.innerHTML = puntos + " puntos";
-  cambio_nivel(puntos);
-  clearTimeout(borrado);
-  borrado = setTimeout(function () {
-    borrar(texto);
-  }, rapidez_inicio_borrado);
+    puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida;
+    cambiar_color_puntuación();
+    puntos2.innerHTML = puntos + " puntos";
+    cambio_nivel(puntos);
+    clearTimeout(borrado);
+    borrado = setTimeout(function () {
+        borrar(texto);
+    }, rapidez_inicio_borrado);
 }
 
 //Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.
 function toNormalForm(str) {
-  return str
-    .normalize("NFD")
-    .replace(
-      /([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi,
-      "$1"
-    );
+    return str
+        .normalize("NFD")
+        .replace(
+            /([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi,
+            "$1"
+        );
 }
 
 //Función auxiliar que cambia la rapidez y el inicio de borrado en función de la cantidad de caracteres escritos.
 function cambio_nivel(caracteres) {
-  if (0 <= caracteres && caracteres < 250) {
-    nivel2.innerHTML = "nivel 0";
-    rapidez_inicio_borrado = 3000;
-    rapidez_borrado = 3000;
-  }
-  if (250 <= caracteres && caracteres < 500) {
-    nivel2.innerHTML = "nivel 1";
-    rapidez_inicio_borrado = 2500;
-    rapidez_borrado = 2500;
-  }
-  if (500 <= caracteres && caracteres < 750) {
-    nivel2.innerHTML = "nivel 2";
-    rapidez_borrado = 1800;
-    rapidez_inicio_borrado = 1800;
-  }
-  if (750 <= caracteres && caracteres < 1000) {
-    nivel2.innerHTML = "nivel 3";
-    rapidez_borrado = 1200;
-    rapidez_inicio_borrado = 1200;
-  }
-  if (caracteres >= 1000) {
-    nivel2.innerHTML = "nivel 4";
-    rapidez_borrado = 500;
-    rapidez_inicio_borrado = 500;
-  }
+    if (0 <= caracteres && caracteres < 250) {
+        nivel2.innerHTML = "nivel 0";
+        rapidez_inicio_borrado = 3000;
+        rapidez_borrado = 3000;
+    }
+    if (250 <= caracteres && caracteres < 500) {
+        nivel2.innerHTML = "nivel 1";
+        rapidez_inicio_borrado = 2500;
+        rapidez_borrado = 2500;
+    }
+    if (500 <= caracteres && caracteres < 750) {
+        nivel2.innerHTML = "nivel 2";
+        rapidez_borrado = 1800;
+        rapidez_inicio_borrado = 1800;
+    }
+    if (750 <= caracteres && caracteres < 1000) {
+        nivel2.innerHTML = "nivel 3";
+        rapidez_borrado = 1200;
+        rapidez_inicio_borrado = 1200;
+    }
+    if (caracteres >= 1000) {
+        nivel2.innerHTML = "nivel 4";
+        rapidez_borrado = 500;
+        rapidez_inicio_borrado = 500;
+    }
 }
 
 //Función auxiliar para crear las animaciones del feedback.
 const animateCSS = (element, animation, prefix = "animate__") =>
-  // We create a Promise and return it
-  new Promise((resolve, reject) => {
-    const animationName = `${prefix}${animation}`;
-    const node = document.querySelector(element);
+    // We create a Promise and return it
+    new Promise((resolve, reject) => {
+        const animationName = `${prefix}${animation}`;
+        const node = document.querySelector(element);
 
-    node.classList.add(`${prefix}animated`, animationName);
+        node.classList.add(`${prefix}animated`, animationName);
 
-    // When the animation ends, we clean the classes and resolve the Promise
-    function handleAnimationEnd(event) {
-      event.stopPropagation();
-      node.classList.remove(`${prefix}animated`, animationName);
-      resolve("Animation ended");
-    }
-    node.addEventListener("animationend", handleAnimationEnd, { once: true });
-  });
+        // When the animation ends, we clean the classes and resolve the Promise
+        function handleAnimationEnd(event) {
+            event.stopPropagation();
+            node.classList.remove(`${prefix}animated`, animationName);
+            resolve("Animation ended");
+        }
+        node.addEventListener("animationend", handleAnimationEnd, { once: true });
+    });

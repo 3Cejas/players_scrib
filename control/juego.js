@@ -20,10 +20,10 @@ function startCountDown(duration, element) {
         element.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         socket.emit('count', count);
-        if(secondsRemaining == 20){
+        if (secondsRemaining == 20) {
             tiempo.style.color = "yellow"
         }
-        if(secondsRemaining == 10){
+        if (secondsRemaining == 10) {
             tiempo.style.color = "red"
         }
         secondsRemaining = secondsRemaining - 1;

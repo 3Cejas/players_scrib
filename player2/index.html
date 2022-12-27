@@ -1,20 +1,20 @@
 <html lang="es">
 
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SCRB</title>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-  <link rel="stylesheet" type="text/css" href="index.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <!--<script src="jquery.highlight-within-textarea.js"></script>-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!--<script src="jquery.highlight-within-textarea.js"></script>-->
 </head>
 
 <body>
-  <script src="./juego.js"></script>
-  <center>
-    <pre class="neon">
+    <script src="./juego.js"></script>
+    <div align="center">
+        <pre class="neon">
         __     _____    _____   _____    _____    __       ____  
        / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
       / /    | (___   | |      | |__) |   | |      \ \    | |_) |
@@ -23,83 +23,75 @@
        \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                   
     </pre>
-    <!-- <pre class="ascii" data-title="ABC">
-       __     _____    _____   _____    _____    __       ____  
-      / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
-     / /    | (___   | |      | |__) |   | |      \ \    | |_) |
-    < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
-     \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
-      \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
-                                                                                                 
-    </pre>-->
-    <center>
-      <p class="sub">powered by</p><img src="logo.png" alt="" width="80" />
-    </center>
-    <br>
-    <div class="container"></div>
-    <p><span id="temas" class="temas"></span>
-    </p>
-    </div>
-    <div id="contenedor">
-      <div>
-        <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
-        <br><br>
-        <p id="alineador1"></p>
-        <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false">
-        </textarea>
-        <br><br>
-        <center>
-          <table class="right">
-            <tr>
-              <th id="puntos">0 puntos</th>
-              <th id="nivel">nivel 0</th>
-            </tr>
-          </table>
-          <h1 id="feedback1" class="feedback1"></h1>
-          <h1 id="focalizador1" class="focalizador"></h1>
-        </center>
-          </br>
-      </div>
-      <div>
-        <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
-        <br><br>
-        <p id="alineador2"></p>
-        <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false">
-        </textarea>
-        <br><br>
-        <center>
-          <table class="right">
-            <tr>
-              <th id="puntos1">0 puntos</th>
-              <th id="nivel1">nivel 0</th>
-            </tr>
-          </table>
-          <h1 id="feedback2" class="feedback2"></h1>
-          <h1 id="focalizador2" class="focalizador"></h1>
-          </br>
-        </center>
+        <div align="center">
+            <p class="sub">powered by</p><img src="logo.png" alt="" width="80" />
+        </div>
+        <br>
+        <div class="container"></div>
+        <p><span id="temas" class="temas"></span></p>
+        <div id="contenedor">
+            <div>
+                <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
+                <br><br>
+                <p id="alineador1"></p>
+                <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..."
+                    spellcheck="false">
+                </textarea>
+                <br><br>
+                <div align="center">
+                    <table class="right">
+                        <tr>
+                            <th id="puntos">0 puntos</th>
+                            <th id="nivel">nivel 0</th>
+                        </tr>
+                    </table>
+                    <h1 id="feedback1" class="feedback1"></h1>
+                    <h1 id="focalizador1" class="focalizador"></h1>
+                </div>
+                </br>
+            </div>
+            <div>
+                <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
+                <br><br>
+                <p id="alineador2"></p>
+                <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..."
+                    spellcheck="false">
+                </textarea>
+                <br><br>
+                <div align="center">
+                    <table class="right">
+                        <tr>
+                            <th id="puntos1">0 puntos</th>
+                            <th id="nivel1">nivel 0</th>
+                        </tr>
+                    </table>
+                    <h1 id="feedback2" class="feedback2"></h1>
+                    <h1 id="focalizador2" class="focalizador"></h1>
+                    </br>
+                </div>
 
-      </div>
-    </div>
-    <div id="pie">
-      <table>
-        <tr>
-          <p id="tiempo" class="tiempo"></p>
-        <tr>
-          <th>
-            <p id="explicación" class=explicación></p>
-          </th>
-        </tr>
-        <th>
-          <p id="palabra" class=palabra></p>
-        </th>
-        </tr>
-        <tr>
-          <th>
-            <p id="definicion" class=definicion></p>
-          </th>
-        </tr>
-      </table>
+            </div>
+        </div>
+        <div id="pie">
+            <table>
+                <tr>
+                    <p id="tiempo" class="tiempo"></p>
+                <tr>
+                    <th>
+                        <p id="explicación" class="explicación"></p>
+                    </th>
+                </tr>
+                <th>
+                    <p id="palabra" class="palabra"></p>
+                </th>
+                </tr>
+                <tr>
+                    <th>
+                        <p id="definicion" class="definicion"></p>
+                    </th>
+                </tr>
+            </table>
+        </div>
     </div>
 
 </body>

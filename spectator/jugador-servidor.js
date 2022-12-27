@@ -86,54 +86,54 @@ const MODOS = {
     },
 
     '': function (data) {
-    }    
+    }
 };
 
 const LIMPIEZAS = {
     "palabras bonus": function (data) {
     },
-  
+
     "letra prohibida": function (data) {
-      
+
     },
-  
+
     "texto borroso": function (data) {
-      texto1.classList.remove("textarea_blur");
-      texto2.classList.remove("textarea_blur");
+        texto1.classList.remove("textarea_blur");
+        texto2.classList.remove("textarea_blur");
     },
-  
+
     psicodélico: function (data) {
         jugador_psico = 0;
-      restablecer_estilo();
-      //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
-      },
-  
+        restablecer_estilo();
+        //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
+    },
+
     "texto inverso": function (data) {
         texto1.value =
-      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-      //eliminar_saltos_de_linea(texto2.value)
-      texto1.value
-        .split("")
-        .reverse()
-        .join("")
-        .split(" ")
-        .reverse()
-        .join(" ");
+            //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+            //eliminar_saltos_de_linea(texto2.value)
+            texto1.value
+                .split("")
+                .reverse()
+                .join("")
+                .split(" ")
+                .reverse()
+                .join(" ");
 
-    texto2.value =
-      //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-      //eliminar_saltos_de_linea(texto2.value)
-      texto2.value
-        .split("")
-        .reverse()
-        .join("")
-        .split(" ")
-        .reverse()
-        .join(" ");
+        texto2.value =
+            //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
+            //eliminar_saltos_de_linea(texto2.value)
+            texto2.value
+                .split("")
+                .reverse()
+                .join("")
+                .split(" ")
+                .reverse()
+                .join(" ");
     },
-  
-    "": function (data) {},
-  };
+
+    "": function (data) { },
+};
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
@@ -141,8 +141,8 @@ socket.on('texto1', data => {
     puntos1.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
-    if(jugador_psico == 1){
-       stylize();
+    if (jugador_psico == 1) {
+        stylize();
     }
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
@@ -165,9 +165,9 @@ socket.on('texto2', data => {
     puntos2.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel2.innerHTML = data.level;
-    if(jugador_psico == 2){
+    if (jugador_psico == 2) {
         stylize();
-     }
+    }
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
@@ -193,11 +193,11 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on('count', data => {
-    if(data == "00:20"){
+    if (data == "00:20") {
         tiempo.style.color = "yellow"
     }
-      if(data == "00:10"){
-          tiempo.style.color = "red"
+    if (data == "00:10") {
+        tiempo.style.color = "red"
     }
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
@@ -226,7 +226,7 @@ socket.on('count', data => {
 // Inicia el juego.
 socket.on('inicio', data => {
     tiempo.style.color = "white"
-    
+
     socket.off('nombre1');
     socket.off('nombre2');
     socket.off('vote');
@@ -351,11 +351,11 @@ socket.on('feedback_a_j1', data => {
 });
 
 socket.on('cambia_vista', data => {
-    if(focalizador_id == 1){
+    if (focalizador_id == 1) {
         focalizador2.scrollIntoView(false);
         focalizador_id = 2;
     }
-    else{
+    else {
         focalizador1.scrollIntoView(false);
         focalizador_id = 1;
     }
@@ -407,11 +407,11 @@ function activar_sockets_extratextuales() {
     });
 
     socket.on("recibir_postgame1", (data) => {
-        focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud+ "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
-      });
+        focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+    });
 
     socket.on("recibir_postgame2", (data) => {
-      focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud+ "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+        focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
     });
 }
 
@@ -441,7 +441,7 @@ function getTextAlign() {
 function stylize() {
     texto1.style.fontFamily = getRandFontFamily();
     texto1.style.color = getRandColor();
-    var tamaño_letra = getRandNumber(7, 35) 
+    var tamaño_letra = getRandNumber(7, 35)
     texto1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     texto1.style.textAlign = getTextAlign();
     texto2.style.textAlign = getTextAlign();
@@ -646,16 +646,16 @@ function erm() {
     eventFire(document.getElementById('temas'), 'click');
 }
 
-function cambiar_color_puntuación(){
-    if(puntos1.innerHTML.match(/\d+/g) > puntos2.innerHTML.match(/\d+/g)){
-      puntos1.style.color = "green";
-      puntos2.style.color = "red";
-    if(puntos1.innerHTML.match(/\d+/g) == puntos2.innerHTML.match(/\d+/g)){
+function cambiar_color_puntuación() {
+    if (puntos1.innerHTML.match(/\d+/g) > puntos2.innerHTML.match(/\d+/g)) {
+        puntos1.style.color = "green";
+        puntos2.style.color = "red";
+        if (puntos1.innerHTML.match(/\d+/g) == puntos2.innerHTML.match(/\d+/g)) {
+            puntos2.style.color = "green";
+        }
+    }
+    else {
+        puntos1.style.color = "red";
         puntos2.style.color = "green";
-      }
     }
-    else{
-      puntos1.style.color = "red";
-      puntos2.style.color = "green";
-    }
-  }
+}

@@ -1,21 +1,22 @@
 <html lang="es">
 
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SCRB</title>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-  <link rel="stylesheet" type="text/css" href="index.css">
-  <link rel="stylesheet" href="./node_modules/mtr-datepicker/dist/mtr-datepicker.min.css">
-  <link rel="stylesheet" href="./node_modules/mtr-datepicker/dist/mtr-datepicker.default-theme.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" href="./node_modules/mtr-datepicker/dist/mtr-datepicker.min.css">
+    <link rel="stylesheet" href="./node_modules/mtr-datepicker/dist/mtr-datepicker.default-theme.min.css">
 </head>
 <script src="./node_modules/mtr-datepicker/dist/mtr-datepicker-timezones.min.js"></script>
 <script src="./node_modules/mtr-datepicker/dist/mtr-datepicker.min.js"></script>
+
 <body>
-  <script src="./juego.js"></script>
-  <div class="ascii">
-    <pre class="neon">
+    <script src="./juego.js"></script>
+    <div class="ascii">
+        <pre class="neon">
        __     _____    _____   _____    _____    __       ____  
       / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
      / /    | (___   | |      | |__) |   | |      \ \    | |_) |
@@ -23,182 +24,184 @@
      \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                 
-    </pre>
-    <br>           
-    <center>
-      <table class="default">
-        <tr>
-          <td>
-            <center>
-              <button onclick="temp()" class="bn54">
-                <span class="bn54span">✍️ ESCRIBIR</span>
-              </button><br>
-            </center>
-          </td>
-          <td>
-            <center>
-              <button onclick="vote()" class="bn54">
-                <span class="bn54span">🗳️ VOTAR</span>
-              </button><br>
-            </center>
-          </td>
-          <td>
-            <center>
-              <button onclick="temas()" class="bn54">
-                <span class="bn54span">🎨 ELEGIR TEMA</span>
-              </button><br>
-            </center>
-          </td>
-          <td>
-            <center>
-              <button onclick="subir()" class="bn54">
-                <span class="bn54span">⬆️ SCROLL</span>
-              </button><br>
-            </center>
-          </td>
-          <td>
-            <center>
-              <button onclick="cambiar_vista()" class="bn54">
-                <span class="bn54span">👀 CAMBIAR DE VISTA</span>
-              </button><br>
-            </center>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <center>
-              <button onclick="exit()" class="bn54">
-                <span class="bn54span">❌ CERRAR</span>
-              </button>
-            </center>
-          </td>
-          <td>
-            <center>
-              <button onclick="limpiar()" class="bn54">
-                <span class="bn54span">🧹 LIMPIAR</span>
-              </button>
-            </center>
-          </td>
-          <td>
-            <center>
-              <div class="container">
-                <input type="text" id="temas" size="10" placeholder="Temas / Coment.">
-              </div>
-            </center>
-          </td>
-          <td><br>
-            <center>
-              <button onclick="bajar()" class="bn54">
-                <span class="bn54span">⬇️ SCROLL</span>
-              </button><br>
-            </center>
-          </td>
-          <td><br>
-            <center>
-              <button onclick="enviar_comentario()" class="bn54">
-                <span class="bn54span">💬 ENVIAR COMENTARIO</span>
-              </button><br>
-            </center>
-          </td>
-        </tr>
-        <tr>
-          <td></td>
-          <td></td>
-          <td>
-            <center>
-              Tiempo de partida:
-              <div id="first-mtr-datepicker"></div>
-              <script>
-                var config = {
-            target:     'first-mtr-datepicker',         // ID of HTML element
-            timestamp:  "9/17/2016, 26:00:34",    // Starting date
-            future:     false,                // Only dates in the future,
-            smartHours: false,                // Make a smart switch from AM to PM
-            animations: true,                 // NOTE: thew version with disabled animations is not stable
-            disableAmPm: true,
-            datepicker: ['seconds', 'hours', 'minutes'],
-          hours: {
-            min: 0,
-            max: 59,
-            step: 2,
-            maxlength: 2
-          },
-            minutes: {
-              min: 0,
-              max: 59,
-              step: 1
-            },
-          };
-                var myDatepicker = new MtrDatepicker(config);
-              </script>
-              </td>
-            </center>
-            <td></td>
-            <td></td>
-        </tr>
-      </table>
-    </center>
+        </pre>
+    </div>
+    <br>
+    <div align="center">
+        <table class="default">
+            <tr>
+                <td>
+                    <div align="center">
+                        <button onclick="temp()" class="bn54">
+                            <span class="bn54span">✍️ ESCRIBIR</span>
+                        </button><br>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="vote()" class="bn54">
+                            <span class="bn54span">🗳️ VOTAR</span>
+                        </button><br>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="temas()" class="bn54">
+                            <span class="bn54span">🎨 ELEGIR TEMA</span>
+                        </button><br>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="subir()" class="bn54">
+                            <span class="bn54span">⬆️ SCROLL</span>
+                        </button><br>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="cambiar_vista()" class="bn54">
+                            <span class="bn54span">👀 CAMBIAR DE VISTA</span>
+                        </button><br>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center">
+                        <button onclick="exit()" class="bn54">
+                            <span class="bn54span">❌ CERRAR</span>
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="limpiar()" class="bn54">
+                            <span class="bn54span">🧹 LIMPIAR</span>
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <div class="container">
+                            <input type="text" id="temas" size="10" placeholder="Temas / Coment.">
+                        </div>
+                    </div>
+                </td>
+                <td><br>
+                    <div align="center">
+                        <button onclick="bajar()" class="bn54">
+                            <span class="bn54span">⬇️ SCROLL</span>
+                        </button><br>
+                    </div>
+                </td>
+                <td><br>
+                    <div align="center">
+                        <button onclick="enviar_comentario()" class="bn54">
+                            <span class="bn54span">💬 ENVIAR COMENTARIO</span>
+                        </button><br>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>
+                    <div align="center">
+                        Tiempo de partida:
+                        <div id="first-mtr-datepicker"></div>
+                        <script>
+                            var config = {
+                                target: 'first-mtr-datepicker',         // ID of HTML element
+                                timestamp: "9/17/2016, 26:00:34",    // Starting date
+                                future: false,                // Only dates in the future,
+                                smartHours: false,                // Make a smart switch from AM to PM
+                                animations: true,                 // NOTE: thew version with disabled animations is not stable
+                                disableAmPm: true,
+                                datepicker: ['seconds', 'hours', 'minutes'],
+                                hours: {
+                                    min: 0,
+                                    max: 59,
+                                    step: 2,
+                                    maxlength: 2
+                                },
+                                minutes: {
+                                    min: 0,
+                                    max: 59,
+                                    step: 1
+                                },
+                            };
+                            var myDatepicker = new MtrDatepicker(config);
+                        </script>
+                </td>
+    </div>
+    <td></td>
+    <td></td>
+    </tr>
+    </table>
+    </div>
 
     <div id="contenedor">
-      <div>
-        <input id="nombre" class="nombre" value="ESCRITXR 1"></input>
-        <br><br>
-        <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
-          oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);"
-        ></textarea>
-        <br><br>
-        <center>
-          <table class="right">
-            <tr>
-              <th id="puntos">0 puntos</th>
-              <th id="nivel">nivel 0</th>
-            </tr>
-          </table>
-          <h1 id="feedback1" class="feedback1"></h1>
-        </center>
-      </div>
-      <div>
-        <input id="nombre1" class="nombre" value="ESCRITXR 2"></input>
-        <br><br>
-        <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
-          oninput="auto_grow1(this)" onkeyup="countChars1(this);" onkeydown="countChars1(this);">
+        <div>
+            <input id="nombre" class="nombre" value="ESCRITXR 1"></input>
+            <br><br>
+            <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
+                oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);"></textarea>
+            <br><br>
+            <div align="center">
+                <table class="right">
+                    <tr>
+                        <th id="puntos">0 puntos</th>
+                        <th id="nivel">nivel 0</th>
+                    </tr>
+                </table>
+                <h1 id="feedback1" class="feedback1"></h1>
+            </div>
+        </div>
+        <div>
+            <input id="nombre1" class="nombre" value="ESCRITXR 2"></input>
+            <br><br>
+            <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
+                oninput="auto_grow1(this)" onkeyup="countChars1(this);" onkeydown="countChars1(this);">
         </textarea>
-        <br><br>
-        <center>
-          <table class="right">
-            <tr>
-              <th id="puntos1">0 puntos</th>
-              <th id="nivel1">nivel 0</th>
-            </tr>
-          </table>
-          <h1 id="feedback2" class="feedback2"></h1>
-          </br>
-        </center>
-      </div>
+            <br><br>
+            <div align="center">
+                <table class="right">
+                    <tr>
+                        <th id="puntos1">0 puntos</th>
+                        <th id="nivel1">nivel 0</th>
+                    </tr>
+                </table>
+                <h1 id="feedback2" class="feedback2"></h1>
+                </br>
+            </div>
+        </div>
     </div>
     <p id="tiempo" class="tiempo"></p>
-    <center>
-      <table>
-        <tr>
-        <tr>
-          <th>
-            <p id="explicación" class=explicación></p>
-          </th>
-        </tr>
-        <th>
-          <p id="palabra" class=palabra></p>
-        </th>
-        </tr>
-        <tr>
-          <th>
-            <p id="definicion" class=definicion></p>
-          </th>
-        </tr>
-      </table>
-    </center>
+    <div align="center">
+        <table>
+            <tr>
+            <tr>
+                <th>
+                    <p id="explicación" class=explicación></p>
+                </th>
+            </tr>
+            <th>
+                <p id="palabra" class=palabra></p>
+            </th>
+            </tr>
+            <tr>
+                <th>
+                    <p id="definicion" class=definicion></p>
+                </th>
+            </tr>
+        </table>
+    </div>
 </body>
 <script src="socket.io-client/dist/socket.io.js"></script>
 <script src="./jugador-servidor.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js" integrity="sha512-ux1VHIyaPxawuad8d1wr1i9l4mTwukRq5B3s8G3nEmdENnKF5wKfOV6MEUH0k/rNT4mFr/yL+ozoDiwhUQekTg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"
+    integrity="sha512-ux1VHIyaPxawuad8d1wr1i9l4mTwukRq5B3s8G3nEmdENnKF5wKfOV6MEUH0k/rNT4mFr/yL+ozoDiwhUQekTg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 </html>
