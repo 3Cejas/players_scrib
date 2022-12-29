@@ -233,14 +233,14 @@ socket.on("count", (data) => {
         LIMPIEZAS[modo_actual](data);
         modo_actual = "";
         activar_sockets_extratextuales();
-        texto1.value = texto1.value.substring(
+        /*texto1.value = texto1.value.substring(
             saltos_línea_alineacion_1,
             texto1.value.length
         );
         texto2.value = texto2.value.substring(
             saltos_línea_alineacion_2,
             texto2.value.length
-        );
+        );*/
 
         // Desactiva, por seguridad, todos los modos.
         modo_texto_borroso = false;
@@ -322,8 +322,8 @@ socket.on("inicio", (data) => {
     puntos_palabra = 0;
     puntos = 0;
     puntos_letra_prohibida = 0;
-    saltos_línea_alineacion_1 = 0;
-    saltos_línea_alineacion_2 = 0;
+    /*saltos_línea_alineacion_1 = 0;
+    saltos_línea_alineacion_2 = 0;*/
 });
 
 // Resetea el tablero de juego.
@@ -380,8 +380,8 @@ socket.on("limpiar", (data) => {
     letra_prohibida = "";
     restablecer_estilo();
     clearTimeout(tempo_text_borroso);
-    saltos_línea_alineacion_1 = 0;
-    saltos_línea_alineacion_2 = 0;
+    /*saltos_línea_alineacion_1 = 0;
+    saltos_línea_alineacion_2 = 0;*/
     focalizador1.innerHTML = "";
     focalizador2.innerHTML = "";
     puntos1.style.color = "white";
