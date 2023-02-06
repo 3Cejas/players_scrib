@@ -45,8 +45,6 @@ const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         explicación.innerHTML = "MODO PALABRAS BONUS";
-        palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
-        definicion1.innerHTML = data.palabra_bonus[1];
     },
 
     //Recibe y activa el modo letra prohibida.
@@ -81,10 +79,10 @@ const MODOS = {
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
         socket.on('psico_a_j2', data => {
-                stylize();
+            stylize();
         });
         socket.on('psico_a_j1', data => {
-                stylize();
+            stylize();
         });
     },
 
@@ -94,8 +92,7 @@ const MODOS = {
         definicion1.innerHTML = "";
     },
 
-    '': function (data) {
-    }    
+    '': function (data) { }
 };
 
 // Recibe los datos del jugador 1 y los coloca.
@@ -136,7 +133,7 @@ socket.on('texto2', data => {
         }
     }*/
     texto2.style.height = (texto1.scrollHeight) + "px";
-    
+
 });
 
 socket.on('count', data => {
@@ -166,12 +163,23 @@ socket.on('activar_modo', data => {
 });
 
 socket.on("recibir_postgame1", (data) => {
-    postgame2 = "\n🖋️ Caracteres escritos = " + data.longitud+ "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n\n";
-  })
+    postgame2 = "\n🖋️ Caracteres escritos = " + data.longitud + "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n\n";
+});
 
 socket.on("recibir_postgame2", (data) => {
-    postgame1 = "\n🖋️ Caracteres escritos = " + data.longitud+ "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n";
-  })
+    postgame1 = "\n🖋️ Caracteres escritos = " + data.longitud + "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n";
+});
+
+socket.on('enviar_palabra', data => {
+    recibir_palabra(data);
+});
+
+function recibir_palabra(data) {
+    animacion_modo();
+    palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
+    definicion1.innerHTML = data.palabra_bonus[1];
+}
+
 socket.on('feedback_a_j2', data => {
     var feedback = document.querySelector(".feedback1");
     feedback.style.color = data.color;
@@ -229,6 +237,7 @@ socket.on('feedback_a_j1', data => {
         }, 2000);
     });
 });
+
 function animacion_modo() {
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
@@ -252,9 +261,9 @@ function animacion_modo() {
     animateCSS(".definicion", "bounceInLeft");
 }
 
-function descargar_textos(){
+function descargar_textos() {
     var a = document.createElement("a");
-    a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value + "\r\n\n" + document.getElementById("puntos").innerHTML + "\r\n\n" + document.getElementById("texto").value + "\r\n" + postgame1 + "\n\n"+ document.getElementById("nombre1").value + "\r\n\n" + document.getElementById("puntos1").innerHTML + "\r\n\n" + document.getElementById("texto1").value + "\n" + postgame2], { type: "text/plain" }));
+    a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value + "\r\n\n" + document.getElementById("puntos").innerHTML + "\r\n\n" + document.getElementById("texto").value + "\r\n" + postgame1 + "\n\n" + document.getElementById("nombre1").value + "\r\n\n" + document.getElementById("puntos1").innerHTML + "\r\n\n" + document.getElementById("texto1").value + "\n" + postgame2], { type: "text/plain" }));
     a.download = document.getElementById("nombre").value + ' VS ' + document.getElementById("nombre1").value + '.txt';
     a.click();
 }
