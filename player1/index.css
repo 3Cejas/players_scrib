@@ -255,7 +255,7 @@ label {
     font-size: 13pt;
 }
 
-textarea {
+.textarea {
     position: sticky;
     font-size: 16pt;
     border-color: currentcolor;
@@ -266,12 +266,17 @@ textarea {
     padding: 0;
     border: none;
     resize: none;
-    overflow: hidden;
+    overflow-wrap: break-word;
     outline: 0px !important;
     -webkit-appearance: none;
     box-shadow: none !important;
     color: rgb(155, 155, 155);
     width: 50%;
+}
+
+.highlight {
+    color: green;
+    font-weight:bold;
 }
 
 .textarea_blur {
