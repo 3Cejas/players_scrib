@@ -39,7 +39,10 @@ let modo_texto_borroso = false;
 let desactivar_borrar = false;
 
 var letra_prohibida = "";
+var letra_bendita = "";
 let listener_modo;
+
+var palabras_bonus = [];
 
 const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
@@ -57,6 +60,17 @@ const MODOS = {
         texto1.addEventListener("keyup", listener_modo);
         explicación.innerHTML = "MODO LETRA PROHIBIDA";
         palabra1.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
+        definicion1.innerHTML = "";
+    },
+
+    "letra bendita": function (data) {
+        activar_socket_feedback();
+        letra_bendita = data.letra_bendita;
+        //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
+        listener_modo = function (e) { modo_letra_bendita(e) };
+        texto1.addEventListener("keyup", listener_modo);
+        explicación.innerHTML = "MODO LETRA BENDITA";
+        palabra1.innerHTML = "LETRA BENDITA: " + letra_bendita;
         definicion1.innerHTML = "";
     },
 
@@ -97,20 +111,20 @@ const MODOS = {
         explicación.innerHTML = "MODO TEXTO INVERSO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
-        texto1.value =
+        texto1.innerText =
             //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-            //eliminar_saltos_de_linea(texto1.value)
-            texto1.value
+            //eliminar_saltos_de_linea(texto1.innerText)
+            texto1.innerText
                 .split("")
                 .reverse()
                 .join("")
                 .split(" ")
                 .reverse()
                 .join(" ");
-        texto2.value =
+        texto2.innerText =
             //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.value)
-            texto2.value
+            //eliminar_saltos_de_linea(texto2.innerText)
+            texto2.innerText
                 .split("")
                 .reverse()
                 .join("")
@@ -136,6 +150,12 @@ const LIMPIEZAS = {
         letra_prohibida = "";
     },
 
+    "letra bendita": function (data) {
+        socket.off('feedback_a_j1');
+        texto1.removeEventListener("keyup", listener_modo);
+        letra_bendita = "";
+    },
+
     "texto borroso": function (data) {
         modo_texto_borroso = false;
         texto1.classList.remove("textarea_blur");
@@ -151,20 +171,20 @@ const LIMPIEZAS = {
 
     "texto inverso": function (data) {
         desactivar_borrar = false;
-        texto1.value =
+        texto1.innerText =
             //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-            //eliminar_saltos_de_linea(texto1.value)
-            texto1.value
+            //eliminar_saltos_de_linea(texto1.innerText)
+            texto1.innerText
                 .split("")
                 .reverse()
                 .join("")
                 .split(" ")
                 .reverse()
                 .join(" ");
-        texto2.value =
+        texto2.innerText =
             //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.value)
-            texto2.value
+            //eliminar_saltos_de_linea(texto2.innerText)
+            texto2.innerText
                 .split("")
                 .reverse()
                 .join("")
@@ -195,18 +215,18 @@ activar_sockets_extratextuales();
 
 // Recibe los datos del jugador 2 y los coloca.
 socket.on("texto2", (data) => {
-    texto2.value = data.text;
+    texto2.innerText = data.text;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
       while (texto2.scrollHeight > texto1.scrollHeight) {
         saltos_línea_alineacion_1 += 1;
-        texto1.value = "\n" + texto1.value;
+        texto1.innerText = "\n" + texto1.innerText;
       }
     } else {
       while (texto2.scrollHeight < texto1.scrollHeight) {
         saltos_línea_alineacion_2 += 1;
-        texto2.value = "\n" + texto2.value;
+        texto2.innerText = "\n" + texto2.innerText;
       }
     }*/
     texto2.style.height = texto2.scrollHeight + "px";
@@ -233,27 +253,28 @@ socket.on("count", (data) => {
         LIMPIEZAS[modo_actual](data);
         modo_actual = "";
         activar_sockets_extratextuales();
-        /*texto1.value = texto1.value.substring(
+        /*texto1.innerText = texto1.innerText.substring(
             saltos_línea_alineacion_1,
-            texto1.value.length
+            texto1.innerText.length
         );
-        texto2.value = texto2.value.substring(
+        texto2.innerText = texto2.innerText.substring(
             saltos_línea_alineacion_2,
-            texto2.value.length
+            texto2.innerText.length
         );*/
 
         // Desactiva, por seguridad, todos los modos.
         modo_texto_borroso = false;
         desactivar_borrar = false;
         letra_prohibida = "";
+        letra_bendita = "";
 
         // Desactiva el blur de ambos textos.
         texto2.classList.remove("textarea_blur");
         texto1.classList.remove("textarea_blur");
 
         // Impide que se pueda escribir en los dos textos.
-        texto2.disabled = true;
-        texto1.disabled = true;
+        texto1.contentEditable= false;
+        texto2.contentEditable = false;
 
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
@@ -270,8 +291,8 @@ socket.on("count", (data) => {
             focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
         });
         setTimeout(postgame, 1000);
-        //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-        //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
+        //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+        //texto2.innerText = eliminar_saltos_de_linea(texto2.innerText); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
         texto1.style.height = "auto";
         texto2.style.height = "auto";
@@ -281,9 +302,10 @@ socket.on("count", (data) => {
         puntos_palabra = 0;
         puntos = 0;
         puntos_letra_prohibida = 0;
+        puntos_letra_bendita = 0;
         /*let a = document.createElement("a");
-            a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"}));
-            blob = new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"});
+            a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value +"\n"+texto1.innerText +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.innerText ], {type: "text/plain"}));
+            blob = new Blob([document.getElementById("nombre").value +"\n"+texto1.innerText +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.innerText ], {type: "text/plain"});
             a.download = 'sesión_player1.txt';
             a.click();*/
     }
@@ -299,10 +321,10 @@ socket.on("inicio", (data) => {
 
     nombre1.disabled = true;
     nombre2.disabled = true;
-    texto1.value = "";
-    texto2.value = "";
-    texto1.disabled = false;
-    texto2.disabled = true;
+    texto1.innerText = "";
+    texto2.innerText = "";
+    texto1.contentEditable= true;
+    texto2.contentEditable= false;
     puntos1.innerHTML = "0 puntos";
     puntos2.innerHTML = "0 puntos";
     nivel1.innerHTML = "nivel 0";
@@ -322,6 +344,7 @@ socket.on("inicio", (data) => {
     puntos_palabra = 0;
     puntos = 0;
     puntos_letra_prohibida = 0;
+    puntos_letra_bendita = 0;
     /*saltos_línea_alineacion_1 = 0;
     saltos_línea_alineacion_2 = 0;*/
 });
@@ -347,6 +370,7 @@ socket.on("limpiar", (data) => {
     puntos_palabra = 0;
     puntos = 0;
     puntos_letra_prohibida = 0;
+    puntos_letra_bendita = 0;
     asignada = false;
     palabra_actual = ""; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
@@ -354,10 +378,10 @@ socket.on("limpiar", (data) => {
     nombre2.value = "ESCRITXR 2";
     nombre1.disabled = true;
     nombre2.disabled = true;
-    texto1.value = "";
-    texto2.value = "";
-    texto1.disabled = true;
-    texto2.disabled = true;
+    texto1.innerText = "";
+    texto2.innerText = "";
+    texto1.contentEditable= false;
+    texto2.contentEditable= false;
     puntos1.innerHTML = "0 puntos";
     puntos2.innerHTML = "0 puntos";
     nivel1.innerHTML = "nivel 0";
@@ -378,6 +402,7 @@ socket.on("limpiar", (data) => {
     modo_texto_borroso = false;
     desactivar_borrar = false;
     letra_prohibida = "";
+    letra_bendita = "";
     restablecer_estilo();
     clearTimeout(tempo_text_borroso);
     /*saltos_línea_alineacion_1 = 0;
@@ -405,10 +430,11 @@ function recibir_palabra(data) {
     animacion_modo();
     asignada = true;
     palabra_actual = data.palabra_bonus[0];
+    palabras_bonus.push(palabra_actual);
     palabra1.innerHTML = "(+" + data.puntuacion + " pts) palabra: " + data.palabra_bonus[0];
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
-    indice_buscar_palabra = texto1.value.length - 5;
+    indice_buscar_palabra = texto1.innerText.length - 5;
     texto1.removeEventListener("keyup", listener_modo);
     listener_modo = function () { modo_palabras_bonus() };
     texto1.addEventListener("keyup", listener_modo);
@@ -418,7 +444,7 @@ function recibir_palabra(data) {
 
 // Función para enviar texto al otro jugador y a control
 function sendText() {
-    let text = texto1.value;
+    let text = texto1.innerText;
     let points = puntos1.textContent;
     let level = nivel1.textContent;
     socket.emit("texto1", { text, points, level });
@@ -560,15 +586,19 @@ function crear_n_saltos_de_linea(n) {
 function modo_palabras_bonus() {
     if (asignada == true) {
         if (
-            texto1.value
-                .substring(indice_buscar_palabra, texto1.value.length)
+            texto1.innerText
+                .substring(indice_buscar_palabra, texto1.innerText.length)
                 .toLowerCase()
                 .includes(palabra_actual)
         ) {
+            //var $div = $('#texto');
+            //$div.highlight(palabra_actual);
+            texto1.focus();
+            setEndOfContenteditable(document.getElementById('texto'));
             asignada = false;
             socket.emit("nueva_palabra", asignada);
             puntos_palabra += puntuacion;
-            puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida;
+            puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
             cambiar_color_puntuación();
             puntos1.innerHTML = puntos + " puntos";
             feedback1.style.color = color_positivo;
@@ -595,9 +625,9 @@ function modo_letra_prohibida(e) {
         letra_prohibida.toUpperCase()
     ) {
         position = e.target.selectionStart;
-        texto1.value = texto1.value.substring(0, position - 1) + texto1.value.substring(position + 1);
+        texto1.innerText = texto1.innerText.substring(0, position - 1) + texto1.innerText.substring(position + 1);
         puntos_letra_prohibida += 50;
-        puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida;
+        puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
         cambiar_color_puntuación();
         puntos1.innerHTML = puntos + " puntos";
         sendText();
@@ -615,6 +645,34 @@ function modo_letra_prohibida(e) {
     }
 }
 
+function modo_letra_bendita(e) {
+    letra = e.key
+    if (
+        toNormalForm(letra) ==
+        letra_bendita ||
+        toNormalForm(letra) ==
+        letra_bendita.toUpperCase()
+    ) {
+        position = e.target.selectionStart;
+        puntos_letra_bendita += 50;
+        puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
+        cambiar_color_puntuación();
+        puntos1.innerHTML = puntos + " puntos";
+        sendText();
+        feedback1.style.color = color_positivo;
+        feedback1.innerHTML = "+50 pts";
+        color = color_negativo;
+        envio_puntos = +50;
+        socket.emit("feedback_de_j1", { color, envio_puntos });
+        clearTimeout(delay_animacion);
+        animateCSS(".feedback1", "bounceInRight").then(() => {
+            delay_animacion = setTimeout(function () {
+                feedback1.innerHTML = "";
+            }, 2000);
+        });
+    }
+}
+
 function modo_psicodélico() {
     //socket.emit("psico", 1);
     stylize();
@@ -622,19 +680,23 @@ function modo_psicodélico() {
 
 function postgame() {
     actualizar_puntuación();
-    longitud = texto1.value.length;
+    longitud = texto1.innerText.length;
     if (puntos_letra_prohibida != 0) {
         puntos_letra_prohibida = -puntos_letra_prohibida;
     }
     socket.emit("enviar_postgame1", { longitud, puntos_palabra, puntos_letra_prohibida });
-    focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + texto1.value.length + "<br>📚 Palabras bonus = " + puntos_palabra + "<br>❌ Letra prohibida = " + puntos_letra_prohibida;
+    focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + texto1.innerText.length +
+                            "<br>📚 Palabras bonus = " + puntos_palabra +
+                            "<br>❌ Letra prohibida = " + puntos_letra_prohibida+
+                            "<br>😇 Letra bendita = " + puntos_letra_bendita;
     puntos_palabra = 0;
     puntos = 0;
     puntos_letra_prohibida = 0;
+    puntos_letra_bendita = 0;
 }
 
 function actualizar_puntuación() {
-    puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida;
+    puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
     puntos1.innerHTML = puntos + " puntos";
     cambio_nivel(puntos);
     sendText();
