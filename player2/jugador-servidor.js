@@ -232,7 +232,7 @@ socket.on("texto1", (data) => {
         texto2.value = "\n" + texto2.value;
       }
     }*/
-    texto1.style.height = texto1.scrollHeight + "px";
+    //texto1.style.height = texto1.scrollHeight + "px";
     //window.scrollTo(0, document.body.scrollHeight);
     focalizador2.scrollIntoView({ block: "end" });
 });
