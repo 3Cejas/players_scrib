@@ -96,7 +96,6 @@ textarea {
     -webkit-appearance: none;
     box-shadow: none !important;
     color: rgb(155, 155, 155);
-    width: 50%;
 }
 
 .textarea_blur {
@@ -116,7 +115,7 @@ textarea {
     outline: 0px !important;
     -webkit-appearance: none;
     box-shadow: none !important;
-    color: rgb(155, 155, 155)
+    color: rgb(155, 155, 155);
 }
 
 .temas {

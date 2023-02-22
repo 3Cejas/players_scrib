@@ -27,6 +27,26 @@
         </pre>
     </div>
     <br>
+    <h3><b><u>CLASIFICACIÓN</u></b></h3>
+    <table id="clasificacion">
+        <tr>
+          <th>ESCRITXR</th>
+          <th>PUNTUACIÓN</th>
+        </tr>
+        <tr>
+          <td contenteditable="false">DAVID</td>
+          <td contenteditable="false">5</td>
+          <td><input type="button" value="❌" onclick="deleteRow(this)"></td>
+          <td><input type="button" value="✏️" onclick="editableRow(this)"></td>
+        </tr>
+        <tr>
+            <td contenteditable="false">ÁNGELA</td>
+            <td contenteditable="false">1</td>
+            <td><input type="button" value="❌" onclick="deleteRow(this)"></td>
+            <td><input type="button" value="✏️" onclick="editableRow(this)"></td>
+          </tr>
+      </table>
+      <br>
     <div align="center">
         <table class="default">
             <tr>
@@ -40,7 +60,7 @@
                 <td>
                     <div align="center">
                         <button onclick="vote()" class="bn54">
-                            <span class="bn54span">🗳️ VOTAR</span>
+                            <span class="bn54span">🗳️ ABRIR VOTACIÓN</span>
                         </button><br>
                     </div>
                 </td>
@@ -65,19 +85,33 @@
                         </button><br>
                     </div>
                 </td>
+                <td>
+                    <div align="center">
+                        <button onclick="puntuacion_final()" class="bn54">
+                            <span class="bn54span">🏁 PUNTUACIÓN FINAL</span>
+                        </button><br>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="enviar_clasificacion()" class="bn54">
+                            <span class="bn54span">🥇 MOSTRAR CLASIFICACIÓN</span>
+                        </button><br>
+                    </div>
+                </td>
             </tr>
             <tr>
                 <td>
                     <div align="center">
-                        <button onclick="exit()" class="bn54">
-                            <span class="bn54span">❌ CERRAR</span>
+                        <button onclick="limpiar()" class="bn54">
+                            <span class="bn54span">🧹 LIMPIAR</span>
                         </button>
                     </div>
                 </td>
                 <td>
                     <div align="center">
-                        <button onclick="limpiar()" class="bn54">
-                            <span class="bn54span">🧹 LIMPIAR</span>
+                        <button onclick="exit()" class="bn54">
+                            <span class="bn54span">🗳️ CERRAR VOTACIÓN</span>
                         </button>
                     </div>
                 </td>
@@ -102,37 +136,43 @@
                         </button><br>
                     </div>
                 </td>
+                <td>   <b>Tiempo:</b>
+                    <div id="first-mtr-datepicker"></div>
+                    <script>
+                        var config = {
+                            target: 'first-mtr-datepicker',         // ID of HTML element
+                            timestamp: "9/17/2016, 26:00:34",    // Starting date
+                            future: false,                // Only dates in the future,
+                            smartHours: false,                // Make a smart switch from AM to PM
+                            animations: true,                 // NOTE: thew version with disabled animations is not stable
+                            disableAmPm: true,
+                            datepicker: ['seconds', 'hours', 'minutes'],
+                            hours: {
+                                min: 0,
+                                max: 59,
+                                step: 2,
+                                maxlength: 2
+                            },
+                            minutes: {
+                                min: 0,
+                                max: 59,
+                                step: 1
+                            },
+                        };
+                        var myDatepicker = new MtrDatepicker(config);
+                    </script></td>
+                    <!--<td>
+                        <div align="center">
+                            <button onclick="cerrar_clasificacion()" class="bn54">
+                                <span class="bn54span">🥇 CERRAR CLASIFICACIÓN</span>
+                            </button><br>
+                        </div>
+                    </td>-->
             </tr>
             <tr>
                 <td></td>
                 <td></td>
                 <td>
-                    <div align="center">
-                        Tiempo de partida:
-                        <div id="first-mtr-datepicker"></div>
-                        <script>
-                            var config = {
-                                target: 'first-mtr-datepicker',         // ID of HTML element
-                                timestamp: "9/17/2016, 26:00:34",    // Starting date
-                                future: false,                // Only dates in the future,
-                                smartHours: false,                // Make a smart switch from AM to PM
-                                animations: true,                 // NOTE: thew version with disabled animations is not stable
-                                disableAmPm: true,
-                                datepicker: ['seconds', 'hours', 'minutes'],
-                                hours: {
-                                    min: 0,
-                                    max: 59,
-                                    step: 2,
-                                    maxlength: 2
-                                },
-                                minutes: {
-                                    min: 0,
-                                    max: 59,
-                                    step: 1
-                                },
-                            };
-                            var myDatepicker = new MtrDatepicker(config);
-                        </script>
                 </td>
     </div>
     <td></td>
@@ -140,9 +180,10 @@
     </tr>
     </table>
     </div>
-
     <div id="contenedor">
         <div>
+            <input id="votos" class="votos" type="number" min="0" value="0" /> <b style="font-size: 18pt">Votos 🗳️</b>
+            <br><br>
             <input id="nombre" class="nombre" value="ESCRITXR 1"></input>
             <br><br>
             <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
@@ -156,9 +197,12 @@
                     </tr>
                 </table>
                 <h1 id="feedback1" class="feedback1"></h1>
+                <h2 id="puntuacion_final1"></h1>
             </div>
         </div>
         <div>
+            <input id="votos1" class="votos" type="number" min="0" value="0" /> <b style="font-size: 18pt">Votos 🗳️</b>
+            <br><br>
             <input id="nombre1" class="nombre" value="ESCRITXR 2"></input>
             <br><br>
             <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
@@ -173,6 +217,7 @@
                     </tr>
                 </table>
                 <h1 id="feedback2" class="feedback2"></h1>
+                <h2 id="puntuacion_final2"></h1>
                 </br>
             </div>
         </div>

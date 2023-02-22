@@ -18,180 +18,6 @@
     background: #f7d07e;
 }
 
-/* Highlight within textarea styles */
-
-.hwt-container {
-    display: inline-block;
-    position: relative;
-    overflow: hidden !important;
-    -webkit-text-size-adjust: none !important;
-}
-
-.hwt-backdrop {
-    position: absolute !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-}
-
-.hwt-highlights {
-    width: auto !important;
-    height: auto !important;
-    border-color: transparent !important;
-    white-space: pre-wrap !important;
-    word-wrap: break-word !important;
-    color: transparent !important;
-    overflow: hidden !important;
-}
-
-.hwt-input {
-    display: block !important;
-    position: relative !important;
-    margin: 0;
-    padding: 0;
-    border-radius: 0;
-    font: inherit;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-}
-
-.hwt-content {
-    border: 0px solid;
-    background: none transparent !important;
-    font-size: 16pt;
-}
-
-.hwt-content mark {
-    padding: 0 !important;
-    color: inherit;
-}
-
-/* Estilos de temas */
-
-.wordsrotator_words {
-    display: inline-block;
-    position: relative;
-    white-space: nowrap;
-    -webkit-transition: width 100ms;
-    -moz-transition: width 100ms;
-    -o-transition: width 100ms;
-    transition: width 100ms;
-}
-
-.wordsrotator_words .wordsrotator_wordOut,
-.wordsrotator_words .wordsrotator_wordIn {
-    font-family: monospace;
-    font-size: 20pt;
-    font-weight: bold;
-    position: relative;
-    display: inline-block;
-    -webkit-animation-duration: 50ms;
-    -webkit-animation-timing-function: ease;
-    -webkit-animation-fill-mode: both;
-    -moz-animation-duration: 50ms;
-    -moz-animation-timing-function: ease;
-    -moz-animation-fill-mode: both;
-    -ms-animation-duration: 50ms;
-    -ms-animation-timing-function: ease;
-    -ms-animation-fill-mode: both;
-}
-
-.wordsrotator_words .wordsrotator_wordOut {
-    left: 0;
-    top: 0;
-    position: absolute;
-    display: inline-block;
-}
-
-.wordsrotator_words .wordsrotator_wordOut span {
-    width: auto;
-    position: relative;
-}
-
-.wordsrotator_words .wordsrotator_wordIn {
-    opacity: 0;
-}
-
-/* Unused */
-
-@-webkit-keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        -webkit-transform: translateY(-20px);
-        transform: translateY(-20px);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        -webkit-transform: translateY(-20px);
-        -ms-transform: translateY(-20px);
-        transform: translateY(-20px);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        -ms-transform: translateY(0);
-        transform: translateY(0);
-    }
-}
-
-.fadeInDown {
-    -webkit-animation-name: fadeInDown;
-    animation-name: fadeInDown;
-}
-
-/* Animación de temas */
-
-@-webkit-keyframes fadeOutDown {
-    0% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        transform: translateY(0);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(20px);
-        transform: translateY(20px);
-    }
-}
-
-@keyframes fadeOutDown {
-    0% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        -ms-transform: translateY(0);
-        transform: translateY(0);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(20px);
-        -ms-transform: translateY(20px);
-        transform: translateY(20px);
-    }
-}
-
-.fadeOutDown {
-    -webkit-animation-name: fadeOutDown;
-    animation-name: fadeOutDown;
-}
-
-::selection {
-    background: #f7d07e;
-}
-
 html,
 body {
     width: auto;
@@ -205,7 +31,6 @@ body {
     /* for Internet Explorer, Edge */
     scrollbar-width: none;
     /* for Firefox */
-    /*scroll-behavior: smooth;*/
     overflow-y: scroll;
 }
 
@@ -255,7 +80,7 @@ label {
     font-size: 13pt;
 }
 
-.textarea {
+textarea {
     position: sticky;
     font-size: 16pt;
     border-color: currentcolor;
@@ -266,17 +91,11 @@ label {
     padding: 0;
     border: none;
     resize: none;
-    overflow-wrap: break-word;
+    overflow: hidden;
     outline: 0px !important;
     -webkit-appearance: none;
     box-shadow: none !important;
     color: rgb(155, 155, 155);
-    width: 50%;
-}
-
-.highlight {
-    color: green;
-    font-weight:bold;
 }
 
 .textarea_blur {

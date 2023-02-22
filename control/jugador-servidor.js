@@ -10,6 +10,8 @@ let nivel1 = getEl("nivel");
 let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
+let votos1 = getEl("votos");
+
 
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
@@ -17,7 +19,6 @@ let explicación = getEl("explicación");
 
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
-
 let tema = getEl("temas");
 
 let temporizador = getEl("temporizador");
@@ -30,6 +31,13 @@ let nivel2 = getEl("nivel1");
 let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
+let votos2 = getEl("votos1");
+
+let puntuacion_final1 = getEl("puntuacion_final1");
+let puntuacion_final2 = getEl("puntuacion_final2");
+
+let clasificacion = getEl("clasificacion");
+
 
 let tempo_text_borroso;
 
@@ -55,7 +63,7 @@ const MODOS = {
     },
 
     'texto borroso': function (data) {
-        explicación.innerHTML = "MODO TEXTO BORROSO";
+        explicación.innerHTML = "MODO TEXTO NUBLADO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
         if (data.jugador == 1) {

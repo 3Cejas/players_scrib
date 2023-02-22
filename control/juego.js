@@ -95,6 +95,8 @@ function limpiar() {
     document.getElementById("tiempo").innerHTML = "";
     document.getElementById("texto").classList.remove('textarea_blur');
     document.getElementById("texto1").classList.remove('textarea_blur');
+    puntuacion_final1.innerHTML = "";
+    puntuacion_final2.innerHTML = "";
     socket.emit('count', "");
     if (feedback1 !== null) {
         feedback1.innerHTML = "";
@@ -120,3 +122,144 @@ function enviar_comentario() {
     palabras = tema.value;
     socket.emit('enviar_comentario', palabras);
 };
+
+function puntuacion_final() {
+    p1 = puntos1.innerHTML.match(/\d+/)[0];
+    p2 = puntos2.innerHTML.match(/\d+/)[0];
+    maxima = Math.max(p1, p2);
+
+    v1 = parseInt(votos1.value);
+    v2 = parseInt(votos2.value);
+    suma = parseInt(v1 + v2);
+    pfinal1 = parseInt(+p1 + Math.round((v1 / suma) * maxima));
+    pfinal2 = parseInt(+p2 + Math.round((v2 / suma) * maxima));
+
+    if(findValueInRowAndChange(nombre1.value, pfinal1) == false){
+        fila = clasificacion.insertRow(clasificacion.rows.length);
+        nombre = fila.insertCell(0);
+        nombre.contentEditable = false;
+        puntuacion = fila.insertCell(1);
+        puntuacion.contentEditable = false;
+        borrar = fila.insertCell(2);
+        borrar.innerHTML = '<input type="button" value="❌" onclick="deleteRow(this)">';
+        editar = fila.insertCell(3);
+        editar.innerHTML = '<input type="button" value="✏️" onclick="editableRow(this)"></input>';
+        nombre.innerHTML = nombre1.value;
+        puntuacion.innerHTML = pfinal1;
+    }
+
+    if(findValueInRowAndChange(nombre2.value, pfinal2) == false){
+        fila = clasificacion.insertRow(clasificacion.rows.length);
+        nombre = fila.insertCell(0);
+        nombre.contentEditable = false;
+        puntuacion = fila.insertCell(1);
+        puntuacion.contentEditable = false;
+        borrar = fila.insertCell(2);
+        borrar.innerHTML = '<input type="button" value="❌" onclick="deleteRow(this)">'
+        editar = fila.insertCell(3);
+        editar.innerHTML = '<input type="button" value="✏️" onclick="editableRow(this)"></input>';
+        nombre.innerHTML = nombre2.value;
+        puntuacion.innerHTML = pfinal2;
+    }
+
+    sortTable();
+
+    puntuacion_final1.innerHTML = "🗳️ Puntuación del público = " + Math.round((v1 / suma) * maxima) + "<br>🏁 Puntuación final = " + pfinal1;
+    puntuacion_final2.innerHTML = "🗳️ Puntuación del público = " + Math.round((v2 / suma) * maxima) + "<br>🏁 Puntuación final = " + pfinal2;
+   
+    pfinal1 = puntuacion_final1.innerHTML;
+    pfinal2 = puntuacion_final2.innerHTML;
+
+    socket.emit('enviar_puntuacion_final', {pfinal1, pfinal2});
+};
+
+function enviar_clasificacion(){
+    data = extractData('clasificacion', (x) => ({
+        jugador: x[0],
+        puntuacion: x[1],
+      }));
+      console.log(data)
+      socket.emit('enviar_clasificacion', data);
+  }
+
+function sortTable() {
+    var table, rows, switching, i, x, y, shouldSwitch;
+    table = document.getElementById("clasificacion");
+    switching = true;
+    /*Make a loop that will continue until
+    no switching has been done:*/
+    while (switching) {
+      //start by saying: no switching is done:
+      switching = false;
+      rows = table.rows;
+      /*Loop through all table rows (except the
+      first, which contains table headers):*/
+      for (i = 1; i < (rows.length - 1); i++) {
+        //start by saying there should be no switching:
+        shouldSwitch = false;
+        /*Get the two elements you want to compare,
+        one from current row and one from the next:*/
+        x = rows[i].getElementsByTagName("TD")[1];
+        y = rows[i + 1].getElementsByTagName("TD")[1];
+        //check if the two rows should switch place:
+        if (Number(x.innerHTML.match(/\d+/)[0]) < Number(y.innerHTML.match(/\d+/)[0])) {
+          //if so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+      }
+      if (shouldSwitch) {
+        /*If a switch has been marked, make the switch
+        and mark that a switch has been done:*/
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+      }
+    }
+  }
+
+  function findValueInRowAndChange(nombre, puntos) {
+    table = document.getElementById("clasificacion");
+    var rows = table.rows;
+    for (var i = 1; i < rows.length; i++) {
+      var cols = rows[i].cells;
+      for (var c = 0; c < cols.length; c++) {
+        if (cols[c].innerText == nombre) {
+          cols[1].innerHTML = puntos;
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function deleteRow(r) {
+    var i = r.parentNode.parentNode.rowIndex;
+    document.getElementById("clasificacion").deleteRow(i);
+}
+
+function editableRow(r) {
+    table = document.getElementById("clasificacion");
+    var i = r.parentNode.parentNode.rowIndex;
+    rows = table.rows;
+    editando = rows[i].getElementsByTagName("TD")[0].contentEditable;
+    if(editando == 'true'){
+        r.value = "✏️";
+        rows[i].getElementsByTagName("TD")[0].contentEditable = 'false';
+        rows[i].getElementsByTagName("TD")[1].contentEditable = 'false';
+        sortTable();
+    }
+    else {
+        r.value = "✅";
+        rows[i].getElementsByTagName("TD")[0].contentEditable = 'true';
+        rows[i].getElementsByTagName("TD")[1].contentEditable = 'true';
+
+    }
+}
+
+const extractData = (tableId, mapper) => {
+    const myTab = document.getElementById(tableId);
+    if (myTab) {
+      const data = [...myTab.rows].map((r) => [...r.cells].map((c) => c.innerText));
+      return data.map(mapper);
+    }
+  };

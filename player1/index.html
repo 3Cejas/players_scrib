@@ -34,9 +34,9 @@
                 <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <div class="textarea" contentEditable=false id="texto" cols="40" rows="5" placeholder="Comienza a escribir..."
+                <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..."
                     spellcheck="false">
-            </div>
+                </textarea>
                 <br><br>
                 <div align="center">
                     <table class="right">
@@ -47,6 +47,7 @@
                     </table>
                     <h1 id="feedback1" class="feedback1"></h1>
                     <h1 id="focalizador1" class="focalizador"></h1>
+                    <h2 id="puntuacion_final1"></h1>
                 </div>
                 </br>
             </div>
@@ -54,9 +55,9 @@
                 <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
                 <br><br>
                 <p id="alineador2"></p>
-                <div contenteditable=true id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..."
+                <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..."
                     spellcheck="false">
-            </div>
+                </textarea>
                 <br><br>
                 <div align="center">
                     <table class="right">
@@ -67,6 +68,7 @@
                     </table>
                     <h1 id="feedback2" class="feedback2"></h1>
                     <h1 id="focalizador2" class="focalizador"></h1>
+                    <h2 id="puntuacion_final2"></h1>
                     </br>
                 </div>
 
@@ -93,7 +95,6 @@
             </table>
         </div>
     </div>
-
 </body>
 <script src="socket.io-client/dist/socket.io.js"></script>
 <script src="./jugador-servidor.js"></script>

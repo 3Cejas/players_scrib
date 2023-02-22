@@ -1,6 +1,44 @@
 
 @charset"utf-8";
 
+/*Estilo para la clasificación*/
+.toc{
+  margin-left: 25%;
+  margin-right: 25%;
+  text-align: justify;
+  font-size: 25pt;
+}
+.entry {
+  display: grid;
+  grid-template-columns: auto max-content;
+  grid-template-areas: "chapter page";
+  align-items: end;
+  gap: 0 .25rem; /* customize the gap to your needs */
+}
+
+.chapter {
+  grid-area: chapter;
+  position: relative;
+  overflow: hidden;
+}
+
+.chapter::after {
+  position: absolute;
+  padding-left: .25ch; /* customise the padding to your needs */
+  /* adjust the amount of dots to your needs */
+  content: " . . . . . . . . . . . . . . . . . . . "
+    ". . . . . . . . . . . . . . . . . . . . . . . "
+    ". . . . . . . . . . . . . . . . . . . . . . . "
+    ". . . . . . . . . . . . . . . . . . . . . . . "
+    ". . . . . . . . . . . . . . . . . . . . . . . ";
+  text-align: right; /* optional, can be removed */
+}
+
+.page {
+  grid-area: page;
+}
+
+
 .focalizador{
   font-size: 15;
   text-align: center;
@@ -29,6 +67,7 @@ body {
   margin-right: 0;
   text-align: center;
   ms-overflow-style: none;
+  scroll-behavior: smooth;
   /* for Internet Explorer, Edge */
   scrollbar-width: none;
   /* for Firefox */
@@ -66,6 +105,24 @@ body {
   background-color: yellow;
 }
 
+table {
+  width: 30%;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.clasificacion{
+  display: none;
+  font-size: 25pt;
+  border-collapse: separate;
+  border-spacing: 25px 25px;
+  width: 30%;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 body {
   font-size: 13pt;
   font-family: monospace;
@@ -99,7 +156,6 @@ textarea {
   -webkit-appearance: none;
   box-shadow: none !important;
   color: rgb(155, 155, 155);
-  width: 50%;
 }
 
 .textarea_blur {

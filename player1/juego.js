@@ -24,14 +24,14 @@ function auto_grow(element) {
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
       while (texto2.scrollHeight > texto1.scrollHeight) {
         saltos_línea_alineacion_1 += 1;
-        texto1.innerText = "\n" + texto1.innerText;
+        texto1.value = "\n" + texto1.value;
       }
       texto1.style.height = texto2.scrollHeight + "px";
       texto2.style.height = texto2.scrollHeight + "px";
     } else {
       while (texto2.scrollHeight < texto1.scrollHeight) {
         saltos_línea_alineacion_2 += 1;
-        texto2.innerText = "\n" + texto2.innerText;
+        texto2.value = "\n" + texto2.value;
       }
       texto1.style.height = texto1.scrollHeight + "px";
       texto2.style.height = texto1.scrollHeight + "px";
@@ -45,12 +45,9 @@ function auto_grow(element) {
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
 function borrar(texto) {
     if (!desactivar_borrar) {
-        texto1.innerText = texto.innerText.substring(0, texto1.innerText.length - 1);
-        subrayar_palabras_bonus();
-        texto1.focus();
-        setEndOfContenteditable(document.getElementById('texto'));
-        puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
-        cambiar_color_puntuación();
+        texto1.value = texto.value.substring(0, texto1.value.length - 1);
+        puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
+        cambiar_color_puntuación()
         puntos1.innerHTML = puntos + " puntos";
         sendText();
         cambio_nivel(puntos);
@@ -62,13 +59,12 @@ function borrar(texto) {
 
 //Función que modifica el comportamiento del juego.
 function countChars(texto) {
-    puntos = texto.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
+    puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
     cambiar_color_puntuación();
     puntos1.innerHTML = puntos + " puntos";
     cambio_nivel(puntos);
     clearTimeout(borrado);
     var $div = $('#texto');
-    $div.highlight(palabra_actual);
     borrado = setTimeout(function () {
         borrar(texto);
     }, rapidez_inicio_borrado);
@@ -130,71 +126,3 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         }
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
-
-    //Función auxiliar que focaliza el área de texto al final de ella.
-function setEndOfContenteditable(contentEditableElement)
-{
-    var range,selection;
-    if(document.createRange)//Firefox, Chrome, Opera, Safari, IE 9+
-    {
-        range = document.createRange();//Create a range (a range is a like the selection but invisible)
-        range.selectNodeContents(contentEditableElement);//Select the entire contents of the element with the range
-        range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
-        selection = window.getSelection();//get the selection object (allows you to change selection)
-        selection.removeAllRanges();//remove any selections already made
-        selection.addRange(range);//make the range you have just created the visible selection
-    }
-    else if(document.selection)//IE 8 and lower
-    { 
-        range = document.body.createTextRange();//Create a range (a range is a like the selection but invisible)
-        range.moveToElementText(contentEditableElement);//Select the entire contents of the element with the range
-        range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
-        range.select();//Select the range (make it the visible selection
-    }
-}
-
-jQuery.fn.highlight = function(pat) {
-    function innerHighlight(node, pat) {
-     var skip = 0;
-     if (node.nodeType == 3) {
-      var pos = node.data.toUpperCase().indexOf(pat);
-      pos -= (node.data.substr(0, pos).toUpperCase().length - node.data.substr(0, pos).length);
-      if (pos >= 0) {
-       var spannode = document.createElement('span');
-       spannode.className = 'highlight';
-       var middlebit = node.splitText(pos);
-       var endbit = middlebit.splitText(pat.length);
-       var middleclone = middlebit.cloneNode(true);
-       spannode.appendChild(middleclone);
-       middlebit.parentNode.replaceChild(spannode, middlebit);
-       skip = 1;
-      }
-     }
-     else if (node.nodeType == 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
-      for (var i = 0; i < node.childNodes.length; ++i) {
-       i += innerHighlight(node.childNodes[i], pat);
-      }
-     }
-     return skip;
-    }
-    return this.length && pat && pat.length ? this.each(function() {
-     innerHighlight(this, pat.toUpperCase());
-    }) : this;
-   };
-   
-   jQuery.fn.removeHighlight = function() {
-    return this.find("span.highlight").each(function() {
-     this.parentNode.firstChild.nodeName;
-     with (this.parentNode) {
-      replaceChild(this.firstChild, this);
-      normalize();
-     }
-    }).end();
-   };
-
-function subrayar_palabras_bonus(){
-    palabras_bonus.forEach(function(palabra){
-        var $div = $('#texto');
-        $div.highlight(palabra);
-    });
-}

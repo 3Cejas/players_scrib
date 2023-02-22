@@ -30,6 +30,8 @@ let focalizador1 = getEl("focalizador1");
 let focalizador2 = getEl("focalizador2");
 let focalizador_id = 1;
 
+let clasificacion = getEl("clasificacion");
+
 // Variables de los modos.
 let modo_actual = "";
 let tempo_text_borroso;
@@ -50,8 +52,16 @@ const MODOS = {
         definicion1.innerHTML = "";
     },
 
+    //Recibe y activa el modo letra bendita.
+    'letra bendita': function (data) {
+        explicación.innerHTML = "MODO LETRA BENDITA";
+        palabra1.innerHTML = "LETRA BENDITA: " + data.letra_bendita;
+        definicion1.innerHTML = "";
+    },
+
+    //Recibe y activa el modo borroso.
     'texto borroso': function (data) {
-        explicación.innerHTML = "MODO TEXTO BORROSO";
+        explicación.innerHTML = "MODO TEXTO NUBLADO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
         if (data.jugador == 1) {
@@ -91,6 +101,8 @@ const LIMPIEZAS = {
     "palabras bonus": function (data) { },
 
     "letra prohibida": function (data) { },
+
+    "letra bendita": function (data) { },
 
     "texto borroso": function (data) {
         texto1.classList.remove("textarea_blur");
@@ -151,7 +163,8 @@ socket.on('texto1', data => {
             texto2.value = "\n" + texto2.value;
         }
     }*/
-    texto1.style.height = (texto1.scrollHeight) + "px";
+    //texto1.style.height = (texto1.scrollHeight) + "px";
+    texto1.scrollTop = texto1.scrollHeight;
     focalizador1.scrollIntoView(false);
 });
 
@@ -176,7 +189,8 @@ socket.on('texto2', data => {
             texto2.value = "\n" + texto2.value
         }
     }*/
-    texto2.style.height = (texto2.scrollHeight) + "px";
+    //texto2.style.height = (texto2.scrollHeight) + "px";
+    texto2.scrollTop = texto2.scrollHeight;
     focalizador2.scrollIntoView(false);
 });
 
@@ -233,11 +247,10 @@ socket.on('inicio', data => {
     socket.off('recibir_postgame2');
 
     palabra1.innerHTML = "";
-    texto1.style.height = "40";
-    texto1.style.height = (texto1.scrollHeight) + "px";
-    texto2.style.height = "40";
-    texto2.style.height = (texto2.scrollHeight) + "px";
+    texto1.style.height = "45%";
+    texto2.style.height = "45%";
     definicion1.innerHTML = "";
+    clasificacion.innerHTML = "";
 });
 
 // Resetea el tablero de juego.
@@ -278,6 +291,9 @@ socket.on('limpiar', data => {
     activar_sockets_extratextuales();
     puntos1.style.color = "white";
     puntos2.style.color = "white";
+    clasificacion.innerHTML = "";
+    texto1.style.height = "40";
+    texto2.style.height = "40";
 });
 
 socket.on('activar_modo', data => {
@@ -412,11 +428,24 @@ function activar_sockets_extratextuales() {
     });
 
     socket.on("recibir_postgame1", (data) => {
-        focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+        focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
     });
 
     socket.on("recibir_postgame2", (data) => {
-        focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida;
+        focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
+    });
+
+    socket.on("recibir_clasificacion", (data) => {
+        clasificacion.style.display = "block";
+        clasificacion.innerHTML = "<center><u><b>CLASIFICACIÓN</b></u><br><br></center>" + "<div class='entry'><div class='chapter'>" + data[1].jugador + " 🏆</div><div class='page'>" + data[1].puntuacion + " pts</div></div>"
+        ;       
+        for (var i = 2; i < data.length; i++) {
+            clasificacion.innerHTML += "<div class='entry'><div class='chapter'>" + data[i].jugador + "</div><div class='page'>" + data[i].puntuacion + " pts</div></div>"
+            if(i == 0){
+                //nombre.style.fontWeight = puntos.style.fontWeight = "bold";
+            }
+        }
+        clasificacion.innerHTML += "<br><br>"
     });
 }
 
@@ -454,8 +483,8 @@ function stylize() {
     texto2.style.color = getRandColor();
     texto2.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();
-    texto1.style.height = texto1.scrollHeight + "px";
-    texto2.style.height = texto2.scrollHeight + "px";
+    //texto1.style.height = texto1.scrollHeight + "px";
+    //texto2.style.height = texto2.scrollHeight + "px";
 }
 
 function animacion_modo() {
