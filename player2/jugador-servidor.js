@@ -233,7 +233,8 @@ socket.on("texto1", (data) => {
       }
     }*/
     //texto1.style.height = texto1.scrollHeight + "px";
-    window.scrollTo(0, document.body.scrollHeight);
+    texto1.scrollTop = texto1.scrollHeight;
+    //window.scrollTo(0, document.body.scrollHeight);
     focalizador2.scrollIntoView({ block: "end" });
 });
 
