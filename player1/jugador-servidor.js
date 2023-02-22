@@ -236,7 +236,7 @@ socket.on("texto2", (data) => {
       }
     }*/
     //texto2.style.height = texto2.scrollHeight + "px";
-    //window.scrollTo(0, document.body.scrollHeight);
+    window.scrollTo(0, document.body.scrollHeight);
     //focalizador1.scrollIntoView({ block: "end" });
 });
 
