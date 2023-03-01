@@ -30,11 +30,11 @@
         <div class="container"></div>
         <p><span id="temas" class="temas"></span></p>
         <div id="contenedor">
-            <div>
+            <div class="jugador1">
                 <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <textarea disabled id="texto" cols="40" rows="5" spellcheck="false" oninput="auto_grow(this)"
+                <textarea disabled id="texto" rows="5" spellcheck="false" oninput="auto_grow(this)"
                     onkeyup="countChars(this);" onkeydown="countChars(this);">
                 </textarea>
                 <br><br>
@@ -50,11 +50,11 @@
                 </div>
                 </br>
             </div>
-            <div>
+            <div class="jugador2">
                 <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
                 <br><br>
                 <p id="alineador2"></p>
-                <textarea disabled id="texto1" cols="40" rows="5" spellcheck="false" oninput="auto_grow(this)"
+                <textarea disabled id="texto1" rows="5" spellcheck="false" oninput="auto_grow(this)"
                     onkeyup="countChars(this);" onkeydown="countChars(this);">
                 </textarea>
                 <br><br>
@@ -69,28 +69,27 @@
                     <h1 id="focalizador2" class="focalizador"></h1>
                     </br>
                 </div>
-
             </div>
-        </div>
-        <div id="pie">
-            <table>
-                <tr>
-                    <p id="tiempo" class="tiempo"></p>
-                <tr>
+            <div id="pie">
+                <table>
+                    <tr>
+                        <p id="tiempo" class="tiempo"></p>
+                    <tr>
+                        <th>
+                            <p id="explicación" class="explicación"></p>
+                        </th>
+                    </tr>
                     <th>
-                        <p id="explicación" class="explicación"></p>
+                        <p id="palabra" class=palabra></p>
                     </th>
-                </tr>
-                <th>
-                    <p id="palabra" class=palabra></p>
-                </th>
-                </tr>
-                <tr>
-                    <th>
-                        <p id="definicion" class="definicion"></p>
-                    </th>
-                </tr>
-            </table>
+                    </tr>
+                    <tr>
+                        <th>
+                            <p id="definicion" class="definicion"></p>
+                        </th>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
         <div id="clasificacion" class="toc">

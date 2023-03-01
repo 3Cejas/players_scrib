@@ -1,6 +1,19 @@
 
 @charset"utf-8";
 
+/* Estilo para los jugadores */
+.jugador1{
+  width: 35%;
+  margin-left: 5%;
+  margin-right: 10%;
+}
+
+.jugador2{
+  width: 35%;
+  margin-left: 5%;
+  margin-right: 10%;
+}
+
 /*Estilo para la clasificación*/
 .toc{
   margin-left: 25%;
@@ -38,16 +51,15 @@
   grid-area: page;
 }
 
-
 .focalizador{
   font-size: 15;
   text-align: center;
 }
 
 #pie {
-  flex: 0 0 auto;
-  position: fixed;
-  bottom: 0;
+  position: absolute;
+  top:55%;
+  bottom: 1%;
   left: 50%;
   transform: translate(-50%, -0%);
   width: auto;
@@ -56,6 +68,13 @@
   ::selection {
     background: #f7d07e;
   }
+.feedback1{
+  font-size: 2vw;
+}
+
+.feedback2{
+  font-size: 2vw;
+}
 
 html,
 body {
@@ -141,21 +160,24 @@ label {
 }
 
 textarea {
+  font-family: "Roboto";
   position: sticky;
-  font-size: 20pt;
+  font-size: 3vw;
+  font-weight: bold;
   border-color: currentcolor;
   outline-color: currentcolor;
   background-color: transparent;
   background-image: none;
   overflow: auto;
   padding: 0;
+  width: 100%;
   border: none;
   resize: none;
   overflow: hidden;
   outline: 0px !important;
   -webkit-appearance: none;
   box-shadow: none !important;
-  color: rgb(155, 155, 155);
+  color: white;
 }
 
 .textarea_blur {
@@ -186,8 +208,7 @@ textarea {
 
 .nombre {
   text-align: center;
-  position: sticky;
-  font-size: 28pt;
+  font-size: 3vw;
   font-weight: bold;
   border-color: currentcolor;
   outline-color: currentcolor;
@@ -252,10 +273,6 @@ select {
   flex-wrap: wrap;
 }
 
-#contenedor>div {
-  width: 50%;
-}
-
 table {
   width: 30%;
   text-align: center;
@@ -268,88 +285,6 @@ table {
   font-size: 11pt;
   font-family: monospace;
   border-right: none;
-}
-
-.middle {
-  width: 33.33%;
-  margin: 0
-}
-
-.bn54 {
-  position: relative;
-  outline: none;
-  text-decoration: none;
-  border-radius: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  text-transform: uppercase;
-  height: 45px;
-  width: 130px;
-  opacity: 1;
-  background-color: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.6);
-}
-
-.bn54 .bn54span {
-  color: #000000;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.7px;
-}
-
-.bn54:hover {
-  animation: bn54rotate 0.7s ease-in-out both;
-}
-
-.bn54:hover .bn54span {
-  animation: bn54storm 0.7s ease-in-out both;
-  animation-delay: 0.06s;
-}
-
-@keyframes bn54rotate {
-  0% {
-    transform: rotate(0deg) translate3d(0, 0, 0);
-  }
-
-  25% {
-    transform: rotate(3deg) translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: rotate(-3deg) translate3d(0, 0, 0);
-  }
-
-  75% {
-    transform: rotate(1deg) translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: rotate(0deg) translate3d(0, 0, 0);
-  }
-}
-
-@keyframes bn54storm {
-  0% {
-    transform: translate3d(0, 0, 0) translateZ(0);
-  }
-
-  25% {
-    transform: translate3d(4px, 0, 0) translateZ(0);
-  }
-
-  50% {
-    transform: translate3d(-3px, 0, 0) translateZ(0);
-  }
-
-  75% {
-    transform: translate3d(2px, 0, 0) translateZ(0);
-  }
-
-  100% {
-    transform: translate3d(0, 0, 0) translateZ(0);
-  }
 }
 
 @media only screen and (max-width: 650px) {
@@ -387,6 +322,7 @@ table {
   textarea {
     position: sticky;
     font-size: 11pt;
+    font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
     background-color: transparent;

@@ -165,6 +165,7 @@ socket.on('texto1', data => {
     }*/
     //texto1.style.height = (texto1.scrollHeight) + "px";
     texto1.scrollTop = texto1.scrollHeight;
+    //window.scrollTo(0, document.body.scrollHeight);
     focalizador1.scrollIntoView(false);
 });
 
@@ -191,6 +192,7 @@ socket.on('texto2', data => {
     }*/
     //texto2.style.height = (texto2.scrollHeight) + "px";
     texto2.scrollTop = texto2.scrollHeight;
+    //window.scrollTo(0, document.body.scrollHeight);
     focalizador2.scrollIntoView(false);
 });
 
@@ -247,8 +249,8 @@ socket.on('inicio', data => {
     socket.off('recibir_postgame2');
 
     palabra1.innerHTML = "";
-    texto1.style.height = "45%";
-    texto2.style.height = "45%";
+    texto1.style.height = "17%";
+    texto2.style.height = "17%";
     definicion1.innerHTML = "";
     clasificacion.innerHTML = "";
 });
@@ -473,15 +475,15 @@ function getTextAlign() {
 }
 
 function stylize() {
-    texto1.style.fontFamily = getRandFontFamily();
+    //texto1.style.fontFamily = getRandFontFamily();
     texto1.style.color = getRandColor();
-    var tamaño_letra = getRandNumber(7, 35)
-    texto1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
-    texto1.style.textAlign = getTextAlign();
-    texto2.style.textAlign = getTextAlign();
+    //var tamaño_letra = getRandNumber(7, 35)
+    //texto1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    //texto1.style.textAlign = getTextAlign();
+    //texto2.style.textAlign = getTextAlign();
     texto2.style.fontFamily = getRandFontFamily();
     texto2.style.color = getRandColor();
-    texto2.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    //texto2.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();
     //texto1.style.height = texto1.scrollHeight + "px";
     //texto2.style.height = texto2.scrollHeight + "px";
@@ -512,13 +514,13 @@ function animacion_modo() {
 
 // Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
 function restablecer_estilo() {
-    texto1.style.fontFamily = "monospace";
-    texto1.style.color = "rgb(155, 155, 155)";
-    texto1.style.fontSize = 20 + "pt"; // Font sizes between 15px and 35px
+    texto1.style.fontFamily = "Roboto";
+    texto1.style.color = "white";
+    texto1.style.fontSize = "3vw"; // Font sizes between 15px and 35px
     texto1.style.textAlign = "justify";
-    texto2.style.fontFamily = "monospace";
-    texto2.style.color = "rgb(155, 155, 155)";
-    texto2.style.fontSize = 20 + "pt"; // Font sizes between 15px and 35px
+    texto2.style.fontFamily = "Roboto";
+    texto2.style.color = "white";
+    texto2.style.fontSize = "3vw"; // Font sizes between 15px and 35px
     texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
     texto1.style.height = texto1.scrollHeight + "px";
