@@ -1,5 +1,15 @@
-var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-//let socket = io("http://localhost:3000/");
+const remoteServerUrl = 'https://scri-b.up.railway.app';
+const localServerUrl = 'http://localhost:3000';
+
+// Se establece la conexión con el servidor.
+let socket = io(localServerUrl);
+
+socket.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
+    socket.io.uri = remoteServerUrl;
+    socket.connect();
+  });
+
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -256,8 +266,9 @@ socket.on("count", (data) => {
     }
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
-        tiempo.style.color = "white"
         LIMPIEZAS[modo_actual](data);
+        limpieza();
+        
         modo_actual = "";
         activar_sockets_extratextuales();
         /*texto1.value = texto1.value.substring(
@@ -269,31 +280,12 @@ socket.on("count", (data) => {
             texto2.value.length
         );*/
 
-        // Desactiva, por seguridad, todos los modos.
-        modo_texto_borroso = false;
-        desactivar_borrar = false;
-        letra_prohibida = "";
-        letra_bendita = "";
-
-        // Desactiva el blur de ambos textos.
-        texto2.classList.remove("textarea_blur");
-        texto1.classList.remove("textarea_blur");
-
         // Impide que se pueda escribir en los dos textos.
         texto1.disabled= true;
-        texto2.disabled = true;
 
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
 
-        // Restablece la rápidez del borrado.
-        rapidez_borrado = 3000;
-        rapidez_inicio_borrado = 3000;
-
-        blurreado = false;
-        clearTimeout(borrado);
-        clearTimeout(cambio_palabra);
-        palabra_actual = ""; // Variable que almacena la palabra bonus actual.
         socket.on("recibir_postgame1", (data) => {
             focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
         });
@@ -316,40 +308,19 @@ socket.on("count", (data) => {
 
 // Inicia el juego.
 socket.on("inicio", (data) => {
-    tiempo.style.color = "white"
+    limpieza();
 
     socket.off("nombre1");
     socket.off("nombre2");
     socket.off("recibir_puntuacion_final");
     
     //socket.off("recibe_temas");
-
-    nombre1.disabled = true;
-    nombre2.disabled = true;
-    texto1.value = "";
-    texto2.value = "";
     texto1.disabled= false;
-    texto2.disabled= true;
-    puntos1.innerHTML = "0 puntos";
-    puntos2.innerHTML = "0 puntos";
-    nivel1.innerHTML = "nivel 0";
-    nivel2.innerHTML = "nivel 0";
-    palabra1.innerHTML = "";
+    
     texto1.rows = 10;
     texto2.rows = 10;
     texto1.style.height = "";
     texto2.style.height = "";
-    texto1.focus();
-    blurreado = false;
-    texto2.classList.remove("textarea_blur");
-    texto1.classList.remove("textarea_blur");
-    definicion1.innerHTML = "";
-    explicación.innerHTML = "";
-    terminado = false;
-    puntos_palabra = 0;
-    puntos = 0;
-    puntos_letra_prohibida = 0;
-    puntos_letra_bendita = 0;
     /*saltos_línea_alineacion_1 = 0;
     saltos_línea_alineacion_2 = 0;*/
 });
@@ -367,53 +338,18 @@ socket.on("limpiar", (data) => {
     });
 
     LIMPIEZAS[modo_actual](data);
+    limpieza();
+    
     modo_actual = "";
-    feedback1.innerHTML = "";
-    feedback2.innerHTML = "";
-    definicion1.innerHTML = "";
-    explicación.innerHTML = "";
-    puntos_palabra = 0;
-    puntos = 0;
-    puntos_letra_prohibida = 0;
-    puntos_letra_bendita = 0;
-    asignada = false;
-    palabra_actual = ""; // Variable que almacena la palabra bonus actual.
-    terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
+
     nombre1.value = "ESCRITXR 1";
     nombre2.value = "ESCRITXR 2";
-    nombre1.disabled = true;
-    nombre2.disabled = true;
-    texto1.value = "";
-    texto2.value = "";
+    
     texto1.disabled= true;
-    texto2.disabled= true;
-    puntos1.innerHTML = "0 puntos";
-    puntos2.innerHTML = "0 puntos";
-    nivel1.innerHTML = "nivel 0";
-    nivel2.innerHTML = "nivel 0";
-    palabra1.innerHTML = "";
-    texto1.focus();
-    blurreado = false;
-    texto2.classList.remove("textarea_blur");
-    texto1.classList.remove("textarea_blur");
-    rapidez_borrado = 3000;
-    rapidez_inicio_borrado = 3000;
-    clearTimeout(borrado);
-    clearTimeout(cambio_palabra);
-    modo_texto_borroso = false;
-    desactivar_borrar = false;
-    letra_prohibida = "";
-    letra_bendita = "";
-    restablecer_estilo();
-    clearTimeout(tempo_text_borroso);
+
     /*saltos_línea_alineacion_1 = 0;
     saltos_línea_alineacion_2 = 0;*/
-    focalizador1.innerHTML = "";
-    focalizador2.innerHTML = "";
-    puntuacion_final1.innerHTML = "";
-    puntuacion_final2.innerHTML = "";
-    puntos1.style.color = "white";
-    puntos2.style.color = "white";
+    
     texto1.style.height = "40";
     texto2.style.height = "40";
 });
@@ -569,8 +505,8 @@ function restablecer_estilo() {
     texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
     texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
-    texto1.style.height = texto1.scrollHeight + "px";
-    texto2.style.height = texto2.scrollHeight + "px";
+    //texto1.style.height = texto1.scrollHeight + "px";
+    //texto2.style.height = texto2.scrollHeight + "px";
 }
 
 // Función auxiliar que elimina los saltos de línea al principio de un string.
@@ -730,4 +666,72 @@ function cambiar_color_puntuación() {
         puntos1.style.color = "red";
         puntos2.style.color = "green";
     }
+}
+
+function limpieza(){
+    nombre1.disabled = true;
+    nombre2.disabled = true;
+
+    texto1.value = "";
+    texto2.value = "";
+
+    texto2.disabled= true;
+
+    puntos1.innerHTML = "0 puntos";
+    puntos2.innerHTML = "0 puntos";
+    
+    nivel1.innerHTML = "nivel 0";
+    nivel2.innerHTML = "nivel 0";
+    
+    palabra1.innerHTML = "";
+    definicion1.innerHTML = "";
+    explicación.innerHTML = "";
+
+    focalizador1.innerHTML = "";
+    focalizador2.innerHTML = "";
+
+    texto1.focus();
+
+    // Desactiva el blur de ambos textos.
+    blurreado = false;
+    texto1.classList.remove("textarea_blur");
+    texto2.classList.remove("textarea_blur");
+
+    puntos_palabra = 0;
+    puntos = 0;
+    puntos_letra_prohibida = 0;
+    puntos_letra_bendita = 0;
+
+    letra_prohibida = "";
+    letra_bendita = "";
+    asignada = false;
+    palabra_actual = ""; // Variable que almacena la palabra bonus actual.
+    terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
+    
+    // Desactiva, por seguridad, todos los modos.
+    modo_texto_borroso = false;
+    desactivar_borrar = false;
+
+    puntos1.style.color = "white";
+    puntos2.style.color = "white";
+    tiempo.style.color = "white"
+
+    puntuacion_final1.innerHTML = "";
+    puntuacion_final2.innerHTML = "";
+    
+    feedback1.innerHTML = "";
+    feedback2.innerHTML = "";
+    
+    definicion1.innerHTML = "";
+    explicación.innerHTML = "";
+
+    // Restablece la rápidez del borrado.
+    rapidez_borrado = 3000;
+    rapidez_inicio_borrado = 3000;
+
+    restablecer_estilo();
+
+    clearTimeout(borrado);
+    clearTimeout(cambio_palabra);
+    clearTimeout(tempo_text_borroso);
 }

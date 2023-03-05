@@ -1,5 +1,15 @@
-let socket = io('https://scri-b.up.railway.app/');
-//let socket = io('http://localhost:3000/');
+const remoteServerUrl = 'https://scri-b.up.railway.app';
+const localServerUrl = 'http://localhost:3000';
+
+// Se establece la conexión con el servidor.
+let socket = io(localServerUrl);
+
+socket.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
+    socket.io.uri = remoteServerUrl;
+    socket.connect();
+  });
+
 const getEl = id => document.getElementById(id);
 
 // COMPONENTES DEL JUGADOR 1

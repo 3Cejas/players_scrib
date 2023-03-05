@@ -1,5 +1,15 @@
-var socket = io('https://scri-b.up.railway.app/'); // Se establece la conexión con el servidor.
-//var socket = io('http://localhost:3000/');
+const remoteServerUrl = 'https://scri-b.up.railway.app';
+const localServerUrl = 'http://localhost:3000';
+
+// Se establece la conexión con el servidor.
+let socket = io(localServerUrl);
+
+socket.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
+    socket.io.uri = remoteServerUrl;
+    socket.connect();
+  });
+
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -212,8 +222,10 @@ socket.on('count', data => {
     }
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
-        tiempo.style.color = "white"
         LIMPIEZAS[modo_actual](data);
+        
+        limpiezas();
+
         activar_sockets_extratextuales();
         //texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
         //texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
@@ -236,7 +248,6 @@ socket.on('count', data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-    tiempo.style.color = "white"
 
     socket.off('nombre1');
     socket.off('nombre2');
@@ -248,11 +259,10 @@ socket.on('inicio', data => {
     socket.off('recibir_postgame1');
     socket.off('recibir_postgame2');
 
-    palabra1.innerHTML = "";
+    limpiezas();
     texto1.style.height = "17%";
     texto2.style.height = "17%";
-    definicion1.innerHTML = "";
-    clasificacion.innerHTML = "";
+    
 });
 
 // Resetea el tablero de juego.
@@ -267,35 +277,19 @@ socket.on('limpiar', data => {
     socket.on('nombre1', data => {
         nombre1.value = data;
     });
-    feedback1.innerHTML = "";
-    feedback2.innerHTML = "";
-    definicion1.innerHTML = "";
-    explicación.innerHTML = "";
+
+    limpiezas();
+
     nombre1.value = "ESCRITXR 1";
     nombre2.value = "ESCRITXR 2";
-    texto1.value = "";
-    texto2.value = "";
-    puntos1.innerHTML = "0 puntos";
-    puntos2.innerHTML = "0 puntos";
-    nivel1.innerHTML = "nivel 0";
-    nivel2.innerHTML = "nivel 0";
-    palabra1.innerHTML = "";
+    
     texto1.style.height = "40";
     texto1.style.height = (texto1.scrollHeight) + "px";
     texto2.style.height = "40";
     texto2.style.height = (texto2.scrollHeight) + "px";
-    texto2.classList.remove('textarea_blur');
-    texto1.classList.remove('textarea_blur');
-    focalizador1.innerHTML = "";
-    focalizador2.innerHTML = "";
-    restablecer_estilo();
-    clearTimeout(tempo_text_borroso);
+    
+    
     activar_sockets_extratextuales();
-    puntos1.style.color = "white";
-    puntos2.style.color = "white";
-    clasificacion.innerHTML = "";
-    texto1.style.height = "40";
-    texto2.style.height = "40";
 });
 
 socket.on('activar_modo', data => {
@@ -523,8 +517,8 @@ function restablecer_estilo() {
     texto2.style.fontSize = "3vw"; // Font sizes between 15px and 35px
     texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
-    texto1.style.height = texto1.scrollHeight + "px";
-    texto2.style.height = texto2.scrollHeight + "px";
+    //texto1.style.height = texto1.scrollHeight + "px";
+    //texto2.style.height = texto2.scrollHeight + "px";
 }
 
 // Función auxiliar que elimina los saltos de línea al principio de un string.
@@ -694,4 +688,38 @@ function cambiar_color_puntuación() {
         puntos1.style.color = "red";
         puntos2.style.color = "green";
     }
+}
+
+function limpiezas(){
+    feedback1.innerHTML = "";
+    feedback2.innerHTML = "";
+    
+    definicion1.innerHTML = "";
+    explicación.innerHTML = "";
+    
+    texto1.value = "";
+    texto2.value = "";
+
+    puntos1.innerHTML = "0 puntos";
+    puntos2.innerHTML = "0 puntos";
+    
+    nivel1.innerHTML = "nivel 0";
+    nivel2.innerHTML = "nivel 0";
+    
+    palabra1.innerHTML = "";
+
+    tiempo.style.color = "white"
+    puntos1.style.color = "white";
+    puntos2.style.color = "white";
+    clasificacion.innerHTML = "";
+    
+    texto1.classList.remove('textarea_blur');
+    texto2.classList.remove('textarea_blur');
+
+    focalizador1.innerHTML = "";
+    focalizador2.innerHTML = "";
+
+    restablecer_estilo();
+
+    clearTimeout(tempo_text_borroso);
 }
