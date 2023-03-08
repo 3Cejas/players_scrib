@@ -4,12 +4,12 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
       </style>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, height=device-height" content="initial-scale=1">
     <title>SCRB</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
     <!-- highlight-within-textarea CSS/JS -->
@@ -30,7 +30,7 @@
                                                                                                   
         </pre>
         <div align="center">
-            <p class="sub">powered by</p><img src="./player1/logo.png" alt="" width="80" />
+            <p class="sub">powered by</p><img src="./img/logo.png" alt="" width="80" />
         </div>
         <br>
         <h2>ENFRÉNTATE A OTROS ESCRITORES</h2>
@@ -47,11 +47,11 @@
         <table class="menu">
             <tr>
                 <td>
-                    <button onclick="window.location.href = './player1/index.html';" class="bn54">
+                    <button onclick="window.location.href = './players/index.html?player=1'" class="bn54">
                         <span class="bn54span">✍️ Player 1</span></button><br>
                 </td>
                 <td>
-                    <button onclick="window.location.href = './player2/index.html';" class="bn54">
+                    <button onclick="window.location.href = './players/index.html?player=2'" class="bn54">
                         <span class="bn54span">✍️ Player 2</span></button><br>
                 </td>
                 <td>
@@ -66,5 +66,21 @@
         </table>
     </div>
 </body>
-
+<script>
+    var viewFullScreen = document.getElementById("view-fullscreen");
+if (viewFullScreen) {
+  viewFullScreen.addEventListener("click", function() {
+    var docElm = document.documentElement;
+    if (docElm.requestFullscreen) {
+      docElm.requestFullscreen();
+    } else if (docElm.msRequestFullscreen) {
+      docElm.msRequestFullscreen();
+    } else if (docElm.mozRequestFullScreen) {
+      docElm.mozRequestFullScreen();
+    } else if (docElm.webkitRequestFullScreen) {
+      docElm.webkitRequestFullScreen();
+    }
+  })
+}
+</script>
 </html>

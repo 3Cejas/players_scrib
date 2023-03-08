@@ -50,11 +50,11 @@ function temp() {
     time_seconds = date.getMinutes();
     let duration = time_minutes * 60 + time_seconds;
 
-    socket.emit('inicio', duration);
 
     element = document.querySelector('#tiempo');
     element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
     count = element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
+    socket.emit('inicio', count);
     socket.emit('count', count);
 
     startCountDown(--duration, element);

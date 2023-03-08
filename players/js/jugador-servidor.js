@@ -1,48 +1,45 @@
+var player = getParameterByName("player");
 const remoteServerUrl = 'https://scri-b.up.railway.app';
 const localServerUrl = 'http://localhost:3000';
-
-// Se establece la conexión con el servidor.
-let socket = io(localServerUrl);
-
-socket.on("connect_error", (err) => {
-    console.log(`connect_error due to ${err.message}`);
-    socket.io.uri = remoteServerUrl;
-    socket.connect();
-  });
+let feedback_a_j_x;
+let feedback_de_j_x;
+let texto_x;
+let texto_y;
+let enviar_postgame_x;
+let recibir_postgame_x;
 
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
-// COMPONENTES DEL JUGADOR 1
-let nombre1 = getEl("nombre");
-let texto1 = getEl("texto");
-let puntos1 = getEl("puntos");
-let nivel1 = getEl("nivel");
-let feedback1 = getEl("feedback1");
-let alineador1 = getEl("alineador1");
-
-let palabra1 = getEl("palabra");
-let definicion1 = getEl("definicion");
-let explicación = getEl("explicación");
-
-// Tiempo restante de la ronda.
-let tiempo = getEl("tiempo");
-let temas = getEl("temas");
-
-// COMPONENTES DEL JUGADOR 2
-let nombre2 = getEl("nombre1");
-let texto2 = getEl("texto1");
-let puntos2 = getEl("puntos1");
-let nivel2 = getEl("nivel1");
-let feedback2 = getEl("feedback2");
-let alineador2 = getEl("alineador2");
-
-let focalizador1 = getEl("focalizador1");
-let focalizador2 = getEl("focalizador2");
-
-let puntuacion_final1 = getEl("puntuacion_final1");
-let puntuacion_final2 = getEl("puntuacion_final2");
-
-
+  // COMPONENTES DEL JUGADOR 1
+  let nombre1;
+  let texto1 = getEl("texto");
+  let puntos1 = getEl("puntos");
+  let nivel1 = getEl("nivel");
+  let feedback1 = getEl("feedback1");
+  let alineador1 = getEl("alineador1");
+  
+  let palabra1 = getEl("palabra");
+  let definicion1 = getEl("definicion");
+  let explicación = getEl("explicación");
+  
+  // Tiempo restante de la ronda.
+  let tiempo = getEl("tiempo");
+  let temas = getEl("temas");
+  
+  // COMPONENTES DEL JUGADOR 2
+  let nombre2;
+  let texto2 = getEl("texto1");
+  let puntos2 = getEl("puntos1");
+  let nivel2 = getEl("nivel1");
+  let feedback2 = getEl("feedback2");
+  let alineador2 = getEl("alineador2");
+  
+  let focalizador1 = getEl("focalizador1");
+  let focalizador2 = getEl("focalizador2");
+  
+  let puntuacion_final1 = getEl("puntuacion_final1");
+  let puntuacion_final2 = getEl("puntuacion_final2");
+  
 
 let tempo_text_borroso;
 
@@ -55,7 +52,50 @@ var letra_prohibida = "";
 var letra_bendita = "";
 let listener_modo;
 
-var palabras_bonus = [];
+function getParameterByName(name, url) {
+if (!url) url = window.location.href;
+name = name.replace(/[\[\]]/g, "\\$&");
+var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+    results = regex.exec(url);
+if (!results) return null;
+if (!results[2]) return '';
+return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+if (player == 1) {
+    feedback_a_j_x = 'feedback_a_j1';
+    feedback_de_j_x = 'feedback_de_j1';
+    texto_x = 'texto1'
+    texto_y= 'texto2';
+    enviar_postgame_x = 'enviar_postgame1';
+    recibir_postgame_x = 'recibir_postgame1';
+    nombre1 = getEl("nombre");
+    nombre1.value = "ESCRITXR 1"
+    nombre2 = getEl("nombre1");
+    nombre2.value = "ESCRITXR 2";
+
+} else if (player == 2) {
+    feedback_a_j_x = 'feedback_a_j2';
+    feedback_de_j_x = 'feedback_de_j2';
+    texto_x = 'texto2'
+    texto_y= 'texto1';
+    enviar_postgame_x = 'enviar_postgame2';
+    recibir_postgame_x = 'recibir_postgame2';
+    nombre1 = getEl("nombre1");
+    nombre1.value="ESCRITXR 1";
+    nombre2 = getEl("nombre");
+    nombre2.value="ESCRITXR 2";
+}
+
+console.log(texto_x)
+// Se establece la conexión con el servidor.
+let socket = io(localServerUrl);
+
+socket.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
+    socket.io.uri = remoteServerUrl;
+    socket.connect();
+  });
 
 const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
@@ -96,18 +136,37 @@ const MODOS = {
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
         if (data.jugador == 1) {
+            if(player == 1){
             texto1.classList.add("textarea_blur");
             tempo_text_borroso = setTimeout(function () {
                 texto1.classList.remove("textarea_blur");
                 texto2.classList.add("textarea_blur");
-            }, 30000);
+            }, data.duracion);
+            }
+            else{
+                texto2.classList.add("textarea_blur");
+                tempo_text_borroso = setTimeout(function () {
+                    texto2.classList.remove("textarea_blur");
+                    texto1.classList.add("textarea_blur");
+                }, data.duracion);
+            }
         }
         if (data.jugador == 2) {
-            texto2.classList.add("textarea_blur");
-            tempo_text_borroso = setTimeout(function () {
-                texto2.classList.remove("textarea_blur");
+            console.log("ENTRO")
+            if(player == 2){
                 texto1.classList.add("textarea_blur");
-            }, 30000);
+                tempo_text_borroso = setTimeout(function () {
+                    texto1.classList.remove("textarea_blur");
+                    texto2.classList.add("textarea_blur");
+                }, data.duracion);
+                }
+            else{
+                texto2.classList.add("textarea_blur");
+                tempo_text_borroso = setTimeout(function () {
+                    texto2.classList.remove("textarea_blur");
+                    texto1.classList.add("textarea_blur");
+                    }, data.duracion);
+                }
         }
     },
 
@@ -154,20 +213,20 @@ const MODOS = {
 
 const LIMPIEZAS = {
     "palabras bonus": function (data) {
-        socket.off('feedback_a_j1');
+        socket.off(feedback_a_j_x);
         //socket.off("enviar_palabra");
         asignada = false;
         texto1.removeEventListener("keyup", listener_modo);
     },
 
     "letra prohibida": function (data) {
-        socket.off('feedback_a_j1');
+        socket.off(feedback_a_j_x);
         texto1.removeEventListener("keyup", listener_modo);
         letra_prohibida = "";
     },
 
     "letra bendita": function (data) {
-        socket.off('feedback_a_j1');
+        socket.off(feedback_a_j_x);
         texto1.removeEventListener("keyup", listener_modo);
         letra_bendita = "";
     },
@@ -230,7 +289,7 @@ texto1.addEventListener("keydown", (evt) => {
 activar_sockets_extratextuales();
 
 // Recibe los datos del jugador 2 y los coloca.
-socket.on("texto2", (data) => {
+socket.on(texto_y, (data) => {
     texto2.value = data.text;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
@@ -267,7 +326,7 @@ socket.on("count", (data) => {
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
         LIMPIEZAS[modo_actual](data);
-        limpieza();
+        limpieza_final();
         
         modo_actual = "";
         activar_sockets_extratextuales();
@@ -286,7 +345,7 @@ socket.on("count", (data) => {
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
 
-        socket.on("recibir_postgame1", (data) => {
+        socket.on(recibir_postgame_x, (data) => {
             focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
         });
         setTimeout(postgame, 1000);
@@ -303,6 +362,8 @@ socket.on("count", (data) => {
             blob = new Blob([document.getElementById("nombre").value +"\n"+texto1.value +"\n"+ document.getElementById("nombre1").value +"\n"+texto2.value ], {type: "text/plain"});
             a.download = 'sesión_player1.txt';
             a.click();*/
+        
+        logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%'/>";
     }
 });
 
@@ -316,13 +377,17 @@ socket.on("inicio", (data) => {
     
     //socket.off("recibe_temas");
     texto1.disabled= false;
-    
-    texto1.rows = 10;
-    texto2.rows = 10;
+
     texto1.style.height = "";
     texto2.style.height = "";
+    texto1.rows = 2;
+    texto2.rows = 2;
+
     /*saltos_línea_alineacion_1 = 0;
     saltos_línea_alineacion_2 = 0;*/
+
+    logo.innerHTML = "";
+
 });
 
 // Resetea el tablero de juego.
@@ -348,10 +413,14 @@ socket.on("limpiar", (data) => {
     texto1.disabled= true;
 
     /*saltos_línea_alineacion_1 = 0;
-    saltos_línea_alineacion_2 = 0;*/
+    saltos_línea_alineacion_2 = 0;
     
     texto1.style.height = "40";
-    texto2.style.height = "40";
+    texto2.style.height = "40";*/
+
+    logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%'/>";    
+
+    activar_sockets_extratextuales();
 });
 
 socket.on("activar_modo", (data) => {
@@ -372,7 +441,7 @@ function recibir_palabra(data) {
     console.log("palabra: ", data.palabra_bonus)
     asignada = true;
     palabra_actual = data.palabra_bonus[0];
-    palabras_bonus.push(palabra_actual);
+    
     palabra1.innerHTML = "(+" + data.puntuacion + " pts) palabra: " + data.palabra_bonus[0];
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
@@ -389,7 +458,7 @@ function sendText() {
     let text = texto1.value;
     let points = puntos1.textContent;
     let level = nivel1.textContent;
-    socket.emit("texto1", { text, points, level });
+    socket.emit(texto_x, { text, points, level });
 }
 
 function activar_sockets_extratextuales() {
@@ -415,7 +484,7 @@ function activar_sockets_extratextuales() {
 }
 
 function activar_socket_feedback() {
-    socket.on("feedback_a_j1", (data) => {
+    socket.on(feedback_a_j_x, (data) => {
         feedback2.style.color = data.color;
         feedback2.innerHTML = data.envio_puntos.toString() + " pts";
         animateCSS(".feedback2", "bounceInLeft").then((message) => {
@@ -497,11 +566,11 @@ function animacion_modo() {
 // Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
 function restablecer_estilo() {
     texto1.style.fontFamily = "monospace";
-    texto1.style.color = "rgb(155, 155, 155)";
+    texto1.style.color = "white";
     texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
     texto1.style.textAlign = "justify";
     texto2.style.fontFamily = "monospace";
-    texto2.style.color = "rgb(155, 155, 155)";
+    texto2.style.color = "white";
     texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
     texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
@@ -551,7 +620,7 @@ function modo_palabras_bonus() {
             feedback1.innerHTML = "+" + puntuacion + " pts";
             color = color_positivo;
             envio_puntos = "+" + puntuacion;
-            socket.emit("feedback_de_j1", { color, envio_puntos });
+            socket.emit(feedback_de_j_x, { color, envio_puntos });
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "bounceInLeft").then(() => {
                 delay_animacion = setTimeout(function () {
@@ -581,7 +650,7 @@ function modo_letra_prohibida(e) {
         feedback1.innerHTML = "-50 pts";
         color = color_negativo;
         envio_puntos = "-50";
-        socket.emit("feedback_de_j1", { color, envio_puntos });
+        socket.emit(feedback_de_j_x, { color, envio_puntos });
         clearTimeout(delay_animacion);
         animateCSS(".feedback1", "bounceInRight").then(() => {
             delay_animacion = setTimeout(function () {
@@ -613,7 +682,7 @@ function modo_letra_bendita(e) {
         feedback1.innerHTML = "+50 pts";
         color = color_positivo;
         envio_puntos = "+50";
-        socket.emit("feedback_de_j1", { color, envio_puntos });
+        socket.emit(feedback_de_j_x, { color, envio_puntos });
         clearTimeout(delay_animacion);
         animateCSS(".feedback1", "bounceInRight").then(() => {
             delay_animacion = setTimeout(function () {
@@ -634,7 +703,7 @@ function postgame() {
     if (puntos_letra_prohibida != 0) {
         puntos_letra_prohibida = -puntos_letra_prohibida;
     }
-    socket.emit("enviar_postgame1", { longitud, puntos_palabra, puntos_letra_prohibida, puntos_letra_bendita });
+    socket.emit(enviar_postgame_x, { longitud, puntos_palabra, puntos_letra_prohibida, puntos_letra_bendita });
     focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + texto1.value.length + " pts" +
                             "<br>📚 Palabras bonus = " + puntos_palabra + " pts" +
                             "<br>❌ Letra prohibida = " + puntos_letra_prohibida + " pts" +
@@ -655,10 +724,10 @@ function actualizar_puntuación() {
 }
 
 function cambiar_color_puntuación() {
-    if (puntos >= puntos2.innerHTML.match(/\d+/g)) {
+    if (puntos > parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
         puntos1.style.color = "green";
         puntos2.style.color = "red";
-        if (puntos == puntos2.innerHTML.match(/\d+/g)) {
+        if (puntos == parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
             puntos2.style.color = "green";
         }
     }
@@ -729,7 +798,49 @@ function limpieza(){
     rapidez_borrado = 3000;
     rapidez_inicio_borrado = 3000;
 
-    restablecer_estilo();
+    //restablecer_estilo();
+
+    clearTimeout(borrado);
+    clearTimeout(cambio_palabra);
+    clearTimeout(tempo_text_borroso);
+}
+
+function limpieza_final(){
+    nombre1.disabled = true;
+    nombre2.disabled = true;
+
+    texto2.disabled= true;
+    
+    palabra1.innerHTML = "";
+    definicion1.innerHTML = "";
+    explicación.innerHTML = "";
+
+    focalizador1.innerHTML = "";
+    focalizador2.innerHTML = "";
+
+    // Desactiva el blur de ambos textos.
+    blurreado = false;
+    texto1.classList.remove("textarea_blur");
+    texto2.classList.remove("textarea_blur");
+
+
+    letra_prohibida = "";
+    letra_bendita = "";
+    asignada = false;
+    palabra_actual = ""; // Variable que almacena la palabra bonus actual.
+    terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
+    
+    // Desactiva, por seguridad, todos los modos.
+    modo_texto_borroso = false;
+    desactivar_borrar = false;
+
+    tiempo.style.color = "white"
+
+    // Restablece la rápidez del borrado.
+    rapidez_borrado = 3000;
+    rapidez_inicio_borrado = 3000;
+
+    //restablecer_estilo();
 
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);

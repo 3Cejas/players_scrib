@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" type="text/css" href="index.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <!--<script src="jquery.highlight-within-textarea.js"></script>-->
 </head>
 
 <body>
@@ -23,8 +22,28 @@
        \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                   
         </pre>
-        <div align="center">
-            <p class="sub">powered by</p><img src="logo.png" alt="" width="80" />
+        <div id = logo>
+            <p class="sub">powered by</p><img src="logo.png" alt="" width="5%" />
+        </div>
+        <div id="info">
+            <table>
+                <tr>
+                    <p id="tiempo" class="tiempo"></p>
+                <tr>
+                    <th>
+                        <p id="explicación" class="explicación"></p>
+                    </th>
+                </tr>
+                <th>
+                    <p id="palabra" class=palabra></p>
+                </th>
+                </tr>
+                <tr>
+                    <th>
+                        <p id="definicion" class="definicion"></p>
+                    </th>
+                </tr>
+            </table>
         </div>
         <br>
         <div class="container"></div>
@@ -34,7 +53,7 @@
                 <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <textarea disabled id="texto" rows="5" spellcheck="false" oninput="auto_grow(this)"
+                <textarea disabled id="texto" rows="2" spellcheck="false" oninput="auto_grow(this)"
                     onkeyup="countChars(this);" onkeydown="countChars(this);">
                 </textarea>
                 <br><br>
@@ -54,7 +73,7 @@
                 <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
                 <br><br>
                 <p id="alineador2"></p>
-                <textarea disabled id="texto1" rows="5" spellcheck="false" oninput="auto_grow(this)"
+                <textarea disabled id="texto1" rows="2" spellcheck="false" oninput="auto_grow(this)"
                     onkeyup="countChars(this);" onkeydown="countChars(this);">
                 </textarea>
                 <br><br>
@@ -70,32 +89,12 @@
                     </br>
                 </div>
             </div>
-            <div id="pie">
-                <table>
-                    <tr>
-                        <p id="tiempo" class="tiempo"></p>
-                    <tr>
-                        <th>
-                            <p id="explicación" class="explicación"></p>
-                        </th>
-                    </tr>
-                    <th>
-                        <p id="palabra" class=palabra></p>
-                    </th>
-                    </tr>
-                    <tr>
-                        <th>
-                            <p id="definicion" class="definicion"></p>
-                        </th>
-                    </tr>
-                </table>
-            </div>
         </div>
     </div>
         <div id="clasificacion" class="toc">
             </div>
 </body>
-<script src="socket.io-client/dist/socket.io.js"></script>
+<script src="../socket.io-client/dist/socket.io.js"></script>
 <script src="./jugador-servidor.js"></script>
 
 </html>

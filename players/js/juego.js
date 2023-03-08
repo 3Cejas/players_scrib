@@ -9,15 +9,40 @@ let countInterval; // Variable que almacena el identificador de la función que 
 let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
 let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra bonus.
-let puntos = 0; // Puntos del jugador 2.
+let puntos = 0; // Puntos del jugador 1.
 let delay_animacion;
 let envio_puntos;
 //let saltos_línea_alineacion_1 = 0; // Variable entera que almacena los saltos de línea del jugador 1 para alínear los textos.
 //let saltos_línea_alineacion_2 = 0; // Variable entera que almacena los saltos de línea del jugador 2 para alínear los textos.
 const color_negativo = "red";
 const color_positivo = "green";
+let isFullscreen = false;
 
-// Función que aumenta de tamaño el texto del jugador 2 cuando el jugador 2 escribe cualquier carácter en el texto.
+document.addEventListener('click', function(event) {
+  if (event.button === 0) {
+    if (isFullscreen) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      }
+      isFullscreen = false;
+    } else {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      } else if (document.documentElement.mozRequestFullScreen) {
+        document.documentElement.mozRequestFullScreen();
+      }
+      isFullscreen = true;
+    }
+  }
+});
+
+// Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe cualquier carácter en el texto.
 function auto_grow(element) {
     element.style.height = "5px";
     element.style.height = element.scrollHeight + "px";
@@ -39,16 +64,16 @@ function auto_grow(element) {
     texto1.style.height = texto1.scrollHeight + "px";
     texto2.style.height = texto2.scrollHeight + "px";
     //window.scrollTo(0, document.body.scrollHeight);
-    focalizador2.scrollIntoView({ block: "end" });
+    focalizador1.scrollIntoView({ block: "end" });
 }
 
 // Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
 function borrar(texto) {
     if (!desactivar_borrar) {
-        texto2.value = texto.value.substring(0, texto2.value.length - 1);
-        puntos = texto2.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
+        texto1.value = texto.value.substring(0, texto1.value.length - 1);
+        puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
         cambiar_color_puntuación()
-        puntos2.innerHTML = puntos + " puntos";
+        puntos1.innerHTML = puntos + " puntos";
         sendText();
         cambio_nivel(puntos);
         borrado = setTimeout(() => {
@@ -61,9 +86,10 @@ function borrar(texto) {
 function countChars(texto) {
     puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
     cambiar_color_puntuación();
-    puntos2.innerHTML = puntos + " puntos";
+    puntos1.innerHTML = puntos + " puntos";
     cambio_nivel(puntos);
     clearTimeout(borrado);
+    var $div = $('#texto');
     borrado = setTimeout(function () {
         borrar(texto);
     }, rapidez_inicio_borrado);
@@ -82,27 +108,27 @@ function toNormalForm(str) {
 //Función auxiliar que cambia la rapidez y el inicio de borrado en función de la cantidad de caracteres escritos.
 function cambio_nivel(caracteres) {
     if (0 <= caracteres && caracteres < 250) {
-        nivel2.innerHTML = "nivel 0";
+        nivel1.innerHTML = "nivel 0";
         rapidez_inicio_borrado = 3000;
         rapidez_borrado = 3000;
     }
     if (250 <= caracteres && caracteres < 500) {
-        nivel2.innerHTML = "nivel 1";
+        nivel1.innerHTML = "nivel 1";
         rapidez_inicio_borrado = 2500;
         rapidez_borrado = 2500;
     }
     if (500 <= caracteres && caracteres < 750) {
-        nivel2.innerHTML = "nivel 2";
+        nivel1.innerHTML = "nivel 2";
         rapidez_borrado = 1800;
         rapidez_inicio_borrado = 1800;
     }
     if (750 <= caracteres && caracteres < 1000) {
-        nivel2.innerHTML = "nivel 3";
+        nivel1.innerHTML = "nivel 3";
         rapidez_borrado = 1200;
         rapidez_inicio_borrado = 1200;
     }
     if (caracteres >= 1000) {
-        nivel2.innerHTML = "nivel 4";
+        nivel1.innerHTML = "nivel 4";
         rapidez_borrado = 500;
         rapidez_inicio_borrado = 500;
     }
@@ -125,4 +151,3 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         }
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
-

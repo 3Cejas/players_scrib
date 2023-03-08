@@ -20,6 +20,7 @@ let nivel1 = getEl("nivel");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 
+let logo = getEl("logo");
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
 let explicación = getEl("explicación");
@@ -74,19 +75,20 @@ const MODOS = {
         explicación.innerHTML = "MODO TEXTO NUBLADO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
+        console.log(data.duracion)
         if (data.jugador == 1) {
             texto1.classList.add('textarea_blur');
             tempo_text_borroso = setTimeout(function () {
                 texto1.classList.remove('textarea_blur');
                 texto2.classList.add('textarea_blur');;
-            }, 30000);
+            }, data.duracion);
         }
         if (data.jugador == 2) {
             texto2.classList.add('textarea_blur');
             tempo_text_borroso = setTimeout(function () {
                 texto2.classList.remove('textarea_blur');
                 texto1.classList.add('textarea_blur');;
-            }, 30000);
+            }, data.duracion);
         }
     },
 
@@ -224,7 +226,7 @@ socket.on('count', data => {
     if (data == "¡Tiempo!") {
         LIMPIEZAS[modo_actual](data);
         
-        limpiezas();
+        limpiezas_final();
 
         activar_sockets_extratextuales();
         //texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
@@ -243,6 +245,8 @@ socket.on('count', data => {
         texto2.style.height = "auto";
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
         texto2.style.height = (texto2.scrollHeight) + "px";// Reajustamos el tamaño del área de texto del j2.
+
+        logo.innerHTML = "<p class='sub'>powered by</p><img src='logo.png' alt='' width='5%'/>";
     }
 });
 
@@ -260,8 +264,12 @@ socket.on('inicio', data => {
     socket.off('recibir_postgame2');
 
     limpiezas();
-    texto1.style.height = "17%";
-    texto2.style.height = "17%";
+    texto1.style.height = "";
+    texto2.style.height = "";
+    texto1.rows =  "2";
+    texto2.rows = "2";
+
+    logo.innerHTML = "";
     
 });
 
@@ -283,11 +291,13 @@ socket.on('limpiar', data => {
     nombre1.value = "ESCRITXR 1";
     nombre2.value = "ESCRITXR 2";
     
-    texto1.style.height = "40";
+    /*texto1.style.height = "40";
     texto1.style.height = (texto1.scrollHeight) + "px";
     texto2.style.height = "40";
     texto2.style.height = (texto2.scrollHeight) + "px";
-    
+    */
+
+    logo.innerHTML = "<p class='sub'>powered by</p><img src='logo.png' alt='' width='5%'/>";    
     
     activar_sockets_extratextuales();
 });
@@ -306,10 +316,12 @@ socket.on('enviar_palabra', data => {
 function recibir_palabra(data) {
     animacion_modo();
     palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
+    console.log(data.palabra_bonus[1])
     definicion1.innerHTML = data.palabra_bonus[1];
 }
 
 socket.on('feedback_a_j2', data => {
+    console.log("HE RECIBIDO EL FEEEDBACK")
     var feedback = document.querySelector(".feedback1");
     feedback.style.color = data.color;
     feedback.innerHTML = data.envio_puntos.toString() + " pts";
@@ -677,10 +689,14 @@ function erm() {
 }
 
 function cambiar_color_puntuación() {
-    if (puntos1.innerHTML.match(/\d+/g) > puntos2.innerHTML.match(/\d+/g)) {
+    console.log(puntos1.innerHTML + " " + puntos2.innerHTML)
+    console.log(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) + " " + puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/));
+    console.log(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) > puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))
+    if (puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) > puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/)) {
+        console.log("entro")
         puntos1.style.color = "green";
         puntos2.style.color = "red";
-        if (puntos1.innerHTML.match(/\d+/g) == puntos2.innerHTML.match(/\d+/g)) {
+        if (puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) == puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/)) {
             puntos2.style.color = "green";
         }
     }
@@ -718,6 +734,24 @@ function limpiezas(){
 
     focalizador1.innerHTML = "";
     focalizador2.innerHTML = "";
+
+    restablecer_estilo();
+
+    clearTimeout(tempo_text_borroso);
+}
+
+function limpiezas_final(){
+    feedback1.innerHTML = "";
+    feedback2.innerHTML = "";
+    
+    palabra1.innerHTML = "";
+    definicion1.innerHTML = "";
+    explicación.innerHTML = "";
+
+    tiempo.style.color = "white"
+
+    texto1.classList.remove('textarea_blur');
+    texto2.classList.remove('textarea_blur');
 
     restablecer_estilo();
 

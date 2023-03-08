@@ -4,8 +4,8 @@
 /* Estilo para los jugadores */
 .jugador1{
   width: 35%;
-  margin-left: 5%;
-  margin-right: 10%;
+  margin-left: 10%;
+  margin-right: 5%;
 }
 
 .jugador2{
@@ -56,24 +56,15 @@
   text-align: center;
 }
 
-#pie {
-  position: absolute;
-  top:55%;
-  bottom: 1%;
-  left: 50%;
-  transform: translate(-50%, -0%);
-  width: auto;
-  }
-
   ::selection {
     background: #f7d07e;
   }
 .feedback1{
-  font-size: 2vw;
+  font-size: 4vw;
 }
 
 .feedback2{
-  font-size: 2vw;
+  font-size: 4vw;
 }
 
 html,
@@ -94,7 +85,7 @@ body {
 }
 
 .sub {
-  font-size: 10;
+  font-size: 1.5vw;
 }
 
 
@@ -103,23 +94,33 @@ body {
 }
 
 .tiempo {
-  font-size: 18;
+  font-size: 3vw;
 }
 
 .explicación {
-  font-size: 23pt;
+  font-size: 2.5vw;
   font-family: monospace;
   color: red;
 }
 
 .definicion {
-  font-size: 10pt;
+  font-size: 1vw;
   font-family: monospace;
   color: white;
+  max-height: 2.5vw;
+  max-width: 70%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  scrollbar-width: none;
+
 }
 
 .palabra {
-  font-size: 16pt;
+  max-height: 5vw;
+  max-width: 90%;
+  font-size: 2vw;
   color: black;
   background-color: yellow;
 }
@@ -197,7 +198,7 @@ textarea {
   outline: 0px !important;
   -webkit-appearance: none;
   box-shadow: none !important;
-  color: rgb(155, 155, 155)
+  color: white
 }
 
 .temas {
@@ -234,6 +235,7 @@ select {
 }
 
 .neon {
+  font-size: 1.5vw;
   position: relative;
   content: attr(data-title);
   z-index: 1;

@@ -6,13 +6,12 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="../spectator/index.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <!--<script src="jquery.highlight-within-textarea.js"></script>-->
 </head>
 
 <body>
-    <script src="./juego.js"></script>
+    <script src="./js/juego.js"></script>
     <div align="center">
         <pre class="neon">
         __     _____    _____   _____    _____    __       ____  
@@ -23,18 +22,38 @@
        \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                   
     </pre>
-        <div align="center">
-            <p class="sub">powered by</p><img src="logo.png" alt="" width="80" />
-        </div>
+    <div id = logo>
+        <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
+    </div>
+    <div id="info">
+        <table>
+            <tr>
+                <p id="tiempo" class="tiempo"></p>
+            <tr>
+                <th>
+                    <p id="explicación" class="explicación"></p>
+                </th>
+            </tr>
+            <th>
+                <p id="palabra" class=palabra></p>
+            </th>
+            </tr>
+            <tr>
+                <th>
+                    <p id="definicion" class="definicion"></p>
+                </th>
+            </tr>
+        </table>
+    </div>
         <br>
         <div class="container"></div>
         <p><span id="temas" class="temas"></span></p>
         <div id="contenedor">
-            <div>
-                <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
+            <div class="jugador1">
+                <input disabled id="nombre" class="nombre"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..."
+                <textarea disabled id="texto" rows="2"
                     spellcheck="false">
                 </textarea>
                 <br><br>
@@ -51,11 +70,11 @@
                 </div>
                 </br>
             </div>
-            <div>
-                <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
+                <div class="jugador2">
+                <input disabled id="nombre1" class="nombre"></input>
                 <br><br>
                 <p id="alineador2"></p>
-                <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..."
+                <textarea disabled id="texto1" rows="2"
                     spellcheck="false">
                 </textarea>
                 <br><br>
@@ -71,33 +90,13 @@
                     <h2 id="puntuacion_final2"></h1>
                     </br>
                 </div>
-
+                </div>
+                </div>
             </div>
         </div>
-        <div id="pie">
-            <table>
-                <tr>
-                    <p id="tiempo" class="tiempo"></p>
-                <tr>
-                    <th>
-                        <p id="explicación" class="explicación"></p>
-                    </th>
-                </tr>
-                <th>
-                    <p id="palabra" class="palabra"></p>
-                </th>
-                </tr>
-                <tr>
-                    <th>
-                        <p id="definicion" class="definicion"></p>
-                    </th>
-                </tr>
-            </table>
-        </div>
     </div>
-
 </body>
-<script src="socket.io-client/dist/socket.io.js"></script>
-<script src="./jugador-servidor.js"></script>
+<script src="../socket.io-client/dist/socket.io.js"></script>
+<script src="./js/jugador-servidor.js"></script>
 
 </html>
