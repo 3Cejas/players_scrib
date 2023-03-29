@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
@@ -21,13 +22,11 @@
       \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
        \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                   
-        </pre>
-        <div id = logo>
-            <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
-        </div>
-        <h1 id="feedback1" class="feedback1"></h1>
-        <h1 id="feedback2" class="feedback2"></h1>
-            <div id="info">
+    </pre>
+    <div id = logo>
+        <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
+    </div>
+    <div id="info">
         <h1 id="feedback1" class="feedback1"></h1>
         <h1 id="feedback2" class="feedback2"></h1>
         <table class="info">
@@ -48,11 +47,11 @@
         <p><span id="temas" class="temas"></span></p>
         <div id="contenedor">
             <div class="jugador1">
-                <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
+                <input disabled id="nombre" class="nombre"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <textarea disabled id="texto" rows="3" spellcheck="false" oninput="auto_grow(this)"
-                    onkeyup="countChars(this);" onkeydown="countChars(this);">
+                <textarea disabled id="texto" rows="3"
+                    spellcheck="false">
                 </textarea>
                 <br><br>
                 <div align="center">
@@ -66,15 +65,16 @@
                         </tr>
                     </table>
                     <h1 id="focalizador1" class="focalizador"></h1>
+                    <h2 id="puntuacion_final1"></h1>
                 </div>
                 </br>
             </div>
-            <div class="jugador2">
-                <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
+                <div class="jugador2">
+                <input disabled id="nombre1" class="nombre"></input>
                 <br><br>
                 <p id="alineador2"></p>
-                <textarea disabled id="texto1" rows="3" spellcheck="false" oninput="auto_grow(this)"
-                    onkeyup="countChars(this);" onkeydown="countChars(this);">
+                <textarea disabled id="texto1" rows="3"
+                    spellcheck="false">
                 </textarea>
                 <br><br>
                 <div align="center">
@@ -88,13 +88,14 @@
                         </tr>
                     </table>
                     <h1 id="focalizador2" class="focalizador"></h1>
+                    <h2 id="puntuacion_final2"></h1>
                     </br>
+                </div>
+                </div>
                 </div>
             </div>
         </div>
     </div>
-        <div id="clasificacion" class="toc">
-            </div>
 </body>
 <script src="../socket.io-client/dist/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>

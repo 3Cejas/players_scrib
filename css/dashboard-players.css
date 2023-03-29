@@ -1,136 +1,16 @@
+
 @charset "utf-8";
 
-/* ¿Se usa? */
-button:focus {
-    outline: none;
-    color: white;
-    box-shadow: 0 0 0 3px #40f2fe;
-    border: none;
-    cursor: pointer;
-    animation: neonEffect 5s infinite;
-  }
-
-.wordsrotator_words {
-    display: inline-block;
-    position: relative;
-    white-space: nowrap;
-    -webkit-transition: width 100ms;
-    -moz-transition: width 100ms;
-    -o-transition: width 100ms;
-    transition: width 100ms;
+@font-face {
+    font-family: 'Retro-gaming';
+    src: url('./fonts/Retro\ Gaming.ttf') format('truetype');
 }
 
-.wordsrotator_words .wordsrotator_wordOut,
-.wordsrotator_words .wordsrotator_wordIn {
-    font-family: monospace;
-    font-size: 20pt;
-    font-weight: bold;
-    position: relative;
-    display: inline-block;
-    -webkit-animation-duration: 50ms;
-    -webkit-animation-timing-function: ease;
-    -webkit-animation-fill-mode: both;
-    -moz-animation-duration: 50ms;
-    -moz-animation-timing-function: ease;
-    -moz-animation-fill-mode: both;
-    -ms-animation-duration: 50ms;
-    -ms-animation-timing-function: ease;
-    -ms-animation-fill-mode: both;
+@font-face {
+    font-family: 'VT323';
+    src: url('./fonts/VT323-Regular.ttf') format('truetype');
 }
 
-.wordsrotator_words .wordsrotator_wordOut {
-    left: 0;
-    top: 0;
-    position: absolute;
-    display: inline-block;
-}
-
-.wordsrotator_words .wordsrotator_wordOut span {
-    width: auto;
-    position: relative;
-}
-
-.wordsrotator_words .wordsrotator_wordIn {
-    opacity: 0;
-}
-
-/* Unused */
-
-@-webkit-keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        -webkit-transform: translateY(-20px);
-        transform: translateY(-20px);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        -webkit-transform: translateY(-20px);
-        -ms-transform: translateY(-20px);
-        transform: translateY(-20px);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        -ms-transform: translateY(0);
-        transform: translateY(0);
-    }
-}
-
-.fadeInDown {
-    -webkit-animation-name: fadeInDown;
-    animation-name: fadeInDown;
-}
-
-/* Animación de temas */
-
-@-webkit-keyframes fadeOutDown {
-    0% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        transform: translateY(0);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(20px);
-        transform: translateY(20px);
-    }
-}
-
-@keyframes fadeOutDown {
-    0% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        -ms-transform: translateY(0);
-        transform: translateY(0);
-    }
-
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(20px);
-        -ms-transform: translateY(20px);
-        transform: translateY(20px);
-    }
-}
-
-.fadeOutDown {
-    -webkit-animation-name: fadeOutDown;
-    animation-name: fadeOutDown;
-}
-
-::selection {
-    background: #f7d07e;
-}
 
 html,
 body {
@@ -146,74 +26,192 @@ body {
     scrollbar-width: none;
     /* for Firefox */
     overflow-y: scroll;
+    color: white;
+    background-color: black;
+    font-family: "Retro-gaming";
+}
+/*Estilo botones focuseados*/
+button:focus {
+    outline: none;
+    color: white;
+    box-shadow: 0 0 0 3px #40f2fe;
+    border: none;
+    cursor: pointer;
+    animation: neonEffect 5s infinite;
+  }
+
+/*Estilo modificadores*/
+.modificador{
+    background: transparent;
+    border: none !important;
+    display: none;
+}
+
+.modificador:focus{
+    outline: none;
+    color: white;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    animation: neonEffect 5s infinite;
+}
+
+/* Estilo para los jugadores */
+.jugador1{
+    width: 35%;
+    margin-left: 10%;
+    margin-right: 5%;
+}
+  
+.jugador2{
+    width: 35%;
+    margin-left: 5%;
+    margin-right: 10%;
+}
+
+/*Estilo para la clasificación*/
+.toc{
+    margin-left: 25%;
+    margin-right: 25%;
+    text-align: justify;
+    font-size: 25pt;
+}
+
+.entry {
+    display: grid;
+    grid-template-columns: auto max-content;
+    grid-template-areas: "chapter page";
+    align-items: end;
+    gap: 0 .25rem; /* customize the gap to your needs */
+}
+  
+.chapter {
+    grid-area: chapter;
+    position: relative;
+    overflow: hidden;
+}
+  
+.chapter::after {
+    position: absolute;
+    padding-left: .25ch; /* customise the padding to your needs */
+    /* adjust the amount of dots to your needs */
+    content: " . . . . . . . . . . . . . . . . . . . "
+      ". . . . . . . . . . . . . . . . . . . . . . . "
+      ". . . . . . . . . . . . . . . . . . . . . . . "
+      ". . . . . . . . . . . . . . . . . . . . . . . "
+      ". . . . . . . . . . . . . . . . . . . . . . . ";
+    text-align: right; /* optional, can be removed */
+  }
+  
+.page {
+    grid-area: page;
 }
 
 .sub {
-    font-size: 10;
+    font-size: 1.5vw;
 }
 
-.ascii {
+* {
+    cursor: none;
+}
+
+
+.info{
+    max-width: 50%;
+    align-items: center;
     text-align: center;
-    position: static;
+    margin: 0 auto;    
+}
+
+.tiempo {
+    font-family: "Retro-gaming";
+    font-size: 2.5vw;
 }
 
 .explicación {
-    font-size: 23pt;
-    font-family: monospace;
+    font-size: 2vw;
     color: red;
-}
-
-.definicion {
-    font-size: 10pt;
-    font-family: monospace;
-    color: white;
+    font-weight: bold;
+    margin: 0 auto;  
 }
 
 .palabra {
+    font-family: monospace;
+    font-weight: bold;
+    max-height: 5vw;
+    max-width: 50%;
+    font-size: 1.5vw;
     color: black;
     background-color: yellow;
+    margin: 0 auto;  
 }
-
-body {
-    font-size: 13pt;
+.definicion {
+    font-weight: bold;
+    font-size: 1vw;
     font-family: monospace;
     color: white;
-    background-color: black;
+    max-height: 2.5vw;
+    max-width: 50%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    scrollbar-width: none;
+    margin: 0 auto;  
+}
+
+
+
+.focalizador{
+    font-size: 15;
+    text-align: center;
+}
+
+.feedback1{
+    font-size: 4vw;
+    position: absolute;
+    left: 20%;
+    z-index: 1;
+}
+  
+.feedback2{
+    font-size: 4vw;
+    position: absolute;
+    left: 65%;
+    z-index: 1;
 }
 
 button {
     height: 5%;
 }
 
-/* element */
-
-label {
-    font-size: 13pt;
-}
-
 textarea {
+    font-family: "VT323";
     position: sticky;
-    font-size: 12pt;
+    font-size: 3vw;
+    font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
     background-color: transparent;
     background-image: none;
-    width: 45%;
+    overflow: auto;
     padding: 0;
+    width: 100%;
     border: none;
     resize: none;
     overflow: hidden;
     outline: 0px !important;
     -webkit-appearance: none;
     box-shadow: none !important;
-    color: rgb(155, 155, 155);
+    color: white;
 }
 
 .textarea_blur {
     filter: blur(5px);
     -webkit-filter: blur(5px);
+    font-family: monospace;
     position: sticky;
-    font-size: 16pt;
+    font-size: 3vw;
     border-color: currentcolor;
     outline-color: currentcolor;
     background-color: transparent;
@@ -221,39 +219,26 @@ textarea {
     overflow: auto;
     padding: 0;
     border: none;
+    width: 100%;
     resize: none;
     overflow: hidden;
     outline: 0px !important;
     -webkit-appearance: none;
     box-shadow: none !important;
-    color: rgb(155, 155, 155)
-}
+    color: white
+  }
 
-.votos{
-    width: 5%;
-    text-align: right;
-    position: sticky;
-    font-size: 18pt;
+.temas {
+    font-family: monospace;
+    font-size: 2.5vw;
     font-weight: bold;
-    border-color: currentcolor;
-    outline-color: currentcolor;
-    background-color: transparent;
-    background-image: none;
-    overflow: auto;
-    padding: 0;
-    border: none;
-    resize: none;
-    overflow: hidden;
-    outline: 0px !important;
-    -webkit-appearance: none;
-    box-shadow: none !important;
-    color: white;
 }
 
 .nombre {
+    width: 100%;
+    font-family: "Retro-gaming";
     text-align: center;
-    position: sticky;
-    font-size: 28pt;
+    font-size: 3vw;
     font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
@@ -267,8 +252,8 @@ textarea {
     outline: 0px !important;
     -webkit-appearance: none;
     box-shadow: none !important;
-    color: white;
-}
+    color: white
+  }
 
 select {
     padding: 1vmax;
@@ -279,6 +264,7 @@ select {
 }
 
 .neon {
+    font-size: 1.5vw;
     position: relative;
     content: attr(data-title);
     z-index: 1;
@@ -289,9 +275,9 @@ select {
     right: 0;
     bottom: 0;
     left: 0;
-
+  
     animation: neonEffect 5s infinite;
-}
+  }  
 
 @keyframes neonEffect {
 
@@ -318,10 +304,6 @@ select {
     flex-wrap: wrap;
 }
 
-#contenedor>div {
-    width: 50%;
-}
-
 table {
     width: 30%;
     text-align: center;
@@ -332,8 +314,8 @@ table {
 .right {
     padding: 0.25vmax;
     background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
-    font-size: 11pt;
-    font-family: monospace;
+    font-size: 1.0vw;
+    font-family: "Retro-gaming";
     border-right: none;
 }
 
@@ -451,4 +433,22 @@ table {
         margin-right: 0;
     }
 
+    textarea {
+        position: sticky;
+        font-size: 11pt;
+        border-color: currentcolor;
+        outline-color: currentcolor;
+        background-color: transparent;
+        background-image: none;
+        overflow: auto;
+        width: 45%;
+        padding: 0;
+        border: none;
+        resize: none;
+        overflow: hidden;
+        outline: 0px !important;
+        -webkit-appearance: none;
+        box-shadow: none !important;
+        color: white
+    }
 }
