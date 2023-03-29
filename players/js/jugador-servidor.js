@@ -1,12 +1,16 @@
 var player = getParameterByName("player");
-const remoteServerUrl = 'https://scri-b.up.railway.app';
-const localServerUrl = 'http://localhost:3000';
 let feedback_a_j_x;
 let feedback_de_j_x;
 let texto_x;
 let texto_y;
 let enviar_postgame_x;
 let recibir_postgame_x;
+let aumentar_tiempo_borrado_de_jx;
+let tiempo_inicial;
+let es_pausa = false;
+let borrado_cambiado = false;
+let duracion;
+
 
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
@@ -51,6 +55,7 @@ let desactivar_borrar = false;
 var letra_prohibida = "";
 var letra_bendita = "";
 let listener_modo;
+let listener_modo_psico;
 
 function getParameterByName(name, url) {
 if (!url) url = window.location.href;
@@ -63,6 +68,7 @@ return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 if (player == 1) {
+    aumentar_tiempo_borrado_de_jx = 'aumentar_tiempo_borrado_de_j2';
     feedback_a_j_x = 'feedback_a_j1';
     feedback_de_j_x = 'feedback_de_j1';
     texto_x = 'texto1'
@@ -75,6 +81,7 @@ if (player == 1) {
     nombre2.value = "ESCRITXR 2";
 
 } else if (player == 2) {
+    aumentar_tiempo_borrado_de_jx = 'aumentar_tiempo_borrado_de_j1';
     feedback_a_j_x = 'feedback_a_j2';
     feedback_de_j_x = 'feedback_de_j2';
     texto_x = 'texto2'
@@ -87,15 +94,13 @@ if (player == 1) {
     nombre2.value="ESCRITXR 2";
 }
 
-console.log(texto_x)
 // Se establece la conexión con el servidor.
-let socket = io(localServerUrl);
+serverUrl = window.location.href.startsWith('file:')
+    ? 'http://localhost:3000'
+    : 'https://scri-b.up.railway.app';
 
-socket.on("connect_error", (err) => {
-    console.log(`connect_error due to ${err.message}`);
-    socket.io.uri = remoteServerUrl;
-    socket.connect();
-  });
+const socket = io(serverUrl);
+  
 
 const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
@@ -135,47 +140,22 @@ const MODOS = {
         explicación.innerHTML = "MODO TEXTO NUBLADO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
-        if (data.jugador == 1) {
-            if(player == 1){
-            texto1.classList.add("textarea_blur");
-            tempo_text_borroso = setTimeout(function () {
-                texto1.classList.remove("textarea_blur");
-                texto2.classList.add("textarea_blur");
-            }, data.duracion);
-            }
-            else{
-                texto2.classList.add("textarea_blur");
-                tempo_text_borroso = setTimeout(function () {
-                    texto2.classList.remove("textarea_blur");
-                    texto1.classList.add("textarea_blur");
-                }, data.duracion);
-            }
+        tiempo_inicial = new Date();
+        duracion = data.duracion;
+        if(es_pausa == false){
+            modo_borroso(data);
         }
-        if (data.jugador == 2) {
-            console.log("ENTRO")
-            if(player == 2){
-                texto1.classList.add("textarea_blur");
-                tempo_text_borroso = setTimeout(function () {
-                    texto1.classList.remove("textarea_blur");
-                    texto2.classList.add("textarea_blur");
-                }, data.duracion);
-                }
-            else{
-                texto2.classList.add("textarea_blur");
-                tempo_text_borroso = setTimeout(function () {
-                    texto2.classList.remove("textarea_blur");
-                    texto1.classList.add("textarea_blur");
-                    }, data.duracion);
-                }
+        else{
+            modo_borroso_pausa(data);
         }
     },
 
     "psicodélico": function (data) {
-        explicación.innerHTML = "MODO PSICODÉLICO";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
-        listener_modo = function () { modo_psicodélico() };
-        texto1.addEventListener("keyup", listener_modo);
+        //explicación.innerHTML = "MODO PSICODÉLICO";
+        //palabra1.innerHTML = "";
+        //definicion1.innerHTML = "";
+        listener_modo_psico = function () { modo_psicodélico() };
+        texto1.addEventListener("keyup", listener_modo_psico);
         /*socket.on("psico_a_j1", (data) => {
             stylize();
         });*/
@@ -239,7 +219,8 @@ const LIMPIEZAS = {
 
     "psicodélico": function (data) {
         //socket.off('psico_a_j1');
-        texto1.removeEventListener("keyup", listener_modo);
+        console.log("LIMPIOOOOOOO");
+        texto1.removeEventListener("keyup", listener_modo_psico);
         restablecer_estilo();
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
     },
@@ -316,16 +297,39 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on("count", (data) => {
-    texto1.focus();
+    //texto1.focus();
     if (data == "00:20") {
         tiempo.style.color = "yellow"
     }
     if (data == "00:10") {
+        MODOS["psicodélico"](data, socket);
         tiempo.style.color = "red"
     }
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
-        LIMPIEZAS[modo_actual](data);
+
+        // Código del cañon de confeti. TO DO: Componerlo en una función auxiliar.
+        var duration = 15 * 1000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+        }
+
+        var interval = setInterval(function() {
+        var timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+            return clearInterval(interval);
+        }
+
+        var particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+        menu_modificador = false;
         limpieza_final();
         
         modo_actual = "";
@@ -363,7 +367,7 @@ socket.on("count", (data) => {
             a.download = 'sesión_player1.txt';
             a.click();*/
         
-        logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%'/>";
+        logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%' />";    
     }
 });
 
@@ -380,14 +384,34 @@ socket.on("inicio", (data) => {
 
     texto1.style.height = "";
     texto2.style.height = "";
-    texto1.rows = 2;
-    texto2.rows = 2;
+    texto1.rows = 3;
+    texto2.rows = 3;
+    for (i = 0; i < document.querySelectorAll('.modificador').length; i++) {
+        document.querySelectorAll('.modificador')[i].style.display = "none";
+    }
+    var checkeados = [];
+    if(player == 2){
+        for (let i = 0; i < data.checkeados.length; i++) {
+            checkeados.push(data.checkeados[i].replace('1', 'x').replace('2', '1').replace('x', '2'));
+          }
+    }
+    else{
+        checkeados = data.checkeados;
+    }
+    for (var i = 0; i < checkeados.length; i++) {
+        console.log(checkeados[i])
 
+        if(checkeados[i].endsWith('1')){
+            modificadorButtons.push(getEl(checkeados[i]));
+        }
+
+        getEl(checkeados[i]).style.display = "block";
+    }
     /*saltos_línea_alineacion_1 = 0;
     saltos_línea_alineacion_2 = 0;*/
 
     logo.innerHTML = "";
-
+    texto1.focus();
 });
 
 // Resetea el tablero de juego.
@@ -402,13 +426,12 @@ socket.on("limpiar", (data) => {
         nombre1.value = data;
     });
 
-    LIMPIEZAS[modo_actual](data);
     limpieza();
     
     modo_actual = "";
 
-    nombre1.value = "ESCRITXR 1";
-    nombre2.value = "ESCRITXR 2";
+    //nombre1.value = "ESCRITXR 1";
+    //nombre2.value = "ESCRITXR 2";
     
     texto1.disabled= true;
 
@@ -418,7 +441,7 @@ socket.on("limpiar", (data) => {
     texto1.style.height = "40";
     texto2.style.height = "40";*/
 
-    logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%'/>";    
+    logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%' />";    
 
     activar_sockets_extratextuales();
 });
@@ -434,6 +457,33 @@ socket.on("activar_modo", (data) => {
 
 socket.on('enviar_palabra', data => {
     recibir_palabra(data);
+});
+
+socket.on('pausar_js', data => {
+    es_pausa = true;
+    if(modo_actual != "texto borroso"){
+        LIMPIEZAS[modo_actual](data);
+    }
+    else{
+        clearTimeout(tempo_text_borroso);
+        tiempo_restante = duracion - (new Date().getTime() - tiempo_inicial.getTime());
+    }
+    pausa();
+});
+
+socket.on('reanudar_js', data => {
+    es_pausa = false;
+    reanudar();
+});
+
+socket.on(aumentar_tiempo_borrado_de_jx, data => {
+    borrado_cambiado = true;
+    rapidez_borrado = 1200;
+    rapidez_inicio_borrado = 1200;
+});
+
+socket.on('recibir_feedback_modificador', data => {
+    getEl(data.id_mod).style.display = "none";
 });
 
 function recibir_palabra(data) {
@@ -526,18 +576,19 @@ function getTextAlign() {
 }
 
 function stylize() {
-    texto1.style.fontFamily = getRandFontFamily();
+    //texto1.style.fontFamily = getRandFontFamily();
     texto1.style.color = getRandColor();
     //var tamaño_letra = getRandNumber(7, 35)
     //text.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
-    texto1.style.textAlign = getTextAlign();
-    texto2.style.textAlign = getTextAlign();
-    texto2.style.fontFamily = getRandFontFamily();
+    //texto1.style.textAlign = getTextAlign();
+    //texto2.style.textAlign = getTextAlign();
+    //texto2.style.fontFamily = getRandFontFamily();
     texto2.style.color = getRandColor();
     //text1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();
     //texto1.style.height = texto1.scrollHeight + "px";
     //texto2.style.height = texto2.scrollHeight + "px";
+    document.body.style.backgroundColor = getRandColor();
 }
 
 function animacion_modo() {
@@ -565,14 +616,14 @@ function animacion_modo() {
 
 // Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
 function restablecer_estilo() {
-    texto1.style.fontFamily = "monospace";
+    //texto1.style.fontFamily = "monospace";
     texto1.style.color = "white";
-    texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    texto1.style.textAlign = "justify";
-    texto2.style.fontFamily = "monospace";
+    //texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    //texto1.style.textAlign = "justify";
+    //texto2.style.fontFamily = "monospace";
     texto2.style.color = "white";
-    texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    texto2.style.textAlign = "justify";
+    //texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    //texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
     //texto1.style.height = texto1.scrollHeight + "px";
     //texto2.style.height = texto2.scrollHeight + "px";
@@ -738,9 +789,6 @@ function cambiar_color_puntuación() {
 }
 
 function limpieza(){
-    nombre1.disabled = true;
-    nombre2.disabled = true;
-
     texto1.value = "";
     texto2.value = "";
 
@@ -795,10 +843,11 @@ function limpieza(){
     explicación.innerHTML = "";
 
     // Restablece la rápidez del borrado.
+    borrado_cambiado = false;
     rapidez_borrado = 3000;
     rapidez_inicio_borrado = 3000;
-
-    //restablecer_estilo();
+    
+    LIMPIEZAS["psicodélico"]("");
 
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
@@ -806,9 +855,6 @@ function limpieza(){
 }
 
 function limpieza_final(){
-    nombre1.disabled = true;
-    nombre2.disabled = true;
-
     texto2.disabled= true;
     
     palabra1.innerHTML = "";
@@ -837,12 +883,94 @@ function limpieza_final(){
     tiempo.style.color = "white"
 
     // Restablece la rápidez del borrado.
+    borrado_cambiado = false;
     rapidez_borrado = 3000;
     rapidez_inicio_borrado = 3000;
 
-    //restablecer_estilo();
+    LIMPIEZAS["psicodélico"]("");
 
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
     clearTimeout(tempo_text_borroso);
+}
+
+function pausa(){
+
+    menu_modificador = false;
+    texto1.disabled= true;
+
+    clearTimeout(borrado);
+    
+
+    //restablecer_estilo();
+}
+
+function reanudar(){
+
+    menu_modificador = true;
+    texto1.disabled = false;
+
+    clearTimeout(borrado);
+    
+    //restablecer_estilo();
+}
+
+function modo_borroso_pausa(data){
+    if(tiempo_restante > 0){
+        modo_borroso(data);
+    }
+}
+
+function tiempo_borrado_menos(){
+    borrado_cambiado = true;
+    rapidez_borrado = 7000;
+    rapidez_inicio_borrado = 7000;
+}
+
+function tiempo_borrado_más(){
+    socket.emit("aumentar_tiempo_borrado_a_jx", player);
+}
+
+function tiempo_muerto(){
+    pausa();
+    setTimeout(reanudar, 10000);
+}
+
+function modo_borroso(data){
+    if (data.jugador == 1) {
+        if(player == 1){
+        texto1.classList.add("textarea_blur");
+        tempo_text_borroso = setTimeout(function () {
+            temp_text_borroso_activado = true;
+            texto1.classList.remove("textarea_blur");
+            texto2.classList.add("textarea_blur");
+        }, data.duracion);
+        }
+        else{
+            texto2.classList.add("textarea_blur");
+            tempo_text_borroso = setTimeout(function () {
+                temp_text_borroso_activado = true;
+                texto2.classList.remove("textarea_blur");
+                texto1.classList.add("textarea_blur");
+            }, data.duracion);
+        }
+    }
+    if (data.jugador == 2) {
+        if(player == 2){
+            texto1.classList.add("textarea_blur");
+            tempo_text_borroso = setTimeout(function () {
+                temp_text_borroso_activado = true;
+                texto1.classList.remove("textarea_blur");
+                texto2.classList.add("textarea_blur");
+            }, data.duracion);
+            }
+        else{
+            texto2.classList.add("textarea_blur");
+            tempo_text_borroso = setTimeout(function () {
+                temp_text_borroso_activado = true;
+                texto2.classList.remove("textarea_blur");
+                texto1.classList.add("textarea_blur");
+                }, data.duracion);
+            }
+    }
 }

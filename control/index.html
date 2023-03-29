@@ -14,7 +14,7 @@
 <script src="./node_modules/mtr-datepicker/dist/mtr-datepicker.min.js"></script>
 
 <body>
-    <script src="./juego.js"></script>
+    <script src="./js/juego.js"></script>
     <div class="ascii">
         <pre class="neon">
        __     _____    _____   _____    _____    __       ____  
@@ -80,8 +80,8 @@
                 </td>
                 <td>
                     <div align="center">
-                        <button onclick="cambiar_vista()" class="bn54">
-                            <span class="bn54span">👀 CAMBIAR DE VISTA</span>
+                        <button onclick="enviar_clasificacion()" class="bn54">
+                            <span class="bn54span">🥇 MOSTRAR CLASIFICACIÓN</span>
                         </button><br>
                     </div>
                 </td>
@@ -89,13 +89,6 @@
                     <div align="center">
                         <button onclick="puntuacion_final()" class="bn54">
                             <span class="bn54span">🏁 PUNTUACIÓN FINAL</span>
-                        </button><br>
-                    </div>
-                </td>
-                <td>
-                    <div align="center">
-                        <button onclick="enviar_clasificacion()" class="bn54">
-                            <span class="bn54span">🥇 MOSTRAR CLASIFICACIÓN</span>
                         </button><br>
                     </div>
                 </td>
@@ -122,18 +115,18 @@
                         </div>
                     </div>
                 </td>
-                <td><br>
+                <td>
                     <div align="center">
                         <button onclick="bajar()" class="bn54">
                             <span class="bn54span">⬇️ SCROLL</span>
-                        </button><br>
+                        </button>
                     </div>
                 </td>
-                <td><br>
+                <td>
                     <div align="center">
                         <button onclick="enviar_comentario()" class="bn54">
                             <span class="bn54span">💬 ENVIAR COMENTARIO</span>
-                        </button><br>
+                        </button>
                     </div>
                 </td>
                 <td>   <b>Tiempo:</b>
@@ -170,8 +163,20 @@
                     </td>-->
             </tr>
             <tr>
-                <td></td>
-                <td></td>
+                <td>
+                    <div align="center">
+                        <button onclick="reanudar()" class="bn54">
+                            <span class="bn54span">▶️ REANUDAR</span>
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="pausar()" class="bn54">
+                            <span class="bn54span">⏸️ PAUSAR</span>
+                        </button>
+                    </div>
+                </td>
                 <td>
                 </td>
     </div>
@@ -180,8 +185,22 @@
     </tr>
     </table>
     </div>
+    <br>
     <div id="contenedor">
         <div>
+            <table class="modificadores">
+                <tr>
+                    <td><input type="checkbox" id="tiempo_borrado_menos1"></td>
+                    <td><input type="checkbox" id="tiempo_borrado_más1"></td>
+                    <td><input type="checkbox" id="tiempo_muerto1"></td>
+                </tr>
+                <tr>
+                    <td>🐢</td>
+                    <td>⚡</td>
+                    <td>⌛</td>
+                </tr>
+            </table>
+            <br>
             <input id="votos" class="votos" type="number" min="0" value="0" /> <b style="font-size: 18pt">Votos 🗳️</b>
             <br><br>
             <input id="nombre" class="nombre" value="ESCRITXR 1"></input>
@@ -201,6 +220,19 @@
             </div>
         </div>
         <div>
+            <table class="modificadores">
+                <tr>
+                    <td><input type="checkbox" id="tiempo_borrado_menos2"></td>
+                    <td><input type="checkbox" id="tiempo_borrado_más2"></td>
+                    <td><input type="checkbox" id="tiempo_muerto2"></td>
+                </tr>
+                <tr>
+                    <td>🐢</td>
+                    <td>⚡</td>
+                    <td>⌛</td>
+                </tr>
+            </table>
+            <br>
             <input id="votos1" class="votos" type="number" min="0" value="0" /> <b style="font-size: 18pt">Votos 🗳️</b>
             <br><br>
             <input id="nombre1" class="nombre" value="ESCRITXR 2"></input>
@@ -243,10 +275,6 @@
         </table>
     </div>
 </body>
-<script src="socket.io-client/dist/socket.io.js"></script>
-<script src="./jugador-servidor.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"
-    integrity="sha512-ux1VHIyaPxawuad8d1wr1i9l4mTwukRq5B3s8G3nEmdENnKF5wKfOV6MEUH0k/rNT4mFr/yL+ozoDiwhUQekTg=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+<script src="../socket.io-client/dist/socket.io.js"></script>
+<script src="./js/jugador-servidor.js"></script>
 </html>

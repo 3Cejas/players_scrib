@@ -12,13 +12,58 @@ let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra
 let puntos = 0; // Puntos del jugador 1.
 let delay_animacion;
 let envio_puntos;
+puntos_letra_prohibida = 0;
+puntos_letra_bendita = 0;
 //let saltos_línea_alineacion_1 = 0; // Variable entera que almacena los saltos de línea del jugador 1 para alínear los textos.
 //let saltos_línea_alineacion_2 = 0; // Variable entera que almacena los saltos de línea del jugador 2 para alínear los textos.
 const color_negativo = "red";
 const color_positivo = "green";
 let isFullscreen = false;
-
+let menu_modificador = false;
+let focusedButtonIndex = 0;
+let modificadorButtons = [];
+document.addEventListener('keydown', function(event) {
+  if(event.key == 'Enter' && menu_modificador) {
+      event.preventDefault();
+      modificadorButtons[focusedButtonIndex].click();
+      modificadorButtons[focusedButtonIndex].style.display = "none";
+      id_mod = modificadorButtons[focusedButtonIndex].id
+      socket.emit('enviar_feedback_modificador', {id_mod, player});
+      modificadorButtons = modificadorButtons.splice(focusedButtonIndex+1, 1);
+      focusedButtonIndex = 0;
+      console.log(modificadorButtons)
+      menu_modificador = false;
+      texto1.focus()
+  }
+  if (event.key == 'Tab') {
+    console.log(modificadorButtons)
+    if(modificadorButtons.length == 0) {
+      event.preventDefault();
+      texto1.focus()
+    }
+    else{
+    menu_modificador = true;
+    event.preventDefault();
+    console.log(modificadorButtons)
+    modificadorButtons[focusedButtonIndex].blur();
+    focusedButtonIndex = 0;
+    modificadorButtons[focusedButtonIndex].focus();
+    }
+  } else if (menu_modificador && ['ArrowRight', 'ArrowLeft'].includes(event.key)) {
+    event.preventDefault();
+    
+    if (event.key == 'ArrowRight' && menu_modificador) {
+      focusedButtonIndex = (focusedButtonIndex + 1) % modificadorButtons.length;
+    } else if(event.key == 'ArrowLeft' && menu_modificador){
+      focusedButtonIndex = (focusedButtonIndex + modificadorButtons.length - 1) % modificadorButtons.length;
+    }
+    
+    modificadorButtons[focusedButtonIndex].focus();
+  }
+});
 document.addEventListener('click', function(event) {
+  if(!menu_modificador || modificadorButtons.length == 0) {
+  texto1.focus()
   if (event.button === 0) {
     if (isFullscreen) {
       if (document.exitFullscreen) {
@@ -40,6 +85,7 @@ document.addEventListener('click', function(event) {
       isFullscreen = true;
     }
   }
+}
 });
 
 // Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe cualquier carácter en el texto.
@@ -109,29 +155,39 @@ function toNormalForm(str) {
 function cambio_nivel(caracteres) {
     if (0 <= caracteres && caracteres < 250) {
         nivel1.innerHTML = "nivel 0";
-        rapidez_inicio_borrado = 3000;
-        rapidez_borrado = 3000;
+        if(!borrado_cambiado){
+          rapidez_inicio_borrado = 3000;
+          rapidez_borrado = 3000;
+        }
     }
     if (250 <= caracteres && caracteres < 500) {
         nivel1.innerHTML = "nivel 1";
-        rapidez_inicio_borrado = 2500;
-        rapidez_borrado = 2500;
+        if(!borrado_cambiado){
+          rapidez_inicio_borrado = 2500;
+          rapidez_borrado = 2500;
     }
     if (500 <= caracteres && caracteres < 750) {
         nivel1.innerHTML = "nivel 2";
-        rapidez_borrado = 1800;
-        rapidez_inicio_borrado = 1800;
+        if(!borrado_cambiado){
+          rapidez_borrado = 1800;
+          rapidez_inicio_borrado = 1800;
+        }
     }
     if (750 <= caracteres && caracteres < 1000) {
         nivel1.innerHTML = "nivel 3";
-        rapidez_borrado = 1200;
-        rapidez_inicio_borrado = 1200;
+        if(!borrado_cambiado){
+          rapidez_borrado = 1200;
+          rapidez_inicio_borrado = 1200;
+        }
     }
     if (caracteres >= 1000) {
         nivel1.innerHTML = "nivel 4";
-        rapidez_borrado = 500;
-        rapidez_inicio_borrado = 500;
+        if(!borrado_cambiado){
+          rapidez_borrado = 500;
+          rapidez_inicio_borrado = 500;
+        }
     }
+  }
 }
 
 //Función auxiliar para crear las animaciones del feedback.

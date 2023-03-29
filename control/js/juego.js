@@ -1,6 +1,8 @@
 let countInterval;
 let time_minutes; // Value in minutes
 let time_seconds; // Value in seconds
+let secondsRemaining
+
 
 function paddedFormat(num) {
     return num < 10 ? "0" + num : num;
@@ -8,7 +10,7 @@ function paddedFormat(num) {
 
 function startCountDown(duration, element) {
 
-    let secondsRemaining = duration;
+    secondsRemaining = duration;
     let min;
     let sec;
 
@@ -27,7 +29,6 @@ function startCountDown(duration, element) {
             tiempo.style.color = "red"
         }
         secondsRemaining = secondsRemaining - 1;
-        console.log(secondsRemaining)
         if (secondsRemaining < 0) {
             clearInterval(countInterval);
             tiempo.style.color = "white"
@@ -54,7 +55,19 @@ function temp() {
     element = document.querySelector('#tiempo');
     element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
     count = element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
-    socket.emit('inicio', count);
+    
+    var checkeados = [];
+    for (var i = 0; i < modificadores.length; i++) {
+        if (modificadores[i].checked) {
+        console.log("Checkbox " + modificadores[i].id + " está marcado");
+        // hacer algo si el checkbox está marcado
+        checkeados.push(modificadores[i].id);
+        } else {
+        console.log("Checkbox " + modificadores[i].id  + " no está marcado");
+        // hacer algo si el checkbox no está marcado
+        }
+    }
+    socket.emit('inicio', {count, checkeados});
     socket.emit('count', count);
 
     startCountDown(--duration, element);
@@ -74,8 +87,8 @@ function temas() {
 };
 
 function limpiar() {
-    document.getElementById("nombre").value = "ESCRITXR 1";
-    document.getElementById("nombre1").value = "ESCRITXR 2";
+    //document.getElementById("nombre").value = "ESCRITXR 1";
+    //document.getElementById("nombre1").value = "ESCRITXR 2";
     document.getElementById("texto").value = "";
     document.getElementById("texto1").value = "";
     document.getElementById("puntos").innerHTML = "0 puntos";
@@ -178,10 +191,20 @@ function enviar_clasificacion(){
         jugador: x[0],
         puntuacion: x[1],
       }));
-      console.log(data)
       socket.emit('enviar_clasificacion', data);
   }
 
+function pausar(){
+    clearInterval(countInterval);
+    socket.emit('pausar', '');
+}
+
+function reanudar(){
+    element = document.querySelector('#tiempo');
+    socket.emit('count', count);
+    startCountDown(secondsRemaining, element);
+    socket.emit('reanudar', '');
+}
 function sortTable() {
     var table, rows, switching, i, x, y, shouldSwitch;
     table = document.getElementById("clasificacion");
@@ -238,20 +261,20 @@ function sortTable() {
 }
 
 function editableRow(r) {
-    table = document.getElementById("clasificacion");
+    table_ = document.getElementById("clasificacion");
     var i = r.parentNode.parentNode.rowIndex;
-    rows = table.rows;
-    editando = rows[i].getElementsByTagName("TD")[0].contentEditable;
+    rows_ = table_.rows;
+    editando = rows_[i].getElementsByTagName("TD")[0].contentEditable;
     if(editando == 'true'){
         r.value = "✏️";
-        rows[i].getElementsByTagName("TD")[0].contentEditable = 'false';
-        rows[i].getElementsByTagName("TD")[1].contentEditable = 'false';
+        rows_[i].getElementsByTagName("TD")[0].contentEditable = 'false';
+        rows_[i].getElementsByTagName("TD")[1].contentEditable = 'false';
         sortTable();
     }
     else {
         r.value = "✅";
-        rows[i].getElementsByTagName("TD")[0].contentEditable = 'true';
-        rows[i].getElementsByTagName("TD")[1].contentEditable = 'true';
+        rows_[i].getElementsByTagName("TD")[0].contentEditable = 'true';
+        rows_[i].getElementsByTagName("TD")[1].contentEditable = 'true';
 
     }
 }

@@ -1,15 +1,10 @@
-const remoteServerUrl = 'https://scri-b.up.railway.app';
-const localServerUrl = 'http://localhost:3000';
-
 // Se establece la conexión con el servidor.
-let socket = io(localServerUrl);
+serverUrl = window.location.href.startsWith('file:')
+    ? 'http://localhost:3000'
+    : 'https://scri-b.up.railway.app';
 
-socket.on("connect_error", (err) => {
-    console.log(`connect_error due to ${err.message}`);
-    socket.io.uri = remoteServerUrl;
-    socket.connect();
-  });
-
+const socket = io(serverUrl);
+  
 const getEl = id => document.getElementById(id);
 
 // COMPONENTES DEL JUGADOR 1
@@ -21,6 +16,9 @@ let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 let votos1 = getEl("votos");
+let modificador11 = document.getElementById("tiempo_borrado_menos1");
+let modificador12 = document.getElementById("tiempo_borrado_más1");
+let modificador13 = document.getElementById("tiempo_muerto1");
 
 
 let palabra1 = getEl("palabra");
@@ -42,17 +40,95 @@ let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 let votos2 = getEl("votos1");
+let modificador21 = document.getElementById("tiempo_borrado_menos2");
+let modificador22 = document.getElementById("tiempo_borrado_más2");
+let modificador23 = document.getElementById("tiempo_muerto2");
 
 let puntuacion_final1 = getEl("puntuacion_final1");
 let puntuacion_final2 = getEl("puntuacion_final2");
 
 let clasificacion = getEl("clasificacion");
-
+let modificadores = [modificador11, modificador12, modificador13, modificador21, modificador22, modificador23];
 
 let tempo_text_borroso;
 
 let postgame1;
 let postgame2;
+
+//const buttons = document.querySelectorAll('button');
+let index = 0;
+
+const table = document.querySelector('.default');
+const buttons = document.querySelectorAll('button');
+const rows = table.rows.length;
+const cols = table.rows[0].cells.length;
+let focusedRow = 0;
+let focusedCol = 0;
+
+buttons[0].focus();
+
+// Función para cambiar el enfoque al botón especificado
+function focusButton(row, col) {
+    // Desenfocar el botón anterior
+    const prevButton = table.rows[focusedRow].cells[focusedCol].querySelector('button');
+    if (prevButton) {
+      prevButton.blur();
+    }
+  
+    // Enfocar el nuevo botón si existe
+    const newButton = table.rows[row].cells[col].querySelector('button');
+    if (newButton) {
+      newButton.focus();
+    }
+  
+    // Actualizar las variables de fila y columna enfocadas
+    focusedRow = row;
+    focusedCol = col;
+  }
+// Manejar las teclas de flecha presionadas
+document.addEventListener('keydown', (event) => {
+  const key = event.key;
+  
+  // Flecha arriba
+  if (key === 'ArrowUp' && focusedRow > 0) {
+    event.preventDefault();
+    focusButton(focusedRow - 1, focusedCol);
+    if(table.rows[(focusedRow - 1)]){
+        table.rows[focusedRow - 1].scrollIntoView({block: "nearest"});
+    }
+  }
+  // Flecha abajo
+  else if (key === 'ArrowDown' && focusedRow < rows - 1) {
+    event.preventDefault();
+    focusButton(focusedRow + 1, focusedCol);
+    if(table.rows[(focusedRow + 1)]){
+    table.rows[focusedRow + 1].scrollIntoView({block: "nearest"});
+    }
+  }
+  // Flecha izquierda
+  else if (key === 'ArrowLeft' && focusedCol > 0) {
+    event.preventDefault();
+    focusButton(focusedRow, focusedCol - 1);
+  }
+  // Flecha derecha
+  else if (key === 'ArrowRight' && focusedCol < cols - 1) {
+    event.preventDefault();
+    focusButton(focusedRow, focusedCol + 1);
+  }
+});
+
+// Añadir el evento de foco a los botones de la tabla
+
+
+buttons.forEach((button, index) => {
+  const row = Math.floor(index / cols);
+  const col = index % cols;
+  button.addEventListener('focus', () => {
+    focusedRow = row;
+    focusedCol = col;
+  });
+  button.dataset.position = `${row}-${col}`;
+});
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {

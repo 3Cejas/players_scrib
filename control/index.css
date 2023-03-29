@@ -1,6 +1,14 @@
-@charset"utf-8";
+@charset "utf-8";
 
 /* ¿Se usa? */
+button:focus {
+    outline: none;
+    color: white;
+    box-shadow: 0 0 0 3px #40f2fe;
+    border: none;
+    cursor: pointer;
+    animation: neonEffect 5s infinite;
+  }
 
 .wordsrotator_words {
     display: inline-block;

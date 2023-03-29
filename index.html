@@ -32,6 +32,28 @@
         <div align="center">
             <p class="sub">powered by</p><img src="./img/logo.png" alt="" width="80" />
         </div>
+        <br><br>
+        <h1>ELIGE TU ROL</h1>
+        <table class="menu">
+            <tr>
+                <td>
+                    <button onclick="window.location.href = './players/index.html?player=1'" class="bn54">
+                        <span class="bn54span">✍️ ESCRITXR 1</span></button><br>
+                </td>
+                <td>
+                    <button onclick="window.location.href = './players/index.html?player=2'" class="bn54">
+                        <span class="bn54span">✍️ ESCRITXR 2</span></button><br>
+                </td>
+                <td>
+                    <button onclick="window.location.href = './control/index.html';" class="bn54">
+                        <span class="bn54span">🎨 CONTROL</span></button><br>
+                </td>
+                <td>
+                    <button onclick="window.location.href = './spectator/index.html';" class="bn54">
+                        <span class="bn54span">👀 ESPECTADOR</span></button><br>
+                </td>
+            </tr>
+        </table>
         <br>
         <h2>ENFRÉNTATE A OTROS ESCRITORES</h2>
         <h2>-</h2>
@@ -42,28 +64,6 @@
         <h2>SOBREVIVE A TODOS LOS NIVELES</h2>
         <h2>-</h2>
         <h2>GÁNATE EL FAVOR DEL PÚBLICO</h2>
-        <br><br>
-        <h1>Por favor, escoja su rol:</h1>
-        <table class="menu">
-            <tr>
-                <td>
-                    <button onclick="window.location.href = './players/index.html?player=1'" class="bn54">
-                        <span class="bn54span">✍️ Player 1</span></button><br>
-                </td>
-                <td>
-                    <button onclick="window.location.href = './players/index.html?player=2'" class="bn54">
-                        <span class="bn54span">✍️ Player 2</span></button><br>
-                </td>
-                <td>
-                    <button onclick="window.location.href = './control/index.html';" class="bn54">
-                        <span class="bn54span">🎨 Control</span></button><br>
-                </td>
-                <td>
-                    <button onclick="window.location.href = './spectator/index.html';" class="bn54">
-                        <span class="bn54span">👀 Spectator</span></button><br>
-                </td>
-            </tr>
-        </table>
     </div>
 </body>
 <script>
@@ -82,5 +82,78 @@ if (viewFullScreen) {
     }
   })
 }
+
+const table = document.querySelector('.menu');
+const buttons = document.querySelectorAll('button');
+const rows = table.rows.length;
+const cols = table.rows[0].cells.length;
+let focusedRow = 0;
+let focusedCol = 0;
+
+buttons[0].focus();
+console.log(buttons[0])
+
+// Función para cambiar el enfoque al botón especificado
+function focusButton(row, col) {
+    // Desenfocar el botón anterior
+    const prevButton = table.rows[focusedRow].cells[focusedCol].querySelector('button');
+    if (prevButton) {
+      prevButton.blur();
+    }
+  
+    // Enfocar el nuevo botón si existe
+    const newButton = table.rows[row].cells[col].querySelector('button');
+    if (newButton) {
+      newButton.focus();
+    }
+  
+    // Actualizar las variables de fila y columna enfocadas
+    focusedRow = row;
+    focusedCol = col;
+  }
+// Manejar las teclas de flecha presionadas
+document.addEventListener('keydown', (event) => {
+  const key = event.key;
+  
+  // Flecha arriba
+  if (key === 'ArrowUp' && focusedRow > 0) {
+    event.preventDefault();
+    focusButton(focusedRow - 1, focusedCol);
+    if(table.rows[(focusedRow - 1)]){
+        table.rows[focusedRow - 1].scrollIntoView({block: "nearest"});
+    }
+  }
+  // Flecha abajo
+  else if (key === 'ArrowDown' && focusedRow < rows - 1) {
+    event.preventDefault();
+    focusButton(focusedRow + 1, focusedCol);
+    if(table.rows[(focusedRow + 1)]){
+    table.rows[focusedRow + 1].scrollIntoView({block: "nearest"});
+    }
+  }
+  // Flecha izquierda
+  else if (key === 'ArrowLeft' && focusedCol > 0) {
+    event.preventDefault();
+    focusButton(focusedRow, focusedCol - 1);
+  }
+  // Flecha derecha
+  else if (key === 'ArrowRight' && focusedCol < cols - 1) {
+    event.preventDefault();
+    focusButton(focusedRow, focusedCol + 1);
+  }
+});
+
+// Añadir el evento de foco a los botones de la tabla
+
+
+buttons.forEach((button, index) => {
+  const row = Math.floor(index / cols);
+  const col = index % cols;
+  button.addEventListener('focus', () => {
+    focusedRow = row;
+    focusedCol = col;
+  });
+  button.dataset.position = `${row}-${col}`;
+});
 </script>
 </html>

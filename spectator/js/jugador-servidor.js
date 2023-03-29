@@ -1,14 +1,9 @@
-const remoteServerUrl = 'https://scri-b.up.railway.app';
-const localServerUrl = 'http://localhost:3000';
-
 // Se establece la conexión con el servidor.
-let socket = io(localServerUrl);
+serverUrl = window.location.href.startsWith('file:')
+    ? 'http://localhost:3000'
+    : 'https://scri-b.up.railway.app';
 
-socket.on("connect_error", (err) => {
-    console.log(`connect_error due to ${err.message}`);
-    socket.io.uri = remoteServerUrl;
-    socket.connect();
-  });
+const socket = io(serverUrl);
 
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
@@ -93,9 +88,9 @@ const MODOS = {
     },
 
     'psicodélico': function (data) {
-        explicación.innerHTML = "MODO PSICODÉLICO";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
+        //explicación.innerHTML = "MODO PSICODÉLICO";
+        //palabra1.innerHTML = "";
+        //definicion1.innerHTML = "";
         jugador_psico = Math.floor(Math.random() * 2 + 1);
     },
 
@@ -178,7 +173,7 @@ socket.on('texto1', data => {
     //texto1.style.height = (texto1.scrollHeight) + "px";
     texto1.scrollTop = texto1.scrollHeight;
     //window.scrollTo(0, document.body.scrollHeight);
-    focalizador1.scrollIntoView(false);
+    //focalizador1.scrollIntoView(false);
 });
 
 socket.on('texto2', data => {
@@ -205,7 +200,7 @@ socket.on('texto2', data => {
     //texto2.style.height = (texto2.scrollHeight) + "px";
     texto2.scrollTop = texto2.scrollHeight;
     //window.scrollTo(0, document.body.scrollHeight);
-    focalizador2.scrollIntoView(false);
+    //focalizador2.scrollIntoView(false);
 });
 
 activar_sockets_extratextuales()
@@ -215,11 +210,12 @@ Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
 limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
-socket.on('count', data => {
+socket.on("count", data => {
     if (data == "00:20") {
         tiempo.style.color = "yellow"
     }
     if (data == "00:10") {
+        MODOS["psicodélico"](data, socket);
         tiempo.style.color = "red"
     }
     tiempo.innerHTML = data;
@@ -246,7 +242,7 @@ socket.on('count', data => {
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
         texto2.style.height = (texto2.scrollHeight) + "px";// Reajustamos el tamaño del área de texto del j2.
 
-        logo.innerHTML = "<p class='sub'>powered by</p><img src='logo.png' alt='' width='5%'/>";
+        logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%' />";    
     }
 });
 
@@ -266,10 +262,18 @@ socket.on('inicio', data => {
     limpiezas();
     texto1.style.height = "";
     texto2.style.height = "";
-    texto1.rows =  "2";
-    texto2.rows = "2";
+    texto1.rows =  "3";
+    texto2.rows = "3";
 
     logo.innerHTML = "";
+
+    for (i = 0; i < document.querySelectorAll('.modificador').length; i++) {
+        document.querySelectorAll('.modificador')[i].style.display = "none";
+    }
+    var checkeados = data.checkeados;
+    for (var i = 0; i < checkeados.length; i++) {
+        getEl(checkeados[i]).style.display = "block";
+    }
     
 });
 
@@ -288,8 +292,8 @@ socket.on('limpiar', data => {
 
     limpiezas();
 
-    nombre1.value = "ESCRITXR 1";
-    nombre2.value = "ESCRITXR 2";
+    //nombre1.value = "ESCRITXR 1";
+    //nombre2.value = "ESCRITXR 2";
     
     /*texto1.style.height = "40";
     texto1.style.height = (texto1.scrollHeight) + "px";
@@ -297,7 +301,7 @@ socket.on('limpiar', data => {
     texto2.style.height = (texto2.scrollHeight) + "px";
     */
 
-    logo.innerHTML = "<p class='sub'>powered by</p><img src='logo.png' alt='' width='5%'/>";    
+    logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%' />";    
     
     activar_sockets_extratextuales();
 });
@@ -307,6 +311,16 @@ socket.on('activar_modo', data => {
     LIMPIEZAS[modo_actual](data);
     modo_actual = data.modo_actual;
     MODOS[modo_actual](data);
+});
+
+socket.on('recibir_feedback_modificador', data => {
+    console.log(data)
+    if(data.player == 2){
+        getEl(data.id_mod).style.display = "none";
+    }
+    else{
+        getEl(data.id_mod.substring(0, data.id_mod.length - 1) + "1").style.display = "none";
+    }
 });
 
 socket.on('enviar_palabra', data => {
@@ -379,16 +393,6 @@ socket.on('feedback_a_j1', data => {
     });
 });
 
-socket.on('cambia_vista', data => {
-    if (focalizador_id == 1) {
-        focalizador2.scrollIntoView(false);
-        focalizador_id = 2;
-    }
-    else {
-        focalizador1.scrollIntoView(false);
-        focalizador_id = 1;
-    }
-});
 //FUNCIONES AUXILIARES.
 
 function activar_sockets_extratextuales() {
@@ -484,16 +488,18 @@ function stylize() {
     //texto1.style.fontFamily = getRandFontFamily();
     texto1.style.color = getRandColor();
     //var tamaño_letra = getRandNumber(7, 35)
-    //texto1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    //text.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     //texto1.style.textAlign = getTextAlign();
     //texto2.style.textAlign = getTextAlign();
-    texto2.style.fontFamily = getRandFontFamily();
+    //texto2.style.fontFamily = getRandFontFamily();
     texto2.style.color = getRandColor();
-    //texto2.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    //text1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();
     //texto1.style.height = texto1.scrollHeight + "px";
     //texto2.style.height = texto2.scrollHeight + "px";
+    document.body.style.backgroundColor = getRandColor();
 }
+
 
 function animacion_modo() {
     const animateCSS = (element, animation, prefix = 'animate__') =>
@@ -520,14 +526,14 @@ function animacion_modo() {
 
 // Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
 function restablecer_estilo() {
-    texto1.style.fontFamily = "Roboto";
+    //texto1.style.fontFamily = "monospace";
     texto1.style.color = "white";
-    texto1.style.fontSize = "3vw"; // Font sizes between 15px and 35px
-    texto1.style.textAlign = "justify";
-    texto2.style.fontFamily = "Roboto";
+    //texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    //texto1.style.textAlign = "justify";
+    //texto2.style.fontFamily = "monospace";
     texto2.style.color = "white";
-    texto2.style.fontSize = "3vw"; // Font sizes between 15px and 35px
-    texto2.style.textAlign = "justify";
+    //texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
+    //texto2.style.textAlign = "justify";
     document.body.style.backgroundColor = "black";
     //texto1.style.height = texto1.scrollHeight + "px";
     //texto2.style.height = texto2.scrollHeight + "px";
@@ -735,7 +741,7 @@ function limpiezas(){
     focalizador1.innerHTML = "";
     focalizador2.innerHTML = "";
 
-    restablecer_estilo();
+    LIMPIEZAS["psicodélico"]("");
 
     clearTimeout(tempo_text_borroso);
 }
@@ -753,7 +759,7 @@ function limpiezas_final(){
     texto1.classList.remove('textarea_blur');
     texto2.classList.remove('textarea_blur');
 
-    restablecer_estilo();
+    LIMPIEZAS["psicodélico"]("");
 
     clearTimeout(tempo_text_borroso);
 }

@@ -6,8 +6,9 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../spectator/index.css">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
@@ -26,22 +27,18 @@
         <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
     </div>
     <div id="info">
-        <table>
+        <h1 id="feedback1" class="feedback1"></h1>
+        <h1 id="feedback2" class="feedback2"></h1>
+        <table class="info">
             <tr>
                 <p id="tiempo" class="tiempo"></p>
             <tr>
-                <th>
                     <p id="explicación" class="explicación"></p>
-                </th>
             </tr>
-            <th>
                 <p id="palabra" class=palabra></p>
-            </th>
             </tr>
             <tr>
-                <th>
-                    <p id="definicion" class="definicion"></p>
-                </th>
+                <p id="definicion" class="definicion"></p>
             </tr>
         </table>
     </div>
@@ -53,7 +50,7 @@
                 <input disabled id="nombre" class="nombre"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <textarea disabled id="texto" rows="2"
+                <textarea disabled id="texto" rows="3"
                     spellcheck="false">
                 </textarea>
                 <br><br>
@@ -62,9 +59,11 @@
                         <tr>
                             <th id="puntos">0 puntos</th>
                             <th id="nivel">nivel 0</th>
+                            <th><button id="tiempo_borrado_menos1" class= "modificador" onclick="tiempo_borrado_menos()">🐢</button></th>
+                            <th><button id="tiempo_borrado_más1" class= "modificador" onclick="tiempo_borrado_más()">⚡</button></th>
+                            <th><button id="tiempo_muerto1" class= "modificador" onclick="tiempo_muerto()">⌛</button></th>
                         </tr>
                     </table>
-                    <h1 id="feedback1" class="feedback1"></h1>
                     <h1 id="focalizador1" class="focalizador"></h1>
                     <h2 id="puntuacion_final1"></h1>
                 </div>
@@ -74,7 +73,7 @@
                 <input disabled id="nombre1" class="nombre"></input>
                 <br><br>
                 <p id="alineador2"></p>
-                <textarea disabled id="texto1" rows="2"
+                <textarea disabled id="texto1" rows="3"
                     spellcheck="false">
                 </textarea>
                 <br><br>
@@ -83,9 +82,11 @@
                         <tr>
                             <th id="puntos1">0 puntos</th>
                             <th id="nivel1">nivel 0</th>
+                            <th><button id="tiempo_borrado_menos2" class= "modificador">🐢</button></th>
+                            <th><button id="tiempo_borrado_más2" class= "modificador">⚡</button></th>
+                            <th><button id="tiempo_muerto2" class= "modificador">⌛</button></th>
                         </tr>
                     </table>
-                    <h1 id="feedback2" class="feedback2"></h1>
                     <h1 id="focalizador2" class="focalizador"></h1>
                     <h2 id="puntuacion_final2"></h1>
                     </br>
