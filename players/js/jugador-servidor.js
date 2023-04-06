@@ -5,7 +5,7 @@ let texto_x;
 let texto_y;
 let enviar_postgame_x;
 let recibir_postgame_x;
-let aumentar_tiempo_borrado_de_jx;
+let enviar_putada_de_jx;
 let tiempo_inicial;
 let es_pausa = false;
 let borrado_cambiado = false;
@@ -68,7 +68,7 @@ return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 if (player == 1) {
-    aumentar_tiempo_borrado_de_jx = 'aumentar_tiempo_borrado_de_j2';
+    enviar_putada_de_jx = 'enviar_putada_de_j2';
     feedback_a_j_x = 'feedback_a_j1';
     feedback_de_j_x = 'feedback_de_j1';
     texto_x = 'texto1'
@@ -81,7 +81,7 @@ if (player == 1) {
     nombre2.value = "ESCRITXR 2";
 
 } else if (player == 2) {
-    aumentar_tiempo_borrado_de_jx = 'aumentar_tiempo_borrado_de_j1';
+    enviar_putada_de_jx = 'enviar_putada_de_j1';
     feedback_a_j_x = 'feedback_a_j2';
     feedback_de_j_x = 'feedback_de_j2';
     texto_x = 'texto2'
@@ -101,6 +101,20 @@ serverUrl = window.location.href.startsWith('file:')
 
 const socket = io(serverUrl);
   
+const PUTADAS = {
+    "tiempo_borrado_más": function (data) {
+        borrado_cambiado = true;
+        rapidez_borrado = 500;
+        rapidez_inicio_borrado = 500;
+    },
+    "inverso": function (data) {
+        
+    },
+
+    "borroso": function (data) {
+        
+    },
+};
 
 const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
@@ -219,7 +233,6 @@ const LIMPIEZAS = {
 
     "psicodélico": function (data) {
         //socket.off('psico_a_j1');
-        console.log("LIMPIOOOOOOO");
         texto1.removeEventListener("keyup", listener_modo_psico);
         restablecer_estilo();
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
@@ -308,27 +321,8 @@ socket.on("count", (data) => {
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
 
-        // Código del cañon de confeti. TO DO: Componerlo en una función auxiliar.
-        var duration = 15 * 1000;
-        var animationEnd = Date.now() + duration;
-        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        confetti_aux();
 
-        function randomInRange(min, max) {
-        return Math.random() * (max - min) + min;
-        }
-
-        var interval = setInterval(function() {
-        var timeLeft = animationEnd - Date.now();
-
-        if (timeLeft <= 0) {
-            return clearInterval(interval);
-        }
-
-        var particleCount = 50 * (timeLeft / duration);
-        // since particles fall down, start a bit higher than random
-        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-        }, 250);
         menu_modificador = false;
         limpieza_final();
         
@@ -399,7 +393,6 @@ socket.on("inicio", (data) => {
         checkeados = data.checkeados;
     }
     for (var i = 0; i < checkeados.length; i++) {
-        console.log(checkeados[i])
 
         if(checkeados[i].endsWith('1')){
             modificadorButtons.push(getEl(checkeados[i]));
@@ -448,10 +441,8 @@ socket.on("limpiar", (data) => {
 
 socket.on("activar_modo", (data) => {
     animacion_modo();
-    console.log("ANTERIOR: " + modo_actual);
     LIMPIEZAS[modo_actual](data);
     modo_actual = data.modo_actual;
-    console.log("NUEVO MODO: " + modo_actual);
     MODOS[modo_actual](data, socket);
 });
 
@@ -471,15 +462,14 @@ socket.on('pausar_js', data => {
     pausa();
 });
 
+
 socket.on('reanudar_js', data => {
     es_pausa = false;
     reanudar();
 });
 
-socket.on(aumentar_tiempo_borrado_de_jx, data => {
-    borrado_cambiado = true;
-    rapidez_borrado = 1200;
-    rapidez_inicio_borrado = 1200;
+socket.on(enviar_putada_de_jx, data => {
+    PUTADAS[data];
 });
 
 socket.on('recibir_feedback_modificador', data => {
@@ -488,11 +478,9 @@ socket.on('recibir_feedback_modificador', data => {
 
 function recibir_palabra(data) {
     animacion_modo();
-    console.log("palabra: ", data.palabra_bonus)
     asignada = true;
     palabra_actual = data.palabra_bonus[0];
-    
-    palabra1.innerHTML = "(+" + data.puntuacion + " pts) palabra: " + data.palabra_bonus[0];
+    palabra1.innerHTML = "(+" + data.puntuacion + " pts) palabra: " + data.palabras_var;
     definicion1.innerHTML = data.palabra_bonus[1];
     puntuacion = data.puntuacion;
     indice_buscar_palabra = texto1.value.length - 5;
@@ -653,11 +641,10 @@ function crear_n_saltos_de_linea(n) {
 function modo_palabras_bonus() {
     if (asignada == true) {
         if (
-            texto1.value
+            palabra_actual.some(palabra => texto1.value
                 .substring(indice_buscar_palabra, texto1.value.length)
-                .toLowerCase()
-                .includes(palabra_actual)
-        ) {
+                .toLowerCase().includes(palabra.toLowerCase()))
+            ) {
             //var $div = $('#texto');
             //$div.highlight(palabra_actual);
             texto1.focus();
@@ -807,6 +794,10 @@ function limpieza(){
     focalizador1.innerHTML = "";
     focalizador2.innerHTML = "";
 
+    menu_modificador = false;
+    focusedButtonIndex = 0;
+    modificadorButtons = [];
+
     texto1.focus();
 
     // Desactiva el blur de ambos textos.
@@ -822,7 +813,7 @@ function limpieza(){
     letra_prohibida = "";
     letra_bendita = "";
     asignada = false;
-    palabra_actual = ""; // Variable que almacena la palabra bonus actual.
+    palabra_actual = []; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
     
     // Desactiva, por seguridad, todos los modos.
@@ -831,7 +822,7 @@ function limpieza(){
 
     puntos1.style.color = "white";
     puntos2.style.color = "white";
-    tiempo.style.color = "white"
+    tiempo.style.color = "white";
 
     puntuacion_final1.innerHTML = "";
     puntuacion_final2.innerHTML = "";
@@ -873,7 +864,7 @@ function limpieza_final(){
     letra_prohibida = "";
     letra_bendita = "";
     asignada = false;
-    palabra_actual = ""; // Variable que almacena la palabra bonus actual.
+    palabra_actual = []; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
     
     // Desactiva, por seguridad, todos los modos.
@@ -896,6 +887,8 @@ function limpieza_final(){
 
 function pausa(){
 
+    //socket.emit('pausar', '');
+    
     menu_modificador = false;
     texto1.disabled= true;
 
@@ -913,6 +906,7 @@ function reanudar(){
     clearTimeout(borrado);
     
     //restablecer_estilo();
+    texto1.focus();
 }
 
 function modo_borroso_pausa(data){
@@ -928,12 +922,22 @@ function tiempo_borrado_menos(){
 }
 
 function tiempo_borrado_más(){
-    socket.emit("aumentar_tiempo_borrado_a_jx", player);
+    putada = "tiempo_borrado_más";
+    socket.emit("enviar_putada_a_jx", {player, putada});
 }
 
 function tiempo_muerto(){
-    pausa();
-    setTimeout(reanudar, 10000);
+    socket.emit("tiempo_muerto_a_control", '');
+}
+
+function borroso(){
+    putada = "borroso";
+    socket.emit("enviar_putada_a_jx", player, putada);
+}
+
+function inverso(){
+    putada = "inverso";
+    socket.emit("enviar_putada_a_jx", player, putada);
 }
 
 function modo_borroso(data){
@@ -973,4 +977,27 @@ function modo_borroso(data){
                 }, data.duracion);
             }
     }
+}
+
+function confetti_aux(){
+    var duration = 15 * 1000;
+    var animationEnd = Date.now() + duration;
+    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+    }
+
+    var interval = setInterval(function() {
+    var timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+        return clearInterval(interval);
+    }
+
+    var particleCount = 50 * (timeLeft / duration);
+    // since particles fall down, start a bit higher than random
+    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
 }

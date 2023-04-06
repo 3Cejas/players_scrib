@@ -29,29 +29,26 @@ document.addEventListener('keydown', function(event) {
       modificadorButtons[focusedButtonIndex].style.display = "none";
       id_mod = modificadorButtons[focusedButtonIndex].id
       socket.emit('enviar_feedback_modificador', {id_mod, player});
-      modificadorButtons = modificadorButtons.splice(focusedButtonIndex+1, 1);
+      modificadorButtons.splice(focusedButtonIndex, 1);
       focusedButtonIndex = 0;
       console.log(modificadorButtons)
       menu_modificador = false;
-      texto1.focus()
+      texto1.focus();
   }
   if (event.key == 'Tab') {
     console.log(modificadorButtons)
+    event.preventDefault();
+    focusedButtonIndex = 0;
     if(modificadorButtons.length == 0) {
-      event.preventDefault();
       texto1.focus()
     }
     else{
     menu_modificador = true;
-    event.preventDefault();
     console.log(modificadorButtons)
     modificadorButtons[focusedButtonIndex].blur();
-    focusedButtonIndex = 0;
     modificadorButtons[focusedButtonIndex].focus();
     }
   } else if (menu_modificador && ['ArrowRight', 'ArrowLeft'].includes(event.key)) {
-    event.preventDefault();
-    
     if (event.key == 'ArrowRight' && menu_modificador) {
       focusedButtonIndex = (focusedButtonIndex + 1) % modificadorButtons.length;
     } else if(event.key == 'ArrowLeft' && menu_modificador){
@@ -62,8 +59,9 @@ document.addEventListener('keydown', function(event) {
   }
 });
 document.addEventListener('click', function(event) {
-  if(!menu_modificador || modificadorButtons.length == 0) {
-  texto1.focus()
+  texto1.focus();
+  console.log(menu_modificador);
+  if(menu_modificador == false || modificadorButtons.length == 0) {
   if (event.button === 0) {
     if (isFullscreen) {
       if (document.exitFullscreen) {
@@ -83,6 +81,7 @@ document.addEventListener('click', function(event) {
         document.documentElement.mozRequestFullScreen();
       }
       isFullscreen = true;
+      texto1.focus();
     }
   }
 }
@@ -165,6 +164,7 @@ function cambio_nivel(caracteres) {
         if(!borrado_cambiado){
           rapidez_inicio_borrado = 2500;
           rapidez_borrado = 2500;
+        }
     }
     if (500 <= caracteres && caracteres < 750) {
         nivel1.innerHTML = "nivel 2";
@@ -187,7 +187,6 @@ function cambio_nivel(caracteres) {
           rapidez_inicio_borrado = 500;
         }
     }
-  }
 }
 
 //Función auxiliar para crear las animaciones del feedback.

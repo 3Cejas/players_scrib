@@ -26,6 +26,7 @@ body {
     scrollbar-width: none;
     /* for Firefox */
     overflow-y: scroll;
+    scroll-behavior: smooth;
     color: white;
     background-color: black;
     font-family: "Retro-gaming";
@@ -150,7 +151,7 @@ button:focus {
     font-size: 1vw;
     font-family: monospace;
     color: white;
-    max-height: 2.5vw;
+    max-height: 1.5em;
     max-width: 50%;
     overflow-x: scroll;
     overflow-y: hidden;
@@ -168,14 +169,14 @@ button:focus {
 }
 
 .feedback1{
-    font-size: 4vw;
+    font-size: 3vw;
     position: absolute;
     left: 20%;
     z-index: 1;
 }
   
 .feedback2{
-    font-size: 4vw;
+    font-size: 3vw;
     position: absolute;
     left: 65%;
     z-index: 1;

@@ -70,7 +70,6 @@ const MODOS = {
         explicación.innerHTML = "MODO TEXTO NUBLADO";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
-        console.log(data.duracion)
         if (data.jugador == 1) {
             texto1.classList.add('textarea_blur');
             tempo_text_borroso = setTimeout(function () {
@@ -220,6 +219,8 @@ socket.on("count", data => {
     }
     tiempo.innerHTML = data;
     if (data == "¡Tiempo!") {
+
+        confetti_aux();
         LIMPIEZAS[modo_actual](data);
         
         limpiezas_final();
@@ -314,7 +315,6 @@ socket.on('activar_modo', data => {
 });
 
 socket.on('recibir_feedback_modificador', data => {
-    console.log(data)
     if(data.player == 2){
         getEl(data.id_mod).style.display = "none";
     }
@@ -329,13 +329,11 @@ socket.on('enviar_palabra', data => {
 
 function recibir_palabra(data) {
     animacion_modo();
-    palabra1.innerHTML = '(+' + data.puntuacion + ' pts) palabra: ' + data.palabra_bonus[0];
-    console.log(data.palabra_bonus[1])
+    palabra1.innerHTML = "(+" + data.puntuacion + " pts) palabra: " + data.palabras_var;
     definicion1.innerHTML = data.palabra_bonus[1];
 }
 
 socket.on('feedback_a_j2', data => {
-    console.log("HE RECIBIDO EL FEEEDBACK")
     var feedback = document.querySelector(".feedback1");
     feedback.style.color = data.color;
     feedback.innerHTML = data.envio_puntos.toString() + " pts";
@@ -695,14 +693,10 @@ function erm() {
 }
 
 function cambiar_color_puntuación() {
-    console.log(puntos1.innerHTML + " " + puntos2.innerHTML)
-    console.log(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) + " " + puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/));
-    console.log(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) > puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))
-    if (puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) > puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/)) {
-        console.log("entro")
+    if (parseInt(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/)) > parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
         puntos1.style.color = "green";
         puntos2.style.color = "red";
-        if (puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/) == puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/)) {
+        if (parseInt(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/)) == parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
             puntos2.style.color = "green";
         }
     }
@@ -762,4 +756,27 @@ function limpiezas_final(){
     LIMPIEZAS["psicodélico"]("");
 
     clearTimeout(tempo_text_borroso);
+}
+
+function confetti_aux(){
+    var duration = 15 * 1000;
+    var animationEnd = Date.now() + duration;
+    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+    }
+
+    var interval = setInterval(function() {
+    var timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+        return clearInterval(interval);
+    }
+
+    var particleCount = 50 * (timeLeft / duration);
+    // since particles fall down, start a bit higher than random
+    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
 }

@@ -19,6 +19,8 @@ let votos1 = getEl("votos");
 let modificador11 = document.getElementById("tiempo_borrado_menos1");
 let modificador12 = document.getElementById("tiempo_borrado_más1");
 let modificador13 = document.getElementById("tiempo_muerto1");
+let modificador14 = document.getElementById("borroso1");
+let modificador15 = document.getElementById("inverso1");
 
 
 let palabra1 = getEl("palabra");
@@ -43,12 +45,14 @@ let votos2 = getEl("votos1");
 let modificador21 = document.getElementById("tiempo_borrado_menos2");
 let modificador22 = document.getElementById("tiempo_borrado_más2");
 let modificador23 = document.getElementById("tiempo_muerto2");
+let modificador24 = document.getElementById("borroso2");
+let modificador25 = document.getElementById("inverso2");
 
 let puntuacion_final1 = getEl("puntuacion_final1");
 let puntuacion_final2 = getEl("puntuacion_final2");
 
 let clasificacion = getEl("clasificacion");
-let modificadores = [modificador11, modificador12, modificador13, modificador21, modificador22, modificador23];
+let modificadores = [modificador11, modificador12, modificador13, modificador14, modificador15, modificador21, modificador22, modificador23, modificador24, modificador25];
 
 let tempo_text_borroso;
 
@@ -151,9 +155,13 @@ socket.on('count', data => {
     if (data == "¡Tiempo!") {
         document.getElementById("texto1").disabled = true;
         document.getElementById("texto").disabled = true;
-        clearTimeout(borrado);
-        clearTimeout(borrado1);
+        clearInterval(countInterval);
     }
+});
+
+socket.on('tiempo_muerto_control', data => {
+  pausar();
+  setTimeout(reanudar, 10000);
 });
 
 nombre1.addEventListener("input", evt => {
