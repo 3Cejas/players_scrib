@@ -22,7 +22,16 @@ let isFullscreen = false;
 let menu_modificador = false;
 let focusedButtonIndex = 0;
 let modificadorButtons = [];
+
 document.addEventListener('keydown', function(event) {
+  if(event.key === "Backspace"){
+    var delete_type = new Audio('../audio/delete.WAV');
+    delete_type.play();
+  }
+  else{
+    var audio_type = new Audio('../audio/type.WAV');
+    audio_type.play();
+  }
   if(event.key == 'Enter' && menu_modificador) {
       event.preventDefault();
       modificadorButtons[focusedButtonIndex].click();

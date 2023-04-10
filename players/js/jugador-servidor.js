@@ -6,7 +6,7 @@ let texto_y;
 let enviar_postgame_x;
 let recibir_postgame_x;
 let enviar_putada_de_jx;
-let tiempo_inicial;
+let tiempo_inicial = new Date();
 let es_pausa = false;
 let borrado_cambiado = false;
 let duracion;
@@ -46,6 +46,7 @@ const getEl = (id) => document.getElementById(id); // Obtiene los elementos con 
   
 
 let tempo_text_borroso;
+let tempo_text_inverso;
 
 // Variables de los modos.
 let modo_actual = "";
@@ -102,17 +103,51 @@ serverUrl = window.location.href.startsWith('file:')
 const socket = io(serverUrl);
   
 const PUTADAS = {
-    "tiempo_borrado_más": function (data) {
+    "tiempo_borrado_más": function () {
         borrado_cambiado = true;
         rapidez_borrado = 500;
         rapidez_inicio_borrado = 500;
     },
-    "inverso": function (data) {
-        
+
+    "inverso": function () {
+        desactivar_borrar = true;
+        console.log("dfsf")
+        texto1.value =
+            texto1.value
+                .split("")
+                .reverse()
+                .join("")
+                .split(" ")
+                .reverse()
+                .join(" ");
+        tempo_text_inverso = setTimeout(function () {
+            temp_text_inverso_activado = true;
+            desactivar_borrar = false;
+            texto1.value =
+                texto1.value
+                    .split("")
+                    .reverse()
+                    .join("")
+                    .split(" ")
+                    .reverse()
+                    .join(" ");
+        }, 30000);
     },
 
-    "borroso": function (data) {
-        
+    "borroso": function () {
+        modo_texto_borroso = true;
+        tiempo_inicial = new Date();
+        duracion = 30000
+        if(es_pausa == false){
+            texto1.classList.add("textarea_blur");
+            tempo_text_borroso = setTimeout(function () {
+                temp_text_borroso_activado = true;
+                texto1.classList.remove("textarea_blur");
+            }, duracion);
+        }
+        else{
+            modo_borroso_pausa(30000);
+        }
     },
 };
 
@@ -151,9 +186,6 @@ const MODOS = {
 
     "texto borroso": function (data) {
         modo_texto_borroso = true;
-        explicación.innerHTML = "MODO TEXTO NUBLADO";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
         tiempo_inicial = new Date();
         duracion = data.duracion;
         if(es_pausa == false){
@@ -174,34 +206,6 @@ const MODOS = {
             stylize();
         });*/
     },
-
-    "texto inverso": function (data) {
-        desactivar_borrar = true;
-        explicación.innerHTML = "MODO TEXTO INVERSO";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
-        texto1.value =
-            //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-            //eliminar_saltos_de_linea(texto1.value)
-            texto1.value
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");
-        texto2.value =
-            //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.value)
-            texto2.value
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");
-    },
-
     "": function (data) { },
 };
 
@@ -225,10 +229,10 @@ const LIMPIEZAS = {
         letra_bendita = "";
     },
 
-    "texto borroso": function (data) {
+    "borroso": function (data) {
         modo_texto_borroso = false;
         texto1.classList.remove("textarea_blur");
-        texto2.classList.remove("textarea_blur");
+        //texto2.classList.remove("textarea_blur");
     },
 
     "psicodélico": function (data) {
@@ -238,7 +242,7 @@ const LIMPIEZAS = {
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
     },
 
-    "texto inverso": function (data) {
+    "inverso": function (data) {
         desactivar_borrar = false;
         texto1.value =
             //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
@@ -250,17 +254,9 @@ const LIMPIEZAS = {
                 .split(" ")
                 .reverse()
                 .join(" ");
-        texto2.value =
-            //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.value)
-            texto2.value
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");
     },
+
+    "tiempo_borrado_más": function (data){ },
 
     "": function (data) { },
 };
@@ -452,13 +448,10 @@ socket.on('enviar_palabra', data => {
 
 socket.on('pausar_js', data => {
     es_pausa = true;
-    if(modo_actual != "texto borroso"){
-        LIMPIEZAS[modo_actual](data);
-    }
-    else{
-        clearTimeout(tempo_text_borroso);
-        tiempo_restante = duracion - (new Date().getTime() - tiempo_inicial.getTime());
-    }
+    LIMPIEZAS[modo_actual](data);
+    clearTimeout(tempo_text_borroso);
+    clearTimeout(tempo_text_inverso);
+    tiempo_restante = duracion - (new Date().getTime() - tiempo_inicial.getTime());
     pausa();
 });
 
@@ -469,7 +462,8 @@ socket.on('reanudar_js', data => {
 });
 
 socket.on(enviar_putada_de_jx, data => {
-    PUTADAS[data];
+    PUTADAS[data]()
+    //setTimeout(LIMPIEZAS[data](), 30000);
 });
 
 socket.on('recibir_feedback_modificador', data => {
@@ -843,6 +837,7 @@ function limpieza(){
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
     clearTimeout(tempo_text_borroso);
+    clearTimeout(tempo_text_inverso);
 }
 
 function limpieza_final(){
@@ -921,8 +916,7 @@ function tiempo_borrado_menos(){
     rapidez_inicio_borrado = 7000;
 }
 
-function tiempo_borrado_más(){
-    putada = "tiempo_borrado_más";
+function enviar_putada(putada){
     socket.emit("enviar_putada_a_jx", {player, putada});
 }
 
