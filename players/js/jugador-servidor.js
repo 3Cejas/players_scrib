@@ -135,6 +135,7 @@ const PUTADAS = {
     },
 
     "borroso": function () {
+        activar_socket_feedback();
         modo_texto_borroso = true;
         tiempo_inicial = new Date();
         duracion = 30000
@@ -467,6 +468,14 @@ socket.on(enviar_putada_de_jx, data => {
 });
 
 socket.on('recibir_feedback_modificador', data => {
+    
+    feedback2.innerHTML = getEl(data.id_mod).innerHTML;
+    clearTimeout(delay_animacion);
+    animateCSS(".feedback2", "flash").then((message) => {
+        delay_animacion = setTimeout(function () {
+            feedback2.innerHTML = "";
+        }, 2000);
+    });
     getEl(data.id_mod).style.display = "none";
 });
 

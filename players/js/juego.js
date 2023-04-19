@@ -35,6 +35,13 @@ document.addEventListener('keydown', function(event) {
   if(event.key == 'Enter' && menu_modificador) {
       event.preventDefault();
       modificadorButtons[focusedButtonIndex].click();
+      feedback1.innerHTML = modificadorButtons[focusedButtonIndex].innerHTML;
+      clearTimeout(delay_animacion);
+      animateCSS(".feedback1", "flash").then((message) => {
+          delay_animacion = setTimeout(function () {
+              feedback1.innerHTML = "";
+          }, 2000);
+      });
       modificadorButtons[focusedButtonIndex].style.display = "none";
       id_mod = modificadorButtons[focusedButtonIndex].id
       socket.emit('enviar_feedback_modificador', {id_mod, player});

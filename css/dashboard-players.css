@@ -171,14 +171,14 @@ button:focus {
 .feedback1{
     font-size: 3vw;
     position: absolute;
-    left: 20%;
+    left: 25%;
     z-index: 1;
 }
   
 .feedback2{
     font-size: 3vw;
     position: absolute;
-    left: 65%;
+    left: 70%;
     z-index: 1;
 }
 

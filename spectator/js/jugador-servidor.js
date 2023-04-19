@@ -316,9 +316,23 @@ socket.on('activar_modo', data => {
 
 socket.on('recibir_feedback_modificador', data => {
     if(data.player == 2){
+        feedback2.innerHTML = getEl(data.id_mod).innerHTML;
+        clearTimeout(delay_animacion);
+        animateCSS(".feedback2", "flash").then((message) => {
+            delay_animacion = setTimeout(function () {
+                feedback2.innerHTML = "";
+            }, 2000);
+        });
         getEl(data.id_mod).style.display = "none";
     }
     else{
+        feedback1.innerHTML = getEl(data.id_mod).innerHTML;
+        clearTimeout(delay_animacion);
+        animateCSS(".feedback1", "flash").then((message) => {
+            delay_animacion = setTimeout(function () {
+                feedback1.innerHTML = "";
+            }, 2000);
+        });
         getEl(data.id_mod.substring(0, data.id_mod.length - 1) + "1").style.display = "none";
     }
 });
