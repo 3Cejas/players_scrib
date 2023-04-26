@@ -340,6 +340,8 @@ socket.on("count", (data) => {
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
 
+        //puntuacion_acumulada += puntos;
+
         socket.on(recibir_postgame_x, (data) => {
             focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
         });
@@ -756,7 +758,7 @@ function postgame() {
 }
 
 function actualizar_puntuación() {
-    puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
+    puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita + puntuacion_acumulada;
     puntos1.innerHTML = puntos + " puntos";
     cambio_nivel(puntos);
     sendText();

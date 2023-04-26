@@ -2,6 +2,7 @@ let countInterval;
 let time_minutes; // Value in minutes
 let time_seconds; // Value in seconds
 let secondsRemaining
+let impro_estado = false;
 
 
 function paddedFormat(num) {
@@ -125,6 +126,15 @@ function subir() {
 
 function bajar() {
     socket.emit('scroll', 'abajo');
+};
+
+function scroll_sincro() {
+    socket.emit('scroll_sincro');
+};
+
+function impro() {
+    socket.emit('impro', impro_estado);
+    impro_estado = !impro_estado;
 };
 
 function cambiar_vista() {

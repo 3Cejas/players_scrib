@@ -256,7 +256,7 @@ socket.on('inicio', data => {
     socket.off('exit');
     socket.off('scroll');
     socket.off('temas_jugadores');
-    socket.off('recibir_comentario');
+    //socket.off('recibir_comentario');
     socket.off('recibir_postgame1');
     socket.off('recibir_postgame2');
 
@@ -293,6 +293,10 @@ socket.on('limpiar', data => {
 
     limpiezas();
 
+    texto1.style.height = "";
+    texto2.style.height = "";
+    texto1.rows =  "3";
+    texto2.rows = "3";
     //nombre1.value = "ESCRITXR 1";
     //nombre2.value = "ESCRITXR 2";
     
@@ -405,6 +409,10 @@ socket.on('feedback_a_j1', data => {
     });
 });
 
+socket.on('recibir_comentario', data => {
+    tema.innerHTML = data;
+});
+
 //FUNCIONES AUXILIARES.
 
 function activar_sockets_extratextuales() {
@@ -422,12 +430,25 @@ function activar_sockets_extratextuales() {
     // Realiza el scroll.
     socket.on('scroll', data => {
         if (data == "arriba") {
-            window.scrollBy(0, -20);
+            window.scrollBy(0, -50);
         }
         else {
-            window.scrollBy(0, 20);
+            window.scrollBy(0, 50);
         }
     });
+
+    socket.on('scroll_sincro', data => {
+        window.scrollTo({ top: 0});
+    });
+
+    socket.on('impro', data => {
+        if(data)
+            document.getElementById("contenedor").style.display = "none"; 
+        else{
+            document.getElementById("contenedor").style.display = ""; 
+        }
+    });
+
     // Recibe el nombre del jugador 2 y lo coloca en su sitio.
     socket.on('nombre2', data => {
         nombre2.value = data;
@@ -445,10 +466,6 @@ function activar_sockets_extratextuales() {
     socket.on('temas_espectador', data => {
         temas = data;
         erm();
-    });
-
-    socket.on('recibir_comentario', data => {
-        tema.innerHTML = data;
     });
 
     socket.on("recibir_postgame1", (data) => {
