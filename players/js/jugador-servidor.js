@@ -340,9 +340,9 @@ socket.on("count", (data) => {
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
 
-        //puntuacion_acumulada += puntos;
 
         socket.on(recibir_postgame_x, (data) => {
+            puntuacion_acumulada_j2 += data.longitud + data.puntos_palabra + data.puntos_letra_prohibida + data.puntos_letra_bendita;
             focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
         });
         setTimeout(postgame, 1000);
@@ -377,8 +377,7 @@ socket.on("inicio", (data) => {
 
     texto1.style.height = "";
     texto2.style.height = "";
-    texto1.rows = 3;
-    texto2.rows = 3;
+
     for (i = 0; i < document.querySelectorAll('.modificador').length; i++) {
         document.querySelectorAll('.modificador')[i].style.display = "none";
     }
@@ -417,6 +416,9 @@ socket.on("limpiar", (data) => {
     socket.on("nombre1", (data) => {
         nombre1.value = data;
     });
+
+    texto1.rows =  "3";
+    texto2.rows = "3";
 
     limpieza();
     
@@ -758,7 +760,8 @@ function postgame() {
 }
 
 function actualizar_puntuación() {
-    puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita + puntuacion_acumulada;
+    puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita + puntuacion_acumulada_j1;
+    puntuacion_acumulada_j1 += puntos;
     puntos1.innerHTML = puntos + " puntos";
     cambio_nivel(puntos);
     sendText();
@@ -781,13 +784,19 @@ function cambiar_color_puntuación() {
 }
 
 function limpieza(){
+    
     texto1.value = "";
     texto2.value = "";
 
+    texto1.style.height = "";
+    texto2.style.height = "";
+    texto1.rows =  "3";
+    texto2.rows = "3";
+
     texto2.disabled= true;
 
-    puntos1.innerHTML = "0 puntos";
-    puntos2.innerHTML = "0 puntos";
+    puntos1.innerHTML = puntuacion_acumulada_j1 + " puntos";
+    puntos2.innerHTML = puntuacion_acumulada_j2 + " puntos";
     
     nivel1.innerHTML = "nivel 0";
     nivel2.innerHTML = "nivel 0";

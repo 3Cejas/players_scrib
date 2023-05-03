@@ -1,6 +1,25 @@
 let delay_animacion;
 let isFullscreen = false;
 
+document.addEventListener('keydown', function (event) {
+  const key = event.key;
+
+  if (key === 'ArrowUp') {
+      event.preventDefault();
+      smoothScrollBy(-50); // Ajusta este valor según la cantidad de desplazamiento deseado
+  } else if (key === 'ArrowDown') {
+      event.preventDefault();
+      smoothScrollBy(50); // Ajusta este valor según la cantidad de desplazamiento deseado
+  }
+});
+
+function smoothScrollBy(value) {
+  window.scrollBy({
+      top: value,
+      behavior: 'smooth'
+  });
+}
+
 document.addEventListener('click', function(event) {
   if (event.button === 0) {
     if (isFullscreen) {

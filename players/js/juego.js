@@ -10,7 +10,8 @@ let cambio_palabra; // Variable que almacena el identificador de la función tem
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
 let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra bonus.
 let puntos = 0; // Puntos del jugador 1.
-let puntuacion_acumulada = 0;
+let puntuacion_acumulada_j1 = 0;
+let puntuacion_acumulada_j2 = 0;
 let delay_animacion;
 let envio_puntos;
 puntos_letra_prohibida = 0;
@@ -133,7 +134,7 @@ function auto_grow(element) {
 function borrar(texto) {
     if (!desactivar_borrar) {
         texto1.value = texto.value.substring(0, texto1.value.length - 1);
-        puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita + puntuacion_acumulada;
+        puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita + puntuacion_acumulada_j1;
         cambiar_color_puntuación()
         puntos1.innerHTML = puntos + " puntos";
         sendText();
@@ -146,7 +147,7 @@ function borrar(texto) {
 
 //Función que modifica el comportamiento del juego.
 function countChars(texto) {
-    puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita + puntuacion_acumulada;
+    puntos = texto.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita + puntuacion_acumulada_j1;
     cambiar_color_puntuación();
     puntos1.innerHTML = puntos + " puntos";
     cambio_nivel(puntos);

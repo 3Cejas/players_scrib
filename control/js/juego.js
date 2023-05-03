@@ -251,8 +251,8 @@ function sortTable() {
   }
 
   function findValueInRowAndChange(nombre, puntos) {
-    table = document.getElementById("clasificacion");
-    var rows = table.rows;
+    clasificacion = document.getElementById("clasificacion");
+    var rows = clasificacion.rows;
     for (var i = 1; i < rows.length; i++) {
       var cols = rows[i].cells;
       for (var c = 0; c < cols.length; c++) {

@@ -442,10 +442,13 @@ function activar_sockets_extratextuales() {
     });
 
     socket.on('impro', data => {
-        if(data)
-            document.getElementById("contenedor").style.display = "none"; 
+        if(data){
+            document.getElementById("contenedor").style.display = "none";
+            tiempo.style.display = "none";
+        }
         else{
-            document.getElementById("contenedor").style.display = ""; 
+            document.getElementById("contenedor").style.display = "";
+            tiempo.style.display = "";
         }
     });
 
