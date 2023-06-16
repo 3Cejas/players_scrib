@@ -251,6 +251,7 @@ textarea {
 }
 
 .nombre {
+    text-transform: uppercase;
     text-align: center;
     position: sticky;
     font-size: 28pt;

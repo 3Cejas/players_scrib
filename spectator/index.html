@@ -14,7 +14,7 @@
 <body>
     <script src="./js/juego.js"></script>
     <div align="center">
-        <pre class="neon">
+        <pre id="neon" class="neon">
         __     _____    _____   _____    _____    __       ____  
        / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
       / /    | (___   | |      | |__) |   | |      \ \    | |_) |
@@ -22,26 +22,17 @@
       \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
        \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                   
-        </pre>
-        <div id = logo>
-            <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
-        </div>
-        <h1 id="feedback1" class="feedback1"></h1>
-        <h1 id="feedback2" class="feedback2"></h1>
-            <div id="info">
+    </pre>
+    <div id="logo">
+        <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
+    </div>
+    <div id="info">
         <h1 id="feedback1" class="feedback1"></h1>
         <h1 id="feedback2" class="feedback2"></h1>
         <table class="info">
             <tr>
                 <p id="tiempo" class="tiempo"></p>
-            <tr>
-                    <p id="explicación" class="explicación"></p>
-            </tr>
-                <p id="palabra" class=palabra></p>
-            </tr>
-            <tr>
-                <p id="definicion" class="definicion"></p>
-            </tr>
+                <p id="feedback_tiempo" class="feedback_tiempo"></p>
         </table>
     </div>
         <br>
@@ -49,53 +40,79 @@
         <p><span id="temas" class="temas"></span></p>
         <div id="contenedor">
             <div class="jugador1">
-                <input disabled id="nombre" class="nombre" value="ESCRITXR 1"></input>
+                <input disabled style="color:aqua" id="nombre" class="nombre"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <textarea disabled id="texto" rows="3" spellcheck="false" oninput="auto_grow(this)"
-                    onkeyup="countChars(this);" onkeydown="countChars(this);">
+                <textarea disabled id="texto" rows="1"
+                    spellcheck="false">
                 </textarea>
                 <br><br>
                 <div align="center">
                     <table class="right">
                         <tr>
-                            <th id="puntos">0 puntos</th>
-                            <th id="nivel">nivel 0</th>
-                            <th><button id="tiempo_borrado_menos1" class= "modificador" onclick="tiempo_borrado_menos()">🐢</button></th>
-                            <th><button id="tiempo_borrado_más1" class= "modificador" onclick="tiempo_borrado_más()">⚡</button></th>
-                            <th><button id="tiempo_muerto1" class= "modificador" onclick="tiempo_muerto()">⌛</button></th>
+                            <th id="puntos"> 0 palabras 🖋️</th>
+                            <th id="nivel">🌡️ nivel 1</th>
+                            <th id="musas">0 musas 🎨</th>
                         </tr>
                     </table>
                     <h1 id="focalizador1" class="focalizador"></h1>
+                    <h2 id="puntuacion_final1"></h1>
                 </div>
-                </br>
+                <table id="info1" class="info">
+                    <tr>
+                        <p id="explicación1" class="explicación1"></p>
+                    </tr>
+                        <p id="palabra1" class=palabra1></p>
+                    </tr>
+                    <tr>
+                        <p id="definicion1" class="definicion1"></p>
+                    </tr>
+                </table>
+                <br>
             </div>
-            <div class="jugador2">
-                <input disabled id="nombre1" class="nombre" value="ESCRITXR 2"></input>
+                <div class="jugador2">
+                <input disabled style="color:red" id="nombre1" class="nombre"></input>
                 <br><br>
                 <p id="alineador2"></p>
-                <textarea disabled id="texto1" rows="3" spellcheck="false" oninput="auto_grow(this)"
-                    onkeyup="countChars(this);" onkeydown="countChars(this);">
+                <textarea disabled id="texto1" rows="1"
+                    spellcheck="false">
                 </textarea>
                 <br><br>
                 <div align="center">
                     <table class="right">
                         <tr>
-                            <th id="puntos1">0 puntos</th>
-                            <th id="nivel1">nivel 0</th>
-                            <th><button id="tiempo_borrado_menos2" class= "modificador">🐢</button></th>
-                            <th><button id="tiempo_borrado_más2" class= "modificador">⚡</button></th>
-                            <th><button id="tiempo_muerto2" class= "modificador">⌛</button></th>
+                            <th id="puntos1"> 0 palabras 🖋️</th>
+                            <th id="nivel1">🌡️ nivel 1</th>
+                            <th id="musas1">0 musas 🎨</th>
                         </tr>
                     </table>
                     <h1 id="focalizador2" class="focalizador"></h1>
-                    </br>
+                    <h2 id="puntuacion_final2"></h1>
                 </div>
+                <table id="info2" class="info">
+                    <tr>
+                        <p id="explicación2" class="explicación2"></p>
+                    </tr>
+                        <p id="palabra2" class=palabra2></p>
+                    </tr>
+                    <tr>
+                        <p id="definicion2" class="definicion2"></p>
+                    </tr>
+                </table>
+                <br>
             </div>
         </div>
     </div>
-        <div id="clasificacion" class="toc">
-            </div>
+    <table class="info">
+        <tr>
+                <p id="explicación" class="explicación"></p>
+        </tr>
+            <p id="palabra" class=palabra></p>
+        </tr>
+        <tr>
+            <p id="definicion" class="definicion"></p>
+        </tr>
+    </table>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>

@@ -14,8 +14,8 @@
 
 html,
 body {
-    width: auto;
-    height: auto;
+    width: 100%;
+    height: 100%;
     margin-top: 0;
     margin-bottom: 1%;
     margin-left: 0;
@@ -146,6 +146,29 @@ button:focus {
     background-color: yellow;
     margin: 0 auto;  
 }
+
+.palabra1 {
+    font-family: monospace;
+    font-weight: bold;
+    max-height: 5vw;
+    max-width: 50%;
+    font-size: 1.5vw;
+    color: black;
+    background-color: yellow;
+    margin: 0 auto;  
+}
+
+.palabra2 {
+    font-family: monospace;
+    font-weight: bold;
+    max-height: 5vw;
+    max-width: 50%;
+    font-size: 1.5vw;
+    color: black;
+    background-color: yellow;
+    margin: 0 auto;  
+}
+
 .definicion {
     font-weight: bold;
     font-size: 1vw;
@@ -161,7 +184,35 @@ button:focus {
     margin: 0 auto;  
 }
 
+.definicion1 {
+    font-weight: bold;
+    font-size: 1vw;
+    font-family: monospace;
+    color: white;
+    max-height: 1.5em;
+    max-width: 50%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    scrollbar-width: none;
+    margin: 0 auto;  
+}
 
+.definicion2 {
+    font-weight: bold;
+    font-size: 1vw;
+    font-family: monospace;
+    color: white;
+    max-height: 1.5em;
+    max-width: 50%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    scrollbar-width: none;
+    margin: 0 auto;  
+}
 
 .focalizador{
     font-size: 15;
@@ -169,20 +220,21 @@ button:focus {
 }
 
 .feedback1{
-    font-size: 3vw;
+    font-size: 2.5vw;
     position: absolute;
-    left: 25%;
+    left: 17.5%;
     z-index: 1;
 }
   
 .feedback2{
-    font-size: 3vw;
+    font-size: 2.5vw;
     position: absolute;
-    left: 70%;
+    left: 62.5%;
     z-index: 1;
 }
 
 button {
+    font-family: "Retro-gaming";
     height: 5%;
 }
 
@@ -208,25 +260,27 @@ textarea {
 }
 
 .textarea_blur {
-    filter: blur(5px);
-    -webkit-filter: blur(5px);
-    font-family: monospace;
+    font-family: "VT323";
+    filter: blur(10px);
+    -webkit-filter: blur(10px);
+    font-family: "VT323";
     position: sticky;
     font-size: 3vw;
+    font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
     background-color: transparent;
     background-image: none;
     overflow: auto;
     padding: 0;
-    border: none;
     width: 100%;
+    border: none;
     resize: none;
     overflow: hidden;
     outline: 0px !important;
     -webkit-appearance: none;
     box-shadow: none !important;
-    color: white
+    color: white;
   }
 
 .temas {
@@ -320,6 +374,10 @@ table {
     border-right: none;
 }
 
+th{
+    padding: 0 10 0;
+}
+
 .middle {
     width: 33.33%;
     margin: 0
@@ -329,14 +387,14 @@ table {
     position: relative;
     outline: none;
     text-decoration: none;
-    border-radius: 50px;
+    border-radius: 1.5vw;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     text-transform: uppercase;
-    height: 45px;
-    width: 130px;
+    height: 7vw;
+    width: 21vw;
     opacity: 1;
     background-color: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.6);
@@ -344,9 +402,8 @@ table {
 
 .bn54 .bn54span {
     color: #000000;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.7px;
+    font-size: 2.5vw;
+    letter-spacing: 0.1vw;
 }
 
 .bn54:hover {

@@ -14,15 +14,29 @@ let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
+let musas1 = getEl("musas");
+
 
 let logo = getEl("logo");
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
 let explicación = getEl("explicación");
 
+let palabra2 = getEl("palabra1");
+let definicion2 = getEl("definicion1");
+let explicación1 = getEl("explicación1");
+
+let palabra3 = getEl("palabra2");
+let definicion3 = getEl("definicion2");
+let explicación2 = getEl("explicación2");
+
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 let tema = getEl("temas");
+let info = getEl("info");
+let info1 = getEl("info1");
+let info2= getEl("info2");
+
 
 // COMPONENTES DEL JUGADOR 2
 let nombre2 = getEl("nombre1");
@@ -31,38 +45,73 @@ let puntos2 = getEl("puntos1");
 let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
+let musas2 = getEl("musas1");
 
 let focalizador1 = getEl("focalizador1");
 let focalizador2 = getEl("focalizador2");
 let focalizador_id = 1;
-
-let clasificacion = getEl("clasificacion");
+let feedback_tiempo = getEl("feedback_tiempo");
 
 // Variables de los modos.
 let modo_actual = "";
 let tempo_text_borroso;
 let listener_modo;
 let jugador_psico;
+let activado_psico = false;
+const color_negativo = "red";
+const color_positivo = "greenyellow";
 
 const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
+        console.log("ALGO")
+        palabra1.style.backgroundColor = "yellow";
+        explicación.style.color = "yellow";
         explicación.innerHTML = "MODO PALABRAS BONUS";
+        palabra1.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion2.style.maxWidth = "50%";
+        definicion3.innerHTML = "";
+        definicion3.style.maxWidth = "50%";
     },
 
     //Recibe y activa el modo letra prohibida.
     'letra prohibida': function (data) {
+        palabra2.innerHTML = "";
+        definicion2.innerHTML = "";
+        explicación1.innerHTML = "";
+        palabra3.innerHTML = "";
+        definicion3.innerHTML = "";
+        explicación2.innerHTML = "";
+        palabra1.style.backgroundColor= "red";
+        explicación.style.color = "red";
         explicación.innerHTML = "MODO LETRA PROHIBIDA";
         palabra1.innerHTML = "LETRA PROHIBIDA: " + data.letra_prohibida;
-        definicion1.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion2.style.maxWidth = "100%";
+        definicion3.innerHTML = "";
+        definicion3.style.maxWidth = "100%";
+        
     },
 
     //Recibe y activa el modo letra bendita.
     'letra bendita': function (data) {
+        palabra2.innerHTML = "";
+        definicion2.innerHTML = "";
+        explicación1.innerHTML = "";
+        palabra3.innerHTML = "";
+        definicion3.innerHTML = "";
+        explicación2.innerHTML = "";
+
+        palabra1.style.backgroundColor= "lime";
+        explicación.style.color = "lime";
         explicación.innerHTML = "MODO LETRA BENDITA";
         palabra1.innerHTML = "LETRA BENDITA: " + data.letra_bendita;
-        definicion1.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion2.style.maxWidth = "100%";
+        definicion3.innerHTML = "";
+        definicion3.style.maxWidth = "100%";
     },
 
     //Recibe y activa el modo borroso.
@@ -115,7 +164,7 @@ const LIMPIEZAS = {
         texto2.classList.remove("textarea_blur");
     },
 
-    psicodélico: function (data) {
+    "psicodélico": function (data) {
         jugador_psico = 0;
         restablecer_estilo();
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
@@ -147,6 +196,15 @@ const LIMPIEZAS = {
 
     "": function (data) { },
 };
+
+activar_sockets_extratextuales();
+
+socket.on('actualizar_contador_musas', contador_musas => {
+    console.log("actualizar_contador_musas")
+    musas1.innerHTML = contador_musas.escritxr1 + " musas 🎨";
+    musas2.innerHTML = contador_musas.escritxr2 + " musas 🎨";
+
+});
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
@@ -210,15 +268,20 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on("count", data => {
-    if (data == "00:20") {
-        tiempo.style.color = "yellow"
+    if (convertirASegundos(data.count) >= 20) {
+        tiempo.style.color = "white";
     }
-    if (data == "00:10") {
+    if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
+        console.log(convertirASegundos(data.count))
+        LIMPIEZAS["psicodélico"]("");
+        tiempo.style.color = "yellow";
+    }
+    if (10 > convertirASegundos(data.count) && activado_psico == false) {
         MODOS["psicodélico"](data, socket);
-        tiempo.style.color = "red"
+        tiempo.style.color = "red";
     }
-    tiempo.innerHTML = data;
-    if (data == "¡Tiempo!") {
+    tiempo.innerHTML = data.count;
+    if (data.count == "¡Tiempo!") {
 
         confetti_aux();
         LIMPIEZAS[modo_actual](data);
@@ -243,15 +306,16 @@ socket.on("count", data => {
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
         texto2.style.height = (texto2.scrollHeight) + "px";// Reajustamos el tamaño del área de texto del j2.
 
-        logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%' />";    
+        logo.style.display = "";
+        neon.style.display = "";
+        LIMPIEZAS["psicodélico"]("");
+        tiempo.style.color = "white";
     }
 });
 
 // Inicia el juego.
 socket.on('inicio', data => {
 
-    socket.off('nombre1');
-    socket.off('nombre2');
     socket.off('vote');
     socket.off('exit');
     socket.off('scroll');
@@ -263,18 +327,12 @@ socket.on('inicio', data => {
     limpiezas();
     texto1.style.height = "";
     texto2.style.height = "";
-    texto1.rows =  "3";
-    texto2.rows = "3";
+    texto1.rows =  "6";
+    texto2.rows = "6";
 
-    logo.innerHTML = "";
-
-    for (i = 0; i < document.querySelectorAll('.modificador').length; i++) {
-        document.querySelectorAll('.modificador')[i].style.display = "none";
-    }
-    var checkeados = data.checkeados;
-    for (var i = 0; i < checkeados.length; i++) {
-        getEl(checkeados[i]).style.display = "block";
-    }
+    logo.style.display = "none"; 
+    neon.style.display = "none"; 
+    tiempo.style.display = "";
     
 });
 
@@ -295,8 +353,8 @@ socket.on('limpiar', data => {
 
     texto1.style.height = "";
     texto2.style.height = "";
-    texto1.rows =  "3";
-    texto2.rows = "3";
+    texto1.rows =  "1";
+    texto2.rows = "1";
     //nombre1.value = "ESCRITXR 1";
     //nombre2.value = "ESCRITXR 2";
     
@@ -306,8 +364,10 @@ socket.on('limpiar', data => {
     texto2.style.height = (texto2.scrollHeight) + "px";
     */
 
-    logo.innerHTML = "<p class='sub'>powered by</p><img src='../img/logo.png' alt='' width='5%' />";    
-    
+    tiempo.style.display = "none";
+    logo.style.display = "";
+    neon.style.display = "";    
+
     activar_sockets_extratextuales();
 });
 
@@ -341,20 +401,23 @@ socket.on('recibir_feedback_modificador', data => {
     }
 });
 
-socket.on('enviar_palabra', data => {
-    recibir_palabra(data);
+socket.on('enviar_palabra_j1', data => {
+    recibir_palabra(data, 1);
 });
 
-function recibir_palabra(data) {
-    animacion_modo();
-    palabra1.innerHTML = "(+" + data.puntuacion + " pts) palabra: " + data.palabras_var;
-    definicion1.innerHTML = data.palabra_bonus[1];
-}
+socket.on('enviar_palabra_j2', data => {
+    recibir_palabra(data, 2);
+});
 
-socket.on('feedback_a_j2', data => {
-    var feedback = document.querySelector(".feedback1");
-    feedback.style.color = data.color;
-    feedback.innerHTML = data.envio_puntos.toString() + " pts";
+socket.on('inspirar_j1', palabra => {
+    definicion2.innerHTML = "<span style='color: orange;'>MUSA</span>: podrías escribir la palabra " + "\"<span style='color: lime;'>" + palabra + "</span>\"";
+});
+
+socket.on('inspirar_j2', palabra => {
+    definicion3.innerHTML = "<span style='color: orange;'>MUSA</span>: podrías escribir la palabra " + "\"<span style='color: lime;'>" + palabra + "</span>\"";
+});
+
+function recibir_palabra(data, escritxr) {
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
         new Promise((resolve, reject) => {
@@ -372,10 +435,47 @@ socket.on('feedback_a_j2', data => {
 
             node.addEventListener('animationend', handleAnimationEnd, { once: true });
         });
-    animateCSS(".feedback1", "bounceInLeft");
-    animateCSS('.feedback1', 'bounceInLeft').then((message) => {
+
+    if(escritxr == 1){
+        palabra2.innerHTML = "(+" + data.tiempo_palabras_bonus + " pts) palabra: " + data.palabras_var;
+        definicion2.innerHTML = data.palabra_bonus[1];
+        animateCSS(".explicación1", "bounceInLeft");
+        animateCSS(".palabra1", "bounceInLeft");
+        animateCSS(".definicion1", "bounceInLeft");
+    }
+    else{
+        palabra3.innerHTML = "(+" + data.tiempo_palabras_bonus + " pts) palabra: " + data.palabras_var;
+        definicion3.innerHTML = data.palabra_bonus[1];
+        animateCSS(".explicación2", "bounceInLeft");
+        animateCSS(".palabra2", "bounceInLeft");
+        animateCSS(".definicion2", "bounceInLeft");
+    }
+}
+
+socket.on('feedback_a_j2', data => {
+    var feedback = document.querySelector(".feedback1");
+    feedback.style.color = data.color;
+    feedback.innerHTML = "⏱️" + data.tiempo_feed.toString() + " segs.";
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
+    animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
-            feedback.innerHTML = "";
+            feedback2.innerHTML = "";
         }, 2000);
     });
 });
@@ -383,7 +483,7 @@ socket.on('feedback_a_j2', data => {
 socket.on('feedback_a_j1', data => {
     var feedback1 = document.querySelector(".feedback2");
     feedback1.style.color = data.color;
-    feedback1.innerHTML = data.envio_puntos.toString() + " pts";
+    feedback1.innerHTML = "⏱️" + data.tiempo_feed.toString() + " segs.";
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
         new Promise((resolve, reject) => {
@@ -401,10 +501,9 @@ socket.on('feedback_a_j1', data => {
 
             node.addEventListener('animationend', handleAnimationEnd, { once: true });
         });
-    animateCSS(".feedback2", "bounceInLeft");
-    animateCSS('.feedback2', 'bounceInLeft').then((message) => {
+    animateCSS(".feedback2", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
-            feedback1.innerHTML = "";
+            feedback2.innerHTML = "";
         }, 2000);
     });
 });
@@ -471,26 +570,13 @@ function activar_sockets_extratextuales() {
         erm();
     });
 
-    socket.on("recibir_postgame1", (data) => {
+    /*socket.on("recibir_postgame1", (data) => {
         focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
     });
 
     socket.on("recibir_postgame2", (data) => {
         focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
-    });
-
-    socket.on("recibir_clasificacion", (data) => {
-        clasificacion.style.display = "block";
-        clasificacion.innerHTML = "<center><u><b>CLASIFICACIÓN</b></u><br><br></center>" + "<div class='entry'><div class='chapter'>" + data[1].jugador + " 🏆</div><div class='page'>" + data[1].puntuacion + " pts</div></div>"
-        ;       
-        for (var i = 2; i < data.length; i++) {
-            clasificacion.innerHTML += "<div class='entry'><div class='chapter'>" + data[i].jugador + "</div><div class='page'>" + data[i].puntuacion + " pts</div></div>"
-            if(i == 0){
-                //nombre.style.fontWeight = puntos.style.fontWeight = "bold";
-            }
-        }
-        clasificacion.innerHTML += "<br><br>"
-    });
+    });*/
 }
 
 function getRandColor() {
@@ -728,40 +814,44 @@ function erm() {
 
 function cambiar_color_puntuación() {
     if (parseInt(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/)) > parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
-        puntos1.style.color = "green";
+        puntos1.style.color = "greenyellow";
         puntos2.style.color = "red";
         if (parseInt(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/)) == parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
-            puntos2.style.color = "green";
+            puntos2.style.color = "greenyellow";
         }
     }
     else {
         puntos1.style.color = "red";
-        puntos2.style.color = "green";
+        puntos2.style.color = "greenyellow";
     }
 }
 
 function limpiezas(){
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
-    
+
+    palabra1.innerHTML = "";
     definicion1.innerHTML = "";
     explicación.innerHTML = "";
+    palabra2.innerHTML = "";
+    definicion2.innerHTML = "";
+    explicación1.innerHTML = "";
+    palabra3.innerHTML = "";
+    definicion3.innerHTML = "";
+    explicación2.innerHTML = "";
     
     texto1.value = "";
     texto2.value = "";
 
-    puntos1.innerHTML = "0 puntos";
-    puntos2.innerHTML = "0 puntos";
+    puntos1.innerHTML = 0 + " palabras 🖋️";
+    puntos2.innerHTML = 0 + " palabras 🖋️";
     
-    nivel1.innerHTML = "nivel 0";
-    nivel2.innerHTML = "nivel 0";
+    nivel1.innerHTML = "🌡️ nivel 0";
+    nivel2.innerHTML = "🌡️ nivel 0";
     
-    palabra1.innerHTML = "";
-
     tiempo.style.color = "white"
     puntos1.style.color = "white";
     puntos2.style.color = "white";
-    clasificacion.innerHTML = "";
     
     texto1.classList.remove('textarea_blur');
     texto2.classList.remove('textarea_blur');
@@ -772,6 +862,9 @@ function limpiezas(){
     LIMPIEZAS["psicodélico"]("");
 
     clearTimeout(tempo_text_borroso);
+
+    feedback_tiempo.style.color = color_positivo;
+
 }
 
 function limpiezas_final(){
@@ -781,6 +874,12 @@ function limpiezas_final(){
     palabra1.innerHTML = "";
     definicion1.innerHTML = "";
     explicación.innerHTML = "";
+    palabra2.innerHTML = "";
+    definicion2.innerHTML = "";
+    explicación1.innerHTML = "";
+    palabra3.innerHTML = "";
+    definicion3.innerHTML = "";
+    explicación2.innerHTML = "";
 
     tiempo.style.color = "white"
 
@@ -790,6 +889,9 @@ function limpiezas_final(){
     LIMPIEZAS["psicodélico"]("");
 
     clearTimeout(tempo_text_borroso);
+
+    feedback_tiempo.style.color = color_positivo;  
+
 }
 
 function confetti_aux(){
@@ -814,3 +916,10 @@ function confetti_aux(){
     confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
     }, 250);
 }
+
+function convertirASegundos(tiempo) {
+    let partes = tiempo.split(':'); // separamos los minutos de los segundos
+    let minutos = parseInt(partes[0], 10); // convertimos los minutos a un número entero
+    let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
+    return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
+  }

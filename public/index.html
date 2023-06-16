@@ -1,0 +1,120 @@
+<html lang="es">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 6vw;
+        }
+        * {
+    cursor:auto;
+    }
+
+    .bn {
+    position: relative;
+    outline: none;
+    text-decoration: none;
+    border-radius: 1.5vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    text-transform: uppercase;
+    height: 15vw;
+    width: 40vw;
+    opacity: 1;
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+.bn .bnspan {
+    color: #000000;
+    font-size: 4.5vw;
+    letter-spacing: 0.1vw;
+}
+
+.bn:hover {
+    animation: bn54rotate 0.7s ease-in-out both;
+}
+
+.bn:hover .bnspan {
+    animation: bn54storm 0.7s ease-in-out both;
+    animation-delay: 0.06s;
+}
+
+@keyframes bnrotate {
+    0% {
+        transform: rotate(0deg) translate3d(0, 0, 0);
+    }
+
+    25% {
+        transform: rotate(3deg) translate3d(0, 0, 0);
+    }
+
+    50% {
+        transform: rotate(-3deg) translate3d(0, 0, 0);
+    }
+
+    75% {
+        transform: rotate(1deg) translate3d(0, 0, 0);
+    }
+
+    100% {
+        transform: rotate(0deg) translate3d(0, 0, 0);
+    }
+}
+
+@keyframes bnstorm {
+    0% {
+        transform: translate3d(0, 0, 0) translateZ(0);
+    }
+
+    25% {
+        transform: translate3d(4px, 0, 0) translateZ(0);
+    }
+
+    50% {
+        transform: translate3d(-3px, 0, 0) translateZ(0);
+    }
+
+    75% {
+        transform: translate3d(2px, 0, 0) translateZ(0);
+    }
+
+    100% {
+        transform: translate3d(0, 0, 0) translateZ(0);
+    }
+}
+    </style>
+</head>
+<body>
+    <div>
+    <h1>MUSA,<br>¿A QUIÉN INSPIRAS?</h1>
+    <table class="default">
+        <tr>
+            <td>
+                <div align="center">
+                    <button onclick="window.location.href = './players/index.html?player=1'" class="bn">
+                        <span style="color:aqua" id="escritxr1" class="bnspan"> ✍️ ESCRITXR 1</span>
+                    </button><br>
+                </div>
+            </td>
+            <td>
+                <div align="center">
+                    <button onclick="window.location.href = './players/index.html?player=2'" class="bn">
+                        <span style="color:red" id="escritxr2" class="bnspan">✍️ ESCRITXR 2</span>
+                    </button><br>
+                </div>
+            </td>
+    </div>
+</body>
+<script src="../dist/socket.io/socket.io.js"></script>
+<script src="./js/jugador-servidor.js"></script>
+</html>

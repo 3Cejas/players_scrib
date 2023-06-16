@@ -16,11 +16,7 @@ let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 let votos1 = getEl("votos");
-let modificador11 = document.getElementById("tiempo_borrado_menos1");
-let modificador12 = document.getElementById("tiempo_borrado_más1");
-let modificador13 = document.getElementById("tiempo_muerto1");
-let modificador14 = document.getElementById("borroso1");
-let modificador15 = document.getElementById("inverso1");
+
 
 
 let palabra1 = getEl("palabra");
@@ -30,6 +26,12 @@ let explicación = getEl("explicación");
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 let tema = getEl("temas");
+let span_pausar_reanudar = getEl("pausar_reanudar");
+let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
+let boton_borrar = getEl("boton_borrar");
+
+boton_borrar.style.backgroundColor = "red";
+
 
 let temporizador = getEl("temporizador");
 
@@ -42,97 +44,25 @@ let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 let votos2 = getEl("votos1");
-let modificador21 = document.getElementById("tiempo_borrado_menos2");
-let modificador22 = document.getElementById("tiempo_borrado_más2");
-let modificador23 = document.getElementById("tiempo_muerto2");
-let modificador24 = document.getElementById("borroso2");
-let modificador25 = document.getElementById("inverso2");
 
 let puntuacion_final1 = getEl("puntuacion_final1");
 let puntuacion_final2 = getEl("puntuacion_final2");
 
 let clasificacion = getEl("clasificacion");
-let modificadores = [modificador11, modificador12, modificador13, modificador14, modificador15, modificador21, modificador22, modificador23, modificador24, modificador25];
 
 let tempo_text_borroso;
 
 let postgame1;
 let postgame2;
 
-//const buttons = document.querySelectorAll('button');
-let index = 0;
+const DURACION_TIEMPO_MUERTO = 60000;
+const DURACION_TIEMPO_MODOS = 20;
 
-const table = document.querySelector('.default');
-const buttons = document.querySelectorAll('button');
-const rows = table.rows.length;
-const cols = table.rows[0].cells.length;
-let focusedRow = 0;
-let focusedCol = 0;
+let val_nombre1 = nombre1.value.toUpperCase();
+socket.emit('envío_nombre1', val_nombre1);
 
-buttons[0].focus();
-
-// Función para cambiar el enfoque al botón especificado
-function focusButton(row, col) {
-    // Desenfocar el botón anterior
-    const prevButton = table.rows[focusedRow].cells[focusedCol].querySelector('button');
-    if (prevButton) {
-      prevButton.blur();
-    }
-  
-    // Enfocar el nuevo botón si existe
-    const newButton = table.rows[row].cells[col].querySelector('button');
-    if (newButton) {
-      newButton.focus();
-    }
-  
-    // Actualizar las variables de fila y columna enfocadas
-    focusedRow = row;
-    focusedCol = col;
-  }
-// Manejar las teclas de flecha presionadas
-document.addEventListener('keydown', (event) => {
-  const key = event.key;
-  
-  // Flecha arriba
-  if (key === 'ArrowUp' && focusedRow > 0) {
-    event.preventDefault();
-    focusButton(focusedRow - 1, focusedCol);
-    if(table.rows[(focusedRow - 1)]){
-        table.rows[focusedRow - 1].scrollIntoView({block: "nearest"});
-    }
-  }
-  // Flecha abajo
-  else if (key === 'ArrowDown' && focusedRow < rows - 1) {
-    event.preventDefault();
-    focusButton(focusedRow + 1, focusedCol);
-    if(table.rows[(focusedRow + 1)]){
-    table.rows[focusedRow + 1].scrollIntoView({block: "nearest"});
-    }
-  }
-  // Flecha izquierda
-  else if (key === 'ArrowLeft' && focusedCol > 0) {
-    event.preventDefault();
-    focusButton(focusedRow, focusedCol - 1);
-  }
-  // Flecha derecha
-  else if (key === 'ArrowRight' && focusedCol < cols - 1) {
-    event.preventDefault();
-    focusButton(focusedRow, focusedCol + 1);
-  }
-});
-
-// Añadir el evento de foco a los botones de la tabla
-
-
-buttons.forEach((button, index) => {
-  const row = Math.floor(index / cols);
-  const col = index % cols;
-  button.addEventListener('focus', () => {
-    focusedRow = row;
-    focusedCol = col;
-  });
-  button.dataset.position = `${row}-${col}`;
-});
+let val_nombre2 = nombre2.value.toUpperCase();
+  socket.emit('envío_nombre2', val_nombre2);
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
@@ -161,17 +91,17 @@ socket.on('count', data => {
 
 socket.on('tiempo_muerto_control', data => {
   pausar();
-  setTimeout(reanudar, 10000);
+  setTimeout(reanudar, DURACION_TIEMPO_MUERTO);
 });
 
 nombre1.addEventListener("input", evt => {
-    let name1 = nombre1.value;
-    socket.emit('envío_nombre1', name1);
+    val_nombre1 = nombre1.value.toUpperCase();
+    socket.emit('envío_nombre1', val_nombre1);
 });
 
 nombre2.addEventListener("input", evt => {
-    let name = nombre2.value;
-    socket.emit('envío_nombre2', name);
+    val_nombre2 = nombre2.value.toUpperCase();
+    socket.emit('envío_nombre2', val_nombre2);
 });
 
 socket.on("recibir_postgame1", (data) => {
@@ -182,9 +112,13 @@ socket.on("recibir_postgame2", (data) => {
     postgame1 = "\n🖋️ Caracteres escritos = " + data.longitud + "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n";
 });
 
+socket.on("aumentar_tiempo_control", (secs) => {
+  addSeconds(secs);
+});
+
 function descargar_textos() {
     var a = document.createElement("a");
     a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value + "\r\n\n" + document.getElementById("puntos").innerHTML + "\r\n\n" + document.getElementById("texto").value + "\r\n" + postgame1 + "\n\n" + document.getElementById("nombre1").value + "\r\n\n" + document.getElementById("puntos1").innerHTML + "\r\n\n" + document.getElementById("texto1").value + "\n" + postgame2], { type: "text/plain" }));
-    a.download = document.getElementById("nombre").value + ' VS ' + document.getElementById("nombre1").value + '.txt';
+    a.download = val_nombre1 + ' VS ' + val_nombre2 + '.txt';
     a.click();
 }

@@ -1,0 +1,136 @@
+
+@charset "utf-8";
+
+@font-face {
+    font-family: 'Retro-gaming';
+    src: url('../../../css/fonts/Retro\ Gaming.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'VT323';
+    src: url('../../../css/fonts/VT323-Regular.ttf') format('truetype');
+}
+
+
+html,
+body {
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    scroll-behavior: smooth;
+    color: white;
+    background-color: black;
+    font-family: "Retro-gaming";
+}
+
+textarea {
+    font-family: "VT323";
+    position: sticky;
+    font-size: 8vw;
+    font-weight: bold;
+    border-color: currentcolor;
+    outline-color: currentcolor;
+    background-color: transparent;
+    background-image: none;
+    overflow: auto;
+    padding: 0;
+    width: 100%;
+    border: none;
+    resize: none;
+    overflow: hidden;
+    outline: 0px !important;
+    -webkit-appearance: none;
+    box-shadow: none !important;
+    color: white;
+}
+
+p{
+    font-size: 5vw;
+}
+.nombre {
+    width: 100%;
+    font-family: "Retro-gaming";
+    text-align: center;
+    font-size: 5vw;
+    font-weight: bold;
+    border-color: currentcolor;
+    outline-color: currentcolor;
+    background-color: transparent;
+    background-image: none;
+    overflow: auto;
+    padding: 0;
+    border: none;
+    resize: none;
+    overflow: hidden;
+    outline: 0px !important;
+    -webkit-appearance: none;
+    box-shadow: none !important;
+    color: white
+  }
+
+  .right {
+    padding: 0.25vmax;
+    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    font-size: 3.5vw;
+    font-family: "Retro-gaming";
+    
+}
+th{
+    padding: 10;
+}
+
+.puntos{
+    color:white
+}
+
+.nivel{
+    color: white;
+}
+
+.tiempo{
+    text-align: center;
+}
+
+.contenedor{
+    display: flex;
+            justify-content: center;
+            align-items: center;
+            /*height: 100vh; /* Esto hace que el div ocupe todo el alto de la pantalla */
+            width: 100%;
+}
+
+.btn{
+    font-family: "Retro-gaming";
+    margin : 0.5vw;
+    cursor: pointer;
+    outline: 0;
+    display: inline-block;
+    font-size: 3.5vw;
+    line-height: 1.0;
+    text-align: center;
+    background-color: transparent;
+    border: 0.2vw solid transparent;
+    padding: 6px 12px;
+    border-radius: 1.0rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    color: white;
+    border-color: white;
+}
+.btn:hover {
+    color: black;
+    background-color: white;
+    border-color: white;
+}
+
+.notificacion{
+    display: none;
+    padding: 0.25vmax;
+    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    font-size: 3.5vw;
+    font-family: "Retro-gaming";
+    
+}
+
+.input_publico{
+    font-family: "Retro-gaming";
+}

@@ -1,8 +1,12 @@
 let countInterval;
 let time_minutes; // Value in minutes
 let time_seconds; // Value in seconds
-let secondsRemaining
+let secondsRemaining;
+let secondsPassed;
 let impro_estado = false;
+let fin_j1 = false;
+let fin_j2 = false;
+let borrar_texto = false;
 
 
 function paddedFormat(num) {
@@ -12,17 +16,22 @@ function paddedFormat(num) {
 function startCountDown(duration, element) {
 
     secondsRemaining = duration;
+    secondsPassed = 0;
     let min;
     let sec;
 
     countInterval = setInterval(function () {
-
+        secondsPassed++;
+        console.log(secondsPassed)
+        if(secondsPassed == DURACION_TIEMPO_MODOS){
+            secondsPassed = 0;
+        }
         min = parseInt(secondsRemaining / 60);
         sec = parseInt(secondsRemaining % 60);
 
         element.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
-        socket.emit('count', count);
+        socket.emit('count', {count, secondsPassed});
         if (secondsRemaining == 20) {
             tiempo.style.color = "yellow"
         }
@@ -31,14 +40,20 @@ function startCountDown(duration, element) {
         }
         secondsRemaining = secondsRemaining - 1;
         if (secondsRemaining < 0) {
-            clearInterval(countInterval);
-            tiempo.style.color = "white"
-            document.getElementById("tiempo").innerHTML = "¡Tiempo!";
-            socket.emit('count', "¡Tiempo!");
-            setTimeout(descargar_textos, 5000);
+            final();
         };
 
     }, 1000);
+}
+
+function addSeconds(secs) {
+    secondsRemaining += secs;
+
+    min = parseInt(secondsRemaining / 60);
+    sec = parseInt(secondsRemaining % 60);
+
+    element.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+    count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
 }
 
 function temp() {
@@ -57,19 +72,13 @@ function temp() {
     element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
     count = element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
     
-    var checkeados = [];
-    for (var i = 0; i < modificadores.length; i++) {
-        if (modificadores[i].checked) {
-        console.log("Checkbox " + modificadores[i].id + " está marcado");
-        // hacer algo si el checkbox está marcado
-        checkeados.push(modificadores[i].id);
-        } else {
-        console.log("Checkbox " + modificadores[i].id  + " no está marcado");
-        // hacer algo si el checkbox no está marcado
-        }
+    if(boton_pausar_reanudar.value == 1){
+        boton_pausar_reanudar.value = 0;
+        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
-    socket.emit('inicio', {count, checkeados});
-    socket.emit('count', count);
+    socket.emit('inicio', {count, borrar_texto});
+    secondsPassed = 0;
+    socket.emit('count', {count, secondsPassed});
 
     startCountDown(--duration, element);
 };
@@ -90,10 +99,15 @@ function temas() {
 function limpiar() {
     //document.getElementById("nombre").value = "ESCRITXR 1";
     //document.getElementById("nombre1").value = "ESCRITXR 2";
+    console.log(boton_pausar_reanudar)
+    if(boton_pausar_reanudar.value == 1){
+        boton_pausar_reanudar.value = 0;
+        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+    }
     document.getElementById("texto").value = "";
     document.getElementById("texto1").value = "";
-    document.getElementById("puntos").innerHTML = "0 puntos";
-    document.getElementById("puntos1").innerHTML = "0 puntos";
+    document.getElementById("puntos").innerHTML = "0 palabras";
+    document.getElementById("puntos1").innerHTML = "0 palabras";
     document.getElementById("nivel").innerHTML = "nivel 0";
     document.getElementById("nivel1").innerHTML = "nivel 0";
     document.getElementById("palabra").innerHTML = "";
@@ -104,6 +118,7 @@ function limpiar() {
     document.getElementById("definicion").innerHTML = "";
     document.getElementById("explicación").innerHTML = "";
     socket.emit('limpiar', "nada");
+    secondsPassed = 0;
     clearInterval(countInterval);
     clearTimeout(tempo_text_borroso);
     document.getElementById("tiempo").innerHTML = "";
@@ -111,12 +126,23 @@ function limpiar() {
     document.getElementById("texto1").classList.remove('textarea_blur');
     puntuacion_final1.innerHTML = "";
     puntuacion_final2.innerHTML = "";
-    socket.emit('count', "");
+    //socket.emit('count', "");
     if (feedback1 !== null) {
         feedback1.innerHTML = "";
     }
     if (feedback2 !== null) {
         feedback2.innerHTML = "";
+    }
+};
+
+function borrar(boton) {
+    if(borrar_texto == false){
+        borrar_texto = true;
+        boton.style.backgroundColor = "green";
+    }
+    else{
+        borrar_texto = false;
+        boton.style.backgroundColor = "red";
     }
 };
 
@@ -132,9 +158,19 @@ function scroll_sincro() {
     socket.emit('scroll_sincro');
 };
 
-function impro() {
-    socket.emit('impro', impro_estado);
-    impro_estado = !impro_estado;
+function fin(player) {
+    if(player == 1){
+        fin_j1 = true
+    }
+    else if(player == 2){
+        fin_j2 = true
+    }
+    if(fin_j1 && fin_j2){
+        fin_j1 = false;
+        fin_j2 = false;
+        final();
+    }
+    socket.emit('fin_de_control', player);
 };
 
 function cambiar_vista() {
@@ -209,9 +245,23 @@ function pausar(){
     socket.emit('pausar', '');
 }
 
+function pausar_reanudar(boton){
+    console.log(boton)
+    if(boton.value == 0){
+        boton.value = 1;
+        pausar();
+        span_pausar_reanudar.innerHTML = "▶️ REANUDAR";
+        }
+    else{
+        boton.value = 0;
+        reanudar();
+        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+    }
+}
+
 function reanudar(){
     element = document.querySelector('#tiempo');
-    socket.emit('count', count);
+    socket.emit('count', count, secondsPassed);
     startCountDown(secondsRemaining, element);
     socket.emit('reanudar', '');
 }
@@ -296,3 +346,12 @@ const extractData = (tableId, mapper) => {
       return data.map(mapper);
     }
   };
+
+function final(){
+    clearInterval(countInterval);
+    tiempo.style.color = "white"
+    document.getElementById("tiempo").innerHTML = "¡Tiempo!";
+    count = "¡Tiempo!";
+    socket.emit('count', {count, secondsPassed});
+    setTimeout(descargar_textos, 5000);
+}

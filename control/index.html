@@ -26,27 +26,6 @@
                                                                                                 
         </pre>
     </div>
-    <br>
-    <h3><b><u>CLASIFICACIÓN</u></b></h3>
-    <table id="clasificacion">
-        <tr>
-          <th>ESCRITXR</th>
-          <th>PUNTUACIÓN</th>
-        </tr>
-        <tr>
-          <td contenteditable="false">DAVID</td>
-          <td contenteditable="false">5</td>
-          <td><input type="button" value="❌" onclick="deleteRow(this)"></td>
-          <td><input type="button" value="✏️" onclick="editableRow(this)"></td>
-        </tr>
-        <tr>
-            <td contenteditable="false">ÁNGELA</td>
-            <td contenteditable="false">1</td>
-            <td><input type="button" value="❌" onclick="deleteRow(this)"></td>
-            <td><input type="button" value="✏️" onclick="editableRow(this)"></td>
-          </tr>
-      </table>
-      <br>
     <div align="center">
         <table class="default">
             <tr>
@@ -165,22 +144,29 @@
             <tr>
                 <td>
                     <div align="center">
-                        <button onclick="reanudar()" class="bn54">
-                            <span class="bn54span">▶️ REANUDAR</span>
+                        <button id="boton_borrar" onclick="borrar(this)" class="bn54">
+                            <span class="bn54span">🧼 BORRAR</span>
                         </button>
                     </div>
                 </td>
                 <td>
                     <div align="center">
-                        <button onclick="pausar()" class="bn54">
-                            <span class="bn54span">⏸️ PAUSAR</span>
+                        <button id="boton_pausar_reanudar" value=0 onclick="pausar_reanudar(this)" class="bn54">
+                            <span id="pausar_reanudar" class="bn54span">▶️ PAUSAR</span>
                         </button>
                     </div>
                 </td>
                 <td>
                     <div align="center">
-                        <button onclick="impro()" class="bn54">
-                            <span class="bn54span">🎭 IMPRO</span>
+                        <button onclick="fin(1)" class="bn54">
+                            <span class="bn54span">👾 FIN J1</span>
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <div align="center">
+                        <button onclick="fin(2)" class="bn54">
+                            <span class="bn54span">👾 FIN J2</span>
                         </button>
                     </div>
                 </td>
@@ -191,7 +177,13 @@
                         </button>
                     </div>
                 </td>         
-    <td></td>
+    <td>
+        <div align="center">
+            <button onclick="descargar_textos()" class="bn54">
+                <span class="bn54span">💾 DESCARGAR TEXTO</span>
+            </button>
+        </div>
+    </td>
     </div>
     </tr>
     </table>
@@ -199,34 +191,16 @@
     <br>
     <div id="contenedor">
         <div>
-            <table class="modificadores">
-                <tr>
-                    <td><input type="checkbox" id="tiempo_borrado_menos1"></td>
-                    <td><input type="checkbox" id="tiempo_borrado_más1"></td>
-                    <td><input type="checkbox" id="tiempo_muerto1"></td>
-                    <td><input type="checkbox" id="borroso1"></td>
-                    <td><input type="checkbox" id="inverso1"></td>
-                </tr>
-                <tr>
-                    <td>🐢</td>
-                    <td>⚡</td>
-                    <td>⌛</td>
-                    <td>🌫️</td>
-                    <td>🙃</td>
-                </tr>
-            </table>
             <br>
-            <input id="votos" class="votos" type="number" min="0" value="0" /> <b style="font-size: 18pt">Votos 🗳️</b>
+            <input style="color:aqua" id="nombre" class="nombre" value="ESCRITXR 1"></input>
             <br><br>
-            <input id="nombre" class="nombre" value="ESCRITXR 1"></input>
-            <br><br>
-            <textarea disabled id="texto" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
+            <textarea disabled id="texto" cols="40" rows="5" spellcheck="false"
                 oninput="auto_grow(this)" onkeyup="countChars(this);" onkeydown="countChars(this);"></textarea>
             <br><br>
             <div align="center">
                 <table class="right">
                     <tr>
-                        <th id="puntos">0 puntos</th>
+                        <th id="puntos">0 palabras</th>
                         <th id="nivel">nivel 0</th>
                     </tr>
                 </table>
@@ -235,35 +209,17 @@
             </div>
         </div>
         <div>
-            <table class="modificadores">
-                <tr>
-                    <td><input type="checkbox" id="tiempo_borrado_menos2"></td>
-                    <td><input type="checkbox" id="tiempo_borrado_más2"></td>
-                    <td><input type="checkbox" id="tiempo_muerto2"></td>
-                    <td><input type="checkbox" id="borroso2"></td>
-                    <td><input type="checkbox" id="inverso2"></td>
-                </tr>
-                <tr>
-                    <td>🐢</td>
-                    <td>⚡</td>
-                    <td>⌛</td>
-                    <td>🌫️</td>
-                    <td>🙃</td>
-                </tr>
-            </table>
             <br>
-            <input id="votos1" class="votos" type="number" min="0" value="0" /> <b style="font-size: 18pt">Votos 🗳️</b>
+            <input style="color:red" id="nombre1" class="nombre" value="ESCRITXR 2"></input>
             <br><br>
-            <input id="nombre1" class="nombre" value="ESCRITXR 2"></input>
-            <br><br>
-            <textarea disabled id="texto1" cols="40" rows="5" placeholder="Comienza a escribir..." spellcheck="false"
+            <textarea disabled id="texto1" cols="40" rows="5" spellcheck="false"
                 oninput="auto_grow1(this)" onkeyup="countChars1(this);" onkeydown="countChars1(this);">
         </textarea>
             <br><br>
             <div align="center">
                 <table class="right">
                     <tr>
-                        <th id="puntos1">0 puntos</th>
+                        <th id="puntos1">0 palabra</th>
                         <th id="nivel1">nivel 0</th>
                     </tr>
                 </table>
