@@ -55,7 +55,8 @@ let tempo_text_inverso;
 
 // Variables de los modos.
 let modo_actual = "";
-let modo_texto_borroso = false;
+let putada_actual = "";
+let modo_texto_borroso = 0;
 let desactivar_borrar = false;
 
 var letra_prohibida = "";
@@ -141,6 +142,7 @@ const PUTADAS = {
     },
 
     "🙃": function () {
+        tiempo_inicial = new Date();
         desactivar_borrar = true;
         texto1.value =
             texto1.value
@@ -161,19 +163,20 @@ const PUTADAS = {
                     .split(" ")
                     .reverse()
                     .join(" ");
+            putada_actual = ""
         }, TIEMPO_INVERSO);
     },
 
     "🌫️": function () {
         //activar_socket_feedback();
-        modo_texto_borroso = true;
+        modo_texto_borroso = 1;
         tiempo_inicial = new Date();
         if(es_pausa == false){
-            console.log("borroso");
             texto1.classList.add("textarea_blur");
             tempo_text_borroso = setTimeout(function () {
                 temp_text_borroso_activado = true;
                 texto1.classList.remove("textarea_blur");
+                putada_actual = "";
             }, TIEMPO_BORROSO);
         }
         else{
@@ -201,6 +204,19 @@ const VENTAJAS = {
     },
 
     "🌫️": function () {
+        modo_texto_borroso = 2;
+        tiempo_inicial = new Date();
+        console.log(tiempo_inicial)
+        if(es_pausa == false){
+            texto2.classList.add("textarea_blur");
+            tempo_text_borroso = setTimeout(function () {
+                temp_text_borroso_activado = true;
+                texto2.classList.remove("textarea_blur");
+            }, TIEMPO_BORROSO);
+        }
+        else{
+            modo_borroso_pausa(TIEMPO_BORROSO);
+        }
         enviar_putada('🌫️');
     },
 };
@@ -249,7 +265,6 @@ const MODOS = {
     },
 
     "texto borroso": function (data) {
-        modo_texto_borroso = true;
         tiempo_inicial = new Date();
         duracion = data.duracion;
         if(es_pausa == false){
@@ -292,7 +307,6 @@ const LIMPIEZAS = {
     },
 
     "borroso": function (data) {
-        modo_texto_borroso = false;
         texto1.classList.remove("textarea_blur");
         //texto2.classList.remove("textarea_blur");
     },
@@ -461,6 +475,8 @@ socket.on("limpiar", (data) => {
     texto2.rows = "1";
 
     modo_actual = "";
+    putada_actual = "";
+
 
     //nombre1.value = "ESCRITXR 1";
     //nombre2.value = "ESCRITXR 2";
@@ -492,7 +508,10 @@ socket.on("activar_modo", (data) => {
 });
 
 socket.on(enviar_palabra, data => {
-    recibir_palabra(data);
+    if(modo_actual == "palabras bonus"){
+        console.log("ESTO ESTÁ MAAAAAL")
+        recibir_palabra(data);
+    }
 });
 
 socket.on('pausar_js', data => {
@@ -500,7 +519,7 @@ socket.on('pausar_js', data => {
     LIMPIEZAS[modo_actual](data);
     clearTimeout(tempo_text_borroso);
     clearTimeout(tempo_text_inverso);
-    tiempo_restante = duracion - (new Date().getTime() - tiempo_inicial.getTime());
+    tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
     pausa();
 });
 
@@ -518,6 +537,7 @@ socket.on('reanudar_js', data => {
 
 socket.on(enviar_putada_de_jx, data => {
     console.log(data)
+    putada_actual = data;
     PUTADAS[data]()
     feedback2.innerHTML = data;
     clearTimeout(delay_animacion);
@@ -574,6 +594,7 @@ function recibir_palabra(data) {
     definicion1.innerHTML = data.palabra_bonus[1];
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     indice_buscar_palabra = texto1.value.length - 5;
+    texto1.removeEventListener("keyup", listener_modo1);
     texto1.removeEventListener("keyup", listener_modo);
     listener_modo = function () { modo_palabras_bonus() };
     texto1.addEventListener("keyup", listener_modo);
@@ -990,7 +1011,7 @@ function limpieza(){
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
     
     // Desactiva, por seguridad, todos los modos.
-    modo_texto_borroso = false;
+    modo_texto_borroso = 0;
     desactivar_borrar = false;
 
     puntos1.style.color = "white";
@@ -1013,7 +1034,10 @@ function limpieza(){
 
     caracteres_seguidos = 0;
     
-    LIMPIEZAS["psicodélico"]("");
+    for (let key in LIMPIEZAS) { 
+        console.log(key)
+        LIMPIEZAS[key]();
+    }
 
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
@@ -1044,7 +1068,7 @@ function limpieza_final(){
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
     
     // Desactiva, por seguridad, todos los modos.
-    modo_texto_borroso = false;
+    modo_texto_borroso = 0;
     desactivar_borrar = false;
 
     tiempo.style.color = "white"
@@ -1069,7 +1093,37 @@ function pausa(){
     texto1.disabled= true;
 
     clearTimeout(borrado);
+    if(putada_actual == "🌫️"){
+        if (modo_texto_borroso == 1) {
+            texto1.classList.remove("textarea_blur");
+        }
+        else if (modo_texto_borroso == 2) {
+            texto2.classList.remove("textarea_blur");
+
+        }
+    }
     
+    else if(putada_actual == "🙃"){
+        console.log("PUTAAAAAAAAAA", putada_actual)
+        desactivar_borrar = false;
+        desactivar_borrar = true;
+        texto1.value =
+            texto1.value
+                .split("")
+                .reverse()
+                .join("")
+                .split(" ")
+                .reverse()
+                .join(" ")
+                .split("")
+                    .reverse()
+                    .join("")
+                    .split(" ")
+                    .reverse()
+                    .join(" ");
+                    
+        modo_inverso_pausa()
+    }
 
     //restablecer_estilo();
 }
@@ -1080,14 +1134,49 @@ function reanudar(){
     texto1.disabled = false;
 
     clearTimeout(borrado);
+    if(putada_actual == "🌫️"){
+        modo_borroso_pausa(TIEMPO_BORROSO);
+    }
     
+    else if(putada_actual == "🙃"){
+        modo_inverso_pausa()
+    }
     //restablecer_estilo();
     texto1.focus();
 }
 
 function modo_borroso_pausa(data){
+    console.log(tiempo_restante)
     if(tiempo_restante > 0){
         modo_borroso(data);
+    }
+}
+
+function modo_inverso_pausa(){
+    console.log(tiempo_restante)
+    if(tiempo_restante > 0){
+        desactivar_borrar = true;
+        texto1.value =
+            texto1.value
+                .split("")
+                .reverse()
+                .join("")
+                .split(" ")
+                .reverse()
+                .join(" ");
+        tempo_text_inverso = setTimeout(function () {
+            temp_text_inverso_activado = true;
+            desactivar_borrar = false;
+            texto1.value =
+                texto1.value
+                    .split("")
+                    .reverse()
+                    .join("")
+                    .split(" ")
+                    .reverse()
+                    .join(" ");
+            putada_actual = ""
+        }, TIEMPO_INVERSO);
     }
 }
 
@@ -1123,41 +1212,23 @@ function inverso(){
 }
 
 function modo_borroso(data){
-    if (data.jugador == 1) {
-        if(player == 1){
+    if (modo_texto_borroso == 1) {
         texto1.classList.add("textarea_blur");
         tempo_text_borroso = setTimeout(function () {
             temp_text_borroso_activado = true;
             texto1.classList.remove("textarea_blur");
-            texto2.classList.add("textarea_blur");
-        }, data.duracion);
-        }
-        else{
-            texto2.classList.add("textarea_blur");
-            tempo_text_borroso = setTimeout(function () {
-                temp_text_borroso_activado = true;
-                texto2.classList.remove("textarea_blur");
-                texto1.classList.add("textarea_blur");
-            }, data.duracion);
-        }
+            modo_texto_borroso = 0
+            putada_actual = ""
+        }, data);   
     }
-    if (data.jugador == 2) {
-        if(player == 2){
-            texto1.classList.add("textarea_blur");
-            tempo_text_borroso = setTimeout(function () {
-                temp_text_borroso_activado = true;
-                texto1.classList.remove("textarea_blur");
-                texto2.classList.add("textarea_blur");
-            }, data.duracion);
-            }
-        else{
-            texto2.classList.add("textarea_blur");
-            tempo_text_borroso = setTimeout(function () {
-                temp_text_borroso_activado = true;
-                texto2.classList.remove("textarea_blur");
-                texto1.classList.add("textarea_blur");
-                }, data.duracion);
-            }
+    if(modo_texto_borroso == 2){
+        texto2.classList.add("textarea_blur");
+        tempo_text_borroso = setTimeout(function () {
+            temp_text_borroso_activado = true;
+            texto2.classList.remove("textarea_blur");
+            modo_texto_borroso = 0
+            putada_actual = "";
+        }, data);
     }
 }
 
@@ -1190,6 +1261,7 @@ function final(){
     limpieza_final();
     
     modo_actual = "";
+    putada_actual = "";
     activar_sockets_extratextuales();
     /*texto1.value = texto1.value.substring(
         saltos_línea_alineacion_1,

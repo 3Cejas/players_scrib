@@ -48,8 +48,9 @@ var player = getParameterByName("player");
         recibir_postgame_x = 'recibir_postgame1';
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
-        elegir_ventaja = "elegir_ventaja_j1";  
-    
+        elegir_ventaja = "elegir_ventaja_j1";
+        nombre1.style="color:aqua"
+
     } else if (player == 2) {
         console.log(nombre1.value)
         enviar_putada_de_jx = 'enviar_putada_de_j1';
@@ -60,7 +61,8 @@ var player = getParameterByName("player");
         recibir_postgame_x = 'recibir_postgame2';
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
-        elegir_ventaja = "elegir_ventaja_j2";  
+        elegir_ventaja = "elegir_ventaja_j2"; 
+        nombre1.style="color:red" 
     }
 
 // Se establece la conexión con el servidor.

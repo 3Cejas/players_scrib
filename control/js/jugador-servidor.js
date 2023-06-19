@@ -56,7 +56,7 @@ let postgame1;
 let postgame2;
 
 const DURACION_TIEMPO_MUERTO = 60000;
-const DURACION_TIEMPO_MODOS = 20;
+const DURACION_TIEMPO_MODOS = 300;
 
 let val_nombre1 = nombre1.value.toUpperCase();
 socket.emit('envío_nombre1', val_nombre1);
