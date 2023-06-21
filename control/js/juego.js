@@ -20,6 +20,7 @@ function startCountDown(duration, element) {
     let min;
     let sec;
 
+    clearInterval(countInterval);
     countInterval = setInterval(function () {
         secondsPassed++;
         console.log(secondsPassed)
@@ -259,11 +260,29 @@ function pausar_reanudar(boton){
     }
 }
 
+
 function reanudar(){
     element = document.querySelector('#tiempo');
     socket.emit('count', count, secondsPassed);
     startCountDown(secondsRemaining, element);
     socket.emit('reanudar', '');
+}
+
+function reanudar_modo(){
+    element = document.querySelector('#tiempo');
+    console.log(count, secondsPassed, secondsRemaining, element)
+    duration = secondsRemaining;
+    console.log(time_minutes, time_seconds)
+    
+    if(boton_pausar_reanudar.value == 1){
+        boton_pausar_reanudar.value = 0;
+        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+    }
+    secondsPassed = 0;
+    socket.emit('count', {count, secondsPassed});
+
+    startCountDown(duration, element);
+    socket.emit('reanudar_modo', '');
 }
 function sortTable() {
     var table, rows, switching, i, x, y, shouldSwitch;

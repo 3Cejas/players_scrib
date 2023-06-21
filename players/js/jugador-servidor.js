@@ -286,6 +286,13 @@ const MODOS = {
             stylize();
         });*/
     },
+
+    'tertulia': function (socket) {
+        //activar_socket_feedback();
+        explicación.style.color = "blue";
+        explicación.innerHTML = "MODO TERTULIA";
+    },
+
     "": function (data) { },
 };
 
@@ -334,7 +341,9 @@ const LIMPIEZAS = {
     },
 
     "tiempo_borrado_más": function (data){ },
-
+    
+    "tertulia": function (data) { },
+    
     "": function (data) { },
 };
 

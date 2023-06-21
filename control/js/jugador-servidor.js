@@ -55,8 +55,10 @@ let tempo_text_borroso;
 let postgame1;
 let postgame2;
 
-const DURACION_TIEMPO_MUERTO = 60000;
-const DURACION_TIEMPO_MODOS = 300;
+const DURACION_TIEMPO_MODOS = 60;
+const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
+const TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
+
 
 let val_nombre1 = nombre1.value.toUpperCase();
 socket.emit('envío_nombre1', val_nombre1);
@@ -91,7 +93,10 @@ socket.on('count', data => {
 
 socket.on('tiempo_muerto_control', data => {
   pausar();
-  setTimeout(reanudar, DURACION_TIEMPO_MUERTO);
+  setTimeout(function(){
+    secondsPassed = TIEMPO_CAMBIO_MODOS;
+    reanudar_modo();
+  }, TIEMPO_CAMBIO_MODOS);
 });
 
 nombre1.addEventListener("input", evt => {
