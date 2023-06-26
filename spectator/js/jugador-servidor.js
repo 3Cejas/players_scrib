@@ -283,7 +283,7 @@ socket.on("count", data => {
     tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
 
-        confetti_aux();
+        //confetti_aux();
         LIMPIEZAS[modo_actual](data);
         
         limpiezas_final();
@@ -511,6 +511,11 @@ socket.on('feedback_a_j1', data => {
 socket.on('recibir_comentario', data => {
     tema.innerHTML = data;
 });
+
+socket.on('fin', data => {
+        confetti_aux();
+});
+
 
 //FUNCIONES AUXILIARES.
 
@@ -859,7 +864,10 @@ function limpiezas(){
     focalizador1.innerHTML = "";
     focalizador2.innerHTML = "";
 
-    LIMPIEZAS["psicodélico"]("");
+    for (let key in LIMPIEZAS) { 
+        console.log(key)
+        LIMPIEZAS[key]();
+    }
 
     clearTimeout(tempo_text_borroso);
 

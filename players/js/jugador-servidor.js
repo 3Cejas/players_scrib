@@ -65,9 +65,9 @@ let listener_modo;
 let listener_modo1;
 let listener_modo_psico;
 let activado_psico = false;
-const TIEMPO_INVERSO = 30000;
-const TIEMPO_BORROSO = 30000;
-const TIEMPO_BORRADO = 30000;
+const TIEMPO_INVERSO = 60000;
+const TIEMPO_BORROSO = 60000;
+const TIEMPO_BORRADO = 60000;
 
 function getParameterByName(name, url) {
 if (!url) url = window.location.href;
@@ -291,6 +291,21 @@ const MODOS = {
         //activar_socket_feedback();
         explicación.style.color = "blue";
         explicación.innerHTML = "MODO TERTULIA";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+    },
+
+    'palabras prohibidas': function (data) {
+        //activar_socket_feedback();
+        palabra1.style.backgroundColor = "pink";
+        explicación.style.color = "pink";
+        explicación.innerHTML = "MODO PALABRAS PROHIBIDAS";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        socket.emit("nueva_palabra_prohibida", player);
+        socket.on(enviar_palabra, data => {
+            recibir_palabra_prohibida(data);
+        });
     },
 
     "": function (data) { },
@@ -343,6 +358,13 @@ const LIMPIEZAS = {
     "tiempo_borrado_más": function (data){ },
     
     "tertulia": function (data) { },
+
+    "palabras prohibidas": function (data) {
+        socket.off(enviar_palabra);
+        asignada = false;
+        texto1.removeEventListener("keyup", listener_modo);
+    },
+
     
     "": function (data) { },
 };
@@ -427,9 +449,12 @@ socket.on("count", (data) => {
     if (data.count == "¡Tiempo!") {
         texto_guardado1 = texto1.value;
         texto_guardado2 = texto2.value;
-        texto1.value = "";
-        texto2.value = "";
         final();
+        setTimeout(function () {
+            texto1.value = "";
+            texto2.value = "";
+            sendText();
+            }, 2000);
     }
     /*else {
         LIMPIEZAS["psicodélico"]("");
@@ -594,6 +619,22 @@ socket.on(enviar_ventaja, ventaja => {
         }, 2000);
     }); 
 });
+
+socket.on("nueva letra", letra => {
+    console.log("NUEVA LETRA")
+    if(modo_actual == "letra prohibida"){
+        letra_prohibida = letra;
+        }
+    else if(modo_actual == "letra bendita"){
+        letra_bendita = letra;
+    }
+    texto1.removeEventListener("keyup", listener_modo);
+    listener_modo = function (e) { modo_letra_bendita(e) };
+    texto1.addEventListener("keyup", listener_modo);
+    animacion_palabra();
+    palabra1.innerHTML = "LETRA BENDITA: " + letra_bendita;
+});
+
 function recibir_palabra(data) {
     console.log("PEN",data)
     animacion_modo();
@@ -602,10 +643,23 @@ function recibir_palabra(data) {
     palabra1.innerHTML = "(⏱️+" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
     definicion1.innerHTML = data.palabra_bonus[1];
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
-    indice_buscar_palabra = texto1.value.length - 5;
     texto1.removeEventListener("keyup", listener_modo1);
     texto1.removeEventListener("keyup", listener_modo);
-    listener_modo = function () { modo_palabras_bonus() };
+    listener_modo = function (e) { modo_palabras_bonus(e) };
+    texto1.addEventListener("keyup", listener_modo);
+}
+
+function recibir_palabra_prohibida(data) {
+    console.log("PEN",data)
+    animacion_modo();
+    asignada = true;
+    palabra_actual = data.palabra_bonus[0];
+    palabra1.innerHTML = "(⏱️-" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
+    definicion1.innerHTML = data.palabra_bonus[1];
+    tiempo_palabras_bonus = data.tiempo_palabras_bonus;
+    texto1.removeEventListener("keyup", listener_modo1);
+    texto1.removeEventListener("keyup", listener_modo);
+    listener_modo = function (e) { modo_palabras_prohibidas(e) };
     texto1.addEventListener("keyup", listener_modo);
 }
 
@@ -632,6 +686,11 @@ function activar_sockets_extratextuales() {
 
     //Recibe los temas (que elige Espectador) y los coloca en su sitio.
     socket.on("recibe_temas", (data) => {
+        temas.innerHTML = data;
+    });
+    
+    socket.on("recibir_comentario", (data) => {
+        console.log(data)
         temas.innerHTML = data;
     });
 
@@ -723,6 +782,27 @@ function animacion_modo() {
     animateCSS(".definicion", "bounceInLeft");
 }
 
+function animacion_palabra() {
+    const animateCSS = (element, animation, prefix = "animate__") =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve("Animation ended");
+            }
+
+            node.addEventListener("animationend", handleAnimationEnd, { once: true });
+        });
+    animateCSS(".palabra", "bounceInLeft");
+}
+
 // Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
 function restablecer_estilo() {
     //texto1.style.fontFamily = "monospace";
@@ -759,12 +839,33 @@ function crear_n_saltos_de_linea(n) {
 }
 
 //Función auxiliar que comprueba que se inserta la palabra bonus.
-function modo_palabras_bonus() {
+function modo_palabras_bonus(e) {
+    console.log(e)
     console.log(palabra_actual)
     if (asignada == true) {
+            e.preventDefault();
+            let endingIndex = e.target.selectionStart;
+            let startingIndex = endingIndex && endingIndex - 1;
+            let value = e.target.value;
+            // putt all delemeters in it by which word can be splitted
+            let regex = /[ ]/;
+        
+            while(startingIndex > -1){
+              if(regex.test(value[startingIndex])){
+                ++startingIndex;
+                break;
+              }
+              --startingIndex;
+            }
+        
+            // note you will have you apply check to avoid negative index
+            if(startingIndex < 0) {
+                startingIndex = 0;
+            }
+            console.log(value.substring(startingIndex, endingIndex));
         if (
             palabra_actual.some(palabra => texto1.value
-                .substring(indice_buscar_palabra, texto1.value.length)
+                .substring(startingIndex, endingIndex)
                 .toLowerCase().includes(palabra.toLowerCase()))
             ) {
             //var $div = $('#texto');
@@ -783,6 +884,73 @@ function modo_palabras_bonus() {
             });
             color = color_positivo;
             tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
+            socket.emit(feedback_de_j_x, { color, tiempo_feed});
+            //puntos_palabra += puntuacion;
+            //puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
+            cambiar_color_puntuación();
+            /*puntos1.innerHTML = puntos + " puntos";
+            feedback1.style.color = color_positivo;
+            feedback1.innerHTML = "+" + puntuacion + " pts";
+            color = color_positivo;
+            envio_puntos = "+" + puntuacion;
+            socket.emit(feedback_de_j_x, { color, envio_puntos });
+            clearTimeout(delay_animacion);
+            animateCSS(".feedback1", "bounceInLeft").then(() => {
+                delay_animacion = setTimeout(function () {
+                    feedback1.innerHTML = "";
+                }, 2000);
+            });*/
+        }
+    }
+}
+
+function modo_palabras_prohibidas(e) {
+    console.log(e)
+    console.log(palabra_actual)
+    if (asignada == true) {
+            e.preventDefault();
+            let endingIndex = e.target.selectionStart;
+            let startingIndex = endingIndex && endingIndex - 1;
+            let value = e.target.value;
+            // putt all delemeters in it by which word can be splitted
+            let regex = /[ ]/;
+        
+            while(startingIndex > -1){
+              if(regex.test(value[startingIndex])){
+                ++startingIndex;
+                break;
+              }
+              --startingIndex;
+            }
+        
+            // note you will have you apply check to avoid negative index
+            if(startingIndex < 0) {
+                startingIndex = 0;
+            }
+            console.log(value.substring(startingIndex, endingIndex));
+        if (
+            palabra_actual.some(palabra => texto1.value
+                .substring(startingIndex, endingIndex)
+                .toLowerCase().includes(palabra.toLowerCase()))
+            ) {
+            //var $div = $('#texto');
+            //$div.highlight(palabra_actual);
+            texto1.focus();
+            asignada = false;
+            console.log("AHORAAAAAAAAAAAA", palabra_actual);
+            socket.emit("nueva_palabra_prohibida", player);
+            tiempo_palabras_bonus = -tiempo_palabras_bonus;
+            socket.emit('aumentar_tiempo', tiempo_palabras_bonus);
+            feedback1.style.color = color_negativo;
+            feedback1.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
+            clearTimeout(delay_animacion);
+            animateCSS(".feedback1", "flash").then((message) => {
+                delay_animacion = setTimeout(function () {
+                    feedback1.innerHTML = "";
+                }, 2000);
+            });
+            color = color_negativo;
+            tiempo_feed = "⏱️-" + tiempo_palabras_bonus + " segs.";
             socket.emit(feedback_de_j_x, { color, tiempo_feed});
             //puntos_palabra += puntuacion;
             //puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;

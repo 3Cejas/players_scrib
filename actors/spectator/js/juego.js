@@ -16,6 +16,33 @@ document.addEventListener('keydown', function (event) {
   }
 });
 
+document.addEventListener('click', function(event) {
+  texto1.focus();
+  if (event.button === 0) {
+    if (isFullscreen) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      }
+      isFullscreen = false;
+    } else {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      } else if (document.documentElement.mozRequestFullScreen) {
+        document.documentElement.mozRequestFullScreen();
+      }
+      isFullscreen = true;
+      texto1.focus();
+    }
+  }
+
+});
+
 function smoothScrollBy(value) {
   window.scrollBy({
       top: value,
@@ -44,7 +71,7 @@ const animateCSS = (element, animation, prefix = "animate__") =>
 //Función auxiliar que envía una palabra al servidor.
 function enviarPalabra() {
   if(palabra.value != '' && palabra.value != null){
-    if((modo_actual == "letra prohibida" && !toNormalForm(palabra.value.toLowerCase()).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(palabra.value.toLowerCase()).includes(letra)) || modo_actual == "palabras bonus" || modo_actual == "palabras prohibidas" ||  letra == 'ñ' && palabra.value.toLowerCase().includes('ñ') || letra == 'n' && modo_actual == "letra prohibida" && palabra.value.toLowerCase().includes('ñ') && !palabra.value.toLowerCase().includes(letra)){
+    if((modo_actual == "letra prohibida" && !toNormalForm(palabra.value.toLowerCase()).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(palabra.value.toLowerCase()).includes(letra)) || modo_actual == "palabras bonus" || letra == 'ñ' && palabra.value.toLowerCase().includes('ñ') || letra == 'n' && modo_actual == "letra prohibida" && palabra.value.toLowerCase().includes('ñ') && !palabra.value.toLowerCase().includes(letra)){
     inspiracion = palabra.value.trim();
     socket.emit('enviar_inspiracion', inspiracion);
     palabra.value = "";

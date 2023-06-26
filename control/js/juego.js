@@ -40,7 +40,7 @@ function startCountDown(duration, element) {
             tiempo.style.color = "red"
         }
         secondsRemaining = secondsRemaining - 1;
-        if (secondsRemaining < 0) {
+        if (secondsRemaining <= 0) {
             final();
         };
 
@@ -49,7 +49,9 @@ function startCountDown(duration, element) {
 
 function addSeconds(secs) {
     secondsRemaining += secs;
-
+    if(secondsRemaining < 0){
+        secondsRemaining = 0;
+    }  
     min = parseInt(secondsRemaining / 60);
     sec = parseInt(secondsRemaining % 60);
 

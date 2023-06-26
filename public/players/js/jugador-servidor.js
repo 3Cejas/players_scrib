@@ -94,6 +94,11 @@ socket.on('modo_actual', (data) => {
     if(modo_actual == "palabras bonus"){
         pedir_inspiracion({modo_actual})
     }
+
+    if(modo_actual == "palabras prohibidas"){
+        pedir_inspiracion({modo_actual})
+    }
+
     sincro = 0;
     }
 });
@@ -229,7 +234,7 @@ socket.on(nombre, data => {
 
 socket.on(elegir_ventaja, () => {
     votando = true;
-    tarea.innerHTML = "<p>¡Tu escritor está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '⌛' onclick='elegir_ventaja_publico(this)'>⌛</button><button class='btn' value = '🌫️' onclick='elegir_ventaja_publico(this)'>🌫️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button>"
+    tarea.innerHTML = "<p>¡Tu escritor está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '🌫️' onclick='elegir_ventaja_publico(this)'>🌫️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button><br><br><p style='font-size: 3.5vw;'>⚡ El videojuego borrará más rápido el texto del contrincante.<br><br>🙃 El texto se volverá un espejo para el contrincante.<br><br>🌫️ Una pesada bruma caerá sobre el texto del contrincante.</p>"
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
@@ -253,7 +258,19 @@ function pedir_inspiracion(juego){
     if(juego.modo_actual == "letra prohibida") {
         letra = juego.letra_prohibida;
         tarea.innerHTML = "Cantame a mí, <span style='color: orange;'>Musa</span>, una palabra que no lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
-    }    
+    }
+
+    if(juego.modo_actual == "palabras prohibidas"){
+        tarea.innerHTML = "<span style='color: pink;'>Incordia</span> a mi oponente, <span style='color: orange;'>Musa</span>, con una palabra que no pueda usar:";
+    } 
+
+    if(juego.modo_actual == "tertulia") {
+        campo_palabra.value = "none";
+        enviarPalabra_boton.style.display = "none";
+        campo_palabra.style.display = "none";
+        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, mira a " + "<span style='color:" + nombre1.style.color + ";'>" +  nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
+    }
+     
     notificacion.style.display = "block";
     animateCSS(".notificacion", "flash");
     fin_pag.scrollIntoView({behavior: "smooth", block: "end"});

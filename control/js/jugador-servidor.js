@@ -55,7 +55,7 @@ let tempo_text_borroso;
 let postgame1;
 let postgame2;
 
-const DURACION_TIEMPO_MODOS = 60;
+const DURACION_TIEMPO_MODOS = 30;
 const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 const TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
 
@@ -96,7 +96,7 @@ socket.on('tiempo_muerto_control', data => {
   setTimeout(function(){
     secondsPassed = TIEMPO_CAMBIO_MODOS;
     reanudar_modo();
-  }, TIEMPO_CAMBIO_MODOS);
+  }, TIEMPO_CAMBIO_MODOS * 1000);
 });
 
 nombre1.addEventListener("input", evt => {
