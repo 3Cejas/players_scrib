@@ -30,6 +30,7 @@ let explicación = getEl("explicación");
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 let temas = getEl("temas");
+let lightning = getEl("lightning");
   
 // COMPONENTES DEL JUGADOR 2
 let nombre2;
@@ -134,7 +135,15 @@ const PUTADAS = {
         antiguo_inicio_borrado = rapidez_inicio_borrado;
         rapidez_borrado = 1200;
         rapidez_inicio_borrado = 1200;
+        document.body.classList.add("bg");
+        document.body.classList.add("rain");
+        lightning.classList.add("lightning");
+        lightning.style.right = "45%";
+        lightning.style.left = "0%";
         setTimeout(function () {
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+            lightning.classList.remove("lightning");
             borrado_cambiado = false;
             rapidez_borrado = antiguo_rapidez_borrado;
             rapidez_inicio_borrado = antiguo_inicio_borrado;
@@ -144,6 +153,7 @@ const PUTADAS = {
     "🙃": function () {
         tiempo_inicial = new Date();
         desactivar_borrar = true;
+        texto1.classList.add("rotate-vertical-center");
         texto1.value =
             texto1.value
                 .split("")
@@ -192,6 +202,16 @@ const VENTAJAS = {
         enviar_putada('🐢');
     },
     "⚡": function () {
+        document.body.classList.add("bg");
+        document.body.classList.add("rain");
+        lightning.classList.add("lightning");
+        lightning.style.right = "0%";
+        lightning.style.left = "45%";
+        setTimeout(function () {
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+            lightning.classList.remove("lightning");
+        }, TIEMPO_BORRADO);
         enviar_putada('⚡');
     },
 
@@ -200,6 +220,7 @@ const VENTAJAS = {
         enviar_putada('⌛');
     },
     "🙃": function () {
+        texto2.classList.add("rotate-vertical-center");
         enviar_putada('🙃');
     },
 
@@ -511,6 +532,7 @@ socket.on("limpiar", (data) => {
     modo_actual = "";
     putada_actual = "";
 
+    temas.innerHTML = "";
 
     //nombre1.value = "ESCRITXR 1";
     //nombre2.value = "ESCRITXR 2";
@@ -610,6 +632,7 @@ socket.on(inspirar, palabra => {
 });
 
 socket.on(enviar_ventaja, ventaja => {
+    console.log("AAAAAASFDSDSDSFDSFDSDSFDSFDDSDSDSFDSDSFDDSDSFDSFDSFDSFDFDFDDFSSDF")
     console.log("ventaja", ventaja)
     VENTAJAS[ventaja]();
     feedback1.innerHTML = ventaja;
@@ -654,7 +677,7 @@ function recibir_palabra_prohibida(data) {
     animacion_modo();
     asignada = true;
     palabra_actual = data.palabra_bonus[0];
-    palabra1.innerHTML = "(⏱️-" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
+    palabra1.innerHTML = "(⏱️+" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
     definicion1.innerHTML = data.palabra_bonus[1];
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto1.removeEventListener("keyup", listener_modo1);
@@ -950,7 +973,7 @@ function modo_palabras_prohibidas(e) {
                 }, 2000);
             });
             color = color_negativo;
-            tiempo_feed = "⏱️-" + tiempo_palabras_bonus + " segs.";
+            tiempo_feed = "⏱️" + tiempo_palabras_bonus + " segs.";
             socket.emit(feedback_de_j_x, { color, tiempo_feed});
             //puntos_palabra += puntuacion;
             //puntos = texto1.value.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
@@ -985,7 +1008,7 @@ function palabras_musas() {
             texto1.focus();
             asignada = false;
             feedback1.style.color = "white";
-            feedback1.innerHTML = "+🎨inspiración";
+            feedback1.innerHTML = "+🎨 inspiración";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
@@ -1218,13 +1241,14 @@ function limpieza(){
 
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
-    clearTimeout(tempo_text_borroso);
-    clearTimeout(tempo_text_inverso);
+    //clearTimeout(tempo_text_borroso);
+    //clearTimeout(tempo_text_inverso);
 }
 
 function limpieza_final(){
     texto2.disabled= true;
     
+    temas.innerHTML = "";
     palabra1.innerHTML = "";
     definicion1.innerHTML = "";
     explicación.innerHTML = "";
@@ -1259,7 +1283,7 @@ function limpieza_final(){
 
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
-    clearTimeout(tempo_text_borroso);
+    //clearTimeout(tempo_text_borroso);
 }
 
 function pausa(){
@@ -1371,6 +1395,7 @@ function tiempo_borrado_menos(){
 }
 
 function enviar_putada(putada){
+
     socket.emit("enviar_putada_a_jx", {player, putada});
 }
 

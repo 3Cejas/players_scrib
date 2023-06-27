@@ -55,9 +55,9 @@ let tempo_text_borroso;
 let postgame1;
 let postgame2;
 
-const DURACION_TIEMPO_MODOS = 30;
+let DURACION_TIEMPO_MODOS = 300;
 const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
-const TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
+let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
 
 
 let val_nombre1 = nombre1.value.toUpperCase();
@@ -120,6 +120,13 @@ socket.on("recibir_postgame2", (data) => {
 socket.on("aumentar_tiempo_control", (secs) => {
   addSeconds(secs);
 });
+
+socket.on("locura", () => {
+    socket.emit('enviar_comentario', "🔥 DIFICULTAD MÁXIMA 🔥");
+    DURACION_TIEMPO_MODOS = 30;
+    secondsPassed = 0;
+    TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
+  });
 
 function descargar_textos() {
     var a = document.createElement("a");

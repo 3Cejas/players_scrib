@@ -60,17 +60,18 @@ let jugador_psico;
 let activado_psico = false;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
-
+const TIEMPO_BORRADO = 60000;
 const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         console.log("ALGO")
-        palabra1.style.backgroundColor = "yellow";
         explicación.style.color = "yellow";
         explicación.innerHTML = "MODO PALABRAS BONUS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
+        palabra2.style.backgroundColor = "yellow";
+        palabra3.style.backgroundColor = "yellow";
         definicion2.style.maxWidth = "50%";
         definicion3.innerHTML = "";
         definicion3.style.maxWidth = "50%";
@@ -148,12 +149,39 @@ const MODOS = {
         definicion1.innerHTML = "";
     },
 
+    'palabras prohibidas': function (data) {
+        palabra2.style.backgroundColor = "pink";
+        palabra3.style.backgroundColor = "pink";
+        explicación.style.color = "pink";
+        explicación.innerHTML = "MODO PALABRAS PROHIBIDAS";
+        palabra1.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion2.style.maxWidth = "50%";
+        definicion3.innerHTML = "";
+        definicion3.style.maxWidth = "50%";
+    },
+
+    'tertulia': function (socket) {
+        //activar_socket_feedback();
+        explicación.style.color = "blue";
+        explicación.innerHTML = "MODO TERTULIA";
+        palabra1.innerHTML = "";
+
+    },
+
     '': function (data) {
     }
 };
 
 const LIMPIEZAS = {
-    "palabras bonus": function (data) { },
+    "palabras bonus": function (data) {
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        palabra2.innerHTML = "";
+        palabra3.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion3.innerHTML = "";
+    },
 
     "letra prohibida": function (data) { },
 
@@ -193,6 +221,18 @@ const LIMPIEZAS = {
                 .reverse()
                 .join(" ");
     },
+
+    "palabras prohibidas": function (data) {
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        palabra2.innerHTML = "";
+        palabra3.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion3.innerHTML = "";
+    },
+
+    "tertulia": function (data) { },
+
 
     "": function (data) { },
 };
@@ -351,6 +391,7 @@ socket.on('limpiar', data => {
 
     limpiezas();
 
+    temas.innerHTML = "";
     texto1.style.height = "";
     texto2.style.height = "";
     texto1.rows =  "1";
@@ -437,14 +478,26 @@ function recibir_palabra(data, escritxr) {
         });
 
     if(escritxr == 1){
-        palabra2.innerHTML = "(+" + data.tiempo_palabras_bonus + " pts) palabra: " + data.palabras_var;
+        if(modo_actual == "palabras prohibidas"){
+            signo = "-";
+        }
+        else {
+            signo = "+";
+        }
+        palabra2.innerHTML = "(" + signo + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
         definicion2.innerHTML = data.palabra_bonus[1];
         animateCSS(".explicación1", "bounceInLeft");
         animateCSS(".palabra1", "bounceInLeft");
         animateCSS(".definicion1", "bounceInLeft");
     }
     else{
-        palabra3.innerHTML = "(+" + data.tiempo_palabras_bonus + " pts) palabra: " + data.palabras_var;
+        if(modo_actual == "palabras prohibidas"){
+            signo = "-";
+        }
+        else {
+            signo = "+";
+        }
+        palabra3.innerHTML = "(" + signo + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
         definicion3.innerHTML = data.palabra_bonus[1];
         animateCSS(".explicación2", "bounceInLeft");
         animateCSS(".palabra2", "bounceInLeft");
@@ -452,38 +505,25 @@ function recibir_palabra(data, escritxr) {
     }
 }
 
-socket.on('feedback_a_j2', data => {
-    var feedback = document.querySelector(".feedback1");
-    feedback.style.color = data.color;
-    feedback.innerHTML = "⏱️" + data.tiempo_feed.toString() + " segs.";
-    const animateCSS = (element, animation, prefix = 'animate__') =>
-        // We create a Promise and return it
-        new Promise((resolve, reject) => {
-            const animationName = `${prefix}${animation}`;
-            const node = document.querySelector(element);
+socket.on('enviar_putada_de_j1', data => {
+    if (data == "🙃"){
+        texto2.classList.add("rotate-vertical-center");
+    }
 
-            node.classList.add(`${prefix}animated`, animationName);
-
-            // When the animation ends, we clean the classes and resolve the Promise
-            function handleAnimationEnd(event) {
-                event.stopPropagation();
-                node.classList.remove(`${prefix}animated`, animationName);
-                resolve('Animation ended');
-            }
-
-            node.addEventListener('animationend', handleAnimationEnd, { once: true });
-        });
-    animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-            feedback2.innerHTML = "";
-        }, 2000);
-    });
-});
-
-socket.on('feedback_a_j1', data => {
+    if (data == "⚡"){
+        document.body.classList.add("bg");
+        document.body.classList.add("rain");
+        lightning.classList.add("lightning")
+        lightning.style.right = "0%";
+        lightning.style.left = "45%";
+        setTimeout(function () {
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+            lightning.classList.remove("lightning");
+        }, TIEMPO_BORRADO);
+    }
     var feedback1 = document.querySelector(".feedback2");
-    feedback1.style.color = data.color;
-    feedback1.innerHTML = "⏱️" + data.tiempo_feed.toString() + " segs.";
+    feedback1.innerHTML = data
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
         new Promise((resolve, reject) => {
@@ -503,7 +543,104 @@ socket.on('feedback_a_j1', data => {
         });
     animateCSS(".feedback2", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
-            feedback2.innerHTML = "";
+            feedback1.innerHTML = "";
+        }, 2000);
+    });
+});
+
+socket.on('enviar_putada_de_j2', data => {
+    if (data == "🙃"){
+        texto1.classList.add("rotate-vertical-center");
+    }
+
+    if (data == "⚡"){
+        document.body.classList.add("bg");
+        document.body.classList.add("rain");
+        lightning.classList.add("lightning")
+        setTimeout(function () {
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+            lightning.classList.remove("lightning");
+        }, TIEMPO_BORRADO);
+    }
+    var feedback = document.querySelector(".feedback1");
+    feedback.innerHTML = data;
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
+    animateCSS(".feedback1", "flash").then((message) => {
+        delay_animacion = setTimeout(function () {
+            feedback.innerHTML = "";
+        }, 2000);
+    });
+});
+
+socket.on('feedback_a_j2', data => {
+    var feedback = document.querySelector(".feedback1");
+    feedback.style.color = data.color;
+    feedback.innerHTML = data.tiempo_feed.toString();
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
+    animateCSS(".feedback1", "flash").then((message) => {
+        delay_animacion = setTimeout(function () {
+            feedback.innerHTML = "";
+        }, 2000);
+    });
+});
+
+socket.on('feedback_a_j1', data => {
+    var feedback1 = document.querySelector(".feedback2");
+    feedback1.style.color = data.color;
+    feedback1.innerHTML = data.tiempo_feed.toString();
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
+    animateCSS(".feedback2", "flash").then((message) => {
+        delay_animacion = setTimeout(function () {
+            feedback1.innerHTML = "";
         }, 2000);
     });
 });
@@ -876,6 +1013,8 @@ function limpiezas(){
 }
 
 function limpiezas_final(){
+
+    temas.innerHTML = "";
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
     

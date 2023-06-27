@@ -81,6 +81,7 @@ function temp() {
     }
     socket.emit('inicio', {count, borrar_texto});
     secondsPassed = 0;
+    DURACION_TIEMPO_MODOS = 30;
     socket.emit('count', {count, secondsPassed});
 
     startCountDown(--duration, element);
@@ -122,6 +123,7 @@ function limpiar() {
     document.getElementById("explicación").innerHTML = "";
     socket.emit('limpiar', "nada");
     secondsPassed = 0;
+    DURACION_TIEMPO_MODOS = 30
     clearInterval(countInterval);
     clearTimeout(tempo_text_borroso);
     document.getElementById("tiempo").innerHTML = "";
