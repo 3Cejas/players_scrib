@@ -79,9 +79,10 @@ function temp() {
         boton_pausar_reanudar.value = 0;
         span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
+
     socket.emit('inicio', {count, borrar_texto});
     secondsPassed = 0;
-    DURACION_TIEMPO_MODOS = 30;
+    DURACION_TIEMPO_MODOS = 300;
     socket.emit('count', {count, secondsPassed});
 
     startCountDown(--duration, element);
@@ -108,6 +109,12 @@ function limpiar() {
         boton_pausar_reanudar.value = 0;
         span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
+    console.log(borrar_texto, "AAAAAAH")
+    if(borrar_texto == false){
+        console.log(texto1.value)
+        texto_guardado1 = texto1.value;
+        texto_guardado2 = texto2.value;
+    }
     document.getElementById("texto").value = "";
     document.getElementById("texto1").value = "";
     document.getElementById("puntos").innerHTML = "0 palabras";
@@ -121,9 +128,11 @@ function limpiar() {
     document.getElementById("texto1").style.height = (document.getElementById("texto1").scrollHeight) + "px";
     document.getElementById("definicion").innerHTML = "";
     document.getElementById("explicación").innerHTML = "";
-    socket.emit('limpiar', "nada");
+
+    console.log(borrar_texto, "aaaah")
+    socket.emit('limpiar', borrar_texto);
     secondsPassed = 0;
-    DURACION_TIEMPO_MODOS = 30
+    DURACION_TIEMPO_MODOS = 300;
     clearInterval(countInterval);
     clearTimeout(tempo_text_borroso);
     document.getElementById("tiempo").innerHTML = "";
@@ -375,6 +384,8 @@ function final(){
     tiempo.style.color = "white"
     document.getElementById("tiempo").innerHTML = "¡Tiempo!";
     count = "¡Tiempo!";
+    texto_guardado1 = texto1.value;
+    texto_guardado2 = texto2.value;
     socket.emit('count', {count, secondsPassed});
     setTimeout(descargar_textos, 5000);
 }

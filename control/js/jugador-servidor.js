@@ -55,6 +55,9 @@ let tempo_text_borroso;
 let postgame1;
 let postgame2;
 
+let texto_guardado1 = "";
+let texto_guardado2 = "";
+
 let DURACION_TIEMPO_MODOS = 300;
 const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
@@ -130,6 +133,8 @@ socket.on("locura", () => {
 
 function descargar_textos() {
     var a = document.createElement("a");
+    texto1.value = texto_guardado1;
+    texto2.value = texto_guardado2;
     a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").value + "\r\n\n" + document.getElementById("puntos").innerHTML + "\r\n\n" + document.getElementById("texto").value + "\r\n" + postgame1 + "\n\n" + document.getElementById("nombre1").value + "\r\n\n" + document.getElementById("puntos1").innerHTML + "\r\n\n" + document.getElementById("texto1").value + "\n" + postgame2], { type: "text/plain" }));
     a.download = val_nombre1 + ' VS ' + val_nombre2 + '.txt';
     a.click();

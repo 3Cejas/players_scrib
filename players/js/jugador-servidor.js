@@ -513,7 +513,7 @@ socket.on("inicio", (data) => {
 });
 
 // Resetea el tablero de juego.
-socket.on("limpiar", (data) => {
+socket.on("limpiar", (borrar) => {
     // Recibe el nombre del jugador 2 y lo coloca en su sitio.
     socket.on("nombre2", (data) => {
         nombre2.value = data;
@@ -523,8 +523,19 @@ socket.on("limpiar", (data) => {
     socket.on("nombre1", (data) => {
         nombre1.value = data;
     });
+    console.log(borrar, "PUTA")
+    if(borrar == false){
 
+        if(texto1.value != "" && texto2.value != "" ){
+            texto_guardado1 = texto1.value;
+            texto_guardado2 = texto2.value;
+        }
+    }
+    
+    console.log("sí", texto1.value)
+    console.log("no",texto_guardado1)
     limpieza();
+    
     
     texto1.rows =  "1";
     texto2.rows = "1";
@@ -647,15 +658,20 @@ socket.on("nueva letra", letra => {
     console.log("NUEVA LETRA")
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
+        texto1.removeEventListener("keyup", listener_modo);
+        listener_modo = function (e) { modo_letra_prohibida(e) };
+        texto1.addEventListener("keyup", listener_modo);
+        animacion_palabra();
+        palabra1.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
         }
     else if(modo_actual == "letra bendita"){
         letra_bendita = letra;
+        texto1.removeEventListener("keyup", listener_modo);
+        listener_modo = function (e) { modo_letra_bendita(e) };
+        texto1.addEventListener("keyup", listener_modo);
+        animacion_palabra();
+        palabra1.innerHTML = "LETRA BENDITA: " + letra_bendita;
     }
-    texto1.removeEventListener("keyup", listener_modo);
-    listener_modo = function (e) { modo_letra_bendita(e) };
-    texto1.addEventListener("keyup", listener_modo);
-    animacion_palabra();
-    palabra1.innerHTML = "LETRA BENDITA: " + letra_bendita;
 });
 
 function recibir_palabra(data) {
@@ -677,7 +693,7 @@ function recibir_palabra_prohibida(data) {
     animacion_modo();
     asignada = true;
     palabra_actual = data.palabra_bonus[0];
-    palabra1.innerHTML = "(⏱️+" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
+    palabra1.innerHTML = "(⏱️-" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
     definicion1.innerHTML = data.palabra_bonus[1];
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto1.removeEventListener("keyup", listener_modo1);
