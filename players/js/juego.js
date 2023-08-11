@@ -26,6 +26,7 @@ let isFullscreen = false;
 let menu_modificador = false;
 let focusedButtonIndex = 0;
 let modificadorButtons = [];
+let locura = false;
 
 document.addEventListener('keydown', function(event) {
   if(event.key === "Backspace"){
@@ -134,9 +135,9 @@ function countChars(texto) {
     caracteres_seguidos += 1;
   }
 
-  if (caracteres_seguidos == 5) {
+  if (caracteres_seguidos == 5 && locura == false) {
     feedback1.style.color = color_positivo;
-    feedback1.innerHTML = "⏱️+5 segs.";
+    feedback1.innerHTML = "⏱️+3 segs.";
     clearTimeout(delay_animacion);
     animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
@@ -144,9 +145,9 @@ function countChars(texto) {
         }, 2000);
     });
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
-    socket.emit('aumentar_tiempo', 5);
+    socket.emit('aumentar_tiempo', 3);
     color = color_positivo;
-    tiempo_feed = "⏱️+" + "5" + " segs."
+    tiempo_feed = "⏱️+" + "3" + " segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed});
   }
   borrado = setTimeout(function () {

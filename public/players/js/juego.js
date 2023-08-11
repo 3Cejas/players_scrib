@@ -1,7 +1,11 @@
 let delay_animacion;
 let isFullscreen = false;
 let letra = "";
+const LIMITE_PALABRAS = 3;
 
+window.addEventListener('beforeunload', (event) => {
+  socket.emit('disconnect');
+});
 
 
 document.addEventListener('keydown', function (event) {
@@ -45,11 +49,20 @@ const animateCSS = (element, animation, prefix = "animate__") =>
 function enviarPalabra() {
   if(palabra.value != '' && palabra.value != null){
     if((modo_actual == "letra prohibida" && !toNormalForm(palabra.value.toLowerCase()).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(palabra.value.toLowerCase()).includes(letra)) || modo_actual == "palabras bonus" || modo_actual == "palabras prohibidas" ||  letra == 'ñ' && palabra.value.toLowerCase().includes('ñ') || letra == 'n' && modo_actual == "letra prohibida" && palabra.value.toLowerCase().includes('ñ') && !palabra.value.toLowerCase().includes(letra)){
-    inspiracion = palabra.value.trim();
-    socket.emit('enviar_inspiracion', inspiracion);
-    palabra.value = "";
-    recordatorio.innerHTML = "<span style='color: green;'>Has mandado una inspiración.</span>";
-    animateCSS(".recordatorio", "flash")
+    if(conteo_palabras < LIMITE_PALABRAS){
+      inspiracion = palabra.value.trim();
+      socket.emit('enviar_inspiracion', inspiracion);
+      palabra.value = "";
+      conteo_palabras++;
+      conteo.innerHTML = conteo_palabras + "/"+ LIMITE_PALABRAS + " palabras"
+      recordatorio.innerHTML = "<span style='color: green;'>Has mandado una inspiración.</span>";
+      animateCSS(".recordatorio", "flash")
+    }
+    else if(conteo_palabras >= LIMITE_PALABRAS){
+      recordatorio.innerHTML = "<span style='color: red;'>No puedes enviar más palabras.</span>";
+      animateCSS(".recordatorio", "flash")
+    }
+
     }
     else{
       recordatorio.innerHTML = "<span style='color: red;'>Recuerda que la palabra debe serle útil.</span>";
@@ -66,7 +79,7 @@ function mostrarTextoCompleto(boton) {
   texto1.scrollTop = texto1.scrollHeight;
   boton.innerHTML = "Ocultar texto";
   boton.value = 1;
-  nombre1.scrollIntoView({behavior: "smooth", block: "begin"});
+  mostrar_texto.scrollIntoView({behavior: "smooth", block: "start"});
   }
   else{
   texto1.style.height = "";

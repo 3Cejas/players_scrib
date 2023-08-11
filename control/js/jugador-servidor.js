@@ -1,7 +1,7 @@
 // Se establece la conexión con el servidor.
 serverUrl = window.location.href.startsWith('file:')
     ? 'http://localhost:3000'
-    : 'https://scri-b.up.railway.app';
+    : 'https://scrib.zeabur.app';
 
 const socket = io(serverUrl);
   
@@ -58,17 +58,21 @@ let postgame2;
 let texto_guardado1 = "";
 let texto_guardado2 = "";
 
-let DURACION_TIEMPO_MODOS = 300;
+const CONST_DURACION_TIEMPO_MODOS = 15;
+let DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
 const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
 
 
 let val_nombre1 = nombre1.value.toUpperCase();
-socket.emit('envío_nombre1', val_nombre1);
 
 let val_nombre2 = nombre2.value.toUpperCase();
-  socket.emit('envío_nombre2', val_nombre2);
 
+socket.on('connect', () => {
+    console.log("Conectado al servidor por primera vez.");
+    socket.emit('envío_nombre1', val_nombre1);
+    socket.emit('envío_nombre2', val_nombre2);
+});
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
     texto1.value = data.text;
@@ -126,7 +130,7 @@ socket.on("aumentar_tiempo_control", (secs) => {
 
 socket.on("locura", () => {
     socket.emit('enviar_comentario', "🔥 DIFICULTAD MÁXIMA 🔥");
-    DURACION_TIEMPO_MODOS = 30;
+    DURACION_TIEMPO_MODOS = 5;
     secondsPassed = 0;
     TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
   });

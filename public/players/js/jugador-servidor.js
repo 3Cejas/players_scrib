@@ -20,8 +20,10 @@ let tarea = getEl("tarea");
 let mostrar_texto = getEl("mostrar_texto");
 let recordatorio = getEl("recordatorio");
 let enviarPalabra_boton = getEl("enviar_palabra");
+let conteo = getEl("conteo");
 let sincro = 0;
 let votando = false;
+let conteo_palabras = 0;
 
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
@@ -68,15 +70,15 @@ var player = getParameterByName("player");
 // Se establece la conexión con el servidor.
 serverUrl = window.location.href.startsWith('file:')
     ? 'http://localhost:3000'
-    : 'https://scri-b.up.railway.app';
+    : 'https://scrib.zeabur.app';
 
 const socket = io(serverUrl);
 
-socket.emit('pedir_nombre');
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {
     modo_actual = data.modo_actual;
+    console.log("Conteo palabras:", 0)
     if(sincro == 1 || votando == true){
 
     }
@@ -108,7 +110,12 @@ socket.on('dar_nombre', (nombre) => {
     nombre1.innerHTML = nombre;
 });
 
-socket.emit('enviar_musa', player);
+socket.on('connect', () => {
+    console.log("Conectado al servidor por primera vez.");
+    socket.emit('enviar_musa', player);
+    socket.emit('pedir_nombre');
+});
+
 // Variables de los modos.
 let modo_actual = "";
 let tempo_text_borroso;
@@ -224,6 +231,7 @@ socket.on('limpiar', () => {
 });
 
 socket.on("pedir_inspiracion_musa", juego => {
+    conteo_palabras = 0;
    pedir_inspiracion(juego);
 });
 
@@ -246,8 +254,9 @@ function pedir_inspiracion(juego){
     enviarPalabra_boton.style.display = "";
     campo_palabra.style.display = "";
     modo_actual = juego.modo_actual;
-    console.log("modosito", modo_actual)
     recordatorio.innerHTML = "";
+    conteo.style.display = "";
+    conteo.innerHTML =  conteo_palabras + "/" + LIMITE_PALABRAS + " palabras"
     if(juego.modo_actual == "palabras bonus"){
         tarea.innerHTML = "Cantame a mí, <span style='color: orange;'>Musa</span>, una palabra que me inspire:"
     }
@@ -265,6 +274,7 @@ function pedir_inspiracion(juego){
     } 
 
     if(juego.modo_actual == "tertulia") {
+        conteo.style.display = "none";
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";

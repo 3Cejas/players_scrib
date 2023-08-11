@@ -461,58 +461,6 @@ th{
     }
 }
 
-@media only screen and (max-width: 650px) {
-    .nombre {
-        margin-left: 25%;
-        text-align: left;
-        position: sticky;
-        font-size: 10pt;
-        font-weight: bold;
-        border-color: currentcolor;
-        outline-color: currentcolor;
-        background-color: transparent;
-        background-image: none;
-        overflow: auto;
-        padding: 0;
-        border: none;
-        resize: none;
-        overflow: hidden;
-        outline: 0px !important;
-        -webkit-appearance: none;
-        box-shadow: none !important;
-        color: white
-    }
-
-    body {
-        font-size: 9pt;
-        padding-top: 15px;
-        text-align: justify;
-        margin-top: 0;
-        margin-bottom: 2%;
-        margin-left: 0;
-        margin-right: 0;
-    }
-
-    textarea {
-        position: sticky;
-        font-size: 11pt;
-        border-color: currentcolor;
-        outline-color: currentcolor;
-        background-color: transparent;
-        background-image: none;
-        overflow: auto;
-        width: 45%;
-        padding: 0;
-        border: none;
-        resize: none;
-        overflow: hidden;
-        outline: 0px !important;
-        -webkit-appearance: none;
-        box-shadow: none !important;
-        color: white
-    }
-}
-
 * {
     margin: 0;
   }
