@@ -58,7 +58,7 @@ let postgame2;
 let texto_guardado1 = "";
 let texto_guardado2 = "";
 
-const CONST_DURACION_TIEMPO_MODOS = 15;
+const CONST_DURACION_TIEMPO_MODOS = 30;
 let DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
 const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
@@ -130,7 +130,7 @@ socket.on("aumentar_tiempo_control", (secs) => {
 
 socket.on("locura", () => {
     socket.emit('enviar_comentario', "🔥 DIFICULTAD MÁXIMA 🔥");
-    DURACION_TIEMPO_MODOS = 5;
+    DURACION_TIEMPO_MODOS = 10;
     secondsPassed = 0;
     TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
   });

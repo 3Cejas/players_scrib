@@ -99,6 +99,17 @@ function elegir_ventaja_publico(boton) {
   sincro = 0;
   socket.emit('pedir_nombre');
 }
+
+function elegir_repentizado_publico(boton) {
+  console.log("Elegido repentizado: " + boton.value);
+  voto = boton.value;
+  socket.emit('enviar_voto_repentizado', voto);
+  recordatorio.innerHTML = "<span style='color: green;'>Se hará tu destino, <span style='color: orange;'>Musa</span>.</span>";
+  votando = false;
+  sincro = 0;
+  socket.emit('pedir_nombre');
+}
+
 function toNormalForm(str) {
   return str
       .normalize("NFD")

@@ -249,6 +249,15 @@ socket.on(elegir_ventaja, () => {
     animateCSS(".notificacion", "flash");
 });
 
+socket.on("elegir_repentizado", (opciones) => {
+    votando = true;
+    tarea.innerHTML = "<p>¿Por donde quieres que continúe la historia?</p><button class='btn' value = '1' onclick='elegir_repentizado_publico(this)'>"+ opciones[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>"+ opciones[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>"+ opciones[2] + "</button>"
+    enviarPalabra_boton.style.display = "none";
+    campo_palabra.style.display = "none";
+    recordatorio.innerHTML = "";
+    animateCSS(".notificacion", "flash");
+});
+
 function pedir_inspiracion(juego){
     campo_palabra.value = "";
     enviarPalabra_boton.style.display = "";
