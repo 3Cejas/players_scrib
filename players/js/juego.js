@@ -1,5 +1,7 @@
 let borrado; // Variable que almacena el identificador de la función temporizada de borrado.
+let antiguo_inicio_borrado = 3000;
 let rapidez_borrado = 3000; // Variable que almacena la velocidad del borrado del texto.
+let antiguo_rapidez_borrado = 3000;
 let rapidez_inicio_borrado = 3000; // Variable que almacena el tiempo de espera sin escribir hasta que empieza a borrar el texto.
 let asignada = false; // Variable boolena que dice si hay una palabra bonus asignada.
 let palabra_actual = ""; // Variable que almacena la palabra bonus actual.
@@ -27,6 +29,8 @@ let menu_modificador = false;
 let focusedButtonIndex = 0;
 let modificadorButtons = [];
 let locura = false;
+
+
 
 document.addEventListener('keydown', function(event) {
   if(event.key === "Backspace"){
@@ -74,14 +78,14 @@ function auto_grow(element) {
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
       while (texto2.scrollHeight > texto1.scrollHeight) {
         saltos_línea_alineacion_1 += 1;
-        texto1.value = "\n" + texto1.value;
+        texto1.innerText = "\n" + texto1.innerText;
       }
       texto1.style.height = texto2.scrollHeight + "px";
       texto2.style.height = texto2.scrollHeight + "px";
     } else {
       while (texto2.scrollHeight < texto1.scrollHeight) {
         saltos_línea_alineacion_2 += 1;
-        texto2.value = "\n" + texto2.value;
+        texto2.innerText = "\n" + texto2.innerText;
       }
       texto1.style.height = texto1.scrollHeight + "px";
       texto2.style.height = texto1.scrollHeight + "px";
@@ -92,40 +96,143 @@ function auto_grow(element) {
     focalizador1.scrollIntoView({ block: "end" });
 }
 
-// Función que comienza a borrar el texto con una velocidad y un inicio variable a lo largo de cada ronda.
-function borrar(texto) {
-    if (!desactivar_borrar) {
-        socket.emit('aumentar_tiempo', -1);
-        caracteres_seguidos = 0;
-        texto1.value = texto.value.substring(0, texto1.value.length - 1);
-        indice_buscar_palabra =  texto1.value.length;
-        if(texto1.value.length != 0) {
-        puntos = texto.value.match(/\b\w+\b/g).length;
-        cambiar_color_puntuación()
-        puntos1.innerHTML = puntos + " palabras 🖋️";
-        cambio_nivel(puntos);
-        borrado = setTimeout(() => {
-          borrar(texto);
-      }, rapidez_borrado);
-        }
-        else{
-          puntos = 0;
-          puntos1.innerHTML = puntos + " palabras 🖋️";
-          cambio_nivel(puntos);
-          console.log(rapidez_borrado)
-          clearTimeout(borrado);
-        }
-        sendText();
-      }
+// Función para guardar la posición del caret
+function guardarPosicionCaret() {
+  let sel = window.getSelection();
+  let range = sel.getRangeAt(0);
+  return {
+    caretPos: range.startOffset,
+    caretNode: range.startContainer
+  };
+}
+
+// Función para restaurar la posición del caret
+function restaurarPosicionCaret(caretNode, caretPos) {
+  let sel = window.getSelection();
+  let range = sel.getRangeAt(0);
+  range.setStart(caretNode, Math.min(caretPos, caretNode.length));
+  range.setEnd(caretNode, Math.min(caretPos, caretNode.length));
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function borrar() {
+  console.log("Borrando");
+  if (!desactivar_borrar) {
+    let nodoBorrado = false;
+
+    // 1. Guardar la posición del caret usando la función
+    let { caretNode, caretPos } = guardarPosicionCaret();
+
+    // 2. Código existente
+    socket.emit('aumentar_tiempo', -1);
+    caracteres_seguidos = 0;
+    indice_buscar_palabra = texto1.innerText.length;
+
+    // 3. Obtener última línea y último nodo de texto
+    let lastLine = texto1.lastChild;
+    let lastTextNode = lastLine.lastChild;
+    if (!lastTextNode) {
+      lastTextNode = lastLine;
+    }
+    
+    // 4. Buscar último nodo de texto
+    while (lastTextNode && lastTextNode.nodeType !== 3) {
+      lastTextNode = lastTextNode.previousSibling;
+    }
+
+    // 5. Si nodo vacío, eliminar y avanzar
+    if (lastTextNode && lastTextNode.data.trim() === "") {
+      lastLine.removeChild(lastTextNode);
+      lastTextNode = lastLine.lastChild;
+      caretNode = lastTextNode;
+      caretPos = lastTextNode ? lastTextNode.length : 0;
+      nodoBorrado = true;
+    }
+
+    // 6. Si no hay nodo de texto, retroceder a la línea anterior si existe
+    if (!lastTextNode && lastLine.previousSibling) {
+      lastLine.remove();
+      lastLine = texto1.lastChild;
+      lastTextNode = lastLine ? lastLine.lastChild : null;
+      caretNode = lastTextNode;
+      caretPos = lastTextNode ? lastTextNode.length : 0;
+      nodoBorrado = true;
+    }
+
+    // 7. Borrar último carácter si procede
+    if (!nodoBorrado && lastTextNode && lastTextNode.data && lastTextNode.data.length > 0) {
+      lastTextNode.data = lastTextNode.data.substring(0, lastTextNode.data.length - 1);
+    }
+
+    // 8. Actualizar estado
+    if(texto1.innerText.match(/\b\w+\b/g) != null){
+      puntos = texto1.innerText.match(/\b\w+\b/g).length;
+      cambiar_color_puntuación();
+    } else {
+      puntos = 0;
+    }
+    puntos1.innerHTML = puntos + " palabras 🖋️";
+    cambio_nivel(puntos);
+    clearTimeout(borrado);
+    borrado = setTimeout(() => {
+      borrar();
+    }, rapidez_borrado);
+
+    // 9. Reposicionar caret usando la función
+    if (caretNode) {
+      restaurarPosicionCaret(caretNode, caretPos);
+    }
+
+  } else {
+    console.log("Borrado desactivado");
+    clearTimeout(borrado);
+  }
+  
+  // 10. Envío de texto
+  sendText();
+}
+
+// Función para obtener la posición del caret dentro de un contenedor
+function getCaretCharacterOffsetWithin(element) {
+  let caretOffset = 0;
+  const doc = element.ownerDocument || element.document;
+  const win = doc.defaultView || doc.parentWindow;
+  let sel;
+  
+  if (typeof win.getSelection !== "undefined") {
+    sel = win.getSelection();
+    if (sel.rangeCount > 0) {
+      const range = win.getSelection().getRangeAt(0);
+      const preCaretRange = range.cloneRange();
+      preCaretRange.selectNodeContents(element);
+      preCaretRange.setEnd(range.endContainer, range.endOffset);
+      caretOffset = preCaretRange.toString().length;
+
+      // Contando los saltos de línea
+      const div = document.createElement("div");
+      div.appendChild(preCaretRange.cloneContents());
+      const text = div.innerHTML;
+      const matches = text.match(/<br>|<div>/g);
+      const extraLines = matches ? matches.length : 0;
+      caretOffset += extraLines;
+    }
+  }
+  
+  return caretOffset;
 }
 
 //Función que modifica el comportamiento del juego.
 function countChars(texto) {
   var lastWordCount = puntos; // Mantenemos el último recuento de palabras
 
-  if(texto.value.length != 0) {
-  puntos = texto.value.match(/\b\w+\b/g).length;
+  if(texto.innerText.match(/\b\w+\b/g) != null){
+  puntos = texto.innerText.match(/\b\w+\b/g).length;
   cambiar_color_puntuación();
+  }
+  else{
+    puntos = 0;
+  }
   puntos1.innerHTML = puntos + " palabras 🖋️";
   cambio_nivel(puntos);
   clearTimeout(borrado);
@@ -150,10 +257,10 @@ function countChars(texto) {
     tiempo_feed = "⏱️+" + "3" + " segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed});
   }
+  console.log("big")
   borrado = setTimeout(function () {
-    borrar(texto);
+    borrar();
 }, rapidez_inicio_borrado);
-  }
 
 }
 

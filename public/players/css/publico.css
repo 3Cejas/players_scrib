@@ -24,7 +24,7 @@ body {
 }
 
 textarea {
-    font-family: "VT323";
+    font-family: "Retro-gaming";
     position: sticky;
     font-size: 8vw;
     font-weight: bold;
@@ -47,11 +47,24 @@ textarea {
 p{
     font-size: 5vw;
 }
+
+#countdown {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: inline-block;
+    transform: translate(-50%, -50%);
+    transition: 1s;
+    font-size: 0vw;
+    opacity: 100%;
+    color: white; 
+  }
+
 .nombre {
     width: 100%;
     font-family: "Retro-gaming";
     text-align: center;
-    font-size: 5vw;
+    font-size: 6vw;
     font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
@@ -134,3 +147,4 @@ th{
 .input_publico{
     font-family: "Retro-gaming";
 }
+

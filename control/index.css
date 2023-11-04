@@ -1,5 +1,10 @@
 @charset "utf-8";
 
+@font-face {
+    font-family: 'Retro-gaming';
+    src: url('../css/fonts/Retro\ Gaming.ttf') format('truetype');
+}
+
 /* ¿Se usa? */
 button:focus {
     outline: none;
@@ -22,7 +27,7 @@ button:focus {
 
 .wordsrotator_words .wordsrotator_wordOut,
 .wordsrotator_words .wordsrotator_wordIn {
-    font-family: monospace;
+    font-family: "Retro-gaming";
     font-size: 20pt;
     font-weight: bold;
     position: relative;
@@ -159,13 +164,13 @@ body {
 
 .explicación {
     font-size: 23pt;
-    font-family: monospace;
+    font-family: "Retro-gaming";
     color: red;
 }
 
 .definicion {
     font-size: 10pt;
-    font-family: monospace;
+    font-family: "Retro-gaming";
     color: white;
 }
 
@@ -176,7 +181,7 @@ body {
 
 body {
     font-size: 13pt;
-    font-family: monospace;
+    font-family: "Retro-gaming";
     color: white;
     background-color: black;
 }
@@ -251,6 +256,7 @@ textarea {
 }
 
 .nombre {
+    font-family: "Retro-gaming";
     text-transform: uppercase;
     text-align: center;
     position: sticky;
@@ -334,7 +340,7 @@ table {
     padding: 0.25vmax;
     background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
     font-size: 11pt;
-    font-family: monospace;
+    font-family: "Retro-gaming";
     border-right: none;
 }
 
@@ -361,8 +367,9 @@ table {
 }
 
 .bn54 .bn54span {
+    font-family: "Retro-gaming";
     color: #000000;
-    font-size: 12px;
+    font-size: 0.8em;
     font-weight: 500;
     letter-spacing: 0.7px;
 }

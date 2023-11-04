@@ -92,6 +92,33 @@
         transform: translate3d(0, 0, 0) translateZ(0);
     }
 }
+
+/* Estilos base para .start-btn */
+.start-btn {
+    text-align: center;
+    display: inline-block;
+    font-size: 2.5em;
+    margin: 0.5em;
+    font-weight: bold;
+    padding: 0.625em 0.625em 0.625em 1em;
+    background-color: white;
+    border-radius: 0.4375em;
+    cursor: pointer;
+}
+
+/* Estilos específicos para el primer botón */
+.start-btn.escritxr1 {
+    color: aqua;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+    box-shadow: 0 0.2em red; 
+}
+
+/* Estilos específicos para el segundo botón */
+.start-btn.escritxr2 {
+    color: red;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;  /* Cambiando los colores para la segunda etiqueta */
+    box-shadow: 0 0.2em aqua;  /* Cambiando el color del box-shadow para la segunda etiqueta */
+}
     </style>
 </head>
 <body>
@@ -100,18 +127,10 @@
     <table class="default">
         <tr>
             <td>
-                <div align="center">
-                    <button onclick="window.location.href = './spectator/index.html?player=1'" class="bn">
-                        <span style="color:aqua" id="escritxr1" class="bnspan"> ✍️ ESCRITXR 1</span>
-                    </button><br>
-                </div>
+                <span id="escritxr1" class='start-btn escritxr1' onclick="window.location.href = './spectator/index.html?player=1'">INSPIRAR</span>
             </td>
             <td>
-                <div align="center">
-                    <button onclick="window.location.href = './spectator/index.html?player=2'" class="bn">
-                        <span style="color:red" id="escritxr2" class="bnspan">✍️ ESCRITXR 2</span>
-                    </button><br>
-                </div>
+                <span id="escritxr2" class='start-btn escritxr2' onclick="window.location.href = './spectator/index.html?player=2'">INSPIRAR</span>
             </td>
     </div>
 </body>

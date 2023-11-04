@@ -62,6 +62,7 @@ const CONST_DURACION_TIEMPO_MODOS = 30;
 let DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
 const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
+let modo_actual = "";
 
 
 let val_nombre1 = nombre1.value.toUpperCase();
@@ -89,8 +90,9 @@ socket.on('texto2', data => {
 
 });
 
+
 socket.on('count', data => {
-    document.getElementById("tiempo").innerHTML = data
+    tiempo.innerHTML = data
     if (data == "¡Tiempo!") {
         document.getElementById("texto1").disabled = true;
         document.getElementById("texto").disabled = true;
@@ -135,6 +137,12 @@ socket.on("locura", () => {
     TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
   });
 
+socket.on('activar_modo', (data) => {
+    modo_actual = data.modo_actual;
+    console.log(modo_actual)
+    MODOS[modo_actual]();
+});
+
 function descargar_textos() {
     var a = document.createElement("a");
     texto1.value = texto_guardado1;
@@ -143,3 +151,76 @@ function descargar_textos() {
     a.download = val_nombre1 + ' VS ' + val_nombre2 + '.txt';
     a.click();
 }
+
+const MODOS = {
+
+    "calentamiento": function (data) {
+        DURACION_TIEMPO_MODOS = 60;
+        TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
+    },
+
+    // Recibe y activa la palabra y el modo bonus.
+    "palabras bonus": function (data) {
+    },
+
+    //Recibe y activa el modo letra prohibida.
+    "letra prohibida": function (data) {
+    },
+
+    "letra bendita": function (data) {
+    },
+
+    "texto borroso": function (data) {
+    },
+
+    "psicodélico": function (data) {
+    },
+
+    'tertulia': function (socket) {
+    },
+
+    'palabras prohibidas': function (data) {
+    },
+
+    'ortografía perfecta': function (data) {
+    },
+
+    "": function (data) { },
+};
+
+const LIMPIEZAS = {
+
+    "calentamiento": function (data) {
+        DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
+        TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
+    },
+    "palabras bonus": function (data) {
+    },
+
+    "letra prohibida": function (data) {
+    },
+
+    "letra bendita": function (data) {
+    },
+
+    "borroso": function (data) {
+    },
+
+    "psicodélico": function (data) {
+    },
+
+    "inverso": function (data) {
+    },
+
+    "tiempo_borrado_más": function (data){ },
+    
+    "tertulia": function (data) { },
+
+    "palabras prohibidas": function (data) {
+    },
+
+    "ortografía perfecta": function (data) {
+    },
+
+    "": function (data) { },
+};

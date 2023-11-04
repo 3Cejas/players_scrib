@@ -31,6 +31,19 @@ body {
     background-color: black;
     font-family: "Retro-gaming";
 }
+
+#countdown {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: inline-block;
+  transform: translate(-50%, -50%);
+  transition: 1s;
+  font-size: 0vw;
+  opacity: 100%;
+  color: white; 
+}
+
 /*Estilo botones focuseados*/
 button:focus {
     outline: none;
@@ -237,8 +250,20 @@ button {
     font-family: "Retro-gaming";
     height: 5%;
 }
+.letra-verde {
+  color: lime;
+}
 
-textarea {
+.letra-roja {
+  color: red;
+}
+.textarea {
+    display: block;
+    hyphens:auto;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    overflow-y: auto;
+    text-align: justify;
     font-family: "VT323";
     position: sticky;
     font-size: 3vw;
@@ -257,7 +282,12 @@ textarea {
     -webkit-appearance: none;
     box-shadow: none !important;
     color: white;
-}
+    height: auto; /* Updated this from a fixed height */
+    min-height: /*simultatin 1 row*/ calc(1.5em * 1);
+    max-height: calc(1.5em * 5) ;
+  }
+
+
 
 .textarea_blur {
     font-family: "VT323";

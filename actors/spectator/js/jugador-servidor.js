@@ -44,7 +44,7 @@ var player = getParameterByName("player");
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
         elegir_ventaja = "elegir_ventaja_j1";
-        nombre1.style="color:aqua"
+        nombre1.style="color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
 
     } else if (player == 2) {
         console.log(nombre1.value)
@@ -57,7 +57,7 @@ var player = getParameterByName("player");
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
         elegir_ventaja = "elegir_ventaja_j2"; 
-        nombre1.style="color:red" 
+        nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" 
     }
 
 // Se establece la conexión con el servidor.
@@ -138,11 +138,39 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-
-    limpiezas();
-    texto1.style.height = "";
-    texto1.rows =  "3";
-    
+    var counter = 3;
+  
+    var timer = setInterval(function() {
+      
+      $('#countdown').remove();
+      
+      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
+      countdown.appendTo($('.container'));
+  
+      setTimeout(() => {
+        if (counter > -1) {
+          $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
+        } else {
+          $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        }
+      }, 20);
+  
+      counter--;
+  
+      if (counter == -1) {
+        clearInterval(timer);
+        setTimeout(() => {
+          $('#countdown').remove();
+        }, 1000);
+  
+        // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
+        setTimeout(function(){
+            limpiezas();
+            texto1.style.height = "";
+            texto1.rows =  "3";
+        }, 2000);
+    }
+  }, 1000);
 });
 
 // Resetea el tablero de juego.

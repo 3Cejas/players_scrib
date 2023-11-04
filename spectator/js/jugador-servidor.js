@@ -67,7 +67,7 @@ const MODOS = {
     'palabras bonus': function (data) {
         console.log("ALGO")
         explicación.style.color = "yellow";
-        explicación.innerHTML = "MODO PALABRAS BONUS";
+        explicación.innerHTML = "MODO PALABRAS BENDITAS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
         palabra2.style.backgroundColor = "yellow";
@@ -87,8 +87,8 @@ const MODOS = {
         explicación2.innerHTML = "";
         palabra1.style.backgroundColor= "red";
         explicación.style.color = "red";
-        explicación.innerHTML = "MODO LETRA PROHIBIDA";
-        palabra1.innerHTML = "LETRA PROHIBIDA: " + data.letra_prohibida;
+        explicación.innerHTML = "MODO LETRA MALDITA";
+        palabra1.innerHTML = "LETRA MALDITA: " + data.letra_prohibida;
         definicion2.innerHTML = "";
         definicion2.style.maxWidth = "100%";
         definicion3.innerHTML = "";
@@ -153,7 +153,7 @@ const MODOS = {
         palabra2.style.backgroundColor = "pink";
         palabra3.style.backgroundColor = "pink";
         explicación.style.color = "pink";
-        explicación.innerHTML = "MODO PALABRAS PROHIBIDAS";
+        explicación.innerHTML = "MODO PALABRAS MALDITAS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
         definicion2.style.maxWidth = "50%";
@@ -199,10 +199,10 @@ const LIMPIEZAS = {
     },
 
     "texto inverso": function (data) {
-        texto1.value =
+        texto1.innerText =
             //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.value)
-            texto1.value
+            //eliminar_saltos_de_linea(texto2.innerText)
+            texto1.innerText
                 .split("")
                 .reverse()
                 .join("")
@@ -210,10 +210,10 @@ const LIMPIEZAS = {
                 .reverse()
                 .join(" ");
 
-        texto2.value =
+        texto2.innerText =
             //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.value)
-            texto2.value
+            //eliminar_saltos_de_linea(texto2.innerText)
+            texto2.innerText
                 .split("")
                 .reverse()
                 .join("")
@@ -248,7 +248,7 @@ socket.on('actualizar_contador_musas', contador_musas => {
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
-    texto1.value = data.text;
+    texto1.innerText = data.text;
     puntos1.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
@@ -258,13 +258,13 @@ socket.on('texto1', data => {
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
-            texto1.value = "\n" + texto1.value;
+            texto1.innerText = "\n" + texto1.innerText;
         }
     }
     else {
         while (texto2.scrollHeight < texto1.scrollHeight) {
             saltos_línea_alineacion_2 += 1;
-            texto2.value = "\n" + texto2.value;
+            texto2.innerText = "\n" + texto2.innerText;
         }
     }*/
     //texto1.style.height = (texto1.scrollHeight) + "px";
@@ -274,7 +274,7 @@ socket.on('texto1', data => {
 });
 
 socket.on('texto2', data => {
-    texto2.value = data.text;
+    texto2.innerText = data.text;
     puntos2.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel2.innerHTML = data.level;
@@ -284,14 +284,14 @@ socket.on('texto2', data => {
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
-            texto1.value = "\n" + texto1.value
+            texto1.innerText = "\n" + texto1.innerText
 
         }
     }
     else {
         while (texto2.scrollHeight < texto1.scrollHeight) {
             saltos_línea_alineacion_2 += 1;
-            texto2.value = "\n" + texto2.value
+            texto2.innerText = "\n" + texto2.innerText
         }
     }*/
     //texto2.style.height = (texto2.scrollHeight) + "px";
@@ -329,8 +329,8 @@ socket.on("count", data => {
         limpiezas_final();
 
         activar_sockets_extratextuales();
-        //texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
-        //texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
+        //texto1.innerText = (texto1.innerText).substring(saltos_línea_alineacion_1, texto1.innerText.length);
+        //texto2.innerText = (texto2.innerText).substring(saltos_línea_alineacion_2, texto2.innerText.length);
 
         // Desactiva el blur de ambos textos.
         //texto2.classList.remove('textarea_blur');
@@ -338,8 +338,8 @@ socket.on("count", data => {
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
 
-        //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-        //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
+        //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+        //texto2.innerText = eliminar_saltos_de_linea(texto2.innerText); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
         texto1.style.height = "auto";
         texto2.style.height = "auto";
@@ -355,25 +355,54 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-
-    socket.off('vote');
-    socket.off('exit');
-    socket.off('scroll');
-    socket.off('temas_jugadores');
-    //socket.off('recibir_comentario');
-    socket.off('recibir_postgame1');
-    socket.off('recibir_postgame2');
-
-    limpiezas();
-    texto1.style.height = "";
-    texto2.style.height = "";
-    texto1.rows =  "6";
-    texto2.rows = "6";
-
-    logo.style.display = "none"; 
-    neon.style.display = "none"; 
-    tiempo.style.display = "";
     
+    var counter = 3;
+  
+    var timer = setInterval(function() {
+      
+      $('#countdown').remove();
+      
+      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
+      countdown.appendTo($('.container'));
+  
+      setTimeout(() => {
+        if (counter > -1) {
+          $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
+        } else {
+          $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        }
+      }, 20);
+  
+      counter--;
+  
+      if (counter == -1) {
+        clearInterval(timer);
+        setTimeout(() => {
+          $('#countdown').remove();
+        }, 1000);
+  
+        // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
+        setTimeout(function(){
+            socket.off('vote');
+            socket.off('exit');
+            socket.off('scroll');
+            socket.off('temas_jugadores');
+            //socket.off('recibir_comentario');
+            socket.off('recibir_postgame1');
+            socket.off('recibir_postgame2');
+
+            limpiezas();
+            texto1.style.height = "";
+            texto2.style.height = "";
+            texto1.rows =  "6";
+            texto2.rows = "6";
+
+            logo.style.display = "none"; 
+            neon.style.display = "none"; 
+            tiempo.style.display = "";
+        }, 2000);
+    }
+  }, 1000);
 });
 
 // Resetea el tablero de juego.
@@ -982,8 +1011,8 @@ function limpiezas(){
     definicion3.innerHTML = "";
     explicación2.innerHTML = "";
     
-    texto1.value = "";
-    texto2.value = "";
+    texto1.innerText = "";
+    texto2.innerText = "";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";
     puntos2.innerHTML = 0 + " palabras 🖋️";

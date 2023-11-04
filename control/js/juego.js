@@ -19,13 +19,13 @@ function startCountDown(duration, element) {
     secondsPassed = 0;
     let min;
     let sec;
-
     clearInterval(countInterval);
     countInterval = setInterval(function () {
         secondsPassed++;
         console.log(secondsPassed)
         console.log(DURACION_TIEMPO_MODOS)
         if(secondsPassed == DURACION_TIEMPO_MODOS){
+            LIMPIEZAS[modo_actual]();
             secondsPassed = 0;
         }
         min = parseInt(secondsRemaining / 60);
@@ -84,9 +84,14 @@ function temp() {
     socket.emit('inicio', {count, borrar_texto});
     secondsPassed = 0;
     DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
-    socket.emit('count', {count, secondsPassed});
+    
+    setTimeout(function(){
+        socket.emit('count', {count, secondsPassed});
+        console.log(duration, element)
+        startCountDown(--duration, element);
+    }, 5000);
+    MODOS['calentamiento']('', '');
 
-    startCountDown(--duration, element);
 };
 
 function vote() {
