@@ -1,19 +1,23 @@
 let countInterval;
+let countInterval1;
 let time_minutes; // Value in minutes
 let time_seconds; // Value in seconds
 let secondsRemaining;
+let secondsRemaining1;
 let secondsPassed;
+let secondsPassed1;
 let impro_estado = false;
 let fin_j1 = false;
 let fin_j2 = false;
 let borrar_texto = false;
-
+let terminado = false;
+let terminado1 = false;
 
 function paddedFormat(num) {
     return num < 10 ? "0" + num : num;
 }
 
-function startCountDown(duration, element) {
+function startCountDown_p1(duration, element) {
 
     secondsRemaining = duration;
     secondsPassed = 0;
@@ -31,9 +35,9 @@ function startCountDown(duration, element) {
         min = parseInt(secondsRemaining / 60);
         sec = parseInt(secondsRemaining % 60);
 
-        element.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+        tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
-        socket.emit('count', {count, secondsPassed});
+        socket.emit('count', {count, secondsPassed, player:1});
         if (secondsRemaining == 20) {
             tiempo.style.color = "yellow"
         }
@@ -42,7 +46,40 @@ function startCountDown(duration, element) {
         }
         secondsRemaining = secondsRemaining - 1;
         if (secondsRemaining <= 0) {
-            final();
+            final(1);
+        };
+
+    }, 1000);
+}
+
+function startCountDown_p2(duration, element) {
+
+    secondsRemaining1 = duration;
+    let min1;
+    let sec1;
+    clearInterval(countInterval1);
+    countInterval1 = setInterval(function () {
+        secondsPassed1++;
+        console.log(secondsPassed1)
+        console.log(DURACION_TIEMPO_MODOS)
+
+        min1 = parseInt(secondsRemaining1 / 60);
+        sec1 = parseInt(secondsRemaining1 % 60);
+
+        tiempo1.textContent = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
+        count1 = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
+        console.log("count", count1);
+        socket.emit('count', {count1, secondsPassed1, player: 2});
+        if (secondsRemaining1 == 20) {
+            tiempo1.style.color = "yellow"
+        }
+        if (secondsRemaining1 == 10) {
+            tiempo1.style.color = "red"
+        }
+        secondsRemaining1 = secondsRemaining1 - 1;
+        if (secondsRemaining1 <= 0) {
+            console.log("PENBEBEEBENEBEE")
+            final(2);
         };
 
     }, 1000);
@@ -56,15 +93,35 @@ function addSeconds(secs) {
     min = parseInt(secondsRemaining / 60);
     sec = parseInt(secondsRemaining % 60);
 
-    element.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+    tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
     count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
 }
 
+function addSeconds1(secs) {
+    secondsRemaining1 += secs;
+    if(secondsRemaining1 < 0){
+        secondsRemaining1 = 0;
+    }  
+    min1 = parseInt(secondsRemaining1 / 60);
+    sec1 = parseInt(secondsRemaining1 % 60);
+
+    tiempo1.textContent = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
+    count1 = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
+    console.log(min1)
+    console.log("JOOOOOOOOO", count1)
+}
+
 function temp() {
+    terminado = false;
+    terminado1 = false;
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
     tiempo.style.color = "white"
+    tiempo1.style.color = "white"
+
     clearInterval(countInterval);
+    clearInterval(countInterval1);
+
 
     var date = new Date(myDatepicker);
     time_minutes = date.getHours();
@@ -72,10 +129,12 @@ function temp() {
     let duration = time_minutes * 60 + time_seconds;
 
 
-    element = document.querySelector('#tiempo');
-    element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
-    count = element.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
-    
+    tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
+    tiempo1.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
+
+    count = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;    
+    count1 = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;   
+
     if(boton_pausar_reanudar.value == 1){
         boton_pausar_reanudar.value = 0;
         span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
@@ -83,12 +142,18 @@ function temp() {
 
     socket.emit('inicio', {count, borrar_texto});
     secondsPassed = 0;
+    secondsPassed1 = 0;
+  
     DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
     
     setTimeout(function(){
-        socket.emit('count', {count, secondsPassed});
-        console.log(duration, element)
-        startCountDown(--duration, element);
+        socket.emit('count', {count, secondsPassed, player:1});
+        socket.emit('count', {count1, secondsPassed1, player:2});
+        console.log(duration, tiempo)
+        duration = duration - 1;
+        startCountDown_p1(duration, tiempo);
+        startCountDown_p2(duration, tiempo);
+
     }, 5000);
     MODOS['calentamiento']('', '');
 
@@ -138,10 +203,12 @@ function limpiar() {
     console.log(borrar_texto, "aaaah")
     socket.emit('limpiar', borrar_texto);
     secondsPassed = 0;
+    secondsPassed1 = 0;
     DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
     clearInterval(countInterval);
     clearTimeout(tempo_text_borroso);
-    document.getElementById("tiempo").innerHTML = "";
+    tiempo.innerHTML = "";
+    tiempo1.innerHTML = "";
     document.getElementById("texto").classList.remove('textarea_blur');
     document.getElementById("texto1").classList.remove('textarea_blur');
     puntuacion_final1.innerHTML = "";
@@ -181,14 +248,15 @@ function scroll_sincro() {
 function fin(player) {
     if(player == 1){
         fin_j1 = true
+        final(1);
     }
     else if(player == 2){
         fin_j2 = true
+        final(2);
     }
     if(fin_j1 && fin_j2){
         fin_j1 = false;
         fin_j2 = false;
-        final();
     }
     socket.emit('fin_de_control', player);
 };
@@ -262,6 +330,7 @@ function enviar_clasificacion(){
 
 function pausar(){
     clearInterval(countInterval);
+    clearInterval(countInterval1);
     socket.emit('pausar', '');
 }
 
@@ -281,26 +350,30 @@ function pausar_reanudar(boton){
 
 
 function reanudar(){
-    element = document.querySelector('#tiempo');
-    socket.emit('count', count, secondsPassed);
-    startCountDown(secondsRemaining, element);
+
+    socket.emit('count', {count, secondsPassed, player:1});
+    socket.emit('count', {count1, secondsPassed1, player:2});
+    startCountDown_p1(secondsRemaining, tiempo);
+    startCountDown_p2(secondsRemaining, tiempo1);
     socket.emit('reanudar', '');
 }
 
 function reanudar_modo(){
-    element = document.querySelector('#tiempo');
-    console.log(count, secondsPassed, secondsRemaining, element)
-    duration = secondsRemaining;
+    console.log(count, secondsPassed, secondsRemaining, tiempo)
+    console.log(count1, secondsPassed1, secondsRemaining1, tiempo1)
     console.log(time_minutes, time_seconds)
-    
     if(boton_pausar_reanudar.value == 1){
         boton_pausar_reanudar.value = 0;
         span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
     secondsPassed = 0;
-    socket.emit('count', {count, secondsPassed});
+    secondsPassed1 = 0;
+    socket.emit('count', {count, secondsPassed, player:1});
+    socket.emit('count', {count1, secondsPassed1, player:2});
 
-    startCountDown(duration, element);
+
+    startCountDown_p1(secondsRemaining, element);
+    startCountDown_p2(secondsRemaining1, element);
     socket.emit('reanudar_modo', '');
 }
 function sortTable() {
@@ -385,13 +458,29 @@ const extractData = (tableId, mapper) => {
     }
   };
 
-function final(){
-    clearInterval(countInterval);
-    tiempo.style.color = "white"
-    document.getElementById("tiempo").innerHTML = "¡Tiempo!";
-    count = "¡Tiempo!";
-    texto_guardado1 = texto1.value;
-    texto_guardado2 = texto2.value;
-    socket.emit('count', {count, secondsPassed});
-    setTimeout(descargar_textos, 5000);
+function final(player){
+    if(player == 1){
+        clearInterval(countInterval);
+        tiempo.style.color = "white"
+        tiempo.innerHTML = "¡Tiempo!";
+        count = "¡Tiempo!";
+        texto_guardado1 = texto1.value;
+        texto_guardado2 = texto2.value;
+        terminado = true;
+        socket.emit('count', {count, secondsPassed, player});
+    }
+    else{
+        clearInterval(countInterval1);
+        tiempo1.style.color = "white"
+        tiempo1.innerHTML = "¡Tiempo!";
+        count1 = "¡Tiempo!";
+        texto_guardado1 = texto1.value;
+        terminado = true;
+        texto_guardado2 = texto2.value;
+
+        socket.emit('count', {count1, secondsPassed1, player});
+    }
+    if(terminado && terminado1){
+        setTimeout(descargar_textos, 5000);
+    }
 }

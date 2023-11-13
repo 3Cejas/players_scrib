@@ -108,6 +108,7 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on("count", data => {
+    if(data.player == player){
     if (data.count == "00:20") {
         tiempo.style.color = "yellow"
     }
@@ -134,6 +135,7 @@ socket.on("count", data => {
         texto1.style.height = "auto";
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
     }
+}
 });
 
 // Inicia el juego.

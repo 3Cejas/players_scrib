@@ -1,6 +1,7 @@
 let delay_animacion;
 let isFullscreen = false;
 let letra = "";
+let editando = false;
 const LIMITE_PALABRAS = 3;
 
 window.addEventListener('beforeunload', (event) => {
@@ -74,19 +75,40 @@ function enviarPalabra() {
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
 function mostrarTextoCompleto(boton) {
   if(boton.value == 0){
-  texto1.style.height = "auto";
   texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
   texto1.scrollTop = texto1.scrollHeight;
   boton.innerHTML = "Ocultar texto";
   boton.value = 1;
   mostrar_texto.scrollIntoView({behavior: "smooth", block: "start"});
   }
-  else{
-  texto1.style.height = "";
-  texto1.rows =  "3";
+  else if(!editando == true){
+  console.log("ACTIVADO")
+  texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
   texto1.scrollTop = texto1.scrollHeight;
   boton.innerHTML = "Mostrar texto completo";
   boton.value = 0;
+  }
+}
+
+//Función auxiliar que muestra el texto completo del jugador en cuestión.
+function editar(boton) {
+  if(boton.value == 0){
+    editando = true;
+    mostrar_texto.value = 0;
+    mostrarTextoCompleto(mostrar_texto);
+    texto1.contentEditable= "true";
+    boton.innerHTML = "✉️ Enviar";
+    boton.value = 1;
+  }
+  else{
+    texto1.style.height = "";
+    editando = false;
+    mostrarTextoCompleto(mostrar_texto);
+    texto1.contentEditable = "false";
+    socket.emit('aumentar_tiempo', {secs:-1, player});
+    socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent, level: nivel1.textContent});
+    boton.innerHTML = "📝 Editar";
+    boton.value = 0;
   }
 }
 

@@ -460,6 +460,28 @@ socket.on('actualizar_contador_musas', contador_musas => {
     }
 });
 
+// Recibe los datos del jugador 1 y los coloca.
+socket.on(texto_x, (data) => {
+    texto1.innerText = data.text;
+    puntos1.innerHTML = data.points;
+    nivel1.innerHTML = data.level;
+    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
+      while (texto2.scrollHeight > texto1.scrollHeight) {
+        saltos_línea_alineacion_1 += 1;
+        texto1.innerText = "\n" + texto1.innerText;
+      }
+    } else {
+      while (texto2.scrollHeight < texto1.scrollHeight) {
+        saltos_línea_alineacion_2 += 1;
+        texto2.innerText = "\n" + texto2.innerText;
+      }
+    }*/
+    //texto2.style.height = texto2.scrollHeight + "px";
+    texto1.scrollTop = texto1.scrollHeight;
+    window.scrollTo(0, document.body.scrollHeight);
+    //focalizador1.scrollIntoView({ block: "end" });
+});
+
 
 // Recibe los datos del jugador 2 y los coloca.
 socket.on(texto_y, (data) => {
@@ -490,6 +512,8 @@ pausa el cambio de palabra.
 */
 socket.on("count", (data) => {
     //texto1.focus();
+    console.log("TIEMPO", data.count)
+    if(data.player == player){
     if (convertirASegundos(data.count) >= 20) {
         tiempo.style.color = "white";
     }
@@ -504,7 +528,7 @@ socket.on("count", (data) => {
     }
     console.log(tiempo.innerHTML)
     console.log(data.count)
-    document.getElementById("tiempo").innerHTML = data.count;
+    tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
         if (putada_actual == "🙃"){
             texto1.innerText =
@@ -533,6 +557,7 @@ socket.on("count", (data) => {
                 texto2.innerText = "";
             }
             final();
+            confetti_aux();
             setTimeout(function () {
                 texto1.style.height = "";
                 texto1.rows =  "1";
@@ -541,14 +566,44 @@ socket.on("count", (data) => {
                 }, 2000);
         }
     }
-    /*else {
-        LIMPIEZAS["psicodélico"]("");
-        tiempo.style.color = "white";
-    }*/
+    }
+    else{
+            if (convertirASegundos(data.count) >= 20) {
+                tiempo1.style.color = "white";
+            }
+            if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
+                console.log(convertirASegundos(data.count))
+                LIMPIEZAS["psicodélico"]("");
+                tiempo1.style.color = "yellow";
+            }
+            if (10 > convertirASegundos(data.count) && activado_psico == false) {
+                MODOS["psicodélico"](data, socket);
+                tiempo1.style.color = "red";
+            }
+            tiempo1.innerHTML = data.count;
+            if (data.count == "¡Tiempo!") {
+                tiempo1.style.color = "white";
+            }
+    }
 });
   
 // Inicia el juego.
 socket.on("inicio", (data) => {
+    activar_socket_feedback();
+    limpieza();
+    texto1.style.height = "";
+    texto2.style.height = "";
+
+    /*saltos_línea_alineacion_1 = 0;
+    saltos_línea_alineacion_2 = 0;*/
+
+    logo.style.display = "none"; 
+    neon.style.display = "none"; 
+    tiempo.innerHTML = "";
+    tiempo1.innerHTML = "";
+    tiempo.style.display = "";
+    tiempo1.style.display = "";
+
     var counter = 3;
   
     var timer = setInterval(function() {
@@ -576,9 +631,6 @@ socket.on("inicio", (data) => {
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         setTimeout(function(){
-            activar_socket_feedback();
-            limpieza();
-        
             if (data.borrar_texto == false) {
                 texto1.innerText = texto_guardado1.trim();
                 texto2.innerText = texto_guardado2.trim();
@@ -600,16 +652,6 @@ socket.on("inicio", (data) => {
             
             //socket.off("recibe_temas");
             texto1.contentEditable= "true";
-        
-            texto1.style.height = "";
-            texto2.style.height = "";
-        
-            /*saltos_línea_alineacion_1 = 0;
-            saltos_línea_alineacion_2 = 0;*/
-        
-            logo.style.display = "none"; 
-            neon.style.display = "none"; 
-            tiempo.style.display = "";
             texto1.focus();
             MODOS['calentamiento']('', '');
         }, 2000);
@@ -662,6 +704,7 @@ socket.on("limpiar", (borrar) => {
     texto2.style.height = "40";*/
 
     tiempo.style.display = "none";
+    tiempo1.style.display = "none";
     logo.style.display = "";
     neon.style.display = ""; 
     texto1.removeEventListener("keyup", listener_modo_psico);
@@ -1039,7 +1082,7 @@ function modo_palabras_bonus(e) {
             asignada = false;
             console.log("AHORAAAAAAAAAAAA", palabra_actual);
             socket.emit("nueva_palabra", player);
-            socket.emit('aumentar_tiempo', tiempo_palabras_bonus);
+            socket.emit('aumentar_tiempo', {tiempo_palabras_bonus, player});
             feedback1.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
@@ -1105,7 +1148,7 @@ function modo_palabras_prohibidas(e) {
             console.log("AHORAAAAAAAAAAAA", palabra_actual);
             socket.emit("nueva_palabra_prohibida", player);
             tiempo_palabras_bonus = -tiempo_palabras_bonus;
-            socket.emit('aumentar_tiempo', tiempo_palabras_bonus);
+            socket.emit('aumentar_tiempo', {tiempo_palabras_bonus, player});
             feedback1.style.color = color_negativo;
             feedback1.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
             clearTimeout(delay_animacion);
@@ -1232,7 +1275,8 @@ function modo_letra_prohibida(e) {
           feedback1.innerHTML = "";
         }, 2000);
       });
-      socket.emit('aumentar_tiempo', -2);
+      secs = -2
+      socket.emit('aumentar_tiempo', {secs, player});
       color = color_negativo;
       tiempo_feed = feedback1.innerHTML;
       socket.emit(feedback_de_j_x, { color, tiempo_feed });
@@ -1264,7 +1308,8 @@ function modo_letra_bendita(e) {
 
         if (node && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
             e.preventDefault(); // Prevenir el comportamiento por defecto de la tecla Backspace
-            socket.emit('aumentar_tiempo', -2); // Emitir el evento de socket
+            secs = -2
+            socket.emit('aumentar_tiempo', {secs, player}); // Emitir el evento de socket
             // Feedback visual
             console.log("-1 seg.")
             feedback1.style.color = color_negativo;
@@ -1303,8 +1348,8 @@ function modo_letra_bendita(e) {
             range.setEndBefore(emptyTextNodeBefore);
             sel.removeAllRanges();
             sel.addRange(range);
-
-            socket.emit('aumentar_tiempo', 2);
+            secs = 2;
+            socket.emit('aumentar_tiempo', {secs, player});
             cambiar_color_puntuación();
             puntos1.innerHTML = puntos + " palabras 🖋️";
             sendText();
@@ -1403,6 +1448,7 @@ function limpieza(){
     texto2.style.height = "";
 
     feedback_tiempo.style.color = color_positivo;
+    feedback_tiempo1.style.color = color_positivo;
 
     texto1.rows =  "6";
     texto2.rows = "6";
@@ -1454,6 +1500,7 @@ function limpieza(){
     puntos1.style.color = "white";
     puntos2.style.color = "white";
     tiempo.style.color = "white";
+    tiempo1.style.color = "white";
 
     puntuacion_final1.innerHTML = "";
     puntuacion_final2.innerHTML = "";
@@ -1512,7 +1559,8 @@ function limpieza_final(){
     desactivar_borrar = false;
     locura = false;
 
-    tiempo.style.color = "white"
+    tiempo.style.color = "white";
+    tiempo1.style.color = "white";
 
     // Restablece la rápidez del borrado.
     borrado_cambiado = false;
@@ -1740,6 +1788,7 @@ function final(){
     texto1.removeEventListener("keyup", listener_modo_psico);
     restablecer_estilo();
     tiempo.style.color = "white";
+    tiempo1.style.color = "white";
 }
 
 function convertirASegundos(tiempo) {

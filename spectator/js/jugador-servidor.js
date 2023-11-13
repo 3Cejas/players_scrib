@@ -32,11 +32,11 @@ let explicación2 = getEl("explicación2");
 
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
+let tiempo1 = getEl("tiempo1");
 let tema = getEl("temas");
 let info = getEl("info");
 let info1 = getEl("info1");
 let info2= getEl("info2");
-
 
 // COMPONENTES DEL JUGADOR 2
 let nombre2 = getEl("nombre1");
@@ -53,6 +53,8 @@ let focalizador_id = 1;
 let feedback_tiempo = getEl("feedback_tiempo");
 
 // Variables de los modos.
+let terminado = false;
+let terminado1 = false;
 let modo_actual = "";
 let tempo_text_borroso;
 let listener_modo;
@@ -308,6 +310,7 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on("count", data => {
+    if(data.player == 1){
     if (convertirASegundos(data.count) >= 20) {
         tiempo.style.color = "white";
     }
@@ -321,7 +324,30 @@ socket.on("count", data => {
         tiempo.style.color = "red";
     }
     tiempo.innerHTML = data.count;
-    if (data.count == "¡Tiempo!") {
+    if(data.count == '¡Tiempo!'){
+        terminado = true;
+    }
+    }
+
+    if(data.player == 2){
+        if (convertirASegundos(data.count) >= 20) {
+            tiempo1.style.color = "white";
+        }
+        if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
+            console.log(convertirASegundos(data.count))
+            LIMPIEZAS["psicodélico"]("");
+            tiempo1.style.color = "yellow";
+        }
+        if (10 > convertirASegundos(data.count) && activado_psico == false) {
+            MODOS["psicodélico"](data, socket);
+            tiempo1.style.color = "red";
+        }
+        tiempo1.innerHTML = data.count;
+        if(data.count == '¡Tiempo!'){
+            terminado1 = true;
+        }
+    }
+    if (terminado && terminado1) {
 
         //confetti_aux();
         LIMPIEZAS[modo_actual](data);
@@ -335,8 +361,7 @@ socket.on("count", data => {
         // Desactiva el blur de ambos textos.
         //texto2.classList.remove('textarea_blur');
         //texto1.classList.remove('textarea_blur');
-        // Variable booleana que dice si la ronda ha terminado o no.
-        terminado = true;
+
 
         //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
         //texto2.innerText = eliminar_saltos_de_linea(texto2.innerText); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
@@ -350,14 +375,34 @@ socket.on("count", data => {
         neon.style.display = "";
         LIMPIEZAS["psicodélico"]("");
         tiempo.style.color = "white";
+        tiempo1.style.color = "white";
     }
 });
 
 // Inicia el juego.
 socket.on('inicio', data => {
     
+    socket.off('vote');
+    socket.off('exit');
+    socket.off('scroll');
+    socket.off('temas_jugadores');
+    //socket.off('recibir_comentario');
+    socket.off('recibir_postgame1');
+    socket.off('recibir_postgame2');
+
+    logo.style.display = "none"; 
+    neon.style.display = "none"; 
+    tiempo.innerHTML = "";
+    tiempo1.innerHTML = "";
+    tiempo.style.display = "";
+    tiempo1.style.display = "";
+
+    texto1.style.height = "";
+    texto2.style.height = "";
+    texto1.rows =  "6";
+    texto2.rows = "6";
+
     var counter = 3;
-  
     var timer = setInterval(function() {
       
       $('#countdown').remove();
@@ -383,23 +428,8 @@ socket.on('inicio', data => {
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         setTimeout(function(){
-            socket.off('vote');
-            socket.off('exit');
-            socket.off('scroll');
-            socket.off('temas_jugadores');
-            //socket.off('recibir_comentario');
-            socket.off('recibir_postgame1');
-            socket.off('recibir_postgame2');
 
             limpiezas();
-            texto1.style.height = "";
-            texto2.style.height = "";
-            texto1.rows =  "6";
-            texto2.rows = "6";
-
-            logo.style.display = "none"; 
-            neon.style.display = "none"; 
-            tiempo.style.display = "";
         }, 2000);
     }
   }, 1000);
@@ -435,6 +465,7 @@ socket.on('limpiar', data => {
     */
 
     tiempo.style.display = "none";
+    tiempo1.style.display = "none";
     logo.style.display = "";
     neon.style.display = "";    
 
@@ -715,10 +746,13 @@ function activar_sockets_extratextuales() {
         if(data){
             document.getElementById("contenedor").style.display = "none";
             tiempo.style.display = "none";
+            tiempo1.style.display = "none";
         }
         else{
             document.getElementById("contenedor").style.display = "";
             tiempo.style.display = "";
+            tiempo1.style.display = "none";
+
         }
     });
 
@@ -998,6 +1032,10 @@ function cambiar_color_puntuación() {
 }
 
 function limpiezas(){
+
+    terminado = false;
+    terminado1 = false;
+
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
 
@@ -1013,6 +1051,10 @@ function limpiezas(){
     
     texto1.innerText = "";
     texto2.innerText = "";
+    texto1.style.height = "";
+    texto2.style.height = "";
+    texto1.rows =  "1";
+    texto2.rows = "1";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";
     puntos2.innerHTML = 0 + " palabras 🖋️";
@@ -1020,7 +1062,8 @@ function limpiezas(){
     nivel1.innerHTML = "🌡️ nivel 0";
     nivel2.innerHTML = "🌡️ nivel 0";
     
-    tiempo.style.color = "white"
+    tiempo.style.color = "white";
+    tiempo1.style.color = "white";
     puntos1.style.color = "white";
     puntos2.style.color = "white";
     
@@ -1038,6 +1081,7 @@ function limpiezas(){
     clearTimeout(tempo_text_borroso);
 
     feedback_tiempo.style.color = color_positivo;
+    feedback_tiempo1.style.color = color_positivo;
 
 }
 
@@ -1057,7 +1101,15 @@ function limpiezas_final(){
     definicion3.innerHTML = "";
     explicación2.innerHTML = "";
 
-    tiempo.style.color = "white"
+    tiempo.style.color = "white";
+    tiempo1.style.color = "white";
+
+    texto1.innerText = "";
+    texto2.innerText = "";
+    texto1.style.height = "";
+    texto2.style.height = "";
+    texto1.rows =  "1";
+    texto2.rows = "1";
 
     texto1.classList.remove('textarea_blur');
     texto2.classList.remove('textarea_blur');
@@ -1067,6 +1119,7 @@ function limpiezas_final(){
     clearTimeout(tempo_text_borroso);
 
     feedback_tiempo.style.color = color_positivo;  
+    feedback_tiempo1.style.color = color_positivo;  
 
 }
 

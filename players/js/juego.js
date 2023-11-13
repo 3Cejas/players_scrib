@@ -125,7 +125,8 @@ function borrar() {
     let { caretNode, caretPos } = guardarPosicionCaret();
 
     // 2. Código existente
-    socket.emit('aumentar_tiempo', -1);
+    secs = -1;
+    socket.emit('aumentar_tiempo', {secs, player});
     caracteres_seguidos = 0;
     indice_buscar_palabra = texto1.innerText.length;
 
@@ -252,7 +253,8 @@ function countChars(texto) {
         }, 2000);
     });
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
-    socket.emit('aumentar_tiempo', 3);
+    secs = 3
+    socket.emit('aumentar_tiempo', {secs, player});
     color = color_positivo;
     tiempo_feed = "⏱️+" + "3" + " segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed});

@@ -23,8 +23,14 @@ body {
     font-family: "Retro-gaming";
 }
 
-textarea {
-    font-family: "Retro-gaming";
+.textarea {
+    display: block;
+    hyphens:auto;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    overflow-y: auto;
+    text-align: justify;
+    font-family: "VT323";
     position: sticky;
     font-size: 8vw;
     font-weight: bold;
@@ -32,7 +38,6 @@ textarea {
     outline-color: currentcolor;
     background-color: transparent;
     background-image: none;
-    overflow: auto;
     padding: 0;
     width: 100%;
     border: none;
@@ -42,6 +47,8 @@ textarea {
     -webkit-appearance: none;
     box-shadow: none !important;
     color: white;
+    height: auto; /* Updated this from a fixed height */
+
 }
 
 p{
@@ -129,6 +136,16 @@ th{
     color: white;
     border-color: white;
 }
+
+.btn-edicion{
+    line-height: 1;
+    font-size: 6vw;
+    border-radius: 0.4rem;
+
+
+}
+
+
 .btn:hover {
     color: black;
     background-color: white;
@@ -147,4 +164,3 @@ th{
 .input_publico{
     font-family: "Retro-gaming";
 }
-

@@ -25,6 +25,7 @@ let explicación = getEl("explicación");
 
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
+let tiempo1 = getEl("tiempo1");
 let tema = getEl("temas");
 let span_pausar_reanudar = getEl("pausar_reanudar");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
@@ -90,16 +91,6 @@ socket.on('texto2', data => {
 
 });
 
-
-socket.on('count', data => {
-    tiempo.innerHTML = data
-    if (data == "¡Tiempo!") {
-        document.getElementById("texto1").disabled = true;
-        document.getElementById("texto").disabled = true;
-        clearInterval(countInterval);
-    }
-});
-
 socket.on('tiempo_muerto_control', data => {
   pausar();
   setTimeout(function(){
@@ -126,8 +117,15 @@ socket.on("recibir_postgame2", (data) => {
     postgame1 = "\n🖋️ Caracteres escritos = " + data.longitud + "\n📚 Palabras bonus = " + data.puntos_palabra + "\n❌ Letra prohibida = " + data.puntos_letra_prohibida + "\n";
 });
 
-socket.on("aumentar_tiempo_control", (secs) => {
-  addSeconds(secs);
+socket.on("aumentar_tiempo_control", (data) => {
+    if(data.player == 1){
+        addSeconds(data.secs);
+    }
+    else {
+        console.log(data.player);
+        console.log(data.secs);
+        addSeconds1(data.secs);
+    }
 });
 
 socket.on("locura", () => {

@@ -124,7 +124,7 @@ let jugador_psico;
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on(texto_x, data => {
-    texto1.value = data.text;
+    texto1.innerText = data.text;
     puntos1.innerHTML = data.points;
     //cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
@@ -138,7 +138,7 @@ socket.on(texto_x, data => {
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
-            texto1.value = "\n" + texto1.value;
+            texto1.innerText = "\n" + texto1.innerText;
         }
     }
     else {
@@ -159,10 +159,14 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on("count", data => {
-    if (data.count == "00:20") {
+    if(data.player == player){
+    if(convertirASegundos(data.count) >= 20){
+        tiempo.style.color = "white"
+    }
+    if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
         tiempo.style.color = "yellow"
     }
-    if (data.count == "00:10") {
+    if (10 > convertirASegundos(data.count)) {
         tiempo.style.color = "red"
     }
     tiempo.innerHTML = data.count;
@@ -171,7 +175,7 @@ socket.on("count", data => {
 
         limpiezas_final();
 
-        //texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
+        //texto1.innerText = (texto1.innerText).substring(saltos_línea_alineacion_1, texto1.innerText.length);
         //texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
 
         // Desactiva el blur de ambos textos.
@@ -179,7 +183,7 @@ socket.on("count", data => {
         //texto1.classList.remove('textarea_blur');
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
-        //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+        //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
         //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
         texto1.style.height = "auto";
@@ -188,6 +192,7 @@ socket.on("count", data => {
         mostrar_texto.value = 1;
         notificacion.style.display = "none";
     }
+}
 });
 
 // Inicia el juego.
@@ -285,6 +290,13 @@ socket.on("elegir_repentizado", (opciones) => {
     recordatorio.innerHTML = "";
     animateCSS(".notificacion", "flash");
 });
+
+function convertirASegundos(tiempo) {
+    let partes = tiempo.split(':'); // separamos los minutos de los segundos
+    let minutos = parseInt(partes[0], 10); // convertimos los minutos a un número entero
+    let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
+    return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
+  }
 
 function pedir_inspiracion(juego){
     campo_palabra.value = "";
@@ -576,7 +588,7 @@ function cambiar_color_puntuación() {
 
 function limpiezas(){
     
-    texto1.value = "";
+    texto1.innerText = "";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";
    
@@ -617,3 +629,28 @@ function confetti_aux(){
     confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
     }, 250);
 }
+
+// Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
+texto1.addEventListener("keyup", (evt) => {
+    console.log(evt.key)
+    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
+      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+  
+    }
+  });
+  // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
+  texto1.addEventListener("keydown", (evt) => {
+    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
+      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+  
+    }
+  });
+  
+  // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
+  texto1.addEventListener("press", (evt) => {
+    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
+      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+  
+    }
+  });
+  
