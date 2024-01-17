@@ -551,11 +551,11 @@ socket.on("count", (data) => {
         texto_guardado2 = texto2.innerText;
         tiempo.style.color = "white";
         if(terminado == false){
-            if(terminado2 == false){
+            /*if(terminado2 == false){
                 texto2.style.height = "";
                 texto2.rows = "1";
                 texto2.innerText = "";
-            }
+            }*/
             final();
             confetti_aux();
             setTimeout(function () {
@@ -563,6 +563,7 @@ socket.on("count", (data) => {
                 texto1.rows =  "1";
                 texto1.innerText = "";
                 sendText();
+                tiempo.style.color = "white";
                 }, 2000);
         }
     }
@@ -573,11 +574,9 @@ socket.on("count", (data) => {
             }
             if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
                 console.log(convertirASegundos(data.count))
-                LIMPIEZAS["psicodélico"]("");
                 tiempo1.style.color = "yellow";
             }
-            if (10 > convertirASegundos(data.count) && activado_psico == false) {
-                MODOS["psicodélico"](data, socket);
+            if (10 > convertirASegundos(data.count)) {
                 tiempo1.style.color = "red";
             }
             tiempo1.innerHTML = data.count;
@@ -1452,6 +1451,8 @@ function limpieza(){
 
     texto1.rows =  "6";
     texto2.rows = "6";
+
+    temas.innerHTML = "";
 
     texto2.contentEditable= "false";
 

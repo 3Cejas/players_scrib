@@ -78,7 +78,7 @@ socket.on('dar_nombre', (nombre) => {
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on(texto_x, data => {
-    texto1.value = data.text;
+    texto1.innerText = data.text;
     puntos1.innerHTML = data.points;
     //cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
@@ -87,7 +87,7 @@ socket.on(texto_x, data => {
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
-            texto1.value = "\n" + texto1.value;
+            texto1.innerText = "\n" + texto1.innerText;
         }
     }
     else {
@@ -121,7 +121,7 @@ socket.on("count", data => {
 
         limpiezas_final();
 
-        //texto1.value = (texto1.value).substring(saltos_línea_alineacion_1, texto1.value.length);
+        //texto1.innerText = (texto1.innerText).substring(saltos_línea_alineacion_1, texto1.innerText.length);
         //texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
 
         // Desactiva el blur de ambos textos.
@@ -129,7 +129,7 @@ socket.on("count", data => {
         //texto1.classList.remove('textarea_blur');
         // Variable booleana que dice si la ronda ha terminado o no.
         terminado = true;
-        //texto1.value = eliminar_saltos_de_linea(texto1.value); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
+        //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
         //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
         texto1.style.height = "auto";
@@ -215,7 +215,7 @@ function cambiar_color_puntuación() {
 
 function limpiezas(){
     
-    texto1.value = "";
+    texto1.innerText = "";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";
    

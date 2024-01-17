@@ -24,11 +24,12 @@ body {
 }
 
 .textarea {
+    word-break:break-word;
     display: block;
     hyphens:auto;
     white-space: pre-wrap;
     overflow-wrap: break-word;
-    overflow-y: auto;
+    overflow-y:hidden;
     text-align: justify;
     font-family: "VT323";
     position: sticky;
@@ -48,7 +49,8 @@ body {
     box-shadow: none !important;
     color: white;
     height: auto; /* Updated this from a fixed height */
-
+    min-height: /*simultatin 1 row*/ calc(1.5em * 1);
+    max-height: calc(1.5em * 5) ;
 }
 
 p{
@@ -163,4 +165,63 @@ th{
 
 .input_publico{
     font-family: "Retro-gaming";
+}
+
+.skill {
+    position: relative;
+    border: 0.5vw solid greenyellow;
+    border-radius: 5%;
+    width: 9vw;
+    height: 9vw;
+    overflow: hidden;
+    cursor: pointer;
+    background-color: transparent;
+    justify-content: center;
+    align-items: center;
+    font-size: 6vw; /* Ajusta el tamaño del emoji */
+    display: none;
+  }
+
+.skill-cancel{
+    border: 0.5vw solid red;
+}
+  
+  /* Prevents you from clicked the button multiple times */
+  .skill.disabled {
+    display: flex;
+    pointer-events: none;
+    border: 0.5vw solid red;
+
+  }
+  
+  /* Makes sure we click the skill not anything in it */
+  .skill > * {
+    pointer-events: none;
+  }
+  
+  .skill::before {
+    content: "";
+    background: conic-gradient(
+      rgba(255, 0, 0, 0.7) var(--time-left),
+      rgba(0, 0, 0, 0.1) var(--time-left));
+    position: absolute;
+    opacity: 0.8;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+@keyframes brillo {
+    0%, 100% {
+        box-shadow: 0 0 10px 0 greenyellow;
+    }
+    50% {
+        box-shadow: 0 0 20px 10px greenyellow;
+    }
+}
+
+.feedback_texto_editado{
+    color: greenyellow;
+    font-size: 4vw;
 }

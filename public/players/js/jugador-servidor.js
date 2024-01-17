@@ -12,6 +12,7 @@ let alineador1 = getEl("alineador1");
 let tiempo = getEl("tiempo");
 let tema = getEl("temas");
 
+let terminado = false;
 let clasificacion = getEl("clasificacion");
 let notificacion = getEl("notificacion");
 let fin_pag = getEl("fin_pag");
@@ -24,6 +25,12 @@ let conteo = getEl("conteo");
 let sincro = 0;
 let votando = false;
 let conteo_palabras = 0;
+const skill = getEl("skill")
+const skill_cancel = getEl("skill_cancel")
+const feedback_texto_editado = getEl("feedback_texto_editado")
+var intervalID = -1;
+
+feedback_texto_editado
 
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
@@ -79,6 +86,7 @@ const socket = io(serverUrl);
 socket.on('modo_actual', (data) => {
     modo_actual = data.modo_actual;
     console.log("Conteo palabras:", 0)
+    console.log("PUTA, ESTO NO SDEBERÑIA PASAR", terminado)
     if(sincro == 1 || votando == true){
 
     }
@@ -160,6 +168,7 @@ pausa el cambio de palabra.
 */
 socket.on("count", data => {
     if(data.player == player){
+        console.log(data.count)
     if(convertirASegundos(data.count) >= 20){
         tiempo.style.color = "white"
     }
@@ -167,6 +176,7 @@ socket.on("count", data => {
         tiempo.style.color = "yellow"
     }
     if (10 > convertirASegundos(data.count)) {
+        console.log("MENOR QUE 10", convertirASegundos(data.count) )
         tiempo.style.color = "red"
     }
     tiempo.innerHTML = data.count;
@@ -182,7 +192,6 @@ socket.on("count", data => {
         //texto2.classList.remove('textarea_blur');
         //texto1.classList.remove('textarea_blur');
         // Variable booleana que dice si la ronda ha terminado o no.
-        terminado = true;
         //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
         //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
 
@@ -197,6 +206,10 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    terminado = false;
+    tiempo.innerHTML = "";
+    tiempo.style.display = "";
+    tiempo.style.color = "white"
     var counter = 3;
   
     var timer = setInterval(function() {
@@ -233,6 +246,15 @@ socket.on('inicio', data => {
             socket.off('recibir_postgame2');
 
             limpiezas();
+
+            socket.on("pedir_inspiracion_musa", juego => {
+                conteo_palabras = 0;
+                console.log("Es aquiiiií")
+               pedir_inspiracion(juego);
+            });
+
+            skill.style.display = "flex";
+
             texto1.style.height = "";
             texto1.rows =  "3";
         }, 2000);
@@ -242,13 +264,16 @@ socket.on('inicio', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
-
+    skill.style = 'animation: brillo 2s ease-in-out;'
     // Recibe el nombre del jugador y lo coloca en su sitio.
     socket.on(nombre, data => {
         nombre1.value = data;
     });
 
     limpiezas();
+    terminado = true;
+    tiempo.style.display = "none";
+    tiempo.style.color = "white"
 
     texto1.style.height = "";
     texto1.rows =  "3";
@@ -265,6 +290,7 @@ socket.on('limpiar', () => {
 
 socket.on("pedir_inspiracion_musa", juego => {
     conteo_palabras = 0;
+    console.log("Es aquiiiií")
    pedir_inspiracion(juego);
 });
 
@@ -305,6 +331,7 @@ function pedir_inspiracion(juego){
     modo_actual = juego.modo_actual;
     recordatorio.innerHTML = "";
     conteo.style.display = "";
+    if(terminado == false){
     conteo.innerHTML =  conteo_palabras + "/" + LIMITE_PALABRAS + " palabras"
     if(juego.modo_actual == "palabras bonus"){
         tarea.innerHTML = "Cantame a mí, <span style='color: orange;'>Musa</span>, una palabra que me inspire:"
@@ -333,6 +360,7 @@ function pedir_inspiracion(juego){
     notificacion.style.display = "block";
     animateCSS(".notificacion", "flash");
     fin_pag.scrollIntoView({behavior: "smooth", block: "end"});
+    }
 }
 
 function recibir_palabra(data) {
@@ -587,23 +615,27 @@ function cambiar_color_puntuación() {
 }
 
 function limpiezas(){
-    
+    clearInterval(intervalID)
+    skill.style.display = "none";
+    skill.style.border = "0.5vw solid greenyellow";
+    skill_cancel.style.display = "none";
     texto1.innerText = "";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";
    
     nivel1.innerHTML = "🌡️ nivel 0";
     
-    tiempo.innerHTML = "";
-    tiempo.style.color = "white"
     puntos1.style.color = "white";  
     votando = false;
 }
 
 function limpiezas_final(){
-
+    skill.style.display = "none";
+    skill_cancel.style.display = "none";
     tiempo.style.color = "white";
     votando = false;
+    terminado = true;
+    socket.off('pedir_inspiracion_musa');
 
 }
 
@@ -653,4 +685,87 @@ texto1.addEventListener("keyup", (evt) => {
   
     }
   });
+
   
+  const SECOND_IN_MS = 1000;
+  const UPDATE_INTERVAL = SECOND_IN_MS / 60; // Update 60 times per second (60 FPS)
+  const SKILL_CLASS = 'skill';
+  const DISABLED_CLASS = 'disabled';
+  
+// Cooldown in milliseconds
+cooldowntime = 5000;
+
+// Activate clicked skill
+const activateSkill = (event) => {
+  const {target} = event;
+  // Exit if we click on anything that isn't a skill
+  if(target.textContent == '✏️'){
+        editando = true;
+        mostrar_texto.value = 0;
+        mostrarTextoCompleto(mostrar_texto);
+        texto1.contentEditable= "true";
+        target.textContent = '✉️';
+        skill_cancel.style.display = "flex";
+    return
+  }
+  if(!target.classList.contains(SKILL_CLASS)) return;
+
+  if(target.textContent == '✉️'){
+    
+    feedback_texto_editado.innerHTML = "¡Texto editado!"
+    animateCSS(".feedback_texto_editado", "flash").then((message) => {
+        delay_animacion = setTimeout(function () {
+        feedback_texto_editado.innerHTML = "";
+        }, 800);
+    });
+    texto1.style.height = "";
+    editando = false;
+    mostrarTextoCompleto(mostrar_texto);
+    texto1.contentEditable = "false";
+    socket.emit('aumentar_tiempo', {secs:-1, player});
+    socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent, level: nivel1.textContent});
+    skill_cancel.style.display = "none";
+    target.textContent = '✏️'
+  }
+  target.classList.add(DISABLED_CLASS);
+  target.style = '--time-left: 100%';
+  
+  // Get cooldown time
+  let time = cooldowntime - UPDATE_INTERVAL;
+  
+  // Update remaining cooldown
+  intervalID = setInterval(() => {
+    // Pass remaining time in percentage to CSS
+    const passedTime = time / cooldowntime * 100;
+    target.style = `--time-left: ${passedTime}%;`;
+
+    // Display time left
+    //target.textContent = (time / SECOND_IN_MS).toFixed(2);
+    time -= UPDATE_INTERVAL;
+    
+    // Stop timer when there is no time left
+    if(time < 0) {
+        
+        skill_cancel.style.display = "none";
+        skill.style.display = "flex";
+        target.textContent = '✏️';
+        target.style = '';
+        target.style = 'animation: brillo 2s ease-in-out;'
+        target.classList.remove(DISABLED_CLASS);
+      
+      clearInterval(intervalID);
+    }
+  }, UPDATE_INTERVAL);
+}
+
+function cancelar(boton){
+    socket.emit('pedir_texto' + player )
+    texto1.style.height = "";
+    editando = false;
+    mostrarTextoCompleto(mostrar_texto);
+    texto1.contentEditable = "false";
+    boton.style.display = "none";
+    skill.textContent = '✏️';
+}
+// Add click handler to the table
+skill.addEventListener('click', activateSkill, false);

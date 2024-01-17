@@ -23,25 +23,27 @@ body {
     font-family: "Retro-gaming";
 }
 
-textarea {
-    font-family: "Retro-gaming";
-    position: sticky;
-    font-size: 5vw;
-    font-weight: bold;
-    border-color: currentcolor;
-    outline-color: currentcolor;
-    background-color: transparent;
-    background-image: none;
-    overflow: auto;
-    padding: 0;
-    width: 100%;
-    border: none;
-    resize: none;
-    overflow: hidden;
-    outline: 0px !important;
-    -webkit-appearance: none;
-    box-shadow: none !important;
-    color: white;
+.textarea {
+    word-break: break-word;       /* Asegura que las palabras se rompan para ajustarse al contenedor */
+    white-space: pre-wrap;        /* Mantiene los espacios en blanco y permite saltos de línea automáticos */
+    hyphens:auto;
+    overflow-wrap: break-word;    /* Permite el quiebre de palabras si es necesario para evitar desbordamiento */
+    text-align: justify;          /* Justifica el texto, útil si quieres una alineación uniforme */
+    font-family: "VT323";         /* Tipo de letra */
+    font-size: 4vw;               /* Tamaño de la letra como un porcentaje del ancho de la ventana */
+    font-weight: bold;            /* Peso de la fuente */
+    color: white;                 /* Color del texto */
+    background-color: transparent;/* Color de fondo */
+    border: none;                 /* Sin bordes */
+    outline: 0px !important;      /* Sin contorno */
+    padding: 0;                   /* Sin relleno */
+    width: 80%;                   /* Ancho relativo al contenedor padre */
+    margin-left: auto;            /* Centra el div en el contenedor padre */
+    margin-right: auto;           /* Centra el div en el contenedor padre */
+    resize: none;                 /* Impide que se cambie el tamaño */
+    overflow: hidden;             /* Oculta el contenido que se desborde del div */
+    -webkit-appearance: none;     /* Estilo estándar para WebKit/Blink */
+    box-shadow: none !important;  /* Sin sombra de caja */
 }
 
 p{
@@ -51,7 +53,7 @@ p{
     width: 100%;
     font-family: "Retro-gaming";
     text-align: center;
-    font-size: 3vw;
+    font-size: 6vw;
     font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
@@ -71,7 +73,7 @@ p{
   .right {
     padding: 0.25vmax;
     background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
-    font-size: 1.5vw;
+    font-size: 2.5vw;
     font-family: "Retro-gaming";
     
 }

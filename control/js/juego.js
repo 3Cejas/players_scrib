@@ -52,7 +52,7 @@ function startCountDown_p1(duration, element) {
     }, 1000);
 }
 
-function startCountDown_p2(duration, element) {
+function startCountDown_p2(duration) {
 
     secondsRemaining1 = duration;
     let min1;
@@ -151,8 +151,8 @@ function temp() {
         socket.emit('count', {count1, secondsPassed1, player:2});
         console.log(duration, tiempo)
         duration = duration - 1;
-        startCountDown_p1(duration, tiempo);
-        startCountDown_p2(duration, tiempo);
+        startCountDown_p1(duration);
+        startCountDown_p2(duration);
 
     }, 5000);
     MODOS['calentamiento']('', '');
@@ -353,8 +353,8 @@ function reanudar(){
 
     socket.emit('count', {count, secondsPassed, player:1});
     socket.emit('count', {count1, secondsPassed1, player:2});
-    startCountDown_p1(secondsRemaining, tiempo);
-    startCountDown_p2(secondsRemaining, tiempo1);
+    startCountDown_p1(secondsRemaining);
+    startCountDown_p2(secondsRemaining);
     socket.emit('reanudar', '');
 }
 
@@ -372,8 +372,8 @@ function reanudar_modo(){
     socket.emit('count', {count1, secondsPassed1, player:2});
 
 
-    startCountDown_p1(secondsRemaining, element);
-    startCountDown_p2(secondsRemaining1, element);
+    startCountDown_p1(secondsRemaining);
+    startCountDown_p2(secondsRemaining1);
     socket.emit('reanudar_modo', '');
 }
 function sortTable() {

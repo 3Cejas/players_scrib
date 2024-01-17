@@ -21,16 +21,26 @@
                 <div contenteditable="false" class="textarea" id="texto"
                 spellcheck="false">
             </div>
-                <br><br>
-                <table>
-                    <tr>
-                        <p id="tiempo" class="tiempo"></p>
-                    </tr>
-                </table>
+                <br>
                 <div align="center">
-                    
-                    <button id="editar" class="btn btn-edicion" value=0 onclick="editar(this)">📝</button>
-                    <br><br>
+                    <table>
+                        <tr>
+                            <td>
+                                <div id="skill_cancel" class="skill skill-cancel" onclick="cancelar(this)">❌</div>
+                                </td>
+                            <td>
+                            <div id="skill" class="skill">✏️</div>
+                          </td>
+                          <td>
+                          </td>
+                        </tr>
+                      </table>
+                    <p id="feedback_texto_editado" class="feedback_texto_editado"></p>
+                    <table>
+                        <tr>
+                            <p id="tiempo" class="tiempo"></p>
+                        </tr>
+                    </table>
                     <table class="right">
                         <tr>
                             <th id="puntos" class="puntos">0 palabras 🖋️</th>

@@ -97,7 +97,7 @@ function editar(boton) {
     mostrar_texto.value = 0;
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable= "true";
-    boton.innerHTML = "✉️ Enviar";
+    boton.innerHTML = "✉️";
     boton.value = 1;
   }
   else{
@@ -107,7 +107,7 @@ function editar(boton) {
     texto1.contentEditable = "false";
     socket.emit('aumentar_tiempo', {secs:-1, player});
     socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent, level: nivel1.textContent});
-    boton.innerHTML = "📝 Editar";
+    boton.innerHTML = "✏️";
     boton.value = 0;
   }
 }

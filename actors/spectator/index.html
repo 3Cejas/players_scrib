@@ -18,9 +18,9 @@
                 <input disabled id="nombre" class="nombre"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <textarea disabled id="texto"
-                    spellcheck="false">
-                </textarea>
+                <div contenteditable="false" class="textarea" id="texto"
+                spellcheck="false">
+            </div>
                 <br><br>
                 <table>
                     <tr>
@@ -35,11 +35,9 @@
                             <th id="nivel" class="nivel">🌡️ nivel 1 </th>
                         </tr>
                     </table>
-            </div>
                 </div>
             </div>
         </div>
-    </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>
