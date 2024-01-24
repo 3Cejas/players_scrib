@@ -75,6 +75,7 @@ function enviarPalabra() {
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
 function mostrarTextoCompleto(boton) {
   if(boton.value == 0){
+  texto1.style.maxHeight = "none";
   texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
   texto1.scrollTop = texto1.scrollHeight;
   boton.innerHTML = "Ocultar texto";

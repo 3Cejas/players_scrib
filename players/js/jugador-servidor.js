@@ -56,6 +56,9 @@ let neon = getEl("neon");
 let tempo_text_borroso;
 let tempo_text_inverso;
 
+let listener_cuenta_atras = null;
+let timer = null;
+
 // Variables de los modos.
 let modo_actual = "";
 let putada_actual = "";
@@ -513,7 +516,9 @@ pausa el cambio de palabra.
 socket.on("count", (data) => {
     //texto1.focus();
     console.log("TIEMPO", data.count)
+    console.log(modo_actual)
     if(data.player == player){
+        console.log
     if (convertirASegundos(data.count) >= 20) {
         tiempo.style.color = "white";
     }
@@ -558,10 +563,16 @@ socket.on("count", (data) => {
             }*/
             final();
             confetti_aux();
+            console.log("ANTESPRIMERO", texto1.innerText)
             setTimeout(function () {
+
                 texto1.style.height = "";
                 texto1.rows =  "1";
-                texto1.innerText = "";
+                texto1.style.display = "none";
+                console.log("TEXTO1", texto1.innerText)
+                console.log("TEXTO_GUARDADO", texto_guardado1)
+                texto1.textContent = texto_guardado1;
+                console.log("TEXTO1_CAMBIADO",texto1.innerText)
                 sendText();
                 tiempo.style.color = "white";
                 }, 2000);
@@ -605,7 +616,7 @@ socket.on("inicio", (data) => {
 
     var counter = 3;
   
-    var timer = setInterval(function() {
+    timer = setInterval(function() {
       
       $('#countdown').remove();
       
@@ -629,11 +640,13 @@ socket.on("inicio", (data) => {
         }, 1000);
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
-        setTimeout(function(){
+        listener_cuenta_atras = setTimeout(function(){
             if (data.borrar_texto == false) {
                 texto1.innerText = texto_guardado1.trim();
                 texto2.innerText = texto_guardado2.trim();
                 
+                sendText()
+
                 // Obtener el último nodo de texto en texto1
                 let lastLine = texto1.lastChild;
                 let lastTextNode = lastLine;
@@ -652,6 +665,7 @@ socket.on("inicio", (data) => {
             //socket.off("recibe_temas");
             texto1.contentEditable= "true";
             texto1.focus();
+            animacion_modo();
             MODOS['calentamiento']('', '');
         }, 2000);
       }
@@ -753,6 +767,7 @@ socket.on('fin', data => {
     }
     else if(player == 1 && data == 2 || player == 2 && data == 1){
         terminado2 = true;
+        texto2.style.display = "none";
     }
 });
 
@@ -1440,8 +1455,14 @@ function cambiar_color_puntuación() {
 
 function limpieza(){
     
+    clearTimeout(listener_cuenta_atras);
+    clearTimeout(timer);
     texto1.innerText = "";
     texto2.innerText = "";
+
+    texto1.style.display = "";
+    texto2.style.display = "";
+
 
     texto1.style.height = "";
     texto2.style.height = "";

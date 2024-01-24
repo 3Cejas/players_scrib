@@ -1,7 +1,7 @@
 // Se establece la conexión con el servidor.
 serverUrl = window.location.href.startsWith('file:')
     ? 'http://localhost:3000'
-    : 'https://scri-b.up.railway.app';
+    : 'https://scrib.zeabur.app';
 
 const socket = io(serverUrl);
 

@@ -29,6 +29,8 @@ const skill = getEl("skill")
 const skill_cancel = getEl("skill_cancel")
 const feedback_texto_editado = getEl("feedback_texto_editado")
 var intervalID = -1;
+let timer = null;
+let listener_cuenta_atras = null;
 
 feedback_texto_editado
 
@@ -85,8 +87,6 @@ const socket = io(serverUrl);
 
 socket.on('modo_actual', (data) => {
     modo_actual = data.modo_actual;
-    console.log("Conteo palabras:", 0)
-    console.log("PUTA, ESTO NO SDEBERÑIA PASAR", terminado)
     if(sincro == 1 || votando == true){
 
     }
@@ -102,6 +102,10 @@ socket.on('modo_actual', (data) => {
         pedir_inspiracion({modo_actual, letra_prohibida})
     }
     if(modo_actual == "palabras bonus"){
+        pedir_inspiracion({modo_actual})
+    }
+
+    if(modo_actual == "tertulia"){
         pedir_inspiracion({modo_actual})
     }
 
@@ -212,7 +216,7 @@ socket.on('inicio', data => {
     tiempo.style.color = "white"
     var counter = 3;
   
-    var timer = setInterval(function() {
+    timer = setInterval(function() {
       
       $('#countdown').remove();
       
@@ -236,7 +240,7 @@ socket.on('inicio', data => {
         }, 1000);
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
-        setTimeout(function(){
+        listener_cuenta_atras = setTimeout(function(){
             socket.off('vote');
             socket.off('exit');
             socket.off('scroll');
@@ -308,12 +312,16 @@ socket.on(elegir_ventaja, () => {
     animateCSS(".notificacion", "flash");
 });
 
-socket.on("elegir_repentizado", (opciones) => {
+socket.on("elegir_repentizado", ({seleccionados, TIEMPO_VOTACION}) => {
     votando = true;
-    tarea.innerHTML = "<p>¿Por donde quieres que continúe la historia?</p><button class='btn' value = '1' onclick='elegir_repentizado_publico(this)'>"+ opciones[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>"+ opciones[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>"+ opciones[2] + "</button>"
+    tarea.innerHTML = "<p>¿Por donde quieres que continúe la historia?</p><button class='btn' value = '1' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[2] + "</button>"
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
+    setTimeout(() => {
+        socket.emit('pedir_nombre');
+        votando = false;
+    }, TIEMPO_VOTACION);
     animateCSS(".notificacion", "flash");
 });
 
@@ -331,7 +339,7 @@ function pedir_inspiracion(juego){
     modo_actual = juego.modo_actual;
     recordatorio.innerHTML = "";
     conteo.style.display = "";
-    if(terminado == false){
+    if(terminado == false && votando == false){
     conteo.innerHTML =  conteo_palabras + "/" + LIMITE_PALABRAS + " palabras"
     if(juego.modo_actual == "palabras bonus"){
         tarea.innerHTML = "Cantame a mí, <span style='color: orange;'>Musa</span>, una palabra que me inspire:"
@@ -616,6 +624,8 @@ function cambiar_color_puntuación() {
 
 function limpiezas(){
     clearInterval(intervalID)
+    clearTimeout(listener_cuenta_atras);
+    clearTimeout(timer)
     skill.style.display = "none";
     skill.style.border = "0.5vw solid greenyellow";
     skill_cancel.style.display = "none";

@@ -1,5 +1,6 @@
 let countInterval;
 let countInterval1;
+let listener_cuenta_atras;
 let time_minutes; // Value in minutes
 let time_seconds; // Value in seconds
 let secondsRemaining;
@@ -17,7 +18,7 @@ function paddedFormat(num) {
     return num < 10 ? "0" + num : num;
 }
 
-function startCountDown_p1(duration, element) {
+function startCountDown_p1(duration) {
 
     secondsRemaining = duration;
     secondsPassed = 0;
@@ -26,17 +27,26 @@ function startCountDown_p1(duration, element) {
     clearInterval(countInterval);
     countInterval = setInterval(function () {
         secondsPassed++;
-        console.log(secondsPassed)
-        console.log(DURACION_TIEMPO_MODOS)
-        if(secondsPassed == DURACION_TIEMPO_MODOS){
-            LIMPIEZAS[modo_actual]();
+        console.log("secondsPased", secondsPassed)
+        console.log("modo_actual", modo_actual)
+        console.log("DURACION_TIEMPO_MODOS", DURACION_TIEMPO_MODOS)
+        if(secondsPassed >= DURACION_TIEMPO_MODOS){
+            console.log(modo_actual)
+            // Se hace solo aquí LIMPIEZAS porque afecta a los dos jugadores.
+            console.log("ENTROOOOOOOO")
+            if(DURACION_TIEMPO_MODOS == TIEMPO_CALENTAMIENTO){
+                LIMPIEZAS["calentamiento"]();
+                }
+
             secondsPassed = 0;
+            secondsPassed1 = 0;
         }
         min = parseInt(secondsRemaining / 60);
         sec = parseInt(secondsRemaining % 60);
 
         tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+        console.log('count', {count, secondsPassed, player:1})
         socket.emit('count', {count, secondsPassed, player:1});
         if (secondsRemaining == 20) {
             tiempo.style.color = "yellow"
@@ -53,23 +63,21 @@ function startCountDown_p1(duration, element) {
 }
 
 function startCountDown_p2(duration) {
-
     secondsRemaining1 = duration;
     let min1;
     let sec1;
     clearInterval(countInterval1);
     countInterval1 = setInterval(function () {
         secondsPassed1++;
-        console.log(secondsPassed1)
-        console.log(DURACION_TIEMPO_MODOS)
-
+        if(secondsPassed1 >= DURACION_TIEMPO_MODOS){
+            secondsPassed1 = 0;
+        }
         min1 = parseInt(secondsRemaining1 / 60);
         sec1 = parseInt(secondsRemaining1 % 60);
 
         tiempo1.textContent = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
         count1 = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
-        console.log("count", count1);
-        socket.emit('count', {count1, secondsPassed1, player: 2});
+        socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player: 2});
         if (secondsRemaining1 == 20) {
             tiempo1.style.color = "yellow"
         }
@@ -78,7 +86,6 @@ function startCountDown_p2(duration) {
         }
         secondsRemaining1 = secondsRemaining1 - 1;
         if (secondsRemaining1 <= 0) {
-            console.log("PENBEBEEBENEBEE")
             final(2);
         };
 
@@ -141,14 +148,16 @@ function temp() {
     }
 
     socket.emit('inicio', {count, borrar_texto});
+    modo_actual = "calentamiento";
     secondsPassed = 0;
     secondsPassed1 = 0;
   
     DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
     
-    setTimeout(function(){
+    listener_cuenta_atras = setTimeout(function(){
+        console.log({count1, secondsPassed1, player:2})
         socket.emit('count', {count, secondsPassed, player:1});
-        socket.emit('count', {count1, secondsPassed1, player:2});
+        socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
         console.log(duration, tiempo)
         duration = duration - 1;
         startCountDown_p1(duration);
@@ -180,16 +189,14 @@ function limpiar() {
         boton_pausar_reanudar.value = 0;
         span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
-    console.log(borrar_texto, "AAAAAAH")
     if(borrar_texto == false){
-        console.log(texto1.value)
         texto_guardado1 = texto1.value;
         texto_guardado2 = texto2.value;
     }
-    document.getElementById("texto").value = "";
-    document.getElementById("texto1").value = "";
-    document.getElementById("puntos").innerHTML = "0 palabras";
-    document.getElementById("puntos1").innerHTML = "0 palabras";
+    texto1.value = "";
+    texto2.value = "";
+    document.getElementById("puntos").innerHTML = "0 palabras 🖊️";
+    document.getElementById("puntos1").innerHTML = "0 palabras 🖊️";
     document.getElementById("nivel").innerHTML = "nivel 0";
     document.getElementById("nivel1").innerHTML = "nivel 0";
     document.getElementById("palabra").innerHTML = "";
@@ -205,7 +212,9 @@ function limpiar() {
     secondsPassed = 0;
     secondsPassed1 = 0;
     DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
+    clearInterval(listener_cuenta_atras);
     clearInterval(countInterval);
+    clearInterval(countInterval1);
     clearTimeout(tempo_text_borroso);
     tiempo.innerHTML = "";
     tiempo1.innerHTML = "";
@@ -352,7 +361,7 @@ function pausar_reanudar(boton){
 function reanudar(){
 
     socket.emit('count', {count, secondsPassed, player:1});
-    socket.emit('count', {count1, secondsPassed1, player:2});
+    socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
     startCountDown_p1(secondsRemaining);
     startCountDown_p2(secondsRemaining);
     socket.emit('reanudar', '');
@@ -360,7 +369,6 @@ function reanudar(){
 
 function reanudar_modo(){
     console.log(count, secondsPassed, secondsRemaining, tiempo)
-    console.log(count1, secondsPassed1, secondsRemaining1, tiempo1)
     console.log(time_minutes, time_seconds)
     if(boton_pausar_reanudar.value == 1){
         boton_pausar_reanudar.value = 0;
@@ -369,7 +377,7 @@ function reanudar_modo(){
     secondsPassed = 0;
     secondsPassed1 = 0;
     socket.emit('count', {count, secondsPassed, player:1});
-    socket.emit('count', {count1, secondsPassed1, player:2});
+    socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
 
 
     startCountDown_p1(secondsRemaining);
@@ -465,7 +473,6 @@ function final(player){
         tiempo.innerHTML = "¡Tiempo!";
         count = "¡Tiempo!";
         texto_guardado1 = texto1.value;
-        texto_guardado2 = texto2.value;
         terminado = true;
         socket.emit('count', {count, secondsPassed, player});
     }
@@ -474,13 +481,14 @@ function final(player){
         tiempo1.style.color = "white"
         tiempo1.innerHTML = "¡Tiempo!";
         count1 = "¡Tiempo!";
-        texto_guardado1 = texto1.value;
-        terminado = true;
+        terminado1 = true;
+        console.log("texto2", texto_guardado2)
         texto_guardado2 = texto2.value;
 
-        socket.emit('count', {count1, secondsPassed1, player});
+        socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
     }
     if(terminado && terminado1){
+        console.log("PRUEBA FINAL", texto_guardado1)
         setTimeout(descargar_textos, 5000);
     }
 }

@@ -8,6 +8,9 @@ let nivel1 = getEl("nivel");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 
+let listener_cuenta_atras = null;
+let timer = null;
+
 texto1.style.height = "auto";
 texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
 texto1.scrollTop = texto1.scrollHeight;
@@ -63,7 +66,7 @@ var player = getParameterByName("player");
 // Se establece la conexión con el servidor.
 serverUrl = window.location.href.startsWith('file:')
     ? 'http://localhost:3000'
-    : 'https://scri-b.up.railway.app';
+    : 'https://scrib.zeabur.app';
 
 const socket = io(serverUrl);
 
@@ -142,7 +145,7 @@ socket.on("count", data => {
 socket.on('inicio', data => {
     var counter = 3;
   
-    var timer = setInterval(function() {
+    timer = setInterval(function() {
       
       $('#countdown').remove();
       
@@ -166,7 +169,7 @@ socket.on('inicio', data => {
         }, 1000);
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
-        setTimeout(function(){
+        listener_cuenta_atras = setTimeout(function(){
             limpiezas();
             texto1.style.height = "";
             texto1.rows =  "3";
@@ -215,6 +218,9 @@ function cambiar_color_puntuación() {
 
 function limpiezas(){
     
+    clearTimeout(listener_cuenta_atras);
+    clearTimeout(timer);
+
     texto1.innerText = "";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";

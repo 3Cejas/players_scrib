@@ -245,7 +245,7 @@ function countChars(texto) {
 
   if (caracteres_seguidos == 5 && locura == false) {
     feedback1.style.color = color_positivo;
-    feedback1.innerHTML = "⏱️+3 segs.";
+    feedback1.innerHTML = "⏱️+6 segs.";
     clearTimeout(delay_animacion);
     animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
@@ -253,10 +253,10 @@ function countChars(texto) {
         }, 2000);
     });
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
-    secs = 3
+    secs = 6;
     socket.emit('aumentar_tiempo', {secs, player});
     color = color_positivo;
-    tiempo_feed = "⏱️+" + "3" + " segs."
+    tiempo_feed = "⏱️+" + "6" + " segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed});
   }
   console.log("big")

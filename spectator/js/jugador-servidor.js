@@ -60,11 +60,20 @@ let tempo_text_borroso;
 let listener_modo;
 let jugador_psico;
 let activado_psico = false;
+let listener_cuenta_atras = null;
+let timer = null;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
 const TIEMPO_BORRADO = 60000;
 const MODOS = {
 
+    "calentamiento": function (data) {
+        explicación.style.color = "purple";
+        palabra1.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion3.innerHTML = "";
+        explicación.innerHTML = "CALENTAMIENTO";
+    },
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         console.log("ALGO")
@@ -176,6 +185,9 @@ const MODOS = {
 };
 
 const LIMPIEZAS = {
+    "calentamiento": function (data) {
+    },
+
     "palabras bonus": function (data) {
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
@@ -403,14 +415,14 @@ socket.on('inicio', data => {
     texto2.rows = "6";
 
     var counter = 3;
-    var timer = setInterval(function() {
+    timer = setInterval(function() {
       
       $('#countdown').remove();
       
       var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
       countdown.appendTo($('.container'));
   
-      setTimeout(() => {
+      listener_cuenta_atras = setTimeout(() => {
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
         } else {
@@ -430,6 +442,8 @@ socket.on('inicio', data => {
         setTimeout(function(){
 
             limpiezas();
+            animacion_modo();
+            MODOS['calentamiento']('', '');
         }, 2000);
     }
   }, 1000);
@@ -468,7 +482,6 @@ socket.on('limpiar', data => {
     tiempo1.style.display = "none";
     logo.style.display = "";
     neon.style.display = "";    
-
     activar_sockets_extratextuales();
 });
 
@@ -713,6 +726,22 @@ socket.on('fin', data => {
         confetti_aux();
 });
 
+socket.on("enviar_repentizado", ventaja => {
+    console.log("ventaja", ventaja)
+    temas.innerHTML = ventaja;
+});
+
+socket.on("nueva letra", letra => {
+    console.log("NUEVA LETRA")
+    if(modo_actual == "letra prohibida"){
+        animacion_modo();
+        palabra1.innerHTML = "LETRA PROHIBIDA: " + letra;
+        }
+    else if(modo_actual == "letra bendita"){
+        animacion_modo();
+        palabra1.innerHTML = "LETRA BENDITA: " + letra;
+    }
+});
 
 //FUNCIONES AUXILIARES.
 
@@ -774,6 +803,8 @@ function activar_sockets_extratextuales() {
         temas = data;
         erm();
     });
+
+
 
     /*socket.on("recibir_postgame1", (data) => {
         focalizador2.innerHTML = "<br>🖋️ Caracteres escritos = " + data.longitud + "<br>📚 Palabras bonus = " + data.puntos_palabra + "<br>❌ Letra prohibida = " + data.puntos_letra_prohibida + "<br>😇 Letra bendita = " + data.puntos_letra_bendita;
@@ -1033,6 +1064,8 @@ function cambiar_color_puntuación() {
 
 function limpiezas(){
 
+    clearTimeout(listener_cuenta_atras);
+    clearInterval(timer)
     terminado = false;
     terminado1 = false;
 
@@ -1074,7 +1107,6 @@ function limpiezas(){
     focalizador2.innerHTML = "";
 
     for (let key in LIMPIEZAS) { 
-        console.log(key)
         LIMPIEZAS[key]();
     }
 
