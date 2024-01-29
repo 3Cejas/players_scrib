@@ -71,9 +71,9 @@ let listener_modo;
 let listener_modo1;
 let listener_modo_psico;
 let activado_psico = false;
-const TIEMPO_INVERSO = 60000;
-const TIEMPO_BORROSO = 60000;
-const TIEMPO_BORRADO = 60000;
+const TIEMPO_INVERSO = 20000;
+const TIEMPO_BORROSO = 20000;
+const TIEMPO_BORRADO = 20000;
 
 function getParameterByName(name, url) {
 if (!url) url = window.location.href;
@@ -158,20 +158,69 @@ const PUTADAS = {
     "🙃": function () {
         tiempo_inicial = new Date();
         desactivar_borrar = true;
+        caretNode, caretPos = guardarPosicionCaret();
+        texto1.contentEditable= "false";
         texto1.classList.add("rotate-vertical-center");
-        texto1.innerText =
+        // Añade un escuchador para el evento 'animationend'
+        texto1.addEventListener('animationend', function() {
+            texto1.classList.remove("rotate-vertical-center");
+            texto1.contentEditable= "true";
+            texto1.focus()
+            // Obtener el último nodo de texto en texto1
+            lastLine = texto1.lastChild;
+            lastTextNode = lastLine;
+            while (lastTextNode && lastTextNode.nodeType !== 3) {
+                lastTextNode = lastTextNode.lastChild;
+            }
+            
+            // Si encontramos el último nodo de texto, colocamos el cursor allí
+            if (lastTextNode) {
+                caretNode = lastTextNode;
+                caretPos = lastTextNode.length;
+                restaurarPosicionCaret(caretNode, caretPos);
+            }
+            texto1.removeEventListener('animationend', arguments.callee);
+        });
+        function invertirPalabras(texto) {
+            return texto.split(' ').map(palabra => palabra.split('').reverse().join('')).join(' ');
+        }
+    
+        function procesarTexto() {
+            let fragmento = document.createDocumentFragment();
+    
+            texto1.childNodes.forEach(nodo => {
+                if (nodo.nodeType === Node.TEXT_NODE) {
+                    // Texto dentro del div, fuera de cualquier otro elemento
+                    let textoInvertido = invertirPalabras(nodo.textContent);
+                    fragmento.appendChild(document.createTextNode(textoInvertido));
+                } else if (nodo.nodeType === Node.ELEMENT_NODE) {
+                    // Copia el nodo (p.ej., <br>, <div>) y procesa su contenido si es necesario
+                    let copiaNodo = nodo.cloneNode(false);
+                    if (nodo.childNodes.length > 0) {
+                        let textoInvertido = invertirPalabras(nodo.textContent);
+                        copiaNodo.textContent = textoInvertido;
+                    }
+                    fragmento.appendChild(copiaNodo);
+                }
+            });
+    
+            texto1.innerHTML = '';
+            texto1.appendChild(fragmento);
+        }
+        procesarTexto();
+        /*texto1.innerText =
             texto1.innerText
                 .split("")
                 .reverse()
                 .join("")
                 .split(" ")
                 .reverse()
-                .join(" ");
+                .join(" ");*/
         sendText();
         tempo_text_inverso = setTimeout(function () {
             temp_text_inverso_activado = true;
             desactivar_borrar = false;
-            texto1.innerText =
+            /*texto1.innerText =
                 texto1.innerText
                     .split("")
                     .reverse()
@@ -179,6 +228,30 @@ const PUTADAS = {
                     .split(" ")
                     .reverse()
                     .join(" ");
+            */
+            texto1.contentEditable= "false";
+            caretNode, caretPos = guardarPosicionCaret();
+            texto1.classList.add("rotate-vertical-center");
+            texto1.addEventListener('animationend', function() {
+                texto1.classList.remove("rotate-vertical-center");
+                texto1.contentEditable= "true";
+                texto1.focus()
+                // Obtener el último nodo de texto en texto1
+                lastLine = texto1.lastChild;
+                lastTextNode = lastLine;
+                while (lastTextNode && lastTextNode.nodeType !== 3) {
+                    lastTextNode = lastTextNode.lastChild;
+                }
+                
+                // Si encontramos el último nodo de texto, colocamos el cursor allí
+                if (lastTextNode) {
+                    caretNode = lastTextNode;
+                    caretPos = lastTextNode.length;
+                    restaurarPosicionCaret(caretNode, caretPos);
+                }
+                texto1.removeEventListener('animationend', arguments.callee);
+            });
+            procesarTexto();
             putada_actual = "";
         sendText()  
         }, TIEMPO_INVERSO);

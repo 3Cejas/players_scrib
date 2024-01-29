@@ -146,7 +146,7 @@ socket.on('activar_modo', (data) => {
 
 function descargar_textos() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    var doc = new jsPDF();
 
     const margen = 20;
     const anchoPagina = doc.internal.pageSize.width;
@@ -194,7 +194,7 @@ function descargar_textos() {
                 y = margen + 10; // Ajustar según el tamaño del logo
             }
             doc.text(linea, x, y);
-            y += 10; // Ajustar según el espacio deseado entre líneas
+            y += 6; // Ajustar según el espacio deseado entre líneas
         });
 
         return y;
@@ -204,21 +204,21 @@ function descargar_textos() {
 
     // Configuración y adición de texto para la primera parte
     let yActual = agregarTextoEnPagina(val_nombre1, margen, margen + 13, 25, [0, 0, 0], true);
-    yActual = agregarTextoEnPagina(texto_guardado1, margen, yActual, 15, [0, 0, 0]);
+    yActual = agregarTextoEnPagina(texto_guardado1, margen, yActual + 5, 15, [0, 0, 0]);
 
+    // Descargar el PDF
+    doc.save(val_nombre1 + '.pdf');
     // Nueva página para el segundo conjunto de textos
-    doc.addPage();
+    doc = new jsPDF();
+
     agregarLogoEnPagina();
 
     // Configuración y adición de texto para la segunda parte
-    agregarTextoEnPagina(val_nombre2, margen, margen + 13, 25, [0, 0, 0], true);
-    agregarTextoEnPagina(texto_guardado2, margen, yActual, 15, [0, 0, 0]);
-
-    // Nombre del archivo
-    const nombreArchivo = val_nombre1 + ' VS ' + val_nombre2 + '.pdf';
+    yActual = agregarTextoEnPagina(val_nombre2, margen, margen + 13, 25, [0, 0, 0], true);
+    yActual = agregarTextoEnPagina(texto_guardado2, margen, yActual + 5, 15, [0, 0, 0]);
 
     // Descargar el PDF
-    doc.save(nombreArchivo);
+    doc.save(val_nombre2 + '.pdf');
 }
 
 const MODOS = {

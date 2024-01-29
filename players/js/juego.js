@@ -243,7 +243,7 @@ function countChars(texto) {
     caracteres_seguidos += 1;
   }
 
-  if (caracteres_seguidos == 5 && locura == false) {
+  if (caracteres_seguidos == 3 && locura == false) {
     feedback1.style.color = color_positivo;
     feedback1.innerHTML = "⏱️+6 segs.";
     clearTimeout(delay_animacion);
