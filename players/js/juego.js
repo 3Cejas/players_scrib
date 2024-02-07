@@ -30,6 +30,14 @@ let focusedButtonIndex = 0;
 let modificadorButtons = [];
 let locura = false;
 
+let lastLine;
+let lastTextNode;
+
+let caretPos;
+let caretNode;
+
+
+
 
 
 document.addEventListener('keydown', function(event) {
@@ -131,8 +139,8 @@ function borrar() {
     indice_buscar_palabra = texto1.innerText.length;
 
     // 3. Obtener última línea y último nodo de texto
-    let lastLine = texto1.lastChild;
-    let lastTextNode = lastLine.lastChild;
+    lastLine = texto1.lastChild;
+    lastTextNode = lastLine.lastChild;
     if (!lastTextNode) {
       lastTextNode = lastLine;
     }
@@ -181,6 +189,7 @@ function borrar() {
     }, rapidez_borrado);
 
     // 9. Reposicionar caret usando la función
+    
     if (caretNode) {
       restaurarPosicionCaret(caretNode, caretPos);
     }

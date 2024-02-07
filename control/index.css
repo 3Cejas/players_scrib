@@ -162,6 +162,15 @@ body {
     position: static;
 }
 
+.parametro{
+    background-color: transparent;
+    font-family: "Retro-gaming";
+    color: white;
+    text-align: center;
+    width: 70%;
+    border: none;
+}
+
 .explicación {
     font-size: 23pt;
     font-family: "Retro-gaming";

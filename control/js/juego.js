@@ -146,13 +146,14 @@ function temp() {
         boton_pausar_reanudar.value = 0;
         span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
-
-    socket.emit('inicio', {count, borrar_texto});
+    rellenarListaModos();
+    actualizarVariables();
+    socket.emit('inicio', {count, borrar_texto, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CALENTAMIENTO, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_PALABRAS } });
     modo_actual = "calentamiento";
     secondsPassed = 0;
     secondsPassed1 = 0;
   
-    DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
+    DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
     
     listener_cuenta_atras = setTimeout(function(){
         console.log({count1, secondsPassed1, player:2})
@@ -211,7 +212,7 @@ function limpiar() {
     socket.emit('limpiar', borrar_texto);
     secondsPassed = 0;
     secondsPassed1 = 0;
-    DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
+    DURACION_TIEMPO_MODOS = DURACION_TIEMPO_MODOS;
     clearInterval(listener_cuenta_atras);
     clearInterval(countInterval);
     clearInterval(countInterval1);

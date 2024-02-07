@@ -2,7 +2,7 @@ let delay_animacion;
 let isFullscreen = false;
 let letra = "";
 let editando = false;
-const LIMITE_PALABRAS = 3;
+let LIMITE_PALABRAS = 3;
 
 window.addEventListener('beforeunload', (event) => {
   socket.emit('disconnect');

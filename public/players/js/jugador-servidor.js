@@ -142,7 +142,7 @@ socket.on(texto_x, data => {
     nivel1.innerHTML = data.level;
     if(mostrar_texto.value == 1){
         //texto1.style.height = ""; // resetear la altura
-        texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+        texto1.style.height = "auto";
     }
     if (jugador_psico == 1) {
         stylize();
@@ -210,6 +210,7 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    LIMITE_PALABRAS = data.parametros.LIMITE_PALABRAS
     terminado = false;
     tiempo.innerHTML = "";
     tiempo.style.display = "";
@@ -253,8 +254,12 @@ socket.on('inicio', data => {
 
             socket.on("pedir_inspiracion_musa", juego => {
                 conteo_palabras = 0;
-                console.log("Es aquiiiií")
-               pedir_inspiracion(juego);
+                if(sincro == 1 || votando == true){
+
+                }
+                else{
+                pedir_inspiracion(juego);
+                }
             });
 
             skill.style.display = "flex";
@@ -292,20 +297,14 @@ socket.on('limpiar', () => {
     notificacion.style.display = "none";
 });
 
-socket.on("pedir_inspiracion_musa", juego => {
-    conteo_palabras = 0;
-    console.log("Es aquiiiií")
-   pedir_inspiracion(juego);
-});
-
 // Recibe el nombre del jugador y lo coloca en su sitio.
 socket.on(nombre, data => {
     nombre1.value = data;
 });
 
 socket.on(elegir_ventaja, () => {
-    votando = true;
-    tarea.innerHTML = "<p>¡Tu escritor está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '🌫️' onclick='elegir_ventaja_publico(this)'>🌫️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button><br><br><p style='font-size: 3.5vw;'>⚡ El videojuego borrará más rápido el texto del contrincante.<br><br>🙃 El texto se volverá un espejo para el contrincante.<br><br>🌫️ Una pesada bruma caerá sobre el texto del contrincante.</p>"
+    votando_ = true;
+    tarea.innerHTML = "<p>¡Tu escritor está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '🌪️' onclick='elegir_ventaja_publico(this)'>🌪️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button><br><br><p style='font-size: 3.5vw;'>⚡ El videojuego borrará más rápido el texto del contrincante.<br><br>🙃 El texto se volverá un espejo para el contrincante.<br><br>🌪️ Una pesada bruma caerá sobre el texto del contrincante.</p>"
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
@@ -318,6 +317,7 @@ socket.on("elegir_repentizado", ({seleccionados, TIEMPO_VOTACION}) => {
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
+    conteo.innerHTML = "";
     setTimeout(() => {
         socket.emit('pedir_nombre');
         votando = false;

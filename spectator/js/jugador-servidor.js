@@ -56,7 +56,10 @@ let feedback_tiempo = getEl("feedback_tiempo");
 let terminado = false;
 let terminado1 = false;
 let modo_actual = "";
-let tempo_text_borroso;
+let tempo_text_inverso1;
+let tempo_text_inverso2;
+let tempo_text_borroso1;
+let tempo_text_borroso2;
 let listener_modo;
 let jugador_psico;
 let activado_psico = false;
@@ -64,7 +67,97 @@ let listener_cuenta_atras = null;
 let timer = null;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
-const TIEMPO_BORRADO = 60000;
+let TIEMPO_BORRADO;
+let TIEMPO_INVERSO;
+let TIEMPO_BORROSO;
+
+const PUTADAS = {
+    "🐢": function () {
+        
+    },
+    "⚡": function (player) {
+        if(player == 1){
+            document.body.classList.add("bg");
+            document.body.classList.add("rain");
+            lightning.classList.add("lightning")
+            lightning.style.right = "0%";
+            lightning.style.left = "45%";
+            setTimeout(function () {
+                document.body.classList.remove("bg");
+                document.body.classList.remove("rain");
+                lightning.classList.remove("lightning");
+            }, TIEMPO_BORRADO);
+        }
+        else{
+            document.body.classList.add("bg");
+            document.body.classList.add("rain");
+            lightning.classList.add("lightning")
+            setTimeout(function () {
+                document.body.classList.remove("bg");
+                document.body.classList.remove("rain");
+                lightning.classList.remove("lightning");
+            }, TIEMPO_BORRADO);
+        }
+    },
+
+    "⌛": function () {
+
+    },
+    "🙃": function (player) {
+        if(player == 1){
+            texto1.classList.add("rotate-vertical-center");
+            // Añade un escuchador para el evento 'animationend'
+            texto1.addEventListener('animationend', function() {
+                texto1.classList.remove("rotate-vertical-center");
+                texto1.removeEventListener('animationend', arguments.callee);
+            });
+            tempo_text_inverso1 = setTimeout(function () {
+                texto1.classList.add("rotate-vertical-center");
+                texto1.addEventListener('animationend', function() {
+                    texto1.classList.remove("rotate-vertical-center");
+                    texto1.removeEventListener('animationend', arguments.callee);
+                });
+            }, TIEMPO_INVERSO);
+        }
+        else{
+            texto2.classList.add("rotate-vertical-center");
+            // Añade un escuchador para el evento 'animationend'
+            texto2.addEventListener('animationend', function() {
+                texto2.classList.remove("rotate-vertical-center");
+                texto2.removeEventListener('animationend', arguments.callee);
+            });
+            tempo_text_inverso2 = setTimeout(function () {
+                texto2.classList.add("rotate-vertical-center");
+                texto2.addEventListener('animationend', function() {
+                    texto2.classList.remove("rotate-vertical-center");
+                    texto2.removeEventListener('animationend', arguments.callee);
+                });
+            }, TIEMPO_INVERSO);
+        }
+    },
+
+    "🌪️": function (player) {
+        modo_texto_borroso1 = true;
+        tiempo_inicial = new Date();
+        if(player == 1){
+            texto1.classList.add("textarea_blur");
+            tempo_text_borroso1 = setTimeout(function () {
+            temp_text_borroso_activado1 = true;
+            texto1.classList.remove("textarea_blur");
+        }, TIEMPO_BORROSO);
+        }
+        else{
+            modo_texto_borroso2 = true;
+            console.log("BORROSO")
+            texto2.classList.add("textarea_blur");
+            tempo_text_borroso2 = setTimeout(function () {
+            temp_text_borroso_activado2 = true;
+            texto2.classList.remove("textarea_blur");
+        }, TIEMPO_BORROSO);
+        }
+    },
+};
+
 const MODOS = {
 
     "calentamiento": function (data) {
@@ -126,38 +219,11 @@ const MODOS = {
         definicion3.style.maxWidth = "100%";
     },
 
-    //Recibe y activa el modo borroso.
-    'texto borroso': function (data) {
-        explicación.innerHTML = "MODO TEXTO NUBLADO";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
-        if (data.jugador == 1) {
-            texto1.classList.add('textarea_blur');
-            tempo_text_borroso = setTimeout(function () {
-                texto1.classList.remove('textarea_blur');
-                texto2.classList.add('textarea_blur');;
-            }, data.duracion);
-        }
-        if (data.jugador == 2) {
-            texto2.classList.add('textarea_blur');
-            tempo_text_borroso = setTimeout(function () {
-                texto2.classList.remove('textarea_blur');
-                texto1.classList.add('textarea_blur');;
-            }, data.duracion);
-        }
-    },
-
     'psicodélico': function (data) {
         //explicación.innerHTML = "MODO PSICODÉLICO";
         //palabra1.innerHTML = "";
         //definicion1.innerHTML = "";
         jugador_psico = Math.floor(Math.random() * 2 + 1);
-    },
-
-    'texto inverso': function (data) {
-        explicación.innerHTML = "MODO TEXTO INVERSO";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
     },
 
     'palabras prohibidas': function (data) {
@@ -201,39 +267,10 @@ const LIMPIEZAS = {
 
     "letra bendita": function (data) { },
 
-    "texto borroso": function (data) {
-        texto1.classList.remove("textarea_blur");
-        texto2.classList.remove("textarea_blur");
-    },
-
     "psicodélico": function (data) {
         jugador_psico = 0;
         restablecer_estilo();
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
-    },
-
-    "texto inverso": function (data) {
-        texto1.innerText =
-            //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.innerText)
-            texto1.innerText
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");
-
-        texto2.innerText =
-            //crear_n_saltos_de_linea(saltos_línea_alineacion_2) +
-            //eliminar_saltos_de_linea(texto2.innerText)
-            texto2.innerText
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");
     },
 
     "palabras prohibidas": function (data) {
@@ -393,7 +430,9 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-    
+    TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
+    TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
+    TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
     socket.off('vote');
     socket.off('exit');
     socket.off('scroll');
@@ -524,12 +563,15 @@ socket.on('enviar_palabra_j2', data => {
 });
 
 socket.on('inspirar_j1', palabra => {
-    definicion2.innerHTML = "<span style='color: orange;'>MUSA</span>: podrías escribir la palabra " + "\"<span style='color: lime;'>" + palabra + "</span>\"";
+    definicion2.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
+    "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
+    "</span><span style='color: orange;'>\"</span>");
 });
 
 socket.on('inspirar_j2', palabra => {
-    definicion3.innerHTML = "<span style='color: orange;'>MUSA</span>: podrías escribir la palabra " + "\"<span style='color: lime;'>" + palabra + "</span>\"";
-});
+    definicion3.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
+    "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
+    "</span><span style='color: orange;'>\"</span>");});
 
 function recibir_palabra(data, escritxr) {
     const animateCSS = (element, animation, prefix = 'animate__') =>
@@ -577,90 +619,6 @@ function recibir_palabra(data, escritxr) {
         animateCSS(".definicion2", "bounceInLeft");
     }
 }
-
-socket.on('enviar_putada_de_j1', data => {
-    if (data == "🙃"){
-        texto2.classList.add("rotate-vertical-center");
-    }
-
-    if (data == "⚡"){
-        document.body.classList.add("bg");
-        document.body.classList.add("rain");
-        lightning.classList.add("lightning")
-        lightning.style.right = "0%";
-        lightning.style.left = "45%";
-        setTimeout(function () {
-            document.body.classList.remove("bg");
-            document.body.classList.remove("rain");
-            lightning.classList.remove("lightning");
-        }, TIEMPO_BORRADO);
-    }
-    var feedback1 = document.querySelector(".feedback2");
-    feedback1.innerHTML = data
-    const animateCSS = (element, animation, prefix = 'animate__') =>
-        // We create a Promise and return it
-        new Promise((resolve, reject) => {
-            const animationName = `${prefix}${animation}`;
-            const node = document.querySelector(element);
-
-            node.classList.add(`${prefix}animated`, animationName);
-
-            // When the animation ends, we clean the classes and resolve the Promise
-            function handleAnimationEnd(event) {
-                event.stopPropagation();
-                node.classList.remove(`${prefix}animated`, animationName);
-                resolve('Animation ended');
-            }
-
-            node.addEventListener('animationend', handleAnimationEnd, { once: true });
-        });
-    animateCSS(".feedback2", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-            feedback1.innerHTML = "";
-        }, 2000);
-    });
-});
-
-socket.on('enviar_putada_de_j2', data => {
-    if (data == "🙃"){
-        texto1.classList.add("rotate-vertical-center");
-    }
-
-    if (data == "⚡"){
-        document.body.classList.add("bg");
-        document.body.classList.add("rain");
-        lightning.classList.add("lightning")
-        setTimeout(function () {
-            document.body.classList.remove("bg");
-            document.body.classList.remove("rain");
-            lightning.classList.remove("lightning");
-        }, TIEMPO_BORRADO);
-    }
-    var feedback = document.querySelector(".feedback1");
-    feedback.innerHTML = data;
-    const animateCSS = (element, animation, prefix = 'animate__') =>
-        // We create a Promise and return it
-        new Promise((resolve, reject) => {
-            const animationName = `${prefix}${animation}`;
-            const node = document.querySelector(element);
-
-            node.classList.add(`${prefix}animated`, animationName);
-
-            // When the animation ends, we clean the classes and resolve the Promise
-            function handleAnimationEnd(event) {
-                event.stopPropagation();
-                node.classList.remove(`${prefix}animated`, animationName);
-                resolve('Animation ended');
-            }
-
-            node.addEventListener('animationend', handleAnimationEnd, { once: true });
-        });
-    animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-            feedback.innerHTML = "";
-        }, 2000);
-    });
-});
 
 socket.on('feedback_a_j2', data => {
     var feedback = document.querySelector(".feedback1");
@@ -726,13 +684,43 @@ socket.on('fin', data => {
         confetti_aux();
 });
 
-socket.on("enviar_repentizado", ventaja => {
-    console.log("ventaja", ventaja)
-    temas.innerHTML = ventaja;
+socket.on("enviar_repentizado", repentizado => {
+    temas.innerHTML = repentizado;
+});
+
+socket.on("enviar_putada_de_j1", putada => {
+    PUTADAS[putada](2);
+    feedback1.innerHTML = putada + " <span style='color: red;'>¡PUTADA!</span>";
+    animateCSS(".feedback1", "flash").then((message) => {
+        setTimeout(function () {
+            feedback1.innerHTML = "";
+        }, 2000);
+    });
+    feedback2.innerHTML = putada + " <span style='color: lime;'>¡VENTAJA!</span>";
+    animateCSS(".feedback2", "flash").then((message) => {
+        setTimeout(function () {
+            feedback2.innerHTML = "";
+        }, 2000);
+    });  
+});
+
+socket.on("enviar_putada_de_j2", putada => {
+    PUTADAS[putada](1);
+    feedback2.innerHTML = putada + " <span style='color: red;'>¡PUTADA!</span>";;
+    animateCSS(".feedback2", "flash").then((message) => {
+        setTimeout(function () {
+            feedback2.innerHTML = "";
+        }, 2000);
+    }); 
+    feedback1.innerHTML = putada + " <span style='color: lime;'>¡VENTAJA!</span>";
+    animateCSS(".feedback1", "flash").then((message) => {
+        setTimeout(function () {
+            feedback1.innerHTML = "";
+        }, 2000);
+    }); 
 });
 
 socket.on("nueva letra", letra => {
-    console.log("NUEVA LETRA")
     if(modo_actual == "letra prohibida"){
         animacion_modo();
         palabra1.innerHTML = "LETRA PROHIBIDA: " + letra;
@@ -1065,6 +1053,12 @@ function cambiar_color_puntuación() {
 function limpiezas(){
 
     clearTimeout(listener_cuenta_atras);
+    clearTimeout(tempo_text_inverso1);
+    clearTimeout(tempo_text_inverso2);
+    clearTimeout(tempo_text_borroso1);
+    clearTimeout(tempo_text_borroso2);
+
+
     clearInterval(timer)
     terminado = false;
     terminado1 = false;
@@ -1102,6 +1096,7 @@ function limpiezas(){
     
     texto1.classList.remove('textarea_blur');
     texto2.classList.remove('textarea_blur');
+    
 
     focalizador1.innerHTML = "";
     focalizador2.innerHTML = "";
@@ -1109,8 +1104,6 @@ function limpiezas(){
     for (let key in LIMPIEZAS) { 
         LIMPIEZAS[key]();
     }
-
-    clearTimeout(tempo_text_borroso);
 
     feedback_tiempo.style.color = color_positivo;
     feedback_tiempo1.style.color = color_positivo;
@@ -1148,10 +1141,14 @@ function limpiezas_final(){
 
     LIMPIEZAS["psicodélico"]("");
 
-    clearTimeout(tempo_text_borroso);
-
     feedback_tiempo.style.color = color_positivo;  
-    feedback_tiempo1.style.color = color_positivo;  
+    feedback_tiempo1.style.color = color_positivo;
+
+    clearTimeout(listener_cuenta_atras);
+    clearTimeout(tempo_text_inverso1);
+    clearTimeout(tempo_text_inverso2);
+    clearTimeout(tempo_text_borroso1);
+    clearTimeout(tempo_text_borroso2);
 
 }
 

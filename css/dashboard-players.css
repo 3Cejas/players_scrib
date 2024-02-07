@@ -184,7 +184,7 @@ button:focus {
 
 .definicion {
     font-weight: bold;
-    font-size: 1vw;
+    font-size: 1.5vw;
     font-family: monospace;
     color: white;
     max-height: 1.5em;
@@ -235,7 +235,7 @@ button:focus {
 .feedback1{
     font-size: 2.5vw;
     position: absolute;
-    left: 5%;
+    left: 4%;
     top: 5%;
     z-index: 1;
 }
@@ -243,8 +243,8 @@ button:focus {
 .feedback2{
     font-size: 2.5vw;
     position: absolute;
-    left: 77.5%;
-    top: 6%;
+    left: 78.5%;
+    top: 5%;
     z-index: 1;
 }
 

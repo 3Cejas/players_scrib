@@ -71,9 +71,11 @@ let listener_modo;
 let listener_modo1;
 let listener_modo_psico;
 let activado_psico = false;
-const TIEMPO_INVERSO = 20000;
-const TIEMPO_BORROSO = 20000;
-const TIEMPO_BORRADO = 20000;
+let temp_text_inverso_activado = false;
+
+let TIEMPO_INVERSO;
+let TIEMPO_BORROSO;
+let TIEMPO_BORRADO;
 
 function getParameterByName(name, url) {
 if (!url) url = window.location.href;
@@ -158,7 +160,9 @@ const PUTADAS = {
     "🙃": function () {
         tiempo_inicial = new Date();
         desactivar_borrar = true;
-        caretNode, caretPos = guardarPosicionCaret();
+        //caret = guardarPosicionCaret();
+        //caretNode = caret.caretNode;
+        //caretPos = caret.caretPos;
         texto1.contentEditable= "false";
         texto1.classList.add("rotate-vertical-center");
         // Añade un escuchador para el evento 'animationend'
@@ -166,47 +170,9 @@ const PUTADAS = {
             texto1.classList.remove("rotate-vertical-center");
             texto1.contentEditable= "true";
             texto1.focus()
-            // Obtener el último nodo de texto en texto1
-            lastLine = texto1.lastChild;
-            lastTextNode = lastLine;
-            while (lastTextNode && lastTextNode.nodeType !== 3) {
-                lastTextNode = lastTextNode.lastChild;
-            }
-            
-            // Si encontramos el último nodo de texto, colocamos el cursor allí
-            if (lastTextNode) {
-                caretNode = lastTextNode;
-                caretPos = lastTextNode.length;
-                restaurarPosicionCaret(caretNode, caretPos);
-            }
             texto1.removeEventListener('animationend', arguments.callee);
         });
-        function invertirPalabras(texto) {
-            return texto.split(' ').map(palabra => palabra.split('').reverse().join('')).join(' ');
-        }
-    
-        function procesarTexto() {
-            let fragmento = document.createDocumentFragment();
-    
-            texto1.childNodes.forEach(nodo => {
-                if (nodo.nodeType === Node.TEXT_NODE) {
-                    // Texto dentro del div, fuera de cualquier otro elemento
-                    let textoInvertido = invertirPalabras(nodo.textContent);
-                    fragmento.appendChild(document.createTextNode(textoInvertido));
-                } else if (nodo.nodeType === Node.ELEMENT_NODE) {
-                    // Copia el nodo (p.ej., <br>, <div>) y procesa su contenido si es necesario
-                    let copiaNodo = nodo.cloneNode(false);
-                    if (nodo.childNodes.length > 0) {
-                        let textoInvertido = invertirPalabras(nodo.textContent);
-                        copiaNodo.textContent = textoInvertido;
-                    }
-                    fragmento.appendChild(copiaNodo);
-                }
-            });
-    
-            texto1.innerHTML = '';
-            texto1.appendChild(fragmento);
-        }
+
         procesarTexto();
         /*texto1.innerText =
             texto1.innerText
@@ -216,9 +182,24 @@ const PUTADAS = {
                 .split(" ")
                 .reverse()
                 .join(" ");*/
+        //restaurarPosicionCaret(caretNode, caretPos);
+        // Obtener el último nodo de texto en texto1
+        let lastLine = texto1.lastChild;
+        let lastTextNode = lastLine;
+        while (lastTextNode && lastTextNode.nodeType !== 3) {
+            lastTextNode = lastTextNode.lastChild;
+        }
+        
+        // Si encontramos el último nodo de texto, colocamos el cursor allí
+        if (lastTextNode) {
+            let caretNode = lastTextNode;
+            let caretPos = lastTextNode.length;
+            restaurarPosicionCaret(caretNode, caretPos);
+        }
         sendText();
+        temp_text_inverso_activado = true;
         tempo_text_inverso = setTimeout(function () {
-            temp_text_inverso_activado = true;
+            temp_text_inverso_activado = false;
             desactivar_borrar = false;
             /*texto1.innerText =
                 texto1.innerText
@@ -236,28 +217,27 @@ const PUTADAS = {
                 texto1.classList.remove("rotate-vertical-center");
                 texto1.contentEditable= "true";
                 texto1.focus()
-                // Obtener el último nodo de texto en texto1
-                lastLine = texto1.lastChild;
-                lastTextNode = lastLine;
-                while (lastTextNode && lastTextNode.nodeType !== 3) {
-                    lastTextNode = lastTextNode.lastChild;
-                }
-                
-                // Si encontramos el último nodo de texto, colocamos el cursor allí
-                if (lastTextNode) {
-                    caretNode = lastTextNode;
-                    caretPos = lastTextNode.length;
-                    restaurarPosicionCaret(caretNode, caretPos);
-                }
                 texto1.removeEventListener('animationend', arguments.callee);
             });
             procesarTexto();
+            let lastLine = texto1.lastChild;
+            let lastTextNode = lastLine;
+            while (lastTextNode && lastTextNode.nodeType !== 3) {
+                lastTextNode = lastTextNode.lastChild;
+            }
+            
+            // Si encontramos el último nodo de texto, colocamos el cursor allí
+            if (lastTextNode) {
+                let caretNode = lastTextNode;
+                let caretPos = lastTextNode.length;
+                restaurarPosicionCaret(caretNode, caretPos);
+            }
             putada_actual = "";
         sendText()  
         }, TIEMPO_INVERSO);
     },
 
-    "🌫️": function () {
+    "🌪️": function () {
         //activar_socket_feedback();
         modo_texto_borroso = 1;
         tiempo_inicial = new Date();
@@ -299,7 +279,7 @@ const VENTAJAS = {
         enviar_putada('🙃');
     },
 
-    "🌫️": function () {
+    "🌪️": function () {
         modo_texto_borroso = 2;
         tiempo_inicial = new Date();
         console.log(tiempo_inicial)
@@ -309,7 +289,7 @@ const VENTAJAS = {
             temp_text_borroso_activado = true;
             texto2.classList.remove("textarea_blur");
         }, TIEMPO_BORROSO);
-        enviar_putada('🌫️');
+        enviar_putada('🌪️');
     },
 };
 
@@ -327,6 +307,7 @@ const MODOS = {
         //activar_socket_feedback();
         palabra1.style.backgroundColor = "yellow";
         explicación.style.color = "yellow";
+        definicion1.style.fontSize = "1vw";
         explicación.innerHTML = "MODO PALABRAS BENDITAS";
         socket.emit("nueva_palabra", player);
         socket.on(enviar_palabra, data => {
@@ -591,7 +572,6 @@ socket.on("count", (data) => {
     console.log("TIEMPO", data.count)
     console.log(modo_actual)
     if(data.player == player){
-        console.log
     if (convertirASegundos(data.count) >= 20) {
         tiempo.style.color = "white";
     }
@@ -672,8 +652,12 @@ socket.on("count", (data) => {
   
 // Inicia el juego.
 socket.on("inicio", (data) => {
+    TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
+    TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
+    TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
     activar_socket_feedback();
     limpieza();
+    desactivar_borrar = false;
     texto1.style.height = "";
     texto2.style.height = "";
 
@@ -714,6 +698,7 @@ socket.on("inicio", (data) => {
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         listener_cuenta_atras = setTimeout(function(){
+            console.log("GOLAA", data.borrar_texto)
             if (data.borrar_texto == false) {
                 texto1.innerText = texto_guardado1.trim();
                 texto2.innerText = texto_guardado2.trim();
@@ -756,13 +741,24 @@ socket.on("limpiar", (borrar) => {
     socket.on("nombre1", (data) => {
         nombre1.value = data;
     });
-    console.log(borrar, "PUTA")
+    console.log(borrar, texto2.innerText, "PUTA")
+    console.l
     if(borrar == false){
 
-        if(texto1.innerText != "" && texto2.innerText != "" ){
+       // Verifica y asigna el valor a texto_guardado1 basado en el contenido de texto1
+        if(texto1.innerText != "") {
             texto_guardado1 = texto1.innerText;
-            texto_guardado2 = texto2.innerText;
+        } else {
+            texto_guardado1 = ""; // Asigna una cadena vacía si texto1.innerText es vacío
         }
+
+        // Verifica y asigna el valor a texto_guardado2 basado en el contenido de texto2
+        if(texto2.innerText != "") {
+            texto_guardado2 = texto2.innerText;
+        } else {
+            texto_guardado2 = ""; // Asigna una cadena vacía si texto2.innerText es vacío
+        }
+
     }
     
     console.log("sí", texto1.innerText)
@@ -819,7 +815,6 @@ socket.on("activar_modo", (data) => {
 
 socket.on(enviar_palabra, data => {
     if(modo_actual == "palabras bonus"){
-        console.log("ESTO ESTÁ MAAAAAL")
         recibir_palabra(data);
     }
 });
@@ -853,7 +848,7 @@ socket.on(enviar_putada_de_jx, data => {
     console.log(data)
     putada_actual = data;
     PUTADAS[data]()
-    feedback2.innerHTML = data;
+    feedback2.innerHTML = data + " <span style='color: red;'>¡PUTADA!</span>";
     clearTimeout(delay_animacion);
     animateCSS(".feedback2", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
@@ -879,8 +874,10 @@ socket.on(inspirar, palabra => {
     console.log("hola", palabra)
     if(palabra != ""){
     palabra_actual = [palabra];
-    definicion1.innerHTML = ("<span style='color: orange;'>MUSA</span>: podrías escribir la palabra " + "\"<span style='color: lime;'>" + palabra + "</span>\"");
-    console.log(definicion1.innerHTML)
+    definicion1.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
+    "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
+    "</span><span style='color: orange;'>\"</span>");
+    animateCSS(".definicion", "flash");
     asignada = true;
     indice_buscar_palabra = texto1.innerText.length - 5;
     texto1.removeEventListener("keyup", listener_modo1);
@@ -890,10 +887,9 @@ socket.on(inspirar, palabra => {
 });
 
 socket.on(enviar_ventaja, ventaja => {
-    console.log("AAAAAASFDSDSDSFDSFDSDSFDSFDDSDSDSFDSDSFDDSDSFDSFDSFDSFDFDFDDFSSDF")
     console.log("ventaja", ventaja)
     VENTAJAS[ventaja]();
-    feedback1.innerHTML = ventaja;
+    feedback1.innerHTML = ventaja + " <span style='color: lime;'>¡VENTAJA!</span>";
     animateCSS(".feedback1", "flash").then((message) => {
         setTimeout(function () {
             feedback1.innerHTML = "";
@@ -912,7 +908,7 @@ socket.on("nueva letra", letra => {
         letra_prohibida = letra;
         texto1.removeEventListener("keydown", listener_modo);
         listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto1.addEventListener("keyup", listener_modo);
+        texto1.addEventListener("keydown", listener_modo);
         animacion_palabra();
         palabra1.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
         }
@@ -920,7 +916,7 @@ socket.on("nueva letra", letra => {
         letra_bendita = letra;
         texto1.removeEventListener("keydown", listener_modo);
         listener_modo = function (e) { modo_letra_bendita(e) };
-        texto1.addEventListener("keyup", listener_modo);
+        texto1.addEventListener("keydown", listener_modo);
         animacion_palabra();
         palabra1.innerHTML = "LETRA BENDITA: " + letra_bendita;
     }
@@ -1169,16 +1165,24 @@ function modo_palabras_bonus(e) {
             asignada = false;
             console.log("AHORAAAAAAAAAAAA", palabra_actual);
             socket.emit("nueva_palabra", player);
-            socket.emit('aumentar_tiempo', {tiempo_palabras_bonus, player});
-            feedback1.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
+            console.log(tiempo_palabras_bonus, player)
+            socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
+            if(definicion1.innerHTML == "") {
+                feedback1.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
+                
+            }
+            else{
+                feedback1.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
+            }
             clearTimeout(delay_animacion);
+            color = color_positivo;
+            feedback1.style.color = color;
+            tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
                     feedback1.innerHTML = "";
                 }, 2000);
             });
-            color = color_positivo;
-            tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
             socket.emit(feedback_de_j_x, { color, tiempo_feed});
             //puntos_palabra += puntuacion;
             //puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
@@ -1235,8 +1239,9 @@ function modo_palabras_prohibidas(e) {
             console.log("AHORAAAAAAAAAAAA", palabra_actual);
             socket.emit("nueva_palabra_prohibida", player);
             tiempo_palabras_bonus = -tiempo_palabras_bonus;
-            socket.emit('aumentar_tiempo', {tiempo_palabras_bonus, player});
-            feedback1.style.color = color_negativo;
+            socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
+            color = color_negativo;
+            feedback1.style.color = color;
             feedback1.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
@@ -1280,7 +1285,7 @@ function palabras_musas() {
             texto1.focus();
             asignada = false;
             feedback1.style.color = "white";
-            feedback1.innerHTML = "+🎨 inspiración";
+            feedback1.innerHTML = "+🎨 insp.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
@@ -1530,6 +1535,11 @@ function limpieza(){
     
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timer);
+    if(temp_text_inverso_activado == true){
+        clearTimeout(tempo_text_inverso);
+        procesarTexto();
+    }
+
     texto1.innerText = "";
     texto2.innerText = "";
 
@@ -1548,7 +1558,7 @@ function limpieza(){
 
     temas.innerHTML = "";
 
-    texto2.contentEditable= "false";
+    texto1.contentEditable= "false";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";
     puntos2.innerHTML = 0 + " palabras 🖋️";
@@ -1589,7 +1599,7 @@ function limpieza(){
     
     // Desactiva, por seguridad, todos los modos.
     modo_texto_borroso = 0;
-    desactivar_borrar = false;
+    desactivar_borrar = true;
     locura = false;
 
     puntos1.style.color = "white";
@@ -1620,12 +1630,13 @@ function limpieza(){
 
     clearTimeout(borrado);
     clearTimeout(cambio_palabra);
-    //clearTimeout(tempo_text_borroso);
-    //clearTimeout(tempo_text_inverso);
+    clearTimeout(tempo_text_borroso);
 }
 
 function limpieza_final(){
-    texto2.contentEditable= "false";
+    texto1.contentEditable= "false";
+    texto1.style.display = "none";
+    texto2.style.display = "none";
     
     temas.innerHTML = "";
     palabra1.innerHTML = "";
@@ -1651,7 +1662,7 @@ function limpieza_final(){
 
     // Desactiva, por seguridad, todos los modos.
     modo_texto_borroso = 0;
-    desactivar_borrar = false;
+    desactivar_borrar = true;
     locura = false;
 
     tiempo.style.color = "white";
@@ -1677,7 +1688,8 @@ function pausa(){
     texto1.contentEditable= "false";
 
     clearTimeout(borrado);
-    /*if(putada_actual == "🌫️"){
+    desactivar_borrar = true;
+    /*if(putada_actual == "🌪️"){
         if (modo_texto_borroso == 1) {
             texto1.classList.remove("textarea_blur");
         }
@@ -1718,7 +1730,8 @@ function reanudar(){
     texto1.contentEditable = "true";
 
     clearTimeout(borrado);
-    /*if(putada_actual == "🌫️"){
+    desactivar_borrar = false;
+    /*if(putada_actual == "🌪️"){
         modo_borroso_pausa(TIEMPO_BORROSO);
     }
     
@@ -1740,26 +1753,70 @@ function modo_inverso_pausa(){
     console.log(tiempo_restante)
     if(tiempo_restante > 0){
         desactivar_borrar = true;
-        texto1.innerText =
+        caretNode, caretPos = guardarPosicionCaret();
+        texto1.contentEditable= "false";
+        texto1.classList.add("rotate-vertical-center");
+        // Añade un escuchador para el evento 'animationend'
+        texto1.addEventListener('animationend', function() {
+            texto1.classList.remove("rotate-vertical-center");
+            texto1.contentEditable= "true";
+            texto1.focus()
+            // Obtener el último nodo de texto en texto1
+            lastLine = texto1.lastChild;
+            lastTextNode = lastLine;
+            while (lastTextNode && lastTextNode.nodeType !== 3) {
+                lastTextNode = lastTextNode.lastChild;
+            }
+            
+            // Si encontramos el último nodo de texto, colocamos el cursor allí
+            if (lastTextNode) {
+                caretNode = lastTextNode;
+                caretPos = lastTextNode.length;
+                restaurarPosicionCaret(caretNode, caretPos);
+            }
+            texto1.removeEventListener('animationend', arguments.callee);
+        });
+        
+        procesarTexto();
+        /*texto1.innerText =
             texto1.innerText
                 .split("")
                 .reverse()
                 .join("")
                 .split(" ")
                 .reverse()
-                .join(" ");
+                .join(" ");*/
+        
+        sendText();
+        temp_text_inverso_activado = true;
         tempo_text_inverso = setTimeout(function () {
-            temp_text_inverso_activado = true;
+            temp_text_inverso_activado = false;
             desactivar_borrar = false;
-            texto1.innerText =
-                texto1.innerText
-                    .split("")
-                    .reverse()
-                    .join("")
-                    .split(" ")
-                    .reverse()
-                    .join(" ");
-            putada_actual = ""
+            texto1.contentEditable= "false";
+            caretNode, caretPos = guardarPosicionCaret();
+            texto1.classList.add("rotate-vertical-center");
+            texto1.addEventListener('animationend', function() {
+                texto1.classList.remove("rotate-vertical-center");
+                texto1.contentEditable= "true";
+                texto1.focus()
+                // Obtener el último nodo de texto en texto1
+                lastLine = texto1.lastChild;
+                lastTextNode = lastLine;
+                while (lastTextNode && lastTextNode.nodeType !== 3) {
+                    lastTextNode = lastTextNode.lastChild;
+                }
+                
+                // Si encontramos el último nodo de texto, colocamos el cursor allí
+                if (lastTextNode) {
+                    caretNode = lastTextNode;
+                    caretPos = lastTextNode.length;
+                    restaurarPosicionCaret(caretNode, caretPos);
+                }
+                texto1.removeEventListener('animationend', arguments.callee);
+            });
+            procesarTexto();
+            putada_actual = "";
+        sendText()  
         }, TIEMPO_INVERSO);
     }
 }
@@ -1870,7 +1927,8 @@ function final(){
     texto2.style.height = "auto";
     texto1.style.height = texto1.scrollHeight + "px"; //Reajustamos el tamaño del área de texto del j1.
     texto2.style.height = texto2.scrollHeight + "px"; // Reajustamos el tamaño del área de texto del j2.
-
+    texto1.style.display = "none";
+    texto2.style.display = "none";
     /*let a = document.createElement("a");
         a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").innerText +"\n"+texto1.innerText +"\n"+ document.getElementById("nombre1").innerText +"\n"+texto2.innerText ], {type: "text/plain"}));
         blob = new Blob([document.getElementById("nombre").innerText +"\n"+texto1.innerText +"\n"+ document.getElementById("nombre1").innerText +"\n"+texto2.innerText ], {type: "text/plain"});
@@ -2002,4 +2060,31 @@ function modo_ortografía_perfecta() {
             }
         });
     }, 10000);
+}
+
+function invertirPalabras(texto) {
+    return texto.split(' ').map(palabra => palabra.split('').reverse().join('')).join(' ');
+}
+
+function procesarTexto() {
+    let fragmento = document.createDocumentFragment();
+
+    texto1.childNodes.forEach(nodo => {
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            // Texto dentro del div, fuera de cualquier otro elemento
+            let textoInvertido = invertirPalabras(nodo.textContent);
+            fragmento.appendChild(document.createTextNode(textoInvertido));
+        } else if (nodo.nodeType === Node.ELEMENT_NODE) {
+            // Copia el nodo (p.ej., <br>, <div>) y procesa su contenido si es necesario
+            let copiaNodo = nodo.cloneNode(false);
+            if (nodo.childNodes.length > 0) {
+                let textoInvertido = invertirPalabras(nodo.textContent);
+                copiaNodo.textContent = textoInvertido;
+            }
+            fragmento.appendChild(copiaNodo);
+        }
+    });
+
+    texto1.innerHTML = '';
+    texto1.appendChild(fragmento);
 }

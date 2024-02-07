@@ -51,6 +51,17 @@ let puntuacion_final2 = getEl("puntuacion_final2");
 
 let clasificacion = getEl("clasificacion");
 
+let limite_palabras_input = document.getElementById('limite_palabras');
+let tiempo_inverso_input = document.getElementById('tiempo_inverso');
+let tiempo_borrado_input = document.getElementById('tiempo_borrado');
+let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabras');
+let tiempo_borroso_input = document.getElementById('tiempo_borroso');
+let palabras_insertadas_meta_input = document.getElementById('palabras_insertadas_meta');
+let tiempo_votacion_input = document.getElementById('tiempo_votacion')
+let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
+let tiempo_calentamiento_input = document.getElementById('tiempo_calentamiento');
+let tiempo_modos_input = document.getElementById('tiempo_modos');
+
 let tempo_text_borroso;
 
 let postgame1;
@@ -59,11 +70,117 @@ let postgame2;
 let texto_guardado1 = "";
 let texto_guardado2 = "";
 
-const CONST_DURACION_TIEMPO_MODOS = 300;
-let DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
-const TIEMPO_CALENTAMIENTO = 60
-const DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
-let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
+let LIMITE_PALABRAS = limite_palabras_input.valueAsNumber;
+let TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
+let TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
+let TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
+let TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
+let PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
+let TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
+let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
+let TIEMPO_CALENTAMIENTO = tiempo_calentamiento_input.valueAsNumber;
+let TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
+
+let DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
+let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
+let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
+
+// Lista de modos disponibles
+let LISTA_MODOS = ["calentamiento", "letra bendita","letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "locura"];
+let LISTA_MODOS_LOCURA = [ "letra bendita", "letra prohibida", "palabras bonus", "palabras prohibidas"];
+
+// Objeto que asocia cada modo con un color
+const COLORES_MODOS = {
+    "calentamiento": "purple", // Ejemplo de color en formato hexadecimal
+    "letra bendita": "green",
+    "letra prohibida": "red",
+    "tertulia": "blue",
+    "palabras bonus": "yellow",
+    "palabras prohibidas": "pink",
+    "locura": "orange"
+};
+
+// Función para generar las casillas de verificación dentro de <td>
+function generarCasillas() {
+    const tr = document.getElementById('listaModos');
+    LISTA_MODOS.forEach(function(modo, index) {
+        // Crear <td> para contener el checkbox y el label
+        const td = document.createElement('td');
+        td.style.textAlign = 'center'; // Centrar contenido dentro del <td>
+
+        // Crear el checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `modo-${index}`;
+        checkbox.name = 'modos';
+        checkbox.value = modo;
+        checkbox.checked = true;
+
+        // Crear el label
+        const label = document.createElement('label');
+        label.htmlFor = `modo-${index}`;
+        label.textContent = modo.toUpperCase(); // Convertir el modo a mayúsculas
+        label.style.display = 'block'; // Asegurar que el label se muestre en una nueva línea
+        label.style.color = COLORES_MODOS[modo]; // Asignar color al texto del label
+        label.style.paddingLeft = "0.2vw";
+        label.style.paddingRight = "0.2vw";
+
+        // Añadir primero el checkbox y luego el label al <td>
+        td.appendChild(checkbox);
+        td.appendChild(label);
+
+        // Añadir el <td> al <tr>
+        tr.appendChild(td);
+    });
+}
+
+// Función para obtener los modos seleccionados
+function rellenarListaModos() {
+    const seleccionados = document.querySelectorAll('input[name="modos"]:checked');
+
+    LISTA_MODOS = Array.from(seleccionados).map(checkbox => checkbox.value);
+
+    LISTA_MODOS_LOCURA = LISTA_MODOS.filter(modo => modo !== "calentamiento" && modo !== "tertulia" && modo !== "locura");
+
+    // Opcional: Mostrar los resultados en consola para verificar
+    console.log('LISTA_MODOS:', LISTA_MODOS);
+    console.log('LISTA_MODOS_LOCURA:', LISTA_MODOS_LOCURA);
+}
+
+function actualizarVariables() {
+    LIMITE_PALABRAS = limite_palabras_input.valueAsNumber;
+    TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
+    TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
+    TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
+    TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
+    PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
+    TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
+    TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
+    TIEMPO_CALENTAMIENTO = tiempo_calentamiento_input.valueAsNumber;
+    TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
+
+    DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
+    DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
+    TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
+
+   console.log('LIMITE_PALABRAS:', LIMITE_PALABRAS);
+   console.log('TIEMPO_INVERSO:', TIEMPO_INVERSO);
+   console.log('TIEMPO_BORRADO:', TIEMPO_BORRADO);
+   console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);
+   console.log('TIEMPO_BORROSO:', TIEMPO_BORROSO);
+   console.log('PALABRAS_INSERTADAS_META:', PALABRAS_INSERTADAS_META);
+   console.log('TIEMPO_VOTACION:', TIEMPO_VOTACION);
+   console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
+   console.log('TIEMPO_CALENTAMIENTO:', TIEMPO_CALENTAMIENTO);
+   console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    generarCasillas()
+    // Inicializa las variables con los valores por defecto
+    actualizarVariables();
+});
 let modo_actual = "";
 
 
@@ -78,7 +195,6 @@ socket.on('connect', () => {
 });
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
-    console.log(data.text, "RECIBIDIDIDIDDIDOD")
     texto1.value = data.text;
     puntos1.innerHTML = data.points;
     nivel1.innerHTML = data.level;
@@ -260,7 +376,7 @@ const MODOS = {
 const LIMPIEZAS = {
 
     "calentamiento": function (data) {
-        DURACION_TIEMPO_MODOS = CONST_DURACION_TIEMPO_MODOS;
+        DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
         TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
         console.log("CAMBIO DE TIEMPOOOOOO")
     },

@@ -7,10 +7,15 @@ let puntos1 = getEl("puntos");
 let nivel1 = getEl("nivel");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
+let palabra = getEl("palabra");
+let definicion = getEl("definicion");
+let explicación = getEl("explicación");
+
+
 
 let listener_cuenta_atras = null;
 let timer = null;
-
+let modo_actual = "";
 texto1.style.height = "auto";
 texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
 texto1.scrollTop = texto1.scrollHeight;
@@ -20,6 +25,89 @@ let tiempo = getEl("tiempo");
 
 let sincro = 0;
 let votando = false;
+
+const MODOS = {
+
+    "calentamiento": function (data) {
+        explicación.style.color = "purple";
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
+        explicación.innerHTML = "CALENTAMIENTO";
+    },
+    // Recibe y activa la palabra y el modo bonus.
+    'palabras bonus': function (data) {
+        explicación.style.color = "yellow";
+        explicación.innerHTML = "MODO PALABRAS BENDITAS";
+        palabra.innerHTML = "";
+        palabra.style.backgroundColor = "yellow";
+        definicion.innerHTML = "";
+        socket.on(enviar_palabra, data => {
+            recibir_palabra(data);
+        });
+    },
+
+    //Recibe y activa el modo letra prohibida.
+    'letra prohibida': function (data) {
+        palabra.style.backgroundColor= "red";
+        explicación.style.color = "red";
+        explicación.innerHTML = "MODO LETRA MALDITA";
+        palabra.innerHTML = "LETRA MALDITA: " + data.letra_prohibida;
+    },
+
+    //Recibe y activa el modo letra bendita.
+    'letra bendita': function (data) {
+        palabra.style.backgroundColor= "lime";
+        explicación.style.color = "lime";
+        explicación.innerHTML = "MODO LETRA BENDITA";
+        palabra.innerHTML = "LETRA BENDITA: " + data.letra_bendita;
+    },
+
+    'palabras prohibidas': function (data) {
+        palabra.style.backgroundColor = "pink";
+        explicación.style.color = "pink";
+        explicación.innerHTML = "MODO PALABRAS MALDITAS";
+        definicion.innerHTML = "";
+        socket.on(enviar_palabra, data => {
+            recibir_palabra_prohibida(data);
+        });
+    },
+
+    'tertulia': function (socket) {
+        //activar_socket_feedback();
+        explicación.style.color = "blue";
+        explicación.innerHTML = "MODO TERTULIA";
+        palabra.innerHTML = "";
+
+    },
+
+    '': function (data) {
+    }
+};
+
+const LIMPIEZAS = {
+    "calentamiento": function (data) {
+    },
+
+    "palabras bonus": function (data) {
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
+        socket.off(enviar_palabra);
+    },
+
+    "letra prohibida": function (data) { },
+
+    "letra bendita": function (data) { },
+
+    "palabras prohibidas": function (data) {
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
+        socket.off(enviar_palabra);
+    },
+
+    "tertulia": function (data) { },
+
+    "": function (data) { },
+};
 
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
@@ -47,6 +135,7 @@ var player = getParameterByName("player");
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
         elegir_ventaja = "elegir_ventaja_j1";
+        enviar_palabra = 'enviar_palabra_j1'
         nombre1.style="color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
 
     } else if (player == 2) {
@@ -59,7 +148,8 @@ var player = getParameterByName("player");
         recibir_postgame_x = 'recibir_postgame2';
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
-        elegir_ventaja = "elegir_ventaja_j2"; 
+        elegir_ventaja = "elegir_ventaja_j2";
+        enviar_palabra = 'enviar_palabra_j2'
         nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" 
     }
 
@@ -112,17 +202,20 @@ pausa el cambio de palabra.
 */
 socket.on("count", data => {
     if(data.player == player){
-    if (data.count == "00:20") {
-        tiempo.style.color = "yellow"
-    }
-    if (data.count == "00:10") {
-        tiempo.style.color = "red"
-    }
+        if (convertirASegundos(data.count) >= 20) {
+            tiempo.style.color = "white";
+        }
+        if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
+            tiempo.style.color = "yellow";
+        }
+        if (10 > convertirASegundos(data.count)) {
+            tiempo.style.color = "red";
+        }
     tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
         confetti_aux();
 
-        limpiezas_final();
+        limpiezas();
 
         //texto1.innerText = (texto1.innerText).substring(saltos_línea_alineacion_1, texto1.innerText.length);
         //texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
@@ -170,9 +263,16 @@ socket.on('inicio', data => {
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         listener_cuenta_atras = setTimeout(function(){
+            texto1.innerText = "";
+            puntos1.innerHTML = 0 + " palabras 🖋️";
+            nivel1.innerHTML = "🌡️ nivel 0";
+            tiempo.innerHTML = "";
+            
             limpiezas();
             texto1.style.height = "";
             texto1.rows =  "3";
+            animacion_modo();
+            MODOS['calentamiento']('', '');
         }, 2000);
     }
   }, 1000);
@@ -185,6 +285,11 @@ socket.on('limpiar', () => {
     socket.on(nombre, data => {
         nombre1.value = data;
     });
+
+    texto1.innerText = "";
+    puntos1.innerHTML = 0 + " palabras 🖋️";
+    nivel1.innerHTML = "🌡️ nivel 0";
+    tiempo.innerHTML = "";
 
     limpiezas();
 
@@ -205,6 +310,13 @@ socket.on(nombre, data => {
     nombre1.value = data;
 });
 
+socket.on('activar_modo', data => {
+    animacion_modo();
+    LIMPIEZAS[modo_actual](data);
+    modo_actual = data.modo_actual;
+    MODOS[modo_actual](data);
+});
+
 function cambiar_color_puntuación() {
     if (parseInt(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/)) > parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
         puntos1.style.color = "green";
@@ -216,28 +328,41 @@ function cambiar_color_puntuación() {
     }
 }
 
+socket.on("nueva letra", letra => {
+    console.log("NUEVA LETRA")
+    if(modo_actual == "letra prohibida"){
+        animacion_modo();
+        palabra.innerHTML = "LETRA PROHIBIDA: " + letra;
+        }
+    else if(modo_actual == "letra bendita"){
+        animacion_modo();
+        palabra.innerHTML = "LETRA BENDITA: " + letra;
+    }
+});
+
+function recibir_palabra(data) {
+    animacion_modo();
+    palabra_actual = data.palabra_bonus[0];
+    palabra.innerHTML = "(⏱️+" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
+    definicion.innerHTML = data.palabra_bonus[1];
+}
+
+function recibir_palabra_prohibida(data) {
+    animacion_modo();
+    palabra.innerHTML = "(⏱️-" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
+    definicion.innerHTML = data.palabra_bonus[1];
+}
 function limpiezas(){
     
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timer);
 
-    texto1.innerText = "";
-
-    puntos1.innerHTML = 0 + " palabras 🖋️";
-   
-    nivel1.innerHTML = "🌡️ nivel 0";
-    
-    tiempo.innerHTML = "";
+    palabra.innerHTML = "";
+    explicación.innerHTML = "";
+    definicion.innerHTML = "";
     tiempo.style.color = "white"
     puntos1.style.color = "white";  
     votando = false;
-}
-
-function limpiezas_final(){
-
-    tiempo.style.color = "white";
-    votando = false;
-
 }
 
 function confetti_aux(){
@@ -262,3 +387,33 @@ function confetti_aux(){
     confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
     }, 250);
 }
+
+function animacion_modo() {
+    const animateCSS = (element, animation, prefix = 'animate__') =>
+        // We create a Promise and return it
+        new Promise((resolve, reject) => {
+            const animationName = `${prefix}${animation}`;
+            const node = document.querySelector(element);
+
+            node.classList.add(`${prefix}animated`, animationName);
+
+            // When the animation ends, we clean the classes and resolve the Promise
+            function handleAnimationEnd(event) {
+                event.stopPropagation();
+                node.classList.remove(`${prefix}animated`, animationName);
+                resolve('Animation ended');
+            }
+
+            node.addEventListener('animationend', handleAnimationEnd, { once: true });
+        });
+    animateCSS(".explicación", "bounceInLeft");
+    animateCSS(".palabra", "bounceInLeft");
+    animateCSS(".definicion", "bounceInLeft");
+}
+
+function convertirASegundos(tiempo) {
+    let partes = tiempo.split(':'); // separamos los minutos de los segundos
+    let minutos = parseInt(partes[0], 10); // convertimos los minutos a un número entero
+    let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
+    return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
+  }
