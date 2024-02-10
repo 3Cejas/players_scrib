@@ -136,8 +136,9 @@ let jugador_psico;
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on(texto_x, data => {
-    texto1.innerText = data.text;
+    texto1.innerHTML = data.text;
     puntos1.innerHTML = data.points;
+    console.log(data.text)
     //cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
     if(mostrar_texto.value == 1){
@@ -283,9 +284,6 @@ socket.on('limpiar', () => {
     terminado = true;
     tiempo.style.display = "none";
     tiempo.style.color = "white"
-
-    texto1.style.height = "";
-    texto1.rows =  "3";
     //nombre1.value = "ESCRITXR 1";
     //nombre2.value = "ESCRITXR 2";
     
@@ -637,6 +635,10 @@ function limpiezas(){
     
     puntos1.style.color = "white";  
     votando = false;
+    texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
+    texto1.scrollTop = texto1.scrollHeight;
+    mostrar_texto.innerHTML = "Mostrar texto completo";
+    mostrar_texto.value = 0;
 }
 
 function limpiezas_final(){

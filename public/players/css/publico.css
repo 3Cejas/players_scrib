@@ -48,10 +48,18 @@ body {
     -webkit-appearance: none;
     box-shadow: none !important;
     color: white;
-    height: auto; /* Updated this from a fixed height */
+    height: 4.5em; /* Updated this from a fixed height */
     min-height: /*simultatin 1 row*/ calc(1.5em * 1);
     max-height: calc(1.5em * 5) ;
 }
+
+.letra-verde {
+    color: lime;
+  }
+  
+  .letra-roja {
+    color: red;
+  }
 
 p{
     font-size: 5vw;

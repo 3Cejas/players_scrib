@@ -61,6 +61,7 @@ let tiempo_votacion_input = document.getElementById('tiempo_votacion')
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
 let tiempo_calentamiento_input = document.getElementById('tiempo_calentamiento');
 let tiempo_modos_input = document.getElementById('tiempo_modos');
+let tiempo_locura_input = document.getElementById('tiempo_locura');
 
 let tempo_text_borroso;
 
@@ -80,6 +81,7 @@ let TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
 let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
 let TIEMPO_CALENTAMIENTO = tiempo_calentamiento_input.valueAsNumber;
 let TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
+let TIEMPO_LOCURA = tiempo_locura_input.valueAsNumber;
 
 let DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
 let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
@@ -158,6 +160,7 @@ function actualizarVariables() {
     TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
     TIEMPO_CALENTAMIENTO = tiempo_calentamiento_input.valueAsNumber;
     TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
+    TIEMPO_LOCURA= tiempo_locura_input.valueAsNumber;
 
     DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
     DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
@@ -173,6 +176,7 @@ function actualizarVariables() {
    console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
    console.log('TIEMPO_CALENTAMIENTO:', TIEMPO_CALENTAMIENTO);
    console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
+   console.log('TIEMPO_LOCURA:', TIEMPO_LOCURA);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -195,14 +199,14 @@ socket.on('connect', () => {
 });
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
-    texto1.value = data.text;
+    texto1.innerHTML = data.text;
     puntos1.innerHTML = data.points;
     nivel1.innerHTML = data.level;
     texto1.style.height = (texto1.scrollHeight) + "px";
 });
 
 socket.on('texto2', data => {
-    texto2.value = data.text;
+    texto2.innerHTML = data.text;
     texto_guardado2 = data.text;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
@@ -249,7 +253,7 @@ socket.on("aumentar_tiempo_control", (data) => {
 
 socket.on("locura", () => {
     socket.emit('enviar_comentario', "🔥 DIFICULTAD MÁXIMA 🔥");
-    DURACION_TIEMPO_MODOS = 20;
+    DURACION_TIEMPO_MODOS = TIEMPO_LOCURA;
     secondsPassed = 0;
     TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
   });

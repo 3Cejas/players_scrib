@@ -299,7 +299,7 @@ socket.on('actualizar_contador_musas', contador_musas => {
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
-    texto1.innerText = data.text;
+    texto1.innerHTML = data.text;
     puntos1.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
@@ -325,7 +325,7 @@ socket.on('texto1', data => {
 });
 
 socket.on('texto2', data => {
-    texto2.innerText = data.text;
+    texto2.innerHTML = data.text;
     puntos2.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel2.innerHTML = data.level;
@@ -685,7 +685,8 @@ socket.on('fin', data => {
 });
 
 socket.on("enviar_repentizado", repentizado => {
-    temas.innerHTML = repentizado;
+    temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
+    animateCSS(".temas", "flash")
 });
 
 socket.on("enviar_putada_de_j1", putada => {
@@ -1075,6 +1076,8 @@ function limpiezas(){
     palabra3.innerHTML = "";
     definicion3.innerHTML = "";
     explicación2.innerHTML = "";
+
+    temas.innerHTML = "";
     
     texto1.innerText = "";
     texto2.innerText = "";

@@ -148,7 +148,7 @@ function temp() {
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CALENTAMIENTO, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_PALABRAS } });
+    socket.emit('inicio', {count, borrar_texto, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CALENTAMIENTO, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_PALABRAS, TIEMPO_LOCURA } });
     modo_actual = "calentamiento";
     secondsPassed = 0;
     secondsPassed1 = 0;
@@ -185,21 +185,20 @@ function temas() {
 function limpiar() {
     //document.getElementById("nombre").value = "ESCRITXR 1";
     //document.getElementById("nombre1").value = "ESCRITXR 2";
-    console.log(boton_pausar_reanudar)
     if(boton_pausar_reanudar.value == 1){
         boton_pausar_reanudar.value = 0;
         span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
     if(borrar_texto == false){
-        texto_guardado1 = texto1.value;
-        texto_guardado2 = texto2.value;
+        texto_guardado1 = texto1.innerText;
+        texto_guardado2 = texto2.innerText;
     }
-    texto1.value = "";
-    texto2.value = "";
+    texto1.innerText = "";
+    texto2.innerText = "";
     document.getElementById("puntos").innerHTML = "0 palabras 🖊️";
     document.getElementById("puntos1").innerHTML = "0 palabras 🖊️";
-    document.getElementById("nivel").innerHTML = "nivel 0";
-    document.getElementById("nivel1").innerHTML = "nivel 0";
+    document.getElementById("nivel").innerHTML = "🌡️ nivel 0";
+    document.getElementById("nivel1").innerHTML = "🌡️ nivel 0";
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("texto").style.height = "40";
     document.getElementById("texto").style.height = (document.getElementById("texto").scrollHeight) + "px";
@@ -473,7 +472,7 @@ function final(player){
         tiempo.style.color = "white"
         tiempo.innerHTML = "¡Tiempo!";
         count = "¡Tiempo!";
-        texto_guardado1 = texto1.value;
+        texto_guardado1 = texto1.innerText;
         terminado = true;
         socket.emit('count', {count, secondsPassed, player});
     }
@@ -484,7 +483,7 @@ function final(player){
         count1 = "¡Tiempo!";
         terminado1 = true;
         console.log("texto2", texto_guardado2)
-        texto_guardado2 = texto2.value;
+        texto_guardado2 = texto2.innerText;
 
         socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
     }

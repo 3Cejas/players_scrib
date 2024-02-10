@@ -542,7 +542,7 @@ socket.on(texto_x, (data) => {
 
 // Recibe los datos del jugador 2 y los coloca.
 socket.on(texto_y, (data) => {
-    texto2.innerText = data.text;
+    texto2.innerHTML = data.text;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
@@ -718,6 +718,7 @@ socket.on("inicio", (data) => {
                     let caretPos = lastTextNode.length;
                     restaurarPosicionCaret(caretNode, caretPos);
                 }
+                texto1.scrollTo(0, texto1.scrollHeight);
                 }
             
             //socket.off("recibe_temas");
@@ -741,8 +742,7 @@ socket.on("limpiar", (borrar) => {
     socket.on("nombre1", (data) => {
         nombre1.value = data;
     });
-    console.log(borrar, texto2.innerText, "PUTA")
-    console.l
+
     if(borrar == false){
 
        // Verifica y asigna el valor a texto_guardado1 basado en el contenido de texto1
@@ -897,10 +897,10 @@ socket.on(enviar_ventaja, ventaja => {
     }); 
 });
 
-socket.on("enviar_repentizado", ventaja => {
-    console.log("ventaja", ventaja)
-    temas.innerHTML = ventaja;
-});
+socket.on("enviar_repentizado", repentizado => {
+    temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
+    animateCSS(".temas", "flash")
+    });
 
 socket.on("nueva letra", letra => {
     console.log("NUEVA LETRA")
@@ -958,7 +958,7 @@ function recibir_palabra_prohibida(data) {
 
 // Función para enviar texto al otro jugador y a control
 function sendText() {
-    let text = texto1.innerText;
+    let text = texto1.innerHTML;
     let points = puntos1.textContent;
     let level = nivel1.textContent;
     socket.emit(texto_x, { text, points, level });
