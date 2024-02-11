@@ -375,6 +375,17 @@ socket.on("count", data => {
     tiempo.innerHTML = data.count;
     if(data.count == '¡Tiempo!'){
         terminado = true;
+        terminado = true;
+        feedback1.innerHTML = "";
+        palabra1.innerHTML = "";
+        definicion1.innerHTML = "";
+        explicación.innerHTML = "";
+        texto1.innerText = "";
+        palabra1.style.display = "none";
+        definicion1.style.display = "none";
+        explicación.style.display = "none";
+        texto1.style.display = "none";
+        tiempo.style.color = "white";
     }
     }
 
@@ -394,6 +405,17 @@ socket.on("count", data => {
         tiempo1.innerHTML = data.count;
         if(data.count == '¡Tiempo!'){
             terminado1 = true;
+            feedback2.innerHTML = "";
+            palabra2.innerHTML = "";
+            definicion2.innerHTML = "";
+            explicación1.innerHTML = "";
+            palabra2.style.display = "none";
+            definicion2.style.display = "none";
+            explicación1.style.display = "none";
+
+            texto2.innerText = "";
+            texto2.style.display = "none";
+            tiempo1.style.color = "white";
         }
     }
     if (terminado && terminado1) {
@@ -481,6 +503,15 @@ socket.on('inicio', data => {
         setTimeout(function(){
 
             limpiezas();
+            texto1.style.display = "";
+            texto2.style.display = "";
+            palabra1.style.display = "";
+            definicion1.style.display = "";
+            explicación.style.display = "";
+            palabra2.style.display = "";
+            definicion2.style.display = "";
+            explicación.style.display = "";
+
             animacion_modo();
             MODOS['calentamiento']('', '');
         }, 2000);
@@ -1085,6 +1116,8 @@ function limpiezas(){
     texto2.style.height = "";
     texto1.rows =  "1";
     texto2.rows = "1";
+    texto1.style.display = "none";
+    texto2.style.display = "none";
 
     puntos1.innerHTML = 0 + " palabras 🖋️";
     puntos2.innerHTML = 0 + " palabras 🖋️";
@@ -1134,6 +1167,9 @@ function limpiezas_final(){
 
     texto1.innerText = "";
     texto2.innerText = "";
+    texto1.style.display = "none";
+    texto2.style.display = "none";
+
     texto1.style.height = "";
     texto2.style.height = "";
     texto1.rows =  "1";

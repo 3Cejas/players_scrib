@@ -317,6 +317,7 @@ const MODOS = {
 
     //Recibe y activa el modo letra prohibida.
     "letra prohibida": function (data) {
+        definicion1.style.fontSize = "1.5vw";
         //activar_socket_feedback();
         palabra1.style.backgroundColor = "red";
         explicación.style.color = "red";
@@ -332,6 +333,7 @@ const MODOS = {
     },
 
     "letra bendita": function (data) {
+        definicion1.style.fontSize = "1.5vw";
         //activar_socket_feedback();
         palabra1.style.backgroundColor= "lime";
         explicación.style.color = "lime";
@@ -413,6 +415,7 @@ const LIMPIEZAS = {
         socket.off(enviar_palabra);
         asignada = false;
         texto1.removeEventListener("keyup", listener_modo);
+        definicion1.style.fontSize = "1.5vw";
     },
 
     "letra prohibida": function (data) {
@@ -898,6 +901,7 @@ socket.on(enviar_ventaja, ventaja => {
 });
 
 socket.on("enviar_repentizado", repentizado => {
+    console.log("repentizado", repentizado)
     temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
     animateCSS(".temas", "flash")
     });
@@ -1323,7 +1327,7 @@ function modo_letra_prohibida(e) {
       toNormalForm(letra) === letra_prohibida.toUpperCase()
     ) {
       e.preventDefault();  // Evita el comportamiento predeterminado del evento de tecla
-  
+    /*
       let sel = window.getSelection();
       let range = sel.getRangeAt(0);
   
@@ -1354,7 +1358,8 @@ function modo_letra_prohibida(e) {
       setTimeout(() => {
         span.parentNode.removeChild(span);
       }, 100);
-  
+      */
+
       // Actualiza otros aspectos de la UI y envía eventos a través de Socket.io
       // Aquí iría la lógica para manejar la UI y eventos de Socket.io (la he mantenido igual)
       puntos1.innerHTML = puntos + " palabras 🖋️";
@@ -1392,7 +1397,7 @@ function modo_letra_bendita(e) {
     let node = sel.anchorNode;
 
     // Añadido: Procesar tecla Backspace
-    if (e.key === 'Backspace') {
+    /*if (e.key === 'Backspace') {
         console.log('Node:', node);
         console.log('Parent Node:', node.parentNode);
         console.log('Parent Node class:', node.parentNode ? node.parentNode.className : 'No parent node');
@@ -1416,12 +1421,12 @@ function modo_letra_bendita(e) {
             socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback1.innerHTML });
         }
         return; // Salir de la función si la tecla es Backspace
-    }
+    }*/
 
     if (letra.length === 1) {
         if ((toNormalForm(letra) === letra_bendita || toNormalForm(letra) === letra_bendita.toUpperCase()) ||
             (letra_bendita === "ñ" && (letra === letra_bendita || letra === letra_bendita.toUpperCase()))) {
-            e.preventDefault();
+            /*e.preventDefault();
             console.log('Se procesa letra bendita');
 
             let textNode = document.createTextNode(letra);
@@ -1439,7 +1444,7 @@ function modo_letra_bendita(e) {
             range.setStartBefore(emptyTextNodeBefore);
             range.setEndBefore(emptyTextNodeBefore);
             sel.removeAllRanges();
-            sel.addRange(range);
+            sel.addRange(range);*/
             secs = 2;
             socket.emit('aumentar_tiempo', {secs, player});
             cambiar_color_puntuación();
@@ -1458,7 +1463,7 @@ function modo_letra_bendita(e) {
 
             // Envío de feedback a través de Socket.io
             socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback1.innerHTML });
-        } else {
+        } /*else {
             if (node && node.parentNode.className === 'letra-verde') {
                 e.preventDefault();
 
@@ -1477,7 +1482,7 @@ function modo_letra_bendita(e) {
                 sel.removeAllRanges();
                 sel.addRange(range);
             }
-        }
+        }*/
     }
     // Aquí podrías añadir más comportamientos para otras teclas no imprimibles si lo consideras necesario
 }
@@ -1555,6 +1560,7 @@ function limpieza(){
 
     texto1.rows =  "6";
     texto2.rows = "6";
+    definicion1.style.fontSize = "1.5vw";
 
     temas.innerHTML = "";
 
@@ -1645,6 +1651,9 @@ function limpieza_final(){
 
     focalizador1.innerHTML = "";
     focalizador2.innerHTML = "";
+
+    definicion1.style.fontSize = "1.5vw";
+
 
     // Desactiva el blur de ambos textos.
     blurreado = false;

@@ -263,7 +263,7 @@ socket.on('inicio', data => {
                 }
             });
 
-            skill.style.display = "flex";
+            //skill.style.display = "flex";
 
             texto1.style.height = "";
             texto1.rows =  "3";
