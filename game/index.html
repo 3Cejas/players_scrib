@@ -1,0 +1,165 @@
+<html lang="es">
+
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
+      </style>
+    <meta name="viewport" content="width=device-width, height=device-height" content="initial-scale=1">
+    <title>SCRB</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- highlight-within-textarea CSS/JS -->
+    <!--<script src="jquery.highlight-within-textarea.js"></script>-->
+
+</head>
+
+<body>
+    <script src="./juego.js"></script>
+    <div align="center">
+        <pre class="neon">
+        __     _____    _____   _____    _____    __       ____  
+       / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+      / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+     < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
+      \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
+                                                                                                  
+        </pre>
+        <div align="center">
+            <p class="sub">powered by</p><img src="./img/logo.png" alt="" width="80" />
+        </div>
+        <br><br>
+        <h1>ELIGE TU ROL</h1>
+        <table class="menu">
+            <tr>
+                <td>
+                    <button onclick="window.location.href = './players/index.html?player=1'" class="bn54">
+                        <span class="bn54span">✍️ ESCRITXR 1</span></button><br>
+                </td>
+                <td>
+                    <button onclick="window.location.href = './players/index.html?player=2'" class="bn54">
+                        <span class="bn54span">✍️ ESCRITXR 2</span></button><br>
+                </td>
+                <td>
+                    <button onclick="window.location.href = './control/index.html';" class="bn54">
+                        <span class="bn54span">🎨 CONTROL</span></button><br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button onclick="window.location.href = './spectator/index.html';" class="bn54">
+                        <span class="bn54span">👀 ESPECTADOR</span></button><br>
+                </td>
+                <td>
+                  <button onclick="window.location.href = './actors/index.html';" class="bn54">
+                      <span class="bn54span">🎭 ACTORES</span></button><br>
+              </td>
+            </tr>
+        </table>
+        <br>
+        <h2>ENFRÉNTATE A OTROS ESCRITORES</h2>
+        <h2>-</h2>
+        <h2>DEMUESTRA QUIÉN ES EL MEJOR</h2>
+        <h2>-</h2>
+        <h2>ROMPE EL BLOQUEO CREATIVO</h2>
+        <h2>-</h2>
+        <h2>SOBREVIVE A TODOS LOS NIVELES</h2>
+        <h2>-</h2>
+        <h2>GÁNATE EL FAVOR DEL PÚBLICO</h2>
+    </div>
+</body>
+<script>
+    var viewFullScreen = document.getElementById("view-fullscreen");
+if (viewFullScreen) {
+  viewFullScreen.addEventListener("click", function() {
+    var docElm = document.documentElement;
+    if (docElm.requestFullscreen) {
+      docElm.requestFullscreen();
+    } else if (docElm.msRequestFullscreen) {
+      docElm.msRequestFullscreen();
+    } else if (docElm.mozRequestFullScreen) {
+      docElm.mozRequestFullScreen();
+    } else if (docElm.webkitRequestFullScreen) {
+      docElm.webkitRequestFullScreen();
+    }
+  })
+}
+
+const table = document.querySelector('.menu');
+const buttons = document.querySelectorAll('button');
+const rows = table.rows.length;
+const cols = table.rows[0].cells.length;
+let focusedRow = 0;
+let focusedCol = 0;
+
+buttons[0].focus();
+console.log(buttons[0])
+
+// Función para cambiar el enfoque al botón especificado
+function focusButton(row, col) {
+    // Desenfocar el botón anterior
+    const prevButton = table.rows[focusedRow].cells[focusedCol].querySelector('button');
+    if (prevButton) {
+      prevButton.blur();
+    }
+  
+    // Enfocar el nuevo botón si existe
+    const newButton = table.rows[row].cells[col].querySelector('button');
+    if (newButton) {
+      newButton.focus();
+    }
+  
+    // Actualizar las variables de fila y columna enfocadas
+    focusedRow = row;
+    focusedCol = col;
+  }
+// Manejar las teclas de flecha presionadas
+document.addEventListener('keydown', (event) => {
+  const key = event.key;
+  
+  // Flecha arriba
+  if (key === 'ArrowUp' && focusedRow > 0) {
+    event.preventDefault();
+    focusButton(focusedRow - 1, focusedCol);
+    if(table.rows[(focusedRow - 1)]){
+        table.rows[focusedRow - 1].scrollIntoView({block: "nearest"});
+    }
+  }
+  // Flecha abajo
+  else if (key === 'ArrowDown' && focusedRow < rows - 1) {
+    event.preventDefault();
+    focusButton(focusedRow + 1, focusedCol);
+    if(table.rows[(focusedRow + 1)]){
+    table.rows[focusedRow + 1].scrollIntoView({block: "nearest"});
+    }
+  }
+  // Flecha izquierda
+  else if (key === 'ArrowLeft' && focusedCol > 0) {
+    event.preventDefault();
+    focusButton(focusedRow, focusedCol - 1);
+  }
+  // Flecha derecha
+  else if (key === 'ArrowRight' && focusedCol < cols - 1) {
+    event.preventDefault();
+    focusButton(focusedRow, focusedCol + 1);
+  }
+});
+
+// Añadir el evento de foco a los botones de la tabla
+
+
+buttons.forEach((button, index) => {
+  const row = Math.floor(index / cols);
+  const col = index % cols;
+  button.addEventListener('focus', () => {
+    focusedRow = row;
+    focusedCol = col;
+  });
+  button.dataset.position = `${row}-${col}`;
+});
+</script>
+</html>

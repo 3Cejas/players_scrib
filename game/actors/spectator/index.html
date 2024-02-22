@@ -1,0 +1,58 @@
+<html lang="es">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" type="text/css" href="./css/publico.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="./js/juego.js"></script>
+</head>
+<body>
+        <div id="contenedor" class="contenedor">
+            <div class="container"></div>
+            <p><span id="temas" class="temas"></span></p>
+            <br>
+            <div class="jugador">
+                <input disabled id="nombre" class="nombre"></input>
+                <br><br>
+                <p id="alineador1"></p>
+                <div contenteditable="false" class="textarea" id="texto"
+                spellcheck="false">
+            </div>
+                <br><br>
+                <table>
+                    <tr>
+                        <p id="tiempo" class="tiempo"></p>
+                    </tr>
+                </table>
+                <div align="center">
+                    <table class="right">
+                        <tr>
+                            <th id="puntos" class="puntos">0 palabras 🖋️</th>
+                            <th id="puntos"></th>
+                            <th id="nivel" class="nivel">🌡️ nivel 1 </th>
+                        </tr>
+                    </table>
+                </div>
+                <br>
+                <table class="info">
+                    <tr>
+                            <p id="explicación" class="explicación"></p>
+                    </tr>
+                        <p id="palabra" class=palabra></p>
+                    </tr>
+                    <tr>
+                        <p id="definicion" class="definicion"></p>
+                    </tr>
+                </table>
+        </div>
+        </div>
+</body>
+<script src="../../dist/socket.io/socket.io.js"></script>
+<script src="./js/jugador-servidor.js"></script>
+
+</html>
