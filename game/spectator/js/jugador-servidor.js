@@ -1,7 +1,7 @@
 // Se establece la conexión con el servidor.
 serverUrl = window.location.href.startsWith('file:')
     ? 'http://localhost:3000'
-    : 'https://scrib.zeabur.app';
+    : 'https://sutura.ddns.net:3000';
 
 const socket = io(serverUrl);
 
