@@ -292,8 +292,8 @@ activar_sockets_extratextuales();
 
 socket.on('actualizar_contador_musas', contador_musas => {
     console.log("actualizar_contador_musas")
-    musas1.innerHTML = contador_musas.escritxr1 + " musas 🎨";
-    musas2.innerHTML = contador_musas.escritxr2 + " musas 🎨";
+    musas1.innerHTML = contador_musas.escritxr1 + " musas";
+    musas2.innerHTML = contador_musas.escritxr2 + " musas";
 
 });
 
@@ -374,7 +374,7 @@ socket.on("count", data => {
     }
     tiempo.innerHTML = data.count;
     if(data.count == '¡Tiempo!'){
-        terminado = true;
+        confetti_aux()
         terminado = true;
         feedback1.innerHTML = "";
         palabra1.innerHTML = "";
@@ -474,7 +474,14 @@ socket.on('inicio', data => {
     texto2.style.height = "";
     texto1.rows =  "6";
     texto2.rows = "6";
-
+    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
+    $('#countdown').remove();
+    var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
+    preparados.appendTo($('.container'));
+    setTimeout(() => {
+        $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+    }, 20);
+    setTimeout(() => {
     var counter = 3;
     timer = setInterval(function() {
       
@@ -517,6 +524,7 @@ socket.on('inicio', data => {
         }, 2000);
     }
   }, 1000);
+}, 1000);
 });
 
 // Resetea el tablero de juego.
@@ -533,7 +541,7 @@ socket.on('limpiar', data => {
     });
 
     limpiezas();
-
+    stopConfetti();
     temas.innerHTML = "";
     texto1.style.height = "";
     texto2.style.height = "";
@@ -630,8 +638,17 @@ function recibir_palabra(data, escritxr) {
         else {
             signo = "+";
         }
-        palabra2.innerHTML = "(" + signo + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
-        definicion2.innerHTML = data.palabra_bonus[1];
+        palabra2.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)";
+        if(data.palabra_bonus[1] != ""){
+            definicion2.innerHTML = data.palabra_bonus[1];
+            }
+        else{
+            if (signo === "+") {
+                definicion2.innerHTML = "<span style='color:lime;'>MUSA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
+            } else {
+                definicion2.innerHTML = "<span style='color:red;'>MUSA ENEMIGA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
+            }
+                    }
         animateCSS(".explicación1", "bounceInLeft");
         animateCSS(".palabra1", "bounceInLeft");
         animateCSS(".definicion1", "bounceInLeft");
@@ -643,8 +660,17 @@ function recibir_palabra(data, escritxr) {
         else {
             signo = "+";
         }
-        palabra3.innerHTML = "(" + signo + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
-        definicion3.innerHTML = data.palabra_bonus[1];
+        palabra3.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)"
+        if(data.palabra_bonus[1] != ""){
+            definicion3.innerHTML = data.palabra_bonus[1];
+            }
+        else{
+            if (signo === "+") {
+                definicion3.innerHTML = "<span style='color:lime;'>MUSA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
+            } else {
+                definicion3.innerHTML = "<span style='color:red;'>MUSA ENEMIGA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
+            }
+                    }
         animateCSS(".explicación2", "bounceInLeft");
         animateCSS(".palabra2", "bounceInLeft");
         animateCSS(".definicion2", "bounceInLeft");
@@ -761,6 +787,14 @@ socket.on("nueva letra", letra => {
         animacion_modo();
         palabra1.innerHTML = "LETRA BENDITA: " + letra;
     }
+});
+
+socket.on('elegir_ventaja_j1', () => {
+    confetti_musas(0.25);
+});
+
+socket.on('elegir_ventaja_j2', () => {
+    confetti_musas(0.75);
 });
 
 //FUNCIONES AUXILIARES.
@@ -1083,7 +1117,6 @@ function cambiar_color_puntuación() {
 }
 
 function limpiezas(){
-
     clearTimeout(listener_cuenta_atras);
     clearTimeout(tempo_text_inverso1);
     clearTimeout(tempo_text_inverso2);
@@ -1109,6 +1142,7 @@ function limpiezas(){
     explicación2.innerHTML = "";
 
     temas.innerHTML = "";
+    temas.display = "";
     
     texto1.innerText = "";
     texto2.innerText = "";
@@ -1119,16 +1153,11 @@ function limpiezas(){
     texto1.style.display = "none";
     texto2.style.display = "none";
 
-    puntos1.innerHTML = 0 + " palabras 🖋️";
-    puntos2.innerHTML = 0 + " palabras 🖋️";
+    puntos1.innerHTML = 0 + " palabras";
+    puntos2.innerHTML = 0 + " palabras";
     
-    nivel1.innerHTML = "🌡️ nivel 0";
-    nivel2.innerHTML = "🌡️ nivel 0";
-    
-    tiempo.style.color = "white";
-    tiempo1.style.color = "white";
-    puntos1.style.color = "white";
-    puntos2.style.color = "white";
+    nivel1.innerHTML = "nivel 0";
+    nivel2.innerHTML = "nivel 0";
     
     texto1.classList.remove('textarea_blur');
     texto2.classList.remove('textarea_blur');
@@ -1147,7 +1176,7 @@ function limpiezas(){
 }
 
 function limpiezas_final(){
-
+    temas.innerHTML = "none";
     temas.innerHTML = "";
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
@@ -1191,27 +1220,40 @@ function limpiezas_final(){
 
 }
 
-function confetti_aux(){
-    var duration = 15 * 1000;
-    var animationEnd = Date.now() + duration;
-    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var duration = 15 * 1000;
+var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var isConfettiRunning = true; // Indicador para controlar la ejecución
 
-    function randomInRange(min, max) {
-    return Math.random() * (max - min) + min;
+function randomInRange(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function confetti_aux() {
+  var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
+  isConfettiRunning = true; // Habilita la ejecución de confetti
+  console.log(isConfettiRunning);
+  
+  var interval = setInterval(function() {
+    if (!isConfettiRunning) {
+      clearInterval(interval);
+      return;
     }
 
-    var interval = setInterval(function() {
     var timeLeft = animationEnd - Date.now();
-
     if (timeLeft <= 0) {
-        return clearInterval(interval);
+      clearInterval(interval);
+      return;
     }
 
     var particleCount = 50 * (timeLeft / duration);
-    // since particles fall down, start a bit higher than random
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-    }, 250);
+    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+  }, 250);
+}
+
+function stopConfetti() {
+  isConfettiRunning = false; // Deshabilita la ejecución de confetti
+  confetti.reset(); // Detiene la animación de confetti
 }
 
 function convertirASegundos(tiempo) {
@@ -1220,3 +1262,26 @@ function convertirASegundos(tiempo) {
     let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
     return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
   }
+
+  function confetti_musas(pos){
+    var scalar = 2;
+    var unicorn = confetti.shapeFromText({ text: '🎨', scalar });
+    isConfettiRunning = true; // Habilita la ejecución de confetti
+    var end = Date.now() + (2 * 1000);
+    
+    (function frame() {
+      confetti({
+        startVelocity: 10,
+        particleCount: 1,
+        angle: 270,
+        spread: 1000,
+        origin: { y: 0, x: pos },
+        shapes: [unicorn],
+        scalar: 3
+      });
+    
+      if ((Date.now() < end) && isConfettiRunning) {
+        requestAnimationFrame(frame);
+      }
+    }());
+    }

@@ -10,45 +10,29 @@ let tiempo_inicial = new Date();
 let es_pausa = false;
 let borrado_cambiado = false;
 let duracion;
-let texto_guardado1 = "";
-let texto_guardado2 = "";
+let texto_guardado = "";
 let interval_ortografia_perfecta;
+
 
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
-let nombre1;
-let texto1 = getEl("texto");
-let puntos1 = getEl("puntos");
-let nivel1 = getEl("nivel");
-let feedback1 = getEl("feedback1");
-let alineador1 = getEl("alineador1");
-let musas1 = getEl("musas");
+let nombre;
+let texto = getEl("texto");
+let puntos = getEl("puntos");
+let nivel = getEl("nivel");
+let feedback = getEl("feedback1");
+let alineador = getEl("alineador1");
+let musas = getEl("musas");
   
-let palabra1 = getEl("palabra");
-let definicion1 = getEl("definicion");
+let palabra = getEl("palabra");
+let definicion = getEl("definicion");
 let explicación = getEl("explicación");
+let metadatos = getEl("metadatos");
   
-// Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 let temas = getEl("temas");
 let lightning = getEl("lightning");
-  
-// COMPONENTES DEL JUGADOR 2
-let nombre2;
-let texto2 = getEl("texto1");
-let puntos2 = getEl("puntos1");
-let nivel2 = getEl("nivel1");
-let feedback2 = getEl("feedback2");
-let alineador2 = getEl("alineador2");
-let musas2 = getEl("musas1");
-  
-let focalizador1 = getEl("focalizador1");
-let focalizador2 = getEl("focalizador2");
-  
-let puntuacion_final1 = getEl("puntuacion_final1");
-let puntuacion_final2 = getEl("puntuacion_final2");
-
 let feedback_tiempo = getEl("feedback_tiempo");
 let neon = getEl("neon");
   
@@ -92,36 +76,33 @@ if (player == 1) {
     feedback_a_j_x = 'feedback_a_j1';
     feedback_de_j_x = 'feedback_de_j1';
     texto_x = 'texto1'
-    texto_y= 'texto2';
     enviar_postgame_x = 'enviar_postgame1';
     recibir_postgame_x = 'recibir_postgame1';
-    nombre1 = getEl("nombre");
-    nombre1.value = "ESCRITXR 1"
-    nombre2 = getEl("nombre1");
-    nombre2.value = "ESCRITXR 2";
+    nombre = getEl("nombre");
+    nombre.value = "ESCRITXR 1"
     inspirar = 'inspirar_j1';
     enviar_palabra = 'enviar_palabra_j1'
     enviar_ventaja = 'enviar_ventaja_j1';
-    nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
-    nombre2.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
+    elegir_ventaja = "elegir_ventaja_j1";
+    nombre.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
+    metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
 
 } else if (player == 2) {
     enviar_putada_de_jx = 'enviar_putada_de_j1';
     feedback_a_j_x = 'feedback_a_j2';
     feedback_de_j_x = 'feedback_de_j2';
     texto_x = 'texto2'
-    texto_y= 'texto1';
     enviar_postgame_x = 'enviar_postgame2';
     recibir_postgame_x = 'recibir_postgame2';
-    nombre1 = getEl("nombre1");
-    nombre1.value="ESCRITXR 1";
-    nombre2 = getEl("nombre");
-    nombre2.value="ESCRITXR 2";
+    nombre = getEl("nombre");
+    nombre.value = "ESCRITXR 2"
     inspirar = 'inspirar_j2';
     enviar_palabra = 'enviar_palabra_j2'
     enviar_ventaja = 'enviar_ventaja_j2';
-    nombre2.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
-    nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
+    elegir_ventaja = "elegir_ventaja_j2";
+    nombre.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
+    metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
+
 }
 
 // Se establece la conexión con el servidor.
@@ -163,28 +144,19 @@ const PUTADAS = {
         //caret = guardarPosicionCaret();
         //caretNode = caret.caretNode;
         //caretPos = caret.caretPos;
-        texto1.contentEditable= "false";
-        texto1.classList.add("rotate-vertical-center");
+        texto.contentEditable= "false";
+        texto.classList.add("rotate-vertical-center");
         // Añade un escuchador para el evento 'animationend'
-        texto1.addEventListener('animationend', function() {
-            texto1.classList.remove("rotate-vertical-center");
-            texto1.contentEditable= "true";
-            texto1.focus()
-            texto1.removeEventListener('animationend', arguments.callee);
+        texto.addEventListener('animationend', function() {
+            texto.classList.remove("rotate-vertical-center");
+            texto.contentEditable= "true";
+            texto.focus()
+            texto.removeEventListener('animationend', arguments.callee);
         });
 
         procesarTexto();
-        /*texto1.innerText =
-            texto1.innerText
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");*/
-        //restaurarPosicionCaret(caretNode, caretPos);
-        // Obtener el último nodo de texto en texto1
-        let lastLine = texto1.lastChild;
+        // Obtener el último nodo de texto en text
+        let lastLine = texto.lastChild;
         let lastTextNode = lastLine;
         while (lastTextNode && lastTextNode.nodeType !== 3) {
             lastTextNode = lastTextNode.lastChild;
@@ -201,26 +173,18 @@ const PUTADAS = {
         tempo_text_inverso = setTimeout(function () {
             temp_text_inverso_activado = false;
             desactivar_borrar = false;
-            /*texto1.innerText =
-                texto1.innerText
-                    .split("")
-                    .reverse()
-                    .join("")
-                    .split(" ")
-                    .reverse()
-                    .join(" ");
-            */
-            texto1.contentEditable= "false";
+
+            texto.contentEditable= "false";
             caretNode, caretPos = guardarPosicionCaret();
-            texto1.classList.add("rotate-vertical-center");
-            texto1.addEventListener('animationend', function() {
-                texto1.classList.remove("rotate-vertical-center");
-                texto1.contentEditable= "true";
-                texto1.focus()
-                texto1.removeEventListener('animationend', arguments.callee);
+            texto.classList.add("rotate-vertical-center");
+            texto.addEventListener('animationend', function() {
+                texto.classList.remove("rotate-vertical-center");
+                texto.contentEditable= "true";
+                texto.focus()
+                texto.removeEventListener('animationend', arguments.callee);
             });
             procesarTexto();
-            let lastLine = texto1.lastChild;
+            let lastLine = texto.lastChild;
             let lastTextNode = lastLine;
             while (lastTextNode && lastTextNode.nodeType !== 3) {
                 lastTextNode = lastTextNode.lastChild;
@@ -238,58 +202,14 @@ const PUTADAS = {
     },
 
     "🌪️": function () {
-        //activar_socket_feedback();
         modo_texto_borroso = 1;
         tiempo_inicial = new Date();
-        texto1.classList.add("textarea_blur");
+        texto.classList.add("textarea_blur");
         tempo_text_borroso = setTimeout(function () {
             temp_text_borroso_activado = true;
-            texto1.classList.remove("textarea_blur");
+            texto.classList.remove("textarea_blur");
             putada_actual = "";
         }, TIEMPO_BORROSO);
-    },
-};
-
-const VENTAJAS = {
-    "🐢": function () {
-        tiempo_borrado_menos()
-        animacion_modo();
-        enviar_putada('🐢');
-    },
-    "⚡": function () {
-        document.body.classList.add("bg");
-        document.body.classList.add("rain");
-        lightning.classList.add("lightning");
-        lightning.style.right = "0%";
-        lightning.style.left = "45%";
-        setTimeout(function () {
-            document.body.classList.remove("bg");
-            document.body.classList.remove("rain");
-            lightning.classList.remove("lightning");
-        }, TIEMPO_BORRADO);
-        enviar_putada('⚡');
-    },
-
-    "⌛": function () {
-        tiempo_muerto();
-        enviar_putada('⌛');
-    },
-    "🙃": function () {
-        texto2.classList.add("rotate-vertical-center");
-        enviar_putada('🙃');
-    },
-
-    "🌪️": function () {
-        modo_texto_borroso = 2;
-        tiempo_inicial = new Date();
-        console.log(tiempo_inicial)
-        console.log(es_pausa)
-        texto2.classList.add("textarea_blur");
-        tempo_text_borroso = setTimeout(function () {
-            temp_text_borroso_activado = true;
-            texto2.classList.remove("textarea_blur");
-        }, TIEMPO_BORROSO);
-        enviar_putada('🌪️');
     },
 };
 
@@ -297,17 +217,16 @@ const MODOS = {
 
     "calentamiento": function (data) {
         explicación.style.color = "purple";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
         explicación.innerHTML = "CALENTAMIENTO";
     },
 
     // Recibe y activa la palabra y el modo bonus.
     "palabras bonus": function (data) {
-        //activar_socket_feedback();
-        palabra1.style.backgroundColor = "yellow";
+        palabra.style.backgroundColor = "yellow";
         explicación.style.color = "yellow";
-        definicion1.style.fontSize = "1vw";
+        definicion.style.fontSize = "1vw";
         explicación.innerHTML = "MODO PALABRAS BENDITAS";
         socket.emit("nueva_palabra", player);
         socket.on(enviar_palabra, data => {
@@ -317,33 +236,30 @@ const MODOS = {
 
     //Recibe y activa el modo letra prohibida.
     "letra prohibida": function (data) {
-        definicion1.style.fontSize = "1.5vw";
-        //activar_socket_feedback();
-        palabra1.style.backgroundColor = "red";
+        definicion.style.fontSize = "1.5vw";
+        palabra.style.backgroundColor = "red";
         explicación.style.color = "red";
-        console.log(data)
         letra_prohibida = data.letra_prohibida;
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto1.addEventListener("keydown", listener_modo);
+        texto.addEventListener("keydown", listener_modo);
         explicación.innerHTML = "MODO LETRA MALDITA";
-        palabra1.innerHTML = "LETRA MALDITA: " + letra_prohibida;
-        definicion1.innerHTML = "";
+        palabra.innerHTML = "LETRA MALDITA: " + letra_prohibida;
+        definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
     },
 
     "letra bendita": function (data) {
-        definicion1.style.fontSize = "1.5vw";
-        //activar_socket_feedback();
-        palabra1.style.backgroundColor= "lime";
+        definicion.style.fontSize = "1.5vw";
+        palabra.style.backgroundColor= "lime";
         explicación.style.color = "lime";
         letra_bendita = data.letra_bendita;
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_bendita(e) };
-        texto1.addEventListener("keydown", listener_modo, true);
+        texto.addEventListener("keydown", listener_modo, true);
         explicación.innerHTML = "MODO LETRA BENDITA";
-        palabra1.innerHTML = "LETRA BENDITA: " + letra_bendita;
-        definicion1.innerHTML = "";
+        palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
+        definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
     },
 
@@ -363,7 +279,7 @@ const MODOS = {
         //palabra1.innerHTML = "";
         //definicion1.innerHTML = "";
         listener_modo_psico = function () { modo_psicodélico() };
-        texto1.addEventListener("keyup", listener_modo_psico);
+        texto.addEventListener("keyup", listener_modo_psico);
         activado_psico = true;
         /*socket.on("psico_a_j1", (data) => {
             stylize();
@@ -371,20 +287,18 @@ const MODOS = {
     },
 
     'tertulia': function (socket) {
-        //activar_socket_feedback();
         explicación.style.color = "blue";
         explicación.innerHTML = "MODO TERTULIA";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
     },
 
     'palabras prohibidas': function (data) {
-        //activar_socket_feedback();
-        palabra1.style.backgroundColor = "pink";
+        palabra.style.backgroundColor = "pink";
         explicación.style.color = "pink";
         explicación.innerHTML = "MODO PALABRAS MALDITAS";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
         socket.emit("nueva_palabra_prohibida", player);
         socket.on(enviar_palabra, data => {
             recibir_palabra_prohibida(data);
@@ -392,12 +306,11 @@ const MODOS = {
     },
 
     'ortografía perfecta': function (data) {
-        //activar_socket_feedback();
-        palabra1.style.backgroundColor = "orange";
+        palabra.style.backgroundColor = "orange";
         explicación.style.color = "orange";
         explicación.innerHTML = "MODO ORTOGRAFÍA PERFECTA";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
         modo_ortografía_perfecta();
 
     },
@@ -414,28 +327,27 @@ const LIMPIEZAS = {
     "palabras bonus": function (data) {
         socket.off(enviar_palabra);
         asignada = false;
-        texto1.removeEventListener("keyup", listener_modo);
-        definicion1.style.fontSize = "1.5vw";
+        texto.removeEventListener("keyup", listener_modo);
+        definicion.style.fontSize = "1.5vw";
     },
 
     "letra prohibida": function (data) {
-        texto1.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("keyup", listener_modo);
         letra_prohibida = "";
     },
 
     "letra bendita": function (data) {
-        texto1.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("keyup", listener_modo);
         letra_bendita = "";
     },
 
     "borroso": function (data) {
-        texto1.classList.remove("textarea_blur");
-        //texto2.classList.remove("textarea_blur");
+        texto.classList.remove("textarea_blur");
     },
 
     "psicodélico": function (data) {
         //socket.off('psico_a_j1');
-        texto1.removeEventListener("keyup", listener_modo_psico);
+        texto.removeEventListener("keyup", listener_modo_psico);
         activado_psico = false;
         restablecer_estilo();
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
@@ -443,10 +355,8 @@ const LIMPIEZAS = {
 
     "inverso": function (data) {
         desactivar_borrar = false;
-        texto1.innerText =
-            //crear_n_saltos_de_linea(saltos_línea_alineacion_1) +
-            //eliminar_saltos_de_linea(texto1.innerText)
-            texto1.innerText
+        texto.innerText =
+            texto.innerText
                 .split("")
                 .reverse()
                 .join("")
@@ -462,7 +372,7 @@ const LIMPIEZAS = {
     "palabras prohibidas": function (data) {
         socket.off(enviar_palabra);
         asignada = false;
-        texto1.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("keyup", listener_modo);
     },
 
     "ortografía perfecta": function (data) {
@@ -473,31 +383,26 @@ const LIMPIEZAS = {
 };
 
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto1.addEventListener("keyup", (evt) => {
+texto.addEventListener("keyup", (evt) => {
     console.log(evt.key)
     if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        countChars(texto1);
+        countChars(texto);
         sendText();
-        //auto_grow(texto1);
     }
 });
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto1.addEventListener("keydown", (evt) => {
+texto.addEventListener("keydown", (evt) => {
     if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        console.log("hola")
-        countChars(texto1);
+        countChars(texto);
         sendText();
-        //auto_grow(texto1);
     }
 });
 
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto1.addEventListener("press", (evt) => {
+texto.addEventListener("press", (evt) => {
     if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        console.log("hola")
-        countChars(texto1);
+        countChars(texto);
         sendText();
-        //auto_grow(texto1);
     }
 });
 
@@ -511,58 +416,20 @@ activar_sockets_extratextuales();
 socket.on('actualizar_contador_musas', contador_musas => {
     console.log("actualizar_contador_musas")
     if(player == 1){
-    musas1.innerHTML = contador_musas.escritxr1 + " musas 🎨";
-    musas2.innerHTML = contador_musas.escritxr2 + " musas 🎨";
+    musas.innerHTML = contador_musas.escritxr1 + " musas";
     }
     else{
-        musas1.innerHTML = contador_musas.escritxr2 + " musas 🎨";
-        musas2.innerHTML = contador_musas.escritxr1 + " musas 🎨";
+        musas.innerHTML = contador_musas.escritxr2 + " musas";
     }
 });
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on(texto_x, (data) => {
-    texto1.innerText = data.text;
-    puntos1.innerHTML = data.points;
-    nivel1.innerHTML = data.level;
-    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
-      while (texto2.scrollHeight > texto1.scrollHeight) {
-        saltos_línea_alineacion_1 += 1;
-        texto1.innerText = "\n" + texto1.innerText;
-      }
-    } else {
-      while (texto2.scrollHeight < texto1.scrollHeight) {
-        saltos_línea_alineacion_2 += 1;
-        texto2.innerText = "\n" + texto2.innerText;
-      }
-    }*/
-    //texto2.style.height = texto2.scrollHeight + "px";
-    texto1.scrollTop = texto1.scrollHeight;
+    texto.innerText = data.text;
+    puntos.innerHTML = data.points;
+    nivel.innerHTML = data.level;
+    texto.scrollTop = texto.scrollHeight;
     window.scrollTo(0, document.body.scrollHeight);
-    //focalizador1.scrollIntoView({ block: "end" });
-});
-
-
-// Recibe los datos del jugador 2 y los coloca.
-socket.on(texto_y, (data) => {
-    texto2.innerHTML = data.text;
-    puntos2.innerHTML = data.points;
-    nivel2.innerHTML = data.level;
-    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
-      while (texto2.scrollHeight > texto1.scrollHeight) {
-        saltos_línea_alineacion_1 += 1;
-        texto1.innerText = "\n" + texto1.innerText;
-      }
-    } else {
-      while (texto2.scrollHeight < texto1.scrollHeight) {
-        saltos_línea_alineacion_2 += 1;
-        texto2.innerText = "\n" + texto2.innerText;
-      }
-    }*/
-    //texto2.style.height = texto2.scrollHeight + "px";
-    texto2.scrollTop = texto2.scrollHeight;
-    window.scrollTo(0, document.body.scrollHeight);
-    //focalizador1.scrollIntoView({ block: "end" });
 });
 
 /* 
@@ -571,9 +438,6 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on("count", (data) => {
-    //texto1.focus();
-    console.log("TIEMPO", data.count)
-    console.log(modo_actual)
     if(data.player == player){
     if (convertirASegundos(data.count) >= 20) {
         tiempo.style.color = "white";
@@ -587,13 +451,12 @@ socket.on("count", (data) => {
         MODOS["psicodélico"](data, socket);
         tiempo.style.color = "red";
     }
-    console.log(tiempo.innerHTML)
-    console.log(data.count)
+
     tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
         if (putada_actual == "🙃"){
-            texto1.innerText =
-                texto1.innerText
+            texto.innerText =
+                texto.innerText
                     .split("")
                     .reverse()
                     .join("")
@@ -608,48 +471,22 @@ socket.on("count", (data) => {
                         .join(" ");
         }
         sendText();
-        texto_guardado1 = texto1.innerText;
-        texto_guardado2 = texto2.innerText;
+        texto_guardado = texto.innerText;
         tiempo.style.color = "white";
         if(terminado == false){
-            /*if(terminado2 == false){
-                texto2.style.height = "";
-                texto2.rows = "1";
-                texto2.innerText = "";
-            }*/
             final();
             confetti_aux();
-            console.log("ANTESPRIMERO", texto1.innerText)
             setTimeout(function () {
 
-                texto1.style.height = "";
-                texto1.rows =  "1";
-                texto1.style.display = "none";
-                console.log("TEXTO1", texto1.innerText)
-                console.log("TEXTO_GUARDADO", texto_guardado1)
-                texto1.textContent = texto_guardado1;
-                console.log("TEXTO1_CAMBIADO",texto1.innerText)
+                texto.style.height = "";
+                texto.rows =  "1";
+                texto.style.display = "none";
+                texto.textContent = texto_guardado;
                 sendText();
                 tiempo.style.color = "white";
                 }, 2000);
         }
     }
-    }
-    else{
-            if (convertirASegundos(data.count) >= 20) {
-                tiempo1.style.color = "white";
-            }
-            if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
-                console.log(convertirASegundos(data.count))
-                tiempo1.style.color = "yellow";
-            }
-            if (10 > convertirASegundos(data.count)) {
-                tiempo1.style.color = "red";
-            }
-            tiempo1.innerHTML = data.count;
-            if (data.count == "¡Tiempo!") {
-                tiempo1.style.color = "white";
-            }
     }
 });
   
@@ -658,22 +495,24 @@ socket.on("inicio", (data) => {
     TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
     TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
     TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
-    activar_socket_feedback();
     limpieza();
     desactivar_borrar = false;
-    texto1.style.height = "";
-    texto2.style.height = "";
-
-    /*saltos_línea_alineacion_1 = 0;
-    saltos_línea_alineacion_2 = 0;*/
+    texto.style.height = "";
 
     logo.style.display = "none"; 
     neon.style.display = "none"; 
     tiempo.innerHTML = "";
-    tiempo1.innerHTML = "";
     tiempo.style.display = "";
-    tiempo1.style.display = "";
 
+    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
+    $('#countdown').remove();
+    var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
+    preparados.appendTo($('.container'));
+    setTimeout(() => {
+        $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+    }, 20);
+
+    setTimeout(() => {
     var counter = 3;
   
     timer = setInterval(function() {
@@ -701,15 +540,13 @@ socket.on("inicio", (data) => {
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         listener_cuenta_atras = setTimeout(function(){
-            console.log("GOLAA", data.borrar_texto)
             if (data.borrar_texto == false) {
-                texto1.innerText = texto_guardado1.trim();
-                texto2.innerText = texto_guardado2.trim();
-                
+                texto.innerText = texto_guardado.trim();
+
                 sendText()
 
-                // Obtener el último nodo de texto en texto1
-                let lastLine = texto1.lastChild;
+                // Obtener el último nodo de texto en texto
+                let lastLine = texto.lastChild;
                 let lastTextNode = lastLine;
                 while (lastTextNode && lastTextNode.nodeType !== 3) {
                     lastTextNode = lastTextNode.lastChild;
@@ -721,79 +558,54 @@ socket.on("inicio", (data) => {
                     let caretPos = lastTextNode.length;
                     restaurarPosicionCaret(caretNode, caretPos);
                 }
-                texto1.scrollTo(0, texto1.scrollHeight);
+                texto.scrollTo(0, texto.scrollHeight);
                 }
             
             //socket.off("recibe_temas");
-            texto1.contentEditable= "true";
-            texto1.focus();
+            texto.contentEditable= "true";
+            texto.focus();
             animacion_modo();
             MODOS['calentamiento']('', '');
         }, 2000);
       }
     }, 1000);
+}, 1000);
 });
 
 // Resetea el tablero de juego.
 socket.on("limpiar", (borrar) => {
     // Recibe el nombre del jugador 2 y lo coloca en su sitio.
-    socket.on("nombre2", (data) => {
-        nombre2.value = data;
+    socket.on("nombre" + player, (data) => {
+        nombre.value = data;
     });
-
-    // Recibe el nombre del jugador 1 y lo coloca en su sitio.
-    socket.on("nombre1", (data) => {
-        nombre1.value = data;
-    });
-
     if(borrar == false){
 
-       // Verifica y asigna el valor a texto_guardado1 basado en el contenido de texto1
-        if(texto1.innerText != "") {
-            texto_guardado1 = texto1.innerText;
+       // Verifica y asigna el valor a texto_guardado basado en el contenido de text
+        if(texto.innerText != "") {
+            texto_guardado = texto.innerText;
         } else {
-            texto_guardado1 = ""; // Asigna una cadena vacía si texto1.innerText es vacío
+            texto_guardado = ""; // Asigna una cadena vacía si text.innerText es vacío
         }
-
-        // Verifica y asigna el valor a texto_guardado2 basado en el contenido de texto2
-        if(texto2.innerText != "") {
-            texto_guardado2 = texto2.innerText;
-        } else {
-            texto_guardado2 = ""; // Asigna una cadena vacía si texto2.innerText es vacío
-        }
-
     }
-    
-    console.log("sí", texto1.innerText)
-    console.log("no",texto_guardado1)
+
     limpieza();
+
+    stopConfetti()
     
-    
-    texto1.rows =  "1";
-    texto2.rows = "1";
+    texto.rows =  "1";
 
     modo_actual = "";
     putada_actual = "";
 
     temas.innerHTML = "";
-
-    //nombre1.value = "ESCRITXR 1";
-    //nombre2.value = "ESCRITXR 2";
     
-    texto1.contentEditable= "false";
-
-    /*saltos_línea_alineacion_1 = 0;
-    saltos_línea_alineacion_2 = 0;
-    
-    texto1.style.height = "40";
-    texto2.style.height = "40";*/
+    texto.contentEditable= "false";
 
     tiempo.style.display = "none";
-    tiempo1.style.display = "none";
     logo.style.display = "";
     neon.style.display = ""; 
-    texto1.removeEventListener("keyup", listener_modo_psico);
-    texto1.removeEventListener("keyup", listener_modo1);
+    texto.removeEventListener("keyup", listener_modo_psico);
+    texto.removeEventListener("keyup", listener_modo1);
 
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
@@ -807,12 +619,10 @@ socket.on("limpiar", (borrar) => {
 
 socket.on("activar_modo", (data) => {
     animacion_modo();
-    palabra1.innerHTML = "";
-    //definicion1.innerHTML = "";
+    palabra.innerHTML = "";
     explicación.innerHTML = "";
     LIMPIEZAS[modo_actual](data);   
     modo_actual = data.modo_actual;
-    console.log("MIRO Y VEO,", modo_actual)
     MODOS[modo_actual](data, socket);
 });
 
@@ -825,8 +635,6 @@ socket.on(enviar_palabra, data => {
 socket.on('pausar_js', data => {
     es_pausa = true;
     LIMPIEZAS[modo_actual](data);
-    //clearTimeout(tempo_text_borroso);
-    //clearTimeout(tempo_text_inverso);
     tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
     pausa();
 });
@@ -836,10 +644,6 @@ socket.on('fin', data => {
         confetti_aux();
         final();
     }
-    else if(player == 1 && data == 2 || player == 2 && data == 1){
-        terminado2 = true;
-        texto2.style.display = "none";
-    }
 });
 
 socket.on('reanudar_js', data => {
@@ -847,82 +651,52 @@ socket.on('reanudar_js', data => {
     reanudar();
 });
 
-socket.on(enviar_putada_de_jx, data => {
-    console.log(data)
-    putada_actual = data;
-    PUTADAS[data]()
-    feedback2.innerHTML = data + " <span style='color: red;'>¡PUTADA!</span>";
-    clearTimeout(delay_animacion);
-    animateCSS(".feedback2", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-            feedback2.innerHTML = "";
-        }, 2000);
-    });
-    //setTimeout(LIMPIEZAS[data](), 30000);
-});
-
-socket.on('recibir_feedback_modificador', data => {
-    
-    feedback2.innerHTML = getEl(data.id_mod).innerHTML;
-    clearTimeout(delay_animacion);
-    animateCSS(".feedback2", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-            feedback2.innerHTML = "";
-        }, 2000);
-    });
-    getEl(data.id_mod).style.display = "none";
-});
-
 socket.on(inspirar, palabra => {
-    console.log("hola", palabra)
     if(palabra != ""){
     palabra_actual = [palabra];
-    definicion1.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
+    definicion.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
     "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
     "</span><span style='color: orange;'>\"</span>");
     animateCSS(".definicion", "flash");
     asignada = true;
-    indice_buscar_palabra = texto1.innerText.length - 5;
-    texto1.removeEventListener("keyup", listener_modo1);
-    listener_modo1 = function () { palabras_musas() };
-    texto1.addEventListener("keyup", listener_modo1);
+    indice_buscar_palabra = texto.innerText.length - 5;
+    texto.removeEventListener("keyup", listener_modo1);
+    listener_modo1 = function (e) { palabras_musas(e) };
+    texto.addEventListener("keyup", listener_modo1);
     }
 });
 
 socket.on(enviar_ventaja, ventaja => {
-    console.log("ventaja", ventaja)
-    VENTAJAS[ventaja]();
-    feedback1.innerHTML = ventaja + " <span style='color: lime;'>¡VENTAJA!</span>";
+    feedback.innerHTML = ventaja + " <span style='color: lime;'>¡VENTAJA!</span>";
     animateCSS(".feedback1", "flash").then((message) => {
         setTimeout(function () {
-            feedback1.innerHTML = "";
+            feedback.innerHTML = "";
         }, 2000);
     }); 
 });
 
 socket.on("enviar_repentizado", repentizado => {
-    console.log("repentizado", repentizado)
-    temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
-    animateCSS(".temas", "flash")
+    //temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
+    efectoMaquinaDeEscribir(texto, repentizado, 150);
+    //animateCSS(".temas", "flash")
     });
 
 socket.on("nueva letra", letra => {
-    console.log("NUEVA LETRA")
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
-        texto1.removeEventListener("keydown", listener_modo);
+        texto.removeEventListener("keydown", listener_modo);
         listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto1.addEventListener("keydown", listener_modo);
+        texto.addEventListener("keydown", listener_modo);
         animacion_palabra();
-        palabra1.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
+        palabra.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
         }
     else if(modo_actual == "letra bendita"){
         letra_bendita = letra;
-        texto1.removeEventListener("keydown", listener_modo);
+        texto.removeEventListener("keydown", listener_modo);
         listener_modo = function (e) { modo_letra_bendita(e) };
-        texto1.addEventListener("keydown", listener_modo);
+        texto.addEventListener("keydown", listener_modo);
         animacion_palabra();
-        palabra1.innerHTML = "LETRA BENDITA: " + letra_bendita;
+        palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
     }
 });
 
@@ -930,53 +704,60 @@ socket.on("locura", () => {
     locura = true;
   });
 
+socket.on(elegir_ventaja, () => {
+    confetti_musas();
+});
+
 function recibir_palabra(data) {
-    console.log("PEN",data)
     animacion_modo();
-    asignada = true;
     palabra_actual = data.palabra_bonus[0];
-    palabra1.innerHTML = "(⏱️+" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
-    definicion1.innerHTML = data.palabra_bonus[1];
+    palabra.innerHTML = data.palabras_var + " (⏱️+" + data.tiempo_palabras_bonus + " segs.)" ;
+    if(data.palabra_bonus[1] != ""){
+    definicion.innerHTML = data.palabra_bonus[1];
+    }
+    else{
+        definicion.innerHTML = "<span style='color:lime;'>MUSA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
+    }
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
-    texto1.removeEventListener("keyup", listener_modo1);
-    texto1.removeEventListener("keyup", listener_modo);
+    texto.removeEventListener("keyup", listener_modo1);
+    texto.removeEventListener("keyup", listener_modo);
+    asignada = true;
     listener_modo = function (e) { modo_palabras_bonus(e) };
-    texto1.addEventListener("keyup", listener_modo);
+    texto.addEventListener("keyup", listener_modo);
 }
 
 function recibir_palabra_prohibida(data) {
-    console.log("PEN",data)
     animacion_modo();
-    asignada = true;
     palabra_actual = data.palabra_bonus[0];
-    palabra1.innerHTML = "(⏱️-" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
-    definicion1.innerHTML = data.palabra_bonus[1];
+    palabra.innerHTML = data.palabras_var + " (⏱️-" + data.tiempo_palabras_bonus + " segs.)";
+    if(data.palabra_bonus[1] != ""){
+        definicion.innerHTML = data.palabra_bonus[1];
+    }
+    else{
+        definicion.innerHTML = "<span style='color: red;'>MUSA ENEMIGA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
+    }
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
-    texto1.removeEventListener("keyup", listener_modo1);
-    texto1.removeEventListener("keyup", listener_modo);
+    texto.removeEventListener("keyup", listener_modo1);
+    texto.removeEventListener("keyup", listener_modo);
+    asignada = true;
     listener_modo = function (e) { modo_palabras_prohibidas(e) };
-    texto1.addEventListener("keyup", listener_modo);
+    texto.addEventListener("keyup", listener_modo);
 }
 
 // FUNCIONES AUXILIARES.
 
 // Función para enviar texto al otro jugador y a control
 function sendText() {
-    let text = texto1.innerHTML;
-    let points = puntos1.textContent;
-    let level = nivel1.textContent;
+    let text = texto.innerHTML;
+    let points = puntos.textContent;
+    let level = nivel.textContent;
     socket.emit(texto_x, { text, points, level });
 }
 
 function activar_sockets_extratextuales() {
-    // Recibe el nombre del jugador 2 y lo coloca en su sitio.
-    socket.on("nombre2", (data) => {
-        nombre2.value = data;
-    });
-
-    // Recibe el nombre del jugador 1 y lo coloca en su sitio.
-    socket.on("nombre1", (data) => {
-        nombre1.value = data;
+    // Recibe el nombre del jugador x y lo coloca en su sitio.
+    socket.on("nombre" + player, (data) => {
+        nombre.value = data;
     });
 
     //Recibe los temas (que elige Espectador) y los coloca en su sitio.
@@ -988,25 +769,8 @@ function activar_sockets_extratextuales() {
         console.log(data)
         temas.innerHTML = data;
     });
-
-    socket.on('recibir_puntuacion_final', data => {
-        puntuacion_final1.innerHTML =  data.pfinal1;
-        puntuacion_final2.innerHTML =  data.pfinal2;
-    });
 }
 
-function activar_socket_feedback() {
-    socket.on(feedback_a_j_x, (data) => {
-        feedback2.style.color = data.color;
-        console.log(data);
-        feedback2.innerHTML = data.tiempo_feed;
-        animateCSS(".feedback2", "flash").then((message) => {
-            delay_animacion = setTimeout(function () {
-                feedback2.innerHTML = "";
-            }, 2000);
-        });
-    });
-}
 
 function getRandColor() {
     var hex = "01234567890ABCDEF",
@@ -1039,18 +803,8 @@ function getTextAlign() {
 }
 
 function stylize() {
-    //texto1.style.fontFamily = getRandFontFamily();
-    texto1.style.color = getRandColor();
-    //var tamaño_letra = getRandNumber(7, 35)
-    //text.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
-    //texto1.style.textAlign = getTextAlign();
-    //texto2.style.textAlign = getTextAlign();
-    //texto2.style.fontFamily = getRandFontFamily();
-    texto2.style.color = getRandColor();
-    //text1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    texto.style.color = getRandColor();
     document.body.style.backgroundColor = getRandColor();
-    //texto1.style.height = texto1.scrollHeight + "px";
-    //texto2.style.height = texto2.scrollHeight + "px";
     document.body.style.backgroundColor = getRandColor();
 }
 
@@ -1100,221 +854,187 @@ function animacion_palabra() {
 
 // Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
 function restablecer_estilo() {
-    //texto1.style.fontFamily = "monospace";
-    texto1.style.color = "white";
-    //texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    //texto1.style.textAlign = "justify";
-    //texto2.style.fontFamily = "monospace";
-    texto2.style.color = "white";
-    //texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    //texto2.style.textAlign = "justify";
+    texto.style.color = "white";
     document.body.style.backgroundColor = "black";
-    //texto1.style.height = texto1.scrollHeight + "px";
-    //texto2.style.height = texto2.scrollHeight + "px";
-}
-
-// Función auxiliar que elimina los saltos de línea al principio de un string.
-function eliminar_saltos_de_linea(texto) {
-    var i = 0;
-    while (texto[i] == "\n") {
-        i++;
-    }
-    return texto.substring(i, texto.length);
-}
-
-// Función auxiliar que genera un string con n saltos de línea.
-function crear_n_saltos_de_linea(n) {
-    var saltos = "";
-    var cont = 0;
-    while (cont <= n) {
-        saltos += "\n";
-        cont++;
-    }
-    return saltos;
 }
 
 //Función auxiliar que comprueba que se inserta la palabra bonus.
 function modo_palabras_bonus(e) {
-    console.log(e)
-    console.log(palabra_actual)
     if (asignada == true) {
-            e.preventDefault();
-            let endingIndex = e.target.selectionStart;
-            let startingIndex = endingIndex && endingIndex - 1;
-            let value = e.target.innerText;
-            // putt all delemeters in it by which word can be splitted
-            let regex = /[ ]/;
-        
-            while(startingIndex > -1){
-              if(regex.test(value[startingIndex])){
-                ++startingIndex;
-                break;
-              }
-              --startingIndex;
+        e.preventDefault();
+
+        let selection = document.getSelection();
+            let range = selection.getRangeAt(0);
+            let preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(e.target);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            let endingIndex = preCaretRange.toString().length;
+            let startingIndex = 0; // Inicialización
+            let textContent = e.target.innerText;
+
+            // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
+            for (let i = endingIndex - 1; i >= 0; i--) {
+                if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
+                    startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
+                    break;
+                }
             }
-        
-            // note you will have you apply check to avoid negative index
-            if(startingIndex < 0) {
-                startingIndex = 0;
+
+            // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
+            for (let i = endingIndex; i <= textContent.length; i++) {
+                if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
+                    endingIndex = i;
+                    break;
+                }
             }
-            console.log(value.substring(startingIndex, endingIndex));
+
+            console.log("Texto seleccionado:", textContent.substring(startingIndex, endingIndex)); // Debugging
+            console.log("palabra_actual:", palabra_actual); // Debugging
+            console.log("Índices:", startingIndex, endingIndex); // Debugging
+
+
         if (
-            palabra_actual.some(palabra => texto1.innerText
+            palabra_actual.some(palabra => textContent
                 .substring(startingIndex, endingIndex)
                 .toLowerCase().includes(palabra.toLowerCase()))
             ) {
-            //var $div = $('#texto');
-            //$div.highlight(palabra_actual);
-            texto1.focus();
+            texto.focus();
             asignada = false;
-            console.log("AHORAAAAAAAAAAAA", palabra_actual);
             socket.emit("nueva_palabra", player);
-            console.log(tiempo_palabras_bonus, player)
             socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
-            if(definicion1.innerHTML == "") {
-                feedback1.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
-                
+            if(definicion.innerHTML == "") {
+                feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
             }
             else{
-                feedback1.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
+                feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
             }
             clearTimeout(delay_animacion);
             color = color_positivo;
-            feedback1.style.color = color;
+            feedback.style.color = color;
             tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
+                    feedback.innerHTML = "";
                 }, 2000);
             });
             socket.emit(feedback_de_j_x, { color, tiempo_feed});
-            //puntos_palabra += puntuacion;
-            //puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
-            cambiar_color_puntuación();
-            /*puntos1.innerHTML = puntos + " puntos";
-            feedback1.style.color = color_positivo;
-            feedback1.innerHTML = "+" + puntuacion + " pts";
-            color = color_positivo;
-            envio_puntos = "+" + puntuacion;
-            socket.emit(feedback_de_j_x, { color, envio_puntos });
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "bounceInLeft").then(() => {
-                delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
-                }, 2000);
-            });*/
         }
     }
 }
 
 function modo_palabras_prohibidas(e) {
-    console.log(e)
-    console.log(palabra_actual)
     if (asignada == true) {
-            e.preventDefault();
-            let endingIndex = e.target.selectionStart;
-            let startingIndex = endingIndex && endingIndex - 1;
-            let value = e.target.innerText;
-            // putt all delemeters in it by which word can be splitted
-            let regex = /[ ]/;
-        
-            while(startingIndex > -1){
-              if(regex.test(value[startingIndex])){
-                ++startingIndex;
-                break;
-              }
-              --startingIndex;
+        e.preventDefault();
+
+        let selection = document.getSelection();
+            let range = selection.getRangeAt(0);
+            let preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(e.target);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            let endingIndex = preCaretRange.toString().length;
+            let startingIndex = 0; // Inicialización
+            let textContent = e.target.innerText;
+
+            // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
+            for (let i = endingIndex - 1; i >= 0; i--) {
+                if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
+                    startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
+                    break;
+                }
             }
-        
-            // note you will have you apply check to avoid negative index
-            if(startingIndex < 0) {
-                startingIndex = 0;
+
+            // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
+            for (let i = endingIndex; i <= textContent.length; i++) {
+                if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
+                    endingIndex = i;
+                    break;
+                }
             }
-            console.log(value.substring(startingIndex, endingIndex));
+
+            console.log("Texto seleccionado:", textContent.substring(startingIndex, endingIndex)); // Debugging
+            console.log("palabra_actual:", palabra_actual); // Debugging
+            console.log("Índices:", startingIndex, endingIndex); // Debugging
+
         if (
-            palabra_actual.some(palabra => texto1.innerText
+            palabra_actual.some(palabra => textContent
                 .substring(startingIndex, endingIndex)
                 .toLowerCase().includes(palabra.toLowerCase()))
             ) {
-            //var $div = $('#texto');
-            //$div.highlight(palabra_actual);
-            texto1.focus();
+            texto.focus();
             asignada = false;
-            console.log("AHORAAAAAAAAAAAA", palabra_actual);
             socket.emit("nueva_palabra_prohibida", player);
             tiempo_palabras_bonus = -tiempo_palabras_bonus;
             socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
             color = color_negativo;
-            feedback1.style.color = color;
-            feedback1.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
+            feedback.style.color = color;
+            feedback.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
+                    feedback.innerHTML = "";
                 }, 2000);
             });
             color = color_negativo;
             tiempo_feed = "⏱️" + tiempo_palabras_bonus + " segs.";
             socket.emit(feedback_de_j_x, { color, tiempo_feed});
-            //puntos_palabra += puntuacion;
-            //puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
-            cambiar_color_puntuación();
-            /*puntos1.innerHTML = puntos + " puntos";
-            feedback1.style.color = color_positivo;
-            feedback1.innerHTML = "+" + puntuacion + " pts";
-            color = color_positivo;
-            envio_puntos = "+" + puntuacion;
-            socket.emit(feedback_de_j_x, { color, envio_puntos });
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "bounceInLeft").then(() => {
-                delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
-                }, 2000);
-            });*/
         }
     }
 }
 
-function palabras_musas() {
-    console.log(palabra_actual)
+function palabras_musas(e) {
     if (asignada == true) {
+        e.preventDefault();
+
+        let selection = document.getSelection();
+            let range = selection.getRangeAt(0);
+            let preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(e.target);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            let endingIndex = preCaretRange.toString().length;
+            let startingIndex = 0; // Inicialización
+            let textContent = e.target.innerText;
+
+            // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
+            for (let i = endingIndex - 1; i >= 0; i--) {
+                if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
+                    startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
+                    break;
+                }
+            }
+
+            // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
+            for (let i = endingIndex; i <= textContent.length; i++) {
+                if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
+                    endingIndex = i;
+                    break;
+                }
+            }
+
+            console.log("Texto seleccionado:", textContent.substring(startingIndex, endingIndex)); // Debugging
+            console.log("palabra_actual:", palabra_actual); // Debugging
+            console.log("Índices:", startingIndex, endingIndex); // Debugging
+
         if (
-            palabra_actual.some(palabra => texto1.innerText
-                .substring(indice_buscar_palabra, texto1.innerText.length)
+            palabra_actual.some(palabra => textContent
+                .substring(startingIndex, endingIndex)
                 .toLowerCase().includes(palabra.toLowerCase()))
             ) {
-            //var $div = $('#texto');
-            //$div.highlight(palabra_actual);
-            definicion1.innerHTML = "";
-            texto1.focus();
+
+            definicion.innerHTML = "";
+            texto.focus();
             asignada = false;
-            feedback1.style.color = "white";
-            feedback1.innerHTML = "+🎨 insp.";
+            feedback.style.color = "white";
+            feedback.innerHTML = "+🎨 insp.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
+                    feedback.innerHTML = "";
                 }, 2000);
             });
             color = "white"
-            tiempo_feed = feedback1.innerHTML;
+            tiempo_feed = feedback.innerHTML;
             socket.emit("nueva_palabra_musa", player);
             socket.emit(feedback_de_j_x, { color, tiempo_feed});
-            //puntos_palabra += puntuacion;
-            //puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
-            cambiar_color_puntuación();
-            /*puntos1.innerHTML = puntos + " puntos";
-            feedback1.style.color = color_positivo;
-            feedback1.innerHTML = "+" + puntuacion + " pts";
-            color = color_positivo;
-            envio_puntos = "+" + puntuacion;
-            socket.emit(feedback_de_j_x, { color, envio_puntos });
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "bounceInLeft").then(() => {
-                delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
-                }, 2000);
-            });*/
         }
     }
 }
@@ -1362,34 +1082,31 @@ function modo_letra_prohibida(e) {
 
       // Actualiza otros aspectos de la UI y envía eventos a través de Socket.io
       // Aquí iría la lógica para manejar la UI y eventos de Socket.io (la he mantenido igual)
-      puntos1.innerHTML = puntos + " palabras 🖋️";
+      secs = -2;
+      console.log(secs);
+      socket.emit('aumentar_tiempo', {secs, player});
+      puntos.innerHTML = puntos_ + " palabras";
       sendText();
-      feedback1.style.color = color_negativo;
-      feedback1.innerHTML = "⏱️-2 segs.";
+      feedback.style.color = color_negativo;
+      feedback.innerHTML = "⏱️-2 segs.";
       clearTimeout(delay_animacion);
       animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
-          feedback1.innerHTML = "";
+          feedback.innerHTML = "";
         }, 2000);
       });
-      secs = -2
-      socket.emit('aumentar_tiempo', {secs, player});
       color = color_negativo;
-      tiempo_feed = feedback1.innerHTML;
+      tiempo_feed = feedback.innerHTML;
       socket.emit(feedback_de_j_x, { color, tiempo_feed });
     }
   }
   
-
-  
-
-// Esta función se llama cuando se presiona una tecla
-function modo_letra_bendita(e) {
+  // Esta función se llama cuando se presiona una tecla
+  function modo_letra_bendita(e) {
     if (e.defaultPrevented) {
         console.log('Evento ya procesado');
         return;
     }
-    console.log(`Evento para tecla: ${e.key}`);
 
     let letra = e.key; // Captura la letra tecleada
     let sel = window.getSelection();
@@ -1397,7 +1114,7 @@ function modo_letra_bendita(e) {
     let node = sel.anchorNode;
 
     // Añadido: Procesar tecla Backspace
-    /*if (e.key === 'Backspace') {
+    if (e.key === 'Backspace') {
         console.log('Node:', node);
         console.log('Parent Node:', node.parentNode);
         console.log('Parent Node class:', node.parentNode ? node.parentNode.className : 'No parent node');
@@ -1408,25 +1125,24 @@ function modo_letra_bendita(e) {
             secs = -2
             socket.emit('aumentar_tiempo', {secs, player}); // Emitir el evento de socket
             // Feedback visual
-            console.log("-1 seg.")
-            feedback1.style.color = color_negativo;
-            feedback1.innerHTML = "⏱️-1 segs.";
+            feedback.style.color = color_negativo;
+            feedback.innerHTML = "⏱️-1 segs.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
+                    feedback.innerHTML = "";
                 }, 2000);
             });
             // Envío de feedback a través de Socket.io
-            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback1.innerHTML });
+            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML });
         }
         return; // Salir de la función si la tecla es Backspace
-    }*/
+    }
 
     if (letra.length === 1) {
         if ((toNormalForm(letra) === letra_bendita || toNormalForm(letra) === letra_bendita.toUpperCase()) ||
             (letra_bendita === "ñ" && (letra === letra_bendita || letra === letra_bendita.toUpperCase()))) {
-            /*e.preventDefault();
+            e.preventDefault();
             console.log('Se procesa letra bendita');
 
             let textNode = document.createTextNode(letra);
@@ -1444,26 +1160,25 @@ function modo_letra_bendita(e) {
             range.setStartBefore(emptyTextNodeBefore);
             range.setEndBefore(emptyTextNodeBefore);
             sel.removeAllRanges();
-            sel.addRange(range);*/
+            sel.addRange(range);
             secs = 2;
             socket.emit('aumentar_tiempo', {secs, player});
-            cambiar_color_puntuación();
-            puntos1.innerHTML = puntos + " palabras 🖋️";
+            puntos.innerHTML = puntos + " palabras";
             sendText();
 
             // Feedback visual
-            feedback1.style.color = color_positivo;
-            feedback1.innerHTML = "⏱️+2 segs.";
+            feedback.style.color = color_positivo;
+            feedback.innerHTML = "⏱️+2 segs.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
-                    feedback1.innerHTML = "";
+                    feedback.innerHTML = "";
                 }, 2000);
             });
 
             // Envío de feedback a través de Socket.io
-            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback1.innerHTML });
-        } /*else {
+            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML });
+        } else {
             if (node && node.parentNode.className === 'letra-verde') {
                 e.preventDefault();
 
@@ -1482,62 +1197,20 @@ function modo_letra_bendita(e) {
                 sel.removeAllRanges();
                 sel.addRange(range);
             }
-        }*/
+        }
     }
     // Aquí podrías añadir más comportamientos para otras teclas no imprimibles si lo consideras necesario
 }
 
 
   
-  
 
 function modo_psicodélico() {
-    //socket.emit("psico", 1);
     stylize();
 }
 
-function postgame() {
-    actualizar_puntuación();
-    longitud = texto1.innerText.length;
-    if (puntos_letra_prohibida != 0) {
-        puntos_letra_prohibida = -puntos_letra_prohibida;
-    }
-    socket.emit(enviar_postgame_x, { longitud, puntos_palabra, puntos_letra_prohibida, puntos_letra_bendita });
-    /*focalizador1.innerHTML = "<br>🖋️ Caracteres escritos = " + texto1.innerText.length + " pts" +
-                            "<br>📚 Palabras bonus = " + puntos_palabra + " pts" +
-                            "<br>❌ Letra prohibida = " + puntos_letra_prohibida + " pts" +
-                            "<br>😇 Letra bendita = " + puntos_letra_bendita + " pts";*/
-    puntos_palabra = 0;
-    puntos = 0;
-    puntos_letra_prohibida = 0;
-    puntos_letra_bendita = 0;
-}
-
-function actualizar_puntuación() {
-    puntos = texto1.innerText.length + puntos_palabra - puntos_letra_prohibida + puntos_letra_bendita;
-    puntos1.innerHTML = puntos + " palabras 🖋️";
-    cambio_nivel(puntos);
-    sendText();
-    //auto_grow(texto1);
-    cambiar_color_puntuación();
-}
-
-function cambiar_color_puntuación() {
-    if (puntos > parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
-        puntos1.style.color = "greenyellow";
-        puntos2.style.color = "red";
-        if (puntos == parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
-            puntos2.style.color = "greenyellow";
-        }
-    }
-    else {
-        puntos1.style.color = "red";
-        puntos2.style.color = "greenyellow";
-    }
-}
-
 function limpieza(){
-    
+    stopConfetti();
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timer);
     if(temp_text_inverso_activado == true){
@@ -1545,53 +1218,31 @@ function limpieza(){
         procesarTexto();
     }
 
-    texto1.innerText = "";
-    texto2.innerText = "";
-
-    texto1.style.display = "";
-    texto2.style.display = "";
-
-
-    texto1.style.height = "";
-    texto2.style.height = "";
-
+    texto.innerText = "";
+    texto.style.display = "";
+    texto.style.height = "";
     feedback_tiempo.style.color = color_positivo;
-    feedback_tiempo1.style.color = color_positivo;
-
-    texto1.rows =  "6";
-    texto2.rows = "6";
-    definicion1.style.fontSize = "1.5vw";
-
+    texto.rows =  "6";
+    definicion.style.fontSize = "1.5vw";
     temas.innerHTML = "";
-
-    texto1.contentEditable= "false";
-
-    puntos1.innerHTML = 0 + " palabras 🖋️";
-    puntos2.innerHTML = 0 + " palabras 🖋️";
-    
-    nivel1.innerHTML = "🌡️ nivel 0";
-    nivel2.innerHTML = "🌡️ nivel 0";
-    
-    palabra1.innerHTML = "";
-    definicion1.innerHTML = "";
+    temas.display = "";
+    texto.contentEditable= "false";
+    puntos.innerHTML = 0 + " palabras";
+    nivel.innerHTML = "nivel 0";
+    palabra.innerHTML = "";
+    definicion.innerHTML = "";
     explicación.innerHTML = "";
-
-    focalizador1.innerHTML = "";
-    focalizador2.innerHTML = "";
-
     menu_modificador = false;
     focusedButtonIndex = 0;
     modificadorButtons = [];
-
-    texto1.focus();
+    texto.focus();
 
     // Desactiva el blur de ambos textos.
     blurreado = false;
-    texto1.classList.remove("textarea_blur");
-    texto2.classList.remove("textarea_blur");
+    texto.classList.remove("textarea_blur");
 
     puntos_palabra = 0;
-    puntos = 0;
+    puntos_ = 0;
     puntos_letra_prohibida = 0;
     puntos_letra_bendita = 0;
 
@@ -1600,26 +1251,16 @@ function limpieza(){
     asignada = false;
     palabra_actual = []; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
-    terminado2 = false;
-
     
     // Desactiva, por seguridad, todos los modos.
     modo_texto_borroso = 0;
     desactivar_borrar = true;
     locura = false;
-
-    puntos1.style.color = "white";
-    puntos2.style.color = "white";
-    tiempo.style.color = "white";
-    tiempo1.style.color = "white";
-
-    puntuacion_final1.innerHTML = "";
-    puntuacion_final2.innerHTML = "";
+    console.log(puntos)
     
-    feedback1.innerHTML = "";
-    feedback2.innerHTML = "";
+    feedback.innerHTML = "";
     
-    definicion1.innerHTML = "";
+    definicion.innerHTML = "";
     explicación.innerHTML = "";
 
     // Restablece la rápidez del borrado.
@@ -1640,34 +1281,25 @@ function limpieza(){
 }
 
 function limpieza_final(){
-    texto1.contentEditable= "false";
-    texto1.style.display = "none";
-    texto2.style.display = "none";
-    
+    texto.contentEditable= "false";
+    texto.style.display = "none";
+    temas.display = "none";
     temas.innerHTML = "";
-    palabra1.innerHTML = "";
-    definicion1.innerHTML = "";
+    palabra.innerHTML = "";
+    definicion.innerHTML = "";
     explicación.innerHTML = "";
 
-    focalizador1.innerHTML = "";
-    focalizador2.innerHTML = "";
-
-    definicion1.style.fontSize = "1.5vw";
-
+    definicion.style.fontSize = "1.5vw";
 
     // Desactiva el blur de ambos textos.
     blurreado = false;
-    texto1.classList.remove("textarea_blur");
-    texto2.classList.remove("textarea_blur");
-
+    texto.classList.remove("textarea_blur");
 
     letra_prohibida = "";
     letra_bendita = "";
     asignada = false;
     palabra_actual = []; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
-    terminado2 = false;
-
 
     // Desactiva, por seguridad, todos los modos.
     modo_texto_borroso = 0;
@@ -1675,7 +1307,6 @@ function limpieza_final(){
     locura = false;
 
     tiempo.style.color = "white";
-    tiempo1.style.color = "white";
 
     // Restablece la rápidez del borrado.
     borrado_cambiado = false;
@@ -1691,64 +1322,22 @@ function limpieza_final(){
 
 function pausa(){
 
-    //socket.emit('pausar', '');
-    
     menu_modificador = false;
-    texto1.contentEditable= "false";
+    texto.contentEditable= "false";
 
     clearTimeout(borrado);
     desactivar_borrar = true;
-    /*if(putada_actual == "🌪️"){
-        if (modo_texto_borroso == 1) {
-            texto1.classList.remove("textarea_blur");
-        }
-        else if (modo_texto_borroso == 2) {
-            texto2.classList.remove("textarea_blur");
-
-        }
-    }
-    
-    else if(putada_actual == "🙃"){
-        console.log("PUTAAAAAAAAAA", putada_actual)
-        desactivar_borrar = false;
-        desactivar_borrar = true;
-        texto1.innerText =
-            texto1.innerText
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ")
-                .split("")
-                    .reverse()
-                    .join("")
-                    .split(" ")
-                    .reverse()
-                    .join(" ");
-                    
-        modo_inverso_pausa()
-    }*/
-
-    //restablecer_estilo();
 }
 
 function reanudar(){
 
     menu_modificador = true;
-    texto1.contentEditable = "true";
+    texto.contentEditable = "true";
 
     clearTimeout(borrado);
     desactivar_borrar = false;
-    /*if(putada_actual == "🌪️"){
-        modo_borroso_pausa(TIEMPO_BORROSO);
-    }
     
-    else if(putada_actual == "🙃"){
-        modo_inverso_pausa()
-    }*/
-    //restablecer_estilo();
-    texto1.focus();
+    texto.focus();
 }
 
 function modo_borroso_pausa(data){
@@ -1759,19 +1348,18 @@ function modo_borroso_pausa(data){
 }
 
 function modo_inverso_pausa(){
-    console.log(tiempo_restante)
     if(tiempo_restante > 0){
         desactivar_borrar = true;
         caretNode, caretPos = guardarPosicionCaret();
-        texto1.contentEditable= "false";
-        texto1.classList.add("rotate-vertical-center");
+        texto.contentEditable= "false";
+        texto.classList.add("rotate-vertical-center");
         // Añade un escuchador para el evento 'animationend'
-        texto1.addEventListener('animationend', function() {
-            texto1.classList.remove("rotate-vertical-center");
-            texto1.contentEditable= "true";
-            texto1.focus()
-            // Obtener el último nodo de texto en texto1
-            lastLine = texto1.lastChild;
+        texto.addEventListener('animationend', function() {
+            texto.classList.remove("rotate-vertical-center");
+            texto.contentEditable= "true";
+            texto.focus()
+            // Obtener el último nodo de texto en text
+            lastLine = texto.lastChild;
             lastTextNode = lastLine;
             while (lastTextNode && lastTextNode.nodeType !== 3) {
                 lastTextNode = lastTextNode.lastChild;
@@ -1783,33 +1371,25 @@ function modo_inverso_pausa(){
                 caretPos = lastTextNode.length;
                 restaurarPosicionCaret(caretNode, caretPos);
             }
-            texto1.removeEventListener('animationend', arguments.callee);
+            texto.removeEventListener('animationend', arguments.callee);
         });
         
         procesarTexto();
-        /*texto1.innerText =
-            texto1.innerText
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");*/
         
         sendText();
         temp_text_inverso_activado = true;
         tempo_text_inverso = setTimeout(function () {
             temp_text_inverso_activado = false;
             desactivar_borrar = false;
-            texto1.contentEditable= "false";
+            texto.contentEditable= "false";
             caretNode, caretPos = guardarPosicionCaret();
-            texto1.classList.add("rotate-vertical-center");
-            texto1.addEventListener('animationend', function() {
-                texto1.classList.remove("rotate-vertical-center");
-                texto1.contentEditable= "true";
-                texto1.focus()
-                // Obtener el último nodo de texto en texto1
-                lastLine = texto1.lastChild;
+            texto.classList.add("rotate-vertical-center");
+            texto.addEventListener('animationend', function() {
+                texto.classList.remove("rotate-vertical-center");
+                texto.contentEditable= "true";
+                texto.focus()
+                // Obtener el último nodo de texto en text
+                lastLine = texto.lastChild;
                 lastTextNode = lastLine;
                 while (lastTextNode && lastTextNode.nodeType !== 3) {
                     lastTextNode = lastTextNode.lastChild;
@@ -1821,7 +1401,7 @@ function modo_inverso_pausa(){
                     caretPos = lastTextNode.length;
                     restaurarPosicionCaret(caretNode, caretPos);
                 }
-                texto1.removeEventListener('animationend', arguments.callee);
+                texto.removeEventListener('animationend', arguments.callee);
             });
             procesarTexto();
             putada_actual = "";
@@ -1864,46 +1444,51 @@ function inverso(){
 
 function modo_borroso(data){
     if (modo_texto_borroso == 1) {
-        texto1.classList.add("textarea_blur");
+        texto.classList.add("textarea_blur");
         tempo_text_borroso = setTimeout(function () {
             temp_text_borroso_activado = true;
-            texto1.classList.remove("textarea_blur");
+            texto.classList.remove("textarea_blur");
             modo_texto_borroso = 0
             putada_actual = ""
         }, data);   
     }
-    if(modo_texto_borroso == 2){
-        texto2.classList.add("textarea_blur");
-        tempo_text_borroso = setTimeout(function () {
-            temp_text_borroso_activado = true;
-            texto2.classList.remove("textarea_blur");
-            modo_texto_borroso = 0
-            putada_actual = "";
-        }, data);
-    }
 }
 
-function confetti_aux(){
-    var duration = 15 * 1000;
-    var animationEnd = Date.now() + duration;
-    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var duration = 15 * 1000;
+var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var isConfettiRunning = true; // Indicador para controlar la ejecución
 
-    function randomInRange(min, max) {
-    return Math.random() * (max - min) + min;
+function randomInRange(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function confetti_aux() {
+  var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
+  isConfettiRunning = true; // Habilita la ejecución de confetti
+  console.log(isConfettiRunning);
+  
+  var interval = setInterval(function() {
+    if (!isConfettiRunning) {
+      clearInterval(interval);
+      return;
     }
 
-    var interval = setInterval(function() {
     var timeLeft = animationEnd - Date.now();
-
     if (timeLeft <= 0) {
-        return clearInterval(interval);
+      clearInterval(interval);
+      return;
     }
 
     var particleCount = 50 * (timeLeft / duration);
-    // since particles fall down, start a bit higher than random
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-    }, 250);
+    console.log("HOLAAAA");
+    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+  }, 250);
+}
+
+function stopConfetti() {
+  isConfettiRunning = false; // Deshabilita la ejecución de confetti
+  confetti.reset(); // Detiene la animación de confetti
 }
 
 function final(){
@@ -1914,43 +1499,23 @@ function final(){
     modo_actual = "";
     putada_actual = "";
     activar_sockets_extratextuales();
-    /*texto1.innerText = texto1.innerText.substring(
-        saltos_línea_alineacion_1,
-        texto1.innerText.length
-    );
-    texto2.innerText = texto2.innerText.substring(
-        saltos_línea_alineacion_2,
-        texto2.innerText.length
-    );*/
 
     // Impide que se pueda escribir en los dos textos.
-    texto1.contentEditable= "false";
+    texto.contentEditable= "false";
 
     // Variable booleana que dice si la ronda ha terminado o no.
     terminado = true;
 
-    //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-    //texto2.innerText = eliminar_saltos_de_linea(texto2.innerText); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
-
-    texto1.style.height = "auto";
-    texto2.style.height = "auto";
-    texto1.style.height = texto1.scrollHeight + "px"; //Reajustamos el tamaño del área de texto del j1.
-    texto2.style.height = texto2.scrollHeight + "px"; // Reajustamos el tamaño del área de texto del j2.
-    texto1.style.display = "none";
-    texto2.style.display = "none";
-    /*let a = document.createElement("a");
-        a.href = window.URL.createObjectURL(new Blob([document.getElementById("nombre").innerText +"\n"+texto1.innerText +"\n"+ document.getElementById("nombre1").innerText +"\n"+texto2.innerText ], {type: "text/plain"}));
-        blob = new Blob([document.getElementById("nombre").innerText +"\n"+texto1.innerText +"\n"+ document.getElementById("nombre1").innerText +"\n"+texto2.innerText ], {type: "text/plain"});
-        a.download = 'sesión_player1.txt';
-        a.click();*/
+    texto.style.height = "auto";
+    texto.style.height = texto.scrollHeight + "px"; //Reajustamos el tamaño del área de texto del j1.
+    texto.style.display = "none";
     
     logo.style.display = "";
     neon.style.display = "";
     LIMPIEZAS["psicodélico"]("");/* TODO: VER POR QUÉ NO FUNCIONA ESTO  */
-    texto1.removeEventListener("keyup", listener_modo_psico);
+    texto.removeEventListener("keyup", listener_modo_psico);
     restablecer_estilo();
     tiempo.style.color = "white";
-    tiempo1.style.color = "white";
 }
 
 function convertirASegundos(tiempo) {
@@ -2052,18 +1617,18 @@ function ajustarPunteros(texto) {
 function modo_ortografía_perfecta() {
     setInterval(() => {
         // Tomar solo el nuevo texto desde el puntero de inicio hasta el final ajustado
-        const nuevoTexto = ajustarPunteros(texto1.innerText);
+        const nuevoTexto = ajustarPunteros(texto.innerText);
         // Actualizar el puntero de inicio global para la próxima iteración
         punteroInicio += nuevoTexto.length;
 
         hacerPeticion(nuevoTexto).then(descuento => {
             if(descuento != 0) {
-                feedback1.style.color = color_negativo;
-                feedback1.innerHTML = "⏱️" + descuento +" segs.";
+                feedback.style.color = color_negativo;
+                feedback.innerHTML = "⏱️" + descuento +" segs.";
                 clearTimeout(delay_animacion);
                 animateCSS(".feedback1", "flash").then((message) => {
                     delay_animacion = setTimeout(function () {
-                        feedback1.innerHTML = "";
+                        feedback.innerHTML = "";
                     }, 2000);
                 });
             }
@@ -2078,7 +1643,7 @@ function invertirPalabras(texto) {
 function procesarTexto() {
     let fragmento = document.createDocumentFragment();
 
-    texto1.childNodes.forEach(nodo => {
+    texto.childNodes.forEach(nodo => {
         if (nodo.nodeType === Node.TEXT_NODE) {
             // Texto dentro del div, fuera de cualquier otro elemento
             let textoInvertido = invertirPalabras(nodo.textContent);
@@ -2094,6 +1659,97 @@ function procesarTexto() {
         }
     });
 
-    texto1.innerHTML = '';
-    texto1.appendChild(fragmento);
+    texto.innerHTML = '';
+    texto.appendChild(fragmento);
+}
+
+function efectoMaquinaDeEscribir(elemento, textoHtml, velocidad = 100) {
+    let cursor = 0; // Índice para recorrer el textoHtml
+    elemento.contentEditable = "false"; // Asegúrate de que esto se refiere al elemento correcto
+    desactivar_borrar = true;
+    // Agrega un salto de línea al principio del contenido a escribir, si el elemento ya tiene contenido
+    let contenidoInicial = elemento.innerHTML;
+    if (contenidoInicial) {
+        contenidoInicial += "<br>"; // Añade un salto de línea antes del nuevo contenido
+    }
+
+    function escribir() {
+        elemento.scrollTo(0, elemento.scrollHeight);
+        if (cursor < textoHtml.length) {
+            if (textoHtml.substring(cursor).startsWith('<span')) {
+                let finSpan = textoHtml.indexOf('</span>', cursor) + '</span>'.length;
+                elemento.innerHTML = contenidoInicial + textoHtml.substring(0, finSpan) + (cursor + 1 < textoHtml.length ? "<br>" : ""); // Agrega salto de línea al final si no es el fin
+                cursor = finSpan;
+                sendText();
+            } else {
+                elemento.innerHTML = contenidoInicial + textoHtml.substring(0, cursor + 1) + (cursor + 1 < textoHtml.length ? "<br>" : ""); // Agrega salto de línea al final si no es el fin
+                cursor++;
+                sendText();
+            }
+
+            setTimeout(escribir, textoHtml.substring(cursor).startsWith('<span') ? 0 : velocidad);
+        } else {
+            elemento.innerHTML += "<br><br><br>";
+            sendText()
+
+                // Asumiendo que 'texto' es el elemento contenedor
+                let lastLine = texto.lastChild;
+                let lastTextNode = lastLine;
+                while (lastTextNode && lastTextNode.nodeType !== 3) {
+                    // Esto maneja el caso cuando lastTextNode no tiene más hijos (nodos de texto)
+                    if (!lastTextNode.lastChild) break;
+                    lastTextNode = lastTextNode.lastChild;
+                }
+
+            // Si encontramos el último nodo de texto o un elemento, colocamos el cursor allí
+            if (lastTextNode) {
+                let range = document.createRange(); // Crea un nuevo rango
+                let sel = window.getSelection();
+
+                if (lastTextNode.nodeType === 3) { // Es un nodo de texto
+                    range.setStart(lastTextNode, lastTextNode.length);
+                    range.setEnd(lastTextNode, lastTextNode.length);
+                } else { // No es un nodo de texto, intenta establecer el rango al final del elemento
+                    range.setStart(lastTextNode, lastTextNode.childNodes.length);
+                    range.setEnd(lastTextNode, lastTextNode.childNodes.length);
+                }
+
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+
+            texto.focus(); 
+            texto.scrollTo(0, texto.scrollHeight);
+            elemento.contentEditable = "true"; // Habilita la edición al finalizar
+            elemento.focus(); // Coloca el foco en el elemento
+            desactivar_borrar = false;
+        }
+    }
+
+    escribir();
+}
+
+function confetti_musas(){
+var scalar = 2;
+var unicorn = confetti.shapeFromText({ text: '🎨', scalar });
+isConfettiRunning = true;
+
+var end = Date.now() + (2 * 1000);
+
+// go Buckeyes!
+(function frame() {
+  confetti({
+    startVelocity: 10,
+    particleCount: 1,
+    angle: 270,
+    spread: 1000,
+    origin: { y: 0 },
+    shapes: [unicorn],
+    scalar: 3
+  });
+
+  if ((Date.now() < end) && isConfettiRunning) {
+    requestAnimationFrame(frame);
+  }
+}());
 }

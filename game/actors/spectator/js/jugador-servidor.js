@@ -236,6 +236,14 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
+    $('#countdown').remove();
+    var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
+    preparados.appendTo($('.container'));
+    setTimeout(() => {
+        $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+    }, 20);
+    setTimeout(() => {
     var counter = 3;
   
     timer = setInterval(function() {
@@ -264,8 +272,8 @@ socket.on('inicio', data => {
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         listener_cuenta_atras = setTimeout(function(){
             texto1.innerText = "";
-            puntos1.innerHTML = 0 + " palabras 🖋️";
-            nivel1.innerHTML = "🌡️ nivel 0";
+            puntos1.innerHTML = 0 + " palabras";
+            nivel1.innerHTML = "nivel 0";
             tiempo.innerHTML = "";
             
             limpiezas();
@@ -276,6 +284,7 @@ socket.on('inicio', data => {
         }, 2000);
     }
   }, 1000);
+}, 1000);
 });
 
 // Resetea el tablero de juego.
@@ -287,11 +296,12 @@ socket.on('limpiar', () => {
     });
 
     texto1.innerText = "";
-    puntos1.innerHTML = 0 + " palabras 🖋️";
-    nivel1.innerHTML = "🌡️ nivel 0";
+    puntos1.innerHTML = 0 + " palabras";
+    nivel1.innerHTML = "nivel 0";
     tiempo.innerHTML = "";
 
     limpiezas();
+    stopConfetti();
 
     texto1.style.height = "";
     texto1.rows =  "3";
@@ -343,17 +353,16 @@ socket.on("nueva letra", letra => {
 function recibir_palabra(data) {
     animacion_modo();
     palabra_actual = data.palabra_bonus[0];
-    palabra.innerHTML = "(⏱️+" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
+    palabra.innerHTML = data.palabras_var + " (⏱️+" + data.tiempo_palabras_bonus + " segs.)" ;
     definicion.innerHTML = data.palabra_bonus[1];
 }
 
 function recibir_palabra_prohibida(data) {
     animacion_modo();
-    palabra.innerHTML = "(⏱️-" + data.tiempo_palabras_bonus + " segs.) palabra: " + data.palabras_var;
+    palabra.innerHTML =  data.palabras_var + " (⏱️-" + data.tiempo_palabras_bonus + " segs.)";
     definicion.innerHTML = data.palabra_bonus[1];
 }
 function limpiezas(){
-    
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timer);
 
@@ -363,29 +372,6 @@ function limpiezas(){
     tiempo.style.color = "white"
     puntos1.style.color = "white";  
     votando = false;
-}
-
-function confetti_aux(){
-    var duration = 15 * 1000;
-    var animationEnd = Date.now() + duration;
-    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-    function randomInRange(min, max) {
-    return Math.random() * (max - min) + min;
-    }
-
-    var interval = setInterval(function() {
-    var timeLeft = animationEnd - Date.now();
-
-    if (timeLeft <= 0) {
-        return clearInterval(interval);
-    }
-
-    var particleCount = 50 * (timeLeft / duration);
-    // since particles fall down, start a bit higher than random
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-    }, 250);
 }
 
 function animacion_modo() {
@@ -416,4 +402,41 @@ function convertirASegundos(tiempo) {
     let minutos = parseInt(partes[0], 10); // convertimos los minutos a un número entero
     let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
     return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
+  }
+
+  var duration = 15 * 1000;
+var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var isConfettiRunning = true; // Indicador para controlar la ejecución
+
+function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+function confetti_aux() {
+    var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
+    isConfettiRunning = true; // Habilita la ejecución de confetti
+    console.log(isConfettiRunning);
+    
+    var interval = setInterval(function() {
+      if (!isConfettiRunning) {
+        clearInterval(interval);
+        return;
+      }
+  
+      var timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
+  
+      var particleCount = 50 * (timeLeft / duration);
+      console.log("HOLAAAA");
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  }
+
+function stopConfetti() {
+    isConfettiRunning = false; // Deshabilita la ejecución de confetti
+    confetti.reset(); // Detiene la animación de confetti
   }

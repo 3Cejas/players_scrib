@@ -10,7 +10,6 @@ let secondsPassed1;
 let impro_estado = false;
 let fin_j1 = false;
 let fin_j2 = false;
-let borrar_texto = false;
 let terminado = false;
 let terminado1 = false;
 
@@ -144,11 +143,11 @@ function temp() {
 
     if(boton_pausar_reanudar.value == 1){
         boton_pausar_reanudar.value = 0;
-        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CALENTAMIENTO, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_PALABRAS, TIEMPO_LOCURA } });
+    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CALENTAMIENTO, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_TIEMPO_INSPIRACION, TIEMPO_LOCURA } });
     modo_actual = "calentamiento";
     secondsPassed = 0;
     secondsPassed1 = 0;
@@ -187,18 +186,18 @@ function limpiar() {
     //document.getElementById("nombre1").value = "ESCRITXR 2";
     if(boton_pausar_reanudar.value == 1){
         boton_pausar_reanudar.value = 0;
-        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
-    if(borrar_texto == false){
+    if(boton_borrar.checked == false){
         texto_guardado1 = texto1.innerText;
         texto_guardado2 = texto2.innerText;
     }
     texto1.innerText = "";
     texto2.innerText = "";
-    document.getElementById("puntos").innerHTML = "0 palabras 🖊️";
-    document.getElementById("puntos1").innerHTML = "0 palabras 🖊️";
-    document.getElementById("nivel").innerHTML = "🌡️ nivel 0";
-    document.getElementById("nivel1").innerHTML = "🌡️ nivel 0";
+    document.getElementById("puntos").innerHTML = "0 palabras";
+    document.getElementById("puntos1").innerHTML = "0 palabras";
+    document.getElementById("nivel").innerHTML = "nivel 0";
+    document.getElementById("nivel1").innerHTML = "nivel 0";
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("texto").style.height = "40";
     document.getElementById("texto").style.height = (document.getElementById("texto").scrollHeight) + "px";
@@ -206,9 +205,7 @@ function limpiar() {
     document.getElementById("texto1").style.height = (document.getElementById("texto1").scrollHeight) + "px";
     document.getElementById("definicion").innerHTML = "";
     document.getElementById("explicación").innerHTML = "";
-
-    console.log(borrar_texto, "aaaah")
-    socket.emit('limpiar', borrar_texto);
+    socket.emit('limpiar', boton_borrar.checked);
     secondsPassed = 0;
     secondsPassed1 = 0;
     DURACION_TIEMPO_MODOS = DURACION_TIEMPO_MODOS;
@@ -229,29 +226,6 @@ function limpiar() {
     if (feedback2 !== null) {
         feedback2.innerHTML = "";
     }
-};
-
-function borrar(boton) {
-    if(borrar_texto == false){
-        borrar_texto = true;
-        boton.style.backgroundColor = "green";
-    }
-    else{
-        borrar_texto = false;
-        boton.style.backgroundColor = "red";
-    }
-};
-
-function subir() {
-    socket.emit('scroll', 'arriba');
-};
-
-function bajar() {
-    socket.emit('scroll', 'abajo');
-};
-
-function scroll_sincro() {
-    socket.emit('scroll_sincro');
 };
 
 function fin(player) {
@@ -348,12 +322,12 @@ function pausar_reanudar(boton){
     if(boton.value == 0){
         boton.value = 1;
         pausar();
-        span_pausar_reanudar.innerHTML = "▶️ REANUDAR";
+        boton_pausar_reanudar.innerHTML = "▶️ REANUDAR";
         }
     else{
         boton.value = 0;
         reanudar();
-        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
 }
 
@@ -372,7 +346,7 @@ function reanudar_modo(){
     console.log(time_minutes, time_seconds)
     if(boton_pausar_reanudar.value == 1){
         boton_pausar_reanudar.value = 0;
-        span_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
     secondsPassed = 0;
     secondsPassed1 = 0;
@@ -489,6 +463,6 @@ function final(player){
     }
     if(terminado && terminado1){
         console.log("PRUEBA FINAL", texto_guardado1)
-        setTimeout(descargar_textos, 5000);
+        //setTimeout(descargar_textos, 5000);
     }
 }

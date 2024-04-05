@@ -251,20 +251,27 @@
     background-color: white;
     border-radius: 0.4375em;
     cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s; /* Agrega una transición suave para transform y box-shadow */
 }
 
 /* Estilos específicos para el primer botón */
 .start-btn.escritxr1 {
     color: aqua;
     text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
-    box-shadow: 0 0.2em red; 
+    box-shadow: 0 0.2em red;
 }
 
 /* Estilos específicos para el segundo botón */
 .start-btn.escritxr2 {
     color: red;
-    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;  /* Cambiando los colores para la segunda etiqueta */
-    box-shadow: 0 0.2em aqua;  /* Cambiando el color del box-shadow para la segunda etiqueta */
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
+    box-shadow: 0 0.2em aqua;
+}
+
+/* Estilos para active (hacer clic en el botón) */
+.start-btn:active {
+    transform: scale(0.95); /* Hace que el botón parezca presionado */
+    box-shadow: 0 0.2em 0.2em rgba(0, 0, 0, 0.2); /* Sombra más sutil al hacer clic */
 }
 
     </style>
@@ -289,8 +296,7 @@
               <td>
                  <p style="color:red;font-size:7vw; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="escritxr2">ESCRITXR 1</p>
         </td>
-            </tr>
-        <!---    
+            </tr> 
             <tr>
                 <td colspan="2"><br><p style="color:purple;">Lenguaje</p><br></td>
               </tr>
@@ -352,7 +358,7 @@
                                   --tx: '33%'">
                           <span></span>
                       </div></td>
-                  </tr>-->
+                  </tr>
                   <tr>
               <td>
                 <br>

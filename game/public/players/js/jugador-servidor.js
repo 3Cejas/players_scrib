@@ -11,6 +11,9 @@ let alineador1 = getEl("alineador1");
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 let tema = getEl("temas");
+let metadatos = getEl("metadatos");
+let text_progress = getEl("text-progress");
+let bar_progress = getEl("bar-progress");
 
 let terminado = false;
 let clasificacion = getEl("clasificacion");
@@ -20,19 +23,16 @@ let campo_palabra = getEl("palabra");
 let tarea = getEl("tarea");
 let mostrar_texto = getEl("mostrar_texto");
 let recordatorio = getEl("recordatorio");
-let enviarPalabra_boton = getEl("enviar_palabra");
-let conteo = getEl("conteo");
+let enviarPalabra_boton = getEl("progressButton");
 let sincro = 0;
 let votando = false;
-let conteo_palabras = 0;
 const skill = getEl("skill")
 const skill_cancel = getEl("skill_cancel")
 const feedback_texto_editado = getEl("feedback_texto_editado")
 var intervalID = -1;
 let timer = null;
 let listener_cuenta_atras = null;
-
-feedback_texto_editado
+let LIMITE_TIEMPO_INSPIRACION = 30;
 
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
@@ -60,7 +60,8 @@ var player = getParameterByName("player");
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
         elegir_ventaja = "elegir_ventaja_j1";
-        nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
+        nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
+        metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
 
     } else if (player == 2) {
         console.log(nombre1.value)
@@ -73,7 +74,8 @@ var player = getParameterByName("player");
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
         elegir_ventaja = "elegir_ventaja_j2"; 
-        nombre1.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" 
+        nombre1.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
+        metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
     }
 
 // Se establece la conexión con el servidor.
@@ -126,6 +128,7 @@ socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     socket.emit('enviar_musa', player);
     socket.emit('pedir_nombre');
+    socket.emit('pedir_texto')
 });
 
 // Variables de los modos.
@@ -136,11 +139,9 @@ let jugador_psico;
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on(texto_x, data => {
-    texto1.innerHTML = data.text;
-    puntos1.innerHTML = data.points;
-    console.log(data.text)
-    //cambiar_color_puntuación()
-    nivel1.innerHTML = data.level;
+    if(data.text != null) texto1.innerHTML = data.text;
+    if(data.points != null) puntos1.innerHTML = data.points;
+    if(data.level != null) nivel1.innerHTML = data.level;
     if(mostrar_texto.value == 1){
         //texto1.style.height = ""; // resetear la altura
         texto1.style.height = "auto";
@@ -211,11 +212,23 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-    LIMITE_PALABRAS = data.parametros.LIMITE_PALABRAS
+    LIMITE_TIEMPO_INSPIRACION = data.parametros.LIMITE_TIEMPO_INSPIRACION;
+    console.log(LIMITE_TIEMPO_INSPIRACION)
     terminado = false;
     tiempo.innerHTML = "";
     tiempo.style.display = "";
     tiempo.style.color = "white"
+
+    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
+    $('#countdown').remove();
+    var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
+    preparados.appendTo($('.container'));
+    setTimeout(() => {
+        $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+    }, 20);
+
+    setTimeout(() => {
+
     var counter = 3;
   
     timer = setInterval(function() {
@@ -253,23 +266,15 @@ socket.on('inicio', data => {
 
             limpiezas();
 
-            socket.on("pedir_inspiracion_musa", juego => {
-                conteo_palabras = 0;
-                if(sincro == 1 || votando == true){
+            skill.style = 'animation: brillo 2s ease-in-out;'
+            skill.style.display = "flex";
 
-                }
-                else{
-                pedir_inspiracion(juego);
-                }
-            });
-
-            //skill.style.display = "flex";
-
-            texto1.style.height = "";
+            texto1.style.height = "4.5em";
             texto1.rows =  "3";
         }, 2000);
     }
   }, 1000);
+}, 1000);
 });
 
 // Resetea el tablero de juego.
@@ -281,6 +286,7 @@ socket.on('limpiar', () => {
     });
 
     limpiezas();
+
     terminado = true;
     tiempo.style.display = "none";
     tiempo.style.color = "white"
@@ -302,7 +308,8 @@ socket.on(nombre, data => {
 
 socket.on(elegir_ventaja, () => {
     votando_ = true;
-    tarea.innerHTML = "<p>¡Tu escritor está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '🌪️' onclick='elegir_ventaja_publico(this)'>🌪️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button><br><br><p style='font-size: 3.5vw;'>⚡ El videojuego borrará más rápido el texto del contrincante.<br><br>🙃 El texto se volverá un espejo para el contrincante.<br><br>🌪️ Una pesada bruma caerá sobre el texto del contrincante.</p>"
+    confetti_musas();
+    tarea.innerHTML = "<p>¡" + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '🌪️' onclick='elegir_ventaja_publico(this)'>🌪️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button><br><br><p style='font-size: 3.5vw;'>⚡ El videojuego borrará más rápido el texto del contrincante.<br><br>🙃 El texto se volverá un espejo para el contrincante.<br><br>🌪️ Una pesada bruma caerá sobre el texto del contrincante.</p>"
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
@@ -311,16 +318,24 @@ socket.on(elegir_ventaja, () => {
 
 socket.on("elegir_repentizado", ({seleccionados, TIEMPO_VOTACION}) => {
     votando = true;
-    tarea.innerHTML = "<p>¿Por donde quieres que continúe la historia?</p><button class='btn' value = '1' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[2] + "</button>"
+    tarea.innerHTML = "<p>¿Por donde quieres que continúe la historia?</p><button class='btn repentizado' value = '1' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[2] + "</button>"
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
-    conteo.innerHTML = "";
     setTimeout(() => {
         socket.emit('pedir_nombre');
         votando = false;
     }, TIEMPO_VOTACION);
     animateCSS(".notificacion", "flash");
+});
+
+socket.on("pedir_inspiracion_musa", juego => {
+    if(sincro == 1 || votando == true){
+
+    }
+    else{
+    pedir_inspiracion(juego);
+    }
 });
 
 function convertirASegundos(tiempo) {
@@ -336,19 +351,17 @@ function pedir_inspiracion(juego){
     campo_palabra.style.display = "";
     modo_actual = juego.modo_actual;
     recordatorio.innerHTML = "";
-    conteo.style.display = "";
     if(terminado == false && votando == false){
-    conteo.innerHTML =  conteo_palabras + "/" + LIMITE_PALABRAS + " palabras"
     if(juego.modo_actual == "palabras bonus"){
-        tarea.innerHTML = "Cantame a mí, <span style='color: orange;'>Musa</span>, una palabra que me inspire:"
+        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que me inspire:"
     }
     if(juego.modo_actual == "letra bendita") {
         letra = juego.letra_bendita;
-        tarea.innerHTML = "Cantame a mí, <span style='color: orange;'>Musa</span>, una palabra que lleve la letra " + "<span style='color: green;'>" + letra.toUpperCase(); + "</span> :";
+        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que lleve la letra " + "<span style='color: green;'>" + letra.toUpperCase(); + "</span> :";
     }
     if(juego.modo_actual == "letra prohibida") {
         letra = juego.letra_prohibida;
-        tarea.innerHTML = "Cantame a mí, <span style='color: orange;'>Musa</span>, una palabra que no lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
+        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que no lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
     }
 
     if(juego.modo_actual == "palabras prohibidas"){
@@ -356,7 +369,6 @@ function pedir_inspiracion(juego){
     } 
 
     if(juego.modo_actual == "tertulia") {
-        conteo.style.display = "none";
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
@@ -371,7 +383,7 @@ function pedir_inspiracion(juego){
 
 function recibir_palabra(data) {
     animacion_modo();
-    palabra1.innerHTML = "(+" + data.puntuacion + " pts) palabra: " + data.palabras_var;
+    palabra1.innerHTML = "(+" + data.puntuacion + " pts) " + data.palabras_var;
     definicion1.innerHTML = data.palabra_bonus[1];
 }
 
@@ -621,17 +633,19 @@ function cambiar_color_puntuación() {
 }
 
 function limpiezas(){
+    stopConfetti()
     clearInterval(intervalID)
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timer)
+    limpiar_colddown()
     skill.style.display = "none";
     skill.style.border = "0.5vw solid greenyellow";
     skill_cancel.style.display = "none";
     texto1.innerText = "";
 
-    puntos1.innerHTML = 0 + " palabras 🖋️";
+    puntos1.innerHTML = 0 + " palabras";
    
-    nivel1.innerHTML = "🌡️ nivel 0";
+    nivel1.innerHTML = "nivel 0";
     
     puntos1.style.color = "white";  
     votando = false;
@@ -642,38 +656,14 @@ function limpiezas(){
 }
 
 function limpiezas_final(){
+    clearInterval(interval_cooldown);
+    limpiar_colddown()
     skill.style.display = "none";
     skill_cancel.style.display = "none";
     tiempo.style.color = "white";
     votando = false;
     terminado = true;
-    socket.off('pedir_inspiracion_musa');
-
 }
-
-function confetti_aux(){
-    var duration = 15 * 1000;
-    var animationEnd = Date.now() + duration;
-    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-    function randomInRange(min, max) {
-    return Math.random() * (max - min) + min;
-    }
-
-    var interval = setInterval(function() {
-    var timeLeft = animationEnd - Date.now();
-
-    if (timeLeft <= 0) {
-        return clearInterval(interval);
-    }
-
-    var particleCount = 50 * (timeLeft / duration);
-    // since particles fall down, start a bit higher than random
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-    }, 250);
-}
-
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
 texto1.addEventListener("keyup", (evt) => {
     console.log(evt.key)
@@ -698,7 +688,17 @@ texto1.addEventListener("keyup", (evt) => {
     }
   });
 
-  
+function limpiar_colddown(){
+    clearInterval(interval_cooldown);
+    text_progress.removeEventListener('mouseenter', onMouseEnter);
+    text_progress.removeEventListener('mouseleave', onMouseLeave);
+    bar_progress.style.width = '0%'
+    //button.disabled = false; // Habilita el botón
+    text_progress.style.color = "orange";
+    text_progress.innerHTML = "Inspirar"
+    cooldown = false;
+}
+
   const SECOND_IN_MS = 1000;
   const UPDATE_INTERVAL = SECOND_IN_MS / 60; // Update 60 times per second (60 FPS)
   const SKILL_CLASS = 'skill';
@@ -781,3 +781,65 @@ function cancelar(boton){
 }
 // Add click handler to the table
 skill.addEventListener('click', activateSkill, false);
+
+var duration = 15 * 1000;
+var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var isConfettiRunning = true; // Indicador para controlar la ejecución
+
+function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+function confetti_aux() {
+    var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
+    isConfettiRunning = true; // Habilita la ejecución de confetti
+    console.log(isConfettiRunning);
+    
+    var interval = setInterval(function() {
+      if (!isConfettiRunning) {
+        clearInterval(interval);
+        return;
+      }
+  
+      var timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
+  
+      var particleCount = 50 * (timeLeft / duration);
+      console.log("HOLAAAA");
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  }
+
+function stopConfetti() {
+    isConfettiRunning = false; // Deshabilita la ejecución de confetti
+    confetti.reset(); // Detiene la animación de confetti
+  }
+
+  function confetti_musas(){
+    var scalar = 2;
+    var unicorn = confetti.shapeFromText({ text: '🎨', scalar });
+    isConfettiRunning = true; // Habilita la ejecución de confetti
+    
+    var end = Date.now() + (2 * 1000);
+    
+    // go Buckeyes!
+    (function frame() {
+      confetti({
+        startVelocity: 10,
+        particleCount: 1,
+        angle: 270,
+        spread: 1000,
+        origin: { y: 0 },
+        shapes: [unicorn],
+        scalar: 3
+      });
+    
+      if ((Date.now() < end) && isConfettiRunning) {
+        requestAnimationFrame(frame);
+      }
+    }());
+    }

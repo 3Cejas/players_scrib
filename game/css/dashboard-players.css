@@ -21,11 +21,9 @@ body {
     margin-left: 0;
     margin-right: 0;
     text-align: center;
-    ms-overflow-style: none;
     /* for Internet Explorer, Edge */
     scrollbar-width: none;
     /* for Firefox */
-    overflow-y: scroll;
     scroll-behavior: smooth;
     color: white;
     background-color: black;
@@ -71,6 +69,15 @@ button:focus {
 }
 
 /* Estilo para los jugadores */
+
+.jugador{
+  width: 100%;
+  margin-left: 10%;
+  margin-right: 10%;
+  position: relative; /* Esto permite que los elementos absolutos dentro de él se posicionen en relación con él */
+  min-height: 100vh;
+}
+
 .jugador1{
     width: 35%;
     margin-left: 10%;
@@ -134,7 +141,7 @@ button:focus {
     max-width: 50%;
     align-items: center;
     text-align: center;
-    margin: 0 auto;    
+    margin: 0 auto;
 }
 
 .tiempo {
@@ -261,14 +268,14 @@ button {
 }
 .textarea {
     word-break:break-word;
-    display: block;
+    display:block;
     hyphens:auto;
     white-space: pre-wrap;
     overflow-wrap: break-word;
     overflow-y: hidden;
     text-align: left;
     font-family: "VT323";
-    position: sticky;
+    position: relative;
     font-size: 3vw;
     font-weight: bold;
     border-color: currentcolor;
@@ -286,10 +293,11 @@ button {
     color: white;
     height: auto; /* Updated this from a fixed height */
     min-height: /*simultatin 1 row*/ calc(1.5em * 1);
-    max-height: calc(1.5em * 3) ;
-  }
-
-
+    z-index: 2;
+    overflow-y: auto; /* Permite el desplazamiento si el contenido excede la altura */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+    }
 
 .textarea_blur {
     font-family: "VT323";
@@ -408,6 +416,27 @@ table {
     border-right: none;
 }
 
+.info-total {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  z-index: 10; /* Asegúrate de que sea mayor que el de otros elementos para que se muestre encima */
+  background-color: transparent;
+  margin-bottom: 0; /* Asegúrate de que no haya margen que afecte */
+}
+
+
+.right.s1{
+  color:aqua;
+  text-shadow: 0.0625em 0.0625em red;
+}
+
+.right.s2{
+  color: red;
+  text-shadow: 0.0625em 0.0625em aqua;
+}
+
+
 th{
     padding: 0 10 0;
 }
@@ -417,58 +446,27 @@ th{
     margin: 0
 }
 
-.bn54 {
-    position: relative;
-    outline: none;
-    text-decoration: none;
-    border-radius: 1.5vw;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    text-transform: uppercase;
-    height: 7vw;
-    width: 21vw;
-    opacity: 1;
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.6);
+/* Estilos base para .start-btn */
+.btn {
+  text-align: center;
+  display: inline-block;
+  font-size: 1.5em;
+  margin: 0.5em;
+  font-weight: bold;
+  padding: 0.625em 0.625em 0.625em 1em;
+  background-color: white;
+  border-radius: 0.4375em;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s; /* Agrega una transición suave para transform y box-shadow */
+  color: red;
+  text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
+  box-shadow: 0 0.2em aqua;
 }
 
-.bn54 .bn54span {
-    color: #000000;
-    font-size: 2.5vw;
-    letter-spacing: 0.1vw;
-}
-
-.bn54:hover {
-    animation: bn54rotate 0.7s ease-in-out both;
-}
-
-.bn54:hover .bn54span {
-    animation: bn54storm 0.7s ease-in-out both;
-    animation-delay: 0.06s;
-}
-
-@keyframes bn54rotate {
-    0% {
-        transform: rotate(0deg) translate3d(0, 0, 0);
-    }
-
-    25% {
-        transform: rotate(3deg) translate3d(0, 0, 0);
-    }
-
-    50% {
-        transform: rotate(-3deg) translate3d(0, 0, 0);
-    }
-
-    75% {
-        transform: rotate(1deg) translate3d(0, 0, 0);
-    }
-
-    100% {
-        transform: rotate(0deg) translate3d(0, 0, 0);
-    }
+/* Estilos para active (hacer clic en el botón) */
+.btn:active {
+  transform: scale(0.95); /* Hace que el botón parezca presionado */
+  box-shadow: 0 0.2em 0.2em rgba(0, 0, 0, 0.2); /* Sombra más sutil al hacer clic */
 }
 
 @keyframes bn54storm {

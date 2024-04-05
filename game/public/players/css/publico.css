@@ -105,8 +105,10 @@ p{
     font-family: "Retro-gaming";
     
 }
+
 th{
-    padding: 10;
+    padding-left: 0.75vmax;
+    padding-right: 0.75vmax;
 }
 
 .puntos{
@@ -130,6 +132,8 @@ th{
 }
 
 .btn{
+    position: relative; /* Importante para que .progress se posicione correctamente */
+    overflow: hidden; /* Evita que el contenido se desborde */
     font-family: "Retro-gaming";
     margin : 0.5vw;
     cursor: pointer;
@@ -147,14 +151,56 @@ th{
     border-color: white;
 }
 
+.btn.mostrarTexto {
+    /* Fijar el ancho y el alto */
+    width: 40vw; /* Ejemplo de ancho fijo */
+    height: 10vw; /* Ejemplo de alto fijo */
+}
+
 .btn-edicion{
     line-height: 1;
     font-size: 6vw;
     border-radius: 0.4rem;
-
-
 }
 
+.btn.inspirar{
+    position: relative; /* Esto es crucial */
+  overflow: hidden; /* Asegura que el .progress no se desborde fuera del botón */
+  display: inline-block; /* O 'block', dependiendo de tu diseño */
+}
+
+.btn.repentizado{
+    position: relative; /* Importante para que .progress se posicione correctamente */
+    overflow: hidden; /* Evita que el contenido se desborde */
+    font-family: "Retro-gaming";
+    margin : 0.5vw;
+    cursor: pointer;
+    outline: 0;
+    display: inline-block;
+    font-size: 3.5vw;
+    line-height: 1.0;
+    text-align: center;
+    background-color: transparent;
+    border: 0.2vw solid transparent;
+    padding: 6px 12px;
+    border-radius: 1.0rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    color: white;
+    border-color: white;
+}
+
+.btn.repentizado:hover{
+    color: black;
+    background-color: white;
+    border-color: white;
+}
+
+
+.btn.inspirar:hover {
+    color: black;
+    background-color: white;
+    border-color: white;
+}
 
 .btn:hover {
     color: black;
@@ -163,12 +209,11 @@ th{
 }
 
 .notificacion{
-    display: none;
     padding: 0.25vmax;
     background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
     font-size: 3.5vw;
     font-family: "Retro-gaming";
-    
+    display: none;
 }
 
 .input_publico{
@@ -187,8 +232,15 @@ th{
     justify-content: center;
     align-items: center;
     font-size: 6vw; /* Ajusta el tamaño del emoji */
-    display: none;
+    /*display: none;*/
   }
+
+.skill.inspirar{
+    margin: auto;
+    font-size: 4vw;
+    width: 30vw;
+    height: 8vw;
+} 
 
 .skill-cancel{
     border: 0.5vw solid red;
@@ -228,8 +280,59 @@ th{
         box-shadow: 0 0 20px 10px greenyellow;
     }
 }
+  
+.progress {
+    position: absolute; /* Se posiciona en relación a su contenedor más cercano que tiene una posición no estática */
+    top: 0;
+    left: 0;
+    width: 0%; /* Inicialmente sin rellenar, puedes modificar este valor con JS */
+    height: 100%; /* Asegura que ocupe todo el alto del botón */
+    background-color: orange; /* Color de la barra de progreso */
+    transition: width 0.4s ease; /* Efecto suave al cambiar el ancho */
+    z-index: 1; /* Asegura que esté detrás del texto */
+}
+
+
+/* Estilos para el texto dentro del botón */
+.text-progress {
+    position: relative; /* Importante para controlar el z-index */
+    z-index: 2; /* Asegura que el texto esté por encima de la barra de progreso */
+    color: orange; /* Color del texto */
+}
 
 .feedback_texto_editado{
     color: greenyellow;
     font-size: 4vw;
 }
+
+#cooldownButton {
+    position: relative;
+    overflow: hidden;
+    background-color: transparent; /* Color inicial del botón */
+    color: white; /* Color del texto para asegurar que sea legible sobre el fondo oscuro */
+    transition: background-color 0.5s; /* Suaviza la transición de colores */
+  }
+  
+  @keyframes shakeAndFlash {
+    0%, 100% {
+      transform: translateX(0);
+      color: initial; /* Color inicial del botón */
+    }
+    25% {
+      transform: translateX(-1vw);
+      color: red; /* Parpadeo rojo */
+    }
+    50% {
+      transform: translateX(1vw);
+      color: initial;
+    }
+    75% {
+      transform: translateX(1vw);
+      color: red; /* Parpadeo rojo */
+    }
+  }
+  
+  .disabled-click-feedback {
+    animation: shakeAndFlash 0.5s;
+  }
+  

@@ -11,7 +11,7 @@ let countInterval; // Variable que almacena el identificador de la función que 
 let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
 let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra bonus.
-let puntos = 0; // Puntos del jugador 1.
+let puntos_ = 0; // Puntos del jugador 1.
 let puntos_escritura = 0;
 let puntuacion_acumulada_j2 = 0;
 let delay_animacion;
@@ -36,22 +36,10 @@ let lastTextNode;
 let caretPos;
 let caretNode;
 
-
-
-
-
 document.addEventListener('keydown', function(event) {
-  if(event.key === "Backspace"){
-    var delete_type = new Audio('../audio/delete.WAV');
-    delete_type.play();
-  }
-  else{
-    var audio_type = new Audio('../audio/type.WAV');
-    audio_type.play();
-  }
 });
 document.addEventListener('click', function(event) {
-  texto1.focus();
+  texto.focus();
   console.log(menu_modificador);
   if(menu_modificador == false || modificadorButtons.length == 0) {
   if (event.button === 0) {
@@ -73,36 +61,11 @@ document.addEventListener('click', function(event) {
         document.documentElement.mozRequestFullScreen();
       }
       isFullscreen = true;
-      texto1.focus();
+      texto.focus();
     }
   }
 }
 });
-
-// Función que aumenta de tamaño el texto del jugador 1 cuando el jugador 1 escribe cualquier carácter en el texto.
-function auto_grow(element) {
-    element.style.height = "5px";
-    element.style.height = element.scrollHeight + "px";
-    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
-      while (texto2.scrollHeight > texto1.scrollHeight) {
-        saltos_línea_alineacion_1 += 1;
-        texto1.innerText = "\n" + texto1.innerText;
-      }
-      texto1.style.height = texto2.scrollHeight + "px";
-      texto2.style.height = texto2.scrollHeight + "px";
-    } else {
-      while (texto2.scrollHeight < texto1.scrollHeight) {
-        saltos_línea_alineacion_2 += 1;
-        texto2.innerText = "\n" + texto2.innerText;
-      }
-      texto1.style.height = texto1.scrollHeight + "px";
-      texto2.style.height = texto1.scrollHeight + "px";
-    }*/
-    texto1.style.height = texto1.scrollHeight + "px";
-    texto2.style.height = texto2.scrollHeight + "px";
-    //window.scrollTo(0, document.body.scrollHeight);
-    focalizador1.scrollIntoView({ block: "end" });
-}
 
 // Función para guardar la posición del caret
 function guardarPosicionCaret() {
@@ -125,7 +88,6 @@ function restaurarPosicionCaret(caretNode, caretPos) {
 }
 
 function borrar() {
-  console.log("Borrando");
   if (!desactivar_borrar) {
     let nodoBorrado = false;
 
@@ -136,10 +98,10 @@ function borrar() {
     secs = -1;
     socket.emit('aumentar_tiempo', {secs, player});
     caracteres_seguidos = 0;
-    indice_buscar_palabra = texto1.innerText.length;
+    indice_buscar_palabra = texto.innerText.length;
 
     // 3. Obtener última línea y último nodo de texto
-    lastLine = texto1.lastChild;
+    lastLine = texto.lastChild;
     lastTextNode = lastLine.lastChild;
     if (!lastTextNode) {
       lastTextNode = lastLine;
@@ -162,7 +124,7 @@ function borrar() {
     // 6. Si no hay nodo de texto, retroceder a la línea anterior si existe
     if (!lastTextNode && lastLine.previousSibling) {
       lastLine.remove();
-      lastLine = texto1.lastChild;
+      lastLine = texto.lastChild;
       lastTextNode = lastLine ? lastLine.lastChild : null;
       caretNode = lastTextNode;
       caretPos = lastTextNode ? lastTextNode.length : 0;
@@ -175,14 +137,13 @@ function borrar() {
     }
 
     // 8. Actualizar estado
-    if(texto1.innerText.match(/\b\w+\b/g) != null){
-      puntos = texto1.innerText.match(/\b\w+\b/g).length;
-      cambiar_color_puntuación();
+    if(texto.innerText.match(/\b\w+\b/g) != null){
+      puntos_ = texto.innerText.match(/\b\w+\b/g).length;
     } else {
-      puntos = 0;
+      puntos_ = 0;
     }
-    puntos1.innerHTML = puntos + " palabras 🖋️";
-    cambio_nivel(puntos);
+    puntos.innerHTML = puntos_ + " palabras";
+    cambio_nivel(puntos_);
     clearTimeout(borrado);
     borrado = setTimeout(() => {
       borrar();
@@ -195,7 +156,6 @@ function borrar() {
     }
 
   } else {
-    console.log("Borrado desactivado");
     clearTimeout(borrado);
   }
   
@@ -234,31 +194,30 @@ function getCaretCharacterOffsetWithin(element) {
 
 //Función que modifica el comportamiento del juego.
 function countChars(texto) {
-  var lastWordCount = puntos; // Mantenemos el último recuento de palabras
+  var lastWordCount = puntos_; // Mantenemos el último recuento de palabras
 
   if(texto.innerText.match(/\b\w+\b/g) != null){
-  puntos = texto.innerText.match(/\b\w+\b/g).length;
-  cambiar_color_puntuación();
+  puntos_ = texto.innerText.match(/\b\w+\b/g).length;
   }
   else{
-    puntos = 0;
+    puntos_ = 0;
   }
-  puntos1.innerHTML = puntos + " palabras 🖋️";
-  cambio_nivel(puntos);
+  puntos.innerHTML = puntos_ + " palabras";
+  cambio_nivel(puntos_);
   clearTimeout(borrado);
   
   // Ahora, en lugar de contar los caracteres, incrementamos palabras_seguidas si el recuento de palabras ha aumentado
-  if (puntos > lastWordCount) {
+  if (puntos_ > lastWordCount) {
     caracteres_seguidos += 1;
   }
 
   if (caracteres_seguidos == 3 && locura == false) {
-    feedback1.style.color = color_positivo;
-    feedback1.innerHTML = "⏱️+6 segs.";
+    feedback.style.color = color_positivo;
+    feedback.innerHTML = "⏱️+6 segs.";
     clearTimeout(delay_animacion);
     animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
-            feedback1.innerHTML = "";
+            feedback.innerHTML = "";
         }, 2000);
     });
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
@@ -268,7 +227,6 @@ function countChars(texto) {
     tiempo_feed = "⏱️+" + "6" + " segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed});
   }
-  console.log("big")
   borrado = setTimeout(function () {
     borrar();
 }, rapidez_inicio_borrado);
@@ -289,28 +247,28 @@ function toNormalForm(str) {
 //Función auxiliar que cambia la rapidez y el inicio de borrado en función de la cantidad de caracteres escritos.
 function cambio_nivel(caracteres) {
     if (0 <= caracteres && caracteres < 100) {
-        nivel1.innerHTML = "🌡️ nivel 1";
+        nivel.innerHTML = "nivel 1";
         if(!borrado_cambiado){
           rapidez_inicio_borrado = 4000;
           rapidez_borrado = 4000;
         }
     }
     if (100 <= caracteres && caracteres < 200) {
-        nivel1.innerHTML = "🌡️ nivel 2";
+        nivel.innerHTML = "nivel 2";
         if(!borrado_cambiado){
           rapidez_inicio_borrado = 3800;
           rapidez_borrado = 3800;
         }
     }
     if (300 <= caracteres && caracteres < 400) {
-        nivel1.innerHTML = "🌡️ nivel 3";
+        nivel.innerHTML = "nivel 3";
         if(!borrado_cambiado){
           rapidez_borrado = 3600;
           rapidez_inicio_borrado = 3600;
         }
     }
     if (400 <= caracteres && caracteres < 500) {
-        nivel1.innerHTML = "🌡️ nivel 4";
+        nivel.innerHTML = "nivel 4";
         if(!borrado_cambiado){
           rapidez_borrado = 3400;
           rapidez_inicio_borrado = 3400;
@@ -318,7 +276,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (500 <= caracteres && caracteres < 600) {
-      nivel1.innerHTML = "🌡️ nivel 5";
+      nivel.innerHTML = "nivel 5";
       if(!borrado_cambiado){
         rapidez_borrado = 3200;
         rapidez_inicio_borrado = 3200;
@@ -326,7 +284,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (600 <= caracteres && caracteres < 700) {
-      nivel1.innerHTML = "🌡️ nivel 6";
+      nivel.innerHTML = "nivel 6";
       if(!borrado_cambiado){
         rapidez_borrado = 3000;
         rapidez_inicio_borrado = 3000;
@@ -334,7 +292,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (700 <= caracteres && caracteres < 800) {
-      nivel1.innerHTML = "🌡️ nivel 7";
+      nivel.innerHTML = "nivel 7";
       if(!borrado_cambiado){
         rapidez_borrado = 2800;
         rapidez_inicio_borrado = 2800;
@@ -342,7 +300,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (900 <= caracteres && caracteres < 1000) {
-      nivel1.innerHTML = "🌡️ nivel 8";
+      nivel.innerHTML = "nivel 8";
       if(!borrado_cambiado){
         rapidez_borrado = 2600;
         rapidez_inicio_borrado = 2600;
@@ -350,7 +308,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (1000 <= caracteres && caracteres < 1100) {
-      nivel1.innerHTML = "🌡️ nivel 9";
+      nivel.innerHTML = "nivel 9";
       if(!borrado_cambiado){
         rapidez_borrado = 2400;
         rapidez_inicio_borrado = 2400;
@@ -358,7 +316,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (1100 <= caracteres && caracteres < 1200) {
-      nivel1.innerHTML = "🌡️ nivel 10";
+      nivel.innerHTML = "nivel 10";
       if(!borrado_cambiado){
         rapidez_borrado = 2200;
         rapidez_inicio_borrado = 2200;
@@ -366,7 +324,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (1200 <= caracteres && caracteres < 1400) {
-      nivel1.innerHTML = "🌡️ nivel 11";
+      nivel.innerHTML = "nivel 11";
       if(!borrado_cambiado){
         rapidez_borrado = 2000;
         rapidez_inicio_borrado = 2000;
@@ -374,7 +332,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (1400 <= caracteres && caracteres < 1600) {
-      nivel1.innerHTML = "🌡️ nivel 12";
+      nivel.innerHTML = "nivel 12";
       if(!borrado_cambiado){
         rapidez_borrado = 1800;
         rapidez_inicio_borrado = 1800;
@@ -382,7 +340,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (1800 <= caracteres && caracteres < 2000) {
-      nivel1.innerHTML = "🌡️ nivel 13";
+      nivel.innerHTML = "nivel 13";
       if(!borrado_cambiado){
         rapidez_borrado = 1600;
         rapidez_inicio_borrado = 1600;
@@ -390,7 +348,7 @@ function cambio_nivel(caracteres) {
     }
 
     if (caracteres >= 2000) {
-        nivel1.innerHTML = "🌡️ nivel 14";
+        nivel.innerHTML = "nivel 14";
         if(!borrado_cambiado){
           rapidez_borrado = 1400;
           rapidez_inicio_borrado = 1400;

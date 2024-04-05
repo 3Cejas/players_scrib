@@ -30,18 +30,10 @@
         <table class="default">
             <tr>
                 <td>
-                    <div align="center">
-                        <button onclick="temp()" class="bn54">
-                            <span class="bn54span">✍️ ESCRIBIR</span>
-                        </button>
-                    </div>
+                    <span class='btn' onclick="temp()">✍️ ESCRIBIR</span>
                 </td>
                 <td>
-                    <div align="center">
-                        <button id="boton_borrar" onclick="borrar(this)" class="bn54">
-                            <span class="bn54span">🧼 BORRAR</span>
-                        </button>
-                    </div>
+                    <span class='btn' onclick="descargar_textos()">💾 DESCARGAR TEXTO</span>
                 </td>
                 <td>   <b>Tiempo</b>
                     <div id="first-mtr-datepicker"></div>
@@ -69,80 +61,36 @@
                         var myDatepicker = new MtrDatepicker(config);
                     </script></td>
                     <td>
-                        <div align="center">
-                            <button onclick="fin(1)" class="bn54">
-                                <span class="bn54span">👾 FIN J1</span>
-                            </button>
-                        </div>
+                    <span class='btn' onclick="fin(1)">👾 FIN J1</span>
                     </td>
                     <td>
-                        <div align="center">
-                            <button onclick="vote()" class="bn54">
-                                <span class="bn54span">🗳️ ABRIR VOTACIÓN</span>
-                            </button>
-                        </div>
+                        <span class='btn' onclick="vote()">🗳️ ABRIR VOTACIÓN</span>
                     </td>
                     <td>
-                        <div align="center">
-                            <button onclick="temas()" class="bn54">
-                                <span class="bn54span">🎨 ELEGIR TEMA</span>
-                            </button>
-                        </div>
+                        <span class='btn' onclick="temas()">🎨 ELEGIR TEMA</span>
                     </td>
             </tr>
             <tr>
                 <td>
-                    <div align="center">
-                        <button onclick="limpiar()" class="bn54">
-                            <span class="bn54span">🧹 LIMPIAR</span>
-                        </button>
-                    </div>
+                    <span class='btn' onclick="limpiar()">🧹 LIMPIAR</span>
                 </td>
                 <td>
-                    <div align="center">
-                        <button id="boton_pausar_reanudar" value=0 onclick="pausar_reanudar(this)" class="bn54">
-                            <span id="pausar_reanudar" class="bn54span">▶️ PAUSAR</span>
-                        </button>
-                    </div>
+                    <span id="boton_pausar_reanudar" value=0 onclick="pausar_reanudar(this)" class='btn'>▶️ PAUSAR</span>
                 </td>   
                 <td>
-                    <div align="center">
-                        <button onclick="enviar_comentario()" class="bn54">
-                            <span class="bn54span">💬 ENVIAR COMENTARIO</span>
-                        </button>
-                    </div>
+                    <span onclick="enviar_comentario()" class='btn'>💬 ENVIAR COMENTARIO</span>
                 </td>
                 <td>
-                    <div align="center">
-                        <button onclick="fin(2)" class="bn54">
-                            <span class="bn54span">👾 FIN J2</span>
-                        </button>
-                    </div>
+                    <span onclick="fin(2)" class='btn'>👾 FIN J2</span>
                 </td> 
                 <td>
-                    <br>
-                    <div align="center">
-                        <button onclick="exit()" class="bn54">
-                            <span class="bn54span">🗳️ CERRAR VOTACIÓN</span>
-                        </button><br>
-                    </div>
+                    <span onclick="exit()" class='btn'>🗳️ CERRAR VOTACIÓN</span>
                 </td>   
                 <td>
-                    <div align="center">
-                        <div class="container">
-                            <input type="text" id="temas" size="10" placeholder="Temas / Coment."><br>
-                        </div>
-                    </div>
+                    <table class="right"><td><input type="text" class="placeholder" id="temas" size="10" placeholder="Comentarios..."></td></table>
                 </td>
             </tr>
             <tr>
-    <td>
-        <div align="center">
-            <button onclick="descargar_textos()" class="bn54">
-                <span class="bn54span">💾 DESCARGAR TEXTO</span>
-            </button>
-        </div>
-    </td>
     </div>
     </tr>
     <tr>
@@ -203,15 +151,25 @@
         </td>
         <td>
             <br>
-            <label for="limite_palabras">LÍMITE PALABRAS MUSAS</label>
-            <input type="number" id="limite_palabras" name="limite_palabras" class="parametro"
-                   min="1" max="100" step="1" value = 3>
+            <label for="limite_tiempo_inspiracion">LÍMITE TIEMPO MUSAS</label>
+            <input type="number" id="limite_tiempo_inspiracion" name="limite_tiempo_inspiracion" class="parametro"
+                   min="5" max="120" step="1" value = 30>
         </td>
         <td>
             <br>
             <label for="palabras_insertadas_meta">PALABRAS INSERTADAS META</label>
             <input type="number" id="palabras_insertadas_meta" name="palabras_insertadas_meta" class="parametro"
                 min="1" max="20" step="1" value = 5>
+        </td>
+        <td>
+            <br>
+            <b>BORRAR</b>
+            <br>
+            <br>
+            <label class="switch">
+                <input id="boton_borrar" type="checkbox">
+                <span class="slider round"></span>
+            </label>
         </td>
     </tr>
     </table>
@@ -237,8 +195,12 @@
             <div align="center">
                 <table class="right">
                     <tr>
-                        <th id="puntos">0 palabras 🖊️</th>
-                        <th id="nivel">🌡️ nivel 0</th>
+                        <th>🖊️</th>
+                        <th>🌡️</th>
+                    </tr>
+                    <tr>
+                        <th id="puntos">0 palabras</th>
+                        <th id="nivel">nivel 0</th>
                     </tr>
                 </table>
                 <h1 id="feedback1" class="feedback1"></h1>
@@ -254,20 +216,21 @@
             spellcheck="false" class="textarea">
             </div>
             <br><br>
-            <div align="center">
                 <table class="right">
                     <tr>
-                        <th id="puntos1">0 palabras 🖊️</th>
-                        <th id="nivel1">🌡️ nivel 0</th>
+                        <th>🖊️</th>
+                        <th>🌡️</th>
+                    </tr>
+                    <tr>
+                        <th id="puntos1">0 palabras</th>
+                        <th id="nivel1">nivel 0</th>
                     </tr>
                 </table>
                 <h1 id="feedback2" class="feedback2"></h1>
                 <h2 id="puntuacion_final2"></h1>
                 </br>
-            </div>
         </div>
     </div>
-    <div align="center">
         <table>
             <tr>
             <tr>
@@ -285,7 +248,6 @@
                 </th>
             </tr>
         </table>
-    </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>

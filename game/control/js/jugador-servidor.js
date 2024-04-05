@@ -27,11 +27,8 @@ let explicación = getEl("explicación");
 let tiempo = getEl("tiempo");
 let tiempo1 = getEl("tiempo1");
 let tema = getEl("temas");
-let span_pausar_reanudar = getEl("pausar_reanudar");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
 let boton_borrar = getEl("boton_borrar");
-
-boton_borrar.style.backgroundColor = "red";
 
 
 let temporizador = getEl("temporizador");
@@ -51,7 +48,7 @@ let puntuacion_final2 = getEl("puntuacion_final2");
 
 let clasificacion = getEl("clasificacion");
 
-let limite_palabras_input = document.getElementById('limite_palabras');
+let limite_tiempo_inspiracion_input = document.getElementById('limite_tiempo_inspiracion');
 let tiempo_inverso_input = document.getElementById('tiempo_inverso');
 let tiempo_borrado_input = document.getElementById('tiempo_borrado');
 let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabras');
@@ -71,7 +68,7 @@ let postgame2;
 let texto_guardado1 = "";
 let texto_guardado2 = "";
 
-let LIMITE_PALABRAS = limite_palabras_input.valueAsNumber;
+let LIMITE_TIEMPO_INSPIRACION = limite_tiempo_inspiracion_input.valueAsNumber;
 let TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
 let TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
 let TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
@@ -150,7 +147,7 @@ function rellenarListaModos() {
 }
 
 function actualizarVariables() {
-    LIMITE_PALABRAS = limite_palabras_input.valueAsNumber;
+    LIMITE_TIEMPO_INSPIRACION = limite_tiempo_inspiracion_input.valueAsNumber;
     TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
     TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
     TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
@@ -166,7 +163,7 @@ function actualizarVariables() {
     DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
     TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
 
-   console.log('LIMITE_PALABRAS:', LIMITE_PALABRAS);
+   console.log('LIMITE_TIEMPO_INSPIRACION:', LIMITE_TIEMPO_INSPIRACION);
    console.log('TIEMPO_INVERSO:', TIEMPO_INVERSO);
    console.log('TIEMPO_BORRADO:', TIEMPO_BORRADO);
    console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);

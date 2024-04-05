@@ -5,6 +5,11 @@
     src: url('../css/fonts/Retro\ Gaming.ttf') format('truetype');
 }
 
+@font-face {
+    font-family: 'VT323';
+    src: url('../css/fonts/VT323-Regular.ttf') format('truetype');
+}
+
 /* ¿Se usa? */
 button:focus {
     outline: none;
@@ -193,6 +198,8 @@ body {
     font-family: "Retro-gaming";
     color: white;
     background-color: black;
+    color:aqua;
+    text-shadow: 0.0625em 0.0625em red;
 }
 
 button {
@@ -206,6 +213,7 @@ label {
 }
 
 .textarea {
+    font-family: 'VT323';
     word-break:break-word;
     display: block;
     hyphens:auto;
@@ -215,7 +223,7 @@ label {
     text-align: justify;
     align-items: center;
     position: sticky;
-    font-size: 0.7vw;
+    font-size: 1vw;
     font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
@@ -376,82 +384,100 @@ table {
     margin: 0
 }
 
-.bn54 {
-    position: relative;
-    outline: none;
-    text-decoration: none;
-    border-radius: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    text-transform: uppercase;
-    height: 45px;
-    width: 130px;
-    opacity: 1;
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.6);
-}
-
-.bn54 .bn54span {
+.placeholder{
     font-family: "Retro-gaming";
-    color: #000000;
+    background-color: transparent;
+    border: none;
+    color: white;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 3.75em; /* 60px / 16px base font size = 3.75em */
+    height: 2.125em; /* 34px / 16px base font size = 2.125em */
+  }
+  
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: red;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "🧼"; /* Agregar el emoji del jabón */
+    font-size: 1em; /* Ajustar el tamaño del emoji */
+    line-height: 1.625em; /* Alineación vertical */
+    text-align: center; /* Alineación horizontal */
+    height: 1.625em; /* 26px / 16px base font size = 1.625em */
+    width: 1.625em; /* 26px / 16px base font size = 1.625em */
+    left: 0.25em; /* 4px / 16px base font size = 0.25em */
+    bottom: 0.25em; /* 4px / 16px base font size = 0.25em */
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%; /* Hacerlo redondo */
+  }
+  
+  input:checked + .slider {
+    background-color: green;
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+  }
+  
+  input:checked + .slider:before {
+    -webkit-transform: translateX(1.625em); /* Ajuste proporcional */
+    -ms-transform: translateX(1.625em);
+    transform: translateX(1.625em);
+  }
+  
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 2.125em; /* Mantener la proporción del border-radius */
+  }
+  
+  .slider.round:before {
+    border-radius: 50%;
+  }
+
+/* Estilos base para .start-btn */
+.btn {
+    text-align: center;
+    display: inline-block;
     font-size: 0.8em;
-    font-weight: 500;
-    letter-spacing: 0.7px;
+    margin: 0.5em;
+    font-weight: bold;
+    padding: 0.625em 0.625em 0.625em 1em;
+    background-color: #505050;
+    border-radius: 0.4375em;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s; /* Agrega una transición suave para transform y box-shadow */
+    color: aqua;
+    text-shadow: 0.0625em 0.0625em red;
+    box-shadow: 0 0.2em red;
 }
 
-.bn54:hover {
-    animation: bn54rotate 0.7s ease-in-out both;
-}
-
-.bn54:hover .bn54span {
-    animation: bn54storm 0.7s ease-in-out both;
-    animation-delay: 0.06s;
-}
-
-@keyframes bn54rotate {
-    0% {
-        transform: rotate(0deg) translate3d(0, 0, 0);
-    }
-
-    25% {
-        transform: rotate(3deg) translate3d(0, 0, 0);
-    }
-
-    50% {
-        transform: rotate(-3deg) translate3d(0, 0, 0);
-    }
-
-    75% {
-        transform: rotate(1deg) translate3d(0, 0, 0);
-    }
-
-    100% {
-        transform: rotate(0deg) translate3d(0, 0, 0);
-    }
-}
-
-@keyframes bn54storm {
-    0% {
-        transform: translate3d(0, 0, 0) translateZ(0);
-    }
-
-    25% {
-        transform: translate3d(4px, 0, 0) translateZ(0);
-    }
-
-    50% {
-        transform: translate3d(-3px, 0, 0) translateZ(0);
-    }
-
-    75% {
-        transform: translate3d(2px, 0, 0) translateZ(0);
-    }
-
-    100% {
-        transform: translate3d(0, 0, 0) translateZ(0);
-    }
+/* Estilos para active (hacer clic en el botón) */
+.btn:active {
+    transform: scale(0.95); /* Hace que el botón parezca presionado */
+    box-shadow: 0 0.2em 0.2em rgba(0, 0, 0, 0.2); /* Sombra más sutil al hacer clic */
 }
 
 @media only screen and (max-width: 650px) {

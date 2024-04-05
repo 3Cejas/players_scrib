@@ -1,8 +1,10 @@
 let delay_animacion;
+let delay_animacion_recordatorio;
 let isFullscreen = false;
 let letra = "";
 let editando = false;
-let LIMITE_PALABRAS = 3;
+let interval_cooldown;
+let cooldown = false;
 
 window.addEventListener('beforeunload', (event) => {
   socket.emit('disconnect');
@@ -47,29 +49,39 @@ const animateCSS = (element, animation, prefix = "animate__") =>
     });
 
 //Función auxiliar que envía una palabra al servidor.
-function enviarPalabra() {
+function enviarPalabra(button) {
+  if(cooldown || palabra.value == '' || palabra.value == null ){
+    text_progress.classList.add('disabled-click-feedback');
+    
+    // Opcional: remover la clase después de que la animación se complete
+    setTimeout(function() {
+      text_progress.classList.remove('disabled-click-feedback');
+    }, 500); // Coincide con la duración de la animación
+  }
+  else{
   if(palabra.value != '' && palabra.value != null){
     if((modo_actual == "letra prohibida" && !toNormalForm(palabra.value.toLowerCase()).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(palabra.value.toLowerCase()).includes(letra)) || modo_actual == "palabras bonus" || modo_actual == "palabras prohibidas" ||  letra == 'ñ' && palabra.value.toLowerCase().includes('ñ') || letra == 'n' && modo_actual == "letra prohibida" && palabra.value.toLowerCase().includes('ñ') && !palabra.value.toLowerCase().includes(letra)){
-    if(conteo_palabras < LIMITE_PALABRAS){
+      startProgress(button);
       inspiracion = palabra.value.trim();
       socket.emit('enviar_inspiracion', inspiracion);
       palabra.value = "";
-      conteo_palabras++;
-      conteo.innerHTML = conteo_palabras + "/"+ LIMITE_PALABRAS + " palabras"
       recordatorio.innerHTML = "<span style='color: green;'>Has mandado una inspiración.</span>";
-      animateCSS(".recordatorio", "flash")
-    }
-    else if(conteo_palabras >= LIMITE_PALABRAS){
-      recordatorio.innerHTML = "<span style='color: red;'>No puedes enviar más palabras.</span>";
-      animateCSS(".recordatorio", "flash")
-    }
-
+      animateCSS(".recordatorio", "flash").then(() => {
+        delay_animacion_recordatorio = setTimeout(function () {
+        recordatorio.innerHTML = "";
+        }, 1200);
+    });
     }
     else{
       recordatorio.innerHTML = "<span style='color: red;'>Recuerda que la palabra debe serle útil.</span>";
-      animateCSS(".recordatorio", "flash")
+      animateCSS(".recordatorio", "flash").then(() => {
+        delay_animacion_recordatorio = setTimeout(function () {
+        recordatorio.innerHTML = "";
+        }, 1200);
+    });
     }
   }
+}
 }
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
@@ -141,3 +153,42 @@ function toNormalForm(str) {
           "$1"
       );
 }
+
+function onMouseEnter() {
+  text_progress.style.color = 'black';
+}
+
+function onMouseLeave() {
+  text_progress.style.color = 'white';
+}
+
+
+function startProgress(button) {
+  cooldown = true;
+  text_progress.innerHTML = "Inspirando..."
+  console.log("INSPIRANDO", text_progress.innerHTML, text_progress)
+  text_progress.style.color = "white";
+  text_progress.addEventListener('mouseenter', onMouseEnter);
+  text_progress.addEventListener('mouseleave', onMouseLeave);
+  let progress = 0;
+  //button.disabled = true; // Deshabilitar el botón durante la carga
+  button.querySelector('.progress')
+  console.log("limite", LIMITE_TIEMPO_INSPIRACION)
+  // Calcular el intervalo y el incremento basado en LIMITE_TIEMPO
+  const incrementoPorIntervalo = 100; // Queremos llegar a 100%
+  const intervalo = (LIMITE_TIEMPO_INSPIRACION * 1000) / incrementoPorIntervalo; // Calcula el intervalo en milisegundos
+  console.log(button.disabled)
+  interval_cooldown = setInterval(() => {
+      progress += 1; // Incrementa el progreso por 1%
+      bar_progress.style.width = `${progress}%`; // Actualiza el ancho del elemento de progreso
+      console.log(bar_progress.style.width)
+    if (progress >= 100) {
+      clearInterval(interval_cooldown); // Detiene el intervalo
+      setTimeout(() => {
+          limpiar_colddown();
+          cooldown = false;
+      }, 1000); // Restablece el progreso después de un tiempo
+    }
+  }, intervalo); // Usa el intervalo calculado para el temporizador
+}
+

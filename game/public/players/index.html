@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" type="text/css" href="./css/publico.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="./js/juego.js"></script>
 </head>
 <body>
@@ -41,11 +41,16 @@
                             <p id="tiempo" class="tiempo"></p>
                         </tr>
                     </table>
-                    <table class="right">
+                    <table id="metadatos" class="right">
                         <tr>
-                            <th id="puntos" class="puntos">0 palabras 🖋️</th>
-                            <th id="nivel" class="nivel">🌡️ nivel 1</th>
-                            <th><button id="mostrar_texto" class="btn" value=0 onclick="mostrarTextoCompleto(this)">Mostrar texto completo</button></th>
+                            <th>🖋️</th>
+                            <th>🌡️</th>
+                            <th></th>
+                        </tr>
+                        <tr>
+                            <th id="puntos" class="puntos">0 palabras</th>
+                            <th id="nivel" class="nivel">nivel 1</th>
+                            <th><button id="mostrar_texto" class="btn mostrarTexto" value=0 onclick="mostrarTextoCompleto(this)">Mostrar texto completo</button></th>
                         </tr>
                     </table>
                     <br>
@@ -60,10 +65,13 @@
                             <th><p id="recordatorio" class="recordatorio"></p></th>
                         </tr>
                         <tr>
-                            <th><p id="conteo" class="recordatorio"></p></th>
-                        </tr>
-                        <tr>
-                            <th><button id="enviar_palabra" class="btn" onclick="enviarPalabra()">Inspirar</button></th>
+                            <th>
+                                <button id="progressButton" class="btn inspirar" onclick="enviarPalabra(this)">
+                                    <span id="text-progress" class="text-progress">Inspirar</span>
+                                    <span id="bar-progress" class="progress"></span>
+                                </button>
+                            </th>
+                                                        
                         </tr>
                     </table>
                     <br>
