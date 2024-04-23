@@ -156,7 +156,7 @@ var player = getParameterByName("player");
 // Se establece la conexión con el servidor.
 serverUrl = window.location.href.startsWith('file:')
     ? 'http://localhost:3000'
-    : 'https://sutura.ddns.net:3000';
+    : 'http://sutura.ddns.net:3000';
 
 const socket = io(serverUrl);
 
