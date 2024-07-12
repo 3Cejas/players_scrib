@@ -81,7 +81,7 @@ if (player == 1) {
     nombre = getEl("nombre");
     nombre.value = "ESCRITXR 1"
     inspirar = 'inspirar_j1';
-    enviar_palabra = 'enviar_palabra_j1'
+    enviar_palabra = 'enviar_palabra_j1';
     enviar_ventaja = 'enviar_ventaja_j1';
     elegir_ventaja = "elegir_ventaja_j1";
     nombre.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
@@ -215,13 +215,6 @@ const PUTADAS = {
 
 const MODOS = {
 
-    "calentamiento": function (data) {
-        explicación.style.color = "purple";
-        palabra.innerHTML = "";
-        definicion.innerHTML = "";
-        explicación.innerHTML = "CALENTAMIENTO";
-    },
-
     // Recibe y activa la palabra y el modo bonus.
     "palabras bonus": function (data) {
         palabra.style.backgroundColor = "yellow";
@@ -315,14 +308,17 @@ const MODOS = {
 
     },
 
+    'frase final': function (socket) {
+        explicación.style.color = "orange";
+        explicación.innerHTML = "MODO FRASE FINAL";
+        palabra.innerHTML = "";
+        definicion.innerHTML = "";
+    },
+
     "": function (data) { },
 };
 
 const LIMPIEZAS = {
-
-    "calentamiento": function (data) {
-        console.log("LIMPIOOOOOOOO")
-    },
 
     "palabras bonus": function (data) {
         socket.off(enviar_palabra);
@@ -378,6 +374,8 @@ const LIMPIEZAS = {
     "ortografía perfecta": function (data) {
         clearTimeout(interval_ortografia_perfecta);
     },
+
+    "frase final": function (data) { },
 
     "": function (data) { },
 };
@@ -492,6 +490,8 @@ socket.on("count", (data) => {
   
 // Inicia el juego.
 socket.on("inicio", (data) => {
+    animateCSS(".cabecera", "backOutLeft").then((message) => {
+        animateCSS(".contenedor", "pulse");
     TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
     TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
     TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
@@ -537,40 +537,39 @@ socket.on("inicio", (data) => {
         setTimeout(() => {
           $('#countdown').remove();
         }, 1000);
-  
-        // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
-        listener_cuenta_atras = setTimeout(function(){
-            if (data.borrar_texto == false) {
-                texto.innerText = texto_guardado.trim();
-
-                sendText()
-
-                // Obtener el último nodo de texto en texto
-                let lastLine = texto.lastChild;
-                let lastTextNode = lastLine;
-                while (lastTextNode && lastTextNode.nodeType !== 3) {
-                    lastTextNode = lastTextNode.lastChild;
-                }
-                
-                // Si encontramos el último nodo de texto, colocamos el cursor allí
-                if (lastTextNode) {
-                    let caretNode = lastTextNode;
-                    let caretPos = lastTextNode.length;
-                    restaurarPosicionCaret(caretNode, caretPos);
-                }
-                texto.scrollTo(0, texto.scrollHeight);
-                }
-            
-            //socket.off("recibe_temas");
-            texto.contentEditable= "true";
-            texto.focus();
-            animacion_modo();
-            MODOS['calentamiento']('', '');
-        }, 2000);
       }
     }, 1000);
 }, 1000);
 });
+});
+
+socket.on("post-inicio", (borrar_texto) => {
+    clearTimeout(timer);
+        if (borrar_texto == false) {
+            texto.innerText = texto_guardado.trim();
+
+            sendText()
+
+            // Obtener el último nodo de texto en texto
+            let lastLine = texto.lastChild;
+            let lastTextNode = lastLine;
+            while (lastTextNode && lastTextNode.nodeType !== 3) {
+                lastTextNode = lastTextNode.lastChild;
+            }
+            
+            // Si encontramos el último nodo de texto, colocamos el cursor allí
+            if (lastTextNode) {
+                let caretNode = lastTextNode;
+                let caretPos = lastTextNode.length;
+                restaurarPosicionCaret(caretNode, caretPos);
+            }
+            texto.scrollTo(0, texto.scrollHeight);
+            }
+        
+        //socket.off("recibe_temas");
+        texto.contentEditable= "true";
+        texto.focus();
+});    
 
 // Resetea el tablero de juego.
 socket.on("limpiar", (borrar) => {
@@ -602,6 +601,9 @@ socket.on("limpiar", (borrar) => {
     texto.contentEditable= "false";
 
     tiempo.style.display = "none";
+    animateCSS(".cabecera", "backInLeft").then((message) => {
+        animateCSS(".contenedor", "pulse");
+    });
     logo.style.display = "";
     neon.style.display = ""; 
     texto.removeEventListener("keyup", listener_modo_psico);
@@ -676,9 +678,9 @@ socket.on(enviar_ventaja, ventaja => {
 });
 
 socket.on("enviar_repentizado", repentizado => {
-    //temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
-    efectoMaquinaDeEscribir(texto, repentizado, 150);
-    //animateCSS(".temas", "flash")
+    temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
+    //efectoMaquinaDeEscribir(texto, repentizado, 150);
+    animateCSS(".temas", "flash")
     });
 
 socket.on("nueva letra", letra => {
@@ -712,12 +714,8 @@ function recibir_palabra(data) {
     animacion_modo();
     palabra_actual = data.palabra_bonus[0];
     palabra.innerHTML = data.palabras_var + " (⏱️+" + data.tiempo_palabras_bonus + " segs.)" ;
-    if(data.palabra_bonus[1] != ""){
     definicion.innerHTML = data.palabra_bonus[1];
-    }
-    else{
-        definicion.innerHTML = "<span style='color:lime;'>MUSA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
-    }
+
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
@@ -730,12 +728,8 @@ function recibir_palabra_prohibida(data) {
     animacion_modo();
     palabra_actual = data.palabra_bonus[0];
     palabra.innerHTML = data.palabras_var + " (⏱️-" + data.tiempo_palabras_bonus + " segs.)";
-    if(data.palabra_bonus[1] != ""){
-        definicion.innerHTML = data.palabra_bonus[1];
-    }
-    else{
-        definicion.innerHTML = "<span style='color: red;'>MUSA ENEMIGA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
-    }
+
+    definicion.innerHTML = data.palabra_bonus[1];
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
@@ -751,7 +745,8 @@ function sendText() {
     let text = texto.innerHTML;
     let points = puntos.textContent;
     let level = nivel.textContent;
-    socket.emit(texto_x, { text, points, level });
+    let caretPos = guardarPosicionCaret();
+    socket.emit(texto_x, { text, points, level, caretPos });
 }
 
 function activar_sockets_extratextuales() {
@@ -902,22 +897,21 @@ function modo_palabras_bonus(e) {
             asignada = false;
             socket.emit("nueva_palabra", player);
             socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
-            if(definicion.innerHTML == "") {
-                feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
-            }
-            else{
-                feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
-            }
+            feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
             clearTimeout(delay_animacion);
             color = color_positivo;
             feedback.style.color = color;
             tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
+            insp = false;
+            if (definicion.innerHTML.startsWith("<span style=\"color:lime;\">MUSA</span>:")) {
+                insp = true;
+            }            
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
                     feedback.innerHTML = "";
                 }, 2000);
             });
-            socket.emit(feedback_de_j_x, { color, tiempo_feed});
+            socket.emit(feedback_de_j_x, { color, tiempo_feed, insp});
         }
     }
 }
@@ -968,6 +962,11 @@ function modo_palabras_prohibidas(e) {
             color = color_negativo;
             feedback.style.color = color;
             feedback.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
+            insp = false;
+            console.log(definicion.innerHTML)
+            if (definicion.innerHTML.startsWith("<span style=\"color: red;\">MUSA ENEMIGA</span>")) {
+                insp = true;
+            }   
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
@@ -976,7 +975,7 @@ function modo_palabras_prohibidas(e) {
             });
             color = color_negativo;
             tiempo_feed = "⏱️" + tiempo_palabras_bonus + " segs.";
-            socket.emit(feedback_de_j_x, { color, tiempo_feed});
+            socket.emit(feedback_de_j_x, { color, tiempo_feed, insp});
         }
     }
 }
@@ -1510,6 +1509,9 @@ function final(){
     texto.style.height = texto.scrollHeight + "px"; //Reajustamos el tamaño del área de texto del j1.
     texto.style.display = "none";
     
+    animateCSS(".cabecera", "backInLeft").then((message) => {
+        animateCSS(".contenedor", "pulse");
+    });
     logo.style.display = "";
     neon.style.display = "";
     LIMPIEZAS["psicodélico"]("");/* TODO: VER POR QUÉ NO FUNCIONA ESTO  */
@@ -1753,3 +1755,35 @@ var end = Date.now() + (2 * 1000);
   }
 }());
 }
+
+const textarea = texto;
+
+document.addEventListener('DOMContentLoaded', function () {
+    const gradientTop = document.getElementById('gradientTop');
+    const gradientBottom = document.getElementById('gradientBottom');
+
+    function updateGradients() {
+        const scrollTop = textarea.scrollTop;
+        const scrollHeight = textarea.scrollHeight;
+        const clientHeight = textarea.clientHeight;
+
+        if (scrollTop > 0) {
+            gradientTop.style.opacity = '1';
+        } else {
+            gradientTop.style.opacity = '0';
+        }
+
+        if (scrollTop + clientHeight < scrollHeight) {
+            gradientBottom.style.opacity = '1';
+        } else {
+            gradientBottom.style.opacity = '0';
+        }
+    }
+
+    textarea.addEventListener('input', updateGradients);
+    textarea.addEventListener('scroll', updateGradients);
+    window.addEventListener('resize', updateGradients); // Añadido para manejar cambios de tamaño de la ventana
+
+    // Inicialización de los gradientes al cargar la página
+    updateGradients();
+});

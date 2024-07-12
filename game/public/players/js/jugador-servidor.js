@@ -1,5 +1,7 @@
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
+animateCSS(".contenedor", "pulse");
+
 // COMPONENTES DEL JUGADOR 1
 let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
@@ -115,6 +117,10 @@ socket.on('modo_actual', (data) => {
         pedir_inspiracion({modo_actual})
     }
 
+    if(modo_actual == "frase final"){
+        pedir_inspiracion({modo_actual})
+    }
+
     sincro = 0;
     }
 });
@@ -213,11 +219,12 @@ socket.on("count", data => {
 // Inicia el juego.
 socket.on('inicio', data => {
     LIMITE_TIEMPO_INSPIRACION = data.parametros.LIMITE_TIEMPO_INSPIRACION;
-    console.log(LIMITE_TIEMPO_INSPIRACION)
     terminado = false;
     tiempo.innerHTML = "";
     tiempo.style.display = "";
     tiempo.style.color = "white"
+
+    animateCSS(".contenedor", "pulse");
 
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
     $('#countdown').remove();
@@ -254,27 +261,29 @@ socket.on('inicio', data => {
           $('#countdown').remove();
         }, 1000);
   
-        // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
-        listener_cuenta_atras = setTimeout(function(){
-            socket.off('vote');
-            socket.off('exit');
-            socket.off('scroll');
-            socket.off('temas_jugadores');
-            //socket.off('recibir_comentario');
-            socket.off('recibir_postgame1');
-            socket.off('recibir_postgame2');
 
-            limpiezas();
-
-            skill.style = 'animation: brillo 2s ease-in-out;'
-            skill.style.display = "flex";
-
-            texto1.style.height = "4.5em";
-            texto1.rows =  "3";
-        }, 2000);
     }
   }, 1000);
 }, 1000);
+});
+
+socket.on("post-inicio", () => {
+                socket.off('vote');
+                socket.off('exit');
+                socket.off('scroll');
+                socket.off('temas_jugadores');
+                //socket.off('recibir_comentario');
+                socket.off('recibir_postgame1');
+                socket.off('recibir_postgame2');
+    
+                limpiezas();
+                /*
+                skill.style = 'animation: brillo 2s ease-in-out;'
+                skill.style.display = "flex";
+                */
+    
+                texto1.style.height = "4.5em";
+                texto1.rows =  "3";
 });
 
 // Resetea el tablero de juego.
@@ -373,6 +382,13 @@ function pedir_inspiracion(juego){
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
         tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, mira a " + "<span style='color:" + nombre1.style.color + ";'>" +  nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
+    }
+
+    if(juego.modo_actual == "frase final") {
+        campo_palabra.value = "none";
+        enviarPalabra_boton.style.display = "none";
+        campo_palabra.style.display = "none";
+        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, " + "<span style='color:" + nombre1.style.color + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. 🤍";
     }
      
     notificacion.style.display = "block";

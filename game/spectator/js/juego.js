@@ -1,4 +1,5 @@
 let delay_animacion;
+let delay_animacion_cabecera;
 let isFullscreen = false;
 
 document.addEventListener('keydown', function (event) {

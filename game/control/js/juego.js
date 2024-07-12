@@ -33,9 +33,6 @@ function startCountDown_p1(duration) {
             console.log(modo_actual)
             // Se hace solo aquí LIMPIEZAS porque afecta a los dos jugadores.
             console.log("ENTROOOOOOOO")
-            if(DURACION_TIEMPO_MODOS == TIEMPO_CALENTAMIENTO){
-                LIMPIEZAS["calentamiento"]();
-                }
 
             secondsPassed = 0;
             secondsPassed1 = 0;
@@ -147,8 +144,8 @@ function temp() {
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CALENTAMIENTO, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_TIEMPO_INSPIRACION, TIEMPO_LOCURA } });
-    modo_actual = "calentamiento";
+    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_TIEMPO_INSPIRACION, TIEMPO_LOCURA } });
+    modo_actual = "";
     secondsPassed = 0;
     secondsPassed1 = 0;
   
@@ -163,9 +160,7 @@ function temp() {
         startCountDown_p1(duration);
         startCountDown_p2(duration);
 
-    }, 5000);
-    MODOS['calentamiento']('', '');
-
+    }, 8000);
 };
 
 function vote() {

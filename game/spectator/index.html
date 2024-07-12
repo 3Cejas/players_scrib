@@ -14,6 +14,7 @@
 <body>
     <script src="./js/juego.js"></script>
     <div align="center">
+        <div class="cabecera">
         <pre id="neon" class="neon">
         __     _____    _____   _____    _____    __       ____  
        / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
@@ -23,8 +24,9 @@
        \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
                                                                                                   
     </pre>
-    <div id="logo">
+    <div id="logo" class="logo">
         <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
+    </div>
     </div>
     <div id="lightning">
     </div>
@@ -36,7 +38,19 @@
         <div class="container"></div>
         <p><span id="temas" class="temas"></span></p>
         <br>
-        <div id="contenedor">
+        <div id="inspiracion" class="inspiracion">
+            <p style="font-size: 1.5vw;">INSPIRACIÓN</p>
+            <div class="bar">
+                <div class="bar-segment blue">
+                    <span class="percentage-text"></span>
+                </div>
+                <div class="bar-segment red">
+                    <span class="percentage-text"></span>
+                </div>
+            </div>
+            
+    </div>
+        <div class="contenedor" id="contenedor">
             <div class="jugador1">
                 <p id="tiempo" class="tiempo"></p>
                 <p id="feedback_tiempo" class="feedback_tiempo"></p>
@@ -44,7 +58,7 @@
                 <br><br>
                 <p id="alineador1"></p>
                 <div disabled id="texto" rows="1"
-                    spellcheck="false" class="textarea">
+                    spellcheck="false" class="textarea1">
                 </div>
                 <br><br>
                 <div align="center">
@@ -83,7 +97,7 @@
                 <br><br>
                 <p id="alineador2"></p>
                 <div disabled id="texto1" rows="1"
-                    spellcheck="false" class="textarea">
+                    spellcheck="false" class="textarea1">
                 </div>
                 <br><br>
                 <div align="center">

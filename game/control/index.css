@@ -209,7 +209,7 @@ button {
 /* element */
 
 label {
-    font-size: 13pt;
+    font-size: 1.5vw;
 }
 
 .textarea {
@@ -295,7 +295,7 @@ label {
     text-transform: uppercase;
     text-align: center;
     position: sticky;
-    font-size: 28pt;
+    font-size: 2vw;
     font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
@@ -374,7 +374,7 @@ table {
 .right {
     padding: 0.25vmax;
     background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
-    font-size: 11pt;
+    font-size: 1vw;
     font-family: "Retro-gaming";
     border-right: none;
 }

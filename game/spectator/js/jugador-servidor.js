@@ -37,6 +37,7 @@ let tema = getEl("temas");
 let info = getEl("info");
 let info1 = getEl("info1");
 let info2= getEl("info2");
+let inspiracion = getEl("inspiracion");
 
 // COMPONENTES DEL JUGADOR 2
 let nombre2 = getEl("nombre1");
@@ -64,6 +65,8 @@ let listener_modo;
 let jugador_psico;
 let activado_psico = false;
 let listener_cuenta_atras = null;
+let timeout_countdown;
+let timeout_timer;
 let timer = null;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
@@ -160,13 +163,6 @@ const PUTADAS = {
 
 const MODOS = {
 
-    "calentamiento": function (data) {
-        explicación.style.color = "purple";
-        palabra1.innerHTML = "";
-        definicion2.innerHTML = "";
-        definicion3.innerHTML = "";
-        explicación.innerHTML = "CALENTAMIENTO";
-    },
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         console.log("ALGO")
@@ -176,9 +172,9 @@ const MODOS = {
         definicion2.innerHTML = "";
         palabra2.style.backgroundColor = "yellow";
         palabra3.style.backgroundColor = "yellow";
-        definicion2.style.maxWidth = "50%";
+        definicion2.style.maxWidth = "100%";
         definicion3.innerHTML = "";
-        definicion3.style.maxWidth = "50%";
+        definicion3.style.maxWidth = "100%";
     },
 
     //Recibe y activa el modo letra prohibida.
@@ -233,9 +229,9 @@ const MODOS = {
         explicación.innerHTML = "MODO PALABRAS MALDITAS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
-        definicion2.style.maxWidth = "50%";
+        definicion2.style.maxWidth = "100%";
         definicion3.innerHTML = "";
-        definicion3.style.maxWidth = "50%";
+        definicion3.style.maxWidth = "100%";
     },
 
     'tertulia': function (socket) {
@@ -246,13 +242,19 @@ const MODOS = {
 
     },
 
+    'frase final': function (socket) {
+        //activar_socket_feedback();
+        explicación.style.color = "orange";
+        explicación.innerHTML = "MODO FRASE FINAL";
+        palabra1.innerHTML = "";
+
+    },
+
     '': function (data) {
     }
 };
 
 const LIMPIEZAS = {
-    "calentamiento": function (data) {
-    },
 
     "palabras bonus": function (data) {
         palabra1.innerHTML = "";
@@ -284,6 +286,7 @@ const LIMPIEZAS = {
 
     "tertulia": function (data) { },
 
+    "frase final": function (data) { },
 
     "": function (data) { },
 };
@@ -303,6 +306,7 @@ socket.on('texto1', data => {
     puntos1.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
+    //establecerPosicionCaret(data.caretPos);
     if (jugador_psico == 1) {
         stylize();
     }
@@ -319,7 +323,7 @@ socket.on('texto1', data => {
         }
     }*/
     //texto1.style.height = (texto1.scrollHeight) + "px";
-    texto1.scrollTop = texto1.scrollHeight;
+    //texto1.scrollTop = texto1.scrollHeight;
     //window.scrollTo(0, document.body.scrollHeight);
     //focalizador1.scrollIntoView(false);
 });
@@ -442,6 +446,9 @@ socket.on("count", data => {
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
         texto2.style.height = (texto2.scrollHeight) + "px";// Reajustamos el tamaño del área de texto del j2.
 
+        animateCSS(".cabecera", "backInLeft").then((message) => {
+            animateCSS(".contenedor", "pulse");
+        });
         logo.style.display = "";
         neon.style.display = "";
         LIMPIEZAS["psicodélico"]("");
@@ -452,19 +459,24 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-    TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
-    TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
-    TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
-    socket.off('vote');
-    socket.off('exit');
-    socket.off('scroll');
-    socket.off('temas_jugadores');
-    //socket.off('recibir_comentario');
-    socket.off('recibir_postgame1');
-    socket.off('recibir_postgame2');
 
-    logo.style.display = "none"; 
-    neon.style.display = "none"; 
+    animateCSS(".cabecera", "backOutLeft").then((message) => {
+        inspiracion.style.display = "block";
+        animateCSS(".contenedor", "pulse");
+        animateCSS(".inspiracion", "pulse");
+        TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
+        TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
+        TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
+        socket.off('vote');
+        socket.off('exit');
+        socket.off('scroll');
+        socket.off('temas_jugadores');
+        //socket.off('recibir_comentario');
+        socket.off('recibir_postgame1');
+        socket.off('recibir_postgame2');
+            logo.style.display = "none";
+            neon.style.display = "none";
+
     tiempo.innerHTML = "";
     tiempo1.innerHTML = "";
     tiempo.style.display = "";
@@ -478,10 +490,10 @@ socket.on('inicio', data => {
     $('#countdown').remove();
     var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
     preparados.appendTo($('.container'));
-    setTimeout(() => {
+    timeout_countdown = setTimeout(() => {
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
     }, 20);
-    setTimeout(() => {
+    timeout_timer = setTimeout(() => {
     var counter = 3;
     timer = setInterval(function() {
       
@@ -505,26 +517,23 @@ socket.on('inicio', data => {
         setTimeout(() => {
           $('#countdown').remove();
         }, 1000);
-  
-        // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
-        setTimeout(function(){
-
-            limpiezas();
-            texto1.style.display = "";
-            texto2.style.display = "";
-            palabra1.style.display = "";
-            definicion1.style.display = "";
-            explicación.style.display = "";
-            palabra2.style.display = "";
-            definicion2.style.display = "";
-            explicación.style.display = "";
-
-            animacion_modo();
-            MODOS['calentamiento']('', '');
-        }, 2000);
     }
   }, 1000);
 }, 1000);
+});
+});
+
+socket.on('post-inicio', data => {
+    
+    limpiezas();
+    texto1.style.display = "";
+    texto2.style.display = "";
+    palabra1.style.display = "";
+    definicion1.style.display = "";
+    explicación.style.display = "";
+    palabra2.style.display = "";
+    definicion2.style.display = "";
+    explicación.style.display = "";
 });
 
 // Resetea el tablero de juego.
@@ -539,6 +548,10 @@ socket.on('limpiar', data => {
     socket.on('nombre1', data => {
         nombre1.value = data;
     });
+    // Vaciar cualquier contenido HTML del elemento con id 'countdown'
+    $('#countdown').empty()
+    clearTimeout(timeout_countdown);
+    clearTimeout(timeout_timer);
 
     limpiezas();
     stopConfetti();
@@ -558,8 +571,12 @@ socket.on('limpiar', data => {
 
     tiempo.style.display = "none";
     tiempo1.style.display = "none";
+    animateCSS(".cabecera", "backInLeft").then((message) => {
+        animateCSS(".contenedor", "pulse");
+    });
     logo.style.display = "";
-    neon.style.display = "";    
+    neon.style.display = "";
+    inspiracion.style.display = "none";
     activar_sockets_extratextuales();
 });
 
@@ -568,6 +585,9 @@ socket.on('activar_modo', data => {
     LIMPIEZAS[modo_actual](data);
     modo_actual = data.modo_actual;
     MODOS[modo_actual](data);
+    blueCount = 0;
+    redCount = 0;
+    updateBar();
 });
 
 socket.on('recibir_feedback_modificador', data => {
@@ -631,46 +651,22 @@ function recibir_palabra(data, escritxr) {
             node.addEventListener('animationend', handleAnimationEnd, { once: true });
         });
 
-    if(escritxr == 1){
-        if(modo_actual == "palabras prohibidas"){
-            signo = "-";
-        }
-        else {
-            signo = "+";
-        }
-        palabra2.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)";
-        if(data.palabra_bonus[1] != ""){
+        if (escritxr == 1) {
+            signo = (modo_actual == "palabras prohibidas") ? "-" : "+";
+        
+            palabra2.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)";
             definicion2.innerHTML = data.palabra_bonus[1];
-            }
-        else{
-            if (signo === "+") {
-                definicion2.innerHTML = "<span style='color:lime;'>MUSA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
-            } else {
-                definicion2.innerHTML = "<span style='color:red;'>MUSA ENEMIGA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
-            }
-                    }
-        animateCSS(".explicación1", "bounceInLeft");
-        animateCSS(".palabra1", "bounceInLeft");
-        animateCSS(".definicion1", "bounceInLeft");
-    }
+        
+            animateCSS(".explicación1", "bounceInLeft");
+            animateCSS(".palabra1", "bounceInLeft");
+            animateCSS(".definicion1", "bounceInLeft");
+        }
+        
     else{
-        if(modo_actual == "palabras prohibidas"){
-            signo = "-";
-        }
-        else {
-            signo = "+";
-        }
+        signo = (modo_actual == "palabras prohibidas") ? "-" : "+";
         palabra3.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)"
-        if(data.palabra_bonus[1] != ""){
-            definicion3.innerHTML = data.palabra_bonus[1];
-            }
-        else{
-            if (signo === "+") {
-                definicion3.innerHTML = "<span style='color:lime;'>MUSA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
-            } else {
-                definicion3.innerHTML = "<span style='color:red;'>MUSA ENEMIGA</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>";
-            }
-                    }
+        definicion3.innerHTML = data.palabra_bonus[1];
+           
         animateCSS(".explicación2", "bounceInLeft");
         animateCSS(".palabra2", "bounceInLeft");
         animateCSS(".definicion2", "bounceInLeft");
@@ -703,6 +699,10 @@ socket.on('feedback_a_j2', data => {
             feedback.innerHTML = "";
         }, 2000);
     });
+    console.log("PARAAAAAAAAAAAAAAAAAAAAAAAAA", data.insp)
+    if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
+        increment('blue');
+    }
 });
 
 socket.on('feedback_a_j1', data => {
@@ -731,6 +731,9 @@ socket.on('feedback_a_j1', data => {
             feedback1.innerHTML = "";
         }, 2000);
     });
+    if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
+        increment('red');
+    }
 });
 
 socket.on('recibir_comentario', data => {
@@ -825,6 +828,7 @@ function activar_sockets_extratextuales() {
         window.scrollTo({ top: 0});
     });
 
+/*
     socket.on('impro', data => {
         if(data){
             document.getElementById("contenedor").style.display = "none";
@@ -838,7 +842,7 @@ function activar_sockets_extratextuales() {
 
         }
     });
-
+*/
     // Recibe el nombre del jugador 2 y lo coloca en su sitio.
     socket.on('nombre2', data => {
         nombre2.value = data;
@@ -1117,6 +1121,7 @@ function cambiar_color_puntuación() {
 }
 
 function limpiezas(){
+
     clearTimeout(listener_cuenta_atras);
     clearTimeout(tempo_text_inverso1);
     clearTimeout(tempo_text_inverso2);
@@ -1173,6 +1178,9 @@ function limpiezas(){
     feedback_tiempo.style.color = color_positivo;
     feedback_tiempo1.style.color = color_positivo;
 
+    blueCount = 0;
+    redCount = 0;
+    updateBar();
 }
 
 function limpiezas_final(){
@@ -1190,6 +1198,7 @@ function limpiezas_final(){
     palabra3.innerHTML = "";
     definicion3.innerHTML = "";
     explicación2.innerHTML = "";
+    inspiracion.style.display = "none";
 
     tiempo.style.color = "white";
     tiempo1.style.color = "white";
@@ -1198,6 +1207,7 @@ function limpiezas_final(){
     texto2.innerText = "";
     texto1.style.display = "none";
     texto2.style.display = "none";
+
 
     texto1.style.height = "";
     texto2.style.height = "";
@@ -1218,6 +1228,9 @@ function limpiezas_final(){
     clearTimeout(tempo_text_borroso1);
     clearTimeout(tempo_text_borroso2);
 
+    blueCount = 0;
+    redCount = 0;
+    updateBar();
 }
 
 var duration = 15 * 1000;
@@ -1285,3 +1298,127 @@ function convertirASegundos(tiempo) {
       }
     }());
     }
+
+// Función para actualizar la barra
+function updateBar() {
+    const total = blueCount + redCount;
+    let bluePercentage, redPercentage;
+
+    if (total === 0) {
+        bluePercentage = 50;
+        redPercentage = 50;
+    } else {
+        bluePercentage = (blueCount / total) * 100;
+        redPercentage = (redCount / total) * 100;
+    }
+
+    const blueSegment = document.querySelector('.bar-segment.blue');
+    const redSegment = document.querySelector('.bar-segment.red');
+    const blueText = blueSegment.querySelector('.percentage-text');
+    const redText = redSegment.querySelector('.percentage-text');
+
+    blueSegment.style.width = `${bluePercentage}%`;
+    redSegment.style.width = `${redPercentage}%`;
+
+    // Ajuste dinámico del tamaño de la fuente en vw
+    const baseFontSize = 0.5; // Tamaño de fuente base en vw
+    const maxFontSize = 2; // Tamaño de fuente máximo en vw
+    const blueFontSize = Math.min(baseFontSize + (bluePercentage / 100) * (maxFontSize - baseFontSize), maxFontSize);
+    const redFontSize = Math.min(baseFontSize + (redPercentage / 100) * (maxFontSize - baseFontSize), maxFontSize);
+
+    // Eliminar ".00" si el valor es un número entero
+    if (Number.isInteger(bluePercentage)) {
+        blueText.innerHTML = `${bluePercentage} %`;
+    } else {
+        blueText.innerHTML = `${bluePercentage.toFixed(0)} %`;
+    }
+    blueText.style.fontSize = `${blueFontSize}vw`;
+
+    if (Number.isInteger(redPercentage)) {
+        redText.innerHTML = `${redPercentage} %`;
+    } else {
+        redText.innerHTML = `${redPercentage.toFixed(0)} %`;
+    }
+    redText.style.fontSize = `${redFontSize}vw`;
+}
+
+
+function increment(color) {
+    if (color === 'blue') {
+        blueCount++;
+    } else if (color === 'red') {
+        redCount++;
+    }
+    updateBar();
+}
+
+// Inicialización con valores iniciales
+blueCount = 0;
+redCount = 0;
+updateBar();
+
+// Función para establecer la posición del caret
+function establecerPosicionCaret(node, pos) {
+    const range = document.createRange();
+    const selection = window.getSelection();
+    let offset = pos;
+
+    function setRange(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (node.length >= offset) {
+                range.setStart(node, offset);
+                return true;
+            } else {
+                offset -= node.length;
+            }
+        } else {
+            for (let i = 0; i < node.childNodes.length; i++) {
+                if (setRange(node.childNodes[i])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    setRange(node);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+// Función para centrar el scroll en la posición del caret
+function centrarScroll(node, pos) {
+    const range = document.createRange();
+    const selection = window.getSelection();
+    let offset = pos;
+
+    function setRange(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (node.length >= offset) {
+                range.setStart(node, offset);
+                return true;
+            } else {
+                offset -= node.length;
+            }
+        } else {
+            for (let i = 0; i < node.childNodes.length; i++) {
+                if (setRange(node.childNodes[i])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    setRange(node);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Centramos el scroll en la posición del caret
+    const caretPosition = range.getBoundingClientRect();
+    const containerPosition = node.getBoundingClientRect();
+    offset = caretPosition.top - containerPosition.top;
+    node.scrollTop = offset - node.clientHeight / 2;
+}

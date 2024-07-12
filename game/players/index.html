@@ -13,6 +13,7 @@
 
 <body>
     <script src="./js/juego.js"></script>
+    <div class="cabecera">
     <pre id="neon" class="neon">
         __     _____    _____   _____    _____    __       ____  
        / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
@@ -25,6 +26,7 @@
     <div id="logo">
         <p class="sub">powered by</p><img src="../img/logo.png" alt="" width="5%" />
     </div>
+    </div>
     <div id="lightning">
     </div>
 
@@ -35,15 +37,18 @@
     <br>
     <p><span id="temas" class="temas"></span></p>
     <br>
-    <div id="contenedor">
+    <div id="contenedor" class="contenedor">
         <div class="jugador">
             <p id="tiempo" class="tiempo"></p>
             <p id="feedback_tiempo" class="feedback_tiempo"></p>
             <input disabled="" id="nombre" class="nombre" data-darkreader-inline-color="">
             <br><br>
             <p id="alineador1"></p>
-            <div contenteditable="false" class="textarea" id="texto" spellcheck="false">
-            </div>
+            <div class="textarea-container">
+            <div contenteditable="false" class="textarea" id="texto" spellcheck="false"> </div>
+                <div class="textarea-gradient top" id="gradientTop"></div>
+                <div class="textarea-gradient bottom" id="gradientBottom"></div></div>
+           
         </div> 
             <br><br>
             <div class="info-total">

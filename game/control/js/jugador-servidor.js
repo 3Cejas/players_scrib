@@ -56,7 +56,6 @@ let tiempo_borroso_input = document.getElementById('tiempo_borroso');
 let palabras_insertadas_meta_input = document.getElementById('palabras_insertadas_meta');
 let tiempo_votacion_input = document.getElementById('tiempo_votacion')
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
-let tiempo_calentamiento_input = document.getElementById('tiempo_calentamiento');
 let tiempo_modos_input = document.getElementById('tiempo_modos');
 let tiempo_locura_input = document.getElementById('tiempo_locura');
 
@@ -76,7 +75,6 @@ let TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
 let PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
 let TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
 let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
-let TIEMPO_CALENTAMIENTO = tiempo_calentamiento_input.valueAsNumber;
 let TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
 let TIEMPO_LOCURA = tiempo_locura_input.valueAsNumber;
 
@@ -85,18 +83,17 @@ let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
 
 // Lista de modos disponibles
-let LISTA_MODOS = ["calentamiento", "letra bendita","letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "locura"];
+let LISTA_MODOS = ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "frase final"];
 let LISTA_MODOS_LOCURA = [ "letra bendita", "letra prohibida", "palabras bonus", "palabras prohibidas"];
 
 // Objeto que asocia cada modo con un color
 const COLORES_MODOS = {
-    "calentamiento": "purple", // Ejemplo de color en formato hexadecimal
     "letra bendita": "green",
     "letra prohibida": "red",
     "tertulia": "blue",
     "palabras bonus": "yellow",
     "palabras prohibidas": "pink",
-    "locura": "orange"
+    "frase final": "orange"
 };
 
 // Función para generar las casillas de verificación dentro de <td>
@@ -139,7 +136,7 @@ function rellenarListaModos() {
 
     LISTA_MODOS = Array.from(seleccionados).map(checkbox => checkbox.value);
 
-    LISTA_MODOS_LOCURA = LISTA_MODOS.filter(modo => modo !== "calentamiento" && modo !== "tertulia" && modo !== "locura");
+    LISTA_MODOS_LOCURA = LISTA_MODOS.filter(modo => modo !== "tertulia" && modo !== "locura");
 
     // Opcional: Mostrar los resultados en consola para verificar
     console.log('LISTA_MODOS:', LISTA_MODOS);
@@ -155,7 +152,6 @@ function actualizarVariables() {
     PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
     TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
     TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
-    TIEMPO_CALENTAMIENTO = tiempo_calentamiento_input.valueAsNumber;
     TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
     TIEMPO_LOCURA= tiempo_locura_input.valueAsNumber;
 
@@ -171,7 +167,6 @@ function actualizarVariables() {
    console.log('PALABRAS_INSERTADAS_META:', PALABRAS_INSERTADAS_META);
    console.log('TIEMPO_VOTACION:', TIEMPO_VOTACION);
    console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
-   console.log('TIEMPO_CALENTAMIENTO:', TIEMPO_CALENTAMIENTO);
    console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
    console.log('TIEMPO_LOCURA:', TIEMPO_LOCURA);
 }
@@ -218,6 +213,15 @@ socket.on('tiempo_muerto_control', data => {
     reanudar_modo();
   }, TIEMPO_CAMBIO_MODOS * 1000);
 });
+
+socket.on('fin_a_control', () => {
+    fin_j1 = false;
+    fin_j2 = false;
+    final(1);
+    final(2);
+    socket.emit('fin_de_control', 1);
+    socket.emit('fin_de_control', 2);
+  });
 
 nombre1.addEventListener("input", evt => {
     val_nombre1 = nombre1.value.toUpperCase();
@@ -340,11 +344,6 @@ function descargar_textos() {
 
 const MODOS = {
 
-    "calentamiento": function (data) {
-        DURACION_TIEMPO_MODOS = TIEMPO_CALENTAMIENTO;
-        TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
-    },
-
     // Recibe y activa la palabra y el modo bonus.
     "palabras bonus": function (data) {
     },
@@ -376,11 +375,6 @@ const MODOS = {
 
 const LIMPIEZAS = {
 
-    "calentamiento": function (data) {
-        DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
-        TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
-        console.log("CAMBIO DE TIEMPOOOOOO")
-    },
     "palabras bonus": function (data) {
     },
 
@@ -408,6 +402,8 @@ const LIMPIEZAS = {
 
     "ortografía perfecta": function (data) {
     },
+
+    "frase final": function (data) { },
 
     "": function (data) { },
 };

@@ -70,10 +70,16 @@ document.addEventListener('click', function(event) {
 // Función para guardar la posición del caret
 function guardarPosicionCaret() {
   let sel = window.getSelection();
-  let range = sel.getRangeAt(0);
+  if (sel.rangeCount > 0) {
+      let range = sel.getRangeAt(0);
+      return {
+          caretPos: range.startOffset,
+          caretNode: range.startContainer
+      };
+  }
   return {
-    caretPos: range.startOffset,
-    caretNode: range.startContainer
+      caretPos: 0,
+      caretNode: null
   };
 }
 

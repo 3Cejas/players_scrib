@@ -28,12 +28,6 @@ let votando = false;
 
 const MODOS = {
 
-    "calentamiento": function (data) {
-        explicación.style.color = "purple";
-        palabra.innerHTML = "";
-        definicion.innerHTML = "";
-        explicación.innerHTML = "CALENTAMIENTO";
-    },
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         explicación.style.color = "yellow";
@@ -80,13 +74,19 @@ const MODOS = {
 
     },
 
+    'frase final': function (socket) {
+        //activar_socket_feedback();
+        explicación.style.color = "orange";
+        explicación.innerHTML = "MODO FRASE FINAL";
+        palabra.innerHTML = "";
+
+    },
+
     '': function (data) {
     }
 };
 
 const LIMPIEZAS = {
-    "calentamiento": function (data) {
-    },
 
     "palabras bonus": function (data) {
         palabra.innerHTML = "";
@@ -280,7 +280,6 @@ socket.on('inicio', data => {
             texto1.style.height = "";
             texto1.rows =  "3";
             animacion_modo();
-            MODOS['calentamiento']('', '');
         }, 2000);
     }
   }, 1000);
