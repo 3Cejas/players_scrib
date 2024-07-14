@@ -325,7 +325,14 @@ function descargar_textos() {
 
     // Configuración y adición de texto para la primera parte
     let yActual = agregarTextoEnPagina(val_nombre1, margen, margen + 13, 25, [0, 0, 0], true);
-    yActual = agregarTextoEnPagina(texto_guardado1, margen, yActual + 5, 15, [0, 0, 0]);
+
+    // Crear un div temporal
+    var div = document.createElement("div");
+
+    // Asignar el contenido a innerHTML del div temporal
+    div.innerHTML = texto_guardado1;
+
+    yActual = agregarTextoEnPagina(div.textContent, margen, yActual + 5, 15, [0, 0, 0]);
 
     // Descargar el PDF
     doc.save(val_nombre1 + '.pdf');
@@ -336,7 +343,10 @@ function descargar_textos() {
 
     // Configuración y adición de texto para la segunda parte
     yActual = agregarTextoEnPagina(val_nombre2, margen, margen + 13, 25, [0, 0, 0], true);
-    yActual = agregarTextoEnPagina(texto_guardado2, margen, yActual + 5, 15, [0, 0, 0]);
+
+    div.innerHTML = texto_guardado2;
+
+    yActual = agregarTextoEnPagina(div.textContent, margen, yActual + 5, 15, [0, 0, 0]);
 
     // Descargar el PDF
     doc.save(val_nombre2 + '.pdf');

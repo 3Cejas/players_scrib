@@ -42,6 +42,7 @@ let tempo_text_inverso;
 
 let listener_cuenta_atras = null;
 let timer = null;
+let sub_timer = null;
 
 // Variables de los modos.
 let modo_actual = "";
@@ -126,8 +127,9 @@ const PUTADAS = {
         document.body.classList.add("bg");
         document.body.classList.add("rain");
         lightning.classList.add("lightning");
-        lightning.style.right = "45%";
-        lightning.style.left = "0%";
+        lightning.style.transform = "translateX(-50%)";
+        lightning.style.top = "27%";
+        lightning.style.left = "50%";
         setTimeout(function () {
             document.body.classList.remove("bg");
             document.body.classList.remove("rain");
@@ -522,7 +524,7 @@ socket.on("inicio", (data) => {
       var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
       countdown.appendTo($('.container'));
   
-      setTimeout(() => {
+      sub_timer = setTimeout(() => {
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
         } else {
@@ -670,6 +672,8 @@ socket.on(inspirar, palabra => {
 
 socket.on(enviar_ventaja, ventaja => {
     feedback.innerHTML = ventaja + " <span style='color: lime;'>¡VENTAJA!</span>";
+    console.log(ventaja);
+    PUTADAS[ventaja]();
     animateCSS(".feedback1", "flash").then((message) => {
         setTimeout(function () {
             feedback.innerHTML = "";
@@ -964,7 +968,7 @@ function modo_palabras_prohibidas(e) {
             feedback.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
             insp = false;
             console.log(definicion.innerHTML)
-            if (definicion.innerHTML.startsWith("<span style=\"color: red;\">MUSA ENEMIGA</span>")) {
+            if (definicion.innerHTML.startsWith("<span style=\"color:red;\">MUSA ENEMIGA</span>")) {
                 insp = true;
             }   
             clearTimeout(delay_animacion);
@@ -1211,7 +1215,11 @@ function modo_psicodélico() {
 function limpieza(){
     stopConfetti();
     clearTimeout(listener_cuenta_atras);
-    clearTimeout(timer);
+    clearInterval(timer);  
+    clearTimeout(sub_timer);
+    document.body.classList.remove("bg");
+    document.body.classList.remove("rain");
+    lightning.classList.remove("lightning");
     if(temp_text_inverso_activado == true){
         clearTimeout(tempo_text_inverso);
         procesarTexto();

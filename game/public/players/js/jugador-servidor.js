@@ -33,6 +33,8 @@ const skill_cancel = getEl("skill_cancel")
 const feedback_texto_editado = getEl("feedback_texto_editado")
 var intervalID = -1;
 let timer = null;
+let preparados_timer = null;
+let sub_timer = null;
 let listener_cuenta_atras = null;
 let LIMITE_TIEMPO_INSPIRACION = 30;
 
@@ -230,7 +232,7 @@ socket.on('inicio', data => {
     $('#countdown').remove();
     var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
     preparados.appendTo($('.container'));
-    setTimeout(() => {
+    preparados_timer = setTimeout(() => {
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
     }, 20);
 
@@ -245,7 +247,7 @@ socket.on('inicio', data => {
       var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
       countdown.appendTo($('.container'));
   
-      setTimeout(() => {
+      sub_timer = setTimeout(() => {
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
         } else {
@@ -381,14 +383,14 @@ function pedir_inspiracion(juego){
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
-        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, mira a " + "<span style='color:" + nombre1.style.color + ";'>" +  nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
+        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, mira a " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" + nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
     }
 
     if(juego.modo_actual == "frase final") {
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
-        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, " + "<span style='color:" + nombre1.style.color + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. 🤍";
+        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. 🤍";
     }
      
     notificacion.style.display = "block";
@@ -652,7 +654,9 @@ function limpiezas(){
     stopConfetti()
     clearInterval(intervalID)
     clearTimeout(listener_cuenta_atras);
-    clearTimeout(timer)
+    clearInterval(timer);
+    clearTimeout(sub_timer);
+    clearTimeout(preparados_timer);
     limpiar_colddown()
     skill.style.display = "none";
     skill.style.border = "0.5vw solid greenyellow";

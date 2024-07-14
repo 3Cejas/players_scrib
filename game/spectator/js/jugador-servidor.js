@@ -701,7 +701,12 @@ socket.on('feedback_a_j2', data => {
     });
     console.log("PARAAAAAAAAAAAAAAAAAAAAAAAAA", data.insp)
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
+        if(modo_actual == "palabras bonus"){
         increment('blue');
+        }
+        else{
+            increment('red');
+        }
     }
 });
 
@@ -732,7 +737,12 @@ socket.on('feedback_a_j1', data => {
         }, 2000);
     });
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
+        if(modo_actual == "palabras bonus"){
         increment('red');
+        }
+        else{
+            increment('blue');
+        }
     }
 });
 
@@ -749,7 +759,7 @@ socket.on("enviar_repentizado", repentizado => {
     animateCSS(".temas", "flash")
 });
 
-socket.on("enviar_putada_de_j1", putada => {
+socket.on("enviar_ventaja_j2", putada => {
     PUTADAS[putada](2);
     feedback1.innerHTML = putada + " <span style='color: red;'>¡PUTADA!</span>";
     animateCSS(".feedback1", "flash").then((message) => {
@@ -765,7 +775,7 @@ socket.on("enviar_putada_de_j1", putada => {
     });  
 });
 
-socket.on("enviar_putada_de_j2", putada => {
+socket.on("enviar_ventaja_j1", putada => {
     PUTADAS[putada](1);
     feedback2.innerHTML = putada + " <span style='color: red;'>¡PUTADA!</span>";;
     animateCSS(".feedback2", "flash").then((message) => {
@@ -1128,6 +1138,9 @@ function limpiezas(){
     clearTimeout(tempo_text_borroso1);
     clearTimeout(tempo_text_borroso2);
 
+    document.body.classList.remove("bg");
+    document.body.classList.remove("rain");
+    lightning.classList.remove("lightning");
 
     clearInterval(timer)
     terminado = false;
@@ -1184,6 +1197,11 @@ function limpiezas(){
 }
 
 function limpiezas_final(){
+
+    document.body.classList.remove("bg");
+    document.body.classList.remove("rain");
+    lightning.classList.remove("lightning");
+
     temas.innerHTML = "none";
     temas.innerHTML = "";
     feedback1.innerHTML = "";
