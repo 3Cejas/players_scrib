@@ -1415,67 +1415,110 @@ function log( text ) {
 
 //Hay un pequeño eror aquí. Al iniciarse, no parpadea el cursor.
 TypeSimulator.prototype.type = function (text, callback) {
+
+		
+
     if (isURL(text)) {
+
         window.open(text);
+
     }
 
     var i = 0;
+
     var output = this.output;
+
     var timer = this.timer;
+
     var skipped = false;
-    var buffer = ''; // Buffer para acumular caracteres
+
+    
 
     var skip = function () {
+
         skipped = true;
+
+        
+
     }.bind(this);
 
-    this.no_writing = true;
+                        this.no_writing = true;
+
     document.addEventListener("dblclick", skip);
+
     document.addEventListener('keypress', skip);
+                      this.no_writing = true;
 
     (function typer() {
+
+        
+
         document.getElementById("cmdline").readOnly = true;
 
+                                
+
         if (i < text.length) {
+
             var char = text.charAt(i);
+
             var isNewLine = char === "\n";
 
-            // Agregar carácter al buffer
-            if (isNewLine) {
-                buffer += "<br/>"; // Añadir un salto de línea
-            } else {
-                buffer += char; // Agregar el carácter al buffer
-            }
-
-            // Procesar el buffer para convertir a HTML
-            var processedOutput = processText(buffer);
-            output.innerHTML = processedOutput;
+            output.innerHTML += isNewLine ? "<br/>" : char;
 
             i++;
+
             if (!skipped) {
-                setTimeout(typer, timer);
+
+                setTimeout(typer, isNewLine ? timer * 2 : timer);
+
             } else {
-                this.no_writing = false;
-                output.innerHTML += processText(text.substring(i).replace(new RegExp("\n", 'g'), "<br/>")) + "<br/>";
+
+                                    this.no_writing = false;
+
+                output.innerHTML += (text.substring(i).replace(new RegExp("\n", 'g'), "<br/>")) + "<br/>";
+
                 document.removeEventListener("dblclick", skip);
+
                 document.removeEventListener("keypress", skip);
+
                 document.getElementById("cmdline").readOnly = false;
+
+                this.no_writing = true;
+
                 callback();
+
+                                    this.no_writing = true;
+
             }
+
         } else if (callback) {
-            this.no_writing = false;
+
+                                this.no_writing = false;
+
             output.innerHTML += "<br/>";
+
             document.removeEventListener("dblclick", skip);
+
             document.removeEventListener("keypress", skip);
+
+            this.no_writing = false;
+
             callback();
+
             document.getElementById("cmdline").readOnly = false;
+
         }
+
+        //Baja automáticamente
+
+        //scrollToBottom();
+
+                   
+
     })();
 
-    // Función para procesar el texto y convertirlo en HTML
-    function processText(text) {
-        return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    }
+                    
+
 };
 
     return {
