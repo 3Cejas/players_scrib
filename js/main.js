@@ -56,7 +56,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "Bienvenides a la página oficial de SCRIB.\n\nPara navegar, introduce alguno de los siguientes comandos:\n\n\u2022 proyecto\n\u2022 dossier\n\u2022 fechas\n\u2022 compañía\n\u2022 contacto\n\u2022 reinicio\n\n Si te pierdes en algun momento, **utiliza** el comando  \"ayuda\".",
+        welcome: "Bienvenides a la página oficial de SCRIB.\n\nPara navegar, introduce alguno de los siguientes comandos:\n\n\u2022 proyecto\n\u2022 dossier\n\u2022 fechas\n\u2022 compañía\n\u2022 contacto\n\u2022 reinicio\n\n Si te pierdes en algun momento, utiliza el comando  \"ayuda\".",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
