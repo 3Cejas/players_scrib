@@ -29,5 +29,5 @@ Se difumina de manera aleatoria a uno de los dos jugadores y después de alterna
 3. Descarga el repositorio 3Cejas/players_scrib e inicia el control y los jugadores desde el dashboard de inicio (HTML).
 4. Desde control, pulsa el botón 'Escribir' y el juego comenzará.
 ## SUTURA
-- Twitter: @ SU.TU.RA
+- Twitter: @SU.TU.RA
 - Instagram: @SU_TU_RA
