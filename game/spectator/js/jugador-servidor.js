@@ -322,8 +322,8 @@ socket.on('texto1', data => {
             texto2.innerText = "\n" + texto2.innerText;
         }
     }*/
-    //texto1.style.height = (texto1.scrollHeight) + "px";
-    //texto1.scrollTop = texto1.scrollHeight;
+    texto1.style.height = (texto1.scrollHeight) + "px";
+    texto1.scrollTop = texto1.scrollHeight;
     //window.scrollTo(0, document.body.scrollHeight);
     //focalizador1.scrollIntoView(false);
 });
@@ -349,7 +349,7 @@ socket.on('texto2', data => {
             texto2.innerText = "\n" + texto2.innerText
         }
     }*/
-    //texto2.style.height = (texto2.scrollHeight) + "px";
+    texto2.style.height = (texto2.scrollHeight) + "px";
     texto2.scrollTop = texto2.scrollHeight;
     //window.scrollTo(0, document.body.scrollHeight);
     //focalizador2.scrollIntoView(false);
