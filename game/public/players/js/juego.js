@@ -156,9 +156,16 @@ function bandera(boton) {
       }
       boton.value = 1; // Cambiar el estado del botón
 
-      // Verificar compatibilidad y agregar listener para detección de agitación
-      const canVibrate = window.navigator.vibrate
-      if (canVibrate) window.navigator.vibrate(100)
+      if ('vibrate' in navigator) {
+        // El dispositivo y navegador soportan la API de vibración.
+        navigator.vibrate(200); // vibrar por 200ms
+        navigator.vibrate([
+          100, 30, 100, 30, 100, 30, 200, 30, 200, 30, 200, 30, 100, 30, 100, 30, 100,
+        ]); // vibrar 'SOS' en código Morse
+      } else {
+        console.log("La API de vibración no está disponible en este dispositivo o navegador.");
+      }
+      
   }
 }
 
