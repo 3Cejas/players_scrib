@@ -165,13 +165,18 @@ function bandera(boton) {
   }
 }
 
-
+// Función para desactivar la pantalla
 function desactivarPantalla() {
   const overlay = document.getElementById('overlay');
   overlay.style.display = 'none';
   // Remover el listener de movimiento si ya no se necesita
   window.removeEventListener('devicemotion', handleShake);
-  // Aquí puedes restablecer el estado del botón u otras acciones...
+  
+  // Obtener el botón con id "btn_bandera"
+  const boton = document.getElementById('btn_bandera');
+  if (boton) {
+      boton.value = 0; // Restablecer el estado del botón
+  }
 }
 
 
