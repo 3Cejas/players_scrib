@@ -109,80 +109,42 @@ function mostrarTextoCompleto(boton) {
   }
 }
 
-// Variables para la detección de shake
-let lastX = null, lastY = null, lastZ = null;
-let lastTime = new Date();
-const shakeThreshold = 15;  // Ajusta este valor según la sensibilidad deseada
-
-function handleShake(event) {
-  // Opcional: detectar si es móvil según ancho de pantalla
-  if (window.innerWidth >= 768) return;
-
-  let acceleration = event.accelerationIncludingGravity;
-  let currentTime = new Date();
-  let timeDifference = currentTime.getTime() - lastTime.getTime();
-
-  // Procesar cada 100ms para no saturar los cálculos
-  if (timeDifference > 100) {
-      if (lastX !== null && lastY !== null && lastZ !== null) {
-          let deltaX = Math.abs(acceleration.x - lastX);
-          let deltaY = Math.abs(acceleration.y - lastY);
-          let deltaZ = Math.abs(acceleration.z - lastZ);
-
-          let totalChange = deltaX + deltaY + deltaZ;
-
-          if (totalChange > shakeThreshold) {
-              navigator.vibrate(200); // Vibra durante 200ms
-          }
-      }
-      lastX = acceleration.x;
-      lastY = acceleration.y;
-      lastZ = acceleration.z;
-      lastTime = currentTime;
-  }
-}
-
-
-// Función para activar/desactivar la pantalla
+// Función para activar la pantalla y aplicar animación
 function bandera(boton) {
   const overlay = document.getElementById('overlay');
   if (boton.value == 0) {
-      // Activar la pantalla y cambiar el color en función del player
+      // Activar la pantalla
       overlay.style.display = 'flex';
+      
+      // Aplicar estilos según el jugador
       if (player == 1) {
+          // Fondo azul estático
           overlay.style.backgroundColor = 'blue';
+          // Remover clase de animación si está aplicada
+          overlay.classList.remove('bright-pulse-background');
       } else if (player == 2) {
-          overlay.style.backgroundColor = 'red';
-      }
-      boton.value = 1; // Cambiar el estado del botón
-
-      if ('vibrate' in navigator) {
-        // El dispositivo y navegador soportan la API de vibración.
-        navigator.vibrate(200); // vibrar por 200ms
-        navigator.vibrate([
-          100, 30, 100, 30, 100, 30, 200, 30, 200, 30, 200, 30, 100, 30, 100, 30, 100,
-        ]); // vibrar 'SOS' en código Morse
-      } else {
-        console.log("La API de vibración no está disponible en este dispositivo o navegador.");
+          // Aplicar fondo con animación pulsante brillante
+          overlay.style.backgroundColor = ''; // Limpia cualquier color estático
+          overlay.classList.add('bright-pulse-background');
       }
       
+      boton.value = 1; // Cambiar estado del botón
   }
 }
 
-// Función para desactivar la pantalla
+// Función para desactivar la pantalla y limpiar estilos
 function desactivarPantalla() {
   const overlay = document.getElementById('overlay');
   overlay.style.display = 'none';
-  // Remover el listener de movimiento si ya no se necesita
-  window.removeEventListener('devicemotion', handleShake);
-  
-  // Obtener el botón con id "btn_bandera"
+  overlay.style.backgroundColor = '';
+  overlay.classList.remove('bright-pulse-background');
+
+  // Obtener el botón con id "btn_bandera" para restablecer su valor
   const boton = document.getElementById('btn_bandera');
   if (boton) {
-      boton.value = 0; // Restablecer el estado del botón
+      boton.value = 0; // Restablecer estado del botón
   }
 }
-
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
 function editar(boton) {
