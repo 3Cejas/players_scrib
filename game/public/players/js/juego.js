@@ -109,42 +109,41 @@ function mostrarTextoCompleto(boton) {
   }
 }
 
-// Función para activar la pantalla y aplicar animación
-function bandera(boton) {
-  const overlay = document.getElementById('overlay');
-  if (boton.value == 0) {
-      // Activar la pantalla
-      overlay.style.display = 'flex';
-      
-      // Aplicar estilos según el jugador
-      if (player == 1) {
-          // Fondo azul estático
-          overlay.style.backgroundColor = 'blue';
-          // Remover clase de animación si está aplicada
-          overlay.classList.remove('bright-pulse-background');
-      } else if (player == 2) {
-          // Aplicar fondo con animación pulsante brillante
-          overlay.style.backgroundColor = ''; // Limpia cualquier color estático
-          overlay.classList.add('bright-pulse-background');
-      }
-      
-      boton.value = 1; // Cambiar estado del botón
+// Función para activar/desactivar la pantalla
+  
+  function bandera(boton) {
+    const overlay = document.getElementById('overlay');
+    if (boton.value == 0) {
+        overlay.style.display = 'flex';
+        
+        if (player == 1) {
+            // Aplicar animación azul para player 1
+            overlay.style.backgroundColor = '';
+            overlay.classList.remove('bright-pulse-background'); // Remueve si estaba activo
+            overlay.classList.add('blue-pulse-background');
+        } else if (player == 2) {
+            // Aplicar animación roja para player 2
+            overlay.style.backgroundColor = '';
+            overlay.classList.remove('blue-pulse-background'); // Remueve si estaba activo
+            overlay.classList.add('bright-pulse-background');
+        }
+        
+        boton.value = 1;
+    }
   }
-}
 
-// Función para desactivar la pantalla y limpiar estilos
-function desactivarPantalla() {
-  const overlay = document.getElementById('overlay');
-  overlay.style.display = 'none';
-  overlay.style.backgroundColor = '';
-  overlay.classList.remove('bright-pulse-background');
+  function desactivarPantalla() {
+    const overlay = document.getElementById('overlay');
+    overlay.style.display = 'none';
+    overlay.style.backgroundColor = '';
+    overlay.classList.remove('bright-pulse-background');
+    overlay.classList.remove('blue-pulse-background');
 
-  // Obtener el botón con id "btn_bandera" para restablecer su valor
-  const boton = document.getElementById('btn_bandera');
-  if (boton) {
-      boton.value = 0; // Restablecer estado del botón
+    const boton = document.getElementById('btn_bandera');
+    if (boton) {
+        boton.value = 0;
+    }
   }
-}
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
 function editar(boton) {

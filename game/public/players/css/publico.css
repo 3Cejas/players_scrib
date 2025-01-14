@@ -365,20 +365,46 @@ th{
 }
 
 /* Definición de la animación para el pulso brillante */
-   @keyframes brightPulse {
-    0%, 100% {
-      background: radial-gradient(circle, #ff4d4d 0%, #b30000 70%);
-      filter: brightness(1);
-    }
-    50% {
-      background: radial-gradient(circle, #ff9999 0%, #e60000 70%);
-      filter: brightness(1.5);
-    }
-  }
+/* Asegúrate de que el overlay esté en posición relativa para posicionar el pseudo-elemento */
 
-  .bright-pulse-background {
+
+/* Definición de la animación para el pulso brillante */
+/* Animación de pulso brillante para rojo */
+@keyframes brightPulse {
+  0%, 100% {
     background: radial-gradient(circle, #ff4d4d 0%, #b30000 70%);
-    background-size: 400% 400%;
-    animation: brightPulse 1.5s ease-in-out infinite;
-    transition: background 0.5s ease-in-out;
+    filter: brightness(1);
   }
+  50% {
+    background: radial-gradient(circle, #ff9999 0%, #e60000 70%);
+    filter: brightness(1.5);
+  }
+}
+
+/* Animación de pulso brillante para azul */
+@keyframes bluePulse {
+  0%, 100% {
+    background: radial-gradient(circle, #4da6ff 0%, #003399 70%);
+    filter: brightness(1);
+  }
+  50% {
+    background: radial-gradient(circle, #99ccff 0%, #3366ff 70%);
+    filter: brightness(1.5);
+  }
+}
+
+/* Clase para animación pulsante roja */
+.bright-pulse-background {
+  background: radial-gradient(circle, #ff4d4d 0%, #b30000 70%);
+  background-size: 400% 400%;
+  animation: brightPulse 1.5s ease-in-out infinite;
+  transition: background 0.5s ease-in-out;
+}
+
+/* Clase para animación pulsante azul */
+.blue-pulse-background {
+  background: radial-gradient(circle, #4da6ff 0%, #003399 70%);
+  background-size: 400% 400%;
+  animation: bluePulse 1.5s ease-in-out infinite;
+  transition: background 0.5s ease-in-out;
+}
