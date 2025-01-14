@@ -50,7 +50,15 @@
                         <tr>
                             <th id="puntos" class="puntos">0 palabras</th>
                             <th id="nivel" class="nivel">nivel 1</th>
-                            <th><button id="mostrar_texto" class="btn mostrarTexto" value=0 onclick="mostrarTextoCompleto(this)">Mostrar texto completo</button></th>
+                            <tr>
+                                <th><button id="mostrar_texto" class="btn mostrarTexto" value=0 onclick="mostrarTextoCompleto(this)">👀 TEXTO COMPLETO</button></th>
+                                    <!-- Contenedor de la pantalla superpuesta -->
+                                    <div id="overlay">
+                                        <p>¡MUSA, AGITA TU BANDERA!</p>
+                                        <button id="btn_volver" class="btn bandera" onclick="desactivarPantalla(this)">⬅️ VOLVER</button>
+                                    </div>
+                                <th><button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">🏳️‍🌈 BANDERA</button></th>
+                            </tr>
                         </tr>
                     </table>
                     <br>

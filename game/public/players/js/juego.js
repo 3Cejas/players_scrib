@@ -86,22 +86,94 @@ function enviarPalabra(button) {
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
 function mostrarTextoCompleto(boton) {
-  if(boton.value == 0){
-  texto1.style.maxHeight = "none";
-  texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
-  texto1.scrollTop = texto1.scrollHeight;
-  boton.innerHTML = "Ocultar texto";
-  boton.value = 1;
-  mostrar_texto.scrollIntoView({behavior: "smooth", block: "start"});
-  }
-  else if(!editando == true){
-  console.log("ACTIVADO")
-  texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
-  texto1.scrollTop = texto1.scrollHeight;
-  boton.innerHTML = "Mostrar texto completo";
-  boton.value = 0;
+  if (boton.value == 0) {
+    texto1.style.maxHeight = "none";
+    texto1.style.height = texto1.scrollHeight + "px"; // Reajustamos el tamaño del área de texto.
+    texto1.scrollTop = texto1.scrollHeight;
+    
+    // Cambiar el color del botón a verde en lugar de cambiar su texto
+    boton.style.backgroundColor = "green";
+    
+    boton.value = 1;
+    mostrar_texto.scrollIntoView({ behavior: "smooth", block: "start" });
+  } 
+  else if (!editando == true) {
+    console.log("ACTIVADO");
+    texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
+    texto1.scrollTop = texto1.scrollHeight;
+    
+    // Cambiar el color del botón a rojo en lugar de cambiar su texto
+    boton.style.backgroundColor = "red";
+    
+    boton.value = 0;
   }
 }
+
+// Variables para la detección de shake
+let lastX = null, lastY = null, lastZ = null;
+let lastTime = new Date();
+const shakeThreshold = 15;  // Ajusta este valor según la sensibilidad deseada
+
+function handleShake(event) {
+  // Opcional: detectar si es móvil según ancho de pantalla
+  if (window.innerWidth >= 768) return;
+
+  let acceleration = event.accelerationIncludingGravity;
+  let currentTime = new Date();
+  let timeDifference = currentTime.getTime() - lastTime.getTime();
+
+  // Procesar cada 100ms para no saturar los cálculos
+  if (timeDifference > 100) {
+      if (lastX !== null && lastY !== null && lastZ !== null) {
+          let deltaX = Math.abs(acceleration.x - lastX);
+          let deltaY = Math.abs(acceleration.y - lastY);
+          let deltaZ = Math.abs(acceleration.z - lastZ);
+
+          let totalChange = deltaX + deltaY + deltaZ;
+
+          if (totalChange > shakeThreshold) {
+              navigator.vibrate(200); // Vibra durante 200ms
+          }
+      }
+      lastX = acceleration.x;
+      lastY = acceleration.y;
+      lastZ = acceleration.z;
+      lastTime = currentTime;
+  }
+}
+
+
+// Función para activar/desactivar la pantalla
+function bandera(boton) {
+  const overlay = document.getElementById('overlay');
+  if (boton.value == 0) {
+      // Activar la pantalla y cambiar el color en función del player
+      overlay.style.display = 'flex';
+      if (player == 1) {
+          overlay.style.backgroundColor = 'blue';
+      } else if (player == 2) {
+          overlay.style.backgroundColor = 'red';
+      }
+      boton.value = 1; // Cambiar el estado del botón
+
+      // Verificar compatibilidad y agregar listener para detección de agitación
+      if ('DeviceMotionEvent' in window && 'vibrate' in navigator) {
+          window.addEventListener('devicemotion', handleShake);
+      } else {
+          console.log("El dispositivo no soporta la detección de movimiento o la vibración.");
+      }
+  }
+}
+
+
+function desactivarPantalla() {
+  const overlay = document.getElementById('overlay');
+  overlay.style.display = 'none';
+  // Remover el listener de movimiento si ya no se necesita
+  window.removeEventListener('devicemotion', handleShake);
+  // Aquí puedes restablecer el estado del botón u otras acciones...
+}
+
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
 function editar(boton) {

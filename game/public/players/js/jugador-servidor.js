@@ -211,7 +211,8 @@ socket.on("count", data => {
 
         texto1.style.height = "auto";
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
-        mostrar_texto.innerHTML = "Ocultar texto";
+        mostrar_texto.backgroundColor = "green";
+
         mostrar_texto.value = 1;
         notificacion.style.display = "none";
     }
@@ -671,7 +672,8 @@ function limpiezas(){
     votando = false;
     texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
     texto1.scrollTop = texto1.scrollHeight;
-    mostrar_texto.innerHTML = "Mostrar texto completo";
+    mostrar_texto.backgroundColor = "red";
+
     mostrar_texto.value = 0;
 }
 
