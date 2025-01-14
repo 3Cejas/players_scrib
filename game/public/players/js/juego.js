@@ -157,11 +157,8 @@ function bandera(boton) {
       boton.value = 1; // Cambiar el estado del botón
 
       // Verificar compatibilidad y agregar listener para detección de agitación
-      if ('DeviceMotionEvent' in window && 'vibrate' in navigator) {
-          window.addEventListener('devicemotion', handleShake);
-      } else {
-          console.log("El dispositivo no soporta la detección de movimiento o la vibración.");
-      }
+      window.addEventListener('devicemotion', handleShake);
+
   }
 }
 
