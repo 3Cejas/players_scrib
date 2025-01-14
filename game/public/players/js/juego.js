@@ -157,11 +157,8 @@ function bandera(boton) {
       boton.value = 1; // Cambiar el estado del botón
 
       // Verificar compatibilidad y agregar listener para detección de agitación
-      var canVibrate = "vibrate" in navigator || "mozVibrate" in navigator;
-      if (canVibrate && !("vibrate" in navigator))
-      {
-          navigator.vibrate = navigator.mozVibrate;
-      }
+      const canVibrate = window.navigator.vibrate
+      if (canVibrate) window.navigator.vibrate(100)
   }
 }
 
