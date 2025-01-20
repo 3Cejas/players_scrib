@@ -5,8 +5,6 @@ serverUrl = window.location.href.startsWith('file:')
 
 const socket = io(serverUrl);
 
-reproducirSonido("../../game/audio/prueba.mp3")
-
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -76,6 +74,13 @@ const color_positivo = "greenyellow";
 let TIEMPO_BORRADO;
 let TIEMPO_INVERSO;
 let TIEMPO_BORROSO;
+
+let sonido;
+
+animateCSS(".cabecera", "backInLeft").then((message) => {
+    animateCSS(".contenedor", "pulse");
+});
+reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
 
 const PUTADAS = {
     "🐢": function () {
@@ -480,7 +485,8 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
-
+    sonido.pause();
+    reproducirSonido("../../game/audio/PREPARADOS.mp3")
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         inspiracion.style.display = "block";
         animateCSS(".contenedor", "pulse");
@@ -599,6 +605,8 @@ socket.on('limpiar', data => {
     logo.style.display = "";
     neon.style.display = "";
     inspiracion.style.display = "none";
+    sonido.pause();
+    reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
     activar_sockets_extratextuales();
 });
 
@@ -699,6 +707,18 @@ socket.on('feedback_a_j2', data => {
     var feedback = document.querySelector(".feedback1");
     feedback.style.color = data.color;
     feedback.innerHTML = data.tiempo_feed.toString();
+
+    console.log(data.tiempo_feed)
+
+    // Si empieza por "⏱️+" (ej.: "⏱️+2 segs." o "⏱️+6 segs.")
+    if (data.tiempo_feed.startsWith("⏱️+")) {
+        reproducirSonido("../../game/audio/GANAR 2 SEG.mp3");
+
+    // Si empieza por "⏱️-" (ej.: "⏱️-1 segs.")
+    } else if (data.tiempo_feed.startsWith("⏱️-")) {
+        reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+    }
+
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
         new Promise((resolve, reject) => {
@@ -736,6 +756,15 @@ socket.on('feedback_a_j1', data => {
     var feedback1 = document.querySelector(".feedback2");
     feedback1.style.color = data.color;
     feedback1.innerHTML = data.tiempo_feed.toString();
+
+    if(data.tiempo_feed.toString() == "⏱️+6 segs."){
+        reproducirSonido("../../game/audio/GANAR 2 SEG.mp3")
+    }
+
+    if(data.tiempo_feed.toString() == "⏱️-2 segs."){
+        reproducirSonido("../../game/audio/PERDER 2 SEG.mp3")
+    }
+
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
         new Promise((resolve, reject) => {
@@ -759,6 +788,7 @@ socket.on('feedback_a_j1', data => {
         }, 2000);
     });
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
+        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
         if(modo_actual == "palabras bonus"){
         increment('red');
         }
@@ -843,13 +873,20 @@ socket.on('elegir_ventaja_j2', () => {
 
 //FUNCIONES AUXILIARES.
 
-function reproducirSonido(rutaArchivo) {
-    // Se crea una instancia del objeto Audio con la ruta del archivo
-    const sonido = new Audio(rutaArchivo);
+function reproducirSonido(rutaArchivo, loop = false) {
+    // Creamos una nueva instancia de Audio con la ruta proporcionada
+    sonido = new Audio(rutaArchivo);
+
+    // Configuramos el bucle según el parámetro 'loop'
+    sonido.loop = loop;
 
     // Intentamos reproducir el sonido
-    sonido.play()
-}
+    // Si el navegador requiere interacción del usuario,
+    // esta promesa puede fallar (por ejemplo, en navegadores móviles).
+    sonido.play().catch(error => {
+      console.error('No se pudo reproducir el audio:', error);
+    });
+  }
 
 // Referencias a los elementos
 // Variables para guardar los IDs de intervalo si es necesario detenerlos después
@@ -1334,6 +1371,7 @@ function randomInRange(min, max) {
 }
 
 function confetti_aux() {
+    reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3")
   var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
   isConfettiRunning = true; // Habilita la ejecución de confetti
   console.log(isConfettiRunning);

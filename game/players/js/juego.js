@@ -103,8 +103,21 @@ function borrar() {
     let { caretNode, caretPos } = guardarPosicionCaret();
 
     // 2. Código existente
+
+    feedback.style.color = color_negativo;
+    feedback.innerHTML = "⏱️-1 segs.";
+    clearTimeout(delay_animacion);
+    animateCSS(".feedback1", "flash").then((message) => {
+        delay_animacion = setTimeout(function () {
+            feedback.innerHTML = "";
+        }, 2000);
+    });
+
     secs = -1;
     socket.emit('aumentar_tiempo', {secs, player});
+    color = color_negativo;
+    tiempo_feed = "⏱️-" + "1" + " segs."
+    socket.emit(feedback_de_j_x, { color, tiempo_feed});
     caracteres_seguidos = 0;
     indice_buscar_palabra = texto.innerText.length;
 
