@@ -779,14 +779,6 @@ function recibir_palabra_prohibida(data) {
 
 // FUNCIONES AUXILIARES.
 
-function reproducirSonido(rutaArchivo) {
-    // Se crea una instancia del objeto Audio con la ruta del archivo
-    const sonido = new Audio(rutaArchivo);
-
-    // Intentamos reproducir el sonido
-    sonido.play()
-}
-
 // Función para enviar texto al otro jugador y a control
 function sendText() {
     let text = texto.innerHTML;

@@ -4,41 +4,8 @@ serverUrl = window.location.href.startsWith('file:')
     : 'https://sutura.ddns.net:3000';
 
 const socket = io(serverUrl);
-function reproducirSonido(rutaArchivo) {
-    // Creamos la instancia del objeto Audio
-    const sonido = new Audio(rutaArchivo);
 
-    // Intentamos reproducir el sonido, manejando la promesa
-    sonido.play()
-      .then(() => {
-        // Éxito en la reproducción
-        console.log("Reproducción iniciada con éxito.");
-      })
-      .catch((error) => {
-        // Fallo en la reproducción
-        console.error("Error al reproducir el audio:", error);
-        /*
-          - Este error puede venir de:
-            1) Falta de interacción del usuario (política de autoplay).
-            2) Ruta incorrecta o archivo no accesible.
-            3) Formato no soportado.
-            4) Problemas en la salida de audio.
-        */
-      });
-  }
-
-  // Obtenemos el botón del DOM
-  const boton = document.getElementById("botonReproducir");
-
-  // Asignamos un listener para que, tras la interacción del usuario (clic),
-  // se intente la reproducción del audio.
-  boton.addEventListener("click", () => {
-    // Sustituye la ruta por la que te corresponda.
-    // Lo ideal es que estés sirviendo este archivo desde un servidor, ejemplo:
-    // http://localhost:3000/game/audio/prueba.mp3
-    // O bien que la ruta relativa sea correcta respecto al HTML o JS actual.
-    reproducirSonido("../../game/audio/type.wav");
-  });
+reproducirSonido("../../game/audio/prueba.mp3")
 
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
