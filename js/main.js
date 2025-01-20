@@ -1024,7 +1024,7 @@ function log( text ) {
 
 			this.type(result, this.unlock.bind(this));
 			
-			location.href='./players_scrib/public/index.html';
+			location.href='./game/public/index.html';
     }
 	//EL PROYECTO
 

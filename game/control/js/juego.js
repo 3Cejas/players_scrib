@@ -12,6 +12,12 @@ let fin_j1 = false;
 let fin_j2 = false;
 let terminado = false;
 let terminado1 = false;
+let juego_iniciado = false;
+let pausado = false;
+let pausedSecondsPassed = 0;
+let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
+let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
+
 
 function paddedFormat(num) {
     return num < 10 ? "0" + num : num;
@@ -20,12 +26,17 @@ function paddedFormat(num) {
 function startCountDown_p1(duration) {
 
     secondsRemaining = duration;
-    secondsPassed = 0;
+    if(pausado = false){
+        secondsPassed = 0;
+    }
     let min;
     let sec;
     clearInterval(countInterval);
     countInterval = setInterval(function () {
         secondsPassed++;
+        display_modo.style.color = COLORES_MODOS[modo_actual]; // Asignar color al texto del label
+        display_modo.textContent = modo_actual.toUpperCase();
+        tiempo_modos_secs.textContent = secondsPassed + " secs.";
         console.log("secondsPased", secondsPassed)
         console.log("modo_actual", modo_actual)
         console.log("DURACION_TIEMPO_MODOS", DURACION_TIEMPO_MODOS)
@@ -33,8 +44,8 @@ function startCountDown_p1(duration) {
             console.log(modo_actual)
             // Se hace solo aquí LIMPIEZAS porque afecta a los dos jugadores.
             console.log("ENTROOOOOOOO")
-
             secondsPassed = 0;
+            tiempo_modos_secs.textContent = secondsPassed + " secs.";
             secondsPassed1 = 0;
         }
         min = parseInt(secondsRemaining / 60);
@@ -42,6 +53,7 @@ function startCountDown_p1(duration) {
 
         tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+        tiempo_modos_secs.textContent = secondsPassed + " secs.";
         console.log('count', {count, secondsPassed, player:1})
         socket.emit('count', {count, secondsPassed, player:1});
         if (secondsRemaining == 20) {
@@ -60,6 +72,9 @@ function startCountDown_p1(duration) {
 
 function startCountDown_p2(duration) {
     secondsRemaining1 = duration;
+    if(pausado = false){
+        secondsPassed1 = 0;
+    }
     let min1;
     let sec1;
     clearInterval(countInterval1);
@@ -138,15 +153,17 @@ function temp() {
     count = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;    
     count1 = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;   
 
-    if(boton_pausar_reanudar.value == 1){
-        boton_pausar_reanudar.value = 0;
+    if(boton_pausar_reanudar.dataset.value == 1){
+        boton_pausar_reanudar.dataset.value = 0;
         boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
     rellenarListaModos();
     actualizarVariables();
     socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_TIEMPO_INSPIRACION, TIEMPO_LOCURA } });
+    juego_iniciado = true;
     modo_actual = "";
     secondsPassed = 0;
+    tiempo_modos_secs.textContent = secondsPassed + " secs.";
     secondsPassed1 = 0;
   
     DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
@@ -179,8 +196,11 @@ function temas() {
 function limpiar() {
     //document.getElementById("nombre").value = "ESCRITXR 1";
     //document.getElementById("nombre1").value = "ESCRITXR 2";
-    if(boton_pausar_reanudar.value == 1){
-        boton_pausar_reanudar.value = 0;
+    limpiarContador();
+    display_modo.style.color = "white";
+    display_modo.textContent = "Ninguno";
+    if(boton_pausar_reanudar.dataset.value == 1){
+        boton_pausar_reanudar.dataset.value = 0;
         boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
     if(boton_borrar.checked == false){
@@ -189,6 +209,7 @@ function limpiar() {
     }
     texto1.innerText = "";
     texto2.innerText = "";
+    juego_iniciado = false;
     document.getElementById("puntos").innerHTML = "0 palabras";
     document.getElementById("puntos1").innerHTML = "0 palabras";
     document.getElementById("nivel").innerHTML = "nivel 0";
@@ -203,11 +224,14 @@ function limpiar() {
     socket.emit('limpiar', boton_borrar.checked);
     secondsPassed = 0;
     secondsPassed1 = 0;
+    tiempo_modos_secs.textContent = secondsPassed + " secs.";
     DURACION_TIEMPO_MODOS = DURACION_TIEMPO_MODOS;
     clearInterval(listener_cuenta_atras);
     clearInterval(countInterval);
     clearInterval(countInterval1);
     clearTimeout(tempo_text_borroso);
+    clearTimeout(TimeoutTiempoMuerto);
+
     tiempo.innerHTML = "";
     tiempo1.innerHTML = "";
     document.getElementById("texto").classList.remove('textarea_blur');
@@ -235,6 +259,7 @@ function fin(player) {
     if(fin_j1 && fin_j2){
         fin_j1 = false;
         fin_j2 = false;
+        juego_iniciado = false;
     }
     socket.emit('fin_de_control', player);
 };
@@ -307,43 +332,97 @@ function enviar_clasificacion(){
   }
 
 function pausar(){
+    pausado = true;
+    console.log(count, secondsPassed, secondsRemaining)
     clearInterval(countInterval);
     clearInterval(countInterval1);
+    limpiarContador();
+    // Variables para llevar el conteo y controlar el intervalo
+
+    tiempo_modos_secs.textContent = secondsPassed + " secs.";
     socket.emit('pausar', '');
 }
 
-function pausar_reanudar(boton){
-    console.log(boton)
-    if(boton.value == 0){
-        boton.value = 1;
-        pausar();
-        boton_pausar_reanudar.innerHTML = "▶️ REANUDAR";
-        }
-    else{
-        boton.value = 0;
-        reanudar();
-        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+    // Función para iniciar el contador
+    function iniciarContador() {
+        // Reiniciar el conteo si es necesario
+        pausedSecondsPassed = 0;
+        tiempo_modos_secs.textContent = pausedSecondsPassed + " secs.";
+  
+        // Configurar setInterval para que se ejecute cada 1000 ms (1 segundo)
+        intervalId = setInterval(() => {
+            pausedSecondsPassed++;  // Incrementar el contador
+          tiempo_modos_secs.textContent = pausedSecondsPassed + " secs.";  // Actualizar el contenido
+        }, 1000);
+      }
+  
+
+function limpiarContador() {
+    // Si hay un intervalo en ejecución, deténlo
+    if (intervalId) {
+      clearInterval(intervalId);
+       // Reiniciar las variables y limpiar la visualización
+        pausedSecondsPassed= 0;
     }
-}
+  }
+
+function pausar_reanudar(boton) {
+    // Imprimimos en consola para verificar
+    console.log(fin_j1, fin_j2);
+
+    console.log("¿Terminado?:", !(fin_j1 || fin_j2));
+    console.log("Valor de data-value:", boton.dataset.value);
+
+    if (juego_iniciado) {
+      // Usamos comparación == para no preocuparnos de que sea string
+      if (boton.dataset.value == 0) {
+        pausar();
+        boton.innerHTML = "▶️ REANUDAR";
+        boton.dataset.value = 1;
+      }
+      else if (boton.dataset.value == 1) {
+        reanudar();
+        boton.innerHTML = "⏸️ PAUSAR";
+        boton.dataset.value = 0;
+      }
+    }
+  }
 
 
 function reanudar(){
-
+    if(modo_actual != "tertulia"){
     socket.emit('count', {count, secondsPassed, player:1});
     socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
+    console.log("estooo",secondsRemaining)
+    console.log("estooo", TIEMPO_MODOS - secondsRemaining)
+    limpiarContador();
     startCountDown_p1(secondsRemaining);
+    tiempo_modos_secs.textContent = secondsPassed + " secs.";
     startCountDown_p2(secondsRemaining);
+    pausado = false;
     socket.emit('reanudar', '');
+    }
+    else if(modo_actual == "tertulia"){
+        secondsPassed = 0;
+        secondsPassed1 = 1;
+        clearTimeout(TimeoutTiempoMuerto)
+        limpiarContador();
+        reanudar_modo();
+    }
 }
 
 function reanudar_modo(){
+    tiempo_modos_secs.textContent = secondsPassed + " secs.";
     console.log(count, secondsPassed, secondsRemaining, tiempo)
     console.log(time_minutes, time_seconds)
-    if(boton_pausar_reanudar.value == 1){
-        boton_pausar_reanudar.value = 0;
+    limpiarContador();
+
+    if(boton_pausar_reanudar.dataset.value == 1){
+        boton_pausar_reanudar.dataset.value = 0;
         boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
     secondsPassed = 0;
+    tiempo_modos_secs.textContent = secondsPassed + " secs.";
     secondsPassed1 = 0;
     socket.emit('count', {count, secondsPassed, player:1});
     socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
@@ -351,6 +430,7 @@ function reanudar_modo(){
 
     startCountDown_p1(secondsRemaining);
     startCountDown_p2(secondsRemaining1);
+    pausado = false;
     socket.emit('reanudar_modo', '');
 }
 function sortTable() {
@@ -453,10 +533,12 @@ function final(player){
         terminado1 = true;
         console.log("texto2", texto_guardado2)
         texto_guardado2 = texto2.innerText;
-
         socket.emit('count', {count : count1, secondsPassed : secondsPassed1, player:2});
     }
     if(terminado && terminado1){
+        tiempo_modos_secs.textContent = 0 + " secs.";
+        display_modo.style.color = "white";
+        display_modo.textContent = "Ninguno"; 
         console.log("PRUEBA FINAL", texto_guardado1)
         //setTimeout(descargar_textos, 5000);
     }

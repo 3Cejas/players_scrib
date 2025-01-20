@@ -4,6 +4,41 @@ serverUrl = window.location.href.startsWith('file:')
     : 'https://sutura.ddns.net:3000';
 
 const socket = io(serverUrl);
+function reproducirSonido(rutaArchivo) {
+    // Creamos la instancia del objeto Audio
+    const sonido = new Audio(rutaArchivo);
+
+    // Intentamos reproducir el sonido, manejando la promesa
+    sonido.play()
+      .then(() => {
+        // Éxito en la reproducción
+        console.log("Reproducción iniciada con éxito.");
+      })
+      .catch((error) => {
+        // Fallo en la reproducción
+        console.error("Error al reproducir el audio:", error);
+        /*
+          - Este error puede venir de:
+            1) Falta de interacción del usuario (política de autoplay).
+            2) Ruta incorrecta o archivo no accesible.
+            3) Formato no soportado.
+            4) Problemas en la salida de audio.
+        */
+      });
+  }
+
+  // Obtenemos el botón del DOM
+  const boton = document.getElementById("botonReproducir");
+
+  // Asignamos un listener para que, tras la interacción del usuario (clic),
+  // se intente la reproducción del audio.
+  boton.addEventListener("click", () => {
+    // Sustituye la ruta por la que te corresponda.
+    // Lo ideal es que estés sirviendo este archivo desde un servidor, ejemplo:
+    // http://localhost:3000/game/audio/prueba.mp3
+    // O bien que la ruta relativa sea correcta respecto al HTML o JS actual.
+    reproducirSonido("../../game/audio/type.wav");
+  });
 
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
@@ -62,11 +97,12 @@ let tempo_text_inverso2;
 let tempo_text_borroso1;
 let tempo_text_borroso2;
 let listener_modo;
-let jugador_psico;
-let activado_psico = false;
+let activado_psico1 = false;
+let activado_psico2 = false;
 let listener_cuenta_atras = null;
 let timeout_countdown;
 let timeout_timer;
+let Temasinterval;
 let timer = null;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
@@ -83,18 +119,20 @@ const PUTADAS = {
             document.body.classList.add("bg");
             document.body.classList.add("rain");
             lightning.classList.add("lightning")
-            lightning.style.right = "0%";
-            lightning.style.left = "45%";
+            lightning.style.right = "45%";
+            lightning.style.left = "0%";
             setTimeout(function () {
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
                 lightning.classList.remove("lightning");
             }, TIEMPO_BORRADO);
         }
-        else{
+        else if(player == 2){
             document.body.classList.add("bg");
             document.body.classList.add("rain");
             lightning.classList.add("lightning")
+            lightning.style.right = "0%";
+            lightning.style.left = "45%";
             setTimeout(function () {
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
@@ -122,7 +160,7 @@ const PUTADAS = {
                 });
             }, TIEMPO_INVERSO);
         }
-        else{
+        else if(player == 2){
             texto2.classList.add("rotate-vertical-center");
             // Añade un escuchador para el evento 'animationend'
             texto2.addEventListener('animationend', function() {
@@ -149,7 +187,7 @@ const PUTADAS = {
             texto1.classList.remove("textarea_blur");
         }, TIEMPO_BORROSO);
         }
-        else{
+        else if(player == 2){
             modo_texto_borroso2 = true;
             console.log("BORROSO")
             texto2.classList.add("textarea_blur");
@@ -215,11 +253,17 @@ const MODOS = {
         definicion3.style.maxWidth = "100%";
     },
 
-    'psicodélico': function (data) {
+    'psicodélico': function (data, socket, player) {
         //explicación.innerHTML = "MODO PSICODÉLICO";
         //palabra1.innerHTML = "";
         //definicion1.innerHTML = "";
-        jugador_psico = Math.floor(Math.random() * 2 + 1);
+        if (player == 1) {
+            activado_psico1 = true;
+        }
+        else if (player == 2) {
+            activado_psico2 = true;
+        }
+
     },
 
     'palabras prohibidas': function (data) {
@@ -269,10 +313,18 @@ const LIMPIEZAS = {
 
     "letra bendita": function (data) { },
 
-    "psicodélico": function (data) {
-        jugador_psico = 0;
+    "psicodélico": function (data, player) {
+        if(player == 1){
+            activado_psico1 = false;
+        }
+        else if(player == 2){
+            activado_psico2 = false;
+        }
+
+        if(activado_psico1 == false && activado_psico2 == false){
         restablecer_estilo();
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
+        }
     },
 
     "palabras prohibidas": function (data) {
@@ -307,7 +359,7 @@ socket.on('texto1', data => {
     cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
     //establecerPosicionCaret(data.caretPos);
-    if (jugador_psico == 1) {
+    if (activado_psico1) {
         stylize();
     }
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
@@ -333,7 +385,7 @@ socket.on('texto2', data => {
     puntos2.innerHTML = data.points;
     cambiar_color_puntuación()
     nivel2.innerHTML = data.level;
-    if (jugador_psico == 2) {
+    if (activado_psico2) {
         stylize();
     }
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
@@ -369,15 +421,16 @@ socket.on("count", data => {
     }
     if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
         console.log(convertirASegundos(data.count))
-        LIMPIEZAS["psicodélico"]("");
+        LIMPIEZAS["psicodélico"](data, data.player);
         tiempo.style.color = "yellow";
     }
-    if (10 > convertirASegundos(data.count) && activado_psico == false) {
-        MODOS["psicodélico"](data, socket);
+    if (10 > convertirASegundos(data.count) && activado_psico1 == false) {
+        MODOS["psicodélico"](data, socket, data.player);
         tiempo.style.color = "red";
     }
     tiempo.innerHTML = data.count;
     if(data.count == '¡Tiempo!'){
+        LIMPIEZAS["psicodélico"](data, data.player);
         confetti_aux()
         terminado = true;
         feedback1.innerHTML = "";
@@ -399,15 +452,16 @@ socket.on("count", data => {
         }
         if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
             console.log(convertirASegundos(data.count))
-            LIMPIEZAS["psicodélico"]("");
+            LIMPIEZAS["psicodélico"](data, data.player);
             tiempo1.style.color = "yellow";
         }
-        if (10 > convertirASegundos(data.count) && activado_psico == false) {
-            MODOS["psicodélico"](data, socket);
+        if (10 > convertirASegundos(data.count) && activado_psico2 == false) {
+            MODOS["psicodélico"](data, socket, data.player);
             tiempo1.style.color = "red";
         }
         tiempo1.innerHTML = data.count;
         if(data.count == '¡Tiempo!'){
+            LIMPIEZAS["psicodélico"](data, data.player);
             terminado1 = true;
             feedback2.innerHTML = "";
             palabra2.innerHTML = "";
@@ -424,7 +478,7 @@ socket.on("count", data => {
     }
     if (terminado && terminado1) {
 
-        //confetti_aux();
+        confetti_aux();
         LIMPIEZAS[modo_actual](data);
         
         limpiezas_final();
@@ -512,7 +566,7 @@ socket.on('inicio', data => {
   
       counter--;
   
-      if (counter == -1) {
+      if (counter <= -1) {
         clearInterval(timer);
         setTimeout(() => {
           $('#countdown').remove();
@@ -555,6 +609,7 @@ socket.on('limpiar', data => {
 
     limpiezas();
     stopConfetti();
+    temas.style.display = "none";
     temas.innerHTML = "";
     texto1.style.height = "";
     texto2.style.height = "";
@@ -755,13 +810,14 @@ socket.on('fin', data => {
 });
 
 socket.on("enviar_repentizado", repentizado => {
-    temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
-    animateCSS(".temas", "flash")
+    //temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
+    //animateCSS(".temas", "flash")
 });
 
-socket.on("enviar_ventaja_j2", putada => {
-    PUTADAS[putada](2);
-    feedback1.innerHTML = putada + " <span style='color: red;'>¡PUTADA!</span>";
+socket.on("enviar_ventaja_j1", putada => {
+    stopDotAnimation(Temasinterval);
+    PUTADAS[putada](1);
+    feedback1.innerHTML = putada + " <span style='color: red;'>¡DESVENTAJA!</span>";
     animateCSS(".feedback1", "flash").then((message) => {
         setTimeout(function () {
             feedback1.innerHTML = "";
@@ -775,9 +831,10 @@ socket.on("enviar_ventaja_j2", putada => {
     });  
 });
 
-socket.on("enviar_ventaja_j1", putada => {
-    PUTADAS[putada](1);
-    feedback2.innerHTML = putada + " <span style='color: red;'>¡PUTADA!</span>";;
+socket.on("enviar_ventaja_j2", putada => {
+    stopDotAnimation(Temasinterval);
+    PUTADAS[putada](2);
+    feedback2.innerHTML = putada + " <span style='color: red;'>¡DESVENTAJA!</span>";;
     animateCSS(".feedback2", "flash").then((message) => {
         setTimeout(function () {
             feedback2.innerHTML = "";
@@ -804,13 +861,63 @@ socket.on("nueva letra", letra => {
 
 socket.on('elegir_ventaja_j1', () => {
     confetti_musas(0.25);
+    temas.innerHTML = "";
+    temas.style.display = "";
+    iniciarAnimacionesSegunCondicion("azul");
+    
 });
 
 socket.on('elegir_ventaja_j2', () => {
     confetti_musas(0.75);
+    temas.innerHTML = "";
+    temas.style.display = "";
+    iniciarAnimacionesSegunCondicion("rojo");
 });
 
 //FUNCIONES AUXILIARES.
+
+function reproducirSonido(rutaArchivo) {
+    // Se crea una instancia del objeto Audio con la ruta del archivo
+    const sonido = new Audio(rutaArchivo);
+
+    // Intentamos reproducir el sonido
+    sonido.play()
+}
+
+// Referencias a los elementos
+// Variables para guardar los IDs de intervalo si es necesario detenerlos después
+
+// Ejemplo: iniciar animaciones según un estado o condición
+function iniciarAnimacionesSegunCondicion(condicion) {
+  if (condicion === "azul") {
+    // Inicia animación para musas azules
+    Temasinterval = startDotAnimation(temas,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+  } else if (condicion === "rojo") {
+    // Inicia animación para musas rojas
+    Temasinterval = startDotAnimation(temas,   'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+  }
+}
+
+function startDotAnimation(element, baseText, maxDots = 3, intervalTime = 500) {
+    let dotCount = 0;
+  
+    // Configura y guarda el intervalo
+    animateCSS(".temas", "flash");
+    element.style.color = 'orange';
+    element.style.fontSize = '0.9em';
+    const intervalId = setInterval(() => {
+      dotCount = (dotCount + 1) % (maxDots + 1);
+      element.innerHTML = baseText + ".".repeat(dotCount);
+    }, intervalTime);
+  
+    return intervalId;
+  }
+  
+  function stopDotAnimation(intervalId) {
+    temas.innerHTML = "";
+    temas.style.display = "";
+    clearInterval(intervalId);
+  }
 
 function activar_sockets_extratextuales() {
 
@@ -1143,6 +1250,7 @@ function limpiezas(){
     lightning.classList.remove("lightning");
 
     clearInterval(timer)
+    stopDotAnimation(Temasinterval);
     terminado = false;
     terminado1 = false;
 
@@ -1159,8 +1267,6 @@ function limpiezas(){
     definicion3.innerHTML = "";
     explicación2.innerHTML = "";
 
-    temas.innerHTML = "";
-    temas.display = "";
     
     texto1.innerText = "";
     texto2.innerText = "";
@@ -1202,7 +1308,7 @@ function limpiezas_final(){
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
 
-    temas.innerHTML = "none";
+    temas.style.display = "none";
     temas.innerHTML = "";
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
@@ -1249,6 +1355,7 @@ function limpiezas_final(){
     blueCount = 0;
     redCount = 0;
     updateBar();
+    stopDotAnimation(Temasinterval);
 }
 
 var duration = 15 * 1000;
@@ -1296,7 +1403,7 @@ function convertirASegundos(tiempo) {
 
   function confetti_musas(pos){
     var scalar = 2;
-    var unicorn = confetti.shapeFromText({ text: '🎨', scalar });
+    var unicorn = confetti.shapeFromText({ text: '⭐', scalar });
     isConfettiRunning = true; // Habilita la ejecución de confetti
     var end = Date.now() + (2 * 1000);
     

@@ -1,4 +1,5 @@
 var player = getParameterByName("player");
+
 let feedback_a_j_x;
 let feedback_de_j_x;
 let texto_x;
@@ -12,6 +13,8 @@ let borrado_cambiado = false;
 let duracion;
 let texto_guardado = "";
 let interval_ortografia_perfecta;
+let pararEscritura = false;
+
 
 
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
@@ -105,6 +108,39 @@ if (player == 1) {
     metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
 
 }
+
+texto.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace") {
+      const sel = window.getSelection();
+      if (sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const startContainer = range.startContainer;
+        const startOffset = range.startOffset;
+  
+        // Si el cursor está justo antes de un `contenteditable="false"`, bloqueamos el retroceso
+        if (
+          startContainer.nodeType === 1 &&
+          startOffset === 0 &&
+          startContainer.previousSibling &&
+          startContainer.previousSibling.getAttribute &&
+          startContainer.previousSibling.getAttribute("contenteditable") === "false"
+        ) {
+          e.preventDefault(); // Bloquea la acción de retroceso
+        }
+  
+        // Si el cursor está dentro de un nodo de texto, verificamos el anterior
+        if (
+          startContainer.nodeType === 3 &&
+          startOffset === 0 &&
+          startContainer.parentNode.previousSibling &&
+          startContainer.parentNode.previousSibling.getAttribute &&
+          startContainer.parentNode.previousSibling.getAttribute("contenteditable") === "false"
+        ) {
+          e.preventDefault(); // Bloquea la acción de retroceso
+        }
+      }
+    }
+  });
 
 // Se establece la conexión con el servidor.
 serverUrl = window.location.href.startsWith('file:')
@@ -455,20 +491,12 @@ socket.on("count", (data) => {
     tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
         if (putada_actual == "🙃"){
-            texto.innerText =
-                texto.innerText
-                    .split("")
-                    .reverse()
-                    .join("")
-                    .split(" ")
-                    .reverse()
-                    .join(" ")
-                    .split("")
-                        .reverse()
-                        .join("")
-                        .split(" ")
-                        .reverse()
-                        .join(" ");
+            texto.classList.add("rotate-vertical-center");
+            texto.addEventListener('animationend', function() {
+                texto.classList.remove("rotate-vertical-center");
+                texto.removeEventListener('animationend', arguments.callee);
+            });
+            procesarTexto();
         }
         sendText();
         texto_guardado = texto.innerText;
@@ -534,7 +562,7 @@ socket.on("inicio", (data) => {
   
       counter--;
   
-      if (counter == -1) {
+      if (counter <= -1) {
         clearInterval(timer);
         setTimeout(() => {
           $('#countdown').remove();
@@ -671,7 +699,7 @@ socket.on(inspirar, palabra => {
 });
 
 socket.on(enviar_ventaja, ventaja => {
-    feedback.innerHTML = ventaja + " <span style='color: lime;'>¡VENTAJA!</span>";
+    feedback.innerHTML = ventaja + " <span style='color: red;'>¡DESVENTAJA!</span>";
     console.log(ventaja);
     PUTADAS[ventaja]();
     animateCSS(".feedback1", "flash").then((message) => {
@@ -682,14 +710,21 @@ socket.on(enviar_ventaja, ventaja => {
 });
 
 socket.on("enviar_repentizado", repentizado => {
-    temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
-    //efectoMaquinaDeEscribir(texto, repentizado, 150);
-    animateCSS(".temas", "flash")
+
+    if(terminado == false){
+        //temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
+        efectoMaquinaDeEscribir(texto, repentizado, 150);
+        //animateCSS(".temas", "flash")
+    }
+    
     });
 
 socket.on("nueva letra", letra => {
+    palabra_actual = []
+    definicion.innerHTML = "";
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
+
         texto.removeEventListener("keydown", listener_modo);
         listener_modo = function (e) { modo_letra_prohibida(e) };
         texto.addEventListener("keydown", listener_modo);
@@ -744,10 +779,18 @@ function recibir_palabra_prohibida(data) {
 
 // FUNCIONES AUXILIARES.
 
+function reproducirSonido(rutaArchivo) {
+    // Se crea una instancia del objeto Audio con la ruta del archivo
+    const sonido = new Audio(rutaArchivo);
+
+    // Intentamos reproducir el sonido
+    sonido.play()
+}
+
 // Función para enviar texto al otro jugador y a control
 function sendText() {
     let text = texto.innerHTML;
-    let points = puntos.textContent;
+    let points = puntos.innerHTML;
     let level = nivel.textContent;
     let caretPos = guardarPosicionCaret();
     socket.emit(texto_x, { text, points, level, caretPos });
@@ -1166,7 +1209,8 @@ function modo_letra_prohibida(e) {
             sel.addRange(range);
             secs = 2;
             socket.emit('aumentar_tiempo', {secs, player});
-            puntos.innerHTML = puntos + " palabras";
+            puntos.innerHTML = puntos_ + " palabras";
+            console.log(puntos);
             sendText();
 
             // Feedback visual
@@ -1213,6 +1257,7 @@ function modo_psicodélico() {
 }
 
 function limpieza(){
+    pararEscritura = true;
     stopConfetti();
     clearTimeout(listener_cuenta_atras);
     clearInterval(timer);  
@@ -1487,7 +1532,6 @@ function confetti_aux() {
     }
 
     var particleCount = 50 * (timeLeft / duration);
-    console.log("HOLAAAA");
     confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
     confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
   }, 250);
@@ -1646,102 +1690,150 @@ function modo_ortografía_perfecta() {
     }, 10000);
 }
 
-function invertirPalabras(texto) {
-    return texto.split(' ').map(palabra => palabra.split('').reverse().join('')).join(' ');
-}
+ // Función que invierte las letras de cada palabra pero NO el orden de las palabras.
+ function invertirPalabras(texto) {
+    return texto
+      .split(' ')                         // Separa por espacios
+      .map(palabra => palabra.split('').reverse().join('')) 
+      .join(' ');
+  }
 
-function procesarTexto() {
-    let fragmento = document.createDocumentFragment();
+  /**
+   * Función recursiva que:
+   * - Invierne el contenido de los nodos de texto
+   * - Clona y procesa los nodos de tipo elemento para preservar estructura e hijos
+   */
+  function procesarNodo(nodo) {
+    if (nodo.nodeType === Node.TEXT_NODE) {
+      // Si es un nodo de texto, lo invertimos
+      const textoInvertido = invertirPalabras(nodo.textContent);
+      return document.createTextNode(textoInvertido);
 
+    } else if (nodo.nodeType === Node.ELEMENT_NODE) {
+      // Clonamos el nodo (pero sin hijos) para preservar etiquetas y atributos (estilos, clases, etc.)
+      const nuevoNodo = nodo.cloneNode(false);
+
+      // Recorremos los hijos originales y los procesamos recursivamente
+      nodo.childNodes.forEach(child => {
+        // Insertamos en el clon el resultado de procesar cada hijo
+        nuevoNodo.appendChild(procesarNodo(child));
+      });
+
+      return nuevoNodo;
+    }
+
+    // Si quisieras manejar comentarios u otro tipo de nodos,
+    // podrías añadir más condiciones. Si no, simplemente retorna el nodo tal cual.
+    return nodo.cloneNode(true);
+  }
+
+  function procesarTexto() {
+    // El contenedor original
+    // Creamos un fragmento para ir colocando los nodos procesados
+    const fragmento = document.createDocumentFragment();
+
+    // Recorremos los childNodes del div con id="texto"
     texto.childNodes.forEach(nodo => {
-        if (nodo.nodeType === Node.TEXT_NODE) {
-            // Texto dentro del div, fuera de cualquier otro elemento
-            let textoInvertido = invertirPalabras(nodo.textContent);
-            fragmento.appendChild(document.createTextNode(textoInvertido));
-        } else if (nodo.nodeType === Node.ELEMENT_NODE) {
-            // Copia el nodo (p.ej., <br>, <div>) y procesa su contenido si es necesario
-            let copiaNodo = nodo.cloneNode(false);
-            if (nodo.childNodes.length > 0) {
-                let textoInvertido = invertirPalabras(nodo.textContent);
-                copiaNodo.textContent = textoInvertido;
-            }
-            fragmento.appendChild(copiaNodo);
-        }
+      // Procesamos cada nodo (ya sea texto o elemento) y lo añadimos al fragmento
+      fragmento.appendChild(procesarNodo(nodo));
     });
 
-    texto.innerHTML = '';
+    // Limpiamos el contenido original y lo reemplazamos con el fragmento procesado
+    texto.innerHTML = "";
     texto.appendChild(fragmento);
-}
+  }
 
-function efectoMaquinaDeEscribir(elemento, textoHtml, velocidad = 100) {
-    let cursor = 0; // Índice para recorrer el textoHtml
-    elemento.contentEditable = "false"; // Asegúrate de que esto se refiere al elemento correcto
-    desactivar_borrar = true;
-    // Agrega un salto de línea al principio del contenido a escribir, si el elemento ya tiene contenido
-    let contenidoInicial = elemento.innerHTML;
-    if (contenidoInicial) {
-        contenidoInicial += "<br>"; // Añade un salto de línea antes del nuevo contenido
+function efectoMaquinaDeEscribir(elemento, textoHtml, velocidad = 50) {
+  // Reiniciar la bandera al inicio para permitir nuevas ejecuciones
+  pararEscritura = false;
+
+  // Asegurar salto de línea inicial si el contenido actual no termina con <br>
+  let contenidoInicial = elemento.innerHTML.trim(); // Limpiamos espacios innecesarios
+  if (!contenidoInicial.endsWith("<br>")) {
+    contenidoInicial += "<br>"; // Añadimos un salto de línea si no está presente
+  }
+
+  let contenidoEscrito = contenidoInicial; // Inicializamos con el contenido previo
+  let cursor = 0;                          // Índice para recorrer el texto
+
+  // Añadir los saltos de línea adicionales al texto
+  textoHtml = "<br>" + textoHtml + "<br><br>";
+
+  // Desactiva la edición temporal
+  elemento.contentEditable = "false";
+
+  // ---- Función para colocar el cursor justo al final ----
+  function colocarCursorAlFinal(elem) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+
+    let ultimoNodo = elem.lastChild;
+    while (ultimoNodo && ultimoNodo.nodeType !== 3 && ultimoNodo.lastChild) {
+      ultimoNodo = ultimoNodo.lastChild;
     }
 
-    function escribir() {
-        elemento.scrollTo(0, elemento.scrollHeight);
-        if (cursor < textoHtml.length) {
-            if (textoHtml.substring(cursor).startsWith('<span')) {
-                let finSpan = textoHtml.indexOf('</span>', cursor) + '</span>'.length;
-                elemento.innerHTML = contenidoInicial + textoHtml.substring(0, finSpan) + (cursor + 1 < textoHtml.length ? "<br>" : ""); // Agrega salto de línea al final si no es el fin
-                cursor = finSpan;
-                sendText();
-            } else {
-                elemento.innerHTML = contenidoInicial + textoHtml.substring(0, cursor + 1) + (cursor + 1 < textoHtml.length ? "<br>" : ""); // Agrega salto de línea al final si no es el fin
-                cursor++;
-                sendText();
-            }
-
-            setTimeout(escribir, textoHtml.substring(cursor).startsWith('<span') ? 0 : velocidad);
-        } else {
-            elemento.innerHTML += "<br><br><br>";
-            sendText()
-
-                // Asumiendo que 'texto' es el elemento contenedor
-                let lastLine = texto.lastChild;
-                let lastTextNode = lastLine;
-                while (lastTextNode && lastTextNode.nodeType !== 3) {
-                    // Esto maneja el caso cuando lastTextNode no tiene más hijos (nodos de texto)
-                    if (!lastTextNode.lastChild) break;
-                    lastTextNode = lastTextNode.lastChild;
-                }
-
-            // Si encontramos el último nodo de texto o un elemento, colocamos el cursor allí
-            if (lastTextNode) {
-                let range = document.createRange(); // Crea un nuevo rango
-                let sel = window.getSelection();
-
-                if (lastTextNode.nodeType === 3) { // Es un nodo de texto
-                    range.setStart(lastTextNode, lastTextNode.length);
-                    range.setEnd(lastTextNode, lastTextNode.length);
-                } else { // No es un nodo de texto, intenta establecer el rango al final del elemento
-                    range.setStart(lastTextNode, lastTextNode.childNodes.length);
-                    range.setEnd(lastTextNode, lastTextNode.childNodes.length);
-                }
-
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-
-            texto.focus(); 
-            texto.scrollTo(0, texto.scrollHeight);
-            elemento.contentEditable = "true"; // Habilita la edición al finalizar
-            elemento.focus(); // Coloca el foco en el elemento
-            desactivar_borrar = false;
-        }
+    if (ultimoNodo && ultimoNodo.nodeType === 3) {
+      range.setStart(ultimoNodo, ultimoNodo.textContent.length);
+      range.setEnd(ultimoNodo, ultimoNodo.textContent.length);
+    } else if (elem.lastChild) {
+      range.setStartAfter(elem.lastChild);
+      range.setEndAfter(elem.lastChild);
+    } else {
+      range.setStart(elem, 0);
+      range.setEnd(elem, 0);
     }
 
-    escribir();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  // ---- Función recursiva para escribir el texto ----
+  function escribir() {
+    // Verificar si se ha solicitado detener la escritura
+    if (pararEscritura) {
+      return; // Salimos de la función para detener la recursión
+    }
+
+    if (cursor < textoHtml.length) {
+      // Detectamos etiquetas HTML para escribirlas completas de golpe
+      if (textoHtml.substring(cursor).startsWith("<")) {
+        const finEtiqueta = textoHtml.indexOf(">", cursor) + 1;
+        contenidoEscrito += textoHtml.substring(cursor, finEtiqueta);
+        cursor = finEtiqueta;
+      } else {
+        // Caso normal: añadimos un carácter
+        contenidoEscrito += textoHtml.charAt(cursor);
+        cursor++;
+      }
+
+      // Actualizamos el contenido en el elemento
+      elemento.innerHTML = contenidoEscrito;
+      elemento.scrollTop = elemento.scrollHeight;  // Scroll al final
+
+      // Continuamos con un pequeño retraso
+      setTimeout(escribir, velocidad);
+    } else {
+      // Cuando terminamos
+      elemento.contentEditable = "true";          // Reactivamos edición
+      colocarCursorAlFinal(elemento);            // Cursor al final
+      elemento.focus();                          // Enfocamos el elemento
+    }
+    sendText();
+  }
+
+  // Inicia el proceso de escritura
+  escribir();
 }
+
+// Función para detener el efecto de la máquina de escribir
+function detenerEfectoMaquina() {
+  pararEscritura = true;
+}
+
 
 function confetti_musas(){
 var scalar = 2;
-var unicorn = confetti.shapeFromText({ text: '🎨', scalar });
+var unicorn = confetti.shapeFromText({ text: '⭐', scalar });
 isConfettiRunning = true;
 
 var end = Date.now() + (2 * 1000);

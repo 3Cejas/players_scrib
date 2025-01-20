@@ -26,6 +26,8 @@ let explicación = getEl("explicación");
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 let tiempo1 = getEl("tiempo1");
+let tiempo_modos_secs = getEl("tiempo_modos_secs");
+let display_modo = getEl("display_modo");
 let tema = getEl("temas");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
 let boton_borrar = getEl("boton_borrar");
@@ -184,6 +186,7 @@ let val_nombre1 = nombre1.value.toUpperCase();
 
 let val_nombre2 = nombre2.value.toUpperCase();
 
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     socket.emit('envío_nombre1', val_nombre1);
@@ -207,10 +210,16 @@ socket.on('texto2', data => {
 });
 
 socket.on('tiempo_muerto_control', data => {
+    display_modo.style.color = COLORES_MODOS[modo_actual];
+    display_modo.textContent = modo_actual.toUpperCase();
+    boton_pausar_reanudar.innerHTML = "▶️ REANUDAR";
+    boton_pausar_reanudar.dataset.value = 1;
   pausar();
-  setTimeout(function(){
+  iniciarContador()
+  TimeoutTiempoMuerto = setTimeout(function(){
     secondsPassed = TIEMPO_CAMBIO_MODOS;
     reanudar_modo();
+    limpiarContador();
   }, TIEMPO_CAMBIO_MODOS * 1000);
 });
 
@@ -385,6 +394,10 @@ const MODOS = {
     },
 
     'ortografía perfecta': function (data) {
+    },
+
+
+    'frase final': function (data) {
     },
 
     "": function (data) { },

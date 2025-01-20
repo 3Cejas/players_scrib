@@ -75,7 +75,7 @@
                     <span class='btn' onclick="limpiar()">🧹 LIMPIAR</span>
                 </td>
                 <td>
-                    <span id="boton_pausar_reanudar" value=0 onclick="pausar_reanudar(this)" class='btn'>▶️ PAUSAR</span>
+                    <span id="boton_pausar_reanudar" data-value="0"  onclick="pausar_reanudar(this)" class='btn'>⏸️  PAUSAR</span>
                 </td>   
                 <td>
                     <span onclick="enviar_comentario()" class='btn'>💬 ENVIAR COMENTARIO</span>
@@ -123,6 +123,11 @@
             <label for="tiempo_modos">TIEMPO MODOS</label>
             <input type="number" id="tiempo_modos" name="tiempo_modos" class="parametro"
                    min="1" max="3600" step="1" value = 300>
+        </td>
+        <td>
+            <br>
+            <p id="display_modo" class="display_modo">Ninguno</p>
+            <p id="tiempo_modos_secs" class="tiempo">0 secs.</p>
         </td>
     </tr>
     <tr>
@@ -176,7 +181,6 @@
             </tr>
         </table>
     </div>
-    <br>
     <div id="contenedor">
         <div>
             <br>

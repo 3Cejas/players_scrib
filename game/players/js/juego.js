@@ -36,6 +36,8 @@ let lastTextNode;
 let caretPos;
 let caretNode;
 
+
+
 document.addEventListener('keydown', function(event) {
 });
 document.addEventListener('click', function(event) {

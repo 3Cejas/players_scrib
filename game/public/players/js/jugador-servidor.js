@@ -258,7 +258,7 @@ socket.on('inicio', data => {
   
       counter--;
   
-      if (counter == -1) {
+      if (counter <= -1) {
         clearInterval(timer);
         setTimeout(() => {
           $('#countdown').remove();
@@ -843,7 +843,7 @@ function stopConfetti() {
 
   function confetti_musas(){
     var scalar = 2;
-    var unicorn = confetti.shapeFromText({ text: '🎨', scalar });
+    var unicorn = confetti.shapeFromText({ text: '⭐', scalar });
     isConfettiRunning = true; // Habilita la ejecución de confetti
     
     var end = Date.now() + (2 * 1000);

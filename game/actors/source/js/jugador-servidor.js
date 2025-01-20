@@ -171,7 +171,8 @@ socket.on('dar_nombre', (nombre) => {
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on(texto_x, data => {
-    texto1.innerText = data.text;
+    console.log(data)
+    texto1.innerHTML = data.text;
     puntos1.innerHTML = data.points;
     //cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
@@ -263,7 +264,7 @@ socket.on('inicio', data => {
   
       counter--;
   
-      if (counter == -1) {
+      if (counter <= -1) {
         clearInterval(timer);
         setTimeout(() => {
           $('#countdown').remove();
