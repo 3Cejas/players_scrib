@@ -713,7 +713,7 @@ socket.on("enviar_repentizado", repentizado => {
 
     if(terminado == false){
         //temas.innerHTML = "⚠️ "+ repentizado + " ⚠️";
-        efectoMaquinaDeEscribir(texto, repentizado, 150);
+        //efectoMaquinaDeEscribir(texto, repentizado, 150);
         //animateCSS(".temas", "flash")
     }
     
