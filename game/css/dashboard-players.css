@@ -258,6 +258,72 @@ button {
     font-family: "Retro-gaming";
     height: 5%;
 }
+
+ /* -- MENÚ 1: Game Over -- */
+
+ #mainMenu {
+  margin-bottom: 20px;
+  display: none; /* Oculto inicialmente */
+}
+
+.main-title {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2em; /* Espacio entre botones */
+  margin-bottom: 20px;
+}
+
+/* -- MENÚ 2: Selección de cantidad -- */
+
+#quantityMenu {
+  display: none; /* Se oculta inicialmente */
+}
+
+.quantity-title {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+/* 
+  Aquí mostraremos la cantidad actual y su conversión en segundos.
+  Lo usaremos como "elemento" navegable, igual que si fuera un botón,
+  para poder resaltarlo cuando se seleccione con flechas.
+*/
+.quantity-display {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  display: inline-block;
+  padding: 10px 20px;
+}
+
+/* -- ESTILOS GENERALES PARA BOTONES -- */
+button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  background-color: #444;
+  color: #fff;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+button:hover {
+  background-color: #666;
+}
+
+/* -- Clase para resaltar el elemento seleccionado con teclado -- */
+.selected {
+  background-color: #00bfff;
+  color: #000; /* Texto en negro para contrastar */
+}
+
 .letra-verde {
   color: lime;
 }

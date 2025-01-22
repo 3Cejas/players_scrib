@@ -46,6 +46,35 @@
             <input disabled="" id="nombre" class="nombre" data-darkreader-inline-color="">
             <br><br>
             <p id="alineador1"></p>
+                          <!-- MENÚ PRINCIPAL -->
+    <div id="mainMenu" class="mainMenu">
+        <!-- Título principal separando "Game Over" en rojo y el resto en blanco -->
+        <h1 class="main-title">
+          <span style="color: red;">GAME OVER</span><br><br> ¿QUIERES <span style="color: lime">RESUCITAR</span> A CAMBIO DE PALABRAS?
+        </h1>
+        <div class="button-container">
+          <button id="btnSi" class="selected">Sí</button>
+          <button id="btnNo">No</button>
+        </div>
+      </div>
+  
+      <!-- MENÚ DE SELECCIÓN DE CANTIDAD (APARECE AL DAR "SÍ") -->
+      <div id="quantityMenu">
+        <h2 class="quantity-title">Selecciona la cantidad de palabras:</h2>
+        <!-- 
+          Este elemento mostrará la cantidad y su conversión a segundos.
+          Lo tratamos como "elemento navegable" en nuestro índice para flechas.
+        -->
+        <div id="quantityDisplay" class="quantity-display selected">
+          <!-- Aquí inyectaremos el texto "X palabras => Y segundos" -->
+        </div>
+  
+        <!-- Botones de abajo: "Confirmar" y "Atrás" -->
+        <div class="button-container">
+          <button id="btnConfirmar">Confirmar</button>
+          <button id="btnAtras">Atrás</button>
+        </div>
+      </div>
             <div class="textarea-container">
             <div contenteditable="false" class="textarea" id="texto" spellcheck="false"> </div>
                 <div class="textarea-gradient top" id="gradientTop"></div>

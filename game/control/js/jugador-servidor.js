@@ -209,17 +209,24 @@ socket.on('texto2', data => {
 
 });
 
+socket.on('temp_modos', data => {
+    tiempo_modos_secs.textContent = data.secondsPassed + " secs.";
+    display_modo.textContent = data.modo_actual.toUpperCase();
+    display_modo.style.color = COLORES_MODOS[data.modo_actual];
+    console.log(data.secondsPassed, "secondsPassed", data.modo_actual);
+    console.log(COLORES_MODOS[data.modo_actual])
+});
+
+
 socket.on('tiempo_muerto_control', data => {
     display_modo.style.color = COLORES_MODOS[modo_actual];
     display_modo.textContent = modo_actual.toUpperCase();
     boton_pausar_reanudar.innerHTML = "▶️ REANUDAR";
     boton_pausar_reanudar.dataset.value = 1;
   pausar();
-  iniciarContador()
   TimeoutTiempoMuerto = setTimeout(function(){
     secondsPassed = TIEMPO_CAMBIO_MODOS;
     reanudar_modo();
-    limpiarContador();
   }, TIEMPO_CAMBIO_MODOS * 1000);
 });
 
@@ -273,6 +280,19 @@ socket.on('activar_modo', (data) => {
     console.log(modo_actual)
     MODOS[modo_actual]();
 });
+
+socket.on('resucitar_control', (data) => {
+ if(data.player == 1){
+    secondsPassed = 0
+    startCountDown_p1(data.secs);
+ }
+ else if(data.player == 2){
+    secondsPassed1 = 0
+    startCountDown_p2(data.secs);
+
+ }
+});
+
 
 function downloadTxtFile(filename, htmlContent) {
     // Reemplazar etiquetas <br> y separar bloques de <div> con saltos de línea

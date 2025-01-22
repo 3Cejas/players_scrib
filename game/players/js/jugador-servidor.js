@@ -16,7 +16,6 @@ let interval_ortografia_perfecta;
 let pararEscritura = false;
 
 
-
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
@@ -64,6 +63,10 @@ let temp_text_inverso_activado = false;
 let TIEMPO_INVERSO;
 let TIEMPO_BORROSO;
 let TIEMPO_BORRADO;
+
+const mainTitle = document.querySelector('.main-title');
+const buttonContainer = document.querySelector('.button-container');
+
 
 function getParameterByName(name, url) {
 if (!url) url = window.location.href;
@@ -499,25 +502,156 @@ socket.on("count", (data) => {
             procesarTexto();
         }
         sendText();
-        texto_guardado = texto.innerText;
+        if(modo_actual != "" || modo_actual != "frase final"){
+        LIMPIEZAS["psicodélico"]("");
         tiempo.style.color = "white";
-        if(terminado == false){
-            final();
-            confetti_aux();
-            setTimeout(function () {
+            pararEscritura = true;
+            stopConfetti();
+            clearTimeout(listener_cuenta_atras);
+            clearInterval(timer);  
+            clearTimeout(sub_timer);
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+            lightning.classList.remove("lightning");
+            if(temp_text_inverso_activado == true){
+                clearTimeout(tempo_text_inverso);
+                procesarTexto();
+            }
 
-                texto.style.height = "";
-                texto.rows =  "1";
-                texto.style.display = "none";
-                texto.textContent = texto_guardado;
-                sendText();
-                tiempo.style.color = "white";
-                }, 2000);
+        // Verifica y asigna el valor a texto_guardado basado en el contenido de text
+            if(texto.innerText != "") {
+                texto_guardado = texto.innerText;
+            } else {
+                texto_guardado = ""; // Asigna una cadena vacía si text.innerText es vacío
+            }
+        
+            texto.innerText = "";
+            texto.style.display = "";
+            texto.style.height = "";
+            feedback_tiempo.style.color = color_positivo;
+            texto.rows =  "6";
+            definicion.style.fontSize = "1.5vw";
+            temas.innerHTML = "";
+            temas.display = "";
+            texto.contentEditable= "false";
+            palabra.innerHTML = "";
+            definicion.innerHTML = "";
+            explicación.innerHTML = "";
+            menu_modificador = false;
+            focusedButtonIndex = 0;
+            modificadorButtons = [];
+        
+            // Desactiva el blur de ambos textos.
+            blurreado = false;
+            texto.classList.remove("textarea_blur");
+        
+            puntos_palabra = 0;
+            puntos_ = 0;
+            puntos_letra_prohibida = 0;
+            puntos_letra_bendita = 0;
+        
+            letra_prohibida = "";
+            letra_bendita = "";
+            asignada = false;
+            palabra_actual = []; // Variable que almacena la palabra bonus actual.
+            terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
+            
+            // Desactiva, por seguridad, todos los modos.
+            modo_texto_borroso = 0;
+            desactivar_borrar = true;
+            console.log(puntos)
+            
+            feedback.innerHTML = "";
+            
+            definicion.innerHTML = "";
+            explicación.innerHTML = "";
+        
+            caracteres_seguidos = 0;
+            
+            for (let key in LIMPIEZAS) { 
+                console.log(key)
+                LIMPIEZAS[key]();
+            }
+        
+            clearTimeout(borrado);
+            clearTimeout(cambio_palabra);
+            clearTimeout(tempo_text_borroso);
         }
-    }
+        console.log(data)
+        console.log("MIERDA PUTA")
+        iniciarMenu();    
+        }
     }
 });
   
+function resucitar(){
+    terminado = false;
+    desactivar_borrar = false;
+    logo.style.display = "none"; 
+    neon.style.display = "none"; 
+    tiempo.innerHTML = "";
+    tiempo.style.display = "";
+
+    pararEscritura = true;
+    stopConfetti();
+    clearTimeout(listener_cuenta_atras);
+    clearInterval(timer);  
+    clearTimeout(sub_timer);
+    document.body.classList.remove("bg");
+    document.body.classList.remove("rain");
+    lightning.classList.remove("lightning");
+    if(temp_text_inverso_activado == true){
+        clearTimeout(tempo_text_inverso);
+        procesarTexto();
+    }
+
+    texto.textContent = texto_guardado;
+    texto.style.display = "";
+    texto.style.height = "";
+    feedback_tiempo.style.color = color_positivo;
+    texto.rows =  "6";
+    definicion.style.fontSize = "1.5vw";
+    temas.innerHTML = "";
+    temas.display = "";
+    texto.contentEditable= "false";
+    //puntos.innerHTML = 0 + " palabras";
+    //nivel.innerHTML = "nivel 0";
+    palabra.innerHTML = "";
+    definicion.innerHTML = "";
+    explicación.innerHTML = "";
+    menu_modificador = false;
+    focusedButtonIndex = 0;
+    modificadorButtons = [];
+    mainMenu.style.display = 'none';
+    quantityMenu.style.display = 'none';
+
+    // Desactiva el blur de ambos textos.
+    blurreado = false;
+    texto.classList.remove("textarea_blur");
+    
+    // Desactiva, por seguridad, todos los modos.
+    console.log(puntos)
+
+    caracteres_seguidos = 0;
+        texto.innerText = texto_guardado.trim();
+
+        sendText()
+
+        // Obtener el último nodo de texto en texto
+        let lastLine = texto.lastChild;
+        let lastTextNode = lastLine;
+        while (lastTextNode && lastTextNode.nodeType !== 3) {
+            lastTextNode = lastTextNode.lastChild;
+        }
+        
+        // Si encontramos el último nodo de texto, colocamos el cursor allí
+        if (lastTextNode) {
+            let caretNode = lastTextNode;
+            let caretPos = lastTextNode.length;
+            restaurarPosicionCaret(caretNode, caretPos);
+        }
+        texto.scrollTo(0, texto.scrollHeight);
+}
 // Inicia el juego.
 socket.on("inicio", (data) => {
     animateCSS(".cabecera", "backOutLeft").then((message) => {
@@ -573,7 +707,12 @@ socket.on("inicio", (data) => {
 });
 });
 
-socket.on("post-inicio", (borrar_texto) => {
+socket.on("post-inicio", (data) => {
+    console.log(data.borrar_texto, "borrar texto")
+    post_inicio(data.borrar_texto);
+});    
+
+function post_inicio(borrar_texto){
     clearTimeout(timer);
         if (borrar_texto == false) {
             texto.innerText = texto_guardado.trim();
@@ -599,7 +738,7 @@ socket.on("post-inicio", (borrar_texto) => {
         //socket.off("recibe_temas");
         texto.contentEditable= "true";
         texto.focus();
-});    
+}
 
 // Resetea el tablero de juego.
 socket.on("limpiar", (borrar) => {
@@ -672,8 +811,9 @@ socket.on('pausar_js', data => {
 });
 
 socket.on('fin', data => {
-    if(player == 1 && data != 2 || player == 2 && data != 1){
-        confetti_aux();
+    console.log(data)
+    if(player == data){
+        console.log("confetti_auxAAXACASCASCASCAS")
         final();
     }
 });
@@ -778,6 +918,222 @@ function recibir_palabra_prohibida(data) {
 }
 
 // FUNCIONES AUXILIARES.
+
+   /*************************************************************
+      VARIABLES GLOBALES Y REFERENCIAS A ELEMENTOS DEL DOM
+    **************************************************************/
+      const mainMenu = document.getElementById('mainMenu');
+      const quantityMenu = document.getElementById('quantityMenu');
+  
+      const btnSi = document.getElementById('btnSi');
+      const btnNo = document.getElementById('btnNo');
+      const mainMenuButtons = [btnSi, btnNo];
+      let mainMenuIndex = 0;
+  
+      const quantityDisplay = document.getElementById('quantityDisplay');
+      const btnConfirmar = document.getElementById('btnConfirmar');
+      const btnAtras = document.getElementById('btnAtras');
+      let quantityMenuElements = [quantityDisplay, btnConfirmar, btnAtras];
+      let quantityMenuIndex = 0;
+  
+      let palabras = 1;
+      const PALABRAS_A_SEGUNDOS = 3;
+      let currentMenu = 'main';
+  
+      /*************************************************************
+        ACTUALIZACIONES DE ESTADO VISUAL
+      **************************************************************/
+      function actualizarSeleccionMainMenu() {
+        mainMenuButtons.forEach(btn => btn.classList.remove('selected'));
+        mainMenuButtons[mainMenuIndex].classList.add('selected');
+        mainMenuButtons[mainMenuIndex].focus();
+      }
+  
+      function actualizarSeleccionQuantityMenu() {
+        quantityMenuElements.forEach(el => el.classList.remove('selected'));
+        quantityMenuElements[quantityMenuIndex].classList.add('selected');
+        if (quantityMenuIndex === 1) btnConfirmar.focus();
+        if (quantityMenuIndex === 2) btnAtras.focus();
+      }
+  
+      function actualizarTextoCantidad() {
+        const segundos = palabras * PALABRAS_A_SEGUNDOS;
+        quantityDisplay.innerHTML = `<span style="color: yellow;">${palabras} palabra(s)</span> => <span style="color: green;">${segundos} segundo(s)</span>`;
+
+      }
+      
+      
+      function recortarUltimasPalabras(text, cantidadPalabras) {
+        const palabrasArray = text.split(' ');       // Divide el texto en un array de palabras
+        if(cantidadPalabras <= 0) return text;       // Si no hay palabras para recortar, retorna el texto original
+        if(cantidadPalabras >= palabrasArray.length) {
+          return '';  // Si se piden recortar más palabras de las que existen, retorna cadena vacía
+        }
+        // Elimina las últimas "cantidadPalabras" del array
+
+        palabrasArray.splice(-cantidadPalabras, cantidadPalabras);
+        // Reúne las palabras restantes en un solo texto
+        return palabrasArray.join(' ');
+      }
+      
+      function mostrarMenuQuantity() {
+        mainMenu.style.display = 'none';
+        quantityMenu.style.display = 'block';
+        currentMenu = 'quantity';
+        quantityMenuIndex = 0;
+        actualizarTextoCantidad();
+        actualizarSeleccionQuantityMenu();
+      }
+  
+      function mostrarMenuPrincipal() {
+        quantityMenu.style.display = 'none';
+        mainMenu.style.display = 'block';
+        currentMenu = 'main';
+        mainMenuIndex = 0;
+        actualizarSeleccionMainMenu();
+      }
+
+      function iniciarMenu() {
+        console.log("Iniciando menú");
+
+
+        document.addEventListener('keydown', manejadorTeclas);
+        animateCSS(".mainMenu", "flash");
+        mainTitle.innerHTML = '<span style="color: red;">GAME OVER</span><br><br> ¿QUIERES <span style="color: lime">RESUCITAR</span> A CAMBIO DE <span style="color: yellow;">PALABRAS</span>?';
+        mainMenu.style.display = 'block';
+        mainTitle.style.display = 'block';
+        buttonContainer.style.display = 'flex';
+        currentMenu = 'main';
+        mainMenuIndex = 0;
+        actualizarSeleccionMainMenu();
+      }
+  
+      /*************************************************************
+        EVENTOS DE CLICK PARA LOS BOTONES CON stopPropagation()
+      **************************************************************/
+      btnSi.addEventListener('click', (evento) => {
+        evento.stopPropagation(); // Evita que se active el listener global
+        mostrarMenuQuantity();
+      });
+  
+      btnNo.addEventListener('click', (evento) => {
+        evento.stopPropagation();
+        texto.innerText = texto_guardado;
+        tiempo.style.color = "white";
+        if (terminado == false) {
+          final();
+          setTimeout(function () {
+            texto.style.height = "";
+            texto.rows = "1";
+            texto.style.display = "none";
+            texto.textContent = texto_guardado;
+            sendText();
+            tiempo.style.color = "white";
+          }, 2000);
+        }
+        animateCSS(".tiempo", "bounceInLeft");
+        tiempo.innerHTML = "¡GRACIAS POR JUGAR!";
+        if (buttonContainer) {
+          buttonContainer.style.display = 'none';
+        }
+
+        document.removeEventListener('keydown', manejadorTeclas);
+                
+        // Lógica para finalizar el juego.
+      });
+      
+  
+      btnConfirmar.addEventListener('click', (evento) => {
+        evento.stopPropagation();
+        socket.emit("resucitar", {player: player, secs: palabras * PALABRAS_A_SEGUNDOS});
+
+        // Recortar las últimas "palabras" de "texto_guardado"
+        console.log("texto_guardado", palabras);
+        console.log("texto_guardado", texto_guardado);
+
+        texto_guardado = recortarUltimasPalabras(texto_guardado, palabras);
+
+        console.log("texto_guardado", texto_guardado);
+
+        // Ocultar los menús para que no se vean más
+        resucitar()
+        mainMenu.style.display = 'none';
+        quantityMenu.style.display = 'none';
+        mainTitle.style.display = 'none';
+        buttonContainer.style.display = 'none';
+        
+        document.removeEventListener('keydown', manejadorTeclas);
+
+        post_inicio(false)
+      });
+  
+      btnAtras.addEventListener('click', (evento) => {
+        evento.stopPropagation();
+        mostrarMenuPrincipal();
+      });
+  
+      /*************************************************************
+        EVENTO DE TECLAS: FLECHAS Y ENTER
+      **************************************************************/
+      // Definimos la función manejadora de eventos de teclado.
+function manejadorTeclas(evento) {
+    evento.stopPropagation();
+    if (currentMenu === 'main') {
+      switch (evento.key) {
+        case 'ArrowLeft':
+          mainMenuIndex = 0;
+          actualizarSeleccionMainMenu();
+          break;
+        case 'ArrowRight':
+          mainMenuIndex = 1;
+          actualizarSeleccionMainMenu();
+          break;
+        case 'Enter':
+          mainMenuButtons[mainMenuIndex].click();
+          break;
+        default:
+          break;
+      }
+    } else if (currentMenu === 'quantity') {
+      switch (evento.key) {
+        case 'ArrowLeft':
+          quantityMenuIndex--;
+          if (quantityMenuIndex < 0) {
+            quantityMenuIndex = quantityMenuElements.length - 1; 
+          }
+          actualizarSeleccionQuantityMenu();
+          break;
+        case 'ArrowRight':
+          quantityMenuIndex++;
+          if (quantityMenuIndex >= quantityMenuElements.length) {
+            quantityMenuIndex = 0;
+          }
+          actualizarSeleccionQuantityMenu();
+          break;
+        case 'ArrowUp':
+          if (quantityMenuIndex === 0) {
+            palabras++;
+            actualizarTextoCantidad();
+          }
+          break;
+        case 'ArrowDown':
+          if (quantityMenuIndex === 0 && palabras > 1) {
+            palabras--;
+            actualizarTextoCantidad();
+          }
+          break;
+        case 'Enter':
+          if (quantityMenuIndex === 1) {
+            btnConfirmar.click();
+          } else if (quantityMenuIndex === 2) {
+            btnAtras.click();
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
 
 // Función para enviar texto al otro jugador y a control
 function sendText() {
@@ -1279,6 +1635,8 @@ function limpieza(){
     menu_modificador = false;
     focusedButtonIndex = 0;
     modificadorButtons = [];
+    mainMenu.style.display = 'none';
+    quantityMenu.style.display = 'none';
     texto.focus();
 
     // Desactiva el blur de ambos textos.
@@ -1325,6 +1683,9 @@ function limpieza(){
 }
 
 function limpieza_final(){
+    confetti_aux();
+    mainMenu.style.display = 'none';
+    quantityMenu.style.display = 'none';
     texto.contentEditable= "false";
     texto.style.display = "none";
     temas.display = "none";
