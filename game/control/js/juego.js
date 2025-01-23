@@ -182,8 +182,8 @@ function limpiar() {
         texto_guardado1 = texto1.innerText;
         texto_guardado2 = texto2.innerText;
     }
-    texto1.innerText = "";
-    texto2.innerText = "";
+    //texto1.innerText = "";
+    //texto2.innerText = "";
     juego_iniciado = false;
     document.getElementById("puntos").innerHTML = "0 palabras";
     document.getElementById("puntos1").innerHTML = "0 palabras";
@@ -458,8 +458,9 @@ function final(player){
         tiempo.style.color = "white"
         tiempo.innerHTML = "¡Tiempo!";
         count = "¡Tiempo!";
-        texto_guardado1 = texto1.innerText;
+        texto_guardado1 = texto1.innerHTML;
         terminado = true;
+        console.log("texto1", texto_guardado1)
         socket.emit('count', {count, player});
     }
     else{
@@ -469,7 +470,7 @@ function final(player){
         count1 = "¡Tiempo!";
         terminado1 = true;
         console.log("texto2", texto_guardado2)
-        texto_guardado2 = texto2.innerText;
+        texto_guardado2 = texto2.innerHTML;
         socket.emit('count', {count : count1, player:2});
     }
 

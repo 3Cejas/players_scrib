@@ -194,7 +194,10 @@ socket.on('connect', () => {
 });
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
+    console.log(data.text)
+    console.log(data.texto_guardado)
     texto1.innerHTML = data.text;
+    texto_guardado1 = data.texto_guardado;
     puntos1.innerHTML = data.points;
     nivel1.innerHTML = data.level;
     texto1.style.height = (texto1.scrollHeight) + "px";
@@ -202,7 +205,7 @@ socket.on('texto1', data => {
 
 socket.on('texto2', data => {
     texto2.innerHTML = data.text;
-    texto_guardado2 = data.text;
+    texto_guardado2 = texto2.innerHTML;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
     texto2.style.height = (texto1.scrollHeight) + "px";

@@ -328,6 +328,7 @@ socket.on('actualizar_contador_musas', contador_musas => {
 socket.on('texto1', data => {
     texto1.innerHTML = data.text;
     puntos1.innerHTML = data.points;
+    console.log("CAMBIADDOO")
     cambiar_color_puntuación()
     nivel1.innerHTML = data.level;
     //establecerPosicionCaret(data.caretPos);

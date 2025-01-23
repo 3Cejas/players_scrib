@@ -321,6 +321,9 @@ const MODOS = {
     },
 
     'tertulia': function (socket) {
+        es_pausa = true;
+        tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
+        pausa();
         explicación.style.color = "blue";
         explicación.innerHTML = "MODO TERTULIA";
         palabra.innerHTML = "";
@@ -404,7 +407,10 @@ const LIMPIEZAS = {
 
     "tiempo_borrado_más": function (data){ },
     
-    "tertulia": function (data) { },
+    "tertulia": function (data) {
+        es_pausa = false;
+        reanudar();
+    },
 
     "palabras prohibidas": function (data) {
         socket.off(enviar_palabra);
@@ -463,13 +469,14 @@ socket.on('actualizar_contador_musas', contador_musas => {
 });
 
 // Recibe los datos del jugador 1 y los coloca.
-socket.on(texto_x, (data) => {
+/*socket.on(texto_x, (data) => {
     texto.innerText = data.text;
     puntos.innerHTML = data.points;
     nivel.innerHTML = data.level;
     texto.scrollTop = texto.scrollHeight;
     window.scrollTo(0, document.body.scrollHeight);
 });
+*/
 
 /* 
 Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
@@ -518,15 +525,10 @@ socket.on("count", (data) => {
                 procesarTexto();
             }
 
-        // Verifica y asigna el valor a texto_guardado basado en el contenido de text
-            if(texto.innerText != "") {
-                texto_guardado = texto.innerText;
-            } else {
-                texto_guardado = ""; // Asigna una cadena vacía si text.innerText es vacío
-            }
+            texto_guardado = texto.innerText;
         
-            texto.innerText = "";
-            texto.style.display = "";
+            //texto.innerText = "";
+            texto.style.display = "none";
             texto.style.height = "";
             feedback_tiempo.style.color = color_positivo;
             texto.rows =  "6";
@@ -605,7 +607,7 @@ function resucitar(){
         procesarTexto();
     }
 
-    texto.textContent = texto_guardado;
+    texto.innerText = texto_guardado;
     texto.style.display = "";
     texto.style.height = "";
     feedback_tiempo.style.color = color_positivo;
@@ -613,7 +615,10 @@ function resucitar(){
     definicion.style.fontSize = "1.5vw";
     temas.innerHTML = "";
     temas.display = "";
+    console.log(modo_actual)
+    if(modo_actual != "tertulia"){
     texto.contentEditable= "false";
+    }
     //puntos.innerHTML = 0 + " palabras";
     //nivel.innerHTML = "nivel 0";
     palabra.innerHTML = "";
@@ -665,6 +670,7 @@ socket.on("inicio", (data) => {
 
     logo.style.display = "none"; 
     neon.style.display = "none"; 
+    texto.contentEditable= "false";
     tiempo.innerHTML = "";
     tiempo.style.display = "";
 
@@ -715,7 +721,7 @@ socket.on("post-inicio", (data) => {
 function post_inicio(borrar_texto){
     clearTimeout(timer);
         if (borrar_texto == false) {
-            texto.innerText = texto_guardado.trim();
+            texto.textContent = texto_guardado.trim();
 
             sendText()
 
@@ -747,13 +753,7 @@ socket.on("limpiar", (borrar) => {
         nombre.value = data;
     });
     if(borrar == false){
-
-       // Verifica y asigna el valor a texto_guardado basado en el contenido de text
-        if(texto.innerText != "") {
-            texto_guardado = texto.innerText;
-        } else {
-            texto_guardado = ""; // Asigna una cadena vacía si text.innerText es vacío
-        }
+        texto_guardado = texto.innerText;
     }
 
     limpieza();
@@ -964,18 +964,42 @@ function recibir_palabra_prohibida(data) {
       
       
       function recortarUltimasPalabras(text, cantidadPalabras) {
-        const palabrasArray = text.split(' ');       // Divide el texto en un array de palabras
-        if(cantidadPalabras <= 0) return text;       // Si no hay palabras para recortar, retorna el texto original
-        if(cantidadPalabras >= palabrasArray.length) {
-          return '';  // Si se piden recortar más palabras de las que existen, retorna cadena vacía
+        if (cantidadPalabras <= 0) {
+          return text;
         }
-        // Elimina las últimas "cantidadPalabras" del array
-
-        palabrasArray.splice(-cantidadPalabras, cantidadPalabras);
-        // Reúne las palabras restantes en un solo texto
-        return palabrasArray.join(' ');
+        
+        let endPos = text.length; // posición hasta la que mantenemos el texto
+        let palabrasEliminadas = 0;
+  
+        while (palabrasEliminadas < cantidadPalabras) {
+          // 1. Ignorar espacios y saltos de línea desde el final (si los hay)
+          while (endPos > 0 && /\s/.test(text[endPos - 1])) {
+            endPos--;
+          }
+          if (endPos <= 0) {
+            // Si se quedó sin texto, todo se elimina
+            return '';
+          }
+  
+          // 2. Retroceder hasta el inicio de la palabra previa
+          let inicioPalabra = endPos - 1;
+          while (inicioPalabra >= 0 && !/\s/.test(text[inicioPalabra])) {
+            inicioPalabra--;
+          }
+  
+          // Ajustamos endPos al inicio de esta palabra (para recortarla)
+          endPos = inicioPalabra >= 0 ? inicioPalabra + 1 : 0;
+          palabrasEliminadas++;
+  
+          if (endPos <= 0) {
+            return '';
+          }
+        }
+  
+        // 3. Retornar sólo la parte que no recortamos, con la estructura intacta
+        return text.substring(0, endPos);
       }
-      
+
       function mostrarMenuQuantity() {
         mainMenu.style.display = 'none';
         quantityMenu.style.display = 'block';
@@ -1026,7 +1050,7 @@ function recibir_palabra_prohibida(data) {
             texto.style.height = "";
             texto.rows = "1";
             texto.style.display = "none";
-            texto.textContent = texto_guardado;
+            //texto.innerText = texto_guardado;
             sendText();
             tiempo.style.color = "white";
           }, 2000);
@@ -1088,9 +1112,6 @@ function manejadorTeclas(evento) {
           mainMenuIndex = 1;
           actualizarSeleccionMainMenu();
           break;
-        case 'Enter':
-          mainMenuButtons[mainMenuIndex].click();
-          break;
         default:
           break;
       }
@@ -1141,7 +1162,7 @@ function sendText() {
     let points = puntos.innerHTML;
     let level = nivel.textContent;
     let caretPos = guardarPosicionCaret();
-    socket.emit(texto_x, { text, points, level, caretPos });
+    socket.emit(texto_x, { text, points, level, caretPos, texto_guardado });
 }
 
 function activar_sockets_extratextuales() {
@@ -1896,7 +1917,7 @@ function stopConfetti() {
 }
 
 function final(){
-    
+    //sendText();
     menu_modificador = false;
     limpieza_final();
     
