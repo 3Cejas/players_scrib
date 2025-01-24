@@ -309,7 +309,6 @@ function pausar(){
     clearInterval(countInterval);
     clearInterval(countInterval1);
     // Variables para llevar el conteo y controlar el intervalo
-
     socket.emit('pausar', '');
 }
 
@@ -368,7 +367,7 @@ function reanudar_modo(){
     startCountDown_p1(secondsRemaining);
     startCountDown_p2(secondsRemaining1);
     pausado = false;
-    socket.emit('reanudar_modo', '');
+    //socket.emit('reanudar_modo', '');
 }
 function sortTable() {
     var table, rows, switching, i, x, y, shouldSwitch;

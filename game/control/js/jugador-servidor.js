@@ -226,9 +226,8 @@ socket.on('tiempo_muerto_control', data => {
     display_modo.textContent = modo_actual.toUpperCase();
     boton_pausar_reanudar.innerHTML = "▶️ REANUDAR";
     boton_pausar_reanudar.dataset.value = 1;
-  pausar();
+    pausar();
   TimeoutTiempoMuerto = setTimeout(function(){
-    secondsPassed = TIEMPO_CAMBIO_MODOS;
     reanudar_modo();
   }, TIEMPO_CAMBIO_MODOS * 1000);
 });

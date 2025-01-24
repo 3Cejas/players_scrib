@@ -404,13 +404,12 @@ socket.on("count", data => {
     tiempo.innerHTML = data.count;
     if(data.count == '¡Tiempo!'){
         LIMPIEZAS["psicodélico"](data, data.player);
-        confetti_aux()
+        //confetti_aux()
         terminado = true;
         feedback1.innerHTML = "";
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
         explicación.innerHTML = "";
-        texto1.innerText = "";
         palabra1.style.display = "none";
         definicion1.style.display = "none";
         explicación.style.display = "none";
@@ -444,7 +443,6 @@ socket.on("count", data => {
             definicion2.style.display = "none";
             explicación1.style.display = "none";
 
-            texto2.innerText = "";
             texto2.style.display = "none";
             tiempo1.style.color = "white";
         }
@@ -484,6 +482,22 @@ socket.on("count", data => {
     }
 });
 
+socket.on('resucitar_control', data => {
+    if(data.player == 1){
+        terminado = false;
+        palabra1.style.display = "";
+        definicion1.style.display = "";
+        explicación.style.display = "";
+        texto1.style.display = "";
+    }
+    else if(data.player == 2){
+        terminado1 = false;
+        palabra2.style.display = "";
+        definicion2.style.display = "";
+        explicación1.style.display = "";
+        texto2.style.display = "";
+    }
+});
 // Inicia el juego.
 socket.on('inicio', data => {
     sonido.pause();
@@ -607,7 +621,7 @@ socket.on('limpiar', data => {
     neon.style.display = "";
     inspiracion.style.display = "none";
     sonido.pause();
-    reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
+    //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
     activar_sockets_extratextuales();
 });
 
@@ -804,7 +818,7 @@ socket.on('recibir_comentario', data => {
 });
 
 socket.on('fin', data => {
-        confetti_aux();
+        //confetti_aux();
 });
 
 socket.on("enviar_repentizado", repentizado => {

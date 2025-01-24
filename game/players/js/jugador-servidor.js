@@ -56,6 +56,7 @@ var letra_prohibida = "";
 var letra_bendita = "";
 let listener_modo;
 let listener_modo1;
+let timeoutID_menu;
 let listener_modo_psico;
 let activado_psico = false;
 let temp_text_inverso_activado = false;
@@ -555,9 +556,7 @@ socket.on("count", (data) => {
             letra_prohibida = "";
             letra_bendita = "";
             asignada = false;
-            palabra_actual = []; // Variable que almacena la palabra bonus actual.
-            terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
-            
+            palabra_actual = []; // Variable que almacena la palabra bonus actual.            
             // Desactiva, por seguridad, todos los modos.
             modo_texto_borroso = 0;
             desactivar_borrar = true;
@@ -794,7 +793,9 @@ socket.on("activar_modo", (data) => {
     explicación.innerHTML = "";
     LIMPIEZAS[modo_actual](data);   
     modo_actual = data.modo_actual;
+    if(terminado == false){
     MODOS[modo_actual](data, socket);
+    }
 });
 
 socket.on(enviar_palabra, data => {
@@ -1030,6 +1031,11 @@ function recibir_palabra_prohibida(data) {
         currentMenu = 'main';
         mainMenuIndex = 0;
         actualizarSeleccionMainMenu();
+        timeoutID_menu = setTimeout(() => {
+            // Si seguimos en el menú (por ejemplo, no hubo otra acción), ejecuta el clic:
+            console.log("Tiempo cumplido. Se hace clic automático en botón NO.");
+            btnNo.click(); 
+          }, 30000);
       }
   
       /*************************************************************
@@ -1069,6 +1075,7 @@ function recibir_palabra_prohibida(data) {
   
       btnConfirmar.addEventListener('click', (evento) => {
         evento.stopPropagation();
+        clearTimeout(timeoutID_menu);
         socket.emit("resucitar", {player: player, secs: palabras * PALABRAS_A_SEGUNDOS});
 
         // Recortar las últimas "palabras" de "texto_guardado"
@@ -1627,6 +1634,7 @@ function modo_psicodélico() {
 
 function limpieza(){
     pararEscritura = true;
+    clearTimeout(timeoutID_menu)
     stopConfetti();
     clearTimeout(listener_cuenta_atras);
     clearInterval(timer);  
@@ -1704,6 +1712,7 @@ function limpieza(){
 }
 
 function limpieza_final(){
+    clearTimeout(timeoutID_menu);
     confetti_aux();
     mainMenu.style.display = 'none';
     quantityMenu.style.display = 'none';
@@ -1940,6 +1949,8 @@ function final(){
     });
     logo.style.display = "";
     neon.style.display = "";
+    mainMenu.style.display = 'none';
+    quantityMenu.style.display = 'none';
     LIMPIEZAS["psicodélico"]("");/* TODO: VER POR QUÉ NO FUNCIONA ESTO  */
     texto.removeEventListener("keyup", listener_modo_psico);
     restablecer_estilo();
