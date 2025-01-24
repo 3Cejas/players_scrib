@@ -68,6 +68,12 @@ let listener_cuenta_atras = null;
 let timeout_countdown;
 let timeout_timer;
 let Temasinterval;
+let sonido_confetti_musa;
+let sonido_confetti;
+let audio_inverso;
+let audio_borroso;
+let sonido_modo;
+let intervaloSonidoRayo;
 let timer = null;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
@@ -93,7 +99,12 @@ const PUTADAS = {
             lightning.classList.add("lightning")
             lightning.style.right = "45%";
             lightning.style.left = "0%";
+            reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+            intervaloSonidoRayo = setInterval(() => {
+                reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+            }, 4000);
             setTimeout(function () {
+                clearInterval(intervaloSonidoRayo);
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
                 lightning.classList.remove("lightning");
@@ -105,7 +116,12 @@ const PUTADAS = {
             lightning.classList.add("lightning")
             lightning.style.right = "0%";
             lightning.style.left = "45%";
+            reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+            intervaloSonidoRayo = setInterval(() => {
+                reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+            }, 4000)
             setTimeout(function () {
+                clearInterval(intervaloSonidoRayo);
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
                 lightning.classList.remove("lightning");
@@ -117,6 +133,7 @@ const PUTADAS = {
 
     },
     "🙃": function (player) {
+        audio_inverso = reproducirSonido("../../game/audio/FX/8. INVERSO LOOP.mp3", true)
         if(player == 1){
             texto1.classList.add("rotate-vertical-center");
             // Añade un escuchador para el evento 'animationend'
@@ -125,6 +142,7 @@ const PUTADAS = {
                 texto1.removeEventListener('animationend', arguments.callee);
             });
             tempo_text_inverso1 = setTimeout(function () {
+                audio_inverso.pause();
                 texto1.classList.add("rotate-vertical-center");
                 texto1.addEventListener('animationend', function() {
                     texto1.classList.remove("rotate-vertical-center");
@@ -140,6 +158,7 @@ const PUTADAS = {
                 texto2.removeEventListener('animationend', arguments.callee);
             });
             tempo_text_inverso2 = setTimeout(function () {
+                audio_inverso.pause();
                 texto2.classList.add("rotate-vertical-center");
                 texto2.addEventListener('animationend', function() {
                     texto2.classList.remove("rotate-vertical-center");
@@ -150,11 +169,13 @@ const PUTADAS = {
     },
 
     "🌪️": function (player) {
+        audio_borroso = reproducirSonido("../../game/audio/FX/7. REMOLINO PARA LOOP.mp3", true)
         modo_texto_borroso1 = true;
         tiempo_inicial = new Date();
         if(player == 1){
             texto1.classList.add("textarea_blur");
             tempo_text_borroso1 = setTimeout(function () {
+            audio_borroso.pause();
             temp_text_borroso_activado1 = true;
             texto1.classList.remove("textarea_blur");
         }, TIEMPO_BORROSO);
@@ -164,6 +185,7 @@ const PUTADAS = {
             console.log("BORROSO")
             texto2.classList.add("textarea_blur");
             tempo_text_borroso2 = setTimeout(function () {
+            audio_borroso.pause();
             temp_text_borroso_activado2 = true;
             texto2.classList.remove("textarea_blur");
         }, TIEMPO_BORROSO);
@@ -175,9 +197,11 @@ const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
+        sonido_modo = reproducirSonido("../../game/audio/7. KEYGEN PRUEBA 3.mp3", true)
+    reproducirSonido("../../game/audio/FX/12. PALABRAS BONUS.mp3")
         console.log("ALGO")
         explicación.style.color = "yellow";
-        explicación.innerHTML = "MODO PALABRAS BENDITAS";
+        explicación.innerHTML = "MODO PALABRAS BONUS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
         palabra2.style.backgroundColor = "yellow";
@@ -189,6 +213,8 @@ const MODOS = {
 
     //Recibe y activa el modo letra prohibida.
     'letra prohibida': function (data) {
+        sonido_modo = reproducirSonido("../../game/audio/6. KEYGEN PRUEBA 2.mp3", true)
+        reproducirSonido("../../game/audio/FX/11. LETRA PROHIBIDA.mp3")
         palabra2.innerHTML = "";
         definicion2.innerHTML = "";
         explicación1.innerHTML = "";
@@ -197,7 +223,7 @@ const MODOS = {
         explicación2.innerHTML = "";
         palabra1.style.backgroundColor= "red";
         explicación.style.color = "red";
-        explicación.innerHTML = "MODO LETRA MALDITA";
+        explicación.innerHTML = "MODO LETRA PROHIBIDA";
         palabra1.innerHTML = "LETRA MALDITA: " + data.letra_prohibida;
         definicion2.innerHTML = "";
         definicion2.style.maxWidth = "100%";
@@ -208,6 +234,9 @@ const MODOS = {
 
     //Recibe y activa el modo letra bendita.
     'letra bendita': function (data) {
+        reproducirSonido("../../game/audio/FX/10. LETRA BENDITA.mp3")
+        sonido_modo = reproducirSonido("../../game/audio/5. KEYGEN PRUEBA 1.mp3", true);
+
         palabra2.innerHTML = "";
         definicion2.innerHTML = "";
         explicación1.innerHTML = "";
@@ -239,10 +268,12 @@ const MODOS = {
     },
 
     'palabras prohibidas': function (data) {
+        sonido_modo = reproducirSonido("../../game/audio/6. KEYGEN PRUEBA 2.mp3", true)
+        reproducirSonido("../../game/audio/FX/13. PALABRAS PROHIBIDAS.mp3")
         palabra2.style.backgroundColor = "pink";
         palabra3.style.backgroundColor = "pink";
         explicación.style.color = "pink";
-        explicación.innerHTML = "MODO PALABRAS MALDITAS";
+        explicación.innerHTML = "MODO PALABRAS PROHIBIDAS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
         definicion2.style.maxWidth = "100%";
@@ -251,6 +282,8 @@ const MODOS = {
     },
 
     'tertulia': function (socket) {
+        sonido_modo = reproducirSonido("../../game/audio/", true)
+        reproducirSonido("../../game/audio/FX/14. TERTULIA.mp3")
         //activar_socket_feedback();
         explicación.style.color = "blue";
         explicación.innerHTML = "MODO TERTULIA";
@@ -259,6 +292,8 @@ const MODOS = {
     },
 
     'frase final': function (socket) {
+        sonido_modo = reproducirSonido("../../game/audio/5. KEYGEN PRUEBA 1.mp3", true)
+        reproducirSonido("../../game/audio/FX/15. FRASE FINAL.mp3")
         //activar_socket_feedback();
         explicación.style.color = "orange";
         explicación.innerHTML = "MODO FRASE FINAL";
@@ -273,6 +308,10 @@ const MODOS = {
 const LIMPIEZAS = {
 
     "palabras bonus": function (data) {
+        console.log(sonido_modo)
+        if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+            sonido_modo.pause();
+        }
         palabra1.innerHTML = "";
         definicion1.innerHTML = "";
         palabra2.innerHTML = "";
@@ -281,9 +320,17 @@ const LIMPIEZAS = {
         definicion3.innerHTML = "";
     },
 
-    "letra prohibida": function (data) { },
+    "letra prohibida": function (data) {
+        if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+            sonido_modo.pause();
+        }
+    },
 
-    "letra bendita": function (data) { },
+    "letra bendita": function (data) {
+        if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+            sonido_modo.pause();
+        }
+    },
 
     "psicodélico": function (data, player) {
         if(player == 1){
@@ -300,7 +347,9 @@ const LIMPIEZAS = {
     },
 
     "palabras prohibidas": function (data) {
-        palabra1.innerHTML = "";
+        if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+            sonido_modo.pause();
+        }        palabra1.innerHTML = "";
         definicion1.innerHTML = "";
         palabra2.innerHTML = "";
         palabra3.innerHTML = "";
@@ -308,9 +357,17 @@ const LIMPIEZAS = {
         definicion3.innerHTML = "";
     },
 
-    "tertulia": function (data) { },
+    "tertulia": function (data) {
+        if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+            sonido_modo.pause();
+        } 
+        
+    },
 
-    "frase final": function (data) { },
+    "frase final": function (data) {
+        if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+            sonido_modo.pause();
+        }    },
 
     "": function (data) { },
 };
@@ -498,9 +555,22 @@ socket.on('resucitar_control', data => {
         texto2.style.display = "";
     }
 });
+
+
+// Array con los audios en el orden que quieres reproducir
+var audios = [
+  "../../game/audio/5. PREPARADOS 2.mp3",
+  "../../game/audio/5. PREPARADOS 3.mp3",
+  "../../game/audio/5. PREPARADOS 4.mp3",
+  "../../game/audio/5. PREPARADOS 5.mp3"
+];
+
+
 // Inicia el juego.
 socket.on('inicio', data => {
+    if(sonido){
     sonido.pause();
+    }
     reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         inspiracion.style.display = "block";
@@ -533,34 +603,46 @@ socket.on('inicio', data => {
     var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
     preparados.appendTo($('.container'));
     timeout_countdown = setTimeout(() => {
-        reproducirSonido("../../game/audio/5. PREPARADOS 2.mp3")
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
     }, 20);
     timeout_timer = setTimeout(() => {
-    var counter = 3;
-    timer = setInterval(function() {
-      $('#countdown').remove();
-      
-      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
-      countdown.appendTo($('.container'));
-  
-      listener_cuenta_atras = setTimeout(() => {
-        if (counter > -1) {
-          $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
-        } else {
-          $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
-        }
-      }, 20);
-  
-      counter--;
-  
-      if (counter <= -1) {
-        clearInterval(timer);
-        setTimeout(() => {
+        var counter = 3;
+        var index   = 0; // Índice para recorrer el array de audios
+        
+        var timer = setInterval(function() {
+          // Eliminamos el anterior #countdown para volverlo a crear
           $('#countdown').remove();
+          
+          // Creamos el nuevo elemento con el número o el texto final
+          var countdown = $('<span id="countdown">'+ (counter === 0 ? '¡ESCRIBE!' : counter) +'</span>');
+          countdown.appendTo($('.container'));
+        
+          // Pequeña pausa para aplicar el CSS que hace el efecto
+          setTimeout(() => {
+            if (counter > -1) {
+              $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
+            } else {
+              $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+            }
+          }, 20);
+        
+          // Reproducimos el siguiente sonido mientras haya disponibles en el array
+          if (index < audios.length) {
+            reproducirSonido(audios[index]);
+            index++;
+          }
+          
+          counter--;
+        
+          // Cuando counter llega a -1, paramos el intervalo y quitamos el #countdown
+          if (counter <= -1) {
+            clearInterval(timer);
+            setTimeout(() => {
+              $('#countdown').remove();
+            }, 1000);
+          }
+        
         }, 1000);
-    }
-  }, 1000);
 }, 1000);
 });
 });
@@ -568,6 +650,7 @@ socket.on('inicio', data => {
 socket.on('post-inicio', data => {
     
     limpiezas();
+
     texto1.style.display = "";
     texto2.style.display = "";
     palabra1.style.display = "";
@@ -620,7 +703,7 @@ socket.on('limpiar', data => {
     logo.style.display = "";
     neon.style.display = "";
     inspiracion.style.display = "none";
-    sonido.pause();
+    if(sonido) sonido.pause();
     //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
     activar_sockets_extratextuales();
 });
@@ -725,15 +808,21 @@ socket.on('feedback_a_j2', data => {
 
     console.log(data.tiempo_feed)
 
+    if (data.tiempo_feed.startsWith("⏱️-")) {
+        // Verificar si comienza con "⏱️-2"
+        console.log(data.tiempo_feed.toString()== ("⏱️-1 segs."))
+        if (data.tiempo_feed.toString() == ("⏱️-1 segs.")) {
+        console.log("ENTROOO")
+            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+        } else {
+        reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
+        }
+    }
     // Si empieza por "⏱️+" (ej.: "⏱️+2 segs." o "⏱️+6 segs.")
-    if (data.tiempo_feed.startsWith("⏱️+")) {
+    else if (data.tiempo_feed.toString() == "⏱️+6 segs.") {
         reproducirSonido("../../game/audio/GANAR 2 SEG.mp3");
 
-    // Si empieza por "⏱️-" (ej.: "⏱️-1 segs.")
-    } else if (data.tiempo_feed.startsWith("⏱️-")) {
-        reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
     }
-
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
         new Promise((resolve, reject) => {
@@ -776,9 +865,16 @@ socket.on('feedback_a_j1', data => {
         reproducirSonido("../../game/audio/GANAR 2 SEG.mp3")
     }
 
-    if(data.tiempo_feed.toString() == "⏱️-2 segs."){
-        reproducirSonido("../../game/audio/PERDER 2 SEG.mp3")
+    // Verificar si comienza con "⏱️-" pero no con "⏱️-2"
+    else if (data.tiempo_feed.startsWith("⏱️-")) {
+            // Verificar si comienza con "⏱️-2"
+            if (data.tiempo_feed.toString() == "⏱️-1 segs.") {
+                reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+            } else {
+            reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
+            }
     }
+
 
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
@@ -803,8 +899,8 @@ socket.on('feedback_a_j1', data => {
         }, 2000);
     });
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
-        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
         if(modo_actual == "palabras bonus"){
+            reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
         increment('red');
         }
         else{
@@ -901,6 +997,7 @@ function reproducirSonido(rutaArchivo, loop = false) {
     sonido.play().catch(error => {
       console.error('No se pudo reproducir el audio:', error);
     });
+    return sonido;
   }
 
 // Referencias a los elementos
@@ -1258,11 +1355,18 @@ function cambiar_color_puntuación() {
 
 function limpiezas(){
 
+    if(intervaloSonidoRayo) clearInterval(intervaloSonidoRayo);
+    if(audio_inverso) audio_inverso.pause();
+    if(audio_borroso) audio_borroso.pause();
+
     clearTimeout(listener_cuenta_atras);
     clearTimeout(tempo_text_inverso1);
     clearTimeout(tempo_text_inverso2);
     clearTimeout(tempo_text_borroso1);
     clearTimeout(tempo_text_borroso2);
+    if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+        sonido_modo.pause();
+    }
 
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
@@ -1323,6 +1427,10 @@ function limpiezas(){
 
 function limpiezas_final(){
 
+    if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
+        sonido_modo.pause();
+    }
+
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
@@ -1371,6 +1479,10 @@ function limpiezas_final(){
     clearTimeout(tempo_text_borroso1);
     clearTimeout(tempo_text_borroso2);
 
+    if(intervaloSonidoRayo) clearInterval(intervaloSonidoRayo);
+    if(audio_inverso) audio_inverso.pause();
+    if(audio_borroso) audio_borroso.pause();
+
     blueCount = 0;
     redCount = 0;
     updateBar();
@@ -1386,7 +1498,9 @@ function randomInRange(min, max) {
 }
 
 function confetti_aux() {
-    reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3")
+
+    sonido_confetti = reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3")
+    
   var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
   isConfettiRunning = true; // Habilita la ejecución de confetti
   console.log(isConfettiRunning);
@@ -1410,6 +1524,9 @@ function confetti_aux() {
 }
 
 function stopConfetti() {
+    if(sonido_confetti_musa) sonido_confetti_musa.pause();
+    if(sonido_confetti) sonido_confetti.pause();
+
   isConfettiRunning = false; // Deshabilita la ejecución de confetti
   confetti.reset(); // Detiene la animación de confetti
 }
@@ -1422,6 +1539,9 @@ function convertirASegundos(tiempo) {
   }
 
   function confetti_musas(pos){
+
+    sonido_confetti_musa = reproducirSonido("../../game/audio/FX/9. ESTRELLAS.mp3")
+    
     var scalar = 2;
     var unicorn = confetti.shapeFromText({ text: '⭐', scalar });
     isConfettiRunning = true; // Habilita la ejecución de confetti
