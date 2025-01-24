@@ -282,8 +282,8 @@ const MODOS = {
     },
 
     'tertulia': function (socket) {
-        sonido_modo = reproducirSonido("../../game/audio/", true)
-        reproducirSonido("../../game/audio/FX/7. KEYGEN PRUEBA 3.mp3")
+        sonido_modo = reproducirSonido("../../game/audio/7. KEYGEN PRUEBA 3.mp3", true)
+        reproducirSonido("../../game/audio/FX/14. TERTULIA.mp3")
         //activar_socket_feedback();
         explicación.style.color = "blue";
         explicación.innerHTML = "MODO TERTULIA";
