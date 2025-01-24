@@ -80,7 +80,7 @@ let sonido;
 animateCSS(".cabecera", "backInLeft").then((message) => {
     animateCSS(".contenedor", "pulse");
 });
-reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
+//reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
 
 const PUTADAS = {
     "🐢": function () {
@@ -501,7 +501,7 @@ socket.on('resucitar_control', data => {
 // Inicia el juego.
 socket.on('inicio', data => {
     sonido.pause();
-    reproducirSonido("../../game/audio/PREPARADOS.mp3")
+    reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         inspiracion.style.display = "block";
         animateCSS(".contenedor", "pulse");
@@ -533,12 +533,12 @@ socket.on('inicio', data => {
     var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
     preparados.appendTo($('.container'));
     timeout_countdown = setTimeout(() => {
+        reproducirSonido("../../game/audio/5. PREPARADOS 2.mp3")
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
     }, 20);
     timeout_timer = setTimeout(() => {
     var counter = 3;
     timer = setInterval(function() {
-      
       $('#countdown').remove();
       
       var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
