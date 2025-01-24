@@ -197,7 +197,7 @@ const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
-        sonido_modo = reproducirSonido("../../game/audio/7. KEYGEN PRUEBA 1.mp3", true)
+        sonido_modo = reproducirSonido("../../game/audio/5. KEYGEN PRUEBA 1.mp3", true)
     reproducirSonido("../../game/audio/FX/12. PALABRAS BONUS.mp3")
         console.log("ALGO")
         explicación.style.color = "yellow";
