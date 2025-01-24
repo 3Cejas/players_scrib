@@ -197,7 +197,7 @@ const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
-        sonido_modo = reproducirSonido("../../game/audio/7. KEYGEN PRUEBA 3.mp3", true)
+        sonido_modo = reproducirSonido("../../game/audio/7. KEYGEN PRUEBA 1.mp3", true)
     reproducirSonido("../../game/audio/FX/12. PALABRAS BONUS.mp3")
         console.log("ALGO")
         explicación.style.color = "yellow";
@@ -283,7 +283,7 @@ const MODOS = {
 
     'tertulia': function (socket) {
         sonido_modo = reproducirSonido("../../game/audio/", true)
-        reproducirSonido("../../game/audio/FX/14. TERTULIA.mp3")
+        reproducirSonido("../../game/audio/FX/7. KEYGEN PRUEBA 3.mp3")
         //activar_socket_feedback();
         explicación.style.color = "blue";
         explicación.innerHTML = "MODO TERTULIA";
