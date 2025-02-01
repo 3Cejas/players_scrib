@@ -375,7 +375,7 @@ function descargar_textos() {
     doc.save(val_nombre1 + '.pdf');
     // Combina el nombre del escritor y el contenido HTML
     console.log("ES ES FINAAAL", val_nombre1 + "\n" + texto_guardado1);
-    downloadTxtFile(val_nombre1 + '.txt', val_nombre1 + "\n" + texto1.innerHTML);
+    downloadTxtFile(val_nombre1 + '.txt', val_nombre1 + "\n" + texto1.innerText);
     // Preparar el segundo documento
     doc = new jsPDF();
     agregarLogoEnPagina();
@@ -388,7 +388,7 @@ function descargar_textos() {
     // Descargar el segundo PDF y TXT
     doc.save(val_nombre2 + '.pdf');
     // Combina el nombre del escritor y el contenido HTML
-    downloadTxtFile(val_nombre2 + '.txt', val_nombre2 + "\n" + texto2.innerHTML);
+    downloadTxtFile(val_nombre2 + '.txt', val_nombre2 + "\n" + texto2.innerText);
 }
 
 const MODOS = {

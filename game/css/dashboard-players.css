@@ -546,14 +546,14 @@ table {
 
 .right.s1{
   width: 100%;
-  font-size: 1.8vw;
+  font-size: 1.5vw;
   color:aqua;
   text-shadow: 0.0625em 0.0625em red;
 }
 
 .right.s2{
   width: 100%;
-  font-size: 1.8vw;
+  font-size: 1.5vw;
   color: red;
   text-shadow: 0.0625em 0.0625em aqua;
 }

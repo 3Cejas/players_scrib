@@ -1023,7 +1023,7 @@ function startDotAnimation(element, baseText, maxDots = 3, intervalTime = 500) {
     // Configura y guarda el intervalo
     animateCSS(".temas", "flash");
     element.style.color = 'orange';
-    element.style.fontSize = '0.9em';
+    element.style.fontSize = '1.5em';
     const intervalId = setInterval(() => {
       dotCount = (dotCount + 1) % (maxDots + 1);
       element.innerHTML = baseText + ".".repeat(dotCount);
