@@ -1051,7 +1051,7 @@ function log( text ) {
 
 			this.type(result, this.unlock.bind(this));
 			
-            location.href='./archives/Guía de usuario SCRIB.pdf';
+            location.href='./archives/Guia de usuario SCRIB.pdf';
             
     }
 	//EL PROYECTO
