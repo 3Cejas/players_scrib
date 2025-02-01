@@ -100,6 +100,8 @@ var configs = (function () {
 		
 		musa_help:"Las musas.",
 
+        guia_de_usuario_help: "Guía de usuario.",
+
 		el_proyecto_help:"¿Qué es  SCRIB?",
 
 		liga_help: "Bases de la liga  SCRIB.",
@@ -281,6 +283,9 @@ var main = (function () {
 		EL_JUEGO: { value: "juego", help: configs.getInstance().el_juego_help},
 		
 		MUSA: { value: "musa", help: configs.getInstance().musa_help},
+
+        GUIA_DE_USUARIO: { value: "guía de usuario", help: configs.getInstance().guia_de_usuario_help},
+
 
 		EL_PROYECTO: { value: "proyecto", help: configs.getInstance().el_proyecto_help},
 
@@ -825,7 +830,13 @@ function log( text ) {
 
                 break;
 				
-			case cmds.MUSA.value:
+			case cmds.GUIA_DE_USUARIO.value:
+
+                this.guia_de_usuario();
+
+                break;
+
+                case cmds.GUIA_DE_USUARIO.value:
 
                 this.musa();
 
@@ -1025,6 +1036,23 @@ function log( text ) {
 			this.type(result, this.unlock.bind(this));
 			
 			location.href='./game/public/index.html';
+
+    }
+
+    	//GUÍA DE USUARIO
+
+	    Terminal.prototype.guia_de_usuario = function () {
+			
+			this.clear();
+			
+			 var result = "Tu guía de usuario se está descargando. \n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
+
+			var output = this.output;
+
+			this.type(result, this.unlock.bind(this));
+			
+            location.href='./archives/Guía de usuario SCRIB.pdf';
+            
     }
 	//EL PROYECTO
 
