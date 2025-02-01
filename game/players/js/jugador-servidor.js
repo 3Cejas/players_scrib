@@ -394,18 +394,6 @@ const LIMPIEZAS = {
         //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodélico, se vuelve a limpiar.
     },
 
-    "inverso": function (data) {
-        desactivar_borrar = false;
-        texto.innerText =
-            texto.innerText
-                .split("")
-                .reverse()
-                .join("")
-                .split(" ")
-                .reverse()
-                .join(" ");
-    },
-
     "tiempo_borrado_más": function (data){ },
     
     "tertulia": function (data) {
@@ -501,12 +489,16 @@ socket.on("count", (data) => {
 
     tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
+        console.log(putada_actual, "esto no doebería ocurrir")
         if (putada_actual == "🙃"){
+            console.log("NO PUEDOOOOO ESTO NO DEBERÍA OCURRRIR")
             texto.classList.add("rotate-vertical-center");
             texto.addEventListener('animationend', function() {
                 texto.classList.remove("rotate-vertical-center");
                 texto.removeEventListener('animationend', arguments.callee);
             });
+            clearTimeout(tempo_text_inverso);
+            temp_text_inverso_activado = false;
             procesarTexto();
         }
         sendText();
@@ -521,10 +513,15 @@ socket.on("count", (data) => {
             document.body.classList.remove("bg");
             document.body.classList.remove("rain");
             lightning.classList.remove("lightning");
+            console.log(texto.innerHTML)
+            console.log(temp_text_inverso_activado)
             if(temp_text_inverso_activado == true){
+                temp_text_inverso_activado = false;
                 clearTimeout(tempo_text_inverso);
                 procesarTexto();
             }
+            console.log(texto.innerHTML)
+            console.log(temp_text_inverso_activado)
 
             texto_guardado = texto.innerText;
         
@@ -543,11 +540,17 @@ socket.on("count", (data) => {
             menu_modificador = false;
             focusedButtonIndex = 0;
             modificadorButtons = [];
+
+            console.log(texto.innerHTML)
+            console.log(temp_text_inverso_activado)
         
             // Desactiva el blur de ambos textos.
             blurreado = false;
             texto.classList.remove("textarea_blur");
         
+            console.log(texto.innerHTML)
+            console.log(temp_text_inverso_activado)
+
             puntos_palabra = 0;
             puntos_ = 0;
             puntos_letra_prohibida = 0;
@@ -569,10 +572,16 @@ socket.on("count", (data) => {
         
             caracteres_seguidos = 0;
             
+            console.log(texto.innerHTML)
+            console.log(temp_text_inverso_activado)
             for (let key in LIMPIEZAS) { 
                 console.log(key)
                 LIMPIEZAS[key]();
+                console.log(texto.innerHTML)
+                console.log(temp_text_inverso_activado)
             }
+            console.log(texto.innerHTML)
+            console.log(temp_text_inverso_activado)
         
             clearTimeout(borrado);
             clearTimeout(cambio_palabra);
@@ -580,6 +589,8 @@ socket.on("count", (data) => {
         }
         console.log(data)
         console.log("MIERDA PUTA")
+        console.log(texto.innerHTML)
+        console.log(temp_text_inverso_activado)
         iniciarMenu();    
         }
     }
@@ -603,6 +614,7 @@ function resucitar(){
     lightning.classList.remove("lightning");
     if(temp_text_inverso_activado == true){
         clearTimeout(tempo_text_inverso);
+        temp_text_inverso_activado = false;
         procesarTexto();
     }
 
@@ -720,7 +732,7 @@ socket.on("post-inicio", (data) => {
 function post_inicio(borrar_texto){
     clearTimeout(timer);
         if (borrar_texto == false) {
-            texto.textContent = texto_guardado.trim();
+            texto.innerText = texto_guardado.trim();
 
             sendText()
 
@@ -1642,7 +1654,9 @@ function limpieza(){
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
+    console.log(texto.innerHTML)
     if(temp_text_inverso_activado == true){
+        temp_text_inverso_activado = false;
         clearTimeout(tempo_text_inverso);
         procesarTexto();
     }
@@ -2113,6 +2127,7 @@ function modo_ortografía_perfecta() {
   }
 
   function procesarTexto() {
+    console.log("ESTO NO PARAAAAAAAAAAA")
     // El contenedor original
     // Creamos un fragmento para ir colocando los nodos procesados
     const fragmento = document.createDocumentFragment();

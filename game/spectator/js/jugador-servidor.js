@@ -847,10 +847,12 @@ socket.on('feedback_a_j2', data => {
     });
     console.log("PARAAAAAAAAAAAAAAAAAAAAAAAAA", data.insp)
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
-        if(modo_actual == "palabras bonus"){
+        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
+        if(modo_actual != "palabras prohibidas"){
         increment('blue');
         }
         else{
+            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
             increment('red');
         }
     }
@@ -899,11 +901,12 @@ socket.on('feedback_a_j1', data => {
         }, 2000);
     });
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
-        if(modo_actual == "palabras bonus"){
-            reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
+        if(modo_actual != "palabras prohibidas"){
+        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
         increment('red');
         }
         else{
+            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
             increment('blue');
         }
     }

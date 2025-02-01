@@ -85,7 +85,7 @@ let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
 
 // Lista de modos disponibles
-let LISTA_MODOS = ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "frase final"];
+let LISTA_MODOS = ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "tertulia", "frase final"];
 let LISTA_MODOS_LOCURA = [ "letra bendita", "letra prohibida", "palabras bonus", "palabras prohibidas"];
 
 // Objeto que asocia cada modo con un color
@@ -208,7 +208,7 @@ socket.on('texto2', data => {
     texto_guardado2 = texto2.innerHTML;
     puntos2.innerHTML = data.points;
     nivel2.innerHTML = data.level;
-    texto2.style.height = (texto1.scrollHeight) + "px";
+    texto2.style.height = (texto2.scrollHeight) + "px";
 
 });
 
@@ -369,12 +369,13 @@ function descargar_textos() {
 
     var div = document.createElement("div");
     div.innerHTML = texto_guardado1;
-    yActual = agregarTextoEnPagina(div.textContent, margen, yActual + 5, 15, [0, 0, 0]);
+    yActual = agregarTextoEnPagina(texto1.innerText, margen, yActual + 5, 15, [0, 0, 0]);
 
     // Descargar el primer PDF y TXT
     doc.save(val_nombre1 + '.pdf');
     // Combina el nombre del escritor y el contenido HTML
-    downloadTxtFile(val_nombre1 + '.txt', val_nombre1 + "\n" + texto_guardado1);
+    console.log("ES ES FINAAAL", val_nombre1 + "\n" + texto_guardado1);
+    downloadTxtFile(val_nombre1 + '.txt', val_nombre1 + "\n" + texto1.innerHTML);
     // Preparar el segundo documento
     doc = new jsPDF();
     agregarLogoEnPagina();
@@ -382,12 +383,12 @@ function descargar_textos() {
     yActual = agregarTextoEnPagina(val_nombre2, margen, margen + 13, 25, [0, 0, 0], true);
 
     div.innerHTML = texto_guardado2;
-    yActual = agregarTextoEnPagina(div.textContent, margen, yActual + 5, 15, [0, 0, 0]);
+    yActual = agregarTextoEnPagina(texto2.innerText, margen, yActual + 5, 15, [0, 0, 0]);
 
     // Descargar el segundo PDF y TXT
     doc.save(val_nombre2 + '.pdf');
     // Combina el nombre del escritor y el contenido HTML
-    downloadTxtFile(val_nombre2 + '.txt', val_nombre2 + "\n" + texto_guardado2);
+    downloadTxtFile(val_nombre2 + '.txt', val_nombre2 + "\n" + texto2.innerHTML);
 }
 
 const MODOS = {
