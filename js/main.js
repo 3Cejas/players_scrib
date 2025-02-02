@@ -284,7 +284,7 @@ var main = (function () {
 		
 		MUSA: { value: "musa", help: configs.getInstance().musa_help},
 
-        GUIA_DE_USUARIO: { value: "guía de usuario", help: configs.getInstance().guia_de_usuario_help},
+        GUIA_DE_USUARIO: { value: "guía", help: configs.getInstance().guia_de_usuario_help},
 
 
 		EL_PROYECTO: { value: "proyecto", help: configs.getInstance().el_proyecto_help},
