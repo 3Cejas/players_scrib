@@ -6,7 +6,6 @@ animateCSS(".contenedor", "pulse");
 let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
-let nivel1 = getEl("nivel");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 
@@ -149,7 +148,6 @@ let jugador_psico;
 socket.on(texto_x, data => {
     if(data.text != null) texto1.innerHTML = data.text;
     if(data.points != null) puntos1.innerHTML = data.points;
-    if(data.level != null) nivel1.innerHTML = data.level;
     if(mostrar_texto.value == 1){
         //texto1.style.height = ""; // resetear la altura
         texto1.style.height = "auto";
@@ -666,7 +664,6 @@ function limpiezas(){
 
     puntos1.innerHTML = 0 + " palabras";
    
-    nivel1.innerHTML = "nivel 0";
     
     puntos1.style.color = "white";  
     votando = false;
@@ -757,7 +754,7 @@ const activateSkill = (event) => {
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable = "false";
     socket.emit('aumentar_tiempo', {secs:-1, player});
-    socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent, level: nivel1.textContent});
+    socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent});
     skill_cancel.style.display = "none";
     target.textContent = '✏️'
   }

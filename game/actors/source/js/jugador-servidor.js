@@ -4,7 +4,6 @@ const getEl = id => document.getElementById(id); // Obtiene los elementos con id
 let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
-let nivel1 = getEl("nivel");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 let palabra = getEl("palabra");
@@ -175,7 +174,6 @@ socket.on(texto_x, data => {
     texto1.innerHTML = data.text;
     puntos1.innerHTML = data.points;
     //cambiar_color_puntuación()
-    nivel1.innerHTML = data.level;
         //texto1.style.height = ""; // resetear la altura
     texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
@@ -274,7 +272,6 @@ socket.on('inicio', data => {
         listener_cuenta_atras = setTimeout(function(){
             texto1.innerText = "";
             puntos1.innerHTML = 0 + " palabras";
-            nivel1.innerHTML = "nivel 0";
             tiempo.innerHTML = "";
             
             limpiezas();
@@ -297,7 +294,6 @@ socket.on('limpiar', () => {
 
     texto1.innerText = "";
     puntos1.innerHTML = 0 + " palabras";
-    nivel1.innerHTML = "nivel 0";
     tiempo.innerHTML = "";
 
     limpiezas();

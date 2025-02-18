@@ -161,7 +161,7 @@ function editar(boton) {
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable = "false";
     socket.emit('aumentar_tiempo', {secs:-1, player});
-    socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent, level: nivel1.textContent});
+    socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent});
     boton.innerHTML = "✏️";
     boton.value = 0;
   }

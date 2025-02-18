@@ -164,7 +164,7 @@ function borrar() {
       puntos_ = 0;
     }
     puntos.innerHTML = puntos_ + " palabras";
-    cambio_nivel(puntos_);
+    //cambio_nivel(puntos_);
     clearTimeout(borrado);
     borrado = setTimeout(() => {
       borrar();
@@ -224,7 +224,7 @@ function countChars(texto) {
     puntos_ = 0;
   }
   puntos.innerHTML = puntos_ + " palabras";
-  cambio_nivel(puntos_);
+  //cambio_nivel(puntos_);
   clearTimeout(borrado);
   
   // Ahora, en lugar de contar los caracteres, incrementamos palabras_seguidas si el recuento de palabras ha aumentado
@@ -265,6 +265,7 @@ function toNormalForm(str) {
         );
 }
 
+/*
 //Función auxiliar que cambia la rapidez y el inicio de borrado en función de la cantidad de caracteres escritos.
 function cambio_nivel(caracteres) {
     if (0 <= caracteres && caracteres < 100) {
@@ -376,6 +377,7 @@ function cambio_nivel(caracteres) {
         }
     }
 }
+*/
 
 //Función auxiliar para crear las animaciones del feedback.
 const animateCSS = (element, animation, prefix = "animate__") =>

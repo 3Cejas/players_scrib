@@ -11,7 +11,6 @@ const getEl = id => document.getElementById(id); // Obtiene los elementos con id
 let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
 let puntos1 = getEl("puntos");
-let nivel1 = getEl("nivel");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 let musas1 = getEl("musas");
@@ -43,7 +42,6 @@ let inspiracion = getEl("inspiracion");
 let nombre2 = getEl("nombre1");
 let texto2 = getEl("texto1");
 let puntos2 = getEl("puntos1");
-let nivel2 = getEl("nivel1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 let musas2 = getEl("musas1");
@@ -387,7 +385,6 @@ socket.on('texto1', data => {
     puntos1.innerHTML = data.points;
     console.log("CAMBIADDOO")
     cambiar_color_puntuación()
-    nivel1.innerHTML = data.level;
     //establecerPosicionCaret(data.caretPos);
     if (activado_psico1) {
         stylize();
@@ -414,7 +411,6 @@ socket.on('texto2', data => {
     texto2.innerHTML = data.text;
     puntos2.innerHTML = data.points;
     cambiar_color_puntuación()
-    nivel2.innerHTML = data.level;
     if (activado_psico2) {
         stylize();
     }
@@ -1405,9 +1401,6 @@ function limpiezas(){
 
     puntos1.innerHTML = 0 + " palabras";
     puntos2.innerHTML = 0 + " palabras";
-    
-    nivel1.innerHTML = "nivel 0";
-    nivel2.innerHTML = "nivel 0";
     
     texto1.classList.remove('textarea_blur');
     texto2.classList.remove('textarea_blur');

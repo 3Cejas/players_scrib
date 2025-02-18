@@ -22,7 +22,6 @@ const getEl = (id) => document.getElementById(id); // Obtiene los elementos con 
 let nombre;
 let texto = getEl("texto");
 let puntos = getEl("puntos");
-let nivel = getEl("nivel");
 let feedback = getEl("feedback1");
 let alineador = getEl("alineador1");
 let musas = getEl("musas");
@@ -803,7 +802,9 @@ socket.on("activar_modo", (data) => {
     animacion_modo();
     palabra.innerHTML = "";
     explicación.innerHTML = "";
-    LIMPIEZAS[modo_actual](data);   
+    LIMPIEZAS[modo_actual](data);
+    rapidez_borrado -= 200;
+    rapidez_inicio_borrado -= 200;
     modo_actual = data.modo_actual;
     if(terminado == false){
     MODOS[modo_actual](data, socket);
@@ -1179,7 +1180,6 @@ function manejadorTeclas(evento) {
 function sendText() {
     let text = texto.innerHTML;
     let points = puntos.innerHTML;
-    let level = nivel.textContent;
     let caretPos = guardarPosicionCaret();
     socket.emit(texto_x, { text, points, level, caretPos, texto_guardado });
 }
@@ -1671,7 +1671,6 @@ function limpieza(){
     temas.display = "";
     texto.contentEditable= "false";
     puntos.innerHTML = 0 + " palabras";
-    nivel.innerHTML = "nivel 0";
     palabra.innerHTML = "";
     definicion.innerHTML = "";
     explicación.innerHTML = "";

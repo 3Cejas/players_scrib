@@ -100,7 +100,7 @@ var configs = (function () {
 		
 		musa_help:"Las musas.",
 
-        guia_de_usuario_help: "Guía de usuario.",
+        guia_de_usuario_help: "Manual de videojuego.",
 
 		el_proyecto_help:"¿Qué es  SCRIB?",
 
@@ -284,7 +284,7 @@ var main = (function () {
 		
 		MUSA: { value: "musa", help: configs.getInstance().musa_help},
 
-        GUIA_DE_USUARIO: { value: "guía", help: configs.getInstance().guia_de_usuario_help},
+        GUIA_DE_USUARIO: { value: "manual", help: configs.getInstance().guia_de_usuario_help},
 
 
 		EL_PROYECTO: { value: "proyecto", help: configs.getInstance().el_proyecto_help},
@@ -836,7 +836,7 @@ function log( text ) {
 
                 break;
 
-                case cmds.GUIA_DE_USUARIO.value:
+                case cmds.MUSA.value:
 
                 this.musa();
 
@@ -1045,7 +1045,7 @@ function log( text ) {
 			
 			this.clear();
 			
-			 var result = "Tu guía de usuario se está descargando. \n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
+			 var result = "Tu manual se está descargando. \n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
 
 			var output = this.output;
 
@@ -1159,7 +1159,7 @@ function log( text ) {
 
 						this.clear();
 
-         var result = "FECHAS\n\n\n2024\n\n\u2022 26 DE OCTUBRE en la sala NavelArt a las 19:00 hrs.\n\nEntradas: PRÓXIMAMENTE.\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
+         var result = "FECHAS\n\n\n2025\n\n\u2022 27, 28 o 29 DE MARZO en la sala NavelArt a las ???? hrs.\n\nEntradas: PRÓXIMAMENTE.\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
 
 			this.type(result, this.unlock.bind(this));
 

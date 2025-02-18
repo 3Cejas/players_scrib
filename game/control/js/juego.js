@@ -187,8 +187,6 @@ function limpiar() {
     juego_iniciado = false;
     document.getElementById("puntos").innerHTML = "0 palabras";
     document.getElementById("puntos1").innerHTML = "0 palabras";
-    document.getElementById("nivel").innerHTML = "nivel 0";
-    document.getElementById("nivel1").innerHTML = "nivel 0";
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("texto").style.height = "40";
     document.getElementById("texto").style.height = (document.getElementById("texto").scrollHeight) + "px";
