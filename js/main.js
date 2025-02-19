@@ -1159,7 +1159,7 @@ function log( text ) {
 
 						this.clear();
 
-         var result = "FECHAS\n\n\n2025\n\n\u2022 27, 28 o 29 DE MARZO en la sala NavelArt a las ???? hrs.\n\nEntradas: PRÓXIMAMENTE.\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
+         var result = "FECHAS\n\n\n2025\n\n\u2022 28 DE MARZO en la sala NavelArt a las 19:00 hrs.\n\nEntradas: PRÓXIMAMENTE.\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
 
 			this.type(result, this.unlock.bind(this));
 
