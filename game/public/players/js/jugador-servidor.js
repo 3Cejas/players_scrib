@@ -1,3 +1,6 @@
+// Importamos las variables de configuración
+import { SERVER_URL_PROD, SERVER_URL_DEV } from '../../../config.js';
+
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 animateCSS(".contenedor", "pulse");
@@ -81,10 +84,10 @@ var player = getParameterByName("player");
         metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
     }
 
-// Se establece la conexión con el servidor.
-serverUrl = window.location.href.startsWith('file:')
-    ? 'http://localhost:3000'
-    : 'https://sutura.ddns.net:3000';
+// Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
+const serverUrl = window.location.href.startsWith('file:')
+    ? SERVER_URL_DEV
+    : SERVER_URL_PROD;
 
 const socket = io(serverUrl);
 
