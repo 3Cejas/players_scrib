@@ -1,6 +1,7 @@
 <html lang="es">
 
 <head>
+    <link  rel="icon"   href="../../../img/logo.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCRB</title>
     <meta charset="utf-8" />
@@ -9,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="./css/publico.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="../../config.js"></script>
     <script src="./js/juego.js"></script>
 </head>
 <body>
@@ -33,7 +35,6 @@
                     <table class="right">
                         <tr>
                             <th> 🖋️</th>
-                            <th>🌡️</th>
                             </tr>
                         <tr>
                             <th id="puntos" class="puntos">0 palabras</th>
@@ -55,5 +56,5 @@
         </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-<script type="module" src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js"></script>
 </html>

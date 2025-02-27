@@ -1,6 +1,3 @@
-// Importamos las variables de configuración
-import { SERVER_URL_PROD, SERVER_URL_DEV } from '../../config.js';
-
 var player = getParameterByName("player");
 
 let feedback_a_j_x;
@@ -17,6 +14,10 @@ let duracion;
 let texto_guardado = "";
 let interval_ortografia_perfecta;
 let pararEscritura = false;
+let inspirar;
+let enviar_palabra;
+let enviar_ventaja;
+let elegir_ventaja
 
 
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
@@ -85,11 +86,11 @@ if (player == 1) {
     enviar_putada_de_jx = 'enviar_putada_de_j2';
     feedback_a_j_x = 'feedback_a_j1';
     feedback_de_j_x = 'feedback_de_j1';
-    texto_x = 'texto1'
+    texto_x = 'texto1';
     enviar_postgame_x = 'enviar_postgame1';
     recibir_postgame_x = 'recibir_postgame1';
     nombre = getEl("nombre");
-    nombre.value = "ESCRITXR 1"
+    nombre.value = "ESCRITXR 1";
     inspirar = 'inspirar_j1';
     enviar_palabra = 'enviar_palabra_j1';
     enviar_ventaja = 'enviar_ventaja_j1';
@@ -101,7 +102,7 @@ if (player == 1) {
     enviar_putada_de_jx = 'enviar_putada_de_j1';
     feedback_a_j_x = 'feedback_a_j2';
     feedback_de_j_x = 'feedback_de_j2';
-    texto_x = 'texto2'
+    texto_x = 'texto2';
     enviar_postgame_x = 'enviar_postgame2';
     recibir_postgame_x = 'recibir_postgame2';
     nombre = getEl("nombre");
@@ -149,9 +150,11 @@ texto.addEventListener("keydown", (e) => {
   });
 
 // Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
-const serverUrl = window.location.href.startsWith('file:')
-    ? SERVER_URL_DEV
-    : SERVER_URL_PROD;
+const isProduction = false;
+
+const serverUrl = isProduction
+    ? SERVER_URL_PROD
+    : SERVER_URL_DEV;
 
 const socket = io(serverUrl);
   
@@ -1184,7 +1187,7 @@ function sendText() {
     let text = texto.innerHTML;
     let points = puntos.innerHTML;
     let caretPos = guardarPosicionCaret();
-    socket.emit(texto_x, { text, points, level, caretPos, texto_guardado });
+    socket.emit(texto_x, { text, points, caretPos, texto_guardado });
 }
 
 function activar_sockets_extratextuales() {

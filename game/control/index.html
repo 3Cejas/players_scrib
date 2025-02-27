@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <link  rel="icon"   href="../../img/logo.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCRB</title>
     <meta charset="utf-8" />
@@ -14,6 +16,7 @@
 <script src="../dist/datepicker/mtr-datepicker.min.js"></script>
 
 <body>
+    <script src="../config.js"></script>
     <script src="./js/juego.js"></script>
     <div class="ascii">
         <pre class="neon">
@@ -195,7 +198,6 @@
                 <table class="right">
                     <tr>
                         <th>🖊️</th>
-                        <th>🌡️</th>
                     </tr>
                     <tr>
                         <th id="puntos">0 palabras</th>
@@ -217,7 +219,6 @@
                 <table class="right">
                     <tr>
                         <th>🖊️</th>
-                        <th>🌡️</th>
                     </tr>
                     <tr>
                         <th id="puntos1">0 palabras</th>
@@ -247,6 +248,6 @@
         </table>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script type="module" src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

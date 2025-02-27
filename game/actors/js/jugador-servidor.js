@@ -1,10 +1,9 @@
-// Importamos las variables de configuración
-import { SERVER_URL_PROD, SERVER_URL_DEV } from '../../config.js';
-
 // Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
-const serverUrl = window.location.href.startsWith('file:')
-    ? SERVER_URL_DEV
-    : SERVER_URL_PROD;
+const isProduction = false;
+
+const serverUrl = isProduction
+    ? SERVER_URL_PROD
+    : SERVER_URL_DEV;;
 
 const socket = io(serverUrl);
 

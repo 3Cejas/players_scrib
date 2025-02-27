@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <link  rel="icon"   href="../../img/logo.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCRB</title>
     <meta charset="utf-8" />
@@ -12,6 +14,7 @@
 </head>
 
 <body>
+    <script src="../config.js"></script>
     <script src="./js/juego.js"></script>
     <div class="cabecera">
     <pre id="neon" class="neon">
@@ -86,7 +89,6 @@
                 <table id="metadatos" class="right">
                     <tr>
                         <th> 🖋️</th>
-                        <th>🌡️</th>
                         <th>🎨</th>
                     </tr>
                     <tr>
@@ -111,5 +113,5 @@
     </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script type="module" src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js"></script>
 </html>
