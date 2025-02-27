@@ -1,6 +1,4 @@
 // Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
-const isProduction = false;
-
 const serverUrl = isProduction
     ? SERVER_URL_PROD
     : SERVER_URL_DEV;
