@@ -56,7 +56,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "Bienvenides a la página oficial de SCRIB.\n\nPara navegar, introduce alguno de los siguientes comandos:\n\n\u2022 proyecto\n\u2022 dossier\n\u2022 fechas\n\u2022 compañía\n\u2022 contacto\n\u2022 reinicio\n\n Si te pierdes en algun momento, utiliza el comando  \"ayuda\".",
+        welcome: "Bienvenides a la página oficial de SCRIB.\n\nPara navegar, introduce alguno de los siguientes comandos:\n\n\u2022 proyecto\n\u2022 dossier\n\u2022 fechas\n\u2022 newsletter\n\u2022 compañía\n\u2022 contacto\n\u2022 reinicio\n\n Si te pierdes en algun momento, utiliza el comando  \"ayuda\".",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
@@ -113,6 +113,8 @@ var configs = (function () {
 		fecha_help:"Próximas fechas de  SCRIB.",
 		
 		financiación_help:"Cómo financiamos el proyecto.",
+
+        newsletter_help:"Suscríbete a la newsletter de la compañía.",
 
 		la_compañía_help: "Sinopsis de la compañía.",
         
@@ -303,8 +305,10 @@ var main = (function () {
 		
 		FINANCIACIÓN: { value: "financiación", help: configs.getInstance().financiación_help},
 
-		LA_COMPAÑÍA: { value: "compañía", help: configs.getInstance().la_compañía_help},
+        NEWSLETTER: { value: "newsletter", help: configs.getInstance().newsletter_help_help},
 
+		LA_COMPAÑÍA: { value: "compañía", help: configs.getInstance().la_compañía_help},
+        
         ANGELA_BUENO: { value: "ángela bueno", help: configs.getInstance().la_compañía_help},
 
         DAVID_VIÑAS: { value: "david viñas", help: configs.getInstance().la_compañía_help},
@@ -884,6 +888,12 @@ function log( text ) {
 
                 break;
 
+            case cmds.NEWSLETTER.value:
+
+                this.newsletter();
+
+                break;
+
 			case cmds.LA_COMPAÑÍA.value:
 
                 this.la_compañía();
@@ -1176,6 +1186,24 @@ function log( text ) {
 			this.type(result, this.unlock.bind(this));
 			
     }
+
+//NEWSLETTER
+		
+    Terminal.prototype.newsletter = function () {
+
+        this.clear();
+        
+        var result = "Se te ha redirigido a suscribirte a la newsletter de la compañía.\n\n\nPara volver al menú, utiliza el comando \"reinicio\"";
+
+       var output = this.output;
+
+       this.type(result, this.unlock.bind(this));
+       
+       location.href='http://eepurl.com/i_jHuo';
+        
+        
+}
+
 	//LA COMPAÑIA
 		
 		Terminal.prototype.la_compañía = function () {
@@ -1277,6 +1305,10 @@ function log( text ) {
 			if(cmds[cmd].value== "proyecto" ||
 			   
 			   cmds[cmd].value=="fechas"  ||
+
+               cmds[cmd].value=="financiación"    ||
+
+               cmds[cmd].value=="newsletter"    ||
 			   
 			   cmds[cmd].value=="compañía"    ||
 
