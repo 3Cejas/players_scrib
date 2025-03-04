@@ -305,7 +305,7 @@ var main = (function () {
 		
 		FINANCIACIÓN: { value: "financiación", help: configs.getInstance().financiación_help},
 
-        NEWSLETTER: { value: "newsletter", help: configs.getInstance().newsletter_help_help},
+        NEWSLETTER: { value: "newsletter", help: configs.getInstance().newsletter_help},
 
 		LA_COMPAÑÍA: { value: "compañía", help: configs.getInstance().la_compañía_help},
         
