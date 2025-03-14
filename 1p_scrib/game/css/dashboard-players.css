@@ -697,16 +697,14 @@ th{
   @media (max-width: 600px) {
     /* CABECERA*/
     .neon {
-      padding: .1em 1em 1em 1em;
-
+      
       text-align: center;
     
       align-content: center;
-    
-      animation: neonEffect 5s infinite;
+
     
       /* Sobrescribimos solo font-size para móviles */
-      font-size: 0.8em; /* Ajusta este valor según tus necesidades */
+      font-size: 0.7em; /* Ajusta este valor según tus necesidades */
     }
     .sub{
       font-size: 1.7em;
