@@ -56,7 +56,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "Bienvenides a la página oficial de SCRIB.\n\nPara navegar, introduce alguno de los siguientes comandos:\n\n\u2022 proyecto\n\u2022 dossier\n\u2022 fechas\n\u2022 newsletter\n\u2022 compañía\n\u2022 contacto\n\u2022 reinicio\n\n Si te pierdes en algun momento, utiliza el comando  \"ayuda\".",
+        welcome: "Bienvenides a la página oficial de SCRIB.\n\nPara navegar, introduce alguno de los siguientes comandos:\n\n\u2022 espectáculo\n\u2022 programa de mano\n\u2022 fechas\n\u2022 dossier\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\n Si te pierdes en algun momento, utiliza el comando  \"ayuda\".",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
@@ -100,9 +100,9 @@ var configs = (function () {
 		
 		musa_help:"Las musas.",
 
-        guia_de_usuario_help: "Manual de videojuego.",
+        programa_de_mano_help: "Manual de videojuego.",
 
-		el_proyecto_help:"¿Qué es  SCRIB?",
+		el_espectáculo_help:"¿Qué es  SCRIB?",
 
 		liga_help: "Bases de la liga  SCRIB.",
 
@@ -116,12 +116,11 @@ var configs = (function () {
 
         newsletter_help:"Suscríbete a la newsletter de la compañía.",
 
-		la_compañía_help: "Sinopsis de la compañía.",
+		la_compañía_help: "¿Quién es Sutura Teatro?",
         
-        dossier_help: "Dossier del proyecto SCRIB.",
+        dossier_help: "Dossier del espectáculo SCRIB.",
 
 		contacto_help: "Para encontrar a la compañía.",
-
     };
 
     return {
@@ -286,34 +285,35 @@ var main = (function () {
 		
 		MUSA: { value: "musa", help: configs.getInstance().musa_help},
 
-        GUIA_DE_USUARIO: { value: "manual", help: configs.getInstance().guia_de_usuario_help},
+        EL_ESPECTÁCULO: { value: "espectáculo", help: configs.getInstance().el_espectáculo_help},
 
+        PROGRAMA_DE_MANO: { value: "programa de mano", help: configs.getInstance().programa_de_mano_help},
 
-		EL_PROYECTO: { value: "proyecto", help: configs.getInstance().el_proyecto_help},
+        FECHAS: { value: "fechas", help: configs.getInstance().fecha_help},
 
         DOSSIER: { value: "dossier", help: configs.getInstance().dossier_help},
+
+        LA_COMPAÑÍA: { value: "compañía", help: configs.getInstance().la_compañía_help},
+
+        NEWSLETTER: { value: "newsletter", help: configs.getInstance().newsletter_help},
 
 		//ATRAS: { value: "atras", help: configs.getInstance().el_proyecto_help},
 
 		LIGA: { value: "liga", help: configs.getInstance().liga_help},
 		
-		FECHAS: { value: "fechas", help: configs.getInstance().fecha_help},
-
 		CLASIFICACIÓN: { value: "clasificación", help: configs.getInstance().clasificacion_help},
 
 		TEXTOS_DEL_MES: { value: "textos del mes", help: configs.getInstance().textos_del_mes_help},
 		
 		FINANCIACIÓN: { value: "financiación", help: configs.getInstance().financiación_help},
-
-        NEWSLETTER: { value: "newsletter", help: configs.getInstance().newsletter_help},
-
-		LA_COMPAÑÍA: { value: "compañía", help: configs.getInstance().la_compañía_help},
         
         ANGELA_BUENO: { value: "ángela bueno", help: configs.getInstance().la_compañía_help},
 
         DAVID_VIÑAS: { value: "david viñas", help: configs.getInstance().la_compañía_help},
 
 		CONTACTO: { value: "contacto", help: configs.getInstance().contacto_help},
+
+        ENTRADAS: { value: "navelart", help: configs.getInstance().la_compañía_help},
 
 		REBOOT: { value: "reinicio", help: configs.getInstance().reboot_help },
 
@@ -834,9 +834,9 @@ function log( text ) {
 
                 break;
 				
-			case cmds.GUIA_DE_USUARIO.value:
+			case cmds.PROGRAMA_DE_MANO.value:
 
-                this.guia_de_usuario();
+                this.programa_de_mano();
 
                 break;
 
@@ -846,9 +846,9 @@ function log( text ) {
 
                 break;
 
-			case cmds.EL_PROYECTO.value:
+			case cmds.EL_ESPECTÁCULO.value:
 
-                this.el_proyecto();
+                this.el_espectáculo();
 
                 break;
 
@@ -917,6 +917,12 @@ function log( text ) {
                 this.contacto();
 
                 break;
+
+            case cmds.ENTRADAS.value:
+
+            this.entradas();
+
+            break;
 
             default:
 
@@ -1048,10 +1054,21 @@ function log( text ) {
 			location.href='./game/public/index.html';
 
     }
+	//EL ESPECTÁCULO
 
-    	//GUÍA DE USUARIO
+	    Terminal.prototype.el_espectáculo = function () {
+			
+			this.clear();
+			var result ="¿QUÉ ES SCRIB?\n\n\nEn cada velada dos equipos (el equipo rojo y el equipo azul) se enfrentan por escribir el mejor texto dramático de la noche.\n\nCada bando se compone, por un lado, de dos dramaturgos/as seleccionados/as previamente que, a la vez que libran la encarnizada batalla de escritura, intentan vencer todos los desafíos que les propone nuestro videojuego.\n\nEstos no están solos, ya que el público (dividido también), en su papel de musa, interactúa mediante su teléfono móvil de diversas maneras para ofrecer soluciones creativas y evitar el bloqueo del escritor/a que haya elegido inspirar.\n\nComo guinda, la última parte del equipo. Tanto el team rojo como el azul cuentan con un elenco actoral que, aislado del escenario, ha estado preparando de manera simultánea el montaje de los textos. Un montaje con diseño de iluminación, sonido en escena, atrezzo... Todo lo necesario para que brille lo escrito.\n\nFinalmente, el jurado decide qué equipo ha demostrado mayor cooperación.\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
 
-	    Terminal.prototype.guia_de_usuario = function () {
+		        var output = this.output;
+			output.innerHTML += ("<center><img style='max-width:100%;width:70%;height:auto;' src='./img/scrib.png'></center>"+ "<br><br/>");
+			this.type(result, this.unlock.bind(this));
+    }
+
+        	//PROGRAMA DE MANO
+
+	    Terminal.prototype.programa_de_mano = function () {
 			
 			this.clear();
 			
@@ -1064,17 +1081,22 @@ function log( text ) {
             location.href='./archives/Guia de usuario SCRIB.pdf';
             
     }
-	//EL PROYECTO
 
-	    Terminal.prototype.el_proyecto = function () {
+    //FECHAS
+
+					
+
+    Terminal.prototype.fechas = function () {
+
 			
-			this.clear();
-			var result ="¿QUÉ ES SCRIB?\n\n\nSCRIB es un videojuego-espectáculo de escritura dramática.\n\nTradicionalmente la tarea del escritor ha sido luchar en solitario con las dificultades de crear una historia. Este espectáculo propone hacer de la escritura un suceso interesante y colectivo, en el que el espectador pueda participar. Fusionando las artes escénicas y la programación, SCRIB es tanto un videojuego como un espectáculo interactivo.\n\nEn cada velada dos dramaturgos seleccionados previamente librarán una encarnizada batalla para ver quién escribe el mejor texto, intentando a su vez, vencer todos los desafíos que les propone SCRIB, nuestro videojuego. \n\nSin embargo, no estarán solos, ya que el público, en su papel de musa, interactuará mediante su teléfono móvil de diversas maneras para ofrecer soluciones creativas y evitar el bloqueo del escritor que haya elegido inspirar. Como guinda, se representarán ambos textos. ¿Quiénes lo harán? Un elenco de actores que, aislado del escenario, ha estado preparando un montaje de los textos de manera simultánea.\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
 
-		        var output = this.output;
-			output.innerHTML += ("<center><img style='max-width:100%;width:70%;height:auto;' src='./img/scrib.png'></center>"+ "<br><br/>");
-			this.type(result, this.unlock.bind(this));
-    }
+        this.clear();
+
+var result = "FECHAS\n\n\n2025\n\n\u2022 28 DE MARZO en la sala NavelArt a las 19:00 hrs.\n\nPara conseguir tus entradas, escribe el comando \"navelart\".\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
+
+this.type(result, this.unlock.bind(this));
+
+}
 
     //DOSSIER
 
@@ -1082,7 +1104,7 @@ function log( text ) {
 
         this.clear();
         
-         var result = "Se te ha descargado el dossier del proyecto SCRIB.\n\n\nPara volver al menú, utiliza el comando \"reinicio\"";
+         var result = "Se te ha descargado el dossier del espectáculo SCRIB.\n\n\nPara volver al menú, utiliza el comando \"reinicio\"";
 
         var output = this.output;
 
@@ -1158,22 +1180,6 @@ function log( text ) {
 			this.type(result, this.unlock.bind(this));
 
     }
-		
-	//FECHAS
-
-					
-
-	    Terminal.prototype.fechas = function () {
-
-			
-
-						this.clear();
-
-         var result = "FECHAS\n\n\n2025\n\n\u2022 28 DE MARZO en la sala NavelArt a las 19:00 hrs.\n\nEntradas: PRÓXIMAMENTE.\n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
-
-			this.type(result, this.unlock.bind(this));
-
-    }
 
 		//FINANCIACIÓN
 		
@@ -1210,7 +1216,7 @@ function log( text ) {
 
 			this.clear();
 			
-			 var result = "¿QUIÉNES SOMOS?\n\n\nSutura es una compañía emergente nacida en 2020. Desde sus comienzos en el teatro, ha ido definiéndose en la clave de la hibridación entre arte y ciencia. Primeramente, con Capilla ardiente (2021), cuya temática es el suicidio desde el punto de vista psicologista.\n\nEntre los años 2022 y 2023, crean el espectáculo-videojuego SCRIB, que obtuvo la beca de ayuda al desarrollo en el festival de arte internacional WE:NOW.\n\nActualmente se encuentra desarrollando, además, la instalación científica para público adolescente ¿Cómo hemos llegado a ser cómo somos?, cuya intención es facilitar el aprendizaje respecto de las teorías darwinistas y de la evolución, a la par que acercar a los conceptos de racismo y eugenesia.\n\nPor último, ha sido finalista en los años 2021 y 2022 de los Premios Madroño (Certamen Jóvenes creadores de la comunidad de Madrid), con los microteatros El viajante y AEGIS, respectivamente, ganando recientemente en el año 2023 con el microteatro Manos.\n\nSutura la componen David Viñas y Ángela Bueno.\n\nSi quieres saber quién es David Viñas, introduce el comando \"david viñas\".\n\nSi quieres quién es Ángela Bueno, introduce el comando \"angela bueno\".\n\n\nPara volver al menú, utiliza el comando  \"reinicio\".";
+			 var result = "¿QUIÉNES SOMOS?\n\n\n Sutura Teatro es una compañía emergente nacida en 2019. Se define en la clave de la hibridación entre arte, tecnología y ciencia.\n\nHa sido finalista en los años 2021 y 2022 y ganadora en el año 2023 en los Premios Madroño Jóvenes Creadores de la Comunidad de Madrid. A su vez, creó la pieza Cómo ligar (muy fácil), para la edición X de Microteatro de Bolsillo del Ayuntamiento de Madrid.\n\nHa formado parte de los congresos La escena intermedial: Inmersividad, interactividad y tecnología en la escena del siglo XXI, impartido en la Universidad Complutense de Madrid y del VII Congreso Mutis 2024, impartido en el Institut del Teatre.\n\nSu último proyecto <SCRI> B ha sido ganador del Festival Internacional WE: NOW. Además, debido a su formato, se representó en 2024, en la Universidad Carlos III de Madrid por el día de la Mujer en la Ciencia y en 2025, en Perú, por el día de la Educación. Este último evento fue subvencionado por el programa de ayudas de Creación Injuve, además de contar con el apoyo de AC/E (Acción Cultural Española).\n\nSutura Teatro la componen David Viñas y Ángela Bueno.\n\nSi quieres saber quién es David Viñas, introduce el comando \"david viñas\".\n\nSi quieres quién es Ángela Bueno, introduce el comando \"ángela bueno\".\n\n\nPara volver al menú, utiliza el comando  \"reinicio\".";
  			
 			var output = this.output;
 
@@ -1226,7 +1232,7 @@ function log( text ) {
 
 			this.clear();
 			
-			 var result = "ÁNGELA BUENO (BUENA ENJUNDIA)\n\n\nEgresada en la RESAD por dirección y dramaturgia y actriz por la EMAD. Ha publicado el epistolario poético Quiero ser una caja de música, violencias machistas en la juventud adolescente: carta a Antonio Gamoneda (Eolas ediciones, 2016).\n\nPosteriormente, ha participado en la antología dramática Piezas breves. Estudiantes RESAD 2021-2022 con el texto ¡Hasta la vista, Benidorm! (Ediciones Antígona, 2022). Es miembro de la Tertulia Literaria Exiles, guiada por el poeta Leo Zelada, habiendo participado en diversos recitales en Madrid y en París.\n\nA su vez, ha sido finalista del Poetry Slam Madrid en varias ocasiones. En 2020 funda junto a Tres Cejas (David Viñas) y Ana Sempere la compañía Sutura. Entre sus piezas teatrales destacan Sin ser, Nadine y Los gritos, a la par que su puesta en escena de La charca inútil de David Desola. Actualmente se encuentra desarrollando el espectáculo de escritura en vivo SCRIB.\n\n\nPara volver al menú, utiliza el comando  \"reinicio\".";
+			 var result = "ÁNGELA BUENO (BUENA ENJUNDIA)\n\n\nEgresada en la RESAD por dramaturgia y dirección. Forma parte del colectivo Madrid Negro, siendo guía de las exposiciones Tabita Rezaire: Nebulosa de la Calabaza y La memoria colonial en las exposiciones del Thyssen en colaboración con Espacio Afro y Museo Thyssen. Además, ha formado parte de la mesa redonda Participación cultural y museos en el marco de Encuentros Detonantes organizada por el Departamento de Educación del Museo del Prado.\n\nComo miembro de la Tertulia Antirracista Exiles ha participado en diversos recitales en Madrid y en París; entre sus publicaciones encontramos  Quiero ser una caja de música, violencias machistas en la juventud adolescente: carta a Antonio Gamoneda (Eolas ediciones, 2016) y ¡Hasta la vista, Benidorm! (Editorial Antígona, 2023) \n\nActualmente se encuentra desarrollando Comosomos,  instalación artística itinerante, interactiva e inmersiva para público adolescente, cuyo eje vertebrador es la deconstrucción del concepto de «raza» y el alegato a favor de la diversidad  a través de la memoria de las víctimas.\n\n\nPara volver al menú, utiliza el comando  \"reinicio\".";
  			
 			var output = this.output;
 
@@ -1242,7 +1248,7 @@ function log( text ) {
 
 			this.clear();
 			
-			 var result = "DAVID VIÑAS (TRES CEJAS)\n\n\nEgresado en Matemáticas e Informática por la Universidad Politécnica de Madrid. Se interesa por el arte dramático al entrar a formar parte del grupo de teatro universitario Histrión, donde ha sido actor y pedagogo.\n\nA su vez, comienza a formarse en escritura en el taller de escritura Fuentetaja e interpretación actoral e improvisación en la escuela de improvisación teatral WIT. Ha publicado en varias ocasiones, siendo La jajajada su primer libro (2020, Ediciones en el mar) y sucediéndose Pizza margarita (2021, Niña Loba Editorial).\n\nComo dramaturgo ha desarrollado los microteatros El viajante (finalista del XXIX Certamen Jóvenes Creadores y nominación al mejor texto y actor masculino en el V Festival de teatro breve de Tarambana) y AEGIS (finalista del XXX Certamen Jóvenes Creadores), y la obra de formato largo Capilla ardiente.\n\nEn su faceta de actor, además de interpretar en todas sus obras, ha sido galardonado con el Premio Madroño 2023 en artes escénicas por su actuación con la pieza Manos (Gustavo Montes) y ha trabajado con Angélica Liddell en su obra Vudú (3318) Blixen.\n\nActualmente se encuentra desarrollando el espectáculo de escritura en vivo SCRIB y la pieza inmersiva Un Macbeth con la compañía Haurire.\n\n\nPara volver al menú, utiliza el comando  \"reinicio\".";
+			 var result = "DAVID VIÑAS (TRES CEJAS)\n\n\nEgresado en Matemáticas e Informática por la Universidad Politécnica de Madrid. Es docente del programa SOY (dinámicas de habilidades sociales para adolescentes a partir de la improvisación teatral). A la par, imparte clases en la escuela WIT Impro.\n\nComo actor trabaja con Angélica Liddell en su obra Vudú (3318) Blixen,  y pertenece al elenco estable de la compañía Impropios; en 2023 fue galardonado con el Premio Madroño a mejor actor por su actuación en Manos de Gustavo Montes. \n\nEntre sus publicaciones encontramos La jajajada (2020, Ediciones en el mar) y Pizza margarita (2021, Niña Loba Editorial). A su vez, es escritor de  los microteatros El viajante (finalista del XXIX Certamen Jóvenes Creadores y nominación al mejor texto en el V Festival de teatro breve de Tarambana) y AEGIS (finalista del XXX Certamen Jóvenes Creadores).\n\nActualmente se encuentra investigando el uso de la inteligencia artificial generativa en escena con el objetivo de integrarla de manera sofisticada.\n\n\nPara volver al menú, utiliza el comando  \"reinicio\".";
  			
 			var output = this.output;
 
@@ -1266,6 +1272,21 @@ function log( text ) {
 
 			     
 
+    }
+
+    //ENTRADAS
+
+    Terminal.prototype.entradas = function () {
+
+        this.clear();
+
+        var result = "Se te ha redirigido a la compra de entradas para nuestro espectáculo SCRIB.\n\n\nPara volver al menú, utiliza el comando \"reinicio\"";
+
+        var output = this.output;
+ 
+        this.type(result, this.unlock.bind(this));
+        
+        location.href='https://www.navelart.es/event-details/scri-b-1';
     }
 
 	/*
@@ -1302,11 +1323,11 @@ function log( text ) {
 
         for (var cmd in cmds) {
 
-			if(cmds[cmd].value== "proyecto" ||
+			if(cmds[cmd].value== "espectáculo" ||
 			   
 			   cmds[cmd].value=="fechas"  ||
 
-               cmds[cmd].value=="financiación"    ||
+               cmds[cmd].value=="programa de mano"    ||
 
                cmds[cmd].value=="newsletter"    ||
 			   
