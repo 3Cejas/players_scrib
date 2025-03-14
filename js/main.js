@@ -102,6 +102,8 @@ var configs = (function () {
 
         programa_de_mano_help: "Manual de videojuego.",
 
+        juego_help: "Versión para un jugador de SCRIB.",
+
 		el_espectáculo_help:"¿Qué es  SCRIB?",
 
 		liga_help: "Bases de la liga  SCRIB.",
@@ -281,13 +283,15 @@ var main = (function () {
 
         SUDO: { value: "sudo", help: configs.getInstance().sudo_help },*/
 		
-		EL_JUEGO: { value: "juego", help: configs.getInstance().el_juego_help},
+		EL_JUEGO: { value: "show", help: configs.getInstance().el_juego_help},
 		
 		MUSA: { value: "musa", help: configs.getInstance().musa_help},
 
         EL_ESPECTÁCULO: { value: "espectáculo", help: configs.getInstance().el_espectáculo_help},
 
         PROGRAMA_DE_MANO: { value: "programa de mano", help: configs.getInstance().programa_de_mano_help},
+
+        JUEGO: { value: "juego", help: configs.getInstance().juego_help},
 
         FECHAS: { value: "fechas", help: configs.getInstance().fecha_help},
 
@@ -840,6 +844,12 @@ function log( text ) {
 
                 break;
 
+            case cmds.JUEGO.value:
+
+                this.juego();
+
+                break;
+
                 case cmds.MUSA.value:
 
                 this.musa();
@@ -1081,6 +1091,22 @@ function log( text ) {
             location.href='./archives/Guia de usuario SCRIB.pdf';
             
     }
+
+    //JUEGO
+
+    Terminal.prototype.juego = function () {
+			
+        this.clear();
+        
+         var result = "Te estamos redirigiendo al juego. Disfruta. \n\n\nPara volver al menú, utiliza el comando \"reinicio\".";
+
+        var output = this.output;
+
+        this.type(result, this.unlock.bind(this));
+        
+        location.href='./1p_scrib/index.html';
+        
+}
 
     //FECHAS
 
