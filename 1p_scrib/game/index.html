@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <link  rel="icon"   href="./img/logo-2.png" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+    <script src="./js/juego.js"></script>
+    <div class="cabecera">
+    <pre id="neon" class="neon">
+        __     _____    _____   _____    _____    __       ____  
+       / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+      / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+     < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
+      \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
+                                                                                                  
+    </pre>
+    <div id="logo">
+        <p class="sub">powered by</p>
+        <br>
+        <img src="./img/logo.png" alt="" class="logo"/>
+    </div>
+    </div>
+    <div id="lightning">
+    </div>
+    <div class="botones">
+    <span id="btn_escribir" class='btn' onclick="inicio()">✍️ ESCRIBIR</span>
+    <span id="btn_limpiar" class='btn' onclick="limpiar()">🔁 REINICIO</span>
+    <span id="btn_pantalla_completa" class='btn' onclick="pantalla_completa()">🖥️ PANTALLA COMPLETA</span>
+    <span id="btn_descargar_texto"class='btn' onclick="descargar_textos()" style="display:none">💾 DESCARGAR TEXTO</span>
+    <span id="btn_opciones" class='btn' onclick="opciones()">⚙️ OPCIONES</span>
+    <span id="btn_volver" class='btn' onclick="volver()" style="display:none">🔙 VOLVER</span>
+    </div>
+    <div id="info">
+        <h1 id="feedback1" class="feedback1"></h1>
+    </div>
+    <div class="container"></div>
+    <br>
+    <p><span id="temas" class="temas"></span></p>
+    <div id="contenedor" class="contenedor">
+        <div class="jugador">
+            <p id="tiempo" class="tiempo"></p>
+            <p id="feedback_tiempo" class="feedback_tiempo"></p>
+            <input disabled="" id="nombre" class="nombre" data-darkreader-inline-color="">
+            <br><br>
+            <p id="alineador1"></p>
+                          <!-- MENÚ PRINCIPAL -->
+    <div id="mainMenu" class="mainMenu">
+        <!-- Título principal separando "Game Over" en rojo y el resto en blanco -->
+        <h1 class="main-title">
+          <span style="color: red;">GAME OVER</span><br><br> ¿QUIERES <span style="color: lime">RESUCITAR</span> A CAMBIO DE PALABRAS?
+        </h1>
+        <div class="button-container">
+          <button id="btnSi" class="selected">Sí</button>
+          <button id="btnNo">No</button>
+        </div>
+      </div>
+      <!-- MENÚ DE SELECCIÓN DE CANTIDAD (APARECE AL DAR "SÍ") -->
+      <div id="quantityMenu">
+        <h2 class="quantity-title">Selecciona la cantidad de palabras:</h2>
+        <!-- 
+          Este elemento mostrará la cantidad y su conversión a segundos.
+          Lo tratamos como "elemento navegable" en nuestro índice para flechas.
+        -->
+        <div id="quantityDisplay" class="quantity-display selected">
+          <!-- Aquí inyectaremos el texto "X palabras => Y segundos" -->
+        </div>
+  
+        <!-- Botones de abajo: "Confirmar" y "Atrás" -->
+        <div class="button-container">
+          <button id="btnConfirmar">Confirmar</button>
+          <button id="btnAtras">Atrás</button>
+        </div>
+      </div>
+            <div class="textarea-container">
+            <div contenteditable="false" class="textarea" id="texto" spellcheck="false"> </div>
+                <div class="textarea-gradient top" id="gradientTop"></div>
+                <div class="textarea-gradient bottom" id="gradientBottom"></div></div>
+           
+        </div> 
+            <br><br>
+            <div class="info-total">
+                <table id="metadatos" class="right">
+                    <tr>
+                        <th> 🖋️</th>
+                    </tr>
+                    <tr>
+                        <th id="puntos"> 0 palabras</th>
+                    </tr>
+                </table>
+                </br>
+            <div>
+                <table class="info">
+                    <tr>
+                        <p id="explicación" class="explicación"></p>
+                    </tr>
+                    <p id="palabra" class=palabra></p>
+                    </tr>
+                    <tr>
+                        <p id="definicion" class="definicion"></p>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="opciones" class="opciones">
+        <table class="opciones_table">
+            <thead>
+              <tr>
+                <th class="opciones_titulo">TIEMPO INICIAL</th>
+                <th class="opciones_titulo">DURACIÓN NIVEL</th>
+                <th class="opciones_titulo">CAMBIO DE PALABRAS</th>
+                <th class="opciones_titulo">CAMBIO DE LETRAS</th>
+
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <!-- En cada celda se incluye el atributo data-label para mostrar el título en móvil -->
+                <td data-label="TIEMPO INICIAL">
+                  <input type="number" id="tiempo_inicial" class="opciones_valores" value="30" min="30" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
+                </td>
+                <td data-label="DURACIÓN NIVEL">
+                  <input type="number" id="tiempo_modos" class="opciones_valores" value="60" min="30" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
+                </td>
+                <td data-label="CAMBIO DE PALABRAS">
+                  <input type="number" id="tiempo_cambio_palabras" class="opciones_valores" value="20" min="10" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
+                </td>
+                <td data-label="CAMBIO DE LETRAS">
+                  <input type="number" id="tiempo_cambio_letra" class="opciones_valores" value="20" min="10" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <br>
+          <form id="listaModosForm" class="listaModosForm">
+            <table>
+                <tr id="listaModos">
+                    <!-- Las casillas de verificación se generan aquí como <td> -->
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+<script src="./js/jugador-servidor.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+</html>
