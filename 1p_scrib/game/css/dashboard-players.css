@@ -709,10 +709,10 @@ th{
       font-size: 0.8em; /* Ajusta este valor según tus necesidades */
     }
     .sub{
-      font-size: 0.7em;
+      font-size: 1.7em;
     }
     .logo{
-      width:20%;
+      width:40%;
     }
     /*JUGADOR*/
     .nombre{
