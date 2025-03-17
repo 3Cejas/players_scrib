@@ -602,3 +602,30 @@ document.addEventListener('DOMContentLoaded', function () {
   // Inicializa las variables con los valores por defecto
   actualizarVariables();
 });
+
+function increment(id) {
+  var input = document.getElementById(id);
+  var step = parseFloat(input.getAttribute('step')) || 1;
+  var max = parseFloat(input.getAttribute('max')) || Infinity;
+  var currentValue = parseFloat(input.value) || 0;
+  var newValue = currentValue + step;
+  if (newValue <= max) {
+    input.value = newValue;
+  }
+}
+
+/**
+ * Función para decrementar el valor del input.
+ * Obtiene el valor actual, lo decrementa según el atributo step y lo actualiza,
+ * respetando el valor mínimo (min) definido.
+ */
+function decrement(id) {
+  var input = document.getElementById(id);
+  var step = parseFloat(input.getAttribute('step')) || 1;
+  var min = parseFloat(input.getAttribute('min')) || -Infinity;
+  var currentValue = parseFloat(input.value) || 0;
+  var newValue = currentValue - step;
+  if (newValue >= min) {
+    input.value = newValue;
+  }
+}

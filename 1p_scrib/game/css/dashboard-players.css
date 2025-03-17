@@ -724,7 +724,7 @@ th{
   }
   .textarea{
     font-size: 2.5em;
-    max-height: /*simultatin 1 row*/ calc(1em);
+    max-height: /*simultatin 1 row*/ calc(0.7em);
   }
   .feedback1{
     font-size: 5vw;
@@ -739,6 +739,7 @@ th{
 }
 
 .palabra {
+  max-width: 80%;
   max-height: 30vw;
   font-size: 5.5vw;
 }
@@ -788,10 +789,8 @@ table{
   outline: 0px !important;
   -webkit-appearance: none;
   box-shadow: none !important;
-  color:aqua;
+  color: aqua;
   text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
-
-  
 }
 /* Ajustamos el tamaño del input number en móviles */
 input[type="number"] {
@@ -803,4 +802,37 @@ input[type="number"] {
 .opciones_valores {
   font-size: 8vw;
 }
+
+/* ============================
+   Estilos para el spinner personalizado
+   ============================ */
+.input-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centra el contenido horizontalmente */
+  gap: 0.5em;  /* Espacio entre botones e input */
+}
+/* Se anula el width: 100% heredado para que el input se ajuste junto a los botones */
+.input-spinner input[type="number"] {
+  width: auto;
+  font-size: 10vw;
+  text-align: center;
+  box-sizing: border-box;
+  flex: 1;
+}
+/* Estilo para los botones del spinner */
+.spinner-btn {
+  font-size: 8vw;
+  padding: 0.5em;
+  width: 20vw; /* Tamaño relativo para móviles */
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  border-radius: 5px;
+}
+/* Estado activo para el botón */
+.spinner-btn:active {
+  background-color: #e0e0e0;
+}
   }
+  
