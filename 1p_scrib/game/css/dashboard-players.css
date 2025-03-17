@@ -724,7 +724,7 @@ th{
   }
   .textarea{
     font-size: 2.5em;
-    max-height: /*simultatin 1 row*/ calc(1.5em * 2);
+    max-height: /*simultatin 1 row*/ calc(1em);
   }
   .feedback1{
     font-size: 5vw;
@@ -739,12 +739,16 @@ th{
 }
 
 .palabra {
-  max-height: 10vw;
+  max-height: 30vw;
   font-size: 5.5vw;
 }
 
 .definicion {
   font-size: 5.5vw;
+}
+table{
+  width: 40%;
+
 }
 /*OPCIONES*/
 .opciones_table thead {
