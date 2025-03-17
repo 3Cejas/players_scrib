@@ -724,7 +724,7 @@ th{
   }
   .textarea{
     font-size: 2.5em;
-    max-height: /*simultatin 1 row*/ 2.5em;
+    max-height: /*simultatin 1 row*/ 2em;
   }
   .feedback1{
     font-size: 5vw;
@@ -735,7 +735,7 @@ th{
 }
 
 .explicación {
-  font-size: 7vw;
+  font-size: 6vw;
 }
 
 .palabra {
