@@ -514,13 +514,9 @@ function volver(){
   })
 }
 
+// Función para generar las casillas de verificación dentro de <td>
 function generarCasillas() {
-  // Obtenemos el contenedor que ahora es un tbody
   const contenedor = document.getElementById('listaModos');
-  if (!contenedor) {
-    console.error('No se encontró el contenedor con id "listaModos"');
-    return;
-  }
   // Limpiar el contenedor antes de agregar elementos
   contenedor.innerHTML = "";
 
@@ -549,7 +545,7 @@ function generarCasillas() {
       checkbox.style.width = "1.5em";
       checkbox.style.height = "1.5em";
 
-      // Crear el label asociado al checkbox
+      // Crear el label
       const label = document.createElement('label');
       label.htmlFor = `modo-${index}`;
       label.textContent = modo.toUpperCase(); // Convertir el modo a mayúsculas
@@ -558,44 +554,51 @@ function generarCasillas() {
       label.style.paddingLeft = "0.2vw";
       label.style.paddingRight = "0.2vw";
       label.style.paddingBottom = "4vw";
-      label.style.fontSize = "8vw";
+      label.style.fontSize = "8vw"
+
 
       // Añadir el checkbox y el label a la celda, y la celda a la fila
       td.appendChild(checkbox);
       td.appendChild(label);
       tr.appendChild(td);
-      // Agregar la fila al contenedor (tbody)
+      // Agregar la fila al contenedor
       contenedor.appendChild(tr);
     });
   }
 }
-
-/**
- * Función para obtener los modos seleccionados.
- * Recorre todos los checkbox con name "modos" que estén seleccionados y extrae su valor.
- */
+// Función para obtener los modos seleccionados
 function rellenarListaModos() {
   const seleccionados = document.querySelectorAll('input[name="modos"]:checked');
-  const LISTA_MODOS = Array.from(seleccionados).map(checkbox => checkbox.value);
+
+  LISTA_MODOS = Array.from(seleccionados).map(checkbox => checkbox.value);
+
+  // Opcional: Mostrar los resultados en consola para verificar
   console.log('LISTA_MODOS:', LISTA_MODOS);
 }
 
-/**
- * Función para actualizar variables globales a partir de inputs (ejemplo).
- * Aquí se actualizan algunas variables multiplicando el valor del input por 1000.
- */
 function actualizarVariables() {
-  // Ejemplo: suponiendo que existen elementos con los ids indicados
-  // TIEMPO_CAMBIO_PALABRAS = document.getElementById('tiempo_cambio_palabras_input').valueAsNumber * 1000;
-  // TIEMPO_INICIAL = document.getElementById('tiempo_inicial_input').valueAsNumber * 1000;
-  // TIEMPO_CAMBIO_LETRA = document.getElementById('tiempo_cambio_letra_input').valueAsNumber * 1000;
-  // TIEMPO_MODOS = document.getElementById('tiempo_modos_input').valueAsNumber * 1000;
-  // TIEMPO_CAMBIO_MODOS = TIEMPO_MODOS - 1;
-  console.log('Variables actualizadas (ejemplo)');
+  //TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
+  //TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
+  TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
+  //TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
+  TIEMPO_INICIAL = tiempo_inicial_input.valueAsNumber * 1000;
+  //PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
+  TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber * 1000;
+  TIEMPO_MODOS = tiempo_modos_input.valueAsNumber * 1000;
+  TIEMPO_CAMBIO_MODOS = TIEMPO_MODOS - 1;
+
+ //console.log('TIEMPO_INVERSO:', TIEMPO_INVERSO);
+ //console.log('TIEMPO_BORRADO:', TIEMPO_BORRADO);
+ console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);
+ //console.log('TIEMPO_BORROSO:', TIEMPO_BORROSO);
+ //console.log('PALABRAS_INSERTADAS_META:', PALABRAS_INSERTADAS_META);
+ console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
+ console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
 }
 
-// Esperamos a que el DOM se cargue para generar las casillas y actualizar las variables
 document.addEventListener('DOMContentLoaded', function () {
-  generarCasillas();
+
+  generarCasillas()
+  // Inicializa las variables con los valores por defecto
   actualizarVariables();
 });

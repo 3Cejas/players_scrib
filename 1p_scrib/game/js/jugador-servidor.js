@@ -711,7 +711,7 @@ function inicio() {
 
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">¿PREPARADO?</span>'); 
+    var preparados = $('<span id="countdown">¿PREPARADX?</span>'); 
     preparados.appendTo($('.container'));
     setTimeout(() => {
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
