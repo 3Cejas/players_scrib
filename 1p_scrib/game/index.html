@@ -127,41 +127,22 @@
             </thead>
             <tbody>
               <tr>
-                <!-- Cada celda incluye el atributo data-label para mejorar la visualización en móvil -->
+                <!-- En cada celda se incluye el atributo data-label para mostrar el título en móvil -->
                 <td data-label="TIEMPO INICIAL">
-                  <div class="input-spinner">
-                    <!-- Botón para decrementar -->
-                    <button onclick="decrement('tiempo_inicial')">−</button>
-                    <!-- Input numérico con sus atributos -->
-                    <input type="number" id="tiempo_inicial" value="30" min="30" max="9999999" step="5">
-                    <!-- Botón para incrementar -->
-                    <button onclick="increment('tiempo_inicial')">+</button>
-                  </div>
-                  <span>segundos</span>
+                  <input type="number" id="tiempo_inicial" class="opciones_valores" value="30" min="30" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
                 </td>
                 <td data-label="DURACIÓN NIVEL">
-                  <div class="input-spinner">
-                    <button onclick="decrement('tiempo_modos')">−</button>
-                    <input type="number" id="tiempo_modos" value="60" min="30" max="9999999" step="5">
-                    <button onclick="increment('tiempo_modos')">+</button>
-                  </div>
-                  <span>segundos</span>
+                  <input type="number" id="tiempo_modos" class="opciones_valores" value="60" min="30" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
                 </td>
                 <td data-label="CAMBIO DE PALABRAS">
-                  <div class="input-spinner">
-                    <button onclick="decrement('tiempo_cambio_palabras')">−</button>
-                    <input type="number" id="tiempo_cambio_palabras" value="20" min="10" max="9999999" step="5">
-                    <button onclick="increment('tiempo_cambio_palabras')">+</button>
-                  </div>
-                  <span>segundos</span>
+                  <input type="number" id="tiempo_cambio_palabras" class="opciones_valores" value="20" min="10" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
                 </td>
                 <td data-label="CAMBIO DE LETRAS">
-                  <div class="input-spinner">
-                    <button onclick="decrement('tiempo_cambio_letra')">−</button>
-                    <input type="number" id="tiempo_cambio_letra" value="20" min="10" max="9999999" step="5">
-                    <button onclick="increment('tiempo_cambio_letra')">+</button>
-                  </div>
-                  <span>segundos</span>
+                  <input type="number" id="tiempo_cambio_letra" class="opciones_valores" value="20" min="10" max="9999999" step="5">
+                  <span class="opciones_valores">segundos</span>
                 </td>
               </tr>
             </tbody>
@@ -169,11 +150,11 @@
           <br>
           <form id="listaModosForm" class="listaModosForm">
             <table>
-                <tr id="listaModos">
-                    <!-- Las casillas de verificación se generan aquí como <td> -->
-                </tr>
+              <tbody id="listaModos">
+                <!-- Aquí se generarán las filas dinámicamente -->
+              </tbody>
             </table>
-        </form>
+          </form>
     </div>
 </body>
 <script src="./js/jugador-servidor.js"></script>

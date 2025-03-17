@@ -138,7 +138,7 @@ const buttonContainer = document.querySelector('.button-container');
 let nombre = getEl("nombre");
 
 let player = getParameterByName("name");
-nombre.value = (player && player.trim() !== "") ? player : "ESCRITXR";
+nombre.value = (player && player.trim() !== "") ? player.toUpperCase() : "ESCRITXR";
 
 nombre.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
 metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
@@ -1673,6 +1673,7 @@ function temp_modos() {
     modo_anterior = modo_actual;
     modo_actual = modos_restantes[0];
     modos_restantes.splice(0, 1);
+    console.log(modo_actual)
     MODOS[modo_actual]("");
 
     // Reiniciar la variable de contador
@@ -1746,7 +1747,13 @@ function limpieza(){
     texto.style.display = "";
     texto.style.height = "";
     feedback_tiempo.style.color = color_positivo;
-    texto.style.maxHeight = "calc(1.5em * 2)";
+    if (window.innerWidth <= 600) {
+        texto.style.maxHeight = "2em";
+    }
+    else{
+        texto.style.maxHeight = "calc(1.5em * 2)";
+
+    }
     texto.rows =  "6";
     definicion.style.fontSize = "1.5vw";
     temas.innerHTML = "";
