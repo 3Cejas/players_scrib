@@ -26,6 +26,7 @@ let lightning = getEl("lightning");
 let feedback_tiempo = getEl("feedback_tiempo");
 let neon = getEl("neon");
 
+let btnFinal = getEl("btn_final");
 let btnPantallaCompleta = getEl("btn_pantalla_completa");
 let btnLimpiar = getEl("btn_limpiar");
 let btnEscribir = getEl("btn_escribir");
@@ -686,7 +687,8 @@ function inicio() {
         btnEscribir.style.display = "none";
         btnLimpiar.style.display = "";
         btnDescargarTexto.style.display = "none" 
-        btnPantallaCompleta.style.display = "" 
+        btnPantallaCompleta.style.display = ""
+        btnFinal.style = "" 
         btnVolver.style.display = "none";
         animateCSS(".botones", "backInLeft")
     });
@@ -831,6 +833,7 @@ function limpiar(borrar){
         btnEscribir.style.display = "";
         //btnDescargarTexto.style.display = "" 
         btnPantallaCompleta.style.display = "" 
+        btnFinal.style.display = "none" 
         animateCSS(".botones", "backInLeft")
     });
 
@@ -1743,6 +1746,7 @@ function limpieza(){
     texto.style.display = "";
     texto.style.height = "";
     feedback_tiempo.style.color = color_positivo;
+    texto.style.maxHeight = "calc(1.5em * 2)";
     texto.rows =  "6";
     definicion.style.fontSize = "1.5vw";
     temas.innerHTML = "";
@@ -1807,6 +1811,7 @@ function limpieza_final(){
         btnOpciones.style.display = "";
         btnEscribir.style.display = "";
         btnDescargarTexto.style.display = "" 
+        btnFinal.style.display = "none"
         btnPantallaCompleta.style.display = "" 
         animateCSS(".botones", "backInLeft")
     });
