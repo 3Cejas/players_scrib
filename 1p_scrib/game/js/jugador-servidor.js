@@ -284,7 +284,16 @@ const MODOS = {
     "palabras bonus": function (data) {
         palabra.style.backgroundColor = "yellow";
         explicación.style.color = "yellow";
-        definicion.style.fontSize = "1vw";
+        if (window.innerWidth <= 600) {
+            definicion.style.fontSize = "1.5vw";
+            palabra.style.fontSize = "4vw";
+            explicación.style.fontSize = "3vw"
+        }
+        else{
+            definicion.style.fontSize = "1vw";
+            palabra.style.fontSize = "5.5vw";
+            explicación.style.fontSize = "5.5vw"
+        }
         explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
 
         recibir_palabra();
@@ -2266,7 +2275,7 @@ var end = Date.now() + (2 * 1000);
 
 const textarea = texto;
 
-document.addEventListener('DOMContentLoaded', function () {
+/*document.addEventListener('DOMContentLoaded', function () {
     const gradientTop = document.getElementById('gradientTop');
     const gradientBottom = document.getElementById('gradientBottom');
 
@@ -2294,7 +2303,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Inicialización de los gradientes al cargar la página
     updateGradients();
-});
+});*/
 
 // Función auxiliar que dada una palabra devuelve una puntación de respecto de la frecuencia.
 function puntuación_palabra(palabra) {
