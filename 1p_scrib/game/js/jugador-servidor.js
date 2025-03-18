@@ -385,7 +385,7 @@ const MODOS = {
         explicación.style.color = "lime";
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_bendita(e) };
-        texto.addEventListener("keydown", listener_modo, true);
+        texto.addEventListener("beforeinput", listener_modo, true);
         explicación.innerHTML = "NIVEL LETRA BENDITA";
         palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
         definicion.innerHTML = "";
