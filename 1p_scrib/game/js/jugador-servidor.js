@@ -1615,73 +1615,97 @@ function modo_letra_prohibida(e) {
   }
   
   // Esta función se llama cuando se presiona una tecla
-  function modo_letra_bendita(e) {
+function modo_letra_bendita(e) {
+    // Si el evento ya ha sido procesado, salimos
     if (e.defaultPrevented) {
         console.log('Evento ya procesado');
         return;
     }
 
-    let letra = e.key; // Captura la letra tecleada
+    // Capturar la tecla presionada utilizando e.key
+    // Si no está definida (por ejemplo, en algunos navegadores móviles), se utiliza e.keyCode como fallback
+    let letra = e.key;
+    if (typeof letra === "undefined" || letra === null) {
+        // Fallback a e.keyCode
+        if (e.keyCode === 13) {
+            letra = "Enter";
+        } else if (e.keyCode === 8) {
+            letra = "Backspace";
+        } else {
+            // Convertimos el keyCode a carácter (puede no ser perfecto para todas las teclas)
+            letra = String.fromCharCode(e.keyCode);
+        }
+    }
+
+    // Obtenemos la selección y el rango actual en el documento
     let sel = window.getSelection();
     let range = sel.getRangeAt(0);
     let node = sel.anchorNode;
 
-    // Añadido: Procesar tecla Backspace
-    if (e.key === 'Backspace') {
+    // Procesar la tecla Backspace de forma especial
+    if (letra === 'Backspace') {
         console.log('Node:', node);
         console.log('Parent Node:', node.parentNode);
         console.log('Parent Node class:', node.parentNode ? node.parentNode.className : 'No parent node');
         console.log('Focus Offset:', sel.focusOffset);
 
         if (node && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
-            e.preventDefault(); // Prevenir el comportamiento por defecto de la tecla Backspace
-            addSeconds(-2)
-            // Feedback visual
+            e.preventDefault(); // Prevenir el comportamiento por defecto
+            addSeconds(-2);
+            // Feedback visual para el usuario
             feedback.style.color = color_negativo;
             feedback.innerHTML = "⏱️-1 segs.";
-            addSeconds(-1)
+            addSeconds(-1);
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
                     feedback.innerHTML = "";
                 }, 2000);
             });
-            // Envío de feedback a través de Socket.io
+            // Aquí se podría enviar el feedback a través de Socket.io
         }
-        return; // Salir de la función si la tecla es Backspace
+        return; // Salir de la función si se presionó Backspace
     }
 
+    // Si se presionó una tecla imprimible (longitud 1)
     if (letra.length === 1) {
+        // Verificar si la letra es la "letra bendita"
         if ((toNormalForm(letra) === letra_bendita || toNormalForm(letra) === letra_bendita.toUpperCase()) ||
             (letra_bendita === "ñ" && (letra === letra_bendita || letra === letra_bendita.toUpperCase()))) {
             e.preventDefault();
             console.log('Se procesa letra bendita');
 
+            // Creamos un nodo de texto con la letra
             let textNode = document.createTextNode(letra);
+            // Creamos un span para aplicar el estilo (clase "letra-verde")
             let span = document.createElement("span");
             span.className = "letra-verde";
             span.appendChild(textNode);
 
+            // Creamos nodos de texto vacíos para separar y posicionar el span
             let emptyTextNodeBefore = document.createTextNode("");
             let emptyTextNodeAfter = document.createTextNode("");
 
+            // Insertamos los nodos en la posición actual del cursor
             range.insertNode(emptyTextNodeBefore);
             range.insertNode(span);
             range.insertNode(emptyTextNodeAfter);
 
+            // Reposicionamos el rango para que el cursor quede al inicio del nodo vacío anterior
             range.setStartBefore(emptyTextNodeBefore);
             range.setEndBefore(emptyTextNodeBefore);
             sel.removeAllRanges();
             sel.addRange(range);
+            
+            // Actualizamos el tiempo y la visualización de puntos (según la lógica del juego)
             addSeconds(-2);
             puntos.innerHTML = puntos_ + " palabras";
             console.log(puntos);
             
-
-            // Feedback visual
+            // Feedback visual para el usuario
             feedback.style.color = color_positivo;
             feedback.innerHTML = "⏱️+2 segs.";
-            addSeconds(+2)
+            addSeconds(+2);
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
@@ -1689,8 +1713,9 @@ function modo_letra_prohibida(e) {
                 }, 2000);
             });
 
-            // Envío de feedback a través de Socket.io
+            // Aquí se podría enviar el feedback a través de Socket.io
         } else {
+            // Si la tecla no corresponde a la "letra bendita" y el nodo actual es parte de un span "letra-verde"
             if (node && node.parentNode.className === 'letra-verde') {
                 e.preventDefault();
 
@@ -1711,7 +1736,7 @@ function modo_letra_prohibida(e) {
             }
         }
     }
-    // Aquí podrías añadir más comportamientos para otras teclas no imprimibles si lo consideras necesario
+    // Aquí se pueden añadir más comportamientos para otras teclas no imprimibles si fuera necesario
 }
 
 function nueva_letra_bendita(){
