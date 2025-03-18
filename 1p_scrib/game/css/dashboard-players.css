@@ -148,9 +148,7 @@ button:focus {
 .feedback1{
     font-size: 2.5vw;
     position: absolute;
-    left: 4%;
-    top: 5%;
-    z-index: 1;
+    margin-left: 2%;
 }
   
 .feedback2{
@@ -716,7 +714,7 @@ th{
     padding: 0.3em 0.6em;     /* Ajusta el tamaño de los botones */
     font-size: 1em;
     border: 1px solid #999;
-    background: #f0f0f0;
+    background: white;
     transition: background 0.2s;
   }
 
@@ -739,6 +737,12 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield; 
+}
+
+.soporte{
+  margin-left: 20%;
+  margin-right: 20%;
+  display: none;
 }
 
   /* Media Query para dispositivos móviles (por ejemplo, pantallas de hasta 600px de ancho) */
@@ -775,11 +779,10 @@ input[type="number"] {
     max-height: /*simultatin 1 row*/ 2em;
   }
   .feedback1{
-    font-size: 5vw;
+    font-size: 4.5vw;
     position: absolute;
-    left: 2.5%;
-    top: 8%;
-    z-index: 1;
+    margin-left: -10%;
+    margin-top: -10%;
 }
 
 .explicación {

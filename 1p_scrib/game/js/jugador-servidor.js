@@ -23,7 +23,6 @@ let metadatos = getEl("metadatos");
 let tiempo = getEl("tiempo");
 let temas = getEl("temas");
 let lightning = getEl("lightning");
-let feedback_tiempo = getEl("feedback_tiempo");
 let neon = getEl("neon");
 
 let btnFinal = getEl("btn_final");
@@ -39,6 +38,8 @@ let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabr
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
 let tiempo_modos_input = document.getElementById('tiempo_modos');
 let tiempo_inicial_input = document.getElementById('tiempo_inicial');
+
+let soporte = document.getElementById('soporte');
 
   
 
@@ -580,7 +581,6 @@ function count(data){
             //texto.innerText = "";
             texto.style.display = "none";
             texto.style.height = "";
-            feedback_tiempo.style.color = color_positivo;
             texto.rows =  "6";
             definicion.style.fontSize = "1.5vw";
             temas.innerHTML = "";
@@ -673,7 +673,6 @@ function resucitar(){
     texto.innerText = texto_guardado;
     texto.style.display = "";
     texto.style.height = "";
-    feedback_tiempo.style.color = color_positivo;
     texto.rows =  "6";
     definicion.style.fontSize = "1.5vw";
     temas.innerHTML = "";
@@ -1614,7 +1613,8 @@ function modo_letra_prohibida(e) {
     }
   }
   
-  // Esta función se llama cuando se presiona una tecla
+// Esta función se llama cuando se produce un input (antes de que se modifique el contenido)
+// y se utiliza para procesar tanto inserciones como borrados.
 function modo_letra_bendita(e) {
     // Si el evento ya ha sido procesado, salimos
     if (e.defaultPrevented) {
@@ -1622,37 +1622,27 @@ function modo_letra_bendita(e) {
         return;
     }
 
-    // Capturar la tecla presionada utilizando e.key
-    // Si no está definida (por ejemplo, en algunos navegadores móviles), se utiliza e.keyCode como fallback
-    let letra = e.key;
-    if (typeof letra === "undefined" || letra === null) {
-        // Fallback a e.keyCode
-        if (e.keyCode === 13) {
-            letra = "Enter";
-        } else if (e.keyCode === 8) {
-            letra = "Backspace";
-        } else {
-            // Convertimos el keyCode a carácter (puede no ser perfecto para todas las teclas)
-            letra = String.fromCharCode(e.keyCode);
-        }
-    }
-
     // Obtenemos la selección y el rango actual en el documento
     let sel = window.getSelection();
+    if (!sel.rangeCount) return;
     let range = sel.getRangeAt(0);
     let node = sel.anchorNode;
 
-    // Procesar la tecla Backspace de forma especial
-    if (letra === 'Backspace') {
+    // Comprobamos el tipo de acción que se va a realizar según la propiedad inputType
+    // Para borrado (retroceso)
+    if (e.inputType === "deleteContentBackward") {
+        console.log('Backspace detectado');
         console.log('Node:', node);
-        console.log('Parent Node:', node.parentNode);
-        console.log('Parent Node class:', node.parentNode ? node.parentNode.className : 'No parent node');
+        console.log('Parent Node:', node ? node.parentNode : null);
+        console.log('Parent Node class:', node && node.parentNode ? node.parentNode.className : 'No parent node');
         console.log('Focus Offset:', sel.focusOffset);
 
-        if (node && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
-            e.preventDefault(); // Prevenir el comportamiento por defecto
+        // Si se cumple la condición de que el nodo pertenece a un span con la clase "letra-verde"
+        // y el cursor está al inicio, prevenimos la acción por defecto y ejecutamos nuestra lógica
+        if (node && node.parentNode && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
+            e.preventDefault(); // Prevenir el borrado automático
             addSeconds(-2);
-            // Feedback visual para el usuario
+            // Feedback visual negativo
             feedback.style.color = color_negativo;
             feedback.innerHTML = "⏱️-1 segs.";
             addSeconds(-1);
@@ -1662,83 +1652,87 @@ function modo_letra_bendita(e) {
                     feedback.innerHTML = "";
                 }, 2000);
             });
-            // Aquí se podría enviar el feedback a través de Socket.io
+            // Aquí se podría enviar feedback vía Socket.io, por ejemplo.
         }
-        return; // Salir de la función si se presionó Backspace
+        return; // Salir si se ha procesado el borrado
     }
 
-    // Si se presionó una tecla imprimible (longitud 1)
-    if (letra.length === 1) {
-        // Verificar si la letra es la "letra bendita"
-        if ((toNormalForm(letra) === letra_bendita || toNormalForm(letra) === letra_bendita.toUpperCase()) ||
-            (letra_bendita === "ñ" && (letra === letra_bendita || letra === letra_bendita.toUpperCase()))) {
-            e.preventDefault();
-            console.log('Se procesa letra bendita');
-
-            // Creamos un nodo de texto con la letra
-            let textNode = document.createTextNode(letra);
-            // Creamos un span para aplicar el estilo (clase "letra-verde")
-            let span = document.createElement("span");
-            span.className = "letra-verde";
-            span.appendChild(textNode);
-
-            // Creamos nodos de texto vacíos para separar y posicionar el span
-            let emptyTextNodeBefore = document.createTextNode("");
-            let emptyTextNodeAfter = document.createTextNode("");
-
-            // Insertamos los nodos en la posición actual del cursor
-            range.insertNode(emptyTextNodeBefore);
-            range.insertNode(span);
-            range.insertNode(emptyTextNodeAfter);
-
-            // Reposicionamos el rango para que el cursor quede al inicio del nodo vacío anterior
-            range.setStartBefore(emptyTextNodeBefore);
-            range.setEndBefore(emptyTextNodeBefore);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            
-            // Actualizamos el tiempo y la visualización de puntos (según la lógica del juego)
-            addSeconds(-2);
-            puntos.innerHTML = puntos_ + " palabras";
-            console.log(puntos);
-            
-            // Feedback visual para el usuario
-            feedback.style.color = color_positivo;
-            feedback.innerHTML = "⏱️+2 segs.";
-            addSeconds(+2);
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
-            });
-
-            // Aquí se podría enviar el feedback a través de Socket.io
-        } else {
-            // Si la tecla no corresponde a la "letra bendita" y el nodo actual es parte de un span "letra-verde"
-            if (node && node.parentNode.className === 'letra-verde') {
+    // Para inserción de texto
+    if (e.inputType === "insertText") {
+        // e.data contiene el carácter que se va a insertar
+        let letra = e.data;
+        // Si se inserta un único carácter, lo procesamos
+        if (letra && letra.length === 1) {
+            // Comprobamos si la letra corresponde a la "letra bendita"
+            if ((toNormalForm(letra) === letra_bendita || toNormalForm(letra) === letra_bendita.toUpperCase()) ||
+                (letra_bendita === "ñ" && (letra === letra_bendita || letra === letra_bendita.toUpperCase()))) {
+                // Prevenimos la acción por defecto para controlar la inserción manualmente
                 e.preventDefault();
+                console.log('Se procesa letra bendita');
 
-                let newTextNode = document.createTextNode(letra);
-                if (sel.focusOffset === 0) {
-                    node.parentNode.parentNode.insertBefore(newTextNode, node.parentNode);
-                } else {
-                    if (node.parentNode.nextSibling) {
-                        node.parentNode.parentNode.insertBefore(newTextNode, node.parentNode.nextSibling);
-                    } else {
-                        node.parentNode.parentNode.appendChild(newTextNode);
-                    }
-                }
-                range.setStartAfter(newTextNode);
-                range.setEndAfter(newTextNode);
+                // Creamos un nodo de texto con la letra
+                let textNode = document.createTextNode(letra);
+                // Creamos un elemento span para darle estilo (clase "letra-verde")
+                let span = document.createElement("span");
+                span.className = "letra-verde";
+                span.appendChild(textNode);
+
+                // Creamos nodos de texto vacíos para facilitar el posicionamiento
+                let emptyTextNodeBefore = document.createTextNode("");
+                let emptyTextNodeAfter = document.createTextNode("");
+
+                // Insertamos los nodos en la posición actual del cursor
+                range.insertNode(emptyTextNodeBefore);
+                range.insertNode(span);
+                range.insertNode(emptyTextNodeAfter);
+
+                // Ajustamos el rango para posicionar el cursor adecuadamente
+                range.setStartBefore(emptyTextNodeBefore);
+                range.setEndBefore(emptyTextNodeBefore);
                 sel.removeAllRanges();
                 sel.addRange(range);
+
+                // Actualizamos el tiempo y la visualización de puntos según la lógica del juego
+                addSeconds(-2);
+                puntos.innerHTML = puntos_ + " palabras";
+                console.log(puntos);
+
+                // Feedback visual positivo
+                feedback.style.color = color_positivo;
+                feedback.innerHTML = "⏱️+2 segs.";
+                addSeconds(+2);
+                clearTimeout(delay_animacion);
+                animateCSS(".feedback1", "flash").then((message) => {
+                    delay_animacion = setTimeout(function () {
+                        feedback.innerHTML = "";
+                    }, 2000);
+                });
+
+                // Aquí se podría enviar feedback vía Socket.io
+            } else {
+                // Si la letra no es la "letra bendita" y el nodo actual es parte de un span "letra-verde"
+                if (node && node.parentNode && node.parentNode.className === 'letra-verde') {
+                    e.preventDefault();
+                    let newTextNode = document.createTextNode(letra);
+                    if (sel.focusOffset === 0) {
+                        node.parentNode.parentNode.insertBefore(newTextNode, node.parentNode);
+                    } else {
+                        if (node.parentNode.nextSibling) {
+                            node.parentNode.parentNode.insertBefore(newTextNode, node.parentNode.nextSibling);
+                        } else {
+                            node.parentNode.parentNode.appendChild(newTextNode);
+                        }
+                    }
+                    range.setStartAfter(newTextNode);
+                    range.setEndAfter(newTextNode);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
             }
         }
     }
-    // Aquí se pueden añadir más comportamientos para otras teclas no imprimibles si fuera necesario
+    // Se pueden añadir otros casos según se necesiten para otros tipos de input (por ejemplo, pegado de texto).
 }
-
 function nueva_letra_bendita(){
     indice_letra_bendita = Math.floor(Math.random() * letras_benditas_restantes.length);
     letra_bendita = letras_benditas_restantes[indice_letra_bendita]
@@ -1846,7 +1840,6 @@ function limpieza(){
     texto.innerText = "";
     texto.style.display = "";
     texto.style.height = "";
-    feedback_tiempo.style.color = color_positivo;
     if (window.innerWidth <= 800) {
         texto.style.maxHeight = "2em";
     }

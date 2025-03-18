@@ -487,13 +487,18 @@ function opciones(){
     btnDescargarTexto.style.display = "none";
     btnPantallaCompleta.style.display = "none";
     btnVolver.style.display = "";
+    soporte.style.display = "block"
     animateCSS(".botones", "backInLeft")
+    animateCSS(".soporte", "backInLeft")
+
   });
 
   animateCSS(".contenedor", "backOutLeft").then((message) => {
     contenedor.style.display = "none";
     div_opciones.style.display = "inline-block";
     animateCSS(".opciones", "backInLeft")
+    animateCSS(".soporte", "backInLeft")
+
   })
 }
 
@@ -504,6 +509,7 @@ function volver(){
     btnLimpiar.style.display = "";
     btnPantallaCompleta.style.display = "" 
     btnVolver.style.display = "none";
+    soporte.style.display = "none"
     animateCSS(".botones", "backInLeft")
   });
   animateCSS(".opciones", "backOutLeft").then((message) => {
