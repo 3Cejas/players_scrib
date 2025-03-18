@@ -516,17 +516,21 @@ function volver(){
 
 // Función para generar las casillas de verificación dentro de <td>
 function generarCasillas() {
+  // Obtener la referencia al contenedor (tbody o similar)
   const contenedor = document.getElementById('listaModos');
+
   // Limpiar el contenedor antes de agregar elementos
   contenedor.innerHTML = "";
 
-  // Centrar la tabla (asumiendo que el tbody es hijo directo de la tabla)
+  // Centrar la tabla (asumiendo que el 'tbody' es hijo directo de la tabla)
   if (contenedor.parentElement && contenedor.parentElement.tagName.toLowerCase() === "table") {
+    // Ajustamos el estilo de la tabla para centrarla
     contenedor.parentElement.style.margin = "0 auto";
   }
 
-  // Si la ventana es pequeña (móvil), se apilan verticalmente y se agranda el tamaño del checkbox
+  // Verificamos si la ventana es pequeña (móvil) o más grande (escritorio)
   if (window.innerWidth <= 600) {
+    // ------- MODO MÓVIL (≤ 600px): apilados verticalmente, checkbox grande -------
     LISTA_MODOS_INICIAL.forEach(function(modo, index) {
       // Crear una fila para cada casilla
       const tr = document.createElement('tr');
@@ -541,31 +545,77 @@ function generarCasillas() {
       checkbox.name = 'modos';
       checkbox.value = modo;
       checkbox.checked = true;
-      // Ajuste dinámico del tamaño del checkbox para móviles
+
+      // Ajuste del tamaño del checkbox para pantallas pequeñas
       checkbox.style.width = "1.5em";
       checkbox.style.height = "1.5em";
 
       // Crear el label
       const label = document.createElement('label');
       label.htmlFor = `modo-${index}`;
-      label.textContent = modo.toUpperCase(); // Convertir el modo a mayúsculas
+      label.textContent = modo.toUpperCase(); // Convertir el texto a mayúsculas
       label.style.display = 'block'; // Mostrar el label en una nueva línea
       label.style.color = COLORES_MODOS[modo];
       label.style.paddingLeft = "0.2vw";
       label.style.paddingRight = "0.2vw";
       label.style.paddingBottom = "4vw";
-      label.style.fontSize = "8vw"
-
+      label.style.fontSize = "8vw";
 
       // Añadir el checkbox y el label a la celda, y la celda a la fila
       td.appendChild(checkbox);
       td.appendChild(label);
       tr.appendChild(td);
+
       // Agregar la fila al contenedor
       contenedor.appendChild(tr);
     });
+
+  } else {
+    // ------- MODO ESCRITORIO (> 600px): distribuidos horizontalmente -------
+    // Creamos una sola fila donde cada modo irá en su propia celda
+    const tr = document.createElement('tr');
+
+    LISTA_MODOS_INICIAL.forEach(function(modo, index) {
+      // Crear una celda para cada modo
+      const td = document.createElement('td');
+      td.className = "casilla";
+
+      // Crear el checkbox (tamaño estándar o el que prefieras)
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = `modo-${index}`;
+      checkbox.name = 'modos';
+      checkbox.value = modo;
+      checkbox.checked = true;
+
+      // Ajuste del tamaño del checkbox para escritorio (puedes modificarlo según tu preferencia)
+      checkbox.style.width = "1.5em";
+      checkbox.style.height = "1.5em";
+
+      // Crear el label justo debajo del checkbox
+      const label = document.createElement('label');
+      label.htmlFor = `modo-${index}`;
+      label.textContent = modo.toUpperCase();
+      label.style.display = 'block'; // Bloque para que aparezca debajo del checkbox
+      label.style.color = COLORES_MODOS[modo];
+      label.style.paddingTop = "0.3em";  // Un pequeño espacio entre checkbox y label
+      label.style.paddingLeft = "0.5vw";
+      label.style.paddingRight = "0.5vw";
+      label.style.fontSize = "1.5em";
+
+      // Agregar el checkbox y el label en la misma celda
+      td.appendChild(checkbox);
+      td.appendChild(label);
+
+      // Agregar la celda a la fila principal
+      tr.appendChild(td);
+    });
+
+    // Finalmente agregamos la fila al contenedor (tbody, etc.)
+    contenedor.appendChild(tr);
   }
 }
+
 // Función para obtener los modos seleccionados
 function rellenarListaModos() {
   const seleccionados = document.querySelectorAll('input[name="modos"]:checked');
@@ -602,3 +652,36 @@ document.addEventListener('DOMContentLoaded', function () {
   // Inicializa las variables con los valores por defecto
   actualizarVariables();
 });
+
+/**
+     * Función para cambiar el valor de un input numérico (type=number)
+     * @param {string} campoId - El id del input (por ejemplo, 'tiempo_inicial')
+     * @param {number} incremento - Cantidad a sumar o restar (p.ej. +5 o -5)
+     */
+function cambiarValor(campoId, incremento) {
+  // Obtenemos el input por su id
+  const input = document.getElementById(campoId);
+
+  // Obtenemos el valor actual y lo convertimos a número
+  let valorActual = parseInt(input.value, 10);
+  if (isNaN(valorActual)) {
+    valorActual = 0; // Si no es numérico, asumimos 0
+  }
+
+  // Calculamos el nuevo valor
+  let nuevoValor = valorActual + incremento;
+
+  // Leemos los límites min y max del propio input
+  const min = parseInt(input.min, 10) || Number.MIN_SAFE_INTEGER;
+  const max = parseInt(input.max, 10) || Number.MAX_SAFE_INTEGER;
+
+  // Forzamos el nuevo valor a permanecer dentro de [min, max]
+  if (nuevoValor < min) {
+    nuevoValor = min;
+  } else if (nuevoValor > max) {
+    nuevoValor = max;
+  }
+
+  // Asignamos el valor calculado al input
+  input.value = nuevoValor;
+}

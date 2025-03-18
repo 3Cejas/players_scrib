@@ -45,12 +45,22 @@ body {
 /*Estilo botones focuseados*/
 button:focus {
     outline: none;
-    color: white;
     box-shadow: 0 0 0 3px #40f2fe;
     border: none;
     cursor: pointer;
     animation: neonEffect 5s infinite;
   }
+
+    /* Colores diferenciados para los botones */
+    .minus-button {
+      color:red;
+      text-shadow: 0.0625em 0.0625em aqua;
+      /* Botón de restar en rojo */
+    }
+    .plus-button {
+      color:aqua;
+      text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;  /* Botón de sumar en azul */
+    }
 
 /*Estilo modificadores*/
 .modificador{
@@ -693,6 +703,44 @@ th{
   --animate-duration: 2s
 }
 
+   /* ------------------- ESTILOS DEL SPINNER PERSONALIZADO ------------------- */
+   .spinner-container {
+    display: inline-flex;     /* Para que los botones y el input estén en la misma línea */
+    align-items: center;      /* Alinea verticalmente en el centro */
+    gap: 0.3em;               /* Espacio horizontal entre botón, input y botón */
+    margin-right: 0.5em;      /* Pequeño margen a la derecha (antes del "segundos") */
+  }
+
+  .spinner-button {
+    cursor: pointer;
+    padding: 0.3em 0.6em;     /* Ajusta el tamaño de los botones */
+    font-size: 1em;
+    border: 1px solid #999;
+    background: #f0f0f0;
+    transition: background 0.2s;
+  }
+
+  .spinner-button:hover {
+    background: #e0e0e0;      /* Efecto hover */
+  }
+
+  /* Ajustamos un poco el input para que no sea muy grande al lado de los botones */
+  .spinner-container input[type="number"] {
+    width: 3em; /* Ajusta a tu preferencia */
+    text-align: center;
+  }
+
+  /* ------------------- Ocultar flechas nativas de los input number ------------------- */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; 
+}
+
   /* Media Query para dispositivos móviles (por ejemplo, pantallas de hasta 600px de ancho) */
   @media (max-width: 600px) {
     /* CABECERA*/
@@ -801,38 +849,6 @@ input[type="number"] {
 /* Ajustamos el tamaño del span para los "segundos" */
 .opciones_valores {
   font-size: 8vw;
-}
-
-/* ============================
-   Estilos para el spinner personalizado
-   ============================ */
-.input-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* Centra el contenido horizontalmente */
-  gap: 0.5em;  /* Espacio entre botones e input */
-}
-/* Se anula el width: 100% heredado para que el input se ajuste junto a los botones */
-.input-spinner input[type="number"] {
-  width: auto;
-  font-size: 10vw;
-  text-align: center;
-  box-sizing: border-box;
-  flex: 1;
-}
-/* Estilo para los botones del spinner */
-.spinner-btn {
-  font-size: 8vw;
-  padding: 0.5em;
-  width: 20vw; /* Tamaño relativo para móviles */
-  border: 1px solid #ccc;
-  background-color: #f0f0f0;
-  cursor: pointer;
-  border-radius: 5px;
-}
-/* Estado activo para el botón */
-.spinner-btn:active {
-  background-color: #e0e0e0;
 }
   }
   

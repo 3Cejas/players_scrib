@@ -285,9 +285,9 @@ const MODOS = {
         palabra.style.backgroundColor = "yellow";
         explicación.style.color = "yellow";
         if (window.innerWidth <= 600) {
-            definicion.style.fontSize = "1.5vw";
-            palabra.style.fontSize = "4vw";
-            explicación.style.fontSize = "3vw"
+            definicion.style.fontSize = "2vw";
+            palabra.style.fontSize = "5vw";
+            explicación.style.fontSize = "5vw"
         }
         else{
             definicion.style.fontSize = "1vw";

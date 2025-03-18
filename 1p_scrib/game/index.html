@@ -115,38 +115,106 @@
         </div>
     </div>
     <div id="opciones" class="opciones">
-        <table class="opciones_table">
-            <thead>
-              <tr>
-                <th class="opciones_titulo">TIEMPO INICIAL</th>
-                <th class="opciones_titulo">DURACIÓN NIVEL</th>
-                <th class="opciones_titulo">CAMBIO DE PALABRAS</th>
-                <th class="opciones_titulo">CAMBIO DE LETRAS</th>
+        <!-- TABLA CON SPINNER PERSONALIZADO EN CADA CELDA -->
+  <table class="opciones_table">
+    <thead>
+      <tr>
+        <th class="opciones_titulo">TIEMPO INICIAL</th>
+        <th class="opciones_titulo">DURACIÓN NIVEL</th>
+        <th class="opciones_titulo">CAMBIO DE PALABRAS</th>
+        <th class="opciones_titulo">CAMBIO DE LETRAS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <!-- Campo 1: TIEMPO INICIAL -->
+        <td data-label="TIEMPO INICIAL">
+          <div class="spinner-container">
+            <!-- Botón RESTAR: con color rojo -->
+            <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_inicial', -5)">-</button>
+            
+            <input 
+              type="number" 
+              id="tiempo_inicial" 
+              class="opciones_valores" 
+              value="30" 
+              min="30" 
+              max="9999999" 
+              step="5" 
+              inputmode="numeric"
+            >
+            
+            <!-- Botón SUMAR: con color azul -->
+            <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_inicial', 5)">+</button>
+          </div>
+          <span class="opciones_valores">segundos</span>
+        </td>
 
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <!-- En cada celda se incluye el atributo data-label para mostrar el título en móvil -->
-                <td data-label="TIEMPO INICIAL">
-                  <input type="number" id="tiempo_inicial" class="opciones_valores" value="30" min="30" max="9999999" step="5">
-                  <span class="opciones_valores">segundos</span>
-                </td>
-                <td data-label="DURACIÓN NIVEL">
-                  <input type="number" id="tiempo_modos" class="opciones_valores" value="60" min="30" max="9999999" step="5">
-                  <span class="opciones_valores">segundos</span>
-                </td>
-                <td data-label="CAMBIO DE PALABRAS">
-                  <input type="number" id="tiempo_cambio_palabras" class="opciones_valores" value="20" min="10" max="9999999" step="5">
-                  <span class="opciones_valores">segundos</span>
-                </td>
-                <td data-label="CAMBIO DE LETRAS">
-                  <input type="number" id="tiempo_cambio_letra" class="opciones_valores" value="20" min="10" max="9999999" step="5">
-                  <span class="opciones_valores">segundos</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Campo 2: DURACIÓN NIVEL -->
+        <td data-label="DURACIÓN NIVEL">
+          <div class="spinner-container">
+            <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_modos', -5)">-</button>
+            
+            <input 
+              type="number" 
+              id="tiempo_modos" 
+              class="opciones_valores" 
+              value="60" 
+              min="30" 
+              max="9999999" 
+              step="5"
+              inputmode="numeric"
+            >
+            
+            <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_modos', 5)">+</button>
+          </div>
+          <span class="opciones_valores">segundos</span>
+        </td>
+
+        <!-- Campo 3: CAMBIO DE PALABRAS -->
+        <td data-label="CAMBIO DE PALABRAS">
+          <div class="spinner-container">
+            <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_cambio_palabras', -5)">-</button>
+            
+            <input 
+              type="number" 
+              id="tiempo_cambio_palabras" 
+              class="opciones_valores" 
+              value="20" 
+              min="10" 
+              max="9999999" 
+              step="5"
+              inputmode="numeric"
+            >
+            
+            <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_palabras', 5)">+</button>
+          </div>
+          <span class="opciones_valores">segundos</span>
+        </td>
+
+        <!-- Campo 4: CAMBIO DE LETRAS -->
+        <td data-label="CAMBIO DE LETRAS">
+          <div class="spinner-container">
+            <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_cambio_letra', -5)">-</button>
+            
+            <input 
+              type="number" 
+              id="tiempo_cambio_letra" 
+              class="opciones_valores" 
+              value="20" 
+              min="10" 
+              max="9999999" 
+              step="5"
+              inputmode="numeric"
+            >
+            
+            <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_letra', 5)">+</button>
+          </div>
+          <span class="opciones_valores">segundos</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
           <br>
           <form id="listaModosForm" class="listaModosForm">
             <table>
