@@ -364,7 +364,7 @@ const MODOS = {
         explicación.style.color = "red";
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto.addEventListener("keydown", listener_modo);
+        texto.addEventListener("beforeinput", listener_modo);
         explicación.innerHTML = "NIVEL LETRA MALDITA";
         palabra.innerHTML = "LETRA MALDITA: " + letra_prohibida;
         definicion.innerHTML = "";

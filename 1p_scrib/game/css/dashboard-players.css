@@ -746,8 +746,16 @@ input[type="number"] {
   display: none;
 }
 
+a{
+  font-size:1vw;
+}
+
   /* Media Query para dispositivos móviles (por ejemplo, pantallas de hasta 600px de ancho) */
   @media (max-width: 800px) {
+
+    a{
+      font-size:3vw;
+    }
     /* CABECERA*/
     .neon {
       
