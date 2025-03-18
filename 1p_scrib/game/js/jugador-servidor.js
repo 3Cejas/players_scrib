@@ -942,17 +942,17 @@ function nueva_letra (letra) {
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
 
-        texto.removeEventListener("keydown", listener_modo);
+        texto.removeEventListener("beforeinput", listener_modo);
         listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto.addEventListener("keydown", listener_modo);
+        texto.addEventListener("beforeinput", listener_modo);
         animacion_palabra();
         palabra.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
         }
     else if(modo_actual == "letra bendita"){
         letra_bendita = letra;
-        texto.removeEventListener("keydown", listener_modo);
+        texto.removeEventListener("beforeinput", listener_modo);
         listener_modo = function (e) { modo_letra_bendita(e) };
-        texto.addEventListener("keydown", listener_modo);
+        texto.addEventListener("beforeinput", listener_modo);
         animacion_palabra();
         palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
     }
@@ -1418,63 +1418,38 @@ function modo_palabras_bonus(e) {
     }
 }
 
-function modo_palabras_prohibidas(e) {
-    if (asignada == true) {
-        e.preventDefault();
+function modo_letra_prohibida(e) {
+    // Sólo procesamos si se intenta insertar texto
+    if (e.inputType === "insertText") {
+        // Intentamos capturar la letra a partir de e.data (propiedad propia de beforeinput)
+        let letra = e.data;
+        // En caso de que e.data no esté definida, usamos e.key como fallback
+        if (typeof letra === "undefined" || letra === null) {
+            letra = e.key;
+        }
 
-        let selection = document.getSelection();
-            let range = selection.getRangeAt(0);
-            let preCaretRange = range.cloneRange();
-            preCaretRange.selectNodeContents(e.target);
-            preCaretRange.setEnd(range.endContainer, range.endOffset);
-            let endingIndex = preCaretRange.toString().length;
-            let startingIndex = 0; // Inicialización
-            let textContent = e.target.innerText;
-
-            // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
-            for (let i = endingIndex - 1; i >= 0; i--) {
-                if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
-                    startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
-                    break;
-                }
-            }
-
-            // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
-            for (let i = endingIndex; i <= textContent.length; i++) {
-                if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
-                    endingIndex = i;
-                    break;
-                }
-            }
-
-            console.log("Texto seleccionado:", textContent.substring(startingIndex, endingIndex)); // Debugging
-            console.log("palabra_actual:", palabra_actual); // Debugging
-            console.log("Índices:", startingIndex, endingIndex); // Debugging
-
+        // Comprobamos si la letra insertada corresponde a la letra prohibida,
+        // comparando en su forma normal y en mayúsculas.
         if (
-            palabra_actual.some(palabra => textContent
-                .substring(startingIndex, endingIndex)
-                .toLowerCase().includes(palabra.toLowerCase()))
-            ) {
-            texto.focus();
-            asignada = false;
-            nueva_palabra_prohibida();
-            tiempo_palabras_bonus = -tiempo_palabras_bonus;
-            addSeconds(tiempo_palabras_bonus);
-            color = color_negativo;
-            feedback.style.color = color;
-            feedback.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
-            insp = false;
-            console.log(definicion.innerHTML)
-            if (definicion.innerHTML.startsWith("<span style=\"color:red;\">MUSA ENEMIGA</span>")) {
-                insp = true;
-            }   
+            toNormalForm(letra) === letra_prohibida || 
+            toNormalForm(letra) === letra_prohibida.toUpperCase()
+        ) {
+            // Prevenir la inserción del carácter prohibido
+            e.preventDefault();
+
+            // Actualiza el tiempo y otros aspectos de la UI (puntos y feedback)
+            addSeconds(-2);
+            puntos.innerHTML = puntos_ + " palabras";
+            
+            feedback.style.color = color_negativo;
+            feedback.innerHTML = "⏱️-2 segs.";
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
                     feedback.innerHTML = "";
                 }, 2000);
             });
+            // Aquí podrías agregar el envío de feedback mediante Socket.io o similar
         }
     }
 }
