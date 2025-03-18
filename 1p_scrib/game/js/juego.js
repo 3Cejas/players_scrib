@@ -529,7 +529,7 @@ function generarCasillas() {
   }
 
   // Verificamos si la ventana es pequeña (móvil) o más grande (escritorio)
-  if (window.innerWidth <= 600) {
+  if (window.innerWidth <= 800) {
     // ------- MODO MÓVIL (≤ 600px): apilados verticalmente, checkbox grande -------
     LISTA_MODOS_INICIAL.forEach(function(modo, index) {
       // Crear una fila para cada casilla
@@ -629,21 +629,20 @@ function rellenarListaModos() {
 function actualizarVariables() {
   //TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
   //TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
-  TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
+  TIEMPO_CAMBIO_PALABRA = tiempo_cambio_palabras_input.valueAsNumber * 1000;
   //TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
   TIEMPO_INICIAL = tiempo_inicial_input.valueAsNumber * 1000;
   //PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
   TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber * 1000;
-  TIEMPO_MODOS = tiempo_modos_input.valueAsNumber * 1000;
-  TIEMPO_CAMBIO_MODOS = TIEMPO_MODOS - 1;
+  TIEMPO_CAMBIO_MODOS = (tiempo_modos_input.valueAsNumber * 1000) - 1;
 
  //console.log('TIEMPO_INVERSO:', TIEMPO_INVERSO);
  //console.log('TIEMPO_BORRADO:', TIEMPO_BORRADO);
- console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);
+ console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRA);
  //console.log('TIEMPO_BORROSO:', TIEMPO_BORROSO);
  //console.log('PALABRAS_INSERTADAS_META:', PALABRAS_INSERTADAS_META);
  console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
- console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
+ console.log('TIEMPO_MODOS:', TIEMPO_CAMBIO_MODOS);
 }
 
 document.addEventListener('DOMContentLoaded', function () {

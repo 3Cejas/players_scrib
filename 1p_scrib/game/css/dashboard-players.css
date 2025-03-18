@@ -742,7 +742,7 @@ input[type="number"] {
 }
 
   /* Media Query para dispositivos móviles (por ejemplo, pantallas de hasta 600px de ancho) */
-  @media (max-width: 600px) {
+  @media (max-width: 800px) {
     /* CABECERA*/
     .neon {
       
@@ -778,7 +778,7 @@ input[type="number"] {
     font-size: 5vw;
     position: absolute;
     left: 2.5%;
-    top: 15%;
+    top: 8%;
     z-index: 1;
 }
 

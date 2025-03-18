@@ -60,6 +60,7 @@ let desactivar_borrar = false;
 
 const LISTA_MODOS_INICIAL = ["letra bendita", "letra prohibida", "palabras bonus", "palabras prohibidas", "frase final"];
 
+
 // Objeto que asocia cada modo con un color
 const COLORES_MODOS = {
     "letra bendita": "green",
@@ -113,8 +114,55 @@ const palabras_prohibidas = [
     "dos", "también", "fue", "había", "era", "muy", "años", "hasta", "desde", "está"
 ];
 
-let palabras_prohibidas_restantes = [...palabras_prohibidas];
+const frases_finales = [
+    "No hay nada que hacer: criaremos a los nuestros",
+    "Cuando todo parecía perennemente feliz",
+    "Nada es intercurrente",
+    "Pudo ser el calor del verano",
+    "Mataste a tus verdaderos padres",
+    "Chillé y salí corriendo",
+    "Y me desperté",
+    "Habla, es lunes",
+    "Nada mejor para aleonar el espíritu del Oeste",
+    "Te perdono, mamá",
+    "Me duele, pero prefiero que nos separemos",
+    "Te estoy diciendo que te tienes que unir",
+    "Alócate, coño",
+    "No podía respirar",
+    "Te van a dar varias hostias hagas lo que hagas",
+    "Yo soy el autor de todo",
+    "Lo flipo",
+    "No consigo separar mis pensamientos",
+    "Y la palabra de Marx será olvidada como la de todos",
+    "Igual se han caído en el baño",
+    "¿Sabes quién soy?",
+    "No me importa que lo esté pasando mal",
+    "Me gusta mucho esto de luchar",
+    "¡Que viva este equipo!",
+    "Se dedica a algo de la sanidad así que es parecido",
+    "No puedo más",
+    "Yo voté al partido",
+    "Eres como la heroína, me matas",
+    "Eras el amor de mi vida. En fin",
+    "Te han robado twitter",
+    "Ahora comienza el viaje",
+    "Un lugar donde todo sale mal",
+    "No es por ti, es por mí",
+    "¡Dime qué quieres!",
+    "Debe haber algo permanente en este cambiante cosmos",
+    "Esperemos a que salga el sol",
+    "Mierda",
+    "¡Basta ya de tanta guerra!",
+    "Siempre hay tiempo para volver a empezar",
+    "Y pasarán muchos años más",
+    "Me confundió un poco",
+    "¡Que se callen!",
+    "¡Tú nunca venías!",
+    "Porque esta ciudad lo es todo, TODO",
+    "Quizá algún día me vuelva a necesitar. Llámeme entonces"
+  ];
 
+let palabras_prohibidas_restantes = [...palabras_prohibidas];
 
 var letra_prohibida = "";
 var letra_bendita = "";
@@ -284,15 +332,15 @@ const MODOS = {
     "palabras bonus": function (data) {
         palabra.style.backgroundColor = "yellow";
         explicación.style.color = "yellow";
-        if (window.innerWidth <= 600) {
+        if (window.innerWidth <= 800) {
             definicion.style.fontSize = "2vw";
             palabra.style.fontSize = "5vw";
             explicación.style.fontSize = "5vw"
         }
         else{
             definicion.style.fontSize = "1vw";
-            palabra.style.fontSize = "5.5vw";
-            explicación.style.fontSize = "5.5vw"
+            palabra.style.fontSize = "2vw";
+            explicación.style.fontSize = "2vw"
         }
         explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
 
@@ -388,9 +436,11 @@ const MODOS = {
 
     'frase final': function (socket) {
         explicación.style.color = "orange";
+        palabra.style.backgroundColor = "orange";
         explicación.innerHTML = "NIVEL FRASE FINAL";
         palabra.innerHTML = "";
         definicion.innerHTML = "";
+        frase_final();
     },
 
     "": function (data) { },
@@ -447,33 +497,16 @@ const LIMPIEZAS = {
 
     },
 
-    "frase final": function (data) { },
+    "frase final": function (data) {
+        texto.removeEventListener("keyup", listener_modo);
+    },
 
     "": function (data) { },
 };
 
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto.addEventListener("keyup", (evt) => {
-    console.log(evt.key)
-    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        countChars(texto);
-        
-    }
-});
-// Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto.addEventListener("keydown", (evt) => {
-    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        countChars(texto);
-        
-    }
-});
-
-// Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto.addEventListener("press", (evt) => {
-    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        countChars(texto);
-        
-    }
+texto.addEventListener("input", (evt) => {
+    countChars(texto);
 });
 
 // Recibe los datos del jugador 1 y los coloca.
@@ -979,6 +1012,18 @@ function nueva_palabra_prohibida() {
     listener_cambio_letra_palabra = setTimeout(nueva_palabra_prohibida, TIEMPO_CAMBIO_PALABRA);
 }
 
+function frase_final() {
+
+    str_frase_final = frases_finales[Math.floor(Math.random() * frases_finales.length)];
+    console.log("\""+str_frase_final+"\"")
+    animacion_modo();
+    palabra.innerHTML = "\""+str_frase_final+"\"";
+    definicion.innerHTML = "⬆️ ¡Introduce la frase final para ganar! ⬆️"
+
+    texto.removeEventListener("keyup", listener_modo);
+    listener_modo = function (e) { modo_frase_final(e) };
+    texto.addEventListener("keyup", listener_modo);
+}
 
 // FUNCIONES AUXILIARES.
 
@@ -1435,6 +1480,27 @@ function modo_palabras_prohibidas(e) {
     }
 }
 
+/**
+ * Función principal: Detectar si el usuario ha escrito la frase final
+ */
+function modo_frase_final(e) {
+    // Obtenemos el texto completo del elemento
+    let textContent = e.target.innerText;
+    // Convertimos a minúsculas y recortamos espacios (opcional pero recomendable):
+    let textLower = textContent.trim().toLowerCase();
+  
+    // Definimos la frase final, también en minúscula y sin espacios sobrantes
+    let fraseFinal = str_frase_final.trim().toLowerCase();
+  
+    // Revisamos si el texto termina exactamente con esa frase final:
+    if (textLower.endsWith(fraseFinal)) {
+      // Aquí va tu lógica de finalización
+      e.target.innerText = textContent.trim() + ".";
+      final();
+    }
+  }
+  
+
 function palabras_musas(e) {
     if (asignada == true) {
         e.preventDefault();
@@ -1756,7 +1822,7 @@ function limpieza(){
     texto.style.display = "";
     texto.style.height = "";
     feedback_tiempo.style.color = color_positivo;
-    if (window.innerWidth <= 600) {
+    if (window.innerWidth <= 800) {
         texto.style.maxHeight = "2em";
     }
     else{
