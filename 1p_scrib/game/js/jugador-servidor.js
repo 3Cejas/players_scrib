@@ -1616,7 +1616,7 @@ function modo_letra_bendita(e) {
         // y el cursor está al inicio, prevenimos la acción por defecto y ejecutamos nuestra lógica
         if (node && node.parentNode && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
             e.preventDefault(); // Prevenir el borrado automático
-            addSeconds(-2);
+            addSeconds(-1);
             // Feedback visual negativo
             feedback.style.color = color_negativo;
             feedback.innerHTML = "⏱️-1 segs.";
@@ -1668,7 +1668,6 @@ function modo_letra_bendita(e) {
                 sel.addRange(range);
 
                 // Actualizamos el tiempo y la visualización de puntos según la lógica del juego
-                addSeconds(-2);
                 puntos.innerHTML = puntos_ + " palabras";
                 console.log(puntos);
 

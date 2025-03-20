@@ -37,11 +37,6 @@ let lastTextNode;
 let caretPos;
 let caretNode;
 
-
-
-document.addEventListener('keydown', function(event) {
-});
-
 function pantalla_completa() {
   texto.focus();
   console.log(menu_modificador);
