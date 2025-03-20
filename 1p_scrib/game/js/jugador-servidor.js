@@ -364,7 +364,7 @@ const MODOS = {
         explicación.style.color = "red";
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto.addEventListener("beforeinput", listener_modo);
+        texto.addEventListener("input", listener_modo);
         explicación.innerHTML = "NIVEL LETRA MALDITA";
         palabra.innerHTML = "LETRA MALDITA: " + letra_prohibida;
         definicion.innerHTML = "";
@@ -820,6 +820,9 @@ function post_inicio(borrar_texto){
         //socket.off("recibe_temas");
         texto.contentEditable= "true";
         texto.focus();
+        animateCSS(".explicación", "bounceInLeft");
+        animateCSS(".palabra", "bounceInLeft");
+        animateCSS(".definicion", "bounceInLeft");
         startCountDown(TIEMPO_INICIAL/1000)
         temp_modos()
 }
@@ -1418,40 +1421,66 @@ function modo_palabras_bonus(e) {
     }
 }
 
+/**
+ * Función que se ejecuta al producirse un cambio en el contenido (evento "input")
+ * en el que se inserta texto. Si se detecta que se ha insertado la letra prohibida,
+ * se elimina ese carácter inmediatamente.
+ *
+ * Se asume que:
+ * - toNormalForm(letra) normaliza la letra para comparar sin acentos u otras diferencias.
+ * - letra_prohibida es la letra prohibida (en minúscula).
+ * - addSeconds(valor), puntos, puntos_, feedback, color_negativo, delay_animacion y animateCSS()
+ *   son parte de la lógica para actualizar la UI y dar feedback.
+ */
 function modo_letra_prohibida(e) {
-    // Sólo procesamos si se intenta insertar texto
-    if (e.inputType === "insertText") {
-        // Intentamos capturar la letra a partir de e.data (propiedad propia de beforeinput)
-        let letra = e.data;
-        // En caso de que e.data no esté definida, usamos e.key como fallback
-        if (typeof letra === "undefined" || letra === null) {
-            letra = e.key;
-        }
-
-        // Comprobamos si la letra insertada corresponde a la letra prohibida,
-        // comparando en su forma normal y en mayúsculas.
-        if (
-            toNormalForm(letra) === letra_prohibida || 
-            toNormalForm(letra) === letra_prohibida.toUpperCase()
-        ) {
-            // Prevenir la inserción del carácter prohibido
-            e.preventDefault();
-
-            // Actualiza el tiempo y otros aspectos de la UI (puntos y feedback)
-            addSeconds(-2);
-            puntos.innerHTML = puntos_ + " palabras";
-            
-            feedback.style.color = color_negativo;
-            feedback.innerHTML = "⏱️-2 segs.";
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
-            });
-            // Aquí podrías agregar el envío de feedback mediante Socket.io o similar
-        }
-    }
+  console.log("edata", e)
+  // Solo procesamos inserciones de texto
+  if (e.inputType === "insertText" && e.data) {
+      // Obtenemos la letra insertada usando e.data
+      let letra = e.data;
+      
+      // Comprobamos si la letra (normalizada) coincide con la letra prohibida
+      if (
+          toNormalForm(letra) === letra_prohibida || 
+          toNormalForm(letra) === letra_prohibida.toUpperCase()
+      ) {
+          // La letra está prohibida, así que la eliminamos manualmente.
+          // Suponemos que el contenido se ha modificado y el cursor se posiciona justo
+          // después del carácter insertado. Entonces, borramos el carácter anterior al cursor.
+          let sel = window.getSelection();
+          if (sel.rangeCount > 0) {
+              let range = sel.getRangeAt(0);
+              // Comprobamos que el nodo de la selección sea un nodo de texto
+              // y que haya al menos un carácter antes del cursor.
+              if (range.startContainer.nodeType === Node.TEXT_NODE && range.startOffset > 0) {
+                  // Creamos un rango auxiliar que abarque únicamente el carácter insertado
+                  let node = range.startContainer;
+                  let offset = range.startOffset;
+                  let newRange = document.createRange();
+                  newRange.setStart(node, offset - 1);
+                  newRange.setEnd(node, offset);
+                  // Borramos ese carácter
+                  newRange.deleteContents();
+                  // Colapsamos la selección al nuevo punto (donde se borró la letra)
+                  range.collapse(true);
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+              }
+          }
+          
+          // Actualizamos la UI y damos feedback negativo (por ejemplo, descontamos tiempo)
+          addSeconds(-2);
+          puntos.innerHTML = puntos_ + " palabras";
+          feedback.style.color = color_negativo;
+          feedback.innerHTML = "⏱️-2 segs.";
+          clearTimeout(delay_animacion);
+          animateCSS(".feedback1", "flash").then((message) => {
+              delay_animacion = setTimeout(function () {
+                  feedback.innerHTML = "";
+              }, 2000);
+          });
+      }
+  }
 }
 
 /**
@@ -1778,7 +1807,8 @@ function temp_modos() {
         modo_anterior = modo_actual;
         modo_actual = modos_restantes[0];
         modos_restantes.splice(0, 1);
-
+        
+        
         MODOS[modo_actual]("");
 
         console.log(modo_actual)
