@@ -189,7 +189,6 @@ let nombre = getEl("nombre");
 let player = getParameterByName("name");
 nombre.value = (player && player.trim() !== "") ? player.toUpperCase() : "ESCRITXR";
 
-nombre.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
 metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
 
 texto.addEventListener("keydown", (e) => {
@@ -365,6 +364,7 @@ const MODOS = {
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_prohibida(e) };
         texto.addEventListener("input", listener_modo);
+
         explicación.innerHTML = "NIVEL LETRA MALDITA";
         palabra.innerHTML = "LETRA MALDITA: " + letra_prohibida;
         definicion.innerHTML = "";
@@ -1422,70 +1422,98 @@ function modo_palabras_bonus(e) {
 }
 
 /**
- * Función que se ejecuta al producirse un cambio en el contenido (evento "input")
- * en el que se inserta texto. Si se detecta que se ha insertado la letra prohibida,
- * se elimina ese carácter inmediatamente.
+ * Función que intercepta la inserción de la "letra prohibida".
+ * Si se detecta dicha letra, se elimina inmediatamente del contenido.
  *
  * Se asume que:
- * - toNormalForm(letra) normaliza la letra para comparar sin acentos u otras diferencias.
+ * - toNormalForm(letra) normaliza la letra (por ejemplo, quita acentos).
  * - letra_prohibida es la letra prohibida (en minúscula).
- * - addSeconds(valor), puntos, puntos_, feedback, color_negativo, delay_animacion y animateCSS()
- *   son parte de la lógica para actualizar la UI y dar feedback.
+ * - addSeconds(valor), puntos, puntos_, feedback, color_negativo, delay_animacion
+ *   y animateCSS(selector, animacion) forman parte de la lógica para actualizar la UI y dar feedback.
+ */
+/**
+ * Función que intercepta la inserción de la "letra prohibida" en un div contenteditable.
+ * Si se detecta la inserción de dicha letra, se elimina inmediatamente.
+ *
+ * Se asume que:
+ * - toNormalForm(letra) normaliza la letra (por ejemplo, quita acentos).
+ * - letra_prohibida es la letra prohibida (en minúscula).
+ * - addSeconds(valor), puntos, puntos_, feedback, color_negativo, delay_animacion
+ *   y animateCSS(selector, animacion) forman parte de la lógica para actualizar la UI y dar feedback.
  */
 function modo_letra_prohibida(e) {
-  console.log("edata", e)
   // Solo procesamos inserciones de texto
-  if (e.inputType === "insertText" && e.data) {
-      // Obtenemos la letra insertada usando e.data
-      let letra = e.data;
-      
-      // Comprobamos si la letra (normalizada) coincide con la letra prohibida
-      if (
-          toNormalForm(letra) === letra_prohibida || 
-          toNormalForm(letra) === letra_prohibida.toUpperCase()
-      ) {
-          // La letra está prohibida, así que la eliminamos manualmente.
-          // Suponemos que el contenido se ha modificado y el cursor se posiciona justo
-          // después del carácter insertado. Entonces, borramos el carácter anterior al cursor.
-          let sel = window.getSelection();
-          if (sel.rangeCount > 0) {
-              let range = sel.getRangeAt(0);
-              // Comprobamos que el nodo de la selección sea un nodo de texto
-              // y que haya al menos un carácter antes del cursor.
-              if (range.startContainer.nodeType === Node.TEXT_NODE && range.startOffset > 0) {
-                  // Creamos un rango auxiliar que abarque únicamente el carácter insertado
-                  let node = range.startContainer;
-                  let offset = range.startOffset;
-                  let newRange = document.createRange();
-                  newRange.setStart(node, offset - 1);
-                  newRange.setEnd(node, offset);
-                  // Borramos ese carácter
-                  newRange.deleteContents();
-                  // Colapsamos la selección al nuevo punto (donde se borró la letra)
-                  range.collapse(true);
-                  sel.removeAllRanges();
-                  sel.addRange(range);
-              }
-          }
-          
-          // Actualizamos la UI y damos feedback negativo (por ejemplo, descontamos tiempo)
-          addSeconds(-2);
-          puntos.innerHTML = puntos_ + " palabras";
-          feedback.style.color = color_negativo;
-          feedback.innerHTML = "⏱️-2 segs.";
-          clearTimeout(delay_animacion);
-          animateCSS(".feedback1", "flash").then((message) => {
-              delay_animacion = setTimeout(function () {
-                  feedback.innerHTML = "";
-              }, 2000);
-          });
+  if (e.inputType === "insertText") {
+    // Capturamos la letra insertada; en la mayoría de navegadores e.data está definida.
+    let letra = e.data;
+    // Fallback para Safari: si e.data no está disponible, obtenemos la letra desde el nodo de texto
+    if (!letra) {
+      let sel = window.getSelection();
+      if (sel.rangeCount > 0) {
+        let node = sel.anchorNode;
+        if (node && node.nodeType === Node.TEXT_NODE && sel.focusOffset > 0) {
+          letra = node.textContent.charAt(sel.focusOffset - 1);
+        }
       }
+    }
+    
+    // Si la letra (normalizada) coincide con la letra prohibida, procedemos
+    if (
+      letra &&
+      (toNormalForm(letra) === letra_prohibida ||
+       toNormalForm(letra) === letra_prohibida.toUpperCase())
+    ) {
+      // Usamos setTimeout para esperar a que el DOM se actualice con la inserción
+      setTimeout(() => {
+        let sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+          let range = sel.getRangeAt(0);
+          if (range.startContainer.nodeType === Node.TEXT_NODE && range.startOffset > 0) {
+            let node = range.startContainer;
+            // Guardamos el offset original antes de modificar el contenido
+            let originalOffset = range.startOffset;
+            let textoActual = node.textContent;
+            // Verificamos que el carácter justo antes del cursor sea la letra insertada
+            if (textoActual.charAt(originalOffset - 1) === letra) {
+              // Eliminamos el carácter prohibido del contenido
+              let nuevoTexto = textoActual.substring(0, originalOffset - 1) + textoActual.substring(originalOffset);
+              node.textContent = nuevoTexto;
+              // Calculamos el nuevo offset, asegurándonos de que esté dentro de los límites
+              let newOffset = originalOffset - 1;
+              if (newOffset < 0) newOffset = 0;
+              if (newOffset > node.textContent.length) newOffset = node.textContent.length;
+              // Intentamos establecer el inicio del rango; en caso de error, lo ubicamos al final del nodo
+              try {
+                range.setStart(node, newOffset);
+              } catch (err) {
+                console.error("Error setting range start: ", err);
+                range.setStart(node, node.textContent.length);
+              }
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        }
+      }, 0);
+      
+      // Actualiza la UI: penaliza (descuenta tiempo, actualiza puntos, muestra feedback)
+      addSeconds(-2);
+      puntos.innerHTML = puntos_ + " palabras";
+      feedback.style.color = color_negativo;
+      feedback.innerHTML = "⏱️-2 segs.";
+      clearTimeout(delay_animacion);
+      animateCSS(".feedback1", "flash").then((message) => {
+        delay_animacion = setTimeout(() => {
+          feedback.innerHTML = "";
+        }, 2000);
+      });
+    }
   }
 }
 
-/**
- * Función principal: Detectar si el usuario ha escrito la frase final
- */
+
+
 function modo_frase_final(e) {
     // Obtenemos el texto completo del elemento
     let textContent = e.target.innerText;
@@ -1559,63 +1587,6 @@ function palabras_musas(e) {
         }
     }
 }
-
-function modo_letra_prohibida(e) {
-    let letra = e.key;  // Captura la letra tecleada
-  
-    if (
-      toNormalForm(letra) === letra_prohibida || 
-      toNormalForm(letra) === letra_prohibida.toUpperCase()
-    ) {
-      e.preventDefault();  // Evita el comportamiento predeterminado del evento de tecla
-    /*
-      let sel = window.getSelection();
-      let range = sel.getRangeAt(0);
-  
-      // Crea un nodo de texto para la letra
-      let textNode = document.createTextNode(letra);
-  
-      // Crea un span con la clase para el color y coloca el nodo de texto dentro
-      let span = document.createElement("span");
-      span.className = "letra-roja";
-      span.appendChild(textNode);
-  
-      // Crea nodos de texto vacíos para actuar como delimitadores
-      let emptyTextNodeBefore = document.createTextNode("");
-      let emptyTextNodeAfter = document.createTextNode("");
-  
-      // Inserta los nodos en el DOM
-      range.insertNode(emptyTextNodeBefore);
-      range.insertNode(span);
-      range.insertNode(emptyTextNodeAfter);
-  
-      // Mueve el cursor a la derecha del nodo span
-      range.setStartAfter(span);
-      range.setEndAfter(span);
-      sel.removeAllRanges();
-      sel.addRange(range);
-  
-      // Borra el span después de medio segundo
-      setTimeout(() => {
-        span.parentNode.removeChild(span);
-      }, 100);
-      */
-
-      // Actualiza otros aspectos de la UI y envía eventos a través de Socket.io
-      // Aquí iría la lógica para manejar la UI y eventos de Socket.io (la he mantenido igual)
-      addSeconds(-2)
-      puntos.innerHTML = puntos_ + " palabras";
-      
-      feedback.style.color = color_negativo;
-      feedback.innerHTML = "⏱️-2 segs.";
-      clearTimeout(delay_animacion);
-      animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-          feedback.innerHTML = "";
-        }, 2000);
-      });
-    }
-  }
   
 // Esta función se llama cuando se produce un input (antes de que se modifique el contenido)
 // y se utiliza para procesar tanto inserciones como borrados.

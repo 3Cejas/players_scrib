@@ -164,6 +164,13 @@ button {
     height: 5%;
 }
 
+.nombre:disabled {
+  color: aqua; /* Reemplaza el color a lo que necesites */
+  text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+  opacity: 1; /* Elimina la opacidad predeterminada */
+}
+
+
  /* -- MENÚ 1: Game Over -- */
 
  #mainMenu {
@@ -362,8 +369,14 @@ button:hover {
   border-color: transparent;
   font-size: 1vw;
   color:red; text-shadow: 0.0625em 0.0625em aqua;
-  
+
 }
+
+.opciones_valores:disabled {
+  color:red; text-shadow: 0.0625em 0.0625em aqua;
+  opacity: 1; /* Elimina la opacidad predeterminada */
+}
+
 
 .nombre {
     width: 100%;
