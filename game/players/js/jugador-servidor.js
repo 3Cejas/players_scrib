@@ -57,6 +57,7 @@ let desactivar_borrar = false;
 
 var letra_prohibida = "";
 var letra_bendita = "";
+let frase_final;
 let listener_modo;
 let listener_modo1;
 let timeoutID_menu;
@@ -357,10 +358,12 @@ const MODOS = {
     },
 
     'frase final': function (socket) {
+        palabra.style.backgroundColor = "orange";
         explicación.style.color = "orange";
         explicación.innerHTML = "MODO FRASE FINAL";
         palabra.innerHTML = "";
         definicion.innerHTML = "";
+        function_frase_final();
     },
 
     "": function (data) { },
@@ -414,7 +417,9 @@ const LIMPIEZAS = {
         clearTimeout(interval_ortografia_perfecta);
     },
 
-    "frase final": function (data) { },
+    "frase final": function (data) {
+        texto.removeEventListener("keyup", listener_modo);
+    },
 
     "": function (data) { },
 };
@@ -678,6 +683,14 @@ socket.on("inicio", (data) => {
     TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
     TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
     TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
+    if(player == 1){
+    frase_final = data.parametros.FRASE_FINAL_J1.trim().toLowerCase();
+    }
+    else{
+        frase_final = data.parametros.FRASE_FINAL_J2;
+    }
+    console.log("FRASE FINAL", data.parametros)
+    console.log("FRASE FINAL", frase_final)
     limpieza();
     desactivar_borrar = false;
     texto.style.height = "";
@@ -1052,7 +1065,7 @@ function recibir_palabra_prohibida(data) {
             // Si seguimos en el menú (por ejemplo, no hubo otra acción), ejecuta el clic:
             console.log("Tiempo cumplido. Se hace clic automático en botón NO.");
             btnNo.click(); 
-          }, 30000);
+          }, 60000);
       }
   
       /*************************************************************
@@ -2290,3 +2303,28 @@ document.addEventListener('DOMContentLoaded', function () {
     // Inicialización de los gradientes al cargar la página
     updateGradients();
 });
+
+function function_frase_final() {
+
+    animacion_modo();
+    palabra.innerHTML = "«"+frase_final+"»";
+    definicion.innerHTML = "⬆️ ¡Introduce la frase final para ganar! ⬆️"
+
+    texto.removeEventListener("keyup", listener_modo);
+    listener_modo = function (e) { modo_frase_final(e) };
+    texto.addEventListener("keyup", listener_modo);
+}
+
+function modo_frase_final(e) {
+    // Obtenemos el texto completo del elemento
+    let textContent = e.target.innerText;
+    // Convertimos a minúsculas y recortamos espacios (opcional pero recomendable):
+    let textLower = textContent.trim().toLowerCase();
+  
+    // Revisamos si el texto termina exactamente con esa frase final:
+    if (textLower.endsWith(frase_final)) {
+      // Aquí va tu lógica de finalización
+      final();
+    }
+  }
+  

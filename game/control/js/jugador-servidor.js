@@ -15,8 +15,8 @@ let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 let votos1 = getEl("votos");
-
-
+let frase_final_j1 = getEl("frase_final_j1")
+let frase_final_j2 = getEl("frase_final_j2")
 
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
@@ -209,7 +209,7 @@ socket.on('texto2', data => {
 });
 
 socket.on('temp_modos', data => {
-    tiempo_modos_secs.textContent = data.secondsPassed + " secs.";
+    tiempo_modos_secs.textContent = data.secondsPassed + " segundos";
     display_modo.textContent = data.modo_actual.toUpperCase();
     display_modo.style.color = COLORES_MODOS[data.modo_actual];
     console.log(data.secondsPassed, "secondsPassed", data.modo_actual);

@@ -170,10 +170,12 @@ body {
 .parametro{
     background-color: transparent;
     font-family: "Retro-gaming";
-    color: white;
     text-align: center;
     width: 70%;
     border: none;
+    color:red;
+    font-size: 1.2vw;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
 }
 
 .explicación {
@@ -389,6 +391,16 @@ table {
     background-color: transparent;
     border: none;
     color: white;
+}
+
+.frase_final{
+    font-family: "Retro-gaming";
+    background-color: transparent;
+    border: none;
+    color: white;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+    width: 50%;
+    text-align: center;
 }
 
 .switch {

@@ -64,13 +64,13 @@
                         var myDatepicker = new MtrDatepicker(config);
                     </script></td>
                     <td>
-                    <span class='btn' onclick="fin(1)">👾 FIN J1</span>
+                        <span onclick="frase_final(1)" class='btn'>🏁 FRASE FINAL J1</span>
                     </td>
                     <td>
-                        <span class='btn' onclick="vote()">🗳️ ABRIR VOTACIÓN</span>
+                        <span onclick="enviar_comentario()" class='btn'>💬 ENVIAR COMENTARIO</span>
                     </td>
                     <td>
-                        <span class='btn' onclick="temas()">🎨 ELEGIR TEMA</span>
+                        <span onclick="frase_final(2)" class='btn'>🏁 FRASE FINAL J2</span>
                     </td>
             </tr>
             <tr>
@@ -81,16 +81,14 @@
                     <span id="boton_pausar_reanudar" data-value="0"  onclick="pausar_reanudar(this)" class='btn'>⏸️  PAUSAR</span>
                 </td>   
                 <td>
-                    <span onclick="enviar_comentario()" class='btn'>💬 ENVIAR COMENTARIO</span>
+                    <span class='btn' onclick="fin(1)">👾 FIN J1</span>
+
                 </td>
                 <td>
                     <span onclick="fin(2)" class='btn'>👾 FIN J2</span>
                 </td> 
                 <td>
-                    <span onclick="exit()" class='btn'>🗳️ CERRAR VOTACIÓN</span>
-                </td>   
-                <td>
-                    <table class="right"><td><input type="text" class="placeholder" id="temas" size="10" placeholder="Comentarios..."></td></table>
+                    <table class="right"><td><input type="text" class="placeholder" id="temas" size="10" placeholder="Pon texto..."></td></table>
                 </td>
             </tr>
             <tr>
@@ -102,35 +100,40 @@
             <label for="tiempo_inverso">TIEMPO INVERSO</label>
             <input type="number" id="tiempo_inverso" name="tiempo_inverso" class="parametro"
                    min="1" max="360" step="1" value = 20>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="tiempo_borrado">TIEMPO BORRADO</label>
             <input type="number" id="tiempo_borrado" name="tiempo_borrado" class="parametro"
                    min="1" max="360" step="1" value = 20>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="tiempo_borroso">TIEMPO BORROSO</label>
             <input type="number" id="tiempo_borroso" name="tiempo_borroso" class="parametro"
                    min="1" max="360" step="1" value = 20>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="tiempo_votacion">TIEMPO VOTACION</label>
             <input type="number" id="tiempo_votacion" name="tiempo_votacion" class="parametro"
                    min="1" max="360" step="1" value = 30>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="tiempo_modos">TIEMPO MODOS</label>
             <input type="number" id="tiempo_modos" name="tiempo_modos" class="parametro"
                    min="1" max="3600" step="1" value = 300>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <p id="display_modo" class="display_modo">Ninguno</p>
-            <p id="tiempo_modos_secs" class="tiempo">0 secs.</p>
+            <p id="tiempo_modos_secs" class="tiempo">0 segundos</p>
         </td>
     </tr>
     <tr>
@@ -139,30 +142,35 @@
             <label for="tiempo_locura">TIEMPO LOCURA</label>
             <input type="number" id="tiempo_locura" name="tiempo_locura" class="parametro"
                    min="1" max="360" step="1" value = 20>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="tiempo_cambio_letra">TIEMPO CAMBIO LETRA</label>
             <input type="number" id="tiempo_cambio_letra" name="tiempo_cambio_letra" class="parametro"
                    min="1" max="360" step="1" value = 60>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="tiempo_cambio_palabras">TIEMPO CAMBIO PALABRAS</label>
             <input type="number" id="tiempo_cambio_palabras" name="tiempo_cambio_palabras" class="parametro"
                    min="1" max="360" step="1" value = 20>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="limite_tiempo_inspiracion">LÍMITE TIEMPO MUSAS</label>
             <input type="number" id="limite_tiempo_inspiracion" name="limite_tiempo_inspiracion" class="parametro"
                    min="5" max="120" step="1" value = 30>
+                   <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
             <label for="palabras_insertadas_meta">PALABRAS INSERTADAS META</label>
             <input type="number" id="palabras_insertadas_meta" name="palabras_insertadas_meta" class="parametro"
                 min="1" max="20" step="1" value = 5>
+                <span class="parametro">palabras</span>
         </td>
         <td>
             <br>
@@ -186,7 +194,8 @@
     </div>
     <div id="contenedor">
         <div>
-            <br>
+            <br>            <p style="color:orange">FRASE FINAL:</p>
+            <input disabled id="frase_final_j1" class="frase_final">
             <p id="tiempo" class="tiempo"></p>
             <input style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre" value="ESCRITXR 1"></input>
             <br><br>
@@ -209,6 +218,8 @@
         </div>
         <div>
             <br>
+            <p style="color:orange">FRASE FINAL:</p>
+            <input disabled id="frase_final_j2" class="frase_final">
             <p id="tiempo1" class="tiempo"></p>
             <input style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre" value="ESCRITXR 2"></input>
             <br><br>

@@ -1460,8 +1460,10 @@ function modo_letra_prohibida(e) {
     // Si la letra (normalizada) coincide con la letra prohibida, procedemos
     if (
       letra &&
-      (toNormalForm(letra) === letra_prohibida ||
-       toNormalForm(letra) === letra_prohibida.toUpperCase())
+      (
+        (toNormalForm(letra) === letra_prohibida || toNormalForm(letra) === letra_prohibida.toUpperCase()) &&
+        !(letra_prohibida.toLowerCase() === 'n' && (letra === 'ñ' || letra === 'Ñ'))
+      )
     ) {
       // Usamos setTimeout para esperar a que el DOM se actualice con la inserción
       setTimeout(() => {

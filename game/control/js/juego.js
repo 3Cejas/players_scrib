@@ -108,6 +108,18 @@ function addSeconds1(secs) {
 }
 
 function temp() {
+    console.log(frase_final_j1.value)
+    var checkboxFraseFinal = document.querySelector('input[type="checkbox"][value="frase final"]');
+    console.log(checkboxFraseFinal)
+    if((!frase_final_j1.value || !frase_final_j2.value || frase_final_j1.value == "«»" || frase_final_j2.value == "«»") && checkboxFraseFinal && checkboxFraseFinal.checked){
+        if(!frase_final_j1.value){
+        alert("Falta introducir una frase inicial para " + nombre1.value + ".")
+        }
+        else{
+            alert("Falta introducir una frase inicial para " + nombre2.value + ".")
+        }
+    }
+    else{
     terminado = false;
     terminado1 = false;
     document.getElementById("palabra").innerHTML = "";
@@ -137,7 +149,7 @@ function temp() {
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_TIEMPO_INSPIRACION, TIEMPO_LOCURA } });
+    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_TIEMPO_INSPIRACION, TIEMPO_LOCURA, FRASE_FINAL_J1: frase_final_j1.value.slice(1, -1), FRASE_FINAL_J2: frase_final_j2.value.slice(1, -1)} });
     juego_iniciado = true;
     modo_actual = "";
   
@@ -153,6 +165,7 @@ function temp() {
         startCountDown_p2(duration);
 
     }, 8000);
+}
 };
 
 function vote() {
@@ -173,7 +186,7 @@ function limpiar() {
     //document.getElementById("nombre1").value = "ESCRITXR 2";
     display_modo.style.color = "white";
     display_modo.textContent = "Ninguno";
-    tiempo_modos_secs.textContent = "0 secs.";
+    tiempo_modos_secs.textContent = "0 segundos";
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
         boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
@@ -472,10 +485,19 @@ function final(player){
     }
 
     if(terminado && terminado1){
-        tiempo_modos_secs.textContent = 0 + " secs.";
+        tiempo_modos_secs.textContent = 0 + " segundos";
         display_modo.style.color = "white";
         display_modo.textContent = "Ninguno"; 
         console.log("PRUEBA FINAL", texto_guardado1)
         //setTimeout(descargar_textos, 5000);
+    }
+}
+
+function frase_final(player){
+    if(player== 1){
+        frase_final_j1.value = "«" + tema.value + "»";
+    }
+    else{
+        frase_final_j2.value = "«" + tema.value + "»";
     }
 }
