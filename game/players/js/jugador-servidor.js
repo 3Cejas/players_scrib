@@ -266,7 +266,7 @@ const MODOS = {
         palabra.style.backgroundColor = "yellow";
         explicación.style.color = "yellow";
         definicion.style.fontSize = "1vw";
-        explicación.innerHTML = "MODO PALABRAS BENDITAS";
+        explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
         socket.emit("nueva_palabra", player);
         socket.on(enviar_palabra, data => {
             recibir_palabra(data);
@@ -282,7 +282,7 @@ const MODOS = {
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_prohibida(e) };
         texto.addEventListener("keydown", listener_modo);
-        explicación.innerHTML = "MODO LETRA MALDITA";
+        explicación.innerHTML = "NIVEL LETRA MALDITA";
         palabra.innerHTML = "LETRA MALDITA: " + letra_prohibida;
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
@@ -296,7 +296,7 @@ const MODOS = {
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_bendita(e) };
         texto.addEventListener("keydown", listener_modo, true);
-        explicación.innerHTML = "MODO LETRA BENDITA";
+        explicación.innerHTML = "NIVEL LETRA BENDITA";
         palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
@@ -338,7 +338,7 @@ const MODOS = {
     'palabras prohibidas': function (data) {
         palabra.style.backgroundColor = "pink";
         explicación.style.color = "pink";
-        explicación.innerHTML = "MODO PALABRAS MALDITAS";
+        explicación.innerHTML = "NIVEL PALABRAS MALDITAS";
         palabra.innerHTML = "";
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_prohibida", player);
@@ -862,7 +862,6 @@ socket.on(inspirar, palabra => {
     "</span><span style='color: orange;'>\"</span>");
     animateCSS(".definicion", "flash");
     asignada = true;
-    indice_buscar_palabra = texto.innerText.length - 5;
     texto.removeEventListener("keyup", listener_modo1);
     listener_modo1 = function (e) { palabras_musas(e) };
     texto.addEventListener("keyup", listener_modo1);

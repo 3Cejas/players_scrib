@@ -119,8 +119,6 @@ function borrar() {
     tiempo_feed = "⏱️-" + "1" + " segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed});
     caracteres_seguidos = 0;
-    indice_buscar_palabra = texto.innerText.length;
-
     // 3. Obtener última línea y último nodo de texto
     lastLine = texto.lastChild;
     lastTextNode = lastLine.lastChild;

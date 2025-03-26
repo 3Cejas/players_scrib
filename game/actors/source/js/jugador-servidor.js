@@ -33,7 +33,7 @@ const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         explicación.style.color = "yellow";
-        explicación.innerHTML = "MODO PALABRAS BENDITAS";
+        explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
         palabra.innerHTML = "";
         palabra.style.backgroundColor = "yellow";
         definicion.innerHTML = "";
@@ -46,7 +46,7 @@ const MODOS = {
     'letra prohibida': function (data) {
         palabra.style.backgroundColor= "red";
         explicación.style.color = "red";
-        explicación.innerHTML = "MODO LETRA MALDITA";
+        explicación.innerHTML = "NIVEL LETRA MALDITA";
         palabra.innerHTML = "LETRA MALDITA: " + data.letra_prohibida;
     },
 
@@ -54,14 +54,14 @@ const MODOS = {
     'letra bendita': function (data) {
         palabra.style.backgroundColor= "lime";
         explicación.style.color = "lime";
-        explicación.innerHTML = "MODO LETRA BENDITA";
+        explicación.innerHTML = "NIVEL LETRA BENDITA";
         palabra.innerHTML = "LETRA BENDITA: " + data.letra_bendita;
     },
 
     'palabras prohibidas': function (data) {
         palabra.style.backgroundColor = "pink";
         explicación.style.color = "pink";
-        explicación.innerHTML = "MODO PALABRAS MALDITAS";
+        explicación.innerHTML = "NIVEL PALABRAS MALDITAS";
         definicion.innerHTML = "";
         socket.on(enviar_palabra, data => {
             recibir_palabra_prohibida(data);

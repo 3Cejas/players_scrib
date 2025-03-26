@@ -199,7 +199,7 @@ const MODOS = {
     reproducirSonido("../../game/audio/FX/12. PALABRAS BONUS.mp3")
         console.log("ALGO")
         explicación.style.color = "yellow";
-        explicación.innerHTML = "MODO PALABRAS BONUS";
+        explicación.innerHTML = "NIVEL PALABRAS BONUS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
         palabra2.style.backgroundColor = "yellow";
@@ -221,7 +221,7 @@ const MODOS = {
         explicación2.innerHTML = "";
         palabra1.style.backgroundColor= "red";
         explicación.style.color = "red";
-        explicación.innerHTML = "MODO LETRA PROHIBIDA";
+        explicación.innerHTML = "NIVEL LETRA PROHIBIDA";
         palabra1.innerHTML = "LETRA MALDITA: " + data.letra_prohibida;
         definicion2.innerHTML = "";
         definicion2.style.maxWidth = "100%";
@@ -244,7 +244,7 @@ const MODOS = {
 
         palabra1.style.backgroundColor= "lime";
         explicación.style.color = "lime";
-        explicación.innerHTML = "MODO LETRA BENDITA";
+        explicación.innerHTML = "NIVEL LETRA BENDITA";
         palabra1.innerHTML = "LETRA BENDITA: " + data.letra_bendita;
         definicion2.innerHTML = "";
         definicion2.style.maxWidth = "100%";
@@ -271,7 +271,7 @@ const MODOS = {
         palabra2.style.backgroundColor = "pink";
         palabra3.style.backgroundColor = "pink";
         explicación.style.color = "pink";
-        explicación.innerHTML = "MODO PALABRAS PROHIBIDAS";
+        explicación.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
         palabra1.innerHTML = "";
         definicion2.innerHTML = "";
         definicion2.style.maxWidth = "100%";
