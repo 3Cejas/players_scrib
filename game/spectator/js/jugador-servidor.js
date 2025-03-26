@@ -284,7 +284,7 @@ const MODOS = {
         reproducirSonido("../../game/audio/FX/14. TERTULIA.mp3")
         //activar_socket_feedback();
         explicación.style.color = "blue";
-        explicación.innerHTML = "MODO TERTULIA";
+        explicación.innerHTML = "NIVEL TERTULIA";
         palabra1.innerHTML = "";
 
     },
@@ -294,7 +294,7 @@ const MODOS = {
         reproducirSonido("../../game/audio/FX/15. FRASE FINAL.mp3")
         //activar_socket_feedback();
         explicación.style.color = "orange";
-        explicación.innerHTML = "MODO FRASE FINAL";
+        explicación.innerHTML = "NIVEL FRASE FINAL";
         palabra1.innerHTML = "";
 
     },

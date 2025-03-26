@@ -330,7 +330,7 @@ const MODOS = {
         tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
         pausa();
         explicación.style.color = "blue";
-        explicación.innerHTML = "MODO TERTULIA";
+        explicación.innerHTML = "NIVEL TERTULIA";
         palabra.innerHTML = "";
         definicion.innerHTML = "";
     },
@@ -360,7 +360,7 @@ const MODOS = {
     'frase final': function (socket) {
         palabra.style.backgroundColor = "orange";
         explicación.style.color = "orange";
-        explicación.innerHTML = "MODO FRASE FINAL";
+        explicación.innerHTML = "NIVEL FRASE FINAL";
         palabra.innerHTML = "";
         definicion.innerHTML = "";
         function_frase_final();

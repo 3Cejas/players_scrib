@@ -71,7 +71,7 @@ const MODOS = {
     'tertulia': function (socket) {
         //activar_socket_feedback();
         explicación.style.color = "blue";
-        explicación.innerHTML = "MODO TERTULIA";
+        explicación.innerHTML = "NIVEL TERTULIA";
         palabra.innerHTML = "";
 
     },
@@ -79,7 +79,7 @@ const MODOS = {
     'frase final': function (socket) {
         //activar_socket_feedback();
         explicación.style.color = "orange";
-        explicación.innerHTML = "MODO FRASE FINAL";
+        explicación.innerHTML = "NIVEL FRASE FINAL";
         palabra.innerHTML = "";
 
     },
