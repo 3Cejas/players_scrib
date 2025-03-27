@@ -1,6 +1,9 @@
-// Importamos las variables de configuración
-import { SERVER_URL_PROD, SERVER_URL_DEV } from '../../../config.js';
+// Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
+const serverUrl = isProduction
+    ? SERVER_URL_PROD
+    : SERVER_URL_DEV;
 
+const socket = io(serverUrl);
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
 animateCSS(".contenedor", "pulse");
@@ -83,13 +86,6 @@ var player = getParameterByName("player");
         nombre1.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
         metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
     }
-
-// Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
-const serverUrl = isProduction
-    ? SERVER_URL_PROD
-    : SERVER_URL_DEV;
-
-const socket = io(serverUrl);
 
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
