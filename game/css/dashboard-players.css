@@ -128,13 +128,8 @@ button:focus {
 }
 
 .sub {
-    font-size: 1.5vw;
+    font-size: 1vw;
 }
-
-* {
-    cursor: none;
-}
-
 
 .info{
     max-width: 50%;
@@ -256,7 +251,7 @@ button:focus {
 
 button {
     font-family: "Retro-gaming";
-    height: 5%;
+    margin: 1%;
 }
 
  /* -- MENÚ 1: Game Over -- */
@@ -478,7 +473,7 @@ select {
 }
 
 .neon {
-    font-size: 1.5vw;
+    font-size: 1.2vw;
     position: relative;
     content: attr(data-title);
     z-index: 1;
@@ -518,6 +513,7 @@ select {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    display: none;
 }
 
 table {
@@ -783,3 +779,148 @@ th{
 .cabecera{
   --animate-duration: 2s
 }
+
+.atributos {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.atributo {
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Colores por atributo */
+.atributo[data-atributo="fuerza"] {
+  border-color: #f00;
+  color: #f00;
+}
+.atributo[data-atributo="agilidad"] {
+  border-color: #0ff;
+  color: #0ff;
+}
+.atributo[data-atributo="inteligencia"] {
+  border-color: #ff0;
+  color: #ff0;
+}
+.atributo h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.controls button {
+  background: transparent;
+  color: inherit;
+  border: 2px solid currentColor;
+  padding: 0.3rem 0.6rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.controls button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btnInicio:disabled{
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.controls button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+/* Hover con texto en blanco para mejor contraste */
+.controls button:hover:not(:disabled) {
+  background: #fff;
+  color: currentColor;
+}
+.contador {
+  width: 2rem;
+  text-align: center;
+  font-weight: bold;
+}
+.barra-puntos {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+.punto {
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  display: inline-block;
+}
+.atributo[data-atributo="fuerza"] .punto.filled {
+  background: #f00;
+}
+.atributo[data-atributo="agilidad"] .punto.filled {
+  background: #0ff;
+}
+.atributo[data-atributo="inteligencia"] .punto.filled {
+  background: #ff0;
+}
+.total {
+  font-size: 1.1rem;
+  color: #fff;
+}
+ /* ------------------------------------------------------------
+       3) Estilos del tooltip usando imagen como disparador
+    ------------------------------------------------------------ */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      margin-left: 0.25em;     /* separación respecto al texto */
+      cursor: help;            /* puntero de ayuda */
+    }
+    /* Ajusta tamaño de la imagen disparadora */
+    .tooltip img {
+      display: inline-block;
+      width: 1rem;             /* puedes cambiar el ancho */
+      height: auto;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 20rem;
+      font-size: 1rem;
+      color: var(--color-atributo);
+      background-color: rgba(0, 0, 0, 0.75);
+      text-align: left;
+      border-radius: 4px;
+      padding: 0.5em;
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      pointer-events: none;
+      z-index: 10;
+    }
+    /* Mostrar al hover o focus */
+    .tooltip:hover .tooltiptext,
+    .tooltip:focus-within .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    /* Flecha del tooltip */
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: var(--color-atributo) transparent transparent transparent;
+    }

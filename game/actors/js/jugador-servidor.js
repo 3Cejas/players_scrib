@@ -1,7 +1,7 @@
 // Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
 const serverUrl = isProduction
     ? SERVER_URL_PROD
-    : SERVER_URL_DEV;;
+    : SERVER_URL_DEV;
 
 const socket = io(serverUrl);
 

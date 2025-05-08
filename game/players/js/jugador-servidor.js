@@ -40,6 +40,8 @@ let temas = getEl("temas");
 let lightning = getEl("lightning");
 let feedback_tiempo = getEl("feedback_tiempo");
 let neon = getEl("neon");
+
+let contenedor = getEl("contenedor")
   
 
 let tempo_text_borroso;
@@ -166,8 +168,9 @@ const PUTADAS = {
         borrado_cambiado = true;
         antiguo_rapidez_borrado = rapidez_borrado;
         antiguo_inicio_borrado = rapidez_inicio_borrado;
-        rapidez_borrado = 1200;
-        rapidez_inicio_borrado = 1200;
+        
+        rapidez_borrado = reduceLog(rapidez_borrado, 1);
+        rapidez_inicio_borrado = reduceLog(rapidez_inicio_borrado, 1);
         document.body.classList.add("bg");
         document.body.classList.add("rain");
         lightning.classList.add("lightning");
@@ -676,6 +679,7 @@ function resucitar(){
         }
         texto.scrollTo(0, texto.scrollHeight);
 }
+
 // Inicia el juego.
 socket.on("inicio", (data) => {
     animateCSS(".cabecera", "backOutLeft").then((message) => {
@@ -683,6 +687,8 @@ socket.on("inicio", (data) => {
     TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
     TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
     TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
+    console.log(atributos)
+    ajustarRapidez(rapidez_borrado, rapidez_inicio_borrado, atributos['agilidad'])
     if(player == 1){
     frase_final = data.parametros.FRASE_FINAL_J1.trim().toLowerCase();
     }
@@ -820,8 +826,8 @@ socket.on("activar_modo", (data) => {
     palabra.innerHTML = "";
     explicación.innerHTML = "";
     LIMPIEZAS[modo_actual](data);
-    rapidez_borrado -= 200;
-    rapidez_inicio_borrado -= 200;
+    rapidez_borrado -= 100;
+    rapidez_inicio_borrado -= 100;
     modo_actual = data.modo_actual;
     if(terminado == false){
     MODOS[modo_actual](data, socket);
@@ -957,6 +963,7 @@ function recibir_palabra_prohibida(data) {
   
       const btnSi = document.getElementById('btnSi');
       const btnNo = document.getElementById('btnNo');
+      const btnInicio = document.getElementById('btnInicio');
       const mainMenuButtons = [btnSi, btnNo];
       let mainMenuIndex = 0;
   
@@ -973,7 +980,70 @@ function recibir_palabra_prohibida(data) {
       /*************************************************************
         ACTUALIZACIONES DE ESTADO VISUAL
       **************************************************************/
-      function actualizarSeleccionMainMenu() {
+        function toggleFullscreen() {
+            if (isFullscreen) {
+              // Salir de pantalla completa
+              if (document.exitFullscreen) {
+                document.exitFullscreen();
+              } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+              } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+              }
+              isFullscreen = false;
+            } else {
+              // Entrar en pantalla completa
+              const elem = document.documentElement;
+              if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+              } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+              } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+              }
+              isFullscreen = true;
+            }
+          }
+      
+          // ------------------------------------------------------
+          // 3) FUNCIÓN PRINCIPAL: INICIO DEL JUEGO
+          // ------------------------------------------------------
+          function inicioJuego() {
+            animateCSS(".atributos", "backOutLeft")
+              .then(() => {
+                      // Creamos un nuevo elemento <style>
+                const style = document.createElement('style');
+                style.id = 'style-ocultar-cursor'; 
+                // Añadimos !important para asegurar que se aplique por encima de cualquier otro cursor
+                style.textContent = `* { cursor: none !important; }`;
+
+                // Insertamos la regla en el <head> del documento
+                document.head.appendChild(style);
+                document.getElementById('atributos-container').style.display = "none";
+              contenedor.style.display = "flex";
+              btnInicio.style.display = "none";
+              document.getElementById('total').style.display = "none";
+              animateCSS(".contenedor", "backInLeft");
+      
+                // Ponemos FULLSCREEN inmediatamente al iniciar
+                toggleFullscreen();
+      
+                // Foco en el textarea
+                texto.focus();
+      
+                // Listener global para alternar fullscreen con click si procede
+                document.addEventListener('click', function(event) {
+                  // Sólo si no estamos en un menú de modificadores
+                  if (!menu_modificador && modificadorButtons.length === 0) {
+                    if (event.button === 0) {       // click izquierdo
+                      toggleFullscreen();
+                      texto.focus();
+                    }
+                  }
+                });
+              });
+          }
+        function actualizarSeleccionMainMenu() {
         mainMenuButtons.forEach(btn => btn.classList.remove('selected'));
         mainMenuButtons[mainMenuIndex].classList.add('selected');
         mainMenuButtons[mainMenuIndex].focus();
@@ -1070,6 +1140,11 @@ function recibir_palabra_prohibida(data) {
       /*************************************************************
         EVENTOS DE CLICK PARA LOS BOTONES CON stopPropagation()
       **************************************************************/
+
+    btnInicio.addEventListener('click', (evento) => {
+        evento.stopPropagation(); // Evita que se active el listener global
+        inicioJuego();
+        });
       btnSi.addEventListener('click', (evento) => {
         evento.stopPropagation(); // Evita que se active el listener global
         mostrarMenuQuantity();
@@ -2325,5 +2400,34 @@ function modo_frase_final(e) {
       // Aquí va tu lógica de finalización
       final();
     }
+  }
+
+const maxIncremento =  0.50; // queremos +50% de lentitud en el peor caso
+
+function ajustarRapidez(baseRapidezBorrado, baseInicioBorrado, agilidad) {
+    const factorLog      = Math.log(agilidad + 1) / Math.log(LIMITE_TOTAL + 1);
+    const pctIncremento  = maxIncremento * factorLog;
+    rapidez_borrado        = baseRapidezBorrado     * (1 + pctIncremento);
+    rapidez_inicio_borrado = baseInicioBorrado      * (1 + pctIncremento);
+    console.log(rapidez_borrado, rapidez_inicio_borrado)
+  }
+
+  /**
+ * reduceLog:
+ *   Reduce un tiempo (ms) aplicando una atenuación logarítmica.
+ *
+ * @param {number} base    - Valor original en milisegundos (debe ser > 0).
+ * @param {number} k       - Coeficiente de “fuerza” de la reducción. 
+ *                           k = 0 → sin reducción; a mayor k → más reducción.
+ * @returns {number}       - Nuevo valor en ms, redondeado.
+ */
+function reduceLog(base, k = 1) {
+    if (base <= 0) return 0;
+    // 1) Calculamos ln(base)
+    const lnBase = Math.log(base);
+    // 2) Creamos el denominador 1 + k·ln(base), para que nunca divida por 0
+    const denom = 1 + k * lnBase;
+    // 3) Dividimos y redondeamos
+    return Math.round(base / denom);
   }
   

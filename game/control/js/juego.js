@@ -501,3 +501,55 @@ function frase_final(player){
         frase_final_j2.value = "«" + tema.value + "»";
     }
 }
+
+    // Esperar a que el DOM esté completamente cargado
+    document.addEventListener('DOMContentLoaded', () => {
+        // Estado inicial de los atributos
+        const atributos = { fuerza: 0, agilidad: 0, inteligencia: 0 };
+        const LIMITE_TOTAL = 10;
+  
+        // Referencias a elementos del DOM
+        const container = document.getElementById('atributos-container');
+        const totalUsadosEl = document.getElementById('total-usados');
+  
+        // Función para calcular la suma total
+        function calcularTotal() {
+          return Object.values(atributos).reduce((a, b) => a + b, 0);
+        }
+  
+        // Función para actualizar la interfaz tras un cambio
+        function actualizarInterfaz() {
+          const total = calcularTotal();
+          document.querySelectorAll('.atributo').forEach(div => {
+            const key = div.dataset.atributo;
+            const valor = atributos[key];
+            div.querySelector('.contador').textContent = valor;
+            const btnMenos = div.querySelector('button[data-action="decrement"]');
+            const btnMas = div.querySelector('button[data-action="increment"]');
+            btnMenos.disabled = valor === 0;
+            btnMas.disabled = total >= LIMITE_TOTAL;
+            const puntos = div.querySelectorAll('.punto');
+            puntos.forEach((el, idx) => el.classList.toggle('filled', idx < valor));
+          });
+          totalUsadosEl.textContent = total;
+        }
+  
+        // Delegación de eventos: manejar todos los botones desde el contenedor
+        container.addEventListener('click', e => {
+          if (e.target.tagName !== 'BUTTON') return;
+          e.preventDefault(); // Prevenir cualquier comportamiento por defecto
+          const action = e.target.dataset.action;
+          const atributoDiv = e.target.closest('.atributo');
+          const key = atributoDiv.dataset.atributo;
+  
+          if (action === 'increment' && calcularTotal() < LIMITE_TOTAL) {
+            atributos[key]++;
+          } else if (action === 'decrement' && atributos[key] > 0) {
+            atributos[key]--;
+          }
+          actualizarInterfaz();
+        });
+  
+        // Inicializar interfaz
+        actualizarInterfaz();
+      });

@@ -41,8 +41,96 @@
     <div class="container"></div>
     <br>
     <p><span id="temas" class="temas"></span></p>
-    <br>
+    <div class="atributos" id="atributos-container">
+
+      <!-- FUERZA -->
+      <div class="atributo" data-atributo="fuerza">
+        <h2>
+          Fuerza
+          <span class="tooltip" tabindex="0" aria-label="¿Qué es la fuerza?">
+            <!-- Sustituimos el “?” por tu imagen -->
+            <img src="../img/tooltip.png" alt="Ayuda fuerza" />
+            <span class="tooltiptext" role="tooltip">
+              La fuerza determina la cantidad de tiempo que obtienes por cada palabra añadida.
+              <br><br>
+              A mayor fuerza, se obtiene mayor cantidad de tiempo por palabra.
+            </span>
+          </span>
+        </h2>
+        <div class="controls">
+          <button type="button" data-action="decrement">−</button>
+          <span class="contador">0</span>
+          <button type="button" data-action="increment">+</button>
+        </div>
+        <div class="barra-puntos">
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span>
+        </div>
+      </div>
+  
+      <!-- AGILIDAD -->
+      <div class="atributo" data-atributo="agilidad">
+        <h2>
+          Agilidad
+          <span class="tooltip" tabindex="0" aria-label="¿Qué es la agilidad?">
+            <img src="../img/tooltip.png" alt="Ayuda agilidad" />
+            <span class="tooltiptext" role="tooltip">
+              La agilidad mide la rapidez y destreza de movimientos.
+              <br><br>
+              Influye en la rapidez con la que se borra el texto.
+            </span>
+          </span>
+        </h2>
+        <div class="controls">
+          <button type="button" data-action="decrement">−</button>
+          <span class="contador">0</span>
+          <button type="button" data-action="increment">+</button>
+        </div>
+        <div class="barra-puntos">
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span>
+        </div>
+      </div>
+  
+      <!-- INTELIGENCIA -->
+      <div class="atributo" data-atributo="inteligencia">
+        <h2>
+          Inteligencia
+          <span class="tooltip" tabindex="0" aria-label="¿Qué es la inteligencia?">
+            <img src="../img/tooltip.png" alt="Ayuda inteligencia" />
+            <span class="tooltiptext" role="tooltip">
+              La inteligencia indica la capacidad de razonamiento y uso de magia
+              o habilidades especiales. Afecta el maná disponible.
+            </span>
+          </span>
+        </h2>
+        <div class="controls">
+          <button type="button" data-action="decrement">−</button>
+          <span class="contador">0</span>
+          <button type="button" data-action="increment">+</button>
+        </div>
+        <div class="barra-puntos">
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span>
+        </div>
+      </div>
+  
+    </div>
+  
+    </div>
+      <div id="total" class="total">
+        Puntos usados: <span id="total-usados">0</span> / 10
+      </div>
+    </div>
+    <button type="button" id="btnInicio" class="btnInicio">¡A escribir!</button>
     <div id="contenedor" class="contenedor">
+        <br>
         <div class="jugador">
             <p id="tiempo" class="tiempo"></p>
             <p id="feedback_tiempo" class="feedback_tiempo"></p>

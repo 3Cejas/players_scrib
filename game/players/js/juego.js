@@ -1,8 +1,10 @@
 let borrado; // Variable que almacena el identificador de la función temporizada de borrado.
-let antiguo_inicio_borrado = 3000;
-let rapidez_borrado = 3000; // Variable que almacena la velocidad del borrado del texto.
-let antiguo_rapidez_borrado = 3000;
-let rapidez_inicio_borrado = 3000; // Variable que almacena el tiempo de espera sin escribir hasta que empieza a borrar el texto.
+let atributos;
+const LIMITE_TOTAL = 10;
+let antiguo_inicio_borrado = 1000;
+let rapidez_borrado = 1000; // Variable que almacena la velocidad del borrado del texto.
+let antiguo_rapidez_borrado = 1000;
+let rapidez_inicio_borrado = 1000; // Variable que almacena el tiempo de espera sin escribir hasta que empieza a borrar el texto.
 let asignada = false; // Variable boolena que dice si hay una palabra bonus asignada.
 let palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 let puntos_palabra = 0; // Variable que almacena los puntos obtenidos por meter palabras bonus.
@@ -39,34 +41,6 @@ let caretNode;
 
 
 document.addEventListener('keydown', function(event) {
-});
-document.addEventListener('click', function(event) {
-  texto.focus();
-  console.log(menu_modificador);
-  if(menu_modificador == false || modificadorButtons.length == 0) {
-  if (event.button === 0) {
-    if (isFullscreen) {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      }
-      isFullscreen = false;
-    } else {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        document.documentElement.webkitRequestFullscreen();
-      } else if (document.documentElement.mozRequestFullScreen) {
-        document.documentElement.mozRequestFullScreen();
-      }
-      isFullscreen = true;
-      texto.focus();
-    }
-  }
-}
 });
 
 // Función para guardar la posición del caret
@@ -253,6 +227,7 @@ function countChars(texto) {
 }
 
 
+
 //Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.
 function toNormalForm(str) {
     return str
@@ -394,3 +369,55 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         }
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
+
+       // Esperar a que el DOM esté completamente cargado
+       document.addEventListener('DOMContentLoaded', () => {
+        // Estado inicial de los atributos
+        atributos = { fuerza: 0, agilidad: 0, inteligencia: 0 };
+  
+        // Referencias a elementos del DOM
+        const container = document.getElementById('atributos-container');
+        const totalUsadosEl = document.getElementById('total-usados');
+  
+        // Función para calcular la suma total
+        function calcularTotal() {
+          return Object.values(atributos).reduce((a, b) => a + b, 0);
+        }
+  
+        // Función para actualizar la interfaz tras un cambio
+        function actualizarInterfaz() {
+          const total = calcularTotal();
+          document.querySelectorAll('.atributo').forEach(div => {
+            const key = div.dataset.atributo;
+            const valor = atributos[key];
+            div.querySelector('.contador').textContent = valor;
+            const btnMenos = div.querySelector('button[data-action="decrement"]');
+            const btnMas = div.querySelector('button[data-action="increment"]');
+            btnMenos.disabled = valor === 0;
+            btnMas.disabled = total >= LIMITE_TOTAL;
+            btnInicio.disabled = !(total === LIMITE_TOTAL);
+            const puntos = div.querySelectorAll('.punto');
+            puntos.forEach((el, idx) => el.classList.toggle('filled', idx < valor));
+          });
+          totalUsadosEl.textContent = total;
+        }
+  
+        // Delegación de eventos: manejar todos los botones desde el contenedor
+        container.addEventListener('click', e => {
+          if (e.target.tagName !== 'BUTTON') return;
+          e.preventDefault(); // Prevenir cualquier comportamiento por defecto
+          const action = e.target.dataset.action;
+          const atributoDiv = e.target.closest('.atributo');
+          const key = atributoDiv.dataset.atributo;
+  
+          if (action === 'increment' && calcularTotal() < LIMITE_TOTAL) {
+            atributos[key]++;
+          } else if (action === 'decrement' && atributos[key] > 0) {
+            atributos[key]--;
+          }
+          actualizarInterfaz();
+        });
+  
+        // Inicializar interfaz
+        actualizarInterfaz();
+      });
