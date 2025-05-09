@@ -15,7 +15,9 @@
 html,
 body {
     display:flex;
-    justify-content: center;
+    margin:0;
+    flex-direction: column; /* Para apilar elementos en columna */
+    justify-content: flex-start;
     align-items: center;
     scroll-behavior: smooth;
     color: white;

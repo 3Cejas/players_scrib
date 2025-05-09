@@ -346,6 +346,7 @@ const MODOS = {
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_prohibida", player);
         socket.on(enviar_palabra, data => {
+            console.log("ESTA FUNCIONANDOOOOOO")
             recibir_palabra_prohibida(data);
         });
     },
@@ -602,7 +603,9 @@ socket.on("count", (data) => {
         console.log("MIERDA PUTA")
         console.log(texto.innerHTML)
         console.log(temp_text_inverso_activado)
-        iniciarMenu();    
+        if(!terminado){
+        iniciarMenu();
+        }
         }
     }
 });
@@ -1151,10 +1154,12 @@ function recibir_palabra_prohibida(data) {
       });
   
       btnNo.addEventListener('click', (evento) => {
+        
         evento.stopPropagation();
         texto.innerText = texto_guardado;
         tiempo.style.color = "white";
         if (terminado == false) {
+            socket.emit('fin_de_player', player)
           final();
           setTimeout(function () {
             texto.style.height = "";
@@ -2399,6 +2404,7 @@ function modo_frase_final(e) {
     if (textLower.endsWith(frase_final)) {
       // Aquí va tu lógica de finalización
       final();
+      socket.emit("fin_de_player", player);
     }
   }
 

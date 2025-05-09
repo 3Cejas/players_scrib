@@ -122,6 +122,8 @@ function temp() {
     else{
     terminado = false;
     terminado1 = false;
+    fin_j1 = false;
+    fin_j2 = false;
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
     tiempo.style.color = "white"
@@ -244,6 +246,7 @@ function fin(player) {
         fin_j1 = false;
         fin_j2 = false;
         juego_iniciado = false;
+
     }
     socket.emit('fin_de_control', player);
 };

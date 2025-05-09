@@ -1,5 +1,7 @@
-// Importamos las variables de configuración
-import { SERVER_URL_PROD, SERVER_URL_DEV } from '../../../config.js';
+// Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
+const serverUrl = isProduction
+    ? SERVER_URL_PROD
+    : SERVER_URL_DEV;
 
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 
@@ -154,11 +156,6 @@ var player = getParameterByName("player");
         enviar_palabra = 'enviar_palabra_j2'
         nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" 
     }
-
-// Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
-const serverUrl = isProduction
-    ? SERVER_URL_PROD
-    : SERVER_URL_DEV;
     
 const socket = io(serverUrl);
 

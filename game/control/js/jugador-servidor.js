@@ -237,6 +237,20 @@ socket.on('fin_a_control', () => {
     socket.emit('fin_de_control', 2);
   });
 
+
+socket.on('fin_de_player_a_control', (player) => {
+if(player == 1){
+    fin_j1 = false;
+    final(1);
+
+}
+else if(player == 2){
+    fin_j2 = false;
+    final(2);
+}
+});
+
+
 nombre1.addEventListener("input", evt => {
     val_nombre1 = nombre1.value.toUpperCase();
     socket.emit('envío_nombre1', val_nombre1);
