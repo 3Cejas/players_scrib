@@ -1,6 +1,9 @@
 let borrado; // Variable que almacena el identificador de la función temporizada de borrado.
 let atributos;
 const LIMITE_TOTAL = 10;
+const SECS_BASE = 2;
+const maxIncremento =  3; // queremos +300% de habilidades en el mejor caso
+let secs_palabras;
 let antiguo_inicio_borrado = 1000;
 let rapidez_borrado = 1000; // Variable que almacena la velocidad del borrado del texto.
 let antiguo_rapidez_borrado = 1000;
@@ -206,7 +209,8 @@ function countChars(texto) {
 
   if (caracteres_seguidos == 3 && locura == false) {
     feedback.style.color = color_positivo;
-    feedback.innerHTML = "⏱️+6 segs.";
+    tiempo_feed = `⏱️+${secs_palabras} segs.`;
+    feedback.innerHTML = tiempo_feed;
     clearTimeout(delay_animacion);
     animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
@@ -214,12 +218,11 @@ function countChars(texto) {
         }, 2000);
     });
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
-    secs = 6;
-    socket.emit('aumentar_tiempo', {secs, player});
-    color = color_positivo;
-    tiempo_feed = "⏱️+" + "6" + " segs."
-    socket.emit(feedback_de_j_x, { color, tiempo_feed});
+    console.log("fuerza: " + secs_palabras);
+    socket.emit('aumentar_tiempo', {secs: secs_palabras, player});
+    color = color_positivo;    socket.emit(feedback_de_j_x, { color, tiempo_feed});
   }
+  console.log(rapidez_borrado, rapidez_inicio_borrado);
   borrado = setTimeout(function () {
     borrar();
 }, rapidez_inicio_borrado);
@@ -384,23 +387,57 @@ const animateCSS = (element, animation, prefix = "animate__") =>
           return Object.values(atributos).reduce((a, b) => a + b, 0);
         }
   
-        // Función para actualizar la interfaz tras un cambio
-        function actualizarInterfaz() {
-          const total = calcularTotal();
-          document.querySelectorAll('.atributo').forEach(div => {
-            const key = div.dataset.atributo;
-            const valor = atributos[key];
-            div.querySelector('.contador').textContent = valor;
-            const btnMenos = div.querySelector('button[data-action="decrement"]');
-            const btnMas = div.querySelector('button[data-action="increment"]');
-            btnMenos.disabled = valor === 0;
-            btnMas.disabled = total >= LIMITE_TOTAL;
-            btnInicio.disabled = !(total === LIMITE_TOTAL);
-            const puntos = div.querySelectorAll('.punto');
-            puntos.forEach((el, idx) => el.classList.toggle('filled', idx < valor));
-          });
-          totalUsadosEl.textContent = total;
-        }
+    // Función para actualizar toda la interfaz tras un cambio
+    function actualizarInterfaz() {
+      // 1) Calculamos total de puntos usados
+      const total = calcularTotal();
+
+      // 2) Iteramos cada atributo para sincronizar contador, botones y barras
+      document.querySelectorAll('.atributo').forEach(div => {
+        const key     = div.dataset.atributo;            // "fuerza", "agilidad", ...
+        const valor   = atributos[key];                  // valor actual
+        const btnMenos= div.querySelector('button[data-action="decrement"]');
+        const btnMas  = div.querySelector('button[data-action="increment"]');
+        const puntos  = div.querySelectorAll('.punto');
+
+        // Actualiza la UI numérica
+        div.querySelector('.contador').textContent = valor;
+
+        // Deshabilita botones según reglas
+        btnMenos.disabled = (valor === 0);
+        btnMas.disabled   = (total >= LIMITE_TOTAL);
+
+        // Opcional: habilita o deshabilita botón de inicio
+        btnInicio.disabled = (total !== LIMITE_TOTAL);
+
+        // Rellena los puntitos de la barra según valor
+        puntos.forEach((el, idx) => {
+          el.classList.toggle('filled', idx < valor);
+        });
+      });
+
+      // 3) Actualiza el número total en pantalla
+      totalUsadosEl.textContent = total;
+
+      // 4) Aplica clases de color según porcentaje usado
+      //    Calculamos ratio de uso (puede superar 1 si excede)
+      const ratio = total / LIMITE_TOTAL;
+
+      // Quitamos clases de estado previas
+      totalUsadosEl.classList.remove('estado-ok', 'estado-warn', 'estado-danger', 'estado-over');
+
+      // Asignamos la clase adecuada
+      if (ratio > 1) {
+        totalUsadosEl.classList.add('estado-over');
+      } else if (ratio > 0.8) {
+        totalUsadosEl.classList.add('estado-danger');
+      } else if (ratio > 0.5) {
+        totalUsadosEl.classList.add('estado-warn');
+      } else {
+        totalUsadosEl.classList.add('estado-ok');
+      }
+    }
+
   
         // Delegación de eventos: manejar todos los botones desde el contenedor
         container.addEventListener('click', e => {

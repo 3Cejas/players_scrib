@@ -692,6 +692,7 @@ socket.on("inicio", (data) => {
     TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
     console.log(atributos)
     ajustarRapidez(rapidez_borrado, rapidez_inicio_borrado, atributos['agilidad'])
+    ajustarFuerza(SECS_BASE, atributos['fuerza'])
     if(player == 1){
     frase_final = data.parametros.FRASE_FINAL_J1.trim().toLowerCase();
     }
@@ -1035,6 +1036,7 @@ function recibir_palabra_prohibida(data) {
                 texto.focus();
       
                 // Listener global para alternar fullscreen con click si procede
+                socket.emit("enviar_atributos", {player, atributos});
                 document.addEventListener('click', function(event) {
                   // Sólo si no estamos en un menú de modificadores
                   if (!menu_modificador && modificadorButtons.length === 0) {
@@ -1805,8 +1807,8 @@ function limpieza(){
 
     // Restablece la rápidez del borrado.
     borrado_cambiado = false;
-    rapidez_borrado = 4000;
-    rapidez_inicio_borrado = 4000;
+    rapidez_borrado = antiguo_rapidez_borrado;
+    rapidez_inicio_borrado = antiguo_inicio_borrado;
 
     caracteres_seguidos = 0;
     
@@ -1854,8 +1856,8 @@ function limpieza_final(){
 
     // Restablece la rápidez del borrado.
     borrado_cambiado = false;
-    rapidez_borrado = 4000;
-    rapidez_inicio_borrado = 4000;
+    rapidez_borrado = antiguo_rapidez_borrado;
+    rapidez_inicio_borrado = antiguo_inicio_borrado;
 
     LIMPIEZAS["psicodélico"]("");
 
@@ -2408,7 +2410,13 @@ function modo_frase_final(e) {
     }
   }
 
-const maxIncremento =  0.50; // queremos +50% de lentitud en el peor caso
+function ajustarFuerza(secs_base, fuerza) {
+    const factorLog      = Math.log(fuerza + 1) / Math.log(fuerza + 1);
+    const pctIncremento  = maxIncremento * factorLog;
+    secs_palabras = Math.round(secs_base     * (1 + pctIncremento));
+    console.log(secs_palabras);
+  }
+  
 
 function ajustarRapidez(baseRapidezBorrado, baseInicioBorrado, agilidad) {
     const factorLog      = Math.log(agilidad + 1) / Math.log(LIMITE_TOTAL + 1);
