@@ -3,6 +3,7 @@ let atributos;
 const LIMITE_TOTAL = 10;
 const SECS_BASE = 2;
 const maxIncremento =  3; // queremos +300% de habilidades en el mejor caso
+const maxIncrementoInteligencia =  0.5; // queremos +300% de habilidades en el mejor caso
 let secs_palabras;
 let antiguo_inicio_borrado = 1000;
 let rapidez_borrado = 1000; // Variable que almacena la velocidad del borrado del texto.
@@ -33,7 +34,6 @@ let isFullscreen = false;
 let menu_modificador = false;
 let focusedButtonIndex = 0;
 let modificadorButtons = [];
-let locura = false;
 
 let lastLine;
 let lastTextNode;
@@ -143,6 +143,7 @@ function borrar() {
     clearTimeout(borrado);
     borrado = setTimeout(() => {
       borrar();
+      console.log(rapidez_borrado, "rapidez_borrado")
     }, rapidez_borrado);
 
     // 9. Reposicionar caret usando la función
@@ -207,7 +208,7 @@ function countChars(texto) {
     caracteres_seguidos += 1;
   }
 
-  if (caracteres_seguidos == 3 && locura == false) {
+  if (caracteres_seguidos == 3) {
     feedback.style.color = color_positivo;
     tiempo_feed = `⏱️+${secs_palabras} segs.`;
     feedback.innerHTML = tiempo_feed;

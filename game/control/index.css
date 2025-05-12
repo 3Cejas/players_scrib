@@ -178,6 +178,22 @@ body {
     text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
 }
 
+.parametro_inicial {
+    background-color: transparent;
+    font-family: "Retro-gaming";
+    text-align: center;
+    /* Ajusta ancho para dos campos en la misma fila */
+    width: 30%;
+    border: none;
+    color: red;
+    font-size: 1.2vw;
+    text-shadow: -0.0625em -0.0625em black,
+                 0.0625em 0.0625em aqua;
+    display: inline-block;  /* para que inputs y spans queden en línea */
+    vertical-align: middle;
+    margin: 0 0.5%;
+  }
+
 .explicación {
     font-size: 23pt;
     font-family: "Retro-gaming";

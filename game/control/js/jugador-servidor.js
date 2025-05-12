@@ -49,15 +49,14 @@ let puntuacion_final2 = getEl("puntuacion_final2");
 let clasificacion = getEl("clasificacion");
 
 let limite_tiempo_inspiracion_input = document.getElementById('limite_tiempo_inspiracion');
-let tiempo_inverso_input = document.getElementById('tiempo_inverso');
-let tiempo_borrado_input = document.getElementById('tiempo_borrado');
+let tiempo_modificador_input = document.getElementById('tiempo_modificador');
 let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabras');
-let tiempo_borroso_input = document.getElementById('tiempo_borroso');
 let palabras_insertadas_meta_input = document.getElementById('palabras_insertadas_meta');
 let tiempo_votacion_input = document.getElementById('tiempo_votacion')
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
 let tiempo_modos_input = document.getElementById('tiempo_modos');
-let tiempo_locura_input = document.getElementById('tiempo_locura');
+let minInput  = document.getElementById('tiempo_minutos');
+let segInput  = document.getElementById('tiempo_segundos');
 
 let tempo_text_borroso;
 
@@ -68,15 +67,12 @@ let texto_guardado1 = "";
 let texto_guardado2 = "";
 
 let LIMITE_TIEMPO_INSPIRACION = limite_tiempo_inspiracion_input.valueAsNumber;
-let TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
-let TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
+let TIEMPO_MODIFICADOR = tiempo_modificador_input.valueAsNumber * 1000;
 let TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
-let TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
 let PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
 let TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
 let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
 let TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
-let TIEMPO_LOCURA = tiempo_locura_input.valueAsNumber;
 
 let DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
 let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
@@ -145,30 +141,24 @@ function rellenarListaModos() {
 
 function actualizarVariables() {
     LIMITE_TIEMPO_INSPIRACION = limite_tiempo_inspiracion_input.valueAsNumber;
-    TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
-    TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
+    TIEMPO_MODIFICADOR = tiempo_modificador_input.valueAsNumber * 1000;
     TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
-    TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
     PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
     TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
     TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
     TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
-    TIEMPO_LOCURA= tiempo_locura_input.valueAsNumber;
 
     DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
     DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
     TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
 
    console.log('LIMITE_TIEMPO_INSPIRACION:', LIMITE_TIEMPO_INSPIRACION);
-   console.log('TIEMPO_INVERSO:', TIEMPO_INVERSO);
-   console.log('TIEMPO_BORRADO:', TIEMPO_BORRADO);
+   console.log('TIEMPO_MODIFICADOR:', TIEMPO_MODIFICADOR);
    console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);
-   console.log('TIEMPO_BORROSO:', TIEMPO_BORROSO);
    console.log('PALABRAS_INSERTADAS_META:', PALABRAS_INSERTADAS_META);
    console.log('TIEMPO_VOTACION:', TIEMPO_VOTACION);
    console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
    console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
-   console.log('TIEMPO_LOCURA:', TIEMPO_LOCURA);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -279,13 +269,6 @@ socket.on("aumentar_tiempo_control", (data) => {
         addSeconds1(data.secs);
     }
 });
-
-socket.on("locura", () => {
-    socket.emit('enviar_comentario', "🔥 DIFICULTAD MÁXIMA 🔥");
-    DURACION_TIEMPO_MODOS = TIEMPO_LOCURA;
-    secondsPassed = 0;
-    TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1
-  });
 
 socket.on('activar_modo', (data) => {
     modo_actual = data.modo_actual;

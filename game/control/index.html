@@ -38,39 +38,14 @@
                 <td>
                     <span class='btn' onclick="descargar_textos()">💾 DESCARGAR TEXTOS</span>
                 </td>
-                <td>   <b>Tiempo</b>
-                    <div id="first-mtr-datepicker"></div>
-                    <script>
-                        var config = {
-                            target: 'first-mtr-datepicker',         // ID of HTML element
-                            timestamp: "9/17/2016, 26:00:34",    // Starting date
-                            future: false,                // Only dates in the future,
-                            smartHours: false,                // Make a smart switch from AM to PM
-                            animations: true,                 // NOTE: thew version with disabled animations is not stable
-                            disableAmPm: true,
-                            datepicker: ['seconds', 'hours', 'minutes'],
-                            hours: {
-                                min: 0,
-                                max: 59,
-                                step: 2,
-                                maxlength: 2
-                            },
-                            minutes: {
-                                min: 0,
-                                max: 59,
-                                step: 1
-                            },
-                        };
-                        var myDatepicker = new MtrDatepicker(config);
-                    </script></td>
                     <td>
                         <span onclick="frase_final(1)" class='btn'>🏁 FRASE FINAL J1</span>
                     </td>
                     <td>
-                        <span onclick="enviar_comentario()" class='btn'>💬 ENVIAR COMENTARIO</span>
+                        <span onclick="frase_final(2)" class='btn'>🏁 FRASE FINAL J2</span>
                     </td>
                     <td>
-                        <span onclick="frase_final(2)" class='btn'>🏁 FRASE FINAL J2</span>
+                        <span onclick="enviar_comentario()" class='btn'>💬 ENVIAR COMENTARIO</span>
                     </td>
             </tr>
             <tr>
@@ -97,38 +72,55 @@
     <tr>
         <td>
             <br>
-            <label for="tiempo_inverso">TIEMPO INVERSO</label>
-            <input type="number" id="tiempo_inverso" name="tiempo_inverso" class="parametro"
-                   min="1" max="360" step="1" value = 20>
+            <label for="tiempo_modificador">VENTAJA</label>
+            <input type="number" id="tiempo_modificador" name="tiempo_modificador" class="parametro"
+                   min="1" max="360" step="1" value = 60>
                    <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
-            <label for="tiempo_borrado">TIEMPO BORRADO</label>
-            <input type="number" id="tiempo_borrado" name="tiempo_borrado" class="parametro"
-                   min="1" max="360" step="1" value = 20>
-                   <span class="parametro">segundos</span>
-        </td>
-        <td>
-            <br>
-            <label for="tiempo_borroso">TIEMPO BORROSO</label>
-            <input type="number" id="tiempo_borroso" name="tiempo_borroso" class="parametro"
-                   min="1" max="360" step="1" value = 20>
-                   <span class="parametro">segundos</span>
-        </td>
-        <td>
-            <br>
-            <label for="tiempo_votacion">TIEMPO VOTACION</label>
+            <label for="tiempo_votacion">VOTACIÓN VENTAJA</label>
             <input type="number" id="tiempo_votacion" name="tiempo_votacion" class="parametro"
                    min="1" max="360" step="1" value = 30>
                    <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
-            <label for="tiempo_modos">TIEMPO MODOS</label>
+            <label for="tiempo_modos">NIVEL</label>
             <input type="number" id="tiempo_modos" name="tiempo_modos" class="parametro"
                    min="1" max="3600" step="1" value = 300>
                    <span class="parametro">segundos</span>
+        </td>
+        <td>
+            <br>
+        <label for="tiempo_minutos">INICIO</label><br>
+
+        <!-- Input de minutos -->
+        <input
+          type="number"
+          id="tiempo_minutos"
+          name="tiempo_minutos"
+          class="parametro_inicial"
+          min="0"
+          max="60"
+          step="1"
+          value="2"
+        >
+        <span class="parametro_inicial">mins.</span>
+
+        <!-- Input de segundos -->
+        <input
+          type="number"
+          id="tiempo_segundos"
+          name="tiempo_segundos"
+          class="parametro_inicial"
+          min="0"
+          max="59"
+          step="5"
+          value="0"
+        >
+        <span class="parametro_inicial">segs.</span>
+
         </td>
         <td>
             <br>
@@ -139,28 +131,21 @@
     <tr>
         <td>
             <br>
-            <label for="tiempo_locura">TIEMPO LOCURA</label>
-            <input type="number" id="tiempo_locura" name="tiempo_locura" class="parametro"
-                   min="1" max="360" step="1" value = 20>
-                   <span class="parametro">segundos</span>
-        </td>
-        <td>
-            <br>
-            <label for="tiempo_cambio_letra">TIEMPO CAMBIO LETRA</label>
+            <label for="tiempo_cambio_letra">CAMBIO LETRA</label>
             <input type="number" id="tiempo_cambio_letra" name="tiempo_cambio_letra" class="parametro"
                    min="1" max="360" step="1" value = 60>
                    <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
-            <label for="tiempo_cambio_palabras">TIEMPO CAMBIO PALABRAS</label>
+            <label for="tiempo_cambio_palabras">CAMBIO PALABRA</label>
             <input type="number" id="tiempo_cambio_palabras" name="tiempo_cambio_palabras" class="parametro"
                    min="1" max="360" step="1" value = 20>
                    <span class="parametro">segundos</span>
         </td>
         <td>
             <br>
-            <label for="limite_tiempo_inspiracion">LÍMITE TIEMPO MUSAS</label>
+            <label for="limite_tiempo_inspiracion">LÍMITE PALABRAS MUSAS</label>
             <input type="number" id="limite_tiempo_inspiracion" name="limite_tiempo_inspiracion" class="parametro"
                    min="5" max="120" step="1" value = 30>
                    <span class="parametro">segundos</span>

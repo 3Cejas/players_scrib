@@ -67,10 +67,7 @@ let listener_modo_psico;
 let activado_psico = false;
 let temp_text_inverso_activado = false;
 
-let TIEMPO_INVERSO;
-let TIEMPO_BORROSO;
-let TIEMPO_BORRADO;
-
+let TIEMPO_MODIFICADOR;
 const mainTitle = document.querySelector('.main-title');
 const buttonContainer = document.querySelector('.button-container');
 
@@ -184,7 +181,7 @@ const PUTADAS = {
             borrado_cambiado = false;
             rapidez_borrado = antiguo_rapidez_borrado;
             rapidez_inicio_borrado = antiguo_inicio_borrado;
-        }, TIEMPO_BORRADO);
+        }, TIEMPO_MODIFICADOR);
     },
 
     "🙃": function () {
@@ -247,7 +244,7 @@ const PUTADAS = {
             }
             putada_actual = "";
         sendText()  
-        }, TIEMPO_INVERSO);
+        }, TIEMPO_MODIFICADOR);
     },
 
     "🌪️": function () {
@@ -258,7 +255,7 @@ const PUTADAS = {
             temp_text_borroso_activado = true;
             texto.classList.remove("textarea_blur");
             putada_actual = "";
-        }, TIEMPO_BORROSO);
+        }, TIEMPO_MODIFICADOR);
     },
 };
 
@@ -330,7 +327,7 @@ const MODOS = {
 
     'tertulia': function (socket) {
         es_pausa = true;
-        tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
+        tiempo_restante = TIEMPO_MODIFICADOR - (new Date().getTime() - tiempo_inicial.getTime());
         pausa();
         explicación.style.color = "blue";
         explicación.innerHTML = "NIVEL TERTULIA";
@@ -687,12 +684,6 @@ function resucitar(){
 socket.on("inicio", (data) => {
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         animateCSS(".contenedor", "pulse");
-    TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
-    TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
-    TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
-    console.log(atributos)
-    ajustarRapidez(rapidez_borrado, rapidez_inicio_borrado, atributos['agilidad'])
-    ajustarFuerza(SECS_BASE, atributos['fuerza'])
     if(player == 1){
     frase_final = data.parametros.FRASE_FINAL_J1.trim().toLowerCase();
     }
@@ -702,6 +693,10 @@ socket.on("inicio", (data) => {
     console.log("FRASE FINAL", data.parametros)
     console.log("FRASE FINAL", frase_final)
     limpieza();
+    TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR + ajustarInteligencia(data.parametros.TIEMPO_MODIFICADOR, atributos['inteligencia']);
+    console.log(atributos);
+    ajustarRapidez(rapidez_borrado, rapidez_inicio_borrado, atributos['agilidad'])
+    secs_palabras = ajustarFuerza(SECS_BASE, atributos['fuerza'])
     desactivar_borrar = false;
     texto.style.height = "";
 
@@ -847,7 +842,7 @@ socket.on(enviar_palabra, data => {
 socket.on('pausar_js', data => {
     es_pausa = true;
     LIMPIEZAS[modo_actual](data);
-    tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
+    tiempo_restante = TIEMPO_MODIFICADOR - (new Date().getTime() - tiempo_inicial.getTime());
     pausa();
 });
 
@@ -867,9 +862,9 @@ socket.on('reanudar_js', data => {
 socket.on(inspirar, palabra => {
     if(palabra != ""){
     palabra_actual = [palabra];
-    definicion.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
+    definicion.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra «" +
     "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
-    "</span><span style='color: orange;'>\"</span>");
+    "</span><span style='color: orange;'>»</span>");
     animateCSS(".definicion", "flash");
     asignada = true;
     texto.removeEventListener("keyup", listener_modo1);
@@ -921,9 +916,6 @@ socket.on("nueva letra", letra => {
     }
 });
 
-socket.on("locura", () => {
-    locura = true;
-  });
 
 socket.on(elegir_ventaja, () => {
     confetti_musas();
@@ -1797,7 +1789,6 @@ function limpieza(){
     // Desactiva, por seguridad, todos los modos.
     modo_texto_borroso = 0;
     desactivar_borrar = true;
-    locura = false;
     console.log(puntos)
     
     feedback.innerHTML = "";
@@ -1850,7 +1841,6 @@ function limpieza_final(){
     // Desactiva, por seguridad, todos los modos.
     modo_texto_borroso = 0;
     desactivar_borrar = true;
-    locura = false;
 
     tiempo.style.color = "white";
 
@@ -1952,7 +1942,7 @@ function modo_inverso_pausa(){
             procesarTexto();
             putada_actual = "";
         sendText()  
-        }, TIEMPO_INVERSO);
+        }, TIEMPO_MODIFICADOR);
     }
 }
 
@@ -1966,7 +1956,7 @@ function tiempo_borrado_menos(){
         borrado_cambiado = false;
         rapidez_borrado = antiguo_rapidez_borrado;
         rapidez_inicio_borrado = antiguo_inicio_borrado;
-    }, TIEMPO_BORRADO);
+    }, TIEMPO_MODIFICADOR);
 }
 
 function enviar_putada(putada){
@@ -2410,21 +2400,129 @@ function modo_frase_final(e) {
     }
   }
 
-function ajustarFuerza(secs_base, fuerza) {
-    const factorLog      = Math.log(fuerza + 1) / Math.log(fuerza + 1);
-    const pctIncremento  = maxIncremento * factorLog;
-    secs_palabras = Math.round(secs_base     * (1 + pctIncremento));
-    console.log(secs_palabras);
+  function ajustarFuerza(secs_base, fuerza) {
+    // 1. Validación de tipos:
+    if (typeof secs_base !== 'number' || typeof fuerza !== 'number') {
+      throw new TypeError('ajustarFuerza: ambos parámetros deben ser números');
+    }
+  
+    // 2. Caso fuerza === 0: devolvemos el valor base sin alteraciones.
+    if (fuerza === 0) {
+      return Math.round(secs_base);
+    }
+  
+    // 3. Colapsamos fuerza al máximo si lo excede:
+    if (fuerza > LIMITE_TOTAL) {
+      fuerza = LIMITE_TOTAL;
+    }
+  
+    // 4. Cálculo del factor logarítmico normalizado:
+    //    Numerador: log(fuerza + 1)
+    //    Denominador: log(LIMITE_TOTAL + 1) para que el máximo sea 1
+    const factorLog = Math.log(fuerza + 1) / Math.log(LIMITE_TOTAL + 1);
+  
+    // 5. Porcentaje de incremento final:
+    //    maxIncremento * factorLog, entre 0 y maxIncremento
+    const pctIncremento = maxIncremento * factorLog;
+  
+    // 6. Cálculo del resultado y redondeo:
+    const resultado = Math.round(secs_base * (1 + pctIncremento));
+  
+    // 7. (Opcional) Depuración en consola:
+    console.log(
+      `[ajustarFuerza] secs_base=${secs_base}, fuerza=${fuerza}, ` +
+      `factorLog=${factorLog.toFixed(3)}, pctInc=${(pctIncremento*100).toFixed(1)}% → resultado=${resultado}`
+    );
+  
+    return resultado;
+  }
+
+
+  function ajustarInteligencia(secs_base, inteligencia) {
+    // 1. Validación de tipos:
+    if (typeof secs_base !== 'number' || typeof inteligencia !== 'number') {
+      throw new TypeError('ajustarInteligencia: ambos parámetros deben ser números');
+    }
+  
+    // 2. Caso inteligencia === 0: devolvemos el valor base sin alteraciones.
+    if (inteligencia === 0) {
+      return Math.round(secs_base);
+    }
+  
+    // 3. Limitar inteligencia al rango [0, LIMITE_TOTAL].
+    if (inteligencia > LIMITE_TOTAL) {
+      inteligencia = LIMITE_TOTAL;
+    }
+  
+    // 4. Cálculo del factor logarítmico normalizado:
+    //    Numerador:   log(inteligencia + 1)
+    //    Denominador: log(LIMITE_TOTAL + 1) → máximo factor = 1
+    const numerador   = Math.log(inteligencia + 1);
+    const denominador = Math.log(LIMITE_TOTAL + 1);
+    const factorLog   = numerador / denominador;
+  
+    // 5. Porcentaje de reducción final:
+    //    Entre 0 (sin cambio) y maxIncremento (reducción máxima).
+    const pctReduccion = maxIncrementoInteligencia * factorLog;
+  
+    // 6. Cálculo del nuevo valor:
+    const resultado = Math.round(secs_base * (1 - pctReduccion));
+  
+    // 7. (Opcional) Depuración en consola:
+    console.log(
+      `[ajustarInteligencia] secs_base=${secs_base}, inteligencia=${inteligencia}, ` +
+      `factorLog=${factorLog.toFixed(3)}, pctRed=${(pctReduccion*100).toFixed(1)}% → resultado=${resultado}`
+    );
+  
+    return resultado;
+  }
+
+  function ajustarRapidez(baseRapidezBorrado, baseInicioBorrado, agilidad) {
+    // 1. Validación de tipos:
+    if (typeof baseRapidezBorrado !== 'number' ||
+        typeof baseInicioBorrado  !== 'number' ||
+        typeof agilidad          !== 'number') {
+      throw new TypeError('ajustarRapidez: todos los parámetros deben ser números');
+    }
+  
+    // 2. Caso agilidad === 0: devolvemos las bases sin alteraciones.
+    if (agilidad === 0) {
+      rapidez_borrado        = baseRapidezBorrado;
+      rapidez_inicio_borrado = baseInicioBorrado;
+      console.log(
+        `[ajustarRapidez] agilidad=0 → rapidez_borrado=${rapidez_borrado}, ` +
+        `rapidez_inicio_borrado=${rapidez_inicio_borrado}`
+      );
+      return;
+    }
+  
+    // 3. Colapsar agilidad al máximo si lo excede:
+    if (agilidad > LIMITE_TOTAL) {
+      agilidad = LIMITE_TOTAL;
+    }
+  
+    // 4. Cálculo del factor logarítmico normalizado:
+    //    - Numerador:   log(agilidad + 1) crece de forma decreciente.
+    //    - Denominador: log(LIMITE_TOTAL + 1) garantiza que el máximo sea 1.
+    const factorLog = Math.log(agilidad + 1) / Math.log(LIMITE_TOTAL + 1);
+  
+    // 5. Porcentaje de incremento final:
+    //    Entre 0 (sin cambio) y maxIncremento (incremento máximo).
+    const pctIncremento = maxIncremento * factorLog;
+  
+    // 6. Aplicación del incremento y redondeo opcional:
+    rapidez_borrado        = Math.round(baseRapidezBorrado     * (1 + pctIncremento));
+    rapidez_inicio_borrado = Math.round(baseInicioBorrado      * (1 + pctIncremento));
+  
+    // 7. Depuración en consola:
+    console.log(
+      `[ajustarRapidez] baseRapidezBorrado=${baseRapidezBorrado}, baseInicioBorrado=${baseInicioBorrado}, ` +
+      `agilidad=${agilidad}, factorLog=${factorLog.toFixed(3)}, ` +
+      `pctInc=${(pctIncremento*100).toFixed(1)}% → rapidez_borrado=${rapidez_borrado}, ` +
+      `rapidez_inicio_borrado=${rapidez_inicio_borrado}`
+    );
   }
   
-
-function ajustarRapidez(baseRapidezBorrado, baseInicioBorrado, agilidad) {
-    const factorLog      = Math.log(agilidad + 1) / Math.log(LIMITE_TOTAL + 1);
-    const pctIncremento  = maxIncremento * factorLog;
-    rapidez_borrado        = baseRapidezBorrado     * (1 + pctIncremento);
-    rapidez_inicio_borrado = baseInicioBorrado      * (1 + pctIncremento);
-    console.log(rapidez_borrado, rapidez_inicio_borrado)
-  }
 
   /**
  * reduceLog:

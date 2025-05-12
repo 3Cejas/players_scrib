@@ -75,14 +75,12 @@ let intervaloSonidoRayo;
 let timer = null;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
-let TIEMPO_BORRADO;
-let TIEMPO_INVERSO;
-let TIEMPO_BORROSO;
+let TIEMPO_MODIFICADOR;
 
 let sonido;
 
 animateCSS(".cabecera", "backInLeft").then((message) => {
-    animateCSS(".contenedor", "pulse");
+    animateCSS(".contenedor_espectador", "pulse");
 });
 //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
 
@@ -106,7 +104,7 @@ const PUTADAS = {
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
                 lightning.classList.remove("lightning");
-            }, TIEMPO_BORRADO);
+            }, TIEMPO_MODIFICADOR);
         }
         else if(player == 2){
             document.body.classList.add("bg");
@@ -123,7 +121,7 @@ const PUTADAS = {
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
                 lightning.classList.remove("lightning");
-            }, TIEMPO_BORRADO);
+            }, TIEMPO_MODIFICADOR);
         }
     },
 
@@ -146,7 +144,7 @@ const PUTADAS = {
                     texto1.classList.remove("rotate-vertical-center");
                     texto1.removeEventListener('animationend', arguments.callee);
                 });
-            }, TIEMPO_INVERSO);
+            }, TIEMPO_MODIFICADOR);
         }
         else if(player == 2){
             texto2.classList.add("rotate-vertical-center");
@@ -162,7 +160,7 @@ const PUTADAS = {
                     texto2.classList.remove("rotate-vertical-center");
                     texto2.removeEventListener('animationend', arguments.callee);
                 });
-            }, TIEMPO_INVERSO);
+            }, TIEMPO_MODIFICADOR);
         }
     },
 
@@ -525,7 +523,7 @@ socket.on("count", data => {
         texto2.style.height = (texto2.scrollHeight) + "px";// Reajustamos el tamaño del área de texto del j2.
 
         animateCSS(".cabecera", "backInLeft").then((message) => {
-            animateCSS(".contenedor", "pulse");
+            animateCSS(".contenedor_espectador", "pulse");
         });
         logo.style.display = "";
         neon.style.display = "";
@@ -570,11 +568,9 @@ socket.on('inicio', data => {
     reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         inspiracion.style.display = "block";
-        animateCSS(".contenedor", "pulse");
+        animateCSS(".contenedor_espectador", "pulse");
         animateCSS(".inspiracion", "pulse");
-        TIEMPO_BORRADO = data.parametros.TIEMPO_BORRADO;
-        TIEMPO_INVERSO = data.parametros.TIEMPO_INVERSO;
-        TIEMPO_BORROSO = data.parametros.TIEMPO_BORROSO;
+        TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR;
         socket.off('vote');
         socket.off('exit');
         socket.off('scroll');
@@ -694,7 +690,7 @@ socket.on('limpiar', data => {
     tiempo.style.display = "none";
     tiempo1.style.display = "none";
     animateCSS(".cabecera", "backInLeft").then((message) => {
-        animateCSS(".contenedor", "pulse");
+        animateCSS(".contenedor_espectador", "pulse");
     });
     logo.style.display = "";
     neon.style.display = "";
@@ -745,16 +741,25 @@ socket.on('enviar_palabra_j2', data => {
     recibir_palabra(data, 2);
 });
 
+// Suscripción al evento 'inspirar_j1'
 socket.on('inspirar_j1', palabra => {
-    definicion2.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
-    "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
-    "</span><span style='color: orange;'>\"</span>");
+    /*
+      Usamos un template literal en una sola línea para evitar
+      los espacios y saltos de línea inducidos por la indentación.
+      De este modo, no quedan espacios antes o después de las comillas « ».
+    */
+    definicion2.innerHTML = `MUSA: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${palabra}</span><span style="color: orange;">»</span>`;
 });
 
+// Suscripción al evento 'inspirar_j2'
 socket.on('inspirar_j2', palabra => {
-    definicion3.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra \"" +
-    "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
-    "</span><span style='color: orange;'>\"</span>");});
+    /*
+      Replica exacta del anterior, apuntando al elemento definicion3.
+      Mantener coherencia en el formato garantiza que no aparezcan espacios 
+      no deseados alrededor de «palabra».
+    */
+    definicion3.innerHTML = `MUSA: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${palabra}</span><span style="color: orange;">»</span>`;
+});
 
 function recibir_palabra(data, escritxr) {
     const animateCSS = (element, animation, prefix = 'animate__') =>
@@ -1063,12 +1068,12 @@ function activar_sockets_extratextuales() {
 /*
     socket.on('impro', data => {
         if(data){
-            document.getElementById("contenedor").style.display = "none";
+            document.getElementById("contenedor_espectador").style.display = "none";
             tiempo.style.display = "none";
             tiempo1.style.display = "none";
         }
         else{
-            document.getElementById("contenedor").style.display = "";
+            document.getElementById("contenedor_espectador").style.display = "";
             tiempo.style.display = "";
             tiempo1.style.display = "none";
 

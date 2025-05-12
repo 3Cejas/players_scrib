@@ -132,12 +132,21 @@ function temp() {
     clearInterval(countInterval);
     clearInterval(countInterval1);
 
+    let duration;
 
-    var date = new Date(myDatepicker);
-    time_minutes = date.getHours();
-    time_seconds = date.getMinutes();
-    let duration = time_minutes * 60 + time_seconds;
-
+    // --------------------------------------------------
+// 3A. DESESTRUCTURACIÓN DE OBJETO
+// --------------------------------------------------
+// Nota: al asignar a variables ya declaradas, debemos envolver
+// la destructuración entre paréntesis para evitar que JS lo interprete
+// como un bloque de código.
+({
+    minutos: time_minutes,
+    segundos: time_seconds,
+    totalSegundos: duration
+  } = obtenerTotalSegundos());
+  
+  console.log('Objeto →', time_minutes, time_seconds, duration);
 
     tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
     tiempo1.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
@@ -151,7 +160,7 @@ function temp() {
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_BORROSO, TIEMPO_BORRADO, TIEMPO_INVERSO, LIMITE_TIEMPO_INSPIRACION, TIEMPO_LOCURA, FRASE_FINAL_J1: frase_final_j1.value.slice(1, -1), FRASE_FINAL_J2: frase_final_j2.value.slice(1, -1)} });
+    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: frase_final_j1.value.slice(1, -1), FRASE_FINAL_J2: frase_final_j2.value.slice(1, -1)} });
     juego_iniciado = true;
     modo_actual = "";
   
@@ -169,6 +178,23 @@ function temp() {
     }, 8000);
 }
 };
+
+function obtenerTotalSegundos() {
+    // Lectura y saneado de los inputs (suponemos que existen en el DOM)
+    const mRaw = parseInt(document.getElementById('tiempo_minutos').value, 10);
+    const sRaw = parseInt(document.getElementById('tiempo_segundos').value, 10);
+  
+    // Validación de rangos y normalización
+    const m = Math.min(Math.max(mRaw || 0, 0), 60);
+    const s = Math.min(Math.max(sRaw || 0, 0), 59);
+  
+    // Retornamos un objeto con los tres valores
+    return {
+      minutos: m,
+      segundos: s,
+      totalSegundos: m * 60 + s
+    };
+  }
 
 function vote() {
     socket.emit('vote', "nada");
@@ -504,55 +530,3 @@ function frase_final(player){
         frase_final_j2.value = "«" + tema.value + "»";
     }
 }
-
-    // Esperar a que el DOM esté completamente cargado
-    document.addEventListener('DOMContentLoaded', () => {
-        // Estado inicial de los atributos
-        const atributos = { fuerza: 0, agilidad: 0, inteligencia: 0 };
-        const LIMITE_TOTAL = 10;
-  
-        // Referencias a elementos del DOM
-        const container = document.getElementById('atributos-container');
-        const totalUsadosEl = document.getElementById('total-usados');
-  
-        // Función para calcular la suma total
-        function calcularTotal() {
-          return Object.values(atributos).reduce((a, b) => a + b, 0);
-        }
-  
-        // Función para actualizar la interfaz tras un cambio
-        function actualizarInterfaz() {
-          const total = calcularTotal();
-          document.querySelectorAll('.atributo').forEach(div => {
-            const key = div.dataset.atributo;
-            const valor = atributos[key];
-            div.querySelector('.contador').textContent = valor;
-            const btnMenos = div.querySelector('button[data-action="decrement"]');
-            const btnMas = div.querySelector('button[data-action="increment"]');
-            btnMenos.disabled = valor === 0;
-            btnMas.disabled = total >= LIMITE_TOTAL;
-            const puntos = div.querySelectorAll('.punto');
-            puntos.forEach((el, idx) => el.classList.toggle('filled', idx < valor));
-          });
-          totalUsadosEl.textContent = total;
-        }
-  
-        // Delegación de eventos: manejar todos los botones desde el contenedor
-        container.addEventListener('click', e => {
-          if (e.target.tagName !== 'BUTTON') return;
-          e.preventDefault(); // Prevenir cualquier comportamiento por defecto
-          const action = e.target.dataset.action;
-          const atributoDiv = e.target.closest('.atributo');
-          const key = atributoDiv.dataset.atributo;
-  
-          if (action === 'increment' && calcularTotal() < LIMITE_TOTAL) {
-            atributos[key]++;
-          } else if (action === 'decrement' && atributos[key] > 0) {
-            atributos[key]--;
-          }
-          actualizarInterfaz();
-        });
-  
-        // Inicializar interfaz
-        actualizarInterfaz();
-      });
