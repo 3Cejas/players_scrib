@@ -132,7 +132,7 @@ socket.on('dar_nombre', (nombre) => {
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
-    socket.emit('enviar_musa', player);
+    socket.emit('registrar_musa', player);
     socket.emit('pedir_nombre');
     socket.emit('pedir_texto')
 });

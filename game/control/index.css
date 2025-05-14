@@ -522,7 +522,7 @@ table {
     text-align: center;
 }
 
-@media only screen and (max-width: 650px) {
+@media only screen and (max-width: 1000px) {
     .nombre {
         margin-left: 25%;
         text-align: left;
@@ -554,4 +554,29 @@ table {
         margin-right: 0;
     }
 
-}
+    .parametro{
+        font-size: 1.8vw;
+    }
+    
+    .parametro_inicial {
+        /* Ajusta ancho para dos campos en la misma fila */
+        width: 50%;
+        font-size: 1.8vw;
+      }
+      p{
+        text-align: center;
+      }
+      .nombre {
+        /* 1) Elimina el margin-left forzado */
+        /* 2) Saca el display:flex (no aporta nada en un <input>) */
+        display: block;
+    
+        /* 3) Con un ancho (p. ej. 80%) y margin auto, queda centrado */
+        width: 80%;        /* o el % que mejor encaje */
+        margin: 0 auto;
+    
+        /* 4) Texto centrado dentro del input */
+        text-align: center;
+    
+      }
+    }

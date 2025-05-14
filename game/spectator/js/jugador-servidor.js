@@ -370,6 +370,12 @@ const LIMPIEZAS = {
 
 activar_sockets_extratextuales();
 
+socket.on('connect', () => {
+    console.log("Conectado al servidor por primera vez.");
+    socket.emit('registrar_espectador');
+});
+
+
 socket.on('actualizar_contador_musas', contador_musas => {
     console.log("actualizar_contador_musas")
     musas1.innerHTML = contador_musas.escritxr1 + " musas";
@@ -749,6 +755,7 @@ socket.on('inspirar_j1', palabra => {
       De este modo, no quedan espacios antes o después de las comillas « ».
     */
     definicion2.innerHTML = `MUSA: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${palabra}</span><span style="color: orange;">»</span>`;
+    animateCSS(".definicion1", "flash");
 });
 
 // Suscripción al evento 'inspirar_j2'
@@ -759,6 +766,7 @@ socket.on('inspirar_j2', palabra => {
       no deseados alrededor de «palabra».
     */
     definicion3.innerHTML = `MUSA: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${palabra}</span><span style="color: orange;">»</span>`;
+    animateCSS(".definicion2", "flash");
 });
 
 function recibir_palabra(data, escritxr) {
@@ -848,6 +856,7 @@ socket.on('feedback_a_j2', data => {
     });
     console.log("PARAAAAAAAAAAAAAAAAAAAAAAAAA", data.insp)
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
+        definicion2.innerHTML = "";
         reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
         if(modo_actual != "palabras prohibidas"){
         increment('blue');
@@ -902,6 +911,7 @@ socket.on('feedback_a_j1', data => {
         }, 2000);
     });
     if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
+        definicion3.innerHTML = "";
         if(modo_actual != "palabras prohibidas"){
         reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
         increment('red');
@@ -961,6 +971,9 @@ socket.on("enviar_ventaja_j2", putada => {
 });
 
 socket.on("nueva letra", letra => {
+    definicion2.innerHTML = "";
+    definicion3.innerHTML = "";
+
     if(modo_actual == "letra prohibida"){
         animacion_modo();
         palabra1.innerHTML = "LETRA PROHIBIDA: " + letra;
@@ -1011,7 +1024,7 @@ function reproducirSonido(rutaArchivo, loop = false) {
 function iniciarAnimacionesSegunCondicion(condicion) {
   if (condicion === "azul") {
     // Inicia animación para musas azules
-    Temasinterval = startDotAnimation(temas,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+    v = startDotAnimation(temas,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
   } else if (condicion === "rojo") {
     // Inicia animación para musas rojas
     Temasinterval = startDotAnimation(temas,   'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');

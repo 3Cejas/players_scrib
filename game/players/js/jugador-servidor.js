@@ -451,7 +451,8 @@ texto.addEventListener("press", (evt) => {
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
-    socket.emit('enviar_musa', 0);
+    socket.emit('registrar_escritor', player);
+
 });
 
 //activar los sockets extratextuales.
