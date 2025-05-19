@@ -269,6 +269,7 @@ const MODOS = {
         explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
         socket.emit("nueva_palabra", player);
         socket.on(enviar_palabra, data => {
+          console.log(data)
             recibir_palabra(data);
         });
     },
