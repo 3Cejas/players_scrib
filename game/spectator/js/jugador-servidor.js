@@ -76,6 +76,8 @@ let timer = null;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
 let TIEMPO_MODIFICADOR;
+let frase_final_j1;
+let frase_final_j2;
 
 let sonido;
 
@@ -293,7 +295,14 @@ const MODOS = {
         //activar_socket_feedback();
         explicación.style.color = "orange";
         explicación.innerHTML = "NIVEL FRASE FINAL";
-        palabra1.innerHTML = "";
+        palabra2.style.backgroundColor= "orange";
+        palabra2.innerHTML = "«" + frase_final_j1 + "»";
+        definicion2.innerHTML = "⬆️ ¡Esta es la última! ⬆️";
+        definicion3.innerHTML = "⬆️ ¡Esta es la última! ⬆️";
+        palabra3.style.backgroundColor= "orange";
+        palabra3.innerHTML = "«"+ frase_final_j2 + "»";
+        definicion2.style.maxWidth = "100%";
+        definicion3.style.maxWidth = "100%";
 
     },
 
@@ -363,7 +372,14 @@ const LIMPIEZAS = {
     "frase final": function (data) {
         if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
             sonido_modo.pause();
-        }    },
+        }
+        definicion1.innerHTML = "";
+        definicion2.innerHTML = "";
+        definicion3.innerHTML = "";
+        palabra1.innerHTML = "";
+        palabra2.innerHTML = "";
+        palabra3.innerHTML = "";   
+    },
 
     "": function (data) { },
 };
@@ -586,6 +602,17 @@ socket.on('inicio', data => {
         socket.off('recibir_postgame2');
             logo.style.display = "none";
             neon.style.display = "none";
+
+    // Comprobamos que data.parametros existe y que cada campo es string
+if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
+    // Sólo si existe y es string hacemos .trim()
+    frase_final_j1 = data.parametros.FRASE_FINAL_J1.trim();
+  }
+  
+  if (data.parametros && typeof data.parametros.FRASE_FINAL_J2 === 'string') {
+    frase_final_j2 = data.parametros.FRASE_FINAL_J2.trim();
+  }
+
 
     tiempo.innerHTML = "";
     tiempo1.innerHTML = "";

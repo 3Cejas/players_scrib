@@ -686,11 +686,15 @@ function resucitar(){
 socket.on("inicio", (data) => {
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         animateCSS(".contenedor", "pulse");
-    if(player == 1){
-    frase_final = data.parametros.FRASE_FINAL_J1.trim().toLowerCase();
-    }
-    else{
-        frase_final = data.parametros.FRASE_FINAL_J2;
+    // Comprueba que data.parametros existe y que el campo solicitado no es null/undefined
+    if (player == 1) {
+      if (data.parametros?.FRASE_FINAL_J1) {
+        frase_final = data.parametros.FRASE_FINAL_J1.trim().toLowerCase();
+      }
+    } else if(player == 2) {
+      if (data.parametros?.FRASE_FINAL_J2) {
+        frase_final = data.parametros.FRASE_FINAL_J2.trim().toLowerCase();
+      }
     }
     console.log("FRASE FINAL", data.parametros)
     console.log("FRASE FINAL", frase_final)

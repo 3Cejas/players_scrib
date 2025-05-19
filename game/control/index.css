@@ -566,6 +566,11 @@ table {
       p{
         text-align: center;
       }
+      
+      .frase_final{
+        align-content: center;
+
+    }
       .nombre {
         /* 1) Elimina el margin-left forzado */
         /* 2) Saca el display:flex (no aporta nada en un <input>) */
