@@ -90,6 +90,14 @@ var player = getParameterByName("player");
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {
+    console.log("MODO_ACTUAL", modo_actual)
+    texto1.style.color = "white";
+    if(modo_actual === "palabras prohibidas"){
+        cambiar_jugadores(true);
+    }
+    else{
+    cambiar_jugadores(false);
+    }
     modo_actual = data.modo_actual;
     if(sincro == 1 || votando == true){
 
@@ -105,22 +113,24 @@ socket.on('modo_actual', (data) => {
         letra_prohibida = data.letra_prohibida;
         pedir_inspiracion({modo_actual, letra_prohibida})
     }
-    if(modo_actual == "palabras bonus"){
-        pedir_inspiracion({modo_actual})
+
+    if (
+        modo_actual === "palabras bonus" ||
+        modo_actual === "tertulia" ||
+        modo_actual === "palabras prohibidas" ||
+        modo_actual === "frase final"
+    ) {
+        pedir_inspiracion({ modo_actual });
     }
 
-    if(modo_actual == "tertulia"){
-        pedir_inspiracion({modo_actual})
-    }
+    if(modo_actual === "palabras prohibidas"){
+        socket.emit("pedir_texto", { musa: 2 });
 
-    if(modo_actual == "palabras prohibidas"){
-        pedir_inspiracion({modo_actual})
     }
+    else{
+        socket.emit("pedir_texto");
 
-    if(modo_actual == "frase final"){
-        pedir_inspiracion({modo_actual})
-    }
-
+    } 
     sincro = 0;
     }
 });
@@ -134,7 +144,7 @@ socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     socket.emit('registrar_musa', player);
     socket.emit('pedir_nombre');
-    socket.emit('pedir_texto')
+    socket.emit('pedir_texto');
 });
 
 // Variables de los modos.
@@ -144,8 +154,8 @@ let listener_modo;
 let jugador_psico;
 
 // Recibe los datos del jugador 1 y los coloca.
-socket.on(texto_x, data => {
-    if(data.text != null) texto1.innerHTML = data.text;
+function handler_recibir_texto_x(data) {
+if(data.text != null) texto1.innerHTML = data.text;
     if(data.points != null) puntos1.innerHTML = data.points;
     if(mostrar_texto.value == 1){
         //texto1.style.height = ""; // resetear la altura
@@ -170,7 +180,9 @@ socket.on(texto_x, data => {
     texto1.scrollTop = texto1.scrollHeight;
     //window.scrollTo(0, document.body.scrollHeight);
     //focalizador1.scrollIntoView(false);
-});
+}
+
+socket.on(texto_x, handler_recibir_texto_x);
 
 /* 
 Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
@@ -308,6 +320,7 @@ socket.on('limpiar', () => {
     texto2.style.height = (texto2.scrollHeight) + "px";
     */
     notificacion.style.display = "none";
+
 });
 
 // Recibe el nombre del jugador y lo coloca en su sitio.
@@ -316,6 +329,10 @@ socket.on(nombre, data => {
 });
 
 socket.on(elegir_ventaja, () => {
+    console.log("MODO ACTUAL", modo_actual);
+    console.log("REVERTIR", false);
+    cambiar_jugadores(false);
+    texto1.style.color = "white";
     votando_ = true;
     confetti_musas();
     tarea.innerHTML = "<p>¡" + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '🌪️' onclick='elegir_ventaja_publico(this)'>🌪️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button><br><br><p style='font-size: 3.5vw;'>⚡ El videojuego borrará más rápido el texto del contrincante.<br><br>🙃 El texto se volverá un espejo para el contrincante.<br><br>🌪️ Una pesada bruma caerá sobre el texto del contrincante.</p>"
@@ -363,18 +380,27 @@ function pedir_inspiracion(juego){
     if(terminado == false && votando == false){
     if(juego.modo_actual == "palabras bonus"){
         tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que me inspire:"
+        socket.emit("pedir_texto")
     }
     if(juego.modo_actual == "letra bendita") {
         letra = juego.letra_bendita;
         tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que lleve la letra " + "<span style='color: green;'>" + letra.toUpperCase(); + "</span> :";
+        socket.emit("pedir_texto")
+
     }
     if(juego.modo_actual == "letra prohibida") {
         letra = juego.letra_prohibida;
-        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que no lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
+        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que NO lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
+        socket.emit("pedir_texto")
+
     }
 
     if(juego.modo_actual == "palabras prohibidas"){
+        console.log("REVERTIR", true);
+        cambiar_jugadores(true);
+        texto1.style.color = "red";
         tarea.innerHTML = "<span style='color: pink;'>Incordia</span> a mi oponente, <span style='color: orange;'>Musa</span>, con una palabra que no pueda usar:";
+                socket.emit("pedir_texto", { musa: 2 });
     } 
 
     if(juego.modo_actual == "tertulia") {
@@ -382,6 +408,8 @@ function pedir_inspiracion(juego){
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
         tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, mira a " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" + nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
+        socket.emit("pedir_texto")
+    
     }
 
     if(juego.modo_actual == "frase final") {
@@ -389,8 +417,9 @@ function pedir_inspiracion(juego){
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
         tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. 🤍";
+        socket.emit("pedir_texto")
     }
-     
+
     notificacion.style.display = "block";
     animateCSS(".notificacion", "flash");
     fin_pag.scrollIntoView({behavior: "smooth", block: "end"});
@@ -656,6 +685,7 @@ function limpiezas(){
     clearTimeout(sub_timer);
     clearTimeout(preparados_timer);
     limpiar_colddown()
+    cambiar_jugadores(false);
     skill.style.display = "none";
     skill.style.border = "0.5vw solid greenyellow";
     skill_cancel.style.display = "none";
@@ -676,6 +706,7 @@ function limpiezas(){
 function limpiezas_final(){
     clearInterval(interval_cooldown);
     limpiar_colddown()
+    cambiar_jugadores(false);
     skill.style.display = "none";
     skill_cancel.style.display = "none";
     tiempo.style.color = "white";
@@ -789,7 +820,7 @@ const activateSkill = (event) => {
 }
 
 function cancelar(boton){
-    socket.emit('pedir_texto' + player )
+    socket.emit('pedir_texto')
     texto1.style.height = "";
     editando = false;
     mostrarTextoCompleto(mostrar_texto);
@@ -861,3 +892,57 @@ function stopConfetti() {
       }
     }());
     }
+
+function cambiar_jugadores(revertir) {
+
+    const p = Number(player); // jugador local: 1 o 2
+
+    // Función de mapeo clara y reversible
+    const mapJugador = (j) => revertir ? (3 - j) : j;
+
+    const jugadorTexto = mapJugador(p);
+    const jugadorEstilo = mapJugador(p);
+    console.log("Revertir:", revertir);
+    console.log("OFF", texto_x);
+
+    // 1) Quitar listener anterior
+    socket.off(texto_x, handler_recibir_texto_x);
+
+    // 2) Nuevo canal de texto
+    texto_x = `texto${jugadorTexto}`;
+
+    console.log("ON", texto_x);
+
+    // 3) Volver a suscribir
+    socket.on(texto_x, handler_recibir_texto_x);
+
+    // 4) Aplicar estilos según el jugador resultante
+    if (jugadorEstilo === 1) {
+        nombre1.style =
+            "color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
+        metadatos.style =
+            "color:red; text-shadow: 0.0625em 0.0625em aqua;";
+
+    } else {
+
+        nombre1.style =
+            "color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
+        metadatos.style =
+            "color:red; text-shadow: 0.0625em 0.0625em aqua;";
+
+                    nombre1.style =
+            "color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
+        metadatos.style =
+            "color:aqua; text-shadow: 0.0625em 0.0625em red;";
+    }
+
+    texto1.style.color = "white";
+
+    console.log(
+        "texto_x final =", texto_x,
+        "| jugadorTexto =", jugadorTexto,
+        "| jugadorEstilo =", jugadorEstilo
+    );
+}
+
+
