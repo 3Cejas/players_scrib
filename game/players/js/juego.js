@@ -94,7 +94,7 @@ function borrar() {
     socket.emit('aumentar_tiempo', {secs, player});
     color = color_negativo;
     tiempo_feed = "⏱️-" + "1" + " segs."
-    socket.emit(feedback_de_j_x, { color, tiempo_feed});
+    socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar"});
     caracteres_seguidos = 0;
     // 3. Obtener última línea y último nodo de texto
     lastLine = texto.lastChild;
@@ -221,7 +221,7 @@ function countChars(texto) {
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
     console.log("fuerza: " + secs_palabras);
     socket.emit('aumentar_tiempo', {secs: secs_palabras, player});
-    color = color_positivo;    socket.emit(feedback_de_j_x, { color, tiempo_feed});
+    color = color_positivo;    socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "ganar_tiempo"});
   }
   console.log(rapidez_borrado, rapidez_inicio_borrado);
   borrado = setTimeout(function () {

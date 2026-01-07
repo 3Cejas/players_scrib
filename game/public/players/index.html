@@ -43,24 +43,73 @@
                             <p id="tiempo" class="tiempo"></p>
                         </tr>
                     </table>
-                    <table id="metadatos" class="right">
-                        <tr>
-                            <th>🖋️</th>
-                            <th></th>
-                        </tr>
-                        <tr>
-                            <th id="puntos" class="puntos">0 palabras</th>
-                            <tr>
-                                <th><button id="mostrar_texto" class="btn mostrarTexto" value=0 onclick="mostrarTextoCompleto(this)">👀 TEXTO COMPLETO</button></th>
-                                    <!-- Contenedor de la pantalla superpuesta -->
-                                    <div id="overlay">
-                                        <p>¡MUSA, AGITA TU BANDERA!</p>
-                                        <button id="btn_volver" class="btn bandera" onclick="desactivarPantalla(this)">⬅️ VOLVER</button>
-                                    </div>
-                                <th><button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">🏳️‍🌈 BANDERA</button></th>
-                            </tr>
-                        </tr>
-                    </table>
+                    <div id="metadatos" class="right metadatos-grid">
+                        <div class="meta-item meta-top-left">
+                            <span class="meta-icon">🖋️</span>
+                            <span id="puntos" class="puntos">0 palabras</span>
+                        </div>
+                        <div id="nombre_musa_label" class="musa-nombre meta-item meta-top-right">MUSA: --</div>
+                        <div class="meta-item meta-bottom-left">
+                            <button id="mostrar_texto" class="btn mostrarTexto" value=0 onclick="mostrarTextoCompleto(this)">👀 TEXTO COMPLETO</button>
+                            <!-- Contenedor de la pantalla superpuesta -->
+                            <div id="overlay">
+                                <p>¡MUSA, AGITA TU BANDERA!</p>
+                                <button id="btn_volver" class="btn bandera" onclick="desactivarPantalla(this)">⬅️ VOLVER</button>
+                            </div>
+                        </div>
+                        <div class="meta-item meta-bottom-right">
+                            <button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">🏳️‍🌈 BANDERA</button>
+                        </div>
+                    </div>
+                    <section class="niveles">
+                        <button class="niveles-flecha niveles-prev" type="button" aria-label="Ver niveles anteriores">&larr;</button>
+                        <div class="niveles-scroll">
+                            <div class="niveles-linea" role="list" aria-label="Niveles de la partida">
+                            <div class="nivel-item nivel-verde" data-modo="letra bendita" role="listitem">
+                                <div class="nivel-icono" aria-hidden="true">🙏</div>
+                                <div class="nivel-texto">
+                                    <span>LETRA</span>
+                                    <span>BENDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-rojo" data-modo="letra prohibida" role="listitem">
+                                <div class="nivel-icono" aria-hidden="true">😈</div>
+                                <div class="nivel-texto">
+                                    <span>LETRA</span>
+                                    <span>MALDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-azul" data-modo="tertulia" role="listitem">
+                                <div class="nivel-icono" aria-hidden="true">💬</div>
+                                <div class="nivel-texto">
+                                    <span>TERTULIA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-amarillo" data-modo="palabras bonus" role="listitem">
+                                <div class="nivel-icono" aria-hidden="true">📖</div>
+                                <div class="nivel-texto">
+                                    <span>PALABRA</span>
+                                    <span>BENDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-rosa" data-modo="palabras prohibidas" role="listitem">
+                                <div class="nivel-icono" aria-hidden="true">⚔️</div>
+                                <div class="nivel-texto">
+                                    <span>PALABRA</span>
+                                    <span>MALDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-naranja" data-modo="frase final" role="listitem">
+                                <div class="nivel-icono" aria-hidden="true">🏁</div>
+                                <div class="nivel-texto">
+                                    <span>FRASE</span>
+                                    <span>FINAL</span>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                        <button class="niveles-flecha niveles-next" type="button" aria-label="Ver niveles siguientes">&rarr;</button>
+                    </section>
                     <br>
                     <table id="notificacion" class="notificacion">
                         <tr>

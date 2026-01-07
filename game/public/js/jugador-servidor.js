@@ -7,6 +7,47 @@ const socket = io(serverUrl);
 
 escritxr1 = document.getElementById("escritxr1");
 escritxr2 = document.getElementById("escritxr2");
+const nombre_musa_input = document.getElementById("nombre_musa");
+const mensaje_musa = document.getElementById("mensaje_musa");
+const MAX_NOMBRE_MUSA = 10;
+const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
+const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
+
+function normalizarNombreMusa(valor) {
+  if (typeof valor !== "string") return "";
+  const limpio = valor.trim().slice(0, MAX_NOMBRE_MUSA);
+  if (!limpio) return "";
+  if (!REGEX_NOMBRE_MUSA.test(limpio)) return "";
+  if (!REGEX_LETRA_MUSA.test(limpio)) return "";
+  return limpio.toUpperCase();
+}
+
+function mostrarAvisoMusa(texto) {
+  if (!mensaje_musa) return;
+  mensaje_musa.textContent = texto;
+  mensaje_musa.classList.add("activa");
+}
+
+function limpiarAvisoMusa() {
+  if (!mensaje_musa) return;
+  mensaje_musa.textContent = "";
+  mensaje_musa.classList.remove("activa");
+}
+
+function entrarComoMusa(playerId) {
+  if (!nombre_musa_input) return;
+  const nombre = normalizarNombreMusa(nombre_musa_input.value);
+  if (!nombre) {
+    mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
+    nombre_musa_input.focus();
+    return;
+  }
+  limpiarAvisoMusa();
+  const destino = `./players/index.html?player=${playerId}&name=${encodeURIComponent(nombre)}`;
+  window.location.href = destino;
+}
+
+window.entrarComoMusa = entrarComoMusa;
 
 socket.on('nombre1', (nombre) => {
     if(nombre == "") nombre = "ESCRITXR 1";
@@ -20,6 +61,20 @@ socket.on('nombre2', (nombre) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("error") === "nombre_musa") {
+    mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
+  }
+  if (nombre_musa_input) {
+    nombre_musa_input.addEventListener("input", () => {
+      if (normalizarNombreMusa(nombre_musa_input.value)) {
+        limpiarAvisoMusa();
+      }
+    });
+  }
+  if (nombre_musa_input) {
+    nombre_musa_input.focus();
+  }
   // Pedimos los atributos al servidor
   socket.emit('pedir_atributos');
 

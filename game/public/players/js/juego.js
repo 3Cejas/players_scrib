@@ -62,8 +62,11 @@ function enviarPalabra(button) {
   if(palabra.value != '' && palabra.value != null){
     if((modo_actual == "letra prohibida" && !toNormalForm(palabra.value.toLowerCase()).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(palabra.value.toLowerCase()).includes(letra)) || modo_actual == "palabras bonus" || modo_actual == "palabras prohibidas" ||  letra == 'ñ' && palabra.value.toLowerCase().includes('ñ') || letra == 'n' && modo_actual == "letra prohibida" && palabra.value.toLowerCase().includes('ñ') && !palabra.value.toLowerCase().includes(letra)){
       startProgress(button);
-      inspiracion = palabra.value.trim();
-      socket.emit('enviar_inspiracion', inspiracion);
+      inspiracion = palabra.value.trim().split(/\s+/)[0];
+      socket.emit('enviar_inspiracion', {
+        palabra: inspiracion,
+        nombre: window.nombre_musa || ""
+      });
       palabra.value = "";
       recordatorio.innerHTML = "<span style='color: green;'>Has mandado una inspiración.</span>";
       animateCSS(".recordatorio", "flash").then(() => {
@@ -233,4 +236,3 @@ function startProgress(button) {
     }
   }, intervalo); // Usa el intervalo calculado para el temporizador
 }
-

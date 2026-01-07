@@ -161,13 +161,150 @@ function actualizarVariables() {
    console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+let heatmapInicializado = false;
 
-    generarCasillas()
-    // Inicializa las variables con los valores por defecto
-    actualizarVariables();
+function inicializarHeatmap() {
+    if (heatmapInicializado) return;
+    const contenedorJ1 = document.getElementById("heatmap-j1");
+    const contenedorJ2 = document.getElementById("heatmap-j2");
+    if (!contenedorJ1 || !contenedorJ2) return;
+    crearHeatmap("heatmap-j1", 1);
+    crearHeatmap("heatmap-j2", 2);
+    heatmapInicializado = true;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        generarCasillas();
+    } catch (error) {
+        console.warn("Error al generar las casillas de modos.", error);
+    }
+    try {
+        // Inicializa las variables con los valores por defecto
+        actualizarVariables();
+    } catch (error) {
+        console.warn("Error al inicializar variables del panel.", error);
+    }
+    inicializarHeatmap();
 });
+
+window.addEventListener('load', inicializarHeatmap);
 let modo_actual = "";
+
+const HEATMAP_LAYOUT = [
+    [
+        { code: "Backquote", label: "º\nª" },
+        { code: "Digit1", label: "1\n!" },
+        { code: "Digit2", label: "2\n\"" },
+        { code: "Digit3", label: "3\n·" },
+        { code: "Digit4", label: "4\n$" },
+        { code: "Digit5", label: "5\n%" },
+        { code: "Digit6", label: "6\n&" },
+        { code: "Digit7", label: "7\n/" },
+        { code: "Digit8", label: "8\n(" },
+        { code: "Digit9", label: "9\n)" },
+        { code: "Digit0", label: "0\n=" },
+        { code: "Minus", label: "¿\n?" },
+        { code: "Equal", label: "¡\n!" },
+        { code: "Backspace", label: "⌫", ancho: 2.4 }
+    ],
+    [
+        { code: "Tab", label: "Tab", ancho: 1.6 },
+        { code: "KeyQ", label: "Q" }, { code: "KeyW", label: "W" }, { code: "KeyE", label: "E" }, { code: "KeyR", label: "R" },
+        { code: "KeyT", label: "T" }, { code: "KeyY", label: "Y" }, { code: "KeyU", label: "U" }, { code: "KeyI", label: "I" },
+        { code: "KeyO", label: "O" }, { code: "KeyP", label: "P" },
+        { code: "BracketLeft", label: "´\n+" }, { code: "BracketRight", label: "`\n^" },
+        { code: "Backslash", label: "\\", ancho: 1.6 }
+    ],
+    [
+        { code: "CapsLock", label: "Caps", ancho: 1.9 },
+        { code: "KeyA", label: "A" }, { code: "KeyS", label: "S" }, { code: "KeyD", label: "D" }, { code: "KeyF", label: "F" },
+        { code: "KeyG", label: "G" }, { code: "KeyH", label: "H" }, { code: "KeyJ", label: "J" }, { code: "KeyK", label: "K" },
+        { code: "KeyL", label: "L" }, { code: "Semicolon", label: "Ñ" },
+        { code: "Quote", label: "¨\n´" },
+        { code: "Enter", label: "Enter", ancho: 2.5 }
+    ],
+    [
+        { code: "ShiftLeft", label: "Shift", ancho: 2.6 },
+        { code: "IntlBackslash", label: "<\n>" },
+        { code: "KeyZ", label: "Z" }, { code: "KeyX", label: "X" }, { code: "KeyC", label: "C" }, { code: "KeyV", label: "V" },
+        { code: "KeyB", label: "B" }, { code: "KeyN", label: "N" }, { code: "KeyM", label: "M" },
+        { code: "Comma", label: ",\n;" }, { code: "Period", label: ".\n:" }, { code: "Slash", label: "¿\n?" },
+        { code: "ShiftRight", label: "Shift", ancho: 3 }
+    ],
+    [
+        { code: "ControlLeft", label: "Ctrl", ancho: 1.5 },
+        { code: "MetaLeft", label: "Win", ancho: 1.5 },
+        { code: "AltLeft", label: "Alt", ancho: 1.5 },
+        { code: "Space", label: "Espacio", ancho: 6.4 },
+        { code: "AltRight", label: "Alt", ancho: 1.5 },
+        { code: "MetaRight", label: "Win", ancho: 1.5 },
+        { code: "ContextMenu", label: "Menu", ancho: 1.5 },
+        { code: "ControlRight", label: "Ctrl", ancho: 1.5 }
+    ],
+    
+];
+
+const heatmapConteos = {
+    1: new Map(),
+    2: new Map()
+};
+const heatmapKeys = {
+    1: new Map(),
+    2: new Map()
+};
+
+function resetearHeatmap() {
+    [1, 2].forEach(jugadorId => {
+        heatmapConteos[jugadorId].clear();
+        heatmapKeys[jugadorId].forEach(teclaEl => {
+            teclaEl.style.backgroundColor = "#222";
+            teclaEl.title = "";
+        });
+    });
+}
+
+function crearHeatmap(contenedorId, jugadorId) {
+    const contenedor = document.getElementById(contenedorId);
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+
+    HEATMAP_LAYOUT.forEach(fila => {
+        const filaEl = document.createElement("div");
+        filaEl.className = "heatmap-row";
+        fila.forEach(tecla => {
+            const teclaEl = document.createElement("div");
+            if (tecla.spacer) {
+                teclaEl.className = "heatmap-spacer";
+            } else {
+                teclaEl.className = "heatmap-key";
+                teclaEl.dataset.code = tecla.code;
+                teclaEl.textContent = tecla.label || tecla.code;
+                heatmapKeys[jugadorId].set(tecla.code, teclaEl);
+            }
+            const ancho = tecla.ancho || 1;
+            teclaEl.style.setProperty("--heatmap-span", ancho);
+            filaEl.appendChild(teclaEl);
+        });
+        contenedor.appendChild(filaEl);
+    });
+}
+
+function actualizarHeatmap(jugadorId, code, key) {
+    if (!heatmapConteos[jugadorId]) return;
+    const conteo = (heatmapConteos[jugadorId].get(code) || 0) + 1;
+    heatmapConteos[jugadorId].set(code, conteo);
+
+    const teclaEl = heatmapKeys[jugadorId].get(code);
+    if (!teclaEl) return;
+
+    let max = 0;
+    heatmapConteos[jugadorId].forEach(v => { if (v > max) max = v; });
+    const intensidad = max > 0 ? conteo / max : 0;
+    const color = `hsl(${40 - 40 * intensidad}, 90%, ${30 + 40 * intensidad}%)`;
+    teclaEl.style.backgroundColor = color;
+    teclaEl.title = `${key || code} (${conteo})`;
+}
 
 
 let val_nombre1 = nombre1.value.toUpperCase();
@@ -199,11 +336,16 @@ socket.on('texto2', data => {
 });
 
 socket.on('temp_modos', data => {
-    tiempo_modos_secs.textContent = data.secondsPassed + " segundos";
+    tiempo_modos_secs.textContent = data.segundos_transcurridos + " segundos";
     display_modo.textContent = data.modo_actual.toUpperCase();
     display_modo.style.color = COLORES_MODOS[data.modo_actual];
     console.log(data.secondsPassed, "secondsPassed", data.modo_actual);
     console.log(COLORES_MODOS[data.modo_actual])
+});
+
+socket.on('tecla_jugador_control', data => {
+    if (!data || !data.player || !data.code) return;
+    actualizarHeatmap(data.player, data.code, data.key);
 });
 
 

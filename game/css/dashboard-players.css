@@ -362,7 +362,7 @@ button:hover {
       hyphens:auto;
       white-space: pre-wrap;
       overflow-wrap: break-word;
-      overflow-y: hidden;
+      overflow-y: auto;
       text-align: left;
       font-family: "VT323";
       position: relative;
@@ -376,15 +376,22 @@ button:hover {
       width: 100%;
       border: none;
       resize: none;
-      overflow: hidden;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      scroll-behavior: auto;
       outline: 0px !important;
       -webkit-appearance: none;
       box-shadow: none !important;
       color: white;
-      height: auto; /* Updated this from a fixed height */
-      min-height: /*simultatin 1 row*/ calc(1.5em * 1);
-      max-height: /*simultatin 1 row*/ calc(1.5em * 3);
+      height: /*simultatin 6 rows*/ calc(1.5em * 6);
+      min-height: /*simultatin 6 rows*/ calc(1.5em * 6);
+      max-height: /*simultatin 6 rows*/ calc(1.5em * 6);
       }
+
+.textarea1::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
 
 /* Estilo para el contenedor que tendrá el gradiente */
 .textarea-container {
@@ -470,6 +477,32 @@ select {
     border: 1px solid #dddddd;
     outline: none;
     letter-spacing: 3px;
+}
+
+.musa-alerta {
+    display: inline-block;
+    margin-top: 1rem;
+    min-height: 2.2em;
+    padding: 0.5em 1em;
+    border: 0.2vw solid #f7d07e;
+    border-radius: 0.6vw;
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.2), rgba(0, 0, 0, 0.75));
+    color: #f7d07e;
+    font-family: "Retro-gaming";
+    font-size: clamp(0.9rem, 2.4vw, 1.3rem);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: 0 0 0.6rem rgba(255, 140, 0, 0.35), inset 0 0 0.4rem rgba(255, 200, 120, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.musa-alerta.activa {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .neon {

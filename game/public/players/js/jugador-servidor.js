@@ -42,6 +42,13 @@ let preparados_timer = null;
 let sub_timer = null;
 let listener_cuenta_atras = null;
 let LIMITE_TIEMPO_INSPIRACION = 30;
+const VENTAJAS_PUTADAS = [
+    { emoji: "🐢", descripcion: "🐢 El teclado del contrincante irá más lento." },
+    { emoji: "⚡", descripcion: "⚡ El videojuego borrará más rápido el texto del contrincante." },
+    { emoji: "🙃", descripcion: "🙃 El texto se volverá un espejo para el contrincante." },
+    { emoji: "🌪️", descripcion: "🌪️ Una pesada bruma caerá sobre el texto del contrincante." },
+    { emoji: "🖊️", descripcion: "🖊️ El contrincante no podrá borrar su texto." }
+];
 
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
@@ -55,7 +62,46 @@ function getParameterByName(name, url) {
 
 let jugador1 = document.querySelector('.jugador1');
 let jugador2 = document.querySelector('.jugador2');
+let nombre_musa_label = getEl("nombre_musa_label");
 
+function formatearPuntos(valor) {
+    if (valor == null) return "0 palabras";
+    if (typeof valor === "number") return `${valor} palabras`;
+    const texto = String(valor).trim();
+    if (/^\d+$/.test(texto)) return `${texto} palabras`;
+    if (/^\d+palabras$/i.test(texto)) {
+        return texto.replace(/^(\d+)(palabras)$/i, "$1 $2");
+    }
+    return texto;
+}
+
+const MAX_NOMBRE_MUSA = 10;
+const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
+const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
+
+function normalizarNombreMusa(valor) {
+    if (typeof valor !== "string") return "";
+    const limpio = valor.trim().slice(0, MAX_NOMBRE_MUSA);
+    if (!limpio) return "";
+    if (!REGEX_NOMBRE_MUSA.test(limpio)) return "";
+    if (!REGEX_LETRA_MUSA.test(limpio)) return "";
+    return limpio.toUpperCase();
+}
+
+const nombre_musa = normalizarNombreMusa(
+    getParameterByName("name") ||
+    getParameterByName("nombre") ||
+    getParameterByName("musa")
+);
+
+if (!nombre_musa) {
+    window.location.href = "../index.html?error=nombre_musa";
+}
+
+window.nombre_musa = nombre_musa;
+if (nombre_musa_label && nombre_musa) {
+    nombre_musa_label.textContent = nombre_musa;
+}
 
 var player = getParameterByName("player");
 
@@ -90,15 +136,19 @@ var player = getParameterByName("player");
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {
-    console.log("MODO_ACTUAL", modo_actual)
+    const siguiente_modo = data.modo_actual;
+    console.log("MODO_ACTUAL", siguiente_modo)
     texto1.style.color = "white";
-    if(modo_actual === "palabras prohibidas"){
+    setNivelesDesactivados(false);
+    if (siguiente_modo === "palabras prohibidas") {
         cambiar_jugadores(true);
+
+    } else {
+        cambiar_jugadores(false);
     }
-    else{
-    cambiar_jugadores(false);
-    }
-    modo_actual = data.modo_actual;
+    modo_actual = siguiente_modo;
+    niveles_bloqueados = false;
+    actualizarNiveles(modo_actual);
     if(sincro == 1 || votando == true){
 
     }
@@ -123,40 +173,263 @@ socket.on('modo_actual', (data) => {
         pedir_inspiracion({ modo_actual });
     }
 
-    if(modo_actual === "palabras prohibidas"){
-        socket.emit("pedir_texto", { musa: 2 });
-
-    }
-    else{
-        socket.emit("pedir_texto");
-
-    } 
     sincro = 0;
     }
 });
 
 socket.on('dar_nombre', (nombre) => {
     if(nombre == "") nombre = "ESCRITXR";
-    nombre1.innerHTML = nombre;
+    console.log("NOMBRE", nombre)
+    nombre1.value = nombre;
 });
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
-    socket.emit('registrar_musa', player);
+    if (!nombre_musa) return;
+    socket.emit('registrar_musa', { musa: player, nombre: nombre_musa });
     socket.emit('pedir_nombre');
-    socket.emit('pedir_texto');
 });
 
 // Variables de los modos.
 let modo_actual = "";
+let niveles_bloqueados = true;
 let tempo_text_borroso;
 let listener_modo;
 let jugador_psico;
+const NIVELES_ORDEN = [
+    "letra bendita",
+    "letra prohibida",
+    "tertulia",
+    "palabras bonus",
+    "palabras prohibidas",
+    "frase final"
+];
+const nivelesLinea = document.querySelector(".niveles-linea");
+const nivelesItems = Array.from(document.querySelectorAll(".nivel-item"));
+const nivelesScroll = document.querySelector(".niveles-scroll");
+const nivelesPrev = document.querySelector(".niveles-prev");
+const nivelesNext = document.querySelector(".niveles-next");
+const nivelesContenedor = document.querySelector(".niveles");
+
+function setNivelesDesactivados(estado) {
+    if (!nivelesContenedor) return;
+    nivelesContenedor.classList.toggle("niveles-desactivados", Boolean(estado));
+}
+
+function obtenerIndiceNivelActivo() {
+    return nivelesItems.findIndex((item) => item.classList.contains("nivel-activo"));
+}
+
+function obtenerCentroItem(item) {
+    if (!item || !nivelesLinea) return 0;
+    const icono = item.querySelector(".nivel-icono");
+    const rectLinea = nivelesLinea.getBoundingClientRect();
+    if (icono) {
+        const rectIcono = icono.getBoundingClientRect();
+        return rectIcono.left - rectLinea.left + rectIcono.width / 2;
+    }
+    const rectItem = item.getBoundingClientRect();
+    return rectItem.left - rectLinea.left + rectItem.width / 2;
+}
+
+function obtenerMaxScrollPermitido() {
+    if (!nivelesScroll) return 0;
+    return Math.max(0, nivelesScroll.scrollWidth - nivelesScroll.clientWidth);
+}
+
+function limitarScrollNiveles() {
+    if (!nivelesScroll) return;
+    const maxScroll = obtenerMaxScrollPermitido();
+    if (nivelesScroll.scrollLeft > maxScroll) {
+        nivelesScroll.scrollLeft = maxScroll;
+    } else if (nivelesScroll.scrollLeft < 0) {
+        nivelesScroll.scrollLeft = 0;
+    }
+}
+
+function asegurarNivelActualVisible() {
+    if (!nivelesScroll || !nivelesItems.length) return;
+    const indice = obtenerIndiceNivelActivo();
+    if (indice < 0) return;
+    const item = nivelesItems[indice];
+    const rectScroll = nivelesScroll.getBoundingClientRect();
+    const rectItem = item.getBoundingClientRect();
+    const margen = 8;
+    let nuevoScroll = nivelesScroll.scrollLeft;
+    if (rectItem.right > rectScroll.right - margen) {
+        nuevoScroll += rectItem.right - rectScroll.right + margen;
+    } else if (rectItem.left < rectScroll.left + margen) {
+        nuevoScroll -= rectScroll.left - rectItem.left + margen;
+    }
+    const maxScroll = obtenerMaxScrollPermitido();
+    nuevoScroll = Math.min(Math.max(0, nuevoScroll), maxScroll);
+    if (Math.abs(nuevoScroll - nivelesScroll.scrollLeft) > 1) {
+        nivelesScroll.scrollLeft = nuevoScroll;
+    }
+}
+
+function resetearScrollNiveles() {
+    if (!nivelesScroll) return;
+    nivelesScroll.scrollTo({ left: 0, behavior: "auto" });
+    if (nivelesPrev) {
+        nivelesPrev.classList.remove("niveles-flecha--visible");
+    }
+    if (nivelesNext) {
+        nivelesNext.classList.remove("niveles-flecha--visible");
+    }
+    limitarScrollNiveles();
+    requestAnimationFrame(actualizarFlechasNiveles);
+    setTimeout(() => {
+        nivelesScroll.scrollLeft = 0;
+        actualizarFlechasNiveles();
+    }, 50);
+    setTimeout(() => {
+        nivelesScroll.scrollLeft = 0;
+        actualizarFlechasNiveles();
+    }, 200);
+}
+
+function recalcularLineaNiveles() {
+    if (!nivelesLinea || !nivelesItems.length) return;
+    const primero = nivelesItems[0];
+    const ultimo = nivelesItems[nivelesItems.length - 1];
+    const inicio = obtenerCentroItem(primero);
+    const fin = obtenerCentroItem(ultimo);
+    const longitud = Math.max(0, fin - inicio);
+    nivelesLinea.style.setProperty("--linea-inicio", `${inicio}px`);
+    nivelesLinea.style.setProperty("--linea-longitud", `${longitud}px`);
+
+    const icono = primero.querySelector(".nivel-icono");
+    if (icono) {
+        const rectLinea = nivelesLinea.getBoundingClientRect();
+        const rectIcono = icono.getBoundingClientRect();
+        const lineaTop = rectIcono.top - rectLinea.top + rectIcono.height / 2;
+        nivelesLinea.style.setProperty("--linea-top", `${lineaTop}px`);
+        if (nivelesContenedor) {
+            const rectCont = nivelesContenedor.getBoundingClientRect();
+            const topGlobal = (rectLinea.top - rectCont.top) + lineaTop;
+            nivelesContenedor.style.setProperty("--linea-top-global", `${topGlobal}px`);
+        }
+    }
+}
+
+function actualizarColorEquipo() {
+    if (!nivelesContenedor) return;
+    const colorEquipo = (nombre1 && nombre1.style && nombre1.style.color)
+        ? nombre1.style.color
+        : (nombre1 ? getComputedStyle(nombre1).color : "");
+    nivelesContenedor.style.setProperty("--equipo-color", colorEquipo || "#00f5ff");
+}
+
+function actualizarFlechasNiveles() {
+    if (!nivelesScroll || !nivelesPrev || !nivelesNext) return;
+    limitarScrollNiveles();
+    const maxScrollTotal = nivelesScroll.scrollWidth - nivelesScroll.clientWidth;
+    const maxScroll = Math.min(maxScrollTotal, obtenerMaxScrollPermitido());
+    const hayOverflow = maxScrollTotal > 4;
+    const scrollActual = Math.max(0, Math.round(nivelesScroll.scrollLeft));
+    const margen = 8;
+    const limiteDerecho = Math.max(0, Math.round(maxScroll) - margen);
+    const puedeIzquierda = hayOverflow && scrollActual > margen;
+    const puedeDerecha = hayOverflow && scrollActual < limiteDerecho;
+    nivelesPrev.classList.toggle("niveles-flecha--visible", puedeIzquierda);
+    nivelesNext.classList.toggle("niveles-flecha--visible", puedeDerecha);
+    if (!hayOverflow) {
+        nivelesPrev.classList.remove("niveles-flecha--visible");
+        nivelesNext.classList.remove("niveles-flecha--visible");
+    }
+    nivelesPrev.classList.remove("niveles-flecha--disabled");
+    nivelesNext.classList.remove("niveles-flecha--disabled");
+}
+
+function desplazarNiveles(direccion) {
+    if (!nivelesScroll) return;
+    const delta = nivelesScroll.clientWidth * 0.6;
+    const maxScroll = obtenerMaxScrollPermitido();
+    const nuevoScroll = Math.min(Math.max(0, nivelesScroll.scrollLeft + direccion * delta), maxScroll);
+    nivelesScroll.scrollTo({ left: nuevoScroll, behavior: "smooth" });
+    requestAnimationFrame(actualizarFlechasNiveles);
+    setTimeout(actualizarFlechasNiveles, 220);
+}
+
+if (nivelesPrev && nivelesNext) {
+    nivelesPrev.addEventListener("click", () => desplazarNiveles(-1));
+    nivelesNext.addEventListener("click", () => desplazarNiveles(1));
+}
+
+if (nivelesScroll) {
+    nivelesScroll.addEventListener("scroll", () => {
+        limitarScrollNiveles();
+        actualizarFlechasNiveles();
+    });
+}
+
+window.addEventListener("resize", () => {
+    actualizarFlechasNiveles();
+    recalcularLineaNiveles();
+});
+window.addEventListener("load", () => {
+    resetearScrollNiveles();
+    setTimeout(actualizarFlechasNiveles, 120);
+    setTimeout(actualizarFlechasNiveles, 320);
+});
+window.addEventListener("pageshow", () => {
+    resetearScrollNiveles();
+    setTimeout(actualizarFlechasNiveles, 120);
+});
+requestAnimationFrame(() => {
+    setNivelesDesactivados(terminado || !modo_actual || niveles_bloqueados);
+    resetearScrollNiveles();
+    actualizarColorEquipo();
+    recalcularLineaNiveles();
+});
+
+function actualizarNiveles(modo) {
+    if (!nivelesItems.length) return;
+    const indice = NIVELES_ORDEN.indexOf(modo);
+    if (niveles_bloqueados && indice < 0) {
+        nivelesItems.forEach((item) => {
+            item.classList.remove("nivel-activo", "nivel-pasado");
+            item.classList.add("nivel-futuro");
+            item.setAttribute("aria-current", "false");
+        });
+        actualizarFlechasNiveles();
+        actualizarColorEquipo();
+        recalcularLineaNiveles();
+        return;
+    }
+    if (indice >= 0) {
+        niveles_bloqueados = false;
+    }
+    nivelesItems.forEach((item, idx) => {
+        item.classList.toggle("nivel-pasado", indice >= 0 && idx < indice);
+        item.classList.toggle("nivel-activo", idx === indice);
+        item.classList.toggle("nivel-futuro", indice < 0 || idx > indice);
+        item.setAttribute("aria-current", idx === indice ? "step" : "false");
+    });
+    if (nivelesLinea) {
+        const progreso = indice < 0 || nivelesItems.length <= 1
+            ? 0
+            : (indice / (nivelesItems.length - 1)) * 100;
+        nivelesLinea.style.setProperty("--progreso", `${progreso}%`);
+        const inicio = obtenerCentroItem(nivelesItems[0]);
+        const centroActivo = indice >= 0 ? obtenerCentroItem(nivelesItems[indice]) : inicio;
+        const progresoPx = indice < 0 ? 0 : Math.max(0, centroActivo - inicio);
+        nivelesLinea.style.setProperty("--progreso-px", `${progresoPx}px`);
+    }
+    asegurarNivelActualVisible();
+    limitarScrollNiveles();
+    actualizarFlechasNiveles();
+    actualizarColorEquipo();
+    recalcularLineaNiveles();
+    requestAnimationFrame(actualizarFlechasNiveles);
+    setTimeout(actualizarFlechasNiveles, 60);
+}
 
 // Recibe los datos del jugador 1 y los coloca.
 function handler_recibir_texto_x(data) {
 if(data.text != null) texto1.innerHTML = data.text;
-    if(data.points != null) puntos1.innerHTML = data.points;
+    if(data.points != null) puntos1.innerHTML = formatearPuntos(data.points);
     if(mostrar_texto.value == 1){
         //texto1.style.height = ""; // resetear la altura
         texto1.style.height = "auto";
@@ -232,6 +505,9 @@ socket.on("count", data => {
 socket.on('inicio', data => {
     LIMITE_TIEMPO_INSPIRACION = data.parametros.LIMITE_TIEMPO_INSPIRACION;
     terminado = false;
+    niveles_bloqueados = true;
+    setNivelesDesactivados(false);
+    actualizarNiveles("");
     tiempo.innerHTML = "";
     tiempo.style.display = "";
     tiempo.style.color = "white"
@@ -308,7 +584,11 @@ socket.on('limpiar', () => {
 
     limpiezas();
 
+    modo_actual = "";
     terminado = true;
+    niveles_bloqueados = true;
+    setNivelesDesactivados(true);
+    actualizarNiveles("");
     tiempo.style.display = "none";
     tiempo.style.color = "white"
     //nombre1.value = "ESCRITXR 1";
@@ -320,6 +600,7 @@ socket.on('limpiar', () => {
     texto2.style.height = (texto2.scrollHeight) + "px";
     */
     notificacion.style.display = "none";
+    resetearScrollNiveles();
 
 });
 
@@ -335,7 +616,21 @@ socket.on(elegir_ventaja, () => {
     texto1.style.color = "white";
     votando_ = true;
     confetti_musas();
-    tarea.innerHTML = "<p>¡" + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " está realmente inspirado!<br>Elige una ventaja:</p><button class='btn' value = '⚡' onclick='elegir_ventaja_publico(this)'>⚡</button><button class='btn' value = '🌪️' onclick='elegir_ventaja_publico(this)'>🌪️</button><button class='btn' value = '🙃' onclick='elegir_ventaja_publico(this)'>🙃</button><br><br><p style='font-size: 3.5vw;'>⚡ El videojuego borrará más rápido el texto del contrincante.<br><br>🙃 El texto se volverá un espejo para el contrincante.<br><br>🌪️ Una pesada bruma caerá sobre el texto del contrincante.</p>"
+    const opciones = [...VENTAJAS_PUTADAS].sort(() => Math.random() - 0.5).slice(0, 3);
+    const botones = opciones
+        .map(op => `<button class='btn' value='${op.emoji}' onclick='elegir_ventaja_publico(this)'>${op.emoji}</button>`)
+        .join("");
+    const explicaciones = opciones
+        .map(op => op.descripcion)
+        .join("<br><br>");
+    tarea.innerHTML =
+        "<p>¡" +
+        "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +
+        nombre1.value +
+        "</span>" +
+        " está realmente inspirado!<br>Elige una ventaja:</p>" +
+        botones +
+        "<br><br><p style='font-size: 3.5vw;'>" + explicaciones + "</p>";
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
@@ -356,12 +651,14 @@ socket.on("elegir_repentizado", ({seleccionados, TIEMPO_VOTACION}) => {
 });
 
 socket.on("pedir_inspiracion_musa", juego => {
+    const es_prohibidas = juego.modo_actual === "palabras prohibidas";
+    cambiar_jugadores(es_prohibidas);
+    texto1.style.color = es_prohibidas ? "red" : "white";
+    actualizarNiveles(juego.modo_actual);
     if(sincro == 1 || votando == true){
-
+        return;
     }
-    else{
     pedir_inspiracion(juego);
-    }
 });
 
 function convertirASegundos(tiempo) {
@@ -377,38 +674,32 @@ function pedir_inspiracion(juego){
     campo_palabra.style.display = "";
     modo_actual = juego.modo_actual;
     recordatorio.innerHTML = "";
+    const etiquetaMusa = "<span style='color: orange;'>" + nombre_musa + "</span>";
     if(terminado == false && votando == false){
     if(juego.modo_actual == "palabras bonus"){
-        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que me inspire:"
-        socket.emit("pedir_texto")
+        tarea.innerHTML = "Cántame a mí, " + etiquetaMusa + ", una palabra que me inspire:"
     }
     if(juego.modo_actual == "letra bendita") {
         letra = juego.letra_bendita;
-        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que lleve la letra " + "<span style='color: green;'>" + letra.toUpperCase(); + "</span> :";
-        socket.emit("pedir_texto")
-
+        tarea.innerHTML = "Cántame a mí, " + etiquetaMusa + ", una palabra que lleve la letra " + "<span style='color: green;'>" + letra.toUpperCase(); + "</span> :";
     }
     if(juego.modo_actual == "letra prohibida") {
         letra = juego.letra_prohibida;
-        tarea.innerHTML = "Cántame a mí, <span style='color: orange;'>Musa</span>, una palabra que NO lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
-        socket.emit("pedir_texto")
-
+        tarea.innerHTML = "Cántame a mí, " + etiquetaMusa + ", una palabra que <span style='color: red;'>NO</span> lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
     }
 
     if(juego.modo_actual == "palabras prohibidas"){
         console.log("REVERTIR", true);
         cambiar_jugadores(true);
         texto1.style.color = "red";
-        tarea.innerHTML = "<span style='color: pink;'>Incordia</span> a mi oponente, <span style='color: orange;'>Musa</span>, con una palabra que no pueda usar:";
-                socket.emit("pedir_texto", { musa: 2 });
+        tarea.innerHTML = "<span style='color: pink;'>Incordia</span> a mi oponente, " + etiquetaMusa + ", con una palabra que no pueda usar:";
     } 
 
     if(juego.modo_actual == "tertulia") {
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
-        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, mira a " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" + nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
-        socket.emit("pedir_texto")
+        tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", mira a " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" + nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
     
     }
 
@@ -416,10 +707,10 @@ function pedir_inspiracion(juego){
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
-        tarea.innerHTML = "<br><br><br><span style='color: orange;'>Musa</span>, " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. 🤍";
-        socket.emit("pedir_texto")
+        tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. 🤍";
     }
 
+    socket.emit("pedir_texto", { musa: player });
     notificacion.style.display = "block";
     animateCSS(".notificacion", "flash");
     fin_pag.scrollIntoView({behavior: "smooth", block: "end"});
@@ -701,6 +992,9 @@ function limpiezas(){
     mostrar_texto.backgroundColor = "red";
 
     mostrar_texto.value = 0;
+    setNivelesDesactivados(false);
+    niveles_bloqueados = true;
+    actualizarNiveles("");
 }
 
 function limpiezas_final(){
@@ -712,6 +1006,10 @@ function limpiezas_final(){
     tiempo.style.color = "white";
     votando = false;
     terminado = true;
+    setNivelesDesactivados(true);
+    niveles_bloqueados = true;
+    actualizarNiveles("");
+    resetearScrollNiveles();
 }
 // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
 texto1.addEventListener("keyup", (evt) => {
@@ -936,7 +1234,9 @@ function cambiar_jugadores(revertir) {
             "color:aqua; text-shadow: 0.0625em 0.0625em red;";
     }
 
-    texto1.style.color = "white";
+    socket.emit('pedir_nombre', {musa : jugadorTexto});
+
+    actualizarColorEquipo();
 
     console.log(
         "texto_x final =", texto_x,
@@ -944,5 +1244,3 @@ function cambiar_jugadores(revertir) {
         "| jugadorEstilo =", jugadorEstilo
     );
 }
-
-

@@ -257,6 +257,9 @@ function limpiar() {
     if (feedback2 !== null) {
         feedback2.innerHTML = "";
     }
+    if (typeof resetearHeatmap === "function") {
+        resetearHeatmap();
+    }
 };
 
 function fin(player) {

@@ -158,6 +158,113 @@ body {
     overflow-y: scroll;
 }
 
+.heatmap-container {
+    --heatmap-key: clamp(1.6rem, 2.1vw, 2.2rem);
+    --heatmap-gap: clamp(0.18rem, 0.35vw, 0.4rem);
+    display: flex;
+    justify-content: center;
+    gap: clamp(0.8rem, 1.6vw, 1.8rem);
+    margin: 2vw auto;
+    width: 90%;
+    flex-wrap: wrap;
+    padding: 0 1vw;
+    box-sizing: border-box;
+}
+
+.heatmap-panel {
+    background: transparent;
+    border: none;
+    padding: 0;
+    width: 100%;
+    max-width: 48rem;
+    flex: 1 1 36rem;
+    overflow: visible;
+}
+
+.heatmap-title {
+    font-family: "Retro-gaming";
+    color: #f7d07e;
+    margin-bottom: 1vw;
+    text-align: center;
+}
+
+.heatmap-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--heatmap-gap);
+    align-items: center;
+}
+
+.heatmap-row {
+    display: flex;
+    gap: var(--heatmap-gap);
+    justify-content: center;
+}
+
+.heatmap-spacer {
+    height: var(--heatmap-key);
+    width: calc((var(--heatmap-key) * var(--heatmap-span, 1)) + (var(--heatmap-gap) * (var(--heatmap-span, 1) - 1)));
+}
+
+.heatmap-key {
+    align-items: center;
+    background: #222;
+    border: 0.1vw solid #555;
+    color: #f7d07e;
+    display: flex;
+    font-family: "Retro-gaming";
+    font-size: clamp(0.55rem, 0.8vw, 0.85rem);
+    height: var(--heatmap-key);
+    justify-content: center;
+    width: calc((var(--heatmap-key) * var(--heatmap-span, 1)) + (var(--heatmap-gap) * (var(--heatmap-span, 1) - 1)));
+    white-space: pre-line;
+    line-height: 1.05;
+    user-select: none;
+}
+
+@media (max-width: 1200px) {
+    .heatmap-container {
+        width: 96%;
+        gap: clamp(0.8rem, 2vw, 1.6rem);
+    }
+    .heatmap-panel {
+        width: 48%;
+    }
+}
+
+@media (max-width: 900px) {
+    .heatmap-container {
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 1.5rem;
+        width: 95%;
+    }
+    .heatmap-panel {
+        flex: 0 1 auto;
+        max-width: none;
+    }
+    .heatmap-panel {
+        width: 100%;
+        padding: 2.5vw;
+    }
+    .heatmap-container {
+        --heatmap-key: clamp(1.4rem, 3.2vw, 2.1rem);
+        --heatmap-gap: clamp(0.2rem, 0.6vw, 0.45rem);
+    }
+}
+
+@media (max-width: 600px) {
+    .heatmap-container {
+        --heatmap-key: clamp(1.2rem, 4.4vw, 1.9rem);
+        --heatmap-gap: clamp(0.2rem, 0.8vw, 0.4rem);
+    }
+    .heatmap-title {
+        font-size: clamp(1rem, 4vw, 1.4rem);
+        margin-bottom: 3vw;
+        text-align: center;
+    }
+}
+
 .sub {
     font-size: 10;
 }

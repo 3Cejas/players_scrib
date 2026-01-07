@@ -6,6 +6,12 @@ const serverUrl = isProduction
 const socket = io(serverUrl);
 
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
+const escapeHtml = (valor) => String(valor)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 // COMPONENTES DEL JUGADOR 1
 let nombre1 = getEl("nombre");
@@ -28,6 +34,12 @@ let explicación1 = getEl("explicación1");
 let palabra3 = getEl("palabra2");
 let definicion3 = getEl("definicion2");
 let explicación2 = getEl("explicación2");
+let ultimo_texto1 = "";
+let ultimo_texto2 = "";
+let ultimo_paquete_texto1 = null;
+let ultimo_paquete_texto2 = null;
+let pendiente_texto1 = false;
+let pendiente_texto2 = false;
 
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
@@ -176,7 +188,7 @@ const PUTADAS = {
             audio_borroso.pause();
             temp_text_borroso_activado1 = true;
             texto1.classList.remove("textarea_blur");
-        }, TIEMPO_BORROSO);
+        }, TIEMPO_MODIFICADOR);
         }
         else if(player == 2){
             modo_texto_borroso2 = true;
@@ -186,8 +198,12 @@ const PUTADAS = {
             audio_borroso.pause();
             temp_text_borroso_activado2 = true;
             texto2.classList.remove("textarea_blur");
-        }, TIEMPO_BORROSO);
+        }, TIEMPO_MODIFICADOR);
         }
+    },
+    "🐢": function (player) {
+    },
+    "🖊️": function (player) {
     },
 };
 
@@ -401,15 +417,53 @@ socket.on('actualizar_contador_musas', contador_musas => {
 
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
-    texto1.innerHTML = data.text;
-    puntos1.innerHTML = data.points;
-    console.log("CAMBIADDOO")
-    cambiar_color_puntuación()
-    //establecerPosicionCaret(data.caretPos);
-    if (activado_psico1) {
-        stylize();
-    }
-    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
+    ultimo_paquete_texto1 = data;
+    if (pendiente_texto1) return;
+    pendiente_texto1 = true;
+    requestAnimationFrame(() => {
+        pendiente_texto1 = false;
+        const paquete = ultimo_paquete_texto1;
+        if (!paquete) return;
+        if (typeof paquete.text === "string" && paquete.text !== ultimo_texto1) {
+            texto1.innerHTML = paquete.text;
+            ultimo_texto1 = paquete.text;
+        }
+        puntos1.innerHTML = paquete.points;
+        console.log("CAMBIADDOO")
+        cambiar_color_puntuación()
+        const caretLine = Number.isInteger(paquete.caretLine) ? paquete.caretLine : null;
+        const caretRatio = typeof paquete.caretRatio === "number" ? paquete.caretRatio : null;
+        const caretPos = typeof paquete.caretPos === "number"
+            ? paquete.caretPos
+            : (paquete.caretPos && typeof paquete.caretPos.caretPos === "number" ? paquete.caretPos.caretPos : null);
+        const caretPath = Array.isArray(paquete.caretPath) ? paquete.caretPath : null;
+        const caretOffset = Number.isInteger(paquete.caretOffset) ? paquete.caretOffset : null;
+        if (caretPos !== null) {
+            if (posicionarScrollPorCaretPosPreciso(texto1, caretPos)) {
+                return;
+            }
+        }
+        if (caretPath && caretOffset !== null) {
+            if (posicionarScrollPorCaretPath(texto1, caretPath, caretOffset)) {
+                return;
+            }
+        }
+        if (caretPos !== null) {
+            const maxPos = obtenerTextoPlanoConSaltos(texto1).length;
+            if (maxPos > 0 && caretPos >= maxPos - 1) {
+                texto1.scrollTop = texto1.scrollHeight;
+                return;
+            }
+            posicionarScrollPorCaretPos(texto1, Math.max(0, Math.min(caretPos, maxPos)));
+        } else if (caretLine !== null) {
+            posicionarScrollPorLinea(texto1, caretLine);
+        } else if (caretRatio !== null) {
+            posicionarScrollPorRatio(texto1, caretRatio);
+        }
+        if (activado_psico1) {
+            stylize();
+        }
+        /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
             texto1.innerText = "\n" + texto1.innerText;
@@ -421,20 +475,62 @@ socket.on('texto1', data => {
             texto2.innerText = "\n" + texto2.innerText;
         }
     }*/
-    texto1.style.height = (texto1.scrollHeight) + "px";
-    texto1.scrollTop = texto1.scrollHeight;
-    //window.scrollTo(0, document.body.scrollHeight);
-    //focalizador1.scrollIntoView(false);
+        texto1.style.height = "";
+        if (caretPos === null) {
+            texto1.scrollTop = texto1.scrollHeight;
+        }
+        //window.scrollTo(0, document.body.scrollHeight);
+        //focalizador1.scrollIntoView(false);
+    });
 });
 
 socket.on('texto2', data => {
-    texto2.innerHTML = data.text;
-    puntos2.innerHTML = data.points;
-    cambiar_color_puntuación()
-    if (activado_psico2) {
-        stylize();
-    }
-    /*if (texto2.scrollHeight >= texto1.scrollHeight) {
+    ultimo_paquete_texto2 = data;
+    if (pendiente_texto2) return;
+    pendiente_texto2 = true;
+    requestAnimationFrame(() => {
+        pendiente_texto2 = false;
+        const paquete = ultimo_paquete_texto2;
+        if (!paquete) return;
+        if (typeof paquete.text === "string" && paquete.text !== ultimo_texto2) {
+            texto2.innerHTML = paquete.text;
+            ultimo_texto2 = paquete.text;
+        }
+        puntos2.innerHTML = paquete.points;
+        cambiar_color_puntuación()
+        const caretLine = Number.isInteger(paquete.caretLine) ? paquete.caretLine : null;
+        const caretRatio = typeof paquete.caretRatio === "number" ? paquete.caretRatio : null;
+        const caretPos = typeof paquete.caretPos === "number"
+            ? paquete.caretPos
+            : (paquete.caretPos && typeof paquete.caretPos.caretPos === "number" ? paquete.caretPos.caretPos : null);
+        const caretPath = Array.isArray(paquete.caretPath) ? paquete.caretPath : null;
+        const caretOffset = Number.isInteger(paquete.caretOffset) ? paquete.caretOffset : null;
+        if (caretPos !== null) {
+            if (posicionarScrollPorCaretPosPreciso(texto2, caretPos)) {
+                return;
+            }
+        }
+        if (caretPath && caretOffset !== null) {
+            if (posicionarScrollPorCaretPath(texto2, caretPath, caretOffset)) {
+                return;
+            }
+        }
+        if (caretPos !== null) {
+            const maxPos = obtenerTextoPlanoConSaltos(texto2).length;
+            if (maxPos > 0 && caretPos >= maxPos - 1) {
+                texto2.scrollTop = texto2.scrollHeight;
+                return;
+            }
+            posicionarScrollPorCaretPos(texto2, Math.max(0, Math.min(caretPos, maxPos)));
+        } else if (caretLine !== null) {
+            posicionarScrollPorLinea(texto2, caretLine);
+        } else if (caretRatio !== null) {
+            posicionarScrollPorRatio(texto2, caretRatio);
+        }
+        if (activado_psico2) {
+            stylize();
+        }
+        /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
             saltos_línea_alineacion_1 += 1;
             texto1.innerText = "\n" + texto1.innerText
@@ -447,10 +543,13 @@ socket.on('texto2', data => {
             texto2.innerText = "\n" + texto2.innerText
         }
     }*/
-    texto2.style.height = (texto2.scrollHeight) + "px";
-    texto2.scrollTop = texto2.scrollHeight;
-    //window.scrollTo(0, document.body.scrollHeight);
-    //focalizador2.scrollIntoView(false);
+        texto2.style.height = "";
+        if (caretPos === null) {
+            texto2.scrollTop = texto2.scrollHeight;
+        }
+        //window.scrollTo(0, document.body.scrollHeight);
+        //focalizador2.scrollIntoView(false);
+    });
 });
 
 activar_sockets_extratextuales()
@@ -775,24 +874,32 @@ socket.on('enviar_palabra_j2', data => {
 });
 
 // Suscripción al evento 'inspirar_j1'
-socket.on('inspirar_j1', palabra => {
+socket.on('inspirar_j1', data => {
+    const palabra = typeof data === "string" ? data : data?.palabra;
+    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
+    if (!palabra) return;
     /*
       Usamos un template literal en una sola línea para evitar
       los espacios y saltos de línea inducidos por la indentación.
       De este modo, no quedan espacios antes o después de las comillas « ».
     */
-    definicion2.innerHTML = `MUSA: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${palabra}</span><span style="color: orange;">»</span>`;
+    const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
+    definicion2.innerHTML = `<span style="color: orange;">${musaLabel}</span>: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: orange;">»</span>`;
     animateCSS(".definicion1", "flash");
 });
 
 // Suscripción al evento 'inspirar_j2'
-socket.on('inspirar_j2', palabra => {
+socket.on('inspirar_j2', data => {
+    const palabra = typeof data === "string" ? data : data?.palabra;
+    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
+    if (!palabra) return;
     /*
       Replica exacta del anterior, apuntando al elemento definicion3.
       Mantener coherencia en el formato garantiza que no aparezcan espacios 
       no deseados alrededor de «palabra».
     */
-    definicion3.innerHTML = `MUSA: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${palabra}</span><span style="color: orange;">»</span>`;
+    const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
+    definicion3.innerHTML = `<span style="color: orange;">${musaLabel}</span>: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: orange;">»</span>`;
     animateCSS(".definicion2", "flash");
 });
 
@@ -819,7 +926,15 @@ function recibir_palabra(data, escritxr) {
             signo = (modo_actual == "palabras prohibidas") ? "-" : "+";
         
             palabra2.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)";
-            definicion2.innerHTML = data.palabra_bonus[1];
+            if (data.origen_musa === "musa") {
+                const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
+                definicion2.innerHTML = `<span style="color:lime;">${musaLabel}</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>`;
+            } else if (data.origen_musa === "musa_enemiga") {
+                const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
+                definicion2.innerHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>me pega esta palabra ⬆️</span>`;
+            } else {
+                definicion2.innerHTML = data.palabra_bonus[1];
+            }
         
             animateCSS(".explicación1", "bounceInLeft");
             animateCSS(".palabra1", "bounceInLeft");
@@ -829,7 +944,15 @@ function recibir_palabra(data, escritxr) {
     else{
         signo = (modo_actual == "palabras prohibidas") ? "-" : "+";
         palabra3.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)"
-        definicion3.innerHTML = data.palabra_bonus[1];
+        if (data.origen_musa === "musa") {
+            const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
+            definicion3.innerHTML = `<span style="color:lime;">${musaLabel}</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>`;
+        } else if (data.origen_musa === "musa_enemiga") {
+            const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
+            definicion3.innerHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>me pega esta palabra ⬆️</span>`;
+        } else {
+            definicion3.innerHTML = data.palabra_bonus[1];
+        }
            
         animateCSS(".explicación2", "bounceInLeft");
         animateCSS(".palabra2", "bounceInLeft");
@@ -843,19 +966,41 @@ socket.on('feedback_a_j2', data => {
     feedback.innerHTML = data.tiempo_feed.toString();
 
     console.log(data.tiempo_feed)
+    console.log(data.tipo)
+    console.log(modo_actual)
 
-    if (data.tiempo_feed.startsWith("⏱️-")) {
-        // Verificar si comienza con "⏱️-2"
-        console.log(data.tiempo_feed.toString()== ("⏱️-1 segs."))
-        if (data.tiempo_feed.toString() == ("⏱️-1 segs.")) {
-        console.log("ENTROOO")
+    if (data.tipo == "borrar") {
             reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
-        } else {
-        reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
+
+    }
+
+    if(data.tipo == "inspiracion"){
+        if(modo_actual == "letra bendita" || modo_actual == "letra prohibida" || modo_actual == "palabras bonus" ){
+        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
+          increment('blue');
+        }
+        
+        if(modo_actual == "palabras prohibidas"){
+            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
+            increment('red');
         }
     }
+
+    if (data.tipo == "lista_prohibidas" || data.tipo == "letra_prohibida") {
+        reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
+
+    }
+
+    if (data.tipo == "rae" || data.tipo == "letra_bendita") {
+            reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
+    }
+
+    if (data.tipo == "perder_tiempo") {
+            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+
+    }
     // Si empieza por "⏱️+" (ej.: "⏱️+2 segs." o "⏱️+6 segs.")
-    else if (data.tiempo_feed.toString() == "⏱️+6 segs.") {
+    if (data.tipo == "ganar_tiempo") {
         reproducirSonido("../../game/audio/GANAR 2 SEG.mp3");
 
     }
@@ -876,23 +1021,12 @@ socket.on('feedback_a_j2', data => {
 
             node.addEventListener('animationend', handleAnimationEnd, { once: true });
         });
+
     animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
             feedback.innerHTML = "";
         }, 2000);
     });
-    console.log("PARAAAAAAAAAAAAAAAAAAAAAAAAA", data.insp)
-    if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
-        definicion2.innerHTML = "";
-        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
-        if(modo_actual != "palabras prohibidas"){
-        increment('blue');
-        }
-        else{
-            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
-            increment('red');
-        }
-    }
 });
 
 socket.on('feedback_a_j1', data => {
@@ -900,20 +1034,45 @@ socket.on('feedback_a_j1', data => {
     feedback1.style.color = data.color;
     feedback1.innerHTML = data.tiempo_feed.toString();
 
-    if(data.tiempo_feed.toString() == "⏱️+6 segs."){
-        reproducirSonido("../../game/audio/GANAR 2 SEG.mp3")
+    console.log(data.tiempo_feed)
+    console.log(data.tipo)
+    console.log(modo_actual)
+
+    if (data.tipo == "borrar") {
+            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+
     }
 
-    // Verificar si comienza con "⏱️-" pero no con "⏱️-2"
-    else if (data.tiempo_feed.startsWith("⏱️-")) {
-            // Verificar si comienza con "⏱️-2"
-            if (data.tiempo_feed.toString() == "⏱️-1 segs.") {
-                reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
-            } else {
-            reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
-            }
+    if(data.tipo == "inspiracion"){
+        if(modo_actual == "letra bendita" || modo_actual == "letra prohibida" || modo_actual == "palabras bonus" ){
+        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
+          increment('red');
+        }
+        
+        if(modo_actual == "palabras prohibidas"){
+            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
+            increment('blue');
+        }
     }
 
+    if (data.tipo == "lista_prohibidas" || data.tipo == "letra_prohibida") {
+        reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
+
+    }
+
+    if (data.tipo == "rae" || data.tipo == "letra_bendita") {
+            reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
+    }
+
+    if (data.tipo == "perder_tiempo") {
+            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+
+    }
+    // Si empieza por "⏱️+" (ej.: "⏱️+2 segs." o "⏱️+6 segs.")
+    if (data.tipo == "ganar_tiempo") {
+        reproducirSonido("../../game/audio/GANAR 2 SEG.mp3");
+
+    }
 
     const animateCSS = (element, animation, prefix = 'animate__') =>
         // We create a Promise and return it
@@ -937,17 +1096,6 @@ socket.on('feedback_a_j1', data => {
             feedback1.innerHTML = "";
         }, 2000);
     });
-    if(data.tiempo_feed.toString() == "+🎨 insp." || data.insp == true){
-        definicion3.innerHTML = "";
-        if(modo_actual != "palabras prohibidas"){
-        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
-        increment('red');
-        }
-        else{
-            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
-            increment('blue');
-        }
-    }
 });
 
 socket.on('recibir_comentario', data => {
@@ -1051,7 +1199,7 @@ function reproducirSonido(rutaArchivo, loop = false) {
 function iniciarAnimacionesSegunCondicion(condicion) {
   if (condicion === "azul") {
     // Inicia animación para musas azules
-    v = startDotAnimation(temas,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+    Temasinterval = startDotAnimation(temas,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
   } else if (condicion === "rojo") {
     // Inicia animación para musas rojas
     Temasinterval = startDotAnimation(temas,   'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
@@ -1727,4 +1875,401 @@ function centrarScroll(node, pos) {
     const containerPosition = node.getBoundingClientRect();
     offset = caretPosition.top - containerPosition.top;
     node.scrollTop = offset - node.clientHeight / 2;
+}
+
+const mirrors = new WeakMap();
+
+const TAGS_SALTO_LINEA = new Set(["BR", "DIV", "P", "LI"]);
+
+function obtenerTextoPlanoConSaltos(contenedor) {
+    let texto = "";
+    function recorrer(nodo, esRaiz) {
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            texto += nodo.textContent;
+            return;
+        }
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = nodo.tagName;
+        if (tag === "BR") {
+            texto += "\n";
+            return;
+        }
+        const hijos = nodo.childNodes;
+        if (!hijos || hijos.length === 0) {
+            if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
+                texto += "\n";
+            }
+            return;
+        }
+        for (let i = 0; i < hijos.length; i++) {
+            recorrer(hijos[i], false);
+        }
+        if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
+            if (texto.length === 0 || texto[texto.length - 1] !== "\n") {
+                texto += "\n";
+            }
+        }
+    }
+    recorrer(contenedor, true);
+    return texto;
+}
+
+function prepararMirror(contenedor) {
+    let mirror = mirrors.get(contenedor);
+    if (!mirror) {
+        mirror = document.createElement("div");
+        mirror.setAttribute("data-mirror", "caret");
+        mirror.style.position = "absolute";
+        mirror.style.top = "0";
+        mirror.style.left = "-99999px";
+        mirror.style.visibility = "hidden";
+        mirror.style.pointerEvents = "none";
+        mirror.style.margin = "0";
+        document.body.appendChild(mirror);
+        mirrors.set(contenedor, mirror);
+    }
+    const estilos = getComputedStyle(contenedor);
+    mirror.style.fontFamily = estilos.fontFamily;
+    mirror.style.fontSize = estilos.fontSize;
+    mirror.style.fontWeight = estilos.fontWeight;
+    mirror.style.letterSpacing = estilos.letterSpacing;
+    mirror.style.wordSpacing = estilos.wordSpacing;
+    mirror.style.lineHeight = estilos.lineHeight;
+    mirror.style.whiteSpace = estilos.whiteSpace;
+    mirror.style.wordBreak = estilos.wordBreak;
+    mirror.style.overflowWrap = estilos.overflowWrap;
+    mirror.style.padding = estilos.padding;
+    mirror.style.border = estilos.border;
+    mirror.style.boxSizing = estilos.boxSizing;
+    mirror.style.width = `${contenedor.clientWidth}px`;
+    return mirror;
+}
+
+function posicionarScrollPorCaretPosPreciso(contenedor, caretPos) {
+    if (!Number.isInteger(caretPos)) return false;
+    if (contenedor.clientHeight === 0) return false;
+
+    const mirror = prepararMirror(contenedor);
+    const textoPlano = obtenerTextoPlanoConSaltos(contenedor);
+    mirror.textContent = textoPlano;
+
+    const total = textoPlano.length;
+    const pos = Math.max(0, Math.min(caretPos, total));
+    const lineHeight = Math.max(
+        parseFloat(getComputedStyle(contenedor).lineHeight) || 0,
+        16
+    );
+
+    if (!mirror.firstChild) {
+        contenedor.scrollTop = 0;
+        return true;
+    }
+
+    const textNode = mirror.firstChild;
+    const range = document.createRange();
+    range.setStart(textNode, pos);
+    range.collapse(true);
+
+    const marker = document.createElement("span");
+    marker.setAttribute("data-caret-marker", "1");
+    marker.style.display = "inline-block";
+    marker.style.width = "0px";
+    marker.style.height = `${lineHeight}px`;
+    marker.style.padding = "0";
+    marker.style.margin = "0";
+    marker.style.pointerEvents = "none";
+    marker.style.verticalAlign = "text-bottom";
+    range.insertNode(marker);
+
+    const rect = marker.getBoundingClientRect();
+    const mirrorRect = mirror.getBoundingClientRect();
+    marker.remove();
+
+    if (!rect || (!rect.height && !rect.width)) {
+        return false;
+    }
+
+    const padding = lineHeight * 0.2;
+    const offsetTop = rect.top - mirrorRect.top;
+    const target = offsetTop - (contenedor.clientHeight - lineHeight - padding);
+    const maxScroll = Math.max(0, contenedor.scrollHeight - contenedor.clientHeight);
+    contenedor.scrollTop = Math.max(0, Math.min(target, maxScroll));
+    return true;
+}
+
+function obtenerNodoPorRuta(raiz, ruta) {
+    let actual = raiz;
+    for (let i = 0; i < ruta.length; i++) {
+        if (!actual || !actual.childNodes || !actual.childNodes[ruta[i]]) {
+            return null;
+        }
+        actual = actual.childNodes[ruta[i]];
+    }
+    return actual;
+}
+
+function obtenerPrimerTexto(nodo) {
+    if (!nodo) return null;
+    if (nodo.nodeType === Node.TEXT_NODE) return nodo;
+    for (let i = 0; i < nodo.childNodes.length; i++) {
+        const encontrado = obtenerPrimerTexto(nodo.childNodes[i]);
+        if (encontrado) return encontrado;
+    }
+    return null;
+}
+
+function obtenerUltimoTexto(nodo) {
+    if (!nodo) return null;
+    if (nodo.nodeType === Node.TEXT_NODE) return nodo;
+    for (let i = nodo.childNodes.length - 1; i >= 0; i--) {
+        const encontrado = obtenerUltimoTexto(nodo.childNodes[i]);
+        if (encontrado) return encontrado;
+    }
+    return null;
+}
+
+function obtenerNodoTextoCercano(nodo, offset) {
+    if (nodo.nodeType === Node.TEXT_NODE) {
+        return { nodo, offset: Math.min(offset, nodo.length) };
+    }
+    if (nodo.nodeType !== Node.ELEMENT_NODE) return null;
+    const hijos = nodo.childNodes;
+    if (!hijos || hijos.length === 0) return null;
+    const anterior = offset > 0 ? hijos[offset - 1] : null;
+    const siguiente = offset < hijos.length ? hijos[offset] : null;
+    const textoAnterior = obtenerUltimoTexto(anterior);
+    if (textoAnterior) {
+        return { nodo: textoAnterior, offset: textoAnterior.length };
+    }
+    const textoSiguiente = obtenerPrimerTexto(siguiente);
+    if (textoSiguiente) {
+        return { nodo: textoSiguiente, offset: 0 };
+    }
+    return null;
+}
+
+function obtenerPrimerBr(nodo) {
+    if (!nodo) return null;
+    if (nodo.nodeType === Node.ELEMENT_NODE && nodo.tagName === "BR") return nodo;
+    if (!nodo.childNodes) return null;
+    for (let i = 0; i < nodo.childNodes.length; i++) {
+        const encontrado = obtenerPrimerBr(nodo.childNodes[i]);
+        if (encontrado) return encontrado;
+    }
+    return null;
+}
+
+function obtenerUltimoBr(nodo) {
+    if (!nodo) return null;
+    if (nodo.nodeType === Node.ELEMENT_NODE && nodo.tagName === "BR") return nodo;
+    if (!nodo.childNodes) return null;
+    for (let i = nodo.childNodes.length - 1; i >= 0; i--) {
+        const encontrado = obtenerUltimoBr(nodo.childNodes[i]);
+        if (encontrado) return encontrado;
+    }
+    return null;
+}
+
+function obtenerRectanguloPorBr(nodo, offset) {
+    if (!nodo || nodo.nodeType !== Node.ELEMENT_NODE) return null;
+    const hijos = nodo.childNodes;
+    if (!hijos || hijos.length === 0) return null;
+    const anterior = offset > 0 ? hijos[offset - 1] : null;
+    const siguiente = offset < hijos.length ? hijos[offset] : null;
+    const brAnterior = obtenerUltimoBr(anterior);
+    if (brAnterior) {
+        const rect = brAnterior.getBoundingClientRect();
+        if (rect && (rect.height || rect.width)) return rect;
+    }
+    const brSiguiente = obtenerPrimerBr(siguiente);
+    if (brSiguiente) {
+        const rect = brSiguiente.getBoundingClientRect();
+        if (rect && (rect.height || rect.width)) return rect;
+    }
+    const brInterno = obtenerUltimoBr(nodo);
+    if (brInterno) {
+        const rect = brInterno.getBoundingClientRect();
+        if (rect && (rect.height || rect.width)) return rect;
+    }
+    return null;
+}
+
+function obtenerRectanguloRange(range) {
+    const rects = range.getClientRects();
+    if (rects.length > 0) return rects[0];
+    const rect = range.getBoundingClientRect();
+    if (rect && (rect.height || rect.width)) return rect;
+    const nodo = range.startContainer;
+    if (nodo && nodo.nodeType === Node.TEXT_NODE && nodo.length > 0) {
+        const clone = range.cloneRange();
+        if (range.startOffset > 0) {
+            clone.setStart(nodo, range.startOffset - 1);
+            clone.setEnd(nodo, range.startOffset);
+        } else {
+            clone.setStart(nodo, 0);
+            clone.setEnd(nodo, Math.min(1, nodo.length));
+        }
+        const rectsClone = clone.getClientRects();
+        if (rectsClone.length > 0) return rectsClone[0];
+        const rectClone = clone.getBoundingClientRect();
+        if (rectClone && (rectClone.height || rectClone.width)) return rectClone;
+    }
+    return null;
+}
+
+function ajustarScrollPorRect(contenedor, rect) {
+    const contRect = contenedor.getBoundingClientRect();
+    const lineHeight = Math.max(
+        rect.height || 0,
+        parseFloat(getComputedStyle(contenedor).lineHeight) || 0,
+        16
+    );
+    const padding = lineHeight * 0.2;
+    const target = (rect.top - contRect.top) - (contenedor.clientHeight - lineHeight - padding);
+    const maxScroll = Math.max(0, contenedor.scrollHeight - contenedor.clientHeight);
+    contenedor.scrollTop = Math.max(0, Math.min(target, maxScroll));
+}
+
+function posicionarScrollPorCaretPath(contenedor, ruta, offset) {
+    const nodo = obtenerNodoPorRuta(contenedor, ruta);
+    if (!nodo) return false;
+    const range = document.createRange();
+    if (nodo.nodeType === Node.TEXT_NODE) {
+        const off = Math.max(0, Math.min(offset, nodo.length));
+        range.setStart(nodo, off);
+    } else if (nodo.nodeType === Node.ELEMENT_NODE) {
+        const off = Math.max(0, Math.min(offset, nodo.childNodes.length));
+        const cercano = obtenerNodoTextoCercano(nodo, off);
+        if (cercano) {
+            range.setStart(cercano.nodo, cercano.offset);
+        } else {
+            range.setStart(nodo, off);
+        }
+    } else {
+        return false;
+    }
+    range.collapse(true);
+    let rect = obtenerRectanguloRange(range);
+    if (!rect && nodo.nodeType === Node.ELEMENT_NODE) {
+        const off = Math.max(0, Math.min(offset, nodo.childNodes.length));
+        rect = obtenerRectanguloPorBr(nodo, off);
+    }
+    if (!rect) {
+        contenedor.scrollTop = contenedor.scrollHeight;
+        return true;
+    }
+    ajustarScrollPorRect(contenedor, rect);
+    return true;
+}
+
+function posicionarScrollPorRatio(node, ratio) {
+    const lineHeight = Math.max(
+        parseFloat(getComputedStyle(node).lineHeight) || 0,
+        16
+    );
+    const padding = lineHeight * 0.2;
+    const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
+    const caretOffset = ratio * node.scrollHeight;
+    const target = caretOffset - (node.clientHeight - lineHeight - padding);
+    node.scrollTop = Math.max(0, Math.min(target, maxScroll));
+}
+
+function posicionarScrollPorLinea(node, linea) {
+    const lineHeight = Math.max(
+        parseFloat(getComputedStyle(node).lineHeight) || 0,
+        16
+    );
+    const padding = lineHeight * 0.2;
+    const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
+    const offset = linea * lineHeight;
+    const target = offset - (node.clientHeight - lineHeight - padding);
+    node.scrollTop = Math.max(0, Math.min(target, maxScroll));
+}
+
+function posicionarScrollPorCaretPos(contenedor, pos) {
+    const range = document.createRange();
+    let restante = pos;
+    let encontrado = false;
+
+    function recorrer(nodo) {
+        if (encontrado) return;
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            const len = nodo.textContent.length;
+            if (restante <= len) {
+                range.setStart(nodo, restante);
+                encontrado = true;
+                return;
+            }
+            restante -= len;
+            return;
+        }
+        if (nodo.nodeType === Node.ELEMENT_NODE) {
+            if (nodo.tagName === "BR") {
+                if (restante === 0) {
+                    range.setStartBefore(nodo);
+                    encontrado = true;
+                    return;
+                }
+                restante -= 1;
+                return;
+            }
+            for (let i = 0; i < nodo.childNodes.length; i++) {
+                recorrer(nodo.childNodes[i]);
+                if (encontrado) return;
+            }
+        }
+    }
+
+    recorrer(contenedor);
+    if (!encontrado) {
+        range.selectNodeContents(contenedor);
+        range.collapse(false);
+    } else {
+        range.collapse(true);
+    }
+
+    const rect = obtenerRectanguloRange(range);
+    if (!rect) {
+        contenedor.scrollTop = contenedor.scrollHeight;
+        return false;
+    }
+    ajustarScrollPorRect(contenedor, rect);
+    return true;
+}
+
+function posicionarScrollEnUltimaLinea(node, pos) {
+    const range = document.createRange();
+    let offset = pos;
+
+    function setRange(nodeActual) {
+        if (nodeActual.nodeType === Node.TEXT_NODE) {
+            if (nodeActual.length >= offset) {
+                range.setStart(nodeActual, offset);
+                return true;
+            }
+            offset -= nodeActual.length;
+        } else {
+            for (let i = 0; i < nodeActual.childNodes.length; i++) {
+                if (setRange(nodeActual.childNodes[i])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    if (!setRange(node)) return;
+    range.collapse(true);
+
+    const caretPosition = range.getBoundingClientRect();
+    const containerPosition = node.getBoundingClientRect();
+    const lineHeight = Math.max(
+        caretPosition.height || 0,
+        parseFloat(getComputedStyle(node).lineHeight) || 0,
+        16
+    );
+    const padding = lineHeight * 0.2;
+    const target = (caretPosition.top - containerPosition.top) - (node.clientHeight - lineHeight - padding);
+    const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
+    node.scrollTop = Math.max(0, Math.min(target, maxScroll));
 }

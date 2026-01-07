@@ -21,6 +21,12 @@ let elegir_ventaja
 
 
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
+const escapeHtml = (valor) => String(valor)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 // COMPONENTES DEL JUGADOR 1
 let nombre;
@@ -56,6 +62,28 @@ let modo_actual = "";
 let putada_actual = "";
 let modo_texto_borroso = 0;
 let desactivar_borrar = false;
+let bloquear_borrado_putada = false;
+let timeout_bloqueo_putada = null;
+let teclado_lento_putada = false;
+let timeout_teclado_lento = null;
+const RETRASO_TECLADO_LENTO_MS = 500;
+
+function limpiar_bloqueo_putada() {
+    bloquear_borrado_putada = false;
+    putada_actual = "";
+    if (timeout_bloqueo_putada) {
+        clearTimeout(timeout_bloqueo_putada);
+        timeout_bloqueo_putada = null;
+    }
+}
+
+function limpiar_teclado_lento() {
+    teclado_lento_putada = false;
+    if (timeout_teclado_lento) {
+        clearTimeout(timeout_teclado_lento);
+        timeout_teclado_lento = null;
+    }
+}
 
 var letra_prohibida = "";
 var letra_bendita = "";
@@ -117,6 +145,11 @@ if (player == 1) {
 }
 
 texto.addEventListener("keydown", (e) => {
+    if (bloquear_borrado_putada && e.key === "Backspace") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+    }
     if (e.key === "Backspace") {
       const sel = window.getSelection();
       if (sel.rangeCount > 0) {
@@ -149,6 +182,22 @@ texto.addEventListener("keydown", (e) => {
     }
   });
 
+texto.addEventListener("beforeinput", (e) => {
+    if (!teclado_lento_putada) return;
+    if (e.inputType === "insertText" || e.inputType === "insertParagraph") {
+        e.preventDefault();
+        const data = e.data ?? (e.inputType === "insertParagraph" ? "\n" : "");
+        setTimeout(() => {
+            if (!teclado_lento_putada) return;
+            if (data === "\n") {
+                document.execCommand("insertLineBreak");
+            } else {
+                document.execCommand("insertText", false, data);
+            }
+        }, RETRASO_TECLADO_LENTO_MS);
+    }
+});
+
 // Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
 const serverUrl = isProduction
     ? SERVER_URL_PROD
@@ -158,6 +207,17 @@ const socket = io(serverUrl);
   
 const PUTADAS = {
     "🐢": function () {
+        if (timeout_teclado_lento) {
+            clearTimeout(timeout_teclado_lento);
+            timeout_teclado_lento = null;
+        }
+        teclado_lento_putada = true;
+        putada_actual = "🐢";
+        timeout_teclado_lento = setTimeout(function () {
+            teclado_lento_putada = false;
+            putada_actual = "";
+            timeout_teclado_lento = null;
+        }, TIEMPO_MODIFICADOR);
     },
     "⌛": function () {
     },
@@ -244,6 +304,18 @@ const PUTADAS = {
             }
             putada_actual = "";
         sendText()  
+        }, TIEMPO_MODIFICADOR);
+    },
+
+    "🖊️": function () {
+        if (timeout_bloqueo_putada) {
+            clearTimeout(timeout_bloqueo_putada);
+            timeout_bloqueo_putada = null;
+        }
+        bloquear_borrado_putada = true;
+        putada_actual = "🖊️";
+        timeout_bloqueo_putada = setTimeout(function () {
+            limpiar_bloqueo_putada();
         }, TIEMPO_MODIFICADOR);
     },
 
@@ -426,27 +498,16 @@ const LIMPIEZAS = {
     "": function (data) { },
 };
 
-// Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto.addEventListener("keyup", (evt) => {
-    console.log(evt.key)
-    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        countChars(texto);
-        sendText();
-    }
-});
-// Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto.addEventListener("keydown", (evt) => {
-    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        countChars(texto);
-        sendText();
-    }
+// Cuando el texto cambia, envía los datos actuales al resto.
+texto.addEventListener("input", () => {
+    countChars(texto);
+    sendText();
 });
 
-// Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
-texto.addEventListener("press", (evt) => {
-    if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-        countChars(texto);
-        sendText();
+// Enviar teclas para el mapa de calor.
+texto.addEventListener("keydown", (evt) => {
+    if (evt.key.length === 1 || evt.key == "Enter" || evt.key == "Backspace") {
+        socket.emit('tecla_jugador', { player, code: evt.code || "", key: evt.key || "" });
     }
 });
 
@@ -500,6 +561,8 @@ socket.on("count", (data) => {
 
     tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
+        limpiar_bloqueo_putada();
+        limpiar_teclado_lento();
         console.log(putada_actual, "esto no doebería ocurrir")
         if (putada_actual == "🙃"){
             console.log("NO PUEDOOOOO ESTO NO DEBERÍA OCURRRIR")
@@ -612,6 +675,8 @@ socket.on("count", (data) => {
 function resucitar(){
     terminado = false;
     desactivar_borrar = false;
+    limpiar_bloqueo_putada();
+    limpiar_teclado_lento();
     logo.style.display = "none"; 
     neon.style.display = "none"; 
     tiempo.innerHTML = "";
@@ -865,17 +930,22 @@ socket.on('reanudar_js', data => {
     reanudar();
 });
 
-socket.on(inspirar, palabra => {
-    if(palabra != ""){
-    palabra_actual = [palabra];
-    definicion.innerHTML = ("MUSA: <span style='color: orange;'>Podrías escribir la palabra «" +
-    "</span><span style='color: lime; text-decoration: underline;'>" + palabra +
-    "</span><span style='color: orange;'>»</span>");
-    animateCSS(".definicion", "flash");
-    asignada = true;
-    texto.removeEventListener("keyup", listener_modo1);
-    listener_modo1 = function (e) { palabras_musas(e) };
-    texto.addEventListener("keyup", listener_modo1);
+socket.on(inspirar, data => {
+    const palabra = typeof data === "string" ? data : data?.palabra;
+    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
+    if (palabra != "") {
+        palabra_actual = [palabra];
+        const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
+        definicion.innerHTML = (`<span style='color: orange;'>${musaLabel}</span>: ` +
+        "<span style='color: orange;'>Podrías escribir la palabra «</span>" +
+        "<span style='color: lime; text-decoration: underline;'>" + escapeHtml(palabra) +
+        "</span><span style='color: orange;'>»</span>");
+        definicion.dataset.origenMusa = "musa";
+        animateCSS(".definicion", "flash");
+        asignada = true;
+        texto.removeEventListener("keyup", listener_modo1);
+        listener_modo1 = function (e) { palabras_musas(e) };
+        texto.addEventListener("keyup", listener_modo1);
     }
 });
 
@@ -931,7 +1001,14 @@ function recibir_palabra(data) {
     animacion_modo();
     palabra_actual = data.palabra_bonus[0];
     palabra.innerHTML = data.palabras_var + " (⏱️+" + data.tiempo_palabras_bonus + " segs.)" ;
-    definicion.innerHTML = data.palabra_bonus[1];
+    if (data.origen_musa === "musa") {
+        const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
+        definicion.innerHTML = `<span style="color:lime;">${musaLabel}</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>`;
+        definicion.dataset.origenMusa = "musa";
+    } else {
+        definicion.innerHTML = data.palabra_bonus[1];
+        definicion.dataset.origenMusa = "";
+    }
 
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo1);
@@ -946,7 +1023,14 @@ function recibir_palabra_prohibida(data) {
     palabra_actual = data.palabra_bonus[0];
     palabra.innerHTML = data.palabras_var + " (⏱️-" + data.tiempo_palabras_bonus + " segs.)";
 
-    definicion.innerHTML = data.palabra_bonus[1];
+    if (data.origen_musa === "musa_enemiga") {
+        const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
+        definicion.innerHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>me pega esta palabra ⬆️</span>`;
+        definicion.dataset.origenMusa = "musa_enemiga";
+    } else {
+        definicion.innerHTML = data.palabra_bonus[1];
+        definicion.dataset.origenMusa = "";
+    }
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
@@ -1276,9 +1360,200 @@ function manejadorTeclas(evento) {
 function sendText() {
     let text = texto.innerHTML;
     let points = puntos.innerHTML;
-    let caretPos = guardarPosicionCaret();
-    socket.emit(texto_x, { text, points, caretPos, texto_guardado });
+    const caretInfo = obtenerCaretInfo(texto);
+    socket.emit(texto_x, {
+        text,
+        points,
+        caretPos: caretInfo.caretPos,
+        caretLine: caretInfo.caretLine,
+        caretRatio: caretInfo.caretRatio,
+        caretPath: caretInfo.caretPath,
+        caretOffset: caretInfo.caretOffset,
+        texto_guardado
+    });
 }
+
+const TAGS_SALTO_LINEA = new Set(["BR", "DIV", "P", "LI"]);
+
+function obtenerTextoPlanoConSaltos(elemento) {
+    let texto = "";
+    function recorrer(nodo, esRaiz) {
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            texto += nodo.textContent;
+            return;
+        }
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = nodo.tagName;
+        if (tag === "BR") {
+            texto += "\n";
+            return;
+        }
+        const hijos = nodo.childNodes;
+        if (!hijos || hijos.length === 0) {
+            if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
+                texto += "\n";
+            }
+            return;
+        }
+        for (let i = 0; i < hijos.length; i++) {
+            recorrer(hijos[i], false);
+        }
+        if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
+            if (texto.length === 0 || texto[texto.length - 1] !== "\n") {
+                texto += "\n";
+            }
+        }
+    }
+    recorrer(elemento, true);
+    return texto;
+}
+
+function contarCaretConSaltos(elemento, range) {
+    let caretPos = 0;
+    let caretLine = 0;
+    let encontrado = false;
+
+    function agregarTexto(texto) {
+        caretPos += texto.length;
+        caretLine += (texto.match(/\n/g) || []).length;
+    }
+
+    function agregarSalto() {
+        caretPos += 1;
+        caretLine += 1;
+    }
+
+    function recorrer(nodo, esRaiz) {
+        if (encontrado) return;
+        if (nodo === range.startContainer) {
+            if (nodo.nodeType === Node.TEXT_NODE) {
+                agregarTexto(nodo.textContent.slice(0, range.startOffset));
+                encontrado = true;
+                return;
+            }
+            if (nodo.nodeType === Node.ELEMENT_NODE) {
+                const hijos = nodo.childNodes || [];
+                const limite = Math.min(range.startOffset, hijos.length);
+                for (let i = 0; i < limite; i++) {
+                    recorrer(hijos[i], false);
+                    if (encontrado) return;
+                }
+                encontrado = true;
+                return;
+            }
+        }
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            agregarTexto(nodo.textContent);
+            return;
+        }
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = nodo.tagName;
+        if (tag === "BR") {
+            agregarSalto();
+            return;
+        }
+        const hijos = nodo.childNodes;
+        if (!hijos || hijos.length === 0) {
+            if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
+                agregarSalto();
+            }
+            return;
+        }
+        for (let i = 0; i < hijos.length; i++) {
+            recorrer(hijos[i], false);
+            if (encontrado) return;
+        }
+        if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
+            agregarSalto();
+        }
+    }
+
+    recorrer(elemento, true);
+    return { caretPos, caretLine };
+}
+
+function obtenerIndiceCaretEnTexto(elemento) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) {
+        return obtenerTextoPlanoConSaltos(elemento).length;
+    }
+    const range = sel.getRangeAt(0);
+    if (!elemento.contains(range.startContainer)) {
+        return obtenerTextoPlanoConSaltos(elemento).length;
+    }
+    return contarCaretConSaltos(elemento, range).caretPos;
+}
+
+function obtenerCaretInfo(elemento) {
+    const textoPlano = obtenerTextoPlanoConSaltos(elemento);
+    const totalChars = textoPlano.length;
+    let caretPos = totalChars;
+    let caretLine = (textoPlano.match(/\n/g) || []).length;
+    let caretPath = null;
+    let caretOffset = 0;
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (elemento.contains(range.startContainer)) {
+            const conteo = contarCaretConSaltos(elemento, range);
+            caretPos = conteo.caretPos;
+            caretLine = conteo.caretLine;
+            caretPath = obtenerRutaNodo(elemento, range.startContainer);
+            caretOffset = range.startOffset;
+        }
+    }
+    ultimoCaretRatio = totalChars > 0
+        ? Math.max(0, Math.min(caretPos / totalChars, 1))
+        : ultimoCaretRatio;
+    return {
+        caretPos,
+        caretLine,
+        caretRatio: ultimoCaretRatio,
+        caretPath,
+        caretOffset
+    };
+}
+
+let rafEnvioCaret = null;
+let ultimoCaretRatio = 0;
+
+function obtenerRutaNodo(raiz, nodo) {
+    const ruta = [];
+    let actual = nodo;
+    while (actual && actual !== raiz) {
+        const padre = actual.parentNode;
+        if (!padre) break;
+        const indice = Array.prototype.indexOf.call(padre.childNodes, actual);
+        ruta.unshift(indice);
+        actual = padre;
+    }
+    return actual === raiz ? ruta : null;
+}
+
+function solicitarEnvioCaret() {
+    if (rafEnvioCaret) return;
+    rafEnvioCaret = requestAnimationFrame(() => {
+        rafEnvioCaret = null;
+        const caretInfo = obtenerCaretInfo(texto);
+        socket.emit(texto_x, {
+            text: texto.innerHTML,
+            points: puntos.innerHTML,
+            caretPos: caretInfo.caretPos,
+            caretLine: caretInfo.caretLine,
+            caretRatio: caretInfo.caretRatio,
+            caretPath: caretInfo.caretPath,
+            caretOffset: caretInfo.caretOffset,
+            texto_guardado
+        });
+    });
+}
+
+document.addEventListener("selectionchange", () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (!texto.contains(sel.anchorNode)) return;
+    solicitarEnvioCaret();
+});
 
 function activar_sockets_extratextuales() {
     // Recibe el nombre del jugador x y lo coloca en su sitio.
@@ -1433,16 +1708,16 @@ function modo_palabras_bonus(e) {
             color = color_positivo;
             feedback.style.color = color;
             tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
-            insp = false;
-            if (definicion.innerHTML.startsWith("<span style=\"color:lime;\">MUSA</span>:")) {
-                insp = true;
-            }            
+            tipo = "rae";
+            if (definicion.dataset.origenMusa === "musa") {
+                tipo = "inspiracion";
+            }
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
                     feedback.innerHTML = "";
                 }, 2000);
             });
-            socket.emit(feedback_de_j_x, { color, tiempo_feed, insp});
+            socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo});
         }
     }
 }
@@ -1493,11 +1768,11 @@ function modo_palabras_prohibidas(e) {
             color = color_negativo;
             feedback.style.color = color;
             feedback.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
-            insp = false;
+            tipo = "lista_prohibidas";
             console.log(definicion.innerHTML)
-            if (definicion.innerHTML.startsWith("<span style=\"color:red;\">MUSA ENEMIGA</span>")) {
-                insp = true;
-            }   
+            if (definicion.dataset.origenMusa === "musa_enemiga") {
+                tipo = "inspiracion";
+            }
             clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
@@ -1506,7 +1781,7 @@ function modo_palabras_prohibidas(e) {
             });
             color = color_negativo;
             tiempo_feed = "⏱️" + tiempo_palabras_bonus + " segs.";
-            socket.emit(feedback_de_j_x, { color, tiempo_feed, insp});
+            socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo});
         }
     }
 }
@@ -1564,7 +1839,7 @@ function palabras_musas(e) {
             color = "white"
             tiempo_feed = feedback.innerHTML;
             socket.emit("nueva_palabra_musa", player);
-            socket.emit(feedback_de_j_x, { color, tiempo_feed});
+            socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "inspiracion" });
         }
     }
 }
@@ -1627,14 +1902,19 @@ function modo_letra_prohibida(e) {
       });
       color = color_negativo;
       tiempo_feed = feedback.innerHTML;
-      socket.emit(feedback_de_j_x, { color, tiempo_feed });
+      socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "letra_prohibida" });
     }
   }
   
   // Esta función se llama cuando se presiona una tecla
-  function modo_letra_bendita(e) {
+function modo_letra_bendita(e) {
     if (e.defaultPrevented) {
         console.log('Evento ya procesado');
+        return;
+    }
+
+    if (bloquear_borrado_putada && e.key === 'Backspace') {
+        e.preventDefault();
         return;
     }
 
@@ -1664,7 +1944,7 @@ function modo_letra_prohibida(e) {
                 }, 2000);
             });
             // Envío de feedback a través de Socket.io
-            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML });
+            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML, tipo: "letra_bendita" });
         }
         return; // Salir de la función si la tecla es Backspace
     }
@@ -1708,7 +1988,7 @@ function modo_letra_prohibida(e) {
             });
 
             // Envío de feedback a través de Socket.io
-            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML });
+            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML, tipo: "letra_bendita" });
         } else {
             if (node && node.parentNode.className === 'letra-verde') {
                 e.preventDefault();

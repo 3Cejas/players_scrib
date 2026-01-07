@@ -161,9 +161,35 @@ const frases_finales = [
     "¡Tú nunca venías!",
     "Porque esta ciudad lo es todo, TODO",
     "Quizá algún día me vuelva a necesitar. Llámeme entonces"
-  ];
+];
 
 let palabras_prohibidas_restantes = [...palabras_prohibidas];
+const TOP_K_PALABRAS_MALDITAS = 5;
+let palabras_top_usadas = new Set();
+
+function normalizar_texto_maldito(texto) {
+    return (texto || "")
+        .toLowerCase()
+        .replace(/[^a-záéíóúüñ\s]/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function obtener_top_palabras_malditas(texto, k) {
+    const limpio = normalizar_texto_maldito(texto);
+    if (!limpio) return [];
+
+    const conteo = new Map();
+    limpio.split(" ").forEach(palabra => {
+        if (palabra.length < 1) return;
+        conteo.set(palabra, (conteo.get(palabra) || 0) + 1);
+    });
+
+    return Array.from(conteo.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([palabra]) => palabra)
+        .slice(0, k);
+}
 
 var letra_prohibida = "";
 var letra_bendita = "";
@@ -431,6 +457,7 @@ const MODOS = {
         explicación.innerHTML = "NIVEL PALABRAS MALDITAS";
         palabra.innerHTML = "";
         definicion.innerHTML = "";
+        palabras_top_usadas.clear();
         nueva_palabra_prohibida()
 
     },
@@ -495,6 +522,7 @@ const LIMPIEZAS = {
         asignada = false;
         texto.removeEventListener("keyup", listener_modo);
         clearTimeout(listener_cambio_letra_palabra);
+        palabras_top_usadas.clear();
 
     },
 
@@ -989,13 +1017,21 @@ async function recibir_palabra() {
 }
 
 function nueva_palabra_prohibida() {
+    const top = obtener_top_palabras_malditas(texto.innerText, TOP_K_PALABRAS_MALDITAS);
+    let palabra_elegida = top.find(palabra => !palabras_top_usadas.has(palabra));
 
-    indice_palabra = Math.floor(Math.random() * palabras_prohibidas_restantes.length);
-    palabra_bonus = [[palabras_prohibidas_restantes[indice_palabra]], [""]];
-    palabras_prohibidas_restantes.splice(indice_palabra, 1);
+    if (palabra_elegida) {
+        palabras_top_usadas.add(palabra_elegida);
+        palabra_bonus = [[palabra_elegida], [""]];
+    } else {
+        indice_palabra = Math.floor(Math.random() * palabras_prohibidas_restantes.length);
+        palabra_bonus = [[palabras_prohibidas_restantes[indice_palabra]], [""]];
+        palabras_prohibidas_restantes.splice(indice_palabra, 1);
         if(palabras_prohibidas_restantes.length == 0){
             palabras_prohibidas_restantes = [...palabras_prohibidas];
         }
+    }
+
     palabras_var = palabra_bonus[0];
     tiempo_palabras_bonus = puntuación_palabra(palabra_bonus[0][0]);
         
@@ -1412,6 +1448,58 @@ function modo_palabras_bonus(e) {
             if (definicion.innerHTML.startsWith("<span style=\"color:lime;\">MUSA</span>:")) {
                 insp = true;
             }            
+            animateCSS(".feedback1", "flash").then((message) => {
+                delay_animacion = setTimeout(function () {
+                    feedback.innerHTML = "";
+                }, 2000);
+            });
+        }
+    }
+}
+
+// Función que intercepta el uso de palabras malditas y aplica penalización.
+function modo_palabras_prohibidas(e) {
+    if (asignada == true) {
+        e.preventDefault();
+
+        let selection = document.getSelection();
+        let range = selection.getRangeAt(0);
+        let preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(e.target);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        let endingIndex = preCaretRange.toString().length;
+        let startingIndex = 0; // Inicialización
+        let textContent = e.target.innerText;
+
+        // Calcula startingIndex: retrocede hasta encontrar un delimitador o el inicio del texto
+        for (let i = endingIndex - 1; i >= 0; i--) {
+            if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
+                startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
+                break;
+            }
+        }
+
+        // Ajusta endingIndex: avanza hasta encontrar un delimitador o el final del texto
+        for (let i = endingIndex; i <= textContent.length; i++) {
+            if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
+                endingIndex = i;
+                break;
+            }
+        }
+
+        if (
+            palabra_actual.some(palabra => textContent
+                .substring(startingIndex, endingIndex)
+                .toLowerCase().includes(palabra.toLowerCase()))
+            ) {
+            texto.focus();
+            asignada = false;
+            nueva_palabra_prohibida();
+            const tiempo_penal = -Math.abs(tiempo_palabras_bonus);
+            addSeconds(tiempo_penal);
+            feedback.style.color = color_negativo;
+            feedback.innerHTML = "⏱️" + tiempo_penal + " segs.";
+            clearTimeout(delay_animacion);
             animateCSS(".feedback1", "flash").then((message) => {
                 delay_animacion = setTimeout(function () {
                     feedback.innerHTML = "";
@@ -2472,4 +2560,3 @@ async function getRandomSpanishWord() {
     if (!results[2]) return '';
     return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
-
