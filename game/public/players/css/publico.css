@@ -59,6 +59,15 @@ body {
 .letra-verde {
     color: lime;
   }
+
+#overlay .motion-permiso {
+  margin: 1vh 6vw;
+  font-size: 3.5vw;
+  font-weight: normal;
+  opacity: 0.85;
+  max-width: 85vw;
+  display: none;
+}
   
   .letra-roja {
     color: red;

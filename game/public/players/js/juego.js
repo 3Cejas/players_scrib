@@ -21,12 +21,13 @@ let agitado_ultimo_motion = 0;
 let agitado_prev_ax = null;
 let agitado_prev_ay = null;
 let agitado_prev_az = null;
+let agitado_aviso_timeout = null;
 
 const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
 const AGITADO_COOLDOWN_MS = 1200;
-const AGITADO_VIBRACION = [60, 40, 60];
-const AGITADO_VIBRACION_FALLBACK = 120;
+const AGITADO_VIBRACION = [160, 90, 160, 90, 160];
+const AGITADO_VIBRACION_FALLBACK = 220;
 const AGITADO_DELTA_THRESHOLD = 3.4;
 const AGITADO_GAMMA_THRESHOLD = 12;
 const AGITADO_ROT_THRESHOLD = 22;
@@ -80,6 +81,29 @@ const vibrarAgitado = () => {
   aplicarVibracion(vibrateFn, AGITADO_VIBRACION);
 };
 
+const mostrarAvisoMotion = (texto) => {
+  const elemento = document.getElementById("motion_permiso");
+  if (!elemento) return;
+  elemento.textContent = texto || "";
+  elemento.style.display = texto ? "block" : "none";
+};
+
+const limpiarAvisoMotion = () => {
+  mostrarAvisoMotion("");
+};
+
+const programarAvisoMotion = () => {
+  if (agitado_aviso_timeout) {
+    clearTimeout(agitado_aviso_timeout);
+  }
+  agitado_aviso_timeout = setTimeout(() => {
+    if (!agitado_activo) return;
+    if (!agitado_ultimo_motion || (Date.now() - agitado_ultimo_motion) > 1500) {
+      mostrarAvisoMotion("Si no vibra, habilita sensores de movimiento en permisos del navegador.");
+    }
+  }, 2000);
+};
+
 const emitirCorazon = () => {
   const ahora = Date.now();
   if (agitado_ultimo && (ahora - agitado_ultimo) < AGITADO_COOLDOWN_MS) return;
@@ -118,6 +142,7 @@ const manejarAgitado = (evento) => {
   const lateral = Math.abs(ax) >= Math.abs(ay) ? ax : ay;
   const ahora = Date.now();
   agitado_ultimo_motion = ahora;
+  limpiarAvisoMotion();
   let direccion = 0;
   if (lateral > AGITADO_THRESHOLD_X) direccion = 1;
   else if (lateral < -AGITADO_THRESHOLD_X) direccion = -1;
@@ -158,6 +183,7 @@ const manejarOrientacion = (evento) => {
   if (typeof evento.gamma !== "number") return;
   const ahora = Date.now();
   agitado_ultimo_motion = ahora;
+  limpiarAvisoMotion();
   const gamma = evento.gamma;
   if (agitado_ultimo_gamma != null) {
     const delta = Math.abs(gamma - agitado_ultimo_gamma);
@@ -169,7 +195,12 @@ const manejarOrientacion = (evento) => {
 const activarAgitado = () => {
   if (agitado_activo) return;
   pedirPermisoMovimiento().then((ok) => {
-    if (!ok || agitado_activo) return;
+    if (!ok || agitado_activo) {
+      if (!ok) {
+        mostrarAvisoMotion("Permite sensores de movimiento para activar la vibracion.");
+      }
+      return;
+    }
     agitado_ultima_direccion = 0;
     agitado_ultimo_cambio = 0;
     agitado_ultimo_lateral = null;
@@ -180,9 +211,11 @@ const activarAgitado = () => {
     agitado_prev_ax = null;
     agitado_prev_ay = null;
     agitado_prev_az = null;
+    agitado_ultimo_motion = 0;
     window.addEventListener("devicemotion", manejarAgitado, { passive: true });
     window.addEventListener("deviceorientation", manejarOrientacion, { passive: true });
     agitado_activo = true;
+    programarAvisoMotion();
   });
 };
 
@@ -202,6 +235,12 @@ const desactivarAgitado = () => {
   agitado_prev_ay = null;
   agitado_prev_az = null;
   agitado_vibracion_habilitada = false;
+  agitado_ultimo_motion = 0;
+  if (agitado_aviso_timeout) {
+    clearTimeout(agitado_aviso_timeout);
+    agitado_aviso_timeout = null;
+  }
+  limpiarAvisoMotion();
 };
 
 window.addEventListener('beforeunload', (event) => {
@@ -334,6 +373,7 @@ function mostrarTextoCompleto(boton) {
         if (agitado_vibracion_habilitada) {
           vibrarAgitado();
         }
+        mostrarAvisoMotion("Agita el movil para enviar corazones.");
         activarAgitado();
     }
   }
@@ -350,6 +390,7 @@ function mostrarTextoCompleto(boton) {
         boton.value = 0;
     }
     desactivarAgitado();
+    limpiarAvisoMotion();
   }
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
