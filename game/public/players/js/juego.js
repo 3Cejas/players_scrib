@@ -18,6 +18,9 @@ let agitado_picos = 0;
 let agitado_inicio_ventana = 0;
 let agitado_ultimo_pico = 0;
 let agitado_ultimo_motion = 0;
+let agitado_prev_ax = null;
+let agitado_prev_ay = null;
+let agitado_prev_az = null;
 
 const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
@@ -26,6 +29,7 @@ const AGITADO_VIBRACION = [60, 40, 60];
 const AGITADO_VIBRACION_FALLBACK = 120;
 const AGITADO_DELTA_THRESHOLD = 3.4;
 const AGITADO_GAMMA_THRESHOLD = 12;
+const AGITADO_ROT_THRESHOLD = 22;
 const AGITADO_PICOS_MIN = 2;
 const AGITADO_PICO_GAP_MS = 80;
 const AGITADO_VENTANA_MS = 900;
@@ -106,10 +110,11 @@ const registrarAgitado = (delta, threshold) => {
 
 const manejarAgitado = (evento) => {
   const aceleracion = evento.accelerationIncludingGravity || evento.acceleration;
-  if (!aceleracion) return;
-  const ax = Number(aceleracion.x) || 0;
-  const ay = Number(aceleracion.y) || 0;
-  const az = Number(aceleracion.z) || 0;
+  const rotacion = evento.rotationRate || null;
+  if (!aceleracion && !rotacion) return;
+  const ax = aceleracion ? (Number(aceleracion.x) || 0) : 0;
+  const ay = aceleracion ? (Number(aceleracion.y) || 0) : 0;
+  const az = aceleracion ? (Number(aceleracion.z) || 0) : 0;
   const lateral = Math.abs(ax) >= Math.abs(ay) ? ax : ay;
   const ahora = Date.now();
   agitado_ultimo_motion = ahora;
@@ -132,8 +137,21 @@ const manejarAgitado = (evento) => {
     agitado_ultima_direccion = direccion;
     agitado_ultimo_lateral = lateral;
   }
-  const deltaTotal = Math.abs(ax) + Math.abs(ay) + Math.abs(az);
-  registrarAgitado(deltaTotal, AGITADO_DELTA_THRESHOLD * 1.8);
+  if (agitado_prev_ax != null) {
+    const deltaAcc = Math.abs(ax - agitado_prev_ax) + Math.abs(ay - agitado_prev_ay) + Math.abs(az - agitado_prev_az);
+    registrarAgitado(deltaAcc, AGITADO_DELTA_THRESHOLD);
+  }
+  agitado_prev_ax = ax;
+  agitado_prev_ay = ay;
+  agitado_prev_az = az;
+
+  if (rotacion) {
+    const rotAlpha = Math.abs(Number(rotacion.alpha) || 0);
+    const rotBeta = Math.abs(Number(rotacion.beta) || 0);
+    const rotGamma = Math.abs(Number(rotacion.gamma) || 0);
+    const deltaRot = rotAlpha + rotBeta + rotGamma;
+    registrarAgitado(deltaRot, AGITADO_ROT_THRESHOLD);
+  }
 };
 
 const manejarOrientacion = (evento) => {
@@ -159,6 +177,9 @@ const activarAgitado = () => {
     agitado_picos = 0;
     agitado_inicio_ventana = 0;
     agitado_ultimo_pico = 0;
+    agitado_prev_ax = null;
+    agitado_prev_ay = null;
+    agitado_prev_az = null;
     window.addEventListener("devicemotion", manejarAgitado, { passive: true });
     window.addEventListener("deviceorientation", manejarOrientacion, { passive: true });
     agitado_activo = true;
@@ -177,6 +198,9 @@ const desactivarAgitado = () => {
   agitado_picos = 0;
   agitado_inicio_ventana = 0;
   agitado_ultimo_pico = 0;
+  agitado_prev_ax = null;
+  agitado_prev_ay = null;
+  agitado_prev_az = null;
   agitado_vibracion_habilitada = false;
 };
 
