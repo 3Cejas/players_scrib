@@ -5,6 +5,92 @@ let letra = "";
 let editando = false;
 let interval_cooldown;
 let cooldown = false;
+let agitado_activo = false;
+let agitado_permiso = false;
+let agitado_solicitado = false;
+let agitado_ultimo = 0;
+let agitado_ultimo_cambio = 0;
+let agitado_ultima_direccion = 0;
+
+const AGITADO_THRESHOLD_X = 7;
+const AGITADO_CAMBIO_MS = 600;
+const AGITADO_COOLDOWN_MS = 1200;
+const AGITADO_VIBRACION = [60, 40, 60];
+
+const pedirPermisoMovimiento = () => {
+  if (agitado_solicitado) return Promise.resolve(agitado_permiso);
+  agitado_solicitado = true;
+  if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+    return DeviceMotionEvent.requestPermission()
+      .then((estado) => {
+        agitado_permiso = (estado === "granted");
+        return agitado_permiso;
+      })
+      .catch(() => false);
+  }
+  agitado_permiso = true;
+  return Promise.resolve(true);
+};
+
+const vibrarAgitado = () => {
+  if (navigator && typeof navigator.vibrate === "function") {
+    navigator.vibrate(AGITADO_VIBRACION);
+  }
+};
+
+const emitirCorazon = () => {
+  const ahora = Date.now();
+  if (agitado_ultimo && (ahora - agitado_ultimo) < AGITADO_COOLDOWN_MS) return;
+  agitado_ultimo = ahora;
+  vibrarAgitado();
+  if (typeof socket !== "undefined" && socket && typeof socket.emit === "function") {
+    socket.emit("musa_corazon");
+  }
+};
+
+const manejarAgitado = (evento) => {
+  const aceleracion = evento.accelerationIncludingGravity || evento.acceleration;
+  if (!aceleracion) return;
+  const ax = Number(aceleracion.x) || 0;
+  const ay = Number(aceleracion.y) || 0;
+  const lateral = Math.abs(ax) >= Math.abs(ay) ? ax : ay;
+  const ahora = Date.now();
+  let direccion = 0;
+  if (lateral > AGITADO_THRESHOLD_X) direccion = 1;
+  else if (lateral < -AGITADO_THRESHOLD_X) direccion = -1;
+  if (!direccion) return;
+  if (!agitado_ultima_direccion) {
+    agitado_ultima_direccion = direccion;
+    agitado_ultimo_cambio = ahora;
+    return;
+  }
+  if (direccion !== agitado_ultima_direccion) {
+    if (agitado_ultimo_cambio && (ahora - agitado_ultimo_cambio) < AGITADO_CAMBIO_MS) {
+      emitirCorazon();
+    }
+    agitado_ultimo_cambio = ahora;
+    agitado_ultima_direccion = direccion;
+  }
+};
+
+const activarAgitado = () => {
+  if (agitado_activo) return;
+  pedirPermisoMovimiento().then((ok) => {
+    if (!ok || agitado_activo) return;
+    agitado_ultima_direccion = 0;
+    agitado_ultimo_cambio = 0;
+    window.addEventListener("devicemotion", manejarAgitado, { passive: true });
+    agitado_activo = true;
+  });
+};
+
+const desactivarAgitado = () => {
+  if (!agitado_activo) return;
+  window.removeEventListener("devicemotion", manejarAgitado);
+  agitado_activo = false;
+  agitado_ultima_direccion = 0;
+  agitado_ultimo_cambio = 0;
+};
 
 window.addEventListener('beforeunload', (event) => {
   socket.emit('disconnect');
@@ -132,6 +218,7 @@ function mostrarTextoCompleto(boton) {
         }
         
         boton.value = 1;
+        activarAgitado();
     }
   }
 
@@ -146,6 +233,7 @@ function mostrarTextoCompleto(boton) {
     if (boton) {
         boton.value = 0;
     }
+    desactivarAgitado();
   }
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.

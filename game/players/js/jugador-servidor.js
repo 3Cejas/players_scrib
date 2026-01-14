@@ -28,6 +28,49 @@ const escapeHtml = (valor) => String(valor)
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+const contenedor_corazones_escritor = (() => {
+    let contenedor = getEl("corazones_escritor");
+    if (!contenedor) {
+        contenedor = document.createElement("div");
+        contenedor.id = "corazones_escritor";
+        contenedor.className = "corazones-flotantes";
+        document.body.appendChild(contenedor);
+    }
+    return contenedor;
+})();
+
+const crearCorazonFlotante = (equipo, x, y) => {
+    if (!contenedor_corazones_escritor) return;
+    const corazon = document.createElement("span");
+    const claseEquipo = equipo === 1 ? "corazon-azul" : "corazon-rojo";
+    corazon.className = `corazon-flotante ${claseEquipo}`;
+    corazon.textContent = equipo === 1 ? "💙" : "❤️";
+    const tamaño = 22 + Math.random() * 22;
+    const duracion = 2000 + Math.random() * 1200;
+    const desplazamiento = -(90 + Math.random() * 140);
+    corazon.style.left = `${x}px`;
+    corazon.style.top = `${y}px`;
+    corazon.style.fontSize = `${tamaño}px`;
+    corazon.style.setProperty("--corazon-duracion", `${duracion}ms`);
+    corazon.style.setProperty("--corazon-dy", `${desplazamiento}px`);
+    contenedor_corazones_escritor.appendChild(corazon);
+    corazon.addEventListener("animationend", () => {
+        corazon.remove();
+    });
+};
+
+const lanzarCorazonEscritor = (equipo) => {
+    const ancho = window.innerWidth || 0;
+    const alto = window.innerHeight || 0;
+    if (!ancho || !alto) return;
+    const margen = ancho * 0.12;
+    const x = margen + Math.random() * Math.max(0, ancho - (margen * 2));
+    const yMin = alto * 0.45;
+    const yMax = alto * 0.8;
+    const y = yMin + Math.random() * (yMax - yMin);
+    crearCorazonFlotante(equipo, x, y);
+};
+
 // COMPONENTES DEL JUGADOR 1
 let nombre;
 let texto = getEl("texto");
@@ -204,6 +247,12 @@ const serverUrl = isProduction
     : SERVER_URL_DEV;
 
 const socket = io(serverUrl);
+
+socket.on("musa_corazon", (data) => {
+    const equipo = data && Number(data.equipo);
+    if (equipo !== 1 && equipo !== 2) return;
+    lanzarCorazonEscritor(equipo);
+});
   
 const PUTADAS = {
     "🐢": function () {
@@ -820,6 +869,11 @@ socket.on("post-inicio", (data) => {
     console.log(data.borrar_texto, "borrar texto")
     post_inicio(data.borrar_texto);
 });    
+
+socket.on("borrar_texto_guardado", () => {
+    texto_guardado = "";
+    sendText();
+});
 
 function post_inicio(borrar_texto){
     clearTimeout(timer);

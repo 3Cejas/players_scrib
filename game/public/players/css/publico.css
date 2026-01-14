@@ -84,7 +84,7 @@ p{
     width: 100%;
     font-family: "Retro-gaming";
     text-align: center;
-    font-size: 6vw;
+    font-size: 8vw;
     font-weight: bold;
     border-color: currentcolor;
     outline-color: currentcolor;
@@ -752,4 +752,188 @@ th{
   background-size: 400% 400%;
   animation: bluePulse 1.5s ease-in-out infinite;
   transition: background 0.5s ease-in-out;
+}
+
+.calentamiento{
+    display: none;
+    margin: 3vw auto 2vw;
+    padding: 2.5vw;
+    border: none;
+    border-radius: 2vw;
+    max-width: 86vw;
+    text-align: center;
+    background: none;
+    box-shadow: none;
+    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+}
+
+.calentamiento.activo{
+    display: block;
+}
+
+.calentamiento-titulo{
+    font-size: 4.5vw;
+    letter-spacing: 0.08em;
+    margin-bottom: 1vw;
+    text-shadow: 0 0 1vw rgba(255, 160, 80, 0.8);
+}
+
+.calentamiento-estado{
+    font-size: 3.6vw;
+    margin: 0 0 1.5vw;
+    color: #f7d07e;
+}
+
+.ellipsis {
+    display: inline;
+    white-space: nowrap;
+}
+
+.ellipsis::after {
+    content: "";
+    display: inline-block;
+    animation: ellipsis 2.4s steps(4, end) infinite;
+}
+
+.calentamiento-semillas{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2.5vw;
+    font-size: 5vw;
+    margin-bottom: 2.2vw;
+}
+
+.calentamiento-objetivo{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1vw;
+    margin: 0 0 5vw;
+    font-size: 3.8vw;
+    color: #f7d07e;
+}
+
+.calentamiento-objetivo-text{
+    text-shadow: 0 0 0.8vw rgba(247, 208, 126, 0.6);
+}
+
+.calentamiento-objetivo-box{
+    min-width: 14vw;
+    font-size: 4.2vw;
+    color: #ffffff;
+}
+
+
+.calentamiento-semilla{
+    padding: 0.4vw 1.4vw;
+    border: 0.2vw solid white;
+    border-radius: 1.2vw;
+    min-width: 12vw;
+    background: rgba(0, 0, 0, 0.35);
+    box-shadow: inset 0 0 0.6vw rgba(255, 255, 255, 0.15);
+}
+
+.calentamiento-revelar{
+    animation: calentamientoRevelar 1.3s ease;
+    text-shadow: 0 0 0.9vw rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 1vw rgba(247, 208, 126, 0.6), inset 0 0 0.6vw rgba(255, 255, 255, 0.25);
+}
+
+@keyframes calentamientoRevelar {
+    0% { transform: scale(0.65) rotate(-4deg); opacity: 0; filter: blur(8px); }
+    50% { transform: scale(1.15) rotate(2deg); opacity: 1; filter: blur(2px); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+}
+
+.calentamiento-separador{
+    font-size: 4.5vw;
+}
+
+.calentamiento-contadores{
+    display: flex;
+    justify-content: center;
+    gap: 5vw;
+    font-size: 3.5vw;
+    margin-bottom: 1vw;
+}
+
+.calentamiento-input{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2vw;
+    flex-wrap: wrap;
+    margin-bottom: 2vw;
+}
+
+.calentamiento-input input{
+    font-family: "Retro-gaming";
+    font-size: 4vw;
+    padding: 0.6vw 1.4vw;
+    border: 0.2vw solid white;
+    border-radius: 1vw;
+    background: transparent;
+    color: white;
+    text-align: center;
+    max-width: 70vw;
+    box-shadow: 0 0 0.8vw rgba(0, 255, 255, 0.2);
+}
+
+.calentamiento-input button:disabled{
+    opacity: 0.35;
+    filter: grayscale(0.8);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.calentamiento-feedback{
+    font-size: 3.3vw;
+    min-height: 1.2em;
+    color: #ffb35c;
+}
+
+.calentamiento-palabra-ganadora{
+    color: #8be9ff;
+    text-shadow: 0 0 0.8vw rgba(139, 233, 255, 0.6);
+}
+
+.calentamiento-usadas-title{
+    font-size: 3.2vw;
+    margin: 0.6vw 0 0.2vw;
+}
+
+.calentamiento-usadas{
+    font-size: 3vw;
+    opacity: 0.85;
+    word-break: break-word;
+}
+
+@keyframes ellipsis {
+    0% { content: ""; }
+    25% { content: "."; }
+    50% { content: ".."; }
+    75% { content: "..."; }
+    100% { content: ""; }
+}
+
+body.vista-calentamiento-musa .container {
+    display: none !important;
+}
+
+body.vista-calentamiento-musa #contenedor {
+    display: block;
+}
+
+body.vista-calentamiento-musa #contenedor .jugador > :not(div[align="center"]) {
+    display: none !important;
+}
+
+body.vista-calentamiento-musa #contenedor .jugador > div[align="center"] > :not(#calentamiento) {
+    display: none !important;
+}
+
+body.vista-calentamiento-musa #calentamiento {
+    display: block !important;
+    margin-top: 4vw;
 }

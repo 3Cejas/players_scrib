@@ -13,6 +13,52 @@ const escapeHtml = (valor) => String(valor)
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+const contenedor_corazones_espectador = (() => {
+    let contenedor = getEl("corazones_espectador");
+    if (!contenedor) {
+        contenedor = document.createElement("div");
+        contenedor.id = "corazones_espectador";
+        contenedor.className = "corazones-flotantes";
+        document.body.appendChild(contenedor);
+    }
+    return contenedor;
+})();
+
+const crearCorazonFlotante = (equipo, x, y) => {
+    if (!contenedor_corazones_espectador) return;
+    const corazon = document.createElement("span");
+    const claseEquipo = equipo === 1 ? "corazon-azul" : "corazon-rojo";
+    corazon.className = `corazon-flotante ${claseEquipo}`;
+    corazon.textContent = equipo === 1 ? "💙" : "❤️";
+    const tamaño = 22 + Math.random() * 22;
+    const duracion = 2000 + Math.random() * 1200;
+    const desplazamiento = -(90 + Math.random() * 140);
+    corazon.style.left = `${x}px`;
+    corazon.style.top = `${y}px`;
+    corazon.style.fontSize = `${tamaño}px`;
+    corazon.style.setProperty("--corazon-duracion", `${duracion}ms`);
+    corazon.style.setProperty("--corazon-dy", `${desplazamiento}px`);
+    contenedor_corazones_espectador.appendChild(corazon);
+    corazon.addEventListener("animationend", () => {
+        corazon.remove();
+    });
+};
+
+const lanzarCorazonEspectador = (equipo) => {
+    const ancho = window.innerWidth || 0;
+    const alto = window.innerHeight || 0;
+    if (!ancho || !alto) return;
+    const margen = ancho * 0.08;
+    const mitad = ancho * 0.5;
+    const minX = equipo === 1 ? margen : mitad + margen;
+    const maxX = equipo === 1 ? mitad - margen : ancho - margen;
+    const x = minX + Math.random() * Math.max(0, maxX - minX);
+    const yMin = alto * 0.45;
+    const yMax = alto * 0.8;
+    const y = yMin + Math.random() * (yMax - yMin);
+    crearCorazonFlotante(equipo, x, y);
+};
+
 // COMPONENTES DEL JUGADOR 1
 let nombre1 = getEl("nombre");
 let texto1 = getEl("texto");
@@ -49,6 +95,825 @@ let info = getEl("info");
 let info1 = getEl("info1");
 let info2= getEl("info2");
 let inspiracion = getEl("inspiracion");
+const calentamiento_espectador = getEl("calentamiento_espectador");
+const calentamiento_global_estado = getEl("calentamiento_global_estado");
+const calentamiento_estado_1 = getEl("calentamiento_estado_1");
+const calentamiento_estado_2 = getEl("calentamiento_estado_2");
+const calentamiento_semilla1_1 = getEl("calentamiento_semilla1_1");
+const calentamiento_semilla2_1 = getEl("calentamiento_semilla2_1");
+const calentamiento_semilla1_2 = getEl("calentamiento_semilla1_2");
+const calentamiento_semilla2_2 = getEl("calentamiento_semilla2_2");
+const calentamiento_intentos_1 = getEl("calentamiento_intentos_1");
+const calentamiento_intentos_2 = getEl("calentamiento_intentos_2");
+const calentamiento_aciertos_1 = getEl("calentamiento_aciertos_1");
+const calentamiento_aciertos_2 = getEl("calentamiento_aciertos_2");
+const calentamiento_marcador_intentos_1 = getEl("calentamiento_marcador_intentos_1");
+const calentamiento_marcador_intentos_2 = getEl("calentamiento_marcador_intentos_2");
+const calentamiento_marcador_aciertos_1 = getEl("calentamiento_marcador_aciertos_1");
+const calentamiento_marcador_aciertos_2 = getEl("calentamiento_marcador_aciertos_2");
+const calentamiento_pendiente_1 = getEl("calentamiento_pendiente_1");
+const calentamiento_pendiente_2 = getEl("calentamiento_pendiente_2");
+const calentamiento_usadas_1 = getEl("calentamiento_usadas_1");
+const calentamiento_usadas_2 = getEl("calentamiento_usadas_2");
+const calentamiento_usadas_titulo_1 = getEl("calentamiento_usadas_titulo_1");
+const calentamiento_usadas_titulo_2 = getEl("calentamiento_usadas_titulo_2");
+const calentamiento_rama_1 = getEl("calentamiento_rama_1");
+const calentamiento_rama_2 = getEl("calentamiento_rama_2");
+const calentamiento_historial_1 = getEl("calentamiento_historial_1");
+const calentamiento_historial_2 = getEl("calentamiento_historial_2");
+const calentamiento_equipo_1 = getEl("calentamiento_equipo_1");
+const calentamiento_equipo_2 = getEl("calentamiento_equipo_2");
+const contenedor_espectador = getEl("contenedor_espectador");
+const temas_container = getEl("temas_container");
+const info_general = getEl("info_general");
+const container_general = document.querySelector(".container");
+const cabecera = document.querySelector(".cabecera");
+const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
+let vista_calentamiento = false;
+const estado_vista_display = new Map();
+let ultimo_estado_calentamiento = 0;
+let intervalo_estado_calentamiento = null;
+
+const ESTADO_CALENTAMIENTO_TEXTO = {
+    inactivo: "⛔ Inactivo",
+    sin_musas: "👥 Sin musas",
+    esperando_semillas: "⏳ Esperando semillas",
+    jugando: "🎮 Jugando",
+    ganado: "✨ Ganado"
+};
+
+const crearNodoCalentamiento = (texto, esPlaceholder = false, extraClass = "") => {
+    const clases = ["calentamiento-nodo"];
+    if (esPlaceholder) clases.push("placeholder");
+    if (extraClass) clases.push(extraClass);
+    return `<span class="${clases.join(" ")}">${escapeHtml(texto || "--")}</span>`;
+};
+const renderizarLineas = (doble, claseExtra = "") => {
+    const clases = ["calentamiento-lineas"];
+    if (claseExtra) clases.push(claseExtra);
+    if (doble) {
+        return `
+            <svg class="${clases.join(" ")} lineas-doble" viewBox="0 0 120 60" preserveAspectRatio="none" aria-hidden="true">
+                <line class="calentamiento-linea-glow" x1="15" y1="4" x2="60" y2="56"></line>
+                <line class="calentamiento-linea-glow" x1="105" y1="4" x2="60" y2="56"></line>
+                <line class="calentamiento-linea-core" x1="15" y1="4" x2="60" y2="56"></line>
+                <line class="calentamiento-linea-core" x1="105" y1="4" x2="60" y2="56"></line>
+                <circle class="calentamiento-linea-nodo" cx="60" cy="56" r="4"></circle>
+            </svg>
+        `;
+    }
+    return `
+        <svg class="${clases.join(" ")} lineas-unico" viewBox="0 0 120 60" preserveAspectRatio="none" aria-hidden="true">
+            <line class="calentamiento-linea-glow" x1="60" y1="4" x2="60" y2="56"></line>
+            <line class="calentamiento-linea-core" x1="60" y1="4" x2="60" y2="56"></line>
+            <circle class="calentamiento-linea-nodo" cx="60" cy="56" r="4"></circle>
+        </svg>
+    `;
+};
+
+const estadoMarcadores = {
+    1: { intentos: null, aciertos: null, pendiente: null },
+    2: { intentos: null, aciertos: null, pendiente: null }
+};
+const estadoPendiente = {
+    1: { palabra: null },
+    2: { palabra: null }
+};
+const CUENTA_SEMILLAS_SEGUNDOS = 3;
+const CUENTA_REVELAR_INTENTO = 3;
+const estadoSemillas = {
+    1: {
+        listas: false,
+        recibidas: 0,
+        s1: false,
+        s2: false,
+        revelando: false,
+        reveladas: false,
+        cuenta: 0,
+        intervalId: null,
+        animarReveal: false
+    },
+    2: {
+        listas: false,
+        recibidas: 0,
+        s1: false,
+        s2: false,
+        revelando: false,
+        reveladas: false,
+        cuenta: 0,
+        intervalId: null,
+        animarReveal: false
+    }
+};
+const estadoRevelacion = {
+    1: {
+        activa: false,
+        hijos: [],
+        timeoutId: null,
+        absorbeTimeoutId: null,
+        intervalId: null,
+        token: 0,
+        subir: false,
+        enCuenta: false,
+        cuenta: 0,
+        pendientes: [],
+        pendienteFallo: false,
+        animar: false
+    },
+    2: {
+        activa: false,
+        hijos: [],
+        timeoutId: null,
+        absorbeTimeoutId: null,
+        intervalId: null,
+        token: 0,
+        subir: false,
+        enCuenta: false,
+        cuenta: 0,
+        pendientes: [],
+        pendienteFallo: false,
+        animar: false
+    }
+};
+const estadoUltimoCalentamiento = {
+    1: null,
+    2: null
+};
+
+const renderizarCuenta = (mensaje, cuenta) => {
+    const numero = Math.max(Number(cuenta) || 0, 0);
+    const clase = `calentamiento-cuenta cuenta-${numero}`;
+    return `${mensaje} <span class="${clase}">${numero}</span><span class="ellipsis-salto"></span>`;
+};
+
+const detenerCuentaSemillas = (equipo) => {
+    const info = estadoSemillas[equipo];
+    if (!info) return;
+    if (info.intervalId) {
+        clearInterval(info.intervalId);
+        info.intervalId = null;
+    }
+    info.revelando = false;
+    info.cuenta = 0;
+    info.animarReveal = false;
+};
+
+const iniciarCuentaSemillas = (equipo) => {
+    const info = estadoSemillas[equipo];
+    if (!info) return;
+    detenerCuentaSemillas(equipo);
+    info.revelando = true;
+    info.cuenta = CUENTA_SEMILLAS_SEGUNDOS;
+    info.intervalId = setInterval(() => {
+        info.cuenta -= 1;
+        if (info.cuenta <= 0) {
+            detenerCuentaSemillas(equipo);
+            info.reveladas = true;
+            info.animarReveal = true;
+        }
+        const datos = estadoUltimoCalentamiento[equipo];
+        if (datos) {
+            actualizarCalentamientoEquipo(equipo, datos);
+        }
+    }, 1000);
+};
+const estadoHistorial = {
+    1: 0,
+    2: 0
+};
+
+const animarMarcador = (elemento, clase) => {
+    if (!elemento) return;
+    elemento.classList.remove(clase);
+    void elemento.offsetWidth;
+    elemento.classList.add(clase);
+    elemento.addEventListener("animationend", () => {
+        elemento.classList.remove(clase);
+    }, { once: true });
+};
+
+const animarEquipo = (equipo, clase) => {
+    const objetivo = equipo === 1 ? calentamiento_equipo_1 : calentamiento_equipo_2;
+    if (!objetivo) return;
+    objetivo.classList.remove("calentamiento-acierto", "calentamiento-fallo");
+    void objetivo.offsetWidth;
+    objetivo.classList.add(clase);
+    objetivo.addEventListener("animationend", () => {
+        objetivo.classList.remove(clase);
+    }, { once: true });
+};
+
+const renderizarUsadas = (elemento, usadas) => {
+    if (!elemento) return;
+    const lista = Array.isArray(usadas) ? usadas : [];
+    elemento.classList.add("calentamiento-usadas-list");
+    if (!lista.length) {
+        elemento.innerHTML = "";
+        return;
+    }
+    elemento.innerHTML = lista
+        .map((palabra) => `<span class="calentamiento-usada">${escapeHtml(palabra)}</span>`)
+        .join("");
+};
+
+const renderizarRamaActual = (equipo, data, opciones = {}) => {
+    const ramaEl = equipo === 1 ? calentamiento_rama_1 : calentamiento_rama_2;
+    if (!ramaEl) return;
+    if (!data) {
+        ramaEl.innerHTML = "";
+        return;
+    }
+    const pendientePalabra = data.pendientePalabra || "";
+    const animarPendiente = Boolean(opciones.animarPendiente);
+    const animarRevelacion = Boolean(opciones.animarRevelacion);
+    const revelacion = Array.isArray(opciones.revelacion) ? opciones.revelacion : null;
+    const subirSemilla = Boolean(opciones.subirSemilla);
+    const misterioDoble = Boolean(opciones.misterioDoble);
+    const semillasListas = Boolean(data.semillas && data.semillas[1] && data.semillas[2]);
+    const textoPlaceholder = "--";
+    let hijos = [];
+    let esPlaceholder = false;
+    let esPendiente = false;
+    if (pendientePalabra) {
+        hijos = ["❓", textoPlaceholder];
+        esPendiente = true;
+    } else if (misterioDoble) {
+        hijos = ["❓", "❓"];
+        esPendiente = true;
+    } else if (revelacion && revelacion.length) {
+        hijos = revelacion;
+    } else if (semillasListas) {
+        hijos = [textoPlaceholder, textoPlaceholder];
+        esPlaceholder = true;
+    } else {
+        hijos = [textoPlaceholder];
+        esPlaceholder = true;
+    }
+    const doble = hijos.length >= 2;
+    let hijosHTML = "";
+    if (esPendiente && doble) {
+        const clasePendiente = animarPendiente
+            ? "pendiente-ocupado pendiente-anim misterio"
+            : "pendiente-ocupado misterio";
+        const claseSegundo = misterioDoble ? clasePendiente : "pendiente-vacio";
+        hijosHTML = `${crearNodoCalentamiento(hijos[0], false, clasePendiente)}${crearNodoCalentamiento(hijos[1], !misterioDoble, claseSegundo)}`;
+    } else if (doble) {
+        const claseRevelado = animarRevelacion && !esPlaceholder
+            ? (subirSemilla ? "revelar-subir" : "revelar")
+            : "";
+        hijosHTML = `${crearNodoCalentamiento(hijos[0], esPlaceholder, claseRevelado)}${crearNodoCalentamiento(hijos[1], esPlaceholder, claseRevelado)}`;
+    } else {
+        const claseRevelado = animarRevelacion && !esPlaceholder
+            ? (subirSemilla ? "revelar-subir" : "revelar")
+            : "";
+        hijosHTML = `${crearNodoCalentamiento(hijos[0], esPlaceholder, claseRevelado)}`;
+    }
+    const hijosClass = doble ? "calentamiento-hijos" : "calentamiento-hijos centrado";
+    const claseLineas = animarRevelacion
+        ? (subirSemilla ? "fusionando fusion-fallo" : "fusionando fusion-exito")
+        : "";
+    ramaEl.innerHTML = `
+        ${renderizarLineas(doble, claseLineas)}
+        <div class="${hijosClass}">${hijosHTML}</div>
+    `;
+};
+
+const renderizarHistorial = (equipo, data, opciones = {}) => {
+    const historialEl = equipo === 1 ? calentamiento_historial_1 : calentamiento_historial_2;
+    if (!historialEl) return;
+    if (!data) {
+        historialEl.innerHTML = "";
+        return;
+    }
+    const animarRevelacion = Boolean(opciones.animarRevelacion);
+    const historial = Array.isArray(data.historial) ? data.historial : [];
+    const recorte = historial.slice(-2);
+    if (!recorte.length) {
+        historialEl.innerHTML = "";
+        return;
+    }
+    const total = recorte.length;
+    historialEl.innerHTML = recorte.map((rama, indice) => {
+        const padres = Array.isArray(rama.padres) ? rama.padres : ["--", "--"];
+        const hijos = Array.isArray(rama.hijos) ? rama.hijos : [];
+        const doble = hijos.length >= 2;
+        const hijosClass = doble ? "calentamiento-hijos" : "calentamiento-hijos centrado";
+        const opacidad = total > 1
+            ? 0.35 + (indice / (total - 1)) * 0.4
+            : 0.55;
+        const escala = total > 1
+            ? 0.9 + (indice / (total - 1)) * 0.08
+            : 0.95;
+        const esUltima = indice === total - 1;
+        const claseRevelado = animarRevelacion && esUltima ? "revelar" : "";
+        const hijosHTML = doble
+            ? `${crearNodoCalentamiento(hijos[0], false, claseRevelado)}${crearNodoCalentamiento(hijos[1], false, claseRevelado)}`
+            : `${crearNodoCalentamiento(hijos[0] || "--", false, claseRevelado)}`;
+        return `
+            <div class="calentamiento-rama-historial" style="opacity:${opacidad}; transform: scale(${escala});">
+                <div class="calentamiento-padres">
+                    ${crearNodoCalentamiento(padres[0])}
+                    ${crearNodoCalentamiento(padres[1])}
+                </div>
+                ${renderizarLineas(doble)}
+                <div class="${hijosClass}">${hijosHTML}</div>
+            </div>
+        `;
+    }).join("");
+};
+
+const actualizarVistaCalentamiento = (activa) => {
+    const siguiente = Boolean(activa);
+    if (vista_calentamiento === siguiente) {
+        if (document.body) {
+            document.body.classList.toggle("vista-calentamiento", vista_calentamiento);
+        }
+        if (calentamiento_espectador) {
+            calentamiento_espectador.style.display = vista_calentamiento ? "flex" : "none";
+        }
+        if (cabecera) {
+            if (vista_calentamiento) {
+                cabecera.style.display = "none";
+            } else {
+                cabecera.style.display = estado_vista_display.get("cabecera")
+                    ?? cabecera_display_inicial
+                    ?? "";
+            }
+        }
+        return;
+    }
+    const ocultarVistaJuego = () => {
+        if (contenedor_espectador) contenedor_espectador.style.display = "none";
+        if (inspiracion) inspiracion.style.display = "none";
+        if (temas_container) temas_container.style.display = "none";
+        if (info_general) info_general.style.display = "none";
+        if (info) info.style.display = "none";
+        if (container_general) container_general.style.display = "none";
+        if (cabecera) cabecera.style.display = "none";
+    };
+    const limpiarAnimacionVista = (elemento) => {
+        if (!elemento) return;
+        elemento.classList.forEach((clase) => {
+            if (clase.startsWith("animate__")) {
+                elemento.classList.remove(clase);
+            }
+        });
+        elemento.style.animation = "none";
+        void elemento.offsetWidth;
+        elemento.style.animation = "";
+        elemento.style.opacity = "";
+        elemento.style.transform = "";
+    };
+    vista_calentamiento = siguiente;
+    if (document.body) {
+        document.body.classList.toggle("vista-calentamiento", vista_calentamiento);
+    }
+    if (calentamiento_espectador) {
+        calentamiento_espectador.style.display = vista_calentamiento ? "flex" : "none";
+    }
+    if (vista_calentamiento) {
+        estado_vista_display.clear();
+        if (contenedor_espectador) estado_vista_display.set("contenedor_espectador", contenedor_espectador.style.display);
+        if (inspiracion) estado_vista_display.set("inspiracion", inspiracion.style.display);
+        if (temas_container) estado_vista_display.set("temas_container", temas_container.style.display);
+        if (info_general) estado_vista_display.set("info_general", info_general.style.display);
+        if (info) estado_vista_display.set("info", info.style.display);
+        if (container_general) estado_vista_display.set("container_general", container_general.style.display);
+        if (cabecera) estado_vista_display.set("cabecera", cabecera.style.display);
+        if (typeof animateCSS !== "function") {
+            ocultarVistaJuego();
+        }
+    } else {
+        const cabecera_display = estado_vista_display.get("cabecera")
+            ?? cabecera_display_inicial
+            ?? "";
+        if (contenedor_espectador) contenedor_espectador.style.display = estado_vista_display.get("contenedor_espectador") ?? "";
+        if (inspiracion) inspiracion.style.display = estado_vista_display.get("inspiracion") ?? "";
+        if (temas_container) temas_container.style.display = estado_vista_display.get("temas_container") ?? "";
+        if (info_general) info_general.style.display = estado_vista_display.get("info_general") ?? "";
+        if (info) info.style.display = estado_vista_display.get("info") ?? "";
+        if (container_general) container_general.style.display = estado_vista_display.get("container_general") ?? "";
+        if (cabecera) cabecera.style.display = cabecera_display;
+        estado_vista_display.clear();
+    }
+    if (typeof animateCSS === "function") {
+        if (vista_calentamiento) {
+            if (cabecera) cabecera.style.display = "none";
+            if (logo) logo.style.display = "none";
+            if (typeof neon !== "undefined" && neon) neon.style.display = "none";
+            ocultarVistaJuego();
+            if (calentamiento_espectador) {
+                limpiarAnimacionVista(calentamiento_espectador);
+                calentamiento_espectador.style.display = "flex";
+                animateCSS(".calentamiento-espectador", "backInLeft").then(() => {
+                    animateCSS(".calentamiento-espectador", "pulse");
+                });
+            }
+        } else {
+            const cabecera_display = cabecera_display_inicial ?? "";
+            if (cabecera) cabecera.style.display = cabecera_display;
+            if (logo) logo.style.display = "";
+            if (typeof neon !== "undefined" && neon) neon.style.display = "";
+            const animarEntradaJuego = () => {
+                animateCSS(".cabecera", "backInLeft").then(() => {
+                    animateCSS(".contenedor_espectador", "pulse");
+                    animateCSS(".jugador1", "pulse");
+                    animateCSS(".jugador2", "pulse");
+                });
+            };
+            if (calentamiento_espectador) {
+                calentamiento_espectador.style.display = "none";
+                animarEntradaJuego();
+            } else {
+                animarEntradaJuego();
+            }
+        }
+    } else if (cabecera) {
+        cabecera.style.display = vista_calentamiento
+            ? "none"
+            : (cabecera_display_inicial ?? "");
+    }
+};
+
+const actualizarCalentamientoEquipo = (equipo, data) => {
+    const estadoEl = equipo === 1 ? calentamiento_estado_1 : calentamiento_estado_2;
+    const semilla1El = equipo === 1 ? calentamiento_semilla1_1 : calentamiento_semilla1_2;
+    const semilla2El = equipo === 1 ? calentamiento_semilla2_1 : calentamiento_semilla2_2;
+    const intentosEl = equipo === 1 ? calentamiento_intentos_1 : calentamiento_intentos_2;
+    const aciertosEl = equipo === 1 ? calentamiento_aciertos_1 : calentamiento_aciertos_2;
+    const pendienteEl = equipo === 1 ? calentamiento_pendiente_1 : calentamiento_pendiente_2;
+    const usadasEl = equipo === 1 ? calentamiento_usadas_1 : calentamiento_usadas_2;
+    const usadasTituloEl = equipo === 1 ? calentamiento_usadas_titulo_1 : calentamiento_usadas_titulo_2;
+    const infoRevelacion = estadoRevelacion[equipo];
+
+    if (!data) {
+        if (estadoEl) estadoEl.textContent = ESTADO_CALENTAMIENTO_TEXTO.inactivo;
+        if (semilla1El) {
+            semilla1El.textContent = "--";
+        }
+        if (semilla2El) {
+            semilla2El.textContent = "--";
+        }
+        if (intentosEl) intentosEl.textContent = "0";
+        if (aciertosEl) aciertosEl.textContent = "0";
+        if (pendienteEl) pendienteEl.textContent = "";
+        if (usadasTituloEl) usadasTituloEl.style.display = "";
+        if (usadasEl) usadasEl.style.display = "";
+        renderizarUsadas(usadasEl, []);
+        estadoMarcadores[equipo].intentos = null;
+        estadoMarcadores[equipo].aciertos = null;
+        estadoMarcadores[equipo].pendiente = null;
+        estadoPendiente[equipo].palabra = null;
+        estadoSemillas[equipo].listas = false;
+        estadoSemillas[equipo].recibidas = 0;
+        estadoSemillas[equipo].s1 = false;
+        estadoSemillas[equipo].s2 = false;
+        estadoSemillas[equipo].reveladas = false;
+        detenerCuentaSemillas(equipo);
+        estadoHistorial[equipo] = 0;
+        estadoUltimoCalentamiento[equipo] = null;
+        if (estadoRevelacion[equipo].timeoutId) {
+            clearTimeout(estadoRevelacion[equipo].timeoutId);
+        }
+        if (estadoRevelacion[equipo].absorbeTimeoutId) {
+            clearTimeout(estadoRevelacion[equipo].absorbeTimeoutId);
+        }
+        if (estadoRevelacion[equipo].intervalId) {
+            clearInterval(estadoRevelacion[equipo].intervalId);
+        }
+        estadoRevelacion[equipo] = {
+            activa: false,
+            hijos: [],
+            timeoutId: null,
+            absorbeTimeoutId: null,
+            intervalId: null,
+            token: 0,
+            subir: false,
+            enCuenta: false,
+            cuenta: 0,
+            pendientes: [],
+            pendienteFallo: false,
+            animar: false
+        };
+        renderizarRamaActual(equipo, null);
+        renderizarHistorial(equipo, null);
+        return;
+    }
+    estadoUltimoCalentamiento[equipo] = data;
+
+    const semillas = data.semillas || {};
+    const semillasRecibidas = data.semillasRecibidas || {};
+    const usadas = Array.isArray(data.usadas) ? data.usadas : [];
+    const semilla1Recibida = Boolean(semillasRecibidas[1] || semillas[1]);
+    const semilla2Recibida = Boolean(semillasRecibidas[2] || semillas[2]);
+    const recibidas = (semilla1Recibida ? 1 : 0) + (semilla2Recibida ? 1 : 0);
+    const nuevaSemilla1 = semilla1Recibida && !estadoSemillas[equipo].s1;
+    const nuevaSemilla2 = semilla2Recibida && !estadoSemillas[equipo].s2;
+    const semillasListas = semilla1Recibida && semilla2Recibida;
+    const algunaSemillaRecibida = semilla1Recibida || semilla2Recibida;
+    const infoSemillas = estadoSemillas[equipo];
+    if (!algunaSemillaRecibida) {
+        infoSemillas.reveladas = false;
+        detenerCuentaSemillas(equipo);
+    } else if (semillasListas && !infoSemillas.reveladas && !infoSemillas.revelando) {
+        iniciarCuentaSemillas(equipo);
+    } else if (!semillasListas) {
+        infoSemillas.reveladas = false;
+        detenerCuentaSemillas(equipo);
+    }
+    const historialActual = Array.isArray(data.historial) ? data.historial.length : 0;
+    const animarRevelacion = historialActual > estadoHistorial[equipo];
+    const ocultarSemillasPorRevelacion = infoRevelacion.enCuenta
+        || animarRevelacion
+        || infoRevelacion.activa;
+    const mostrarSemillas = semillasListas && infoSemillas.reveladas && !ocultarSemillasPorRevelacion;
+    const puedeMostrarMisterioSemillas = !ocultarSemillasPorRevelacion;
+    const mostrarSemilla1Misterio = puedeMostrarMisterioSemillas && !mostrarSemillas && semilla1Recibida;
+    const mostrarSemilla2Misterio = puedeMostrarMisterioSemillas && !mostrarSemillas && semilla2Recibida;
+    if (semilla1El) {
+        if (ocultarSemillasPorRevelacion) {
+            semilla1El.textContent = "";
+            semilla1El.classList.remove("misterio");
+            semilla1El.classList.remove("pendiente-anim");
+        } else if (mostrarSemillas) {
+            semilla1El.textContent = semillas[1];
+            semilla1El.classList.remove("misterio");
+            semilla1El.classList.remove("pendiente-anim");
+        } else if (mostrarSemilla1Misterio) {
+            semilla1El.textContent = "❓";
+            semilla1El.classList.add("misterio");
+        } else {
+            semilla1El.textContent = "--";
+            semilla1El.classList.remove("misterio");
+            semilla1El.classList.remove("pendiente-anim");
+        }
+    }
+    if (semilla2El) {
+        if (ocultarSemillasPorRevelacion) {
+            semilla2El.textContent = "";
+            semilla2El.classList.remove("misterio");
+            semilla2El.classList.remove("pendiente-anim");
+        } else if (mostrarSemillas) {
+            semilla2El.textContent = semillas[2];
+            semilla2El.classList.remove("misterio");
+            semilla2El.classList.remove("pendiente-anim");
+        } else if (mostrarSemilla2Misterio) {
+            semilla2El.textContent = "❓";
+            semilla2El.classList.add("misterio");
+        } else {
+            semilla2El.textContent = "--";
+            semilla2El.classList.remove("misterio");
+            semilla2El.classList.remove("pendiente-anim");
+        }
+    }
+    if (puedeMostrarMisterioSemillas && !mostrarSemillas && !semillasListas && (nuevaSemilla1 || nuevaSemilla2)) {
+        if (nuevaSemilla1 && semilla1El) animarMarcador(semilla1El, "pendiente-anim");
+        if (nuevaSemilla2 && semilla2El) animarMarcador(semilla2El, "pendiente-anim");
+    }
+    if (mostrarSemillas && infoSemillas.animarReveal) {
+        [semilla1El, semilla2El].forEach((el) => {
+            if (!el) return;
+            animarMarcador(el, "semilla-revelar");
+        });
+        infoSemillas.animarReveal = false;
+    }
+    infoSemillas.listas = semillasListas;
+    infoSemillas.recibidas = recibidas;
+    infoSemillas.s1 = semilla1Recibida;
+    infoSemillas.s2 = semilla2Recibida;
+    const intentosActual = Number(data.intentos ?? 0);
+    const aciertosActual = Number(data.aciertos ?? 0);
+    if (usadasTituloEl) usadasTituloEl.style.display = "";
+    if (usadasEl) usadasEl.style.display = "";
+    renderizarUsadas(usadasEl, usadas);
+
+    let estadoTexto = ESTADO_CALENTAMIENTO_TEXTO[data.estado] || ESTADO_CALENTAMIENTO_TEXTO.inactivo;
+    let estadoAnimado = false;
+    if (data.estado === "esperando_semillas") {
+        estadoTexto = "⏳ Esperando palabras semilla";
+        estadoAnimado = true;
+    }
+    if (data.estado === "jugando") {
+        estadoTexto = "🧠 ¡Encontrad la palabra intermedia!";
+    }
+    if (infoSemillas.revelando && data.estado === "jugando") {
+        const cuenta = Math.max(infoSemillas.cuenta, 1);
+        estadoTexto = renderizarCuenta("🔮 Revelando semillas en", cuenta);
+        estadoAnimado = false;
+    }
+    if (estadoEl) {
+        if (estadoAnimado) {
+            estadoEl.innerHTML = `${escapeHtml(estadoTexto)}<span class="ellipsis"></span>`;
+        } else {
+            estadoEl.innerHTML = infoSemillas.revelando
+                ? estadoTexto
+                : escapeHtml(estadoTexto);
+        }
+    }
+    const prev = estadoMarcadores[equipo];
+    const diferirMarcadores = Boolean(infoRevelacion.enCuenta || animarRevelacion || infoRevelacion.activa);
+    if (prev.intentos !== null && prev.aciertos !== null) {
+        const aumentoIntentos = intentosActual > prev.intentos;
+        const aumentoAciertos = aciertosActual > prev.aciertos;
+        const descenso = intentosActual < prev.intentos || aciertosActual < prev.aciertos;
+        if (descenso) {
+            if (intentosEl) intentosEl.textContent = intentosActual;
+            if (aciertosEl) aciertosEl.textContent = aciertosActual;
+            prev.intentos = intentosActual;
+            prev.aciertos = aciertosActual;
+            prev.pendiente = null;
+        } else if (aumentoIntentos || aumentoAciertos) {
+            if (diferirMarcadores) {
+                prev.pendiente = { intentos: intentosActual, aciertos: aciertosActual };
+            } else {
+                if (intentosEl) intentosEl.textContent = intentosActual;
+                if (aciertosEl) aciertosEl.textContent = aciertosActual;
+                if (aumentoAciertos) {
+                    animarMarcador(equipo === 1 ? calentamiento_marcador_aciertos_1 : calentamiento_marcador_aciertos_2, "marcador-acierto-anim");
+                    animarEquipo(equipo, "calentamiento-acierto");
+                    if (typeof confetti_musas === "function") {
+                        confetti_musas(equipo === 1 ? 0.25 : 0.75);
+                    }
+                } else if (aumentoIntentos) {
+                    animarMarcador(equipo === 1 ? calentamiento_marcador_intentos_1 : calentamiento_marcador_intentos_2, "marcador-intento-anim");
+                    animarEquipo(equipo, "calentamiento-fallo");
+                }
+                prev.intentos = intentosActual;
+                prev.aciertos = aciertosActual;
+                prev.pendiente = null;
+            }
+        } else if (!prev.pendiente) {
+            if (intentosEl) intentosEl.textContent = intentosActual;
+            if (aciertosEl) aciertosEl.textContent = aciertosActual;
+        }
+    } else {
+        if (intentosEl) intentosEl.textContent = intentosActual;
+        if (aciertosEl) aciertosEl.textContent = aciertosActual;
+        prev.intentos = intentosActual;
+        prev.aciertos = aciertosActual;
+        prev.pendiente = null;
+    }
+    const prevPendiente = estadoPendiente[equipo].palabra;
+    const pendienteActual = data.pendientePalabra || null;
+    const animarPendiente = Boolean(pendienteActual && pendienteActual !== prevPendiente);
+    if (pendienteActual) {
+        if (estadoRevelacion[equipo].timeoutId) {
+            clearTimeout(estadoRevelacion[equipo].timeoutId);
+            estadoRevelacion[equipo].timeoutId = null;
+        }
+        if (estadoRevelacion[equipo].absorbeTimeoutId) {
+            clearTimeout(estadoRevelacion[equipo].absorbeTimeoutId);
+            estadoRevelacion[equipo].absorbeTimeoutId = null;
+        }
+        if (estadoRevelacion[equipo].intervalId) {
+            clearInterval(estadoRevelacion[equipo].intervalId);
+            estadoRevelacion[equipo].intervalId = null;
+        }
+        estadoRevelacion[equipo].activa = false;
+        estadoRevelacion[equipo].enCuenta = false;
+        estadoRevelacion[equipo].cuenta = 0;
+        estadoRevelacion[equipo].hijos = [];
+        estadoRevelacion[equipo].pendientes = [];
+        estadoRevelacion[equipo].pendienteFallo = false;
+        estadoRevelacion[equipo].subir = false;
+        estadoRevelacion[equipo].animar = false;
+        if (semilla1El) semilla1El.classList.remove("semilla-espera");
+        if (semilla2El) semilla2El.classList.remove("semilla-espera");
+    }
+    if (animarRevelacion) {
+        const historial = Array.isArray(data.historial) ? data.historial : [];
+        const ultima = historial.length ? historial[historial.length - 1] : null;
+        const ultimoFallo = Boolean(ultima && ultima.exito === false);
+        if (ultima && Array.isArray(ultima.hijos) && ultima.hijos.length) {
+            const infoRevelacion = estadoRevelacion[equipo];
+            infoRevelacion.token += 1;
+            const token = infoRevelacion.token;
+            if (infoRevelacion.timeoutId) {
+                clearTimeout(infoRevelacion.timeoutId);
+            }
+            if (infoRevelacion.absorbeTimeoutId) {
+                clearTimeout(infoRevelacion.absorbeTimeoutId);
+            }
+            if (infoRevelacion.intervalId) {
+                clearInterval(infoRevelacion.intervalId);
+            }
+            infoRevelacion.activa = false;
+            infoRevelacion.enCuenta = true;
+            infoRevelacion.cuenta = CUENTA_REVELAR_INTENTO;
+            infoRevelacion.pendientes = ultima.hijos;
+            infoRevelacion.pendienteFallo = ultimoFallo;
+            infoRevelacion.subir = false;
+            infoRevelacion.animar = false;
+            infoRevelacion.intervalId = setInterval(() => {
+                if (estadoRevelacion[equipo].token !== token) return;
+                infoRevelacion.cuenta -= 1;
+                if (infoRevelacion.cuenta <= 0) {
+                    if (infoRevelacion.intervalId) {
+                        clearInterval(infoRevelacion.intervalId);
+                        infoRevelacion.intervalId = null;
+                    }
+                    infoRevelacion.enCuenta = false;
+                    infoRevelacion.activa = true;
+                    infoRevelacion.hijos = infoRevelacion.pendientes;
+                    infoRevelacion.subir = infoRevelacion.pendienteFallo;
+                    infoRevelacion.animar = true;
+                    if (infoRevelacion.subir) {
+                        infoRevelacion.absorbeTimeoutId = setTimeout(() => {
+                            animarMarcador(semilla1El, "semilla-absorbe");
+                            animarMarcador(semilla2El, "semilla-absorbe");
+                        }, 900);
+                    }
+                    const duracionRevelacion = infoRevelacion.subir ? 1800 : 1200;
+                    infoRevelacion.timeoutId = setTimeout(() => {
+                        if (estadoRevelacion[equipo].token !== token) return;
+                        estadoRevelacion[equipo].activa = false;
+                        estadoRevelacion[equipo].hijos = [];
+                        estadoRevelacion[equipo].subir = false;
+                        estadoRevelacion[equipo].pendientes = [];
+                        estadoRevelacion[equipo].pendienteFallo = false;
+                        estadoRevelacion[equipo].animar = false;
+                        if (semilla1El) semilla1El.classList.remove("semilla-espera");
+                        if (semilla2El) semilla2El.classList.remove("semilla-espera");
+                        const datosActuales = estadoUltimoCalentamiento[equipo];
+                        renderizarRamaActual(equipo, datosActuales || null);
+                    }, duracionRevelacion);
+                }
+                const datos = estadoUltimoCalentamiento[equipo];
+                if (datos) {
+                    actualizarCalentamientoEquipo(equipo, datos);
+                }
+            }, 1000);
+        }
+    }
+    if (pendienteEl) {
+        if (infoRevelacion.enCuenta) {
+            const cuenta = Math.max(infoRevelacion.cuenta, 1);
+            pendienteEl.innerHTML = renderizarCuenta("✨ Revelando intento en", cuenta);
+        } else if (data.estado === "jugando" && data.pendiente) {
+            pendienteEl.innerHTML = "⏳ Esperando otra musa<span class=\"ellipsis\"></span>";
+        } else {
+            pendienteEl.textContent = "";
+        }
+    }
+    const mostrarRevelacion = estadoRevelacion[equipo].activa;
+    const hijosRevelacion = mostrarRevelacion ? estadoRevelacion[equipo].hijos : null;
+    const animacionRevelacion = mostrarRevelacion && estadoRevelacion[equipo].animar;
+    const subirSemilla = mostrarRevelacion && estadoRevelacion[equipo].subir;
+    const cuentaRevelacion = estadoRevelacion[equipo].enCuenta;
+    renderizarRamaActual(equipo, data, {
+        animarPendiente,
+        animarRevelacion: animacionRevelacion,
+        revelacion: hijosRevelacion,
+        subirSemilla,
+        misterioDoble: cuentaRevelacion
+    });
+    renderizarHistorial(equipo, data, { animarRevelacion: animacionRevelacion });
+    if (animacionRevelacion && prev.pendiente) {
+        const pendiente = prev.pendiente;
+        const aumentoAciertos = pendiente.aciertos > prev.aciertos;
+        const aumentoIntentos = pendiente.intentos > prev.intentos;
+        if (intentosEl) intentosEl.textContent = pendiente.intentos;
+        if (aciertosEl) aciertosEl.textContent = pendiente.aciertos;
+        if (pendienteEl) pendienteEl.textContent = "";
+        if (aumentoAciertos) {
+            animarMarcador(equipo === 1 ? calentamiento_marcador_aciertos_1 : calentamiento_marcador_aciertos_2, "marcador-acierto-anim");
+            animarEquipo(equipo, "calentamiento-acierto");
+            if (typeof confetti_musas === "function") {
+                confetti_musas(equipo === 1 ? 0.25 : 0.75);
+            }
+        } else if (aumentoIntentos) {
+            animarMarcador(equipo === 1 ? calentamiento_marcador_intentos_1 : calentamiento_marcador_intentos_2, "marcador-intento-anim");
+            animarEquipo(equipo, "calentamiento-fallo");
+        }
+        prev.intentos = pendiente.intentos;
+        prev.aciertos = pendiente.aciertos;
+        prev.pendiente = null;
+    }
+    if (animacionRevelacion) {
+        estadoRevelacion[equipo].animar = false;
+    }
+    estadoPendiente[equipo].palabra = pendienteActual;
+    estadoHistorial[equipo] = historialActual;
+};
+
+const actualizarCalentamientoEspectador = (data) => {
+    if (!data) return;
+    if (typeof data.vista === "boolean") {
+        actualizarVistaCalentamiento(data.vista);
+    }
+    if (calentamiento_global_estado) {
+        if (data.activo) {
+            calentamiento_global_estado.textContent = "";
+            calentamiento_global_estado.style.display = "none";
+        } else {
+            calentamiento_global_estado.textContent = "Calentamiento inactivo.";
+            calentamiento_global_estado.style.display = "";
+        }
+    }
+    const equipos = data.equipos || {};
+    actualizarCalentamientoEquipo(1, equipos[1]);
+    actualizarCalentamientoEquipo(2, equipos[2]);
+};
 
 // COMPONENTES DEL JUGADOR 2
 let nombre2 = getEl("nombre1");
@@ -93,9 +958,11 @@ let frase_final_j2;
 
 let sonido;
 
-animateCSS(".cabecera", "backInLeft").then((message) => {
-    animateCSS(".contenedor_espectador", "pulse");
-});
+if (typeof animateCSS === "function") {
+    animateCSS(".cabecera", "backInLeft").then(() => {
+        animateCSS(".contenedor_espectador", "pulse");
+    });
+}
 //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
 
 const PUTADAS = {
@@ -405,6 +1272,29 @@ activar_sockets_extratextuales();
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     socket.emit('registrar_espectador');
+    socket.emit('pedir_calentamiento_estado');
+    if (!intervalo_estado_calentamiento) {
+        intervalo_estado_calentamiento = setInterval(() => {
+            if (!socket.connected) return;
+            if (Date.now() - ultimo_estado_calentamiento < 1500) return;
+            socket.emit('pedir_calentamiento_estado');
+        }, 2000);
+    }
+});
+
+socket.on('musa_corazon', (data) => {
+    const equipo = data && Number(data.equipo);
+    if (equipo !== 1 && equipo !== 2) return;
+    lanzarCorazonEspectador(equipo);
+});
+
+socket.on('calentamiento_vista', (data) => {
+    actualizarVistaCalentamiento(data && data.activo);
+});
+
+socket.on('calentamiento_estado_espectador', (data) => {
+    ultimo_estado_calentamiento = Date.now();
+    actualizarCalentamientoEspectador(data);
 });
 
 

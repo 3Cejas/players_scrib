@@ -15,6 +15,7 @@ let juego_iniciado = false;
 let pausado = false;
 let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
+let vista_calentamiento = false;
 
 
 function paddedFormat(num) {
@@ -160,7 +161,7 @@ function temp() {
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto : boton_borrar.checked, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: frase_final_j1.value.slice(1, -1), FRASE_FINAL_J2: frase_final_j2.value.slice(1, -1)} });
+    socket.emit('inicio', {count, borrar_texto : false, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: frase_final_j1.value.slice(1, -1), FRASE_FINAL_J2: frase_final_j2.value.slice(1, -1)} });
     juego_iniciado = true;
     modo_actual = "";
   
@@ -219,10 +220,8 @@ function limpiar() {
         boton_pausar_reanudar.dataset.value = 0;
         boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
     }
-    if(boton_borrar.checked == false){
-        texto_guardado1 = texto1.innerText;
-        texto_guardado2 = texto2.innerText;
-    }
+    texto_guardado1 = texto1.innerText;
+    texto_guardado2 = texto2.innerText;
     //texto1.innerText = "";
     //texto2.innerText = "";
     juego_iniciado = false;
@@ -235,7 +234,7 @@ function limpiar() {
     document.getElementById("texto1").style.height = (document.getElementById("texto1").scrollHeight) + "px";
     document.getElementById("definicion").innerHTML = "";
     document.getElementById("explicación").innerHTML = "";
-    socket.emit('limpiar', boton_borrar.checked);
+    socket.emit('limpiar', false);
 
     DURACION_TIEMPO_MODOS = DURACION_TIEMPO_MODOS;
     clearInterval(listener_cuenta_atras);
@@ -262,6 +261,12 @@ function limpiar() {
     }
 };
 
+function borrar_texto_guardado() {
+    texto_guardado1 = "";
+    texto_guardado2 = "";
+    socket.emit('borrar_texto_guardado');
+}
+
 function fin(player) {
     if(player == 1){
         fin_j1 = true
@@ -283,6 +288,26 @@ function fin(player) {
 function cambiar_vista() {
     socket.emit('cambiar_vista', 'nada');
 };
+
+function cambiar_vista_calentamiento(boton) {
+    vista_calentamiento = !vista_calentamiento;
+    actualizarBotonVistaCalentamiento(boton);
+    socket.emit('cambiar_vista_calentamiento', { activo: vista_calentamiento });
+}
+
+function actualizarBotonVistaCalentamiento(boton) {
+    const destino = boton || document.getElementById("boton_vista_calentamiento");
+    if (!destino) return;
+    destino.textContent = vista_calentamiento ? "🎮 VISTA PARTIDA" : "🔥 VISTA CALENTAMIENTO";
+    destino.dataset.activo = vista_calentamiento ? "1" : "0";
+}
+function reiniciar_calentamiento() {
+    socket.emit('reiniciar_calentamiento');
+}
+
+function reiniciar_marcador_calentamiento() {
+    socket.emit('reiniciar_marcador_calentamiento');
+}
 
 function enviar_comentario() {
     palabras = tema.value;

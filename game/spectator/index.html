@@ -23,6 +23,7 @@
 <body>
     <script src="../config.js"></script>
     <script src="./js/juego.js"></script>
+    <div id="corazones_espectador" class="corazones-flotantes"></div>
     <div align="center">
         <div class="cabecera">
         <pre id="neon" class="neon_espectador">
@@ -46,7 +47,7 @@
     </div>
         <br>
         <div class="container"></div>
-        <p><span id="temas" class="temas"></span></p>
+        <p id="temas_container"><span id="temas" class="temas"></span></p>
         <br>
         <div id="inspiracion" class="inspiracion">
             <p style="font-size: 1.5vw;">INSPIRACIÓN</p>
@@ -60,6 +61,50 @@
             </div>
             
     </div>
+        <section id="calentamiento_espectador" class="calentamiento-espectador">
+            <h2 class="calentamiento-titulo">🔥CALENTAMIENTO🔥</h2>
+            <p id="calentamiento_global_estado" class="calentamiento-global-estado">Calentamiento inactivo.</p>
+            <div class="calentamiento-paneles">
+                <article id="calentamiento_equipo_1" class="calentamiento-equipo calentamiento-equipo-azul">
+                    <h3 class="calentamiento-equipo-titulo">MUSAS AZULES</h3>
+                    <p id="calentamiento_estado_1" class="calentamiento-equipo-estado">Esperando datos.</p>
+                    <div class="calentamiento-semillas">
+                        <span id="calentamiento_semilla1_1" class="calentamiento-semilla">--</span>
+                        <span id="calentamiento_semilla2_1" class="calentamiento-semilla">--</span>
+                    </div>
+                    <div class="calentamiento-arbol">
+                        <div id="calentamiento_rama_1" class="calentamiento-rama-actual"></div>
+                        <div id="calentamiento_historial_1" class="calentamiento-historial"></div>
+                    </div>
+                    <div class="calentamiento-marcadores">
+                        <span id="calentamiento_marcador_intentos_1" class="calentamiento-marcador marcador-intentos">🎯 Intentos <strong id="calentamiento_intentos_1">0</strong></span>
+                        <span id="calentamiento_marcador_aciertos_1" class="calentamiento-marcador marcador-aciertos">🏆 Aciertos <strong id="calentamiento_aciertos_1">0</strong></span>
+                    </div>
+                    <p id="calentamiento_pendiente_1" class="calentamiento-pendiente"></p>
+                    <p id="calentamiento_usadas_titulo_1" class="calentamiento-usadas-title">🧩 Usadas</p>
+                    <p id="calentamiento_usadas_1" class="calentamiento-usadas">-</p>
+                </article>
+                <article id="calentamiento_equipo_2" class="calentamiento-equipo calentamiento-equipo-rojo">
+                    <h3 class="calentamiento-equipo-titulo">MUSAS ROJAS</h3>
+                    <p id="calentamiento_estado_2" class="calentamiento-equipo-estado">Esperando datos.</p>
+                    <div class="calentamiento-semillas">
+                        <span id="calentamiento_semilla1_2" class="calentamiento-semilla">--</span>
+                        <span id="calentamiento_semilla2_2" class="calentamiento-semilla">--</span>
+                    </div>
+                    <div class="calentamiento-arbol">
+                        <div id="calentamiento_rama_2" class="calentamiento-rama-actual"></div>
+                        <div id="calentamiento_historial_2" class="calentamiento-historial"></div>
+                    </div>
+                    <div class="calentamiento-marcadores">
+                        <span id="calentamiento_marcador_intentos_2" class="calentamiento-marcador marcador-intentos">🎯 Intentos <strong id="calentamiento_intentos_2">0</strong></span>
+                        <span id="calentamiento_marcador_aciertos_2" class="calentamiento-marcador marcador-aciertos">🏆 Aciertos <strong id="calentamiento_aciertos_2">0</strong></span>
+                    </div>
+                    <p id="calentamiento_pendiente_2" class="calentamiento-pendiente"></p>
+                    <p id="calentamiento_usadas_titulo_2" class="calentamiento-usadas-title">🧩 Usadas</p>
+                    <p id="calentamiento_usadas_2" class="calentamiento-usadas">-</p>
+                </article>
+            </div>
+        </section>
         <div class="contenedor" id="contenedor_espectador">
             <div class="jugador1">
                 <p id="tiempo" class="tiempo"></p>
@@ -137,7 +182,7 @@
             </div>
         </div>
     </div>
-    <table class="info">
+    <table id="info_general" class="info">
         <tr>
                 <p id="explicación" class="explicación"></p>
         </tr>

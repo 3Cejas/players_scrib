@@ -63,7 +63,18 @@
                     <span onclick="fin(2)" class='btn'>👾 FIN J2</span>
                 </td> 
                 <td>
-                    <table class="right"><td><input type="text" class="placeholder" id="temas" size="10" placeholder="Pon texto..."></td></table>
+                    <span class='btn' onclick="borrar_texto_guardado()">🪄 BORRAR TEXTO</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">🔥 VISTA CALENTAMIENTO</span>
+                </td>
+                <td>
+                    <span class='btn' onclick="reiniciar_calentamiento()">🔁 REJUGAR CALENTAMIENTO</span>
+                </td>
+                <td>
+                    <span class='btn' onclick="reiniciar_marcador_calentamiento()">🏆 REINICIAR MARCADOR</span>
                 </td>
             </tr>
             <tr>
@@ -159,13 +170,7 @@
         </td>
         <td>
             <br>
-            <b>BORRAR</b>
-            <br>
-            <br>
-            <label class="switch">
-                <input id="boton_borrar" type="checkbox">
-                <span class="slider round"></span>
-            </label>
+            <table class="right"><td><input type="text" class="placeholder" id="temas" size="10" placeholder="Pon texto..."></td></table>
         </td>
     </tr>
     </table>

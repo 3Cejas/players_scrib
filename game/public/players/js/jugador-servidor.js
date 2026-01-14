@@ -5,6 +5,12 @@ const serverUrl = isProduction
 
 const socket = io(serverUrl);
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
+const escapeHtml = (valor) => String(valor)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 animateCSS(".contenedor", "pulse");
 
@@ -63,6 +69,377 @@ function getParameterByName(name, url) {
 let jugador1 = document.querySelector('.jugador1');
 let jugador2 = document.querySelector('.jugador2');
 let nombre_musa_label = getEl("nombre_musa_label");
+const calentamiento_section = getEl("calentamiento");
+const calentamiento_estado = getEl("calentamiento_estado");
+const calentamiento_semilla1 = getEl("calentamiento_semilla1");
+const calentamiento_semilla2 = getEl("calentamiento_semilla2");
+const calentamiento_objetivo = getEl("calentamiento_objetivo");
+const calentamiento_intentos = getEl("calentamiento_intentos");
+const calentamiento_aciertos = getEl("calentamiento_aciertos");
+const calentamiento_input = getEl("calentamiento_input");
+const calentamiento_enviar = getEl("calentamiento_enviar");
+const calentamiento_feedback = getEl("calentamiento_feedback");
+const calentamiento_usadas = getEl("calentamiento_usadas");
+let calentamiento_rol = "musa";
+let calentamiento_activo = false;
+let calentamiento_vista = false;
+let calentamiento_estado_actual = "inactivo";
+let calentamiento_pendiente_enviado = false;
+let calentamiento_semilla_enviada = false;
+let calentamiento_pendiente_anterior = false;
+let calentamiento_bloqueado_revelacion = false;
+let calentamiento_timeout_revelacion = null;
+const CALENTAMIENTO_REVELADO_MS = 3000;
+let calentamiento_revelacion_inicio = 0;
+let calentamiento_ultimo_estado = null;
+let calentamiento_timeout_ganado = null;
+let calentamiento_sonido_ganado = null;
+const CALENTAMIENTO_GANADO_MS = 8000;
+let calentamiento_ultimo_ganado = "";
+const CALENTAMIENTO_GANADO_ESPERA_MS = 3000;
+let calentamiento_timeout_ganado_show = null;
+let calentamiento_semillas_prev = { 1: "", 2: "" };
+let calentamiento_semillas_reveladas = false;
+let calentamiento_semillas_reveal_at = 0;
+let calentamiento_timeout_semillas_reveal = null;
+let calentamiento_semillas_ts = 0;
+let calentamiento_objetivo_prev = "";
+let calentamiento_ultimo_intento_id = null;
+let calentamiento_timeout_intermedia_reveal = null;
+const CALENTAMIENTO_INTERMEDIA_VISIBLE_MS = 2500;
+let calentamiento_intermedia_visible_hasta = 0;
+let calentamiento_intermedia_reveal_at = 0;
+
+const mostrarFeedbackCalentamiento = (mensaje, esError = false) => {
+    if (!calentamiento_feedback) return;
+    const prefijo = esError ? "⚠️ " : "✨ ";
+    calentamiento_feedback.innerHTML = `${prefijo}${mensaje}`;
+    calentamiento_feedback.style.color = esError ? "#ff6b6b" : "#ffb35c";
+};
+const animarReveladoCalentamiento = (elemento) => {
+    if (!elemento) return;
+    elemento.classList.remove("calentamiento-revelar");
+    void elemento.offsetWidth;
+    elemento.classList.add("calentamiento-revelar");
+    elemento.addEventListener("animationend", () => {
+        elemento.classList.remove("calentamiento-revelar");
+    }, { once: true });
+};
+
+const actualizarCalentamiento = (data) => {
+    if (!data) return;
+    calentamiento_ultimo_estado = data;
+    calentamiento_activo = Boolean(data.activo);
+    calentamiento_vista = Boolean(data.vista);
+    calentamiento_rol = data.rol || "musa";
+    calentamiento_estado_actual = data.estado || "inactivo";
+    if (document.body) {
+        document.body.classList.toggle("vista-calentamiento-musa", calentamiento_activo && calentamiento_vista);
+    }
+    if (calentamiento_section) {
+        calentamiento_section.classList.toggle("activo", calentamiento_activo && calentamiento_vista);
+    }
+    if (!calentamiento_activo || !calentamiento_vista) {
+        if (calentamiento_estado) {
+            calentamiento_estado.textContent = calentamiento_activo ? "Calentamiento oculto." : "Calentamiento inactivo.";
+        }
+        if (calentamiento_input) calentamiento_input.disabled = true;
+        if (calentamiento_enviar) calentamiento_enviar.disabled = true;
+        calentamiento_bloqueado_revelacion = false;
+        calentamiento_revelacion_inicio = 0;
+        if (calentamiento_timeout_revelacion) {
+            clearTimeout(calentamiento_timeout_revelacion);
+            calentamiento_timeout_revelacion = null;
+        }
+        return;
+    }
+    const semillas = data.semillas || {};
+    const semillasRecibidas = data.semillasRecibidas || {};
+    const semilla1Recibida = Boolean(semillasRecibidas[1]);
+    const semilla2Recibida = Boolean(semillasRecibidas[2]);
+    const ultimoIntento = data.ultimoIntento || null;
+    if (!ultimoIntento || !Array.isArray(ultimoIntento.palabras)) {
+        calentamiento_ultimo_intento_id = null;
+        calentamiento_intermedia_reveal_at = 0;
+        if (calentamiento_timeout_intermedia_reveal) {
+            clearTimeout(calentamiento_timeout_intermedia_reveal);
+            calentamiento_timeout_intermedia_reveal = null;
+        }
+    } else if (ultimoIntento.id !== calentamiento_ultimo_intento_id) {
+        if (calentamiento_timeout_intermedia_reveal) {
+            clearTimeout(calentamiento_timeout_intermedia_reveal);
+        }
+        calentamiento_ultimo_intento_id = ultimoIntento.id;
+        const esperaReveal = CALENTAMIENTO_REVELADO_MS + 250;
+        calentamiento_intermedia_reveal_at = Date.now() + esperaReveal;
+        calentamiento_timeout_intermedia_reveal = setTimeout(() => {
+            const palabraA = ultimoIntento.palabras[0] || "--";
+            const palabraB = ultimoIntento.palabras[1] || ultimoIntento.palabras[0] || "--";
+            if (calentamiento_semilla1) {
+                calentamiento_semilla1.textContent = palabraA;
+                animarReveladoCalentamiento(calentamiento_semilla1);
+            }
+            if (calentamiento_semilla2) {
+                calentamiento_semilla2.textContent = palabraB;
+                animarReveladoCalentamiento(calentamiento_semilla2);
+            }
+            calentamiento_semillas_prev = { 1: palabraA, 2: palabraB };
+            calentamiento_intermedia_visible_hasta = Date.now() + CALENTAMIENTO_INTERMEDIA_VISIBLE_MS;
+            calentamiento_intermedia_reveal_at = 0;
+        }, esperaReveal);
+    }
+    const ahora = Date.now();
+    const intermediaVisible = ahora < calentamiento_intermedia_visible_hasta;
+    const intermediaPendiente = calentamiento_intermedia_reveal_at && ahora < calentamiento_intermedia_reveal_at;
+    const semillaA = semillas[1] || "";
+    const semillaB = semillas[2] || "";
+    const semillasListas = Boolean(semillaA && semillaB);
+    const semillasTs = Number(data.semillasTs) || 0;
+    if (!semillasListas) {
+        calentamiento_semillas_reveladas = false;
+        calentamiento_semillas_ts = 0;
+        calentamiento_semillas_reveal_at = 0;
+        if (calentamiento_timeout_semillas_reveal) {
+            clearTimeout(calentamiento_timeout_semillas_reveal);
+            calentamiento_timeout_semillas_reveal = null;
+        }
+    } else if (semillasTs && semillasTs !== calentamiento_semillas_ts) {
+        calentamiento_semillas_ts = semillasTs;
+        calentamiento_semillas_reveladas = false;
+        if (calentamiento_timeout_semillas_reveal) {
+            clearTimeout(calentamiento_timeout_semillas_reveal);
+        }
+        const esperaSemillas = CALENTAMIENTO_REVELADO_MS + 250;
+        calentamiento_semillas_reveal_at = Date.now() + esperaSemillas;
+        calentamiento_timeout_semillas_reveal = setTimeout(() => {
+            calentamiento_semillas_reveladas = true;
+            calentamiento_semillas_reveal_at = 0;
+            if (!intermediaVisible && !intermediaPendiente) {
+                if (calentamiento_semilla1) {
+                    calentamiento_semilla1.textContent = semillaA || "--";
+                    animarReveladoCalentamiento(calentamiento_semilla1);
+                }
+                if (calentamiento_semilla2) {
+                    calentamiento_semilla2.textContent = semillaB || "--";
+                    animarReveladoCalentamiento(calentamiento_semilla2);
+                }
+                calentamiento_semillas_prev = { 1: semillaA, 2: semillaB };
+            }
+        }, esperaSemillas);
+    } else if (!semillasTs && semillasListas && !calentamiento_semillas_reveladas) {
+        calentamiento_semillas_reveladas = true;
+        calentamiento_semillas_reveal_at = 0;
+    }
+    const mostrarSemillas = !intermediaVisible && !intermediaPendiente && calentamiento_semillas_reveladas;
+    if (mostrarSemillas) {
+        const mostrar1 = semillaA || "--";
+        const mostrar2 = semillaB || "--";
+        if (calentamiento_semilla1) calentamiento_semilla1.textContent = mostrar1;
+        if (calentamiento_semilla2) calentamiento_semilla2.textContent = mostrar2;
+        calentamiento_semillas_prev = { 1: mostrar1, 2: mostrar2 };
+    } else if (!intermediaVisible && !intermediaPendiente) {
+        if (calentamiento_semilla1) calentamiento_semilla1.textContent = "--";
+        if (calentamiento_semilla2) calentamiento_semilla2.textContent = "--";
+    }
+    if (calentamiento_objetivo) {
+        const pendientePalabra = data.pendientePalabra || "";
+        const pendienteSocketId = data.pendienteSocketId || "";
+        const esRemitente = pendienteSocketId && socket && socket.id && pendienteSocketId === socket.id;
+        const objetivoTexto = esRemitente ? (pendientePalabra || "--") : "--";
+        calentamiento_objetivo.textContent = objetivoTexto;
+        if (objetivoTexto !== "--" && objetivoTexto !== calentamiento_objetivo_prev) {
+            animarReveladoCalentamiento(calentamiento_objetivo);
+        }
+        calentamiento_objetivo_prev = objetivoTexto;
+    }
+    if (semillas[1] && semillas[2]) {
+        if (calentamiento_feedback && calentamiento_feedback.textContent.includes("Palabra enviada")) {
+            calentamiento_feedback.textContent = "";
+        }
+    }
+    if (calentamiento_intentos) calentamiento_intentos.textContent = data.intentos ?? 0;
+    if (calentamiento_aciertos) calentamiento_aciertos.textContent = data.aciertos ?? 0;
+    if (calentamiento_usadas) {
+        const usadas = Array.isArray(data.usadas) ? data.usadas : [];
+        calentamiento_usadas.textContent = usadas.length ? usadas.join(" | ") : "-";
+    }
+    if (!data.pendiente) {
+        calentamiento_pendiente_enviado = false;
+    }
+    if (calentamiento_pendiente_anterior && !data.pendiente && calentamiento_estado_actual === "jugando") {
+        if (calentamiento_timeout_revelacion) {
+            clearTimeout(calentamiento_timeout_revelacion);
+        }
+        calentamiento_bloqueado_revelacion = true;
+        calentamiento_revelacion_inicio = Date.now();
+        calentamiento_timeout_revelacion = setTimeout(() => {
+            calentamiento_bloqueado_revelacion = false;
+            calentamiento_revelacion_inicio = 0;
+            if (calentamiento_feedback && calentamiento_feedback.textContent.includes("Intento enviado")) {
+                calentamiento_feedback.textContent = "";
+            }
+            if (calentamiento_ultimo_estado) {
+                actualizarCalentamiento(calentamiento_ultimo_estado);
+            }
+        }, CALENTAMIENTO_REVELADO_MS);
+    }
+    calentamiento_pendiente_anterior = Boolean(data.pendiente);
+    if (data.pendiente) {
+        calentamiento_bloqueado_revelacion = false;
+        calentamiento_revelacion_inicio = 0;
+        if (calentamiento_timeout_revelacion) {
+            clearTimeout(calentamiento_timeout_revelacion);
+            calentamiento_timeout_revelacion = null;
+        }
+    }
+    if (calentamiento_estado_actual !== "jugando") {
+        calentamiento_bloqueado_revelacion = false;
+        calentamiento_revelacion_inicio = 0;
+        if (calentamiento_timeout_revelacion) {
+            clearTimeout(calentamiento_timeout_revelacion);
+            calentamiento_timeout_revelacion = null;
+        }
+    }
+    if (calentamiento_bloqueado_revelacion && calentamiento_revelacion_inicio) {
+        if (Date.now() - calentamiento_revelacion_inicio >= CALENTAMIENTO_REVELADO_MS) {
+            calentamiento_bloqueado_revelacion = false;
+            calentamiento_revelacion_inicio = 0;
+            if (calentamiento_feedback && calentamiento_feedback.textContent.includes("Intento enviado")) {
+                calentamiento_feedback.textContent = "";
+            }
+            if (calentamiento_ultimo_estado) {
+                actualizarCalentamiento(calentamiento_ultimo_estado);
+            }
+        }
+    }
+    const esSemillaDoble = calentamiento_rol === "semilla_doble";
+    const esSemilla = esSemillaDoble || calentamiento_rol === "semilla1" || calentamiento_rol === "semilla2";
+    const posicionSemilla = esSemillaDoble
+        ? (!semilla1Recibida ? 1 : (!semilla2Recibida ? 2 : null))
+        : (calentamiento_rol === "semilla1" ? 1 : (calentamiento_rol === "semilla2" ? 2 : null));
+    if (calentamiento_estado_actual !== "esperando_semillas" || !esSemilla) {
+        calentamiento_semilla_enviada = false;
+    } else if (esSemillaDoble && semilla1Recibida && !semilla2Recibida) {
+        calentamiento_semilla_enviada = false;
+    }
+    let estadoTexto = "🔥 Calentamiento en curso.";
+    let estadoAnimado = false;
+    let puedeEnviar = false;
+    let placeholder = "Palabra intermedia";
+
+    if (calentamiento_estado_actual === "sin_musas") {
+        estadoTexto = "👥 Esperando musas de este equipo.";
+    } else if (calentamiento_estado_actual === "esperando_semillas") {
+        const otraSemillaRecibida = posicionSemilla === 1 ? semilla2Recibida : (posicionSemilla === 2 ? semilla1Recibida : false);
+        const semillaActualRecibida = posicionSemilla === 1 ? semilla1Recibida : (posicionSemilla === 2 ? semilla2Recibida : false);
+        if (esSemilla && posicionSemilla && calentamiento_semilla_enviada && !esSemillaDoble && !otraSemillaRecibida) {
+            estadoTexto = "⏳ Palabra semilla enviada. Espera a la otra musa.";
+            placeholder = "Esperando otra palabra semilla";
+            estadoAnimado = true;
+            puedeEnviar = false;
+        } else if (esSemilla && posicionSemilla && !semillaActualRecibida) {
+            estadoTexto = `🌱 Eres musa semilla: escribe la palabra ${posicionSemilla}.`;
+            placeholder = `Palabra semilla ${posicionSemilla}`;
+            puedeEnviar = true;
+        } else {
+            estadoTexto = "⏳ Esperando palabras semilla";
+            estadoAnimado = true;
+        }
+    } else if (calentamiento_estado_actual === "jugando") {
+        if (data.pendiente) {
+            estadoTexto = "🤝 Esperando otra musa para comparar";
+            estadoAnimado = true;
+        } else {
+            estadoTexto = "🧠 Envia una palabra que se encuentre en medio de:";
+        }
+        if (calentamiento_bloqueado_revelacion) {
+            estadoTexto = "🔮 Revelando nuevas palabras";
+            estadoAnimado = true;
+            puedeEnviar = false;
+        } else {
+            puedeEnviar = !calentamiento_pendiente_enviado;
+        }
+    } else if (calentamiento_estado_actual === "ganado") {
+        estadoTexto = "";
+    }
+
+    if (calentamiento_estado) {
+        if (estadoAnimado) {
+            calentamiento_estado.innerHTML = `${estadoTexto}<span class="ellipsis"></span>`;
+        } else {
+            calentamiento_estado.textContent = estadoTexto;
+        }
+    }
+    if (calentamiento_input) {
+        calentamiento_input.placeholder = placeholder;
+        calentamiento_input.disabled = !puedeEnviar;
+    }
+    if (calentamiento_enviar) {
+        calentamiento_enviar.disabled = !puedeEnviar;
+    }
+};
+const enviarCalentamiento = () => {
+    if (!calentamiento_activo || !calentamiento_input) {
+        return;
+    }
+    const palabra = calentamiento_input.value.trim();
+    if (!palabra) {
+        mostrarFeedbackCalentamiento("Escribe una palabra.", true);
+        return;
+    }
+    if (/\s/.test(palabra)) {
+        mostrarFeedbackCalentamiento("Envia solo una palabra, sin espacios.", true);
+        return;
+    }
+    if (palabra.length > 10) {
+        mostrarFeedbackCalentamiento("Maximo 10 caracteres.", true);
+        return;
+    }
+    if (calentamiento_estado_actual === "esperando_semillas") {
+        const semillasRecibidas = (calentamiento_ultimo_estado && calentamiento_ultimo_estado.semillasRecibidas) ? calentamiento_ultimo_estado.semillasRecibidas : {};
+        const semilla1Recibida = Boolean(semillasRecibidas[1]);
+        const semilla2Recibida = Boolean(semillasRecibidas[2]);
+        let posicion = null;
+        if (calentamiento_rol === "semilla1") {
+            posicion = 1;
+        } else if (calentamiento_rol === "semilla2") {
+            posicion = 2;
+        } else if (calentamiento_rol === "semilla_doble") {
+            posicion = !semilla1Recibida ? 1 : (!semilla2Recibida ? 2 : null);
+        }
+        if (!posicion) {
+            mostrarFeedbackCalentamiento("No eres musa semilla.", true);
+            return;
+        }
+        socket.emit("calentamiento_semilla", { posicion, palabra });
+        calentamiento_semilla_enviada = true;
+        if (calentamiento_input) calentamiento_input.disabled = true;
+        if (calentamiento_enviar) calentamiento_enviar.disabled = true;
+        calentamiento_input.value = "";
+        mostrarFeedbackCalentamiento("Palabra enviada. Espera a la otra musa.", false);
+        return;
+    }
+    if (calentamiento_estado_actual !== "jugando") {
+        mostrarFeedbackCalentamiento("El calentamiento no esta listo.", true);
+        return;
+    }
+    socket.emit("calentamiento_intento", { palabra });
+    calentamiento_pendiente_enviado = true;
+    calentamiento_input.value = "";
+    mostrarFeedbackCalentamiento("Intento enviado.", false);
+};
+
+if (calentamiento_enviar) {
+    calentamiento_enviar.addEventListener("click", enviarCalentamiento);
+}
+if (calentamiento_input) {
+    calentamiento_input.addEventListener("keydown", (evt) => {
+        if (evt.key === "Enter") {
+            evt.preventDefault();
+            enviarCalentamiento();
+        }
+    });
+}
 
 function formatearPuntos(valor) {
     if (valor == null) return "0 palabras";
@@ -188,6 +565,51 @@ socket.on('connect', () => {
     if (!nombre_musa) return;
     socket.emit('registrar_musa', { musa: player, nombre: nombre_musa });
     socket.emit('pedir_nombre');
+});
+
+socket.on('calentamiento_estado_musa', (data) => {
+    actualizarCalentamiento(data);
+});
+
+socket.on('calentamiento_error', (data) => {
+    calentamiento_pendiente_enviado = false;
+    if (calentamiento_estado_actual === "esperando_semillas") {
+        calentamiento_semilla_enviada = false;
+    }
+    mostrarFeedbackCalentamiento(data && data.mensaje ? data.mensaje : "Error.", true);
+});
+
+socket.on('calentamiento_ganado', (data) => {
+    calentamiento_pendiente_enviado = false;
+    const palabra = data && data.palabra ? data.palabra : "";
+    const mensaje = palabra
+        ? "\u00a1Las musas hab\u00e9is acertado! La palabra ha sido \u00ab<span class=\"calentamiento-palabra-ganadora\">" + escapeHtml(palabra) + "</span>\u00bb."
+        : "\u00a1Las musas hab\u00e9is acertado!";
+    if (calentamiento_timeout_ganado_show) {
+        clearTimeout(calentamiento_timeout_ganado_show);
+    }
+    if (calentamiento_timeout_ganado) {
+        clearTimeout(calentamiento_timeout_ganado);
+    }
+    calentamiento_timeout_ganado_show = setTimeout(() => {
+        calentamiento_ultimo_ganado = mensaje;
+        mostrarFeedbackCalentamiento(mensaje, false);
+        if (typeof confetti_musas === "function") {
+            confetti_musas();
+        }
+        if (typeof Audio !== "undefined") {
+            if (!calentamiento_sonido_ganado) {
+                calentamiento_sonido_ganado = new Audio("../../audio/FX/9. ESTRELLAS.mp3");
+            }
+            calentamiento_sonido_ganado.currentTime = 0;
+            calentamiento_sonido_ganado.play().catch(() => {});
+        }
+        calentamiento_timeout_ganado = setTimeout(() => {
+            if (calentamiento_feedback && calentamiento_feedback.textContent.includes("hab\u00e9is acertado")) {
+                calentamiento_feedback.textContent = "";
+            }
+        }, CALENTAMIENTO_GANADO_MS);
+    }, CALENTAMIENTO_GANADO_ESPERA_MS);
 });
 
 // Variables de los modos.
@@ -1244,3 +1666,13 @@ function cambiar_jugadores(revertir) {
         "| jugadorEstilo =", jugadorEstilo
     );
 }
+
+
+
+
+
+
+
+
+
+

@@ -61,6 +61,23 @@
                             <button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">🏳️‍🌈 BANDERA</button>
                         </div>
                     </div>
+                    <section id="calentamiento" class="calentamiento">
+                        <h2 class="calentamiento-titulo">CALENTAMIENTO DE MUSAS 🔥</h2>
+                        <p id="calentamiento_estado" class="calentamiento-estado">Calentamiento inactivo.</p>
+                        <div class="calentamiento-semillas">
+                            <span id="calentamiento_semilla1" class="calentamiento-semilla">--</span>
+                            <span id="calentamiento_semilla2" class="calentamiento-semilla">--</span>
+                        </div>
+                        <div class="calentamiento-objetivo">
+                            <span class="calentamiento-objetivo-text">🎯 Palabra intermedia:</span>
+                            <span id="calentamiento_objetivo" class="calentamiento-semilla calentamiento-objetivo-box">--</span>
+                        </div>
+                        <div class="calentamiento-input">
+                            <input id="calentamiento_input" class="input_publico" maxlength="10" placeholder="🧩 Palabra intermedia">
+                            <button id="calentamiento_enviar" class="btn btn-edicion" type="button">🚀 ENVIAR</button>
+                        </div>
+                        <p id="calentamiento_feedback" class="calentamiento-feedback"></p>
+                    </section>
                     <section class="niveles">
                         <button class="niveles-flecha niveles-prev" type="button" aria-label="Ver niveles anteriores">&larr;</button>
                         <div class="niveles-scroll">
@@ -144,3 +161,4 @@
 <script src="../../dist/socket.io/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>
 </html>
+

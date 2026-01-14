@@ -29,7 +29,7 @@ let tiempo_modos_secs = getEl("tiempo_modos_secs");
 let display_modo = getEl("display_modo");
 let tema = getEl("temas");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
-let boton_borrar = getEl("boton_borrar");
+let boton_vista_calentamiento = getEl("boton_vista_calentamiento");
 
 
 let temporizador = getEl("temporizador");
@@ -317,6 +317,16 @@ socket.on('connect', () => {
     socket.emit('envío_nombre1', val_nombre1);
     socket.emit('envío_nombre2', val_nombre2);
 });
+socket.on('calentamiento_vista', (data) => {
+    vista_calentamiento = Boolean(data && data.activo);
+    if (typeof actualizarBotonVistaCalentamiento === "function") {
+        actualizarBotonVistaCalentamiento();
+    }
+    if (boton_vista_calentamiento) {
+        boton_vista_calentamiento.dataset.activo = vista_calentamiento ? "1" : "0";
+        boton_vista_calentamiento.textContent = vista_calentamiento ? "VISTA PARTIDA" : "VISTA CALENTAMIENTO";
+    }
+});
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
     console.log(data.text)
@@ -329,10 +339,15 @@ socket.on('texto1', data => {
 
 socket.on('texto2', data => {
     texto2.innerHTML = data.text;
-    texto_guardado2 = texto2.innerHTML;
+    texto_guardado2 = data.texto_guardado;
     puntos2.innerHTML = data.points;
     texto2.style.height = (texto2.scrollHeight) + "px";
 
+});
+
+socket.on('borrar_texto_guardado', () => {
+    texto_guardado1 = "";
+    texto_guardado2 = "";
 });
 
 socket.on('temp_modos', data => {
