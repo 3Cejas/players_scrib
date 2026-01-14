@@ -11,11 +11,28 @@ let agitado_solicitado = false;
 let agitado_ultimo = 0;
 let agitado_ultimo_cambio = 0;
 let agitado_ultima_direccion = 0;
+let agitado_vibracion_habilitada = false;
 
 const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
 const AGITADO_COOLDOWN_MS = 1200;
 const AGITADO_VIBRACION = [60, 40, 60];
+
+const obtenerVibracion = () => {
+  const vibrateFn = navigator && (navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate);
+  return typeof vibrateFn === "function" ? vibrateFn.bind(navigator) : null;
+};
+
+const probarVibracion = () => {
+  const vibrateFn = obtenerVibracion();
+  if (!vibrateFn) return false;
+  try {
+    const resultado = vibrateFn(1);
+    return resultado !== false;
+  } catch (error) {
+    return false;
+  }
+};
 
 const pedirPermisoMovimiento = () => {
   if (agitado_solicitado) return Promise.resolve(agitado_permiso);
@@ -33,9 +50,9 @@ const pedirPermisoMovimiento = () => {
 };
 
 const vibrarAgitado = () => {
-  if (navigator && typeof navigator.vibrate === "function") {
-    navigator.vibrate(AGITADO_VIBRACION);
-  }
+  const vibrateFn = obtenerVibracion();
+  if (!vibrateFn || !agitado_vibracion_habilitada) return;
+  vibrateFn(AGITADO_VIBRACION);
 };
 
 const emitirCorazon = () => {
@@ -90,6 +107,7 @@ const desactivarAgitado = () => {
   agitado_activo = false;
   agitado_ultima_direccion = 0;
   agitado_ultimo_cambio = 0;
+  agitado_vibracion_habilitada = false;
 };
 
 window.addEventListener('beforeunload', (event) => {
@@ -218,6 +236,7 @@ function mostrarTextoCompleto(boton) {
         }
         
         boton.value = 1;
+        agitado_vibracion_habilitada = probarVibracion();
         activarAgitado();
     }
   }
