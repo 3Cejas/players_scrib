@@ -17,20 +17,23 @@ const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
 const AGITADO_COOLDOWN_MS = 1200;
 const AGITADO_VIBRACION = [60, 40, 60];
+const AGITADO_VIBRACION_FALLBACK = 120;
 
 const obtenerVibracion = () => {
   const vibrateFn = navigator && (navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate);
   return typeof vibrateFn === "function" ? vibrateFn.bind(navigator) : null;
 };
 
-const probarVibracion = () => {
-  const vibrateFn = obtenerVibracion();
-  if (!vibrateFn) return false;
+const aplicarVibracion = (vibrateFn, patron) => {
   try {
-    const resultado = vibrateFn(1);
-    return resultado !== false;
+    const resultado = vibrateFn(patron);
+    if (resultado === false && patron !== AGITADO_VIBRACION_FALLBACK) {
+      vibrateFn(AGITADO_VIBRACION_FALLBACK);
+    }
   } catch (error) {
-    return false;
+    try {
+      vibrateFn(AGITADO_VIBRACION_FALLBACK);
+    } catch (errorFallback) {}
   }
 };
 
@@ -52,7 +55,7 @@ const pedirPermisoMovimiento = () => {
 const vibrarAgitado = () => {
   const vibrateFn = obtenerVibracion();
   if (!vibrateFn || !agitado_vibracion_habilitada) return;
-  vibrateFn(AGITADO_VIBRACION);
+  aplicarVibracion(vibrateFn, AGITADO_VIBRACION);
 };
 
 const emitirCorazon = () => {
@@ -236,7 +239,10 @@ function mostrarTextoCompleto(boton) {
         }
         
         boton.value = 1;
-        agitado_vibracion_habilitada = probarVibracion();
+        agitado_vibracion_habilitada = Boolean(obtenerVibracion());
+        if (agitado_vibracion_habilitada) {
+          vibrarAgitado();
+        }
         activarAgitado();
     }
   }
