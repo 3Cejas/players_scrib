@@ -12,12 +12,23 @@ let agitado_ultimo = 0;
 let agitado_ultimo_cambio = 0;
 let agitado_ultima_direccion = 0;
 let agitado_vibracion_habilitada = false;
+let agitado_ultimo_lateral = null;
+let agitado_ultimo_gamma = null;
+let agitado_picos = 0;
+let agitado_inicio_ventana = 0;
+let agitado_ultimo_pico = 0;
+let agitado_ultimo_motion = 0;
 
 const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
 const AGITADO_COOLDOWN_MS = 1200;
 const AGITADO_VIBRACION = [60, 40, 60];
 const AGITADO_VIBRACION_FALLBACK = 120;
+const AGITADO_DELTA_THRESHOLD = 3.4;
+const AGITADO_GAMMA_THRESHOLD = 12;
+const AGITADO_PICOS_MIN = 2;
+const AGITADO_PICO_GAP_MS = 80;
+const AGITADO_VENTANA_MS = 900;
 
 const obtenerVibracion = () => {
   const vibrateFn = navigator && (navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate);
@@ -40,10 +51,17 @@ const aplicarVibracion = (vibrateFn, patron) => {
 const pedirPermisoMovimiento = () => {
   if (agitado_solicitado) return Promise.resolve(agitado_permiso);
   agitado_solicitado = true;
+  const permisos = [];
   if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
-    return DeviceMotionEvent.requestPermission()
-      .then((estado) => {
-        agitado_permiso = (estado === "granted");
+    permisos.push(DeviceMotionEvent.requestPermission());
+  }
+  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+    permisos.push(DeviceOrientationEvent.requestPermission());
+  }
+  if (permisos.length) {
+    return Promise.all(permisos)
+      .then((resultados) => {
+        agitado_permiso = resultados.every((estado) => estado === "granted");
         return agitado_permiso;
       })
       .catch(() => false);
@@ -68,13 +86,33 @@ const emitirCorazon = () => {
   }
 };
 
+const registrarAgitado = (delta, threshold) => {
+  const ahora = Date.now();
+  const umbral = threshold ?? AGITADO_DELTA_THRESHOLD;
+  if (delta < umbral) return;
+  if (agitado_ultimo_pico && (ahora - agitado_ultimo_pico) < AGITADO_PICO_GAP_MS) return;
+  if (!agitado_inicio_ventana || (ahora - agitado_inicio_ventana) > AGITADO_VENTANA_MS) {
+    agitado_inicio_ventana = ahora;
+    agitado_picos = 0;
+  }
+  agitado_ultimo_pico = ahora;
+  agitado_picos += 1;
+  if (agitado_picos >= AGITADO_PICOS_MIN) {
+    agitado_picos = 0;
+    agitado_inicio_ventana = 0;
+    emitirCorazon();
+  }
+};
+
 const manejarAgitado = (evento) => {
   const aceleracion = evento.accelerationIncludingGravity || evento.acceleration;
   if (!aceleracion) return;
   const ax = Number(aceleracion.x) || 0;
   const ay = Number(aceleracion.y) || 0;
+  const az = Number(aceleracion.z) || 0;
   const lateral = Math.abs(ax) >= Math.abs(ay) ? ax : ay;
   const ahora = Date.now();
+  agitado_ultimo_motion = ahora;
   let direccion = 0;
   if (lateral > AGITADO_THRESHOLD_X) direccion = 1;
   else if (lateral < -AGITADO_THRESHOLD_X) direccion = -1;
@@ -82,15 +120,32 @@ const manejarAgitado = (evento) => {
   if (!agitado_ultima_direccion) {
     agitado_ultima_direccion = direccion;
     agitado_ultimo_cambio = ahora;
+    agitado_ultimo_lateral = lateral;
     return;
   }
   if (direccion !== agitado_ultima_direccion) {
     if (agitado_ultimo_cambio && (ahora - agitado_ultimo_cambio) < AGITADO_CAMBIO_MS) {
-      emitirCorazon();
+      const deltaLateral = agitado_ultimo_lateral == null ? Math.abs(lateral) : Math.abs(lateral - agitado_ultimo_lateral);
+      registrarAgitado(deltaLateral);
     }
     agitado_ultimo_cambio = ahora;
     agitado_ultima_direccion = direccion;
+    agitado_ultimo_lateral = lateral;
   }
+  const deltaTotal = Math.abs(ax) + Math.abs(ay) + Math.abs(az);
+  registrarAgitado(deltaTotal, AGITADO_DELTA_THRESHOLD * 1.8);
+};
+
+const manejarOrientacion = (evento) => {
+  if (typeof evento.gamma !== "number") return;
+  const ahora = Date.now();
+  agitado_ultimo_motion = ahora;
+  const gamma = evento.gamma;
+  if (agitado_ultimo_gamma != null) {
+    const delta = Math.abs(gamma - agitado_ultimo_gamma);
+    registrarAgitado(delta, AGITADO_GAMMA_THRESHOLD);
+  }
+  agitado_ultimo_gamma = gamma;
 };
 
 const activarAgitado = () => {
@@ -99,7 +154,13 @@ const activarAgitado = () => {
     if (!ok || agitado_activo) return;
     agitado_ultima_direccion = 0;
     agitado_ultimo_cambio = 0;
+    agitado_ultimo_lateral = null;
+    agitado_ultimo_gamma = null;
+    agitado_picos = 0;
+    agitado_inicio_ventana = 0;
+    agitado_ultimo_pico = 0;
     window.addEventListener("devicemotion", manejarAgitado, { passive: true });
+    window.addEventListener("deviceorientation", manejarOrientacion, { passive: true });
     agitado_activo = true;
   });
 };
@@ -107,9 +168,15 @@ const activarAgitado = () => {
 const desactivarAgitado = () => {
   if (!agitado_activo) return;
   window.removeEventListener("devicemotion", manejarAgitado);
+  window.removeEventListener("deviceorientation", manejarOrientacion);
   agitado_activo = false;
   agitado_ultima_direccion = 0;
   agitado_ultimo_cambio = 0;
+  agitado_ultimo_lateral = null;
+  agitado_ultimo_gamma = null;
+  agitado_picos = 0;
+  agitado_inicio_ventana = 0;
+  agitado_ultimo_pico = 0;
   agitado_vibracion_habilitada = false;
 };
 
