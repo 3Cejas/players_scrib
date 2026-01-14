@@ -26,8 +26,8 @@ let agitado_aviso_timeout = null;
 const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
 const AGITADO_COOLDOWN_MS = 1200;
-const AGITADO_VIBRACION = [160, 90, 160, 90, 160];
-const AGITADO_VIBRACION_FALLBACK = 220;
+const AGITADO_VIBRACION = 320;
+const AGITADO_VIBRACION_FALLBACK = 460;
 const AGITADO_DELTA_THRESHOLD = 3.4;
 const AGITADO_GAMMA_THRESHOLD = 12;
 const AGITADO_ROT_THRESHOLD = 22;
@@ -77,7 +77,12 @@ const pedirPermisoMovimiento = () => {
 
 const vibrarAgitado = () => {
   const vibrateFn = obtenerVibracion();
-  if (!vibrateFn || !agitado_vibracion_habilitada) return;
+  if (!vibrateFn || !agitado_vibracion_habilitada) {
+    if (!vibrateFn) {
+      mostrarAvisoMotion("Este navegador no permite vibracion.");
+    }
+    return;
+  }
   aplicarVibracion(vibrateFn, AGITADO_VIBRACION);
 };
 
@@ -99,7 +104,7 @@ const programarAvisoMotion = () => {
   agitado_aviso_timeout = setTimeout(() => {
     if (!agitado_activo) return;
     if (!agitado_ultimo_motion || (Date.now() - agitado_ultimo_motion) > 1500) {
-      mostrarAvisoMotion("Si no vibra, habilita sensores de movimiento en permisos del navegador.");
+      mostrarAvisoMotion("Si no vibra, habilita sensores y vibracion en permisos del navegador.");
     }
   }, 2000);
 };
@@ -370,6 +375,9 @@ function mostrarTextoCompleto(boton) {
         
         boton.value = 1;
         agitado_vibracion_habilitada = Boolean(obtenerVibracion());
+        if (!agitado_vibracion_habilitada) {
+          mostrarAvisoMotion("Activa vibracion del sistema para notar el gesto.");
+        }
         if (agitado_vibracion_habilitada) {
           vibrarAgitado();
         }
