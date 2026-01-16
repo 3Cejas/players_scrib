@@ -80,11 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   socket.on('recibir_atributos', (data) => {
     console.log('Recibidos atributos:', data);
-    // 'data' es un objeto: { "1": {fuerza, agilidad, inteligencia}, "2": {…} }
+    // 'data' es un objeto: { "1": {fuerza, agilidad, destreza}, "2": {…} }
     const attrs = data;
 
     // Orden de los atributos según el HTML (3 filas × 2 columnas)
-    const nombres = ['fuerza', 'agilidad', 'inteligencia'];
+    const nombres = ['fuerza', 'agilidad', 'destreza'];
 
     // 1) Calculamos el total de puntos repartidos por cada jugador
     const sumas = {};
@@ -93,17 +93,17 @@ document.addEventListener('DOMContentLoaded', () => {
       // Si alguno no está definido, lo tratamos como cero
       const f = Number(a.fuerza)       || 0;
       const ag = Number(a.agilidad)    || 0;
-      const intel = Number(a.inteligencia) || 0;
-      sumas[jugadorId] = f + ag + intel;
+      const dest = Number(a.destreza) || 0;
+      sumas[jugadorId] = f + ag + dest;
     });
 
     // 2) Seleccionamos las 6 barras en el orden: 
-    //    fuerza1, fuerza2, agilidad1, agilidad2, inteligencia1, inteligencia2
+    //    fuerza1, fuerza2, agilidad1, agilidad2, destreza1, destreza2
     const barras = document.querySelectorAll('.skill .progress-line');
 
     barras.forEach((barra, idx) => {
       // 2.1) Atributo y jugador correspondientes
-      const atributoIndex = Math.floor(idx / 2); // 0→fuerza, 1→agilidad, 2→inteligencia
+      const atributoIndex = Math.floor(idx / 2); // 0→fuerza, 1→agilidad, 2→destreza
       const jugadorIndex  = idx % 2;              // 0→jugador "1", 1→jugador "2"
       const atributo      = nombres[atributoIndex];
       const jugadorId     = String(jugadorIndex + 1);

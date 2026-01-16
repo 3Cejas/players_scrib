@@ -477,6 +477,26 @@ th{
     text-align: center;
 }
 
+.tiempo-vida {
+    --vida-pct: 0%;
+    --vida-color: #41d860;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(10rem, 32vw, 18rem);
+    min-height: 1.6em;
+    padding: 0.2em 0.7em;
+    border: 0.12em solid rgba(255, 255, 255, 0.8);
+    border-radius: 0.6em;
+    background: linear-gradient(90deg, var(--vida-color) var(--vida-pct), rgba(0, 0, 0, 0.35) var(--vida-pct));
+    box-shadow: inset 0 0 0.35em rgba(0, 0, 0, 0.65), 0 0 0.35em rgba(0, 0, 0, 0.5);
+    color: #fff;
+    text-shadow: 0.08em 0.08em 0 #000;
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
+    margin: 0.4em auto 0.6em;
+}
+
 .contenedor{
     display: flex;
             justify-content: center;

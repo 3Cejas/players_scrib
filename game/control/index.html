@@ -53,6 +53,9 @@
                     <span class='btn' onclick="limpiar()">🧹 LIMPIAR</span>
                 </td>
                 <td>
+                    <span class='btn' onclick="borrar_texto_guardado()">🪄 BORRAR TEXTO</span>
+                </td>
+                <td>
                     <span id="boton_pausar_reanudar" data-value="0"  onclick="pausar_reanudar(this)" class='btn'>⏸️  PAUSAR</span>
                 </td>   
                 <td>
@@ -62,9 +65,6 @@
                 <td>
                     <span onclick="fin(2)" class='btn'>👾 FIN J2</span>
                 </td> 
-                <td>
-                    <span class='btn' onclick="borrar_texto_guardado()">🪄 BORRAR TEXTO</span>
-                </td>
             </tr>
             <tr>
                 <td>
@@ -75,6 +75,9 @@
                 </td>
                 <td>
                     <span class='btn' onclick="reiniciar_marcador_calentamiento()">🏆 REINICIAR MARCADOR</span>
+                </td>
+                <td>
+                    <span class='btn' onclick="activar_temporizador_gigante()">⏱️ TEMPORIZADOR GIGANTE</span>
                 </td>
             </tr>
             <tr>
@@ -186,7 +189,7 @@
         <div>
             <br><p style="color:orange">FRASE FINAL:</p>
             <input disabled id="frase_final_j1" class="frase_final">
-            <p id="tiempo" class="tiempo"></p>
+            <p id="tiempo" class="tiempo tiempo-vida"></p>
             <input style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre" value="ESCRITXR 1"></input>
             <br><br>
             <div disabled id="texto" rows="1"
@@ -210,7 +213,7 @@
             <br>
             <p style="color:orange">FRASE FINAL:</p>
             <input disabled id="frase_final_j2" class="frase_final">
-            <p id="tiempo1" class="tiempo"></p>
+            <p id="tiempo1" class="tiempo tiempo-vida"></p>
             <input style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre" value="ESCRITXR 2"></input>
             <br><br>
             <div disabled id="texto1" rows="1"

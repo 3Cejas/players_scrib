@@ -3,7 +3,7 @@ let atributos;
 const LIMITE_TOTAL = 10;
 const SECS_BASE = 2;
 const maxIncremento =  3; // queremos +300% de habilidades en el mejor caso
-const maxIncrementoInteligencia =  0.5; // queremos +300% de habilidades en el mejor caso
+const maxIncrementoDestreza =  0.5; // queremos +300% de habilidades en el mejor caso
 let secs_palabras;
 let antiguo_inicio_borrado = 1000;
 let rapidez_borrado = 1000; // Variable que almacena la velocidad del borrado del texto.
@@ -377,7 +377,7 @@ const animateCSS = (element, animation, prefix = "animate__") =>
        // Esperar a que el DOM esté completamente cargado
        document.addEventListener('DOMContentLoaded', () => {
         // Estado inicial de los atributos
-        atributos = { fuerza: 0, agilidad: 0, inteligencia: 0 };
+        atributos = { fuerza: 0, agilidad: 0, destreza: 0 };
   
         // Referencias a elementos del DOM
         const container = document.getElementById('atributos-container');

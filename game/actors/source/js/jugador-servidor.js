@@ -27,6 +27,44 @@ texto1.scrollTop = texto1.scrollHeight;
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
 
+const VIDA_MAX_SEGUNDOS = 5 * 60;
+const DISPLAY_BARRA_VIDA = "inline-flex";
+
+function extraerSegundosTiempo(texto) {
+    if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
+        return null;
+    }
+    const partes = texto.split(":");
+    if (partes.length < 2) {
+        return null;
+    }
+    const minutos = parseInt(partes[0], 10);
+    const segundos = parseInt(partes[1], 10);
+    if (Number.isNaN(minutos) || Number.isNaN(segundos)) {
+        return null;
+    }
+    return (minutos * 60) + segundos;
+}
+
+function actualizarBarraVida(elemento, texto) {
+    if (!elemento) {
+        return;
+    }
+    const total = extraerSegundosTiempo(texto);
+    if (total === null) {
+        elemento.style.setProperty("--vida-pct", "0%");
+        elemento.style.setProperty("--vida-color", "#d94b4b");
+        elemento.style.display = "none";
+        return;
+    }
+    const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
+    const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
+    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
+    elemento.style.display = DISPLAY_BARRA_VIDA;
+    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
 let sincro = 0;
 let votando = false;
 
@@ -211,6 +249,7 @@ socket.on("count", data => {
             tiempo.style.color = "red";
         }
     tiempo.innerHTML = data.count;
+    actualizarBarraVida(tiempo, data.count);
     if (data.count == "¡Tiempo!") {
         confetti_aux();
 
@@ -273,6 +312,7 @@ socket.on('inicio', data => {
             texto1.innerText = "";
             puntos1.innerHTML = 0 + " palabras";
             tiempo.innerHTML = "";
+            actualizarBarraVida(tiempo, tiempo.innerHTML);
             
             limpiezas();
             texto1.style.height = "";
@@ -295,6 +335,7 @@ socket.on('limpiar', () => {
     texto1.innerText = "";
     puntos1.innerHTML = 0 + " palabras";
     tiempo.innerHTML = "";
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
 
     limpiezas();
     stopConfetti();

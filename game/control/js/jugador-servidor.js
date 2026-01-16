@@ -31,6 +31,13 @@ let tema = getEl("temas");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
 let boton_vista_calentamiento = getEl("boton_vista_calentamiento");
 
+if (tiempo) {
+    tiempo.style.display = "none";
+}
+if (tiempo1) {
+    tiempo1.style.display = "none";
+}
+
 
 let temporizador = getEl("temporizador");
 

@@ -13,6 +13,86 @@ const escapeHtml = (valor) => String(valor)
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+const paddedFormat = (num) => (num < 10 ? `0${num}` : `${num}`);
+
+const obtenerContenidoMarquee = (elemento) => {
+    if (!elemento) return "";
+    const inner = elemento.querySelector(".definicion-marquee__inner");
+    return inner ? inner.innerHTML : elemento.innerHTML;
+};
+
+const aplicarMarqueeSiOverflow = (elemento) => {
+    if (!elemento) return;
+    const contenido = obtenerContenidoMarquee(elemento);
+    elemento.classList.remove("definicion--marquee");
+    elemento.innerHTML = contenido;
+    elemento.style.removeProperty("--marquee-distance");
+    elemento.style.removeProperty("--marquee-duration");
+
+    requestAnimationFrame(() => {
+        const distancia = elemento.scrollWidth - elemento.clientWidth;
+        if (distancia <= 1) {
+            return;
+        }
+        const velocidad = 35;
+        const duracion = Math.max(distancia / velocidad, 6);
+        elemento.style.setProperty("--marquee-distance", `${Math.ceil(distancia)}px`);
+        elemento.style.setProperty("--marquee-duration", `${duracion.toFixed(2)}s`);
+        elemento.innerHTML = `<span class="definicion-marquee__inner">${contenido}</span>`;
+        elemento.classList.add("definicion--marquee");
+    });
+};
+
+const temporizador_gigante = (() => {
+    let nodo = getEl("temporizador_gigante");
+    if (!nodo) {
+        nodo = document.createElement("div");
+        nodo.id = "temporizador_gigante";
+        nodo.className = "temporizador-gigante";
+        document.body.appendChild(nodo);
+    }
+    return nodo;
+})();
+
+let temporizador_gigante_interval = null;
+let temporizador_gigante_restante = 0;
+
+function actualizarTemporizadorGigante() {
+    const minutos = Math.floor(temporizador_gigante_restante / 60);
+    const segundos = temporizador_gigante_restante % 60;
+    temporizador_gigante.textContent = `${paddedFormat(minutos)}:${paddedFormat(segundos)}`;
+}
+
+function detenerTemporizadorGigante() {
+    if (temporizador_gigante_interval) {
+        clearInterval(temporizador_gigante_interval);
+        temporizador_gigante_interval = null;
+    }
+    temporizador_gigante_restante = 0;
+    temporizador_gigante.textContent = "";
+    temporizador_gigante.classList.remove("activo");
+    temporizador_gigante.classList.remove("fin");
+}
+
+function iniciarTemporizadorGigante(duracion) {
+    detenerTemporizadorGigante();
+    temporizador_gigante_restante = Math.max(0, Number(duracion) || (10 * 60));
+    temporizador_gigante.classList.add("activo");
+    temporizador_gigante.classList.remove("fin");
+    actualizarTemporizadorGigante();
+    temporizador_gigante_interval = setInterval(() => {
+        temporizador_gigante_restante -= 1;
+        if (temporizador_gigante_restante < 0) {
+            clearInterval(temporizador_gigante_interval);
+            temporizador_gigante_interval = null;
+            temporizador_gigante.textContent = "";
+            temporizador_gigante.classList.add("fin");
+            return;
+        }
+        actualizarTemporizadorGigante();
+    }, 1000);
+}
+
 const contenedor_corazones_espectador = (() => {
     let contenedor = getEl("corazones_espectador");
     if (!contenedor) {
@@ -95,6 +175,51 @@ let info = getEl("info");
 let info1 = getEl("info1");
 let info2= getEl("info2");
 let inspiracion = getEl("inspiracion");
+
+if (tiempo) {
+    tiempo.style.display = "none";
+}
+if (tiempo1) {
+    tiempo1.style.display = "none";
+}
+
+const VIDA_MAX_SEGUNDOS = 5 * 60;
+const DISPLAY_BARRA_VIDA = "inline-flex";
+
+function extraerSegundosTiempo(texto) {
+    if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
+        return null;
+    }
+    const partes = texto.split(":");
+    if (partes.length < 2) {
+        return null;
+    }
+    const minutos = parseInt(partes[0], 10);
+    const segundos = parseInt(partes[1], 10);
+    if (Number.isNaN(minutos) || Number.isNaN(segundos)) {
+        return null;
+    }
+    return (minutos * 60) + segundos;
+}
+
+function actualizarBarraVida(elemento, texto) {
+    if (!elemento) {
+        return;
+    }
+    const total = extraerSegundosTiempo(texto);
+    if (total === null) {
+        elemento.style.setProperty("--vida-pct", "0%");
+        elemento.style.setProperty("--vida-color", "#d94b4b");
+        elemento.style.display = "none";
+        return;
+    }
+    const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
+    const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
+    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
+    elemento.style.display = DISPLAY_BARRA_VIDA;
+    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
 const calentamiento_espectador = getEl("calentamiento_espectador");
 const calentamiento_global_estado = getEl("calentamiento_global_estado");
 const calentamiento_estado_1 = getEl("calentamiento_estado_1");
@@ -842,7 +967,7 @@ const actualizarCalentamientoEquipo = (equipo, data) => {
                 if (datos) {
                     actualizarCalentamientoEquipo(equipo, datos);
                 }
-            }, 1000);
+            }, 2000);
         }
     }
     if (pendienteEl) {
@@ -942,6 +1067,10 @@ let activado_psico2 = false;
 let listener_cuenta_atras = null;
 let timeout_countdown;
 let timeout_timer;
+let cuenta_atras_activa = false;
+let modo_pendiente = null;
+let inicio_modo_delay = false;
+let timeout_inicio_modo = null;
 let Temasinterval;
 let sonido_confetti_musa;
 let sonido_confetti;
@@ -1288,6 +1417,14 @@ socket.on('musa_corazon', (data) => {
     lanzarCorazonEspectador(equipo);
 });
 
+socket.on('temporizador_gigante_inicio', (data) => {
+    iniciarTemporizadorGigante(data && data.duracion);
+});
+
+socket.on('temporizador_gigante_detener', () => {
+    detenerTemporizadorGigante();
+});
+
 socket.on('calentamiento_vista', (data) => {
     actualizarVistaCalentamiento(data && data.activo);
 });
@@ -1464,6 +1601,7 @@ socket.on("count", data => {
         tiempo.style.color = "red";
     }
     tiempo.innerHTML = data.count;
+    actualizarBarraVida(tiempo, data.count);
     if(data.count == '¡Tiempo!'){
         LIMPIEZAS["psicodélico"](data, data.player);
         //confetti_aux()
@@ -1494,6 +1632,7 @@ socket.on("count", data => {
             tiempo1.style.color = "red";
         }
         tiempo1.innerHTML = data.count;
+        actualizarBarraVida(tiempo1, data.count);
         if(data.count == '¡Tiempo!'){
             LIMPIEZAS["psicodélico"](data, data.player);
             terminado1 = true;
@@ -1576,6 +1715,13 @@ socket.on('inicio', data => {
     if(sonido){
     sonido.pause();
     }
+    cuenta_atras_activa = true;
+    modo_pendiente = null;
+    inicio_modo_delay = false;
+    if (timeout_inicio_modo) {
+      clearTimeout(timeout_inicio_modo);
+      timeout_inicio_modo = null;
+    }
     reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         inspiracion.style.display = "block";
@@ -1605,6 +1751,8 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
 
     tiempo.innerHTML = "";
     tiempo1.innerHTML = "";
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
+    actualizarBarraVida(tiempo1, tiempo1.innerHTML);
     tiempo.style.display = "";
     tiempo1.style.display = "";
 
@@ -1641,7 +1789,25 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
           }, 20);
         
           // Reproducimos el siguiente sonido mientras haya disponibles en el array
-          if (index < audios.length) {
+          if (counter === 0) {
+            if (index < audios.length) {
+              reproducirSonido(audios[index]);
+              index++;
+            }
+            cuenta_atras_activa = false;
+            inicio_modo_delay = true;
+            if (timeout_inicio_modo) {
+              clearTimeout(timeout_inicio_modo);
+            }
+            timeout_inicio_modo = setTimeout(() => {
+              inicio_modo_delay = false;
+              timeout_inicio_modo = null;
+              if (modo_pendiente) {
+                aplicarModo(modo_pendiente);
+                modo_pendiente = null;
+              }
+            }, 1000);
+          } else if (index < audios.length) {
             reproducirSonido(audios[index]);
             index++;
           }
@@ -1662,6 +1828,11 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
 });
 
 socket.on('post-inicio', data => {
+    if (sonido) {
+        sonido.pause();
+        sonido.currentTime = 0;
+    }
+    detenerTemporizadorGigante();
     
     limpiezas();
 
@@ -1677,6 +1848,14 @@ socket.on('post-inicio', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', data => {
+    detenerTemporizadorGigante();
+    cuenta_atras_activa = false;
+    modo_pendiente = null;
+    inicio_modo_delay = false;
+    if (timeout_inicio_modo) {
+      clearTimeout(timeout_inicio_modo);
+      timeout_inicio_modo = null;
+    }
 
     // Recibe el nombre del jugador 2 y lo coloca en su sitio.
     socket.on('nombre2', data => {
@@ -1723,6 +1902,14 @@ socket.on('limpiar', data => {
 });
 
 socket.on('activar_modo', data => {
+    if (cuenta_atras_activa || inicio_modo_delay) {
+        modo_pendiente = data;
+        return;
+    }
+    aplicarModo(data);
+});
+
+function aplicarModo(data) {
     animacion_modo();
     LIMPIEZAS[modo_actual](data);
     modo_actual = data.modo_actual;
@@ -1730,7 +1917,7 @@ socket.on('activar_modo', data => {
     blueCount = 0;
     redCount = 0;
     updateBar();
-});
+}
 
 socket.on('recibir_feedback_modificador', data => {
     if(data.player == 2){
@@ -1775,6 +1962,7 @@ socket.on('inspirar_j1', data => {
     */
     const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
     definicion2.innerHTML = `<span style="color: orange;">${musaLabel}</span>: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: orange;">»</span>`;
+    aplicarMarqueeSiOverflow(definicion2);
     animateCSS(".definicion1", "flash");
 });
 
@@ -1790,6 +1978,7 @@ socket.on('inspirar_j2', data => {
     */
     const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
     definicion3.innerHTML = `<span style="color: orange;">${musaLabel}</span>: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: orange;">»</span>`;
+    aplicarMarqueeSiOverflow(definicion3);
     animateCSS(".definicion2", "flash");
 });
 
@@ -1825,6 +2014,7 @@ function recibir_palabra(data, escritxr) {
             } else {
                 definicion2.innerHTML = data.palabra_bonus[1];
             }
+            aplicarMarqueeSiOverflow(definicion2);
         
             animateCSS(".explicación1", "bounceInLeft");
             animateCSS(".palabra1", "bounceInLeft");
@@ -1843,6 +2033,7 @@ function recibir_palabra(data, escritxr) {
         } else {
             definicion3.innerHTML = data.palabra_bonus[1];
         }
+        aplicarMarqueeSiOverflow(definicion3);
            
         animateCSS(".explicación2", "bounceInLeft");
         animateCSS(".palabra2", "bounceInLeft");

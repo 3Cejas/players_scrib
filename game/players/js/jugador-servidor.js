@@ -90,6 +90,48 @@ let lightning = getEl("lightning");
 let feedback_tiempo = getEl("feedback_tiempo");
 let neon = getEl("neon");
 
+if (tiempo) {
+    tiempo.style.display = "none";
+}
+
+const VIDA_MAX_SEGUNDOS = 5 * 60;
+const DISPLAY_BARRA_VIDA = "inline-flex";
+
+function extraerSegundosTiempo(texto) {
+    if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
+        return null;
+    }
+    const partes = texto.split(":");
+    if (partes.length < 2) {
+        return null;
+    }
+    const minutos = parseInt(partes[0], 10);
+    const segundos = parseInt(partes[1], 10);
+    if (Number.isNaN(minutos) || Number.isNaN(segundos)) {
+        return null;
+    }
+    return (minutos * 60) + segundos;
+}
+
+function actualizarBarraVida(elemento, texto) {
+    if (!elemento) {
+        return;
+    }
+    const total = extraerSegundosTiempo(texto);
+    if (total === null) {
+        elemento.style.setProperty("--vida-pct", "0%");
+        elemento.style.setProperty("--vida-color", "#d94b4b");
+        elemento.style.display = "none";
+        return;
+    }
+    const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
+    const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
+    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
+    elemento.style.display = DISPLAY_BARRA_VIDA;
+    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
 let contenedor = getEl("contenedor")
   
 
@@ -609,6 +651,7 @@ socket.on("count", (data) => {
     }
 
     tiempo.innerHTML = data.count;
+    actualizarBarraVida(tiempo, data.count);
     if (data.count == "¡Tiempo!") {
         limpiar_bloqueo_putada();
         limpiar_teclado_lento();
@@ -729,6 +772,8 @@ function resucitar(){
     logo.style.display = "none"; 
     neon.style.display = "none"; 
     tiempo.innerHTML = "";
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
     tiempo.style.display = "";
 
     pararEscritura = true;
@@ -813,7 +858,7 @@ socket.on("inicio", (data) => {
     console.log("FRASE FINAL", data.parametros)
     console.log("FRASE FINAL", frase_final)
     limpieza();
-    TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR + ajustarInteligencia(data.parametros.TIEMPO_MODIFICADOR, atributos['inteligencia']);
+    TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR + ajustarDestreza(data.parametros.TIEMPO_MODIFICADOR, atributos['destreza']);
     console.log(atributos);
     ajustarRapidez(rapidez_borrado, rapidez_inicio_borrado, atributos['agilidad'])
     secs_palabras = ajustarFuerza(SECS_BASE, atributos['fuerza'])
@@ -1310,6 +1355,7 @@ function recibir_palabra_prohibida(data) {
         }
         animateCSS(".tiempo", "bounceInLeft");
         tiempo.innerHTML = "¡GRACIAS POR JUGAR!";
+        actualizarBarraVida(tiempo, tiempo.innerHTML);
         if (buttonContainer) {
           buttonContainer.style.display = 'none';
         }
@@ -2778,39 +2824,39 @@ function modo_frase_final(e) {
   }
 
 
-  function ajustarInteligencia(secs_base, inteligencia) {
+  function ajustarDestreza(secs_base, destreza) {
     // 1. Validación de tipos:
-    if (typeof secs_base !== 'number' || typeof inteligencia !== 'number') {
-      throw new TypeError('ajustarInteligencia: ambos parámetros deben ser números');
+    if (typeof secs_base !== 'number' || typeof destreza !== 'number') {
+      throw new TypeError('ajustarDestreza: ambos parámetros deben ser números');
     }
   
-    // 2. Caso inteligencia === 0: devolvemos el valor base sin alteraciones.
-    if (inteligencia === 0) {
+    // 2. Caso destreza === 0: devolvemos el valor base sin alteraciones.
+    if (destreza === 0) {
       return Math.round(secs_base);
     }
   
-    // 3. Limitar inteligencia al rango [0, LIMITE_TOTAL].
-    if (inteligencia > LIMITE_TOTAL) {
-      inteligencia = LIMITE_TOTAL;
+    // 3. Limitar destreza al rango [0, LIMITE_TOTAL].
+    if (destreza > LIMITE_TOTAL) {
+      destreza = LIMITE_TOTAL;
     }
   
     // 4. Cálculo del factor logarítmico normalizado:
-    //    Numerador:   log(inteligencia + 1)
+    //    Numerador:   log(destreza + 1)
     //    Denominador: log(LIMITE_TOTAL + 1) → máximo factor = 1
-    const numerador   = Math.log(inteligencia + 1);
+    const numerador   = Math.log(destreza + 1);
     const denominador = Math.log(LIMITE_TOTAL + 1);
     const factorLog   = numerador / denominador;
   
     // 5. Porcentaje de reducción final:
     //    Entre 0 (sin cambio) y maxIncremento (reducción máxima).
-    const pctReduccion = maxIncrementoInteligencia * factorLog;
+    const pctReduccion = maxIncrementoDestreza * factorLog;
   
     // 6. Cálculo del nuevo valor:
     const resultado = Math.round(secs_base * (1 - pctReduccion));
   
     // 7. (Opcional) Depuración en consola:
     console.log(
-      `[ajustarInteligencia] secs_base=${secs_base}, inteligencia=${inteligencia}, ` +
+      `[ajustarDestreza] secs_base=${secs_base}, destreza=${destreza}, ` +
       `factorLog=${factorLog.toFixed(3)}, pctRed=${(pctReduccion*100).toFixed(1)}% → resultado=${resultado}`
     );
   

@@ -28,6 +28,48 @@ let metadatos = getEl("metadatos");
 let text_progress = getEl("text-progress");
 let bar_progress = getEl("bar-progress");
 
+if (tiempo) {
+    tiempo.style.display = "none";
+}
+
+const VIDA_MAX_SEGUNDOS = 5 * 60;
+const DISPLAY_BARRA_VIDA = "inline-flex";
+
+function extraerSegundosTiempo(texto) {
+    if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
+        return null;
+    }
+    const partes = texto.split(":");
+    if (partes.length < 2) {
+        return null;
+    }
+    const minutos = parseInt(partes[0], 10);
+    const segundos = parseInt(partes[1], 10);
+    if (Number.isNaN(minutos) || Number.isNaN(segundos)) {
+        return null;
+    }
+    return (minutos * 60) + segundos;
+}
+
+function actualizarBarraVida(elemento, texto) {
+    if (!elemento) {
+        return;
+    }
+    const total = extraerSegundosTiempo(texto);
+    if (total === null) {
+        elemento.style.setProperty("--vida-pct", "0%");
+        elemento.style.setProperty("--vida-color", "#d94b4b");
+        elemento.style.display = "none";
+        return;
+    }
+    const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
+    const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
+    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
+    elemento.style.display = DISPLAY_BARRA_VIDA;
+    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
 let terminado = false;
 let clasificacion = getEl("clasificacion");
 let notificacion = getEl("notificacion");
@@ -56,6 +98,247 @@ const VENTAJAS_PUTADAS = [
     { emoji: "🖊️", descripcion: "🖊️ El contrincante no podrá borrar su texto." }
 ];
 
+const RETRASO_TECLADO_LENTO_MS = 500;
+let teclado_lento_putada = false;
+let timeout_teclado_lento = null;
+let TIEMPO_MODIFICADOR = 0;
+
+let temporizador_lectura_interval = null;
+let temporizador_lectura_restante = 0;
+let temporizador_lectura_activo = false;
+let lectura_estado_guardado = null;
+const CLAVE_TEMPORIZADOR_LECTURA = "scrib_temporizador_lectura_fin";
+
+function paddedFormat(num) {
+    return num < 10 ? `0${num}` : `${num}`;
+}
+
+function insertarTextoEnInput(input, texto) {
+    if (!input || !texto) return;
+    const inicio = input.selectionStart ?? input.value.length;
+    const fin = input.selectionEnd ?? input.value.length;
+    const valor = input.value;
+    let insercion = texto;
+    if (input.maxLength > 0) {
+        const disponible = input.maxLength - (valor.length - (fin - inicio));
+        insercion = disponible > 0 ? texto.slice(0, disponible) : "";
+    }
+    if (!insercion) return;
+    input.value = valor.slice(0, inicio) + insercion + valor.slice(fin);
+    const cursor = inicio + insercion.length;
+    input.setSelectionRange(cursor, cursor);
+}
+
+function ocultarBarraVida() {
+    tiempo.classList.remove("tiempo-vida");
+}
+
+function mostrarBarraVida() {
+    if (!tiempo.classList.contains("tiempo-vida")) {
+        tiempo.classList.add("tiempo-vida");
+    }
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
+}
+
+function aplicarTecladoLento(input) {
+    if (!input) return;
+    input.addEventListener("beforeinput", (e) => {
+        if (!teclado_lento_putada) return;
+        if (e.inputType === "insertText") {
+            e.preventDefault();
+            const data = e.data ?? "";
+            if (!data) return;
+            setTimeout(() => {
+                if (!teclado_lento_putada) return;
+                insertarTextoEnInput(input, data);
+            }, RETRASO_TECLADO_LENTO_MS);
+        }
+    });
+    input.addEventListener("paste", (e) => {
+        if (!teclado_lento_putada) return;
+        const texto = (e.clipboardData || window.clipboardData)?.getData("text");
+        if (!texto) return;
+        e.preventDefault();
+        setTimeout(() => {
+            if (!teclado_lento_putada) return;
+            insertarTextoEnInput(input, texto);
+        }, RETRASO_TECLADO_LENTO_MS);
+    });
+}
+
+function limpiarTecladoLentoMusa() {
+    teclado_lento_putada = false;
+    if (timeout_teclado_lento) {
+        clearTimeout(timeout_teclado_lento);
+        timeout_teclado_lento = null;
+    }
+}
+
+function activarTecladoLentoMusa() {
+    limpiarTecladoLentoMusa();
+    teclado_lento_putada = true;
+    const duracion = TIEMPO_MODIFICADOR > 0 ? TIEMPO_MODIFICADOR : (60 * 1000);
+    if (duracion > 0) {
+        timeout_teclado_lento = setTimeout(() => {
+            teclado_lento_putada = false;
+            timeout_teclado_lento = null;
+        }, duracion);
+    }
+}
+
+function guardarTemporizadorLecturaPersistente(finTimestamp) {
+    try {
+        localStorage.setItem(CLAVE_TEMPORIZADOR_LECTURA, String(finTimestamp));
+    } catch (error) {
+        console.warn("No se pudo guardar el temporizador:", error);
+    }
+}
+
+function obtenerTemporizadorLecturaPersistente() {
+    try {
+        const valor = localStorage.getItem(CLAVE_TEMPORIZADOR_LECTURA);
+        if (!valor) return null;
+        const numero = Number(valor);
+        return Number.isFinite(numero) ? numero : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function limpiarTemporizadorLecturaPersistente() {
+    try {
+        localStorage.removeItem(CLAVE_TEMPORIZADOR_LECTURA);
+    } catch (error) {
+        console.warn("No se pudo limpiar el temporizador:", error);
+    }
+}
+
+function obtenerEstiloMusa() {
+    const p = Number(player);
+    if (p === 1) {
+        return "color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
+    }
+    if (p === 2) {
+        return "color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
+    }
+    if (nombre1 && nombre1.style && nombre1.style.color) {
+        const sombra = nombre1.style.textShadow ? ` text-shadow: ${nombre1.style.textShadow};` : "";
+        return `color:${nombre1.style.color};${sombra}`;
+    }
+    return "color: orange;";
+}
+
+function mostrarMensajeLecturaFinal() {
+    const musaLabel = nombre_musa || "MUSA";
+    const estiloMusa = obtenerEstiloMusa();
+    const nombreHtml = `<span style="${estiloMusa}">${escapeHtml(musaLabel)}</span>`;
+    const enhorabuenaHtml = `<span style="color: lime;">¡Enhorabuena!</span>`;
+    tarea.innerHTML = `${nombreHtml}, lee el fruto de tu creación. ${enhorabuenaHtml}`;
+    recordatorio.innerHTML = "";
+    notificacion.style.display = "block";
+    if (campo_palabra) {
+        campo_palabra.style.display = "none";
+    }
+    if (enviarPalabra_boton) {
+        enviarPalabra_boton.style.display = "none";
+    }
+    animateCSS(".notificacion", "flash");
+    if (fin_pag) {
+        fin_pag.scrollIntoView({behavior: "smooth", block: "end"});
+    }
+}
+
+function guardarEstadoLectura() {
+    if (lectura_estado_guardado) return;
+    lectura_estado_guardado = {
+        tarea: tarea.innerHTML,
+        recordatorio: recordatorio.innerHTML,
+        notificacion: notificacion.style.display
+    };
+}
+
+function restaurarEstadoLectura() {
+    if (!lectura_estado_guardado) return;
+    tarea.innerHTML = lectura_estado_guardado.tarea;
+    recordatorio.innerHTML = lectura_estado_guardado.recordatorio;
+    notificacion.style.display = lectura_estado_guardado.notificacion;
+    lectura_estado_guardado = null;
+}
+
+function detenerTemporizadorLectura() {
+    if (temporizador_lectura_interval) {
+        clearInterval(temporizador_lectura_interval);
+        temporizador_lectura_interval = null;
+    }
+    temporizador_lectura_restante = 0;
+    temporizador_lectura_activo = false;
+}
+
+function resetearTemporizadorLectura() {
+    detenerTemporizadorLectura();
+    lectura_estado_guardado = null;
+    limpiarTemporizadorLecturaPersistente();
+    mostrarBarraVida();
+}
+
+function cancelarTemporizadorLectura() {
+    detenerTemporizadorLectura();
+    restaurarEstadoLectura();
+    limpiarTemporizadorLecturaPersistente();
+    tiempo.innerHTML = "";
+    tiempo.style.display = "none";
+    ocultarBarraVida();
+}
+
+function actualizarTemporizadorLectura() {
+    const minutos = Math.floor(temporizador_lectura_restante / 60);
+    const segundos = temporizador_lectura_restante % 60;
+    const texto = `${paddedFormat(minutos)}:${paddedFormat(segundos)}`;
+    tiempo.innerHTML = texto;
+}
+
+function iniciarTemporizadorLectura(duracion, finTimestamp) {
+    resetearTemporizadorLectura();
+    guardarEstadoLectura();
+    mostrarMensajeLecturaFinal();
+    temporizador_lectura_restante = Math.max(0, Number(duracion) || (10 * 60));
+    temporizador_lectura_activo = true;
+    tiempo.style.display = "";
+    tiempo.style.color = "white";
+    ocultarBarraVida();
+    const fin = finTimestamp || (Date.now() + (temporizador_lectura_restante * 1000));
+    guardarTemporizadorLecturaPersistente(fin);
+    actualizarTemporizadorLectura();
+    temporizador_lectura_interval = setInterval(() => {
+        temporizador_lectura_restante -= 1;
+        if (temporizador_lectura_restante < 0) {
+            clearInterval(temporizador_lectura_interval);
+            temporizador_lectura_interval = null;
+            temporizador_lectura_restante = 0;
+            actualizarTemporizadorLectura();
+            temporizador_lectura_activo = false;
+            limpiarTemporizadorLecturaPersistente();
+            mostrarMensajeLecturaFinal();
+            return;
+        }
+        actualizarTemporizadorLectura();
+    }, 1000);
+}
+
+function restaurarTemporizadorLecturaPersistente() {
+    const finTimestamp = obtenerTemporizadorLecturaPersistente();
+    if (!finTimestamp) return;
+    const restante = Math.ceil((finTimestamp - Date.now()) / 1000);
+    if (restante > 0) {
+        iniciarTemporizadorLectura(restante, finTimestamp);
+    } else {
+        limpiarTemporizadorLecturaPersistente();
+        temporizador_lectura_activo = false;
+        ocultarBarraVida();
+        mostrarMensajeLecturaFinal();
+    }
+}
+
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
     name = name.replace(/[\[\]]/g, "\\$&");
@@ -78,6 +361,9 @@ const calentamiento_intentos = getEl("calentamiento_intentos");
 const calentamiento_aciertos = getEl("calentamiento_aciertos");
 const calentamiento_input = getEl("calentamiento_input");
 const calentamiento_enviar = getEl("calentamiento_enviar");
+
+aplicarTecladoLento(campo_palabra);
+aplicarTecladoLento(calentamiento_input);
 const calentamiento_feedback = getEl("calentamiento_feedback");
 const calentamiento_usadas = getEl("calentamiento_usadas");
 let calentamiento_rol = "musa";
@@ -480,7 +766,10 @@ if (nombre_musa_label && nombre_musa) {
     nombre_musa_label.textContent = nombre_musa;
 }
 
+restaurarTemporizadorLecturaPersistente();
+
 var player = getParameterByName("player");
+let enviar_ventaja;
 
     if (player == 1) {
         enviar_putada_de_jx = 'enviar_putada_de_j2';
@@ -492,6 +781,7 @@ var player = getParameterByName("player");
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
         elegir_ventaja = "elegir_ventaja_j1";
+        enviar_ventaja = "enviar_ventaja_j1";
         nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
         metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
 
@@ -506,6 +796,7 @@ var player = getParameterByName("player");
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
         elegir_ventaja = "elegir_ventaja_j2"; 
+        enviar_ventaja = "enviar_ventaja_j2";
         nombre1.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
         metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
     }
@@ -560,11 +851,30 @@ socket.on('dar_nombre', (nombre) => {
     nombre1.value = nombre;
 });
 
+if (enviar_ventaja) {
+    socket.on(enviar_ventaja, (ventaja) => {
+        if (ventaja === "🐢") {
+            activarTecladoLentoMusa();
+        }
+    });
+}
+
+socket.on('temporizador_gigante_inicio', (data) => {
+    iniciarTemporizadorLectura(data && data.duracion);
+});
+
+socket.on('temporizador_gigante_detener', () => {
+    cancelarTemporizadorLectura();
+});
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     if (!nombre_musa) return;
     socket.emit('registrar_musa', { musa: player, nombre: nombre_musa });
     socket.emit('pedir_nombre');
+    setTimeout(() => {
+        socket.emit('pedir_texto');
+    }, 80);
 });
 
 socket.on('calentamiento_estado_musa', (data) => {
@@ -887,17 +1197,21 @@ pausa el cambio de palabra.
 socket.on("count", data => {
     if(data.player == player){
         console.log(data.count)
-    if(convertirASegundos(data.count) >= 20){
-        tiempo.style.color = "white"
+    if (!temporizador_lectura_activo) {
+        mostrarBarraVida();
+        if(convertirASegundos(data.count) >= 20){
+            tiempo.style.color = "white"
+        }
+        if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
+            tiempo.style.color = "yellow"
+        }
+        if (10 > convertirASegundos(data.count)) {
+            console.log("MENOR QUE 10", convertirASegundos(data.count) )
+            tiempo.style.color = "red"
+        }
+        tiempo.innerHTML = data.count;
+        actualizarBarraVida(tiempo, data.count);
     }
-    if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
-        tiempo.style.color = "yellow"
-    }
-    if (10 > convertirASegundos(data.count)) {
-        console.log("MENOR QUE 10", convertirASegundos(data.count) )
-        tiempo.style.color = "red"
-    }
-    tiempo.innerHTML = data.count;
     if (data.count == "¡Tiempo!") {
         confetti_aux();
 
@@ -926,11 +1240,15 @@ socket.on("count", data => {
 // Inicia el juego.
 socket.on('inicio', data => {
     LIMITE_TIEMPO_INSPIRACION = data.parametros.LIMITE_TIEMPO_INSPIRACION;
+    TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR || TIEMPO_MODIFICADOR;
+    resetearTemporizadorLectura();
+    limpiarTecladoLentoMusa();
     terminado = false;
     niveles_bloqueados = true;
     setNivelesDesactivados(false);
     actualizarNiveles("");
     tiempo.innerHTML = "";
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
     tiempo.style.display = "";
     tiempo.style.color = "white"
 
@@ -978,6 +1296,7 @@ socket.on('inicio', data => {
 });
 
 socket.on("post-inicio", () => {
+                resetearTemporizadorLectura();
                 socket.off('vote');
                 socket.off('exit');
                 socket.off('scroll');
@@ -999,6 +1318,8 @@ socket.on("post-inicio", () => {
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
     skill.style = 'animation: brillo 2s ease-in-out;'
+    resetearTemporizadorLectura();
+    limpiarTecladoLentoMusa();
     // Recibe el nombre del jugador y lo coloca en su sitio.
     socket.on(nombre, data => {
         nombre1.value = data;
@@ -1464,7 +1785,7 @@ function limpiar_colddown(){
     bar_progress.style.width = '0%'
     //button.disabled = false; // Habilita el botón
     text_progress.style.color = "orange";
-    text_progress.innerHTML = "Inspirar"
+    text_progress.innerHTML = "🚀 Inspirar"
     cooldown = false;
 }
 
@@ -1666,13 +1987,3 @@ function cambiar_jugadores(revertir) {
         "| jugadorEstilo =", jugadorEstilo
     );
 }
-
-
-
-
-
-
-
-
-
-

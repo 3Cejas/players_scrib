@@ -16,6 +16,45 @@ let pausado = false;
 let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
+let temporizador_gigante_activo = false;
+
+const VIDA_MAX_SEGUNDOS = 5 * 60;
+const DISPLAY_BARRA_VIDA = "flex";
+
+function extraerSegundosTiempo(texto) {
+    if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
+        return null;
+    }
+    const partes = texto.split(":");
+    if (partes.length < 2) {
+        return null;
+    }
+    const minutos = parseInt(partes[0], 10);
+    const segundos = parseInt(partes[1], 10);
+    if (Number.isNaN(minutos) || Number.isNaN(segundos)) {
+        return null;
+    }
+    return (minutos * 60) + segundos;
+}
+
+function actualizarBarraVida(elemento, texto) {
+    if (!elemento) {
+        return;
+    }
+    const total = extraerSegundosTiempo(texto);
+    if (total === null) {
+        elemento.style.setProperty("--vida-pct", "0%");
+        elemento.style.setProperty("--vida-color", "#d94b4b");
+        elemento.style.display = "none";
+        return;
+    }
+    const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
+    const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
+    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
+    elemento.style.display = DISPLAY_BARRA_VIDA;
+    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
 
 
 function paddedFormat(num) {
@@ -38,6 +77,7 @@ function startCountDown_p1(duration) {
         sec = parseInt(secondsRemaining % 60);
 
         tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+        actualizarBarraVida(tiempo, tiempo.textContent);
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         console.log('count', {count, player:1})
         socket.emit('count', {count, player:1});
@@ -66,6 +106,7 @@ function startCountDown_p2(duration) {
         sec1 = parseInt(secondsRemaining1 % 60);
 
         tiempo1.textContent = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
+        actualizarBarraVida(tiempo1, tiempo1.textContent);
         count1 = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
         socket.emit('count', {count : count1, player: 2});
         if (secondsRemaining1 == 20) {
@@ -91,6 +132,7 @@ function addSeconds(secs) {
     sec = parseInt(secondsRemaining % 60);
 
     tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+    actualizarBarraVida(tiempo, tiempo.textContent);
     count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
 }
 
@@ -103,6 +145,7 @@ function addSeconds1(secs) {
     sec1 = parseInt(secondsRemaining1 % 60);
 
     tiempo1.textContent = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
+    actualizarBarraVida(tiempo1, tiempo1.textContent);
     count1 = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
     console.log(min1)
     console.log("JOOOOOOOOO", count1)
@@ -151,6 +194,8 @@ function temp() {
 
     tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
     tiempo1.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
+    actualizarBarraVida(tiempo, tiempo.textContent);
+    actualizarBarraVida(tiempo1, tiempo1.textContent);
 
     count = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;    
     count1 = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;   
@@ -242,9 +287,12 @@ function limpiar() {
     clearInterval(countInterval1);
     clearTimeout(tempo_text_borroso);
     clearTimeout(TimeoutTiempoMuerto);
+    temporizador_gigante_activo = false;
 
     tiempo.innerHTML = "";
     tiempo1.innerHTML = "";
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
+    actualizarBarraVida(tiempo1, tiempo1.innerHTML);
     document.getElementById("texto").classList.remove('textarea_blur');
     document.getElementById("texto1").classList.remove('textarea_blur');
     puntuacion_final1.innerHTML = "";
@@ -265,6 +313,16 @@ function borrar_texto_guardado() {
     texto_guardado1 = "";
     texto_guardado2 = "";
     socket.emit('borrar_texto_guardado');
+}
+
+function activar_temporizador_gigante() {
+    if (temporizador_gigante_activo) {
+        temporizador_gigante_activo = false;
+        socket.emit('temporizador_gigante_detener', {});
+        return;
+    }
+    temporizador_gigante_activo = true;
+    socket.emit('activar_temporizador_gigante', { duracion: 10 * 60 });
 }
 
 function fin(player) {
@@ -524,6 +582,7 @@ function final(player){
         clearInterval(countInterval);
         tiempo.style.color = "white"
         tiempo.innerHTML = "¡Tiempo!";
+        actualizarBarraVida(tiempo, tiempo.innerHTML);
         count = "¡Tiempo!";
         texto_guardado1 = texto1.innerHTML;
         terminado = true;
@@ -534,6 +593,7 @@ function final(player){
         clearInterval(countInterval1);
         tiempo1.style.color = "white"
         tiempo1.innerHTML = "¡Tiempo!";
+        actualizarBarraVida(tiempo1, tiempo1.innerHTML);
         count1 = "¡Tiempo!";
         terminado1 = true;
         console.log("texto2", texto_guardado2)
