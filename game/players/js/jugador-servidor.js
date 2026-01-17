@@ -152,6 +152,7 @@ let timeout_bloqueo_putada = null;
 let teclado_lento_putada = false;
 let timeout_teclado_lento = null;
 const RETRASO_TECLADO_LENTO_MS = 500;
+const RAYO_REDUCCION_K = 0.08;
 
 function limpiar_bloqueo_putada() {
     bloquear_borrado_putada = false;
@@ -317,8 +318,8 @@ const PUTADAS = {
         antiguo_rapidez_borrado = rapidez_borrado;
         antiguo_inicio_borrado = rapidez_inicio_borrado;
         
-        rapidez_borrado = reduceLog(rapidez_borrado, 1);
-        rapidez_inicio_borrado = reduceLog(rapidez_inicio_borrado, 1);
+        rapidez_borrado = reduceLog(rapidez_borrado, RAYO_REDUCCION_K);
+        rapidez_inicio_borrado = reduceLog(rapidez_inicio_borrado, RAYO_REDUCCION_K);
         document.body.classList.add("bg");
         document.body.classList.add("rain");
         lightning.classList.add("lightning");
@@ -1035,10 +1036,11 @@ socket.on(inspirar, data => {
     if (palabra != "") {
         palabra_actual = [palabra];
         const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
-        definicion.innerHTML = (`<span style='color: orange;'>${musaLabel}</span>: ` +
-        "<span style='color: orange;'>Podrías escribir la palabra «</span>" +
+        definicion.innerHTML = (`<span style='color: orange;'>${musaLabel}</span>` +
+        "<span style='color: white;'>: </span>" +
+        "<span style='color: white;'>Podrías escribir la palabra «</span>" +
         "<span style='color: lime; text-decoration: underline;'>" + escapeHtml(palabra) +
-        "</span><span style='color: orange;'>»</span>");
+        "</span><span style='color: white;'>»</span>");
         definicion.dataset.origenMusa = "musa";
         animateCSS(".definicion", "flash");
         asignada = true;
@@ -1102,7 +1104,7 @@ function recibir_palabra(data) {
     palabra.innerHTML = data.palabras_var + " (⏱️+" + data.tiempo_palabras_bonus + " segs.)" ;
     if (data.origen_musa === "musa") {
         const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-        definicion.innerHTML = `<span style="color:lime;">${musaLabel}</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>`;
+        definicion.innerHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podrías escribir esta palabra ⬆️</span>`;
         definicion.dataset.origenMusa = "musa";
     } else {
         definicion.innerHTML = data.palabra_bonus[1];

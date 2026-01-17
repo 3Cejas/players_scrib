@@ -992,7 +992,7 @@ const actualizarCalentamientoEquipo = (equipo, data) => {
         subirSemilla,
         misterioDoble: cuentaRevelacion
     });
-    renderizarHistorial(equipo, data, { animarRevelacion: animacionRevelacion });
+    renderizarHistorial(equipo, null);
     if (animacionRevelacion && prev.pendiente) {
         const pendiente = prev.pendiente;
         const aumentoAciertos = pendiente.aciertos > prev.aciertos;
@@ -1087,6 +1087,35 @@ let frase_final_j2;
 
 let sonido;
 
+function detenerSonidoRayo() {
+    if (intervaloSonidoRayo) {
+        clearInterval(intervaloSonidoRayo);
+        intervaloSonidoRayo = null;
+    }
+}
+
+function detenerAudioInverso() {
+    if (audio_inverso) {
+        audio_inverso.pause();
+        audio_inverso.currentTime = 0;
+        audio_inverso = null;
+    }
+}
+
+function detenerAudioBorroso() {
+    if (audio_borroso) {
+        audio_borroso.pause();
+        audio_borroso.currentTime = 0;
+        audio_borroso = null;
+    }
+}
+
+function detenerSonidosDesventaja() {
+    detenerSonidoRayo();
+    detenerAudioInverso();
+    detenerAudioBorroso();
+}
+
 if (typeof animateCSS === "function") {
     animateCSS(".cabecera", "backInLeft").then(() => {
         animateCSS(".contenedor_espectador", "pulse");
@@ -1099,6 +1128,7 @@ const PUTADAS = {
         
     },
     "⚡": function (player) {
+        detenerSonidoRayo();
         if(player == 1){
             document.body.classList.add("bg");
             document.body.classList.add("rain");
@@ -1110,7 +1140,7 @@ const PUTADAS = {
                 reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
             }, 4000);
             setTimeout(function () {
-                clearInterval(intervaloSonidoRayo);
+                detenerSonidoRayo();
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
                 lightning.classList.remove("lightning");
@@ -1127,7 +1157,7 @@ const PUTADAS = {
                 reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
             }, 4000)
             setTimeout(function () {
-                clearInterval(intervaloSonidoRayo);
+                detenerSonidoRayo();
                 document.body.classList.remove("bg");
                 document.body.classList.remove("rain");
                 lightning.classList.remove("lightning");
@@ -1139,6 +1169,7 @@ const PUTADAS = {
 
     },
     "🙃": function (player) {
+        detenerAudioInverso();
         audio_inverso = reproducirSonido("../../game/audio/FX/8. INVERSO LOOP.mp3", true)
         if(player == 1){
             texto1.classList.add("rotate-vertical-center");
@@ -1148,7 +1179,7 @@ const PUTADAS = {
                 texto1.removeEventListener('animationend', arguments.callee);
             });
             tempo_text_inverso1 = setTimeout(function () {
-                audio_inverso.pause();
+                detenerAudioInverso();
                 texto1.classList.add("rotate-vertical-center");
                 texto1.addEventListener('animationend', function() {
                     texto1.classList.remove("rotate-vertical-center");
@@ -1164,7 +1195,7 @@ const PUTADAS = {
                 texto2.removeEventListener('animationend', arguments.callee);
             });
             tempo_text_inverso2 = setTimeout(function () {
-                audio_inverso.pause();
+                detenerAudioInverso();
                 texto2.classList.add("rotate-vertical-center");
                 texto2.addEventListener('animationend', function() {
                     texto2.classList.remove("rotate-vertical-center");
@@ -1175,13 +1206,14 @@ const PUTADAS = {
     },
 
     "🌪️": function (player) {
+        detenerAudioBorroso();
         audio_borroso = reproducirSonido("../../game/audio/FX/7. REMOLINO PARA LOOP.mp3", true)
         modo_texto_borroso1 = true;
         tiempo_inicial = new Date();
         if(player == 1){
             texto1.classList.add("textarea_blur");
             tempo_text_borroso1 = setTimeout(function () {
-            audio_borroso.pause();
+            detenerAudioBorroso();
             temp_text_borroso_activado1 = true;
             texto1.classList.remove("textarea_blur");
         }, TIEMPO_MODIFICADOR);
@@ -1191,7 +1223,7 @@ const PUTADAS = {
             console.log("BORROSO")
             texto2.classList.add("textarea_blur");
             tempo_text_borroso2 = setTimeout(function () {
-            audio_borroso.pause();
+            detenerAudioBorroso();
             temp_text_borroso_activado2 = true;
             texto2.classList.remove("textarea_blur");
         }, TIEMPO_MODIFICADOR);
@@ -1911,6 +1943,7 @@ socket.on('activar_modo', data => {
 
 function aplicarModo(data) {
     animacion_modo();
+    limpiarEstadoVotacionVentaja();
     LIMPIEZAS[modo_actual](data);
     modo_actual = data.modo_actual;
     MODOS[modo_actual](data);
@@ -1961,7 +1994,7 @@ socket.on('inspirar_j1', data => {
       De este modo, no quedan espacios antes o después de las comillas « ».
     */
     const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
-    definicion2.innerHTML = `<span style="color: orange;">${musaLabel}</span>: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: orange;">»</span>`;
+    definicion2.innerHTML = `<span style="color: orange;">${musaLabel}</span><span style="color: white;">: </span><span style="color: white;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: white;">»</span>`;
     aplicarMarqueeSiOverflow(definicion2);
     animateCSS(".definicion1", "flash");
 });
@@ -1977,7 +2010,7 @@ socket.on('inspirar_j2', data => {
       no deseados alrededor de «palabra».
     */
     const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
-    definicion3.innerHTML = `<span style="color: orange;">${musaLabel}</span>: <span style="color: orange;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: orange;">»</span>`;
+    definicion3.innerHTML = `<span style="color: orange;">${musaLabel}</span><span style="color: white;">: </span><span style="color: white;">Podrías escribir la palabra «</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: white;">»</span>`;
     aplicarMarqueeSiOverflow(definicion3);
     animateCSS(".definicion2", "flash");
 });
@@ -2007,7 +2040,7 @@ function recibir_palabra(data, escritxr) {
             palabra2.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)";
             if (data.origen_musa === "musa") {
                 const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-                definicion2.innerHTML = `<span style="color:lime;">${musaLabel}</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>`;
+                definicion2.innerHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podrías escribir esta palabra ⬆️</span>`;
             } else if (data.origen_musa === "musa_enemiga") {
                 const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
                 definicion2.innerHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>me pega esta palabra ⬆️</span>`;
@@ -2026,7 +2059,7 @@ function recibir_palabra(data, escritxr) {
         palabra3.innerHTML = data.palabras_var + " (" + signo + data.tiempo_palabras_bonus + " segs.)"
         if (data.origen_musa === "musa") {
             const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-            definicion3.innerHTML = `<span style="color:lime;">${musaLabel}</span>: <span style='color: orange;'>Podrías escribir esta palabra ⬆️</span>`;
+            definicion3.innerHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podrías escribir esta palabra ⬆️</span>`;
         } else if (data.origen_musa === "musa_enemiga") {
             const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
             definicion3.innerHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>me pega esta palabra ⬆️</span>`;
@@ -2184,6 +2217,7 @@ socket.on('recibir_comentario', data => {
 });
 
 socket.on('fin', data => {
+        detenerSonidosDesventaja();
         //confetti_aux();
 });
 
@@ -2193,7 +2227,7 @@ socket.on("enviar_repentizado", repentizado => {
 });
 
 socket.on("enviar_ventaja_j1", putada => {
-    stopDotAnimation(Temasinterval);
+    limpiarEstadoVotacionVentaja();
     PUTADAS[putada](1);
     feedback1.innerHTML = putada + " <span style='color: red;'>¡DESVENTAJA!</span>";
     animateCSS(".feedback1", "flash").then((message) => {
@@ -2210,7 +2244,7 @@ socket.on("enviar_ventaja_j1", putada => {
 });
 
 socket.on("enviar_ventaja_j2", putada => {
-    stopDotAnimation(Temasinterval);
+    limpiarEstadoVotacionVentaja();
     PUTADAS[putada](2);
     feedback2.innerHTML = putada + " <span style='color: red;'>¡DESVENTAJA!</span>";;
     animateCSS(".feedback2", "flash").then((message) => {
@@ -2301,11 +2335,14 @@ function startDotAnimation(element, baseText, maxDots = 3, intervalTime = 500) {
   
     return intervalId;
   }
-  
-  function stopDotAnimation(intervalId) {
+
+  function limpiarEstadoVotacionVentaja() {
     temas.innerHTML = "";
     temas.style.display = "";
-    clearInterval(intervalId);
+    if (Temasinterval) {
+        clearInterval(Temasinterval);
+        Temasinterval = null;
+    }
   }
 
 function activar_sockets_extratextuales() {
@@ -2628,9 +2665,7 @@ function cambiar_color_puntuación() {
 
 function limpiezas(){
 
-    if(intervaloSonidoRayo) clearInterval(intervaloSonidoRayo);
-    if(audio_inverso) audio_inverso.pause();
-    if(audio_borroso) audio_borroso.pause();
+    detenerSonidosDesventaja();
 
     clearTimeout(listener_cuenta_atras);
     clearTimeout(tempo_text_inverso1);
@@ -2646,7 +2681,7 @@ function limpiezas(){
     lightning.classList.remove("lightning");
 
     clearInterval(timer)
-    stopDotAnimation(Temasinterval);
+    limpiarEstadoVotacionVentaja();
     terminado = false;
     terminado1 = false;
 
@@ -2749,14 +2784,12 @@ function limpiezas_final(){
     clearTimeout(tempo_text_borroso1);
     clearTimeout(tempo_text_borroso2);
 
-    if(intervaloSonidoRayo) clearInterval(intervaloSonidoRayo);
-    if(audio_inverso) audio_inverso.pause();
-    if(audio_borroso) audio_borroso.pause();
+    detenerSonidosDesventaja();
 
     blueCount = 0;
     redCount = 0;
     updateBar();
-    stopDotAnimation(Temasinterval);
+    limpiarEstadoVotacionVentaja();
 }
 
 var duration = 15 * 1000;
@@ -2879,6 +2912,9 @@ function updateBar() {
 
 
 function increment(color) {
+    if (inspiracion && inspiracion.style.display !== "block") {
+        inspiracion.style.display = "block";
+    }
     if (color === 'blue') {
         blueCount++;
     } else if (color === 'red') {

@@ -98,6 +98,17 @@ const VENTAJAS_PUTADAS = [
     { emoji: "🖊️", descripcion: "🖊️ El contrincante no podrá borrar su texto." }
 ];
 
+function obtenerOpcionesVentaja(opcionesEmojis) {
+    const mapa = new Map(VENTAJAS_PUTADAS.map(op => [op.emoji, op]));
+    if (!Array.isArray(opcionesEmojis) || opcionesEmojis.length === 0) {
+        return [...VENTAJAS_PUTADAS].sort(() => Math.random() - 0.5).slice(0, 3);
+    }
+    return opcionesEmojis
+        .map(emoji => mapa.get(emoji))
+        .filter(Boolean)
+        .slice(0, 3);
+}
+
 const RETRASO_TECLADO_LENTO_MS = 500;
 let teclado_lento_putada = false;
 let timeout_teclado_lento = null;
@@ -1352,16 +1363,16 @@ socket.on(nombre, data => {
     nombre1.value = data;
 });
 
-socket.on(elegir_ventaja, () => {
+socket.on(elegir_ventaja, (data = {}) => {
     console.log("MODO ACTUAL", modo_actual);
     console.log("REVERTIR", false);
     cambiar_jugadores(false);
     texto1.style.color = "white";
     votando_ = true;
     confetti_musas();
-    const opciones = [...VENTAJAS_PUTADAS].sort(() => Math.random() - 0.5).slice(0, 3);
+    const opciones = obtenerOpcionesVentaja(data.opciones);
     const botones = opciones
-        .map(op => `<button class='btn' value='${op.emoji}' onclick='elegir_ventaja_publico(this)'>${op.emoji}</button>`)
+        .map(op => `<button class='btn btn-ventaja' value='${op.emoji}' onclick='elegir_ventaja_publico(this)'>${op.emoji}</button>`)
         .join("");
     const explicaciones = opciones
         .map(op => op.descripcion)

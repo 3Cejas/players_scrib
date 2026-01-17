@@ -589,6 +589,23 @@ th{
     border-color: white;
 }
 
+.btn-ventaja {
+    margin: 1.2vw 1.4vw;
+    border-color: #ffe066;
+    border-width: 0.28vw;
+    color: #fff6cc;
+    background-color: rgba(255, 224, 102, 0.08);
+    box-shadow: 0 0 0.6em rgba(255, 224, 102, 0.7), 0 0 1.2em rgba(255, 112, 0, 0.35);
+    text-shadow: 0.08em 0.08em 0 #000, 0 0 0.4em rgba(255, 224, 102, 0.7);
+}
+
+.btn-ventaja:hover {
+    color: #000;
+    background-color: #ffe066;
+    border-color: #ffe066;
+    box-shadow: 0 0 0.8em rgba(255, 224, 102, 0.9);
+}
+
 .notificacion{
     padding: 0.25vmax;
     background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='white' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");

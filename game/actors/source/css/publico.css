@@ -94,6 +94,12 @@ th{
     text-align: center;
 }
 
+.tiempo-contenedor {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 .tiempo-vida {
     --vida-pct: 0%;
     --vida-color: #41d860;

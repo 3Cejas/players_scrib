@@ -26,6 +26,9 @@ texto1.scrollTop = texto1.scrollHeight;
 
 // Tiempo restante de la ronda.
 let tiempo = getEl("tiempo");
+if (tiempo) {
+    tiempo.style.display = "none";
+}
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "inline-flex";
