@@ -645,6 +645,15 @@
     font-weight: 700;
 }
 
+.intro-tiempo-img {
+    width: min(82vw, 520px);
+    height: auto;
+    align-self: center;
+    margin-top: clamp(0.4rem, 2vw, 1rem);
+    margin-bottom: clamp(0.6rem, 3vw, 1.4rem);
+    display: block;
+}
+
 .intro-explica--azul {
     --accent-color: #63e7ff;
 }
@@ -731,6 +740,14 @@
     display: block;
     object-fit: cover;
     object-position: center;
+}
+
+.intro-cover {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    height: clamp(200px, 36vh, 360px);
+    overflow: hidden;
 }
 
 .intro-niveles-list {
@@ -982,9 +999,7 @@
                     <p class="intro-explica-text">                       
                         Deben tener mucho cuidado porque, <strong>si el contador de un escritor llega a cero, lo que ha escrito se autodestruirá.</strong>
                     </p>
-                    <div class="intro-cover">
-                        <img class="intro-cover-img" src="../../img/el_tiempo.png" alt="El tiempo">
-                    </div>
+                    <img class="intro-tiempo-img" src="../../img/el_tiempo.png" alt="El tiempo">
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-musas" aria-label="Ir a las musas"></button>
@@ -1033,7 +1048,7 @@
                         Vivirás todo el proceso creativo de un texto dramático, desde su escritura hasta su puesta en escena.
                     </p>
                     <div class="intro-repre-art intro-repre-art--full">
-                        <img class="intro-repre-img" src="../../img/la%20representacio%CC%81n.png" alt="La representación">
+                        <img class="intro-repre-img" src="../../img/la_representacion.png" alt="La representación">
                     </div>
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-musas" aria-label="Volver a las musas"></button>
@@ -1218,10 +1233,3 @@
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>
 </html>
- .intro-cover {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    height: clamp(200px, 36vh, 360px);
-    overflow: hidden;
-}
