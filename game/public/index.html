@@ -627,11 +627,14 @@
 .intro-explica-meta {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 0.4rem;
     font-size: clamp(14px, 3.8vw, 24px);
     color: #8bff6a;
     text-shadow: 0 0 0.6rem rgba(139, 255, 106, 0.4);
     letter-spacing: 0.05em;
+    width: 100%;
+    margin-top: clamp(0.6rem, 3vw, 1.2rem);
 }
 
 .intro-explica-text {
@@ -646,12 +649,20 @@
 }
 
 .intro-tiempo-img {
-    width: min(82vw, 520px);
+    width: min(72vw, 440px);
     height: auto;
-    align-self: center;
-    margin-top: clamp(0.4rem, 2vw, 1rem);
-    margin-bottom: clamp(0.6rem, 3vw, 1.4rem);
     display: block;
+}
+
+.intro-tiempo-wrap {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    display: flex;
+    justify-content: flex-end;
+    padding-right: max(env(safe-area-inset-right), 0px);
+    margin-top: clamp(0.2rem, 1.4vw, 0.6rem);
+    margin-bottom: clamp(0.6rem, 3vw, 1.2rem);
 }
 
 .intro-explica--azul {
@@ -988,7 +999,6 @@
                         <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
                     </div>
                     <h2 class="intro-explica-title intro-explica-title--azul">EL TIEMPO</h2>
-                    <div class="intro-explica-meta"><span>⏱️</span><span>+6 segs.</span></div>
                     <p class="intro-explica-text">
                         Cada escritxr parte de una cuenta regresiva de unos minutos.
                     </p>
@@ -999,7 +1009,10 @@
                     <p class="intro-explica-text">                       
                         Deben tener mucho cuidado porque, <strong>si el contador de un escritor llega a cero, lo que ha escrito se autodestruirá.</strong>
                     </p>
-                    <img class="intro-tiempo-img" src="../../img/el_tiempo.png" alt="El tiempo">
+                    <p class="intro-explica-meta"><span>⏱️</span><span>+6 segs.</span></p>
+                    <div class="intro-tiempo-wrap">
+                        <img class="intro-tiempo-img" src="../../img/el_tiempo.png" alt="El tiempo">
+                    </div>
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-musas" aria-label="Ir a las musas"></button>
