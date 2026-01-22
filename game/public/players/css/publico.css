@@ -529,13 +529,145 @@ th{
     /* Fijar el ancho y el alto */
     width: 40vw; /* Ejemplo de ancho fijo */
     height: 10vw; /* Ejemplo de alto fijo */
-    background-color: red;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6vw;
+    padding-right: 10vw;
+    background: linear-gradient(180deg, #ff3b1a 0%, #d40c00 100%);
+    border-color: #fff2e6;
+    border-width: 0.25vw;
+    color: #fff8f0;
+    text-shadow: 0.12em 0.12em 0 #000;
+    box-shadow: 0 0.6vw 0 #8a0a00, 0 0 1.2vw rgba(255, 70, 30, 0.55);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.btn.mostrarTexto::after {
+    content: attr(data-estado);
+    position: absolute;
+    right: 1.2vw;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8vw;
+    height: 3.2vw;
+    line-height: 3.2vw;
+    text-align: center;
+    font-size: 2.1vw;
+    border-radius: 999px;
+    border: 0.18vw solid rgba(255, 255, 255, 0.85);
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    letter-spacing: 0.2em;
+    box-shadow: inset 0 0 0.4vw rgba(0, 0, 0, 0.7);
+}
+
+.btn.mostrarTexto::before {
+    content: "";
+    position: absolute;
+    right: 6.6vw;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.2vw;
+    height: 2.2vw;
+    border-radius: 50%;
+    background: #fff6e6;
+    box-shadow: 0 0 0.4vw rgba(255, 255, 255, 0.7);
+    transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.btn.mostrarTexto.is-on {
+    background: linear-gradient(180deg, #3dff63 0%, #09b53b 100%);
+    border-color: #e6ffe9;
+    color: #f2fff6;
+    box-shadow: 0 0.6vw 0 #007c26, 0 0 1.2vw rgba(60, 255, 120, 0.6);
+}
+
+.btn.mostrarTexto.is-on::after {
+    background: rgba(0, 90, 30, 0.7);
+    border-color: rgba(230, 255, 235, 0.95);
+    color: #eaffea;
+}
+
+.btn.mostrarTexto.is-on::before {
+    transform: translate(3.2vw, -50%);
+    background: #eaffea;
+}
+
+.btn.mostrarTexto:hover {
+    background: linear-gradient(180deg, #ff593a 0%, #e31200 100%);
+    border-color: #ffffff;
+    color: #fff;
+    box-shadow: 0 0.4vw 0 #7b0900, 0 0 1.6vw rgba(255, 90, 50, 0.7);
+    transform: translateY(-0.1vw);
+}
+
+.btn.mostrarTexto.is-on:hover {
+    background: linear-gradient(180deg, #4dff76 0%, #0cc847 100%);
+    border-color: #ffffff;
+    color: #ffffff;
+    box-shadow: 0 0.4vw 0 #007c26, 0 0 1.6vw rgba(60, 255, 120, 0.7);
+}
+
+.btn.mostrarTexto:active {
+    transform: translateY(0.2vw);
+    box-shadow: 0 0.2vw 0 #7b0900, 0 0 1vw rgba(255, 90, 50, 0.55);
+}
+
+.btn.mostrarTexto.is-on:active {
+    box-shadow: 0 0.2vw 0 #007c26, 0 0 1vw rgba(60, 255, 120, 0.55);
 }
 
 .btn.bandera {
   /* Fijar el ancho y el alto */
   width: 40vw; /* Ejemplo de ancho fijo */
   height: 10vw; /* Ejemplo de alto fijo */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6vw;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f2f2f2 100%);
+  border-color: #ffffff;
+  border-width: 0.25vw;
+  color: #111;
+  text-shadow: 0.08em 0.08em 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0.6vw 0 #cfcfcf, 0 0 1.2vw rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#btn_bandera {
+  --bandera-color: var(--equipo-color, #00f5ff);
+  --bandera-franja: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 42%,
+    color-mix(in srgb, var(--bandera-color), transparent 15%) 42%,
+    color-mix(in srgb, var(--bandera-color), transparent 15%) 58%,
+    transparent 58%,
+    transparent 100%
+  );
+  background-image: var(--bandera-franja), linear-gradient(180deg, #ffffff 0%, #f2f2f2 100%);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.btn.bandera:hover {
+  background-image: linear-gradient(180deg, #ffffff 0%, #e6e6e6 100%);
+  border-color: #ffffff;
+  color: #000;
+  box-shadow: 0 0.4vw 0 #bdbdbd, 0 0 1.4vw rgba(255, 255, 255, 0.7);
+  transform: translateY(-0.1vw);
+}
+
+#btn_bandera:hover {
+  background-image: var(--bandera-franja), linear-gradient(180deg, #ffffff 0%, #e6e6e6 100%);
+}
+
+.btn.bandera:active {
+  transform: translateY(0.2vw);
+  box-shadow: 0 0.2vw 0 #bdbdbd, 0 0 1vw rgba(255, 255, 255, 0.55);
 }
 
 .btn-edicion{

@@ -9,6 +9,8 @@ escritxr1 = document.getElementById("escritxr1");
 escritxr2 = document.getElementById("escritxr2");
 const nombre_musa_input = document.getElementById("nombre_musa");
 const mensaje_musa = document.getElementById("mensaje_musa");
+const musa_nombre_titulo = document.getElementById("intro_musa_nombre");
+const intro_scroll = document.querySelector(".intro-scroll");
 const MAX_NOMBRE_MUSA = 10;
 const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
 const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
@@ -32,6 +34,35 @@ function limpiarAvisoMusa() {
   if (!mensaje_musa) return;
   mensaje_musa.textContent = "";
   mensaje_musa.classList.remove("activa");
+}
+
+function actualizarNombreIntro() {
+  if (!musa_nombre_titulo) return;
+  const nombre = normalizarNombreMusa(nombre_musa_input?.value || "");
+  musa_nombre_titulo.textContent = nombre || "MUSA";
+}
+
+function scrollToSeccion(objetivo) {
+  if (!objetivo) return;
+  if (!intro_scroll) {
+    objetivo.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  const inicio = intro_scroll.scrollTop;
+  const destino = objetivo.offsetTop;
+  const distancia = destino - inicio;
+  const duracion = 1200;
+  let inicioTiempo = null;
+  const animar = (marca) => {
+    if (!inicioTiempo) inicioTiempo = marca;
+    const progreso = Math.min((marca - inicioTiempo) / duracion, 1);
+    const eased = 1 - Math.pow(1 - progreso, 3);
+    intro_scroll.scrollTop = inicio + (distancia * eased);
+    if (progreso < 1) {
+      requestAnimationFrame(animar);
+    }
+  };
+  requestAnimationFrame(animar);
 }
 
 function entrarComoMusa(playerId) {
@@ -64,16 +95,85 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   if (params.get("error") === "nombre_musa") {
     mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
+    const seccionNombre = document.getElementById("intro-nombre");
+    if (seccionNombre) {
+      scrollToSeccion(seccionNombre);
+    }
+    if (nombre_musa_input) {
+      setTimeout(() => nombre_musa_input.focus(), 350);
+    }
   }
   if (nombre_musa_input) {
     nombre_musa_input.addEventListener("input", () => {
       if (normalizarNombreMusa(nombre_musa_input.value)) {
         limpiarAvisoMusa();
       }
+      actualizarNombreIntro();
+    });
+    nombre_musa_input.addEventListener("keydown", (evento) => {
+      if (evento.key !== "Enter") return;
+      evento.preventDefault();
+      const nombre = normalizarNombreMusa(nombre_musa_input.value);
+      if (!nombre) {
+        mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
+        nombre_musa_input.focus();
+        return;
+      }
+      limpiarAvisoMusa();
+      actualizarNombreIntro();
+      const objetivo = document.querySelector("#intro-equipo");
+      scrollToSeccion(objetivo);
     });
   }
-  if (nombre_musa_input) {
-    nombre_musa_input.focus();
+  actualizarNombreIntro();
+  const botonesScroll = document.querySelectorAll("[data-scroll-target]");
+  botonesScroll.forEach((boton) => {
+    boton.addEventListener("click", () => {
+      const selector = boton.getAttribute("data-scroll-target");
+      if (!selector) return;
+      if (boton.dataset.validate === "nombre_musa") {
+        const nombre = normalizarNombreMusa(nombre_musa_input?.value || "");
+        if (!nombre) {
+          mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
+          if (nombre_musa_input) {
+            nombre_musa_input.focus();
+          }
+          return;
+        }
+        limpiarAvisoMusa();
+        actualizarNombreIntro();
+      }
+      const objetivo = document.querySelector(selector);
+      scrollToSeccion(objetivo);
+      const focusId = boton.getAttribute("data-focus");
+      if (focusId) {
+        const foco = document.getElementById(focusId);
+        if (foco) {
+          setTimeout(() => foco.focus(), 350);
+        }
+      }
+    });
+  });
+  const contenedorScroll = document.querySelector(".intro-scroll");
+  if (contenedorScroll) {
+    const bloquearScroll = (evento) => {
+      const destino = evento.target;
+      if (destino && (destino.tagName === "INPUT" || destino.tagName === "TEXTAREA" || destino.isContentEditable)) {
+        return;
+      }
+      evento.preventDefault();
+    };
+    contenedorScroll.addEventListener("wheel", bloquearScroll, { passive: false });
+    contenedorScroll.addEventListener("touchmove", bloquearScroll, { passive: false });
+    document.addEventListener("keydown", (evento) => {
+      const teclas = ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "];
+      if (!teclas.includes(evento.key)) return;
+      const destino = evento.target;
+      if (destino && (destino.tagName === "INPUT" || destino.tagName === "TEXTAREA" || destino.isContentEditable)) {
+        return;
+      }
+      evento.preventDefault();
+    });
   }
   // Pedimos los atributos al servidor
   socket.emit('pedir_atributos');

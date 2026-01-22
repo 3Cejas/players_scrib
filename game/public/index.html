@@ -8,14 +8,17 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css">
     <style>
+        html, body {
+            height: 100%;
+            min-height: 100dvh;
+        }
+
         body {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
+            display: block;
             text-align: center;
-            font-size: 3.5vw;
-            padding-top: 40vw;
+            font-size: clamp(14px, 3.5vw, 32px);
+            padding: 0;
+            overflow: hidden;
         }
         * {
     cursor:auto;
@@ -271,113 +274,954 @@
     box-shadow: 0 0.2em aqua;
 }
 
+.escritxr-nombre {
+    font-size: clamp(22px, 6vw, 48px);
+    margin: 0;
+}
+
+.escritxr-nombre.escritxr1 {
+    color: aqua;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+}
+
+.escritxr-nombre.escritxr2 {
+    color: red;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
+}
+
 /* Estilos para active (hacer clic en el botón) */
 .start-btn:active {
     transform: scale(0.95); /* Hace que el botón parezca presionado */
     box-shadow: 0 0.2em 0.2em rgba(0, 0, 0, 0.2); /* Sombra más sutil al hacer clic */
 }
 
-    </style>
+.intro-flow {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.intro-scroll {
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.intro-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.intro-section {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2.2rem, 8vw, 4.5rem) 0;
+    position: relative;
+}
+
+.intro-panel {
+    width: 100%;
+    max-width: 100%;
+    padding: clamp(1.5rem, 6vw, 3rem) clamp(1rem, 4vw, 2.5rem) clamp(2.6rem, 8vw, 4.8rem);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.8rem, 3vw, 1.6rem);
+}
+
+.intro-title {
+    font-size: clamp(26px, 7vw, 64px);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    color: #fff;
+    text-shadow: -0.08em 0 #ff3c3c, 0 0 0.6em rgba(0, 245, 255, 0.55);
+}
+
+.intro-logo {
+    color: #00f5ff;
+    text-shadow: -0.08em 0 #ff3c3c, 0 0 0.6em rgba(0, 245, 255, 0.65);
+}
+
+.intro-arrow,
+.intro-cta-icon {
+    margin-top: 0;
+    width: clamp(46px, 10vw, 72px);
+    height: clamp(26px, 6vw, 42px);
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    box-shadow: none;
+    --flecha-color: #ffffff;
+    --flecha-glow: rgba(255, 255, 255, 0.35);
+}
+
+.intro-arrow::before,
+.intro-arrow::after,
+.intro-cta-icon::before,
+.intro-cta-icon::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 82%;
+    height: clamp(7px, 1.6vw, 13px);
+    background: var(--flecha-color, #ffffff);
+    border-radius: 999px;
+    box-shadow: 0 0 0.6rem var(--flecha-glow, rgba(255, 255, 255, 0.45)),
+        0 0 1.4rem var(--flecha-glow, rgba(255, 255, 255, 0.35));
+}
+
+.intro-arrow:focus,
+.intro-cta-icon:focus {
+    outline: none;
+    box-shadow: none;
+    animation: none;
+}
+
+.intro-arrow:focus-visible,
+.intro-cta-icon:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+.intro-arrow--down {
+    --flecha-color: #00f5ff;
+    --flecha-glow: rgba(0, 245, 255, 0.6);
+}
+
+.intro-arrow--down::before,
+.intro-cta-icon.intro-arrow--down::before {
+    left: 50%;
+    transform: translate(-84%, -50%) rotate(25deg);
+    transform-origin: left center;
+}
+
+.intro-arrow--down::after,
+.intro-cta-icon.intro-arrow--down::after {
+    left: 50%;
+    transform: translate(-16%, -50%) rotate(-25deg);
+    transform-origin: right center;
+}
+
+.intro-arrow--up {
+    --flecha-color: #ff3b3b;
+    --flecha-glow: rgba(255, 59, 59, 0.6);
+}
+
+.intro-arrow--up::before,
+.intro-cta-icon.intro-arrow--up::before {
+    left: 50%;
+    transform: translate(-84%, -50%) rotate(-25deg);
+    transform-origin: left center;
+}
+
+.intro-arrow--up::after,
+.intro-cta-icon.intro-arrow--up::after {
+    left: 50%;
+    transform: translate(-16%, -50%) rotate(25deg);
+    transform-origin: right center;
+}
+
+.intro-nav .intro-arrow--up {
+    margin-top: clamp(0.4rem, 2vw, 0.8rem);
+}
+
+.intro-arrow--down:active {
+    --flecha-color: #00f5ff;
+    --flecha-glow: rgba(0, 245, 255, 0.7);
+}
+
+.intro-arrow--up:active {
+    --flecha-color: #ff3b3b;
+    --flecha-glow: rgba(255, 59, 59, 0.7);
+}
+
+
+.intro-panel h1 {
+    font-size: clamp(22px, 6vw, 48px);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-shadow: 0.08em 0.08em 0 #000;
+}
+
+.intro-musa-nombre {
+    color: orange;
+    text-shadow: none;
+    display: inline-block;
+    max-width: min(80vw, 28ch);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    font-size: clamp(20px, 5.5vw, 40px);
+}
+
+.intro-panel .nombre {
+    width: min(360px, 80vw);
+}
+
+.intro-panel table {
+    width: 100%;
+}
+
+.intro-logo-img {
+    width: clamp(60px, 16vw, 120px);
+    height: auto;
+    display: block;
+}
+
+.intro-logo-img--center {
+    width: clamp(80px, 20vw, 140px);
+    margin: clamp(0.4rem, 2vw, 0.8rem) auto 0;
+}
+
+.intro-logo-sutura {
+    width: clamp(40px, 10.5vw, 82px);
+}
+
+.intro-logos {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: clamp(0.4rem, 2vw, 0.8rem);
+    padding-right: max(env(safe-area-inset-right), 0px);
+    padding-left: max(env(safe-area-inset-left), 0px);
+}
+
+.intro-logo-inline {
+    color: #00f5ff;
+    text-shadow: -0.08em 0 #ff3c3c, 0 0 0.6em rgba(0, 245, 255, 0.65);
+    letter-spacing: 0.08em;
+}
+
+.intro-musa-bienvenida {
+    color: orange;
+}
+
+.intro-logo-mark {
+    align-self: flex-start;
+    margin-bottom: clamp(0.4rem, 2vw, 0.8rem);
+}
+
+.intro-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0;
+    padding: max(env(safe-area-inset-top), 0px) 0 max(env(safe-area-inset-bottom), 0px);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.intro-nav .intro-arrow {
+    pointer-events: auto;
+}
+
+.intro-nav-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: max(env(safe-area-inset-bottom), 0px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    transform: translateY(clamp(2.2rem, 6vw, 3.8rem));
+    z-index: 3;
+}
+
+.intro-cta {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.intro-cta-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.1rem, 0.5vw, 0.3rem);
+}
+
+.intro-cta-text {
+    font-size: clamp(14px, 3.2vw, 22px);
+    letter-spacing: 0.12em;
+    color: #00f5ff;
+    text-transform: uppercase;
+    text-shadow: 0 0 0.6rem rgba(0, 245, 255, 0.55),
+        0 0 1.2rem rgba(0, 245, 255, 0.35);
+    animation: neonCta 2.4s ease-in-out infinite;
+}
+
+.intro-cta:focus,
+.intro-cta:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+@keyframes neonCta {
+    0%, 100% {
+        text-shadow: 0 0 0.5rem rgba(0, 245, 255, 0.45),
+            0 0 1rem rgba(0, 245, 255, 0.25);
+    }
+    50% {
+        text-shadow: 0 0 0.9rem rgba(0, 245, 255, 0.75),
+            0 0 1.6rem rgba(0, 245, 255, 0.5);
+    }
+}
+
+.intro-explica .intro-panel {
+    max-width: min(90vw, 36rem);
+    align-items: flex-start;
+    text-align: left;
+    gap: clamp(0.6rem, 2.6vw, 1.4rem);
+    padding: clamp(1.2rem, 4.5vw, 2.4rem) clamp(1rem, 5vw, 2.4rem) clamp(2.8rem, 9vw, 5rem);
+}
+
+.intro-explica .intro-logos {
+    margin-bottom: clamp(0.6rem, 2.4vw, 1.2rem);
+}
+
+.intro-explica-title {
+    font-size: clamp(24px, 6.2vw, 50px);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    text-shadow: 0.08em 0.08em 0 #000;
+}
+
+.intro-explica-title--azul {
+    color: #63e7ff;
+    text-shadow: -0.08em 0 #00a9c0, 0 0 0.7em rgba(99, 231, 255, 0.45);
+}
+
+.intro-explica-title--rojo {
+    color: #ff4a4a;
+    text-shadow: -0.08em 0 #a30000, 0 0 0.7em rgba(255, 74, 74, 0.45);
+}
+
+.intro-explica-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: clamp(14px, 3.8vw, 24px);
+    color: #8bff6a;
+    text-shadow: 0 0 0.6rem rgba(139, 255, 106, 0.4);
+    letter-spacing: 0.05em;
+}
+
+.intro-explica-text {
+    font-size: clamp(14px, 3.2vw, 22px);
+    line-height: 1.4;
+    color: #fff;
+}
+
+.intro-explica-text strong {
+    color: var(--accent-color, #fff);
+    font-weight: 700;
+}
+
+.intro-explica--azul {
+    --accent-color: #63e7ff;
+}
+
+.intro-explica--rojo {
+    --accent-color: #ff4a4a;
+}
+
+.intro-acento-azul {
+    color: #00f5ff;
+}
+
+.intro-acento-rojo {
+    color: #ff3b3b;
+}
+
+.intro-acento-verde {
+    color: #8bff6a;
+}
+
+.intro-musas-equipos {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: clamp(1rem, 6vw, 2rem);
+    margin-top: clamp(0.4rem, 2vw, 1.2rem);
+}
+
+.intro-equipo-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.3rem, 1vw, 0.6rem);
+}
+
+.intro-equipo-card img {
+    width: clamp(28px, 9vw, 48px);
+}
+
+.intro-equipo-nombre {
+    font-size: clamp(15px, 3.9vw, 24px);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.intro-equipo-nombre--azul {
+    color: #00f5ff;
+}
+
+.intro-equipo-nombre--rojo {
+    color: #ff3b3b;
+}
+
+.intro-repre-art {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: clamp(0.6rem, 4vw, 1.6rem);
+    margin-top: clamp(0.6rem, 3vw, 1.4rem);
+}
+
+.intro-repre-art--full {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    height: clamp(200px, 36vh, 360px);
+    overflow: hidden;
+}
+
+.intro-repre-art img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0 1rem rgba(0, 0, 0, 0.7));
+}
+
+.intro-repre-img,
+.intro-cover-img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+}
+
+.intro-niveles-list {
+    width: 100%;
+    display: grid;
+    gap: clamp(0.5rem, 2.6vw, 1.2rem);
+    position: relative;
+    padding-left: clamp(1.8rem, 6.5vw, 3.2rem);
+    margin-top: clamp(0.1rem, 1.4vw, 0.6rem);
+}
+
+.intro-niveles-list::before {
+    content: none;
+}
+
+.intro-nivel {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: clamp(0.6rem, 2.8vw, 1.2rem);
+}
+
+.intro-nivel-icon {
+    width: clamp(36px, 10vw, 56px);
+    height: clamp(36px, 10vw, 56px);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(16px, 4.8vw, 24px);
+    background: rgba(0, 0, 0, 0.35);
+    border: 3px solid var(--nivel-color);
+    box-shadow: 0 0 0.8rem var(--nivel-glow);
+}
+
+.intro-nivel-title {
+    font-size: clamp(14px, 4vw, 22px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0;
+    color: var(--nivel-color);
+}
+
+.intro-nivel-desc {
+    font-size: clamp(12px, 3vw, 18px);
+    line-height: 1.25;
+    margin: 0.2rem 0 0;
+    color: #fff;
+}
+
+#intro-niveles .intro-panel {
+    gap: clamp(0.5rem, 2.2vw, 1.1rem);
+    padding-bottom: clamp(1.8rem, 6vw, 3.4rem);
+}
+
+@media (max-height: 740px) {
+    #intro-niveles .intro-panel {
+        padding-bottom: clamp(2rem, 7vw, 3rem);
+    }
+
+    #intro-niveles .intro-niveles-list {
+        gap: clamp(0.4rem, 2vw, 0.8rem);
+        padding-left: clamp(1.5rem, 6vw, 2.6rem);
+    }
+
+    #intro-niveles .intro-nivel-icon {
+        width: clamp(30px, 9vw, 48px);
+        height: clamp(30px, 9vw, 48px);
+        font-size: clamp(14px, 4.2vw, 20px);
+    }
+
+    #intro-niveles .intro-nivel-title {
+        font-size: clamp(13px, 3.6vw, 20px);
+    }
+
+    #intro-niveles .intro-nivel-desc {
+        font-size: clamp(11px, 3vw, 16px);
+    }
+}
+
+@media (max-width: 900px) {
+    #intro-niveles .intro-niveles-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.4rem, 2.2vw, 0.8rem) clamp(0.6rem, 3vw, 1.2rem);
+        padding-left: 0;
+    }
+
+    #intro-niveles .intro-nivel-icon {
+        width: clamp(28px, 8vw, 44px);
+        height: clamp(28px, 8vw, 44px);
+        font-size: clamp(12px, 3.6vw, 18px);
+    }
+
+    #intro-niveles .intro-nivel-title {
+        font-size: clamp(12px, 3.2vw, 18px);
+    }
+
+    #intro-niveles .intro-nivel-desc {
+        font-size: clamp(11px, 2.8vw, 16px);
+        line-height: 1.2;
+    }
+}
+
+@media (max-height: 1120px) {
+    #intro-niveles .intro-panel {
+        padding-bottom: clamp(1.4rem, 5.2vw, 2.4rem);
+    }
+
+    #intro-niveles .intro-niveles-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.35rem, 1.8vw, 0.65rem) clamp(0.5rem, 2.6vw, 0.9rem);
+        padding-left: 0;
+    }
+
+    #intro-niveles .intro-nivel-icon {
+        width: clamp(30px, 7.4vw, 46px);
+        height: clamp(30px, 7.4vw, 46px);
+        font-size: clamp(13px, 3.4vw, 19px);
+    }
+
+    #intro-niveles .intro-nivel-title {
+        font-size: clamp(12px, 3.2vw, 18px);
+    }
+
+    #intro-niveles .intro-nivel-desc {
+        font-size: clamp(11px, 2.6vw, 16px);
+        line-height: 1.2;
+    }
+}
+
+.intro-nivel--verde {
+    --nivel-color: #59ff7a;
+    --nivel-glow: rgba(89, 255, 122, 0.45);
+}
+
+.intro-nivel--rojo {
+    --nivel-color: #ff3b3b;
+    --nivel-glow: rgba(255, 59, 59, 0.45);
+}
+
+.intro-nivel--azul {
+    --nivel-color: #00f5ff;
+    --nivel-glow: rgba(0, 245, 255, 0.45);
+}
+
+.intro-nivel--amarillo {
+    --nivel-color: #ffe55b;
+    --nivel-glow: rgba(255, 229, 91, 0.45);
+}
+
+.intro-nivel--rosa {
+    --nivel-color: #ff8bdc;
+    --nivel-glow: rgba(255, 139, 220, 0.45);
+}
+
+.intro-nivel--naranja {
+    --nivel-color: #ffb15b;
+    --nivel-glow: rgba(255, 177, 91, 0.45);
+}
+
+.intro-nombre .musa-alerta {
+    margin-top: 1.4rem;
+    max-width: min(68vw, 26rem);
+}
+
+.intro-nav--up,
+.intro-nav--down {
+    justify-content: space-between;
+}
+
+.intro-nav--up {
+    justify-content: flex-start;
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-bottom: 0;
+}
+
+.intro-nav--down {
+    justify-content: flex-end;
+    padding-top: 0;
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+.intro-equipo .intro-panel {
+    gap: clamp(0.5rem, 2vw, 1rem);
+    padding-top: clamp(1.2rem, 5vw, 2rem);
+    padding-bottom: clamp(2.6rem, 8vw, 4rem);
+}
+
+.intro-equipo td {
+    padding: 0.3em;
+}
+
+.intro-equipo .skill {
+    margin: 1.4rem 0.4rem 0.4rem;
+}
+
+.intro-equipo .escritxr-nombre {
+    font-size: clamp(20px, 5vw, 42px);
+    margin: 0;
+}
+
+.intro-equipo .pluma-icono {
+    width: 32%;
+}
+
+.intro-equipo .start-btn {
+    font-size: 0.95em;
+    padding: 0.5em 0.6em 0.5em 0.8em;
+}
+
+.intro-equipo .skill-label {
+    display: block;
+    margin: 0.2rem 0 1.4rem;
+    letter-spacing: 0.06em;
+}
+
+</style>
 </head>
 <body>
-    <div>
-    <h1 style="color:#fff;">¿CUÁL SERÁ TU NOMBRE?</h1>
-    <input id="nombre_musa" class="nombre" maxlength="10" style="color:orange;text-transform: uppercase;">
-    <div id="mensaje_musa" class="musa-alerta" aria-live="polite"></div>
-    <br><br>
-    <h1>MUSA,<br>¿A QUIÉN INSPIRAS?</h1>
-    <br>
-    <table> 
-         <tr>
-              <td>
-                <img src="./img/pluma_azul.png" alt="Pluma Pixel Art Azul Aqua" style="width:50%;">
-            </td>
-              <td>
-                <img src="./img/pluma_roja.png" alt="Pluma Pixel Art Azul Aqua" style="width:50%;">
-        </td>
-            </tr>
-            <tr>
-              <td>
-                <p style="color:aqua;font-size:7vw;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="escritxr1">ESCRITXR 1</p>
-            </td>
-              <td>
-                 <p style="color:red;font-size:7vw; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="escritxr2">ESCRITXR 2</p>
-        </td>
-            </tr> 
-            <tr>
-                <td colspan="2"><br><p style="color:#f00;">Fuerza</p><br><br></td>
-              </tr>
-            <tr>
-              <td> <div class="skill">
-                <div class="progress-line" style="
-                            --bg: #f00;
-                            --wd: 50%;
-                            --tx: '50%'">
-                    <span></span>
+    <main class="intro-flow">
+        <div class="intro-scroll">
+            <section id="intro-bienvenida" class="intro-section">
+                <div class="intro-panel">
+                    <h1 class="intro-title"><span class="intro-musa-bienvenida">MUSA</span>, BIENVENIDA A <span class="intro-logo-inline">&lt;SCRI&gt; B</span></h1>
+                    <img class="intro-logo-img intro-logo-img--center" src="../../img/logo.png" alt="SCRIB">
+                    <div class="intro-nav-bottom">
+                        <button class="intro-cta intro-cta-btn" type="button" data-scroll-target="#intro-tiempo" aria-label="Comenzar">
+                            <span class="intro-cta-text">COMENZAR</span>
+                            <span class="intro-cta-icon intro-arrow--down" aria-hidden="true"></span>
+                        </button>
+                    </div>
                 </div>
-            </div>    </td>
-              <td> <div class="skill">
-                <div class="progress-line" style="
-                            --bg: #f00;
-                            --wd: 20%;
-                            --tx: '20%'">
-                    <span></span>
-                </div></td>
-            </tr>
-            <tr>
-                <td colspan="2"><p style="color:#0ff;">Agilidad</p><br><br></td>
-              </tr>
-              <tr>
-                <td> <div class="skill">
-                  <div class="progress-line" style="
-                              --bg: #0ff;
-                              --wd: 70%;
-                              --tx: '70%'">
-                      <span></span>
-                  </div>
-              </div>    </td>
-                <td> <div class="skill">
-                  <div class="progress-line" style="
-                              --bg: #0ff;
-                              --wd: 5%;
-                              --tx: '5%'">
-                      <span></span>
-                  </div></td>
-              </tr>
-              <tr>
-                <td colspan="2"><p style="color:#ff0;">Destreza</p><br></td>
-              </tr>
-                <tr>
-                    <td> <div class="skill">
-                      <br>
-                      <div class="progress-line" style="
-                                  --bg: #ff0;
-                                  --wd: 69%;
-                                  --tx: '69%'">
-                          <span></span>
-                      </div>
-                  </div>    </td>
-                    <td> <div class="skill">
-                      <br>
-                      <div class="progress-line" style="
-                                  --bg: #ff0;
-                                  --wd: 30%;
-                                  --tx: '30%'">
-                          <span></span>
-                      </div></td>
-                  </tr>
-                  <tr>
-              <td>
-                <span class='start-btn escritxr1' onclick="entrarComoMusa(1)">INSPIRAR</span>
-            </td>
-              <td> 
-                 <span class='start-btn escritxr2' onclick="entrarComoMusa(2)">INSPIRAR</span>
-        </td>
-            </tr>
-          </table>
-    </div>
+            </section>
+            <section id="intro-tiempo" class="intro-section intro-explica intro-explica--azul">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h2 class="intro-explica-title intro-explica-title--azul">EL TIEMPO</h2>
+                    <div class="intro-explica-meta"><span>⏱️</span><span>+6 segs.</span></div>
+                    <p class="intro-explica-text">
+                        Cada escritxr parte de una cuenta regresiva de unos minutos.
+                    </p>
+                    <p class="intro-explica-text">
+                        <strong>En caso de no escribir, el texto comenzará a borrarse</strong> y se restarán segundos de su marcador.
+                        Por el contrario, si escribe, se le irá otorgando una pequeña cantidad de tiempo.
+                    </p>
+                    <p class="intro-explica-text">                       
+                        Deben tener mucho cuidado porque, <strong>si el contador de un escritor llega a cero, lo que ha escrito se autodestruirá.</strong>
+                    </p>
+                    <div class="intro-cover">
+                        <img class="intro-cover-img" src="../../img/el%20tiempo.png" alt="El tiempo">
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-musas" aria-label="Ir a las musas"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-musas" class="intro-section intro-explica intro-explica--rojo">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h2 class="intro-explica-title intro-explica-title--rojo">LAS MUSAS</h2>
+                    <p class="intro-explica-text">
+                        Estarás conectada en todo momento a uno de lxs escritorxs y le acompañarás en su proceso creativo,
+                        ayudándole a superar los diferentes nivel de juego, dándole consejos, ¡e incluso corrigiendo el texto que se está escribiendo en directo!
+                    </p>
+                    <p class="intro-explica-text">
+                        Al final de cada nivel, <strong>las musas que más hayan ayudado a su escritor podrán elegir una desventaja para el equipo contrario.</strong>
+                    </p>
+                    <div class="intro-musas-equipos">
+                        <div class="intro-equipo-card">
+                            <img src="./img/pluma_azul.png" alt="Pluma azul">
+                            <span class="intro-equipo-nombre intro-equipo-nombre--azul">ESCRITXR 1</span>
+                        </div>
+                        <div class="intro-equipo-card">
+                            <img src="./img/pluma_roja.png" alt="Pluma roja">
+                            <span class="intro-equipo-nombre intro-equipo-nombre--rojo">ESCRITXR 2</span>
+                        </div>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-tiempo" aria-label="Volver al tiempo"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-representacion" aria-label="Ir a la representación"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-representacion" class="intro-section intro-explica intro-explica--rojo">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h2 class="intro-explica-title intro-explica-title--rojo">LA REPRESENTACIÓN</h2>
+                    <p class="intro-explica-text">
+                        Al final de la velada, dos equipos de intérpretes  <strong>representarán las obras creadas por sus respectivos escritores.</strong>
+                        Vivirás todo el proceso creativo de un texto dramático, desde su escritura hasta su puesta en escena.
+                    </p>
+                    <div class="intro-repre-art intro-repre-art--full">
+                        <img class="intro-repre-img" src="../../img/la%20representacio%CC%81n.png" alt="La representación">
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-musas" aria-label="Volver a las musas"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-niveles" aria-label="Ir a los niveles"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-niveles" class="intro-section intro-explica intro-explica--azul">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h2 class="intro-explica-title intro-explica-title--azul">LOS NIVELES</h2>
+                    <div class="intro-niveles-list">
+                        <div class="intro-nivel intro-nivel--verde">
+                            <div class="intro-nivel-icon">🙏</div>
+                            <div>
+                                <h3 class="intro-nivel-title">LETRA BENDITA</h3>
+                                <p class="intro-nivel-desc">Se elige una de las diez letras menos usadas en el español y si se escribe, se añade tiempo al marcador.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--rojo">
+                            <div class="intro-nivel-icon">😈</div>
+                            <div>
+                                <h3 class="intro-nivel-title">LETRA MALDITA</h3>
+                                <p class="intro-nivel-desc">El opuesto de Letra Bendita: evita esa letra o perderás tiempo.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--azul">
+                            <div class="intro-nivel-icon">💬</div>
+                            <div>
+                                <h3 class="intro-nivel-title">TERTULIA</h3>
+                                <p class="intro-nivel-desc">El público dialoga, comenta y pregunta sobre el texto con su escritor.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--amarillo">
+                            <div class="intro-nivel-icon">📖</div>
+                            <div>
+                                <h3 class="intro-nivel-title">PALABRA BENDITA</h3>
+                                <p class="intro-nivel-desc">El juego ofrece palabras aleatorias y propuestas de musas para enriquecer el texto.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--rosa">
+                            <div class="intro-nivel-icon">⚔️</div>
+                            <div>
+                                <h3 class="intro-nivel-title">PALABRA MALDITA</h3>
+                                <p class="intro-nivel-desc">Se prohíbe el uso de palabras lanzadas por el equipo contrario. Si se escriben, se restará tiempo.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--naranja">
+                            <div class="intro-nivel-icon">🏁</div>
+                            <div>
+                                <h3 class="intro-nivel-title">FRASE FINAL</h3>
+                                <p class="intro-nivel-desc">Deberás introducir una frase final para cerrar el texto antes de que acabe el tiempo.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-representacion" aria-label="Volver a la representación"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-nombre" data-focus="nombre_musa" aria-label="Ir a elegir nombre"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-nombre" class="intro-section intro-nombre">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h1>¿CUÁL SERÁ TU NOMBRE?</h1>
+                    <input id="nombre_musa" class="nombre" maxlength="10" style="color:orange;text-transform: uppercase;">
+                    <div id="mensaje_musa" class="musa-alerta" aria-live="polite"></div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-niveles" aria-label="Volver a niveles"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-equipo" data-validate="nombre_musa" aria-label="Ir a elegir escritxr"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-equipo" class="intro-section intro-equipo">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h1><span id="intro_musa_nombre" class="intro-musa-nombre">MUSA</span>,<br>¿A QUIÉN INSPIRAS?</h1>
+                    <table>
+                        <tr>
+                            <td>
+                            <img class="pluma-icono" src="./img/pluma_azul.png" alt="Pluma Pixel Art Azul Aqua">
+                        </td>
+                        <td>
+                            <img class="pluma-icono" src="./img/pluma_roja.png" alt="Pluma Pixel Art Azul Aqua">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p class="escritxr-nombre escritxr1" id="escritxr1">ESCRITXR 1</p>
+                        </td>
+                        <td>
+                            <p class="escritxr-nombre escritxr2" id="escritxr2">ESCRITXR 2</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><p class="skill-label" style="color:#f00;">Fuerza</p></td>
+                    </tr>
+                    <tr>
+                        <td><div class="skill">
+                            <div class="progress-line" style="
+                                        --bg: #f00;
+                                        --wd: 50%;
+                                        --tx: '50%'">
+                                <span></span>
+                            </div>
+                        </div></td>
+                        <td><div class="skill">
+                            <div class="progress-line" style="
+                                        --bg: #f00;
+                                        --wd: 20%;
+                                        --tx: '20%'">
+                                <span></span>
+                            </div></div></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><p class="skill-label" style="color:#0ff;">Agilidad</p></td>
+                    </tr>
+                    <tr>
+                        <td><div class="skill">
+                            <div class="progress-line" style="
+                                        --bg: #0ff;
+                                        --wd: 70%;
+                                        --tx: '70%'">
+                                <span></span>
+                            </div>
+                        </div></td>
+                        <td><div class="skill">
+                            <div class="progress-line" style="
+                                        --bg: #0ff;
+                                        --wd: 5%;
+                                        --tx: '5%'">
+                                <span></span>
+                            </div></div></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><p class="skill-label" style="color:#ff0;">Destreza</p></td>
+                    </tr>
+                    <tr>
+                        <td><div class="skill">
+                            <div class="progress-line" style="
+                                        --bg: #ff0;
+                                        --wd: 69%;
+                                        --tx: '69%'">
+                                <span></span>
+                            </div>
+                        </div></td>
+                        <td><div class="skill">
+                            <div class="progress-line" style="
+                                        --bg: #ff0;
+                                        --wd: 30%;
+                                        --tx: '30%'">
+                                <span></span>
+                            </div></div></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class='start-btn escritxr1' onclick="entrarComoMusa(1)">INSPIRAR</span>
+                        </td>
+                        <td>
+                            <span class='start-btn escritxr2' onclick="entrarComoMusa(2)">INSPIRAR</span>
+                        </td>
+                    </tr>
+                </table>
+                <div class="intro-nav intro-nav--up">
+                    <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-nombre" aria-label="Volver a nombre"></button>
+                </div>
+            </div>
+        </section>
+        </div>
+    </main>
 </body>
 <script src="../config.js"></script>
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>
 </html>
+ .intro-cover {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    height: clamp(200px, 36vh, 360px);
+    overflow: hidden;
+}

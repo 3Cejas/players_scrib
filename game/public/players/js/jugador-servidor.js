@@ -1061,7 +1061,9 @@ function actualizarColorEquipo() {
     const colorEquipo = (nombre1 && nombre1.style && nombre1.style.color)
         ? nombre1.style.color
         : (nombre1 ? getComputedStyle(nombre1).color : "");
-    nivelesContenedor.style.setProperty("--equipo-color", colorEquipo || "#00f5ff");
+    const colorFinal = colorEquipo || "#00f5ff";
+    nivelesContenedor.style.setProperty("--equipo-color", colorFinal);
+    document.documentElement.style.setProperty("--equipo-color", colorFinal);
 }
 
 function actualizarFlechasNiveles() {

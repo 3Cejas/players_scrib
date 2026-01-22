@@ -329,16 +329,21 @@ function enviarPalabra(button) {
 }
 }
 
+// Actualiza el estado visual del toggle de texto completo.
+function actualizarEstadoTextoCompleto(boton, activo) {
+  boton.classList.toggle("is-on", activo);
+  boton.setAttribute("aria-pressed", activo ? "true" : "false");
+  boton.dataset.estado = activo ? "ON" : "OFF";
+}
+
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
 function mostrarTextoCompleto(boton) {
   if (boton.value == 0) {
     texto1.style.maxHeight = "none";
     texto1.style.height = texto1.scrollHeight + "px"; // Reajustamos el tamaño del área de texto.
     texto1.scrollTop = texto1.scrollHeight;
-    
-    // Cambiar el color del botón a verde en lugar de cambiar su texto
-    boton.style.backgroundColor = "green";
-    
+
+    actualizarEstadoTextoCompleto(boton, true);
     boton.value = 1;
     mostrar_texto.scrollIntoView({ behavior: "smooth", block: "start" });
   } 
@@ -346,10 +351,8 @@ function mostrarTextoCompleto(boton) {
     console.log("ACTIVADO");
     texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
     texto1.scrollTop = texto1.scrollHeight;
-    
-    // Cambiar el color del botón a rojo en lugar de cambiar su texto
-    boton.style.backgroundColor = "red";
-    
+
+    actualizarEstadoTextoCompleto(boton, false);
     boton.value = 0;
   }
 }
