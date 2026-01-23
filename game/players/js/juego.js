@@ -5,6 +5,8 @@ const SECS_BASE = 2;
 const maxIncremento =  3; // queremos +300% de habilidades en el mejor caso
 const maxIncrementoDestreza =  0.5; // queremos +300% de habilidades en el mejor caso
 let secs_palabras;
+var CLASE_PALABRA_BENDITA = window.CLASE_PALABRA_BENDITA || "palabra-bendita";
+window.CLASE_PALABRA_BENDITA = CLASE_PALABRA_BENDITA;
 let antiguo_inicio_borrado = 1000;
 let rapidez_borrado = 1000; // Variable que almacena la velocidad del borrado del texto.
 let antiguo_rapidez_borrado = 1000;
@@ -72,10 +74,32 @@ function restaurarPosicionCaret(caretNode, caretPos) {
   sel.addRange(range);
 }
 
+function obtenerUltimoNodoEditable() {
+  if (!texto) return null;
+  const walker = document.createTreeWalker(texto, NodeFilter.SHOW_TEXT, null, false);
+  let last = null;
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (!node.textContent) continue;
+    const dentroBendita = node.parentElement?.closest(`.${CLASE_PALABRA_BENDITA}`);
+    if (dentroBendita) continue;
+    last = node;
+  }
+  return last;
+}
+
+function borrarUltimoCaracterEditable() {
+  const nodo = obtenerUltimoNodoEditable();
+  if (!nodo || !nodo.data) return false;
+  nodo.data = nodo.data.substring(0, nodo.data.length - 1);
+  if (nodo.data.length === 0 && nodo.parentNode) {
+    nodo.parentNode.removeChild(nodo);
+  }
+  return true;
+}
+
 function borrar() {
   if (!desactivar_borrar) {
-    let nodoBorrado = false;
-
     // 1. Guardar la posición del caret usando la función
     let { caretNode, caretPos } = guardarPosicionCaret();
 
@@ -96,41 +120,8 @@ function borrar() {
     tiempo_feed = "⏱️-" + "1" + " segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar"});
     caracteres_seguidos = 0;
-    // 3. Obtener última línea y último nodo de texto
-    lastLine = texto.lastChild;
-    lastTextNode = lastLine.lastChild;
-    if (!lastTextNode) {
-      lastTextNode = lastLine;
-    }
-    
-    // 4. Buscar último nodo de texto
-    while (lastTextNode && lastTextNode.nodeType !== 3) {
-      lastTextNode = lastTextNode.previousSibling;
-    }
-
-    // 5. Si nodo vacío, eliminar y avanzar
-    if (lastTextNode && lastTextNode.data.trim() === "") {
-      lastLine.removeChild(lastTextNode);
-      lastTextNode = lastLine.lastChild;
-      caretNode = lastTextNode;
-      caretPos = lastTextNode ? lastTextNode.length : 0;
-      nodoBorrado = true;
-    }
-
-    // 6. Si no hay nodo de texto, retroceder a la línea anterior si existe
-    if (!lastTextNode && lastLine.previousSibling) {
-      lastLine.remove();
-      lastLine = texto.lastChild;
-      lastTextNode = lastLine ? lastLine.lastChild : null;
-      caretNode = lastTextNode;
-      caretPos = lastTextNode ? lastTextNode.length : 0;
-      nodoBorrado = true;
-    }
-
-    // 7. Borrar último carácter si procede
-    if (!nodoBorrado && lastTextNode && lastTextNode.data && lastTextNode.data.length > 0) {
-      lastTextNode.data = lastTextNode.data.substring(0, lastTextNode.data.length - 1);
-    }
+    // 3. Borrar último carácter editable, saltando palabras benditas
+    borrarUltimoCaracterEditable();
 
     // 8. Actualizar estado
     if(texto.innerText.match(/\b\w+\b/g) != null){

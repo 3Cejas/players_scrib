@@ -65,6 +65,14 @@ function scrollToSeccion(objetivo) {
   requestAnimationFrame(animar);
 }
 
+function cerrarTeclado() {
+  const activo = document.activeElement;
+  if (!activo) return;
+  if (activo.tagName === "INPUT" || activo.tagName === "TEXTAREA" || activo.isContentEditable) {
+    activo.blur();
+  }
+}
+
 function entrarComoMusa(playerId) {
   if (!nombre_musa_input) return;
   const nombre = normalizarNombreMusa(nombre_musa_input.value);
@@ -121,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       limpiarAvisoMusa();
       actualizarNombreIntro();
+      cerrarTeclado();
       const objetivo = document.querySelector("#intro-equipo");
       scrollToSeccion(objetivo);
     });
@@ -143,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         limpiarAvisoMusa();
         actualizarNombreIntro();
       }
+      cerrarTeclado();
       const objetivo = document.querySelector(selector);
       scrollToSeccion(objetivo);
       const focusId = boton.getAttribute("data-focus");

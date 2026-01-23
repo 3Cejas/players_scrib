@@ -94,6 +94,289 @@ if (tiempo) {
     tiempo.style.display = "none";
 }
 
+const CLASE_PALABRA_BENDITA_LOCAL =
+    typeof CLASE_PALABRA_BENDITA !== "undefined" ? CLASE_PALABRA_BENDITA : "palabra-bendita";
+
+function nodoEnPalabraBendita(nodo) {
+    if (!nodo) return null;
+    if (nodo.nodeType === Node.ELEMENT_NODE) {
+        return nodo.closest(`.${CLASE_PALABRA_BENDITA_LOCAL}`);
+    }
+    if (nodo.nodeType === Node.TEXT_NODE) {
+        return nodo.parentElement?.closest(`.${CLASE_PALABRA_BENDITA_LOCAL}`) || null;
+    }
+    return null;
+}
+
+function rangoIntersecaPalabraBendita(rango) {
+    if (!texto || !rango) return false;
+    const spans = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`);
+    for (const span of spans) {
+        if (rango.intersectsNode(span)) return true;
+    }
+    return false;
+}
+
+function hayPalabraBenditaAdyacente(sel, direccion) {
+    if (!sel || !sel.rangeCount) return false;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return rangoIntersecaPalabraBendita(range);
+    const node = range.startContainer;
+    const offset = range.startOffset;
+    if (nodoEnPalabraBendita(node)) return true;
+    let objetivo = null;
+    if (node.nodeType === Node.TEXT_NODE) {
+        if (direccion === "backward" && offset === 0) {
+            objetivo = node.previousSibling || node.parentNode?.previousSibling;
+        }
+        if (direccion === "forward" && offset === node.textContent.length) {
+            objetivo = node.nextSibling || node.parentNode?.nextSibling;
+        }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const indice = direccion === "backward" ? offset - 1 : offset;
+        objetivo = node.childNodes[indice];
+    }
+    return Boolean(nodoEnPalabraBendita(objetivo));
+}
+
+function obtenerRangoPorOffsets(contenedor, inicio, fin) {
+    if (!contenedor || inicio >= fin) return null;
+    const walker = document.createTreeWalker(contenedor, NodeFilter.SHOW_TEXT, null, false);
+    let pos = 0;
+    let startNode = null;
+    let startOffset = 0;
+    let endNode = null;
+    let endOffset = 0;
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const length = node.textContent.length;
+        const nodeEnd = pos + length;
+        if (!startNode && inicio <= nodeEnd) {
+            startNode = node;
+            startOffset = Math.max(0, Math.min(length, inicio - pos));
+        }
+        if (startNode && fin <= nodeEnd) {
+            endNode = node;
+            endOffset = Math.max(0, Math.min(length, fin - pos));
+            break;
+        }
+        pos = nodeEnd;
+    }
+    if (!startNode || !endNode) return null;
+    const rango = document.createRange();
+    rango.setStart(startNode, startOffset);
+    rango.setEnd(endNode, endOffset);
+    return rango;
+}
+
+function obtenerRangoBorradoCaracter(direccion) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const original = sel.getRangeAt(0).cloneRange();
+    if (!original.collapsed) return original;
+    if (typeof sel.modify === "function") {
+        sel.removeAllRanges();
+        sel.addRange(original);
+        sel.collapse(original.endContainer, original.endOffset);
+        sel.modify("extend", direccion, "character");
+        const rango = sel.getRangeAt(0).cloneRange();
+        sel.removeAllRanges();
+        sel.addRange(original);
+        return rango;
+    }
+    return null;
+}
+
+function obtenerOffsetCaretEnTexto() {
+    if (!texto) return 0;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return 0;
+    const range = sel.getRangeAt(0).cloneRange();
+    const preCaretRange = range.cloneRange();
+    preCaretRange.selectNodeContents(texto);
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    return preCaretRange.toString().length;
+}
+
+function colocarCaretEnOffset(offset) {
+    if (!texto) return;
+    const walker = document.createTreeWalker(texto, NodeFilter.SHOW_TEXT, null, false);
+    let pos = 0;
+    let ultimoNodo = null;
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        ultimoNodo = node;
+        const length = node.textContent.length;
+        if (offset <= pos + length) {
+            const range = document.createRange();
+            range.setStart(node, Math.max(0, offset - pos));
+            range.collapse(true);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            return;
+        }
+        pos += length;
+    }
+    if (ultimoNodo) {
+        const range = document.createRange();
+        range.setStart(ultimoNodo, ultimoNodo.textContent.length);
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+}
+
+function obtenerOffsetInicioNodo(nodo) {
+    if (!texto || !nodo) return 0;
+    const range = document.createRange();
+    range.selectNodeContents(texto);
+    range.setEndBefore(nodo);
+    return range.toString().length;
+}
+
+function caretAfectaPalabraBendita(direccion) {
+    if (!texto) return false;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return false;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return rangoIntersecaPalabraBendita(range);
+    const caretOffset = obtenerOffsetCaretEnTexto();
+    const targetOffset = direccion === "backward" ? caretOffset - 1 : caretOffset;
+    if (targetOffset < 0) return false;
+    const spans = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`);
+    for (const span of spans) {
+        const inicio = obtenerOffsetInicioNodo(span);
+        const fin = inicio + (span.textContent || "").length;
+        if (targetOffset >= inicio && targetOffset < fin) return true;
+    }
+    return false;
+}
+
+let snapshot_html_bendita = null;
+let snapshot_offset_bendita = null;
+let snapshot_cantidad_benditas = 0;
+let restaurando_bendita = false;
+
+function moverCursorPorPalabraBendita(direccion) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return false;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return false;
+    let span = nodoEnPalabraBendita(range.startContainer);
+    if (!span) {
+        const node = range.startContainer;
+        const offset = range.startOffset;
+        let candidato = null;
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (direccion === "forward" && offset === node.textContent.length) {
+                candidato = node.nextSibling || node.parentNode?.nextSibling;
+            } else if (direccion === "backward" && offset === 0) {
+                candidato = node.previousSibling || node.parentNode?.previousSibling;
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const indice = direccion === "forward" ? offset : offset - 1;
+            candidato = node.childNodes[indice];
+        }
+        if (candidato) {
+            span = nodoEnPalabraBendita(candidato);
+        }
+    }
+    if (!span) return false;
+    const nuevoRango = document.createRange();
+    if (direccion === "forward") {
+        nuevoRango.setStartAfter(span);
+    } else {
+        nuevoRango.setStartBefore(span);
+    }
+    nuevoRango.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(nuevoRango);
+    return true;
+}
+
+function debeBloquearEdicionPalabraBendita(e) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return false;
+    const range = sel.getRangeAt(0);
+    const rangosObjetivo = typeof e.getTargetRanges === "function" ? e.getTargetRanges() : [];
+    if (rangosObjetivo && rangosObjetivo.length) {
+        for (const rango of rangosObjetivo) {
+            if (rangoIntersecaPalabraBendita(rango)) return true;
+        }
+    }
+    if (range.collapsed) {
+        if (nodoEnPalabraBendita(range.startContainer)) return true;
+    } else if (rangoIntersecaPalabraBendita(range)) {
+        return true;
+    }
+    if (e.inputType && e.inputType.startsWith("delete")) {
+        const direccion = e.inputType.includes("Forward") ? "forward" : "backward";
+        if (caretAfectaPalabraBendita(direccion)) return true;
+        const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
+        if (rangoBorrado && rangoIntersecaPalabraBendita(rangoBorrado)) {
+            return true;
+        }
+        if (hayPalabraBenditaAdyacente(sel, direccion)) return true;
+    }
+    return false;
+}
+
+function obtenerRangoPalabraActual() {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const original = sel.getRangeAt(0).cloneRange();
+    if (typeof sel.modify === "function") {
+        sel.collapse(original.endContainer, original.endOffset);
+        sel.modify("move", "backward", "word");
+        sel.modify("extend", "forward", "word");
+        const rango = sel.getRangeAt(0).cloneRange();
+        sel.removeAllRanges();
+        sel.addRange(original);
+        return rango;
+    }
+    if (original.startContainer.nodeType !== Node.TEXT_NODE) {
+        return null;
+    }
+    const textoNodo = original.startContainer.textContent || "";
+    let inicio = original.startOffset;
+    let fin = original.startOffset;
+    while (inicio > 0 && !/\s/.test(textoNodo[inicio - 1])) {
+        inicio -= 1;
+    }
+    while (fin < textoNodo.length && !/\s/.test(textoNodo[fin])) {
+        fin += 1;
+    }
+    const rango = document.createRange();
+    rango.setStart(original.startContainer, inicio);
+    rango.setEnd(original.startContainer, fin);
+    return rango;
+}
+
+function marcarPalabraBenditaActual(inicio, fin) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const rango = Number.isInteger(inicio) && Number.isInteger(fin)
+        ? obtenerRangoPorOffsets(texto, inicio, fin)
+        : obtenerRangoPalabraActual();
+    if (!rango) return;
+    const contenido = rango.toString();
+    if (!contenido || !contenido.trim()) return;
+    if (rangoIntersecaPalabraBendita(rango)) return;
+    const span = document.createElement("span");
+    span.className = CLASE_PALABRA_BENDITA_LOCAL;
+    span.setAttribute("contenteditable", "false");
+    const fragmento = rango.extractContents();
+    span.appendChild(fragmento);
+    rango.insertNode(span);
+    const nuevoRango = document.createRange();
+    nuevoRango.setStartAfter(span);
+    nuevoRango.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(nuevoRango);
+}
+
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "inline-flex";
 
@@ -236,6 +519,33 @@ texto.addEventListener("keydown", (e) => {
         e.stopImmediatePropagation();
         return;
     }
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        const direccion = e.key === "ArrowRight" ? "forward" : "backward";
+        if (moverCursorPorPalabraBendita(direccion)) {
+            e.preventDefault();
+            return;
+        }
+    }
+    if (e.key === "Backspace" || e.key === "Delete") {
+        const sel = window.getSelection();
+        const direccion = e.key === "Backspace" ? "backward" : "forward";
+        if (caretAfectaPalabraBendita(direccion)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+        }
+        const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
+        if (rangoBorrado && rangoIntersecaPalabraBendita(rangoBorrado)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+        }
+        if (hayPalabraBenditaAdyacente(sel, direccion)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+        }
+    }
     if (e.key === "Backspace") {
       const sel = window.getSelection();
       if (sel.rangeCount > 0) {
@@ -269,6 +579,19 @@ texto.addEventListener("keydown", (e) => {
   });
 
 texto.addEventListener("beforeinput", (e) => {
+    if (e.inputType && e.inputType.startsWith("delete")) {
+        snapshot_html_bendita = texto.innerHTML;
+        snapshot_offset_bendita = obtenerOffsetCaretEnTexto();
+        snapshot_cantidad_benditas = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`).length;
+    } else {
+        snapshot_html_bendita = null;
+        snapshot_offset_bendita = null;
+        snapshot_cantidad_benditas = 0;
+    }
+    if (debeBloquearEdicionPalabraBendita(e)) {
+        e.preventDefault();
+        return;
+    }
     if (!teclado_lento_putada) return;
     if (e.inputType === "insertText" || e.inputType === "insertParagraph") {
         e.preventDefault();
@@ -282,6 +605,26 @@ texto.addEventListener("beforeinput", (e) => {
             }
         }, RETRASO_TECLADO_LENTO_MS);
     }
+});
+
+texto.addEventListener("input", (e) => {
+    if (!snapshot_html_bendita) return;
+    const cantidad_actual = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`).length;
+    if (cantidad_actual < snapshot_cantidad_benditas) {
+        restaurando_bendita = true;
+        texto.innerHTML = snapshot_html_bendita;
+        if (Number.isFinite(snapshot_offset_bendita)) {
+            colocarCaretEnOffset(snapshot_offset_bendita);
+        }
+        countChars(texto);
+        sendText();
+        setTimeout(() => {
+            restaurando_bendita = false;
+        }, 0);
+    }
+    snapshot_html_bendita = null;
+    snapshot_offset_bendita = null;
+    snapshot_cantidad_benditas = 0;
 });
 
 // Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
@@ -592,6 +935,7 @@ const LIMPIEZAS = {
 
 // Cuando el texto cambia, envía los datos actuales al resto.
 texto.addEventListener("input", () => {
+    if (restaurando_bendita) return;
     countChars(texto);
     sendText();
 });
@@ -1773,19 +2117,25 @@ function modo_palabras_bonus(e) {
             preCaretRange.setEnd(range.endContainer, range.endOffset);
             let endingIndex = preCaretRange.toString().length;
             let startingIndex = 0; // Inicialización
-            let textContent = e.target.innerText;
+            const textContent = e.target.textContent || "";
+            const esCaracterPalabra = (ch) => /[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ]/.test(ch || "");
+            const esSeparador = (ch) => !esCaracterPalabra(ch);
+
+            while (endingIndex > 0 && esSeparador(textContent[endingIndex - 1])) {
+                endingIndex -= 1;
+            }
 
             // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
             for (let i = endingIndex - 1; i >= 0; i--) {
-                if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
-                    startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
+                if (esSeparador(textContent[i]) || i === 0) {
+                    startingIndex = (i === 0 && !esSeparador(textContent[i])) ? i : i + 1;
                     break;
                 }
             }
 
             // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
             for (let i = endingIndex; i <= textContent.length; i++) {
-                if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
+                if (i === textContent.length || esSeparador(textContent[i])) {
                     endingIndex = i;
                     break;
                 }
@@ -1820,6 +2170,26 @@ function modo_palabras_bonus(e) {
                 }, 2000);
             });
             socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo});
+            const palabraObjetivo = Array.isArray(palabra_actual)
+                ? palabra_actual[0]
+                : palabra_actual;
+            const palabraLower = (palabraObjetivo || "").toLowerCase();
+            const tokenLower = textContent
+                .slice(startingIndex, endingIndex)
+                .toLowerCase();
+            let indiceMatch = -1;
+            if (palabraLower) {
+                indiceMatch = tokenLower.lastIndexOf(palabraLower);
+            }
+            const inicioMarca = indiceMatch >= 0
+                ? startingIndex + indiceMatch
+                : startingIndex;
+            const finMarca = indiceMatch >= 0
+                ? inicioMarca + palabraLower.length
+                : endingIndex;
+            marcarPalabraBenditaActual(inicioMarca, finMarca);
+            countChars(texto);
+            sendText();
         }
     }
 }
