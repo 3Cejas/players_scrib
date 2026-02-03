@@ -1,4 +1,14 @@
 var player = getParameterByName("player");
+const playerNumber = Number(player);
+if (document.body) {
+    if (playerNumber === 1) document.body.classList.add("equipo-azul");
+    if (playerNumber === 2) document.body.classList.add("equipo-rojo");
+} else {
+    window.addEventListener("DOMContentLoaded", () => {
+        if (playerNumber === 1) document.body.classList.add("equipo-azul");
+        if (playerNumber === 2) document.body.classList.add("equipo-rojo");
+    }, { once: true });
+}
 
 let feedback_a_j_x;
 let feedback_de_j_x;
@@ -96,21 +106,34 @@ if (tiempo) {
 
 const CLASE_PALABRA_BENDITA_LOCAL =
     typeof CLASE_PALABRA_BENDITA !== "undefined" ? CLASE_PALABRA_BENDITA : "palabra-bendita";
+const CLASE_PALABRA_MUSA_LOCAL = "palabra-musa";
+const CLASE_LETRA_BENDITA_LOCAL = "letra-verde";
+const SELECTOR_PALABRA_PROTEGIDA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}, .${CLASE_LETRA_BENDITA_LOCAL}`;
+const SELECTOR_PALABRA_MARCADA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}`;
 
 function nodoEnPalabraBendita(nodo) {
     if (!nodo) return null;
     if (nodo.nodeType === Node.ELEMENT_NODE) {
-        return nodo.closest(`.${CLASE_PALABRA_BENDITA_LOCAL}`);
+        return nodo.closest(SELECTOR_PALABRA_PROTEGIDA);
     }
     if (nodo.nodeType === Node.TEXT_NODE) {
-        return nodo.parentElement?.closest(`.${CLASE_PALABRA_BENDITA_LOCAL}`) || null;
+        return nodo.parentElement?.closest(SELECTOR_PALABRA_PROTEGIDA) || null;
     }
     return null;
 }
 
 function rangoIntersecaPalabraBendita(rango) {
     if (!texto || !rango) return false;
-    const spans = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`);
+    const spans = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA);
+    for (const span of spans) {
+        if (rango.intersectsNode(span)) return true;
+    }
+    return false;
+}
+
+function rangoIntersecaPalabraMarcada(rango) {
+    if (!texto || !rango) return false;
+    const spans = texto.querySelectorAll(SELECTOR_PALABRA_MARCADA);
     for (const span of spans) {
         if (rango.intersectsNode(span)) return true;
     }
@@ -245,7 +268,7 @@ function caretAfectaPalabraBendita(direccion) {
     const caretOffset = obtenerOffsetCaretEnTexto();
     const targetOffset = direccion === "backward" ? caretOffset - 1 : caretOffset;
     if (targetOffset < 0) return false;
-    const spans = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`);
+    const spans = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA);
     for (const span of spans) {
         const inicio = obtenerOffsetInicioNodo(span);
         const fin = inicio + (span.textContent || "").length;
@@ -354,7 +377,7 @@ function obtenerRangoPalabraActual() {
     return rango;
 }
 
-function marcarPalabraBenditaActual(inicio, fin) {
+function marcarPalabraBenditaActual(inicio, fin, esMusa) {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
     const rango = Number.isInteger(inicio) && Number.isInteger(fin)
@@ -363,9 +386,12 @@ function marcarPalabraBenditaActual(inicio, fin) {
     if (!rango) return;
     const contenido = rango.toString();
     if (!contenido || !contenido.trim()) return;
-    if (rangoIntersecaPalabraBendita(rango)) return;
+    if (rangoIntersecaPalabraMarcada(rango)) return;
     const span = document.createElement("span");
     span.className = CLASE_PALABRA_BENDITA_LOCAL;
+    if (esMusa) {
+        span.classList.add("palabra-bendita-musa");
+    }
     span.setAttribute("contenteditable", "false");
     const fragmento = rango.extractContents();
     span.appendChild(fragmento);
@@ -375,6 +401,156 @@ function marcarPalabraBenditaActual(inicio, fin) {
     nuevoRango.collapse(true);
     sel.removeAllRanges();
     sel.addRange(nuevoRango);
+}
+
+function marcarPalabraMusaActual(inicio, fin) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return false;
+    const rango = Number.isInteger(inicio) && Number.isInteger(fin)
+        ? obtenerRangoPorOffsets(texto, inicio, fin)
+        : obtenerRangoPalabraActual();
+    if (!rango) return false;
+    const contenido = rango.toString();
+    if (!contenido || !contenido.trim()) return false;
+    if (rangoIntersecaPalabraMarcada(rango)) return false;
+    const span = document.createElement("span");
+    span.className = CLASE_PALABRA_MUSA_LOCAL;
+    span.setAttribute("contenteditable", "false");
+    const fragmento = rango.extractContents();
+    span.appendChild(fragmento);
+    rango.insertNode(span);
+    const nuevoRango = document.createRange();
+    nuevoRango.setStartAfter(span);
+    nuevoRango.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(nuevoRango);
+    return true;
+}
+
+let progreso_frase_final_intensidad = 0;
+let progreso_frase_final_ultimo_match = 0;
+
+function estiloProgresoFraseFinal(intensidad) {
+    const t = Math.max(0, Math.min(1, intensidad));
+    const saturation = Math.round(t * 100);
+    const lightness = Math.round(96 - (t * 40));
+    const glowSize = (0.08 + (t * 0.6)).toFixed(2);
+    const glowAlpha = (0.03 + (t * 0.6)).toFixed(2);
+    return {
+        color: `hsl(32, ${saturation}%, ${lightness}%)`,
+        textShadow: `0 0 ${glowSize}em rgba(255, 140, 0, ${glowAlpha})`,
+    };
+}
+
+function limpiarMarcadoFraseFinal() {
+    if (!texto) return;
+    const spans = texto.querySelectorAll(".frase-final-progreso");
+    spans.forEach((span) => {
+        const parent = span.parentNode;
+        if (!parent) return;
+        while (span.firstChild) {
+            parent.insertBefore(span.firstChild, span);
+        }
+        parent.removeChild(span);
+        parent.normalize();
+    });
+    progreso_frase_final_intensidad = 0;
+    progreso_frase_final_ultimo_match = 0;
+}
+
+function animarFalloFraseFinal() {
+    if (!texto) return;
+    texto.classList.remove("frase-final-fallo");
+    void texto.offsetWidth;
+    texto.classList.add("frase-final-fallo");
+    texto.addEventListener(
+        "animationend",
+        () => texto.classList.remove("frase-final-fallo"),
+        { once: true }
+    );
+}
+
+function obtenerRangoUltimosCaracteres(cantidad) {
+    if (!texto || cantidad <= 0) return null;
+    const sel = window.getSelection();
+    if (!sel) return null;
+    const original = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+    const range = document.createRange();
+    range.selectNodeContents(texto);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    let resultado = null;
+    if (typeof sel.modify === "function") {
+        for (let i = 0; i < cantidad; i++) {
+            sel.modify("extend", "backward", "character");
+        }
+        resultado = sel.getRangeAt(0).cloneRange();
+    } else {
+        const textoPlano = texto.textContent || "";
+        const inicio = Math.max(0, textoPlano.length - cantidad);
+        resultado = obtenerRangoPorOffsets(texto, inicio, inicio + cantidad);
+    }
+    sel.removeAllRanges();
+    if (original) {
+        sel.addRange(original);
+    }
+    return resultado;
+}
+
+function actualizarProgresoFraseFinal() {
+    if (!texto) return;
+    const objetivo = (frase_final || "").toLowerCase();
+    if (!objetivo) {
+        limpiarMarcadoFraseFinal();
+        return;
+    }
+    const textoPlano = (texto.innerText || "").toLowerCase();
+    const max = Math.min(textoPlano.length, objetivo.length);
+    let matchLen = 0;
+    for (let len = max; len > 0; len--) {
+        if (textoPlano.endsWith(objetivo.slice(0, len))) {
+            matchLen = len;
+            break;
+        }
+    }
+    if (progreso_frase_final_ultimo_match > 0 && matchLen === 0) {
+        animarFalloFraseFinal();
+    }
+    const caretOffset = obtenerOffsetCaretEnTexto();
+    limpiarMarcadoFraseFinal();
+    if (matchLen === 0) {
+        colocarCaretEnOffset(caretOffset);
+        return;
+    }
+    const rango = obtenerRangoUltimosCaracteres(matchLen);
+    if (!rango) {
+        colocarCaretEnOffset(caretOffset);
+        return;
+    }
+    const span = document.createElement("span");
+    span.className = "frase-final-progreso";
+    const ratio = Math.max(0, Math.min(1, matchLen / objetivo.length));
+    const intensidadObjetivo = Math.pow(ratio, 1.6);
+    const estiloPrevio = estiloProgresoFraseFinal(progreso_frase_final_intensidad);
+    const estiloObjetivo = estiloProgresoFraseFinal(intensidadObjetivo);
+    span.style.color = estiloPrevio.color;
+    span.style.textShadow = estiloPrevio.textShadow;
+    try {
+        rango.surroundContents(span);
+    } catch (err) {
+        const fragmento = rango.extractContents();
+        span.appendChild(fragmento);
+        rango.insertNode(span);
+    }
+    requestAnimationFrame(() => {
+        if (!span.isConnected) return;
+        span.style.color = estiloObjetivo.color;
+        span.style.textShadow = estiloObjetivo.textShadow;
+    });
+    progreso_frase_final_intensidad = intensidadObjetivo;
+    progreso_frase_final_ultimo_match = matchLen;
+    colocarCaretEnOffset(caretOffset);
 }
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
@@ -582,7 +758,7 @@ texto.addEventListener("beforeinput", (e) => {
     if (e.inputType && e.inputType.startsWith("delete")) {
         snapshot_html_bendita = texto.innerHTML;
         snapshot_offset_bendita = obtenerOffsetCaretEnTexto();
-        snapshot_cantidad_benditas = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`).length;
+        snapshot_cantidad_benditas = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA).length;
     } else {
         snapshot_html_bendita = null;
         snapshot_offset_bendita = null;
@@ -609,7 +785,7 @@ texto.addEventListener("beforeinput", (e) => {
 
 texto.addEventListener("input", (e) => {
     if (!snapshot_html_bendita) return;
-    const cantidad_actual = texto.querySelectorAll(`.${CLASE_PALABRA_BENDITA_LOCAL}`).length;
+    const cantidad_actual = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA).length;
     if (cantidad_actual < snapshot_cantidad_benditas) {
         restaurando_bendita = true;
         texto.innerHTML = snapshot_html_bendita;
@@ -928,6 +1104,7 @@ const LIMPIEZAS = {
 
     "frase final": function (data) {
         texto.removeEventListener("keyup", listener_modo);
+        limpiarMarcadoFraseFinal();
     },
 
     "": function (data) { },
@@ -1114,6 +1291,7 @@ function resucitar(){
     desactivar_borrar = false;
     limpiar_bloqueo_putada();
     limpiar_teclado_lento();
+    document.body.classList.remove('modo-resucitar');
     logo.style.display = "none"; 
     neon.style.display = "none"; 
     tiempo.innerHTML = "";
@@ -1501,12 +1679,47 @@ function recibir_palabra_prohibida(data) {
       const quantityDisplay = document.getElementById('quantityDisplay');
       const btnConfirmar = document.getElementById('btnConfirmar');
       const btnAtras = document.getElementById('btnAtras');
-      let quantityMenuElements = [quantityDisplay, btnConfirmar, btnAtras];
+      let quantityMenuElements = [btnConfirmar, btnAtras];
       let quantityMenuIndex = 0;
   
       let palabras = 1;
       const PALABRAS_A_SEGUNDOS = 3;
       let currentMenu = 'main';
+
+      function contarPalabrasTexto(textoBase) {
+        const matches = (textoBase || "").match(/\b\w+\b/g);
+        return matches ? matches.length : 0;
+      }
+
+      function ajustarPalabrasResucitar() {
+        const max = contarPalabrasTexto(texto_guardado);
+        const min = max > 0 ? 1 : 0;
+        if (palabras < min) palabras = min;
+        if (palabras > max) palabras = max;
+        return { max, min };
+      }
+
+      function emitirEstadoResucitar(menuForzado = null) {
+        if (!socket || typeof socket.emit !== "function") return;
+        const { max } = ajustarPalabrasResucitar();
+        const segundos = palabras * PALABRAS_A_SEGUNDOS;
+        const menu = menuForzado || currentMenu;
+        const visible = menu === "main"
+          ? (mainMenu && mainMenu.style.display !== "none")
+          : menu === "quantity"
+            ? (quantityMenu && quantityMenu.style.display !== "none")
+            : false;
+        socket.emit("resucitar_menu", {
+          player: playerNumber,
+          menu,
+          visible,
+          mainIndex: mainMenuIndex,
+          quantityIndex: quantityMenuIndex,
+          palabras,
+          max,
+          segundos
+        });
+      }
   
       /*************************************************************
         ACTUALIZACIONES DE ESTADO VISUAL
@@ -1579,19 +1792,54 @@ function recibir_palabra_prohibida(data) {
         mainMenuButtons.forEach(btn => btn.classList.remove('selected'));
         mainMenuButtons[mainMenuIndex].classList.add('selected');
         mainMenuButtons[mainMenuIndex].focus();
+        emitirEstadoResucitar();
       }
   
-      function actualizarSeleccionQuantityMenu() {
+      function actualizarSeleccionQuantityMenu(enfocar = true) {
         quantityMenuElements.forEach(el => el.classList.remove('selected'));
         quantityMenuElements[quantityMenuIndex].classList.add('selected');
-        if (quantityMenuIndex === 1) btnConfirmar.focus();
-        if (quantityMenuIndex === 2) btnAtras.focus();
+        emitirEstadoResucitar();
+        if (!enfocar) return;
+        if (quantityMenuIndex === 0) btnConfirmar.focus();
+        if (quantityMenuIndex === 1) btnAtras.focus();
       }
   
       function actualizarTextoCantidad() {
+        const { max } = ajustarPalabrasResucitar();
         const segundos = palabras * PALABRAS_A_SEGUNDOS;
-        quantityDisplay.innerHTML = `<span style="color: yellow;">${palabras} palabra(s)</span> => <span style="color: green;">${segundos} segundo(s)</span>`;
+        quantityDisplay.innerHTML = `
+          <div class="resucitar-stepper" aria-hidden="true">
+            <div id="resucitarArrowUp" class="resucitar-stepper-arrow">&uarr;</div>
+            <div id="resucitarArrowDown" class="resucitar-stepper-arrow">&darr;</div>
+          </div>
+          <div class="resucitar-metric">
+            <span class="resucitar-label">Palabras</span>
+            <span class="resucitar-value resucitar-pop palabras">${palabras}</span>
+            <span class="resucitar-max">MAX ${max}</span>
+          </div>
+          <div class="resucitar-arrow">→</div>
+          <div class="resucitar-metric">
+            <span class="resucitar-label">Segundos</span>
+            <span class="resucitar-value resucitar-pop segundos">${segundos}</span>
+          </div>
+        `;
+        emitirEstadoResucitar();
+      }
 
+      function activarIndicadorConversor(direccion, esLimite) {
+        const flecha = direccion === 'up'
+          ? document.getElementById('resucitarArrowUp')
+          : document.getElementById('resucitarArrowDown');
+        if (!flecha) return;
+        flecha.classList.remove('activo', 'limite');
+        void flecha.offsetWidth;
+        flecha.classList.add('activo');
+        if (esLimite) {
+          flecha.classList.add('limite');
+        }
+        flecha.addEventListener('animationend', () => {
+          flecha.classList.remove('activo', 'limite');
+        }, { once: true });
       }
       
       
@@ -1635,18 +1883,22 @@ function recibir_palabra_prohibida(data) {
       function mostrarMenuQuantity() {
         mainMenu.style.display = 'none';
         quantityMenu.style.display = 'block';
+        document.body.classList.add('modo-resucitar');
         currentMenu = 'quantity';
         quantityMenuIndex = 0;
         actualizarTextoCantidad();
         actualizarSeleccionQuantityMenu();
+        emitirEstadoResucitar();
       }
   
       function mostrarMenuPrincipal() {
         quantityMenu.style.display = 'none';
         mainMenu.style.display = 'block';
+        document.body.classList.add('modo-resucitar');
         currentMenu = 'main';
         mainMenuIndex = 0;
         actualizarSeleccionMainMenu();
+        emitirEstadoResucitar();
       }
 
       function iniciarMenu() {
@@ -1655,13 +1907,15 @@ function recibir_palabra_prohibida(data) {
 
         document.addEventListener('keydown', manejadorTeclas);
         animateCSS(".mainMenu", "flash");
-        mainTitle.innerHTML = '<span style="color: red;">GAME OVER</span><br><br> ¿QUIERES <span style="color: lime">RESUCITAR</span> A CAMBIO DE <span style="color: yellow;">PALABRAS</span>?';
+        mainTitle.innerHTML = '<span class="resucitar-title-over">GAME OVER</span><span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>';
         mainMenu.style.display = 'block';
         mainTitle.style.display = 'block';
         buttonContainer.style.display = 'flex';
+        document.body.classList.add('modo-resucitar');
         currentMenu = 'main';
         mainMenuIndex = 0;
         actualizarSeleccionMainMenu();
+        emitirEstadoResucitar();
         timeoutID_menu = setTimeout(() => {
             // Si seguimos en el menú (por ejemplo, no hubo otra acción), ejecuta el clic:
             console.log("Tiempo cumplido. Se hace clic automático en botón NO.");
@@ -1685,6 +1939,7 @@ function recibir_palabra_prohibida(data) {
       btnNo.addEventListener('click', (evento) => {
         
         evento.stopPropagation();
+        document.body.classList.remove('modo-resucitar');
         texto.innerText = texto_guardado;
         tiempo.style.color = "white";
         if (terminado == false) {
@@ -1707,6 +1962,7 @@ function recibir_palabra_prohibida(data) {
         }
 
         document.removeEventListener('keydown', manejadorTeclas);
+        emitirEstadoResucitar('hidden');
                 
         // Lógica para finalizar el juego.
       });
@@ -1733,13 +1989,35 @@ function recibir_palabra_prohibida(data) {
         buttonContainer.style.display = 'none';
         
         document.removeEventListener('keydown', manejadorTeclas);
+        emitirEstadoResucitar('hidden');
 
         post_inicio(false)
       });
   
       btnAtras.addEventListener('click', (evento) => {
         evento.stopPropagation();
-        mostrarMenuPrincipal();
+        quantityMenu.style.display = 'none';
+        mainMenu.style.display = 'block';
+        currentMenu = 'main';
+        mainMenuIndex = 0;
+        actualizarSeleccionMainMenu();
+        if (mainTitle) {
+          mainTitle.style.display = 'block';
+        }
+        if (buttonContainer) {
+          buttonContainer.style.display = 'flex';
+        }
+        emitirEstadoResucitar();
+      });
+
+      btnConfirmar.addEventListener('focus', () => {
+        quantityMenuIndex = 0;
+        actualizarSeleccionQuantityMenu(false);
+      });
+
+      btnAtras.addEventListener('focus', () => {
+        quantityMenuIndex = 1;
+        actualizarSeleccionQuantityMenu(false);
       });
   
       /*************************************************************
@@ -1747,9 +2025,12 @@ function recibir_palabra_prohibida(data) {
       **************************************************************/
       // Definimos la función manejadora de eventos de teclado.
 function manejadorTeclas(evento) {
+    const tecla = (evento.key === 'Enter' || evento.code === 'NumpadEnter')
+      ? 'Enter'
+      : evento.key;
     evento.stopPropagation();
     if (currentMenu === 'main') {
-      switch (evento.key) {
+      switch (tecla) {
         case 'ArrowLeft':
           mainMenuIndex = 0;
           actualizarSeleccionMainMenu();
@@ -1762,7 +2043,7 @@ function manejadorTeclas(evento) {
           break;
       }
     } else if (currentMenu === 'quantity') {
-      switch (evento.key) {
+      switch (tecla) {
         case 'ArrowLeft':
           quantityMenuIndex--;
           if (quantityMenuIndex < 0) {
@@ -1778,22 +2059,45 @@ function manejadorTeclas(evento) {
           actualizarSeleccionQuantityMenu();
           break;
         case 'ArrowUp':
-          if (quantityMenuIndex === 0) {
-            palabras++;
-            actualizarTextoCantidad();
+          evento.preventDefault();
+          {
+            const limites = ajustarPalabrasResucitar();
+            let esLimite = false;
+            if (palabras < limites.max) {
+              palabras++;
+              actualizarTextoCantidad();
+              esLimite = palabras >= limites.max;
+            } else {
+              esLimite = true;
+            }
+            activarIndicadorConversor('up', esLimite);
           }
           break;
         case 'ArrowDown':
-          if (quantityMenuIndex === 0 && palabras > 1) {
-            palabras--;
-            actualizarTextoCantidad();
+          evento.preventDefault();
+          {
+            const limites = ajustarPalabrasResucitar();
+            let esLimite = false;
+            if (palabras > limites.min) {
+              palabras--;
+              actualizarTextoCantidad();
+              esLimite = palabras <= limites.min;
+            } else {
+              esLimite = true;
+            }
+            activarIndicadorConversor('down', esLimite);
           }
           break;
         case 'Enter':
-          if (quantityMenuIndex === 1) {
-            btnConfirmar.click();
-          } else if (quantityMenuIndex === 2) {
-            btnAtras.click();
+          evento.preventDefault();
+          {
+            if (document.activeElement === btnAtras || quantityMenuIndex === 1) {
+              btnAtras.click();
+            } else if (document.activeElement === btnConfirmar || quantityMenuIndex === 0) {
+              btnConfirmar.click();
+            } else {
+              btnConfirmar.click();
+            }
           }
           break;
         default:
@@ -2187,7 +2491,8 @@ function modo_palabras_bonus(e) {
             const finMarca = indiceMatch >= 0
                 ? inicioMarca + palabraLower.length
                 : endingIndex;
-            marcarPalabraBenditaActual(inicioMarca, finMarca);
+            const esMusa = definicion?.dataset?.origenMusa === "musa";
+            marcarPalabraBenditaActual(inicioMarca, finMarca, esMusa);
             countChars(texto);
             sendText();
         }
@@ -2232,6 +2537,14 @@ function modo_palabras_prohibidas(e) {
                 .substring(startingIndex, endingIndex)
                 .toLowerCase().includes(palabra.toLowerCase()))
             ) {
+            const palabraEncontrada = Array.isArray(palabra_actual)
+                ? palabra_actual.find(palabra => textContent
+                    .substring(startingIndex, endingIndex)
+                    .toLowerCase()
+                    .includes((palabra || "").toLowerCase()))
+                : palabra_actual;
+            const palabraReportada = palabraEncontrada || textContent.substring(startingIndex, endingIndex);
+            socket.emit("intento_prohibido", { player, tipo: "palabra", valor: palabraReportada });
             texto.focus();
             asignada = false;
             socket.emit("nueva_palabra_prohibida", player);
@@ -2312,6 +2625,27 @@ function palabras_musas(e) {
             tiempo_feed = feedback.innerHTML;
             socket.emit("nueva_palabra_musa", player);
             socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "inspiracion" });
+            const tokenLower = textContent
+                .substring(startingIndex, endingIndex)
+                .toLowerCase();
+            const palabraEncontrada = Array.isArray(palabra_actual)
+                ? palabra_actual.find(palabra => tokenLower.includes((palabra || "").toLowerCase()))
+                : palabra_actual;
+            const palabraLower = (palabraEncontrada || "").toLowerCase();
+            let indiceMatch = -1;
+            if (palabraLower) {
+                indiceMatch = tokenLower.lastIndexOf(palabraLower);
+            }
+            const inicioMarca = indiceMatch >= 0
+                ? startingIndex + indiceMatch
+                : startingIndex;
+            const finMarca = indiceMatch >= 0
+                ? inicioMarca + palabraLower.length
+                : endingIndex;
+            if (marcarPalabraMusaActual(inicioMarca, finMarca)) {
+                countChars(texto);
+                sendText();
+            }
         }
     }
 }
@@ -2324,6 +2658,8 @@ function modo_letra_prohibida(e) {
       toNormalForm(letra) === letra_prohibida.toUpperCase()
     ) {
       e.preventDefault();  // Evita el comportamiento predeterminado del evento de tecla
+      const letraReportada = letra_prohibida || letra;
+      socket.emit("intento_prohibido", { player, tipo: "letra", valor: letraReportada });
     /*
       let sel = window.getSelection();
       let range = sel.getRangeAt(0);
@@ -2430,6 +2766,7 @@ function modo_letra_bendita(e) {
             let textNode = document.createTextNode(letra);
             let span = document.createElement("span");
             span.className = "letra-verde";
+            span.setAttribute("contenteditable", "false");
             span.appendChild(textNode);
 
             let emptyTextNodeBefore = document.createTextNode("");
@@ -3138,6 +3475,7 @@ function function_frase_final() {
     animacion_modo();
     palabra.innerHTML = "«"+frase_final+"»";
     definicion.innerHTML = "⬆️ ¡Introduce la frase final para ganar! ⬆️"
+    limpiarMarcadoFraseFinal();
 
     texto.removeEventListener("keyup", listener_modo);
     listener_modo = function (e) { modo_frase_final(e) };
@@ -3145,6 +3483,7 @@ function function_frase_final() {
 }
 
 function modo_frase_final(e) {
+    actualizarProgresoFraseFinal();
     // Obtenemos el texto completo del elemento
     let textContent = e.target.innerText;
     // Convertimos a minúsculas y recortamos espacios (opcional pero recomendable):

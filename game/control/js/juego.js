@@ -17,6 +17,7 @@ let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
 let temporizador_gigante_activo = false;
+let regalo_musas_enviado = false;
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "flex";
@@ -78,6 +79,9 @@ function startCountDown_p1(duration) {
 
         tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         actualizarBarraVida(tiempo, tiempo.textContent);
+        if (window.registrarTiempoControl) {
+            window.registrarTiempoControl(1, secondsRemaining);
+        }
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         console.log('count', {count, player:1})
         socket.emit('count', {count, player:1});
@@ -107,6 +111,9 @@ function startCountDown_p2(duration) {
 
         tiempo1.textContent = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
         actualizarBarraVida(tiempo1, tiempo1.textContent);
+        if (window.registrarTiempoControl) {
+            window.registrarTiempoControl(2, secondsRemaining1);
+        }
         count1 = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
         socket.emit('count', {count : count1, player: 2});
         if (secondsRemaining1 == 20) {
@@ -134,6 +141,9 @@ function addSeconds(secs) {
     tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
     actualizarBarraVida(tiempo, tiempo.textContent);
     count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
+    if (window.registrarTiempoControl) {
+        window.registrarTiempoControl(1, secondsRemaining);
+    }
 }
 
 function addSeconds1(secs) {
@@ -149,14 +159,28 @@ function addSeconds1(secs) {
     count1 = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
     console.log(min1)
     console.log("JOOOOOOOOO", count1)
+    if (window.registrarTiempoControl) {
+        window.registrarTiempoControl(2, secondsRemaining1);
+    }
+}
+
+function normalizarFraseFinal(valor) {
+    let texto = (valor || "").trim();
+    if (texto.startsWith("\u00ab") && texto.endsWith("\u00bb") && texto.length > 1) {
+        texto = texto.slice(1, -1).trim();
+    }
+    texto = texto.replace(/^["\u201c]+/, "").replace(/["\u201d]+$/, "").trim();
+    return texto;
 }
 
 function temp() {
     console.log(frase_final_j1.value)
+    const fraseJ1 = normalizarFraseFinal(frase_final_j1.value);
+    const fraseJ2 = normalizarFraseFinal(frase_final_j2.value);
     var checkboxFraseFinal = document.querySelector('input[type="checkbox"][value="frase final"]');
     console.log(checkboxFraseFinal)
-    if((!frase_final_j1.value || !frase_final_j2.value || frase_final_j1.value == "«»" || frase_final_j2.value == "«»") && checkboxFraseFinal && checkboxFraseFinal.checked){
-        if(!frase_final_j1.value){
+    if((!fraseJ1 || !fraseJ2) && checkboxFraseFinal && checkboxFraseFinal.checked){
+        if(!fraseJ1){
         alert("Falta introducir una frase inicial para " + nombre1.value + ".")
         }
         else{
@@ -164,8 +188,12 @@ function temp() {
         }
     }
     else{
+    if (window.resetResumenPartida) {
+        window.resetResumenPartida();
+    }
     terminado = false;
     terminado1 = false;
+    regalo_musas_enviado = false;
     fin_j1 = false;
     fin_j2 = false;
     document.getElementById("palabra").innerHTML = "";
@@ -179,18 +207,18 @@ function temp() {
     let duration;
 
     // --------------------------------------------------
-// 3A. DESESTRUCTURACIÓN DE OBJETO
+// 3A. DESESTRUCTURACION DE OBJETO
 // --------------------------------------------------
 // Nota: al asignar a variables ya declaradas, debemos envolver
-// la destructuración entre paréntesis para evitar que JS lo interprete
-// como un bloque de código.
+// la destructuracion entre parentesis para evitar que JS lo interprete
+// como un bloque de codigo.
 ({
     minutos: time_minutes,
     segundos: time_seconds,
     totalSegundos: duration
   } = obtenerTotalSegundos());
   
-  console.log('Objeto →', time_minutes, time_seconds, duration);
+  console.log('Objeto ->', time_minutes, time_seconds, duration);
 
     tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
     tiempo1.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
@@ -202,11 +230,11 @@ function temp() {
 
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
-        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+        boton_pausar_reanudar.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto : false, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: frase_final_j1.value.slice(1, -1), FRASE_FINAL_J2: frase_final_j2.value.slice(1, -1)} });
+    socket.emit('inicio', {count, borrar_texto : false, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
   
@@ -225,6 +253,7 @@ function temp() {
 }
 };
 
+
 function obtenerTotalSegundos() {
     // Lectura y saneado de los inputs (suponemos que existen en el DOM)
     const mRaw = parseInt(document.getElementById('tiempo_minutos').value, 10);
@@ -241,6 +270,34 @@ function obtenerTotalSegundos() {
       totalSegundos: m * 60 + s
     };
   }
+
+function cambiarValor(campoId, incremento) {
+    const input = document.getElementById(campoId);
+    if (!input) return;
+
+    let valorActual = parseInt(input.value, 10);
+    if (isNaN(valorActual)) {
+        valorActual = 0;
+    }
+
+    let nuevoValor = valorActual + incremento;
+    const min = parseInt(input.min, 10) || Number.MIN_SAFE_INTEGER;
+    const max = parseInt(input.max, 10) || Number.MAX_SAFE_INTEGER;
+    const stepAttr = parseInt(input.step, 10);
+    const step = Number.isNaN(stepAttr) ? Math.abs(incremento) : stepAttr;
+
+    if (!Number.isNaN(step) && step > 0) {
+        nuevoValor = Math.round(nuevoValor / step) * step;
+    }
+
+    if (nuevoValor < min) {
+        nuevoValor = min;
+    } else if (nuevoValor > max) {
+        nuevoValor = max;
+    }
+
+    input.value = nuevoValor;
+}
 
 function vote() {
     socket.emit('vote', "nada");
@@ -263,13 +320,14 @@ function limpiar() {
     tiempo_modos_secs.textContent = "0 segundos";
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
-        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+        boton_pausar_reanudar.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
     }
     texto_guardado1 = texto1.innerText;
     texto_guardado2 = texto2.innerText;
     //texto1.innerText = "";
     //texto2.innerText = "";
     juego_iniciado = false;
+    regalo_musas_enviado = false;
     document.getElementById("puntos").innerHTML = "0 palabras";
     document.getElementById("puntos1").innerHTML = "0 palabras";
     document.getElementById("palabra").innerHTML = "";
@@ -306,6 +364,9 @@ function limpiar() {
     }
     if (typeof resetearHeatmap === "function") {
         resetearHeatmap();
+    }
+    if (window.resetResumenPartida) {
+        window.resetResumenPartida();
     }
 };
 
@@ -356,8 +417,330 @@ function cambiar_vista_calentamiento(boton) {
 function actualizarBotonVistaCalentamiento(boton) {
     const destino = boton || document.getElementById("boton_vista_calentamiento");
     if (!destino) return;
-    destino.textContent = vista_calentamiento ? "🎮 VISTA PARTIDA" : "🔥 VISTA CALENTAMIENTO";
+    destino.textContent = vista_calentamiento ? "\u{1F3AE} VISTA PARTIDA" : "\u{1F525} VISTA CALENTAMIENTO";
     destino.dataset.activo = vista_calentamiento ? "1" : "0";
+}
+
+let parametros_visibles = false;
+let teleprompter_visible = false;
+let teleprompter_emit_timeout = null;
+let teleprompter_play_raf = null;
+let teleprompter_last_tick = null;
+
+const teleprompter_state = {
+    visible: false,
+    text: "",
+    fontSize: 36,
+    speed: 25,
+    playing: false,
+    scroll: 0
+};
+
+const animateCSS = (element, animation, prefix = "animate__") =>
+    new Promise((resolve) => {
+        const node = typeof element === "string" ? document.querySelector(element) : element;
+        if (!node) {
+            resolve("no-node");
+            return;
+        }
+
+        const animationName = `${prefix}${animation}`;
+        node.classList.add(`${prefix}animated`, animationName);
+
+        function handleAnimationEnd(event) {
+            event.stopPropagation();
+            node.classList.remove(`${prefix}animated`, animationName);
+            resolve("Animation ended");
+        }
+
+        node.addEventListener("animationend", handleAnimationEnd, { once: true });
+    });
+
+function toggleParametros() {
+    if (teleprompter_visible) {
+        toggleTeleprompter(true);
+    }
+    parametros_visibles = !parametros_visibles;
+    const panelControles = document.getElementById("panel_controles");
+    const panelParametros = document.getElementById("panel_parametros");
+    const panelParametrosExtra = document.getElementById("panel_parametros_extra");
+    const boton = document.getElementById("boton_parametros");
+
+    if (parametros_visibles) {
+        if (panelControles) {
+            animateCSS(panelControles, "backOutLeft").then(() => {
+                panelControles.classList.add("panel-oculto");
+            });
+        }
+        if (panelParametros) {
+            panelParametros.classList.remove("panel-oculto");
+            animateCSS(panelParametros, "backInLeft");
+        }
+        if (panelParametrosExtra) {
+            panelParametrosExtra.classList.remove("panel-oculto");
+            animateCSS(panelParametrosExtra, "backInLeft");
+        }
+    } else {
+        if (panelParametros) {
+            animateCSS(panelParametros, "backOutLeft").then(() => {
+                panelParametros.classList.add("panel-oculto");
+            });
+        }
+        if (panelParametrosExtra) {
+            animateCSS(panelParametrosExtra, "backOutLeft").then(() => {
+                panelParametrosExtra.classList.add("panel-oculto");
+            });
+        }
+        if (panelControles) {
+            panelControles.classList.remove("panel-oculto");
+            animateCSS(panelControles, "backInLeft");
+        }
+    }
+    if (boton) {
+        boton.textContent = parametros_visibles ? "\u{1F3AE} CONTROLES" : "\u2699\uFE0F PAR\u00C1METROS";
+    }
+}
+
+function actualizarTeleprompterUI() {
+    const fontLabel = document.getElementById("teleprompter_font_size");
+    const speedLabel = document.getElementById("teleprompter_speed");
+    const playBtn = document.getElementById("teleprompter_play");
+    if (fontLabel) {
+        fontLabel.textContent = Math.round(teleprompter_state.fontSize);
+    }
+    if (speedLabel) {
+        speedLabel.textContent = Math.round(teleprompter_state.speed);
+    }
+    if (playBtn) {
+        playBtn.textContent = teleprompter_state.playing ? "\u23F8\uFE0F PAUSA" : "\u25B6\uFE0F PLAY";
+    }
+    const botonTeleprompter = document.getElementById("boton_teleprompter");
+    if (botonTeleprompter) {
+        botonTeleprompter.textContent = teleprompter_visible ? "\u{1F399}\uFE0F CONTROLES" : "\u{1F399}\uFE0F TELEPROMPTER";
+    }
+}
+
+function emitirTeleprompter(inmediato = false) {
+    if (!socket) return;
+    if (inmediato) {
+        socket.emit('teleprompter_control', { state: { ...teleprompter_state } });
+        return;
+    }
+    if (teleprompter_emit_timeout) return;
+    teleprompter_emit_timeout = setTimeout(() => {
+        teleprompter_emit_timeout = null;
+        socket.emit('teleprompter_control', { state: { ...teleprompter_state } });
+    }, 60);
+}
+
+function teleprompterPlayLoop(ts) {
+    if (!teleprompter_state.playing) {
+        teleprompter_play_raf = null;
+        teleprompter_last_tick = null;
+        return;
+    }
+    if (teleprompter_last_tick === null) {
+        teleprompter_last_tick = ts;
+    }
+    const dt = (ts - teleprompter_last_tick) / 1000;
+    teleprompter_last_tick = ts;
+    if (dt > 0) {
+        teleprompter_state.scroll += teleprompter_state.speed * dt;
+        emitirTeleprompter();
+    }
+    teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoop);
+}
+
+function iniciarTeleprompterPlay() {
+    if (teleprompter_play_raf) return;
+    teleprompter_last_tick = null;
+    teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoop);
+}
+
+function detenerTeleprompterPlay() {
+    if (teleprompter_play_raf) {
+        cancelAnimationFrame(teleprompter_play_raf);
+    }
+    teleprompter_play_raf = null;
+    teleprompter_last_tick = null;
+}
+
+function toggleTeleprompter(forzarCerrar = false) {
+    if (forzarCerrar) {
+        teleprompter_visible = false;
+    } else {
+        teleprompter_visible = !teleprompter_visible;
+    }
+    const panelControles = document.getElementById("panel_controles");
+    const panelTeleprompter = document.getElementById("panel_teleprompter");
+
+    if (teleprompter_visible) {
+        if (panelControles) {
+            animateCSS(panelControles, "backOutLeft").then(() => {
+                panelControles.classList.add("panel-oculto");
+            });
+        }
+        if (panelTeleprompter) {
+            panelTeleprompter.classList.remove("panel-oculto");
+            animateCSS(panelTeleprompter, "backInLeft");
+        }
+        teleprompter_state.visible = true;
+    } else {
+        if (panelTeleprompter) {
+            animateCSS(panelTeleprompter, "backOutLeft").then(() => {
+                panelTeleprompter.classList.add("panel-oculto");
+            });
+        }
+        if (panelControles) {
+            panelControles.classList.remove("panel-oculto");
+            animateCSS(panelControles, "backInLeft");
+        }
+        teleprompter_state.visible = false;
+        teleprompter_state.playing = false;
+        detenerTeleprompterPlay();
+    }
+    actualizarTeleprompterUI();
+    emitirTeleprompter(true);
+}
+
+function teleprompterCargarTexto(jugador) {
+    const textoFuente = jugador === 2 ? texto2 : texto1;
+    const texto = textoFuente ? textoFuente.innerText : "";
+    teleprompter_state.text = (texto || "").trim();
+    teleprompter_state.scroll = 0;
+    teleprompter_state.visible = true;
+    teleprompter_visible = true;
+    actualizarTeleprompterUI();
+    emitirTeleprompter(true);
+}
+
+function teleprompterSubir() {
+    teleprompter_state.scroll = Math.max(0, teleprompter_state.scroll - 60);
+    emitirTeleprompter();
+}
+
+function teleprompterBajar() {
+    teleprompter_state.scroll += 60;
+    emitirTeleprompter();
+}
+
+function teleprompterIrInicio() {
+    teleprompter_state.scroll = 0;
+    emitirTeleprompter(true);
+}
+
+function teleprompterIrFinal() {
+    teleprompter_state.scroll = Number.MAX_SAFE_INTEGER;
+    emitirTeleprompter(true);
+}
+
+function teleprompterCambiarFuente(delta) {
+    const nueva = Math.min(80, Math.max(18, teleprompter_state.fontSize + delta));
+    teleprompter_state.fontSize = nueva;
+    actualizarTeleprompterUI();
+    emitirTeleprompter(true);
+}
+
+function teleprompterCambiarVelocidad(delta) {
+    const nueva = Math.min(200, Math.max(5, teleprompter_state.speed + delta));
+    teleprompter_state.speed = nueva;
+    actualizarTeleprompterUI();
+    emitirTeleprompter();
+}
+
+function teleprompterTogglePlay() {
+    teleprompter_state.playing = !teleprompter_state.playing;
+    actualizarTeleprompterUI();
+    if (teleprompter_state.playing) {
+        iniciarTeleprompterPlay();
+    } else {
+        detenerTeleprompterPlay();
+    }
+    emitirTeleprompter(true);
+}
+
+const TELEPROMPTER_GAMEPAD = {
+    deadzone: 0.18,
+    analogSpeed: 320
+};
+let teleprompter_gamepad_loop = null;
+let teleprompter_gamepad_last = null;
+let teleprompter_gamepad_prev_buttons = [];
+
+const obtenerGamepadActivo = () => {
+    if (!navigator.getGamepads) return null;
+    const pads = navigator.getGamepads();
+    if (!pads) return null;
+    for (let i = 0; i < pads.length; i++) {
+        const pad = pads[i];
+        if (pad && pad.connected) return pad;
+    }
+    return null;
+};
+
+const botonJustPressed = (pad, index, threshold = 0.5) => {
+    if (!pad || !pad.buttons || !pad.buttons[index]) return false;
+    const btn = pad.buttons[index];
+    const pressed = !!(btn.pressed || btn.value > threshold);
+    const prev = !!teleprompter_gamepad_prev_buttons[index];
+    teleprompter_gamepad_prev_buttons[index] = pressed;
+    return pressed && !prev;
+};
+
+function teleprompterGamepadLoop(ts) {
+    const pad = obtenerGamepadActivo();
+    if (!pad) {
+        teleprompter_gamepad_last = ts;
+        teleprompter_gamepad_prev_buttons = [];
+        teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoop);
+        return;
+    }
+    const tiempoActual = ts || performance.now();
+    const dt = teleprompter_gamepad_last ? (tiempoActual - teleprompter_gamepad_last) / 1000 : 0;
+    teleprompter_gamepad_last = tiempoActual;
+
+    if (teleprompter_state.visible) {
+        const axisY = pad.axes && pad.axes.length > 1 ? pad.axes[1] : 0;
+        const abs = Math.abs(axisY);
+        if (abs > TELEPROMPTER_GAMEPAD.deadzone && dt > 0) {
+            const factor = (abs - TELEPROMPTER_GAMEPAD.deadzone) / (1 - TELEPROMPTER_GAMEPAD.deadzone);
+            const delta = axisY * factor * TELEPROMPTER_GAMEPAD.analogSpeed * dt;
+            teleprompter_state.scroll = Math.max(0, teleprompter_state.scroll + delta);
+            emitirTeleprompter();
+        }
+
+        if (botonJustPressed(pad, 12)) teleprompterSubir();
+        if (botonJustPressed(pad, 13)) teleprompterBajar();
+        if (botonJustPressed(pad, 14)) teleprompterCambiarVelocidad(-5);
+        if (botonJustPressed(pad, 15)) teleprompterCambiarVelocidad(5);
+        if (botonJustPressed(pad, 0)) teleprompterTogglePlay();
+        if (botonJustPressed(pad, 2)) teleprompterCambiarFuente(-2);
+        if (botonJustPressed(pad, 3)) teleprompterCambiarFuente(2);
+        if (botonJustPressed(pad, 4)) teleprompterIrInicio();
+        if (botonJustPressed(pad, 5)) teleprompterIrFinal();
+        if (botonJustPressed(pad, 6, 0.6)) teleprompterCargarTexto(1);
+        if (botonJustPressed(pad, 7, 0.6)) teleprompterCargarTexto(2);
+    } else {
+        teleprompter_gamepad_prev_buttons = pad.buttons.map((btn) => !!(btn && (btn.pressed || btn.value > 0.5)));
+    }
+
+    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoop);
+}
+
+const iniciarTeleprompterGamepad = () => {
+    if (teleprompter_gamepad_loop) return;
+    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoop);
+};
+
+if (typeof window !== "undefined") {
+    window.addEventListener("gamepadconnected", iniciarTeleprompterGamepad);
+    window.addEventListener("gamepaddisconnected", () => {
+        const pad = obtenerGamepadActivo();
+        if (!pad) {
+            teleprompter_gamepad_prev_buttons = [];
+        }
+    });
+    window.addEventListener("load", iniciarTeleprompterGamepad);
 }
 function reiniciar_calentamiento() {
     socket.emit('reiniciar_calentamiento');
@@ -450,12 +833,12 @@ function pausar_reanudar(boton) {
       // Usamos comparación == para no preocuparnos de que sea string
       if (boton.dataset.value == 0) {
         pausar();
-        boton.innerHTML = "▶️ REANUDAR";
+        boton.innerHTML = "\u{25B6}\u{FE0F} REANUDAR";
         boton.dataset.value = 1;
       }
       else if (boton.dataset.value == 1) {
         reanudar();
-        boton.innerHTML = "⏸️ PAUSAR";
+        boton.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
         boton.dataset.value = 0;
       }
     }
@@ -484,7 +867,7 @@ function reanudar_modo(){
     console.log(time_minutes, time_seconds)
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
-        boton_pausar_reanudar.innerHTML = "⏸️ PAUSAR";
+        boton_pausar_reanudar.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
     }
     socket.emit('count', {count, player:1});
     socket.emit('count', {count : count1, player:2});
@@ -606,15 +989,20 @@ function final(player){
         display_modo.style.color = "white";
         display_modo.textContent = "Ninguno"; 
         console.log("PRUEBA FINAL", texto_guardado1)
+        if (!regalo_musas_enviado && typeof window.emitirRegaloMusas === "function") {
+            regalo_musas_enviado = true;
+            window.emitirRegaloMusas();
+        }
         //setTimeout(descargar_textos, 5000);
     }
 }
 
 function frase_final(player){
+    const fraseTema = normalizarFraseFinal(tema.value);
     if(player== 1){
-        frase_final_j1.value = "«" + tema.value + "»";
+        frase_final_j1.value = fraseTema;
     }
     else{
-        frase_final_j2.value = "«" + tema.value + "»";
+        frase_final_j2.value = fraseTema;
     }
 }

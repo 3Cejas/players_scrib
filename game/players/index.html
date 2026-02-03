@@ -139,36 +139,71 @@
             <input disabled="" id="nombre" class="nombre" data-darkreader-inline-color="">
             <br><br>
             <p id="alineador1"></p>
-                          <!-- MENÚ PRINCIPAL -->
-    <div id="mainMenu" class="mainMenu">
-        <!-- Título principal separando "Game Over" en rojo y el resto en blanco -->
-        <h1 class="main-title">
-          <span style="color: red;">GAME OVER</span><br><br> ¿QUIERES <span style="color: lime">RESUCITAR</span> A CAMBIO DE PALABRAS?
-        </h1>
-        <div class="button-container">
-          <button id="btnSi" class="selected">Sí</button>
-          <button id="btnNo">No</button>
+    
+    <!-- MENU PRINCIPAL -->
+    <div id="mainMenu" class="mainMenu resucitar-panel">
+        <div class="resucitar-header">
+                    <h1 class="main-title">
+            <span class="resucitar-title-over">GAME OVER</span>
+            <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
+          </h1>
+        </div>
+        <div class="resucitar-row">
+          <div class="resucitar-actions">
+            <div class="button-container resucitar-buttons">
+              <button id="btnSi" class="selected" type="button">S&iacute;</button>
+              <button id="btnNo" type="button">No</button>
+            </div>
+          </div>
+          <div class="resucitar-keys">
+  <div class="resucitar-keys-title">Usa flechas y Enter</div>
+  <div class="resucitar-keypad" aria-hidden="true">
+    <div class="keycap keycap-up">&uarr;</div>
+    <div class="keycap keycap-left">&larr;</div>
+    <div class="keycap keycap-down">&darr;</div>
+    <div class="keycap keycap-right">&rarr;</div>
+    <div class="keycap keycap-enter">ENTER</div>
+  </div>
+</div>
+          </div>
         </div>
       </div>
   
-      <!-- MENÚ DE SELECCIÓN DE CANTIDAD (APARECE AL DAR "SÍ") -->
-      <div id="quantityMenu">
-        <h2 class="quantity-title">Selecciona la cantidad de palabras:</h2>
-        <!-- 
-          Este elemento mostrará la cantidad y su conversión a segundos.
-          Lo tratamos como "elemento navegable" en nuestro índice para flechas.
-        -->
-        <div id="quantityDisplay" class="quantity-display selected">
-          <!-- Aquí inyectaremos el texto "X palabras => Y segundos" -->
+      <!-- MENU DE SELECCION DE CANTIDAD (APARECE AL DAR "S&Iacute;") -->
+      <div id="quantityMenu" class="resucitar-panel">
+        <div class="resucitar-header">
+          <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
         </div>
+        <div class="resucitar-row">
+          <div class="resucitar-actions">
+            <!-- 
+              Este elemento mostrar&aacute; la cantidad y su conversi&oacute;n a segundos.
+              Lo tratamos como "elemento navegable" en nuestro &iacute;ndice para flechas.
+            -->
+            <div id="quantityDisplay" class="quantity-display">
+              <!-- Aqu&iacute; inyectaremos el texto "X palabras => Y segundos" -->
+            </div>
   
-        <!-- Botones de abajo: "Confirmar" y "Atrás" -->
-        <div class="button-container">
-          <button id="btnConfirmar">Confirmar</button>
-          <button id="btnAtras">Atrás</button>
+            <!-- Botones de abajo: "Confirmar" y "Atras" -->
+            <div class="button-container resucitar-buttons">
+              <button id="btnConfirmar" type="button">Confirmar</button>
+              <button id="btnAtras" type="button">Atr&aacute;s</button>
+            </div>
+          </div>
+          <div class="resucitar-keys">
+  <div class="resucitar-keys-title">Usa flechas y Enter</div>
+  <div class="resucitar-keypad" aria-hidden="true">
+    <div class="keycap keycap-up">&uarr;</div>
+    <div class="keycap keycap-left">&larr;</div>
+    <div class="keycap keycap-down">&darr;</div>
+    <div class="keycap keycap-right">&rarr;</div>
+    <div class="keycap keycap-enter">ENTER</div>
+  </div>
+</div>
+          </div>
         </div>
       </div>
-            <div class="textarea-container">
+<div class="textarea-container">
             <div contenteditable="false" class="textarea" id="texto" spellcheck="false"> </div>
                 <div class="textarea-gradient top" id="gradientTop"></div>
                 <div class="textarea-gradient bottom" id="gradientBottom"></div></div>

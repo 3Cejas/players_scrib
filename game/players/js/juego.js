@@ -7,6 +7,8 @@ const maxIncrementoDestreza =  0.5; // queremos +300% de habilidades en el mejor
 let secs_palabras;
 var CLASE_PALABRA_BENDITA = window.CLASE_PALABRA_BENDITA || "palabra-bendita";
 window.CLASE_PALABRA_BENDITA = CLASE_PALABRA_BENDITA;
+const CLASE_PALABRA_MUSA = "palabra-musa";
+const CLASE_LETRA_BENDITA = "letra-verde";
 let antiguo_inicio_borrado = 1000;
 let rapidez_borrado = 1000; // Variable que almacena la velocidad del borrado del texto.
 let antiguo_rapidez_borrado = 1000;
@@ -81,8 +83,8 @@ function obtenerUltimoNodoEditable() {
   while (walker.nextNode()) {
     const node = walker.currentNode;
     if (!node.textContent) continue;
-    const dentroBendita = node.parentElement?.closest(`.${CLASE_PALABRA_BENDITA}`);
-    if (dentroBendita) continue;
+    const dentroProtegida = node.parentElement?.closest(`.${CLASE_PALABRA_BENDITA}, .${CLASE_PALABRA_MUSA}, .${CLASE_LETRA_BENDITA}`);
+    if (dentroProtegida) continue;
     last = node;
   }
   return last;

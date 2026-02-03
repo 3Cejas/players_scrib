@@ -104,6 +104,59 @@ const contenedor_corazones_espectador = (() => {
     return contenedor;
 })();
 
+const teleprompter_overlay = getEl("teleprompter_overlay");
+const teleprompter_screen = getEl("teleprompter_screen");
+const teleprompter_text = getEl("teleprompter_text");
+const teleprompter_estado = {
+    visible: false,
+    text: "",
+    fontSize: 36,
+    scroll: 0
+};
+
+const sincronizarTeleprompterScroll = () => {
+    if (!teleprompter_screen || !teleprompter_text) return;
+    const maxScroll = Math.max(0, teleprompter_text.scrollHeight - teleprompter_screen.clientHeight);
+    let objetivo = Number.isFinite(teleprompter_estado.scroll) ? teleprompter_estado.scroll : 0;
+    if (objetivo >= Number.MAX_SAFE_INTEGER) {
+        objetivo = maxScroll;
+    }
+    objetivo = Math.max(0, Math.min(objetivo, maxScroll));
+    teleprompter_text.style.transform = `translateY(${-objetivo}px)`;
+};
+
+const actualizarTeleprompterEstado = (state = {}) => {
+    if (!state) return;
+    if (typeof state.visible === "boolean") {
+        teleprompter_estado.visible = state.visible;
+    }
+    if (typeof state.text === "string") {
+        teleprompter_estado.text = state.text;
+        if (teleprompter_text) {
+            teleprompter_text.textContent = state.text;
+        }
+    }
+    if (Number.isFinite(state.fontSize)) {
+        teleprompter_estado.fontSize = Math.min(96, Math.max(18, state.fontSize));
+        if (teleprompter_text) {
+            teleprompter_text.style.fontSize = `${teleprompter_estado.fontSize}px`;
+        }
+    }
+    if (Number.isFinite(state.scroll)) {
+        teleprompter_estado.scroll = state.scroll;
+    }
+    if (teleprompter_overlay) {
+        teleprompter_overlay.classList.toggle("activo", teleprompter_estado.visible);
+    }
+    requestAnimationFrame(sincronizarTeleprompterScroll);
+};
+
+window.addEventListener("resize", () => {
+    if (teleprompter_estado.visible) {
+        requestAnimationFrame(sincronizarTeleprompterScroll);
+    }
+});
+
 const crearCorazonFlotante = (equipo, x, y) => {
     if (!contenedor_corazones_espectador) return;
     const corazon = document.createElement("span");
@@ -175,6 +228,66 @@ let info = getEl("info");
 let info1 = getEl("info1");
 let info2= getEl("info2");
 let inspiracion = getEl("inspiracion");
+
+const construirResucitarMini = (root) => {
+    if (!root) return null;
+    return {
+        root,
+        mainPanel: root.querySelector(".resucitar-mini-main"),
+        quantityPanel: root.querySelector(".resucitar-mini-quantity"),
+        btnSi: root.querySelector('[data-btn="si"]'),
+        btnNo: root.querySelector('[data-btn="no"]'),
+        btnConfirmar: root.querySelector('[data-btn="confirmar"]'),
+        btnAtras: root.querySelector('[data-btn="atras"]'),
+        palabras: root.querySelector(".resucitar-mini-value.palabras"),
+        segundos: root.querySelector(".resucitar-mini-value.segundos"),
+        max: root.querySelector(".resucitar-mini-max")
+    };
+};
+
+const resucitarMini = {
+    1: construirResucitarMini(getEl("resucitar_mini_1")),
+    2: construirResucitarMini(getEl("resucitar_mini_2"))
+};
+
+const ocultarResucitarMini = (playerId) => {
+    const ui = resucitarMini[playerId];
+    if (!ui || !ui.root) return;
+    ui.root.classList.remove("activa");
+    ui.root.style.display = "none";
+};
+
+const actualizarResucitarMini = (data) => {
+    if (!data) return;
+    const playerId = Number(data.player);
+    const ui = resucitarMini[playerId];
+    if (!ui || !ui.root) return;
+    const menu = data.menu;
+    const visible = data.visible && (menu === "main" || menu === "quantity");
+    if (!visible) {
+        ocultarResucitarMini(playerId);
+        return;
+    }
+    ui.root.classList.add("activa");
+    ui.root.style.display = "grid";
+    if (ui.mainPanel) ui.mainPanel.style.display = menu === "main" ? "grid" : "none";
+    if (ui.quantityPanel) ui.quantityPanel.style.display = menu === "quantity" ? "grid" : "none";
+
+    if (ui.btnSi) ui.btnSi.classList.toggle("active", data.mainIndex === 0);
+    if (ui.btnNo) ui.btnNo.classList.toggle("active", data.mainIndex === 1);
+    if (ui.btnConfirmar) ui.btnConfirmar.classList.toggle("active", data.quantityIndex === 0);
+    if (ui.btnAtras) ui.btnAtras.classList.toggle("active", data.quantityIndex === 1);
+
+    if (typeof data.palabras === "number" && ui.palabras) {
+        ui.palabras.textContent = data.palabras;
+    }
+    if (typeof data.segundos === "number" && ui.segundos) {
+        ui.segundos.textContent = data.segundos;
+    }
+    if (typeof data.max === "number" && ui.max) {
+        ui.max.textContent = `MAX ${data.max}`;
+    }
+};
 
 if (tiempo) {
     tiempo.style.display = "none";
@@ -1443,6 +1556,10 @@ socket.on('connect', () => {
     }
 });
 
+socket.on('teleprompter_state', (payload = {}) => {
+    actualizarTeleprompterEstado(payload.state || {});
+});
+
 socket.on('musa_corazon', (data) => {
     const equipo = data && Number(data.equipo);
     if (equipo !== 1 && equipo !== 2) return;
@@ -1722,6 +1839,7 @@ socket.on('resucitar_control', data => {
         definicion1.style.display = "";
         explicación.style.display = "";
         texto1.style.display = "";
+        ocultarResucitarMini(1);
     }
     else if(data.player == 2){
         terminado1 = false;
@@ -1729,9 +1847,13 @@ socket.on('resucitar_control', data => {
         definicion2.style.display = "";
         explicación1.style.display = "";
         texto2.style.display = "";
+        ocultarResucitarMini(2);
     }
 });
 
+socket.on('resucitar_menu', data => {
+    actualizarResucitarMini(data);
+});
 
 // Array con los audios en el orden que quieres reproducir
 var audios = [

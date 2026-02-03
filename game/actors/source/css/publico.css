@@ -224,8 +224,30 @@ th{
 
 .letra-verde {
     color: lime;
-  }
+    text-shadow: 0 0 0.35em rgba(99, 255, 130, 0.7);
+    font-weight: 700;
+}
   
-  .letra-roja {
+.letra-roja {
     color: red;
-  }
+}
+
+.palabra-bendita {
+    color: #ffe55b;
+    text-shadow: 0 0 0.35em rgba(255, 229, 91, 0.6);
+    font-weight: 700;
+}
+
+.palabra-bendita.palabra-bendita-musa,
+.palabra-musa {
+    color: #ff9d42;
+    text-shadow: 0 0 0.35em rgba(255, 157, 66, 0.65);
+    font-weight: 700;
+}
+
+.frase-final-progreso {
+    color: #ff9d42;
+    text-shadow: 0 0 0.35em rgba(255, 157, 66, 0.65);
+    font-weight: 700;
+    transition: color 180ms linear, text-shadow 180ms linear;
+}

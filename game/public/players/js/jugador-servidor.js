@@ -74,6 +74,12 @@ let terminado = false;
 let clasificacion = getEl("clasificacion");
 let notificacion = getEl("notificacion");
 let fin_pag = getEl("fin_pag");
+let regalo_pdf = getEl("regalo_pdf");
+let regalo_btn = getEl("regalo_btn");
+let regalo_nombre = getEl("regalo_nombre");
+let regalo_pdf_data = null;
+let regalo_pdf_filename = null;
+let regalo_pdf_pendiente = null;
 let campo_palabra = getEl("palabra");
 let tarea = getEl("tarea");
 let mostrar_texto = getEl("mostrar_texto");
@@ -118,6 +124,85 @@ let temporizador_lectura_interval = null;
 let temporizador_lectura_restante = 0;
 let temporizador_lectura_activo = false;
 let lectura_estado_guardado = null;
+
+function configurarColorRegalo() {
+    if (!regalo_pdf) {
+        return;
+    }
+    const color = Number(player) === 2 ? "#ff6b6b" : "#35f0ff";
+    regalo_pdf.style.setProperty("--regalo-color", color);
+}
+
+function actualizarNombreRegalo() {
+    if (!regalo_nombre) {
+        return;
+    }
+    const nombreTexto = (nombre1 && nombre1.value) ? nombre1.value.trim() : "";
+    regalo_nombre.textContent = nombreTexto || "ESCRITXR";
+    if (nombre1) {
+        const estilo = window.getComputedStyle(nombre1);
+        regalo_nombre.style.color = estilo.color;
+        regalo_nombre.style.textShadow = estilo.textShadow;
+        regalo_nombre.style.fontFamily = estilo.fontFamily;
+        regalo_nombre.style.letterSpacing = estilo.letterSpacing;
+    }
+}
+
+function mostrarRegaloPdf(payload) {
+    if (!payload || !payload.data || !regalo_pdf) {
+        return;
+    }
+    actualizarNombreRegalo();
+    regalo_pdf_data = payload.data;
+    regalo_pdf_filename = payload.filename || "regalo.pdf";
+    regalo_pdf.classList.add("regalo-pdf--visible");
+    regalo_pdf.classList.remove("regalo-pdf--claimed");
+    regalo_pdf.setAttribute("aria-hidden", "false");
+}
+
+function ocultarRegaloPdf() {
+    if (!regalo_pdf) {
+        return;
+    }
+    regalo_pdf.classList.remove("regalo-pdf--visible");
+    regalo_pdf.classList.remove("regalo-pdf--claimed");
+    regalo_pdf.setAttribute("aria-hidden", "true");
+    regalo_pdf_data = null;
+    regalo_pdf_filename = null;
+}
+
+async function descargarRegaloPdf() {
+    if (!regalo_pdf_data || !regalo_btn) {
+        return;
+    }
+    regalo_btn.disabled = true;
+    regalo_pdf.classList.add("regalo-pdf--claimed");
+    try {
+        const respuesta = await fetch(regalo_pdf_data);
+        const blob = await respuesta.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = regalo_pdf_filename || "regalo.pdf";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        if (typeof confetti_musas === "function") {
+            confetti_musas();
+        }
+    } catch (error) {
+        console.error("No se pudo descargar el regalo PDF:", error);
+    }
+    setTimeout(() => {
+        ocultarRegaloPdf();
+        regalo_btn.disabled = false;
+    }, 900);
+}
+
+if (regalo_btn) {
+    regalo_btn.addEventListener("click", descargarRegaloPdf);
+}
 const CLAVE_TEMPORIZADOR_LECTURA = "scrib_temporizador_lectura_fin";
 
 function paddedFormat(num) {
@@ -812,6 +897,13 @@ let enviar_ventaja;
         metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
     }
 
+configurarColorRegalo();
+actualizarNombreRegalo();
+if (regalo_pdf_pendiente) {
+    mostrarRegaloPdf(regalo_pdf_pendiente);
+    regalo_pdf_pendiente = null;
+}
+
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {
@@ -886,6 +978,22 @@ socket.on('connect', () => {
     setTimeout(() => {
         socket.emit('pedir_texto');
     }, 80);
+});
+
+socket.on('regalo_pdf_musas', (payload) => {
+    if (!player) {
+        regalo_pdf_pendiente = payload;
+        return;
+    }
+    if (payload && payload.player && Number(payload.player) !== Number(player)) {
+        return;
+    }
+    mostrarRegaloPdf(payload);
+});
+
+socket.on('regalo_pdf_musas_reset', () => {
+    regalo_pdf_pendiente = null;
+    ocultarRegaloPdf();
 });
 
 socket.on('calentamiento_estado_musa', (data) => {
@@ -1254,6 +1362,7 @@ socket.on("count", data => {
 socket.on('inicio', data => {
     LIMITE_TIEMPO_INSPIRACION = data.parametros.LIMITE_TIEMPO_INSPIRACION;
     TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR || TIEMPO_MODIFICADOR;
+    ocultarRegaloPdf();
     resetearTemporizadorLectura();
     limpiarTecladoLentoMusa();
     terminado = false;
@@ -1363,6 +1472,7 @@ socket.on('limpiar', () => {
 // Recibe el nombre del jugador y lo coloca en su sitio.
 socket.on(nombre, data => {
     nombre1.value = data;
+    actualizarNombreRegalo();
 });
 
 socket.on(elegir_ventaja, (data = {}) => {

@@ -327,47 +327,410 @@ button {
     margin: 1%;
 }
 
- /* -- MENÚ 1: Game Over -- */
+ 
+/* -- MENU RESUCITAR -- */
+body {
+  --resucitar-acento: #7cffc3;
+  --resucitar-acento-soft: rgba(124, 255, 195, 0.35);
+  --resucitar-acento-strong: rgba(124, 255, 195, 0.9);
+  --resucitar-acento-glow: rgba(124, 255, 195, 0.7);
+  --resucitar-panel-glow: rgba(0, 255, 255, 0.18);
+  --resucitar-key-color: #9df6ff;
+  --resucitar-key-border: rgba(157, 246, 255, 0.75);
+  --resucitar-key-glow: rgba(0, 255, 255, 0.25);
+}
 
- #mainMenu {
-  margin-bottom: 20px;
+body.equipo-azul {
+  --resucitar-acento: #46f0ff;
+  --resucitar-acento-soft: rgba(70, 240, 255, 0.35);
+  --resucitar-acento-strong: rgba(70, 240, 255, 0.9);
+  --resucitar-acento-glow: rgba(70, 240, 255, 0.65);
+  --resucitar-panel-glow: rgba(0, 245, 255, 0.22);
+  --resucitar-key-color: #9df6ff;
+  --resucitar-key-border: rgba(157, 246, 255, 0.75);
+  --resucitar-key-glow: rgba(70, 240, 255, 0.28);
+}
+
+body.equipo-rojo {
+  --resucitar-acento: #ff6b6b;
+  --resucitar-acento-soft: rgba(255, 107, 107, 0.35);
+  --resucitar-acento-strong: rgba(255, 107, 107, 0.95);
+  --resucitar-acento-glow: rgba(255, 107, 107, 0.65);
+  --resucitar-panel-glow: rgba(255, 90, 90, 0.24);
+  --resucitar-key-color: #ffd1d1;
+  --resucitar-key-border: rgba(255, 180, 180, 0.8);
+  --resucitar-key-glow: rgba(255, 107, 107, 0.32);
+}
+
+#mainMenu,
+#quantityMenu {
   display: none; /* Oculto inicialmente */
 }
 
+.resucitar-panel {
+  margin: 20px auto;
+  padding: 1.6vw 2vw;
+  max-width: 56vw;
+  border: none;
+  border-radius: 1vw;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.88));
+  box-shadow: 0 0 1vw var(--resucitar-panel-glow, rgba(0, 255, 255, 0.18)),
+    0 0 1.4vw rgba(0, 0, 0, 0.55),
+    inset 0 0 0.9vw rgba(255, 255, 255, 0.05);
+  text-align: center;
+}
+
+body.modo-resucitar #atributos-container,
+body.modo-resucitar #total,
+body.modo-resucitar .info-total,
+body.modo-resucitar .info,
+body.modo-resucitar #metadatos {
+  display: none !important;
+}
+
+.resucitar-header {
+  display: grid;
+  gap: 0.6vw;
+  justify-items: center;
+}
+
+.resucitar-highlight {
+  color: var(--resucitar-acento, #7cffc3);
+  text-shadow: 0 0 0.8vw var(--resucitar-acento-glow, rgba(124, 255, 195, 0.7));
+}
+
 .main-title {
-  margin-bottom: 20px;
-  font-size: 1.5rem;
+  margin: 0.4vw 0 1vw;
+  font-size: 1.7vw;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: grid;
+  gap: 0.4vw;
+}
+
+.resucitar-title-over {
+  display: block;
+  color: #ff4b4b;
+  text-shadow: 0 0 0.7vw rgba(255, 75, 75, 0.7);
+  letter-spacing: 0.2em;
+  font-size: 1.5vw;
+}
+
+.resucitar-title-question {
+  display: block;
+}
+
+.resucitar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.6vw;
+  align-items: center;
+  justify-items: center;
+}
+
+.resucitar-actions {
+  display: grid;
+  gap: 1vw;
+  justify-items: center;
 }
 
 .button-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 2em; /* Espacio entre botones */
-  margin-bottom: 20px;
+  gap: 1.2vw;
+  margin-bottom: 0;
 }
 
-/* -- MENÚ 2: Selección de cantidad -- */
+.resucitar-panel button {
+  padding: 0.6vw 1.6vw;
+  font-size: 1.2vw;
+  border-radius: 0.6vw;
+  border: 0.18vw solid var(--resucitar-acento-strong, rgba(255, 255, 255, 0.6));
+  background: linear-gradient(135deg, rgba(16, 16, 16, 0.9), rgba(40, 40, 40, 0.8));
+  box-shadow: 0 0 0.6vw var(--resucitar-panel-glow, rgba(0, 255, 255, 0.2));
+}
 
-#quantityMenu {
-  display: none; /* Se oculta inicialmente */
+.resucitar-panel button:hover {
+  background: linear-gradient(135deg, rgba(40, 40, 40, 0.9), rgba(60, 60, 60, 0.85));
+}
+
+/* -- RESUCITAR MINI (ESPECTADOR) -- */
+.resucitar-mini {
+  display: none;
+  margin: 0.6vw auto 0.8vw;
+  padding: 0.6vw 0.9vw;
+  border-radius: 0.9vw;
+  background: rgba(6, 6, 6, 0.82);
+  border: 0.16vw solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0.7vw rgba(0, 0, 0, 0.45),
+    inset 0 0 0.4vw rgba(255, 255, 255, 0.05);
+  text-align: center;
+  max-width: 90%;
+}
+
+.resucitar-mini.activa {
+  display: grid;
+  gap: 0.5vw;
+}
+
+.resucitar-mini.equipo-azul {
+  --mini-acento: #46f0ff;
+  --mini-acento-glow: rgba(70, 240, 255, 0.55);
+}
+
+.resucitar-mini.equipo-rojo {
+  --mini-acento: #ff6b6b;
+  --mini-acento-glow: rgba(255, 107, 107, 0.55);
+}
+
+.resucitar-mini-header {
+  font-size: 1.05vw;
+  letter-spacing: 0.12em;
+  color: var(--mini-acento, #7cffc3);
+  text-shadow: 0 0 0.6vw var(--mini-acento-glow, rgba(124, 255, 195, 0.6));
+  animation: resucitarMiniBlink 1.3s steps(2, end) infinite;
+}
+
+.resucitar-mini-panel {
+  display: none;
+  gap: 0.45vw;
+  justify-items: center;
+}
+
+.resucitar-mini-question {
+  font-size: 0.95vw;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.resucitar-mini-buttons {
+  display: flex;
+  gap: 0.6vw;
+  justify-content: center;
+}
+
+.resucitar-mini-btn {
+  padding: 0.25vw 0.7vw;
+  border-radius: 0.5vw;
+  border: 0.12vw solid rgba(255, 255, 255, 0.35);
+  font-size: 0.9vw;
+  letter-spacing: 0.05em;
+  background: rgba(20, 20, 20, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+}
+
+.resucitar-mini-btn.active {
+  border-color: var(--mini-acento, #7cffc3);
+  color: #ffffff;
+  box-shadow: 0 0 0.6vw var(--mini-acento-glow, rgba(124, 255, 195, 0.5));
+  background: rgba(30, 30, 30, 0.9);
+}
+
+.resucitar-mini-converter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5vw;
+  font-size: 1vw;
+}
+
+.resucitar-mini-value {
+  min-width: 2.2vw;
+  padding: 0.15vw 0.45vw;
+  border-radius: 0.45vw;
+  border: 0.12vw solid rgba(255, 255, 255, 0.25);
+  background: rgba(12, 12, 12, 0.8);
+}
+
+.resucitar-mini-value.palabras {
+  color: var(--mini-acento, #7cffc3);
+  text-shadow: 0 0 0.5vw var(--mini-acento-glow, rgba(124, 255, 195, 0.5));
+}
+
+.resucitar-mini-value.segundos {
+  color: #ffe28a;
+  text-shadow: 0 0 0.5vw rgba(255, 226, 138, 0.6);
+}
+
+.resucitar-mini-arrow {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.resucitar-mini-max {
+  font-size: 0.7vw;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@keyframes resucitarMiniBlink {
+  0%, 45% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.35;
+  }
 }
 
 .quantity-title {
-  font-size: 1.2rem;
-  margin-bottom: 10px;
+  font-size: 1.4vw;
+  margin-bottom: 0.6vw;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 /* 
-  Aquí mostraremos la cantidad actual y su conversión en segundos.
-  Lo usaremos como "elemento" navegable, igual que si fuera un botón,
+  Aqui mostraremos la cantidad actual y su conversion en segundos.
+  Lo usaremos como "elemento" navegable, igual que si fuera un boton,
   para poder resaltarlo cuando se seleccione con flechas.
 */
 .quantity-display {
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-  display: inline-block;
-  padding: 10px 20px;
+  margin-bottom: 0.6vw;
+  font-size: 1.2vw;
+  display: inline-flex;
+  align-items: center;
+  gap: 1vw;
+  padding: 0.6vw 1.4vw;
+  border-radius: 0.7vw;
+  border: 0.18vw solid var(--resucitar-acento-soft, rgba(255, 255, 255, 0.15));
+  background: rgba(8, 8, 8, 0.7);
+  box-shadow: inset 0 0 0.4vw rgba(255, 255, 255, 0.08);
+}
+
+.resucitar-stepper {
+  display: grid;
+  gap: 0.4vw;
+  align-items: center;
+  justify-items: center;
+  padding-right: 0.4vw;
+}
+
+.resucitar-stepper-arrow {
+  width: 2.2vw;
+  height: 1.8vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1vw;
+  color: rgba(255, 255, 255, 0.6);
+  border: 0.14vw solid var(--resucitar-acento-soft, rgba(255, 255, 255, 0.25));
+  border-radius: 0.5vw;
+  background: rgba(12, 12, 12, 0.75);
+  box-shadow: inset 0 0 0.3vw rgba(255, 255, 255, 0.08);
+}
+
+.resucitar-stepper-arrow.activo {
+  animation: resucitarArrowPulse 320ms ease-out;
+}
+
+.resucitar-stepper-arrow.activo.limite {
+  animation: resucitarArrowPulseLimite 320ms ease-out;
+}
+
+@keyframes resucitarArrowPulse {
+  0% {
+    transform: scale(0.9);
+    color: rgba(255, 255, 255, 0.6);
+    box-shadow: inset 0 0 0.3vw rgba(255, 255, 255, 0.08);
+  }
+  45% {
+    transform: scale(1.1);
+    color: #7cffc3;
+    box-shadow: 0 0 0.6vw rgba(124, 255, 195, 0.8);
+    border-color: rgba(124, 255, 195, 0.9);
+  }
+  100% {
+    transform: scale(1);
+    color: rgba(255, 255, 255, 0.6);
+    box-shadow: inset 0 0 0.3vw rgba(255, 255, 255, 0.08);
+  }
+}
+
+@keyframes resucitarArrowPulseLimite {
+  0% {
+    transform: scale(0.9);
+    color: rgba(255, 120, 120, 0.7);
+    box-shadow: inset 0 0 0.3vw rgba(255, 120, 120, 0.15);
+    border-color: rgba(255, 120, 120, 0.5);
+  }
+  45% {
+    transform: scale(1.1);
+    color: #ff4b4b;
+    box-shadow: 0 0 0.7vw rgba(255, 75, 75, 0.9);
+    border-color: rgba(255, 75, 75, 1);
+  }
+  100% {
+    transform: scale(1);
+    color: rgba(255, 120, 120, 0.7);
+    box-shadow: inset 0 0 0.3vw rgba(255, 120, 120, 0.15);
+    border-color: rgba(255, 120, 120, 0.5);
+  }
+}
+
+.resucitar-metric {
+  display: grid;
+  gap: 0.2vw;
+  justify-items: center;
+  min-width: 6vw;
+}
+
+.resucitar-metric .resucitar-label {
+  font-size: 0.8vw;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.resucitar-metric .resucitar-value {
+  font-size: 1.6vw;
+  font-weight: 700;
+  text-shadow: 0 0 0.5vw rgba(255, 255, 255, 0.15);
+}
+
+.resucitar-value.palabras {
+  color: #ffd14d;
+  text-shadow: 0 0 0.6vw rgba(255, 209, 77, 0.6);
+}
+
+.resucitar-value.segundos {
+  color: #00f0ff;
+  text-shadow: 0 0 1.1vw rgba(0, 240, 255, 0.95);
+  background: rgba(0, 200, 255, 0.14);
+  border: 0.1vw solid rgba(0, 230, 255, 0.45);
+  padding: 0.1vw 0.6vw;
+  border-radius: 0.5vw;
+}
+
+.resucitar-pop {
+  animation: resucitarPop 260ms ease-out;
+}
+
+@keyframes resucitarPop {
+  0% {
+    transform: scale(0.92);
+    filter: brightness(0.9);
+  }
+  45% {
+    transform: scale(1.06);
+    filter: brightness(1.25);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.resucitar-arrow {
+  font-size: 1.4vw;
+  color: var(--resucitar-acento, rgba(255, 255, 255, 0.5));
+}
+
+.resucitar-max {
+  font-size: 0.7vw;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* -- ESTILOS GENERALES PARA BOTONES -- */
@@ -388,12 +751,169 @@ button:hover {
 
 /* -- Clase para resaltar el elemento seleccionado con teclado -- */
 .selected {
-  background-color: #00bfff;
-  color: #000; /* Texto en negro para contrastar */
+  background-color: rgba(0, 220, 255, 0.35);
+  color: #ffffff;
+  text-shadow: 0 0 0.4vw rgba(0, 255, 255, 0.8);
+  border-color: rgba(0, 255, 255, 0.9);
+  box-shadow: 0 0 0.8vw rgba(0, 255, 255, 0.6);
+}
+
+.resucitar-panel .selected {
+  background-color: var(--resucitar-acento-soft, rgba(0, 220, 255, 0.35));
+  text-shadow: 0 0 0.4vw var(--resucitar-acento-glow, rgba(0, 255, 255, 0.8));
+  border-color: var(--resucitar-acento-strong, rgba(0, 255, 255, 0.9));
+  box-shadow: 0 0 0.8vw var(--resucitar-acento-glow, rgba(0, 255, 255, 0.6));
+}
+
+.resucitar-keys {
+  display: grid;
+  gap: 0.6vw;
+  justify-items: center;
+}
+
+.resucitar-keys-title {
+  font-size: 1.05vw;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.resucitar-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 3.1vw);
+  grid-template-rows: 3.1vw 3.1vw 2.4vw;
+  gap: 0.45vw;
+}
+
+.keycap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4vw;
+  color: var(--resucitar-key-color, #9df6ff);
+  background: linear-gradient(145deg, rgba(8, 8, 8, 0.95), rgba(30, 30, 30, 0.85));
+  border: 0.18vw solid var(--resucitar-key-border, rgba(157, 246, 255, 0.75));
+  border-radius: 0.6vw;
+  box-shadow: inset 0 0 0.25vw rgba(255, 255, 255, 0.08),
+    0 0 0.6vw var(--resucitar-key-glow, rgba(0, 255, 255, 0.25));
+}
+
+.keycap-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.keycap-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.keycap-down {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.keycap-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.keycap-enter {
+  grid-column: 1 / span 3;
+  grid-row: 3;
+  font-size: 1vw;
+  letter-spacing: 0.18em;
+}
+
+@media (max-width: 900px) {
+  .resucitar-panel {
+    max-width: 90vw;
+    padding: 3vw 4vw;
+  }
+
+  .resucitar-row {
+    grid-template-columns: 1fr;
+  }
+
+  .main-title {
+    font-size: 4vw;
+  }
+
+  .resucitar-title-over {
+    font-size: 3.2vw;
+  }
+
+  .quantity-title {
+    font-size: 3.5vw;
+  }
+
+  .quantity-display {
+    font-size: 3.2vw;
+    padding: 2vw 3vw;
+    gap: 2vw;
+  }
+
+  .resucitar-stepper {
+    gap: 1.2vw;
+  }
+
+  .resucitar-stepper-arrow {
+    width: 6.5vw;
+    height: 5.2vw;
+    font-size: 3.6vw;
+    border-width: 0.6vw;
+    border-radius: 1.6vw;
+  }
+
+  .resucitar-metric {
+    min-width: 20vw;
+  }
+
+  .resucitar-metric .resucitar-label {
+    font-size: 2.2vw;
+  }
+
+  .resucitar-metric .resucitar-value {
+    font-size: 4.2vw;
+  }
+
+  .resucitar-arrow {
+    font-size: 3.5vw;
+  }
+
+  .resucitar-max {
+    font-size: 2vw;
+  }
+
+  .resucitar-panel button {
+    font-size: 3.5vw;
+    padding: 2vw 4vw;
+  }
+
+  .resucitar-keys-title {
+    font-size: 2.8vw;
+  }
+
+  .resucitar-keypad {
+    grid-template-columns: repeat(3, 8vw);
+    grid-template-rows: 8vw 8vw 6.2vw;
+  }
+
+  .keycap {
+    font-size: 4vw;
+    border-width: 0.6vw;
+  }
+
+  .keycap-enter {
+    font-size: 2.6vw;
+    letter-spacing: 0.12em;
+  }
 }
 
 .letra-verde {
   color: lime;
+  text-shadow: 0 0 0.35em rgba(99, 255, 130, 0.7);
+  font-weight: 700;
 }
 
 .letra-roja {
@@ -404,6 +924,33 @@ button:hover {
   color: #ffe55b;
   text-shadow: 0 0 0.35em rgba(255, 229, 91, 0.6);
   font-weight: 700;
+}
+
+.palabra-bendita.palabra-bendita-musa,
+.palabra-musa {
+  color: #ff9d42;
+  text-shadow: 0 0 0.35em rgba(255, 157, 66, 0.65);
+  font-weight: 700;
+}
+
+.frase-final-progreso {
+  color: #ff9d42;
+  text-shadow: 0 0 0.35em rgba(255, 157, 66, 0.65);
+  font-weight: 700;
+  transition: color 180ms linear, text-shadow 180ms linear;
+}
+
+@keyframes frase-final-fallo {
+  0% { filter: brightness(1); }
+  18% { filter: brightness(0.25); }
+  36% { filter: brightness(1); }
+  54% { filter: brightness(0.2); }
+  72% { filter: brightness(1); }
+  100% { filter: brightness(1); }
+}
+
+.textarea.frase-final-fallo {
+  animation: frase-final-fallo 620ms ease-in-out;
 }
 .textarea {
     word-break:break-word;
@@ -1696,5 +2243,52 @@ body.vista-calentamiento .calentamiento-espectador {
 @media (prefers-reduced-motion: reduce) {
   .corazon-flotante {
     animation-duration: 1ms;
+  }
+  .resucitar-mini-header {
+    animation: none;
+  }
+}
+
+.teleprompter-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 4vh 4vw;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 200;
+}
+
+.teleprompter-overlay.activo {
+  display: flex;
+}
+
+.teleprompter-screen {
+  width: min(92vw, 1200px);
+  height: min(82vh, 860px);
+  border-radius: 28px;
+  border: 2px solid rgba(69, 243, 255, 0.9);
+  background: radial-gradient(circle at top, rgba(69, 243, 255, 0.08), rgba(0, 0, 0, 0.92));
+  box-shadow: 0 0 35px rgba(69, 243, 255, 0.25), inset 0 0 30px rgba(0, 0, 0, 0.8);
+  padding: 3.2rem 3rem;
+  overflow: hidden;
+}
+
+.teleprompter-text {
+  font-family: "Retro-gaming";
+  font-size: 36px;
+  line-height: 1.55;
+  color: #f2f6ff;
+  white-space: pre-wrap;
+  text-shadow: 0 0 12px rgba(69, 243, 255, 0.25);
+  transform: translateY(0);
+  transition: transform 120ms linear;
+  will-change: transform;
+}
+
+@media (max-width: 900px) {
+  .teleprompter-screen {
+    padding: 2.4rem 2rem;
   }
 }

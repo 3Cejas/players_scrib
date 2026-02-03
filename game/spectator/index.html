@@ -24,6 +24,11 @@
     <script src="../config.js"></script>
     <script src="./js/juego.js"></script>
     <div id="corazones_espectador" class="corazones-flotantes"></div>
+    <div id="teleprompter_overlay" class="teleprompter-overlay">
+        <div id="teleprompter_screen" class="teleprompter-screen">
+            <div id="teleprompter_text" class="teleprompter-text"></div>
+        </div>
+    </div>
     <div align="center">
         <div class="cabecera">
         <pre id="neon" class="neon_espectador">
@@ -110,6 +115,29 @@
                 <p id="tiempo" class="tiempo tiempo-vida"></p>
                 <p id="feedback_tiempo" class="feedback_tiempo"></p>
                 <input disabled style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre"></input>
+                <div id="resucitar_mini_1" class="resucitar-mini equipo-azul">
+                    <div class="resucitar-mini-header">💀 GAME OVER</div>
+                    <div class="resucitar-mini-panel resucitar-mini-main" data-menu="main">
+                        <div class="resucitar-mini-question">&iquest;Resucitar?</div>
+                        <div class="resucitar-mini-buttons">
+                            <span class="resucitar-mini-btn" data-btn="si">S&iacute;</span>
+                            <span class="resucitar-mini-btn" data-btn="no">No</span>
+                        </div>
+                    </div>
+                    <div class="resucitar-mini-panel resucitar-mini-quantity" data-menu="quantity">
+                        <div class="resucitar-mini-question">Palabras &#8594; Segundos</div>
+                        <div class="resucitar-mini-converter">
+                            <span class="resucitar-mini-value palabras">1</span>
+                            <span class="resucitar-mini-arrow">&#8594;</span>
+                            <span class="resucitar-mini-value segundos">3</span>
+                            <span class="resucitar-mini-max">MAX 0</span>
+                        </div>
+                        <div class="resucitar-mini-buttons">
+                            <span class="resucitar-mini-btn" data-btn="confirmar">Confirmar</span>
+                            <span class="resucitar-mini-btn" data-btn="atras">Atr&aacute;s</span>
+                        </div>
+                    </div>
+                </div>
                 <br><br>
                 <p id="alineador1"></p>
                 <div disabled id="texto" rows="1"
@@ -147,6 +175,29 @@
                     <p id="tiempo1" class="tiempo tiempo-vida"></p>
                     <p id="feedback_tiempo1" class="feedback_tiempo"></p>
                 <input disabled style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre"></input>
+                <div id="resucitar_mini_2" class="resucitar-mini equipo-rojo">
+                    <div class="resucitar-mini-header">💀 GAME OVER</div>
+                    <div class="resucitar-mini-panel resucitar-mini-main" data-menu="main">
+                        <div class="resucitar-mini-question">&iquest;Resucitar?</div>
+                        <div class="resucitar-mini-buttons">
+                            <span class="resucitar-mini-btn" data-btn="si">S&iacute;</span>
+                            <span class="resucitar-mini-btn" data-btn="no">No</span>
+                        </div>
+                    </div>
+                    <div class="resucitar-mini-panel resucitar-mini-quantity" data-menu="quantity">
+                        <div class="resucitar-mini-question">Palabras &#8594; Segundos</div>
+                        <div class="resucitar-mini-converter">
+                            <span class="resucitar-mini-value palabras">1</span>
+                            <span class="resucitar-mini-arrow">&#8594;</span>
+                            <span class="resucitar-mini-value segundos">3</span>
+                            <span class="resucitar-mini-max">MAX 0</span>
+                        </div>
+                        <div class="resucitar-mini-buttons">
+                            <span class="resucitar-mini-btn" data-btn="confirmar">Confirmar</span>
+                            <span class="resucitar-mini-btn" data-btn="atras">Atr&aacute;s</span>
+                        </div>
+                    </div>
+                </div>
                 <br><br>
                 <p id="alineador2"></p>
                 <div disabled id="texto1" rows="1"
