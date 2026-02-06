@@ -409,6 +409,9 @@ function actualizarTitulosHeatmap() {
 }
 
 actualizarTitulosHeatmap();
+if (window.actualizarBotonesTeleprompterCarga) {
+    window.actualizarBotonesTeleprompterCarga();
+}
 
 
 socket.on('connect', () => {
@@ -434,6 +437,9 @@ socket.on('texto1', data => {
     texto_guardado1 = data.texto_guardado;
     puntos1.innerHTML = data.points;
     texto1.style.height = (texto1.scrollHeight) + "px";
+    if (window.actualizarBotonesTeleprompterCarga) {
+        window.actualizarBotonesTeleprompterCarga();
+    }
 });
 
 socket.on('texto2', data => {
@@ -441,6 +447,9 @@ socket.on('texto2', data => {
     texto_guardado2 = data.texto_guardado;
     puntos2.innerHTML = data.points;
     texto2.style.height = (texto2.scrollHeight) + "px";
+    if (window.actualizarBotonesTeleprompterCarga) {
+        window.actualizarBotonesTeleprompterCarga();
+    }
 
 });
 
@@ -1514,8 +1523,6 @@ const LIMPIEZAS = {
 
     "": function (data) { },
 };
-
-
 
 
 

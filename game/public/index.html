@@ -318,11 +318,13 @@
 
 .intro-section {
     min-height: 100dvh;
+    height: 100dvh;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     padding: clamp(2.2rem, 8vw, 4.5rem) 0;
     position: relative;
+    overflow: hidden;
 }
 
 .intro-panel {
@@ -332,11 +334,23 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    position: relative;
+    position: static;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: clamp(0.8rem, 3vw, 1.6rem);
+    min-height: calc(100dvh - (2 * clamp(2.2rem, 8vw, 4.5rem)));
+    height: 100%;
+}
+
+#intro-bienvenida .intro-panel {
+    justify-content: center;
+    text-align: center;
+}
+
+#intro-nombre .intro-panel {
+    justify-content: center;
+    text-align: center;
 }
 
 .intro-title {
@@ -472,11 +486,25 @@
 }
 
 .intro-panel .nombre {
-    width: min(360px, 80vw);
+    width: min(760px, 92vw);
+    font-size: clamp(20px, 6vw, 48px);
+    padding: clamp(0.6rem, 2vw, 1.1rem) clamp(0.8rem, 3vw, 1.4rem);
+    border-radius: clamp(8px, 2vw, 14px);
+}
+
+@media (min-width: 1100px) {
+    .intro-panel .nombre {
+        width: min(1100px, 98vw);
+    }
 }
 
 .intro-panel table {
     width: 100%;
+}
+
+.intro-equipo table {
+    width: min(92vw, 980px);
+    margin: 0 auto;
 }
 
 .intro-logo-img {
@@ -499,6 +527,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    align-self: stretch;
     margin-bottom: clamp(0.4rem, 2vw, 0.8rem);
     padding-right: max(env(safe-area-inset-right), 0px);
     padding-left: max(env(safe-area-inset-left), 0px);
@@ -530,26 +559,49 @@
     justify-content: space-between;
     align-items: center;
     gap: 0;
-    padding: max(env(safe-area-inset-top), 0px) 0 max(env(safe-area-inset-bottom), 0px);
+    padding:
+        calc(max(env(safe-area-inset-top), 0px) + clamp(0.6rem, 2.4vw, 1.2rem))
+        0
+        calc(max(env(safe-area-inset-bottom), 0px) + clamp(0.6rem, 2.4vw, 1.2rem));
     z-index: 3;
     pointer-events: none;
+}
+
+.intro-nav .intro-arrow {
+    transform: translateY(0);
+}
+
+.intro-nav .intro-arrow--up {
+    transform: translateY(clamp(0.2rem, 1vw, 0.6rem));
+}
+
+.intro-nav .intro-arrow--down {
+    transform: translateY(clamp(-0.2rem, -1vw, -0.6rem));
 }
 
 .intro-nav .intro-arrow {
     pointer-events: auto;
 }
 
+.intro-nav .intro-arrow--up {
+    margin-top: 0;
+}
+
+.intro-nav .intro-arrow--down {
+    margin-bottom: 0;
+}
+
 .intro-nav-bottom {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: max(env(safe-area-inset-bottom), 0px);
+    bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(0.8rem, 3vw, 1.6rem));
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0;
-    padding-bottom: max(env(safe-area-inset-bottom), 0px);
-    transform: translateY(clamp(2.2rem, 6vw, 3.8rem));
+    padding-bottom: 0;
+    transform: none;
     z-index: 3;
 }
 
@@ -595,15 +647,40 @@
 }
 
 .intro-explica .intro-panel {
-    max-width: min(90vw, 36rem);
+    max-width: 100%;
     align-items: flex-start;
     text-align: left;
     gap: clamp(0.6rem, 2.6vw, 1.4rem);
-    padding: clamp(1.2rem, 4.5vw, 2.4rem) clamp(1rem, 5vw, 2.4rem) clamp(2.8rem, 9vw, 5rem);
+    padding: clamp(1.5rem, 6vw, 3rem) clamp(1rem, 4vw, 2.5rem) clamp(2.8rem, 9vw, 5rem);
+}
+
+@media (min-width: 1100px) {
+    .intro-explica .intro-panel {
+        max-width: 100%;
+    }
+    .intro-explica-text {
+        max-width: 70ch;
+    }
+    #intro-tiempo .intro-panel,
+    #intro-musas .intro-panel,
+    #intro-representacion .intro-panel {
+        padding-left: clamp(2rem, 7vw, 6.5rem);
+        padding-right: clamp(2rem, 7vw, 6.5rem);
+    }
+    #intro-tiempo .intro-explica-text,
+    #intro-musas .intro-explica-text,
+    #intro-representacion .intro-explica-text {
+        font-size: clamp(18px, 1.9vw, 26px);
+        line-height: 1.6;
+    }
+    #intro-musas .intro-explica-text {
+        font-size: clamp(18px, 1.9vw, 26px);
+        line-height: 1.6;
+    }
 }
 
 .intro-explica .intro-logos {
-    margin-bottom: clamp(0.6rem, 2.4vw, 1.2rem);
+    margin-bottom: clamp(0.4rem, 2vw, 0.8rem);
 }
 
 .intro-explica-title {
@@ -643,15 +720,26 @@
     color: #fff;
 }
 
+#intro-musas .intro-explica-text {
+    max-width: 60ch;
+}
+
 .intro-explica-text strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+.intro-accent {
     color: var(--accent-color, #fff);
     font-weight: 700;
 }
 
 .intro-tiempo-img {
-    width: min(72vw, 440px);
+    width: min(78vw, 520px);
     height: auto;
+    max-width: 100%;
     display: block;
+    object-fit: contain;
 }
 
 .intro-tiempo-wrap {
@@ -661,8 +749,26 @@
     display: flex;
     justify-content: flex-end;
     padding-right: max(env(safe-area-inset-right), 0px);
+    padding-left: max(env(safe-area-inset-left), 0px);
     margin-top: clamp(0.2rem, 1.4vw, 0.6rem);
     margin-bottom: clamp(0.6rem, 3vw, 1.2rem);
+}
+
+@media (min-width: 900px) {
+    .intro-tiempo-wrap {
+        justify-content: center;
+        padding-right: max(env(safe-area-inset-right), 0px);
+        padding-left: max(env(safe-area-inset-left), 0px);
+    }
+    .intro-tiempo-img {
+        width: min(56vw, 540px);
+    }
+}
+
+@media (max-width: 420px) {
+    .intro-tiempo-img {
+        width: min(86vw, 320px);
+    }
 }
 
 .intro-explica--azul {
@@ -691,6 +797,16 @@
     justify-content: space-between;
     gap: clamp(1rem, 6vw, 2rem);
     margin-top: clamp(0.4rem, 2vw, 1.2rem);
+}
+
+@media (min-width: 768px) {
+    #intro-musas .intro-panel {
+        max-width: 100%;
+    }
+    #intro-musas .intro-explica-text {
+        font-size: clamp(16px, 1.9vw, 22px);
+        line-height: 1.5;
+    }
 }
 
 .intro-equipo-card {
@@ -733,8 +849,12 @@
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
-    height: clamp(200px, 36vh, 360px);
-    overflow: hidden;
+    height: auto;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: clamp(0.4rem, 2vw, 1rem);
 }
 
 .intro-repre-art img {
@@ -750,7 +870,21 @@
     max-width: none;
     display: block;
     object-fit: cover;
+    object-position: center 70%;
+}
+
+.intro-repre-img {
+    width: min(90vw, 980px);
+    height: auto;
+    max-height: clamp(220px, 42vh, 460px);
+    object-fit: contain;
     object-position: center;
+}
+
+@media (min-width: 900px) {
+    .intro-repre-art--full {
+        align-items: center;
+    }
 }
 
 .intro-cover {
@@ -889,6 +1023,69 @@
     }
 }
 
+@media (min-width: 1100px) {
+    /* Mas margen lateral en escritorio para mejorar lectura */
+    #intro-tiempo .intro-panel,
+    #intro-representacion .intro-panel,
+    #intro-musas .intro-panel,
+    #intro-niveles .intro-panel {
+        padding-left: clamp(7rem, 18vw, 22rem);
+        padding-right: clamp(7rem, 18vw, 22rem);
+    }
+
+    /* Slides: EL TIEMPO + LA REPRESENTACION */
+    #intro-tiempo .intro-explica-title,
+    #intro-representacion .intro-explica-title {
+        font-size: clamp(48px, 4.5vw, 72px);
+    }
+
+    #intro-tiempo .intro-explica-text,
+    #intro-representacion .intro-explica-text {
+        max-width: 58ch;
+        font-size: clamp(26px, 2.1vw, 38px);
+        line-height: 1.55;
+    }
+
+    /* Slide: ERES UNA MUSA */
+    #intro-musas .intro-explica-title {
+        font-size: clamp(48px, 4.5vw, 72px);
+    }
+
+    #intro-musas .intro-explica-text {
+        max-width: 58ch;
+        font-size: clamp(26px, 2.1vw, 38px);
+        line-height: 1.55;
+    }
+
+    #intro-musas .intro-equipo-nombre {
+        font-size: clamp(24px, 2vw, 34px);
+    }
+
+    /* Slide: LOS NIVELES */
+    #intro-niveles .intro-explica-title {
+        font-size: clamp(46px, 4.4vw, 70px);
+    }
+
+    #intro-niveles .intro-niveles-list {
+        gap: clamp(0.9rem, 1.8vw, 1.8rem);
+    }
+
+    #intro-niveles .intro-nivel-icon {
+        width: clamp(50px, 4.6vw, 74px);
+        height: clamp(50px, 4.6vw, 74px);
+        font-size: clamp(20px, 1.8vw, 30px);
+    }
+
+    #intro-niveles .intro-nivel-title {
+        font-size: clamp(22px, 2vw, 36px);
+    }
+
+    #intro-niveles .intro-nivel-desc {
+        font-size: clamp(20px, 1.6vw, 30px);
+        line-height: 1.35;
+    }
+}
+
 .intro-nivel--verde {
     --nivel-color: #59ff7a;
     --nivel-glow: rgba(89, 255, 122, 0.45);
@@ -945,6 +1142,8 @@
     gap: clamp(0.5rem, 2vw, 1rem);
     padding-top: clamp(1.2rem, 5vw, 2rem);
     padding-bottom: clamp(2.6rem, 8vw, 4rem);
+    padding-left: clamp(1.2rem, 5vw, 4rem);
+    padding-right: clamp(1.2rem, 5vw, 4rem);
 }
 
 .intro-equipo td {
@@ -961,7 +1160,8 @@
 }
 
 .intro-equipo .pluma-icono {
-    width: 32%;
+    width: 24%;
+    max-width: 180px;
 }
 
 .intro-equipo .start-btn {
@@ -1000,14 +1200,16 @@
                     </div>
                     <h2 class="intro-explica-title intro-explica-title--azul">EL TIEMPO</h2>
                     <p class="intro-explica-text">
-                        Cada escritxr parte de una cuenta regresiva de unos minutos.
+                        Al inicio, <span class="intro-accent">cada escritxr dispone de X minutos</span>.
                     </p>
                     <p class="intro-explica-text">
-                        <strong>En caso de no escribir, el texto comenzará a borrarse</strong> y se restarán segundos de su marcador.
-                        Por el contrario, si escribe, se le irá otorgando una pequeña cantidad de tiempo.
+                        <span class="intro-accent">Cuando escribe,</span> se le irán añadiendo segundos a su marcador.
                     </p>
-                    <p class="intro-explica-text">                       
-                        Deben tener mucho cuidado porque, <strong>si el contador de un escritor llega a cero, lo que ha escrito se autodestruirá.</strong>
+                    <p class="intro-explica-text">
+                        <span class="intro-accent">Si deja de escribir,</span> el texto comenzará a borrarse y se restará tiempo.
+                    </p>
+                    <p class="intro-explica-text">
+                        <span class="intro-accent">Si el contador llega a cero,</span> el texto escrito se autodestruirá.
                     </p>
                     <p class="intro-explica-meta"><span>⏱️</span><span>+6 segs.</span></p>
                     <div class="intro-tiempo-wrap">
@@ -1025,13 +1227,12 @@
                         <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
                         <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
                     </div>
-                    <h2 class="intro-explica-title intro-explica-title--rojo">LAS MUSAS</h2>
+                    <h2 class="intro-explica-title intro-explica-title--rojo">ERES UNA MUSA</h2>
                     <p class="intro-explica-text">
-                        Estarás conectada en todo momento a uno de lxs escritorxs y le acompañarás en su proceso creativo,
-                        ayudándole a superar los diferentes nivel de juego, dándole consejos, ¡e incluso corrigiendo el texto que se está escribiendo en directo!
+                        Tu papel como <span class="intro-accent">musa</span> es <span class="intro-accent">acompañar a tu escritor o escritora</span> en su proceso creativo.
                     </p>
                     <p class="intro-explica-text">
-                        Al final de cada nivel, <strong>las musas que más hayan ayudado a su escritor podrán elegir una desventaja para el equipo contrario.</strong>
+                        Le podrás <span class="intro-accent">sugerir palabras</span>, <span class="intro-accent">dar consejos</span> e incluso elegir una <span class="intro-accent">desventaja para el equipo contrario</span>.
                     </p>
                     <div class="intro-musas-equipos">
                         <div class="intro-equipo-card">
@@ -1057,8 +1258,7 @@
                     </div>
                     <h2 class="intro-explica-title intro-explica-title--rojo">LA REPRESENTACIÓN</h2>
                     <p class="intro-explica-text">
-                        Al final de la velada, dos equipos de intérpretes  <strong>representarán las obras creadas por sus respectivos escritores.</strong>
-                        Vivirás todo el proceso creativo de un texto dramático, desde su escritura hasta su puesta en escena.
+                        Al final de la velada, <span class="intro-accent">dos equipos de intérpretes representarán las obras creadas</span> por sus respectivos escritores o escritoras.
                     </p>
                     <div class="intro-repre-art intro-repre-art--full">
                         <img class="intro-repre-img" src="../../img/la_representacion.png" alt="La representación">
@@ -1081,42 +1281,42 @@
                             <div class="intro-nivel-icon">🙏</div>
                             <div>
                                 <h3 class="intro-nivel-title">LETRA BENDITA</h3>
-                                <p class="intro-nivel-desc">Se elige una de las diez letras menos usadas en el español y si se escribe, se añade tiempo al marcador.</p>
+                                <p class="intro-nivel-desc">Se elige una de las diez letras menos usadas en el español. <span class="intro-accent">Si quien escribe la emplea, se añade tiempo al marcador</span>.</p>
                             </div>
                         </div>
                         <div class="intro-nivel intro-nivel--rojo">
                             <div class="intro-nivel-icon">😈</div>
                             <div>
                                 <h3 class="intro-nivel-title">LETRA MALDITA</h3>
-                                <p class="intro-nivel-desc">El opuesto de Letra Bendita: evita esa letra o perderás tiempo.</p>
+                                <p class="intro-nivel-desc">El opuesto de Letra Bendita: <span class="intro-accent">si quien escribe la emplea, perderá tiempo</span>.</p>
                             </div>
                         </div>
                         <div class="intro-nivel intro-nivel--azul">
                             <div class="intro-nivel-icon">💬</div>
                             <div>
                                 <h3 class="intro-nivel-title">TERTULIA</h3>
-                                <p class="intro-nivel-desc">El público dialoga, comenta y pregunta sobre el texto con su escritor.</p>
+                                <p class="intro-nivel-desc"><span class="intro-accent">Quien escribe</span> dialoga con sus musas y pregunta sobre el curso de la historia.</p>
                             </div>
                         </div>
                         <div class="intro-nivel intro-nivel--amarillo">
                             <div class="intro-nivel-icon">📖</div>
                             <div>
                                 <h3 class="intro-nivel-title">PALABRA BENDITA</h3>
-                                <p class="intro-nivel-desc">El juego ofrece palabras aleatorias y propuestas de musas para enriquecer el texto.</p>
+                                <p class="intro-nivel-desc">El juego ofrece palabras [aleatorias] y propuestas por las musas. Si quien escribe las usa, ganará tiempo.</p>
                             </div>
                         </div>
                         <div class="intro-nivel intro-nivel--rosa">
                             <div class="intro-nivel-icon">⚔️</div>
                             <div>
                                 <h3 class="intro-nivel-title">PALABRA MALDITA</h3>
-                                <p class="intro-nivel-desc">Se prohíbe el uso de palabras lanzadas por el equipo contrario. Si se escriben, se restará tiempo.</p>
+                                <p class="intro-nivel-desc"><span class="intro-accent">Se prohíbe el uso de palabras lanzadas por el equipo contrario</span>. Si quien escribe las usa, perderá tiempo.</p>
                             </div>
                         </div>
                         <div class="intro-nivel intro-nivel--naranja">
                             <div class="intro-nivel-icon">🏁</div>
                             <div>
                                 <h3 class="intro-nivel-title">FRASE FINAL</h3>
-                                <p class="intro-nivel-desc">Deberás introducir una frase final para cerrar el texto antes de que acabe el tiempo.</p>
+                                <p class="intro-nivel-desc"><span class="intro-accent">Quien escribe deberá introducir una frase final</span> para cerrar el texto antes de que acabe el tiempo.</p>
                             </div>
                         </div>
                     </div>

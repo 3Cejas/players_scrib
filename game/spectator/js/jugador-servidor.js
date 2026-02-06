@@ -111,42 +111,66 @@ const teleprompter_estado = {
     visible: false,
     text: "",
     fontSize: 36,
-    scroll: 0
+    scroll: 0,
+    source: 0
 };
 
 const sincronizarTeleprompterScroll = () => {
-    if (!teleprompter_screen || !teleprompter_text) return;
-    const maxScroll = Math.max(0, teleprompter_text.scrollHeight - teleprompter_screen.clientHeight);
+    const screen = teleprompter_screen || getEl("teleprompter_screen");
+    const text = teleprompter_text || getEl("teleprompter_text");
+    if (!screen || !text) return;
+    const maxScroll = Math.max(0, text.scrollHeight - screen.clientHeight + 4);
     let objetivo = Number.isFinite(teleprompter_estado.scroll) ? teleprompter_estado.scroll : 0;
     if (objetivo >= Number.MAX_SAFE_INTEGER) {
         objetivo = maxScroll;
     }
     objetivo = Math.max(0, Math.min(objetivo, maxScroll));
-    teleprompter_text.style.transform = `translateY(${-objetivo}px)`;
+    text.style.transform = `translateY(${-objetivo}px)`;
 };
 
 const actualizarTeleprompterEstado = (state = {}) => {
     if (!state) return;
+    const overlay = teleprompter_overlay || getEl("teleprompter_overlay");
+    const screen = teleprompter_screen || getEl("teleprompter_screen");
+    const text = teleprompter_text || getEl("teleprompter_text");
     if (typeof state.visible === "boolean") {
         teleprompter_estado.visible = state.visible;
     }
     if (typeof state.text === "string") {
         teleprompter_estado.text = state.text;
-        if (teleprompter_text) {
-            teleprompter_text.textContent = state.text;
+        if (text) {
+            text.textContent = state.text;
         }
+    }
+    if (state.source !== undefined) {
+        const fuente = Number(state.source);
+        teleprompter_estado.source = fuente === 1 || fuente === 2 ? fuente : 0;
     }
     if (Number.isFinite(state.fontSize)) {
         teleprompter_estado.fontSize = Math.min(96, Math.max(18, state.fontSize));
-        if (teleprompter_text) {
-            teleprompter_text.style.fontSize = `${teleprompter_estado.fontSize}px`;
+        if (text) {
+            text.style.fontSize = `${teleprompter_estado.fontSize}px`;
         }
     }
     if (Number.isFinite(state.scroll)) {
         teleprompter_estado.scroll = state.scroll;
     }
-    if (teleprompter_overlay) {
-        teleprompter_overlay.classList.toggle("activo", teleprompter_estado.visible);
+    if (overlay) {
+        overlay.classList.toggle("activo", teleprompter_estado.visible);
+    }
+    if (screen) {
+        const tieneTexto = typeof teleprompter_estado.text === "string" && teleprompter_estado.text.trim().length > 0;
+        const equipo = teleprompter_estado.source;
+        const valor = tieneTexto && equipo === 1 ? "1" : tieneTexto && equipo === 2 ? "2" : "none";
+        screen.setAttribute("data-team", valor);
+        const frameColor = valor === "1"
+            ? "rgba(69, 243, 255, 0.9)"
+            : valor === "2"
+                ? "rgba(255, 90, 90, 0.9)"
+                : "rgba(120, 120, 120, 0.6)";
+        screen.style.setProperty("--tp-frame", frameColor);
+        screen.style.borderColor = frameColor;
+        screen.style.boxShadow = `0 0 35px ${frameColor}, inset 0 0 30px rgba(0, 0, 0, 0.8)`;
     }
     requestAnimationFrame(sincronizarTeleprompterScroll);
 };

@@ -872,7 +872,8 @@ table {
     gap: 0.9rem;
 }
 
-.teleprompter-row {
+.teleprompter-row,
+.tp-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -898,6 +899,40 @@ table {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.6rem;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.teleprompter-cargar {
+    border: none;
+    padding: 0.55rem 1.1rem;
+    border-radius: 14px;
+    background: rgba(10, 10, 10, 0.85);
+    color: #f2f6ff;
+    border: 2px solid rgba(69, 243, 255, 0.5);
+    box-shadow: 0 0 14px rgba(69, 243, 255, 0.2);
+    text-transform: uppercase;
+    font-family: "Retro-gaming";
+    letter-spacing: 0.06em;
+}
+
+.teleprompter-cargar--j1 {
+    border-color: rgba(69, 243, 255, 0.85);
+    box-shadow: 0 0 16px rgba(69, 243, 255, 0.35);
+}
+
+.teleprompter-cargar--j2 {
+    border-color: rgba(255, 90, 90, 0.85);
+    box-shadow: 0 0 16px rgba(255, 90, 90, 0.35);
+}
+
+.teleprompter-cargar:disabled,
+.teleprompter-btn-disabled {
+    opacity: 0.45;
+    filter: grayscale(0.5);
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
 }
 
 .teleprompter-indicador {
@@ -910,6 +945,390 @@ table {
 
 .teleprompter-play {
     min-width: 180px;
+}
+
+.tp-pad {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) minmax(110px, 0.55fr) minmax(130px, 1fr);
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.tp-top {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr);
+    align-items: center;
+    gap: 1rem;
+}
+
+.tp-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tp-stack--left {
+    align-items: flex-start;
+}
+
+.tp-stack--right {
+    align-items: flex-end;
+}
+
+.tp-stack--left #tp_l1 {
+    margin-left: 0.4rem;
+}
+
+.tp-stack--right #tp_r1 {
+    margin-right: 0.4rem;
+}
+
+.tp-dpad,
+.tp-face {
+    display: grid;
+    grid-template-columns: repeat(3, 62px);
+    grid-template-rows: repeat(3, 62px);
+    gap: 0.35rem;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+}
+
+.tp-dpad {
+    grid-template-areas:
+      ". up ."
+      "left center right"
+      ". down .";
+}
+
+.tp-face {
+    grid-template-areas:
+      ". triangle ."
+      "square . circle"
+      ". cross .";
+}
+
+.tp-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px solid rgba(69, 243, 255, 0.65);
+    background: rgba(10, 10, 10, 0.9);
+    color: #f2f6ff;
+    font-family: "Retro-gaming";
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 0 8px rgba(69, 243, 255, 0.35);
+    box-shadow: 0 0 12px rgba(69, 243, 255, 0.2);
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.tp-btn--empty {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+}
+
+.tp-btn--active,
+.tp-btn--held {
+    transform: scale(0.94);
+    box-shadow: 0 0 18px rgba(69, 243, 255, 0.6);
+    border-color: rgba(69, 243, 255, 1);
+}
+
+.tp-btn--up { grid-area: up; }
+.tp-btn--down { grid-area: down; }
+.tp-btn--left { grid-area: left; }
+.tp-btn--right { grid-area: right; }
+.tp-dpad-center { 
+    grid-area: center; 
+    font-family: "Retro-gaming";
+    font-size: 0.75rem;
+    color: #d6a7ff;
+    text-shadow: 0.08em 0.08em #ff2d2d;
+    text-align: center;
+}
+
+.tp-btn--triangle { grid-area: triangle; border-color: #7cffc4; }
+.tp-btn--cross { grid-area: cross; border-color: #ff6b6b; }
+.tp-btn--circle { grid-area: circle; border-color: #ffd166; }
+.tp-btn--square { grid-area: square; border-color: #6ee7ff; }
+.tp-btn--circle,
+.tp-btn--square {
+    font-size: 1.2rem;
+}
+
+.tp-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.tp-btn--shoulder {
+    width: auto;
+    height: 44px;
+    padding: 0 1rem;
+    border-radius: 999px;
+}
+
+.tp-btn--trigger {
+    width: auto;
+    height: 44px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border-color: rgba(154, 107, 255, 0.8);
+    text-shadow: 0 0 8px rgba(154, 107, 255, 0.5);
+}
+
+.tp-btn--shoulder,
+.tp-btn--trigger {
+    min-width: 68px;
+    position: relative;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+}
+
+.tp-status {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.tp-chip {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(10, 10, 10, 0.75);
+    border: 1px solid rgba(69, 243, 255, 0.45);
+    box-shadow: 0 0 12px rgba(69, 243, 255, 0.2);
+    font-family: "Retro-gaming";
+    font-size: 0.85rem;
+    color: #f2f6ff;
+    text-shadow: 0 0 8px rgba(69, 243, 255, 0.35);
+}
+
+.tp-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem 1.4rem;
+    align-items: center;
+}
+
+.tp-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 12px;
+    background: rgba(10, 10, 10, 0.75);
+    border: 1px solid rgba(69, 243, 255, 0.3);
+    box-shadow: 0 0 14px rgba(69, 243, 255, 0.2);
+}
+
+.tp-meter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: "Retro-gaming";
+    font-size: 0.8rem;
+    color: #f2f6ff;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.tp-meter-value {
+    color: #ffd166;
+    text-shadow: 0 0 8px rgba(255, 209, 102, 0.45);
+}
+
+.tp-meter-track {
+    position: relative;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(12, 24, 28, 0.9);
+    overflow: hidden;
+    border: 1px solid rgba(69, 243, 255, 0.35);
+}
+
+.tp-meter-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(69, 243, 255, 0.2), rgba(69, 243, 255, 0.85));
+    box-shadow: 0 0 12px rgba(69, 243, 255, 0.6);
+    transition: width 160ms ease;
+}
+
+.tp-meter-fill--speed {
+    background: linear-gradient(90deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.9));
+    box-shadow: 0 0 12px rgba(255, 107, 107, 0.6);
+}
+
+.tp-meter-range {
+    font-family: "Retro-gaming";
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: rgba(242, 246, 255, 0.6);
+    text-align: right;
+}
+
+.tp-legend {
+    margin-top: 0.8rem;
+    width: 100%;
+    font-family: "Retro-gaming";
+    font-size: 0.78rem;
+    color: #e6f8ff;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(69, 243, 255, 0.25);
+}
+
+.tp-legend--split {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(160px, 0.7fr) minmax(280px, 1fr);
+    gap: 0.8rem 1.2rem;
+    align-items: start;
+}
+
+.tp-legend-col {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.tp-legend-col--left {
+    justify-items: start;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
+.tp-legend-col--center {
+    justify-items: center;
+}
+
+.tp-legend-col--right {
+    justify-items: end;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
+.tp-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(10, 10, 10, 0.6);
+    border: 1px solid rgba(69, 243, 255, 0.2);
+    justify-content: center;
+}
+
+.tp-legend-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(69, 243, 255, 0.15);
+    border: 1px solid rgba(69, 243, 255, 0.55);
+    color: #f2f6ff;
+    font-size: 0.7rem;
+}
+
+.tp-legend-x {
+    border-color: rgba(255, 107, 107, 0.9);
+    color: #ffdede;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+}
+
+.tp-legend-item--x .tp-legend-icon {
+    border-color: rgba(255, 107, 107, 0.9);
+    color: #ffdede;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
+}
+
+.tp-legend-item--square .tp-legend-icon {
+    border-color: rgba(110, 231, 255, 0.9);
+    color: #c7f7ff;
+    box-shadow: 0 0 10px rgba(110, 231, 255, 0.4);
+}
+
+.tp-legend-item--circle .tp-legend-icon {
+    border-color: rgba(255, 209, 102, 0.95);
+    color: #ffe9b0;
+    box-shadow: 0 0 10px rgba(255, 209, 102, 0.4);
+}
+
+.tp-legend-item--triangle .tp-legend-icon {
+    border-color: rgba(124, 255, 196, 0.95);
+    color: #d8ffee;
+    box-shadow: 0 0 10px rgba(124, 255, 196, 0.4);
+}
+
+.tp-legend-item--l1 .tp-legend-icon,
+.tp-legend-item--r1 .tp-legend-icon,
+.tp-legend-item--dpad .tp-legend-icon,
+.tp-legend-item--stick .tp-legend-icon {
+    border-color: rgba(69, 243, 255, 0.9);
+    color: #e7fbff;
+    box-shadow: 0 0 10px rgba(69, 243, 255, 0.35);
+}
+
+.tp-legend-item--l2 .tp-legend-icon,
+.tp-legend-item--r2 .tp-legend-icon {
+    border-color: rgba(154, 107, 255, 0.9);
+    color: #e8dbff;
+    box-shadow: 0 0 10px rgba(154, 107, 255, 0.35);
+}
+
+@media (max-width: 1100px) {
+    .tp-legend--split {
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+    .tp-legend-col--left,
+    .tp-legend-col--center,
+    .tp-legend-col--right {
+        justify-items: center;
+        grid-template-columns: 1fr;
+    }
+}
+
+.tp-start {
+    min-width: 200px;
+}
+
+.tp-indicadores {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+@media (max-width: 900px) {
+    .tp-pad {
+        grid-template-columns: 1fr;
+    }
+    .tp-top {
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+    .tp-stack {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .tp-stack--left #tp_l1,
+    .tp-stack--right #tp_r1 {
+        margin: 0;
+    }
+    .tp-dpad,
+    .tp-face {
+        max-width: 260px;
+        margin: 0 auto;
+    }
 }
 
 .estado-modo {
@@ -1018,3 +1437,16 @@ table {
     
       }
     }
+.tp-title {
+    margin: 0;
+    font-family: "Retro-gaming";
+    font-size: 1.15rem;
+    letter-spacing: 0.28em;
+    color: #f8fcff;
+    text-transform: uppercase;
+    text-shadow:
+        0 0 6px rgba(69, 243, 255, 0.65),
+        0 0 14px rgba(69, 243, 255, 0.45),
+        0 0 28px rgba(255, 90, 90, 0.2);
+    text-align: center;
+}

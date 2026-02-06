@@ -65,6 +65,50 @@ function scrollToSeccion(objetivo) {
   requestAnimationFrame(animar);
 }
 
+function enfocarNombreSiCorresponde(objetivo) {
+  if (!objetivo || !nombre_musa_input) return;
+  if (objetivo.id !== "intro-nombre") return;
+  setTimeout(() => {
+    nombre_musa_input.focus({ preventScroll: true });
+  }, 350);
+}
+
+function gestionarFocusNombre(actual, objetivo) {
+  if (!nombre_musa_input) return;
+  if (actual && actual.id === "intro-nombre" && (!objetivo || objetivo.id !== "intro-nombre")) {
+    cerrarTeclado();
+  }
+  if (objetivo && objetivo.id === "intro-nombre") {
+    enfocarNombreSiCorresponde(objetivo);
+  }
+}
+
+function obtenerIndiceSeccionActual() {
+  if (!intro_scroll) return 0;
+  const secciones = Array.from(document.querySelectorAll(".intro-section"));
+  if (!secciones.length) return 0;
+  const referencia = intro_scroll.scrollTop + (intro_scroll.clientHeight * 0.35);
+  let indice = 0;
+  secciones.forEach((seccion, idx) => {
+    if (seccion.offsetTop <= referencia) {
+      indice = idx;
+    }
+  });
+  return indice;
+}
+
+function irASeccionPorDelta(delta) {
+  const secciones = Array.from(document.querySelectorAll(".intro-section"));
+  if (!secciones.length) return;
+  const actual = obtenerIndiceSeccionActual();
+  const siguiente = Math.min(Math.max(actual + delta, 0), secciones.length - 1);
+  if (siguiente === actual) return;
+  const actualSeccion = secciones[actual];
+  const destino = secciones[siguiente];
+  gestionarFocusNombre(actualSeccion, destino);
+  scrollToSeccion(destino);
+}
+
 function cerrarTeclado() {
   const activo = document.activeElement;
   if (!activo) return;
@@ -152,8 +196,10 @@ document.addEventListener('DOMContentLoaded', () => {
         limpiarAvisoMusa();
         actualizarNombreIntro();
       }
-      cerrarTeclado();
       const objetivo = document.querySelector(selector);
+      const secciones = Array.from(document.querySelectorAll(".intro-section"));
+      const actual = secciones[obtenerIndiceSeccionActual()];
+      gestionarFocusNombre(actual, objetivo);
       scrollToSeccion(objetivo);
       const focusId = boton.getAttribute("data-focus");
       if (focusId) {
@@ -177,12 +223,34 @@ document.addEventListener('DOMContentLoaded', () => {
     contenedorScroll.addEventListener("touchmove", bloquearScroll, { passive: false });
     document.addEventListener("keydown", (evento) => {
       const teclas = ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "];
-      if (!teclas.includes(evento.key)) return;
+      const esEnter = evento.key === "Enter";
+      if (!teclas.includes(evento.key) && !esEnter) return;
       const destino = evento.target;
       if (destino && (destino.tagName === "INPUT" || destino.tagName === "TEXTAREA" || destino.isContentEditable)) {
         return;
       }
+      if ((evento.key === "ArrowDown" || esEnter)) {
+        const secciones = Array.from(document.querySelectorAll(".intro-section"));
+        const actual = secciones[obtenerIndiceSeccionActual()];
+        if (actual && actual.id === "intro-nombre") {
+          const nombre = normalizarNombreMusa(nombre_musa_input?.value || "");
+          if (!nombre) {
+            mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
+            if (nombre_musa_input) {
+              nombre_musa_input.focus();
+            }
+            return;
+          }
+        }
+      }
       evento.preventDefault();
+      if (evento.key === "ArrowDown" || esEnter) {
+        irASeccionPorDelta(1);
+        return;
+      }
+      if (evento.key === "ArrowUp") {
+        irASeccionPorDelta(-1);
+      }
     });
   }
   // Pedimos los atributos al servidor

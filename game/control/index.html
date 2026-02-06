@@ -83,40 +83,80 @@
             <tr>
                 <td colspan="5">
                     <div class="teleprompter-panel">
-                        <div class="teleprompter-row">
-                            <div class="teleprompter-label">Texto</div>
+                        <div class="tp-row tp-row--text">
                             <div class="teleprompter-buttons">
-                                <span class='btn' onclick="teleprompterCargarTexto(1)">&#x1F4DC; CARGAR J1</span>
-                                <span class='btn' onclick="teleprompterCargarTexto(2)">&#x1F4DC; CARGAR J2</span>
+                                <button id="teleprompter_cargar_j1" type="button" class="btn teleprompter-cargar teleprompter-cargar--j1" onclick="teleprompterCargarTexto(1)">💾 CARGAR</button>
+                                <button id="teleprompter_cargar_j2" type="button" class="btn teleprompter-cargar teleprompter-cargar--j2" onclick="teleprompterCargarTexto(2)">💾 CARGAR</button>
                             </div>
                         </div>
-                        <div class="teleprompter-row">
-                            <div class="teleprompter-label">Scroll</div>
-                            <div class="teleprompter-buttons">
-                                <span class='btn' onclick="teleprompterSubir()">&#x2B06;&#xFE0F; SUBIR</span>
-                                <span class='btn' onclick="teleprompterBajar()">&#x2B07;&#xFE0F; BAJAR</span>
-                                <span class='btn' onclick="teleprompterIrInicio()">&#x1F519; INICIO</span>
-                                <span class='btn' onclick="teleprompterIrFinal()">&#x1F51A; FINAL</span>
+                        <div class="tp-pad">
+                            <div class="tp-top">
+                                <div class="tp-stack tp-stack--left">
+                                    <button id="tp_l2" class="tp-btn tp-btn--trigger tp-btn--l2" data-hold="font-down" aria-label="Disminuir tamaño de letra">L2</button>
+                                    <button id="tp_l1" class="tp-btn tp-btn--shoulder tp-btn--l1" onclick="teleprompterIrInicio()" aria-label="Inicio del texto">L1</button>
+                                </div>
+                                <div class="tp-title">TELEPROMPTER 🎬</div>
+                                <div class="tp-stack tp-stack--right">
+                                    <button id="tp_r2" class="tp-btn tp-btn--trigger tp-btn--r2" data-hold="font-up" aria-label="Aumentar tamaño de letra">R2</button>
+                                    <button id="tp_r1" class="tp-btn tp-btn--shoulder tp-btn--r1" onclick="teleprompterIrFinal()" aria-label="Final del texto">R1</button>
+                                </div>
+                            </div>
+                            <div class="tp-dpad" aria-label="Cruceta">
+                                <button id="tp_dpad_up" class="tp-btn tp-btn--up" data-hold="scroll-up">▲</button>
+                                <button id="tp_dpad_left" class="tp-btn tp-btn--left" data-hold="speed-down">◀</button>
+                                <div class="tp-dpad-center"></div>
+                                <button id="tp_dpad_right" class="tp-btn tp-btn--right" data-hold="speed-up">▶</button>
+                                <button id="tp_dpad_down" class="tp-btn tp-btn--down" data-hold="scroll-down">▼</button>
+                            </div>
+                            <div class="tp-center">
+                            </div>
+                            <div class="tp-face" aria-label="Tamaño">
+                                <button id="tp_triangle" class="tp-btn tp-btn--triangle" onclick="teleprompterBajarGrande()" aria-label="Salto grande hacia abajo">△</button>
+                                <button id="tp_circle" class="tp-btn tp-btn--circle" data-hold="font-up" aria-label="Aumentar tamaño">○</button>
+                                <button id="tp_x" class="tp-btn tp-btn--cross" onclick="teleprompterTogglePlay()">✕</button>
+                                <button id="tp_square" class="tp-btn tp-btn--square" data-hold="font-down" aria-label="Disminuir tamaño">□</button>
                             </div>
                         </div>
-                        <div class="teleprompter-row">
-                            <div class="teleprompter-label">Tama&ntilde;o</div>
-                            <div class="teleprompter-buttons">
-                                <span class='btn' onclick="teleprompterCambiarFuente(-2)">A-</span>
-                                <span class='btn' onclick="teleprompterCambiarFuente(2)">A+</span>
-                                <span class="teleprompter-indicador">Fuente: <strong id="teleprompter_font_size">36</strong></span>
+                        <div class="tp-metrics">
+                            <div class="tp-meter">
+                                <div class="tp-meter-header">
+                                    <span class="tp-meter-title">TAMAÑO</span>
+                                    <span class="tp-meter-value"><strong id="teleprompter_font_size">36</strong></span>
+                                </div>
+                                <div class="tp-meter-track">
+                                    <div id="teleprompter_font_meter" class="tp-meter-fill"></div>
+                                </div>
+                                <div class="tp-meter-range">18 — 80</div>
+                            </div>
+                            <div class="tp-meter">
+                                <div class="tp-meter-header">
+                                    <span class="tp-meter-title">VELOCIDAD</span>
+                                    <span class="tp-meter-value"><strong id="teleprompter_speed">25</strong></span>
+                                </div>
+                                <div class="tp-meter-track">
+                                    <div id="teleprompter_speed_meter" class="tp-meter-fill tp-meter-fill--speed"></div>
+                                </div>
+                                <div class="tp-meter-range">5 — 200</div>
                             </div>
                         </div>
-                        <div class="teleprompter-row">
-                            <div class="teleprompter-label">Velocidad</div>
-                            <div class="teleprompter-buttons">
-                                <span class='btn' onclick="teleprompterCambiarVelocidad(-5)">&#x1F422; LENTO</span>
-                                <span class='btn' onclick="teleprompterCambiarVelocidad(5)">&#x1F407; R&Aacute;PIDO</span>
-                                <span class="teleprompter-indicador">Px/s: <strong id="teleprompter_speed">25</strong></span>
+                        <div class="tp-legend tp-legend--split">
+                            <div class="tp-legend-col tp-legend-col--left">
+                                <span class="tp-legend-item tp-legend-item--l1"><span class="tp-legend-icon">L1</span> Inicio</span>
+                                <span class="tp-legend-item tp-legend-item--l2"><span class="tp-legend-icon">L2</span> Tamaño -</span>
+                                <span class="tp-legend-item tp-legend-item--dpad"><span class="tp-legend-icon">◀▶</span> Velocidad</span>
+                                <span class="tp-legend-item tp-legend-item--dpad"><span class="tp-legend-icon">▲▼</span> Salto</span>
+                                <span class="tp-legend-item tp-legend-item--stick"><span class="tp-legend-icon">🕹️</span> Scroll</span>
                             </div>
-                        </div>
-                        <div class="teleprompter-row teleprompter-row--center">
-                            <span id="teleprompter_play" class='btn teleprompter-play' onclick="teleprompterTogglePlay()">&#x25B6;&#xFE0F; PLAY</span>
+                            <div class="tp-legend-col tp-legend-col--center">
+                                <span class="tp-legend-item tp-legend-item--x"><span class="tp-legend-icon tp-legend-x">✕</span> Pausa / Play</span>
+                                <span class="tp-legend-item tp-legend-item--triangle"><span class="tp-legend-icon">△</span> Salto ↓↓</span>
+                            </div>
+                            <div class="tp-legend-col tp-legend-col--right">
+                                <span class="tp-legend-item tp-legend-item--r1"><span class="tp-legend-icon">R1</span> Final</span>
+                                <span class="tp-legend-item tp-legend-item--r2"><span class="tp-legend-icon">R2</span> Tamaño +</span>
+                                <span class="tp-legend-item tp-legend-item--square"><span class="tp-legend-icon">□</span> Tamaño -</span>
+                                <span class="tp-legend-item tp-legend-item--circle"><span class="tp-legend-icon">○</span> Tamaño +</span>
+                            </div>
                         </div>
                     </div>
                 </td>

@@ -1,77 +1,292 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
-      </style>
-                   <link  rel="icon"   href="../img/logo.png" type="image/png" />
-
-    <meta name="viewport" content="width=device-width, height=device-height" content="initial-scale=1">
+    <link rel="icon" href="../img/logo.png" type="image/png" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
     <title>SCRB</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css" />
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: rgba(10, 12, 16, 0.82);
+            --cyan: #63e7ff;
+            --red: #ff4a4a;
+            --gold: #ffd166;
+            --violet: #9a6bff;
+            --mint: #7cffc4;
+        }
 
-    <!-- highlight-within-textarea CSS/JS -->
-    <!--<script src="jquery.highlight-within-textarea.js"></script>-->
+        * {
+            box-sizing: border-box;
+        }
 
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            background: #030303;
+            color: #f5fbff;
+            font-family: "Retro-gaming", "Share Tech Mono", monospace;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 18% 20%, rgba(99, 231, 255, 0.22), transparent 45%),
+                radial-gradient(circle at 82% 18%, rgba(255, 74, 74, 0.18), transparent 40%),
+                radial-gradient(circle at 40% 80%, rgba(124, 255, 196, 0.16), transparent 45%),
+                #020202;
+            z-index: 0;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 3px);
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .landing {
+            width: min(1200px, 92vw);
+            padding: clamp(1.5rem, 5vw, 3.8rem) 0;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(1.4rem, 4vw, 3rem);
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(0.6rem, 2vw, 1.2rem);
+            text-align: center;
+        }
+
+        .brand-title {
+            font-size: clamp(32px, 9vw, 92px);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #f9fbff;
+            text-shadow: -0.08em 0 #ff3b3b, 0 0 1.6rem rgba(0, 245, 255, 0.55);
+        }
+
+        .brand-powered {
+            font-size: clamp(11px, 2.4vw, 16px);
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+
+        .brand-sutura {
+            width: clamp(70px, 14vw, 140px);
+            filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.32));
+        }
+
+        .brand-spectador-logo {
+            font-size: clamp(56px, 11vw, 120px);
+            line-height: 1;
+            filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.32));
+        }
+
+        .brand-sutura-text {
+            font-family: "Times New Roman", serif;
+            font-size: clamp(13px, 2.6vw, 20px);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #f5f0ea;
+        }
+
+        .role-title {
+            font-size: clamp(18px, 3.6vw, 32px);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            text-align: center;
+            color: #f8fcff;
+            text-shadow: 0 0 0.9rem rgba(99, 231, 255, 0.35);
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 260px));
+            gap: clamp(0.8rem, 3vw, 1.8rem);
+            justify-content: center;
+            justify-items: stretch;
+        }
+
+        .role-card {
+            position: relative;
+            padding: clamp(1rem, 3vw, 1.6rem);
+            border-radius: 18px;
+            background: var(--panel);
+            border: 2px solid rgba(99, 231, 255, 0.35);
+            box-shadow: 0 0 18px rgba(0, 245, 255, 0.18);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+            overflow: hidden;
+        }
+
+        .role-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 55%);
+            opacity: 0;
+            transition: opacity 200ms ease;
+        }
+
+        .role-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            border-color: var(--accent, rgba(99, 231, 255, 0.8));
+            box-shadow: 0 0 24px var(--accent-glow, rgba(99, 231, 255, 0.35));
+        }
+
+        .role-card:hover::after {
+            opacity: 1;
+        }
+
+        .role-icon {
+            font-size: clamp(22px, 4.5vw, 34px);
+        }
+
+        .role-name {
+            font-size: clamp(14px, 2.8vw, 22px);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .role-desc {
+            font-size: clamp(11px, 2.4vw, 16px);
+            color: #d0e9ff;
+            line-height: 1.4;
+        }
+
+        .role-card--blue { --accent: rgba(99, 231, 255, 0.9); --accent-glow: rgba(99, 231, 255, 0.5); }
+        .role-card--red { --accent: rgba(255, 74, 74, 0.9); --accent-glow: rgba(255, 74, 74, 0.5); }
+        .role-card--gold { --accent: rgba(255, 209, 102, 0.9); --accent-glow: rgba(255, 209, 102, 0.45); }
+        .role-card--violet { --accent: rgba(154, 107, 255, 0.9); --accent-glow: rgba(154, 107, 255, 0.45); }
+        .role-card--mint { --accent: rgba(124, 255, 196, 0.9); --accent-glow: rgba(124, 255, 196, 0.45); }
+        .role-card--cyan { --accent: rgba(0, 245, 255, 0.9); --accent-glow: rgba(0, 245, 255, 0.45); }
+
+        .footer-note {
+            text-align: center;
+            font-size: clamp(10px, 2.2vw, 14px);
+            color: #7db7cc;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 600px) {
+            .role-card {
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
-
 <body>
-    <div align="center">
-        <pre class="neon">
-        __     _____    _____   _____    _____    __       ____  
-       / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
-      / /    | (___   | |      | |__) |   | |      \ \    | |_) |
-     < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
-      \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
-       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
-                                                                                                  
-        </pre>
-        <div align="center">
-            <p class="sub">powered by</p>
-            <br>
-            <img src="./img/logo.png" alt="" width="15%" />
-        </div>
-        <br><br>
-        <h1>ELIGE TU ROL</h1>
-        <table class="menu">
-            <tr>
-                <td>
-                        <span onclick="window.location.href = './players/index.html?player=1'" class="btn">✍️ ESCRITXR 1</span></button><br>
-                </td>
-                <td>
-                        <span onclick="window.location.href = './players/index.html?player=2'" class="btn">✍️ ESCRITXR 2</span></button><br>
-                </td>
-                <td>
-                        <span onclick="window.location.href = './control/index.html';" class="btn">🎨 CONTROL</span></button><br>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                        <span onclick="window.location.href = './spectator/index.html';" class="btn">👀 ESPECTADOR</span></button><br>
-                </td>
-                <td>
-                      <span onclick="window.location.href = './actors/index.html';" class="btn">🎭 ACTORES</span></button><br>
-              </td>
-              <td>
-                    <span onclick="window.location.href = './public/index.html';" class="btn">👁️ MUSAS</span></button><br>
-            </td>
-            </tr>
-        </table>
-        <br>
-        <h2>ENFRÉNTATE A OTROS ESCRITORES</h2>
-        <h2>-</h2>
-        <h2>DEMUESTRA QUIÉN ES EL MEJOR</h2>
-        <h2>-</h2>
-        <h2>ROMPE EL BLOQUEO CREATIVO</h2>
-        <h2>-</h2>
-        <h2>SOBREVIVE A TODOS LOS NIVELES</h2>
-        <h2>-</h2>
-        <h2>GÁNATE EL FAVOR DEL PÚBLICO</h2>
-    </div>
+    <main class="landing">
+        <header class="brand">
+            <div class="brand-title">&lt;SCRI&gt; B</div>
+                    <p class="sub">powered by</p><br><img src="./img/logo.png" alt="" width="20%" />
+        </header>
+
+        <div class="role-title">ELIGE TU ROL</div>
+
+        <section class="role-grid">
+            <a class="role-card role-card--blue" href="./players/index.html?player=1" data-pass="true">
+                <div class="role-icon">✍️</div>
+                <div class="role-name">Escritxr 1</div>
+                <div class="role-desc">La pluma azul anunda el relato.</div>
+            </a>
+            <a class="role-card role-card--red" href="./players/index.html?player=2" data-pass="true">
+                <div class="role-icon">✍️</div>
+                <div class="role-name">Escritxr 2</div>
+                <div class="role-desc">La pluma roja abrasa la historia.</div>
+            </a>
+            <a class="role-card role-card--gold" href="./control/index.html" data-pass="true">
+                <div class="role-icon">🎨</div>
+                <div class="role-name">Control</div>
+                <div class="role-desc">Domina el ritmo de la partida.</div>
+            </a>
+            <a class="role-card role-card--cyan" href="./spectator/index.html">
+                <div class="role-icon">👀</div>
+                <div class="role-name">Espectador</div>
+                <div class="role-desc">Sigue la historia en directo.</div>
+            </a>
+            <a class="role-card role-card--mint" href="./actors/index.html" data-pass="true">
+                <div class="role-icon">🎭</div>
+                <div class="role-name">Actores</div>
+                <div class="role-desc">Prepárate para la puesta en escena.</div>
+            </a>
+            <a class="role-card role-card--violet" href="./public/index.html">
+                <div class="role-icon">👁️</div>
+                <div class="role-name">Musas</div>
+                <div class="role-desc">Inspira y altera el destino.</div>
+            </a>
+        </section>
+
+    </main>
+    <script src="./config.js"></script>
+    <script src="./dist/socket.io/socket.io.js"></script>
+    <script>
+        const SESSION_KEY = "scrib_roles_ok";
+        const serverUrl = (window.isProduction ? window.SERVER_URL_PROD : window.SERVER_URL_DEV);
+        const socket = window.io ? window.io(serverUrl) : null;
+
+        function accesoConcedido() {
+            return sessionStorage.getItem(SESSION_KEY) === "1";
+        }
+
+        function pedirContrasena() {
+            return new Promise((resolve) => {
+                const pwd = window.prompt("Contraseña para acceder:");
+                if (!pwd) {
+                    resolve(false);
+                    return;
+                }
+                if (!socket) {
+                    window.alert("No se pudo validar la contraseña.");
+                    resolve(false);
+                    return;
+                }
+                socket.emit("validar_password_roles", { password: pwd }, (response) => {
+                    if (!response || !response.ok) {
+                        window.alert("Contraseña incorrecta.");
+                        resolve(false);
+                        return;
+                    }
+                    sessionStorage.setItem(SESSION_KEY, "1");
+                    resolve(true);
+                });
+                setTimeout(() => resolve(false), 4000);
+            });
+        }
+
+        document.querySelectorAll("[data-pass='true']").forEach((card) => {
+            card.addEventListener("click", async (event) => {
+                event.preventDefault();
+                if (!accesoConcedido()) {
+                    const ok = await pedirContrasena();
+                    if (!ok) return;
+                }
+                window.location.href = card.getAttribute("href");
+            });
+        });
+    </script>
 </body>
 </html>

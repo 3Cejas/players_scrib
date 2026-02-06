@@ -427,13 +427,19 @@ let teleprompter_emit_timeout = null;
 let teleprompter_play_raf = null;
 let teleprompter_last_tick = null;
 
+const TELEPROMPTER_FONT_MIN = 18;
+const TELEPROMPTER_FONT_MAX = 80;
+const TELEPROMPTER_SPEED_MIN = 5;
+const TELEPROMPTER_SPEED_MAX = 200;
+
 const teleprompter_state = {
     visible: false,
     text: "",
     fontSize: 36,
     speed: 25,
     playing: false,
-    scroll: 0
+    scroll: 0,
+    source: 0
 };
 
 const animateCSS = (element, animation, prefix = "animate__") =>
@@ -459,6 +465,25 @@ const animateCSS = (element, animation, prefix = "animate__") =>
 function toggleParametros() {
     if (teleprompter_visible) {
         toggleTeleprompter(true);
+        parametros_visibles = false;
+        const panelControles = document.getElementById("panel_controles");
+        const panelParametros = document.getElementById("panel_parametros");
+        const panelParametrosExtra = document.getElementById("panel_parametros_extra");
+        const boton = document.getElementById("boton_parametros");
+        if (panelParametros) {
+            panelParametros.classList.add("panel-oculto");
+        }
+        if (panelParametrosExtra) {
+            panelParametrosExtra.classList.add("panel-oculto");
+        }
+        if (panelControles) {
+            panelControles.classList.remove("panel-oculto");
+            animateCSS(panelControles, "backInLeft");
+        }
+        if (boton) {
+            boton.textContent = "\u2699\uFE0F PAR\u00C1METROS";
+        }
+        return;
     }
     parametros_visibles = !parametros_visibles;
     const panelControles = document.getElementById("panel_controles");
@@ -505,6 +530,8 @@ function actualizarTeleprompterUI() {
     const fontLabel = document.getElementById("teleprompter_font_size");
     const speedLabel = document.getElementById("teleprompter_speed");
     const playBtn = document.getElementById("teleprompter_play");
+    const fontMeter = document.getElementById("teleprompter_font_meter");
+    const speedMeter = document.getElementById("teleprompter_speed_meter");
     if (fontLabel) {
         fontLabel.textContent = Math.round(teleprompter_state.fontSize);
     }
@@ -514,14 +541,46 @@ function actualizarTeleprompterUI() {
     if (playBtn) {
         playBtn.textContent = teleprompter_state.playing ? "\u23F8\uFE0F PAUSA" : "\u25B6\uFE0F PLAY";
     }
+    if (fontMeter) {
+        const pct = (teleprompter_state.fontSize - TELEPROMPTER_FONT_MIN) / (TELEPROMPTER_FONT_MAX - TELEPROMPTER_FONT_MIN);
+        fontMeter.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
+    }
+    if (speedMeter) {
+        const pct = (teleprompter_state.speed - TELEPROMPTER_SPEED_MIN) / (TELEPROMPTER_SPEED_MAX - TELEPROMPTER_SPEED_MIN);
+        speedMeter.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
+    }
     const botonTeleprompter = document.getElementById("boton_teleprompter");
     if (botonTeleprompter) {
         botonTeleprompter.textContent = teleprompter_visible ? "\u{1F399}\uFE0F CONTROLES" : "\u{1F399}\uFE0F TELEPROMPTER";
     }
+    if (typeof actualizarBotonesTeleprompterCarga === "function") {
+        actualizarBotonesTeleprompterCarga();
+    }
 }
+
+function actualizarBotonesTeleprompterCarga() {
+    const btnJ1 = document.getElementById("teleprompter_cargar_j1");
+    const btnJ2 = document.getElementById("teleprompter_cargar_j2");
+    const textoJ1 = (typeof texto1 !== "undefined" && texto1) ? (texto1.innerText || "").trim() : "";
+    const textoJ2 = (typeof texto2 !== "undefined" && texto2) ? (texto2.innerText || "").trim() : "";
+    const habilJ1 = textoJ1.length > 0;
+    const habilJ2 = textoJ2.length > 0;
+    if (btnJ1) {
+        btnJ1.disabled = !habilJ1;
+        btnJ1.classList.toggle("teleprompter-btn-disabled", !habilJ1);
+    }
+    if (btnJ2) {
+        btnJ2.disabled = !habilJ2;
+        btnJ2.classList.toggle("teleprompter-btn-disabled", !habilJ2);
+    }
+}
+
+window.actualizarBotonesTeleprompterCarga = actualizarBotonesTeleprompterCarga;
 
 function emitirTeleprompter(inmediato = false) {
     if (!socket) return;
+    const textoActivo = typeof teleprompter_state.text === "string" && teleprompter_state.text.trim().length > 0;
+    teleprompter_state.visible = teleprompter_visible && textoActivo;
     if (inmediato) {
         socket.emit('teleprompter_control', { state: { ...teleprompter_state } });
         return;
@@ -606,21 +665,40 @@ function toggleTeleprompter(forzarCerrar = false) {
 function teleprompterCargarTexto(jugador) {
     const textoFuente = jugador === 2 ? texto2 : texto1;
     const texto = textoFuente ? textoFuente.innerText : "";
+    if (!texto || !texto.trim()) {
+        if (typeof actualizarBotonesTeleprompterCarga === "function") {
+            actualizarBotonesTeleprompterCarga();
+        }
+        return;
+    }
     teleprompter_state.text = (texto || "").trim();
     teleprompter_state.scroll = 0;
+    teleprompter_state.source = jugador === 2 ? 2 : 1;
+    teleprompter_state.playing = false;
     teleprompter_state.visible = true;
     teleprompter_visible = true;
+    detenerTeleprompterPlay();
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
 }
 
 function teleprompterSubir() {
     teleprompter_state.scroll = Math.max(0, teleprompter_state.scroll - 60);
-    emitirTeleprompter();
+    emitirTeleprompter(true);
 }
 
 function teleprompterBajar() {
     teleprompter_state.scroll += 60;
+    emitirTeleprompter(true);
+}
+
+function teleprompterSubirGrande() {
+    teleprompter_state.scroll = Math.max(0, teleprompter_state.scroll - 260);
+    emitirTeleprompter();
+}
+
+function teleprompterBajarGrande() {
+    teleprompter_state.scroll += 260;
     emitirTeleprompter();
 }
 
@@ -635,17 +713,23 @@ function teleprompterIrFinal() {
 }
 
 function teleprompterCambiarFuente(delta) {
-    const nueva = Math.min(80, Math.max(18, teleprompter_state.fontSize + delta));
+    const nueva = Math.min(TELEPROMPTER_FONT_MAX, Math.max(TELEPROMPTER_FONT_MIN, teleprompter_state.fontSize + delta));
     teleprompter_state.fontSize = nueva;
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
+    if (teleprompter_state.playing && !teleprompter_play_raf) {
+        iniciarTeleprompterPlay();
+    }
 }
 
 function teleprompterCambiarVelocidad(delta) {
-    const nueva = Math.min(200, Math.max(5, teleprompter_state.speed + delta));
+    const nueva = Math.min(TELEPROMPTER_SPEED_MAX, Math.max(TELEPROMPTER_SPEED_MIN, teleprompter_state.speed + delta));
     teleprompter_state.speed = nueva;
     actualizarTeleprompterUI();
     emitirTeleprompter();
+    if (teleprompter_state.playing && !teleprompter_play_raf) {
+        iniciarTeleprompterPlay();
+    }
 }
 
 function teleprompterTogglePlay() {
@@ -666,6 +750,100 @@ const TELEPROMPTER_GAMEPAD = {
 let teleprompter_gamepad_loop = null;
 let teleprompter_gamepad_last = null;
 let teleprompter_gamepad_prev_buttons = [];
+const teleprompter_btn_timeouts = new Map();
+const teleprompter_hold_intervals = new Map();
+
+const teleprompter_hold_actions = {
+    "font-down": () => teleprompterCambiarFuente(-2),
+    "font-up": () => teleprompterCambiarFuente(2),
+    "speed-down": () => teleprompterCambiarVelocidad(-5),
+    "speed-up": () => teleprompterCambiarVelocidad(5),
+    "scroll-up": () => teleprompterSubir(),
+    "scroll-down": () => teleprompterBajar()
+};
+
+const activarBotonVisual = (id, duracion = 160) => {
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add("tp-btn--active");
+    if (teleprompter_btn_timeouts.has(el)) {
+        clearTimeout(teleprompter_btn_timeouts.get(el));
+    }
+    const timeout = setTimeout(() => {
+        el.classList.remove("tp-btn--active");
+        teleprompter_btn_timeouts.delete(el);
+    }, duracion);
+    teleprompter_btn_timeouts.set(el, timeout);
+};
+
+const setBotonHeld = (id, activo) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (activo) {
+        el.classList.add("tp-btn--held");
+    } else {
+        el.classList.remove("tp-btn--held");
+    }
+};
+
+const iniciarHoldTeleprompter = (elemento, accion) => {
+    if (!elemento || !accion) return;
+    const ejecutar = () => accion();
+    ejecutar();
+    const interval = setInterval(ejecutar, 140);
+    teleprompter_hold_intervals.set(elemento, interval);
+    elemento.classList.add("tp-btn--held");
+};
+
+const detenerHoldTeleprompter = (elemento) => {
+    if (!elemento) return;
+    const interval = teleprompter_hold_intervals.get(elemento);
+    if (interval) {
+        clearInterval(interval);
+        teleprompter_hold_intervals.delete(elemento);
+    }
+    elemento.classList.remove("tp-btn--held");
+};
+
+const configurarHoldTeleprompter = () => {
+    const botones = document.querySelectorAll(".tp-btn");
+    botones.forEach((btn) => {
+        let activo = false;
+        const accion = teleprompter_hold_actions[btn.dataset.hold];
+        const start = (event) => {
+            if (btn.disabled || btn.classList.contains("tp-btn--empty")) return;
+            if (activo) return;
+            event.preventDefault();
+            activo = true;
+            detenerHoldTeleprompter(btn);
+            if (accion) {
+                iniciarHoldTeleprompter(btn, accion);
+            } else {
+                btn.classList.add("tp-btn--held");
+            }
+        };
+        const stop = () => {
+            if (!activo) return;
+            activo = false;
+            if (accion) {
+                detenerHoldTeleprompter(btn);
+            } else {
+                btn.classList.remove("tp-btn--held");
+            }
+        };
+        btn.addEventListener("pointerdown", start);
+        btn.addEventListener("pointerup", stop);
+        btn.addEventListener("pointerleave", stop);
+        btn.addEventListener("pointercancel", stop);
+        btn.addEventListener("mousedown", start);
+        btn.addEventListener("mouseup", stop);
+        btn.addEventListener("mouseleave", stop);
+        btn.addEventListener("touchstart", start, { passive: false });
+        btn.addEventListener("touchend", stop);
+        btn.addEventListener("touchcancel", stop);
+    });
+};
 
 const obtenerGamepadActivo = () => {
     if (!navigator.getGamepads) return null;
@@ -709,19 +887,67 @@ function teleprompterGamepadLoop(ts) {
             emitirTeleprompter();
         }
 
-        if (botonJustPressed(pad, 12)) teleprompterSubir();
-        if (botonJustPressed(pad, 13)) teleprompterBajar();
-        if (botonJustPressed(pad, 14)) teleprompterCambiarVelocidad(-5);
-        if (botonJustPressed(pad, 15)) teleprompterCambiarVelocidad(5);
-        if (botonJustPressed(pad, 0)) teleprompterTogglePlay();
-        if (botonJustPressed(pad, 2)) teleprompterCambiarFuente(-2);
-        if (botonJustPressed(pad, 3)) teleprompterCambiarFuente(2);
-        if (botonJustPressed(pad, 4)) teleprompterIrInicio();
-        if (botonJustPressed(pad, 5)) teleprompterIrFinal();
-        if (botonJustPressed(pad, 6, 0.6)) teleprompterCargarTexto(1);
-        if (botonJustPressed(pad, 7, 0.6)) teleprompterCargarTexto(2);
+        if (abs > TELEPROMPTER_GAMEPAD.deadzone) {
+            setBotonHeld("tp_dpad_up", axisY < 0);
+            setBotonHeld("tp_dpad_down", axisY > 0);
+        } else {
+            setBotonHeld("tp_dpad_up", false);
+            setBotonHeld("tp_dpad_down", false);
+        }
+
+        if (botonJustPressed(pad, 12)) {
+            teleprompterSubir();
+            activarBotonVisual("tp_dpad_up");
+        }
+        if (botonJustPressed(pad, 13)) {
+            teleprompterBajar();
+            activarBotonVisual("tp_dpad_down");
+        }
+        if (botonJustPressed(pad, 14)) {
+            teleprompterCambiarVelocidad(-5);
+            activarBotonVisual("tp_dpad_left");
+        }
+        if (botonJustPressed(pad, 15)) {
+            teleprompterCambiarVelocidad(5);
+            activarBotonVisual("tp_dpad_right");
+        }
+        if (botonJustPressed(pad, 0)) {
+            teleprompterTogglePlay();
+            activarBotonVisual("tp_x");
+            activarBotonVisual("teleprompter_play");
+        }
+        if (botonJustPressed(pad, 1)) {
+            teleprompterCambiarFuente(2);
+            activarBotonVisual("tp_circle");
+        }
+        if (botonJustPressed(pad, 2)) {
+            teleprompterCambiarFuente(-2);
+            activarBotonVisual("tp_square");
+        }
+        if (botonJustPressed(pad, 3)) {
+            teleprompterBajarGrande();
+            activarBotonVisual("tp_triangle");
+        }
+        if (botonJustPressed(pad, 4)) {
+            teleprompterIrInicio();
+            activarBotonVisual("tp_l1");
+        }
+        if (botonJustPressed(pad, 5)) {
+            teleprompterIrFinal();
+            activarBotonVisual("tp_r1");
+        }
+        if (botonJustPressed(pad, 6, 0.6)) {
+            teleprompterCambiarFuente(-2);
+            activarBotonVisual("tp_l2");
+        }
+        if (botonJustPressed(pad, 7, 0.6)) {
+            teleprompterCambiarFuente(2);
+            activarBotonVisual("tp_r2");
+        }
     } else {
         teleprompter_gamepad_prev_buttons = pad.buttons.map((btn) => !!(btn && (btn.pressed || btn.value > 0.5)));
+        setBotonHeld("tp_dpad_up", false);
+        setBotonHeld("tp_dpad_down", false);
     }
 
     teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoop);
@@ -741,6 +967,7 @@ if (typeof window !== "undefined") {
         }
     });
     window.addEventListener("load", iniciarTeleprompterGamepad);
+    window.addEventListener("load", configurarHoldTeleprompter);
 }
 function reiniciar_calentamiento() {
     socket.emit('reiniciar_calentamiento');
