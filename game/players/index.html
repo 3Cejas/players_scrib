@@ -2,21 +2,22 @@
 <html lang="es">
 
 <head>
+    <meta charset="utf-8" />
     <link  rel="icon"   href="../../img/logo.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCRB - Escritxr ✍️</title>
-    <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260213d">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
-<body>
+<body class="page-players">
     <script src="../config.js"></script>
     <script src="./js/juego.js"></script>
     <div id="corazones_escritor" class="corazones-flotantes"></div>
+    <div align="center">
     <div class="cabecera">
     <pre id="neon" class="neon">
         __     _____    _____   _____    _____    __       ____  
@@ -30,7 +31,7 @@
     <div id="logo">
         <p class="sub">powered by</p>
         <br>
-        <img src="../img/logo.png" alt="" width="15%" />
+        <img src="../img/logo.png" alt="" width="10%" />
     </div>
     </div>
     <div id="lightning">
@@ -39,17 +40,35 @@
     <div id="info">
         <h1 id="feedback1" class="feedback1"></h1>
     </div>
-    <div class="container"></div>
+    <section id="calentamiento_escritor" class="calentamiento-escritor" aria-hidden="true">
+        <div class="calentamiento-stage">
+            <div id="calentamiento_nube_escritor" class="calentamiento-nube"></div>
+            <div id="calentamiento_cursor_escritor_1" class="calentamiento-cursor equipo-1" aria-hidden="true">
+                <span class="cursor-punto"></span>
+                <span class="cursor-label">ESCRITORA AZUL</span>
+            </div>
+            <div id="calentamiento_cursor_escritor_2" class="calentamiento-cursor equipo-2" aria-hidden="true">
+                <span class="cursor-punto"></span>
+                <span class="cursor-label">ESCRITORA ROJA</span>
+            </div>
+        </div>
+        <div class="calentamiento-overlay-ui">
+            <h2 class="calentamiento-titulo">CALENTAMIENTO</h2>
+            <p id="calentamiento_estado_escritor" class="calentamiento-global-estado">Esperando vista de calentamiento.</p>
+        </div>
+    </section>
+    <div class="container">
     <br>
     <p><span id="temas" class="temas"></span></p>
-    <div class="atributos" id="atributos-container">
+    <div class="atributos-wrap">
+      <div class="atributos" id="atributos-container">
 
       <!-- FUERZA -->
       <div class="atributo" data-atributo="fuerza">
         <h2>
           Fuerza
           <span class="tooltip" tabindex="0" aria-label="¿Qué es la fuerza?">
-            <!-- Sustituimos el “?” por tu imagen -->
+            <!-- Sustituimos el "?" por tu imagen -->
             <img src="../img/tooltip.png" alt="Ayuda fuerza" />
             <span class="tooltiptext" role="tooltip">
               La fuerza determina la cantidad de tiempo que obtienes por cada palabra añadida.
@@ -59,7 +78,7 @@
           </span>
         </h2>
         <div class="controls">
-          <button type="button" data-action="decrement">−</button>
+          <button type="button" data-action="decrement">-</button>
           <span class="contador">0</span>
           <button type="button" data-action="increment">+</button>
         </div>
@@ -85,7 +104,7 @@
           </span>
         </h2>
         <div class="controls">
-          <button type="button" data-action="decrement">−</button>
+          <button type="button" data-action="decrement">-</button>
           <span class="contador">0</span>
           <button type="button" data-action="increment">+</button>
         </div>
@@ -111,7 +130,7 @@
           </span>
         </h2>
         <div class="controls">
-          <button type="button" data-action="decrement">−</button>
+          <button type="button" data-action="decrement">-</button>
           <span class="contador">0</span>
           <button type="button" data-action="increment">+</button>
         </div>
@@ -123,14 +142,19 @@
         </div>
       </div>
   
-    </div>
+      </div>
   
-    </div>
-      <div id="total" class="total">
-        Puntos usados: <span id="total-usados">0</span> / 10
+            <div id="total" class="total">
+        <span class="total-label">PUNTOS USADOS:</span>
+        <span class="total-fraction">
+          <span id="total-usados">0</span>
+          <span class="total-divider">de</span>
+          <span class="total-max">10</span>
+        </span>
+        <span class="total-cta">&iexcl;A ESCRIBIR!</span>
       </div>
     </div>
-    <button type="button" id="btnInicio" class="btnInicio">¡A escribir!</button>
+    <button type="button" id="btnInicio" class="btnInicio" aria-hidden="true" tabindex="-1">&iexcl;A ESCRIBIR!</button>
     <div id="contenedor" class="contenedor">
         <br>
         <div class="jugador">
@@ -213,7 +237,7 @@
             <div class="info-total">
                 <table id="metadatos" class="right">
                     <tr>
-                        <th> 🖋️</th>
+                        <th>🖋️</th>
                         <th>🎨</th>
                     </tr>
                     <tr>
@@ -240,3 +264,4 @@
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="./js/jugador-servidor.js"></script>
 </html>
+

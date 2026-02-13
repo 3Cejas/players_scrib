@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260213d">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -17,7 +17,7 @@
 
 <body>
     <script src="../config.js"></script>
-    <script src="./js/juego.js"></script>
+    <script src="./js/juego.js?v=20260213b"></script>
     <div class="ascii">
         <pre class="neon">
        __     _____    _____   _____    _____    __       ____  
@@ -54,9 +54,17 @@
                             <div class="control-group-title">&#x1F525; CALENTAMIENTO</div>
                             <div class="control-group-buttons control-group-buttons--two">
                                 <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F525; VISTA CALENTAMIENTO</span>
-                                <span class='btn' onclick="reiniciar_calentamiento()">&#x1F501; REJUGAR</span>
+                                <span class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
                                 <span class='btn' onclick="reiniciar_marcador_calentamiento()">&#x1F3C6; REINICIAR MARCADOR</span>
+                                <span class='btn' onclick="activar_banderas_musas()">&#x1F6A9; ACTIVAR BANDERAS</span>
                             </div>
+                            <div class="control-group-subtitle">CONSIGNAS PARA MUSAS</div>
+                            <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">
+                                <span id="boton_solicitud_lugares" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="lugares" onclick="pedir_solicitud_calentamiento('lugares')">&#x1F4CD; PEDIR LUGARES</span>
+                                <span id="boton_solicitud_acciones" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="acciones" onclick="pedir_solicitud_calentamiento('acciones')">&#x1F3C3; PEDIR ACCIONES</span>
+                                <span id="boton_solicitud_frase_final" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="frase_final" onclick="pedir_solicitud_calentamiento('frase_final')">&#x1F5E3;&#xFE0F; PEDIR FRASE FINAL</span>
+                            </div>
+                            <p id="calentamiento_solicitud_actual" class="calentamiento-solicitud-estado">CONSIGNA ACTUAL: LIBRE</p>
                         </div>
                         <div class="control-group control-group--juego">
                             <div class="control-group-title">&#x1F3AE; JUEGO</div>
@@ -163,6 +171,29 @@
             </tr>
         </tbody>
         <tbody id="panel_parametros" class="panel-oculto">
+            <tr class="panel-estado">
+                <td colspan="4">
+                    <div class="conexion-panel">
+                        <div class="conexion-title">CONEXI&Oacute;N</div>
+                        <div class="conexion-items">
+                            <div class="conexion-item">
+                                <span class="conexion-label">SERVIDOR</span>
+                                <span id="estado_servidor" class="conexion-dot conexion-dot--off" data-status="off"></span>
+                                <span id="estado_servidor_texto" class="conexion-text">DESCONECTADO</span>
+                            </div>
+                            <div class="conexion-item conexion-item--players">
+                                <span class="conexion-label">PLAYERS</span>
+                                <div class="conexion-players">
+                                    <span id="estado_player_1_label" class="conexion-player-name conexion-player-name--j1">ESCRITXR 1</span>
+                                    <span id="estado_player_1" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
+                                    <span id="estado_player_2_label" class="conexion-player-name conexion-player-name--j2">ESCRITXR 2</span>
+                                    <span id="estado_player_2" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
             <tr>
                 <td>
                     <br>
@@ -323,7 +354,6 @@
             </div>
         </div>
         <div>
-            <br>
             <div class="fin_jugador fin_jugador--j2">
                 <span class='btn' onclick="fin(2)">&#x1F534; FIN</span>
             </div>
@@ -382,6 +412,6 @@
         </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js?v=20260213b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

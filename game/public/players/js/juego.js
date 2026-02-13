@@ -430,6 +430,7 @@ function elegir_ventaja_publico(boton) {
   console.log("Elegida ventaja " + boton.value);
   voto = boton.value;
   socket.emit('enviar_voto_ventaja', voto);
+  window.dispatchEvent(new CustomEvent('musa_voto_ventaja_emitido', { detail: { voto } }));
   recordatorio.innerHTML = "<span style='color: green;'>Has votado por la ventaja " + voto + ".</span>";
   votando = false;
   sincro = 0;
@@ -460,13 +461,13 @@ function onMouseEnter() {
 }
 
 function onMouseLeave() {
-  text_progress.style.color = 'white';
+  text_progress.style.color = '';
 }
 
 
 function startProgress(button) {
   cooldown = true;
-  text_progress.innerHTML = "Inspirando..."
+  text_progress.innerHTML = "&#x1F680; Inspirando..."
   console.log("INSPIRANDO", text_progress.innerHTML, text_progress)
   text_progress.style.color = "white";
   text_progress.addEventListener('mouseenter', onMouseEnter);

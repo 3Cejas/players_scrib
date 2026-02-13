@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCRB - Bolzano Musa</title>
+    <link rel="icon" href="../img/logo.png" type="image/png" />
+    <style>
+        @font-face {
+            font-family: "Retro-gaming";
+            src: url("../css/fonts/Retro%20Gaming.ttf") format("truetype");
+        }
+
+        :root {
+            --bg: #020202;
+            --ink: #f2fbff;
+            --cyan: #63e7ff;
+            --red: #ff5959;
+            --gold: #ffd166;
+            --ok: #72f7b4;
+            --warn: #ff9f7a;
+            --team-color: #63e7ff;
+            --team-rgb: 99, 231, 255;
+            --team-color-2: #88f0ff;
+            --team-ink: #d9f5ff;
+            --calentamiento-bg:
+                linear-gradient(90deg, rgba(0, 126, 186, 0.24) 0%, rgba(6, 10, 18, 0.58) 42%, rgba(6, 10, 18, 0.58) 58%, rgba(178, 38, 38, 0.24) 100%),
+                radial-gradient(circle at 14% 20%, rgba(0, 181, 255, 0.2), transparent 56%),
+                radial-gradient(circle at 86% 20%, rgba(255, 67, 67, 0.2), transparent 56%),
+                radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.08), transparent 62%),
+                #02040a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Retro-gaming", "Share Tech Mono", monospace;
+            color: var(--ink);
+            background: var(--calentamiento-bg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: clamp(12px, 3vw, 26px);
+        }
+
+        body.equipo-azul {
+            --team-color: #63e7ff;
+            --team-rgb: 99, 231, 255;
+            --team-color-2: #94f4ff;
+            --team-ink: #d9f7ff;
+            background: var(--calentamiento-bg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        body.equipo-rojo {
+            --team-color: #ff5959;
+            --team-rgb: 255, 89, 89;
+            --team-color-2: #ff8b8b;
+            --team-ink: #ffe3e3;
+            background: var(--calentamiento-bg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .panel {
+            width: min(880px, 96vw);
+            border-radius: 22px;
+            border: 2px solid rgba(var(--team-rgb), 0.45);
+            background: rgba(8, 10, 14, 0.88);
+            box-shadow:
+                0 0 24px rgba(var(--team-rgb), 0.28),
+                0 0 42px rgba(var(--team-rgb), 0.16),
+                inset 0 0 16px rgba(255, 255, 255, 0.03);
+            padding: clamp(14px, 2.6vw, 22px);
+            display: grid;
+            gap: clamp(10px, 2vw, 16px);
+        }
+
+        .titulo {
+            font-size: clamp(20px, 4.2vw, 46px);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-align: center;
+            color: #f9fbff;
+            text-shadow:
+                -0.055em 0 var(--team-color),
+                0.055em 0 rgba(255, 255, 255, 0.14),
+                0 0 1.2rem rgba(var(--team-rgb), 0.6);
+            margin: 0;
+        }
+
+        .sub {
+            margin: 0;
+            text-align: center;
+            font-size: clamp(10px, 1.9vw, 14px);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--team-ink);
+            text-shadow: 0 0 0.7rem rgba(var(--team-rgb), 0.4);
+            opacity: 0.96;
+        }
+
+        .estado {
+            margin: 0;
+            font-size: clamp(11px, 2.1vw, 18px);
+            color: #f7d07e;
+            text-align: center;
+            min-height: 1.2em;
+        }
+
+        .semillas {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: clamp(8px, 2vw, 16px);
+        }
+
+        .semilla {
+            border: 2px solid rgba(var(--team-rgb), 0.7);
+            border-radius: 12px;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(15px, 3.5vw, 26px);
+            letter-spacing: 0.08em;
+            background: rgba(0, 0, 0, 0.28);
+            text-transform: uppercase;
+            box-shadow:
+                inset 0 0 12px rgba(var(--team-rgb), 0.08),
+                0 0 14px rgba(var(--team-rgb), 0.2);
+        }
+
+        .fusion {
+            font-size: clamp(16px, 3.1vw, 24px);
+            opacity: 0.9;
+        }
+
+        .objetivo {
+            display: grid;
+            gap: 6px;
+            justify-items: center;
+        }
+
+        .objetivo-label {
+            font-size: clamp(11px, 2vw, 15px);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #f7d07e;
+        }
+
+        .objetivo-valor {
+            border: 2px solid rgba(247, 208, 126, 0.65);
+            border-radius: 12px;
+            min-width: clamp(170px, 44vw, 300px);
+            min-height: 52px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 10px;
+            font-size: clamp(15px, 3.5vw, 26px);
+            background: rgba(0, 0, 0, 0.32);
+            text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(247, 208, 126, 0.25);
+        }
+
+        .form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+
+        .input {
+            width: 100%;
+            min-height: 52px;
+            border: 2px solid rgba(var(--team-rgb), 0.65);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-family: "Retro-gaming", "Share Tech Mono", monospace;
+            font-size: clamp(13px, 2.7vw, 20px);
+            padding: 0 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            box-shadow: inset 0 0 14px rgba(var(--team-rgb), 0.08);
+        }
+
+        .btn {
+            min-height: 52px;
+            border: 2px solid rgba(var(--team-rgb), 0.78);
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(var(--team-rgb), 0.18), rgba(7, 17, 24, 0.86));
+            color: #f1fbff;
+            font-family: "Retro-gaming", "Share Tech Mono", monospace;
+            font-size: clamp(12px, 2.2vw, 17px);
+            padding: 0 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            box-shadow: 0 0 14px rgba(var(--team-rgb), 0.28);
+            transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 0 18px rgba(var(--team-rgb), 0.45);
+            filter: saturate(1.08);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            min-height: 1.2em;
+            text-align: center;
+            font-size: clamp(11px, 2vw, 16px);
+            color: #ffb35c;
+        }
+
+        .meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: clamp(10px, 1.9vw, 14px);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .meta > div {
+            border: 1px solid rgba(var(--team-rgb), 0.35);
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: inset 0 0 12px rgba(var(--team-rgb), 0.07);
+        }
+
+        .conexion {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: clamp(10px, 1.8vw, 13px);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.92;
+        }
+
+        .chip {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #808793;
+            box-shadow: 0 0 0.5rem rgba(128, 135, 147, 0.45);
+        }
+
+        .chip.ok {
+            background: var(--ok);
+            box-shadow: 0 0 0.6rem rgba(114, 247, 180, 0.62);
+        }
+
+        .chip.error {
+            background: var(--warn);
+            box-shadow: 0 0 0.6rem rgba(255, 159, 122, 0.68);
+        }
+
+        @media (max-width: 620px) {
+            .form {
+                grid-template-columns: 1fr;
+            }
+
+            .meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="panel">
+        <h1 class="titulo">Calentamiento Musa</h1>
+        <p class="sub" id="subtitulo"></p>
+        <p id="estado" class="estado">Conectando...</p>
+
+        <section class="semillas">
+            <div id="semilla1" class="semilla">--</div>
+            <div class="fusion">+</div>
+            <div id="semilla2" class="semilla">--</div>
+        </section>
+
+        <section class="objetivo">
+            <div class="objetivo-label">Palabra intermedia</div>
+            <div id="objetivo" class="objetivo-valor">--</div>
+        </section>
+
+        <section class="form">
+            <input id="input_palabra" class="input" maxlength="10" placeholder="Escribe una palabra" />
+            <button id="btn_enviar" class="btn" type="button">Enviar</button>
+        </section>
+
+        <p id="feedback" class="feedback"></p>
+
+        <section class="meta">
+            <div id="meta_rol">Rol: --</div>
+            <div id="meta_marcador">Intentos: 0 | Aciertos: 0</div>
+        </section>
+
+        <div class="conexion">
+            <span id="chip_conexion" class="chip"></span>
+            <span id="texto_conexion">Sin conexion</span>
+        </div>
+    </main>
+
+    <script src="../config.js"></script>
+    <script src="../dist/socket.io/socket.io.js"></script>
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const player = Number(params.get("player")) === 2 ? 2 : 1;
+            const nombreMusa = player === 2 ? "MUSA ROJA" : "MUSA AZUL";
+            const body = document.body;
+            const subtitulo = document.getElementById("subtitulo");
+            const estado = document.getElementById("estado");
+            const semilla1 = document.getElementById("semilla1");
+            const semilla2 = document.getElementById("semilla2");
+            const objetivo = document.getElementById("objetivo");
+            const input = document.getElementById("input_palabra");
+            const btn = document.getElementById("btn_enviar");
+            const feedback = document.getElementById("feedback");
+            const metaRol = document.getElementById("meta_rol");
+            const metaMarcador = document.getElementById("meta_marcador");
+            const chipConexion = document.getElementById("chip_conexion");
+            const textoConexion = document.getElementById("texto_conexion");
+
+            if (body) {
+                body.classList.add(player === 2 ? "equipo-rojo" : "equipo-azul");
+            }
+
+            if (subtitulo) {
+                subtitulo.textContent = nombreMusa;
+            }
+
+            const serverUrl = window.isProduction ? window.SERVER_URL_PROD : window.SERVER_URL_DEV;
+            const socket = window.io ? window.io(serverUrl) : null;
+
+            let ultimoEstado = null;
+            let pendienteEnviado = false;
+            let semillaEnviada = false;
+
+            function setConexion(ok, texto) {
+                if (!chipConexion || !textoConexion) return;
+                chipConexion.classList.remove("ok", "error");
+                chipConexion.classList.add(ok ? "ok" : "error");
+                textoConexion.textContent = texto;
+            }
+
+            function setFeedback(texto, esError) {
+                if (!feedback) return;
+                feedback.textContent = texto || "";
+                feedback.style.color = esError ? "#ff9f7a" : "#ffcf6b";
+            }
+
+            function actualizarUI(data) {
+                if (!data) return;
+                ultimoEstado = data;
+
+                const semillas = data.semillas || {};
+                const semillasRecibidas = data.semillasRecibidas || {};
+                const rol = data.rol || "musa";
+                const estadoActual = data.estado || "inactivo";
+
+                if (semilla1) semilla1.textContent = (semillas[1] || "--").toUpperCase();
+                if (semilla2) semilla2.textContent = (semillas[2] || "--").toUpperCase();
+                if (objetivo) objetivo.textContent = (data.pendientePalabra || "--").toUpperCase();
+                if (metaRol) metaRol.textContent = `Rol: ${rol.toUpperCase()}`;
+                if (metaMarcador) metaMarcador.textContent = `Intentos: ${data.intentos || 0} | Aciertos: ${data.aciertos || 0}`;
+
+                const esSemillaDoble = rol === "semilla_doble";
+                let posicionSemilla = null;
+                if (rol === "semilla1") posicionSemilla = 1;
+                if (rol === "semilla2") posicionSemilla = 2;
+                if (esSemillaDoble) {
+                    posicionSemilla = !semillasRecibidas[1] ? 1 : (!semillasRecibidas[2] ? 2 : null);
+                }
+
+                let puedeEnviar = false;
+                let estadoTexto = "";
+                let placeholder = "Escribe una palabra";
+                input.dataset.modoEnvio = "none";
+                input.dataset.posicionSemilla = "";
+
+                if (estadoActual === "sin_musas") {
+                    estadoTexto = "Sin musas suficientes en este equipo.";
+                } else if (estadoActual === "esperando_semillas") {
+                    const semillaRecibidaActual = posicionSemilla ? Boolean(semillasRecibidas[posicionSemilla]) : true;
+                    if (posicionSemilla && !semillaRecibidaActual && !semillaEnviada) {
+                        estadoTexto = `Eres musa semilla: escribe la palabra ${posicionSemilla}.`;
+                        placeholder = `Palabra semilla ${posicionSemilla}`;
+                        puedeEnviar = true;
+                        input.dataset.modoEnvio = "semilla";
+                        input.dataset.posicionSemilla = String(posicionSemilla);
+                    } else if (posicionSemilla && !semillaRecibidaActual && semillaEnviada) {
+                        estadoTexto = "Palabra semilla enviada. Espera al resto.";
+                    } else {
+                        estadoTexto = "Esperando palabras semilla.";
+                    }
+                    if (semillasRecibidas[1] && semillasRecibidas[2]) {
+                        semillaEnviada = false;
+                    }
+                    pendienteEnviado = false;
+                } else if (estadoActual === "jugando") {
+                    const bloqueadoPorPendientePropia = Boolean(data.pendiente && data.pendienteSocketId === socket.id);
+                    if (bloqueadoPorPendientePropia || pendienteEnviado) {
+                        estadoTexto = "Esperando a otra musa.";
+                    } else {
+                        estadoTexto = "Escribe una palabra intermedia.";
+                        placeholder = "Palabra intermedia";
+                        puedeEnviar = true;
+                        input.dataset.modoEnvio = "intento";
+                    }
+                    semillaEnviada = false;
+                } else if (estadoActual === "ganado") {
+                    estadoTexto = "Acierto del equipo. Preparando siguiente ronda...";
+                    pendienteEnviado = false;
+                    semillaEnviada = false;
+                } else {
+                    estadoTexto = "Calentamiento no disponible.";
+                    pendienteEnviado = false;
+                    semillaEnviada = false;
+                }
+
+                if (estado) estado.textContent = estadoTexto;
+                if (input) {
+                    input.disabled = !puedeEnviar;
+                    input.placeholder = placeholder;
+                }
+                if (btn) {
+                    btn.disabled = !puedeEnviar;
+                }
+            }
+
+            function enviar() {
+                if (!socket || !ultimoEstado) return;
+                const palabra = (input.value || "").trim();
+                if (!palabra) {
+                    setFeedback("Escribe una palabra.", true);
+                    return;
+                }
+                if (/\s/.test(palabra)) {
+                    setFeedback("Solo una palabra, sin espacios.", true);
+                    return;
+                }
+                if (palabra.length > 10) {
+                    setFeedback("La palabra es demasiado larga.", true);
+                    return;
+                }
+
+                const modoEnvio = input.dataset.modoEnvio;
+                if (modoEnvio === "semilla") {
+                    const posicion = Number(input.dataset.posicionSemilla);
+                    if (posicion !== 1 && posicion !== 2) {
+                        setFeedback("No eres musa semilla ahora mismo.", true);
+                        return;
+                    }
+                    socket.emit("bolzano_calentamiento_semilla", { posicion, palabra });
+                    semillaEnviada = true;
+                    input.value = "";
+                    btn.disabled = true;
+                    input.disabled = true;
+                    setFeedback("Palabra semilla enviada.");
+                    return;
+                }
+
+                if (modoEnvio !== "intento") {
+                    setFeedback("Ahora mismo no puedes enviar palabra.", true);
+                    return;
+                }
+                socket.emit("bolzano_calentamiento_intento", { palabra });
+                pendienteEnviado = true;
+                input.value = "";
+                btn.disabled = true;
+                input.disabled = true;
+                setFeedback("Intento enviado.");
+            }
+
+            if (!socket) {
+                setConexion(false, "Socket no disponible");
+                setFeedback("No se pudo inicializar la conexion.", true);
+                return;
+            }
+
+            btn.addEventListener("click", enviar);
+            input.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    enviar();
+                }
+            });
+
+            socket.on("connect", () => {
+                setConexion(true, "Conectado");
+                socket.emit("registrar_musa_bolzano", { musa: player, nombre: nombreMusa });
+                socket.emit("pedir_calentamiento_estado_bolzano");
+            });
+
+            socket.on("connect_error", () => {
+                setConexion(false, "Error de conexion");
+            });
+
+            socket.on("disconnect", () => {
+                setConexion(false, "Desconectado");
+            });
+
+            socket.on("bolzano_calentamiento_estado_musa", (data) => {
+                actualizarUI(data);
+            });
+
+            socket.on("bolzano_calentamiento_error", (data) => {
+                pendienteEnviado = false;
+                semillaEnviada = false;
+                setFeedback((data && data.mensaje) ? data.mensaje : "Error.", true);
+                if (ultimoEstado) {
+                    actualizarUI(ultimoEstado);
+                }
+            });
+
+            socket.on("bolzano_calentamiento_ganado", (data) => {
+                pendienteEnviado = false;
+                semillaEnviada = false;
+                const palabra = (data && data.palabra) ? data.palabra : "";
+                setFeedback(palabra ? `Acierto: ${palabra}` : "Acierto del equipo");
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-// Se establece la conexión con el servidor según si estamos abriendo el archivo localmente o no
+﻿// Se establece la conexiÃ³n con el servidor segÃºn si estamos abriendo el archivo localmente o no
 const serverUrl = isProduction
     ? SERVER_URL_PROD
     : SERVER_URL_DEV;
@@ -90,19 +90,57 @@ let votando = false;
 const skill = getEl("skill")
 const skill_cancel = getEl("skill_cancel")
 const feedback_texto_editado = getEl("feedback_texto_editado")
+let votacion_ventaja_inline = getEl("votacion_ventaja_inline");
+let votacion_ventaja_pie_inline = getEl("votacion_ventaja_pie_inline");
+let votacion_ventaja_legend_inline = getEl("votacion_ventaja_legend_inline");
+let votacion_ventaja_total_inline = getEl("votacion_ventaja_total_inline");
+let votacion_ventaja_modal = getEl("votacion_ventaja_modal");
+let votacion_ventaja_modal_titulo = getEl("votacion_ventaja_modal_titulo");
+let votacion_ventaja_modal_opciones = getEl("votacion_ventaja_modal_opciones");
+let votacion_ventaja_modal_explicaciones = getEl("votacion_ventaja_modal_explicaciones");
+let votacion_ventaja_pie_modal = getEl("votacion_ventaja_pie_modal");
+let votacion_ventaja_legend_modal = getEl("votacion_ventaja_legend_modal");
+let votacion_ventaja_total_modal = getEl("votacion_ventaja_total_modal");
+let votacion_ventaja_activa = false;
+let votacion_ventaja_participo = false;
+let votacion_ventaja_ya_voto = false;
+let votacion_ventaja_equipo = null;
+let votacion_ventaja_opciones = [];
+let votacion_ventaja_votos = {};
+let votacion_ventaja_voto_emitido = false;
+let votacion_ventaja_gracias_timer = null;
 var intervalID = -1;
 let timer = null;
 let preparados_timer = null;
 let sub_timer = null;
 let listener_cuenta_atras = null;
 let LIMITE_TIEMPO_INSPIRACION = 30;
+const EMOJI_TORTUGA = "\uD83D\uDC22";
+const EMOJI_RAYO = "\u26A1";
+const EMOJI_ESPEJO = "\uD83D\uDE43";
+const EMOJI_BRUMA = "\uD83C\uDF2A\uFE0F";
+const EMOJI_BLOQUEO = "\uD83D\uDD8A\uFE0F";
+const EMOJI_ROCKET = "\uD83D\uDE80";
+const EMOJI_EDITAR = "\u270F\uFE0F";
+const EMOJI_ENVIAR = "\u2709\uFE0F";
+const EMOJI_STAR = "\u2B50";
+const EMOJI_CORAZON_OJOS = "\uD83E\uDD0D";
 const VENTAJAS_PUTADAS = [
-    { emoji: "🐢", descripcion: "🐢 El teclado del contrincante irá más lento." },
-    { emoji: "⚡", descripcion: "⚡ El videojuego borrará más rápido el texto del contrincante." },
-    { emoji: "🙃", descripcion: "🙃 El texto se volverá un espejo para el contrincante." },
-    { emoji: "🌪️", descripcion: "🌪️ Una pesada bruma caerá sobre el texto del contrincante." },
-    { emoji: "🖊️", descripcion: "🖊️ El contrincante no podrá borrar su texto." }
+    { emoji: EMOJI_TORTUGA, descripcion: `${EMOJI_TORTUGA} El teclado del contrincante ira mas lento.` },
+    { emoji: EMOJI_RAYO, descripcion: `${EMOJI_RAYO} El videojuego borrara mas rapido el texto del contrincante.` },
+    { emoji: EMOJI_ESPEJO, descripcion: `${EMOJI_ESPEJO} El texto se volvera un espejo para el contrincante.` },
+    { emoji: EMOJI_BRUMA, descripcion: `${EMOJI_BRUMA} Una pesada bruma caera sobre el texto del contrincante.` },
+    { emoji: EMOJI_BLOQUEO, descripcion: `${EMOJI_BLOQUEO} El contrincante no podra borrar su texto.` }
 ];
+const MAPA_VENTAJAS_PUTADAS = new Map(VENTAJAS_PUTADAS.map(op => [op.emoji, op]));
+const COLORES_VOTACION_VENTAJA = ["#46f0ff", "#ff6b6b", "#f7d07e"];
+const SEGMENTOS_PIE_VOTACION = new WeakMap();
+
+function normalizarEquipoVotacion(valor) {
+    if (valor === 1 || valor === "1" || valor === "j1") return 1;
+    if (valor === 2 || valor === "2" || valor === "j2") return 2;
+    return null;
+}
 
 function obtenerOpcionesVentaja(opcionesEmojis) {
     const mapa = new Map(VENTAJAS_PUTADAS.map(op => [op.emoji, op]));
@@ -114,6 +152,286 @@ function obtenerOpcionesVentaja(opcionesEmojis) {
         .filter(Boolean)
         .slice(0, 3);
 }
+
+function ocultarModalVotacionVentaja() {
+    if (votacion_ventaja_modal) {
+        votacion_ventaja_modal.classList.remove("activa");
+    }
+}
+
+function mostrarModalVotacionVentaja() {
+    if (votacion_ventaja_modal) {
+        votacion_ventaja_modal.classList.add("activa");
+    }
+}
+
+function ocultarInlineVotacionVentaja() {
+    if (votacion_ventaja_inline) {
+        votacion_ventaja_inline.classList.remove("activa");
+    }
+}
+
+function mostrarInlineVotacionVentaja() {
+    if (votacion_ventaja_inline) {
+        votacion_ventaja_inline.classList.add("activa");
+    }
+}
+
+function construirDatosVotacionVentaja(opciones, votos) {
+    const opcionesUsar = Array.isArray(opciones) ? opciones.slice(0, 3) : [];
+    return opcionesUsar.map((emoji, idx) => {
+        const info = MAPA_VENTAJAS_PUTADAS.get(emoji);
+        const descripcionBase = info ? info.descripcion : "Desventaja";
+        const descripcion = String(descripcionBase).startsWith(emoji)
+            ? String(descripcionBase).slice(emoji.length).trim()
+            : String(descripcionBase);
+        return {
+            emoji,
+            descripcion,
+            color: COLORES_VOTACION_VENTAJA[idx % COLORES_VOTACION_VENTAJA.length],
+            votos: Number(votos && votos[emoji]) || 0
+        };
+    });
+}
+
+function inicializarVotosVentajaEquilibrado(opciones) {
+    const base = {};
+    if (!Array.isArray(opciones)) return base;
+    opciones.slice(0, 3).forEach((emoji) => {
+        base[emoji] = 0;
+    });
+    return base;
+}
+
+function mostrarGraciasVotoVentaja(voto) {
+    if (votacion_ventaja_modal_titulo) {
+        votacion_ventaja_modal_titulo.textContent = "GRACIAS POR VOTAR";
+    }
+    if (recordatorio) {
+        recordatorio.innerHTML = `<span style='color: green;'>Gracias por votar ${escapeHtml(voto)}.</span>`;
+    }
+}
+
+function pintarEmojisPieVotacionVentaja(pieEl, datos, total) {
+    if (!pieEl || !Array.isArray(datos) || datos.length === 0) return;
+    const previo = pieEl.querySelector(".votacion-ventaja-pie-emojis");
+    if (previo) {
+        previo.remove();
+    }
+    const capa = document.createElement("div");
+    capa.className = "votacion-ventaja-pie-emojis";
+    let acumulado = 0;
+    datos.forEach((item) => {
+        if (total > 0 && item.votos <= 0) {
+            return;
+        }
+        const proporcion = total > 0 ? (item.votos / total) : (1 / datos.length);
+        const inicio = acumulado;
+        const fin = acumulado + (proporcion * 360);
+        acumulado = fin;
+        const angulo = ((inicio + fin) / 2) - 90;
+        const radio = 36;
+        const rad = (angulo * Math.PI) / 180;
+        const x = 50 + (Math.cos(rad) * radio);
+        const y = 50 + (Math.sin(rad) * radio);
+        const etiqueta = document.createElement("span");
+        etiqueta.className = "votacion-ventaja-pie-emoji";
+        etiqueta.textContent = item.emoji;
+        etiqueta.style.left = `${x.toFixed(2)}%`;
+        etiqueta.style.top = `${y.toFixed(2)}%`;
+        capa.appendChild(etiqueta);
+    });
+    pieEl.appendChild(capa);
+}
+
+function pintarPieVotacionVentaja(pieEl, totalEl, legendEl, datos) {
+    if (!pieEl || !legendEl) return;
+    const total = datos.reduce((acc, item) => acc + item.votos, 0);
+    let acumulado = 0;
+    const segmentos = datos.map((item) => {
+        const proporcion = total > 0 ? (item.votos / total) : (1 / datos.length);
+        const inicio = acumulado;
+        const fin = acumulado + (proporcion * 360);
+        acumulado = fin;
+        return {
+            inicio,
+            fin,
+            color: item.color,
+            emoji: item.emoji
+        };
+    });
+
+    pieEl.style.background = `conic-gradient(${segmentos.map(seg => `${seg.color} ${seg.inicio.toFixed(2)}deg ${seg.fin.toFixed(2)}deg`).join(", ")})`;
+    pieEl.classList.toggle("sin-votos", total === 0);
+    SEGMENTOS_PIE_VOTACION.set(pieEl, segmentos);
+    pintarEmojisPieVotacionVentaja(pieEl, datos, total);
+    if (totalEl) {
+        totalEl.textContent = String(total);
+    }
+
+    legendEl.innerHTML = "";
+    datos.forEach((item) => {
+        const fila = document.createElement("div");
+        fila.className = "votacion-ventaja-legend-item";
+
+        const color = document.createElement("span");
+        color.className = "votacion-ventaja-color";
+        color.style.background = item.color;
+
+        const emoji = document.createElement("span");
+        emoji.className = "votacion-ventaja-emoji";
+        emoji.textContent = item.emoji;
+
+        const desc = document.createElement("span");
+        desc.className = "votacion-ventaja-desc";
+        desc.textContent = item.descripcion;
+
+        const count = document.createElement("span");
+        count.className = "votacion-ventaja-count";
+        count.textContent = String(item.votos);
+
+        const pct = document.createElement("span");
+        pct.className = "votacion-ventaja-pct";
+        pct.textContent = total > 0 ? `${Math.round((item.votos / total) * 100)}%` : "0%";
+
+        fila.append(color, emoji, desc, count, pct);
+        legendEl.appendChild(fila);
+    });
+}
+
+function obtenerEmojiPorClickPie(pieEl, evt) {
+    if (!pieEl || !evt) return "";
+    const segmentos = SEGMENTOS_PIE_VOTACION.get(pieEl);
+    if (!Array.isArray(segmentos) || segmentos.length === 0) return "";
+
+    const rect = pieEl.getBoundingClientRect();
+    const cx = rect.left + (rect.width / 2);
+    const cy = rect.top + (rect.height / 2);
+    const dx = evt.clientX - cx;
+    const dy = evt.clientY - cy;
+    const radioExterior = rect.width / 2;
+    const distancia = Math.sqrt((dx * dx) + (dy * dy));
+    const radioHueco = radioExterior * 0.68;
+    if (distancia < radioHueco || distancia > radioExterior) {
+        return "";
+    }
+
+    let angulo = (Math.atan2(dy, dx) * 180 / Math.PI) + 90;
+    if (angulo < 0) angulo += 360;
+
+    const segmento = segmentos.find((seg) => angulo >= seg.inicio && angulo < seg.fin);
+    return segmento ? segmento.emoji : "";
+}
+
+function votarVentajaPorEmoji(emoji) {
+    if (!emoji || !votacion_ventaja_activa || votacion_ventaja_ya_voto || votacion_ventaja_voto_emitido) {
+        return;
+    }
+    votacion_ventaja_voto_emitido = true;
+    if (typeof elegir_ventaja_publico === "function") {
+        elegir_ventaja_publico({ value: emoji });
+        return;
+    }
+    socket.emit("enviar_voto_ventaja", emoji);
+    window.dispatchEvent(new CustomEvent("musa_voto_ventaja_emitido", { detail: { voto: emoji } }));
+}
+
+function renderizarModalVotacionVentaja(opciones) {
+    if (!Array.isArray(opciones) || opciones.length === 0) return;
+    if (votacion_ventaja_modal_titulo) {
+        votacion_ventaja_modal_titulo.textContent = `ELIGE UNA DESVENTAJA PARA ${nombre1.value || "ESCRITXR"}`;
+    }
+    if (votacion_ventaja_modal_opciones) {
+        votacion_ventaja_modal_opciones.innerHTML = `<p class="votacion-ventaja-modal-ayuda">Toca un quesito del grafico para votar.</p>`;
+    }
+    if (votacion_ventaja_modal_explicaciones) {
+        votacion_ventaja_modal_explicaciones.innerHTML = "";
+    }
+}
+
+function manejarClickModalVotacionVentaja(evt) {
+    const boton = evt.target && evt.target.closest
+        ? evt.target.closest(".votacion-ventaja-modal-btn")
+        : null;
+    if (!boton) {
+        return;
+    }
+    votarVentajaPorEmoji(boton.value);
+}
+
+function votarVentajaDesdeModal(boton) {
+    votarVentajaPorEmoji(boton && boton.value ? boton.value : "");
+}
+
+window.votarVentajaDesdeModal = votarVentajaDesdeModal;
+
+function manejarClickPieModalVotacionVentaja(evt) {
+    const emoji = obtenerEmojiPorClickPie(votacion_ventaja_pie_modal, evt);
+    if (!emoji) return;
+    votarVentajaPorEmoji(emoji);
+}
+
+function actualizarPiesVotacionVentaja() {
+    const datos = construirDatosVotacionVentaja(votacion_ventaja_opciones, votacion_ventaja_votos);
+    if (!datos.length) return;
+    pintarPieVotacionVentaja(
+        votacion_ventaja_pie_modal,
+        votacion_ventaja_total_modal,
+        votacion_ventaja_legend_modal,
+        datos
+    );
+    pintarPieVotacionVentaja(
+        votacion_ventaja_pie_inline,
+        votacion_ventaja_total_inline,
+        votacion_ventaja_legend_inline,
+        datos
+    );
+}
+
+function resetearEstadoVotacionVentaja() {
+    votacion_ventaja_activa = false;
+    votacion_ventaja_participo = false;
+    votacion_ventaja_ya_voto = false;
+    votacion_ventaja_voto_emitido = false;
+    votacion_ventaja_equipo = null;
+    votacion_ventaja_opciones = [];
+    votacion_ventaja_votos = {};
+    if (votacion_ventaja_gracias_timer) {
+        clearTimeout(votacion_ventaja_gracias_timer);
+        votacion_ventaja_gracias_timer = null;
+    }
+    ocultarModalVotacionVentaja();
+    ocultarInlineVotacionVentaja();
+}
+
+if (votacion_ventaja_modal_opciones) {
+    votacion_ventaja_modal_opciones.addEventListener("click", manejarClickModalVotacionVentaja);
+}
+if (votacion_ventaja_pie_modal) {
+    votacion_ventaja_pie_modal.addEventListener("click", manejarClickPieModalVotacionVentaja);
+}
+
+window.addEventListener("musa_voto_ventaja_emitido", (evt) => {
+    const voto = evt && evt.detail ? evt.detail.voto : "";
+    if (voto) {
+        votacion_ventaja_votos[voto] = (Number(votacion_ventaja_votos[voto]) || 0) + 1;
+    }
+    actualizarPiesVotacionVentaja();
+    mostrarGraciasVotoVentaja(voto);
+    votacion_ventaja_ya_voto = true;
+    votacion_ventaja_voto_emitido = true;
+    if (votacion_ventaja_gracias_timer) {
+        clearTimeout(votacion_ventaja_gracias_timer);
+    }
+    votacion_ventaja_gracias_timer = setTimeout(() => {
+        ocultarModalVotacionVentaja();
+        if (votacion_ventaja_activa) {
+            mostrarInlineVotacionVentaja();
+        } else {
+            ocultarInlineVotacionVentaja();
+        }
+    }, 600);
+});
 
 const RETRASO_TECLADO_LENTO_MS = 500;
 let teclado_lento_putada = false;
@@ -328,8 +646,8 @@ function mostrarMensajeLecturaFinal() {
     const musaLabel = nombre_musa || "MUSA";
     const estiloMusa = obtenerEstiloMusa();
     const nombreHtml = `<span style="${estiloMusa}">${escapeHtml(musaLabel)}</span>`;
-    const enhorabuenaHtml = `<span style="color: lime;">¡Enhorabuena!</span>`;
-    tarea.innerHTML = `${nombreHtml}, lee el fruto de tu creación. ${enhorabuenaHtml}`;
+    const enhorabuenaHtml = `<span style="color: lime;">&iexcl;Enhorabuena!</span>`;
+    tarea.innerHTML = `${nombreHtml}, lee el fruto de tu creacion. ${enhorabuenaHtml}`;
     recordatorio.innerHTML = "";
     notificacion.style.display = "block";
     if (campo_palabra) {
@@ -450,318 +768,242 @@ let jugador2 = document.querySelector('.jugador2');
 let nombre_musa_label = getEl("nombre_musa_label");
 const calentamiento_section = getEl("calentamiento");
 const calentamiento_estado = getEl("calentamiento_estado");
-const calentamiento_semilla1 = getEl("calentamiento_semilla1");
-const calentamiento_semilla2 = getEl("calentamiento_semilla2");
-const calentamiento_objetivo = getEl("calentamiento_objetivo");
-const calentamiento_intentos = getEl("calentamiento_intentos");
-const calentamiento_aciertos = getEl("calentamiento_aciertos");
 const calentamiento_input = getEl("calentamiento_input");
 const calentamiento_enviar = getEl("calentamiento_enviar");
+const calentamiento_text_progress = getEl("calentamiento_text_progress");
+const calentamiento_bar_progress = getEl("calentamiento_bar_progress");
 
 aplicarTecladoLento(campo_palabra);
 aplicarTecladoLento(calentamiento_input);
+
 const calentamiento_feedback = getEl("calentamiento_feedback");
-const calentamiento_usadas = getEl("calentamiento_usadas");
-let calentamiento_rol = "musa";
 let calentamiento_activo = false;
 let calentamiento_vista = false;
-let calentamiento_estado_actual = "inactivo";
-let calentamiento_pendiente_enviado = false;
-let calentamiento_semilla_enviada = false;
-let calentamiento_pendiente_anterior = false;
-let calentamiento_bloqueado_revelacion = false;
-let calentamiento_timeout_revelacion = null;
-const CALENTAMIENTO_REVELADO_MS = 3000;
-let calentamiento_revelacion_inicio = 0;
-let calentamiento_ultimo_estado = null;
-let calentamiento_timeout_ganado = null;
-let calentamiento_sonido_ganado = null;
-const CALENTAMIENTO_GANADO_MS = 8000;
-let calentamiento_ultimo_ganado = "";
-const CALENTAMIENTO_GANADO_ESPERA_MS = 3000;
-let calentamiento_timeout_ganado_show = null;
-let calentamiento_semillas_prev = { 1: "", 2: "" };
-let calentamiento_semillas_reveladas = false;
-let calentamiento_semillas_reveal_at = 0;
-let calentamiento_timeout_semillas_reveal = null;
-let calentamiento_semillas_ts = 0;
-let calentamiento_objetivo_prev = "";
-let calentamiento_ultimo_intento_id = null;
-let calentamiento_timeout_intermedia_reveal = null;
-const CALENTAMIENTO_INTERMEDIA_VISIBLE_MS = 2500;
-let calentamiento_intermedia_visible_hasta = 0;
-let calentamiento_intermedia_reveal_at = 0;
+let timeout_destello_calentamiento = null;
+let timeout_feedback_calentamiento = null;
+let calentamiento_cooldown = false;
+let calentamiento_interval_cooldown = null;
+let calentamiento_solicitud_actual = null;
+let timeout_animacion_consigna = null;
+const MENSAJES_SOLICITUD_CALENTAMIENTO = {
+    libre: {
+        estado: "Envia palabras para llenar la pantalla del calentamiento.",
+        placeholder: "Escribe una palabra"
+    },
+    lugares: {
+        estado: "Envia lugares o sitios donde la historia naciera.",
+        estadoHtml: 'Envia <span class="calentamiento-consigna-lugares">lugares o sitios</span> donde la historia naciera.',
+        placeholder: "Ejemplo: playa"
+    },
+    acciones: {
+        estado: "Envia acciones (verbos) con las que historia avanzase.",
+        estadoHtml: 'Envia <span class="calentamiento-consigna-acciones">acciones (verbos)</span> con las que la historia avanzase.',
+        placeholder: "Ejemplo: correr"
+    },
+    frase_final: {
+        estado: "Envía palabras para construir la frase final.",
+        estadoHtml: 'Envia palabras para construir la <span class="calentamiento-consigna-frase-final">frase final</span>.',
+        placeholder: "Ejemplo: destino"
+    }
+};
+
+const actualizarTemaCalentamiento = (equipo) => {
+    if (!calentamiento_section) return;
+    const idEquipo = Number(equipo || player);
+    const esRojo = idEquipo === 2;
+    calentamiento_section.classList.toggle("calentamiento-equipo-1", !esRojo);
+    calentamiento_section.classList.toggle("calentamiento-equipo-2", esRojo);
+    const colorProgreso = esRojo ? "rgba(255, 125, 125, 0.92)" : "rgba(123, 239, 255, 0.92)";
+    const colorTextoProgreso = esRojo ? "#ffb8b8" : "#8fefff";
+    document.documentElement.style.setProperty("--musa-progress-color", colorProgreso);
+    document.documentElement.style.setProperty("--musa-progress-text-color", colorTextoProgreso);
+};
+
+const obtenerColorFeedbackCalentamiento = () => {
+    if (!calentamiento_section) return "#9fffa2";
+    return calentamiento_section.classList.contains("calentamiento-equipo-2")
+        ? "#ffafaf"
+        : "#8cefff";
+};
+
+const restaurarTextoBotonCalentamiento = () => {
+    if (!calentamiento_text_progress) return;
+    calentamiento_text_progress.innerHTML = `ENVIAR <span class="btn-emoji" aria-hidden="true">${EMOJI_ROCKET}</span>`;
+    calentamiento_text_progress.style.color = "";
+};
+
+const onMouseEnterCalentamiento = () => {
+    if (!calentamiento_text_progress) return;
+    calentamiento_text_progress.style.color = "black";
+};
+
+const onMouseLeaveCalentamiento = () => {
+    if (!calentamiento_text_progress) return;
+    calentamiento_text_progress.style.color = "";
+};
+
+const limpiarCooldownCalentamiento = () => {
+    if (calentamiento_interval_cooldown) {
+        clearInterval(calentamiento_interval_cooldown);
+        calentamiento_interval_cooldown = null;
+    }
+    if (calentamiento_text_progress) {
+        calentamiento_text_progress.removeEventListener("mouseenter", onMouseEnterCalentamiento);
+        calentamiento_text_progress.removeEventListener("mouseleave", onMouseLeaveCalentamiento);
+    }
+    if (calentamiento_bar_progress) {
+        calentamiento_bar_progress.style.width = "0%";
+    }
+    restaurarTextoBotonCalentamiento();
+    calentamiento_cooldown = false;
+};
+
+const startProgressCalentamiento = (button) => {
+    if (!button || !calentamiento_text_progress || !calentamiento_bar_progress) return;
+    calentamiento_cooldown = true;
+    calentamiento_text_progress.textContent = "Enviando...";
+    calentamiento_text_progress.style.color = "white";
+    calentamiento_text_progress.addEventListener("mouseenter", onMouseEnterCalentamiento);
+    calentamiento_text_progress.addEventListener("mouseleave", onMouseLeaveCalentamiento);
+    let progress = 0;
+    const incrementoPorIntervalo = 100;
+    const limiteSegundos = Number(LIMITE_TIEMPO_INSPIRACION) > 0 ? Number(LIMITE_TIEMPO_INSPIRACION) : 30;
+    const intervalo = (limiteSegundos * 1000) / incrementoPorIntervalo;
+    if (calentamiento_interval_cooldown) {
+        clearInterval(calentamiento_interval_cooldown);
+    }
+    calentamiento_interval_cooldown = setInterval(() => {
+        progress += 1;
+        calentamiento_bar_progress.style.width = `${progress}%`;
+        if (progress >= 100) {
+            clearInterval(calentamiento_interval_cooldown);
+            calentamiento_interval_cooldown = null;
+            setTimeout(() => {
+                limpiarCooldownCalentamiento();
+            }, 1000);
+        }
+    }, intervalo);
+};
 
 const mostrarFeedbackCalentamiento = (mensaje, esError = false) => {
     if (!calentamiento_feedback) return;
-    const prefijo = esError ? "⚠️ " : "✨ ";
-    calentamiento_feedback.innerHTML = `${prefijo}${mensaje}`;
-    calentamiento_feedback.style.color = esError ? "#ff6b6b" : "#ffb35c";
-};
-const animarReveladoCalentamiento = (elemento) => {
-    if (!elemento) return;
-    elemento.classList.remove("calentamiento-revelar");
-    void elemento.offsetWidth;
-    elemento.classList.add("calentamiento-revelar");
-    elemento.addEventListener("animationend", () => {
-        elemento.classList.remove("calentamiento-revelar");
-    }, { once: true });
+    const texto = typeof mensaje === "string" ? mensaje : "";
+    calentamiento_feedback.textContent = texto;
+    calentamiento_feedback.style.color = esError ? "#ff6b6b" : obtenerColorFeedbackCalentamiento();
+    if (timeout_feedback_calentamiento) {
+        clearTimeout(timeout_feedback_calentamiento);
+        timeout_feedback_calentamiento = null;
+    }
+    if (!texto) return;
+    timeout_feedback_calentamiento = setTimeout(() => {
+        if (!calentamiento_feedback) return;
+        calentamiento_feedback.textContent = "";
+        timeout_feedback_calentamiento = null;
+    }, 2400);
 };
 
-const actualizarCalentamiento = (data) => {
-    if (!data) return;
-    calentamiento_ultimo_estado = data;
+const dispararDestelloCalentamiento = (equipo) => {
+    if (!calentamiento_section) return;
+    const idEquipo = Number(equipo || player);
+    const clase = idEquipo === 2 ? "destello-equipo-2" : "destello-equipo-1";
+    calentamiento_section.classList.remove("destello-equipo-1", "destello-equipo-2");
+    void calentamiento_section.offsetWidth;
+    calentamiento_section.classList.add(clase);
+    if (timeout_destello_calentamiento) {
+        clearTimeout(timeout_destello_calentamiento);
+    }
+    timeout_destello_calentamiento = setTimeout(() => {
+        calentamiento_section.classList.remove(clase);
+        timeout_destello_calentamiento = null;
+    }, 820);
+};
+
+const animarCambioConsignaCalentamiento = () => {
+    if (!calentamiento_section) return;
+    calentamiento_section.classList.remove("calentamiento-consigna-cambio");
+    void calentamiento_section.offsetWidth;
+    calentamiento_section.classList.add("calentamiento-consigna-cambio");
+    if (timeout_animacion_consigna) {
+        clearTimeout(timeout_animacion_consigna);
+    }
+    timeout_animacion_consigna = setTimeout(() => {
+        if (!calentamiento_section) return;
+        calentamiento_section.classList.remove("calentamiento-consigna-cambio");
+        timeout_animacion_consigna = null;
+    }, 760);
+};
+
+const actualizarCalentamiento = (data = {}) => {
     calentamiento_activo = Boolean(data.activo);
     calentamiento_vista = Boolean(data.vista);
-    calentamiento_rol = data.rol || "musa";
-    calentamiento_estado_actual = data.estado || "inactivo";
+    actualizarTemaCalentamiento(data.equipo || player);
+    const solicitud = (typeof data.solicitud === "string" && MENSAJES_SOLICITUD_CALENTAMIENTO[data.solicitud])
+        ? data.solicitud
+        : "libre";
+    const solicitudAnterior = calentamiento_solicitud_actual;
+    calentamiento_solicitud_actual = solicitud;
+    const cambioConsigna = Boolean(solicitudAnterior && solicitudAnterior !== solicitud);
+    const mensajeSolicitud = MENSAJES_SOLICITUD_CALENTAMIENTO[solicitud] || MENSAJES_SOLICITUD_CALENTAMIENTO.libre;
+    const visible = calentamiento_activo && calentamiento_vista;
+
     if (document.body) {
-        document.body.classList.toggle("vista-calentamiento-musa", calentamiento_activo && calentamiento_vista);
+        document.body.classList.toggle("vista-calentamiento-musa", visible);
     }
     if (calentamiento_section) {
-        calentamiento_section.classList.toggle("activo", calentamiento_activo && calentamiento_vista);
+        calentamiento_section.classList.toggle("activo", visible);
     }
-    if (!calentamiento_activo || !calentamiento_vista) {
+
+    if (!visible) {
         if (calentamiento_estado) {
-            calentamiento_estado.textContent = calentamiento_activo ? "Calentamiento oculto." : "Calentamiento inactivo.";
+            calentamiento_estado.textContent = calentamiento_activo
+                ? "Calentamiento oculto."
+                : "Calentamiento inactivo.";
         }
+        limpiarCooldownCalentamiento();
+        mostrarFeedbackCalentamiento("");
         if (calentamiento_input) calentamiento_input.disabled = true;
         if (calentamiento_enviar) calentamiento_enviar.disabled = true;
-        calentamiento_bloqueado_revelacion = false;
-        calentamiento_revelacion_inicio = 0;
-        if (calentamiento_timeout_revelacion) {
-            clearTimeout(calentamiento_timeout_revelacion);
-            calentamiento_timeout_revelacion = null;
-        }
         return;
     }
-    const semillas = data.semillas || {};
-    const semillasRecibidas = data.semillasRecibidas || {};
-    const semilla1Recibida = Boolean(semillasRecibidas[1]);
-    const semilla2Recibida = Boolean(semillasRecibidas[2]);
-    const ultimoIntento = data.ultimoIntento || null;
-    if (!ultimoIntento || !Array.isArray(ultimoIntento.palabras)) {
-        calentamiento_ultimo_intento_id = null;
-        calentamiento_intermedia_reveal_at = 0;
-        if (calentamiento_timeout_intermedia_reveal) {
-            clearTimeout(calentamiento_timeout_intermedia_reveal);
-            calentamiento_timeout_intermedia_reveal = null;
-        }
-    } else if (ultimoIntento.id !== calentamiento_ultimo_intento_id) {
-        if (calentamiento_timeout_intermedia_reveal) {
-            clearTimeout(calentamiento_timeout_intermedia_reveal);
-        }
-        calentamiento_ultimo_intento_id = ultimoIntento.id;
-        const esperaReveal = CALENTAMIENTO_REVELADO_MS + 250;
-        calentamiento_intermedia_reveal_at = Date.now() + esperaReveal;
-        calentamiento_timeout_intermedia_reveal = setTimeout(() => {
-            const palabraA = ultimoIntento.palabras[0] || "--";
-            const palabraB = ultimoIntento.palabras[1] || ultimoIntento.palabras[0] || "--";
-            if (calentamiento_semilla1) {
-                calentamiento_semilla1.textContent = palabraA;
-                animarReveladoCalentamiento(calentamiento_semilla1);
-            }
-            if (calentamiento_semilla2) {
-                calentamiento_semilla2.textContent = palabraB;
-                animarReveladoCalentamiento(calentamiento_semilla2);
-            }
-            calentamiento_semillas_prev = { 1: palabraA, 2: palabraB };
-            calentamiento_intermedia_visible_hasta = Date.now() + CALENTAMIENTO_INTERMEDIA_VISIBLE_MS;
-            calentamiento_intermedia_reveal_at = 0;
-        }, esperaReveal);
-    }
-    const ahora = Date.now();
-    const intermediaVisible = ahora < calentamiento_intermedia_visible_hasta;
-    const intermediaPendiente = calentamiento_intermedia_reveal_at && ahora < calentamiento_intermedia_reveal_at;
-    const semillaA = semillas[1] || "";
-    const semillaB = semillas[2] || "";
-    const semillasListas = Boolean(semillaA && semillaB);
-    const semillasTs = Number(data.semillasTs) || 0;
-    if (!semillasListas) {
-        calentamiento_semillas_reveladas = false;
-        calentamiento_semillas_ts = 0;
-        calentamiento_semillas_reveal_at = 0;
-        if (calentamiento_timeout_semillas_reveal) {
-            clearTimeout(calentamiento_timeout_semillas_reveal);
-            calentamiento_timeout_semillas_reveal = null;
-        }
-    } else if (semillasTs && semillasTs !== calentamiento_semillas_ts) {
-        calentamiento_semillas_ts = semillasTs;
-        calentamiento_semillas_reveladas = false;
-        if (calentamiento_timeout_semillas_reveal) {
-            clearTimeout(calentamiento_timeout_semillas_reveal);
-        }
-        const esperaSemillas = CALENTAMIENTO_REVELADO_MS + 250;
-        calentamiento_semillas_reveal_at = Date.now() + esperaSemillas;
-        calentamiento_timeout_semillas_reveal = setTimeout(() => {
-            calentamiento_semillas_reveladas = true;
-            calentamiento_semillas_reveal_at = 0;
-            if (!intermediaVisible && !intermediaPendiente) {
-                if (calentamiento_semilla1) {
-                    calentamiento_semilla1.textContent = semillaA || "--";
-                    animarReveladoCalentamiento(calentamiento_semilla1);
-                }
-                if (calentamiento_semilla2) {
-                    calentamiento_semilla2.textContent = semillaB || "--";
-                    animarReveladoCalentamiento(calentamiento_semilla2);
-                }
-                calentamiento_semillas_prev = { 1: semillaA, 2: semillaB };
-            }
-        }, esperaSemillas);
-    } else if (!semillasTs && semillasListas && !calentamiento_semillas_reveladas) {
-        calentamiento_semillas_reveladas = true;
-        calentamiento_semillas_reveal_at = 0;
-    }
-    const mostrarSemillas = !intermediaVisible && !intermediaPendiente && calentamiento_semillas_reveladas;
-    if (mostrarSemillas) {
-        const mostrar1 = semillaA || "--";
-        const mostrar2 = semillaB || "--";
-        if (calentamiento_semilla1) calentamiento_semilla1.textContent = mostrar1;
-        if (calentamiento_semilla2) calentamiento_semilla2.textContent = mostrar2;
-        calentamiento_semillas_prev = { 1: mostrar1, 2: mostrar2 };
-    } else if (!intermediaVisible && !intermediaPendiente) {
-        if (calentamiento_semilla1) calentamiento_semilla1.textContent = "--";
-        if (calentamiento_semilla2) calentamiento_semilla2.textContent = "--";
-    }
-    if (calentamiento_objetivo) {
-        const pendientePalabra = data.pendientePalabra || "";
-        const pendienteSocketId = data.pendienteSocketId || "";
-        const esRemitente = pendienteSocketId && socket && socket.id && pendienteSocketId === socket.id;
-        const objetivoTexto = esRemitente ? (pendientePalabra || "--") : "--";
-        calentamiento_objetivo.textContent = objetivoTexto;
-        if (objetivoTexto !== "--" && objetivoTexto !== calentamiento_objetivo_prev) {
-            animarReveladoCalentamiento(calentamiento_objetivo);
-        }
-        calentamiento_objetivo_prev = objetivoTexto;
-    }
-    if (semillas[1] && semillas[2]) {
-        if (calentamiento_feedback && calentamiento_feedback.textContent.includes("Palabra enviada")) {
-            calentamiento_feedback.textContent = "";
-        }
-    }
-    if (calentamiento_intentos) calentamiento_intentos.textContent = data.intentos ?? 0;
-    if (calentamiento_aciertos) calentamiento_aciertos.textContent = data.aciertos ?? 0;
-    if (calentamiento_usadas) {
-        const usadas = Array.isArray(data.usadas) ? data.usadas : [];
-        calentamiento_usadas.textContent = usadas.length ? usadas.join(" | ") : "-";
-    }
-    if (!data.pendiente) {
-        calentamiento_pendiente_enviado = false;
-    }
-    if (calentamiento_pendiente_anterior && !data.pendiente && calentamiento_estado_actual === "jugando") {
-        if (calentamiento_timeout_revelacion) {
-            clearTimeout(calentamiento_timeout_revelacion);
-        }
-        calentamiento_bloqueado_revelacion = true;
-        calentamiento_revelacion_inicio = Date.now();
-        calentamiento_timeout_revelacion = setTimeout(() => {
-            calentamiento_bloqueado_revelacion = false;
-            calentamiento_revelacion_inicio = 0;
-            if (calentamiento_feedback && calentamiento_feedback.textContent.includes("Intento enviado")) {
-                calentamiento_feedback.textContent = "";
-            }
-            if (calentamiento_ultimo_estado) {
-                actualizarCalentamiento(calentamiento_ultimo_estado);
-            }
-        }, CALENTAMIENTO_REVELADO_MS);
-    }
-    calentamiento_pendiente_anterior = Boolean(data.pendiente);
-    if (data.pendiente) {
-        calentamiento_bloqueado_revelacion = false;
-        calentamiento_revelacion_inicio = 0;
-        if (calentamiento_timeout_revelacion) {
-            clearTimeout(calentamiento_timeout_revelacion);
-            calentamiento_timeout_revelacion = null;
-        }
-    }
-    if (calentamiento_estado_actual !== "jugando") {
-        calentamiento_bloqueado_revelacion = false;
-        calentamiento_revelacion_inicio = 0;
-        if (calentamiento_timeout_revelacion) {
-            clearTimeout(calentamiento_timeout_revelacion);
-            calentamiento_timeout_revelacion = null;
-        }
-    }
-    if (calentamiento_bloqueado_revelacion && calentamiento_revelacion_inicio) {
-        if (Date.now() - calentamiento_revelacion_inicio >= CALENTAMIENTO_REVELADO_MS) {
-            calentamiento_bloqueado_revelacion = false;
-            calentamiento_revelacion_inicio = 0;
-            if (calentamiento_feedback && calentamiento_feedback.textContent.includes("Intento enviado")) {
-                calentamiento_feedback.textContent = "";
-            }
-            if (calentamiento_ultimo_estado) {
-                actualizarCalentamiento(calentamiento_ultimo_estado);
-            }
-        }
-    }
-    const esSemillaDoble = calentamiento_rol === "semilla_doble";
-    const esSemilla = esSemillaDoble || calentamiento_rol === "semilla1" || calentamiento_rol === "semilla2";
-    const posicionSemilla = esSemillaDoble
-        ? (!semilla1Recibida ? 1 : (!semilla2Recibida ? 2 : null))
-        : (calentamiento_rol === "semilla1" ? 1 : (calentamiento_rol === "semilla2" ? 2 : null));
-    if (calentamiento_estado_actual !== "esperando_semillas" || !esSemilla) {
-        calentamiento_semilla_enviada = false;
-    } else if (esSemillaDoble && semilla1Recibida && !semilla2Recibida) {
-        calentamiento_semilla_enviada = false;
-    }
-    let estadoTexto = "🔥 Calentamiento en curso.";
-    let estadoAnimado = false;
-    let puedeEnviar = false;
-    let placeholder = "Palabra intermedia";
 
-    if (calentamiento_estado_actual === "sin_musas") {
-        estadoTexto = "👥 Esperando musas de este equipo.";
-    } else if (calentamiento_estado_actual === "esperando_semillas") {
-        const otraSemillaRecibida = posicionSemilla === 1 ? semilla2Recibida : (posicionSemilla === 2 ? semilla1Recibida : false);
-        const semillaActualRecibida = posicionSemilla === 1 ? semilla1Recibida : (posicionSemilla === 2 ? semilla2Recibida : false);
-        if (esSemilla && posicionSemilla && calentamiento_semilla_enviada && !esSemillaDoble && !otraSemillaRecibida) {
-            estadoTexto = "⏳ Palabra semilla enviada. Espera a la otra musa.";
-            placeholder = "Esperando otra palabra semilla";
-            estadoAnimado = true;
-            puedeEnviar = false;
-        } else if (esSemilla && posicionSemilla && !semillaActualRecibida) {
-            estadoTexto = `🌱 Eres musa semilla: escribe la palabra ${posicionSemilla}.`;
-            placeholder = `Palabra semilla ${posicionSemilla}`;
-            puedeEnviar = true;
-        } else {
-            estadoTexto = "⏳ Esperando palabras semilla";
-            estadoAnimado = true;
-        }
-    } else if (calentamiento_estado_actual === "jugando") {
-        if (data.pendiente) {
-            estadoTexto = "🤝 Esperando otra musa para comparar";
-            estadoAnimado = true;
-        } else {
-            estadoTexto = "🧠 Envia una palabra que se encuentre en medio de:";
-        }
-        if (calentamiento_bloqueado_revelacion) {
-            estadoTexto = "🔮 Revelando nuevas palabras";
-            estadoAnimado = true;
-            puedeEnviar = false;
-        } else {
-            puedeEnviar = !calentamiento_pendiente_enviado;
-        }
-    } else if (calentamiento_estado_actual === "ganado") {
-        estadoTexto = "";
+    // Si cambia la consigna, se reinicia el cooldown de envio para la musa afectada.
+    if (cambioConsigna) {
+        limpiarCooldownCalentamiento();
     }
 
     if (calentamiento_estado) {
-        if (estadoAnimado) {
-            calentamiento_estado.innerHTML = `${estadoTexto}<span class="ellipsis"></span>`;
+        if (mensajeSolicitud.estadoHtml) {
+            calentamiento_estado.innerHTML = mensajeSolicitud.estadoHtml;
         } else {
-            calentamiento_estado.textContent = estadoTexto;
+            calentamiento_estado.textContent = mensajeSolicitud.estado;
         }
     }
     if (calentamiento_input) {
-        calentamiento_input.placeholder = placeholder;
-        calentamiento_input.disabled = !puedeEnviar;
+        calentamiento_input.placeholder = mensajeSolicitud.placeholder;
+        calentamiento_input.disabled = false;
     }
     if (calentamiento_enviar) {
-        calentamiento_enviar.disabled = !puedeEnviar;
+        calentamiento_enviar.disabled = false;
+    }
+    if (!calentamiento_cooldown) {
+        restaurarTextoBotonCalentamiento();
+    }
+    if (cambioConsigna) {
+        animarCambioConsignaCalentamiento();
     }
 };
+
 const enviarCalentamiento = () => {
-    if (!calentamiento_activo || !calentamiento_input) {
+    if (!calentamiento_activo || !calentamiento_vista || !calentamiento_input) {
+        return;
+    }
+    if (calentamiento_cooldown) {
+        if (calentamiento_text_progress) {
+            calentamiento_text_progress.classList.add("disabled-click-feedback");
+            setTimeout(() => {
+                calentamiento_text_progress.classList.remove("disabled-click-feedback");
+            }, 500);
+        }
         return;
     }
     const palabra = calentamiento_input.value.trim();
@@ -770,45 +1012,17 @@ const enviarCalentamiento = () => {
         return;
     }
     if (/\s/.test(palabra)) {
-        mostrarFeedbackCalentamiento("Envia solo una palabra, sin espacios.", true);
+        mostrarFeedbackCalentamiento("Solo se permite una palabra, sin espacios.", true);
         return;
     }
-    if (palabra.length > 10) {
-        mostrarFeedbackCalentamiento("Maximo 10 caracteres.", true);
-        return;
-    }
-    if (calentamiento_estado_actual === "esperando_semillas") {
-        const semillasRecibidas = (calentamiento_ultimo_estado && calentamiento_ultimo_estado.semillasRecibidas) ? calentamiento_ultimo_estado.semillasRecibidas : {};
-        const semilla1Recibida = Boolean(semillasRecibidas[1]);
-        const semilla2Recibida = Boolean(semillasRecibidas[2]);
-        let posicion = null;
-        if (calentamiento_rol === "semilla1") {
-            posicion = 1;
-        } else if (calentamiento_rol === "semilla2") {
-            posicion = 2;
-        } else if (calentamiento_rol === "semilla_doble") {
-            posicion = !semilla1Recibida ? 1 : (!semilla2Recibida ? 2 : null);
-        }
-        if (!posicion) {
-            mostrarFeedbackCalentamiento("No eres musa semilla.", true);
-            return;
-        }
-        socket.emit("calentamiento_semilla", { posicion, palabra });
-        calentamiento_semilla_enviada = true;
-        if (calentamiento_input) calentamiento_input.disabled = true;
-        if (calentamiento_enviar) calentamiento_enviar.disabled = true;
-        calentamiento_input.value = "";
-        mostrarFeedbackCalentamiento("Palabra enviada. Espera a la otra musa.", false);
-        return;
-    }
-    if (calentamiento_estado_actual !== "jugando") {
-        mostrarFeedbackCalentamiento("El calentamiento no esta listo.", true);
+    if (palabra.length > 24) {
+        mostrarFeedbackCalentamiento("Maximo 24 caracteres.", true);
         return;
     }
     socket.emit("calentamiento_intento", { palabra });
-    calentamiento_pendiente_enviado = true;
+    startProgressCalentamiento(calentamiento_enviar);
     calentamiento_input.value = "";
-    mostrarFeedbackCalentamiento("Intento enviado.", false);
+    mostrarFeedbackCalentamiento("Palabra enviada.", false);
 };
 
 if (calentamiento_enviar) {
@@ -822,7 +1036,6 @@ if (calentamiento_input) {
         }
     });
 }
-
 function formatearPuntos(valor) {
     if (valor == null) return "0 palabras";
     if (typeof valor === "number") return `${valor} palabras`;
@@ -835,8 +1048,8 @@ function formatearPuntos(valor) {
 }
 
 const MAX_NOMBRE_MUSA = 10;
-const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
-const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
+const REGEX_NOMBRE_MUSA = /^[A-Za-z\u00C1\u00C9\u00CD\u00D3\u00DA\u00DC\u00D1\u00E1\u00E9\u00ED\u00F3\u00FA\u00FC\u00F10-9 _.-]+$/;
+const REGEX_LETRA_MUSA = /[A-Za-z\u00C1\u00C9\u00CD\u00D3\u00DA\u00DC\u00D1\u00E1\u00E9\u00ED\u00F3\u00FA\u00FC\u00F1]/;
 
 function normalizarNombreMusa(valor) {
     if (typeof valor !== "string") return "";
@@ -865,6 +1078,7 @@ if (nombre_musa_label && nombre_musa) {
 restaurarTemporizadorLecturaPersistente();
 
 var player = getParameterByName("player");
+actualizarTemaCalentamiento(player);
 let enviar_ventaja;
 
     if (player == 1) {
@@ -956,7 +1170,7 @@ socket.on('dar_nombre', (nombre) => {
 
 if (enviar_ventaja) {
     socket.on(enviar_ventaja, (ventaja) => {
-        if (ventaja === "🐢") {
+        if (ventaja === EMOJI_TORTUGA) {
             activarTecladoLentoMusa();
         }
     });
@@ -968,6 +1182,15 @@ socket.on('temporizador_gigante_inicio', (data) => {
 
 socket.on('temporizador_gigante_detener', () => {
     cancelarTemporizadorLectura();
+});
+
+socket.on('activar_banderas_musas', () => {
+    const botonBandera = document.getElementById('btn_bandera');
+    if (!botonBandera) return;
+    if (Number(botonBandera.value) !== 0) return;
+    if (typeof bandera === 'function') {
+        bandera(botonBandera);
+    }
 });
 
 socket.on('connect', () => {
@@ -1001,44 +1224,13 @@ socket.on('calentamiento_estado_musa', (data) => {
 });
 
 socket.on('calentamiento_error', (data) => {
-    calentamiento_pendiente_enviado = false;
-    if (calentamiento_estado_actual === "esperando_semillas") {
-        calentamiento_semilla_enviada = false;
-    }
     mostrarFeedbackCalentamiento(data && data.mensaje ? data.mensaje : "Error.", true);
 });
 
 socket.on('calentamiento_ganado', (data) => {
-    calentamiento_pendiente_enviado = false;
-    const palabra = data && data.palabra ? data.palabra : "";
-    const mensaje = palabra
-        ? "\u00a1Las musas hab\u00e9is acertado! La palabra ha sido \u00ab<span class=\"calentamiento-palabra-ganadora\">" + escapeHtml(palabra) + "</span>\u00bb."
-        : "\u00a1Las musas hab\u00e9is acertado!";
-    if (calentamiento_timeout_ganado_show) {
-        clearTimeout(calentamiento_timeout_ganado_show);
-    }
-    if (calentamiento_timeout_ganado) {
-        clearTimeout(calentamiento_timeout_ganado);
-    }
-    calentamiento_timeout_ganado_show = setTimeout(() => {
-        calentamiento_ultimo_ganado = mensaje;
-        mostrarFeedbackCalentamiento(mensaje, false);
-        if (typeof confetti_musas === "function") {
-            confetti_musas();
-        }
-        if (typeof Audio !== "undefined") {
-            if (!calentamiento_sonido_ganado) {
-                calentamiento_sonido_ganado = new Audio("../../audio/FX/9. ESTRELLAS.mp3");
-            }
-            calentamiento_sonido_ganado.currentTime = 0;
-            calentamiento_sonido_ganado.play().catch(() => {});
-        }
-        calentamiento_timeout_ganado = setTimeout(() => {
-            if (calentamiento_feedback && calentamiento_feedback.textContent.includes("hab\u00e9is acertado")) {
-                calentamiento_feedback.textContent = "";
-            }
-        }, CALENTAMIENTO_GANADO_MS);
-    }, CALENTAMIENTO_GANADO_ESPERA_MS);
+    const palabra = data && data.palabra ? ` (${data.palabra})` : "";
+    mostrarFeedbackCalentamiento(`Palabra destacada${palabra}.`, false);
+    dispararDestelloCalentamiento(data && data.equipo);
 });
 
 // Variables de los modos.
@@ -1240,6 +1432,7 @@ requestAnimationFrame(() => {
 function actualizarNiveles(modo) {
     if (!nivelesItems.length) return;
     const indice = NIVELES_ORDEN.indexOf(modo);
+    aplicarOrdenCircular(indice);
     if (niveles_bloqueados && indice < 0) {
         nivelesItems.forEach((item) => {
             item.classList.remove("nivel-activo", "nivel-pasado");
@@ -1254,11 +1447,22 @@ function actualizarNiveles(modo) {
     if (indice >= 0) {
         niveles_bloqueados = false;
     }
+    const total = nivelesItems.length;
+    const mitad = total / 2;
     nivelesItems.forEach((item, idx) => {
-        item.classList.toggle("nivel-pasado", indice >= 0 && idx < indice);
-        item.classList.toggle("nivel-activo", idx === indice);
-        item.classList.toggle("nivel-futuro", indice < 0 || idx > indice);
-        item.setAttribute("aria-current", idx === indice ? "step" : "false");
+        if (indice < 0) {
+            item.classList.remove("nivel-activo", "nivel-pasado");
+            item.classList.add("nivel-futuro");
+            item.setAttribute("aria-current", "false");
+            return;
+        }
+        let delta = idx - indice;
+        if (delta > mitad) delta -= total;
+        if (delta < -mitad) delta += total;
+        item.classList.toggle("nivel-pasado", delta < 0);
+        item.classList.toggle("nivel-activo", delta === 0);
+        item.classList.toggle("nivel-futuro", delta > 0);
+        item.setAttribute("aria-current", delta === 0 ? "step" : "false");
     });
     if (nivelesLinea) {
         const progreso = indice < 0 || nivelesItems.length <= 1
@@ -1279,6 +1483,23 @@ function actualizarNiveles(modo) {
     setTimeout(actualizarFlechasNiveles, 60);
 }
 
+function aplicarOrdenCircular(indiceActivo) {
+    if (!nivelesItems.length) return;
+    if (indiceActivo < 0) {
+        nivelesItems.forEach((item) => {
+            item.style.order = "";
+        });
+        return;
+    }
+    const total = nivelesItems.length;
+    const centro = Math.floor(total / 2);
+    nivelesItems.forEach((item, idx) => {
+        const distancia = (idx - indiceActivo + total) % total;
+        const orden = (distancia + centro) % total;
+        item.style.order = orden;
+    });
+}
+
 // Recibe los datos del jugador 1 y los coloca.
 function handler_recibir_texto_x(data) {
 if(data.text != null) texto1.innerHTML = data.text;
@@ -1292,13 +1513,13 @@ if(data.text != null) texto1.innerHTML = data.text;
     }
     /*if (texto2.scrollHeight >= texto1.scrollHeight) {
         while (texto2.scrollHeight > texto1.scrollHeight) {
-            saltos_línea_alineacion_1 += 1;
+            saltos_lÃ­nea_alineacion_1 += 1;
             texto1.innerText = "\n" + texto1.innerText;
         }
     }
     else {
         while (texto2.scrollHeight < texto1.scrollHeight) {
-            saltos_línea_alineacion_2 += 1;
+            saltos_lÃ­nea_alineacion_2 += 1;
             texto2.value = "\n" + texto2.value;
         }
     }*/
@@ -1333,23 +1554,23 @@ socket.on("count", data => {
         tiempo.innerHTML = data.count;
         actualizarBarraVida(tiempo, data.count);
     }
-    if (data.count == "¡Tiempo!") {
+    if (data.count == "\u00A1Tiempo!") {
         confetti_aux();
 
         limpiezas_final();
 
-        //texto1.innerText = (texto1.innerText).substring(saltos_línea_alineacion_1, texto1.innerText.length);
-        //texto2.value = (texto2.value).substring(saltos_línea_alineacion_2, texto2.value.length);
+        //texto1.innerText = (texto1.innerText).substring(saltos_lÃ­nea_alineacion_1, texto1.innerText.length);
+        //texto2.value = (texto2.value).substring(saltos_lÃ­nea_alineacion_2, texto2.value.length);
 
         // Desactiva el blur de ambos textos.
         //texto2.classList.remove('textarea_blur');
         //texto1.classList.remove('textarea_blur');
         // Variable booleana que dice si la ronda ha terminado o no.
-        //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-        //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
+        //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de lÃ­nea del jugador 1 para alinear los textos.
+        //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de lÃ­nea del jugador 2 para alinear los textos.
 
         texto1.style.height = "auto";
-        texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+        texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaÃ±o del Ã¡rea de texto del j1.
         mostrar_texto.backgroundColor = "green";
 
         mostrar_texto.value = 1;
@@ -1376,9 +1597,9 @@ socket.on('inicio', data => {
 
     animateCSS(".contenedor", "pulse");
 
-    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
+    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atras
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
+    var preparados = $('<span id="countdown">\u00BFPREPARADOS?</span>');
     preparados.appendTo($('.container'));
     preparados_timer = setTimeout(() => {
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
@@ -1392,7 +1613,7 @@ socket.on('inicio', data => {
       
       $('#countdown').remove();
       
-      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
+      var countdown = $('<span id="countdown">' + (counter == 0 ? '\u00A1ESCRIBE!' : counter) + '</span>');
       countdown.appendTo($('.container'));
   
       sub_timer = setTimeout(() => {
@@ -1466,6 +1687,7 @@ socket.on('limpiar', () => {
     */
     notificacion.style.display = "none";
     resetearScrollNiveles();
+    resetearEstadoVotacionVentaja();
 
 });
 
@@ -1480,32 +1702,83 @@ socket.on(elegir_ventaja, (data = {}) => {
     console.log("REVERTIR", false);
     cambiar_jugadores(false);
     texto1.style.color = "white";
-    votando_ = true;
+    const overlay = getEl("overlay");
+    if (overlay && overlay.style.display !== "none") {
+        if (typeof desactivarPantalla === "function") {
+            desactivarPantalla();
+        } else {
+            overlay.style.display = "none";
+        }
+    }
+    votando = true;
     confetti_musas();
+    votacion_ventaja_participo = true;
+    votacion_ventaja_activa = true;
+    votacion_ventaja_ya_voto = false;
+    votacion_ventaja_voto_emitido = false;
+    votacion_ventaja_equipo = Number(player) || null;
     const opciones = obtenerOpcionesVentaja(data.opciones);
-    const botones = opciones
-        .map(op => `<button class='btn btn-ventaja' value='${op.emoji}' onclick='elegir_ventaja_publico(this)'>${op.emoji}</button>`)
-        .join("");
-    const explicaciones = opciones
-        .map(op => op.descripcion)
-        .join("<br><br>");
-    tarea.innerHTML =
-        "<p>¡" +
-        "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +
-        nombre1.value +
-        "</span>" +
-        " está realmente inspirado!<br>Elige una ventaja:</p>" +
-        botones +
-        "<br><br><p style='font-size: 3.5vw;'>" + explicaciones + "</p>";
+    votacion_ventaja_opciones = opciones.map(op => op.emoji);
+    votacion_ventaja_votos = inicializarVotosVentajaEquilibrado(votacion_ventaja_opciones);
+    renderizarModalVotacionVentaja(opciones);
+    actualizarPiesVotacionVentaja();
+    mostrarModalVotacionVentaja();
+    ocultarInlineVotacionVentaja();
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
+    notificacion.style.display = "block";
     animateCSS(".notificacion", "flash");
+});
+
+socket.on('votacion_ventaja_estado', (data = {}) => {
+    if (!data || typeof data !== "object") return;
+
+    const equipo = normalizarEquipoVotacion(data.equipo);
+    votacion_ventaja_equipo = equipo;
+    const esEquipoActual = Boolean(equipo) && Number(player) === equipo;
+
+    if (Array.isArray(data.opciones) && data.opciones.length > 0) {
+        votacion_ventaja_opciones = data.opciones.slice(0, 3);
+    }
+    if (data.votos && typeof data.votos === "object") {
+        votacion_ventaja_votos = { ...data.votos };
+    }
+
+    if (votacion_ventaja_opciones.length > 0) {
+        const opcionesRender = obtenerOpcionesVentaja(votacion_ventaja_opciones);
+        renderizarModalVotacionVentaja(opcionesRender);
+        actualizarPiesVotacionVentaja();
+    }
+
+    if (data.activa === true) {
+        votacion_ventaja_activa = true;
+        if (esEquipoActual) {
+            votacion_ventaja_participo = true;
+            if (votacion_ventaja_ya_voto) {
+                ocultarModalVotacionVentaja();
+                mostrarInlineVotacionVentaja();
+            } else {
+                votacion_ventaja_voto_emitido = false;
+                mostrarModalVotacionVentaja();
+                ocultarInlineVotacionVentaja();
+            }
+        } else if (!votacion_ventaja_participo) {
+            ocultarModalVotacionVentaja();
+            ocultarInlineVotacionVentaja();
+        }
+        return;
+    }
+
+    if (data.activa === false) {
+        votando = false;
+        resetearEstadoVotacionVentaja();
+    }
 });
 
 socket.on("elegir_repentizado", ({seleccionados, TIEMPO_VOTACION}) => {
     votando = true;
-    tarea.innerHTML = "<p>¿Por donde quieres que continúe la historia?</p><button class='btn repentizado' value = '1' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>"+ seleccionados[2] + "</button>"
+    tarea.innerHTML = "<p>&iquest;Por donde quieres que continue la historia?</p><button class='btn repentizado' value = '1' onclick='elegir_repentizado_publico(this)'>" + seleccionados[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>" + seleccionados[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>" + seleccionados[2] + "</button>";
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
@@ -1529,8 +1802,8 @@ socket.on("pedir_inspiracion_musa", juego => {
 
 function convertirASegundos(tiempo) {
     let partes = tiempo.split(':'); // separamos los minutos de los segundos
-    let minutos = parseInt(partes[0], 10); // convertimos los minutos a un número entero
-    let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
+    let minutos = parseInt(partes[0], 10); // convertimos los minutos a un nÃºmero entero
+    let segundos = parseInt(partes[1], 10); // convertimos los segundos a un nÃºmero entero
     return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
   }
 
@@ -1543,15 +1816,15 @@ function pedir_inspiracion(juego){
     const etiquetaMusa = "<span style='color: orange;'>" + nombre_musa + "</span>";
     if(terminado == false && votando == false){
     if(juego.modo_actual == "palabras bonus"){
-        tarea.innerHTML = "Cántame a mí, " + etiquetaMusa + ", una palabra que me inspire:"
+        tarea.innerHTML = "Cantame a mi, " + etiquetaMusa + ", una palabra que me inspire:";
     }
     if(juego.modo_actual == "letra bendita") {
         letra = juego.letra_bendita;
-        tarea.innerHTML = "Cántame a mí, " + etiquetaMusa + ", una palabra que lleve la letra " + "<span style='color: green;'>" + letra.toUpperCase(); + "</span> :";
+        tarea.innerHTML = "Cantame a mi, " + etiquetaMusa + ", una palabra que lleve la letra <span style='color: green;'>" + letra.toUpperCase() + "</span>:";
     }
     if(juego.modo_actual == "letra prohibida") {
         letra = juego.letra_prohibida;
-        tarea.innerHTML = "Cántame a mí, " + etiquetaMusa + ", una palabra que <span style='color: red;'>NO</span> lleve la letra " + "<span style='color: red;'>" + letra.toUpperCase(); + "</span> :";
+        tarea.innerHTML = "Cantame a mi, " + etiquetaMusa + ", una palabra que <span style='color: red;'>NO</span> lleve la letra <span style='color: red;'>" + letra.toUpperCase() + "</span>:";
     }
 
     if(juego.modo_actual == "palabras prohibidas"){
@@ -1573,7 +1846,7 @@ function pedir_inspiracion(juego){
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
-        tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. 🤍";
+        tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. " + EMOJI_CORAZON_OJOS;
     }
 
     socket.emit("pedir_texto", { musa: player });
@@ -1617,13 +1890,13 @@ function getTextAlign() {
 function stylize() {
     //texto1.style.fontFamily = getRandFontFamily();
     texto1.style.color = getRandColor();
-    //var tamaño_letra = getRandNumber(7, 35)
-    //text.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    //var tamaÃ±o_letra = getRandNumber(7, 35)
+    //text.style.fontSize = tamaÃ±o_letra + "px"; // Font sizes between 15px and 35px
     //texto1.style.textAlign = getTextAlign();
     //texto2.style.textAlign = getTextAlign();
     //texto2.style.fontFamily = getRandFontFamily();
     texto2.style.color = getRandColor();
-    //text1.style.fontSize = tamaño_letra + "px"; // Font sizes between 15px and 35px
+    //text1.style.fontSize = tamaÃ±o_letra + "px"; // Font sizes between 15px and 35px
     document.body.style.backgroundColor = getRandColor();
     //texto1.style.height = texto1.scrollHeight + "px";
     //texto2.style.height = texto2.scrollHeight + "px";
@@ -1649,12 +1922,12 @@ function animacion_modo() {
 
             node.addEventListener('animationend', handleAnimationEnd, { once: true });
         });
-    animateCSS(".explicación", "bounceInLeft");
+    animateCSS(".explicacion", "bounceInLeft");
     animateCSS(".palabra", "bounceInLeft");
     animateCSS(".definicion", "bounceInLeft");
 }
 
-// Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
+// FunciÃ³n auxiliar que reestablece el estilo inicial de la pÃ¡gina modificado por el modo psicodÃ©lico.
 function restablecer_estilo() {
     //texto1.style.fontFamily = "monospace";
     texto1.style.color = "orange";
@@ -1668,7 +1941,7 @@ function restablecer_estilo() {
     //texto2.style.height = texto2.scrollHeight + "px";
 }
 
-// Función auxiliar que elimina los saltos de línea al principio de un string.
+// FunciÃ³n auxiliar que elimina los saltos de lÃ­nea al principio de un string.
 function eliminar_saltos_de_linea(texto) {
     var i = 0;
     while (texto[i] == "\n") {
@@ -1677,7 +1950,7 @@ function eliminar_saltos_de_linea(texto) {
     return (texto.substring(i, texto.length));
 }
 
-// Función auxiliar que genera un string con n saltos de línea.
+// FunciÃ³n auxiliar que genera un string con n saltos de lÃ­nea.
 function crear_n_saltos_de_linea(n) {
     var saltos = "";
     var cont = 0;
@@ -1688,7 +1961,7 @@ function crear_n_saltos_de_linea(n) {
     return saltos;
 }
 
-// FUNCIONES AUXILIARES PARA LA ELECCIÓN ALEATORIA DEL TEMA.
+// FUNCIONES AUXILIARES PARA LA ELECCIÃ“N ALEATORIA DEL TEMA.
 (function ($) {
 
     $.fn.wordsrotator = function (options) {
@@ -1823,7 +2096,7 @@ function erm() {
     eventFire(document.getElementById('temas'), 'click');
 }
 
-function cambiar_color_puntuación() {
+function cambiar_color_puntuacion() {
     if (parseInt(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/)) > parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
         puntos1.style.color = "green";
         if (parseInt(puntos1.innerHTML.match(/[-+]?\d+(\.\d+)?/)) == parseInt(puntos2.innerHTML.match(/[-+]?\d+(\.\d+)?/))) {
@@ -1853,7 +2126,7 @@ function limpiezas(){
     
     puntos1.style.color = "white";  
     votando = false;
-    texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
+    texto1.style.height = "4.5em"; /* Alto para tres lÃ­neas de texto */
     texto1.scrollTop = texto1.scrollHeight;
     mostrar_texto.backgroundColor = "red";
 
@@ -1877,26 +2150,26 @@ function limpiezas_final(){
     actualizarNiveles("");
     resetearScrollNiveles();
 }
-// Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
+// Cuando el texto del jugador 1 cambia, envÃ­a los datos de jugador 1 al resto.
 texto1.addEventListener("keyup", (evt) => {
     console.log(evt.key)
     if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaÃ±o del Ã¡rea de texto del j1.
   
     }
   });
-  // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
+  // Cuando el texto del jugador 1 cambia, envÃ­a los datos de jugador 1 al resto.
   texto1.addEventListener("keydown", (evt) => {
     if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaÃ±o del Ã¡rea de texto del j1.
   
     }
   });
   
-  // Cuando el texto del jugador 1 cambia, envía los datos de jugador 1 al resto.
+  // Cuando el texto del jugador 1 cambia, envÃ­a los datos de jugador 1 al resto.
   texto1.addEventListener("press", (evt) => {
     if (evt.key.length === 1 || evt.key == "Enter" || evt.key=="Backspace") {
-      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+      texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaÃ±o del Ã¡rea de texto del j1.
   
     }
   });
@@ -1906,9 +2179,9 @@ function limpiar_colddown(){
     text_progress.removeEventListener('mouseenter', onMouseEnter);
     text_progress.removeEventListener('mouseleave', onMouseLeave);
     bar_progress.style.width = '0%'
-    //button.disabled = false; // Habilita el botón
-    text_progress.style.color = "orange";
-    text_progress.innerHTML = "🚀 Inspirar"
+    //button.disabled = false; // Habilita el botÃ³n
+    text_progress.style.color = "";
+    text_progress.innerHTML = `${EMOJI_ROCKET} Inspirar`;
     cooldown = false;
 }
 
@@ -1924,20 +2197,20 @@ cooldowntime = 5000;
 const activateSkill = (event) => {
   const {target} = event;
   // Exit if we click on anything that isn't a skill
-  if(target.textContent == '✏️'){
+  if (target.textContent === EMOJI_EDITAR) {
         editando = true;
         mostrar_texto.value = 0;
         mostrarTextoCompleto(mostrar_texto);
         texto1.contentEditable= "true";
-        target.textContent = '✉️';
+        target.textContent = EMOJI_ENVIAR;
         skill_cancel.style.display = "flex";
     return
   }
   if(!target.classList.contains(SKILL_CLASS)) return;
 
-  if(target.textContent == '✉️'){
+  if (target.textContent === EMOJI_ENVIAR) {
     
-    feedback_texto_editado.innerHTML = "¡Texto editado!"
+    feedback_texto_editado.innerHTML = "&iexcl;Texto editado!";
     animateCSS(".feedback_texto_editado", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
         feedback_texto_editado.innerHTML = "";
@@ -1950,7 +2223,7 @@ const activateSkill = (event) => {
     socket.emit('aumentar_tiempo', {secs:-1, player});
     socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent});
     skill_cancel.style.display = "none";
-    target.textContent = '✏️'
+    target.textContent = EMOJI_EDITAR;
   }
   target.classList.add(DISABLED_CLASS);
   target.style = '--time-left: 100%';
@@ -1973,7 +2246,7 @@ const activateSkill = (event) => {
         
         skill_cancel.style.display = "none";
         skill.style.display = "flex";
-        target.textContent = '✏️';
+        target.textContent = EMOJI_EDITAR;
         target.style = '';
         target.style = 'animation: brillo 2s ease-in-out;'
         target.classList.remove(DISABLED_CLASS);
@@ -1990,22 +2263,22 @@ function cancelar(boton){
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable = "false";
     boton.style.display = "none";
-    skill.textContent = '✏️';
+    skill.textContent = EMOJI_EDITAR;
 }
 // Add click handler to the table
 skill.addEventListener('click', activateSkill, false);
 
 var duration = 15 * 1000;
 var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-var isConfettiRunning = true; // Indicador para controlar la ejecución
+var isConfettiRunning = true; // Indicador para controlar la ejecuciÃ³n
 
 function randomInRange(min, max) {
     return Math.random() * (max - min) + min;
   }
 
 function confetti_aux() {
-    var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
-    isConfettiRunning = true; // Habilita la ejecución de confetti
+    var animationEnd = Date.now() + duration; // Actualiza aquÃ­ dentro de la funciÃ³n
+    isConfettiRunning = true; // Habilita la ejecuciÃ³n de confetti
     console.log(isConfettiRunning);
     
     var interval = setInterval(function() {
@@ -2028,14 +2301,14 @@ function confetti_aux() {
   }
 
 function stopConfetti() {
-    isConfettiRunning = false; // Deshabilita la ejecución de confetti
-    confetti.reset(); // Detiene la animación de confetti
+    isConfettiRunning = false; // Deshabilita la ejecuciÃ³n de confetti
+    confetti.reset(); // Detiene la animaciÃ³n de confetti
   }
 
   function confetti_musas(){
     var scalar = 2;
-    var unicorn = confetti.shapeFromText({ text: '⭐', scalar });
-    isConfettiRunning = true; // Habilita la ejecución de confetti
+    var unicorn = confetti.shapeFromText({ text: EMOJI_STAR, scalar });
+    isConfettiRunning = true; // Habilita la ejecuciÃ³n de confetti
     
     var end = Date.now() + (2 * 1000);
     
@@ -2061,7 +2334,7 @@ function cambiar_jugadores(revertir) {
 
     const p = Number(player); // jugador local: 1 o 2
 
-    // Función de mapeo clara y reversible
+    // FunciÃ³n de mapeo clara y reversible
     const mapJugador = (j) => revertir ? (3 - j) : j;
 
     const jugadorTexto = mapJugador(p);
@@ -2080,7 +2353,7 @@ function cambiar_jugadores(revertir) {
     // 3) Volver a suscribir
     socket.on(texto_x, handler_recibir_texto_x);
 
-    // 4) Aplicar estilos según el jugador resultante
+    // 4) Aplicar estilos segÃºn el jugador resultante
     if (jugadorEstilo === 1) {
         nombre1.style =
             "color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
@@ -2110,3 +2383,5 @@ function cambiar_jugadores(revertir) {
         "| jugadorEstilo =", jugadorEstilo
     );
 }
+
+

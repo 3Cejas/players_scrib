@@ -759,6 +759,24 @@ function log( text ) {
 
         switch (cmdComponents) {
 
+            case "bolzano":
+
+                this.bolzano();
+
+                break;
+
+            case "bolzano control":
+
+                this.bolzano_control();
+
+                break;
+
+            case "bolzano musa":
+
+                this.bolzano_musa();
+
+                break;
+
             case cmds.CAT.value:
 
                 this.cat(cmdComponents);
@@ -1064,6 +1082,46 @@ function log( text ) {
 			location.href='./game/public/index.html';
 
     }
+
+    //BOLZANO (COMANDO OCULTO)
+
+        Terminal.prototype.bolzano = function () {
+
+            this.clear();
+
+            var result = "Abriendo menu oculto BOLZANO.\n\nElige CONTROL o MUSA.";
+
+            this.type(result, this.unlock.bind(this));
+
+            location.href='./game/bolzano/index.html';
+
+    }
+
+        Terminal.prototype.bolzano_control = function () {
+
+            this.clear();
+
+            var result = "Abriendo BOLZANO en modo CONTROL.";
+
+            this.type(result, this.unlock.bind(this));
+
+            location.href='./game/bolzano/index.html?modo=control';
+
+    }
+
+        Terminal.prototype.bolzano_musa = function () {
+
+            this.clear();
+
+            var result = "Abriendo BOLZANO en modo MUSA.";
+
+            this.type(result, this.unlock.bind(this));
+
+            location.href='./game/bolzano/index.html?modo=musa';
+
+    }
+
+
 	//EL ESPECTÁCULO
 
 	    Terminal.prototype.el_espectáculo = function () {
@@ -1665,4 +1723,3 @@ TypeSimulator.prototype.type = function (text, callback) {
 
 
 window.onload = main.listener;
-

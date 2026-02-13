@@ -367,7 +367,16 @@ body {
     font-size: 13pt;
     font-family: "Retro-gaming", "VT323", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif;
     color: white;
-    background-color: black;
+    background:
+        linear-gradient(90deg, rgba(0, 126, 186, 0.24) 0%, rgba(6, 10, 18, 0.58) 42%, rgba(6, 10, 18, 0.58) 58%, rgba(178, 38, 38, 0.24) 100%),
+        radial-gradient(circle at 14% 20%, rgba(0, 181, 255, 0.2), transparent 56%),
+        radial-gradient(circle at 86% 20%, rgba(255, 67, 67, 0.2), transparent 56%),
+        radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.08), transparent 62%),
+        #02040a;
+    background-color: #02040a;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
     color:aqua;
     text-shadow: 0.0625em 0.0625em red;
 }
@@ -777,6 +786,48 @@ table {
     row-gap: 0.9rem;
 }
 
+.control-group-buttons--three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.65rem;
+    row-gap: 0.65rem;
+}
+
+.control-group-subtitle {
+    font-family: "Retro-gaming";
+    font-size: clamp(0.68rem, 0.95vw, 0.88rem);
+    letter-spacing: 0.08em;
+    color: #f7d07e;
+    text-shadow: 0.06em 0.06em #421010;
+    margin-top: 0.2rem;
+}
+
+.control-group-buttons--solicitud .btn {
+    font-size: clamp(0.62rem, 0.72vw, 0.75rem);
+    padding: 0.5em 0.45em;
+}
+
+.btn-calentamiento-solicitud {
+    position: relative;
+}
+
+.btn-calentamiento-solicitud[data-active="1"],
+.btn-calentamiento-solicitud.is-active {
+    box-shadow: 0 0.22em #ffd166, 0 0 0.8em rgba(255, 209, 102, 0.45);
+    color: #fff7d6;
+    text-shadow: 0.06em 0.06em #7a1f1f;
+    background: linear-gradient(180deg, #6d3f1b 0%, #4f2912 100%);
+}
+
+.calentamiento-solicitud-estado {
+    margin: 0.25rem 0 0;
+    font-family: "Retro-gaming";
+    font-size: clamp(0.64rem, 0.9vw, 0.82rem);
+    color: #ffe7a1;
+    text-shadow: 0.06em 0.06em #421010;
+    letter-spacing: 0.07em;
+}
+
 @media (max-width: 1400px) {
     .control-groups {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -791,6 +842,9 @@ table {
     }
     .control-group-buttons {
         gap: 0.6rem;
+    }
+    .control-group-buttons--three {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -1305,6 +1359,160 @@ table {
     gap: 1.2rem;
     flex-wrap: wrap;
     justify-content: center;
+}
+
+/* Estado de conexiones (panel parametros). */
+.conexion-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1rem;
+    margin: 0.2rem auto 0.8rem;
+    border-radius: 0.6rem;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    width: min(92vw, 920px);
+}
+
+.conexion-title {
+    font-family: "Retro-gaming";
+    font-size: 0.95rem;
+    color: #f7d07e;
+    letter-spacing: 0.08em;
+    text-shadow: 0.08em 0.08em #ff2d2d;
+}
+
+.conexion-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem 2rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.conexion-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: "Retro-gaming";
+    font-size: 0.85rem;
+    color: #f2f6ff;
+    text-shadow: 0.0625em 0.0625em #ff2d2d;
+}
+
+.conexion-item--players {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.conexion-label {
+    color: #45f3ff;
+    letter-spacing: 0.05em;
+}
+
+.conexion-text {
+    color: #f7d07e;
+    min-width: 3.4rem;
+    text-align: left;
+}
+
+.conexion-players {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.conexion-player-name {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    color: #b5f7ff;
+    letter-spacing: 0.03em;
+}
+
+.conexion-player-name--j1 {
+    color: aqua;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+}
+
+.conexion-player-name--j2 {
+    color: red;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
+}
+
+.conexion-mini-label {
+    font-size: 0.75rem;
+    color: #b5f7ff;
+    margin-left: 0.15rem;
+    margin-right: 0.15rem;
+}
+
+.conexion-dot {
+    --dot-color: #555;
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--dot-color);
+    border: 0.12rem solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+    display: inline-block;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.conexion-dot--mini {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-width: 0.1rem;
+}
+
+.conexion-dot--ok {
+    --dot-color: #2cff6d;
+    box-shadow: 0 0 10px rgba(44, 255, 109, 0.65);
+}
+
+.conexion-dot--warn {
+    --dot-color: #ffd166;
+    box-shadow: 0 0 10px rgba(255, 209, 102, 0.55);
+}
+
+.conexion-dot--off {
+    --dot-color: #ff4d4d;
+    box-shadow: 0 0 8px rgba(255, 77, 77, 0.5);
+}
+
+.conexion-dot--ping {
+    animation: conexionPing 0.6s ease;
+}
+
+@keyframes conexionPing {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 14px var(--dot-color);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 8px var(--dot-color);
+    }
+}
+
+@media (max-width: 700px) {
+    .conexion-panel {
+        width: min(92vw, 520px);
+        padding: 0.6rem 0.8rem;
+    }
+    .conexion-item {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 900px) {

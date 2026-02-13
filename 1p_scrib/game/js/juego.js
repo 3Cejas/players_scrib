@@ -1,4 +1,10 @@
 let borrado; // Variable que almacena el identificador de la función temporizada de borrado.
+let atributos;
+const LIMITE_TOTAL = 10;
+const SECS_BASE = 2;
+const maxIncremento = 3; // queremos +300% de habilidades en el mejor caso
+const maxIncrementoDestreza = 0.5; // reducción máxima de desventajas
+let secs_palabras = SECS_BASE;
 let antiguo_inicio_borrado = 3000;
 let rapidez_borrado = 3000; // Variable que almacena la velocidad del borrado del texto.
 let antiguo_rapidez_borrado = 3000;
@@ -226,10 +232,13 @@ function countChars(texto) {
     caracteres_seguidos += 1;
   }
 
-  if (caracteres_seguidos == 3 && locura == false) {
+  if (caracteres_seguidos == 3 && locura == false && modo_actual !== "frase final") {
+    const bonusTiempo = (typeof secs_palabras === "number" && !Number.isNaN(secs_palabras))
+      ? secs_palabras
+      : 6;
     feedback.style.color = color_positivo;
-    feedback.innerHTML = "⏱️+6 segs.";
-    addSeconds(6)
+    feedback.innerHTML = "⏱️+" + bonusTiempo + " segs.";
+    addSeconds(bonusTiempo)
     clearTimeout(delay_animacion);
     animateCSS(".feedback1", "flash").then((message) => {
         delay_animacion = setTimeout(function () {
@@ -646,11 +655,119 @@ function actualizarVariables() {
  console.log('TIEMPO_MODOS:', TIEMPO_CAMBIO_MODOS);
 }
 
+function leerAtributosDesdeURL() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const keys = ['fuerza', 'agilidad', 'destreza'];
+  const tieneTodos = keys.every((key) => searchParams.has(key));
+  if (!tieneTodos) {
+    return null;
+  }
+
+  const attrs = {};
+  for (const key of keys) {
+    const raw = Number(searchParams.get(key));
+    if (!Number.isFinite(raw)) {
+      return null;
+    }
+    const valor = Math.max(0, Math.min(LIMITE_TOTAL, Math.floor(raw)));
+    attrs[key] = valor;
+  }
+
+  const total = Object.values(attrs).reduce((a, b) => a + b, 0);
+  if (total !== LIMITE_TOTAL) {
+    return null;
+  }
+
+  return attrs;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 
   generarCasillas()
   // Inicializa las variables con los valores por defecto
   actualizarVariables();
+
+  // Estado inicial de los atributos
+  atributos = leerAtributosDesdeURL() || { fuerza: 0, agilidad: 0, destreza: 0 };
+
+  // Referencias a elementos del DOM
+  const container = document.getElementById('atributos-container');
+  const totalUsadosEl = document.getElementById('total-usados');
+  const btnEscribir = document.getElementById('btn_escribir');
+
+  if (!container || !totalUsadosEl) {
+    return;
+  }
+
+  // Función para calcular la suma total
+  function calcularTotal() {
+    return Object.values(atributos).reduce((a, b) => a + b, 0);
+  }
+
+  // Función para actualizar toda la interfaz tras un cambio
+  function actualizarInterfaz() {
+    const total = calcularTotal();
+
+    document.querySelectorAll('.atributo').forEach(div => {
+      const key = div.dataset.atributo;
+      const valor = atributos[key];
+      const btnMenos = div.querySelector('button[data-action="decrement"]');
+      const btnMas = div.querySelector('button[data-action="increment"]');
+      const puntos = div.querySelectorAll('.punto');
+
+      div.querySelector('.contador').textContent = valor;
+
+      if (btnMenos) {
+        btnMenos.disabled = (valor === 0);
+      }
+      if (btnMas) {
+        btnMas.disabled = (total >= LIMITE_TOTAL);
+      }
+
+      puntos.forEach((el, idx) => {
+        el.classList.toggle('filled', idx < valor);
+      });
+    });
+
+    totalUsadosEl.textContent = total;
+
+    const ratio = total / LIMITE_TOTAL;
+    totalUsadosEl.classList.remove('estado-ok', 'estado-warn', 'estado-danger', 'estado-over');
+
+    if (ratio > 1) {
+      totalUsadosEl.classList.add('estado-over');
+    } else if (ratio > 0.8) {
+      totalUsadosEl.classList.add('estado-danger');
+    } else if (ratio > 0.5) {
+      totalUsadosEl.classList.add('estado-warn');
+    } else {
+      totalUsadosEl.classList.add('estado-ok');
+    }
+
+    if (btnEscribir) {
+      const habilitado = total === LIMITE_TOTAL;
+      btnEscribir.classList.toggle('disabled', !habilitado);
+      btnEscribir.setAttribute('aria-disabled', habilitado ? 'false' : 'true');
+    }
+  }
+
+  container.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') return;
+    e.preventDefault();
+    const action = e.target.dataset.action;
+    const atributoDiv = e.target.closest('.atributo');
+    if (!atributoDiv) return;
+    const key = atributoDiv.dataset.atributo;
+
+    if (action === 'increment' && calcularTotal() < LIMITE_TOTAL) {
+      atributos[key]++;
+    } else if (action === 'decrement' && atributos[key] > 0) {
+      atributos[key]--;
+    }
+    actualizarInterfaz();
+  });
+
+  actualizarInterfaz();
 });
 
 /**

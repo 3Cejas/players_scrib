@@ -9,11 +9,19 @@ escritxr1 = document.getElementById("escritxr1");
 escritxr2 = document.getElementById("escritxr2");
 const nombre_musa_input = document.getElementById("nombre_musa");
 const mensaje_musa = document.getElementById("mensaje_musa");
-const musa_nombre_titulo = document.getElementById("intro_musa_nombre");
+const musa_nombre_titulos = document.querySelectorAll(".intro-musa-nombre");
 const intro_scroll = document.querySelector(".intro-scroll");
 const MAX_NOMBRE_MUSA = 10;
 const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
 const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
+let musaSeleccionBloqueada = false;
+
+function restablecerBotonesInspirar() {
+  musaSeleccionBloqueada = false;
+  document.body.classList.remove("musa-eleccion-hecha");
+  const botones = document.querySelectorAll(".intro-choice-btn");
+  botones.forEach((boton) => boton.classList.remove("intro-choice-btn--disabled"));
+}
 
 function normalizarNombreMusa(valor) {
   if (typeof valor !== "string") return "";
@@ -37,9 +45,11 @@ function limpiarAvisoMusa() {
 }
 
 function actualizarNombreIntro() {
-  if (!musa_nombre_titulo) return;
+  if (!musa_nombre_titulos || !musa_nombre_titulos.length) return;
   const nombre = normalizarNombreMusa(nombre_musa_input?.value || "");
-  musa_nombre_titulo.textContent = nombre || "MUSA";
+  musa_nombre_titulos.forEach((titulo) => {
+    titulo.textContent = nombre || "MUSA";
+  });
 }
 
 function scrollToSeccion(objetivo) {
@@ -118,6 +128,7 @@ function cerrarTeclado() {
 }
 
 function entrarComoMusa(playerId) {
+  if (musaSeleccionBloqueada) return;
   if (!nombre_musa_input) return;
   const nombre = normalizarNombreMusa(nombre_musa_input.value);
   if (!nombre) {
@@ -126,6 +137,10 @@ function entrarComoMusa(playerId) {
     return;
   }
   limpiarAvisoMusa();
+  musaSeleccionBloqueada = true;
+  document.body.classList.add("musa-eleccion-hecha");
+  const botones = document.querySelectorAll(".intro-choice-btn");
+  botones.forEach((boton) => boton.classList.add("intro-choice-btn--disabled"));
   const destino = `./players/index.html?player=${playerId}&name=${encodeURIComponent(nombre)}`;
   window.location.href = destino;
 }
@@ -144,6 +159,7 @@ socket.on('nombre2', (nombre) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  restablecerBotonesInspirar();
   const params = new URLSearchParams(window.location.search);
   if (params.get("error") === "nombre_musa") {
     mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
@@ -174,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
       limpiarAvisoMusa();
       actualizarNombreIntro();
       cerrarTeclado();
-      const objetivo = document.querySelector("#intro-equipo");
+      const objetivo = document.querySelector("#intro-equipo-azul");
       scrollToSeccion(objetivo);
     });
   }
@@ -221,6 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     contenedorScroll.addEventListener("wheel", bloquearScroll, { passive: false });
     contenedorScroll.addEventListener("touchmove", bloquearScroll, { passive: false });
+    const esTactil = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    if (esTactil) {
+      document.addEventListener("touchmove", bloquearScroll, { passive: false, capture: true });
+    }
     document.addEventListener("keydown", (evento) => {
       const teclas = ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "];
       const esEnter = evento.key === "Enter";
@@ -258,59 +278,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   socket.on('recibir_atributos', (data) => {
     console.log('Recibidos atributos:', data);
-    // 'data' es un objeto: { "1": {fuerza, agilidad, destreza}, "2": {…} }
-    const attrs = data;
+    // data tiene forma: { "1": {fuerza, agilidad, destreza}, "2": { ... } }
+    const attrs = data || {};
+    const LIMITE_PUNTOS = 10;
 
-    // Orden de los atributos según el HTML (3 filas × 2 columnas)
-    const nombres = ['fuerza', 'agilidad', 'destreza'];
+    // Seleccionamos los grupos de puntos por jugador y atributo
+    const grupos = document.querySelectorAll('.intro-skill-points[data-player][data-attr]');
 
-    // 1) Calculamos el total de puntos repartidos por cada jugador
-    const sumas = {};
-    Object.keys(attrs).forEach(jugadorId => {
-      const a = attrs[jugadorId];
-      // Si alguno no está definido, lo tratamos como cero
-      const f = Number(a.fuerza)       || 0;
-      const ag = Number(a.agilidad)    || 0;
-      const dest = Number(a.destreza) || 0;
-      sumas[jugadorId] = f + ag + dest;
-    });
+    grupos.forEach((grupo) => {
+      const jugadorId = grupo.dataset.player;
+      const atributo = grupo.dataset.attr;
+      if (!jugadorId || !atributo) return;
 
-    // 2) Seleccionamos las 6 barras en el orden: 
-    //    fuerza1, fuerza2, agilidad1, agilidad2, destreza1, destreza2
-    const barras = document.querySelectorAll('.skill .progress-line');
-
-    barras.forEach((barra, idx) => {
-      // 2.1) Atributo y jugador correspondientes
-      const atributoIndex = Math.floor(idx / 2); // 0→fuerza, 1→agilidad, 2→destreza
-      const jugadorIndex  = idx % 2;              // 0→jugador "1", 1→jugador "2"
-      const atributo      = nombres[atributoIndex];
-      const jugadorId     = String(jugadorIndex + 1);
-
-      // 2.2) Valor absoluto de puntos para este atributo y jugador
       let valor = 0;
       if (attrs[jugadorId] && typeof attrs[jugadorId][atributo] !== 'undefined') {
         valor = Number(attrs[jugadorId][atributo]) || 0;
       }
+      const puntos = grupo.querySelectorAll('.intro-skill-point');
+      const limite = puntos.length || LIMITE_PUNTOS;
+      valor = Math.max(0, Math.min(limite, valor));
+      puntos.forEach((punto, indice) => {
+        punto.classList.toggle('filled', indice < valor);
+      });
 
-      // 2.3) Total de puntos repartidos por este jugador
-      const totalPuntos = sumas[jugadorId] || 0;
-
-      // 2.4) Calculamos el porcentaje relativo:
-      //      si totalPuntos es 0, dejamos 0% para evitar división por cero
-      const porcentaje = totalPuntos > 0
-        ? Math.round((valor / totalPuntos) * 100)
-        : 0;
-
-      // 3) Aplicamos el porcentaje en CSS custom properties
-      barra.style.setProperty('--wd', porcentaje + '%');
-      barra.style.setProperty('--tx', `'${porcentaje}%'`);
-
-      // 4) Reiniciamos la animación del <span> para que el cambio se anime
-      const span = barra.querySelector('span');
-      span.style.animation = 'none';
-      // Forzar reflow para resetear animación
-      void span.offsetWidth;
-      span.style.animation = '';
+      grupo.setAttribute('aria-label', `${atributo}: ${valor} de ${limite}`);
     });
   });
+});
+
+window.addEventListener("pageshow", () => {
+  restablecerBotonesInspirar();
 });

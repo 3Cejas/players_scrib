@@ -375,6 +375,8 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         // Referencias a elementos del DOM
         const container = document.getElementById('atributos-container');
         const totalUsadosEl = document.getElementById('total-usados');
+        const totalWrapEl = document.getElementById('total');
+        const btnInicioEl = document.getElementById('btnInicio');
   
         // Función para calcular la suma total
         function calcularTotal() {
@@ -390,19 +392,24 @@ const animateCSS = (element, animation, prefix = "animate__") =>
       document.querySelectorAll('.atributo').forEach(div => {
         const key     = div.dataset.atributo;            // "fuerza", "agilidad", ...
         const valor   = atributos[key];                  // valor actual
+        const contadorEl = div.querySelector('.contador');
         const btnMenos= div.querySelector('button[data-action="decrement"]');
         const btnMas  = div.querySelector('button[data-action="increment"]');
         const puntos  = div.querySelectorAll('.punto');
 
         // Actualiza la UI numérica
-        div.querySelector('.contador').textContent = valor;
+        if (contadorEl) {
+          contadorEl.textContent = valor;
+        }
 
         // Deshabilita botones según reglas
         btnMenos.disabled = (valor === 0);
         btnMas.disabled   = (total >= LIMITE_TOTAL);
 
-        // Opcional: habilita o deshabilita botón de inicio
-        btnInicio.disabled = (total !== LIMITE_TOTAL);
+        // Sincroniza el botón de inicio legacy (oculto visualmente)
+        if (btnInicioEl) {
+          btnInicioEl.disabled = (total !== LIMITE_TOTAL);
+        }
 
         // Rellena los puntitos de la barra según valor
         puntos.forEach((el, idx) => {
@@ -412,10 +419,25 @@ const animateCSS = (element, animation, prefix = "animate__") =>
 
       // 3) Actualiza el número total en pantalla
       totalUsadosEl.textContent = total;
+      actualizarTotalComoBoton(total);
 
       // 4) Aplica clases de color según porcentaje usado
       //    Calculamos ratio de uso (puede superar 1 si excede)
       const ratio = total / LIMITE_TOTAL;
+      const ratioAjustado = Math.max(0, Math.min(ratio, 1));
+
+      // La cápsula de puntos usados transita de color:
+      // azul -> verde para escritxr azul, rojo -> verde para escritxr rojo.
+      if (totalWrapEl) {
+        const equipoRojo = document.body.classList.contains('equipo-rojo');
+        const hueInicio = equipoRojo ? 0 : 188;
+        const hueFinal = 130;
+        const hue = Math.round(hueInicio + ((hueFinal - hueInicio) * ratioAjustado));
+        totalWrapEl.style.setProperty('--total-border-color', `hsla(${hue}, 95%, 63%, 0.6)`);
+        totalWrapEl.style.setProperty('--total-bg-a', `hsla(${hue}, 95%, 56%, 0.24)`);
+        totalWrapEl.style.setProperty('--total-bg-b', `hsla(${hue}, 95%, 38%, 0.10)`);
+        totalWrapEl.style.setProperty('--total-glow', `hsla(${hue}, 95%, 56%, 0.34)`);
+      }
 
       // Quitamos clases de estado previas
       totalUsadosEl.classList.remove('estado-ok', 'estado-warn', 'estado-danger', 'estado-over');
@@ -432,22 +454,100 @@ const animateCSS = (element, animation, prefix = "animate__") =>
       }
     }
 
+    function actualizarTotalComoBoton(total) {
+      if (!totalWrapEl) return;
+      const listo = total === LIMITE_TOTAL;
+      totalWrapEl.classList.toggle('total-ready', listo);
+      totalWrapEl.setAttribute('role', 'button');
+      totalWrapEl.setAttribute('aria-disabled', listo ? 'false' : 'true');
+      totalWrapEl.tabIndex = listo ? 0 : -1;
+      totalWrapEl.title = listo
+        ? 'Comenzar a escribir'
+        : 'Reparte 10 puntos para comenzar';
+    }
+
+    function intentarEmpezarDesdeTotal(evento) {
+      if (evento) {
+        evento.preventDefault();
+      }
+      if (calcularTotal() !== LIMITE_TOTAL) return;
+      if (btnInicioEl && !btnInicioEl.disabled) {
+        btnInicioEl.click();
+        return;
+      }
+      if (typeof inicioJuego === 'function') {
+        inicioJuego();
+      }
+    }
+
   
         // Delegación de eventos: manejar todos los botones desde el contenedor
         container.addEventListener('click', e => {
-          if (e.target.tagName !== 'BUTTON') return;
+          const boton = e.target.closest('button[data-action]');
+          if (!boton) return;
           e.preventDefault(); // Prevenir cualquier comportamiento por defecto
-          const action = e.target.dataset.action;
-          const atributoDiv = e.target.closest('.atributo');
+          const action = boton.dataset.action;
+          const atributoDiv = boton.closest('.atributo');
+          if (!atributoDiv) return;
           const key = atributoDiv.dataset.atributo;
+          const contadorEl = atributoDiv.querySelector('.contador');
+          let indicePunto = null;
   
           if (action === 'increment' && calcularTotal() < LIMITE_TOTAL) {
             atributos[key]++;
+            indicePunto = atributos[key] - 1;
           } else if (action === 'decrement' && atributos[key] > 0) {
             atributos[key]--;
+            indicePunto = atributos[key];
+          } else {
+            return;
           }
+
+          // Animación de pulsación en el botón
+          boton.classList.remove('is-pressed');
+          void boton.offsetWidth;
+          boton.classList.add('is-pressed');
+          setTimeout(() => boton.classList.remove('is-pressed'), 360);
+
+          // Barrido de fila para dar feedback visual al cambio
+          atributoDiv.classList.remove('is-burst');
+          void atributoDiv.offsetWidth;
+          atributoDiv.classList.add('is-burst');
+          setTimeout(() => atributoDiv.classList.remove('is-burst'), 500);
+
+          // Pequeño "pop" en el punto afectado
+          if (indicePunto !== null) {
+            const puntos = atributoDiv.querySelectorAll('.punto');
+            const punto = puntos[indicePunto];
+            if (punto) {
+              punto.classList.remove('pop');
+              void punto.offsetWidth;
+              punto.classList.add('pop');
+              setTimeout(() => punto.classList.remove('pop'), 450);
+            }
+          }
+
+          // Animación del valor numérico del atributo
+          if (contadorEl) {
+            contadorEl.classList.remove('is-changing');
+            void contadorEl.offsetWidth;
+            contadorEl.classList.add('is-changing');
+            setTimeout(() => contadorEl.classList.remove('is-changing'), 320);
+          }
+
           actualizarInterfaz();
         });
+
+        if (totalWrapEl) {
+          totalWrapEl.addEventListener('click', (evento) => {
+            intentarEmpezarDesdeTotal(evento);
+          });
+          totalWrapEl.addEventListener('keydown', (evento) => {
+            if (evento.key === 'Enter' || evento.key === ' ') {
+              intentarEmpezarDesdeTotal(evento);
+            }
+          });
+        }
   
         // Inicializar interfaz
         actualizarInterfaz();

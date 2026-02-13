@@ -68,6 +68,268 @@ function actualizarBarraVida(elemento, texto) {
     elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
 }
 
+let niveles_bloqueados = true;
+const NIVELES_ORDEN = [
+    "letra bendita",
+    "letra prohibida",
+    "tertulia",
+    "palabras bonus",
+    "palabras prohibidas",
+    "frase final"
+];
+const nivelesLinea = document.querySelector(".niveles-linea");
+const nivelesItems = Array.from(document.querySelectorAll(".nivel-item"));
+const nivelesScroll = document.querySelector(".niveles-scroll");
+const nivelesPrev = document.querySelector(".niveles-prev");
+const nivelesNext = document.querySelector(".niveles-next");
+const nivelesContenedor = document.querySelector(".niveles");
+
+function setNivelesDesactivados(estado) {
+    if (!nivelesContenedor) return;
+    nivelesContenedor.classList.toggle("niveles-desactivados", Boolean(estado));
+}
+
+function obtenerIndiceNivelActivo() {
+    return nivelesItems.findIndex((item) => item.classList.contains("nivel-activo"));
+}
+
+function obtenerCentroItem(item) {
+    if (!item || !nivelesLinea) return 0;
+    const icono = item.querySelector(".nivel-icono");
+    const rectLinea = nivelesLinea.getBoundingClientRect();
+    if (icono) {
+        const rectIcono = icono.getBoundingClientRect();
+        return rectIcono.left - rectLinea.left + rectIcono.width / 2;
+    }
+    const rectItem = item.getBoundingClientRect();
+    return rectItem.left - rectLinea.left + rectItem.width / 2;
+}
+
+function obtenerMaxScrollPermitido() {
+    if (!nivelesScroll) return 0;
+    return Math.max(0, nivelesScroll.scrollWidth - nivelesScroll.clientWidth);
+}
+
+function limitarScrollNiveles() {
+    if (!nivelesScroll) return;
+    const maxScroll = obtenerMaxScrollPermitido();
+    if (nivelesScroll.scrollLeft > maxScroll) {
+        nivelesScroll.scrollLeft = maxScroll;
+    } else if (nivelesScroll.scrollLeft < 0) {
+        nivelesScroll.scrollLeft = 0;
+    }
+}
+
+function asegurarNivelActualVisible() {
+    if (!nivelesScroll || !nivelesItems.length) return;
+    const indice = obtenerIndiceNivelActivo();
+    if (indice < 0) return;
+    const item = nivelesItems[indice];
+    const rectScroll = nivelesScroll.getBoundingClientRect();
+    const rectItem = item.getBoundingClientRect();
+    const margen = 8;
+    let nuevoScroll = nivelesScroll.scrollLeft;
+    if (rectItem.right > rectScroll.right - margen) {
+        nuevoScroll += rectItem.right - rectScroll.right + margen;
+    } else if (rectItem.left < rectScroll.left + margen) {
+        nuevoScroll -= rectScroll.left - rectItem.left + margen;
+    }
+    const maxScroll = obtenerMaxScrollPermitido();
+    nuevoScroll = Math.min(Math.max(0, nuevoScroll), maxScroll);
+    if (Math.abs(nuevoScroll - nivelesScroll.scrollLeft) > 1) {
+        nivelesScroll.scrollLeft = nuevoScroll;
+    }
+}
+
+function resetearScrollNiveles() {
+    if (!nivelesScroll) return;
+    nivelesScroll.scrollTo({ left: 0, behavior: "auto" });
+    if (nivelesPrev) {
+        nivelesPrev.classList.remove("niveles-flecha--visible");
+    }
+    if (nivelesNext) {
+        nivelesNext.classList.remove("niveles-flecha--visible");
+    }
+    limitarScrollNiveles();
+    requestAnimationFrame(actualizarFlechasNiveles);
+    setTimeout(() => {
+        nivelesScroll.scrollLeft = 0;
+        actualizarFlechasNiveles();
+    }, 50);
+    setTimeout(() => {
+        nivelesScroll.scrollLeft = 0;
+        actualizarFlechasNiveles();
+    }, 200);
+}
+
+function recalcularLineaNiveles() {
+    if (!nivelesLinea || !nivelesItems.length) return;
+    const primero = nivelesItems[0];
+    const ultimo = nivelesItems[nivelesItems.length - 1];
+    const inicio = obtenerCentroItem(primero);
+    const fin = obtenerCentroItem(ultimo);
+    const longitud = Math.max(0, fin - inicio);
+    nivelesLinea.style.setProperty("--linea-inicio", `${inicio}px`);
+    nivelesLinea.style.setProperty("--linea-longitud", `${longitud}px`);
+
+    const icono = primero.querySelector(".nivel-icono");
+    if (icono) {
+        const rectLinea = nivelesLinea.getBoundingClientRect();
+        const rectIcono = icono.getBoundingClientRect();
+        const lineaTop = rectIcono.top - rectLinea.top + rectIcono.height / 2;
+        nivelesLinea.style.setProperty("--linea-top", `${lineaTop}px`);
+        if (nivelesContenedor) {
+            const rectCont = nivelesContenedor.getBoundingClientRect();
+            const topGlobal = (rectLinea.top - rectCont.top) + lineaTop;
+            nivelesContenedor.style.setProperty("--linea-top-global", `${topGlobal}px`);
+        }
+    }
+}
+
+function actualizarColorEquipo() {
+    if (!nivelesContenedor) return;
+    const colorEquipo = (nombre1 && nombre1.style && nombre1.style.color)
+        ? nombre1.style.color
+        : (nombre1 ? getComputedStyle(nombre1).color : "");
+    const colorFinal = colorEquipo || "#00f5ff";
+    nivelesContenedor.style.setProperty("--equipo-color", colorFinal);
+    document.documentElement.style.setProperty("--equipo-color", colorFinal);
+}
+
+function actualizarFlechasNiveles() {
+    if (!nivelesScroll || !nivelesPrev || !nivelesNext) return;
+    limitarScrollNiveles();
+    const maxScrollTotal = nivelesScroll.scrollWidth - nivelesScroll.clientWidth;
+    const maxScroll = Math.min(maxScrollTotal, obtenerMaxScrollPermitido());
+    const hayOverflow = maxScrollTotal > 4;
+    const scrollActual = Math.max(0, Math.round(nivelesScroll.scrollLeft));
+    const margen = 8;
+    const limiteDerecho = Math.max(0, Math.round(maxScroll) - margen);
+    const puedeIzquierda = hayOverflow && scrollActual > margen;
+    const puedeDerecha = hayOverflow && scrollActual < limiteDerecho;
+    nivelesPrev.classList.toggle("niveles-flecha--visible", puedeIzquierda);
+    nivelesNext.classList.toggle("niveles-flecha--visible", puedeDerecha);
+    if (!hayOverflow) {
+        nivelesPrev.classList.remove("niveles-flecha--visible");
+        nivelesNext.classList.remove("niveles-flecha--visible");
+    }
+    nivelesPrev.classList.remove("niveles-flecha--disabled");
+    nivelesNext.classList.remove("niveles-flecha--disabled");
+}
+
+function desplazarNiveles(direccion) {
+    if (!nivelesScroll) return;
+    const delta = nivelesScroll.clientWidth * 0.6;
+    const maxScroll = obtenerMaxScrollPermitido();
+    const nuevoScroll = Math.min(Math.max(0, nivelesScroll.scrollLeft + direccion * delta), maxScroll);
+    nivelesScroll.scrollTo({ left: nuevoScroll, behavior: "smooth" });
+    requestAnimationFrame(actualizarFlechasNiveles);
+    setTimeout(actualizarFlechasNiveles, 220);
+}
+
+if (nivelesPrev && nivelesNext) {
+    nivelesPrev.addEventListener("click", () => desplazarNiveles(-1));
+    nivelesNext.addEventListener("click", () => desplazarNiveles(1));
+}
+
+if (nivelesScroll) {
+    nivelesScroll.addEventListener("scroll", () => {
+        limitarScrollNiveles();
+        actualizarFlechasNiveles();
+    });
+}
+
+window.addEventListener("resize", () => {
+    actualizarFlechasNiveles();
+    recalcularLineaNiveles();
+});
+window.addEventListener("load", () => {
+    resetearScrollNiveles();
+    setTimeout(actualizarFlechasNiveles, 120);
+    setTimeout(actualizarFlechasNiveles, 320);
+});
+window.addEventListener("pageshow", () => {
+    resetearScrollNiveles();
+    setTimeout(actualizarFlechasNiveles, 120);
+});
+requestAnimationFrame(() => {
+    setNivelesDesactivados(!modo_actual || niveles_bloqueados);
+    resetearScrollNiveles();
+    actualizarColorEquipo();
+    recalcularLineaNiveles();
+});
+
+function actualizarNiveles(modo) {
+    if (!nivelesItems.length) return;
+    const indice = NIVELES_ORDEN.indexOf(modo);
+    aplicarOrdenCircular(indice);
+    if (niveles_bloqueados && indice < 0) {
+        nivelesItems.forEach((item) => {
+            item.classList.remove("nivel-activo", "nivel-pasado");
+            item.classList.add("nivel-futuro");
+            item.setAttribute("aria-current", "false");
+        });
+        actualizarFlechasNiveles();
+        actualizarColorEquipo();
+        recalcularLineaNiveles();
+        return;
+    }
+    if (indice >= 0) {
+        niveles_bloqueados = false;
+    }
+    const total = nivelesItems.length;
+    const mitad = total / 2;
+    nivelesItems.forEach((item, idx) => {
+        if (indice < 0) {
+            item.classList.remove("nivel-activo", "nivel-pasado");
+            item.classList.add("nivel-futuro");
+            item.setAttribute("aria-current", "false");
+            return;
+        }
+        let delta = idx - indice;
+        if (delta > mitad) delta -= total;
+        if (delta < -mitad) delta += total;
+        item.classList.toggle("nivel-pasado", delta < 0);
+        item.classList.toggle("nivel-activo", delta === 0);
+        item.classList.toggle("nivel-futuro", delta > 0);
+        item.setAttribute("aria-current", delta === 0 ? "step" : "false");
+    });
+    if (nivelesLinea) {
+        const progreso = indice < 0 || nivelesItems.length <= 1
+            ? 0
+            : (indice / (nivelesItems.length - 1)) * 100;
+        nivelesLinea.style.setProperty("--progreso", `${progreso}%`);
+        const inicio = obtenerCentroItem(nivelesItems[0]);
+        const centroActivo = indice >= 0 ? obtenerCentroItem(nivelesItems[indice]) : inicio;
+        const progresoPx = indice < 0 ? 0 : Math.max(0, centroActivo - inicio);
+        nivelesLinea.style.setProperty("--progreso-px", `${progresoPx}px`);
+    }
+    asegurarNivelActualVisible();
+    limitarScrollNiveles();
+    actualizarFlechasNiveles();
+    actualizarColorEquipo();
+    recalcularLineaNiveles();
+    requestAnimationFrame(actualizarFlechasNiveles);
+    setTimeout(actualizarFlechasNiveles, 60);
+}
+
+function aplicarOrdenCircular(indiceActivo) {
+    if (!nivelesItems.length) return;
+    if (indiceActivo < 0) {
+        nivelesItems.forEach((item) => {
+            item.style.order = "";
+        });
+        return;
+    }
+    const total = nivelesItems.length;
+    const centro = Math.floor(total / 2);
+    nivelesItems.forEach((item, idx) => {
+        const distancia = (idx - indiceActivo + total) % total;
+        const orden = (distancia + centro) % total;
+        item.style.order = orden;
+    });
+}
+
 let sincro = 0;
 let votando = false;
 
@@ -197,11 +459,21 @@ var player = getParameterByName("player");
         enviar_palabra = 'enviar_palabra_j2'
         nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" 
     }
+
+actualizarColorEquipo();
     
 const socket = io(serverUrl);
 
 socket.emit('pedir_nombre');
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
+
+socket.on('modo_actual', (data) => {
+    const siguiente_modo = data && data.modo_actual ? data.modo_actual : "";
+    modo_actual = siguiente_modo;
+    niveles_bloqueados = !siguiente_modo;
+    setNivelesDesactivados(!siguiente_modo);
+    actualizarNiveles(modo_actual);
+});
 
 
 socket.on('dar_nombre', (nombre) => {
@@ -342,6 +614,10 @@ socket.on('limpiar', () => {
 
     limpiezas();
     stopConfetti();
+    modo_actual = "";
+    niveles_bloqueados = true;
+    setNivelesDesactivados(true);
+    actualizarNiveles(modo_actual);
 
     texto1.style.height = "";
     texto1.rows =  "3";
@@ -364,6 +640,9 @@ socket.on('activar_modo', data => {
     animacion_modo();
     LIMPIEZAS[modo_actual](data);
     modo_actual = data.modo_actual;
+    niveles_bloqueados = false;
+    setNivelesDesactivados(false);
+    actualizarNiveles(modo_actual);
     MODOS[modo_actual](data);
 });
 

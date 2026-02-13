@@ -30,6 +30,92 @@ let display_modo = getEl("display_modo");
 let tema = getEl("temas");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
 let boton_vista_calentamiento = getEl("boton_vista_calentamiento");
+const estadoServidorDot = getEl("estado_servidor");
+const estadoServidorTexto = getEl("estado_servidor_texto");
+const estadoPlayer1Dot = getEl("estado_player_1");
+const estadoPlayer2Dot = getEl("estado_player_2");
+const estadoPlayer1Label = getEl("estado_player_1_label");
+const estadoPlayer2Label = getEl("estado_player_2_label");
+
+const STATUS_PING_INTERVAL_MS = 5000;
+const STATUS_STALE_MS = 15000;
+let statusPingInterval = null;
+let statusWatchdogInterval = null;
+let lastPongTs = 0;
+
+const setEstadoDot = (el, estado) => {
+    if (!el) return;
+    el.classList.remove("conexion-dot--ok", "conexion-dot--warn", "conexion-dot--off");
+    el.classList.add(`conexion-dot--${estado}`);
+    el.dataset.status = estado;
+};
+
+const blinkEstadoDot = (el) => {
+    if (!el) return;
+    el.classList.remove("conexion-dot--ping");
+    void el.offsetWidth;
+    el.classList.add("conexion-dot--ping");
+};
+
+const setEstadoServidor = (conectado) => {
+    setEstadoDot(estadoServidorDot, conectado ? "ok" : "off");
+    if (estadoServidorTexto) {
+        estadoServidorTexto.textContent = conectado ? "CONECTADO" : "DESCONECTADO";
+    }
+};
+
+const setEstadoPlayers = (j1, j2) => {
+    setEstadoDot(estadoPlayer1Dot, j1 ? "ok" : "off");
+    setEstadoDot(estadoPlayer2Dot, j2 ? "ok" : "off");
+};
+
+const actualizarNombresConexiones = () => {
+    if (estadoPlayer1Label) {
+        estadoPlayer1Label.textContent = (val_nombre1 || "").trim() || "ESCRITXR 1";
+    }
+    if (estadoPlayer2Label) {
+        estadoPlayer2Label.textContent = (val_nombre2 || "").trim() || "ESCRITXR 2";
+    }
+};
+
+const procesarEstadoConexiones = (estado) => {
+    if (!estado || !estado.players) return;
+    lastPongTs = Date.now();
+    setEstadoServidor(true);
+    setEstadoPlayers(Boolean(estado.players.j1), Boolean(estado.players.j2));
+    blinkEstadoDot(estadoServidorDot);
+    if (estado.players.j1) blinkEstadoDot(estadoPlayer1Dot);
+    if (estado.players.j2) blinkEstadoDot(estadoPlayer2Dot);
+};
+
+const enviarPingEstado = () => {
+    if (!socket || !socket.connected) return;
+    socket.emit('health_ping', {}, (estado) => {
+        procesarEstadoConexiones(estado);
+    });
+};
+
+const iniciarStatusPing = () => {
+    clearInterval(statusPingInterval);
+    clearInterval(statusWatchdogInterval);
+    enviarPingEstado();
+    statusPingInterval = setInterval(enviarPingEstado, STATUS_PING_INTERVAL_MS);
+    statusWatchdogInterval = setInterval(() => {
+        if (!socket || !socket.connected) return;
+        if (lastPongTs && (Date.now() - lastPongTs) > STATUS_STALE_MS) {
+            setEstadoServidor(false);
+            setEstadoPlayers(false, false);
+        }
+    }, 1000);
+};
+
+const detenerStatusPing = () => {
+    clearInterval(statusPingInterval);
+    clearInterval(statusWatchdogInterval);
+    statusPingInterval = null;
+    statusWatchdogInterval = null;
+    lastPongTs = 0;
+};
 
 if (tiempo) {
     tiempo.style.display = "none";
@@ -409,6 +495,7 @@ function actualizarTitulosHeatmap() {
 }
 
 actualizarTitulosHeatmap();
+actualizarNombresConexiones();
 if (window.actualizarBotonesTeleprompterCarga) {
     window.actualizarBotonesTeleprompterCarga();
 }
@@ -416,8 +503,26 @@ if (window.actualizarBotonesTeleprompterCarga) {
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
+    setEstadoServidor(true);
+    iniciarStatusPing();
+    if (typeof actualizarSolicitudCalentamientoControl === "function") {
+        actualizarSolicitudCalentamientoControl({ tipo: "libre" });
+    }
     socket.emit('envío_nombre1', val_nombre1);
     socket.emit('envío_nombre2', val_nombre2);
+});
+socket.on('disconnect', () => {
+    setEstadoServidor(false);
+    setEstadoPlayers(false, false);
+    detenerStatusPing();
+});
+
+socket.on('connect_error', () => {
+    setEstadoServidor(false);
+});
+
+socket.on('health_pong', (estado) => {
+    procesarEstadoConexiones(estado);
 });
 socket.on('calentamiento_vista', (data) => {
     vista_calentamiento = Boolean(data && data.activo);
@@ -427,6 +532,12 @@ socket.on('calentamiento_vista', (data) => {
     if (boton_vista_calentamiento) {
         boton_vista_calentamiento.dataset.activo = vista_calentamiento ? "1" : "0";
         boton_vista_calentamiento.textContent = vista_calentamiento ? "\u{1F3AE} VISTA PARTIDA" : "\u{1F525} VISTA CALENTAMIENTO";
+    }
+});
+
+socket.on('calentamiento_estado_espectador', (data) => {
+    if (typeof actualizarSolicitudCalentamientoControl === "function") {
+        actualizarSolicitudCalentamientoControl(data || {});
     }
 });
 // Recibe los datos del jugador 1 y los coloca.
@@ -510,12 +621,14 @@ else if(player == 2){
 nombre1.addEventListener("input", evt => {
     val_nombre1 = nombre1.value.toUpperCase();
     actualizarTitulosHeatmap();
+    actualizarNombresConexiones();
     socket.emit('envío_nombre1', val_nombre1);
 });
 
 nombre2.addEventListener("input", evt => {
     val_nombre2 = nombre2.value.toUpperCase();
     actualizarTitulosHeatmap();
+    actualizarNombresConexiones();
     socket.emit('envío_nombre2', val_nombre2);
 });
 

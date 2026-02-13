@@ -104,12 +104,241 @@ if (tiempo) {
     tiempo.style.display = "none";
 }
 
+const calentamiento_escritor = getEl("calentamiento_escritor");
+const calentamiento_nube_escritor = getEl("calentamiento_nube_escritor");
+const calentamiento_cursor_escritor_1 = getEl("calentamiento_cursor_escritor_1");
+const calentamiento_cursor_escritor_2 = getEl("calentamiento_cursor_escritor_2");
+const calentamiento_cursor_label_escritor_1 = calentamiento_cursor_escritor_1 ? calentamiento_cursor_escritor_1.querySelector(".cursor-label") : null;
+const calentamiento_cursor_label_escritor_2 = calentamiento_cursor_escritor_2 ? calentamiento_cursor_escritor_2.querySelector(".cursor-label") : null;
+const calentamiento_estado_escritor = getEl("calentamiento_estado_escritor");
+const calentamiento_overlay_ui_escritor = document.querySelector("#calentamiento_escritor .calentamiento-overlay-ui");
+let vista_calentamiento_escritor = false;
+let calentamiento_palabras_escritor = [];
+let calentamiento_cursores_escritor = {
+    1: { x: 50, y: 50, visible: false },
+    2: { x: 50, y: 50, visible: false }
+};
+const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
+const VENTANA_ANIMACION_PALABRA_MS = 600;
+const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
+const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
+const MAX_NOMBRE_CURSOR_CALENTAMIENTO = 26;
+const nombres_cursores_calentamiento_escritor = {
+    1: "ESCRITXR 1",
+    2: "ESCRITXR 2"
+};
+let editable_previo_calentamiento = null;
+let ultimo_envio_cursor_calentamiento = 0;
+const limitarPct = (valor, min, max) => Math.max(min, Math.min(max, valor));
+const normalizarNombreCursorCalentamientoEscritor = (valor, fallback) => {
+    const texto = typeof valor === "string" ? valor.trim() : "";
+    if (!texto) return fallback;
+    return texto.slice(0, MAX_NOMBRE_CURSOR_CALENTAMIENTO);
+};
+const actualizarEtiquetasCursorCalentamientoEscritor = () => {
+    if (calentamiento_cursor_label_escritor_1) {
+        calentamiento_cursor_label_escritor_1.textContent = normalizarNombreCursorCalentamientoEscritor(
+            nombres_cursores_calentamiento_escritor[1],
+            "ESCRITXR 1"
+        );
+    }
+    if (calentamiento_cursor_label_escritor_2) {
+        calentamiento_cursor_label_escritor_2.textContent = normalizarNombreCursorCalentamientoEscritor(
+            nombres_cursores_calentamiento_escritor[2],
+            "ESCRITXR 2"
+        );
+    }
+};
+const obtenerMinYPalabrasCalentamientoEscritor = () => {
+    if (!calentamiento_overlay_ui_escritor) return MIN_Y_CALENTAMIENTO_DEFAULT;
+    const altoVentana = window.innerHeight || 1;
+    const rect = calentamiento_overlay_ui_escritor.getBoundingClientRect();
+    if (!Number.isFinite(rect.bottom) || rect.bottom <= 0) return MIN_Y_CALENTAMIENTO_DEFAULT;
+    const yPct = ((rect.bottom + MARGEN_CABECERA_CALENTAMIENTO_PX) / altoVentana) * 100;
+    return limitarPct(yPct, 12, 62);
+};
+
+const aplicarCursorCalentamientoEscritor = (elemento, cursor) => {
+    if (!elemento) return;
+    const visible = Boolean(cursor && cursor.visible);
+    elemento.classList.toggle("activo", visible);
+    if (!visible) return;
+    const x = typeof cursor.x === "number" ? cursor.x : 50;
+    const y = typeof cursor.y === "number" ? cursor.y : 50;
+    elemento.style.left = `${Math.max(0, Math.min(100, x))}%`;
+    elemento.style.top = `${Math.max(0, Math.min(100, y))}%`;
+};
+
+const renderizarCursoresCalentamientoEscritor = () => {
+    aplicarCursorCalentamientoEscritor(calentamiento_cursor_escritor_1, calentamiento_cursores_escritor[1]);
+    aplicarCursorCalentamientoEscritor(calentamiento_cursor_escritor_2, calentamiento_cursores_escritor[2]);
+};
+
+const renderizarPalabrasCalentamientoEscritor = () => {
+    if (!calentamiento_nube_escritor) return;
+    calentamiento_nube_escritor.innerHTML = "";
+    const fragment = document.createDocumentFragment();
+    const equipoEscritor = playerNumber === 1 || playerNumber === 2 ? playerNumber : null;
+    const ahora = Date.now();
+    const minY = obtenerMinYPalabrasCalentamientoEscritor();
+    calentamiento_palabras_escritor.forEach((entrada) => {
+        const propia = equipoEscritor !== null && entrada.equipo === equipoEscritor;
+        const nodo = document.createElement("span");
+        const clases = [`calentamiento-palabra`, `equipo-${entrada.equipo}`];
+        if (entrada.destacada) clases.push("is-highlighted");
+        if (entrada.destacada && entrada.animOnTs && (ahora - entrada.animOnTs) < VENTANA_ANIMACION_PALABRA_MS) {
+            clases.push("is-highlight-enter");
+        }
+        if (!entrada.destacada && entrada.animOffTs && (ahora - entrada.animOffTs) < VENTANA_ANIMACION_PALABRA_MS) {
+            clases.push("is-highlight-exit");
+        }
+        if (propia && entrada.id) clases.push("calentamiento-palabra-clickable");
+        nodo.className = clases.join(" ");
+        nodo.textContent = entrada.palabra;
+        nodo.style.left = `${Math.max(0, Math.min(100, entrada.x))}%`;
+        nodo.style.top = `${limitarPct(entrada.y, minY, 96)}%`;
+        const duracionMs = Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS;
+        const edadMs = Math.max(0, Date.now() - (Number(entrada.ts) || Date.now()));
+        const delayMs = entrada.destacada ? 0 : -Math.min(edadMs, duracionMs);
+        nodo.style.setProperty("--calentamiento-decay-duration", `${duracionMs}ms`);
+        nodo.style.setProperty("--calentamiento-decay-delay", `${delayMs}ms`);
+        if (propia && entrada.id) {
+            nodo.dataset.id = entrada.id;
+            nodo.addEventListener("click", () => {
+                if (!socket || !socket.connected) return;
+                socket.emit("calentamiento_click_palabra", { id: entrada.id });
+            });
+        }
+        fragment.appendChild(nodo);
+    });
+    calentamiento_nube_escritor.appendChild(fragment);
+};
+
+const normalizarPalabrasCalentamientoEscritor = (equipos = {}) => {
+    const lista = [];
+    const minY = obtenerMinYPalabrasCalentamientoEscritor();
+    [1, 2].forEach((equipo) => {
+        const data = equipos[equipo] || {};
+        const palabras = Array.isArray(data.palabras) ? data.palabras : [];
+        palabras.forEach((entrada) => {
+            if (!entrada || typeof entrada.palabra !== "string") return;
+            lista.push({
+                id: typeof entrada.id === "string" ? entrada.id : "",
+                palabra: entrada.palabra,
+                equipo,
+                x: typeof entrada.x === "number" ? entrada.x : 50,
+                y: limitarPct(typeof entrada.y === "number" ? entrada.y : 50, minY, 96),
+                destacada: Boolean(entrada.destacada),
+                ts: Number(entrada.ts) || 0,
+                animOnTs: Number(entrada.animOnTs) || 0,
+                animOffTs: Number(entrada.animOffTs) || 0,
+                duracionMs: Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS
+            });
+        });
+    });
+    lista.sort((a, b) => a.ts - b.ts);
+    return lista.slice(-220);
+};
+
+const actualizarVistaCalentamientoEscritor = (activa) => {
+    const siguiente = Boolean(activa);
+    if (vista_calentamiento_escritor === siguiente) return;
+    vista_calentamiento_escritor = siguiente;
+    if (document.body) {
+        document.body.classList.toggle("vista-calentamiento-escritor", vista_calentamiento_escritor);
+    }
+    if (calentamiento_escritor) {
+        calentamiento_escritor.setAttribute("aria-hidden", vista_calentamiento_escritor ? "false" : "true");
+        calentamiento_escritor.style.display = vista_calentamiento_escritor ? "flex" : "none";
+    }
+    if (texto) {
+        if (vista_calentamiento_escritor) {
+            editable_previo_calentamiento = texto.contentEditable;
+            texto.contentEditable = "false";
+        } else if (editable_previo_calentamiento !== null) {
+            texto.contentEditable = editable_previo_calentamiento;
+            editable_previo_calentamiento = null;
+        }
+    }
+    if (!vista_calentamiento_escritor) {
+        socket.emit("calentamiento_cursor", { visible: false });
+    }
+};
+
+const actualizarCalentamientoEscritor = (data = {}) => {
+    if (typeof data.vista === "boolean") {
+        actualizarVistaCalentamientoEscritor(data.vista);
+    }
+    const activo = Boolean(data.activo && data.vista);
+    if (calentamiento_estado_escritor) {
+        const etiquetaEquipo = playerNumber === 1 ? "azules" : (playerNumber === 2 ? "rojas" : "de tu equipo");
+        calentamiento_estado_escritor.textContent = activo
+            ? `Palabras sincronizadas. Click para iluminar/desiluminar las ${etiquetaEquipo}.`
+            : "Esperando vista de calentamiento.";
+    }
+    calentamiento_palabras_escritor = normalizarPalabrasCalentamientoEscritor(data.equipos || {});
+    if (data.cursores && typeof data.cursores === "object") {
+        calentamiento_cursores_escritor = {
+            1: { ...(calentamiento_cursores_escritor[1] || {}), ...(data.cursores[1] || {}) },
+            2: { ...(calentamiento_cursores_escritor[2] || {}), ...(data.cursores[2] || {}) }
+        };
+    }
+    renderizarPalabrasCalentamientoEscritor();
+    renderizarCursoresCalentamientoEscritor();
+};
+
+const actualizarCursorCalentamientoEscritor = (payload = {}) => {
+    const equipo = Number(payload.equipo);
+    if (equipo !== 1 && equipo !== 2) return;
+    calentamiento_cursores_escritor[equipo] = {
+        ...(calentamiento_cursores_escritor[equipo] || {}),
+        ...payload
+    };
+    renderizarCursoresCalentamientoEscritor();
+};
+
+const enviarCursorCalentamiento = (x, y, visible = true) => {
+    if (!vista_calentamiento_escritor || !socket || !socket.connected) return;
+    const ahora = Date.now();
+    if (visible && (ahora - ultimo_envio_cursor_calentamiento) < 40) return;
+    ultimo_envio_cursor_calentamiento = ahora;
+    socket.emit("calentamiento_cursor", {
+        x: Math.max(0, Math.min(100, x)),
+        y: Math.max(0, Math.min(100, y)),
+        visible
+    });
+};
+
+window.addEventListener("mousemove", (evt) => {
+    if (!vista_calentamiento_escritor) return;
+    const ancho = window.innerWidth || 1;
+    const alto = window.innerHeight || 1;
+    enviarCursorCalentamiento((evt.clientX / ancho) * 100, (evt.clientY / alto) * 100, true);
+});
+
+window.addEventListener("blur", () => {
+    if (!vista_calentamiento_escritor) return;
+    socket.emit("calentamiento_cursor", { visible: false });
+});
+
+window.addEventListener("resize", () => {
+    if (!vista_calentamiento_escritor) return;
+    renderizarPalabrasCalentamientoEscritor();
+});
+
+window.addEventListener("beforeunload", () => {
+    if (!socket) return;
+    socket.emit("calentamiento_cursor", { visible: false });
+});
+
 const CLASE_PALABRA_BENDITA_LOCAL =
     typeof CLASE_PALABRA_BENDITA !== "undefined" ? CLASE_PALABRA_BENDITA : "palabra-bendita";
 const CLASE_PALABRA_MUSA_LOCAL = "palabra-musa";
 const CLASE_LETRA_BENDITA_LOCAL = "letra-verde";
 const SELECTOR_PALABRA_PROTEGIDA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}, .${CLASE_LETRA_BENDITA_LOCAL}`;
 const SELECTOR_PALABRA_MARCADA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}`;
+const PATRON_CARACTER_PALABRA = "A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ";
+let estadoObjetivosMultipalabra = [];
 
 function nodoEnPalabraBendita(nodo) {
     if (!nodo) return null;
@@ -427,6 +656,91 @@ function marcarPalabraMusaActual(inicio, fin) {
     return true;
 }
 
+function obtenerObjetivosPalabraActual() {
+    if (Array.isArray(palabra_actual)) {
+        return palabra_actual
+            .map((palabra) => (typeof palabra === "string" ? palabra.trim() : ""))
+            .filter(Boolean);
+    }
+    if (typeof palabra_actual === "string") {
+        const palabra = palabra_actual.trim();
+        return palabra ? [palabra] : [];
+    }
+    return [];
+}
+
+function escaparRegex(valor) {
+    return String(valor).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function esObjetivoMultipalabra(objetivo) {
+    return typeof objetivo === "string" && /\s+/.test(objetivo.trim());
+}
+
+function crearRegexObjetivoMultipalabra(objetivo) {
+    if (!esObjetivoMultipalabra(objetivo)) return null;
+    const partes = String(objetivo).trim().split(/\s+/).map(escaparRegex);
+    if (partes.length < 2) return null;
+    const cuerpo = partes.join("\\s+");
+    const separador = `[^${PATRON_CARACTER_PALABRA}]`;
+    return new RegExp(`(^|${separador})(${cuerpo})(?=$|${separador})`, "gi");
+}
+
+function buscarCoincidenciasMultipalabra(textoFuente, objetivo) {
+    if (typeof textoFuente !== "string") return [];
+    const regex = crearRegexObjetivoMultipalabra(objetivo);
+    if (!regex) return [];
+    const coincidencias = [];
+    let match;
+    while ((match = regex.exec(textoFuente)) !== null) {
+        const prefijo = match[1] || "";
+        const contenido = match[2] || "";
+        const inicio = match.index + prefijo.length;
+        coincidencias.push({ inicio, fin: inicio + contenido.length });
+        if (regex.lastIndex === match.index) {
+            regex.lastIndex += 1;
+        }
+    }
+    return coincidencias;
+}
+
+function prepararDeteccionMultipalabraAsignada() {
+    const textoBase = texto?.textContent || "";
+    estadoObjetivosMultipalabra = obtenerObjetivosPalabraActual()
+        .filter(esObjetivoMultipalabra)
+        .map((objetivo) => ({
+            objetivo,
+            ocurrenciasBase: buscarCoincidenciasMultipalabra(textoBase, objetivo).length
+        }));
+}
+
+function limpiarDeteccionMultipalabraAsignada() {
+    estadoObjetivosMultipalabra = [];
+}
+
+function detectarInsercionMultipalabra(textoActual) {
+    if (!Array.isArray(estadoObjetivosMultipalabra) || !estadoObjetivosMultipalabra.length) {
+        return null;
+    }
+    const fuente = typeof textoActual === "string" ? textoActual : "";
+    let mejorCoincidencia = null;
+    estadoObjetivosMultipalabra.forEach((estado) => {
+        const coincidencias = buscarCoincidenciasMultipalabra(fuente, estado.objetivo);
+        if (coincidencias.length <= estado.ocurrenciasBase) return;
+        const indiceNueva = Math.max(0, Math.min(coincidencias.length - 1, estado.ocurrenciasBase));
+        const coincidenciaNueva = coincidencias[indiceNueva] || coincidencias[coincidencias.length - 1];
+        if (!coincidenciaNueva) return;
+        if (!mejorCoincidencia || coincidenciaNueva.fin >= mejorCoincidencia.fin) {
+            mejorCoincidencia = {
+                objetivo: estado.objetivo,
+                inicio: coincidenciaNueva.inicio,
+                fin: coincidenciaNueva.fin
+            };
+        }
+    });
+    return mejorCoincidencia;
+}
+
 let progreso_frase_final_intensidad = 0;
 let progreso_frase_final_ultimo_match = 0;
 
@@ -664,6 +978,7 @@ if (player == 1) {
     recibir_postgame_x = 'recibir_postgame1';
     nombre = getEl("nombre");
     nombre.value = "ESCRITXR 1";
+    nombres_cursores_calentamiento_escritor[1] = nombre.value;
     inspirar = 'inspirar_j1';
     enviar_palabra = 'enviar_palabra_j1';
     enviar_ventaja = 'enviar_ventaja_j1';
@@ -680,6 +995,7 @@ if (player == 1) {
     recibir_postgame_x = 'recibir_postgame2';
     nombre = getEl("nombre");
     nombre.value = "ESCRITXR 2"
+    nombres_cursores_calentamiento_escritor[2] = nombre.value;
     inspirar = 'inspirar_j2';
     enviar_palabra = 'enviar_palabra_j2'
     enviar_ventaja = 'enviar_ventaja_j2';
@@ -688,6 +1004,7 @@ if (player == 1) {
     metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
 
 }
+actualizarEtiquetasCursorCalentamientoEscritor();
 
 texto.addEventListener("keydown", (e) => {
     if (bloquear_borrado_putada && e.key === "Backspace") {
@@ -814,6 +1131,24 @@ socket.on("musa_corazon", (data) => {
     const equipo = data && Number(data.equipo);
     if (equipo !== 1 && equipo !== 2) return;
     lanzarCorazonEscritor(equipo);
+});
+
+socket.on("nombre1", (data) => {
+    const nombreAzul = normalizarNombreCursorCalentamientoEscritor(data, "ESCRITXR 1");
+    nombres_cursores_calentamiento_escritor[1] = nombreAzul;
+    if (player == 1 && nombre) {
+        nombre.value = nombreAzul;
+    }
+    actualizarEtiquetasCursorCalentamientoEscritor();
+});
+
+socket.on("nombre2", (data) => {
+    const nombreRojo = normalizarNombreCursorCalentamientoEscritor(data, "ESCRITXR 2");
+    nombres_cursores_calentamiento_escritor[2] = nombreRojo;
+    if (player == 2 && nombre) {
+        nombre.value = nombreRojo;
+    }
+    actualizarEtiquetasCursorCalentamientoEscritor();
 });
   
 const PUTADAS = {
@@ -1059,6 +1394,7 @@ const LIMPIEZAS = {
     "palabras bonus": function (data) {
         socket.off(enviar_palabra);
         asignada = false;
+        limpiarDeteccionMultipalabraAsignada();
         texto.removeEventListener("keyup", listener_modo);
         definicion.style.fontSize = "1.5vw";
     },
@@ -1095,6 +1431,7 @@ const LIMPIEZAS = {
     "palabras prohibidas": function (data) {
         socket.off(enviar_palabra);
         asignada = false;
+        limpiarDeteccionMultipalabraAsignada();
         texto.removeEventListener("keyup", listener_modo);
     },
 
@@ -1126,8 +1463,22 @@ texto.addEventListener("keydown", (evt) => {
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
+    actualizarEtiquetasCursorCalentamientoEscritor();
     socket.emit('registrar_escritor', player);
+    socket.emit('pedir_calentamiento_estado');
+    socket.emit('calentamiento_cursor', { visible: false });
+});
 
+socket.on('calentamiento_vista', (data) => {
+    actualizarVistaCalentamientoEscritor(Boolean(data && data.activo));
+});
+
+socket.on('calentamiento_estado_espectador', (data) => {
+    actualizarCalentamientoEscritor(data || {});
+});
+
+socket.on('calentamiento_cursor', (payload = {}) => {
+    actualizarCursorCalentamientoEscritor(payload);
 });
 
 //activar los sockets extratextuales.
@@ -1190,7 +1541,7 @@ socket.on("count", (data) => {
             procesarTexto();
         }
         sendText();
-        if(modo_actual != "" || modo_actual != "frase final"){
+        if (modo_actual != "" && modo_actual != "frase final") {
         LIMPIEZAS["psicodélico"]("");
         tiempo.style.color = "white";
             pararEscritura = true;
@@ -1247,6 +1598,7 @@ socket.on("count", (data) => {
             letra_prohibida = "";
             letra_bendita = "";
             asignada = false;
+            limpiarDeteccionMultipalabraAsignada();
             palabra_actual = []; // Variable que almacena la palabra bonus actual.            
             // Desactiva, por seguridad, todos los modos.
             modo_texto_borroso = 0;
@@ -1279,8 +1631,12 @@ socket.on("count", (data) => {
         console.log("MIERDA PUTA")
         console.log(texto.innerHTML)
         console.log(temp_text_inverso_activado)
-        if(!terminado){
-        iniciarMenu();
+        if (!terminado) {
+        if (puedeResucitarSegunEstado()) {
+            iniciarMenu();
+        } else {
+            btnNo.click();
+        }
         }
         }
     }
@@ -1482,6 +1838,7 @@ socket.on("limpiar", (borrar) => {
     }
 
     limpieza();
+    document.body.classList.remove('partida-activa');
 
     stopConfetti()
     
@@ -1565,6 +1922,7 @@ socket.on(inspirar, data => {
         "</span><span style='color: white;'>»</span>");
         definicion.dataset.origenMusa = "musa";
         animateCSS(".definicion", "flash");
+        prepararDeteccionMultipalabraAsignada();
         asignada = true;
         texto.removeEventListener("keyup", listener_modo1);
         listener_modo1 = function (e) { palabras_musas(e) };
@@ -1595,6 +1953,7 @@ socket.on("enviar_repentizado", repentizado => {
 
 socket.on("nueva letra", letra => {
     palabra_actual = []
+    limpiarDeteccionMultipalabraAsignada();
     definicion.innerHTML = "";
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
@@ -1636,6 +1995,7 @@ function recibir_palabra(data) {
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
+    prepararDeteccionMultipalabraAsignada();
     asignada = true;
     listener_modo = function (e) { modo_palabras_bonus(e) };
     texto.addEventListener("keyup", listener_modo);
@@ -1657,6 +2017,7 @@ function recibir_palabra_prohibida(data) {
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
+    prepararDeteccionMultipalabraAsignada();
     asignada = true;
     listener_modo = function (e) { modo_palabras_prohibidas(e) };
     texto.addEventListener("keyup", listener_modo);
@@ -1689,6 +2050,10 @@ function recibir_palabra_prohibida(data) {
       function contarPalabrasTexto(textoBase) {
         const matches = (textoBase || "").match(/\b\w+\b/g);
         return matches ? matches.length : 0;
+      }
+
+      function puedeResucitarSegunEstado() {
+        return modo_actual !== "frase final" && contarPalabrasTexto(texto_guardado) > 0;
       }
 
       function ajustarPalabrasResucitar() {
@@ -1767,6 +2132,7 @@ function recibir_palabra_prohibida(data) {
               contenedor.style.display = "flex";
               btnInicio.style.display = "none";
               document.getElementById('total').style.display = "none";
+              document.body.classList.add('partida-activa');
               animateCSS(".contenedor", "backInLeft");
       
                 // Ponemos FULLSCREEN inmediatamente al iniciar
@@ -1902,6 +2268,10 @@ function recibir_palabra_prohibida(data) {
       }
 
       function iniciarMenu() {
+        if (!puedeResucitarSegunEstado()) {
+          btnNo.click();
+          return;
+        }
         console.log("Iniciando menú");
 
 
@@ -1933,6 +2303,10 @@ function recibir_palabra_prohibida(data) {
         });
       btnSi.addEventListener('click', (evento) => {
         evento.stopPropagation(); // Evita que se active el listener global
+        if (!puedeResucitarSegunEstado()) {
+          btnNo.click();
+          return;
+        }
         mostrarMenuQuantity();
       });
   
@@ -2415,48 +2789,53 @@ function modo_palabras_bonus(e) {
         e.preventDefault();
 
         let selection = document.getSelection();
-            let range = selection.getRangeAt(0);
-            let preCaretRange = range.cloneRange();
-            preCaretRange.selectNodeContents(e.target);
-            preCaretRange.setEnd(range.endContainer, range.endOffset);
-            let endingIndex = preCaretRange.toString().length;
-            let startingIndex = 0; // Inicialización
-            const textContent = e.target.textContent || "";
-            const esCaracterPalabra = (ch) => /[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ]/.test(ch || "");
-            const esSeparador = (ch) => !esCaracterPalabra(ch);
+        if (!selection || !selection.rangeCount) return;
+        let range = selection.getRangeAt(0);
+        let preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(e.target);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        let endingIndex = preCaretRange.toString().length;
+        let startingIndex = 0; // Inicializacion
+        const textContent = e.target.textContent || "";
+        const objetivos = obtenerObjetivosPalabraActual();
+        const esCaracterPalabra = (ch) => /[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ]/.test(ch || "");
+        const esSeparador = (ch) => !esCaracterPalabra(ch);
 
-            while (endingIndex > 0 && esSeparador(textContent[endingIndex - 1])) {
-                endingIndex -= 1;
+        while (endingIndex > 0 && esSeparador(textContent[endingIndex - 1])) {
+            endingIndex -= 1;
+        }
+
+        // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
+        for (let i = endingIndex - 1; i >= 0; i--) {
+            if (esSeparador(textContent[i]) || i === 0) {
+                startingIndex = (i === 0 && !esSeparador(textContent[i])) ? i : i + 1;
+                break;
             }
+        }
 
-            // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
-            for (let i = endingIndex - 1; i >= 0; i--) {
-                if (esSeparador(textContent[i]) || i === 0) {
-                    startingIndex = (i === 0 && !esSeparador(textContent[i])) ? i : i + 1;
-                    break;
-                }
+        // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
+        for (let i = endingIndex; i <= textContent.length; i++) {
+            if (i === textContent.length || esSeparador(textContent[i])) {
+                endingIndex = i;
+                break;
             }
+        }
 
-            // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
-            for (let i = endingIndex; i <= textContent.length; i++) {
-                if (i === textContent.length || esSeparador(textContent[i])) {
-                    endingIndex = i;
-                    break;
-                }
-            }
+        const tokenActual = textContent.substring(startingIndex, endingIndex);
+        const tokenLower = tokenActual.toLowerCase();
+        const coincidenciaMultipalabra = detectarInsercionMultipalabra(textContent);
+        const palabraDetectadaToken = objetivos.find((objetivo) =>
+            tokenLower.includes((objetivo || "").toLowerCase())
+        );
 
-            console.log("Texto seleccionado:", textContent.substring(startingIndex, endingIndex)); // Debugging
-            console.log("palabra_actual:", palabra_actual); // Debugging
-            console.log("Índices:", startingIndex, endingIndex); // Debugging
+        console.log("Texto seleccionado:", tokenActual); // Debugging
+        console.log("palabra_actual:", palabra_actual); // Debugging
+        console.log("Indices:", startingIndex, endingIndex); // Debugging
 
-
-        if (
-            palabra_actual.some(palabra => textContent
-                .substring(startingIndex, endingIndex)
-                .toLowerCase().includes(palabra.toLowerCase()))
-            ) {
+        if (coincidenciaMultipalabra || palabraDetectadaToken) {
             texto.focus();
             asignada = false;
+            limpiarDeteccionMultipalabraAsignada();
             socket.emit("nueva_palabra", player);
             socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
             feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
@@ -2474,23 +2853,26 @@ function modo_palabras_bonus(e) {
                 }, 2000);
             });
             socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo});
-            const palabraObjetivo = Array.isArray(palabra_actual)
-                ? palabra_actual[0]
-                : palabra_actual;
-            const palabraLower = (palabraObjetivo || "").toLowerCase();
-            const tokenLower = textContent
-                .slice(startingIndex, endingIndex)
-                .toLowerCase();
-            let indiceMatch = -1;
-            if (palabraLower) {
-                indiceMatch = tokenLower.lastIndexOf(palabraLower);
+
+            let inicioMarca = startingIndex;
+            let finMarca = endingIndex;
+            if (coincidenciaMultipalabra) {
+                inicioMarca = coincidenciaMultipalabra.inicio;
+                finMarca = coincidenciaMultipalabra.fin;
+            } else {
+                const palabraLower = (palabraDetectadaToken || "").toLowerCase();
+                let indiceMatch = -1;
+                if (palabraLower) {
+                    indiceMatch = tokenLower.lastIndexOf(palabraLower);
+                }
+                inicioMarca = indiceMatch >= 0
+                    ? startingIndex + indiceMatch
+                    : startingIndex;
+                finMarca = indiceMatch >= 0
+                    ? inicioMarca + palabraLower.length
+                    : endingIndex;
             }
-            const inicioMarca = indiceMatch >= 0
-                ? startingIndex + indiceMatch
-                : startingIndex;
-            const finMarca = indiceMatch >= 0
-                ? inicioMarca + palabraLower.length
-                : endingIndex;
+
             const esMusa = definicion?.dataset?.origenMusa === "musa";
             marcarPalabraBenditaActual(inicioMarca, finMarca, esMusa);
             countChars(texto);
@@ -2547,6 +2929,7 @@ function modo_palabras_prohibidas(e) {
             socket.emit("intento_prohibido", { player, tipo: "palabra", valor: palabraReportada });
             texto.focus();
             asignada = false;
+            limpiarDeteccionMultipalabraAsignada();
             socket.emit("nueva_palabra_prohibida", player);
             tiempo_palabras_bonus = -tiempo_palabras_bonus;
             socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
@@ -2576,43 +2959,49 @@ function palabras_musas(e) {
         e.preventDefault();
 
         let selection = document.getSelection();
-            let range = selection.getRangeAt(0);
-            let preCaretRange = range.cloneRange();
-            preCaretRange.selectNodeContents(e.target);
-            preCaretRange.setEnd(range.endContainer, range.endOffset);
-            let endingIndex = preCaretRange.toString().length;
-            let startingIndex = 0; // Inicialización
-            let textContent = e.target.innerText;
+        if (!selection || !selection.rangeCount) return;
+        let range = selection.getRangeAt(0);
+        let preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(e.target);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        let endingIndex = preCaretRange.toString().length;
+        let startingIndex = 0; // Inicializacion
+        const textContent = e.target.textContent || "";
+        const objetivos = obtenerObjetivosPalabraActual();
 
-            // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
-            for (let i = endingIndex - 1; i >= 0; i--) {
-                if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
-                    startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
-                    break;
-                }
+        // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
+        for (let i = endingIndex - 1; i >= 0; i--) {
+            if (textContent[i] === ' ' || textContent[i] === '\n' || i === 0) {
+                startingIndex = (i === 0 && (textContent[i] !== ' ' && textContent[i] !== '\n')) ? i : i + 1;
+                break;
             }
+        }
 
-            // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
-            for (let i = endingIndex; i <= textContent.length; i++) {
-                if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
-                    endingIndex = i;
-                    break;
-                }
+        // Ajusta endingIndex: Avanza hasta encontrar un delimitador o el final del texto
+        for (let i = endingIndex; i <= textContent.length; i++) {
+            if (textContent[i] === ' ' || textContent[i] === '\n' || i === textContent.length) {
+                endingIndex = i;
+                break;
             }
+        }
 
-            console.log("Texto seleccionado:", textContent.substring(startingIndex, endingIndex)); // Debugging
-            console.log("palabra_actual:", palabra_actual); // Debugging
-            console.log("Índices:", startingIndex, endingIndex); // Debugging
+        const tokenActual = textContent.substring(startingIndex, endingIndex);
+        const tokenLower = tokenActual.toLowerCase();
+        const coincidenciaMultipalabra = detectarInsercionMultipalabra(textContent);
+        const palabraEncontrada = coincidenciaMultipalabra
+            ? coincidenciaMultipalabra.objetivo
+            : objetivos.find((objetivo) => tokenLower.includes((objetivo || "").toLowerCase()));
 
-        if (
-            palabra_actual.some(palabra => textContent
-                .substring(startingIndex, endingIndex)
-                .toLowerCase().includes(palabra.toLowerCase()))
-            ) {
+        console.log("Texto seleccionado:", tokenActual); // Debugging
+        console.log("palabra_actual:", palabra_actual); // Debugging
+        console.log("Indices:", startingIndex, endingIndex); // Debugging
+
+        if (coincidenciaMultipalabra || palabraEncontrada) {
 
             definicion.innerHTML = "";
             texto.focus();
             asignada = false;
+            limpiarDeteccionMultipalabraAsignada();
             feedback.style.color = "white";
             feedback.innerHTML = "+🎨 insp.";
             clearTimeout(delay_animacion);
@@ -2621,27 +3010,30 @@ function palabras_musas(e) {
                     feedback.innerHTML = "";
                 }, 2000);
             });
-            color = "white"
+            color = "white";
             tiempo_feed = feedback.innerHTML;
             socket.emit("nueva_palabra_musa", player);
             socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "inspiracion" });
-            const tokenLower = textContent
-                .substring(startingIndex, endingIndex)
-                .toLowerCase();
-            const palabraEncontrada = Array.isArray(palabra_actual)
-                ? palabra_actual.find(palabra => tokenLower.includes((palabra || "").toLowerCase()))
-                : palabra_actual;
-            const palabraLower = (palabraEncontrada || "").toLowerCase();
-            let indiceMatch = -1;
-            if (palabraLower) {
-                indiceMatch = tokenLower.lastIndexOf(palabraLower);
+
+            let inicioMarca = startingIndex;
+            let finMarca = endingIndex;
+            if (coincidenciaMultipalabra) {
+                inicioMarca = coincidenciaMultipalabra.inicio;
+                finMarca = coincidenciaMultipalabra.fin;
+            } else {
+                const palabraLower = (palabraEncontrada || "").toLowerCase();
+                let indiceMatch = -1;
+                if (palabraLower) {
+                    indiceMatch = tokenLower.lastIndexOf(palabraLower);
+                }
+                inicioMarca = indiceMatch >= 0
+                    ? startingIndex + indiceMatch
+                    : startingIndex;
+                finMarca = indiceMatch >= 0
+                    ? inicioMarca + palabraLower.length
+                    : endingIndex;
             }
-            const inicioMarca = indiceMatch >= 0
-                ? startingIndex + indiceMatch
-                : startingIndex;
-            const finMarca = indiceMatch >= 0
-                ? inicioMarca + palabraLower.length
-                : endingIndex;
+
             if (marcarPalabraMusaActual(inicioMarca, finMarca)) {
                 countChars(texto);
                 sendText();
@@ -2878,6 +3270,7 @@ function limpieza(){
     letra_prohibida = "";
     letra_bendita = "";
     asignada = false;
+    limpiarDeteccionMultipalabraAsignada();
     palabra_actual = []; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
     
@@ -2930,6 +3323,7 @@ function limpieza_final(){
     letra_prohibida = "";
     letra_bendita = "";
     asignada = false;
+    limpiarDeteccionMultipalabraAsignada();
     palabra_actual = []; // Variable que almacena la palabra bonus actual.
     terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
 

@@ -1,74 +1,2601 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
-      </style>
-                   <link  rel="icon"   href="./game/img/logo scrib.png" type="image/png" />
+    </style>
+    <link rel="icon" href="./game/img/logo scrib.png" type="image/png" />
 
-    <meta name="viewport" content="width=device-width, height=device-height" content="initial-scale=1">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
     <title>SCRB</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" type="text/css" href="./game/css/dashboard-players.css?v=20260213b">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./game/css/dashboard-players.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
-    <!-- highlight-within-textarea CSS/JS -->
-    <!--<script src="jquery.highlight-within-textarea.js"></script>-->
+    <style>
+        :root {
+            --intro-nav-zone-top: calc(max(env(safe-area-inset-top), 0px) + clamp(3.4rem, 9vh, 5.2rem));
+            --intro-nav-zone-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(5.2rem, 13vh, 8rem));
+        }
 
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            min-height: 100dvh;
+        }
+
+        body {
+            margin: 0;
+            text-align: center;
+            font-size: clamp(14px, 3.5vw, 30px);
+            overflow: hidden;
+        }
+
+        .intro-flow {
+            width: 100vw;
+            max-width: 100vw;
+            height: 100dvh;
+            min-height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .intro-scroll {
+            height: 100%;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .intro-scroll {
+                overflow-y: hidden;
+                touch-action: none;
+                overscroll-behavior-y: none;
+            }
+        }
+
+        .intro-scroll::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        .intro-section {
+            min-height: 100dvh;
+            height: 100dvh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: clamp(2.2rem, 8vw, 4.5rem) 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intro-panel {
+            width: 100%;
+            max-width: 100%;
+            padding: var(--intro-nav-zone-top) clamp(1rem, 4vw, 2.5rem) var(--intro-nav-zone-bottom);
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            position: static;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(0.8rem, 3vw, 1.6rem);
+            min-height: calc(100dvh - (2 * clamp(2.2rem, 8vw, 4.5rem)));
+            height: 100%;
+        }
+
+        .intro-panel h1,
+        .intro-panel h2 {
+            align-self: flex-start;
+            text-align: left;
+            width: 100%;
+        }
+
+        #intro-bienvenida .intro-title {
+            align-self: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        #intro-bienvenida .intro-panel {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(1.4rem, 4vh, 2.4rem));
+            padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(7.8rem, 20vh, 11rem));
+        }
+
+        #intro-bienvenida .neon {
+            margin: 0;
+            text-align: center;
+        }
+
+        #intro-nombre .intro-panel {
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+        }
+
+        #intro-nombre .intro-panel h1 {
+            align-self: center;
+            text-align: center;
+            width: auto;
+        }
+
+        #intro-jugar .intro-panel {
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+        }
+
+        #intro-jugar .intro-panel h1 {
+            align-self: center;
+            text-align: center;
+            width: auto;
+        }
+
+        #intro-atributos .intro-panel {
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+        }
+
+        #intro-atributos .intro-panel h1 {
+            align-self: center;
+            text-align: center;
+            width: auto;
+            margin: 0;
+            max-width: min(96vw, 20ch);
+            font-size: clamp(24px, 3.35vw, 54px);
+            line-height: 1.06;
+            letter-spacing: 0.045em;
+            text-wrap: balance;
+        }
+
+        .intro-center-block {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: clamp(0.8rem, 2.6vw, 1.4rem);
+        }
+
+        .intro-panel--center {
+            justify-content: center;
+        }
+
+        .intro-title {
+            font-size: clamp(26px, 7vw, 64px);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.2;
+            color: #fff;
+            text-shadow: -0.08em 0 #ff3c3c, 0 0 0.6em rgba(0, 245, 255, 0.55);
+        }
+
+        .intro-logo-inline {
+            color: #00f5ff;
+            text-shadow: -0.08em 0 #ff3c3c, 0 0 0.6em rgba(0, 245, 255, 0.65);
+            letter-spacing: 0.08em;
+        }
+
+        .intro-logos {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: clamp(0.8rem, 2vw, 1.4rem);
+            margin-bottom: clamp(0.4rem, 2vw, 0.8rem);
+        }
+
+        .intro-logo-img {
+            width: clamp(60px, 16vw, 120px);
+            height: auto;
+            display: block;
+        }
+
+        .intro-logo-sutura {
+            width: clamp(40px, 10.5vw, 82px);
+        }
+
+        .intro-explica {
+            align-items: flex-start;
+            text-align: left;
+            gap: clamp(0.6rem, 2.6vw, 1.4rem);
+        }
+
+        .intro-explica-title {
+            font-size: clamp(20px, 4.8vmin, 50px);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            line-height: 1.1;
+            text-shadow: 0.08em 0.08em 0 #000;
+        }
+
+        .intro-explica-title--azul {
+            color: #63e7ff;
+            text-shadow: -0.08em 0 #00a9c0, 0 0 0.7em rgba(99, 231, 255, 0.45);
+        }
+
+        .intro-explica-title--rojo {
+            color: #ff4a4a;
+            text-shadow: -0.08em 0 #a30000, 0 0 0.7em rgba(255, 74, 74, 0.45);
+        }
+
+        .intro-explica-text {
+            width: min(100%, 80ch);
+            margin: 0 auto 0 0;
+            text-align: left;
+            font-size: clamp(11px, 2.15vmin, 22px);
+            line-height: 1.35;
+            color: #fff;
+            overflow-wrap: anywhere;
+        }
+
+        .intro-explica-text strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .intro-accent {
+            color: var(--accent-color, #00f5ff);
+            font-weight: 700;
+        }
+
+        .intro-explica--azul {
+            --accent-color: #63e7ff;
+        }
+
+        .intro-explica--rojo {
+            --accent-color: #ff4a4a;
+        }
+
+        .intro-explica--azul .intro-explica-text {
+            color: #fff;
+        }
+
+        .intro-explica--rojo .intro-explica-text {
+            color: #fff;
+        }
+
+        #intro-tiempo .intro-explica-text {
+            text-indent: 0;
+            margin-left: 0;
+            padding-left: 0;
+            margin-right: auto;
+            text-align: left;
+        }
+
+        #intro-tiempo .intro-explica-text--inicio {
+            transform: none;
+        }
+
+        .intro-tiempo-copy {
+            width: 100%;
+            display: grid;
+            gap: clamp(0.5rem, 1.6vw, 1rem);
+        }
+
+        @media (min-width: 760px) {
+            #intro-que-es .intro-explica-title {
+                font-size: clamp(26px, 2.4vw, 44px);
+            }
+
+            #intro-que-es .intro-explica-text {
+                font-size: clamp(16px, 1.35vw, 26px);
+                line-height: 1.35;
+                max-width: 66ch;
+            }
+
+            #intro-tiempo .intro-explica-title {
+                font-size: clamp(26px, 2.4vw, 44px);
+            }
+
+            #intro-tiempo .intro-tiempo-copy {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: clamp(1rem, 2.4vw, 2.4rem);
+                row-gap: clamp(0.55rem, 1.5vw, 1.1rem);
+                align-content: start;
+            }
+
+            #intro-tiempo .intro-explica-text {
+                width: 100%;
+                margin: 0;
+                font-size: clamp(14px, 1.15vw, 21px);
+                line-height: 1.28;
+            }
+        }
+        .intro-panel .nombre {
+            width: min(760px, 92vw);
+            font-size: clamp(20px, 6vw, 48px);
+            padding: clamp(0.6rem, 2vw, 1.1rem) clamp(0.8rem, 3vw, 1.4rem);
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            outline: none;
+        }
+
+        .intro-alerta {
+            min-height: 1.4em;
+            font-size: clamp(12px, 3vw, 18px);
+            color: #ff3b3b;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .intro-alerta.activa {
+            opacity: 1;
+        }
+
+        .intro-jugador-nombre {
+            color: #00f5ff;
+            text-shadow: -0.08em 0 #ff3c3c, 0 0 0.6em rgba(0, 245, 255, 0.55);
+        }
+
+        .intro-nombre-input,
+        .intro-nombre-input::placeholder {
+            color: #00f5ff;
+            text-shadow: -0.08em 0 #ff3c3c, 0 0 0.6em rgba(0, 245, 255, 0.55);
+            text-transform: uppercase;
+            opacity: 1;
+        }
+
+        .intro-powered {
+            font-size: clamp(9px, 1.8vw, 12px);
+            margin: 0;
+        }
+
+        .intro-powered-logo {
+            width: min(52vw, clamp(130px, 24vmin, 280px));
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .intro-arrow,
+        .intro-cta-icon {
+            margin-top: 0;
+            width: clamp(46px, 10vw, 72px);
+            height: clamp(26px, 6vw, 42px);
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            box-shadow: none;
+            --flecha-color: #ffffff;
+            --flecha-glow: rgba(255, 255, 255, 0.35);
+        }
+
+        .intro-arrow::before,
+        .intro-arrow::after,
+        .intro-cta-icon::before,
+        .intro-cta-icon::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 82%;
+            height: clamp(7px, 1.6vw, 13px);
+            background: var(--flecha-color, #ffffff);
+            border-radius: 999px;
+            box-shadow: 0 0 0.6rem var(--flecha-glow, rgba(255, 255, 255, 0.45)),
+                0 0 1.4rem var(--flecha-glow, rgba(255, 255, 255, 0.35));
+        }
+
+        .intro-arrow--down {
+            --flecha-color: #00f5ff;
+            --flecha-glow: rgba(0, 245, 255, 0.6);
+        }
+
+        .intro-arrow--down::before,
+        .intro-cta-icon.intro-arrow--down::before {
+            left: 50%;
+            transform: translate(-84%, -50%) rotate(25deg);
+            transform-origin: left center;
+        }
+
+        .intro-arrow--down::after,
+        .intro-cta-icon.intro-arrow--down::after {
+            left: 50%;
+            transform: translate(-16%, -50%) rotate(-25deg);
+            transform-origin: right center;
+        }
+
+        .intro-arrow--up {
+            --flecha-color: #ff3b3b;
+            --flecha-glow: rgba(255, 59, 59, 0.6);
+        }
+
+        .intro-arrow--up::before,
+        .intro-cta-icon.intro-arrow--up::before {
+            left: 50%;
+            transform: translate(-84%, -50%) rotate(-25deg);
+            transform-origin: left center;
+        }
+
+        .intro-arrow--up::after,
+        .intro-cta-icon.intro-arrow--up::after {
+            left: 50%;
+            transform: translate(-16%, -50%) rotate(25deg);
+            transform-origin: right center;
+        }
+
+        .intro-nav {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0;
+            padding:
+                calc(max(env(safe-area-inset-top), 0px) + clamp(0.6rem, 2.4vw, 1.2rem))
+                0
+                calc(max(env(safe-area-inset-bottom), 0px) + clamp(0.6rem, 2.4vw, 1.2rem));
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .intro-nav .intro-arrow {
+            pointer-events: auto;
+        }
+
+        .intro-nav-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(0.8rem, 3vw, 1.6rem));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(0.95rem, 3.6vw, 1.8rem);
+            z-index: 3;
+        }
+
+        .intro-cta {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .intro-cta-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(0.1rem, 0.5vw, 0.3rem);
+        }
+
+        .intro-cta-text {
+            font-size: clamp(14px, 3.2vw, 22px);
+            letter-spacing: 0.12em;
+            color: #00f5ff;
+            text-transform: uppercase;
+            text-shadow: 0 0 0.6rem rgba(0, 245, 255, 0.55),
+                0 0 1.2rem rgba(0, 245, 255, 0.35);
+        }
+
+        .intro-skip-btn {
+            margin: 0 0 clamp(0.25rem, 1vw, 0.45rem) 0;
+            padding: 0.5em 1.15em;
+            border-radius: 999px;
+            border: 1px solid rgba(99, 231, 255, 0.55);
+            background: linear-gradient(135deg, rgba(99, 231, 255, 0.22) 0%, rgba(255, 91, 91, 0.12) 100%);
+            color: #eafcff;
+            font-family: "Retro-gaming";
+            font-size: clamp(10px, 2.1vw, 13px);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.95;
+            cursor: pointer;
+            text-shadow: 0 0 0.55rem rgba(99, 231, 255, 0.45);
+            box-shadow: 0 0 0.75rem rgba(99, 231, 255, 0.3), inset 0 0 0.5rem rgba(255, 255, 255, 0.15);
+            transition: opacity 0.16s ease, transform 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .intro-skip-btn:hover,
+        .intro-skip-btn:focus,
+        .intro-skip-btn:focus-visible {
+            color: #ffffff;
+            opacity: 1;
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 0 1rem rgba(99, 231, 255, 0.4), inset 0 0 0.6rem rgba(255, 255, 255, 0.18);
+            outline: none;
+        }
+
+        .intro-choice-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: clamp(200px, 54vw, 380px);
+            border: 2px solid rgba(0, 245, 255, 0.88);
+            border-radius: 999px;
+            padding: clamp(0.72rem, 2.1vw, 1.02rem) clamp(1.5rem, 6vw, 3rem);
+            font-family: "Retro-gaming";
+            font-size: clamp(1.02rem, 4.4vw, 1.52rem);
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+            color: #021015;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+            background:
+                radial-gradient(circle at 50% -35%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.1) 55%),
+                linear-gradient(140deg, #9dffff 0%, #4ef7ff 28%, #17deeb 58%, #63f8ff 100%);
+            box-shadow:
+                0 0 0.35rem rgba(0, 245, 255, 0.9),
+                0 0 1.1rem rgba(0, 245, 255, 0.65),
+                0 0 2.2rem rgba(0, 245, 255, 0.38),
+                inset 0 0 0.5rem rgba(255, 255, 255, 0.45);
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
+            isolation: isolate;
+        }
+
+        .intro-choice-btn::before {
+            content: "";
+            position: absolute;
+            left: -35%;
+            top: -70%;
+            width: 48%;
+            height: 250%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.65) 45%, transparent 100%);
+            transform: rotate(18deg);
+            animation: intro-write-shine 2.2s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .intro-choice-btn::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: inherit;
+            border: 1px solid rgba(0, 245, 255, 0.35);
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .intro-choice-btn:hover {
+            transform: translateY(-2px) scale(1.018);
+            border-color: rgba(176, 255, 255, 0.98);
+            box-shadow:
+                0 0 0.45rem rgba(0, 245, 255, 0.95),
+                0 0 1.55rem rgba(0, 245, 255, 0.85),
+                0 0 2.8rem rgba(0, 245, 255, 0.45),
+                inset 0 0 0.65rem rgba(255, 255, 255, 0.52);
+            filter: brightness(1.06);
+        }
+
+        .intro-choice-btn:active {
+            transform: translateY(1px) scale(0.985);
+            filter: brightness(0.96);
+            box-shadow:
+                0 0 0.28rem rgba(0, 245, 255, 0.78),
+                0 0 0.8rem rgba(0, 245, 255, 0.5),
+                inset 0 0 0.45rem rgba(255, 255, 255, 0.4);
+        }
+
+        .intro-choice-btn:focus,
+        .intro-choice-btn:focus-visible {
+            outline: none;
+            border-color: rgba(176, 255, 255, 1);
+            box-shadow:
+                0 0 0.5rem rgba(0, 245, 255, 1),
+                0 0 1.45rem rgba(0, 245, 255, 0.9),
+                0 0 2.8rem rgba(0, 245, 255, 0.5),
+                inset 0 0 0.62rem rgba(255, 255, 255, 0.54);
+        }
+
+        .intro-choice-btn--azul {
+            --btn-color: #00f5ff;
+            --btn-glow: rgba(0, 245, 255, 0.7);
+        }
+
+        @keyframes intro-write-shine {
+            0% {
+                transform: translateX(0) rotate(18deg);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.35;
+            }
+            58% {
+                opacity: 0.72;
+            }
+            100% {
+                transform: translateX(320%) rotate(18deg);
+                opacity: 0;
+            }
+        }
+
+        .intro-atributos-wrap {
+            width: min(820px, 94vw);
+            display: grid;
+            gap: clamp(0.8rem, 2.7vw, 1.45rem);
+        }
+
+        .intro-habilidad {
+            --hab-color: #63e7ff;
+            width: 100%;
+            display: grid;
+            grid-template-columns: minmax(140px, 1fr) auto minmax(160px, 1fr);
+            align-items: center;
+            gap: clamp(0.4rem, 2vw, 0.9rem);
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: clamp(0.38rem, 1.45vw, 0.72rem) 0;
+            position: relative;
+            overflow: visible;
+        }
+
+        .intro-habilidad[data-habilidad="fuerza"] {
+            --hab-color: #ff5b5b;
+        }
+
+        .intro-habilidad[data-habilidad="agilidad"] {
+            --hab-color: #63e7ff;
+        }
+
+        .intro-habilidad[data-habilidad="destreza"] {
+            --hab-color: #ffe55b;
+        }
+
+        .intro-habilidad-nombre {
+            margin: 0;
+            text-align: left;
+            font-size: clamp(14px, 3.6vw, 20px);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--hab-color);
+            text-shadow: 0 0 0.6rem rgba(255, 255, 255, 0.3);
+        }
+
+        .intro-habilidad-texto {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 0.2rem;
+            min-width: 0;
+        }
+
+        .intro-habilidad-desc {
+            margin: 0;
+            text-align: left;
+            font-size: clamp(11px, 2.55vw, 14px);
+            line-height: 1.28;
+            color: #d9f8ff;
+            opacity: 0.95;
+            text-shadow: 0 0 0.5rem rgba(217, 248, 255, 0.22);
+        }
+
+        .intro-habilidad[data-habilidad="fuerza"] .intro-habilidad-desc {
+            color: #ffb2b2;
+            text-shadow: 0 0 0.5rem rgba(255, 178, 178, 0.28);
+        }
+
+        .intro-habilidad[data-habilidad="agilidad"] .intro-habilidad-desc {
+            color: #baf4ff;
+            text-shadow: 0 0 0.5rem rgba(186, 244, 255, 0.28);
+        }
+
+        .intro-habilidad[data-habilidad="destreza"] .intro-habilidad-desc {
+            color: #fff2ad;
+            text-shadow: 0 0 0.5rem rgba(255, 242, 173, 0.28);
+        }
+
+        .intro-habilidad-controls {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(0.4rem, 1.7vw, 0.9rem);
+            min-width: clamp(120px, 30vw, 170px);
+            position: relative;
+            isolation: isolate;
+        }
+
+        .intro-habilidad-controls::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(760px, calc(100vw - 3.6rem));
+            height: 2px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%) scaleX(0.35);
+            transform-origin: center center;
+            background: linear-gradient(90deg, transparent 0%, var(--hab-color) 18%, rgba(255, 255, 255, 0.9) 50%, var(--hab-color) 82%, transparent 100%);
+            z-index: -1;
+        }
+
+        .intro-habilidad.is-burst .intro-habilidad-controls::after {
+            animation: intro-habilidad-sweep 460ms ease-out;
+        }
+
+        .intro-habilidad-btn {
+            width: clamp(36px, 9vw, 52px);
+            height: clamp(36px, 9vw, 52px);
+            border: 2px solid var(--hab-color);
+            border-radius: 999px;
+            background: transparent;
+            color: var(--hab-color);
+            font-family: "Retro-gaming";
+            font-size: clamp(16px, 4vw, 22px);
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            transform-origin: center center;
+            box-shadow: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            animation: none !important;
+            transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+        }
+
+        .intro-habilidad-btn:hover,
+        .intro-habilidad-btn:focus,
+        .intro-habilidad-btn:focus-visible,
+        .intro-habilidad-btn:active {
+            outline: none;
+            box-shadow: none;
+            background: transparent;
+            color: var(--hab-color);
+            border: 2px solid var(--hab-color);
+            animation: none !important;
+            transform: none;
+        }
+
+        .intro-habilidad-btn.is-pressed {
+            animation: intro-habilidad-btn-kick 320ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        }
+
+        .intro-habilidad-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .intro-habilidad-valor {
+            min-width: 1.4em;
+            text-align: center;
+            font-size: clamp(18px, 4.5vw, 24px);
+            color: var(--hab-color);
+            text-shadow: 0 0 0.58rem rgba(255, 255, 255, 0.34);
+            display: inline-block;
+            transform-origin: center center;
+        }
+
+        .intro-habilidad-valor.is-changing {
+            animation: intro-habilidad-valor-pop 300ms cubic-bezier(0.22, 0.78, 0.24, 1);
+        }
+
+        .intro-habilidad-barra {
+            display: flex;
+            justify-content: flex-end;
+            gap: clamp(0.2rem, 0.7vw, 0.35rem);
+        }
+
+        .intro-habilidad-punto {
+            width: clamp(9px, 1.9vw, 14px);
+            height: clamp(9px, 1.9vw, 14px);
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.12) 52%, rgba(255, 255, 255, 0.04) 100%);
+            box-shadow: inset 0 0 0.35rem rgba(255, 255, 255, 0.1);
+            opacity: 0.65;
+            transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .intro-habilidad-punto.filled {
+            background: radial-gradient(circle at 26% 24%, #ffffff 0%, var(--hab-color) 42%, var(--hab-color) 100%);
+            border-color: var(--hab-color);
+            opacity: 1;
+            box-shadow: 0 0 0.45rem rgba(255, 255, 255, 0.35), inset 0 0 0.28rem rgba(255, 255, 255, 0.45);
+        }
+
+        .intro-habilidad-punto.pop {
+            animation: intro-habilidad-dot-pop 420ms cubic-bezier(0.15, 0.85, 0.2, 1);
+        }
+
+        @keyframes intro-habilidad-btn-kick {
+            0% {
+                transform: scale(1);
+                background: transparent;
+            }
+            34% {
+                transform: scale(0.84);
+                background: rgba(255, 255, 255, 0.12);
+            }
+            72% {
+                transform: scale(1.12);
+                background: rgba(255, 255, 255, 0.2);
+            }
+            100% {
+                transform: scale(1);
+                background: transparent;
+            }
+        }
+
+        @keyframes intro-habilidad-dot-pop {
+            0% {
+                transform: scale(1);
+            }
+            38% {
+                transform: scale(1.7);
+            }
+            68% {
+                transform: scale(0.88);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes intro-habilidad-sweep {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scaleX(0.2);
+            }
+            28% {
+                opacity: 0.95;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scaleX(1);
+            }
+        }
+
+        @keyframes intro-habilidad-valor-pop {
+            0% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            42% {
+                transform: scale(1.2);
+                filter: brightness(1.25);
+            }
+            100% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        .intro-total-habilidades {
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(0.32rem, 1.2vw, 0.6rem);
+            padding: clamp(0.38rem, 1.25vw, 0.64rem) clamp(0.72rem, 2.2vw, 1.15rem);
+            border-radius: 999px;
+            border: 2px solid rgba(99, 231, 255, 0.45);
+            background: linear-gradient(135deg, rgba(99, 231, 255, 0.15) 0%, rgba(255, 91, 91, 0.08) 100%);
+            box-shadow: 0 0 0.95rem rgba(99, 231, 255, 0.22), inset 0 0 0.55rem rgba(255, 255, 255, 0.1);
+            font-size: clamp(12px, 2.75vw, 17px);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #fff;
+            line-height: 1;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .intro-total-label {
+            color: #dffbff;
+            opacity: 0.95;
+        }
+
+        .intro-total-habilidades .intro-total-usados {
+            color: #ff9e5b;
+            min-width: 1.4em;
+            text-align: right;
+            font-size: clamp(14px, 3.3vw, 20px);
+            text-shadow: 0 0 0.6rem rgba(255, 158, 91, 0.45);
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+        }
+
+        .intro-total-fraction {
+            display: inline-flex;
+            align-items: baseline;
+            gap: clamp(0.15rem, 0.55vw, 0.3rem);
+            padding: 0.18em 0.5em;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 0 0.45rem rgba(255, 255, 255, 0.08);
+        }
+
+        .intro-total-divider {
+            color: #d7f7ff;
+            opacity: 0.9;
+            font-size: clamp(9px, 2.1vw, 12px);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            text-shadow: 0 0 0.45rem rgba(99, 231, 255, 0.35);
+            transform: translateY(-0.08em);
+        }
+
+        .intro-total-max {
+            color: #63e7ff;
+            font-size: clamp(13px, 3vw, 19px);
+            text-shadow: 0 0 0.55rem rgba(99, 231, 255, 0.35);
+            min-width: 1.25em;
+            text-align: left;
+        }
+
+        .intro-total-habilidades.casi {
+            border-color: rgba(255, 158, 91, 0.55);
+            box-shadow: 0 0 1rem rgba(255, 158, 91, 0.35), inset 0 0 0.55rem rgba(255, 255, 255, 0.12);
+            background: linear-gradient(135deg, rgba(255, 158, 91, 0.2) 0%, rgba(255, 91, 91, 0.1) 100%);
+        }
+
+        .intro-total-habilidades.completo {
+            border-color: rgba(89, 255, 122, 0.75);
+            box-shadow: 0 0 1.15rem rgba(89, 255, 122, 0.45), inset 0 0 0.62rem rgba(255, 255, 255, 0.16);
+            background: linear-gradient(135deg, rgba(89, 255, 122, 0.22) 0%, rgba(99, 231, 255, 0.12) 100%);
+        }
+
+        .intro-total-habilidades.completo .intro-total-usados {
+            color: #59ff7a;
+            text-shadow: 0 0 0.75rem rgba(89, 255, 122, 0.6);
+        }
+
+        .intro-total-habilidades.completo .intro-total-divider {
+            color: #d8ffe3;
+            opacity: 1;
+        }
+
+        body.jugador-inicio-hecho .intro-choice-btn {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-niveles-list {
+            width: 100%;
+            display: grid;
+            gap: clamp(0.5rem, 2.6vw, 1.2rem);
+            position: relative;
+            padding-left: clamp(1.8rem, 6.5vw, 3.2rem);
+            margin-top: clamp(0.1rem, 1.4vw, 0.6rem);
+        }
+
+        .intro-niveles-list::before {
+            content: none;
+        }
+
+        .intro-nivel {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: start;
+            gap: clamp(0.6rem, 2.8vw, 1.2rem);
+        }
+
+        .intro-nivel-icon {
+            width: clamp(36px, 10vw, 56px);
+            height: clamp(36px, 10vw, 56px);
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(16px, 4.8vw, 24px);
+            background: rgba(0, 0, 0, 0.35);
+            border: 3px solid var(--nivel-color);
+            box-shadow: 0 0 0.8rem var(--nivel-glow);
+        }
+
+        .intro-nivel-title {
+            font-size: clamp(14px, 4vw, 22px);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin: 0;
+            color: var(--nivel-color);
+        }
+
+        .intro-nivel-desc {
+            font-size: clamp(10px, 1.95vmin, 18px);
+            line-height: 1.25;
+            margin: 0.2rem 0 0;
+            color: #fff;
+            overflow-wrap: anywhere;
+        }
+
+        #intro-niveles .intro-panel {
+            gap: clamp(0.5rem, 2.2vw, 1.1rem);
+            padding-bottom: clamp(1.8rem, 6vw, 3.4rem);
+        }
+
+        @media (min-width: 760px) {
+            #intro-niveles .intro-panel {
+                align-items: stretch;
+                gap: clamp(0.3rem, 1vw, 0.8rem);
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(2.5rem, 5.2vh, 3.4rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(3.9rem, 8vh, 5.2rem));
+            }
+
+            #intro-niveles .intro-niveles-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: clamp(1rem, 2.5vw, 2.4rem);
+                row-gap: clamp(0.45rem, 1.2vw, 0.95rem);
+                padding-left: 0;
+                margin-top: 0;
+                align-content: start;
+            }
+
+            #intro-niveles .intro-nivel {
+                min-width: 0;
+                gap: clamp(0.45rem, 1vw, 0.8rem);
+            }
+
+            #intro-niveles .intro-nivel-icon {
+                width: clamp(30px, 2.2vw, 48px);
+                height: clamp(30px, 2.2vw, 48px);
+                font-size: clamp(14px, 1.25vw, 20px);
+                border-width: 2px;
+            }
+
+            #intro-niveles .intro-nivel-title {
+                font-size: clamp(16px, 1.75vw, 32px);
+                line-height: 1.05;
+            }
+
+            #intro-niveles .intro-nivel-desc {
+                font-size: clamp(11px, 1.02vw, 17px);
+                line-height: 1.2;
+                margin-top: 0.06rem;
+            }
+        }
+
+        @media (min-width: 1680px) {
+            #intro-niveles .intro-niveles-list {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                column-gap: clamp(0.9rem, 2vw, 2rem);
+            }
+
+            #intro-niveles .intro-nivel-desc {
+                font-size: clamp(10px, 0.86vw, 15px);
+            }
+        }
+
+        @media (min-width: 760px) {
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(21px, 2.25vw, 42px);
+                max-width: min(92vw, 22ch);
+                line-height: 1.04;
+            }
+
+            #intro-atributos .intro-panel {
+                align-items: stretch;
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(2.5rem, 5.2vh, 3.6rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(3.9rem, 8vh, 5.4rem));
+            }
+
+            #intro-atributos .intro-center-block {
+                justify-content: flex-start;
+                gap: clamp(0.55rem, 1.3vw, 1rem);
+            }
+
+            #intro-atributos .intro-atributos-wrap {
+                width: min(1320px, 97vw);
+                gap: clamp(0.45rem, 1vw, 0.8rem);
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            #intro-atributos .intro-habilidad {
+                padding: clamp(0.28rem, 0.7vw, 0.46rem) 0;
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+                gap: clamp(0.22rem, 0.48vw, 0.42rem);
+            }
+
+            #intro-atributos .intro-habilidad-texto {
+                align-items: center;
+                gap: 0.12rem;
+            }
+
+            #intro-atributos .intro-habilidad-nombre,
+            #intro-atributos .intro-habilidad-desc {
+                text-align: center;
+            }
+
+            #intro-atributos .intro-habilidad-nombre {
+                font-size: clamp(12px, 1.02vw, 16px);
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                font-size: clamp(9px, 0.62vw, 10px);
+                line-height: 1.16;
+            }
+
+            #intro-atributos .intro-habilidad-controls {
+                min-width: 0;
+                gap: clamp(0.25rem, 0.58vw, 0.45rem);
+            }
+
+            #intro-atributos .intro-habilidad-btn {
+                width: clamp(28px, 1.8vw, 36px);
+                height: clamp(28px, 1.8vw, 36px);
+                font-size: clamp(12px, 1.02vw, 16px);
+            }
+
+            #intro-atributos .intro-habilidad-valor {
+                font-size: clamp(14px, 1.25vw, 19px);
+            }
+
+            #intro-atributos .intro-habilidad-barra {
+                justify-content: center;
+            }
+
+            #intro-atributos .intro-habilidad-punto {
+                width: clamp(8px, 0.74vw, 11px);
+                height: clamp(8px, 0.74vw, 11px);
+            }
+
+            #intro-atributos .intro-total-habilidades {
+                font-size: clamp(10px, 0.95vw, 14px);
+                padding: clamp(0.28rem, 0.68vw, 0.5rem) clamp(0.6rem, 1.6vw, 0.95rem);
+            }
+
+            #intro-atributos .intro-total-habilidades .intro-total-usados,
+            #intro-atributos .intro-total-max {
+                font-size: clamp(11px, 1.06vw, 16px);
+            }
+        }
+
+        @media (min-width: 1500px) and (min-height: 840px) {
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(26px, 2.55vw, 50px);
+                max-width: min(90vw, 20ch);
+            }
+
+            #intro-atributos .intro-habilidad-nombre {
+                font-size: clamp(14px, 1.22vw, 20px);
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                font-size: clamp(10px, 0.82vw, 13px);
+                line-height: 1.18;
+            }
+
+            #intro-atributos .intro-habilidad-btn {
+                width: clamp(32px, 2.05vw, 44px);
+                height: clamp(32px, 2.05vw, 44px);
+                font-size: clamp(13px, 1.08vw, 17px);
+            }
+
+            #intro-atributos .intro-habilidad-valor {
+                font-size: clamp(16px, 1.45vw, 23px);
+            }
+
+            #intro-atributos .intro-habilidad-punto {
+                width: clamp(9px, 0.82vw, 13px);
+                height: clamp(9px, 0.82vw, 13px);
+            }
+
+            #intro-atributos .intro-total-habilidades {
+                font-size: clamp(11px, 1.06vw, 16px);
+            }
+
+            #intro-atributos .intro-total-habilidades .intro-total-usados,
+            #intro-atributos .intro-total-max {
+                font-size: clamp(12px, 1.2vw, 18px);
+            }
+        }
+
+        @media (min-width: 760px) and (max-height: 920px) {
+            #intro-bienvenida .intro-title {
+                font-size: clamp(20px, 4.6vw, 50px);
+            }
+
+            #intro-bienvenida .neon {
+                font-size: clamp(4.6px, 0.52vw, 7.2px);
+                line-height: 1;
+            }
+
+            #intro-bienvenida .intro-powered-logo {
+                max-width: min(38vw, 200px);
+                max-height: clamp(74px, 15vh, 112px);
+            }
+
+            #intro-bienvenida .intro-nav-bottom {
+                gap: clamp(0.45rem, 1.4vh, 0.9rem);
+            }
+
+            #intro-bienvenida .intro-skip-btn {
+                font-size: clamp(9px, 1.2vw, 11px);
+                padding: 0.42em 0.92em;
+            }
+
+            #intro-niveles .intro-explica-title,
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(20px, 2.1vw, 34px);
+            }
+
+            #intro-niveles .intro-nivel-title {
+                font-size: clamp(15px, 1.45vw, 27px);
+            }
+
+            #intro-niveles .intro-nivel-desc {
+                font-size: clamp(10px, 0.84vw, 14px);
+                line-height: 1.18;
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                font-size: clamp(8px, 0.56vw, 9.5px);
+                line-height: 1.12;
+            }
+        }
+
+        .intro-nivel--verde {
+            --nivel-color: #59ff7a;
+            --nivel-glow: rgba(89, 255, 122, 0.45);
+        }
+
+        .intro-nivel--rojo {
+            --nivel-color: #ff3b3b;
+            --nivel-glow: rgba(255, 59, 59, 0.45);
+        }
+
+        .intro-nivel--azul {
+            --nivel-color: #00f5ff;
+            --nivel-glow: rgba(0, 245, 255, 0.45);
+        }
+
+        .intro-nivel--amarillo {
+            --nivel-color: #ffe55b;
+            --nivel-glow: rgba(255, 229, 91, 0.45);
+        }
+
+        .intro-nivel--rosa {
+            --nivel-color: #ff8bdc;
+            --nivel-glow: rgba(255, 139, 220, 0.45);
+        }
+
+        .intro-nivel--naranja {
+            --nivel-color: #ffb15b;
+            --nivel-glow: rgba(255, 177, 91, 0.45);
+        }
+
+        @media (max-width: 720px) {
+            .intro-panel {
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(3rem, 6vh, 4.2rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(5.6rem, 11vh, 7.4rem));
+            }
+
+            #intro-bienvenida .intro-panel {
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(1.2rem, 2.8vh, 2rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(7rem, 15vh, 9.4rem));
+            }
+
+            .intro-habilidad {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+            }
+
+            .intro-habilidad-texto {
+                align-items: center;
+            }
+
+            .intro-habilidad-nombre {
+                text-align: center;
+            }
+
+            .intro-habilidad-desc {
+                text-align: center;
+            }
+
+            .intro-habilidad-barra {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 760px) and (min-height: 900px) {
+            #intro-que-es .intro-explica-title,
+            #intro-tiempo .intro-explica-title {
+                font-size: clamp(28px, 5.2vw, 44px);
+            }
+
+            #intro-que-es .intro-explica-text,
+            #intro-tiempo .intro-explica-text {
+                font-size: clamp(14px, 2.55vw, 19px);
+                line-height: 1.3;
+            }
+
+            #intro-niveles .intro-panel {
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(2.4rem, 4.8vh, 3rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(5.2rem, 10vh, 6.8rem));
+            }
+
+            #intro-niveles .intro-niveles-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: clamp(0.75rem, 2.1vw, 1.2rem);
+                row-gap: clamp(0.4rem, 1.2vw, 0.75rem);
+                padding-left: 0;
+                margin-top: 0;
+            }
+
+            #intro-niveles .intro-nivel {
+                min-width: 0;
+                gap: clamp(0.35rem, 1vw, 0.6rem);
+            }
+
+            #intro-niveles .intro-nivel-icon {
+                width: clamp(30px, 6.2vw, 40px);
+                height: clamp(30px, 6.2vw, 40px);
+                font-size: clamp(14px, 3vw, 20px);
+            }
+
+            #intro-niveles .intro-nivel-title {
+                font-size: clamp(16px, 3.5vw, 24px);
+            }
+
+            #intro-niveles .intro-nivel-desc {
+                font-size: clamp(10px, 1.85vw, 13px);
+                line-height: 1.18;
+            }
+
+            #intro-atributos .intro-panel {
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(2.2rem, 4.4vh, 2.8rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(5rem, 9.5vh, 6.4rem));
+            }
+
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(26px, 5vw, 40px);
+                max-width: min(94vw, 18ch);
+                line-height: 1.03;
+            }
+
+            #intro-atributos .intro-center-block {
+                justify-content: flex-start;
+                gap: clamp(0.4rem, 1vw, 0.7rem);
+            }
+
+            #intro-atributos .intro-atributos-wrap {
+                width: min(720px, 97vw);
+                gap: clamp(0.35rem, 0.95vw, 0.65rem);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            #intro-atributos .intro-habilidad:last-child {
+                grid-column: 1 / -1;
+            }
+
+            #intro-atributos .intro-habilidad {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+                padding: clamp(0.2rem, 0.6vw, 0.38rem) 0;
+                gap: clamp(0.18rem, 0.5vw, 0.35rem);
+            }
+
+            #intro-atributos .intro-habilidad-texto {
+                align-items: center;
+            }
+
+            #intro-atributos .intro-habilidad-nombre {
+                text-align: center;
+                font-size: clamp(14px, 2.7vw, 19px);
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                text-align: center;
+                font-size: clamp(10px, 1.75vw, 13px);
+                line-height: 1.18;
+            }
+
+            #intro-atributos .intro-habilidad-controls {
+                min-width: 0;
+                gap: clamp(0.25rem, 0.75vw, 0.45rem);
+            }
+
+            #intro-atributos .intro-habilidad-btn {
+                width: clamp(30px, 5.8vw, 40px);
+                height: clamp(30px, 5.8vw, 40px);
+                font-size: clamp(13px, 2.5vw, 18px);
+            }
+
+            #intro-atributos .intro-habilidad-valor {
+                font-size: clamp(16px, 3.3vw, 22px);
+            }
+
+            #intro-atributos .intro-habilidad-punto {
+                width: clamp(8px, 1.55vw, 11px);
+                height: clamp(8px, 1.55vw, 11px);
+            }
+
+            #intro-atributos .intro-total-habilidades {
+                font-size: clamp(10px, 2.05vw, 14px);
+            }
+        }
+
+        @media (min-width: 560px) and (max-width: 759px) {
+            #intro-niveles .intro-panel {
+                align-items: stretch;
+                gap: clamp(0.32rem, 0.9vw, 0.72rem);
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(2rem, 4.2vh, 2.8rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(3rem, 6.8vh, 4.4rem));
+            }
+
+            #intro-niveles .intro-niveles-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: clamp(0.58rem, 1.8vw, 1.1rem);
+                row-gap: clamp(0.3rem, 0.85vw, 0.62rem);
+                padding-left: 0;
+                margin-top: 0;
+            }
+
+            #intro-niveles .intro-nivel {
+                min-width: 0;
+                gap: clamp(0.28rem, 0.78vw, 0.52rem);
+            }
+
+            #intro-niveles .intro-nivel-icon {
+                width: clamp(26px, 4.6vw, 34px);
+                height: clamp(26px, 4.6vw, 34px);
+                font-size: clamp(12px, 2.2vw, 16px);
+                border-width: 2px;
+            }
+
+            #intro-niveles .intro-nivel-title {
+                font-size: clamp(13px, 2vw, 17px);
+                line-height: 1.06;
+            }
+
+            #intro-niveles .intro-nivel-desc {
+                font-size: clamp(9px, 1.35vw, 11px);
+                line-height: 1.14;
+                margin-top: 0.04rem;
+            }
+        }
+
+        @media (max-height: 780px) {
+            .intro-explica-title {
+                font-size: clamp(18px, 4.15vmin, 42px);
+            }
+
+            .intro-explica-text,
+            .intro-nivel-desc {
+                font-size: clamp(10px, 1.85vmin, 17px);
+                line-height: 1.28;
+            }
+        }
+
+        @media (max-height: 620px) {
+            .intro-explica-title {
+                font-size: clamp(16px, 3.8vmin, 34px);
+            }
+
+            .intro-explica-text,
+            .intro-nivel-desc {
+                font-size: clamp(9px, 1.65vmin, 14px);
+                line-height: 1.22;
+            }
+        }
+
+        @media (min-width: 1280px) and (min-height: 780px) {
+            .intro-explica-text {
+                font-size: clamp(12px, 1.28vw, 25px);
+                line-height: 1.37;
+            }
+        }
+
+        @media (min-width: 1400px) and (min-height: 760px) {
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(34px, 3.05vw, 60px);
+                max-width: min(92vw, 19ch);
+                line-height: 1.02;
+            }
+
+            #intro-atributos .intro-atributos-wrap {
+                width: min(1520px, 98vw);
+                gap: clamp(0.72rem, 1.4vw, 1.25rem);
+            }
+
+            #intro-atributos .intro-habilidad-nombre {
+                font-size: clamp(20px, 1.72vw, 30px);
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                font-size: clamp(13px, 1.02vw, 18px);
+                line-height: 1.2;
+            }
+
+            #intro-atributos .intro-habilidad-controls {
+                gap: clamp(0.36rem, 0.9vw, 0.7rem);
+            }
+
+            #intro-atributos .intro-habilidad-btn {
+                width: clamp(38px, 2.45vw, 54px);
+                height: clamp(38px, 2.45vw, 54px);
+                font-size: clamp(17px, 1.34vw, 24px);
+            }
+
+            #intro-atributos .intro-habilidad-valor {
+                font-size: clamp(22px, 1.95vw, 33px);
+            }
+
+            #intro-atributos .intro-habilidad-punto {
+                width: clamp(11px, 0.95vw, 16px);
+                height: clamp(11px, 0.95vw, 16px);
+            }
+
+            #intro-atributos .intro-total-habilidades {
+                font-size: clamp(15px, 1.25vw, 20px);
+                padding: clamp(0.4rem, 0.85vw, 0.68rem) clamp(0.85rem, 1.9vw, 1.4rem);
+            }
+
+            #intro-atributos .intro-total-habilidades .intro-total-usados,
+            #intro-atributos .intro-total-max {
+                font-size: clamp(17px, 1.4vw, 24px);
+            }
+        }
+
+        @media (max-width: 900px) and (min-height: 760px) {
+            #intro-que-es .intro-explica-title,
+            #intro-tiempo .intro-explica-title {
+                font-size: clamp(32px, 6.2vw, 52px);
+                line-height: 1.05;
+            }
+
+            #intro-que-es .intro-explica-text,
+            #intro-tiempo .intro-explica-text {
+                font-size: clamp(16px, 3.2vw, 24px);
+                line-height: 1.3;
+                max-width: 68ch;
+            }
+
+            #intro-tiempo .intro-tiempo-copy {
+                gap: clamp(0.7rem, 2.4vw, 1.3rem);
+            }
+        }
+
+        @media (min-width: 901px) and (max-width: 1250px) and (min-height: 760px) {
+            #intro-que-es .intro-explica-title,
+            #intro-tiempo .intro-explica-title {
+                font-size: clamp(34px, 4.4vw, 56px);
+                line-height: 1.05;
+            }
+
+            #intro-que-es .intro-explica-text,
+            #intro-tiempo .intro-explica-text {
+                font-size: clamp(18px, 2.05vw, 26px);
+                line-height: 1.3;
+                max-width: 68ch;
+            }
+        }
+
+        @media (min-width: 620px) and (max-width: 980px) and (min-height: 760px) {
+            .intro-nav {
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(0.35rem, 1vh, 0.7rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(0.35rem, 1vh, 0.7rem));
+            }
+
+            .intro-nav .intro-arrow {
+                width: clamp(38px, 6.4vw, 54px);
+                height: clamp(22px, 3.7vw, 31px);
+            }
+
+            #intro-que-es .intro-explica-title {
+                font-size: clamp(34px, 5.8vw, 54px);
+                line-height: 1.06;
+            }
+
+            #intro-que-es .intro-explica-text {
+                font-size: clamp(18px, 3vw, 26px);
+                line-height: 1.34;
+                max-width: 72ch;
+            }
+
+            #intro-tiempo .intro-explica-title {
+                font-size: clamp(34px, 5.8vw, 54px);
+                line-height: 1.06;
+            }
+
+            #intro-tiempo .intro-tiempo-copy {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: clamp(0.7rem, 2vw, 1.6rem);
+                row-gap: clamp(0.35rem, 0.95vw, 0.75rem);
+                align-content: start;
+            }
+
+            #intro-tiempo .intro-explica-text {
+                font-size: clamp(17px, 2.75vw, 24px);
+                line-height: 1.26;
+                margin: 0;
+                width: 100%;
+            }
+
+            #intro-niveles .intro-panel {
+                align-items: stretch;
+                gap: clamp(0.35rem, 0.95vw, 0.8rem);
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(2rem, 4.7vh, 3rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(3.2rem, 7.5vh, 4.8rem));
+            }
+
+            #intro-niveles .intro-niveles-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: clamp(0.7rem, 1.9vw, 1.4rem);
+                row-gap: clamp(0.35rem, 0.95vw, 0.75rem);
+                padding-left: 0;
+                margin-top: 0;
+            }
+
+            #intro-niveles .intro-nivel {
+                min-width: 0;
+                gap: clamp(0.35rem, 0.9vw, 0.65rem);
+            }
+
+            #intro-niveles .intro-nivel-icon {
+                width: clamp(28px, 5.2vw, 40px);
+                height: clamp(28px, 5.2vw, 40px);
+                font-size: clamp(13px, 2.45vw, 18px);
+                border-width: 2px;
+            }
+
+            #intro-niveles .intro-nivel-title {
+                font-size: clamp(14px, 2.7vw, 20px);
+                line-height: 1.05;
+            }
+
+            #intro-niveles .intro-nivel-desc {
+                font-size: clamp(10px, 1.7vw, 13px);
+                line-height: 1.15;
+                margin-top: 0.05rem;
+            }
+
+            #intro-atributos .intro-panel {
+                align-items: stretch;
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(2rem, 4.7vh, 3rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(3.2rem, 7.5vh, 4.8rem));
+            }
+
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(23px, 4.6vw, 36px);
+                max-width: min(94vw, 16ch);
+                line-height: 1.04;
+            }
+
+            #intro-atributos .intro-center-block {
+                justify-content: flex-start;
+                gap: clamp(0.35rem, 0.95vw, 0.7rem);
+            }
+
+            #intro-atributos .intro-atributos-wrap {
+                width: min(900px, 98vw);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: clamp(0.35rem, 0.85vw, 0.65rem);
+            }
+
+            #intro-atributos .intro-habilidad:last-child {
+                grid-column: 1 / -1;
+            }
+
+            #intro-atributos .intro-habilidad {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+                padding: clamp(0.16rem, 0.45vw, 0.28rem) 0;
+                gap: clamp(0.14rem, 0.4vw, 0.28rem);
+            }
+
+            #intro-atributos .intro-habilidad-texto {
+                align-items: center;
+            }
+
+            #intro-atributos .intro-habilidad-nombre {
+                text-align: center;
+                font-size: clamp(13px, 2.2vw, 17px);
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                text-align: center;
+                font-size: clamp(9px, 1.35vw, 11px);
+                line-height: 1.14;
+            }
+
+            #intro-atributos .intro-habilidad-controls {
+                min-width: 0;
+                gap: clamp(0.2rem, 0.62vw, 0.38rem);
+            }
+
+            #intro-atributos .intro-habilidad-btn {
+                width: clamp(29px, 4.9vw, 38px);
+                height: clamp(29px, 4.9vw, 38px);
+                font-size: clamp(12px, 2vw, 17px);
+            }
+
+            #intro-atributos .intro-habilidad-valor {
+                font-size: clamp(15px, 2.8vw, 21px);
+            }
+
+            #intro-atributos .intro-habilidad-barra {
+                justify-content: center;
+            }
+
+            #intro-atributos .intro-habilidad-punto {
+                width: clamp(8px, 1.28vw, 10px);
+                height: clamp(8px, 1.28vw, 10px);
+            }
+
+            #intro-atributos .intro-total-habilidades {
+                margin-top: clamp(0.18rem, 0.5vw, 0.35rem);
+                font-size: clamp(10px, 1.7vw, 13px);
+                padding: clamp(0.26rem, 0.62vw, 0.42rem) clamp(0.58rem, 1.35vw, 0.88rem);
+            }
+
+            #intro-atributos .intro-total-habilidades .intro-total-usados,
+            #intro-atributos .intro-total-max {
+                font-size: clamp(12px, 2vw, 16px);
+            }
+        }
+
+        @media (max-width: 620px) {
+            #intro-atributos .intro-panel {
+                align-items: stretch;
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(1.8rem, 4.2vh, 2.6rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(3rem, 7.4vh, 4.6rem));
+                gap: clamp(0.24rem, 0.9vw, 0.55rem);
+            }
+
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(20px, 6.2vw, 32px);
+                max-width: min(94vw, 16ch);
+                line-height: 1.03;
+                margin: 0;
+            }
+
+            #intro-atributos .intro-center-block {
+                justify-content: flex-start;
+                gap: clamp(0.24rem, 0.8vw, 0.5rem);
+            }
+
+            #intro-atributos .intro-atributos-wrap {
+                width: min(96vw, 760px);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: clamp(0.35rem, 1.35vw, 0.8rem);
+                row-gap: clamp(0.2rem, 0.75vw, 0.5rem);
+            }
+
+            #intro-atributos .intro-habilidad:last-child {
+                grid-column: 1 / -1;
+            }
+
+            #intro-atributos .intro-habilidad {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+                padding: clamp(0.08rem, 0.35vw, 0.2rem) 0;
+                gap: clamp(0.08rem, 0.34vw, 0.2rem);
+            }
+
+            #intro-atributos .intro-habilidad-texto {
+                align-items: center;
+                gap: 0.04rem;
+            }
+
+            #intro-atributos .intro-habilidad-nombre {
+                text-align: center;
+                font-size: clamp(12px, 3.25vw, 16px);
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                text-align: center;
+                font-size: clamp(8px, 2.05vw, 10px);
+                line-height: 1.1;
+                max-width: 22ch;
+            }
+
+            #intro-atributos .intro-habilidad-controls {
+                min-width: 0;
+                gap: clamp(0.16rem, 0.58vw, 0.32rem);
+            }
+
+            #intro-atributos .intro-habilidad-btn {
+                width: clamp(26px, 6.2vw, 34px);
+                height: clamp(26px, 6.2vw, 34px);
+                font-size: clamp(11px, 2.6vw, 16px);
+            }
+
+            #intro-atributos .intro-habilidad-valor {
+                font-size: clamp(13px, 3.2vw, 18px);
+            }
+
+            #intro-atributos .intro-habilidad-barra {
+                justify-content: center;
+                gap: clamp(0.12rem, 0.45vw, 0.24rem);
+            }
+
+            #intro-atributos .intro-habilidad-punto {
+                width: clamp(7px, 1.45vw, 9px);
+                height: clamp(7px, 1.45vw, 9px);
+            }
+
+            #intro-atributos .intro-total-habilidades {
+                margin-top: clamp(0.12rem, 0.45vw, 0.28rem);
+                font-size: clamp(9px, 2vw, 12px);
+                padding: clamp(0.22rem, 0.6vw, 0.38rem) clamp(0.5rem, 1.4vw, 0.8rem);
+            }
+
+            #intro-atributos .intro-total-habilidades .intro-total-usados,
+            #intro-atributos .intro-total-max {
+                font-size: clamp(11px, 2.55vw, 15px);
+            }
+        }
+
+        @media (max-width: 620px) and (max-height: 880px) {
+            #intro-atributos .intro-panel {
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(1.5rem, 3.8vh, 2.2rem));
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(2.7rem, 6.6vh, 4rem));
+            }
+
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(18px, 5.6vw, 28px);
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                font-size: clamp(8px, 1.9vw, 9.5px);
+                line-height: 1.08;
+            }
+        }
+
+        @media (max-width: 1100px) and (max-height: 1050px) {
+            #intro-atributos .intro-panel {
+                align-items: stretch !important;
+                padding-top: calc(max(env(safe-area-inset-top), 0px) + clamp(1.35rem, 3.2vh, 2.1rem)) !important;
+                padding-bottom: calc(max(env(safe-area-inset-bottom), 0px) + clamp(2.45rem, 5.8vh, 3.8rem)) !important;
+                gap: clamp(0.16rem, 0.55vh, 0.42rem) !important;
+            }
+
+            #intro-atributos .intro-panel h1 {
+                font-size: clamp(18px, 4.9vw, 34px) !important;
+                max-width: min(95vw, 17ch) !important;
+                line-height: 1.02 !important;
+                margin: 0 !important;
+            }
+
+            #intro-atributos .intro-center-block {
+                justify-content: flex-start !important;
+                gap: clamp(0.16rem, 0.6vh, 0.42rem) !important;
+            }
+
+            #intro-atributos .intro-atributos-wrap {
+                width: min(960px, 98vw) !important;
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                column-gap: clamp(0.32rem, 1vw, 0.72rem) !important;
+                row-gap: clamp(0.12rem, 0.5vh, 0.35rem) !important;
+            }
+
+            #intro-atributos .intro-habilidad:last-child {
+                grid-column: 1 / -1 !important;
+            }
+
+            #intro-atributos .intro-habilidad {
+                grid-template-columns: 1fr !important;
+                justify-items: center !important;
+                text-align: center !important;
+                padding: clamp(0.05rem, 0.2vh, 0.16rem) 0 !important;
+                gap: clamp(0.04rem, 0.2vh, 0.14rem) !important;
+            }
+
+            #intro-atributos .intro-habilidad-texto {
+                align-items: center !important;
+                gap: 0.02rem !important;
+            }
+
+            #intro-atributos .intro-habilidad-nombre {
+                text-align: center !important;
+                font-size: clamp(11px, 2.25vw, 16px) !important;
+            }
+
+            #intro-atributos .intro-habilidad-desc {
+                text-align: center !important;
+                font-size: clamp(8px, 1.35vw, 10px) !important;
+                line-height: 1.08 !important;
+                max-width: 24ch !important;
+            }
+
+            #intro-atributos .intro-habilidad-controls {
+                min-width: 0 !important;
+                gap: clamp(0.12rem, 0.45vw, 0.32rem) !important;
+            }
+
+            #intro-atributos .intro-habilidad-btn {
+                width: clamp(24px, 3.9vw, 36px) !important;
+                height: clamp(24px, 3.9vw, 36px) !important;
+                font-size: clamp(11px, 2.05vw, 16px) !important;
+            }
+
+            #intro-atributos .intro-habilidad-valor {
+                font-size: clamp(12px, 2.5vw, 18px) !important;
+            }
+
+            #intro-atributos .intro-habilidad-barra {
+                justify-content: center !important;
+                gap: clamp(0.1rem, 0.35vw, 0.22rem) !important;
+            }
+
+            #intro-atributos .intro-habilidad-punto {
+                width: clamp(6px, 1vw, 9px) !important;
+                height: clamp(6px, 1vw, 9px) !important;
+            }
+
+            #intro-atributos .intro-total-habilidades {
+                margin-top: clamp(0.06rem, 0.25vh, 0.2rem) !important;
+                font-size: clamp(8px, 1.5vw, 12px) !important;
+                padding: clamp(0.18rem, 0.46vw, 0.34rem) clamp(0.45rem, 1.2vw, 0.74rem) !important;
+            }
+
+            #intro-atributos .intro-total-habilidades .intro-total-usados,
+            #intro-atributos .intro-total-max {
+                font-size: clamp(10px, 1.75vw, 15px) !important;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div align="center">
-        <pre id="neon" class="neon">
-     __     _____    _____   _____    _____    __       ____  
-     / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
-    / /    | (___   | |      | |__) |   | |      \ \    | |_) |
-   < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
-    \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
-       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/   
+    <main class="intro-flow">
+        <div class="intro-scroll">
+            <section id="intro-bienvenida" class="intro-section">
+                <div class="intro-panel intro-panel--center">
+                    <h1 class="intro-title">BIENVENIDX A</h1>
+                    <pre id="neon" class="neon">
+   __     _____    _____   _____    _____    __       ____  
+  / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+ / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+< <      \___ \  | |      |  _  /    | |       > >   |  _ < 
+ \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+    \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/   
+                    </pre>
+                    <p class="sub intro-powered">powered by</p>
+                    <img class="intro-powered-logo" src="./game/img/logo.png" alt="" />
+                    <div class="intro-nav-bottom">
+                        <button class="intro-skip-btn" type="button" data-scroll-target="#intro-nombre" data-focus="nombre" aria-label="Omitir tutorial">
+                            Omitir tutorial
+                        </button>
+                        <button class="intro-cta intro-cta-btn" type="button" data-scroll-target="#intro-que-es" aria-label="Comenzar">
+                            <span class="intro-cta-text">COMENZAR</span>
+                            <span class="intro-cta-icon intro-arrow--down" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-que-es" class="intro-section intro-explica intro-explica--azul">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h2 class="intro-explica-title intro-explica-title--azul">&iquest;QU&Eacute; ES <span class="intro-logo-inline">&lt;SCRI&gt; B</span>?</h2>
+                    <p class="intro-explica-text">
+                        <span class="intro-accent">&lt;SCRI&gt; B es un videojuego de escritura r&aacute;pida</span> donde el tiempo responde a tus teclas.
+                    </p>
+                    <p class="intro-explica-text">
+                        Si te detienes, <span class="intro-accent">el texto empieza a borrarse</span>. Tu reto es terminar antes de que el contador llegue a cero.
+                    </p>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-tiempo" aria-label="Ir al tiempo"></button>
+                    </div>
+                </div>
+            </section>
 
-            </pre>
-        <div align="center">
-            <p class="sub">powered by</p>
-            <br>
-            <img src="./game/img/logo.png" alt="" class="logo"/>
+            <section id="intro-tiempo" class="intro-section intro-explica intro-explica--rojo">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h2 class="intro-explica-title intro-explica-title--rojo">EL TIEMPO</h2>
+                    <div class="intro-tiempo-copy">
+                        <p class="intro-explica-text intro-explica-text--inicio">Al inicio, <span class="intro-accent">dispones de X minutos</span>.</p>
+                        <p class="intro-explica-text"><span class="intro-accent">Cuando escribes,</span> se a&ntilde;aden segundos a tu marcador.</p>
+                        <p class="intro-explica-text"><span class="intro-accent">Si dejas de escribir,</span> el texto comienza a borrarse y perder&aacute;s tiempo.</p>
+                        <p class="intro-explica-text"><span class="intro-accent">Si el contador llega a cero,</span> tu texto se autodestruir&aacute;.</p>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-que-es" aria-label="Volver a Que es"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-niveles" aria-label="Ir a los niveles"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-niveles" class="intro-section intro-explica intro-explica--azul">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <h2 class="intro-explica-title intro-explica-title--azul">LOS NIVELES</h2>
+                    <div class="intro-niveles-list">
+                        <div class="intro-nivel intro-nivel--verde">
+                            <div class="intro-nivel-icon">&#x1F64F;</div>
+                            <div>
+                                <h3 class="intro-nivel-title">LETRA BENDITA</h3>
+                                <p class="intro-nivel-desc">Se elige una de las diez letras menos usadas en el espa&ntilde;ol. <span class="intro-accent">Si quien escribe la emplea, se a&ntilde;ade tiempo al marcador</span>.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--rojo">
+                            <div class="intro-nivel-icon">&#x1F608;</div>
+                            <div>
+                                <h3 class="intro-nivel-title">LETRA MALDITA</h3>
+                                <p class="intro-nivel-desc">El opuesto de Letra Bendita: <span class="intro-accent">si quien escribe la emplea, perder&aacute; tiempo</span>.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--amarillo">
+                            <div class="intro-nivel-icon">&#x1F4D6;</div>
+                            <div>
+                                <h3 class="intro-nivel-title">PALABRA BENDITA</h3>
+                                <p class="intro-nivel-desc">El juego ofrece palabras [aleatorias] y propuestas por las musas. Si quien escribe las usa, ganar&aacute; tiempo.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--rosa">
+                            <div class="intro-nivel-icon">&#x2694;&#xFE0F;</div>
+                            <div>
+                                <h3 class="intro-nivel-title">PALABRA MALDITA</h3>
+                                <p class="intro-nivel-desc"><span class="intro-accent">Se proh&iacute;be el uso de palabras lanzadas por el equipo contrario</span>. Si quien escribe las usa, perder&aacute; tiempo.</p>
+                            </div>
+                        </div>
+                        <div class="intro-nivel intro-nivel--naranja">
+                            <div class="intro-nivel-icon">&#x1F3C1;</div>
+                            <div>
+                                <h3 class="intro-nivel-title">FRASE FINAL</h3>
+                                <p class="intro-nivel-desc"><span class="intro-accent">Quien escribe deber&aacute; introducir una frase final</span> para cerrar el texto antes de que acabe el tiempo.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-tiempo" aria-label="Volver al tiempo"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-nombre" data-focus="nombre" aria-label="Ir a elegir nombre"></button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="intro-nombre" class="intro-section intro-nombre">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <div class="intro-center-block">
+                        <h1>&iquest;CU&Aacute;L SER&Aacute; TU NOMBRE?</h1>
+                        <input id="nombre" class="nombre intro-nombre-input" maxlength="10">
+                        <div id="mensaje_nombre" class="intro-alerta" aria-live="polite"></div>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-niveles" aria-label="Volver a niveles"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-atributos" data-validate="nombre" aria-label="Ir a habilidades"></button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="intro-atributos" class="intro-section">
+                <div class="intro-panel intro-panel--center">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <div class="intro-center-block">
+                        <h1>REPARTE TUS PUNTOS DE HABILIDAD</h1>
+                        <div id="intro-atributos-container" class="intro-atributos-wrap">
+                            <div class="intro-habilidad" data-habilidad="fuerza">
+                                <div class="intro-habilidad-texto">
+                                    <p class="intro-habilidad-nombre">Fuerza</p>
+                                    <p class="intro-habilidad-desc">Te da mas segundos por cada palabra que escribes.</p>
+                                </div>
+                                <div class="intro-habilidad-controls">
+                                    <button class="intro-habilidad-btn" type="button" data-action="decrement" data-attr="fuerza" aria-label="Quitar punto de fuerza">-</button>
+                                    <span class="intro-habilidad-valor">0</span>
+                                    <button class="intro-habilidad-btn" type="button" data-action="increment" data-attr="fuerza" aria-label="Sumar punto de fuerza">+</button>
+                                </div>
+                                <div class="intro-habilidad-barra">
+                                    <span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span>
+                                    <span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span>
+                                </div>
+                            </div>
+                            <div class="intro-habilidad" data-habilidad="agilidad">
+                                <div class="intro-habilidad-texto">
+                                    <p class="intro-habilidad-nombre">Agilidad</p>
+                                    <p class="intro-habilidad-desc">Reduce la velocidad a la que el texto se borra.</p>
+                                </div>
+                                <div class="intro-habilidad-controls">
+                                    <button class="intro-habilidad-btn" type="button" data-action="decrement" data-attr="agilidad" aria-label="Quitar punto de agilidad">-</button>
+                                    <span class="intro-habilidad-valor">0</span>
+                                    <button class="intro-habilidad-btn" type="button" data-action="increment" data-attr="agilidad" aria-label="Sumar punto de agilidad">+</button>
+                                </div>
+                                <div class="intro-habilidad-barra">
+                                    <span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span>
+                                    <span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span>
+                                </div>
+                            </div>
+                            <div class="intro-habilidad" data-habilidad="destreza">
+                                <div class="intro-habilidad-texto">
+                                    <p class="intro-habilidad-nombre">Destreza</p>
+                                    <p class="intro-habilidad-desc">Hace que las desventajas duren menos tiempo.</p>
+                                </div>
+                                <div class="intro-habilidad-controls">
+                                    <button class="intro-habilidad-btn" type="button" data-action="decrement" data-attr="destreza" aria-label="Quitar punto de destreza">-</button>
+                                    <span class="intro-habilidad-valor">0</span>
+                                    <button class="intro-habilidad-btn" type="button" data-action="increment" data-attr="destreza" aria-label="Sumar punto de destreza">+</button>
+                                </div>
+                                <div class="intro-habilidad-barra">
+                                    <span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span>
+                                    <span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span><span class="intro-habilidad-punto"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="intro-total-habilidades">
+                            <span class="intro-total-label">PUNTOS USADOS:</span>
+                            <span class="intro-total-fraction">
+                                <span id="intro-total-usados" class="intro-total-usados">0</span>
+                                <span class="intro-total-divider">de</span>
+                                <span class="intro-total-max">10</span>
+                            </span>
+                        </p>
+                        <div id="mensaje_habilidades" class="intro-alerta" aria-live="polite"></div>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-nombre" aria-label="Volver a nombre"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-jugar" data-validate="habilidades" aria-label="Ir a jugar"></button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="intro-jugar" class="intro-section">
+                <div class="intro-panel intro-panel--center">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <div class="intro-center-block">
+                        <h1><span class="intro-jugador-nombre">ESCRITXR</span>, &iquest;LISTO PARA ESCRIBIR?</h1>
+                        <button class="intro-choice-btn intro-choice-btn--azul" type="button" onclick="iniciarJuego()">&iexcl;ESCRIBE!</button>
+                    </div>
+                    <div class="intro-nav intro-nav--up">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-atributos" aria-label="Volver a habilidades"></button>
+                    </div>
+                </div>
+            </section>
         </div>
-        <br><br>
-        <h1>¿CUÁL ES TU NOMBRE, ESCRITXR?</h1>
-        <br><br>
-        <input id="nombre" class="nombre" maxlength="10" data-darkreader-inline-color="" style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;text-transform: uppercase;">
-        <br><br>
-        <span onclick="window.location.href = './game/index.html?name=' + encodeURIComponent(nombre.value);" id="btn" class="btn">✍️ ¡ESCRIBE!</span></button><br>
-        
-    </div>
-        <!-- Script para gestionar el focus y redirección con el valor del input -->
-        <script>
-            // Al cargar la página se hace focus automático en el input
-            window.onload = function() {
-                document.getElementById('nombre').focus();
-            };
-            // Al hacer clic en el botón, redirecciona pasando el valor ingresado en el input
-            function irAPaginaJuego() {
-            let nombre = document.getElementById('nombre').value;
-            if (nombre.trim().length === 0) {
-                alert('Por favor, escribe tu nombre.');
-                return;
-            }
+    </main>
 
-            // Redirecciona a la siguiente página añadiendo el nombre en la URL como parámetro GET
-            window.location.href = "./game/index.html.html?nombre=" + encodeURIComponent(nombre.value);
+    <script>
+        const nombreInput = document.getElementById('nombre');
+        const mensajeNombre = document.getElementById('mensaje_nombre');
+        const jugadorNombreTitulos = document.querySelectorAll('.intro-jugador-nombre');
+        const introScroll = document.querySelector('.intro-scroll');
+        const habilidadesContainer = document.getElementById('intro-atributos-container');
+        const totalHabilidadesEl = document.getElementById('intro-total-usados');
+        const totalHabilidadesWrap = totalHabilidadesEl ? totalHabilidadesEl.closest('.intro-total-habilidades') : null;
+        const mensajeHabilidades = document.getElementById('mensaje_habilidades');
+        const MAX_NOMBRE = 10;
+        const LIMITE_HABILIDADES = 10;
+        const REGEX_NOMBRE = /^[A-Za-z\u00C0-\u00FF0-9 _.-]+$/;
+        const REGEX_LETRA = /[A-Za-z\u00C0-\u00FF]/;
+        const habilidades = { fuerza: 0, agilidad: 0, destreza: 0 };
+        let inicioBloqueado = false;
+
+        function normalizarNombre(valor) {
+            if (typeof valor !== 'string') return '';
+            const limpio = valor.trim().slice(0, MAX_NOMBRE);
+            if (!limpio) return '';
+            if (!REGEX_NOMBRE.test(limpio)) return '';
+            if (!REGEX_LETRA.test(limpio)) return '';
+            return limpio.toUpperCase();
         }
 
-        // Evento para detectar la tecla Enter y realizar el envío
-        document.getElementById("nombre").addEventListener("keyup", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                document.getElementById("btn").click();
+        function mostrarAviso(texto) {
+            if (!mensajeNombre) return;
+            mensajeNombre.textContent = texto;
+            mensajeNombre.classList.add('activa');
+        }
+
+        function limpiarAviso() {
+            if (!mensajeNombre) return;
+            mensajeNombre.textContent = '';
+            mensajeNombre.classList.remove('activa');
+        }
+
+        function mostrarAvisoHabilidades(texto) {
+            if (!mensajeHabilidades) return;
+            mensajeHabilidades.textContent = texto;
+            mensajeHabilidades.classList.add('activa');
+        }
+
+        function limpiarAvisoHabilidades() {
+            if (!mensajeHabilidades) return;
+            mensajeHabilidades.textContent = '';
+            mensajeHabilidades.classList.remove('activa');
+        }
+
+        function calcularTotalHabilidades() {
+            return Object.values(habilidades).reduce((acumulado, valor) => acumulado + valor, 0);
+        }
+
+        function actualizarInterfazHabilidades() {
+            if (!habilidadesContainer || !totalHabilidadesEl) return;
+            const total = calcularTotalHabilidades();
+            totalHabilidadesEl.textContent = String(total);
+            if (totalHabilidadesWrap) {
+                totalHabilidadesWrap.classList.remove('casi');
+                totalHabilidadesWrap.classList.toggle('completo', total === LIMITE_HABILIDADES);
+                if (total >= 7 && total < LIMITE_HABILIDADES) {
+                    totalHabilidadesWrap.classList.add('casi');
+                }
             }
-        })
-        </script>
+            const filas = habilidadesContainer.querySelectorAll('.intro-habilidad');
+            filas.forEach((fila) => {
+                const atributo = fila.dataset.habilidad;
+                const valor = Number(habilidades[atributo]) || 0;
+                const valorEl = fila.querySelector('.intro-habilidad-valor');
+                if (valorEl) {
+                    valorEl.textContent = String(valor);
+                }
+                const botonRestar = fila.querySelector('button[data-action="decrement"]');
+                const botonSumar = fila.querySelector('button[data-action="increment"]');
+                if (botonRestar) {
+                    botonRestar.disabled = valor <= 0;
+                }
+                if (botonSumar) {
+                    botonSumar.disabled = total >= LIMITE_HABILIDADES;
+                }
+                const puntos = fila.querySelectorAll('.intro-habilidad-punto');
+                puntos.forEach((punto, indice) => {
+                    punto.classList.toggle('filled', indice < valor);
+                });
+            });
+            if (total === LIMITE_HABILIDADES) {
+                limpiarAvisoHabilidades();
+            }
+        }
+
+        function validarHabilidades() {
+            if (calcularTotalHabilidades() !== LIMITE_HABILIDADES) {
+                mostrarAvisoHabilidades('Reparte los 10 puntos de habilidad para continuar.');
+                return false;
+            }
+            limpiarAvisoHabilidades();
+            return true;
+        }
+
+        function animarCambioHabilidad(atributo, indicePunto, boton) {
+            if (!habilidadesContainer || !atributo) return;
+            const fila = habilidadesContainer.querySelector(`.intro-habilidad[data-habilidad="${atributo}"]`);
+            if (!fila) return;
+            const valorEl = fila.querySelector('.intro-habilidad-valor');
+
+            if (boton) {
+                boton.classList.remove('is-pressed');
+                void boton.offsetWidth;
+                boton.classList.add('is-pressed');
+                setTimeout(() => boton.classList.remove('is-pressed'), 340);
+            }
+
+            if (valorEl) {
+                valorEl.classList.remove('is-changing');
+                void valorEl.offsetWidth;
+                valorEl.classList.add('is-changing');
+                setTimeout(() => valorEl.classList.remove('is-changing'), 320);
+            }
+
+            fila.classList.remove('is-burst');
+            void fila.offsetWidth;
+            fila.classList.add('is-burst');
+            setTimeout(() => fila.classList.remove('is-burst'), 480);
+
+            if (Number.isInteger(indicePunto) && indicePunto >= 0) {
+                const puntos = fila.querySelectorAll('.intro-habilidad-punto');
+                const punto = puntos[indicePunto];
+                if (punto) {
+                    punto.classList.remove('pop');
+                    void punto.offsetWidth;
+                    punto.classList.add('pop');
+                    setTimeout(() => punto.classList.remove('pop'), 460);
+                }
+            }
+        }
+
+        function actualizarNombreIntro() {
+            if (!jugadorNombreTitulos.length) return;
+            const nombre = normalizarNombre(nombreInput?.value || '');
+            jugadorNombreTitulos.forEach((titulo) => {
+                titulo.textContent = nombre || 'ESCRITXR';
+            });
+        }
+
+        function scrollToSeccion(objetivo) {
+            if (!objetivo) return;
+            if (!introScroll) {
+                objetivo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            const inicio = introScroll.scrollTop;
+            const destino = objetivo.offsetTop;
+            const distancia = destino - inicio;
+            const duracion = 1200;
+            let inicioTiempo = null;
+            const animar = (marca) => {
+                if (!inicioTiempo) inicioTiempo = marca;
+                const progreso = Math.min((marca - inicioTiempo) / duracion, 1);
+                const eased = 1 - Math.pow(1 - progreso, 3);
+                introScroll.scrollTop = inicio + (distancia * eased);
+                if (progreso < 1) {
+                    requestAnimationFrame(animar);
+                }
+            };
+            requestAnimationFrame(animar);
+        }
+
+        function enfocarNombreSiCorresponde(objetivo) {
+            if (!objetivo || !nombreInput) return;
+            if (objetivo.id !== 'intro-nombre') return;
+            setTimeout(() => {
+                nombreInput.focus({ preventScroll: true });
+            }, 350);
+        }
+
+        function gestionarFocusNombre(actual, objetivo) {
+            if (!nombreInput) return;
+            if (actual && actual.id === 'intro-nombre' && (!objetivo || objetivo.id !== 'intro-nombre')) {
+                cerrarTeclado();
+            }
+            if (objetivo && objetivo.id === 'intro-nombre') {
+                enfocarNombreSiCorresponde(objetivo);
+            }
+        }
+
+        function obtenerIndiceSeccionActual() {
+            if (!introScroll) return 0;
+            const secciones = Array.from(document.querySelectorAll('.intro-section'));
+            if (!secciones.length) return 0;
+            const referencia = introScroll.scrollTop + (introScroll.clientHeight * 0.35);
+            let indice = 0;
+            secciones.forEach((seccion, idx) => {
+                if (seccion.offsetTop <= referencia) {
+                    indice = idx;
+                }
+            });
+            return indice;
+        }
+
+        function irASeccionPorDelta(delta) {
+            const secciones = Array.from(document.querySelectorAll('.intro-section'));
+            if (!secciones.length) return;
+            const actual = obtenerIndiceSeccionActual();
+            const siguiente = Math.min(Math.max(actual + delta, 0), secciones.length - 1);
+            if (siguiente === actual) return;
+            const actualSeccion = secciones[actual];
+            const destino = secciones[siguiente];
+            gestionarFocusNombre(actualSeccion, destino);
+            scrollToSeccion(destino);
+        }
+
+        function cerrarTeclado() {
+            const activo = document.activeElement;
+            if (!activo) return;
+            if (activo.tagName === 'INPUT' || activo.tagName === 'TEXTAREA' || activo.isContentEditable) {
+                activo.blur();
+            }
+        }
+
+        function iniciarJuego() {
+            if (inicioBloqueado) return;
+            if (!nombreInput) return;
+            const nombre = normalizarNombre(nombreInput.value);
+            if (!nombre) {
+                mostrarAviso('Tu nombre necesita al menos 1 letra y maximo 10 caracteres.');
+                nombreInput.focus();
+                return;
+            }
+            if (!validarHabilidades()) {
+                const objetivoHabilidades = document.querySelector('#intro-atributos');
+                scrollToSeccion(objetivoHabilidades);
+                return;
+            }
+            limpiarAviso();
+            actualizarNombreIntro();
+            inicioBloqueado = true;
+            document.body.classList.add('jugador-inicio-hecho');
+            const query = new URLSearchParams({
+                name: nombre,
+                fuerza: String(habilidades.fuerza),
+                agilidad: String(habilidades.agilidad),
+                destreza: String(habilidades.destreza)
+            });
+            window.location.href = `./game/index.html?${query.toString()}`;
+        }
+
+        function resetearEstadoInicio() {
+            inicioBloqueado = false;
+            document.body.classList.remove('jugador-inicio-hecho');
+        }
+
+        window.iniciarJuego = iniciarJuego;
+
+        window.addEventListener('pageshow', () => {
+            resetearEstadoInicio();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            resetearEstadoInicio();
+            if (nombreInput) {
+                nombreInput.addEventListener('input', () => {
+                    if (normalizarNombre(nombreInput.value)) {
+                        limpiarAviso();
+                    }
+                    actualizarNombreIntro();
+                });
+                nombreInput.addEventListener('keydown', (evento) => {
+                    if (evento.key !== 'Enter') return;
+                    evento.preventDefault();
+                    const nombre = normalizarNombre(nombreInput.value);
+                    if (!nombre) {
+                        mostrarAviso('Tu nombre necesita al menos 1 letra y maximo 10 caracteres.');
+                        nombreInput.focus();
+                        return;
+                    }
+                    limpiarAviso();
+                    actualizarNombreIntro();
+                    cerrarTeclado();
+                    const objetivo = document.querySelector('#intro-atributos');
+                    scrollToSeccion(objetivo);
+                });
+            }
+
+            if (habilidadesContainer) {
+                habilidadesContainer.addEventListener('click', (evento) => {
+                    const boton = evento.target.closest('button[data-action][data-attr]');
+                    if (!boton) return;
+                    evento.preventDefault();
+                    const accion = boton.dataset.action;
+                    const atributo = boton.dataset.attr;
+                    if (!atributo || !(atributo in habilidades)) return;
+                    const total = calcularTotalHabilidades();
+                    let indicePunto = null;
+                    if (accion === 'increment' && total < LIMITE_HABILIDADES) {
+                        habilidades[atributo] += 1;
+                        indicePunto = habilidades[atributo] - 1;
+                    } else if (accion === 'decrement' && habilidades[atributo] > 0) {
+                        habilidades[atributo] -= 1;
+                        indicePunto = habilidades[atributo];
+                    } else {
+                        return;
+                    }
+                    actualizarInterfazHabilidades();
+                    animarCambioHabilidad(atributo, indicePunto, boton);
+                });
+            }
+
+            actualizarNombreIntro();
+            actualizarInterfazHabilidades();
+
+            const botonesScroll = document.querySelectorAll('[data-scroll-target]');
+            botonesScroll.forEach((boton) => {
+                boton.addEventListener('click', () => {
+                    const selector = boton.getAttribute('data-scroll-target');
+                    if (!selector) return;
+                    if (boton.dataset.validate === 'nombre') {
+                        const nombre = normalizarNombre(nombreInput?.value || '');
+                        if (!nombre) {
+                            mostrarAviso('Tu nombre necesita al menos 1 letra y maximo 10 caracteres.');
+                            if (nombreInput) {
+                                nombreInput.focus();
+                            }
+                            return;
+                        }
+                        limpiarAviso();
+                        actualizarNombreIntro();
+                    }
+                    if (boton.dataset.validate === 'habilidades') {
+                        if (!validarHabilidades()) {
+                            return;
+                        }
+                    }
+                    const objetivo = document.querySelector(selector);
+                    const secciones = Array.from(document.querySelectorAll('.intro-section'));
+                    const actual = secciones[obtenerIndiceSeccionActual()];
+                    gestionarFocusNombre(actual, objetivo);
+                    scrollToSeccion(objetivo);
+                    const focusId = boton.getAttribute('data-focus');
+                    if (focusId) {
+                        const foco = document.getElementById(focusId);
+                        if (foco) {
+                            setTimeout(() => foco.focus(), 350);
+                        }
+                    }
+                });
+            });
+
+            const contenedorScroll = document.querySelector('.intro-scroll');
+            if (contenedorScroll) {
+                const bloquearScroll = (evento) => {
+                    const destino = evento.target;
+                    if (destino && (destino.tagName === 'INPUT' || destino.tagName === 'TEXTAREA' || destino.isContentEditable)) {
+                        return;
+                    }
+                    evento.preventDefault();
+                };
+                contenedorScroll.addEventListener('wheel', bloquearScroll, { passive: false });
+                contenedorScroll.addEventListener('touchmove', bloquearScroll, { passive: false });
+                const esTactil = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+                if (esTactil) {
+                    document.addEventListener('touchmove', bloquearScroll, { passive: false, capture: true });
+                }
+                document.addEventListener('keydown', (evento) => {
+                    const teclas = ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '];
+                    const esEnter = evento.key === 'Enter';
+                    if (!teclas.includes(evento.key) && !esEnter) return;
+                    const destino = evento.target;
+                    if (destino && (
+                        destino.tagName === 'INPUT' ||
+                        destino.tagName === 'TEXTAREA' ||
+                        destino.tagName === 'BUTTON' ||
+                        destino.isContentEditable
+                    )) {
+                        return;
+                    }
+                    if ((evento.key === 'ArrowDown' || esEnter)) {
+                        const secciones = Array.from(document.querySelectorAll('.intro-section'));
+                        const actual = secciones[obtenerIndiceSeccionActual()];
+                        if (actual && actual.id === 'intro-nombre') {
+                            const nombre = normalizarNombre(nombreInput?.value || '');
+                            if (!nombre) {
+                                mostrarAviso('Tu nombre necesita al menos 1 letra y maximo 10 caracteres.');
+                                if (nombreInput) {
+                                    nombreInput.focus();
+                                }
+                                return;
+                            }
+                        }
+                        if (actual && actual.id === 'intro-atributos') {
+                            if (!validarHabilidades()) {
+                                return;
+                            }
+                        }
+                    }
+                    evento.preventDefault();
+                    if (evento.key === 'ArrowDown' || esEnter) {
+                        irASeccionPorDelta(1);
+                        return;
+                    }
+                    if (evento.key === 'ArrowUp') {
+                        irASeccionPorDelta(-1);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

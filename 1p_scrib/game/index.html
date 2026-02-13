@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260213b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
@@ -47,7 +47,7 @@
     <p><span id="temas" class="temas"></span></p>
     <div id="contenedor" class="contenedor">
         <div class="jugador">
-            <p id="tiempo" class="tiempo"></p>
+            <p id="tiempo" class="tiempo tiempo-vida"></p>
             <h1 id="feedback1" class="feedback1"></h1>
             <input disabled id="nombre" class="nombre" data-darkreader-inline-color="" style=" color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;text-transform: uppercase;">
 
@@ -79,6 +79,21 @@
         <div class="button-container">
           <button id="btnConfirmar">Confirmar</button>
           <button id="btnAtras">Atrás</button>
+        </div>
+      </div>
+      <div id="desventajaOverlay" class="desventaja-overlay" aria-live="assertive" aria-modal="true" role="dialog">
+        <div class="desventaja-card">
+          <div id="desventajaStatus" class="desventaja-status">SE VA A ELEGIR UNA DESVENTAJA</div>
+          <div id="desventajaSlot" class="desventaja-slot">
+            <div id="desventajaReel1" class="desventaja-reel">?</div>
+            <div id="desventajaReel2" class="desventaja-reel">?</div>
+            <div id="desventajaReel3" class="desventaja-reel">?</div>
+          </div>
+          <div id="desventajaChoiceTimer" class="desventaja-choice-timer" aria-hidden="true">
+            <div id="desventajaChoiceTimerFill" class="desventaja-choice-timer-fill"></div>
+          </div>
+          <div id="desventajaChoices" class="desventaja-choices"></div>
+          <div id="desventajaLegend" class="desventaja-legend"></div>
         </div>
       </div>
             <div class="textarea-container">

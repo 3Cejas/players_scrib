@@ -421,6 +421,42 @@ function actualizarBotonVistaCalentamiento(boton) {
     destino.dataset.activo = vista_calentamiento ? "1" : "0";
 }
 
+const TIPOS_SOLICITUD_CALENTAMIENTO = new Set(["libre", "lugares", "acciones", "frase_final"]);
+const ETIQUETAS_SOLICITUD_CALENTAMIENTO = {
+    libre: "LIBRE",
+    lugares: "LUGARES",
+    acciones: "ACCIONES",
+    frase_final: "PALABRAS PARA FRASE FINAL"
+};
+let solicitud_calentamiento_actual = "libre";
+
+function actualizarSolicitudCalentamientoControl(payload = {}) {
+    const tipoRecibido = (payload && typeof payload.solicitud === "string")
+        ? payload.solicitud
+        : (payload && typeof payload.tipo === "string" ? payload.tipo : "libre");
+    const tipo = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipoRecibido) ? tipoRecibido : "libre";
+    solicitud_calentamiento_actual = tipo;
+
+    const botones = document.querySelectorAll("[data-solicitud-calentamiento]");
+    botones.forEach((boton) => {
+        const activo = boton.dataset.solicitudCalentamiento === tipo;
+        boton.dataset.active = activo ? "1" : "0";
+        boton.classList.toggle("is-active", activo);
+    });
+
+    const estado = document.getElementById("calentamiento_solicitud_actual");
+    if (estado) {
+        const etiqueta = ETIQUETAS_SOLICITUD_CALENTAMIENTO[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO.libre;
+        estado.textContent = `CONSIGNA ACTUAL: ${etiqueta}`;
+    }
+}
+
+function pedir_solicitud_calentamiento(tipo) {
+    const destino = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipo) ? tipo : "libre";
+    socket.emit("calentamiento_solicitud", { tipo: destino });
+    actualizarSolicitudCalentamientoControl({ tipo: destino });
+}
+
 let parametros_visibles = false;
 let teleprompter_visible = false;
 let teleprompter_emit_timeout = null;
@@ -975,6 +1011,10 @@ function reiniciar_calentamiento() {
 
 function reiniciar_marcador_calentamiento() {
     socket.emit('reiniciar_marcador_calentamiento');
+}
+
+function activar_banderas_musas() {
+    socket.emit('activar_banderas_musas');
 }
 
 function enviar_comentario() {

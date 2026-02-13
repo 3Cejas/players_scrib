@@ -26,7 +26,16 @@ body {
     /* for Firefox */
     scroll-behavior: smooth;
     color: white;
-    background-color: black;
+    background:
+      linear-gradient(90deg, rgba(0, 126, 186, 0.24) 0%, rgba(6, 10, 18, 0.58) 42%, rgba(6, 10, 18, 0.58) 58%, rgba(178, 38, 38, 0.24) 100%),
+      radial-gradient(circle at 14% 20%, rgba(0, 181, 255, 0.2), transparent 56%),
+      radial-gradient(circle at 86% 20%, rgba(255, 67, 67, 0.2), transparent 56%),
+      radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.08), transparent 62%),
+      #02040a;
+    background-color: #02040a;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
     font-family: "Retro-gaming";
 }
 
@@ -105,6 +114,26 @@ button:focus {
 .tiempo {
     font-family: "Retro-gaming";
     font-size: 2.5vw;
+}
+
+.tiempo-vida {
+    --vida-pct: 0%;
+    --vida-color: #41d860;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(10rem, 26vw, 18rem);
+    min-height: 1.6em;
+    padding: 0.2em 0.7em;
+    border: 0.12em solid rgba(255, 255, 255, 0.8);
+    border-radius: 0.6em;
+    background: linear-gradient(90deg, var(--vida-color) var(--vida-pct), rgba(0, 0, 0, 0.35) var(--vida-pct));
+    box-shadow: inset 0 0 0.35em rgba(0, 0, 0, 0.65), 0 0 0.35em rgba(0, 0, 0, 0.5);
+    color: #fff;
+    text-shadow: 0.08em 0.08em 0 #000;
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
+    margin: 0.4em auto 0.6em;
 }
 
 .explicación {
@@ -242,6 +271,26 @@ button:hover {
 
 .letra-roja {
   color: red;
+}
+
+.frase-final-progreso {
+  color: #ff9d42;
+  text-shadow: 0 0 0.35em rgba(255, 157, 66, 0.65);
+  font-weight: 700;
+  transition: color 180ms linear, text-shadow 180ms linear;
+}
+
+@keyframes frase-final-fallo {
+  0% { filter: brightness(1); }
+  18% { filter: brightness(0.25); }
+  36% { filter: brightness(1); }
+  54% { filter: brightness(0.2); }
+  72% { filter: brightness(1); }
+  100% { filter: brightness(1); }
+}
+
+.textarea.frase-final-fallo {
+  animation: frase-final-fallo 620ms ease-in-out;
 }
 .textarea {
     word-break:break-word;
@@ -712,6 +761,492 @@ th{
 
 .cabecera{
   --animate-duration: 2s
+}
+
+/* -----------------------------
+   Atributos (Fuerza/Agilidad/Destreza)
+-------------------------------- */
+.atributos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.6rem, 2vw, 1.2rem);
+  justify-content: center;
+  align-items: stretch;
+  padding: 0 1rem;
+  margin: 1.2rem auto 0.4rem;
+}
+
+.atributo {
+  --color-atributo: currentColor;
+  padding: clamp(0.6rem, 2vw, 1rem);
+  text-align: center;
+  border: 2px solid currentColor;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  min-width: min(280px, 92vw);
+  max-width: 360px;
+  flex: 1 1 260px;
+}
+
+/* Colores por atributo */
+.atributo[data-atributo="fuerza"] {
+  color: #f00;
+}
+.atributo[data-atributo="agilidad"] {
+  color: #0ff;
+}
+.atributo[data-atributo="destreza"] {
+  color: #ff0;
+}
+
+.atributo h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1rem, 3.5vw, 1.2rem);
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.controls button {
+  background: transparent;
+  color: inherit;
+  border: 2px solid currentColor;
+  padding: 0.35rem 0.7rem;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+  touch-action: manipulation;
+}
+
+.controls button:active {
+  transform: scale(0.96);
+}
+
+.controls button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.controls button:hover:not(:disabled) {
+  background: #fff;
+  color: currentColor;
+}
+
+.contador {
+  width: 2.2rem;
+  text-align: center;
+  font-weight: bold;
+  font-size: clamp(0.95rem, 3vw, 1.1rem);
+}
+
+.barra-puntos {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.punto {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  display: inline-block;
+}
+
+.atributo[data-atributo="fuerza"] .punto.filled {
+  background: #f00;
+}
+.atributo[data-atributo="agilidad"] .punto.filled {
+  background: #0ff;
+}
+.atributo[data-atributo="destreza"] .punto.filled {
+  background: #ff0;
+}
+
+.total {
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  color: #fff;
+  margin: 0.5rem auto 1rem;
+}
+
+.estado-ok     { color: #28a745; }
+.estado-warn   { color: #ffc107; }
+.estado-danger { color: #dc3545; }
+.estado-over   {
+  color: #721c24;
+  background-color: #f8d7da;
+  padding: 0 0.25em;
+  border-radius: 3px;
+}
+
+/* Tooltip con soporte táctil */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 0.25em;
+  cursor: help;
+}
+
+.tooltip img {
+  display: inline-block;
+  width: 1rem;
+  height: auto;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: min(85vw, 20rem);
+  font-size: clamp(0.85rem, 3vw, 1rem);
+  color: var(--color-atributo);
+  background-color: rgba(0, 0, 0, 0.75);
+  text-align: left;
+  border-radius: 4px;
+  padding: 0.5em;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tooltip:hover .tooltiptext,
+.tooltip:focus-within .tooltiptext,
+.tooltip:active .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--color-atributo) transparent transparent transparent;
+}
+
+@media (max-width: 700px) {
+  .atributos {
+    gap: 0.8rem;
+  }
+  .controls button {
+    min-width: 2.8rem;
+    min-height: 2.8rem;
+  }
+}
+
+@media (hover: none) {
+  .controls button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .tooltip img {
+    width: 1.2rem;
+  }
+}
+
+.btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(0.35);
+}
+
+.desventaja-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 3.5vh 4vw;
+}
+
+.desventaja-overlay.activa {
+  display: flex;
+}
+
+.desventaja-card {
+  width: min(92vw, 900px);
+  border: 0.14em solid rgba(64, 242, 254, 0.7);
+  border-radius: 1.1em;
+  background: linear-gradient(160deg, rgba(8, 18, 28, 0.95), rgba(20, 10, 10, 0.95));
+  box-shadow: 0 0 1.2em rgba(64, 242, 254, 0.35), inset 0 0 0.9em rgba(255, 70, 70, 0.18);
+  padding: clamp(14px, 2.2vw, 24px);
+  text-align: center;
+}
+
+.desventaja-status {
+  font-size: clamp(0.9rem, 2.2vw, 1.3rem);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.9em;
+  color: #f7f7f7;
+  text-shadow: 0.08em 0.08em 0 #000;
+  text-transform: uppercase;
+}
+
+.desventaja-slot {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(70px, 1fr));
+  gap: clamp(10px, 1.4vw, 16px);
+  margin: 0 auto 1em;
+  max-width: 500px;
+}
+
+.desventaja-reel {
+  min-height: clamp(86px, 12vw, 112px);
+  border: 0.12em solid rgba(255, 255, 255, 0.5);
+  border-radius: 0.8em;
+  background: rgba(0, 0, 0, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.9rem, 5.4vw, 3.2rem);
+  line-height: 1;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 0.45em rgba(255, 255, 255, 0.12), 0 0 0.7em rgba(0, 0, 0, 0.55);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.desventaja-reel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.46) 0%,
+    rgba(0, 0, 0, 0) 22%,
+    rgba(0, 0, 0, 0) 78%,
+    rgba(0, 0, 0, 0.46) 100%
+  );
+}
+
+.desventaja-reel-emoji {
+  display: inline-block;
+  line-height: 1;
+  transform: translateY(0);
+  will-change: transform, opacity, filter;
+}
+
+.desventaja-reel.girando .desventaja-reel-emoji {
+  animation: desventajaReelSpinDown 190ms linear infinite;
+}
+
+.desventaja-reel.girando {
+  border-color: rgba(99, 231, 255, 0.74);
+  box-shadow: 0 0 0.85em rgba(99, 231, 255, 0.42), inset 0 0 0.52em rgba(99, 231, 255, 0.2);
+}
+
+.desventaja-reel.frenada {
+  transform: scale(1.04);
+  border-color: rgba(255, 214, 72, 0.95);
+  box-shadow: 0 0 0.8em rgba(255, 214, 72, 0.65), inset 0 0 0.55em rgba(255, 214, 72, 0.25);
+}
+
+.desventaja-reel.elegible {
+  cursor: pointer;
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.desventaja-reel.elegible:hover {
+  transform: translateY(-0.08em) scale(1.035);
+  border-color: rgba(64, 242, 254, 0.95);
+  box-shadow: 0 0 0.95em rgba(64, 242, 254, 0.62), inset 0 0 0.55em rgba(64, 242, 254, 0.22);
+}
+
+.desventaja-reel.seleccionado {
+  border-color: rgba(90, 255, 120, 0.98);
+  box-shadow: 0 0 0.95em rgba(90, 255, 120, 0.72), inset 0 0 0.6em rgba(90, 255, 120, 0.2);
+  animation: desventajaSelect 420ms ease;
+}
+
+.desventaja-reel.auto {
+  border-color: rgba(255, 171, 70, 0.98);
+  box-shadow: 0 0 0.95em rgba(255, 171, 70, 0.72), inset 0 0 0.6em rgba(255, 171, 70, 0.22);
+}
+
+.desventaja-slot.fusionando .desventaja-reel {
+  animation: desventajaFusion 0.95s ease both;
+}
+
+.desventaja-slot.fusionando .desventaja-reel:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.desventaja-slot.fusionando .desventaja-reel:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.desventaja-choice-timer {
+  height: 0.62em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+  margin: 0 auto 0.95em;
+  max-width: 520px;
+  display: none;
+}
+
+.desventaja-choice-timer.activa {
+  display: block;
+}
+
+.desventaja-choice-timer-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #40f2fe, #67ff8d);
+  box-shadow: 0 0 0.7em rgba(64, 242, 254, 0.8);
+  transform-origin: left center;
+}
+
+.desventaja-choice-timer-fill.urgente {
+  background: linear-gradient(90deg, #ff9d42, #ff5151);
+  box-shadow: 0 0 0.8em rgba(255, 81, 81, 0.75);
+}
+
+.desventaja-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(90px, 1fr));
+  gap: clamp(8px, 1vw, 12px);
+  margin: 0 auto 0.95em;
+  max-width: 560px;
+}
+
+.desventaja-choices:empty {
+  display: none;
+  margin: 0;
+}
+
+.desventaja-choice-btn {
+  border: 0.14em solid rgba(255, 255, 255, 0.55);
+  border-radius: 0.7em;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: "Retro-gaming";
+  font-size: clamp(0.95rem, 2.4vw, 1.2rem);
+  padding: 0.55em 0.4em;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.desventaja-choice-btn:hover {
+  border-color: rgba(64, 242, 254, 0.95);
+  box-shadow: 0 0 0.85em rgba(64, 242, 254, 0.55);
+}
+
+.desventaja-choice-btn:active {
+  transform: scale(0.97);
+}
+
+.desventaja-choice-btn.seleccionado {
+  border-color: rgba(90, 255, 120, 0.98);
+  box-shadow: 0 0 0.95em rgba(90, 255, 120, 0.72);
+  animation: desventajaSelect 420ms ease;
+}
+
+.desventaja-choice-btn.auto {
+  border-color: rgba(255, 171, 70, 0.98);
+  box-shadow: 0 0 0.95em rgba(255, 171, 70, 0.72);
+}
+
+.desventaja-legend {
+  display: grid;
+  gap: 0.36em;
+  text-align: left;
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: clamp(0.78rem, 1.8vw, 1rem);
+  color: #f0f0f0;
+}
+
+.desventaja-legend-item {
+  border: 0.1em solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.55em;
+  padding: 0.4em 0.52em;
+  background: rgba(255, 255, 255, 0.04);
+  line-height: 1.35;
+}
+
+.desventaja-legend-item.activa {
+  border-color: rgba(64, 242, 254, 0.75);
+  box-shadow: 0 0 0.7em rgba(64, 242, 254, 0.35);
+}
+
+@keyframes desventajaSelect {
+  0% {
+    transform: scale(0.94);
+  }
+  62% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes desventajaFusion {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1.12);
+    filter: brightness(1.35);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes desventajaReelSpinDown {
+  0% {
+    transform: translateY(-145%);
+    opacity: 0;
+    filter: blur(2px);
+  }
+  26% {
+    opacity: 0.45;
+  }
+  56% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    transform: translateY(145%);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@media (max-width: 720px) {
+  .desventaja-card {
+    padding: 14px;
+  }
+
+  .desventaja-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .desventaja-slot {
+    gap: 8px;
+  }
 }
 
    /* ------------------- ESTILOS DEL SPINNER PERSONALIZADO ------------------- */
