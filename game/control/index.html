@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260213d">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260219c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -17,7 +17,7 @@
 
 <body>
     <script src="../config.js"></script>
-    <script src="./js/juego.js?v=20260213b"></script>
+    <script src="./js/juego.js?v=20260218e"></script>
     <div class="ascii">
         <pre class="neon">
        __     _____    _____   _____    _____    __       ____  
@@ -56,7 +56,7 @@
                                 <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F525; VISTA CALENTAMIENTO</span>
                                 <span class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
                                 <span class='btn' onclick="reiniciar_marcador_calentamiento()">&#x1F3C6; REINICIAR MARCADOR</span>
-                                <span class='btn' onclick="activar_banderas_musas()">&#x1F6A9; ACTIVAR BANDERAS</span>
+                                <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F3F3;&#xFE0F; BANDERAS DESACTIVADAS</span>
                             </div>
                             <div class="control-group-subtitle">CONSIGNAS PARA MUSAS</div>
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">
@@ -65,6 +65,7 @@
                                 <span id="boton_solicitud_frase_final" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="frase_final" onclick="pedir_solicitud_calentamiento('frase_final')">&#x1F5E3;&#xFE0F; PEDIR FRASE FINAL</span>
                             </div>
                             <p id="calentamiento_solicitud_actual" class="calentamiento-solicitud-estado">CONSIGNA ACTUAL: LIBRE</p>
+                            <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: ABIERTO | J2: ABIERTO</p>
                         </div>
                         <div class="control-group control-group--juego">
                             <div class="control-group-title">&#x1F3AE; JUEGO</div>
@@ -73,6 +74,8 @@
                                 <span class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
                                 <span class='btn' onclick="borrar_texto_guardado()">&#x1FAA4; BORRAR TEXTO</span>
+                                <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
+                                <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
                             </div>
                         </div>
                         <div class="control-group control-group--representacion">
@@ -341,14 +344,22 @@
             </div>
             <br><br>
             <div align="center">
-                <table class="right">
-                    <tr>
-                        <th>&#x1F58A;&#xFE0F;</th>
-                    </tr>
-                    <tr>
-                        <th id="puntos">0 palabras</th>
-                    </tr>
-                </table>
+                <div id="metadatos_control_1" class="right metadatos-grid metadatos-grid--cabecera marcador-control marcador-equipo marcador-equipo-1">
+                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                        <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Palabras</span>
+                            <span id="puntos" class="puntos">0 palabras</span>
+                        </div>
+                    </div>
+                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                        <span class="meta-icon">&#x1F3A8;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Musas</span>
+                            <span id="musas" class="musas-total">0 musas</span>
+                        </div>
+                    </div>
+                </div>
                 <h1 id="feedback1" class="feedback1"></h1>
                 <h2 id="puntuacion_final1"></h1>
             </div>
@@ -370,14 +381,22 @@
             spellcheck="false" class="textarea">
             </div>
             <br><br>
-                <table class="right">
-                    <tr>
-                        <th>&#x1F58A;&#xFE0F;</th>
-                    </tr>
-                    <tr>
-                        <th id="puntos1">0 palabras</th>
-                    </tr>
-                </table>
+                <div id="metadatos_control_2" class="right metadatos-grid metadatos-grid--cabecera marcador-control marcador-equipo marcador-equipo-2">
+                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                        <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Palabras</span>
+                            <span id="puntos1" class="puntos">0 palabras</span>
+                        </div>
+                    </div>
+                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                        <span class="meta-icon">&#x1F3A8;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Musas</span>
+                            <span id="musas1" class="musas-total">0 musas</span>
+                        </div>
+                    </div>
+                </div>
                 <h1 id="feedback2" class="feedback2"></h1>
                 <h2 id="puntuacion_final2"></h1>
                 </br>
@@ -412,6 +431,7 @@
         </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260213b"></script>
+<script src="./js/jugador-servidor.js?v=20260217d"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>
+

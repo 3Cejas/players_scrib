@@ -39,6 +39,30 @@ let menu_modificador = false;
 let focusedButtonIndex = 0;
 let modificadorButtons = [];
 
+function mostrarFeedbackTiempoEscritora(texto, tipo, color) {
+  const contenido = String(texto ?? "").trim();
+  if (!contenido) return;
+
+  if (typeof mostrarFeedbackFlotanteEscritora === "function") {
+    mostrarFeedbackFlotanteEscritora(contenido, { tipo, color });
+    if (typeof feedback !== "undefined" && feedback) {
+      feedback.innerHTML = "";
+    }
+    return;
+  }
+
+  if (typeof feedback !== "undefined" && feedback) {
+    feedback.style.color = color || "";
+    feedback.innerHTML = contenido;
+    clearTimeout(delay_animacion);
+    animateCSS(".feedback1", "flash").then(() => {
+      delay_animacion = setTimeout(() => {
+        feedback.innerHTML = "";
+      }, 2000);
+    });
+  }
+}
+
 let lastLine;
 let lastTextNode;
 
@@ -107,19 +131,17 @@ function borrar() {
 
     // 2. Código existente
 
-    feedback.style.color = color_negativo;
-    feedback.innerHTML = "⏱️-1 segs.";
-    clearTimeout(delay_animacion);
-    animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-            feedback.innerHTML = "";
-        }, 2000);
-    });
+    tiempo_feed = "-1 segs.";
+    mostrarFeedbackTiempoEscritora(tiempo_feed, "borrar", color_negativo);
 
     secs = -1;
-    socket.emit('aumentar_tiempo', {secs, player});
+    if (typeof emitirCambioTiempoEscritora === "function") {
+      emitirCambioTiempoEscritora(secs);
+    } else {
+      socket.emit('aumentar_tiempo', {secs, player});
+    }
     color = color_negativo;
-    tiempo_feed = "⏱️-" + "1" + " segs."
+    tiempo_feed = "-1 segs."
     socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar"});
     caracteres_seguidos = 0;
     // 3. Borrar último carácter editable, saltando palabras benditas
@@ -131,7 +153,11 @@ function borrar() {
     } else {
       puntos_ = 0;
     }
-    puntos.innerHTML = puntos_ + " palabras";
+    if (typeof actualizarPuntosMarcador === "function") {
+      actualizarPuntosMarcador(`${puntos_} palabras`);
+    } else {
+      puntos.innerHTML = puntos_ + " palabras";
+    }
     //cambio_nivel(puntos_);
     clearTimeout(borrado);
     borrado = setTimeout(() => {
@@ -192,7 +218,11 @@ function countChars(texto) {
   else{
     puntos_ = 0;
   }
-  puntos.innerHTML = puntos_ + " palabras";
+  if (typeof actualizarPuntosMarcador === "function") {
+    actualizarPuntosMarcador(`${puntos_} palabras`);
+  } else {
+    puntos.innerHTML = puntos_ + " palabras";
+  }
   //cambio_nivel(puntos_);
   clearTimeout(borrado);
   
@@ -202,18 +232,15 @@ function countChars(texto) {
   }
 
   if (caracteres_seguidos == 3) {
-    feedback.style.color = color_positivo;
-    tiempo_feed = `⏱️+${secs_palabras} segs.`;
-    feedback.innerHTML = tiempo_feed;
-    clearTimeout(delay_animacion);
-    animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-            feedback.innerHTML = "";
-        }, 2000);
-    });
+    tiempo_feed = `+${secs_palabras} segs.`;
+    mostrarFeedbackTiempoEscritora(tiempo_feed, "ganar_tiempo", color_positivo);
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
     console.log("fuerza: " + secs_palabras);
-    socket.emit('aumentar_tiempo', {secs: secs_palabras, player});
+    if (typeof emitirCambioTiempoEscritora === "function") {
+      emitirCambioTiempoEscritora(secs_palabras);
+    } else {
+      socket.emit('aumentar_tiempo', {secs: secs_palabras, player});
+    }
     color = color_positivo;    socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "ganar_tiempo"});
   }
   console.log(rapidez_borrado, rapidez_inicio_borrado);

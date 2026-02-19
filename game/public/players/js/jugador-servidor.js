@@ -27,6 +27,80 @@ let tema = getEl("temas");
 let metadatos = getEl("metadatos");
 let text_progress = getEl("text-progress");
 let bar_progress = getEl("bar-progress");
+let ui_partida_activa_musa = false;
+let ui_partida_finalizada_musa = false;
+
+function refrescarClasesUiPartidaMusa() {
+    if (!document.body) return;
+    document.body.classList.toggle("partida-activa", ui_partida_activa_musa);
+    document.body.classList.toggle("partida-finalizada-musa", ui_partida_finalizada_musa);
+}
+
+function setUiPartidaActivaMusa(activa) {
+    ui_partida_activa_musa = Boolean(activa);
+    if (ui_partida_activa_musa) {
+        ui_partida_finalizada_musa = false;
+    }
+    refrescarClasesUiPartidaMusa();
+}
+
+function setUiPartidaFinalizadaMusa(finalizada) {
+    ui_partida_finalizada_musa = Boolean(finalizada);
+    if (ui_partida_finalizada_musa) {
+        ui_partida_activa_musa = false;
+    }
+    refrescarClasesUiPartidaMusa();
+}
+
+const CLASE_INTRO_PARTIDA_MUSA = "partida-intro-musa";
+const CLASES_ETAPAS_INTRO_PARTIDA_MUSA = [
+    "partida-intro-stage-tiempo",
+    "partida-intro-stage-metadatos",
+    "partida-intro-stage-acciones",
+    "partida-intro-stage-niveles"
+];
+let secuencia_inicio_musa_activa = false;
+let post_inicio_pendiente_musa = false;
+
+function limpiarClasesIntroPartidaMusa() {
+    if (!document.body) return;
+    document.body.classList.remove(CLASE_INTRO_PARTIDA_MUSA);
+    CLASES_ETAPAS_INTRO_PARTIDA_MUSA.forEach((clase) => {
+        document.body.classList.remove(clase);
+    });
+}
+
+function iniciarSecuenciaIntroPartidaMusa() {
+    if (!document.body) return;
+    limpiarClasesIntroPartidaMusa();
+    document.body.classList.add(CLASE_INTRO_PARTIDA_MUSA);
+    secuencia_inicio_musa_activa = true;
+    post_inicio_pendiente_musa = false;
+    revelarEtapaIntroPartidaMusa(0);
+}
+
+function revelarEtapaIntroPartidaMusa(etapa) {
+    if (!document.body || !Number.isFinite(etapa)) return;
+    const total = CLASES_ETAPAS_INTRO_PARTIDA_MUSA.length;
+    const limite = Math.max(0, Math.min(total, Math.floor(etapa)));
+    for (let i = 0; i < total; i++) {
+        if (i < limite) {
+            document.body.classList.add(CLASES_ETAPAS_INTRO_PARTIDA_MUSA[i]);
+        }
+    }
+}
+
+function finalizarSecuenciaIntroPartidaMusa() {
+    secuencia_inicio_musa_activa = false;
+    revelarEtapaIntroPartidaMusa(CLASES_ETAPAS_INTRO_PARTIDA_MUSA.length);
+    if (post_inicio_pendiente_musa) {
+        post_inicio_pendiente_musa = false;
+        aplicarPostInicioMusa();
+    }
+}
+
+setUiPartidaActivaMusa(false);
+setUiPartidaFinalizadaMusa(false);
 
 if (tiempo) {
     tiempo.style.display = "none";
@@ -34,6 +108,9 @@ if (tiempo) {
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "inline-flex";
+const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
+const animacionesEntradaBarraVida = new WeakMap();
+let animacionEntradaVidaPendiente = false;
 
 function extraerSegundosTiempo(texto) {
     if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
@@ -51,12 +128,64 @@ function extraerSegundosTiempo(texto) {
     return (minutos * 60) + segundos;
 }
 
-function actualizarBarraVida(elemento, texto) {
+function setPendienteAnimacionEntradaBarraVida(valor) {
+    animacionEntradaVidaPendiente = Boolean(valor);
+}
+
+function cancelarAnimacionEntradaBarraVida(elemento) {
+    if (!elemento) return;
+    const frameId = animacionesEntradaBarraVida.get(elemento);
+    if (frameId) {
+        cancelAnimationFrame(frameId);
+        animacionesEntradaBarraVida.delete(elemento);
+    }
+}
+
+function aplicarEstadoBarraVida(elemento, porcentaje) {
+    const pct = Math.max(0, Math.min(100, Number(porcentaje) || 0));
+    const tono = Math.max(0, Math.min(120, pct * 1.2));
+    elemento.style.setProperty("--vida-pct", `${pct.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
+function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURACION_ANIMACION_ENTRADA_VIDA_MS) {
+    if (!elemento) return;
+    const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
+    cancelarAnimacionEntradaBarraVida(elemento);
+
+    if (objetivo <= 0 || duracionMs <= 0) {
+        aplicarEstadoBarraVida(elemento, objetivo);
+        return;
+    }
+
+    const inicio = performance.now();
+    const paso = (ahora) => {
+        const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+        const easing = 1 - Math.pow(1 - progreso, 3);
+        aplicarEstadoBarraVida(elemento, objetivo * easing);
+
+        if (progreso < 1) {
+            const siguiente = requestAnimationFrame(paso);
+            animacionesEntradaBarraVida.set(elemento, siguiente);
+            return;
+        }
+
+        animacionesEntradaBarraVida.delete(elemento);
+        aplicarEstadoBarraVida(elemento, objetivo);
+    };
+
+    const primerFrame = requestAnimationFrame(paso);
+    animacionesEntradaBarraVida.set(elemento, primerFrame);
+}
+
+function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
+    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
+        cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
@@ -64,10 +193,13 @@ function actualizarBarraVida(elemento, texto) {
     }
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
-    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
     elemento.style.display = DISPLAY_BARRA_VIDA;
-    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
-    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+    if (animarEntrada) {
+        animarEntradaBarraVida(elemento, porcentaje);
+        return;
+    }
+    cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, porcentaje);
 }
 
 let terminado = false;
@@ -94,10 +226,16 @@ let votacion_ventaja_inline = getEl("votacion_ventaja_inline");
 let votacion_ventaja_pie_inline = getEl("votacion_ventaja_pie_inline");
 let votacion_ventaja_legend_inline = getEl("votacion_ventaja_legend_inline");
 let votacion_ventaja_total_inline = getEl("votacion_ventaja_total_inline");
+let votacion_ventaja_timer_inline = getEl("votacion_ventaja_timer_inline");
+let votacion_ventaja_timer_fill_inline = getEl("votacion_ventaja_timer_fill_inline");
+let votacion_ventaja_timer_text_inline = getEl("votacion_ventaja_timer_text_inline");
 let votacion_ventaja_modal = getEl("votacion_ventaja_modal");
 let votacion_ventaja_modal_titulo = getEl("votacion_ventaja_modal_titulo");
 let votacion_ventaja_modal_opciones = getEl("votacion_ventaja_modal_opciones");
 let votacion_ventaja_modal_explicaciones = getEl("votacion_ventaja_modal_explicaciones");
+let votacion_ventaja_timer_modal = getEl("votacion_ventaja_timer_modal");
+let votacion_ventaja_timer_fill_modal = getEl("votacion_ventaja_timer_fill_modal");
+let votacion_ventaja_timer_text_modal = getEl("votacion_ventaja_timer_text_modal");
 let votacion_ventaja_pie_modal = getEl("votacion_ventaja_pie_modal");
 let votacion_ventaja_legend_modal = getEl("votacion_ventaja_legend_modal");
 let votacion_ventaja_total_modal = getEl("votacion_ventaja_total_modal");
@@ -109,11 +247,41 @@ let votacion_ventaja_opciones = [];
 let votacion_ventaja_votos = {};
 let votacion_ventaja_voto_emitido = false;
 let votacion_ventaja_gracias_timer = null;
+let votacion_ventaja_duracion_ms = 0;
+let votacion_ventaja_fin_ts = 0;
+let votacion_ventaja_timer_interval = null;
 var intervalID = -1;
 let timer = null;
 let preparados_timer = null;
 let sub_timer = null;
 let listener_cuenta_atras = null;
+let fallback_cuenta_atras_timer = null;
+
+function limpiarCountdownInicioMusa(removerNodo = true) {
+    clearTimeout(listener_cuenta_atras);
+    clearInterval(timer);
+    clearTimeout(sub_timer);
+    clearTimeout(preparados_timer);
+    clearTimeout(fallback_cuenta_atras_timer);
+    timer = null;
+    sub_timer = null;
+    preparados_timer = null;
+    listener_cuenta_atras = null;
+    fallback_cuenta_atras_timer = null;
+    if (removerNodo) {
+        $('#countdown').remove();
+    }
+}
+
+function hayCountdownInicioActivoMusa() {
+    return Boolean(
+        secuencia_inicio_musa_activa ||
+        listener_cuenta_atras ||
+        timer ||
+        preparados_timer ||
+        document.getElementById("countdown")
+    );
+}
 let LIMITE_TIEMPO_INSPIRACION = 30;
 const EMOJI_TORTUGA = "\uD83D\uDC22";
 const EMOJI_RAYO = "\u26A1";
@@ -125,6 +293,134 @@ const EMOJI_EDITAR = "\u270F\uFE0F";
 const EMOJI_ENVIAR = "\u2709\uFE0F";
 const EMOJI_STAR = "\u2B50";
 const EMOJI_CORAZON_OJOS = "\uD83E\uDD0D";
+const DURACION_FULGOR_MUSA_MS = 980;
+const DURACION_TOAST_INSPIRACION_MS = 2600;
+let timeout_fulgor_musa = null;
+let timeout_toast_musa = null;
+let timeout_nombre_musa_destacado = null;
+let timeout_puntos_musa_destacado = null;
+let toast_inspiracion_musa = null;
+
+function normalizarNombreMusaEvento(valor) {
+    if (typeof valor !== "string") return "";
+    return valor.trim().toUpperCase().slice(0, 18);
+}
+
+function obtenerToastInspiracionMusa() {
+    if (toast_inspiracion_musa && document.body.contains(toast_inspiracion_musa)) {
+        return toast_inspiracion_musa;
+    }
+    const el = document.createElement("div");
+    el.id = "musa_inspiracion_toast";
+    el.className = "musa-inspiracion-toast";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+    toast_inspiracion_musa = el;
+    return el;
+}
+
+function activarFulgorBordesMusa() {
+    if (!document.body) return;
+    document.body.classList.remove("musa-borde-fulgor");
+    // Forzamos reflow para reiniciar la animacion aunque la clase ya exista.
+    void document.body.offsetWidth;
+    document.body.classList.add("musa-borde-fulgor");
+    if (timeout_fulgor_musa) {
+        clearTimeout(timeout_fulgor_musa);
+    }
+    timeout_fulgor_musa = setTimeout(() => {
+        if (document.body) {
+            document.body.classList.remove("musa-borde-fulgor");
+        }
+    }, DURACION_FULGOR_MUSA_MS);
+}
+
+function destacarNombreMusaHit() {
+    if (!nombre_musa_label) return;
+    nombre_musa_label.classList.remove("musa-nombre-hit");
+    void nombre_musa_label.offsetWidth;
+    nombre_musa_label.classList.add("musa-nombre-hit");
+    if (timeout_nombre_musa_destacado) {
+        clearTimeout(timeout_nombre_musa_destacado);
+    }
+    timeout_nombre_musa_destacado = setTimeout(() => {
+        if (nombre_musa_label) {
+            nombre_musa_label.classList.remove("musa-nombre-hit");
+        }
+    }, 1400);
+}
+
+function destacarPuntosMusaHit() {
+    if (!puntos1) return;
+    puntos1.classList.remove("puntos-hit");
+    void puntos1.offsetWidth;
+    puntos1.classList.add("puntos-hit");
+    if (timeout_puntos_musa_destacado) {
+        clearTimeout(timeout_puntos_musa_destacado);
+    }
+    timeout_puntos_musa_destacado = setTimeout(() => {
+        if (puntos1) {
+            puntos1.classList.remove("puntos-hit");
+        }
+    }, 640);
+}
+
+function obtenerNombreEscritxrInspiracion(payload = {}) {
+    const nombreLocal = (nombre1 && typeof nombre1.value === "string")
+        ? nombre1.value.trim()
+        : "";
+    const nombrePayload = (typeof payload.nombre_escritxr === "string")
+        ? payload.nombre_escritxr.trim()
+        : "";
+    if (nombrePayload) {
+        return nombrePayload.toUpperCase().slice(0, 24);
+    }
+    const escritxrId = Number(payload.escritxr);
+    if ((escritxrId === 1 || escritxrId === 2) && escritxrId !== Number(player)) {
+        return `ESCRITXR ${escritxrId}`;
+    }
+    if (nombreLocal) {
+        return nombreLocal.toUpperCase().slice(0, 24);
+    }
+    if (escritxrId === 1 || escritxrId === 2) {
+        return `ESCRITXR ${escritxrId}`;
+    }
+    return "ESCRITXR";
+}
+
+function mostrarToastInspiracionMusa(payload = {}) {
+    const musaEvento = normalizarNombreMusaEvento(payload.musa_nombre || "");
+    const musaLocal = normalizarNombreMusaEvento(window.nombre_musa || "");
+    const esPalabraPropia = Boolean(musaEvento && musaLocal && musaEvento === musaLocal);
+    const nombreEscritxr = obtenerNombreEscritxrInspiracion(payload);
+    const palabra = typeof payload.palabra === "string"
+        ? payload.palabra.trim().slice(0, 48)
+        : "";
+
+    const toast = obtenerToastInspiracionMusa();
+    toast.classList.remove("musa-inspiracion-toast--propia", "musa-inspiracion-toast--ajena");
+    toast.classList.add(esPalabraPropia ? "musa-inspiracion-toast--propia" : "musa-inspiracion-toast--ajena");
+
+    if (esPalabraPropia) {
+        const partePalabra = palabra ? ` «${palabra}»` : "";
+        toast.textContent = `¡${nombreEscritxr} HA UTILIZADO TU PALABRA!${partePalabra}`;
+        destacarNombreMusaHit();
+    } else {
+        const partePalabra = palabra ? ` «${palabra}»` : "";
+        toast.textContent = `¡${nombreEscritxr} HA UTILIZADO TU PALABRA!${partePalabra}`;
+    }
+
+    toast.classList.remove("activa");
+    void toast.offsetWidth;
+    toast.classList.add("activa");
+    if (timeout_toast_musa) {
+        clearTimeout(timeout_toast_musa);
+    }
+    timeout_toast_musa = setTimeout(() => {
+        toast.classList.remove("activa");
+    }, DURACION_TOAST_INSPIRACION_MS);
+}
 const VENTAJAS_PUTADAS = [
     { emoji: EMOJI_TORTUGA, descripcion: `${EMOJI_TORTUGA} El teclado del contrincante ira mas lento.` },
     { emoji: EMOJI_RAYO, descripcion: `${EMOJI_RAYO} El videojuego borrara mas rapido el texto del contrincante.` },
@@ -151,6 +447,135 @@ function obtenerOpcionesVentaja(opcionesEmojis) {
         .map(emoji => mapa.get(emoji))
         .filter(Boolean)
         .slice(0, 3);
+}
+
+function obtenerNumeroNoNegativo(...valores) {
+    for (const valor of valores) {
+        const numero = Number(valor);
+        if (Number.isFinite(numero) && numero >= 0) {
+            return numero;
+        }
+    }
+    return null;
+}
+
+function obtenerColorEquipoVotacion(equipo) {
+    return Number(equipo) === 2 ? "#ff6b6b" : "#46f0ff";
+}
+
+function aplicarColorTemporizadorVotacionVentaja(equipo) {
+    const color = obtenerColorEquipoVotacion(equipo);
+    if (votacion_ventaja_timer_modal) {
+        votacion_ventaja_timer_modal.style.setProperty("--votacion-ventaja-timer-color", color);
+    }
+    if (votacion_ventaja_timer_inline) {
+        votacion_ventaja_timer_inline.style.setProperty("--votacion-ventaja-timer-color", color);
+    }
+}
+
+function formatearTiempoRestanteVotacion(ms) {
+    const totalSegundos = Math.max(0, Math.ceil((Number(ms) || 0) / 1000));
+    const minutos = Math.floor(totalSegundos / 60);
+    const segundos = totalSegundos % 60;
+    return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+}
+
+function actualizarBarraTiempoVotacionVentaja(restanteMs, duracionMs) {
+    const restante = Math.max(0, Number(restanteMs) || 0);
+    const total = Math.max(1, Number(duracionMs) || 1);
+    const porcentaje = Math.max(0, Math.min(100, (restante / total) * 100));
+    const texto = formatearTiempoRestanteVotacion(restante);
+
+    if (votacion_ventaja_timer_fill_modal) {
+        votacion_ventaja_timer_fill_modal.style.width = `${porcentaje.toFixed(1)}%`;
+    }
+    if (votacion_ventaja_timer_fill_inline) {
+        votacion_ventaja_timer_fill_inline.style.width = `${porcentaje.toFixed(1)}%`;
+    }
+    if (votacion_ventaja_timer_text_modal) {
+        votacion_ventaja_timer_text_modal.textContent = texto;
+    }
+    if (votacion_ventaja_timer_text_inline) {
+        votacion_ventaja_timer_text_inline.textContent = texto;
+    }
+}
+
+function detenerTemporizadorVotacionVentaja() {
+    if (votacion_ventaja_timer_interval) {
+        clearInterval(votacion_ventaja_timer_interval);
+        votacion_ventaja_timer_interval = null;
+    }
+}
+
+function obtenerMsRestantesVotacionVentaja() {
+    if (!votacion_ventaja_fin_ts) return 0;
+    return Math.max(0, votacion_ventaja_fin_ts - Date.now());
+}
+
+function manejarFinTiempoVotacionVentaja() {
+    ocultarModalVotacionVentaja();
+    if (votacion_ventaja_activa && votacion_ventaja_ya_voto) {
+        mostrarInlineVotacionVentaja();
+    } else {
+        ocultarInlineVotacionVentaja();
+    }
+}
+
+function tickTemporizadorVotacionVentaja() {
+    if (votacion_ventaja_duracion_ms <= 0 || votacion_ventaja_fin_ts <= 0) {
+        return;
+    }
+    const restante = obtenerMsRestantesVotacionVentaja();
+    actualizarBarraTiempoVotacionVentaja(restante, votacion_ventaja_duracion_ms);
+    if (restante <= 0) {
+        detenerTemporizadorVotacionVentaja();
+        manejarFinTiempoVotacionVentaja();
+    }
+}
+
+function iniciarTemporizadorVotacionVentaja() {
+    if (votacion_ventaja_timer_interval) {
+        return;
+    }
+    votacion_ventaja_timer_interval = setInterval(tickTemporizadorVotacionVentaja, 200);
+}
+
+function sincronizarTemporizadorVotacionVentaja(payload = {}) {
+    const duracionPayload = obtenerNumeroNoNegativo(
+        payload.duracion_ms,
+        payload.tiempo_votacion_ms,
+        payload.TIEMPO_VOTACION
+    );
+    const restantePayload = obtenerNumeroNoNegativo(
+        payload.tiempo_restante_ms,
+        payload.restante_ms
+    );
+    const terminaEnPayload = obtenerNumeroNoNegativo(payload.termina_en_ts);
+
+    if (duracionPayload !== null && duracionPayload > 0) {
+        votacion_ventaja_duracion_ms = duracionPayload;
+    }
+    if (restantePayload !== null) {
+        votacion_ventaja_fin_ts = Date.now() + restantePayload;
+    } else if (terminaEnPayload !== null && terminaEnPayload > 0) {
+        votacion_ventaja_fin_ts = terminaEnPayload;
+    } else if (!votacion_ventaja_fin_ts && votacion_ventaja_duracion_ms > 0) {
+        votacion_ventaja_fin_ts = Date.now() + votacion_ventaja_duracion_ms;
+    }
+
+    if (votacion_ventaja_activa && votacion_ventaja_duracion_ms > 0 && votacion_ventaja_fin_ts > 0) {
+        tickTemporizadorVotacionVentaja();
+        if (obtenerMsRestantesVotacionVentaja() > 0) {
+            iniciarTemporizadorVotacionVentaja();
+        }
+    }
+}
+
+function resetearTemporizadorVotacionVentaja() {
+    detenerTemporizadorVotacionVentaja();
+    votacion_ventaja_duracion_ms = 0;
+    votacion_ventaja_fin_ts = 0;
+    actualizarBarraTiempoVotacionVentaja(0, 1);
 }
 
 function ocultarModalVotacionVentaja() {
@@ -230,7 +655,9 @@ function pintarEmojisPieVotacionVentaja(pieEl, datos, total) {
         const fin = acumulado + (proporcion * 360);
         acumulado = fin;
         const angulo = ((inicio + fin) / 2) - 90;
-        const radio = 36;
+        // Mantener el emoji centrado sobre el grosor del donut.
+        // El agujero interior usa inset 16% en CSS, por eso el radio medio es ~42%.
+        const radio = 42;
         const rad = (angulo * Math.PI) / 180;
         const x = 50 + (Math.cos(rad) * radio);
         const y = 50 + (Math.sin(rad) * radio);
@@ -336,10 +763,32 @@ function votarVentajaPorEmoji(emoji) {
     window.dispatchEvent(new CustomEvent("musa_voto_ventaja_emitido", { detail: { voto: emoji } }));
 }
 
+function obtenerEquipoEscritxrObjetivo(nombreEscritxr) {
+    const nombre = String(nombreEscritxr || "");
+    const matchUltimoDigito = nombre.match(/([12])(?!.*[12])/);
+    if (matchUltimoDigito) {
+        return Number(matchUltimoDigito[1]);
+    }
+    const equipoMusa = Number(votacion_ventaja_equipo) || Number(player) || 0;
+    if (equipoMusa === 1 || equipoMusa === 2) {
+        return 3 - equipoMusa;
+    }
+    return 0;
+}
+
+function obtenerClaseColorEscritxr(nombreEscritxr) {
+    const equipoObjetivo = obtenerEquipoEscritxrObjetivo(nombreEscritxr);
+    if (equipoObjetivo === 1) return "votacion-ventaja-escritxr--1";
+    if (equipoObjetivo === 2) return "votacion-ventaja-escritxr--2";
+    return "";
+}
+
 function renderizarModalVotacionVentaja(opciones) {
     if (!Array.isArray(opciones) || opciones.length === 0) return;
     if (votacion_ventaja_modal_titulo) {
-        votacion_ventaja_modal_titulo.textContent = `ELIGE UNA DESVENTAJA PARA ${nombre1.value || "ESCRITXR"}`;
+        const nombreObjetivo = (nombre1 && nombre1.value ? nombre1.value : "ESCRITXR").toUpperCase();
+        const claseColor = obtenerClaseColorEscritxr(nombreObjetivo);
+        votacion_ventaja_modal_titulo.innerHTML = `ELIGE UNA DESVENTAJA PARA <span class="votacion-ventaja-escritxr ${claseColor}">${escapeHtml(nombreObjetivo)}</span>`;
     }
     if (votacion_ventaja_modal_opciones) {
         votacion_ventaja_modal_opciones.innerHTML = `<p class="votacion-ventaja-modal-ayuda">Toca un quesito del grafico para votar.</p>`;
@@ -400,6 +849,8 @@ function resetearEstadoVotacionVentaja() {
         clearTimeout(votacion_ventaja_gracias_timer);
         votacion_ventaja_gracias_timer = null;
     }
+    resetearTemporizadorVotacionVentaja();
+    aplicarColorTemporizadorVotacionVentaja(player);
     ocultarModalVotacionVentaja();
     ocultarInlineVotacionVentaja();
 }
@@ -437,6 +888,11 @@ const RETRASO_TECLADO_LENTO_MS = 500;
 let teclado_lento_putada = false;
 let timeout_teclado_lento = null;
 let TIEMPO_MODIFICADOR = 0;
+let timeout_rayo_musa = null;
+let tempo_text_borroso = null;
+let timeout_bruma_salida_musa = null;
+let lightning_musa = null;
+let timeout_espejo_musa = null;
 
 let temporizador_lectura_interval = null;
 let temporizador_lectura_restante = 0;
@@ -598,6 +1054,113 @@ function activarTecladoLentoMusa() {
             timeout_teclado_lento = null;
         }, duracion);
     }
+}
+
+function obtenerDuracionDesventajaMusa() {
+    return TIEMPO_MODIFICADOR > 0 ? TIEMPO_MODIFICADOR : (60 * 1000);
+}
+
+function asegurarLightningMusa() {
+    if (lightning_musa && lightning_musa.isConnected) {
+        return lightning_musa;
+    }
+    lightning_musa = getEl("lightning");
+    if (lightning_musa) {
+        return lightning_musa;
+    }
+    lightning_musa = document.createElement("div");
+    lightning_musa.id = "lightning";
+    lightning_musa.setAttribute("aria-hidden", "true");
+    document.body.appendChild(lightning_musa);
+    return lightning_musa;
+}
+
+function limpiarRayoMusa() {
+    if (timeout_rayo_musa) {
+        clearTimeout(timeout_rayo_musa);
+        timeout_rayo_musa = null;
+    }
+    document.body.classList.remove("bg");
+    document.body.classList.remove("rain");
+    if (lightning_musa && lightning_musa.classList) {
+        lightning_musa.classList.remove("lightning");
+    }
+}
+
+function activarRayoMusa() {
+    limpiarRayoMusa();
+    document.body.classList.add("bg");
+    document.body.classList.add("rain");
+    const duracion = obtenerDuracionDesventajaMusa();
+    if (duracion > 0) {
+        timeout_rayo_musa = setTimeout(() => {
+            timeout_rayo_musa = null;
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+        }, duracion);
+    }
+}
+
+function limpiarBrumaMusa(apagarProgresivo = false) {
+    if (tempo_text_borroso) {
+        clearTimeout(tempo_text_borroso);
+        tempo_text_borroso = null;
+    }
+    if (timeout_bruma_salida_musa) {
+        clearTimeout(timeout_bruma_salida_musa);
+        timeout_bruma_salida_musa = null;
+    }
+    if (!texto1) return;
+    if (apagarProgresivo) {
+        texto1.classList.remove("textarea-bruma-musa");
+        texto1.classList.add("textarea-bruma-musa-salida");
+        timeout_bruma_salida_musa = setTimeout(() => {
+            timeout_bruma_salida_musa = null;
+            if (texto1) {
+                texto1.classList.remove("textarea-bruma-musa-salida");
+            }
+        }, 900);
+        return;
+    }
+    texto1.classList.remove("textarea-bruma-musa");
+    texto1.classList.remove("textarea-bruma-musa-salida");
+}
+
+function activarBrumaMusa() {
+    if (!texto1) return;
+    limpiarBrumaMusa(false);
+    void texto1.offsetWidth;
+    texto1.classList.add("textarea-bruma-musa");
+    const duracion = obtenerDuracionDesventajaMusa();
+    if (duracion > 0) {
+        tempo_text_borroso = setTimeout(() => {
+            tempo_text_borroso = null;
+            limpiarBrumaMusa(true);
+        }, duracion);
+    }
+}
+
+function limpiarEspejoMusa() {
+    if (timeout_espejo_musa) {
+        clearTimeout(timeout_espejo_musa);
+        timeout_espejo_musa = null;
+    }
+}
+
+function activarEspejoMusa() {
+    limpiarEspejoMusa();
+    const duracion = obtenerDuracionDesventajaMusa();
+    if (duracion > 0) {
+        timeout_espejo_musa = setTimeout(() => {
+            limpiarEspejoMusa();
+        }, duracion);
+    }
+}
+
+function limpiarEfectosVisualesDesventajaMusa() {
+    limpiarRayoMusa();
+    limpiarBrumaMusa(false);
+    limpiarEspejoMusa();
 }
 
 function guardarTemporizadorLecturaPersistente(finTimestamp) {
@@ -772,6 +1335,8 @@ const calentamiento_input = getEl("calentamiento_input");
 const calentamiento_enviar = getEl("calentamiento_enviar");
 const calentamiento_text_progress = getEl("calentamiento_text_progress");
 const calentamiento_bar_progress = getEl("calentamiento_bar_progress");
+const calentamiento_estado_cierre = getEl("calentamiento_estado_cierre");
+const calentamiento_final_musa = getEl("calentamiento_final_musa");
 
 aplicarTecladoLento(campo_palabra);
 aplicarTecladoLento(calentamiento_input);
@@ -784,6 +1349,9 @@ let timeout_feedback_calentamiento = null;
 let calentamiento_cooldown = false;
 let calentamiento_interval_cooldown = null;
 let calentamiento_solicitud_actual = null;
+let calentamiento_bloqueado = false;
+let calentamiento_final_actual = null;
+let calentamiento_final_id_previo = "";
 let timeout_animacion_consigna = null;
 const MENSAJES_SOLICITUD_CALENTAMIENTO = {
     libre: {
@@ -805,6 +1373,17 @@ const MENSAJES_SOLICITUD_CALENTAMIENTO = {
         estadoHtml: 'Envia palabras para construir la <span class="calentamiento-consigna-frase-final">frase final</span>.',
         placeholder: "Ejemplo: destino"
     }
+};
+
+const normalizarFinalCalentamientoMusa = (entrada) => {
+    if (!entrada || typeof entrada !== "object") return null;
+    if (typeof entrada.id !== "string" || !entrada.id) return null;
+    if (typeof entrada.palabra !== "string" || !entrada.palabra.trim()) return null;
+    return {
+        id: entrada.id,
+        palabra: entrada.palabra.trim(),
+        ts: Number(entrada.ts) || 0
+    };
 };
 
 const actualizarTemaCalentamiento = (equipo) => {
@@ -933,9 +1512,42 @@ const animarCambioConsignaCalentamiento = () => {
     }, 760);
 };
 
+const actualizarBloqueoCalentamientoMusa = (bloqueado, finalPalabra) => {
+    if (calentamiento_section) {
+        calentamiento_section.classList.toggle("calentamiento-bloqueado", Boolean(bloqueado));
+        calentamiento_section.classList.toggle("calentamiento-final-elegida", Boolean(finalPalabra));
+    }
+    if (calentamiento_estado_cierre) {
+        calentamiento_estado_cierre.textContent = bloqueado
+            ? "Consigna cerrada por tu escritxr."
+            : "";
+    }
+    if (calentamiento_text_progress && bloqueado) {
+        calentamiento_text_progress.textContent = "CONSIGNA CERRADA";
+        calentamiento_text_progress.style.color = "white";
+    }
+    if (!calentamiento_final_musa) return;
+    if (!finalPalabra) {
+        calentamiento_final_musa.textContent = "";
+        calentamiento_final_musa.classList.remove("activa", "reveal");
+        calentamiento_final_id_previo = "";
+        return;
+    }
+    calentamiento_final_musa.textContent = `Palabra elegida: «${finalPalabra.palabra}»`;
+    calentamiento_final_musa.classList.add("activa");
+    if (calentamiento_final_id_previo !== finalPalabra.id) {
+        calentamiento_final_musa.classList.remove("reveal");
+        void calentamiento_final_musa.offsetWidth;
+        calentamiento_final_musa.classList.add("reveal");
+    }
+    calentamiento_final_id_previo = finalPalabra.id;
+};
+
 const actualizarCalentamiento = (data = {}) => {
     calentamiento_activo = Boolean(data.activo);
     calentamiento_vista = Boolean(data.vista);
+    calentamiento_bloqueado = Boolean(data.bloqueado);
+    calentamiento_final_actual = normalizarFinalCalentamientoMusa(data.final);
     actualizarTemaCalentamiento(data.equipo || player);
     const solicitud = (typeof data.solicitud === "string" && MENSAJES_SOLICITUD_CALENTAMIENTO[data.solicitud])
         ? data.solicitud
@@ -963,6 +1575,9 @@ const actualizarCalentamiento = (data = {}) => {
         mostrarFeedbackCalentamiento("");
         if (calentamiento_input) calentamiento_input.disabled = true;
         if (calentamiento_enviar) calentamiento_enviar.disabled = true;
+        calentamiento_bloqueado = false;
+        calentamiento_final_actual = null;
+        actualizarBloqueoCalentamientoMusa(false, null);
         return;
     }
 
@@ -980,10 +1595,13 @@ const actualizarCalentamiento = (data = {}) => {
     }
     if (calentamiento_input) {
         calentamiento_input.placeholder = mensajeSolicitud.placeholder;
-        calentamiento_input.disabled = false;
+        calentamiento_input.disabled = calentamiento_bloqueado;
     }
     if (calentamiento_enviar) {
-        calentamiento_enviar.disabled = false;
+        calentamiento_enviar.disabled = calentamiento_bloqueado;
+    }
+    if (calentamiento_bloqueado) {
+        limpiarCooldownCalentamiento();
     }
     if (!calentamiento_cooldown) {
         restaurarTextoBotonCalentamiento();
@@ -991,10 +1609,15 @@ const actualizarCalentamiento = (data = {}) => {
     if (cambioConsigna) {
         animarCambioConsignaCalentamiento();
     }
+    actualizarBloqueoCalentamientoMusa(calentamiento_bloqueado, calentamiento_final_actual);
 };
 
 const enviarCalentamiento = () => {
     if (!calentamiento_activo || !calentamiento_vista || !calentamiento_input) {
+        return;
+    }
+    if (calentamiento_bloqueado) {
+        mostrarFeedbackCalentamiento("La consigna esta cerrada por tu escritxr.", true);
         return;
     }
     if (calentamiento_cooldown) {
@@ -1094,6 +1717,7 @@ let enviar_ventaja;
         enviar_ventaja = "enviar_ventaja_j1";
         nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
         metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
+        document.documentElement.style.setProperty("--equipo-color", "aqua");
 
     } else if (player == 2) {
         console.log(nombre1.value)
@@ -1109,14 +1733,22 @@ let enviar_ventaja;
         enviar_ventaja = "enviar_ventaja_j2";
         nombre1.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
         metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
+        document.documentElement.style.setProperty("--equipo-color", "red");
     }
 
+aplicarColorTemporizadorVotacionVentaja(player);
 configurarColorRegalo();
 actualizarNombreRegalo();
 if (regalo_pdf_pendiente) {
     mostrarRegaloPdf(regalo_pdf_pendiente);
     regalo_pdf_pendiente = null;
 }
+
+socket.on("feedback_musa_inspiracion", (payload = {}) => {
+    if (!payload || payload.tipo !== "inspiracion") return;
+    activarFulgorBordesMusa();
+    mostrarToastInspiracionMusa(payload);
+});
 
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
@@ -1172,6 +1804,18 @@ if (enviar_ventaja) {
     socket.on(enviar_ventaja, (ventaja) => {
         if (ventaja === EMOJI_TORTUGA) {
             activarTecladoLentoMusa();
+            return;
+        }
+        if (ventaja === EMOJI_RAYO) {
+            activarRayoMusa();
+            return;
+        }
+        if (ventaja === EMOJI_ESPEJO) {
+            activarEspejoMusa();
+            return;
+        }
+        if (ventaja === EMOJI_BRUMA) {
+            activarBrumaMusa();
         }
     });
 }
@@ -1184,19 +1828,41 @@ socket.on('temporizador_gigante_detener', () => {
     cancelarTemporizadorLectura();
 });
 
-socket.on('activar_banderas_musas', () => {
+function aplicarEstadoBanderasMusaDesdeServidor(payload = {}) {
+    if (typeof aplicarEstadoBanderasControl === 'function') {
+        aplicarEstadoBanderasControl(payload);
+        return;
+    }
     const botonBandera = document.getElementById('btn_bandera');
     if (!botonBandera) return;
+    if (payload && payload.activa === false) {
+        if (typeof desactivarPantalla === 'function') {
+            desactivarPantalla({ forzadoControl: true });
+        }
+        return;
+    }
     if (Number(botonBandera.value) !== 0) return;
     if (typeof bandera === 'function') {
-        bandera(botonBandera);
+        bandera(botonBandera, { forzadoControl: true });
     }
+}
+
+socket.on('estado_banderas_musas', (payload = {}) => {
+    aplicarEstadoBanderasMusaDesdeServidor(payload);
+});
+
+socket.on('activar_banderas_musas', (payload = {}) => {
+    const estadoNormalizado = (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'activa'))
+        ? payload
+        : { activa: true, bloqueado_por_control: true };
+    aplicarEstadoBanderasMusaDesdeServidor(estadoNormalizado);
 });
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     if (!nombre_musa) return;
     socket.emit('registrar_musa', { musa: player, nombre: nombre_musa });
+    socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_nombre');
     setTimeout(() => {
         socket.emit('pedir_texto');
@@ -1236,7 +1902,6 @@ socket.on('calentamiento_ganado', (data) => {
 // Variables de los modos.
 let modo_actual = "";
 let niveles_bloqueados = true;
-let tempo_text_borroso;
 let listener_modo;
 let jugador_psico;
 const NIVELES_ORDEN = [
@@ -1323,13 +1988,33 @@ function resetearScrollNiveles() {
     limitarScrollNiveles();
     requestAnimationFrame(actualizarFlechasNiveles);
     setTimeout(() => {
-        nivelesScroll.scrollLeft = 0;
+        if (obtenerIndiceNivelActivo() < 0) {
+            nivelesScroll.scrollLeft = 0;
+        }
         actualizarFlechasNiveles();
     }, 50);
     setTimeout(() => {
-        nivelesScroll.scrollLeft = 0;
+        if (obtenerIndiceNivelActivo() < 0) {
+            nivelesScroll.scrollLeft = 0;
+        }
         actualizarFlechasNiveles();
     }, 200);
+}
+
+function sincronizarVisorNiveles() {
+    if (!nivelesScroll || !nivelesItems.length) return;
+    recalcularLineaNiveles();
+    asegurarNivelActualVisible();
+    limitarScrollNiveles();
+    actualizarFlechasNiveles();
+}
+
+function programarSincronizacionVisorNiveles() {
+    sincronizarVisorNiveles();
+    requestAnimationFrame(sincronizarVisorNiveles);
+    setTimeout(sincronizarVisorNiveles, 90);
+    setTimeout(sincronizarVisorNiveles, 220);
+    setTimeout(sincronizarVisorNiveles, 520);
 }
 
 function recalcularLineaNiveles() {
@@ -1410,23 +2095,21 @@ if (nivelesScroll) {
 }
 
 window.addEventListener("resize", () => {
-    actualizarFlechasNiveles();
-    recalcularLineaNiveles();
+    programarSincronizacionVisorNiveles();
 });
 window.addEventListener("load", () => {
     resetearScrollNiveles();
-    setTimeout(actualizarFlechasNiveles, 120);
-    setTimeout(actualizarFlechasNiveles, 320);
+    programarSincronizacionVisorNiveles();
 });
 window.addEventListener("pageshow", () => {
     resetearScrollNiveles();
-    setTimeout(actualizarFlechasNiveles, 120);
+    programarSincronizacionVisorNiveles();
 });
 requestAnimationFrame(() => {
     setNivelesDesactivados(terminado || !modo_actual || niveles_bloqueados);
     resetearScrollNiveles();
     actualizarColorEquipo();
-    recalcularLineaNiveles();
+    programarSincronizacionVisorNiveles();
 });
 
 function actualizarNiveles(modo) {
@@ -1503,7 +2186,14 @@ function aplicarOrdenCircular(indiceActivo) {
 // Recibe los datos del jugador 1 y los coloca.
 function handler_recibir_texto_x(data) {
 if(data.text != null) texto1.innerHTML = data.text;
-    if(data.points != null) puntos1.innerHTML = formatearPuntos(data.points);
+    if (data.points != null && puntos1) {
+        const puntosAnteriores = puntos1.textContent;
+        const puntosNuevos = formatearPuntos(data.points);
+        puntos1.innerHTML = puntosNuevos;
+        if (puntosNuevos !== puntosAnteriores) {
+            destacarPuntosMusaHit();
+        }
+    }
     if(mostrar_texto.value == 1){
         //texto1.style.height = ""; // resetear la altura
         texto1.style.height = "auto";
@@ -1538,6 +2228,11 @@ pausa el cambio de palabra.
 */
 socket.on("count", data => {
     if(data.player == player){
+    const segundosRestantes = extraerSegundosTiempo(data.count);
+    const introEnCurso = secuencia_inicio_musa_activa || (document.body && document.body.classList.contains(CLASE_INTRO_PARTIDA_MUSA));
+    if (segundosRestantes !== null && !ui_partida_activa_musa && !introEnCurso) {
+        setUiPartidaActivaMusa(true);
+    }
         console.log(data.count)
     if (!temporizador_lectura_activo) {
         mostrarBarraVida();
@@ -1552,12 +2247,17 @@ socket.on("count", data => {
             tiempo.style.color = "red"
         }
         tiempo.innerHTML = data.count;
-        actualizarBarraVida(tiempo, data.count);
+        const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosRestantes));
+        actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+        if (animarEntradaVida) {
+            animacionEntradaVidaPendiente = false;
+        }
     }
     if (data.count == "\u00A1Tiempo!") {
         confetti_aux();
 
         limpiezas_final();
+        limpiarEfectosVisualesDesventajaMusa();
 
         //texto1.innerText = (texto1.innerText).substring(saltos_lÃ­nea_alineacion_1, texto1.innerText.length);
         //texto2.value = (texto2.value).substring(saltos_lÃ­nea_alineacion_2, texto2.value.length);
@@ -1571,8 +2271,10 @@ socket.on("count", data => {
 
         texto1.style.height = "auto";
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaÃ±o del Ã¡rea de texto del j1.
-        mostrar_texto.backgroundColor = "green";
-
+        if (typeof actualizarEstadoTextoCompleto === "function") {
+            actualizarEstadoTextoCompleto(mostrar_texto, true);
+        }
+        mostrar_texto.style.backgroundColor = "";
         mostrar_texto.value = 1;
         notificacion.style.display = "none";
     }
@@ -1581,11 +2283,22 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    setPendienteAnimacionEntradaBarraVida(true);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    if (tiempo) {
+        tiempo.style.display = DISPLAY_BARRA_VIDA;
+        aplicarEstadoBarraVida(tiempo, 0);
+    }
+    setUiPartidaActivaMusa(false);
+    setUiPartidaFinalizadaMusa(false);
+    limpiarCountdownInicioMusa();
+    post_inicio_pendiente_musa = false;
     LIMITE_TIEMPO_INSPIRACION = data.parametros.LIMITE_TIEMPO_INSPIRACION;
     TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR || TIEMPO_MODIFICADOR;
     ocultarRegaloPdf();
     resetearTemporizadorLectura();
     limpiarTecladoLentoMusa();
+    limpiarEfectosVisualesDesventajaMusa();
     terminado = false;
     niveles_bloqueados = true;
     setNivelesDesactivados(false);
@@ -1596,16 +2309,20 @@ socket.on('inicio', data => {
     tiempo.style.color = "white"
 
     animateCSS(".contenedor", "pulse");
+    iniciarSecuenciaIntroPartidaMusa();
 
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atras
     $('#countdown').remove();
     var preparados = $('<span id="countdown">\u00BFPREPARADOS?</span>');
     preparados.appendTo($('.container'));
     preparados_timer = setTimeout(() => {
+        preparados_timer = null;
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        revelarEtapaIntroPartidaMusa(1);
     }, 20);
 
-    setTimeout(() => {
+    listener_cuenta_atras = setTimeout(() => {
+    listener_cuenta_atras = null;
 
     var counter = 3;
   
@@ -1615,6 +2332,15 @@ socket.on('inicio', data => {
       
       var countdown = $('<span id="countdown">' + (counter == 0 ? '\u00A1ESCRIBE!' : counter) + '</span>');
       countdown.appendTo($('.container'));
+
+      if (counter === 3) {
+        revelarEtapaIntroPartidaMusa(2);
+      } else if (counter === 2) {
+        revelarEtapaIntroPartidaMusa(3);
+      } else if (counter === 1) {
+        revelarEtapaIntroPartidaMusa(4);
+        programarSincronizacionVisorNiveles();
+      }
   
       sub_timer = setTimeout(() => {
         if (counter > -1) {
@@ -1628,47 +2354,98 @@ socket.on('inicio', data => {
   
       if (counter <= -1) {
         clearInterval(timer);
+        timer = null;
         setTimeout(() => {
+          clearTimeout(fallback_cuenta_atras_timer);
+          fallback_cuenta_atras_timer = null;
           $('#countdown').remove();
+          finalizarSecuenciaIntroPartidaMusa();
         }, 1000);
   
 
     }
   }, 1000);
 }, 1000);
+
+    // Failsafe para evitar que la intro se quede atascada en "PREPARADOS?".
+    fallback_cuenta_atras_timer = setTimeout(() => {
+        limpiarCountdownInicioMusa();
+        finalizarSecuenciaIntroPartidaMusa();
+    }, 7000);
 });
 
+function aplicarPostInicioMusa() {
+    const modoAlAplicarPostInicio = modo_actual;
+    limpiarCountdownInicioMusa();
+    limpiarClasesIntroPartidaMusa();
+    secuencia_inicio_musa_activa = false;
+    post_inicio_pendiente_musa = false;
+    setUiPartidaActivaMusa(true);
+    resetearTemporizadorLectura();
+    socket.off('vote');
+    socket.off('exit');
+    socket.off('scroll');
+    socket.off('temas_jugadores');
+    //socket.off('recibir_comentario');
+    socket.off('recibir_postgame1');
+    socket.off('recibir_postgame2');
+
+    limpiezas();
+    setPendienteAnimacionEntradaBarraVida(true);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    if (tiempo) {
+        tiempo.style.display = DISPLAY_BARRA_VIDA;
+        aplicarEstadoBarraVida(tiempo, 0);
+    }
+    /*
+    skill.style = 'animation: brillo 2s ease-in-out;'
+    skill.style.display = "flex";
+    */
+
+    texto1.style.height = "4.5em";
+    texto1.rows =  "3";
+    if (modoAlAplicarPostInicio) {
+        niveles_bloqueados = false;
+        setNivelesDesactivados(false);
+        actualizarNiveles(modoAlAplicarPostInicio);
+    }
+    programarSincronizacionVisorNiveles();
+}
+
 socket.on("post-inicio", () => {
-                resetearTemporizadorLectura();
-                socket.off('vote');
-                socket.off('exit');
-                socket.off('scroll');
-                socket.off('temas_jugadores');
-                //socket.off('recibir_comentario');
-                socket.off('recibir_postgame1');
-                socket.off('recibir_postgame2');
-    
-                limpiezas();
-                /*
-                skill.style = 'animation: brillo 2s ease-in-out;'
-                skill.style.display = "flex";
-                */
-    
-                texto1.style.height = "4.5em";
-                texto1.rows =  "3";
+    if (hayCountdownInicioActivoMusa()) {
+        post_inicio_pendiente_musa = true;
+        // Si por cualquier carrera el contador quedo visible pero sin timers,
+        // forzamos cierre de intro para no quedarse en "PREPARADOS?".
+        if (!listener_cuenta_atras && !timer && !secuencia_inicio_musa_activa) {
+            finalizarSecuenciaIntroPartidaMusa();
+        }
+        return;
+    }
+    aplicarPostInicioMusa();
 });
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    const mantenerResumenPartida = ui_partida_activa_musa || terminado;
+    if (mantenerResumenPartida) {
+        setUiPartidaFinalizadaMusa(true);
+    } else {
+        setUiPartidaActivaMusa(false);
+        setUiPartidaFinalizadaMusa(false);
+    }
     skill.style = 'animation: brillo 2s ease-in-out;'
     resetearTemporizadorLectura();
     limpiarTecladoLentoMusa();
+    limpiarEfectosVisualesDesventajaMusa();
     // Recibe el nombre del jugador y lo coloca en su sitio.
     socket.on(nombre, data => {
         nombre1.value = data;
     });
 
-    limpiezas();
+    limpiezas({ preservarResumenFinal: mantenerResumenPartida });
 
     modo_actual = "";
     terminado = true;
@@ -1705,7 +2482,7 @@ socket.on(elegir_ventaja, (data = {}) => {
     const overlay = getEl("overlay");
     if (overlay && overlay.style.display !== "none") {
         if (typeof desactivarPantalla === "function") {
-            desactivarPantalla();
+            desactivarPantalla({ forzadoControl: true });
         } else {
             overlay.style.display = "none";
         }
@@ -1716,14 +2493,20 @@ socket.on(elegir_ventaja, (data = {}) => {
     votacion_ventaja_activa = true;
     votacion_ventaja_ya_voto = false;
     votacion_ventaja_voto_emitido = false;
-    votacion_ventaja_equipo = Number(player) || null;
+    votacion_ventaja_equipo = normalizarEquipoVotacion(data.equipo) || Number(player) || null;
     const opciones = obtenerOpcionesVentaja(data.opciones);
     votacion_ventaja_opciones = opciones.map(op => op.emoji);
     votacion_ventaja_votos = inicializarVotosVentajaEquilibrado(votacion_ventaja_opciones);
+    aplicarColorTemporizadorVotacionVentaja(votacion_ventaja_equipo);
+    sincronizarTemporizadorVotacionVentaja(data);
     renderizarModalVotacionVentaja(opciones);
     actualizarPiesVotacionVentaja();
-    mostrarModalVotacionVentaja();
-    ocultarInlineVotacionVentaja();
+    if (votacion_ventaja_duracion_ms > 0 && obtenerMsRestantesVotacionVentaja() <= 0) {
+        manejarFinTiempoVotacionVentaja();
+    } else {
+        mostrarModalVotacionVentaja();
+        ocultarInlineVotacionVentaja();
+    }
     enviarPalabra_boton.style.display = "none";
     campo_palabra.style.display = "none";
     recordatorio.innerHTML = "";
@@ -1736,6 +2519,7 @@ socket.on('votacion_ventaja_estado', (data = {}) => {
 
     const equipo = normalizarEquipoVotacion(data.equipo);
     votacion_ventaja_equipo = equipo;
+    aplicarColorTemporizadorVotacionVentaja(equipo || player);
     const esEquipoActual = Boolean(equipo) && Number(player) === equipo;
 
     if (Array.isArray(data.opciones) && data.opciones.length > 0) {
@@ -1753,15 +2537,21 @@ socket.on('votacion_ventaja_estado', (data = {}) => {
 
     if (data.activa === true) {
         votacion_ventaja_activa = true;
+        sincronizarTemporizadorVotacionVentaja(data);
         if (esEquipoActual) {
             votacion_ventaja_participo = true;
             if (votacion_ventaja_ya_voto) {
                 ocultarModalVotacionVentaja();
                 mostrarInlineVotacionVentaja();
             } else {
-                votacion_ventaja_voto_emitido = false;
-                mostrarModalVotacionVentaja();
-                ocultarInlineVotacionVentaja();
+                const tiempoAgotado = votacion_ventaja_duracion_ms > 0 && obtenerMsRestantesVotacionVentaja() <= 0;
+                if (tiempoAgotado) {
+                    manejarFinTiempoVotacionVentaja();
+                } else {
+                    votacion_ventaja_voto_emitido = false;
+                    mostrarModalVotacionVentaja();
+                    ocultarInlineVotacionVentaja();
+                }
             }
         } else if (!votacion_ventaja_participo) {
             ocultarModalVotacionVentaja();
@@ -1816,15 +2606,15 @@ function pedir_inspiracion(juego){
     const etiquetaMusa = "<span style='color: orange;'>" + nombre_musa + "</span>";
     if(terminado == false && votando == false){
     if(juego.modo_actual == "palabras bonus"){
-        tarea.innerHTML = "Cantame a mi, " + etiquetaMusa + ", una palabra que me inspire:";
+        tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que me inspire:";
     }
     if(juego.modo_actual == "letra bendita") {
         letra = juego.letra_bendita;
-        tarea.innerHTML = "Cantame a mi, " + etiquetaMusa + ", una palabra que lleve la letra <span style='color: green;'>" + letra.toUpperCase() + "</span>:";
+        tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que lleve la letra <span style='color: green;'>" + letra.toUpperCase() + "</span>:";
     }
     if(juego.modo_actual == "letra prohibida") {
         letra = juego.letra_prohibida;
-        tarea.innerHTML = "Cantame a mi, " + etiquetaMusa + ", una palabra que <span style='color: red;'>NO</span> lleve la letra <span style='color: red;'>" + letra.toUpperCase() + "</span>:";
+        tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que <span style='color: red;'>NO</span> lleve la letra <span style='color: red;'>" + letra.toUpperCase() + "</span>:";
     }
 
     if(juego.modo_actual == "palabras prohibidas"){
@@ -1838,7 +2628,7 @@ function pedir_inspiracion(juego){
         campo_palabra.value = "none";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
-        tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", mira a " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" + nombre1.value + "</span>" + " y " + "<span style='color: blue;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
+        tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", mira a " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" + nombre1.value + "</span>" + " y " + "<span style='color: #86d0ff;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
     
     }
 
@@ -2107,38 +2897,59 @@ function cambiar_color_puntuacion() {
     }
 }
 
-function limpiezas(){
+function limpiezas({ preservarResumenFinal = false } = {}){
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
     stopConfetti()
     clearInterval(intervalID)
-    clearTimeout(listener_cuenta_atras);
-    clearInterval(timer);
-    clearTimeout(sub_timer);
-    clearTimeout(preparados_timer);
+    limpiarCountdownInicioMusa();
+    secuencia_inicio_musa_activa = false;
+    post_inicio_pendiente_musa = false;
+    limpiarClasesIntroPartidaMusa();
     limpiar_colddown()
+    limpiarEfectosVisualesDesventajaMusa();
     cambiar_jugadores(false);
     skill.style.display = "none";
     skill.style.border = "0.5vw solid greenyellow";
     skill_cancel.style.display = "none";
-    texto1.innerText = "";
+    if (!preservarResumenFinal) {
+        texto1.innerText = "";
+        puntos1.innerHTML = 0 + " palabras";
+        texto1.style.height = "4.5em"; /* Alto para tres lÃ­neas de texto */
+        texto1.scrollTop = texto1.scrollHeight;
+        if (typeof actualizarEstadoTextoCompleto === "function") {
+            actualizarEstadoTextoCompleto(mostrar_texto, false);
+        }
+        mostrar_texto.style.backgroundColor = "";
+        mostrar_texto.value = 0;
+    } else {
+        texto1.style.height = "auto";
+        texto1.style.height = (texto1.scrollHeight) + "px";
+        texto1.scrollTop = texto1.scrollHeight;
+        if (typeof actualizarEstadoTextoCompleto === "function") {
+            actualizarEstadoTextoCompleto(mostrar_texto, true);
+        }
+        mostrar_texto.style.backgroundColor = "";
+        mostrar_texto.value = 1;
+    }
 
-    puntos1.innerHTML = 0 + " palabras";
-   
-    
     puntos1.style.color = "white";  
     votando = false;
-    texto1.style.height = "4.5em"; /* Alto para tres lÃ­neas de texto */
-    texto1.scrollTop = texto1.scrollHeight;
-    mostrar_texto.backgroundColor = "red";
-
-    mostrar_texto.value = 0;
     setNivelesDesactivados(false);
     niveles_bloqueados = true;
     actualizarNiveles("");
 }
 
 function limpiezas_final(){
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
     clearInterval(interval_cooldown);
+    limpiarCountdownInicioMusa();
+    secuencia_inicio_musa_activa = false;
+    post_inicio_pendiente_musa = false;
+    limpiarClasesIntroPartidaMusa();
     limpiar_colddown()
+    limpiarEfectosVisualesDesventajaMusa();
     cambiar_jugadores(false);
     skill.style.display = "none";
     skill_cancel.style.display = "none";

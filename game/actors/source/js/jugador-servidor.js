@@ -14,6 +14,44 @@ let alineador1 = getEl("alineador1");
 let palabra = getEl("palabra");
 let definicion = getEl("definicion");
 let explicación = getEl("explicación");
+let metadatos_actor = getEl("metadatos_actor");
+const timeout_marcador_actor = new WeakMap();
+
+const formatearPuntosMarcadorActor = (valor) => {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return "0 palabras";
+    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
+        return `${texto} palabras`;
+    }
+    return texto;
+};
+
+function destacarMarcadorActorHit(elemento) {
+    if (!elemento) return;
+    elemento.classList.remove("puntos-hit");
+    void elemento.offsetWidth;
+    elemento.classList.add("puntos-hit");
+    const timeoutPrevio = timeout_marcador_actor.get(elemento);
+    if (timeoutPrevio) {
+        clearTimeout(timeoutPrevio);
+    }
+    const timeoutNuevo = setTimeout(() => {
+        if (elemento) {
+            elemento.classList.remove("puntos-hit");
+        }
+    }, 640);
+    timeout_marcador_actor.set(elemento, timeoutNuevo);
+}
+
+function actualizarPuntosMarcadorActor(valor, animar = true) {
+    if (!puntos1) return;
+    const previo = (puntos1.textContent || "").trim();
+    const siguiente = formatearPuntosMarcadorActor(valor);
+    puntos1.textContent = siguiente;
+    if (animar && siguiente !== previo) {
+        destacarMarcadorActorHit(puntos1);
+    }
+}
 
 
 
@@ -32,6 +70,9 @@ if (tiempo) {
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "inline-flex";
+const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
+const animacionesEntradaBarraVida = new WeakMap();
+let animacionEntradaVidaPendiente = false;
 
 function extraerSegundosTiempo(texto) {
     if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
@@ -49,12 +90,64 @@ function extraerSegundosTiempo(texto) {
     return (minutos * 60) + segundos;
 }
 
-function actualizarBarraVida(elemento, texto) {
+function setPendienteAnimacionEntradaBarraVida(valor) {
+    animacionEntradaVidaPendiente = Boolean(valor);
+}
+
+function cancelarAnimacionEntradaBarraVida(elemento) {
+    if (!elemento) return;
+    const frameId = animacionesEntradaBarraVida.get(elemento);
+    if (frameId) {
+        cancelAnimationFrame(frameId);
+        animacionesEntradaBarraVida.delete(elemento);
+    }
+}
+
+function aplicarEstadoBarraVida(elemento, porcentaje) {
+    const pct = Math.max(0, Math.min(100, Number(porcentaje) || 0));
+    const tono = Math.max(0, Math.min(120, pct * 1.2));
+    elemento.style.setProperty("--vida-pct", `${pct.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
+function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURACION_ANIMACION_ENTRADA_VIDA_MS) {
+    if (!elemento) return;
+    const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
+    cancelarAnimacionEntradaBarraVida(elemento);
+
+    if (objetivo <= 0 || duracionMs <= 0) {
+        aplicarEstadoBarraVida(elemento, objetivo);
+        return;
+    }
+
+    const inicio = performance.now();
+    const paso = (ahora) => {
+        const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+        const easing = 1 - Math.pow(1 - progreso, 3);
+        aplicarEstadoBarraVida(elemento, objetivo * easing);
+
+        if (progreso < 1) {
+            const siguiente = requestAnimationFrame(paso);
+            animacionesEntradaBarraVida.set(elemento, siguiente);
+            return;
+        }
+
+        animacionesEntradaBarraVida.delete(elemento);
+        aplicarEstadoBarraVida(elemento, objetivo);
+    };
+
+    const primerFrame = requestAnimationFrame(paso);
+    animacionesEntradaBarraVida.set(elemento, primerFrame);
+}
+
+function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
+    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
+        cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
@@ -62,10 +155,13 @@ function actualizarBarraVida(elemento, texto) {
     }
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
-    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
     elemento.style.display = DISPLAY_BARRA_VIDA;
-    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
-    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+    if (animarEntrada) {
+        animarEntradaBarraVida(elemento, porcentaje);
+        return;
+    }
+    cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, porcentaje);
 }
 
 let niveles_bloqueados = true;
@@ -444,6 +540,10 @@ var player = getParameterByName("player");
         elegir_ventaja = "elegir_ventaja_j1";
         enviar_palabra = 'enviar_palabra_j1'
         nombre1.style="color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
+        if (metadatos_actor) {
+            metadatos_actor.classList.remove("marcador-equipo-2");
+            metadatos_actor.classList.add("marcador-equipo-1");
+        }
 
     } else if (player == 2) {
         console.log(nombre1.value)
@@ -457,7 +557,11 @@ var player = getParameterByName("player");
         //nombre1.value="ESCRITXR 2";
         elegir_ventaja = "elegir_ventaja_j2";
         enviar_palabra = 'enviar_palabra_j2'
-        nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" 
+        nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
+        if (metadatos_actor) {
+            metadatos_actor.classList.remove("marcador-equipo-1");
+            metadatos_actor.classList.add("marcador-equipo-2");
+        }
     }
 
 actualizarColorEquipo();
@@ -485,7 +589,7 @@ socket.on('dar_nombre', (nombre) => {
 socket.on(texto_x, data => {
     console.log(data)
     texto1.innerHTML = data.text;
-    puntos1.innerHTML = data.points;
+    actualizarPuntosMarcadorActor(data.points);
     //cambiar_color_puntuación()
         //texto1.style.height = ""; // resetear la altura
     texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
@@ -514,6 +618,7 @@ pausa el cambio de palabra.
 */
 socket.on("count", data => {
     if(data.player == player){
+        const segundosCount = extraerSegundosTiempo(data.count);
         if (convertirASegundos(data.count) >= 20) {
             tiempo.style.color = "white";
         }
@@ -524,8 +629,14 @@ socket.on("count", data => {
             tiempo.style.color = "red";
         }
     tiempo.innerHTML = data.count;
-    actualizarBarraVida(tiempo, data.count);
+    const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosCount));
+    actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+    if (animarEntradaVida) {
+        animacionEntradaVidaPendiente = false;
+    }
     if (data.count == "¡Tiempo!") {
+        setPendienteAnimacionEntradaBarraVida(false);
+        cancelarAnimacionEntradaBarraVida(tiempo);
         confetti_aux();
 
         limpiezas();
@@ -549,6 +660,12 @@ socket.on("count", data => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    setPendienteAnimacionEntradaBarraVida(true);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    if (tiempo) {
+        tiempo.style.display = DISPLAY_BARRA_VIDA;
+        aplicarEstadoBarraVida(tiempo, 0);
+    }
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
     $('#countdown').remove();
     var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
@@ -585,11 +702,17 @@ socket.on('inicio', data => {
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         listener_cuenta_atras = setTimeout(function(){
             texto1.innerText = "";
-            puntos1.innerHTML = 0 + " palabras";
+            actualizarPuntosMarcadorActor(0, false);
             tiempo.innerHTML = "";
             actualizarBarraVida(tiempo, tiempo.innerHTML);
             
             limpiezas();
+            setPendienteAnimacionEntradaBarraVida(true);
+            cancelarAnimacionEntradaBarraVida(tiempo);
+            if (tiempo) {
+                tiempo.style.display = DISPLAY_BARRA_VIDA;
+                aplicarEstadoBarraVida(tiempo, 0);
+            }
             texto1.style.height = "";
             texto1.rows =  "3";
             animacion_modo();
@@ -601,6 +724,8 @@ socket.on('inicio', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
 
     // Recibe el nombre del jugador y lo coloca en su sitio.
     socket.on(nombre, data => {
@@ -608,7 +733,7 @@ socket.on('limpiar', () => {
     });
 
     texto1.innerText = "";
-    puntos1.innerHTML = 0 + " palabras";
+    actualizarPuntosMarcadorActor(0, false);
     tiempo.innerHTML = "";
     actualizarBarraVida(tiempo, tiempo.innerHTML);
 
@@ -682,6 +807,8 @@ function recibir_palabra_prohibida(data) {
     definicion.innerHTML = data.palabra_bonus[1];
 }
 function limpiezas(){
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timer);
 
@@ -689,7 +816,7 @@ function limpiezas(){
     explicación.innerHTML = "";
     definicion.innerHTML = "";
     tiempo.style.color = "white"
-    puntos1.style.color = "white";  
+    puntos1.style.removeProperty("color");
     votando = false;
 }
 
@@ -759,3 +886,4 @@ function stopConfetti() {
     isConfettiRunning = false; // Deshabilita la ejecución de confetti
     confetti.reset(); // Detiene la animación de confetti
   }
+

@@ -15,6 +15,7 @@ let objetivo1 = getEl("objetivo");
 let feedback1 = getEl("feedback1");
 let alineador1 = getEl("alineador1");
 let votos1 = getEl("votos");
+let musas1 = getEl("musas");
 let frase_final_j1 = getEl("frase_final_j1")
 let frase_final_j2 = getEl("frase_final_j2")
 
@@ -30,12 +31,48 @@ let display_modo = getEl("display_modo");
 let tema = getEl("temas");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
 let boton_vista_calentamiento = getEl("boton_vista_calentamiento");
+const timeout_marcador_control = new WeakMap();
 const estadoServidorDot = getEl("estado_servidor");
 const estadoServidorTexto = getEl("estado_servidor_texto");
 const estadoPlayer1Dot = getEl("estado_player_1");
 const estadoPlayer2Dot = getEl("estado_player_2");
 const estadoPlayer1Label = getEl("estado_player_1_label");
 const estadoPlayer2Label = getEl("estado_player_2_label");
+
+const formatearPuntosMarcadorControl = (valor) => {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return "0 palabras";
+    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
+        return `${texto} palabras`;
+    }
+    return texto;
+};
+
+const formatearMusasMarcadorControl = (valor) => {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return "0 musas";
+    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
+        return `${texto} musas`;
+    }
+    return texto;
+};
+
+function destacarMarcadorControlHit(elemento) {
+    if (!elemento) return;
+    elemento.classList.remove("puntos-hit");
+    void elemento.offsetWidth;
+    elemento.classList.add("puntos-hit");
+    const timeoutPrevio = timeout_marcador_control.get(elemento);
+    if (timeoutPrevio) {
+        clearTimeout(timeoutPrevio);
+    }
+    const timeoutNuevo = setTimeout(() => {
+        if (elemento) {
+            elemento.classList.remove("puntos-hit");
+        }
+    }, 640);
+    timeout_marcador_control.set(elemento, timeoutNuevo);
+}
 
 const STATUS_PING_INTERVAL_MS = 5000;
 const STATUS_STALE_MS = 15000;
@@ -135,6 +172,38 @@ let objetivo2 = getEl("objetivo1");
 let feedback2 = getEl("feedback2");
 let alineador2 = getEl("alineador2");
 let votos2 = getEl("votos1");
+let musas2 = getEl("musas1");
+
+function actualizarPuntosMarcadorControl(playerId, valor, animar = true) {
+    const esJ2 = Number(playerId) === 2;
+    const puntosEl = esJ2 ? puntos2 : puntos1;
+    if (!puntosEl) return;
+    const previo = (puntosEl.textContent || "").trim();
+    const siguiente = formatearPuntosMarcadorControl(valor);
+    puntosEl.textContent = siguiente;
+    if (animar && siguiente !== previo) {
+        destacarMarcadorControlHit(puntosEl);
+    }
+}
+
+function actualizarMusasMarcadorControl(playerId, valor, animar = true) {
+    const esJ2 = Number(playerId) === 2;
+    const musasEl = esJ2 ? musas2 : musas1;
+    if (!musasEl) return;
+    const previo = (musasEl.textContent || "").trim();
+    const siguiente = formatearMusasMarcadorControl(valor);
+    musasEl.textContent = siguiente;
+    if (animar && siguiente !== previo) {
+        destacarMarcadorControlHit(musasEl);
+    }
+}
+
+window.actualizarPuntosMarcadorControl = actualizarPuntosMarcadorControl;
+window.actualizarMusasMarcadorControl = actualizarMusasMarcadorControl;
+actualizarPuntosMarcadorControl(1, puntos1 ? puntos1.textContent : 0, false);
+actualizarPuntosMarcadorControl(2, puntos2 ? puntos2.textContent : 0, false);
+actualizarMusasMarcadorControl(1, musas1 ? musas1.textContent : 0, false);
+actualizarMusasMarcadorControl(2, musas2 ? musas2.textContent : 0, false);
 
 let puntuacion_final1 = getEl("puntuacion_final1");
 let puntuacion_final2 = getEl("puntuacion_final2");
@@ -425,6 +494,117 @@ window.resetResumenPartida = resetResumenPartida;
 window.registrarTiempoControl = registrarTiempoControl;
 resetResumenPartida();
 
+let intervalo_stats_live_control = null;
+const INTERVALO_STATS_LIVE_CONTROL_MS = 1200;
+
+function obtenerConteoPalabrasControl(playerId) {
+    const puntosEl = playerId === 2 ? puntos2 : puntos1;
+    const textoPuntos = puntosEl ? String(puntosEl.textContent || "") : "";
+    const match = textoPuntos.match(/\d+/);
+    if (match) {
+        return Number(match[0]) || 0;
+    }
+    const textoEl = playerId === 2 ? texto2 : texto1;
+    const textoPlano = textoEl ? extraerTextoPlanoDesdeHtmlControl(textoEl.innerHTML || "") : "";
+    if (!textoPlano) return 0;
+    return textoPlano.split(/\s+/).filter(Boolean).length;
+}
+
+function obtenerResumenVidaControl(serie = []) {
+    const valores = Array.isArray(serie) ? serie.map((p) => Number(p && p.v)).filter(Number.isFinite) : [];
+    if (!valores.length) {
+        return { actual: null, min: null, max: null, media: null };
+    }
+    const total = valores.reduce((acc, val) => acc + val, 0);
+    return {
+        actual: valores[valores.length - 1],
+        min: Math.min(...valores),
+        max: Math.max(...valores),
+        media: Math.round(total / valores.length)
+    };
+}
+
+function obtenerTopTeclasControl(playerId, limite = 6) {
+    const conteos = heatmapConteos[playerId];
+    if (!conteos || typeof conteos.forEach !== "function") return [];
+    const top = [];
+    conteos.forEach((count, code) => {
+        if (!Number.isFinite(count) || count <= 0) return;
+        top.push({ code, count: Number(count) });
+    });
+    top.sort((a, b) => b.count - a.count);
+    return top.slice(0, limite);
+}
+
+function obtenerResumenJugadorStatsControl(playerId) {
+    const serieVida = resumenPartida.tiempos[playerId] || [];
+    const tiempoTotalMs = serieVida.length
+        ? Number(serieVida[serieVida.length - 1].t) || 0
+        : (resumenPartida.inicio ? Math.max(0, Date.now() - resumenPartida.inicio) : 0);
+    const tiempoEscrituraMs = Math.max(0, Number(obtenerTiempoEscrituraMs()) || 0);
+    const topTeclas = obtenerTopTeclasControl(playerId);
+    const pulsacionesTotal = topTeclas.reduce((acc, item) => acc + item.count, 0);
+    const ritmoPpm = tiempoEscrituraMs > 0
+        ? Math.round(pulsacionesTotal / Math.max(tiempoEscrituraMs / 60000, 0.001))
+        : 0;
+    const textoEl = playerId === 2 ? texto2 : texto1;
+    const html = textoEl && typeof textoEl.innerHTML === "string" ? textoEl.innerHTML : "";
+    const palabrasBenditas = extraerPalabrasConClase(html, ["palabra-bendita", "palabra-bendita-musa"]);
+    const palabrasMalditasMap = resumenPartida.palabrasProhibidasUsadas[playerId];
+    const palabrasMalditas = palabrasMalditasMap && typeof palabrasMalditasMap.keys === "function"
+        ? Array.from(palabrasMalditasMap.keys()).map((valor) => String(valor).toUpperCase()).sort()
+        : [];
+
+    return {
+        id: playerId,
+        nombre: (playerId === 2 ? val_nombre2 : val_nombre1) || `ESCRITXR ${playerId}`,
+        palabrasTotal: obtenerConteoPalabrasControl(playerId),
+        pulsacionesTotal,
+        teclasDistintas: topTeclas.length,
+        topTeclas: topTeclas.map((item) => ({ ...item })),
+        ritmoPpm,
+        tiempoTotalMs,
+        tiempoEscrituraMs,
+        vida: obtenerResumenVidaControl(serieVida),
+        letrasBenditas: Array.from(resumenPartida.letrasBenditas).sort(),
+        letrasMalditas: Array.from(resumenPartida.letrasMalditas).sort(),
+        palabrasBenditas,
+        palabrasMalditas,
+        intentosLetraProhibida: Number(resumenPartida.intentosLetraProhibida[playerId] || 0),
+        intentosPalabraProhibida: Number(resumenPartida.intentosPalabraProhibida[playerId] || 0)
+    };
+}
+
+function construirPayloadStatsLiveControl() {
+    return {
+        ts: Date.now(),
+        modo_actual: String(modo_actual || ""),
+        players: {
+            1: obtenerResumenJugadorStatsControl(1),
+            2: obtenerResumenJugadorStatsControl(2)
+        }
+    };
+}
+
+function emitirStatsLiveControl() {
+    if (!socket || !socket.connected) return;
+    socket.emit("stats_live_actualizar", construirPayloadStatsLiveControl());
+}
+
+function iniciarStatsLiveControl() {
+    if (intervalo_stats_live_control) {
+        clearInterval(intervalo_stats_live_control);
+    }
+    emitirStatsLiveControl();
+    intervalo_stats_live_control = setInterval(emitirStatsLiveControl, INTERVALO_STATS_LIVE_CONTROL_MS);
+}
+
+function detenerStatsLiveControl() {
+    if (!intervalo_stats_live_control) return;
+    clearInterval(intervalo_stats_live_control);
+    intervalo_stats_live_control = null;
+}
+
 function resetearHeatmap() {
     [1, 2].forEach(jugadorId => {
         heatmapConteos[jugadorId].clear();
@@ -508,13 +688,20 @@ socket.on('connect', () => {
     if (typeof actualizarSolicitudCalentamientoControl === "function") {
         actualizarSolicitudCalentamientoControl({ tipo: "libre" });
     }
+    if (typeof actualizarModoVistaEspectadorControl === "function") {
+        actualizarModoVistaEspectadorControl({ modo: "partida" });
+    }
     socket.emit('envío_nombre1', val_nombre1);
     socket.emit('envío_nombre2', val_nombre2);
+    socket.emit('pedir_estado_banderas_musas');
+    socket.emit('pedir_vista_espectador_modo');
+    iniciarStatsLiveControl();
 });
 socket.on('disconnect', () => {
     setEstadoServidor(false);
     setEstadoPlayers(false, false);
     detenerStatusPing();
+    detenerStatsLiveControl();
 });
 
 socket.on('connect_error', () => {
@@ -540,27 +727,101 @@ socket.on('calentamiento_estado_espectador', (data) => {
         actualizarSolicitudCalentamientoControl(data || {});
     }
 });
-// Recibe los datos del jugador 1 y los coloca.
-socket.on('texto1', data => {
-    console.log(data.text)
-    console.log(data.texto_guardado)
-    texto1.innerHTML = data.text;
-    texto_guardado1 = data.texto_guardado;
-    puntos1.innerHTML = data.points;
-    texto1.style.height = (texto1.scrollHeight) + "px";
-    if (window.actualizarBotonesTeleprompterCarga) {
-        window.actualizarBotonesTeleprompterCarga();
+socket.on('vista_espectador_modo', (payload = {}) => {
+    if (typeof actualizarModoVistaEspectadorControl === "function") {
+        actualizarModoVistaEspectadorControl(payload);
+    }
+});
+socket.on('estado_banderas_musas', (data = {}) => {
+    if (typeof window.actualizarEstadoBanderasMusasControl === "function") {
+        window.actualizarEstadoBanderasMusasControl(data);
     }
 });
 
-socket.on('texto2', data => {
-    texto2.innerHTML = data.text;
-    texto_guardado2 = data.texto_guardado;
-    puntos2.innerHTML = data.points;
-    texto2.style.height = (texto2.scrollHeight) + "px";
+socket.on('actualizar_contador_musas', (contador_musas = {}) => {
+    actualizarMusasMarcadorControl(1, contador_musas.escritxr1);
+    actualizarMusasMarcadorControl(2, contador_musas.escritxr2);
+});
+
+function extraerTextoPlanoDesdeHtmlControl(html) {
+    if (typeof html !== "string" || !html) return "";
+    const contenedor = document.createElement("div");
+    contenedor.innerHTML = html;
+    return String(contenedor.textContent || contenedor.innerText || "").trim();
+}
+
+function convertirTextoPlanoAHtmlControl(textoPlano) {
+    const plano = String(textoPlano || "").trim();
+    if (!plano) return "";
+    return escapeHtml(plano).replace(/\n/g, "<br>");
+}
+
+function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
+    const esJ2 = playerId === 2;
+    const textoEl = esJ2 ? texto2 : texto1;
+    const puntosEl = esJ2 ? puntos2 : puntos1;
+    if (!textoEl || !data) return;
+
+    const htmlRemoto = typeof data.text === "string" ? data.text : "";
+    const guardadoRemoto = typeof data.texto_guardado === "string" ? data.texto_guardado : "";
+    const guardadoLocal = esJ2 ? texto_guardado2 : texto_guardado1;
+    const textoRemotoPlano = extraerTextoPlanoDesdeHtmlControl(htmlRemoto);
+    const hayTextoRemoto = textoRemotoPlano.length > 0;
+    const hayGuardadoRemoto = guardadoRemoto.trim().length > 0;
+    const jugadorTerminado = esJ2 ? Boolean(terminado1 || fin_j2) : Boolean(terminado || fin_j1);
+
+    if (hayTextoRemoto) {
+        textoEl.innerHTML = htmlRemoto;
+    } else if (hayGuardadoRemoto) {
+        textoEl.innerHTML = convertirTextoPlanoAHtmlControl(guardadoRemoto);
+    } else if (!jugadorTerminado) {
+        textoEl.innerHTML = htmlRemoto;
+    } else if (!extraerTextoPlanoDesdeHtmlControl(textoEl.innerHTML || "") && String(guardadoLocal || "").trim()) {
+        textoEl.innerHTML = convertirTextoPlanoAHtmlControl(guardadoLocal);
+    }
+
+    if (hayGuardadoRemoto) {
+        if (esJ2) {
+            texto_guardado2 = guardadoRemoto;
+        } else {
+            texto_guardado1 = guardadoRemoto;
+        }
+    } else if (hayTextoRemoto) {
+        const plano = extraerTextoPlanoDesdeHtmlControl(textoEl.innerHTML || "");
+        if (esJ2) {
+            texto_guardado2 = plano;
+        } else {
+            texto_guardado1 = plano;
+        }
+    } else if (!jugadorTerminado) {
+        if (esJ2) {
+            texto_guardado2 = "";
+        } else {
+            texto_guardado1 = "";
+        }
+    }
+
+    if (puntosEl && typeof data.points !== "undefined") {
+        actualizarPuntosMarcadorControl(playerId, data.points);
+    }
+    textoEl.style.height = (textoEl.scrollHeight) + "px";
+}
+
+// Recibe los datos del jugador 1 y los coloca.
+socket.on('texto1', data => {
+    actualizarTextoJugadorControlDesdeSocket(1, data);
     if (window.actualizarBotonesTeleprompterCarga) {
         window.actualizarBotonesTeleprompterCarga();
     }
+    emitirStatsLiveControl();
+});
+
+socket.on('texto2', data => {
+    actualizarTextoJugadorControlDesdeSocket(2, data);
+    if (window.actualizarBotonesTeleprompterCarga) {
+        window.actualizarBotonesTeleprompterCarga();
+    }
+    emitirStatsLiveControl();
 
 });
 
@@ -574,6 +835,7 @@ socket.on('temp_modos', data => {
     display_modo.textContent = data.modo_actual.toUpperCase();
     display_modo.style.color = COLORES_MODOS[data.modo_actual];
     registrarModoActual(data.modo_actual);
+    emitirStatsLiveControl();
     console.log(data.secondsPassed, "secondsPassed", data.modo_actual);
     console.log(COLORES_MODOS[data.modo_actual])
 });
@@ -581,6 +843,7 @@ socket.on('temp_modos', data => {
 socket.on('tecla_jugador_control', data => {
     if (!data || !data.player || !data.code) return;
     actualizarHeatmap(data.player, data.code, data.key);
+    emitirStatsLiveControl();
 });
 
 
@@ -649,6 +912,7 @@ socket.on("aumentar_tiempo_control", (data) => {
         console.log(data.secs);
         addSeconds1(data.secs);
     }
+    emitirStatsLiveControl();
 });
 
 socket.on('activar_modo', (data) => {
@@ -662,6 +926,7 @@ socket.on('activar_modo', (data) => {
         resumenPartida.letrasMalditas.add(String(data.letra_prohibida).toUpperCase());
     }
     MODOS[modo_actual]();
+    emitirStatsLiveControl();
 });
 
 socket.on('nueva letra', (letra) => {
@@ -694,6 +959,7 @@ socket.on('intento_prohibido', (data) => {
             mapa.set(valor, (mapa.get(valor) || 0) + 1);
         }
     }
+    emitirStatsLiveControl();
 });
 
 socket.on('resucitar_control', (data) => {
@@ -1512,18 +1778,37 @@ function descargar_textos(opciones = {}) {
         return y;
     }
 
+    function obtenerContenidoExportable(playerId) {
+        const esJ2 = playerId === 2;
+        const textoEl = esJ2 ? texto2 : texto1;
+        const guardado = esJ2 ? texto_guardado2 : texto_guardado1;
+        const htmlActual = textoEl && typeof textoEl.innerHTML === "string" ? textoEl.innerHTML : "";
+        const textoPlanoActual = textoEl && typeof textoEl.innerText === "string"
+            ? String(textoEl.innerText || "").trim()
+            : "";
+        const textoPlanoGuardado = typeof guardado === "string" ? guardado.trim() : "";
+        const textoPlano = textoPlanoActual || textoPlanoGuardado;
+        const html = extraerTextoPlanoDesdeHtmlControl(htmlActual).length > 0
+            ? htmlActual
+            : convertirTextoPlanoAHtmlControl(textoPlano);
+        return { html, textoPlano };
+    }
+
+    const contenidoJ1 = obtenerContenidoExportable(1);
+    const contenidoJ2 = obtenerContenidoExportable(2);
+
     agregarPaginaTexto();
 
     let yActual = dibujarNombreEnPagina(val_nombre1, margen, margen + 13, 25, accentColor, [255, 107, 107]);
 
-    const segmentos1 = construirSegmentosColor(texto1.innerHTML || "");
+    const segmentos1 = construirSegmentosColor(contenidoJ1.html || "");
     if (segmentos1.length) {
         yActual = agregarSegmentosEnPagina(doc, segmentos1, margen, yActual + 5, 15, agregarPaginaTexto, margen, anchoPagina, altoPagina);
     } else {
-        yActual = agregarTextoEnPagina(texto1.innerText, margen, yActual + 5, 15, [230, 230, 230]);
+        yActual = agregarTextoEnPagina(contenidoJ1.textoPlano, margen, yActual + 5, 15, [230, 230, 230]);
     }
 
-    const palabrasBenditas1 = extraerPalabrasConClase(texto1.innerHTML || "", ["palabra-bendita", "palabra-bendita-musa"]);
+    const palabrasBenditas1 = extraerPalabrasConClase(contenidoJ1.html || "", ["palabra-bendita", "palabra-bendita-musa"]);
     agregarPaginaEstadisticas(doc, 1, val_nombre1, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas1);
     emitirPdfMusas(1, val_nombre1, doc);
     // Descargar el primer PDF y TXT
@@ -1533,7 +1818,7 @@ function descargar_textos(opciones = {}) {
     // Combina el nombre del escritor y el contenido HTML
     console.log("ES ES FINAAAL", val_nombre1 + "\n" + texto_guardado1);
     if (descargar) {
-        downloadTxtFile(val_nombre1 + '.txt', val_nombre1 + "\n" + texto1.innerText);
+        downloadTxtFile(val_nombre1 + '.txt', val_nombre1 + "\n" + contenidoJ1.textoPlano);
     }
     // Preparar el segundo documento
     doc = new jsPDF();
@@ -1543,14 +1828,14 @@ function descargar_textos(opciones = {}) {
 
     yActual = dibujarNombreEnPagina(val_nombre2, margen, margen + 13, 25, accentColor, [70, 240, 255]);
 
-    const segmentos2 = construirSegmentosColor(texto2.innerHTML || "");
+    const segmentos2 = construirSegmentosColor(contenidoJ2.html || "");
     if (segmentos2.length) {
         yActual = agregarSegmentosEnPagina(doc, segmentos2, margen, yActual + 5, 15, agregarPaginaTexto, margen, anchoPagina, altoPagina);
     } else {
-        yActual = agregarTextoEnPagina(texto2.innerText, margen, yActual + 5, 15, [230, 230, 230]);
+        yActual = agregarTextoEnPagina(contenidoJ2.textoPlano, margen, yActual + 5, 15, [230, 230, 230]);
     }
 
-    const palabrasBenditas2 = extraerPalabrasConClase(texto2.innerHTML || "", ["palabra-bendita", "palabra-bendita-musa"]);
+    const palabrasBenditas2 = extraerPalabrasConClase(contenidoJ2.html || "", ["palabra-bendita", "palabra-bendita-musa"]);
     agregarPaginaEstadisticas(doc, 2, val_nombre2, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas2);
     emitirPdfMusas(2, val_nombre2, doc);
     // Descargar el segundo PDF y TXT
@@ -1559,7 +1844,7 @@ function descargar_textos(opciones = {}) {
     }
     // Combina el nombre del escritor y el contenido HTML
     if (descargar) {
-        downloadTxtFile(val_nombre2 + '.txt', val_nombre2 + "\n" + texto2.innerText);
+        downloadTxtFile(val_nombre2 + '.txt', val_nombre2 + "\n" + contenidoJ2.textoPlano);
     }
 }
 

@@ -250,6 +250,8 @@ const AUDIOS_CUENTA_ATRAS = [
     `${AUDIO_BASE_PATH}/5. PREPARADOS 5.mp3`
 ];
 const AUDIO_FINAL_PARTIDA = `${AUDIO_BASE_PATH}/CELEBRACION con explosiones.mp3`;
+const AUDIO_GANAR_TIEMPO = `${AUDIO_BASE_PATH}/GANAR 2 SEG.mp3`;
+const AUDIO_PERDER_TIEMPO = `${AUDIO_BASE_PATH}/PERDER 2 SEG.mp3`;
 const AUDIO_DESVENTAJA_TRUENO = `${AUDIO_BASE_PATH}/FX/6. TRUENO 1.mp3`;
 const AUDIO_DESVENTAJA_INVERSO = `${AUDIO_BASE_PATH}/FX/8. INVERSO LOOP.mp3`;
 const AUDIO_DESVENTAJA_BORROSO = `${AUDIO_BASE_PATH}/FX/7. REMOLINO PARA LOOP.mp3`;
@@ -1850,6 +1852,11 @@ function paddedFormat(num) {
 }
 
 function addSeconds(secs) {
+    if (secs > 0) {
+        reproducirSfx(AUDIO_GANAR_TIEMPO, 1);
+    } else if (secs < 0) {
+        reproducirSfx(AUDIO_PERDER_TIEMPO, 1);
+    }
     secondsRemaining += secs;
     if(secondsRemaining < 0){
         secondsRemaining = 0;

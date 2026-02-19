@@ -16,11 +16,16 @@ let pausado = false;
 let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
+let vista_espectador_modo = "partida";
 let temporizador_gigante_activo = false;
 let regalo_musas_enviado = false;
+let banderas_musas_activas = false;
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "flex";
+const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
+const animacionesEntradaBarraVida = new WeakMap();
+const animacionEntradaVidaPendiente = { 1: false, 2: false };
 
 function extraerSegundosTiempo(texto) {
     if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
@@ -38,12 +43,66 @@ function extraerSegundosTiempo(texto) {
     return (minutos * 60) + segundos;
 }
 
-function actualizarBarraVida(elemento, texto) {
+function setPendienteAnimacionEntradaBarraVida(playerId, valor) {
+    const id = Number(playerId);
+    if (id !== 1 && id !== 2) return;
+    animacionEntradaVidaPendiente[id] = Boolean(valor);
+}
+
+function cancelarAnimacionEntradaBarraVida(elemento) {
+    if (!elemento) return;
+    const frameId = animacionesEntradaBarraVida.get(elemento);
+    if (frameId) {
+        cancelAnimationFrame(frameId);
+        animacionesEntradaBarraVida.delete(elemento);
+    }
+}
+
+function aplicarEstadoBarraVida(elemento, porcentaje) {
+    const pct = Math.max(0, Math.min(100, Number(porcentaje) || 0));
+    const tono = Math.max(0, Math.min(120, pct * 1.2));
+    elemento.style.setProperty("--vida-pct", `${pct.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
+function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURACION_ANIMACION_ENTRADA_VIDA_MS) {
+    if (!elemento) return;
+    const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
+    cancelarAnimacionEntradaBarraVida(elemento);
+
+    if (objetivo <= 0 || duracionMs <= 0) {
+        aplicarEstadoBarraVida(elemento, objetivo);
+        return;
+    }
+
+    const inicio = performance.now();
+    const paso = (ahora) => {
+        const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+        const easing = 1 - Math.pow(1 - progreso, 3);
+        aplicarEstadoBarraVida(elemento, objetivo * easing);
+
+        if (progreso < 1) {
+            const siguiente = requestAnimationFrame(paso);
+            animacionesEntradaBarraVida.set(elemento, siguiente);
+            return;
+        }
+
+        animacionesEntradaBarraVida.delete(elemento);
+        aplicarEstadoBarraVida(elemento, objetivo);
+    };
+
+    const primerFrame = requestAnimationFrame(paso);
+    animacionesEntradaBarraVida.set(elemento, primerFrame);
+}
+
+function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
+    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
+        cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
@@ -51,10 +110,13 @@ function actualizarBarraVida(elemento, texto) {
     }
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
-    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
     elemento.style.display = DISPLAY_BARRA_VIDA;
-    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
-    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+    if (animarEntrada) {
+        animarEntradaBarraVida(elemento, porcentaje);
+        return;
+    }
+    cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, porcentaje);
 }
 
 
@@ -78,7 +140,11 @@ function startCountDown_p1(duration) {
         sec = parseInt(secondsRemaining % 60);
 
         tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
-        actualizarBarraVida(tiempo, tiempo.textContent);
+        const animarEntradaVidaJ1 = Boolean(animacionEntradaVidaPendiente[1]);
+        actualizarBarraVida(tiempo, tiempo.textContent, { animarEntrada: animarEntradaVidaJ1 });
+        if (animarEntradaVidaJ1) {
+            animacionEntradaVidaPendiente[1] = false;
+        }
         if (window.registrarTiempoControl) {
             window.registrarTiempoControl(1, secondsRemaining);
         }
@@ -110,7 +176,11 @@ function startCountDown_p2(duration) {
         sec1 = parseInt(secondsRemaining1 % 60);
 
         tiempo1.textContent = `${paddedFormat(min1)}:${paddedFormat(sec1)}`;
-        actualizarBarraVida(tiempo1, tiempo1.textContent);
+        const animarEntradaVidaJ2 = Boolean(animacionEntradaVidaPendiente[2]);
+        actualizarBarraVida(tiempo1, tiempo1.textContent, { animarEntrada: animarEntradaVidaJ2 });
+        if (animarEntradaVidaJ2) {
+            animacionEntradaVidaPendiente[2] = false;
+        }
         if (window.registrarTiempoControl) {
             window.registrarTiempoControl(2, secondsRemaining1);
         }
@@ -241,6 +311,18 @@ function temp() {
     DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
     
     listener_cuenta_atras = setTimeout(function(){
+        setPendienteAnimacionEntradaBarraVida(1, true);
+        setPendienteAnimacionEntradaBarraVida(2, true);
+        cancelarAnimacionEntradaBarraVida(tiempo);
+        cancelarAnimacionEntradaBarraVida(tiempo1);
+        if (tiempo) {
+            tiempo.style.display = DISPLAY_BARRA_VIDA;
+            aplicarEstadoBarraVida(tiempo, 0);
+        }
+        if (tiempo1) {
+            tiempo1.style.display = DISPLAY_BARRA_VIDA;
+            aplicarEstadoBarraVida(tiempo1, 0);
+        }
         console.log({count1, player:2})
         socket.emit('count', {count, player:1});
         socket.emit('count', {count : count1, player:2});
@@ -327,9 +409,27 @@ function limpiar() {
     //texto1.innerText = "";
     //texto2.innerText = "";
     juego_iniciado = false;
+    terminado = false;
+    terminado1 = false;
+    fin_j1 = false;
+    fin_j2 = false;
     regalo_musas_enviado = false;
-    document.getElementById("puntos").innerHTML = "0 palabras";
-    document.getElementById("puntos1").innerHTML = "0 palabras";
+    if (typeof window.actualizarPuntosMarcadorControl === "function") {
+        window.actualizarPuntosMarcadorControl(1, 0, false);
+        window.actualizarPuntosMarcadorControl(2, 0, false);
+    } else {
+        document.getElementById("puntos").innerHTML = "0 palabras";
+        document.getElementById("puntos1").innerHTML = "0 palabras";
+    }
+    if (typeof window.actualizarMusasMarcadorControl === "function") {
+        window.actualizarMusasMarcadorControl(1, 0, false);
+        window.actualizarMusasMarcadorControl(2, 0, false);
+    } else {
+        const musasJ1 = document.getElementById("musas");
+        const musasJ2 = document.getElementById("musas1");
+        if (musasJ1) musasJ1.innerHTML = "0 musas";
+        if (musasJ2) musasJ2.innerHTML = "0 musas";
+    }
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("texto").style.height = "40";
     document.getElementById("texto").style.height = (document.getElementById("texto").scrollHeight) + "px";
@@ -343,6 +443,10 @@ function limpiar() {
     clearInterval(listener_cuenta_atras);
     clearInterval(countInterval);
     clearInterval(countInterval1);
+    setPendienteAnimacionEntradaBarraVida(1, false);
+    setPendienteAnimacionEntradaBarraVida(2, false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    cancelarAnimacionEntradaBarraVida(tiempo1);
     clearTimeout(tempo_text_borroso);
     clearTimeout(TimeoutTiempoMuerto);
     temporizador_gigante_activo = false;
@@ -421,6 +525,40 @@ function actualizarBotonVistaCalentamiento(boton) {
     destino.dataset.activo = vista_calentamiento ? "1" : "0";
 }
 
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "stats", "nube_inspiracion"]);
+const normalizarModoVistaEspectador = (valor) => {
+    const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
+    return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "partida";
+};
+
+function actualizarBotonesVistaEspectadorControl() {
+    const botonStats = document.getElementById("boton_vista_stats");
+    const botonNube = document.getElementById("boton_vista_nube_inspiracion");
+    if (botonStats) {
+        const activo = vista_espectador_modo === "stats";
+        botonStats.dataset.active = activo ? "1" : "0";
+        botonStats.classList.toggle("is-active", activo);
+    }
+    if (botonNube) {
+        const activo = vista_espectador_modo === "nube_inspiracion";
+        botonNube.dataset.active = activo ? "1" : "0";
+        botonNube.classList.toggle("is-active", activo);
+    }
+}
+
+function cambiar_vista_espectador(modo) {
+    const destino = normalizarModoVistaEspectador(modo);
+    const siguiente = vista_espectador_modo === destino ? "partida" : destino;
+    vista_espectador_modo = siguiente;
+    actualizarBotonesVistaEspectadorControl();
+    socket.emit("cambiar_vista_espectador_modo", { modo: siguiente });
+}
+
+function actualizarModoVistaEspectadorControl(payload = {}) {
+    vista_espectador_modo = normalizarModoVistaEspectador(payload.modo);
+    actualizarBotonesVistaEspectadorControl();
+}
+
 const TIPOS_SOLICITUD_CALENTAMIENTO = new Set(["libre", "lugares", "acciones", "frase_final"]);
 const ETIQUETAS_SOLICITUD_CALENTAMIENTO = {
     libre: "LIBRE",
@@ -448,6 +586,25 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
     if (estado) {
         const etiqueta = ETIQUETAS_SOLICITUD_CALENTAMIENTO[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO.libre;
         estado.textContent = `CONSIGNA ACTUAL: ${etiqueta}`;
+    }
+
+    const flujo = document.getElementById("calentamiento_flujo_estado");
+    if (flujo && payload && payload.equipos) {
+        const equipos = payload && payload.equipos ? payload.equipos : {};
+        const formatear = (equipoData = {}) => {
+            const final = equipoData && equipoData.final && typeof equipoData.final.palabra === "string"
+                ? equipoData.final.palabra.trim()
+                : "";
+            if (final) {
+                const compacta = final.toUpperCase().slice(0, 18);
+                return `FINAL ${compacta}`;
+            }
+            if (equipoData && equipoData.bloqueado) return "BLOQUEADO";
+            return "ABIERTO";
+        };
+        const estadoJ1 = formatear(equipos[1] || {});
+        const estadoJ2 = formatear(equipos[2] || {});
+        flujo.textContent = `J1: ${estadoJ1} | J2: ${estadoJ2}`;
     }
 }
 
@@ -594,11 +751,26 @@ function actualizarTeleprompterUI() {
     }
 }
 
+function obtenerTextoJugadorParaRepresentacion(jugador) {
+    const esJ2 = jugador === 2;
+    const nodoTexto = esJ2
+        ? ((typeof texto2 !== "undefined" && texto2) ? texto2 : null)
+        : ((typeof texto1 !== "undefined" && texto1) ? texto1 : null);
+    const textoVisible = nodoTexto ? String(nodoTexto.innerText || "").trim() : "";
+    if (textoVisible) {
+        return textoVisible;
+    }
+    const respaldo = esJ2
+        ? (typeof texto_guardado2 === "string" ? texto_guardado2 : "")
+        : (typeof texto_guardado1 === "string" ? texto_guardado1 : "");
+    return String(respaldo || "").trim();
+}
+
 function actualizarBotonesTeleprompterCarga() {
     const btnJ1 = document.getElementById("teleprompter_cargar_j1");
     const btnJ2 = document.getElementById("teleprompter_cargar_j2");
-    const textoJ1 = (typeof texto1 !== "undefined" && texto1) ? (texto1.innerText || "").trim() : "";
-    const textoJ2 = (typeof texto2 !== "undefined" && texto2) ? (texto2.innerText || "").trim() : "";
+    const textoJ1 = obtenerTextoJugadorParaRepresentacion(1);
+    const textoJ2 = obtenerTextoJugadorParaRepresentacion(2);
     const habilJ1 = textoJ1.length > 0;
     const habilJ2 = textoJ2.length > 0;
     if (btnJ1) {
@@ -699,8 +871,7 @@ function toggleTeleprompter(forzarCerrar = false) {
 }
 
 function teleprompterCargarTexto(jugador) {
-    const textoFuente = jugador === 2 ? texto2 : texto1;
-    const texto = textoFuente ? textoFuente.innerText : "";
+    const texto = obtenerTextoJugadorParaRepresentacion(jugador === 2 ? 2 : 1);
     if (!texto || !texto.trim()) {
         if (typeof actualizarBotonesTeleprompterCarga === "function") {
             actualizarBotonesTeleprompterCarga();
@@ -1013,8 +1184,28 @@ function reiniciar_marcador_calentamiento() {
     socket.emit('reiniciar_marcador_calentamiento');
 }
 
+function actualizarBotonBanderasMusasControl(estado = banderas_musas_activas) {
+    banderas_musas_activas = Boolean(estado);
+    const boton = document.getElementById("boton_banderas_musas");
+    if (!boton) return;
+    boton.dataset.activo = banderas_musas_activas ? "1" : "0";
+    boton.textContent = banderas_musas_activas
+        ? "\uD83D\uDEA9 BANDERAS ACTIVADAS"
+        : "\uD83C\uDFF3\uFE0F BANDERAS DESACTIVADAS";
+}
+
+window.actualizarEstadoBanderasMusasControl = (payload = {}) => {
+    const activa = Boolean(payload && payload.activa);
+    actualizarBotonBanderasMusasControl(activa);
+};
+
 function activar_banderas_musas() {
-    socket.emit('activar_banderas_musas');
+    const siguienteEstado = !banderas_musas_activas;
+    actualizarBotonBanderasMusasControl(siguienteEstado);
+    socket.emit('activar_banderas_musas', {
+        activa: siguienteEstado,
+        bloquear_desactivar: siguienteEstado
+    });
 }
 
 function enviar_comentario() {
@@ -1229,25 +1420,29 @@ const extractData = (tableId, mapper) => {
 
 function final(player){
     if(player == 1){
+        setPendienteAnimacionEntradaBarraVida(1, false);
+        cancelarAnimacionEntradaBarraVida(tiempo);
         clearInterval(countInterval);
         tiempo.style.color = "white"
         tiempo.innerHTML = "¡Tiempo!";
         actualizarBarraVida(tiempo, tiempo.innerHTML);
         count = "¡Tiempo!";
-        texto_guardado1 = texto1.innerHTML;
+        texto_guardado1 = texto1.innerText;
         terminado = true;
         console.log("texto1", texto_guardado1)
         socket.emit('count', {count, player});
     }
     else{
+        setPendienteAnimacionEntradaBarraVida(2, false);
+        cancelarAnimacionEntradaBarraVida(tiempo1);
         clearInterval(countInterval1);
         tiempo1.style.color = "white"
         tiempo1.innerHTML = "¡Tiempo!";
         actualizarBarraVida(tiempo1, tiempo1.innerHTML);
         count1 = "¡Tiempo!";
         terminado1 = true;
+        texto_guardado2 = texto2.innerText;
         console.log("texto2", texto_guardado2)
-        texto_guardado2 = texto2.innerHTML;
         socket.emit('count', {count : count1, player:2});
     }
 

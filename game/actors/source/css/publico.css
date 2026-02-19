@@ -82,8 +82,142 @@ th{
     padding-right: 1vmax;
 }
 
-.puntos{
-    color:white
+.right.marcador-equipo {
+    --equipo-color: #46f0ff;
+    --equipo-color-2: #ff6b6b;
+    --equipo-texto: #9ff8ff;
+    width: min(420px, 88vw);
+    max-width: 100%;
+    margin: 0 auto 1rem;
+    padding: clamp(6px, 1vw, 10px) clamp(8px, 1.2vw, 12px);
+    border-radius: clamp(7px, 0.8vw, 10px);
+    border: 1px solid color-mix(in srgb, var(--equipo-color), transparent 44%);
+    background: linear-gradient(90deg, rgba(4, 22, 42, 0.72), rgba(6, 10, 18, 0.7) 50%, rgba(24, 8, 18, 0.72));
+    box-shadow: 0 0 0.65vw color-mix(in srgb, var(--equipo-color), transparent 82%);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.right.marcador-equipo::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: max(1px, 0.12vw);
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--equipo-color), transparent 14%) 0%,
+        color-mix(in srgb, var(--equipo-color), white 18%) 50%,
+        color-mix(in srgb, var(--equipo-color), transparent 14%) 100%
+    );
+    opacity: 0.96;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.metadatos-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+}
+
+.meta-item {
+    display: flex;
+    width: 100%;
+    min-height: clamp(42px, 5.2vw, 62px);
+    align-items: center;
+    justify-content: center;
+    gap: clamp(6px, 0.75vw, 10px);
+    border-radius: clamp(5px, 0.7vw, 9px);
+    border: max(1px, 0.1vw) solid color-mix(in srgb, var(--equipo-color), transparent 55%);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.28)),
+        rgba(8, 12, 22, 0.9);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 0 0.75em rgba(0, 0, 0, 0.55);
+    padding: clamp(6px, 0.75vw, 9px) clamp(8px, 1vw, 12px);
+    box-sizing: border-box;
+}
+
+/* Igual que escritoras: marcador sin recuadro interior. */
+#metadatos_actor .meta-item {
+    min-height: auto;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+    justify-content: flex-start;
+}
+
+.meta-icon {
+    font-size: clamp(15px, 1.6vw, 24px);
+    color: color-mix(in srgb, var(--equipo-color), white 22%);
+    filter: drop-shadow(0 0 0.35em rgba(255, 255, 255, 0.4));
+}
+
+.meta-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25em;
+}
+
+.meta-label {
+    color: color-mix(in srgb, var(--equipo-color), white 32%);
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: clamp(8px, 0.75vw, 12px);
+    opacity: 0.95;
+}
+
+.puntos {
+    font-family: "Retro-gaming";
+    color: var(--equipo-texto);
+    letter-spacing: 0.04em;
+    font-size: clamp(13px, 1.55vw, 22px);
+    display: inline-block;
+    transform-origin: center center;
+    will-change: transform, filter, text-shadow;
+    text-shadow:
+      -0.05em 0 color-mix(in srgb, var(--equipo-color-2), transparent 18%),
+      0 0 0.45em color-mix(in srgb, var(--equipo-color), transparent 52%);
+}
+
+.puntos-hit {
+    animation: puntosHit 640ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes puntosHit {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+        text-shadow: -0.05em 0 rgba(255, 72, 72, 0.9), 0 0 0.45em rgba(85, 224, 255, 0.35);
+    }
+    35% {
+        transform: scale(1.12);
+        filter: brightness(1.45);
+        text-shadow: -0.05em 0 rgba(255, 72, 72, 1), 0 0 0.85em rgba(85, 224, 255, 0.82);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+        text-shadow: -0.05em 0 rgba(255, 72, 72, 0.9), 0 0 0.45em rgba(85, 224, 255, 0.35);
+    }
+}
+
+.marcador-equipo-1 {
+    --equipo-color: #46f0ff;
+    --equipo-color-2: #ff6b6b;
+    --equipo-texto: #9ff8ff;
+}
+
+.marcador-equipo-2 {
+    --equipo-color: #ff6b6b;
+    --equipo-color-2: #46f0ff;
+    --equipo-texto: #ffadad;
 }
 
 .nivel{
@@ -103,21 +237,80 @@ th{
 .tiempo-vida {
     --vida-pct: 0%;
     --vida-color: #41d860;
+    --vida-frame: #7bdfff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: clamp(10rem, 32vw, 18rem);
     min-height: 1.6em;
     padding: 0.2em 0.7em;
-    border: 0.12em solid rgba(255, 255, 255, 0.8);
+    border: 0.12em solid var(--vida-frame);
     border-radius: 0.6em;
-    background: linear-gradient(90deg, var(--vida-color) var(--vida-pct), rgba(0, 0, 0, 0.35) var(--vida-pct));
-    box-shadow: inset 0 0 0.35em rgba(0, 0, 0, 0.65), 0 0 0.35em rgba(0, 0, 0, 0.5);
+    background:
+        linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--vida-color), white 28%) 0%,
+            color-mix(in srgb, var(--vida-color), white 6%) var(--vida-pct),
+            rgba(8, 15, 28, 0.84) var(--vida-pct),
+            rgba(3, 7, 15, 0.95) 100%
+        ),
+        repeating-linear-gradient(
+            125deg,
+            rgba(255, 255, 255, 0.14) 0 0.42em,
+            rgba(255, 255, 255, 0.02) 0.42em 0.84em
+        );
+    box-shadow:
+        inset 0 0 0.35em rgba(0, 0, 0, 0.7),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+        0 0 0.55em color-mix(in srgb, var(--vida-frame), transparent 52%),
+        0 0 1.15em color-mix(in srgb, var(--vida-color), transparent 70%);
     color: #fff;
-    text-shadow: 0.08em 0.08em 0 #000;
+    text-shadow:
+        0.07em 0.07em 0 #000,
+        0 0 0.22em color-mix(in srgb, var(--vida-color), transparent 40%);
     box-sizing: border-box;
     font-variant-numeric: tabular-nums;
     margin: 0.4em auto 0.6em;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    animation: vidaNeonPulse 1.7s ease-in-out infinite;
+}
+
+.tiempo-vida::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 24%, rgba(255, 255, 255, 0.3) 48%, transparent 72%);
+    transform: translateX(-130%);
+    animation: vidaSweep 2.6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes vidaNeonPulse {
+    0%,
+    100% {
+        filter: saturate(1) brightness(1);
+    }
+    50% {
+        filter: saturate(1.16) brightness(1.08);
+    }
+}
+
+@keyframes vidaSweep {
+    0%,
+    58%,
+    100% {
+        transform: translateX(-130%);
+        opacity: 0;
+    }
+    72% {
+        opacity: 0.66;
+    }
+    92% {
+        transform: translateX(130%);
+        opacity: 0.1;
+    }
 }
 
 .contenedor{
@@ -220,6 +413,11 @@ th{
     align-items: center;
     text-align: center;
     margin: 0 auto;    
+}
+
+/* En actores ocultamos los textos de nivel tipo "NIVEL ... / LETRA ...". */
+.jugador .info {
+    display: none !important;
 }
 
 .letra-verde {

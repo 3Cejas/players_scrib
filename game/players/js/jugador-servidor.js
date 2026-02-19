@@ -38,6 +38,131 @@ const escapeHtml = (valor) => String(valor)
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+const normalizarNombreMusaFeedback = (valor) => {
+    if (typeof valor !== "string") return "";
+    return valor.trim().slice(0, 18).toUpperCase();
+};
+
+const establecerContextoMusaDefinicion = (origen, musaNombre = "") => {
+    if (!definicion || !definicion.dataset) return;
+    definicion.dataset.origenMusa = origen || "";
+    definicion.dataset.musaNombre = normalizarNombreMusaFeedback(musaNombre);
+};
+
+const construirPayloadFeedbackInspiracion = (basePayload = {}) => {
+    const payload = { ...(basePayload || {}) };
+    const origenMusa = definicion?.dataset?.origenMusa
+        ? String(definicion.dataset.origenMusa).trim().toLowerCase()
+        : "";
+    if (origenMusa !== "musa" && origenMusa !== "musa_enemiga") {
+        return payload;
+    }
+    payload.origen_musa = origenMusa;
+    const musaNombre = definicion?.dataset?.musaNombre
+        ? normalizarNombreMusaFeedback(definicion.dataset.musaNombre)
+        : "";
+    if (musaNombre) {
+        payload.musa_nombre = musaNombre;
+    }
+
+    let palabraReferencia = "";
+    if (typeof palabra_actual !== "undefined") {
+        if (Array.isArray(palabra_actual)) {
+            const primera = palabra_actual.find((p) => typeof p === "string" && p.trim());
+            palabraReferencia = primera || "";
+        } else if (typeof palabra_actual === "string") {
+            palabraReferencia = palabra_actual;
+        }
+    }
+    palabraReferencia = String(palabraReferencia || "").trim().slice(0, 48);
+    if (palabraReferencia) {
+        payload.palabra = palabraReferencia;
+    }
+
+    return payload;
+};
+
+const DURACION_FULGOR_ESCRITOR_MS = 880;
+const CLASES_FULGOR_ESCRITOR = [
+    "escritor-borde-fulgor-musa",
+    "escritor-borde-fulgor-positivo",
+    "escritor-borde-fulgor-negativo"
+];
+let timeout_fulgor_escritor = null;
+
+function activarFulgorEscritor(claseObjetivo) {
+    if (!document.body) return;
+    CLASES_FULGOR_ESCRITOR.forEach((clase) => document.body.classList.remove(clase));
+    if (!claseObjetivo) return;
+    void document.body.offsetWidth;
+    document.body.classList.add(claseObjetivo);
+    if (timeout_fulgor_escritor) {
+        clearTimeout(timeout_fulgor_escritor);
+    }
+    timeout_fulgor_escritor = setTimeout(() => {
+        if (!document.body) return;
+        document.body.classList.remove(claseObjetivo);
+    }, DURACION_FULGOR_ESCRITOR_MS);
+}
+
+function activarFulgorInspiracionEscritora() {
+    activarFulgorEscritor("escritor-borde-fulgor-musa");
+}
+
+function activarFulgorCambioTiempoEscritora(secs) {
+    const delta = Number(secs);
+    if (!Number.isFinite(delta) || delta === 0) return;
+    activarFulgorEscritor(delta > 0 ? "escritor-borde-fulgor-positivo" : "escritor-borde-fulgor-negativo");
+}
+
+function emitirCambioTiempoEscritora(secs) {
+    const delta = Number(secs);
+    if (!Number.isFinite(delta) || delta === 0) return;
+    activarFulgorCambioTiempoEscritora(delta);
+    socket.emit("aumentar_tiempo", { secs: delta, player });
+}
+
+let ultimo_tiempo_contador_segundos = null;
+let ultimo_tiempo_contador_ms = 0;
+
+function extraerSegundosContador(valor) {
+    if (typeof valor !== "string") return null;
+    const texto = valor.trim();
+    const match = texto.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+    const minutos = Number(match[1]);
+    const segundos = Number(match[2]);
+    if (!Number.isFinite(minutos) || !Number.isFinite(segundos)) return null;
+    return (minutos * 60) + segundos;
+}
+
+function procesarFulgorCambioTiempoDesdeContador(countTexto) {
+    const actual = extraerSegundosContador(countTexto);
+    if (actual === null) {
+        ultimo_tiempo_contador_segundos = null;
+        ultimo_tiempo_contador_ms = 0;
+        return;
+    }
+    const ahora = Date.now();
+    if (ultimo_tiempo_contador_segundos !== null) {
+        let ticksEsperados = 1;
+        if (ultimo_tiempo_contador_ms > 0) {
+            ticksEsperados = Math.max(1, Math.round((ahora - ultimo_tiempo_contador_ms) / 1000));
+            // Evita lecturas extremas tras pausas largas o cambios de pantalla.
+            if (ticksEsperados > 6) {
+                ticksEsperados = 1;
+            }
+        }
+        const esperadoSinAjuste = ultimo_tiempo_contador_segundos - ticksEsperados;
+        const ajuste = actual - esperadoSinAjuste;
+        if (ajuste !== 0) {
+            activarFulgorCambioTiempoEscritora(ajuste);
+        }
+    }
+    ultimo_tiempo_contador_segundos = actual;
+    ultimo_tiempo_contador_ms = ahora;
+}
+
 const contenedor_corazones_escritor = (() => {
     let contenedor = getEl("corazones_escritor");
     if (!contenedor) {
@@ -81,6 +206,83 @@ const lanzarCorazonEscritor = (equipo) => {
     crearCorazonFlotante(equipo, x, y);
 };
 
+const feedback_flotante_escritora = (() => {
+    let root = getEl("feedback_tiempo_flotante_root");
+    if (!root) {
+        root = document.createElement("div");
+        root.id = "feedback_tiempo_flotante_root";
+        document.body.appendChild(root);
+    }
+    let columna = root.querySelector(".feedback-tiempo-columna.lado-1");
+    if (!columna) {
+        columna = document.createElement("div");
+        columna.className = "feedback-tiempo-columna lado-1";
+        root.appendChild(columna);
+    }
+    return columna;
+})();
+
+function obtenerTipoFeedbackFlotanteEscritora(texto = "", tipo = "") {
+    const tipoNorm = String(tipo || "").trim().toLowerCase();
+    if (tipoNorm === "ganar_tiempo" || tipoNorm === "letra_bendita" || tipoNorm === "inspiracion" || tipoNorm === "rae") {
+        return "positivo";
+    }
+    if (tipoNorm === "perder_tiempo" || tipoNorm === "letra_prohibida" || tipoNorm === "lista_prohibidas" || tipoNorm === "borrar") {
+        return "negativo";
+    }
+    const textoNorm = String(texto || "").trim().toLowerCase();
+    if (!textoNorm) return "neutro";
+    if (textoNorm.includes("desventaja") || textoNorm.includes("perder") || textoNorm.startsWith("-") || /\s-\d/.test(textoNorm)) {
+        return "negativo";
+    }
+    if (textoNorm.includes("ventaja") || textoNorm.includes("insp") || textoNorm.includes("ganar") || textoNorm.startsWith("+") || /\s\+\d/.test(textoNorm)) {
+        return "positivo";
+    }
+    return "neutro";
+}
+
+function mostrarFeedbackFlotanteEscritora(texto, opciones = {}) {
+    const contenido = String(texto ?? "").trim();
+    if (!contenido || !feedback_flotante_escritora) return;
+    const tipo = obtenerTipoFeedbackFlotanteEscritora(contenido, opciones.tipo);
+    const nodo = document.createElement("span");
+    nodo.className = `feedback-tiempo-float ${tipo}`;
+    nodo.textContent = contenido;
+
+    if (typeof opciones.color === "string" && opciones.color.trim()) {
+        nodo.style.setProperty("--feedback-float-color", opciones.color.trim());
+    }
+
+    const derivaX = (Math.random() * 18) - 9;
+    const subidaDeseada = -54 - (Math.random() * 18);
+    const rectContenedor = feedback_flotante_escritora.getBoundingClientRect();
+    const margenSuperior = 24;
+    const subidaMaxima = -Math.max(8, rectContenedor.top - margenSuperior);
+    const subidaY = Math.max(subidaDeseada, subidaMaxima);
+    const duracion = 1100 + Math.round(Math.random() * 200);
+    nodo.style.setProperty("--feedback-float-drift-x", `${derivaX.toFixed(1)}px`);
+    nodo.style.setProperty("--feedback-float-rise-y", `${subidaY.toFixed(1)}px`);
+    nodo.style.animationDuration = `${duracion}ms`;
+
+    feedback_flotante_escritora.appendChild(nodo);
+    nodo.addEventListener("animationend", () => nodo.remove(), { once: true });
+    while (feedback_flotante_escritora.childElementCount > 6) {
+        feedback_flotante_escritora.firstElementChild.remove();
+    }
+    if (feedback) {
+        feedback.innerHTML = "";
+    }
+}
+
+function limpiarFeedbackFlotanteEscritora() {
+    if (feedback_flotante_escritora) {
+        feedback_flotante_escritora.innerHTML = "";
+    }
+    if (feedback) {
+        feedback.innerHTML = "";
+    }
+}
+
 // COMPONENTES DEL JUGADOR 1
 let nombre;
 let texto = getEl("texto");
@@ -99,6 +301,262 @@ let temas = getEl("temas");
 let lightning = getEl("lightning");
 let feedback_tiempo = getEl("feedback_tiempo");
 let neon = getEl("neon");
+const explicacion = getEl("explicación") || getEl("explicacion");
+const timeout_marcador_escritora = new WeakMap();
+
+const CLASES_BARRA_NIVEL_ESCRITORA = [
+    "barra-nivel--bendita",
+    "barra-nivel--prohibida",
+    "barra-nivel--bonus",
+    "barra-nivel--prohibidas",
+    "barra-nivel--tertulia",
+    "barra-nivel--frase-final"
+];
+
+const CLASES_ESTILO_PALABRA_NIVEL_ESCRITORA = [
+    "palabra-letras--bendita",
+    "palabra-letras--prohibida",
+    "palabra-letras--bonus",
+    "palabra-letras--prohibidas",
+    "palabra-letras--tertulia",
+    "palabra-letras--frase-final"
+];
+
+const CLASES_ESTILO_DEFINICION_NIVEL_ESCRITORA = [
+    "definicion-letras--bendita",
+    "definicion-letras--prohibida",
+    "definicion-letras--bonus",
+    "definicion-letras--prohibidas",
+    "definicion-letras--tertulia",
+    "definicion-letras--frase-final"
+];
+
+let DURACION_NIVEL_MS_ESCRITORA = 60000;
+let inicio_nivel_ts_escritora = 0;
+let intervalo_progreso_nivel_escritora = null;
+
+function normalizarDuracionNivelMsEscritora(valor) {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero) || numero <= 0) return null;
+    if (numero <= 600) return Math.round(numero * 1000);
+    return Math.round(numero);
+}
+
+function actualizarDuracionNivelDesdeParametrosEscritora(parametros = {}) {
+    const candidatos = [
+        parametros.TIEMPO_MODOS,
+        parametros.DURACION_TIEMPO_MODOS,
+        parametros.TIEMPO_CAMBIO_MODOS,
+        parametros.DURACION_TIEMPO_MUERTO
+    ];
+    for (const candidato of candidatos) {
+        const ms = normalizarDuracionNivelMsEscritora(candidato);
+        if (ms) {
+            DURACION_NIVEL_MS_ESCRITORA = ms;
+            return;
+        }
+    }
+}
+
+function setProgresoNivelBarraEscritora(progreso) {
+    if (!palabra) return;
+    const valor = Number(progreso);
+    const pct = Math.max(0, Math.min(100, Number.isFinite(valor) ? valor : 0));
+    palabra.style.setProperty("--nivel-progress", `${pct.toFixed(2)}%`);
+}
+
+function detenerProgresoNivelBarraEscritora(reiniciar = false) {
+    if (intervalo_progreso_nivel_escritora) {
+        clearInterval(intervalo_progreso_nivel_escritora);
+        intervalo_progreso_nivel_escritora = null;
+    }
+    inicio_nivel_ts_escritora = 0;
+    if (reiniciar) {
+        setProgresoNivelBarraEscritora(0);
+    }
+}
+
+function tickProgresoNivelBarraEscritora() {
+    if (!inicio_nivel_ts_escritora || DURACION_NIVEL_MS_ESCRITORA <= 0) {
+        setProgresoNivelBarraEscritora(0);
+        return;
+    }
+    const transcurrido = Date.now() - inicio_nivel_ts_escritora;
+    const pct = Math.min(100, (transcurrido / DURACION_NIVEL_MS_ESCRITORA) * 100);
+    setProgresoNivelBarraEscritora(pct);
+    if (pct >= 100) {
+        detenerProgresoNivelBarraEscritora(false);
+    }
+}
+
+function iniciarProgresoNivelBarraEscritora() {
+    detenerProgresoNivelBarraEscritora(true);
+    inicio_nivel_ts_escritora = Date.now();
+    tickProgresoNivelBarraEscritora();
+    intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
+}
+
+function formatoLetraNivelEscritora(letra) {
+    const valor = String(letra || "").trim();
+    return valor ? valor.toUpperCase() : "-";
+}
+
+function renderLetraDestacadaNivelEscritora(letra) {
+    return `<span class="explicacion-letra-destacada">${escapeHtml(formatoLetraNivelEscritora(letra))}</span>`;
+}
+
+function construirExplicacionNivelLetraEscritora(tipo, letra) {
+    const letraDestacada = renderLetraDestacadaNivelEscritora(letra);
+    if (tipo === "bendita") {
+        return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+    }
+    if (tipo === "prohibida") {
+        return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
+    }
+    return "";
+}
+
+function setBarraNivelClaseEscritora(tipo = "") {
+    if (!palabra || !palabra.classList) return;
+    CLASES_BARRA_NIVEL_ESCRITORA.forEach((clase) => palabra.classList.remove(clase));
+    if (!tipo) return;
+    palabra.classList.add(`barra-nivel--${tipo}`);
+}
+
+function limpiarEstiloNivelesEscritora() {
+    if (palabra && palabra.classList) {
+        CLASES_ESTILO_PALABRA_NIVEL_ESCRITORA.forEach((clase) => palabra.classList.remove(clase));
+    }
+    if (definicion && definicion.classList) {
+        definicion.classList.remove("objetivo-nivel");
+        CLASES_ESTILO_DEFINICION_NIVEL_ESCRITORA.forEach((clase) => definicion.classList.remove(clase));
+    }
+}
+
+function aplicarEstiloNivelesEscritora(tipo = "") {
+    limpiarEstiloNivelesEscritora();
+    if (!tipo || !palabra || !palabra.classList || !definicion || !definicion.classList) return;
+    palabra.classList.add(`palabra-letras--${tipo}`);
+    definicion.classList.add(`definicion-letras--${tipo}`);
+}
+
+function extraerTextoPalabraEventoEscritora(data = {}) {
+    if (!data || typeof data !== "object") return "";
+    if (typeof data.palabras_var === "string" && data.palabras_var.trim()) {
+        return data.palabras_var.trim();
+    }
+    if (Array.isArray(data.palabras_var) && data.palabras_var.length) {
+        const primera = String(data.palabras_var[0] || "").trim();
+        if (primera) return primera;
+    }
+    if (Array.isArray(data.palabra_bonus) && data.palabra_bonus.length) {
+        const primeraBonus = String(data.palabra_bonus[0] || "").trim();
+        if (primeraBonus) return primeraBonus;
+    }
+    return "";
+}
+
+function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, tipo = "bendita") {
+    const base = String(palabraTexto || "").trim();
+    if (!base) return "";
+    const tiempoRaw = String(tiempoSegundos ?? "").trim();
+    if (!tiempoRaw) return escapeHtml(base);
+    const tiempoLimpio = tiempoRaw.replace(/^[+-]\s*/, "");
+    const esMaldita = tipo === "maldita";
+    const signo = esMaldita ? "-" : "+";
+    const claseTiempo = esMaldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
+    const tiempoTexto = `${signo}${tiempoLimpio} segs.`;
+    return `${escapeHtml(base)} <span class="palabra-tiempo ${claseTiempo}">${escapeHtml(tiempoTexto)}</span>`;
+}
+
+function normalizarTextoPlanoEscritora(texto) {
+    return String(texto ?? "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function construirBloqueObjetivoNivelEscritora(palabraTexto, opciones = {}) {
+    const base = String(palabraTexto || "").trim();
+    if (!base) return "";
+    const tipo = String(opciones.tipo || "bonus").trim().toLowerCase();
+    const esMaldita = tipo === "prohibidas";
+    const tiempoRaw = String(opciones.tiempoSegundos ?? "").trim();
+    const palabraHtml = tiempoRaw
+        ? construirTextoPalabraConTiempoEscritora(base, tiempoRaw, esMaldita ? "maldita" : "bendita")
+        : escapeHtml(base);
+    const descripcion = normalizarTextoPlanoEscritora(opciones.descripcion);
+    const descripcionHtml = descripcion
+        ? `<span class="objetivo-def objetivo-def--${tipo}">${escapeHtml(descripcion)}</span>`
+        : "";
+    return `<span class="objetivo-chip objetivo-chip--${tipo}">${palabraHtml}</span>${descripcionHtml}`;
+}
+
+function renderObjetivoNivelEscritora(palabraTexto, opciones = {}) {
+    if (!definicion) return false;
+    const bloque = construirBloqueObjetivoNivelEscritora(palabraTexto, opciones);
+    const tieneContenido = Boolean(String(bloque || "").trim());
+    if (definicion.classList) {
+        definicion.classList.toggle("objetivo-nivel", tieneContenido);
+    }
+    definicion.innerHTML = tieneContenido ? bloque : "";
+    return tieneContenido;
+}
+
+const formatearPuntosMarcador = (valor) => {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return "0 palabras";
+    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
+        return `${texto} palabras`;
+    }
+    return texto;
+};
+
+const formatearMusasMarcador = (valor) => {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return "0 musas";
+    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
+        return `${texto} musas`;
+    }
+    return texto;
+};
+
+function destacarMarcadorEscritoraHit(elemento) {
+    if (!elemento) return;
+    elemento.classList.remove("puntos-hit");
+    void elemento.offsetWidth;
+    elemento.classList.add("puntos-hit");
+    const timeoutPrevio = timeout_marcador_escritora.get(elemento);
+    if (timeoutPrevio) {
+        clearTimeout(timeoutPrevio);
+    }
+    const timeoutNuevo = setTimeout(() => {
+        if (elemento) {
+            elemento.classList.remove("puntos-hit");
+        }
+    }, 640);
+    timeout_marcador_escritora.set(elemento, timeoutNuevo);
+}
+
+function actualizarPuntosMarcador(valor, animar = true) {
+    if (!puntos) return;
+    const previo = (puntos.textContent || "").trim();
+    const siguiente = formatearPuntosMarcador(valor);
+    puntos.textContent = siguiente;
+    if (animar && siguiente !== previo) {
+        destacarMarcadorEscritoraHit(puntos);
+    }
+}
+
+function actualizarMusasMarcador(valor, animar = true) {
+    if (!musas) return;
+    const previo = (musas.textContent || "").trim();
+    const siguiente = formatearMusasMarcador(valor);
+    musas.textContent = siguiente;
+    if (animar && siguiente !== previo) {
+        destacarMarcadorEscritoraHit(musas);
+    }
+}
 
 if (tiempo) {
     tiempo.style.display = "none";
@@ -110,30 +568,244 @@ const calentamiento_cursor_escritor_1 = getEl("calentamiento_cursor_escritor_1")
 const calentamiento_cursor_escritor_2 = getEl("calentamiento_cursor_escritor_2");
 const calentamiento_cursor_label_escritor_1 = calentamiento_cursor_escritor_1 ? calentamiento_cursor_escritor_1.querySelector(".cursor-label") : null;
 const calentamiento_cursor_label_escritor_2 = calentamiento_cursor_escritor_2 ? calentamiento_cursor_escritor_2.querySelector(".cursor-label") : null;
+const calentamiento_consigna_escritor = getEl("calentamiento_consigna_escritor");
 const calentamiento_estado_escritor = getEl("calentamiento_estado_escritor");
+const calentamiento_bloquear_escritor = getEl("calentamiento_bloquear_escritor");
+const calentamiento_final_escritor = getEl("calentamiento_final_escritor");
 const calentamiento_overlay_ui_escritor = document.querySelector("#calentamiento_escritor .calentamiento-overlay-ui");
+const panel_atributos_escritora = getEl("atributos-container");
+const panel_total_atributos_escritora = getEl("total");
+const boton_inicio_atributos_escritora = getEl("btnInicio");
+const players_fit_root = getEl("players_fit_root");
 let vista_calentamiento_escritor = false;
 let calentamiento_palabras_escritor = [];
 let calentamiento_cursores_escritor = {
     1: { x: 50, y: 50, visible: false },
     2: { x: 50, y: 50, visible: false }
 };
+let calentamiento_estado_equipo_escritor = {
+    bloqueado: false,
+    seleccionadas: 0,
+    final: null
+};
+let calentamiento_ultimo_final_escritor = "";
+let timeout_error_calentamiento_escritor = null;
+let calentamiento_solicitud_escritor = "libre";
 const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
 const VENTANA_ANIMACION_PALABRA_MS = 600;
 const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
 const MAX_NOMBRE_CURSOR_CALENTAMIENTO = 26;
+const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set(["libre", "lugares", "acciones", "frase_final"]);
+const ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA = {
+    libre: "LIBRE",
+    lugares: "LUGARES",
+    acciones: "ACCIONES",
+    frase_final: "FRASE FINAL"
+};
 const nombres_cursores_calentamiento_escritor = {
     1: "ESCRITXR 1",
     2: "ESCRITXR 2"
 };
 let editable_previo_calentamiento = null;
 let ultimo_envio_cursor_calentamiento = 0;
+let observador_marcador_escritora = null;
+const CLASE_OCULTAR_MARCADOR_ESCRITORA = "ocultar-marcador-escritora";
+const CLASE_INTRO_PARTIDA_ESCRITORA = "partida-intro-escritora";
+const CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA = [
+    "partida-intro-stage-tiempo-escritora",
+    "partida-intro-stage-marcador-escritora",
+    "partida-intro-stage-info-escritora"
+];
+let secuencia_inicio_escritora_activa = false;
+let post_inicio_pendiente_escritora = null;
+let raf_ajuste_viewport_escritora = null;
+let resize_observer_fit_viewport_escritora = null;
+
+const resetAjusteViewportEscritora = () => {
+    if (!players_fit_root) return;
+    players_fit_root.style.removeProperty("transform");
+};
+
+const ajustarViewportEscritora = () => {
+    if (!players_fit_root) return;
+    if (vista_calentamiento_escritor) {
+        resetAjusteViewportEscritora();
+        return;
+    }
+
+    players_fit_root.style.transform = "none";
+    const viewportW = Math.max(window.innerWidth || 0, 1);
+    const viewportH = Math.max(window.innerHeight || 0, 1);
+    const anchoNatural = Math.max(Math.ceil(players_fit_root.scrollWidth || 0), 1);
+    const altoNatural = Math.max(Math.ceil(players_fit_root.scrollHeight || 0), 1);
+
+    let escala = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
+    if (!Number.isFinite(escala) || escala <= 0) {
+        escala = 1;
+    }
+
+    const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5);
+    players_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, 0, 0) scale(${escala.toFixed(4)})`;
+};
+
+const programarAjusteViewportEscritora = () => {
+    if (!players_fit_root) return;
+    if (raf_ajuste_viewport_escritora) return;
+    raf_ajuste_viewport_escritora = requestAnimationFrame(() => {
+        raf_ajuste_viewport_escritora = null;
+        ajustarViewportEscritora();
+    });
+};
+
+const iniciarAjusteViewportEscritora = () => {
+    if (document.documentElement) {
+        document.documentElement.style.overflow = "hidden";
+    }
+    if (document.body) {
+        document.body.style.overflow = "hidden";
+    }
+    if (!players_fit_root) return;
+    if (!resize_observer_fit_viewport_escritora && typeof ResizeObserver === "function") {
+        resize_observer_fit_viewport_escritora = new ResizeObserver(() => {
+            programarAjusteViewportEscritora();
+        });
+        resize_observer_fit_viewport_escritora.observe(players_fit_root);
+    }
+    programarAjusteViewportEscritora();
+    setTimeout(programarAjusteViewportEscritora, 120);
+};
+
+const esElementoVisible = (elemento) => {
+    if (!elemento || !document.body || !document.body.contains(elemento)) return false;
+    const estilos = window.getComputedStyle(elemento);
+    if (!estilos || estilos.display === "none" || estilos.visibility === "hidden") return false;
+    if (Number.parseFloat(estilos.opacity || "1") <= 0.01) return false;
+    return elemento.getClientRects().length > 0;
+};
+
+const actualizarOcultacionMarcadorEscritora = () => {
+    if (!document.body) return;
+    const seleccionAtributosActiva =
+        esElementoVisible(panel_atributos_escritora) ||
+        esElementoVisible(panel_total_atributos_escritora) ||
+        esElementoVisible(boton_inicio_atributos_escritora);
+    const ocultarMarcador = Boolean(vista_calentamiento_escritor || seleccionAtributosActiva);
+    document.body.classList.toggle(CLASE_OCULTAR_MARCADOR_ESCRITORA, ocultarMarcador);
+    programarAjusteViewportEscritora();
+};
+
+function limpiarClasesIntroPartidaEscritora() {
+    if (!document.body) return;
+    document.body.classList.remove(CLASE_INTRO_PARTIDA_ESCRITORA);
+    CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA.forEach((clase) => {
+        document.body.classList.remove(clase);
+    });
+}
+
+function revelarEtapaIntroPartidaEscritora(etapa) {
+    if (!document.body || !Number.isFinite(etapa)) return;
+    const total = CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA.length;
+    const limite = Math.max(0, Math.min(total, Math.floor(etapa)));
+    for (let i = 0; i < total; i += 1) {
+        if (i < limite) {
+            document.body.classList.add(CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA[i]);
+        }
+    }
+}
+
+function iniciarSecuenciaIntroPartidaEscritora() {
+    if (!document.body) return;
+    limpiarClasesIntroPartidaEscritora();
+    document.body.classList.add(CLASE_INTRO_PARTIDA_ESCRITORA);
+    secuencia_inicio_escritora_activa = true;
+    post_inicio_pendiente_escritora = null;
+    revelarEtapaIntroPartidaEscritora(0);
+}
+
+function hayCountdownInicioActivoEscritora() {
+    return Boolean(
+        secuencia_inicio_escritora_activa ||
+        listener_cuenta_atras ||
+        timer ||
+        preparados_timer ||
+        document.getElementById("countdown")
+    );
+}
+
+function aplicarPostInicioEscritora(borrar_texto) {
+    limpiarCountdownInicioEscritora();
+    limpiarClasesIntroPartidaEscritora();
+    secuencia_inicio_escritora_activa = false;
+    post_inicio_pendiente_escritora = null;
+    post_inicio(borrar_texto);
+}
+
+function finalizarSecuenciaIntroPartidaEscritora() {
+    secuencia_inicio_escritora_activa = false;
+    revelarEtapaIntroPartidaEscritora(CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA.length);
+    if (post_inicio_pendiente_escritora && !hayCountdownInicioActivoEscritora()) {
+        const payloadPendiente = post_inicio_pendiente_escritora;
+        post_inicio_pendiente_escritora = null;
+        aplicarPostInicioEscritora(payloadPendiente && payloadPendiente.borrar_texto);
+    }
+}
+
+const iniciarObservadorMarcadorEscritora = () => {
+    if (observador_marcador_escritora || typeof MutationObserver !== "function") return;
+    const objetivos = [
+        panel_atributos_escritora,
+        panel_total_atributos_escritora,
+        boton_inicio_atributos_escritora,
+        document.body
+    ].filter(Boolean);
+    if (!objetivos.length) return;
+    observador_marcador_escritora = new MutationObserver(() => {
+        actualizarOcultacionMarcadorEscritora();
+    });
+    objetivos.forEach((objetivo) => {
+        observador_marcador_escritora.observe(objetivo, {
+            attributes: true,
+            attributeFilter: ["style", "class", "hidden", "aria-hidden"]
+        });
+    });
+    window.addEventListener("resize", actualizarOcultacionMarcadorEscritora);
+};
 const limitarPct = (valor, min, max) => Math.max(min, Math.min(max, valor));
 const normalizarNombreCursorCalentamientoEscritor = (valor, fallback) => {
     const texto = typeof valor === "string" ? valor.trim() : "";
     if (!texto) return fallback;
     return texto.slice(0, MAX_NOMBRE_CURSOR_CALENTAMIENTO);
+};
+const normalizarFinalCalentamientoEscritor = (entrada) => {
+    if (!entrada || typeof entrada !== "object") return null;
+    if (typeof entrada.id !== "string" || !entrada.id) return null;
+    if (typeof entrada.palabra !== "string" || !entrada.palabra.trim()) return null;
+    return {
+        id: entrada.id,
+        palabra: entrada.palabra.trim(),
+        ts: Number(entrada.ts) || 0,
+        animTs: Number(entrada.animTs) || 0
+    };
+};
+const normalizarSolicitudCalentamientoVista = (valor) => {
+    const tipo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
+    return TIPOS_SOLICITUD_CALENTAMIENTO_VISTA.has(tipo) ? tipo : "libre";
+};
+const actualizarConsignaCalentamientoEscritor = (solicitud) => {
+    if (!calentamiento_consigna_escritor) return;
+    const tipo = normalizarSolicitudCalentamientoVista(solicitud);
+    calentamiento_consigna_escritor.textContent = `CONSIGNA: ${ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || "LIBRE"}`;
+    calentamiento_consigna_escritor.classList.remove("tipo-libre", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
+    calentamiento_consigna_escritor.classList.add(`tipo-${tipo}`);
+    if (calentamiento_solicitud_escritor && calentamiento_solicitud_escritor !== tipo) {
+        calentamiento_consigna_escritor.classList.remove("consigna-cambio");
+        void calentamiento_consigna_escritor.offsetWidth;
+        calentamiento_consigna_escritor.classList.add("consigna-cambio");
+    } else {
+        calentamiento_consigna_escritor.classList.remove("consigna-cambio");
+    }
+    calentamiento_solicitud_escritor = tipo;
 };
 const actualizarEtiquetasCursorCalentamientoEscritor = () => {
     if (calentamiento_cursor_label_escritor_1) {
@@ -186,6 +858,7 @@ const renderizarPalabrasCalentamientoEscritor = () => {
         const nodo = document.createElement("span");
         const clases = [`calentamiento-palabra`, `equipo-${entrada.equipo}`];
         if (entrada.destacada) clases.push("is-highlighted");
+        if (entrada.esFinal) clases.push("is-final-word");
         if (entrada.destacada && entrada.animOnTs && (ahora - entrada.animOnTs) < VENTANA_ANIMACION_PALABRA_MS) {
             clases.push("is-highlight-enter");
         }
@@ -217,9 +890,14 @@ const renderizarPalabrasCalentamientoEscritor = () => {
 const normalizarPalabrasCalentamientoEscritor = (equipos = {}) => {
     const lista = [];
     const minY = obtenerMinYPalabrasCalentamientoEscritor();
+    const finales = {
+        1: normalizarFinalCalentamientoEscritor(equipos[1] && equipos[1].final),
+        2: normalizarFinalCalentamientoEscritor(equipos[2] && equipos[2].final)
+    };
     [1, 2].forEach((equipo) => {
         const data = equipos[equipo] || {};
         const palabras = Array.isArray(data.palabras) ? data.palabras : [];
+        const finalId = finales[equipo] ? finales[equipo].id : "";
         palabras.forEach((entrada) => {
             if (!entrada || typeof entrada.palabra !== "string") return;
             lista.push({
@@ -232,7 +910,8 @@ const normalizarPalabrasCalentamientoEscritor = (equipos = {}) => {
                 ts: Number(entrada.ts) || 0,
                 animOnTs: Number(entrada.animOnTs) || 0,
                 animOffTs: Number(entrada.animOffTs) || 0,
-                duracionMs: Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS
+                duracionMs: Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS,
+                esFinal: Boolean(finalId && finalId === entrada.id)
             });
         });
     });
@@ -263,6 +942,77 @@ const actualizarVistaCalentamientoEscritor = (activa) => {
     if (!vista_calentamiento_escritor) {
         socket.emit("calentamiento_cursor", { visible: false });
     }
+    actualizarOcultacionMarcadorEscritora();
+};
+
+iniciarObservadorMarcadorEscritora();
+actualizarOcultacionMarcadorEscritora();
+iniciarAjusteViewportEscritora();
+
+const actualizarBotonBloquearCalentamientoEscritor = (activo, bloqueado, seleccionadas) => {
+    if (!calentamiento_bloquear_escritor) return;
+    const cantidad = Number.isFinite(seleccionadas) ? Math.max(0, Math.floor(seleccionadas)) : 0;
+    if (!activo) {
+        calentamiento_bloquear_escritor.disabled = true;
+        calentamiento_bloquear_escritor.textContent = "SELECCIONA PALABRAS";
+        return;
+    }
+    if (bloqueado) {
+        calentamiento_bloquear_escritor.disabled = true;
+        calentamiento_bloquear_escritor.textContent = "CONSIGNA CERRADA";
+        return;
+    }
+    if (cantidad > 0) {
+        calentamiento_bloquear_escritor.disabled = false;
+        calentamiento_bloquear_escritor.textContent = `CERRAR CONSIGNA (${cantidad})`;
+        return;
+    }
+    calentamiento_bloquear_escritor.disabled = true;
+    calentamiento_bloquear_escritor.textContent = "SELECCIONA PALABRAS";
+};
+
+const actualizarFinalCalentamientoEscritor = (finalPalabra) => {
+    if (!calentamiento_final_escritor) return;
+    const finalValido = normalizarFinalCalentamientoEscritor(finalPalabra);
+    if (!finalValido) {
+        calentamiento_final_escritor.textContent = "";
+        calentamiento_final_escritor.classList.remove("activo", "reveal");
+        calentamiento_ultimo_final_escritor = "";
+        return;
+    }
+    calentamiento_final_escritor.textContent = `PALABRA FINAL: ${finalValido.palabra.toUpperCase()}`;
+    calentamiento_final_escritor.classList.add("activo");
+    if (calentamiento_ultimo_final_escritor !== finalValido.id) {
+        calentamiento_final_escritor.classList.remove("reveal");
+        void calentamiento_final_escritor.offsetWidth;
+        calentamiento_final_escritor.classList.add("reveal");
+    }
+    calentamiento_ultimo_final_escritor = finalValido.id;
+};
+
+const mostrarErrorCalentamientoEscritor = (mensaje) => {
+    const textoError = typeof mensaje === "string" && mensaje.trim()
+        ? mensaje.trim()
+        : "No se pudo completar la accion.";
+    if (calentamiento_estado_escritor) {
+        calentamiento_estado_escritor.textContent = textoError;
+        calentamiento_estado_escritor.classList.add("calentamiento-error");
+    }
+    if (calentamiento_bloquear_escritor) {
+        calentamiento_bloquear_escritor.classList.add("is-error");
+    }
+    if (timeout_error_calentamiento_escritor) {
+        clearTimeout(timeout_error_calentamiento_escritor);
+    }
+    timeout_error_calentamiento_escritor = setTimeout(() => {
+        if (calentamiento_estado_escritor) {
+            calentamiento_estado_escritor.classList.remove("calentamiento-error");
+        }
+        if (calentamiento_bloquear_escritor) {
+            calentamiento_bloquear_escritor.classList.remove("is-error");
+        }
+        timeout_error_calentamiento_escritor = null;
+    }, 1200);
 };
 
 const actualizarCalentamientoEscritor = (data = {}) => {
@@ -270,13 +1020,40 @@ const actualizarCalentamientoEscritor = (data = {}) => {
         actualizarVistaCalentamientoEscritor(data.vista);
     }
     const activo = Boolean(data.activo && data.vista);
+    actualizarConsignaCalentamientoEscritor(data.solicitud);
+    const equipos = data.equipos || {};
+    const equipoEscritor = playerNumber === 1 || playerNumber === 2 ? playerNumber : null;
+    const dataEquipo = equipoEscritor !== null ? (equipos[equipoEscritor] || {}) : {};
+    const bloqueado = Boolean(dataEquipo && dataEquipo.bloqueado);
+    const seleccionadas = Number.isFinite(Number(dataEquipo && dataEquipo.seleccionadas))
+        ? Number(dataEquipo.seleccionadas)
+        : 0;
+    const finalEquipo = normalizarFinalCalentamientoEscritor(dataEquipo && dataEquipo.final);
+    calentamiento_estado_equipo_escritor = {
+        bloqueado,
+        seleccionadas: Math.max(0, Math.floor(seleccionadas)),
+        final: finalEquipo
+    };
     if (calentamiento_estado_escritor) {
-        const etiquetaEquipo = playerNumber === 1 ? "azules" : (playerNumber === 2 ? "rojas" : "de tu equipo");
-        calentamiento_estado_escritor.textContent = activo
-            ? `Palabras sincronizadas. Click para iluminar/desiluminar las ${etiquetaEquipo}.`
-            : "Esperando vista de calentamiento.";
+        calentamiento_estado_escritor.classList.remove("calentamiento-error");
     }
-    calentamiento_palabras_escritor = normalizarPalabrasCalentamientoEscritor(data.equipos || {});
+    if (calentamiento_bloquear_escritor) {
+        calentamiento_bloquear_escritor.classList.remove("is-error");
+    }
+    if (calentamiento_estado_escritor) {
+        if (!activo) {
+            calentamiento_estado_escritor.textContent = "Esperando vista de calentamiento.";
+        } else if (!bloqueado) {
+            calentamiento_estado_escritor.textContent = "Selecciona palabras de tu equipo y pulsa CERRAR CONSIGNA.";
+        } else if (!finalEquipo) {
+            calentamiento_estado_escritor.textContent = "Consigna cerrada. Elige una palabra final de las seleccionadas.";
+        } else {
+            calentamiento_estado_escritor.textContent = `Palabra final fijada: ${finalEquipo.palabra}.`;
+        }
+    }
+    actualizarBotonBloquearCalentamientoEscritor(activo, bloqueado, seleccionadas);
+    actualizarFinalCalentamientoEscritor(finalEquipo);
+    calentamiento_palabras_escritor = normalizarPalabrasCalentamientoEscritor(equipos);
     if (data.cursores && typeof data.cursores === "object") {
         calentamiento_cursores_escritor = {
             1: { ...(calentamiento_cursores_escritor[1] || {}), ...(data.cursores[1] || {}) },
@@ -322,14 +1099,25 @@ window.addEventListener("blur", () => {
 });
 
 window.addEventListener("resize", () => {
-    if (!vista_calentamiento_escritor) return;
-    renderizarPalabrasCalentamientoEscritor();
+    if (vista_calentamiento_escritor) {
+        renderizarPalabrasCalentamientoEscritor();
+    }
+    programarAjusteViewportEscritora();
 });
 
 window.addEventListener("beforeunload", () => {
     if (!socket) return;
     socket.emit("calentamiento_cursor", { visible: false });
 });
+
+if (calentamiento_bloquear_escritor) {
+    calentamiento_bloquear_escritor.addEventListener("click", () => {
+        if (!socket || !socket.connected) return;
+        const estado = calentamiento_estado_equipo_escritor || {};
+        if (estado.bloqueado) return;
+        socket.emit("calentamiento_bloquear_equipo");
+    });
+}
 
 const CLASE_PALABRA_BENDITA_LOCAL =
     typeof CLASE_PALABRA_BENDITA !== "undefined" ? CLASE_PALABRA_BENDITA : "palabra-bendita";
@@ -869,6 +1657,9 @@ function actualizarProgresoFraseFinal() {
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "inline-flex";
+const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
+const animacionesEntradaBarraVida = new WeakMap();
+let animacionEntradaVidaPendiente = false;
 
 function extraerSegundosTiempo(texto) {
     if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
@@ -886,12 +1677,64 @@ function extraerSegundosTiempo(texto) {
     return (minutos * 60) + segundos;
 }
 
-function actualizarBarraVida(elemento, texto) {
+function setPendienteAnimacionEntradaBarraVida(valor) {
+    animacionEntradaVidaPendiente = Boolean(valor);
+}
+
+function cancelarAnimacionEntradaBarraVida(elemento) {
+    if (!elemento) return;
+    const frameId = animacionesEntradaBarraVida.get(elemento);
+    if (frameId) {
+        cancelAnimationFrame(frameId);
+        animacionesEntradaBarraVida.delete(elemento);
+    }
+}
+
+function aplicarEstadoBarraVida(elemento, porcentaje) {
+    const pct = Math.max(0, Math.min(100, Number(porcentaje) || 0));
+    const tono = Math.max(0, Math.min(120, pct * 1.2));
+    elemento.style.setProperty("--vida-pct", `${pct.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
+function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURACION_ANIMACION_ENTRADA_VIDA_MS) {
+    if (!elemento) return;
+    const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
+    cancelarAnimacionEntradaBarraVida(elemento);
+
+    if (objetivo <= 0 || duracionMs <= 0) {
+        aplicarEstadoBarraVida(elemento, objetivo);
+        return;
+    }
+
+    const inicio = performance.now();
+    const paso = (ahora) => {
+        const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+        const easing = 1 - Math.pow(1 - progreso, 3);
+        aplicarEstadoBarraVida(elemento, objetivo * easing);
+
+        if (progreso < 1) {
+            const siguiente = requestAnimationFrame(paso);
+            animacionesEntradaBarraVida.set(elemento, siguiente);
+            return;
+        }
+
+        animacionesEntradaBarraVida.delete(elemento);
+        aplicarEstadoBarraVida(elemento, objetivo);
+    };
+
+    const primerFrame = requestAnimationFrame(paso);
+    animacionesEntradaBarraVida.set(elemento, primerFrame);
+}
+
+function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
+    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
+        cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
@@ -899,10 +1742,13 @@ function actualizarBarraVida(elemento, texto) {
     }
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
-    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
     elemento.style.display = DISPLAY_BARRA_VIDA;
-    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
-    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+    if (animarEntrada) {
+        animarEntradaBarraVida(elemento, porcentaje);
+        return;
+    }
+    cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, porcentaje);
 }
 
 let contenedor = getEl("contenedor")
@@ -914,6 +1760,22 @@ let tempo_text_inverso;
 let listener_cuenta_atras = null;
 let timer = null;
 let sub_timer = null;
+let preparados_timer = null;
+let fallback_cuenta_atras_timer = null;
+
+function limpiarCountdownInicioEscritora() {
+    clearTimeout(listener_cuenta_atras);
+    clearInterval(timer);
+    clearTimeout(sub_timer);
+    clearTimeout(preparados_timer);
+    clearTimeout(fallback_cuenta_atras_timer);
+    listener_cuenta_atras = null;
+    timer = null;
+    sub_timer = null;
+    preparados_timer = null;
+    fallback_cuenta_atras_timer = null;
+    $('#countdown').remove();
+}
 
 // Variables de los modos.
 let modo_actual = "";
@@ -950,9 +1812,16 @@ let frase_final;
 let listener_modo;
 let listener_modo1;
 let timeoutID_menu;
+let resurreccion_obligatoria_activa = false;
+let esperando_resurreccion_tiempo = false;
+let permitir_fin_por_decision_local = false;
+let partida_global_finalizada = false;
 let listener_modo_psico;
 let activado_psico = false;
 let temp_text_inverso_activado = false;
+
+function setInterfazInversaGlobal(_estado) {
+}
 
 let TIEMPO_MODIFICADOR;
 const mainTitle = document.querySelector('.main-title');
@@ -984,7 +1853,12 @@ if (player == 1) {
     enviar_ventaja = 'enviar_ventaja_j1';
     elegir_ventaja = "elegir_ventaja_j1";
     nombre.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
-    metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
+    if (metadatos) {
+        metadatos.style.removeProperty("color");
+        metadatos.style.removeProperty("text-shadow");
+        metadatos.classList.remove("marcador-equipo-2");
+        metadatos.classList.add("marcador-equipo-1");
+    }
 
 } else if (player == 2) {
     enviar_putada_de_jx = 'enviar_putada_de_j1';
@@ -1001,7 +1875,12 @@ if (player == 1) {
     enviar_ventaja = 'enviar_ventaja_j2';
     elegir_ventaja = "elegir_ventaja_j2";
     nombre.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
-    metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
+    if (metadatos) {
+        metadatos.style.removeProperty("color");
+        metadatos.style.removeProperty("text-shadow");
+        metadatos.classList.remove("marcador-equipo-1");
+        metadatos.classList.add("marcador-equipo-2");
+    }
 
 }
 actualizarEtiquetasCursorCalentamientoEscritor();
@@ -1222,8 +2101,10 @@ const PUTADAS = {
         }
         sendText();
         temp_text_inverso_activado = true;
+        setInterfazInversaGlobal(true);
         tempo_text_inverso = setTimeout(function () {
             temp_text_inverso_activado = false;
+            setInterfazInversaGlobal(false);
             desactivar_borrar = false;
 
             texto.contentEditable= "false";
@@ -1281,10 +2162,14 @@ const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     "palabras bonus": function (data) {
-        palabra.style.backgroundColor = "yellow";
-        explicación.style.color = "yellow";
-        definicion.style.fontSize = "1vw";
-        explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("bonus");
+        if (explicacion) {
+            explicacion.style.color = "yellow";
+            explicacion.innerHTML = "SUMA TIEMPO CON PALABRAS BONUS";
+        }
+        palabra.innerHTML = "NIVEL PALABRAS BONUS";
+        definicion.innerHTML = "";
         socket.emit("nueva_palabra", player);
         socket.on(enviar_palabra, data => {
           console.log(data)
@@ -1294,29 +2179,33 @@ const MODOS = {
 
     //Recibe y activa el modo letra prohibida.
     "letra prohibida": function (data) {
-        definicion.style.fontSize = "1.5vw";
-        palabra.style.backgroundColor = "red";
-        explicación.style.color = "red";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("prohibida");
         letra_prohibida = data.letra_prohibida;
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_prohibida(e) };
         texto.addEventListener("keydown", listener_modo);
-        explicación.innerHTML = "NIVEL LETRA MALDITA";
-        palabra.innerHTML = "LETRA MALDITA: " + letra_prohibida;
+        if (explicacion) {
+            explicacion.style.color = "red";
+            explicacion.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
+        }
+        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
     },
 
     "letra bendita": function (data) {
-        definicion.style.fontSize = "1.5vw";
-        palabra.style.backgroundColor= "lime";
-        explicación.style.color = "lime";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("bendita");
         letra_bendita = data.letra_bendita;
         //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
         listener_modo = function (e) { modo_letra_bendita(e) };
         texto.addEventListener("keydown", listener_modo, true);
-        explicación.innerHTML = "NIVEL LETRA BENDITA";
-        palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
+        if (explicacion) {
+            explicacion.style.color = "lime";
+            explicacion.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
+        }
+        palabra.innerHTML = "NIVEL LETRA BENDITA";
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
     },
@@ -1345,20 +2234,27 @@ const MODOS = {
     },
 
     'tertulia': function (socket) {
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("tertulia");
         es_pausa = true;
         tiempo_restante = TIEMPO_MODIFICADOR - (new Date().getTime() - tiempo_inicial.getTime());
         pausa();
-        explicación.style.color = "blue";
-        explicación.innerHTML = "NIVEL TERTULIA";
-        palabra.innerHTML = "";
+        if (explicacion) {
+            explicacion.style.color = "#86d0ff";
+            explicacion.innerHTML = "DIALOGA CON TUS MUSAS";
+        }
+        palabra.innerHTML = "NIVEL TERTULIA";
         definicion.innerHTML = "";
     },
 
     'palabras prohibidas': function (data) {
-        palabra.style.backgroundColor = "pink";
-        explicación.style.color = "pink";
-        explicación.innerHTML = "NIVEL PALABRAS MALDITAS";
-        palabra.innerHTML = "";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("prohibidas");
+        if (explicacion) {
+            explicacion.style.color = "pink";
+            explicacion.innerHTML = "EVITA LAS PALABRAS PROHIBIDAS";
+        }
+        palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_prohibida", player);
         socket.on(enviar_palabra, data => {
@@ -1368,20 +2264,26 @@ const MODOS = {
     },
 
     'ortografía perfecta': function (data) {
-        palabra.style.backgroundColor = "orange";
-        explicación.style.color = "orange";
-        explicación.innerHTML = "MODO ORTOGRAFÍA PERFECTA";
-        palabra.innerHTML = "";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("frase-final");
+        if (explicacion) {
+            explicacion.style.color = "orange";
+            explicacion.innerHTML = "MODO ORTOGRAFÍA PERFECTA";
+        }
+        palabra.innerHTML = "NIVEL ORTOGRAFÍA PERFECTA";
         definicion.innerHTML = "";
-        modo_ortografía_perfecta();
+        modo_ortografia_perfecta();
 
     },
 
     'frase final': function (socket) {
-        palabra.style.backgroundColor = "orange";
-        explicación.style.color = "orange";
-        explicación.innerHTML = "NIVEL FRASE FINAL";
-        palabra.innerHTML = "";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("frase-final");
+        if (explicacion) {
+            explicacion.style.color = "orange";
+            explicacion.innerHTML = "ULTIMA RONDA";
+        }
+        palabra.innerHTML = "NIVEL FRASE FINAL";
         definicion.innerHTML = "";
         function_frase_final();
     },
@@ -1481,16 +2383,16 @@ socket.on('calentamiento_cursor', (payload = {}) => {
     actualizarCursorCalentamientoEscritor(payload);
 });
 
+socket.on('calentamiento_error_escritor', (data = {}) => {
+    mostrarErrorCalentamientoEscritor(data && data.mensaje ? data.mensaje : "No se pudo completar la accion.");
+});
+
 //activar los sockets extratextuales.
 activar_sockets_extratextuales();
 socket.on('actualizar_contador_musas', contador_musas => {
     console.log("actualizar_contador_musas")
-    if(player == 1){
-    musas.innerHTML = contador_musas.escritxr1 + " musas";
-    }
-    else{
-        musas.innerHTML = contador_musas.escritxr2 + " musas";
-    }
+    const totalMusas = player == 1 ? contador_musas.escritxr1 : contador_musas.escritxr2;
+    actualizarMusasMarcador(totalMusas);
 });
 
 // Recibe los datos del jugador 1 y los coloca.
@@ -1510,24 +2412,34 @@ pausa el cambio de palabra.
 */
 socket.on("count", (data) => {
     if(data.player == player){
-    if (convertirASegundos(data.count) >= 20) {
-        tiempo.style.color = "white";
-    }
-    if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
-        console.log(convertirASegundos(data.count))
+    procesarFulgorCambioTiempoDesdeContador(data.count);
+    const segundosCount = extraerSegundosContador(data.count);
+    if (segundosCount !== null && segundosCount >= 10 && activado_psico) {
         LIMPIEZAS["psicodélico"]("");
-        tiempo.style.color = "yellow";
     }
-    if (10 > convertirASegundos(data.count) && activado_psico == false) {
-        MODOS["psicodélico"](data, socket);
-        tiempo.style.color = "red";
+    if (segundosCount !== null) {
+        if (segundosCount >= 20) {
+            tiempo.style.color = "white";
+        } else if (segundosCount >= 10) {
+            tiempo.style.color = "yellow";
+        } else if (activado_psico == false) {
+            MODOS["psicodélico"](data, socket);
+            tiempo.style.color = "red";
+        } else {
+            tiempo.style.color = "red";
+        }
     }
 
     tiempo.innerHTML = data.count;
-    actualizarBarraVida(tiempo, data.count);
+    const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosCount));
+    actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+    if (animarEntradaVida) {
+        animacionEntradaVidaPendiente = false;
+    }
     if (data.count == "¡Tiempo!") {
         limpiar_bloqueo_putada();
         limpiar_teclado_lento();
+        setInterfazInversaGlobal(false);
         console.log(putada_actual, "esto no doebería ocurrir")
         if (putada_actual == "🙃"){
             console.log("NO PUEDOOOOO ESTO NO DEBERÍA OCURRRIR")
@@ -1538,6 +2450,7 @@ socket.on("count", (data) => {
             });
             clearTimeout(tempo_text_inverso);
             temp_text_inverso_activado = false;
+            setInterfazInversaGlobal(false);
             procesarTexto();
         }
         sendText();
@@ -1546,9 +2459,7 @@ socket.on("count", (data) => {
         tiempo.style.color = "white";
             pararEscritura = true;
             stopConfetti();
-            clearTimeout(listener_cuenta_atras);
-            clearInterval(timer);  
-            clearTimeout(sub_timer);
+            limpiarCountdownInicioEscritora();
             document.body.classList.remove("bg");
             document.body.classList.remove("rain");
             lightning.classList.remove("lightning");
@@ -1556,6 +2467,7 @@ socket.on("count", (data) => {
             console.log(temp_text_inverso_activado)
             if(temp_text_inverso_activado == true){
                 temp_text_inverso_activado = false;
+                setInterfazInversaGlobal(false);
                 clearTimeout(tempo_text_inverso);
                 procesarTexto();
             }
@@ -1605,7 +2517,7 @@ socket.on("count", (data) => {
             desactivar_borrar = true;
             console.log(puntos)
             
-            feedback.innerHTML = "";
+            limpiarFeedbackFlotanteEscritora();
             
             definicion.innerHTML = "";
             explicación.innerHTML = "";
@@ -1631,22 +2543,29 @@ socket.on("count", (data) => {
         console.log("MIERDA PUTA")
         console.log(texto.innerHTML)
         console.log(temp_text_inverso_activado)
-        if (!terminado) {
-        if (puedeResucitarSegunEstado()) {
+        if (!terminado && !partida_global_finalizada && puedeResucitarSegunEstado()) {
             iniciarMenu();
-        } else {
+        } else if (!terminado) {
+            esperando_resurreccion_tiempo = false;
             btnNo.click();
-        }
         }
         }
     }
 });
+
+socket.on("aumentar_tiempo_control", (data = {}) => {
+    if (Number(data.player) !== Number(player)) return;
+    activarFulgorCambioTiempoEscritora(data.secs);
+});
   
 function resucitar(){
     terminado = false;
+    esperando_resurreccion_tiempo = false;
+    permitir_fin_por_decision_local = false;
     desactivar_borrar = false;
     limpiar_bloqueo_putada();
     limpiar_teclado_lento();
+    ocultarUiResucitar({ emitirEstado: false });
     document.body.classList.remove('modo-resucitar');
     logo.style.display = "none"; 
     neon.style.display = "none"; 
@@ -1657,15 +2576,14 @@ function resucitar(){
 
     pararEscritura = true;
     stopConfetti();
-    clearTimeout(listener_cuenta_atras);
-    clearInterval(timer);  
-    clearTimeout(sub_timer);
+    limpiarCountdownInicioEscritora();
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
     if(temp_text_inverso_activado == true){
         clearTimeout(tempo_text_inverso);
         temp_text_inverso_activado = false;
+        setInterfazInversaGlobal(false);
         procesarTexto();
     }
 
@@ -1722,6 +2640,18 @@ function resucitar(){
 
 // Inicia el juego.
 socket.on("inicio", (data) => {
+    setPendienteAnimacionEntradaBarraVida(true);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerProgresoNivelBarraEscritora(true);
+    partida_global_finalizada = false;
+    setInterfazInversaGlobal(false);
+    permitir_fin_por_decision_local = false;
+    esperando_resurreccion_tiempo = false;
+    ocultarUiResucitar({ emitirEstado: false });
+    limpiarCountdownInicioEscritora();
+    post_inicio_pendiente_escritora = null;
+    ultimo_tiempo_contador_segundos = null;
+    ultimo_tiempo_contador_ms = 0;
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         animateCSS(".contenedor", "pulse");
     // Comprueba que data.parametros existe y que el campo solicitado no es null/undefined
@@ -1737,7 +2667,14 @@ socket.on("inicio", (data) => {
     console.log("FRASE FINAL", data.parametros)
     console.log("FRASE FINAL", frase_final)
     limpieza();
+    setPendienteAnimacionEntradaBarraVida(true);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    if (tiempo) {
+        tiempo.style.display = DISPLAY_BARRA_VIDA;
+        aplicarEstadoBarraVida(tiempo, 0);
+    }
     TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR + ajustarDestreza(data.parametros.TIEMPO_MODIFICADOR, atributos['destreza']);
+    actualizarDuracionNivelDesdeParametrosEscritora(data && data.parametros ? data.parametros : {});
     console.log(atributos);
     ajustarRapidez(rapidez_borrado, rapidez_inicio_borrado, atributos['agilidad'])
     secs_palabras = ajustarFuerza(SECS_BASE, atributos['fuerza'])
@@ -1749,25 +2686,35 @@ socket.on("inicio", (data) => {
     texto.contentEditable= "false";
     tiempo.innerHTML = "";
     tiempo.style.display = "";
+    setProgresoNivelBarraEscritora(0);
+    iniciarSecuenciaIntroPartidaEscritora();
 
-    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
+    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás.
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
+    var preparados = $('<span id="countdown">&iquest;PREPARADOS?</span>');
     preparados.appendTo($('.container'));
-    setTimeout(() => {
+    preparados_timer = setTimeout(() => {
+        preparados_timer = null;
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        revelarEtapaIntroPartidaEscritora(1);
     }, 20);
 
-    setTimeout(() => {
+    listener_cuenta_atras = setTimeout(() => {
+    listener_cuenta_atras = null;
     var counter = 3;
-  
+
     timer = setInterval(function() {
-      
+
       $('#countdown').remove();
-      
-      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
+
+      var countdown = $('<span id="countdown">'+(counter === 0 ? '&iexcl;ESCRIBE!' : counter)+'</span>');
       countdown.appendTo($('.container'));
-  
+      if (counter === 3) {
+        revelarEtapaIntroPartidaEscritora(2);
+      } else if (counter === 2) {
+        revelarEtapaIntroPartidaEscritora(3);
+      }
+
       sub_timer = setTimeout(() => {
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
@@ -1775,23 +2722,40 @@ socket.on("inicio", (data) => {
           $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
         }
       }, 20);
-  
+
       counter--;
-  
+
       if (counter <= -1) {
         clearInterval(timer);
+        timer = null;
         setTimeout(() => {
+          clearTimeout(fallback_cuenta_atras_timer);
+          fallback_cuenta_atras_timer = null;
           $('#countdown').remove();
+          finalizarSecuenciaIntroPartidaEscritora();
         }, 1000);
       }
     }, 1000);
 }, 1000);
+
+    // Failsafe: evita que el contador se quede bloqueado en pantalla.
+    fallback_cuenta_atras_timer = setTimeout(() => {
+        limpiarCountdownInicioEscritora();
+        finalizarSecuenciaIntroPartidaEscritora();
+    }, 7000);
 });
 });
 
 socket.on("post-inicio", (data) => {
-    console.log(data.borrar_texto, "borrar texto")
-    post_inicio(data.borrar_texto);
+    if (hayCountdownInicioActivoEscritora()) {
+        post_inicio_pendiente_escritora = data || {};
+        if (!listener_cuenta_atras && !timer && !secuencia_inicio_escritora_activa) {
+            finalizarSecuenciaIntroPartidaEscritora();
+        }
+        return;
+    }
+    console.log(data && data.borrar_texto, "borrar texto");
+    aplicarPostInicioEscritora(data && data.borrar_texto);
 });    
 
 socket.on("borrar_texto_guardado", () => {
@@ -1800,7 +2764,7 @@ socket.on("borrar_texto_guardado", () => {
 });
 
 function post_inicio(borrar_texto){
-    clearTimeout(timer);
+    limpiarCountdownInicioEscritora();
         if (borrar_texto == false) {
             texto.innerText = texto_guardado.trim();
 
@@ -1829,6 +2793,8 @@ function post_inicio(borrar_texto){
 
 // Resetea el tablero de juego.
 socket.on("limpiar", (borrar) => {
+    partida_global_finalizada = true;
+    detenerProgresoNivelBarraEscritora(true);
     // Recibe el nombre del jugador 2 y lo coloca en su sitio.
     socket.on("nombre" + player, (data) => {
         nombre.value = data;
@@ -1836,9 +2802,16 @@ socket.on("limpiar", (borrar) => {
     if(borrar == false){
         texto_guardado = texto.innerText;
     }
+    limpiarCountdownInicioEscritora();
+    limpiarClasesIntroPartidaEscritora();
+    secuencia_inicio_escritora_activa = false;
+    post_inicio_pendiente_escritora = null;
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
 
     limpieza();
     document.body.classList.remove('partida-activa');
+    actualizarOcultacionMarcadorEscritora();
 
     stopConfetti()
     
@@ -1871,19 +2844,40 @@ socket.on("limpiar", (borrar) => {
 });
 
 socket.on("activar_modo", (data) => {
+    const modoSiguiente = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
+    if (estaResurreccionActiva()) {
+        // Si llega un modo nuevo, forzamos salida del estado de resurrección
+        // para no bloquear la petición/recepción de palabras.
+        esperando_resurreccion_tiempo = false;
+        ocultarUiResucitar({ emitirEstado: false });
+    }
     animacion_modo();
+    limpiarEstiloNivelesEscritora();
+    setBarraNivelClaseEscritora("");
+    setProgresoNivelBarraEscritora(0);
     palabra.innerHTML = "";
-    explicación.innerHTML = "";
+    if (explicacion) {
+        explicacion.innerHTML = "";
+    }
     LIMPIEZAS[modo_actual](data);
     rapidez_borrado -= 100;
     rapidez_inicio_borrado -= 100;
-    modo_actual = data.modo_actual;
+    modo_actual = modoSiguiente;
+    actualizarDuracionNivelDesdeParametrosEscritora(data || {});
     if(terminado == false){
     MODOS[modo_actual](data, socket);
+    }
+    if (modo_actual) {
+        iniciarProgresoNivelBarraEscritora();
+    } else {
+        detenerProgresoNivelBarraEscritora(true);
     }
 });
 
 socket.on(enviar_palabra, data => {
+    if (estaResurreccionActiva()) {
+        return;
+    }
     if(modo_actual == "palabras bonus"){
         recibir_palabra(data);
     }
@@ -1899,8 +2893,15 @@ socket.on('pausar_js', data => {
 socket.on('fin', data => {
     console.log(data)
     if(player == data){
+        const finEnFraseFinal = modo_actual === "frase final";
+        if (!permitir_fin_por_decision_local && !partida_global_finalizada && !finEnFraseFinal && (esperando_resurreccion_tiempo || puedeResucitarSegunEstado())) {
+            return;
+        }
+        esperando_resurreccion_tiempo = false;
+        ocultarUiResucitar();
         console.log("confetti_auxAAXACASCASCASCAS")
         final();
+        permitir_fin_por_decision_local = false;
     }
 });
 
@@ -1910,6 +2911,9 @@ socket.on('reanudar_js', data => {
 });
 
 socket.on(inspirar, data => {
+    if (estaResurreccionActiva()) {
+        return;
+    }
     const palabra = typeof data === "string" ? data : data?.palabra;
     const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
     if (palabra != "") {
@@ -1920,7 +2924,7 @@ socket.on(inspirar, data => {
         "<span style='color: white;'>Podrías escribir la palabra «</span>" +
         "<span style='color: lime; text-decoration: underline;'>" + escapeHtml(palabra) +
         "</span><span style='color: white;'>»</span>");
-        definicion.dataset.origenMusa = "musa";
+        establecerContextoMusaDefinicion("musa", musa_nombre);
         animateCSS(".definicion", "flash");
         prepararDeteccionMultipalabraAsignada();
         asignada = true;
@@ -1931,14 +2935,12 @@ socket.on(inspirar, data => {
 });
 
 socket.on(enviar_ventaja, ventaja => {
-    feedback.innerHTML = ventaja + " <span style='color: red;'>¡DESVENTAJA!</span>";
+    mostrarFeedbackFlotanteEscritora(`${ventaja} DESVENTAJA!`, {
+        tipo: "negativo",
+        color: color_negativo
+    });
     console.log(ventaja);
     PUTADAS[ventaja]();
-    animateCSS(".feedback1", "flash").then((message) => {
-        setTimeout(function () {
-            feedback.innerHTML = "";
-        }, 2000);
-    }); 
 });
 
 socket.on("enviar_repentizado", repentizado => {
@@ -1955,6 +2957,7 @@ socket.on("nueva letra", letra => {
     palabra_actual = []
     limpiarDeteccionMultipalabraAsignada();
     definicion.innerHTML = "";
+    establecerContextoMusaDefinicion("");
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
 
@@ -1962,7 +2965,11 @@ socket.on("nueva letra", letra => {
         listener_modo = function (e) { modo_letra_prohibida(e) };
         texto.addEventListener("keydown", listener_modo);
         animacion_palabra();
-        palabra.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
+        setBarraNivelClaseEscritora("prohibida");
+        if (explicacion) {
+            explicacion.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
+        }
+        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
         }
     else if(modo_actual == "letra bendita"){
         letra_bendita = letra;
@@ -1970,7 +2977,11 @@ socket.on("nueva letra", letra => {
         listener_modo = function (e) { modo_letra_bendita(e) };
         texto.addEventListener("keydown", listener_modo);
         animacion_palabra();
-        palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
+        setBarraNivelClaseEscritora("bendita");
+        if (explicacion) {
+            explicacion.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
+        }
+        palabra.innerHTML = "NIVEL LETRA BENDITA";
     }
 });
 
@@ -1980,16 +2991,32 @@ socket.on(elegir_ventaja, () => {
 });
 
 function recibir_palabra(data) {
+    if (estaResurreccionActiva()) {
+        return;
+    }
     animacion_modo();
-    palabra_actual = data.palabra_bonus[0];
-    palabra.innerHTML = data.palabras_var + " (⏱️+" + data.tiempo_palabras_bonus + " segs.)" ;
+    palabra_actual = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[0] : "";
+    setBarraNivelClaseEscritora("bonus");
+    const textoPalabra = extraerTextoPalabraEventoEscritora(data);
+    palabra.innerHTML = "NIVEL PALABRAS BONUS";
     if (data.origen_musa === "musa") {
-        const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-        definicion.innerHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podrías escribir esta palabra ⬆️</span>`;
-        definicion.dataset.origenMusa = "musa";
+        const musaLabel = data.musa_nombre ? String(data.musa_nombre) : "MUSA";
+        const descripcion = `${musaLabel}: Podrías escribir esta palabra`;
+        renderObjetivoNivelEscritora(textoPalabra, {
+            tipo: "bonus",
+            tiempoSegundos: data.tiempo_palabras_bonus,
+            descripcion
+        });
+        establecerContextoMusaDefinicion("musa", data.musa_nombre);
     } else {
-        definicion.innerHTML = data.palabra_bonus[1];
-        definicion.dataset.origenMusa = "";
+        const descripcionBase = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[1] : data && data.definicion;
+        const descripcion = normalizarTextoPlanoEscritora(descripcionBase);
+        renderObjetivoNivelEscritora(textoPalabra, {
+            tipo: "bonus",
+            tiempoSegundos: data.tiempo_palabras_bonus,
+            descripcion
+        });
+        establecerContextoMusaDefinicion("");
     }
 
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
@@ -2002,17 +3029,33 @@ function recibir_palabra(data) {
 }
 
 function recibir_palabra_prohibida(data) {
+    if (estaResurreccionActiva()) {
+        return;
+    }
     animacion_modo();
-    palabra_actual = data.palabra_bonus[0];
-    palabra.innerHTML = data.palabras_var + " (⏱️-" + data.tiempo_palabras_bonus + " segs.)";
+    palabra_actual = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[0] : "";
+    setBarraNivelClaseEscritora("prohibidas");
+    const textoPalabra = extraerTextoPalabraEventoEscritora(data);
+    palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
 
     if (data.origen_musa === "musa_enemiga") {
-        const musaLabel = data.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
-        definicion.innerHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>me pega esta palabra ⬆️</span>`;
-        definicion.dataset.origenMusa = "musa_enemiga";
+        const musaLabel = data.musa_nombre ? String(data.musa_nombre) : "MUSA ENEMIGA";
+        const descripcion = `${musaLabel}: me pega esta palabra`;
+        renderObjetivoNivelEscritora(textoPalabra, {
+            tipo: "prohibidas",
+            tiempoSegundos: data.tiempo_palabras_bonus,
+            descripcion
+        });
+        establecerContextoMusaDefinicion("musa_enemiga", data.musa_nombre);
     } else {
-        definicion.innerHTML = data.palabra_bonus[1];
-        definicion.dataset.origenMusa = "";
+        const descripcionBase = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[1] : data && data.definicion;
+        const descripcion = normalizarTextoPlanoEscritora(descripcionBase);
+        renderObjetivoNivelEscritora(textoPalabra, {
+            tipo: "prohibidas",
+            tiempoSegundos: data.tiempo_palabras_bonus,
+            descripcion
+        });
+        establecerContextoMusaDefinicion("");
     }
     tiempo_palabras_bonus = data.tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo1);
@@ -2052,16 +3095,46 @@ function recibir_palabra_prohibida(data) {
         return matches ? matches.length : 0;
       }
 
+      function obtenerPalabrasDisponiblesResucitar() {
+        const palabrasGuardadas = contarPalabrasTexto(texto_guardado);
+        const palabrasActuales = texto && typeof texto.innerText === "string"
+          ? contarPalabrasTexto(texto.innerText)
+          : 0;
+        return Math.max(palabrasGuardadas, palabrasActuales);
+      }
+
       function puedeResucitarSegunEstado() {
-        return modo_actual !== "frase final" && contarPalabrasTexto(texto_guardado) > 0;
+        return !partida_global_finalizada && obtenerPalabrasDisponiblesResucitar() > 0;
+      }
+
+      function estaResurreccionActiva() {
+        return Boolean(esperando_resurreccion_tiempo || (document.body && document.body.classList.contains('modo-resucitar')));
       }
 
       function ajustarPalabrasResucitar() {
-        const max = contarPalabrasTexto(texto_guardado);
+        const max = obtenerPalabrasDisponiblesResucitar();
         const min = max > 0 ? 1 : 0;
         if (palabras < min) palabras = min;
         if (palabras > max) palabras = max;
         return { max, min };
+      }
+
+      function configurarResurreccionObligatoria(activa) {
+        resurreccion_obligatoria_activa = Boolean(activa);
+        if (btnAtras) {
+          btnAtras.style.display = resurreccion_obligatoria_activa ? 'none' : '';
+        }
+        quantityMenuElements = resurreccion_obligatoria_activa
+          ? [btnConfirmar]
+          : [btnConfirmar, btnAtras];
+        quantityMenuElements = quantityMenuElements.filter(Boolean);
+        if (!quantityMenuElements.length) {
+          quantityMenuIndex = 0;
+          return;
+        }
+        if (quantityMenuIndex >= quantityMenuElements.length || quantityMenuIndex < 0) {
+          quantityMenuIndex = 0;
+        }
       }
 
       function emitirEstadoResucitar(menuForzado = null) {
@@ -2084,6 +3157,33 @@ function recibir_palabra_prohibida(data) {
           max,
           segundos
         });
+      }
+
+      function ocultarUiResucitar({ emitirEstado = true } = {}) {
+        clearTimeout(timeoutID_menu);
+        timeoutID_menu = null;
+        esperando_resurreccion_tiempo = false;
+        configurarResurreccionObligatoria(false);
+        currentMenu = 'main';
+        mainMenuIndex = 0;
+        quantityMenuIndex = 0;
+        if (mainMenu) {
+          mainMenu.style.display = 'none';
+        }
+        if (quantityMenu) {
+          quantityMenu.style.display = 'none';
+        }
+        if (mainTitle) {
+          mainTitle.style.display = 'none';
+        }
+        if (buttonContainer) {
+          buttonContainer.style.display = 'none';
+        }
+        document.body.classList.remove('modo-resucitar');
+        document.removeEventListener('keydown', manejadorTeclas);
+        if (emitirEstado) {
+          emitirEstadoResucitar('hidden');
+        }
       }
   
       /*************************************************************
@@ -2133,6 +3233,7 @@ function recibir_palabra_prohibida(data) {
               btnInicio.style.display = "none";
               document.getElementById('total').style.display = "none";
               document.body.classList.add('partida-activa');
+              actualizarOcultacionMarcadorEscritora();
               animateCSS(".contenedor", "backInLeft");
       
                 // Ponemos FULLSCREEN inmediatamente al iniciar
@@ -2145,7 +3246,7 @@ function recibir_palabra_prohibida(data) {
                 socket.emit("enviar_atributos", {player, atributos});
                 document.addEventListener('click', function(event) {
                   // Sólo si no estamos en un menú de modificadores
-                  if (!menu_modificador && modificadorButtons.length === 0) {
+                  if (!menu_modificador && modificadorButtons.length === 0 && !vista_calentamiento_escritor) {
                     if (event.button === 0) {       // click izquierdo
                       toggleFullscreen();
                       texto.focus();
@@ -2162,12 +3263,23 @@ function recibir_palabra_prohibida(data) {
       }
   
       function actualizarSeleccionQuantityMenu(enfocar = true) {
+        if (!quantityMenuElements.length) return;
+        if (quantityMenuIndex >= quantityMenuElements.length || quantityMenuIndex < 0) {
+          quantityMenuIndex = 0;
+        }
         quantityMenuElements.forEach(el => el.classList.remove('selected'));
-        quantityMenuElements[quantityMenuIndex].classList.add('selected');
+        const seleccionado = quantityMenuElements[quantityMenuIndex];
+        if (seleccionado) {
+          seleccionado.classList.add('selected');
+        }
         emitirEstadoResucitar();
         if (!enfocar) return;
-        if (quantityMenuIndex === 0) btnConfirmar.focus();
-        if (quantityMenuIndex === 1) btnAtras.focus();
+        if (resurreccion_obligatoria_activa) {
+          btnConfirmar.focus();
+          return;
+        }
+        if (quantityMenuIndex === 0 && btnConfirmar) btnConfirmar.focus();
+        if (quantityMenuIndex === 1 && btnAtras) btnAtras.focus();
       }
   
       function actualizarTextoCantidad() {
@@ -2246,7 +3358,8 @@ function recibir_palabra_prohibida(data) {
         return text.substring(0, endPos);
       }
 
-      function mostrarMenuQuantity() {
+      function mostrarMenuQuantity({ obligatoria = false } = {}) {
+        configurarResurreccionObligatoria(obligatoria);
         mainMenu.style.display = 'none';
         quantityMenu.style.display = 'block';
         document.body.classList.add('modo-resucitar');
@@ -2258,6 +3371,7 @@ function recibir_palabra_prohibida(data) {
       }
   
       function mostrarMenuPrincipal() {
+        configurarResurreccionObligatoria(false);
         quantityMenu.style.display = 'none';
         mainMenu.style.display = 'block';
         document.body.classList.add('modo-resucitar');
@@ -2269,28 +3383,27 @@ function recibir_palabra_prohibida(data) {
 
       function iniciarMenu() {
         if (!puedeResucitarSegunEstado()) {
+          esperando_resurreccion_tiempo = false;
           btnNo.click();
           return;
         }
-        console.log("Iniciando menú");
-
-
+        if (!texto_guardado && texto && typeof texto.innerText === "string") {
+          texto_guardado = texto.innerText;
+        }
+        clearTimeout(timeoutID_menu);
+        permitir_fin_por_decision_local = false;
+        esperando_resurreccion_tiempo = true;
+        console.log("Iniciando menu de resurreccion obligatoria");
+        document.removeEventListener('keydown', manejadorTeclas);
         document.addEventListener('keydown', manejadorTeclas);
-        animateCSS(".mainMenu", "flash");
-        mainTitle.innerHTML = '<span class="resucitar-title-over">GAME OVER</span><span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>';
-        mainMenu.style.display = 'block';
-        mainTitle.style.display = 'block';
-        buttonContainer.style.display = 'flex';
-        document.body.classList.add('modo-resucitar');
-        currentMenu = 'main';
-        mainMenuIndex = 0;
-        actualizarSeleccionMainMenu();
-        emitirEstadoResucitar();
-        timeoutID_menu = setTimeout(() => {
-            // Si seguimos en el menú (por ejemplo, no hubo otra acción), ejecuta el clic:
-            console.log("Tiempo cumplido. Se hace clic automático en botón NO.");
-            btnNo.click(); 
-          }, 60000);
+        if (mainTitle) {
+          mainTitle.style.display = 'none';
+        }
+        if (buttonContainer) {
+          buttonContainer.style.display = 'none';
+        }
+        mostrarMenuQuantity({ obligatoria: true });
+        animateCSS("#quantityMenu", "flash");
       }
   
       /*************************************************************
@@ -2304,15 +3417,19 @@ function recibir_palabra_prohibida(data) {
       btnSi.addEventListener('click', (evento) => {
         evento.stopPropagation(); // Evita que se active el listener global
         if (!puedeResucitarSegunEstado()) {
+          esperando_resurreccion_tiempo = false;
           btnNo.click();
           return;
         }
-        mostrarMenuQuantity();
+        esperando_resurreccion_tiempo = true;
+        mostrarMenuQuantity({ obligatoria: true });
       });
   
       btnNo.addEventListener('click', (evento) => {
         
         evento.stopPropagation();
+        permitir_fin_por_decision_local = true;
+        esperando_resurreccion_tiempo = false;
         document.body.classList.remove('modo-resucitar');
         texto.innerText = texto_guardado;
         tiempo.style.color = "white";
@@ -2334,9 +3451,7 @@ function recibir_palabra_prohibida(data) {
         if (buttonContainer) {
           buttonContainer.style.display = 'none';
         }
-
-        document.removeEventListener('keydown', manejadorTeclas);
-        emitirEstadoResucitar('hidden');
+        ocultarUiResucitar();
                 
         // Lógica para finalizar el juego.
       });
@@ -2345,6 +3460,9 @@ function recibir_palabra_prohibida(data) {
       btnConfirmar.addEventListener('click', (evento) => {
         evento.stopPropagation();
         clearTimeout(timeoutID_menu);
+        timeoutID_menu = null;
+        esperando_resurreccion_tiempo = false;
+        permitir_fin_por_decision_local = false;
         socket.emit("resucitar", {player: player, secs: palabras * PALABRAS_A_SEGUNDOS});
 
         // Recortar las últimas "palabras" de "texto_guardado"
@@ -2357,19 +3475,18 @@ function recibir_palabra_prohibida(data) {
 
         // Ocultar los menús para que no se vean más
         resucitar()
-        mainMenu.style.display = 'none';
-        quantityMenu.style.display = 'none';
-        mainTitle.style.display = 'none';
-        buttonContainer.style.display = 'none';
-        
-        document.removeEventListener('keydown', manejadorTeclas);
-        emitirEstadoResucitar('hidden');
+        ocultarUiResucitar();
 
         post_inicio(false)
       });
   
       btnAtras.addEventListener('click', (evento) => {
         evento.stopPropagation();
+        if (resurreccion_obligatoria_activa) {
+          quantityMenuIndex = 0;
+          actualizarSeleccionQuantityMenu();
+          return;
+        }
         quantityMenu.style.display = 'none';
         mainMenu.style.display = 'block';
         currentMenu = 'main';
@@ -2465,6 +3582,10 @@ function manejadorTeclas(evento) {
         case 'Enter':
           evento.preventDefault();
           {
+            if (resurreccion_obligatoria_activa) {
+              btnConfirmar.click();
+              break;
+            }
             if (document.activeElement === btnAtras || quantityMenuIndex === 1) {
               btnAtras.click();
             } else if (document.activeElement === btnConfirmar || quantityMenuIndex === 0) {
@@ -2739,6 +3860,10 @@ function animacion_modo() {
         new Promise((resolve, reject) => {
             const animationName = `${prefix}${animation}`;
             const node = document.querySelector(element);
+            if (!node) {
+                resolve("Element not found");
+                return;
+            }
 
             node.classList.add(`${prefix}animated`, animationName);
 
@@ -2752,7 +3877,7 @@ function animacion_modo() {
             node.addEventListener("animationend", handleAnimationEnd, { once: true });
         });
     animateCSS(".explicación", "bounceInLeft");
-    animateCSS(".palabra", "bounceInLeft");
+    animateCSS("#palabra", "bounceInLeft");
     animateCSS(".definicion", "bounceInLeft");
 }
 
@@ -2762,6 +3887,10 @@ function animacion_palabra() {
         new Promise((resolve, reject) => {
             const animationName = `${prefix}${animation}`;
             const node = document.querySelector(element);
+            if (!node) {
+                resolve("Element not found");
+                return;
+            }
 
             node.classList.add(`${prefix}animated`, animationName);
 
@@ -2774,7 +3903,7 @@ function animacion_palabra() {
 
             node.addEventListener("animationend", handleAnimationEnd, { once: true });
         });
-    animateCSS(".palabra", "bounceInLeft");
+    animateCSS("#palabra", "bounceInLeft");
 }
 
 // Función auxiliar que reestablece el estilo inicial de la página modificado por el modo psicodélico.
@@ -2837,22 +3966,19 @@ function modo_palabras_bonus(e) {
             asignada = false;
             limpiarDeteccionMultipalabraAsignada();
             socket.emit("nueva_palabra", player);
-            socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
-            feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
-            clearTimeout(delay_animacion);
-            color = color_positivo;
-            feedback.style.color = color;
-            tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
-            tipo = "rae";
-            if (definicion.dataset.origenMusa === "musa") {
-                tipo = "inspiracion";
+            emitirCambioTiempoEscritora(tiempo_palabras_bonus);
+            const color = color_positivo;
+            const tiempo_feed = "+" + tiempo_palabras_bonus + " segs.";
+            const tipo = (definicion.dataset.origenMusa === "musa") ? "inspiracion" : "rae";
+            mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo });
+            const payloadFeedback = (tipo === "inspiracion")
+                ? construirPayloadFeedbackInspiracion({ color, tiempo_feed, tipo })
+                : { color, tiempo_feed, tipo };
+            socket.emit(feedback_de_j_x, payloadFeedback);
+            if (tipo === "inspiracion") {
+                activarFulgorInspiracionEscritora();
+                socket.emit("feedback_musa_inspiracion", { ...payloadFeedback, player });
             }
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
-            });
-            socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo});
 
             let inicioMarca = startingIndex;
             let finMarca = endingIndex;
@@ -2932,24 +4058,19 @@ function modo_palabras_prohibidas(e) {
             limpiarDeteccionMultipalabraAsignada();
             socket.emit("nueva_palabra_prohibida", player);
             tiempo_palabras_bonus = -tiempo_palabras_bonus;
-            socket.emit('aumentar_tiempo', {secs: tiempo_palabras_bonus, player});
-            color = color_negativo;
-            feedback.style.color = color;
-            feedback.innerHTML = "⏱️" + tiempo_palabras_bonus + " segs.";
-            tipo = "lista_prohibidas";
-            console.log(definicion.innerHTML)
-            if (definicion.dataset.origenMusa === "musa_enemiga") {
-                tipo = "inspiracion";
+            emitirCambioTiempoEscritora(tiempo_palabras_bonus);
+            const color = color_negativo;
+            const tiempo_feed = String(tiempo_palabras_bonus) + " segs.";
+            const tipo = (definicion.dataset.origenMusa === "musa_enemiga") ? "inspiracion" : "lista_prohibidas";
+            mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo });
+            const payloadFeedback = (tipo === "inspiracion")
+                ? construirPayloadFeedbackInspiracion({ color, tiempo_feed, tipo })
+                : { color, tiempo_feed, tipo };
+            socket.emit(feedback_de_j_x, payloadFeedback);
+            if (tipo === "inspiracion") {
+                activarFulgorInspiracionEscritora();
+                socket.emit("feedback_musa_inspiracion", { ...payloadFeedback, player });
             }
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
-            });
-            color = color_negativo;
-            tiempo_feed = "⏱️" + tiempo_palabras_bonus + " segs.";
-            socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo});
         }
     }
 }
@@ -3002,18 +4123,12 @@ function palabras_musas(e) {
             texto.focus();
             asignada = false;
             limpiarDeteccionMultipalabraAsignada();
-            feedback.style.color = "white";
-            feedback.innerHTML = "+🎨 insp.";
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
-            });
-            color = "white";
-            tiempo_feed = feedback.innerHTML;
+            const tiempo_feed = "+insp.";
+            const color = "white";
+            mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo: "inspiracion" });
             socket.emit("nueva_palabra_musa", player);
             socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "inspiracion" });
+            activarFulgorInspiracionEscritora();
 
             let inicioMarca = startingIndex;
             let finMarca = endingIndex;
@@ -3089,19 +4204,12 @@ function modo_letra_prohibida(e) {
       // Aquí iría la lógica para manejar la UI y eventos de Socket.io (la he mantenido igual)
       secs = -2;
       console.log(secs);
-      socket.emit('aumentar_tiempo', {secs, player});
-      puntos.innerHTML = puntos_ + " palabras";
+      emitirCambioTiempoEscritora(secs);
+      actualizarPuntosMarcador(puntos_ + " palabras");
       sendText();
-      feedback.style.color = color_negativo;
-      feedback.innerHTML = "⏱️-2 segs.";
-      clearTimeout(delay_animacion);
-      animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
-          feedback.innerHTML = "";
-        }, 2000);
-      });
-      color = color_negativo;
-      tiempo_feed = feedback.innerHTML;
+      const tiempo_feed = "-2 segs.";
+      const color = color_negativo;
+      mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo: "letra_prohibida" });
       socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "letra_prohibida" });
     }
   }
@@ -3133,18 +4241,11 @@ function modo_letra_bendita(e) {
         if (node && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
             e.preventDefault(); // Prevenir el comportamiento por defecto de la tecla Backspace
             secs = -2
-            socket.emit('aumentar_tiempo', {secs, player}); // Emitir el evento de socket
+            emitirCambioTiempoEscritora(secs); // Emitir el evento de socket
             // Feedback visual
-            feedback.style.color = color_negativo;
-            feedback.innerHTML = "⏱️-1 segs.";
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
-            });
-            // Envío de feedback a través de Socket.io
-            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML, tipo: "letra_bendita" });
+            const tiempo_feed = "-1 segs.";
+            mostrarFeedbackFlotanteEscritora(tiempo_feed, { color: color_negativo, tipo: "letra_bendita" });
+            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed, tipo: "letra_bendita" });
         }
         return; // Salir de la función si la tecla es Backspace
     }
@@ -3173,23 +4274,15 @@ function modo_letra_bendita(e) {
             sel.removeAllRanges();
             sel.addRange(range);
             secs = 2;
-            socket.emit('aumentar_tiempo', {secs, player});
-            puntos.innerHTML = puntos_ + " palabras";
+            emitirCambioTiempoEscritora(secs);
+            actualizarPuntosMarcador(puntos_ + " palabras");
             console.log(puntos);
             sendText();
 
             // Feedback visual
-            feedback.style.color = color_positivo;
-            feedback.innerHTML = "⏱️+2 segs.";
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
-            });
-
-            // Envío de feedback a través de Socket.io
-            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed: feedback.innerHTML, tipo: "letra_bendita" });
+            const tiempo_feed = "+2 segs.";
+            mostrarFeedbackFlotanteEscritora(tiempo_feed, { color: color_positivo, tipo: "letra_bendita" });
+            socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed, tipo: "letra_bendita" });
         } else {
             if (node && node.parentNode.className === 'letra-verde') {
                 e.preventDefault();
@@ -3222,18 +4315,26 @@ function modo_psicodélico() {
 }
 
 function limpieza(){
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerProgresoNivelBarraEscritora(true);
+    setInterfazInversaGlobal(false);
     pararEscritura = true;
-    clearTimeout(timeoutID_menu)
+    permitir_fin_por_decision_local = false;
+    esperando_resurreccion_tiempo = false;
+    ocultarUiResucitar({ emitirEstado: false });
     stopConfetti();
-    clearTimeout(listener_cuenta_atras);
-    clearInterval(timer);  
-    clearTimeout(sub_timer);
+    limpiarCountdownInicioEscritora();
+    limpiarClasesIntroPartidaEscritora();
+    secuencia_inicio_escritora_activa = false;
+    post_inicio_pendiente_escritora = null;
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
     console.log(texto.innerHTML)
     if(temp_text_inverso_activado == true){
         temp_text_inverso_activado = false;
+        setInterfazInversaGlobal(false);
         clearTimeout(tempo_text_inverso);
         procesarTexto();
     }
@@ -3247,15 +4348,15 @@ function limpieza(){
     temas.innerHTML = "";
     temas.display = "";
     texto.contentEditable= "false";
-    puntos.innerHTML = 0 + " palabras";
+    actualizarPuntosMarcador(0, false);
     palabra.innerHTML = "";
     definicion.innerHTML = "";
     explicación.innerHTML = "";
+    limpiarEstiloNivelesEscritora();
+    setBarraNivelClaseEscritora("");
     menu_modificador = false;
     focusedButtonIndex = 0;
     modificadorButtons = [];
-    mainMenu.style.display = 'none';
-    quantityMenu.style.display = 'none';
     texto.focus();
 
     // Desactiva el blur de ambos textos.
@@ -3279,10 +4380,12 @@ function limpieza(){
     desactivar_borrar = true;
     console.log(puntos)
     
-    feedback.innerHTML = "";
+    limpiarFeedbackFlotanteEscritora();
     
     definicion.innerHTML = "";
     explicación.innerHTML = "";
+    limpiarEstiloNivelesEscritora();
+    setBarraNivelClaseEscritora("");
 
     // Restablece la rápidez del borrado.
     borrado_cambiado = false;
@@ -3302,17 +4405,28 @@ function limpieza(){
 }
 
 function limpieza_final(){
-    clearTimeout(timeoutID_menu);
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerProgresoNivelBarraEscritora(true);
+    setInterfazInversaGlobal(false);
+    permitir_fin_por_decision_local = false;
+    esperando_resurreccion_tiempo = false;
+    ocultarUiResucitar({ emitirEstado: false });
+    limpiarCountdownInicioEscritora();
+    limpiarClasesIntroPartidaEscritora();
+    secuencia_inicio_escritora_activa = false;
+    post_inicio_pendiente_escritora = null;
     confetti_aux();
-    mainMenu.style.display = 'none';
-    quantityMenu.style.display = 'none';
     texto.contentEditable= "false";
     texto.style.display = "none";
     temas.display = "none";
     temas.innerHTML = "";
+    limpiarFeedbackFlotanteEscritora();
     palabra.innerHTML = "";
     definicion.innerHTML = "";
     explicación.innerHTML = "";
+    limpiarEstiloNivelesEscritora();
+    setBarraNivelClaseEscritora("");
 
     definicion.style.fontSize = "1.5vw";
 
@@ -3403,8 +4517,10 @@ function modo_inverso_pausa(){
         
         sendText();
         temp_text_inverso_activado = true;
+        setInterfazInversaGlobal(true);
         tempo_text_inverso = setTimeout(function () {
             temp_text_inverso_activado = false;
+            setInterfazInversaGlobal(false);
             desactivar_borrar = false;
             texto.contentEditable= "false";
             caretNode, caretPos = guardarPosicionCaret();
@@ -3516,6 +4632,10 @@ function stopConfetti() {
 }
 
 function final(){
+    setInterfazInversaGlobal(false);
+    permitir_fin_por_decision_local = false;
+    esperando_resurreccion_tiempo = false;
+    ocultarUiResucitar();
     //sendText();
     menu_modificador = false;
     limpieza_final();
@@ -3643,30 +4763,24 @@ function ajustarPunteros(texto) {
     return texto.substring(punteroInicio, punteroFinal).trim();  // trim() para eliminar espacios adicionales
 }
 
-function modo_ortografía_perfecta() {
+function modo_ortografia_perfecta() {
     setInterval(() => {
         // Tomar solo el nuevo texto desde el puntero de inicio hasta el final ajustado
         const nuevoTexto = ajustarPunteros(texto.innerText);
-        // Actualizar el puntero de inicio global para la próxima iteración
+        // Actualizar el puntero de inicio global para la pr?xima iteraci?n
         punteroInicio += nuevoTexto.length;
 
         hacerPeticion(nuevoTexto).then(descuento => {
-            if(descuento != 0) {
-                feedback.style.color = color_negativo;
-                feedback.innerHTML = "⏱️" + descuento +" segs.";
-                clearTimeout(delay_animacion);
-                animateCSS(".feedback1", "flash").then((message) => {
-                    delay_animacion = setTimeout(function () {
-                        feedback.innerHTML = "";
-                    }, 2000);
-                });
+            if (descuento != 0) {
+                const tiempo_feed = String(descuento) + " segs.";
+                mostrarFeedbackFlotanteEscritora(tiempo_feed, { color: color_negativo, tipo: "perder_tiempo" });
             }
         });
     }, 10000);
 }
 
- // Función que invierte las letras de cada palabra pero NO el orden de las palabras.
- function invertirPalabras(texto) {
+ // Funci?n que invierte las letras de cada palabra pero NO el orden de las palabras.
+function invertirPalabras(texto) {
     return texto
       .split(' ')                         // Separa por espacios
       .map(palabra => palabra.split('').reverse().join('')) 
@@ -3833,42 +4947,118 @@ var end = Date.now() + (2 * 1000);
 }
 
 const textarea = texto;
+const CLASES_FADE_TEXTAREA_ESCRITOR = [
+    "textarea-fade-none",
+    "textarea-fade-top",
+    "textarea-fade-bottom",
+    "textarea-fade-both"
+];
+let raf_degradado_textarea_escritor = null;
+let observador_degradado_textarea_escritor = null;
+let observador_resize_textarea_escritor = null;
+let degradado_textarea_escritor_iniciado = false;
 
-document.addEventListener('DOMContentLoaded', function () {
-    const gradientTop = document.getElementById('gradientTop');
-    const gradientBottom = document.getElementById('gradientBottom');
+function actualizarDegradadoDinamicoTextoEscritor() {
+    if (!textarea || !textarea.classList) return;
+    const gradientTop = document.getElementById("gradientTop");
+    const gradientBottom = document.getElementById("gradientBottom");
+    const clientHeight = textarea.clientHeight || 0;
+    const scrollHeight = textarea.scrollHeight || 0;
 
-    function updateGradients() {
-        const scrollTop = textarea.scrollTop;
-        const scrollHeight = textarea.scrollHeight;
-        const clientHeight = textarea.clientHeight;
-
-        if (scrollTop > 0) {
-            gradientTop.style.opacity = '1';
-        } else {
-            gradientTop.style.opacity = '0';
-        }
-
-        if (scrollTop + clientHeight < scrollHeight) {
-            gradientBottom.style.opacity = '1';
-        } else {
-            gradientBottom.style.opacity = '0';
-        }
+    if (clientHeight <= 0 || textarea.style.display === "none") {
+        CLASES_FADE_TEXTAREA_ESCRITOR.forEach((clase) => textarea.classList.remove(clase));
+        textarea.classList.add("textarea-fade-none");
+        if (gradientTop) gradientTop.style.opacity = "0";
+        if (gradientBottom) gradientBottom.style.opacity = "0";
+        return;
     }
 
-    textarea.addEventListener('input', updateGradients);
-    textarea.addEventListener('scroll', updateGradients);
-    window.addEventListener('resize', updateGradients); // Añadido para manejar cambios de tamaño de la ventana
+    const margen = 2;
+    const tieneOverflow = (scrollHeight - clientHeight) > margen;
+    const scrollTop = Math.max(0, textarea.scrollTop || 0);
+    const ocultoArriba = tieneOverflow && (scrollTop > margen);
+    const ocultoAbajo = tieneOverflow && ((scrollTop + clientHeight) < (scrollHeight - margen));
 
-    // Inicialización de los gradientes al cargar la página
-    updateGradients();
-});
+    CLASES_FADE_TEXTAREA_ESCRITOR.forEach((clase) => textarea.classList.remove(clase));
+    if (ocultoArriba && ocultoAbajo) {
+        textarea.classList.add("textarea-fade-both");
+    } else if (ocultoArriba) {
+        textarea.classList.add("textarea-fade-top");
+    } else if (ocultoAbajo) {
+        textarea.classList.add("textarea-fade-bottom");
+    } else {
+        textarea.classList.add("textarea-fade-none");
+    }
+
+    if (gradientTop) gradientTop.style.opacity = ocultoArriba ? "1" : "0";
+    if (gradientBottom) gradientBottom.style.opacity = ocultoAbajo ? "1" : "0";
+}
+
+function programarActualizacionDegradadoTextoEscritor() {
+    if (raf_degradado_textarea_escritor) return;
+    raf_degradado_textarea_escritor = requestAnimationFrame(() => {
+        raf_degradado_textarea_escritor = null;
+        actualizarDegradadoDinamicoTextoEscritor();
+    });
+}
+
+function iniciarDegradadoDinamicoTextoEscritor() {
+    if (degradado_textarea_escritor_iniciado || !textarea) return;
+    degradado_textarea_escritor_iniciado = true;
+
+    const eventos = ["input", "scroll", "keyup", "mouseup", "touchend", "focus", "blur"];
+    eventos.forEach((evento) => {
+        textarea.addEventListener(evento, programarActualizacionDegradadoTextoEscritor);
+    });
+    window.addEventListener("resize", programarActualizacionDegradadoTextoEscritor);
+    document.addEventListener("selectionchange", () => {
+        if (document.activeElement === textarea) {
+            programarActualizacionDegradadoTextoEscritor();
+        }
+    });
+
+    if (typeof MutationObserver === "function") {
+        observador_degradado_textarea_escritor = new MutationObserver(() => {
+            programarActualizacionDegradadoTextoEscritor();
+        });
+        observador_degradado_textarea_escritor.observe(textarea, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: ["class", "style"]
+        });
+    }
+
+    if (typeof ResizeObserver === "function") {
+        observador_resize_textarea_escritor = new ResizeObserver(() => {
+            programarActualizacionDegradadoTextoEscritor();
+        });
+        observador_resize_textarea_escritor.observe(textarea);
+    }
+
+    programarActualizacionDegradadoTextoEscritor();
+    setTimeout(programarActualizacionDegradadoTextoEscritor, 120);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", iniciarDegradadoDinamicoTextoEscritor, { once: true });
+} else {
+    iniciarDegradadoDinamicoTextoEscritor();
+}
 
 function function_frase_final() {
 
     animacion_modo();
-    palabra.innerHTML = "«"+frase_final+"»";
-    definicion.innerHTML = "⬆️ ¡Introduce la frase final para ganar! ⬆️"
+    limpiarEstiloNivelesEscritora();
+    setBarraNivelClaseEscritora("frase-final");
+    palabra.innerHTML = "NIVEL FRASE FINAL";
+    const fraseObjetivo = String(frase_final || "").trim();
+    const palabraObjetivo = fraseObjetivo ? "\u00AB" + fraseObjetivo + "\u00BB" : "\u00AB-\u00BB";
+    renderObjetivoNivelEscritora(palabraObjetivo, {
+        tipo: "frase-final",
+        descripcion: "\u00A1Esta es la \u00FAltima!"
+    });
     limpiarMarcadoFraseFinal();
 
     texto.removeEventListener("keyup", listener_modo);

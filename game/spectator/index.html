@@ -15,21 +15,21 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260213c">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260219e">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
-<body>
+<body class="page-spectator">
     <script src="../config.js"></script>
-    <script src="./js/juego.js"></script>
+    <script src="./js/juego.js?v=20260219b"></script>
     <div id="corazones_espectador" class="corazones-flotantes"></div>
     <div id="teleprompter_overlay" class="teleprompter-overlay">
         <div id="teleprompter_screen" class="teleprompter-screen">
             <div id="teleprompter_text" class="teleprompter-text" lang="es"></div>
         </div>
     </div>
-    <div align="center">
+    <div id="spectator_fit_root" align="center">
         <div class="cabecera">
         <pre id="neon" class="neon_espectador">
         __     _____    _____   _____    _____    __       ____  
@@ -55,7 +55,7 @@
         <p id="temas_container"><span id="temas" class="temas"></span></p>
         <br>
         <div id="inspiracion" class="inspiracion">
-            <p style="font-size: 1.5vw;">INSPIRACIÓN</p>
+            <p class="inspiracion-title">INSPIRACION</p>
             <div class="bar">
                 <div class="bar-segment blue">
                     <span class="percentage-text"></span>
@@ -79,7 +79,37 @@
             </div>
             <div class="calentamiento-overlay-ui">
                 <h2 class="calentamiento-titulo">CALENTAMIENTO</h2>
+                <p id="calentamiento_consigna_espectador" class="calentamiento-consigna-chip tipo-libre">CONSIGNA: LIBRE</p>
                 <p id="calentamiento_global_estado" class="calentamiento-global-estado">Calentamiento inactivo.</p>
+                <div id="calentamiento_finales" class="calentamiento-finales">
+                    <div id="calentamiento_final_j1" class="calentamiento-final-card equipo-1">
+                        <span class="final-label">ESCRITXR 1</span>
+                        <span class="final-word">PENDIENTE</span>
+                    </div>
+                    <div id="calentamiento_final_j2" class="calentamiento-final-card equipo-2">
+                        <span class="final-label">ESCRITXR 2</span>
+                        <span class="final-word">PENDIENTE</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="stats_espectador" class="stats-espectador" aria-live="polite">
+            <div class="stats-overlay-ui">
+                <div class="stats-header-row">
+                    <h2 class="stats-titulo">STATS EN TIEMPO REAL</h2>
+                    <p id="stats_timestamp" class="stats-timestamp">Sin datos</p>
+                </div>
+                <p id="stats_estado" class="stats-estado">Esperando estadisticas de las escritoras...</p>
+            </div>
+            <div class="stats-slider">
+                <div id="stats_slides_track" class="stats-slides-track"></div>
+            </div>
+            <div id="stats_dots" class="stats-dots" aria-label="Paginas de estadisticas"></div>
+        </section>
+        <section id="nube_inspiracion_espectador" class="nube-inspiracion-espectador" aria-live="polite">
+            <div id="nube_inspiracion_canvas" class="nube-inspiracion-canvas"></div>
+            <div class="nube-inspiracion-overlay-ui">
+                <h2 class="nube-inspiracion-titulo">NUBE DE INSPIRACION</h2>
             </div>
         </section>
         <div class="contenedor" id="contenedor_espectador">
@@ -117,23 +147,29 @@
                 </div>
                 <br><br>
                 <div align="center">
-                    <table class="right s1">
-                        <tr>
-                            <th>🖋️</th>
-                            <th>🎨</th>
-                        </tr>
-                        <tr>
-                            <th id="puntos"> 0 palabras</th>
-                            <th id="musas">0 musas</th>
-                        </tr>
-                    </table>
+                                        <div id="metadatos_j1" class="right metadatos-grid metadatos-grid--cabecera marcador-equipo marcador-equipo-1">
+                        <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                            <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                            <div class="meta-copy">
+                                <span class="meta-label">Palabras</span>
+                                <span id="puntos" class="puntos">0 palabras</span>
+                            </div>
+                        </div>
+                        <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                            <span class="meta-icon">&#x1F3A8;</span>
+                            <div class="meta-copy">
+                                <span class="meta-label">Musas</span>
+                                <span id="musas" class="musas-total">0 musas</span>
+                            </div>
+                        </div>
+                    </div>
                     <h1 id="focalizador1" class="focalizador"></h1>
                     <h2 id="puntuacion_final1"></h1>
                 </div>
                 <br>
                 <table id="info1" class="info">
                     <tr>
-                        <p id="explicación1" class="explicación1"></p>
+                        <p id="explicacion1" class="explicación1"></p>
                     </tr>
                         <p id="palabra1" class=palabra1></p>
                     </tr>
@@ -177,23 +213,29 @@
                 </div>
                 <br><br>
                 <div align="center">
-                    <table class="right s2">
-                        <tr>
-                            <th>🖋️</th>
-                            <th>🎨</th>
-                        </tr>
-                        <tr>
-                            <th id="puntos1"> 0 palabras</th>
-                            <th id="musas1">0 musas</th>
-                        </tr>
-                    </table>
+                                        <div id="metadatos_j2" class="right metadatos-grid metadatos-grid--cabecera marcador-equipo marcador-equipo-2">
+                        <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                            <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                            <div class="meta-copy">
+                                <span class="meta-label">Palabras</span>
+                                <span id="puntos1" class="puntos">0 palabras</span>
+                            </div>
+                        </div>
+                        <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                            <span class="meta-icon">&#x1F3A8;</span>
+                            <div class="meta-copy">
+                                <span class="meta-label">Musas</span>
+                                <span id="musas1" class="musas-total">0 musas</span>
+                            </div>
+                        </div>
+                    </div>
                     <h1 id="focalizador2" class="focalizador"></h1>
                     <h2 id="puntuacion_final2"></h1>
                 </div>
                 <br>
                 <table id="info2" class="info">
                     <tr>
-                        <p id="explicación2" class="explicación2"></p>
+                        <p id="explicacion2" class="explicación2"></p>
                     </tr>
                         <p id="palabra2" class=palabra2></p>
                     </tr>
@@ -204,18 +246,18 @@
                 <br>
             </div>
         </div>
+        <section id="info_general" class="info info-general-panel" aria-live="polite">
+        <p id="explicacion" class="explicación"></p>
+        <p id="palabra" class="palabra"></p>
+        <p id="definicion" class="definicion"></p>
+    </section>
     </div>
-    <table id="info_general" class="info">
-        <tr>
-                <p id="explicación" class="explicación"></p>
-        </tr>
-            <p id="palabra" class=palabra></p>
-        </tr>
-        <tr>
-            <p id="definicion" class="definicion"></p>
-        </tr>
-    </table>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js?v=20260219d"></script>
 </html>
+
+
+
+
+

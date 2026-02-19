@@ -8,11 +8,11 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260213m">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260218d">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="../../config.js"></script>
-    <script src="./js/juego.js?v=20260211o"></script>
+    <script src="./js/juego.js?v=20260217k"></script>
 </head>
 <body>
     <div class="container"></div>
@@ -21,6 +21,19 @@
                 <input disabled id="nombre" class="nombre"></input>
                 <br><br>
                 <p id="alineador1"></p>
+                <div id="metadatos" class="right metadatos-grid metadatos-grid--cabecera">
+                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                        <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Palabras</span>
+                            <span id="puntos" class="puntos">0 palabras</span>
+                        </div>
+                    </div>
+                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                        <span class="meta-label">Musa</span>
+                        <span id="nombre_musa_label" class="musa-nombre">--</span>
+                    </div>
+                </div>
                 <div contenteditable="false" class="textarea" id="texto"
                 spellcheck="false">
             </div>
@@ -44,13 +57,8 @@
                             <p id="tiempo" class="tiempo tiempo-vida"></p>
                         </tr>
                     </table>
-                    <div id="metadatos" class="right metadatos-grid">
-                        <div class="meta-item meta-top-left">
-                            <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
-                            <span id="puntos" class="puntos">0 palabras</span>
-                        </div>
-                        <div id="nombre_musa_label" class="musa-nombre meta-item meta-top-right">MUSA: --</div>
-                        <div class="meta-item meta-bottom-left">
+                    <div id="metadatos_acciones" class="metadatos-grid metadatos-grid--acciones">
+                        <div class="meta-item meta-bottom-left marcador-accion marcador-accion--texto">
                             <button id="mostrar_texto" class="btn mostrarTexto" value="0" data-estado="OFF" aria-pressed="false" onclick="mostrarTextoCompleto(this)">&#x1F440; TEXTO COMPLETO</button>
                             <!-- Contenedor de la pantalla superpuesta -->
                             <div id="overlay">
@@ -59,12 +67,16 @@
                                 <button id="btn_volver" class="btn bandera" onclick="desactivarPantalla(this)">&#x2B05;&#xFE0F; VOLVER</button>
                             </div>
                         </div>
-                        <div class="meta-item meta-bottom-right">
+                        <div class="meta-item meta-bottom-right marcador-accion marcador-accion--bandera">
                             <button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">&#x1F3F3;&#xFE0F;&#x200D;&#x1F308; BANDERA</button>
                         </div>
                     </div>
                     <div id="votacion_ventaja_inline" class="votacion-ventaja-inline" aria-live="polite">
                         <div class="votacion-ventaja-inline-header">VOTACION EN CURSO</div>
+                        <div id="votacion_ventaja_timer_inline" class="votacion-ventaja-timer" role="timer" aria-label="Tiempo restante de votacion">
+                            <span id="votacion_ventaja_timer_fill_inline" class="votacion-ventaja-timer-fill"></span>
+                            <span id="votacion_ventaja_timer_text_inline" class="votacion-ventaja-timer-text">00:00</span>
+                        </div>
                         <div class="votacion-ventaja-inline-body">
                             <div id="votacion_ventaja_pie_inline" class="votacion-ventaja-pie">
                                 <div class="votacion-ventaja-pie-center">
@@ -86,6 +98,8 @@
                             </button>
                         </div>
                         <p id="calentamiento_feedback" class="calentamiento-feedback"></p>
+                        <p id="calentamiento_estado_cierre" class="calentamiento-cierre"></p>
+                        <p id="calentamiento_final_musa" class="calentamiento-final-musa"></p>
                     </section>
                     <section class="niveles">
                         <div class="niveles-scroll">
@@ -178,6 +192,10 @@
         <div class="votacion-ventaja-modal-card">
             <div id="votacion_ventaja_modal_titulo" class="votacion-ventaja-modal-titulo">ELIGE UNA DESVENTAJA</div>
             <div id="votacion_ventaja_modal_opciones" class="votacion-ventaja-modal-opciones"></div>
+            <div id="votacion_ventaja_timer_modal" class="votacion-ventaja-timer" role="timer" aria-label="Tiempo restante de votacion">
+                <span id="votacion_ventaja_timer_fill_modal" class="votacion-ventaja-timer-fill"></span>
+                <span id="votacion_ventaja_timer_text_modal" class="votacion-ventaja-timer-text">00:00</span>
+            </div>
             <div id="votacion_ventaja_modal_explicaciones" class="votacion-ventaja-modal-explicaciones"></div>
             <div class="votacion-ventaja-modal-grafico">
                 <div id="votacion_ventaja_pie_modal" class="votacion-ventaja-pie">
@@ -192,7 +210,7 @@
     </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260213l"></script>
+<script src="./js/jugador-servidor.js?v=20260218f"></script>
 </html>
 
 

@@ -22,6 +22,7 @@ let agitado_prev_ax = null;
 let agitado_prev_ay = null;
 let agitado_prev_az = null;
 let agitado_aviso_timeout = null;
+let bandera_bloqueada_por_control = false;
 
 const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
@@ -334,6 +335,9 @@ function actualizarEstadoTextoCompleto(boton, activo) {
   boton.classList.toggle("is-on", activo);
   boton.setAttribute("aria-pressed", activo ? "true" : "false");
   boton.dataset.estado = activo ? "ON" : "OFF";
+  if (typeof texto1 !== "undefined" && texto1 && texto1.classList) {
+    texto1.classList.toggle("textarea--completa", Boolean(activo));
+  }
 }
 
 //Función auxiliar que muestra el texto completo del jugador en cuestión.
@@ -359,21 +363,49 @@ function mostrarTextoCompleto(boton) {
 
 // Función para activar/desactivar la pantalla
   
-  function bandera(boton) {
+  function actualizarBloqueoBanderaControl(bloqueada) {
+    bandera_bloqueada_por_control = Boolean(bloqueada);
+    const botonVolver = document.getElementById('btn_volver');
+    if (botonVolver) {
+      botonVolver.style.display = bandera_bloqueada_por_control ? 'none' : '';
+    }
+  }
+
+  function aplicarEstadoBanderasControl(payload = {}) {
+    const activa = Boolean(payload && payload.activa);
+    const bloqueada = activa && Boolean(payload && payload.bloqueado_por_control);
+    actualizarBloqueoBanderaControl(bloqueada);
+    const boton = document.getElementById('btn_bandera');
+    if (!boton) return;
+    const overlay = document.getElementById('overlay');
+    const overlayVisible = overlay && overlay.style.display === 'flex';
+    if (activa) {
+      if (Number(boton.value) !== 0 && !overlayVisible) {
+        boton.value = 0;
+      }
+      bandera(boton, { forzadoControl: true });
+      return;
+    }
+    desactivarPantalla({ forzadoControl: true });
+  }
+
+  window.aplicarEstadoBanderasControl = aplicarEstadoBanderasControl;
+
+  function bandera(boton, _opciones = {}) {
     const overlay = document.getElementById('overlay');
     if (boton.value == 0) {
         overlay.style.display = 'flex';
-        
-        if (player == 1) {
-            // Aplicar animación azul para player 1
-            overlay.style.backgroundColor = '';
-            overlay.classList.remove('bright-pulse-background'); // Remueve si estaba activo
-            overlay.classList.add('blue-pulse-background');
-        } else if (player == 2) {
+        const equipo = Number(player);
+        overlay.classList.remove('bright-pulse-background');
+        overlay.classList.remove('blue-pulse-background');
+        if (equipo === 2) {
             // Aplicar animación roja para player 2
-            overlay.style.backgroundColor = '';
-            overlay.classList.remove('blue-pulse-background'); // Remueve si estaba activo
+            overlay.style.backgroundColor = '#991010';
             overlay.classList.add('bright-pulse-background');
+        } else {
+            // Aplicar animación azul para player 1 y fallback para valores desconocidos
+            overlay.style.backgroundColor = '#1b4fb8';
+            overlay.classList.add('blue-pulse-background');
         }
         
         boton.value = 1;
@@ -389,7 +421,11 @@ function mostrarTextoCompleto(boton) {
     }
   }
 
-  function desactivarPantalla() {
+  function desactivarPantalla(opciones = {}) {
+    const forzadoControl = Boolean(opciones && opciones.forzadoControl);
+    if (bandera_bloqueada_por_control && !forzadoControl) {
+      return;
+    }
     const overlay = document.getElementById('overlay');
     overlay.style.display = 'none';
     overlay.style.backgroundColor = '';
@@ -399,6 +435,9 @@ function mostrarTextoCompleto(boton) {
     const boton = document.getElementById('btn_bandera');
     if (boton) {
         boton.value = 0;
+    }
+    if (forzadoControl) {
+      actualizarBloqueoBanderaControl(false);
     }
     desactivarAgitado();
     limpiarAvisoMotion();

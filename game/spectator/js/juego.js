@@ -1,8 +1,10 @@
 let delay_animacion;
 let delay_animacion_cabecera;
 let isFullscreen = false;
+const permitirScrollManualEspectador = false;
 
 document.addEventListener('keydown', function (event) {
+  if (!permitirScrollManualEspectador) return;
   const key = event.key;
 
   if (key === 'ArrowUp') {
@@ -15,6 +17,7 @@ document.addEventListener('keydown', function (event) {
 });
 
 function smoothScrollBy(value) {
+  if (!permitirScrollManualEspectador) return;
   window.scrollBy({
       top: value,
       behavior: 'smooth'

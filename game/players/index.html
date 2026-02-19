@@ -8,16 +8,16 @@
     <title>SCRB - Escritxr ✍️</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260213d">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260219f">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="page-players">
     <script src="../config.js"></script>
-    <script src="./js/juego.js"></script>
+    <script src="./js/juego.js?v=20260218h"></script>
     <div id="corazones_escritor" class="corazones-flotantes"></div>
-    <div align="center">
+    <div id="players_fit_root" align="center">
     <div class="cabecera">
     <pre id="neon" class="neon">
         __     _____    _____   _____    _____    __       ____  
@@ -54,7 +54,14 @@
         </div>
         <div class="calentamiento-overlay-ui">
             <h2 class="calentamiento-titulo">CALENTAMIENTO</h2>
+            <p id="calentamiento_consigna_escritor" class="calentamiento-consigna-chip tipo-libre">CONSIGNA: LIBRE</p>
             <p id="calentamiento_estado_escritor" class="calentamiento-global-estado">Esperando vista de calentamiento.</p>
+            <div class="calentamiento-overlay-actions">
+                <button id="calentamiento_bloquear_escritor" class="calentamiento-bloquear-btn" type="button">
+                    SELECCIONA PALABRAS
+                </button>
+            </div>
+            <div id="calentamiento_final_escritor" class="calentamiento-final-chip" aria-live="polite"></div>
         </div>
     </section>
     <div class="container">
@@ -235,23 +242,28 @@
         </div> 
             <br><br>
             <div class="info-total">
-                <table id="metadatos" class="right">
-                    <tr>
-                        <th>🖋️</th>
-                        <th>🎨</th>
-                    </tr>
-                    <tr>
-                        <th id="puntos"> 0 palabras</th>
-                        <th id="musas">0 musas</th>
-                    </tr>
-                </table>
-                </br>
+                                <div id="metadatos" class="right metadatos-grid metadatos-grid--cabecera marcador-escritor marcador-equipo">
+                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                        <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Palabras</span>
+                            <span id="puntos" class="puntos">0 palabras</span>
+                        </div>
+                    </div>
+                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                        <span class="meta-icon">&#x1F3A8;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Musas</span>
+                            <span id="musas" class="musas-total">0 musas</span>
+                        </div>
+                    </div>
+                </div>
             <div>
                 <table class="info">
                     <tr>
                         <p id="explicación" class="explicación"></p>
                     </tr>
-                    <p id="palabra" class=palabra></p>
+                    <p id="palabra"></p>
                     </tr>
                     <tr>
                         <p id="definicion" class="definicion"></p>
@@ -262,6 +274,7 @@
     </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js?v=20260219g"></script>
 </html>
+
 
