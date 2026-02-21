@@ -1222,6 +1222,52 @@ function obtenerEstiloMusa() {
     return "color: orange;";
 }
 
+function forzarVisibilidadAccionesLecturaFinal(activo) {
+    const contenedorAcciones = document.getElementById("metadatos_acciones");
+    const botonTextoCompleto = document.getElementById("mostrar_texto");
+    const botonBandera = document.getElementById("btn_bandera");
+    const cardTexto = botonTextoCompleto && botonTextoCompleto.closest ? botonTextoCompleto.closest(".marcador-accion") : null;
+    const cardBandera = botonBandera && botonBandera.closest ? botonBandera.closest(".marcador-accion") : null;
+
+    const elementos = [contenedorAcciones, cardTexto, cardBandera, botonTextoCompleto, botonBandera].filter(Boolean);
+    elementos.forEach((el) => {
+        if (!el || !el.style) return;
+        if (activo) {
+            if (!Object.prototype.hasOwnProperty.call(el.dataset, "lecturaVisDisplayPrev")) {
+                el.dataset.lecturaVisDisplayPrev = el.style.display || "";
+                el.dataset.lecturaVisVisibilityPrev = el.style.visibility || "";
+                el.dataset.lecturaVisOpacityPrev = el.style.opacity || "";
+                el.dataset.lecturaVisPointerPrev = el.style.pointerEvents || "";
+            }
+            if (el === contenedorAcciones) {
+                el.style.display = "grid";
+            } else {
+                el.style.display = "";
+            }
+            el.style.visibility = "visible";
+            el.style.opacity = "1";
+            el.style.pointerEvents = "auto";
+        } else if (Object.prototype.hasOwnProperty.call(el.dataset, "lecturaVisDisplayPrev")) {
+            el.style.display = el.dataset.lecturaVisDisplayPrev;
+            el.style.visibility = el.dataset.lecturaVisVisibilityPrev;
+            el.style.opacity = el.dataset.lecturaVisOpacityPrev;
+            el.style.pointerEvents = el.dataset.lecturaVisPointerPrev;
+            delete el.dataset.lecturaVisDisplayPrev;
+            delete el.dataset.lecturaVisVisibilityPrev;
+            delete el.dataset.lecturaVisOpacityPrev;
+            delete el.dataset.lecturaVisPointerPrev;
+        }
+    });
+
+    if (activo) {
+        if (typeof setUiPartidaFinalizadaMusa === "function") {
+            setUiPartidaFinalizadaMusa(true);
+        } else if (typeof setUiPartidaActivaMusa === "function") {
+            setUiPartidaActivaMusa(true);
+        }
+    }
+}
+
 function mostrarMensajeLecturaFinal() {
     const musaLabel = nombre_musa || "MUSA";
     const estiloMusa = obtenerEstiloMusa();
@@ -1272,6 +1318,7 @@ function resetearTemporizadorLectura() {
     detenerTemporizadorLectura();
     lectura_estado_guardado = null;
     limpiarTemporizadorLecturaPersistente();
+    forzarVisibilidadAccionesLecturaFinal(false);
     mostrarBarraVida();
 }
 
@@ -1279,6 +1326,7 @@ function cancelarTemporizadorLectura() {
     detenerTemporizadorLectura();
     restaurarEstadoLectura();
     limpiarTemporizadorLecturaPersistente();
+    forzarVisibilidadAccionesLecturaFinal(false);
     tiempo.innerHTML = "";
     tiempo.style.display = "none";
     ocultarBarraVida();
@@ -1295,6 +1343,7 @@ function iniciarTemporizadorLectura(duracion, finTimestamp) {
     resetearTemporizadorLectura();
     guardarEstadoLectura();
     mostrarMensajeLecturaFinal();
+    forzarVisibilidadAccionesLecturaFinal(true);
     temporizador_lectura_restante = Math.max(0, Number(duracion) || (10 * 60));
     temporizador_lectura_activo = true;
     tiempo.style.display = "";
@@ -1330,6 +1379,7 @@ function restaurarTemporizadorLecturaPersistente() {
         temporizador_lectura_activo = false;
         ocultarBarraVida();
         mostrarMensajeLecturaFinal();
+        forzarVisibilidadAccionesLecturaFinal(true);
     }
 }
 

@@ -5858,3 +5858,39 @@ body.vista-nube-inspiracion .nube-inspiracion-espectador {
   }
 }
 
+
+/* ===== MUSAS: evitar truncado con puntos suspensivos en consejos ===== */
+/*
+   Cuando la definición proviene de una musa, el texto puede ser largo
+   ([NOMBRE MUSA]: Podrías escribir...) y en tamaños pequeños terminaba
+   cortado con ellipsis. Estas reglas hacen que aproveche todo el ancho
+   disponible del panel y, si aun así no cabe, que haga salto de línea en
+   vez de truncarlo.
+*/
+body.page-players #definicion[data-origen-musa="musa"],
+body.page-players #definicion[data-origen-musa="musa_enemiga"] {
+  width: 100%;
+  max-width: 100% !important;
+  max-height: none !important;
+  overflow: visible;
+  overflow-x: visible;
+  overflow-y: visible;
+  white-space: normal;
+  text-overflow: clip;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+body.page-players #definicion.objetivo-nivel[data-origen-musa="musa"] .objetivo-def,
+body.page-players #definicion.objetivo-nivel[data-origen-musa="musa_enemiga"] .objetivo-def {
+  width: 100%;
+  max-width: 100% !important;
+  min-height: auto;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
