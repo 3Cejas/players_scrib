@@ -1191,17 +1191,34 @@ function limpiarTemporizadorLecturaPersistente() {
 }
 
 function obtenerEstiloMusa() {
-    const p = Number(player);
+    // IMPORTANTE: tras un refresh, `restaurarTemporizadorLecturaPersistente()` puede ejecutarse
+    // antes de que la variable global `player` esté inicializada. Por eso añadimos fallback
+    // al query param y también al estilo computado del input `nombre1`.
+    const p = Number(player || getParameterByName("player"));
     if (p === 1) {
         return "color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
     }
     if (p === 2) {
         return "color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
     }
-    if (nombre1 && nombre1.style && nombre1.style.color) {
-        const sombra = nombre1.style.textShadow ? ` text-shadow: ${nombre1.style.textShadow};` : "";
-        return `color:${nombre1.style.color};${sombra}`;
+
+    if (nombre1) {
+        // 1) Intento con estilo inline (si ya se aplicó en la inicialización)
+        if (nombre1.style && nombre1.style.color) {
+            const sombraInline = nombre1.style.textShadow ? ` text-shadow: ${nombre1.style.textShadow};` : "";
+            return `color:${nombre1.style.color};${sombraInline}`;
+        }
+
+        // 2) Fallback robusto al estilo computado (por si viene de CSS y no de inline style)
+        const estilo = window.getComputedStyle ? window.getComputedStyle(nombre1) : null;
+        if (estilo && estilo.color) {
+            const sombraComputada = estilo.textShadow && estilo.textShadow !== "none"
+                ? ` text-shadow: ${estilo.textShadow};`
+                : "";
+            return `color:${estilo.color};${sombraComputada}`;
+        }
     }
+
     return "color: orange;";
 }
 
@@ -1698,8 +1715,6 @@ if (nombre_musa_label && nombre_musa) {
     nombre_musa_label.textContent = nombre_musa;
 }
 
-restaurarTemporizadorLecturaPersistente();
-
 var player = getParameterByName("player");
 actualizarTemaCalentamiento(player);
 let enviar_ventaja;
@@ -1737,6 +1752,12 @@ let enviar_ventaja;
     }
 
 aplicarColorTemporizadorVotacionVentaja(player);
+
+// Se restaura DESPUÉS de inicializar `player` y de aplicar el estilo del equipo.
+// Si se hace antes (como ocurría), `obtenerEstiloMusa()` cae en el fallback naranja
+// al recargar la página porque `player` todavía está indefinido y el estilo aún no existe.
+restaurarTemporizadorLecturaPersistente();
+
 configurarColorRegalo();
 actualizarNombreRegalo();
 if (regalo_pdf_pendiente) {

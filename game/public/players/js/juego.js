@@ -386,11 +386,40 @@ function mostrarTextoCompleto(boton) {
     desactivarPantalla({ forzadoControl: true });
   }
 
-  window.aplicarEstadoBanderasControl = aplicarEstadoBanderasControl;
+    window.aplicarEstadoBanderasControl = aplicarEstadoBanderasControl;
+
+  // Durante el calentamiento puede ocultarse el contenedor de acciones (o crear un stacking context),
+  // y el #overlay queda invisible aunque se active. Para evitarlo, “portalizamos” el overlay al <body>
+  // cuando se usa la bandera, de modo que no dependa del contenedor original.
+  function asegurarOverlayBanderaVisible() {
+    const overlay = document.getElementById('overlay');
+    if (!overlay) return null;
+
+    // Movemos el overlay al body una única vez para que no quede dentro de un contenedor oculto.
+    if (document.body && overlay.parentElement !== document.body) {
+      if (!overlay.dataset.portalizadoBandera) {
+        overlay.dataset.portalizadoBandera = '1';
+      }
+      document.body.appendChild(overlay);
+    }
+
+    // Refuerzo visual para que siempre quede por encima, independientemente del CSS del calentamiento.
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.right = '0';
+    overlay.style.bottom = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100dvh';
+    overlay.style.zIndex = '2147483647';
+
+    return overlay;
+  }
 
   function bandera(boton, _opciones = {}) {
     const forzar = Boolean(_opciones && _opciones.forzar);
-    const overlay = document.getElementById('overlay');
+    const overlay = asegurarOverlayBanderaVisible();
+    if (!overlay) return;
     if (boton.value == 0 || forzar) {
         overlay.style.display = 'flex';
         const equipo = Number(player);
