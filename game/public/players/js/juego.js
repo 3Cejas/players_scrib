@@ -377,13 +377,10 @@ function mostrarTextoCompleto(boton) {
     actualizarBloqueoBanderaControl(bloqueada);
     const boton = document.getElementById('btn_bandera');
     if (!boton) return;
-    const overlay = document.getElementById('overlay');
-    const overlayVisible = overlay && overlay.style.display === 'flex';
     if (activa) {
-      if (Number(boton.value) !== 0 && !overlayVisible) {
-        boton.value = 0;
-      }
-      bandera(boton, { forzadoControl: true });
+      // Forzamos activación para evitar estados desincronizados del botón local.
+      boton.value = 0;
+      bandera(boton, { forzadoControl: true, forzar: true });
       return;
     }
     desactivarPantalla({ forzadoControl: true });
@@ -392,8 +389,9 @@ function mostrarTextoCompleto(boton) {
   window.aplicarEstadoBanderasControl = aplicarEstadoBanderasControl;
 
   function bandera(boton, _opciones = {}) {
+    const forzar = Boolean(_opciones && _opciones.forzar);
     const overlay = document.getElementById('overlay');
-    if (boton.value == 0) {
+    if (boton.value == 0 || forzar) {
         overlay.style.display = 'flex';
         const equipo = Number(player);
         overlay.classList.remove('bright-pulse-background');

@@ -5467,7 +5467,9 @@ body.vista-nube-inspiracion #calentamiento_espectador,
 body.vista-nube-inspiracion #stats_espectador,
 body.vista-nube-inspiracion #teleprompter_overlay,
 body.vista-nube-inspiracion #temporizador_gigante,
-body.vista-nube-inspiracion #espectador_fulgor_root {
+body.vista-nube-inspiracion #espectador_fulgor_root,
+body.vista-nube-inspiracion #feedback_tiempo_flotante_root,
+body.vista-nube-inspiracion #lightning {
   display: none !important;
 }
 
@@ -5855,5 +5857,4 @@ body.vista-nube-inspiracion .nube-inspiracion-espectador {
     grid-template-columns: 1fr;
   }
 }
-
 

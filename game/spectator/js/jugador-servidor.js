@@ -556,6 +556,7 @@ function obtenerClaseFeedbackTiempoFlotante(payload = {}) {
 }
 
 function mostrarFeedbackFlotanteEspectador(playerId, texto, opciones = {}) {
+    if (vista_espectador_modo_resuelta === "nube_inspiracion") return;
     const id = Number(playerId);
     if (id !== 1 && id !== 2) return;
     const contenedor = feedback_tiempo_flotante_espectador[id];
@@ -1488,6 +1489,9 @@ const actualizarVisibilidadPanelNivelEspectador = () => {
 const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
     vista_espectador_modo_resuelta = modo;
+    if (modo === "nube_inspiracion") {
+        limpiarFeedbackFlotanteEspectador();
+    }
     if (document.body) {
         document.body.classList.toggle("vista-calentamiento", modo === "calentamiento");
         document.body.classList.toggle("vista-stats", modo === "stats");
@@ -4911,6 +4915,5 @@ function posicionarScrollEnUltimaLinea(node, pos) {
     const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
     node.scrollTop = Math.max(0, Math.min(target, maxScroll));
 }
-
 
 
