@@ -563,6 +563,7 @@ if (tiempo) {
 }
 
 const calentamiento_escritor = getEl("calentamiento_escritor");
+const calentamiento_stage_escritor = document.querySelector("#calentamiento_escritor .calentamiento-stage");
 const calentamiento_nube_escritor = getEl("calentamiento_nube_escritor");
 const calentamiento_cursor_escritor_1 = getEl("calentamiento_cursor_escritor_1");
 const calentamiento_cursor_escritor_2 = getEl("calentamiento_cursor_escritor_2");
@@ -830,6 +831,19 @@ const obtenerMinYPalabrasCalentamientoEscritor = () => {
     return limitarPct(yPct, 12, 62);
 };
 
+const obtenerRectStageCalentamientoEscritor = () => {
+    if (!calentamiento_stage_escritor || typeof calentamiento_stage_escritor.getBoundingClientRect !== "function") {
+        return null;
+    }
+    const rect = calentamiento_stage_escritor.getBoundingClientRect();
+    const width = Number(rect && rect.width) || 0;
+    const height = Number(rect && rect.height) || 0;
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+        return null;
+    }
+    return rect;
+};
+
 const aplicarCursorCalentamientoEscritor = (elemento, cursor) => {
     if (!elemento) return;
     const visible = Boolean(cursor && cursor.visible);
@@ -837,8 +851,18 @@ const aplicarCursorCalentamientoEscritor = (elemento, cursor) => {
     if (!visible) return;
     const x = typeof cursor.x === "number" ? cursor.x : 50;
     const y = typeof cursor.y === "number" ? cursor.y : 50;
-    elemento.style.left = `${Math.max(0, Math.min(100, x))}%`;
-    elemento.style.top = `${Math.max(0, Math.min(100, y))}%`;
+    const xPct = Math.max(0, Math.min(100, x));
+    const yPct = Math.max(0, Math.min(100, y));
+    const rectStage = obtenerRectStageCalentamientoEscritor();
+    if (rectStage) {
+        const xPx = (xPct / 100) * rectStage.width;
+        const yPx = (yPct / 100) * rectStage.height;
+        elemento.style.left = `${xPx}px`;
+        elemento.style.top = `${yPx}px`;
+        return;
+    }
+    elemento.style.left = `${xPct}%`;
+    elemento.style.top = `${yPct}%`;
 };
 
 const renderizarCursoresCalentamientoEscritor = () => {
@@ -1088,6 +1112,15 @@ const enviarCursorCalentamiento = (x, y, visible = true) => {
 
 window.addEventListener("mousemove", (evt) => {
     if (!vista_calentamiento_escritor) return;
+    const rectStage = obtenerRectStageCalentamientoEscritor();
+    if (rectStage) {
+        const ancho = rectStage.width || 1;
+        const alto = rectStage.height || 1;
+        const x = ((evt.clientX - rectStage.left) / ancho) * 100;
+        const y = ((evt.clientY - rectStage.top) / alto) * 100;
+        enviarCursorCalentamiento(x, y, true);
+        return;
+    }
     const ancho = window.innerWidth || 1;
     const alto = window.innerHeight || 1;
     enviarCursorCalentamiento((evt.clientX / ancho) * 100, (evt.clientY / alto) * 100, true);
@@ -1101,6 +1134,7 @@ window.addEventListener("blur", () => {
 window.addEventListener("resize", () => {
     if (vista_calentamiento_escritor) {
         renderizarPalabrasCalentamientoEscritor();
+        renderizarCursoresCalentamientoEscritor();
     }
     programarAjusteViewportEscritora();
 });
