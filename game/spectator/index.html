@@ -15,7 +15,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260219e">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260224b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
@@ -78,9 +78,10 @@
                 </div>
             </div>
             <div class="calentamiento-overlay-ui">
-                <h2 class="calentamiento-titulo">CALENTAMIENTO</h2>
-                <p id="calentamiento_consigna_espectador" class="calentamiento-consigna-chip tipo-libre">CONSIGNA: LIBRE</p>
-                <p id="calentamiento_global_estado" class="calentamiento-global-estado">Calentamiento inactivo.</p>
+                <h2 class="calentamiento-titulo">TUTORIAL</h2>
+                <p id="calentamiento_consigna_espectador" class="calentamiento-consigna-chip tipo-lugares">DETONADOR: LUGARES</p>
+                <div id="calentamiento_detonadores_historial" class="calentamiento-detonadores-historial" aria-live="polite"></div>
+                <p id="calentamiento_global_estado" class="calentamiento-global-estado">Tutorial inactivo.</p>
                 <div id="calentamiento_finales" class="calentamiento-finales">
                     <div id="calentamiento_final_j1" class="calentamiento-final-card equipo-1">
                         <span class="final-label">ESCRITXR 1</span>
@@ -112,31 +113,45 @@
                 <h2 class="nube-inspiracion-titulo">NUBE DE INSPIRACION</h2>
             </div>
         </section>
+        <section id="creditos_espectador" class="creditos-espectador" aria-live="polite">
+            <div id="creditos_track" class="creditos-track">
+                <div id="creditos_content" class="creditos-content"></div>
+            </div>
+        </section>
         <div class="contenedor" id="contenedor_espectador">
             <div class="jugador1">
                 <p id="tiempo" class="tiempo tiempo-vida"></p>
                 <p id="feedback_tiempo" class="feedback_tiempo"></p>
                 <input disabled style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre"></input>
-                <div id="resucitar_mini_1" class="resucitar-mini equipo-azul">
-                    <div class="resucitar-mini-header">💀 GAME OVER</div>
-                    <div class="resucitar-mini-panel resucitar-mini-main" data-menu="main">
-                        <div class="resucitar-mini-question">&iquest;Resucitar?</div>
-                        <div class="resucitar-mini-buttons">
-                            <span class="resucitar-mini-btn" data-btn="si">S&iacute;</span>
-                            <span class="resucitar-mini-btn" data-btn="no">No</span>
+                <div id="resucitar_mini_1" class="resucitar-spectator equipo-azul">
+                    <div class="resucitar-panel resucitar-main-panel" data-menu="main">
+                        <div class="resucitar-header">
+                            <h1 class="main-title">
+                                <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
+                                <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
+                            </h1>
+                        </div>
+                        <div class="resucitar-row">
+                            <div class="resucitar-actions">
+                                <div class="button-container resucitar-buttons">
+                                    <button class="selected" type="button" data-btn="si">S&iacute;</button>
+                                    <button type="button" data-btn="no">No</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="resucitar-mini-panel resucitar-mini-quantity" data-menu="quantity">
-                        <div class="resucitar-mini-question">Palabras &#8594; Segundos</div>
-                        <div class="resucitar-mini-converter">
-                            <span class="resucitar-mini-value palabras">1</span>
-                            <span class="resucitar-mini-arrow">&#8594;</span>
-                            <span class="resucitar-mini-value segundos">3</span>
-                            <span class="resucitar-mini-max">MAX 0</span>
+                    <div class="resucitar-panel resucitar-quantity-panel" data-menu="quantity">
+                        <div class="resucitar-header">
+                            <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
+                            <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
                         </div>
-                        <div class="resucitar-mini-buttons">
-                            <span class="resucitar-mini-btn" data-btn="confirmar">Confirmar</span>
-                            <span class="resucitar-mini-btn" data-btn="atras">Atr&aacute;s</span>
+                        <div class="resucitar-row">
+                            <div class="resucitar-actions">
+                                <div class="quantity-display" data-resucitar-display></div>
+                                <div class="button-container resucitar-buttons">
+                                    <button type="button" data-btn="confirmar">Confirmar</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,26 +198,35 @@
                     <p id="tiempo1" class="tiempo tiempo-vida"></p>
                     <p id="feedback_tiempo1" class="feedback_tiempo"></p>
                 <input disabled style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre"></input>
-                <div id="resucitar_mini_2" class="resucitar-mini equipo-rojo">
-                    <div class="resucitar-mini-header">💀 GAME OVER</div>
-                    <div class="resucitar-mini-panel resucitar-mini-main" data-menu="main">
-                        <div class="resucitar-mini-question">&iquest;Resucitar?</div>
-                        <div class="resucitar-mini-buttons">
-                            <span class="resucitar-mini-btn" data-btn="si">S&iacute;</span>
-                            <span class="resucitar-mini-btn" data-btn="no">No</span>
+                <div id="resucitar_mini_2" class="resucitar-spectator equipo-rojo">
+                    <div class="resucitar-panel resucitar-main-panel" data-menu="main">
+                        <div class="resucitar-header">
+                            <h1 class="main-title">
+                                <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
+                                <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
+                            </h1>
+                        </div>
+                        <div class="resucitar-row">
+                            <div class="resucitar-actions">
+                                <div class="button-container resucitar-buttons">
+                                    <button class="selected" type="button" data-btn="si">S&iacute;</button>
+                                    <button type="button" data-btn="no">No</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="resucitar-mini-panel resucitar-mini-quantity" data-menu="quantity">
-                        <div class="resucitar-mini-question">Palabras &#8594; Segundos</div>
-                        <div class="resucitar-mini-converter">
-                            <span class="resucitar-mini-value palabras">1</span>
-                            <span class="resucitar-mini-arrow">&#8594;</span>
-                            <span class="resucitar-mini-value segundos">3</span>
-                            <span class="resucitar-mini-max">MAX 0</span>
+                    <div class="resucitar-panel resucitar-quantity-panel" data-menu="quantity">
+                        <div class="resucitar-header">
+                            <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
+                            <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
                         </div>
-                        <div class="resucitar-mini-buttons">
-                            <span class="resucitar-mini-btn" data-btn="confirmar">Confirmar</span>
-                            <span class="resucitar-mini-btn" data-btn="atras">Atr&aacute;s</span>
+                        <div class="resucitar-row">
+                            <div class="resucitar-actions">
+                                <div class="quantity-display" data-resucitar-display></div>
+                                <div class="button-container resucitar-buttons">
+                                    <button type="button" data-btn="confirmar">Confirmar</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -254,7 +278,7 @@
     </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260219d"></script>
+<script src="./js/jugador-servidor.js?v=20260224a"></script>
 </html>
 
 

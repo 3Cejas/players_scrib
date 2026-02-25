@@ -516,16 +516,19 @@ function cambiar_vista_calentamiento(boton) {
     vista_calentamiento = !vista_calentamiento;
     actualizarBotonVistaCalentamiento(boton);
     socket.emit('cambiar_vista_calentamiento', { activo: vista_calentamiento });
+    if (vista_calentamiento) {
+        pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
+    }
 }
 
 function actualizarBotonVistaCalentamiento(boton) {
     const destino = boton || document.getElementById("boton_vista_calentamiento");
     if (!destino) return;
-    destino.textContent = vista_calentamiento ? "\u{1F3AE} VISTA PARTIDA" : "\u{1F525} VISTA CALENTAMIENTO";
+    destino.textContent = vista_calentamiento ? "\u{1F3AE} VISTA PARTIDA" : "\u{1F525} VISTA TUTORIAL";
     destino.dataset.activo = vista_calentamiento ? "1" : "0";
 }
 
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "stats", "nube_inspiracion"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "stats", "nube_inspiracion", "creditos"]);
 const normalizarModoVistaEspectador = (valor) => {
     const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
     return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "partida";
@@ -534,6 +537,7 @@ const normalizarModoVistaEspectador = (valor) => {
 function actualizarBotonesVistaEspectadorControl() {
     const botonStats = document.getElementById("boton_vista_stats");
     const botonNube = document.getElementById("boton_vista_nube_inspiracion");
+    const botonCreditos = document.getElementById("boton_mostrar_creditos");
     if (botonStats) {
         const activo = vista_espectador_modo === "stats";
         botonStats.dataset.active = activo ? "1" : "0";
@@ -543,6 +547,11 @@ function actualizarBotonesVistaEspectadorControl() {
         const activo = vista_espectador_modo === "nube_inspiracion";
         botonNube.dataset.active = activo ? "1" : "0";
         botonNube.classList.toggle("is-active", activo);
+    }
+    if (botonCreditos) {
+        const activo = vista_espectador_modo === "creditos";
+        botonCreditos.dataset.active = activo ? "1" : "0";
+        botonCreditos.classList.toggle("is-active", activo);
     }
 }
 
@@ -559,20 +568,33 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
     actualizarBotonesVistaEspectadorControl();
 }
 
-const TIPOS_SOLICITUD_CALENTAMIENTO = new Set(["libre", "lugares", "acciones", "frase_final"]);
+function mostrarCreditosEspectador() {
+    const creditos = obtenerCreditosDesdePanelControl();
+    creditos_estado_control = { ...creditos };
+    vista_espectador_modo = "creditos";
+    actualizarBotonesVistaEspectadorControl();
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        return;
+    }
+    socket.emit("creditos_actualizar", { creditos });
+    socket.emit("mostrar_creditos_espectador", { creditos });
+}
+
+const ORDEN_SOLICITUD_CALENTAMIENTO = ["lugares", "acciones", "frase_final"];
+const SOLICITUD_CALENTAMIENTO_POR_DEFECTO = ORDEN_SOLICITUD_CALENTAMIENTO[0];
+const TIPOS_SOLICITUD_CALENTAMIENTO = new Set(ORDEN_SOLICITUD_CALENTAMIENTO);
 const ETIQUETAS_SOLICITUD_CALENTAMIENTO = {
-    libre: "LIBRE",
     lugares: "LUGARES",
     acciones: "ACCIONES",
     frase_final: "PALABRAS PARA FRASE FINAL"
 };
-let solicitud_calentamiento_actual = "libre";
+let solicitud_calentamiento_actual = SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
 
 function actualizarSolicitudCalentamientoControl(payload = {}) {
     const tipoRecibido = (payload && typeof payload.solicitud === "string")
         ? payload.solicitud
-        : (payload && typeof payload.tipo === "string" ? payload.tipo : "libre");
-    const tipo = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipoRecibido) ? tipoRecibido : "libre";
+        : (payload && typeof payload.tipo === "string" ? payload.tipo : SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
+    const tipo = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipoRecibido) ? tipoRecibido : SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
     solicitud_calentamiento_actual = tipo;
 
     const botones = document.querySelectorAll("[data-solicitud-calentamiento]");
@@ -584,7 +606,7 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
 
     const estado = document.getElementById("calentamiento_solicitud_actual");
     if (estado) {
-        const etiqueta = ETIQUETAS_SOLICITUD_CALENTAMIENTO[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO.libre;
+        const etiqueta = ETIQUETAS_SOLICITUD_CALENTAMIENTO[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO[SOLICITUD_CALENTAMIENTO_POR_DEFECTO];
         estado.textContent = `CONSIGNA ACTUAL: ${etiqueta}`;
     }
 
@@ -609,21 +631,57 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
 }
 
 function pedir_solicitud_calentamiento(tipo) {
-    const destino = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipo) ? tipo : "libre";
+    const destino = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipo) ? tipo : SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
     socket.emit("calentamiento_solicitud", { tipo: destino });
     actualizarSolicitudCalentamientoControl({ tipo: destino });
 }
 
 let parametros_visibles = false;
+let creditos_visibles = false;
 let teleprompter_visible = false;
+let panel_control_previo_teleprompter = "controles";
 let teleprompter_emit_timeout = null;
 let teleprompter_play_raf = null;
 let teleprompter_last_tick = null;
+let creditos_emit_timeout = null;
+let listeners_creditos_inicializados = false;
 
 const TELEPROMPTER_FONT_MIN = 18;
 const TELEPROMPTER_FONT_MAX = 80;
 const TELEPROMPTER_SPEED_MIN = 5;
 const TELEPROMPTER_SPEED_MAX = 200;
+const CREDITOS_TEXT_MAX = 80;
+const CREDITOS_AGRADECIMIENTOS_MAX = 420;
+const PANEL_CONTROL_MODOS = new Set(["controles", "parametros", "creditos", "teleprompter"]);
+const CAMPOS_CREDITOS_CONTROL = [
+    ["escritxr_rojo", "credito_escritxr_rojo", CREDITOS_TEXT_MAX],
+    ["escritxr_azul", "credito_escritxr_azul", CREDITOS_TEXT_MAX],
+    ["interprete_azul_1", "credito_interprete_azul_1", CREDITOS_TEXT_MAX],
+    ["interprete_azul_2", "credito_interprete_azul_2", CREDITOS_TEXT_MAX],
+    ["interprete_rojo_1", "credito_interprete_rojo_1", CREDITOS_TEXT_MAX],
+    ["interprete_rojo_2", "credito_interprete_rojo_2", CREDITOS_TEXT_MAX],
+    ["programacion", "credito_programacion", CREDITOS_TEXT_MAX],
+    ["dramaturgia", "credito_dramaturgia", CREDITOS_TEXT_MAX],
+    ["iluminacion", "credito_iluminacion", CREDITOS_TEXT_MAX],
+    ["musica", "credito_musica", CREDITOS_TEXT_MAX],
+    ["voz_off", "credito_voz_off", CREDITOS_TEXT_MAX]
+];
+const CAMPO_AGRADECIMIENTOS_CONTROL = ["agradecimientos", "credito_agradecimientos", CREDITOS_AGRADECIMIENTOS_MAX];
+const ESTADO_CREDITOS_POR_DEFECTO = {
+    escritxr_rojo: "",
+    escritxr_azul: "",
+    interprete_azul_1: "",
+    interprete_azul_2: "",
+    interprete_rojo_1: "",
+    interprete_rojo_2: "",
+    programacion: "",
+    dramaturgia: "",
+    iluminacion: "",
+    musica: "",
+    voz_off: "",
+    agradecimientos: ""
+};
+let creditos_estado_control = { ...ESTADO_CREDITOS_POR_DEFECTO };
 
 const teleprompter_state = {
     visible: false,
@@ -655,68 +713,196 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
 
-function toggleParametros() {
-    if (teleprompter_visible) {
-        toggleTeleprompter(true);
-        parametros_visibles = false;
-        const panelControles = document.getElementById("panel_controles");
-        const panelParametros = document.getElementById("panel_parametros");
-        const panelParametrosExtra = document.getElementById("panel_parametros_extra");
-        const boton = document.getElementById("boton_parametros");
-        if (panelParametros) {
-            panelParametros.classList.add("panel-oculto");
+const normalizarTextoCreditoControl = (valor, max = CREDITOS_TEXT_MAX) => String(valor ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+
+const normalizarTextoAgradecimientosControl = (valor, max = CREDITOS_AGRADECIMIENTOS_MAX) => String(valor ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map((linea) => linea.trim())
+    .filter((linea) => linea.length > 0)
+    .join("\n")
+    .slice(0, max);
+
+const normalizarEstadoCreditosControl = (entrada = {}) => {
+    const data = (entrada && typeof entrada === "object") ? entrada : {};
+    const salida = { ...ESTADO_CREDITOS_POR_DEFECTO };
+    CAMPOS_CREDITOS_CONTROL.forEach(([clave, _id, max]) => {
+        salida[clave] = normalizarTextoCreditoControl(data[clave], max);
+    });
+    salida.agradecimientos = normalizarTextoAgradecimientosControl(data.agradecimientos, CREDITOS_AGRADECIMIENTOS_MAX);
+    return salida;
+};
+
+const aplicarCreditosEnPanelControl = (estado = {}) => {
+    const data = normalizarEstadoCreditosControl(estado);
+    creditos_estado_control = { ...data };
+    CAMPOS_CREDITOS_CONTROL.forEach(([clave, id]) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        if (input.value !== data[clave]) {
+            input.value = data[clave];
         }
-        if (panelParametrosExtra) {
-            panelParametrosExtra.classList.add("panel-oculto");
-        }
-        if (panelControles) {
-            panelControles.classList.remove("panel-oculto");
-            animateCSS(panelControles, "backInLeft");
-        }
-        if (boton) {
-            boton.textContent = "\u2699\uFE0F PAR\u00C1METROS";
-        }
+    });
+    const textarea = document.getElementById(CAMPO_AGRADECIMIENTOS_CONTROL[1]);
+    if (textarea && textarea.value !== data.agradecimientos) {
+        textarea.value = data.agradecimientos;
+    }
+};
+
+function obtenerCreditosDesdePanelControl() {
+    const data = { ...creditos_estado_control };
+    CAMPOS_CREDITOS_CONTROL.forEach(([clave, id, max]) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        data[clave] = normalizarTextoCreditoControl(input.value, max);
+    });
+    const textarea = document.getElementById(CAMPO_AGRADECIMIENTOS_CONTROL[1]);
+    if (textarea) {
+        data.agradecimientos = normalizarTextoAgradecimientosControl(textarea.value, CREDITOS_AGRADECIMIENTOS_MAX);
+    }
+    return normalizarEstadoCreditosControl(data);
+}
+
+function emitirCreditosControl(inmediato = false) {
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") return;
+    const creditos = obtenerCreditosDesdePanelControl();
+    creditos_estado_control = { ...creditos };
+    if (inmediato) {
+        socket.emit("creditos_actualizar", { creditos });
         return;
     }
-    parametros_visibles = !parametros_visibles;
+    if (creditos_emit_timeout) return;
+    creditos_emit_timeout = setTimeout(() => {
+        creditos_emit_timeout = null;
+        socket.emit("creditos_actualizar", { creditos: obtenerCreditosDesdePanelControl() });
+    }, 120);
+}
+
+function inicializarPanelCreditosControl() {
+    if (listeners_creditos_inicializados) return;
+    const ids = CAMPOS_CREDITOS_CONTROL.map(([, id]) => id);
+    ids.push(CAMPO_AGRADECIMIENTOS_CONTROL[1]);
+    const elementos = ids
+        .map((id) => document.getElementById(id))
+        .filter((el) => Boolean(el));
+    if (!elementos.length) return;
+    listeners_creditos_inicializados = true;
+    elementos.forEach((el) => {
+        el.addEventListener("input", () => {
+            creditos_estado_control = obtenerCreditosDesdePanelControl();
+            emitirCreditosControl();
+        });
+        el.addEventListener("change", () => {
+            creditos_estado_control = obtenerCreditosDesdePanelControl();
+            emitirCreditosControl(true);
+        });
+    });
+    aplicarCreditosEnPanelControl(creditos_estado_control);
+}
+
+window.actualizarCreditosControlRemoto = (payload = {}) => {
+    const creditos = (payload && typeof payload === "object" && payload.creditos)
+        ? payload.creditos
+        : payload;
+    aplicarCreditosEnPanelControl(creditos);
+};
+
+function actualizarBotonesPanelSuperiorControl() {
+    const botonParametros = document.getElementById("boton_parametros");
+    const botonCreditos = document.getElementById("boton_creditos");
+    if (botonParametros) {
+        botonParametros.dataset.active = parametros_visibles ? "1" : "0";
+        botonParametros.classList.toggle("is-active", parametros_visibles);
+        botonParametros.textContent = parametros_visibles ? "\u{1F3AE} CONTROLES" : "\u2699\uFE0F PAR\u00C1METROS";
+    }
+    if (botonCreditos) {
+        botonCreditos.dataset.active = creditos_visibles ? "1" : "0";
+        botonCreditos.classList.toggle("is-active", creditos_visibles);
+        botonCreditos.textContent = creditos_visibles ? "\u{1F3AE} CONTROLES" : "\u{1F3AC} CR\u00C9DITOS";
+    }
+}
+
+function aplicarVistaPanelControl(vistaDestino) {
+    const destino = PANEL_CONTROL_MODOS.has(vistaDestino) ? vistaDestino : "controles";
     const panelControles = document.getElementById("panel_controles");
     const panelParametros = document.getElementById("panel_parametros");
     const panelParametrosExtra = document.getElementById("panel_parametros_extra");
-    const boton = document.getElementById("boton_parametros");
+    const panelCreditos = document.getElementById("panel_creditos");
+    const panelTeleprompter = document.getElementById("panel_teleprompter");
 
-    if (parametros_visibles) {
-        if (panelControles) {
-            animateCSS(panelControles, "backOutLeft").then(() => {
-                panelControles.classList.add("panel-oculto");
-            });
-        }
+    parametros_visibles = destino === "parametros";
+    creditos_visibles = destino === "creditos";
+    teleprompter_visible = destino === "teleprompter";
+
+    if (panelControles) panelControles.classList.add("panel-oculto");
+    if (panelParametros) panelParametros.classList.add("panel-oculto");
+    if (panelParametrosExtra) panelParametrosExtra.classList.add("panel-oculto");
+    if (panelCreditos) panelCreditos.classList.add("panel-oculto");
+    if (panelTeleprompter) panelTeleprompter.classList.add("panel-oculto");
+
+    if (destino === "parametros") {
         if (panelParametros) {
             panelParametros.classList.remove("panel-oculto");
-            animateCSS(panelParametros, "backInLeft");
+            animateCSS(panelParametros, "fadeInLeft");
         }
         if (panelParametrosExtra) {
             panelParametrosExtra.classList.remove("panel-oculto");
-            animateCSS(panelParametrosExtra, "backInLeft");
+            animateCSS(panelParametrosExtra, "fadeInLeft");
         }
-    } else {
-        if (panelParametros) {
-            animateCSS(panelParametros, "backOutLeft").then(() => {
-                panelParametros.classList.add("panel-oculto");
-            });
+        if (typeof asegurarCasillasModos === "function") {
+            asegurarCasillasModos();
         }
-        if (panelParametrosExtra) {
-            animateCSS(panelParametrosExtra, "backOutLeft").then(() => {
-                panelParametrosExtra.classList.add("panel-oculto");
-            });
+    } else if (destino === "creditos") {
+        inicializarPanelCreditosControl();
+        if (panelCreditos) {
+            panelCreditos.classList.remove("panel-oculto");
+            animateCSS(panelCreditos, "fadeInLeft");
         }
-        if (panelControles) {
-            panelControles.classList.remove("panel-oculto");
-            animateCSS(panelControles, "backInLeft");
+    } else if (destino === "teleprompter") {
+        if (panelTeleprompter) {
+            panelTeleprompter.classList.remove("panel-oculto");
+            animateCSS(panelTeleprompter, "fadeInLeft");
         }
+    } else if (panelControles) {
+        panelControles.classList.remove("panel-oculto");
+        animateCSS(panelControles, "fadeInLeft");
     }
-    if (boton) {
-        boton.textContent = parametros_visibles ? "\u{1F3AE} CONTROLES" : "\u2699\uFE0F PAR\u00C1METROS";
+
+    actualizarBotonesPanelSuperiorControl();
+}
+
+function toggleParametros() {
+    const teleprompterEstabaActivo = teleprompter_visible;
+    if (teleprompterEstabaActivo) {
+        teleprompter_state.visible = false;
+        teleprompter_state.playing = false;
+        detenerTeleprompterPlay();
     }
+    const mostrarParametros = teleprompterEstabaActivo ? true : !parametros_visibles;
+    aplicarVistaPanelControl(mostrarParametros ? "parametros" : "controles");
+    actualizarTeleprompterUI();
+    emitirTeleprompter(true);
+}
+
+function toggleCreditos() {
+    const teleprompterEstabaActivo = teleprompter_visible;
+    if (teleprompterEstabaActivo) {
+        teleprompter_state.visible = false;
+        teleprompter_state.playing = false;
+        detenerTeleprompterPlay();
+    }
+    const mostrarCreditos = teleprompterEstabaActivo ? true : !creditos_visibles;
+    aplicarVistaPanelControl(mostrarCreditos ? "creditos" : "controles");
+    inicializarPanelCreditosControl();
+    if (mostrarCreditos) {
+        emitirCreditosControl(true);
+    }
+    actualizarTeleprompterUI();
+    emitirTeleprompter(true);
 }
 
 function actualizarTeleprompterUI() {
@@ -833,38 +1019,27 @@ function detenerTeleprompterPlay() {
 }
 
 function toggleTeleprompter(forzarCerrar = false) {
-    if (forzarCerrar) {
-        teleprompter_visible = false;
-    } else {
-        teleprompter_visible = !teleprompter_visible;
+    const estaVisible = teleprompter_visible;
+    if (forzarCerrar && !estaVisible) {
+        return;
     }
-    const panelControles = document.getElementById("panel_controles");
-    const panelTeleprompter = document.getElementById("panel_teleprompter");
-
-    if (teleprompter_visible) {
-        if (panelControles) {
-            animateCSS(panelControles, "backOutLeft").then(() => {
-                panelControles.classList.add("panel-oculto");
-            });
-        }
-        if (panelTeleprompter) {
-            panelTeleprompter.classList.remove("panel-oculto");
-            animateCSS(panelTeleprompter, "backInLeft");
-        }
+    const abrirTeleprompter = forzarCerrar ? false : !estaVisible;
+    if (abrirTeleprompter) {
+        panel_control_previo_teleprompter = parametros_visibles
+            ? "parametros"
+            : creditos_visibles
+                ? "creditos"
+                : "controles";
+        aplicarVistaPanelControl("teleprompter");
         teleprompter_state.visible = true;
     } else {
-        if (panelTeleprompter) {
-            animateCSS(panelTeleprompter, "backOutLeft").then(() => {
-                panelTeleprompter.classList.add("panel-oculto");
-            });
-        }
-        if (panelControles) {
-            panelControles.classList.remove("panel-oculto");
-            animateCSS(panelControles, "backInLeft");
-        }
         teleprompter_state.visible = false;
         teleprompter_state.playing = false;
         detenerTeleprompterPlay();
+        const vistaRetorno = (PANEL_CONTROL_MODOS.has(panel_control_previo_teleprompter) && panel_control_previo_teleprompter !== "teleprompter")
+            ? panel_control_previo_teleprompter
+            : "controles";
+        aplicarVistaPanelControl(vistaRetorno);
     }
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
@@ -883,7 +1058,7 @@ function teleprompterCargarTexto(jugador) {
     teleprompter_state.source = jugador === 2 ? 2 : 1;
     teleprompter_state.playing = false;
     teleprompter_state.visible = true;
-    teleprompter_visible = true;
+    aplicarVistaPanelControl("teleprompter");
     detenerTeleprompterPlay();
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
@@ -1175,6 +1350,12 @@ if (typeof window !== "undefined") {
     });
     window.addEventListener("load", iniciarTeleprompterGamepad);
     window.addEventListener("load", configurarHoldTeleprompter);
+    window.addEventListener("load", () => {
+        actualizarBotonesPanelSuperiorControl();
+        actualizarBotonesVistaEspectadorControl();
+        inicializarPanelCreditosControl();
+        aplicarCreditosEnPanelControl(creditos_estado_control);
+    });
 }
 function reiniciar_calentamiento() {
     socket.emit('reiniciar_calentamiento');
@@ -1468,3 +1649,4 @@ function frase_final(player){
         frase_final_j2.value = fraseTema;
     }
 }
+

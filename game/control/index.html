@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260219c">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260224d">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -17,7 +17,7 @@
 
 <body>
     <script src="../config.js"></script>
-    <script src="./js/juego.js?v=20260218e"></script>
+    <script src="./js/juego.js?v=20260224c"></script>
     <div class="ascii">
         <pre class="neon">
        __     _____    _____   _____    _____    __       ____  
@@ -34,7 +34,10 @@
         <tbody id="panel_toggle">
             <tr>
                 <td colspan="5">
-                    <span id="boton_parametros" class='btn' onclick="toggleParametros()">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
+                    <div class="panel-toggle-buttons">
+                        <span id="boton_parametros" class='btn' onclick="toggleParametros()">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
+                        <span id="boton_creditos" class='btn' onclick="toggleCreditos()">&#x1F3AC; CR&Eacute;DITOS</span>
+                    </div>
                 </td>
             </tr>
             <tr>
@@ -51,9 +54,9 @@
                 <td colspan="5">
                     <div class="control-groups">
                         <div class="control-group control-group--calentamiento">
-                            <div class="control-group-title">&#x1F525; CALENTAMIENTO</div>
+                            <div class="control-group-title">&#x1F525; TUTORIAL</div>
                             <div class="control-group-buttons control-group-buttons--two">
-                                <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F525; VISTA CALENTAMIENTO</span>
+                                <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F525; VISTA TUTORIAL</span>
                                 <span class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
                                 <span class='btn' onclick="reiniciar_marcador_calentamiento()">&#x1F3C6; REINICIAR MARCADOR</span>
                                 <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F3F3;&#xFE0F; BANDERAS DESACTIVADAS</span>
@@ -64,7 +67,7 @@
                                 <span id="boton_solicitud_acciones" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="acciones" onclick="pedir_solicitud_calentamiento('acciones')">&#x1F3C3; PEDIR ACCIONES</span>
                                 <span id="boton_solicitud_frase_final" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="frase_final" onclick="pedir_solicitud_calentamiento('frase_final')">&#x1F5E3;&#xFE0F; PEDIR FRASE FINAL</span>
                             </div>
-                            <p id="calentamiento_solicitud_actual" class="calentamiento-solicitud-estado">CONSIGNA ACTUAL: LIBRE</p>
+                            <p id="calentamiento_solicitud_actual" class="calentamiento-solicitud-estado">CONSIGNA ACTUAL: LUGARES</p>
                             <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: ABIERTO | J2: ABIERTO</p>
                         </div>
                         <div class="control-group control-group--juego">
@@ -83,6 +86,7 @@
                             <div class="control-group-buttons">
                                 <span class='btn' onclick="descargar_textos()">&#x1F4BE; DESCARGAR TEXTOS</span>
                                 <span class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
+                                <span id="boton_mostrar_creditos" class='btn' onclick="mostrarCreditosEspectador()">&#x1F4DC; MOSTRAR CR&Eacute;DITOS</span>
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
                             </div>
                         </div>
@@ -169,6 +173,69 @@
                                 <span class="tp-legend-item tp-legend-item--circle"><span class="tp-legend-icon">○</span> Tamaño +</span>
                             </div>
                         </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+        <tbody id="panel_creditos" class="panel-oculto">
+            <tr>
+                <td colspan="5">
+                    <div class="creditos-panel">
+                        <div class="creditos-panel-header">
+                            <h3 class="creditos-panel-title">CR&Eacute;DITOS DEL SHOW</h3>
+                            <p class="creditos-panel-help">Editar estos campos actualiza el pase de cr&eacute;ditos del espectador.</p>
+                        </div>
+                        <div class="creditos-form-grid">
+                            <label class="creditos-field" for="credito_escritxr_rojo">
+                                <span>ESCRITXR ROJO</span>
+                                <input id="credito_escritxr_rojo" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr rojo" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_escritxr_azul">
+                                <span>ESCRITXR AZUL</span>
+                                <input id="credito_escritxr_azul" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr azul" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_azul_1">
+                                <span>INT&Eacute;RPRETE AZUL 1</span>
+                                <input id="credito_interprete_azul_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 1" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_azul_2">
+                                <span>INT&Eacute;RPRETE AZUL 2</span>
+                                <input id="credito_interprete_azul_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 2" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_rojo_1">
+                                <span>INT&Eacute;RPRETE ROJO 1</span>
+                                <input id="credito_interprete_rojo_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 1" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_rojo_2">
+                                <span>INT&Eacute;RPRETE ROJO 2</span>
+                                <input id="credito_interprete_rojo_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 2" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_programacion">
+                                <span>PROGRAMACI&Oacute;N</span>
+                                <input id="credito_programacion" class="credito-input" type="text" maxlength="80" placeholder="Programaci&oacute;n" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_dramaturgia">
+                                <span>DRAMATURGIA</span>
+                                <input id="credito_dramaturgia" class="credito-input" type="text" maxlength="80" placeholder="Dramaturgia" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_iluminacion">
+                                <span>ILUMINACI&Oacute;N</span>
+                                <input id="credito_iluminacion" class="credito-input" type="text" maxlength="80" placeholder="Iluminaci&oacute;n" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_musica">
+                                <span>M&Uacute;SICA</span>
+                                <input id="credito_musica" class="credito-input" type="text" maxlength="80" placeholder="M&uacute;sica" autocomplete="off">
+                            </label>
+                            <label class="creditos-field" for="credito_voz_off">
+                                <span>VOZ EN OFF</span>
+                                <input id="credito_voz_off" class="credito-input" type="text" maxlength="80" placeholder="Voz en off" autocomplete="off">
+                            </label>
+                        </div>
+                        <label class="creditos-field creditos-field--full" for="credito_agradecimientos">
+                            <span>AGRADECIMIENTOS</span>
+                            <textarea id="credito_agradecimientos" class="credito-textarea" rows="4" maxlength="420" placeholder="Agradecimientos del show"></textarea>
+                        </label>
+                        <p class="creditos-produccion">UNA PRODUCCI&Oacute;N DE SUTURA TEATRO</p>
                     </div>
                 </td>
             </tr>
@@ -431,7 +498,7 @@
         </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260217d"></script>
+<script src="./js/jugador-servidor.js?v=20260224b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>
 

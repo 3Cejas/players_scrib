@@ -1,4 +1,4 @@
-let delay_animacion;
+﻿let delay_animacion;
 let delay_animacion_recordatorio;
 let isFullscreen = false;
 let letra = "";
@@ -259,10 +259,10 @@ document.addEventListener('keydown', function (event) {
 
   if (key === 'ArrowUp') {
       event.preventDefault();
-      smoothScrollBy(-50); // Ajusta este valor según la cantidad de desplazamiento deseado
+      smoothScrollBy(-50); // Ajusta este valor segÃºn la cantidad de desplazamiento deseado
   } else if (key === 'ArrowDown') {
       event.preventDefault();
-      smoothScrollBy(50); // Ajusta este valor según la cantidad de desplazamiento deseado
+      smoothScrollBy(50); // Ajusta este valor segÃºn la cantidad de desplazamiento deseado
   }
 });
 
@@ -273,7 +273,7 @@ function smoothScrollBy(value) {
   });
 }
 
-//Función auxiliar para crear las animaciones del feedback.
+//FunciÃ³n auxiliar para crear las animaciones del feedback.
 const animateCSS = (element, animation, prefix = "animate__") =>
     // We create a Promise and return it
     new Promise((resolve, reject) => {
@@ -291,43 +291,50 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
 
-//Función auxiliar que envía una palabra al servidor.
+//FunciÃ³n auxiliar que envÃ­a una palabra al servidor.
 function enviarPalabra(button) {
-  if(cooldown || palabra.value == '' || palabra.value == null ){
+  if (cooldown || palabra.value == '' || palabra.value == null) {
     text_progress.classList.add('disabled-click-feedback');
-    
-    // Opcional: remover la clase después de que la animación se complete
-    setTimeout(function() {
+    setTimeout(function () {
       text_progress.classList.remove('disabled-click-feedback');
-    }, 500); // Coincide con la duración de la animación
+    }, 500);
+    return;
   }
-  else{
-  if(palabra.value != '' && palabra.value != null){
-    if((modo_actual == "letra prohibida" && !toNormalForm(palabra.value.toLowerCase()).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(palabra.value.toLowerCase()).includes(letra)) || modo_actual == "palabras bonus" || modo_actual == "palabras prohibidas" ||  letra == 'ñ' && palabra.value.toLowerCase().includes('ñ') || letra == 'n' && modo_actual == "letra prohibida" && palabra.value.toLowerCase().includes('ñ') && !palabra.value.toLowerCase().includes(letra)){
+
+  if (palabra.value != '' && palabra.value != null) {
+    const inspiracionTexto = String(palabra.value || "").trim();
+    const inspiracionMinus = inspiracionTexto.toLowerCase();
+    if (/\s/.test(inspiracionTexto)) {
+      recordatorio.innerHTML = "<span style='color: red;'>No se permiten espacios en la inspiracion.</span>";
+      animateCSS(".recordatorio", "flash").then(() => {
+        delay_animacion_recordatorio = setTimeout(function () {
+          recordatorio.innerHTML = "";
+        }, 1200);
+      });
+      return;
+    }
+    if ((modo_actual == "letra prohibida" && !toNormalForm(inspiracionMinus).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(inspiracionMinus).includes(letra)) || modo_actual == "palabras bonus" || modo_actual == "palabras prohibidas" || letra == 'Ã±' && inspiracionMinus.includes('Ã±') || letra == 'n' && modo_actual == "letra prohibida" && inspiracionMinus.includes('Ã±') && !inspiracionMinus.includes(letra)) {
       startProgress(button);
-      inspiracion = palabra.value.trim().split(/\s+/)[0];
       socket.emit('enviar_inspiracion', {
-        palabra: inspiracion,
+        palabra: inspiracionTexto,
         nombre: window.nombre_musa || ""
       });
       palabra.value = "";
-      recordatorio.innerHTML = "<span style='color: green;'>Has mandado una inspiración.</span>";
+      recordatorio.innerHTML = "<span style='color: green;'>Has mandado una inspiracion.</span>";
       animateCSS(".recordatorio", "flash").then(() => {
         delay_animacion_recordatorio = setTimeout(function () {
-        recordatorio.innerHTML = "";
+          recordatorio.innerHTML = "";
         }, 1200);
-    });
-    }
-    else{
-      recordatorio.innerHTML = "<span style='color: red;'>Recuerda que la palabra debe serle útil.</span>";
+      });
+    } else {
+      recordatorio.innerHTML = "<span style='color: red;'>Recuerda que la palabra debe serle util.</span>";
       animateCSS(".recordatorio", "flash").then(() => {
         delay_animacion_recordatorio = setTimeout(function () {
-        recordatorio.innerHTML = "";
+          recordatorio.innerHTML = "";
         }, 1200);
-    });
+      });
     }
   }
-}
 }
 
 // Actualiza el estado visual del toggle de texto completo.
@@ -340,11 +347,11 @@ function actualizarEstadoTextoCompleto(boton, activo) {
   }
 }
 
-//Función auxiliar que muestra el texto completo del jugador en cuestión.
+//FunciÃ³n auxiliar que muestra el texto completo del jugador en cuestiÃ³n.
 function mostrarTextoCompleto(boton) {
   if (boton.value == 0) {
     texto1.style.maxHeight = "none";
-    texto1.style.height = texto1.scrollHeight + "px"; // Reajustamos el tamaño del área de texto.
+    texto1.style.height = texto1.scrollHeight + "px"; // Reajustamos el tamaÃ±o del Ã¡rea de texto.
     texto1.scrollTop = texto1.scrollHeight;
 
     actualizarEstadoTextoCompleto(boton, true);
@@ -353,7 +360,7 @@ function mostrarTextoCompleto(boton) {
   } 
   else if (!editando == true) {
     console.log("ACTIVADO");
-    texto1.style.height = "4.5em"; /* Alto para tres líneas de texto */
+    texto1.style.height = "4.5em"; /* Alto para tres lÃ­neas de texto */
     texto1.scrollTop = texto1.scrollHeight;
 
     actualizarEstadoTextoCompleto(boton, false);
@@ -361,7 +368,7 @@ function mostrarTextoCompleto(boton) {
   }
 }
 
-// Función para activar/desactivar la pantalla
+// FunciÃ³n para activar/desactivar la pantalla
   
   function actualizarBloqueoBanderaControl(bloqueada) {
     bandera_bloqueada_por_control = Boolean(bloqueada);
@@ -378,7 +385,7 @@ function mostrarTextoCompleto(boton) {
     const boton = document.getElementById('btn_bandera');
     if (!boton) return;
     if (activa) {
-      // Forzamos activación para evitar estados desincronizados del botón local.
+      // Forzamos activaciÃ³n para evitar estados desincronizados del botÃ³n local.
       boton.value = 0;
       bandera(boton, { forzadoControl: true, forzar: true });
       return;
@@ -389,13 +396,13 @@ function mostrarTextoCompleto(boton) {
     window.aplicarEstadoBanderasControl = aplicarEstadoBanderasControl;
 
   // Durante el calentamiento puede ocultarse el contenedor de acciones (o crear un stacking context),
-  // y el #overlay queda invisible aunque se active. Para evitarlo, “portalizamos” el overlay al <body>
+  // y el #overlay queda invisible aunque se active. Para evitarlo, â€œportalizamosâ€ el overlay al <body>
   // cuando se usa la bandera, de modo que no dependa del contenedor original.
   function asegurarOverlayBanderaVisible() {
     const overlay = document.getElementById('overlay');
     if (!overlay) return null;
 
-    // Movemos el overlay al body una única vez para que no quede dentro de un contenedor oculto.
+    // Movemos el overlay al body una Ãºnica vez para que no quede dentro de un contenedor oculto.
     if (document.body && overlay.parentElement !== document.body) {
       if (!overlay.dataset.portalizadoBandera) {
         overlay.dataset.portalizadoBandera = '1';
@@ -426,11 +433,11 @@ function mostrarTextoCompleto(boton) {
         overlay.classList.remove('bright-pulse-background');
         overlay.classList.remove('blue-pulse-background');
         if (equipo === 2) {
-            // Aplicar animación roja para player 2
+            // Aplicar animaciÃ³n roja para player 2
             overlay.style.backgroundColor = '#991010';
             overlay.classList.add('bright-pulse-background');
         } else {
-            // Aplicar animación azul para player 1 y fallback para valores desconocidos
+            // Aplicar animaciÃ³n azul para player 1 y fallback para valores desconocidos
             overlay.style.backgroundColor = '#1b4fb8';
             overlay.classList.add('blue-pulse-background');
         }
@@ -470,14 +477,14 @@ function mostrarTextoCompleto(boton) {
     limpiarAvisoMotion();
   }
 
-//Función auxiliar que muestra el texto completo del jugador en cuestión.
+//FunciÃ³n auxiliar que muestra el texto completo del jugador en cuestiÃ³n.
 function editar(boton) {
   if(boton.value == 0){
     editando = true;
     mostrar_texto.value = 0;
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable= "true";
-    boton.innerHTML = "✉️";
+    boton.innerHTML = "âœ‰ï¸";
     boton.value = 1;
   }
   else{
@@ -487,7 +494,7 @@ function editar(boton) {
     texto1.contentEditable = "false";
     socket.emit('aumentar_tiempo', {secs:-1, player});
     socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent});
-    boton.innerHTML = "✏️";
+    boton.innerHTML = "âœï¸";
     boton.value = 0;
   }
 }
@@ -497,7 +504,6 @@ function elegir_ventaja_publico(boton) {
   voto = boton.value;
   socket.emit('enviar_voto_ventaja', voto);
   window.dispatchEvent(new CustomEvent('musa_voto_ventaja_emitido', { detail: { voto } }));
-  recordatorio.innerHTML = "<span style='color: green;'>Has votado por la ventaja " + voto + ".</span>";
   votando = false;
   sincro = 0;
   socket.emit('pedir_nombre');
@@ -507,7 +513,7 @@ function elegir_repentizado_publico(boton) {
   console.log("Elegido repentizado: " + boton.value);
   voto = boton.value;
   socket.emit('enviar_voto_repentizado', voto);
-  recordatorio.innerHTML = "<span style='color: green;'>Se hará tu destino, <span style='color: orange;'>Musa</span>.</span>";
+  recordatorio.innerHTML = "<span style='color: green;'>Se harÃ¡ tu destino, <span style='color: orange;'>Musa</span>.</span>";
   votando = false;
   sincro = 0;
   socket.emit('pedir_nombre');
@@ -539,7 +545,7 @@ function startProgress(button) {
   text_progress.addEventListener('mouseenter', onMouseEnter);
   text_progress.addEventListener('mouseleave', onMouseLeave);
   let progress = 0;
-  //button.disabled = true; // Deshabilitar el botón durante la carga
+  //button.disabled = true; // Deshabilitar el botÃ³n durante la carga
   button.querySelector('.progress')
   console.log("limite", LIMITE_TIEMPO_INSPIRACION)
   // Calcular el intervalo y el incremento basado en LIMITE_TIEMPO
@@ -555,7 +561,8 @@ function startProgress(button) {
       setTimeout(() => {
           limpiar_colddown();
           cooldown = false;
-      }, 1000); // Restablece el progreso después de un tiempo
+      }, 1000); // Restablece el progreso despuÃ©s de un tiempo
     }
   }, intervalo); // Usa el intervalo calculado para el temporizador
 }
+

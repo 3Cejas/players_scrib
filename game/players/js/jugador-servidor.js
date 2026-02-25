@@ -37,6 +37,16 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const AUDIO_GAME_OVER_ESCRITORA = "../../game/audio/PERDER PALABRA.mp3";
+const AUDIO_RESUCITAR_ESCRITORA = "../../game/audio/GANAR PALABRA.mp3";
+
+function reproducirEfectoVidaEscritora(ruta, volumen = 0.9) {
+    try {
+        const audio = new Audio(ruta);
+        audio.volume = Math.max(0, Math.min(1, Number(volumen) || 0.9));
+        audio.play().catch(() => {});
+    } catch (_) {}
+}
 
 const normalizarNombreMusaFeedback = (valor) => {
     if (typeof valor !== "string") return "";
@@ -334,6 +344,7 @@ const CLASES_ESTILO_DEFINICION_NIVEL_ESCRITORA = [
 let DURACION_NIVEL_MS_ESCRITORA = 60000;
 let inicio_nivel_ts_escritora = 0;
 let intervalo_progreso_nivel_escritora = null;
+let progreso_frase_final_base_segundos_escritora = null;
 
 function normalizarDuracionNivelMsEscritora(valor) {
     const numero = Number(valor);
@@ -376,6 +387,32 @@ function detenerProgresoNivelBarraEscritora(reiniciar = false) {
     }
 }
 
+function reiniciarProgresoFraseFinalEscritora() {
+    progreso_frase_final_base_segundos_escritora = null;
+}
+
+function actualizarProgresoFraseFinalEscritora(segundosRestantes) {
+    if (modo_actual !== "frase final") return false;
+    const segundos = Number(segundosRestantes);
+    if (!Number.isFinite(segundos) || segundos < 0) return false;
+
+    if (!Number.isFinite(progreso_frase_final_base_segundos_escritora) || progreso_frase_final_base_segundos_escritora <= 0) {
+        progreso_frase_final_base_segundos_escritora = segundos;
+    } else if (segundos > progreso_frase_final_base_segundos_escritora) {
+        // Protege de ajustes de tiempo positivos durante sincronizaciones.
+        progreso_frase_final_base_segundos_escritora = segundos;
+    }
+
+    const base = Math.max(1, Number(progreso_frase_final_base_segundos_escritora) || 1);
+    const restante = Math.max(0, segundos);
+    const pct = Math.max(0, Math.min(100, ((base - restante) / base) * 100));
+    setProgresoNivelBarraEscritora(pct);
+    if (pct >= 100) {
+        detenerProgresoNivelBarraEscritora(false);
+    }
+    return true;
+}
+
 function tickProgresoNivelBarraEscritora() {
     if (!inicio_nivel_ts_escritora || DURACION_NIVEL_MS_ESCRITORA <= 0) {
         setProgresoNivelBarraEscritora(0);
@@ -390,6 +427,11 @@ function tickProgresoNivelBarraEscritora() {
 }
 
 function iniciarProgresoNivelBarraEscritora() {
+    if (modo_actual === "frase final") {
+        detenerProgresoNivelBarraEscritora(true);
+        reiniciarProgresoFraseFinalEscritora();
+        return;
+    }
     detenerProgresoNivelBarraEscritora(true);
     inicio_nivel_ts_escritora = Date.now();
     tickProgresoNivelBarraEscritora();
@@ -591,15 +633,14 @@ let calentamiento_estado_equipo_escritor = {
 };
 let calentamiento_ultimo_final_escritor = "";
 let timeout_error_calentamiento_escritor = null;
-let calentamiento_solicitud_escritor = "libre";
+let calentamiento_solicitud_escritor = "lugares";
 const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
 const VENTANA_ANIMACION_PALABRA_MS = 600;
 const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
 const MAX_NOMBRE_CURSOR_CALENTAMIENTO = 26;
-const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set(["libre", "lugares", "acciones", "frase_final"]);
+const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set(["lugares", "acciones", "frase_final"]);
 const ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA = {
-    libre: "LIBRE",
     lugares: "LUGARES",
     acciones: "ACCIONES",
     frase_final: "FRASE FINAL"
@@ -791,12 +832,12 @@ const normalizarFinalCalentamientoEscritor = (entrada) => {
 };
 const normalizarSolicitudCalentamientoVista = (valor) => {
     const tipo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
-    return TIPOS_SOLICITUD_CALENTAMIENTO_VISTA.has(tipo) ? tipo : "libre";
+    return TIPOS_SOLICITUD_CALENTAMIENTO_VISTA.has(tipo) ? tipo : "lugares";
 };
 const actualizarConsignaCalentamientoEscritor = (solicitud) => {
     if (!calentamiento_consigna_escritor) return;
     const tipo = normalizarSolicitudCalentamientoVista(solicitud);
-    calentamiento_consigna_escritor.textContent = `CONSIGNA: ${ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || "LIBRE"}`;
+    calentamiento_consigna_escritor.textContent = `DETONADOR: ${ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || "LUGARES"}`;
     calentamiento_consigna_escritor.classList.remove("tipo-libre", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
     calentamiento_consigna_escritor.classList.add(`tipo-${tipo}`);
     if (calentamiento_solicitud_escritor && calentamiento_solicitud_escritor !== tipo) {
@@ -855,8 +896,8 @@ const aplicarCursorCalentamientoEscritor = (elemento, cursor) => {
     const yPct = Math.max(0, Math.min(100, y));
     const rectStage = obtenerRectStageCalentamientoEscritor();
     if (rectStage) {
-        const xPx = (xPct / 100) * rectStage.width;
-        const yPx = (yPct / 100) * rectStage.height;
+        const xPx = rectStage.left + ((xPct / 100) * rectStage.width);
+        const yPx = rectStage.top + ((yPct / 100) * rectStage.height);
         elemento.style.left = `${xPx}px`;
         elemento.style.top = `${yPx}px`;
         return;
@@ -983,12 +1024,12 @@ const actualizarBotonBloquearCalentamientoEscritor = (activo, bloqueado, selecci
     }
     if (bloqueado) {
         calentamiento_bloquear_escritor.disabled = true;
-        calentamiento_bloquear_escritor.textContent = "CONSIGNA CERRADA";
+        calentamiento_bloquear_escritor.textContent = "DETONADOR CERRADO";
         return;
     }
     if (cantidad > 0) {
         calentamiento_bloquear_escritor.disabled = false;
-        calentamiento_bloquear_escritor.textContent = `CERRAR CONSIGNA (${cantidad})`;
+        calentamiento_bloquear_escritor.textContent = `CERRAR DETONADOR (${cantidad})`;
         return;
     }
     calentamiento_bloquear_escritor.disabled = true;
@@ -1066,9 +1107,9 @@ const actualizarCalentamientoEscritor = (data = {}) => {
     }
     if (calentamiento_estado_escritor) {
         if (!activo) {
-            calentamiento_estado_escritor.textContent = "Esperando vista de calentamiento.";
+            calentamiento_estado_escritor.textContent = "Esperando vista de tutorial.";
         } else if (!bloqueado) {
-            calentamiento_estado_escritor.textContent = "Selecciona palabras de tu equipo y pulsa CERRAR CONSIGNA.";
+            calentamiento_estado_escritor.textContent = "Selecciona palabras de tu equipo y pulsa CERRAR DETONADOR.";
         } else if (!finalEquipo) {
             calentamiento_estado_escritor.textContent = "Consigna cerrada. Elige una palabra final de las seleccionadas.";
         } else {
@@ -1848,6 +1889,7 @@ let listener_modo1;
 let timeoutID_menu;
 let resurreccion_obligatoria_activa = false;
 let esperando_resurreccion_tiempo = false;
+let gameover_ui_activa_escritora = false;
 let permitir_fin_por_decision_local = false;
 let partida_global_finalizada = false;
 let listener_modo_psico;
@@ -2470,7 +2512,11 @@ socket.on("count", (data) => {
     if (animarEntradaVida) {
         animacionEntradaVidaPendiente = false;
     }
-    if (data.count == "¡Tiempo!") {
+    if (Number.isFinite(segundosCount)) {
+        actualizarProgresoFraseFinalEscritora(segundosCount);
+    }
+    if (String(data.count || "").toLowerCase().includes("tiempo")) {
+        actualizarProgresoFraseFinalEscritora(0);
         limpiar_bloqueo_putada();
         limpiar_teclado_lento();
         setInterfazInversaGlobal(false);
@@ -2595,6 +2641,8 @@ socket.on("aumentar_tiempo_control", (data = {}) => {
 function resucitar(){
     terminado = false;
     esperando_resurreccion_tiempo = false;
+    gameover_ui_activa_escritora = false;
+    reproducirEfectoVidaEscritora(AUDIO_RESUCITAR_ESCRITORA);
     permitir_fin_por_decision_local = false;
     desactivar_borrar = false;
     limpiar_bloqueo_putada();
@@ -2677,6 +2725,7 @@ socket.on("inicio", (data) => {
     setPendienteAnimacionEntradaBarraVida(true);
     cancelarAnimacionEntradaBarraVida(tiempo);
     detenerProgresoNivelBarraEscritora(true);
+    reiniciarProgresoFraseFinalEscritora();
     partida_global_finalizada = false;
     setInterfazInversaGlobal(false);
     permitir_fin_por_decision_local = false;
@@ -2880,10 +2929,9 @@ socket.on("limpiar", (borrar) => {
 socket.on("activar_modo", (data) => {
     const modoSiguiente = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
     if (estaResurreccionActiva()) {
-        // Si llega un modo nuevo, forzamos salida del estado de resurrección
-        // para no bloquear la petición/recepción de palabras.
-        esperando_resurreccion_tiempo = false;
-        ocultarUiResucitar({ emitirEstado: false });
+        // Mantener activa la UI de resurrección evita cierres prematuros
+        // y desincronizaciones con espectador durante carreras de eventos.
+        permitir_fin_por_decision_local = false;
     }
     animacion_modo();
     limpiarEstiloNivelesEscritora();
@@ -2900,6 +2948,9 @@ socket.on("activar_modo", (data) => {
     actualizarDuracionNivelDesdeParametrosEscritora(data || {});
     if(terminado == false){
     MODOS[modo_actual](data, socket);
+    }
+    if (modo_actual !== "frase final") {
+        reiniciarProgresoFraseFinalEscritora();
     }
     if (modo_actual) {
         iniciarProgresoNivelBarraEscritora();
@@ -2928,8 +2979,13 @@ socket.on('fin', data => {
     console.log(data)
     if(player == data){
         const finEnFraseFinal = modo_actual === "frase final";
-        if (!permitir_fin_por_decision_local && !partida_global_finalizada && !finEnFraseFinal && (esperando_resurreccion_tiempo || puedeResucitarSegunEstado())) {
-            return;
+        if (!permitir_fin_por_decision_local && !partida_global_finalizada) {
+            if (estaResurreccionActiva()) {
+                return;
+            }
+            if (!finEnFraseFinal && puedeResucitarSegunEstado()) {
+                return;
+            }
         }
         esperando_resurreccion_tiempo = false;
         ocultarUiResucitar();
@@ -3138,7 +3194,9 @@ function recibir_palabra_prohibida(data) {
       }
 
       function puedeResucitarSegunEstado() {
-        return !partida_global_finalizada && obtenerPalabrasDisponiblesResucitar() > 0;
+        return !partida_global_finalizada
+          && modo_actual !== "frase final"
+          && obtenerPalabrasDisponiblesResucitar() > 0;
       }
 
       function estaResurreccionActiva() {
@@ -3197,6 +3255,7 @@ function recibir_palabra_prohibida(data) {
         clearTimeout(timeoutID_menu);
         timeoutID_menu = null;
         esperando_resurreccion_tiempo = false;
+        gameover_ui_activa_escritora = false;
         configurarResurreccionObligatoria(false);
         currentMenu = 'main';
         mainMenuIndex = 0;
@@ -3416,6 +3475,11 @@ function recibir_palabra_prohibida(data) {
       }
 
       function iniciarMenu() {
+        if (modo_actual === "frase final") {
+          esperando_resurreccion_tiempo = false;
+          btnNo.click();
+          return;
+        }
         if (!puedeResucitarSegunEstado()) {
           esperando_resurreccion_tiempo = false;
           btnNo.click();
@@ -3427,6 +3491,10 @@ function recibir_palabra_prohibida(data) {
         clearTimeout(timeoutID_menu);
         permitir_fin_por_decision_local = false;
         esperando_resurreccion_tiempo = true;
+        if (!gameover_ui_activa_escritora) {
+          gameover_ui_activa_escritora = true;
+          reproducirEfectoVidaEscritora(AUDIO_GAME_OVER_ESCRITORA);
+        }
         console.log("Iniciando menu de resurreccion obligatoria");
         document.removeEventListener('keydown', manejadorTeclas);
         document.addEventListener('keydown', manejadorTeclas);
@@ -3493,6 +3561,11 @@ function recibir_palabra_prohibida(data) {
   
       btnConfirmar.addEventListener('click', (evento) => {
         evento.stopPropagation();
+        if (modo_actual === "frase final") {
+          esperando_resurreccion_tiempo = false;
+          btnNo.click();
+          return;
+        }
         clearTimeout(timeoutID_menu);
         timeoutID_menu = null;
         esperando_resurreccion_tiempo = false;

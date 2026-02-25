@@ -332,7 +332,7 @@
             <button id="menu_musa" class="role-card role-card--violet mode-card" type="button">
                 <span class="role-icon">👁️</span>
                 <span class="role-name">Musa</span>
-                <span class="role-desc">Entra directo a la vista de calentamiento de musas.</span>
+                <span class="role-desc">Entra directo a la vista de tutorial de musas.</span>
             </button>
         </section>
 
@@ -343,7 +343,7 @@
                     <button id="btn_rejugar" class="role-card role-card--amber action-card" type="button">
                         <span class="role-icon">🔁</span>
                         <span class="role-name">Rejugar</span>
-                        <span class="role-desc">Lanza una nueva ronda del calentamiento actual.</span>
+                        <span class="role-desc">Lanza una nueva ronda del tutorial actual.</span>
                     </button>
                     <button id="btn_reiniciar_marcador" class="role-card role-card--red action-card" type="button">
                         <span class="role-icon">🏆</span>
@@ -359,12 +359,12 @@
                     <button data-player="1" class="role-card role-card--cyan action-card" type="button">
                         <span class="role-icon">🪶</span>
                         <span class="role-name">Musa azul</span>
-                        <span class="role-desc">Abre musa del equipo 1 en modo calentamiento.</span>
+                        <span class="role-desc">Abre musa del equipo 1 en modo tutorial.</span>
                     </button>
                     <button data-player="2" class="role-card role-card--red action-card" type="button">
                         <span class="role-icon">🪶</span>
                         <span class="role-name">Musa roja</span>
-                        <span class="role-desc">Abre musa del equipo 2 en modo calentamiento.</span>
+                        <span class="role-desc">Abre musa del equipo 2 en modo tutorial.</span>
                     </button>
                 </div>
             </section>
@@ -459,11 +459,11 @@
             });
 
             document.getElementById("btn_rejugar").addEventListener("click", () => {
-                emitir("bolzano_reiniciar_calentamiento", undefined, "Calentamiento reiniciado.");
+                emitir("bolzano_reiniciar_calentamiento", undefined, "Tutorial reiniciado.");
             });
 
             document.getElementById("btn_reiniciar_marcador").addEventListener("click", () => {
-                emitir("bolzano_reiniciar_marcador_calentamiento", undefined, "Marcador del calentamiento reiniciado.");
+                emitir("bolzano_reiniciar_marcador_calentamiento", undefined, "Marcador del tutorial reiniciado.");
             });
 
             panelMusa.querySelectorAll("button[data-player]").forEach((btn) => {
