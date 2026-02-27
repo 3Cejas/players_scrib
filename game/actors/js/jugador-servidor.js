@@ -5,16 +5,23 @@ const serverUrl = isProduction
 
 const socket = io(serverUrl);
 
-escritxr1 = document.getElementById("escritxr1");
-escritxr2 = document.getElementById("escritxr2");
+const botonEscritxr1 = document.getElementById("escritxr1");
+const botonEscritxr2 = document.getElementById("escritxr2");
+const nombreEscritxr1 = botonEscritxr1 ? botonEscritxr1.querySelector(".actor-select-name") : null;
+const nombreEscritxr2 = botonEscritxr2 ? botonEscritxr2.querySelector(".actor-select-name") : null;
+
+function actualizarNombreEscritxrActor(target, fallback, nombreRecibido) {
+    const nombre = (typeof nombreRecibido === "string" ? nombreRecibido.trim() : "") || fallback;
+    if (target) {
+        target.textContent = nombre;
+    }
+}
 
 socket.on('nombre1', (nombre) => {
-    if(nombre == "") nombre = "ESCRITXR 1";
-    escritxr1.innerHTML = "✍️ " + nombre;
+    actualizarNombreEscritxrActor(nombreEscritxr1, "ESCRITXR 1", nombre);
 });
 
 // Recibe el nombre del jugador 2 y lo coloca en su sitio.
 socket.on('nombre2', (nombre) => {
-    if(nombre == "") nombre = "ESCRITXR 2";
-    escritxr2.innerHTML = "✍️ " + nombre;
+    actualizarNombreEscritxrActor(nombreEscritxr2, "ESCRITXR 2", nombre);
 });

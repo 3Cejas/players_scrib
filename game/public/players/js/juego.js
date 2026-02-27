@@ -303,7 +303,9 @@ function enviarPalabra(button) {
 
   if (palabra.value != '' && palabra.value != null) {
     const inspiracionTexto = String(palabra.value || "").trim();
-    const inspiracionMinus = inspiracionTexto.toLowerCase();
+    const inspiracionNormalizada = normalizarTextoParaCompararLetra(inspiracionTexto);
+    const letraObjetivo = normalizarTextoParaCompararLetra(letra);
+    const contieneLetraObjetivo = Boolean(letraObjetivo) && inspiracionNormalizada.includes(letraObjetivo);
     if (/\s/.test(inspiracionTexto)) {
       recordatorio.innerHTML = "<span style='color: red;'>No se permiten espacios en la inspiracion.</span>";
       animateCSS(".recordatorio", "flash").then(() => {
@@ -313,7 +315,12 @@ function enviarPalabra(button) {
       });
       return;
     }
-    if ((modo_actual == "letra prohibida" && !toNormalForm(inspiracionMinus).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(inspiracionMinus).includes(letra)) || modo_actual == "palabras bonus" || modo_actual == "palabras prohibidas" || letra == 'Ã±' && inspiracionMinus.includes('Ã±') || letra == 'n' && modo_actual == "letra prohibida" && inspiracionMinus.includes('Ã±') && !inspiracionMinus.includes(letra)) {
+    if (
+      (modo_actual == "letra prohibida" && !contieneLetraObjetivo) ||
+      (modo_actual == "letra bendita" && contieneLetraObjetivo) ||
+      modo_actual == "palabras bonus" ||
+      modo_actual == "palabras prohibidas"
+    ) {
       startProgress(button);
       socket.emit('enviar_inspiracion', {
         palabra: inspiracionTexto,
@@ -525,23 +532,27 @@ function toNormalForm(str) {
       .replace(
           /([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi,
           "$1"
-      );
+      )
+      .normalize("NFC");
+}
+
+function normalizarTextoParaCompararLetra(str) {
+  return toNormalForm(String(str || "").toLowerCase());
 }
 
 function onMouseEnter() {
-  text_progress.style.color = 'black';
+  text_progress.style.color = "var(--musa-progress-loading-text-color, #f7fbff)";
 }
 
 function onMouseLeave() {
-  text_progress.style.color = '';
+  text_progress.style.color = cooldown ? "var(--musa-progress-loading-text-color, #f7fbff)" : '';
 }
 
 
 function startProgress(button) {
   cooldown = true;
-  text_progress.innerHTML = "&#x1F680; Inspirando..."
-  console.log("INSPIRANDO", text_progress.innerHTML, text_progress)
-  text_progress.style.color = "white";
+  text_progress.textContent = "Inspirando...";
+  text_progress.style.color = "var(--musa-progress-loading-text-color, #f7fbff)";
   text_progress.addEventListener('mouseenter', onMouseEnter);
   text_progress.addEventListener('mouseleave', onMouseLeave);
   let progress = 0;
@@ -565,4 +576,3 @@ function startProgress(button) {
     }
   }, intervalo); // Usa el intervalo calculado para el temporizador
 }
-

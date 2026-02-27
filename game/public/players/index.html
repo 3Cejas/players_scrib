@@ -8,11 +8,11 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260218d">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260225zg">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="../../config.js"></script>
-    <script src="./js/juego.js?v=20260217k"></script>
+    <script src="./js/juego.js?v=20260225zd"></script>
 </head>
 <body>
     <div class="container"></div>
@@ -91,7 +91,7 @@
                         <h2 class="calentamiento-titulo">TUTORIAL</h2>
                         <p id="calentamiento_estado" class="calentamiento-estado">Tutorial inactivo.</p>
                         <div class="calentamiento-input">
-                            <input id="calentamiento_input" class="input_publico" maxlength="24" placeholder="Escribe una palabra">
+                            <input id="calentamiento_input" class="input_publico" maxlength="48" placeholder="Escribe una palabra">
                             <button id="calentamiento_enviar" class="btn btn-edicion inspirar" type="button">
                                 <span id="calentamiento_text_progress" class="calentamiento-progress-text">INSPIRAR <span class="btn-emoji" aria-hidden="true">&#x1F680;</span></span>
                                 <span id="calentamiento_bar_progress" class="progress"></span>
@@ -161,8 +161,8 @@
                         </tr>
                         <tr>
                             <th>
-                                <button id="progressButton" class="btn inspirar" onclick="enviarPalabra(this)">
-                                    <span id="text-progress" class="text-progress">&#x1F680; Inspirar</span>
+                                <button id="progressButton" class="btn btn-edicion inspirar" onclick="enviarPalabra(this)">
+                                    <span id="text-progress" class="text-progress calentamiento-progress-text">INSPIRAR <span class="btn-emoji" aria-hidden="true">&#x1F680;</span></span>
                                     <span id="bar-progress" class="progress"></span>
                                 </button>
                             </th>
@@ -210,8 +210,5 @@
     </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260218f"></script>
+<script src="./js/jugador-servidor.js?v=20260225zf"></script>
 </html>
-
-
-

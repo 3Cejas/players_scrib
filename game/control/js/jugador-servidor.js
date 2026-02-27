@@ -31,6 +31,7 @@ let display_modo = getEl("display_modo");
 let tema = getEl("temas");
 let boton_pausar_reanudar = getEl("boton_pausar_reanudar");
 let boton_vista_calentamiento = getEl("boton_vista_calentamiento");
+let forzar_solicitud_calentamiento_default_pendiente = false;
 const timeout_marcador_control = new WeakMap();
 const estadoServidorDot = getEl("estado_servidor");
 const estadoServidorTexto = getEl("estado_servidor_texto");
@@ -564,14 +565,34 @@ function obtenerTopTeclasControl(playerId, limite = 6) {
     return top.slice(0, limite);
 }
 
+function obtenerHeatmapCompletoControl(playerId) {
+    const conteos = heatmapConteos[playerId];
+    const heatmap = {};
+    let totalPulsaciones = 0;
+    let teclasDistintas = 0;
+    if (!conteos || typeof conteos.forEach !== "function") {
+        return { heatmap, totalPulsaciones, teclasDistintas };
+    }
+    conteos.forEach((count, code) => {
+        const codigo = String(code || "").trim();
+        const valor = Math.max(0, Math.round(Number(count) || 0));
+        if (!codigo || valor <= 0) return;
+        heatmap[codigo] = valor;
+        totalPulsaciones += valor;
+        teclasDistintas += 1;
+    });
+    return { heatmap, totalPulsaciones, teclasDistintas };
+}
+
 function obtenerResumenJugadorStatsControl(playerId) {
     const serieVida = resumenPartida.tiempos[playerId] || [];
+    const datosHeatmap = obtenerHeatmapCompletoControl(playerId);
     const tiempoTotalMs = serieVida.length
         ? Number(serieVida[serieVida.length - 1].t) || 0
         : (resumenPartida.inicio ? Math.max(0, Date.now() - resumenPartida.inicio) : 0);
     const tiempoEscrituraMs = Math.max(0, Number(obtenerTiempoEscrituraMs()) || 0);
     const topTeclas = obtenerTopTeclasControl(playerId);
-    const pulsacionesTotal = topTeclas.reduce((acc, item) => acc + item.count, 0);
+    const pulsacionesTotal = datosHeatmap.totalPulsaciones;
     const ritmoPpm = tiempoEscrituraMs > 0
         ? Math.round(pulsacionesTotal / Math.max(tiempoEscrituraMs / 60000, 0.001))
         : 0;
@@ -588,8 +609,9 @@ function obtenerResumenJugadorStatsControl(playerId) {
         nombre: (playerId === 2 ? val_nombre2 : val_nombre1) || `ESCRITXR ${playerId}`,
         palabrasTotal: obtenerConteoPalabrasControl(playerId),
         pulsacionesTotal,
-        teclasDistintas: topTeclas.length,
+        teclasDistintas: datosHeatmap.teclasDistintas,
         topTeclas: topTeclas.map((item) => ({ ...item })),
+        heatmap: { ...datosHeatmap.heatmap },
         ritmoPpm,
         tiempoTotalMs,
         tiempoEscrituraMs,
@@ -713,8 +735,9 @@ socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     setEstadoServidor(true);
     iniciarStatusPing();
+    forzar_solicitud_calentamiento_default_pendiente = true;
     if (typeof actualizarSolicitudCalentamientoControl === "function") {
-        actualizarSolicitudCalentamientoControl({ tipo: "lugares" });
+        actualizarSolicitudCalentamientoControl({ tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO });
     }
     if (typeof actualizarModoVistaEspectadorControl === "function") {
         actualizarModoVistaEspectadorControl({ modo: "partida" });
@@ -742,6 +765,7 @@ socket.on('health_pong', (estado) => {
 });
 socket.on('calentamiento_vista', (data) => {
     vista_calentamiento = Boolean(data && data.activo);
+    forzar_solicitud_calentamiento_default_pendiente = true;
     if (typeof actualizarBotonVistaCalentamiento === "function") {
         actualizarBotonVistaCalentamiento();
     }
@@ -752,6 +776,33 @@ socket.on('calentamiento_vista', (data) => {
 });
 
 socket.on('calentamiento_estado_espectador', (data) => {
+    if (forzar_solicitud_calentamiento_default_pendiente) {
+        const vistaActiva = (data && typeof data.vista === "boolean")
+            ? Boolean(data.vista)
+            : vista_calentamiento;
+        const solicitudServidor = (data && typeof data.solicitud === "string")
+            ? data.solicitud.trim().toLowerCase()
+            : "";
+        if (
+            !vistaActiva &&
+            solicitudServidor &&
+            typeof pedir_solicitud_calentamiento === "function" &&
+            typeof SOLICITUD_CALENTAMIENTO_POR_DEFECTO === "string" &&
+            solicitudServidor !== SOLICITUD_CALENTAMIENTO_POR_DEFECTO
+        ) {
+            pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
+            if (typeof actualizarSolicitudCalentamientoControl === "function") {
+                actualizarSolicitudCalentamientoControl({
+                    ...(data || {}),
+                    solicitud: SOLICITUD_CALENTAMIENTO_POR_DEFECTO,
+                    tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO
+                });
+            }
+            forzar_solicitud_calentamiento_default_pendiente = false;
+            return;
+        }
+        forzar_solicitud_calentamiento_default_pendiente = false;
+    }
     if (typeof actualizarSolicitudCalentamientoControl === "function") {
         actualizarSolicitudCalentamientoControl(data || {});
     }
@@ -782,7 +833,41 @@ function extraerTextoPlanoDesdeHtmlControl(html) {
     if (typeof html !== "string" || !html) return "";
     const contenedor = document.createElement("div");
     contenedor.innerHTML = html;
-    return String(contenedor.textContent || contenedor.innerText || "").trim();
+    let texto = "";
+    const TAGS_SALTO = new Set(["BR", "DIV", "P", "LI"]);
+    const recorrer = (nodo, esRaiz = false) => {
+        if (!nodo) return;
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            texto += nodo.textContent || "";
+            return;
+        }
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = nodo.tagName;
+        if (tag === "BR") {
+            texto += "\n";
+            return;
+        }
+        const hijos = nodo.childNodes;
+        if (!hijos || hijos.length === 0) {
+            if (!esRaiz && TAGS_SALTO.has(tag)) {
+                texto += "\n";
+            }
+            return;
+        }
+        for (let i = 0; i < hijos.length; i += 1) {
+            recorrer(hijos[i], false);
+        }
+        if (!esRaiz && TAGS_SALTO.has(tag)) {
+            if (!texto.endsWith("\n")) {
+                texto += "\n";
+            }
+        }
+    };
+    recorrer(contenedor, true);
+    return String(texto)
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .trim();
 }
 
 function convertirTextoPlanoAHtmlControl(textoPlano) {
@@ -827,12 +912,6 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
             texto_guardado2 = plano;
         } else {
             texto_guardado1 = plano;
-        }
-    } else if (!jugadorTerminado) {
-        if (esJ2) {
-            texto_guardado2 = "";
-        } else {
-            texto_guardado1 = "";
         }
     }
 
@@ -1528,7 +1607,18 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
             }
         });
     });
-    const nombreTecla = (code) => etiquetasTeclas.get(code) || code;
+    const nombreTecla = (code) => {
+        const codigoNormalizado = typeof code === "string" ? code.trim() : "";
+        const etiquetaRaw = etiquetasTeclas.get(codigoNormalizado) || "";
+        const etiquetaLimpia = String(etiquetaRaw)
+            .split(/\n+/)
+            .map((chunk) => chunk.trim())
+            .filter(Boolean)
+            .join("/");
+        if (etiquetaLimpia) return etiquetaLimpia;
+        if (codigoNormalizado) return `Tecla ${codigoNormalizado}`;
+        return "Tecla desconocida";
+    };
 
     const serieVida = resumenPartida.tiempos[jugadorId] || [];
     const duracionMs = serieVida.length ? serieVida[serieVida.length - 1].t : 0;
@@ -1956,8 +2046,3 @@ const LIMPIEZAS = {
 
     "": function (data) { },
 };
-
-
-
-
-

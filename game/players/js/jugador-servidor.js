@@ -37,6 +37,32 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const normalizarSaltosTextoGuardado = (valor) => String(valor ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+
+function capturarTextoGuardadoDesdeEditor() {
+    if (!texto) {
+        texto_guardado = "";
+        return texto_guardado;
+    }
+    texto_guardado = normalizarSaltosTextoGuardado(obtenerTextoPlanoConSaltos(texto));
+    return texto_guardado;
+}
+
+function capturarTextoGuardadoSinPerderPrevio() {
+    const previo = typeof texto_guardado === "string" ? texto_guardado : "";
+    const capturado = capturarTextoGuardadoDesdeEditor();
+    if (!String(capturado || "").trim() && String(previo || "").trim()) {
+        texto_guardado = previo;
+    }
+    return texto_guardado;
+}
+
+function restaurarTextoGuardadoEnEditor() {
+    if (!texto) return;
+    texto.innerText = normalizarSaltosTextoGuardado(texto_guardado);
+}
 const AUDIO_GAME_OVER_ESCRITORA = "../../game/audio/PERDER PALABRA.mp3";
 const AUDIO_RESUCITAR_ESCRITORA = "../../game/audio/GANAR PALABRA.mp3";
 
@@ -98,6 +124,8 @@ const CLASES_FULGOR_ESCRITOR = [
     "escritor-borde-fulgor-positivo",
     "escritor-borde-fulgor-negativo"
 ];
+const TEXTO_GANADOR_ESCRITORA = "¡TEXTO TERMINADO!";
+const TEXTO_PERDISTE_SIN_PALABRAS = "¡PERDISTE, NO ESCRIBISTE NADA!";
 let timeout_fulgor_escritor = null;
 
 function activarFulgorEscritor(claseObjetivo) {
@@ -125,9 +153,16 @@ function activarFulgorCambioTiempoEscritora(secs) {
     activarFulgorEscritor(delta > 0 ? "escritor-borde-fulgor-positivo" : "escritor-borde-fulgor-negativo");
 }
 
+function animarFinEscritora(textoGanador) {
+    activarFulgorEscritor("escritor-borde-fulgor-negativo");
+    setIndicadorGanadoraEscritora(true, textoGanador);
+}
+
 function emitirCambioTiempoEscritora(secs) {
     const delta = Number(secs);
     if (!Number.isFinite(delta) || delta === 0) return;
+    // En frase final no se permite ganar tiempo escribiendo.
+    if (modo_actual === "frase final" && delta > 0) return;
     activarFulgorCambioTiempoEscritora(delta);
     socket.emit("aumentar_tiempo", { secs: delta, player });
 }
@@ -305,6 +340,15 @@ let palabra = getEl("palabra");
 let definicion = getEl("definicion");
 let explicación = getEl("explicación");
 let metadatos = getEl("metadatos");
+
+function setIndicadorGanadoraEscritora(visible, texto = TEXTO_GANADOR_ESCRITORA) {
+    if (!metadatos) return;
+    if (!visible) {
+        metadatos.removeAttribute("data-ganador");
+        return;
+    }
+    metadatos.setAttribute("data-ganador", texto || TEXTO_GANADOR_ESCRITORA);
+}
   
 let tiempo = getEl("tiempo");
 let temas = getEl("temas");
@@ -600,6 +644,15 @@ function actualizarMusasMarcador(valor, animar = true) {
     }
 }
 
+function obtenerPalabrasMarcadorEscritora() {
+    if (!puntos) return 0;
+    const texto = String(puntos.textContent || "").trim();
+    const match = texto.match(/-?\d+/);
+    if (!match) return 0;
+    const valor = Number(match[0]);
+    return Number.isFinite(valor) ? valor : 0;
+}
+
 if (tiempo) {
     tiempo.style.display = "none";
 }
@@ -633,14 +686,15 @@ let calentamiento_estado_equipo_escritor = {
 };
 let calentamiento_ultimo_final_escritor = "";
 let timeout_error_calentamiento_escritor = null;
-let calentamiento_solicitud_escritor = "lugares";
+let calentamiento_solicitud_escritor = "ninguna";
 const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
 const VENTANA_ANIMACION_PALABRA_MS = 600;
 const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
 const MAX_NOMBRE_CURSOR_CALENTAMIENTO = 26;
-const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set(["lugares", "acciones", "frase_final"]);
+const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set(["ninguna", "lugares", "acciones", "frase_final"]);
 const ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA = {
+    ninguna: "SIN DETONADOR ACTIVO",
     lugares: "LUGARES",
     acciones: "ACCIONES",
     frase_final: "FRASE FINAL"
@@ -832,13 +886,13 @@ const normalizarFinalCalentamientoEscritor = (entrada) => {
 };
 const normalizarSolicitudCalentamientoVista = (valor) => {
     const tipo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
-    return TIPOS_SOLICITUD_CALENTAMIENTO_VISTA.has(tipo) ? tipo : "lugares";
+    return TIPOS_SOLICITUD_CALENTAMIENTO_VISTA.has(tipo) ? tipo : "ninguna";
 };
 const actualizarConsignaCalentamientoEscritor = (solicitud) => {
     if (!calentamiento_consigna_escritor) return;
     const tipo = normalizarSolicitudCalentamientoVista(solicitud);
-    calentamiento_consigna_escritor.textContent = `DETONADOR: ${ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || "LUGARES"}`;
-    calentamiento_consigna_escritor.classList.remove("tipo-libre", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
+    calentamiento_consigna_escritor.textContent = `DETONADOR: ${ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || "SIN DETONADOR ACTIVO"}`;
+    calentamiento_consigna_escritor.classList.remove("tipo-libre", "tipo-ninguna", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
     calentamiento_consigna_escritor.classList.add(`tipo-${tipo}`);
     if (calentamiento_solicitud_escritor && calentamiento_solicitud_escritor !== tipo) {
         calentamiento_consigna_escritor.classList.remove("consigna-cambio");
@@ -2554,7 +2608,7 @@ socket.on("count", (data) => {
             console.log(texto.innerHTML)
             console.log(temp_text_inverso_activado)
 
-            texto_guardado = texto.innerText;
+            capturarTextoGuardadoDesdeEditor();
         
             //texto.innerText = "";
             texto.style.display = "none";
@@ -2648,6 +2702,7 @@ function resucitar(){
     limpiar_bloqueo_putada();
     limpiar_teclado_lento();
     ocultarUiResucitar({ emitirEstado: false });
+    setIndicadorGanadoraEscritora(false);
     document.body.classList.remove('modo-resucitar');
     logo.style.display = "none"; 
     neon.style.display = "none"; 
@@ -2669,7 +2724,7 @@ function resucitar(){
         procesarTexto();
     }
 
-    texto.innerText = texto_guardado;
+    restaurarTextoGuardadoEnEditor();
     texto.style.display = "";
     texto.style.height = "";
     feedback_tiempo.style.color = color_positivo;
@@ -2700,7 +2755,7 @@ function resucitar(){
     console.log(puntos)
 
     caracteres_seguidos = 0;
-        texto.innerText = texto_guardado.trim();
+        restaurarTextoGuardadoEnEditor();
 
         sendText()
 
@@ -2848,30 +2903,50 @@ socket.on("borrar_texto_guardado", () => {
 
 function post_inicio(borrar_texto){
     limpiarCountdownInicioEscritora();
-        if (borrar_texto == false) {
-            texto.innerText = texto_guardado.trim();
+    setIndicadorGanadoraEscritora(false);
+    if (borrar_texto === false) {
+        if (!String(texto_guardado || "").trim() && texto) {
+            const textoActual = normalizarSaltosTextoGuardado(obtenerTextoPlanoConSaltos(texto));
+            if (String(textoActual || "").trim()) {
+                texto_guardado = textoActual;
+            }
+        }
+        restaurarTextoGuardadoEnEditor();
 
-            sendText()
+        sendText();
 
-            // Obtener el último nodo de texto en texto
-            let lastLine = texto.lastChild;
-            let lastTextNode = lastLine;
-            while (lastTextNode && lastTextNode.nodeType !== 3) {
-                lastTextNode = lastTextNode.lastChild;
-            }
-            
-            // Si encontramos el último nodo de texto, colocamos el cursor allí
-            if (lastTextNode) {
-                let caretNode = lastTextNode;
-                let caretPos = lastTextNode.length;
-                restaurarPosicionCaret(caretNode, caretPos);
-            }
-            texto.scrollTo(0, texto.scrollHeight);
-            }
+        // Obtener el último nodo de texto en texto
+        let lastLine = texto.lastChild;
+        let lastTextNode = lastLine;
+        while (lastTextNode && lastTextNode.nodeType !== 3) {
+            lastTextNode = lastTextNode.lastChild;
+        }
         
-        //socket.off("recibe_temas");
-        texto.contentEditable= "true";
+        // Si encontramos el último nodo de texto, colocamos el cursor allí
+        if (lastTextNode) {
+            let caretNode = lastTextNode;
+            let caretPos = lastTextNode.length;
+            restaurarPosicionCaret(caretNode, caretPos);
+        }
+        texto.scrollTo(0, texto.scrollHeight);
+    } else if (borrar_texto === true) {
+        texto_guardado = "";
+        if (texto) {
+            texto.innerText = "";
+            texto.scrollTo(0, 0);
+        }
+        sendText();
+    }
+    
+    // socket.off("recibe_temas");
+    // Si el modo activo es tertulia, no debe permitirse escribir.
+    if (modo_actual === "tertulia" || es_pausa === true) {
+        texto.contentEditable = "false";
+        texto.blur();
+    } else {
+        texto.contentEditable = "true";
         texto.focus();
+    }
 }
 
 // Resetea el tablero de juego.
@@ -2883,7 +2958,7 @@ socket.on("limpiar", (borrar) => {
         nombre.value = data;
     });
     if(borrar == false){
-        texto_guardado = texto.innerText;
+        capturarTextoGuardadoDesdeEditor();
     }
     limpiarCountdownInicioEscritora();
     limpiarClasesIntroPartidaEscritora();
@@ -2976,10 +3051,24 @@ socket.on('pausar_js', data => {
 });
 
 socket.on('fin', data => {
-    console.log(data)
-    if(player == data){
+    const payload = (data && typeof data === "object") ? data : { player: data };
+    const jugadorFin = Number(payload && payload.player);
+    const motivoFin = payload && payload.motivo === "sin_palabras" ? "sin_palabras" : "";
+    const cierreSinPalabras = motivoFin === "sin_palabras"
+        || (
+            Number(player) === jugadorFin &&
+            modo_actual !== "frase final" &&
+            obtenerPalabrasMarcadorEscritora() <= 0
+        );
+    const esFinForzadoControl = Boolean(
+        payload &&
+        payload.origen === "control" &&
+        payload.forzar_fin === true
+    );
+    console.log(data);
+    if (Number(player) === jugadorFin) {
         const finEnFraseFinal = modo_actual === "frase final";
-        if (!permitir_fin_por_decision_local && !partida_global_finalizada) {
+        if (!esFinForzadoControl && !permitir_fin_por_decision_local && !partida_global_finalizada) {
             if (estaResurreccionActiva()) {
                 return;
             }
@@ -2989,13 +3078,19 @@ socket.on('fin', data => {
         }
         esperando_resurreccion_tiempo = false;
         ocultarUiResucitar();
-        console.log("confetti_auxAAXACASCASCASCAS")
-        final();
+        console.log("confetti_auxAAXACASCASCASCAS");
+        const textoGanador = cierreSinPalabras ? TEXTO_PERDISTE_SIN_PALABRAS : undefined;
+        final({ textoGanador });
         permitir_fin_por_decision_local = false;
     }
 });
 
 socket.on('reanudar_js', data => {
+    if (modo_actual === "tertulia") {
+        es_pausa = true;
+        pausa();
+        return;
+    }
     es_pausa = false;
     reanudar();
 });
@@ -3041,13 +3136,23 @@ socket.on("enviar_repentizado", repentizado => {
         //animateCSS(".temas", "flash")
     }
     
-    });
+});
 
 socket.on("nueva letra", letra => {
-    palabra_actual = []
-    limpiarDeteccionMultipalabraAsignada();
-    definicion.innerHTML = "";
-    establecerContextoMusaDefinicion("");
+    const esModoLetras = (modo_actual == "letra prohibida" || modo_actual == "letra bendita");
+    if (!esModoLetras) {
+        return;
+    }
+    const hayObjetivoMusaActivo = Boolean(
+        asignada === true
+        && obtenerObjetivosPalabraActual().length > 0
+    );
+    if (!hayObjetivoMusaActivo) {
+        palabra_actual = [];
+        limpiarDeteccionMultipalabraAsignada();
+        definicion.innerHTML = "";
+        establecerContextoMusaDefinicion("");
+    }
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
 
@@ -3486,7 +3591,7 @@ function recibir_palabra_prohibida(data) {
           return;
         }
         if (!texto_guardado && texto && typeof texto.innerText === "string") {
-          texto_guardado = texto.innerText;
+          capturarTextoGuardadoDesdeEditor();
         }
         clearTimeout(timeoutID_menu);
         permitir_fin_por_decision_local = false;
@@ -3533,11 +3638,18 @@ function recibir_palabra_prohibida(data) {
         permitir_fin_por_decision_local = true;
         esperando_resurreccion_tiempo = false;
         document.body.classList.remove('modo-resucitar');
-        texto.innerText = texto_guardado;
+        restaurarTextoGuardadoEnEditor();
         tiempo.style.color = "white";
         if (terminado == false) {
-            socket.emit('fin_de_player', player)
-          final();
+            const sinPalabrasParaResucitar = modo_actual !== "frase final"
+              && !partida_global_finalizada
+              && obtenerPalabrasDisponiblesResucitar() <= 0;
+            const payloadFin = sinPalabrasParaResucitar
+              ? { player, motivo: "sin_palabras" }
+              : player;
+            socket.emit('fin_de_player', payloadFin)
+            const textoGanador = sinPalabrasParaResucitar ? TEXTO_PERDISTE_SIN_PALABRAS : undefined;
+            final({ textoGanador });
           setTimeout(function () {
             texto.style.height = "";
             texto.rows = "1";
@@ -3710,6 +3822,7 @@ function manejadorTeclas(evento) {
 
 // Función para enviar texto al otro jugador y a control
 function sendText() {
+    capturarTextoGuardadoDesdeEditor();
     let text = texto.innerHTML;
     let points = puntos.innerHTML;
     const caretInfo = obtenerCaretInfo(texto);
@@ -4437,6 +4550,7 @@ function limpieza(){
     post_inicio_pendiente_escritora = null;
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
+    document.body.classList.remove("fin-escritora-anim");
     lightning.classList.remove("lightning");
     console.log(texto.innerHTML)
     if(temp_text_inverso_activado == true){
@@ -4469,6 +4583,7 @@ function limpieza(){
     // Desactiva el blur de ambos textos.
     blurreado = false;
     texto.classList.remove("textarea_blur");
+    setIndicadorGanadoraEscritora(false);
 
     puntos_palabra = 0;
     puntos_ = 0;
@@ -4521,6 +4636,7 @@ function limpieza_final(){
     ocultarUiResucitar({ emitirEstado: false });
     limpiarCountdownInicioEscritora();
     limpiarClasesIntroPartidaEscritora();
+    document.body.classList.remove("fin-escritora-anim");
     secuencia_inicio_escritora_activa = false;
     post_inicio_pendiente_escritora = null;
     confetti_aux();
@@ -4702,8 +4818,9 @@ function modo_borroso(data){
     }
 }
 
+var CONFETTI_TOP_Z_INDEX = 2147483647;
 var duration = 15 * 1000;
-var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: CONFETTI_TOP_Z_INDEX };
 var isConfettiRunning = true; // Indicador para controlar la ejecución
 
 function randomInRange(min, max) {
@@ -4738,7 +4855,12 @@ function stopConfetti() {
   confetti.reset(); // Detiene la animación de confetti
 }
 
-function final(){
+function final(opciones = {}){
+    capturarTextoGuardadoSinPerderPrevio();
+    const textoGanador = (opciones && typeof opciones.textoGanador === "string" && opciones.textoGanador.trim())
+      ? opciones.textoGanador
+      : TEXTO_GANADOR_ESCRITORA;
+    animarFinEscritora(textoGanador);
     setInterfazInversaGlobal(false);
     permitir_fin_por_decision_local = false;
     esperando_resurreccion_tiempo = false;
@@ -5030,7 +5152,12 @@ function detenerEfectoMaquina() {
 
 function confetti_musas(){
 var scalar = 2;
-var unicorn = confetti.shapeFromText({ text: '⭐', scalar });
+var starShape = confetti.shapeFromText({
+  text: "⭐",
+  scalar,
+  color: "#ffd43b",
+  fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+});
 isConfettiRunning = true;
 
 var end = Date.now() + (2 * 1000);
@@ -5038,13 +5165,15 @@ var end = Date.now() + (2 * 1000);
 // go Buckeyes!
 (function frame() {
   confetti({
-    startVelocity: 10,
-    particleCount: 1,
+    startVelocity: 12,
+    particleCount: 2,
     angle: 270,
     spread: 1000,
-    origin: { y: 0 },
-    shapes: [unicorn],
-    scalar: 3
+    origin: { x: randomInRange(0.12, 0.88), y: 0 },
+    shapes: [starShape],
+    scalar: 3,
+    colors: ["#fff6ad", "#ffe066", "#ffd43b", "#ffffff"],
+    zIndex: CONFETTI_TOP_Z_INDEX
   });
 
   if ((Date.now() < end) && isConfettiRunning) {

@@ -8,13 +8,14 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260213b">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260227m">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
-<body>
-    <script src="./js/juego.js"></script>
+<body class="page-players ui-dashboard-only">
+    <script src="./js/juego.js?v=20260227e"></script>
+    <div id="players_fit_root" align="center">
     <div class="cabecera">
     <pre id="neon" class="neon">
     __     _____    _____   _____    _____    __       ____  
@@ -53,34 +54,59 @@
 
             <br><br>
             <p id="alineador1"></p>
-                          <!-- MENÚ PRINCIPAL -->
-    <div id="mainMenu" class="mainMenu">
-        <!-- Título principal separando "Game Over" en rojo y el resto en blanco -->
-        <h1 class="main-title">
-          <span style="color: red;">GAME OVER</span><br><br> ¿QUIERES <span style="color: lime">RESUCITAR</span> A CAMBIO DE PALABRAS?
-        </h1>
-        <div class="button-container">
-          <button id="btnSi" class="selected">Sí</button>
-          <button id="btnNo">No</button>
-        </div>
-      </div>
-      <!-- MENÚ DE SELECCIÓN DE CANTIDAD (APARECE AL DAR "SÍ") -->
-      <div id="quantityMenu">
-        <h2 class="quantity-title">Selecciona la cantidad de palabras:</h2>
-        <!-- 
-          Este elemento mostrará la cantidad y su conversión a segundos.
-          Lo tratamos como "elemento navegable" en nuestro índice para flechas.
-        -->
-        <div id="quantityDisplay" class="quantity-display selected">
-          <!-- Aquí inyectaremos el texto "X palabras => Y segundos" -->
-        </div>
-  
-        <!-- Botones de abajo: "Confirmar" y "Atrás" -->
-        <div class="button-container">
-          <button id="btnConfirmar">Confirmar</button>
-          <button id="btnAtras">Atrás</button>
-        </div>
-      </div>
+            <!-- MENÚ PRINCIPAL -->
+            <div id="mainMenu" class="mainMenu resucitar-panel">
+                <div class="resucitar-header">
+                    <h1 class="main-title">
+                        <span class="resucitar-title-over">GAME OVER</span>
+                        <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
+                    </h1>
+                </div>
+                <div class="resucitar-row">
+                    <div class="resucitar-actions">
+                        <div class="button-container resucitar-buttons">
+                            <button id="btnSi" class="selected" type="button">S&iacute;</button>
+                            <button id="btnNo" type="button">No</button>
+                        </div>
+                    </div>
+                    <div class="resucitar-keys">
+                        <div class="resucitar-keys-title">Usa flechas y Enter</div>
+                        <div class="resucitar-keypad" aria-hidden="true">
+                            <div class="keycap keycap-up">&uarr;</div>
+                            <div class="keycap keycap-left">&larr;</div>
+                            <div class="keycap keycap-down">&darr;</div>
+                            <div class="keycap keycap-right">&rarr;</div>
+                            <div class="keycap keycap-enter">ENTER</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- MENÚ DE SELECCIÓN DE CANTIDAD (APARECE AL DAR "SÍ") -->
+            <div id="quantityMenu" class="resucitar-panel">
+                <div class="resucitar-header">
+                    <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
+                </div>
+                <div class="resucitar-row">
+                    <div class="resucitar-actions">
+                        <div id="quantityDisplay" class="quantity-display selected"></div>
+
+                        <div class="button-container resucitar-buttons">
+                            <button id="btnConfirmar" type="button">Confirmar</button>
+                            <button id="btnAtras" type="button">Atr&aacute;s</button>
+                        </div>
+                    </div>
+                    <div class="resucitar-keys">
+                        <div class="resucitar-keys-title">Usa flechas y Enter</div>
+                        <div class="resucitar-keypad" aria-hidden="true">
+                            <div class="keycap keycap-up">&uarr;</div>
+                            <div class="keycap keycap-left">&larr;</div>
+                            <div class="keycap keycap-down">&darr;</div>
+                            <div class="keycap keycap-right">&rarr;</div>
+                            <div class="keycap keycap-enter">ENTER</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
       <div id="desventajaOverlay" class="desventaja-overlay" aria-live="assertive" aria-modal="true" role="dialog">
         <div class="desventaja-card">
           <div id="desventajaStatus" class="desventaja-status">SE VA A ELEGIR UNA DESVENTAJA</div>
@@ -104,15 +130,16 @@
         </div> 
             <br><br>
             <div class="info-total">
-                <table id="metadatos" class="right">
-                    <tr>
-                        <th> 🖋️</th>
-                    </tr>
-                    <tr>
-                        <th id="puntos"> 0 palabras</th>
-                    </tr>
-                </table>
-                </br>
+                <div id="metadatos" class="right metadatos-grid metadatos-grid--cabecera marcador-equipo marcador-equipo-1 metadatos-grid--solo-palabras">
+                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                        <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Palabras</span>
+                            <span id="puntos" class="puntos">0 palabras</span>
+                        </div>
+                    </div>
+                </div>
+                <br>
             <div>
                 <table class="info">
                     <tr>
@@ -248,7 +275,8 @@
       <p>En caso de encontrar algún error o tengas alguna sugerencia, envianos un correo a <a href="mailto:contacto@suturateatro.es" style="color:aqua">contacto@suturateatro.es</a></p>
       <br>
     </div>
+    </div>
 </body>
-<script src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js?v=20260227m"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

@@ -7,13 +7,13 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260218a">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260225a7">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="../../config.js"></script>
     <script src="./js/juego.js"></script>
 </head>
-<body>
+<body class="page-actors">
         <div id="contenedor" class="contenedor">
             <div class="container"></div>
             <p><span id="temas" class="temas"></span></p>
@@ -30,7 +30,7 @@
                     <p id="tiempo" class="tiempo tiempo-vida"></p>
                 </div>
                 <div align="center">
-                    <div id="metadatos_actor" class="right metadatos-grid marcador-actores marcador-equipo marcador-equipo-1">
+                    <div id="metadatos_actor" class="right metadatos-grid metadatos-grid--cabecera marcador-actores marcador-equipo marcador-equipo-1">
                         <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
                             <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
                             <div class="meta-copy">
@@ -102,6 +102,5 @@
         </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260218a"></script>
+<script src="./js/jugador-servidor.js?v=20260225a7"></script>
 </html>
-

@@ -50,6 +50,507 @@ let tiempo_modos_input = document.getElementById('tiempo_modos');
 let tiempo_inicial_input = document.getElementById('tiempo_inicial');
 
 let soporte = document.getElementById('soporte');
+const players_fit_root = getEl("players_fit_root");
+const contenedor_principal_escritora = getEl("contenedor");
+let raf_ajuste_viewport_escritora = null;
+let raf_ajuste_altura_editor_escritora = null;
+let resize_observer_fit_viewport_escritora = null;
+
+const resetAjusteViewportEscritora = () => {
+    if (!players_fit_root) return;
+    players_fit_root.style.removeProperty("transform");
+};
+
+const ajustarViewportEscritora = () => {
+    if (!players_fit_root) return;
+
+    players_fit_root.style.transform = "none";
+    if (document.body && document.body.classList.contains("ui-dashboard-only")) {
+        return;
+    }
+    const viewportW = Math.max(window.innerWidth || 0, 1);
+    const viewportH = Math.max(window.innerHeight || 0, 1);
+    const anchoNatural = Math.max(Math.ceil(players_fit_root.scrollWidth || 0), 1);
+    const altoNatural = Math.max(Math.ceil(players_fit_root.scrollHeight || 0), 1);
+
+    let escala = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
+    if (!Number.isFinite(escala) || escala <= 0) {
+        escala = 1;
+    }
+
+    const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5);
+    players_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, 0, 0) scale(${escala.toFixed(4)})`;
+};
+
+const ajustarAlturaEditorEscritora = () => {
+    if (!texto || !contenedor_principal_escritora) return;
+    if (document.body && document.body.classList.contains("ui-dashboard-only")) {
+        texto.style.removeProperty("min-height");
+        texto.style.removeProperty("max-height");
+        return;
+    }
+    const textareaContainer = texto.closest(".textarea-container");
+    const infoTotal = contenedor_principal_escritora.querySelector(".info-total");
+    if (!textareaContainer) return;
+    const viewportH = Math.max(window.innerHeight || 0, 1);
+    const topEditor = textareaContainer.getBoundingClientRect().top;
+    const altoInfo = infoTotal ? infoTotal.getBoundingClientRect().height : 0;
+    const margenSeguro = Math.max(14, Math.round(viewportH * 0.024));
+    const disponible = Math.floor(viewportH - topEditor - altoInfo - margenSeguro);
+    const maxPx = Math.max(180, disponible);
+    const minPx = Math.max(110, Math.min(maxPx - 20, Math.round(maxPx * 0.38)));
+    texto.style.minHeight = `${minPx}px`;
+    texto.style.maxHeight = `${maxPx}px`;
+};
+
+const programarAjusteAlturaEditorEscritora = () => {
+    if (raf_ajuste_altura_editor_escritora) return;
+    raf_ajuste_altura_editor_escritora = requestAnimationFrame(() => {
+        raf_ajuste_altura_editor_escritora = null;
+        ajustarAlturaEditorEscritora();
+    });
+};
+
+const programarAjusteViewportEscritora = () => {
+    if (!players_fit_root) return;
+    if (raf_ajuste_viewport_escritora) return;
+    raf_ajuste_viewport_escritora = requestAnimationFrame(() => {
+        raf_ajuste_viewport_escritora = null;
+        ajustarViewportEscritora();
+        ajustarAlturaEditorEscritora();
+    });
+};
+
+function aplicarVisibilidadBotonesDashboard() {
+    if (btnEscribir) btnEscribir.style.display = "";
+    if (btnPantallaCompleta) btnPantallaCompleta.style.display = "";
+    if (btnOpciones) btnOpciones.style.display = "";
+    if (btnLimpiar) btnLimpiar.style.display = "none";
+    if (btnFinal) btnFinal.style.display = "none";
+    if (btnDescargarTexto) btnDescargarTexto.style.display = "none";
+    if (btnVolver) btnVolver.style.display = "none";
+}
+
+function setModoDashboardSolo(activo) {
+    if (!document.body) return;
+    document.body.classList.toggle("ui-dashboard-only", Boolean(activo));
+    if (activo) {
+        aplicarVisibilidadBotonesDashboard();
+    }
+    programarAjusteViewportEscritora();
+    programarAjusteAlturaEditorEscritora();
+}
+
+const iniciarAjusteViewportEscritora = () => {
+    if (document.documentElement) {
+        document.documentElement.style.overflow = "hidden";
+    }
+    if (document.body) {
+        document.body.style.overflow = "hidden";
+    }
+    if (!players_fit_root) return;
+    if (!resize_observer_fit_viewport_escritora && typeof ResizeObserver === "function") {
+        resize_observer_fit_viewport_escritora = new ResizeObserver(() => {
+            programarAjusteViewportEscritora();
+        });
+        resize_observer_fit_viewport_escritora.observe(players_fit_root);
+    }
+    programarAjusteViewportEscritora();
+    setTimeout(programarAjusteViewportEscritora, 120);
+};
+
+window.addEventListener("resize", programarAjusteViewportEscritora);
+window.addEventListener("orientationchange", programarAjusteViewportEscritora);
+window.addEventListener("load", programarAjusteViewportEscritora);
+
+iniciarAjusteViewportEscritora();
+setModoDashboardSolo(document.body && document.body.classList.contains("ui-dashboard-only"));
+
+const feedback_flotante_escritora = (() => {
+    let root = getEl("feedback_tiempo_flotante_root");
+    if (!root) {
+        root = document.createElement("div");
+        root.id = "feedback_tiempo_flotante_root";
+        document.body.appendChild(root);
+    }
+    let columna = root.querySelector(".feedback-tiempo-columna.lado-1");
+    if (!columna) {
+        columna = document.createElement("div");
+        columna.className = "feedback-tiempo-columna lado-1";
+        root.appendChild(columna);
+    }
+    return columna;
+})();
+
+function obtenerTipoFeedbackFlotanteEscritora(texto = "", tipo = "") {
+    const tipoNorm = String(tipo || "").trim().toLowerCase();
+    if (tipoNorm === "ganar_tiempo" || tipoNorm === "letra_bendita" || tipoNorm === "inspiracion") {
+        return "positivo";
+    }
+    if (tipoNorm === "perder_tiempo" || tipoNorm === "letra_prohibida" || tipoNorm === "lista_prohibidas" || tipoNorm === "borrar") {
+        return "negativo";
+    }
+    const textoNorm = String(texto || "").trim().toLowerCase();
+    if (!textoNorm) return "neutro";
+    if (textoNorm.includes("perder") || textoNorm.startsWith("-") || /\s-\d/.test(textoNorm)) {
+        return "negativo";
+    }
+    if (textoNorm.includes("insp") || textoNorm.includes("ganar") || textoNorm.startsWith("+") || /\s\+\d/.test(textoNorm)) {
+        return "positivo";
+    }
+    return "neutro";
+}
+
+function mostrarFeedbackFlotanteEscritora(texto, opciones = {}) {
+    const contenido = String(texto ?? "").trim();
+    if (!contenido || !feedback_flotante_escritora) return;
+    const tipo = obtenerTipoFeedbackFlotanteEscritora(contenido, opciones.tipo);
+    const nodo = document.createElement("span");
+    nodo.className = `feedback-tiempo-float ${tipo}`;
+    nodo.textContent = contenido;
+
+    if (typeof opciones.color === "string" && opciones.color.trim()) {
+        nodo.style.setProperty("--feedback-float-color", opciones.color.trim());
+    }
+
+    const derivaX = (Math.random() * 18) - 9;
+    const subidaDeseada = -54 - (Math.random() * 18);
+    const rectContenedor = feedback_flotante_escritora.getBoundingClientRect();
+    const margenSuperior = 24;
+    const subidaMaxima = -Math.max(8, rectContenedor.top - margenSuperior);
+    const subidaY = Math.max(subidaDeseada, subidaMaxima);
+    const duracion = 1100 + Math.round(Math.random() * 200);
+    nodo.style.setProperty("--feedback-float-drift-x", `${derivaX.toFixed(1)}px`);
+    nodo.style.setProperty("--feedback-float-rise-y", `${subidaY.toFixed(1)}px`);
+    nodo.style.animationDuration = `${duracion}ms`;
+
+    feedback_flotante_escritora.appendChild(nodo);
+    nodo.addEventListener("animationend", () => nodo.remove(), { once: true });
+    while (feedback_flotante_escritora.childElementCount > 6) {
+        feedback_flotante_escritora.firstElementChild.remove();
+    }
+    if (feedback) {
+        feedback.innerHTML = "";
+    }
+}
+
+function limpiarFeedbackFlotanteEscritora() {
+    if (feedback_flotante_escritora) {
+        feedback_flotante_escritora.innerHTML = "";
+    }
+    if (feedback) {
+        feedback.innerHTML = "";
+    }
+}
+
+const timeout_marcador_escritora = new WeakMap();
+
+const formatearPuntosMarcador = (valor) => {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return "0 palabras";
+    if (/^-?\d+(?:\.\d+)?$/.test(texto)) return `${texto} palabras`;
+    return texto;
+};
+
+const formatearMusasMarcador = (valor) => {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return "0 musas";
+    if (/^-?\d+(?:\.\d+)?$/.test(texto)) return `${texto} musas`;
+    return texto;
+};
+
+function destacarMarcadorEscritoraHit(elemento) {
+    if (!elemento) return;
+    elemento.classList.remove("puntos-hit");
+    void elemento.offsetWidth;
+    elemento.classList.add("puntos-hit");
+    const timeoutPrevio = timeout_marcador_escritora.get(elemento);
+    if (timeoutPrevio) {
+        clearTimeout(timeoutPrevio);
+    }
+    const timeoutNuevo = setTimeout(() => {
+        if (elemento) {
+            elemento.classList.remove("puntos-hit");
+        }
+    }, 640);
+    timeout_marcador_escritora.set(elemento, timeoutNuevo);
+}
+
+function actualizarPuntosMarcador(valor, animar = true) {
+    if (!puntos) return;
+    const previo = (puntos.textContent || "").trim();
+    const siguiente = formatearPuntosMarcador(valor);
+    puntos.textContent = siguiente;
+    if (animar && siguiente !== previo) {
+        destacarMarcadorEscritoraHit(puntos);
+    }
+}
+
+function actualizarMusasMarcador(valor, animar = true) {
+    if (!musas) return;
+    const previo = (musas.textContent || "").trim();
+    const siguiente = formatearMusasMarcador(valor);
+    musas.textContent = siguiente;
+    if (animar && siguiente !== previo) {
+        destacarMarcadorEscritoraHit(musas);
+    }
+}
+
+actualizarPuntosMarcador(puntos ? puntos.textContent : 0, false);
+actualizarMusasMarcador(musas ? musas.textContent : 0, false);
+
+const CLASES_BARRA_NIVEL_ESCRITORA = [
+    "barra-nivel--bendita",
+    "barra-nivel--prohibida",
+    "barra-nivel--bonus",
+    "barra-nivel--prohibidas",
+    "barra-nivel--tertulia",
+    "barra-nivel--frase-final"
+];
+
+const CLASES_ESTILO_PALABRA_NIVEL_ESCRITORA = [
+    "palabra-letras--bendita",
+    "palabra-letras--prohibida",
+    "palabra-letras--bonus",
+    "palabra-letras--prohibidas",
+    "palabra-letras--tertulia",
+    "palabra-letras--frase-final"
+];
+
+const CLASES_ESTILO_DEFINICION_NIVEL_ESCRITORA = [
+    "definicion-letras--bendita",
+    "definicion-letras--prohibida",
+    "definicion-letras--bonus",
+    "definicion-letras--prohibidas",
+    "definicion-letras--tertulia",
+    "definicion-letras--frase-final"
+];
+
+let DURACION_NIVEL_MS_ESCRITORA = 60000;
+let inicio_nivel_ts_escritora = 0;
+let intervalo_progreso_nivel_escritora = null;
+let progreso_frase_final_base_segundos_escritora = null;
+
+const CLASE_INTRO_PARTIDA_ESCRITORA = "partida-intro-escritora";
+const CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA = [
+    "partida-intro-stage-tiempo-escritora",
+    "partida-intro-stage-marcador-escritora",
+    "partida-intro-stage-info-escritora"
+];
+let secuencia_inicio_escritora_activa = false;
+let post_inicio_pendiente_escritora = null;
+
+function normalizarDuracionNivelMsEscritora(valor) {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero) || numero <= 0) return null;
+    if (numero <= 600) return Math.round(numero * 1000);
+    return Math.round(numero);
+}
+
+function actualizarDuracionNivelDesdeParametrosEscritora(parametros = {}) {
+    const candidatos = [
+        parametros.TIEMPO_MODOS,
+        parametros.DURACION_TIEMPO_MODOS,
+        parametros.TIEMPO_CAMBIO_MODOS,
+        TIEMPO_CAMBIO_MODOS
+    ];
+    for (const candidato of candidatos) {
+        const ms = normalizarDuracionNivelMsEscritora(candidato);
+        if (ms) {
+            DURACION_NIVEL_MS_ESCRITORA = ms;
+            return;
+        }
+    }
+}
+
+function setProgresoNivelBarraEscritora(progreso) {
+    if (!palabra) return;
+    const valor = Number(progreso);
+    const pct = Math.max(0, Math.min(100, Number.isFinite(valor) ? valor : 0));
+    palabra.style.setProperty("--nivel-progress", `${pct.toFixed(2)}%`);
+}
+
+function detenerProgresoNivelBarraEscritora(reiniciar = false) {
+    if (intervalo_progreso_nivel_escritora) {
+        clearInterval(intervalo_progreso_nivel_escritora);
+        intervalo_progreso_nivel_escritora = null;
+    }
+    inicio_nivel_ts_escritora = 0;
+    if (reiniciar) {
+        setProgresoNivelBarraEscritora(0);
+    }
+}
+
+function reiniciarProgresoFraseFinalEscritora() {
+    progreso_frase_final_base_segundos_escritora = null;
+}
+
+function actualizarProgresoFraseFinalEscritora(segundosRestantes) {
+    if (modo_actual !== "frase final") return false;
+    const segundos = Number(segundosRestantes);
+    if (!Number.isFinite(segundos) || segundos < 0) return false;
+
+    if (!Number.isFinite(progreso_frase_final_base_segundos_escritora) || progreso_frase_final_base_segundos_escritora <= 0) {
+        progreso_frase_final_base_segundos_escritora = segundos;
+    } else if (segundos > progreso_frase_final_base_segundos_escritora) {
+        progreso_frase_final_base_segundos_escritora = segundos;
+    }
+
+    const base = Math.max(1, Number(progreso_frase_final_base_segundos_escritora) || 1);
+    const restante = Math.max(0, segundos);
+    const pct = Math.max(0, Math.min(100, ((base - restante) / base) * 100));
+    setProgresoNivelBarraEscritora(pct);
+    if (pct >= 100) {
+        detenerProgresoNivelBarraEscritora(false);
+    }
+    return true;
+}
+
+function tickProgresoNivelBarraEscritora() {
+    if (!inicio_nivel_ts_escritora || DURACION_NIVEL_MS_ESCRITORA <= 0) {
+        setProgresoNivelBarraEscritora(0);
+        return;
+    }
+    const transcurrido = Date.now() - inicio_nivel_ts_escritora;
+    const pct = Math.min(100, (transcurrido / DURACION_NIVEL_MS_ESCRITORA) * 100);
+    setProgresoNivelBarraEscritora(pct);
+    if (pct >= 100) {
+        detenerProgresoNivelBarraEscritora(false);
+    }
+}
+
+function iniciarProgresoNivelBarraEscritora() {
+    if (modo_actual === "frase final") {
+        detenerProgresoNivelBarraEscritora(true);
+        reiniciarProgresoFraseFinalEscritora();
+        return;
+    }
+    detenerProgresoNivelBarraEscritora(true);
+    inicio_nivel_ts_escritora = Date.now();
+    tickProgresoNivelBarraEscritora();
+    intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
+}
+
+function setBarraNivelClaseEscritora(tipo = "") {
+    if (!palabra || !palabra.classList) return;
+    CLASES_BARRA_NIVEL_ESCRITORA.forEach((clase) => palabra.classList.remove(clase));
+    if (!tipo) return;
+    palabra.classList.add(`barra-nivel--${tipo}`);
+}
+
+function limpiarEstiloNivelesEscritora() {
+    if (palabra && palabra.classList) {
+        CLASES_ESTILO_PALABRA_NIVEL_ESCRITORA.forEach((clase) => palabra.classList.remove(clase));
+    }
+    if (definicion && definicion.classList) {
+        definicion.classList.remove("objetivo-nivel");
+        CLASES_ESTILO_DEFINICION_NIVEL_ESCRITORA.forEach((clase) => definicion.classList.remove(clase));
+    }
+}
+
+function aplicarEstiloNivelesEscritora(tipo = "") {
+    limpiarEstiloNivelesEscritora();
+    if (!tipo || !palabra || !palabra.classList || !definicion || !definicion.classList) return;
+    palabra.classList.add(`palabra-letras--${tipo}`);
+    definicion.classList.add(`definicion-letras--${tipo}`);
+}
+
+function formatoLetraNivelEscritora(letra) {
+    const valor = String(letra || "").trim();
+    return valor ? valor.toUpperCase() : "-";
+}
+
+function renderLetraDestacadaNivelEscritora(letra) {
+    return `<span class="explicacion-letra-destacada">${formatoLetraNivelEscritora(letra)}</span>`;
+}
+
+function construirExplicacionNivelLetraEscritora(tipo, letra) {
+    const letraDestacada = renderLetraDestacadaNivelEscritora(letra);
+    if (tipo === "bendita") {
+        return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+    }
+    if (tipo === "prohibida") {
+        return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
+    }
+    return "";
+}
+
+function escapeHtmlBasico(texto) {
+    return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, tipo = "bendita") {
+    const base = String(palabraTexto || "").trim();
+    if (!base) return "";
+    const tiempoRaw = String(tiempoSegundos ?? "").trim();
+    if (!tiempoRaw) return escapeHtmlBasico(base);
+    const tiempoLimpio = tiempoRaw.replace(/^[+-]\s*/, "");
+    const esMaldita = tipo === "maldita";
+    const signo = esMaldita ? "-" : "+";
+    const claseTiempo = esMaldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
+    const tiempoTexto = `${signo}${tiempoLimpio} segs.`;
+    return `${escapeHtmlBasico(base)} <span class="palabra-tiempo ${claseTiempo}">${escapeHtmlBasico(tiempoTexto)}</span>`;
+}
+
+function renderObjetivoNivelEscritora(palabraTexto, opciones = {}) {
+    if (!definicion) return;
+    const base = String(palabraTexto || "").trim();
+    if (!base) {
+        definicion.classList.remove("objetivo-nivel");
+        definicion.innerHTML = "";
+        return;
+    }
+    const tipo = String(opciones.tipo || "bonus").trim().toLowerCase();
+    const clase = `objetivo-chip--${tipo}`;
+    const tiempoSegundos = String(opciones.tiempoSegundos ?? "").trim();
+    const descripcion = String(opciones.descripcion || "").trim();
+    const textoPalabra = tiempoSegundos
+        ? construirTextoPalabraConTiempoEscritora(base, tiempoSegundos, tipo === "prohibidas" ? "maldita" : "bendita")
+        : escapeHtmlBasico(base);
+    const descripcionHtml = descripcion
+        ? `<span class="objetivo-def objetivo-def--${tipo}">${escapeHtmlBasico(descripcion)}</span>`
+        : "";
+    definicion.classList.add("objetivo-nivel");
+    definicion.innerHTML = `<span class="objetivo-chip ${clase}">${textoPalabra}</span>${descripcionHtml}`;
+}
+
+function limpiarClasesIntroPartidaEscritora() {
+    if (!document.body) return;
+    document.body.classList.remove(CLASE_INTRO_PARTIDA_ESCRITORA);
+    CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA.forEach((clase) => {
+        document.body.classList.remove(clase);
+    });
+}
+
+function revelarEtapaIntroPartidaEscritora(etapa) {
+    if (!document.body || !Number.isFinite(etapa)) return;
+    const total = CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA.length;
+    const limite = Math.max(0, Math.min(total, Math.floor(etapa)));
+    for (let i = 0; i < total; i += 1) {
+        if (i < limite) {
+            document.body.classList.add(CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA[i]);
+        }
+    }
+}
+
+function iniciarSecuenciaIntroPartidaEscritora() {
+    if (!document.body) return;
+    limpiarClasesIntroPartidaEscritora();
+    document.body.classList.add(CLASE_INTRO_PARTIDA_ESCRITORA);
+    secuencia_inicio_escritora_activa = true;
+    post_inicio_pendiente_escritora = null;
+    revelarEtapaIntroPartidaEscritora(0);
+}
+
+function finalizarSecuenciaIntroPartidaEscritora() {
+    secuencia_inicio_escritora_activa = false;
+    revelarEtapaIntroPartidaEscritora(CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA.length);
+}
 
 // ---- Resumen y heatmap para PDF (1 jugador) ----
 const HEATMAP_LAYOUT = [
@@ -204,8 +705,12 @@ let listener_cuenta_atras = null;
 let listener_cambio_letra_palabra = null;
 let timer = null;
 let sub_timer = null;
+let preparados_timer = null;
+let fallback_cuenta_atras_timer = null;
 let secondsRemaining = 0;
 let secondsPassed = 0;
+let duracion_modo_actual_segundos = 0;
+let menu_resurreccion_activo = false;
 let desventajaEnCurso = false;
 let timeout_bloqueo_putada = null;
 let timeout_teclado_lento = null;
@@ -226,6 +731,9 @@ const RETRASO_TECLADO_LENTO_MS = 500;
 const RAYO_REDUCCION_K = 0.08;
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "inline-flex";
+const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
+const animacionesEntradaBarraVida = new WeakMap();
+let animacionEntradaVidaPendiente = false;
 const DURACION_ELECCION_DESVENTAJA_MS = 8000;
 const DURACION_LECTURA_RESULTADO_TRAGAPERRAS_MS = 2400;
 const INTERVALO_TRAGAPERRAS_MS = 80;
@@ -408,6 +916,20 @@ function limpiar_teclado_lento() {
     }
 }
 
+function limpiarCountdownInicioEscritora() {
+    clearTimeout(listener_cuenta_atras);
+    clearInterval(timer);
+    clearTimeout(sub_timer);
+    clearTimeout(preparados_timer);
+    clearTimeout(fallback_cuenta_atras_timer);
+    listener_cuenta_atras = null;
+    timer = null;
+    sub_timer = null;
+    preparados_timer = null;
+    fallback_cuenta_atras_timer = null;
+    $('#countdown').remove();
+}
+
 function extraerSegundosTiempo(textoTiempo) {
     if (!textoTiempo || typeof textoTiempo !== "string" || textoTiempo.indexOf(":") === -1) {
         return null;
@@ -424,10 +946,75 @@ function extraerSegundosTiempo(textoTiempo) {
     return (minutos * 60) + segundos;
 }
 
-function actualizarBarraVida(elemento, textoTiempo) {
+function setPendienteAnimacionEntradaBarraVida(valor) {
+    animacionEntradaVidaPendiente = Boolean(valor);
+}
+
+function animarEntradaBarraVidaInicioPartida() {
+    if (!tiempo) return;
+    const segundosIniciales = Math.max(0, Math.floor((Number(TIEMPO_INICIAL) || 0) / 1000));
+    const minutos = parseInt(segundosIniciales / 60, 10);
+    const segundos = parseInt(segundosIniciales % 60, 10);
+    const textoInicial = `${paddedFormat(minutos)}:${paddedFormat(segundos)}`;
+    tiempo.textContent = textoInicial;
+    tiempo.style.color = "white";
+    actualizarBarraVida(tiempo, textoInicial, { animarEntrada: true });
+    // Ya se animó en la intro visual; evita doble animación al arrancar el temporizador real.
+    animacionEntradaVidaPendiente = false;
+}
+
+function cancelarAnimacionEntradaBarraVida(elemento) {
     if (!elemento) return;
+    const frameId = animacionesEntradaBarraVida.get(elemento);
+    if (frameId) {
+        cancelAnimationFrame(frameId);
+        animacionesEntradaBarraVida.delete(elemento);
+    }
+}
+
+function aplicarEstadoBarraVida(elemento, porcentaje) {
+    const pct = Math.max(0, Math.min(100, Number(porcentaje) || 0));
+    const tono = Math.max(0, Math.min(120, pct * 1.2));
+    elemento.style.setProperty("--vida-pct", `${pct.toFixed(1)}%`);
+    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+}
+
+function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURACION_ANIMACION_ENTRADA_VIDA_MS) {
+    if (!elemento) return;
+    const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
+    cancelarAnimacionEntradaBarraVida(elemento);
+
+    if (objetivo <= 0 || duracionMs <= 0) {
+        aplicarEstadoBarraVida(elemento, objetivo);
+        return;
+    }
+
+    const inicio = performance.now();
+    const paso = (ahora) => {
+        const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+        const easing = 1 - Math.pow(1 - progreso, 3);
+        aplicarEstadoBarraVida(elemento, objetivo * easing);
+
+        if (progreso < 1) {
+            const siguiente = requestAnimationFrame(paso);
+            animacionesEntradaBarraVida.set(elemento, siguiente);
+            return;
+        }
+
+        animacionesEntradaBarraVida.delete(elemento);
+        aplicarEstadoBarraVida(elemento, objetivo);
+    };
+
+    const primerFrame = requestAnimationFrame(paso);
+    animacionesEntradaBarraVida.set(elemento, primerFrame);
+}
+
+function actualizarBarraVida(elemento, textoTiempo, opciones = {}) {
+    if (!elemento) return;
+    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(textoTiempo);
     if (total === null) {
+        cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
@@ -435,10 +1022,13 @@ function actualizarBarraVida(elemento, textoTiempo) {
     }
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
-    const tono = Math.max(0, Math.min(120, porcentaje * 1.2));
     elemento.style.display = DISPLAY_BARRA_VIDA;
-    elemento.style.setProperty("--vida-pct", `${porcentaje.toFixed(1)}%`);
-    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+    if (animarEntrada) {
+        animarEntradaBarraVida(elemento, porcentaje);
+        return;
+    }
+    cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, porcentaje);
 }
 
 function reduceLog(base, k = 1) {
@@ -754,6 +1344,7 @@ function avanzarModoTrasDesventaja(emoji) {
         return;
     }
     MODOS[modo_actual]("");
+    duracion_modo_actual_segundos = obtenerDuracionModoActualSegundos();
     if (!terminado) {
         texto.contentEditable = "true";
         texto.focus();
@@ -1259,26 +1850,23 @@ const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     "palabras bonus": function (data) {
         reproducirAudioModo("palabras bonus");
-        palabra.style.backgroundColor = "yellow";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("bonus");
+        aplicarEstiloNivelesEscritora("bonus");
         explicación.style.color = "yellow";
-        if (window.innerWidth <= 800) {
-            definicion.style.fontSize = "2vw";
-            palabra.style.fontSize = "5vw";
-            explicación.style.fontSize = "5vw"
-        }
-        else{
-            definicion.style.fontSize = "1vw";
-            palabra.style.fontSize = "2vw";
-            explicación.style.fontSize = "2vw"
-        }
-        explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
-
+        explicación.innerHTML = "SUMA TIEMPO CON PALABRAS BONUS";
+        palabra.innerHTML = "NIVEL PALABRAS BONUS";
+        definicion.innerHTML = "";
         recibir_palabra();
+        iniciarProgresoNivelBarraEscritora();
     },
 
     //Recibe y activa el modo letra prohibida.
     "letra prohibida": function (data) {
         reproducirAudioModo("letra prohibida");
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("prohibida");
+        aplicarEstiloNivelesEscritora("prohibida");
         indice_letra_prohibida = Math.floor(Math.random() * letras_prohibidas_restantes.length);
         letra_prohibida = letras_prohibidas_restantes[indice_letra_prohibida]
         letras_prohibidas_restantes.splice(indice_letra_prohibida, 1);
@@ -1288,21 +1876,20 @@ const MODOS = {
 
         listener_cambio_letra_palabra = setTimeout(nueva_letra_prohibida, TIEMPO_CAMBIO_LETRA);
 
-        definicion.style.fontSize = "1.5vw";
-        palabra.style.backgroundColor = "red";
         explicación.style.color = "red";
-        //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
-        listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto.addEventListener("input", listener_modo);
-
-        explicación.innerHTML = "NIVEL LETRA MALDITA";
-        palabra.innerHTML = "LETRA MALDITA: " + letra_prohibida;
+        explicación.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
+        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
         definicion.innerHTML = "";
-        //////socket.emit("nueva_palabra_musa", player);
+        listener_modo = function (e) { modo_letra_prohibida(e) };
+        texto.addEventListener("beforeinput", listener_modo, true);
+        iniciarProgresoNivelBarraEscritora();
     },
 
     "letra bendita": function (data) {
         reproducirAudioModo("letra bendita");
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("bendita");
+        aplicarEstiloNivelesEscritora("bendita");
         indice_letra_bendita = Math.floor(Math.random() * letras_benditas_restantes.length);
         letra_bendita = letras_benditas_restantes[indice_letra_bendita]
         letras_benditas_restantes.splice(indice_letra_bendita, 1);
@@ -1311,16 +1898,13 @@ const MODOS = {
         }
         listener_cambio_letra_palabra = setTimeout(nueva_letra_bendita, TIEMPO_CAMBIO_LETRA);
 
-        definicion.style.fontSize = "1.5vw";
-        palabra.style.backgroundColor= "lime";
         explicación.style.color = "lime";
-        //TO DO: MODIFICAR FUNCIÓN PARA QUE NO ESTÉ DENTRO DE OTRA.
+        explicación.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
+        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        definicion.innerHTML = "";
         listener_modo = function (e) { modo_letra_bendita(e) };
         texto.addEventListener("beforeinput", listener_modo, true);
-        explicación.innerHTML = "NIVEL LETRA BENDITA";
-        palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
-        definicion.innerHTML = "";
-        //////socket.emit("nueva_palabra_musa", player);
+        iniciarProgresoNivelBarraEscritora();
     },
 
     "texto borroso": function (data) {
@@ -1348,34 +1932,44 @@ const MODOS = {
 
     'tertulia': function (socket) {
         reproducirAudioModo("tertulia");
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("tertulia");
+        aplicarEstiloNivelesEscritora("tertulia");
         es_pausa = true;
         tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
         pausa();
-        explicación.style.color = "blue";
-        explicación.innerHTML = "NIVEL TERTULIA";
-        palabra.innerHTML = "";
+        explicación.style.color = "#86d0ff";
+        explicación.innerHTML = "DIALOGA CON TUS MUSAS";
+        palabra.innerHTML = "NIVEL TERTULIA";
         definicion.innerHTML = "";
+        iniciarProgresoNivelBarraEscritora();
     },
 
     'palabras prohibidas': function (data) {
         reproducirAudioModo("palabras prohibidas");
-        palabra.style.backgroundColor = "pink";
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("prohibidas");
+        aplicarEstiloNivelesEscritora("prohibidas");
         explicación.style.color = "pink";
-        explicación.innerHTML = "NIVEL PALABRAS MALDITAS";
-        palabra.innerHTML = "";
+        explicación.innerHTML = "EVITA LAS PALABRAS PROHIBIDAS";
+        palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
         definicion.innerHTML = "";
         palabras_top_usadas.clear();
-        nueva_palabra_prohibida()
-
+        nueva_palabra_prohibida();
+        iniciarProgresoNivelBarraEscritora();
     },
 
     'frase final': function (socket) {
         reproducirAudioModo("frase final");
+        limpiarEstiloNivelesEscritora();
+        setBarraNivelClaseEscritora("frase-final");
+        aplicarEstiloNivelesEscritora("frase-final");
         explicación.style.color = "orange";
-        palabra.style.backgroundColor = "orange";
-        explicación.innerHTML = "NIVEL FRASE FINAL";
-        palabra.innerHTML = "";
+        explicación.innerHTML = "ULTIMA RONDA";
+        palabra.innerHTML = "NIVEL FRASE FINAL";
         definicion.innerHTML = "";
+        reiniciarProgresoFraseFinalEscritora();
+        setProgresoNivelBarraEscritora(0);
         frase_final();
     },
 
@@ -1394,13 +1988,14 @@ const LIMPIEZAS = {
     },
 
     "letra prohibida": function (data) {
-        texto.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("input", listener_modo);
+        texto.removeEventListener("beforeinput", listener_modo, true);
         clearTimeout(listener_cambio_letra_palabra);
         letra_prohibida = "";
     },
 
     "letra bendita": function (data) {
-        texto.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("beforeinput", listener_modo, true);
         letra_bendita = "";
         clearTimeout(listener_cambio_letra_palabra);
 
@@ -1449,7 +2044,7 @@ texto.addEventListener("input", (evt) => {
 // Recibe los datos del jugador 1 y los coloca.
 /*socket.on(texto_x, (data) => {
     texto.innerText = data.text;
-    puntos.innerHTML = data.points;
+    actualizarPuntosMarcador(data.points);
     nivel.innerHTML = data.level;
     texto.scrollTop = texto.scrollHeight;
     window.scrollTo(0, document.body.scrollHeight);
@@ -1477,8 +2072,17 @@ function count(data){
     }
 
     tiempo.innerHTML = data.count;
-    actualizarBarraVida(tiempo, data.count);
+    const segundosCount = extraerSegundosTiempo(data.count);
+    const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosCount));
+    actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+    if (animarEntradaVida) {
+        animacionEntradaVidaPendiente = false;
+    }
+    if (Number.isFinite(segundosCount)) {
+        actualizarProgresoFraseFinalEscritora(segundosCount);
+    }
     if (data.count == "¡Tiempo!") {
+        actualizarProgresoFraseFinalEscritora(0);
         limpiar_bloqueo_putada();
         limpiar_teclado_lento();
         console.log(putada_actual, "esto no doebería ocurrir")
@@ -1499,9 +2103,7 @@ function count(data){
         tiempo.style.color = "white";
             pararEscritura = true;
             stopConfetti();
-            clearTimeout(listener_cuenta_atras);
-            clearInterval(timer);  
-            clearTimeout(sub_timer);
+            limpiarCountdownInicioEscritora();
             document.body.classList.remove("bg");
             document.body.classList.remove("rain");
             lightning.classList.remove("lightning");
@@ -1556,7 +2158,7 @@ function count(data){
             desactivar_borrar = true;
             console.log(puntos)
             
-            feedback.innerHTML = "";
+            limpiarFeedbackFlotanteEscritora();
             
             definicion.innerHTML = "";
             explicación.innerHTML = "";
@@ -1586,7 +2188,7 @@ function count(data){
             if (puedeResucitarSegunEstado()) {
                 iniciarMenu();
             } else {
-                btnNo.click();
+                finalizarSinResurreccion();
             }
         }
         }
@@ -1604,9 +2206,8 @@ function resucitar(){
 
     pararEscritura = true;
     stopConfetti();
-    clearTimeout(listener_cuenta_atras);
-    clearInterval(timer);  
-    clearTimeout(sub_timer);
+    limpiarCountdownInicioEscritora();
+    limpiarClasesIntroPartidaEscritora();
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
@@ -1690,9 +2291,18 @@ function inicio() {
         }
     }
     aplicarAtributos();
+    // Mantiene ocultos cabecera/marcador/vida durante toda la transición de arranque.
+    iniciarSecuenciaIntroPartidaEscritora();
+    setModoDashboardSolo(false);
 
     actualizarVariables()
     rellenarListaModos()
+    setPendienteAnimacionEntradaBarraVida(false);
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerProgresoNivelBarraEscritora(true);
+    reiniciarProgresoFraseFinalEscritora();
+    limpiarCountdownInicioEscritora();
+    post_inicio_pendiente_escritora = null;
     animateCSS(".botones", "backOutLeft").then((message) => {
         btnOpciones.style.display = "none";
         btnEscribir.style.display = "none";
@@ -1708,8 +2318,10 @@ function inicio() {
         animateCSS(".contenedor", "pulse");
 
     limpieza();
+    iniciarSecuenciaIntroPartidaEscritora();
     modos_restantes = [...LISTA_MODOS];
     palabras_prohibidas_restantes = [...palabras_prohibidas];
+    actualizarDuracionNivelDesdeParametrosEscritora({ TIEMPO_CAMBIO_MODOS });
 
     desactivar_borrar = false;
     texto.style.height = "";
@@ -1720,23 +2332,27 @@ function inicio() {
     tiempo.innerHTML = "";
     tiempo.style.display = "";
     actualizarBarraVida(tiempo, "");
+    setProgresoNivelBarraEscritora(0);
 
     detenerTodoAudioJuego();
     reproducirSfx(AUDIO_CUENTA_ATRAS_INICIO, 0.9);
 
-    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
+    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás.
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">¿PREPARADX?</span>'); 
+    var preparados = $('<span id="countdown">&iquest;PREPARADOS?</span>');
     preparados.appendTo($('.container'));
-    setTimeout(() => {
+    preparados_timer = setTimeout(() => {
+        preparados_timer = null;
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        animarEntradaBarraVidaInicioPartida();
     }, 20);
 
-    setTimeout(() => {
+    listener_cuenta_atras = setTimeout(() => {
+    listener_cuenta_atras = null;
     var counter = 3;
-  
+
     timer = setInterval(function() {
-      
+
       $('#countdown').remove();
 
       if (counter >= 0 && counter <= 3) {
@@ -1745,27 +2361,40 @@ function inicio() {
           reproducirSfx(AUDIOS_CUENTA_ATRAS[indiceAudio], 0.9);
         }
       }
-      
-      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
-      countdown.appendTo($('.container'));  
+      var countdown = $('<span id="countdown">'+(counter === 0 ? '&iexcl;ESCRIBE!' : counter)+'</span>');
+      countdown.appendTo($('.container'));
       sub_timer = setTimeout(() => {
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
         } else {
-            post_inicio(false);
           $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
         }
       }, 20);
-  
+
       counter--;
-  
+
       if (counter <= -1) {
         clearInterval(timer);
+        timer = null;
         setTimeout(() => {
+          clearTimeout(fallback_cuenta_atras_timer);
+          fallback_cuenta_atras_timer = null;
           $('#countdown').remove();
+          finalizarSecuenciaIntroPartidaEscritora();
+          post_inicio(false);
         }, 1000);
       }
     }, 1000);
+    fallback_cuenta_atras_timer = setTimeout(() => {
+        fallback_cuenta_atras_timer = null;
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+        $('#countdown').remove();
+        finalizarSecuenciaIntroPartidaEscritora();
+        post_inicio(false);
+    }, 6800);
 }, 1000);
 });
 };
@@ -1776,7 +2405,8 @@ function inicio() {
 //////});    
 
 function post_inicio(borrar_texto){
-    clearTimeout(timer);
+    clearInterval(timer);
+    timer = null;
         if (borrar_texto == false) {
             texto.innerText = texto_guardado.trim();
 
@@ -1804,14 +2434,112 @@ function post_inicio(borrar_texto){
         animateCSS(".explicación", "bounceInLeft");
         animateCSS(".palabra", "bounceInLeft");
         animateCSS(".definicion", "bounceInLeft");
+        programarAjusteAlturaEditorEscritora();
         resetResumenPartida();
         resetHeatmap();
         startCountDown(TIEMPO_INICIAL/1000)
         temp_modos()
 }
 
+function colocarCursorAlFinalEditor() {
+    let lastLine = texto.lastChild;
+    let lastTextNode = lastLine;
+    while (lastTextNode && lastTextNode.nodeType !== 3) {
+        lastTextNode = lastTextNode.lastChild;
+    }
+    if (lastTextNode) {
+        restaurarPosicionCaret(lastTextNode, lastTextNode.length);
+    }
+    texto.scrollTo(0, texto.scrollHeight);
+}
+
+function ocultarMenuResurreccion() {
+    mainMenu.style.display = "none";
+    quantityMenu.style.display = "none";
+    if (mainTitle) {
+        mainTitle.style.display = "none";
+    }
+    if (buttonContainer) {
+        buttonContainer.style.display = "none";
+    }
+    document.removeEventListener("keydown", manejadorTeclas);
+    clearTimeout(timeoutID_menu);
+    timeoutID_menu = null;
+}
+
+function prepararMenuResurreccionPorTiempo() {
+    menu_resurreccion_activo = true;
+    clearTimeout(borrado);
+    desactivar_borrar = true;
+    texto.contentEditable = "false";
+    tiempo.style.color = "white";
+}
+
+function limpiarEstadoGameOverBarraVida() {
+    if (!tiempo || !tiempo.classList) return;
+    tiempo.classList.remove("tiempo-vida--game-over");
+}
+
+function mostrarGameOverBarraVida() {
+    if (!tiempo) return;
+    tiempo.style.display = "";
+    tiempo.style.color = "#ff5050";
+    tiempo.classList.add("tiempo-vida--game-over");
+    tiempo.innerHTML = '<span class="vida-game-over-text">GAME OVER</span>';
+    // Mantiene la barra visible con vida agotada.
+    actualizarBarraVida(tiempo, "00:00");
+}
+
+function reanudarTrasResurreccion(segundosResurreccion) {
+    const segundos = Number(segundosResurreccion);
+    if (!Number.isFinite(segundos) || segundos <= 0) {
+        finalizarSinResurreccion();
+        return;
+    }
+    if (modo_actual === "frase final") {
+        finalizarSinResurreccion();
+        return;
+    }
+
+    limpiarEstadoGameOverBarraVida();
+    menu_resurreccion_activo = false;
+    ocultarMenuResurreccion();
+    terminado = false;
+    desactivar_borrar = false;
+    texto.style.display = "";
+    tiempo.style.display = "";
+    texto.innerText = texto_guardado;
+    colocarCursorAlFinalEditor();
+    if (modo_actual !== "tertulia") {
+        texto.contentEditable = "true";
+        texto.focus();
+    }
+    startCountDown(segundos);
+}
+
+function gestionarTiempoAgotado() {
+    clearInterval(countInterval);
+    countInterval = null;
+    actualizarProgresoFraseFinalEscritora(0);
+    if (terminado) {
+        return;
+    }
+
+    texto_guardado = texto.innerText;
+    mostrarGameOverBarraVida();
+    if (modo_actual !== "frase final" && puedeResucitarSegunEstado()) {
+        prepararMenuResurreccionPorTiempo();
+        iniciarMenu();
+        return;
+    }
+
+    menu_resurreccion_activo = false;
+    finalizarSinResurreccion();
+}
+
 function startCountDown(duration) {
 
+    limpiarEstadoGameOverBarraVida();
     secondsRemaining = duration;
     registrarTiempoControl(1, secondsRemaining);
     let min = parseInt(secondsRemaining / 60, 10);
@@ -1819,11 +2547,16 @@ function startCountDown(duration) {
     count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
     tiempo.textContent = count;
     tiempo.style.color = "white";
-    actualizarBarraVida(tiempo, count);
+    const animarEntradaVida = Boolean(animacionEntradaVidaPendiente);
+    actualizarBarraVida(tiempo, count, { animarEntrada: animarEntradaVida });
+    if (animarEntradaVida) {
+        animacionEntradaVidaPendiente = false;
+    }
+    actualizarProgresoFraseFinalEscritora(secondsRemaining);
 
     clearInterval(countInterval);
     countInterval = setInterval(function () {
-        if (desventajaEnCurso) {
+        if (desventajaEnCurso || menu_resurreccion_activo) {
             return;
         }
         min = parseInt(secondsRemaining / 60);
@@ -1832,6 +2565,7 @@ function startCountDown(duration) {
         tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
         actualizarBarraVida(tiempo, count);
+        actualizarProgresoFraseFinalEscritora(secondsRemaining);
         registrarTiempoControl(1, secondsRemaining);
         if (secondsRemaining == 20) {
             tiempo.style.color = "yellow"
@@ -1841,7 +2575,7 @@ function startCountDown(duration) {
         }
         secondsRemaining = secondsRemaining - 1;
         if (secondsRemaining <= 0) {
-            final();
+            gestionarTiempoAgotado();
         };
 
     }, 1000);
@@ -1852,6 +2586,9 @@ function paddedFormat(num) {
 }
 
 function addSeconds(secs) {
+    if (modo_actual === "frase final") {
+        return false;
+    }
     if (secs > 0) {
         reproducirSfx(AUDIO_GANAR_TIEMPO, 1);
     } else if (secs < 0) {
@@ -1867,11 +2604,15 @@ function addSeconds(secs) {
     tiempo.textContent = `${paddedFormat(min)}:${paddedFormat(sec)}`;
     count = `${paddedFormat(min)}:${paddedFormat(sec)}`;
     actualizarBarraVida(tiempo, count);
+    actualizarProgresoFraseFinalEscritora(secondsRemaining);
     registrarTiempoControl(1, secondsRemaining);
+    return true;
 }
 
 // Resetea el tablero de juego.
 function limpiar(borrar){
+    setModoDashboardSolo(true);
+    limpiarEstadoGameOverBarraVida();
     animateCSS(".botones", "backOutLeft").then((message) => {
         btnOpciones.style.display = "";
         btnEscribir.style.display = "";
@@ -1916,6 +2657,7 @@ function limpiar(borrar){
     rapidez_inicio_borrado = antiguo_inicio_borrado;
 
     restablecer_estilo();
+    programarAjusteAlturaEditorEscritora();
 };
 
 function activar_modo (data){
@@ -1949,7 +2691,10 @@ function nueva_letra (letra) {
         listener_modo = function (e) { modo_letra_prohibida(e) };
         texto.addEventListener("beforeinput", listener_modo);
         animacion_palabra();
-        palabra.innerHTML = "LETRA PROHIBIDA: " + letra_prohibida;
+        setBarraNivelClaseEscritora("prohibida");
+        aplicarEstiloNivelesEscritora("prohibida");
+        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
+        explicación.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
         }
     else if(modo_actual == "letra bendita"){
         letra_bendita = letra;
@@ -1957,7 +2702,10 @@ function nueva_letra (letra) {
         listener_modo = function (e) { modo_letra_bendita(e) };
         texto.addEventListener("beforeinput", listener_modo);
         animacion_palabra();
-        palabra.innerHTML = "LETRA BENDITA: " + letra_bendita;
+        setBarraNivelClaseEscritora("bendita");
+        aplicarEstiloNivelesEscritora("bendita");
+        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        explicación.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
     }
 };
 
@@ -1976,8 +2724,14 @@ async function recibir_palabra() {
     animacion_modo();
     palabra_actual = [data.title];
     tiempo_palabras_bonus = puntuación_palabra(data.title);
-    palabra.innerHTML = data.title + " (⏱️+" + tiempo_palabras_bonus + " segs.)" ;
-    definicion.innerHTML = data.definicion;
+    setBarraNivelClaseEscritora("bonus");
+    aplicarEstiloNivelesEscritora("bonus");
+    palabra.innerHTML = "NIVEL PALABRAS BONUS";
+    renderObjetivoNivelEscritora(data.title, {
+        tipo: "bonus",
+        tiempoSegundos: tiempo_palabras_bonus,
+        descripcion: data.definicion
+    });
 
     texto.removeEventListener("keyup", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
@@ -2010,9 +2764,14 @@ function nueva_palabra_prohibida() {
     console.log(palabra_bonus, palabras_var, tiempo_palabras_bonus)
     animacion_modo();
     palabra_actual = palabra_bonus[0];
-    palabra.innerHTML = palabras_var + " (⏱️-" + tiempo_palabras_bonus + " segs.)";
-
-    definicion.innerHTML = palabra_bonus[1];
+    setBarraNivelClaseEscritora("prohibidas");
+    aplicarEstiloNivelesEscritora("prohibidas");
+    palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+    renderObjetivoNivelEscritora(palabras_var, {
+        tipo: "prohibidas",
+        tiempoSegundos: tiempo_palabras_bonus,
+        descripcion: palabra_bonus[1]
+    });
     tiempo_palabras_bonus = tiempo_palabras_bonus;
     texto.removeEventListener("keyup", listener_modo);
     asignada = true;
@@ -2044,20 +2803,20 @@ function frase_final() {
       const mainMenu = document.getElementById('mainMenu');
       const quantityMenu = document.getElementById('quantityMenu');
   
-      const btnSi = document.getElementById('btnSi');
-      const btnNo = document.getElementById('btnNo');
-      const mainMenuButtons = [btnSi, btnNo];
+      const btnSi = document.getElementById('btnSi'); // legado
+      const btnNo = document.getElementById('btnNo'); // legado
+      const mainMenuButtons = [btnSi, btnNo].filter(Boolean);
       let mainMenuIndex = 0;
   
       const quantityDisplay = document.getElementById('quantityDisplay');
       const btnConfirmar = document.getElementById('btnConfirmar');
       const btnAtras = document.getElementById('btnAtras');
-      let quantityMenuElements = [quantityDisplay, btnConfirmar, btnAtras];
+      let quantityMenuElements = [quantityDisplay, btnConfirmar].filter(Boolean);
       let quantityMenuIndex = 0;
   
       let palabras = 1;
       const PALABRAS_A_SEGUNDOS = 3;
-      let currentMenu = 'main';
+      let currentMenu = 'quantity';
 
       function contarPalabrasTexto(textoBase) {
         const matches = (textoBase || "").match(/\b\w+\b/g);
@@ -2068,26 +2827,90 @@ function frase_final() {
         return modo_actual !== "frase final" && contarPalabrasTexto(texto_guardado) > 0;
       }
 
+      function obtenerMaxPalabrasResucitar() {
+        return Math.max(1, contarPalabrasTexto(texto_guardado));
+      }
+
+      function finalizarSinResurreccion() {
+        menu_resurreccion_activo = false;
+        ocultarMenuResurreccion();
+        texto.innerText = texto_guardado;
+        tiempo.style.color = "white";
+        if (terminado == false) {
+          final();
+          setTimeout(function () {
+            texto.style.height = "";
+            texto.rows = "1";
+            texto.style.display = "none";
+            tiempo.style.color = "white";
+          }, 2000);
+        }
+        animateCSS(".tiempo", "bounceInLeft");
+        tiempo.innerHTML = "¡GRACIAS POR JUGAR!";
+        if (buttonContainer) {
+          buttonContainer.style.display = 'none';
+        }
+      }
+
       /*************************************************************
         ACTUALIZACIONES DE ESTADO VISUAL
       **************************************************************/
       function actualizarSeleccionMainMenu() {
+        if (!mainMenuButtons.length) return;
+        if (mainMenuIndex < 0 || mainMenuIndex >= mainMenuButtons.length) {
+          mainMenuIndex = 0;
+        }
         mainMenuButtons.forEach(btn => btn.classList.remove('selected'));
         mainMenuButtons[mainMenuIndex].classList.add('selected');
         mainMenuButtons[mainMenuIndex].focus();
       }
   
       function actualizarSeleccionQuantityMenu() {
+        if (!quantityMenuElements.length) return;
+        if (quantityMenuIndex < 0 || quantityMenuIndex >= quantityMenuElements.length) {
+          quantityMenuIndex = 0;
+        }
         quantityMenuElements.forEach(el => el.classList.remove('selected'));
         quantityMenuElements[quantityMenuIndex].classList.add('selected');
-        if (quantityMenuIndex === 1) btnConfirmar.focus();
-        if (quantityMenuIndex === 2) btnAtras.focus();
+        if (quantityMenuIndex === 1 && btnConfirmar) btnConfirmar.focus();
       }
   
       function actualizarTextoCantidad() {
+        const maxPalabras = obtenerMaxPalabrasResucitar();
+        palabras = Math.min(Math.max(1, palabras), maxPalabras);
         const segundos = palabras * PALABRAS_A_SEGUNDOS;
-        quantityDisplay.innerHTML = `<span style="color: yellow;">${palabras} palabra(s)</span> => <span style="color: green;">${segundos} segundo(s)</span>`;
+        quantityDisplay.innerHTML = `
+          <div class="resucitar-stepper" aria-hidden="true">
+            <div id="resucitarArrowUp" class="resucitar-stepper-arrow">&uarr;</div>
+            <div id="resucitarArrowDown" class="resucitar-stepper-arrow">&darr;</div>
+          </div>
+          <div class="resucitar-metric">
+            <span class="resucitar-label">Palabras</span>
+            <span class="resucitar-value resucitar-pop palabras">${palabras}</span>
+            <span class="resucitar-max">MAX ${maxPalabras}</span>
+          </div>
+          <div class="resucitar-arrow">→</div>
+          <div class="resucitar-metric">
+            <span class="resucitar-label">Segundos</span>
+            <span class="resucitar-value resucitar-pop segundos">${segundos}</span>
+          </div>
+        `;
+      }
 
+      function activarIndicadorConversor(direccion, esLimite) {
+        const flecha = direccion === 'up'
+          ? document.getElementById('resucitarArrowUp')
+          : document.getElementById('resucitarArrowDown');
+        if (!flecha) return;
+        flecha.classList.remove('activo', 'limite');
+        void flecha.offsetWidth;
+        flecha.classList.add('activo');
+        if (esLimite) {
+          flecha.classList.add('limite');
+        }
+        flecha.addEventListener('animationend', () => {
+          flecha.classList.remove('activo', 'limite');
+        }, { once: true });
       }
       
       
@@ -2129,8 +2952,12 @@ function frase_final() {
       }
 
       function mostrarMenuQuantity() {
-        mainMenu.style.display = 'none';
-        quantityMenu.style.display = 'block';
+        if (mainMenu) mainMenu.style.display = 'none';
+        if (quantityMenu) quantityMenu.style.display = 'block';
+        if (btnAtras) {
+          btnAtras.style.display = 'none';
+          btnAtras.disabled = true;
+        }
         currentMenu = 'quantity';
         quantityMenuIndex = 0;
         actualizarTextoCantidad();
@@ -2138,80 +2965,58 @@ function frase_final() {
       }
   
       function mostrarMenuPrincipal() {
-        quantityMenu.style.display = 'none';
-        mainMenu.style.display = 'block';
-        currentMenu = 'main';
-        mainMenuIndex = 0;
-        actualizarSeleccionMainMenu();
+        // El flujo de 1P ya no muestra decision Si/No: va directo a confirmar resurreccion.
+        mostrarMenuQuantity();
       }
 
       function iniciarMenu() {
-        if (!puedeResucitarSegunEstado()) {
-          btnNo.click();
+        if (modo_actual === "frase final") {
+          finalizarSinResurreccion();
           return;
         }
-        console.log("Iniciando menú");
-
-
+        if (!puedeResucitarSegunEstado()) {
+          finalizarSinResurreccion();
+          return;
+        }
+        menu_resurreccion_activo = true;
+        console.log("Iniciando menú de resurrección");
+        document.removeEventListener('keydown', manejadorTeclas);
         document.addEventListener('keydown', manejadorTeclas);
-        animateCSS(".mainMenu", "flash");
-        mainTitle.innerHTML = '<span style="color: red;">GAME OVER</span><br><br> ¿QUIERES <span style="color: lime">RESUCITAR</span> A CAMBIO DE <span style="color: yellow;">PALABRAS</span>?';
-        mainMenu.style.display = 'block';
-        mainTitle.style.display = 'block';
-        buttonContainer.style.display = 'flex';
-        currentMenu = 'main';
-        mainMenuIndex = 0;
-        actualizarSeleccionMainMenu();
-        timeoutID_menu = setTimeout(() => {
-            // Si seguimos en el menú (por ejemplo, no hubo otra acción), ejecuta el clic:
-            console.log("Tiempo cumplido. Se hace clic automático en botón NO.");
-            btnNo.click(); 
-          }, 30000);
+        if (mainTitle) mainTitle.style.display = 'none';
+        if (buttonContainer) buttonContainer.style.display = 'none';
+        if (mainMenu) mainMenu.style.display = 'none';
+        mostrarMenuQuantity();
+        animateCSS("#quantityMenu", "flash");
       }
   
       /*************************************************************
         EVENTOS DE CLICK PARA LOS BOTONES CON stopPropagation()
       **************************************************************/
-      btnSi.addEventListener('click', (evento) => {
-        evento.stopPropagation(); // Evita que se active el listener global
-        if (!puedeResucitarSegunEstado()) {
-          btnNo.click();
-          return;
-        }
-        mostrarMenuQuantity();
-      });
+      if (btnSi) {
+        btnSi.addEventListener('click', (evento) => {
+          evento.stopPropagation();
+          mostrarMenuQuantity();
+        });
+      }
   
-      btnNo.addEventListener('click', (evento) => {
-        evento.stopPropagation();
-        texto.innerText = texto_guardado;
-        tiempo.style.color = "white";
-        if (terminado == false) {
-          final();
-          setTimeout(function () {
-            texto.style.height = "";
-            texto.rows = "1";
-            texto.style.display = "none";
-            //texto.innerText = texto_guardado;
-            
-            tiempo.style.color = "white";
-          }, 2000);
-        }
-        animateCSS(".tiempo", "bounceInLeft");
-        tiempo.innerHTML = "¡GRACIAS POR JUGAR!";
-        if (buttonContainer) {
-          buttonContainer.style.display = 'none';
-        }
-
-        document.removeEventListener('keydown', manejadorTeclas);
-                
-        // Lógica para finalizar el juego.
-      });
+      if (btnNo) {
+        btnNo.addEventListener('click', (evento) => {
+          evento.stopPropagation();
+          finalizarSinResurreccion();
+        });
+      }
       
   
       btnConfirmar.addEventListener('click', (evento) => {
         evento.stopPropagation();
-        clearTimeout(timeoutID_menu);
-        socket.emit("resucitar", {player: player, secs: palabras * PALABRAS_A_SEGUNDOS});
+        if (modo_actual === "frase final") {
+          finalizarSinResurreccion();
+          return;
+        }
+        const segundosResurreccion = palabras * PALABRAS_A_SEGUNDOS;
+        if (typeof socket !== "undefined" && socket && typeof socket.emit === "function") {
+          socket.emit("resucitar", {player: player, secs: segundosResurreccion});
+        }
 
         // Recortar las últimas "palabras" de "texto_guardado"
         console.log("texto_guardado", palabras);
@@ -2221,21 +3026,7 @@ function frase_final() {
 
         console.log("texto_guardado", texto_guardado);
 
-        // Ocultar los menús para que no se vean más
-        resucitar()
-        mainMenu.style.display = 'none';
-        quantityMenu.style.display = 'none';
-        mainTitle.style.display = 'none';
-        buttonContainer.style.display = 'none';
-        
-        document.removeEventListener('keydown', manejadorTeclas);
-
-        post_inicio(false)
-      });
-  
-      btnAtras.addEventListener('click', (evento) => {
-        evento.stopPropagation();
-        mostrarMenuPrincipal();
+        reanudarTrasResurreccion(segundosResurreccion);
       });
   
       /*************************************************************
@@ -2243,22 +3034,12 @@ function frase_final() {
       **************************************************************/
       // Definimos la función manejadora de eventos de teclado.
 function manejadorTeclas(evento) {
+    const tecla = (evento.key === 'Enter' || evento.code === 'NumpadEnter')
+      ? 'Enter'
+      : evento.key;
     evento.stopPropagation();
-    if (currentMenu === 'main') {
-      switch (evento.key) {
-        case 'ArrowLeft':
-          mainMenuIndex = 0;
-          actualizarSeleccionMainMenu();
-          break;
-        case 'ArrowRight':
-          mainMenuIndex = 1;
-          actualizarSeleccionMainMenu();
-          break;
-        default:
-          break;
-      }
-    } else if (currentMenu === 'quantity') {
-      switch (evento.key) {
+    if (currentMenu === 'quantity') {
+      switch (tecla) {
         case 'ArrowLeft':
           quantityMenuIndex--;
           if (quantityMenuIndex < 0) {
@@ -2275,22 +3056,33 @@ function manejadorTeclas(evento) {
           break;
         case 'ArrowUp':
           if (quantityMenuIndex === 0) {
-            palabras++;
-            actualizarTextoCantidad();
+            const maxPalabras = obtenerMaxPalabrasResucitar();
+            let esLimite = false;
+            if (palabras < maxPalabras) {
+              palabras++;
+              actualizarTextoCantidad();
+              esLimite = palabras >= maxPalabras;
+            } else {
+              esLimite = true;
+            }
+            activarIndicadorConversor('up', esLimite);
           }
           break;
         case 'ArrowDown':
-          if (quantityMenuIndex === 0 && palabras > 1) {
-            palabras--;
-            actualizarTextoCantidad();
+          if (quantityMenuIndex === 0) {
+            let esLimite = false;
+            if (palabras > 1) {
+              palabras--;
+              actualizarTextoCantidad();
+              esLimite = palabras <= 1;
+            } else {
+              esLimite = true;
+            }
+            activarIndicadorConversor('down', esLimite);
           }
           break;
         case 'Enter':
-          if (quantityMenuIndex === 1) {
-            btnConfirmar.click();
-          } else if (quantityMenuIndex === 2) {
-            btnAtras.click();
-          }
+          btnConfirmar.click();
           break;
         default:
           break;
@@ -2826,19 +3618,9 @@ function modo_palabras_bonus(e) {
             asignada = false;
             recibir_palabra()
             addSeconds(tiempo_palabras_bonus)
-            feedback.innerHTML = "⏱️+" + tiempo_palabras_bonus + " segs.";
-            clearTimeout(delay_animacion);
-            color = color_positivo;
-            feedback.style.color = color;
-            tiempo_feed = "⏱️+" + tiempo_palabras_bonus + " segs.";
-            insp = false;
-            if (definicion.innerHTML.startsWith('<span style="color:lime;">MUSA</span>:')) {
-                insp = true;
-            }            
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
+            mostrarFeedbackFlotanteEscritora(`+${tiempo_palabras_bonus} segs.`, {
+                color: color_positivo,
+                tipo: "ganar_tiempo"
             });
             const palabraObjetivo = Array.isArray(palabra_actual)
                 ? palabra_actual[0]
@@ -2907,13 +3689,9 @@ function modo_palabras_prohibidas(e) {
             nueva_palabra_prohibida();
             const tiempo_penal = -Math.abs(tiempo_palabras_bonus);
             addSeconds(tiempo_penal);
-            feedback.style.color = color_negativo;
-            feedback.innerHTML = "⏱️" + tiempo_penal + " segs.";
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
+            mostrarFeedbackFlotanteEscritora(`${tiempo_penal} segs.`, {
+                color: color_negativo,
+                tipo: "perder_tiempo"
             });
         }
     }
@@ -3000,14 +3778,10 @@ function modo_letra_prohibida(e) {
       // Actualiza la UI: penaliza (descuenta tiempo, actualiza puntos, muestra feedback)
       registrarIntentoLetraProhibida(letra_prohibida);
       addSeconds(-2);
-      puntos.innerHTML = puntos_ + " palabras";
-      feedback.style.color = color_negativo;
-      feedback.innerHTML = "⏱️-2 segs.";
-      clearTimeout(delay_animacion);
-      animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(() => {
-          feedback.innerHTML = "";
-        }, 2000);
+      actualizarPuntosMarcador(puntos_);
+      mostrarFeedbackFlotanteEscritora("-2 segs.", {
+        color: color_negativo,
+        tipo: "letra_prohibida"
       });
     }
   }
@@ -3077,16 +3851,10 @@ function palabras_musas(e) {
             definicion.innerHTML = "";
             texto.focus();
             asignada = false;
-            feedback.style.color = "white";
-            feedback.innerHTML = "+🎨 insp.";
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
+            mostrarFeedbackFlotanteEscritora("+insp.", {
+                color: "white",
+                tipo: "inspiracion"
             });
-            color = "white"
-            tiempo_feed = feedback.innerHTML;
         }
     }
 }
@@ -3120,17 +3888,11 @@ function modo_letra_bendita(e) {
         if (node && node.parentNode && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
             e.preventDefault(); // Prevenir el borrado automático
             addSeconds(-1);
-            // Feedback visual negativo
-            feedback.style.color = color_negativo;
-            feedback.innerHTML = "⏱️-1 segs.";
             addSeconds(-1);
-            clearTimeout(delay_animacion);
-            animateCSS(".feedback1", "flash").then((message) => {
-                delay_animacion = setTimeout(function () {
-                    feedback.innerHTML = "";
-                }, 2000);
+            mostrarFeedbackFlotanteEscritora("-1 segs.", {
+                color: color_negativo,
+                tipo: "letra_bendita"
             });
-            // Aquí se podría enviar feedback vía Socket.io, por ejemplo.
         }
         return; // Salir si se ha procesado el borrado
     }
@@ -3172,18 +3934,13 @@ function modo_letra_bendita(e) {
                 sel.addRange(range);
 
                 // Actualizamos el tiempo y la visualización de puntos según la lógica del juego
-                puntos.innerHTML = puntos_ + " palabras";
+                actualizarPuntosMarcador(puntos_);
                 console.log(puntos);
 
-                // Feedback visual positivo
-                feedback.style.color = color_positivo;
-                feedback.innerHTML = "⏱️+2 segs.";
                 addSeconds(+2);
-                clearTimeout(delay_animacion);
-                animateCSS(".feedback1", "flash").then((message) => {
-                    delay_animacion = setTimeout(function () {
-                        feedback.innerHTML = "";
-                    }, 2000);
+                mostrarFeedbackFlotanteEscritora("+2 segs.", {
+                    color: color_positivo,
+                    tipo: "letra_bendita"
                 });
 
                 // Aquí se podría enviar feedback vía Socket.io
@@ -3244,22 +4001,42 @@ function modo_psicodélico() {
     stylize();
 }
 
+function obtenerDuracionModoActualSegundos() {
+    if (modo_actual === "frase final") {
+        const restante = Math.ceil(Number(secondsRemaining));
+        if (Number.isFinite(restante) && restante > 0) {
+            return restante;
+        }
+        return 1;
+    }
+    const duracionBase = Number(TIEMPO_CAMBIO_MODOS) / 1000;
+    if (!Number.isFinite(duracionBase) || duracionBase <= 0) {
+        return 1;
+    }
+    return Math.ceil(duracionBase);
+}
+
 
 // Función que inicia el temporizador para una duración determinada
 function temp_modos() {
+    actualizarDuracionNivelDesdeParametrosEscritora({ TIEMPO_CAMBIO_MODOS });
 
     modo_anterior = modo_actual;
     modo_actual = modos_restantes[0];
     modos_restantes.splice(0, 1);
+    if (!modo_actual) {
+        return;
+    }
     console.log(modo_actual)
     MODOS[modo_actual]("");
+    duracion_modo_actual_segundos = obtenerDuracionModoActualSegundos();
 
     // Reiniciar la variable de contador
     secondsPassed = 0;
     
     // Crear un intervalo que se ejecute cada segundo (1000 ms)
     intervaloID_temp_modos = setInterval(() => {
-    if (desventajaEnCurso) {
+    if (desventajaEnCurso || menu_resurreccion_activo) {
       return;
     }
     secondsPassed++;  // Incrementar el contador cada segundo
@@ -3267,13 +4044,14 @@ function temp_modos() {
     console.log(modo_actual)
     console.log(modo_anterior)
     console.log(modos_restantes)
-    console.log(secondsPassed >= TIEMPO_CAMBIO_MODOS)
+    console.log(secondsPassed >= duracion_modo_actual_segundos)
     console.log(secondsPassed)
-    console.log(TIEMPO_CAMBIO_MODOS)
+    console.log(duracion_modo_actual_segundos)
 
       // Verificar si se alcanzó la duración deseada y reiniciar
-      if (secondsPassed >= TIEMPO_CAMBIO_MODOS/1000) {
+      if (secondsPassed >= duracion_modo_actual_segundos) {
         if(modo_actual == "frase final"){
+            setProgresoNivelBarraEscritora(100);
             final()
             fin_del_juego = true;
             clearInterval(intervaloID_temp_modos);
@@ -3292,18 +4070,25 @@ function temp_modos() {
   }
 
 function limpieza(){
+    limpiarEstadoGameOverBarraVida();
     cancelarSecuenciaDesventaja();
     limpiar_bloqueo_putada();
     limpiar_teclado_lento();
+    menu_resurreccion_activo = false;
+    duracion_modo_actual_segundos = 0;
+    ocultarMenuResurreccion();
     detenerTodoAudioJuego();
+    animacionEntradaVidaPendiente = false;
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerProgresoNivelBarraEscritora(true);
+    reiniciarProgresoFraseFinalEscritora();
     clearInterval(countInterval);
     clearInterval(intervaloID_temp_modos)
     pararEscritura = true;
     clearTimeout(timeoutID_menu)
     stopConfetti();
-    clearTimeout(listener_cuenta_atras);
-    clearInterval(timer);  
-    clearTimeout(sub_timer);
+    limpiarCountdownInicioEscritora();
+    limpiarClasesIntroPartidaEscritora();
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
@@ -3329,10 +4114,12 @@ function limpieza(){
     temas.innerHTML = "";
     temas.display = "";
     texto.contentEditable= "false";
-    puntos.innerHTML = 0 + " palabras";
+    actualizarPuntosMarcador(0, false);
     palabra.innerHTML = "";
     definicion.innerHTML = "";
     explicación.innerHTML = "";
+    limpiarEstiloNivelesEscritora();
+    setBarraNivelClaseEscritora("");
     menu_modificador = false;
     focusedButtonIndex = 0;
     modificadorButtons = [];
@@ -3361,7 +4148,7 @@ function limpieza(){
     locura = false;
     console.log(puntos)
     
-    feedback.innerHTML = "";
+    limpiarFeedbackFlotanteEscritora();
     
     definicion.innerHTML = "";
     explicación.innerHTML = "";
@@ -3385,6 +4172,7 @@ function limpieza(){
 }
 
 function limpieza_final(){
+    limpiarEstadoGameOverBarraVida();
     animateCSS(".botones", "backOutLeft").then((message) => {
         btnOpciones.style.display = "";
         btnEscribir.style.display = "";
@@ -3395,12 +4183,22 @@ function limpieza_final(){
     });
 
     clearTimeout(timeoutID_menu);
+    timeoutID_menu = null;
+    menu_resurreccion_activo = false;
+    duracion_modo_actual_segundos = 0;
+    ocultarMenuResurreccion();
     cancelarSecuenciaDesventaja();
     limpiar_bloqueo_putada();
     limpiar_teclado_lento();
     clearInterval(countInterval);
     clearInterval(intervaloID_temp_modos);
     clearInterval(listener_cambio_letra_palabra)
+    animacionEntradaVidaPendiente = false;
+    cancelarAnimacionEntradaBarraVida(tiempo);
+    limpiarCountdownInicioEscritora();
+    limpiarClasesIntroPartidaEscritora();
+    detenerProgresoNivelBarraEscritora(true);
+    reiniciarProgresoFraseFinalEscritora();
     detenerMusicaModo();
     detenerSfxActivos();
     detenerAudioFinal();
@@ -3415,6 +4213,9 @@ function limpieza_final(){
     palabra.innerHTML = "";
     definicion.innerHTML = "";
     explicación.innerHTML = "";
+    limpiarEstiloNivelesEscritora();
+    setBarraNivelClaseEscritora("");
+    limpiarFeedbackFlotanteEscritora();
 
     definicion.style.fontSize = "1.5vw";
 
@@ -4578,7 +5379,18 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
             }
         });
     });
-    const nombreTecla = (code) => etiquetasTeclas.get(code) || code;
+    const nombreTecla = (code) => {
+        const codigoNormalizado = typeof code === "string" ? code.trim() : "";
+        const etiquetaRaw = etiquetasTeclas.get(codigoNormalizado) || "";
+        const etiquetaLimpia = String(etiquetaRaw)
+            .split(/\n+/)
+            .map((chunk) => chunk.trim())
+            .filter(Boolean)
+            .join("/");
+        if (etiquetaLimpia) return etiquetaLimpia;
+        if (codigoNormalizado) return `Tecla ${codigoNormalizado}`;
+        return "Tecla desconocida";
+    };
 
     const serieVida = resumenPartida.tiempos[jugadorId] || [];
     const duracionMs = serieVida.length ? serieVida[serieVida.length - 1].t : 0;
@@ -4868,6 +5680,3 @@ function descargar_textos() {
         downloadTxtFile(nombrePdf + '.txt', nombrePdf + "\n" + textoPlano);
     }
 }
-
-
-

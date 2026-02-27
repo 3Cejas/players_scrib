@@ -786,11 +786,45 @@
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     padding-right: max(env(safe-area-inset-right), 0px);
     padding-left: max(env(safe-area-inset-left), 0px);
     margin-top: clamp(0.2rem, 1.4vw, 0.6rem);
-    margin-bottom: clamp(0.6rem, 3vw, 1.2rem);
+    margin-bottom: clamp(0.3rem, 1.8vw, 1rem);
+}
+
+.intro-que-es-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(0.2rem, 1.4vw, 0.6rem);
+    margin-bottom: clamp(0.3rem, 1.8vw, 0.8rem);
+}
+
+.intro-que-es-img {
+    width: min(78vw, 460px);
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    filter: drop-shadow(0 0 1rem rgba(0, 0, 0, 0.55));
+}
+
+.intro-escritoras-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(0.4rem, 2vw, 1rem);
+    margin-bottom: clamp(0.5rem, 2.4vw, 1rem);
+}
+
+.intro-escritoras-img {
+    width: min(82vw, 540px);
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    filter: drop-shadow(0 0 1.2rem rgba(0, 0, 0, 0.65));
 }
 
 @media (min-width: 900px) {
@@ -802,11 +836,23 @@
     .intro-tiempo-img {
         width: min(56vw, 540px);
     }
+    .intro-que-es-img {
+        width: min(42vw, 480px);
+    }
+    .intro-escritoras-img {
+        width: min(46vw, 520px);
+    }
 }
 
 @media (max-width: 420px) {
     .intro-tiempo-img {
         width: min(86vw, 320px);
+    }
+    .intro-que-es-img {
+        width: min(88vw, 360px);
+    }
+    .intro-escritoras-img {
+        width: min(90vw, 360px);
     }
 }
 
@@ -2090,6 +2136,9 @@ body.musa-eleccion-hecha .intro-choice-btn {
                     <p class="intro-explica-text">
                         <span class="intro-accent">&lt;SCRI&gt; B es un videojuego de escritura rápida</span> donde el tiempo responde a las teclas de quien escribe.
                     </p>
+                    <div class="intro-que-es-wrap">
+                        <img class="intro-que-es-img" src="../../img/scrib.png" alt="SCRIB">
+                    </div>
                     <p class="intro-explica-text">
                         Si quien escribe se detiene, <span class="intro-accent">el texto empieza a borrarse</span>. Tu labor como musa es guiar para llegar al final antes de que el contador llegue a cero.
                     </p>
@@ -2118,9 +2167,8 @@ body.musa-eleccion-hecha .intro-choice-btn {
                     <p class="intro-explica-text">
                         <span class="intro-accent">Si el contador llega a cero,</span> el texto escrito se autodestruirá.
                     </p>
-                    <p class="intro-explica-meta"><span>⏱️</span><span>+6 segs.</span></p>
                     <div class="intro-tiempo-wrap">
-                        <img class="intro-tiempo-img" src="../../img/el_tiempo.png" alt="El tiempo">
+                        <img class="intro-tiempo-img intro-que-es-img" src="../../img/el_tiempo.png" alt="El tiempo">
                     </div>
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-que-es" aria-label="Volver a Qué es"></button>
@@ -2141,15 +2189,8 @@ body.musa-eleccion-hecha .intro-choice-btn {
                     <p class="intro-explica-text">
                         Le podrás <span class="intro-accent">sugerir palabras</span>, <span class="intro-accent">dar consejos</span> e incluso elegir una <span class="intro-accent">desventaja para el equipo contrario</span>.
                     </p>
-                    <div class="intro-musas-equipos">
-                        <div class="intro-equipo-card">
-                            <img src="./img/pluma_azul.png" alt="Pluma azul">
-                            <span class="intro-equipo-nombre intro-equipo-nombre--azul">ESCRITXR 1</span>
-                        </div>
-                        <div class="intro-equipo-card">
-                            <img src="./img/pluma_roja.png" alt="Pluma roja">
-                            <span class="intro-equipo-nombre intro-equipo-nombre--rojo">ESCRITXR 2</span>
-                        </div>
+                    <div class="intro-escritoras-wrap">
+                        <img class="intro-escritoras-img" src="../../img/escritoras.png" alt="Escritoras">
                     </div>
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-tiempo" aria-label="Volver al tiempo"></button>

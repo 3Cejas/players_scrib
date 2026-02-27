@@ -119,6 +119,23 @@ function irASeccionPorDelta(delta) {
   scrollToSeccion(destino);
 }
 
+function puedeAvanzarDesdeSeccionNombre() {
+  const secciones = Array.from(document.querySelectorAll(".intro-section"));
+  const actual = secciones[obtenerIndiceSeccionActual()];
+  if (!actual || actual.id !== "intro-nombre") {
+    return true;
+  }
+  const nombre = normalizarNombreMusa(nombre_musa_input?.value || "");
+  if (nombre) {
+    return true;
+  }
+  mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
+  if (nombre_musa_input) {
+    nombre_musa_input.focus();
+  }
+  return false;
+}
+
 function cerrarTeclado() {
   const activo = document.activeElement;
   if (!activo) return;
@@ -228,6 +245,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const contenedorScroll = document.querySelector(".intro-scroll");
   if (contenedorScroll) {
+    const SWIPE_MIN_DISTANCIA_Y = 48;
+    const SWIPE_MAX_DESVIO_X = 140;
+    const SWIPE_MAX_DURACION_MS = 900;
+    let touchInicioY = null;
+    let touchInicioX = null;
+    let touchInicioTs = 0;
     const bloquearScroll = (evento) => {
       const destino = evento.target;
       if (destino && (destino.tagName === "INPUT" || destino.tagName === "TEXTAREA" || destino.isContentEditable)) {
@@ -241,6 +264,54 @@ document.addEventListener('DOMContentLoaded', () => {
     if (esTactil) {
       document.addEventListener("touchmove", bloquearScroll, { passive: false, capture: true });
     }
+    contenedorScroll.addEventListener("touchstart", (evento) => {
+      const destino = evento.target;
+      if (destino && (destino.tagName === "INPUT" || destino.tagName === "TEXTAREA" || destino.isContentEditable)) {
+        touchInicioY = null;
+        touchInicioX = null;
+        touchInicioTs = 0;
+        return;
+      }
+      const touch = evento.changedTouches && evento.changedTouches[0];
+      if (!touch) return;
+      touchInicioY = touch.clientY;
+      touchInicioX = touch.clientX;
+      touchInicioTs = Date.now();
+    }, { passive: true });
+    contenedorScroll.addEventListener("touchend", (evento) => {
+      if (!Number.isFinite(touchInicioY) || !Number.isFinite(touchInicioX) || !touchInicioTs) {
+        return;
+      }
+      const touch = evento.changedTouches && evento.changedTouches[0];
+      const inicioY = touchInicioY;
+      const inicioX = touchInicioX;
+      const inicioTs = touchInicioTs;
+      touchInicioY = null;
+      touchInicioX = null;
+      touchInicioTs = 0;
+      if (!touch) return;
+      const deltaY = touch.clientY - inicioY;
+      const deltaX = touch.clientX - inicioX;
+      const duracion = Date.now() - inicioTs;
+      const esSwipeVertical = Math.abs(deltaY) >= SWIPE_MIN_DISTANCIA_Y
+        && Math.abs(deltaY) > Math.abs(deltaX)
+        && Math.abs(deltaX) <= SWIPE_MAX_DESVIO_X
+        && duracion <= SWIPE_MAX_DURACION_MS;
+      if (!esSwipeVertical) return;
+      if (deltaY < 0) {
+        if (!puedeAvanzarDesdeSeccionNombre()) {
+          return;
+        }
+        irASeccionPorDelta(1);
+        return;
+      }
+      irASeccionPorDelta(-1);
+    }, { passive: true });
+    contenedorScroll.addEventListener("touchcancel", () => {
+      touchInicioY = null;
+      touchInicioX = null;
+      touchInicioTs = 0;
+    }, { passive: true });
     document.addEventListener("keydown", (evento) => {
       const teclas = ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "];
       const esEnter = evento.key === "Enter";
@@ -249,19 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (destino && (destino.tagName === "INPUT" || destino.tagName === "TEXTAREA" || destino.isContentEditable)) {
         return;
       }
-      if ((evento.key === "ArrowDown" || esEnter)) {
-        const secciones = Array.from(document.querySelectorAll(".intro-section"));
-        const actual = secciones[obtenerIndiceSeccionActual()];
-        if (actual && actual.id === "intro-nombre") {
-          const nombre = normalizarNombreMusa(nombre_musa_input?.value || "");
-          if (!nombre) {
-            mostrarAvisoMusa("Tu nombre necesita al menos 1 letra y maximo 10 caracteres.");
-            if (nombre_musa_input) {
-              nombre_musa_input.focus();
-            }
-            return;
-          }
-        }
+      if ((evento.key === "ArrowDown" || esEnter) && !puedeAvanzarDesdeSeccionNombre()) {
+        return;
       }
       evento.preventDefault();
       if (evento.key === "ArrowDown" || esEnter) {

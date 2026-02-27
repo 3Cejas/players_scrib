@@ -203,6 +203,7 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
 }
 
 let terminado = false;
+let esperando_resurreccion_musa = false;
 let clasificacion = getEl("clasificacion");
 let notificacion = getEl("notificacion");
 let fin_pag = getEl("fin_pag");
@@ -977,8 +978,26 @@ function actualizarNombreRegalo() {
     }
 }
 
+function puedeMostrarRegaloPdfMusa() {
+    return Boolean(terminado || ui_partida_finalizada_musa || temporizador_lectura_activo);
+}
+
+function intentarMostrarRegaloPdfPendiente() {
+    if (!regalo_pdf_pendiente || !player) {
+        return;
+    }
+    mostrarRegaloPdf(regalo_pdf_pendiente);
+}
+
 function mostrarRegaloPdf(payload) {
     if (!payload || !payload.data || !regalo_pdf) {
+        return;
+    }
+    if (payload.player && player && Number(payload.player) !== Number(player)) {
+        return;
+    }
+    if (!puedeMostrarRegaloPdfMusa()) {
+        regalo_pdf_pendiente = payload;
         return;
     }
     actualizarNombreRegalo();
@@ -987,6 +1006,7 @@ function mostrarRegaloPdf(payload) {
     regalo_pdf.classList.add("regalo-pdf--visible");
     regalo_pdf.classList.remove("regalo-pdf--claimed");
     regalo_pdf.setAttribute("aria-hidden", "false");
+    regalo_pdf_pendiente = null;
 }
 
 function ocultarRegaloPdf() {
@@ -1058,15 +1078,23 @@ function removerEspaciosInspiracion(texto) {
     return String(texto || "").replace(/\s+/g, "");
 }
 
-function bloquearEspaciosEnInspiracionInput(input) {
+function bloquearEspaciosEnInspiracionInput(input, permitirEspaciosFn = null) {
     if (!input) return;
     input.addEventListener("keydown", (evt) => {
         if (!evt) return;
+        const permitirEspacios = typeof permitirEspaciosFn === "function"
+            ? Boolean(permitirEspaciosFn())
+            : false;
+        if (permitirEspacios) return;
         if (evt.key === " " || evt.key === "Spacebar" || evt.code === "Space") {
             evt.preventDefault();
         }
     });
     input.addEventListener("input", () => {
+        const permitirEspacios = typeof permitirEspaciosFn === "function"
+            ? Boolean(permitirEspaciosFn())
+            : false;
+        if (permitirEspacios) return;
         const valorActual = String(input.value || "");
         const valorSinEspacios = removerEspaciosInspiracion(valorActual);
         if (valorActual === valorSinEspacios) {
@@ -1348,6 +1376,7 @@ function forzarVisibilidadAccionesLecturaFinal(activo) {
         } else if (typeof setUiPartidaActivaMusa === "function") {
             setUiPartidaActivaMusa(true);
         }
+        intentarMostrarRegaloPdfPendiente();
     }
 }
 
@@ -1481,6 +1510,7 @@ let jugador2 = document.querySelector('.jugador2');
 let nombre_musa_label = getEl("nombre_musa_label");
 const calentamiento_section = getEl("calentamiento");
 const calentamiento_estado = getEl("calentamiento_estado");
+const calentamiento_input_wrap = calentamiento_section ? calentamiento_section.querySelector(".calentamiento-input") : null;
 const calentamiento_input = getEl("calentamiento_input");
 const calentamiento_enviar = getEl("calentamiento_enviar");
 const calentamiento_text_progress = getEl("calentamiento_text_progress");
@@ -1491,39 +1521,57 @@ const calentamiento_final_musa = getEl("calentamiento_final_musa");
 aplicarTecladoLento(campo_palabra);
 aplicarTecladoLento(calentamiento_input);
 bloquearEspaciosEnInspiracionInput(campo_palabra);
-bloquearEspaciosEnInspiracionInput(calentamiento_input);
+bloquearEspaciosEnInspiracionInput(calentamiento_input, () => calentamiento_solicitud_actual === "frase_final");
 
 const calentamiento_feedback = getEl("calentamiento_feedback");
 let calentamiento_activo = false;
 let calentamiento_vista = false;
 let timeout_destello_calentamiento = null;
 let timeout_feedback_calentamiento = null;
+let timeout_feedback_calentamiento_salida = null;
 let calentamiento_cooldown = false;
 let calentamiento_interval_cooldown = null;
-let calentamiento_solicitud_actual = null;
+let calentamiento_solicitud_actual = "ninguna";
 let calentamiento_bloqueado = false;
 let calentamiento_final_actual = null;
 let calentamiento_final_id_previo = "";
 let timeout_animacion_consigna = null;
+const CALENTAMIENTO_MAX_PALABRA = 24;
+const CALENTAMIENTO_MAX_FRASE_FINAL = 48;
+const esSolicitudActivaCalentamiento = () => (
+    Boolean(MENSAJES_SOLICITUD_CALENTAMIENTO[calentamiento_solicitud_actual]) &&
+    calentamiento_solicitud_actual !== "ninguna"
+);
+const esSolicitudFraseFinalCalentamiento = () => (
+    esSolicitudActivaCalentamiento() && calentamiento_solicitud_actual === "frase_final"
+);
+const obtenerMaxLongitudCalentamiento = () => (
+    esSolicitudFraseFinalCalentamiento()
+        ? CALENTAMIENTO_MAX_FRASE_FINAL
+        : CALENTAMIENTO_MAX_PALABRA
+);
 const MENSAJES_SOLICITUD_CALENTAMIENTO = {
+    ninguna: {
+        estado: "Sin detonador activo. Usa la bandera hasta que control active una consigna."
+    },
     libre: {
         estado: "Inspira palabras para llenar la pantalla del calentamiento.",
         placeholder: "Escribe una palabra"
     },
     lugares: {
-        estado: "Inspira lugares o sitios donde la historia naciera.",
-        estadoHtml: 'Inspira <span class="calentamiento-consigna-lugares">lugares o sitios</span> donde la historia naciera.',
+        estado: "Inspira lugares o sitios donde la historia nacerá.",
+        estadoHtml: 'Inspira <span class="calentamiento-consigna-lugares">lugares o sitios</span> donde la historia nacerá.',
         placeholder: "Ejemplo: playa"
     },
     acciones: {
-        estado: "Inspira acciones (verbos) con las que historia avanzase.",
+        estado: "Inspira acciones (verbos) con las que historia avance.",
         estadoHtml: 'Inspira <span class="calentamiento-consigna-acciones">acciones (verbos)</span> con las que la historia avanzase.',
         placeholder: "Ejemplo: correr"
     },
     frase_final: {
-        estado: "Inspira palabras para construir la frase final.",
-        estadoHtml: 'Inspira palabras para construir la <span class="calentamiento-consigna-frase-final">frase final</span>.',
-        placeholder: "Ejemplo: destino"
+        estado: "Inspira la frase final.",
+        estadoHtml: 'Inspira la <span class="calentamiento-consigna-frase-final">frase final</span>.',
+        placeholder: "Ejemplo: hacia el destino final"
     }
 };
 
@@ -1546,8 +1594,10 @@ const actualizarTemaCalentamiento = (equipo) => {
     calentamiento_section.classList.toggle("calentamiento-equipo-2", esRojo);
     const colorProgreso = esRojo ? "rgba(255, 125, 125, 0.92)" : "rgba(123, 239, 255, 0.92)";
     const colorTextoProgreso = esRojo ? "#ffb8b8" : "#8fefff";
+    const colorTextoCarga = esRojo ? "#fff2e2" : "#f2fbff";
     document.documentElement.style.setProperty("--musa-progress-color", colorProgreso);
     document.documentElement.style.setProperty("--musa-progress-text-color", colorTextoProgreso);
+    document.documentElement.style.setProperty("--musa-progress-loading-text-color", colorTextoCarga);
 };
 
 const obtenerColorFeedbackCalentamiento = () => {
@@ -1565,12 +1615,14 @@ const restaurarTextoBotonCalentamiento = () => {
 
 const onMouseEnterCalentamiento = () => {
     if (!calentamiento_text_progress) return;
-    calentamiento_text_progress.style.color = "black";
+    calentamiento_text_progress.style.color = "var(--musa-progress-loading-text-color, #f7fbff)";
 };
 
 const onMouseLeaveCalentamiento = () => {
     if (!calentamiento_text_progress) return;
-    calentamiento_text_progress.style.color = calentamiento_cooldown ? "#101820" : "";
+    calentamiento_text_progress.style.color = calentamiento_cooldown
+        ? "var(--musa-progress-loading-text-color, #f7fbff)"
+        : "";
 };
 
 const limpiarCooldownCalentamiento = () => {
@@ -1593,7 +1645,7 @@ const startProgressCalentamiento = (button) => {
     if (!button || !calentamiento_text_progress || !calentamiento_bar_progress) return;
     calentamiento_cooldown = true;
     calentamiento_text_progress.textContent = "Inspirando...";
-    calentamiento_text_progress.style.color = "#101820";
+    calentamiento_text_progress.style.color = "var(--musa-progress-loading-text-color, #f7fbff)";
     calentamiento_text_progress.addEventListener("mouseenter", onMouseEnterCalentamiento);
     calentamiento_text_progress.addEventListener("mouseleave", onMouseLeaveCalentamiento);
     let progress = 0;
@@ -1616,21 +1668,65 @@ const startProgressCalentamiento = (button) => {
     }, intervalo);
 };
 
-const mostrarFeedbackCalentamiento = (mensaje, esError = false) => {
+const CLASES_FEEDBACK_CALENTAMIENTO = ["feedback-destacado", "equipo-1", "equipo-2", "activa", "is-leaving"];
+const DURACION_FEEDBACK_CALENTAMIENTO_MS = 2400;
+const DURACION_SALIDA_FEEDBACK_CALENTAMIENTO_MS = 280;
+
+const limpiarEstiloFeedbackCalentamiento = () => {
+    if (!calentamiento_feedback) return;
+    calentamiento_feedback.classList.remove(...CLASES_FEEDBACK_CALENTAMIENTO);
+    calentamiento_feedback.style.color = "";
+};
+
+const mostrarFeedbackCalentamiento = (mensaje, esError = false, opciones = {}) => {
     if (!calentamiento_feedback) return;
     const texto = typeof mensaje === "string" ? mensaje : "";
-    calentamiento_feedback.textContent = texto;
-    calentamiento_feedback.style.color = esError ? "#ff6b6b" : obtenerColorFeedbackCalentamiento();
+    const usarHtml = Boolean(opciones && opciones.html);
+    const clasesExtra = (opciones && typeof opciones.clase === "string")
+        ? opciones.clase.trim().split(/\s+/).filter(Boolean)
+        : [];
+    const esFeedbackDestacado = clasesExtra.includes("feedback-destacado");
+    limpiarEstiloFeedbackCalentamiento();
+    if (usarHtml) {
+        calentamiento_feedback.innerHTML = texto;
+    } else {
+        calentamiento_feedback.textContent = texto;
+    }
+    if (!usarHtml) {
+        calentamiento_feedback.style.color = esError ? "#ff6b6b" : obtenerColorFeedbackCalentamiento();
+    }
+    clasesExtra.forEach((clase) => calentamiento_feedback.classList.add(clase));
     if (timeout_feedback_calentamiento) {
         clearTimeout(timeout_feedback_calentamiento);
         timeout_feedback_calentamiento = null;
     }
+    if (timeout_feedback_calentamiento_salida) {
+        clearTimeout(timeout_feedback_calentamiento_salida);
+        timeout_feedback_calentamiento_salida = null;
+    }
     if (!texto) return;
+    if (esFeedbackDestacado) {
+        calentamiento_feedback.classList.remove("is-leaving", "activa");
+        void calentamiento_feedback.offsetWidth;
+        calentamiento_feedback.classList.add("activa");
+    }
     timeout_feedback_calentamiento = setTimeout(() => {
         if (!calentamiento_feedback) return;
-        calentamiento_feedback.textContent = "";
+        if (esFeedbackDestacado) {
+            calentamiento_feedback.classList.remove("activa");
+            calentamiento_feedback.classList.add("is-leaving");
+            timeout_feedback_calentamiento_salida = setTimeout(() => {
+                if (!calentamiento_feedback) return;
+                calentamiento_feedback.textContent = "";
+                limpiarEstiloFeedbackCalentamiento();
+                timeout_feedback_calentamiento_salida = null;
+            }, DURACION_SALIDA_FEEDBACK_CALENTAMIENTO_MS);
+        } else {
+            calentamiento_feedback.textContent = "";
+            limpiarEstiloFeedbackCalentamiento();
+        }
         timeout_feedback_calentamiento = null;
-    }, 2400);
+    }, DURACION_FEEDBACK_CALENTAMIENTO_MS);
 };
 
 const dispararDestelloCalentamiento = (equipo) => {
@@ -1670,12 +1766,11 @@ const actualizarBloqueoCalentamientoMusa = (bloqueado, finalPalabra) => {
         calentamiento_section.classList.toggle("calentamiento-final-elegida", Boolean(finalPalabra));
     }
     if (calentamiento_estado_cierre) {
-        calentamiento_estado_cierre.textContent = bloqueado
-            ? "Detonador cerrado por tu escritxr."
-            : "";
+        calentamiento_estado_cierre.textContent = "";
+        calentamiento_estado_cierre.classList.remove("activa");
     }
     if (calentamiento_text_progress && bloqueado) {
-        calentamiento_text_progress.textContent = "DETONADOR CERRADO";
+        calentamiento_text_progress.textContent = "\u{1F512} DETONADOR CERRADO";
         calentamiento_text_progress.style.color = "white";
     }
     if (!calentamiento_final_musa) return;
@@ -1685,7 +1780,11 @@ const actualizarBloqueoCalentamientoMusa = (bloqueado, finalPalabra) => {
         calentamiento_final_id_previo = "";
         return;
     }
-    calentamiento_final_musa.textContent = `Palabra elegida: «${finalPalabra.palabra}»`;
+    const palabraSegura = escapeHtml(finalPalabra.palabra);
+    calentamiento_final_musa.innerHTML = [
+        '<span class="calentamiento-final-label">PALABRA ELEGIDA</span>',
+        `<span class="calentamiento-final-chip">${palabraSegura}</span>`
+    ].join(" ");
     calentamiento_final_musa.classList.add("activa");
     if (calentamiento_final_id_previo !== finalPalabra.id) {
         calentamiento_final_musa.classList.remove("reveal");
@@ -1701,13 +1800,20 @@ const actualizarCalentamiento = (data = {}) => {
     calentamiento_bloqueado = Boolean(data.bloqueado);
     calentamiento_final_actual = normalizarFinalCalentamientoMusa(data.final);
     actualizarTemaCalentamiento(data.equipo || player);
-    const solicitud = (typeof data.solicitud === "string" && MENSAJES_SOLICITUD_CALENTAMIENTO[data.solicitud])
-        ? data.solicitud
-        : "lugares";
+    const solicitudRecibida = typeof data.solicitud === "string" ? data.solicitud.trim().toLowerCase() : "";
+    const solicitud = (solicitudRecibida && MENSAJES_SOLICITUD_CALENTAMIENTO[solicitudRecibida])
+        ? solicitudRecibida
+        : "ninguna";
+    const solicitudActiva = solicitud !== "ninguna";
     const solicitudAnterior = calentamiento_solicitud_actual;
     calentamiento_solicitud_actual = solicitud;
-    const cambioConsigna = Boolean(solicitudAnterior && solicitudAnterior !== solicitud);
-    const mensajeSolicitud = MENSAJES_SOLICITUD_CALENTAMIENTO[solicitud] || MENSAJES_SOLICITUD_CALENTAMIENTO.lugares;
+    const cambioConsigna = Boolean(
+        solicitudActiva &&
+        solicitudAnterior &&
+        solicitudAnterior !== "ninguna" &&
+        solicitudAnterior !== solicitud
+    );
+    const mensajeSolicitud = MENSAJES_SOLICITUD_CALENTAMIENTO[solicitud] || MENSAJES_SOLICITUD_CALENTAMIENTO.ninguna;
     const visible = calentamiento_activo && calentamiento_vista;
 
     if (document.body) {
@@ -1715,6 +1821,7 @@ const actualizarCalentamiento = (data = {}) => {
     }
     if (calentamiento_section) {
         calentamiento_section.classList.toggle("activo", visible);
+        calentamiento_section.classList.toggle("calentamiento-sin-solicitud", visible && !solicitudActiva);
     }
 
     if (!visible) {
@@ -1725,6 +1832,7 @@ const actualizarCalentamiento = (data = {}) => {
         }
         limpiarCooldownCalentamiento();
         mostrarFeedbackCalentamiento("");
+        if (calentamiento_input_wrap) calentamiento_input_wrap.hidden = false;
         if (calentamiento_input) calentamiento_input.disabled = true;
         if (calentamiento_enviar) calentamiento_enviar.disabled = true;
         calentamiento_bloqueado = false;
@@ -1745,8 +1853,26 @@ const actualizarCalentamiento = (data = {}) => {
             calentamiento_estado.textContent = mensajeSolicitud.estado;
         }
     }
+
+    if (!solicitudActiva) {
+        limpiarCooldownCalentamiento();
+        mostrarFeedbackCalentamiento("");
+        if (calentamiento_input_wrap) calentamiento_input_wrap.hidden = true;
+        if (calentamiento_input) {
+            calentamiento_input.value = "";
+            calentamiento_input.disabled = true;
+        }
+        if (calentamiento_enviar) {
+            calentamiento_enviar.disabled = true;
+        }
+        actualizarBloqueoCalentamientoMusa(false, null);
+        return;
+    }
+
+    if (calentamiento_input_wrap) calentamiento_input_wrap.hidden = false;
     if (calentamiento_input) {
         calentamiento_input.placeholder = mensajeSolicitud.placeholder;
+        calentamiento_input.maxLength = obtenerMaxLongitudCalentamiento();
         calentamiento_input.disabled = calentamiento_bloqueado;
     }
     if (calentamiento_enviar) {
@@ -1768,6 +1894,10 @@ const enviarCalentamiento = () => {
     if (!calentamiento_activo || !calentamiento_vista || !calentamiento_input) {
         return;
     }
+    if (!esSolicitudActivaCalentamiento()) {
+        mostrarFeedbackCalentamiento("No hay detonador activo.", true);
+        return;
+    }
     if (calentamiento_bloqueado) {
         mostrarFeedbackCalentamiento("La consigna esta cerrada por tu escritxr.", true);
         return;
@@ -1781,23 +1911,26 @@ const enviarCalentamiento = () => {
         }
         return;
     }
-    const palabra = calentamiento_input.value.trim();
-    if (!palabra) {
-        mostrarFeedbackCalentamiento("Escribe una palabra.", true);
+    const esFraseFinal = esSolicitudFraseFinalCalentamiento();
+    const valorEntrada = String(calentamiento_input.value || "").trim();
+    if (!valorEntrada) {
+        mostrarFeedbackCalentamiento(esFraseFinal ? "Escribe una frase." : "Escribe una palabra.", true);
         return;
     }
-    if (/\s/.test(palabra)) {
+    if (!esFraseFinal && /\s/.test(valorEntrada)) {
         mostrarFeedbackCalentamiento("Solo se permite una palabra, sin espacios.", true);
         return;
     }
-    if (palabra.length > 24) {
-        mostrarFeedbackCalentamiento("Maximo 24 caracteres.", true);
+    const contenido = esFraseFinal ? valorEntrada.replace(/\s+/g, " ") : valorEntrada;
+    const maxLongitud = obtenerMaxLongitudCalentamiento();
+    if (contenido.length > maxLongitud) {
+        mostrarFeedbackCalentamiento(`Maximo ${maxLongitud} caracteres.`, true);
         return;
     }
-    socket.emit("calentamiento_intento", { palabra });
+    socket.emit("calentamiento_intento", { palabra: contenido });
     startProgressCalentamiento(calentamiento_enviar);
     calentamiento_input.value = "";
-    mostrarFeedbackCalentamiento("Palabra enviada.", false);
+    mostrarFeedbackCalentamiento(esFraseFinal ? "Frase enviada." : "Palabra enviada.", false);
 };
 
 if (calentamiento_enviar) {
@@ -1895,10 +2028,7 @@ restaurarTemporizadorLecturaPersistente();
 
 configurarColorRegalo();
 actualizarNombreRegalo();
-if (regalo_pdf_pendiente) {
-    mostrarRegaloPdf(regalo_pdf_pendiente);
-    regalo_pdf_pendiente = null;
-}
+intentarMostrarRegaloPdfPendiente();
 
 socket.on("feedback_musa_inspiracion", (payload = {}) => {
     if (!payload || payload.tipo !== "inspiracion") return;
@@ -1912,6 +2042,7 @@ socket.on('modo_actual', (data) => {
     const siguiente_modo = data.modo_actual;
     console.log("MODO_ACTUAL", siguiente_modo)
     texto1.style.color = "white";
+    esperando_resurreccion_musa = false;
     setNivelesDesactivados(false);
     if (siguiente_modo === "palabras prohibidas") {
         cambiar_jugadores(true);
@@ -2037,9 +2168,6 @@ socket.on('regalo_pdf_musas', (payload) => {
         regalo_pdf_pendiente = payload;
         return;
     }
-    if (payload && payload.player && Number(payload.player) !== Number(player)) {
-        return;
-    }
     mostrarRegaloPdf(payload);
 });
 
@@ -2056,10 +2184,40 @@ socket.on('calentamiento_error', (data) => {
     mostrarFeedbackCalentamiento(data && data.mensaje ? data.mensaje : "Error.", true);
 });
 
+const obtenerEquipoDestacadoCalentamiento = (payload = {}) => {
+    const equipo = normalizarEquipoVotacion(payload.equipo || payload.escritxr || payload.player);
+    if (equipo === 1 || equipo === 2) return equipo;
+    const equipoLocal = normalizarEquipoVotacion(player);
+    return equipoLocal === 1 || equipoLocal === 2 ? equipoLocal : 1;
+};
+
+const obtenerNombreEscritxrDestacadoCalentamiento = (payload = {}, equipo = null) => {
+    const nombrePayload = typeof payload.nombre_escritxr === "string" ? payload.nombre_escritxr.trim() : "";
+    if (nombrePayload) {
+        return normalizarNombreEscritxrUi(nombrePayload, "ESCRITXR");
+    }
+    const equipoResuelto = (equipo === 1 || equipo === 2) ? equipo : obtenerEquipoDestacadoCalentamiento(payload);
+    const nombreGuardado = nombres_escritxr_por_equipo[equipoResuelto];
+    if (nombreGuardado) {
+        return normalizarNombreEscritxrUi(nombreGuardado, `ESCRITXR ${equipoResuelto}`);
+    }
+    return normalizarNombreEscritxrUi(nombre1 && nombre1.value ? nombre1.value : "", `ESCRITXR ${equipoResuelto}`);
+};
+
 socket.on('calentamiento_ganado', (data) => {
-    const palabra = data && data.palabra ? ` (${data.palabra})` : "";
-    mostrarFeedbackCalentamiento(`Palabra destacada${palabra}.`, false);
-    dispararDestelloCalentamiento(data && data.equipo);
+    const equipoDestacado = obtenerEquipoDestacadoCalentamiento(data || {});
+    const claseEquipo = equipoDestacado === 2 ? "equipo-2" : "equipo-1";
+    const nombreEscritxr = escapeHtml(obtenerNombreEscritxrDestacadoCalentamiento(data || {}, equipoDestacado));
+    const mensaje = [
+        '<span class="calentamiento-feedback-exclamacion">\u00A1</span>',
+        `<span class="calentamiento-feedback-escritxr ${claseEquipo}">${nombreEscritxr}</span>`,
+        '<span class="calentamiento-feedback-resto">ha destacado tu palabra!</span>'
+    ].join("");
+    mostrarFeedbackCalentamiento(mensaje, false, {
+        html: true,
+        clase: `feedback-destacado ${claseEquipo}`
+    });
+    dispararDestelloCalentamiento(equipoDestacado);
 });
 
 // Variables de los modos.
@@ -2392,6 +2550,9 @@ pausa el cambio de palabra.
 socket.on("count", data => {
     if(data.player == player){
     const segundosRestantes = extraerSegundosTiempo(data.count);
+    if (segundosRestantes !== null) {
+        esperando_resurreccion_musa = false;
+    }
     const introEnCurso = secuencia_inicio_musa_activa || (document.body && document.body.classList.contains(CLASE_INTRO_PARTIDA_MUSA));
     if (segundosRestantes !== null && !ui_partida_activa_musa && !introEnCurso) {
         setUiPartidaActivaMusa(true);
@@ -2417,9 +2578,14 @@ socket.on("count", data => {
         }
     }
     if (data.count == "\u00A1Tiempo!") {
-        confetti_aux();
-
-        limpiezas_final();
+        const finDefinitivoPorTiempo = modo_actual === "frase final";
+        if (finDefinitivoPorTiempo) {
+            esperando_resurreccion_musa = false;
+            confetti_aux();
+            limpiezas_final();
+        } else {
+            esperando_resurreccion_musa = true;
+        }
         limpiarEfectosVisualesDesventajaMusa();
 
         //texto1.innerText = (texto1.innerText).substring(saltos_lÃ­nea_alineacion_1, texto1.innerText.length);
@@ -2444,6 +2610,22 @@ socket.on("count", data => {
 }
 });
 
+socket.on("resucitar_control", (data = {}) => {
+    if (Number(data.player) !== Number(player)) return;
+    esperando_resurreccion_musa = false;
+    terminado = false;
+});
+
+socket.on("fin", (data) => {
+    const payload = (data && typeof data === "object") ? data : { player: data };
+    if (Number(payload.player) !== Number(player)) return;
+    esperando_resurreccion_musa = false;
+    if (terminado) return;
+    confetti_aux();
+    limpiezas_final();
+    limpiarEfectosVisualesDesventajaMusa();
+});
+
 // Inicia el juego.
 socket.on('inicio', data => {
     setPendienteAnimacionEntradaBarraVida(true);
@@ -2463,6 +2645,7 @@ socket.on('inicio', data => {
     limpiarTecladoLentoMusa();
     limpiarEfectosVisualesDesventajaMusa();
     terminado = false;
+    esperando_resurreccion_musa = false;
     niveles_bloqueados = true;
     setNivelesDesactivados(false);
     actualizarNiveles("");
@@ -2612,6 +2795,7 @@ socket.on('limpiar', () => {
 
     modo_actual = "";
     terminado = true;
+    esperando_resurreccion_musa = false;
     niveles_bloqueados = true;
     setNivelesDesactivados(true);
     actualizarNiveles("");
@@ -2748,6 +2932,7 @@ socket.on("elegir_repentizado", ({seleccionados, TIEMPO_VOTACION}) => {
 
 socket.on("pedir_inspiracion_musa", juego => {
     const es_prohibidas = juego.modo_actual === "palabras prohibidas";
+    esperando_resurreccion_musa = false;
     cambiar_jugadores(es_prohibidas);
     texto1.style.color = es_prohibidas ? "red" : "white";
     actualizarNiveles(juego.modo_actual);
@@ -2771,7 +2956,7 @@ function pedir_inspiracion(juego){
     modo_actual = juego.modo_actual;
     recordatorio.innerHTML = "";
     const etiquetaMusa = "<span style='color: orange;'>" + nombre_musa + "</span>";
-    if(terminado == false && votando == false){
+    if(terminado == false && votando == false && esperando_resurreccion_musa == false){
     if(juego.modo_actual == "palabras bonus"){
         tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que me inspire:";
     }
@@ -3127,6 +3312,7 @@ function limpiezas_final(){
     niveles_bloqueados = true;
     actualizarNiveles("");
     resetearScrollNiveles();
+    intentarMostrarRegaloPdfPendiente();
 }
 // Cuando el texto del jugador 1 cambia, envÃ­a los datos de jugador 1 al resto.
 texto1.addEventListener("keyup", (evt) => {
@@ -3159,7 +3345,7 @@ function limpiar_colddown(){
     bar_progress.style.width = '0%'
     //button.disabled = false; // Habilita el botÃ³n
     text_progress.style.color = "";
-    text_progress.innerHTML = `${EMOJI_ROCKET} Inspirar`;
+    text_progress.innerHTML = `INSPIRAR <span class="btn-emoji" aria-hidden="true">${EMOJI_ROCKET}</span>`;
     cooldown = false;
 }
 
@@ -3246,8 +3432,9 @@ function cancelar(boton){
 // Add click handler to the table
 skill.addEventListener('click', activateSkill, false);
 
+var CONFETTI_TOP_Z_INDEX = 2147483647;
 var duration = 15 * 1000;
-var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: CONFETTI_TOP_Z_INDEX };
 var isConfettiRunning = true; // Indicador para controlar la ejecuciÃ³n
 
 function randomInRange(min, max) {
@@ -3285,7 +3472,12 @@ function stopConfetti() {
 
   function confetti_musas(){
     var scalar = 2;
-    var unicorn = confetti.shapeFromText({ text: EMOJI_STAR, scalar });
+    var starShape = confetti.shapeFromText({
+      text: "⭐",
+      scalar,
+      color: "#ffd43b",
+      fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+    });
     isConfettiRunning = true; // Habilita la ejecuciÃ³n de confetti
     
     var end = Date.now() + (2 * 1000);
@@ -3293,13 +3485,15 @@ function stopConfetti() {
     // go Buckeyes!
     (function frame() {
       confetti({
-        startVelocity: 10,
-        particleCount: 1,
+        startVelocity: 12,
+        particleCount: 2,
         angle: 270,
         spread: 1000,
-        origin: { y: 0 },
-        shapes: [unicorn],
-        scalar: 3
+        origin: { x: randomInRange(0.12, 0.88), y: 0 },
+        shapes: [starShape],
+        scalar: 3,
+        colors: ["#fff6ad", "#ffe066", "#ffd43b", "#ffffff"],
+        zIndex: CONFETTI_TOP_Z_INDEX
       });
     
       if ((Date.now() < end) && isConfettiRunning) {

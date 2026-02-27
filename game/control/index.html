@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260224d">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260225c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -17,7 +17,7 @@
 
 <body>
     <script src="../config.js"></script>
-    <script src="./js/juego.js?v=20260224c"></script>
+    <script src="./js/juego.js?v=20260225zf"></script>
     <div class="ascii">
         <pre class="neon">
        __     _____    _____   _____    _____    __       ____  
@@ -61,13 +61,13 @@
                                 <span class='btn' onclick="reiniciar_marcador_calentamiento()">&#x1F3C6; REINICIAR MARCADOR</span>
                                 <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F3F3;&#xFE0F; BANDERAS DESACTIVADAS</span>
                             </div>
-                            <div class="control-group-subtitle">CONSIGNAS PARA MUSAS</div>
+                            <div class="control-group-subtitle">DETONADORES PARA MUSAS</div>
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">
                                 <span id="boton_solicitud_lugares" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="lugares" onclick="pedir_solicitud_calentamiento('lugares')">&#x1F4CD; PEDIR LUGARES</span>
                                 <span id="boton_solicitud_acciones" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="acciones" onclick="pedir_solicitud_calentamiento('acciones')">&#x1F3C3; PEDIR ACCIONES</span>
                                 <span id="boton_solicitud_frase_final" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="frase_final" onclick="pedir_solicitud_calentamiento('frase_final')">&#x1F5E3;&#xFE0F; PEDIR FRASE FINAL</span>
                             </div>
-                            <p id="calentamiento_solicitud_actual" class="calentamiento-solicitud-estado">CONSIGNA ACTUAL: LUGARES</p>
+                            <p id="calentamiento_solicitud_actual" class="calentamiento-solicitud-estado">DETONADOR ACTUAL: SIN DETONADOR ACTIVO</p>
                             <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: ABIERTO | J2: ABIERTO</p>
                         </div>
                         <div class="control-group control-group--juego">
@@ -76,7 +76,7 @@
                                 <span class='btn' onclick="temp()">&#x270D;&#xFE0F; ESCRIBIR</span>
                                 <span class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
-                                <span class='btn' onclick="borrar_texto_guardado()">&#x1FAA4; BORRAR TEXTO</span>
+                                <span id="boton_borrar_texto_guardado" class='btn' data-active="0" onclick="borrar_texto_guardado()">&#x1F9F9; BORRAR TEXTO: OFF</span>
                                 <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
                             </div>
@@ -394,14 +394,16 @@
 </div>
 <div id="contenedor">
         <div>
-            <div class="fin_jugador fin_jugador--j1">
-                <span class='btn' onclick="fin(1)">&#x1F535; FIN</span>
-            </div>
-            <p style="color:orange">FRASE FINAL:</p>
-            <div class="frase_final_editor frase_final_editor--j1">
-                <span class="frase_final_quote">&laquo;</span>
-                <input id="frase_final_j1" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
-                <span class="frase_final_quote">&raquo;</span>
+            <div class="frase_final_bloque frase_final_bloque--j1">
+                <div class="fin_jugador fin_jugador--j1">
+                    <span class='btn' onclick="fin(1)">&#x1F535; FIN</span>
+                </div>
+                <p class="frase_final_label frase_final_label--j1">FRASE FINAL:</p>
+                <div class="frase_final_editor frase_final_editor--j1">
+                    <span class="frase_final_quote">&laquo;</span>
+                    <input id="frase_final_j1" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
+                    <span class="frase_final_quote">&raquo;</span>
+                </div>
             </div>
             <p id="tiempo" class="tiempo tiempo-vida"></p>
             <input style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre" value="ESCRITXR 1"></input>
@@ -432,14 +434,16 @@
             </div>
         </div>
         <div>
-            <div class="fin_jugador fin_jugador--j2">
-                <span class='btn' onclick="fin(2)">&#x1F534; FIN</span>
-            </div>
-            <p style="color:orange">FRASE FINAL:</p>
-            <div class="frase_final_editor frase_final_editor--j2">
-                <span class="frase_final_quote">&laquo;</span>
-                <input id="frase_final_j2" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
-                <span class="frase_final_quote">&raquo;</span>
+            <div class="frase_final_bloque frase_final_bloque--j2">
+                <div class="fin_jugador fin_jugador--j2">
+                    <span class='btn' onclick="fin(2)">&#x1F534; FIN</span>
+                </div>
+                <p class="frase_final_label frase_final_label--j2">FRASE FINAL:</p>
+                <div class="frase_final_editor frase_final_editor--j2">
+                    <span class="frase_final_quote">&laquo;</span>
+                    <input id="frase_final_j2" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
+                    <span class="frase_final_quote">&raquo;</span>
+                </div>
             </div>
             <p id="tiempo1" class="tiempo tiempo-vida"></p>
             <input style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre" value="ESCRITXR 2"></input>
@@ -498,7 +502,6 @@
         </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260224b"></script>
+<script src="./js/jugador-servidor.js?v=20260225ze"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>
-

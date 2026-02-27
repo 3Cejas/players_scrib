@@ -131,18 +131,21 @@ function borrar() {
 
     // 2. Código existente
 
-    tiempo_feed = "-1 segs.";
-    mostrarFeedbackTiempoEscritora(tiempo_feed, "borrar", color_negativo);
+    // En frase final no se modifica el tiempo por inactividad.
+    if (modo_actual !== "frase final") {
+      tiempo_feed = "-1 segs.";
+      mostrarFeedbackTiempoEscritora(tiempo_feed, "borrar", color_negativo);
 
-    secs = -1;
-    if (typeof emitirCambioTiempoEscritora === "function") {
-      emitirCambioTiempoEscritora(secs);
-    } else {
-      socket.emit('aumentar_tiempo', {secs, player});
+      secs = -1;
+      if (typeof emitirCambioTiempoEscritora === "function") {
+        emitirCambioTiempoEscritora(secs);
+      } else {
+        socket.emit('aumentar_tiempo', {secs, player});
+      }
+      color = color_negativo;
+      tiempo_feed = "-1 segs.";
+      socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar" });
     }
-    color = color_negativo;
-    tiempo_feed = "-1 segs."
-    socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar"});
     caracteres_seguidos = 0;
     // 3. Borrar último carácter editable, saltando palabras benditas
     borrarUltimoCaracterEditable();
@@ -231,7 +234,7 @@ function countChars(texto) {
     caracteres_seguidos += 1;
   }
 
-  if (caracteres_seguidos == 3) {
+  if (caracteres_seguidos == 3 && modo_actual !== "frase final") {
     tiempo_feed = `+${secs_palabras} segs.`;
     mostrarFeedbackTiempoEscritora(tiempo_feed, "ganar_tiempo", color_positivo);
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas

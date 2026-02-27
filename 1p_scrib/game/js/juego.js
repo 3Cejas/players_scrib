@@ -107,19 +107,26 @@ function borrar() {
 
     // 2. Código existente
 
-    feedback.style.color = color_negativo;
-    feedback.innerHTML = "⏱️-1 segs.";
-    addSeconds(-1);
-    clearTimeout(delay_animacion);
-    animateCSS(".feedback1", "flash").then((message) => {
-        delay_animacion = setTimeout(function () {
+    if (modo_actual !== "frase final") {
+      addSeconds(-1);
+      if (typeof mostrarFeedbackFlotanteEscritora === "function") {
+        mostrarFeedbackFlotanteEscritora("-1 segs.", {
+          color: color_negativo,
+          tipo: "borrar"
+        });
+      } else {
+        feedback.style.color = color_negativo;
+        feedback.innerHTML = "⏱️-1 segs.";
+        clearTimeout(delay_animacion);
+        animateCSS(".feedback1", "flash").then(() => {
+          delay_animacion = setTimeout(function () {
             feedback.innerHTML = "";
-        }, 2000);
-    });
-
-   ///////socket.emit('aumentar_tiempo', {secs, player});
-    color = color_negativo;
-    tiempo_feed = "⏱️-" + "1" + " segs."
+          }, 2000);
+        });
+      }
+      color = color_negativo;
+      tiempo_feed = "-1 segs.";
+    }
     caracteres_seguidos = 0;
     indice_buscar_palabra = texto.innerText.length;
 
@@ -165,7 +172,11 @@ function borrar() {
     } else {
       puntos_ = 0;
     }
-    puntos.innerHTML = puntos_ + " palabras";
+    if (typeof actualizarPuntosMarcador === "function") {
+      actualizarPuntosMarcador(`${puntos_} palabras`);
+    } else {
+      puntos.innerHTML = puntos_ + " palabras";
+    }
     //cambio_nivel(puntos_);
     clearTimeout(borrado);
     borrado = setTimeout(() => {
@@ -223,7 +234,11 @@ function countChars(texto) {
   else{
     puntos_ = 0;
   }
-  puntos.innerHTML = puntos_ + " palabras";
+  if (typeof actualizarPuntosMarcador === "function") {
+    actualizarPuntosMarcador(`${puntos_} palabras`);
+  } else {
+    puntos.innerHTML = puntos_ + " palabras";
+  }
   //cambio_nivel(puntos_);
   clearTimeout(borrado);
   
@@ -232,24 +247,31 @@ function countChars(texto) {
     caracteres_seguidos += 1;
   }
 
-  if (caracteres_seguidos == 3 && locura == false && modo_actual !== "frase final") {
+  if (caracteres_seguidos == 3 && modo_actual !== "frase final") {
     const bonusTiempo = (typeof secs_palabras === "number" && !Number.isNaN(secs_palabras))
       ? secs_palabras
       : 6;
-    feedback.style.color = color_positivo;
-    feedback.innerHTML = "⏱️+" + bonusTiempo + " segs.";
-    addSeconds(bonusTiempo)
-    clearTimeout(delay_animacion);
-    animateCSS(".feedback1", "flash").then((message) => {
+    addSeconds(bonusTiempo);
+    if (typeof mostrarFeedbackFlotanteEscritora === "function") {
+      mostrarFeedbackFlotanteEscritora(`+${bonusTiempo} segs.`, {
+        color: color_positivo,
+        tipo: "ganar_tiempo"
+      });
+    } else {
+      feedback.style.color = color_positivo;
+      feedback.innerHTML = "⏱️+" + bonusTiempo + " segs.";
+      clearTimeout(delay_animacion);
+      animateCSS(".feedback1", "flash").then(() => {
         delay_animacion = setTimeout(function () {
-            feedback.innerHTML = "";
+          feedback.innerHTML = "";
         }, 2000);
-    });
+      });
+    }
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
-    secs = 6;
+    secs = bonusTiempo;
     /////socket.emit('aumentar_tiempo', {secs, player});
     color = color_positivo;
-    tiempo_feed = "⏱️+" + "6" + " segs."
+    tiempo_feed = `+${bonusTiempo} segs.`;
   }
   borrado = setTimeout(function () {
     borrar();

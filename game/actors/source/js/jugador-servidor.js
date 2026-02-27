@@ -16,6 +16,405 @@ let definicion = getEl("definicion");
 let explicación = getEl("explicación");
 let metadatos_actor = getEl("metadatos_actor");
 const timeout_marcador_actor = new WeakMap();
+const escapeHtml = (valor) => String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const CLASES_BARRA_NIVEL_ACTOR = [
+    "barra-nivel--bendita",
+    "barra-nivel--prohibida",
+    "barra-nivel--bonus",
+    "barra-nivel--prohibidas",
+    "barra-nivel--tertulia",
+    "barra-nivel--frase-final"
+];
+
+const CLASES_ESTILO_PALABRA_NIVEL_ACTOR = [
+    "palabra-letras--bendita",
+    "palabra-letras--prohibida",
+    "palabra-letras--bonus",
+    "palabra-letras--prohibidas",
+    "palabra-letras--tertulia",
+    "palabra-letras--frase-final"
+];
+
+const CLASES_ESTILO_DEFINICION_NIVEL_ACTOR = [
+    "definicion-letras--bendita",
+    "definicion-letras--prohibida",
+    "definicion-letras--bonus",
+    "definicion-letras--prohibidas",
+    "definicion-letras--tertulia",
+    "definicion-letras--frase-final"
+];
+
+function formatoLetraNivelActor(letra) {
+    const valor = String(letra || "").trim();
+    return valor ? valor.toUpperCase() : "-";
+}
+
+function renderLetraDestacadaNivelActor(letra) {
+    return `<span class="explicacion-letra-destacada">${escapeHtml(formatoLetraNivelActor(letra))}</span>`;
+}
+
+function construirExplicacionNivelLetraActor(tipo, letra) {
+    const letraDestacada = renderLetraDestacadaNivelActor(letra);
+    if (tipo === "bendita") {
+        return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+    }
+    if (tipo === "prohibida") {
+        return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
+    }
+    return "";
+}
+
+function setBarraNivelClaseActor(tipo = "") {
+    if (!palabra || !palabra.classList) return;
+    CLASES_BARRA_NIVEL_ACTOR.forEach((clase) => palabra.classList.remove(clase));
+    if (!tipo) return;
+    palabra.classList.add(`barra-nivel--${tipo}`);
+}
+
+function limpiarEstiloNivelesActor() {
+    if (palabra && palabra.classList) {
+        CLASES_ESTILO_PALABRA_NIVEL_ACTOR.forEach((clase) => palabra.classList.remove(clase));
+    }
+    if (definicion && definicion.classList) {
+        definicion.classList.remove("objetivo-nivel");
+        CLASES_ESTILO_DEFINICION_NIVEL_ACTOR.forEach((clase) => definicion.classList.remove(clase));
+    }
+}
+
+function aplicarEstiloNivelesActor(tipo = "") {
+    limpiarEstiloNivelesActor();
+    if (!tipo || !palabra || !palabra.classList || !definicion || !definicion.classList) return;
+    palabra.classList.add(`palabra-letras--${tipo}`);
+    definicion.classList.add(`definicion-letras--${tipo}`);
+}
+
+function extraerTextoPalabraEventoActor(data = {}) {
+    if (!data || typeof data !== "object") return "";
+    if (typeof data.palabras_var === "string" && data.palabras_var.trim()) {
+        return data.palabras_var.trim();
+    }
+    if (Array.isArray(data.palabras_var) && data.palabras_var.length) {
+        const primera = String(data.palabras_var[0] || "").trim();
+        if (primera) return primera;
+    }
+    if (Array.isArray(data.palabra_bonus) && data.palabra_bonus.length) {
+        const primeraBonus = String(data.palabra_bonus[0] || "").trim();
+        if (primeraBonus) return primeraBonus;
+    }
+    return "";
+}
+
+function normalizarTextoPlanoActor(texto) {
+    return String(texto ?? "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function construirTextoPalabraConTiempoActor(palabraTexto, tiempoSegundos, tipo = "bendita") {
+    const base = String(palabraTexto || "").trim();
+    if (!base) return "";
+    const tiempoRaw = String(tiempoSegundos ?? "").trim();
+    if (!tiempoRaw) return escapeHtml(base);
+    const tiempoLimpio = tiempoRaw.replace(/^[+-]\s*/, "");
+    const esMaldita = tipo === "maldita";
+    const signo = esMaldita ? "-" : "+";
+    const claseTiempo = esMaldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
+    const tiempoTexto = `${signo}${tiempoLimpio} segs.`;
+    return `${escapeHtml(base)} <span class="palabra-tiempo ${claseTiempo}">${escapeHtml(tiempoTexto)}</span>`;
+}
+
+function construirBloqueObjetivoNivelActor(palabraTexto, opciones = {}) {
+    const base = String(palabraTexto || "").trim();
+    if (!base) return "";
+    const tipo = String(opciones.tipo || "bonus").trim().toLowerCase();
+    const esMaldita = tipo === "prohibidas";
+    const tiempoRaw = String(opciones.tiempoSegundos ?? "").trim();
+    const palabraHtml = tiempoRaw
+        ? construirTextoPalabraConTiempoActor(base, tiempoRaw, esMaldita ? "maldita" : "bendita")
+        : escapeHtml(base);
+    const descripcion = normalizarTextoPlanoActor(opciones.descripcion);
+    const descripcionHtml = descripcion
+        ? `<span class="objetivo-def objetivo-def--${tipo}">${escapeHtml(descripcion)}</span>`
+        : "";
+    return `<span class="objetivo-chip objetivo-chip--${tipo}">${palabraHtml}</span>${descripcionHtml}`;
+}
+
+function renderObjetivoNivelActor(palabraTexto, opciones = {}) {
+    if (!definicion) return false;
+    const bloque = construirBloqueObjetivoNivelActor(palabraTexto, opciones);
+    const tieneContenido = Boolean(String(bloque || "").trim());
+    if (definicion.classList) {
+        definicion.classList.toggle("objetivo-nivel", tieneContenido);
+    }
+    definicion.innerHTML = tieneContenido ? bloque : "";
+    return tieneContenido;
+}
+
+let cache_letra_bendita_actor = "";
+let cache_letra_prohibida_actor = "";
+let cache_objetivo_bonus_actor = null;
+let cache_objetivo_prohibidas_actor = null;
+
+function limpiarCacheInfoNivelesActor() {
+    cache_letra_bendita_actor = "";
+    cache_letra_prohibida_actor = "";
+    cache_objetivo_bonus_actor = null;
+    cache_objetivo_prohibidas_actor = null;
+}
+
+function actualizarCacheLetrasActor(data = {}) {
+    if (!data || typeof data !== "object") return;
+    const letraBendita = typeof data.letra_bendita === "string" ? data.letra_bendita.trim() : "";
+    const letraProhibida = typeof data.letra_prohibida === "string" ? data.letra_prohibida.trim() : "";
+    if (letraBendita) {
+        cache_letra_bendita_actor = letraBendita;
+    }
+    if (letraProhibida) {
+        cache_letra_prohibida_actor = letraProhibida;
+    }
+}
+
+function construirObjetivoCacheadoActor(data = {}, tipo = "bonus") {
+    const textoPalabra = extraerTextoPalabraEventoActor(data);
+    if (!textoPalabra) return null;
+    const descripcionBase = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[1] : data && data.definicion;
+    return {
+        palabra: textoPalabra,
+        tipo,
+        tiempoSegundos: data && data.tiempo_palabras_bonus,
+        descripcion: descripcionBase
+    };
+}
+
+function actualizarCacheObjetivoActor(modo, data = {}) {
+    if (modo === "palabras bonus") {
+        const objetivo = construirObjetivoCacheadoActor(data, "bonus");
+        if (objetivo) {
+            cache_objetivo_bonus_actor = objetivo;
+            return true;
+        }
+        return false;
+    }
+    if (modo === "palabras prohibidas") {
+        const objetivo = construirObjetivoCacheadoActor(data, "prohibidas");
+        if (objetivo) {
+            cache_objetivo_prohibidas_actor = objetivo;
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+function renderObjetivoCacheadoActor(modo) {
+    const objetivo = modo === "palabras bonus"
+        ? cache_objetivo_bonus_actor
+        : (modo === "palabras prohibidas" ? cache_objetivo_prohibidas_actor : null);
+    if (!objetivo || !objetivo.palabra) return false;
+    return renderObjetivoNivelActor(objetivo.palabra, {
+        tipo: objetivo.tipo,
+        tiempoSegundos: objetivo.tiempoSegundos,
+        descripcion: objetivo.descripcion
+    });
+}
+
+function renderInfoModoActor(modo, data = {}, opciones = {}) {
+    const modoNormalizado = typeof modo === "string" ? modo : "";
+    const animar = Boolean(opciones && opciones.animar);
+    if (animar) {
+        animacion_modo();
+    }
+
+    actualizarCacheLetrasActor(data);
+    limpiarEstiloNivelesActor();
+    setBarraNivelClaseActor("");
+
+    if (!modoNormalizado) {
+        palabra.innerHTML = "";
+        explicación.innerHTML = "";
+        definicion.innerHTML = "";
+        return;
+    }
+
+    if (modoNormalizado === "palabras bonus") {
+        setBarraNivelClaseActor("bonus");
+        aplicarEstiloNivelesActor("bonus");
+        explicación.style.color = "yellow";
+        explicación.innerHTML = "SUMA TIEMPO CON PALABRAS BONUS";
+        palabra.innerHTML = "NIVEL PALABRAS BONUS";
+        definicion.innerHTML = "";
+        return;
+    }
+
+    if (modoNormalizado === "letra prohibida") {
+        setBarraNivelClaseActor("prohibida");
+        aplicarEstiloNivelesActor("prohibida");
+        const letra = (typeof data.letra_prohibida === "string" && data.letra_prohibida.trim())
+            ? data.letra_prohibida
+            : cache_letra_prohibida_actor;
+        explicación.style.color = "red";
+        explicación.innerHTML = construirExplicacionNivelLetraActor("prohibida", letra);
+        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
+        definicion.innerHTML = "";
+        return;
+    }
+
+    if (modoNormalizado === "letra bendita") {
+        setBarraNivelClaseActor("bendita");
+        aplicarEstiloNivelesActor("bendita");
+        const letra = (typeof data.letra_bendita === "string" && data.letra_bendita.trim())
+            ? data.letra_bendita
+            : cache_letra_bendita_actor;
+        explicación.style.color = "lime";
+        explicación.innerHTML = construirExplicacionNivelLetraActor("bendita", letra);
+        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        definicion.innerHTML = "";
+        return;
+    }
+
+    if (modoNormalizado === "palabras prohibidas") {
+        setBarraNivelClaseActor("prohibidas");
+        aplicarEstiloNivelesActor("prohibidas");
+        explicación.style.color = "pink";
+        explicación.innerHTML = "EVITA LAS PALABRAS PROHIBIDAS";
+        palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+        definicion.innerHTML = "";
+        return;
+    }
+
+    if (modoNormalizado === "tertulia") {
+        setBarraNivelClaseActor("tertulia");
+        aplicarEstiloNivelesActor("tertulia");
+        explicación.style.color = "#86d0ff";
+        explicación.innerHTML = "DIALOGA CON TUS MUSAS";
+        palabra.innerHTML = "NIVEL TERTULIA";
+        definicion.innerHTML = "";
+        return;
+    }
+
+    if (modoNormalizado === "frase final") {
+        setBarraNivelClaseActor("frase-final");
+        aplicarEstiloNivelesActor("frase-final");
+        explicación.style.color = "orange";
+        explicación.innerHTML = "ULTIMA RONDA";
+        palabra.innerHTML = "NIVEL FRASE FINAL";
+        definicion.innerHTML = "";
+        return;
+    }
+
+    palabra.innerHTML = "";
+    explicación.innerHTML = "";
+    definicion.innerHTML = "";
+}
+
+function hayInfoNivelVisibleActor() {
+    const textoPalabra = palabra && typeof palabra.textContent === "string" ? palabra.textContent.trim() : "";
+    const textoExplicacion = explicación && typeof explicación.textContent === "string" ? explicación.textContent.trim() : "";
+    return Boolean(textoPalabra || textoExplicacion);
+}
+
+let DURACION_NIVEL_MS_ACTOR = 60000;
+let inicio_nivel_ts_actor = 0;
+let intervalo_progreso_nivel_actor = null;
+let progreso_frase_final_base_segundos_actor = null;
+
+function normalizarDuracionNivelMsActor(valor) {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero) || numero <= 0) return null;
+    if (numero <= 600) return Math.round(numero * 1000);
+    return Math.round(numero);
+}
+
+function actualizarDuracionNivelDesdeParametrosActor(parametros = {}) {
+    const candidatos = [
+        parametros.TIEMPO_MODOS,
+        parametros.DURACION_TIEMPO_MODOS,
+        parametros.TIEMPO_CAMBIO_MODOS,
+        parametros.DURACION_TIEMPO_MUERTO
+    ];
+    for (const candidato of candidatos) {
+        const ms = normalizarDuracionNivelMsActor(candidato);
+        if (ms) {
+            DURACION_NIVEL_MS_ACTOR = ms;
+            return;
+        }
+    }
+}
+
+function setProgresoNivelBarraActor(progreso) {
+    if (!palabra) return;
+    const valor = Number(progreso);
+    const pct = Math.max(0, Math.min(100, Number.isFinite(valor) ? valor : 0));
+    palabra.style.setProperty("--nivel-progress", `${pct.toFixed(2)}%`);
+}
+
+function detenerProgresoNivelBarraActor(reiniciar = false) {
+    if (intervalo_progreso_nivel_actor) {
+        clearInterval(intervalo_progreso_nivel_actor);
+        intervalo_progreso_nivel_actor = null;
+    }
+    inicio_nivel_ts_actor = 0;
+    if (reiniciar) {
+        setProgresoNivelBarraActor(0);
+    }
+}
+
+function reiniciarProgresoFraseFinalActor() {
+    progreso_frase_final_base_segundos_actor = null;
+}
+
+function actualizarProgresoFraseFinalActor(segundosRestantes) {
+    if (modo_actual !== "frase final") return false;
+    const segundos = Number(segundosRestantes);
+    if (!Number.isFinite(segundos) || segundos < 0) return false;
+
+    if (!Number.isFinite(progreso_frase_final_base_segundos_actor) || progreso_frase_final_base_segundos_actor <= 0) {
+        progreso_frase_final_base_segundos_actor = segundos;
+    } else if (segundos > progreso_frase_final_base_segundos_actor) {
+        progreso_frase_final_base_segundos_actor = segundos;
+    }
+
+    const base = Math.max(1, Number(progreso_frase_final_base_segundos_actor) || 1);
+    const restante = Math.max(0, segundos);
+    const pct = Math.max(0, Math.min(100, ((base - restante) / base) * 100));
+    setProgresoNivelBarraActor(pct);
+    if (pct >= 100) {
+        detenerProgresoNivelBarraActor(false);
+    }
+    return true;
+}
+
+function tickProgresoNivelBarraActor() {
+    if (!inicio_nivel_ts_actor || DURACION_NIVEL_MS_ACTOR <= 0) {
+        setProgresoNivelBarraActor(0);
+        return;
+    }
+    const transcurrido = Date.now() - inicio_nivel_ts_actor;
+    const pct = Math.min(100, (transcurrido / DURACION_NIVEL_MS_ACTOR) * 100);
+    setProgresoNivelBarraActor(pct);
+    if (pct >= 100) {
+        detenerProgresoNivelBarraActor(false);
+    }
+}
+
+function iniciarProgresoNivelBarraActor() {
+    if (modo_actual === "frase final") {
+        detenerProgresoNivelBarraActor(true);
+        reiniciarProgresoFraseFinalActor();
+        return;
+    }
+    detenerProgresoNivelBarraActor(true);
+    inicio_nivel_ts_actor = Date.now();
+    tickProgresoNivelBarraActor();
+    intervalo_progreso_nivel_actor = setInterval(tickProgresoNivelBarraActor, 120);
+}
 
 const formatearPuntosMarcadorActor = (valor) => {
     const texto = String(valor ?? "").trim();
@@ -58,6 +457,8 @@ function actualizarPuntosMarcadorActor(valor, animar = true) {
 let listener_cuenta_atras = null;
 let timer = null;
 let modo_actual = "";
+let partida_finalizada_actor = false;
+let esperando_resurreccion_actor = false;
 texto1.style.height = "auto";
 texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
 texto1.scrollTop = texto1.scrollHeight;
@@ -433,59 +834,45 @@ const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
-        explicación.style.color = "yellow";
-        explicación.innerHTML = "NIVEL PALABRAS BENDITAS";
-        palabra.innerHTML = "";
-        palabra.style.backgroundColor = "yellow";
-        definicion.innerHTML = "";
-        socket.on(enviar_palabra, data => {
-            recibir_palabra(data);
+        renderInfoModoActor("palabras bonus", data, { animar: true });
+        socket.off(enviar_palabra);
+        socket.on(enviar_palabra, (payload) => {
+            recibir_palabra(payload);
         });
     },
 
     //Recibe y activa el modo letra prohibida.
     'letra prohibida': function (data) {
-        palabra.style.backgroundColor= "red";
-        explicación.style.color = "red";
-        explicación.innerHTML = "NIVEL LETRA MALDITA";
-        palabra.innerHTML = "LETRA MALDITA: " + data.letra_prohibida;
+        renderInfoModoActor("letra prohibida", data, { animar: true });
     },
 
     //Recibe y activa el modo letra bendita.
     'letra bendita': function (data) {
-        palabra.style.backgroundColor= "lime";
-        explicación.style.color = "lime";
-        explicación.innerHTML = "NIVEL LETRA BENDITA";
-        palabra.innerHTML = "LETRA BENDITA: " + data.letra_bendita;
+        renderInfoModoActor("letra bendita", data, { animar: true });
     },
 
     'palabras prohibidas': function (data) {
-        palabra.style.backgroundColor = "pink";
-        explicación.style.color = "pink";
-        explicación.innerHTML = "NIVEL PALABRAS MALDITAS";
-        definicion.innerHTML = "";
-        socket.on(enviar_palabra, data => {
-            recibir_palabra_prohibida(data);
+        renderInfoModoActor("palabras prohibidas", data, { animar: true });
+        socket.off(enviar_palabra);
+        socket.on(enviar_palabra, (payload) => {
+            recibir_palabra_prohibida(payload);
         });
     },
 
-    'tertulia': function (socket) {
+    'tertulia': function (data) {
         //activar_socket_feedback();
-        explicación.style.color = "blue";
-        explicación.innerHTML = "NIVEL TERTULIA";
-        palabra.innerHTML = "";
+        renderInfoModoActor("tertulia", data, { animar: true });
 
     },
 
-    'frase final': function (socket) {
+    'frase final': function (data) {
         //activar_socket_feedback();
-        explicación.style.color = "orange";
-        explicación.innerHTML = "NIVEL FRASE FINAL";
-        palabra.innerHTML = "";
+        renderInfoModoActor("frase final", data, { animar: true });
 
     },
 
     '': function (data) {
+        renderInfoModoActor("", data, { animar: false });
     }
 };
 
@@ -508,6 +895,8 @@ const LIMPIEZAS = {
     },
 
     "tertulia": function (data) { },
+
+    "frase final": function (data) { },
 
     "": function (data) { },
 };
@@ -571,12 +960,41 @@ const socket = io(serverUrl);
 socket.emit('pedir_nombre');
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
-socket.on('modo_actual', (data) => {
-    const siguiente_modo = data && data.modo_actual ? data.modo_actual : "";
+socket.on('modo_actual', (data = {}) => {
+    const payload = (data && typeof data === "object") ? data : {};
+    const traeModo = Object.prototype.hasOwnProperty.call(payload, "modo_actual");
+    const siguiente_modo = traeModo ? String(payload.modo_actual || "") : modo_actual;
     modo_actual = siguiente_modo;
+    actualizarDuracionNivelDesdeParametrosActor(payload);
+    actualizarCacheLetrasActor(payload);
+    if (modo_actual === "palabras bonus") {
+        actualizarCacheObjetivoActor("palabras bonus", payload);
+    } else if (modo_actual === "palabras prohibidas") {
+        actualizarCacheObjetivoActor("palabras prohibidas", payload);
+    }
     niveles_bloqueados = !siguiente_modo;
     setNivelesDesactivados(!siguiente_modo);
     actualizarNiveles(modo_actual);
+    renderInfoModoActor(modo_actual, payload, { animar: false });
+    if (modo_actual) {
+        iniciarProgresoNivelBarraActor();
+    } else {
+        detenerProgresoNivelBarraActor(true);
+        reiniciarProgresoFraseFinalActor();
+    }
+});
+
+socket.on("temp_modos", (data = {}) => {
+    if (!modo_actual || modo_actual === "frase final") return;
+    const payload = (data && typeof data === "object") ? data : {};
+    const modoEvento = typeof payload.modo_actual === "string" ? payload.modo_actual : "";
+    if (!modoEvento || modoEvento !== modo_actual) return;
+    const segundos = Number(payload.segundos_transcurridos);
+    if (!Number.isFinite(segundos) || segundos < 0) return;
+    const ms = Math.max(0, Math.min(DURACION_NIVEL_MS_ACTOR, Math.round(segundos * 1000)));
+    inicio_nivel_ts_actor = Date.now() - ms;
+    const pct = DURACION_NIVEL_MS_ACTOR > 0 ? (ms / DURACION_NIVEL_MS_ACTOR) * 100 : 0;
+    setProgresoNivelBarraActor(pct);
 });
 
 
@@ -631,13 +1049,28 @@ socket.on("count", data => {
     tiempo.innerHTML = data.count;
     const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosCount));
     actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+    if (Number.isFinite(segundosCount) && modo_actual === "frase final") {
+        actualizarProgresoFraseFinalActor(segundosCount);
+    }
     if (animarEntradaVida) {
         animacionEntradaVidaPendiente = false;
     }
-    if (data.count == "¡Tiempo!") {
+    const cuentaFinalizada = String(data.count || "").toLowerCase().includes("tiempo");
+    if (!cuentaFinalizada && modo_actual && !hayInfoNivelVisibleActor()) {
+        renderInfoModoActor(modo_actual, {}, { animar: false });
+    }
+    if (cuentaFinalizada) {
         setPendienteAnimacionEntradaBarraVida(false);
         cancelarAnimacionEntradaBarraVida(tiempo);
-        confetti_aux();
+        detenerProgresoNivelBarraActor(false);
+        const finDefinitivoPorTiempo = modo_actual === "frase final";
+        esperando_resurreccion_actor = !finDefinitivoPorTiempo;
+        partida_finalizada_actor = finDefinitivoPorTiempo;
+        if (finDefinitivoPorTiempo) {
+            confetti_aux();
+        } else {
+            stopConfetti();
+        }
 
         limpiezas();
 
@@ -647,19 +1080,53 @@ socket.on("count", data => {
         // Desactiva el blur de ambos textos.
         //texto2.classList.remove('textarea_blur');
         //texto1.classList.remove('textarea_blur');
-        // Variable booleana que dice si la ronda ha terminado o no.
-        terminado = true;
-        //texto1.innerText = eliminar_saltos_de_linea(texto1.innerText); //Eliminamos los saltos de línea del jugador 1 para alinear los textos.
-        //texto2.value = eliminar_saltos_de_linea(texto2.value); //Eliminamos los saltos de línea del jugador 2 para alinear los textos.
-
         texto1.style.height = "auto";
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
+    } else if (Number.isFinite(segundosCount) && segundosCount > 0 && !partida_finalizada_actor) {
+        esperando_resurreccion_actor = false;
     }
 }
 });
 
+socket.on("resucitar_control", (data = {}) => {
+    if (Number(data.player) !== Number(player)) return;
+    esperando_resurreccion_actor = false;
+    partida_finalizada_actor = false;
+    stopConfetti();
+    niveles_bloqueados = !modo_actual;
+    setNivelesDesactivados(!modo_actual);
+    actualizarNiveles(modo_actual);
+    renderInfoModoActor(modo_actual, {}, { animar: true });
+    if (modo_actual) {
+        iniciarProgresoNivelBarraActor();
+    }
+});
+
+socket.on("fin", (data) => {
+    const payload = (data && typeof data === "object") ? data : { player: data };
+    if (Number(payload.player) !== Number(player)) return;
+    if (partida_finalizada_actor) return;
+    esperando_resurreccion_actor = false;
+    partida_finalizada_actor = true;
+    tiempo.innerHTML = "¡Tiempo!";
+    actualizarBarraVida(tiempo, tiempo.innerHTML);
+    confetti_aux();
+    limpiezas();
+});
+
 // Inicia el juego.
 socket.on('inicio', data => {
+    const payloadInicio = (data && typeof data === "object") ? data : {};
+    const parametrosInicio = (payloadInicio.parametros && typeof payloadInicio.parametros === "object")
+        ? payloadInicio.parametros
+        : payloadInicio;
+    actualizarDuracionNivelDesdeParametrosActor(parametrosInicio || {});
+    esperando_resurreccion_actor = false;
+    partida_finalizada_actor = false;
+    stopConfetti();
+    limpiarCacheInfoNivelesActor();
+    detenerProgresoNivelBarraActor(true);
+    reiniciarProgresoFraseFinalActor();
     setPendienteAnimacionEntradaBarraVida(true);
     cancelarAnimacionEntradaBarraVida(tiempo);
     if (tiempo) {
@@ -668,8 +1135,8 @@ socket.on('inicio', data => {
     }
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">¿PREPARADOS?</span>'); 
-    preparados.appendTo($('.container'));
+    var preparados = $('<span id="countdown">¿PREPARADOS?</span>');
+    preparados.appendTo('body');
     setTimeout(() => {
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
     }, 20);
@@ -680,8 +1147,8 @@ socket.on('inicio', data => {
       
       $('#countdown').remove();
       
-      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>'); 
-      countdown.appendTo($('.container'));
+      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>');
+      countdown.appendTo('body');
   
       setTimeout(() => {
         if (counter > -1) {
@@ -701,6 +1168,15 @@ socket.on('inicio', data => {
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         listener_cuenta_atras = setTimeout(function(){
+            if (modo_actual) {
+                setPendienteAnimacionEntradaBarraVida(true);
+                cancelarAnimacionEntradaBarraVida(tiempo);
+                if (tiempo) {
+                    tiempo.style.display = DISPLAY_BARRA_VIDA;
+                    aplicarEstadoBarraVida(tiempo, 0);
+                }
+                return;
+            }
             texto1.innerText = "";
             actualizarPuntosMarcadorActor(0, false);
             tiempo.innerHTML = "";
@@ -724,6 +1200,11 @@ socket.on('inicio', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
+    esperando_resurreccion_actor = false;
+    partida_finalizada_actor = false;
+    limpiarCacheInfoNivelesActor();
+    detenerProgresoNivelBarraActor(true);
+    reiniciarProgresoFraseFinalActor();
     setPendienteAnimacionEntradaBarraVida(false);
     cancelarAnimacionEntradaBarraVida(tiempo);
 
@@ -762,13 +1243,42 @@ socket.on(nombre, data => {
 });
 
 socket.on('activar_modo', data => {
-    animacion_modo();
-    LIMPIEZAS[modo_actual](data);
-    modo_actual = data.modo_actual;
+    const payload = (data && typeof data === "object") ? data : {};
+    const modo_previo = modo_actual;
+    const limpiarModoPrevio = LIMPIEZAS[modo_previo];
+    if (typeof limpiarModoPrevio === "function") {
+        limpiarModoPrevio(payload);
+    }
+    const siguiente_modo = typeof payload.modo_actual === "string" ? payload.modo_actual : "";
+    modo_actual = siguiente_modo;
+    actualizarDuracionNivelDesdeParametrosActor(payload);
+    actualizarCacheLetrasActor(payload);
+    if (modo_actual === "palabras bonus") {
+        const objetivoActualizado = actualizarCacheObjetivoActor("palabras bonus", payload);
+        if (!objetivoActualizado && modo_previo !== "palabras bonus") {
+            cache_objetivo_bonus_actor = null;
+        }
+    } else if (modo_actual === "palabras prohibidas") {
+        const objetivoActualizado = actualizarCacheObjetivoActor("palabras prohibidas", payload);
+        if (!objetivoActualizado && modo_previo !== "palabras prohibidas") {
+            cache_objetivo_prohibidas_actor = null;
+        }
+    }
     niveles_bloqueados = false;
     setNivelesDesactivados(false);
     actualizarNiveles(modo_actual);
-    MODOS[modo_actual](data);
+    const ejecutarModo = MODOS[modo_actual];
+    if (typeof ejecutarModo === "function") {
+        ejecutarModo(payload);
+    } else {
+        renderInfoModoActor(modo_actual, payload, { animar: true });
+    }
+    if (modo_actual) {
+        iniciarProgresoNivelBarraActor();
+    } else {
+        detenerProgresoNivelBarraActor(true);
+        reiniciarProgresoFraseFinalActor();
+    }
 });
 
 function cambiar_color_puntuación() {
@@ -785,33 +1295,34 @@ function cambiar_color_puntuación() {
 socket.on("nueva letra", letra => {
     console.log("NUEVA LETRA")
     if(modo_actual == "letra prohibida"){
-        animacion_modo();
-        palabra.innerHTML = "LETRA PROHIBIDA: " + letra;
+        cache_letra_prohibida_actor = String(letra || "").trim();
+        renderInfoModoActor("letra prohibida", { letra_prohibida: cache_letra_prohibida_actor }, { animar: true });
         }
     else if(modo_actual == "letra bendita"){
-        animacion_modo();
-        palabra.innerHTML = "LETRA BENDITA: " + letra;
+        cache_letra_bendita_actor = String(letra || "").trim();
+        renderInfoModoActor("letra bendita", { letra_bendita: cache_letra_bendita_actor }, { animar: true });
     }
 });
 
 function recibir_palabra(data) {
-    animacion_modo();
-    palabra_actual = data.palabra_bonus[0];
-    palabra.innerHTML = data.palabras_var + " (⏱️+" + data.tiempo_palabras_bonus + " segs.)" ;
-    definicion.innerHTML = data.palabra_bonus[1];
+    actualizarCacheObjetivoActor("palabras bonus", data || {});
+    renderInfoModoActor("palabras bonus", data || {}, { animar: true });
 }
 
 function recibir_palabra_prohibida(data) {
-    animacion_modo();
-    palabra.innerHTML =  data.palabras_var + " (⏱️-" + data.tiempo_palabras_bonus + " segs.)";
-    definicion.innerHTML = data.palabra_bonus[1];
+    actualizarCacheObjetivoActor("palabras prohibidas", data || {});
+    renderInfoModoActor("palabras prohibidas", data || {}, { animar: true });
 }
 function limpiezas(){
     setPendienteAnimacionEntradaBarraVida(false);
     cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerProgresoNivelBarraActor(true);
+    reiniciarProgresoFraseFinalActor();
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timer);
 
+    limpiarEstiloNivelesActor();
+    setBarraNivelClaseActor("");
     palabra.innerHTML = "";
     explicación.innerHTML = "";
     definicion.innerHTML = "";
@@ -886,4 +1397,3 @@ function stopConfetti() {
     isConfettiRunning = false; // Deshabilita la ejecución de confetti
     confetti.reset(); // Detiene la animación de confetti
   }
-

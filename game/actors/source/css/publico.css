@@ -14,12 +14,23 @@
 
 html,
 body {
+    width: 100%;
+    min-height: 100%;
     display:flex;
     justify-content: center;
     align-items: center;
     scroll-behavior: smooth;
     color: white;
-    background-color: black;
+    background:
+      linear-gradient(90deg, rgba(0, 126, 186, 0.24) 0%, rgba(6, 10, 18, 0.58) 42%, rgba(6, 10, 18, 0.58) 58%, rgba(178, 38, 38, 0.24) 100%),
+      radial-gradient(circle at 14% 20%, rgba(0, 181, 255, 0.2), transparent 56%),
+      radial-gradient(circle at 86% 20%, rgba(255, 67, 67, 0.2), transparent 56%),
+      radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.08), transparent 62%),
+      #02040a;
+    background-color: #02040a;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
     font-family: "Retro-gaming";
 }
 
@@ -358,7 +369,7 @@ th{
 }
 
 #countdown {
-    position: absolute;
+    position: fixed;
     left: 50%;
     top: 50%;
     display: inline-block;
@@ -366,7 +377,9 @@ th{
     transition: 1s;
     font-size: 0vw;
     opacity: 100%;
-    color: white; 
+    color: white;
+    z-index: 2147483646;
+    pointer-events: none;
   }
 
 .explicación {
@@ -415,9 +428,27 @@ th{
     margin: 0 auto;    
 }
 
-/* En actores ocultamos los textos de nivel tipo "NIVEL ... / LETRA ...". */
-.jugador .info {
+body.page-actors .jugador .info {
+    display: block !important;
+    width: min(92vw, 1100px);
+    max-width: 100%;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+body.page-actors .jugador .info p {
+    margin: 0;
+}
+
+/* Se elimina la barra inferior de info de niveles en actores. */
+body.page-actors #definicion,
+body.page-actors .definicion {
     display: none !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
 }
 
 .letra-verde {
@@ -450,6 +481,420 @@ th{
     transition: color 180ms linear, text-shadow 180ms linear;
 }
 
+body.page-actors p[id^="explic"] {
+    width: min(92vw, 1100px);
+    max-width: 100%;
+    padding: 0 clamp(8px, 1vw, 16px);
+    box-sizing: border-box;
+    font-family: "Retro-gaming";
+    font-size: clamp(15px, 1.1vw, 26px);
+    line-height: 1.14;
+    text-transform: uppercase;
+    letter-spacing: clamp(0.03em, 0.06vw, 0.07em);
+    opacity: 0.95;
+    text-shadow:
+        0 0 0.5em color-mix(in srgb, currentColor, transparent 42%),
+        0 0 0.95em color-mix(in srgb, currentColor, transparent 68%);
+    text-wrap: balance;
+}
+
+body.page-actors p[id^="explic"] .explicacion-letra-destacada {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    width: 1.86em;
+    height: 1.86em;
+    margin-inline: 0.24em;
+    border-radius: 50%;
+    border: 0.16em solid currentColor;
+    background: rgba(4, 10, 17, 0.82);
+    color: #f6fbff;
+    font-family: "Retro-gaming";
+    font-size: 1.3em;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-shadow: 0.07em 0.07em 0 rgba(0, 0, 0, 0.6);
+    box-shadow:
+        0 0 0.18em rgba(0, 0, 0, 0.72),
+        0 0 0.65em color-mix(in srgb, currentColor, transparent 58%);
+    transform: translateY(0.06em);
+}
+
+body.page-actors #palabra {
+    --nivel-chip-a: #5dff86;
+    --nivel-chip-b: #2ebf5c;
+    --nivel-fill: #5dff86;
+    --nivel-chip-texto: #f3fbff;
+    --nivel-chip-glow: rgba(93, 255, 134, 0.3);
+    --nivel-neon-glow: color-mix(in srgb, var(--nivel-chip-a), white 12%);
+    --nivel-progress: 0%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: min(88vw, 1120px);
+    min-width: clamp(280px, 34vw, 700px);
+    min-height: clamp(38px, 3.2vw, 66px);
+    margin: clamp(4px, 0.45vw, 9px) auto 0;
+    padding: clamp(8px, 0.7vw, 14px) clamp(16px, 1.8vw, 30px);
+    border: clamp(2px, 0.2vw, 4px) solid color-mix(in srgb, var(--nivel-chip-a), white 28%);
+    border-radius: clamp(10px, 1vw, 20px);
+    color: var(--nivel-chip-texto);
+    font-family: "Retro-gaming";
+    font-size: clamp(22px, 2vw, 38px);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: clamp(0.04em, 0.12vw, 0.1em);
+    text-transform: uppercase;
+    text-shadow:
+        0 0 0.05em rgba(255, 255, 255, 0.88),
+        0 0 0.22em color-mix(in srgb, var(--nivel-neon-glow), transparent 50%),
+        0 0 0.5em color-mix(in srgb, var(--nivel-neon-glow), transparent 62%),
+        0.07em 0.07em 0 rgba(0, 0, 0, 0.58);
+    background:
+        linear-gradient(90deg, var(--nivel-fill), var(--nivel-fill))
+            0 0 / var(--nivel-progress) 100% no-repeat,
+        linear-gradient(180deg, rgba(7, 11, 18, 0.96) 0%, rgba(7, 11, 18, 0.96) 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 -0.22em 0 rgba(0, 0, 0, 0.28),
+        0 0.28em 0 rgba(0, 0, 0, 0.33),
+        0 0 clamp(10px, 1.4vw, 20px) var(--nivel-chip-glow);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition:
+        background-size 120ms linear,
+        box-shadow 180ms ease,
+        border-color 180ms ease;
+    animation: neonTextoNivelActor 1.9s ease-in-out infinite;
+}
+
+body.page-actors #palabra::after {
+    content: none;
+}
+
+body.page-actors #palabra:empty {
+    display: none;
+}
+
+body.page-actors #palabra.barra-nivel--bendita {
+    --nivel-chip-a: #5dff86;
+    --nivel-chip-b: #2ebf5c;
+    --nivel-fill: #5dff86;
+    --nivel-chip-glow: rgba(93, 255, 134, 0.3);
+}
+
+body.page-actors #palabra.barra-nivel--prohibida {
+    --nivel-chip-a: #ff7f8f;
+    --nivel-chip-b: #e53c59;
+    --nivel-fill: #ff6a7e;
+    --nivel-chip-glow: rgba(255, 103, 121, 0.32);
+}
+
+body.page-actors #palabra.barra-nivel--bonus {
+    --nivel-chip-a: #ffd978;
+    --nivel-chip-b: #ffb454;
+    --nivel-fill: #ffcf64;
+    --nivel-chip-glow: rgba(255, 201, 113, 0.3);
+}
+
+body.page-actors #palabra.barra-nivel--prohibidas {
+    --nivel-chip-a: #ff9be3;
+    --nivel-chip-b: #db65b8;
+    --nivel-fill: #ff8bda;
+    --nivel-chip-glow: rgba(255, 155, 227, 0.3);
+}
+
+body.page-actors #palabra.barra-nivel--tertulia {
+    --nivel-chip-a: #86d0ff;
+    --nivel-chip-b: #4d93f2;
+    --nivel-fill: #75c8ff;
+    --nivel-chip-glow: rgba(126, 197, 255, 0.31);
+}
+
+body.page-actors #palabra.barra-nivel--frase-final {
+    --nivel-chip-a: #ffc88f;
+    --nivel-chip-b: #f69d49;
+    --nivel-fill: #ffbb7a;
+    --nivel-chip-glow: rgba(255, 181, 113, 0.3);
+}
+
+@keyframes barridoBarraNivelActor {
+    0%,
+    60%,
+    100% {
+        transform: translateX(-130%);
+        opacity: 0;
+    }
+    72% {
+        opacity: 0.7;
+    }
+    92% {
+        transform: translateX(130%);
+        opacity: 0.15;
+    }
+}
+
+@keyframes neonTextoNivelActor {
+    0%,
+    100% {
+        text-shadow:
+            0 0 0.05em rgba(255, 255, 255, 0.86),
+            0 0 0.22em color-mix(in srgb, var(--nivel-neon-glow), transparent 50%),
+            0 0 0.48em color-mix(in srgb, var(--nivel-neon-glow), transparent 64%),
+            0.07em 0.07em 0 rgba(0, 0, 0, 0.56);
+    }
+    50% {
+        text-shadow:
+            0 0 0.07em rgba(255, 255, 255, 0.95),
+            0 0 0.28em color-mix(in srgb, var(--nivel-neon-glow), transparent 38%),
+            0 0 0.7em color-mix(in srgb, var(--nivel-neon-glow), transparent 52%),
+            0.07em 0.07em 0 rgba(0, 0, 0, 0.62);
+    }
+}
+
+body.page-actors #definicion.definicion-letras--bendita,
+body.page-actors #definicion.definicion-letras--prohibida,
+body.page-actors #definicion.definicion-letras--bonus,
+body.page-actors #definicion.definicion-letras--prohibidas,
+body.page-actors #definicion.definicion-letras--tertulia,
+body.page-actors #definicion.definicion-letras--frase-final {
+    --definicion-aro: #5dff86;
+    display: block;
+    box-sizing: border-box;
+    width: min(92vw, 1100px);
+    max-width: min(92vw, 1100px) !important;
+    min-height: clamp(26px, 2.3vw, 42px);
+    max-height: none !important;
+    margin: clamp(4px, 0.35vw, 8px) auto 0;
+    padding: clamp(6px, 0.5vw, 10px) clamp(12px, 1.2vw, 20px);
+    border: clamp(1px, 0.12vw, 3px) solid color-mix(in srgb, var(--definicion-aro), white 24%);
+    border-radius: clamp(8px, 0.8vw, 14px);
+    background: linear-gradient(
+        160deg,
+        rgba(7, 13, 22, 0.92) 0%,
+        color-mix(in srgb, var(--definicion-aro), #0a1222 84%) 100%
+    );
+    color: #f2f8ff;
+    font-family: "Retro-gaming";
+    font-size: clamp(15px, 1.12vw, 24px) !important;
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: clamp(0.02em, 0.04vw, 0.06em);
+    text-shadow:
+        0.06em 0.06em 0 rgba(0, 0, 0, 0.62),
+        0 0 0.3em color-mix(in srgb, var(--definicion-aro), transparent 74%);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    scrollbar-width: none;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 0 0.62em color-mix(in srgb, var(--definicion-aro), transparent 78%);
+}
+
+body.page-actors #definicion.definicion-letras--prohibida {
+    --definicion-aro: #ff6f84;
+}
+
+body.page-actors #definicion.definicion-letras--bonus {
+    --definicion-aro: #ffd86f;
+}
+
+body.page-actors #definicion.definicion-letras--prohibidas {
+    --definicion-aro: #ff9be3;
+}
+
+body.page-actors #definicion.definicion-letras--tertulia {
+    --definicion-aro: #86d0ff;
+}
+
+body.page-actors #definicion.definicion-letras--frase-final {
+    --definicion-aro: #ffb675;
+}
+
+body.page-actors #definicion.objetivo-nivel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: clamp(6px, 0.55vw, 10px);
+    box-sizing: border-box;
+    width: min(92vw, 1100px);
+    max-width: min(92vw, 1100px) !important;
+    min-height: auto;
+    max-height: none !important;
+    margin: clamp(4px, 0.35vw, 8px) auto 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #f2f8ff;
+    box-shadow: none;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-chip {
+    --objetivo-aro: #ffd86f;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: min(92vw, 1100px);
+    max-width: 100%;
+    min-height: clamp(34px, 3vw, 58px);
+    margin: 0 auto;
+    padding: clamp(6px, 0.55vw, 11px) clamp(14px, 1.6vw, 28px);
+    border: clamp(2px, 0.16vw, 4px) solid color-mix(in srgb, var(--objetivo-aro), white 26%);
+    border-radius: clamp(10px, 1vw, 18px);
+    background: linear-gradient(
+        110deg,
+        color-mix(in srgb, var(--objetivo-aro), white 24%) 0%,
+        color-mix(in srgb, var(--objetivo-aro), black 24%) 42%,
+        color-mix(in srgb, var(--objetivo-aro), black 6%) 100%
+    );
+    color: #f5fbff;
+    font-family: "Retro-gaming";
+    font-size: clamp(22px, 1.9vw, 36px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: clamp(0.02em, 0.08vw, 0.08em);
+    text-shadow:
+        0.06em 0.06em 0 rgba(0, 0, 0, 0.55),
+        0 0 0.4em color-mix(in srgb, var(--objetivo-aro), transparent 64%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+        inset 0 -0.2em 0 rgba(0, 0, 0, 0.25),
+        0 0.18em 0 rgba(0, 0, 0, 0.28),
+        0 0 0.95em color-mix(in srgb, var(--objetivo-aro), transparent 70%);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    isolation: isolate;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-chip::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(112deg, transparent 30%, rgba(255, 255, 255, 0.28) 52%, transparent 72%);
+    transform: translateX(-140%);
+    animation: barridoPalabraLetraActor 3.4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-chip--bonus {
+    --objetivo-aro: #ffd86f;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-chip--prohibidas {
+    --objetivo-aro: #ff9be3;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-chip--frase-final {
+    --objetivo-aro: #ffb675;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-def {
+    --objetivo-def-aro: #ffd86f;
+    display: block;
+    box-sizing: border-box;
+    width: min(92vw, 1100px);
+    max-width: min(92vw, 1100px);
+    min-height: clamp(26px, 2.3vw, 42px);
+    margin: 0 auto;
+    padding: clamp(6px, 0.5vw, 10px) clamp(12px, 1.2vw, 20px);
+    border: clamp(1px, 0.12vw, 3px) solid color-mix(in srgb, var(--objetivo-def-aro), white 24%);
+    border-radius: clamp(8px, 0.8vw, 14px);
+    background: linear-gradient(
+        160deg,
+        rgba(7, 13, 22, 0.92) 0%,
+        color-mix(in srgb, var(--objetivo-def-aro), #0a1222 84%) 100%
+    );
+    color: #f2f8ff;
+    font-family: "Retro-gaming";
+    font-size: clamp(15px, 1.12vw, 24px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: clamp(0.02em, 0.04vw, 0.06em);
+    text-shadow:
+        0.06em 0.06em 0 rgba(0, 0, 0, 0.62),
+        0 0 0.3em color-mix(in srgb, var(--objetivo-def-aro), transparent 74%);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 0 0.62em color-mix(in srgb, var(--objetivo-def-aro), transparent 78%);
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-def--bonus {
+    --objetivo-def-aro: #ffd86f;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-def--prohibidas {
+    --objetivo-def-aro: #ff9be3;
+}
+
+body.page-actors #definicion.objetivo-nivel .objetivo-def--frase-final {
+    --objetivo-def-aro: #ffb675;
+}
+
+body.page-actors #palabra .palabra-tiempo,
+body.page-actors #definicion .palabra-tiempo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.3em;
+    min-height: 1.2em;
+    padding: 0.12em 0.48em;
+    border-radius: 999px;
+    border: 0.08em solid color-mix(in srgb, currentColor, white 30%);
+    font-family: "Retro-gaming";
+    font-size: 0.62em;
+    line-height: 1;
+    letter-spacing: 0.03em;
+    color: #fff9df;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.32));
+    text-shadow: 0.05em 0.05em 0 rgba(0, 0, 0, 0.52);
+    box-shadow: inset 0 0 0.08em rgba(255, 255, 255, 0.35);
+}
+
+body.page-actors #palabra .palabra-tiempo--bendita,
+body.page-actors #definicion .palabra-tiempo--bendita {
+    color: #f2ffe3;
+    border-color: rgba(169, 255, 135, 0.72);
+}
+
+body.page-actors #palabra .palabra-tiempo--maldita,
+body.page-actors #definicion .palabra-tiempo--maldita {
+    color: #ffe8ec;
+    border-color: rgba(255, 134, 156, 0.72);
+}
+
+@keyframes barridoPalabraLetraActor {
+    0%,
+    60%,
+    100% {
+        transform: translateX(-140%);
+        opacity: 0;
+    }
+    74% {
+        opacity: 0.58;
+    }
+    92% {
+        transform: translateX(140%);
+        opacity: 0.12;
+    }
+}
+
 .niveles{
     width: min(1200px, 100vw);
     max-width: 100%;
@@ -471,19 +916,67 @@ th{
 .niveles-scroll{
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
+    overflow-x: auto;
     overflow-y: visible;
     scrollbar-width: none;
     padding-bottom: clamp(18px, 4vw, 32px);
     padding-top: clamp(26px, 6vw, 46px);
     box-sizing: border-box;
     overscroll-behavior-x: contain;
-    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    position: relative;
+    --niveles-fade-lados: clamp(24px, 8vw, 90px);
+    -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0,
+        rgba(0, 0, 0, 0.3) calc(var(--niveles-fade-lados) * 0.45),
+        #000 var(--niveles-fade-lados),
+        #000 calc(100% - var(--niveles-fade-lados)),
+        rgba(0, 0, 0, 0.3) calc(100% - (var(--niveles-fade-lados) * 0.45)),
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        90deg,
+        transparent 0,
+        rgba(0, 0, 0, 0.3) calc(var(--niveles-fade-lados) * 0.45),
+        #000 var(--niveles-fade-lados),
+        #000 calc(100% - var(--niveles-fade-lados)),
+        rgba(0, 0, 0, 0.3) calc(100% - (var(--niveles-fade-lados) * 0.45)),
+        transparent 100%
+    );
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
 }
 
 .niveles-scroll::-webkit-scrollbar{
     width: 0;
     height: 0;
+}
+
+@supports not ((-webkit-mask-image: linear-gradient(90deg, #000, #000)) or (mask-image: linear-gradient(90deg, #000, #000))) {
+    .niveles-scroll::before,
+    .niveles-scroll::after{
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: var(--niveles-fade-lados);
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .niveles-scroll::before{
+        left: 0;
+        background: linear-gradient(90deg, rgba(2, 4, 10, 0.99), rgba(2, 4, 10, 0));
+    }
+
+    .niveles-scroll::after{
+        right: 0;
+        background: linear-gradient(270deg, rgba(2, 4, 10, 0.99), rgba(2, 4, 10, 0));
+    }
 }
 
 .niveles-linea{

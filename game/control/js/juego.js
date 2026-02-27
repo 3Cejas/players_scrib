@@ -20,6 +20,7 @@ let vista_espectador_modo = "partida";
 let temporizador_gigante_activo = false;
 let regalo_musas_enviado = false;
 let banderas_musas_activas = false;
+let borrar_texto_en_inicio_activo = false;
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "flex";
@@ -243,6 +244,20 @@ function normalizarFraseFinal(valor) {
     return texto;
 }
 
+function actualizarBotonBorrarTextoGuardadoControl() {
+    const boton = document.getElementById("boton_borrar_texto_guardado");
+    if (!boton) return;
+    const activo = borrar_texto_en_inicio_activo === true;
+    boton.dataset.active = activo ? "1" : "0";
+    boton.classList.toggle("is-active", activo);
+    boton.innerHTML = activo
+        ? "\u{1F9F9} BORRAR TEXTO: ON"
+        : "\u{1F9F9} BORRAR TEXTO: OFF";
+    boton.title = activo
+        ? "La siguiente partida arrancara sin texto guardado."
+        : "La siguiente partida recuperara el ultimo texto guardado.";
+}
+
 function temp() {
     console.log(frase_final_j1.value)
     const fraseJ1 = normalizarFraseFinal(frase_final_j1.value);
@@ -304,7 +319,27 @@ function temp() {
     }
     rellenarListaModos();
     actualizarVariables();
-    socket.emit('inicio', {count, borrar_texto : false, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    const borrarTextoEnInicio = borrar_texto_en_inicio_activo === true;
+    if (borrarTextoEnInicio) {
+        texto_guardado1 = "";
+        texto_guardado2 = "";
+        const textoPanel1 = document.getElementById("texto");
+        const textoPanel2 = document.getElementById("texto1");
+        if (textoPanel1) {
+            textoPanel1.innerHTML = "";
+            textoPanel1.style.height = "40";
+            textoPanel1.style.height = textoPanel1.scrollHeight + "px";
+        }
+        if (textoPanel2) {
+            textoPanel2.innerHTML = "";
+            textoPanel2.style.height = "40";
+            textoPanel2.style.height = textoPanel2.scrollHeight + "px";
+        }
+        if (window.actualizarBotonesTeleprompterCarga) {
+            window.actualizarBotonesTeleprompterCarga();
+        }
+    }
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
   
@@ -475,9 +510,8 @@ function limpiar() {
 };
 
 function borrar_texto_guardado() {
-    texto_guardado1 = "";
-    texto_guardado2 = "";
-    socket.emit('borrar_texto_guardado');
+    borrar_texto_en_inicio_activo = !borrar_texto_en_inicio_activo;
+    actualizarBotonBorrarTextoGuardadoControl();
 }
 
 function activar_temporizador_gigante() {
@@ -493,11 +527,21 @@ function activar_temporizador_gigante() {
 function fin(player) {
     if(player == 1){
         fin_j1 = true
-        final(1);
+        socket.emit('fin_de_control', {
+            player: 1,
+            forzar_fin: true,
+            suprimir_confetti_espectador: true
+        });
+        final(1, { emitirConteoFinal: false });
     }
     else if(player == 2){
         fin_j2 = true
-        final(2);
+        socket.emit('fin_de_control', {
+            player: 2,
+            forzar_fin: true,
+            suprimir_confetti_espectador: true
+        });
+        final(2, { emitirConteoFinal: false });
     }
     if(fin_j1 && fin_j2){
         fin_j1 = false;
@@ -505,7 +549,6 @@ function fin(player) {
         juego_iniciado = false;
 
     }
-    socket.emit('fin_de_control', player);
 };
 
 function cambiar_vista() {
@@ -571,24 +614,81 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
 function mostrarCreditosEspectador() {
     const creditos = obtenerCreditosDesdePanelControl();
     creditos_estado_control = { ...creditos };
-    vista_espectador_modo = "creditos";
-    actualizarBotonesVistaEspectadorControl();
     if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        vista_espectador_modo = vista_espectador_modo === "creditos" ? "partida" : "creditos";
+        actualizarBotonesVistaEspectadorControl();
         return;
     }
+
+    if (vista_espectador_modo === "creditos") {
+        vista_espectador_modo = "partida";
+        actualizarBotonesVistaEspectadorControl();
+        socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
+        return;
+    }
+
+    vista_espectador_modo = "creditos";
+    actualizarBotonesVistaEspectadorControl();
     socket.emit("creditos_actualizar", { creditos });
     socket.emit("mostrar_creditos_espectador", { creditos });
 }
 
 const ORDEN_SOLICITUD_CALENTAMIENTO = ["lugares", "acciones", "frase_final"];
-const SOLICITUD_CALENTAMIENTO_POR_DEFECTO = ORDEN_SOLICITUD_CALENTAMIENTO[0];
-const TIPOS_SOLICITUD_CALENTAMIENTO = new Set(ORDEN_SOLICITUD_CALENTAMIENTO);
+const SOLICITUD_CALENTAMIENTO_NINGUNA = "ninguna";
+const SOLICITUD_CALENTAMIENTO_POR_DEFECTO = SOLICITUD_CALENTAMIENTO_NINGUNA;
+const TIPOS_SOLICITUD_CALENTAMIENTO = new Set([
+    SOLICITUD_CALENTAMIENTO_NINGUNA,
+    ...ORDEN_SOLICITUD_CALENTAMIENTO
+]);
 const ETIQUETAS_SOLICITUD_CALENTAMIENTO = {
+    ninguna: "SIN DETONADOR ACTIVO",
     lugares: "LUGARES",
     acciones: "ACCIONES",
     frase_final: "PALABRAS PARA FRASE FINAL"
 };
 let solicitud_calentamiento_actual = SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
+const estado_autofill_frase_final_calentamiento = {
+    1: { id: "", palabra: "" },
+    2: { id: "", palabra: "" }
+};
+
+function normalizarFinalCalentamientoControl(entrada) {
+    if (!entrada || typeof entrada !== "object") return null;
+    const palabra = normalizarFraseFinal(entrada.palabra);
+    if (!palabra) return null;
+    return {
+        id: typeof entrada.id === "string" ? entrada.id.trim() : "",
+        palabra
+    };
+}
+
+function sincronizarFraseFinalControlDesdeCalentamiento(equipo, dataEquipo = {}) {
+    const input = equipo === 1 ? frase_final_j1 : frase_final_j2;
+    if (!input) return;
+    const estadoPrevio = estado_autofill_frase_final_calentamiento[equipo] || { id: "", palabra: "" };
+    const finalCalentamiento = normalizarFinalCalentamientoControl(dataEquipo && dataEquipo.final);
+    if (!finalCalentamiento) {
+        estadoPrevio.id = "";
+        estadoPrevio.palabra = "";
+        estado_autofill_frase_final_calentamiento[equipo] = estadoPrevio;
+        return;
+    }
+
+    const idServidor = finalCalentamiento.id || "";
+    const cambioFinalServidor = idServidor
+        ? idServidor !== estadoPrevio.id
+        : finalCalentamiento.palabra !== estadoPrevio.palabra;
+    const valorActualInput = normalizarFraseFinal(input.value);
+    const debeAplicar = cambioFinalServidor || !valorActualInput || valorActualInput === estadoPrevio.palabra;
+
+    if (debeAplicar) {
+        input.value = finalCalentamiento.palabra;
+    }
+
+    estadoPrevio.id = idServidor;
+    estadoPrevio.palabra = finalCalentamiento.palabra;
+    estado_autofill_frase_final_calentamiento[equipo] = estadoPrevio;
+}
 
 function actualizarSolicitudCalentamientoControl(payload = {}) {
     const tipoRecibido = (payload && typeof payload.solicitud === "string")
@@ -607,7 +707,7 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
     const estado = document.getElementById("calentamiento_solicitud_actual");
     if (estado) {
         const etiqueta = ETIQUETAS_SOLICITUD_CALENTAMIENTO[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO[SOLICITUD_CALENTAMIENTO_POR_DEFECTO];
-        estado.textContent = `CONSIGNA ACTUAL: ${etiqueta}`;
+        estado.textContent = `DETONADOR ACTUAL: ${etiqueta}`;
     }
 
     const flujo = document.getElementById("calentamiento_flujo_estado");
@@ -628,13 +728,27 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
         const estadoJ2 = formatear(equipos[2] || {});
         flujo.textContent = `J1: ${estadoJ1} | J2: ${estadoJ2}`;
     }
+
+    if (payload && payload.equipos) {
+        const equipos = payload.equipos || {};
+        sincronizarFraseFinalControlDesdeCalentamiento(1, equipos[1] || {});
+        sincronizarFraseFinalControlDesdeCalentamiento(2, equipos[2] || {});
+    }
 }
 
 function pedir_solicitud_calentamiento(tipo) {
-    const destino = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipo) ? tipo : SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
+    const tipoSolicitado = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipo) ? tipo : SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
+    const destino = (
+        tipoSolicitado !== SOLICITUD_CALENTAMIENTO_POR_DEFECTO &&
+        tipoSolicitado === solicitud_calentamiento_actual
+    )
+        ? SOLICITUD_CALENTAMIENTO_POR_DEFECTO
+        : tipoSolicitado;
     socket.emit("calentamiento_solicitud", { tipo: destino });
     actualizarSolicitudCalentamientoControl({ tipo: destino });
 }
+
+actualizarSolicitudCalentamientoControl({ tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO });
 
 let parametros_visibles = false;
 let creditos_visibles = false;
@@ -668,18 +782,18 @@ const CAMPOS_CREDITOS_CONTROL = [
 ];
 const CAMPO_AGRADECIMIENTOS_CONTROL = ["agradecimientos", "credito_agradecimientos", CREDITOS_AGRADECIMIENTOS_MAX];
 const ESTADO_CREDITOS_POR_DEFECTO = {
-    escritxr_rojo: "",
-    escritxr_azul: "",
-    interprete_azul_1: "",
-    interprete_azul_2: "",
-    interprete_rojo_1: "",
-    interprete_rojo_2: "",
-    programacion: "",
-    dramaturgia: "",
-    iluminacion: "",
-    musica: "",
-    voz_off: "",
-    agradecimientos: ""
+    escritxr_rojo: "ÁNGELA BUENO",
+    escritxr_azul: "MIRIAM DEL VALLE",
+    interprete_azul_1: "PAULA CM",
+    interprete_azul_2: "DIEGO VALVERDE",
+    interprete_rojo_1: "ANA SEMPERE",
+    interprete_rojo_2: "PABLO PINEÑO",
+    programacion: "DAVID VIÑAS",
+    dramaturgia: "ÁNGELA BUENO",
+    iluminacion: "TERESA TIMPER",
+    musica: "ARNY RAMÍREZ",
+    voz_off: "NINACHASKA ZL",
+    agradecimientos: "SALA EXLÍMITE\nJUAN CEACERO"
 };
 let creditos_estado_control = { ...ESTADO_CREDITOS_POR_DEFECTO };
 
@@ -1353,6 +1467,7 @@ if (typeof window !== "undefined") {
     window.addEventListener("load", () => {
         actualizarBotonesPanelSuperiorControl();
         actualizarBotonesVistaEspectadorControl();
+        actualizarBotonBorrarTextoGuardadoControl();
         inicializarPanelCreditosControl();
         aplicarCreditosEnPanelControl(creditos_estado_control);
     });
@@ -1599,7 +1714,8 @@ const extractData = (tableId, mapper) => {
     }
   };
 
-function final(player){
+function final(player, opciones = {}){
+    const emitirConteoFinal = !opciones || opciones.emitirConteoFinal !== false;
     if(player == 1){
         setPendienteAnimacionEntradaBarraVida(1, false);
         cancelarAnimacionEntradaBarraVida(tiempo);
@@ -1611,7 +1727,9 @@ function final(player){
         texto_guardado1 = texto1.innerText;
         terminado = true;
         console.log("texto1", texto_guardado1)
-        socket.emit('count', {count, player});
+        if (emitirConteoFinal) {
+            socket.emit('count', {count, player});
+        }
     }
     else{
         setPendienteAnimacionEntradaBarraVida(2, false);
@@ -1624,7 +1742,9 @@ function final(player){
         terminado1 = true;
         texto_guardado2 = texto2.innerText;
         console.log("texto2", texto_guardado2)
-        socket.emit('count', {count : count1, player:2});
+        if (emitirConteoFinal) {
+            socket.emit('count', {count : count1, player:2});
+        }
     }
 
     if(terminado && terminado1){
@@ -1649,4 +1769,3 @@ function frase_final(player){
         frase_final_j2.value = fraseTema;
     }
 }
-

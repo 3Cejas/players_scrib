@@ -353,6 +353,22 @@ const resetearOscuridadGameOverEspectador = () => {
     actualizarOscuridadGameOverEspectador(2, false);
 };
 
+const actualizarClaseResucitarActivaEspectador = () => {
+    if (!document.body) return;
+    const lado1Activo = Boolean(
+        resucitarMini[1] &&
+        resucitarMini[1].root &&
+        resucitarMini[1].root.classList.contains("activa")
+    );
+    const lado2Activo = Boolean(
+        resucitarMini[2] &&
+        resucitarMini[2].root &&
+        resucitarMini[2].root.classList.contains("activa")
+    );
+    document.body.classList.toggle("resucitar-activo-lado-1", lado1Activo);
+    document.body.classList.toggle("resucitar-activo-lado-2", lado2Activo);
+};
+
 const ocultarTodosResucitarMini = () => {
     ocultarResucitarMini(1);
     ocultarResucitarMini(2);
@@ -364,6 +380,7 @@ const ocultarResucitarMini = (playerId) => {
     ui.root.classList.remove("activa");
     ui.root.style.display = "none";
     actualizarOscuridadGameOverEspectador(playerId, false);
+    actualizarClaseResucitarActivaEspectador();
     programarAjusteViewportEspectador();
 };
 
@@ -403,9 +420,16 @@ const actualizarResucitarMini = (data) => {
     }
     ui.root.classList.add("activa");
     ui.root.style.display = "grid";
+    if (playerId === 1) {
+        cierre_definitivo_j1 = false;
+    } else if (playerId === 2) {
+        cierre_definitivo_j2 = false;
+    }
+    setIndicadorGanadorMarcadorEspectador(playerId, false);
     if (actualizarOscuridadGameOverEspectador(playerId, true)) {
         reproducirEfectoVidaEspectador(AUDIO_GAME_OVER_ESPECTADOR);
     }
+    actualizarClaseResucitarActivaEspectador();
     if (ui.mainPanel) ui.mainPanel.style.display = menu === "main" ? "block" : "none";
     if (ui.quantityPanel) ui.quantityPanel.style.display = menu === "quantity" ? "block" : "none";
 
@@ -512,6 +536,17 @@ function esInspiracionDesdeMusa(payload) {
     return origen === "musa" || origen === "musa_enemiga";
 }
 
+function limpiarSugerenciaMusaModoLetrasEspectador(escritoraId, payload = {}) {
+    const modoEsLetras = modo_actual === "letra bendita" || modo_actual === "letra prohibida";
+    if (!modoEsLetras) return;
+    const tipo = typeof payload?.tipo === "string" ? payload.tipo.trim().toLowerCase() : "";
+    if (tipo !== "inspiracion") return;
+    const id = Number(escritoraId);
+    const nodoDefinicion = id === 1 ? definicion2 : (id === 2 ? definicion3 : null);
+    if (!nodoDefinicion) return;
+    actualizarDefinicionConVisibilidad(nodoDefinicion, "", false);
+}
+
 function extraerDeltaFeedbackTiempo(feedbackTexto) {
     const texto = String(feedbackTexto ?? "").trim();
     if (!texto) return 0;
@@ -610,7 +645,13 @@ function obtenerClaseFeedbackTiempoFlotante(payload = {}) {
 }
 
 function mostrarFeedbackFlotanteEspectador(playerId, texto, opciones = {}) {
-    if (vista_espectador_modo_resuelta === "nube_inspiracion") return;
+    if (
+        vista_espectador_modo_resuelta === "stats" ||
+        vista_espectador_modo_resuelta === "nube_inspiracion" ||
+        vista_espectador_modo_resuelta === "creditos"
+    ) {
+        return;
+    }
     const id = Number(playerId);
     if (id !== 1 && id !== 2) return;
     const contenedor = feedback_tiempo_flotante_espectador[id];
@@ -737,18 +778,34 @@ const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
 const MAX_NOMBRE_CURSOR_CALENTAMIENTO = 26;
 const ORDEN_SOLICITUD_CALENTAMIENTO_VISTA = ["lugares", "acciones", "frase_final"];
-const SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO = ORDEN_SOLICITUD_CALENTAMIENTO_VISTA[0];
-const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set(ORDEN_SOLICITUD_CALENTAMIENTO_VISTA);
+const SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA = "ninguna";
+const SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO = SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA;
+const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set([
+    SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA,
+    ...ORDEN_SOLICITUD_CALENTAMIENTO_VISTA
+]);
 const ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA = {
+    ninguna: "NINGUNO",
     lugares: "LUGARES",
     acciones: "ACCIONES",
     frase_final: "FRASE FINAL"
 };
+const ETIQUETAS_DETONADORES_HISTORIAL_VISTA = {
+    lugares: "LUGAR",
+    acciones: "ACCIÓN",
+    frase_final: "FRASE FINAL"
+};
+const MAX_TEXTO_DETONADOR_HISTORIAL = 48;
+const crearHistorialDetonadoresBase = () => (
+    ORDEN_SOLICITUD_CALENTAMIENTO_VISTA.map((tipo) => ({
+        tipo,
+        titulo: ETIQUETAS_DETONADORES_HISTORIAL_VISTA[tipo] || tipo.toUpperCase(),
+        valor: "NINGUNO"
+    }))
+);
 let solicitud_calentamiento_espectador = SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO;
-let historial_detonadores_espectador = [];
-let contador_casos_detonador_espectador = 0;
+let historial_detonadores_espectador = crearHistorialDetonadoresBase();
 let calentamiento_activo_previo_espectador = false;
-const MAX_CASOS_DETONADOR_HISTORIAL = 8;
 let finales_calentamiento_previos = { 1: "", 2: "" };
 let cursores_calentamiento = {
     1: { x: 50, y: 50, visible: false },
@@ -759,6 +816,73 @@ let stats_slide_index = 0;
 let stats_slide_count = 0;
 let intervalo_stats_slides = null;
 const INTERVALO_STATS_SLIDE_MS = 6500;
+const STATS_LAYOUT_HEATMAP = [
+    [
+        { code: "Backquote", label: "º\nª" },
+        { code: "Digit1", label: "1\n!" },
+        { code: "Digit2", label: "2\n\"" },
+        { code: "Digit3", label: "3\n#" },
+        { code: "Digit4", label: "4\n$" },
+        { code: "Digit5", label: "5\n%" },
+        { code: "Digit6", label: "6\n&" },
+        { code: "Digit7", label: "7\n/" },
+        { code: "Digit8", label: "8\n(" },
+        { code: "Digit9", label: "9\n)" },
+        { code: "Digit0", label: "0\n=" },
+        { code: "Minus", label: "¿\n?" },
+        { code: "Equal", label: "¡\n!" },
+        { code: "Backspace", label: "←", ancho: 2.4 }
+    ],
+    [
+        { code: "Tab", label: "Tab", ancho: 1.6 },
+        { code: "KeyQ", label: "Q" }, { code: "KeyW", label: "W" }, { code: "KeyE", label: "E" }, { code: "KeyR", label: "R" },
+        { code: "KeyT", label: "T" }, { code: "KeyY", label: "Y" }, { code: "KeyU", label: "U" }, { code: "KeyI", label: "I" },
+        { code: "KeyO", label: "O" }, { code: "KeyP", label: "P" },
+        { code: "BracketLeft", label: "´\n+" }, { code: "BracketRight", label: "`\n^" },
+        { code: "Backslash", label: "\\", ancho: 1.6 }
+    ],
+    [
+        { code: "CapsLock", label: "Caps", ancho: 1.9 },
+        { code: "KeyA", label: "A" }, { code: "KeyS", label: "S" }, { code: "KeyD", label: "D" }, { code: "KeyF", label: "F" },
+        { code: "KeyG", label: "G" }, { code: "KeyH", label: "H" }, { code: "KeyJ", label: "J" }, { code: "KeyK", label: "K" },
+        { code: "KeyL", label: "L" }, { code: "Semicolon", label: "Ñ" },
+        { code: "Quote", label: "¨\n´" },
+        { code: "Enter", label: "Enter", ancho: 2.5 }
+    ],
+    [
+        { code: "ShiftLeft", label: "Shift", ancho: 2.6 },
+        { code: "IntlBackslash", label: "<\n>" },
+        { code: "KeyZ", label: "Z" }, { code: "KeyX", label: "X" }, { code: "KeyC", label: "C" }, { code: "KeyV", label: "V" },
+        { code: "KeyB", label: "B" }, { code: "KeyN", label: "N" }, { code: "KeyM", label: "M" },
+        { code: "Comma", label: ",\n;" }, { code: "Period", label: ".\n:" }, { code: "Slash", label: "¿\n?" },
+        { code: "ShiftRight", label: "Shift", ancho: 3 }
+    ],
+    [
+        { code: "ControlLeft", label: "Ctrl", ancho: 1.5 },
+        { code: "MetaLeft", label: "Win", ancho: 1.5 },
+        { code: "AltLeft", label: "Alt", ancho: 1.5 },
+        { code: "Space", label: "Espacio", ancho: 6.4 },
+        { code: "AltRight", label: "Alt", ancho: 1.5 },
+        { code: "MetaRight", label: "Win", ancho: 1.5 },
+        { code: "ContextMenu", label: "Menu", ancho: 1.5 },
+        { code: "ControlRight", label: "Ctrl", ancho: 1.5 }
+    ]
+];
+const STATS_HEATMAP_LABELS = (() => {
+    const mapa = new Map();
+    STATS_LAYOUT_HEATMAP.forEach((fila) => {
+        fila.forEach((tecla) => {
+            if (!tecla || tecla.spacer || !tecla.code) return;
+            mapa.set(tecla.code, tecla.label || tecla.code);
+        });
+    });
+    return mapa;
+})();
+const STATS_HISTORIAL_VIDA_MAX = 320;
+const STATS_HISTORIAL_VIDA_VENTANA_MS = 1000 * 60 * 15;
+const STATS_REINICIO_SUBIDA_BRUSCA_SEGUNDOS = 15;
+const STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS = 8000;
+const stats_historial_vida_espectador = { 1: [], 2: [] };
 let estado_nube_inspiracion_espectador = null;
 const posiciones_nube_inspiracion = new Map();
 const palabras_nube_inspiracion = new Map();
@@ -773,31 +897,31 @@ const PERMITIR_SCROLL_ESPECTADOR = false;
 let raf_ajuste_viewport_espectador = null;
 let resize_observer_fit_viewport_espectador = null;
 const CREDITOS_CAMPOS_ORDEN = [
-    ["ESCRITXR ROJO", "escritxr_rojo"],
-    ["ESCRITXR AZUL", "escritxr_azul"],
-    ["INT\u00C9RPRETE AZUL 1", "interprete_azul_1"],
-    ["INT\u00C9RPRETE AZUL 2", "interprete_azul_2"],
-    ["INT\u00C9RPRETE ROJO 1", "interprete_rojo_1"],
-    ["INT\u00C9RPRETE ROJO 2", "interprete_rojo_2"],
-    ["PROGRAMACI\u00D3N", "programacion"],
-    ["DRAMATURGIA", "dramaturgia"],
-    ["ILUMINACI\u00D3N", "iluminacion"],
-    ["M\u00DASICA", "musica"],
-    ["VOZ EN OFF", "voz_off"]
+    ["❤️ ESCRITORA", "escritxr_rojo"],
+    ["❤️ INTÉRPRETE", "interprete_rojo_1"],
+    ["❤️ INTÉRPRETE", "interprete_rojo_2"],
+    ["💙 ESCRITOR", "escritxr_azul"],
+    ["💙 INTÉRPRETE", "interprete_azul_1"],
+    ["💙 INTÉRPRETE", "interprete_azul_2"],
+    ["👾 PROGRAMACIÓN", "programacion"],
+    ["✍️ DRAMATURGIA", "dramaturgia"],
+    ["💡 ILUMINACIÓN", "iluminacion"],
+    ["🎹 MÚSICA", "musica"],
+    ["🗣️ VOZ EN OFF", "voz_off"]
 ];
 const ESTADO_CREDITOS_ESPECTADOR_POR_DEFECTO = {
-    escritxr_rojo: "",
-    escritxr_azul: "",
-    interprete_azul_1: "",
-    interprete_azul_2: "",
-    interprete_rojo_1: "",
-    interprete_rojo_2: "",
-    programacion: "",
-    dramaturgia: "",
-    iluminacion: "",
-    musica: "",
-    voz_off: "",
-    agradecimientos: ""
+    escritxr_rojo: "ÁNGELA BUENO",
+    escritxr_azul: "MIRIAM DEL VALLE",
+    interprete_azul_1: "PAULA CM",
+    interprete_azul_2: "DIEGO VALVERDE",
+    interprete_rojo_1: "ANA SEMPERE",
+    interprete_rojo_2: "PABLO PINEÑO",
+    programacion: "DAVID VIÑAS",
+    dramaturgia: "ÁNGELA BUENO",
+    iluminacion: "TERESA TIMPER",
+    musica: "ARNY RAMÍREZ",
+    voz_off: "NINACHASKA ZL",
+    agradecimientos: "SALA EXLÍMITE\nJUAN CEACERO"
 };
 let estado_creditos_espectador = {
     creditos: { ...ESTADO_CREDITOS_ESPECTADOR_POR_DEFECTO },
@@ -806,6 +930,12 @@ let estado_creditos_espectador = {
 };
 let creditos_animacion_raf = null;
 let creditos_animacion_inicio = null;
+let creditos_animacion_y_inicio = 0;
+let creditos_animacion_y_fin = 0;
+let creditos_animacion_duracion_ms = 0;
+const CREDITOS_SCROLL_VELOCIDAD_PX_S = 34;
+const CREDITOS_SCROLL_DURACION_MIN_MS = 28000;
+const CREDITOS_SCROLL_MARGEN_SALIDA_PX = 100;
 
 const resetAjusteViewportEspectador = () => {
     if (!spectator_fit_root) return;
@@ -934,8 +1064,11 @@ const detenerAnimacionCreditosEspectador = (reiniciar = true) => {
         creditos_animacion_raf = null;
     }
     creditos_animacion_inicio = null;
+    creditos_animacion_y_inicio = 0;
+    creditos_animacion_y_fin = 0;
+    creditos_animacion_duracion_ms = 0;
     if (reiniciar && creditos_track) {
-        creditos_track.style.transform = "translate3d(-50%, -120%, 0)";
+        creditos_track.style.transform = "translate3d(-50%, 140vh, 0)";
         creditos_track.style.opacity = "1";
     }
     if (creditos_espectador) {
@@ -948,61 +1081,84 @@ const renderizarCreditosEspectador = () => {
         ? estado_creditos_espectador.creditos
         : ESTADO_CREDITOS_ESPECTADOR_POR_DEFECTO;
     const lineas = CREDITOS_CAMPOS_ORDEN.map(([label, campo]) => {
-        const valor = data[campo] ? data[campo] : "-";
-        return `<div class="credito-linea"><span class="credito-label">${escapeHtml(label)}</span><span class="credito-valor">${escapeHtml(valor)}</span></div>`;
+        const valor = data[campo] ? data[campo] : "—";
+        return `<div class="credito-linea"><span class="credito-label">${escapeHtml(label)}</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">${escapeHtml(valor)}</span></div>`;
     }).join("");
     const agradecimientos = data.agradecimientos
         ? escapeHtml(data.agradecimientos).replace(/\n/g, "<br>")
         : "Agradecimientos pendientes.";
     creditos_content.innerHTML = `
         <div class="creditos-bloque">
-            <h2 class="creditos-titulo">CR&Eacute;DITOS</h2>
             <div class="creditos-lineas">${lineas}</div>
         </div>
         <div class="creditos-bloque creditos-bloque--agradecimientos">
-            <h3 class="creditos-subtitulo">AGRADECIMIENTOS</h3>
+            <h3 class="creditos-subtitulo">AGRADECIMIENTOS:</h3>
             <p class="creditos-agradecimientos">${agradecimientos}</p>
         </div>
-        <p class="creditos-cierre">UNA PRODUCCI&Oacute;N DE SUTURA TEATRO</p>
+        <p class="creditos-cierre">Una producción de SUTURA TEATRO.</p>
     `;
 };
-const iniciarAnimacionCreditosEspectador = () => {
+const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     if (!creditos_espectador || !creditos_track) return;
+    if (!forzar && (creditos_animacion_raf || creditos_animacion_inicio !== null)) {
+        return;
+    }
     renderizarCreditosEspectador();
     detenerAnimacionCreditosEspectador(false);
     creditos_espectador.classList.remove("creditos-finalizados");
-
-    const viewportAlto = Math.max(window.innerHeight || 0, 1);
-    const alturaTrack = Math.max(creditos_track.scrollHeight || creditos_track.offsetHeight || 0, 320);
-    const inicioY = -(alturaTrack + 80);
-    const finY = viewportAlto + 80;
-    const recorrido = finY - inicioY;
-    const duracionMs = Math.max(26000, (recorrido / 24) * 1000);
-    creditos_track.style.transform = `translate3d(-50%, ${inicioY.toFixed(2)}px, 0)`;
+    resetearOscuridadGameOverEspectador();
     creditos_track.style.opacity = "1";
-    creditos_animacion_inicio = null;
+    const altoViewportInicial = Math.max(window.innerHeight || 0, 1);
+    const yInicioVisible = Math.round(altoViewportInicial * 0.82);
+    creditos_track.style.transform = `translate3d(-50%, ${yInicioVisible}px, 0)`;
+    requestAnimationFrame(() => {
+        if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") return;
+        const altoViewport = Math.max(window.innerHeight || 0, 1);
+        const altoTrack = Math.max(
+            Math.ceil(creditos_track.scrollHeight || 0),
+            Math.ceil(creditos_track.getBoundingClientRect().height || 0),
+            1
+        );
+        const yInicio = yInicioVisible;
+        const yFin = -(altoTrack + CREDITOS_SCROLL_MARGEN_SALIDA_PX);
+        const distancia = Math.max(1, yInicio - yFin);
+        const duracionMs = Math.max(
+            CREDITOS_SCROLL_DURACION_MIN_MS,
+            Math.round((distancia / CREDITOS_SCROLL_VELOCIDAD_PX_S) * 1000)
+        );
 
-    const loop = (ts) => {
-        if (vista_espectador_modo_resuelta !== "creditos") {
-            detenerAnimacionCreditosEspectador();
-            return;
-        }
-        if (creditos_animacion_inicio === null) {
-            creditos_animacion_inicio = ts;
-        }
-        const progreso = Math.min((ts - creditos_animacion_inicio) / duracionMs, 1);
-        const y = inicioY + (recorrido * progreso);
-        creditos_track.style.transform = `translate3d(-50%, ${y.toFixed(2)}px, 0)`;
+        creditos_animacion_y_inicio = yInicio;
+        creditos_animacion_y_fin = yFin;
+        creditos_animacion_duracion_ms = duracionMs;
+        creditos_animacion_inicio = null;
+        creditos_track.style.transform = `translate3d(-50%, ${yInicio.toFixed(2)}px, 0)`;
 
-        if (progreso >= 1) {
-            creditos_animacion_raf = null;
-            creditos_espectador.classList.add("creditos-finalizados");
-            return;
-        }
-        creditos_animacion_raf = requestAnimationFrame(loop);
-    };
+        const step = (ts) => {
+            if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") {
+                creditos_animacion_raf = null;
+                return;
+            }
+            if (!Number.isFinite(creditos_animacion_inicio) || creditos_animacion_inicio === null) {
+                creditos_animacion_inicio = ts;
+            }
+            const progreso = Math.min(
+                (ts - creditos_animacion_inicio) / Math.max(1, creditos_animacion_duracion_ms),
+                1
+            );
+            const yActual = creditos_animacion_y_inicio + ((creditos_animacion_y_fin - creditos_animacion_y_inicio) * progreso);
+            creditos_track.style.transform = `translate3d(-50%, ${yActual.toFixed(2)}px, 0)`;
 
-    creditos_animacion_raf = requestAnimationFrame(loop);
+            if (progreso >= 1) {
+                creditos_animacion_raf = null;
+                creditos_espectador.classList.add("creditos-finalizados");
+                creditos_track.style.transform = `translate3d(-50%, ${creditos_animacion_y_fin.toFixed(2)}px, 0)`;
+                return;
+            }
+            creditos_animacion_raf = requestAnimationFrame(step);
+        };
+
+        creditos_animacion_raf = requestAnimationFrame(step);
+    });
 };
 const actualizarCreditosEspectador = (payload = {}) => {
     const previoAnimacionId = Number(estado_creditos_espectador && estado_creditos_espectador.animacion_id) || 0;
@@ -1010,66 +1166,80 @@ const actualizarCreditosEspectador = (payload = {}) => {
     renderizarCreditosEspectador();
     const hayNuevaAnimacion = estado_creditos_espectador.animacion_id !== previoAnimacionId;
     if (vista_espectador_modo_resuelta === "creditos" && hayNuevaAnimacion) {
-        iniciarAnimacionCreditosEspectador();
+        iniciarAnimacionCreditosEspectador(true);
     }
+};
+const normalizarTextoDetonadorHistorial = (valor) => String(valor ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_TEXTO_DETONADOR_HISTORIAL);
+const obtenerDetonadorElegidoHistorial = (equipos = {}) => {
+    const finalJ1 = normalizarFinalCalentamientoEspectador(equipos && equipos[1] ? equipos[1].final : null);
+    const finalJ2 = normalizarFinalCalentamientoEspectador(equipos && equipos[2] ? equipos[2].final : null);
+    const palabraJ1 = finalJ1 ? normalizarTextoDetonadorHistorial(finalJ1.palabra) : "";
+    const palabraJ2 = finalJ2 ? normalizarTextoDetonadorHistorial(finalJ2.palabra) : "";
+    if (palabraJ1 && palabraJ2) {
+        if (palabraJ1.toUpperCase() === palabraJ2.toUpperCase()) return palabraJ1.toUpperCase();
+        return normalizarTextoDetonadorHistorial(`${palabraJ1} / ${palabraJ2}`).toUpperCase();
+    }
+    if (palabraJ1) return palabraJ1.toUpperCase();
+    if (palabraJ2) return palabraJ2.toUpperCase();
+    return "NINGUNO";
 };
 const renderizarHistorialDetonadores = () => {
     if (!calentamiento_detonadores_historial) return;
     calentamiento_detonadores_historial.innerHTML = "";
-    if (!historial_detonadores_espectador.length) {
-        const vacio = document.createElement("div");
-        vacio.className = "detonador-historial-vacio";
-        vacio.textContent = "SIN DETONADORES AUN";
-        calentamiento_detonadores_historial.appendChild(vacio);
-        return;
-    }
     const fragment = document.createDocumentFragment();
     historial_detonadores_espectador.forEach((entrada) => {
         const item = document.createElement("div");
         item.className = `detonador-historial-item tipo-${entrada.tipo}`;
-        const caso = document.createElement("span");
-        caso.className = "detonador-historial-caso";
-        caso.textContent = `CASO ${entrada.caso}`;
-        const label = document.createElement("span");
-        label.className = "detonador-historial-label";
-        label.textContent = entrada.etiqueta;
-        item.appendChild(caso);
-        item.appendChild(label);
+        const titulo = document.createElement("span");
+        titulo.className = "detonador-historial-caso";
+        titulo.textContent = entrada.titulo || "";
+        const valor = document.createElement("span");
+        valor.className = "detonador-historial-label";
+        const textoValor = normalizarTextoDetonadorHistorial(entrada.valor).toUpperCase() || "NINGUNO";
+        valor.textContent = textoValor;
+        if (textoValor === "NINGUNO") {
+            item.classList.add("is-empty");
+        }
+        item.appendChild(titulo);
+        item.appendChild(valor);
         fragment.appendChild(item);
     });
     calentamiento_detonadores_historial.appendChild(fragment);
 };
 const limpiarHistorialDetonadores = () => {
-    historial_detonadores_espectador = [];
-    contador_casos_detonador_espectador = 0;
+    historial_detonadores_espectador = crearHistorialDetonadoresBase();
     renderizarHistorialDetonadores();
 };
-const registrarDetonadorHistorial = (solicitud) => {
+const registrarDetonadorHistorial = (solicitud, equipos = {}) => {
     const tipo = normalizarSolicitudCalentamientoVista(solicitud);
-    const ultimo = historial_detonadores_espectador.length
-        ? historial_detonadores_espectador[historial_detonadores_espectador.length - 1]
-        : null;
-    if (ultimo && ultimo.tipo === tipo) return;
-    contador_casos_detonador_espectador += 1;
-    historial_detonadores_espectador.push({
-        caso: contador_casos_detonador_espectador,
-        tipo,
-        etiqueta: ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO]
-    });
-    if (historial_detonadores_espectador.length > MAX_CASOS_DETONADOR_HISTORIAL) {
-        historial_detonadores_espectador = historial_detonadores_espectador.slice(-MAX_CASOS_DETONADOR_HISTORIAL);
+    if (!ORDEN_SOLICITUD_CALENTAMIENTO_VISTA.includes(tipo)) {
+        renderizarHistorialDetonadores();
+        return;
+    }
+    const entrada = historial_detonadores_espectador.find((item) => item.tipo === tipo);
+    if (!entrada) {
+        renderizarHistorialDetonadores();
+        return;
+    }
+    const detonadorElegido = obtenerDetonadorElegidoHistorial(equipos);
+    if (detonadorElegido && detonadorElegido !== "NINGUNO") {
+        entrada.valor = detonadorElegido;
     }
     renderizarHistorialDetonadores();
 };
-const actualizarConsignaCalentamientoEspectador = (solicitud) => {
+const actualizarConsignaCalentamientoEspectador = (solicitud, equipos = {}) => {
     const tipo = normalizarSolicitudCalentamientoVista(solicitud);
-    registrarDetonadorHistorial(tipo);
+    registrarDetonadorHistorial(tipo, equipos);
     if (!calentamiento_consigna_espectador) {
         solicitud_calentamiento_espectador = tipo;
         return;
     }
-    calentamiento_consigna_espectador.textContent = `DETONADOR: ${ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO]}`;
-    calentamiento_consigna_espectador.classList.remove("tipo-libre", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
+    const etiquetaActual = ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO];
+    calentamiento_consigna_espectador.textContent = `DETONADOR ACTUAL: ${etiquetaActual}`;
+    calentamiento_consigna_espectador.classList.remove("tipo-libre", "tipo-ninguna", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
     calentamiento_consigna_espectador.classList.add(`tipo-${tipo}`);
     if (solicitud_calentamiento_espectador && solicitud_calentamiento_espectador !== tipo) {
         calentamiento_consigna_espectador.classList.remove("consigna-cambio");
@@ -1201,14 +1371,6 @@ const renderizarCursoresCalentamiento = () => {
     aplicarCursorCalentamiento(calentamiento_cursor_2, cursores_calentamiento[2]);
 };
 
-const chunkArrayEspectador = (arr, size) => {
-    const salida = [];
-    if (!Array.isArray(arr) || size <= 0) return salida;
-    for (let i = 0; i < arr.length; i += size) {
-        salida.push(arr.slice(i, i + size));
-    }
-    return salida;
-};
 const crearJugadorStatsVacioEspectador = (id) => ({
     id,
     nombre: `ESCRITXR ${id}`,
@@ -1216,6 +1378,7 @@ const crearJugadorStatsVacioEspectador = (id) => ({
     pulsacionesTotal: 0,
     teclasDistintas: 0,
     topTeclas: [],
+    heatmap: {},
     ritmoPpm: 0,
     tiempoTotalMs: 0,
     tiempoEscrituraMs: 0,
@@ -1244,6 +1407,79 @@ const normalizarTopTeclasEspectador = (arr) => {
         .filter((item) => item.code)
         .slice(0, 8);
 };
+const normalizarHeatmapStatsEspectador = (entrada, topTeclasFallback = []) => {
+    const salida = {};
+    const pushTecla = (code, count) => {
+        const codigo = String(code || "").trim().slice(0, 24);
+        const valor = Math.max(0, Number(count) || 0);
+        if (!codigo || !Number.isFinite(valor) || valor <= 0) return;
+        if (Object.prototype.hasOwnProperty.call(salida, codigo)) return;
+        if (Object.keys(salida).length >= 128) return;
+        salida[codigo] = valor;
+    };
+    if (entrada && typeof entrada === "object") {
+        if (Array.isArray(entrada)) {
+            entrada.forEach((item) => {
+                if (!item || typeof item !== "object") return;
+                pushTecla(item.code, item.count);
+            });
+        } else {
+            Object.keys(entrada).forEach((code) => pushTecla(code, entrada[code]));
+        }
+    }
+    if (!Object.keys(salida).length && Array.isArray(topTeclasFallback)) {
+        topTeclasFallback.forEach((item) => pushTecla(item && item.code, item && item.count));
+    }
+    return salida;
+};
+const reiniciarHistorialVidaStatsEspectador = () => {
+    stats_historial_vida_espectador[1] = [];
+    stats_historial_vida_espectador[2] = [];
+};
+const registrarPuntoVidaStatsEspectador = (equipo, ts, valorVida) => {
+    const id = Number(equipo);
+    if (id !== 1 && id !== 2) return;
+    const valor = Number(valorVida);
+    if (!Number.isFinite(valor)) return;
+    let timestamp = Number(ts);
+    if (!Number.isFinite(timestamp)) {
+        timestamp = Date.now();
+    }
+    const serie = stats_historial_vida_espectador[id];
+    const ultimo = serie.length ? serie[serie.length - 1] : null;
+    if (ultimo && timestamp <= ultimo.t) {
+        timestamp = ultimo.t + 1;
+    }
+    if (ultimo) {
+        const deltaVida = valor - ultimo.v;
+        const deltaMs = timestamp - ultimo.t;
+        const subidaBrusca = deltaVida >= STATS_REINICIO_SUBIDA_BRUSCA_SEGUNDOS
+            && deltaMs >= 0
+            && deltaMs <= STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS;
+        const veniaAgotado = ultimo.v <= 5;
+        // Evita "triángulos" en la gráfica cuando arranca una nueva ronda desde 0.
+        if (subidaBrusca && veniaAgotado) {
+            serie.length = 0;
+        }
+    }
+    if (!serie.length && valor <= 0) return;
+    const ultimoActual = serie.length ? serie[serie.length - 1] : null;
+    if (ultimoActual && ultimoActual.v === valor && (timestamp - ultimoActual.t) < 700) return;
+    serie.push({ t: timestamp, v: Math.max(0, valor) });
+    const limiteMin = timestamp - STATS_HISTORIAL_VIDA_VENTANA_MS;
+    while (serie.length > STATS_HISTORIAL_VIDA_MAX || (serie.length > 2 && serie[0].t < limiteMin)) {
+        serie.shift();
+    }
+};
+const actualizarHistorialVidaDesdeStatsEspectador = (estado) => {
+    const data = estado && typeof estado === "object" ? estado : {};
+    const ts = Number(data.ts) || Date.now();
+    [1, 2].forEach((equipo) => {
+        const jugador = data.players && data.players[equipo] ? data.players[equipo] : null;
+        const actual = jugador && jugador.vida ? jugador.vida.actual : null;
+        registrarPuntoVidaStatsEspectador(equipo, ts, actual);
+    });
+};
 const normalizarJugadorStatsLiveEspectador = (payload, id) => {
     const base = crearJugadorStatsVacioEspectador(id);
     const data = payload && typeof payload === "object" ? payload : {};
@@ -1260,6 +1496,7 @@ const normalizarJugadorStatsLiveEspectador = (payload, id) => {
         pulsacionesTotal: Math.max(0, Number(data.pulsacionesTotal) || 0),
         teclasDistintas: Math.max(0, Number(data.teclasDistintas) || 0),
         topTeclas: normalizarTopTeclasEspectador(data.topTeclas),
+        heatmap: normalizarHeatmapStatsEspectador(data.heatmap, data.topTeclas),
         ritmoPpm: Math.max(0, Number(data.ritmoPpm) || 0),
         tiempoTotalMs: Math.max(0, Number(data.tiempoTotalMs) || 0),
         tiempoEscrituraMs: Math.max(0, Number(data.tiempoEscrituraMs) || 0),
@@ -1322,108 +1559,206 @@ const formatearHoraEspectador = (ts) => {
     const fecha = new Date(Number(ts) || Date.now());
     return fecha.toLocaleTimeString("es-ES", { hour12: false });
 };
-const renderizarChipsStats = (items = [], claseExtra = "") => {
-    if (!Array.isArray(items) || !items.length) {
-        return `<span class="stats-tag vacio">Sin datos</span>`;
+const obtenerLabelTeclaStats = (code) => {
+    const codigo = String(code || "").trim();
+    const raw = STATS_HEATMAP_LABELS.get(codigo) || codigo;
+    const limpio = String(raw)
+        .split(/\n+/)
+        .map((parte) => parte.trim())
+        .filter(Boolean)
+        .join("/");
+    if (limpio) return limpio;
+    return codigo || "Tecla";
+};
+const mezclarColorStats = (origen, destino, factor) => {
+    const t = Math.max(0, Math.min(1, Number(factor) || 0));
+    return [
+        Math.round((origen[0] * (1 - t)) + (destino[0] * t)),
+        Math.round((origen[1] * (1 - t)) + (destino[1] * t)),
+        Math.round((origen[2] * (1 - t)) + (destino[2] * t))
+    ];
+};
+const rgbStats = (arr) => `${arr[0]}, ${arr[1]}, ${arr[2]}`;
+const estiloHeatmapTeclaStats = (equipo, nivel) => {
+    const base = equipo === 2 ? [255, 107, 107] : [70, 240, 255];
+    const oscuroA = [12, 18, 29];
+    const oscuroB = [6, 10, 18];
+    const bordeBase = [84, 96, 122];
+    const t = Math.max(0, Math.min(1, Number(nivel) || 0));
+    const fillA = mezclarColorStats(oscuroA, base, 0.14 + (t * 0.7));
+    const fillB = mezclarColorStats(oscuroB, base, 0.07 + (t * 0.44));
+    const border = mezclarColorStats(bordeBase, base, 0.18 + (t * 0.8));
+    const glow = mezclarColorStats([18, 26, 44], base, 0.5 + (t * 0.5));
+    return {
+        fillA: rgbStats(fillA),
+        fillB: rgbStats(fillB),
+        border: rgbStats(border),
+        glow: rgbStats(glow),
+        glowAlpha: (0.12 + (t * 0.7)).toFixed(3)
+    };
+};
+const renderizarHeatmapStatsJugador = (jugador, equipo) => {
+    const heatmap = jugador && jugador.heatmap && typeof jugador.heatmap === "object" ? jugador.heatmap : {};
+    const valores = Object.values(heatmap).map((v) => Math.max(0, Number(v) || 0)).filter((v) => v > 0);
+    const maximo = valores.length ? Math.max(...valores) : 0;
+    const total = valores.reduce((acc, v) => acc + v, 0);
+    const filasHtml = STATS_LAYOUT_HEATMAP.map((fila) => {
+        const columnas = Math.max(28, Math.round(fila.reduce((acc, tecla) => acc + (tecla.ancho || 1), 0) * 2));
+        const teclasHtml = fila.map((tecla) => {
+            const span = Math.max(1, Math.round((tecla.ancho || 1) * 2));
+            const count = Math.max(0, Number(heatmap[tecla.code]) || 0);
+            const nivel = maximo > 0 ? (count / maximo) : 0;
+            const estilo = estiloHeatmapTeclaStats(equipo, nivel);
+            const labelRaw = String(tecla.label || tecla.code || "").trim();
+            const etiqueta = labelRaw ? labelRaw : String(tecla.code || "").trim();
+            const labelHtml = escapeHtml(etiqueta).replace(/\n/g, "<br>");
+            return `
+                <div class="stats-hm-key equipo-${equipo}" style="--stats-hm-span:${span};--hm-fill-a:${estilo.fillA};--hm-fill-b:${estilo.fillB};--hm-border:${estilo.border};--hm-glow:${estilo.glow};--hm-glow-alpha:${estilo.glowAlpha};" title="${escapeHtml(`${obtenerLabelTeclaStats(tecla.code)} (${count})`)}">
+                    <span class="stats-hm-key-label">${labelHtml}</span>
+                    <em class="stats-hm-key-count">${count > 0 ? count : ""}</em>
+                </div>
+            `;
+        }).join("");
+        return `<div class="stats-heatmap-row" style="--stats-hm-cols:${columnas};">${teclasHtml}</div>`;
+    }).join("");
+
+    return `
+        <div class="stats-kpis-grid equipo-${equipo}">
+            <div class="stats-kpi"><span>Pulsaciones</span><strong>${total}</strong></div>
+            <div class="stats-kpi"><span>Teclas activas</span><strong>${valores.length}</strong></div>
+            <div class="stats-kpi"><span>Pico por tecla</span><strong>${maximo || 0}</strong></div>
+        </div>
+        <div class="stats-heatmap-board equipo-${equipo}">
+            ${filasHtml}
+        </div>
+    `;
+};
+const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
+    const ancho = 1000;
+    const alto = 330;
+    const padX = 54;
+    const padY = 34;
+    const usableX = ancho - (padX * 2);
+    const usableY = alto - (padY * 2);
+    const maxVidaHint = Math.max(0, Number(opciones && opciones.maxVidaHint) || 0);
+    const fallbackMaxVida = maxVidaHint > 0 ? maxVidaHint : 120;
+    const serieCruda = Array.isArray(historial) ? historial.slice(-STATS_HISTORIAL_VIDA_MAX) : [];
+    const serie = serieCruda
+        .map((p) => ({
+            t: Number(p && p.t),
+            v: Math.max(0, Number(p && p.v))
+        }))
+        .filter((p) => Number.isFinite(p.t) && Number.isFinite(p.v))
+        .sort((a, b) => a.t - b.t);
+    if (serie.length < 2) {
+        return { ancho, alto, linePath: "", areaPath: "", ultimo: null, maxVida: fallbackMaxVida };
     }
-    return items
-        .map((item) => `<span class="stats-tag ${claseExtra}">${escapeHtml(String(item))}</span>`)
-        .join("");
+    const serieOrdenada = [];
+    serie.forEach((punto) => {
+        const ultimo = serieOrdenada[serieOrdenada.length - 1];
+        if (ultimo && punto.t <= ultimo.t) {
+            serieOrdenada[serieOrdenada.length - 1] = { t: ultimo.t, v: punto.v };
+            return;
+        }
+        serieOrdenada.push(punto);
+    });
+    if (serieOrdenada.length < 2) {
+        return { ancho, alto, linePath: "", areaPath: "", ultimo: null, maxVida: fallbackMaxVida };
+    }
+    const minT = serieOrdenada[0].t;
+    const maxT = serieOrdenada[serieOrdenada.length - 1].t;
+    const spanT = Math.max(1, maxT - minT);
+    const usarIndiceEnX = spanT <= 5;
+    const divisorIdx = Math.max(1, serieOrdenada.length - 1);
+    const maxObservada = serieOrdenada.reduce((acc, punto) => Math.max(acc, Math.max(0, Number(punto.v) || 0)), 0);
+    const maxVida = Math.max(30, Math.ceil(Math.max(maxObservada, maxVidaHint, fallbackMaxVida) * 1.08));
+    const puntos = serieOrdenada.map((punto, idx) => {
+        const ratioX = usarIndiceEnX ? (idx / divisorIdx) : ((punto.t - minT) / spanT);
+        const x = padX + (ratioX * usableX);
+        const y = alto - padY - ((Math.max(0, punto.v) / maxVida) * usableY);
+        return { x, y, v: punto.v };
+    });
+    const linePath = (() => {
+        if (!puntos.length) return "";
+        let path = `M${puntos[0].x.toFixed(2)} ${puntos[0].y.toFixed(2)}`;
+        for (let i = 1; i < puntos.length; i += 1) {
+            const prev = puntos[i - 1];
+            const curr = puntos[i];
+            path += ` L${curr.x.toFixed(2)} ${prev.y.toFixed(2)} L${curr.x.toFixed(2)} ${curr.y.toFixed(2)}`;
+        }
+        return path;
+    })();
+    const areaPath = `${linePath} L${puntos[puntos.length - 1].x.toFixed(2)} ${(alto - padY).toFixed(2)} L${puntos[0].x.toFixed(2)} ${(alto - padY).toFixed(2)} Z`;
+    return { ancho, alto, linePath, areaPath, ultimo: puntos[puntos.length - 1], maxVida };
+};
+const renderizarEvolucionTiempoStatsJugador = (jugador, equipo) => {
+    const historial = stats_historial_vida_espectador[equipo] || [];
+    const vida = jugador && jugador.vida ? jugador.vida : { actual: null, min: null, max: null, media: null };
+    const maxVidaHint = Number.isFinite(Number(vida.max))
+        ? Math.max(0, Number(vida.max))
+        : (Number.isFinite(Number(vida.actual)) ? Math.max(0, Number(vida.actual)) : 0);
+    const serie = construirSerieSvgVidaStats(historial, { maxVidaHint });
+    const valorVida = (valor) => (Number.isFinite(Number(valor)) ? `${Math.max(0, Number(valor))} s` : "--");
+    const gridHorizontal = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+        const y = (serie.alto - 34) - ((serie.alto - 68) * ratio);
+        return `<line x1="54" y1="${y.toFixed(2)}" x2="${(serie.ancho - 54).toFixed(2)}" y2="${y.toFixed(2)}"></line>`;
+    }).join("");
+    const gridVertical = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+        const x = 54 + ((serie.ancho - 108) * ratio);
+        return `<line x1="${x.toFixed(2)}" y1="34" x2="${x.toFixed(2)}" y2="${(serie.alto - 34).toFixed(2)}"></line>`;
+    }).join("");
+    const graficaHtml = serie.linePath
+        ? `
+            <svg viewBox="0 0 ${serie.ancho} ${serie.alto}" class="stats-tiempo-svg" role="img" aria-label="Evolucion del tiempo restante">
+                <g class="stats-tiempo-grid">${gridHorizontal}${gridVertical}</g>
+                <path class="stats-tiempo-area equipo-${equipo}" d="${serie.areaPath}"></path>
+                <path class="stats-tiempo-linea equipo-${equipo}" d="${serie.linePath}"></path>
+                ${serie.ultimo ? `<circle class="stats-tiempo-punto equipo-${equipo}" cx="${serie.ultimo.x.toFixed(2)}" cy="${serie.ultimo.y.toFixed(2)}" r="6"></circle>` : ""}
+            </svg>
+        `
+        : `<div class="stats-tiempo-vacio">Esperando datos de tiempo en vivo...</div>`;
+    return `
+        <div class="stats-kpis-grid equipo-${equipo}">
+            <div class="stats-kpi"><span>Actual</span><strong>${valorVida(vida.actual)}</strong></div>
+            <div class="stats-kpi"><span>Min</span><strong>${valorVida(vida.min)}</strong></div>
+            <div class="stats-kpi"><span>Max</span><strong>${valorVida(vida.max)}</strong></div>
+            <div class="stats-kpi"><span>Media</span><strong>${valorVida(vida.media)}</strong></div>
+        </div>
+        <div class="stats-tiempo-board equipo-${equipo}">
+            ${graficaHtml}
+        </div>
+    `;
 };
 const construirSlidesStats = (payload) => {
     const estado = normalizarStatsLiveEspectador(payload);
     const p1 = estado.players[1];
     const p2 = estado.players[2];
-    const slides = [];
-
-    slides.push({
-        titulo: "RESUMEN",
-        subtitulo: estado.modo_actual ? `Modo: ${estado.modo_actual}` : "Modo: partida",
-        html: `
-            <div class="stats-resumen-grid">
-                <article class="stats-resumen-card equipo-1">
-                    <h4>${escapeHtml(p1.nombre)}</h4>
-                    <p><strong>${p1.palabrasTotal}</strong> palabras</p>
-                    <p><strong>${p1.ritmoPpm}</strong> ppm</p>
-                    <p><strong>${p1.pulsacionesTotal}</strong> pulsaciones</p>
-                </article>
-                <article class="stats-resumen-card equipo-2">
-                    <h4>${escapeHtml(p2.nombre)}</h4>
-                    <p><strong>${p2.palabrasTotal}</strong> palabras</p>
-                    <p><strong>${p2.ritmoPpm}</strong> ppm</p>
-                    <p><strong>${p2.pulsacionesTotal}</strong> pulsaciones</p>
-                </article>
-            </div>
-        `
-    });
-
-    [p1, p2].forEach((jugador, index) => {
-        const equipo = index + 1;
-        const topTeclas = jugador.topTeclas.map((item) => `${item.code} x${item.count}`);
-        const vidaTexto = [
-            jugador.vida.actual !== null ? `actual ${jugador.vida.actual}s` : null,
-            jugador.vida.min !== null ? `min ${jugador.vida.min}s` : null,
-            jugador.vida.max !== null ? `max ${jugador.vida.max}s` : null,
-            jugador.vida.media !== null ? `media ${jugador.vida.media}s` : null
-        ].filter(Boolean).join(" | ") || "Sin datos";
-
-        slides.push({
-            titulo: escapeHtml(jugador.nombre),
-            subtitulo: "Metricas base",
-            html: `
-                <div class="stats-metricas-grid equipo-${equipo}">
-                    <div class="stats-metrica"><span>Palabras</span><strong>${jugador.palabrasTotal}</strong></div>
-                    <div class="stats-metrica"><span>Pulsaciones</span><strong>${jugador.pulsacionesTotal}</strong></div>
-                    <div class="stats-metrica"><span>Teclas distintas</span><strong>${jugador.teclasDistintas}</strong></div>
-                    <div class="stats-metrica"><span>Ritmo</span><strong>${jugador.ritmoPpm} ppm</strong></div>
-                    <div class="stats-metrica"><span>Tiempo total</span><strong>${formatearDuracionMsEspectador(jugador.tiempoTotalMs)}</strong></div>
-                    <div class="stats-metrica"><span>Tiempo escritura</span><strong>${formatearDuracionMsEspectador(jugador.tiempoEscrituraMs)}</strong></div>
-                </div>
-                <p class="stats-vida-linea">${escapeHtml(vidaTexto)}</p>
-                <div class="stats-tags">${renderizarChipsStats(topTeclas, "stats-tag--soft")}</div>
-            `
-        });
-
-        const listas = [
-            { titulo: "Letras benditas", items: jugador.letrasBenditas, chunk: 16 },
-            { titulo: "Letras malditas", items: jugador.letrasMalditas, chunk: 16 },
-            { titulo: "Palabras benditas", items: jugador.palabrasBenditas, chunk: 12 },
-            { titulo: "Palabras malditas", items: jugador.palabrasMalditas, chunk: 12 }
-        ];
-        listas.forEach((lista) => {
-            const trozos = chunkArrayEspectador(lista.items, lista.chunk);
-            if (!trozos.length) return;
-            trozos.forEach((trozo, idx) => {
-                slides.push({
-                    titulo: escapeHtml(jugador.nombre),
-                    subtitulo: `${lista.titulo}${trozos.length > 1 ? ` (${idx + 1}/${trozos.length})` : ""}`,
-                    html: `
-                        <div class="stats-tags stats-tags--densas equipo-${equipo}">
-                            ${renderizarChipsStats(trozo)}
-                        </div>
-                    `
-                });
-            });
-        });
-
-        slides.push({
-            titulo: escapeHtml(jugador.nombre),
-            subtitulo: "Intentos en restricciones",
-            html: `
-                <div class="stats-intentos-grid equipo-${equipo}">
-                    <div class="stats-intento">
-                        <span>Intentos letra prohibida</span>
-                        <strong>${jugador.intentosLetraProhibida}</strong>
-                    </div>
-                    <div class="stats-intento">
-                        <span>Intentos palabra prohibida</span>
-                        <strong>${jugador.intentosPalabraProhibida}</strong>
-                    </div>
-                </div>
-            `
-        });
-    });
-    return slides;
+    return [
+        {
+            tipo: "heatmap",
+            titulo: `${escapeHtml(p1.nombre)} · MAPA DE CALOR`,
+            subtitulo: "Pulsaciones por tecla (actualizacion en vivo)",
+            html: renderizarHeatmapStatsJugador(p1, 1)
+        },
+        {
+            tipo: "heatmap",
+            titulo: `${escapeHtml(p2.nombre)} · MAPA DE CALOR`,
+            subtitulo: "Pulsaciones por tecla (actualizacion en vivo)",
+            html: renderizarHeatmapStatsJugador(p2, 2)
+        },
+        {
+            tipo: "tiempo",
+            titulo: `${escapeHtml(p1.nombre)} · EVOLUCION DEL TIEMPO`,
+            subtitulo: `Duracion: ${formatearDuracionMsEspectador(p1.tiempoTotalMs)}`,
+            html: renderizarEvolucionTiempoStatsJugador(p1, 1)
+        },
+        {
+            tipo: "tiempo",
+            titulo: `${escapeHtml(p2.nombre)} · EVOLUCION DEL TIEMPO`,
+            subtitulo: `Duracion: ${formatearDuracionMsEspectador(p2.tiempoTotalMs)}`,
+            html: renderizarEvolucionTiempoStatsJugador(p2, 2)
+        }
+    ];
 };
 const actualizarPaginadorStats = () => {
     if (!stats_dots) return;
@@ -1459,7 +1794,7 @@ const renderizarStatsEspectador = () => {
                 <h3>${slide.titulo}</h3>
                 <p>${escapeHtml(slide.subtitulo || "")}</p>
             </header>
-            <div class="stats-slide-body">${slide.html}</div>
+            <div class="stats-slide-body stats-slide-body--${slide.tipo || "default"}">${slide.html}</div>
         `;
         fragment.appendChild(item);
     });
@@ -1471,7 +1806,7 @@ const renderizarStatsEspectador = () => {
     stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
     actualizarPaginadorStats();
     const nombreModo = estado.modo_actual ? estado.modo_actual : "partida";
-    stats_estado.textContent = `Modo: ${nombreModo} | ${stats_slide_count} slides`;
+    stats_estado.textContent = `Modo: ${nombreModo} · Heatmap + tiempo live · ${stats_slide_count} slides`;
     stats_timestamp.textContent = `Actualizado: ${formatearHoraEspectador(estado.ts)}`;
 };
 const iniciarSlidesStats = () => {
@@ -1776,6 +2111,7 @@ const actualizarVisibilidadPanelNivelEspectador = () => {
 };
 
 const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
+    const modoPrevio = vista_espectador_modo_resuelta;
     const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
     vista_espectador_modo_resuelta = modo;
     if (modo === "nube_inspiracion") {
@@ -1803,6 +2139,12 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         cabecera.style.display = modo === "partida" ? (cabecera_display_inicial || "") : "none";
     }
     if (modo === "stats") {
+        limpiarFeedbackFlotanteEspectador();
+        stopConfetti();
+        const countdown = getEl("countdown");
+        if (countdown && countdown.parentNode) {
+            countdown.parentNode.removeChild(countdown);
+        }
         iniciarSlidesStats();
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
@@ -1814,7 +2156,9 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     } else if (modo === "creditos") {
         detenerSlidesStats();
         detenerAnimacionNubeInspiracion();
-        iniciarAnimacionCreditosEspectador();
+        if (modoPrevio !== "creditos") {
+            iniciarAnimacionCreditosEspectador(true);
+        }
     } else {
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
@@ -1901,11 +2245,11 @@ const actualizarCalentamientoEspectador = (data) => {
     }
     calentamiento_activo_previo_espectador = activoServidor;
     actualizarEtiquetasCursorCalentamiento();
-    actualizarConsignaCalentamientoEspectador(data.solicitud);
+    const equipos = data.equipos || {};
+    actualizarConsignaCalentamientoEspectador(data.solicitud, equipos);
     if (typeof data.vista === "boolean") {
         actualizarVistaCalentamiento(data.vista);
     }
-    const equipos = data.equipos || {};
     const activo = Boolean(data.activo && data.vista);
     if (calentamiento_global_estado) {
         calentamiento_global_estado.textContent = activo
@@ -2147,6 +2491,9 @@ let frase_final_completada_j1 = false;
 let frase_final_completada_j2 = false;
 let confetti_cierre_partida_disparado = false;
 let fin_ultimo_nivel_por_tiempo = false;
+let suprimir_confetti_cierre_por_fin_control = false;
+let cierre_definitivo_j1 = false;
+let cierre_definitivo_j2 = false;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
 let TIEMPO_MODIFICADOR;
@@ -3259,6 +3606,7 @@ socket.on('vista_espectador_modo', (payload = {}) => {
 
 socket.on('stats_live_estado', (payload = {}) => {
     estado_stats_live_espectador = normalizarStatsLiveEspectador(payload);
+    actualizarHistorialVidaDesdeStatsEspectador(estado_stats_live_espectador);
     if (vista_espectador_modo_resuelta === "stats") {
         renderizarStatsEspectador();
     }
@@ -3290,11 +3638,93 @@ socket.on('actualizar_contador_musas', contador_musas => {
 
 });
 
+const marcador_espectador_j1 = getEl("metadatos_j1");
+const marcador_espectador_j2 = getEl("metadatos_j2");
+const puntuacion_final_j1 = getEl("puntuacion_final1");
+const puntuacion_final_j2 = getEl("puntuacion_final2");
+const TEXTO_GANADOR_ESPECTADOR = "¡TEXTO TERMINADO!";
+const TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR = "¡PERDISTE, NO ESCRIBISTE NADA!";
+
+function obtenerMarcadorEquipoEspectador(jugadorId) {
+    const id = Number(jugadorId);
+    if (id === 1) return marcador_espectador_j1;
+    if (id === 2) return marcador_espectador_j2;
+    return null;
+}
+
+function setIndicadorGanadorMarcadorEspectador(jugadorId, visible, textoGanador = TEXTO_GANADOR_ESPECTADOR) {
+    const marcador = obtenerMarcadorEquipoEspectador(jugadorId);
+    if (!marcador) return;
+    if (!visible) {
+        marcador.removeAttribute("data-ganador");
+        return;
+    }
+    marcador.setAttribute("data-ganador", textoGanador || TEXTO_GANADOR_ESPECTADOR);
+}
+
+function obtenerTextoIndicadorGanadorEspectador(jugadorId) {
+    const marcador = obtenerMarcadorEquipoEspectador(jugadorId);
+    if (!marcador) return "";
+    return String(marcador.getAttribute("data-ganador") || "").trim();
+}
+
+function obtenerPalabrasMarcadorEspectador(jugadorId) {
+    const id = Number(jugadorId);
+    const nodo = id === 1 ? puntos1 : (id === 2 ? puntos2 : null);
+    if (!nodo) return 0;
+    const texto = String(nodo.textContent || "").trim();
+    const match = texto.match(/-?\d+/);
+    if (!match) return 0;
+    const valor = Number(match[0]);
+    return Number.isFinite(valor) ? valor : 0;
+}
+
+function setVisibilidadUiJugadorEspectador(jugadorId, visible) {
+    const id = Number(jugadorId);
+    const display = visible ? "" : "none";
+    if (id === 1) {
+        if (texto1) texto1.style.display = display;
+        if (alineador1) alineador1.style.display = display;
+        if (feedback1) feedback1.style.display = display;
+        if (focalizador1) focalizador1.style.display = display;
+        if (puntuacion_final_j1) puntuacion_final_j1.style.display = display;
+        if (info1) info1.style.display = display;
+        if (explicacion1) explicacion1.style.display = display;
+        if (!visible) {
+            actualizarPalabraConVisibilidad(palabra2, "");
+            actualizarDefinicionConVisibilidad(definicion2, "", false);
+            if (explicacion1) explicacion1.innerHTML = "";
+        }
+        return;
+    }
+    if (id === 2) {
+        if (texto2) texto2.style.display = display;
+        if (alineador2) alineador2.style.display = display;
+        if (feedback2) feedback2.style.display = display;
+        if (focalizador2) focalizador2.style.display = display;
+        if (puntuacion_final_j2) puntuacion_final_j2.style.display = display;
+        if (info2) info2.style.display = display;
+        if (explicacion2) explicacion2.style.display = display;
+        if (!visible) {
+            actualizarPalabraConVisibilidad(palabra3, "");
+            actualizarDefinicionConVisibilidad(definicion3, "", false);
+            if (explicacion2) explicacion2.innerHTML = "";
+        }
+    }
+}
+
 function reiniciarEstadoCierrePartidaEspectador() {
     frase_final_completada_j1 = false;
     frase_final_completada_j2 = false;
     confetti_cierre_partida_disparado = false;
     fin_ultimo_nivel_por_tiempo = false;
+    suprimir_confetti_cierre_por_fin_control = false;
+    cierre_definitivo_j1 = false;
+    cierre_definitivo_j2 = false;
+    setIndicadorGanadorMarcadorEspectador(1, false);
+    setIndicadorGanadorMarcadorEspectador(2, false);
+    setVisibilidadUiJugadorEspectador(1, true);
+    setVisibilidadUiJugadorEspectador(2, true);
     reiniciarProgresoFraseFinalEspectador();
     resetearOscuridadGameOverEspectador();
 }
@@ -3323,10 +3753,63 @@ function actualizarEstadoFraseFinalEspectadorDesdeTexto(jugadorId, textoPlano) {
     }
 }
 
+function animarFinJugadorEspectador(jugadorId, opciones = {}) {
+    const id = Number(jugadorId);
+    if (id !== 1 && id !== 2) return;
+    const mostrarEtiqueta = Boolean(opciones && opciones.mostrarEtiquetaFinal);
+    const textoEtiqueta = (opciones && typeof opciones.textoEtiqueta === "string" && opciones.textoEtiqueta.trim())
+        ? opciones.textoEtiqueta
+        : TEXTO_GANADOR_ESPECTADOR;
+    if (mostrarEtiqueta) {
+        setIndicadorGanadorMarcadorEspectador(id, true, textoEtiqueta);
+    }
+}
+
+function marcarJugadorTerminadoEspectador(jugadorId, opciones = {}) {
+    const id = Number(jugadorId);
+    const mostrarEtiquetaFinal = Boolean(opciones && opciones.mostrarEtiquetaFinal);
+    const textoEtiqueta = (opciones && typeof opciones.textoEtiqueta === "string" && opciones.textoEtiqueta.trim())
+        ? opciones.textoEtiqueta
+        : TEXTO_GANADOR_ESPECTADOR;
+    const yaTerminado = (id === 1 && terminado) || (id === 2 && terminado1);
+    if (yaTerminado) {
+        if (mostrarEtiquetaFinal) {
+            animarFinJugadorEspectador(id, { mostrarEtiquetaFinal: true, textoEtiqueta });
+        }
+        return;
+    }
+    if (id === 1) {
+        terminado = true;
+        registrarTiempoFraseFinalJugadorEspectador(1, 0);
+        feedback1.innerHTML = "";
+        setVisibilidadUiJugadorEspectador(1, false);
+        tiempo.style.color = "white";
+        tiempo.innerHTML = "¡Tiempo!";
+        actualizarBarraVida(tiempo, tiempo.innerHTML);
+        animarFinJugadorEspectador(1, { mostrarEtiquetaFinal, textoEtiqueta });
+        return;
+    }
+    if (id === 2) {
+        terminado1 = true;
+        registrarTiempoFraseFinalJugadorEspectador(2, 0);
+        feedback2.innerHTML = "";
+        setVisibilidadUiJugadorEspectador(2, false);
+        tiempo1.style.color = "white";
+        tiempo1.innerHTML = "¡Tiempo!";
+        actualizarBarraVida(tiempo1, tiempo1.innerHTML);
+        animarFinJugadorEspectador(2, { mostrarEtiquetaFinal, textoEtiqueta });
+    }
+}
+
 function ejecutarCierrePartidaEspectador(data = {}) {
     if (confetti_cierre_partida_disparado) return;
     confetti_cierre_partida_disparado = true;
-    confetti_aux();
+    if (!suprimir_confetti_cierre_por_fin_control) {
+        confetti_aux();
+    } else {
+        stopConfetti();
+        sonido_confetti = reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3");
+    }
     ejecutarLimpiezaModo(modo_actual, data);
     limpiezas_final();
     activar_sockets_extratextuales();
@@ -3348,6 +3831,18 @@ function evaluarCierrePartidaEspectador(data = {}, opciones = {}) {
     if (confetti_cierre_partida_disparado) return;
     if (opciones && opciones.finTiempoUltimoNivel) {
         fin_ultimo_nivel_por_tiempo = true;
+    }
+    const ambasFinalizadasDefinitivas = Boolean(cierre_definitivo_j1 && cierre_definitivo_j2);
+    if (ambasFinalizadasDefinitivas) {
+        if (!obtenerTextoIndicadorGanadorEspectador(1)) {
+            setIndicadorGanadorMarcadorEspectador(1, true);
+        }
+        if (!obtenerTextoIndicadorGanadorEspectador(2)) {
+            setIndicadorGanadorMarcadorEspectador(2, true);
+        }
+        suprimir_confetti_cierre_por_fin_control = false;
+        ejecutarCierrePartidaEspectador(data);
+        return;
     }
     const esFraseFinal = modo_actual === "frase final";
     if (!esFraseFinal) return;
@@ -3545,18 +4040,7 @@ socket.on("count", data => {
     }
     if (String(data.count || "").toLowerCase().includes("tiempo")) {
         LIMPIEZAS["psicod�f©lico"](data, data.player);
-        //confetti_aux()
-        terminado = true;
-        registrarTiempoFraseFinalJugadorEspectador(1, 0);
-        feedback1.innerHTML = "";
-        palabra1.innerHTML = "";
-        definicion1.innerHTML = "";
-        explicacion.innerHTML = "";
-        palabra1.style.display = "";
-        definicion1.style.display = "";
-        explicacion.style.display = "";
-        texto1.style.display = "none";
-        tiempo.style.color = "white";
+        marcarJugadorTerminadoEspectador(1);
     }
     }
 
@@ -3589,18 +4073,7 @@ socket.on("count", data => {
         }
         if (String(data.count || "").toLowerCase().includes("tiempo")) {
             LIMPIEZAS["psicod�f©lico"](data, data.player);
-            terminado1 = true;
-            registrarTiempoFraseFinalJugadorEspectador(2, 0);
-            feedback2.innerHTML = "";
-            palabra2.innerHTML = "";
-            definicion2.innerHTML = "";
-            explicacion1.innerHTML = "";
-            palabra2.style.display = "none";
-            definicion2.style.display = "none";
-            explicacion1.style.display = "none";
-
-            texto2.style.display = "none";
-            tiempo1.style.color = "white";
+            marcarJugadorTerminadoEspectador(2);
         }
     }
     actualizarProgresoFraseFinalEspectador();
@@ -3611,19 +4084,17 @@ socket.on('resucitar_control', data => {
     if(data.player == 1){
         reproducirEfectoVidaEspectador(AUDIO_RESUCITAR_ESPECTADOR);
         terminado = false;
-        palabra1.style.display = "";
-        definicion1.style.display = "";
-        explicacion.style.display = "";
-        texto1.style.display = "";
+        cierre_definitivo_j1 = false;
+        setIndicadorGanadorMarcadorEspectador(1, false);
+        setVisibilidadUiJugadorEspectador(1, true);
         ocultarResucitarMini(1);
     }
     else if(data.player == 2){
         reproducirEfectoVidaEspectador(AUDIO_RESUCITAR_ESPECTADOR);
         terminado1 = false;
-        actualizarPalabraConVisibilidad(palabra2, palabra2.innerHTML);
-        definicion2.style.display = "";
-        explicacion1.style.display = "";
-        texto2.style.display = "";
+        cierre_definitivo_j2 = false;
+        setIndicadorGanadorMarcadorEspectador(2, false);
+        setVisibilidadUiJugadorEspectador(2, true);
         ocultarResucitarMini(2);
     }
 });
@@ -3652,6 +4123,7 @@ socket.on('inicio', data => {
     sonido.pause();
     }
     reiniciarEstadoCierrePartidaEspectador();
+    reiniciarHistorialVidaStatsEspectador();
     limpiarColaPalabrasPendientesEspectador();
     setPendienteAnimacionEntradaBarraVida(true);
     cancelarAnimacionEntradaBarraVida(tiempo);
@@ -3808,6 +4280,10 @@ socket.on('post-inicio', data => {
     actualizarPalabraConVisibilidad(palabra3, palabra3.innerHTML);
     definicion2.style.display = "";
     explicacion.style.display = "";
+    setIndicadorGanadorMarcadorEspectador(1, false);
+    setIndicadorGanadorMarcadorEspectador(2, false);
+    setVisibilidadUiJugadorEspectador(1, true);
+    setVisibilidadUiJugadorEspectador(2, true);
     actualizarVisibilidadPanelNivelEspectador();
 });
 
@@ -3815,6 +4291,8 @@ socket.on('post-inicio', data => {
 socket.on('limpiar', data => {
     detenerTemporizadorGigante();
     limpiarColaPalabrasPendientesEspectador();
+    reiniciarEstadoCierrePartidaEspectador();
+    reiniciarHistorialVidaStatsEspectador();
     setPendienteAnimacionEntradaBarraVida(false);
     partida_activa_espectador = false;
     ocultarTodosResucitarMini();
@@ -4093,6 +4571,7 @@ socket.on('feedback_a_j2', data => {
 
     if(data.tipo == "inspiracion"){
         procesarPalabraUsadaInspiracion(1, data);
+        limpiarSugerenciaMusaModoLetrasEspectador(1, data);
         if (esInspiracionDesdeMusa(data)) {
             activarFulgorLadoEspectador(1, "musa");
         }
@@ -4146,6 +4625,7 @@ socket.on('feedback_a_j1', data => {
 
     if(data.tipo == "inspiracion"){
         procesarPalabraUsadaInspiracion(2, data);
+        limpiarSugerenciaMusaModoLetrasEspectador(2, data);
         if (esInspiracionDesdeMusa(data)) {
             activarFulgorLadoEspectador(2, "musa");
         }
@@ -4185,6 +4665,40 @@ socket.on('recibir_comentario', data => {
 });
 
 socket.on('fin', data => {
+        const payload = (data && typeof data === "object") ? data : { player: data };
+        const jugadorFinalizado = Number(payload && payload.player);
+        const cierreSinPalabras = Boolean(
+            payload &&
+            payload.motivo === "sin_palabras"
+        ) || (
+            (jugadorFinalizado === 1 || jugadorFinalizado === 2) &&
+            obtenerPalabrasMarcadorEspectador(jugadorFinalizado) <= 0
+        );
+        const textoEtiqueta = cierreSinPalabras
+            ? TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR
+            : undefined;
+        if (
+            payload &&
+            payload.origen === "control" &&
+            payload.suprimir_confetti_espectador !== false
+        ) {
+            suprimir_confetti_cierre_por_fin_control = true;
+            stopConfetti();
+        }
+        if (jugadorFinalizado === 1 || jugadorFinalizado === 2) {
+            if (jugadorFinalizado === 1) {
+                cierre_definitivo_j1 = true;
+            } else if (jugadorFinalizado === 2) {
+                cierre_definitivo_j2 = true;
+            }
+            marcarJugadorTerminadoEspectador(jugadorFinalizado, {
+                mostrarEtiquetaFinal: true,
+                textoEtiqueta
+            });
+            ocultarResucitarMini(jugadorFinalizado);
+            actualizarProgresoFraseFinalEspectador();
+            evaluarCierrePartidaEspectador(payload);
+        }
         detenerSonidosDesventaja();
         //confetti_aux();
 });
@@ -4761,8 +5275,9 @@ function limpiezas_final(){
     limpiarEstadoVotacionVentaja();
 }
 
+var CONFETTI_TOP_Z_INDEX = 2147483647;
 var duration = 15 * 1000;
-var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: CONFETTI_TOP_Z_INDEX };
 var isConfettiRunning = true; // Indicador para controlar la ejecuci�f³n
 
 function randomInRange(min, max) {
@@ -4770,6 +5285,10 @@ function randomInRange(min, max) {
 }
 
 function confetti_aux() {
+    if (vista_espectador_modo_resuelta === "stats") {
+        stopConfetti();
+        return;
+    }
 
     sonido_confetti = reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3")
     
@@ -4811,23 +5330,34 @@ function convertirASegundos(tiempo) {
   }
 
   function confetti_musas(pos){
+    if (vista_espectador_modo_resuelta === "stats") {
+      stopConfetti();
+      return;
+    }
 
     sonido_confetti_musa = reproducirSonido("../../game/audio/FX/9. ESTRELLAS.mp3")
     
     var scalar = 2;
-    var unicorn = confetti.shapeFromText({ text: 'â­', scalar });
+    var starShape = confetti.shapeFromText({
+      text: "⭐",
+      scalar,
+      color: "#ffd43b",
+      fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+    });
     isConfettiRunning = true; // Habilita la ejecuci�f³n de confetti
     var end = Date.now() + (2 * 1000);
     
     (function frame() {
       confetti({
-        startVelocity: 10,
-        particleCount: 1,
+        startVelocity: 12,
+        particleCount: 2,
         angle: 270,
         spread: 1000,
         origin: { y: 0, x: pos },
-        shapes: [unicorn],
-        scalar: 3
+        shapes: [starShape],
+        scalar: 3,
+        colors: ["#fff6ad", "#ffe066", "#ffd43b", "#ffffff"],
+        zIndex: CONFETTI_TOP_Z_INDEX
       });
     
       if ((Date.now() < end) && isConfettiRunning) {
@@ -5362,5 +5892,3 @@ function posicionarScrollEnUltimaLinea(node, pos) {
     const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
     node.scrollTop = Math.max(0, Math.min(target, maxScroll));
 }
-
-

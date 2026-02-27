@@ -71,7 +71,14 @@ const animateCSS = (element, animation, prefix = "animate__") =>
 //Función auxiliar que envía una palabra al servidor.
 function enviarPalabra() {
   if(palabra.value != '' && palabra.value != null){
-    if((modo_actual == "letra prohibida" && !toNormalForm(palabra.value.toLowerCase()).includes(letra)) || (modo_actual == "letra bendita" && toNormalForm(palabra.value.toLowerCase()).includes(letra)) || modo_actual == "palabras bonus" || letra == 'ñ' && palabra.value.toLowerCase().includes('ñ') || letra == 'n' && modo_actual == "letra prohibida" && palabra.value.toLowerCase().includes('ñ') && !palabra.value.toLowerCase().includes(letra)){
+    const palabraNormalizada = normalizarTextoParaCompararLetra(palabra.value);
+    const letraObjetivo = normalizarTextoParaCompararLetra(letra);
+    const contieneLetraObjetivo = Boolean(letraObjetivo) && palabraNormalizada.includes(letraObjetivo);
+    if(
+      (modo_actual == "letra prohibida" && !contieneLetraObjetivo) ||
+      (modo_actual == "letra bendita" && contieneLetraObjetivo) ||
+      modo_actual == "palabras bonus"
+    ){
     inspiracion = palabra.value.trim();
     socket.emit('enviar_inspiracion', inspiracion);
     palabra.value = "";
@@ -119,5 +126,10 @@ function toNormalForm(str) {
       .replace(
           /([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi,
           "$1"
-      );
+      )
+      .normalize("NFC");
+}
+
+function normalizarTextoParaCompararLetra(str) {
+  return toNormalForm(String(str || "").toLowerCase());
 }
