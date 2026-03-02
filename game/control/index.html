@@ -79,6 +79,7 @@
                                 <span id="boton_borrar_texto_guardado" class='btn' data-active="0" onclick="borrar_texto_guardado()">&#x1F9F9; BORRAR TEXTO: OFF</span>
                                 <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
+                                <span id="boton_skip_tertulia" class='btn btn-skip-tertulia' onclick="saltar_tertulia()">&#x23ED;&#xFE0F; SKIP TERTULIA</span>
                             </div>
                         </div>
                         <div class="control-group control-group--representacion">
@@ -103,6 +104,7 @@
                                 <button id="teleprompter_cargar_j1" type="button" class="btn teleprompter-cargar teleprompter-cargar--j1" onclick="teleprompterCargarTexto(1)">💾 CARGAR</button>
                                 <button id="teleprompter_cargar_j2" type="button" class="btn teleprompter-cargar teleprompter-cargar--j2" onclick="teleprompterCargarTexto(2)">💾 CARGAR</button>
                             </div>
+                            <div id="teleprompter_estado_carga" class="teleprompter-status teleprompter-status--idle">Sin carga en teleprompter</div>
                         </div>
                         <div class="tp-pad">
                             <div class="tp-top">

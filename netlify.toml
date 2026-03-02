@@ -1,0 +1,29 @@
+[[redirects]]
+  from = "/musa"
+  to = "/game/public/"
+  status = 301
+
+[[redirects]]
+  from = "/espectador"
+  to = "/game/spectator/"
+  status = 301
+
+[[redirects]]
+  from = "/control"
+  to = "/game/control/"
+  status = 301
+
+[[redirects]]
+  from = "/escritxr"
+  to = "/game/public/players/"
+  status = 301
+
+[[redirects]]
+  from = "/interprete"
+  to = "/game/actors/"
+  status = 301
+
+[[redirects]]
+  from = "/int%C3%A9rprete"
+  to = "/game/actors/"
+  status = 301

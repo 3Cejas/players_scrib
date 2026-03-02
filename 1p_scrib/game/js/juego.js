@@ -98,7 +98,16 @@ function restaurarPosicionCaret(caretNode, caretPos) {
   sel.addRange(range);
 }
 
+function desventajaSeleccionActiva() {
+  return typeof desventajaEnCurso !== "undefined" && desventajaEnCurso === true;
+}
+
 function borrar() {
+  if (desventajaSeleccionActiva()) {
+    clearTimeout(borrado);
+    return;
+  }
+
   if (!desactivar_borrar) {
     let nodoBorrado = false;
 
@@ -241,6 +250,9 @@ function countChars(texto) {
   }
   //cambio_nivel(puntos_);
   clearTimeout(borrado);
+  if (desventajaSeleccionActiva()) {
+    return;
+  }
   
   // Ahora, en lugar de contar los caracteres, incrementamos palabras_seguidas si el recuento de palabras ha aumentado
   if (puntos_ > lastWordCount) {

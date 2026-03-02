@@ -150,8 +150,10 @@ const teleprompter_estado = {
     text: "",
     fontSize: 36,
     scroll: 0,
-    source: 0
+    source: 0,
+    loadId: 0
 };
+let teleprompter_last_ack_load_id = 0;
 
 const sincronizarTeleprompterScroll = () => {
     const screen = teleprompter_screen || getEl("teleprompter_screen");
@@ -166,11 +168,34 @@ const sincronizarTeleprompterScroll = () => {
     text.style.transform = `translateY(${-objetivo}px)`;
 };
 
+const emitirTeleprompterAck = (loadId) => {
+    const id = Number(loadId);
+    if (!Number.isFinite(id) || id <= 0 || id === teleprompter_last_ack_load_id) {
+        return;
+    }
+    teleprompter_last_ack_load_id = id;
+    const overlay = teleprompter_overlay || getEl("teleprompter_overlay");
+    const text = teleprompter_text || getEl("teleprompter_text");
+    const overlayActive = Boolean(overlay && overlay.classList.contains("activo"));
+    const timerActive = Boolean(temporizador_gigante && temporizador_gigante.classList.contains("activo"));
+    const rendered = Boolean(text) && String(text.textContent || "") === String(teleprompter_estado.text || "");
+    socket.emit("teleprompter_ack", {
+        loadId: id,
+        source: teleprompter_estado.source === 2 ? 2 : 1,
+        rendered,
+        overlayActive,
+        timerActive,
+        visible: overlayActive && !timerActive,
+        textLength: String(teleprompter_estado.text || "").length
+    });
+};
+
 const actualizarTeleprompterEstado = (state = {}) => {
     if (!state) return;
     const overlay = teleprompter_overlay || getEl("teleprompter_overlay");
     const screen = teleprompter_screen || getEl("teleprompter_screen");
     const text = teleprompter_text || getEl("teleprompter_text");
+    let esNuevaCarga = false;
     if (typeof state.visible === "boolean") {
         teleprompter_estado.visible = state.visible;
     }
@@ -193,6 +218,14 @@ const actualizarTeleprompterEstado = (state = {}) => {
     if (Number.isFinite(state.scroll)) {
         teleprompter_estado.scroll = state.scroll;
     }
+    if (Number.isFinite(state.loadId)) {
+        const loadId = Math.max(0, Math.trunc(Number(state.loadId)));
+        esNuevaCarga = loadId > 0 && loadId !== teleprompter_estado.loadId;
+        teleprompter_estado.loadId = loadId;
+    }
+    if (esNuevaCarga && text) {
+        text.classList.add("teleprompter-text--no-anim");
+    }
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
     }
@@ -211,7 +244,15 @@ const actualizarTeleprompterEstado = (state = {}) => {
         screen.style.boxShadow = `0 0 35px ${frameColor}, inset 0 0 30px rgba(0, 0, 0, 0.8)`;
     }
     programarAjusteViewportEspectador();
-    requestAnimationFrame(sincronizarTeleprompterScroll);
+    requestAnimationFrame(() => {
+        sincronizarTeleprompterScroll();
+        if (esNuevaCarga) {
+            if (text) {
+                requestAnimationFrame(() => text.classList.remove("teleprompter-text--no-anim"));
+            }
+            emitirTeleprompterAck(teleprompter_estado.loadId);
+        }
+    });
 };
 
 window.addEventListener("resize", () => {
@@ -301,6 +342,7 @@ let pendiente_texto2 = false;
 let tiempo = getEl("tiempo");
 let tiempo1 = getEl("tiempo1");
 let tema = getEl("temas");
+let temasLista = [];
 let info = getEl("info");
 let info1 = getEl("info1");
 let info2= getEl("info2");
@@ -1314,12 +1356,141 @@ const normalizarPalabrasCalentamiento = (equipos = {}) => {
     return lista.slice(-220);
 };
 
+const contextoMedicionCalentamiento = (() => {
+    if (typeof document === "undefined") return null;
+    const canvas = document.createElement("canvas");
+    if (!canvas || typeof canvas.getContext !== "function") return null;
+    return canvas.getContext("2d");
+})();
+
+const limitarNumeroCalentamiento = (valor, min, max) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return min;
+    return Math.max(min, Math.min(max, numero));
+};
+
+const obtenerTamFuentePalabraCalentamientoPx = () => {
+    const viewport = Math.max(window.innerWidth || 0, 1);
+    return Math.max(15, Math.min(34, viewport * 0.022));
+};
+
+const medirCajaPalabraCalentamiento = (texto, maxAnchoPx) => {
+    const contenido = String(texto ?? "").trim();
+    const tamFuente = obtenerTamFuentePalabraCalentamientoPx();
+    const maxAnchoSeguro = Math.max(120, Number(maxAnchoPx) || 320);
+    let anchoTexto = contenido.length * (tamFuente * 0.62);
+    if (contextoMedicionCalentamiento && typeof contextoMedicionCalentamiento.measureText === "function") {
+        contextoMedicionCalentamiento.font = `${tamFuente}px "Retro-gaming", monospace`;
+        anchoTexto = Math.max(anchoTexto, contextoMedicionCalentamiento.measureText(contenido).width);
+    }
+    const paddingX = tamFuente * 0.9;
+    const paddingY = tamFuente * 0.56;
+    const anchoCaja = Math.max(tamFuente * 2.4, Math.min(maxAnchoSeguro, anchoTexto + paddingX));
+    const lineas = Math.max(1, Math.ceil((anchoTexto + (tamFuente * 0.16)) / maxAnchoSeguro));
+    const altoLinea = tamFuente * 1.08;
+    const altoCaja = Math.max(altoLinea + paddingY, (lineas * altoLinea) + paddingY);
+    return {
+        ancho: anchoCaja,
+        alto: altoCaja,
+        maxAncho: maxAnchoSeguro
+    };
+};
+
+const haySolapePalabrasCalentamiento = (a, b, separacion = 0) => (
+    Math.abs(a.cx - b.cx) < (((a.w + b.w) * 0.5) + separacion)
+    && Math.abs(a.cy - b.cy) < (((a.h + b.h) * 0.5) + separacion)
+);
+
+const resolverPosicionSeguraPalabraCalentamiento = (entrada, cajasOcupadas, stageW, stageH, minY) => {
+    const margenExteriorPx = 6;
+    const maxAnchoTexto = entrada && entrada.esFinal
+        ? Math.max(170, Math.min(stageW * 0.54, 620))
+        : Math.max(150, Math.min(stageW * 0.4, 500));
+    const caja = medirCajaPalabraCalentamiento(entrada && entrada.palabra, maxAnchoTexto);
+    const minXPx = (caja.ancho * 0.5) + margenExteriorPx;
+    const maxXPx = stageW - (caja.ancho * 0.5) - margenExteriorPx;
+    const minYPx = ((limitarPct(minY, 0, 100) / 100) * stageH) + (caja.alto * 0.5) + margenExteriorPx;
+    const maxYPx = stageH - (caja.alto * 0.5) - margenExteriorPx;
+
+    const rangoXValido = minXPx <= maxXPx;
+    const rangoYValido = minYPx <= maxYPx;
+    const xBase = rangoXValido
+        ? limitarNumeroCalentamiento((limitarPct(entrada.x, 0, 100) / 100) * stageW, minXPx, maxXPx)
+        : stageW * 0.5;
+    const yBase = rangoYValido
+        ? limitarNumeroCalentamiento((limitarPct(entrada.y, minY, 96) / 100) * stageH, minYPx, maxYPx)
+        : stageH * 0.5;
+
+    const separacion = Math.max(5, Math.min(18, caja.alto * 0.16));
+    const existeColision = (cx, cy) => cajasOcupadas.some((ocupada) => haySolapePalabrasCalentamiento(
+        { cx, cy, w: caja.ancho, h: caja.alto },
+        ocupada,
+        separacion
+    ));
+
+    let xFinal = xBase;
+    let yFinal = yBase;
+    if (existeColision(xFinal, yFinal)) {
+        const maxIntentos = 30;
+        for (let intento = 1; intento <= maxIntentos; intento += 1) {
+            const salto = Math.ceil(intento / 2);
+            const dirY = (intento % 2 === 0) ? -1 : 1;
+            const dirX = (intento % 4 < 2) ? 1 : -1;
+            const deltaY = salto * ((caja.alto * 0.72) + 4);
+            const deltaX = salto * Math.max(8, Math.min(26, caja.ancho * 0.15));
+            const yCandidato = rangoYValido
+                ? limitarNumeroCalentamiento(yBase + (dirY * deltaY), minYPx, maxYPx)
+                : yBase;
+            const xCandidato = rangoXValido
+                ? limitarNumeroCalentamiento(xBase + (dirX * deltaX), minXPx, maxXPx)
+                : xBase;
+
+            if (!existeColision(xCandidato, yCandidato)) {
+                xFinal = xCandidato;
+                yFinal = yCandidato;
+                break;
+            }
+            if (!existeColision(xBase, yCandidato)) {
+                xFinal = xBase;
+                yFinal = yCandidato;
+                break;
+            }
+            if (!existeColision(xCandidato, yBase)) {
+                xFinal = xCandidato;
+                yFinal = yBase;
+                break;
+            }
+            if (intento === maxIntentos) {
+                xFinal = xCandidato;
+                yFinal = yCandidato;
+            }
+        }
+    }
+
+    cajasOcupadas.push({
+        cx: xFinal,
+        cy: yFinal,
+        w: caja.ancho,
+        h: caja.alto
+    });
+
+    return {
+        xPct: limitarPct((xFinal / Math.max(1, stageW)) * 100, 0, 100),
+        yPct: limitarPct((yFinal / Math.max(1, stageH)) * 100, minY, 96),
+        maxAncho: caja.maxAncho
+    };
+};
+
 const renderizarPalabrasCalentamiento = () => {
     if (!calentamiento_nube) return;
     calentamiento_nube.innerHTML = "";
     const fragment = document.createDocumentFragment();
     const ahora = Date.now();
     const minY = obtenerMinYPalabrasCalentamiento();
+    const rectStage = obtenerRectStageCalentamientoEspectador();
+    const stageW = Math.max(1, Number(rectStage && rectStage.width) || window.innerWidth || 1);
+    const stageH = Math.max(1, Number(rectStage && rectStage.height) || window.innerHeight || 1);
+    const cajasOcupadas = [];
     palabras_calentamiento.forEach((entrada) => {
         const nodo = document.createElement("span");
         const clases = [`calentamiento-palabra`, `equipo-${entrada.equipo}`];
@@ -1333,8 +1504,16 @@ const renderizarPalabrasCalentamiento = () => {
         }
         nodo.className = clases.join(" ");
         nodo.textContent = entrada.palabra;
-        nodo.style.left = `${Math.max(0, Math.min(100, entrada.x))}%`;
-        nodo.style.top = `${limitarPct(entrada.y, minY, 96)}%`;
+        const posicionSegura = resolverPosicionSeguraPalabraCalentamiento(
+            entrada,
+            cajasOcupadas,
+            stageW,
+            stageH,
+            minY
+        );
+        nodo.style.left = `${posicionSegura.xPct}%`;
+        nodo.style.top = `${posicionSegura.yPct}%`;
+        nodo.style.setProperty("--calentamiento-word-max-width", `${Math.round(posicionSegura.maxAncho)}px`);
         const duracionMs = Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS;
         const edadMs = Math.max(0, Date.now() - (Number(entrada.ts) || Date.now()));
         const delayMs = entrada.destacada ? 0 : -Math.min(edadMs, duracionMs);
@@ -3213,117 +3392,141 @@ if (typeof animateCSS === "function") {
 }
 //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
 
-const PUTADAS = {
-    "ï¿½Yï¿½ï¿½": function () {
-        
-    },
-    "ï¿½sï¿½": function (player) {
-        detenerSonidoRayo();
-        if(player == 1){
-            document.body.classList.add("bg");
-            document.body.classList.add("rain");
-            lightning.classList.add("lightning")
-            lightning.style.right = "45%";
-            lightning.style.left = "0%";
-            reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
-            intervaloSonidoRayo = setInterval(() => {
-                reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
-            }, 4000);
-            setTimeout(function () {
-                detenerSonidoRayo();
-                document.body.classList.remove("bg");
-                document.body.classList.remove("rain");
-                lightning.classList.remove("lightning");
-            }, TIEMPO_MODIFICADOR);
-        }
-        else if(player == 2){
-            document.body.classList.add("bg");
-            document.body.classList.add("rain");
-            lightning.classList.add("lightning")
-            lightning.style.right = "0%";
-            lightning.style.left = "45%";
-            reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
-            intervaloSonidoRayo = setInterval(() => {
-                reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
-            }, 4000)
-            setTimeout(function () {
-                detenerSonidoRayo();
-                document.body.classList.remove("bg");
-                document.body.classList.remove("rain");
-                lightning.classList.remove("lightning");
-            }, TIEMPO_MODIFICADOR);
-        }
-    },
+const desventajaVaciaEspectador = function () {};
 
-    "ï¿½O>": function () {
+const desventajaRayoEspectador = function (player) {
+    detenerSonidoRayo();
+    if (player == 1) {
+        document.body.classList.add("bg");
+        document.body.classList.add("rain");
+        lightning.classList.add("lightning");
+        lightning.style.right = "45%";
+        lightning.style.left = "0%";
+        reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+        intervaloSonidoRayo = setInterval(() => {
+            reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+        }, 4000);
+        setTimeout(function () {
+            detenerSonidoRayo();
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+            lightning.classList.remove("lightning");
+        }, TIEMPO_MODIFICADOR);
+    } else if (player == 2) {
+        document.body.classList.add("bg");
+        document.body.classList.add("rain");
+        lightning.classList.add("lightning");
+        lightning.style.right = "0%";
+        lightning.style.left = "45%";
+        reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+        intervaloSonidoRayo = setInterval(() => {
+            reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
+        }, 4000);
+        setTimeout(function () {
+            detenerSonidoRayo();
+            document.body.classList.remove("bg");
+            document.body.classList.remove("rain");
+            lightning.classList.remove("lightning");
+        }, TIEMPO_MODIFICADOR);
+    }
+};
 
-    },
-    "ï¿½YTf": function (player) {
-        detenerAudioInverso();
-        audio_inverso = reproducirSonido("../../game/audio/FX/8. INVERSO LOOP.mp3", true)
-        if(player == 1){
+const desventajaInversoEspectador = function (player) {
+    detenerAudioInverso();
+    audio_inverso = reproducirSonido("../../game/audio/FX/8. INVERSO LOOP.mp3", true);
+    if (player == 1) {
+        texto1.classList.add("rotate-vertical-center");
+        texto1.addEventListener("animationend", function () {
+            texto1.classList.remove("rotate-vertical-center");
+            texto1.removeEventListener("animationend", arguments.callee);
+        });
+        tempo_text_inverso1 = setTimeout(function () {
+            detenerAudioInverso();
             texto1.classList.add("rotate-vertical-center");
-            // A�f±ade un escuchador para el evento 'animationend'
-            texto1.addEventListener('animationend', function() {
+            texto1.addEventListener("animationend", function () {
                 texto1.classList.remove("rotate-vertical-center");
-                texto1.removeEventListener('animationend', arguments.callee);
+                texto1.removeEventListener("animationend", arguments.callee);
             });
-            tempo_text_inverso1 = setTimeout(function () {
-                detenerAudioInverso();
-                texto1.classList.add("rotate-vertical-center");
-                texto1.addEventListener('animationend', function() {
-                    texto1.classList.remove("rotate-vertical-center");
-                    texto1.removeEventListener('animationend', arguments.callee);
-                });
-            }, TIEMPO_MODIFICADOR);
-        }
-        else if(player == 2){
+        }, TIEMPO_MODIFICADOR);
+    } else if (player == 2) {
+        texto2.classList.add("rotate-vertical-center");
+        texto2.addEventListener("animationend", function () {
+            texto2.classList.remove("rotate-vertical-center");
+            texto2.removeEventListener("animationend", arguments.callee);
+        });
+        tempo_text_inverso2 = setTimeout(function () {
+            detenerAudioInverso();
             texto2.classList.add("rotate-vertical-center");
-            // A�f±ade un escuchador para el evento 'animationend'
-            texto2.addEventListener('animationend', function() {
+            texto2.addEventListener("animationend", function () {
                 texto2.classList.remove("rotate-vertical-center");
-                texto2.removeEventListener('animationend', arguments.callee);
+                texto2.removeEventListener("animationend", arguments.callee);
             });
-            tempo_text_inverso2 = setTimeout(function () {
-                detenerAudioInverso();
-                texto2.classList.add("rotate-vertical-center");
-                texto2.addEventListener('animationend', function() {
-                    texto2.classList.remove("rotate-vertical-center");
-                    texto2.removeEventListener('animationend', arguments.callee);
-                });
-            }, TIEMPO_MODIFICADOR);
-        }
-    },
+        }, TIEMPO_MODIFICADOR);
+    }
+};
 
-    "ï¿½YOï¿½ï¸": function (player) {
-        detenerAudioBorroso();
-        audio_borroso = reproducirSonido("../../game/audio/FX/7. REMOLINO PARA LOOP.mp3", true)
-        modo_texto_borroso1 = true;
-        tiempo_inicial = new Date();
-        if(player == 1){
-            texto1.classList.add("textarea_blur");
-            tempo_text_borroso1 = setTimeout(function () {
+const desventajaBorrosoEspectador = function (player) {
+    detenerAudioBorroso();
+    audio_borroso = reproducirSonido("../../game/audio/FX/7. REMOLINO PARA LOOP.mp3", true);
+    modo_texto_borroso1 = true;
+    tiempo_inicial = new Date();
+    if (player == 1) {
+        texto1.classList.add("textarea_blur");
+        tempo_text_borroso1 = setTimeout(function () {
             detenerAudioBorroso();
             temp_text_borroso_activado1 = true;
             texto1.classList.remove("textarea_blur");
         }, TIEMPO_MODIFICADOR);
-        }
-        else if(player == 2){
-            modo_texto_borroso2 = true;
-            console.log("BORROSO")
-            texto2.classList.add("textarea_blur");
-            tempo_text_borroso2 = setTimeout(function () {
+    } else if (player == 2) {
+        modo_texto_borroso2 = true;
+        texto2.classList.add("textarea_blur");
+        tempo_text_borroso2 = setTimeout(function () {
             detenerAudioBorroso();
             temp_text_borroso_activado2 = true;
             texto2.classList.remove("textarea_blur");
         }, TIEMPO_MODIFICADOR);
-        }
-    },
-    "ï¿½Yï¿½ï¿½": function (player) {
-    },
-    "ï¿½Y-Sï¸": function (player) {
-    },
+    }
 };
+
+const PUTADAS = {
+    "🐢": desventajaVaciaEspectador,
+    "⚡": desventajaRayoEspectador,
+    "🌪️": desventajaBorrosoEspectador,
+    "🙃": desventajaInversoEspectador,
+    "🖊️": desventajaVaciaEspectador
+};
+
+function normalizarPutada(putada) {
+    const valor = String(putada || "").trim();
+    const sinVs16 = valor.replace(/\uFE0F/g, "");
+    const mapa = {
+        "🐢": "🐢",
+        "⚡": "⚡",
+        "🌪": "🌪️",
+        "🌪️": "🌪️",
+        "🙃": "🙃",
+        "🖊": "🖊️",
+        "🖊️": "🖊️",
+        "ï¿½sï¿½": "⚡",
+        "ï¿½YTf": "🙃",
+        "ï¿½YOï¿½ï¸": "🌪️",
+        "ï¿½Y-Sï¸": "🖊️",
+        "ï¿½Yï¿½ï¿½": "🐢",
+        "ï¿½O>": "🐢"
+    };
+    return mapa[valor] || mapa[sinVs16] || valor;
+}
+
+function aplicarPutadaEnEspectador(putada, player) {
+    const clave = normalizarPutada(putada);
+    const handler = PUTADAS[clave];
+    if (typeof handler === "function") {
+        handler(player);
+        return true;
+    }
+    console.warn("[Espectador] Desventaja desconocida:", putada, "->", clave);
+    return false;
+}
 
 const MODOS = {
 
@@ -4327,8 +4530,10 @@ socket.on('limpiar', data => {
 
     limpiezas();
     stopConfetti();
-    temas.style.display = "none";
-    temas.innerHTML = "";
+    if (tema) {
+        tema.style.display = "none";
+        tema.innerHTML = "";
+    }
     texto1.style.height = "";
     texto2.style.height = "";
     texto1.rows =  "1";
@@ -4710,14 +4915,14 @@ socket.on("enviar_repentizado", repentizado => {
 
 socket.on("enviar_ventaja_j1", putada => {
     limpiarEstadoVotacionVentaja();
-    PUTADAS[putada](1);
+    aplicarPutadaEnEspectador(putada, 1);
     mostrarFeedbackFlotanteEspectador(1, `${putada} DESVENTAJA!`, { tipo: "negativo" });
     mostrarFeedbackFlotanteEspectador(2, `${putada} VENTAJA!`, { tipo: "positivo" });
 });
 
 socket.on("enviar_ventaja_j2", putada => {
     limpiarEstadoVotacionVentaja();
-    PUTADAS[putada](2);
+    aplicarPutadaEnEspectador(putada, 2);
     mostrarFeedbackFlotanteEspectador(2, `${putada} DESVENTAJA!`, { tipo: "negativo" });
     mostrarFeedbackFlotanteEspectador(1, `${putada} VENTAJA!`, { tipo: "positivo" });
 });
@@ -4737,16 +4942,20 @@ socket.on("nueva letra", letra => {
 
 socket.on('elegir_ventaja_j1', () => {
     confetti_musas(0.25);
-    temas.innerHTML = "";
-    temas.style.display = "";
+    if (tema) {
+        tema.innerHTML = "";
+        tema.style.display = "";
+    }
     iniciarAnimacionesSegunCondicion("azul");
     
 });
 
 socket.on('elegir_ventaja_j2', () => {
     confetti_musas(0.75);
-    temas.innerHTML = "";
-    temas.style.display = "";
+    if (tema) {
+        tema.innerHTML = "";
+        tema.style.display = "";
+    }
     iniciarAnimacionesSegunCondicion("rojo");
 });
 
@@ -4773,12 +4982,13 @@ function reproducirSonido(rutaArchivo, loop = false) {
 
 // Ejemplo: iniciar animaciones seg�fºn un estado o condici�f³n
 function iniciarAnimacionesSegunCondicion(condicion) {
+  if (!tema) return;
   if (condicion === "azul") {
     // Inicia animaci�f³n para musas azules
-    Temasinterval = startDotAnimation(temas,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+    Temasinterval = startDotAnimation(tema,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
   } else if (condicion === "rojo") {
     // Inicia animaci�f³n para musas rojas
-    Temasinterval = startDotAnimation(temas,   'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+    Temasinterval = startDotAnimation(tema,   'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
   }
 }
 
@@ -4798,8 +5008,10 @@ function startDotAnimation(element, baseText, maxDots = 3, intervalTime = 500) {
   }
 
   function limpiarEstadoVotacionVentaja() {
-    temas.innerHTML = "";
-    temas.style.display = "";
+    if (tema) {
+        tema.innerHTML = "";
+        tema.style.display = "";
+    }
     if (Temasinterval) {
         clearInterval(Temasinterval);
         Temasinterval = null;
@@ -4866,7 +5078,7 @@ function activar_sockets_extratextuales() {
     elegir uno aleatoriamente.
     */
     socket.on('temas_espectador', data => {
-        temas = data;
+        temasLista = Array.isArray(data) ? data : [];
         erm();
     });
 
@@ -5100,7 +5312,7 @@ function erm() {
             animationOut: "fadeOutDown", //css class for exit animation
             randomize: true,
             stopOnHover: false, //stop animation on hover
-            words: temas,
+            words: temasLista,
             onRotate: function () {
                 //on each rotate you make the timeout longer, until it's slow enough
                 if (this.speed < 600) {
@@ -5222,8 +5434,10 @@ function limpiezas_final(){
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
 
-    temas.style.display = "none";
-    temas.innerHTML = "";
+    if (tema) {
+        tema.style.display = "none";
+        tema.innerHTML = "";
+    }
     feedback1.innerHTML = "";
     feedback2.innerHTML = "";
     limpiarFeedbackFlotanteEspectador();
@@ -5319,7 +5533,9 @@ function stopConfetti() {
     if(sonido_confetti) sonido_confetti.pause();
 
   isConfettiRunning = false; // Deshabilita la ejecuci�f³n de confetti
-  confetti.reset(); // Detiene la animaci�f³n de confetti
+  if (typeof confetti !== "undefined" && typeof confetti.reset === "function") {
+      confetti.reset(); // Detiene la animaci�f³n de confetti
+  }
 }
 
 function convertirASegundos(tiempo) {
@@ -5335,30 +5551,40 @@ function convertirASegundos(tiempo) {
       return;
     }
 
+    if (typeof confetti !== "function") {
+      return;
+    }
+
     sonido_confetti_musa = reproducirSonido("../../game/audio/FX/9. ESTRELLAS.mp3")
     
     var scalar = 2;
-    var starShape = confetti.shapeFromText({
-      text: "⭐",
-      scalar,
-      color: "#ffd43b",
-      fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
-    });
+    var starShape = null;
+    if (typeof confetti.shapeFromText === "function") {
+      starShape = confetti.shapeFromText({
+        text: "⭐",
+        scalar,
+        color: "#ffd43b",
+        fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+      });
+    }
     isConfettiRunning = true; // Habilita la ejecuci�f³n de confetti
     var end = Date.now() + (2 * 1000);
     
     (function frame() {
-      confetti({
+      const opciones = {
         startVelocity: 12,
         particleCount: 2,
         angle: 270,
         spread: 1000,
         origin: { y: 0, x: pos },
-        shapes: [starShape],
         scalar: 3,
         colors: ["#fff6ad", "#ffe066", "#ffd43b", "#ffffff"],
         zIndex: CONFETTI_TOP_Z_INDEX
-      });
+      };
+      if (starShape) {
+        opciones.shapes = [starShape];
+      }
+      confetti(opciones);
     
       if ((Date.now() < end) && isConfettiRunning) {
         requestAnimationFrame(frame);

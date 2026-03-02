@@ -166,6 +166,81 @@ window.addEventListener("load", programarAjusteViewportEscritora);
 iniciarAjusteViewportEscritora();
 setModoDashboardSolo(document.body && document.body.classList.contains("ui-dashboard-only"));
 
+let cursor_pluma_escritora = null;
+let partida_activa_cursor_pluma = false;
+const soporta_cursor_pluma_escritora = (() => {
+    if (typeof window.matchMedia !== "function") return true;
+    return window.matchMedia("(pointer: fine)").matches;
+})();
+
+function setPartidaActivaCursorPluma(activa) {
+    partida_activa_cursor_pluma = Boolean(activa);
+    if (texto && texto.classList) {
+        texto.classList.toggle("textarea--pluma-cursor-visible", !partida_activa_cursor_pluma);
+    }
+    if (partida_activa_cursor_pluma) {
+        ocultarCursorPlumaEscritora();
+    }
+}
+
+function ocultarCursorPlumaEscritora() {
+    if (!cursor_pluma_escritora) return;
+    cursor_pluma_escritora.classList.remove("activa");
+}
+
+function posicionarCursorPlumaEscritora(clientX, clientY) {
+    if (!cursor_pluma_escritora) return;
+    cursor_pluma_escritora.style.left = `${clientX}px`;
+    cursor_pluma_escritora.style.top = `${clientY}px`;
+}
+
+function mostrarCursorPlumaEscritora(clientX, clientY) {
+    if (!cursor_pluma_escritora || !texto) return;
+    if (partida_activa_cursor_pluma) {
+        ocultarCursorPlumaEscritora();
+        return;
+    }
+    posicionarCursorPlumaEscritora(clientX, clientY);
+    cursor_pluma_escritora.classList.add("activa");
+}
+
+function crearCursorPlumaEscritora() {
+    if (!texto || !document.body || !soporta_cursor_pluma_escritora) return;
+    if (!cursor_pluma_escritora) {
+        const nodo = document.createElement("div");
+        nodo.id = "cursor_pluma_escritora";
+        nodo.className = "escritora-cursor-pluma";
+        document.body.appendChild(nodo);
+        cursor_pluma_escritora = nodo;
+    }
+    texto.classList.add("textarea--pluma-cursor");
+}
+
+function inicializarCursorPlumaEscritora() {
+    if (!texto || !soporta_cursor_pluma_escritora) return;
+    crearCursorPlumaEscritora();
+    if (!cursor_pluma_escritora) return;
+    setPartidaActivaCursorPluma(false);
+
+    const actualizar = (evt) => {
+        if (!evt || typeof evt.clientX !== "number" || typeof evt.clientY !== "number") return;
+        mostrarCursorPlumaEscritora(evt.clientX, evt.clientY);
+    };
+
+    texto.addEventListener("mouseenter", actualizar);
+    texto.addEventListener("mousemove", actualizar);
+    texto.addEventListener("mouseleave", ocultarCursorPlumaEscritora);
+    texto.addEventListener("blur", ocultarCursorPlumaEscritora);
+    window.addEventListener("blur", ocultarCursorPlumaEscritora);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            ocultarCursorPlumaEscritora();
+        }
+    });
+}
+
+inicializarCursorPlumaEscritora();
+
 const feedback_flotante_escritora = (() => {
     let root = getEl("feedback_tiempo_flotante_root");
     if (!root) {
@@ -1352,15 +1427,35 @@ function avanzarModoTrasDesventaja(emoji) {
     aplicarDesventajaSeleccionada(emoji);
 }
 
+function pausarBorradoDuranteEleccionDesventaja() {
+    clearTimeout(borrado);
+}
+
+function rearmarBorradoTrasEleccionDesventaja() {
+    if (typeof borrar !== "function") return;
+    if (terminado || desactivar_borrar || desventajaEnCurso || menu_resurreccion_activo) return;
+
+    const espera = Number(rapidez_inicio_borrado);
+    if (!Number.isFinite(espera) || espera < 0) return;
+
+    clearTimeout(borrado);
+    borrado = setTimeout(() => {
+        if (desventajaEnCurso || menu_resurreccion_activo || terminado) return;
+        borrar();
+    }, espera);
+}
+
 function completarFaseDesventaja(emoji) {
     ocultarOverlayDesventaja();
     avanzarModoTrasDesventaja(emoji);
     desventajaEnCurso = false;
+    rearmarBorradoTrasEleccionDesventaja();
 }
 
 async function iniciarDesventajaEntreNiveles() {
     if (desventajaEnCurso || terminado) return;
     desventajaEnCurso = true;
+    pausarBorradoDuranteEleccionDesventaja();
     desventajaSecuenciaId += 1;
     const tokenSecuencia = desventajaSecuenciaId;
 
@@ -1646,6 +1741,33 @@ texto.addEventListener("keydown", (e) => {
     }
 });
 
+function insertarConRetrasoTecladoLento(contenido, esSaltoLinea = false) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+    const range = sel.getRangeAt(0).cloneRange();
+    if (!texto.contains(range.commonAncestorContainer)) return false;
+
+    range.deleteContents();
+
+    if (esSaltoLinea) {
+        const salto = document.createElement("br");
+        range.insertNode(salto);
+        range.setStartAfter(salto);
+    } else {
+        const valor = String(contenido ?? "");
+        if (!valor) return false;
+        const nodoTexto = document.createTextNode(valor);
+        range.insertNode(nodoTexto);
+        range.setStartAfter(nodoTexto);
+    }
+
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    texto.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+}
+
 texto.addEventListener("beforeinput", (e) => {
     if (e.inputType && e.inputType.startsWith("delete")) {
         snapshot_html_bendita = texto.innerHTML;
@@ -1661,16 +1783,17 @@ texto.addEventListener("beforeinput", (e) => {
         return;
     }
     if (!teclado_lento_putada) return;
-    if (e.inputType === "insertText" || e.inputType === "insertParagraph") {
+    if (
+        e.inputType === "insertText" ||
+        e.inputType === "insertParagraph" ||
+        e.inputType === "insertLineBreak"
+    ) {
         e.preventDefault();
-        const data = e.data ?? (e.inputType === "insertParagraph" ? "\n" : "");
+        const esSaltoLinea = e.inputType === "insertParagraph" || e.inputType === "insertLineBreak";
+        const data = esSaltoLinea ? "\n" : (e.data ?? "");
         setTimeout(() => {
             if (!teclado_lento_putada) return;
-            if (data === "\n") {
-                document.execCommand("insertLineBreak");
-            } else {
-                document.execCommand("insertText", false, data);
-            }
+            insertarConRetrasoTecladoLento(data, esSaltoLinea);
         }, RETRASO_TECLADO_LENTO_MS);
     }
 });
@@ -2291,6 +2414,7 @@ function inicio() {
         }
     }
     aplicarAtributos();
+    setPartidaActivaCursorPluma(true);
     // Mantiene ocultos cabecera/marcador/vida durante toda la transición de arranque.
     iniciarSecuenciaIntroPartidaEscritora();
     setModoDashboardSolo(false);
@@ -2611,6 +2735,7 @@ function addSeconds(secs) {
 
 // Resetea el tablero de juego.
 function limpiar(borrar){
+    setPartidaActivaCursorPluma(false);
     setModoDashboardSolo(true);
     limpiarEstadoGameOverBarraVida();
     animateCSS(".botones", "backOutLeft").then((message) => {
@@ -4424,6 +4549,7 @@ function stopConfetti() {
 }
 
 function final(){
+    setPartidaActivaCursorPluma(false);
 
     menu_modificador = false;
     cancelarSecuenciaDesventaja();

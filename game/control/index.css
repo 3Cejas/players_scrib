@@ -1209,6 +1209,18 @@ table {
     box-shadow: 0 0.2em 0.2em rgba(0, 0, 0, 0.25);
 }
 
+#boton_skip_tertulia {
+    display: none;
+    border-color: rgba(74, 246, 255, 0.85);
+    color: #9ffcff;
+    text-shadow: 0.06em 0.06em #ff3030;
+    box-shadow: 0 0.2em #4af6ff, 0 0 0.6em rgba(74, 246, 255, 0.35);
+}
+
+#boton_skip_tertulia.is-visible {
+    display: inline-block;
+}
+
 
 .panel-oculto {
     display: none;
@@ -1353,6 +1365,56 @@ table {
     gap: 0.6rem;
     width: 100%;
     justify-content: space-between;
+}
+
+.teleprompter-status {
+    width: 100%;
+    height: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(120, 120, 120, 0.42);
+    background: rgba(12, 12, 12, 0.8);
+    font-family: "Retro-gaming";
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: #cdd2df;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.12);
+}
+
+.teleprompter-status--idle {
+    border-color: rgba(120, 120, 120, 0.42);
+    color: #b7bfd1;
+}
+
+.teleprompter-status--info {
+    border-color: rgba(69, 243, 255, 0.52);
+    color: #b9fbff;
+    box-shadow: 0 0 12px rgba(69, 243, 255, 0.22);
+}
+
+.teleprompter-status--ok {
+    border-color: rgba(115, 255, 169, 0.58);
+    color: #d8ffe8;
+    box-shadow: 0 0 12px rgba(115, 255, 169, 0.24);
+}
+
+.teleprompter-status--warn {
+    border-color: rgba(255, 205, 102, 0.58);
+    color: #ffeec4;
+    box-shadow: 0 0 12px rgba(255, 205, 102, 0.2);
+}
+
+.teleprompter-status--error {
+    border-color: rgba(255, 99, 99, 0.62);
+    color: #ffd2d2;
+    box-shadow: 0 0 12px rgba(255, 99, 99, 0.24);
 }
 
 .teleprompter-cargar {

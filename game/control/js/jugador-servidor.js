@@ -242,7 +242,7 @@ let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
 
 // Lista de modos disponibles (catalogo fijo para que nunca desaparezcan del panel).
-const LISTA_MODOS_DISPONIBLES = ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "tertulia", "frase final"];
+const LISTA_MODOS_DISPONIBLES = ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "frase final"];
 let LISTA_MODOS = LISTA_MODOS_DISPONIBLES.slice();
 let LISTA_MODOS_LOCURA = [ "letra bendita", "letra prohibida", "palabras bonus", "palabras prohibidas"];
 
@@ -812,6 +812,11 @@ socket.on('vista_espectador_modo', (payload = {}) => {
         actualizarModoVistaEspectadorControl(payload);
     }
 });
+socket.on('teleprompter_ack', (payload = {}) => {
+    if (window && typeof window.procesarTeleprompterAckControl === "function") {
+        window.procesarTeleprompterAckControl(payload);
+    }
+});
 socket.on('estado_banderas_musas', (data = {}) => {
     if (typeof window.actualizarEstadoBanderasMusasControl === "function") {
         window.actualizarEstadoBanderasMusasControl(data);
@@ -949,6 +954,9 @@ socket.on('temp_modos', data => {
     display_modo.textContent = data.modo_actual.toUpperCase();
     display_modo.style.color = COLORES_MODOS[data.modo_actual];
     registrarModoActual(data.modo_actual);
+    if (typeof actualizarBotonSkipTertuliaControl === "function") {
+        actualizarBotonSkipTertuliaControl();
+    }
     emitirStatsLiveControl();
     console.log(data.secondsPassed, "secondsPassed", data.modo_actual);
     console.log(COLORES_MODOS[data.modo_actual])
@@ -1033,6 +1041,9 @@ socket.on('activar_modo', (data) => {
     modo_actual = data.modo_actual;
     console.log(modo_actual)
     registrarModoActual(modo_actual);
+    if (typeof actualizarBotonSkipTertuliaControl === "function") {
+        actualizarBotonSkipTertuliaControl();
+    }
     if (data && data.letra_bendita) {
         resumenPartida.letrasBenditas.add(String(data.letra_bendita).toUpperCase());
     }

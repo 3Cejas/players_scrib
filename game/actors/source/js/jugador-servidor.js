@@ -469,11 +469,34 @@ if (tiempo) {
     tiempo.style.display = "none";
 }
 
-const VIDA_MAX_SEGUNDOS = 5 * 60;
+const VIDA_MAX_SEGUNDOS = 10 * 60;
 const DISPLAY_BARRA_VIDA = "inline-flex";
 const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
 const animacionesEntradaBarraVida = new WeakMap();
 let animacionEntradaVidaPendiente = false;
+let ultimo_count_valido_actor = "";
+let ultimo_ts_count_actor = 0;
+let temporizador_gigante_actor_interval = null;
+let temporizador_gigante_actor_restante = 0;
+let temporizador_gigante_actor_activo = false;
+const DURACION_ALERTA_TIEMPO_LIMITE_ACTOR_MS = 15000;
+let timeout_alerta_tiempo_limite_actor = null;
+let alerta_tiempo_limite_actor_activa = false;
+const aviso_tiempo_limite_actor = (() => {
+    if (!document.body) return null;
+    let nodo = getEl("actor_tiempo_limite_aviso");
+    if (!nodo) {
+        nodo = document.createElement("div");
+        nodo.id = "actor_tiempo_limite_aviso";
+        nodo.setAttribute("aria-hidden", "true");
+        const textoAviso = document.createElement("p");
+        textoAviso.className = "actor-tiempo-limite-texto";
+        textoAviso.textContent = "¡INTÉRPRETE, ES HORA DE ACTUAR!";
+        nodo.appendChild(textoAviso);
+        document.body.appendChild(nodo);
+    }
+    return nodo;
+})();
 
 function extraerSegundosTiempo(texto) {
     if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
@@ -489,6 +512,138 @@ function extraerSegundosTiempo(texto) {
         return null;
     }
     return (minutos * 60) + segundos;
+}
+
+function normalizarPlayerCountActor(valor) {
+    if (valor === null || typeof valor === "undefined") return null;
+    const numeroDirecto = Number(valor);
+    if (numeroDirecto === 1 || numeroDirecto === 2) return numeroDirecto;
+    const texto = String(valor || "").trim();
+    if (!texto) return null;
+    const match = texto.match(/[12]/);
+    if (!match) return null;
+    const numero = Number(match[0]);
+    return numero === 1 || numero === 2 ? numero : null;
+}
+
+function formatearSegundosCountActor(totalSegundos) {
+    if (!Number.isFinite(totalSegundos)) return "";
+    const total = Math.max(0, Math.floor(Number(totalSegundos) || 0));
+    const minutos = Math.floor(total / 60);
+    const segundos = total % 60;
+    return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+}
+
+function normalizarTextoCountActor(valor) {
+    if (valor === null || typeof valor === "undefined") return "";
+    if (typeof valor === "number" && Number.isFinite(valor)) {
+        return formatearSegundosCountActor(valor);
+    }
+    if (typeof valor !== "string") {
+        return "";
+    }
+    const texto = String(valor || "").trim();
+    if (!texto) return "";
+    if (texto.indexOf(":") !== -1) return texto;
+    if (/^\d+$/.test(texto)) {
+        return formatearSegundosCountActor(Number(texto));
+    }
+    return texto;
+}
+
+function extraerCountDesdePayloadActor(payload, playerSeleccionado = null) {
+    if (!payload || typeof payload !== "object") {
+        return { countTexto: normalizarTextoCountActor(payload), playerEvento: null };
+    }
+
+    let playerEvento = normalizarPlayerCountActor(
+        payload.player ?? payload.jugador ?? payload.escritor ?? payload.team
+    );
+    let countTexto = normalizarTextoCountActor(payload.count);
+
+    const clavesGenerales = ["tiempo", "timer", "clock", "contador", "remaining", "restante"];
+    const claveJugadorPreferida = Number(playerSeleccionado) === 2 ? "2" : "1";
+    const clavesJugador = Number(playerSeleccionado) === 2
+        ? ["count2", "tiempo2", "timer2", "p2", "j2", "player2", "escritor2", "equipo2", "2", "rojo"]
+        : ["count1", "tiempo1", "timer1", "p1", "j1", "player1", "escritor1", "equipo1", "1", "azul"];
+
+    if (!countTexto && playerSeleccionado !== null) {
+        for (const clave of clavesJugador) {
+            if (!Object.prototype.hasOwnProperty.call(payload, clave)) continue;
+            const candidato = normalizarTextoCountActor(payload[clave]);
+            if (!candidato) continue;
+            countTexto = candidato;
+            playerEvento = playerSeleccionado;
+            break;
+        }
+    }
+
+    if (!countTexto) {
+        for (const clave of clavesGenerales) {
+            if (!Object.prototype.hasOwnProperty.call(payload, clave)) continue;
+            const candidato = normalizarTextoCountActor(payload[clave]);
+            if (!candidato) continue;
+            countTexto = candidato;
+            break;
+        }
+    }
+
+    if (!countTexto) {
+        const countPlano1 = normalizarTextoCountActor(payload.count1);
+        const countPlano2 = normalizarTextoCountActor(payload.count2);
+        if (playerSeleccionado === 1 && countPlano1) {
+            countTexto = countPlano1;
+            playerEvento = 1;
+        } else if (playerSeleccionado === 2 && countPlano2) {
+            countTexto = countPlano2;
+            playerEvento = 2;
+        } else {
+            countTexto = countPlano1 || countPlano2 || "";
+            if (countTexto && !playerEvento) {
+                playerEvento = countPlano1 ? 1 : 2;
+            }
+        }
+    }
+
+    const nested = payload.count && typeof payload.count === "object" ? payload.count : null;
+    if (!countTexto && nested) {
+        if (playerSeleccionado !== null) {
+            for (const clave of clavesJugador) {
+                if (!Object.prototype.hasOwnProperty.call(nested, clave)) continue;
+                const candidato = normalizarTextoCountActor(nested[clave]);
+                if (!candidato) continue;
+                countTexto = candidato;
+                playerEvento = playerSeleccionado;
+                break;
+            }
+        }
+
+        if (!countTexto) {
+            const nestedCount = normalizarTextoCountActor(nested.count);
+            if (nestedCount) {
+                countTexto = nestedCount;
+            }
+            const nestedPlayer = normalizarPlayerCountActor(nested.player);
+            if (nestedPlayer !== null) {
+                playerEvento = nestedPlayer;
+            }
+        }
+
+        if (!countTexto) {
+            for (const valor of Object.values(nested)) {
+                const candidato = normalizarTextoCountActor(valor);
+                if (!candidato) continue;
+                countTexto = candidato;
+                const valorPlayer = normalizarPlayerCountActor(claveJugadorPreferida);
+                if (valorPlayer !== null && playerEvento === null) {
+                    playerEvento = valorPlayer;
+                }
+                break;
+            }
+        }
+    }
+
+    return { countTexto, playerEvento };
 }
 
 function setPendienteAnimacionEntradaBarraVida(valor) {
@@ -563,6 +718,104 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
     }
     cancelarAnimacionEntradaBarraVida(elemento);
     aplicarEstadoBarraVida(elemento, porcentaje);
+}
+
+function inicializarBarraVidaActor() {
+    if (!tiempo) return;
+    tiempo.style.display = "none";
+    tiempo.innerHTML = "";
+}
+
+function aplicarTemaAlertaTiempoLimiteActor(equipo) {
+    if (!document.body) return;
+    const equipoNorm = Number(equipo) === 2 ? 2 : 1;
+    document.body.classList.toggle("actor-tiempo-limite-equipo-1", equipoNorm === 1);
+    document.body.classList.toggle("actor-tiempo-limite-equipo-2", equipoNorm === 2);
+}
+
+function ocultarAlertaTiempoLimiteActor() {
+    if (timeout_alerta_tiempo_limite_actor) {
+        clearTimeout(timeout_alerta_tiempo_limite_actor);
+        timeout_alerta_tiempo_limite_actor = null;
+    }
+    alerta_tiempo_limite_actor_activa = false;
+    if (aviso_tiempo_limite_actor) {
+        aviso_tiempo_limite_actor.setAttribute("aria-hidden", "true");
+    }
+    if (!document.body) return;
+    document.body.classList.remove("actor-tiempo-limite-activo");
+}
+
+function mostrarAlertaTiempoLimiteActor() {
+    if (!document.body || alerta_tiempo_limite_actor_activa) return;
+    alerta_tiempo_limite_actor_activa = true;
+    if (aviso_tiempo_limite_actor) {
+        aviso_tiempo_limite_actor.setAttribute("aria-hidden", "false");
+    }
+    document.body.classList.add("actor-tiempo-limite-activo");
+    timeout_alerta_tiempo_limite_actor = setTimeout(() => {
+        ocultarAlertaTiempoLimiteActor();
+    }, DURACION_ALERTA_TIEMPO_LIMITE_ACTOR_MS);
+}
+
+function pintarConteoActor(textoConteo, opciones = {}) {
+    if (!tiempo) return null;
+    const texto = String(textoConteo || "").trim();
+    if (!texto) return null;
+    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
+    const segundosCount = extraerSegundosTiempo(texto);
+
+    if (Number.isFinite(segundosCount) && segundosCount >= 20) {
+        tiempo.style.color = "white";
+    } else if (Number.isFinite(segundosCount) && segundosCount >= 10) {
+        tiempo.style.color = "yellow";
+    } else if (Number.isFinite(segundosCount) && segundosCount < 10) {
+        tiempo.style.color = "red";
+    }
+
+    tiempo.style.display = DISPLAY_BARRA_VIDA;
+    tiempo.innerHTML = texto;
+
+    if (Number.isFinite(segundosCount)) {
+        actualizarBarraVida(tiempo, texto, { animarEntrada });
+    } else {
+        cancelarAnimacionEntradaBarraVida(tiempo);
+    }
+    return segundosCount;
+}
+
+function detenerTemporizadorGiganteActor(opciones = {}) {
+    const ocultar = !opciones || opciones.ocultar !== false;
+    if (temporizador_gigante_actor_interval) {
+        clearInterval(temporizador_gigante_actor_interval);
+        temporizador_gigante_actor_interval = null;
+    }
+    temporizador_gigante_actor_restante = 0;
+    temporizador_gigante_actor_activo = false;
+    if (!tiempo || !ocultar) return;
+    tiempo.innerHTML = "";
+    tiempo.style.display = "none";
+    cancelarAnimacionEntradaBarraVida(tiempo);
+}
+
+function iniciarTemporizadorGiganteActor(duracion) {
+    detenerTemporizadorGiganteActor({ ocultar: false });
+    ocultarAlertaTiempoLimiteActor();
+    const total = Math.max(0, Number(duracion) || (10 * 60));
+    temporizador_gigante_actor_restante = total;
+    temporizador_gigante_actor_activo = true;
+    pintarConteoActor(formatearSegundosCountActor(temporizador_gigante_actor_restante), { animarEntrada: true });
+
+    temporizador_gigante_actor_interval = setInterval(() => {
+        temporizador_gigante_actor_restante -= 1;
+        if (temporizador_gigante_actor_restante < 0) {
+            detenerTemporizadorGiganteActor({ ocultar: false });
+            pintarConteoActor("00:00");
+            mostrarAlertaTiempoLimiteActor();
+            return;
+        }
+        pintarConteoActor(formatearSegundosCountActor(temporizador_gigante_actor_restante));
+    }, 1000);
 }
 
 let niveles_bloqueados = true;
@@ -691,6 +944,29 @@ function actualizarColorEquipo() {
     const colorFinal = colorEquipo || "#00f5ff";
     nivelesContenedor.style.setProperty("--equipo-color", colorFinal);
     document.documentElement.style.setProperty("--equipo-color", colorFinal);
+}
+
+function aplicarTemaMarcadorActor(equipo) {
+    if (!metadatos_actor) return;
+    const equipoNorm = Number(equipo) === 2 ? 2 : 1;
+    const tema = equipoNorm === 2
+        ? {
+            color: "#ff6b6b",
+            color2: "#46f0ff",
+            texto: "#ffadad"
+        }
+        : {
+            color: "#46f0ff",
+            color2: "#ff6b6b",
+            texto: "#9ff8ff"
+        };
+
+    metadatos_actor.classList.toggle("marcador-equipo-1", equipoNorm === 1);
+    metadatos_actor.classList.toggle("marcador-equipo-2", equipoNorm === 2);
+    metadatos_actor.style.setProperty("--equipo-color", tema.color);
+    metadatos_actor.style.setProperty("--equipo-color-2", tema.color2);
+    metadatos_actor.style.setProperty("--equipo-texto", tema.texto);
+    metadatos_actor.setAttribute("data-equipo", String(equipoNorm));
 }
 
 function actualizarFlechasNiveles() {
@@ -929,10 +1205,8 @@ var player = getParameterByName("player");
         elegir_ventaja = "elegir_ventaja_j1";
         enviar_palabra = 'enviar_palabra_j1'
         nombre1.style="color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
-        if (metadatos_actor) {
-            metadatos_actor.classList.remove("marcador-equipo-2");
-            metadatos_actor.classList.add("marcador-equipo-1");
-        }
+        aplicarTemaMarcadorActor(1);
+        aplicarTemaAlertaTiempoLimiteActor(1);
 
     } else if (player == 2) {
         console.log(nombre1.value)
@@ -947,13 +1221,17 @@ var player = getParameterByName("player");
         elegir_ventaja = "elegir_ventaja_j2";
         enviar_palabra = 'enviar_palabra_j2'
         nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
-        if (metadatos_actor) {
-            metadatos_actor.classList.remove("marcador-equipo-1");
-            metadatos_actor.classList.add("marcador-equipo-2");
-        }
+        aplicarTemaMarcadorActor(2);
+        aplicarTemaAlertaTiempoLimiteActor(2);
     }
 
+if (player != 1 && player != 2) {
+    aplicarTemaMarcadorActor(1);
+    aplicarTemaAlertaTiempoLimiteActor(1);
+}
+
 actualizarColorEquipo();
+inicializarBarraVidaActor();
     
 const socket = io(serverUrl);
 
@@ -1034,28 +1312,42 @@ Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
 limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
-socket.on("count", data => {
-    if(data.player == player){
-        const segundosCount = extraerSegundosTiempo(data.count);
-        if (convertirASegundos(data.count) >= 20) {
-            tiempo.style.color = "white";
-        }
-        if (20 > convertirASegundos(data.count) && convertirASegundos(data.count) >= 10) {
-            tiempo.style.color = "yellow";
-        }
-        if (10 > convertirASegundos(data.count)) {
-            tiempo.style.color = "red";
-        }
-    tiempo.innerHTML = data.count;
-    const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosCount));
-    actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+socket.on("count", (data = {}) => {
+    if (temporizador_gigante_actor_activo) {
+        return;
+    }
+    const playerSeleccionado = normalizarPlayerCountActor(player);
+    const payloadNormalizado = extraerCountDesdePayloadActor(data, playerSeleccionado);
+    const countTexto = payloadNormalizado.countTexto;
+    const playerEvento = payloadNormalizado.playerEvento;
+
+    if (!countTexto) {
+        return;
+    }
+
+    const playerEventoNormalizado = normalizarPlayerCountActor(playerEvento);
+    const coincidePlayer = playerEventoNormalizado === null
+        || playerSeleccionado === null
+        || playerEventoNormalizado === playerSeleccionado;
+
+    if (!coincidePlayer) {
+        return;
+    }
+
+    const segundosCountPrevio = extraerSegundosTiempo(countTexto);
+    const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosCountPrevio));
+    const segundosCount = pintarConteoActor(countTexto, { animarEntrada: animarEntradaVida });
+    if (Number.isFinite(segundosCount)) {
+        ultimo_count_valido_actor = countTexto;
+        ultimo_ts_count_actor = Date.now();
+    }
     if (Number.isFinite(segundosCount) && modo_actual === "frase final") {
         actualizarProgresoFraseFinalActor(segundosCount);
     }
     if (animarEntradaVida) {
         animacionEntradaVidaPendiente = false;
     }
-    const cuentaFinalizada = String(data.count || "").toLowerCase().includes("tiempo");
+    const cuentaFinalizada = String(countTexto || "").toLowerCase().includes("tiempo");
     if (!cuentaFinalizada && modo_actual && !hayInfoNivelVisibleActor()) {
         renderInfoModoActor(modo_actual, {}, { animar: false });
     }
@@ -1066,11 +1358,8 @@ socket.on("count", data => {
         const finDefinitivoPorTiempo = modo_actual === "frase final";
         esperando_resurreccion_actor = !finDefinitivoPorTiempo;
         partida_finalizada_actor = finDefinitivoPorTiempo;
-        if (finDefinitivoPorTiempo) {
-            confetti_aux();
-        } else {
-            stopConfetti();
-        }
+        stopConfetti();
+        mostrarAlertaTiempoLimiteActor();
 
         limpiezas();
 
@@ -1085,7 +1374,15 @@ socket.on("count", data => {
     } else if (Number.isFinite(segundosCount) && segundosCount > 0 && !partida_finalizada_actor) {
         esperando_resurreccion_actor = false;
     }
-}
+});
+
+socket.on("temporizador_gigante_inicio", (data = {}) => {
+    const duracion = (data && typeof data === "object") ? data.duracion : data;
+    iniciarTemporizadorGiganteActor(duracion);
+});
+
+socket.on("temporizador_gigante_detener", () => {
+    detenerTemporizadorGiganteActor();
 });
 
 socket.on("resucitar_control", (data = {}) => {
@@ -1093,6 +1390,7 @@ socket.on("resucitar_control", (data = {}) => {
     esperando_resurreccion_actor = false;
     partida_finalizada_actor = false;
     stopConfetti();
+    ocultarAlertaTiempoLimiteActor();
     niveles_bloqueados = !modo_actual;
     setNivelesDesactivados(!modo_actual);
     actualizarNiveles(modo_actual);
@@ -1110,7 +1408,11 @@ socket.on("fin", (data) => {
     partida_finalizada_actor = true;
     tiempo.innerHTML = "¡Tiempo!";
     actualizarBarraVida(tiempo, tiempo.innerHTML);
-    confetti_aux();
+    if (alerta_tiempo_limite_actor_activa) {
+        stopConfetti();
+    } else {
+        confetti_aux();
+    }
     limpiezas();
 });
 
@@ -1124,14 +1426,18 @@ socket.on('inicio', data => {
     esperando_resurreccion_actor = false;
     partida_finalizada_actor = false;
     stopConfetti();
+    ocultarAlertaTiempoLimiteActor();
     limpiarCacheInfoNivelesActor();
     detenerProgresoNivelBarraActor(true);
     reiniciarProgresoFraseFinalActor();
     setPendienteAnimacionEntradaBarraVida(true);
     cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerTemporizadorGiganteActor();
+    ultimo_count_valido_actor = "";
+    ultimo_ts_count_actor = 0;
     if (tiempo) {
-        tiempo.style.display = DISPLAY_BARRA_VIDA;
-        aplicarEstadoBarraVida(tiempo, 0);
+        tiempo.style.display = "none";
+        tiempo.innerHTML = "";
     }
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
     $('#countdown').remove();
@@ -1202,11 +1508,15 @@ socket.on('inicio', data => {
 socket.on('limpiar', () => {
     esperando_resurreccion_actor = false;
     partida_finalizada_actor = false;
+    ocultarAlertaTiempoLimiteActor();
     limpiarCacheInfoNivelesActor();
     detenerProgresoNivelBarraActor(true);
     reiniciarProgresoFraseFinalActor();
     setPendienteAnimacionEntradaBarraVida(false);
     cancelarAnimacionEntradaBarraVida(tiempo);
+    detenerTemporizadorGiganteActor();
+    ultimo_count_valido_actor = "";
+    ultimo_ts_count_actor = 0;
 
     // Recibe el nombre del jugador y lo coloca en su sitio.
     socket.on(nombre, data => {
@@ -1216,6 +1526,7 @@ socket.on('limpiar', () => {
     texto1.innerText = "";
     actualizarPuntosMarcadorActor(0, false);
     tiempo.innerHTML = "";
+    tiempo.style.display = "none";
     actualizarBarraVida(tiempo, tiempo.innerHTML);
 
     limpiezas();
@@ -1355,9 +1666,11 @@ function animacion_modo() {
 }
 
 function convertirASegundos(tiempo) {
+    if (typeof tiempo !== "string" || tiempo.indexOf(":") === -1) return NaN;
     let partes = tiempo.split(':'); // separamos los minutos de los segundos
     let minutos = parseInt(partes[0], 10); // convertimos los minutos a un número entero
     let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
+    if (Number.isNaN(minutos) || Number.isNaN(segundos)) return NaN;
     return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
   }
 

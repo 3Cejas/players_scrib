@@ -258,6 +258,13 @@ function actualizarBotonBorrarTextoGuardadoControl() {
         : "La siguiente partida recuperara el ultimo texto guardado.";
 }
 
+function actualizarBotonSkipTertuliaControl() {
+    const boton = document.getElementById("boton_skip_tertulia");
+    if (!boton) return;
+    const visible = juego_iniciado === true && modo_actual === "tertulia";
+    boton.classList.toggle("is-visible", visible);
+}
+
 function temp() {
     console.log(frase_final_j1.value)
     const fraseJ1 = normalizarFraseFinal(frase_final_j1.value);
@@ -342,6 +349,7 @@ function temp() {
     socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, LISTA_MODOS_LOCURA, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
+    actualizarBotonSkipTertuliaControl();
   
     DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
     
@@ -507,6 +515,7 @@ function limpiar() {
     if (window.resetResumenPartida) {
         window.resetResumenPartida();
     }
+    actualizarBotonSkipTertuliaControl();
 };
 
 function borrar_texto_guardado() {
@@ -522,6 +531,14 @@ function activar_temporizador_gigante() {
     }
     temporizador_gigante_activo = true;
     socket.emit('activar_temporizador_gigante', { duracion: 10 * 60 });
+}
+
+function saltar_tertulia() {
+    if (!juego_iniciado || modo_actual !== "tertulia") {
+        return;
+    }
+    clearTimeout(TimeoutTiempoMuerto);
+    socket.emit('saltar_tertulia', {});
 }
 
 function fin(player) {
@@ -804,8 +821,74 @@ const teleprompter_state = {
     speed: 25,
     playing: false,
     scroll: 0,
-    source: 0
+    source: 0,
+    loadId: 0
 };
+
+const TELEPROMPTER_ACK_TIMEOUT_MS = 4200;
+let teleprompter_load_seq = 0;
+let teleprompter_espera_ack = null;
+let teleprompter_ack_timeout = null;
+
+function actualizarEstadoCargaTeleprompter(mensaje, tipo = "idle") {
+    const estado = document.getElementById("teleprompter_estado_carga");
+    if (!estado) return;
+    estado.textContent = mensaje || "Sin carga en teleprompter";
+    estado.className = `teleprompter-status teleprompter-status--${tipo}`;
+}
+
+function limpiarEsperaAckTeleprompter() {
+    teleprompter_espera_ack = null;
+    if (teleprompter_ack_timeout) {
+        clearTimeout(teleprompter_ack_timeout);
+        teleprompter_ack_timeout = null;
+    }
+}
+
+function iniciarEsperaAckTeleprompter(loadId, source) {
+    limpiarEsperaAckTeleprompter();
+    teleprompter_espera_ack = {
+        loadId: Number(loadId) || 0,
+        source: source === 2 ? 2 : 1,
+        startedAt: Date.now()
+    };
+    teleprompter_ack_timeout = setTimeout(() => {
+        if (!teleprompter_espera_ack || teleprompter_espera_ack.loadId !== loadId) return;
+        const etiqueta = teleprompter_espera_ack.source === 2 ? "J2" : "J1";
+        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} enviado, sin confirmación del espectador`, "error");
+    }, TELEPROMPTER_ACK_TIMEOUT_MS);
+}
+
+function procesarTeleprompterAckControl(payload = {}) {
+    const loadId = Number(payload.loadId);
+    if (!Number.isFinite(loadId) || loadId <= 0) return;
+    if (!teleprompter_espera_ack || teleprompter_espera_ack.loadId !== loadId) return;
+
+    const source = Number(payload.source) === 2 ? 2 : 1;
+    const etiqueta = source === 2 ? "J2" : "J1";
+    const textoRenderizado = Boolean(payload.rendered);
+    const timerActivo = Boolean(payload.timerActive);
+    const visible = Boolean(payload.visible);
+
+    limpiarEsperaAckTeleprompter();
+    if (!textoRenderizado) {
+        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} no renderizado en espectador`, "error");
+        return;
+    }
+    if (timerActivo && !visible) {
+        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado (oculto por temporizador de 10 minutos)`, "warn");
+        return;
+    }
+    if (visible) {
+        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado y visible en espectador`, "ok");
+        return;
+    }
+    actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado en espectador`, "ok");
+}
+
+if (typeof window !== "undefined") {
+    window.procesarTeleprompterAckControl = procesarTeleprompterAckControl;
+}
 
 const animateCSS = (element, animation, prefix = "animate__") =>
     new Promise((resolve) => {
@@ -1162,18 +1245,28 @@ function toggleTeleprompter(forzarCerrar = false) {
 function teleprompterCargarTexto(jugador) {
     const texto = obtenerTextoJugadorParaRepresentacion(jugador === 2 ? 2 : 1);
     if (!texto || !texto.trim()) {
+        const etiqueta = jugador === 2 ? "J2" : "J1";
+        actualizarEstadoCargaTeleprompter(`No hay texto para cargar en ${etiqueta}`, "warn");
         if (typeof actualizarBotonesTeleprompterCarga === "function") {
             actualizarBotonesTeleprompterCarga();
         }
         return;
     }
+    const source = jugador === 2 ? 2 : 1;
+    const etiqueta = source === 2 ? "J2" : "J1";
+    const loadId = ++teleprompter_load_seq;
     teleprompter_state.text = (texto || "").trim();
     teleprompter_state.scroll = 0;
-    teleprompter_state.source = jugador === 2 ? 2 : 1;
+    teleprompter_state.source = source;
     teleprompter_state.playing = false;
     teleprompter_state.visible = true;
-    aplicarVistaPanelControl("teleprompter");
+    teleprompter_state.loadId = loadId;
+    if (!teleprompter_visible) {
+        aplicarVistaPanelControl("teleprompter");
+    }
     detenerTeleprompterPlay();
+    actualizarEstadoCargaTeleprompter(`Cargando texto ${etiqueta} en espectador...`, "info");
+    iniciarEsperaAckTeleprompter(loadId, source);
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
 }

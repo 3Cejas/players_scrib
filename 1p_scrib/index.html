@@ -38,6 +38,67 @@
             overflow: hidden;
         }
 
+        body.intro-cursor-pluma-activo,
+        body.intro-cursor-pluma-activo * {
+            cursor: none !important;
+        }
+
+        .intro-cursor-pluma {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 44px;
+            height: 44px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transform: translate(-33px, -38px);
+            transition: opacity 120ms ease;
+            will-change: left, top, opacity;
+        }
+
+        .intro-cursor-pluma.activa {
+            opacity: 1;
+        }
+
+        .intro-cursor-pluma::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            display: block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            background-image: url("./game/img/pluma_azul.png");
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            transform: rotate(-14deg);
+            transform-origin: center;
+            filter: drop-shadow(0 0 0.28em rgba(55, 236, 255, 0.95)) drop-shadow(0 0 0.58em rgba(55, 236, 255, 0.6));
+            animation: introCursorPlumaGlow 1.35s ease-in-out infinite;
+        }
+
+        @keyframes introCursorPlumaGlow {
+            0%,
+            100% {
+                filter: drop-shadow(0 0 0.24em rgba(55, 236, 255, 0.9)) drop-shadow(0 0 0.52em rgba(55, 236, 255, 0.52));
+            }
+            50% {
+                filter: drop-shadow(0 0 0.34em rgba(55, 236, 255, 1)) drop-shadow(0 0 0.74em rgba(55, 236, 255, 0.74));
+            }
+        }
+
+        @media (pointer: coarse) {
+            body.intro-cursor-pluma-activo,
+            body.intro-cursor-pluma-activo * {
+                cursor: auto !important;
+            }
+
+            .intro-cursor-pluma {
+                display: none !important;
+            }
+        }
+
         .intro-flow {
             width: 100vw;
             max-width: 100vw;
@@ -2206,6 +2267,45 @@
         const REGEX_LETRA = /[A-Za-z\u00C0-\u00FF]/;
         const habilidades = { fuerza: 0, agilidad: 0, destreza: 0 };
         let inicioBloqueado = false;
+        let cursorPlumaIntro = null;
+        const soportaCursorPlumaIntro = (() => {
+            if (typeof window.matchMedia !== 'function') return true;
+            return window.matchMedia('(pointer: fine)').matches;
+        })();
+
+        function ocultarCursorPlumaIntro() {
+            if (!cursorPlumaIntro) return;
+            cursorPlumaIntro.classList.remove('activa');
+        }
+
+        function moverCursorPlumaIntro(clientX, clientY) {
+            if (!cursorPlumaIntro) return;
+            cursorPlumaIntro.style.left = `${clientX}px`;
+            cursorPlumaIntro.style.top = `${clientY}px`;
+            cursorPlumaIntro.classList.add('activa');
+        }
+
+        function inicializarCursorPlumaIntro() {
+            if (!soportaCursorPlumaIntro || !document.body) return;
+            if (!cursorPlumaIntro) {
+                const nodo = document.createElement('div');
+                nodo.className = 'intro-cursor-pluma';
+                document.body.appendChild(nodo);
+                cursorPlumaIntro = nodo;
+            }
+            document.body.classList.add('intro-cursor-pluma-activo');
+            document.addEventListener('mousemove', (evento) => {
+                if (!evento || typeof evento.clientX !== 'number' || typeof evento.clientY !== 'number') return;
+                moverCursorPlumaIntro(evento.clientX, evento.clientY);
+            }, { passive: true });
+            window.addEventListener('blur', ocultarCursorPlumaIntro);
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    ocultarCursorPlumaIntro();
+                }
+            });
+            document.addEventListener('mouseleave', ocultarCursorPlumaIntro);
+        }
 
         function normalizarNombre(valor) {
             if (typeof valor !== 'string') return '';
@@ -2476,6 +2576,7 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
+            inicializarCursorPlumaIntro();
             resetearEstadoInicio();
             if (nombreInput) {
                 nombreInput.addEventListener('input', () => {
