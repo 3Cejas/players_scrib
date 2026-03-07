@@ -43,6 +43,40 @@ let lastTextNode;
 let caretPos;
 let caretNode;
 
+function traducirTextoJuego1P(clave, variables = {}, fallback = "") {
+  if (typeof window.scrib1pT === "function") {
+    return window.scrib1pT(clave, variables, fallback);
+  }
+  return fallback || clave;
+}
+
+function formatearConteoPalabrasJuego1P(valor) {
+  if (typeof window.scrib1pFormatWordsCount === "function") {
+    return window.scrib1pFormatWordsCount(valor);
+  }
+  const texto = String(valor ?? "").trim();
+  if (!texto) return "0 palabras";
+  if (/^-?\d+(?:[.,]\d+)?$/.test(texto)) return `${texto} palabras`;
+  return texto;
+}
+
+function formatearSegundosJuego1P(valor, opciones = {}) {
+  if (typeof window.scrib1pFormatSecs === "function") {
+    return window.scrib1pFormatSecs(valor, opciones);
+  }
+  const numero = String(valor ?? "").trim();
+  if (!numero) return "0 segs.";
+  const signo = typeof opciones.signo === "string" ? opciones.signo : "";
+  return `${signo}${numero} segs.`;
+}
+
+function traducirModoJuego1P(modoCanonical) {
+  if (typeof window.scrib1pTranslateModeName === "function") {
+    return window.scrib1pTranslateModeName(modoCanonical);
+  }
+  return String(modoCanonical || "").toUpperCase();
+}
+
 function pantalla_completa() {
   texto.focus();
   console.log(menu_modificador);
@@ -119,13 +153,13 @@ function borrar() {
     if (modo_actual !== "frase final") {
       addSeconds(-1);
       if (typeof mostrarFeedbackFlotanteEscritora === "function") {
-        mostrarFeedbackFlotanteEscritora("-1 segs.", {
+        mostrarFeedbackFlotanteEscritora(formatearSegundosJuego1P(1, { signo: "-" }), {
           color: color_negativo,
           tipo: "borrar"
         });
       } else {
         feedback.style.color = color_negativo;
-        feedback.innerHTML = "⏱️-1 segs.";
+        feedback.innerHTML = `⏱️${formatearSegundosJuego1P(1, { signo: "-" })}`;
         clearTimeout(delay_animacion);
         animateCSS(".feedback1", "flash").then(() => {
           delay_animacion = setTimeout(function () {
@@ -134,7 +168,7 @@ function borrar() {
         });
       }
       color = color_negativo;
-      tiempo_feed = "-1 segs.";
+      tiempo_feed = formatearSegundosJuego1P(1, { signo: "-" });
     }
     caracteres_seguidos = 0;
     indice_buscar_palabra = texto.innerText.length;
@@ -182,9 +216,9 @@ function borrar() {
       puntos_ = 0;
     }
     if (typeof actualizarPuntosMarcador === "function") {
-      actualizarPuntosMarcador(`${puntos_} palabras`);
+      actualizarPuntosMarcador(puntos_);
     } else {
-      puntos.innerHTML = puntos_ + " palabras";
+      puntos.innerHTML = formatearConteoPalabrasJuego1P(puntos_);
     }
     //cambio_nivel(puntos_);
     clearTimeout(borrado);
@@ -244,9 +278,9 @@ function countChars(texto) {
     puntos_ = 0;
   }
   if (typeof actualizarPuntosMarcador === "function") {
-    actualizarPuntosMarcador(`${puntos_} palabras`);
+    actualizarPuntosMarcador(puntos_);
   } else {
-    puntos.innerHTML = puntos_ + " palabras";
+    puntos.innerHTML = formatearConteoPalabrasJuego1P(puntos_);
   }
   //cambio_nivel(puntos_);
   clearTimeout(borrado);
@@ -265,13 +299,13 @@ function countChars(texto) {
       : 6;
     addSeconds(bonusTiempo);
     if (typeof mostrarFeedbackFlotanteEscritora === "function") {
-      mostrarFeedbackFlotanteEscritora(`+${bonusTiempo} segs.`, {
+      mostrarFeedbackFlotanteEscritora(formatearSegundosJuego1P(bonusTiempo, { signo: "+" }), {
         color: color_positivo,
         tipo: "ganar_tiempo"
       });
     } else {
       feedback.style.color = color_positivo;
-      feedback.innerHTML = "⏱️+" + bonusTiempo + " segs.";
+      feedback.innerHTML = `⏱️${formatearSegundosJuego1P(bonusTiempo, { signo: "+" })}`;
       clearTimeout(delay_animacion);
       animateCSS(".feedback1", "flash").then(() => {
         delay_animacion = setTimeout(function () {
@@ -283,7 +317,7 @@ function countChars(texto) {
     secs = bonusTiempo;
     /////socket.emit('aumentar_tiempo', {secs, player});
     color = color_positivo;
-    tiempo_feed = `+${bonusTiempo} segs.`;
+    tiempo_feed = formatearSegundosJuego1P(bonusTiempo, { signo: "+" });
   }
   borrado = setTimeout(function () {
     borrar();
@@ -517,23 +551,32 @@ const animateCSS = (element, animation, prefix = "animate__") =>
   }
 
 function opciones(){
+  const btnOpcionesEl = document.getElementById("btn_opciones");
+  const btnEscribirEl = document.getElementById("btn_escribir");
+  const btnLimpiarEl = document.getElementById("btn_limpiar");
+  const btnDescargarEl = document.getElementById("btn_descargar_texto");
+  const btnPantallaEl = document.getElementById("btn_pantalla_completa");
+  const btnVolverEl = document.getElementById("btn_volver");
+  const soporteEl = document.getElementById("soporte");
+  const contenedorEl = document.getElementById("contenedor");
+  const opcionesEl = document.getElementById("opciones");
   
   animateCSS(".botones", "backOutLeft").then((message) => {
-    btnOpciones.style.display = "none";
-    btnEscribir.style.display = "none";
-    btnLimpiar.style.display = "none";
-    btnDescargarTexto.style.display = "none";
-    btnPantallaCompleta.style.display = "none";
-    btnVolver.style.display = "";
-    soporte.style.display = "block"
+    if (btnOpcionesEl) btnOpcionesEl.style.display = "none";
+    if (btnEscribirEl) btnEscribirEl.style.display = "none";
+    if (btnLimpiarEl) btnLimpiarEl.style.display = "none";
+    if (btnDescargarEl) btnDescargarEl.style.display = "none";
+    if (btnPantallaEl) btnPantallaEl.style.display = "none";
+    if (btnVolverEl) btnVolverEl.style.display = "";
+    if (soporteEl) soporteEl.style.display = "block";
     animateCSS(".botones", "backInLeft")
     animateCSS(".soporte", "backInLeft")
 
   });
 
   animateCSS(".contenedor", "backOutLeft").then((message) => {
-    contenedor.style.display = "none";
-    div_opciones.style.display = "inline-block";
+    if (contenedorEl) contenedorEl.style.display = "none";
+    if (opcionesEl) opcionesEl.style.display = "inline-block";
     animateCSS(".opciones", "backInLeft")
     animateCSS(".soporte", "backInLeft")
 
@@ -541,124 +584,139 @@ function opciones(){
 }
 
 function volver(){
+  const btnOpcionesEl = document.getElementById("btn_opciones");
+  const btnEscribirEl = document.getElementById("btn_escribir");
+  const btnLimpiarEl = document.getElementById("btn_limpiar");
+  const btnPantallaEl = document.getElementById("btn_pantalla_completa");
+  const btnVolverEl = document.getElementById("btn_volver");
+  const soporteEl = document.getElementById("soporte");
+  const contenedorEl = document.getElementById("contenedor");
+  const opcionesEl = document.getElementById("opciones");
+
   animateCSS(".botones", "backOutLeft").then((message) => {
-    btnOpciones.style.display = "";
-    btnEscribir.style.display = "";
-    btnLimpiar.style.display = "";
-    btnPantallaCompleta.style.display = "" 
-    btnVolver.style.display = "none";
-    soporte.style.display = "none"
+    if (btnOpcionesEl) btnOpcionesEl.style.display = "";
+    if (btnEscribirEl) btnEscribirEl.style.display = "";
+    if (btnLimpiarEl) btnLimpiarEl.style.display = "";
+    if (btnPantallaEl) btnPantallaEl.style.display = "";
+    if (btnVolverEl) btnVolverEl.style.display = "none";
+    if (soporteEl) soporteEl.style.display = "none";
     animateCSS(".botones", "backInLeft")
   });
   animateCSS(".opciones", "backOutLeft").then((message) => {
-    contenedor.style.display = "";
-    div_opciones.style.display = ""
-    contenedor.style.display = "";
+    if (contenedorEl) contenedorEl.style.display = "";
+    if (opcionesEl) opcionesEl.style.display = "";
+    if (contenedorEl) contenedorEl.style.display = "";
     animateCSS(".contenedor", "backInLeft")
   })
 }
 
 // Función para generar las casillas de verificación dentro de <td>
 function generarCasillas() {
-  // Obtener la referencia al contenedor (tbody o similar)
   const contenedor = document.getElementById('listaModos');
+  if (!contenedor) return;
 
-  // Limpiar el contenedor antes de agregar elementos
+  const seleccionadosPrevios = new Set(
+    Array.from(contenedor.querySelectorAll('input[name="modos"]:checked')).map((checkbox) => checkbox.value)
+  );
+  const mantenerTodoMarcado = seleccionadosPrevios.size === 0;
+
   contenedor.innerHTML = "";
 
-  // Centrar la tabla (asumiendo que el 'tbody' es hijo directo de la tabla)
   if (contenedor.parentElement && contenedor.parentElement.tagName.toLowerCase() === "table") {
-    // Ajustamos el estilo de la tabla para centrarla
     contenedor.parentElement.style.margin = "0 auto";
   }
 
-  // Verificamos si la ventana es pequeña (móvil) o más grande (escritorio)
   if (window.innerWidth <= 800) {
-    // ------- MODO MÓVIL (≤ 600px): apilados verticalmente, checkbox grande -------
     LISTA_MODOS_INICIAL.forEach(function(modo, index) {
-      // Crear una fila para cada casilla
       const tr = document.createElement('tr');
-      // Crear una celda que contenga el checkbox y el label
       const td = document.createElement('td');
       td.className = "casilla";
 
-      // Crear el checkbox con tamaño mayor para móviles
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.id = `modo-${index}`;
       checkbox.name = 'modos';
       checkbox.value = modo;
-      checkbox.checked = true;
+      checkbox.checked = mantenerTodoMarcado || seleccionadosPrevios.has(modo);
 
-      // Ajuste del tamaño del checkbox para pantallas pequeñas
       checkbox.style.width = "1.5em";
       checkbox.style.height = "1.5em";
 
-      // Crear el label
       const label = document.createElement('label');
       label.htmlFor = `modo-${index}`;
-      label.textContent = modo.toUpperCase(); // Convertir el texto a mayúsculas
-      label.style.display = 'block'; // Mostrar el label en una nueva línea
+      label.setAttribute("data-mode-key", modo);
+      label.textContent = traducirModoJuego1P(modo);
+      label.style.display = 'block';
       label.style.color = COLORES_MODOS[modo];
       label.style.paddingLeft = "0.2vw";
       label.style.paddingRight = "0.2vw";
       label.style.paddingBottom = "4vw";
       label.style.fontSize = "8vw";
 
-      // Añadir el checkbox y el label a la celda, y la celda a la fila
       td.appendChild(checkbox);
       td.appendChild(label);
       tr.appendChild(td);
 
-      // Agregar la fila al contenedor
       contenedor.appendChild(tr);
     });
 
   } else {
-    // ------- MODO ESCRITORIO (> 600px): distribuidos horizontalmente -------
-    // Creamos una sola fila donde cada modo irá en su propia celda
     const tr = document.createElement('tr');
 
     LISTA_MODOS_INICIAL.forEach(function(modo, index) {
-      // Crear una celda para cada modo
       const td = document.createElement('td');
       td.className = "casilla";
 
-      // Crear el checkbox (tamaño estándar o el que prefieras)
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.id = `modo-${index}`;
       checkbox.name = 'modos';
       checkbox.value = modo;
-      checkbox.checked = true;
+      checkbox.checked = mantenerTodoMarcado || seleccionadosPrevios.has(modo);
 
-      // Ajuste del tamaño del checkbox para escritorio (puedes modificarlo según tu preferencia)
       checkbox.style.width = "1.5em";
       checkbox.style.height = "1.5em";
 
-      // Crear el label justo debajo del checkbox
       const label = document.createElement('label');
       label.htmlFor = `modo-${index}`;
-      label.textContent = modo.toUpperCase();
-      label.style.display = 'block'; // Bloque para que aparezca debajo del checkbox
+      label.setAttribute("data-mode-key", modo);
+      label.textContent = traducirModoJuego1P(modo);
+      label.style.display = 'block';
       label.style.color = COLORES_MODOS[modo];
-      label.style.paddingTop = "0.3em";  // Un pequeño espacio entre checkbox y label
+      label.style.paddingTop = "0.3em";
       label.style.paddingLeft = "0.5vw";
       label.style.paddingRight = "0.5vw";
       label.style.fontSize = "1.5em";
 
-      // Agregar el checkbox y el label en la misma celda
       td.appendChild(checkbox);
       td.appendChild(label);
 
-      // Agregar la celda a la fila principal
       tr.appendChild(td);
     });
 
-    // Finalmente agregamos la fila al contenedor (tbody, etc.)
     contenedor.appendChild(tr);
   }
 }
+
+function actualizarEtiquetasCasillasModo() {
+  let mapaColores = null;
+  try {
+    mapaColores = COLORES_MODOS;
+  } catch (_error) {
+    mapaColores = null;
+  }
+
+  document.querySelectorAll('#listaModos label[data-mode-key]').forEach((label) => {
+    const modo = label.getAttribute("data-mode-key");
+    if (!modo) return;
+    label.textContent = traducirModoJuego1P(modo);
+    if (mapaColores && Object.prototype.hasOwnProperty.call(mapaColores, modo)) {
+      label.style.color = mapaColores[modo];
+    }
+  });
+}
+
+window.scrib1pRefreshModeLabels = actualizarEtiquetasCasillasModo;
 
 // Función para obtener los modos seleccionados
 function rellenarListaModos() {

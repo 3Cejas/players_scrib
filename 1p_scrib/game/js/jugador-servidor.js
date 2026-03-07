@@ -49,6 +49,431 @@ let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
 let tiempo_modos_input = document.getElementById('tiempo_modos');
 let tiempo_inicial_input = document.getElementById('tiempo_inicial');
 
+const I18N_STORAGE_KEY_1P = "scrib_1p_language";
+const I18N_DEFAULT_LANG_1P = "es";
+const I18N_TEXTS_1P = {
+    es: {
+        "lang.es": "Español",
+        "lang.en": "English",
+        "lang.fr": "Français",
+        "ui.btn_write": "✍️ ESCRIBIR",
+        "ui.btn_restart": "🔁 REINICIO",
+        "ui.btn_finish": "🏁 FIN",
+        "ui.btn_fullscreen": "🖥️ PANTALLA COMPLETA",
+        "ui.btn_download_text": "💾 DESCARGAR TEXTO",
+        "ui.btn_options": "⚙️ OPCIONES",
+        "ui.btn_back": "🔙 VOLVER",
+        "res.game_over": "GAME OVER",
+        "res.title_prefix": "¿QUIERES",
+        "res.title_highlight": "RESUCITAR",
+        "res.title_suffix": "A CAMBIO DE PALABRAS?",
+        "res.btn_yes": "Sí",
+        "res.btn_no": "No",
+        "res.keys_hint": "Usa flechas y Enter",
+        "res.badge_game_over": "💀 GAME OVER",
+        "res.quantity_title": "Selecciona la cantidad de palabras",
+        "res.btn_confirm": "Confirmar",
+        "res.btn_back": "Atrás",
+        "res.quantity.words_label": "Palabras",
+        "res.quantity.seconds_label": "Segundos",
+        "res.quantity.max": "MAX {max}",
+        "disadvantage.selecting": "SE VA A ELEGIR UNA DESVENTAJA",
+        "disadvantage.applying": "APLICANDO DESVENTAJA...",
+        "score.words_label": "Palabras",
+        "score.words_count": "{count} palabras",
+        "score.muses_count": "{count} musas",
+        "options.initial_time": "TIEMPO INICIAL",
+        "options.level_duration": "DURACIÓN NIVEL",
+        "options.word_change": "CAMBIO DE PALABRAS",
+        "options.letter_change": "CAMBIO DE LETRAS",
+        "options.seconds_unit": "segundos",
+        "options.language_label": "IDIOMA",
+        "options.language_aria": "Idioma",
+        "support.message": "En caso de encontrar algún error o tengas alguna sugerencia, envianos un correo a <a href=\"mailto:contacto@suturateatro.es\" style=\"color:aqua\">contacto@suturateatro.es</a>",
+        "mode.name.letra_bendita": "LETRA BENDITA",
+        "mode.name.letra_prohibida": "LETRA PROHIBIDA",
+        "mode.name.palabras_bonus": "PALABRAS BONUS",
+        "mode.name.palabras_prohibidas": "PALABRAS PROHIBIDAS",
+        "mode.name.tertulia": "TERTULIA",
+        "mode.name.frase_final": "FRASE FINAL",
+        "mode.title.letra_bendita": "NIVEL LETRA BENDITA",
+        "mode.title.letra_prohibida": "NIVEL LETRA PROHIBIDA",
+        "mode.title.palabras_bonus": "NIVEL PALABRAS BONUS",
+        "mode.title.palabras_prohibidas": "NIVEL PALABRAS PROHIBIDAS",
+        "mode.title.tertulia": "NIVEL TERTULIA",
+        "mode.title.frase_final": "NIVEL FRASE FINAL",
+        "mode.desc.bonus": "SUMA TIEMPO CON PALABRAS BONUS",
+        "mode.desc.prohibidas": "EVITA LAS PALABRAS PROHIBIDAS",
+        "mode.desc.tertulia": "DIALOGA CON TUS MUSAS",
+        "mode.desc.frase_final": "ULTIMA RONDA",
+        "mode.rule.bendita": "CADA PALABRA DEBE INCLUIR LA LETRA {letter}.",
+        "mode.rule.prohibida": "NINGUNA PALABRA PUEDE USAR LA LETRA {letter}.",
+        "mode.goal.final_phrase": "⬆️ ¡Introduce la frase final para ganar! ⬆️",
+        "time.secs": "{sign}{value} segs.",
+        "thanks.playing": "¡GRACIAS POR JUGAR!",
+        "countdown.write": "¡ESCRIBE!"
+    },
+    en: {
+        "lang.es": "Spanish",
+        "lang.en": "English",
+        "lang.fr": "French",
+        "ui.btn_write": "✍️ WRITE",
+        "ui.btn_restart": "🔁 RESTART",
+        "ui.btn_finish": "🏁 FINISH",
+        "ui.btn_fullscreen": "🖥️ FULLSCREEN",
+        "ui.btn_download_text": "💾 DOWNLOAD TEXT",
+        "ui.btn_options": "⚙️ OPTIONS",
+        "ui.btn_back": "🔙 BACK",
+        "res.game_over": "GAME OVER",
+        "res.title_prefix": "DO YOU WANT TO",
+        "res.title_highlight": "REVIVE",
+        "res.title_suffix": "IN EXCHANGE FOR WORDS?",
+        "res.btn_yes": "Yes",
+        "res.btn_no": "No",
+        "res.keys_hint": "Use arrows and Enter",
+        "res.badge_game_over": "💀 GAME OVER",
+        "res.quantity_title": "Choose how many words",
+        "res.btn_confirm": "Confirm",
+        "res.btn_back": "Back",
+        "res.quantity.words_label": "Words",
+        "res.quantity.seconds_label": "Seconds",
+        "res.quantity.max": "MAX {max}",
+        "disadvantage.selecting": "A DISADVANTAGE WILL BE CHOSEN",
+        "disadvantage.applying": "APPLYING DISADVANTAGE...",
+        "score.words_label": "Words",
+        "score.words_count": "{count} words",
+        "score.muses_count": "{count} muses",
+        "options.initial_time": "INITIAL TIME",
+        "options.level_duration": "LEVEL DURATION",
+        "options.word_change": "WORD CHANGE",
+        "options.letter_change": "LETTER CHANGE",
+        "options.seconds_unit": "seconds",
+        "options.language_label": "LANGUAGE",
+        "options.language_aria": "Language",
+        "support.message": "If you find any bug or have any suggestion, send us an email at <a href=\"mailto:contacto@suturateatro.es\" style=\"color:aqua\">contacto@suturateatro.es</a>",
+        "mode.name.letra_bendita": "BLESSED LETTER",
+        "mode.name.letra_prohibida": "FORBIDDEN LETTER",
+        "mode.name.palabras_bonus": "BONUS WORDS",
+        "mode.name.palabras_prohibidas": "FORBIDDEN WORDS",
+        "mode.name.tertulia": "MUSE CHAT",
+        "mode.name.frase_final": "FINAL SENTENCE",
+        "mode.title.letra_bendita": "BLESSED LETTER LEVEL",
+        "mode.title.letra_prohibida": "FORBIDDEN LETTER LEVEL",
+        "mode.title.palabras_bonus": "BONUS WORDS LEVEL",
+        "mode.title.palabras_prohibidas": "FORBIDDEN WORDS LEVEL",
+        "mode.title.tertulia": "MUSE CHAT LEVEL",
+        "mode.title.frase_final": "FINAL SENTENCE LEVEL",
+        "mode.desc.bonus": "ADD TIME WITH BONUS WORDS",
+        "mode.desc.prohibidas": "AVOID FORBIDDEN WORDS",
+        "mode.desc.tertulia": "CHAT WITH YOUR MUSES",
+        "mode.desc.frase_final": "FINAL ROUND",
+        "mode.rule.bendita": "EVERY WORD MUST INCLUDE LETTER {letter}.",
+        "mode.rule.prohibida": "NO WORD CAN USE LETTER {letter}.",
+        "mode.goal.final_phrase": "⬆️ Type the final sentence to win! ⬆️",
+        "time.secs": "{sign}{value} secs.",
+        "thanks.playing": "THANKS FOR PLAYING!",
+        "countdown.write": "WRITE!"
+    },
+    fr: {
+        "lang.es": "Espagnol",
+        "lang.en": "Anglais",
+        "lang.fr": "Français",
+        "ui.btn_write": "✍️ ÉCRIRE",
+        "ui.btn_restart": "🔁 RECOMMENCER",
+        "ui.btn_finish": "🏁 FIN",
+        "ui.btn_fullscreen": "🖥️ PLEIN ÉCRAN",
+        "ui.btn_download_text": "💾 TÉLÉCHARGER LE TEXTE",
+        "ui.btn_options": "⚙️ OPTIONS",
+        "ui.btn_back": "🔙 RETOUR",
+        "res.game_over": "GAME OVER",
+        "res.title_prefix": "VEUX-TU",
+        "res.title_highlight": "RESSUSCITER",
+        "res.title_suffix": "EN ÉCHANGE DE MOTS ?",
+        "res.btn_yes": "Oui",
+        "res.btn_no": "Non",
+        "res.keys_hint": "Utilise les flèches et Entrée",
+        "res.badge_game_over": "💀 GAME OVER",
+        "res.quantity_title": "Choisis la quantité de mots",
+        "res.btn_confirm": "Confirmer",
+        "res.btn_back": "Retour",
+        "res.quantity.words_label": "Mots",
+        "res.quantity.seconds_label": "Secondes",
+        "res.quantity.max": "MAX {max}",
+        "disadvantage.selecting": "UN DÉSAVANTAGE VA ÊTRE CHOISI",
+        "disadvantage.applying": "APPLICATION DU DÉSAVANTAGE...",
+        "score.words_label": "Mots",
+        "score.words_count": "{count} mots",
+        "score.muses_count": "{count} muses",
+        "options.initial_time": "TEMPS INITIAL",
+        "options.level_duration": "DURÉE DU NIVEAU",
+        "options.word_change": "CHANGEMENT DE MOTS",
+        "options.letter_change": "CHANGEMENT DE LETTRES",
+        "options.seconds_unit": "secondes",
+        "options.language_label": "LANGUE",
+        "options.language_aria": "Langue",
+        "support.message": "Si tu trouves une erreur ou as une suggestion, envoie-nous un email à <a href=\"mailto:contacto@suturateatro.es\" style=\"color:aqua\">contacto@suturateatro.es</a>",
+        "mode.name.letra_bendita": "LETTRE BÉNIE",
+        "mode.name.letra_prohibida": "LETTRE INTERDITE",
+        "mode.name.palabras_bonus": "MOTS BONUS",
+        "mode.name.palabras_prohibidas": "MOTS INTERDITS",
+        "mode.name.tertulia": "DIALOGUE MUSES",
+        "mode.name.frase_final": "PHRASE FINALE",
+        "mode.title.letra_bendita": "NIVEAU LETTRE BÉNIE",
+        "mode.title.letra_prohibida": "NIVEAU LETTRE INTERDITE",
+        "mode.title.palabras_bonus": "NIVEAU MOTS BONUS",
+        "mode.title.palabras_prohibidas": "NIVEAU MOTS INTERDITS",
+        "mode.title.tertulia": "NIVEAU DIALOGUE MUSES",
+        "mode.title.frase_final": "NIVEAU PHRASE FINALE",
+        "mode.desc.bonus": "GAGNE DU TEMPS AVEC DES MOTS BONUS",
+        "mode.desc.prohibidas": "ÉVITE LES MOTS INTERDITS",
+        "mode.desc.tertulia": "DIALOGUE AVEC TES MUSES",
+        "mode.desc.frase_final": "DERNIER TOUR",
+        "mode.rule.bendita": "CHAQUE MOT DOIT INCLURE LA LETTRE {letter}.",
+        "mode.rule.prohibida": "AUCUN MOT NE PEUT UTILISER LA LETTRE {letter}.",
+        "mode.goal.final_phrase": "⬆️ Écris la phrase finale pour gagner ! ⬆️",
+        "time.secs": "{sign}{value} s",
+        "thanks.playing": "MERCI D'AVOIR JOUÉ !",
+        "countdown.write": "ÉCRIS !"
+    }
+};
+
+const MODO_I18N_NAME_KEYS_1P = {
+    "letra bendita": "mode.name.letra_bendita",
+    "letra prohibida": "mode.name.letra_prohibida",
+    "palabras bonus": "mode.name.palabras_bonus",
+    "palabras prohibidas": "mode.name.palabras_prohibidas",
+    "tertulia": "mode.name.tertulia",
+    "frase final": "mode.name.frase_final"
+};
+
+const MODO_I18N_TITLE_KEYS_1P = {
+    "letra bendita": "mode.title.letra_bendita",
+    "letra prohibida": "mode.title.letra_prohibida",
+    "palabras bonus": "mode.title.palabras_bonus",
+    "palabras prohibidas": "mode.title.palabras_prohibidas",
+    "tertulia": "mode.title.tertulia",
+    "frase final": "mode.title.frase_final"
+};
+
+const MODO_CANONICAL_KEY_1P = Object.freeze({
+    "letra bendita": "letra bendita",
+    "letra prohibida": "letra prohibida",
+    "palabras bonus": "palabras bonus",
+    "palabras prohibidas": "palabras prohibidas",
+    "tertulia": "tertulia",
+    "frase final": "frase final"
+});
+
+const resolverIdiomaJuego1P = (idioma) => (
+    Object.prototype.hasOwnProperty.call(I18N_TEXTS_1P, idioma) ? idioma : I18N_DEFAULT_LANG_1P
+);
+
+let idioma_juego_1p = (() => {
+    try {
+        const guardado = localStorage.getItem(I18N_STORAGE_KEY_1P);
+        return resolverIdiomaJuego1P(guardado || I18N_DEFAULT_LANG_1P);
+    } catch (_error) {
+        return I18N_DEFAULT_LANG_1P;
+    }
+})();
+
+const interpolarPlantillaI18n1P = (plantilla, variables = {}) => String(plantilla || "").replace(
+    /\{([a-zA-Z0-9_]+)\}/g,
+    (_match, nombre) => (variables[nombre] ?? "")
+);
+
+function tJuego1P(clave, variables = {}, fallback = "") {
+    const tablaIdioma = I18N_TEXTS_1P[idioma_juego_1p] || I18N_TEXTS_1P[I18N_DEFAULT_LANG_1P];
+    const tablaBase = I18N_TEXTS_1P[I18N_DEFAULT_LANG_1P];
+    const plantilla = tablaIdioma[clave] ?? tablaBase[clave] ?? fallback ?? clave;
+    return interpolarPlantillaI18n1P(plantilla, variables);
+}
+
+function traducirNombreModo1P(modoCanonical) {
+    const clave = MODO_I18N_NAME_KEYS_1P[modoCanonical];
+    if (!clave) return String(modoCanonical || "").toUpperCase();
+    return tJuego1P(clave, {}, String(modoCanonical || "").toUpperCase());
+}
+
+function traducirTituloModo1P(modoCanonical) {
+    const clave = MODO_I18N_TITLE_KEYS_1P[modoCanonical];
+    if (!clave) return String(modoCanonical || "").toUpperCase();
+    return tJuego1P(clave, {}, String(modoCanonical || "").toUpperCase());
+}
+
+function formatearConteoPalabrasI18n1P(valor) {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return tJuego1P("score.words_count", { count: 0 }, "0 palabras");
+    if (/^-?\d+(?:[.,]\d+)?$/.test(texto)) {
+        return tJuego1P("score.words_count", { count: texto }, `${texto} palabras`);
+    }
+    return texto;
+}
+
+function formatearConteoMusasI18n1P(valor) {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return tJuego1P("score.muses_count", { count: 0 }, "0 musas");
+    if (/^-?\d+(?:[.,]\d+)?$/.test(texto)) {
+        return tJuego1P("score.muses_count", { count: texto }, `${texto} musas`);
+    }
+    return texto;
+}
+
+function formatearTiempoSegundosI18n1P(valor, opciones = {}) {
+    const original = String(valor ?? "").trim();
+    if (!original) {
+        return tJuego1P("time.secs", { sign: "", value: "0" }, "0 segs.");
+    }
+    const extraido = original.match(/^([+-])?\s*([0-9]+(?:[.,][0-9]+)?)\s*(?:segs?|secs?|s)?\.?$/i);
+    const signo = (typeof opciones.signo === "string")
+        ? opciones.signo
+        : ((extraido && extraido[1]) ? extraido[1] : "");
+    const numero = (extraido && extraido[2]) ? extraido[2] : original;
+    return tJuego1P("time.secs", { sign: signo, value: numero }, `${signo}${numero} segs.`);
+}
+
+function aplicarIdiomaDOMJuego1P() {
+    if (document.documentElement) {
+        document.documentElement.setAttribute("lang", idioma_juego_1p);
+    }
+
+    document.querySelectorAll("[data-i18n]").forEach((nodo) => {
+        const clave = nodo.getAttribute("data-i18n");
+        if (!clave) return;
+        nodo.textContent = tJuego1P(clave);
+    });
+
+    document.querySelectorAll("[data-i18n-html]").forEach((nodo) => {
+        const clave = nodo.getAttribute("data-i18n-html");
+        if (!clave) return;
+        nodo.innerHTML = tJuego1P(clave);
+    });
+
+    document.querySelectorAll("[data-i18n-attr]").forEach((nodo) => {
+        const descriptor = nodo.getAttribute("data-i18n-attr");
+        if (!descriptor) return;
+        const pares = descriptor.split(";").map((item) => item.trim()).filter(Boolean);
+        pares.forEach((par) => {
+            const [attr, clave] = par.split(":").map((item) => item.trim());
+            if (!attr || !clave) return;
+            nodo.setAttribute(attr, tJuego1P(clave));
+        });
+    });
+
+    const selectorIdioma = getEl("selector_idioma");
+    if (selectorIdioma) {
+        selectorIdioma.value = idioma_juego_1p;
+        selectorIdioma.setAttribute("aria-label", tJuego1P("options.language_aria"));
+    }
+}
+
+function actualizarTextosDinamicosI18n1P() {
+    const estadoPuntos = puntos ? puntos.textContent : "";
+    if (typeof actualizarPuntosMarcador === "function") {
+        actualizarPuntosMarcador(estadoPuntos, false);
+    } else if (puntos) {
+        puntos.textContent = formatearConteoPalabrasI18n1P(estadoPuntos);
+    }
+
+    if (typeof actualizarMusasMarcador === "function" && musas) {
+        actualizarMusasMarcador(musas.textContent, false);
+    }
+
+    if (typeof actualizarTextoCantidad === "function" && typeof menu_resurreccion_activo !== "undefined" && menu_resurreccion_activo) {
+        actualizarTextoCantidad();
+    }
+
+    if (typeof window.scrib1pRefreshModeLabels === "function") {
+        window.scrib1pRefreshModeLabels();
+    }
+
+    if (desventajaStatus) {
+        const actual = String(desventajaStatus.textContent || "").trim();
+        const selecting = new Set(Object.values(I18N_TEXTS_1P).map((tabla) => tabla["disadvantage.selecting"]));
+        const applying = new Set(Object.values(I18N_TEXTS_1P).map((tabla) => tabla["disadvantage.applying"]));
+        if (selecting.has(actual)) {
+            desventajaStatus.textContent = tJuego1P("disadvantage.selecting", {}, actual);
+        } else if (applying.has(actual)) {
+            desventajaStatus.textContent = tJuego1P("disadvantage.applying", {}, actual);
+        }
+    }
+
+    const modoActual = (typeof modo_actual === "string") ? modo_actual : "";
+    if (!modoActual) return;
+
+    if (modoActual === "letra bendita") {
+        if (palabra) palabra.innerHTML = traducirTituloModo1P("letra bendita");
+        if (explicación && typeof letra_bendita !== "undefined") {
+            explicación.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
+        }
+        return;
+    }
+
+    if (modoActual === "letra prohibida") {
+        if (palabra) palabra.innerHTML = traducirTituloModo1P("letra prohibida");
+        if (explicación && typeof letra_prohibida !== "undefined") {
+            explicación.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
+        }
+        return;
+    }
+
+    if (modoActual === "palabras bonus") {
+        if (palabra) palabra.innerHTML = traducirTituloModo1P("palabras bonus");
+        if (explicación) explicación.innerHTML = tJuego1P("mode.desc.bonus", {}, "SUMA TIEMPO CON PALABRAS BONUS");
+        return;
+    }
+
+    if (modoActual === "palabras prohibidas") {
+        if (palabra) palabra.innerHTML = traducirTituloModo1P("palabras prohibidas");
+        if (explicación) explicación.innerHTML = tJuego1P("mode.desc.prohibidas", {}, "EVITA LAS PALABRAS PROHIBIDAS");
+        return;
+    }
+
+    if (modoActual === "tertulia") {
+        if (palabra) palabra.innerHTML = traducirTituloModo1P("tertulia");
+        if (explicación) explicación.innerHTML = tJuego1P("mode.desc.tertulia", {}, "DIALOGA CON TUS MUSAS");
+        return;
+    }
+
+    if (modoActual === "frase final") {
+        if (explicación) explicación.innerHTML = tJuego1P("mode.desc.frase_final", {}, "ULTIMA RONDA");
+        if (definicion) {
+            definicion.innerHTML = tJuego1P("mode.goal.final_phrase", {}, "⬆️ ¡Introduce la frase final para ganar! ⬆️");
+        }
+    }
+}
+
+function setIdiomaJuego1P(nuevoIdioma, opciones = {}) {
+    const idiomaResuelto = resolverIdiomaJuego1P(nuevoIdioma);
+    idioma_juego_1p = idiomaResuelto;
+    const persistir = opciones.persistir !== false;
+    if (persistir) {
+        try {
+            localStorage.setItem(I18N_STORAGE_KEY_1P, idiomaResuelto);
+        } catch (_error) {
+            // Ignorado: modo privado o storage bloqueado
+        }
+    }
+    aplicarIdiomaDOMJuego1P();
+    actualizarTextosDinamicosI18n1P();
+}
+
+window.scrib1pT = (clave, variables = {}, fallback = "") => tJuego1P(clave, variables, fallback);
+window.scrib1pGetLanguage = () => idioma_juego_1p;
+window.scrib1pSetLanguage = setIdiomaJuego1P;
+window.scrib1pTranslateModeName = (modoCanonical) => traducirNombreModo1P(modoCanonical);
+window.scrib1pTranslateModeTitle = (modoCanonical) => traducirTituloModo1P(modoCanonical);
+window.scrib1pFormatWordsCount = (valor) => formatearConteoPalabrasI18n1P(valor);
+window.scrib1pFormatMusesCount = (valor) => formatearConteoMusasI18n1P(valor);
+window.scrib1pFormatSecs = (valor, opciones = {}) => formatearTiempoSegundosI18n1P(valor, opciones);
+window.scrib1pCanonicalModes = MODO_CANONICAL_KEY_1P;
+
+const selector_idioma_juego_1p = getEl("selector_idioma");
+if (selector_idioma_juego_1p) {
+    selector_idioma_juego_1p.addEventListener("change", (evento) => {
+        setIdiomaJuego1P(evento && evento.target ? evento.target.value : I18N_DEFAULT_LANG_1P);
+    });
+}
 let soporte = document.getElementById('soporte');
 const players_fit_root = getEl("players_fit_root");
 const contenedor_principal_escritora = getEl("contenedor");
@@ -135,7 +560,11 @@ function setModoDashboardSolo(activo) {
     if (!document.body) return;
     document.body.classList.toggle("ui-dashboard-only", Boolean(activo));
     if (activo) {
+        setPartidaActivaCursorPluma(false);
         aplicarVisibilidadBotonesDashboard();
+    } else {
+        setPartidaActivaCursorPluma(true);
+        ocultarCursorPlumaEscritora();
     }
     programarAjusteViewportEscritora();
     programarAjusteAlturaEditorEscritora();
@@ -164,7 +593,6 @@ window.addEventListener("orientationchange", programarAjusteViewportEscritora);
 window.addEventListener("load", programarAjusteViewportEscritora);
 
 iniciarAjusteViewportEscritora();
-setModoDashboardSolo(document.body && document.body.classList.contains("ui-dashboard-only"));
 
 let cursor_pluma_escritora = null;
 let partida_activa_cursor_pluma = false;
@@ -176,10 +604,7 @@ const soporta_cursor_pluma_escritora = (() => {
 function setPartidaActivaCursorPluma(activa) {
     partida_activa_cursor_pluma = Boolean(activa);
     if (texto && texto.classList) {
-        texto.classList.toggle("textarea--pluma-cursor-visible", !partida_activa_cursor_pluma);
-    }
-    if (partida_activa_cursor_pluma) {
-        ocultarCursorPlumaEscritora();
+        texto.classList.add("textarea--pluma-cursor-visible");
     }
 }
 
@@ -196,10 +621,6 @@ function posicionarCursorPlumaEscritora(clientX, clientY) {
 
 function mostrarCursorPlumaEscritora(clientX, clientY) {
     if (!cursor_pluma_escritora || !texto) return;
-    if (partida_activa_cursor_pluma) {
-        ocultarCursorPlumaEscritora();
-        return;
-    }
     posicionarCursorPlumaEscritora(clientX, clientY);
     cursor_pluma_escritora.classList.add("activa");
 }
@@ -231,6 +652,7 @@ function inicializarCursorPlumaEscritora() {
     texto.addEventListener("mousemove", actualizar);
     texto.addEventListener("mouseleave", ocultarCursorPlumaEscritora);
     texto.addEventListener("blur", ocultarCursorPlumaEscritora);
+    document.addEventListener("mousemove", actualizar);
     window.addEventListener("blur", ocultarCursorPlumaEscritora);
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
@@ -240,6 +662,7 @@ function inicializarCursorPlumaEscritora() {
 }
 
 inicializarCursorPlumaEscritora();
+setModoDashboardSolo(document.body && document.body.classList.contains("ui-dashboard-only"));
 
 const feedback_flotante_escritora = (() => {
     let root = getEl("feedback_tiempo_flotante_root");
@@ -321,17 +744,11 @@ function limpiarFeedbackFlotanteEscritora() {
 const timeout_marcador_escritora = new WeakMap();
 
 const formatearPuntosMarcador = (valor) => {
-    const texto = String(valor ?? "").trim();
-    if (!texto) return "0 palabras";
-    if (/^-?\d+(?:\.\d+)?$/.test(texto)) return `${texto} palabras`;
-    return texto;
+    return formatearConteoPalabrasI18n1P(valor);
 };
 
 const formatearMusasMarcador = (valor) => {
-    const texto = String(valor ?? "").trim();
-    if (!texto) return "0 musas";
-    if (/^-?\d+(?:\.\d+)?$/.test(texto)) return `${texto} musas`;
-    return texto;
+    return formatearConteoMusasI18n1P(valor);
 };
 
 function destacarMarcadorEscritoraHit(elemento) {
@@ -405,6 +822,7 @@ let DURACION_NIVEL_MS_ESCRITORA = 60000;
 let inicio_nivel_ts_escritora = 0;
 let intervalo_progreso_nivel_escritora = null;
 let progreso_frase_final_base_segundos_escritora = null;
+let inicio_pausa_nivel_ts_escritora = 0;
 
 const CLASE_INTRO_PARTIDA_ESCRITORA = "partida-intro-escritora";
 const CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA = [
@@ -450,6 +868,7 @@ function detenerProgresoNivelBarraEscritora(reiniciar = false) {
         clearInterval(intervalo_progreso_nivel_escritora);
         intervalo_progreso_nivel_escritora = null;
     }
+    inicio_pausa_nivel_ts_escritora = 0;
     inicio_nivel_ts_escritora = 0;
     if (reiniciar) {
         setProgresoNivelBarraEscritora(0);
@@ -506,6 +925,28 @@ function iniciarProgresoNivelBarraEscritora() {
     intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
 }
 
+function pausarProgresoNivelBarraEscritora() {
+    if (modo_actual === "frase final") return;
+    if (!inicio_nivel_ts_escritora || inicio_pausa_nivel_ts_escritora) return;
+    inicio_pausa_nivel_ts_escritora = Date.now();
+    if (intervalo_progreso_nivel_escritora) {
+        clearInterval(intervalo_progreso_nivel_escritora);
+        intervalo_progreso_nivel_escritora = null;
+    }
+}
+
+function reanudarProgresoNivelBarraEscritora() {
+    if (modo_actual === "frase final") return;
+    if (!inicio_nivel_ts_escritora || !inicio_pausa_nivel_ts_escritora) return;
+    const pausaMs = Math.max(0, Date.now() - inicio_pausa_nivel_ts_escritora);
+    inicio_pausa_nivel_ts_escritora = 0;
+    inicio_nivel_ts_escritora += pausaMs;
+    tickProgresoNivelBarraEscritora();
+    if (!intervalo_progreso_nivel_escritora) {
+        intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
+    }
+}
+
 function setBarraNivelClaseEscritora(tipo = "") {
     if (!palabra || !palabra.classList) return;
     CLASES_BARRA_NIVEL_ESCRITORA.forEach((clase) => palabra.classList.remove(clase));
@@ -542,10 +983,10 @@ function renderLetraDestacadaNivelEscritora(letra) {
 function construirExplicacionNivelLetraEscritora(tipo, letra) {
     const letraDestacada = renderLetraDestacadaNivelEscritora(letra);
     if (tipo === "bendita") {
-        return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+        return tJuego1P("mode.rule.bendita", { letter: letraDestacada }, `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`);
     }
     if (tipo === "prohibida") {
-        return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
+        return tJuego1P("mode.rule.prohibida", { letter: letraDestacada }, `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`);
     }
     return "";
 }
@@ -568,7 +1009,7 @@ function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, t
     const esMaldita = tipo === "maldita";
     const signo = esMaldita ? "-" : "+";
     const claseTiempo = esMaldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
-    const tiempoTexto = `${signo}${tiempoLimpio} segs.`;
+    const tiempoTexto = formatearTiempoSegundosI18n1P(tiempoLimpio, { signo });
     return `${escapeHtmlBasico(base)} <span class="palabra-tiempo ${claseTiempo}">${escapeHtmlBasico(tiempoTexto)}</span>`;
 }
 
@@ -625,6 +1066,8 @@ function iniciarSecuenciaIntroPartidaEscritora() {
 function finalizarSecuenciaIntroPartidaEscritora() {
     secuencia_inicio_escritora_activa = false;
     revelarEtapaIntroPartidaEscritora(CLASES_ETAPAS_INTRO_PARTIDA_ESCRITORA.length);
+    // La intro ya terminó: quitamos clases para no ocultar vida/nombre/marcador durante la partida.
+    limpiarClasesIntroPartidaEscritora();
 }
 
 // ---- Resumen y heatmap para PDF (1 jugador) ----
@@ -798,6 +1241,7 @@ let desventajaDecisionInterval = null;
 // Variables de los modos.
 let modo_actual = "";
 let modo_anterior = "";
+setIdiomaJuego1P(idioma_juego_1p, { persistir: false });
 
 let putada_actual = "";
 let modo_texto_borroso = 0;
@@ -1461,7 +1905,7 @@ async function iniciarDesventajaEntreNiveles() {
 
     texto.contentEditable = "false";
     mostrarOverlayDesventaja();
-    setEstadoDesventaja("SE VA A ELEGIR UNA DESVENTAJA");
+    setEstadoDesventaja(tJuego1P("disadvantage.selecting", {}, "SE VA A ELEGIR UNA DESVENTAJA"));
     if (desventajaChoiceTimer) desventajaChoiceTimer.classList.remove("activa");
     if (desventajaChoices) desventajaChoices.innerHTML = "";
     renderLeyendaDesventajas([]);
@@ -1489,7 +1933,7 @@ async function iniciarDesventajaEntreNiveles() {
         if (tokenSecuencia !== desventajaSecuenciaId) return;
     }
 
-    setEstadoDesventaja("APLICANDO DESVENTAJA...");
+    setEstadoDesventaja(tJuego1P("disadvantage.applying", {}, "APLICANDO DESVENTAJA..."));
     await esperar(DURACION_LECTURA_RESULTADO_TRAGAPERRAS_MS);
 
     if (tokenSecuencia !== desventajaSecuenciaId) return;
@@ -1977,8 +2421,8 @@ const MODOS = {
         setBarraNivelClaseEscritora("bonus");
         aplicarEstiloNivelesEscritora("bonus");
         explicación.style.color = "yellow";
-        explicación.innerHTML = "SUMA TIEMPO CON PALABRAS BONUS";
-        palabra.innerHTML = "NIVEL PALABRAS BONUS";
+        explicación.innerHTML = tJuego1P("mode.desc.bonus", {}, "SUMA TIEMPO CON PALABRAS BONUS");
+        palabra.innerHTML = traducirTituloModo1P("palabras bonus");
         definicion.innerHTML = "";
         recibir_palabra();
         iniciarProgresoNivelBarraEscritora();
@@ -2001,7 +2445,7 @@ const MODOS = {
 
         explicación.style.color = "red";
         explicación.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
-        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
+        palabra.innerHTML = traducirTituloModo1P("letra prohibida");
         definicion.innerHTML = "";
         listener_modo = function (e) { modo_letra_prohibida(e) };
         texto.addEventListener("beforeinput", listener_modo, true);
@@ -2023,7 +2467,7 @@ const MODOS = {
 
         explicación.style.color = "lime";
         explicación.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
-        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        palabra.innerHTML = traducirTituloModo1P("letra bendita");
         definicion.innerHTML = "";
         listener_modo = function (e) { modo_letra_bendita(e) };
         texto.addEventListener("beforeinput", listener_modo, true);
@@ -2062,8 +2506,8 @@ const MODOS = {
         tiempo_restante = TIEMPO_BORRADO - (new Date().getTime() - tiempo_inicial.getTime());
         pausa();
         explicación.style.color = "#86d0ff";
-        explicación.innerHTML = "DIALOGA CON TUS MUSAS";
-        palabra.innerHTML = "NIVEL TERTULIA";
+        explicación.innerHTML = tJuego1P("mode.desc.tertulia", {}, "DIALOGA CON TUS MUSAS");
+        palabra.innerHTML = traducirTituloModo1P("tertulia");
         definicion.innerHTML = "";
         iniciarProgresoNivelBarraEscritora();
     },
@@ -2074,8 +2518,8 @@ const MODOS = {
         setBarraNivelClaseEscritora("prohibidas");
         aplicarEstiloNivelesEscritora("prohibidas");
         explicación.style.color = "pink";
-        explicación.innerHTML = "EVITA LAS PALABRAS PROHIBIDAS";
-        palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+        explicación.innerHTML = tJuego1P("mode.desc.prohibidas", {}, "EVITA LAS PALABRAS PROHIBIDAS");
+        palabra.innerHTML = traducirTituloModo1P("palabras prohibidas");
         definicion.innerHTML = "";
         palabras_top_usadas.clear();
         nueva_palabra_prohibida();
@@ -2088,8 +2532,8 @@ const MODOS = {
         setBarraNivelClaseEscritora("frase-final");
         aplicarEstiloNivelesEscritora("frase-final");
         explicación.style.color = "orange";
-        explicación.innerHTML = "ULTIMA RONDA";
-        palabra.innerHTML = "NIVEL FRASE FINAL";
+        explicación.innerHTML = tJuego1P("mode.desc.frase_final", {}, "ULTIMA RONDA");
+        palabra.innerHTML = traducirTituloModo1P("frase final");
         definicion.innerHTML = "";
         reiniciarProgresoFraseFinalEscritora();
         setProgresoNivelBarraEscritora(0);
@@ -2309,6 +2753,7 @@ function count(data){
         console.log(temp_text_inverso_activado)
         if (!terminado) {
             if (puedeResucitarSegunEstado()) {
+                prepararMenuResurreccionPorTiempo();
                 iniciarMenu();
             } else {
                 finalizarSinResurreccion();
@@ -2414,6 +2859,9 @@ function inicio() {
         }
     }
     aplicarAtributos();
+    // En partida nueva, siempre arrancar con texto vacío.
+    texto_guardado = "";
+    texto.innerText = "";
     setPartidaActivaCursorPluma(true);
     // Mantiene ocultos cabecera/marcador/vida durante toda la transición de arranque.
     iniciarSecuenciaIntroPartidaEscritora();
@@ -2468,6 +2916,7 @@ function inicio() {
     preparados_timer = setTimeout(() => {
         preparados_timer = null;
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        revelarEtapaIntroPartidaEscritora(1);
         animarEntradaBarraVidaInicioPartida();
     }, 20);
 
@@ -2485,8 +2934,13 @@ function inicio() {
           reproducirSfx(AUDIOS_CUENTA_ATRAS[indiceAudio], 0.9);
         }
       }
-      var countdown = $('<span id="countdown">'+(counter === 0 ? '&iexcl;ESCRIBE!' : counter)+'</span>');
+      var countdown = $('<span id="countdown">'+(counter === 0 ? tJuego1P("countdown.write", {}, "&iexcl;ESCRIBE!") : counter)+'</span>');
       countdown.appendTo($('.container'));
+      if (counter === 3) {
+        revelarEtapaIntroPartidaEscritora(2);
+      } else if (counter === 2) {
+        revelarEtapaIntroPartidaEscritora(3);
+      }
       sub_timer = setTimeout(() => {
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
@@ -2505,7 +2959,7 @@ function inicio() {
           fallback_cuenta_atras_timer = null;
           $('#countdown').remove();
           finalizarSecuenciaIntroPartidaEscritora();
-          post_inicio(false);
+          post_inicio(true);
         }, 1000);
       }
     }, 1000);
@@ -2517,7 +2971,7 @@ function inicio() {
         }
         $('#countdown').remove();
         finalizarSecuenciaIntroPartidaEscritora();
-        post_inicio(false);
+        post_inicio(true);
     }, 6800);
 }, 1000);
 });
@@ -2531,6 +2985,11 @@ function inicio() {
 function post_inicio(borrar_texto){
     clearInterval(timer);
     timer = null;
+        limpiarClasesIntroPartidaEscritora();
+        if (tiempo) {
+            tiempo.classList.add("tiempo-vida");
+            tiempo.style.display = DISPLAY_BARRA_VIDA;
+        }
         if (borrar_texto == false) {
             texto.innerText = texto_guardado.trim();
 
@@ -2595,8 +3054,10 @@ function prepararMenuResurreccionPorTiempo() {
     menu_resurreccion_activo = true;
     clearTimeout(borrado);
     desactivar_borrar = true;
+    texto.style.display = "none";
     texto.contentEditable = "false";
     tiempo.style.color = "white";
+    pausarProgresoNivelBarraEscritora();
 }
 
 function limpiarEstadoGameOverBarraVida() {
@@ -2609,8 +3070,7 @@ function mostrarGameOverBarraVida() {
     tiempo.style.display = "";
     tiempo.style.color = "#ff5050";
     tiempo.classList.add("tiempo-vida--game-over");
-    tiempo.innerHTML = '<span class="vida-game-over-text">GAME OVER</span>';
-    // Mantiene la barra visible con vida agotada.
+    tiempo.textContent = "00:00";
     actualizarBarraVida(tiempo, "00:00");
 }
 
@@ -2638,6 +3098,7 @@ function reanudarTrasResurreccion(segundosResurreccion) {
         texto.contentEditable = "true";
         texto.focus();
     }
+    reanudarProgresoNivelBarraEscritora();
     startCountDown(segundos);
 }
 
@@ -2664,6 +3125,10 @@ function gestionarTiempoAgotado() {
 function startCountDown(duration) {
 
     limpiarEstadoGameOverBarraVida();
+    if (tiempo) {
+        tiempo.classList.add("tiempo-vida");
+        tiempo.style.display = DISPLAY_BARRA_VIDA;
+    }
     secondsRemaining = duration;
     registrarTiempoControl(1, secondsRemaining);
     let min = parseInt(secondsRemaining / 60, 10);
@@ -2818,7 +3283,7 @@ function nueva_letra (letra) {
         animacion_palabra();
         setBarraNivelClaseEscritora("prohibida");
         aplicarEstiloNivelesEscritora("prohibida");
-        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
+        palabra.innerHTML = traducirTituloModo1P("letra prohibida");
         explicación.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
         }
     else if(modo_actual == "letra bendita"){
@@ -2829,7 +3294,7 @@ function nueva_letra (letra) {
         animacion_palabra();
         setBarraNivelClaseEscritora("bendita");
         aplicarEstiloNivelesEscritora("bendita");
-        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        palabra.innerHTML = traducirTituloModo1P("letra bendita");
         explicación.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
     }
 };
@@ -2851,7 +3316,7 @@ async function recibir_palabra() {
     tiempo_palabras_bonus = puntuación_palabra(data.title);
     setBarraNivelClaseEscritora("bonus");
     aplicarEstiloNivelesEscritora("bonus");
-    palabra.innerHTML = "NIVEL PALABRAS BONUS";
+    palabra.innerHTML = traducirTituloModo1P("palabras bonus");
     renderObjetivoNivelEscritora(data.title, {
         tipo: "bonus",
         tiempoSegundos: tiempo_palabras_bonus,
@@ -2891,7 +3356,7 @@ function nueva_palabra_prohibida() {
     palabra_actual = palabra_bonus[0];
     setBarraNivelClaseEscritora("prohibidas");
     aplicarEstiloNivelesEscritora("prohibidas");
-    palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+    palabra.innerHTML = traducirTituloModo1P("palabras prohibidas");
     renderObjetivoNivelEscritora(palabras_var, {
         tipo: "prohibidas",
         tiempoSegundos: tiempo_palabras_bonus,
@@ -2912,7 +3377,7 @@ function frase_final() {
     console.log("\""+str_frase_final+"\"")
     animacion_modo();
     palabra.innerHTML = "\""+str_frase_final+"\"";
-    definicion.innerHTML = "⬆️ ¡Introduce la frase final para ganar! ⬆️"
+    definicion.innerHTML = tJuego1P("mode.goal.final_phrase", {}, "⬆️ ¡Introduce la frase final para ganar! ⬆️");
     limpiarMarcadoFraseFinal();
 
     texto.removeEventListener("keyup", listener_modo);
@@ -2971,7 +3436,7 @@ function frase_final() {
           }, 2000);
         }
         animateCSS(".tiempo", "bounceInLeft");
-        tiempo.innerHTML = "¡GRACIAS POR JUGAR!";
+        tiempo.innerHTML = tJuego1P("thanks.playing", {}, "¡GRACIAS POR JUGAR!");
         if (buttonContainer) {
           buttonContainer.style.display = 'none';
         }
@@ -3004,19 +3469,22 @@ function frase_final() {
         const maxPalabras = obtenerMaxPalabrasResucitar();
         palabras = Math.min(Math.max(1, palabras), maxPalabras);
         const segundos = palabras * PALABRAS_A_SEGUNDOS;
+        const etiquetaPalabras = tJuego1P("res.quantity.words_label", {}, "Palabras");
+        const etiquetaSegundos = tJuego1P("res.quantity.seconds_label", {}, "Segundos");
+        const etiquetaMax = tJuego1P("res.quantity.max", { max: maxPalabras }, `MAX ${maxPalabras}`);
         quantityDisplay.innerHTML = `
           <div class="resucitar-stepper" aria-hidden="true">
             <div id="resucitarArrowUp" class="resucitar-stepper-arrow">&uarr;</div>
             <div id="resucitarArrowDown" class="resucitar-stepper-arrow">&darr;</div>
           </div>
           <div class="resucitar-metric">
-            <span class="resucitar-label">Palabras</span>
+            <span class="resucitar-label">${etiquetaPalabras}</span>
             <span class="resucitar-value resucitar-pop palabras">${palabras}</span>
-            <span class="resucitar-max">MAX ${maxPalabras}</span>
+            <span class="resucitar-max">${etiquetaMax}</span>
           </div>
           <div class="resucitar-arrow">→</div>
           <div class="resucitar-metric">
-            <span class="resucitar-label">Segundos</span>
+            <span class="resucitar-label">${etiquetaSegundos}</span>
             <span class="resucitar-value resucitar-pop segundos">${segundos}</span>
           </div>
         `;
@@ -3743,7 +4211,7 @@ function modo_palabras_bonus(e) {
             asignada = false;
             recibir_palabra()
             addSeconds(tiempo_palabras_bonus)
-            mostrarFeedbackFlotanteEscritora(`+${tiempo_palabras_bonus} segs.`, {
+            mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(tiempo_palabras_bonus, { signo: "+" }), {
                 color: color_positivo,
                 tipo: "ganar_tiempo"
             });
@@ -3814,7 +4282,7 @@ function modo_palabras_prohibidas(e) {
             nueva_palabra_prohibida();
             const tiempo_penal = -Math.abs(tiempo_palabras_bonus);
             addSeconds(tiempo_penal);
-            mostrarFeedbackFlotanteEscritora(`${tiempo_penal} segs.`, {
+            mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(tiempo_penal), {
                 color: color_negativo,
                 tipo: "perder_tiempo"
             });
@@ -3904,7 +4372,7 @@ function modo_letra_prohibida(e) {
       registrarIntentoLetraProhibida(letra_prohibida);
       addSeconds(-2);
       actualizarPuntosMarcador(puntos_);
-      mostrarFeedbackFlotanteEscritora("-2 segs.", {
+      mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(2, { signo: "-" }), {
         color: color_negativo,
         tipo: "letra_prohibida"
       });
@@ -4014,7 +4482,7 @@ function modo_letra_bendita(e) {
             e.preventDefault(); // Prevenir el borrado automático
             addSeconds(-1);
             addSeconds(-1);
-            mostrarFeedbackFlotanteEscritora("-1 segs.", {
+            mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(1, { signo: "-" }), {
                 color: color_negativo,
                 tipo: "letra_bendita"
             });
@@ -4063,7 +4531,7 @@ function modo_letra_bendita(e) {
                 console.log(puntos);
 
                 addSeconds(+2);
-                mostrarFeedbackFlotanteEscritora("+2 segs.", {
+                mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(2, { signo: "+" }), {
                     color: color_positivo,
                     tipo: "letra_bendita"
                 });

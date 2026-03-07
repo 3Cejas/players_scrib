@@ -8,13 +8,13 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260227m">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260303c">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="page-players ui-dashboard-only">
-    <script src="./js/juego.js?v=20260227e"></script>
+    <script src="./js/juego.js?v=20260303b"></script>
     <div id="players_fit_root" align="center">
     <div class="cabecera">
     <pre id="neon" class="neon">
@@ -35,13 +35,13 @@
     <div id="lightning">
     </div>
     <div class="botones">
-    <span id="btn_escribir" class='btn' onclick="inicio()">✍️ ESCRIBIR</span>
-    <span id="btn_limpiar" class='btn' onclick="limpiar()">🔁 REINICIO</span>
-    <span id="btn_final" class='btn' onclick="final()" style="display:none">🏁 FIN</span>
-    <span id="btn_pantalla_completa" class='btn' onclick="pantalla_completa()">🖥️ PANTALLA COMPLETA</span>
-    <span id="btn_descargar_texto"class='btn' onclick="descargar_textos()" style="display:none">💾 DESCARGAR TEXTO</span>
-    <span id="btn_opciones" class='btn' onclick="opciones()">⚙️ OPCIONES</span>
-    <span id="btn_volver" class='btn' onclick="volver()" style="display:none">🔙 VOLVER</span>
+    <span id="btn_escribir" class='btn' onclick="inicio()" data-i18n="ui.btn_write">✍️ ESCRIBIR</span>
+    <span id="btn_limpiar" class='btn' onclick="limpiar()" data-i18n="ui.btn_restart">🔁 REINICIO</span>
+    <span id="btn_final" class='btn' onclick="final()" style="display:none" data-i18n="ui.btn_finish">🏁 FIN</span>
+    <span id="btn_pantalla_completa" class='btn' onclick="pantalla_completa()" data-i18n="ui.btn_fullscreen">🖥️ PANTALLA COMPLETA</span>
+    <span id="btn_descargar_texto"class='btn' onclick="descargar_textos()" style="display:none" data-i18n="ui.btn_download_text">💾 DESCARGAR TEXTO</span>
+    <span id="btn_opciones" class='btn' onclick="opciones()" data-i18n="ui.btn_options">⚙️ OPCIONES</span>
+    <span id="btn_volver" class='btn' onclick="volver()" style="display:none" data-i18n="ui.btn_back">🔙 VOLVER</span>
     </div>
     <div class="container"></div>
     <br>
@@ -58,19 +58,19 @@
             <div id="mainMenu" class="mainMenu resucitar-panel">
                 <div class="resucitar-header">
                     <h1 class="main-title">
-                        <span class="resucitar-title-over">GAME OVER</span>
-                        <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
+                        <span class="resucitar-title-over" data-i18n="res.game_over">GAME OVER</span>
+                        <span class="resucitar-title-question"><span data-i18n="res.title_prefix">&iquest;QUIERES</span> <span class="resucitar-highlight" data-i18n="res.title_highlight">RESUCITAR</span> <span data-i18n="res.title_suffix">A CAMBIO DE PALABRAS?</span></span>
                     </h1>
                 </div>
                 <div class="resucitar-row">
                     <div class="resucitar-actions">
                         <div class="button-container resucitar-buttons">
-                            <button id="btnSi" class="selected" type="button">S&iacute;</button>
-                            <button id="btnNo" type="button">No</button>
+                            <button id="btnSi" class="selected" type="button" data-i18n="res.btn_yes">S&iacute;</button>
+                            <button id="btnNo" type="button" data-i18n="res.btn_no">No</button>
                         </div>
                     </div>
                     <div class="resucitar-keys">
-                        <div class="resucitar-keys-title">Usa flechas y Enter</div>
+                        <div class="resucitar-keys-title" data-i18n="res.keys_hint">Usa flechas y Enter</div>
                         <div class="resucitar-keypad" aria-hidden="true">
                             <div class="keycap keycap-up">&uarr;</div>
                             <div class="keycap keycap-left">&larr;</div>
@@ -84,19 +84,20 @@
             <!-- MENÚ DE SELECCIÓN DE CANTIDAD (APARECE AL DAR "SÍ") -->
             <div id="quantityMenu" class="resucitar-panel">
                 <div class="resucitar-header">
-                    <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
+                    <div class="resucitar-gameover-badge" data-i18n="res.badge_game_over">💀 GAME OVER</div>
+                    <h2 class="quantity-title" data-i18n="res.quantity_title">Selecciona la cantidad de palabras</h2>
                 </div>
                 <div class="resucitar-row">
                     <div class="resucitar-actions">
                         <div id="quantityDisplay" class="quantity-display selected"></div>
 
                         <div class="button-container resucitar-buttons">
-                            <button id="btnConfirmar" type="button">Confirmar</button>
-                            <button id="btnAtras" type="button">Atr&aacute;s</button>
+                            <button id="btnConfirmar" type="button" data-i18n="res.btn_confirm">Confirmar</button>
+                            <button id="btnAtras" type="button" data-i18n="res.btn_back">Atr&aacute;s</button>
                         </div>
                     </div>
                     <div class="resucitar-keys">
-                        <div class="resucitar-keys-title">Usa flechas y Enter</div>
+                        <div class="resucitar-keys-title" data-i18n="res.keys_hint">Usa flechas y Enter</div>
                         <div class="resucitar-keypad" aria-hidden="true">
                             <div class="keycap keycap-up">&uarr;</div>
                             <div class="keycap keycap-left">&larr;</div>
@@ -109,7 +110,7 @@
             </div>
       <div id="desventajaOverlay" class="desventaja-overlay" aria-live="assertive" aria-modal="true" role="dialog">
         <div class="desventaja-card">
-          <div id="desventajaStatus" class="desventaja-status">SE VA A ELEGIR UNA DESVENTAJA</div>
+          <div id="desventajaStatus" class="desventaja-status" data-i18n="disadvantage.selecting">SE VA A ELEGIR UNA DESVENTAJA</div>
           <div id="desventajaSlot" class="desventaja-slot">
             <div id="desventajaReel1" class="desventaja-reel">?</div>
             <div id="desventajaReel2" class="desventaja-reel">?</div>
@@ -134,7 +135,7 @@
                     <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
                         <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
                         <div class="meta-copy">
-                            <span class="meta-label">Palabras</span>
+                            <span class="meta-label" data-i18n="score.words_label">Palabras</span>
                             <span id="puntos" class="puntos">0 palabras</span>
                         </div>
                     </div>
@@ -159,16 +160,16 @@
   <table class="opciones_table">
     <thead>
       <tr>
-        <th class="opciones_titulo">TIEMPO INICIAL</th>
-        <th class="opciones_titulo">DURACIÓN NIVEL</th>
-        <th class="opciones_titulo">CAMBIO DE PALABRAS</th>
-        <th class="opciones_titulo">CAMBIO DE LETRAS</th>
+        <th class="opciones_titulo" data-i18n="options.initial_time">TIEMPO INICIAL</th>
+        <th class="opciones_titulo" data-i18n="options.level_duration">DURACIÓN NIVEL</th>
+        <th class="opciones_titulo" data-i18n="options.word_change">CAMBIO DE PALABRAS</th>
+        <th class="opciones_titulo" data-i18n="options.letter_change">CAMBIO DE LETRAS</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <!-- Campo 1: TIEMPO INICIAL -->
-        <td data-label="TIEMPO INICIAL">
+        <td data-label="TIEMPO INICIAL" data-i18n-attr="data-label:options.initial_time">
           <div class="spinner-container">
             <!-- Botón RESTAR: con color rojo -->
             <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_inicial', -5)">-</button>
@@ -189,11 +190,11 @@
             <!-- Botón SUMAR: con color azul -->
             <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_inicial', 5)">+</button>
           </div>
-          <span class="opciones_valores">segundos</span>
+          <span class="opciones_valores" data-i18n="options.seconds_unit">segundos</span>
         </td>
 
         <!-- Campo 2: DURACIÓN NIVEL -->
-        <td data-label="DURACIÓN NIVEL">
+        <td data-label="DURACIÓN NIVEL" data-i18n-attr="data-label:options.level_duration">
           <div class="spinner-container">
             <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_modos', -5)">-</button>
             
@@ -211,11 +212,11 @@
             
             <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_modos', 5)">+</button>
           </div>
-          <span class="opciones_valores">segundos</span>
+          <span class="opciones_valores" data-i18n="options.seconds_unit">segundos</span>
         </td>
 
         <!-- Campo 3: CAMBIO DE PALABRAS -->
-        <td data-label="CAMBIO DE PALABRAS">
+        <td data-label="CAMBIO DE PALABRAS" data-i18n-attr="data-label:options.word_change">
           <div class="spinner-container">
             <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_cambio_palabras', -5)">-</button>
             
@@ -234,11 +235,11 @@
             
             <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_palabras', 5)">+</button>
           </div>
-          <span class="opciones_valores">segundos</span>
+          <span class="opciones_valores" data-i18n="options.seconds_unit">segundos</span>
         </td>
 
         <!-- Campo 4: CAMBIO DE LETRAS -->
-        <td data-label="CAMBIO DE LETRAS">
+        <td data-label="CAMBIO DE LETRAS" data-i18n-attr="data-label:options.letter_change">
           <div class="spinner-container">
             <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_cambio_letra', -5)">-</button>
             
@@ -257,11 +258,19 @@
             
             <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_letra', 5)">+</button>
           </div>
-          <span class="opciones_valores">segundos</span>
+          <span class="opciones_valores" data-i18n="options.seconds_unit">segundos</span>
         </td>
       </tr>
     </tbody>
   </table>
+          <div class="opciones-idioma">
+            <label for="selector_idioma" class="opciones_titulo opciones-idioma-label" data-i18n="options.language_label">IDIOMA</label>
+            <select id="selector_idioma" class="opciones-idioma-select" aria-label="Idioma" data-i18n-attr="aria-label:options.language_aria">
+              <option value="es" data-i18n="lang.es">Espa&ntilde;ol</option>
+              <option value="en" data-i18n="lang.en">English</option>
+              <option value="fr" data-i18n="lang.fr">Fran&ccedil;ais</option>
+            </select>
+          </div>
           <br>
           <form id="listaModosForm" class="listaModosForm">
             <table>
@@ -272,11 +281,11 @@
         </form>
     </div>
     <div id="soporte" class="soporte">
-      <p>En caso de encontrar algún error o tengas alguna sugerencia, envianos un correo a <a href="mailto:contacto@suturateatro.es" style="color:aqua">contacto@suturateatro.es</a></p>
+      <p data-i18n-html="support.message">En caso de encontrar algún error o tengas alguna sugerencia, envianos un correo a <a href="mailto:contacto@suturateatro.es" style="color:aqua">contacto@suturateatro.es</a></p>
       <br>
     </div>
     </div>
 </body>
-<script src="./js/jugador-servidor.js?v=20260301a"></script>
+<script src="./js/jugador-servidor.js?v=20260303e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>
