@@ -4,6 +4,7 @@
     const submitButton = document.getElementById("feedback_submit");
     const successPanel = document.getElementById("feedback_success");
     const isLocalFilePreview = window.location.protocol === "file:";
+    const submitEndpoint = "/";
 
     if (!form || !submitButton) {
         return;
@@ -64,7 +65,7 @@
         submitButton.disabled = true;
         setStatus("Enviando feedback...", "");
 
-        fetch("/feedback/", {
+        fetch(submitEndpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
@@ -85,7 +86,7 @@
                 }
 
                 if (window.history && typeof window.history.replaceState === "function") {
-                    window.history.replaceState({}, "", "/feedback/?enviado=1");
+                    window.history.replaceState({}, "", window.location.pathname + "?enviado=1");
                 }
             })
             .catch(function () {
