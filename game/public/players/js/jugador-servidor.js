@@ -11,11 +11,7 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-const tJuego2P = (clave, variables = {}, fallback = "") => (
-    (window && typeof window.scribT2P === "function")
-        ? window.scribT2P(clave, variables, fallback)
-        : (fallback || clave)
-);
+// Reutiliza el helper de traduccion ya definido en juego.js para evitar colisiones globales.
 const traducirStripModoMusa = (modo) => (
     (window && typeof window.scribTranslateModeStrip2P === "function")
         ? window.scribTranslateModeStrip2P(modo)
@@ -1032,6 +1028,49 @@ let temporizador_lectura_interval = null;
 let temporizador_lectura_restante = 0;
 let temporizador_lectura_activo = false;
 let lectura_estado_guardado = null;
+const FEEDBACK_MUSA_URL_LOCAL = "../../../feedback/index.html";
+const FEEDBACK_MUSA_URL_WEB = "/feedback/";
+let redireccion_feedback_musa_en_curso = false;
+
+function debeUsarRutaLocalFeedbackMusa() {
+    const host = String(window.location.hostname || "").trim().toLowerCase();
+    return (
+        window.location.protocol === "file:"
+        || window.isProduction === false
+        || host === "localhost"
+        || host === "127.0.0.1"
+    );
+}
+
+function resolverUrlFeedbackMusa(payload = {}) {
+    const usarRutaLocal = debeUsarRutaLocalFeedbackMusa();
+    const urlFallback = usarRutaLocal ? FEEDBACK_MUSA_URL_LOCAL : FEEDBACK_MUSA_URL_WEB;
+    const urlCruda = (!usarRutaLocal && payload && typeof payload.url === "string" && payload.url.trim())
+        ? payload.url.trim()
+        : urlFallback;
+    try {
+        return new URL(urlCruda, window.location.href).toString();
+    } catch (error) {
+        try {
+            return new URL(urlFallback, window.location.href).toString();
+        } catch (fallbackError) {
+            return urlFallback;
+        }
+    }
+}
+
+function redirigirMusaAFeedback(payload = {}) {
+    const payloadSeguro = (payload && typeof payload === "object") ? payload : {};
+    const activo = !Object.prototype.hasOwnProperty.call(payloadSeguro, "activa") || Boolean(payloadSeguro.activa);
+    if (!activo || redireccion_feedback_musa_en_curso) {
+        return;
+    }
+    if (/\/feedback(?:\/|$)/i.test(window.location.pathname)) {
+        return;
+    }
+    redireccion_feedback_musa_en_curso = true;
+    window.location.assign(resolverUrlFeedbackMusa(payloadSeguro));
+}
 
 function configurarColorRegalo() {
     if (!regalo_pdf) {
@@ -2407,6 +2446,10 @@ socket.on('activar_banderas_musas', (payload = {}) => {
     aplicarEstadoBanderasMusaDesdeServidor(estadoNormalizado);
 });
 
+socket.on('feedback_musas_estado', (payload = {}) => {
+    redirigirMusaAFeedback(payload);
+});
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     if (!nombre_musa) return;
@@ -2415,6 +2458,7 @@ socket.on('connect', () => {
     socket.emit('pedir_estado_banderas_musas');
     pedirNombreMusa();
     socket.emit('pedir_estado_musa');
+    socket.emit('pedir_feedback_musas_estado');
     setTimeout(() => {
         socket.emit('pedir_texto');
     }, 80);

@@ -174,6 +174,13 @@ body.page-spectator.vista-creditos #spectator_fit_root::after {
     opacity: 0 !important;
 }
 
+body.page-spectator.vista-stats #spectator_fit_root::before,
+body.page-spectator.vista-stats #spectator_fit_root::after {
+    opacity: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
 #spectator_fit_root {
     position: fixed;
     inset: 0 auto auto 0;
@@ -6305,10 +6312,14 @@ body.vista-creditos #lightning {
 
 body.vista-stats .stats-espectador {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto auto;
   gap: clamp(0.5rem, 1vw, 1.1rem);
   padding: clamp(0.7rem, 1.6vw, 1.5rem);
   box-sizing: border-box;
+  background: transparent;
+  align-content: start;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 body.vista-creditos .creditos-espectador {
@@ -6462,7 +6473,7 @@ body.vista-creditos .creditos-espectador {
 .stats-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 1rem;
 }
 
@@ -6471,6 +6482,7 @@ body.vista-creditos .creditos-espectador {
   font-size: clamp(1.1rem, 2.2vw, 2rem);
   letter-spacing: 0.14em;
   color: #f4f8ff;
+  flex: 0 0 auto;
 }
 
 .stats-estado,
@@ -6478,6 +6490,48 @@ body.vista-creditos .creditos-espectador {
   margin: 0;
   font-size: clamp(0.72rem, 1.25vw, 1rem);
   color: rgba(244, 248, 255, 0.9);
+}
+
+.stats-estado {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.stats-estado-label {
+  color: rgba(244, 248, 255, 0.82);
+}
+
+.stats-current-level {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 0.72em currentColor;
+}
+
+.stats-current-level--bendita {
+  color: #5dff86;
+}
+
+.stats-current-level--prohibida {
+  color: #ff6f84;
+}
+
+.stats-current-level--bonus {
+  color: #ffd86f;
+}
+
+.stats-current-level--prohibidas {
+  color: #ff9be3;
+}
+
+.stats-current-level--tertulia {
+  color: #86d0ff;
+}
+
+.stats-current-level--frase-final {
+  color: #ffb675;
 }
 
 .stats-slider {
@@ -6490,15 +6544,16 @@ body.vista-creditos .creditos-espectador {
 }
 
 .stats-slides-track {
-  height: 100%;
+  height: auto;
   display: flex;
   transition: transform 0.6s ease;
   will-change: transform;
+  align-items: flex-start;
 }
 
 .stats-slide {
   min-width: 100%;
-  height: 100%;
+  height: auto;
   box-sizing: border-box;
   padding: clamp(0.65rem, 1.2vw, 1.1rem);
   display: grid;
@@ -6647,9 +6702,7 @@ body.vista-creditos .creditos-espectador {
 }
 
 .stats-dots {
-  display: flex;
-  justify-content: center;
-  gap: 0.45rem;
+  display: none;
 }
 
 .stats-dot {
@@ -6669,19 +6722,15 @@ body.vista-creditos .creditos-espectador {
 
 /* ===== STATS LIVE (heatmap + tiempo) ===== */
 body.vista-stats .stats-espectador {
-  background:
-    radial-gradient(circle at 14% 14%, rgba(67, 230, 255, 0.22), transparent 52%),
-    radial-gradient(circle at 86% 16%, rgba(255, 118, 118, 0.2), transparent 54%),
-    linear-gradient(120deg, rgba(6, 14, 28, 0.95), rgba(5, 8, 14, 0.98) 46%, rgba(24, 8, 12, 0.96));
+  background: transparent;
 }
 
 .stats-overlay-ui {
-  border: max(1px, 0.08vw) solid rgba(220, 236, 255, 0.24);
-  background: linear-gradient(115deg, rgba(8, 20, 38, 0.88), rgba(7, 11, 20, 0.9));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 0 1.2vw rgba(0, 0, 0, 0.42);
-  backdrop-filter: blur(7px);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .stats-titulo {
@@ -6691,11 +6740,18 @@ body.vista-stats .stats-espectador {
 
 .stats-slider {
   border: max(1px, 0.08vw) solid rgba(203, 224, 255, 0.2);
-  background:
-    linear-gradient(135deg, rgba(7, 18, 34, 0.84), rgba(6, 10, 19, 0.9) 54%, rgba(17, 8, 17, 0.84));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 1.5vw rgba(2, 6, 13, 0.55);
+  background: transparent;
+  box-shadow: none;
+}
+
+.stats-slider.stats-slider--tiempo {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.stats-slider.stats-slider--heatmap {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .stats-slide {
@@ -6707,26 +6763,78 @@ body.vista-stats .stats-espectador {
   text-transform: uppercase;
 }
 
+.stats-slide-title-hidden {
+  display: none;
+}
+
+.stats-slide-player-name {
+  display: inline-block;
+  font-weight: 700;
+  font-family: "Retro-gaming";
+  text-shadow: none;
+}
+
+.stats-slide-player-name.equipo-1 {
+  color: aqua;
+  text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+}
+
+.stats-slide-player-name.equipo-2 {
+  color: red;
+  text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
+}
+
 .stats-slide-header p {
   letter-spacing: 0.04em;
+}
+
+.stats-timestamp {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+  font-size: clamp(0.82rem, 1.3vw, 1.3rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f8fbff;
+}
+
+.stats-timestamp[hidden] {
+  display: none;
+}
+
+.stats-timestamp .stats-slide-player-name {
+  margin-right: 0.32em;
 }
 
 .stats-slide-body {
   align-content: stretch;
 }
 
-.stats-slide-body--heatmap,
-.stats-slide-body--tiempo {
+.stats-slide-body--heatmap {
   display: grid;
   grid-template-rows: auto 1fr;
   gap: clamp(0.55rem, 1vw, 0.95rem);
   min-height: 0;
+  justify-items: center;
+}
+
+.stats-slide-body--tiempo {
+  display: block;
+  min-height: auto;
 }
 
 .stats-kpis-grid {
   display: grid;
   gap: clamp(0.38rem, 0.75vw, 0.66rem);
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+}
+
+.stats-kpis-grid--heatmap {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: min(100%, 1520px);
+  margin-inline: auto;
 }
 
 .stats-kpi {
@@ -6736,6 +6844,9 @@ body.vista-stats .stats-espectador {
   background: linear-gradient(150deg, rgba(9, 14, 23, 0.86), rgba(8, 10, 18, 0.72));
   display: grid;
   gap: 0.14rem;
+  justify-items: center;
+  align-content: center;
+  text-align: center;
 }
 
 .stats-kpi span {
@@ -6762,16 +6873,16 @@ body.vista-stats .stats-espectador {
 
 .stats-heatmap-board {
   min-height: 0;
-  border-radius: clamp(0.5rem, 0.9vw, 0.85rem);
-  border: max(1px, 0.08vw) solid rgba(196, 219, 255, 0.2);
-  padding: clamp(0.55rem, 1vw, 0.94rem);
+  width: 100%;
+  max-width: min(100%, 1520px);
+  margin-inline: auto;
+  border-radius: 0;
+  border: none;
+  padding: 0;
   display: grid;
   gap: clamp(0.34rem, 0.6vw, 0.52rem);
-  background:
-    linear-gradient(160deg, rgba(5, 10, 18, 0.94), rgba(5, 8, 14, 0.98));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 1vw rgba(0, 0, 0, 0.35);
+  background: transparent;
+  box-shadow: none;
 }
 
 .stats-heatmap-row {
@@ -6793,9 +6904,12 @@ body.vista-stats .stats-espectador {
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     0 0 0.58em rgba(var(--hm-glow, 40, 52, 78), var(--hm-glow-alpha, 0.12));
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: center;
+  align-items: center;
   padding: clamp(0.16rem, 0.32vw, 0.28rem) clamp(0.24rem, 0.42vw, 0.38rem);
+  text-align: center;
   overflow: hidden;
 }
 
@@ -6803,6 +6917,7 @@ body.vista-stats .stats-espectador {
   font-size: clamp(0.56rem, 0.78vw, 0.72rem);
   letter-spacing: 0.03em;
   line-height: 1.04;
+  justify-self: center;
   align-self: center;
   opacity: 0.93;
   text-shadow: 0 0 0.36em rgba(0, 0, 0, 0.5);
@@ -6813,7 +6928,8 @@ body.vista-stats .stats-espectador {
   font-style: normal;
   font-size: clamp(0.52rem, 0.72vw, 0.7rem);
   line-height: 1;
-  align-self: end;
+  justify-self: center;
+  align-self: center;
   opacity: 0.9;
 }
 
@@ -6829,16 +6945,112 @@ body.vista-stats .stats-espectador {
 
 .stats-tiempo-board {
   min-height: 0;
-  border-radius: clamp(0.5rem, 0.95vw, 0.92rem);
-  border: max(1px, 0.08vw) solid rgba(190, 216, 255, 0.22);
-  padding: clamp(0.35rem, 0.7vw, 0.62rem);
-  background:
-    linear-gradient(155deg, rgba(6, 12, 22, 0.96), rgba(6, 10, 18, 0.98));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 1vw rgba(0, 0, 0, 0.34);
+  border-radius: 0;
+  border: none;
+  padding: clamp(0.65rem, 1.1vw, 1rem) clamp(0.5rem, 0.95vw, 0.9rem) clamp(1rem, 1.4vw, 1.25rem);
+  background: transparent;
+  box-shadow: none;
   display: flex;
   align-items: stretch;
+}
+
+.stats-tiempo-layout {
+  min-height: clamp(280px, 42vh, 420px);
+  display: grid;
+  grid-template-columns: minmax(248px, 320px) minmax(0, 1fr);
+  gap: clamp(1rem, 1.8vw, 1.7rem);
+  align-items: center;
+  padding-inline: clamp(0.2rem, 0.7vw, 0.8rem);
+}
+
+.stats-vida-panel {
+  width: 100%;
+  border: max(1px, 0.08vw) solid rgba(203, 224, 255, 0.2);
+  border-radius: clamp(0.56rem, 1vw, 0.92rem);
+  padding: clamp(0.8rem, 1.1vw, 1.15rem);
+  background: linear-gradient(150deg, rgba(9, 14, 23, 0.84), rgba(8, 10, 18, 0.66));
+  display: grid;
+  gap: clamp(0.7rem, 1vw, 1rem);
+  align-content: start;
+  align-self: center;
+}
+
+.stats-vida-panel.equipo-1 {
+  border-color: rgba(74, 238, 255, 0.44);
+  box-shadow: inset 0 0 0 1px rgba(74, 238, 255, 0.12);
+}
+
+.stats-vida-panel.equipo-2 {
+  border-color: rgba(255, 107, 107, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.12);
+}
+
+.stats-vida-panel-title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: clamp(0.88rem, 1.1vw, 1.02rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stats-vida-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.6rem, 0.9vw, 0.8rem);
+}
+
+.stats-vida-grid .stats-kpi {
+  min-height: clamp(82px, 10vh, 104px);
+  padding: clamp(0.5rem, 0.85vw, 0.82rem);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stats-vida-panel.equipo-1 .stats-kpi {
+  border: none;
+  box-shadow: none;
+}
+
+.stats-vida-panel.equipo-2 .stats-kpi {
+  border: none;
+  box-shadow: none;
+}
+
+.stats-tiempo-side {
+  display: grid;
+  gap: clamp(0.95rem, 1.35vw, 1.45rem);
+  align-content: center;
+  justify-content: center;
+  grid-auto-rows: minmax(0, auto);
+  padding-block: clamp(0.2rem, 0.9vw, 0.75rem);
+}
+
+.stats-tiempo-side .stats-kpi {
+  height: auto;
+  min-height: clamp(96px, 11vh, 126px);
+  padding: clamp(0.6rem, 1vw, 1rem);
+  text-align: center;
+  align-content: center;
+}
+
+.stats-tiempo-bandas rect,
+.stats-tiempo-bandas line {
+  pointer-events: none;
+  shape-rendering: crispEdges;
+}
+
+.stats-tiempo-side.equipo-1 .stats-kpi {
+  border-color: rgba(74, 238, 255, 0.44);
+  box-shadow: inset 0 0 0 1px rgba(74, 238, 255, 0.12);
+}
+
+.stats-tiempo-side.equipo-2 .stats-kpi {
+  border-color: rgba(255, 107, 107, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.12);
 }
 
 .stats-tiempo-svg {
@@ -6847,29 +7059,77 @@ body.vista-stats .stats-espectador {
   display: block;
 }
 
+.stats-tiempo-plot-bg {
+  fill: rgba(7, 10, 18, 0.94);
+}
+
 .stats-tiempo-grid line {
   stroke: rgba(204, 225, 255, 0.16);
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
 
+.stats-tiempo-axis line {
+  stroke: rgba(230, 239, 255, 0.28);
+  stroke-width: 1.35;
+  shape-rendering: crispEdges;
+}
+
+.stats-tiempo-axis-label {
+  fill: rgba(232, 241, 255, 0.78);
+  font-size: 16px;
+  letter-spacing: 0.03em;
+}
+
+.stats-tiempo-axis-title {
+  fill: rgba(232, 241, 255, 0.88);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stats-tiempo-axis-icon {
+  letter-spacing: 0;
+}
+
+.stats-tiempo-axis-icon--vida {
+  font-size: 16px;
+}
+
+.stats-tiempo-axis-icon--vida.equipo-1 {
+  color: #8fefff;
+  fill: #8fefff;
+}
+
+.stats-tiempo-axis-icon--vida.equipo-2 {
+  color: #ff6b6b;
+  fill: #ff6b6b;
+}
+
 .stats-tiempo-area {
-  stroke: none;
+  display: none;
 }
 
 .stats-tiempo-linea {
   fill: none;
-  stroke-width: 4.5;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 0.35em rgba(255, 255, 255, 0.35));
+  filter: none;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
 }
 
 .stats-tiempo-area.equipo-1 {
   fill: rgba(70, 240, 255, 0.12);
 }
 
-.stats-tiempo-linea.equipo-1,
+.stats-tiempo-linea.equipo-1 {
+  stroke: #49f0ff;
+  fill: none !important;
+}
+
 .stats-tiempo-punto.equipo-1 {
   stroke: #49f0ff;
   fill: #49f0ff;
@@ -6879,7 +7139,11 @@ body.vista-stats .stats-espectador {
   fill: rgba(255, 107, 107, 0.12);
 }
 
-.stats-tiempo-linea.equipo-2,
+.stats-tiempo-linea.equipo-2 {
+  stroke: #ff6b6b;
+  fill: none !important;
+}
+
 .stats-tiempo-punto.equipo-2 {
   stroke: #ff6b6b;
   fill: #ff6b6b;
@@ -7052,6 +7316,30 @@ body.vista-nube-inspiracion .nube-inspiracion-espectador {
   }
 
   .stats-kpis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-header-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stats-timestamp {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .stats-tiempo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-vida-panel {
+    max-width: min(100%, 520px);
+    justify-self: center;
+  }
+
+  .stats-tiempo-side {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

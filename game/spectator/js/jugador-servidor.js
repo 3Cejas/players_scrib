@@ -22,6 +22,11 @@ const traducirTituloModoEspectador = (modo, fallback = "") => (
         ? window.scribTranslateModeTitle2P(modo, fallback || String(modo || "").toUpperCase())
         : (fallback || String(modo || "").toUpperCase())
 );
+const traducirNombreModoEspectador = (modo, fallback = "") => (
+    (window && typeof window.scribTranslateModeName2P === "function")
+        ? window.scribTranslateModeName2P(modo, fallback || String(modo || "").toUpperCase())
+        : (fallback || String(modo || "").toUpperCase())
+);
 const traducirDescripcionModoEspectador = (modo, fallback = "") => (
     (window && typeof window.scribTranslateModeDescription2P === "function")
         ? window.scribTranslateModeDescription2P(modo, fallback)
@@ -837,6 +842,7 @@ const calentamiento_final_j1 = getEl("calentamiento_final_j1");
 const calentamiento_final_j2 = getEl("calentamiento_final_j2");
 const calentamiento_overlay_ui = document.querySelector("#calentamiento_espectador .calentamiento-overlay-ui");
 const stats_espectador = getEl("stats_espectador");
+const stats_slider = stats_espectador ? stats_espectador.querySelector(".stats-slider") : null;
 const stats_slides_track = getEl("stats_slides_track");
 const stats_dots = getEl("stats_dots");
 const stats_estado = getEl("stats_estado");
@@ -900,6 +906,8 @@ let estado_stats_live_espectador = null;
 let stats_slide_step_remoto = 0;
 let stats_slide_index = 0;
 let stats_slide_count = 0;
+let stats_slides_actuales = [];
+const stats_timeline_modos_local_espectador = [];
 const STATS_LAYOUT_HEATMAP = [
     [
         { code: "Backquote", label: "º\nª" },
@@ -1716,6 +1724,178 @@ const reiniciarHistorialVidaStatsEspectador = () => {
     stats_historial_vida_espectador[1] = [];
     stats_historial_vida_espectador[2] = [];
 };
+const reiniciarTimelineModosStatsEspectador = () => {
+    stats_timeline_modos_local_espectador.length = 0;
+};
+const obtenerTiempoPartidaReferenciaStatsEspectador = (preferido = null) => {
+    const candidatoPreferido = Number(preferido);
+    if (Number.isFinite(candidatoPreferido)) {
+        return Math.max(0, candidatoPreferido);
+    }
+    const tiemposEstado = [1, 2].map((equipo) => {
+        const jugador = estado_stats_live_espectador && estado_stats_live_espectador.players
+            ? estado_stats_live_espectador.players[equipo]
+            : null;
+        return Math.max(0, Number(jugador && jugador.tiempoTotalMs) || 0);
+    });
+    const tiemposHistorial = [1, 2].map((equipo) => {
+        const serie = Array.isArray(stats_historial_vida_espectador[equipo]) ? stats_historial_vida_espectador[equipo] : [];
+        const ultimo = serie.length ? serie[serie.length - 1] : null;
+        return Math.max(0, Number(ultimo && ultimo.t) || 0);
+    });
+    return Math.max(0, ...tiemposEstado, ...tiemposHistorial);
+};
+const registrarModoTimelineStatsEspectador = (modo = "", tiempoReferenciaMs = null) => {
+    const modoNormalizado = String(modo || "").trim().toLowerCase();
+    if (!modoNormalizado) return;
+    const tiempoMs = obtenerTiempoPartidaReferenciaStatsEspectador(tiempoReferenciaMs);
+    const ultimo = stats_timeline_modos_local_espectador.length
+        ? stats_timeline_modos_local_espectador[stats_timeline_modos_local_espectador.length - 1]
+        : null;
+    if (!ultimo) {
+        stats_timeline_modos_local_espectador.push({ modo: modoNormalizado, inicioMs: 0, finMs: null });
+        return;
+    }
+    if (ultimo.modo === modoNormalizado) return;
+    if (
+        ultimo.finMs === null
+        || typeof ultimo.finMs === "undefined"
+        || !Number.isFinite(Number(ultimo.finMs))
+    ) {
+        ultimo.finMs = Math.max(ultimo.inicioMs, tiempoMs);
+    }
+    stats_timeline_modos_local_espectador.push({
+        modo: modoNormalizado,
+        inicioMs: Math.max(0, tiempoMs),
+        finMs: null
+    });
+};
+const obtenerTimelineModosLocalStatsEspectador = (tiempoActualMs = null) => {
+    const tiempoMs = obtenerTiempoPartidaReferenciaStatsEspectador(tiempoActualMs);
+    return stats_timeline_modos_local_espectador
+        .map((segmento, indice, arr) => {
+            const inicioMs = Math.max(0, Number(segmento && segmento.inicioMs) || 0);
+            const finRaw = segmento ? segmento.finMs : null;
+            const tieneFin = finRaw !== null && typeof finRaw !== "undefined" && Number.isFinite(Number(finRaw));
+            const esUltimo = indice === (arr.length - 1);
+            const inicioSiguiente = Math.max(
+                inicioMs,
+                Number(arr[indice + 1] && arr[indice + 1].inicioMs) || inicioMs
+            );
+            const finMs = tieneFin
+                ? Math.max(inicioMs, Number(finRaw))
+                : (esUltimo ? Math.max(inicioMs, tiempoMs) : inicioSiguiente);
+            return {
+                modo: String(segmento && segmento.modo ? segmento.modo : "").trim().toLowerCase(),
+                inicioMs,
+                finMs
+            };
+        })
+        .filter((segmento) => segmento.modo && segmento.finMs > segmento.inicioMs);
+};
+const resolverTimelineModosStatsEspectador = (estado = {}) => {
+    const tiempoActualMs = Math.max(
+        0,
+        Number(estado && estado.players && estado.players[1] ? estado.players[1].tiempoTotalMs : 0) || 0,
+        Number(estado && estado.players && estado.players[2] ? estado.players[2].tiempoTotalMs : 0) || 0
+    );
+    const timelinePayload = Array.isArray(estado && estado.timeline_modos) ? estado.timeline_modos : [];
+    const timelineLocal = obtenerTimelineModosLocalStatsEspectador(tiempoActualMs);
+    if (timelinePayload.length) return timelinePayload;
+    return timelineLocal;
+};
+const suavizarSegmentosModoStatsEspectador = (segmentos = [], minDuracionMs = 1800) => {
+    const salida = [];
+    (Array.isArray(segmentos) ? segmentos : []).forEach((segmento) => {
+        if (!segmento || segmento.finMs <= segmento.inicioMs) return;
+        const ultimo = salida.length ? salida[salida.length - 1] : null;
+        if (ultimo && ultimo.modo === segmento.modo && segmento.inicioMs <= ultimo.finMs) {
+            ultimo.finMs = Math.max(ultimo.finMs, segmento.finMs);
+            return;
+        }
+        salida.push({ ...segmento });
+    });
+    for (let i = 0; i < salida.length; i += 1) {
+        const actual = salida[i];
+        if (!actual) continue;
+        if ((actual.finMs - actual.inicioMs) >= minDuracionMs) continue;
+        const previo = i > 0 ? salida[i - 1] : null;
+        const siguiente = i < salida.length - 1 ? salida[i + 1] : null;
+        if (previo && siguiente && previo.modo === siguiente.modo) {
+            previo.finMs = Math.max(previo.finMs, siguiente.finMs);
+            salida.splice(i, 2);
+            i = Math.max(-1, i - 2);
+            continue;
+        }
+        if (siguiente) {
+            siguiente.inicioMs = Math.min(siguiente.inicioMs, actual.inicioMs);
+            salida.splice(i, 1);
+            i = Math.max(-1, i - 2);
+            continue;
+        }
+        if (previo) {
+            previo.finMs = Math.max(previo.finMs, actual.finMs);
+            salida.splice(i, 1);
+            i = Math.max(-1, i - 2);
+        }
+    }
+    return salida.filter((segmento) => segmento && segmento.finMs > segmento.inicioMs);
+};
+const compactarSegmentosModoPorPixelesStatsEspectador = (segmentos = [], opciones = {}) => {
+    const spanMs = Math.max(1, Number(opciones && opciones.spanMs) || 0);
+    const plotWidthPx = Math.max(1, Number(opciones && opciones.plotWidthPx) || 0);
+    const minPx = Math.max(0, Number(opciones && opciones.minPx) || 0);
+    if (!Array.isArray(segmentos) || segmentos.length < 2 || minPx <= 0) {
+        return Array.isArray(segmentos) ? segmentos.filter((segmento) => segmento && segmento.finMs > segmento.inicioMs) : [];
+    }
+    const salida = segmentos
+        .map((segmento) => ({ ...segmento }))
+        .filter((segmento) => segmento && segmento.finMs > segmento.inicioMs);
+    let huboCambios = true;
+    while (huboCambios && salida.length > 1) {
+        huboCambios = false;
+        for (let i = 0; i < salida.length; i += 1) {
+            const actual = salida[i];
+            if (!actual) continue;
+            const duracionMs = Math.max(0, actual.finMs - actual.inicioMs);
+            const anchoPx = (duracionMs / spanMs) * plotWidthPx;
+            if (anchoPx >= minPx) continue;
+            const previo = i > 0 ? salida[i - 1] : null;
+            const siguiente = i < salida.length - 1 ? salida[i + 1] : null;
+            if (previo && siguiente && previo.modo === siguiente.modo) {
+                previo.finMs = Math.max(previo.finMs, siguiente.finMs);
+                salida.splice(i, 2);
+                huboCambios = true;
+                break;
+            }
+            if (!previo && siguiente) {
+                siguiente.inicioMs = Math.min(siguiente.inicioMs, actual.inicioMs);
+                salida.splice(i, 1);
+                huboCambios = true;
+                break;
+            }
+            if (previo && !siguiente) {
+                previo.finMs = Math.max(previo.finMs, actual.finMs);
+                salida.splice(i, 1);
+                huboCambios = true;
+                break;
+            }
+            if (previo && siguiente) {
+                const anchoPrevio = ((previo.finMs - previo.inicioMs) / spanMs) * plotWidthPx;
+                const anchoSiguiente = ((siguiente.finMs - siguiente.inicioMs) / spanMs) * plotWidthPx;
+                if (anchoPrevio >= anchoSiguiente) {
+                    previo.finMs = Math.max(previo.finMs, actual.finMs);
+                } else {
+                    siguiente.inicioMs = Math.min(siguiente.inicioMs, actual.inicioMs);
+                }
+                salida.splice(i, 1);
+                huboCambios = true;
+                break;
+            }
+        }
+    }
+    return suavizarSegmentosModoStatsEspectador(salida, 0);
+};
 const registrarPuntoVidaStatsEspectador = (equipo, ts, valorVida) => {
     const id = Number(equipo);
     if (id !== 1 && id !== 2) return;
@@ -1737,8 +1917,11 @@ const registrarPuntoVidaStatsEspectador = (equipo, ts, valorVida) => {
             && deltaMs >= 0
             && deltaMs <= STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS;
         const veniaAgotado = ultimo.v <= 5;
-        // Evita "triángulos" en la gráfica cuando arranca una nueva ronda desde 0.
-        if (subidaBrusca && veniaAgotado) {
+        const ventanaArranqueMs = Math.min(2500, STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS);
+        const pareceArranqueDePartida = ultimo.t <= ventanaArranqueMs
+            && timestamp <= (ventanaArranqueMs * 2);
+        // Solo reinicia al principio real de la partida; un resucitar debe mantenerse en la curva.
+        if (subidaBrusca && veniaAgotado && pareceArranqueDePartida) {
             serie.length = 0;
         }
     }
@@ -1757,7 +1940,12 @@ const actualizarHistorialVidaDesdeStatsEspectador = (estado) => {
     [1, 2].forEach((equipo) => {
         const jugador = data.players && data.players[equipo] ? data.players[equipo] : null;
         const actual = jugador && jugador.vida ? jugador.vida.actual : null;
-        registrarPuntoVidaStatsEspectador(equipo, ts, actual);
+        const tiempoPartidaMs = jugador ? Number(jugador.tiempoTotalMs) : NaN;
+        registrarPuntoVidaStatsEspectador(
+            equipo,
+            Number.isFinite(tiempoPartidaMs) ? tiempoPartidaMs : ts,
+            actual
+        );
     });
 };
 const normalizarJugadorStatsLiveEspectador = (payload, id) => {
@@ -1794,12 +1982,25 @@ const normalizarJugadorStatsLiveEspectador = (payload, id) => {
         intentosPalabraProhibida: Math.max(0, Number(data.intentosPalabraProhibida) || 0)
     };
 };
+const normalizarTimelineModosStatsEspectador = (arr) => {
+    if (!Array.isArray(arr)) return [];
+    return arr
+        .map((item) => ({
+            modo: String(item && item.modo ? item.modo : "").trim().slice(0, 32).toLowerCase(),
+            inicioMs: Math.max(0, Number(item && item.inicioMs) || 0),
+            finMs: Math.max(0, Number(item && item.finMs) || 0)
+        }))
+        .filter((item) => item.modo && item.finMs > item.inicioMs)
+        .sort((a, b) => a.inicioMs - b.inicioMs)
+        .slice(0, 48);
+};
 const normalizarStatsLiveEspectador = (payload = {}) => {
     const data = payload && typeof payload === "object" ? payload : {};
     const players = data.players && typeof data.players === "object" ? data.players : {};
     return {
         ts: Number.isFinite(Number(data.ts)) ? Number(data.ts) : Date.now(),
         modo_actual: String(data.modo_actual ?? "").trim().slice(0, 32),
+        timeline_modos: normalizarTimelineModosStatsEspectador(data.timeline_modos),
         players: {
             1: normalizarJugadorStatsLiveEspectador(players[1], 1),
             2: normalizarJugadorStatsLiveEspectador(players[2], 2)
@@ -1838,6 +2039,181 @@ const formatearDuracionMsEspectador = (ms) => {
 const formatearHoraEspectador = (ts) => {
     const fecha = new Date(Number(ts) || Date.now());
     return fecha.toLocaleTimeString("es-ES", { hour12: false });
+};
+const resolverModoActivoStatsEspectador = (estado = {}) => {
+    const candidatos = [
+        estado && estado.modo_actual,
+        modo_nivel_activo_espectador,
+        modo_actual
+    ];
+    return candidatos
+        .map((valor) => String(valor ?? "").trim().toLowerCase())
+        .find(Boolean) || "";
+};
+const obtenerClaseNivelActualStatsEspectador = (modo = "") => ({
+    "letra bendita": "stats-current-level--bendita",
+    "letra prohibida": "stats-current-level--prohibida",
+    "palabras bonus": "stats-current-level--bonus",
+    "palabras prohibidas": "stats-current-level--prohibidas",
+    "tertulia": "stats-current-level--tertulia",
+    "frase final": "stats-current-level--frase-final"
+})[String(modo || "").trim().toLowerCase()] || "";
+const renderizarEstadoStatsEspectador = (modo = "") => {
+    if (!stats_estado) return;
+    const modoNormalizado = String(modo || "").trim().toLowerCase();
+    if (!modoNormalizado) {
+        stats_estado.textContent = tJuego2P("stats.state.waiting", {}, "Esperando estadisticas de las escritoras...");
+        return;
+    }
+    const etiqueta = escapeHtml(tJuego2P("stats.current_level", {}, "Nivel actual"));
+    const nombre = escapeHtml(traducirNombreModoEspectador(modoNormalizado, modoNormalizado.toUpperCase()));
+    const claseModo = obtenerClaseNivelActualStatsEspectador(modoNormalizado);
+    stats_estado.innerHTML = `
+        <span class="stats-estado-label">${etiqueta}:</span>
+        <span class="stats-current-level${claseModo ? ` ${claseModo}` : ""}">${nombre}</span>
+    `;
+};
+const normalizarPasoEjeStats = (valor) => {
+    const numero = Math.max(1, Number(valor) || 0);
+    const magnitud = 10 ** Math.floor(Math.log10(numero));
+    const fraccion = numero / magnitud;
+    if (fraccion <= 1) return magnitud;
+    if (fraccion <= 1.5) return 1.5 * magnitud;
+    if (fraccion <= 2) return 2 * magnitud;
+    if (fraccion <= 2.5) return 2.5 * magnitud;
+    if (fraccion <= 4) return 4 * magnitud;
+    if (fraccion <= 5) return 5 * magnitud;
+    if (fraccion <= 7.5) return 7.5 * magnitud;
+    return 10 * magnitud;
+};
+const redondearMaximoEjeVidaStats = (valor) => {
+    const objetivo = Math.max(4, Number(valor) || 0);
+    const paso = normalizarPasoEjeStats(objetivo / 4);
+    return Math.max(4, Math.ceil(objetivo / paso) * paso);
+};
+const formatearValorEjeVidaStats = (valor) => `${Math.max(0, Math.round(Number(valor) || 0))} s`;
+const renderizarNombreEquipoStats = (nombre, equipo) => (
+    `<span class="stats-slide-player-name equipo-${Number(equipo) === 2 ? 2 : 1}">${escapeHtml(String(nombre || `ESCRITXR ${equipo}`).trim() || `ESCRITXR ${equipo}`)}</span>`
+);
+const obtenerPaletaModoStatsEspectador = (modo = "") => ({
+    "letra bendita": { color: "#5dff86", fillOpacity: 0.38, edgeOpacity: 0.9 },
+    "letra prohibida": { color: "#ff6f84", fillOpacity: 0.38, edgeOpacity: 0.9 },
+    "palabras bonus": { color: "#ffd86f", fillOpacity: 0.38, edgeOpacity: 0.88 },
+    "palabras prohibidas": { color: "#ff9be3", fillOpacity: 0.38, edgeOpacity: 0.88 },
+    "tertulia": { color: "#86d0ff", fillOpacity: 0.34, edgeOpacity: 0.84 },
+    "frase final": { color: "#ffb675", fillOpacity: 0.38, edgeOpacity: 0.88 }
+})[String(modo || "").trim().toLowerCase()] || {
+    color: "#ffffff",
+    fillOpacity: 0.08,
+    edgeOpacity: 0.28
+};
+const resolverSegmentosModoVisiblesStatsEspectador = (timeline = [], dominio = {}, modoActual = "") => {
+    const inicioDominio = Math.max(0, Number(dominio.inicioMs) || 0);
+    const finDominio = Math.max(inicioDominio, Number(dominio.finMs) || 0);
+    const normalizarModo = (valor) => String(valor || "").trim().toLowerCase();
+    const segmentosBase = (Array.isArray(timeline) ? timeline : [])
+        .map((segmento) => ({
+            modo: normalizarModo(segmento && segmento.modo),
+            inicioMs: Math.max(0, Number(segmento && segmento.inicioMs) || 0),
+            finMs: Math.max(0, Number(segmento && segmento.finMs) || 0)
+        }))
+        .filter((segmento) => segmento.modo && segmento.finMs > segmento.inicioMs)
+        .sort((a, b) => a.inicioMs - b.inicioMs);
+    const segmentos = [];
+    segmentosBase.forEach((segmento) => {
+        const inicioMs = Math.max(inicioDominio, segmento.inicioMs);
+        const finMs = Math.min(finDominio, segmento.finMs);
+        if (finMs <= inicioMs) return;
+        const previo = segmentos[segmentos.length - 1];
+        if (previo && previo.modo === segmento.modo && inicioMs <= previo.finMs) {
+            previo.finMs = Math.max(previo.finMs, finMs);
+            return;
+        }
+        segmentos.push({ modo: segmento.modo, inicioMs, finMs });
+    });
+    const modoActivo = normalizarModo(modoActual);
+    if (!modoActivo || finDominio <= inicioDominio) {
+        return suavizarSegmentosModoStatsEspectador(segmentos);
+    }
+    if (!segmentos.length) {
+        return [{ modo: modoActivo, inicioMs: inicioDominio, finMs: finDominio }];
+    }
+    const ultimo = segmentos[segmentos.length - 1];
+    if (ultimo.modo === modoActivo) {
+        ultimo.finMs = Math.max(ultimo.finMs, finDominio);
+    } else if (ultimo.finMs < finDominio) {
+        segmentos.push({
+            modo: modoActivo,
+            inicioMs: Math.max(inicioDominio, ultimo.finMs),
+            finMs: finDominio
+        });
+    }
+    return suavizarSegmentosModoStatsEspectador(segmentos);
+};
+const renderizarBandasModoStatsEspectador = (timeline = [], serie = {}, dominio = {}, modoActual = "") => {
+    const inicioDominio = Math.max(0, Number(dominio.inicioMs) || 0);
+    const finDominio = Math.max(inicioDominio, Number(dominio.finMs) || 0);
+    const spanDominio = Math.max(1, finDominio - inicioDominio);
+    if (!Number.isFinite(serie.plotLeft) || !Number.isFinite(serie.plotWidth)) {
+        return "";
+    }
+    const segmentosRecortados = compactarSegmentosModoPorPixelesStatsEspectador(
+        resolverSegmentosModoVisiblesStatsEspectador(timeline, {
+            inicioMs: inicioDominio,
+            finMs: finDominio
+        }, modoActual),
+        {
+            spanMs: spanDominio,
+            plotWidthPx: serie.plotWidth,
+            minPx: 10
+        }
+    );
+    const bandasHtml = segmentosRecortados.map((segmento) => {
+        const inicioMs = segmento.inicioMs;
+        const finMs = segmento.finMs;
+        const x = serie.plotLeft + (((inicioMs - inicioDominio) / spanDominio) * serie.plotWidth);
+        const xFin = serie.plotLeft + (((finMs - inicioDominio) / spanDominio) * serie.plotWidth);
+        const width = Math.max(0, xFin - x);
+        if (width <= 0.4) {
+            return "";
+        }
+        const paleta = obtenerPaletaModoStatsEspectador(segmento.modo);
+        const titulo = traducirNombreModoEspectador(segmento.modo, String(segmento.modo || "").toUpperCase());
+        return `
+            <g class="stats-tiempo-banda">
+                <title>${escapeHtml(titulo)}</title>
+                <rect x="${x.toFixed(2)}" y="${serie.plotTop.toFixed(2)}" width="${width.toFixed(2)}" height="${serie.plotHeight.toFixed(2)}" fill="${paleta.color}" fill-opacity="${paleta.fillOpacity}"></rect>
+            </g>
+        `;
+    }).join("");
+    const separadoresHtml = segmentosRecortados.slice(0, -1).map((segmento, indice) => {
+        const siguiente = segmentosRecortados[indice + 1];
+        if (!siguiente || segmento.modo === siguiente.modo) {
+            return "";
+        }
+        const xSeparador = serie.plotLeft + (((siguiente.inicioMs - inicioDominio) / spanDominio) * serie.plotWidth);
+        if (
+            !Number.isFinite(xSeparador)
+            || xSeparador <= (serie.plotLeft + 0.75)
+            || xSeparador >= (serie.plotRight - 0.75)
+        ) {
+            return "";
+        }
+        const paleta = obtenerPaletaModoStatsEspectador(siguiente.modo);
+        return `
+            <line
+                class="stats-tiempo-separador"
+                x1="${xSeparador.toFixed(2)}"
+                y1="${serie.plotTop.toFixed(2)}"
+                x2="${xSeparador.toFixed(2)}"
+                y2="${serie.plotBottom.toFixed(2)}"
+                stroke="${paleta.color}"
+                stroke-opacity="${Math.min(1, Math.max(0.72, Number(paleta.edgeOpacity) || 0.85)).toFixed(2)}"
+                stroke-width="2.5"
+            ></line>
+        `;
+    }).join("");
+    return `${bandasHtml}${separadoresHtml}`;
 };
 const obtenerLabelTeclaStats = (code) => {
     const codigo = String(code || "").trim();
@@ -1903,10 +2279,10 @@ const renderizarHeatmapStatsJugador = (jugador, equipo) => {
     }).join("");
 
     return `
-        <div class="stats-kpis-grid equipo-${equipo}">
-            <div class="stats-kpi"><span>Pulsaciones</span><strong>${total}</strong></div>
-            <div class="stats-kpi"><span>Teclas activas</span><strong>${valores.length}</strong></div>
-            <div class="stats-kpi"><span>Pico por tecla</span><strong>${maximo || 0}</strong></div>
+        <div class="stats-kpis-grid stats-kpis-grid--heatmap equipo-${equipo}">
+            <div class="stats-kpi"><span>&#x2328;&#xFE0F; Pulsaciones</span><strong>${total}</strong></div>
+            <div class="stats-kpi"><span>&#x1F3AF; Teclas activas</span><strong>${valores.length}</strong></div>
+            <div class="stats-kpi"><span>&#x1F525; Maximo en una tecla</span><strong>${maximo || 0}</strong></div>
         </div>
         <div class="stats-heatmap-board equipo-${equipo}">
             ${filasHtml}
@@ -1916,10 +2292,12 @@ const renderizarHeatmapStatsJugador = (jugador, equipo) => {
 const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
     const ancho = 1000;
     const alto = 330;
-    const padX = 54;
-    const padY = 34;
-    const usableX = ancho - (padX * 2);
-    const usableY = alto - (padY * 2);
+    const padLeft = 92;
+    const padRight = 26;
+    const padTop = 28;
+    const padBottom = 58;
+    const usableX = ancho - padLeft - padRight;
+    const usableY = alto - padTop - padBottom;
     const maxVidaHint = Math.max(0, Number(opciones && opciones.maxVidaHint) || 0);
     const fallbackMaxVida = maxVidaHint > 0 ? maxVidaHint : 120;
     const serieCruda = Array.isArray(historial) ? historial.slice(-STATS_HISTORIAL_VIDA_MAX) : [];
@@ -1931,7 +2309,27 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
         .filter((p) => Number.isFinite(p.t) && Number.isFinite(p.v))
         .sort((a, b) => a.t - b.t);
     if (serie.length < 2) {
-        return { ancho, alto, linePath: "", areaPath: "", ultimo: null, maxVida: fallbackMaxVida };
+        return {
+            ancho,
+            alto,
+            padLeft,
+            padRight,
+            padTop,
+            padBottom,
+            plotLeft: padLeft,
+            plotRight: ancho - padRight,
+            plotTop: padTop,
+            plotBottom: alto - padBottom,
+            plotWidth: usableX,
+            plotHeight: usableY,
+            linePath: "",
+            areaPath: "",
+            ultimo: null,
+            maxVida: redondearMaximoEjeVidaStats(fallbackMaxVida),
+            minT: 0,
+            maxT: 0,
+            spanT: 0
+        };
     }
     const serieOrdenada = [];
     serie.forEach((punto) => {
@@ -1943,7 +2341,27 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
         serieOrdenada.push(punto);
     });
     if (serieOrdenada.length < 2) {
-        return { ancho, alto, linePath: "", areaPath: "", ultimo: null, maxVida: fallbackMaxVida };
+        return {
+            ancho,
+            alto,
+            padLeft,
+            padRight,
+            padTop,
+            padBottom,
+            plotLeft: padLeft,
+            plotRight: ancho - padRight,
+            plotTop: padTop,
+            plotBottom: alto - padBottom,
+            plotWidth: usableX,
+            plotHeight: usableY,
+            linePath: "",
+            areaPath: "",
+            ultimo: null,
+            maxVida: redondearMaximoEjeVidaStats(fallbackMaxVida),
+            minT: 0,
+            maxT: 0,
+            spanT: 0
+        };
     }
     const minT = serieOrdenada[0].t;
     const maxT = serieOrdenada[serieOrdenada.length - 1].t;
@@ -1951,27 +2369,45 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
     const usarIndiceEnX = spanT <= 5;
     const divisorIdx = Math.max(1, serieOrdenada.length - 1);
     const maxObservada = serieOrdenada.reduce((acc, punto) => Math.max(acc, Math.max(0, Number(punto.v) || 0)), 0);
-    const maxVida = Math.max(30, Math.ceil(Math.max(maxObservada, maxVidaHint, fallbackMaxVida) * 1.08));
+    const maxVida = redondearMaximoEjeVidaStats(Math.max(30, Math.ceil(Math.max(maxObservada, maxVidaHint, fallbackMaxVida) * 1.05)));
     const puntos = serieOrdenada.map((punto, idx) => {
         const ratioX = usarIndiceEnX ? (idx / divisorIdx) : ((punto.t - minT) / spanT);
-        const x = padX + (ratioX * usableX);
-        const y = alto - padY - ((Math.max(0, punto.v) / maxVida) * usableY);
+        const x = padLeft + (ratioX * usableX);
+        const y = alto - padBottom - ((Math.max(0, punto.v) / maxVida) * usableY);
         return { x, y, v: punto.v };
     });
     const linePath = (() => {
         if (!puntos.length) return "";
         let path = `M${puntos[0].x.toFixed(2)} ${puntos[0].y.toFixed(2)}`;
         for (let i = 1; i < puntos.length; i += 1) {
-            const prev = puntos[i - 1];
             const curr = puntos[i];
-            path += ` L${curr.x.toFixed(2)} ${prev.y.toFixed(2)} L${curr.x.toFixed(2)} ${curr.y.toFixed(2)}`;
+            path += ` L${curr.x.toFixed(2)} ${curr.y.toFixed(2)}`;
         }
         return path;
     })();
-    const areaPath = `${linePath} L${puntos[puntos.length - 1].x.toFixed(2)} ${(alto - padY).toFixed(2)} L${puntos[0].x.toFixed(2)} ${(alto - padY).toFixed(2)} Z`;
-    return { ancho, alto, linePath, areaPath, ultimo: puntos[puntos.length - 1], maxVida };
+    return {
+        ancho,
+        alto,
+        padLeft,
+        padRight,
+        padTop,
+        padBottom,
+        plotLeft: padLeft,
+        plotRight: ancho - padRight,
+        plotTop: padTop,
+        plotBottom: alto - padBottom,
+        plotWidth: usableX,
+        plotHeight: usableY,
+        linePath,
+        areaPath: "",
+        ultimo: puntos[puntos.length - 1],
+        maxVida,
+        minT,
+        maxT,
+        spanT
+    };
 };
-const renderizarEvolucionTiempoStatsJugador = (jugador, equipo) => {
+const renderizarEvolucionTiempoStatsJugador = (jugador, equipo, timelineModos = [], modoActual = "") => {
     const historial = stats_historial_vida_espectador[equipo] || [];
     const vida = jugador && jugador.vida ? jugador.vida : { actual: null, min: null, max: null, media: null };
     const maxVidaHint = Number.isFinite(Number(vida.max))
@@ -1979,72 +2415,141 @@ const renderizarEvolucionTiempoStatsJugador = (jugador, equipo) => {
         : (Number.isFinite(Number(vida.actual)) ? Math.max(0, Number(vida.actual)) : 0);
     const serie = construirSerieSvgVidaStats(historial, { maxVidaHint });
     const valorVida = (valor) => (Number.isFinite(Number(valor)) ? `${Math.max(0, Number(valor))} s` : "--");
-    const gridHorizontal = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-        const y = (serie.alto - 34) - ((serie.alto - 68) * ratio);
-        return `<line x1="54" y1="${y.toFixed(2)}" x2="${(serie.ancho - 54).toFixed(2)}" y2="${y.toFixed(2)}"></line>`;
-    }).join("");
-    const gridVertical = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-        const x = 54 + ((serie.ancho - 108) * ratio);
-        return `<line x1="${x.toFixed(2)}" y1="34" x2="${x.toFixed(2)}" y2="${(serie.alto - 34).toFixed(2)}"></line>`;
-    }).join("");
+    const totalMs = Math.max(0, Number(jugador && jugador.tiempoTotalMs) || 0);
+    const inicioTiempoMs = Math.max(0, Math.round(serie.minT || 0));
+    const finTiempoMs = Math.max(inicioTiempoMs, Math.max(totalMs, Math.round(serie.maxT || 0)));
+    const totalTicks = 4;
+    const yTicks = Array.from({ length: totalTicks + 1 }, (_, idx) => {
+        const ratio = idx / totalTicks;
+        const valor = serie.maxVida - (serie.maxVida * ratio);
+        const y = serie.plotTop + (serie.plotHeight * ratio);
+        return { valor, y };
+    });
+    const xTicks = Array.from({ length: totalTicks + 1 }, (_, idx) => {
+        const ratio = idx / totalTicks;
+        const valorMs = inicioTiempoMs + ((finTiempoMs - inicioTiempoMs) * ratio);
+        const x = serie.plotLeft + (serie.plotWidth * ratio);
+        return { valorMs, x };
+    });
+    const gridHorizontal = yTicks.map((tick) => (
+        `<line x1="${serie.plotLeft.toFixed(2)}" y1="${tick.y.toFixed(2)}" x2="${serie.plotRight.toFixed(2)}" y2="${tick.y.toFixed(2)}"></line>`
+    )).join("");
+    const gridVertical = xTicks.map((tick) => (
+        `<line x1="${tick.x.toFixed(2)}" y1="${serie.plotTop.toFixed(2)}" x2="${tick.x.toFixed(2)}" y2="${serie.plotBottom.toFixed(2)}"></line>`
+    )).join("");
+    const labelsY = yTicks.map((tick) => (
+        `<text class="stats-tiempo-axis-label stats-tiempo-axis-label--y" x="${(serie.plotLeft - 12).toFixed(2)}" y="${(tick.y + 4).toFixed(2)}" text-anchor="end">${escapeHtml(formatearValorEjeVidaStats(tick.valor))}</text>`
+    )).join("");
+    const labelsX = xTicks.map((tick) => (
+        `<text class="stats-tiempo-axis-label stats-tiempo-axis-label--x" x="${tick.x.toFixed(2)}" y="${(serie.plotBottom + 24).toFixed(2)}" text-anchor="middle">${escapeHtml(formatearDuracionMsEspectador(tick.valorMs))}</text>`
+    )).join("");
+    const bandasModo = renderizarBandasModoStatsEspectador(timelineModos, serie, {
+        inicioMs: inicioTiempoMs,
+        finMs: finTiempoMs
+    }, modoActual);
+    const tituloEjeY = escapeHtml(tJuego2P("stats.axis.y_time_left", {}, "Vida"));
+    const tituloEjeX = escapeHtml(`\u231B\uFE0F ${tJuego2P("stats.axis.x_elapsed", {}, "Tiempo transcurrido")}`);
+    const ejeYTitleX = 20;
+    const ejeYTitleY = (serie.plotTop + (serie.plotHeight / 2)).toFixed(2);
     const graficaHtml = serie.linePath
         ? `
-            <svg viewBox="0 0 ${serie.ancho} ${serie.alto}" class="stats-tiempo-svg" role="img" aria-label="Evolucion del tiempo restante">
+            <svg viewBox="0 0 ${serie.ancho} ${serie.alto}" class="stats-tiempo-svg" role="img" aria-label="Evolucion de la vida">
+                <rect class="stats-tiempo-plot-bg" x="${serie.plotLeft.toFixed(2)}" y="${serie.plotTop.toFixed(2)}" width="${serie.plotWidth.toFixed(2)}" height="${serie.plotHeight.toFixed(2)}"></rect>
+                <g class="stats-tiempo-bandas">${bandasModo}</g>
                 <g class="stats-tiempo-grid">${gridHorizontal}${gridVertical}</g>
-                <path class="stats-tiempo-area equipo-${equipo}" d="${serie.areaPath}"></path>
-                <path class="stats-tiempo-linea equipo-${equipo}" d="${serie.linePath}"></path>
+                <g class="stats-tiempo-axis">
+                    <line x1="${serie.plotLeft.toFixed(2)}" y1="${serie.plotTop.toFixed(2)}" x2="${serie.plotLeft.toFixed(2)}" y2="${serie.plotBottom.toFixed(2)}"></line>
+                    <line x1="${serie.plotLeft.toFixed(2)}" y1="${serie.plotBottom.toFixed(2)}" x2="${serie.plotRight.toFixed(2)}" y2="${serie.plotBottom.toFixed(2)}"></line>
+                </g>
+                <path class="stats-tiempo-linea equipo-${equipo}" d="${serie.linePath}" fill="none" vector-effect="non-scaling-stroke"></path>
                 ${serie.ultimo ? `<circle class="stats-tiempo-punto equipo-${equipo}" cx="${serie.ultimo.x.toFixed(2)}" cy="${serie.ultimo.y.toFixed(2)}" r="6"></circle>` : ""}
+                <g class="stats-tiempo-axis-labels">${labelsY}${labelsX}</g>
+                <text class="stats-tiempo-axis-title stats-tiempo-axis-title--y" x="${ejeYTitleX}" y="${ejeYTitleY}" text-anchor="middle" transform="rotate(-90 ${ejeYTitleX} ${ejeYTitleY})"><tspan class="stats-tiempo-axis-icon stats-tiempo-axis-icon--vida equipo-${equipo}">&#x2665;</tspan><tspan dx="8">${tituloEjeY}</tspan></text>
+                <text class="stats-tiempo-axis-title stats-tiempo-axis-title--x" x="${(serie.plotLeft + (serie.plotWidth / 2)).toFixed(2)}" y="${(serie.alto - 12).toFixed(2)}" text-anchor="middle">${tituloEjeX}</text>
             </svg>
         `
-        : `<div class="stats-tiempo-vacio">Esperando datos de tiempo en vivo...</div>`;
+        : `<div class="stats-tiempo-vacio">${escapeHtml(tJuego2P("stats.time.waiting", {}, "Esperando datos de tiempo en vivo..."))}</div>`;
+    const tituloPanelVida = escapeHtml(tJuego2P("stats.axis.y_time_left", {}, "Vida")).toUpperCase();
     return `
-        <div class="stats-kpis-grid equipo-${equipo}">
-            <div class="stats-kpi"><span>Actual</span><strong>${valorVida(vida.actual)}</strong></div>
-            <div class="stats-kpi"><span>Min</span><strong>${valorVida(vida.min)}</strong></div>
-            <div class="stats-kpi"><span>Max</span><strong>${valorVida(vida.max)}</strong></div>
-            <div class="stats-kpi"><span>Media</span><strong>${valorVida(vida.media)}</strong></div>
-        </div>
-        <div class="stats-tiempo-board equipo-${equipo}">
-            ${graficaHtml}
+        <div class="stats-tiempo-layout equipo-${equipo}">
+            <section class="stats-vida-panel equipo-${equipo}" aria-label="${tituloPanelVida}">
+                <h4 class="stats-vida-panel-title">
+                    <span class="stats-tiempo-axis-icon stats-tiempo-axis-icon--vida equipo-${equipo}">&#x2665;</span>
+                    <span>${tituloPanelVida}</span>
+                </h4>
+                <div class="stats-vida-grid">
+                    <div class="stats-kpi"><span>&#x1F7E2; Actual</span><strong>${valorVida(vida.actual)}</strong></div>
+                    <div class="stats-kpi"><span>&#x1F680; Max</span><strong>${valorVida(vida.max)}</strong></div>
+                    <div class="stats-kpi"><span>&#x1F4C9; Min</span><strong>${valorVida(vida.min)}</strong></div>
+                    <div class="stats-kpi"><span>&#x1F4CA; Media</span><strong>${valorVida(vida.media)}</strong></div>
+                </div>
+            </section>
+            <div class="stats-tiempo-board equipo-${equipo}">
+                ${graficaHtml}
+            </div>
         </div>
     `;
 };
 const construirSlidesStats = (payload) => {
     const estado = normalizarStatsLiveEspectador(payload);
+    const timelineModos = resolverTimelineModosStatsEspectador(estado);
     const p1 = estado.players[1];
     const p2 = estado.players[2];
+    const contextoHeatmapP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; MAPA DE CALOR`;
+    const contextoHeatmapP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; MAPA DE CALOR`;
+    const contextoTiempoP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; EVOLUCION DEL TIEMPO`;
+    const contextoTiempoP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; EVOLUCION DEL TIEMPO`;
     return [
         {
             tipo: "heatmap",
-            titulo: `${escapeHtml(p1.nombre)} · MAPA DE CALOR`,
-            subtitulo: "Pulsaciones por tecla (actualizacion en vivo)",
+            titulo: contextoHeatmapP1,
+            contextoCabecera: contextoHeatmapP1,
+            ocultarTituloEnSlide: true,
             html: renderizarHeatmapStatsJugador(p1, 1)
         },
         {
             tipo: "heatmap",
-            titulo: `${escapeHtml(p2.nombre)} · MAPA DE CALOR`,
-            subtitulo: "Pulsaciones por tecla (actualizacion en vivo)",
+            titulo: contextoHeatmapP2,
+            contextoCabecera: contextoHeatmapP2,
+            ocultarTituloEnSlide: true,
             html: renderizarHeatmapStatsJugador(p2, 2)
         },
         {
             tipo: "tiempo",
-            titulo: `${escapeHtml(p1.nombre)} · EVOLUCION DEL TIEMPO`,
-            subtitulo: `Duracion: ${formatearDuracionMsEspectador(p1.tiempoTotalMs)}`,
-            html: renderizarEvolucionTiempoStatsJugador(p1, 1)
+            titulo: contextoTiempoP1,
+            contextoCabecera: contextoTiempoP1,
+            ocultarTituloEnSlide: true,
+            html: renderizarEvolucionTiempoStatsJugador(p1, 1, timelineModos, estado.modo_actual)
         },
         {
             tipo: "tiempo",
-            titulo: `${escapeHtml(p2.nombre)} · EVOLUCION DEL TIEMPO`,
-            subtitulo: `Duracion: ${formatearDuracionMsEspectador(p2.tiempoTotalMs)}`,
-            html: renderizarEvolucionTiempoStatsJugador(p2, 2)
+            titulo: contextoTiempoP2,
+            contextoCabecera: contextoTiempoP2,
+            ocultarTituloEnSlide: true,
+            html: renderizarEvolucionTiempoStatsJugador(p2, 2, timelineModos, estado.modo_actual)
         }
     ];
+};
+const actualizarCabeceraSlideStats = () => {
+    if (!stats_timestamp) return;
+    const slide = Array.isArray(stats_slides_actuales) ? stats_slides_actuales[stats_slide_index] : null;
+    const contexto = slide && typeof slide.contextoCabecera === "string" ? slide.contextoCabecera.trim() : "";
+    const visible = contexto.length > 0;
+    stats_timestamp.hidden = !visible;
+    stats_timestamp.setAttribute("aria-hidden", visible ? "false" : "true");
+    stats_timestamp.innerHTML = visible ? contexto : "";
 };
 const aplicarSlideStatsActual = () => {
     if (!stats_slides_track) return;
     stats_slide_index = resolverIndiceSlideStatsEspectador(stats_slide_step_remoto, stats_slide_count);
     stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
+    const slide = Array.isArray(stats_slides_actuales) ? stats_slides_actuales[stats_slide_index] : null;
+    const esSlideTiempo = Boolean(slide && slide.tipo === "tiempo");
+    const esSlideHeatmap = Boolean(slide && slide.tipo === "heatmap");
+    stats_slider?.classList.toggle("stats-slider--tiempo", esSlideTiempo);
+    stats_slider?.classList.toggle("stats-slider--heatmap", esSlideHeatmap);
     actualizarPaginadorStats();
+    actualizarCabeceraSlideStats();
 };
 const actualizarPaginadorStats = () => {
     if (!stats_dots) return;
@@ -2059,19 +2564,29 @@ const actualizarPaginadorStats = () => {
     stats_dots.appendChild(fragment);
 };
 const renderizarStatsEspectador = () => {
-    if (!stats_slides_track || !stats_estado || !stats_timestamp) return;
+    if (!stats_slides_track || !stats_estado) return;
     const estado = normalizarStatsLiveEspectador(estado_stats_live_espectador || {});
     const slides = construirSlidesStats(estado);
+    stats_slides_actuales = slides;
     stats_slides_track.innerHTML = "";
     const fragment = document.createDocumentFragment();
     slides.forEach((slide) => {
         const item = document.createElement("article");
         item.className = "stats-slide";
-        item.innerHTML = `
+        const tituloHtml = (slide.titulo && !slide.ocultarTituloEnSlide)
+            ? `<h3>${slide.titulo}</h3>`
+            : "";
+        const subtituloHtml = slide.subtitulo ? `<p>${escapeHtml(slide.subtitulo || "")}</p>` : "";
+        const headerHtml = (tituloHtml || subtituloHtml)
+            ? `
             <header class="stats-slide-header">
-                <h3>${slide.titulo}</h3>
-                <p>${escapeHtml(slide.subtitulo || "")}</p>
+                ${tituloHtml}
+                ${subtituloHtml}
             </header>
+        `
+            : "";
+        item.innerHTML = `
+            ${headerHtml}
             <div class="stats-slide-body stats-slide-body--${slide.tipo || "default"}">${slide.html}</div>
         `;
         fragment.appendChild(item);
@@ -2082,6 +2597,8 @@ const renderizarStatsEspectador = () => {
     const nombreModo = estado.modo_actual ? estado.modo_actual : "partida";
     stats_estado.textContent = `Modo: ${nombreModo} · Heatmap + tiempo live · ${stats_slide_count} slides`;
     stats_timestamp.textContent = `Actualizado: ${formatearHoraEspectador(estado.ts)}`;
+    actualizarCabeceraSlideStats();
+    renderizarEstadoStatsEspectador(resolverModoActivoStatsEspectador(estado));
 };
 const iniciarSlidesStats = () => {
     aplicarSlideStatsActual();
@@ -3928,6 +4445,13 @@ socket.on('vista_espectador_modo', (payload = {}) => {
 
 socket.on('stats_live_estado', (payload = {}) => {
     estado_stats_live_espectador = normalizarStatsLiveEspectador(payload);
+    registrarModoTimelineStatsEspectador(
+        estado_stats_live_espectador.modo_actual,
+        Math.max(
+            Number(estado_stats_live_espectador.players[1] && estado_stats_live_espectador.players[1].tiempoTotalMs) || 0,
+            Number(estado_stats_live_espectador.players[2] && estado_stats_live_espectador.players[2].tiempoTotalMs) || 0
+        )
+    );
     actualizarHistorialVidaDesdeStatsEspectador(estado_stats_live_espectador);
     if (vista_espectador_modo_resuelta === "stats") {
         renderizarStatsEspectador();
@@ -4452,6 +4976,7 @@ socket.on('inicio', data => {
     }
     reiniciarEstadoCierrePartidaEspectador();
     reiniciarHistorialVidaStatsEspectador();
+    reiniciarTimelineModosStatsEspectador();
     limpiarColaPalabrasPendientesEspectador();
     setPendienteAnimacionEntradaBarraVida(true);
     cancelarAnimacionEntradaBarraVida(tiempo);
@@ -4623,6 +5148,7 @@ socket.on('limpiar', data => {
     limpiarColaPalabrasPendientesEspectador();
     reiniciarEstadoCierrePartidaEspectador();
     reiniciarHistorialVidaStatsEspectador();
+    reiniciarTimelineModosStatsEspectador();
     setPendienteAnimacionEntradaBarraVida(false);
     partida_activa_espectador = false;
     ocultarTodosResucitarMini();
@@ -4700,6 +5226,7 @@ function aplicarModo(data) {
     limpiarEstadoVotacionVentaja();
     ejecutarLimpiezaModo(modo_actual, data);
     modo_actual = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
+    registrarModoTimelineStatsEspectador(modo_actual);
     ultimo_payload_modo_espectador = data || {};
     if (data && typeof data.letra_bendita === "string" && data.letra_bendita.trim()) {
         ultima_letra_bendita_espectador = data.letra_bendita.trim();
@@ -4800,13 +5327,10 @@ function refrescarUiIdiomaEspectador() {
         actualizarConsignaCalentamientoEspectador(solicitud_calentamiento_espectador);
     }
 
-    if (!estado_stats_live_espectador) {
-        if (stats_timestamp) {
-            stats_timestamp.textContent = tJuego2P("stats.timestamp.none", {}, "Sin datos");
-        }
-        if (stats_estado) {
-            stats_estado.textContent = tJuego2P("stats.state.waiting", {}, "Esperando estadisticas de las escritoras...");
-        }
+    if (estado_stats_live_espectador) {
+        renderizarStatsEspectador();
+    } else {
+        renderizarEstadoStatsEspectador("");
     }
 
     renderizarCreditosEspectador();

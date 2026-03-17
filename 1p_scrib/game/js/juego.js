@@ -43,6 +43,97 @@ let lastTextNode;
 let caretPos;
 let caretNode;
 
+if (typeof window !== "undefined") {
+  const compartidoJuego1P = window.scrib1pGameplayShared || {};
+  Object.defineProperties(compartidoJuego1P, {
+    LIMITE_TOTAL: {
+      configurable: true,
+      enumerable: true,
+      get: () => LIMITE_TOTAL
+    },
+    SECS_BASE: {
+      configurable: true,
+      enumerable: true,
+      get: () => SECS_BASE
+    },
+    maxIncremento: {
+      configurable: true,
+      enumerable: true,
+      get: () => maxIncremento
+    },
+    maxIncrementoDestreza: {
+      configurable: true,
+      enumerable: true,
+      get: () => maxIncrementoDestreza
+    },
+    rapidez_borrado: {
+      configurable: true,
+      enumerable: true,
+      get: () => rapidez_borrado,
+      set: (valor) => {
+        rapidez_borrado = valor;
+      }
+    },
+    rapidez_inicio_borrado: {
+      configurable: true,
+      enumerable: true,
+      get: () => rapidez_inicio_borrado,
+      set: (valor) => {
+        rapidez_inicio_borrado = valor;
+      }
+    },
+    borrado: {
+      configurable: true,
+      enumerable: true,
+      get: () => borrado,
+      set: (valor) => {
+        borrado = valor;
+      }
+    },
+    countInterval: {
+      configurable: true,
+      enumerable: true,
+      get: () => countInterval,
+      set: (valor) => {
+        countInterval = valor;
+      }
+    },
+    intervaloID_temp_modos: {
+      configurable: true,
+      enumerable: true,
+      get: () => intervaloID_temp_modos,
+      set: (valor) => {
+        intervaloID_temp_modos = valor;
+      }
+    },
+    cambio_palabra: {
+      configurable: true,
+      enumerable: true,
+      get: () => cambio_palabra,
+      set: (valor) => {
+        cambio_palabra = valor;
+      }
+    },
+    terminado: {
+      configurable: true,
+      enumerable: true,
+      get: () => terminado,
+      set: (valor) => {
+        terminado = valor;
+      }
+    },
+    atributos: {
+      configurable: true,
+      enumerable: true,
+      get: () => atributos,
+      set: (valor) => {
+        atributos = valor;
+      }
+    }
+  });
+  window.scrib1pGameplayShared = compartidoJuego1P;
+}
+
 function traducirTextoJuego1P(clave, variables = {}, fallback = "") {
   if (typeof window.scrib1pT === "function") {
     return window.scrib1pT(clave, variables, fallback);
@@ -75,6 +166,37 @@ function traducirModoJuego1P(modoCanonical) {
     return window.scrib1pTranslateModeName(modoCanonical);
   }
   return String(modoCanonical || "").toUpperCase();
+}
+
+const LISTA_MODOS_INICIAL_JUEGO_1P = Object.freeze([
+  "letra bendita",
+  "letra prohibida",
+  "palabras bonus",
+  "palabras prohibidas",
+  "frase final"
+]);
+
+const COLORES_MODOS_JUEGO_1P = Object.freeze({
+  "letra bendita": "green",
+  "letra prohibida": "red",
+  "tertulia": "blue",
+  "palabras bonus": "yellow",
+  "palabras prohibidas": "pink",
+  "frase final": "orange"
+});
+
+function obtenerListaModosInicialJuego1P() {
+  if (Array.isArray(window.scrib1pInitialModes) && window.scrib1pInitialModes.length) {
+    return window.scrib1pInitialModes;
+  }
+  return LISTA_MODOS_INICIAL_JUEGO_1P;
+}
+
+function obtenerColoresModosJuego1P() {
+  if (window.scrib1pModeColors && typeof window.scrib1pModeColors === "object") {
+    return window.scrib1pModeColors;
+  }
+  return COLORES_MODOS_JUEGO_1P;
 }
 
 function pantalla_completa() {
@@ -460,8 +582,7 @@ function cambio_nivel(caracteres) {
 
 //Función auxiliar para crear las animaciones del feedback.
 const animateCSS = (element, animation, prefix = "animate__") =>
-    // We create a Promise and return it
-    new Promise((resolve, reject) => {
+    new Promise((resolve) => {
         const animationName = `${prefix}${animation}`;
         const node = document.querySelector(element);
 
@@ -470,21 +591,64 @@ const animateCSS = (element, animation, prefix = "animate__") =>
             return;
         }
 
-        const estilosNodo = window.getComputedStyle(node);
-        if (estilosNodo.display === "none" || estilosNodo.visibility === "hidden") {
-            resolve("Animation skipped");
-            return;
+        const limpiarTiempoAnimacion = (valor) => {
+            const texto = String(valor || "").trim().toLowerCase();
+            if (!texto) return 0;
+            if (texto.endsWith("ms")) return Number.parseFloat(texto) || 0;
+            if (texto.endsWith("s")) return (Number.parseFloat(texto) || 0) * 1000;
+            return Number.parseFloat(texto) || 0;
+        };
+
+        const obtenerDuracionAnimacionMs = () => {
+            const estilosNodo = window.getComputedStyle(node);
+            if (estilosNodo.display === "none" || estilosNodo.visibility === "hidden") {
+                return 0;
+            }
+            const duraciones = String(estilosNodo.animationDuration || "0s").split(",").map(limpiarTiempoAnimacion);
+            const retrasos = String(estilosNodo.animationDelay || "0s").split(",").map(limpiarTiempoAnimacion);
+            const totalSegmentos = Math.max(duraciones.length, retrasos.length, 1);
+            let maximo = 0;
+            for (let i = 0; i < totalSegmentos; i += 1) {
+                const duracion = duraciones[i] ?? duraciones[duraciones.length - 1] ?? 0;
+                const retraso = retrasos[i] ?? retrasos[retrasos.length - 1] ?? 0;
+                maximo = Math.max(maximo, duracion + retraso);
+            }
+            return maximo;
+        };
+
+        let resuelto = false;
+        let fallbackTimer = null;
+
+        const finalizar = (mensaje) => {
+            if (resuelto) return;
+            resuelto = true;
+            if (fallbackTimer) {
+                clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
+            node.classList.remove(`${prefix}animated`, animationName);
+            node.removeEventListener("animationend", handleAnimationEnd);
+            resolve(mensaje);
+        };
+
+        function handleAnimationEnd(event) {
+            event.stopPropagation();
+            finalizar("Animation ended");
         }
 
         node.classList.add(`${prefix}animated`, animationName);
+        node.addEventListener("animationend", handleAnimationEnd);
 
-        // When the animation ends, we clean the classes and resolve the Promise
-        function handleAnimationEnd(event) {
-            event.stopPropagation();
-            node.classList.remove(`${prefix}animated`, animationName);
-            resolve("Animation ended");
-        }
-        node.addEventListener("animationend", handleAnimationEnd, { once: true });
+        requestAnimationFrame(() => {
+            const duracionAnimacionMs = obtenerDuracionAnimacionMs();
+            if (duracionAnimacionMs <= 0) {
+                finalizar("Animation skipped");
+                return;
+            }
+            fallbackTimer = setTimeout(() => {
+                finalizar("Animation timeout");
+            }, duracionAnimacionMs + 120);
+        });
     });
 
     function downloadTxtFile(filename, htmlContent) {
@@ -635,6 +799,8 @@ function volver(){
 function generarCasillas() {
   const contenedor = document.getElementById('listaModos');
   if (!contenedor) return;
+  const listaModosInicial = obtenerListaModosInicialJuego1P();
+  const coloresModos = obtenerColoresModosJuego1P();
 
   const seleccionadosPrevios = new Set(
     Array.from(contenedor.querySelectorAll('input[name="modos"]:checked')).map((checkbox) => checkbox.value)
@@ -648,7 +814,7 @@ function generarCasillas() {
   }
 
   if (window.innerWidth <= 800) {
-    LISTA_MODOS_INICIAL.forEach(function(modo, index) {
+    listaModosInicial.forEach(function(modo, index) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
       td.className = "casilla";
@@ -668,7 +834,7 @@ function generarCasillas() {
       label.setAttribute("data-mode-key", modo);
       label.textContent = traducirModoJuego1P(modo);
       label.style.display = 'block';
-      label.style.color = COLORES_MODOS[modo];
+      label.style.color = coloresModos[modo];
       label.style.paddingLeft = "0.2vw";
       label.style.paddingRight = "0.2vw";
       label.style.paddingBottom = "4vw";
@@ -684,7 +850,7 @@ function generarCasillas() {
   } else {
     const tr = document.createElement('tr');
 
-    LISTA_MODOS_INICIAL.forEach(function(modo, index) {
+    listaModosInicial.forEach(function(modo, index) {
       const td = document.createElement('td');
       td.className = "casilla";
 
@@ -703,7 +869,7 @@ function generarCasillas() {
       label.setAttribute("data-mode-key", modo);
       label.textContent = traducirModoJuego1P(modo);
       label.style.display = 'block';
-      label.style.color = COLORES_MODOS[modo];
+      label.style.color = coloresModos[modo];
       label.style.paddingTop = "0.3em";
       label.style.paddingLeft = "0.5vw";
       label.style.paddingRight = "0.5vw";
@@ -720,12 +886,7 @@ function generarCasillas() {
 }
 
 function actualizarEtiquetasCasillasModo() {
-  let mapaColores = null;
-  try {
-    mapaColores = COLORES_MODOS;
-  } catch (_error) {
-    mapaColores = null;
-  }
+  const mapaColores = obtenerColoresModosJuego1P();
 
   document.querySelectorAll('#listaModos label[data-mode-key]').forEach((label) => {
     const modo = label.getAttribute("data-mode-key");
@@ -750,14 +911,32 @@ function rellenarListaModos() {
 }
 
 function actualizarVariables() {
+  const inputCambioPalabras = document.getElementById('tiempo_cambio_palabras');
+  const inputTiempoInicial = document.getElementById('tiempo_inicial');
+  const inputCambioLetra = document.getElementById('tiempo_cambio_letra');
+  const inputTiempoModos = document.getElementById('tiempo_modos');
+
+  const valorCambioPalabras = inputCambioPalabras ? inputCambioPalabras.valueAsNumber : NaN;
+  const valorTiempoInicial = inputTiempoInicial ? inputTiempoInicial.valueAsNumber : NaN;
+  const valorCambioLetra = inputCambioLetra ? inputCambioLetra.valueAsNumber : NaN;
+  const valorTiempoModos = inputTiempoModos ? inputTiempoModos.valueAsNumber : NaN;
+
   //TIEMPO_INVERSO = tiempo_inverso_input.valueAsNumber * 1000;
   //TIEMPO_BORRADO = tiempo_borrado_input.valueAsNumber * 1000;
-  TIEMPO_CAMBIO_PALABRA = tiempo_cambio_palabras_input.valueAsNumber * 1000;
+  if (Number.isFinite(valorCambioPalabras)) {
+    TIEMPO_CAMBIO_PALABRA = valorCambioPalabras * 1000;
+  }
   //TIEMPO_BORROSO = tiempo_borroso_input.valueAsNumber * 1000;
-  TIEMPO_INICIAL = tiempo_inicial_input.valueAsNumber * 1000;
+  if (Number.isFinite(valorTiempoInicial)) {
+    TIEMPO_INICIAL = valorTiempoInicial * 1000;
+  }
   //PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
-  TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber * 1000;
-  TIEMPO_CAMBIO_MODOS = (tiempo_modos_input.valueAsNumber * 1000) - 1;
+  if (Number.isFinite(valorCambioLetra)) {
+    TIEMPO_CAMBIO_LETRA = valorCambioLetra * 1000;
+  }
+  if (Number.isFinite(valorTiempoModos)) {
+    TIEMPO_CAMBIO_MODOS = (valorTiempoModos * 1000) - 1;
+  }
 
  //console.log('TIEMPO_INVERSO:', TIEMPO_INVERSO);
  //console.log('TIEMPO_BORRADO:', TIEMPO_BORRADO);

@@ -1961,11 +1961,16 @@ th{
     }
 }
 
-/* UI de partida (musas): oculta marcador, acciones y niveles hasta que comience */
+/* UI de partida (musas): oculta nombre, marcador, acciones y niveles hasta que comience */
+body:not(.partida-activa):not(.partida-intro-musa):not(.vista-calentamiento-musa):not(.partida-finalizada-musa) #nombre,
 body:not(.partida-activa):not(.partida-intro-musa):not(.vista-calentamiento-musa):not(.partida-finalizada-musa) #metadatos,
 body:not(.partida-activa):not(.partida-intro-musa):not(.vista-calentamiento-musa):not(.partida-finalizada-musa) #metadatos_acciones,
 body:not(.partida-activa):not(.partida-intro-musa):not(.vista-calentamiento-musa):not(.partida-finalizada-musa) .niveles {
     display: none !important;
+}
+
+body.partida-intro-musa #nombre {
+    display: block !important;
 }
 
 body.partida-intro-musa #metadatos,
@@ -1977,6 +1982,7 @@ body.partida-intro-musa .niveles {
     display: block !important;
 }
 
+body.partida-intro-musa #nombre,
 body.partida-intro-musa #tiempo,
 body.partida-intro-musa #metadatos,
 body.partida-intro-musa #metadatos_acciones,
@@ -1991,6 +1997,7 @@ body.partida-intro-musa .niveles {
     pointer-events: none;
 }
 
+body.partida-intro-musa:is(.partida-intro-stage-metadatos, .partida-intro-stage-acciones, .partida-intro-stage-niveles) #nombre,
 body.partida-intro-musa:is(.partida-intro-stage-tiempo, .partida-intro-stage-metadatos, .partida-intro-stage-acciones, .partida-intro-stage-niveles) #tiempo,
 body.partida-intro-musa:is(.partida-intro-stage-metadatos, .partida-intro-stage-acciones, .partida-intro-stage-niveles) #metadatos,
 body.partida-intro-musa:is(.partida-intro-stage-acciones, .partida-intro-stage-niveles) #metadatos_acciones,
@@ -1999,6 +2006,14 @@ body.partida-intro-musa.partida-intro-stage-niveles .niveles {
     transform: translateY(0) scale(1);
     filter: blur(0);
     pointer-events: auto;
+}
+
+body.partida-activa #nombre,
+body.partida-finalizada-musa #nombre {
+    display: block !important;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
 }
 
 body.partida-activa #metadatos,

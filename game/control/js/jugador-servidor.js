@@ -484,7 +484,8 @@ const resumenPartida = {
     inicio: null,
     modoActual: null,
     ultimoCambioModo: null,
-    tiempoEscrituraMs: 0
+    tiempoEscrituraMs: 0,
+    timelineModos: []
 };
 
 function resetResumenPartida() {
@@ -504,11 +505,16 @@ function resetResumenPartida() {
     resumenPartida.modoActual = null;
     resumenPartida.ultimoCambioModo = null;
     resumenPartida.tiempoEscrituraMs = 0;
+    resumenPartida.timelineModos = [];
 }
 
 function registrarModoActual(nuevoModo) {
     if (!nuevoModo) return;
     const ahora = Date.now();
+    if (!resumenPartida.inicio) {
+        resumenPartida.inicio = ahora;
+    }
+    const tiempoRelativoMs = Math.max(0, ahora - resumenPartida.inicio);
     const anterior = resumenPartida.modoActual;
     if (anterior && resumenPartida.ultimoCambioModo !== null && anterior !== nuevoModo) {
         if (anterior !== "tertulia") {
@@ -516,9 +522,54 @@ function registrarModoActual(nuevoModo) {
         }
     }
     if (anterior !== nuevoModo || resumenPartida.ultimoCambioModo === null) {
+        const timeline = Array.isArray(resumenPartida.timelineModos) ? resumenPartida.timelineModos : [];
+        const ultimoSegmento = timeline.length ? timeline[timeline.length - 1] : null;
+        if (
+            ultimoSegmento
+            && (
+                ultimoSegmento.finMs === null
+                || typeof ultimoSegmento.finMs === "undefined"
+                || !Number.isFinite(Number(ultimoSegmento.finMs))
+            )
+        ) {
+            ultimoSegmento.finMs = tiempoRelativoMs;
+        }
+        timeline.push({
+            modo: String(nuevoModo || "").trim().slice(0, 32),
+            inicioMs: tiempoRelativoMs,
+            finMs: null
+        });
+        resumenPartida.timelineModos = timeline;
         resumenPartida.modoActual = nuevoModo;
         resumenPartida.ultimoCambioModo = ahora;
     }
+}
+
+function obtenerTimelineModosControl(tsActual = Date.now()) {
+    if (!resumenPartida.inicio) return [];
+    const ahora = Number(tsActual) || Date.now();
+    const tiempoRelativoActual = Math.max(0, ahora - resumenPartida.inicio);
+    const timeline = Array.isArray(resumenPartida.timelineModos) ? resumenPartida.timelineModos : [];
+    return timeline
+        .map((segmento, indice) => {
+            const inicioMs = Math.max(0, Number(segmento && segmento.inicioMs) || 0);
+            const finRaw = segmento ? segmento.finMs : null;
+            const tieneFin = finRaw !== null && typeof finRaw !== "undefined" && Number.isFinite(Number(finRaw));
+            const esUltimo = indice === (timeline.length - 1);
+            const inicioSiguiente = Math.max(
+                inicioMs,
+                Number(timeline[indice + 1] && timeline[indice + 1].inicioMs) || inicioMs
+            );
+            const finMs = tieneFin
+                ? Math.max(inicioMs, Number(finRaw))
+                : (esUltimo ? tiempoRelativoActual : inicioSiguiente);
+            return {
+                modo: String(segmento && segmento.modo ? segmento.modo : "").trim().slice(0, 32),
+                inicioMs,
+                finMs
+            };
+        })
+        .filter((segmento) => segmento.modo && segmento.finMs > segmento.inicioMs);
 }
 
 function obtenerTiempoEscrituraMs() {
@@ -527,6 +578,60 @@ function obtenerTiempoEscrituraMs() {
         total += Math.max(0, Date.now() - resumenPartida.ultimoCambioModo);
     }
     return total;
+}
+
+function extraerSegundosTextoStatsControl(texto = "") {
+    const valor = String(texto || "").trim();
+    if (!valor || valor.indexOf(":") === -1) return null;
+    const partes = valor.split(":");
+    if (partes.length < 2) return null;
+    const minutos = parseInt(partes[0], 10);
+    const segundos = parseInt(partes[1], 10);
+    if (Number.isNaN(minutos) || Number.isNaN(segundos)) return null;
+    return Math.max(0, (minutos * 60) + segundos);
+}
+
+function obtenerUltimaVidaRegistradaControl(playerId) {
+    const serie = resumenPartida.tiempos[playerId];
+    if (!Array.isArray(serie) || !serie.length) return null;
+    const ultimo = Number(serie[serie.length - 1] && serie[serie.length - 1].v);
+    return Number.isFinite(ultimo) ? Math.max(0, ultimo) : null;
+}
+
+function obtenerVidaActualStatsControl(playerId) {
+    const id = Number(playerId);
+    if (id !== 1 && id !== 2) return null;
+    const estaTerminado = Boolean(id === 2 ? (terminado1 || fin_j2) : (terminado || fin_j1));
+    if (estaTerminado) {
+        return 0;
+    }
+
+    const ultimoValor = obtenerUltimaVidaRegistradaControl(id);
+    if ((resumenPartida.modoActual === "tertulia" || modo_actual === "tertulia") && Number.isFinite(ultimoValor)) {
+        return ultimoValor;
+    }
+
+    const nodoTiempo = id === 2 ? tiempo1 : tiempo;
+    const desdeTexto = extraerSegundosTextoStatsControl(
+        nodoTiempo ? (nodoTiempo.textContent || nodoTiempo.innerText || "") : ""
+    );
+    if (Number.isFinite(desdeTexto)) {
+        return desdeTexto;
+    }
+
+    const desdeContador = Number(id === 2 ? secondsRemaining1 : secondsRemaining);
+    if (Number.isFinite(desdeContador)) {
+        return Math.max(0, desdeContador);
+    }
+
+    return Number.isFinite(ultimoValor) ? ultimoValor : null;
+}
+
+function registrarTiempoEstadoActualControl(playerId) {
+    if (!resumenPartida.inicio) return;
+    const valorVida = obtenerVidaActualStatsControl(playerId);
+    if (!Number.isFinite(valorVida)) return;
+    registrarTiempoControl(playerId, valorVida);
 }
 
 function registrarTiempoControl(playerId, segundosRestantes) {
@@ -651,9 +756,11 @@ function obtenerResumenJugadorStatsControl(playerId) {
 }
 
 function construirPayloadStatsLiveControl() {
+    const ts = Date.now();
     return {
-        ts: Date.now(),
+        ts,
         modo_actual: String(modo_actual || ""),
+        timeline_modos: obtenerTimelineModosControl(ts),
         players: {
             1: obtenerResumenJugadorStatsControl(1),
             2: obtenerResumenJugadorStatsControl(2)
@@ -663,8 +770,12 @@ function construirPayloadStatsLiveControl() {
 
 function emitirStatsLiveControl() {
     if (!socket || !socket.connected) return;
+    registrarTiempoEstadoActualControl(1);
+    registrarTiempoEstadoActualControl(2);
     socket.emit("stats_live_actualizar", construirPayloadStatsLiveControl());
 }
+
+window.emitirStatsLiveControl = emitirStatsLiveControl;
 
 function iniciarStatsLiveControl() {
     if (intervalo_stats_live_control) {
@@ -1178,11 +1289,17 @@ socket.on('intento_prohibido', (data) => {
 
 socket.on('resucitar_control', (data) => {
  if(data.player == 1){
+    terminado = false;
+    fin_j1 = false;
     secondsPassed = 0
+    emitirStatsLiveControl();
     startCountDown_p1(data.secs);
  }
  else if(data.player == 2){
+    terminado1 = false;
+    fin_j2 = false;
     secondsPassed1 = 0
+    emitirStatsLiveControl();
     startCountDown_p2(data.secs);
 
  }

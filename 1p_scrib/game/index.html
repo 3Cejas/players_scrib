@@ -8,13 +8,13 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260313a">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260317b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="page-players ui-dashboard-only">
-    <script src="./js/juego.js?v=20260303b"></script>
+    <script src="./js/juego.js?v=20260317b"></script>
     <div id="players_fit_root" align="center">
     <div class="cabecera">
     <pre id="neon" class="neon">
@@ -42,6 +42,7 @@
     <span id="btn_descargar_texto"class='btn' onclick="descargar_textos()" style="display:none" data-i18n="ui.btn_download_text">💾 DESCARGAR TEXTO</span>
     <span id="btn_opciones" class='btn' onclick="opciones()" data-i18n="ui.btn_options">⚙️ OPCIONES</span>
     <span id="btn_volver" class='btn' onclick="volver()" style="display:none" data-i18n="ui.btn_back">🔙 VOLVER</span>
+    <span id="btn_silencio" class='btn' onclick="toggleSilencioJuego()" data-audio-toggle="menu-superior" aria-pressed="false">🔇 DESACTIVAR SONIDO</span>
     </div>
     <div class="container"></div>
     <br>
@@ -94,6 +95,9 @@
                         <div class="button-container resucitar-buttons">
                             <button id="btnConfirmar" type="button" data-i18n="res.btn_confirm">Confirmar</button>
                             <button id="btnAtras" type="button" data-i18n="res.btn_back">Atr&aacute;s</button>
+                        </div>
+                        <div class="button-container resucitar-buttons resucitar-buttons--secondary">
+                            <button id="btnSilencioQuantityMenu" class="resucitar-audio-toggle" type="button" onclick="toggleSilencioJuego()" data-audio-toggle="menu-partida" aria-pressed="false">🔇 DESACTIVAR SONIDO</button>
                         </div>
                     </div>
                     <div class="resucitar-keys">
@@ -284,8 +288,43 @@
       <p data-i18n-html="support.message">En caso de encontrar algún error o tengas alguna sugerencia, envianos un correo a <a href="mailto:contacto@suturateatro.es" style="color:aqua">contacto@suturateatro.es</a></p>
       <br>
     </div>
+    <footer id="footer_legal" class="footer-legal">
+      <p data-i18n="footer.rights">© SUTURA TEATRO. Todos los derechos reservados.</p>
+    </footer>
+    </div>
+    <div id="escritxr_boot_overlay" class="escritxr-boot-overlay" aria-hidden="true">
+        <div class="escritxr-boot-blackout" aria-hidden="true"></div>
+        <div class="escritxr-boot-panel">
+            <div id="escritxr_boot_kicker" class="escritxr-boot-kicker">INICIANDO SISTEMA ESCRITXR</div>
+            <h2 id="escritxr_boot_title" class="escritxr-boot-title">ENTRANDO EN UN NUEVO MUNDO</h2>
+            <p id="escritxr_boot_copy" class="escritxr-boot-copy">Preparando el escenario.</p>
+            <div class="escritxr-boot-world" aria-hidden="true">
+                <div class="escritxr-boot-world-base"></div>
+                <div class="escritxr-boot-world-fill"></div>
+                <div class="escritxr-boot-world-grid"></div>
+                <div class="escritxr-boot-world-orb"></div>
+                <div id="escritxr_boot_pixels" class="escritxr-boot-world-pixels">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="escritxr-boot-bar" role="status" aria-live="polite">
+                <span id="escritxr_boot_bar" class="escritxr-boot-bar-fill"></span>
+                <div class="escritxr-boot-bar-copy">
+                    <span id="escritxr_boot_status" class="escritxr-boot-status-text">ENLAZANDO SISTEMA DE ESCRITURA</span>
+                    <span id="escritxr_boot_percent" class="escritxr-boot-status-percent">0%</span>
+                </div>
+            </div>
+            <ul id="escritxr_boot_logs" class="escritxr-boot-logs" aria-live="polite">
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+        </div>
     </div>
 </body>
-<script src="./js/jugador-servidor.js?v=20260313a"></script>
+<script src="./js/jugador-servidor.js?v=20260317b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

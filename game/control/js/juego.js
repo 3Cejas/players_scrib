@@ -810,6 +810,13 @@ function activar_temporizador_gigante() {
     socket.emit('activar_temporizador_gigante', { duracion: 10 * 60 });
 }
 
+function pedirFeedbackMusas() {
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        return;
+    }
+    socket.emit("pedir_feedback_musas", { url: "/feedback/" });
+}
+
 function saltar_tertulia() {
     if (!juego_iniciado || modo_actual !== "tertulia") {
         return;
@@ -2007,6 +2014,7 @@ function refrescarTextosEstaticosControl() {
         ["boton_escribir", "control.button.write", "\u270D\uFE0F ESCRIBIR"],
         ["boton_limpiar_juego", "control.button.clear", "\u{1F9F9} LIMPIAR"],
         ["boton_descargar_textos", "control.button.download_texts", "\u{1F4BE} DESCARGAR TEXTOS"],
+        ["boton_pedir_feedback", "control.button.ask_feedback", "\u{1F4DD} PEDIR FEEDBACK"],
         ["boton_temporizador_gigante", "control.button.giant_timer", "\u23F1\uFE0F TEMPORIZADOR GIGANTE"],
         ["boton_fin_j1", "control.button.end.blue", "\uD83D\uDD35 FIN"],
         ["boton_fin_j2", "control.button.end.red", "\uD83D\uDD34 FIN"],
@@ -2281,6 +2289,9 @@ function final(player, opciones = {}){
         count = tJuego2PControl("timer.time_up", {}, "¡Tiempo!");
         texto_guardado1 = texto1.innerText;
         terminado = true;
+        if (window.registrarTiempoControl) {
+            window.registrarTiempoControl(1, 0);
+        }
         console.log("texto1", texto_guardado1)
         if (emitirConteoFinal) {
             socket.emit('count', {count, player});
@@ -2295,11 +2306,18 @@ function final(player, opciones = {}){
         actualizarBarraVida(tiempo1, tiempo1.innerHTML);
         count1 = tJuego2PControl("timer.time_up", {}, "¡Tiempo!");
         terminado1 = true;
+        if (window.registrarTiempoControl) {
+            window.registrarTiempoControl(2, 0);
+        }
         texto_guardado2 = texto2.innerText;
         console.log("texto2", texto_guardado2)
         if (emitirConteoFinal) {
             socket.emit('count', {count : count1, player:2});
         }
+    }
+
+    if (window.emitirStatsLiveControl) {
+        window.emitirStatsLiveControl();
     }
 
     if(terminado && terminado1){
