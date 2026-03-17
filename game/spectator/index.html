@@ -15,14 +15,14 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260301a">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260314b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="page-spectator">
     <script src="../config.js"></script>
-    <script src="./js/juego.js?v=20260219b"></script>
+    <script src="./js/juego.js?v=20260314b"></script>
     <div id="corazones_espectador" class="corazones-flotantes"></div>
     <div id="teleprompter_overlay" class="teleprompter-overlay">
         <div id="teleprompter_screen" class="teleprompter-screen">
@@ -55,7 +55,7 @@
         <p id="temas_container"><span id="temas" class="temas"></span></p>
         <br>
         <div id="inspiracion" class="inspiracion">
-            <p class="inspiracion-title">INSPIRACION</p>
+            <p class="inspiracion-title" data-i18n="ui.inspiration_title">INSPIRACION</p>
             <div class="bar">
                 <div class="bar-segment blue">
                     <span class="percentage-text"></span>
@@ -78,10 +78,10 @@
                 </div>
             </div>
             <div class="calentamiento-overlay-ui">
-                <h2 class="calentamiento-titulo">TUTORIAL</h2>
+                <h2 class="calentamiento-titulo" data-i18n="warmup.title">TUTORIAL</h2>
                 <p id="calentamiento_consigna_espectador" class="calentamiento-consigna-chip tipo-ninguna">DETONADOR ACTUAL: NINGUNO</p>
                 <div id="calentamiento_detonadores_historial" class="calentamiento-detonadores-historial" aria-live="polite"></div>
-                <p id="calentamiento_global_estado" class="calentamiento-global-estado">Tutorial inactivo.</p>
+                <p id="calentamiento_global_estado" class="calentamiento-global-estado" data-i18n="warmup.state.inactive">Tutorial inactivo.</p>
                 <div id="calentamiento_finales" class="calentamiento-finales">
                     <div id="calentamiento_final_j1" class="calentamiento-final-card equipo-1">
                         <span class="final-label">ESCRITXR 1</span>
@@ -97,10 +97,10 @@
         <section id="stats_espectador" class="stats-espectador" aria-live="polite">
             <div class="stats-overlay-ui">
                 <div class="stats-header-row">
-                    <h2 class="stats-titulo">STATS EN TIEMPO REAL</h2>
-                    <p id="stats_timestamp" class="stats-timestamp">Sin datos</p>
+                    <h2 class="stats-titulo" data-i18n="ui.stats_live_title">STATS EN TIEMPO REAL</h2>
+                    <p id="stats_timestamp" class="stats-timestamp" data-i18n="stats.timestamp.none">Sin datos</p>
                 </div>
-                <p id="stats_estado" class="stats-estado">Esperando estadisticas de las escritoras...</p>
+                <p id="stats_estado" class="stats-estado" data-i18n="stats.state.waiting">Esperando estadisticas de las escritoras...</p>
             </div>
             <div class="stats-slider">
                 <div id="stats_slides_track" class="stats-slides-track"></div>
@@ -110,7 +110,7 @@
         <section id="nube_inspiracion_espectador" class="nube-inspiracion-espectador" aria-live="polite">
             <div id="nube_inspiracion_canvas" class="nube-inspiracion-canvas"></div>
             <div class="nube-inspiracion-overlay-ui">
-                <h2 class="nube-inspiracion-titulo">NUBE DE INSPIRACION</h2>
+                <h2 class="nube-inspiracion-titulo" data-i18n="ui.cloud_title">NUBE DE INSPIRACION</h2>
             </div>
         </section>
         <section id="creditos_espectador" class="creditos-espectador" aria-live="polite">
@@ -134,8 +134,8 @@
                         <div class="resucitar-row">
                             <div class="resucitar-actions">
                                 <div class="button-container resucitar-buttons">
-                                    <button class="selected" type="button" data-btn="si">S&iacute;</button>
-                                    <button type="button" data-btn="no">No</button>
+                                    <button class="selected" type="button" data-btn="si" data-i18n="res.btn_yes">S&iacute;</button>
+                                    <button type="button" data-btn="no" data-i18n="res.btn_no">No</button>
                                 </div>
                             </div>
                         </div>
@@ -143,13 +143,13 @@
                     <div class="resucitar-panel resucitar-quantity-panel" data-menu="quantity">
                         <div class="resucitar-header">
                             <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
-                            <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
+                            <h2 class="quantity-title" data-i18n="res.quantity_title">Selecciona la cantidad de palabras</h2>
                         </div>
                         <div class="resucitar-row">
                             <div class="resucitar-actions">
                                 <div class="quantity-display" data-resucitar-display></div>
                                 <div class="button-container resucitar-buttons">
-                                    <button type="button" data-btn="confirmar">Confirmar</button>
+                                    <button type="button" data-btn="confirmar" data-i18n="res.btn_confirm">Confirmar</button>
                                 </div>
                             </div>
                         </div>
@@ -166,14 +166,14 @@
                         <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
                             <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
                             <div class="meta-copy">
-                                <span class="meta-label">Palabras</span>
+                                <span class="meta-label" data-i18n="score.words_label">Palabras</span>
                                 <span id="puntos" class="puntos">0 palabras</span>
                             </div>
                         </div>
                         <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
                             <span class="meta-icon">&#x1F3A8;</span>
                             <div class="meta-copy">
-                                <span class="meta-label">Musas</span>
+                                <span class="meta-label" data-i18n="score.muses_label">Musas</span>
                                 <span id="musas" class="musas-total">0 musas</span>
                             </div>
                         </div>
@@ -209,8 +209,8 @@
                         <div class="resucitar-row">
                             <div class="resucitar-actions">
                                 <div class="button-container resucitar-buttons">
-                                    <button class="selected" type="button" data-btn="si">S&iacute;</button>
-                                    <button type="button" data-btn="no">No</button>
+                                    <button class="selected" type="button" data-btn="si" data-i18n="res.btn_yes">S&iacute;</button>
+                                    <button type="button" data-btn="no" data-i18n="res.btn_no">No</button>
                                 </div>
                             </div>
                         </div>
@@ -218,13 +218,13 @@
                     <div class="resucitar-panel resucitar-quantity-panel" data-menu="quantity">
                         <div class="resucitar-header">
                             <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
-                            <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
+                            <h2 class="quantity-title" data-i18n="res.quantity_title">Selecciona la cantidad de palabras</h2>
                         </div>
                         <div class="resucitar-row">
                             <div class="resucitar-actions">
                                 <div class="quantity-display" data-resucitar-display></div>
                                 <div class="button-container resucitar-buttons">
-                                    <button type="button" data-btn="confirmar">Confirmar</button>
+                                    <button type="button" data-btn="confirmar" data-i18n="res.btn_confirm">Confirmar</button>
                                 </div>
                             </div>
                         </div>
@@ -241,14 +241,14 @@
                         <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
                             <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
                             <div class="meta-copy">
-                                <span class="meta-label">Palabras</span>
+                                <span class="meta-label" data-i18n="score.words_label">Palabras</span>
                                 <span id="puntos1" class="puntos">0 palabras</span>
                             </div>
                         </div>
                         <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
                             <span class="meta-icon">&#x1F3A8;</span>
                             <div class="meta-copy">
-                                <span class="meta-label">Musas</span>
+                                <span class="meta-label" data-i18n="score.muses_label">Musas</span>
                                 <span id="musas1" class="musas-total">0 musas</span>
                             </div>
                         </div>
@@ -278,5 +278,6 @@
     </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260301a"></script>
+<script src="../js/i18n.js?v=20260314a"></script>
+    <script src="./js/jugador-servidor.js?v=20260314c"></script>
 </html>

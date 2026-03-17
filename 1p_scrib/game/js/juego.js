@@ -142,6 +142,11 @@ function borrar() {
     return;
   }
 
+  if (modo_actual === "frase final") {
+    clearTimeout(borrado);
+    return;
+  }
+
   if (!desactivar_borrar) {
     let nodoBorrado = false;
 
@@ -285,6 +290,9 @@ function countChars(texto) {
   //cambio_nivel(puntos_);
   clearTimeout(borrado);
   if (desventajaSeleccionActiva()) {
+    return;
+  }
+  if (modo_actual === "frase final") {
     return;
   }
   
@@ -457,6 +465,17 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         const animationName = `${prefix}${animation}`;
         const node = document.querySelector(element);
 
+        if (!node) {
+            resolve("Animation skipped");
+            return;
+        }
+
+        const estilosNodo = window.getComputedStyle(node);
+        if (estilosNodo.display === "none" || estilosNodo.visibility === "hidden") {
+            resolve("Animation skipped");
+            return;
+        }
+
         node.classList.add(`${prefix}animated`, animationName);
 
         // When the animation ends, we clean the classes and resolve the Promise
@@ -551,6 +570,7 @@ const animateCSS = (element, animation, prefix = "animate__") =>
   }
 
 function opciones(){
+  if (document.body) document.body.classList.add("modo-opciones");
   const btnOpcionesEl = document.getElementById("btn_opciones");
   const btnEscribirEl = document.getElementById("btn_escribir");
   const btnLimpiarEl = document.getElementById("btn_limpiar");
@@ -567,7 +587,7 @@ function opciones(){
     if (btnLimpiarEl) btnLimpiarEl.style.display = "none";
     if (btnDescargarEl) btnDescargarEl.style.display = "none";
     if (btnPantallaEl) btnPantallaEl.style.display = "none";
-    if (btnVolverEl) btnVolverEl.style.display = "";
+    if (btnVolverEl) btnVolverEl.style.setProperty("display", "inline-block", "important");
     if (soporteEl) soporteEl.style.display = "block";
     animateCSS(".botones", "backInLeft")
     animateCSS(".soporte", "backInLeft")
@@ -584,6 +604,7 @@ function opciones(){
 }
 
 function volver(){
+  if (document.body) document.body.classList.remove("modo-opciones");
   const btnOpcionesEl = document.getElementById("btn_opciones");
   const btnEscribirEl = document.getElementById("btn_escribir");
   const btnLimpiarEl = document.getElementById("btn_limpiar");
@@ -598,7 +619,7 @@ function volver(){
     if (btnEscribirEl) btnEscribirEl.style.display = "";
     if (btnLimpiarEl) btnLimpiarEl.style.display = "";
     if (btnPantallaEl) btnPantallaEl.style.display = "";
-    if (btnVolverEl) btnVolverEl.style.display = "none";
+    if (btnVolverEl) btnVolverEl.style.setProperty("display", "none", "important");
     if (soporteEl) soporteEl.style.display = "none";
     animateCSS(".botones", "backInLeft")
   });

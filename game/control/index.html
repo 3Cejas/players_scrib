@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260225c">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260314a">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -17,7 +17,7 @@
 
 <body>
     <script src="../config.js"></script>
-    <script src="./js/juego.js?v=20260225zf"></script>
+    <script src="./js/juego.js?v=20260314b"></script>
     <div class="ascii">
         <pre class="neon">
        __     _____    _____   _____    _____    __       ____  
@@ -34,9 +34,19 @@
         <tbody id="panel_toggle">
             <tr>
                 <td colspan="5">
-                    <div class="panel-toggle-buttons">
-                        <span id="boton_parametros" class='btn' onclick="toggleParametros()">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
-                        <span id="boton_creditos" class='btn' onclick="toggleCreditos()">&#x1F3AC; CR&Eacute;DITOS</span>
+                    <div class="panel-toggle-header">
+                        <div class="panel-toggle-buttons">
+                            <span id="boton_parametros" class='btn' onclick="toggleParametros()">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
+                            <span id="boton_creditos" class='btn' onclick="toggleCreditos()">&#x1F3AC; CR&Eacute;DITOS</span>
+                        </div>
+                        <div class="control-language" role="group" aria-labelledby="selector_idioma_label">
+                            <span id="selector_idioma_label" data-i18n="options.language_label">IDIOMA</span>
+                            <select id="selector_idioma_control">
+                                <option value="es">Espa&ntilde;ol</option>
+                                <option value="en">English</option>
+                                <option value="fr">Fran&ccedil;ais</option>
+                            </select>
+                        </div>
                     </div>
                 </td>
             </tr>
@@ -54,14 +64,14 @@
                 <td colspan="5">
                     <div class="control-groups">
                         <div class="control-group control-group--calentamiento">
-                            <div class="control-group-title">&#x1F525; TUTORIAL</div>
+                            <div id="control_title_tutorial" class="control-group-title">&#x1F525; TUTORIAL</div>
                             <div class="control-group-buttons control-group-buttons--two">
                                 <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F525; VISTA TUTORIAL</span>
-                                <span class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
-                                <span class='btn' onclick="reiniciar_marcador_calentamiento()">&#x1F3C6; REINICIAR MARCADOR</span>
+                                <span id="boton_reiniciar_calentamiento" class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
+                                <span id="boton_reiniciar_marcador_calentamiento" class='btn' onclick="reiniciar_marcador_calentamiento()">&#x1F3C6; REINICIAR MARCADOR</span>
                                 <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F3F3;&#xFE0F; BANDERAS DESACTIVADAS</span>
                             </div>
-                            <div class="control-group-subtitle">DETONADORES PARA MUSAS</div>
+                            <div id="control_subtitle_musas" class="control-group-subtitle">DETONADORES PARA MUSAS</div>
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">
                                 <span id="boton_solicitud_lugares" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="lugares" onclick="pedir_solicitud_calentamiento('lugares')">&#x1F4CD; PEDIR LUGARES</span>
                                 <span id="boton_solicitud_acciones" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="acciones" onclick="pedir_solicitud_calentamiento('acciones')">&#x1F3C3; PEDIR ACCIONES</span>
@@ -71,22 +81,35 @@
                             <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: ABIERTO | J2: ABIERTO</p>
                         </div>
                         <div class="control-group control-group--juego">
-                            <div class="control-group-title">&#x1F3AE; JUEGO</div>
+                            <div id="control_title_game" class="control-group-title">&#x1F3AE; JUEGO</div>
                             <div class="control-group-buttons control-group-buttons--two">
-                                <span class='btn' onclick="temp()">&#x270D;&#xFE0F; ESCRIBIR</span>
-                                <span class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
+                                <span id="boton_escribir" class='btn' onclick="temp()">&#x270D;&#xFE0F; ESCRIBIR</span>
+                                <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
                                 <span id="boton_borrar_texto_guardado" class='btn' data-active="0" onclick="borrar_texto_guardado()">&#x1F9F9; BORRAR TEXTO: OFF</span>
                                 <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
                                 <span id="boton_skip_tertulia" class='btn btn-skip-tertulia' onclick="saltar_tertulia()">&#x23ED;&#xFE0F; SKIP TERTULIA</span>
                             </div>
+                            <div id="stats_nav_control" class="stats-nav-control" hidden aria-hidden="true">
+                                <button id="stats_nav_prev" type="button" class="btn stats-nav-button" onclick="navegarSlidesStatsControl('prev')" aria-label="Slide anterior">&#x2B05;&#xFE0F;</button>
+                                <span id="stats_nav_label" class="stats-nav-label">&#x1F4CA; SLIDES STATS</span>
+                                <button id="stats_nav_next" type="button" class="btn stats-nav-button" onclick="navegarSlidesStatsControl('next')" aria-label="Slide siguiente">&#x27A1;&#xFE0F;</button>
+                            </div>
+                            <div id="spectator_scale_control" class="stats-nav-control spectator-scale-control" aria-live="polite">
+                                <span id="spectator_scale_label" class="stats-nav-label">&#x1F441;&#xFE0F; TAMA&Ntilde;O ESPECTADOR</span>
+                                <div class="spectator-scale-actions">
+                                    <button id="spectator_scale_down" type="button" class="btn stats-nav-button spectator-scale-button" onclick="ajustarEscalaEspectadorControl('down')" aria-label="Empeque&ntilde;ecer espectador">&#x2796;</button>
+                                    <button id="spectator_scale_reset" type="button" class="btn stats-nav-button spectator-scale-button spectator-scale-button--value" onclick="ajustarEscalaEspectadorControl('reset')" aria-label="Restablecer tama&ntilde;o del espectador">100%</button>
+                                    <button id="spectator_scale_up" type="button" class="btn stats-nav-button spectator-scale-button" onclick="ajustarEscalaEspectadorControl('up')" aria-label="Agrandar espectador">&#x2795;</button>
+                                </div>
+                            </div>
                         </div>
                         <div class="control-group control-group--representacion">
-                            <div class="control-group-title">&#x1F3AD; REPRESENTACI&Oacute;N</div>
+                            <div id="control_title_representation" class="control-group-title">&#x1F3AD; REPRESENTACI&Oacute;N</div>
                             <div class="control-group-buttons">
-                                <span class='btn' onclick="descargar_textos()">&#x1F4BE; DESCARGAR TEXTOS</span>
-                                <span class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
+                                <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x1F4BE; DESCARGAR TEXTOS</span>
+                                <span id="boton_temporizador_gigante" class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
                                 <span id="boton_mostrar_creditos" class='btn' onclick="mostrarCreditosEspectador()">&#x1F4DC; MOSTRAR CR&Eacute;DITOS</span>
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
                             </div>
@@ -184,60 +207,60 @@
                 <td colspan="5">
                     <div class="creditos-panel">
                         <div class="creditos-panel-header">
-                            <h3 class="creditos-panel-title">CR&Eacute;DITOS DEL SHOW</h3>
-                            <p class="creditos-panel-help">Editar estos campos actualiza el pase de cr&eacute;ditos del espectador.</p>
+                            <h3 class="creditos-panel-title" data-i18n="control.credits.title">CR&Eacute;DITOS DEL SHOW</h3>
+                            <p class="creditos-panel-help" data-i18n="control.credits.help">Editar estos campos actualiza el pase de cr&eacute;ditos del espectador.</p>
                         </div>
                         <div class="creditos-form-grid">
                             <label class="creditos-field" for="credito_escritxr_rojo">
-                                <span>ESCRITXR ROJO</span>
-                                <input id="credito_escritxr_rojo" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr rojo" autocomplete="off">
+                                <span data-i18n="control.credits.field.escritxr_rojo">ESCRITXR ROJO</span>
+                                <input id="credito_escritxr_rojo" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr rojo" data-i18n-attr="placeholder:control.credits.placeholder.escritxr_rojo" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_escritxr_azul">
-                                <span>ESCRITXR AZUL</span>
-                                <input id="credito_escritxr_azul" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr azul" autocomplete="off">
+                                <span data-i18n="control.credits.field.escritxr_azul">ESCRITXR AZUL</span>
+                                <input id="credito_escritxr_azul" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr azul" data-i18n-attr="placeholder:control.credits.placeholder.escritxr_azul" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_interprete_azul_1">
-                                <span>INT&Eacute;RPRETE AZUL 1</span>
-                                <input id="credito_interprete_azul_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 1" autocomplete="off">
+                                <span data-i18n="control.credits.field.interprete_azul_1">INT&Eacute;RPRETE AZUL 1</span>
+                                <input id="credito_interprete_azul_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 1" data-i18n-attr="placeholder:control.credits.placeholder.interprete_azul_1" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_interprete_azul_2">
-                                <span>INT&Eacute;RPRETE AZUL 2</span>
-                                <input id="credito_interprete_azul_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 2" autocomplete="off">
+                                <span data-i18n="control.credits.field.interprete_azul_2">INT&Eacute;RPRETE AZUL 2</span>
+                                <input id="credito_interprete_azul_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 2" data-i18n-attr="placeholder:control.credits.placeholder.interprete_azul_2" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_interprete_rojo_1">
-                                <span>INT&Eacute;RPRETE ROJO 1</span>
-                                <input id="credito_interprete_rojo_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 1" autocomplete="off">
+                                <span data-i18n="control.credits.field.interprete_rojo_1">INT&Eacute;RPRETE ROJO 1</span>
+                                <input id="credito_interprete_rojo_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 1" data-i18n-attr="placeholder:control.credits.placeholder.interprete_rojo_1" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_interprete_rojo_2">
-                                <span>INT&Eacute;RPRETE ROJO 2</span>
-                                <input id="credito_interprete_rojo_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 2" autocomplete="off">
+                                <span data-i18n="control.credits.field.interprete_rojo_2">INT&Eacute;RPRETE ROJO 2</span>
+                                <input id="credito_interprete_rojo_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 2" data-i18n-attr="placeholder:control.credits.placeholder.interprete_rojo_2" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_programacion">
-                                <span>PROGRAMACI&Oacute;N</span>
-                                <input id="credito_programacion" class="credito-input" type="text" maxlength="80" placeholder="Programaci&oacute;n" autocomplete="off">
+                                <span data-i18n="control.credits.field.programacion">PROGRAMACI&Oacute;N</span>
+                                <input id="credito_programacion" class="credito-input" type="text" maxlength="80" placeholder="Programaci&oacute;n" data-i18n-attr="placeholder:control.credits.placeholder.programacion" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_dramaturgia">
-                                <span>DRAMATURGIA</span>
-                                <input id="credito_dramaturgia" class="credito-input" type="text" maxlength="80" placeholder="Dramaturgia" autocomplete="off">
+                                <span data-i18n="control.credits.field.dramaturgia">DRAMATURGIA</span>
+                                <input id="credito_dramaturgia" class="credito-input" type="text" maxlength="80" placeholder="Dramaturgia" data-i18n-attr="placeholder:control.credits.placeholder.dramaturgia" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_iluminacion">
-                                <span>ILUMINACI&Oacute;N</span>
-                                <input id="credito_iluminacion" class="credito-input" type="text" maxlength="80" placeholder="Iluminaci&oacute;n" autocomplete="off">
+                                <span data-i18n="control.credits.field.iluminacion">ILUMINACI&Oacute;N</span>
+                                <input id="credito_iluminacion" class="credito-input" type="text" maxlength="80" placeholder="Iluminaci&oacute;n" data-i18n-attr="placeholder:control.credits.placeholder.iluminacion" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_musica">
-                                <span>M&Uacute;SICA</span>
-                                <input id="credito_musica" class="credito-input" type="text" maxlength="80" placeholder="M&uacute;sica" autocomplete="off">
+                                <span data-i18n="control.credits.field.musica">M&Uacute;SICA</span>
+                                <input id="credito_musica" class="credito-input" type="text" maxlength="80" placeholder="M&uacute;sica" data-i18n-attr="placeholder:control.credits.placeholder.musica" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_voz_off">
-                                <span>VOZ EN OFF</span>
-                                <input id="credito_voz_off" class="credito-input" type="text" maxlength="80" placeholder="Voz en off" autocomplete="off">
+                                <span data-i18n="control.credits.field.voz_off">VOZ EN OFF</span>
+                                <input id="credito_voz_off" class="credito-input" type="text" maxlength="80" placeholder="Voz en off" data-i18n-attr="placeholder:control.credits.placeholder.voz_off" autocomplete="off">
                             </label>
                         </div>
                         <label class="creditos-field creditos-field--full" for="credito_agradecimientos">
-                            <span>AGRADECIMIENTOS</span>
-                            <textarea id="credito_agradecimientos" class="credito-textarea" rows="4" maxlength="420" placeholder="Agradecimientos del show"></textarea>
+                            <span data-i18n="control.credits.field.agradecimientos">AGRADECIMIENTOS</span>
+                            <textarea id="credito_agradecimientos" class="credito-textarea" rows="4" maxlength="420" placeholder="Agradecimientos del show" data-i18n-attr="placeholder:control.credits.placeholder.agradecimientos"></textarea>
                         </label>
-                        <p class="creditos-produccion">UNA PRODUCCI&Oacute;N DE SUTURA TEATRO</p>
+                        <p class="creditos-produccion" data-i18n="control.credits.production">UNA PRODUCCI&Oacute;N DE SUTURA TEATRO</p>
                     </div>
                 </td>
             </tr>
@@ -246,15 +269,15 @@
             <tr class="panel-estado">
                 <td colspan="4">
                     <div class="conexion-panel">
-                        <div class="conexion-title">CONEXI&Oacute;N</div>
+                        <div class="conexion-title" data-i18n="control.connection.title">CONEXI&Oacute;N</div>
                         <div class="conexion-items">
                             <div class="conexion-item">
-                                <span class="conexion-label">SERVIDOR</span>
+                                <span class="conexion-label" data-i18n="control.connection.server">SERVIDOR</span>
                                 <span id="estado_servidor" class="conexion-dot conexion-dot--off" data-status="off"></span>
                                 <span id="estado_servidor_texto" class="conexion-text">DESCONECTADO</span>
                             </div>
                             <div class="conexion-item conexion-item--players">
-                                <span class="conexion-label">PLAYERS</span>
+                                <span class="conexion-label" data-i18n="control.connection.players">PLAYERS</span>
                                 <div class="conexion-players">
                                     <span id="estado_player_1_label" class="conexion-player-name conexion-player-name--j1">ESCRITXR 1</span>
                                     <span id="estado_player_1" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
@@ -269,40 +292,40 @@
             <tr>
                 <td>
                     <br>
-                    <label for="tiempo_modificador">VENTAJA</label>
+                    <label for="tiempo_modificador" data-i18n="control.param.advantage">VENTAJA</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_modificador', -5)">-</button>
                         <input type="number" id="tiempo_modificador" name="tiempo_modificador" class="parametro"
                                min="1" max="360" step="1" value="60">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_modificador', 5)">+</button>
                     </div>
-                    <span class="parametro">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
                 </td>
                 <td>
                     <br>
-                    <label for="tiempo_votacion">VOTACI&Oacute;N VENTAJA</label>
+                    <label for="tiempo_votacion" data-i18n="control.param.advantage_vote">VOTACI&Oacute;N VENTAJA</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_votacion', -5)">-</button>
                         <input type="number" id="tiempo_votacion" name="tiempo_votacion" class="parametro"
                                min="1" max="360" step="1" value="30">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_votacion', 5)">+</button>
                     </div>
-                    <span class="parametro">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
                 </td>
                 <td>
                     <br>
-                    <label for="tiempo_modos">NIVEL</label>
+                    <label for="tiempo_modos" data-i18n="control.param.level">NIVEL</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_modos', -5)">-</button>
                         <input type="number" id="tiempo_modos" name="tiempo_modos" class="parametro"
                                min="1" max="3600" step="1" value="300">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_modos', 5)">+</button>
                     </div>
-                    <span class="parametro">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
                 </td>
                 <td>
                     <br>
-                    <label for="tiempo_minutos">INICIO</label><br>
+                    <label for="tiempo_minutos" data-i18n="control.param.start">INICIO</label><br>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_minutos', -1)">-</button>
                         <input
@@ -317,7 +340,7 @@
                         >
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_minutos', 1)">+</button>
                     </div>
-                    <span class="parametro_inicial">mins.</span>
+                    <span class="parametro_inicial" data-i18n="control.unit.minutes_short">mins.</span>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_segundos', -5)">-</button>
                         <input
@@ -332,53 +355,53 @@
                         >
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_segundos', 5)">+</button>
                     </div>
-                    <span class="parametro_inicial">segs.</span>
+                    <span class="parametro_inicial" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
             </tr>
             <tr>
                 <td>
                     <br>
-                    <label for="tiempo_cambio_letra">CAMBIO LETRA</label>
+                    <label for="tiempo_cambio_letra" data-i18n="control.param.letter_change">CAMBIO LETRA</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_cambio_letra', -5)">-</button>
                         <input type="number" id="tiempo_cambio_letra" name="tiempo_cambio_letra" class="parametro"
                                min="1" max="360" step="1" value="60">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_letra', 5)">+</button>
                     </div>
-                    <span class="parametro">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
                 </td>
                 <td>
                     <br>
-                    <label for="tiempo_cambio_palabras">CAMBIO PALABRA</label>
+                    <label for="tiempo_cambio_palabras" data-i18n="control.param.word_change">CAMBIO PALABRA</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_cambio_palabras', -5)">-</button>
                         <input type="number" id="tiempo_cambio_palabras" name="tiempo_cambio_palabras" class="parametro"
                                min="1" max="360" step="1" value="20">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_palabras', 5)">+</button>
                     </div>
-                    <span class="parametro">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
                 </td>
                 <td>
                     <br>
-                    <label for="limite_tiempo_inspiracion">L&Iacute;MITE PALABRAS MUSAS</label>
+                    <label for="limite_tiempo_inspiracion" data-i18n="control.param.muse_limit">L&Iacute;MITE PALABRAS MUSAS</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('limite_tiempo_inspiracion', -5)">-</button>
                         <input type="number" id="limite_tiempo_inspiracion" name="limite_tiempo_inspiracion" class="parametro"
                                min="5" max="120" step="1" value="30">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('limite_tiempo_inspiracion', 5)">+</button>
                     </div>
-                    <span class="parametro">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
                 </td>
                 <td>
                     <br>
-                    <label for="palabras_insertadas_meta">PALABRAS INSERTADAS META</label>
+                    <label for="palabras_insertadas_meta" data-i18n="control.param.inserted_goal">PALABRAS INSERTADAS META</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('palabras_insertadas_meta', -5)">-</button>
                         <input type="number" id="palabras_insertadas_meta" name="palabras_insertadas_meta" class="parametro"
                                min="1" max="20" step="1" value="5">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('palabras_insertadas_meta', 5)">+</button>
                     </div>
-                    <span class="parametro">palabras</span>
+                    <span class="parametro" data-i18n="control.unit.words">palabras</span>
                 </td>
             </tr>
         </tbody>
@@ -396,11 +419,11 @@
 </div>
 <div id="contenedor">
         <div>
-            <div class="frase_final_bloque frase_final_bloque--j1">
+                <div class="frase_final_bloque frase_final_bloque--j1">
                 <div class="fin_jugador fin_jugador--j1">
-                    <span class='btn' onclick="fin(1)">&#x1F535; FIN</span>
+                    <span id="boton_fin_j1" class='btn' onclick="fin(1)">&#x1F535; FIN</span>
                 </div>
-                <p class="frase_final_label frase_final_label--j1">FRASE FINAL:</p>
+                <p id="frase_final_label_j1" class="frase_final_label frase_final_label--j1">FRASE FINAL:</p>
                 <div class="frase_final_editor frase_final_editor--j1">
                     <span class="frase_final_quote">&laquo;</span>
                     <input id="frase_final_j1" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
@@ -438,9 +461,9 @@
         <div>
             <div class="frase_final_bloque frase_final_bloque--j2">
                 <div class="fin_jugador fin_jugador--j2">
-                    <span class='btn' onclick="fin(2)">&#x1F534; FIN</span>
+                    <span id="boton_fin_j2" class='btn' onclick="fin(2)">&#x1F534; FIN</span>
                 </div>
-                <p class="frase_final_label frase_final_label--j2">FRASE FINAL:</p>
+                <p id="frase_final_label_j2" class="frase_final_label frase_final_label--j2">FRASE FINAL:</p>
                 <div class="frase_final_editor frase_final_editor--j2">
                     <span class="frase_final_quote">&laquo;</span>
                     <input id="frase_final_j2" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
@@ -504,6 +527,7 @@
         </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260225ze"></script>
+<script src="../js/i18n.js?v=20260314a"></script>
+<script src="./js/jugador-servidor.js?v=20260313d"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

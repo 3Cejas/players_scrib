@@ -11,6 +11,61 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const tJuego2P = (clave, variables = {}, fallback = "") => (
+    (window && typeof window.scribT2P === "function")
+        ? window.scribT2P(clave, variables, fallback)
+        : (fallback || clave)
+);
+const traducirStripModoMusa = (modo) => (
+    (window && typeof window.scribTranslateModeStrip2P === "function")
+        ? window.scribTranslateModeStrip2P(modo)
+        : [String(modo || "").toUpperCase()]
+);
+const formatearPuntosJuego2P = (valor) => (
+    (window && typeof window.scribFormatWordsCount2P === "function")
+        ? window.scribFormatWordsCount2P(valor)
+        : `${Number(valor) || 0} palabras`
+);
+const refrescarCountdownMusa = () => {
+    if (window && typeof window.scribRefreshCountdownText2P === "function") {
+        window.scribRefreshCountdownText2P(document.getElementById("countdown"));
+    }
+};
+
+function obtenerMensajesSolicitudCalentamiento() {
+    return {
+        ninguna: {
+            estado: tJuego2P(
+                "warmup.muse.state.none",
+                {},
+                "Sin detonador activo. Usa la bandera hasta que control active una consigna."
+            )
+        },
+        libre: {
+            estado: tJuego2P(
+                "warmup.muse.state.none",
+                {},
+                "Sin detonador activo. Usa la bandera hasta que control active una consigna."
+            ),
+            placeholder: tJuego2P("warmup.muse.placeholder.word", {}, "Escribe una palabra")
+        },
+        lugares: {
+            estado: tJuego2P("warmup.muse.state.lugares_html", {}, "Inspira lugares o sitios donde la historia nacera."),
+            estadoHtml: tJuego2P("warmup.muse.state.lugares_html", {}, "Inspira lugares o sitios donde la historia nacera."),
+            placeholder: tJuego2P("warmup.muse.placeholder.place", {}, "Ejemplo: playa")
+        },
+        acciones: {
+            estado: tJuego2P("warmup.muse.state.acciones_html", {}, "Inspira acciones (verbos) con las que la historia avance."),
+            estadoHtml: tJuego2P("warmup.muse.state.acciones_html", {}, "Inspira acciones (verbos) con las que la historia avance."),
+            placeholder: tJuego2P("warmup.muse.placeholder.action", {}, "Ejemplo: correr")
+        },
+        frase_final: {
+            estado: tJuego2P("warmup.muse.state.frase_final_html", {}, "Inspira la frase final."),
+            estadoHtml: tJuego2P("warmup.muse.state.frase_final_html", {}, "Inspira la frase final."),
+            placeholder: tJuego2P("warmup.muse.placeholder.final", {}, "Ejemplo: hacia el destino final")
+        }
+    };
+}
 
 animateCSS(".contenedor", "pulse");
 
@@ -248,11 +303,21 @@ let votacion_ventaja_opciones = [];
 let votacion_ventaja_votos = {};
 let votacion_ventaja_voto_emitido = false;
 let votacion_ventaja_gracias_timer = null;
+let votacion_ventaja_ultimo_voto = "";
 let votacion_ventaja_duracion_ms = 0;
 let votacion_ventaja_fin_ts = 0;
 let votacion_ventaja_timer_interval = null;
 const nombres_escritxr_por_equipo = { 1: "", 2: "" };
 let equipo_pendiente_nombre_musa = null;
+const MUSA_WORLD_ENTRY_DURACION_MS = 6200;
+const MUSA_WORLD_ENTRY_RELEASE_MS = 700;
+const MUSA_WORLD_ENTRY_BLACK_HOLD_MS = 180;
+const MUSA_WORLD_ENTRY_FADE_MS = 980;
+let musa_world_entry_activa = false;
+let musa_world_entry_frame = null;
+let musa_world_entry_release_timeout = null;
+let musa_world_entry_hide_timeout = null;
+let musa_world_entry_indice_log = 0;
 var intervalID = -1;
 let timer = null;
 let preparados_timer = null;
@@ -451,6 +516,9 @@ function registrarNombreEscritxrPorEquipo(equipo, nombreValor) {
     if (!equipoNorm) return;
     const nombreNorm = typeof nombreValor === "string" ? nombreValor.trim() : "";
     nombres_escritxr_por_equipo[equipoNorm] = nombreNorm || `ESCRITXR ${equipoNorm}`;
+    if (musa_world_entry_activa) {
+        actualizarContenidoEntradaMusa();
+    }
 }
 
 function obtenerEquipoObjetivoVotacionVentaja() {
@@ -671,11 +739,14 @@ function inicializarVotosVentajaEquilibrado(opciones) {
 }
 
 function mostrarGraciasVotoVentaja(voto) {
+    votacion_ventaja_ultimo_voto = String(voto || "");
     if (votacion_ventaja_modal_titulo) {
-        votacion_ventaja_modal_titulo.textContent = "GRACIAS POR VOTAR";
+        votacion_ventaja_modal_titulo.textContent = tJuego2P("ui.thanks_for_voting", {}, "GRACIAS POR VOTAR");
     }
     if (recordatorio) {
-        recordatorio.innerHTML = `<span style='color: green;'>Gracias por votar ${escapeHtml(voto)}.</span>`;
+        recordatorio.innerHTML = `<span style='color: green;'>${escapeHtml(
+            tJuego2P("vote.thanks_detail", { vote }, `Gracias por votar ${voto}.`)
+        )}</span>`;
     }
 }
 
@@ -835,10 +906,16 @@ function renderizarModalVotacionVentaja(opciones) {
     if (votacion_ventaja_modal_titulo) {
         const nombreObjetivo = obtenerNombreEscritxrObjetivoVotacionVentaja();
         const claseColor = obtenerClaseColorEscritxr(nombreObjetivo);
-        votacion_ventaja_modal_titulo.innerHTML = `ELIGE UNA DESVENTAJA PARA <span class="votacion-ventaja-escritxr ${claseColor}">${escapeHtml(nombreObjetivo)}</span>`;
+        votacion_ventaja_modal_titulo.innerHTML = tJuego2P(
+            "ui.choose_disadvantage_for",
+            { name: `<span class="votacion-ventaja-escritxr ${claseColor}">${escapeHtml(nombreObjetivo)}</span>` },
+            `ELIGE UNA DESVENTAJA PARA <span class="votacion-ventaja-escritxr ${claseColor}">${escapeHtml(nombreObjetivo)}</span>`
+        );
     }
     if (votacion_ventaja_modal_opciones) {
-        votacion_ventaja_modal_opciones.innerHTML = `<p class="votacion-ventaja-modal-ayuda">Toca un quesito del grafico para votar.</p>`;
+        votacion_ventaja_modal_opciones.innerHTML = `<p class="votacion-ventaja-modal-ayuda">${escapeHtml(
+            tJuego2P("vote.chart_help", {}, "Toca un quesito del grafico para votar.")
+        )}</p>`;
     }
     if (votacion_ventaja_modal_explicaciones) {
         votacion_ventaja_modal_explicaciones.innerHTML = "";
@@ -898,6 +975,7 @@ function resetearEstadoVotacionVentaja() {
     votacion_ventaja_participo = false;
     votacion_ventaja_ya_voto = false;
     votacion_ventaja_voto_emitido = false;
+    votacion_ventaja_ultimo_voto = "";
     votacion_ventaja_equipo = null;
     votacion_ventaja_opciones = [];
     votacion_ventaja_votos = {};
@@ -1536,10 +1614,11 @@ let calentamiento_bloqueado = false;
 let calentamiento_final_actual = null;
 let calentamiento_final_id_previo = "";
 let timeout_animacion_consigna = null;
+let ultimo_payload_calentamiento_musa = null;
 const CALENTAMIENTO_MAX_PALABRA = 24;
 const CALENTAMIENTO_MAX_FRASE_FINAL = 48;
 const esSolicitudActivaCalentamiento = () => (
-    Boolean(MENSAJES_SOLICITUD_CALENTAMIENTO[calentamiento_solicitud_actual]) &&
+    Boolean(obtenerMensajesSolicitudCalentamiento()[calentamiento_solicitud_actual]) &&
     calentamiento_solicitud_actual !== "ninguna"
 );
 const esSolicitudFraseFinalCalentamiento = () => (
@@ -1550,31 +1629,6 @@ const obtenerMaxLongitudCalentamiento = () => (
         ? CALENTAMIENTO_MAX_FRASE_FINAL
         : CALENTAMIENTO_MAX_PALABRA
 );
-const MENSAJES_SOLICITUD_CALENTAMIENTO = {
-    ninguna: {
-        estado: "Sin detonador activo. Usa la bandera hasta que control active una consigna."
-    },
-    libre: {
-        estado: "Inspira palabras para llenar la pantalla del calentamiento.",
-        placeholder: "Escribe una palabra"
-    },
-    lugares: {
-        estado: "Inspira lugares o sitios donde la historia nacerá.",
-        estadoHtml: 'Inspira <span class="calentamiento-consigna-lugares">lugares o sitios</span> donde la historia nacerá.',
-        placeholder: "Ejemplo: playa"
-    },
-    acciones: {
-        estado: "Inspira acciones (verbos) con las que historia avance.",
-        estadoHtml: 'Inspira <span class="calentamiento-consigna-acciones">acciones (verbos)</span> con las que la historia avanzase.',
-        placeholder: "Ejemplo: correr"
-    },
-    frase_final: {
-        estado: "Inspira la frase final.",
-        estadoHtml: 'Inspira la <span class="calentamiento-consigna-frase-final">frase final</span>.',
-        placeholder: "Ejemplo: hacia el destino final"
-    }
-};
-
 const normalizarFinalCalentamientoMusa = (entrada) => {
     if (!entrada || typeof entrada !== "object") return null;
     if (typeof entrada.id !== "string" || !entrada.id) return null;
@@ -1609,7 +1663,11 @@ const obtenerColorFeedbackCalentamiento = () => {
 
 const restaurarTextoBotonCalentamiento = () => {
     if (!calentamiento_text_progress) return;
-    calentamiento_text_progress.innerHTML = `INSPIRAR <span class="btn-emoji" aria-hidden="true">${EMOJI_ROCKET}</span>`;
+    calentamiento_text_progress.innerHTML = tJuego2P(
+        "warmup.inspire",
+        {},
+        `INSPIRAR <span class="btn-emoji" aria-hidden="true">${EMOJI_ROCKET}</span>`
+    );
     calentamiento_text_progress.style.color = "";
 };
 
@@ -1644,7 +1702,7 @@ const limpiarCooldownCalentamiento = () => {
 const startProgressCalentamiento = (button) => {
     if (!button || !calentamiento_text_progress || !calentamiento_bar_progress) return;
     calentamiento_cooldown = true;
-    calentamiento_text_progress.textContent = "Inspirando...";
+    calentamiento_text_progress.textContent = tJuego2P("warmup.inspiring", {}, "Inspirando...");
     calentamiento_text_progress.style.color = "var(--musa-progress-loading-text-color, #f7fbff)";
     calentamiento_text_progress.addEventListener("mouseenter", onMouseEnterCalentamiento);
     calentamiento_text_progress.addEventListener("mouseleave", onMouseLeaveCalentamiento);
@@ -1770,7 +1828,7 @@ const actualizarBloqueoCalentamientoMusa = (bloqueado, finalPalabra) => {
         calentamiento_estado_cierre.classList.remove("activa");
     }
     if (calentamiento_text_progress && bloqueado) {
-        calentamiento_text_progress.textContent = "\u{1F512} DETONADOR CERRADO";
+        calentamiento_text_progress.textContent = `\u{1F512} ${tJuego2P("warmup.button.closed", {}, "DETONADOR CERRADO")}`;
         calentamiento_text_progress.style.color = "white";
     }
     if (!calentamiento_final_musa) return;
@@ -1782,7 +1840,7 @@ const actualizarBloqueoCalentamientoMusa = (bloqueado, finalPalabra) => {
     }
     const palabraSegura = escapeHtml(finalPalabra.palabra);
     calentamiento_final_musa.innerHTML = [
-        '<span class="calentamiento-final-label">PALABRA ELEGIDA</span>',
+        `<span class="calentamiento-final-label">${escapeHtml(tJuego2P("warmup.word_chosen", {}, "PALABRA ELEGIDA"))}</span>`,
         `<span class="calentamiento-final-chip">${palabraSegura}</span>`
     ].join(" ");
     calentamiento_final_musa.classList.add("activa");
@@ -1795,13 +1853,15 @@ const actualizarBloqueoCalentamientoMusa = (bloqueado, finalPalabra) => {
 };
 
 const actualizarCalentamiento = (data = {}) => {
+    ultimo_payload_calentamiento_musa = { ...(data || {}) };
+    const mensajesCalentamiento = obtenerMensajesSolicitudCalentamiento();
     calentamiento_activo = Boolean(data.activo);
     calentamiento_vista = Boolean(data.vista);
     calentamiento_bloqueado = Boolean(data.bloqueado);
     calentamiento_final_actual = normalizarFinalCalentamientoMusa(data.final);
     actualizarTemaCalentamiento(data.equipo || player);
     const solicitudRecibida = typeof data.solicitud === "string" ? data.solicitud.trim().toLowerCase() : "";
-    const solicitud = (solicitudRecibida && MENSAJES_SOLICITUD_CALENTAMIENTO[solicitudRecibida])
+    const solicitud = (solicitudRecibida && mensajesCalentamiento[solicitudRecibida])
         ? solicitudRecibida
         : "ninguna";
     const solicitudActiva = solicitud !== "ninguna";
@@ -1813,7 +1873,7 @@ const actualizarCalentamiento = (data = {}) => {
         solicitudAnterior !== "ninguna" &&
         solicitudAnterior !== solicitud
     );
-    const mensajeSolicitud = MENSAJES_SOLICITUD_CALENTAMIENTO[solicitud] || MENSAJES_SOLICITUD_CALENTAMIENTO.ninguna;
+    const mensajeSolicitud = mensajesCalentamiento[solicitud] || mensajesCalentamiento.ninguna;
     const visible = calentamiento_activo && calentamiento_vista;
 
     if (document.body) {
@@ -1827,8 +1887,8 @@ const actualizarCalentamiento = (data = {}) => {
     if (!visible) {
         if (calentamiento_estado) {
             calentamiento_estado.textContent = calentamiento_activo
-                ? "Tutorial oculto."
-                : "Tutorial inactivo.";
+                ? tJuego2P("warmup.state.hidden", {}, "Tutorial oculto.")
+                : tJuego2P("warmup.state.inactive", {}, "Tutorial inactivo.");
         }
         limpiarCooldownCalentamiento();
         mostrarFeedbackCalentamiento("");
@@ -1895,11 +1955,11 @@ const enviarCalentamiento = () => {
         return;
     }
     if (!esSolicitudActivaCalentamiento()) {
-        mostrarFeedbackCalentamiento("No hay detonador activo.", true);
+        mostrarFeedbackCalentamiento(tJuego2P("warmup.feedback.no_trigger", {}, "No hay detonador activo."), true);
         return;
     }
     if (calentamiento_bloqueado) {
-        mostrarFeedbackCalentamiento("La consigna esta cerrada por tu escritxr.", true);
+        mostrarFeedbackCalentamiento(tJuego2P("warmup.feedback.closed_by_writer", {}, "La consigna esta cerrada por tu escritxr."), true);
         return;
     }
     if (calentamiento_cooldown) {
@@ -1914,23 +1974,36 @@ const enviarCalentamiento = () => {
     const esFraseFinal = esSolicitudFraseFinalCalentamiento();
     const valorEntrada = String(calentamiento_input.value || "").trim();
     if (!valorEntrada) {
-        mostrarFeedbackCalentamiento(esFraseFinal ? "Escribe una frase." : "Escribe una palabra.", true);
+        mostrarFeedbackCalentamiento(
+            esFraseFinal
+                ? tJuego2P("warmup.feedback.write_phrase", {}, "Escribe una frase.")
+                : tJuego2P("warmup.feedback.write_word", {}, "Escribe una palabra."),
+            true
+        );
         return;
     }
     if (!esFraseFinal && /\s/.test(valorEntrada)) {
-        mostrarFeedbackCalentamiento("Solo se permite una palabra, sin espacios.", true);
+        mostrarFeedbackCalentamiento(tJuego2P("warmup.feedback.one_word_only", {}, "Solo se permite una palabra, sin espacios."), true);
         return;
     }
     const contenido = esFraseFinal ? valorEntrada.replace(/\s+/g, " ") : valorEntrada;
     const maxLongitud = obtenerMaxLongitudCalentamiento();
     if (contenido.length > maxLongitud) {
-        mostrarFeedbackCalentamiento(`Maximo ${maxLongitud} caracteres.`, true);
+        mostrarFeedbackCalentamiento(
+            tJuego2P("warmup.feedback.max_chars", { max: maxLongitud }, `Maximo ${maxLongitud} caracteres.`),
+            true
+        );
         return;
     }
     socket.emit("calentamiento_intento", { palabra: contenido });
     startProgressCalentamiento(calentamiento_enviar);
     calentamiento_input.value = "";
-    mostrarFeedbackCalentamiento(esFraseFinal ? "Frase enviada." : "Palabra enviada.", false);
+    mostrarFeedbackCalentamiento(
+        esFraseFinal
+            ? tJuego2P("warmup.feedback.phrase_sent", {}, "Frase enviada.")
+            : tJuego2P("warmup.feedback.word_sent", {}, "Palabra enviada."),
+        false
+    );
 };
 
 if (calentamiento_enviar) {
@@ -1945,12 +2018,12 @@ if (calentamiento_input) {
     });
 }
 function formatearPuntos(valor) {
-    if (valor == null) return "0 palabras";
-    if (typeof valor === "number") return `${valor} palabras`;
+    if (valor == null) return formatearPuntosJuego2P(0);
+    if (typeof valor === "number") return formatearPuntosJuego2P(valor);
     const texto = String(valor).trim();
-    if (/^\d+$/.test(texto)) return `${texto} palabras`;
+    if (/^\d+$/.test(texto)) return formatearPuntosJuego2P(texto);
     if (/^\d+palabras$/i.test(texto)) {
-        return texto.replace(/^(\d+)(palabras)$/i, "$1 $2");
+        return formatearPuntosJuego2P(texto.replace(/^(\d+)(palabras)$/i, "$1"));
     }
     return texto;
 }
@@ -1984,6 +2057,182 @@ if (nombre_musa_label && nombre_musa) {
 }
 
 var player = getParameterByName("player");
+registrarNombreEscritxrPorEquipo(player, getParameterByName("escritxr") || "");
+
+function obtenerNombreEscritxrEntradaMusa() {
+    const equipo = normalizarEquipoVotacion(player) || 1;
+    const nombreQuery = typeof getParameterByName("escritxr") === "string"
+        ? getParameterByName("escritxr").trim()
+        : "";
+    if (nombreQuery) {
+        return normalizarNombreEscritxrUi(nombreQuery, `ESCRITXR ${equipo}`);
+    }
+    const nombreGuardado = nombres_escritxr_por_equipo[equipo];
+    if (nombreGuardado) {
+        return normalizarNombreEscritxrUi(nombreGuardado, `ESCRITXR ${equipo}`);
+    }
+    const nombreVisible = nombre1 && typeof nombre1.value === "string" ? nombre1.value : "";
+    return normalizarNombreEscritxrUi(nombreVisible, `ESCRITXR ${equipo}`);
+}
+
+function construirNombreMusaEntradaHtml() {
+    return `<span class="musa-world-entry__name musa-world-entry__name--musa">${escapeHtml(window.nombre_musa || "MUSA")}</span>`;
+}
+
+function construirNombreEscritxrEntradaHtml() {
+    const nombre = obtenerNombreEscritxrEntradaMusa();
+    const claseEquipo = Number(player) === 2
+        ? "musa-world-entry__name--rojo"
+        : "musa-world-entry__name--azul";
+    return `<span class="musa-world-entry__name ${claseEquipo}">${escapeHtml(nombre)}</span>`;
+}
+
+function obtenerEstadosEntradaMusa() {
+    return [
+        tJuego2P("world.status.linking", {}, "🔗 ENLAZANDO CANAL DE INSPIRACION"),
+        tJuego2P("world.status.sync", {}, "⚙️ SINCRONIA DE SISTEMA ESTABLE"),
+        tJuego2P("world.status.compiling", {}, "🧩 COMPILANDO EL NUEVO MUNDO"),
+        tJuego2P("world.status.color", {}, "🎨 VOLCANDO COLOR Y ATMOSFERA"),
+        tJuego2P("world.status.authorized", {}, "✅ ACCESO AUTORIZADO")
+    ];
+}
+
+function construirLogsEntradaMusa() {
+    const teamLabel = Number(player) === 2
+        ? tJuego2P("world.team.red", {}, "ROJO")
+        : tJuego2P("world.team.blue", {}, "AZUL");
+    return [
+        tJuego2P("world.log.link_muse", { muse: construirNombreMusaEntradaHtml() }, `🔗 ENLAZANDO A ${construirNombreMusaEntradaHtml()}`),
+        tJuego2P("world.log.sync_pen", { team: teamLabel }, `🖋️ SINCRONIZANDO PLUMA ${teamLabel}`),
+        tJuego2P("world.log.load_imagery", { writer: construirNombreEscritxrEntradaHtml() }, `📖 CARGANDO IMAGINARIO DE ${construirNombreEscritxrEntradaHtml()}`),
+        tJuego2P("world.log.paint_world", {}, "🎨 PINTANDO EL COLOR DEL MUNDO"),
+        tJuego2P("world.log.portal", {}, "🌀 ABRIENDO PORTAL DE INSPIRACION")
+    ];
+}
+
+function renderizarLogsEntradaMusa(logs, indiceActivo) {
+    const lista = getEl("musa_world_entry_logs");
+    if (!lista) return;
+    const items = Array.from(lista.querySelectorAll("li"));
+    items.forEach((item, indice) => {
+        item.innerHTML = logs[indice] || "";
+        item.classList.toggle("is-active", indice === indiceActivo);
+        item.classList.toggle("is-done", indice < indiceActivo);
+    });
+    musa_world_entry_indice_log = indiceActivo;
+}
+
+function actualizarContenidoEntradaMusa() {
+    const copy = getEl("musa_world_entry_copy");
+    if (copy) {
+        copy.innerHTML = tJuego2P(
+            "world.copy",
+            { muse: construirNombreMusaEntradaHtml(), writer: construirNombreEscritxrEntradaHtml() },
+            `${construirNombreMusaEntradaHtml()} ha elegido apoyar a ${construirNombreEscritxrEntradaHtml()}. Preparando la entrada al mundo de juego.`
+        );
+    }
+    renderizarLogsEntradaMusa(construirLogsEntradaMusa(), musa_world_entry_indice_log);
+}
+
+function reproducirEntradaMundoMusa() {
+    const overlay = getEl("musa_world_entry");
+    if (!overlay) return;
+    const status = getEl("musa_world_entry_status");
+    const percent = getEl("musa_world_entry_percent");
+    const pixelNodes = Array.from(document.querySelectorAll("#musa_world_entry_pixels span"));
+    const estados = obtenerEstadosEntradaMusa();
+    const umbrales = [0.12, 0.34, 0.56, 0.79, 0.96];
+
+    musa_world_entry_activa = true;
+    musa_world_entry_indice_log = 0;
+    if (musa_world_entry_frame) {
+        cancelAnimationFrame(musa_world_entry_frame);
+        musa_world_entry_frame = null;
+    }
+    if (musa_world_entry_release_timeout) {
+        clearTimeout(musa_world_entry_release_timeout);
+        musa_world_entry_release_timeout = null;
+    }
+    if (musa_world_entry_hide_timeout) {
+        clearTimeout(musa_world_entry_hide_timeout);
+        musa_world_entry_hide_timeout = null;
+    }
+
+    overlay.classList.remove("musa-world-entry--azul", "musa-world-entry--rojo");
+    overlay.classList.add(player == 2 ? "musa-world-entry--rojo" : "musa-world-entry--azul", "is-visible");
+    overlay.setAttribute("aria-hidden", "false");
+    overlay.style.setProperty("--world-entry-progress", "0%");
+    overlay.style.setProperty("--world-entry-world-progress", "0%");
+    pixelNodes.forEach((pixel) => pixel.classList.remove("is-on"));
+    actualizarContenidoEntradaMusa();
+    if (document.body) {
+        document.body.classList.add("musa-world-entry-activa");
+        document.body.classList.remove("musa-world-entry-salida");
+    }
+
+    const inicio = performance.now();
+    const paso = (ahora) => {
+        const progreso = Math.min((ahora - inicio) / MUSA_WORLD_ENTRY_DURACION_MS, 1);
+        const easing = 1 - Math.pow(1 - progreso, 3);
+        const pct = Math.round(easing * 100);
+        let idxActivo = umbrales.findIndex((umbral) => progreso <= umbral);
+        if (idxActivo === -1) idxActivo = estados.length - 1;
+
+        musa_world_entry_indice_log = idxActivo;
+        overlay.style.setProperty("--world-entry-progress", `${pct}%`);
+        overlay.style.setProperty("--world-entry-world-progress", `${Math.max(12, Math.round(easing * 100))}%`);
+        if (percent) percent.textContent = `${pct}%`;
+        if (status) status.textContent = estados[idxActivo] || estados[estados.length - 1];
+        renderizarLogsEntradaMusa(construirLogsEntradaMusa(), idxActivo);
+
+        const pixelsActivos = Math.round((pixelNodes.length || 0) * easing);
+        pixelNodes.forEach((pixel, indice) => {
+            pixel.classList.toggle("is-on", indice < pixelsActivos);
+        });
+
+        if (progreso < 1) {
+            musa_world_entry_frame = requestAnimationFrame(paso);
+            return;
+        }
+
+        musa_world_entry_frame = null;
+        musa_world_entry_indice_log = estados.length;
+        renderizarLogsEntradaMusa(construirLogsEntradaMusa(), estados.length);
+        if (status) status.textContent = tJuego2P("world.status.loaded", {}, "🏁 MUNDO CARGADO");
+        if (percent) percent.textContent = "100%";
+
+        musa_world_entry_release_timeout = setTimeout(() => {
+            musa_world_entry_release_timeout = null;
+            overlay.classList.add("musa-world-entry--blackout");
+            musa_world_entry_hide_timeout = setTimeout(() => {
+                musa_world_entry_hide_timeout = null;
+                if (document.body) {
+                    document.body.classList.add("musa-world-entry-salida");
+                    document.body.classList.remove("musa-world-entry-activa");
+                }
+                overlay.classList.add("musa-world-entry--reveal-game");
+                musa_world_entry_hide_timeout = setTimeout(() => {
+                    musa_world_entry_hide_timeout = null;
+                    musa_world_entry_activa = false;
+                    overlay.classList.remove(
+                        "is-visible",
+                        "musa-world-entry--azul",
+                        "musa-world-entry--rojo",
+                        "musa-world-entry--blackout",
+                        "musa-world-entry--reveal-game"
+                    );
+                    overlay.setAttribute("aria-hidden", "true");
+                    if (document.body) {
+                        document.body.classList.remove("musa-world-entry-salida");
+                    }
+                }, MUSA_WORLD_ENTRY_FADE_MS);
+            }, MUSA_WORLD_ENTRY_BLACK_HOLD_MS);
+        }, MUSA_WORLD_ENTRY_RELEASE_MS);
+    };
+
+    musa_world_entry_frame = requestAnimationFrame(paso);
+}
+
 actualizarTemaCalentamiento(player);
 let enviar_ventaja;
 
@@ -2020,6 +2269,7 @@ let enviar_ventaja;
     }
 
 aplicarColorTemporizadorVotacionVentaja(player);
+reproducirEntradaMundoMusa();
 
 // Se restaura DESPUÉS de inicializar `player` y de aplicar el estilo del equipo.
 // Si se hace antes (como ocurría), `obtenerEstiloMusa()` cae en el fallback naranja
@@ -2034,6 +2284,12 @@ socket.on("feedback_musa_inspiracion", (payload = {}) => {
     if (!payload || payload.tipo !== "inspiracion") return;
     activarFulgorBordesMusa();
     mostrarToastInspiracionMusa(payload);
+});
+
+socket.on("idioma_actual", (payload = {}) => {
+    if (window && typeof window.scribSetLanguage2P === "function") {
+        window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
+    }
 });
 
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
@@ -2155,6 +2411,7 @@ socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     if (!nombre_musa) return;
     socket.emit('registrar_musa', { musa: player, nombre: nombre_musa });
+    socket.emit('pedir_idioma_actual');
     socket.emit('pedir_estado_banderas_musas');
     pedirNombreMusa();
     socket.emit('pedir_estado_musa');
@@ -2181,7 +2438,10 @@ socket.on('calentamiento_estado_musa', (data) => {
 });
 
 socket.on('calentamiento_error', (data) => {
-    mostrarFeedbackCalentamiento(data && data.mensaje ? data.mensaje : "Error.", true);
+    mostrarFeedbackCalentamiento(
+        data && data.mensaje ? data.mensaje : tJuego2P("warmup.feedback.generic_error", {}, "Error."),
+        true
+    );
 });
 
 const obtenerEquipoDestacadoCalentamiento = (payload = {}) => {
@@ -2207,12 +2467,14 @@ const obtenerNombreEscritxrDestacadoCalentamiento = (payload = {}, equipo = null
 socket.on('calentamiento_ganado', (data) => {
     const equipoDestacado = obtenerEquipoDestacadoCalentamiento(data || {});
     const claseEquipo = equipoDestacado === 2 ? "equipo-2" : "equipo-1";
-    const nombreEscritxr = escapeHtml(obtenerNombreEscritxrDestacadoCalentamiento(data || {}, equipoDestacado));
-    const mensaje = [
-        '<span class="calentamiento-feedback-exclamacion">\u00A1</span>',
-        `<span class="calentamiento-feedback-escritxr ${claseEquipo}">${nombreEscritxr}</span>`,
-        '<span class="calentamiento-feedback-resto">ha destacado tu palabra!</span>'
-    ].join("");
+    const nombreEscritxr = `<span class="calentamiento-feedback-escritxr ${claseEquipo}">${escapeHtml(
+        obtenerNombreEscritxrDestacadoCalentamiento(data || {}, equipoDestacado)
+    )}</span>`;
+    const mensaje = `<span class="calentamiento-feedback-exclamacion">\u00A1</span>${tJuego2P(
+        "warmup.feedback.word_highlighted",
+        { name: nombreEscritxr },
+        `${nombreEscritxr} ha destacado tu palabra!`
+    )}`;
     mostrarFeedbackCalentamiento(mensaje, false, {
         html: true,
         clase: `feedback-destacado ${claseEquipo}`
@@ -2239,6 +2501,25 @@ const nivelesScroll = document.querySelector(".niveles-scroll");
 const nivelesPrev = document.querySelector(".niveles-prev");
 const nivelesNext = document.querySelector(".niveles-next");
 const nivelesContenedor = document.querySelector(".niveles");
+
+function refrescarEtiquetasNivelesMusa() {
+    nivelesItems.forEach((item) => {
+        const modo = item && item.dataset ? item.dataset.modo : "";
+        const strips = traducirStripModoMusa(modo);
+        const contenedorTexto = item ? item.querySelector(".nivel-texto") : null;
+        if (!contenedorTexto) return;
+        const spans = Array.from(contenedorTexto.querySelectorAll("span"));
+        while (spans.length < strips.length) {
+            const extra = document.createElement("span");
+            contenedorTexto.appendChild(extra);
+            spans.push(extra);
+        }
+        spans.forEach((span, indice) => {
+            span.textContent = strips[indice] || "";
+            span.style.display = strips[indice] ? "" : "none";
+        });
+    });
+}
 
 function setNivelesDesactivados(estado) {
     if (!nivelesContenedor) return;
@@ -2504,6 +2785,54 @@ function aplicarOrdenCircular(indiceActivo) {
     });
 }
 
+function refrescarUiIdiomaMusa() {
+    refrescarEtiquetasNivelesMusa();
+    refrescarCountdownMusa();
+
+    if (nombre_musa_label && nombre_musa) {
+        nombre_musa_label.textContent = nombre_musa;
+    }
+    if (puntos1) {
+        const matchPuntos = String(puntos1.textContent || "").match(/-?\d+/);
+        puntos1.textContent = formatearPuntos(matchPuntos ? Number(matchPuntos[0]) : 0);
+    }
+
+    if (ultimo_payload_calentamiento_musa) {
+        actualizarCalentamiento(ultimo_payload_calentamiento_musa);
+    } else {
+        restaurarTextoBotonCalentamiento();
+    }
+
+    actualizarContenidoEntradaMusa();
+    if (musa_world_entry_activa) {
+        const status = getEl("musa_world_entry_status");
+        const estados = obtenerEstadosEntradaMusa();
+        const indice = Math.min(musa_world_entry_indice_log, estados.length);
+        if (status) {
+            status.textContent = indice >= estados.length
+                ? tJuego2P("world.status.loaded", {}, "🏁 MUNDO CARGADO")
+                : (estados[indice] || estados[estados.length - 1]);
+        }
+    }
+
+    if (votacion_ventaja_activa && votacion_ventaja_opciones.length > 0) {
+        if (votacion_ventaja_ya_voto) {
+            mostrarGraciasVotoVentaja(votacion_ventaja_ultimo_voto);
+        } else {
+            renderizarModalVotacionVentaja(obtenerOpcionesVentaja(votacion_ventaja_opciones));
+        }
+        actualizarPiesVotacionVentaja();
+    }
+}
+
+if (window && typeof window.scribOnLanguageChange2P === "function") {
+    window.scribOnLanguageChange2P(() => {
+        refrescarUiIdiomaMusa();
+    });
+}
+
+refrescarUiIdiomaMusa();
+
 // Recibe los datos del jugador 1 y los coloca.
 function handler_recibir_texto_x(data) {
 if(data.text != null) texto1.innerHTML = data.text;
@@ -2570,9 +2899,12 @@ socket.on("count", data => {
             console.log("MENOR QUE 10", convertirASegundos(data.count) )
             tiempo.style.color = "red"
         }
-        tiempo.innerHTML = data.count;
+        const textoCount = String(data.count || "").toLowerCase().includes("tiempo")
+            ? tJuego2P("timer.time_up", {}, "¡Tiempo!")
+            : data.count;
+        tiempo.innerHTML = textoCount;
         const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosRestantes));
-        actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+        actualizarBarraVida(tiempo, textoCount, { animarEntrada: animarEntradaVida });
         if (animarEntradaVida) {
             animacionEntradaVidaPendiente = false;
         }
@@ -2657,9 +2989,9 @@ socket.on('inicio', data => {
     animateCSS(".contenedor", "pulse");
     iniciarSecuenciaIntroPartidaMusa();
 
-    // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atras
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">\u00BFPREPARADOS?</span>');
+    var preparados = $('<span id="countdown"></span>');
+    preparados.text(tJuego2P("countdown.ready", {}, "¿PREPARADOS?"));
     preparados.appendTo($('.container'));
     preparados_timer = setTimeout(() => {
         preparados_timer = null;
@@ -2676,7 +3008,8 @@ socket.on('inicio', data => {
       
       $('#countdown').remove();
       
-      var countdown = $('<span id="countdown">' + (counter == 0 ? '\u00A1ESCRIBE!' : counter) + '</span>');
+      var countdown = $('<span id="countdown"></span>');
+      countdown.text(counter == 0 ? tJuego2P("countdown.write", {}, "¡ESCRIBE!") : counter);
       countdown.appendTo($('.container'));
 
       if (counter === 3) {

@@ -37,6 +37,46 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const tJuego2P = (clave, variables = {}, fallback = "") => (
+    (window && typeof window.scribT2P === "function")
+        ? window.scribT2P(clave, variables, fallback)
+        : (fallback || clave)
+);
+const traducirTituloModoEscritora = (modo, fallback = "") => (
+    (window && typeof window.scribTranslateModeTitle2P === "function")
+        ? window.scribTranslateModeTitle2P(modo, fallback || String(modo || "").toUpperCase())
+        : (fallback || String(modo || "").toUpperCase())
+);
+const traducirDescripcionModoEscritora = (modo, fallback = "") => (
+    (window && typeof window.scribTranslateModeDescription2P === "function")
+        ? window.scribTranslateModeDescription2P(modo, fallback)
+        : fallback
+);
+const traducirSolicitudCalentamientoEscritora = (tipo, opciones = {}) => (
+    (window && typeof window.scribTranslateWarmupRequest2P === "function")
+        ? window.scribTranslateWarmupRequest2P(tipo, opciones)
+        : (opciones && opciones.corta ? "NINGUNO" : "SIN DETONADOR ACTIVO")
+);
+const traducirNombreEscritoraUi = (id, fallback = "") => (
+    (window && typeof window.scribTranslateWriterName2P === "function")
+        ? window.scribTranslateWriterName2P(id, fallback || `ESCRITXR ${id}`)
+        : (fallback || `ESCRITXR ${id}`)
+);
+const formatearPalabrasJuego2P = (valor) => (
+    (window && typeof window.scribFormatWordsCount2P === "function")
+        ? window.scribFormatWordsCount2P(valor)
+        : `${Number(valor) || 0} palabras`
+);
+const formatearMusasJuego2P = (valor) => (
+    (window && typeof window.scribFormatMusesCount2P === "function")
+        ? window.scribFormatMusesCount2P(valor)
+        : `${Number(valor) || 0} musas`
+);
+const construirCantidadResucitarJuego2P = (payload = {}) => (
+    (window && typeof window.scribBuildResurrectionQuantityHtml2P === "function")
+        ? window.scribBuildResurrectionQuantityHtml2P(payload)
+        : ""
+);
 const normalizarSaltosTextoGuardado = (valor) => String(valor ?? "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n");
@@ -62,6 +102,36 @@ function capturarTextoGuardadoSinPerderPrevio() {
 function restaurarTextoGuardadoEnEditor() {
     if (!texto) return;
     texto.innerText = normalizarSaltosTextoGuardado(texto_guardado);
+}
+
+function colocarCursorAlFinalEditor() {
+    if (!texto) return;
+
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const range = document.createRange();
+    let lastNode = texto.lastChild;
+
+    while (lastNode && lastNode.nodeType !== 3 && lastNode.lastChild) {
+        lastNode = lastNode.lastChild;
+    }
+
+    if (lastNode && lastNode.nodeType === 3) {
+        const offset = lastNode.textContent ? lastNode.textContent.length : 0;
+        range.setStart(lastNode, offset);
+        range.setEnd(lastNode, offset);
+    } else if (texto.lastChild) {
+        range.setStartAfter(texto.lastChild);
+        range.setEndAfter(texto.lastChild);
+    } else {
+        range.setStart(texto, 0);
+        range.setEnd(texto, 0);
+    }
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+    texto.scrollTo(0, texto.scrollHeight);
 }
 const AUDIO_GAME_OVER_ESCRITORA = "../../game/audio/PERDER PALABRA.mp3";
 const AUDIO_RESUCITAR_ESCRITORA = "../../game/audio/GANAR PALABRA.mp3";
@@ -124,8 +194,8 @@ const CLASES_FULGOR_ESCRITOR = [
     "escritor-borde-fulgor-positivo",
     "escritor-borde-fulgor-negativo"
 ];
-const TEXTO_GANADOR_ESCRITORA = "¡TEXTO TERMINADO!";
-const TEXTO_PERDISTE_SIN_PALABRAS = "¡PERDISTE, NO ESCRIBISTE NADA!";
+let TEXTO_GANADOR_ESCRITORA = tJuego2P("game.finished", {}, "¡TEXTO TERMINADO!");
+let TEXTO_PERDISTE_SIN_PALABRAS = tJuego2P("game.no_words_lost", {}, "¡PERDISTE, NO ESCRIBISTE NADA!");
 let timeout_fulgor_escritor = null;
 
 function activarFulgorEscritor(claseObjetivo) {
@@ -492,13 +562,12 @@ function renderLetraDestacadaNivelEscritora(letra) {
 }
 
 function construirExplicacionNivelLetraEscritora(tipo, letra) {
+    if (window && typeof window.scribBuildModeRule2P === "function") {
+        return window.scribBuildModeRule2P(tipo, letra);
+    }
     const letraDestacada = renderLetraDestacadaNivelEscritora(letra);
-    if (tipo === "bendita") {
-        return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
-    }
-    if (tipo === "prohibida") {
-        return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
-    }
+    if (tipo === "bendita") return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+    if (tipo === "prohibida") return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
     return "";
 }
 
@@ -590,21 +659,11 @@ function renderObjetivoNivelEscritora(palabraTexto, opciones = {}) {
 }
 
 const formatearPuntosMarcador = (valor) => {
-    const texto = String(valor ?? "").trim();
-    if (!texto) return "0 palabras";
-    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
-        return `${texto} palabras`;
-    }
-    return texto;
+    return formatearPalabrasJuego2P(valor);
 };
 
 const formatearMusasMarcador = (valor) => {
-    const texto = String(valor ?? "").trim();
-    if (!texto) return "0 musas";
-    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
-        return `${texto} musas`;
-    }
-    return texto;
+    return formatearMusasJuego2P(valor);
 };
 
 function destacarMarcadorEscritoraHit(elemento) {
@@ -707,6 +766,7 @@ let calentamiento_estado_equipo_escritor = {
 let calentamiento_ultimo_final_escritor = "";
 let timeout_error_calentamiento_escritor = null;
 let calentamiento_solicitud_escritor = "ninguna";
+let ultimo_payload_calentamiento_escritor = null;
 const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
 const VENTANA_ANIMACION_PALABRA_MS = 600;
 const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
@@ -968,7 +1028,12 @@ const normalizarSolicitudCalentamientoVista = (valor) => {
 const actualizarConsignaCalentamientoEscritor = (solicitud) => {
     if (!calentamiento_consigna_escritor) return;
     const tipo = normalizarSolicitudCalentamientoVista(solicitud);
-    calentamiento_consigna_escritor.textContent = `DETONADOR: ${ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || "SIN DETONADOR ACTIVO"}`;
+    const etiqueta = traducirSolicitudCalentamientoEscritora(tipo);
+    calentamiento_consigna_escritor.textContent = tJuego2P(
+        "warmup.request.writer",
+        { label: etiqueta },
+        `DETONADOR: ${etiqueta}`
+    );
     calentamiento_consigna_escritor.classList.remove("tipo-libre", "tipo-ninguna", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
     calentamiento_consigna_escritor.classList.add(`tipo-${tipo}`);
     if (calentamiento_solicitud_escritor && calentamiento_solicitud_escritor !== tipo) {
@@ -984,13 +1049,13 @@ const actualizarEtiquetasCursorCalentamientoEscritor = () => {
     if (calentamiento_cursor_label_escritor_1) {
         calentamiento_cursor_label_escritor_1.textContent = normalizarNombreCursorCalentamientoEscritor(
             nombres_cursores_calentamiento_escritor[1],
-            "ESCRITXR 1"
+            traducirNombreEscritoraUi(1, "ESCRITXR 1")
         );
     }
     if (calentamiento_cursor_label_escritor_2) {
         calentamiento_cursor_label_escritor_2.textContent = normalizarNombreCursorCalentamientoEscritor(
             nombres_cursores_calentamiento_escritor[2],
-            "ESCRITXR 2"
+            traducirNombreEscritoraUi(2, "ESCRITXR 2")
         );
     }
 };
@@ -1151,21 +1216,25 @@ const actualizarBotonBloquearCalentamientoEscritor = (activo, bloqueado, selecci
     const cantidad = Number.isFinite(seleccionadas) ? Math.max(0, Math.floor(seleccionadas)) : 0;
     if (!activo) {
         calentamiento_bloquear_escritor.disabled = true;
-        calentamiento_bloquear_escritor.textContent = "SELECCIONA PALABRAS";
+        calentamiento_bloquear_escritor.textContent = tJuego2P("warmup.button.select_words", {}, "SELECCIONA PALABRAS");
         return;
     }
     if (bloqueado) {
         calentamiento_bloquear_escritor.disabled = true;
-        calentamiento_bloquear_escritor.textContent = "DETONADOR CERRADO";
+        calentamiento_bloquear_escritor.textContent = tJuego2P("warmup.button.closed", {}, "DETONADOR CERRADO");
         return;
     }
     if (cantidad > 0) {
         calentamiento_bloquear_escritor.disabled = false;
-        calentamiento_bloquear_escritor.textContent = `CERRAR DETONADOR (${cantidad})`;
+        calentamiento_bloquear_escritor.textContent = tJuego2P(
+            "warmup.button.close_count",
+            { count: cantidad },
+            `CERRAR DETONADOR (${cantidad})`
+        );
         return;
     }
     calentamiento_bloquear_escritor.disabled = true;
-    calentamiento_bloquear_escritor.textContent = "SELECCIONA PALABRAS";
+    calentamiento_bloquear_escritor.textContent = tJuego2P("warmup.button.select_words", {}, "SELECCIONA PALABRAS");
 };
 
 const actualizarFinalCalentamientoEscritor = (finalPalabra) => {
@@ -1177,7 +1246,11 @@ const actualizarFinalCalentamientoEscritor = (finalPalabra) => {
         calentamiento_ultimo_final_escritor = "";
         return;
     }
-    calentamiento_final_escritor.textContent = `PALABRA FINAL: ${finalValido.palabra.toUpperCase()}`;
+    calentamiento_final_escritor.textContent = tJuego2P(
+        "warmup.final_word",
+        { word: finalValido.palabra.toUpperCase() },
+        `PALABRA FINAL: ${finalValido.palabra.toUpperCase()}`
+    );
     calentamiento_final_escritor.classList.add("activo");
     if (calentamiento_ultimo_final_escritor !== finalValido.id) {
         calentamiento_final_escritor.classList.remove("reveal");
@@ -1190,7 +1263,7 @@ const actualizarFinalCalentamientoEscritor = (finalPalabra) => {
 const mostrarErrorCalentamientoEscritor = (mensaje) => {
     const textoError = typeof mensaje === "string" && mensaje.trim()
         ? mensaje.trim()
-        : "No se pudo completar la accion.";
+        : tJuego2P("warmup.feedback.generic_error", {}, "No se pudo completar la accion.");
     if (calentamiento_estado_escritor) {
         calentamiento_estado_escritor.textContent = textoError;
         calentamiento_estado_escritor.classList.add("calentamiento-error");
@@ -1213,6 +1286,7 @@ const mostrarErrorCalentamientoEscritor = (mensaje) => {
 };
 
 const actualizarCalentamientoEscritor = (data = {}) => {
+    ultimo_payload_calentamiento_escritor = { ...(data || {}) };
     if (typeof data.vista === "boolean") {
         actualizarVistaCalentamientoEscritor(data.vista);
     }
@@ -1238,14 +1312,28 @@ const actualizarCalentamientoEscritor = (data = {}) => {
         calentamiento_bloquear_escritor.classList.remove("is-error");
     }
     if (calentamiento_estado_escritor) {
-        if (!activo) {
-            calentamiento_estado_escritor.textContent = "Esperando vista de tutorial.";
+        if (!Boolean(data.activo)) {
+            calentamiento_estado_escritor.textContent = tJuego2P("warmup.state.inactive", {}, "Tutorial inactivo.");
+        } else if (!Boolean(data.vista)) {
+            calentamiento_estado_escritor.textContent = tJuego2P("warmup.state.waiting_view", {}, "Esperando vista de tutorial.");
         } else if (!bloqueado) {
-            calentamiento_estado_escritor.textContent = "Selecciona palabras de tu equipo y pulsa CERRAR DETONADOR.";
+            calentamiento_estado_escritor.textContent = tJuego2P(
+                "warmup.state.select_words",
+                {},
+                "Selecciona palabras de tu equipo y pulsa CERRAR DETONADOR."
+            );
         } else if (!finalEquipo) {
-            calentamiento_estado_escritor.textContent = "Consigna cerrada. Elige una palabra final de las seleccionadas.";
+            calentamiento_estado_escritor.textContent = tJuego2P(
+                "warmup.state.closed_choose_final",
+                {},
+                "Consigna cerrada. Elige una palabra final de las seleccionadas."
+            );
         } else {
-            calentamiento_estado_escritor.textContent = `Palabra final fijada: ${finalEquipo.palabra}.`;
+            calentamiento_estado_escritor.textContent = tJuego2P(
+                "warmup.state.final_fixed",
+                { word: finalEquipo.palabra },
+                `Palabra final fijada: ${finalEquipo.palabra}.`
+            );
         }
     }
     actualizarBotonBloquearCalentamientoEscritor(activo, bloqueado, seleccionadas);
@@ -2394,6 +2482,62 @@ const PUTADAS = {
     },
 };
 
+function renderizarObjetivoFraseFinalEscritora() {
+    if (!palabra) return;
+    palabra.innerHTML = traducirTituloModoEscritora("frase final", "NIVEL FRASE FINAL");
+    const fraseObjetivo = String(frase_final || "").trim();
+    const palabraObjetivo = fraseObjetivo ? "\u00AB" + fraseObjetivo + "\u00BB" : "\u00AB-\u00BB";
+    renderObjetivoNivelEscritora(palabraObjetivo, {
+        tipo: "frase-final",
+        descripcion: traducirDescripcionModoEscritora("frase final", "ULTIMA RONDA")
+    });
+}
+
+function refrescarCabeceraModoActualEscritora() {
+    if (!palabra || !explicacion) return;
+    if (modo_actual === "palabras bonus") {
+        explicacion.style.color = "yellow";
+        explicacion.innerHTML = traducirDescripcionModoEscritora("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
+        palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BONUS");
+        return;
+    }
+    if (modo_actual === "letra prohibida") {
+        explicacion.style.color = "red";
+        explicacion.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
+        palabra.innerHTML = traducirTituloModoEscritora("letra prohibida", "NIVEL LETRA PROHIBIDA");
+        return;
+    }
+    if (modo_actual === "letra bendita") {
+        explicacion.style.color = "lime";
+        explicacion.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
+        palabra.innerHTML = traducirTituloModoEscritora("letra bendita", "NIVEL LETRA BENDITA");
+        return;
+    }
+    if (modo_actual === "tertulia") {
+        explicacion.style.color = "#86d0ff";
+        explicacion.innerHTML = traducirDescripcionModoEscritora("tertulia", "DIALOGA CON TUS MUSAS");
+        palabra.innerHTML = traducirTituloModoEscritora("tertulia", "NIVEL TERTULIA");
+        return;
+    }
+    if (modo_actual === "palabras prohibidas") {
+        explicacion.style.color = "pink";
+        explicacion.innerHTML = traducirDescripcionModoEscritora("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
+        palabra.innerHTML = traducirTituloModoEscritora("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
+        return;
+    }
+    if (modo_actual === "frase final") {
+        explicacion.style.color = "orange";
+        explicacion.innerHTML = traducirDescripcionModoEscritora("frase final", "ULTIMA RONDA");
+        renderizarObjetivoFraseFinalEscritora();
+    }
+}
+
+function refrescarCountdownEscritora() {
+    if (window && typeof window.scribRefreshCountdownText2P === "function") {
+        window.scribRefreshCountdownText2P(document.getElementById("countdown"));
+    }
+}
+
 const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
@@ -2402,9 +2546,9 @@ const MODOS = {
         setBarraNivelClaseEscritora("bonus");
         if (explicacion) {
             explicacion.style.color = "yellow";
-            explicacion.innerHTML = "SUMA TIEMPO CON PALABRAS BONUS";
+            explicacion.innerHTML = traducirDescripcionModoEscritora("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
         }
-        palabra.innerHTML = "NIVEL PALABRAS BONUS";
+        palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BONUS");
         definicion.innerHTML = "";
         socket.emit("nueva_palabra", player);
         socket.on(enviar_palabra, data => {
@@ -2425,7 +2569,7 @@ const MODOS = {
             explicacion.style.color = "red";
             explicacion.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
         }
-        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
+        palabra.innerHTML = traducirTituloModoEscritora("letra prohibida", "NIVEL LETRA PROHIBIDA");
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
     },
@@ -2441,7 +2585,7 @@ const MODOS = {
             explicacion.style.color = "lime";
             explicacion.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
         }
-        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        palabra.innerHTML = traducirTituloModoEscritora("letra bendita", "NIVEL LETRA BENDITA");
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_musa", player);
     },
@@ -2477,9 +2621,9 @@ const MODOS = {
         pausa();
         if (explicacion) {
             explicacion.style.color = "#86d0ff";
-            explicacion.innerHTML = "DIALOGA CON TUS MUSAS";
+            explicacion.innerHTML = traducirDescripcionModoEscritora("tertulia", "DIALOGA CON TUS MUSAS");
         }
-        palabra.innerHTML = "NIVEL TERTULIA";
+        palabra.innerHTML = traducirTituloModoEscritora("tertulia", "NIVEL TERTULIA");
         definicion.innerHTML = "";
     },
 
@@ -2488,9 +2632,9 @@ const MODOS = {
         setBarraNivelClaseEscritora("prohibidas");
         if (explicacion) {
             explicacion.style.color = "pink";
-            explicacion.innerHTML = "EVITA LAS PALABRAS PROHIBIDAS";
+            explicacion.innerHTML = traducirDescripcionModoEscritora("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
         }
-        palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+        palabra.innerHTML = traducirTituloModoEscritora("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
         definicion.innerHTML = "";
         socket.emit("nueva_palabra_prohibida", player);
         socket.on(enviar_palabra, data => {
@@ -2517,9 +2661,9 @@ const MODOS = {
         setBarraNivelClaseEscritora("frase-final");
         if (explicacion) {
             explicacion.style.color = "orange";
-            explicacion.innerHTML = "ULTIMA RONDA";
+            explicacion.innerHTML = traducirDescripcionModoEscritora("frase final", "ULTIMA RONDA");
         }
-        palabra.innerHTML = "NIVEL FRASE FINAL";
+        palabra.innerHTML = traducirTituloModoEscritora("frase final", "NIVEL FRASE FINAL");
         definicion.innerHTML = "";
         function_frase_final();
     },
@@ -2599,10 +2743,17 @@ texto.addEventListener("keydown", (evt) => {
     }
 });
 
+socket.on("idioma_actual", (payload = {}) => {
+    if (window && typeof window.scribSetLanguage2P === "function") {
+        window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
+    }
+});
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     actualizarEtiquetasCursorCalentamientoEscritor();
     socket.emit('registrar_escritor', player);
+    socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');
     socket.emit('calentamiento_cursor', { visible: false });
 });
@@ -2620,7 +2771,7 @@ socket.on('calentamiento_cursor', (payload = {}) => {
 });
 
 socket.on('calentamiento_error_escritor', (data = {}) => {
-    mostrarErrorCalentamientoEscritor(data && data.mensaje ? data.mensaje : "No se pudo completar la accion.");
+    mostrarErrorCalentamientoEscritor(data && data.mensaje ? data.mensaje : tJuego2P("warmup.feedback.generic_error", {}, "No se pudo completar la accion."));
 });
 
 //activar los sockets extratextuales.
@@ -2666,9 +2817,12 @@ socket.on("count", (data) => {
         }
     }
 
-    tiempo.innerHTML = data.count;
+    const textoCount = String(data.count || "").toLowerCase().includes("tiempo")
+        ? tJuego2P("timer.time_up", {}, "¡Tiempo!")
+        : data.count;
+    tiempo.innerHTML = textoCount;
     const animarEntradaVida = Boolean(animacionEntradaVidaPendiente && Number.isFinite(segundosCount));
-    actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVida });
+    actualizarBarraVida(tiempo, textoCount, { animarEntrada: animarEntradaVida });
     if (animarEntradaVida) {
         animacionEntradaVidaPendiente = false;
     }
@@ -2879,6 +3033,7 @@ function resucitar(){
             restaurarPosicionCaret(caretNode, caretPos);
         }
         texto.scrollTo(0, texto.scrollHeight);
+        colocarCursorAlFinalEditor();
 }
 
 // Inicia el juego.
@@ -2935,7 +3090,8 @@ socket.on("inicio", (data) => {
 
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás.
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">&iquest;PREPARADOS?</span>');
+    var preparados = $('<span id="countdown"></span>');
+    preparados.text(tJuego2P("countdown.ready", {}, "¿PREPARADOS?"));
     preparados.appendTo($('.container'));
     preparados_timer = setTimeout(() => {
         preparados_timer = null;
@@ -2951,7 +3107,8 @@ socket.on("inicio", (data) => {
 
       $('#countdown').remove();
 
-      var countdown = $('<span id="countdown">'+(counter === 0 ? '&iexcl;ESCRIBE!' : counter)+'</span>');
+      var countdown = $('<span id="countdown"></span>');
+      countdown.text(counter === 0 ? tJuego2P("countdown.write", {}, "¡ESCRIBE!") : counter);
       countdown.appendTo($('.container'));
       if (counter === 3) {
         revelarEtapaIntroPartidaEscritora(2);
@@ -3052,6 +3209,9 @@ function post_inicio(borrar_texto){
     } else {
         texto.contentEditable = "true";
         texto.focus();
+        requestAnimationFrame(() => {
+            colocarCursorAlFinalEditor();
+        });
     }
 }
 
@@ -3270,7 +3430,7 @@ socket.on("nueva letra", letra => {
         if (explicacion) {
             explicacion.innerHTML = construirExplicacionNivelLetraEscritora("prohibida", letra_prohibida);
         }
-        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
+        palabra.innerHTML = traducirTituloModoEscritora("letra prohibida", "NIVEL LETRA PROHIBIDA");
         }
     else if(modo_actual == "letra bendita"){
         letra_bendita = letra;
@@ -3282,7 +3442,7 @@ socket.on("nueva letra", letra => {
         if (explicacion) {
             explicacion.innerHTML = construirExplicacionNivelLetraEscritora("bendita", letra_bendita);
         }
-        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        palabra.innerHTML = traducirTituloModoEscritora("letra bendita", "NIVEL LETRA BENDITA");
     }
 });
 
@@ -3299,7 +3459,7 @@ function recibir_palabra(data) {
     palabra_actual = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[0] : "";
     setBarraNivelClaseEscritora("bonus");
     const textoPalabra = extraerTextoPalabraEventoEscritora(data);
-    palabra.innerHTML = "NIVEL PALABRAS BONUS";
+    palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BONUS");
     if (data.origen_musa === "musa") {
         const musaLabel = data.musa_nombre ? String(data.musa_nombre) : "MUSA";
         const descripcion = `${musaLabel}: Podrías escribir esta palabra`;
@@ -3337,7 +3497,7 @@ function recibir_palabra_prohibida(data) {
     palabra_actual = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[0] : "";
     setBarraNivelClaseEscritora("prohibidas");
     const textoPalabra = extraerTextoPalabraEventoEscritora(data);
-    palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+    palabra.innerHTML = traducirTituloModoEscritora("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
 
     if (data.origen_musa === "musa_enemiga") {
         const musaLabel = data.musa_nombre ? String(data.musa_nombre) : "MUSA ENEMIGA";
@@ -3589,22 +3749,17 @@ function recibir_palabra_prohibida(data) {
       function actualizarTextoCantidad() {
         const { max } = ajustarPalabrasResucitar();
         const segundos = palabras * PALABRAS_A_SEGUNDOS;
-        quantityDisplay.innerHTML = `
-          <div class="resucitar-stepper" aria-hidden="true">
-            <div id="resucitarArrowUp" class="resucitar-stepper-arrow">&uarr;</div>
-            <div id="resucitarArrowDown" class="resucitar-stepper-arrow">&darr;</div>
-          </div>
-          <div class="resucitar-metric">
-            <span class="resucitar-label">Palabras</span>
-            <span class="resucitar-value resucitar-pop palabras">${palabras}</span>
-            <span class="resucitar-max">MAX ${max}</span>
-          </div>
-          <div class="resucitar-arrow">→</div>
-          <div class="resucitar-metric">
-            <span class="resucitar-label">Segundos</span>
-            <span class="resucitar-value resucitar-pop segundos">${segundos}</span>
-          </div>
-        `;
+        quantityDisplay.innerHTML = construirCantidadResucitarJuego2P({ palabras, segundos, max });
+        const arrow = quantityDisplay.querySelector(".resucitar-arrow");
+        if (arrow) {
+          arrow.innerHTML = "&rarr;";
+        }
+        const stepper = quantityDisplay.querySelector(".resucitar-stepper");
+        if (stepper) {
+          const arrows = stepper.querySelectorAll(".resucitar-stepper-arrow");
+          if (arrows[0]) arrows[0].id = "resucitarArrowUp";
+          if (arrows[1]) arrows[1].id = "resucitarArrowDown";
+        }
         emitirEstadoResucitar();
       }
 
@@ -3927,6 +4082,61 @@ function manejadorTeclas(evento) {
   }
 
 // Función para enviar texto al otro jugador y a control
+function refrescarUiIdiomaEscritora() {
+    const textoGanadorPrevio = TEXTO_GANADOR_ESCRITORA;
+    const textoPerdidaPrevio = TEXTO_PERDISTE_SIN_PALABRAS;
+    TEXTO_GANADOR_ESCRITORA = tJuego2P("game.finished", {}, "¡TEXTO TERMINADO!");
+    TEXTO_PERDISTE_SIN_PALABRAS = tJuego2P("game.no_words_lost", {}, "¡PERDISTE, NO ESCRIBISTE NADA!");
+
+    if (metadatos && metadatos.hasAttribute("data-ganador")) {
+        const textoActual = String(metadatos.getAttribute("data-ganador") || "").trim();
+        const esPerdida = textoActual === textoPerdidaPrevio;
+        setIndicadorGanadoraEscritora(true, esPerdida ? TEXTO_PERDISTE_SIN_PALABRAS : TEXTO_GANADOR_ESCRITORA);
+    }
+
+    if (puntos) {
+        actualizarPuntosMarcador(obtenerPalabrasMarcadorEscritora(), false);
+    }
+    if (musas) {
+        const matchMusas = String(musas.textContent || "").match(/-?\d+/);
+        actualizarMusasMarcador(matchMusas ? Number(matchMusas[0]) : 0, false);
+    }
+
+    actualizarEtiquetasCursorCalentamientoEscritor();
+    if (ultimo_payload_calentamiento_escritor) {
+        actualizarCalentamientoEscritor(ultimo_payload_calentamiento_escritor);
+    } else {
+        actualizarConsignaCalentamientoEscritor(calentamiento_solicitud_escritor);
+        actualizarBotonBloquearCalentamientoEscritor(
+            Boolean(vista_calentamiento_escritor),
+            Boolean(calentamiento_estado_equipo_escritor && calentamiento_estado_equipo_escritor.bloqueado),
+            Number(calentamiento_estado_equipo_escritor && calentamiento_estado_equipo_escritor.seleccionadas)
+        );
+        actualizarFinalCalentamientoEscritor(calentamiento_estado_equipo_escritor && calentamiento_estado_equipo_escritor.final);
+    }
+
+    refrescarCabeceraModoActualEscritora();
+    refrescarCountdownEscritora();
+
+    if (typeof quantityMenu !== "undefined" && quantityMenu && quantityMenu.style.display !== "none") {
+        actualizarTextoCantidad();
+    }
+    if (
+        (typeof mainMenu !== "undefined" && mainMenu && mainMenu.style.display !== "none")
+        || (typeof quantityMenu !== "undefined" && quantityMenu && quantityMenu.style.display !== "none")
+    ) {
+        emitirEstadoResucitar();
+    }
+}
+
+if (window && typeof window.scribOnLanguageChange2P === "function") {
+    window.scribOnLanguageChange2P(() => {
+        refrescarUiIdiomaEscritora();
+    });
+}
+
+refrescarUiIdiomaEscritora();
+
 function sendText() {
     capturarTextoGuardadoDesdeEditor();
     let text = texto.innerHTML;
@@ -5394,13 +5604,9 @@ function function_frase_final() {
     animacion_modo();
     limpiarEstiloNivelesEscritora();
     setBarraNivelClaseEscritora("frase-final");
-    palabra.innerHTML = "NIVEL FRASE FINAL";
-    const fraseObjetivo = String(frase_final || "").trim();
-    const palabraObjetivo = fraseObjetivo ? "\u00AB" + fraseObjetivo + "\u00BB" : "\u00AB-\u00BB";
-    renderObjetivoNivelEscritora(palabraObjetivo, {
-        tipo: "frase-final",
-        descripcion: "\u00A1Esta es la \u00FAltima!"
-    });
+    explicacion.style.color = "orange";
+    explicacion.innerHTML = traducirDescripcionModoEscritora("frase final", "ULTIMA RONDA");
+    renderizarObjetivoFraseFinalEscritora();
     limpiarMarcadoFraseFinal();
 
     texto.removeEventListener("keyup", listener_modo);

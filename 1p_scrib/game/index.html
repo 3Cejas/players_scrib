@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260303c">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260313a">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
@@ -263,8 +263,8 @@
       </tr>
     </tbody>
   </table>
-          <div class="opciones-idioma">
-            <label for="selector_idioma" class="opciones_titulo opciones-idioma-label" data-i18n="options.language_label">IDIOMA</label>
+          <div class="opciones-idioma" role="group" aria-labelledby="selector_idioma_label_1p">
+            <label id="selector_idioma_label_1p" class="opciones_titulo opciones-idioma-label" data-i18n="options.language_label">IDIOMA</label>
             <select id="selector_idioma" class="opciones-idioma-select" aria-label="Idioma" data-i18n-attr="aria-label:options.language_aria">
               <option value="es" data-i18n="lang.es">Espa&ntilde;ol</option>
               <option value="en" data-i18n="lang.en">English</option>
@@ -286,6 +286,6 @@
     </div>
     </div>
 </body>
-<script src="./js/jugador-servidor.js?v=20260303e"></script>
+<script src="./js/jugador-servidor.js?v=20260313a"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

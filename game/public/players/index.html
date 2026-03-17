@@ -15,6 +15,37 @@
     <script src="./js/juego.js?v=20260225zd"></script>
 </head>
 <body>
+    <div id="musa_world_entry" class="musa-world-entry" aria-hidden="true">
+        <div class="musa-world-entry__panel">
+            <div class="musa-world-entry__eyebrow">INICIANDO SISTEMA MUSA</div>
+            <div class="musa-world-entry__title">ENTRANDO EN UN NUEVO MUNDO</div>
+            <div id="musa_world_entry_copy" class="musa-world-entry__copy">Preparando enlace creativo.</div>
+            <div class="musa-world-entry__world" aria-hidden="true">
+                <div class="musa-world-entry__world-base"></div>
+                <div class="musa-world-entry__world-fill"></div>
+                <div class="musa-world-entry__world-grid"></div>
+                <div class="musa-world-entry__world-orb"></div>
+                <div id="musa_world_entry_pixels" class="musa-world-entry__world-pixels">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="musa-world-entry__status-row">
+                <span id="musa_world_entry_status" class="musa-world-entry__status-text">ENLAZANDO CANAL DE INSPIRACION</span>
+                <span id="musa_world_entry_percent" class="musa-world-entry__status-percent">0%</span>
+            </div>
+            <div class="musa-world-entry__bar" aria-hidden="true">
+                <span id="musa_world_entry_bar" class="musa-world-entry__bar-fill"></span>
+            </div>
+            <ul id="musa_world_entry_logs" class="musa-world-entry__logs" aria-live="polite">
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+        </div>
+    </div>
     <div class="container"></div>
         <div id="contenedor" class="contenedor">
             <div class="jugador">
@@ -210,5 +241,6 @@
     </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js?v=20260225zf"></script>
+<script src="../../js/i18n.js?v=20260312b"></script>
+<script src="./js/jugador-servidor.js?v=20260312b"></script>
 </html>

@@ -50,18 +50,22 @@ document.addEventListener('click', function(event) {
 
 //Función auxiliar para crear las animaciones del feedback.
 const animateCSS = (element, animation, prefix = "animate__") =>
-    // We create a Promise and return it
-    new Promise((resolve, reject) => {
+    new Promise((resolve) => {
         const animationName = `${prefix}${animation}`;
-        const node = document.querySelector(element);
+        const node = typeof element === "string" ? document.querySelector(element) : element;
+
+        if (!node || !node.classList) {
+            resolve("Animation skipped");
+            return;
+        }
 
         node.classList.add(`${prefix}animated`, animationName);
 
-        // When the animation ends, we clean the classes and resolve the Promise
         function handleAnimationEnd(event) {
             event.stopPropagation();
             node.classList.remove(`${prefix}animated`, animationName);
             resolve("Animation ended");
         }
+
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });

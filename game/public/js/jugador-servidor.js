@@ -4,6 +4,12 @@ const serverUrl = isProduction
     : SERVER_URL_DEV;
 
 const socket = io(serverUrl);
+const escapeHtmlMusa = (valor) => String(valor)
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
 
 escritxr1 = document.getElementById("escritxr1");
 escritxr2 = document.getElementById("escritxr2");
@@ -15,12 +21,33 @@ const MAX_NOMBRE_MUSA = 10;
 const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
 const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
 let musaSeleccionBloqueada = false;
+const MUSA_BOOT_SESSION_KEY = "scrib_musa_boot_transition";
+const MUSA_BOOT_DURACION_MS = 6200;
+const MUSA_BOOT_REDIRECT_DELAY_MS = 700;
+let musaBootFrameId = null;
+let musaBootRedirectTimeout = null;
 
 function restablecerBotonesInspirar() {
   musaSeleccionBloqueada = false;
   document.body.classList.remove("musa-eleccion-hecha");
+  document.body.classList.remove("musa-boot-activa");
   const botones = document.querySelectorAll(".intro-choice-btn");
   botones.forEach((boton) => boton.classList.remove("intro-choice-btn--disabled"));
+  const overlay = document.getElementById("musa_boot_overlay");
+  if (overlay) {
+    overlay.classList.remove("is-active", "musa-boot-overlay--azul", "musa-boot-overlay--rojo");
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.style.setProperty("--boot-bar-progress", "0%");
+    overlay.style.setProperty("--boot-world-progress", "0%");
+  }
+  if (musaBootFrameId) {
+    cancelAnimationFrame(musaBootFrameId);
+    musaBootFrameId = null;
+  }
+  if (musaBootRedirectTimeout) {
+    clearTimeout(musaBootRedirectTimeout);
+    musaBootRedirectTimeout = null;
+  }
 }
 
 function normalizarNombreMusa(valor) {
@@ -144,6 +171,111 @@ function cerrarTeclado() {
   }
 }
 
+function renderizarLogsCargaMusa(logs, indiceActivo) {
+  const lista = document.getElementById("musa_boot_logs");
+  if (!lista) return;
+  const items = Array.from(lista.querySelectorAll("li"));
+  items.forEach((item, indice) => {
+    item.innerHTML = logs[indice] || "";
+    item.classList.toggle("is-active", indice === indiceActivo);
+    item.classList.toggle("is-done", indice < indiceActivo);
+  });
+}
+
+function iniciarCargaMusa(playerId, nombre, destinoNombre) {
+  const overlay = document.getElementById("musa_boot_overlay");
+  if (!overlay) {
+    return false;
+  }
+
+  const equipoRojo = Number(playerId) === 2;
+  const teamClass = equipoRojo ? "musa-boot-overlay--rojo" : "musa-boot-overlay--azul";
+  const teamNameClass = equipoRojo ? "musa-boot-name--rojo" : "musa-boot-name--azul";
+  const teamLabel = equipoRojo ? "ROJO" : "AZUL";
+  const escrituraDestino = (destinoNombre || `ESCRITXR ${playerId}`).trim().toUpperCase();
+  const musaHtml = `<span class="musa-boot-name musa-boot-name--musa">${escapeHtmlMusa(nombre)}</span>`;
+  const escritoraHtml = `<span class="musa-boot-name ${teamNameClass}">${escapeHtmlMusa(escrituraDestino)}</span>`;
+  const estado = document.getElementById("musa_boot_status");
+  const porcentaje = document.getElementById("musa_boot_percent");
+  const copy = document.getElementById("musa_boot_copy");
+  const pixelNodes = Array.from(document.querySelectorAll("#musa_boot_pixels span"));
+  const logs = [
+    `ENLAZANDO A ${musaHtml}`,
+    `SINCRONIZANDO PLUMA ${teamLabel}`,
+    `CARGANDO IMAGINARIO DE ${escritoraHtml}`,
+    "PINTANDO EL COLOR DEL MUNDO",
+    "ABRIENDO PORTAL DE INSPIRACION"
+  ];
+  const estados = [
+    "ENLAZANDO CANAL DE INSPIRACION",
+    "SINCRONIA DE SISTEMA ESTABLE",
+    "COMPILANDO EL NUEVO MUNDO",
+    "VOLCANDO COLOR Y ATMOSFERA",
+    "ACCESO AUTORIZADO"
+  ];
+  const umbrales = [0.12, 0.34, 0.56, 0.79, 0.96];
+  const duracionMs = MUSA_BOOT_DURACION_MS;
+  const destino = `./players/index.html?player=${playerId}&name=${encodeURIComponent(nombre)}`;
+
+  if (copy) {
+    copy.innerHTML = `${musaHtml} ha elegido apoyar a ${escritoraHtml}. Preparando la entrada al mundo de juego.`;
+  }
+
+  overlay.classList.remove("musa-boot-overlay--azul", "musa-boot-overlay--rojo");
+  overlay.classList.add(teamClass, "is-active");
+  overlay.setAttribute("aria-hidden", "false");
+  overlay.style.setProperty("--boot-bar-progress", "0%");
+  overlay.style.setProperty("--boot-world-progress", "0%");
+  pixelNodes.forEach((pixel) => pixel.classList.remove("is-on"));
+  renderizarLogsCargaMusa(logs, 0);
+  document.body.classList.add("musa-boot-activa");
+
+  try {
+    sessionStorage.setItem(MUSA_BOOT_SESSION_KEY, JSON.stringify({
+      playerId: Number(playerId),
+      nombre,
+      destinoNombre: escrituraDestino,
+      ts: Date.now()
+    }));
+  } catch (_error) {}
+
+  const inicio = performance.now();
+  const paso = (ahora) => {
+    const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+    const easing = 1 - Math.pow(1 - progreso, 3);
+    const pct = Math.round(easing * 100);
+    let idxActivo = umbrales.findIndex((umbral) => progreso <= umbral);
+    if (idxActivo === -1) idxActivo = logs.length - 1;
+
+    overlay.style.setProperty("--boot-bar-progress", `${pct}%`);
+    overlay.style.setProperty("--boot-world-progress", `${Math.max(12, Math.round(easing * 100))}%`);
+    if (porcentaje) porcentaje.textContent = `${pct}%`;
+    if (estado) estado.textContent = estados[idxActivo] || estados[estados.length - 1];
+    renderizarLogsCargaMusa(logs, idxActivo);
+
+    const pixelsActivos = Math.round((pixelNodes.length || 0) * easing);
+    pixelNodes.forEach((pixel, indice) => {
+      pixel.classList.toggle("is-on", indice < pixelsActivos);
+    });
+
+    if (progreso < 1) {
+      musaBootFrameId = requestAnimationFrame(paso);
+      return;
+    }
+
+    musaBootFrameId = null;
+    renderizarLogsCargaMusa(logs, logs.length);
+    if (estado) estado.textContent = "MUNDO CARGADO";
+    if (porcentaje) porcentaje.textContent = "100%";
+    musaBootRedirectTimeout = setTimeout(() => {
+      window.location.href = destino;
+    }, MUSA_BOOT_REDIRECT_DELAY_MS);
+  };
+
+  musaBootFrameId = requestAnimationFrame(paso);
+  return true;
+}
+
 function entrarComoMusa(playerId) {
   if (musaSeleccionBloqueada) return;
   if (!nombre_musa_input) return;
@@ -158,7 +290,10 @@ function entrarComoMusa(playerId) {
   document.body.classList.add("musa-eleccion-hecha");
   const botones = document.querySelectorAll(".intro-choice-btn");
   botones.forEach((boton) => boton.classList.add("intro-choice-btn--disabled"));
-  const destino = `./players/index.html?player=${playerId}&name=${encodeURIComponent(nombre)}`;
+  const destinoNombre = playerId === 2
+    ? (escritxr2?.textContent || "ESCRITXR 2")
+    : (escritxr1?.textContent || "ESCRITXR 1");
+  const destino = `./players/index.html?player=${playerId}&name=${encodeURIComponent(nombre)}&escritxr=${encodeURIComponent(destinoNombre)}`;
   window.location.href = destino;
 }
 

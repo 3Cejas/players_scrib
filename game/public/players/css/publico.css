@@ -44,6 +44,507 @@ body {
     --musa-progress-loading-text-color: #f7fbff;
 }
 
+.musa-world-entry {
+    --world-entry-accent: #54f0ff;
+    position: fixed;
+    inset: 0;
+    z-index: 15050;
+    display: grid;
+    place-items: center;
+    padding: clamp(18px, 4vw, 34px);
+    opacity: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--world-entry-accent), transparent 76%), transparent 44%),
+        linear-gradient(180deg, rgba(2, 4, 10, 0.96), rgba(2, 2, 6, 0.98));
+    transition: opacity 320ms ease;
+    overflow: hidden;
+}
+
+.musa-world-entry::before,
+.musa-world-entry::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.musa-world-entry::before {
+    background:
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 4px);
+    opacity: 0.18;
+}
+
+.musa-world-entry::after {
+    background:
+        radial-gradient(circle at 50% 72%, color-mix(in srgb, var(--world-entry-accent), transparent 76%), transparent 40%);
+    transform: scale(0.64);
+    opacity: 0;
+    transition: transform 900ms cubic-bezier(0.18, 0.8, 0.2, 1), opacity 900ms ease;
+}
+
+.musa-world-entry.is-visible {
+    opacity: 1;
+}
+
+.musa-world-entry.is-visible::after {
+    transform: scale(1.18);
+    opacity: 1;
+}
+
+.musa-world-entry--rojo {
+    --world-entry-accent: #ff6262;
+}
+
+.musa-world-entry__panel {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 720px);
+    padding: clamp(18px, 4vw, 30px);
+    border-radius: clamp(18px, 3vw, 28px);
+    border: 1px solid color-mix(in srgb, var(--world-entry-accent), transparent 50%);
+    background:
+        linear-gradient(145deg, rgba(6, 14, 28, 0.9), rgba(6, 9, 18, 0.92)),
+        radial-gradient(circle at top, color-mix(in srgb, var(--world-entry-accent), transparent 84%), transparent 55%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 0 2rem color-mix(in srgb, var(--world-entry-accent), transparent 78%);
+    text-align: center;
+    display: grid;
+    gap: clamp(10px, 2vw, 18px);
+}
+
+.musa-world-entry__eyebrow {
+    font-size: clamp(0.7rem, 1.5vw, 0.86rem);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--world-entry-accent), white 16%);
+}
+
+.musa-world-entry__title {
+    font-size: clamp(1.4rem, 4.2vw, 2.5rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #f6fbff;
+    text-shadow:
+        -0.06em 0 color-mix(in srgb, var(--world-entry-accent), transparent 30%),
+        0 0 1.1rem color-mix(in srgb, var(--world-entry-accent), transparent 62%);
+}
+
+.musa-world-entry__copy {
+    font-size: clamp(0.84rem, 2vw, 1rem);
+    line-height: 1.6;
+    color: rgba(236, 246, 255, 0.84);
+}
+
+.musa-world-entry__name {
+    display: inline-block;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.musa-world-entry__name--musa {
+    color: orange;
+    text-shadow: none;
+}
+
+.musa-world-entry__name--azul {
+    color: aqua;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+}
+
+.musa-world-entry__name--rojo {
+    color: red;
+    text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;
+}
+
+.musa-world-entry__bar {
+    width: min(100%, 420px);
+    justify-self: center;
+    height: 14px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--world-entry-accent), transparent 58%);
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.musa-world-entry__bar-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--world-entry-accent), black 6%) 0%, #ffffff 52%, color-mix(in srgb, var(--world-entry-accent), white 6%) 100%);
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--world-entry-accent), transparent 44%);
+}
+
+.musa-world-entry.is-visible .musa-world-entry__bar-fill {
+    width: 100%;
+    transition: width 2200ms cubic-bezier(0.2, 0.72, 0.2, 1);
+}
+
+body.musa-world-entry-activa {
+    overflow: hidden;
+}
+
+body.musa-world-entry-activa .container,
+body.musa-world-entry-activa #contenedor {
+    opacity: 0;
+    filter: blur(14px) saturate(0.7);
+    transform: scale(0.985);
+    transition: opacity 700ms ease, filter 700ms ease, transform 700ms ease;
+}
+
+body.musa-world-entry-salida .container,
+body.musa-world-entry-salida #contenedor {
+    opacity: 1;
+    filter: blur(0) saturate(1);
+    transform: scale(1);
+}
+
+@media (max-width: 640px) {
+    .musa-world-entry__panel {
+        padding: 1rem;
+    }
+}
+
+.musa-world-entry {
+    --world-entry-accent: #54f0ff;
+    --world-entry-progress: 0%;
+    --world-entry-world-progress: 0%;
+    background:
+        radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--world-entry-accent), transparent 74%), transparent 44%),
+        radial-gradient(circle at 50% 110%, rgba(255, 255, 255, 0.08), transparent 42%),
+        linear-gradient(180deg, rgba(2, 6, 12, 0.92), rgba(2, 2, 4, 0.98));
+}
+
+.musa-world-entry.is-visible {
+    pointer-events: auto;
+}
+
+.musa-world-entry.musa-world-entry--blackout {
+    opacity: 1;
+    background: #000;
+    transition: opacity 980ms ease;
+}
+
+.musa-world-entry.musa-world-entry--blackout::before,
+.musa-world-entry.musa-world-entry--blackout::after {
+    opacity: 0;
+    animation: none;
+    transition: opacity 180ms ease;
+}
+
+.musa-world-entry.musa-world-entry--blackout .musa-world-entry__panel {
+    opacity: 0;
+    transform: scale(1.02);
+    transition: opacity 180ms ease, transform 180ms ease;
+    pointer-events: none;
+}
+
+.musa-world-entry.musa-world-entry--blackout.musa-world-entry--reveal-game {
+    opacity: 0;
+}
+
+.musa-world-entry::after {
+    background:
+        linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--world-entry-accent), transparent 88%) 50%, transparent 100%);
+    transform: translateX(-100%);
+    animation: musaWorldEntrySweep 2200ms cubic-bezier(0.2, 0.75, 0.2, 1) infinite;
+    opacity: 0.48;
+}
+
+.musa-world-entry--rojo {
+    --world-entry-accent: #ff6262;
+}
+
+.musa-world-entry__panel {
+    width: min(100%, 880px);
+    border: 1px solid color-mix(in srgb, var(--world-entry-accent), transparent 44%);
+    background:
+        linear-gradient(145deg, rgba(5, 12, 22, 0.9), rgba(5, 7, 14, 0.92)),
+        radial-gradient(circle at top, color-mix(in srgb, var(--world-entry-accent), transparent 84%), transparent 55%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 0 2.6rem color-mix(in srgb, var(--world-entry-accent), transparent 78%);
+    overflow: hidden;
+}
+
+.musa-world-entry__panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.08) 48%, transparent 100%);
+    transform: translateX(-120%);
+    animation: musaWorldEntryGlass 1900ms ease-in-out infinite;
+    pointer-events: none;
+}
+
+.musa-world-entry__eyebrow {
+    position: relative;
+    z-index: 1;
+    color: color-mix(in srgb, var(--world-entry-accent), white 18%);
+}
+
+.musa-world-entry__title {
+    position: relative;
+    z-index: 1;
+    text-shadow:
+        -0.06em 0 color-mix(in srgb, var(--world-entry-accent), transparent 30%),
+        0 0 1.2rem color-mix(in srgb, var(--world-entry-accent), transparent 62%);
+}
+
+.musa-world-entry__copy {
+    position: relative;
+    z-index: 1;
+}
+
+.musa-world-entry__world {
+    position: relative;
+    min-height: clamp(150px, 28vw, 240px);
+    border-radius: 20px;
+    border: 1px solid color-mix(in srgb, var(--world-entry-accent), transparent 58%);
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.18));
+    box-shadow:
+        inset 0 0 28px rgba(0, 0, 0, 0.38),
+        0 0 1.25rem color-mix(in srgb, var(--world-entry-accent), transparent 84%);
+}
+
+.musa-world-entry__world-base,
+.musa-world-entry__world-fill,
+.musa-world-entry__world-grid,
+.musa-world-entry__world-orb,
+.musa-world-entry__world-pixels {
+    position: absolute;
+    inset: 0;
+}
+
+.musa-world-entry__world-base {
+    background:
+        linear-gradient(180deg, rgba(4, 9, 16, 0.96) 0%, rgba(6, 12, 20, 0.88) 60%, rgba(3, 5, 8, 0.98) 100%);
+}
+
+.musa-world-entry__world-fill {
+    width: var(--world-entry-world-progress);
+    background:
+        radial-gradient(circle at 50% 24%, color-mix(in srgb, var(--world-entry-accent), white 12%) 0%, transparent 34%),
+        linear-gradient(180deg, color-mix(in srgb, var(--world-entry-accent), black 68%) 0%, color-mix(in srgb, var(--world-entry-accent), black 22%) 62%, rgba(5, 5, 8, 0.98) 100%);
+    box-shadow: 0 0 2rem color-mix(in srgb, var(--world-entry-accent), transparent 76%);
+    transition: width 120ms linear;
+}
+
+.musa-world-entry__world-grid {
+    background:
+        linear-gradient(transparent 0 64%, rgba(255, 255, 255, 0.08) 64% 65%, transparent 65% 100%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 44px),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 28px);
+    opacity: 0.48;
+    transform: perspective(460px) rotateX(68deg) scale(1.35) translateY(28%);
+    transform-origin: center bottom;
+}
+
+.musa-world-entry__world-orb {
+    inset: auto;
+    width: clamp(74px, 12vw, 116px);
+    height: clamp(74px, 12vw, 116px);
+    left: 50%;
+    top: 28%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.7), color-mix(in srgb, var(--world-entry-accent), white 4%) 32%, color-mix(in srgb, var(--world-entry-accent), black 8%) 68%, transparent 100%);
+    box-shadow:
+        0 0 1.4rem color-mix(in srgb, var(--world-entry-accent), transparent 52%),
+        0 0 3.2rem color-mix(in srgb, var(--world-entry-accent), transparent 78%);
+    animation: musaWorldEntryOrb 1400ms ease-in-out infinite alternate;
+}
+
+.musa-world-entry__world-pixels {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-content: start;
+    gap: clamp(10px, 1vw, 12px);
+    padding: clamp(14px, 2.2vw, 18px);
+    pointer-events: none;
+}
+
+.musa-world-entry__world-pixels span {
+    width: clamp(10px, 1.2vw, 14px);
+    height: clamp(10px, 1.2vw, 14px);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--world-entry-accent), transparent 42%);
+    box-shadow: 0 0 0.7rem color-mix(in srgb, var(--world-entry-accent), transparent 60%);
+    opacity: 0.1;
+    transform: scale(0.4);
+    transition: opacity 140ms linear, transform 140ms linear;
+}
+
+.musa-world-entry__world-pixels span.is-on {
+    opacity: 0.95;
+    transform: scale(1);
+}
+
+.musa-world-entry__status-row {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    font-size: clamp(0.7rem, 1.6vw, 0.9rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(240, 247, 255, 0.84);
+}
+
+.musa-world-entry__status-text {
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.musa-world-entry__status-percent {
+    color: color-mix(in srgb, var(--world-entry-accent), white 15%);
+    justify-self: end;
+    align-self: center;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.musa-world-entry__bar-fill {
+    width: var(--world-entry-progress);
+    transition: width 120ms linear;
+    box-shadow:
+        0 0 1rem color-mix(in srgb, var(--world-entry-accent), transparent 40%),
+        inset 0 0 0.45rem rgba(255, 255, 255, 0.4);
+}
+
+.musa-world-entry.is-visible .musa-world-entry__bar-fill {
+    width: var(--world-entry-progress);
+    transition: width 120ms linear;
+}
+
+.musa-world-entry.is-visible::after {
+    opacity: 0.48;
+    animation: musaWorldEntrySweep 2200ms cubic-bezier(0.2, 0.75, 0.2, 1) infinite;
+}
+
+.musa-world-entry__logs {
+    position: relative;
+    z-index: 1;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.musa-world-entry__logs li {
+    position: relative;
+    padding-left: 1.6rem;
+    font-size: clamp(0.72rem, 1.7vw, 0.92rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(215, 230, 242, 0.42);
+    transition: color 160ms ease, transform 160ms ease;
+}
+
+.musa-world-entry__logs li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.34rem;
+    width: 0.74rem;
+    height: 0.74rem;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0 0 transparent;
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.musa-world-entry__logs li.is-active {
+    color: #f9fcff;
+    transform: translateX(4px);
+}
+
+.musa-world-entry__logs li.is-active::before {
+    border-color: color-mix(in srgb, var(--world-entry-accent), transparent 10%);
+    background: color-mix(in srgb, var(--world-entry-accent), white 14%);
+    box-shadow: 0 0 0.8rem color-mix(in srgb, var(--world-entry-accent), transparent 38%);
+    animation: musaWorldEntryPing 620ms ease-in-out infinite;
+}
+
+.musa-world-entry__logs li.is-done {
+    color: rgba(233, 247, 255, 0.88);
+}
+
+.musa-world-entry__logs li.is-done::before {
+    border-color: color-mix(in srgb, var(--world-entry-accent), transparent 8%);
+    background: color-mix(in srgb, var(--world-entry-accent), white 8%);
+    box-shadow: 0 0 0.9rem color-mix(in srgb, var(--world-entry-accent), transparent 44%);
+}
+
+@keyframes musaWorldEntrySweep {
+    0% {
+        transform: translateX(-120%);
+    }
+    100% {
+        transform: translateX(120%);
+    }
+}
+
+@keyframes musaWorldEntryGlass {
+    0% {
+        transform: translateX(-120%);
+    }
+    55%,
+    100% {
+        transform: translateX(120%);
+    }
+}
+
+@keyframes musaWorldEntryPing {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.18);
+    }
+}
+
+@keyframes musaWorldEntryOrb {
+    0% {
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+    100% {
+        transform: translateX(-50%) translateY(-10px) scale(1.06);
+    }
+}
+
+@media (max-width: 780px) {
+    .musa-world-entry__panel {
+        padding: 1rem;
+        border-radius: 18px;
+    }
+
+    .musa-world-entry__world {
+        min-height: 140px;
+    }
+
+    .musa-world-entry__world-grid {
+        transform: perspective(360px) rotateX(70deg) scale(1.55) translateY(34%);
+    }
+
+    .musa-world-entry__logs li {
+        padding-left: 1.35rem;
+        line-height: 1.35;
+    }
+}
+
 body.musa-borde-fulgor::before {
     content: "";
     position: fixed;

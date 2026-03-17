@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRIB | Demo de repentizados</title>
+    <link rel="stylesheet" href="./repentizados-demo.css">
+</head>
+<body>
+    <main class="page">
+        <section class="hero">
+            <p class="hero__eyebrow">SCRIB / DEMO DE LABORATORIO</p>
+            <h1>Pipeline hibrido de repentizados</h1>
+            <p class="hero__lead">
+                Esta demo prueba una arquitectura por capas para detectar personajes en texto dramaturgico o narrativo,
+                consolidarlos, leer la presion dramatica de la escena y proponer repentizados robustos. Todo ocurre
+                en esta pagina para poder inspeccionar cada paso antes de tocar el juego.
+            </p>
+        </section>
+
+        <section class="layout">
+            <div class="column">
+                <section class="panel">
+                    <header class="panel__header">
+                        <div>
+                            <h2 class="panel__title">Entrada</h2>
+                            <div class="panel__meta">Texto de prueba + boton de ejecucion</div>
+                        </div>
+                    </header>
+                    <div class="panel__body controls">
+                        <div class="sample-row">
+                            <button type="button" data-sample="teatral">Cargar muestra teatral</button>
+                            <button type="button" data-sample="narrativa">Cargar muestra narrativa</button>
+                            <button type="button" data-sample="mixta">Cargar muestra mixta</button>
+                        </div>
+                        <textarea id="input_text" spellcheck="false"></textarea>
+                        <div class="controls__actions">
+                            <button id="analyze_button" type="button">Analizar solo heuristicas</button>
+                            <button id="analyze_model_button" type="button" class="primary">Analizar con modelos locales</button>
+                            <button id="clear_button" type="button">Vaciar</button>
+                        </div>
+                        <p class="hint">
+                            La demo ense&ntilde;a estructura, deteccion local, resolucion de entidades, memoria de escena,
+                            capa de modelos locales y candidatos de repentizado con su criterio de validacion.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <header class="panel__header">
+                        <div>
+                            <h2 class="panel__title">Salida final</h2>
+                            <div class="panel__meta">Repentizado principal + lectura dramatica</div>
+                        </div>
+                    </header>
+                    <div class="panel__body hero-card">
+                        <p class="hero-card__kicker">Repentizado recomendado</p>
+                        <h3 id="final_repentizado" class="hero-card__main">Esperando analisis...</h3>
+                        <p id="final_reason" class="hero-card__reason">
+                            Carga un texto y ejecuta el pipeline para ver la propuesta principal.
+                        </p>
+                        <div class="score">
+                            <div class="score__track">
+                                <div id="final_score_fill" class="score__fill" style="width:0%"></div>
+                            </div>
+                            <div id="final_score_label" class="panel__meta">Confianza estimada: 0%</div>
+                        </div>
+                        <div class="split split--two" style="margin-top:16px;">
+                            <div class="mini-card">
+                                <h4>Texto insertable</h4>
+                                <p id="final_insertable" class="empty">-</p>
+                            </div>
+                            <div class="mini-card">
+                                <h4>Validacion prevista</h4>
+                                <p id="final_validation" class="empty">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="column">
+                <section class="panel">
+                    <header class="panel__header">
+                        <div>
+                            <h2 class="panel__title">Modelos locales</h2>
+                            <div class="panel__meta">Estado de carga, cache y ultima inferencia</div>
+                        </div>
+                    </header>
+                    <div class="panel__body grid-cards" id="model_runtime_cards">
+                        <div class="mini-card">
+                            <h4>Estado</h4>
+                            <p class="empty">Todavia no se ha pedido inferencia local.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <header class="panel__header">
+                        <div>
+                            <h2 class="panel__title">Slots dramaticos</h2>
+                            <div class="panel__meta">Personajes elegidos para P1 y P2</div>
+                        </div>
+                    </header>
+                    <div class="panel__body grid-cards" id="slot_cards">
+                        <div class="mini-card">
+                            <h4>P1</h4>
+                            <p class="empty">Sin asignar.</p>
+                        </div>
+                        <div class="mini-card">
+                            <h4>P2</h4>
+                            <p class="empty">Sin asignar.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <header class="panel__header">
+                        <div>
+                            <h2 class="panel__title">Resumen de escena</h2>
+                            <div class="panel__meta">Sintesis rapida del motor de memoria</div>
+                        </div>
+                    </header>
+                    <div class="panel__body grid-cards" id="scene_summary">
+                        <div class="mini-card">
+                            <h4>Estado</h4>
+                            <p class="empty">Todavia no hay lectura de escena.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <header class="panel__header">
+                        <div>
+                            <h2 class="panel__title">Candidatos</h2>
+                            <div class="panel__meta">Variantes de repentizado ordenadas por ajuste</div>
+                        </div>
+                    </header>
+                    <div class="panel__body candidate-list" id="candidate_list">
+                        <p class="empty">Aun no hay candidatos.</p>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section class="output-grid">
+            <details class="panel" open>
+                <summary>
+                    <div>
+                        <h2 class="panel__title">1. Normalizacion y estructura</h2>
+                        <div class="panel__meta">Texto plano, tipos de linea y marcas de dramaturgia</div>
+                    </div>
+                </summary>
+                <div class="panel__body">
+                    <div class="split split--two">
+                        <div>
+                            <span class="label">Texto normalizado</span>
+                            <pre id="normalized_text">-</pre>
+                        </div>
+                        <div>
+                            <span class="label">Resumen</span>
+                            <div id="structure_summary" class="chips"></div>
+                        </div>
+                    </div>
+                    <div class="stack-lg">
+                        <span class="label">Lineas detectadas</span>
+                        <div id="structure_lines" class="line-list">
+                            <p class="empty">Todavia no hay lineas analizadas.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details class="panel" open>
+                <summary>
+                    <div>
+                        <h2 class="panel__title">2. Deteccion local</h2>
+                        <div class="panel__meta">Heuristicas rapidas: nombres, roles, parlamentos y patrones</div>
+                    </div>
+                </summary>
+                <div class="panel__body table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Candidato</th>
+                                <th>Tipo</th>
+                                <th>Peso</th>
+                                <th>Menciones</th>
+                                <th>Evidencias</th>
+                            </tr>
+                        </thead>
+                        <tbody id="local_candidates_body">
+                            <tr><td colspan="5" class="empty">Sin resultados todavia.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+
+            <details class="panel" open>
+                <summary>
+                    <div>
+                        <h2 class="panel__title">3. Resolucion de entidades</h2>
+                        <div class="panel__meta">Fusion de aliases, confianza y actividad dramatica</div>
+                    </div>
+                </summary>
+                <div class="panel__body table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Entidad</th>
+                                <th>Clase</th>
+                                <th>Semantica</th>
+                                <th>Aliases</th>
+                                <th>Confianza</th>
+                                <th>Actividad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="entities_body">
+                            <tr><td colspan="6" class="empty">Sin entidades resueltas.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+
+            <details class="panel" open>
+                <summary>
+                    <div>
+                        <h2 class="panel__title">4. Senales dramaticas y memoria</h2>
+                        <div class="panel__meta">Deseos, ocultaciones, bloqueos, miedo, entradas y foco de escena</div>
+                    </div>
+                </summary>
+                <div class="panel__body">
+                    <div class="split split--two">
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Senal</th>
+                                        <th>Personajes</th>
+                                        <th>Intensidad</th>
+                                        <th>Fragmento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="signals_body">
+                                    <tr><td colspan="4" class="empty">Sin senales todavia.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <span class="label">Memoria de escena</span>
+                            <pre id="memory_output">-</pre>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details class="panel" open>
+                <summary>
+                    <div>
+                        <h2 class="panel__title">5. Capa de modelos locales</h2>
+                        <div class="panel__meta">Payload, salida cruda y fusion de NER + embeddings en navegador</div>
+                    </div>
+                </summary>
+                <div class="panel__body split split--two">
+                    <div>
+                        <span class="label">Payload hacia modelos</span>
+                        <pre id="model_input">-</pre>
+                    </div>
+                    <div>
+                        <span class="label">Salida consolidada</span>
+                        <pre id="model_output">-</pre>
+                    </div>
+                </div>
+            </details>
+
+            <details class="panel" open>
+                <summary>
+                    <div>
+                        <h2 class="panel__title">6. JSON completo</h2>
+                        <div class="panel__meta">Salida integral del pipeline para depurar y ajustar reglas</div>
+                    </div>
+                </summary>
+                <div class="panel__body">
+                    <pre id="debug_json">-</pre>
+                </div>
+            </details>
+        </section>
+
+        <p class="footer-note">
+            Nota: el modo con modelos locales ejecuta inferencia en el navegador. La primera vez puede tardar porque descarga
+            y cachea los pesos del NER y del modelo semantico en la maquina.
+        </p>
+    </main>
+    <script src="./repentizados-demo.js"></script>
+</body>
+</html>

@@ -61,6 +61,12 @@ body.page-spectator {
     background-size: cover;
     background-attachment: fixed;
     overflow: hidden;
+    --spectator-ui-scale: 1;
+    --spectator-name-scale: 1;
+    --spectator-time-scale: 1;
+    --spectator-meta-scale: 1;
+    --spectator-level-scale: 1;
+    --spectator-text-lines: 6;
 }
 
 /* Oscurecimiento game over en escritora */
@@ -488,6 +494,10 @@ body.page-players #metadatos[data-ganador]::after {
     font-size: 2.5vw;
 }
 
+body.page-spectator .tiempo {
+    font-size: calc(2.5vw * var(--spectator-time-scale, 1));
+}
+
 .tiempo-vida {
     --vida-pct: 0%;
     --vida-color: #41d860;
@@ -643,7 +653,7 @@ body.page-spectator #info_general.info-general-panel p[id^="explic"] {
     padding: 0 clamp(8px, 1vw, 16px);
     box-sizing: border-box;
     font-family: "Retro-gaming";
-    font-size: clamp(24px, 3.1vw, 64px);
+    font-size: clamp(24px, calc(3.1vw * var(--spectator-level-scale, 1)), 76px);
     line-height: 1.02;
     text-transform: uppercase;
     letter-spacing: clamp(0.06em, 0.17vw, 0.16em);
@@ -654,7 +664,7 @@ body.page-spectator #info_general.info-general-panel p[id^="explic"] {
 }
 
 body.page-spectator #info_general.info-general-panel #explicacion {
-    font-size: clamp(15px, 1.1vw, 26px);
+    font-size: clamp(15px, calc(1.1vw * var(--spectator-level-scale, 1)), 32px);
     line-height: 1.14;
     letter-spacing: clamp(0.03em, 0.06vw, 0.07em);
     opacity: 0.95;
@@ -2953,6 +2963,13 @@ button:hover {
       max-height: /*simultatin 6 rows*/ calc(1.5em * 6);
       }
 
+body.page-spectator .textarea1 {
+      font-size: calc(2vw * var(--spectator-ui-scale, 1));
+      height: calc(1.5em * var(--spectator-text-lines, 6));
+      min-height: calc(1.5em * var(--spectator-text-lines, 6));
+      max-height: calc(1.5em * var(--spectator-text-lines, 6));
+}
+
 body.page-spectator .jugador1 #texto,
 body.page-spectator .jugador2 #texto1 {
     border: none;
@@ -3059,6 +3076,10 @@ body.page-spectator .textarea-container .textarea-gradient {
     box-shadow: none !important;
     color: white
   }
+
+body.page-spectator .nombre {
+    font-size: calc(3vw * var(--spectator-name-scale, 1));
+}
 
 #nombre_musa {
     font-size: 5.5vw;
@@ -3548,6 +3569,10 @@ body.page-players #metadatos .meta-label {
     opacity: 0.95;
 }
 
+body.page-spectator .meta-label {
+    font-size: clamp(8px, calc(0.75vw * var(--spectator-meta-scale, 1)), 14px);
+}
+
 body.page-spectator .puntos,
 body.page-players #metadatos .puntos {
     color: var(--equipo-texto, #f4fbff);
@@ -3559,6 +3584,10 @@ body.page-players #metadatos .puntos {
     text-shadow:
       -0.05em 0 color-mix(in srgb, var(--equipo-color-2, #ff6b6b), transparent 18%),
       0 0 0.45em color-mix(in srgb, var(--equipo-color, #46f0ff), transparent 52%);
+}
+
+body.page-spectator .puntos {
+    font-size: clamp(13px, calc(1.55vw * var(--spectator-meta-scale, 1)), 28px);
 }
 
 body.page-spectator .musas-total,
@@ -3576,6 +3605,10 @@ body.page-players #metadatos .musas-total {
     text-shadow:
       -0.05em 0 color-mix(in srgb, var(--equipo-color-2, #ff6b6b), transparent 22%),
       0 0 0.45em color-mix(in srgb, var(--equipo-color, #46f0ff), transparent 52%);
+}
+
+body.page-spectator .musas-total {
+    font-size: clamp(13px, calc(1.6vw * var(--spectator-meta-scale, 1)), 28px);
 }
 
 body.page-spectator .marcador-chip--puntos .meta-icon,
@@ -4758,6 +4791,10 @@ body.vista-calentamiento .calentamiento-espectador {
   will-change: transform, opacity, filter;
 }
 
+body.page-spectator .calentamiento-palabra {
+  font-size: clamp(15px, calc(2.2vw * var(--spectator-ui-scale, 1)), 42px);
+}
+
 .calentamiento-palabra.equipo-1 {
   --calentamiento-highlight-color: rgba(110, 244, 255, 0.95);
   --calentamiento-highlight-soft: rgba(110, 244, 255, 0.48);
@@ -5095,6 +5132,15 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   max-width: min(46vw, 380px);
 }
 
+body.page-spectator .cursor-punto {
+  width: calc(44px * var(--spectator-ui-scale, 1));
+  height: calc(44px * var(--spectator-ui-scale, 1));
+}
+
+body.page-spectator .cursor-label {
+  font-size: clamp(11px, calc(0.78vw * var(--spectator-meta-scale, 1)), 16px);
+}
+
 .calentamiento-cursor.equipo-1 .cursor-label {
   color: #6ef4ff;
   border-color: rgba(110, 244, 255, 0.75);
@@ -5120,6 +5166,10 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   pointer-events: none;
 }
 
+body.page-spectator .calentamiento-overlay-ui {
+  width: min(90vw, calc(900px * var(--spectator-level-scale, 1)));
+}
+
 .calentamiento-overlay-ui .calentamiento-titulo {
   margin: 0;
   font-size: clamp(24px, 3vw, 50px);
@@ -5140,10 +5190,18 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   animation: calentamientoTituloGlow 2.8s ease-in-out infinite alternate;
 }
 
+body.page-spectator .calentamiento-overlay-ui .calentamiento-titulo {
+  font-size: clamp(24px, calc(3vw * var(--spectator-level-scale, 1)), 62px);
+}
+
 .calentamiento-overlay-ui .calentamiento-global-estado {
   margin: 0.55rem 0 0;
   font-size: clamp(12px, 1.15vw, 18px);
   color: rgba(255, 255, 255, 0.82);
+}
+
+body.page-spectator .calentamiento-overlay-ui .calentamiento-global-estado {
+  font-size: clamp(12px, calc(1.15vw * var(--spectator-level-scale, 1)), 22px);
 }
 
 .calentamiento-consigna-chip {
@@ -5162,6 +5220,11 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 0 0.5em rgba(255, 255, 255, 0.3);
+}
+
+body.page-spectator .calentamiento-consigna-chip {
+  max-width: min(92vw, calc(520px * var(--spectator-level-scale, 1)));
+  font-size: clamp(10px, calc(1.02vw * var(--spectator-meta-scale, 1)), 18px);
 }
 
 .calentamiento-consigna-chip.tipo-libre {
@@ -5243,12 +5306,20 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   text-transform: uppercase;
 }
 
+body.page-spectator .detonador-historial-caso {
+  font-size: clamp(9px, calc(0.86vw * var(--spectator-meta-scale, 1)), 14px);
+}
+
 .detonador-historial-label {
   font-family: "Retro-gaming", monospace;
   font-size: clamp(10px, 1.02vw, 14px);
   letter-spacing: 0.08em;
   color: rgba(243, 248, 255, 0.94);
   text-transform: uppercase;
+}
+
+body.page-spectator .detonador-historial-label {
+  font-size: clamp(10px, calc(1.02vw * var(--spectator-meta-scale, 1)), 16px);
 }
 
 .detonador-historial-item.is-empty .detonador-historial-label {
@@ -5391,6 +5462,10 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   color: rgba(255, 255, 255, 0.76);
 }
 
+body.page-spectator .calentamiento-final-card .final-label {
+  font-size: clamp(9px, calc(0.82vw * var(--spectator-meta-scale, 1)), 15px);
+}
+
 .calentamiento-final-card .final-word {
   display: block;
   width: 100%;
@@ -5405,6 +5480,10 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   overflow-wrap: anywhere;
   word-break: break-word;
   text-align: center;
+}
+
+body.page-spectator .calentamiento-final-card .final-word {
+  font-size: clamp(11px, calc(1.08vw * var(--spectator-level-scale, 1)), 20px);
 }
 
 .calentamiento-final-card.equipo-1 {

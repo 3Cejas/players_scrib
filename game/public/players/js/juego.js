@@ -23,6 +23,51 @@ let agitado_prev_ay = null;
 let agitado_prev_az = null;
 let agitado_aviso_timeout = null;
 let bandera_bloqueada_por_control = false;
+const tJuego2P = (clave, variables = {}, fallback = "") => (
+  (window && typeof window.scribT2P === "function")
+    ? window.scribT2P(clave, variables, fallback)
+    : (fallback || clave)
+);
+
+function refrescarTextosAccionesMusa() {
+  const botonTexto = document.getElementById("mostrar_texto");
+  if (botonTexto) {
+    const activo = String(botonTexto.value) === "1" || botonTexto.dataset.estado === "ON";
+    botonTexto.innerHTML = activo
+      ? tJuego2P("ui.hide_text", {}, "OCULTAR TEXTO")
+      : tJuego2P("ui.text_complete", {}, "👀 TEXTO COMPLETO");
+  }
+  const botonVolver = document.getElementById("btn_volver");
+  if (botonVolver) {
+    botonVolver.innerHTML = tJuego2P("ui.back", {}, "⬅️ VOLVER");
+  }
+  const botonBandera = document.getElementById("btn_bandera");
+  if (botonBandera) {
+    botonBandera.innerHTML = tJuego2P("ui.flag", {}, "🏳️‍🌈 BANDERA");
+  }
+  const overlayMensaje = document.querySelector("#overlay > p");
+  if (overlayMensaje) {
+    overlayMensaje.textContent = tJuego2P("ui.wave_flag", {}, "¡MUSA, AGITA TU BANDERA!");
+  }
+  const regaloBtn = document.getElementById("regalo_btn");
+  if (regaloBtn) {
+    regaloBtn.setAttribute("aria-label", tJuego2P("ui.download_gift_aria", {}, "Descargar regalo"));
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    refrescarTextosAccionesMusa();
+  }, { once: true });
+} else {
+  refrescarTextosAccionesMusa();
+}
+
+if (window && typeof window.scribOnLanguageChange2P === "function") {
+  window.scribOnLanguageChange2P(() => {
+    refrescarTextosAccionesMusa();
+  });
+}
 
 const AGITADO_THRESHOLD_X = 7;
 const AGITADO_CAMBIO_MS = 600;
@@ -307,7 +352,7 @@ function enviarPalabra(button) {
     const letraObjetivo = normalizarTextoParaCompararLetra(letra);
     const contieneLetraObjetivo = Boolean(letraObjetivo) && inspiracionNormalizada.includes(letraObjetivo);
     if (/\s/.test(inspiracionTexto)) {
-      recordatorio.innerHTML = "<span style='color: red;'>No se permiten espacios en la inspiracion.</span>";
+      recordatorio.innerHTML = `<span style='color: red;'>${tJuego2P("warmup.feedback.no_spaces", {}, "No se permiten espacios en la inspiracion.")}</span>`;
       animateCSS(".recordatorio", "flash").then(() => {
         delay_animacion_recordatorio = setTimeout(function () {
           recordatorio.innerHTML = "";
@@ -327,14 +372,14 @@ function enviarPalabra(button) {
         nombre: window.nombre_musa || ""
       });
       palabra.value = "";
-      recordatorio.innerHTML = "<span style='color: green;'>Has mandado una inspiracion.</span>";
+      recordatorio.innerHTML = `<span style='color: green;'>${tJuego2P("warmup.feedback.word_sent", {}, "Has mandado una inspiracion.")}</span>`;
       animateCSS(".recordatorio", "flash").then(() => {
         delay_animacion_recordatorio = setTimeout(function () {
           recordatorio.innerHTML = "";
         }, 1200);
       });
     } else {
-      recordatorio.innerHTML = "<span style='color: red;'>Recuerda que la palabra debe serle util.</span>";
+      recordatorio.innerHTML = `<span style='color: red;'>${tJuego2P("warmup.feedback.useful_word", {}, "Recuerda que la palabra debe serle util.")}</span>`;
       animateCSS(".recordatorio", "flash").then(() => {
         delay_animacion_recordatorio = setTimeout(function () {
           recordatorio.innerHTML = "";
@@ -363,6 +408,7 @@ function mostrarTextoCompleto(boton) {
 
     actualizarEstadoTextoCompleto(boton, true);
     boton.value = 1;
+    refrescarTextosAccionesMusa();
     mostrar_texto.scrollIntoView({ behavior: "smooth", block: "start" });
   } 
   else if (!editando == true) {
@@ -372,6 +418,7 @@ function mostrarTextoCompleto(boton) {
 
     actualizarEstadoTextoCompleto(boton, false);
     boton.value = 0;
+    refrescarTextosAccionesMusa();
   }
 }
 
@@ -520,7 +567,7 @@ function elegir_repentizado_publico(boton) {
   console.log("Elegido repentizado: " + boton.value);
   voto = boton.value;
   socket.emit('enviar_voto_repentizado', voto);
-  recordatorio.innerHTML = "<span style='color: green;'>Se harÃ¡ tu destino, <span style='color: orange;'>Musa</span>.</span>";
+  recordatorio.innerHTML = `<span style='color: green;'>${tJuego2P("warmup.feedback.destiny", {}, "Se hara tu destino, Musa.")}</span>`;
   votando = false;
   sincro = 0;
   socket.emit('pedir_nombre');
@@ -551,7 +598,7 @@ function onMouseLeave() {
 
 function startProgress(button) {
   cooldown = true;
-  text_progress.textContent = "Inspirando...";
+  text_progress.textContent = tJuego2P("warmup.inspiring", {}, "Inspirando...");
   text_progress.style.color = "var(--musa-progress-loading-text-color, #f7fbff)";
   text_progress.addEventListener('mouseenter', onMouseEnter);
   text_progress.addEventListener('mouseleave', onMouseLeave);

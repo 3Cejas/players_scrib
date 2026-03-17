@@ -932,11 +932,13 @@ body.page-players .textarea.textarea--pluma-cursor.textarea--pluma-cursor-visibl
 
 .opciones-idioma {
   margin: 1.2vw auto 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.8vw;
   flex-wrap: wrap;
+  padding: 0.12em 0;
+  position: relative;
 }
 
 .opciones-idioma-label {
@@ -946,24 +948,142 @@ body.page-players .textarea.textarea--pluma-cursor.textarea--pluma-cursor-visibl
 }
 
 .opciones-idioma-select {
-  font-family: "Retro-gaming";
-  font-size: 1vw;
-  color: #e8f7ff;
-  padding: 0.45em 0.8em;
-  border-radius: 0.45em;
-  border: 0.12em solid rgba(127, 242, 255, 0.75);
-  background:
-    linear-gradient(135deg, rgba(8, 27, 46, 0.96), rgba(36, 12, 31, 0.9));
-  box-shadow:
-    0 0 0.65em rgba(127, 242, 255, 0.24),
-    inset 0 0 0.4em rgba(255, 255, 255, 0.12);
-  outline: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  pointer-events: none;
 }
 
-.opciones-idioma-select:focus {
+.opciones-idioma-ui {
+  position: relative;
+  min-width: clamp(9.8rem, 15vw, 12.4rem);
+}
+
+.opciones-idioma-button,
+.opciones-idioma-option {
+  width: 100%;
+  border: 0;
+  cursor: inherit;
+  color: #eefcff;
+  font-family: "VT323";
+  letter-spacing: 0.04em;
+  text-shadow: 0.05em 0.05em rgba(160, 32, 32, 0.82);
+}
+
+.opciones-idioma-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.8rem;
+  padding: 0.42rem 2.05rem 0.36rem 0.88rem;
+  border-radius: 0.56rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+    linear-gradient(120deg, rgba(34, 37, 50, 0.94), rgba(63, 20, 36, 0.9));
   box-shadow:
-    0 0 0.72em rgba(127, 242, 255, 0.45),
-    inset 0 0 0.45em rgba(255, 255, 255, 0.18);
+    0 0.22rem rgba(255, 0, 0, 0.78),
+    inset 0 0 0 1px rgba(118, 236, 255, 0.16),
+    inset 0 0 1rem rgba(255, 255, 255, 0.03);
+  font-size: clamp(1.6rem, 2.05vw, 2rem);
+  transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
+}
+
+.opciones-idioma-button:hover,
+.opciones-idioma.is-open .opciones-idioma-button {
+  filter: brightness(1.06);
+}
+
+.opciones-idioma-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 0.15rem rgba(69, 243, 255, 0.22),
+    0 0.22rem rgba(255, 0, 0, 0.78),
+    inset 0 0 0 1px rgba(135, 245, 255, 0.32),
+    inset 0 0 1rem rgba(255, 255, 255, 0.04);
+}
+
+.opciones-idioma-button::after {
+  content: "";
+  position: absolute;
+  right: 0.88rem;
+  top: 50%;
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: -0.34rem;
+  border-right: 0.18rem solid rgba(223, 251, 255, 0.94);
+  border-bottom: 0.18rem solid rgba(223, 251, 255, 0.94);
+  transform: rotate(45deg);
+  filter: drop-shadow(0 0 0.25rem rgba(69, 243, 255, 0.35));
+  transition: transform 120ms ease, margin-top 120ms ease;
+}
+
+.opciones-idioma.is-open .opciones-idioma-button::after {
+  margin-top: -0.08rem;
+  transform: rotate(225deg);
+}
+
+.opciones-idioma-current {
+  display: block;
+  white-space: nowrap;
+}
+
+.opciones-idioma-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.48rem);
+  display: none;
+  gap: 0.32rem;
+  padding: 0.38rem;
+  border-radius: 0.7rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.22)),
+    linear-gradient(120deg, rgba(14, 18, 31, 0.97), rgba(45, 12, 29, 0.96));
+  box-shadow:
+    0 0.2rem rgba(255, 0, 0, 0.74),
+    0 0 1rem rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(118, 236, 255, 0.16);
+  z-index: 50;
+}
+
+.opciones-idioma.is-open .opciones-idioma-list {
+  display: grid;
+}
+
+.opciones-idioma-option {
+  display: block;
+  padding: 0.28rem 0.72rem 0.25rem;
+  border-radius: 0.48rem;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: clamp(1.35rem, 1.78vw, 1.7rem);
+  letter-spacing: 0.02em;
+  text-align: left;
+  transition: background-color 100ms ease, color 100ms ease, transform 100ms ease;
+}
+
+.opciones-idioma-option:hover,
+.opciones-idioma-option:focus-visible {
+  outline: none;
+  background: rgba(69, 243, 255, 0.14);
+  color: #ffffff;
+}
+
+.opciones-idioma-option.is-selected {
+  background: rgba(69, 243, 255, 0.11);
+  color: #b6f9ff;
+}
+
+.opciones-idioma-option:active {
+  transform: translateY(1px);
 }
 
 .opciones_table{
@@ -2002,10 +2122,17 @@ input[type="number"] {
   font-size: 7vw;
 }
 
-.opciones-idioma-select {
+.opciones-idioma-ui {
+  min-width: min(58vw, 320px);
+}
+
+.opciones-idioma-button {
   font-size: 6.2vw;
-  padding: 0.4em 0.65em;
-  border-width: 0.08em;
+  padding: 0.4em 2.1em 0.34em 0.72em;
+}
+
+.opciones-idioma-option {
+  font-size: 5.4vw;
 }
   }
 
@@ -2019,7 +2146,8 @@ body.page-players #players_fit_root {
   position: fixed;
   inset: 0 auto auto 0;
   width: 100vw;
-  min-height: 100vh;
+  height: auto;
+  min-height: 100dvh;
   transform-origin: top left;
   will-change: transform;
   z-index: 0;
@@ -2027,9 +2155,15 @@ body.page-players #players_fit_root {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  padding: clamp(8px, 1vh, 16px) clamp(10px, 1.2vw, 20px);
+  padding: clamp(8px, 1vh, 16px) clamp(10px, 1.2vw, 20px) clamp(54px, 7vh, 104px);
   box-sizing: border-box;
   gap: clamp(4px, 0.8vh, 12px);
+  overflow: visible;
+}
+
+body.page-players.ui-dashboard-only #players_fit_root,
+body.page-players.modo-opciones #players_fit_root {
+  overflow-y: auto;
 }
 
 body.page-players #players_fit_root > br,
@@ -2097,7 +2231,23 @@ body.page-players #btn_final { --btn-color: #ffcf7a; }
 body.page-players #btn_pantalla_completa { --btn-color: #9dc7ff; }
 body.page-players #btn_descargar_texto { --btn-color: #d5b9ff; }
 body.page-players #btn_opciones { --btn-color: #7ff2ff; }
-body.page-players #btn_volver { --btn-color: #ffd79a; }
+body.page-players #btn_volver {
+  --btn-color: #ffd79a;
+  position: relative;
+}
+
+body.page-players #btn_volver::before {
+  content: "←";
+  position: absolute;
+  left: clamp(14px, 1.35vw, 24px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95em;
+  line-height: 1;
+  color: inherit;
+  text-shadow: inherit;
+  pointer-events: none;
+}
 
 body.page-players.ui-dashboard-only #contenedor,
 body.page-players.ui-dashboard-only #temas,
@@ -2145,6 +2295,46 @@ body.page-players.ui-dashboard-only .botones {
   gap: clamp(10px, 1.5vh, 18px) clamp(10px, 1.5vw, 18px);
   margin-top: clamp(6px, 1vh, 14px);
   margin-bottom: 0;
+}
+
+body.page-players.modo-opciones .botones {
+  margin-bottom: clamp(18px, 3.2vh, 36px);
+}
+
+body.page-players.modo-opciones #btn_volver {
+  width: min(100%, 540px);
+}
+
+body.page-players #btn_volver::before {
+  content: "\1F519";
+  left: clamp(18px, 1.7vw, 30px);
+  font-size: clamp(20px, 1.55vw, 28px);
+}
+
+body.page-players.modo-opciones .botones {
+  margin-bottom: clamp(42px, 6vh, 78px);
+}
+
+body.page-players.modo-opciones #btn_volver {
+  width: min(100%, 560px);
+  padding-left: clamp(54px, 4.2vw, 84px);
+  padding-right: clamp(20px, 1.8vw, 34px);
+  padding-top: clamp(14px, 1.8vh, 20px);
+  padding-bottom: clamp(6px, 0.75vh, 10px);
+  line-height: 1.18;
+}
+
+body.page-players.modo-opciones #opciones {
+  padding-top: clamp(14px, 2.2vh, 28px);
+}
+
+body.page-players #btn_volver::before {
+  content: none !important;
+}
+
+body.page-players.modo-opciones #btn_volver {
+  padding: clamp(10px, 1.2vh, 16px) clamp(12px, 1.6vw, 22px);
+  line-height: 1.05;
 }
 
 body.page-players.ui-dashboard-only .botones .btn {
@@ -2202,6 +2392,66 @@ body.page-players #contenedor {
   display: flex;
 }
 
+body.page-players #opciones {
+  width: min(1120px, 96vw);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: clamp(8px, 1vh, 14px) 0 0;
+  box-sizing: border-box;
+}
+
+body.page-players .opciones_table {
+  width: min(1120px, 96vw);
+  max-width: 100%;
+  margin: 0 auto;
+  table-layout: fixed;
+}
+
+body.page-players .opciones_table td {
+  vertical-align: top;
+}
+
+body.page-players .opciones-idioma {
+  margin-top: clamp(14px, 2vh, 24px);
+  gap: clamp(10px, 1.1vw, 16px);
+}
+
+body.page-players .opciones-idioma-ui {
+  min-width: clamp(180px, 16vw, 260px);
+  max-width: min(88vw, 320px);
+  width: 100%;
+}
+
+body.page-players .opciones-idioma-button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+body.page-players .listaModosForm {
+  width: min(1200px, 96vw);
+  max-width: 100%;
+  margin: clamp(12px, 2vh, 24px) auto 0;
+}
+
+body.page-players .soporte {
+  width: min(1100px, 94vw);
+  max-width: 100%;
+  margin: clamp(14px, 2vh, 24px) auto calc(max(env(safe-area-inset-bottom), 0px) + clamp(18px, 3vh, 32px));
+  padding: 0 clamp(8px, 1.2vw, 16px);
+  box-sizing: border-box;
+}
+
+body.page-players .soporte p {
+  margin: 0;
+  font-size: clamp(14px, 1.65vw, 31px);
+  line-height: 1.28;
+  overflow-wrap: anywhere;
+}
+
+body.page-players .soporte a {
+  font-size: inherit;
+}
+
 body.page-players #contenedor .jugador {
   width: 100%;
   margin: 0;
@@ -2230,6 +2480,79 @@ body.page-players .textarea {
 
 body.page-players .textarea::-webkit-scrollbar {
   width: 0;
+}
+
+body.page-players .textarea.textarea-fade-none {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+body.page-players .textarea.textarea-fade-top {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.86) clamp(14px, 2.4vw, 28px),
+    rgba(0, 0, 0, 1) clamp(22px, 3.8vw, 44px),
+    rgba(0, 0, 0, 1) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.86) clamp(14px, 2.4vw, 28px),
+    rgba(0, 0, 0, 1) clamp(22px, 3.8vw, 44px),
+    rgba(0, 0, 0, 1) 100%
+  );
+}
+
+body.page-players .textarea.textarea-fade-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) calc(100% - clamp(22px, 3.8vw, 44px)),
+    rgba(0, 0, 0, 0.86) calc(100% - clamp(14px, 2.4vw, 28px)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) calc(100% - clamp(22px, 3.8vw, 44px)),
+    rgba(0, 0, 0, 0.86) calc(100% - clamp(14px, 2.4vw, 28px)),
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+body.page-players .textarea.textarea-fade-both {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.86) clamp(14px, 2.4vw, 28px),
+    rgba(0, 0, 0, 1) clamp(22px, 3.8vw, 44px),
+    rgba(0, 0, 0, 1) calc(100% - clamp(22px, 3.8vw, 44px)),
+    rgba(0, 0, 0, 0.86) calc(100% - clamp(14px, 2.4vw, 28px)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.86) clamp(14px, 2.4vw, 28px),
+    rgba(0, 0, 0, 1) clamp(22px, 3.8vw, 44px),
+    rgba(0, 0, 0, 1) calc(100% - clamp(22px, 3.8vw, 44px)),
+    rgba(0, 0, 0, 0.86) calc(100% - clamp(14px, 2.4vw, 28px)),
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+body.page-players .textarea.textarea-fade-top,
+body.page-players .textarea.textarea-fade-bottom,
+body.page-players .textarea.textarea-fade-both {
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+body.page-players .textarea-container .textarea-gradient {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 body.page-players #definicion:empty {

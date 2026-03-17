@@ -111,6 +111,7 @@ const I18N_TEXTS_1P = {
         "mode.goal.final_phrase": "⬆️ ¡Introduce la frase final para ganar! ⬆️",
         "time.secs": "{sign}{value} segs.",
         "thanks.playing": "¡GRACIAS POR JUGAR!",
+        "countdown.ready": "¿PREPARADOS?",
         "countdown.write": "¡ESCRIBE!"
     },
     en: {
@@ -172,6 +173,7 @@ const I18N_TEXTS_1P = {
         "mode.goal.final_phrase": "⬆️ Type the final sentence to win! ⬆️",
         "time.secs": "{sign}{value} secs.",
         "thanks.playing": "THANKS FOR PLAYING!",
+        "countdown.ready": "READY?",
         "countdown.write": "WRITE!"
     },
     fr: {
@@ -233,6 +235,7 @@ const I18N_TEXTS_1P = {
         "mode.goal.final_phrase": "⬆️ Écris la phrase finale pour gagner ! ⬆️",
         "time.secs": "{sign}{value} s",
         "thanks.playing": "MERCI D'AVOIR JOUÉ !",
+        "countdown.ready": "PRÊTS ?",
         "countdown.write": "ÉCRIS !"
     }
 };
@@ -365,6 +368,9 @@ function aplicarIdiomaDOMJuego1P() {
         selectorIdioma.value = idioma_juego_1p;
         selectorIdioma.setAttribute("aria-label", tJuego1P("options.language_aria"));
     }
+    if (window && typeof window.scrib1pRefreshLanguageSelectorUI === "function") {
+        window.scrib1pRefreshLanguageSelectorUI();
+    }
 }
 
 function actualizarTextosDinamicosI18n1P() {
@@ -373,6 +379,18 @@ function actualizarTextosDinamicosI18n1P() {
         actualizarPuntosMarcador(estadoPuntos, false);
     } else if (puntos) {
         puntos.textContent = formatearConteoPalabrasI18n1P(estadoPuntos);
+    }
+
+    const countdownEl = getEl("countdown");
+    if (countdownEl) {
+        const actualCountdown = String(countdownEl.textContent || "").trim();
+        const textosReady = new Set(Object.values(I18N_TEXTS_1P).map((tabla) => tabla["countdown.ready"]));
+        const textosWrite = new Set(Object.values(I18N_TEXTS_1P).map((tabla) => tabla["countdown.write"]));
+        if (textosReady.has(actualCountdown)) {
+            countdownEl.textContent = tJuego1P("countdown.ready", {}, actualCountdown);
+        } else if (textosWrite.has(actualCountdown)) {
+            countdownEl.textContent = tJuego1P("countdown.write", {}, actualCountdown);
+        }
     }
 
     if (typeof actualizarMusasMarcador === "function" && musas) {
@@ -468,22 +486,181 @@ window.scrib1pFormatMusesCount = (valor) => formatearConteoMusasI18n1P(valor);
 window.scrib1pFormatSecs = (valor, opciones = {}) => formatearTiempoSegundosI18n1P(valor, opciones);
 window.scrib1pCanonicalModes = MODO_CANONICAL_KEY_1P;
 
+let selector_idioma_ui_1p_inicializado = false;
+
+function inicializarSelectorIdiomaUI1P() {
+    if (selector_idioma_ui_1p_inicializado) return;
+    const contenedor = selector_idioma_juego_1p ? selector_idioma_juego_1p.closest(".opciones-idioma") : null;
+    if (!contenedor || !selector_idioma_juego_1p) return;
+
+    selector_idioma_ui_1p_inicializado = true;
+    selector_idioma_juego_1p.tabIndex = -1;
+    selector_idioma_juego_1p.setAttribute("aria-hidden", "true");
+
+    const interfaz = document.createElement("div");
+    interfaz.className = "opciones-idioma-ui";
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "opciones-idioma-button";
+    boton.setAttribute("aria-haspopup", "listbox");
+    boton.setAttribute("aria-expanded", "false");
+    boton.setAttribute("aria-labelledby", "selector_idioma_label_1p");
+
+    const textoActual = document.createElement("span");
+    textoActual.className = "opciones-idioma-current";
+    boton.appendChild(textoActual);
+
+    const lista = document.createElement("div");
+    lista.className = "opciones-idioma-list";
+    lista.setAttribute("role", "listbox");
+
+    interfaz.appendChild(boton);
+    interfaz.appendChild(lista);
+    contenedor.appendChild(interfaz);
+
+    const cerrar = ({ devolverFoco = false } = {}) => {
+        contenedor.classList.remove("is-open");
+        boton.setAttribute("aria-expanded", "false");
+        if (devolverFoco) boton.focus();
+    };
+
+    const abrir = () => {
+        contenedor.classList.add("is-open");
+        boton.setAttribute("aria-expanded", "true");
+    };
+
+    const sincronizar = () => {
+        const opciones = Array.from(selector_idioma_juego_1p.options || []);
+        const valorActual = selector_idioma_juego_1p.value;
+        const seleccionada = opciones.find((option) => option.value === valorActual) || opciones[0] || null;
+        textoActual.textContent = seleccionada ? seleccionada.textContent : "";
+        lista.setAttribute("aria-label", selector_idioma_juego_1p.getAttribute("aria-label") || tJuego1P("options.language_aria"));
+        lista.innerHTML = "";
+
+        opciones.forEach((option) => {
+            const botonOpcion = document.createElement("button");
+            botonOpcion.type = "button";
+            botonOpcion.className = "opciones-idioma-option";
+            botonOpcion.dataset.value = option.value;
+            botonOpcion.setAttribute("role", "option");
+            botonOpcion.setAttribute("aria-selected", option.value === valorActual ? "true" : "false");
+            botonOpcion.textContent = option.textContent;
+            if (option.value === valorActual) {
+                botonOpcion.classList.add("is-selected");
+            }
+            lista.appendChild(botonOpcion);
+        });
+    };
+
+    boton.addEventListener("click", () => {
+        if (contenedor.classList.contains("is-open")) {
+            cerrar();
+            return;
+        }
+        abrir();
+    });
+
+    boton.addEventListener("keydown", (evento) => {
+        if (evento.key !== "ArrowDown" && evento.key !== "Enter" && evento.key !== " ") return;
+        evento.preventDefault();
+        abrir();
+        const primeraOpcion = lista.querySelector(".opciones-idioma-option");
+        if (primeraOpcion) primeraOpcion.focus();
+    });
+
+    lista.addEventListener("click", (evento) => {
+        const opcion = evento.target.closest(".opciones-idioma-option");
+        if (!opcion) return;
+        const nuevoValor = opcion.dataset.value || I18N_DEFAULT_LANG_1P;
+        if (selector_idioma_juego_1p.value !== nuevoValor) {
+            selector_idioma_juego_1p.value = nuevoValor;
+            selector_idioma_juego_1p.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        sincronizar();
+        cerrar({ devolverFoco: true });
+    });
+
+    lista.addEventListener("keydown", (evento) => {
+        const opciones = Array.from(lista.querySelectorAll(".opciones-idioma-option"));
+        const indiceActual = opciones.indexOf(document.activeElement);
+        if (evento.key === "Escape") {
+            evento.preventDefault();
+            cerrar({ devolverFoco: true });
+            return;
+        }
+        if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
+            evento.preventDefault();
+            if (!opciones.length) return;
+            const direccion = evento.key === "ArrowDown" ? 1 : -1;
+            const siguienteIndice = indiceActual >= 0
+                ? (indiceActual + direccion + opciones.length) % opciones.length
+                : 0;
+            opciones[siguienteIndice].focus();
+            return;
+        }
+        if (evento.key === "Enter" || evento.key === " ") {
+            const opcion = document.activeElement;
+            if (opcion && opcion.classList.contains("opciones-idioma-option")) {
+                evento.preventDefault();
+                opcion.click();
+            }
+        }
+    });
+
+    document.addEventListener("click", (evento) => {
+        if (!contenedor.contains(evento.target)) {
+            cerrar();
+        }
+    });
+
+    window.addEventListener("resize", () => cerrar());
+    selector_idioma_juego_1p.addEventListener("change", sincronizar);
+    window.scrib1pRefreshLanguageSelectorUI = sincronizar;
+    sincronizar();
+}
+
 const selector_idioma_juego_1p = getEl("selector_idioma");
 if (selector_idioma_juego_1p) {
     selector_idioma_juego_1p.addEventListener("change", (evento) => {
         setIdiomaJuego1P(evento && evento.target ? evento.target.value : I18N_DEFAULT_LANG_1P);
     });
+    inicializarSelectorIdiomaUI1P();
 }
 let soporte = document.getElementById('soporte');
 const players_fit_root = getEl("players_fit_root");
 const contenedor_principal_escritora = getEl("contenedor");
+const info_total_escritora = players_fit_root ? players_fit_root.querySelector(".info-total") : null;
 let raf_ajuste_viewport_escritora = null;
 let raf_ajuste_altura_editor_escritora = null;
 let resize_observer_fit_viewport_escritora = null;
+let resize_observer_info_total_escritora = null;
+let timeout_reajuste_viewport_escritora_1 = null;
+let timeout_reajuste_viewport_escritora_2 = null;
+let timeout_reajuste_viewport_escritora_3 = null;
+let timeout_reajuste_viewport_escritora_4 = null;
 
 const resetAjusteViewportEscritora = () => {
     if (!players_fit_root) return;
+    players_fit_root.style.removeProperty("width");
+    players_fit_root.style.removeProperty("height");
+    players_fit_root.style.removeProperty("max-height");
+    players_fit_root.style.removeProperty("min-height");
     players_fit_root.style.removeProperty("transform");
+};
+
+const obtenerViewportActualEscritora = () => {
+    const vv = window.visualViewport;
+    const ancho = vv && Number.isFinite(vv.width) && vv.width > 0
+        ? vv.width
+        : window.innerWidth;
+    const alto = vv && Number.isFinite(vv.height) && vv.height > 0
+        ? vv.height
+        : window.innerHeight;
+    return {
+        width: Math.max(1, Math.round(ancho || 1)),
+        height: Math.max(1, Math.round(alto || 1))
+    };
 };
 
 const ajustarViewportEscritora = () => {
@@ -493,18 +670,25 @@ const ajustarViewportEscritora = () => {
     if (document.body && document.body.classList.contains("ui-dashboard-only")) {
         return;
     }
-    const viewportW = Math.max(window.innerWidth || 0, 1);
-    const viewportH = Math.max(window.innerHeight || 0, 1);
+    const viewportActual = obtenerViewportActualEscritora();
+    const viewportW = viewportActual.width;
+    const viewportH = viewportActual.height;
+    players_fit_root.style.width = `${viewportW}px`;
+    players_fit_root.style.height = "auto";
+    players_fit_root.style.maxHeight = "none";
+    players_fit_root.style.minHeight = `${viewportH}px`;
     const anchoNatural = Math.max(Math.ceil(players_fit_root.scrollWidth || 0), 1);
     const altoNatural = Math.max(Math.ceil(players_fit_root.scrollHeight || 0), 1);
+    const reservaViewportY = Math.max(42, Math.round(viewportH * 0.055));
 
-    let escala = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
+    let escala = Math.min(1, viewportW / anchoNatural, Math.max(1, viewportH - reservaViewportY) / altoNatural);
     if (!Number.isFinite(escala) || escala <= 0) {
         escala = 1;
     }
 
     const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5);
-    players_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, 0, 0) scale(${escala.toFixed(4)})`;
+    const offsetY = Math.max(0, (viewportH - (altoNatural * escala)) * 0.5);
+    players_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${escala.toFixed(4)})`;
 };
 
 const ajustarAlturaEditorEscritora = () => {
@@ -512,20 +696,25 @@ const ajustarAlturaEditorEscritora = () => {
     if (document.body && document.body.classList.contains("ui-dashboard-only")) {
         texto.style.removeProperty("min-height");
         texto.style.removeProperty("max-height");
+        if (typeof programarActualizacionDegradadoTextoEscritor === "function") {
+            programarActualizacionDegradadoTextoEscritor();
+        }
         return;
     }
     const textareaContainer = texto.closest(".textarea-container");
-    const infoTotal = contenedor_principal_escritora.querySelector(".info-total");
     if (!textareaContainer) return;
-    const viewportH = Math.max(window.innerHeight || 0, 1);
+    const viewportH = obtenerViewportActualEscritora().height;
     const topEditor = textareaContainer.getBoundingClientRect().top;
-    const altoInfo = infoTotal ? infoTotal.getBoundingClientRect().height : 0;
-    const margenSeguro = Math.max(14, Math.round(viewportH * 0.024));
+    const altoInfo = info_total_escritora ? Math.ceil(info_total_escritora.getBoundingClientRect().height) : 0;
+    const margenSeguro = Math.max(76, Math.round(viewportH * 0.1));
     const disponible = Math.floor(viewportH - topEditor - altoInfo - margenSeguro);
     const maxPx = Math.max(180, disponible);
     const minPx = Math.max(110, Math.min(maxPx - 20, Math.round(maxPx * 0.38)));
     texto.style.minHeight = `${minPx}px`;
     texto.style.maxHeight = `${maxPx}px`;
+    if (typeof programarActualizacionDegradadoTextoEscritor === "function") {
+        programarActualizacionDegradadoTextoEscritor();
+    }
 };
 
 const programarAjusteAlturaEditorEscritora = () => {
@@ -544,6 +733,34 @@ const programarAjusteViewportEscritora = () => {
         ajustarViewportEscritora();
         ajustarAlturaEditorEscritora();
     });
+};
+
+const programarReajusteViewportEscritoraDiferido = () => {
+    programarAjusteViewportEscritora();
+    if (timeout_reajuste_viewport_escritora_1) {
+        clearTimeout(timeout_reajuste_viewport_escritora_1);
+    }
+    if (timeout_reajuste_viewport_escritora_2) {
+        clearTimeout(timeout_reajuste_viewport_escritora_2);
+    }
+    if (timeout_reajuste_viewport_escritora_3) {
+        clearTimeout(timeout_reajuste_viewport_escritora_3);
+    }
+    if (timeout_reajuste_viewport_escritora_4) {
+        clearTimeout(timeout_reajuste_viewport_escritora_4);
+    }
+    timeout_reajuste_viewport_escritora_1 = setTimeout(() => {
+        programarAjusteViewportEscritora();
+    }, 120);
+    timeout_reajuste_viewport_escritora_2 = setTimeout(() => {
+        programarAjusteViewportEscritora();
+    }, 280);
+    timeout_reajuste_viewport_escritora_3 = setTimeout(() => {
+        programarAjusteViewportEscritora();
+    }, 520);
+    timeout_reajuste_viewport_escritora_4 = setTimeout(() => {
+        programarAjusteViewportEscritora();
+    }, 900);
 };
 
 function aplicarVisibilidadBotonesDashboard() {
@@ -580,17 +797,28 @@ const iniciarAjusteViewportEscritora = () => {
     if (!players_fit_root) return;
     if (!resize_observer_fit_viewport_escritora && typeof ResizeObserver === "function") {
         resize_observer_fit_viewport_escritora = new ResizeObserver(() => {
-            programarAjusteViewportEscritora();
+            programarReajusteViewportEscritoraDiferido();
         });
         resize_observer_fit_viewport_escritora.observe(players_fit_root);
     }
-    programarAjusteViewportEscritora();
-    setTimeout(programarAjusteViewportEscritora, 120);
+    if (!resize_observer_info_total_escritora && info_total_escritora && typeof ResizeObserver === "function") {
+        resize_observer_info_total_escritora = new ResizeObserver(() => {
+            programarAjusteAlturaEditorEscritora();
+            programarReajusteViewportEscritoraDiferido();
+        });
+        resize_observer_info_total_escritora.observe(info_total_escritora);
+    }
+    programarReajusteViewportEscritoraDiferido();
 };
 
-window.addEventListener("resize", programarAjusteViewportEscritora);
-window.addEventListener("orientationchange", programarAjusteViewportEscritora);
-window.addEventListener("load", programarAjusteViewportEscritora);
+window.addEventListener("resize", programarReajusteViewportEscritoraDiferido);
+window.addEventListener("orientationchange", programarReajusteViewportEscritoraDiferido);
+window.addEventListener("load", programarReajusteViewportEscritoraDiferido);
+window.addEventListener("fullscreenchange", programarReajusteViewportEscritoraDiferido);
+window.addEventListener("webkitfullscreenchange", programarReajusteViewportEscritoraDiferido);
+if (window.visualViewport && typeof window.visualViewport.addEventListener === "function") {
+    window.visualViewport.addEventListener("resize", programarReajusteViewportEscritoraDiferido);
+}
 
 iniciarAjusteViewportEscritora();
 
@@ -2597,6 +2825,7 @@ const LIMPIEZAS = {
     },
 
     "frase final": function (data) {
+        texto.removeEventListener("input", listener_modo);
         texto.removeEventListener("keyup", listener_modo);
     },
 
@@ -2911,7 +3140,7 @@ function inicio() {
 
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás.
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">&iquest;PREPARADOS?</span>');
+    var preparados = $('<span id="countdown">' + tJuego1P("countdown.ready", {}, "&iquest;PREPARADOS?") + '</span>');
     preparados.appendTo($('.container'));
     preparados_timer = setTimeout(() => {
         preparados_timer = null;
@@ -3025,14 +3254,32 @@ function post_inicio(borrar_texto){
 }
 
 function colocarCursorAlFinalEditor() {
-    let lastLine = texto.lastChild;
-    let lastTextNode = lastLine;
-    while (lastTextNode && lastTextNode.nodeType !== 3) {
-        lastTextNode = lastTextNode.lastChild;
+    if (!texto) return;
+
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const range = document.createRange();
+    let lastNode = texto.lastChild;
+
+    while (lastNode && lastNode.nodeType !== 3 && lastNode.lastChild) {
+        lastNode = lastNode.lastChild;
     }
-    if (lastTextNode) {
-        restaurarPosicionCaret(lastTextNode, lastTextNode.length);
+
+    if (lastNode && lastNode.nodeType === 3) {
+        const offset = lastNode.textContent ? lastNode.textContent.length : 0;
+        range.setStart(lastNode, offset);
+        range.setEnd(lastNode, offset);
+    } else if (texto.lastChild) {
+        range.setStartAfter(texto.lastChild);
+        range.setEndAfter(texto.lastChild);
+    } else {
+        range.setStart(texto, 0);
+        range.setEnd(texto, 0);
     }
+
+    selection.removeAllRanges();
+    selection.addRange(range);
     texto.scrollTo(0, texto.scrollHeight);
 }
 
@@ -3093,10 +3340,12 @@ function reanudarTrasResurreccion(segundosResurreccion) {
     texto.style.display = "";
     tiempo.style.display = "";
     texto.innerText = texto_guardado;
-    colocarCursorAlFinalEditor();
     if (modo_actual !== "tertulia") {
         texto.contentEditable = "true";
         texto.focus();
+        requestAnimationFrame(() => {
+            colocarCursorAlFinalEditor();
+        });
     }
     reanudarProgresoNivelBarraEscritora();
     startCountDown(segundos);
@@ -3380,9 +3629,18 @@ function frase_final() {
     definicion.innerHTML = tJuego1P("mode.goal.final_phrase", {}, "⬆️ ¡Introduce la frase final para ganar! ⬆️");
     limpiarMarcadoFraseFinal();
 
+    texto.removeEventListener("input", listener_modo);
     texto.removeEventListener("keyup", listener_modo);
     listener_modo = function (e) { modo_frase_final(e) };
-    texto.addEventListener("keyup", listener_modo);
+    texto.addEventListener("input", listener_modo);
+
+    texto.contentEditable = "true";
+    requestAnimationFrame(() => {
+        if (!texto || terminado) return;
+        texto.focus();
+        colocarCursorAlFinalEditor();
+        actualizarProgresoFraseFinal();
+    });
 }
 
 // FUNCIONES AUXILIARES.
@@ -3971,6 +4229,7 @@ function obtenerRangoPorOffsets(contenedor, inicio, fin) {
 
 let progreso_frase_final_intensidad = 0;
 let progreso_frase_final_ultimo_match = 0;
+const TAGS_SALTO_LINEA_FRASE_FINAL = new Set(["BR", "DIV", "P", "LI"]);
 
 function estiloProgresoFraseFinal(intensidad) {
     const t = Math.max(0, Math.min(1, intensidad));
@@ -4012,45 +4271,206 @@ function animarFalloFraseFinal() {
     );
 }
 
+function obtenerTextoPlanoConSaltosFraseFinal(elemento) {
+    let contenido = "";
+
+    function recorrer(nodo, esRaiz) {
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            contenido += nodo.textContent;
+            return;
+        }
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+
+        const tag = nodo.tagName;
+        if (tag === "BR") {
+            contenido += "\n";
+            return;
+        }
+
+        const hijos = nodo.childNodes;
+        if (!hijos || hijos.length === 0) {
+            if (!esRaiz && TAGS_SALTO_LINEA_FRASE_FINAL.has(tag)) {
+                contenido += "\n";
+            }
+            return;
+        }
+
+        for (let i = 0; i < hijos.length; i++) {
+            recorrer(hijos[i], false);
+        }
+
+        if (!esRaiz && TAGS_SALTO_LINEA_FRASE_FINAL.has(tag)) {
+            if (contenido.length === 0 || contenido[contenido.length - 1] !== "\n") {
+                contenido += "\n";
+            }
+        }
+    }
+
+    recorrer(elemento, true);
+    return contenido;
+}
+
+function contarCaretConSaltosFraseFinal(elemento, range) {
+    let caretPos = 0;
+    let encontrado = false;
+
+    function agregarTexto(textoNodo) {
+        caretPos += textoNodo.length;
+    }
+
+    function agregarSalto() {
+        caretPos += 1;
+    }
+
+    function recorrer(nodo, esRaiz) {
+        if (encontrado) return;
+
+        if (nodo === range.startContainer) {
+            if (nodo.nodeType === Node.TEXT_NODE) {
+                agregarTexto(nodo.textContent.slice(0, range.startOffset));
+                encontrado = true;
+                return;
+            }
+            if (nodo.nodeType === Node.ELEMENT_NODE) {
+                const hijos = nodo.childNodes || [];
+                const limite = Math.min(range.startOffset, hijos.length);
+                for (let i = 0; i < limite; i++) {
+                    recorrer(hijos[i], false);
+                    if (encontrado) return;
+                }
+                encontrado = true;
+                return;
+            }
+        }
+
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            agregarTexto(nodo.textContent);
+            return;
+        }
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+
+        const tag = nodo.tagName;
+        if (tag === "BR") {
+            agregarSalto();
+            return;
+        }
+
+        const hijos = nodo.childNodes;
+        if (!hijos || hijos.length === 0) {
+            if (!esRaiz && TAGS_SALTO_LINEA_FRASE_FINAL.has(tag)) {
+                agregarSalto();
+            }
+            return;
+        }
+
+        for (let i = 0; i < hijos.length; i++) {
+            recorrer(hijos[i], false);
+            if (encontrado) return;
+        }
+
+        if (!esRaiz && TAGS_SALTO_LINEA_FRASE_FINAL.has(tag)) {
+            agregarSalto();
+        }
+    }
+
+    recorrer(elemento, true);
+    return caretPos;
+}
+
 function obtenerOffsetCaretEnTexto() {
     if (!texto) return 0;
+    const textoPlano = obtenerTextoPlanoConSaltosFraseFinal(texto);
     const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return 0;
-    const range = sel.getRangeAt(0).cloneRange();
-    const preCaretRange = range.cloneRange();
-    preCaretRange.selectNodeContents(texto);
-    preCaretRange.setEnd(range.endContainer, range.endOffset);
-    return preCaretRange.toString().length;
+    if (!sel || !sel.rangeCount) return textoPlano.length;
+    const range = sel.getRangeAt(0);
+    if (!texto.contains(range.startContainer)) return textoPlano.length;
+    return contarCaretConSaltosFraseFinal(texto, range);
 }
 
 function colocarCaretEnOffset(offset) {
     if (!texto) return;
-    const walker = document.createTreeWalker(texto, NodeFilter.SHOW_TEXT, null, false);
-    let pos = 0;
-    let ultimoNodo = null;
-    while (walker.nextNode()) {
-        const node = walker.currentNode;
-        ultimoNodo = node;
-        const length = node.textContent.length;
-        if (offset <= pos + length) {
-            const range = document.createRange();
-            range.setStart(node, Math.max(0, offset - pos));
-            range.collapse(true);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
+    const sel = window.getSelection();
+    if (!sel) return;
+
+    let restante = Math.max(0, Number(offset) || 0);
+    let destinoNodo = null;
+    let destinoOffset = 0;
+
+    function fijarDestino(nodo, offsetNodo) {
+        if (destinoNodo) return;
+        destinoNodo = nodo;
+        destinoOffset = offsetNodo;
+    }
+
+    function recorrer(nodo, esRaiz) {
+        if (destinoNodo) return;
+
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            const length = nodo.textContent.length;
+            if (restante <= length) {
+                fijarDestino(nodo, Math.max(0, Math.min(length, restante)));
+                return;
+            }
+            restante -= length;
             return;
         }
-        pos += length;
+
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+
+        const tag = nodo.tagName;
+        if (tag === "BR") {
+            if (restante === 0) {
+                const padre = nodo.parentNode;
+                if (padre) {
+                    const indice = Array.prototype.indexOf.call(padre.childNodes, nodo);
+                    fijarDestino(padre, indice + 1);
+                }
+                return;
+            }
+            restante = Math.max(0, restante - 1);
+            return;
+        }
+
+        const hijos = nodo.childNodes;
+        if (!hijos || hijos.length === 0) {
+            if (!esRaiz && TAGS_SALTO_LINEA_FRASE_FINAL.has(tag)) {
+                if (restante === 0) {
+                    fijarDestino(nodo, 0);
+                    return;
+                }
+                restante = Math.max(0, restante - 1);
+            }
+            return;
+        }
+
+        for (let i = 0; i < hijos.length; i++) {
+            recorrer(hijos[i], false);
+            if (destinoNodo) return;
+        }
+
+        if (!esRaiz && TAGS_SALTO_LINEA_FRASE_FINAL.has(tag)) {
+            if (restante === 0) {
+                fijarDestino(nodo, hijos.length);
+                return;
+            }
+            restante = Math.max(0, restante - 1);
+        }
     }
-    if (ultimoNodo) {
-        const range = document.createRange();
-        range.setStart(ultimoNodo, ultimoNodo.textContent.length);
-        range.collapse(true);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
+
+    recorrer(texto, true);
+
+    const range = document.createRange();
+    if (destinoNodo) {
+        range.setStart(destinoNodo, destinoOffset);
+    } else if (texto.lastChild) {
+        range.selectNodeContents(texto);
+        range.collapse(false);
+    } else {
+        range.setStart(texto, 0);
     }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
 }
 
 function obtenerRangoUltimosCaracteres(cantidad) {
@@ -5247,6 +5667,106 @@ var end = Date.now() + (2 * 1000);
 
 const textarea = texto;
 
+const CLASES_FADE_TEXTAREA_ESCRITOR = [
+    "textarea-fade-none",
+    "textarea-fade-top",
+    "textarea-fade-bottom",
+    "textarea-fade-both"
+];
+let raf_degradado_textarea_escritor = null;
+let observador_degradado_textarea_escritor = null;
+let observador_resize_textarea_escritor = null;
+let degradado_textarea_escritor_iniciado = false;
+
+function actualizarDegradadoDinamicoTextoEscritor() {
+    if (!textarea || !textarea.classList) return;
+    const gradientTop = document.getElementById("gradientTop");
+    const gradientBottom = document.getElementById("gradientBottom");
+    const clientHeight = textarea.clientHeight || 0;
+    const scrollHeight = textarea.scrollHeight || 0;
+
+    if (clientHeight <= 0 || textarea.style.display === "none") {
+        CLASES_FADE_TEXTAREA_ESCRITOR.forEach((clase) => textarea.classList.remove(clase));
+        textarea.classList.add("textarea-fade-none");
+        if (gradientTop) gradientTop.style.opacity = "0";
+        if (gradientBottom) gradientBottom.style.opacity = "0";
+        return;
+    }
+
+    const margen = 2;
+    const tieneOverflow = (scrollHeight - clientHeight) > margen;
+    const scrollTop = Math.max(0, textarea.scrollTop || 0);
+    const ocultoArriba = tieneOverflow && (scrollTop > margen);
+    const ocultoAbajo = tieneOverflow && ((scrollTop + clientHeight) < (scrollHeight - margen));
+
+    CLASES_FADE_TEXTAREA_ESCRITOR.forEach((clase) => textarea.classList.remove(clase));
+    if (ocultoArriba && ocultoAbajo) {
+        textarea.classList.add("textarea-fade-both");
+    } else if (ocultoArriba) {
+        textarea.classList.add("textarea-fade-top");
+    } else if (ocultoAbajo) {
+        textarea.classList.add("textarea-fade-bottom");
+    } else {
+        textarea.classList.add("textarea-fade-none");
+    }
+
+    if (gradientTop) gradientTop.style.opacity = ocultoArriba ? "1" : "0";
+    if (gradientBottom) gradientBottom.style.opacity = ocultoAbajo ? "1" : "0";
+}
+
+function programarActualizacionDegradadoTextoEscritor() {
+    if (raf_degradado_textarea_escritor) return;
+    raf_degradado_textarea_escritor = requestAnimationFrame(() => {
+        raf_degradado_textarea_escritor = null;
+        actualizarDegradadoDinamicoTextoEscritor();
+    });
+}
+
+function iniciarDegradadoDinamicoTextoEscritor() {
+    if (degradado_textarea_escritor_iniciado || !textarea) return;
+    degradado_textarea_escritor_iniciado = true;
+
+    const eventos = ["input", "scroll", "keyup", "mouseup", "touchend", "focus", "blur"];
+    eventos.forEach((evento) => {
+        textarea.addEventListener(evento, programarActualizacionDegradadoTextoEscritor);
+    });
+    window.addEventListener("resize", programarActualizacionDegradadoTextoEscritor);
+    document.addEventListener("selectionchange", () => {
+        if (document.activeElement === textarea) {
+            programarActualizacionDegradadoTextoEscritor();
+        }
+    });
+
+    if (typeof MutationObserver === "function") {
+        observador_degradado_textarea_escritor = new MutationObserver(() => {
+            programarActualizacionDegradadoTextoEscritor();
+        });
+        observador_degradado_textarea_escritor.observe(textarea, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: ["class", "style"]
+        });
+    }
+
+    if (typeof ResizeObserver === "function") {
+        observador_resize_textarea_escritor = new ResizeObserver(() => {
+            programarActualizacionDegradadoTextoEscritor();
+        });
+        observador_resize_textarea_escritor.observe(textarea);
+    }
+
+    programarActualizacionDegradadoTextoEscritor();
+    setTimeout(programarActualizacionDegradadoTextoEscritor, 120);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", iniciarDegradadoDinamicoTextoEscritor, { once: true });
+} else {
+    iniciarDegradadoDinamicoTextoEscritor();
+}
+
 /*document.addEventListener('DOMContentLoaded', function () {
     const gradientTop = document.getElementById('gradientTop');
     const gradientBottom = document.getElementById('gradientBottom');
@@ -5476,11 +5996,15 @@ function getParameterByName(name, url) {
 // ---- PDF estilo control (1 jugador) ----
 function obtenerColorPorClases(clases) {
     if (clases.has("letra-verde")) return [0, 210, 110];
+    if (clases.has("letra-roja") || clases.has("letra-prohibida") || clases.has("letra-maldita")) return [255, 90, 90];
     if (clases.has("palabra-musa") || clases.has("palabra-bendita-musa")) return [255, 157, 66];
+    if (clases.has("palabra-prohibida") || clases.has("palabra-maldita") || clases.has("palabra-musa-enemiga")) return [255, 110, 190];
     if (clases.has("palabra-bendita")) return [255, 229, 91];
     if (clases.has("frase-final-progreso")) return [255, 157, 66];
     return [230, 230, 230];
 }
+
+const CLASES_PALABRAS_DESTACADAS_PDF = ["palabra-bendita", "palabra-bendita-musa", "palabra-musa"];
 
 function extraerPalabrasConClase(html, clases) {
     const contenedor = document.createElement("div");
@@ -5556,11 +6080,84 @@ function construirSegmentosColor(html) {
     return segmentos;
 }
 
+function tokenizarSegmentosPdf(segmentos) {
+    const tokens = [];
+    let actual = null;
+
+    const coloresIguales = (a, b) => Array.isArray(a) && Array.isArray(b)
+        && a.length === 3
+        && b.length === 3
+        && a[0] === b[0]
+        && a[1] === b[1]
+        && a[2] === b[2];
+
+    const cerrarActual = () => {
+        if (actual && actual.partes.length) {
+            tokens.push(actual);
+        }
+        actual = null;
+    };
+
+    const agregarParte = (token, texto, color) => {
+        if (!token || !texto) return;
+        const colorSeguro = Array.isArray(color) && color.length === 3 ? color : [0, 0, 0];
+        const ultimaParte = token.partes[token.partes.length - 1];
+        if (ultimaParte && coloresIguales(ultimaParte.color, colorSeguro)) {
+            ultimaParte.texto += texto;
+        } else {
+            token.partes.push({ texto, color: colorSeguro });
+        }
+    };
+
+    (segmentos || []).forEach((segmento = {}) => {
+        const color = segmento.color || [0, 0, 0];
+        const texto = String(segmento.texto || "");
+        for (const char of texto) {
+            if (char === "\r") continue;
+            if (char === "\n") {
+                cerrarActual();
+                tokens.push({ tipo: "newline", partes: [] });
+                continue;
+            }
+            const tipo = /\s/.test(char) ? "space" : "word";
+            if (!actual || actual.tipo !== tipo) {
+                cerrarActual();
+                actual = { tipo, partes: [] };
+            }
+            agregarParte(actual, char, color);
+        }
+    });
+
+    cerrarActual();
+    return tokens;
+}
+
+function medirPartesPdf(doc, tamano, partes) {
+    return (partes || []).reduce((anchoTotal, parte) => {
+        setPdfFont(doc, tamano, parte.color || [0, 0, 0]);
+        return anchoTotal + doc.getTextWidth(parte.texto || "");
+    }, 0);
+}
+
+function dibujarPartesPdf(doc, tamano, partes, x, y) {
+    let xCursor = x;
+    (partes || []).forEach((parte) => {
+        const texto = String(parte.texto || "");
+        if (!texto) return;
+        setPdfFont(doc, tamano, parte.color || [0, 0, 0]);
+        doc.text(texto, xCursor, y);
+        xCursor += doc.getTextWidth(texto);
+    });
+    return xCursor;
+}
+
 function agregarSegmentosEnPagina(doc, segmentos, x, yInicial, tamano, agregarLogo, margen, anchoPagina, altoPagina) {
     const maxWidth = anchoPagina - (margen * 2);
-    const lineHeight = tamano * 0.4;
+    const maxX = x + maxWidth;
+    const lineHeight = Math.max(6, tamano * 0.46);
     let y = yInicial;
     let xCursor = x;
+    const tokens = tokenizarSegmentosPdf(segmentos);
 
     const nuevaLinea = () => {
         xCursor = x;
@@ -5572,30 +6169,53 @@ function agregarSegmentosEnPagina(doc, segmentos, x, yInicial, tamano, agregarLo
         }
     };
 
-    segmentos.forEach(seg => {
-        const color = seg.color || [0, 0, 0];
-        const partes = seg.texto.split(/(\n)/);
-        partes.forEach(parte => {
-            if (!parte) return;
-            if (parte === "\n") {
-                nuevaLinea();
-                return;
-            }
-            const tokens = parte.split(/(\s+)/);
-            tokens.forEach(token => {
-                if (!token) return;
-                if (token.trim() === "" && xCursor === x) {
-                    return;
-                }
+    const dibujarTokenPartido = (token) => {
+        (token.partes || []).forEach((parte) => {
+            const color = parte.color || [0, 0, 0];
+            const textoParte = String(parte.texto || "");
+            for (const char of textoParte) {
                 setPdfFont(doc, tamano, color);
-                const anchoToken = doc.getTextWidth(token);
-                if (xCursor + anchoToken > x + maxWidth && token.trim() !== "") {
+                const anchoChar = doc.getTextWidth(char);
+                if (xCursor !== x && xCursor + anchoChar > maxX) {
                     nuevaLinea();
                 }
-                doc.text(token, xCursor, y);
-                xCursor += anchoToken;
-            });
+                doc.text(char, xCursor, y);
+                xCursor += anchoChar;
+            }
         });
+    };
+
+    tokens.forEach((token) => {
+        if (!token) return;
+        if (token.tipo === "newline") {
+            nuevaLinea();
+            return;
+        }
+        if (token.tipo === "space" && xCursor === x) {
+            return;
+        }
+
+        const anchoToken = medirPartesPdf(doc, tamano, token.partes);
+        if (token.tipo === "word") {
+            if (anchoToken > maxWidth) {
+                if (xCursor !== x) {
+                    nuevaLinea();
+                }
+                dibujarTokenPartido(token);
+                return;
+            }
+            if (xCursor !== x && xCursor + anchoToken > maxX) {
+                nuevaLinea();
+            }
+            xCursor = dibujarPartesPdf(doc, tamano, token.partes, xCursor, y);
+            return;
+        }
+
+        if (xCursor + anchoToken > maxX) {
+            nuevaLinea();
+            return;
+        }
+        xCursor = dibujarPartesPdf(doc, tamano, token.partes, xCursor, y);
     });
 
     return y;
@@ -6266,7 +6886,7 @@ function descargar_textos() {
         yActual = agregarTextoEnPagina(textoPlano, margen, yActual + 5, 15, [230, 230, 230]);
     }
 
-    const palabrasBenditas = extraerPalabrasConClase(htmlTexto, ["palabra-bendita"]);
+    const palabrasBenditas = extraerPalabrasConClase(htmlTexto, CLASES_PALABRAS_DESTACADAS_PDF);
     agregarPaginaEstadisticas(doc, 1, nombrePdf, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas);
 
     doc.save(nombrePdf + '.pdf');

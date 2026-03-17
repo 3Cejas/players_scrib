@@ -17,16 +17,75 @@ let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
 let vista_espectador_modo = "partida";
+let escala_ui_espectador_control = 1;
 let temporizador_gigante_activo = false;
 let regalo_musas_enviado = false;
 let banderas_musas_activas = false;
 let borrar_texto_en_inicio_activo = false;
+let modo_control_activo = "";
+let segundos_modo_control = 0;
+const ESCALA_UI_ESPECTADOR_CONTROL_MIN = 0.82;
+const ESCALA_UI_ESPECTADOR_CONTROL_MAX = 1.28;
+const EVENTO_CAMBIO_IDIOMA_UI = "scrib:language-changed";
+const tJuego2PControl = (clave, variables = {}, fallback = "") => (
+    (window && typeof window.scribT2P === "function")
+        ? window.scribT2P(clave, variables, fallback)
+        : (fallback || clave)
+);
+const traducirModoControl = (modo) => (
+    (window && typeof window.scribTranslateModeName2P === "function")
+        ? window.scribTranslateModeName2P(modo)
+        : String(modo || "").toUpperCase()
+);
+const traducirSolicitudCalentamientoControl = (tipo, opciones = {}) => (
+    (window && typeof window.scribTranslateWarmupRequest2P === "function")
+        ? window.scribTranslateWarmupRequest2P(tipo, opciones)
+        : String(tipo || "")
+);
+const CLASE_CURSOR_PLUMA_CONTROL = "cursor-control-pluma-activo";
+const SOPORTA_CURSOR_PLUMA_CONTROL = (() => {
+    if (typeof window.matchMedia !== "function") return true;
+    return window.matchMedia("(pointer: fine)").matches;
+})();
+let cursor_pluma_control = null;
+let cursor_pluma_control_inicializado = false;
+let selector_idioma_control_inicializado = false;
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "flex";
 const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
 const animacionesEntradaBarraVida = new WeakMap();
 const animacionEntradaVidaPendiente = { 1: false, 2: false };
+
+function obtenerTextoModoControl(modo = modo_control_activo) {
+    const modoNormalizado = typeof modo === "string" ? modo.trim() : "";
+    return modoNormalizado
+        ? traducirModoControl(modoNormalizado)
+        : tJuego2PControl("control.mode.none", {}, "Ninguno");
+}
+
+function formatearSegundosControl(segundos = segundos_modo_control) {
+    const total = Number.isFinite(Number(segundos)) ? Math.max(0, Math.round(Number(segundos))) : 0;
+    return tJuego2PControl("control.time.seconds_count", { count: total }, `${total} segundos`);
+}
+
+function actualizarCabeceraModoControl({ modo = modo_control_activo, segundos = segundos_modo_control } = {}) {
+    modo_control_activo = typeof modo === "string" ? modo.trim() : "";
+    segundos_modo_control = Number.isFinite(Number(segundos)) ? Number(segundos) : 0;
+
+    const display = document.getElementById("display_modo");
+    const tiempo = document.getElementById("tiempo_modos_secs");
+    if (display) {
+        display.textContent = obtenerTextoModoControl(modo_control_activo);
+        display.style.color = modo_control_activo && typeof COLORES_MODOS !== "undefined" && COLORES_MODOS[modo_control_activo]
+            ? COLORES_MODOS[modo_control_activo]
+            : "white";
+    }
+    if (tiempo) {
+        tiempo.textContent = formatearSegundosControl(segundos_modo_control);
+    }
+}
+window.actualizarCabeceraModoControl = actualizarCabeceraModoControl;
 
 function extraerSegundosTiempo(texto) {
     if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
@@ -42,6 +101,224 @@ function extraerSegundosTiempo(texto) {
         return null;
     }
     return (minutos * 60) + segundos;
+}
+
+function ocultarCursorPlumaControl() {
+    if (!cursor_pluma_control) return;
+    cursor_pluma_control.classList.remove("activa");
+}
+
+function moverCursorPlumaControl(clientX, clientY) {
+    if (!cursor_pluma_control) return;
+    cursor_pluma_control.style.left = `${clientX}px`;
+    cursor_pluma_control.style.top = `${clientY}px`;
+    cursor_pluma_control.classList.add("activa");
+    cursor_pluma_control.classList.remove("is-hidden");
+}
+
+function inicializarCursorPlumaControl() {
+    if (cursor_pluma_control_inicializado) return;
+    cursor_pluma_control_inicializado = true;
+    if (!SOPORTA_CURSOR_PLUMA_CONTROL || !document.body) return;
+
+    let nodo = document.getElementById("control_cursor_pluma");
+    if (!nodo) {
+        nodo = document.createElement("div");
+        nodo.id = "control_cursor_pluma";
+        nodo.className = "control-cursor-pluma";
+        nodo.setAttribute("aria-hidden", "true");
+        document.body.appendChild(nodo);
+    }
+    cursor_pluma_control = nodo;
+    document.body.classList.add(CLASE_CURSOR_PLUMA_CONTROL);
+
+    window.addEventListener("mousemove", (evento) => {
+        if (!document.body || !document.body.classList.contains(CLASE_CURSOR_PLUMA_CONTROL)) return;
+        if (!evento || typeof evento.clientX !== "number" || typeof evento.clientY !== "number") return;
+        moverCursorPlumaControl(evento.clientX, evento.clientY);
+    }, { passive: true });
+    window.addEventListener("pointerdown", (evento) => {
+        if (!document.body || !document.body.classList.contains(CLASE_CURSOR_PLUMA_CONTROL)) return;
+        if (!evento || typeof evento.clientX !== "number" || typeof evento.clientY !== "number") return;
+        moverCursorPlumaControl(evento.clientX, evento.clientY);
+    }, { passive: true });
+    window.addEventListener("blur", ocultarCursorPlumaControl);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            ocultarCursorPlumaControl();
+        }
+    });
+    document.addEventListener("mouseleave", ocultarCursorPlumaControl);
+}
+
+function inicializarSelectorIdiomaControl() {
+    if (selector_idioma_control_inicializado) return;
+    const contenedor = document.querySelector(".control-language");
+    const selector = document.getElementById("selector_idioma_control");
+    if (!contenedor || !selector) return;
+
+    selector_idioma_control_inicializado = true;
+    contenedor.removeAttribute("for");
+    contenedor.setAttribute("role", "group");
+    selector.tabIndex = -1;
+    selector.setAttribute("aria-hidden", "true");
+
+    const interfaz = document.createElement("div");
+    interfaz.className = "control-language-ui";
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "control-language-button";
+    boton.setAttribute("aria-haspopup", "listbox");
+    boton.setAttribute("aria-expanded", "false");
+    boton.setAttribute("aria-labelledby", "selector_idioma_label");
+
+    const textoActual = document.createElement("span");
+    textoActual.className = "control-language-current";
+    boton.appendChild(textoActual);
+
+    const lista = document.createElement("div");
+    lista.className = "control-language-list";
+    lista.setAttribute("role", "listbox");
+    lista.setAttribute("aria-label", selector.getAttribute("aria-label") || "Idioma");
+
+    interfaz.appendChild(boton);
+    interfaz.appendChild(lista);
+    contenedor.appendChild(interfaz);
+
+    const cerrar = ({ devolverFoco = false } = {}) => {
+        contenedor.classList.remove("is-open");
+        boton.setAttribute("aria-expanded", "false");
+        if (cursor_pluma_control) {
+            cursor_pluma_control.classList.remove("is-hidden");
+        }
+        if (devolverFoco) {
+            boton.focus();
+        }
+    };
+
+    const abrir = () => {
+        contenedor.classList.add("is-open");
+        boton.setAttribute("aria-expanded", "true");
+        if (cursor_pluma_control) {
+            cursor_pluma_control.classList.remove("is-hidden");
+        }
+    };
+
+    const sincronizar = () => {
+        const opciones = Array.from(selector.options || []);
+        const valorActual = selector.value;
+        const seleccionada = opciones.find((option) => option.value === valorActual) || opciones[0] || null;
+        textoActual.textContent = seleccionada ? seleccionada.textContent : "";
+        lista.setAttribute("aria-label", selector.getAttribute("aria-label") || "Idioma");
+        lista.innerHTML = "";
+
+        opciones.forEach((option) => {
+            const botonOpcion = document.createElement("button");
+            botonOpcion.type = "button";
+            botonOpcion.className = "control-language-option";
+            botonOpcion.dataset.value = option.value;
+            botonOpcion.setAttribute("role", "option");
+            botonOpcion.setAttribute("aria-selected", option.value === valorActual ? "true" : "false");
+            botonOpcion.textContent = option.textContent;
+            if (option.value === valorActual) {
+                botonOpcion.classList.add("is-selected");
+            }
+            lista.appendChild(botonOpcion);
+        });
+    };
+
+    const aplicarCambioIdioma = (nuevoValor) => {
+        const idioma = String(nuevoValor || "es");
+        if (selector.value !== idioma) {
+            selector.value = idioma;
+        }
+        if (window && typeof window.scribSetLanguage2P === "function") {
+            window.scribSetLanguage2P(idioma);
+        }
+        if (window && typeof window.emitirCambioIdiomaControl === "function") {
+            window.emitirCambioIdiomaControl(idioma);
+        } else {
+            selector.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    };
+
+    boton.addEventListener("click", () => {
+        if (contenedor.classList.contains("is-open")) {
+            cerrar();
+            return;
+        }
+        abrir();
+    });
+
+    boton.addEventListener("keydown", (evento) => {
+        if (evento.key !== "ArrowDown" && evento.key !== "Enter" && evento.key !== " ") return;
+        evento.preventDefault();
+        abrir();
+        const primeraOpcion = lista.querySelector(".control-language-option");
+        if (primeraOpcion) {
+            primeraOpcion.focus();
+        }
+    });
+
+    lista.addEventListener("click", (evento) => {
+        const opcion = evento.target.closest(".control-language-option");
+        if (!opcion) return;
+        const nuevoValor = opcion.dataset.value || "es";
+        if (selector.value !== nuevoValor) {
+            aplicarCambioIdioma(nuevoValor);
+        }
+        sincronizar();
+        cerrar({ devolverFoco: true });
+    });
+
+    lista.addEventListener("keydown", (evento) => {
+        const opciones = Array.from(lista.querySelectorAll(".control-language-option"));
+        const indiceActual = opciones.indexOf(document.activeElement);
+        if (evento.key === "Escape") {
+            evento.preventDefault();
+            cerrar({ devolverFoco: true });
+            return;
+        }
+        if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
+            evento.preventDefault();
+            if (!opciones.length) return;
+            const direccion = evento.key === "ArrowDown" ? 1 : -1;
+            const siguienteIndice = indiceActual >= 0
+                ? (indiceActual + direccion + opciones.length) % opciones.length
+                : 0;
+            opciones[siguienteIndice].focus();
+            return;
+        }
+        if (evento.key === "Enter" || evento.key === " ") {
+            const opcion = document.activeElement;
+            if (opcion && opcion.classList.contains("control-language-option")) {
+                evento.preventDefault();
+                opcion.click();
+            }
+        }
+    });
+
+    document.addEventListener("click", (evento) => {
+        if (!contenedor.contains(evento.target)) {
+            cerrar();
+        }
+    });
+
+    window.addEventListener("resize", () => cerrar());
+    window.addEventListener(EVENTO_CAMBIO_IDIOMA_UI, sincronizar);
+    selector.addEventListener("change", sincronizar);
+    sincronizar();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+        inicializarCursorPlumaControl();
+        inicializarSelectorIdiomaControl();
+    }, { once: true });
+} else {
+    inicializarCursorPlumaControl();
+    inicializarSelectorIdiomaControl();
 }
 
 function setPendienteAnimacionEntradaBarraVida(playerId, valor) {
@@ -134,7 +411,7 @@ function startCountDown_p1(duration) {
     clearInterval(countInterval);
     countInterval = setInterval(function () {
         display_modo.style.color = COLORES_MODOS[modo_actual]; // Asignar color al texto del label
-        display_modo.textContent = modo_actual.toUpperCase();
+        display_modo.textContent = traducirModoControl(modo_actual);
         console.log("modo_actual", modo_actual)
         console.log("DURACION_TIEMPO_MODOS", DURACION_TIEMPO_MODOS)
         min = parseInt(secondsRemaining / 60);
@@ -251,17 +528,19 @@ function actualizarBotonBorrarTextoGuardadoControl() {
     boton.dataset.active = activo ? "1" : "0";
     boton.classList.toggle("is-active", activo);
     boton.innerHTML = activo
-        ? "\u{1F9F9} BORRAR TEXTO: ON"
-        : "\u{1F9F9} BORRAR TEXTO: OFF";
+        ? tJuego2PControl("control.button.delete_saved.on", {}, "\u{1F9F9} BORRAR TEXTO: ON")
+        : tJuego2PControl("control.button.delete_saved.off", {}, "\u{1F9F9} BORRAR TEXTO: OFF");
     boton.title = activo
         ? "La siguiente partida arrancara sin texto guardado."
         : "La siguiente partida recuperara el ultimo texto guardado.";
 }
+window.actualizarBotonBorrarTextoGuardadoControl = actualizarBotonBorrarTextoGuardadoControl;
 
 function actualizarBotonSkipTertuliaControl() {
     const boton = document.getElementById("boton_skip_tertulia");
     if (!boton) return;
     const visible = juego_iniciado === true && modo_actual === "tertulia";
+    boton.textContent = tJuego2PControl("control.button.skip_tertulia", {}, "\u23ED\uFE0F SKIP TERTULIA");
     boton.classList.toggle("is-visible", visible);
 }
 
@@ -273,10 +552,10 @@ function temp() {
     console.log(checkboxFraseFinal)
     if((!fraseJ1 || !fraseJ2) && checkboxFraseFinal && checkboxFraseFinal.checked){
         if(!fraseJ1){
-        alert("Falta introducir una frase inicial para " + nombre1.value + ".")
+        alert(`Falta introducir una frase inicial para ${nombre1.value}.`)
         }
         else{
-            alert("Falta introducir una frase inicial para " + nombre2.value + ".")
+            alert(`Falta introducir una frase inicial para ${nombre2.value}.`)
         }
     }
     else{
@@ -322,7 +601,7 @@ function temp() {
 
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
-        boton_pausar_reanudar.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
+        actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     }
     rellenarListaModos();
     actualizarVariables();
@@ -440,12 +719,10 @@ function temas() {
 function limpiar() {
     //document.getElementById("nombre").value = "ESCRITXR 1";
     //document.getElementById("nombre1").value = "ESCRITXR 2";
-    display_modo.style.color = "white";
-    display_modo.textContent = "Ninguno";
-    tiempo_modos_secs.textContent = "0 segundos";
+    actualizarCabeceraModoControl({ modo: "", segundos: 0 });
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
-        boton_pausar_reanudar.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
+        actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     }
     texto_guardado1 = texto1.innerText;
     texto_guardado2 = texto2.innerText;
@@ -461,8 +738,8 @@ function limpiar() {
         window.actualizarPuntosMarcadorControl(1, 0, false);
         window.actualizarPuntosMarcadorControl(2, 0, false);
     } else {
-        document.getElementById("puntos").innerHTML = "0 palabras";
-        document.getElementById("puntos1").innerHTML = "0 palabras";
+        document.getElementById("puntos").innerHTML = tJuego2PControl("score.words_count", { count: 0 }, "0 palabras");
+        document.getElementById("puntos1").innerHTML = tJuego2PControl("score.words_count", { count: 0 }, "0 palabras");
     }
     if (typeof window.actualizarMusasMarcadorControl === "function") {
         window.actualizarMusasMarcadorControl(1, 0, false);
@@ -470,8 +747,8 @@ function limpiar() {
     } else {
         const musasJ1 = document.getElementById("musas");
         const musasJ2 = document.getElementById("musas1");
-        if (musasJ1) musasJ1.innerHTML = "0 musas";
-        if (musasJ2) musasJ2.innerHTML = "0 musas";
+        if (musasJ1) musasJ1.innerHTML = tJuego2PControl("score.muses_count", { count: 0 }, "0 musas");
+        if (musasJ2) musasJ2.innerHTML = tJuego2PControl("score.muses_count", { count: 0 }, "0 musas");
     }
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("texto").style.height = "40";
@@ -584,35 +861,134 @@ function cambiar_vista_calentamiento(boton) {
 function actualizarBotonVistaCalentamiento(boton) {
     const destino = boton || document.getElementById("boton_vista_calentamiento");
     if (!destino) return;
-    destino.textContent = vista_calentamiento ? "\u{1F3AE} VISTA PARTIDA" : "\u{1F525} VISTA TUTORIAL";
+    destino.textContent = vista_calentamiento
+        ? tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA")
+        : tJuego2PControl("control.button.tutorial_view", {}, "\u{1F525} VISTA TUTORIAL");
     destino.dataset.activo = vista_calentamiento ? "1" : "0";
 }
+window.actualizarBotonVistaCalentamiento = actualizarBotonVistaCalentamiento;
+
+function actualizarBotonPausaReanudarControl(boton) {
+    if (!boton) return;
+    boton.innerHTML = boton.dataset.value == 1
+        ? tJuego2PControl("control.button.resume", {}, "\u{25B6}\u{FE0F} REANUDAR")
+        : tJuego2PControl("control.button.pause", {}, "\u{23F8}\u{FE0F} PAUSAR");
+}
+window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl;
 
 const MODOS_VISTA_ESPECTADOR = new Set(["partida", "stats", "nube_inspiracion", "creditos"]);
 const normalizarModoVistaEspectador = (valor) => {
     const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
     return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "partida";
 };
+const normalizarEscalaUiEspectadorControl = (valor) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) {
+        return ESCALA_UI_ESPECTADOR_CONTROL_MAX;
+    }
+    return Math.min(
+        ESCALA_UI_ESPECTADOR_CONTROL_MAX,
+        Math.max(ESCALA_UI_ESPECTADOR_CONTROL_MIN, numero)
+    );
+};
+
+function actualizarControlesEscalaEspectadorControl() {
+    const label = document.getElementById("spectator_scale_label");
+    const botonDown = document.getElementById("spectator_scale_down");
+    const botonReset = document.getElementById("spectator_scale_reset");
+    const botonUp = document.getElementById("spectator_scale_up");
+    const porcentaje = Math.round(normalizarEscalaUiEspectadorControl(escala_ui_espectador_control) * 100);
+    const estaEnMin = porcentaje <= Math.round(ESCALA_UI_ESPECTADOR_CONTROL_MIN * 100);
+    const estaEnMax = porcentaje >= Math.round(ESCALA_UI_ESPECTADOR_CONTROL_MAX * 100);
+
+    if (label) {
+        label.textContent = tJuego2PControl(
+            "control.spectator_scale.label",
+            {},
+            "\u{1F441}\uFE0F TAMA\u00d1O ESPECTADOR"
+        );
+    }
+    if (botonReset) {
+        botonReset.textContent = tJuego2PControl(
+            "control.spectator_scale.value",
+            { percent: porcentaje },
+            `${porcentaje}%`
+        );
+        botonReset.disabled = porcentaje === 100;
+        botonReset.setAttribute(
+            "aria-label",
+            tJuego2PControl(
+                "control.spectator_scale.reset_aria",
+                { percent: porcentaje },
+                `Restablecer tama\u00f1o del espectador (${porcentaje}%)`
+            )
+        );
+    }
+    if (botonDown) {
+        botonDown.disabled = estaEnMin;
+        botonDown.setAttribute(
+            "aria-label",
+            tJuego2PControl(
+                "control.spectator_scale.decrease_aria",
+                {},
+                "Empeque\u00f1ecer espectador"
+            )
+        );
+    }
+    if (botonUp) {
+        botonUp.disabled = estaEnMax;
+        botonUp.setAttribute(
+            "aria-label",
+            tJuego2PControl(
+                "control.spectator_scale.increase_aria",
+                {},
+                "Agrandar espectador"
+            )
+        );
+    }
+}
 
 function actualizarBotonesVistaEspectadorControl() {
     const botonStats = document.getElementById("boton_vista_stats");
     const botonNube = document.getElementById("boton_vista_nube_inspiracion");
     const botonCreditos = document.getElementById("boton_mostrar_creditos");
+    const statsNav = document.getElementById("stats_nav_control");
+    const statsNavLabel = document.getElementById("stats_nav_label");
+    const statsPrev = document.getElementById("stats_nav_prev");
+    const statsNext = document.getElementById("stats_nav_next");
     if (botonStats) {
         const activo = vista_espectador_modo === "stats";
         botonStats.dataset.active = activo ? "1" : "0";
         botonStats.classList.toggle("is-active", activo);
+        botonStats.textContent = tJuego2PControl("control.button.stats", {}, "\u{1F4CA} STATS");
     }
     if (botonNube) {
         const activo = vista_espectador_modo === "nube_inspiracion";
         botonNube.dataset.active = activo ? "1" : "0";
         botonNube.classList.toggle("is-active", activo);
+        botonNube.textContent = tJuego2PControl("control.button.cloud", {}, "\u2601\uFE0F NUBE DE INSPIRACI\u00d3N");
     }
     if (botonCreditos) {
         const activo = vista_espectador_modo === "creditos";
         botonCreditos.dataset.active = activo ? "1" : "0";
         botonCreditos.classList.toggle("is-active", activo);
+        botonCreditos.textContent = tJuego2PControl("control.button.show_credits", {}, "\u{1F4DC} MOSTRAR CR\u00c9DITOS");
     }
+    if (statsNavLabel) {
+        statsNavLabel.textContent = tJuego2PControl("control.stats.slides", {}, "\u{1F4CA} SLIDES STATS");
+    }
+    if (statsPrev) {
+        statsPrev.setAttribute("aria-label", tJuego2PControl("control.stats.prev_aria", {}, "Slide anterior"));
+    }
+    if (statsNext) {
+        statsNext.setAttribute("aria-label", tJuego2PControl("control.stats.next_aria", {}, "Slide siguiente"));
+    }
+    if (statsNav) {
+        const visible = vista_espectador_modo === "stats";
+        statsNav.hidden = !visible;
+        statsNav.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
+    actualizarControlesEscalaEspectadorControl();
 }
 
 function cambiar_vista_espectador(modo) {
@@ -623,8 +999,34 @@ function cambiar_vista_espectador(modo) {
     socket.emit("cambiar_vista_espectador_modo", { modo: siguiente });
 }
 
+function navegarSlidesStatsControl(direccion) {
+    const dir = typeof direccion === "string" ? direccion.trim().toLowerCase() : "";
+    if ((dir !== "prev" && dir !== "next") || vista_espectador_modo !== "stats") {
+        return;
+    }
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        return;
+    }
+    socket.emit("stats_slide_control_navegar", { direccion: dir });
+}
+
+function ajustarEscalaEspectadorControl(accion) {
+    const siguienteAccion = typeof accion === "string" ? accion.trim().toLowerCase() : "";
+    if (siguienteAccion !== "down" && siguienteAccion !== "up" && siguienteAccion !== "reset") {
+        return;
+    }
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        return;
+    }
+    socket.emit("ajustar_escala_espectador", { accion: siguienteAccion });
+}
+window.ajustarEscalaEspectadorControl = ajustarEscalaEspectadorControl;
+
 function actualizarModoVistaEspectadorControl(payload = {}) {
     vista_espectador_modo = normalizarModoVistaEspectador(payload.modo);
+    if (payload && Object.prototype.hasOwnProperty.call(payload, "escala_ui")) {
+        escala_ui_espectador_control = normalizarEscalaUiEspectadorControl(payload.escala_ui);
+    }
     actualizarBotonesVistaEspectadorControl();
 }
 
@@ -657,13 +1059,8 @@ const TIPOS_SOLICITUD_CALENTAMIENTO = new Set([
     SOLICITUD_CALENTAMIENTO_NINGUNA,
     ...ORDEN_SOLICITUD_CALENTAMIENTO
 ]);
-const ETIQUETAS_SOLICITUD_CALENTAMIENTO = {
-    ninguna: "SIN DETONADOR ACTIVO",
-    lugares: "LUGARES",
-    acciones: "ACCIONES",
-    frase_final: "PALABRAS PARA FRASE FINAL"
-};
 let solicitud_calentamiento_actual = SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
+let ultimo_payload_solicitud_calentamiento_control = { tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO };
 const estado_autofill_frase_final_calentamiento = {
     1: { id: "", palabra: "" },
     2: { id: "", palabra: "" }
@@ -713,6 +1110,9 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
         : (payload && typeof payload.tipo === "string" ? payload.tipo : SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
     const tipo = TIPOS_SOLICITUD_CALENTAMIENTO.has(tipoRecibido) ? tipoRecibido : SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
     solicitud_calentamiento_actual = tipo;
+    ultimo_payload_solicitud_calentamiento_control = payload && typeof payload === "object"
+        ? { ...payload, solicitud: tipo }
+        : { tipo };
 
     const botones = document.querySelectorAll("[data-solicitud-calentamiento]");
     botones.forEach((boton) => {
@@ -723,8 +1123,8 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
 
     const estado = document.getElementById("calentamiento_solicitud_actual");
     if (estado) {
-        const etiqueta = ETIQUETAS_SOLICITUD_CALENTAMIENTO[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO[SOLICITUD_CALENTAMIENTO_POR_DEFECTO];
-        estado.textContent = `DETONADOR ACTUAL: ${etiqueta}`;
+        const etiqueta = traducirSolicitudCalentamientoControl(tipo) || traducirSolicitudCalentamientoControl(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
+        estado.textContent = tJuego2PControl("control.warmup.current_trigger", { label: etiqueta }, `DETONADOR ACTUAL: ${etiqueta}`);
     }
 
     const flujo = document.getElementById("calentamiento_flujo_estado");
@@ -736,14 +1136,16 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
                 : "";
             if (final) {
                 const compacta = final.toUpperCase().slice(0, 18);
-                return `FINAL ${compacta}`;
+                return tJuego2PControl("control.warmup.flow.final", { word: compacta }, `FINAL ${compacta}`);
             }
-            if (equipoData && equipoData.bloqueado) return "BLOQUEADO";
-            return "ABIERTO";
+            if (equipoData && equipoData.bloqueado) {
+                return tJuego2PControl("control.warmup.flow.blocked", {}, "BLOQUEADO");
+            }
+            return tJuego2PControl("control.warmup.flow.open", {}, "ABIERTO");
         };
         const estadoJ1 = formatear(equipos[1] || {});
         const estadoJ2 = formatear(equipos[2] || {});
-        flujo.textContent = `J1: ${estadoJ1} | J2: ${estadoJ2}`;
+        flujo.textContent = tJuego2PControl("control.warmup.flow.summary", { j1: estadoJ1, j2: estadoJ2 }, `J1: ${estadoJ1} | J2: ${estadoJ2}`);
     }
 
     if (payload && payload.equipos) {
@@ -833,7 +1235,7 @@ let teleprompter_ack_timeout = null;
 function actualizarEstadoCargaTeleprompter(mensaje, tipo = "idle") {
     const estado = document.getElementById("teleprompter_estado_carga");
     if (!estado) return;
-    estado.textContent = mensaje || "Sin carga en teleprompter";
+    estado.textContent = mensaje || tJuego2PControl("control.teleprompter.status.empty", {}, "Sin carga en teleprompter");
     estado.className = `teleprompter-status teleprompter-status--${tipo}`;
 }
 
@@ -1014,12 +1416,16 @@ function actualizarBotonesPanelSuperiorControl() {
     if (botonParametros) {
         botonParametros.dataset.active = parametros_visibles ? "1" : "0";
         botonParametros.classList.toggle("is-active", parametros_visibles);
-        botonParametros.textContent = parametros_visibles ? "\u{1F3AE} CONTROLES" : "\u2699\uFE0F PAR\u00C1METROS";
+        botonParametros.textContent = parametros_visibles
+            ? tJuego2PControl("control.button.controls", {}, "\u{1F3AE} CONTROLES")
+            : tJuego2PControl("control.button.parameters", {}, "\u2699\uFE0F PAR\u00c1METROS");
     }
     if (botonCreditos) {
         botonCreditos.dataset.active = creditos_visibles ? "1" : "0";
         botonCreditos.classList.toggle("is-active", creditos_visibles);
-        botonCreditos.textContent = creditos_visibles ? "\u{1F3AE} CONTROLES" : "\u{1F3AC} CR\u00C9DITOS";
+        botonCreditos.textContent = creditos_visibles
+            ? tJuego2PControl("control.button.controls", {}, "\u{1F3AE} CONTROLES")
+            : tJuego2PControl("control.button.credits", {}, "\u{1F3AC} CR\u00c9DITOS");
     }
 }
 
@@ -1115,7 +1521,9 @@ function actualizarTeleprompterUI() {
         speedLabel.textContent = Math.round(teleprompter_state.speed);
     }
     if (playBtn) {
-        playBtn.textContent = teleprompter_state.playing ? "\u23F8\uFE0F PAUSA" : "\u25B6\uFE0F PLAY";
+        playBtn.textContent = teleprompter_state.playing
+            ? tJuego2PControl("control.teleprompter.pause", {}, "\u23F8\uFE0F PAUSA")
+            : tJuego2PControl("control.teleprompter.play", {}, "\u25B6\uFE0F PLAY");
     }
     if (fontMeter) {
         const pct = (teleprompter_state.fontSize - TELEPROMPTER_FONT_MIN) / (TELEPROMPTER_FONT_MAX - TELEPROMPTER_FONT_MIN);
@@ -1127,7 +1535,9 @@ function actualizarTeleprompterUI() {
     }
     const botonTeleprompter = document.getElementById("boton_teleprompter");
     if (botonTeleprompter) {
-        botonTeleprompter.textContent = teleprompter_visible ? "\u{1F399}\uFE0F CONTROLES" : "\u{1F399}\uFE0F TELEPROMPTER";
+        botonTeleprompter.textContent = teleprompter_visible
+            ? tJuego2PControl("control.teleprompter.controls", {}, "\u{1F399}\uFE0F CONTROLES")
+            : tJuego2PControl("control.button.teleprompter", {}, "\u{1F399}\uFE0F TELEPROMPTER");
     }
     if (typeof actualizarBotonesTeleprompterCarga === "function") {
         actualizarBotonesTeleprompterCarga();
@@ -1558,9 +1968,7 @@ if (typeof window !== "undefined") {
     window.addEventListener("load", iniciarTeleprompterGamepad);
     window.addEventListener("load", configurarHoldTeleprompter);
     window.addEventListener("load", () => {
-        actualizarBotonesPanelSuperiorControl();
-        actualizarBotonesVistaEspectadorControl();
-        actualizarBotonBorrarTextoGuardadoControl();
+        refrescarTextosEstaticosControl();
         inicializarPanelCreditosControl();
         aplicarCreditosEnPanelControl(creditos_estado_control);
     });
@@ -1579,14 +1987,68 @@ function actualizarBotonBanderasMusasControl(estado = banderas_musas_activas) {
     if (!boton) return;
     boton.dataset.activo = banderas_musas_activas ? "1" : "0";
     boton.textContent = banderas_musas_activas
-        ? "\uD83D\uDEA9 BANDERAS ACTIVADAS"
-        : "\uD83C\uDFF3\uFE0F BANDERAS DESACTIVADAS";
+        ? tJuego2PControl("control.button.flags.on", {}, "\uD83D\uDEA9 BANDERAS ACTIVADAS")
+        : tJuego2PControl("control.button.flags.off", {}, "\uD83C\uDFF3\uFE0F BANDERAS DESACTIVADAS");
 }
 
 window.actualizarEstadoBanderasMusasControl = (payload = {}) => {
     const activa = Boolean(payload && payload.activa);
     actualizarBotonBanderasMusasControl(activa);
 };
+
+function refrescarTextosEstaticosControl() {
+    const textos = [
+        ["control_title_tutorial", "control.title.tutorial", "\u{1F525} TUTORIAL"],
+        ["control_title_game", "control.title.game", "\u{1F3AE} JUEGO"],
+        ["control_title_representation", "control.title.representation", "\u{1F3AD} REPRESENTACI\u00d3N"],
+        ["control_subtitle_musas", "control.subtitle.muses", "DETONADORES PARA MUSAS"],
+        ["boton_reiniciar_calentamiento", "control.button.clear", "\u{1F9F9} LIMPIAR"],
+        ["boton_reiniciar_marcador_calentamiento", "control.button.reset_score", "\u{1F3C6} REINICIAR MARCADOR"],
+        ["boton_escribir", "control.button.write", "\u270D\uFE0F ESCRIBIR"],
+        ["boton_limpiar_juego", "control.button.clear", "\u{1F9F9} LIMPIAR"],
+        ["boton_descargar_textos", "control.button.download_texts", "\u{1F4BE} DESCARGAR TEXTOS"],
+        ["boton_temporizador_gigante", "control.button.giant_timer", "\u23F1\uFE0F TEMPORIZADOR GIGANTE"],
+        ["boton_fin_j1", "control.button.end.blue", "\uD83D\uDD35 FIN"],
+        ["boton_fin_j2", "control.button.end.red", "\uD83D\uDD34 FIN"],
+        ["frase_final_label_j1", "control.label.final_phrase", "FRASE FINAL:"],
+        ["frase_final_label_j2", "control.label.final_phrase", "FRASE FINAL:"],
+        ["boton_solicitud_lugares", "control.button.request_places", "\u{1F4CD} PEDIR LUGARES"],
+        ["boton_solicitud_acciones", "control.button.request_actions", "\u{1F3C3} PEDIR ACCIONES"],
+        ["boton_solicitud_frase_final", "control.button.request_final_phrase", "\u{1F5E3}\uFE0F PEDIR FRASE FINAL"],
+        ["teleprompter_cargar_j1", "control.button.load", "\u{1F4BE} CARGAR"],
+        ["teleprompter_cargar_j2", "control.button.load", "\u{1F4BE} CARGAR"]
+    ];
+
+    textos.forEach(([id, clave, fallback]) => {
+        const nodo = document.getElementById(id);
+        if (nodo) {
+            nodo.textContent = tJuego2PControl(clave, {}, fallback);
+        }
+    });
+
+    const fraseFinalJ1 = document.getElementById("frase_final_j1");
+    const fraseFinalJ2 = document.getElementById("frase_final_j2");
+    const placeholderFrase = tJuego2PControl("control.placeholder.final_phrase", {}, "Escribe la frase final...");
+    if (fraseFinalJ1) fraseFinalJ1.setAttribute("placeholder", placeholderFrase);
+    if (fraseFinalJ2) fraseFinalJ2.setAttribute("placeholder", placeholderFrase);
+
+    actualizarCabeceraModoControl();
+    actualizarBotonesPanelSuperiorControl();
+    actualizarBotonesVistaEspectadorControl();
+    actualizarBotonSkipTertuliaControl();
+    actualizarBotonVistaCalentamiento();
+    actualizarBotonBorrarTextoGuardadoControl();
+    actualizarBotonBanderasMusasControl();
+    if (typeof boton_pausar_reanudar !== "undefined" && boton_pausar_reanudar) {
+        actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
+    } else {
+        const botonPausa = document.getElementById("boton_pausar_reanudar");
+        if (botonPausa) actualizarBotonPausaReanudarControl(botonPausa);
+    }
+    actualizarSolicitudCalentamientoControl(ultimo_payload_solicitud_calentamiento_control);
+    actualizarTeleprompterUI();
+}
+window.refrescarIdiomaControlUI = refrescarTextosEstaticosControl;
 
 function activar_banderas_musas() {
     const siguienteEstado = !banderas_musas_activas;
@@ -1680,13 +2142,13 @@ function pausar_reanudar(boton) {
       // Usamos comparación == para no preocuparnos de que sea string
       if (boton.dataset.value == 0) {
         pausar();
-        boton.innerHTML = "\u{25B6}\u{FE0F} REANUDAR";
         boton.dataset.value = 1;
+        actualizarBotonPausaReanudarControl(boton);
       }
       else if (boton.dataset.value == 1) {
         reanudar();
-        boton.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
         boton.dataset.value = 0;
+        actualizarBotonPausaReanudarControl(boton);
       }
     }
   }
@@ -1714,7 +2176,7 @@ function reanudar_modo(){
     console.log(time_minutes, time_seconds)
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
-        boton_pausar_reanudar.innerHTML = "\u{23F8}\u{FE0F} PAUSAR";
+        actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     }
     socket.emit('count', {count, player:1});
     socket.emit('count', {count : count1, player:2});
@@ -1814,9 +2276,9 @@ function final(player, opciones = {}){
         cancelarAnimacionEntradaBarraVida(tiempo);
         clearInterval(countInterval);
         tiempo.style.color = "white"
-        tiempo.innerHTML = "¡Tiempo!";
+        tiempo.innerHTML = tJuego2PControl("timer.time_up", {}, "¡Tiempo!");
         actualizarBarraVida(tiempo, tiempo.innerHTML);
-        count = "¡Tiempo!";
+        count = tJuego2PControl("timer.time_up", {}, "¡Tiempo!");
         texto_guardado1 = texto1.innerText;
         terminado = true;
         console.log("texto1", texto_guardado1)
@@ -1829,9 +2291,9 @@ function final(player, opciones = {}){
         cancelarAnimacionEntradaBarraVida(tiempo1);
         clearInterval(countInterval1);
         tiempo1.style.color = "white"
-        tiempo1.innerHTML = "¡Tiempo!";
+        tiempo1.innerHTML = tJuego2PControl("timer.time_up", {}, "¡Tiempo!");
         actualizarBarraVida(tiempo1, tiempo1.innerHTML);
-        count1 = "¡Tiempo!";
+        count1 = tJuego2PControl("timer.time_up", {}, "¡Tiempo!");
         terminado1 = true;
         texto_guardado2 = texto2.innerText;
         console.log("texto2", texto_guardado2)
@@ -1841,9 +2303,7 @@ function final(player, opciones = {}){
     }
 
     if(terminado && terminado1){
-        tiempo_modos_secs.textContent = 0 + " segundos";
-        display_modo.style.color = "white";
-        display_modo.textContent = "Ninguno"; 
+        actualizarCabeceraModoControl({ modo: "", segundos: 0 });
         console.log("PRUEBA FINAL", texto_guardado1)
         if (!regalo_musas_enviado && typeof window.emitirRegaloMusas === "function") {
             regalo_musas_enviado = true;

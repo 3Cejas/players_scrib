@@ -12,8 +12,52 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const tJuego2P = (clave, variables = {}, fallback = "") => (
+    (window && typeof window.scribT2P === "function")
+        ? window.scribT2P(clave, variables, fallback)
+        : (fallback || clave)
+);
+const traducirTituloModoEspectador = (modo, fallback = "") => (
+    (window && typeof window.scribTranslateModeTitle2P === "function")
+        ? window.scribTranslateModeTitle2P(modo, fallback || String(modo || "").toUpperCase())
+        : (fallback || String(modo || "").toUpperCase())
+);
+const traducirDescripcionModoEspectador = (modo, fallback = "") => (
+    (window && typeof window.scribTranslateModeDescription2P === "function")
+        ? window.scribTranslateModeDescription2P(modo, fallback)
+        : fallback
+);
+const formatearPalabrasEspectador = (valor) => (
+    (window && typeof window.scribFormatWordsCount2P === "function")
+        ? window.scribFormatWordsCount2P(valor)
+        : `${Number(valor) || 0} palabras`
+);
+const formatearMusasEspectador = (valor) => (
+    (window && typeof window.scribFormatMusesCount2P === "function")
+        ? window.scribFormatMusesCount2P(valor)
+        : `${Number(valor) || 0} musas`
+);
+const traducirSolicitudCalentamientoEspectador = (tipo, opciones = {}) => (
+    (window && typeof window.scribTranslateWarmupRequest2P === "function")
+        ? window.scribTranslateWarmupRequest2P(tipo, opciones)
+        : String(tipo || "").toUpperCase()
+);
+const traducirNombreEscritoraEspectador = (id, fallback = "") => (
+    (window && typeof window.scribTranslateWriterName2P === "function")
+        ? window.scribTranslateWriterName2P(id, fallback)
+        : (fallback || `ESCRITXR ${id}`)
+);
+const textoTiempoAgotadoEspectador = () => (
+    tJuego2P("timer.time_up", {}, "¡Tiempo!")
+);
 
 const paddedFormat = (num) => (num < 10 ? `0${num}` : `${num}`);
+
+const refrescarCountdownEspectador = () => {
+    if (window && typeof window.scribRefreshCountdownText2P === "function") {
+        window.scribRefreshCountdownText2P(getEl("countdown"));
+    }
+};
 
 const obtenerContenidoMarquee = (elemento) => {
     if (!elemento) return "";
@@ -264,7 +308,7 @@ window.addEventListener("resize", () => {
         renderizarCursoresCalentamiento();
     }
     if (vista_espectador_modo_resuelta === "stats" && stats_slides_track) {
-        stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
+        aplicarSlideStatsActual();
     }
     if (vista_espectador_modo_resuelta === "nube_inspiracion") {
         renderizarNubeInspiracion();
@@ -431,6 +475,10 @@ const renderizarCantidadResucitarMini = (ui, data = {}) => {
     const palabras = Math.max(0, Math.floor(Number(data.palabras) || 0));
     const segundos = Math.max(0, Math.floor(Number(data.segundos) || 0));
     const max = Math.max(0, Math.floor(Number(data.max) || 0));
+    if (window && typeof window.scribBuildResurrectionQuantityHtml2P === "function") {
+        ui.quantityDisplay.innerHTML = window.scribBuildResurrectionQuantityHtml2P({ palabras, segundos, max });
+        return;
+    }
     ui.quantityDisplay.innerHTML = `
       <div class="resucitar-stepper" aria-hidden="true">
         <div class="resucitar-stepper-arrow">&uarr;</div>
@@ -454,6 +502,7 @@ const actualizarResucitarMini = (data) => {
     const playerId = Number(data.player);
     const ui = resucitarMini[playerId];
     if (!ui || !ui.root) return;
+    ultimo_estado_resucitar_espectador[playerId] = data;
     const menu = data.menu;
     const visible = data.visible && (menu === "main" || menu === "quantity");
     if (!visible) {
@@ -826,38 +875,31 @@ const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set([
     SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA,
     ...ORDEN_SOLICITUD_CALENTAMIENTO_VISTA
 ]);
-const ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA = {
-    ninguna: "NINGUNO",
-    lugares: "LUGARES",
-    acciones: "ACCIONES",
-    frase_final: "FRASE FINAL"
-};
-const ETIQUETAS_DETONADORES_HISTORIAL_VISTA = {
-    lugares: "LUGAR",
-    acciones: "ACCIÓN",
-    frase_final: "FRASE FINAL"
-};
 const MAX_TEXTO_DETONADOR_HISTORIAL = 48;
 const crearHistorialDetonadoresBase = () => (
     ORDEN_SOLICITUD_CALENTAMIENTO_VISTA.map((tipo) => ({
         tipo,
-        titulo: ETIQUETAS_DETONADORES_HISTORIAL_VISTA[tipo] || tipo.toUpperCase(),
-        valor: "NINGUNO"
+        titulo: traducirSolicitudCalentamientoEspectador(tipo).toUpperCase(),
+        valor: traducirSolicitudCalentamientoEspectador(SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA, { corta: true }).toUpperCase()
     }))
 );
 let solicitud_calentamiento_espectador = SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO;
 let historial_detonadores_espectador = crearHistorialDetonadoresBase();
 let calentamiento_activo_previo_espectador = false;
+let ultimo_payload_calentamiento_espectador = null;
+let ultimo_payload_modo_espectador = null;
+let ultimo_estado_resucitar_espectador = { 1: null, 2: null };
+let ultima_letra_bendita_espectador = "";
+let ultima_letra_prohibida_espectador = "";
 let finales_calentamiento_previos = { 1: "", 2: "" };
 let cursores_calentamiento = {
     1: { x: 50, y: 50, visible: false },
     2: { x: 50, y: 50, visible: false }
 };
 let estado_stats_live_espectador = null;
+let stats_slide_step_remoto = 0;
 let stats_slide_index = 0;
 let stats_slide_count = 0;
-let intervalo_stats_slides = null;
-const INTERVALO_STATS_SLIDE_MS = 6500;
 const STATS_LAYOUT_HEATMAP = [
     [
         { code: "Backquote", label: "º\nª" },
@@ -936,6 +978,8 @@ const DURACION_VIGENCIA_ENTREGADA_NUBE_MS = 10000;
 const DURACION_EXPIRAR_NUBE_MS = 160;
 const DURACION_USO_NUBE_MS = 1000;
 const PERMITIR_SCROLL_ESPECTADOR = false;
+const ESCALA_UI_ESPECTADOR_MIN = 0.82;
+const ESCALA_UI_ESPECTADOR_MAX = 1.28;
 let raf_ajuste_viewport_espectador = null;
 let resize_observer_fit_viewport_espectador = null;
 const CREDITOS_CAMPOS_ORDEN = [
@@ -970,6 +1014,7 @@ let estado_creditos_espectador = {
     mostrar: false,
     animacion_id: 0
 };
+let escala_ui_espectador = ESCALA_UI_ESPECTADOR_MAX;
 let creditos_animacion_raf = null;
 let creditos_animacion_inicio = null;
 let creditos_animacion_y_inicio = 0;
@@ -978,6 +1023,35 @@ let creditos_animacion_duracion_ms = 0;
 const CREDITOS_SCROLL_VELOCIDAD_PX_S = 34;
 const CREDITOS_SCROLL_DURACION_MIN_MS = 28000;
 const CREDITOS_SCROLL_MARGEN_SALIDA_PX = 100;
+const interpolarEscalaUiEspectador = (valor, salidaMin, salidaMax) => {
+    const escala = normalizarEscalaUiEspectador(valor);
+    const rangoEntrada = ESCALA_UI_ESPECTADOR_MAX - ESCALA_UI_ESPECTADOR_MIN;
+    if (rangoEntrada <= 0) {
+        return salidaMin;
+    }
+    const progreso = (escala - ESCALA_UI_ESPECTADOR_MIN) / rangoEntrada;
+    return salidaMin + ((salidaMax - salidaMin) * progreso);
+};
+const normalizarEscalaUiEspectador = (valor, fallback = ESCALA_UI_ESPECTADOR_MAX) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) {
+        return fallback;
+    }
+    return Math.max(ESCALA_UI_ESPECTADOR_MIN, Math.min(ESCALA_UI_ESPECTADOR_MAX, numero));
+};
+const aplicarEscalaUiEspectador = () => {
+    const root = document.body && document.body.classList && document.body.classList.contains("page-spectator")
+        ? document.body
+        : document.documentElement;
+    if (!root || !root.style) return;
+    const escala = normalizarEscalaUiEspectador(escala_ui_espectador);
+    root.style.setProperty("--spectator-ui-scale", escala.toFixed(3));
+    root.style.setProperty("--spectator-name-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.22).toFixed(3));
+    root.style.setProperty("--spectator-time-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.18).toFixed(3));
+    root.style.setProperty("--spectator-meta-scale", interpolarEscalaUiEspectador(escala, 0.92, 1.2).toFixed(3));
+    root.style.setProperty("--spectator-level-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.18).toFixed(3));
+    root.style.setProperty("--spectator-text-lines", interpolarEscalaUiEspectador(escala, 8.1, 4.25).toFixed(2));
+};
 
 const resetAjusteViewportEspectador = () => {
     if (!spectator_fit_root) return;
@@ -986,9 +1060,8 @@ const resetAjusteViewportEspectador = () => {
 
 const ajustarViewportEspectador = () => {
     if (!spectator_fit_root) return;
-    const esPartida = vista_espectador_modo_resuelta === "partida";
     const teleprompterActivo = Boolean(teleprompter_estado && teleprompter_estado.visible);
-    if (!esPartida || teleprompterActivo) {
+    if (teleprompterActivo) {
         resetAjusteViewportEspectador();
         return;
     }
@@ -998,10 +1071,11 @@ const ajustarViewportEspectador = () => {
     const viewportH = Math.max(window.innerHeight || 0, 1);
     const anchoNatural = Math.max(Math.ceil(spectator_fit_root.scrollWidth || 0), 1);
     const altoNatural = Math.max(Math.ceil(spectator_fit_root.scrollHeight || 0), 1);
+    const escalaMaxima = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
 
-    let escala = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
+    let escala = escalaMaxima;
     if (!Number.isFinite(escala) || escala <= 0) {
-        escala = 1;
+        escala = Number.isFinite(escalaMaxima) && escalaMaxima > 0 ? escalaMaxima : 1;
     }
 
     const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5);
@@ -1052,6 +1126,18 @@ const resolverModoVistaEspectadorLocal = () => {
         return vista_espectador_override;
     }
     return vista_calentamiento ? "calentamiento" : "partida";
+};
+const normalizarPasoSlideStatsEspectador = (valor) => {
+    const numero = Number(valor);
+    return Number.isFinite(numero) ? Math.trunc(numero) : 0;
+};
+const resolverIndiceSlideStatsEspectador = (paso, total) => {
+    const cantidad = Number(total);
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+        return 0;
+    }
+    const resto = normalizarPasoSlideStatsEspectador(paso) % cantidad;
+    return resto < 0 ? resto + cantidad : resto;
 };
 const normalizarNombreCursorCalentamiento = (valor, fallback) => {
     const texto = typeof valor === "string" ? valor.trim() : "";
@@ -1128,16 +1214,16 @@ const renderizarCreditosEspectador = () => {
     }).join("");
     const agradecimientos = data.agradecimientos
         ? escapeHtml(data.agradecimientos).replace(/\n/g, "<br>")
-        : "Agradecimientos pendientes.";
+        : tJuego2P("credits.thanks_pending", {}, "Agradecimientos pendientes.");
     creditos_content.innerHTML = `
         <div class="creditos-bloque">
             <div class="creditos-lineas">${lineas}</div>
         </div>
         <div class="creditos-bloque creditos-bloque--agradecimientos">
-            <h3 class="creditos-subtitulo">AGRADECIMIENTOS:</h3>
+            <h3 class="creditos-subtitulo">${tJuego2P("credits.thanks_title", {}, "AGRADECIMIENTOS:")}</h3>
             <p class="creditos-agradecimientos">${agradecimientos}</p>
         </div>
-        <p class="creditos-cierre">Una producción de SUTURA TEATRO.</p>
+        <p class="creditos-cierre">${tJuego2P("credits.closure", {}, "Una produccion de SUTURA TEATRO.")}</p>
     `;
 };
 const iniciarAnimacionCreditosEspectador = (forzar = false) => {
@@ -1226,23 +1312,28 @@ const obtenerDetonadorElegidoHistorial = (equipos = {}) => {
     }
     if (palabraJ1) return palabraJ1.toUpperCase();
     if (palabraJ2) return palabraJ2.toUpperCase();
-    return "NINGUNO";
+    return traducirSolicitudCalentamientoEspectador(SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA, { corta: true }).toUpperCase();
 };
 const renderizarHistorialDetonadores = () => {
     if (!calentamiento_detonadores_historial) return;
     calentamiento_detonadores_historial.innerHTML = "";
     const fragment = document.createDocumentFragment();
+    const textoVacio = traducirSolicitudCalentamientoEspectador(SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA, { corta: true }).toUpperCase();
+    const valoresVacios = new Set(["NINGUNO", "NONE", "AUCUN", textoVacio]);
     historial_detonadores_espectador.forEach((entrada) => {
         const item = document.createElement("div");
         item.className = `detonador-historial-item tipo-${entrada.tipo}`;
         const titulo = document.createElement("span");
         titulo.className = "detonador-historial-caso";
-        titulo.textContent = entrada.titulo || "";
+        titulo.textContent = traducirSolicitudCalentamientoEspectador(entrada.tipo).toUpperCase();
         const valor = document.createElement("span");
         valor.className = "detonador-historial-label";
-        const textoValor = normalizarTextoDetonadorHistorial(entrada.valor).toUpperCase() || "NINGUNO";
+        const textoValorGuardado = normalizarTextoDetonadorHistorial(entrada.valor).toUpperCase();
+        const textoValor = valoresVacios.has(textoValorGuardado) || !textoValorGuardado
+            ? textoVacio
+            : textoValorGuardado;
         valor.textContent = textoValor;
-        if (textoValor === "NINGUNO") {
+        if (textoValor === textoVacio) {
             item.classList.add("is-empty");
         }
         item.appendChild(titulo);
@@ -1279,8 +1370,12 @@ const actualizarConsignaCalentamientoEspectador = (solicitud, equipos = {}) => {
         solicitud_calentamiento_espectador = tipo;
         return;
     }
-    const etiquetaActual = ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[tipo] || ETIQUETAS_SOLICITUD_CALENTAMIENTO_VISTA[SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO];
-    calentamiento_consigna_espectador.textContent = `DETONADOR ACTUAL: ${etiquetaActual}`;
+    const etiquetaActual = traducirSolicitudCalentamientoEspectador(tipo);
+    calentamiento_consigna_espectador.textContent = tJuego2P(
+        "warmup.request.spectator",
+        { label: etiquetaActual },
+        `DETONADOR ACTUAL: ${etiquetaActual}`
+    );
     calentamiento_consigna_espectador.classList.remove("tipo-libre", "tipo-ninguna", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
     calentamiento_consigna_espectador.classList.add(`tipo-${tipo}`);
     if (solicitud_calentamiento_espectador && solicitud_calentamiento_espectador !== tipo) {
@@ -1294,11 +1389,17 @@ const actualizarConsignaCalentamientoEspectador = (solicitud, equipos = {}) => {
 };
 const actualizarEtiquetasCursorCalentamiento = () => {
     if (calentamiento_cursor_label_1) {
-        const nombreAzul = normalizarNombreCursorCalentamiento(getEl("nombre")?.value, "ESCRITORA AZUL");
+        const nombreAzul = normalizarNombreCursorCalentamiento(
+            getEl("nombre")?.value,
+            traducirNombreEscritoraEspectador(1, "ESCRITORA AZUL")
+        );
         calentamiento_cursor_label_1.textContent = nombreAzul;
     }
     if (calentamiento_cursor_label_2) {
-        const nombreRojo = normalizarNombreCursorCalentamiento(getEl("nombre1")?.value, "ESCRITORA ROJA");
+        const nombreRojo = normalizarNombreCursorCalentamiento(
+            getEl("nombre1")?.value,
+            traducirNombreEscritoraEspectador(2, "ESCRITORA ROJA")
+        );
         calentamiento_cursor_label_2.textContent = nombreRojo;
     }
 };
@@ -1939,22 +2040,20 @@ const construirSlidesStats = (payload) => {
         }
     ];
 };
+const aplicarSlideStatsActual = () => {
+    if (!stats_slides_track) return;
+    stats_slide_index = resolverIndiceSlideStatsEspectador(stats_slide_step_remoto, stats_slide_count);
+    stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
+    actualizarPaginadorStats();
+};
 const actualizarPaginadorStats = () => {
     if (!stats_dots) return;
     stats_dots.innerHTML = "";
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < stats_slide_count; i += 1) {
-        const dot = document.createElement("button");
-        dot.type = "button";
+        const dot = document.createElement("span");
         dot.className = `stats-dot${i === stats_slide_index ? " activo" : ""}`;
-        dot.setAttribute("aria-label", `Slide ${i + 1}`);
-        dot.addEventListener("click", () => {
-            stats_slide_index = i;
-            if (stats_slides_track) {
-                stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
-            }
-            actualizarPaginadorStats();
-        });
+        dot.setAttribute("aria-hidden", "true");
         fragment.appendChild(dot);
     }
     stats_dots.appendChild(fragment);
@@ -1979,29 +2078,16 @@ const renderizarStatsEspectador = () => {
     });
     stats_slides_track.appendChild(fragment);
     stats_slide_count = slides.length;
-    if (stats_slide_index >= stats_slide_count) {
-        stats_slide_index = 0;
-    }
-    stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
-    actualizarPaginadorStats();
+    aplicarSlideStatsActual();
     const nombreModo = estado.modo_actual ? estado.modo_actual : "partida";
     stats_estado.textContent = `Modo: ${nombreModo} · Heatmap + tiempo live · ${stats_slide_count} slides`;
     stats_timestamp.textContent = `Actualizado: ${formatearHoraEspectador(estado.ts)}`;
 };
 const iniciarSlidesStats = () => {
-    if (intervalo_stats_slides) return;
-    intervalo_stats_slides = setInterval(() => {
-        if (vista_espectador_modo_resuelta !== "stats") return;
-        if (!stats_slide_count || stats_slide_count <= 1 || !stats_slides_track) return;
-        stats_slide_index = (stats_slide_index + 1) % stats_slide_count;
-        stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
-        actualizarPaginadorStats();
-    }, INTERVALO_STATS_SLIDE_MS);
+    aplicarSlideStatsActual();
 };
 const detenerSlidesStats = () => {
-    if (!intervalo_stats_slides) return;
-    clearInterval(intervalo_stats_slides);
-    intervalo_stats_slides = null;
+    return;
 };
 const hashCadenaInspiracion = (texto) => {
     const valor = String(texto || "");
@@ -2350,7 +2436,20 @@ const actualizarVistaCalentamiento = (activa) => {
     actualizarModoVistaEspectadorUi();
 };
 const actualizarModoVistaEspectadorRemota = (payload = {}) => {
+    let cambioPasoStats = false;
+    let cambioEscalaUi = false;
     if (payload && typeof payload === "object") {
+        if (Object.prototype.hasOwnProperty.call(payload, "stats_slide_step")) {
+            const nuevoPaso = normalizarPasoSlideStatsEspectador(payload.stats_slide_step);
+            cambioPasoStats = nuevoPaso !== stats_slide_step_remoto;
+            stats_slide_step_remoto = nuevoPaso;
+        }
+        if (Object.prototype.hasOwnProperty.call(payload, "escala_ui")) {
+            const nuevaEscala = normalizarEscalaUiEspectador(payload.escala_ui, escala_ui_espectador);
+            cambioEscalaUi = nuevaEscala !== escala_ui_espectador;
+            escala_ui_espectador = nuevaEscala;
+            aplicarEscalaUiEspectador();
+        }
         if (Object.prototype.hasOwnProperty.call(payload, "calentamiento_vista")) {
             vista_calentamiento = Boolean(payload.calentamiento_vista);
         }
@@ -2359,14 +2458,31 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
         }
         if (Object.prototype.hasOwnProperty.call(payload, "modo")) {
             const modoServidor = normalizarModoVistaEspectador(payload.modo);
+            if (modoServidor === vista_espectador_modo_resuelta) {
+                if (modoServidor === "stats" && cambioPasoStats) {
+                    aplicarSlideStatsActual();
+                }
+                if (cambioEscalaUi) {
+                    programarAjusteViewportEspectador();
+                }
+                return;
+            }
             actualizarModoVistaEspectadorUi(modoServidor);
             return;
         }
+    }
+    if (vista_espectador_modo_resuelta === "stats" && cambioPasoStats) {
+        aplicarSlideStatsActual();
+    }
+    if (cambioEscalaUi || cambioPasoStats) {
+        programarAjusteViewportEspectador();
+        return;
     }
     actualizarModoVistaEspectadorUi();
 };
 actualizarModoVistaEspectadorUi();
 renderizarCreditosEspectador();
+aplicarEscalaUiEspectador();
 iniciarAjusteViewportEspectador();
 
 const actualizarFinalCardCalentamiento = (equipo, dataEquipo = {}) => {
@@ -2378,17 +2494,17 @@ const actualizarFinalCardCalentamiento = (equipo, dataEquipo = {}) => {
     const bloqueado = Boolean(dataEquipo && dataEquipo.bloqueado);
     if (label) {
         const nombre = equipo === 1
-            ? normalizarNombreCursorCalentamiento(getEl("nombre")?.value, "ESCRITXR 1")
-            : normalizarNombreCursorCalentamiento(getEl("nombre1")?.value, "ESCRITXR 2");
+            ? normalizarNombreCursorCalentamiento(getEl("nombre")?.value, traducirNombreEscritoraEspectador(1, "ESCRITXR 1"))
+            : normalizarNombreCursorCalentamiento(getEl("nombre1")?.value, traducirNombreEscritoraEspectador(2, "ESCRITXR 2"));
         label.textContent = nombre.toUpperCase();
     }
     if (word) {
         if (final) {
             word.textContent = final.palabra.toUpperCase();
         } else if (bloqueado) {
-            word.textContent = "ELIGIENDO...";
+            word.textContent = tJuego2P("warmup.final.choosing", {}, "ELIGIENDO...");
         } else {
-            word.textContent = "PENDIENTE";
+            word.textContent = tJuego2P("warmup.final.pending", {}, "PENDIENTE");
         }
     }
     card.classList.toggle("is-blocked", bloqueado && !final);
@@ -2409,15 +2525,16 @@ const construirEstadoGlobalCalentamiento = (equipos = {}) => {
     const e2 = equipos[2] || {};
     const final1 = normalizarFinalCalentamientoEspectador(e1.final);
     const final2 = normalizarFinalCalentamientoEspectador(e2.final);
-    if (final1 && final2) return "Ambas escritoras eligieron su palabra final. Esperando nueva consigna.";
-    if (final1 || final2) return "Falta una palabra final para completar esta consigna.";
+    if (final1 && final2) return tJuego2P("warmup.state.both_final", {}, "Ambas escritoras eligieron su palabra final. Esperando nueva consigna.");
+    if (final1 || final2) return tJuego2P("warmup.state.one_final_missing", {}, "Falta una palabra final para completar esta consigna.");
     const bloqueadas = Number(Boolean(e1.bloqueado)) + Number(Boolean(e2.bloqueado));
-    if (bloqueadas > 0) return "Consigna cerrada en una mesa. Falta elegir palabra final.";
-    return "Recibiendo palabras de las musas.";
+    if (bloqueadas > 0) return tJuego2P("warmup.state.table_closed_choose_final", {}, "Consigna cerrada en una mesa. Falta elegir palabra final.");
+    return tJuego2P("warmup.state.receiving_words", {}, "Recibiendo palabras de las musas.");
 };
 
 const actualizarCalentamientoEspectador = (data) => {
     if (!data) return;
+    ultimo_payload_calentamiento_espectador = data;
     const activoServidor = Boolean(data.activo);
     if (activoServidor && !calentamiento_activo_previo_espectador) {
         limpiarHistorialDetonadores();
@@ -2433,7 +2550,9 @@ const actualizarCalentamientoEspectador = (data) => {
     if (calentamiento_global_estado) {
         calentamiento_global_estado.textContent = activo
             ? construirEstadoGlobalCalentamiento(equipos)
-            : (data.activo ? "Tutorial oculto." : "Tutorial inactivo.");
+            : (data.activo
+                ? tJuego2P("warmup.state.hidden", {}, "Tutorial oculto.")
+                : tJuego2P("warmup.state.inactive", {}, "Tutorial inactivo."));
     }
     actualizarFinalCardCalentamiento(1, equipos[1] || {});
     actualizarFinalCardCalentamiento(2, equipos[2] || {});
@@ -2580,21 +2699,11 @@ if (document.readyState === "loading") {
 const timeout_puntos_espectador = new WeakMap();
 
 const formatearPuntosMarcador = (valor) => {
-    const texto = String(valor ?? "").trim();
-    if (!texto) return "0 palabras";
-    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
-        return `${texto} palabras`;
-    }
-    return texto;
+    return formatearPalabrasEspectador(valor);
 };
 
 const formatearMusasMarcador = (valor) => {
-    const texto = String(valor ?? "").trim();
-    if (!texto) return "0 musas";
-    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
-        return `${texto} musas`;
-    }
-    return texto;
+    return formatearMusasEspectador(valor);
 };
 
 function destacarPuntosEspectadorHit(elemento) {
@@ -2955,6 +3064,9 @@ function renderLetraDestacadaNivel(letra) {
 }
 
 function construirExplicacionNivelLetra(tipo, letra) {
+    if (window && typeof window.scribBuildModeRule2P === "function") {
+        return window.scribBuildModeRule2P(tipo, letra);
+    }
     const letraDestacada = renderLetraDestacadaNivel(letra);
     if (tipo === "bendita") {
         return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
@@ -3387,7 +3499,7 @@ function detenerSonidosDesventaja() {
 
 if (typeof animateCSS === "function") {
     animateCSS(".cabecera", "backInLeft").then(() => {
-        animateCSS(".contenedor_espectador", "pulse");
+        animateCSS("#contenedor_espectador", "pulse");
     });
 }
 //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
@@ -3540,8 +3652,8 @@ const MODOS = {
         actualizarPalabraConVisibilidad(palabra3, "");
         setBarraNivelClase("bonus");
         explicacion.style.color = "yellow";
-        explicacion.innerHTML = "SUMA TIEMPO CON PALABRAS BONUS";
-        palabra1.innerHTML = "NIVEL PALABRAS BONUS";
+        explicacion.innerHTML = traducirDescripcionModoEspectador("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
+        palabra1.innerHTML = traducirTituloModoEspectador("palabras bonus", "NIVEL PALABRAS BONUS");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
         definicion2.style.maxWidth = "100%";
         actualizarDefinicionConVisibilidad(definicion3, "", false);
@@ -3562,7 +3674,7 @@ const MODOS = {
         setBarraNivelClase("prohibida");
         explicacion.style.color = "red";
         explicacion.innerHTML = construirExplicacionNivelLetra("prohibida", data.letra_prohibida);
-        palabra1.innerHTML = "NIVEL LETRA PROHIBIDA";
+        palabra1.innerHTML = traducirTituloModoEspectador("letra prohibida", "NIVEL LETRA PROHIBIDA");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
         definicion2.style.maxWidth = "100%";
         actualizarDefinicionConVisibilidad(definicion3, "", false);
@@ -3587,7 +3699,7 @@ const MODOS = {
         setBarraNivelClase("bendita");
         explicacion.style.color = "lime";
         explicacion.innerHTML = construirExplicacionNivelLetra("bendita", data.letra_bendita);
-        palabra1.innerHTML = "NIVEL LETRA BENDITA";
+        palabra1.innerHTML = traducirTituloModoEspectador("letra bendita", "NIVEL LETRA BENDITA");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
         definicion2.style.maxWidth = "100%";
         actualizarDefinicionConVisibilidad(definicion3, "", false);
@@ -3616,8 +3728,8 @@ const MODOS = {
         actualizarPalabraConVisibilidad(palabra3, "");
         setBarraNivelClase("prohibidas");
         explicacion.style.color = "pink";
-        explicacion.innerHTML = "EVITA LAS PALABRAS PROHIBIDAS";
-        palabra1.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+        explicacion.innerHTML = traducirDescripcionModoEspectador("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
+        palabra1.innerHTML = traducirTituloModoEspectador("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
         definicion2.style.maxWidth = "100%";
         actualizarDefinicionConVisibilidad(definicion3, "", false);
@@ -3630,8 +3742,8 @@ const MODOS = {
         setBarraNivelClase("tertulia");
         //activar_socket_feedback();
         explicacion.style.color = "#86d0ff";
-        explicacion.innerHTML = "MODIFICADORES ACTIVOS";
-        palabra1.innerHTML = "NIVEL TERTULIA";
+        explicacion.innerHTML = traducirDescripcionModoEspectador("tertulia", "DIALOGA CON TUS MUSAS");
+        palabra1.innerHTML = traducirTituloModoEspectador("tertulia", "NIVEL TERTULIA");
 
     },
 
@@ -3642,11 +3754,11 @@ const MODOS = {
         setBarraNivelClase("frase-final");
         //activar_socket_feedback();
         explicacion.style.color = "orange";
-        explicacion.innerHTML = "ULTIMA RONDA";
-        palabra1.innerHTML = "NIVEL FRASE FINAL";
+        explicacion.innerHTML = traducirDescripcionModoEspectador("frase final", "ULTIMA RONDA");
+        palabra1.innerHTML = traducirTituloModoEspectador("frase final", "NIVEL FRASE FINAL");
         actualizarPalabraConVisibilidad(palabra2, "&laquo;" + frase_final_j1 + "&raquo;");
-        actualizarDefinicionConVisibilidad(definicion2, "&iexcl;Esta es la &uacute;ltima!", false);
-        actualizarDefinicionConVisibilidad(definicion3, "&iexcl;Esta es la &uacute;ltima!", false);
+        actualizarDefinicionConVisibilidad(definicion2, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
+        actualizarDefinicionConVisibilidad(definicion3, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
         actualizarPalabraConVisibilidad(palabra3, "&laquo;" + frase_final_j2 + "&raquo;");
         definicion2.style.maxWidth = "100%";
         definicion3.style.maxWidth = "100%";
@@ -3753,10 +3865,17 @@ function ejecutarModo(nombreModo, data) {
 
 activar_sockets_extratextuales();
 
+socket.on("idioma_actual", (payload = {}) => {
+    if (window && typeof window.scribSetLanguage2P === "function") {
+        window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
+    }
+});
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     actualizarEtiquetasCursorCalentamiento();
     socket.emit('registrar_espectador');
+    socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');
     socket.emit('pedir_vista_espectador_modo');
     socket.emit('pedir_stats_live');
@@ -3845,8 +3964,8 @@ const marcador_espectador_j1 = getEl("metadatos_j1");
 const marcador_espectador_j2 = getEl("metadatos_j2");
 const puntuacion_final_j1 = getEl("puntuacion_final1");
 const puntuacion_final_j2 = getEl("puntuacion_final2");
-const TEXTO_GANADOR_ESPECTADOR = "¡TEXTO TERMINADO!";
-const TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR = "¡PERDISTE, NO ESCRIBISTE NADA!";
+let TEXTO_GANADOR_ESPECTADOR = tJuego2P("game.finished", {}, "¡TEXTO TERMINADO!");
+let TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR = tJuego2P("game.no_words_lost", {}, "¡PERDISTE, NO ESCRIBISTE NADA!");
 
 function obtenerMarcadorEquipoEspectador(jugadorId) {
     const id = Number(jugadorId);
@@ -3987,7 +4106,7 @@ function marcarJugadorTerminadoEspectador(jugadorId, opciones = {}) {
         feedback1.innerHTML = "";
         setVisibilidadUiJugadorEspectador(1, false);
         tiempo.style.color = "white";
-        tiempo.innerHTML = "¡Tiempo!";
+        tiempo.innerHTML = textoTiempoAgotadoEspectador();
         actualizarBarraVida(tiempo, tiempo.innerHTML);
         animarFinJugadorEspectador(1, { mostrarEtiquetaFinal, textoEtiqueta });
         return;
@@ -3998,7 +4117,7 @@ function marcarJugadorTerminadoEspectador(jugadorId, opciones = {}) {
         feedback2.innerHTML = "";
         setVisibilidadUiJugadorEspectador(2, false);
         tiempo1.style.color = "white";
-        tiempo1.innerHTML = "¡Tiempo!";
+        tiempo1.innerHTML = textoTiempoAgotadoEspectador();
         actualizarBarraVida(tiempo1, tiempo1.innerHTML);
         animarFinJugadorEspectador(2, { mostrarEtiquetaFinal, textoEtiqueta });
     }
@@ -4021,7 +4140,7 @@ function ejecutarCierrePartidaEspectador(data = {}) {
     texto1.style.height = (texto1.scrollHeight) + "px";
     texto2.style.height = (texto2.scrollHeight) + "px";
     animateCSS(".cabecera", "backInLeft").then((message) => {
-        animateCSS(".contenedor_espectador", "pulse");
+        animateCSS("#contenedor_espectador", "pulse");
     });
     logo.style.display = "";
     neon.style.display = "";
@@ -4235,9 +4354,12 @@ socket.on("count", data => {
             tiempo.style.color = "red";
         }
     }
-    tiempo.innerHTML = data.count;
+    const textoCountJ1 = String(data.count || "").toLowerCase().includes("tiempo")
+        ? textoTiempoAgotadoEspectador()
+        : data.count;
+    tiempo.innerHTML = textoCountJ1;
     const animarEntradaVidaJ1 = Boolean(animacionEntradaVidaPendiente[1] && Number.isFinite(segundosCount));
-    actualizarBarraVida(tiempo, data.count, { animarEntrada: animarEntradaVidaJ1 });
+    actualizarBarraVida(tiempo, textoCountJ1, { animarEntrada: animarEntradaVidaJ1 });
     if (animarEntradaVidaJ1) {
         animacionEntradaVidaPendiente[1] = false;
     }
@@ -4268,9 +4390,12 @@ socket.on("count", data => {
                 tiempo1.style.color = "red";
             }
         }
-        tiempo1.innerHTML = data.count;
+        const textoCountJ2 = String(data.count || "").toLowerCase().includes("tiempo")
+            ? textoTiempoAgotadoEspectador()
+            : data.count;
+        tiempo1.innerHTML = textoCountJ2;
         const animarEntradaVidaJ2 = Boolean(animacionEntradaVidaPendiente[2] && Number.isFinite(segundosCount));
-        actualizarBarraVida(tiempo1, data.count, { animarEntrada: animarEntradaVidaJ2 });
+        actualizarBarraVida(tiempo1, textoCountJ2, { animarEntrada: animarEntradaVidaJ2 });
         if (animarEntradaVidaJ2) {
             animacionEntradaVidaPendiente[2] = false;
         }
@@ -4346,7 +4471,7 @@ socket.on('inicio', data => {
     animateCSS(".cabecera", "backOutLeft").then((message) => {
         inspiracion.style.display = "block";
         iniciarIntroCuentaAtrasEspectador();
-        animateCSS(".contenedor_espectador", "pulse");
+        animateCSS("#contenedor_espectador", "pulse");
         animateCSS(".inspiracion", "pulse");
         TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR;
         actualizarDuracionNivelDesdeParametros(data && data.parametros ? data.parametros : {});
@@ -4385,7 +4510,8 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
     texto2.rows = "6";
     // Se muestra "&iquest;PREPARADOS?" antes de comenzar la cuenta atras
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">&iquest;PREPARADOS?</span>');
+    var preparados = $('<span id="countdown"></span>');
+    preparados.text(tJuego2P("countdown.ready", {}, "¿PREPARADOS?"));
     preparados.appendTo($('.container'));
     timeout_countdown = setTimeout(() => {
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
@@ -4399,7 +4525,8 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
           $('#countdown').remove();
           
           // Creamos el nuevo elemento con el n�fºmero o el texto final
-          var countdown = $('<span id="countdown">'+ (counter === 0 ? '&iexcl;ESCRIBE!' : counter) +'</span>');
+          var countdown = $('<span id="countdown"></span>');
+          countdown.text(counter === 0 ? tJuego2P("countdown.write", {}, "¡ESCRIBE!") : counter);
           countdown.appendTo($('.container'));
           actualizarIntroCuentaAtrasSegunContador(counter);
         
@@ -4550,7 +4677,7 @@ socket.on('limpiar', data => {
     tiempo.style.display = "none";
     tiempo1.style.display = "none";
     animateCSS(".cabecera", "backInLeft").then((message) => {
-        animateCSS(".contenedor_espectador", "pulse");
+        animateCSS("#contenedor_espectador", "pulse");
     });
     logo.style.display = "";
     neon.style.display = "";
@@ -4573,6 +4700,13 @@ function aplicarModo(data) {
     limpiarEstadoVotacionVentaja();
     ejecutarLimpiezaModo(modo_actual, data);
     modo_actual = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
+    ultimo_payload_modo_espectador = data || {};
+    if (data && typeof data.letra_bendita === "string" && data.letra_bendita.trim()) {
+        ultima_letra_bendita_espectador = data.letra_bendita.trim();
+    }
+    if (data && typeof data.letra_prohibida === "string" && data.letra_prohibida.trim()) {
+        ultima_letra_prohibida_espectador = data.letra_prohibida.trim();
+    }
     frase_final_completada_j1 = false;
     frase_final_completada_j2 = false;
     fin_ultimo_nivel_por_tiempo = false;
@@ -4593,6 +4727,124 @@ function aplicarModo(data) {
     actualizarVisibilidadPanelNivelEspectador();
     vaciarColaPalabrasPendientesEspectador();
 }
+
+function refrescarCabeceraModoActualEspectador() {
+    if (!modo_actual) return;
+    if (modo_actual === "letra prohibida") {
+        if (explicacion) explicacion.innerHTML = construirExplicacionNivelLetra("prohibida", ultima_letra_prohibida_espectador);
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("letra prohibida", "NIVEL LETRA PROHIBIDA");
+        return;
+    }
+    if (modo_actual === "letra bendita") {
+        if (explicacion) explicacion.innerHTML = construirExplicacionNivelLetra("bendita", ultima_letra_bendita_espectador);
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("letra bendita", "NIVEL LETRA BENDITA");
+        return;
+    }
+    if (modo_actual === "palabras bonus") {
+        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras bonus", "NIVEL PALABRAS BONUS");
+        return;
+    }
+    if (modo_actual === "palabras prohibidas") {
+        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
+        return;
+    }
+    if (modo_actual === "tertulia") {
+        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("tertulia", "DIALOGA CON TUS MUSAS");
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("tertulia", "NIVEL TERTULIA");
+        return;
+    }
+    if (modo_actual === "frase final") {
+        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("frase final", "ULTIMA RONDA");
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("frase final", "NIVEL FRASE FINAL");
+        if (typeof frase_final_j1 === "string") {
+            actualizarPalabraConVisibilidad(palabra2, "&laquo;" + frase_final_j1 + "&raquo;");
+        }
+        if (typeof frase_final_j2 === "string") {
+            actualizarPalabraConVisibilidad(palabra3, "&laquo;" + frase_final_j2 + "&raquo;");
+        }
+        actualizarDefinicionConVisibilidad(definicion2, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
+        actualizarDefinicionConVisibilidad(definicion3, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
+    }
+}
+
+function refrescarUiIdiomaEspectador() {
+    const textoGanadorPrevio = TEXTO_GANADOR_ESPECTADOR;
+    const textoPerdidaPrevio = TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR;
+    TEXTO_GANADOR_ESPECTADOR = tJuego2P("game.finished", {}, "¡TEXTO TERMINADO!");
+    TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR = tJuego2P("game.no_words_lost", {}, "¡PERDISTE, NO ESCRIBISTE NADA!");
+
+    [1, 2].forEach((jugadorId) => {
+        const textoActual = obtenerTextoIndicadorGanadorEspectador(jugadorId);
+        if (!textoActual) return;
+        const esPerdida = textoActual === textoPerdidaPrevio;
+        const esGanador = textoActual === textoGanadorPrevio || !esPerdida;
+        setIndicadorGanadorMarcadorEspectador(
+            jugadorId,
+            true,
+            esPerdida ? TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR : (esGanador ? TEXTO_GANADOR_ESPECTADOR : textoActual)
+        );
+    });
+
+    actualizarPuntosMarcadorEquipo(puntos1, obtenerPalabrasMarcadorEspectador(1), false);
+    actualizarPuntosMarcadorEquipo(puntos2, obtenerPalabrasMarcadorEspectador(2), false);
+    actualizarMusasMarcadorEquipo(musas1, (String(musas1 && musas1.textContent || "").match(/-?\d+/) || [0])[0], false);
+    actualizarMusasMarcadorEquipo(musas2, (String(musas2 && musas2.textContent || "").match(/-?\d+/) || [0])[0], false);
+
+    actualizarEtiquetasCursorCalentamiento();
+    if (ultimo_payload_calentamiento_espectador) {
+        actualizarCalentamientoEspectador(ultimo_payload_calentamiento_espectador);
+    } else {
+        renderizarHistorialDetonadores();
+        actualizarConsignaCalentamientoEspectador(solicitud_calentamiento_espectador);
+    }
+
+    if (!estado_stats_live_espectador) {
+        if (stats_timestamp) {
+            stats_timestamp.textContent = tJuego2P("stats.timestamp.none", {}, "Sin datos");
+        }
+        if (stats_estado) {
+            stats_estado.textContent = tJuego2P("stats.state.waiting", {}, "Esperando estadisticas de las escritoras...");
+        }
+    }
+
+    renderizarCreditosEspectador();
+    refrescarCabeceraModoActualEspectador();
+    refrescarCountdownEspectador();
+
+    document.querySelectorAll(".resucitar-title-question").forEach((nodo) => {
+        if (window && typeof window.scribBuildResurrectionQuestionHtml2P === "function") {
+            nodo.innerHTML = window.scribBuildResurrectionQuestionHtml2P();
+        }
+    });
+    document.querySelectorAll(".quantity-title").forEach((nodo) => {
+        nodo.textContent = tJuego2P("res.quantity_title", {}, "Selecciona la cantidad de palabras");
+    });
+
+    [1, 2].forEach((jugadorId) => {
+        const estadoResucitar = ultimo_estado_resucitar_espectador[jugadorId];
+        if (estadoResucitar && estadoResucitar.visible) {
+            actualizarResucitarMini(estadoResucitar);
+        }
+    });
+
+    [tiempo, tiempo1].forEach((nodoTiempo) => {
+        if (!nodoTiempo) return;
+        const texto = String(nodoTiempo.textContent || "").trim();
+        if (texto && texto.indexOf(":") === -1) {
+            nodoTiempo.textContent = textoTiempoAgotadoEspectador();
+        }
+    });
+}
+
+if (window && typeof window.scribOnLanguageChange2P === "function") {
+    window.scribOnLanguageChange2P(() => {
+        refrescarUiIdiomaEspectador();
+    });
+}
+
+refrescarUiIdiomaEspectador();
 
 socket.on('recibir_feedback_modificador', data => {
     const playerId = Number(data && data.player) === 2 ? 2 : 1;
@@ -4682,14 +4934,17 @@ function recibir_palabra(data, escritxr) {
         return;
     }
     const animateCSS = (element, animation, prefix = 'animate__') =>
-        // We create a Promise and return it
-        new Promise((resolve, reject) => {
+        new Promise((resolve) => {
             const animationName = `${prefix}${animation}`;
-            const node = document.querySelector(element);
+            const node = typeof element === "string" ? document.querySelector(element) : element;
+
+            if (!node || !node.classList) {
+                resolve('Animation skipped');
+                return;
+            }
 
             node.classList.add(`${prefix}animated`, animationName);
 
-            // When the animation ends, we clean the classes and resolve the Promise
             function handleAnimationEnd(event) {
                 event.stopPropagation();
                 node.classList.remove(`${prefix}animated`, animationName);
@@ -4929,11 +5184,13 @@ socket.on("enviar_ventaja_j2", putada => {
 
 socket.on("nueva letra", letra => {
     if(modo_actual == "letra prohibida"){
+        ultima_letra_prohibida_espectador = String(letra || "").trim();
         animacion_modo();
         explicacion.innerHTML = construirExplicacionNivelLetra("prohibida", letra);
         activarEfectoCambioLetraEspectador("prohibida");
         }
     else if(modo_actual == "letra bendita"){
+        ultima_letra_bendita_espectador = String(letra || "").trim();
         animacion_modo();
         explicacion.innerHTML = construirExplicacionNivelLetra("bendita", letra);
         activarEfectoCambioLetraEspectador("bendita");
@@ -5135,14 +5392,17 @@ function stylize() {
 
 function animacion_modo() {
     const animateCSS = (element, animation, prefix = 'animate__') =>
-        // We create a Promise and return it
-        new Promise((resolve, reject) => {
+        new Promise((resolve) => {
             const animationName = `${prefix}${animation}`;
-            const node = document.querySelector(element);
+            const node = typeof element === "string" ? document.querySelector(element) : element;
+
+            if (!node || !node.classList) {
+                resolve('Animation skipped');
+                return;
+            }
 
             node.classList.add(`${prefix}animated`, animationName);
 
-            // When the animation ends, we clean the classes and resolve the Promise
             function handleAnimationEnd(event) {
                 event.stopPropagation();
                 node.classList.remove(`${prefix}animated`, animationName);

@@ -22,6 +22,34 @@ const escapeHtml = (valor) => String(valor ?? "")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const tJuego2P = (clave, variables = {}, fallback = "") => (
+    (window && typeof window.scribT2P === "function")
+        ? window.scribT2P(clave, variables, fallback)
+        : (fallback || clave)
+);
+const traducirTituloModoActor = (modo, fallback = "") => (
+    (window && typeof window.scribTranslateModeTitle2P === "function")
+        ? window.scribTranslateModeTitle2P(modo, fallback || String(modo || "").toUpperCase())
+        : (fallback || String(modo || "").toUpperCase())
+);
+const traducirDescripcionModoActor = (modo, fallback = "") => (
+    (window && typeof window.scribTranslateModeDescription2P === "function")
+        ? window.scribTranslateModeDescription2P(modo, fallback)
+        : fallback
+);
+const traducirStripModoActor = (modo) => (
+    (window && typeof window.scribTranslateModeStrip2P === "function")
+        ? window.scribTranslateModeStrip2P(modo)
+        : [String(modo || "").toUpperCase()]
+);
+const formatearPalabrasActor = (valor) => (
+    (window && typeof window.scribFormatWordsCount2P === "function")
+        ? window.scribFormatWordsCount2P(valor)
+        : `${Number(valor) || 0} palabras`
+);
+const textoTiempoAgotadoActor = () => (
+    tJuego2P("timer.time_up", {}, "¡Tiempo!")
+);
 
 const CLASES_BARRA_NIVEL_ACTOR = [
     "barra-nivel--bendita",
@@ -60,13 +88,12 @@ function renderLetraDestacadaNivelActor(letra) {
 }
 
 function construirExplicacionNivelLetraActor(tipo, letra) {
+    if (window && typeof window.scribBuildModeRule2P === "function") {
+        return window.scribBuildModeRule2P(tipo, letra);
+    }
     const letraDestacada = renderLetraDestacadaNivelActor(letra);
-    if (tipo === "bendita") {
-        return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
-    }
-    if (tipo === "prohibida") {
-        return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
-    }
+    if (tipo === "bendita") return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+    if (tipo === "prohibida") return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
     return "";
 }
 
@@ -247,8 +274,8 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
         setBarraNivelClaseActor("bonus");
         aplicarEstiloNivelesActor("bonus");
         explicación.style.color = "yellow";
-        explicación.innerHTML = "SUMA TIEMPO CON PALABRAS BONUS";
-        palabra.innerHTML = "NIVEL PALABRAS BONUS";
+        explicación.innerHTML = traducirDescripcionModoActor("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
+        palabra.innerHTML = traducirTituloModoActor("palabras bonus", "NIVEL PALABRAS BONUS");
         definicion.innerHTML = "";
         return;
     }
@@ -261,7 +288,7 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
             : cache_letra_prohibida_actor;
         explicación.style.color = "red";
         explicación.innerHTML = construirExplicacionNivelLetraActor("prohibida", letra);
-        palabra.innerHTML = "NIVEL LETRA PROHIBIDA";
+        palabra.innerHTML = traducirTituloModoActor("letra prohibida", "NIVEL LETRA PROHIBIDA");
         definicion.innerHTML = "";
         return;
     }
@@ -274,7 +301,7 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
             : cache_letra_bendita_actor;
         explicación.style.color = "lime";
         explicación.innerHTML = construirExplicacionNivelLetraActor("bendita", letra);
-        palabra.innerHTML = "NIVEL LETRA BENDITA";
+        palabra.innerHTML = traducirTituloModoActor("letra bendita", "NIVEL LETRA BENDITA");
         definicion.innerHTML = "";
         return;
     }
@@ -283,8 +310,8 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
         setBarraNivelClaseActor("prohibidas");
         aplicarEstiloNivelesActor("prohibidas");
         explicación.style.color = "pink";
-        explicación.innerHTML = "EVITA LAS PALABRAS PROHIBIDAS";
-        palabra.innerHTML = "NIVEL PALABRAS PROHIBIDAS";
+        explicación.innerHTML = traducirDescripcionModoActor("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
+        palabra.innerHTML = traducirTituloModoActor("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
         definicion.innerHTML = "";
         return;
     }
@@ -293,8 +320,8 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
         setBarraNivelClaseActor("tertulia");
         aplicarEstiloNivelesActor("tertulia");
         explicación.style.color = "#86d0ff";
-        explicación.innerHTML = "DIALOGA CON TUS MUSAS";
-        palabra.innerHTML = "NIVEL TERTULIA";
+        explicación.innerHTML = traducirDescripcionModoActor("tertulia", "DIALOGA CON TUS MUSAS");
+        palabra.innerHTML = traducirTituloModoActor("tertulia", "NIVEL TERTULIA");
         definicion.innerHTML = "";
         return;
     }
@@ -303,8 +330,8 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
         setBarraNivelClaseActor("frase-final");
         aplicarEstiloNivelesActor("frase-final");
         explicación.style.color = "orange";
-        explicación.innerHTML = "ULTIMA RONDA";
-        palabra.innerHTML = "NIVEL FRASE FINAL";
+        explicación.innerHTML = traducirDescripcionModoActor("frase final", "ULTIMA RONDA");
+        palabra.innerHTML = traducirTituloModoActor("frase final", "NIVEL FRASE FINAL");
         definicion.innerHTML = "";
         return;
     }
@@ -417,12 +444,7 @@ function iniciarProgresoNivelBarraActor() {
 }
 
 const formatearPuntosMarcadorActor = (valor) => {
-    const texto = String(valor ?? "").trim();
-    if (!texto) return "0 palabras";
-    if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
-        return `${texto} palabras`;
-    }
-    return texto;
+    return formatearPalabrasActor(valor);
 };
 
 function destacarMarcadorActorHit(elemento) {
@@ -491,7 +513,7 @@ const aviso_tiempo_limite_actor = (() => {
         nodo.setAttribute("aria-hidden", "true");
         const textoAviso = document.createElement("p");
         textoAviso.className = "actor-tiempo-limite-texto";
-        textoAviso.textContent = "¡INTÉRPRETE, ES HORA DE ACTUAR!";
+        textoAviso.textContent = tJuego2P("actor.time_limit", {}, "¡INTERPRETE, ES HORA DE ACTUAR!");
         nodo.appendChild(textoAviso);
         document.body.appendChild(nodo);
     }
@@ -547,6 +569,9 @@ function normalizarTextoCountActor(valor) {
     if (texto.indexOf(":") !== -1) return texto;
     if (/^\d+$/.test(texto)) {
         return formatearSegundosCountActor(Number(texto));
+    }
+    if (texto.toLowerCase().includes("tiempo")) {
+        return textoTiempoAgotadoActor();
     }
     return texto;
 }
@@ -834,6 +859,38 @@ const nivelesPrev = document.querySelector(".niveles-prev");
 const nivelesNext = document.querySelector(".niveles-next");
 const nivelesContenedor = document.querySelector(".niveles");
 
+function refrescarEtiquetasNivelesActor() {
+    nivelesItems.forEach((item) => {
+        const modo = item && item.dataset ? item.dataset.modo : "";
+        const strips = traducirStripModoActor(modo);
+        const contenedorTexto = item ? item.querySelector(".nivel-texto") : null;
+        if (!contenedorTexto) return;
+        const spans = Array.from(contenedorTexto.querySelectorAll("span"));
+        while (spans.length < strips.length) {
+            const extra = document.createElement("span");
+            contenedorTexto.appendChild(extra);
+            spans.push(extra);
+        }
+        spans.forEach((span, indice) => {
+            span.textContent = strips[indice] || "";
+            span.style.display = strips[indice] ? "" : "none";
+        });
+    });
+}
+
+function refrescarCountdownActor() {
+    if (window && typeof window.scribRefreshCountdownText2P === "function") {
+        window.scribRefreshCountdownText2P(getEl("countdown"));
+    }
+}
+
+function actualizarTextoAlertaTiempoLimiteActor() {
+    if (!aviso_tiempo_limite_actor) return;
+    const textoAviso = aviso_tiempo_limite_actor.querySelector(".actor-tiempo-limite-texto");
+    if (!textoAviso) return;
+    textoAviso.textContent = tJuego2P("actor.time_limit", {}, "¡INTERPRETE, ES HORA DE ACTUAR!");
+}
+
 function setNivelesDesactivados(estado) {
     if (!nivelesContenedor) return;
     nivelesContenedor.classList.toggle("niveles-desactivados", Boolean(estado));
@@ -1027,6 +1084,7 @@ window.addEventListener("pageshow", () => {
 });
 requestAnimationFrame(() => {
     setNivelesDesactivados(!modo_actual || niveles_bloqueados);
+    refrescarEtiquetasNivelesActor();
     resetearScrollNiveles();
     actualizarColorEquipo();
     recalcularLineaNiveles();
@@ -1235,7 +1293,16 @@ inicializarBarraVidaActor();
     
 const socket = io(serverUrl);
 
-socket.emit('pedir_nombre');
+socket.on("idioma_actual", (payload = {}) => {
+    if (window && typeof window.scribSetLanguage2P === "function") {
+        window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
+    }
+});
+
+socket.on("connect", () => {
+    socket.emit("pedir_nombre");
+    socket.emit("pedir_idioma_actual");
+});
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data = {}) => {
@@ -1277,7 +1344,7 @@ socket.on("temp_modos", (data = {}) => {
 
 
 socket.on('dar_nombre', (nombre) => {
-    if(nombre == "") nombre = "ESCRITXR";
+    if(nombre == "") nombre = tJuego2P("ui.writer_generic", {}, "ESCRITXR");
     nombre1.innerHTML = nombre;
 });
 
@@ -1406,7 +1473,7 @@ socket.on("fin", (data) => {
     if (partida_finalizada_actor) return;
     esperando_resurreccion_actor = false;
     partida_finalizada_actor = true;
-    tiempo.innerHTML = "¡Tiempo!";
+    tiempo.innerHTML = textoTiempoAgotadoActor();
     actualizarBarraVida(tiempo, tiempo.innerHTML);
     if (alerta_tiempo_limite_actor_activa) {
         stopConfetti();
@@ -1441,7 +1508,8 @@ socket.on('inicio', data => {
     }
     // Se muestra "¿PREPARADOS?" antes de comenzar la cuenta atrás
     $('#countdown').remove();
-    var preparados = $('<span id="countdown">¿PREPARADOS?</span>');
+    var preparados = $('<span id="countdown"></span>');
+    preparados.text(tJuego2P("countdown.ready", {}, "¿PREPARADOS?"));
     preparados.appendTo('body');
     setTimeout(() => {
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
@@ -1453,7 +1521,8 @@ socket.on('inicio', data => {
       
       $('#countdown').remove();
       
-      var countdown = $('<span id="countdown">'+(counter==0?'¡ESCRIBE!':counter)+'</span>');
+      var countdown = $('<span id="countdown"></span>');
+      countdown.text(counter == 0 ? tJuego2P("countdown.write", {}, "¡ESCRIBE!") : counter);
       countdown.appendTo('body');
   
       setTimeout(() => {
@@ -1550,7 +1619,7 @@ socket.on('limpiar', () => {
 
 // Recibe el nombre del jugador y lo coloca en su sitio.
 socket.on(nombre, data => {
-    nombre1.value = data;
+    nombre1.value = data || tJuego2P("ui.writer_generic", {}, "ESCRITXR");
 });
 
 socket.on('activar_modo', data => {
@@ -1710,3 +1779,30 @@ function stopConfetti() {
     isConfettiRunning = false; // Deshabilita la ejecución de confetti
     confetti.reset(); // Detiene la animación de confetti
   }
+
+function refrescarUiIdiomaActor() {
+    refrescarEtiquetasNivelesActor();
+    actualizarTextoAlertaTiempoLimiteActor();
+    refrescarCountdownActor();
+
+    if (puntos1) {
+        const matchPuntos = String(puntos1.textContent || "").match(/-?\d+/);
+        actualizarPuntosMarcadorActor(matchPuntos ? Number(matchPuntos[0]) : 0, false);
+    }
+
+    if (modo_actual) {
+        renderInfoModoActor(modo_actual, {}, { animar: false });
+    }
+
+    if (tiempo && String(tiempo.textContent || "").trim() && String(tiempo.textContent || "").indexOf(":") === -1) {
+        tiempo.innerHTML = textoTiempoAgotadoActor();
+    }
+}
+
+if (window && typeof window.scribOnLanguageChange2P === "function") {
+    window.scribOnLanguageChange2P(() => {
+        refrescarUiIdiomaActor();
+    });
+}
+
+refrescarUiIdiomaActor();

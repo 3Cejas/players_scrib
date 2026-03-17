@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRIB | Feedback</title>
+    <meta name="description" content="Comparte tu feedback sobre SCRIB con una encuesta breve de 1 a 5.">
+    <link rel="icon" href="../img/logo.png" type="image/png">
+    <link rel="stylesheet" href="./css/feedback.css?v=20260313k">
+    <script defer src="./js/feedback.js?v=20260313b"></script>
+</head>
+<body class="feedback-body">
+    <div class="feedback-shell">
+        <header class="feedback-hero">
+            <div class="feedback-hero__frame">
+                <div class="feedback-hero__copy">
+                    <p class="feedback-kicker">POSTPARTIDA</p>
+                    <h1 class="feedback-title">Cu&eacute;ntanos qu&eacute; ha pasado dentro del juego.</h1>
+                </div>
+                <div class="feedback-brand">
+                    <img class="feedback-brand__icon" src="../img/logo.png" alt="" aria-hidden="true">
+                </div>
+            </div>
+        </header>
+
+        <main class="feedback-grid">
+            <section class="feedback-panel feedback-panel--intel" aria-labelledby="feedback-intel-title">
+                <div class="feedback-panel__header">
+                    <p class="feedback-panel__eyebrow">SE&Ntilde;AL QUE BUSCAMOS</p>
+                    <h2 id="feedback-intel-title">Lo que queremos escuchar</h2>
+                </div>
+
+                <div class="feedback-radar" aria-hidden="true">
+                    <span class="feedback-radar__ring feedback-radar__ring--one"></span>
+                    <span class="feedback-radar__ring feedback-radar__ring--two"></span>
+                    <span class="feedback-radar__ring feedback-radar__ring--three"></span>
+                    <span class="feedback-radar__dot feedback-radar__dot--one"></span>
+                    <span class="feedback-radar__dot feedback-radar__dot--two"></span>
+                    <span class="feedback-radar__dot feedback-radar__dot--three"></span>
+                </div>
+
+                <ul class="feedback-list">
+                    <li>Si la experiencia engancha de verdad o se queda a medio camino.</li>
+                    <li>Si las reglas, turnos y objetivos se entienden sin fricci&oacute;n.</li>
+                    <li>Si la identidad visual y sonora empuja la partida hacia delante.</li>
+                    <li>Qu&eacute; momento merece quedarse y cu&aacute;l deber&iacute;a cambiar primero.</li>
+                </ul>
+
+                <div id="feedback_success" class="feedback-success" hidden>
+                    <p class="feedback-success__eyebrow">SE&Ntilde;AL RECIBIDA</p>
+                    <p class="feedback-success__text">
+                        Gracias. Tu feedback ya ha entrado en el canal de revisi&oacute;n de SCRIB.
+                    </p>
+                </div>
+            </section>
+
+            <section class="feedback-panel feedback-panel--form" aria-labelledby="feedback-form-title">
+                <div class="feedback-panel__header">
+                    <p class="feedback-panel__eyebrow">FORMULARIO</p>
+                    <h2 id="feedback-form-title">Lectura de partida</h2>
+                </div>
+
+                <form
+                    id="feedback_form"
+                    class="feedback-form"
+                    name="scrib-feedback"
+                    method="POST"
+                    action="./gracias/"
+                    data-netlify="true"
+                    netlify-honeypot="bot-field"
+                >
+                    <input type="hidden" name="form-name" value="scrib-feedback">
+                    <input type="hidden" name="entry_point" value="/feedback">
+                    <input type="hidden" name="rol" value="musa">
+                    <input type="hidden" name="submitted_at" value="">
+
+                    <p class="feedback-form__intro">
+                        No pedimos datos personales. Solo necesitamos una lectura honesta de la experiencia.
+                    </p>
+
+                    <p class="feedback-honeypot">
+                        <label>No rellenes este campo si eres humana/o.
+                            <input name="bot-field" autocomplete="off">
+                        </label>
+                    </p>
+
+                    <div class="feedback-fields feedback-fields--compact">
+                        <label class="feedback-field feedback-field--wide">
+                            <span class="feedback-field__label">Donde la jugaste</span>
+                            <input
+                                type="text"
+                                name="contexto"
+                                maxlength="90"
+                                placeholder="Muestra, aula, festival, streaming..."
+                                required
+                            >
+                        </label>
+                    </div>
+
+                    <div class="feedback-rating-grid">
+                        <fieldset class="rating-card">
+                            <legend>Experiencia general</legend>
+                            <p>&iquest;Cu&aacute;nto te atrap&oacute; la partida?</p>
+                            <div class="rating-scale" role="radiogroup" aria-label="Experiencia general">
+                                <span class="rating-option"><input id="valoracion_global_1" type="radio" name="valoracion_global" value="1" required><label for="valoracion_global_1">1</label></span>
+                                <span class="rating-option"><input id="valoracion_global_2" type="radio" name="valoracion_global" value="2"><label for="valoracion_global_2">2</label></span>
+                                <span class="rating-option"><input id="valoracion_global_3" type="radio" name="valoracion_global" value="3"><label for="valoracion_global_3">3</label></span>
+                                <span class="rating-option"><input id="valoracion_global_4" type="radio" name="valoracion_global" value="4"><label for="valoracion_global_4">4</label></span>
+                                <span class="rating-option"><input id="valoracion_global_5" type="radio" name="valoracion_global" value="5"><label for="valoracion_global_5">5</label></span>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="rating-card">
+                            <legend>Claridad de reglas</legend>
+                            <p>&iquest;Se entend&iacute;a qu&eacute; hab&iacute;a que hacer?</p>
+                            <div class="rating-scale" role="radiogroup" aria-label="Claridad de reglas">
+                                <span class="rating-option"><input id="claridad_reglas_1" type="radio" name="claridad_reglas" value="1" required><label for="claridad_reglas_1">1</label></span>
+                                <span class="rating-option"><input id="claridad_reglas_2" type="radio" name="claridad_reglas" value="2"><label for="claridad_reglas_2">2</label></span>
+                                <span class="rating-option"><input id="claridad_reglas_3" type="radio" name="claridad_reglas" value="3"><label for="claridad_reglas_3">3</label></span>
+                                <span class="rating-option"><input id="claridad_reglas_4" type="radio" name="claridad_reglas" value="4"><label for="claridad_reglas_4">4</label></span>
+                                <span class="rating-option"><input id="claridad_reglas_5" type="radio" name="claridad_reglas" value="5"><label for="claridad_reglas_5">5</label></span>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="rating-card">
+                            <legend>Estetica del juego</legend>
+                            <p>&iquest;La direccion visual acompa&ntilde;a la experiencia?</p>
+                            <div class="rating-scale" role="radiogroup" aria-label="Estetica del juego">
+                                <span class="rating-option"><input id="estetica_1" type="radio" name="estetica" value="1" required><label for="estetica_1">1</label></span>
+                                <span class="rating-option"><input id="estetica_2" type="radio" name="estetica" value="2"><label for="estetica_2">2</label></span>
+                                <span class="rating-option"><input id="estetica_3" type="radio" name="estetica" value="3"><label for="estetica_3">3</label></span>
+                                <span class="rating-option"><input id="estetica_4" type="radio" name="estetica" value="4"><label for="estetica_4">4</label></span>
+                                <span class="rating-option"><input id="estetica_5" type="radio" name="estetica" value="5"><label for="estetica_5">5</label></span>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="rating-card">
+                            <legend>Ritmo</legend>
+                            <p>&iquest;La partida avanzaba con buena energia?</p>
+                            <div class="rating-scale" role="radiogroup" aria-label="Ritmo">
+                                <span class="rating-option"><input id="ritmo_1" type="radio" name="ritmo" value="1" required><label for="ritmo_1">1</label></span>
+                                <span class="rating-option"><input id="ritmo_2" type="radio" name="ritmo" value="2"><label for="ritmo_2">2</label></span>
+                                <span class="rating-option"><input id="ritmo_3" type="radio" name="ritmo" value="3"><label for="ritmo_3">3</label></span>
+                                <span class="rating-option"><input id="ritmo_4" type="radio" name="ritmo" value="4"><label for="ritmo_4">4</label></span>
+                                <span class="rating-option"><input id="ritmo_5" type="radio" name="ritmo" value="5"><label for="ritmo_5">5</label></span>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="rating-card">
+                            <legend>Ganas de volver</legend>
+                            <p>&iquest;Te apeteceria repetir o recomendarla?</p>
+                            <div class="rating-scale" role="radiogroup" aria-label="Ganas de volver">
+                                <span class="rating-option"><input id="ganas_de_volver_1" type="radio" name="ganas_de_volver" value="1" required><label for="ganas_de_volver_1">1</label></span>
+                                <span class="rating-option"><input id="ganas_de_volver_2" type="radio" name="ganas_de_volver" value="2"><label for="ganas_de_volver_2">2</label></span>
+                                <span class="rating-option"><input id="ganas_de_volver_3" type="radio" name="ganas_de_volver" value="3"><label for="ganas_de_volver_3">3</label></span>
+                                <span class="rating-option"><input id="ganas_de_volver_4" type="radio" name="ganas_de_volver" value="4"><label for="ganas_de_volver_4">4</label></span>
+                                <span class="rating-option"><input id="ganas_de_volver_5" type="radio" name="ganas_de_volver" value="5"><label for="ganas_de_volver_5">5</label></span>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <div class="feedback-fields">
+                        <label class="feedback-field feedback-field--wide">
+                            <span class="feedback-field__label">El momento que m&aacute;s te gust&oacute;</span>
+                            <textarea
+                                name="momento_favorito"
+                                rows="4"
+                                maxlength="500"
+                                placeholder="Que escena, dinamica o sensacion se te ha quedado dentro"
+                                required
+                            ></textarea>
+                        </label>
+
+                        <label class="feedback-field feedback-field--wide">
+                            <span class="feedback-field__label">Lo primero que cambiar&iacute;as</span>
+                            <textarea
+                                name="mejora_prioritaria"
+                                rows="4"
+                                maxlength="500"
+                                placeholder="La mejora mas urgente, concreta y util"
+                                required
+                            ></textarea>
+                        </label>
+
+                        <label class="feedback-field feedback-field--wide">
+                            <span class="feedback-field__label">Algo m&aacute;s que debamos saber</span>
+                            <textarea
+                                name="comentario_libre"
+                                rows="4"
+                                maxlength="500"
+                                placeholder="Observaciones libres, fallos detectados o ideas nuevas"
+                            ></textarea>
+                        </label>
+                    </div>
+
+                    <div class="feedback-form__footer">
+                        <button id="feedback_submit" class="feedback-submit" type="submit">
+                            <span class="feedback-submit__label">ENVIAR</span>
+                            <span class="feedback-submit__emoji" aria-hidden="true">&#128640;</span>
+                            <span class="feedback-submit__glow" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </main>
+
+    </div>
+</body>
+</html>

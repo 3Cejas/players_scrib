@@ -6,6 +6,16 @@ const serverUrl = isProduction
 const socket = io(serverUrl);
   
 const getEl = id => document.getElementById(id);
+const tJuego2P = (clave, variables = {}, fallback = "") => (
+    (window && typeof window.scribT2P === "function")
+        ? window.scribT2P(clave, variables, fallback)
+        : (fallback || clave)
+);
+
+function extraerNumeroMarcadorControl(valor) {
+    const match = String(valor ?? "").match(/-?\d+(?:\.\d+)?/);
+    return match ? Number(match[0]) : null;
+}
 
 // COMPONENTES DEL JUGADOR 1
 let nombre1 = getEl("nombre");
@@ -42,18 +52,18 @@ const estadoPlayer2Label = getEl("estado_player_2_label");
 
 const formatearPuntosMarcadorControl = (valor) => {
     const texto = String(valor ?? "").trim();
-    if (!texto) return "0 palabras";
+    if (!texto) return tJuego2P("score.words_count", { count: 0 }, "0 palabras");
     if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
-        return `${texto} palabras`;
+        return tJuego2P("score.words_count", { count: texto }, `${texto} palabras`);
     }
     return texto;
 };
 
 const formatearMusasMarcadorControl = (valor) => {
     const texto = String(valor ?? "").trim();
-    if (!texto) return "0 musas";
+    if (!texto) return tJuego2P("score.muses_count", { count: 0 }, "0 musas");
     if (/^-?\d+(?:\.\d+)?$/.test(texto)) {
-        return `${texto} musas`;
+        return tJuego2P("score.muses_count", { count: texto }, `${texto} musas`);
     }
     return texto;
 };
@@ -98,7 +108,9 @@ const blinkEstadoDot = (el) => {
 const setEstadoServidor = (conectado) => {
     setEstadoDot(estadoServidorDot, conectado ? "ok" : "off");
     if (estadoServidorTexto) {
-        estadoServidorTexto.textContent = conectado ? "CONECTADO" : "DESCONECTADO";
+        estadoServidorTexto.textContent = conectado
+            ? tJuego2P("control.connection.connected", {}, "CONECTADO")
+            : tJuego2P("control.connection.disconnected", {}, "DESCONECTADO");
     }
 };
 
@@ -109,10 +121,10 @@ const setEstadoPlayers = (j1, j2) => {
 
 const actualizarNombresConexiones = () => {
     if (estadoPlayer1Label) {
-        estadoPlayer1Label.textContent = (val_nombre1 || "").trim() || "ESCRITXR 1";
+        estadoPlayer1Label.textContent = (val_nombre1 || "").trim() || tJuego2P("ui.writer_1", {}, "ESCRITXR 1");
     }
     if (estadoPlayer2Label) {
-        estadoPlayer2Label.textContent = (val_nombre2 || "").trim() || "ESCRITXR 2";
+        estadoPlayer2Label.textContent = (val_nombre2 || "").trim() || tJuego2P("ui.writer_2", {}, "ESCRITXR 2");
     }
 };
 
@@ -292,7 +304,9 @@ function generarCasillas(modosMarcados = LISTA_MODOS) {
         // Crear el label
         const label = document.createElement('label');
         label.htmlFor = `modo-${index}`;
-        label.textContent = modo.toUpperCase(); // Convertir el modo a mayusculas
+        label.textContent = (window && typeof window.scribTranslateModeName2P === "function")
+            ? window.scribTranslateModeName2P(modo)
+            : modo.toUpperCase();
         label.style.display = 'block'; // Asegurar que el label se muestre en una nueva linea
         label.style.color = COLORES_MODOS[modo]; // Asignar color al texto del label
         label.style.paddingLeft = "0.2vw";
@@ -377,10 +391,21 @@ document.addEventListener('DOMContentLoaded', function () {
         console.warn("Error al inicializar variables del panel.", error);
     }
     inicializarHeatmap();
+    const selectorIdioma = getEl("selector_idioma_control");
+    window.emitirCambioIdiomaControl = (idioma = "es") => {
+        socket.emit("cambiar_idioma_global", { idioma });
+    };
+    if (selectorIdioma) {
+        selectorIdioma.addEventListener("change", (evento) => {
+            const idioma = evento && evento.target ? evento.target.value : "es";
+            window.emitirCambioIdiomaControl(idioma);
+        });
+    }
 });
 
 window.addEventListener('load', inicializarHeatmap);
 let modo_actual = "";
+let segundos_modo_actual_control = 0;
 
 const HEATMAP_LAYOUT = [
     [
@@ -598,7 +623,7 @@ function obtenerResumenJugadorStatsControl(playerId) {
         : 0;
     const textoEl = playerId === 2 ? texto2 : texto1;
     const html = textoEl && typeof textoEl.innerHTML === "string" ? textoEl.innerHTML : "";
-    const palabrasBenditas = extraerPalabrasConClase(html, ["palabra-bendita", "palabra-bendita-musa"]);
+    const palabrasBenditas = extraerPalabrasConClase(html, CLASES_PALABRAS_DESTACADAS_PDF);
     const palabrasMalditasMap = resumenPartida.palabrasProhibidasUsadas[playerId];
     const palabrasMalditas = palabrasMalditasMap && typeof palabrasMalditasMap.keys === "function"
         ? Array.from(palabrasMalditasMap.keys()).map((valor) => String(valor).toUpperCase()).sort()
@@ -717,10 +742,14 @@ const heatmapTitleJ2 = getEl("heatmap-title-j2");
 
 function actualizarTitulosHeatmap() {
     if (heatmapTitleJ1) {
-        heatmapTitleJ1.textContent = val_nombre1 ? `Mapa de calor ${val_nombre1}` : "Mapa de calor";
+        heatmapTitleJ1.textContent = val_nombre1
+            ? tJuego2P("control.heatmap_title", { name: val_nombre1 }, `Mapa de calor ${val_nombre1}`)
+            : tJuego2P("control.heatmap_title", { name: "" }, "Mapa de calor").trim();
     }
     if (heatmapTitleJ2) {
-        heatmapTitleJ2.textContent = val_nombre2 ? `Mapa de calor ${val_nombre2}` : "Mapa de calor";
+        heatmapTitleJ2.textContent = val_nombre2
+            ? tJuego2P("control.heatmap_title", { name: val_nombre2 }, `Mapa de calor ${val_nombre2}`)
+            : tJuego2P("control.heatmap_title", { name: "" }, "Mapa de calor").trim();
     }
 }
 
@@ -747,6 +776,7 @@ socket.on('connect', () => {
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_vista_espectador_modo');
     socket.emit('pedir_creditos_estado');
+    socket.emit('pedir_idioma_actual');
     iniciarStatsLiveControl();
 });
 socket.on('disconnect', () => {
@@ -768,10 +798,6 @@ socket.on('calentamiento_vista', (data) => {
     forzar_solicitud_calentamiento_default_pendiente = true;
     if (typeof actualizarBotonVistaCalentamiento === "function") {
         actualizarBotonVistaCalentamiento();
-    }
-    if (boton_vista_calentamiento) {
-        boton_vista_calentamiento.dataset.activo = vista_calentamiento ? "1" : "0";
-        boton_vista_calentamiento.textContent = vista_calentamiento ? "\u{1F3AE} VISTA PARTIDA" : "\u{1F525} VISTA TUTORIAL";
     }
 });
 
@@ -829,10 +855,52 @@ socket.on('creditos_estado', (payload = {}) => {
     }
 });
 
+socket.on('idioma_actual', (payload = {}) => {
+    if (!window || typeof window.scribSetLanguage2P !== "function") return;
+    window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
+});
+
 socket.on('actualizar_contador_musas', (contador_musas = {}) => {
     actualizarMusasMarcadorControl(1, contador_musas.escritxr1);
     actualizarMusasMarcadorControl(2, contador_musas.escritxr2);
 });
+
+if (window && typeof window.scribOnLanguageChange2P === "function") {
+    window.scribOnLanguageChange2P(() => {
+        const puntosJ1 = extraerNumeroMarcadorControl(puntos1 && puntos1.textContent);
+        const puntosJ2 = extraerNumeroMarcadorControl(puntos2 && puntos2.textContent);
+        const musasJ1 = extraerNumeroMarcadorControl(musas1 && musas1.textContent);
+        const musasJ2 = extraerNumeroMarcadorControl(musas2 && musas2.textContent);
+        if (puntosJ1 !== null) actualizarPuntosMarcadorControl(1, puntosJ1, false);
+        if (puntosJ2 !== null) actualizarPuntosMarcadorControl(2, puntosJ2, false);
+        if (musasJ1 !== null) actualizarMusasMarcadorControl(1, musasJ1, false);
+        if (musasJ2 !== null) actualizarMusasMarcadorControl(2, musasJ2, false);
+        actualizarNombresConexiones();
+        actualizarTitulosHeatmap();
+        if (typeof generarCasillas === "function") {
+            generarCasillas(LISTA_MODOS);
+        }
+        if (typeof window.actualizarBotonVistaCalentamiento === "function") {
+            window.actualizarBotonVistaCalentamiento();
+        }
+        const botonPausa = getEl("boton_pausar_reanudar");
+        if (botonPausa && typeof window.actualizarBotonPausaReanudarControl === "function") {
+            window.actualizarBotonPausaReanudarControl(botonPausa);
+        }
+        if (typeof window.actualizarBotonBorrarTextoGuardadoControl === "function") {
+            window.actualizarBotonBorrarTextoGuardadoControl();
+        }
+        if (typeof window.actualizarCabeceraModoControl === "function") {
+            window.actualizarCabeceraModoControl({
+                modo: modo_actual,
+                segundos: segundos_modo_actual_control
+            });
+        }
+        if (typeof window.refrescarIdiomaControlUI === "function") {
+            window.refrescarIdiomaControlUI();
+        }
+    });
+}
 
 function extraerTextoPlanoDesdeHtmlControl(html) {
     if (typeof html !== "string" || !html) return "";
@@ -950,9 +1018,18 @@ socket.on('borrar_texto_guardado', () => {
 });
 
 socket.on('temp_modos', data => {
-    tiempo_modos_secs.textContent = data.segundos_transcurridos + " segundos";
-    display_modo.textContent = data.modo_actual.toUpperCase();
-    display_modo.style.color = COLORES_MODOS[data.modo_actual];
+    modo_actual = data && data.modo_actual ? data.modo_actual : modo_actual;
+    segundos_modo_actual_control = Number(data && data.segundos_transcurridos) || 0;
+    if (typeof window.actualizarCabeceraModoControl === "function") {
+        window.actualizarCabeceraModoControl({
+            modo: modo_actual,
+            segundos: segundos_modo_actual_control
+        });
+    } else {
+        tiempo_modos_secs.textContent = `${segundos_modo_actual_control} segundos`;
+        display_modo.textContent = data.modo_actual.toUpperCase();
+        display_modo.style.color = COLORES_MODOS[data.modo_actual];
+    }
     registrarModoActual(data.modo_actual);
     if (typeof actualizarBotonSkipTertuliaControl === "function") {
         actualizarBotonSkipTertuliaControl();
@@ -970,10 +1047,22 @@ socket.on('tecla_jugador_control', data => {
 
 
 socket.on('tiempo_muerto_control', data => {
-    display_modo.style.color = COLORES_MODOS[modo_actual];
-    display_modo.textContent = modo_actual.toUpperCase();
-    boton_pausar_reanudar.innerHTML = "\u25B6\uFE0F REANUDAR";
-    boton_pausar_reanudar.dataset.value = 1;
+    if (typeof window.actualizarCabeceraModoControl === "function") {
+        window.actualizarCabeceraModoControl({
+            modo: modo_actual,
+            segundos: segundos_modo_actual_control
+        });
+    } else {
+        display_modo.style.color = COLORES_MODOS[modo_actual];
+        display_modo.textContent = modo_actual.toUpperCase();
+    }
+    if (typeof window.actualizarBotonPausaReanudarControl === "function") {
+        boton_pausar_reanudar.dataset.value = 1;
+        window.actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
+    } else {
+        boton_pausar_reanudar.innerHTML = "\u25B6\uFE0F REANUDAR";
+        boton_pausar_reanudar.dataset.value = 1;
+    }
     pausar();
   TimeoutTiempoMuerto = setTimeout(function(){
     reanudar_modo();
@@ -1121,11 +1210,15 @@ function downloadTxtFile(filename, htmlContent) {
 
 function obtenerColorPorClases(clases) {
     if (clases.has("letra-verde")) return [0, 210, 110];
+    if (clases.has("letra-roja") || clases.has("letra-prohibida") || clases.has("letra-maldita")) return [255, 90, 90];
     if (clases.has("palabra-musa") || clases.has("palabra-bendita-musa")) return [255, 157, 66];
+    if (clases.has("palabra-prohibida") || clases.has("palabra-maldita") || clases.has("palabra-musa-enemiga")) return [255, 110, 190];
     if (clases.has("palabra-bendita")) return [255, 229, 91];
     if (clases.has("frase-final-progreso")) return [255, 157, 66];
     return [230, 230, 230];
 }
+
+const CLASES_PALABRAS_DESTACADAS_PDF = ["palabra-bendita", "palabra-bendita-musa", "palabra-musa"];
 
 function extraerPalabrasConClase(html, clases) {
     const contenedor = document.createElement("div");
@@ -1201,11 +1294,84 @@ function construirSegmentosColor(html) {
     return segmentos;
 }
 
+function tokenizarSegmentosPdf(segmentos) {
+    const tokens = [];
+    let actual = null;
+
+    const coloresIguales = (a, b) => Array.isArray(a) && Array.isArray(b)
+        && a.length === 3
+        && b.length === 3
+        && a[0] === b[0]
+        && a[1] === b[1]
+        && a[2] === b[2];
+
+    const cerrarActual = () => {
+        if (actual && actual.partes.length) {
+            tokens.push(actual);
+        }
+        actual = null;
+    };
+
+    const agregarParte = (token, texto, color) => {
+        if (!token || !texto) return;
+        const colorSeguro = Array.isArray(color) && color.length === 3 ? color : [0, 0, 0];
+        const ultimaParte = token.partes[token.partes.length - 1];
+        if (ultimaParte && coloresIguales(ultimaParte.color, colorSeguro)) {
+            ultimaParte.texto += texto;
+        } else {
+            token.partes.push({ texto, color: colorSeguro });
+        }
+    };
+
+    (segmentos || []).forEach((segmento = {}) => {
+        const color = segmento.color || [0, 0, 0];
+        const texto = String(segmento.texto || "");
+        for (const char of texto) {
+            if (char === "\r") continue;
+            if (char === "\n") {
+                cerrarActual();
+                tokens.push({ tipo: "newline", partes: [] });
+                continue;
+            }
+            const tipo = /\s/.test(char) ? "space" : "word";
+            if (!actual || actual.tipo !== tipo) {
+                cerrarActual();
+                actual = { tipo, partes: [] };
+            }
+            agregarParte(actual, char, color);
+        }
+    });
+
+    cerrarActual();
+    return tokens;
+}
+
+function medirPartesPdf(doc, tamano, partes) {
+    return (partes || []).reduce((anchoTotal, parte) => {
+        setPdfFont(doc, tamano, parte.color || [0, 0, 0]);
+        return anchoTotal + doc.getTextWidth(parte.texto || "");
+    }, 0);
+}
+
+function dibujarPartesPdf(doc, tamano, partes, x, y) {
+    let xCursor = x;
+    (partes || []).forEach((parte) => {
+        const texto = String(parte.texto || "");
+        if (!texto) return;
+        setPdfFont(doc, tamano, parte.color || [0, 0, 0]);
+        doc.text(texto, xCursor, y);
+        xCursor += doc.getTextWidth(texto);
+    });
+    return xCursor;
+}
+
 function agregarSegmentosEnPagina(doc, segmentos, x, yInicial, tamano, agregarLogo, margen, anchoPagina, altoPagina) {
     const maxWidth = anchoPagina - (margen * 2);
-    const lineHeight = tamano * 0.4;
+    const maxX = x + maxWidth;
+    const lineHeight = Math.max(6, tamano * 0.46);
     let y = yInicial;
     let xCursor = x;
+    const tokens = tokenizarSegmentosPdf(segmentos);
 
     const nuevaLinea = () => {
         xCursor = x;
@@ -1217,30 +1383,53 @@ function agregarSegmentosEnPagina(doc, segmentos, x, yInicial, tamano, agregarLo
         }
     };
 
-    segmentos.forEach(seg => {
-        const color = seg.color || [0, 0, 0];
-        const partes = seg.texto.split(/(\n)/);
-        partes.forEach(parte => {
-            if (!parte) return;
-            if (parte === "\n") {
-                nuevaLinea();
-                return;
-            }
-            const tokens = parte.split(/(\s+)/);
-            tokens.forEach(token => {
-                if (!token) return;
-                if (token.trim() === "" && xCursor === x) {
-                    return;
-                }
+    const dibujarTokenPartido = (token) => {
+        (token.partes || []).forEach((parte) => {
+            const color = parte.color || [0, 0, 0];
+            const textoParte = String(parte.texto || "");
+            for (const char of textoParte) {
                 setPdfFont(doc, tamano, color);
-                const anchoToken = doc.getTextWidth(token);
-                if (xCursor + anchoToken > x + maxWidth && token.trim() !== "") {
+                const anchoChar = doc.getTextWidth(char);
+                if (xCursor !== x && xCursor + anchoChar > maxX) {
                     nuevaLinea();
                 }
-                doc.text(token, xCursor, y);
-                xCursor += anchoToken;
-            });
+                doc.text(char, xCursor, y);
+                xCursor += anchoChar;
+            }
         });
+    };
+
+    tokens.forEach((token) => {
+        if (!token) return;
+        if (token.tipo === "newline") {
+            nuevaLinea();
+            return;
+        }
+        if (token.tipo === "space" && xCursor === x) {
+            return;
+        }
+
+        const anchoToken = medirPartesPdf(doc, tamano, token.partes);
+        if (token.tipo === "word") {
+            if (anchoToken > maxWidth) {
+                if (xCursor !== x) {
+                    nuevaLinea();
+                }
+                dibujarTokenPartido(token);
+                return;
+            }
+            if (xCursor !== x && xCursor + anchoToken > maxX) {
+                nuevaLinea();
+            }
+            xCursor = dibujarPartesPdf(doc, tamano, token.partes, xCursor, y);
+            return;
+        }
+
+        if (xCursor + anchoToken > maxX) {
+            nuevaLinea();
+            return;
+        }
+        xCursor = dibujarPartesPdf(doc, tamano, token.partes, xCursor, y);
     });
 
     return y;
@@ -1944,7 +2133,7 @@ function descargar_textos(opciones = {}) {
         yActual = agregarTextoEnPagina(contenidoJ1.textoPlano, margen, yActual + 5, 15, [230, 230, 230]);
     }
 
-    const palabrasBenditas1 = extraerPalabrasConClase(contenidoJ1.html || "", ["palabra-bendita", "palabra-bendita-musa"]);
+    const palabrasBenditas1 = extraerPalabrasConClase(contenidoJ1.html || "", CLASES_PALABRAS_DESTACADAS_PDF);
     agregarPaginaEstadisticas(doc, 1, val_nombre1, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas1);
     emitirPdfMusas(1, val_nombre1, doc);
     // Descargar el primer PDF y TXT
@@ -1971,7 +2160,7 @@ function descargar_textos(opciones = {}) {
         yActual = agregarTextoEnPagina(contenidoJ2.textoPlano, margen, yActual + 5, 15, [230, 230, 230]);
     }
 
-    const palabrasBenditas2 = extraerPalabrasConClase(contenidoJ2.html || "", ["palabra-bendita", "palabra-bendita-musa"]);
+    const palabrasBenditas2 = extraerPalabrasConClase(contenidoJ2.html || "", CLASES_PALABRAS_DESTACADAS_PDF);
     agregarPaginaEstadisticas(doc, 2, val_nombre2, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas2);
     emitirPdfMusas(2, val_nombre2, doc);
     // Descargar el segundo PDF y TXT

@@ -92,10 +92,16 @@ function guardarPosicionCaret() {
 
 // Función para restaurar la posición del caret
 function restaurarPosicionCaret(caretNode, caretPos) {
+  if (!caretNode) return;
   let sel = window.getSelection();
-  let range = sel.getRangeAt(0);
-  range.setStart(caretNode, Math.min(caretPos, caretNode.length));
-  range.setEnd(caretNode, Math.min(caretPos, caretNode.length));
+  if (!sel) return;
+  let range = (sel.rangeCount > 0) ? sel.getRangeAt(0) : document.createRange();
+  const longitudNodo = typeof caretNode.length === "number"
+    ? caretNode.length
+    : (typeof caretNode.textContent === "string" ? caretNode.textContent.length : 0);
+  const offsetSeguro = Math.min(Math.max(0, caretPos), longitudNodo);
+  range.setStart(caretNode, offsetSeguro);
+  range.setEnd(caretNode, offsetSeguro);
   sel.removeAllRanges();
   sel.addRange(range);
 }
