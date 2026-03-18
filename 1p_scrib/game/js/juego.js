@@ -733,6 +733,15 @@ const animateCSS = (element, animation, prefix = "animate__") =>
       //downloadTxtFile(nombre.value + '.txt', nombre.value + "\n" + texto.innerText);
   }
 
+function refrescarLayoutDashboardJuego1P() {
+  if (typeof window === "undefined") return;
+  [0, 320].forEach((delay) => {
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, delay);
+  });
+}
+
 function opciones(){
   if (document.body) document.body.classList.add("modo-opciones");
   const btnOpcionesEl = document.getElementById("btn_opciones");
@@ -765,6 +774,7 @@ function opciones(){
     animateCSS(".soporte", "backInLeft")
 
   })
+  refrescarLayoutDashboardJuego1P();
 }
 
 function volver(){
@@ -793,6 +803,7 @@ function volver(){
     if (contenedorEl) contenedorEl.style.display = "";
     animateCSS(".contenedor", "backInLeft")
   })
+  refrescarLayoutDashboardJuego1P();
 }
 
 // Función para generar las casillas de verificación dentro de <td>

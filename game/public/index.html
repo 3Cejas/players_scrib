@@ -1399,6 +1399,9 @@ body.musa-boot-activa .intro-flow {
         radial-gradient(circle at 50% 110%, rgba(255, 255, 255, 0.08), transparent 42%),
         linear-gradient(180deg, rgba(2, 6, 12, 0.92), rgba(2, 2, 4, 0.98));
     overflow: hidden;
+    isolation: isolate;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .musa-boot-overlay::before,
@@ -1457,6 +1460,10 @@ body.musa-boot-activa .intro-flow {
     display: grid;
     gap: clamp(12px, 2vw, 20px);
     overflow: hidden;
+    transform: translateZ(0);
+    isolation: isolate;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .musa-boot-panel::before {
@@ -1534,6 +1541,9 @@ body.musa-boot-activa .intro-flow {
     box-shadow:
         inset 0 0 28px rgba(0, 0, 0, 0.38),
         0 0 1.25rem color-mix(in srgb, var(--boot-accent), transparent 84%);
+    isolation: isolate;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .musa-boot-world-base,
@@ -1654,6 +1664,8 @@ body.musa-boot-activa .intro-flow {
         0 0 1rem color-mix(in srgb, var(--boot-accent), transparent 40%),
         inset 0 0 0.45rem rgba(255, 255, 255, 0.4);
     transition: width 120ms linear;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .musa-boot-logs {
@@ -1771,6 +1783,30 @@ body.musa-boot-activa .intro-flow {
     .musa-boot-logs li {
         padding-left: 1.35rem;
         line-height: 1.35;
+    }
+}
+
+@media (hover: none), (pointer: coarse) {
+    body.musa-boot-activa .intro-flow {
+        filter: none;
+        transform: none;
+        opacity: 0.18;
+    }
+
+    .musa-boot-overlay::before {
+        mix-blend-mode: normal;
+        opacity: 0.08;
+    }
+
+    .musa-boot-overlay::after,
+    .musa-boot-panel::before {
+        animation: none;
+        opacity: 0;
+    }
+
+    .musa-boot-world-orb,
+    .musa-boot-logs li.is-active::before {
+        animation-duration: 1800ms;
     }
 }
 

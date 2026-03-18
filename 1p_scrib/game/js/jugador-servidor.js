@@ -149,16 +149,16 @@ const I18N_STORAGE_KEY_1P = "scrib_1p_language";
 const I18N_DEFAULT_LANG_1P = "es";
 const I18N_TEXTS_1P = {
     es: {
-        "lang.es": "Espanol",
+        "lang.es": "Espa\u00F1ol",
         "lang.en": "English",
-        "lang.fr": "Francais",
+        "lang.fr": "Fran\u00E7ais",
         "ui.btn_write": "✍️ ESCRIBIR",
         "ui.btn_restart": "🔁 REINICIO",
         "ui.btn_finish": "🏁 FIN",
         "ui.btn_fullscreen": "🖥️ PANTALLA COMPLETA",
         "ui.btn_download_text": "💾 DESCARGAR TEXTO",
         "ui.btn_options": "⚙️ OPCIONES",
-        "ui.btn_back": "🔙 VOLVER",
+        "ui.btn_back": "VOLVER",
         "ui.btn_mute": "🔇 DESACTIVAR SONIDO",
         "ui.btn_unmute": "🔊 ACTIVAR SONIDO",
         "res.game_over": "GAME OVER",
@@ -210,8 +210,8 @@ const I18N_TEXTS_1P = {
         "mode.goal.final_phrase": "INTRODUCE LA FRASE FINAL PARA GANAR",
         "time.secs": "{sign}{value} segs.",
         "thanks.playing": "GRACIAS POR JUGAR",
-        "countdown.ready": "PREPARADOS?",
-        "countdown.write": "ESCRIBE!",
+        "countdown.ready": "\u00BFPREPARADOS?",
+        "countdown.write": "\u00A1ESCRIBE!",
         "boot.writer.kicker": "INICIANDO SISTEMA ESCRITXR",
         "boot.writer.title": "ENTRANDO EN UN NUEVO MUNDO",
         "boot.writer.copy": "{role} {writer} afila la pluma. Preparando la entrada al escenario.",
@@ -237,7 +237,7 @@ const I18N_TEXTS_1P = {
         "ui.btn_fullscreen": "🖥️ FULLSCREEN",
         "ui.btn_download_text": "💾 DOWNLOAD TEXT",
         "ui.btn_options": "⚙️ OPTIONS",
-        "ui.btn_back": "🔙 BACK",
+        "ui.btn_back": "BACK",
         "ui.btn_mute": "🔇 DISABLE SOUND",
         "ui.btn_unmute": "🔊 ENABLE SOUND",
         "res.game_over": "GAME OVER",
@@ -309,14 +309,14 @@ const I18N_TEXTS_1P = {
     fr: {
         "lang.es": "Espagnol",
         "lang.en": "Anglais",
-        "lang.fr": "Francais",
+        "lang.fr": "Fran\u00E7ais",
         "ui.btn_write": "✍️ ECRIRE",
         "ui.btn_restart": "🔁 RECOMMENCER",
         "ui.btn_finish": "🏁 FIN",
         "ui.btn_fullscreen": "🖥️ PLEIN ECRAN",
         "ui.btn_download_text": "💾 TELECHARGER LE TEXTE",
         "ui.btn_options": "⚙️ OPTIONS",
-        "ui.btn_back": "🔙 RETOUR",
+        "ui.btn_back": "RETOUR",
         "ui.btn_mute": "🔇 DESACTIVER LE SON",
         "ui.btn_unmute": "🔊 ACTIVER LE SON",
         "res.game_over": "GAME OVER",
@@ -368,8 +368,8 @@ const I18N_TEXTS_1P = {
         "mode.goal.final_phrase": "ECRIS LA PHRASE FINALE POUR GAGNER",
         "time.secs": "{sign}{value} s",
         "thanks.playing": "MERCI D'AVOIR JOUE",
-        "countdown.ready": "PRETS ?",
-        "countdown.write": "ECRIS !",
+        "countdown.ready": "PR\u00CATS?",
+        "countdown.write": "\u00C9CRIS!",
         "boot.writer.kicker": "DEMARRAGE DU SYSTEME ECRITXR",
         "boot.writer.title": "ENTREE DANS UN NOUVEAU MONDE",
         "boot.writer.copy": "{role} {writer} affute sa plume. Preparation de l'entree en scene.",
@@ -820,15 +820,37 @@ const obtenerViewportActualEscritora = () => {
 const ajustarViewportEscritora = () => {
     if (!players_fit_root) return;
     bloqueo_resize_viewport_escritora_hasta = Date.now() + 160;
-
-    players_fit_root.style.transform = "none";
-    if (document.body && document.body.classList.contains("ui-dashboard-only")) {
-        actualizarCentroVerticalDashboard1P();
-        return;
-    }
+    const body = document.body;
     const viewportActual = obtenerViewportActualEscritora();
     const viewportW = viewportActual.width;
     const viewportH = viewportActual.height;
+    const permitirScrollPagina = Boolean(body && body.classList.contains("modo-opciones"));
+
+    if (document.documentElement) {
+        document.documentElement.style.overflowX = "hidden";
+        document.documentElement.style.overflowY = permitirScrollPagina ? "auto" : "hidden";
+    }
+    if (body) {
+        body.style.overflowX = "hidden";
+        body.style.overflowY = permitirScrollPagina ? "auto" : "hidden";
+    }
+
+    players_fit_root.style.transform = "none";
+    if (body && body.classList.contains("modo-opciones")) {
+        players_fit_root.style.width = `${viewportW}px`;
+        players_fit_root.style.height = `${viewportH}px`;
+        players_fit_root.style.maxHeight = `${viewportH}px`;
+        players_fit_root.style.minHeight = `${viewportH}px`;
+        return;
+    }
+    if (body && body.classList.contains("ui-dashboard-only")) {
+        players_fit_root.style.width = `${viewportW}px`;
+        players_fit_root.style.height = "auto";
+        players_fit_root.style.maxHeight = "none";
+        players_fit_root.style.minHeight = `${viewportH}px`;
+        actualizarCentroVerticalDashboard1P();
+        return;
+    }
     players_fit_root.style.width = `${viewportW}px`;
     players_fit_root.style.height = "auto";
     players_fit_root.style.maxHeight = "none";
@@ -849,7 +871,7 @@ const ajustarViewportEscritora = () => {
 
 const ajustarAlturaEditorEscritora = () => {
     if (!texto || !contenedor_principal_escritora) return;
-    if (document.body && document.body.classList.contains("ui-dashboard-only")) {
+    if (document.body && (document.body.classList.contains("ui-dashboard-only") || document.body.classList.contains("modo-opciones"))) {
         texto.style.removeProperty("min-height");
         texto.style.removeProperty("max-height");
         if (typeof programarActualizacionDegradadoTextoEscritor === "function") {
