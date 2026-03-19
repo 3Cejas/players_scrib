@@ -56,7 +56,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "**Bienvenides a la página oficial de SCRIB.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 materiales\n\u2022 artículos\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
+        welcome: "**Bienvenidx a la página oficial de SCRIB.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
@@ -116,7 +116,7 @@ var configs = (function () {
 
         newsletter_help:"Suscríbete a la newsletter de la compañía.",
 
-        imagenes_help:"Imágenes y vídeos de SCRIB.",
+        imagenes_help:"Prensa de SCRIB: álbum por eventos, vídeos y dossier.",
 
         articulos_help:"Artículos de Substack sobre <SCRI> B.",
 
@@ -330,7 +330,7 @@ var main = (function () {
 
         NEWSLETTER: { value: "newsletter", help: configs.getInstance().newsletter_help},
 
-        IMAGENES: { value: "materiales", help: configs.getInstance().imagenes_help},
+        IMAGENES: { value: "prensa", help: configs.getInstance().imagenes_help},
 
         ARTICULOS: { value: "artículos", help: configs.getInstance().articulos_help},
 
@@ -554,20 +554,273 @@ function log( text ) {
 
         this.galleryLightboxCaption = null;
 
+        this.galleryLightboxPrev = null;
+
+        this.galleryLightboxNext = null;
+
+        this.galleryLightboxItems = [];
+
+        this.galleryLightboxIndex = -1;
+
+        this.penCursor = null;
+
+        this.penCursorHideTimeoutId = null;
+
+        this.penCursorInitialized = false;
+
+        this.penCursorPressTimeoutId = null;
+
     };
 
-    var galleryImages = [
-        "ScriB_ 1.jpg",
-        "ScriB_008.jpg",
-        "ScriB_10.png",
-        "ScriB_11.png",
-        "ScriB_2.jpg",
-        "ScriB_3.jpg",
-        "ScriB_4.jpg",
-        "ScriB_5.jpg",
-        "ScriB_6.jpg",
-        "ScriB_7.jpg",
-        "ScriB_9.jpg"
+    var padNumber = function (value, width) {
+
+        var stringValue = String(value);
+
+        while (stringValue.length < width) {
+
+            stringValue = "0" + stringValue;
+
+        }
+
+        return stringValue;
+
+    };
+
+    var buildRange = function (start, end, mapper) {
+
+        var values = [];
+
+        for (var index = start; index <= end; index++) {
+
+            values.push(mapper(index));
+
+        }
+
+        return values;
+
+    };
+
+    var PEN_CURSOR_INACTIVITY_MS = 1600;
+
+    var createGalleryMediaFromFiles = function (fileNames) {
+
+        return fileNames.map(function (fileName) {
+
+            return {
+                type: /\.(mp4|mov)$/i.test(fileName) ? "video" : "image",
+                fileName: fileName
+            };
+
+        });
+
+    };
+
+    var galleryEvents = [
+        {
+            title: "DÍA DE LA NIÑA Y LA MUJER EN LA CIENCIA",
+            media: createGalleryMediaFromFiles(
+                []
+                    .concat(buildRange(1, 10, function (index) { return "ScriB_" + padNumber(index, 3) + ".jpg"; }))
+                    .concat(["ScriB_0101.jpg"])
+                    .concat(buildRange(11, 33, function (index) { return "ScriB_" + padNumber(index, 3) + ".jpg"; }))
+                    .concat(["ScriB_0333.jpg"])
+                    .concat(buildRange(34, 51, function (index) { return "ScriB_" + padNumber(index, 3) + ".jpg"; }))
+                    .concat(["ScriB_061.jpg", "ScriB_073.jpg", "ScriB_074.jpg"])
+            )
+        },
+        {
+            title: "FESTIVAL MUTIS 2025",
+            media: createGalleryMediaFromFiles(
+                ["entrevista.mp4"].concat(
+                    buildRange(1, 35, function (index) {
+
+                        return "Scrib (" + index + " de 35).jpg";
+
+                    })
+                )
+            )
+        },
+        {
+            title: "JORNADAS ESCÉNICAS MATADERO 2025",
+            media: createGalleryMediaFromFiles(
+                buildRange(1, 92, function (index) {
+
+                    return "INJV D1_O1-" + padNumber(index, 2) + ".jpg";
+
+                })
+            )
+        },
+        {
+            title: "RESIDENCIA KRACC 2025",
+            media: createGalleryMediaFromFiles([
+                "20250125_005028856_iOS.jpg",
+                "20250125_005034348_iOS.jpg",
+                "20250125_005036045_iOS.jpg",
+                "20250125_005059000_iOS.MOV",
+                "20250125_012526562_iOS.jpg",
+                "20250125_012551182_iOS.jpg",
+                "20250125_012552787_iOS.jpg",
+                "20250125_014318215_iOS.jpg",
+                "20250125_014844526_iOS.jpg",
+                "20250125_014901891_iOS.jpg",
+                "20250125_014903633_iOS.jpg",
+                "20250125_014929476_iOS.jpg",
+                "20250125_014933199_iOS.jpg",
+                "20250125_020105841_iOS.jpg",
+                "20250125_020109542_iOS.jpg",
+                "20250125_020111968_iOS.jpg",
+                "20250125_020902061_iOS.jpg",
+                "20250125_020904145_iOS.jpg",
+                "20250125_020908727_iOS.jpg",
+                "20250125_020916062_iOS.jpg",
+                "20250125_020919593_iOS.jpg",
+                "20250125_020920677_iOS.jpg",
+                "20250125_020935932_iOS.jpg",
+                "20250125_020945117_iOS.jpg",
+                "20250125_021249559_iOS.jpg",
+                "20250125_021254934_iOS.jpg",
+                "20250125_021258135_iOS.jpg",
+                "20250125_021324765_iOS.jpg",
+                "20250125_021329306_iOS.jpg",
+                "20250125_021403237_iOS.jpg",
+                "20250125_021407226_iOS.jpg",
+                "20250125_021420498_iOS.jpg",
+                "20250125_021424412_iOS.jpg",
+                "20250125_021440653_iOS.jpg",
+                "20250125_021453572_iOS.jpg",
+                "20250125_021454219_iOS.jpg",
+                "20250125_021540151_iOS.jpg",
+                "20250125_021542759_iOS.jpg",
+                "20250125_021546024_iOS.jpg",
+                "20250125_021929637_iOS.jpg",
+                "20250125_021931535_iOS.jpg",
+                "20250125_022135145_iOS.jpg"
+            ])
+        }
+    ];
+
+    galleryEvents = [
+        {
+            folder: "JORNADAS ESC\u00c9NICAS MATADERO 2025",
+            title: "JORNADAS ESC\u00c9NICAS MATADERO 2025",
+            media: createGalleryMediaFromFiles([
+                "INJV D1_O1-01.jpg",
+                "INJV D1_O1-04.jpg",
+                "INJV D1_O1-10.jpg",
+                "INJV D1_O1-13.jpg",
+                "INJV D1_O1-16.jpg",
+                "INJV D1_O1-17.jpg",
+                "INJV D1_O1-23.jpg",
+                "INJV D1_O1-32.jpg",
+                "INJV D1_O1-35.jpg",
+                "INJV D1_O1-36.jpg",
+                "INJV D1_O1-41.jpg",
+                "INJV D1_O1-42.jpg",
+                "INJV D1_O1-44.jpg",
+                "INJV D1_O1-46.jpg",
+                "INJV D1_O1-47.jpg",
+                "INJV D1_O1-48.jpg",
+                "INJV D1_O1-54.jpg",
+                "INJV D1_O1-57.jpg",
+                "INJV D1_O1-60.jpg",
+                "INJV D1_O1-63.jpg",
+                "INJV D1_O1-64.jpg",
+                "INJV D1_O1-69.jpg",
+                "INJV D1_O1-73.jpg",
+                "INJV D1_O1-75.jpg",
+                "INJV D1_O1-76.jpg",
+                "INJV D1_O1-79.jpg",
+                "INJV D1_O1-86.jpg",
+                "INJV D1_O1-88.jpg"
+            ])
+        },
+        {
+            folder: "FESTIVAL MUTIS 2025",
+            title: "FESTIVAL MUTIS 2025",
+            media: createGalleryMediaFromFiles([
+                "Scrib (10 de 35).jpg",
+                "Scrib (11 de 35).jpg",
+                "Scrib (12 de 35).jpg",
+                "Scrib (13 de 35).jpg",
+                "Scrib (14 de 35).jpg",
+                "Scrib (15 de 35).jpg",
+                "Scrib (17 de 35).jpg",
+                "Scrib (18 de 35).jpg",
+                "Scrib (19 de 35).jpg",
+                "Scrib (2 de 35).jpg",
+                "Scrib (22 de 35).jpg",
+                "Scrib (25 de 35).jpg",
+                "Scrib (27 de 35).jpg",
+                "Scrib (28 de 35).jpg",
+                "Scrib (35 de 35).jpg",
+                "Scrib (5 de 35).jpg",
+                "Scrib (7 de 35).jpg"
+            ])
+        },
+        {
+            folder: "RESIDENCIA KRACC 2025",
+            title: "RESIDENCIA KRACC 2025",
+            media: createGalleryMediaFromFiles([
+                "20250125_005028856_iOS.jpg",
+                "20250125_005034348_iOS.jpg",
+                "20250125_005036045_iOS.jpg",
+                "20250125_012526562_iOS.jpg",
+                "20250125_012552787_iOS.jpg",
+                "20250125_014318215_iOS.jpg",
+                "20250125_014844526_iOS.jpg",
+                "20250125_020902061_iOS.jpg",
+                "20250125_020945117_iOS.jpg",
+                "20250125_021329306_iOS.jpg",
+                "20250125_021403237_iOS.jpg",
+                "20250125_021424412_iOS.jpg",
+                "20250125_022135145_iOS.jpg"
+            ])
+        },
+        {
+            folder: "D\u00cdA DE LA NI\u00d1A Y LA MUJER EN LA CIENCIA",
+            title: "D\u00cdA DE LA NI\u00d1A Y LA MUJER EN LA CIENCIA 2025",
+            media: createGalleryMediaFromFiles([
+                "ScriB_002.jpg",
+                "ScriB_003.jpg",
+                "ScriB_005.jpg",
+                "ScriB_007.jpg",
+                "ScriB_008.jpg",
+                "ScriB_010.jpg",
+                "ScriB_011.jpg",
+                "ScriB_013.jpg",
+                "ScriB_014.jpg",
+                "ScriB_015.jpg",
+                "ScriB_016.jpg",
+                "ScriB_019.jpg",
+                "ScriB_022.jpg",
+                "ScriB_023.jpg",
+                "ScriB_024.jpg",
+                "ScriB_025.jpg",
+                "ScriB_033.jpg",
+                "ScriB_034.jpg",
+                "ScriB_035.jpg",
+                "ScriB_036.jpg",
+                "ScriB_038.jpg",
+                "ScriB_041.jpg",
+                "ScriB_042.jpg",
+                "ScriB_043.jpg",
+                "ScriB_044.jpg",
+                "ScriB_045.jpg",
+                "ScriB_048.jpg",
+                "ScriB_051.jpg"
+            ])
+        },
+        {
+            folder: "FESTIVAL INTERNACIONAL WENOW 2023",
+            title: "FESTIVAL INTERNACIONAL WE:NOW",
+            media: createGalleryMediaFromFiles(
+                buildRange(1, 36, function (index) {
+
+                    return "ScriB_" + padNumber(index, 3) + ".jpg";
+
+                })
+            )
+        }
     ];
 
     var tournamentTicketsUrl = "https://www.dinaticket.com/es/provider/18142/event/4940616";
@@ -695,6 +948,215 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.shouldAutoFocusCommandLine = function (event) {
+
+        var selection = typeof window.getSelection === "function" ? window.getSelection() : null;
+        var target = event && event.target;
+
+        if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+
+            return false;
+
+        }
+
+        if (!target || target === this.cmdLine) {
+
+            return false;
+
+        }
+
+        if (target.closest && target.closest("a, button, input, textarea, select, option, video, iframe, label")) {
+
+            return false;
+
+        }
+
+        if (target.closest && target.closest(".output-lightbox__dialog, .output-reading-card, .article-card, .output-video-card")) {
+
+            return false;
+
+        }
+
+        return true;
+
+    };
+
+    Terminal.prototype.clearPenCursorHideTimer = function () {
+
+        if (this.penCursorHideTimeoutId !== null) {
+
+            clearTimeout(this.penCursorHideTimeoutId);
+            this.penCursorHideTimeoutId = null;
+
+        }
+
+    };
+
+    Terminal.prototype.hidePenCursor = function () {
+
+        if (!this.penCursor) {
+
+            return;
+
+        }
+
+        this.penCursor.classList.remove("activa");
+        this.penCursor.classList.remove("is-pressing");
+
+    };
+
+    Terminal.prototype.scheduleHidePenCursor = function () {
+
+        this.clearPenCursorHideTimer();
+
+        if (!this.penCursor) {
+
+            return;
+
+        }
+
+        this.penCursorHideTimeoutId = window.setTimeout(function () {
+
+            this.penCursorHideTimeoutId = null;
+            this.hidePenCursor();
+
+        }.bind(this), PEN_CURSOR_INACTIVITY_MS);
+
+    };
+
+    Terminal.prototype.movePenCursor = function (clientX, clientY, isPressing) {
+
+        if (!this.penCursor) {
+
+            return;
+
+        }
+
+        this.penCursor.style.left = clientX + "px";
+        this.penCursor.style.top = clientY + "px";
+        this.penCursor.classList.add("activa");
+
+        if (isPressing) {
+
+            this.penCursor.classList.add("is-pressing");
+
+            if (this.penCursorPressTimeoutId !== null) {
+
+                clearTimeout(this.penCursorPressTimeoutId);
+
+            }
+
+            this.penCursorPressTimeoutId = window.setTimeout(function () {
+
+                this.penCursorPressTimeoutId = null;
+
+                if (this.penCursor) {
+
+                    this.penCursor.classList.remove("is-pressing");
+
+                }
+
+            }.bind(this), 140);
+
+        }
+
+        this.scheduleHidePenCursor();
+
+    };
+
+    Terminal.prototype.initPenCursor = function () {
+
+        var supportsFinePointer;
+
+        if (this.penCursorInitialized || !document.body) {
+
+            return;
+
+        }
+
+        this.penCursorInitialized = true;
+
+        if (typeof window.matchMedia !== "function") {
+
+            supportsFinePointer = true;
+
+        } else {
+
+            supportsFinePointer = window.matchMedia("(pointer: fine)").matches;
+
+        }
+
+        if (!supportsFinePointer) {
+
+            return;
+
+        }
+
+        this.penCursor = document.createElement("div");
+        this.penCursor.className = "page-cursor-pluma";
+        document.body.appendChild(this.penCursor);
+        document.body.classList.add("page-cursor-pluma-activo");
+
+        document.addEventListener("mousemove", function (event) {
+
+            if (!event || typeof event.clientX !== "number" || typeof event.clientY !== "number") {
+
+                return;
+
+            }
+
+            this.movePenCursor(event.clientX, event.clientY, false);
+
+        }.bind(this), { passive: true });
+
+        document.addEventListener("mousedown", function (event) {
+
+            if (!event || typeof event.clientX !== "number" || typeof event.clientY !== "number") {
+
+                return;
+
+            }
+
+            this.movePenCursor(event.clientX, event.clientY, true);
+
+        }.bind(this), { passive: true });
+
+        document.addEventListener("mouseup", function (event) {
+
+            if (!event || typeof event.clientX !== "number" || typeof event.clientY !== "number") {
+
+                return;
+
+            }
+
+            this.movePenCursor(event.clientX, event.clientY, false);
+
+        }.bind(this), { passive: true });
+
+        document.addEventListener("mouseout", function (event) {
+
+            if (!event.relatedTarget) {
+
+                this.hidePenCursor();
+
+            }
+
+        }.bind(this));
+
+        window.addEventListener("blur", this.hidePenCursor.bind(this));
+
+        document.addEventListener("visibilitychange", function () {
+
+            if (document.hidden) {
+
+                this.hidePenCursor();
+
+            }
+
+        }.bind(this));
+
+    };
+
 
 
     Terminal.prototype.init = function () {
@@ -710,6 +1172,7 @@ function log( text ) {
         });
 
         this.prepareSideNav();
+        this.initPenCursor();
 
         this.lock(); // NECESARIO PARA BLOQUEAR DESDE QUE LOS ELEMENTOS DEL SIDENAV HAN SIDO AÑADIDOS AHORA
 
@@ -723,7 +1186,11 @@ function log( text ) {
 
             //Hace que se focalice en la linea de comandos cuando termina de ejecutar el último comando o al empezar
 
-			this.focus();
+			if (this.shouldAutoFocusCommandLine(event)) {
+
+				this.focus();
+
+			}
 
         }.bind(this));
 
@@ -874,6 +1341,55 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.buildGalleryEventMeta = function (eventData) {
+
+        var imageCount = 0;
+        var videoCount = 0;
+        var metaParts = [];
+
+        eventData.media.forEach(function (mediaItem) {
+
+            if (mediaItem.type === "video") {
+
+                videoCount++;
+
+            } else {
+
+                imageCount++;
+
+            }
+
+        });
+
+        imageCount && metaParts.push(imageCount + " imagen" + (imageCount === 1 ? "" : "es"));
+        videoCount && metaParts.push(videoCount + " vÃ­deo" + (videoCount === 1 ? "" : "s"));
+
+        return metaParts.join(" Â· ");
+
+    };
+
+    Terminal.prototype.buildGalleryMediaMarkup = function (eventData, mediaItem, mediaIndex) {
+
+        var assetPath = "./img/gallery/" + encodeURIComponent(eventData.title) + "/" + encodeURIComponent(mediaItem.fileName);
+        var caption = normalizeScribBrand(eventData.title + " Â· " + (mediaIndex + 1));
+
+        if (mediaItem.type === "video") {
+
+            var mimeType = /\.mov$/i.test(mediaItem.fileName) ? "video/quicktime" : "video/mp4";
+
+            return "<article class=\"output-gallery-video-card\">" +
+                "<video class=\"output-gallery-video\" controls preload=\"metadata\" playsinline>" +
+                    "<source src=\"" + assetPath + "\" type=\"" + mimeType + "\">" +
+                "</video>" +
+                "<span class=\"output-gallery-video-badge\">VÃ­deo</span>" +
+            "</article>";
+
+        }
+
+        return "<a class=\"output-gallery-item\" href=\"" + assetPath + "\" data-caption=\"" + escapeHTML(caption) + "\"><img class=\"output-gallery-image\" src=\"" + assetPath + "\" alt=\"" + escapeHTML(caption) + "\" loading=\"lazy\"></a>";
+
+    };
+
     Terminal.prototype.buildGalleryMarkup = function () {
 
         return "<div class=\"output-gallery\">" + galleryImages.map(function (fileName, index) {
@@ -946,6 +1462,288 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.buildGalleryEventMeta = function (eventData) {
+
+        var imageCount = 0;
+        var videoCount = 0;
+        var metaParts = [];
+
+        eventData.media.forEach(function (mediaItem) {
+
+            if (mediaItem.type === "video") {
+
+                videoCount++;
+
+            } else {
+
+                imageCount++;
+
+            }
+
+        });
+
+        imageCount && metaParts.push(imageCount + " imagen" + (imageCount === 1 ? "" : "es"));
+        videoCount && metaParts.push(videoCount + " video" + (videoCount === 1 ? "" : "s"));
+
+        return metaParts.join(" | ");
+
+    };
+
+    Terminal.prototype.buildGalleryMediaMarkup = function (eventData, mediaItem, mediaIndex) {
+
+        var folderName = eventData.folder || eventData.title;
+        var assetPath = "./img/gallery/" + encodeURIComponent(folderName) + "/" + encodeURIComponent(mediaItem.fileName);
+        var caption = normalizeScribBrand(eventData.title + " - " + (mediaIndex + 1));
+
+        if (mediaItem.type === "video") {
+
+            var mimeType = /\.mov$/i.test(mediaItem.fileName) ? "video/quicktime" : "video/mp4";
+
+            return "<article class=\"output-gallery-video-card\">" +
+                "<video class=\"output-gallery-video\" controls preload=\"metadata\" playsinline>" +
+                    "<source src=\"" + assetPath + "\" type=\"" + mimeType + "\">" +
+                "</video>" +
+                "<span class=\"output-gallery-video-badge\">VIDEO</span>" +
+            "</article>";
+
+        }
+
+        return "<a class=\"output-gallery-item\" href=\"" + assetPath + "\" data-caption=\"" + escapeHTML(caption) + "\"><img class=\"output-gallery-image\" src=\"" + assetPath + "\" alt=\"" + escapeHTML(caption) + "\" loading=\"lazy\"></a>";
+
+    };
+
+    Terminal.prototype.buildGalleryMarkup = function () {
+
+        return "<div class=\"output-album\">" + galleryEvents.map(function (eventData) {
+
+            return "<section class=\"output-album-event\">" +
+                "<div class=\"output-album-event__header\">" +
+                    "<div class=\"output-album-event__title\">" + escapeHTML(eventData.title) + "</div>" +
+                    "<div class=\"output-album-event__meta\">" + escapeHTML(this.buildGalleryEventMeta(eventData)) + "</div>" +
+                "</div>" +
+                "<div class=\"output-album-carousel\">" +
+                    "<button type=\"button\" class=\"output-album-nav output-album-nav--prev\" data-carousel-control=\"prev\" aria-label=\"Ver im\u00e1genes anteriores\">&#8249;</button>" +
+                    "<div class=\"output-album-track-shell\">" +
+                        "<div class=\"output-gallery output-gallery--album\" data-carousel-track>" + eventData.media.map(function (mediaItem, mediaIndex) {
+
+                            return this.buildGalleryMediaMarkup(eventData, mediaItem, mediaIndex);
+
+                        }.bind(this)).join("") + "</div>" +
+                    "</div>" +
+                    "<button type=\"button\" class=\"output-album-nav output-album-nav--next\" data-carousel-control=\"next\" aria-label=\"Ver im\u00e1genes siguientes\">&#8250;</button>" +
+                "</div>" +
+            "</section>";
+
+        }.bind(this)).join("") + "</div>";
+
+    };
+
+    Terminal.prototype.updateAlbumCarouselState = function (eventElement) {
+
+        var track = eventElement && eventElement.querySelector("[data-carousel-track]");
+        var prevButton = eventElement && eventElement.querySelector(".output-album-nav--prev");
+        var nextButton = eventElement && eventElement.querySelector(".output-album-nav--next");
+        var maxScrollLeft;
+        var atStart;
+        var atEnd;
+        var isScrollable;
+
+        if (!track || !prevButton || !nextButton) {
+
+            return;
+
+        }
+
+        maxScrollLeft = Math.max(track.scrollWidth - track.clientWidth, 0);
+        atStart = track.scrollLeft <= 4;
+        atEnd = maxScrollLeft <= 4 || track.scrollLeft >= maxScrollLeft - 4;
+        isScrollable = maxScrollLeft > 4;
+
+        eventElement.classList.toggle("is-at-start", atStart);
+        eventElement.classList.toggle("is-at-end", atEnd);
+        eventElement.classList.toggle("is-not-scrollable", !isScrollable);
+
+        prevButton.disabled = !isScrollable || atStart;
+        nextButton.disabled = !isScrollable || atEnd;
+
+    };
+
+    Terminal.prototype.initAlbumCarousels = function () {
+
+        var eventElements = this.output.querySelectorAll(".output-album-event");
+
+        eventElements.forEach(function (eventElement) {
+
+            var track = eventElement.querySelector("[data-carousel-track]");
+
+            if (!track) {
+
+                return;
+
+            }
+
+            if (track.dataset.carouselBound !== "true") {
+
+                track.dataset.carouselBound = "true";
+
+                track.addEventListener("scroll", function () {
+
+                    this.updateAlbumCarouselState(eventElement);
+
+                }.bind(this), { passive: true });
+
+            }
+
+            this.updateAlbumCarouselState(eventElement);
+
+        }.bind(this));
+
+        if (this.albumCarouselResizeBound) {
+
+            return;
+
+        }
+
+        this.albumCarouselResizeBound = true;
+
+        window.addEventListener("resize", function () {
+
+            this.output.querySelectorAll(".output-album-event").forEach(function (eventElement) {
+
+                this.updateAlbumCarouselState(eventElement);
+
+            }.bind(this));
+
+        }.bind(this));
+
+    };
+
+    Terminal.prototype.scrollAlbumCarousel = function (button) {
+
+        var eventElement = button;
+        var track;
+        var direction;
+        var step;
+
+        while (eventElement && (!eventElement.classList || !eventElement.classList.contains("output-album-event"))) {
+
+            eventElement = eventElement.parentNode;
+
+        }
+
+        if (!eventElement) {
+
+            return;
+
+        }
+
+        track = eventElement.querySelector("[data-carousel-track]");
+
+        if (!track) {
+
+            return;
+
+        }
+
+        direction = button.getAttribute("data-carousel-control") === "prev" ? -1 : 1;
+        step = Math.max(Math.round(track.clientWidth * 0.88), 240);
+
+        track.scrollBy({
+            left: direction * step,
+            behavior: "smooth"
+        });
+
+        window.setTimeout(function () {
+
+            this.updateAlbumCarouselState(eventElement);
+
+        }.bind(this), 220);
+
+    };
+
+    Terminal.prototype.buildPressMarkup = function () {
+
+        return "<div class=\"output-materials-layout\">" +
+            "<section class=\"output-materials-section\">" +
+                "<div class=\"output-materials-heading\">\ud83d\udcf8 IM\u00c1GENES</div>" +
+                this.buildGalleryMarkup() +
+            "</section>" +
+            "<section class=\"output-materials-section\">" +
+                "<div class=\"output-materials-heading\">\ud83c\udfac V\u00cdDEOS</div>" +
+                this.buildMaterialVideosMarkup() +
+            "</section>" +
+            "<section class=\"output-materials-section\">" +
+                "<div class=\"output-materials-heading\">\ud83d\udcda LECTURAS</div>" +
+                this.buildMaterialReadingsMarkup() +
+            "</section>" +
+        "</div>";
+
+    };
+
+    Terminal.prototype.buildMaterialsMarkup = Terminal.prototype.buildPressMarkup;
+
+    Terminal.prototype.buildSpectacleImageMarkup = function (folderName, fileName, caption, className) {
+
+        var assetPath = "./img/gallery/" + encodeURIComponent(folderName) + "/" + encodeURIComponent(fileName);
+        var normalizedCaption = normalizeScribBrand(caption);
+        var figureClassName = className ? "showcase-figure " + className : "showcase-figure";
+
+        return "<figure class=\"" + figureClassName + "\">" +
+            "<a class=\"output-gallery-item showcase-figure__link\" href=\"" + assetPath + "\" data-caption=\"" + escapeHTML(normalizedCaption) + "\">" +
+                "<img class=\"output-gallery-image showcase-figure__image\" src=\"" + assetPath + "\" alt=\"" + escapeHTML(normalizedCaption) + "\" loading=\"lazy\">" +
+            "</a>" +
+            "<figcaption class=\"showcase-figure__caption\">" + escapeHTML(normalizedCaption) + "</figcaption>" +
+        "</figure>";
+
+    };
+
+    Terminal.prototype.buildSpectacleMarkup = function () {
+
+        return "<div class=\"showcase-page\">" +
+            "<div class=\"showcase-copy\">" +
+                "<p>En cada velada <span class=\"showcase-underline\">dos equipos</span>, el <span class=\"showcase-underline\">equipo rojo</span> y el <span class=\"showcase-underline\">equipo azul</span>, se enfrentan para escribir <span class=\"showcase-underline\">el mejor texto dramático de la noche</span>.</p>" +
+            "</div>" +
+            this.buildSpectacleImageMarkup(
+                "FESTIVAL MUTIS 2025",
+                "Scrib (22 de 35).jpg",
+                "Competición en vivo entre dramaturgia, escena y juego.",
+                "showcase-figure--wide"
+            ) +
+            "<div class=\"showcase-copy\">" +
+                "<p>Cada bando reúne a <span class=\"showcase-underline\">dos dramaturgos/as</span> que escriben en directo mientras sortean <span class=\"showcase-underline\">los desafíos del videojuego</span>. La escritura no sucede aparte: <span class=\"showcase-underline\">sucede dentro de la partida</span>.</p>" +
+                "<p>El espectáculo convierte el proceso creativo en algo visible, físico y urgente: <span class=\"showcase-underline\">pensar, fallar, corregir y decidir</span> forman parte del propio acontecimiento escénico.</p>" +
+            "</div>" +
+            "<div class=\"showcase-media-grid\">" +
+                this.buildSpectacleImageMarkup(
+                    "RESIDENCIA KRACC 2025",
+                    "20250125_021329306_iOS.jpg",
+                    "La escritura se cocina mientras el equipo prepara la escena."
+                ) +
+                this.buildSpectacleImageMarkup(
+                    "DÍA DE LA NIÑA Y LA MUJER EN LA CIENCIA",
+                    "ScriB_036.jpg",
+                    "El público entra en la partida y empuja la escritura."
+                ) +
+            "</div>" +
+            "<div class=\"showcase-copy\">" +
+                "<p>Mientras tanto, el <span class=\"showcase-underline\">público</span>, en su papel de <span class=\"showcase-underline\">musa</span>, participa desde el teléfono móvil para ofrecer soluciones, desbloquear situaciones y acompañar al escritor o escritora que decide inspirar.</p>" +
+                "<p>Y no acaba ahí: cada equipo cuenta además con <span class=\"showcase-underline\">un elenco actoral</span> que prepara de manera simultánea el montaje del texto con <span class=\"showcase-underline\">iluminación, sonido, atrezzo y puesta en escena</span>.</p>" +
+            "</div>" +
+            this.buildSpectacleImageMarkup(
+                "JORNADAS ESCÉNICAS MATADERO 2025",
+                "INJV D1_O1-64.jpg",
+                "La escritura termina convertida en escena delante del público.",
+                "showcase-figure--wide"
+            ) +
+            "<div class=\"showcase-copy showcase-copy--closing\">" +
+                "<p>Finalmente, <span class=\"showcase-underline\">el jurado</span> decide qué equipo ha demostrado <span class=\"showcase-underline\">mayor cooperación, inventiva y capacidad escénica</span>. &lt;SCRI&gt; B no trata solo de escribir bien: trata de <span class=\"showcase-underline\">escribir en vivo, en colectivo y bajo presión</span>.</p>" +
+            "</div>" +
+        "</div>"
+            .replace(/<span class=\"showcase-underline\">/g, "<strong class=\"showcase-emphasis\">")
+            .replace(/<\/span>/g, "</strong>");
+
+    };
+
     Terminal.prototype.buildArticlesMarkup = function () {
 
         return "<div class=\"article-mosaic\">" + articlePosts.slice().reverse().map(function (article) {
@@ -973,12 +1771,14 @@ function log( text ) {
 
         this.galleryLightbox = document.createElement("div");
         this.galleryLightbox.className = "output-lightbox output-lightbox--hidden";
-        this.galleryLightbox.innerHTML = "<div class=\"output-lightbox__dialog\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Imagen ampliada\"><button type=\"button\" class=\"output-lightbox__close\" aria-label=\"Cerrar imagen\">×</button><img class=\"output-lightbox__image\" alt=\"\"><div class=\"output-lightbox__caption\"></div></div>";
+        this.galleryLightbox.innerHTML = "<div class=\"output-lightbox__dialog\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Imagen ampliada\"><button type=\"button\" class=\"output-lightbox__close\" aria-label=\"Cerrar imagen\">×</button><div class=\"output-lightbox__viewer\"><button type=\"button\" class=\"output-lightbox__nav output-lightbox__nav--prev\" aria-label=\"Imagen anterior\">&#8249;</button><img class=\"output-lightbox__image\" alt=\"\"><button type=\"button\" class=\"output-lightbox__nav output-lightbox__nav--next\" aria-label=\"Imagen siguiente\">&#8250;</button></div><div class=\"output-lightbox__caption\"></div></div>";
 
         document.body.appendChild(this.galleryLightbox);
 
         this.galleryLightboxImage = this.galleryLightbox.querySelector(".output-lightbox__image");
         this.galleryLightboxCaption = this.galleryLightbox.querySelector(".output-lightbox__caption");
+        this.galleryLightboxPrev = this.galleryLightbox.querySelector(".output-lightbox__nav--prev");
+        this.galleryLightboxNext = this.galleryLightbox.querySelector(".output-lightbox__nav--next");
 
         this.galleryLightbox.addEventListener("click", function (event) {
 
@@ -994,11 +1794,53 @@ function log( text ) {
 
         }.bind(this));
 
+        this.galleryLightboxPrev.addEventListener("click", function (event) {
+
+            ignoreEvent(event);
+
+            this.navigateGalleryLightbox(-1);
+
+        }.bind(this));
+
+        this.galleryLightboxNext.addEventListener("click", function (event) {
+
+            ignoreEvent(event);
+
+            this.navigateGalleryLightbox(1);
+
+        }.bind(this));
+
         document.addEventListener("keydown", function (event) {
 
-            if (event.key === "Escape" && this.galleryLightbox && !this.galleryLightbox.classList.contains("output-lightbox--hidden")) {
+            if (!this.galleryLightbox || this.galleryLightbox.classList.contains("output-lightbox--hidden")) {
+
+                return;
+
+            }
+
+            if (event.key === "Escape") {
 
                 this.closeGalleryLightbox();
+
+                return;
+
+            }
+
+            if (event.key === "ArrowLeft") {
+
+                ignoreEvent(event);
+
+                this.navigateGalleryLightbox(-1);
+
+                return;
+
+            }
+
+            if (event.key === "ArrowRight") {
+
+                ignoreEvent(event);
+
+                this.navigateGalleryLightbox(1);
 
             }
 
@@ -1006,13 +1848,93 @@ function log( text ) {
 
     };
 
-    Terminal.prototype.openGalleryLightbox = function (src, caption) {
+    Terminal.prototype.getGalleryLightboxItems = function (triggerElement) {
+
+        var scope = null;
+
+        if (!triggerElement) {
+
+            return [];
+
+        }
+
+        if (triggerElement.closest) {
+
+            scope = triggerElement.closest(".output-album-event") ||
+                triggerElement.closest(".showcase-page") ||
+                triggerElement.closest(".output-gallery");
+
+        }
+
+        scope = scope || this.output;
+
+        return Array.prototype.slice.call(scope.querySelectorAll(".output-gallery-item"));
+
+    };
+
+    Terminal.prototype.renderGalleryLightboxItem = function (index) {
+
+        var item;
+        var src;
+        var caption;
+        var isAtStart;
+        var isAtEnd;
+
+        if (!this.galleryLightboxItems.length || index < 0 || index >= this.galleryLightboxItems.length) {
+
+            return;
+
+        }
+
+        item = this.galleryLightboxItems[index];
+        src = item.getAttribute("href");
+        caption = item.getAttribute("data-caption") || "";
+        isAtStart = index === 0;
+        isAtEnd = index === this.galleryLightboxItems.length - 1;
+
+        this.galleryLightboxIndex = index;
+        this.galleryLightboxImage.setAttribute("src", src);
+        this.galleryLightboxImage.setAttribute("alt", caption || "Imagen ampliada");
+        this.galleryLightboxCaption.textContent = caption;
+        this.galleryLightboxPrev.disabled = isAtStart;
+        this.galleryLightboxNext.disabled = isAtEnd;
+        this.galleryLightbox.classList.toggle("output-lightbox--single", this.galleryLightboxItems.length <= 1);
+
+    };
+
+    Terminal.prototype.navigateGalleryLightbox = function (direction) {
+
+        var nextIndex = this.galleryLightboxIndex + direction;
+
+        if (!this.galleryLightboxItems.length || nextIndex < 0 || nextIndex >= this.galleryLightboxItems.length) {
+
+            return;
+
+        }
+
+        this.renderGalleryLightboxItem(nextIndex);
+
+    };
+
+    Terminal.prototype.openGalleryLightbox = function (triggerElement) {
+
+        var items;
+        var itemIndex;
 
         this.initGalleryLightbox();
 
-        this.galleryLightboxImage.setAttribute("src", src);
-        this.galleryLightboxImage.setAttribute("alt", caption || "Imagen ampliada");
-        this.galleryLightboxCaption.textContent = caption || "";
+        items = this.getGalleryLightboxItems(triggerElement);
+        itemIndex = items.indexOf(triggerElement);
+
+        this.galleryLightboxItems = items.length ? items : [triggerElement];
+
+        if (itemIndex < 0) {
+
+            itemIndex = 0;
+
+        }
+
+        this.renderGalleryLightboxItem(itemIndex);
         this.galleryLightbox.classList.remove("output-lightbox--hidden");
         document.body.classList.add("output-lightbox-open");
 
@@ -1030,6 +1952,11 @@ function log( text ) {
         this.galleryLightboxImage.removeAttribute("src");
         this.galleryLightboxImage.setAttribute("alt", "");
         this.galleryLightboxCaption.textContent = "";
+        this.galleryLightboxItems = [];
+        this.galleryLightboxIndex = -1;
+        this.galleryLightboxPrev.disabled = true;
+        this.galleryLightboxNext.disabled = true;
+        this.galleryLightbox.classList.remove("output-lightbox--single");
         document.body.classList.remove("output-lightbox-open");
 
     };
@@ -1113,7 +2040,17 @@ function log( text ) {
 
                     ignoreEvent(event);
 
-                    this.openGalleryLightbox(element.getAttribute("href"), element.getAttribute("data-caption"));
+                    this.openGalleryLightbox(element);
+
+                    return;
+
+                }
+
+                if (element.classList && element.classList.contains("output-album-nav")) {
+
+                    ignoreEvent(event);
+
+                    this.scrollAlbumCarousel(element);
 
                     return;
 
@@ -1220,6 +2157,12 @@ function log( text ) {
     Terminal.prototype.handleDirectNavigation = function (command) {
 
         var normalizedCommand = command.toLowerCase().trim();
+
+        if (normalizedCommand === "materiales") {
+
+            normalizedCommand = cmds.IMAGENES.value;
+
+        }
 
         switch (normalizedCommand) {
 
@@ -1605,6 +2548,12 @@ function log( text ) {
     Terminal.prototype.handleCmd = function () {
 
         var cmdComponents = this.cmdLine.value.toLowerCase().trim();
+
+        if (cmdComponents === "materiales") {
+
+            cmdComponents = cmds.IMAGENES.value;
+
+        }
 
         if (this.handleDirectNavigation(cmdComponents)) {
 
@@ -2025,6 +2974,21 @@ function log( text ) {
 			this.type(result, this.unlock.bind(this));
     }
 
+    Terminal.prototype.el_espectáculo = function () {
+
+        this.clear();
+
+        var output = this.output;
+
+        this.type("# ¿QUÉ ES SCRIB?", function () {
+
+            output.innerHTML += "<br/>" + this.buildSpectacleMarkup() + "<br/><br/>";
+            this.type("Para volver al menú, utiliza el comando «reinicio».", this.unlock.bind(this));
+
+        }.bind(this));
+
+    }
+
     //JUEGO
 
     Terminal.prototype.juego = function () {
@@ -2225,6 +3189,28 @@ function log( text ) {
     }
 
     Terminal.prototype.imagenes = Terminal.prototype.materiales;
+
+    //PRENSA
+
+    Terminal.prototype.prensa = function () {
+
+        this.clear();
+
+        var result = "# PRENSA";
+        var output = this.output;
+
+        this.type(result, function () {
+
+            output.innerHTML += "<br/>" + this.buildPressMarkup() + "<br/><br/>";
+            this.initAlbumCarousels();
+            this.type("Para volver al menú, utiliza el comando «reinicio».", this.unlock.bind(this));
+
+        }.bind(this));
+
+    }
+
+    Terminal.prototype.materiales = Terminal.prototype.prensa;
+    Terminal.prototype.imagenes = Terminal.prototype.prensa;
 
     //ARTÍCULOS
 

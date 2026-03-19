@@ -6,7 +6,7 @@
     <title>SCRB - Musas</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260319w">
     <style>
         html, body {
             height: 100%;
@@ -1793,20 +1793,65 @@ body.musa-boot-activa .intro-flow {
         opacity: 0.18;
     }
 
+    .musa-boot-overlay {
+        background: linear-gradient(180deg, rgba(3, 8, 14, 0.98), rgba(2, 4, 8, 1));
+    }
+
     .musa-boot-overlay::before {
-        mix-blend-mode: normal;
-        opacity: 0.08;
+        content: none;
     }
 
     .musa-boot-overlay::after,
     .musa-boot-panel::before {
-        animation: none;
-        opacity: 0;
+        content: none;
     }
 
-    .musa-boot-world-orb,
+    .musa-boot-panel,
+    .musa-boot-world,
+    .musa-boot-bar,
+    .musa-boot-bar-fill,
+    .musa-boot-world-fill {
+        box-shadow: none;
+    }
+
+    .musa-boot-panel {
+        background: linear-gradient(180deg, rgba(5, 12, 22, 0.96), rgba(4, 8, 16, 0.98));
+    }
+
+    .musa-boot-world-grid {
+        display: none;
+    }
+
+    .musa-boot-world-orb {
+        animation: none;
+        opacity: 0.88;
+        box-shadow: none;
+    }
+
+    .musa-boot-world-pixels span,
+    .musa-boot-logs li,
     .musa-boot-logs li.is-active::before {
-        animation-duration: 1800ms;
+        transition: none;
+    }
+
+    .musa-boot-world-pixels span {
+        transform: none;
+        opacity: 0.42;
+        box-shadow: none;
+    }
+
+    .musa-boot-world-pixels span.is-on {
+        opacity: 0.9;
+    }
+
+    .musa-boot-logs li.is-active::before {
+        animation: none;
+        box-shadow: none;
+    }
+
+    .musa-boot-bar-fill {
+        transition: none;
+        background: linear-gradient(90deg, #59d7e7 0%, #c5f9ff 100%);
     }
 }
 
@@ -2570,6 +2615,15 @@ body.musa-boot-activa .intro-flow {
 </style>
 </head>
 <body>
+    <div id="background-effects" aria-hidden="true">
+        <span class="aquarium-glow aquarium-glow--blue"></span>
+        <span class="aquarium-glow aquarium-glow--red"></span>
+        <span class="aquarium-current aquarium-current--one"></span>
+        <span class="aquarium-current aquarium-current--two"></span>
+        <span class="aquarium-shimmer"></span>
+        <span class="aquarium-bloom aquarium-bloom--blue"></span>
+        <span class="aquarium-bloom aquarium-bloom--red"></span>
+    </div>
     <main class="intro-flow">
         <div class="intro-scroll">
             <section id="intro-bienvenida" class="intro-section">
@@ -2862,5 +2916,5 @@ body.musa-boot-activa .intro-flow {
 </body>
 <script src="../config.js"></script>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/jugador-servidor.js"></script>
+<script src="./js/jugador-servidor.js?v=20260319a"></script>
 </html>

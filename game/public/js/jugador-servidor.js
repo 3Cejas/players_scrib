@@ -216,6 +216,9 @@ function iniciarCargaMusa(playerId, nombre, destinoNombre) {
   const umbrales = [0.12, 0.34, 0.56, 0.79, 0.96];
   const duracionMs = MUSA_BOOT_DURACION_MS;
   const destino = `./players/index.html?player=${playerId}&name=${encodeURIComponent(nombre)}`;
+  const bootReducidoMovil = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  const intervaloPintadoMs = bootReducidoMovil ? 96 : 0;
+  let ultimoPintadoBoot = -Infinity;
 
   if (copy) {
     copy.innerHTML = `${musaHtml} ha elegido apoyar a ${escritoraHtml}. Preparando la entrada al mundo de juego.`;
@@ -242,10 +245,15 @@ function iniciarCargaMusa(playerId, nombre, destinoNombre) {
   const inicio = performance.now();
   const paso = (ahora) => {
     const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+    if (intervaloPintadoMs && progreso < 1 && (ahora - ultimoPintadoBoot) < intervaloPintadoMs) {
+      musaBootFrameId = requestAnimationFrame(paso);
+      return;
+    }
     const easing = 1 - Math.pow(1 - progreso, 3);
     const pct = Math.round(easing * 100);
     let idxActivo = umbrales.findIndex((umbral) => progreso <= umbral);
     if (idxActivo === -1) idxActivo = logs.length - 1;
+    ultimoPintadoBoot = ahora;
 
     overlay.style.setProperty("--boot-bar-progress", `${pct}%`);
     overlay.style.setProperty("--boot-world-progress", `${Math.max(12, Math.round(easing * 100))}%`);

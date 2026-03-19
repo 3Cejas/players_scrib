@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -8,13 +8,22 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260318h">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260319ac">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="page-players ui-dashboard-only">
-    <script src="./js/juego.js?v=20260318h"></script>
+    <div id="background-effects" aria-hidden="true">
+        <span class="aquarium-glow aquarium-glow--blue"></span>
+        <span class="aquarium-glow aquarium-glow--red"></span>
+        <span class="aquarium-current aquarium-current--one"></span>
+        <span class="aquarium-current aquarium-current--two"></span>
+        <span class="aquarium-shimmer"></span>
+        <span class="aquarium-bloom aquarium-bloom--blue"></span>
+        <span class="aquarium-bloom aquarium-bloom--red"></span>
+    </div>
+    <script src="./js/juego.js?v=20260319v"></script>
     <div id="players_fit_root" align="center">
     <div class="cabecera">
     <pre id="neon" class="neon">
@@ -35,21 +44,24 @@
     <div id="lightning">
     </div>
     <div id="partida_acciones_toggle_wrap" class="partida-acciones-toggle-wrap" hidden>
-    <button id="partida_acciones_toggle" class="partida-acciones-toggle" type="button" aria-expanded="false" aria-controls="panel_acciones_partida">▼ ACCIONES</button>
+    <button id="partida_acciones_toggle" class="partida-acciones-toggle" type="button" aria-expanded="false" aria-controls="panel_acciones_partida">
+      <span class="partida-acciones-toggle-label">OPCIONES</span>
+    </button>
     </div>
     <div id="panel_acciones_partida" class="botones">
-    <span id="btn_escribir" class='btn' onclick="inicio()" data-i18n="ui.btn_write">✍️ ESCRIBIR</span>
-    <span id="btn_limpiar" class='btn' onclick="limpiar()" data-i18n="ui.btn_restart">🔁 REINICIO</span>
-    <span id="btn_final" class='btn' onclick="final()" style="display:none" data-i18n="ui.btn_finish">🏁 FIN</span>
-    <span id="btn_pantalla_completa" class='btn' onclick="pantalla_completa()" data-i18n="ui.btn_fullscreen">🖥️ PANTALLA COMPLETA</span>
-    <span id="btn_descargar_texto"class='btn' onclick="descargar_textos()" style="display:none" data-i18n="ui.btn_download_text">💾 DESCARGAR TEXTO</span>
-    <span id="btn_opciones" class='btn' onclick="opciones()" data-i18n="ui.btn_options">⚙️ OPCIONES</span>
+    <span id="btn_escribir" class='btn' onclick="inicio()" data-i18n="ui.btn_write">âœï¸ ESCRIBIR</span>
+    <span id="btn_limpiar" class='btn' onclick="limpiar()" data-i18n="ui.btn_restart">ðŸ” REINICIO</span>
+    <span id="btn_final" class='btn' onclick="final()" style="display:none" data-i18n="ui.btn_finish">ðŸ FIN</span>
+    <span id="btn_pantalla_completa" class='btn' onclick="pantalla_completa()" data-i18n="ui.btn_fullscreen">ðŸ–¥ï¸ PANTALLA COMPLETA</span>
+    <span id="btn_descargar_texto"class='btn' onclick="descargar_textos()" style="display:none" data-i18n="ui.btn_download_text">ðŸ’¾ DESCARGAR TEXTO</span>
+    <span id="btn_opciones" class='btn' onclick="opciones()" data-i18n="ui.btn_options">âš™ï¸ OPCIONES</span>
     <span id="btn_volver" class='btn btn-volver-grid' onclick="volver()" style="display:none">
-      <span class="btn-volver-icon" aria-hidden="true">⬅️</span>
+      <span class="btn-volver-icon" aria-hidden="true">â¬…ï¸</span>
       <span class="btn-volver-label" data-i18n="ui.btn_back">VOLVER</span>
-      <span class="btn-volver-spacer" aria-hidden="true">⬅️</span>
+      <span class="btn-volver-spacer" aria-hidden="true">â¬…ï¸</span>
     </span>
-    <span id="btn_silencio" class='btn' onclick="toggleSilencioJuego()" data-audio-toggle="menu-superior" aria-pressed="false">🔇 DESACTIVAR SONIDO</span>
+    <span id="btn_contraer_acciones" class='btn btn-contraer-acciones' onclick="toggleAccionesPartida1P()" style="display:none">â–² OCULTAR OPCIONES</span>
+    <span id="btn_silencio" class='btn' onclick="toggleSilencioJuego()" data-audio-toggle="menu-superior" aria-pressed="false">ðŸ”‡ DESACTIVAR SONIDO</span>
     </div>
     <div class="container"></div>
     <br>
@@ -62,7 +74,7 @@
 
             <br><br>
             <p id="alineador1"></p>
-            <!-- MENÚ PRINCIPAL -->
+            <!-- MENÃš PRINCIPAL -->
             <div id="mainMenu" class="mainMenu resucitar-panel">
                 <div class="resucitar-header">
                     <h1 class="main-title">
@@ -79,20 +91,20 @@
                     </div>
                     <div class="resucitar-keys">
                         <div class="resucitar-keys-title" data-i18n="res.keys_hint">Usa flechas y Enter</div>
-                        <div class="resucitar-keypad" aria-hidden="true">
-                            <div class="keycap keycap-up">&uarr;</div>
-                            <div class="keycap keycap-left">&larr;</div>
-                            <div class="keycap keycap-down">&darr;</div>
-                            <div class="keycap keycap-right">&rarr;</div>
-                            <div class="keycap keycap-enter">ENTER</div>
+                        <div class="resucitar-keypad">
+                            <button class="keycap keycap-up" type="button" data-res-key="ArrowUp" aria-label="Arriba">&uarr;</button>
+                            <button class="keycap keycap-left" type="button" data-res-key="ArrowLeft" aria-label="Izquierda">&larr;</button>
+                            <button class="keycap keycap-down" type="button" data-res-key="ArrowDown" aria-label="Abajo">&darr;</button>
+                            <button class="keycap keycap-right" type="button" data-res-key="ArrowRight" aria-label="Derecha">&rarr;</button>
+                            <button class="keycap keycap-enter" type="button" data-res-key="Enter" aria-label="Enter">ENTER</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- MENÚ DE SELECCIÓN DE CANTIDAD (APARECE AL DAR "SÍ") -->
+            <!-- MENÃš DE SELECCIÃ“N DE CANTIDAD (APARECE AL DAR "SÃ") -->
             <div id="quantityMenu" class="resucitar-panel">
                 <div class="resucitar-header">
-                    <div class="resucitar-gameover-badge" data-i18n="res.badge_game_over">💀 GAME OVER</div>
+                    <div class="resucitar-gameover-badge" data-i18n="res.badge_game_over">ðŸ’€ GAME OVER</div>
                     <h2 class="quantity-title" data-i18n="res.quantity_title">Selecciona la cantidad de palabras</h2>
                 </div>
                 <div class="resucitar-row">
@@ -103,23 +115,15 @@
                             <button id="btnConfirmar" type="button" data-i18n="res.btn_confirm">Confirmar</button>
                             <button id="btnAtras" type="button" data-i18n="res.btn_back">Atr&aacute;s</button>
                         </div>
-                        <div class="button-container resucitar-buttons resucitar-touch-controls">
-                            <button id="btnResucitarMenosTouch" type="button" data-i18n="res.mobile_less">- TIEMPO</button>
-                            <button id="btnResucitarMasTouch" type="button" data-i18n="res.mobile_more">+ TIEMPO</button>
-                            <button id="btnConfirmarTouch" type="button" data-i18n="res.mobile_confirm">CONFIRMAR TIEMPO</button>
-                        </div>
-                        <div class="button-container resucitar-buttons resucitar-buttons--secondary">
-                            <button id="btnSilencioQuantityMenu" class="resucitar-audio-toggle" type="button" onclick="toggleSilencioJuego()" data-audio-toggle="menu-partida" aria-pressed="false">🔇 DESACTIVAR SONIDO</button>
-                        </div>
                     </div>
                     <div class="resucitar-keys">
                         <div class="resucitar-keys-title" data-i18n="res.keys_hint">Usa flechas y Enter</div>
-                        <div class="resucitar-keypad" aria-hidden="true">
-                            <div class="keycap keycap-up">&uarr;</div>
-                            <div class="keycap keycap-left">&larr;</div>
-                            <div class="keycap keycap-down">&darr;</div>
-                            <div class="keycap keycap-right">&rarr;</div>
-                            <div class="keycap keycap-enter">ENTER</div>
+                        <div class="resucitar-keypad">
+                            <button class="keycap keycap-up" type="button" data-res-key="ArrowUp" aria-label="Arriba">&uarr;</button>
+                            <button class="keycap keycap-left" type="button" data-res-key="ArrowLeft" aria-label="Izquierda">&larr;</button>
+                            <button class="keycap keycap-down" type="button" data-res-key="ArrowDown" aria-label="Abajo">&darr;</button>
+                            <button class="keycap keycap-right" type="button" data-res-key="ArrowRight" aria-label="Derecha">&rarr;</button>
+                            <button class="keycap keycap-enter" type="button" data-res-key="Enter" aria-label="Enter">ENTER</button>
                         </div>
                     </div>
                 </div>
@@ -177,7 +181,7 @@
     <thead>
       <tr>
         <th class="opciones_titulo" data-i18n="options.initial_time">TIEMPO INICIAL</th>
-        <th class="opciones_titulo" data-i18n="options.level_duration">DURACIÓN NIVEL</th>
+        <th class="opciones_titulo" data-i18n="options.level_duration">DURACIÃ“N NIVEL</th>
         <th class="opciones_titulo" data-i18n="options.word_change">CAMBIO DE PALABRAS</th>
         <th class="opciones_titulo" data-i18n="options.letter_change">CAMBIO DE LETRAS</th>
       </tr>
@@ -187,7 +191,7 @@
         <!-- Campo 1: TIEMPO INICIAL -->
         <td data-label="TIEMPO INICIAL" data-i18n-attr="data-label:options.initial_time">
           <div class="spinner-container">
-            <!-- Botón RESTAR: con color rojo -->
+            <!-- BotÃ³n RESTAR: con color rojo -->
             <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_inicial', -5)">-</button>
             
             <input 
@@ -203,14 +207,14 @@
               inputmode="numeric"
             >
             
-            <!-- Botón SUMAR: con color azul -->
+            <!-- BotÃ³n SUMAR: con color azul -->
             <button class="spinner-button plus-button" onclick="cambiarValor('tiempo_inicial', 5)">+</button>
           </div>
           <span class="opciones_valores" data-i18n="options.seconds_unit">segundos</span>
         </td>
 
-        <!-- Campo 2: DURACIÓN NIVEL -->
-        <td data-label="DURACIÓN NIVEL" data-i18n-attr="data-label:options.level_duration">
+        <!-- Campo 2: DURACIÃ“N NIVEL -->
+        <td data-label="DURACIÃ“N NIVEL" data-i18n-attr="data-label:options.level_duration">
           <div class="spinner-container">
             <button class="spinner-button minus-button" onclick="cambiarValor('tiempo_modos', -5)">-</button>
             
@@ -291,23 +295,23 @@
           <form id="listaModosForm" class="listaModosForm">
             <table>
                 <tr id="listaModos">
-                    <!-- Las casillas de verificación se generan aquí como <td> -->
+                    <!-- Las casillas de verificaciÃ³n se generan aquÃ­ como <td> -->
                 </tr>
             </table>
         </form>
     </div>
     <div id="soporte" class="soporte">
-      <p data-i18n-html="support.message">En caso de encontrar algún error o tengas alguna sugerencia, envianos un correo a <a href="mailto:contacto@suturateatro.es" style="color:aqua">contacto@suturateatro.es</a></p>
+      <p data-i18n-html="support.message">En caso de encontrar algÃºn error o tengas alguna sugerencia, envianos un correo a <a href="mailto:contacto@suturateatro.es" style="color:aqua">contacto@suturateatro.es</a></p>
       <br>
     </div>
     <footer id="footer_legal" class="footer-legal">
-      <p data-i18n="footer.rights">© SUTURA TEATRO. Todos los derechos reservados.</p>
+      <p data-i18n="footer.rights">Â© SUTURA TEATRO. Todos los derechos reservados.</p>
     </footer>
     </div>
     <div id="escritxr_boot_overlay" class="escritxr-boot-overlay" aria-hidden="true">
         <div class="escritxr-boot-blackout" aria-hidden="true"></div>
         <div class="escritxr-boot-panel">
-            <div id="escritxr_boot_kicker" class="escritxr-boot-kicker">INICIANDO SISTEMA ESCRITXR</div>
+            <div id="escritxr_boot_kicker" class="escritxr-boot-kicker">INICIANDO SISTEMA DE ESCRITURA</div>
             <h2 id="escritxr_boot_title" class="escritxr-boot-title">ENTRANDO EN UN NUEVO MUNDO</h2>
             <p id="escritxr_boot_copy" class="escritxr-boot-copy">Preparando el escenario.</p>
             <div class="escritxr-boot-world" aria-hidden="true">
@@ -337,6 +341,6 @@
         </div>
     </div>
 </body>
-<script src="./js/jugador-servidor.js?v=20260318h"></script>
+<script src="./js/jugador-servidor.js?v=20260319ac"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

@@ -7,7 +7,13 @@ let pararEscritura = false;
 let LISTA_MODOS = ["palabras bonus", "letra bendita","letra prohibida", "palabras bonus", "palabras prohibidas", "frase final"];
 let modos_restantes;
 
-const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
+const getEl = (...ids) => {
+    for (const id of ids) {
+        const elemento = document.getElementById(id);
+        if (elemento) return elemento;
+    }
+    return null;
+}; // Obtiene los elementos con id.
 
 // COMPONENTES DEL JUGADOR 1
 let texto = getEl("texto");
@@ -17,7 +23,7 @@ let musas = getEl("musas");
   
 let palabra = getEl("palabra");
 let definicion = getEl("definicion");
-let explicación = getEl("explicación");
+let explicación = getEl("explicación", "explicaciÃ³n");
 let metadatos = getEl("metadatos");
   
 let tiempo = getEl("tiempo");
@@ -33,10 +39,8 @@ let btnEscribir = getEl("btn_escribir");
 let btnDescargarTexto = getEl("btn_descargar_texto");
 let btnOpciones = getEl("btn_opciones");
 let btnVolver = getEl("btn_volver");
+let btnContraerAcciones = getEl("btn_contraer_acciones");
 let btnSilencio = getEl("btn_silencio");
-let btnResucitarMenosTouch = getEl("btnResucitarMenosTouch");
-let btnResucitarMasTouch = getEl("btnResucitarMasTouch");
-let btnConfirmarTouch = getEl("btnConfirmarTouch");
 let partidaAccionesToggleWrap = getEl("partida_acciones_toggle_wrap");
 let partidaAccionesToggle = getEl("partida_acciones_toggle");
 let div_opciones = getEl("opciones");
@@ -166,8 +170,9 @@ const I18N_TEXTS_1P = {
         "ui.btn_back": "VOLVER",
         "ui.btn_mute": "🔇 DESACTIVAR SONIDO",
         "ui.btn_unmute": "🔊 ACTIVAR SONIDO",
-        "ui.actions_show": "\u25BE ACCIONES",
-        "ui.actions_hide": "\u25B4 OCULTAR ACCIONES",
+        "ui.actions_label": "OPCIONES",
+        "ui.actions_show": "\u25BE OPCIONES",
+        "ui.actions_hide": "\u25B4 OCULTAR OPCIONES",
         "res.game_over": "GAME OVER",
         "res.title_prefix": "QUIERES",
         "res.title_highlight": "RESUCITAR",
@@ -222,9 +227,9 @@ const I18N_TEXTS_1P = {
         "thanks.playing": "GRACIAS POR JUGAR",
         "countdown.ready": "\u00BFPREPARADOS?",
         "countdown.write": "\u00A1ESCRIBE!",
-        "boot.writer.kicker": "INICIANDO SISTEMA ESCRITXR",
+        "boot.writer.kicker": "INICIANDO SISTEMA DE ESCRITURA",
         "boot.writer.title": "ENTRANDO EN UN NUEVO MUNDO",
-        "boot.writer.copy": "{role} {writer} afila la pluma. Preparando la entrada al escenario.",
+        "boot.writer.copy": "{writer} afila la pluma. Preparando la entrada al escenario.",
         "boot.writer.log_1": "ENLAZANDO PLUMA DE {writer}",
         "boot.writer.log_2": "CALIBRANDO EL RITMO DE ESCRITURA",
         "boot.writer.log_3": "CARGANDO REGLAS DEL NUEVO RETO",
@@ -250,8 +255,9 @@ const I18N_TEXTS_1P = {
         "ui.btn_back": "BACK",
         "ui.btn_mute": "🔇 DISABLE SOUND",
         "ui.btn_unmute": "🔊 ENABLE SOUND",
-        "ui.actions_show": "\u25BE ACTIONS",
-        "ui.actions_hide": "\u25B4 HIDE ACTIONS",
+        "ui.actions_label": "OPTIONS",
+        "ui.actions_show": "\u25BE OPTIONS",
+        "ui.actions_hide": "\u25B4 HIDE OPTIONS",
         "res.game_over": "GAME OVER",
         "res.title_prefix": "DO YOU WANT TO",
         "res.title_highlight": "REVIVE",
@@ -306,9 +312,9 @@ const I18N_TEXTS_1P = {
         "thanks.playing": "THANKS FOR PLAYING",
         "countdown.ready": "READY?",
         "countdown.write": "WRITE!",
-        "boot.writer.kicker": "BOOTING WRITER SYSTEM",
+        "boot.writer.kicker": "BOOTING WRITING SYSTEM",
         "boot.writer.title": "ENTERING A NEW WORLD",
-        "boot.writer.copy": "{role} {writer} is sharpening the pen. Preparing the stage entry.",
+        "boot.writer.copy": "{writer} is sharpening the pen. Preparing the stage entry.",
         "boot.writer.log_1": "LINKING PEN FOR {writer}",
         "boot.writer.log_2": "CALIBRATING WRITING PACE",
         "boot.writer.log_3": "LOADING NEW CHALLENGE RULES",
@@ -334,8 +340,9 @@ const I18N_TEXTS_1P = {
         "ui.btn_back": "RETOUR",
         "ui.btn_mute": "🔇 DESACTIVER LE SON",
         "ui.btn_unmute": "🔊 ACTIVER LE SON",
-        "ui.actions_show": "\u25BE COMMANDES",
-        "ui.actions_hide": "\u25B4 MASQUER COMMANDES",
+        "ui.actions_label": "OPTIONS",
+        "ui.actions_show": "\u25BE OPTIONS",
+        "ui.actions_hide": "\u25B4 MASQUER OPTIONS",
         "res.game_over": "GAME OVER",
         "res.title_prefix": "VEUX-TU",
         "res.title_highlight": "RESSUSCITER",
@@ -390,9 +397,9 @@ const I18N_TEXTS_1P = {
         "thanks.playing": "MERCI D'AVOIR JOUE",
         "countdown.ready": "PR\u00CATS?",
         "countdown.write": "\u00C9CRIS!",
-        "boot.writer.kicker": "DEMARRAGE DU SYSTEME ECRITXR",
+        "boot.writer.kicker": "DEMARRAGE DU SYSTEME D'ECRITURE",
         "boot.writer.title": "ENTREE DANS UN NOUVEAU MONDE",
-        "boot.writer.copy": "{role} {writer} affute sa plume. Preparation de l'entree en scene.",
+        "boot.writer.copy": "{writer} affute sa plume. Preparation de l'entree en scene.",
         "boot.writer.log_1": "LIAISON DE LA PLUME DE {writer}",
         "boot.writer.log_2": "CALIBRAGE DU RYTHME D'ECRITURE",
         "boot.writer.log_3": "CHARGEMENT DES REGLES DU NOUVEAU DEFI",
@@ -971,7 +978,7 @@ function aplicarVisibilidadBotonesDashboard() {
     if (btnLimpiar) btnLimpiar.style.display = "none";
     if (btnFinal) btnFinal.style.display = "none";
     if (btnDescargarTexto) btnDescargarTexto.style.display = "none";
-    if (btnVolver) btnVolver.style.display = "none";
+    sincronizarVisibilidadBtnVolver1P();
     actualizarColumnasBotonesDashboard1P();
 }
 
@@ -994,13 +1001,25 @@ function hayMenuResurreccionVisible1P() {
     return esVisibleUIJuego1P(getEl("mainMenu")) || esVisibleUIJuego1P(getEl("quantityMenu"));
 }
 
+function hayOverlayBloqueanteCursorPluma1P() {
+    if (typeof terminado !== "undefined" && terminado) return true;
+    if (typeof menu_resurreccion_activo !== "undefined" && menu_resurreccion_activo) return true;
+    return hayMenuResurreccionVisible1P();
+}
+
+function hayOverlayBloqueanteTextoJuego1P() {
+    if (hayOverlayBloqueanteCursorPluma1P()) return true;
+    if (typeof desventajaEnCurso !== "undefined" && desventajaEnCurso) return true;
+    return esVisibleUIJuego1P(desventajaOverlay);
+}
+
 function esVistaPartidaConMenuAcciones1P() {
     const body = document.body;
     if (!body) return false;
     if (body.classList.contains("ui-dashboard-only") || body.classList.contains("modo-opciones")) {
         return false;
     }
-    if (hayMenuResurreccionVisible1P()) {
+    if (typeof terminado !== "undefined" && terminado) {
         return false;
     }
     return true;
@@ -1009,26 +1028,48 @@ function esVistaPartidaConMenuAcciones1P() {
 function actualizarTextoToggleAccionesPartida1P() {
     if (!partidaAccionesToggle) return;
     const abierto = Boolean(acciones_partida_desplegadas_1p);
-    const texto = abierto
-        ? tJuego1P("ui.actions_hide", {}, "\u25B4 OCULTAR ACCIONES")
-        : tJuego1P("ui.actions_show", {}, "\u25BE ACCIONES");
-    partidaAccionesToggle.textContent = texto;
+    const textoAccesible = abierto
+        ? tJuego1P("ui.actions_hide", {}, "\u25B4 OCULTAR OPCIONES")
+        : tJuego1P("ui.actions_show", {}, "\u25BE OPCIONES");
+    const textoVisible = tJuego1P("ui.actions_label", {}, "OPCIONES");
+    const etiqueta = partidaAccionesToggle.querySelector(".partida-acciones-toggle-label");
+    if (etiqueta) {
+        etiqueta.textContent = textoVisible;
+    } else {
+        partidaAccionesToggle.textContent = textoVisible;
+    }
     partidaAccionesToggle.setAttribute("aria-expanded", abierto ? "true" : "false");
-    partidaAccionesToggle.setAttribute("aria-label", texto);
+    partidaAccionesToggle.setAttribute("aria-label", textoAccesible);
+}
+
+function sincronizarVisibilidadBtnVolver1P() {
+    if (!btnVolver || !document.body) return;
+    if (document.body.classList.contains("modo-opciones")) {
+        btnVolver.style.setProperty("display", "inline-block", "important");
+        return;
+    }
+    btnVolver.style.setProperty("display", "none", "important");
 }
 
 function actualizarEstadoMenuAccionesPartida1P() {
     const body = document.body;
-    const mostrar = esVistaPartidaConMenuAcciones1P() && contarBotonesVisiblesDashboard1P() > 0;
-    if (!mostrar) {
+    const mostrarBase = esVistaPartidaConMenuAcciones1P();
+    const mostrarPanel = mostrarBase && Boolean(acciones_partida_desplegadas_1p);
+    if (!mostrarBase) {
         acciones_partida_desplegadas_1p = false;
     }
     if (partidaAccionesToggleWrap) {
-        partidaAccionesToggleWrap.hidden = !mostrar;
+        partidaAccionesToggleWrap.hidden = !mostrarBase;
+    }
+    if (partidaAccionesToggle) {
+        partidaAccionesToggle.disabled = false;
+    }
+    if (btnContraerAcciones) {
+        btnContraerAcciones.style.setProperty("display", "none", "important");
     }
     if (body) {
-        body.classList.toggle("partida-ui-activa", mostrar);
-        body.classList.toggle("partida-acciones-desplegadas", mostrar && acciones_partida_desplegadas_1p);
+        body.classList.toggle("partida-ui-activa", mostrarBase);
+        body.classList.toggle("partida-acciones-desplegadas", mostrarPanel);
     }
     actualizarTextoToggleAccionesPartida1P();
 }
@@ -1046,6 +1087,7 @@ function toggleAccionesPartida1P() {
 
 window.setAccionesPartidaDesplegadas1P = setAccionesPartidaDesplegadas1P;
 window.actualizarEstadoMenuAccionesPartida1P = actualizarEstadoMenuAccionesPartida1P;
+window.toggleAccionesPartida1P = toggleAccionesPartida1P;
 
 if (partidaAccionesToggle) {
     partidaAccionesToggle.addEventListener("click", (evento) => {
@@ -1059,6 +1101,10 @@ function contarBotonesVisiblesDashboard1P() {
     if (!contenedor_botones_dashboard_1p || typeof window.getComputedStyle !== "function") return 0;
     return Array.from(contenedor_botones_dashboard_1p.querySelectorAll(".btn")).filter((boton) => {
         if (!boton) return false;
+        if (boton.id === "btn_contraer_acciones") return false;
+        if (boton.id === "btn_volver" && (!document.body || !document.body.classList.contains("modo-opciones"))) {
+            return false;
+        }
         const estilo = window.getComputedStyle(boton);
         return estilo.display !== "none" && estilo.visibility !== "hidden";
     }).length;
@@ -1066,6 +1112,7 @@ function contarBotonesVisiblesDashboard1P() {
 
 function resolverColumnasBotonesDashboard1P(totalVisibles) {
     const total = Math.max(0, Number(totalVisibles) || 0);
+    if (total >= 7) return 4;
     if (total >= 5) return 3;
     if (total === 4) return 2;
     if (total === 3) return 3;
@@ -1139,7 +1186,9 @@ function iniciarObservadorColumnasBotonesDashboard1P() {
             if (!mutacion) return false;
             if (mutacion.type !== "attributes") return true;
             if (mutacion.target !== contenedor_botones_dashboard_1p) return true;
-            return mutacion.attributeName !== "style" && mutacion.attributeName !== "data-botones-visibles";
+            return mutacion.attributeName !== "style"
+                && mutacion.attributeName !== "data-botones-visibles"
+                && mutacion.attributeName !== "class";
         });
         if (!hayCambioExterno) return;
         actualizarColumnasBotonesDashboard1P();
@@ -1206,22 +1255,141 @@ iniciarObservadorColumnasBotonesDashboard1P();
 iniciarAjusteViewportEscritora();
 
 let cursor_pluma_escritora = null;
+let caret_neon_escritora = null;
+let raf_caret_neon_escritora = null;
+let bloqueo_selectionchange_caret_neon_escritora = false;
 let partida_activa_cursor_pluma = false;
+let caret_offset_memorizado_juego_1p = 0;
+let raf_reenfoque_texto_juego_1p = null;
+let persistencia_foco_texto_juego_1p_iniciada = false;
+let timeout_cursor_pluma_inactivo_escritora = null;
+let timeout_click_cursor_pluma_escritora = null;
+const CURSOR_PLUMA_INACTIVIDAD_MS = 1600;
 const soporta_cursor_pluma_escritora = (() => {
-    if (typeof window.matchMedia !== "function") return true;
-    return window.matchMedia("(pointer: fine)").matches;
+    return true;
 })();
+
+function seleccionPerteneceATextoJuego1P() {
+    if (!texto) return false;
+    const sel = window.getSelection();
+    return Boolean(sel && sel.rangeCount && texto.contains(sel.anchorNode));
+}
+
+function debeMantenerFocoTextoJuego1P() {
+    const body = document.body;
+    if (!texto || !body) return false;
+    if (!texto.isContentEditable || !esVisibleUIJuego1P(texto)) return false;
+    if (body.classList.contains("ui-dashboard-only") || body.classList.contains("modo-opciones")) return false;
+    if (document.hidden) return false;
+    if (hayOverlayBloqueanteTextoJuego1P()) return false;
+    return true;
+}
+
+function memorizarOffsetCaretTextoJuego1P() {
+    if (!texto || !seleccionPerteneceATextoJuego1P()) return false;
+    const offset = obtenerOffsetCaretEnTexto();
+    if (!Number.isFinite(offset)) return false;
+    caret_offset_memorizado_juego_1p = Math.max(0, offset);
+    return true;
+}
+
+function restaurarFocoTextoJuego1P() {
+    if (!debeMantenerFocoTextoJuego1P()) return false;
+    try {
+        texto.focus({ preventScroll: true });
+    } catch (err) {
+        texto.focus();
+    }
+    colocarCaretEnOffset(caret_offset_memorizado_juego_1p);
+    programarActualizacionCaretNeonEscritora();
+    return true;
+}
+
+function programarReenfoqueTextoJuego1P() {
+    if (raf_reenfoque_texto_juego_1p) return;
+    raf_reenfoque_texto_juego_1p = requestAnimationFrame(() => {
+        raf_reenfoque_texto_juego_1p = null;
+        if (!debeMantenerFocoTextoJuego1P()) return;
+        if (document.activeElement === texto && seleccionPerteneceATextoJuego1P()) {
+            programarActualizacionCaretNeonEscritora();
+            return;
+        }
+        restaurarFocoTextoJuego1P();
+    });
+}
+
+function inicializarPersistenciaFocoTextoJuego1P() {
+    if (persistencia_foco_texto_juego_1p_iniciada || !texto) return;
+    persistencia_foco_texto_juego_1p_iniciada = true;
+
+    texto.addEventListener("blur", () => {
+        memorizarOffsetCaretTextoJuego1P();
+        programarReenfoqueTextoJuego1P();
+    });
+    ["focus", "click", "input", "keydown", "keyup", "mouseup", "touchend"].forEach((evento) => {
+        texto.addEventListener(evento, memorizarOffsetCaretTextoJuego1P);
+    });
+    document.addEventListener("mousedown", memorizarOffsetCaretTextoJuego1P, true);
+    document.addEventListener("touchstart", memorizarOffsetCaretTextoJuego1P, { capture: true, passive: true });
+    document.addEventListener("focusin", (evento) => {
+        if (!debeMantenerFocoTextoJuego1P()) return;
+        const objetivo = evento.target;
+        if (objetivo === texto || (objetivo instanceof Node && texto.contains(objetivo))) {
+            memorizarOffsetCaretTextoJuego1P();
+            return;
+        }
+        programarReenfoqueTextoJuego1P();
+    }, true);
+    document.addEventListener("click", (evento) => {
+        if (!debeMantenerFocoTextoJuego1P()) return;
+        const objetivo = evento.target;
+        if (objetivo === texto || (objetivo instanceof Node && texto.contains(objetivo))) return;
+        programarReenfoqueTextoJuego1P();
+    }, true);
+    document.addEventListener("selectionchange", () => {
+        memorizarOffsetCaretTextoJuego1P();
+    });
+    window.addEventListener("fullscreenchange", programarReenfoqueTextoJuego1P);
+    window.addEventListener("webkitfullscreenchange", programarReenfoqueTextoJuego1P);
+}
 
 function setPartidaActivaCursorPluma(activa) {
     partida_activa_cursor_pluma = Boolean(activa);
     if (texto && texto.classList) {
         texto.classList.add("textarea--pluma-cursor-visible");
     }
+    if (!partida_activa_cursor_pluma) {
+        limpiarOcultacionCursorPlumaInactivo();
+        ocultarCursorPlumaEscritora();
+        ocultarCaretNeonEscritora();
+    } else {
+        programarActualizacionCaretNeonEscritora();
+    }
+}
+
+function limpiarOcultacionCursorPlumaInactivo() {
+    clearTimeout(timeout_cursor_pluma_inactivo_escritora);
+    timeout_cursor_pluma_inactivo_escritora = null;
+}
+
+function programarOcultacionCursorPlumaInactivo() {
+    limpiarOcultacionCursorPlumaInactivo();
+    if (!partida_activa_cursor_pluma || !soporta_cursor_pluma_escritora) return;
+    if (!debeMantenerFocoTextoJuego1P()) return;
+    timeout_cursor_pluma_inactivo_escritora = setTimeout(() => {
+        timeout_cursor_pluma_inactivo_escritora = null;
+        ocultarCursorPlumaEscritora();
+    }, CURSOR_PLUMA_INACTIVIDAD_MS);
 }
 
 function ocultarCursorPlumaEscritora() {
     if (!cursor_pluma_escritora) return;
     cursor_pluma_escritora.classList.remove("activa");
+}
+
+function ocultarCaretNeonEscritora() {
+    if (!caret_neon_escritora) return;
+    caret_neon_escritora.classList.remove("activa");
 }
 
 function posicionarCursorPlumaEscritora(clientX, clientY) {
@@ -1230,10 +1398,110 @@ function posicionarCursorPlumaEscritora(clientX, clientY) {
     cursor_pluma_escritora.style.top = `${clientY}px`;
 }
 
+function pulsarCursorPlumaEscritora() {
+    if (!cursor_pluma_escritora) return;
+    cursor_pluma_escritora.classList.add("is-pressing");
+    clearTimeout(timeout_click_cursor_pluma_escritora);
+    timeout_click_cursor_pluma_escritora = setTimeout(() => {
+        timeout_click_cursor_pluma_escritora = null;
+        if (!cursor_pluma_escritora) return;
+        cursor_pluma_escritora.classList.remove("is-pressing");
+    }, 140);
+}
+
+function posicionarCaretNeonEscritora(rect) {
+    if (!caret_neon_escritora || !rect) return;
+    const altura = Math.max(26, Math.round((rect.height || 0) + 8));
+    caret_neon_escritora.style.left = `${Math.round(rect.left)}px`;
+    caret_neon_escritora.style.top = `${Math.round(rect.top)}px`;
+    caret_neon_escritora.style.height = `${altura}px`;
+}
+
 function mostrarCursorPlumaEscritora(clientX, clientY) {
     if (!cursor_pluma_escritora || !texto) return;
+    if (hayOverlayBloqueanteCursorPluma1P()) {
+        ocultarCursorPlumaEscritora();
+        return;
+    }
     posicionarCursorPlumaEscritora(clientX, clientY);
     cursor_pluma_escritora.classList.add("activa");
+    programarOcultacionCursorPlumaInactivo();
+}
+
+function obtenerRectCaretActualEscritora() {
+    if (!texto) return null;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const original = sel.getRangeAt(0).cloneRange();
+    if (!original.collapsed || !texto.contains(original.startContainer)) return null;
+
+    let rect = original.getBoundingClientRect();
+    if (rect && rect.height > 0) {
+        return rect;
+    }
+
+    const marcador = document.createElement("span");
+    marcador.setAttribute("aria-hidden", "true");
+    marcador.textContent = "\u200b";
+    marcador.style.display = "inline-block";
+    marcador.style.width = "1px";
+    marcador.style.height = "1em";
+    marcador.style.padding = "0";
+    marcador.style.margin = "0";
+    marcador.style.opacity = "0";
+    marcador.style.pointerEvents = "none";
+
+    const rangoPrueba = original.cloneRange();
+    rangoPrueba.insertNode(marcador);
+    rect = marcador.getBoundingClientRect();
+    if (marcador.parentNode) {
+        marcador.parentNode.removeChild(marcador);
+    }
+    bloqueo_selectionchange_caret_neon_escritora = true;
+    sel.removeAllRanges();
+    sel.addRange(original);
+    requestAnimationFrame(() => {
+        bloqueo_selectionchange_caret_neon_escritora = false;
+    });
+    return rect && rect.height > 0 ? rect : null;
+}
+
+function actualizarCaretNeonEscritora() {
+    if (!texto || !caret_neon_escritora || !partida_activa_cursor_pluma || !texto.isContentEditable) {
+        ocultarCaretNeonEscritora();
+        return;
+    }
+    if (hayOverlayBloqueanteTextoJuego1P()) {
+        ocultarCaretNeonEscritora();
+        return;
+    }
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !sel.isCollapsed) {
+        ocultarCaretNeonEscritora();
+        return;
+    }
+    const editorActivo = document.activeElement === texto
+        || (document.activeElement instanceof Node && texto.contains(document.activeElement))
+        || (typeof texto.matches === "function" && texto.matches(":focus-within"));
+    if (!texto.contains(sel.anchorNode) || !editorActivo) {
+        ocultarCaretNeonEscritora();
+        return;
+    }
+    const rect = obtenerRectCaretActualEscritora();
+    if (!rect || rect.height <= 0) {
+        ocultarCaretNeonEscritora();
+        return;
+    }
+    posicionarCaretNeonEscritora(rect);
+    caret_neon_escritora.classList.add("activa");
+}
+
+function programarActualizacionCaretNeonEscritora() {
+    if (raf_caret_neon_escritora) return;
+    raf_caret_neon_escritora = requestAnimationFrame(() => {
+        raf_caret_neon_escritora = null;
+        actualizarCaretNeonEscritora();
+    });
 }
 
 function crearCursorPlumaEscritora() {
@@ -1245,11 +1513,20 @@ function crearCursorPlumaEscritora() {
         document.body.appendChild(nodo);
         cursor_pluma_escritora = nodo;
     }
+    if (!caret_neon_escritora) {
+        const nodoCaret = document.createElement("div");
+        nodoCaret.id = "caret_neon_escritora";
+        nodoCaret.className = "escritora-caret-neon";
+        document.body.appendChild(nodoCaret);
+        caret_neon_escritora = nodoCaret;
+    }
     texto.classList.add("textarea--pluma-cursor");
 }
 
 function inicializarCursorPlumaEscritora() {
-    if (!texto || !soporta_cursor_pluma_escritora) return;
+    if (!texto) return;
+    inicializarPersistenciaFocoTextoJuego1P();
+    if (!soporta_cursor_pluma_escritora) return;
     crearCursorPlumaEscritora();
     if (!cursor_pluma_escritora) return;
     setPartidaActivaCursorPluma(false);
@@ -1261,15 +1538,60 @@ function inicializarCursorPlumaEscritora() {
 
     texto.addEventListener("mouseenter", actualizar);
     texto.addEventListener("mousemove", actualizar);
-    texto.addEventListener("mouseleave", ocultarCursorPlumaEscritora);
+    texto.addEventListener("mouseleave", () => {
+        limpiarOcultacionCursorPlumaInactivo();
+        ocultarCursorPlumaEscritora();
+    });
     texto.addEventListener("blur", ocultarCursorPlumaEscritora);
+    texto.addEventListener("blur", ocultarCaretNeonEscritora);
+    texto.addEventListener("click", programarActualizacionCaretNeonEscritora);
+    texto.addEventListener("focus", programarActualizacionCaretNeonEscritora);
+    texto.addEventListener("input", programarActualizacionCaretNeonEscritora);
+    texto.addEventListener("keydown", programarActualizacionCaretNeonEscritora);
+    texto.addEventListener("keyup", programarActualizacionCaretNeonEscritora);
+    texto.addEventListener("mouseup", programarActualizacionCaretNeonEscritora);
+    texto.addEventListener("touchstart", () => {
+        programarActualizacionCaretNeonEscritora();
+    }, { passive: true });
+    texto.addEventListener("touchend", () => {
+        requestAnimationFrame(programarActualizacionCaretNeonEscritora);
+    }, { passive: true });
+    texto.addEventListener("scroll", programarActualizacionCaretNeonEscritora);
     document.addEventListener("mousemove", actualizar);
+    document.addEventListener("pointerdown", (evt) => {
+        if (!evt || typeof evt.clientX !== "number" || typeof evt.clientY !== "number") return;
+        if (!partida_activa_cursor_pluma) return;
+        mostrarCursorPlumaEscritora(evt.clientX, evt.clientY);
+        pulsarCursorPlumaEscritora();
+    }, { passive: true });
+    document.addEventListener("touchend", () => {
+        requestAnimationFrame(programarActualizacionCaretNeonEscritora);
+    }, { passive: true });
+    document.addEventListener("selectionchange", () => {
+        if (bloqueo_selectionchange_caret_neon_escritora) return;
+        const sel = window.getSelection();
+        if (!texto || !sel || !sel.rangeCount) return;
+        const editorActivo = document.activeElement === texto
+            || (document.activeElement instanceof Node && texto.contains(document.activeElement))
+            || (typeof texto.matches === "function" && texto.matches(":focus-within"));
+        if (!editorActivo && !texto.contains(sel.anchorNode)) return;
+        programarActualizacionCaretNeonEscritora();
+    });
     window.addEventListener("blur", ocultarCursorPlumaEscritora);
+    window.addEventListener("blur", ocultarCaretNeonEscritora);
+    window.addEventListener("blur", limpiarOcultacionCursorPlumaInactivo);
+    window.addEventListener("resize", programarActualizacionCaretNeonEscritora);
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
+            limpiarOcultacionCursorPlumaInactivo();
             ocultarCursorPlumaEscritora();
+            ocultarCaretNeonEscritora();
         }
     });
+    if (window.visualViewport && typeof window.visualViewport.addEventListener === "function") {
+        window.visualViewport.addEventListener("resize", programarActualizacionCaretNeonEscritora);
+        window.visualViewport.addEventListener("scroll", programarActualizacionCaretNeonEscritora);
+    }
 }
 
 inicializarCursorPlumaEscritora();
@@ -1621,7 +1943,7 @@ function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, t
     const signo = esMaldita ? "-" : "+";
     const claseTiempo = esMaldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
     const tiempoTexto = formatearTiempoSegundosI18n1P(tiempoLimpio, { signo });
-    return `${escapeHtmlBasico(base)} <span class="palabra-tiempo ${claseTiempo}">${escapeHtmlBasico(tiempoTexto)}</span>`;
+    return `${escapeHtmlBasico(base)} <span class="palabra-tiempo ${claseTiempo}"><span class="palabra-tiempo-badge">${escapeHtmlBasico(tiempoTexto)}</span></span>`;
 }
 
 function renderObjetivoNivelEscritora(palabraTexto, opciones = {}) {
@@ -2588,9 +2910,35 @@ function renderLeyendaDesventajas(opciones, activaEmoji = "") {
         const info = MAPA_DESVENTAJAS.get(emoji);
         const desc = info ? info.descripcion : "Desventaja";
         const activaClass = activaEmoji === emoji ? " activa" : "";
-        return `<div class="desventaja-legend-item${activaClass}">${emoji} ${desc}</div>`;
+        return `<button type="button" class="desventaja-legend-item${activaClass}" data-desventaja-emoji="${escapeHtmlBasico(emoji)}" aria-label="${escapeHtmlBasico(`${emoji} ${desc}`)}"><span class="desventaja-legend-emoji">${emoji}</span><span class="desventaja-legend-text">${escapeHtmlBasico(desc)}</span></button>`;
     });
     desventajaLegend.innerHTML = lista.join("");
+}
+
+function renderBotonesDesventajas(opciones, activaEmoji = "", autoEmoji = "") {
+    if (!desventajaChoices) return;
+    const lista = (opciones || []).map((emoji) => {
+        const info = MAPA_DESVENTAJAS.get(emoji);
+        const desc = (info ? info.descripcion : "Desventaja").replace(/\.\s*$/, "");
+        const activaClass = activaEmoji === emoji ? " seleccionado" : "";
+        const autoClass = autoEmoji === emoji ? " auto" : "";
+        return `<button type="button" class="desventaja-choice-btn${activaClass}${autoClass}" data-desventaja-emoji="${escapeHtmlBasico(emoji)}" aria-label="${escapeHtmlBasico(`${emoji} ${desc}`)}"><span class="desventaja-choice-emoji">${emoji}</span><span class="desventaja-choice-text">${escapeHtmlBasico(desc)}</span></button>`;
+    });
+    desventajaChoices.innerHTML = lista.join("");
+}
+
+function vincularControlesEleccionDesventaja(onSelect) {
+    const contenedores = [desventajaChoices, desventajaLegend];
+    contenedores.forEach((contenedor) => {
+        if (!contenedor) return;
+        contenedor.querySelectorAll("[data-desventaja-emoji]").forEach((nodo) => {
+            nodo.onclick = () => {
+                const emoji = nodo.dataset.desventajaEmoji || "";
+                if (!emoji) return;
+                onSelect(emoji, false);
+            };
+        });
+    });
 }
 
 function animarTragaperras(resultado, tokenSecuencia) {
@@ -2701,6 +3049,7 @@ function mostrarEleccionDesventaja(opciones, tokenSecuencia) {
                 reel.classList.toggle("seleccionado", coincide);
                 reel.classList.toggle("auto", coincide && auto);
             });
+            renderBotonesDesventajas(opciones, emoji, auto ? emoji : "");
             renderLeyendaDesventajas(opciones, emoji);
             resolve({ emoji, auto });
         };
@@ -2714,8 +3063,9 @@ function mostrarEleccionDesventaja(opciones, tokenSecuencia) {
             reel.classList.add("elegible");
             reel.onclick = () => resolver(emoji, false);
         });
-        if (desventajaChoices) desventajaChoices.innerHTML = "";
+        renderBotonesDesventajas(opciones);
         renderLeyendaDesventajas(opciones);
+        vincularControlesEleccionDesventaja(resolver);
 
         iniciarCuentaEleccionDesventaja(opciones, tokenSecuencia, resolver);
     });
@@ -2771,6 +3121,12 @@ function completarFaseDesventaja(emoji) {
     ocultarOverlayDesventaja();
     avanzarModoTrasDesventaja(emoji);
     desventajaEnCurso = false;
+    if (!terminado && !menu_resurreccion_activo && texto && texto.isContentEditable) {
+        setPartidaActivaCursorPluma(true);
+        requestAnimationFrame(() => {
+            programarActualizacionCaretNeonEscritora();
+        });
+    }
     rearmarBorradoTrasEleccionDesventaja();
 }
 
@@ -2781,6 +3137,7 @@ async function iniciarDesventajaEntreNiveles() {
     desventajaSecuenciaId += 1;
     const tokenSecuencia = desventajaSecuenciaId;
 
+    ocultarCaretNeonEscritora();
     texto.contentEditable = "false";
     mostrarOverlayDesventaja();
     setEstadoDesventaja(tJuego1P("disadvantage.selecting", {}, "SE VA A ELEGIR UNA DESVENTAJA"));
@@ -3010,7 +3367,93 @@ let escritxrBootTimeout = null;
 
 function obtenerNombreCargaEscritxr() {
     const valor = String((nombre && nombre.value) || "").trim().toUpperCase();
-    return valor || "ESCRITXR";
+    return valor || "AUTOR/A";
+}
+
+const ACENTOS_TEXTO_CARGA_ESCRITXR = {
+    kicker: [
+        {
+            patron: /(SISTEMA DE ESCRITURA|WRITING SYSTEM|SYSTEME D['’]ECRITURE)/gi,
+            clase: "escritxr-boot-accent--cyan"
+        }
+    ],
+    title: [
+        {
+            patron: /(NUEVO MUNDO|NEW WORLD|NOUVEAU MONDE)/gi,
+            clase: "escritxr-boot-accent--gold"
+        }
+    ],
+    copy: [
+        {
+            patron: /\b(PLUMA|PEN|PLUME)\b/gi,
+            clase: "escritxr-boot-accent--gold"
+        },
+        {
+            patron: /\b(ESCENARIO|STAGE|SCENE)\b/gi,
+            clase: "escritxr-boot-accent--mint"
+        }
+    ],
+    log: [
+        {
+            patron: /(RITMO DE ESCRITURA|WRITING PACE|RYTHME D['’]ECRITURE)/gi,
+            clase: "escritxr-boot-accent--violet"
+        },
+        {
+            patron: /(NUEVO RETO|NEW CHALLENGE|NOUVEAU DEFI)/gi,
+            clase: "escritxr-boot-accent--gold"
+        },
+        {
+            patron: /\b(PLUMA|PEN|PLUME)\b/gi,
+            clase: "escritxr-boot-accent--gold"
+        },
+        {
+            patron: /\b(REGLAS|RULES|REGLES)\b/gi,
+            clase: "escritxr-boot-accent--mint"
+        },
+        {
+            patron: /\b(MUNDO|WORLD|MONDE)\b/gi,
+            clase: "escritxr-boot-accent--cyan"
+        },
+        {
+            patron: /\b(ESCENARIO|STAGE|SCENE)\b/gi,
+            clase: "escritxr-boot-accent--mint"
+        }
+    ],
+    status: [
+        {
+            patron: /(SISTEMA DE ESCRITURA|WRITING SYSTEM|SYSTEME D['’]ECRITURE)/gi,
+            clase: "escritxr-boot-accent--cyan"
+        },
+        {
+            patron: /(SINCRONIA ESTABLE|SYNC STABLE|SYNCHRONISATION STABLE)/gi,
+            clase: "escritxr-boot-accent--violet"
+        },
+        {
+            patron: /(NUEVO RETO|NEW CHALLENGE|NOUVEAU DEFI)/gi,
+            clase: "escritxr-boot-accent--gold"
+        },
+        {
+            patron: /(ESCENARIO Y ATMOSFERA|STAGE AND ATMOSPHERE|SCENE ET DE L['’]AMBIANCE)/gi,
+            clase: "escritxr-boot-accent--mint"
+        },
+        {
+            patron: /(ACCESO AUTORIZADO|ACCESS AUTHORIZED|ACCES AUTORISE)/gi,
+            clase: "escritxr-boot-accent--gold"
+        },
+        {
+            patron: /(MUNDO CARGADO|WORLD LOADED|MONDE CHARGE)/gi,
+            clase: "escritxr-boot-accent--cyan"
+        }
+    ]
+};
+
+function aplicarAcentosTextoCargaEscritxr(html, contexto = "copy") {
+    const reglas = ACENTOS_TEXTO_CARGA_ESCRITXR[contexto] || [];
+    return reglas.reduce((textoMarcado, { patron, clase }) => {
+        return textoMarcado.replace(patron, (coincidencia) => {
+            return `<span class="escritxr-boot-accent ${clase}">${coincidencia}</span>`;
+        });
+    }, html);
 }
 
 function renderizarLogsCargaEscritxr(logs, indiceActivo) {
@@ -3029,7 +3472,6 @@ function actualizarTextosCargaEscritxr() {
     if (!overlay) return null;
 
     const nombreEscritxr = escapeHtmlBasico(obtenerNombreCargaEscritxr());
-    const roleHtml = `<span class="escritxr-boot-name escritxr-boot-name--rol">ESCRITXR</span>`;
     const writerHtml = `<span class="escritxr-boot-name escritxr-boot-name--escritxr">${nombreEscritxr}</span>`;
     const logs = [
         tJuego1P("boot.writer.log_1", { writer: writerHtml }, `ENLAZANDO PLUMA DE ${writerHtml}`),
@@ -3037,25 +3479,38 @@ function actualizarTextosCargaEscritxr() {
         tJuego1P("boot.writer.log_3", {}, "CARGANDO REGLAS DEL NUEVO RETO"),
         tJuego1P("boot.writer.log_4", { writer: writerHtml }, `PINTANDO EL MUNDO DE ${writerHtml}`),
         tJuego1P("boot.writer.log_5", {}, "ABRIENDO EL ESCENARIO")
-    ];
+    ].map((textoLog) => aplicarAcentosTextoCargaEscritxr(textoLog, "log"));
     const estados = [
         tJuego1P("boot.writer.state_1", {}, "ENLAZANDO SISTEMA DE ESCRITURA"),
         tJuego1P("boot.writer.state_2", {}, "SINCRONIA ESTABLE"),
         tJuego1P("boot.writer.state_3", {}, "COMPILANDO EL NUEVO RETO"),
         tJuego1P("boot.writer.state_4", {}, "LEVANTANDO ESCENARIO Y ATMOSFERA"),
         tJuego1P("boot.writer.state_5", {}, "ACCESO AUTORIZADO")
-    ];
+    ].map((textoEstado) => aplicarAcentosTextoCargaEscritxr(textoEstado, "status"));
 
     const kicker = getEl("escritxr_boot_kicker");
     const titulo = getEl("escritxr_boot_title");
     const copy = getEl("escritxr_boot_copy");
-    if (kicker) kicker.textContent = tJuego1P("boot.writer.kicker", {}, "INICIANDO SISTEMA ESCRITXR");
-    if (titulo) titulo.textContent = tJuego1P("boot.writer.title", {}, "ENTRANDO EN UN NUEVO MUNDO");
+    if (kicker) {
+        kicker.innerHTML = aplicarAcentosTextoCargaEscritxr(
+            escapeHtmlBasico(tJuego1P("boot.writer.kicker", {}, "INICIANDO SISTEMA DE ESCRITURA")),
+            "kicker"
+        );
+    }
+    if (titulo) {
+        titulo.innerHTML = aplicarAcentosTextoCargaEscritxr(
+            escapeHtmlBasico(tJuego1P("boot.writer.title", {}, "ENTRANDO EN UN NUEVO MUNDO")),
+            "title"
+        );
+    }
     if (copy) {
-        copy.innerHTML = tJuego1P(
-            "boot.writer.copy",
-            { role: roleHtml, writer: writerHtml },
-            `${roleHtml} ${writerHtml} afila la pluma. Preparando la entrada al escenario.`
+        copy.innerHTML = aplicarAcentosTextoCargaEscritxr(
+            tJuego1P(
+                "boot.writer.copy",
+                { writer: writerHtml },
+                `${writerHtml} afila la pluma. Preparando la entrada al escenario.`
+            ),
+            "copy"
         );
     }
 
@@ -3130,17 +3585,25 @@ function iniciarCargaInicialEscritxr() {
     iniciarMusicaMenu1P({ reiniciar: true, volumeInicial: 0, fadeInMs: 900 });
 
     const inicio = performance.now();
+    const bootReducidoMovil = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+    const intervaloPintadoMs = bootReducidoMovil ? 96 : 0;
+    let ultimoPintadoBoot = -Infinity;
     const paso = (ahora) => {
         const progreso = Math.min((ahora - inicio) / ESCRITXR_BOOT_DURACION_MS, 1);
+        if (intervaloPintadoMs && progreso < 1 && (ahora - ultimoPintadoBoot) < intervaloPintadoMs) {
+            escritxrBootFrame = requestAnimationFrame(paso);
+            return;
+        }
         const easing = 1 - Math.pow(1 - progreso, 3);
         const pct = Math.round(easing * 100);
         let indiceActivo = umbrales.findIndex((umbral) => progreso <= umbral);
         if (indiceActivo === -1) indiceActivo = logs.length - 1;
+        ultimoPintadoBoot = ahora;
 
         overlay.style.setProperty("--boot-bar-progress", `${pct}%`);
         overlay.style.setProperty("--boot-world-progress", `${Math.max(12, pct)}%`);
         if (porcentaje) porcentaje.textContent = `${pct}%`;
-        if (estado) estado.textContent = estados[indiceActivo] || estados[estados.length - 1];
+        if (estado) estado.innerHTML = estados[indiceActivo] || estados[estados.length - 1];
         renderizarLogsCargaEscritxr(logs, indiceActivo);
 
         const pixelsActivos = Math.round((pixels.length || 0) * easing);
@@ -3156,7 +3619,10 @@ function iniciarCargaInicialEscritxr() {
         escritxrBootFrame = null;
         renderizarLogsCargaEscritxr(logs, logs.length);
         if (estado) {
-            estado.textContent = tJuego1P("boot.writer.state_done", {}, "MUNDO CARGADO");
+            estado.innerHTML = aplicarAcentosTextoCargaEscritxr(
+                tJuego1P("boot.writer.state_done", {}, "MUNDO CARGADO"),
+                "status"
+            );
         }
         if (porcentaje) porcentaje.textContent = "100%";
         escritxrBootTimeout = setTimeout(() => {
@@ -3258,17 +3724,18 @@ function insertarConRetrasoTecladoLento(contenido, esSaltoLinea = false) {
 }
 
 texto.addEventListener("beforeinput", (e) => {
-    if (e.inputType && e.inputType.startsWith("delete")) {
+    if (debeVigilarMutacionProtegida(e.inputType)) {
         snapshot_html_bendita = texto.innerHTML;
         snapshot_offset_bendita = obtenerOffsetCaretEnTexto();
         snapshot_cantidad_benditas = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA).length;
+        snapshot_input_type_bendita = String(e.inputType || "");
+        snapshot_input_data_bendita = e.data ?? "";
     } else {
-        snapshot_html_bendita = null;
-        snapshot_offset_bendita = null;
-        snapshot_cantidad_benditas = 0;
+        limpiarSnapshotProtegido();
     }
     if (debeBloquearEdicionPalabraBendita(e)) {
         e.preventDefault();
+        limpiarSnapshotProtegido();
         return;
     }
     if (!teclado_lento_putada) return;
@@ -3278,6 +3745,7 @@ texto.addEventListener("beforeinput", (e) => {
         e.inputType === "insertLineBreak"
     ) {
         e.preventDefault();
+        limpiarSnapshotProtegido();
         const esSaltoLinea = e.inputType === "insertParagraph" || e.inputType === "insertLineBreak";
         const data = esSaltoLinea ? "\n" : (e.data ?? "");
         setTimeout(() => {
@@ -3296,14 +3764,13 @@ texto.addEventListener("input", () => {
         if (Number.isFinite(snapshot_offset_bendita)) {
             colocarCaretEnOffset(snapshot_offset_bendita);
         }
+        reinsertarEntradaTrasRestauracionProtegida();
         countChars(texto);
         setTimeout(() => {
             restaurando_bendita = false;
         }, 0);
     }
-    snapshot_html_bendita = null;
-    snapshot_offset_bendita = null;
-    snapshot_cantidad_benditas = 0;
+    limpiarSnapshotProtegido();
 });
   
 const PUTADAS = {
@@ -3935,8 +4402,7 @@ function inicio() {
         btnDescargarTexto.style.display = "none" 
         btnPantallaCompleta.style.display = ""
         btnFinal.style = "" 
-        btnVolver.style.display = "none";
-        animarCSSJuego1P(".botones", "backInLeft")
+        sincronizarVisibilidadBtnVolver1P();
     });
 
     animarCSSJuego1P(".contenedor", "backOutLeft").then((message) => {
@@ -4073,6 +4539,7 @@ function post_inicio(borrar_texto){
         programarAjusteAlturaEditorEscritora();
         resetResumenPartida();
         resetHeatmap();
+        animarCSSJuego1P("#partida_acciones_toggle_wrap", "backInDown");
         startCountDown(TIEMPO_INICIAL/1000)
         temp_modos()
 }
@@ -4125,9 +4592,14 @@ function ocultarMenuResurreccion() {
 }
 
 function prepararMenuResurreccionPorTiempo() {
+    memorizarOffsetCaretTextoJuego1P();
+    setAccionesPartidaDesplegadas1P(false);
     menu_resurreccion_activo = true;
     limpiarTimeoutCompartidoGameplay1P("borrado");
     desactivar_borrar = true;
+    setPartidaActivaCursorPluma(false);
+    ocultarCursorPlumaEscritora();
+    ocultarCaretNeonEscritora();
     texto.style.display = "none";
     texto.contentEditable = "false";
     tiempo.style.color = "white";
@@ -4169,9 +4641,9 @@ function reanudarTrasResurreccion(segundosResurreccion) {
     texto.innerText = texto_guardado;
     if (modo_actual !== "tertulia") {
         texto.contentEditable = "true";
-        texto.focus();
+        setPartidaActivaCursorPluma(true);
         requestAnimationFrame(() => {
-            colocarCursorAlFinalEditor();
+            restaurarFocoTextoJuego1P();
         });
     }
     reanudarProgresoNivelBarraEscritora();
@@ -4185,6 +4657,9 @@ function gestionarTiempoAgotado() {
         return;
     }
 
+    setPartidaActivaCursorPluma(false);
+    ocultarCursorPlumaEscritora();
+    ocultarCaretNeonEscritora();
     texto_guardado = texto.innerText;
     mostrarGameOverBarraVida();
     if (modo_actual !== "frase final" && puedeResucitarSegunEstado()) {
@@ -4356,9 +4831,9 @@ function nueva_letra (letra) {
     if(modo_actual == "letra prohibida"){
         letra_prohibida = letra;
 
-        texto.removeEventListener("beforeinput", listener_modo);
+        texto.removeEventListener("beforeinput", listener_modo, true);
         listener_modo = function (e) { modo_letra_prohibida(e) };
-        texto.addEventListener("beforeinput", listener_modo);
+        texto.addEventListener("beforeinput", listener_modo, true);
         animacion_palabra();
         setBarraNivelClaseEscritora("prohibida");
         aplicarEstiloNivelesEscritora("prohibida");
@@ -4367,9 +4842,9 @@ function nueva_letra (letra) {
         }
     else if(modo_actual == "letra bendita"){
         letra_bendita = letra;
-        texto.removeEventListener("beforeinput", listener_modo);
+        texto.removeEventListener("beforeinput", listener_modo, true);
         listener_modo = function (e) { modo_letra_bendita(e) };
-        texto.addEventListener("beforeinput", listener_modo);
+        texto.addEventListener("beforeinput", listener_modo, true);
         animacion_palabra();
         setBarraNivelClaseEscritora("bendita");
         aplicarEstiloNivelesEscritora("bendita");
@@ -4488,8 +4963,7 @@ function frase_final() {
       const quantityDisplay = document.getElementById('quantityDisplay');
       const btnConfirmar = document.getElementById('btnConfirmar');
       const btnAtras = document.getElementById('btnAtras');
-      const btnSilencioQuantityMenu = document.getElementById('btnSilencioQuantityMenu');
-      let quantityMenuElements = [quantityDisplay, btnConfirmar, btnSilencioQuantityMenu].filter(Boolean);
+      let quantityMenuElements = [quantityDisplay, btnConfirmar].filter(Boolean);
       let quantityMenuIndex = 0;
   
       let palabras = 1;
@@ -4511,6 +4985,9 @@ function frase_final() {
 
       function finalizarSinResurreccion() {
         menu_resurreccion_activo = false;
+        setPartidaActivaCursorPluma(false);
+        ocultarCursorPlumaEscritora();
+        ocultarCaretNeonEscritora();
         ocultarMenuResurreccion();
         texto.innerText = texto_guardado;
         tiempo.style.color = "white";
@@ -4564,8 +5041,8 @@ function frase_final() {
         const etiquetaMax = tJuego1P("res.quantity.max", { max: maxPalabras }, `MAX ${maxPalabras}`);
         quantityDisplay.innerHTML = `
           <div class="resucitar-stepper" aria-hidden="true">
-            <div id="resucitarArrowUp" class="resucitar-stepper-arrow">&uarr;</div>
-            <div id="resucitarArrowDown" class="resucitar-stepper-arrow">&darr;</div>
+            <button id="resucitarArrowUp" class="resucitar-stepper-arrow" type="button" data-res-key="ArrowUp" aria-label="Arriba">&uarr;</button>
+            <button id="resucitarArrowDown" class="resucitar-stepper-arrow" type="button" data-res-key="ArrowDown" aria-label="Abajo">&darr;</button>
           </div>
           <div class="resucitar-metric">
             <span class="resucitar-label">${etiquetaPalabras}</span>
@@ -4578,6 +5055,15 @@ function frase_final() {
             <span class="resucitar-value resucitar-pop segundos">${segundos}</span>
           </div>
         `;
+        quantityDisplay.querySelectorAll('[data-res-key]').forEach((botonKeypad) => {
+          botonKeypad.addEventListener('click', (evento) => {
+            evento.preventDefault();
+            evento.stopPropagation();
+            const tecla = botonKeypad.getAttribute('data-res-key');
+            if (!tecla) return;
+            ejecutarAccionMenuResurreccion(tecla);
+          });
+        });
       }
 
       function cambiarCantidadResurreccion(deltaPalabras) {
@@ -4762,38 +5248,9 @@ animarCSSJuego1P("#quantityMenu", "flash");
         reanudarTrasResurreccion(segundosResurreccion);
       });
 
-      if (btnResucitarMenosTouch) {
-        btnResucitarMenosTouch.addEventListener('click', (evento) => {
-          evento.stopPropagation();
-          cambiarCantidadResurreccion(-1);
-        });
-      }
-
-      if (btnResucitarMasTouch) {
-        btnResucitarMasTouch.addEventListener('click', (evento) => {
-          evento.stopPropagation();
-          cambiarCantidadResurreccion(1);
-        });
-      }
-
-      if (btnConfirmarTouch) {
-        btnConfirmarTouch.addEventListener('click', (evento) => {
-          evento.stopPropagation();
-          btnConfirmar.click();
-        });
-      }
-  
-      /*************************************************************
-        EVENTO DE TECLAS: FLECHAS Y ENTER
-      **************************************************************/
-      // Definimos la función manejadora de eventos de teclado.
-function manejadorTeclas(evento) {
-    const tecla = (evento.key === 'Enter' || evento.code === 'NumpadEnter')
-      ? 'Enter'
-      : evento.key;
-    evento.stopPropagation();
-    if (currentMenu === 'quantity') {
-      switch (tecla) {
+      function ejecutarAccionMenuResurreccion(tecla) {
+        if (currentMenu === 'quantity') {
+          switch (tecla) {
         case 'ArrowLeft':
           quantityMenuIndex--;
           if (quantityMenuIndex < 0) {
@@ -4836,17 +5293,35 @@ function manejadorTeclas(evento) {
           }
           break;
         case 'Enter':
-          if (quantityMenuElements[quantityMenuIndex] === btnSilencioQuantityMenu) {
-            btnSilencioQuantityMenu.click();
-          } else {
-            btnConfirmar.click();
-          }
+          btnConfirmar.click();
           break;
         default:
           break;
+          }
+        }
       }
-    }
+
+      /*************************************************************
+        EVENTO DE TECLAS: FLECHAS Y ENTER
+      **************************************************************/
+      // Definimos la función manejadora de eventos de teclado.
+function manejadorTeclas(evento) {
+    const tecla = (evento.key === 'Enter' || evento.code === 'NumpadEnter')
+      ? 'Enter'
+      : evento.key;
+    evento.stopPropagation();
+    ejecutarAccionMenuResurreccion(tecla);
   }
+
+      document.querySelectorAll('[data-res-key]').forEach((botonKeypad) => {
+        botonKeypad.addEventListener('click', (evento) => {
+          evento.preventDefault();
+          evento.stopPropagation();
+          const tecla = botonKeypad.getAttribute('data-res-key');
+          if (!tecla) return;
+          ejecutarAccionMenuResurreccion(tecla);
+        });
+      });
 
 
 function getRandColor() {
@@ -5038,7 +5513,119 @@ function caretAfectaPalabraBendita(direccion) {
 let snapshot_html_bendita = null;
 let snapshot_offset_bendita = null;
 let snapshot_cantidad_benditas = 0;
+let snapshot_input_type_bendita = "";
+let snapshot_input_data_bendita = "";
 let restaurando_bendita = false;
+
+function limpiarSnapshotProtegido() {
+    snapshot_html_bendita = null;
+    snapshot_offset_bendita = null;
+    snapshot_cantidad_benditas = 0;
+    snapshot_input_type_bendita = "";
+    snapshot_input_data_bendita = "";
+}
+
+function debeVigilarMutacionProtegida(inputType) {
+    const tipo = String(inputType || "");
+    return tipo.startsWith("delete") || tipo.startsWith("insert");
+}
+
+function obtenerCaracterEntradaEvento(e) {
+    if (typeof e?.data === "string" && e.data.length > 0) {
+        return e.data;
+    }
+    if (typeof e?.key === "string" && e.key.length === 1) {
+        return e.key;
+    }
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return "";
+    const node = sel.anchorNode;
+    if (node && node.nodeType === Node.TEXT_NODE && sel.focusOffset > 0) {
+        return node.textContent.charAt(sel.focusOffset - 1);
+    }
+    return "";
+}
+
+function insertarTextoPlanoEnCaretProtegido(contenido) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return false;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+
+    const fragmento = document.createDocumentFragment();
+    const textoPlano = String(contenido ?? "");
+    const partes = textoPlano.split("\n");
+    partes.forEach((parte, indice) => {
+        if (parte) {
+            fragmento.appendChild(document.createTextNode(parte));
+        }
+        if (indice < partes.length - 1) {
+            fragmento.appendChild(document.createElement("br"));
+        }
+    });
+    const marcador = document.createTextNode("");
+    fragmento.appendChild(marcador);
+    range.insertNode(fragmento);
+
+    const nuevoRango = document.createRange();
+    nuevoRango.setStart(marcador, 0);
+    nuevoRango.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(nuevoRango);
+    return true;
+}
+
+function reinsertarEntradaTrasRestauracionProtegida() {
+    const tipo = String(snapshot_input_type_bendita || "");
+    if (!tipo.startsWith("insert")) return false;
+    const esSalto = tipo === "insertParagraph" || tipo === "insertLineBreak";
+    const contenido = esSalto ? "\n" : (snapshot_input_data_bendita ?? "");
+    if (!contenido && !esSalto) return false;
+    return insertarTextoPlanoEnCaretProtegido(contenido);
+}
+
+function insertarSpanProtegidoEnCaret(letra, clase) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return false;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+
+    const span = document.createElement("span");
+    span.className = clase;
+    span.setAttribute("contenteditable", "false");
+    span.textContent = letra;
+
+    const marcador = document.createTextNode("");
+    const fragmento = document.createDocumentFragment();
+    fragmento.appendChild(span);
+    fragmento.appendChild(marcador);
+    range.insertNode(fragmento);
+
+    const nuevoRango = document.createRange();
+    nuevoRango.setStart(marcador, 0);
+    nuevoRango.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(nuevoRango);
+    return true;
+}
+
+function insertarTextoJuntoANodoProtegido(nodoProtegido, contenido, direccion = "after") {
+    if (!nodoProtegido || !nodoProtegido.parentNode) return false;
+    const nuevoTexto = document.createTextNode(String(contenido ?? ""));
+    if (direccion === "before") {
+        nodoProtegido.parentNode.insertBefore(nuevoTexto, nodoProtegido);
+    } else {
+        nodoProtegido.parentNode.insertBefore(nuevoTexto, nodoProtegido.nextSibling);
+    }
+    const sel = window.getSelection();
+    if (!sel) return true;
+    const range = document.createRange();
+    range.setStart(nuevoTexto, nuevoTexto.textContent.length);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    return true;
+}
 
 function moverCursorPorPalabraBendita(direccion) {
     const sel = window.getSelection();
@@ -5820,7 +6407,7 @@ function modo_letra_bendita(e) {
     // Para inserción de texto
     if (e.inputType === "insertText") {
         // e.data contiene el carácter que se va a insertar
-        let letra = e.data;
+        let letra = obtenerCaracterEntradaEvento(e);
         // Si se inserta un único carácter, lo procesamos
         if (letra && letra.length === 1) {
             // Comprobamos si la letra corresponde a la "letra bendita"
@@ -5831,27 +6418,15 @@ function modo_letra_bendita(e) {
                 console.log('Se procesa letra bendita');
 
                 // Creamos un nodo de texto con la letra
-                let textNode = document.createTextNode(letra);
+                insertarSpanProtegidoEnCaret(letra, CLASE_LETRA_BENDITA_LOCAL);
                 // Creamos un elemento span para darle estilo (clase "letra-verde")
-                let span = document.createElement("span");
-                span.className = "letra-verde";
-                span.setAttribute("contenteditable", "false");
-                span.appendChild(textNode);
 
                 // Creamos nodos de texto vacíos para facilitar el posicionamiento
-                let emptyTextNodeBefore = document.createTextNode("");
-                let emptyTextNodeAfter = document.createTextNode("");
 
                 // Insertamos los nodos en la posición actual del cursor
-                range.insertNode(emptyTextNodeBefore);
-                range.insertNode(span);
-                range.insertNode(emptyTextNodeAfter);
 
                 // Ajustamos el rango para posicionar el cursor adecuadamente
-                range.setStartBefore(emptyTextNodeBefore);
-                range.setEndBefore(emptyTextNodeBefore);
-                sel.removeAllRanges();
-                sel.addRange(range);
+                texto.dispatchEvent(new Event("input", { bubbles: true }));
 
                 // Actualizamos el tiempo y la visualización de puntos según la lógica del juego
                 actualizarPuntosMarcador(puntos_);
@@ -5865,23 +6440,15 @@ function modo_letra_bendita(e) {
 
                 // Aquí se podría enviar feedback vía Socket.io
             } else {
-                // Si la letra no es la "letra bendita" y el nodo actual es parte de un span "letra-verde"
-                if (node && node.parentNode && node.parentNode.className === 'letra-verde') {
+                const nodoProtegido = nodoEnPalabraBendita(node);
+                if (nodoProtegido && nodoProtegido.classList.contains(CLASE_LETRA_BENDITA_LOCAL)) {
                     e.preventDefault();
-                    let newTextNode = document.createTextNode(letra);
-                    if (sel.focusOffset === 0) {
-                        node.parentNode.parentNode.insertBefore(newTextNode, node.parentNode);
-                    } else {
-                        if (node.parentNode.nextSibling) {
-                            node.parentNode.parentNode.insertBefore(newTextNode, node.parentNode.nextSibling);
-                        } else {
-                            node.parentNode.parentNode.appendChild(newTextNode);
-                        }
-                    }
-                    range.setStartAfter(newTextNode);
-                    range.setEndAfter(newTextNode);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                    insertarTextoJuntoANodoProtegido(
+                        nodoProtegido,
+                        letra,
+                        sel.focusOffset === 0 ? "before" : "after"
+                    );
+                    texto.dispatchEvent(new Event("input", { bubbles: true }));
                 }
             }
         }
@@ -6365,6 +6932,9 @@ function final(){
 
     // Variable booleana que dice si la ronda ha terminado o no.
     terminado = true;
+    if (typeof actualizarEstadoMenuAccionesPartida1P === "function") {
+        actualizarEstadoMenuAccionesPartida1P();
+    }
     
     console.log("ES EL FINAL")
     texto.style.maxHeight = "none";

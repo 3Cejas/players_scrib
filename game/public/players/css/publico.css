@@ -15,6 +15,8 @@
 html,
 body {
     display:flex;
+    position: relative;
+    isolation: isolate;
     margin:0;
     width: 100%;
     max-width: 100%;
@@ -38,10 +40,256 @@ body {
     font-family: "Retro-gaming";
 }
 
+body {
+    --equipo-caret-color: #7df6ff;
+}
+
+body.equipo-rojo {
+    --equipo-caret-color: #ff7a86;
+}
+
+#background-effects {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.aquarium-glow,
+.aquarium-current,
+.aquarium-shimmer,
+.aquarium-bloom {
+    position: absolute;
+    display: block;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.aquarium-glow {
+    width: 70vw;
+    height: 80vh;
+    border-radius: 50%;
+    filter: blur(34px);
+    opacity: 0.42;
+}
+
+.aquarium-glow--blue {
+    left: -18vw;
+    top: -10vh;
+    background:
+        radial-gradient(circle at 42% 44%, rgba(150, 246, 255, 0.48) 0 15%, rgba(73, 211, 255, 0.34) 28%, rgba(16, 116, 212, 0.18) 48%, rgba(0, 0, 0, 0) 74%);
+    animation: aquariumDriftBlue 24s ease-in-out infinite;
+}
+
+.aquarium-glow--red {
+    right: -18vw;
+    top: -8vh;
+    background:
+        radial-gradient(circle at 58% 42%, rgba(255, 195, 195, 0.4) 0 14%, rgba(255, 109, 109, 0.28) 30%, rgba(193, 28, 28, 0.18) 52%, rgba(0, 0, 0, 0) 76%);
+    animation: aquariumDriftRed 26s ease-in-out infinite;
+}
+
+.aquarium-current {
+    width: 108vw;
+    height: 36vh;
+    border-radius: 50%;
+    filter: blur(28px);
+    opacity: 0.24;
+}
+
+.aquarium-current--one {
+    left: -12vw;
+    top: 14vh;
+    transform: rotate(-6deg);
+    background:
+        linear-gradient(90deg, rgba(66, 216, 255, 0) 0%, rgba(66, 216, 255, 0.1) 14%, rgba(73, 201, 255, 0.26) 30%, rgba(235, 251, 255, 0.14) 48%, rgba(255, 160, 160, 0.16) 72%, rgba(255, 83, 83, 0.08) 86%, rgba(255, 83, 83, 0) 100%);
+    animation: aquariumCurrentOne 20s ease-in-out infinite;
+}
+
+.aquarium-current--two {
+    left: -4vw;
+    bottom: 10vh;
+    transform: rotate(8deg);
+    background:
+        linear-gradient(90deg, rgba(66, 216, 255, 0) 0%, rgba(66, 216, 255, 0.06) 12%, rgba(140, 238, 255, 0.18) 28%, rgba(255, 249, 252, 0.12) 50%, rgba(255, 170, 170, 0.14) 74%, rgba(255, 83, 83, 0.08) 88%, rgba(255, 83, 83, 0) 100%);
+    animation: aquariumCurrentTwo 24s ease-in-out infinite;
+}
+
+.aquarium-shimmer {
+    left: -18%;
+    top: -24%;
+    width: 136%;
+    height: 148%;
+    opacity: 0.12;
+    filter: blur(10px);
+    background:
+        repeating-linear-gradient(108deg,
+            rgba(255, 255, 255, 0) 0 8%,
+            rgba(255, 255, 255, 0.05) 10% 11.5%,
+            rgba(255, 255, 255, 0) 14% 21%);
+    animation: aquariumShimmer 18s linear infinite;
+}
+
+.aquarium-bloom {
+    width: min(22vw, 18rem);
+    height: min(22vw, 18rem);
+    border-radius: 50%;
+    filter: blur(18px);
+    opacity: 0.2;
+}
+
+.aquarium-bloom--blue {
+    left: 12%;
+    top: 46%;
+    background: radial-gradient(circle, rgba(126, 243, 255, 0.3) 0, rgba(31, 166, 241, 0.16) 40%, rgba(0, 0, 0, 0) 74%);
+    animation: aquariumBloomBlue 28s ease-in-out infinite;
+}
+
+.aquarium-bloom--red {
+    right: 14%;
+    top: 52%;
+    background: radial-gradient(circle, rgba(255, 203, 203, 0.28) 0, rgba(229, 72, 72, 0.16) 42%, rgba(0, 0, 0, 0) 74%);
+    animation: aquariumBloomRed 30s ease-in-out infinite;
+}
+
 :root {
     --musa-progress-color: rgba(123, 239, 255, 0.92);
     --musa-progress-text-color: #8fefff;
     --musa-progress-loading-text-color: #f7fbff;
+}
+
+.container,
+#contenedor {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes aquariumDriftBlue {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    35% {
+        transform: translate3d(6vw, 4vh, 0) scale(1.08);
+    }
+    68% {
+        transform: translate3d(2vw, 10vh, 0) scale(0.94);
+    }
+}
+
+@keyframes aquariumDriftRed {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    30% {
+        transform: translate3d(-5vw, 3vh, 0) scale(1.06);
+    }
+    72% {
+        transform: translate3d(-3vw, 9vh, 0) scale(0.95);
+    }
+}
+
+@keyframes aquariumCurrentOne {
+    0%, 100% {
+        transform: rotate(-6deg) translate3d(0, 0, 0) scaleX(1);
+        opacity: 0.18;
+    }
+    50% {
+        transform: rotate(-2deg) translate3d(6vw, 3vh, 0) scaleX(1.08);
+        opacity: 0.32;
+    }
+}
+
+@keyframes aquariumCurrentTwo {
+    0%, 100% {
+        transform: rotate(8deg) translate3d(0, 0, 0) scaleX(1);
+        opacity: 0.14;
+    }
+    50% {
+        transform: rotate(12deg) translate3d(-7vw, -4vh, 0) scaleX(1.12);
+        opacity: 0.28;
+    }
+}
+
+@keyframes aquariumShimmer {
+    0% {
+        transform: translate3d(-2%, -1%, 0) rotate(7deg);
+        opacity: 0.08;
+    }
+    50% {
+        transform: translate3d(2%, 2%, 0) rotate(11deg);
+        opacity: 0.16;
+    }
+    100% {
+        transform: translate3d(-2%, -1%, 0) rotate(7deg);
+        opacity: 0.08;
+    }
+}
+
+@keyframes aquariumBloomBlue {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) scale(0.92);
+        opacity: 0.14;
+    }
+    50% {
+        transform: translate3d(3vw, -2vh, 0) scale(1.18);
+        opacity: 0.26;
+    }
+}
+
+@keyframes aquariumBloomRed {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) scale(0.94);
+        opacity: 0.12;
+    }
+    50% {
+        transform: translate3d(-3vw, 3vh, 0) scale(1.16);
+        opacity: 0.24;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aquarium-glow,
+    .aquarium-current,
+    .aquarium-shimmer,
+    .aquarium-bloom {
+        animation: none;
+    }
+
+    .aquarium-glow {
+        opacity: 0.34;
+    }
+
+    .aquarium-current {
+        opacity: 0.16;
+    }
+
+    .aquarium-shimmer {
+        opacity: 0.08;
+    }
+
+    .aquarium-bloom {
+        opacity: 0.16;
+    }
+}
+
+@media (pointer: coarse) {
+    .aquarium-shimmer {
+        display: none;
+    }
+
+    .aquarium-glow {
+        opacity: 0.28;
+        filter: blur(28px);
+    }
+
+    .aquarium-current {
+        opacity: 0.18;
+    }
+
+    .aquarium-bloom {
+        opacity: 0.14;
+    }
 }
 
 .musa-world-entry {
@@ -717,6 +965,7 @@ body.musa-borde-fulgor::before {
     );
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
+    caret-color: var(--equipo-caret-color, #7df6ff);
 }
 
 .textarea.textarea--completa {
@@ -2488,8 +2737,12 @@ body.partida-finalizada-musa .niveles {
     }
 }
 
-.input_publico{
+.input_publico,
+#calentamiento_input,
+#palabra,
+.textarea[contenteditable="true"] {
     font-family: "Retro-gaming";
+    caret-color: var(--equipo-caret-color, #7df6ff);
 }
 
 .skill {

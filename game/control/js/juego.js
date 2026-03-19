@@ -49,6 +49,7 @@ const SOPORTA_CURSOR_PLUMA_CONTROL = (() => {
 })();
 let cursor_pluma_control = null;
 let cursor_pluma_control_inicializado = false;
+let timeout_cursor_pluma_control_press = null;
 let selector_idioma_control_inicializado = false;
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
@@ -116,6 +117,17 @@ function moverCursorPlumaControl(clientX, clientY) {
     cursor_pluma_control.classList.remove("is-hidden");
 }
 
+function pulsarCursorPlumaControl() {
+    if (!cursor_pluma_control) return;
+    cursor_pluma_control.classList.add("is-pressing");
+    clearTimeout(timeout_cursor_pluma_control_press);
+    timeout_cursor_pluma_control_press = setTimeout(() => {
+        timeout_cursor_pluma_control_press = null;
+        if (!cursor_pluma_control) return;
+        cursor_pluma_control.classList.remove("is-pressing");
+    }, 140);
+}
+
 function inicializarCursorPlumaControl() {
     if (cursor_pluma_control_inicializado) return;
     cursor_pluma_control_inicializado = true;
@@ -141,6 +153,7 @@ function inicializarCursorPlumaControl() {
         if (!document.body || !document.body.classList.contains(CLASE_CURSOR_PLUMA_CONTROL)) return;
         if (!evento || typeof evento.clientX !== "number" || typeof evento.clientY !== "number") return;
         moverCursorPlumaControl(evento.clientX, evento.clientY);
+        pulsarCursorPlumaControl();
     }, { passive: true });
     window.addEventListener("blur", ocultarCursorPlumaControl);
     document.addEventListener("visibilitychange", () => {

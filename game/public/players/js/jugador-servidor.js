@@ -2096,6 +2096,10 @@ if (nombre_musa_label && nombre_musa) {
 }
 
 var player = getParameterByName("player");
+if (document.body) {
+    document.body.classList.toggle("equipo-azul", Number(player) !== 2);
+    document.body.classList.toggle("equipo-rojo", Number(player) === 2);
+}
 registrarNombreEscritxrPorEquipo(player, getParameterByName("escritxr") || "");
 
 function obtenerNombreEscritxrEntradaMusa() {

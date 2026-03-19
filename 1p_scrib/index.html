@@ -76,6 +76,11 @@
             transform-origin: center;
             filter: drop-shadow(0 0 0.28em rgba(55, 236, 255, 0.95)) drop-shadow(0 0 0.58em rgba(55, 236, 255, 0.6));
             animation: introCursorPlumaGlow 1.35s ease-in-out infinite;
+            transition: transform 90ms ease;
+        }
+
+        .intro-cursor-pluma.is-pressing::before {
+            transform: rotate(-8deg) scale(0.94);
         }
 
         @keyframes introCursorPlumaGlow {
@@ -2268,6 +2273,7 @@
         const habilidades = { fuerza: 0, agilidad: 0, destreza: 0 };
         let inicioBloqueado = false;
         let cursorPlumaIntro = null;
+        let timeoutCursorPlumaIntroPress = null;
         const soportaCursorPlumaIntro = (() => {
             if (typeof window.matchMedia !== 'function') return true;
             return window.matchMedia('(pointer: fine)').matches;
@@ -2285,6 +2291,17 @@
             cursorPlumaIntro.classList.add('activa');
         }
 
+        function pulsarCursorPlumaIntro() {
+            if (!cursorPlumaIntro) return;
+            cursorPlumaIntro.classList.add('is-pressing');
+            clearTimeout(timeoutCursorPlumaIntroPress);
+            timeoutCursorPlumaIntroPress = setTimeout(() => {
+                timeoutCursorPlumaIntroPress = null;
+                if (!cursorPlumaIntro) return;
+                cursorPlumaIntro.classList.remove('is-pressing');
+            }, 140);
+        }
+
         function inicializarCursorPlumaIntro() {
             if (!soportaCursorPlumaIntro || !document.body) return;
             if (!cursorPlumaIntro) {
@@ -2297,6 +2314,11 @@
             document.addEventListener('mousemove', (evento) => {
                 if (!evento || typeof evento.clientX !== 'number' || typeof evento.clientY !== 'number') return;
                 moverCursorPlumaIntro(evento.clientX, evento.clientY);
+            }, { passive: true });
+            document.addEventListener('pointerdown', (evento) => {
+                if (!evento || typeof evento.clientX !== 'number' || typeof evento.clientY !== 'number') return;
+                moverCursorPlumaIntro(evento.clientX, evento.clientY);
+                pulsarCursorPlumaIntro();
             }, { passive: true });
             window.addEventListener('blur', ocultarCursorPlumaIntro);
             document.addEventListener('visibilitychange', () => {

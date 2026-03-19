@@ -766,7 +766,11 @@ function opciones(){
     if (btnLimpiarEl) btnLimpiarEl.style.display = "none";
     if (btnDescargarEl) btnDescargarEl.style.display = "none";
     if (btnPantallaEl) btnPantallaEl.style.display = "none";
-    if (btnVolverEl) btnVolverEl.style.setProperty("display", "inline-block", "important");
+    if (typeof sincronizarVisibilidadBtnVolver1P === "function") {
+      sincronizarVisibilidadBtnVolver1P();
+    } else if (btnVolverEl) {
+      btnVolverEl.style.setProperty("display", "inline-block", "important");
+    }
     if (soporteEl) soporteEl.style.display = "block";
     animateCSS(".botones", "backInLeft")
     animateCSS(".soporte", "backInLeft")
@@ -802,7 +806,11 @@ function volver(){
     if (btnEscribirEl) btnEscribirEl.style.display = "";
     if (btnLimpiarEl) btnLimpiarEl.style.display = "";
     if (btnPantallaEl) btnPantallaEl.style.display = "";
-    if (btnVolverEl) btnVolverEl.style.setProperty("display", "none", "important");
+    if (typeof sincronizarVisibilidadBtnVolver1P === "function") {
+      sincronizarVisibilidadBtnVolver1P();
+    } else if (btnVolverEl) {
+      btnVolverEl.style.setProperty("display", "none", "important");
+    }
     if (soporteEl) soporteEl.style.display = "none";
     animateCSS(".botones", "backInLeft")
   });

@@ -1211,6 +1211,11 @@ body.cursor-control-pluma-activo * {
     transform-origin: center;
     filter: drop-shadow(0 0 0.28em rgba(55, 236, 255, 0.95)) drop-shadow(0 0 0.58em rgba(55, 236, 255, 0.6));
     animation: controlCursorPlumaAzulGlow 1.35s ease-in-out infinite;
+    transition: transform 90ms ease;
+}
+
+.control-cursor-pluma.is-pressing::before {
+    transform: rotate(-8deg) scale(0.94);
 }
 
 .control-cursor-pluma.is-hidden {
