@@ -8,13 +8,13 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260318f">
+    <link rel="stylesheet" type="text/css" href="./css/dashboard-players.css?v=20260318h">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="page-players ui-dashboard-only">
-    <script src="./js/juego.js?v=20260318a"></script>
+    <script src="./js/juego.js?v=20260318h"></script>
     <div id="players_fit_root" align="center">
     <div class="cabecera">
     <pre id="neon" class="neon">
@@ -34,7 +34,10 @@
     </div>
     <div id="lightning">
     </div>
-    <div class="botones">
+    <div id="partida_acciones_toggle_wrap" class="partida-acciones-toggle-wrap" hidden>
+    <button id="partida_acciones_toggle" class="partida-acciones-toggle" type="button" aria-expanded="false" aria-controls="panel_acciones_partida">▼ ACCIONES</button>
+    </div>
+    <div id="panel_acciones_partida" class="botones">
     <span id="btn_escribir" class='btn' onclick="inicio()" data-i18n="ui.btn_write">✍️ ESCRIBIR</span>
     <span id="btn_limpiar" class='btn' onclick="limpiar()" data-i18n="ui.btn_restart">🔁 REINICIO</span>
     <span id="btn_final" class='btn' onclick="final()" style="display:none" data-i18n="ui.btn_finish">🏁 FIN</span>
@@ -99,6 +102,11 @@
                         <div class="button-container resucitar-buttons">
                             <button id="btnConfirmar" type="button" data-i18n="res.btn_confirm">Confirmar</button>
                             <button id="btnAtras" type="button" data-i18n="res.btn_back">Atr&aacute;s</button>
+                        </div>
+                        <div class="button-container resucitar-buttons resucitar-touch-controls">
+                            <button id="btnResucitarMenosTouch" type="button" data-i18n="res.mobile_less">- TIEMPO</button>
+                            <button id="btnResucitarMasTouch" type="button" data-i18n="res.mobile_more">+ TIEMPO</button>
+                            <button id="btnConfirmarTouch" type="button" data-i18n="res.mobile_confirm">CONFIRMAR TIEMPO</button>
                         </div>
                         <div class="button-container resucitar-buttons resucitar-buttons--secondary">
                             <button id="btnSilencioQuantityMenu" class="resucitar-audio-toggle" type="button" onclick="toggleSilencioJuego()" data-audio-toggle="menu-partida" aria-pressed="false">🔇 DESACTIVAR SONIDO</button>
@@ -329,6 +337,6 @@
         </div>
     </div>
 </body>
-<script src="./js/jugador-servidor.js?v=20260318e"></script>
+<script src="./js/jugador-servidor.js?v=20260318h"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

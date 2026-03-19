@@ -737,12 +737,18 @@ function refrescarLayoutDashboardJuego1P() {
   if (typeof window === "undefined") return;
   [0, 320].forEach((delay) => {
     setTimeout(() => {
+      if (typeof actualizarEstadoMenuAccionesPartida1P === "function") {
+        actualizarEstadoMenuAccionesPartida1P();
+      }
       window.dispatchEvent(new Event("resize"));
     }, delay);
   });
 }
 
 function opciones(){
+  if (typeof setAccionesPartidaDesplegadas1P === "function") {
+    setAccionesPartidaDesplegadas1P(false);
+  }
   if (document.body) document.body.classList.add("modo-opciones");
   const btnOpcionesEl = document.getElementById("btn_opciones");
   const btnEscribirEl = document.getElementById("btn_escribir");
@@ -778,6 +784,9 @@ function opciones(){
 }
 
 function volver(){
+  if (typeof setAccionesPartidaDesplegadas1P === "function") {
+    setAccionesPartidaDesplegadas1P(false);
+  }
   if (document.body) document.body.classList.remove("modo-opciones");
   const btnOpcionesEl = document.getElementById("btn_opciones");
   const btnEscribirEl = document.getElementById("btn_escribir");

@@ -431,6 +431,19 @@ body.page-players {
   margin-top: 0.35vw;
 }
 
+.resucitar-touch-controls {
+  display: none;
+}
+
+.resucitar-touch-controls button {
+  flex: 1 1 150px;
+}
+
+.resucitar-panel #btnConfirmarTouch {
+  background: linear-gradient(135deg, rgba(24, 60, 78, 0.98), rgba(12, 108, 138, 0.95));
+  color: #eaffff;
+}
+
 .resucitar-panel .resucitar-audio-toggle {
   min-width: clamp(180px, 16vw, 280px);
   font-size: clamp(13px, 1vw, 19px);
@@ -759,6 +772,38 @@ body.page-players {
   .keycap-enter {
     font-size: 2.6vw;
     letter-spacing: 0.12em;
+  }
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+  .resucitar-keys {
+    display: none;
+  }
+
+  .resucitar-panel #btnConfirmar {
+    display: none;
+  }
+
+  .quantity-display {
+    width: min(100%, 560px);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .resucitar-stepper {
+    display: none;
+  }
+
+  .resucitar-touch-controls {
+    display: flex;
+    flex-wrap: wrap;
+    width: min(100%, 560px);
+    gap: clamp(8px, 2vw, 14px);
+  }
+
+  .resucitar-touch-controls button {
+    min-width: 0;
+    width: 100%;
   }
 }
 
@@ -2210,6 +2255,90 @@ body.page-players .botones {
   gap: var(--botones-gap-y) var(--botones-gap-x);
 }
 
+.partida-acciones-toggle-wrap {
+  display: none;
+}
+
+.partida-acciones-toggle {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: clamp(42px, 4.8vh, 56px);
+  border: 1px solid rgba(127, 242, 255, 0.48);
+  border-radius: clamp(10px, 0.8vw, 16px);
+  background:
+    linear-gradient(170deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02) 42%),
+    linear-gradient(90deg, rgba(3, 30, 46, 0.94), rgba(4, 8, 18, 0.95) 52%, rgba(34, 10, 24, 0.9));
+  color: #c9f8ff;
+  font-family: "Retro-gaming";
+  font-size: clamp(12px, 1vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0.05em 0.05em 0 rgba(0, 0, 0, 0.72), 0 0 0.5em rgba(127, 242, 255, 0.35);
+  box-shadow:
+    inset 0 0 0.5em rgba(255, 255, 255, 0.08),
+    0 0 0.72em rgba(127, 242, 255, 0.18),
+    0 0.42em 0.85em rgba(0, 0, 0, 0.34);
+  cursor: pointer;
+}
+
+body.page-players.partida-ui-activa .partida-acciones-toggle-wrap {
+  position: absolute;
+  top: clamp(8px, 1vh, 16px);
+  left: 0;
+  right: 0;
+  display: flex;
+  width: min(420px, 90vw);
+  margin: 0 auto;
+  z-index: 34;
+}
+
+body.page-players.partida-ui-activa #contenedor {
+  margin-top: clamp(58px, 7vh, 90px);
+}
+
+body.page-players.partida-ui-activa .botones {
+  position: absolute;
+  top: calc(clamp(8px, 1vh, 16px) + clamp(42px, 4.8vh, 56px) + clamp(8px, 0.9vh, 12px));
+  left: 0;
+  right: 0;
+  width: min(880px, 94vw);
+  margin: 0 auto;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: clamp(12px, 0.9vw, 18px);
+  background:
+    linear-gradient(170deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02) 42%),
+    linear-gradient(90deg, rgba(3, 30, 46, 0.94), rgba(4, 8, 18, 0.95) 52%, rgba(34, 10, 24, 0.9));
+  box-shadow: none;
+  transition:
+    max-height 220ms ease,
+    padding 220ms ease,
+    opacity 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+  z-index: 33;
+}
+
+body.page-players.partida-ui-activa.partida-acciones-desplegadas .botones {
+  padding: clamp(10px, 1.1vh, 16px);
+  max-height: min(52vh, 420px);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  border-color: rgba(127, 242, 255, 0.34);
+  box-shadow:
+    inset 0 0 0.5em rgba(255, 255, 255, 0.08),
+    0 0 0.85em rgba(127, 242, 255, 0.14),
+    0 0.42em 1.1em rgba(0, 0, 0, 0.34);
+}
+
 body.page-players .botones .btn {
   --btn-color: #78ecff;
   --btn-color-soft: color-mix(in srgb, var(--btn-color), transparent 78%);
@@ -2490,6 +2619,36 @@ body.page-players.ui-dashboard-only #btn_volver {
   body.page-players.ui-dashboard-only .botones {
     --botones-columns: 1;
     width: min(520px, 94vw);
+  }
+}
+
+@media (max-width: 800px) {
+  body.page-players .opciones_table,
+  body.page-players .opciones_table tbody,
+  body.page-players .opciones_table tr,
+  body.page-players .opciones_table td {
+    display: block;
+    width: 100%;
+  }
+
+  body.page-players .opciones_table td {
+    text-align: center;
+    margin-bottom: clamp(18px, 4vw, 30px);
+  }
+
+  body.page-players .spinner-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto clamp(8px, 1.8vw, 14px);
+  }
+
+  body.page-players .opciones_table td > .opciones_valores {
+    display: block;
+    width: 100%;
+    text-align: center;
   }
 }
 

@@ -34,6 +34,11 @@ let btnDescargarTexto = getEl("btn_descargar_texto");
 let btnOpciones = getEl("btn_opciones");
 let btnVolver = getEl("btn_volver");
 let btnSilencio = getEl("btn_silencio");
+let btnResucitarMenosTouch = getEl("btnResucitarMenosTouch");
+let btnResucitarMasTouch = getEl("btnResucitarMasTouch");
+let btnConfirmarTouch = getEl("btnConfirmarTouch");
+let partidaAccionesToggleWrap = getEl("partida_acciones_toggle_wrap");
+let partidaAccionesToggle = getEl("partida_acciones_toggle");
 let div_opciones = getEl("opciones");
 let desventajaOverlay = getEl("desventajaOverlay");
 let desventajaStatus = getEl("desventajaStatus");
@@ -161,6 +166,8 @@ const I18N_TEXTS_1P = {
         "ui.btn_back": "VOLVER",
         "ui.btn_mute": "🔇 DESACTIVAR SONIDO",
         "ui.btn_unmute": "🔊 ACTIVAR SONIDO",
+        "ui.actions_show": "\u25BE ACCIONES",
+        "ui.actions_hide": "\u25B4 OCULTAR ACCIONES",
         "res.game_over": "GAME OVER",
         "res.title_prefix": "QUIERES",
         "res.title_highlight": "RESUCITAR",
@@ -172,6 +179,9 @@ const I18N_TEXTS_1P = {
         "res.quantity_title": "Selecciona la cantidad de palabras",
         "res.btn_confirm": "Confirmar",
         "res.btn_back": "Atras",
+        "res.mobile_less": "- TIEMPO",
+        "res.mobile_more": "+ TIEMPO",
+        "res.mobile_confirm": "CONFIRMAR TIEMPO",
         "res.quantity.words_label": "Palabras",
         "res.quantity.seconds_label": "Segundos",
         "res.quantity.max": "MAX {max}",
@@ -240,6 +250,8 @@ const I18N_TEXTS_1P = {
         "ui.btn_back": "BACK",
         "ui.btn_mute": "🔇 DISABLE SOUND",
         "ui.btn_unmute": "🔊 ENABLE SOUND",
+        "ui.actions_show": "\u25BE ACTIONS",
+        "ui.actions_hide": "\u25B4 HIDE ACTIONS",
         "res.game_over": "GAME OVER",
         "res.title_prefix": "DO YOU WANT TO",
         "res.title_highlight": "REVIVE",
@@ -251,6 +263,9 @@ const I18N_TEXTS_1P = {
         "res.quantity_title": "Choose how many words",
         "res.btn_confirm": "Confirm",
         "res.btn_back": "Back",
+        "res.mobile_less": "- TIME",
+        "res.mobile_more": "+ TIME",
+        "res.mobile_confirm": "CONFIRM TIME",
         "res.quantity.words_label": "Words",
         "res.quantity.seconds_label": "Seconds",
         "res.quantity.max": "MAX {max}",
@@ -319,6 +334,8 @@ const I18N_TEXTS_1P = {
         "ui.btn_back": "RETOUR",
         "ui.btn_mute": "🔇 DESACTIVER LE SON",
         "ui.btn_unmute": "🔊 ACTIVER LE SON",
+        "ui.actions_show": "\u25BE COMMANDES",
+        "ui.actions_hide": "\u25B4 MASQUER COMMANDES",
         "res.game_over": "GAME OVER",
         "res.title_prefix": "VEUX-TU",
         "res.title_highlight": "RESSUSCITER",
@@ -330,6 +347,9 @@ const I18N_TEXTS_1P = {
         "res.quantity_title": "Choisis la quantite de mots",
         "res.btn_confirm": "Confirmer",
         "res.btn_back": "Retour",
+        "res.mobile_less": "- TEMPS",
+        "res.mobile_more": "+ TEMPS",
+        "res.mobile_confirm": "CONFIRMER LE TEMPS",
         "res.quantity.words_label": "Mots",
         "res.quantity.seconds_label": "Secondes",
         "res.quantity.max": "MAX {max}",
@@ -520,6 +540,9 @@ function aplicarIdiomaDOMJuego1P() {
     }
     if (typeof actualizarBotonesSilencioJuego === "function") {
         actualizarBotonesSilencioJuego();
+    }
+    if (typeof actualizarEstadoMenuAccionesPartida1P === "function") {
+        actualizarEstadoMenuAccionesPartida1P();
     }
     if (typeof actualizarTextosCargaEscritxr === "function") {
         actualizarTextosCargaEscritxr();
@@ -956,6 +979,81 @@ const contenedor_botones_dashboard_1p = document.querySelector("body.page-player
 const cabecera_dashboard_1p = document.querySelector("body.page-players .cabecera");
 const footer_legal_dashboard_1p = document.getElementById("footer_legal");
 let observador_columnas_botones_dashboard_1p = null;
+let acciones_partida_desplegadas_1p = false;
+
+function esVisibleUIJuego1P(elemento) {
+    if (!elemento) return false;
+    if (typeof window.getComputedStyle !== "function") {
+        return elemento.style.display !== "none" && elemento.style.visibility !== "hidden";
+    }
+    const estilo = window.getComputedStyle(elemento);
+    return estilo.display !== "none" && estilo.visibility !== "hidden";
+}
+
+function hayMenuResurreccionVisible1P() {
+    return esVisibleUIJuego1P(getEl("mainMenu")) || esVisibleUIJuego1P(getEl("quantityMenu"));
+}
+
+function esVistaPartidaConMenuAcciones1P() {
+    const body = document.body;
+    if (!body) return false;
+    if (body.classList.contains("ui-dashboard-only") || body.classList.contains("modo-opciones")) {
+        return false;
+    }
+    if (hayMenuResurreccionVisible1P()) {
+        return false;
+    }
+    return true;
+}
+
+function actualizarTextoToggleAccionesPartida1P() {
+    if (!partidaAccionesToggle) return;
+    const abierto = Boolean(acciones_partida_desplegadas_1p);
+    const texto = abierto
+        ? tJuego1P("ui.actions_hide", {}, "\u25B4 OCULTAR ACCIONES")
+        : tJuego1P("ui.actions_show", {}, "\u25BE ACCIONES");
+    partidaAccionesToggle.textContent = texto;
+    partidaAccionesToggle.setAttribute("aria-expanded", abierto ? "true" : "false");
+    partidaAccionesToggle.setAttribute("aria-label", texto);
+}
+
+function actualizarEstadoMenuAccionesPartida1P() {
+    const body = document.body;
+    const mostrar = esVistaPartidaConMenuAcciones1P() && contarBotonesVisiblesDashboard1P() > 0;
+    if (!mostrar) {
+        acciones_partida_desplegadas_1p = false;
+    }
+    if (partidaAccionesToggleWrap) {
+        partidaAccionesToggleWrap.hidden = !mostrar;
+    }
+    if (body) {
+        body.classList.toggle("partida-ui-activa", mostrar);
+        body.classList.toggle("partida-acciones-desplegadas", mostrar && acciones_partida_desplegadas_1p);
+    }
+    actualizarTextoToggleAccionesPartida1P();
+}
+
+function setAccionesPartidaDesplegadas1P(desplegadas) {
+    acciones_partida_desplegadas_1p = Boolean(desplegadas);
+    actualizarEstadoMenuAccionesPartida1P();
+    programarAjusteViewportEscritora();
+}
+
+function toggleAccionesPartida1P() {
+    if (!esVistaPartidaConMenuAcciones1P()) return;
+    setAccionesPartidaDesplegadas1P(!acciones_partida_desplegadas_1p);
+}
+
+window.setAccionesPartidaDesplegadas1P = setAccionesPartidaDesplegadas1P;
+window.actualizarEstadoMenuAccionesPartida1P = actualizarEstadoMenuAccionesPartida1P;
+
+if (partidaAccionesToggle) {
+    partidaAccionesToggle.addEventListener("click", (evento) => {
+        evento.preventDefault();
+        evento.stopPropagation();
+        toggleAccionesPartida1P();
+    });
+}
 
 function contarBotonesVisiblesDashboard1P() {
     if (!contenedor_botones_dashboard_1p || typeof window.getComputedStyle !== "function") return 0;
@@ -1028,6 +1126,7 @@ function actualizarColumnasBotonesDashboard1P() {
         contenedor_botones_dashboard_1p.dataset.botonesVisibles = visiblesTexto;
     }
     actualizarCentroVerticalDashboard1P();
+    actualizarEstadoMenuAccionesPartida1P();
 }
 
 function iniciarObservadorColumnasBotonesDashboard1P() {
@@ -3714,6 +3813,7 @@ function count(data){
 function resucitar(){
     terminado = false;
     desactivar_borrar = false;
+    setAccionesPartidaDesplegadas1P(false);
     if (logo) logo.style.display = "none"; 
     if (neon) neon.style.display = "none"; 
     tiempo.innerHTML = "";
@@ -3810,6 +3910,7 @@ function inicio() {
         }
     }
     inicio_en_progreso_1p = true;
+    setAccionesPartidaDesplegadas1P(false);
     aplicarAtributos();
     // En partida nueva, siempre arrancar con texto vacío.
     texto_guardado = "";
@@ -4018,6 +4119,9 @@ function ocultarMenuResurreccion() {
     document.removeEventListener("keydown", manejadorTeclas);
     clearTimeout(timeoutID_menu);
     timeoutID_menu = null;
+    if (typeof actualizarEstadoMenuAccionesPartida1P === "function") {
+        actualizarEstadoMenuAccionesPartida1P();
+    }
 }
 
 function prepararMenuResurreccionPorTiempo() {
@@ -4172,6 +4276,7 @@ function addSeconds(secs) {
 // Resetea el tablero de juego.
 function limpiar(borrar){
     inicio_en_progreso_1p = false;
+    setAccionesPartidaDesplegadas1P(false);
     setPartidaActivaCursorPluma(false);
     setModoDashboardSolo(true);
     limpiarEstadoGameOverBarraVida();
@@ -4475,6 +4580,53 @@ function frase_final() {
         `;
       }
 
+      function cambiarCantidadResurreccion(deltaPalabras) {
+        if (!Number.isFinite(deltaPalabras) || deltaPalabras === 0) return;
+        if (deltaPalabras > 0) {
+          const maxPalabras = obtenerMaxPalabrasResucitar();
+          let esLimite = false;
+          if (palabras < maxPalabras) {
+            palabras++;
+            actualizarTextoCantidad();
+            esLimite = palabras >= maxPalabras;
+          } else {
+            esLimite = true;
+          }
+          activarIndicadorConversor('up', esLimite);
+          return;
+        }
+
+        let esLimite = false;
+        if (palabras > 1) {
+          palabras--;
+          actualizarTextoCantidad();
+          esLimite = palabras <= 1;
+        } else {
+          esLimite = true;
+        }
+        activarIndicadorConversor('down', esLimite);
+      }
+
+      function confirmarResurreccionActual() {
+        if (modo_actual === "frase final") {
+          finalizarSinResurreccion();
+          return;
+        }
+        const segundosResurreccion = palabras * PALABRAS_A_SEGUNDOS;
+        if (typeof socket !== "undefined" && socket && typeof socket.emit === "function") {
+          socket.emit("resucitar", {player: player, secs: segundosResurreccion});
+        }
+
+        console.log("texto_guardado", palabras);
+        console.log("texto_guardado", texto_guardado);
+
+        texto_guardado = recortarUltimasPalabras(texto_guardado, palabras);
+
+        console.log("texto_guardado", texto_guardado);
+
+        reanudarTrasResurreccion(segundosResurreccion);
+      }
+
       function activarIndicadorConversor(direccion, esLimite) {
         const flecha = direccion === 'up'
           ? document.getElementById('resucitarArrowUp')
@@ -4540,6 +4692,9 @@ function frase_final() {
         quantityMenuIndex = 0;
         actualizarTextoCantidad();
         actualizarSeleccionQuantityMenu();
+        if (typeof actualizarEstadoMenuAccionesPartida1P === "function") {
+          actualizarEstadoMenuAccionesPartida1P();
+        }
       }
   
       function mostrarMenuPrincipal() {
@@ -4606,6 +4761,27 @@ animarCSSJuego1P("#quantityMenu", "flash");
 
         reanudarTrasResurreccion(segundosResurreccion);
       });
+
+      if (btnResucitarMenosTouch) {
+        btnResucitarMenosTouch.addEventListener('click', (evento) => {
+          evento.stopPropagation();
+          cambiarCantidadResurreccion(-1);
+        });
+      }
+
+      if (btnResucitarMasTouch) {
+        btnResucitarMasTouch.addEventListener('click', (evento) => {
+          evento.stopPropagation();
+          cambiarCantidadResurreccion(1);
+        });
+      }
+
+      if (btnConfirmarTouch) {
+        btnConfirmarTouch.addEventListener('click', (evento) => {
+          evento.stopPropagation();
+          btnConfirmar.click();
+        });
+      }
   
       /*************************************************************
         EVENTO DE TECLAS: FLECHAS Y ENTER
@@ -5916,6 +6092,7 @@ function limpieza(){
 
 function limpieza_final(){
     inicio_en_progreso_1p = false;
+    setAccionesPartidaDesplegadas1P(false);
     limpiarEstadoGameOverBarraVida();
     animarCSSJuego1P(".botones", "backOutLeft").then((message) => {
         btnOpciones.style.display = "";
