@@ -405,6 +405,7 @@ let puntos = getEl("puntos");
 let feedback = getEl("feedback1");
 let alineador = getEl("alineador1");
 let musas = getEl("musas");
+let musa_regalo_estado = getEl("musa_regalo_estado");
   
 let palabra = getEl("palabra");
 let definicion = getEl("definicion");
@@ -701,6 +702,54 @@ function actualizarMusasMarcador(valor, animar = true) {
     if (animar && siguiente !== previo) {
         destacarMarcadorEscritoraHit(musas);
     }
+}
+
+function obtenerEstadoRegaloBanderaEscritora(payload = {}) {
+    const equipoLocal = Number(player);
+    if (equipoLocal !== 1 && equipoLocal !== 2) return null;
+    const equipos = payload && payload.equipos;
+    if (!equipos || typeof equipos !== "object") return null;
+    return equipos[equipoLocal] || null;
+}
+
+function animarChipRegaloMusaEscritora() {
+    if (!musa_regalo_estado) return;
+    musa_regalo_estado.classList.remove("is-award");
+    void musa_regalo_estado.offsetWidth;
+    musa_regalo_estado.classList.add("is-award");
+    setTimeout(() => {
+        if (musa_regalo_estado) {
+            musa_regalo_estado.classList.remove("is-award");
+        }
+    }, 720);
+}
+
+function actualizarEstadoRegaloBanderaEscritora(payload = {}) {
+    if (!musa_regalo_estado) return;
+    const estado = obtenerEstadoRegaloBanderaEscritora(payload);
+    if (!estado || !estado.visible) {
+        musa_regalo_estado.hidden = true;
+        musa_regalo_estado.textContent = "";
+        return;
+    }
+    const objetivo = Math.max(1, Number(estado.objetivo) || 1);
+    const progreso = Math.max(0, Math.min(objetivo, Number(estado.progreso) || 0));
+    const regaloSegs = Math.max(1, Number(estado.regalo_secs) || 1);
+    const cooldownMs = Math.max(0, Number(estado.cooldown_ms) || 0);
+    musa_regalo_estado.hidden = false;
+    musa_regalo_estado.textContent = cooldownMs > 0 && progreso === 0
+        ? `REGALO +${regaloSegs}S | RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
+        : `REGALO +${regaloSegs}S | ${progreso}/${objetivo}`;
+}
+
+function mostrarFeedbackRegaloBanderaEscritora(data = {}) {
+    if (Number(data.player) !== Number(player)) return;
+    const secs = Math.max(1, Math.abs(Number(data.secs) || 0));
+    mostrarFeedbackFlotanteEscritora(`+${secs} SEG${secs === 1 ? "" : "S"} MUSAS`, {
+        color: color_positivo,
+        tipo: "ganar_tiempo"
+    });
+    animarChipRegaloMusaEscritora();
 }
 
 function obtenerPalabrasMarcadorEscritora() {
@@ -1655,6 +1704,15 @@ function rangoIntersecaPalabraBendita(rango) {
     return false;
 }
 
+function obtenerNodoProtegidoEnRango(rango) {
+    if (!texto || !rango) return null;
+    const spans = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA);
+    for (const span of spans) {
+        if (rango.intersectsNode(span)) return span;
+    }
+    return null;
+}
+
 function rangoIntersecaPalabraMarcada(rango) {
     if (!texto || !rango) return false;
     const spans = texto.querySelectorAll(SELECTOR_PALABRA_MARCADA);
@@ -1684,6 +1742,28 @@ function hayPalabraBenditaAdyacente(sel, direccion) {
         objetivo = node.childNodes[indice];
     }
     return Boolean(nodoEnPalabraBendita(objetivo));
+}
+
+function obtenerNodoProtegidoAdyacente(sel, direccion) {
+    if (!sel || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return obtenerNodoProtegidoEnRango(range);
+    const node = range.startContainer;
+    const offset = range.startOffset;
+    if (nodoEnPalabraBendita(node)) return nodoEnPalabraBendita(node);
+    let objetivo = null;
+    if (node.nodeType === Node.TEXT_NODE) {
+        if (direccion === "backward" && offset === 0) {
+            objetivo = node.previousSibling || node.parentNode?.previousSibling;
+        }
+        if (direccion === "forward" && offset === node.textContent.length) {
+            objetivo = node.nextSibling || node.parentNode?.nextSibling;
+        }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const indice = direccion === "backward" ? offset - 1 : offset;
+        objetivo = node.childNodes[indice];
+    }
+    return nodoEnPalabraBendita(objetivo);
 }
 
 function obtenerRangoPorOffsets(contenedor, inicio, fin) {
@@ -1799,6 +1879,62 @@ function caretAfectaPalabraBendita(direccion) {
         if (targetOffset >= inicio && targetOffset < fin) return true;
     }
     return false;
+}
+
+function obtenerNodoProtegidoAfectadoPorDireccion(direccion) {
+    if (!texto) return null;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return obtenerNodoProtegidoEnRango(range);
+    const directo = nodoEnPalabraBendita(range.startContainer);
+    if (directo) return directo;
+
+    const caretOffset = obtenerOffsetCaretEnTexto();
+    const targetOffset = direccion === "backward" ? caretOffset - 1 : caretOffset;
+    if (targetOffset >= 0) {
+        const spans = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA);
+        for (const span of spans) {
+            const inicio = obtenerOffsetInicioNodo(span);
+            const fin = inicio + (span.textContent || "").length;
+            if (targetOffset >= inicio && targetOffset < fin) return span;
+        }
+    }
+
+    const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
+    const spanPorRango = obtenerNodoProtegidoEnRango(rangoBorrado);
+    if (spanPorRango) return spanPorRango;
+
+    return obtenerNodoProtegidoAdyacente(sel, direccion);
+}
+
+function obtenerNodoProtegidoAfectadoPorEdicion(e) {
+    const rangosObjetivo = typeof e?.getTargetRanges === "function" ? e.getTargetRanges() : [];
+    if (rangosObjetivo && rangosObjetivo.length) {
+        for (const rango of rangosObjetivo) {
+            const span = obtenerNodoProtegidoEnRango(rango);
+            if (span) return span;
+        }
+    }
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        if (range.collapsed) {
+            const spanDirecto = nodoEnPalabraBendita(range.startContainer);
+            if (spanDirecto) return spanDirecto;
+        } else {
+            const spanSeleccionado = obtenerNodoProtegidoEnRango(range);
+            if (spanSeleccionado) return spanSeleccionado;
+        }
+    }
+
+    const tipo = String(e?.inputType || "");
+    if (tipo.startsWith("delete")) {
+        return obtenerNodoProtegidoAfectadoPorDireccion(tipo.includes("Forward") ? "forward" : "backward");
+    }
+
+    return null;
 }
 
 let snapshot_html_bendita = null;
@@ -1956,30 +2092,7 @@ function moverCursorPorPalabraBendita(direccion) {
 }
 
 function debeBloquearEdicionPalabraBendita(e) {
-    const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return false;
-    const range = sel.getRangeAt(0);
-    const rangosObjetivo = typeof e.getTargetRanges === "function" ? e.getTargetRanges() : [];
-    if (rangosObjetivo && rangosObjetivo.length) {
-        for (const rango of rangosObjetivo) {
-            if (rangoIntersecaPalabraBendita(rango)) return true;
-        }
-    }
-    if (range.collapsed) {
-        if (nodoEnPalabraBendita(range.startContainer)) return true;
-    } else if (rangoIntersecaPalabraBendita(range)) {
-        return true;
-    }
-    if (e.inputType && e.inputType.startsWith("delete")) {
-        const direccion = e.inputType.includes("Forward") ? "forward" : "backward";
-        if (caretAfectaPalabraBendita(direccion)) return true;
-        const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
-        if (rangoBorrado && rangoIntersecaPalabraBendita(rangoBorrado)) {
-            return true;
-        }
-        if (hayPalabraBenditaAdyacente(sel, direccion)) return true;
-    }
-    return false;
+    return Boolean(obtenerNodoProtegidoAfectadoPorEdicion(e));
 }
 
 function obtenerRangoPalabraActual() {
@@ -3080,6 +3193,7 @@ socket.on('connect', () => {
     socket.emit('registrar_escritor', player);
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');
+    socket.emit('pedir_estado_regalo_bandera_musas');
     socket.emit('calentamiento_cursor', { visible: false });
 });
 
@@ -3105,6 +3219,10 @@ socket.on('actualizar_contador_musas', contador_musas => {
     console.log("actualizar_contador_musas")
     const totalMusas = player == 1 ? contador_musas.escritxr1 : contador_musas.escritxr2;
     actualizarMusasMarcador(totalMusas);
+});
+
+socket.on('musa_regalo_bandera_estado', (payload = {}) => {
+    actualizarEstadoRegaloBanderaEscritora(payload);
 });
 
 // Recibe los datos del jugador 1 y los coloca.
@@ -3275,6 +3393,9 @@ socket.on("count", (data) => {
 socket.on("aumentar_tiempo_control", (data = {}) => {
     if (Number(data.player) !== Number(player)) return;
     activarFulgorCambioTiempoEscritora(data.secs);
+    if (data.origen === "musa_bandera") {
+        mostrarFeedbackRegaloBanderaEscritora(data);
+    }
 });
   
 function resucitar(){

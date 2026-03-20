@@ -902,6 +902,17 @@ body.musa-borde-fulgor::before {
     border-color: rgba(255, 170, 120, 0.78);
 }
 
+.musa-inspiracion-toast--regalo {
+    border-color: rgba(126, 255, 188, 0.88);
+    background:
+        linear-gradient(180deg, rgba(7, 34, 26, 0.96), rgba(8, 14, 22, 0.96));
+    color: #e9fff4;
+    text-shadow: 0 0 8px rgba(126, 255, 188, 0.6);
+    box-shadow:
+        0 0 28px rgba(67, 255, 173, 0.36),
+        inset 0 0 24px rgba(126, 255, 188, 0.14);
+}
+
 @keyframes musaToastEntrada {
     0% {
         opacity: 0;
@@ -1459,6 +1470,95 @@ th{
     justify-content: center;
     text-align: center;
     padding: 0 clamp(8px, 0.9vw, 12px);
+}
+
+.marcador-accion--bandera {
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(6px, 0.8vw, 10px);
+}
+
+.bandera-regalo-chip[hidden] {
+    display: none !important;
+}
+
+.bandera-regalo-chip {
+    width: 100%;
+    display: grid;
+    gap: clamp(4px, 0.55vw, 7px);
+    padding: clamp(7px, 0.8vw, 10px) clamp(10px, 1vw, 14px);
+    border-radius: clamp(8px, 0.9vw, 11px);
+    border: max(1px, 0.09vw) solid rgba(117, 239, 255, 0.45);
+    background:
+        linear-gradient(180deg, rgba(17, 34, 52, 0.92), rgba(8, 14, 22, 0.92));
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 1.1em rgba(59, 214, 255, 0.16);
+    text-align: center;
+}
+
+.bandera-regalo-chip__titulo,
+.bandera-regalo-chip__valor {
+    font-family: "Retro-gaming";
+    text-transform: uppercase;
+    line-height: 1.1;
+}
+
+.bandera-regalo-chip__titulo {
+    color: #c9faff;
+    font-size: clamp(8px, 0.74vw, 11px);
+    letter-spacing: 0.12em;
+}
+
+.bandera-regalo-chip__valor {
+    color: #f5fffb;
+    font-size: clamp(11px, 1vw, 14px);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 0.5em rgba(117, 239, 255, 0.24);
+}
+
+.bandera-regalo-chip__barra {
+    position: relative;
+    height: clamp(5px, 0.45vw, 7px);
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.bandera-regalo-chip__fill {
+    display: block;
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #58f7ff 0%, #94ffd7 100%);
+    box-shadow: 0 0 10px rgba(117, 239, 255, 0.34);
+    transition: width 180ms ease;
+}
+
+.bandera-regalo-chip.is-award {
+    animation: banderaRegaloPremio 640ms ease;
+}
+
+@keyframes banderaRegaloPremio {
+    0% {
+        transform: scale(0.98);
+        box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+            0 0 1.1em rgba(59, 214, 255, 0.16);
+    }
+    45% {
+        transform: scale(1.02);
+        box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+            0 0 1.8em rgba(107, 255, 177, 0.34);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+            0 0 1.1em rgba(59, 214, 255, 0.16);
+    }
 }
 
 .niveles{

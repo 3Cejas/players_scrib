@@ -3260,6 +3260,49 @@ function actualizarMusasMarcadorEquipo(elemento, valor, animar = true) {
     }
 }
 
+function obtenerChipRegaloMusaEspectador(equipo) {
+    if (Number(equipo) === 1) return musa_regalo_estado_j1;
+    if (Number(equipo) === 2) return musa_regalo_estado_j2;
+    return null;
+}
+
+function animarChipRegaloMusaEspectador(equipo) {
+    const chip = obtenerChipRegaloMusaEspectador(equipo);
+    if (!chip) return;
+    chip.classList.remove("is-award");
+    void chip.offsetWidth;
+    chip.classList.add("is-award");
+    setTimeout(() => {
+        if (chip) {
+            chip.classList.remove("is-award");
+        }
+    }, 720);
+}
+
+function actualizarChipRegaloMusaEspectador(equipo, estado = null) {
+    const chip = obtenerChipRegaloMusaEspectador(equipo);
+    if (!chip) return;
+    if (!estado || !estado.visible) {
+        chip.hidden = true;
+        chip.textContent = "";
+        return;
+    }
+    const objetivo = Math.max(1, Number(estado.objetivo) || 1);
+    const progreso = Math.max(0, Math.min(objetivo, Number(estado.progreso) || 0));
+    const regaloSegs = Math.max(1, Number(estado.regalo_secs) || 1);
+    const cooldownMs = Math.max(0, Number(estado.cooldown_ms) || 0);
+    chip.hidden = false;
+    chip.textContent = cooldownMs > 0 && progreso === 0
+        ? `REGALO +${regaloSegs}S | RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
+        : `REGALO +${regaloSegs}S | ${progreso}/${objetivo}`;
+}
+
+function actualizarEstadoRegaloBanderaEspectador(payload = {}) {
+    const equipos = payload && payload.equipos ? payload.equipos : {};
+    actualizarChipRegaloMusaEspectador(1, equipos[1] || null);
+    actualizarChipRegaloMusaEspectador(2, equipos[2] || null);
+}
+
 let focalizador1 = getEl("focalizador1");
 let focalizador2 = getEl("focalizador2");
 let focalizador_id = 1;
@@ -3301,6 +3344,8 @@ let cierre_definitivo_j1 = false;
 let cierre_definitivo_j2 = false;
 const color_negativo = "red";
 const color_positivo = "greenyellow";
+let musa_regalo_estado_j1 = getEl("musa_regalo_estado_j1");
+let musa_regalo_estado_j2 = getEl("musa_regalo_estado_j2");
 let TIEMPO_MODIFICADOR;
 let frase_final_j1;
 let frase_final_j2;
@@ -4394,6 +4439,7 @@ socket.on('connect', () => {
     socket.emit('registrar_espectador');
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');
+    socket.emit('pedir_estado_regalo_bandera_musas');
     socket.emit('pedir_vista_espectador_modo');
     socket.emit('pedir_stats_live');
     socket.emit('pedir_nube_inspiracion');
@@ -4416,6 +4462,22 @@ socket.on('musa_corazon', (data) => {
     const equipo = data && Number(data.equipo);
     if (equipo !== 1 && equipo !== 2) return;
     lanzarCorazonEspectador(equipo);
+});
+
+socket.on('musa_regalo_bandera_estado', (payload = {}) => {
+    actualizarEstadoRegaloBanderaEspectador(payload);
+});
+
+socket.on('aumentar_tiempo_control', (payload = {}) => {
+    if (payload.origen !== 'musa_bandera') return;
+    const equipo = Number(payload.player);
+    if (equipo !== 1 && equipo !== 2) return;
+    const secs = Math.max(1, Math.abs(Number(payload.secs) || 0));
+    mostrarFeedbackFlotanteEspectador(equipo, `+${secs} SEG${secs === 1 ? '' : 'S'} MUSAS`, {
+        tipo: 'positivo'
+    });
+    activarFulgorLadoEspectador(equipo, 'positivo');
+    animarChipRegaloMusaEspectador(equipo);
 });
 
 socket.on('temporizador_gigante_inicio', (data) => {

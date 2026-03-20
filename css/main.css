@@ -1161,6 +1161,8 @@ body,
 
     gap: 0.9rem;
 
+    contain: layout paint style;
+
 }
 
 .output-materials-heading {
@@ -1205,6 +1207,8 @@ body,
 
     cursor: zoom-in;
 
+    contain: layout paint style;
+
 }
 
 .output-gallery-item:hover,
@@ -1237,6 +1241,33 @@ body,
 
     min-width: 0;
 
+    aspect-ratio: 4 / 3;
+
+}
+
+.output-gallery--album .output-gallery-image,
+.output-gallery--album .output-gallery-video {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    object-position: center center;
+
+    background: transparent;
+
+}
+
+.output-gallery--album .output-gallery-image.output-gallery-image--portrait {
+
+    object-fit: cover;
+
+    object-position: center 65%;
+
+    background: transparent;
+
 }
 
 .output-gallery-video-card {
@@ -1254,6 +1285,8 @@ body,
       rgba(4, 9, 18, 0.82);
 
     box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.3);
+
+    contain: layout paint style;
 
 }
 
@@ -1322,6 +1355,8 @@ body,
       rgba(4, 9, 18, 0.82);
 
     box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.3);
+
+    contain: layout paint style;
 
 }
 
@@ -1492,6 +1527,8 @@ body,
 
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 
+    contain: layout paint style;
+
 }
 
 .output-reading-card::before {
@@ -1567,6 +1604,8 @@ body,
 
     margin-top: 0.4rem;
 
+    contain: layout paint style;
+
 }
 
 .showcase-copy {
@@ -1630,6 +1669,8 @@ body,
     gap: 0.55rem;
 
     margin: 0;
+
+    contain: layout paint style;
 
 }
 
@@ -2011,6 +2052,8 @@ body,
 
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 
+    contain: layout paint style;
+
 }
 
 .article-card:hover,
@@ -2125,6 +2168,8 @@ body,
     background: rgba(4, 9, 18, 0.72);
 
     box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.22);
+
+    contain: layout paint style;
 
 }
 

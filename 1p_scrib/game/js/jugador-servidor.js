@@ -1,4 +1,4 @@
-let tiempo_inicial = new Date();
+﻿let tiempo_inicial = new Date();
 let es_pausa = false;
 let borrado_cambiado = false;
 let duracion;
@@ -5444,6 +5444,15 @@ function rangoIntersecaPalabraBendita(rango) {
     return false;
 }
 
+function obtenerNodoProtegidoEnRango(rango) {
+    if (!texto || !rango) return null;
+    const spans = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA);
+    for (const span of spans) {
+        if (rango.intersectsNode(span)) return span;
+    }
+    return null;
+}
+
 function hayPalabraBenditaAdyacente(sel, direccion) {
     if (!sel || !sel.rangeCount) return false;
     const range = sel.getRangeAt(0);
@@ -5464,6 +5473,28 @@ function hayPalabraBenditaAdyacente(sel, direccion) {
         objetivo = node.childNodes[indice];
     }
     return Boolean(nodoEnPalabraBendita(objetivo));
+}
+
+function obtenerNodoProtegidoAdyacente(sel, direccion) {
+    if (!sel || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return obtenerNodoProtegidoEnRango(range);
+    const node = range.startContainer;
+    const offset = range.startOffset;
+    if (nodoEnPalabraBendita(node)) return nodoEnPalabraBendita(node);
+    let objetivo = null;
+    if (node.nodeType === Node.TEXT_NODE) {
+        if (direccion === "backward" && offset === 0) {
+            objetivo = node.previousSibling || node.parentNode?.previousSibling;
+        }
+        if (direccion === "forward" && offset === node.textContent.length) {
+            objetivo = node.nextSibling || node.parentNode?.nextSibling;
+        }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const indice = direccion === "backward" ? offset - 1 : offset;
+        objetivo = node.childNodes[indice];
+    }
+    return nodoEnPalabraBendita(objetivo);
 }
 
 function obtenerRangoBorradoCaracter(direccion) {
@@ -5508,6 +5539,62 @@ function caretAfectaPalabraBendita(direccion) {
         if (targetOffset >= inicio && targetOffset < fin) return true;
     }
     return false;
+}
+
+function obtenerNodoProtegidoAfectadoPorDireccion(direccion) {
+    if (!texto) return null;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return obtenerNodoProtegidoEnRango(range);
+    const directo = nodoEnPalabraBendita(range.startContainer);
+    if (directo) return directo;
+
+    const caretOffset = obtenerOffsetCaretEnTexto();
+    const targetOffset = direccion === "backward" ? caretOffset - 1 : caretOffset;
+    if (targetOffset >= 0) {
+        const spans = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA);
+        for (const span of spans) {
+            const inicio = obtenerOffsetInicioNodo(span);
+            const fin = inicio + (span.textContent || "").length;
+            if (targetOffset >= inicio && targetOffset < fin) return span;
+        }
+    }
+
+    const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
+    const spanPorRango = obtenerNodoProtegidoEnRango(rangoBorrado);
+    if (spanPorRango) return spanPorRango;
+
+    return obtenerNodoProtegidoAdyacente(sel, direccion);
+}
+
+function obtenerNodoProtegidoAfectadoPorEdicion(e) {
+    const rangosObjetivo = typeof e?.getTargetRanges === "function" ? e.getTargetRanges() : [];
+    if (rangosObjetivo && rangosObjetivo.length) {
+        for (const rango of rangosObjetivo) {
+            const span = obtenerNodoProtegidoEnRango(rango);
+            if (span) return span;
+        }
+    }
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        if (range.collapsed) {
+            const spanDirecto = nodoEnPalabraBendita(range.startContainer);
+            if (spanDirecto) return spanDirecto;
+        } else {
+            const spanSeleccionado = obtenerNodoProtegidoEnRango(range);
+            if (spanSeleccionado) return spanSeleccionado;
+        }
+    }
+
+    const tipo = String(e?.inputType || "");
+    if (tipo.startsWith("delete")) {
+        return obtenerNodoProtegidoAfectadoPorDireccion(tipo.includes("Forward") ? "forward" : "backward");
+    }
+
+    return null;
 }
 
 let snapshot_html_bendita = null;
@@ -5665,30 +5752,7 @@ function moverCursorPorPalabraBendita(direccion) {
 }
 
 function debeBloquearEdicionPalabraBendita(e) {
-    const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return false;
-    const range = sel.getRangeAt(0);
-    const rangosObjetivo = typeof e.getTargetRanges === "function" ? e.getTargetRanges() : [];
-    if (rangosObjetivo && rangosObjetivo.length) {
-        for (const rango of rangosObjetivo) {
-            if (rangoIntersecaPalabraBendita(rango)) return true;
-        }
-    }
-    if (range.collapsed) {
-        if (nodoEnPalabraBendita(range.startContainer)) return true;
-    } else if (rangoIntersecaPalabraBendita(range)) {
-        return true;
-    }
-    if (e.inputType && e.inputType.startsWith("delete")) {
-        const direccion = e.inputType.includes("Forward") ? "forward" : "backward";
-        if (caretAfectaPalabraBendita(direccion)) return true;
-        const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
-        if (rangoBorrado && rangoIntersecaPalabraBendita(rangoBorrado)) {
-            return true;
-        }
-        if (hayPalabraBenditaAdyacente(sel, direccion)) return true;
-    }
-    return false;
+    return Boolean(obtenerNodoProtegidoAfectadoPorEdicion(e));
 }
 
 function obtenerRangoPorOffsets(contenedor, inicio, fin) {
@@ -6369,31 +6433,17 @@ function palabras_musas(e) {
 // Esta función se llama cuando se produce un input (antes de que se modifique el contenido)
 // y se utiliza para procesar tanto inserciones como borrados.
 function modo_letra_bendita(e) {
-    // Si el evento ya ha sido procesado, salimos
     if (e.defaultPrevented) {
         console.log('Evento ya procesado');
         return;
     }
-
-    // Obtenemos la selección y el rango actual en el documento
     let sel = window.getSelection();
     if (!sel.rangeCount) return;
-    let range = sel.getRangeAt(0);
     let node = sel.anchorNode;
-
-    // Comprobamos el tipo de acción que se va a realizar según la propiedad inputType
-    // Para borrado (retroceso)
-    if (e.inputType === "deleteContentBackward") {
-        console.log('Backspace detectado');
-        console.log('Node:', node);
-        console.log('Parent Node:', node ? node.parentNode : null);
-        console.log('Parent Node class:', node && node.parentNode ? node.parentNode.className : 'No parent node');
-        console.log('Focus Offset:', sel.focusOffset);
-
-        // Si se cumple la condición de que el nodo pertenece a un span con la clase "letra-verde"
-        // y el cursor está al inicio, prevenimos la acción por defecto y ejecutamos nuestra lógica
-        if (node && node.parentNode && node.parentNode.className === 'letra-verde' && sel.focusOffset === 0) {
-            e.preventDefault(); // Prevenir el borrado automático
+    if (e.inputType && e.inputType.startsWith("delete")) {
+        const nodoProtegido = obtenerNodoProtegidoAfectadoPorEdicion(e);
+        if (nodoProtegido && nodoProtegido.classList.contains(CLASE_LETRA_BENDITA_LOCAL)) {
+            e.preventDefault();
             addSeconds(-1);
             addSeconds(-1);
             mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(1, { signo: "-" }), {
@@ -6401,44 +6451,24 @@ function modo_letra_bendita(e) {
                 tipo: "letra_bendita"
             });
         }
-        return; // Salir si se ha procesado el borrado
+        return;
     }
-
-    // Para inserción de texto
     if (e.inputType === "insertText") {
-        // e.data contiene el carácter que se va a insertar
         let letra = obtenerCaracterEntradaEvento(e);
-        // Si se inserta un único carácter, lo procesamos
         if (letra && letra.length === 1) {
-            // Comprobamos si la letra corresponde a la "letra bendita"
             if ((toNormalForm(letra) === letra_bendita || toNormalForm(letra) === letra_bendita.toUpperCase()) ||
-                (letra_bendita === "ñ" && (letra === letra_bendita || letra === letra_bendita.toUpperCase()))) {
-                // Prevenimos la acción por defecto para controlar la inserción manualmente
+                (letra_bendita === "\u00f1" && (letra === letra_bendita || letra === letra_bendita.toUpperCase()))) {
                 e.preventDefault();
                 console.log('Se procesa letra bendita');
-
-                // Creamos un nodo de texto con la letra
                 insertarSpanProtegidoEnCaret(letra, CLASE_LETRA_BENDITA_LOCAL);
-                // Creamos un elemento span para darle estilo (clase "letra-verde")
-
-                // Creamos nodos de texto vacíos para facilitar el posicionamiento
-
-                // Insertamos los nodos en la posición actual del cursor
-
-                // Ajustamos el rango para posicionar el cursor adecuadamente
                 texto.dispatchEvent(new Event("input", { bubbles: true }));
-
-                // Actualizamos el tiempo y la visualización de puntos según la lógica del juego
                 actualizarPuntosMarcador(puntos_);
                 console.log(puntos);
-
                 addSeconds(+2);
                 mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(2, { signo: "+" }), {
                     color: color_positivo,
                     tipo: "letra_bendita"
                 });
-
-                // Aquí se podría enviar feedback vía Socket.io
             } else {
                 const nodoProtegido = nodoEnPalabraBendita(node);
                 if (nodoProtegido && nodoProtegido.classList.contains(CLASE_LETRA_BENDITA_LOCAL)) {
@@ -6453,7 +6483,6 @@ function modo_letra_bendita(e) {
             }
         }
     }
-    // Se pueden añadir otros casos según se necesiten para otros tipos de input (por ejemplo, pegado de texto).
 }
 function nueva_letra_bendita(){
     indice_letra_bendita = Math.floor(Math.random() * letras_benditas_restantes.length);
@@ -8435,3 +8464,5 @@ function descargar_textos() {
         downloadTxtFile(nombrePdf + '.txt', nombrePdf + "\n" + textoPlano);
     }
 }
+
+

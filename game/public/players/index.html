@@ -8,7 +8,7 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260319w">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260320b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="../../config.js"></script>
@@ -109,6 +109,11 @@
                         </div>
                         <div class="meta-item meta-bottom-right marcador-accion marcador-accion--bandera">
                             <button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">&#x1F3F3;&#xFE0F;&#x200D;&#x1F308; BANDERA</button>
+                            <div id="bandera_regalo_estado" class="bandera-regalo-chip" hidden aria-live="polite">
+                                <span id="bandera_regalo_titulo" class="bandera-regalo-chip__titulo">REGALO +1S</span>
+                                <span id="bandera_regalo_valor" class="bandera-regalo-chip__valor">0/10</span>
+                                <span class="bandera-regalo-chip__barra"><span id="bandera_regalo_fill" class="bandera-regalo-chip__fill"></span></span>
+                            </div>
                         </div>
                     </div>
                     <div id="votacion_ventaja_inline" class="votacion-ventaja-inline" aria-live="polite">
@@ -251,5 +256,5 @@
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
 <script src="../../js/i18n.js?v=20260312b"></script>
-<script src="./js/jugador-servidor.js?v=20260319w"></script>
+<script src="./js/jugador-servidor.js?v=20260320b"></script>
 </html>

@@ -615,6 +615,26 @@ function log( text ) {
 
     };
 
+    var buildGalleryAssetPath = function (folderName, fileName) {
+
+        return "./img/gallery/" + encodeURIComponent(folderName) + "/" + encodeURIComponent(fileName);
+
+    };
+
+    var buildGalleryPreviewPath = function (folderName, fileName) {
+
+        var previewFileName = /\.[^.]+$/.test(fileName) ? fileName.replace(/\.[^.]+$/, ".webp") : fileName + ".webp";
+
+        return "./img/gallery_previews/" + encodeURIComponent(folderName) + "/" + encodeURIComponent(previewFileName);
+
+    };
+
+    var buildOptimizedImageMarkup = function (previewPath, fallbackPath, className, altText) {
+
+        return "<img class=\"" + className + "\" src=\"" + previewPath + "\" data-fallback-src=\"" + fallbackPath + "\" alt=\"" + escapeHTML(altText) + "\" loading=\"lazy\" decoding=\"async\" fetchpriority=\"low\">";
+
+    };
+
     var galleryEvents = [
         {
             title: "DÍA DE LA NIÑA Y LA MUJER EN LA CIENCIA",
@@ -1034,6 +1054,7 @@ function log( text ) {
 
         this.penCursor.style.left = clientX + "px";
         this.penCursor.style.top = clientY + "px";
+
         this.penCursor.classList.add("activa");
 
         if (isPressing) {
@@ -1157,6 +1178,89 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.bindOutputOptimizedMedia = function () {
+
+        if (this.output.dataset.optimizedMediaBound === "true") {
+
+            return;
+
+        }
+
+        this.output.dataset.optimizedMediaBound = "true";
+
+        this.output.addEventListener("error", function (event) {
+
+            var element = event.target;
+            var fallbackSrc;
+
+            if (!element || element.tagName !== "IMG") {
+
+                return;
+
+            }
+
+            fallbackSrc = element.getAttribute("data-fallback-src");
+
+            if (!fallbackSrc || element.getAttribute("src") === fallbackSrc) {
+
+                return;
+
+            }
+
+            element.setAttribute("src", fallbackSrc);
+            element.removeAttribute("data-fallback-src");
+
+        }, true);
+
+        this.output.addEventListener("load", function (event) {
+
+            var element = event.target;
+
+            if (!element || element.tagName !== "IMG" || !element.classList || !element.classList.contains("output-gallery-image")) {
+
+                return;
+
+            }
+
+            this.updateOutputGalleryImageOrientation(element);
+
+        }.bind(this), true);
+
+    };
+
+    Terminal.prototype.updateOutputGalleryImageOrientation = function (image) {
+
+        var isPortrait;
+
+        if (!image || !image.classList || !image.classList.contains("output-gallery-image")) {
+
+            return;
+
+        }
+
+        if (!image.naturalWidth || !image.naturalHeight) {
+
+            return;
+
+        }
+
+        isPortrait = image.naturalHeight > image.naturalWidth;
+
+        image.classList.toggle("output-gallery-image--portrait", isPortrait);
+        image.classList.toggle("output-gallery-image--landscape", !isPortrait);
+
+    };
+
+    Terminal.prototype.refreshOutputGalleryImageOrientation = function () {
+
+        this.output.querySelectorAll(".output-gallery-image").forEach(function (image) {
+
+            this.updateOutputGalleryImageOrientation(image);
+
+        }.bind(this));
+
+    };
+
 
 
     Terminal.prototype.init = function () {
@@ -1173,6 +1277,7 @@ function log( text ) {
 
         this.prepareSideNav();
         this.initPenCursor();
+        this.bindOutputOptimizedMedia();
 
         this.lock(); // NECESARIO PARA BLOQUEAR DESDE QUE LOS ELEMENTOS DEL SIDENAV HAN SIDO AÑADIDOS AHORA
 
@@ -1415,7 +1520,7 @@ function log( text ) {
             if (useYoutubeFallback) {
 
                 return "<a class=\"output-video-card output-video-card--fallback " + orientationClassName + "\" href=\"" + video.watchUrl + "\" target=\"_blank\" rel=\"noreferrer noopener\">" +
-                    "<span class=\"output-video-preview\"><img class=\"output-video-thumb\" src=\"https://i.ytimg.com/vi/" + video.videoId + "/hqdefault.jpg\" alt=\"" + escapeHTML(video.title) + "\" loading=\"lazy\" style=\"aspect-ratio: " + aspectRatio + ";\"></span>" +
+                    "<span class=\"output-video-preview\"><img class=\"output-video-thumb\" src=\"https://i.ytimg.com/vi/" + video.videoId + "/hqdefault.jpg\" alt=\"" + escapeHTML(video.title) + "\" loading=\"lazy\" decoding=\"async\" fetchpriority=\"low\" style=\"aspect-ratio: " + aspectRatio + ";\"></span>" +
                     "<span class=\"output-video-title\">" + escapeHTML(video.title) + "</span>" +
                 "</a>";
 
@@ -1492,7 +1597,8 @@ function log( text ) {
     Terminal.prototype.buildGalleryMediaMarkup = function (eventData, mediaItem, mediaIndex) {
 
         var folderName = eventData.folder || eventData.title;
-        var assetPath = "./img/gallery/" + encodeURIComponent(folderName) + "/" + encodeURIComponent(mediaItem.fileName);
+        var assetPath = buildGalleryAssetPath(folderName, mediaItem.fileName);
+        var previewPath = mediaItem.type === "image" ? buildGalleryPreviewPath(folderName, mediaItem.fileName) : assetPath;
         var caption = normalizeScribBrand(eventData.title + " - " + (mediaIndex + 1));
 
         if (mediaItem.type === "video") {
@@ -1500,7 +1606,7 @@ function log( text ) {
             var mimeType = /\.mov$/i.test(mediaItem.fileName) ? "video/quicktime" : "video/mp4";
 
             return "<article class=\"output-gallery-video-card\">" +
-                "<video class=\"output-gallery-video\" controls preload=\"metadata\" playsinline>" +
+                "<video class=\"output-gallery-video\" controls preload=\"none\" playsinline>" +
                     "<source src=\"" + assetPath + "\" type=\"" + mimeType + "\">" +
                 "</video>" +
                 "<span class=\"output-gallery-video-badge\">VIDEO</span>" +
@@ -1508,7 +1614,9 @@ function log( text ) {
 
         }
 
-        return "<a class=\"output-gallery-item\" href=\"" + assetPath + "\" data-caption=\"" + escapeHTML(caption) + "\"><img class=\"output-gallery-image\" src=\"" + assetPath + "\" alt=\"" + escapeHTML(caption) + "\" loading=\"lazy\"></a>";
+        return "<a class=\"output-gallery-item\" href=\"" + assetPath + "\" data-caption=\"" + escapeHTML(caption) + "\">" +
+            buildOptimizedImageMarkup(previewPath, assetPath, "output-gallery-image", caption) +
+        "</a>";
 
     };
 
@@ -1684,13 +1792,14 @@ function log( text ) {
 
     Terminal.prototype.buildSpectacleImageMarkup = function (folderName, fileName, caption, className) {
 
-        var assetPath = "./img/gallery/" + encodeURIComponent(folderName) + "/" + encodeURIComponent(fileName);
+        var assetPath = buildGalleryAssetPath(folderName, fileName);
+        var previewPath = buildGalleryPreviewPath(folderName, fileName);
         var normalizedCaption = normalizeScribBrand(caption);
         var figureClassName = className ? "showcase-figure " + className : "showcase-figure";
 
         return "<figure class=\"" + figureClassName + "\">" +
             "<a class=\"output-gallery-item showcase-figure__link\" href=\"" + assetPath + "\" data-caption=\"" + escapeHTML(normalizedCaption) + "\">" +
-                "<img class=\"output-gallery-image showcase-figure__image\" src=\"" + assetPath + "\" alt=\"" + escapeHTML(normalizedCaption) + "\" loading=\"lazy\">" +
+                buildOptimizedImageMarkup(previewPath, assetPath, "output-gallery-image showcase-figure__image", normalizedCaption) +
             "</a>" +
             "<figcaption class=\"showcase-figure__caption\">" + escapeHTML(normalizedCaption) + "</figcaption>" +
         "</figure>";
@@ -1749,7 +1858,7 @@ function log( text ) {
         return "<div class=\"article-mosaic\">" + articlePosts.slice().reverse().map(function (article) {
 
             return "<a class=\"article-card\" href=\"" + article.url + "\" target=\"_blank\" rel=\"noreferrer noopener\">" +
-                "<span class=\"article-card__media\"><img class=\"article-card__image\" src=\"" + article.image + "\" alt=\"" + escapeHTML(article.title) + "\" loading=\"lazy\"></span>" +
+                "<span class=\"article-card__media\"><img class=\"article-card__image\" src=\"" + article.image + "\" alt=\"" + escapeHTML(article.title) + "\" loading=\"lazy\" decoding=\"async\" fetchpriority=\"low\"></span>" +
                 "<span class=\"article-card__body\">" +
                     "<span class=\"article-card__date\">" + escapeHTML(article.dateLabel) + "</span>" +
                     "<span class=\"article-card__title\">" + escapeHTML(article.title) + "</span>" +
@@ -2112,6 +2221,7 @@ function log( text ) {
 
         this.output.innerHTML = html;
 
+        this.refreshOutputGalleryImageOrientation();
         this.bindOutputCommandLinks();
 
     };

@@ -274,6 +274,10 @@ let votando = false;
 const skill = getEl("skill")
 const skill_cancel = getEl("skill_cancel")
 const feedback_texto_editado = getEl("feedback_texto_editado")
+const bandera_regalo_estado = getEl("bandera_regalo_estado");
+const bandera_regalo_titulo = getEl("bandera_regalo_titulo");
+const bandera_regalo_valor = getEl("bandera_regalo_valor");
+const bandera_regalo_fill = getEl("bandera_regalo_fill");
 let votacion_ventaja_inline = getEl("votacion_ventaja_inline");
 let votacion_ventaja_pie_inline = getEl("votacion_ventaja_pie_inline");
 let votacion_ventaja_legend_inline = getEl("votacion_ventaja_legend_inline");
@@ -363,6 +367,7 @@ let timeout_fulgor_musa = null;
 let timeout_toast_musa = null;
 let timeout_nombre_musa_destacado = null;
 let timeout_puntos_musa_destacado = null;
+let timeout_bandera_regalo_anim = null;
 let toast_inspiracion_musa = null;
 
 function normalizarNombreMusaEvento(valor) {
@@ -463,7 +468,7 @@ function mostrarToastInspiracionMusa(payload = {}) {
         : "";
 
     const toast = obtenerToastInspiracionMusa();
-    toast.classList.remove("musa-inspiracion-toast--propia", "musa-inspiracion-toast--ajena");
+    toast.classList.remove("musa-inspiracion-toast--propia", "musa-inspiracion-toast--ajena", "musa-inspiracion-toast--regalo");
     toast.classList.add(esPalabraPropia ? "musa-inspiracion-toast--propia" : "musa-inspiracion-toast--ajena");
 
     if (esPalabraPropia) {
@@ -484,6 +489,75 @@ function mostrarToastInspiracionMusa(payload = {}) {
     timeout_toast_musa = setTimeout(() => {
         toast.classList.remove("activa");
     }, DURACION_TOAST_INSPIRACION_MS);
+}
+
+function obtenerEstadoRegaloBanderaMusaLocal(payload = {}) {
+    const equipoLocal = Number(player);
+    if (equipoLocal !== 1 && equipoLocal !== 2) return null;
+    const equipos = payload && payload.equipos;
+    if (!equipos || typeof equipos !== "object") return null;
+    return equipos[equipoLocal] || null;
+}
+
+function animarEstadoRegaloBanderaMusa() {
+    if (!bandera_regalo_estado) return;
+    bandera_regalo_estado.classList.remove("is-award");
+    void bandera_regalo_estado.offsetWidth;
+    bandera_regalo_estado.classList.add("is-award");
+    if (timeout_bandera_regalo_anim) {
+        clearTimeout(timeout_bandera_regalo_anim);
+    }
+    timeout_bandera_regalo_anim = setTimeout(() => {
+        if (bandera_regalo_estado) {
+            bandera_regalo_estado.classList.remove("is-award");
+        }
+    }, 720);
+}
+
+function actualizarEstadoRegaloBanderaMusa(payload = {}) {
+    if (!bandera_regalo_estado || !bandera_regalo_titulo || !bandera_regalo_valor || !bandera_regalo_fill) {
+        return;
+    }
+    const estado = obtenerEstadoRegaloBanderaMusaLocal(payload);
+    if (!estado || !estado.visible) {
+        bandera_regalo_estado.hidden = true;
+        bandera_regalo_fill.style.width = "0%";
+        return;
+    }
+
+    const musasActivas = Math.max(0, Number(estado.musas) || 0);
+    const objetivo = Math.max(1, Number(estado.objetivo) || 1);
+    const progreso = Math.max(0, Math.min(objetivo, Number(estado.progreso) || 0));
+    const regaloSegs = Math.max(1, Number(estado.regalo_secs) || 1);
+    const cooldownMs = Math.max(0, Number(estado.cooldown_ms) || 0);
+
+    bandera_regalo_estado.hidden = false;
+    bandera_regalo_titulo.textContent = `${musasActivas} MUSA${musasActivas === 1 ? "" : "S"} | +${regaloSegs}S`;
+    bandera_regalo_valor.textContent = cooldownMs > 0 && progreso === 0
+        ? `RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
+        : `${progreso}/${objetivo}`;
+    bandera_regalo_fill.style.width = `${Math.max(0, Math.min(100, Number(estado.progreso_pct) || 0))}%`;
+    bandera_regalo_estado.setAttribute("aria-label", `Regalo de bandera: ${progreso} de ${objetivo}, +${regaloSegs} segundos.`);
+}
+
+function mostrarToastRegaloBanderaMusa(payload = {}) {
+    if (Number(payload && payload.player) !== Number(player)) return;
+    const secs = Math.max(1, Math.abs(Number(payload && payload.secs) || 0));
+    const nombreEscritxr = obtenerNombreEscritxrInspiracion({ escritxr: player });
+    const toast = obtenerToastInspiracionMusa();
+    toast.classList.remove("musa-inspiracion-toast--propia", "musa-inspiracion-toast--ajena");
+    toast.classList.add("musa-inspiracion-toast--regalo");
+    toast.textContent = `+${secs}S PARA ${nombreEscritxr}`;
+    toast.classList.remove("activa");
+    void toast.offsetWidth;
+    toast.classList.add("activa");
+    if (timeout_toast_musa) {
+        clearTimeout(timeout_toast_musa);
+    }
+    timeout_toast_musa = setTimeout(() => {
+        toast.classList.remove("activa");
+    }, DURACION_TOAST_INSPIRACION_MS);
+    animarEstadoRegaloBanderaMusa();
 }
 const VENTAJAS_PUTADAS = [
     { emoji: EMOJI_TORTUGA, descripcion: `${EMOJI_TORTUGA} El teclado del contrincante ira mas lento.` },
@@ -2450,6 +2524,10 @@ socket.on('activar_banderas_musas', (payload = {}) => {
     aplicarEstadoBanderasMusaDesdeServidor(estadoNormalizado);
 });
 
+socket.on('musa_regalo_bandera_estado', (payload = {}) => {
+    actualizarEstadoRegaloBanderaMusa(payload);
+});
+
 socket.on('feedback_musas_estado', (payload = {}) => {
     redirigirMusaAFeedback(payload);
 });
@@ -2460,6 +2538,7 @@ socket.on('connect', () => {
     socket.emit('registrar_musa', { musa: player, nombre: nombre_musa });
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_estado_banderas_musas');
+    socket.emit('pedir_estado_regalo_bandera_musas');
     pedirNombreMusa();
     socket.emit('pedir_estado_musa');
     socket.emit('pedir_feedback_musas_estado');
@@ -2490,6 +2569,11 @@ socket.on('calentamiento_error', (data) => {
         data && data.mensaje ? data.mensaje : tJuego2P("warmup.feedback.generic_error", {}, "Error."),
         true
     );
+});
+
+socket.on("aumentar_tiempo_control", (payload = {}) => {
+    if (payload.origen !== "musa_bandera") return;
+    mostrarToastRegaloBanderaMusa(payload);
 });
 
 const obtenerEquipoDestacadoCalentamiento = (payload = {}) => {
