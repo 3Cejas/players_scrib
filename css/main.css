@@ -28,6 +28,8 @@ html, body {
 
 	line-height: 1.4em;
 
+    scroll-behavior: smooth;
+
 }
 
 body {
@@ -1046,6 +1048,8 @@ body,
 
     overflow-y: hidden;
 
+    scroll-behavior: smooth;
+
     padding-bottom: 0;
 
     scroll-snap-type: x proximity;
@@ -1211,6 +1215,44 @@ body,
 
 }
 
+.output-gallery-item::before,
+.article-card__media::before,
+.output-video-preview::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    pointer-events: none;
+
+    background:
+      linear-gradient(135deg, rgba(7, 13, 24, 0.94), rgba(19, 27, 44, 0.86)),
+      linear-gradient(100deg, rgba(255, 255, 255, 0) 20%, rgba(143, 239, 255, 0.14) 45%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 129, 129, 0.14) 55%, rgba(255, 255, 255, 0) 80%);
+
+    background-size: auto, 220% 100%;
+
+    background-position: 0 0, 100% 0;
+
+    animation: outputImageShimmer 1.35s ease-in-out infinite;
+
+    transition: opacity 220ms ease;
+
+}
+
+.output-gallery-item.is-loaded::before,
+.article-card__media.is-loaded::before,
+.output-video-preview.is-loaded::before {
+
+    opacity: 0;
+
+    animation: none;
+
+}
+
 .output-gallery-item:hover,
 .output-gallery-item:focus {
 
@@ -1233,6 +1275,22 @@ body,
     aspect-ratio: 4 / 3;
 
     object-fit: cover;
+
+    opacity: 0;
+
+    transform: scale(1.015);
+
+    transition: opacity 260ms ease, transform 320ms ease;
+
+}
+
+.output-gallery-image.is-loaded,
+.article-card__image.is-loaded,
+.output-video-thumb.is-loaded {
+
+    opacity: 1;
+
+    transform: none;
 
 }
 
@@ -1403,6 +1461,10 @@ body,
 
     display: block;
 
+    position: relative;
+
+    overflow: hidden;
+
     background: #000;
 
 }
@@ -1414,6 +1476,12 @@ body,
     width: 100%;
 
     object-fit: cover;
+
+    opacity: 0;
+
+    transform: scale(1.015);
+
+    transition: opacity 260ms ease, transform 320ms ease;
 
 }
 
@@ -1944,13 +2012,19 @@ body,
 
     position: absolute;
 
-    top: -0.9rem;
+    top: 0.75rem;
 
-    right: -0.9rem;
+    right: 0.75rem;
 
     width: 2.4rem;
 
     height: 2.4rem;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
 
     border: 1px solid rgba(143, 239, 255, 0.42);
 
@@ -1962,7 +2036,13 @@ body,
 
     font-size: 1.5rem;
 
+    line-height: 1;
+
     cursor: pointer;
+
+    z-index: 3;
+
+    box-shadow: 0 0.45rem 1.2rem rgba(0, 0, 0, 0.34);
 
 }
 
@@ -2073,6 +2153,8 @@ body,
 
     display: block;
 
+    position: relative;
+
     aspect-ratio: 16 / 9;
 
     overflow: hidden;
@@ -2090,6 +2172,28 @@ body,
     height: 100%;
 
     object-fit: cover;
+
+    opacity: 0;
+
+    transform: scale(1.015);
+
+    transition: opacity 260ms ease, transform 320ms ease;
+
+}
+
+@keyframes outputImageShimmer {
+
+    0% {
+
+        background-position: 0 0, 100% 0;
+
+    }
+
+    100% {
+
+        background-position: 0 0, -100% 0;
+
+    }
 
 }
 
@@ -2585,6 +2689,126 @@ ul.leaders span + span {
         font-size: 0.95rem;
 
         letter-spacing: 0.05em;
+
+    }
+
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+
+    body {
+
+        background-attachment: scroll;
+
+    }
+
+    #background-effects {
+
+        opacity: 0.82;
+
+    }
+
+    .aquarium-current,
+    .aquarium-shimmer {
+
+        display: none;
+
+    }
+
+    .aquarium-glow,
+    .aquarium-bloom {
+
+        mix-blend-mode: normal;
+
+        animation: none;
+
+    }
+
+    .aquarium-glow {
+
+        filter: blur(20px);
+
+        opacity: 0.26;
+
+    }
+
+    .aquarium-bloom {
+
+        filter: blur(10px);
+
+        opacity: 0.14;
+
+    }
+
+    .output-gallery--album {
+
+        -webkit-overflow-scrolling: touch;
+
+        touch-action: pan-x pinch-zoom;
+
+    }
+
+    .output-album-nav,
+    .output-lightbox {
+
+        backdrop-filter: none;
+
+    }
+
+    .output-gallery-item,
+    .output-video-card--fallback,
+    .output-reading-card,
+    .article-card,
+    .output-album-nav,
+    .output-lightbox__nav {
+
+        transition: none;
+
+    }
+
+    .output-materials-section,
+    .output-album-event,
+    .showcase-page,
+    .schedule-section,
+    .article-mosaic {
+
+        content-visibility: auto;
+
+        contain-intrinsic-size: 1px 900px;
+
+    }
+
+    .article-card,
+    .output-reading-card,
+    .output-video-card,
+    .schedule-card,
+    .showcase-figure {
+
+        content-visibility: auto;
+
+        contain-intrinsic-size: 1px 320px;
+
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    html,
+    body,
+    .output-gallery--album {
+
+        scroll-behavior: auto;
+
+    }
+
+    .aquarium-glow,
+    .aquarium-current,
+    .aquarium-shimmer,
+    .aquarium-bloom,
+    .page-cursor-pluma::before {
+
+        animation: none !important;
 
     }
 

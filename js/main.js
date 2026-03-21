@@ -1203,28 +1203,65 @@ function log( text ) {
 
             if (!fallbackSrc || element.getAttribute("src") === fallbackSrc) {
 
+                this.updateOutputMediaLoadedState(element, true);
+
                 return;
 
             }
 
+            this.updateOutputMediaLoadedState(element, false);
             element.setAttribute("src", fallbackSrc);
             element.removeAttribute("data-fallback-src");
 
-        }, true);
+        }.bind(this), true);
 
         this.output.addEventListener("load", function (event) {
 
             var element = event.target;
 
-            if (!element || element.tagName !== "IMG" || !element.classList || !element.classList.contains("output-gallery-image")) {
+            if (!element || element.tagName !== "IMG") {
 
                 return;
 
             }
 
-            this.updateOutputGalleryImageOrientation(element);
+            this.updateOutputMediaLoadedState(element, true);
+
+            if (element.classList && element.classList.contains("output-gallery-image")) {
+
+                this.updateOutputGalleryImageOrientation(element);
+
+            }
 
         }.bind(this), true);
+
+    };
+
+    Terminal.prototype.updateOutputMediaLoadedState = function (image, isLoaded) {
+
+        var wrapper;
+
+        if (!image || image.tagName !== "IMG" || !image.classList) {
+
+            return;
+
+        }
+
+        image.classList.toggle("is-loaded", !!isLoaded);
+
+        if (!image.closest) {
+
+            return;
+
+        }
+
+        wrapper = image.closest(".output-gallery-item, .article-card__media, .output-video-preview");
+
+        if (wrapper) {
+
+            wrapper.classList.toggle("is-loaded", !!isLoaded);
+
+        }
 
     };
 
@@ -1253,7 +1290,15 @@ function log( text ) {
 
     Terminal.prototype.refreshOutputGalleryImageOrientation = function () {
 
-        this.output.querySelectorAll(".output-gallery-image").forEach(function (image) {
+        this.output.querySelectorAll("img").forEach(function (image) {
+
+            this.updateOutputMediaLoadedState(image, !!(image.complete && image.naturalWidth));
+
+            if (!image.classList || !image.classList.contains("output-gallery-image")) {
+
+                return;
+
+            }
 
             this.updateOutputGalleryImageOrientation(image);
 
@@ -1726,6 +1771,68 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.smoothScrollAlbumCarousel = function (track, targetLeft) {
+
+        var startLeft = track.scrollLeft;
+        var distance = targetLeft - startLeft;
+        var isCoarsePointer = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+        var prefersReducedMotion = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var duration = prefersReducedMotion ? 0 : (isCoarsePointer ? 320 : 560);
+        var startTime = null;
+        var animateScroll;
+
+        if (!distance) {
+
+            return;
+
+        }
+
+        if (!duration) {
+
+            track.scrollLeft = targetLeft;
+            return;
+
+        }
+
+        if (track.albumSmoothScrollFrameId) {
+
+            cancelAnimationFrame(track.albumSmoothScrollFrameId);
+
+        }
+
+        animateScroll = function (timestamp) {
+
+            var progress;
+            var easedProgress;
+
+            if (startTime === null) {
+
+                startTime = timestamp;
+
+            }
+
+            progress = Math.min((timestamp - startTime) / duration, 1);
+            easedProgress = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            track.scrollLeft = startLeft + distance * easedProgress;
+
+            if (progress < 1) {
+
+                track.albumSmoothScrollFrameId = window.requestAnimationFrame(animateScroll);
+                return;
+
+            }
+
+            track.albumSmoothScrollFrameId = null;
+
+        };
+
+        track.albumSmoothScrollFrameId = window.requestAnimationFrame(animateScroll);
+
+    };
+
     Terminal.prototype.scrollAlbumCarousel = function (button) {
 
         var eventElement = button;
@@ -1756,16 +1863,10 @@ function log( text ) {
         direction = button.getAttribute("data-carousel-control") === "prev" ? -1 : 1;
         step = Math.max(Math.round(track.clientWidth * 0.88), 240);
 
-        track.scrollBy({
-            left: direction * step,
-            behavior: "smooth"
-        });
-
-        window.setTimeout(function () {
-
-            this.updateAlbumCarouselState(eventElement);
-
-        }.bind(this), 220);
+        this.smoothScrollAlbumCarousel(
+            track,
+            Math.max(0, Math.min(track.scrollLeft + direction * step, track.scrollWidth - track.clientWidth))
+        );
 
     };
 
@@ -1981,11 +2082,18 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.buildGalleryLightboxItemData = function (itemElement) {
+
+        return {
+            src: itemElement.getAttribute("href"),
+            caption: itemElement.getAttribute("data-caption") || ""
+        };
+
+    };
+
     Terminal.prototype.renderGalleryLightboxItem = function (index) {
 
         var item;
-        var src;
-        var caption;
         var isAtStart;
         var isAtEnd;
 
@@ -1996,15 +2104,14 @@ function log( text ) {
         }
 
         item = this.galleryLightboxItems[index];
-        src = item.getAttribute("href");
-        caption = item.getAttribute("data-caption") || "";
         isAtStart = index === 0;
         isAtEnd = index === this.galleryLightboxItems.length - 1;
 
         this.galleryLightboxIndex = index;
-        this.galleryLightboxImage.setAttribute("src", src);
-        this.galleryLightboxImage.setAttribute("alt", caption || "Imagen ampliada");
-        this.galleryLightboxCaption.textContent = caption;
+        this.galleryLightboxImage.removeAttribute("src");
+        this.galleryLightboxImage.setAttribute("src", item.src);
+        this.galleryLightboxImage.setAttribute("alt", item.caption || "Imagen ampliada");
+        this.galleryLightboxCaption.textContent = item.caption;
         this.galleryLightboxPrev.disabled = isAtStart;
         this.galleryLightboxNext.disabled = isAtEnd;
         this.galleryLightbox.classList.toggle("output-lightbox--single", this.galleryLightboxItems.length <= 1);
@@ -2027,15 +2134,19 @@ function log( text ) {
 
     Terminal.prototype.openGalleryLightbox = function (triggerElement) {
 
-        var items;
+        var itemElements;
         var itemIndex;
 
         this.initGalleryLightbox();
 
-        items = this.getGalleryLightboxItems(triggerElement);
-        itemIndex = items.indexOf(triggerElement);
+        itemElements = this.getGalleryLightboxItems(triggerElement);
+        itemIndex = itemElements.indexOf(triggerElement);
 
-        this.galleryLightboxItems = items.length ? items : [triggerElement];
+        this.galleryLightboxItems = itemElements.length ? itemElements.map(function (itemElement) {
+
+            return this.buildGalleryLightboxItemData(itemElement);
+
+        }.bind(this)) : [this.buildGalleryLightboxItemData(triggerElement)];
 
         if (itemIndex < 0) {
 
