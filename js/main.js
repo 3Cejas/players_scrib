@@ -570,6 +570,8 @@ function log( text ) {
 
         this.penCursorPressTimeoutId = null;
 
+        this.asciiHeader = document.getElementById("containerascii");
+
     };
 
     var padNumber = function (value, width) {
@@ -991,6 +993,12 @@ function log( text ) {
 
         }
 
+        if (target.closest && target.closest("#containerascii")) {
+
+            return false;
+
+        }
+
         if (target.closest && target.closest(".output-lightbox__dialog, .output-reading-card, .article-card, .output-video-card")) {
 
             return false;
@@ -998,6 +1006,88 @@ function log( text ) {
         }
 
         return true;
+
+    };
+
+    Terminal.prototype.bindAsciiHeader = function () {
+
+        var handleActivate;
+
+        if (!this.asciiHeader) {
+
+            return;
+
+        }
+
+        handleActivate = function (event) {
+
+            if (event) {
+
+                ignoreEvent(event);
+
+            }
+
+            this.showInitialPage();
+
+        }.bind(this);
+
+        this.asciiHeader.addEventListener("click", handleActivate);
+        this.asciiHeader.addEventListener("keydown", function (event) {
+
+            if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+
+                handleActivate(event);
+
+            }
+
+        });
+
+    };
+
+    Terminal.prototype.scrollViewportToTop = function () {
+
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
+    };
+
+    Terminal.prototype.showInitialPage = function (options) {
+
+        var shouldRecordHistory = !options || options.recordHistory !== false;
+
+        if (this.typeSimulator && this.typeSimulator.cancel) {
+
+            this.typeSimulator.cancel();
+
+        }
+
+        if (this.galleryLightbox && !this.galleryLightbox.classList.contains("output-lightbox--hidden")) {
+
+            this.closeGalleryLightbox();
+
+        }
+
+        this.cmdLine.value = "";
+
+        if (shouldRecordHistory) {
+
+            this.updateBrowserHistoryState(null);
+
+        } else {
+
+            this.currentHistoryCommand = "__home__";
+
+        }
+
+        this.scrollViewportToTop();
+        this.reset();
+
+        window.requestAnimationFrame(function () {
+
+            this.scrollViewportToTop();
+
+        }.bind(this));
 
     };
 
@@ -1322,6 +1412,7 @@ function log( text ) {
 
         this.prepareSideNav();
         this.initPenCursor();
+        this.bindAsciiHeader();
         this.bindOutputOptimizedMedia();
 
         this.lock(); // NECESARIO PARA BLOQUEAR DESDE QUE LOS ELEMENTOS DEL SIDENAV HAN SIDO AÑADIDOS AHORA
@@ -2181,6 +2272,25 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.openGalleryLightboxWithAnimation = function (triggerElement) {
+
+        if (!triggerElement) {
+
+            return;
+
+        }
+
+        triggerElement.classList.add("is-opening");
+
+        window.setTimeout(function () {
+
+            triggerElement.classList.remove("is-opening");
+            this.openGalleryLightbox(triggerElement);
+
+        }.bind(this), 90);
+
+    };
+
     Terminal.prototype.buildScheduleCardMarkup = function (event, tone) {
 
         var cardClassName = "schedule-card schedule-card--" + tone + (event.past ? " schedule-card--past" : "");
@@ -2260,7 +2370,7 @@ function log( text ) {
 
                     ignoreEvent(event);
 
-                    this.openGalleryLightbox(element);
+                    this.openGalleryLightboxWithAnimation(element);
 
                     return;
 
@@ -2450,7 +2560,7 @@ function log( text ) {
 
         if (historyCommand === "__home__") {
 
-            this.reset();
+            this.showInitialPage({ recordHistory: false });
             return;
 
         }

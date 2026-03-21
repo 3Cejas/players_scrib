@@ -26,6 +26,8 @@ html, body {
 
     margin: 0;
 
+    overflow-x: hidden;
+
 	line-height: 1.4em;
 
     scroll-behavior: smooth;
@@ -46,10 +48,16 @@ body {
 
     overflow-x: hidden;
 
+    min-height: 100vh;
+
     background:
       linear-gradient(90deg, rgba(0, 126, 186, 0.24) 0%, rgba(6, 10, 18, 0.58) 42%, rgba(6, 10, 18, 0.58) 58%, rgba(178, 38, 38, 0.24) 100%),
       radial-gradient(circle at 14% 20%, rgba(0, 181, 255, 0.2), transparent 56%),
       radial-gradient(circle at 86% 20%, rgba(255, 67, 67, 0.2), transparent 56%),
+      radial-gradient(circle at 18% 62%, rgba(0, 181, 255, 0.12), transparent 48%),
+      radial-gradient(circle at 82% 68%, rgba(255, 67, 67, 0.12), transparent 48%),
+      radial-gradient(circle at 12% 88%, rgba(0, 181, 255, 0.12), transparent 42%),
+      radial-gradient(circle at 88% 92%, rgba(255, 67, 67, 0.12), transparent 42%),
       radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.08), transparent 62%),
       #02040a;
     background-color: #02040a;
@@ -441,6 +449,21 @@ body,
     animation: heroSubtitleColorShift 3.8s ease-in-out infinite alternate;
 
     will-change: color, text-shadow;
+
+    cursor: pointer;
+
+    transition: transform 180ms ease, filter 180ms ease;
+
+}
+
+#containerascii:hover,
+#containerascii:focus-visible {
+
+    transform: translateY(-0.12rem);
+
+    filter: drop-shadow(0 0 0.6rem rgba(143, 239, 255, 0.18));
+
+    outline: none;
 
 }
 
@@ -1243,6 +1266,26 @@ body,
 
 }
 
+.output-gallery-item::after {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.26) 0%, rgba(143, 239, 255, 0.24) 24%, rgba(255, 95, 95, 0.18) 48%, rgba(255, 255, 255, 0) 76%);
+
+    transform: scale(0.92);
+
+}
+
 .output-gallery-item.is-loaded::before,
 .article-card__media.is-loaded::before,
 .output-video-preview.is-loaded::before {
@@ -1263,6 +1306,22 @@ body,
     box-shadow: 0 0.9rem 2rem rgba(0, 0, 0, 0.38);
 
     outline: none;
+
+}
+
+.output-gallery-item.is-opening {
+
+    transform: scale(0.982);
+
+    border-color: rgba(255, 240, 184, 0.78);
+
+    box-shadow: 0 1rem 2.1rem rgba(0, 0, 0, 0.42), 0 0 1.3rem rgba(143, 239, 255, 0.18);
+
+}
+
+.output-gallery-item.is-opening::after {
+
+    animation: outputGalleryClickFlash 260ms cubic-bezier(0.18, 0.84, 0.3, 1) forwards;
 
 }
 
@@ -1900,6 +1959,8 @@ body,
     max-width: min(92vw, 1100px);
 
     width: 100%;
+
+    animation: outputLightboxPopIn 220ms cubic-bezier(0.19, 1, 0.22, 1);
 
 }
 
@@ -2700,6 +2761,25 @@ ul.leaders span + span {
 
         background-attachment: scroll;
 
+        background:
+          linear-gradient(90deg, rgba(0, 181, 255, 0.2) 0%, rgba(0, 181, 255, 0.05) 34%, rgba(0, 0, 0, 0) 56%),
+          linear-gradient(270deg, rgba(255, 67, 67, 0.2) 0%, rgba(255, 67, 67, 0.05) 34%, rgba(0, 0, 0, 0) 56%),
+          linear-gradient(90deg, rgba(0, 126, 186, 0.26) 0%, rgba(6, 10, 18, 0.68) 42%, rgba(6, 10, 18, 0.68) 58%, rgba(178, 38, 38, 0.26) 100%),
+          radial-gradient(circle at 14% 18%, rgba(0, 181, 255, 0.2), transparent 48%),
+          radial-gradient(circle at 86% 18%, rgba(255, 67, 67, 0.2), transparent 48%),
+          radial-gradient(circle at 16% 52%, rgba(0, 181, 255, 0.14), transparent 40%),
+          radial-gradient(circle at 84% 56%, rgba(255, 67, 67, 0.14), transparent 40%),
+          radial-gradient(circle at 12% 84%, rgba(0, 181, 255, 0.14), transparent 36%),
+          radial-gradient(circle at 88% 88%, rgba(255, 67, 67, 0.14), transparent 36%),
+          #02040a;
+    }
+
+    #background-effects {
+
+        position: fixed;
+
+        inset: 0;
+
     }
 
     #background-effects {
@@ -2766,27 +2846,51 @@ ul.leaders span + span {
 
     }
 
-    .output-materials-section,
-    .output-album-event,
-    .showcase-page,
-    .schedule-section,
-    .article-mosaic {
+}
 
-        content-visibility: auto;
+@keyframes outputGalleryClickFlash {
 
-        contain-intrinsic-size: 1px 900px;
+    0% {
+
+        opacity: 0;
+
+        transform: scale(0.88);
 
     }
 
-    .article-card,
-    .output-reading-card,
-    .output-video-card,
-    .schedule-card,
-    .showcase-figure {
+    32% {
 
-        content-visibility: auto;
+        opacity: 1;
 
-        contain-intrinsic-size: 1px 320px;
+        transform: scale(1);
+
+    }
+
+    100% {
+
+        opacity: 0;
+
+        transform: scale(1.08);
+
+    }
+
+}
+
+@keyframes outputLightboxPopIn {
+
+    0% {
+
+        opacity: 0;
+
+        transform: translateY(0.6rem) scale(0.97);
+
+    }
+
+    100% {
+
+        opacity: 1;
+
+        transform: none;
 
     }
 
@@ -2806,7 +2910,9 @@ ul.leaders span + span {
     .aquarium-current,
     .aquarium-shimmer,
     .aquarium-bloom,
-    .page-cursor-pluma::before {
+    .page-cursor-pluma::before,
+    .output-gallery-item::after,
+    .output-lightbox__dialog {
 
         animation: none !important;
 
