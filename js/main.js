@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 
 
@@ -469,8 +469,18 @@ var main = (function () {
     var materialReadings = [
         {
             title: "Dossier de <SCRI> B",
-            description: "PDF con información del espectáculo, universo del proyecto y materiales de presentación.",
+            description: "PDF con informaci\u00f3n del espect\u00e1culo, universo del proyecto y materiales de presentaci\u00f3n.",
             href: "./archives/Dossier SCRIB.pdf"
+        },
+        {
+            title: "<SCRI> B en Movimientos de escucha al futuro de la escena",
+            description: "Rese\u00f1a del espect\u00e1culo en el marco de las ayudas a la creaci\u00f3n 2025 de INJUVE.",
+            href: "./archives/Movimientos-de-escucha-al-futuro-de-la-escena.pdf"
+        },
+        {
+            title: "Desaf\u00edos en el proceso de gamificaci\u00f3n y escenificaci\u00f3n de la escritura, un acercamiento al espect\u00e1culo-videojuego SCRIB",
+            description: "Paper desarrollado en el Congreso Internacional La escena intermedial: Inmersividad, interactividad y tecnolog\u00eda en la escena del siglo XXI.",
+            href: "./archives/Desaf\u00edos en el proceso de gamificaci\u00f3n y escenificaci\u00f3n de la escritura, un acercamiento al espect\u00e1culo-videojuego SCRIB, por Sutura.pdf"
         }
     ];
 
@@ -850,6 +860,7 @@ function log( text ) {
     var scheduleSections = [
         {
             tone: "tournament",
+            year: 2026,
             title: "🏆 TORNEO <SCRI> B 2026",
             subtitle: "📅 Calendario de Octavos",
             events: [
@@ -1576,9 +1587,33 @@ function log( text ) {
 
     };
 
+    Terminal.prototype.buildOutputCommandMarkupWithLabel = function (command, label, isActive) {
+
+        var className = "output-command-link" + (isActive ? " is-active" : "");
+        var currentAttribute = isActive ? " aria-current=\"true\"" : "";
+
+        return "<span class=\"output-command-entry\"><span class=\"output-command-bullet\">â€¢</span> <button type=\"button\" class=\"" + className + "\" data-command=\"" + escapeHTML(command) + "\"" + currentAttribute + ">" + escapeHTML(label || command) + "</button></span>";
+
+    };
+
     Terminal.prototype.buildInlineCommandMarkup = function (command) {
 
         return "<span class=\"output-command-inline\">«<button type=\"button\" class=\"output-command-link output-command-link--inline\" data-command=\"" + command + "\">" + command + "</button>»</span>";
+
+    };
+
+    Terminal.prototype.buildOutputCommandMarkup = function (command) {
+
+        return "<span class=\"output-command-entry\"><span class=\"output-command-bullet\">&#8226;</span> <button type=\"button\" class=\"output-command-link\" data-command=\"" + command + "\">" + command + "</button></span>";
+
+    };
+
+    Terminal.prototype.buildOutputCommandMarkupWithLabel = function (command, label, isActive) {
+
+        var className = "output-command-link" + (isActive ? " is-active" : "");
+        var currentAttribute = isActive ? " aria-current=\"true\"" : "";
+
+        return "<span class=\"output-command-entry\"><span class=\"output-command-bullet\">&#8226;</span> <button type=\"button\" class=\"" + className + "\" data-command=\"" + escapeHTML(command) + "\"" + currentAttribute + ">" + escapeHTML(label || command) + "</button></span>";
 
     };
 
@@ -1961,26 +1996,67 @@ function log( text ) {
 
     };
 
-    Terminal.prototype.buildPressMarkup = function () {
+    Terminal.prototype.buildPressNavigationMarkup = function (activeView) {
 
-        return "<div class=\"output-materials-layout\">" +
-            "<section class=\"output-materials-section\">" +
-                "<div class=\"output-materials-heading\">\ud83d\udcf8 IM\u00c1GENES</div>" +
-                this.buildGalleryMarkup() +
-            "</section>" +
-            "<section class=\"output-materials-section\">" +
-                "<div class=\"output-materials-heading\">\ud83c\udfac V\u00cdDEOS</div>" +
-                this.buildMaterialVideosMarkup() +
-            "</section>" +
-            "<section class=\"output-materials-section\">" +
-                "<div class=\"output-materials-heading\">\ud83d\udcda LECTURAS</div>" +
-                this.buildMaterialReadingsMarkup() +
-            "</section>" +
+        var commands = [
+            { label: "\ud83d\udcf8 im\u00e1genes", command: "imagenes", view: "imagenes" },
+            { label: "\ud83c\udfac v\u00eddeos", command: "videos", view: "videos" },
+            { label: "\ud83d\udcda lecturas", command: "lecturas", view: "lecturas" }
+        ];
+
+        return "<div class=\"output-press-menu\">" +
+            "<div class=\"output-press-command-list output-press-command-list--menu\">" + commands.map(function (item) {
+
+                return "<div class=\"output-press-command-row\">" + this.buildOutputCommandMarkupWithLabel(item.command, item.label, activeView === item.view) + "</div>";
+
+            }.bind(this)).join("") + "</div>" +
         "</div>";
 
     };
 
-    Terminal.prototype.buildMaterialsMarkup = Terminal.prototype.buildPressMarkup;
+    Terminal.prototype.buildPressContentMarkup = function (activeView) {
+
+        switch (activeView) {
+
+            case "imagenes":
+                return "<section class=\"output-materials-section\">" +
+                    "<div class=\"output-materials-heading\">\ud83d\udcf8 IM\u00c1GENES</div>" +
+                    this.buildGalleryMarkup() +
+                "</section>";
+
+            case "videos":
+                return "<section class=\"output-materials-section\">" +
+                    "<div class=\"output-materials-heading\">\ud83c\udfac V\u00cdDEOS</div>" +
+                    this.buildMaterialVideosMarkup() +
+                "</section>";
+
+            case "lecturas":
+                return "<section class=\"output-materials-section\">" +
+                    "<div class=\"output-materials-heading\">\ud83d\udcda LECTURAS</div>" +
+                    this.buildMaterialReadingsMarkup() +
+                "</section>";
+
+            default:
+                return "";
+
+        }
+
+    };
+
+    Terminal.prototype.buildPressMarkup = function (activeView) {
+
+        return "<div class=\"output-materials-layout\">" +
+            this.buildPressNavigationMarkup(activeView) +
+            this.buildPressContentMarkup(activeView) +
+        "</div>";
+
+    };
+
+    Terminal.prototype.buildMaterialsMarkup = function () {
+
+        return this.buildPressMarkup("imagenes");
+
+    };
 
     Terminal.prototype.buildSpectacleImageMarkup = function (folderName, fileName, caption, className) {
 
@@ -2291,9 +2367,72 @@ function log( text ) {
 
     };
 
-    Terminal.prototype.buildScheduleCardMarkup = function (event, tone) {
+    Terminal.prototype.parseScheduleEventDate = function (event, section) {
 
-        var cardClassName = "schedule-card schedule-card--" + tone + (event.past ? " schedule-card--past" : "");
+        var monthMap = {
+            enero: 0,
+            febrero: 1,
+            marzo: 2,
+            abril: 3,
+            mayo: 4,
+            junio: 5,
+            julio: 6,
+            agosto: 7,
+            septiembre: 8,
+            setiembre: 8,
+            octubre: 9,
+            noviembre: 10,
+            diciembre: 11
+        };
+        var dateText = event && event.date ? String(event.date).toLowerCase().trim() : "";
+        var dateMatch = dateText.match(/^(\d{1,2})\s+de\s+([a-zñ]+)(?:\s+de\s+(\d{4}))?$/);
+        var day;
+        var monthIndex;
+        var year;
+
+        if (!dateMatch) {
+
+            return null;
+
+        }
+
+        day = parseInt(dateMatch[1], 10);
+        monthIndex = monthMap[dateMatch[2]];
+        year = dateMatch[3] ? parseInt(dateMatch[3], 10) : (section && section.year ? section.year : null);
+
+        if (typeof monthIndex !== "number" || !year) {
+
+            return null;
+
+        }
+
+        return new Date(year, monthIndex, day);
+
+    };
+
+    Terminal.prototype.isScheduleEventPast = function (event, section) {
+
+        var eventDate = this.parseScheduleEventDate(event, section);
+        var today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        if (!eventDate || isNaN(eventDate.getTime())) {
+
+            return !!event.past;
+
+        }
+
+        eventDate.setHours(0, 0, 0, 0);
+
+        return eventDate.getTime() < today.getTime();
+
+    };
+
+    Terminal.prototype.buildScheduleCardMarkup = function (event, section) {
+
+        var isPast = this.isScheduleEventPast(event, section);
+        var cardClassName = "schedule-card schedule-card--" + section.tone + (isPast ? " schedule-card--past" : "");
         var ticketMarkup = "";
 
         if (event.ticketUrl) {
@@ -2331,7 +2470,7 @@ function log( text ) {
                 "</div>" +
                 "<div class=\"schedule-grid\">" + section.events.map(function (event) {
 
-                    return this.buildScheduleCardMarkup(event, section.tone);
+                    return this.buildScheduleCardMarkup(event, section);
 
                 }.bind(this)).join("") + "</div>" +
             "</section>";
@@ -2602,6 +2741,38 @@ function log( text ) {
             }
 
         }.bind(this);
+
+        if (normalizedCommand === cmds.IMAGENES.value) {
+
+            remember(cmds.IMAGENES.value);
+            this.prensa();
+            return;
+
+        }
+
+        if (normalizedCommand === "imÃ¡genes" || normalizedCommand === "imagenes") {
+
+            remember("imagenes");
+            this.prensa_imagenes();
+            return;
+
+        }
+
+        if (normalizedCommand === "vÃ­deos" || normalizedCommand === "videos") {
+
+            remember("videos");
+            this.prensa_videos();
+            return;
+
+        }
+
+        if (normalizedCommand === "lecturas") {
+
+            remember("lecturas");
+            this.prensa_lecturas();
+            return;
+
+        }
 
         switch (normalizedCommand) {
 
@@ -3503,6 +3674,29 @@ function log( text ) {
 
     //MATERIALES
 
+    Terminal.prototype.renderPressView = function (activeView) {
+
+        this.clear();
+
+        var result = "# PRENSA";
+        var output = this.output;
+
+        this.type(result, function () {
+
+            output.innerHTML += "<br/>" + this.buildPressMarkup(activeView) + "<br/><br/>";
+
+            if (activeView === "imagenes") {
+
+                this.initAlbumCarousels();
+
+            }
+
+            this.type("Para volver al menÃº, utiliza el comando Â«reinicioÂ».", this.unlock.bind(this));
+
+        }.bind(this));
+
+    }
+
     Terminal.prototype.materiales = function () {
 
         this.clear();
@@ -3542,6 +3736,63 @@ function log( text ) {
 
     Terminal.prototype.materiales = Terminal.prototype.prensa;
     Terminal.prototype.imagenes = Terminal.prototype.prensa;
+
+    Terminal.prototype.renderPressView = function (activeView) {
+
+        this.clear();
+
+        var result = "# PRENSA";
+        var output = this.output;
+
+        this.type(result, function () {
+
+            output.innerHTML += "<br/>" + this.buildPressMarkup(activeView) + "<br/><br/>";
+
+            if (activeView === "imagenes") {
+
+                this.initAlbumCarousels();
+
+            }
+
+            this.type("Para volver al men\u00fa, utiliza el comando \u00abreinicio\u00bb.", this.unlock.bind(this));
+
+        }.bind(this));
+
+    };
+
+    Terminal.prototype.materiales = function () {
+
+        this.renderPressView(null);
+
+    };
+
+    Terminal.prototype.prensa = function () {
+
+        this.renderPressView(null);
+
+    };
+
+    Terminal.prototype.prensa_imagenes = function () {
+
+        this.renderPressView("imagenes");
+
+    };
+
+    Terminal.prototype.prensa_videos = function () {
+
+        this.renderPressView("videos");
+
+    };
+
+    Terminal.prototype.prensa_lecturas = function () {
+
+        this.renderPressView("lecturas");
+
+    };
+
+    Terminal.prototype.imagenes = Terminal.prototype.prensa_imagenes;
+    Terminal.prototype.videos = Terminal.prototype.prensa_videos;
+    Terminal.prototype.lecturas = Terminal.prototype.prensa_lecturas;
 
     //ARTÍCULOS
 
@@ -4053,3 +4304,4 @@ TypeSimulator.prototype.type = function (text, callback) {
 
 
 window.onload = main.listener;
+

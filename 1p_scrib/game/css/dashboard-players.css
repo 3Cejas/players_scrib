@@ -4799,4 +4799,81 @@ body.escritxr-boot-activa {
     transition: none;
   }
 }
+
+@media (pointer: coarse), (max-width: 900px) {
+  html,
+  body,
+  body.page-players {
+    background-attachment: scroll;
+  }
+
+  #background-effects {
+    opacity: 0.74;
+  }
+
+  .aquarium-current,
+  .aquarium-shimmer {
+    display: none !important;
+  }
+
+  .aquarium-glow,
+  .aquarium-bloom {
+    animation: none !important;
+    mix-blend-mode: normal;
+    filter: blur(16px);
+    opacity: 0.12;
+  }
+
+  body.page-players .tiempo-vida,
+  body.page-players #palabra,
+  .escritora-caret-neon::before,
+  .escritora-cursor-pluma::before {
+    animation: none !important;
+  }
+
+  body.page-players .tiempo-vida::after,
+  body.page-players #palabra::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .escritora-caret-neon::before {
+    box-shadow:
+      0 0 0.14em rgba(255, 255, 255, 0.88),
+      0 0 0.34em rgba(55, 236, 255, 0.64);
+  }
+
+  #flash,
+  .lightning,
+  .rain {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .escritxr-boot-overlay::after,
+  .escritxr-boot-panel::before,
+  .escritxr-boot-world-orb,
+  .escritxr-boot-logs li.is-active::before {
+    animation: none !important;
+    box-shadow: none;
+  }
+
+  .escritxr-boot-world-grid {
+    display: none;
+  }
+
+  .escritxr-boot-bar-fill,
+  .escritxr-boot-world-fill,
+  .escritxr-boot-world-pixels span,
+  .escritxr-boot-logs li,
+  .escritxr-boot-logs li::before {
+    transition: none;
+  }
+
+  .escritxr-boot-world-pixels span {
+    transform: none;
+    opacity: 0.46;
+    box-shadow: none;
+  }
+}
   

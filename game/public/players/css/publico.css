@@ -3985,3 +3985,76 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
         opacity: 0.7;
     }
 }
+
+@media (pointer: coarse), (max-width: 900px) {
+    html,
+    body {
+        background-attachment: scroll;
+    }
+
+    #background-effects {
+        opacity: 0.74;
+    }
+
+    .aquarium-current,
+    .aquarium-shimmer {
+        display: none !important;
+    }
+
+    .aquarium-glow,
+    .aquarium-bloom {
+        animation: none !important;
+        mix-blend-mode: normal;
+        filter: blur(16px);
+        opacity: 0.12;
+    }
+
+    .tiempo-vida,
+    .nivel-activo .nivel-icono::before,
+    .textarea-bruma-musa,
+    .musa-world-entry__world-orb,
+    .musa-world-entry__logs li.is-active::before {
+        animation: none !important;
+    }
+
+    .tiempo-vida::after {
+        animation: none !important;
+        opacity: 0 !important;
+    }
+
+    .textarea-bruma-musa {
+        filter: none;
+        opacity: 1;
+    }
+
+    #flash,
+    .lightning,
+    .rain {
+        display: none !important;
+        animation: none !important;
+    }
+
+    .musa-world-entry::after,
+    .musa-world-entry__panel::before {
+        content: none;
+        animation: none !important;
+        opacity: 0;
+    }
+
+    .musa-world-entry__world-grid {
+        display: none;
+    }
+
+    .musa-world-entry__world-fill,
+    .musa-world-entry__world-pixels span,
+    .musa-world-entry__logs li,
+    .musa-world-entry__logs li::before {
+        transition: none;
+    }
+
+    .musa-world-entry__world-pixels span {
+        transform: none;
+        opacity: 0.46;
+        box-shadow: none;
+    }
+}

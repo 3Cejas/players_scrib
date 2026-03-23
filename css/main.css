@@ -780,6 +780,16 @@ body,
 
 }
 
+.output-command-link.is-active {
+
+    color: #ffffff;
+
+    text-decoration: underline;
+
+    text-underline-offset: 0.14em;
+
+}
+
 .output-command-inline {
 
     white-space: nowrap;
@@ -1192,6 +1202,55 @@ body,
 
 }
 
+.output-materials-section--press-nav,
+.output-materials-section--press-intro {
+
+    padding: 1rem 1.1rem;
+
+    border: 1px solid rgba(143, 239, 255, 0.16);
+
+    border-radius: 1rem;
+
+    background: rgba(4, 9, 18, 0.48);
+
+}
+
+.output-press-command-list {
+
+    display: grid;
+
+    gap: 0.55rem;
+
+}
+
+.output-press-menu {
+
+    display: grid;
+
+    gap: 1rem;
+
+}
+
+.output-press-command-list--menu {
+
+    gap: 0.45rem;
+
+}
+
+.output-press-command-row {
+
+    display: block;
+
+}
+
+.output-press-intro {
+
+    color: #f9fcff;
+
+    line-height: 1.5;
+
+}
+
 .output-materials-heading {
 
     color: #f7d07e;
@@ -1359,6 +1418,17 @@ body,
     min-width: 0;
 
     aspect-ratio: 4 / 3;
+
+}
+
+.output-gallery--album .output-gallery-item:hover,
+.output-gallery--album .output-gallery-item:focus {
+
+    transform: none;
+
+    border-color: rgba(255, 240, 184, 0.65);
+
+    box-shadow: 0 0.9rem 2rem rgba(0, 0, 0, 0.38);
 
 }
 

@@ -7780,3 +7780,50 @@ body.page-players #definicion.objetivo-nivel[data-origen-musa="musa_enemiga"] .o
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+@media (pointer: coarse), (max-width: 900px) {
+  html,
+  body,
+  body.page-players,
+  body.page-spectator {
+    background-attachment: scroll;
+  }
+
+  #background-effects {
+    opacity: 0.74;
+  }
+
+  .aquarium-current,
+  .aquarium-shimmer {
+    display: none !important;
+  }
+
+  .aquarium-glow,
+  .aquarium-bloom {
+    animation: none !important;
+    mix-blend-mode: normal;
+    filter: blur(16px);
+    opacity: 0.12;
+  }
+
+  .tiempo-vida,
+  body.page-players #palabra,
+  body.page-spectator #info_general.info-general-panel #palabra,
+  .escritora-cursor-pluma::before {
+    animation: none !important;
+  }
+
+  .tiempo-vida::after,
+  body.page-players #palabra::after,
+  body.page-spectator #info_general.info-general-panel #palabra::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  #flash,
+  .lightning,
+  .rain {
+    display: none !important;
+    animation: none !important;
+  }
+}
