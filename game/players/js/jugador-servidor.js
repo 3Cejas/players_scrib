@@ -855,6 +855,9 @@ let timeout_cursor_pluma_juego_press = null;
 let timeout_cursor_pluma_atributos_press = null;
 let ultimo_cursor_pluma_juego_x = Math.round((window.innerWidth || 0) * 0.5);
 let ultimo_cursor_pluma_juego_y = Math.round((window.innerHeight || 0) * 0.5);
+let raf_cursor_pluma_juego_posicion = null;
+let destino_cursor_pluma_juego_x = ultimo_cursor_pluma_juego_x;
+let destino_cursor_pluma_juego_y = ultimo_cursor_pluma_juego_y;
 let observador_cursor_pluma_juego_escritora = null;
 const CURSOR_PLUMA_JUEGO_INACTIVIDAD_MS = 1600;
 const SOPORTA_CURSOR_PLUMA_JUEGO = (() => {
@@ -953,13 +956,23 @@ const limpiarOcultacionCursorPlumaJuegoEscritora = () => {
 
 const ocultarCursorPlumaJuegoEscritora = () => {
     if (!cursor_pluma_juego_escritora) return;
+    if (raf_cursor_pluma_juego_posicion) {
+        cancelAnimationFrame(raf_cursor_pluma_juego_posicion);
+        raf_cursor_pluma_juego_posicion = null;
+    }
     cursor_pluma_juego_escritora.classList.remove("activa");
 };
 
 const posicionarCursorPlumaJuegoEscritora = (clientX, clientY) => {
     if (!cursor_pluma_juego_escritora) return;
-    cursor_pluma_juego_escritora.style.left = `${Math.round(clientX)}px`;
-    cursor_pluma_juego_escritora.style.top = `${Math.round(clientY)}px`;
+    destino_cursor_pluma_juego_x = Math.round(clientX);
+    destino_cursor_pluma_juego_y = Math.round(clientY);
+    if (raf_cursor_pluma_juego_posicion) return;
+    raf_cursor_pluma_juego_posicion = requestAnimationFrame(() => {
+        raf_cursor_pluma_juego_posicion = null;
+        if (!cursor_pluma_juego_escritora) return;
+        cursor_pluma_juego_escritora.style.transform = `translate3d(${destino_cursor_pluma_juego_x}px, ${destino_cursor_pluma_juego_y}px, 0) translate3d(-33px, -38px, 0)`;
+    });
 };
 
 const pulsarCursorPlumaJuegoEscritora = () => {
@@ -1059,7 +1072,8 @@ const iniciarCursorPlumaJuegoEscritora = () => {
         mostrarCursorPlumaJuegoEscritora(evento.clientX, evento.clientY);
     };
 
-    document.addEventListener("mousemove", manejarMovimiento, { passive: true });
+    const eventoMovimientoCursorPluma = window.PointerEvent ? "pointermove" : "mousemove";
+    document.addEventListener(eventoMovimientoCursorPluma, manejarMovimiento, { passive: true });
     document.addEventListener("pointerdown", (evento) => {
         if (!evento || typeof evento.clientX !== "number" || typeof evento.clientY !== "number") return;
         if (!cursor_pluma_juego_activo) return;
@@ -1067,7 +1081,7 @@ const iniciarCursorPlumaJuegoEscritora = () => {
         pulsarCursorPlumaJuegoEscritora();
     }, { passive: true });
     texto.addEventListener("mouseenter", manejarMovimiento);
-    texto.addEventListener("mousemove", manejarMovimiento);
+    texto.addEventListener(eventoMovimientoCursorPluma, manejarMovimiento);
     texto.addEventListener("focus", () => {
         sincronizarCursorPlumaJuegoEscritora();
         mostrarCursorPlumaJuegoEscritora();
