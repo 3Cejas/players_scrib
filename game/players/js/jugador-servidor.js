@@ -1103,9 +1103,11 @@ const iniciarCursorPlumaJuegoEscritora = () => {
         observador_cursor_pluma_juego_escritora = new MutationObserver(() => {
             sincronizarCursorPlumaJuegoEscritora();
         });
+        // El propio sincronizador cambia clases del editor; si observamos class/style
+        // aquí entramos en un bucle de mutaciones al cargar la vista de escritora.
         observador_cursor_pluma_juego_escritora.observe(texto, {
             attributes: true,
-            attributeFilter: ["contenteditable", "class", "style"]
+            attributeFilter: ["contenteditable"]
         });
         if (document.body) {
             observador_cursor_pluma_juego_escritora.observe(document.body, {
