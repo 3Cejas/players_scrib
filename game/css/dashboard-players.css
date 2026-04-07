@@ -47,8 +47,33 @@ body.page-players {
     background-color: #02040a;
     background-repeat: no-repeat;
     background-size: cover;
-    background-attachment: fixed;
+    background-attachment: scroll;
     overflow: hidden;
+}
+
+body.page-players #background-effects {
+    opacity: 0.78;
+}
+
+body.page-players .aquarium-current,
+body.page-players .aquarium-shimmer {
+    display: none;
+}
+
+body.page-players .aquarium-glow,
+body.page-players .aquarium-bloom {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+body.page-players .aquarium-glow {
+    filter: blur(24px);
+    opacity: 0.2;
+}
+
+body.page-players .aquarium-bloom {
+    filter: blur(14px);
+    opacity: 0.14;
 }
 
 body.page-spectator {
@@ -415,6 +440,27 @@ body.page-spectator.vista-stats #spectator_fit_root::after {
     opacity: 0 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+}
+
+body.page-spectator:not(.vista-partida) #spectator_fit_root::before,
+body.page-spectator:not(.vista-partida) #spectator_fit_root::after {
+    opacity: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+body.page-spectator:not(.vista-partida) #teleprompter_overlay,
+body.page-spectator:not(.vista-partida) #temporizador_gigante,
+body.page-spectator:not(.vista-partida) #espectador_fulgor_root,
+body.page-spectator:not(.vista-partida) #feedback_tiempo_flotante_root,
+body.page-spectator:not(.vista-partida) #lightning,
+body.page-spectator:not(.vista-partida) #countdown,
+body.page-spectator:not(.vista-partida) .confetti-canvas,
+body.page-spectator:not(.vista-partida) canvas.confetti-canvas,
+body.page-spectator:not(.vista-partida) #resucitar_mini_1,
+body.page-spectator:not(.vista-partida) #resucitar_mini_2 {
+    display: none !important;
+    pointer-events: none !important;
 }
 
 #spectator_fit_root {
@@ -3069,7 +3115,7 @@ body.page-players .textarea.textarea--pluma-cursor.textarea--pluma-cursor-visibl
     z-index: 20000;
     transform: translate(-33px, -38px);
     transition: opacity 120ms ease;
-    will-change: left, top, opacity;
+    will-change: transform, opacity;
 }
 
 .escritora-cursor-pluma.activa {
@@ -3111,6 +3157,10 @@ body.page-players.equipo-rojo .escritora-cursor-pluma::before {
     background-image: url("../public/img/pluma_roja.png");
     filter: drop-shadow(0 0 0.28em rgba(255, 93, 93, 0.95)) drop-shadow(0 0 0.58em rgba(255, 93, 93, 0.6));
     animation: cursorPlumaJuegoRojoGlow 1.35s ease-in-out infinite;
+}
+
+body.page-players .escritora-cursor-pluma::before {
+    animation: none !important;
 }
 
 @keyframes cursorPlumaJuegoAzulGlow {
@@ -5469,7 +5519,7 @@ body.page-spectator .calentamiento-palabra.is-highlight-exit {
   pointer-events: none;
   z-index: 12000;
   transition: opacity 120ms ease;
-  will-change: left, top, opacity;
+  will-change: transform, opacity;
 }
 
 .atributos-cursor-pluma.activo {
@@ -6697,6 +6747,10 @@ body.vista-creditos #espectador_fulgor_root,
 body.vista-creditos #feedback_tiempo_flotante_root,
 body.vista-creditos #lightning {
   display: none !important;
+}
+
+body.page-spectator.votacion-desventaja-activa #temas_container {
+  display: block !important;
 }
 
 .stats-espectador,

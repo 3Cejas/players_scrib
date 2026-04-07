@@ -670,6 +670,26 @@ const animateCSS = (element, animation, prefix = "animate__") =>
       URL.revokeObjectURL(link.href);
   }
 
+    function formatearFechaDescargaArchivo(fecha = new Date()) {
+      const dia = String(fecha.getDate()).padStart(2, "0");
+      const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+      const anio = String(fecha.getFullYear()).slice(-2);
+      return `${dia}-${mes}-${anio}`;
+  }
+
+    function normalizarNombreDescargaArchivo(nombreJugador, fallback = "JUGADOR") {
+      const nombreLimpio = String(nombreJugador || "")
+          .trim()
+          .replace(/[\\/:*?"<>|]+/g, "-")
+          .replace(/\s+/g, " ")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+      return nombreLimpio || fallback;
+  }
+
+    function crearBaseArchivoDescargaJugador(nombreJugador, fechaDescarga, fallback = "JUGADOR") {
+      return `${normalizarNombreDescargaArchivo(nombreJugador, fallback)}_${fechaDescarga}`;
+  }
     function descargar_textos() {
       const { jsPDF } = window.jspdf;
       var doc = new jsPDF();
@@ -726,11 +746,13 @@ const animateCSS = (element, animation, prefix = "animate__") =>
       div.innerHTML = texto_guardado;
       yActual = agregarTextoEnPagina(texto.innerText, margen, yActual + 5, 15, [0, 0, 0]);
   
+      const baseArchivo = crearBaseArchivoDescargaJugador(nombre.value, formatearFechaDescargaArchivo(), "JUGADOR");
+
       // Descargar el primer PDF y TXT
-      doc.save(nombre.value + '.pdf');
+      doc.save(baseArchivo + '.pdf');
       // Combina el nombre del escritor y el contenido HTML
       console.log("ES ES FINAAAL", nombre.value + "\n" + texto_guardado);
-      //downloadTxtFile(nombre.value + '.txt', nombre.value + "\n" + texto.innerText);
+      //downloadTxtFile(baseArchivo + '.txt', nombre.value + "\n" + texto.innerText);
   }
 
 function refrescarLayoutDashboardJuego1P() {

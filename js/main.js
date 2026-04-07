@@ -876,8 +876,8 @@ function log( text ) {
                 },
                 {
                     date: "9 de abril",
-                    writers: "Miriam vs Irene",
-                    performers: "Ari · Pablo · Judith · Diego",
+                    writers: "Diego vs Maca",
+                    performers: "Ari · Pablo · Judith · Ángela",
                     time: "20:30 hrs.",
                     venue: "Espacio Hollywood",
                     address: "C. del Infante, 3, Madrid",
@@ -886,7 +886,7 @@ function log( text ) {
                 },
                 {
                     date: "23 de abril",
-                    writers: "Teresa vs Maca",
+                    writers: "Teresa vs Irene",
                     performers: "Ari · Pablo · Judith · Diego",
                     time: "20:30 hrs.",
                     venue: "Espacio Hollywood",
@@ -896,7 +896,7 @@ function log( text ) {
                 },
                 {
                     date: "7 de mayo",
-                    writers: "Ángela vs Paula",
+                    writers: "Majo vs Paula",
                     performers: "Ari · Pablo · Judith · Diego",
                     time: "20:30 hrs.",
                     venue: "Espacio Hollywood",

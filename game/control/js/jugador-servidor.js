@@ -1325,6 +1325,26 @@ function downloadTxtFile(filename, htmlContent) {
     URL.revokeObjectURL(link.href);
 }
 
+function formatearFechaDescargaArchivo(fecha = new Date()) {
+    const dia = String(fecha.getDate()).padStart(2, "0");
+    const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+    const anio = String(fecha.getFullYear()).slice(-2);
+    return `${dia}-${mes}-${anio}`;
+}
+
+function normalizarNombreDescargaArchivo(nombre, fallback = "JUGADOR") {
+    const nombreLimpio = String(nombre || "")
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, " ")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    return nombreLimpio || fallback;
+}
+
+function crearBaseArchivoDescargaJugador(nombre, fechaDescarga, fallback = "JUGADOR") {
+    return `${normalizarNombreDescargaArchivo(nombre, fallback)}_${fechaDescarga}`;
+}
 function obtenerColorPorClases(clases) {
     if (clases.has("letra-verde")) return [0, 210, 110];
     if (clases.has("letra-roja") || clases.has("letra-prohibida") || clases.has("letra-maldita")) return [255, 90, 90];
@@ -2151,6 +2171,7 @@ function descargar_textos(opciones = {}) {
     const headerRightX = xLogo - 6;
 
     let accentColor = [70, 240, 255];
+    const fechaDescarga = formatearFechaDescargaArchivo();
 
     function agregarLogoEnPagina() {
          doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
@@ -2175,7 +2196,7 @@ function descargar_textos(opciones = {}) {
             if (dataUri) {
                 socket.emit('regalo_pdf_musas', {
                     player: playerId,
-                    filename: (nombre || `regalo_j${playerId}`) + '.pdf',
+                    filename: `${crearBaseArchivoDescargaJugador(nombre, fechaDescarga, "JUGADOR_" + playerId)}.pdf`,
                     data: dataUri
                 });
             }
@@ -2238,6 +2259,8 @@ function descargar_textos(opciones = {}) {
 
     const contenidoJ1 = obtenerContenidoExportable(1);
     const contenidoJ2 = obtenerContenidoExportable(2);
+    const baseArchivoJ1 = crearBaseArchivoDescargaJugador(val_nombre1, fechaDescarga, "JUGADOR_1");
+    const baseArchivoJ2 = crearBaseArchivoDescargaJugador(val_nombre2, fechaDescarga, "JUGADOR_2");
 
     agregarPaginaTexto();
 
@@ -2255,12 +2278,12 @@ function descargar_textos(opciones = {}) {
     emitirPdfMusas(1, val_nombre1, doc);
     // Descargar el primer PDF y TXT
     if (descargar) {
-        doc.save(val_nombre1 + '.pdf');
+        doc.save(baseArchivoJ1 + '.pdf');
     }
     // Combina el nombre del escritor y el contenido HTML
     console.log("ES ES FINAAAL", val_nombre1 + "\n" + texto_guardado1);
     if (descargar) {
-        downloadTxtFile(val_nombre1 + '.txt', val_nombre1 + "\n" + contenidoJ1.textoPlano);
+        downloadTxtFile(baseArchivoJ1 + '.txt', val_nombre1 + "\n" + contenidoJ1.textoPlano);
     }
     // Preparar el segundo documento
     doc = new jsPDF();
@@ -2282,11 +2305,11 @@ function descargar_textos(opciones = {}) {
     emitirPdfMusas(2, val_nombre2, doc);
     // Descargar el segundo PDF y TXT
     if (descargar) {
-        doc.save(val_nombre2 + '.pdf');
+        doc.save(baseArchivoJ2 + '.pdf');
     }
     // Combina el nombre del escritor y el contenido HTML
     if (descargar) {
-        downloadTxtFile(val_nombre2 + '.txt', val_nombre2 + "\n" + contenidoJ2.textoPlano);
+        downloadTxtFile(baseArchivoJ2 + '.txt', val_nombre2 + "\n" + contenidoJ2.textoPlano);
     }
 }
 

@@ -855,6 +855,10 @@ let timeout_cursor_pluma_juego_press = null;
 let timeout_cursor_pluma_atributos_press = null;
 let ultimo_cursor_pluma_juego_x = Math.round((window.innerWidth || 0) * 0.5);
 let ultimo_cursor_pluma_juego_y = Math.round((window.innerHeight || 0) * 0.5);
+let ultimo_cursor_pluma_atributos_x = Math.round((window.innerWidth || 0) * 0.5);
+let ultimo_cursor_pluma_atributos_y = Math.round((window.innerHeight || 0) * 0.5);
+let raf_cursor_pluma_juego = null;
+let raf_cursor_pluma_atributos = null;
 let observador_cursor_pluma_juego_escritora = null;
 const CURSOR_PLUMA_JUEGO_INACTIVIDAD_MS = 1600;
 const SOPORTA_CURSOR_PLUMA_JUEGO = (() => {
@@ -956,10 +960,24 @@ const ocultarCursorPlumaJuegoEscritora = () => {
     cursor_pluma_juego_escritora.classList.remove("activa");
 };
 
+const aplicarTransformCursorPlumaEscritora = (nodo, clientX, clientY) => {
+    if (!nodo) return;
+    nodo.style.transform = `translate3d(${Math.round(clientX)}px, ${Math.round(clientY)}px, 0) translate(-33px, -38px)`;
+};
+
 const posicionarCursorPlumaJuegoEscritora = (clientX, clientY) => {
     if (!cursor_pluma_juego_escritora) return;
-    cursor_pluma_juego_escritora.style.left = `${Math.round(clientX)}px`;
-    cursor_pluma_juego_escritora.style.top = `${Math.round(clientY)}px`;
+    ultimo_cursor_pluma_juego_x = clientX;
+    ultimo_cursor_pluma_juego_y = clientY;
+    if (raf_cursor_pluma_juego) return;
+    raf_cursor_pluma_juego = requestAnimationFrame(() => {
+        raf_cursor_pluma_juego = null;
+        aplicarTransformCursorPlumaEscritora(
+            cursor_pluma_juego_escritora,
+            ultimo_cursor_pluma_juego_x,
+            ultimo_cursor_pluma_juego_y
+        );
+    });
 };
 
 const pulsarCursorPlumaJuegoEscritora = () => {
@@ -1122,8 +1140,18 @@ const iniciarCursorPlumaJuegoEscritora = () => {
 
 const moverCursorPlumaAtributosEscritora = (clientX, clientY) => {
     if (!cursor_pluma_atributos_escritora) return;
-    cursor_pluma_atributos_escritora.style.left = `${clientX}px`;
-    cursor_pluma_atributos_escritora.style.top = `${clientY}px`;
+    ultimo_cursor_pluma_atributos_x = clientX;
+    ultimo_cursor_pluma_atributos_y = clientY;
+    if (!raf_cursor_pluma_atributos) {
+        raf_cursor_pluma_atributos = requestAnimationFrame(() => {
+            raf_cursor_pluma_atributos = null;
+            aplicarTransformCursorPlumaEscritora(
+                cursor_pluma_atributos_escritora,
+                ultimo_cursor_pluma_atributos_x,
+                ultimo_cursor_pluma_atributos_y
+            );
+        });
+    }
     cursor_pluma_atributos_escritora.classList.add("activo");
 };
 
@@ -4779,6 +4807,7 @@ function solicitarEnvioCaret() {
 }
 
 document.addEventListener("selectionchange", () => {
+    if (!texto || document.activeElement !== texto || !texto.isContentEditable) return;
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     if (!texto.contains(sel.anchorNode)) return;

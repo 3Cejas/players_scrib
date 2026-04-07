@@ -2900,6 +2900,7 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         limpiarFeedbackFlotanteEspectador();
     }
     if (document.body) {
+        document.body.classList.toggle("vista-partida", modo === "partida");
         document.body.classList.toggle("vista-calentamiento", modo === "calentamiento");
         document.body.classList.toggle("vista-stats", modo === "stats");
         document.body.classList.toggle("vista-nube-inspiracion", modo === "nube_inspiracion");
@@ -3328,6 +3329,7 @@ let inicio_modo_delay = false;
 let timeout_inicio_modo = null;
 let cola_palabras_pendientes_espectador = [];
 let Temasinterval;
+let estado_votacion_ventaja_espectador = "";
 let sonido_confetti_musa;
 let sonido_confetti;
 let audio_inverso;
@@ -4412,9 +4414,13 @@ const LIMPIEZAS = {
 };
 
 function ejecutarLimpiezaModo(nombreModo, data) {
+    const estadoVotacionPendiente = estado_votacion_ventaja_espectador;
     const limpieza = LIMPIEZAS[nombreModo] || LIMPIEZAS[""];
     if (typeof limpieza === "function") {
         limpieza(data);
+    }
+    if (estadoVotacionPendiente && !estado_votacion_ventaja_espectador) {
+        estado_votacion_ventaja_espectador = estadoVotacionPendiente;
     }
 }
 
@@ -5285,8 +5291,8 @@ socket.on('activar_modo', data => {
 
 function aplicarModo(data) {
     animacion_modo();
-    limpiarEstadoVotacionVentaja();
     ejecutarLimpiezaModo(modo_actual, data);
+    refrescarEstadoVotacionVentaja();
     modo_actual = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
     registrarModoTimelineStatsEspectador(modo_actual);
     ultimo_payload_modo_espectador = data || {};
@@ -5785,21 +5791,13 @@ socket.on("nueva letra", letra => {
 
 socket.on('elegir_ventaja_j1', () => {
     confetti_musas(0.25);
-    if (tema) {
-        tema.innerHTML = "";
-        tema.style.display = "";
-    }
-    iniciarAnimacionesSegunCondicion("azul");
+    activarEstadoVotacionVentaja("azul");
     
 });
 
 socket.on('elegir_ventaja_j2', () => {
     confetti_musas(0.75);
-    if (tema) {
-        tema.innerHTML = "";
-        tema.style.display = "";
-    }
-    iniciarAnimacionesSegunCondicion("rojo");
+    activarEstadoVotacionVentaja("rojo");
 });
 
 //FUNCIONES AUXILIARES.
@@ -5824,14 +5822,48 @@ function reproducirSonido(rutaArchivo, loop = false) {
 // Variables para guardar los IDs de intervalo si es necesario detenerlos despu�f©s
 
 // Ejemplo: iniciar animaciones seg�fºn un estado o condici�f³n
+function actualizarClaseVotacionVentajaEspectador() {
+  if (!document.body) return;
+  document.body.classList.toggle("votacion-desventaja-activa", Boolean(estado_votacion_ventaja_espectador));
+}
+
+function obtenerMensajeVotacionVentaja(condicion) {
+  if (condicion === "azul") {
+    return 'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">DESVENTAJA</span>';
+  }
+  if (condicion === "rojo") {
+    return 'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">DESVENTAJA</span>';
+  }
+  return "";
+}
+
+function refrescarEstadoVotacionVentaja() {
+  if (Temasinterval) {
+    clearInterval(Temasinterval);
+    Temasinterval = null;
+  }
+  actualizarClaseVotacionVentajaEspectador();
+  if (!tema) return;
+  tema.innerHTML = "";
+  tema.style.display = "";
+  if (estado_votacion_ventaja_espectador) {
+    iniciarAnimacionesSegunCondicion(estado_votacion_ventaja_espectador);
+  }
+}
+
+function activarEstadoVotacionVentaja(condicion) {
+  estado_votacion_ventaja_espectador = condicion === "rojo" ? "rojo" : "azul";
+  refrescarEstadoVotacionVentaja();
+}
+
 function iniciarAnimacionesSegunCondicion(condicion) {
   if (!tema) return;
   if (condicion === "azul") {
     // Inicia animaci�f³n para musas azules
-    Temasinterval = startDotAnimation(tema,'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+    Temasinterval = startDotAnimation(tema, obtenerMensajeVotacionVentaja("azul"));
   } else if (condicion === "rojo") {
     // Inicia animaci�f³n para musas rojas
-    Temasinterval = startDotAnimation(tema,   'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">VENTAJA</span>');
+    Temasinterval = startDotAnimation(tema, obtenerMensajeVotacionVentaja("rojo"));
   }
 }
 
@@ -5842,6 +5874,7 @@ function startDotAnimation(element, baseText, maxDots = 3, intervalTime = 500) {
     animateCSS(".temas", "flash");
     element.style.color = 'orange';
     element.style.fontSize = '1.5em';
+    element.innerHTML = baseText;
     const intervalId = setInterval(() => {
       dotCount = (dotCount + 1) % (maxDots + 1);
       element.innerHTML = baseText + ".".repeat(dotCount);
@@ -5851,6 +5884,8 @@ function startDotAnimation(element, baseText, maxDots = 3, intervalTime = 500) {
   }
 
   function limpiarEstadoVotacionVentaja() {
+    estado_votacion_ventaja_espectador = "";
+    actualizarClaseVotacionVentajaEspectador();
     if (tema) {
         tema.innerHTML = "";
         tema.style.display = "";
