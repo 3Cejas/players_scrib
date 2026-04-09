@@ -473,6 +473,17 @@ body.page-spectator:not(.vista-partida) #resucitar_mini_2 {
     will-change: transform;
 }
 
+body.page-spectator #spectator_fit_root {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    align-content: stretch;
+    justify-items: stretch;
+    gap: clamp(8px, 1.2vh, 18px);
+    height: 100vh;
+    padding: clamp(14px, 2vh, 26px) clamp(20px, 2.4vw, 42px) clamp(18px, 2.2vh, 30px);
+    box-sizing: border-box;
+}
+
 #players_fit_root {
     position: fixed;
     inset: 0 auto auto 0;
@@ -689,6 +700,30 @@ body.page-spectator .jugador2 {
     position: relative;
 }
 
+body.page-spectator .jugador1,
+body.page-spectator .jugador2 {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(8px, 1vh, 16px);
+}
+
+body.page-spectator .jugador1 > br,
+body.page-spectator .jugador2 > br {
+    display: none;
+}
+
+body.page-spectator .jugador1 > [align="center"],
+body.page-spectator .jugador2 > [align="center"] {
+    margin-top: auto;
+    display: grid;
+    justify-items: center;
+    gap: clamp(8px, 0.9vh, 14px);
+}
+
 body.page-spectator .marcador-equipo[data-ganador],
 body.page-players #metadatos[data-ganador] {
     overflow: visible;
@@ -786,6 +821,16 @@ body.page-players #metadatos[data-ganador]::after {
 
 body.page-spectator .tiempo {
     font-size: calc(2.5vw * var(--spectator-time-scale, 1));
+}
+
+body.page-spectator .jugador1 .tiempo-vida,
+body.page-spectator .jugador2 .tiempo-vida {
+    margin: 0 auto;
+}
+
+body.page-spectator .feedback_tiempo {
+    margin: 0;
+    min-height: clamp(18px, 2vh, 28px);
 }
 
 .tiempo-vida {
@@ -927,6 +972,12 @@ body.page-spectator #info_general.info-general-panel {
     position: relative;
     z-index: 12;
     text-align: center;
+}
+
+body.page-spectator #info_general.info-general-panel {
+    width: min(92vw, 1360px);
+    margin: clamp(4px, 0.6vh, 10px) auto 0;
+    padding-bottom: clamp(2px, 0.6vh, 10px);
 }
 
 body.page-spectator #info_general.info-general-panel.info-general-panel--oculto {
@@ -3394,6 +3445,8 @@ body.page-spectator .jugador2 #texto1 {
     background-color: transparent;
     background-image: none;
     box-shadow: none;
+    width: min(100%, 96%);
+    margin: 0 auto;
 }
 
 body.page-spectator .jugador1.putada-visual-activa,
@@ -3677,6 +3730,81 @@ select {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+}
+
+body.page-spectator #contenedor_espectador {
+  width: min(100%, 1760px);
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: clamp(28px, 3.2vw, 72px);
+  padding: clamp(10px, 1.2vh, 18px) clamp(16px, 2vw, 28px) 0;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+body.page-spectator .cabecera {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+  gap: clamp(6px, 0.8vh, 14px);
+}
+
+body.page-spectator .cabecera > * {
+  margin: 0;
+}
+
+body.page-spectator .neon_espectador {
+  margin: 0;
+  line-height: 0.86;
+}
+
+body.page-spectator #logo {
+  display: grid;
+  justify-items: center;
+  gap: clamp(6px, 0.8vh, 12px);
+}
+
+body.page-spectator #logo br {
+  display: none;
+}
+
+body.page-spectator #logo .sub {
+  margin: 0;
+  font-size: clamp(11px, calc(0.8vw * var(--spectator-meta-scale, 1)), 18px);
+}
+
+body.page-spectator #logo img {
+  width: clamp(88px, 8.5vw, 156px) !important;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+body.page-spectator #temas_container,
+body.page-spectator #inspiracion.inspiracion {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.page-spectator #alineador1,
+body.page-spectator #alineador2 {
+  margin: 0;
+  min-height: 0;
+}
+
+body.page-spectator .nombre {
+  margin: 0;
+  line-height: 0.98;
+}
+
+body.page-spectator .jugador1 .info,
+body.page-spectator .jugador2 .info {
+  width: min(100%, 34rem);
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 body.page-spectator .intro-reveal-bloque {

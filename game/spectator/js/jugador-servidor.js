@@ -1370,6 +1370,35 @@ const resetAjusteViewportEspectador = () => {
     spectator_fit_root.style.removeProperty("transform");
 };
 
+function medirLimitesVisiblesViewportEspectador() {
+    if (!spectator_fit_root) {
+        return { width: 1, height: 1 };
+    }
+    const rootRect = spectator_fit_root.getBoundingClientRect();
+    let maxRight = rootRect.left + spectator_fit_root.offsetWidth;
+    let maxBottom = rootRect.top + spectator_fit_root.offsetHeight;
+    const nodos = spectator_fit_root.querySelectorAll("*");
+    nodos.forEach((nodo) => {
+        if (!(nodo instanceof HTMLElement)) return;
+        const estilos = window.getComputedStyle(nodo);
+        if (
+            estilos.display === "none"
+            || estilos.visibility === "hidden"
+            || estilos.position === "fixed"
+        ) {
+            return;
+        }
+        const rect = nodo.getBoundingClientRect();
+        if (rect.width <= 0 && rect.height <= 0) return;
+        maxRight = Math.max(maxRight, rect.right);
+        maxBottom = Math.max(maxBottom, rect.bottom);
+    });
+    return {
+        width: Math.max(Math.ceil(maxRight - rootRect.left), Math.ceil(spectator_fit_root.offsetWidth || 0), 1),
+        height: Math.max(Math.ceil(maxBottom - rootRect.top), Math.ceil(spectator_fit_root.offsetHeight || 0), 1)
+    };
+}
+
 const ajustarViewportEspectador = () => {
     if (!spectator_fit_root) return;
     const teleprompterActivo = Boolean(teleprompter_estado && teleprompter_estado.visible);
@@ -1381,8 +1410,9 @@ const ajustarViewportEspectador = () => {
     spectator_fit_root.style.transform = "none";
     const viewportW = Math.max(window.innerWidth || 0, 1);
     const viewportH = Math.max(window.innerHeight || 0, 1);
-    const anchoNatural = Math.max(Math.ceil(spectator_fit_root.scrollWidth || 0), 1);
-    const altoNatural = Math.max(Math.ceil(spectator_fit_root.scrollHeight || 0), 1);
+    const limitesVisibles = medirLimitesVisiblesViewportEspectador();
+    const anchoNatural = Math.max(Math.ceil(limitesVisibles.width || 0), 1);
+    const altoNatural = Math.max(Math.ceil(limitesVisibles.height || 0), 1);
     const escalaMaxima = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
 
     let escala = escalaMaxima;
