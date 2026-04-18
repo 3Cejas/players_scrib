@@ -1194,6 +1194,8 @@ let creditos_visibles = false;
 let teleprompter_visible = false;
 let panel_control_previo_teleprompter = "controles";
 let teleprompter_emit_timeout = null;
+let teleprompter_play_raf = null;
+let teleprompter_last_tick = null;
 let creditos_emit_timeout = null;
 let listeners_creditos_inicializados = false;
 
@@ -1306,39 +1308,8 @@ function procesarTeleprompterAckControl(payload = {}) {
     actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado en espectador`, "ok");
 }
 
-function sincronizarTeleprompterEstadoControl(state = {}) {
-    if (!state || typeof state !== "object") return;
-    if (typeof state.visible === "boolean") {
-        teleprompter_state.visible = state.visible;
-    }
-    if (typeof state.text === "string") {
-        teleprompter_state.text = state.text;
-    }
-    if (Number.isFinite(state.fontSize)) {
-        teleprompter_state.fontSize = Math.min(TELEPROMPTER_FONT_MAX, Math.max(TELEPROMPTER_FONT_MIN, Number(state.fontSize)));
-    }
-    if (Number.isFinite(state.speed)) {
-        teleprompter_state.speed = Math.min(TELEPROMPTER_SPEED_MAX, Math.max(TELEPROMPTER_SPEED_MIN, Number(state.speed)));
-    }
-    if (typeof state.playing === "boolean") {
-        teleprompter_state.playing = state.playing;
-    }
-    if (Number.isFinite(state.scroll)) {
-        teleprompter_state.scroll = Number(state.scroll);
-    }
-    if (state.source !== undefined) {
-        const source = Number(state.source);
-        teleprompter_state.source = source === 2 ? 2 : source === 1 ? 1 : 0;
-    }
-    if (Number.isFinite(state.loadId)) {
-        teleprompter_state.loadId = Math.max(0, Math.trunc(Number(state.loadId)));
-    }
-    actualizarTeleprompterUI();
-}
-
 if (typeof window !== "undefined") {
     window.procesarTeleprompterAckControl = procesarTeleprompterAckControl;
-    window.sincronizarTeleprompterEstadoControl = sincronizarTeleprompterEstadoControl;
 }
 
 const animateCSS = (element, animation, prefix = "animate__") =>
@@ -1532,6 +1503,7 @@ function toggleParametros() {
     if (teleprompterEstabaActivo) {
         teleprompter_state.visible = false;
         teleprompter_state.playing = false;
+        detenerTeleprompterPlay();
     }
     const mostrarParametros = teleprompterEstabaActivo ? true : !parametros_visibles;
     aplicarVistaPanelControl(mostrarParametros ? "parametros" : "controles");
@@ -1544,6 +1516,7 @@ function toggleCreditos() {
     if (teleprompterEstabaActivo) {
         teleprompter_state.visible = false;
         teleprompter_state.playing = false;
+        detenerTeleprompterPlay();
     }
     const mostrarCreditos = teleprompterEstabaActivo ? true : !creditos_visibles;
     aplicarVistaPanelControl(mostrarCreditos ? "creditos" : "controles");
@@ -1640,6 +1613,38 @@ function emitirTeleprompter(inmediato = false) {
     }, 60);
 }
 
+function teleprompterPlayLoop(ts) {
+    if (!teleprompter_state.playing) {
+        teleprompter_play_raf = null;
+        teleprompter_last_tick = null;
+        return;
+    }
+    if (teleprompter_last_tick === null) {
+        teleprompter_last_tick = ts;
+    }
+    const dt = (ts - teleprompter_last_tick) / 1000;
+    teleprompter_last_tick = ts;
+    if (dt > 0) {
+        teleprompter_state.scroll += teleprompter_state.speed * dt;
+        emitirTeleprompter();
+    }
+    teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoop);
+}
+
+function iniciarTeleprompterPlay() {
+    if (teleprompter_play_raf) return;
+    teleprompter_last_tick = null;
+    teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoop);
+}
+
+function detenerTeleprompterPlay() {
+    if (teleprompter_play_raf) {
+        cancelAnimationFrame(teleprompter_play_raf);
+    }
+    teleprompter_play_raf = null;
+    teleprompter_last_tick = null;
+}
+
 function toggleTeleprompter(forzarCerrar = false) {
     const estaVisible = teleprompter_visible;
     if (forzarCerrar && !estaVisible) {
@@ -1657,6 +1662,7 @@ function toggleTeleprompter(forzarCerrar = false) {
     } else {
         teleprompter_state.visible = false;
         teleprompter_state.playing = false;
+        detenerTeleprompterPlay();
         const vistaRetorno = (PANEL_CONTROL_MODOS.has(panel_control_previo_teleprompter) && panel_control_previo_teleprompter !== "teleprompter")
             ? panel_control_previo_teleprompter
             : "controles";
@@ -1688,6 +1694,7 @@ function teleprompterCargarTexto(jugador) {
     if (!teleprompter_visible) {
         aplicarVistaPanelControl("teleprompter");
     }
+    detenerTeleprompterPlay();
     actualizarEstadoCargaTeleprompter(`Cargando texto ${etiqueta} en espectador...`, "info");
     iniciarEsperaAckTeleprompter(loadId, source);
     actualizarTeleprompterUI();
@@ -1729,6 +1736,9 @@ function teleprompterCambiarFuente(delta) {
     teleprompter_state.fontSize = nueva;
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
+    if (teleprompter_state.playing && !teleprompter_play_raf) {
+        iniciarTeleprompterPlay();
+    }
 }
 
 function teleprompterCambiarVelocidad(delta) {
@@ -1736,13 +1746,29 @@ function teleprompterCambiarVelocidad(delta) {
     teleprompter_state.speed = nueva;
     actualizarTeleprompterUI();
     emitirTeleprompter();
+    if (teleprompter_state.playing && !teleprompter_play_raf) {
+        iniciarTeleprompterPlay();
+    }
 }
 
 function teleprompterTogglePlay() {
     teleprompter_state.playing = !teleprompter_state.playing;
     actualizarTeleprompterUI();
+    if (teleprompter_state.playing) {
+        iniciarTeleprompterPlay();
+    } else {
+        detenerTeleprompterPlay();
+    }
     emitirTeleprompter(true);
 }
+
+const TELEPROMPTER_GAMEPAD = {
+    deadzone: 0.18,
+    analogSpeed: 320
+};
+let teleprompter_gamepad_loop = null;
+let teleprompter_gamepad_last = null;
+let teleprompter_gamepad_prev_buttons = [];
 const teleprompter_btn_timeouts = new Map();
 const teleprompter_hold_intervals = new Map();
 
@@ -1779,23 +1805,6 @@ const setBotonHeld = (id, activo) => {
         el.classList.remove("tp-btn--held");
     }
 };
-
-function procesarTeleprompterFeedbackControl(payload = {}) {
-    const tipo = typeof payload.type === "string" ? payload.type : "";
-    const id = typeof payload.id === "string" ? payload.id : "";
-    if (!tipo || !id) return;
-    if (tipo === "press") {
-        activarBotonVisual(id, Math.max(60, Math.trunc(Number(payload.duration) || 160)));
-        return;
-    }
-    if (tipo === "held") {
-        setBotonHeld(id, Boolean(payload.active));
-    }
-}
-
-if (typeof window !== "undefined") {
-    window.procesarTeleprompterFeedbackControl = procesarTeleprompterFeedbackControl;
-}
 
 const iniciarHoldTeleprompter = (elemento, accion) => {
     if (!elemento || !accion) return;
@@ -1855,7 +1864,128 @@ const configurarHoldTeleprompter = () => {
     });
 };
 
+const obtenerGamepadActivo = () => {
+    if (!navigator.getGamepads) return null;
+    const pads = navigator.getGamepads();
+    if (!pads) return null;
+    for (let i = 0; i < pads.length; i++) {
+        const pad = pads[i];
+        if (pad && pad.connected) return pad;
+    }
+    return null;
+};
+
+const botonJustPressed = (pad, index, threshold = 0.5) => {
+    if (!pad || !pad.buttons || !pad.buttons[index]) return false;
+    const btn = pad.buttons[index];
+    const pressed = !!(btn.pressed || btn.value > threshold);
+    const prev = !!teleprompter_gamepad_prev_buttons[index];
+    teleprompter_gamepad_prev_buttons[index] = pressed;
+    return pressed && !prev;
+};
+
+function teleprompterGamepadLoop(ts) {
+    const pad = obtenerGamepadActivo();
+    if (!pad) {
+        teleprompter_gamepad_last = ts;
+        teleprompter_gamepad_prev_buttons = [];
+        teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoop);
+        return;
+    }
+    const tiempoActual = ts || performance.now();
+    const dt = teleprompter_gamepad_last ? (tiempoActual - teleprompter_gamepad_last) / 1000 : 0;
+    teleprompter_gamepad_last = tiempoActual;
+
+    if (teleprompter_state.visible) {
+        const axisY = pad.axes && pad.axes.length > 1 ? pad.axes[1] : 0;
+        const abs = Math.abs(axisY);
+        if (abs > TELEPROMPTER_GAMEPAD.deadzone && dt > 0) {
+            const factor = (abs - TELEPROMPTER_GAMEPAD.deadzone) / (1 - TELEPROMPTER_GAMEPAD.deadzone);
+            const delta = axisY * factor * TELEPROMPTER_GAMEPAD.analogSpeed * dt;
+            teleprompter_state.scroll = Math.max(0, teleprompter_state.scroll + delta);
+            emitirTeleprompter();
+        }
+
+        if (abs > TELEPROMPTER_GAMEPAD.deadzone) {
+            setBotonHeld("tp_dpad_up", axisY < 0);
+            setBotonHeld("tp_dpad_down", axisY > 0);
+        } else {
+            setBotonHeld("tp_dpad_up", false);
+            setBotonHeld("tp_dpad_down", false);
+        }
+
+        if (botonJustPressed(pad, 12)) {
+            teleprompterSubir();
+            activarBotonVisual("tp_dpad_up");
+        }
+        if (botonJustPressed(pad, 13)) {
+            teleprompterBajar();
+            activarBotonVisual("tp_dpad_down");
+        }
+        if (botonJustPressed(pad, 14)) {
+            teleprompterCambiarVelocidad(-5);
+            activarBotonVisual("tp_dpad_left");
+        }
+        if (botonJustPressed(pad, 15)) {
+            teleprompterCambiarVelocidad(5);
+            activarBotonVisual("tp_dpad_right");
+        }
+        if (botonJustPressed(pad, 0)) {
+            teleprompterTogglePlay();
+            activarBotonVisual("tp_x");
+            activarBotonVisual("teleprompter_play");
+        }
+        if (botonJustPressed(pad, 1)) {
+            teleprompterCambiarFuente(2);
+            activarBotonVisual("tp_circle");
+        }
+        if (botonJustPressed(pad, 2)) {
+            teleprompterCambiarFuente(-2);
+            activarBotonVisual("tp_square");
+        }
+        if (botonJustPressed(pad, 3)) {
+            teleprompterBajarGrande();
+            activarBotonVisual("tp_triangle");
+        }
+        if (botonJustPressed(pad, 4)) {
+            teleprompterIrInicio();
+            activarBotonVisual("tp_l1");
+        }
+        if (botonJustPressed(pad, 5)) {
+            teleprompterIrFinal();
+            activarBotonVisual("tp_r1");
+        }
+        if (botonJustPressed(pad, 6, 0.6)) {
+            teleprompterCambiarFuente(-2);
+            activarBotonVisual("tp_l2");
+        }
+        if (botonJustPressed(pad, 7, 0.6)) {
+            teleprompterCambiarFuente(2);
+            activarBotonVisual("tp_r2");
+        }
+    } else {
+        teleprompter_gamepad_prev_buttons = pad.buttons.map((btn) => !!(btn && (btn.pressed || btn.value > 0.5)));
+        setBotonHeld("tp_dpad_up", false);
+        setBotonHeld("tp_dpad_down", false);
+    }
+
+    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoop);
+}
+
+const iniciarTeleprompterGamepad = () => {
+    if (teleprompter_gamepad_loop) return;
+    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoop);
+};
+
 if (typeof window !== "undefined") {
+    window.addEventListener("gamepadconnected", iniciarTeleprompterGamepad);
+    window.addEventListener("gamepaddisconnected", () => {
+        const pad = obtenerGamepadActivo();
+        if (!pad) {
+            teleprompter_gamepad_prev_buttons = [];
+        }
+    });
+    window.addEventListener("load", iniciarTeleprompterGamepad);
     window.addEventListener("load", configurarHoldTeleprompter);
     window.addEventListener("load", () => {
         refrescarTextosEstaticosControl();

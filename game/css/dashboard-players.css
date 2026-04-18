@@ -371,9 +371,9 @@ body.page-spectator #spectator_fit_root::before,
 body.page-spectator #spectator_fit_root::after {
     content: "";
     position: absolute;
-    top: -42vh;
-    bottom: -42vh;
-    width: 112vw;
+    top: 0;
+    bottom: 0;
+    width: 52vw;
     pointer-events: none;
     opacity: 0;
     z-index: 1850;
@@ -393,17 +393,17 @@ body.page-spectator .resucitar-spectator .quantity-display {
 }
 
 body.page-spectator #spectator_fit_root::before {
-    left: -44vw;
+    left: 0;
     transform: translateX(-2.4%);
-    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 68%, transparent 100%);
-    mask-image: linear-gradient(to right, #000 0%, #000 68%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 84%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 0%, #000 84%, transparent 100%);
 }
 
 body.page-spectator #spectator_fit_root::after {
-    right: -44vw;
+    right: 0;
     transform: translateX(2.4%);
-    -webkit-mask-image: linear-gradient(to left, #000 0%, #000 68%, transparent 100%);
-    mask-image: linear-gradient(to left, #000 0%, #000 68%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to left, #000 0%, #000 84%, transparent 100%);
+    mask-image: linear-gradient(to left, #000 0%, #000 84%, transparent 100%);
 }
 
 body.page-spectator.gameover-lado-1 #spectator_fit_root::before {
@@ -471,17 +471,6 @@ body.page-spectator:not(.vista-partida) #resucitar_mini_2 {
     z-index: 1;
     transform-origin: top left;
     will-change: transform;
-}
-
-body.page-spectator #spectator_fit_root {
-    display: grid;
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
-    align-content: stretch;
-    justify-items: stretch;
-    gap: clamp(8px, 1.2vh, 18px);
-    height: 100vh;
-    padding: clamp(14px, 2vh, 26px) clamp(20px, 2.4vw, 42px) clamp(18px, 2.2vh, 30px);
-    box-sizing: border-box;
 }
 
 #players_fit_root {
@@ -700,30 +689,6 @@ body.page-spectator .jugador2 {
     position: relative;
 }
 
-body.page-spectator .jugador1,
-body.page-spectator .jugador2 {
-    width: auto;
-    min-width: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: clamp(8px, 1vh, 16px);
-}
-
-body.page-spectator .jugador1 > br,
-body.page-spectator .jugador2 > br {
-    display: none;
-}
-
-body.page-spectator .jugador1 > [align="center"],
-body.page-spectator .jugador2 > [align="center"] {
-    margin-top: auto;
-    display: grid;
-    justify-items: center;
-    gap: clamp(8px, 0.9vh, 14px);
-}
-
 body.page-spectator .marcador-equipo[data-ganador],
 body.page-players #metadatos[data-ganador] {
     overflow: visible;
@@ -821,16 +786,6 @@ body.page-players #metadatos[data-ganador]::after {
 
 body.page-spectator .tiempo {
     font-size: calc(2.5vw * var(--spectator-time-scale, 1));
-}
-
-body.page-spectator .jugador1 .tiempo-vida,
-body.page-spectator .jugador2 .tiempo-vida {
-    margin: 0 auto;
-}
-
-body.page-spectator .feedback_tiempo {
-    margin: 0;
-    min-height: clamp(18px, 2vh, 28px);
 }
 
 .tiempo-vida {
@@ -972,12 +927,6 @@ body.page-spectator #info_general.info-general-panel {
     position: relative;
     z-index: 12;
     text-align: center;
-}
-
-body.page-spectator #info_general.info-general-panel {
-    width: min(92vw, 1360px);
-    margin: clamp(4px, 0.6vh, 10px) auto 0;
-    padding-bottom: clamp(2px, 0.6vh, 10px);
 }
 
 body.page-spectator #info_general.info-general-panel.info-general-panel--oculto {
@@ -2170,17 +2119,6 @@ body.page-players .feedback-tiempo-float.negativo {
     --feedback-float-color: #ff7f7f;
 }
 
-body.page-spectator .feedback-tiempo-float.feedback-tiempo-float--putada {
-    padding: 0.18em 0.72em;
-    font-size: clamp(22px, 2.35vw, 48px);
-    letter-spacing: 0.055em;
-    white-space: nowrap;
-    box-shadow:
-        0 0 1.15em color-mix(in srgb, var(--feedback-float-color), transparent 62%),
-        inset 0 0 0.66em rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(10px);
-}
-
 @keyframes feedbackTiempoFlotanteSube {
     0% {
         opacity: 0;
@@ -2196,18 +2134,6 @@ body.page-spectator .feedback-tiempo-float.feedback-tiempo-float--putada {
     100% {
         opacity: 0;
         transform: translate(var(--feedback-float-drift-x), var(--feedback-float-rise-y));
-    }
-}
-
-@keyframes spectatorPutadaBadgePulse {
-    0% {
-        transform: translate(-50%, 0) scale(0.98);
-    }
-    50% {
-        transform: translate(-50%, -2px) scale(1.02);
-    }
-    100% {
-        transform: translate(-50%, 0) scale(0.98);
     }
 }
 
@@ -3445,84 +3371,6 @@ body.page-spectator .jugador2 #texto1 {
     background-color: transparent;
     background-image: none;
     box-shadow: none;
-    width: min(100%, 96%);
-    margin: 0 auto;
-}
-
-body.page-spectator .jugador1.putada-visual-activa,
-body.page-spectator .jugador2.putada-visual-activa {
-    --putada-visual-accent: #ffd86b;
-}
-
-body.page-spectator .jugador1.putada-visual-activa::after,
-body.page-spectator .jugador2.putada-visual-activa::after {
-    content: attr(data-putada-visual);
-    position: absolute;
-    left: 50%;
-    top: clamp(84px, 8vw, 128px);
-    transform: translate(-50%, 0);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.1em;
-    padding: 0.16em 0.82em;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--putada-visual-accent), transparent 48%);
-    background:
-        radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--putada-visual-accent), white 22%) 0%, transparent 58%),
-        color-mix(in srgb, var(--putada-visual-accent), transparent 88%);
-    box-shadow:
-        0 0 1.15rem color-mix(in srgb, var(--putada-visual-accent), transparent 72%),
-        inset 0 0 0.9rem color-mix(in srgb, var(--putada-visual-accent), transparent 88%);
-    color: var(--putada-visual-accent);
-    font-family: "Retro-gaming";
-    font-size: clamp(13px, 1.05vw, 20px);
-    letter-spacing: 0.08em;
-    line-height: 1;
-    text-shadow:
-        0.04em 0.04em 0 rgba(0, 0, 0, 0.72),
-        0 0 0.42em color-mix(in srgb, var(--putada-visual-accent), transparent 65%);
-    white-space: nowrap;
-    pointer-events: none;
-    z-index: 12;
-    animation: spectatorPutadaBadgePulse 1.55s ease-in-out infinite;
-}
-
-body.page-spectator .jugador1.putada-visual-activa #texto,
-body.page-spectator .jugador2.putada-visual-activa #texto1 {
-    border-radius: clamp(18px, 2vw, 28px);
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--putada-visual-accent), transparent 90%) 0%, transparent 42%),
-        color-mix(in srgb, var(--putada-visual-accent), transparent 97%);
-    box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--putada-visual-accent), transparent 42%),
-        0 0 1.35rem color-mix(in srgb, var(--putada-visual-accent), transparent 82%),
-        inset 0 0 1.15rem color-mix(in srgb, var(--putada-visual-accent), transparent 92%);
-}
-
-body.page-spectator .jugador1.putada-visual--tortuga,
-body.page-spectator .jugador2.putada-visual--tortuga {
-    --putada-visual-accent: #ffd86b;
-}
-
-body.page-spectator .jugador1.putada-visual--rayo,
-body.page-spectator .jugador2.putada-visual--rayo {
-    --putada-visual-accent: #fff06b;
-}
-
-body.page-spectator .jugador1.putada-visual--borroso,
-body.page-spectator .jugador2.putada-visual--borroso {
-    --putada-visual-accent: #74e8ff;
-}
-
-body.page-spectator .jugador1.putada-visual--inverso,
-body.page-spectator .jugador2.putada-visual--inverso {
-    --putada-visual-accent: #ff9df1;
-}
-
-body.page-spectator .jugador1.putada-visual--pluma,
-body.page-spectator .jugador2.putada-visual--pluma {
-    --putada-visual-accent: #ffaf78;
 }
 
 .textarea1::-webkit-scrollbar {
@@ -3730,81 +3578,6 @@ select {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-}
-
-body.page-spectator #contenedor_espectador {
-  width: min(100%, 1760px);
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
-  gap: clamp(28px, 3.2vw, 72px);
-  padding: clamp(10px, 1.2vh, 18px) clamp(16px, 2vw, 28px) 0;
-  box-sizing: border-box;
-  margin: 0 auto;
-}
-
-body.page-spectator .cabecera {
-  width: min(100%, 980px);
-  margin: 0 auto;
-  display: grid;
-  justify-items: center;
-  gap: clamp(6px, 0.8vh, 14px);
-}
-
-body.page-spectator .cabecera > * {
-  margin: 0;
-}
-
-body.page-spectator .neon_espectador {
-  margin: 0;
-  line-height: 0.86;
-}
-
-body.page-spectator #logo {
-  display: grid;
-  justify-items: center;
-  gap: clamp(6px, 0.8vh, 12px);
-}
-
-body.page-spectator #logo br {
-  display: none;
-}
-
-body.page-spectator #logo .sub {
-  margin: 0;
-  font-size: clamp(11px, calc(0.8vw * var(--spectator-meta-scale, 1)), 18px);
-}
-
-body.page-spectator #logo img {
-  width: clamp(88px, 8.5vw, 156px) !important;
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-body.page-spectator #temas_container,
-body.page-spectator #inspiracion.inspiracion {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-body.page-spectator #alineador1,
-body.page-spectator #alineador2 {
-  margin: 0;
-  min-height: 0;
-}
-
-body.page-spectator .nombre {
-  margin: 0;
-  line-height: 0.98;
-}
-
-body.page-spectator .jugador1 .info,
-body.page-spectator .jugador2 .info {
-  width: min(100%, 34rem);
-  max-width: 100%;
-  margin: 0 auto;
 }
 
 body.page-spectator .intro-reveal-bloque {

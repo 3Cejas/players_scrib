@@ -3087,9 +3087,6 @@ const MODOS = {
         es_pausa = true;
         tiempo_restante = TIEMPO_MODIFICADOR - (new Date().getTime() - tiempo_inicial.getTime());
         pausa();
-        // Fuerza un snapshot al entrar en tertulia para resincronizar
-        // vistas remotas aunque no haya una nueva pulsacion de texto.
-        sendText();
         if (explicacion) {
             explicacion.style.color = "#86d0ff";
             explicacion.innerHTML = traducirDescripcionModoEscritora("tertulia", "DIALOGA CON TUS MUSAS");
@@ -3413,10 +3410,9 @@ socket.on("count", (data) => {
         console.log("MIERDA PUTA")
         console.log(texto.innerHTML)
         console.log(temp_text_inverso_activado)
-        const rondaActivaParaResolucion = hayRondaActivaParaResucitar();
-        if (!terminado && rondaActivaParaResolucion && puedeResucitarSegunEstado()) {
+        if (!terminado && !partida_global_finalizada && puedeResucitarSegunEstado()) {
             iniciarMenu();
-        } else if (!terminado && rondaActivaParaResolucion) {
+        } else if (!terminado) {
             esperando_resurreccion_tiempo = false;
             btnNo.click();
         }
@@ -4044,16 +4040,8 @@ function recibir_palabra_prohibida(data) {
         return Math.max(palabrasGuardadas, palabrasActuales);
       }
 
-      function hayRondaActivaParaResucitar() {
-        return Boolean(
-          !partida_global_finalizada
-          && typeof modo_actual === "string"
-          && modo_actual.trim().length > 0
-        );
-      }
-
       function puedeResucitarSegunEstado() {
-        return hayRondaActivaParaResucitar()
+        return !partida_global_finalizada
           && modo_actual !== "frase final"
           && obtenerPalabrasDisponiblesResucitar() > 0;
       }
@@ -4098,19 +4086,6 @@ function recibir_palabra_prohibida(data) {
           : menu === "quantity"
             ? (quantityMenu && quantityMenu.style.display !== "none")
             : false;
-        if (!hayRondaActivaParaResucitar()) {
-          socket.emit("resucitar_menu", {
-            player: playerNumber,
-            menu: "hidden",
-            visible: false,
-            mainIndex: 0,
-            quantityIndex: 0,
-            palabras: 0,
-            max: 0,
-            segundos: 0
-          });
-          return;
-        }
         socket.emit("resucitar_menu", {
           player: playerNumber,
           menu,

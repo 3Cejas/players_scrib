@@ -194,35 +194,15 @@ function activarFulgorLadoEspectador(playerId, tipo) {
 const teleprompter_overlay = getEl("teleprompter_overlay");
 const teleprompter_screen = getEl("teleprompter_screen");
 const teleprompter_text = getEl("teleprompter_text");
-const TELEPROMPTER_FONT_MIN = 18;
-const TELEPROMPTER_FONT_MAX = 80;
-const TELEPROMPTER_SPEED_MIN = 5;
-const TELEPROMPTER_SPEED_MAX = 200;
-const TELEPROMPTER_GAMEPAD = {
-    deadzone: 0.18,
-    analogSpeed: 320
-};
 const teleprompter_estado = {
     visible: false,
     text: "",
     fontSize: 36,
-    speed: 25,
-    playing: false,
     scroll: 0,
     source: 0,
     loadId: 0
 };
 let teleprompter_last_ack_load_id = 0;
-let teleprompter_emit_timeout = null;
-let teleprompter_play_raf = null;
-let teleprompter_last_tick = null;
-let teleprompter_gamepad_loop = null;
-let teleprompter_gamepad_last = null;
-let teleprompter_gamepad_prev_buttons = [];
-const teleprompter_feedback_hold_state = {
-    tp_dpad_up: false,
-    tp_dpad_down: false
-};
 
 const sincronizarTeleprompterScroll = () => {
     const screen = teleprompter_screen || getEl("teleprompter_screen");
@@ -235,67 +215,6 @@ const sincronizarTeleprompterScroll = () => {
     }
     objetivo = Math.max(0, Math.min(objetivo, maxScroll));
     text.style.transform = `translateY(${-objetivo}px)`;
-};
-
-const teleprompterTieneTexto = () => (
-    typeof teleprompter_estado.text === "string" && teleprompter_estado.text.trim().length > 0
-);
-
-const teleprompterPuedeMoverse = () => teleprompter_estado.visible && teleprompterTieneTexto();
-
-const teleprompterDebeReproducirse = () => (
-    teleprompterPuedeMoverse() && teleprompter_estado.playing && teleprompter_estado.speed > 0
-);
-
-const emitirTeleprompterEstadoEspectador = (inmediato = false) => {
-    if (!socket || typeof socket.emit !== "function") return;
-    if (inmediato) {
-        socket.emit("teleprompter_control", { state: { ...teleprompter_estado } });
-        return;
-    }
-    if (teleprompter_emit_timeout) return;
-    teleprompter_emit_timeout = setTimeout(() => {
-        teleprompter_emit_timeout = null;
-        socket.emit("teleprompter_control", { state: { ...teleprompter_estado } });
-    }, 60);
-};
-
-const emitirTeleprompterFeedbackEspectador = (payload = {}) => {
-    if (!socket || typeof socket.emit !== "function") return;
-    const type = typeof payload.type === "string" ? payload.type.trim() : "";
-    const id = typeof payload.id === "string" ? payload.id.trim() : "";
-    if (!type || !id) return;
-    socket.emit("teleprompter_feedback", {
-        type,
-        id,
-        active: Boolean(payload.active),
-        duration: Math.max(60, Math.trunc(Number(payload.duration) || 160))
-    });
-};
-
-const activarBotonFeedbackEspectador = (id, duration = 160) => {
-    emitirTeleprompterFeedbackEspectador({
-        type: "press",
-        id,
-        duration
-    });
-};
-
-const setHoldFeedbackEspectador = (id, active) => {
-    if (!id) return;
-    const activo = Boolean(active);
-    if (teleprompter_feedback_hold_state[id] === activo) return;
-    teleprompter_feedback_hold_state[id] = activo;
-    emitirTeleprompterFeedbackEspectador({
-        type: "held",
-        id,
-        active: activo
-    });
-};
-
-const resetHoldFeedbackEspectador = () => {
-    setHoldFeedbackEspectador("tp_dpad_up", false);
-    setHoldFeedbackEspectador("tp_dpad_down", false);
 };
 
 const emitirTeleprompterAck = (loadId) => {
@@ -320,60 +239,49 @@ const emitirTeleprompterAck = (loadId) => {
     });
 };
 
-const detenerTeleprompterPlayEspectador = () => {
-    if (teleprompter_play_raf) {
-        cancelAnimationFrame(teleprompter_play_raf);
-    }
-    teleprompter_play_raf = null;
-    teleprompter_last_tick = null;
-};
-
-function teleprompterPlayLoopEspectador(ts) {
-    if (!teleprompterDebeReproducirse()) {
-        detenerTeleprompterPlayEspectador();
-        return;
-    }
-    if (teleprompter_last_tick === null) {
-        teleprompter_last_tick = ts;
-    }
-    const dt = (ts - teleprompter_last_tick) / 1000;
-    teleprompter_last_tick = ts;
-    if (dt > 0) {
-        teleprompter_estado.scroll += teleprompter_estado.speed * dt;
-        sincronizarTeleprompterScroll();
-        emitirTeleprompterEstadoEspectador();
-    }
-    teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoopEspectador);
-}
-
-const sincronizarTeleprompterPlayEspectador = () => {
-    if (teleprompterDebeReproducirse()) {
-        if (!teleprompter_play_raf) {
-            teleprompter_last_tick = null;
-            teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoopEspectador);
-        }
-        return;
-    }
-    detenerTeleprompterPlayEspectador();
-};
-
-const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
+const actualizarTeleprompterEstado = (state = {}) => {
+    if (!state) return;
     const overlay = teleprompter_overlay || getEl("teleprompter_overlay");
     const screen = teleprompter_screen || getEl("teleprompter_screen");
     const text = teleprompter_text || getEl("teleprompter_text");
-    if (text) {
-        text.textContent = teleprompter_estado.text;
-        text.style.fontSize = `${teleprompter_estado.fontSize}px`;
-        if (esNuevaCarga) {
-            text.classList.add("teleprompter-text--no-anim");
+    let esNuevaCarga = false;
+    if (typeof state.visible === "boolean") {
+        teleprompter_estado.visible = state.visible;
+    }
+    if (typeof state.text === "string") {
+        teleprompter_estado.text = state.text;
+        if (text) {
+            text.textContent = state.text;
         }
+    }
+    if (state.source !== undefined) {
+        const fuente = Number(state.source);
+        teleprompter_estado.source = fuente === 1 || fuente === 2 ? fuente : 0;
+    }
+    if (Number.isFinite(state.fontSize)) {
+        teleprompter_estado.fontSize = Math.min(96, Math.max(18, state.fontSize));
+        if (text) {
+            text.style.fontSize = `${teleprompter_estado.fontSize}px`;
+        }
+    }
+    if (Number.isFinite(state.scroll)) {
+        teleprompter_estado.scroll = state.scroll;
+    }
+    if (Number.isFinite(state.loadId)) {
+        const loadId = Math.max(0, Math.trunc(Number(state.loadId)));
+        esNuevaCarga = loadId > 0 && loadId !== teleprompter_estado.loadId;
+        teleprompter_estado.loadId = loadId;
+    }
+    if (esNuevaCarga && text) {
+        text.classList.add("teleprompter-text--no-anim");
     }
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
     }
     if (screen) {
+        const tieneTexto = typeof teleprompter_estado.text === "string" && teleprompter_estado.text.trim().length > 0;
         const equipo = teleprompter_estado.source;
-        const valor = teleprompterTieneTexto() && equipo === 1 ? "1" : teleprompterTieneTexto() && equipo === 2 ? "2" : "none";
+        const valor = tieneTexto && equipo === 1 ? "1" : tieneTexto && equipo === 2 ? "2" : "none";
         screen.setAttribute("data-team", valor);
         const frameColor = valor === "1"
             ? "rgba(69, 243, 255, 0.9)"
@@ -384,7 +292,6 @@ const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
         screen.style.borderColor = frameColor;
         screen.style.boxShadow = `0 0 35px ${frameColor}, inset 0 0 30px rgba(0, 0, 0, 0.8)`;
     }
-    sincronizarTeleprompterPlayEspectador();
     programarAjusteViewportEspectador();
     requestAnimationFrame(() => {
         sincronizarTeleprompterScroll();
@@ -396,209 +303,6 @@ const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
         }
     });
 };
-
-const actualizarTeleprompterEstado = (state = {}) => {
-    if (!state) return;
-    let esNuevaCarga = false;
-    if (typeof state.visible === "boolean") {
-        teleprompter_estado.visible = state.visible;
-    }
-    if (typeof state.text === "string") {
-        teleprompter_estado.text = state.text;
-    }
-    if (state.source !== undefined) {
-        const fuente = Number(state.source);
-        teleprompter_estado.source = fuente === 1 || fuente === 2 ? fuente : 0;
-    }
-    if (Number.isFinite(state.fontSize)) {
-        teleprompter_estado.fontSize = Math.min(96, Math.max(18, Number(state.fontSize)));
-    }
-    if (Number.isFinite(state.speed)) {
-        teleprompter_estado.speed = Math.min(TELEPROMPTER_SPEED_MAX, Math.max(TELEPROMPTER_SPEED_MIN, Number(state.speed)));
-    }
-    if (typeof state.playing === "boolean") {
-        teleprompter_estado.playing = state.playing;
-    }
-    if (Number.isFinite(state.scroll)) {
-        teleprompter_estado.scroll = Number(state.scroll);
-    }
-    if (Number.isFinite(state.loadId)) {
-        const loadId = Math.max(0, Math.trunc(Number(state.loadId)));
-        esNuevaCarga = loadId > 0 && loadId !== teleprompter_estado.loadId;
-        teleprompter_estado.loadId = loadId;
-    }
-    aplicarRenderTeleprompterEspectador({ esNuevaCarga });
-};
-
-const teleprompterSubirEspectador = () => {
-    teleprompter_estado.scroll = Math.max(0, teleprompter_estado.scroll - 60);
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador(true);
-};
-
-const teleprompterBajarEspectador = () => {
-    teleprompter_estado.scroll += 60;
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador(true);
-};
-
-const teleprompterBajarGrandeEspectador = () => {
-    teleprompter_estado.scroll += 260;
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador();
-};
-
-const teleprompterIrInicioEspectador = () => {
-    teleprompter_estado.scroll = 0;
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador(true);
-};
-
-const teleprompterIrFinalEspectador = () => {
-    teleprompter_estado.scroll = Number.MAX_SAFE_INTEGER;
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador(true);
-};
-
-const teleprompterCambiarFuenteEspectador = (delta) => {
-    teleprompter_estado.fontSize = Math.min(TELEPROMPTER_FONT_MAX, Math.max(TELEPROMPTER_FONT_MIN, teleprompter_estado.fontSize + delta));
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador(true);
-};
-
-const teleprompterCambiarVelocidadEspectador = (delta) => {
-    teleprompter_estado.speed = Math.min(TELEPROMPTER_SPEED_MAX, Math.max(TELEPROMPTER_SPEED_MIN, teleprompter_estado.speed + delta));
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador();
-};
-
-const teleprompterTogglePlayEspectador = () => {
-    teleprompter_estado.playing = !teleprompter_estado.playing;
-    aplicarRenderTeleprompterEspectador();
-    emitirTeleprompterEstadoEspectador(true);
-};
-
-const obtenerGamepadActivoEspectador = () => {
-    if (!navigator.getGamepads) return null;
-    const pads = navigator.getGamepads();
-    if (!pads) return null;
-    for (let i = 0; i < pads.length; i++) {
-        const pad = pads[i];
-        if (pad && pad.connected) return pad;
-    }
-    return null;
-};
-
-const botonJustPressedEspectador = (pad, index, threshold = 0.5) => {
-    if (!pad || !pad.buttons || !pad.buttons[index]) return false;
-    const btn = pad.buttons[index];
-    const pressed = !!(btn.pressed || btn.value > threshold);
-    const prev = !!teleprompter_gamepad_prev_buttons[index];
-    teleprompter_gamepad_prev_buttons[index] = pressed;
-    return pressed && !prev;
-};
-
-function teleprompterGamepadLoopEspectador(ts) {
-    const pad = obtenerGamepadActivoEspectador();
-    if (!pad) {
-        teleprompter_gamepad_last = ts;
-        teleprompter_gamepad_prev_buttons = [];
-        resetHoldFeedbackEspectador();
-        teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoopEspectador);
-        return;
-    }
-    const tiempoActual = ts || performance.now();
-    const dt = teleprompter_gamepad_last ? (tiempoActual - teleprompter_gamepad_last) / 1000 : 0;
-    teleprompter_gamepad_last = tiempoActual;
-
-    if (teleprompterPuedeMoverse()) {
-        const axisY = pad.axes && pad.axes.length > 1 ? pad.axes[1] : 0;
-        const abs = Math.abs(axisY);
-        if (abs > TELEPROMPTER_GAMEPAD.deadzone && dt > 0) {
-            const factor = (abs - TELEPROMPTER_GAMEPAD.deadzone) / (1 - TELEPROMPTER_GAMEPAD.deadzone);
-            const delta = axisY * factor * TELEPROMPTER_GAMEPAD.analogSpeed * dt;
-            teleprompter_estado.scroll = Math.max(0, teleprompter_estado.scroll + delta);
-            sincronizarTeleprompterScroll();
-            emitirTeleprompterEstadoEspectador();
-        }
-
-        if (abs > TELEPROMPTER_GAMEPAD.deadzone) {
-            setHoldFeedbackEspectador("tp_dpad_up", axisY < 0);
-            setHoldFeedbackEspectador("tp_dpad_down", axisY > 0);
-        } else {
-            resetHoldFeedbackEspectador();
-        }
-
-        if (botonJustPressedEspectador(pad, 12)) {
-            teleprompterSubirEspectador();
-            activarBotonFeedbackEspectador("tp_dpad_up");
-        }
-        if (botonJustPressedEspectador(pad, 13)) {
-            teleprompterBajarEspectador();
-            activarBotonFeedbackEspectador("tp_dpad_down");
-        }
-        if (botonJustPressedEspectador(pad, 14)) {
-            teleprompterCambiarVelocidadEspectador(-5);
-            activarBotonFeedbackEspectador("tp_dpad_left");
-        }
-        if (botonJustPressedEspectador(pad, 15)) {
-            teleprompterCambiarVelocidadEspectador(5);
-            activarBotonFeedbackEspectador("tp_dpad_right");
-        }
-        if (botonJustPressedEspectador(pad, 0)) {
-            teleprompterTogglePlayEspectador();
-            activarBotonFeedbackEspectador("tp_x");
-        }
-        if (botonJustPressedEspectador(pad, 1)) {
-            teleprompterCambiarFuenteEspectador(2);
-            activarBotonFeedbackEspectador("tp_circle");
-        }
-        if (botonJustPressedEspectador(pad, 2)) {
-            teleprompterCambiarFuenteEspectador(-2);
-            activarBotonFeedbackEspectador("tp_square");
-        }
-        if (botonJustPressedEspectador(pad, 3)) {
-            teleprompterBajarGrandeEspectador();
-            activarBotonFeedbackEspectador("tp_triangle");
-        }
-        if (botonJustPressedEspectador(pad, 4)) {
-            teleprompterIrInicioEspectador();
-            activarBotonFeedbackEspectador("tp_l1");
-        }
-        if (botonJustPressedEspectador(pad, 5)) {
-            teleprompterIrFinalEspectador();
-            activarBotonFeedbackEspectador("tp_r1");
-        }
-        if (botonJustPressedEspectador(pad, 6, 0.6)) {
-            teleprompterCambiarFuenteEspectador(-2);
-            activarBotonFeedbackEspectador("tp_l2");
-        }
-        if (botonJustPressedEspectador(pad, 7, 0.6)) {
-            teleprompterCambiarFuenteEspectador(2);
-            activarBotonFeedbackEspectador("tp_r2");
-        }
-    } else {
-        teleprompter_gamepad_prev_buttons = pad.buttons.map((btn) => !!(btn && (btn.pressed || btn.value > 0.5)));
-        resetHoldFeedbackEspectador();
-    }
-
-    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoopEspectador);
-}
-
-const iniciarTeleprompterGamepadEspectador = () => {
-    if (teleprompter_gamepad_loop) return;
-    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoopEspectador);
-};
-
-window.addEventListener("gamepadconnected", iniciarTeleprompterGamepadEspectador);
-window.addEventListener("gamepaddisconnected", () => {
-    const pad = obtenerGamepadActivoEspectador();
-    if (!pad) {
-        teleprompter_gamepad_prev_buttons = [];
-        resetHoldFeedbackEspectador();
-    }
-});
-window.addEventListener("load", iniciarTeleprompterGamepadEspectador);
 
 window.addEventListener("resize", () => {
     if (teleprompter_estado.visible) {
@@ -1059,11 +763,6 @@ function mostrarFeedbackFlotanteEspectador(playerId, texto, opciones = {}) {
     const nodo = document.createElement("span");
     nodo.className = `feedback-tiempo-float ${tipo}`;
     nodo.textContent = contenido;
-    if (typeof opciones.claseExtra === "string" && opciones.claseExtra.trim()) {
-        opciones.claseExtra.trim().split(/\s+/).forEach((clase) => {
-            if (clase) nodo.classList.add(clase);
-        });
-    }
 
     if (typeof opciones.color === "string" && opciones.color.trim()) {
         nodo.style.setProperty("--feedback-float-color", opciones.color.trim());
@@ -1075,10 +774,7 @@ function mostrarFeedbackFlotanteEspectador(playerId, texto, opciones = {}) {
     const margenSuperior = 24;
     const subidaMaxima = -Math.max(8, rectContenedor.top - margenSuperior);
     const subidaY = Math.max(subidaDeseada, subidaMaxima);
-    const duracionPersonalizada = Number(opciones.duracionMs);
-    const duracion = Number.isFinite(duracionPersonalizada) && duracionPersonalizada > 0
-        ? Math.round(duracionPersonalizada)
-        : 1100 + Math.round(Math.random() * 200);
+    const duracion = 1100 + Math.round(Math.random() * 200);
     nodo.style.setProperty("--feedback-float-drift-x", `${derivaX.toFixed(1)}px`);
     nodo.style.setProperty("--feedback-float-rise-y", `${subidaY.toFixed(1)}px`);
     nodo.style.animationDuration = `${duracion}ms`;
@@ -1370,35 +1066,6 @@ const resetAjusteViewportEspectador = () => {
     spectator_fit_root.style.removeProperty("transform");
 };
 
-function medirLimitesVisiblesViewportEspectador() {
-    if (!spectator_fit_root) {
-        return { width: 1, height: 1 };
-    }
-    const rootRect = spectator_fit_root.getBoundingClientRect();
-    let maxRight = rootRect.left + spectator_fit_root.offsetWidth;
-    let maxBottom = rootRect.top + spectator_fit_root.offsetHeight;
-    const nodos = spectator_fit_root.querySelectorAll("*");
-    nodos.forEach((nodo) => {
-        if (!(nodo instanceof HTMLElement)) return;
-        const estilos = window.getComputedStyle(nodo);
-        if (
-            estilos.display === "none"
-            || estilos.visibility === "hidden"
-            || estilos.position === "fixed"
-        ) {
-            return;
-        }
-        const rect = nodo.getBoundingClientRect();
-        if (rect.width <= 0 && rect.height <= 0) return;
-        maxRight = Math.max(maxRight, rect.right);
-        maxBottom = Math.max(maxBottom, rect.bottom);
-    });
-    return {
-        width: Math.max(Math.ceil(maxRight - rootRect.left), Math.ceil(spectator_fit_root.offsetWidth || 0), 1),
-        height: Math.max(Math.ceil(maxBottom - rootRect.top), Math.ceil(spectator_fit_root.offsetHeight || 0), 1)
-    };
-}
-
 const ajustarViewportEspectador = () => {
     if (!spectator_fit_root) return;
     const teleprompterActivo = Boolean(teleprompter_estado && teleprompter_estado.visible);
@@ -1410,9 +1077,8 @@ const ajustarViewportEspectador = () => {
     spectator_fit_root.style.transform = "none";
     const viewportW = Math.max(window.innerWidth || 0, 1);
     const viewportH = Math.max(window.innerHeight || 0, 1);
-    const limitesVisibles = medirLimitesVisiblesViewportEspectador();
-    const anchoNatural = Math.max(Math.ceil(limitesVisibles.width || 0), 1);
-    const altoNatural = Math.max(Math.ceil(limitesVisibles.height || 0), 1);
+    const anchoNatural = Math.max(Math.ceil(spectator_fit_root.scrollWidth || 0), 1);
+    const altoNatural = Math.max(Math.ceil(spectator_fit_root.scrollHeight || 0), 1);
     const escalaMaxima = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
 
     let escala = escalaMaxima;
@@ -4403,110 +4069,6 @@ if (typeof animateCSS === "function") {
 //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
 
 const desventajaVaciaEspectador = function () {};
-const PUTADA_TORTUGA = "\u{1F422}";
-const PUTADA_RAYO = "\u26A1";
-const PUTADA_BORROSO = "\u{1F32A}\uFE0F";
-const PUTADA_INVERSO = "\u{1F643}";
-const PUTADA_PLUMA = "\u{1F58A}\uFE0F";
-const CLASES_VISUALES_PUTADA_ESPECTADOR = [
-    "putada-visual-activa",
-    "putada-visual--tortuga",
-    "putada-visual--rayo",
-    "putada-visual--borroso",
-    "putada-visual--inverso",
-    "putada-visual--pluma"
-];
-const temporizadores_visual_putada_espectador = { 1: null, 2: null };
-
-function obtenerDuracionModificadorEspectador() {
-    const duracion = Number(TIEMPO_MODIFICADOR);
-    if (Number.isFinite(duracion) && duracion > 0) {
-        return Math.round(duracion);
-    }
-    return 3500;
-}
-
-function obtenerDuracionFeedbackPutadaEspectador() {
-    const estimada = Math.round(obtenerDuracionModificadorEspectador() * 0.65);
-    return Math.max(2600, Math.min(4200, estimada));
-}
-
-function obtenerRaizVisualPutadaEspectador(player) {
-    const area = Number(player) === 2 ? texto2 : texto1;
-    if (!area || typeof area.closest !== "function") {
-        return null;
-    }
-    return area.closest(".jugador1, .jugador2");
-}
-
-function obtenerClaseVisualPutadaEspectador(putada) {
-    switch (normalizarPutada(putada)) {
-        case PUTADA_TORTUGA:
-            return "putada-visual--tortuga";
-        case PUTADA_RAYO:
-            return "putada-visual--rayo";
-        case PUTADA_BORROSO:
-            return "putada-visual--borroso";
-        case PUTADA_INVERSO:
-            return "putada-visual--inverso";
-        case PUTADA_PLUMA:
-            return "putada-visual--pluma";
-        default:
-            return "";
-    }
-}
-
-function obtenerEtiquetaVisualPutadaEspectador(putada) {
-    switch (normalizarPutada(putada)) {
-        case PUTADA_TORTUGA:
-            return `${PUTADA_TORTUGA} TECLADO LENTO`;
-        case PUTADA_RAYO:
-            return `${PUTADA_RAYO} BORRADO RAPIDO`;
-        case PUTADA_BORROSO:
-            return `${PUTADA_BORROSO} TEXTO BORROSO`;
-        case PUTADA_INVERSO:
-            return `${PUTADA_INVERSO} INVERSO`;
-        case PUTADA_PLUMA:
-            return `${PUTADA_PLUMA} BORRADO BLOQUEADO`;
-        default:
-            return "";
-    }
-}
-
-function limpiarVisualPutadaEspectador(player) {
-    const id = Number(player) === 2 ? 2 : 1;
-    clearTimeout(temporizadores_visual_putada_espectador[id]);
-    temporizadores_visual_putada_espectador[id] = null;
-    const raiz = obtenerRaizVisualPutadaEspectador(id);
-    if (!raiz) {
-        return;
-    }
-    raiz.classList.remove(...CLASES_VISUALES_PUTADA_ESPECTADOR);
-    delete raiz.dataset.putadaVisual;
-}
-
-function limpiarVisualPutadasEspectador() {
-    limpiarVisualPutadaEspectador(1);
-    limpiarVisualPutadaEspectador(2);
-}
-
-function activarVisualPutadaEspectador(player, putada) {
-    const id = Number(player) === 2 ? 2 : 1;
-    const clave = normalizarPutada(putada);
-    const clase = obtenerClaseVisualPutadaEspectador(clave);
-    const etiqueta = obtenerEtiquetaVisualPutadaEspectador(clave);
-    const raiz = obtenerRaizVisualPutadaEspectador(id);
-    limpiarVisualPutadaEspectador(id);
-    if (!raiz || !clase || !etiqueta) {
-        return false;
-    }
-    raiz.dataset.putadaVisual = etiqueta;
-    raiz.classList.add("putada-visual-activa", clase);
-    temporizadores_visual_putada_espectador[id] = setTimeout(() => {
-        limpiarVisualPutadaEspectador(id);
-    }, obtenerDuracionModificadorEspectador());
-    return true;
-}
 
 const desventajaRayoEspectador = function (player) {
     detenerSonidoRayo();
@@ -4603,60 +4165,36 @@ const desventajaBorrosoEspectador = function (player) {
 };
 
 const PUTADAS = {
-    [PUTADA_TORTUGA]: desventajaVaciaEspectador,
-    [PUTADA_RAYO]: desventajaRayoEspectador,
-    [PUTADA_BORROSO]: desventajaBorrosoEspectador,
-    [PUTADA_INVERSO]: desventajaInversoEspectador,
-    [PUTADA_PLUMA]: desventajaVaciaEspectador
+    "🐢": desventajaVaciaEspectador,
+    "⚡": desventajaRayoEspectador,
+    "🌪️": desventajaBorrosoEspectador,
+    "🙃": desventajaInversoEspectador,
+    "🖊️": desventajaVaciaEspectador
 };
 
 function normalizarPutada(putada) {
     const valor = String(putada || "").trim();
     const sinVs16 = valor.replace(/\uFE0F/g, "");
-    const valorTexto = typeof sinVs16.normalize === "function"
-        ? sinVs16.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-        : sinVs16.toLowerCase();
     const mapa = {
-        [PUTADA_TORTUGA]: PUTADA_TORTUGA,
-        [PUTADA_RAYO]: PUTADA_RAYO,
-        "\u{1F32A}": PUTADA_BORROSO,
-        [PUTADA_BORROSO]: PUTADA_BORROSO,
-        [PUTADA_INVERSO]: PUTADA_INVERSO,
-        "\u{1F58A}": PUTADA_PLUMA,
-        [PUTADA_PLUMA]: PUTADA_PLUMA,
-        "ï¿½sï¿½": PUTADA_RAYO,
-        "ï¿½YTf": PUTADA_INVERSO,
-        "ï¿½YOï¿½ï¸": PUTADA_BORROSO,
-        "ï¿½Y-Sï¸": PUTADA_PLUMA,
-        "ï¿½Yï¿½ï¿½": PUTADA_TORTUGA,
-        "ï¿½O>": PUTADA_TORTUGA
+        "🐢": "🐢",
+        "⚡": "⚡",
+        "🌪": "🌪️",
+        "🌪️": "🌪️",
+        "🙃": "🙃",
+        "🖊": "🖊️",
+        "🖊️": "🖊️",
+        "ï¿½sï¿½": "⚡",
+        "ï¿½YTf": "🙃",
+        "ï¿½YOï¿½ï¸": "🌪️",
+        "ï¿½Y-Sï¸": "🖊️",
+        "ï¿½Yï¿½ï¿½": "🐢",
+        "ï¿½O>": "🐢"
     };
-    const mapaTexto = {
-        tortuga: PUTADA_TORTUGA,
-        turtle: PUTADA_TORTUGA,
-        lento: PUTADA_TORTUGA,
-        "teclado lento": PUTADA_TORTUGA,
-        rayo: PUTADA_RAYO,
-        rapido: PUTADA_RAYO,
-        "borrado rapido": PUTADA_RAYO,
-        borroso: PUTADA_BORROSO,
-        remolino: PUTADA_BORROSO,
-        inverso: PUTADA_INVERSO,
-        "al reves": PUTADA_INVERSO,
-        pluma: PUTADA_PLUMA,
-        boligrafo: PUTADA_PLUMA,
-        "sin borrado": PUTADA_PLUMA,
-        "bloqueo borrado": PUTADA_PLUMA,
-        "bloqueo de borrado": PUTADA_PLUMA,
-        "borrado bloqueado": PUTADA_PLUMA,
-        "backspace bloqueado": PUTADA_PLUMA
-    };
-    return mapa[valor] || mapa[sinVs16] || mapaTexto[valorTexto] || valor;
+    return mapa[valor] || mapa[sinVs16] || valor;
 }
 
 function aplicarPutadaEnEspectador(putada, player) {
     const clave = normalizarPutada(putada);
-    activarVisualPutadaEspectador(player, clave);
     const handler = PUTADAS[clave];
     if (typeof handler === "function") {
         handler(player);
@@ -5482,19 +5020,6 @@ socket.on('resucitar_control', data => {
 });
 
 socket.on('resucitar_menu', data => {
-    const jugador = Number(data && data.player);
-    if (!partida_activa_espectador || !modo_actual) {
-        if (jugador === 1 || jugador === 2) {
-            ultimo_estado_resucitar_espectador[jugador] = {
-                ...(data && typeof data === "object" ? data : {}),
-                player: jugador,
-                menu: "hidden",
-                visible: false
-            };
-        }
-        ocultarTodosResucitarMini();
-        return;
-    }
     const mantenerMenuPorSincronia = Boolean(data && data.visible);
     if (modo_actual === "frase final" && !mantenerMenuPorSincronia) {
         ocultarTodosResucitarMini();
@@ -6236,35 +5761,17 @@ socket.on("enviar_repentizado", repentizado => {
 });
 
 socket.on("enviar_ventaja_j1", putada => {
-    const putadaNormalizada = normalizarPutada(putada);
     limpiarEstadoVotacionVentaja();
-    aplicarPutadaEnEspectador(putadaNormalizada, 1);
-    mostrarFeedbackFlotanteEspectador(1, `${putadaNormalizada} DESVENTAJA!`, {
-        tipo: "negativo",
-        claseExtra: "feedback-tiempo-float--putada",
-        duracionMs: obtenerDuracionFeedbackPutadaEspectador()
-    });
-    mostrarFeedbackFlotanteEspectador(2, `${putadaNormalizada} VENTAJA!`, {
-        tipo: "positivo",
-        claseExtra: "feedback-tiempo-float--putada",
-        duracionMs: obtenerDuracionFeedbackPutadaEspectador()
-    });
+    aplicarPutadaEnEspectador(putada, 1);
+    mostrarFeedbackFlotanteEspectador(1, `${putada} DESVENTAJA!`, { tipo: "negativo" });
+    mostrarFeedbackFlotanteEspectador(2, `${putada} VENTAJA!`, { tipo: "positivo" });
 });
 
 socket.on("enviar_ventaja_j2", putada => {
-    const putadaNormalizada = normalizarPutada(putada);
     limpiarEstadoVotacionVentaja();
-    aplicarPutadaEnEspectador(putadaNormalizada, 2);
-    mostrarFeedbackFlotanteEspectador(2, `${putadaNormalizada} DESVENTAJA!`, {
-        tipo: "negativo",
-        claseExtra: "feedback-tiempo-float--putada",
-        duracionMs: obtenerDuracionFeedbackPutadaEspectador()
-    });
-    mostrarFeedbackFlotanteEspectador(1, `${putadaNormalizada} VENTAJA!`, {
-        tipo: "positivo",
-        claseExtra: "feedback-tiempo-float--putada",
-        duracionMs: obtenerDuracionFeedbackPutadaEspectador()
-    });
+    aplicarPutadaEnEspectador(putada, 2);
+    mostrarFeedbackFlotanteEspectador(2, `${putada} DESVENTAJA!`, { tipo: "negativo" });
+    mostrarFeedbackFlotanteEspectador(1, `${putada} VENTAJA!`, { tipo: "positivo" });
 });
 
 socket.on("nueva letra", letra => {
@@ -6713,7 +6220,6 @@ function limpiezas(){
     limpiarColaPalabrasPendientesEspectador();
     reiniciarEstadoCierrePartidaEspectador();
     detenerSonidosDesventaja();
-    limpiarVisualPutadasEspectador();
     ocultarTodosResucitarMini();
     detenerProgresoNivelBarra(true);
     limpiarEstiloPalabrasModoLetrasEspectador();
@@ -6796,7 +6302,6 @@ function limpiezas_final(){
     partida_activa_espectador = false;
     modo_nivel_activo_espectador = "";
     modo_actual = "";
-    limpiarVisualPutadasEspectador();
     setBarraNivelClase("");
     actualizarVisibilidadPanelNivelEspectador();
     finalizarIntroCuentaAtrasEspectador();
