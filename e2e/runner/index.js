@@ -25,6 +25,11 @@ const VISUAL_BASELINES_DIR = path.join(ROOT_DIR, "e2e", "visual-baselines");
 const STATIC_PORT = 4173;
 const SOCKET_PORT = 3000;
 const DEFAULT_TIMEOUT_MS = 10000;
+const PUPPETEER_CI_ARGS = [
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage"
+];
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".gif": "image/gif",
@@ -425,7 +430,8 @@ class E2EHarness {
 
     this.browser = await puppeteer.launch({
       headless: this.options.headed ? false : true,
-      defaultViewport: null
+      defaultViewport: null,
+      args: process.env.CI ? PUPPETEER_CI_ARGS : []
     });
   }
 
