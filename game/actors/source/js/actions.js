@@ -43,30 +43,10 @@ document.addEventListener('click', function(event) {
 
 });
 
-function smoothScrollBy(value) {
-  window.scrollBy({
-      top: value,
-      behavior: 'smooth'
-  });
-}
+const smoothScrollBy = window.ScribRuntime.smoothScrollBy;
 
 //Función auxiliar para crear las animaciones del feedback.
-const animateCSS = (element, animation, prefix = "animate__") =>
-    // We create a Promise and return it
-    new Promise((resolve, reject) => {
-        const animationName = `${prefix}${animation}`;
-        const node = document.querySelector(element);
-
-        node.classList.add(`${prefix}animated`, animationName);
-
-        // When the animation ends, we clean the classes and resolve the Promise
-        function handleAnimationEnd(event) {
-            event.stopPropagation();
-            node.classList.remove(`${prefix}animated`, animationName);
-            resolve("Animation ended");
-        }
-        node.addEventListener("animationend", handleAnimationEnd, { once: true });
-    });
+const animateCSS = window.ScribRuntime.animateCSS;
 
 //Función auxiliar que envía una palabra al servidor.
 function enviarPalabra() {

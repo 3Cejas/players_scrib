@@ -1,21 +1,54 @@
-Original prompt: Quiero poner en opciones un boton para cambiar de idioma al inglés y al fránces para que traduzca automáticamente todo el juego
+Original prompt: Quiero poner en opciones un boton para cambiar de idioma al ingles y al frances para que traduzca automaticamente todo el juego
 
 ## 2026-03-03
-- Revisado flujo actual de `1p_scrib` para localizar textos estáticos (`index.html`) y dinámicos (`juego.js`, `jugador-servidor.js`).
-- Próximo paso: implementar capa i18n con persistencia, selector de idioma en opciones y actualización en vivo de UI.
+- Revisado flujo actual de `1p_scrib` para localizar textos estaticos (`index.html`) y dinamicos (scripts modulares de gameplay/runtime).
+- Proximo paso: implementar capa i18n con persistencia, selector de idioma en opciones y actualizacion en vivo de UI.
 - Implementado selector de idioma en `Opciones` (`es`, `en`, `fr`) con persistencia en `localStorage` (`scrib_1p_language`).
-- Añadida capa i18n en `jugador-servidor.js`:
+- Anadida capa i18n, ahora ubicada en `i18n.js` tras la division del runtime:
   - Diccionarios ES/EN/FR.
   - Helpers globales `scrib1pT`, `scrib1pSetLanguage`, `scrib1pFormatWordsCount`, `scrib1pFormatSecs`, etc.
-  - Traducción de textos estáticos vía `data-i18n`, `data-i18n-html`, `data-i18n-attr`.
-  - Traducción dinámica de marcador, menú de resurrección, countdown, feedback de tiempo y títulos/descripciones de modo.
-- Adaptado `juego.js` para usar formato traducible en feedback de tiempo y contador de palabras.
-- Adaptada generación de casillas de modos:
+  - Traduccion de textos estaticos via `data-i18n`, `data-i18n-html`, `data-i18n-attr`.
+  - Traduccion dinamica de marcador, menu de resurreccion, countdown, feedback de tiempo y titulos/descripciones de modo.
+- Adaptados los scripts de gameplay para usar formato traducible en feedback de tiempo y contador de palabras.
+- Adaptada generacion de casillas de modos:
   - Etiquetas traducidas.
-  - Mantiene selección previa al regenerar.
-  - Expuesta actualización dinámica `window.scrib1pRefreshModeLabels`.
-- Ajuste adicional: cambio de idioma en modo `frase final` ya no sobrescribe la frase objetivo (solo refresca textos auxiliares).
-- Estilos añadidos para bloque de idioma en opciones (`dashboard-players.css`).
-- Verificación:
-  - `node --check` OK en `juego.js` y `jugador-servidor.js`.
-  - Prueba Playwright del skill bloqueada por entorno (falta paquete `playwright` / navegador Chrome disponible para el runner).
+  - Mantiene seleccion previa al regenerar.
+  - Expuesta actualizacion dinamica `window.scrib1pRefreshModeLabels`.
+- Ajuste adicional: cambio de idioma en modo `frase final` ya no sobrescribe la frase objetivo, solo refresca textos auxiliares.
+- Estilos anadidos para bloque de idioma en opciones (`dashboard-players.css`).
+- Reestructuracion posterior:
+  - `runtime-core.js`: estado global inicial, referencias DOM y helpers compartidos.
+  - `i18n.js`: diccionarios, formateadores y selector de idioma.
+  - `layout.js`: ajuste responsive del dashboard y botones de opciones.
+  - `writer-cursor.js`: foco persistente, caret y cursor de pluma.
+  - `hud-levels.js`: feedback flotante, marcadores, barra de nivel e intro.
+  - `match-summary.js`: resumen de partida y heatmap.
+  - `word-provider.js`: palabras fallback/remotas, puntuacion y atributos.
+  - `runtime-state.js`: estado global mutable de la partida 1P.
+  - `audio.js`: musica, efectos, silencio y crossfades.
+  - `mode-data.js`: configuracion, listas y tiempos base de modos.
+  - `mode-effects.js`: animaciones y estilos temporales de modo.
+  - `mode-lifecycle.js`: activacion, limpieza y renovacion de objetivos.
+  - `protected-text.js`: proteccion de letras/palabras benditas ante borrado.
+  - `final-phrase.js`: marcado y progreso de frase final.
+  - `mode-rules.js`: reglas de escritura, timers, pausas y limpieza de modos.
+  - `disadvantages.js`: seleccion, tragaperras, overlay y aplicacion de putadas.
+  - `boot-screen.js`: animacion inicial de carga.
+  - `writer-text.js`: input diferido, texto invertido, maquina de escribir y degradado.
+  - `match-runtime.js`: inicio, cuenta atras, vida, resurreccion, limpieza y final.
+  - `pdf-export.js`: exportacion PDF con texto, estadisticas y heatmap.
+- Reestructuracion del bloque gameplay:
+  - `gameplay-state.js`: estado compartido y variables base.
+  - `gameplay-i18n.js`: wrappers de traduccion/formato.
+  - `gameplay-mode-config.js`: lista y colores base de modos.
+  - `fullscreen-controls.js`: control de pantalla completa.
+  - `editor-progress.js`: escritura, borrado, caret y progreso.
+  - `animation-utils.js`: helper comun de animaciones.
+  - `text-download.js`: descarga TXT auxiliar.
+  - `options-panel.js`: entrada/salida del menu de opciones.
+  - `mode-settings-panel.js`: casillas y tiempos de modos.
+  - `attributes-panel.js`: reparto de atributos.
+  - `numeric-settings.js`: spinners numericos.
+- Verificacion:
+  - `node --check` OK en scripts extraidos.
+  - Prueba Playwright del skill bloqueada por entorno, falta paquete `playwright` / navegador Chrome disponible para el runner.

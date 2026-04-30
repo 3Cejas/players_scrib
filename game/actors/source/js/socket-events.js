@@ -15,7 +15,7 @@ let palabra = getEl("palabra");
 let definicion = getEl("definicion");
 let explicación = getEl("explicación");
 let metadatos_actor = getEl("metadatos_actor");
-const timeout_marcador_actor = new WeakMap();
+const timeout_marcador_actor = new Map();
 const escapeHtml = (valor) => String(valor ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -478,7 +478,12 @@ function actualizarPuntosMarcadorActor(valor, animar = true) {
 
 let listener_cuenta_atras = null;
 let timer = null;
+let revision_intro_actor = 0;
+let timeout_preparados_actor = null;
+let timeout_animacion_countdown_actor = null;
+let timeout_remover_countdown_actor = null;
 let modo_actual = "";
+let modo_seq_actual_actor = 0;
 let partida_finalizada_actor = false;
 let esperando_resurreccion_actor = false;
 texto1.style.height = "auto";
@@ -498,11 +503,130 @@ const animacionesEntradaBarraVida = new WeakMap();
 let animacionEntradaVidaPendiente = false;
 let ultimo_count_valido_actor = "";
 let ultimo_ts_count_actor = 0;
+let ultimo_count_seq_actor = 0;
+let tiempo_seq_actual_actor = 0;
 let temporizador_gigante_actor_interval = null;
 let temporizador_gigante_actor_restante = 0;
 let temporizador_gigante_actor_activo = false;
 const DURACION_ALERTA_TIEMPO_LIMITE_ACTOR_MS = 15000;
 let timeout_alerta_tiempo_limite_actor = null;
+let raf_actualizar_flechas_niveles_actor = null;
+const timeouts_actualizar_flechas_niveles_actor = new Set();
+
+function invalidarIntroActor() {
+    revision_intro_actor += 1;
+    clearTimeout(listener_cuenta_atras);
+    clearTimeout(timeout_preparados_actor);
+    clearTimeout(timeout_animacion_countdown_actor);
+    clearTimeout(timeout_remover_countdown_actor);
+    clearInterval(timer);
+    listener_cuenta_atras = null;
+    timeout_preparados_actor = null;
+    timeout_animacion_countdown_actor = null;
+    timeout_remover_countdown_actor = null;
+    timer = null;
+    $('#countdown').remove();
+    return revision_intro_actor;
+}
+
+function esRevisionIntroActorActiva(revision) {
+    return revision === revision_intro_actor;
+}
+
+function programarActualizacionFlechasNivelesActor(delay = 0) {
+    if (delay > 0) {
+        const timeoutId = setTimeout(() => {
+            timeouts_actualizar_flechas_niveles_actor.delete(timeoutId);
+            actualizarFlechasNiveles();
+        }, delay);
+        timeouts_actualizar_flechas_niveles_actor.add(timeoutId);
+        return;
+    }
+    if (raf_actualizar_flechas_niveles_actor) return;
+    raf_actualizar_flechas_niveles_actor = requestAnimationFrame(() => {
+        raf_actualizar_flechas_niveles_actor = null;
+        actualizarFlechasNiveles();
+    });
+}
+
+function limpiarAsincroniaVisualActor() {
+    if (raf_actualizar_flechas_niveles_actor) {
+        cancelAnimationFrame(raf_actualizar_flechas_niveles_actor);
+        raf_actualizar_flechas_niveles_actor = null;
+    }
+    timeouts_actualizar_flechas_niveles_actor.forEach((timeoutId) => clearTimeout(timeoutId));
+    timeouts_actualizar_flechas_niveles_actor.clear();
+    timeout_marcador_actor.forEach((timeoutId, elemento) => {
+        clearTimeout(timeoutId);
+        if (elemento && elemento.classList) {
+            elemento.classList.remove("puntos-hit");
+        }
+    });
+    timeout_marcador_actor.clear();
+    detenerTemporizadorGiganteActor();
+    ocultarAlertaTiempoLimiteActor();
+}
+
+function extraerModoSeqPayloadActor(payload = {}) {
+    const valor = Number(payload && payload.modo_seq);
+    return Number.isFinite(valor) ? Math.max(0, Math.trunc(valor)) : null;
+}
+
+function extraerTiempoSeqPayloadActor(payload = {}) {
+    const valor = Number(payload && payload.tiempo_seq);
+    return Number.isFinite(valor) ? Math.max(0, Math.trunc(valor)) : null;
+}
+
+function aceptarTiempoActor(payload = {}, opciones = {}) {
+    const { actualizar = true } = opciones;
+    const seq = extraerTiempoSeqPayloadActor(payload);
+    if (seq === null) {
+        return true;
+    }
+    if (seq < tiempo_seq_actual_actor) {
+        return false;
+    }
+    if (actualizar && seq > tiempo_seq_actual_actor) {
+        tiempo_seq_actual_actor = seq;
+        ultimo_count_seq_actor = 0;
+    }
+    return true;
+}
+
+function aceptarEventoModoActor(payload = {}, opciones = {}) {
+    const { actualizar = true } = opciones;
+    const seq = extraerModoSeqPayloadActor(payload);
+    if (seq === null) {
+        return true;
+    }
+    if (seq < modo_seq_actual_actor) {
+        return false;
+    }
+    if (actualizar && seq > modo_seq_actual_actor) {
+        modo_seq_actual_actor = seq;
+        ultimo_count_seq_actor = 0;
+        tiempo_seq_actual_actor = 0;
+    }
+    return true;
+}
+
+function extraerPayloadNuevaLetraActor(payload) {
+    if (payload && typeof payload === "object") {
+        const letraPayload = typeof payload.letra === "string"
+            ? payload.letra
+            : (typeof payload.letra_bendita === "string"
+                ? payload.letra_bendita
+                : (typeof payload.letra_prohibida === "string" ? payload.letra_prohibida : ""));
+        return {
+            letra: String(letraPayload || "").trim(),
+            payload
+        };
+    }
+    return {
+        letra: String(payload || "").trim(),
+        payload: {}
+    };
+}
 let alerta_tiempo_limite_actor_activa = false;
 const aviso_tiempo_limite_actor = (() => {
     if (!document.body) return null;
@@ -958,15 +1082,19 @@ function resetearScrollNiveles() {
         nivelesNext.classList.remove("niveles-flecha--visible");
     }
     limitarScrollNiveles();
-    requestAnimationFrame(actualizarFlechasNiveles);
-    setTimeout(() => {
+    programarActualizacionFlechasNivelesActor();
+    const timeoutResetLargo = setTimeout(() => {
+        timeouts_actualizar_flechas_niveles_actor.delete(timeoutResetLargo);
         nivelesScroll.scrollLeft = 0;
         actualizarFlechasNiveles();
     }, 50);
-    setTimeout(() => {
+    timeouts_actualizar_flechas_niveles_actor.add(timeoutResetLargo);
+    const timeoutResetFinal = setTimeout(() => {
+        timeouts_actualizar_flechas_niveles_actor.delete(timeoutResetFinal);
         nivelesScroll.scrollLeft = 0;
         actualizarFlechasNiveles();
     }, 200);
+    timeouts_actualizar_flechas_niveles_actor.add(timeoutResetFinal);
 }
 
 function recalcularLineaNiveles() {
@@ -1053,8 +1181,8 @@ function desplazarNiveles(direccion) {
     const maxScroll = obtenerMaxScrollPermitido();
     const nuevoScroll = Math.min(Math.max(0, nivelesScroll.scrollLeft + direccion * delta), maxScroll);
     nivelesScroll.scrollTo({ left: nuevoScroll, behavior: "smooth" });
-    requestAnimationFrame(actualizarFlechasNiveles);
-    setTimeout(actualizarFlechasNiveles, 220);
+    programarActualizacionFlechasNivelesActor();
+    programarActualizacionFlechasNivelesActor(220);
 }
 
 if (nivelesPrev && nivelesNext) {
@@ -1075,12 +1203,12 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("load", () => {
     resetearScrollNiveles();
-    setTimeout(actualizarFlechasNiveles, 120);
-    setTimeout(actualizarFlechasNiveles, 320);
+    programarActualizacionFlechasNivelesActor(120);
+    programarActualizacionFlechasNivelesActor(320);
 });
 window.addEventListener("pageshow", () => {
     resetearScrollNiveles();
-    setTimeout(actualizarFlechasNiveles, 120);
+    programarActualizacionFlechasNivelesActor(120);
 });
 requestAnimationFrame(() => {
     setNivelesDesactivados(!modo_actual || niveles_bloqueados);
@@ -1140,8 +1268,8 @@ function actualizarNiveles(modo) {
     actualizarFlechasNiveles();
     actualizarColorEquipo();
     recalcularLineaNiveles();
-    requestAnimationFrame(actualizarFlechasNiveles);
-    setTimeout(actualizarFlechasNiveles, 60);
+    programarActualizacionFlechasNivelesActor();
+    programarActualizacionFlechasNivelesActor(60);
 }
 
 function aplicarOrdenCircular(indiceActivo) {
@@ -1300,12 +1428,31 @@ socket.on("idioma_actual", (payload = {}) => {
 });
 
 socket.on("connect", () => {
+    limpiarAsincroniaVisualActor();
+    invalidarIntroActor();
+    modo_seq_actual_actor = 0;
+    ultimo_count_seq_actor = 0;
+    tiempo_seq_actual_actor = 0;
+    socket.emit("registrar_actor", { player });
     socket.emit("pedir_nombre");
     socket.emit("pedir_idioma_actual");
+});
+
+socket.on("disconnect", () => {
+    limpiarAsincroniaVisualActor();
+    invalidarIntroActor();
+});
+
+socket.on("connect_error", () => {
+    limpiarAsincroniaVisualActor();
+    invalidarIntroActor();
 });
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data = {}) => {
+    if (!aceptarEventoModoActor(data)) {
+        return;
+    }
     const payload = (data && typeof data === "object") ? data : {};
     const traeModo = Object.prototype.hasOwnProperty.call(payload, "modo_actual");
     const siguiente_modo = traeModo ? String(payload.modo_actual || "") : modo_actual;
@@ -1330,6 +1477,9 @@ socket.on('modo_actual', (data = {}) => {
 });
 
 socket.on("temp_modos", (data = {}) => {
+    if (!aceptarEventoModoActor(data)) {
+        return;
+    }
     if (!modo_actual || modo_actual === "frase final") return;
     const payload = (data && typeof data === "object") ? data : {};
     const modoEvento = typeof payload.modo_actual === "string" ? payload.modo_actual : "";
@@ -1351,7 +1501,15 @@ socket.on('dar_nombre', (nombre) => {
 // Recibe los datos del jugador 1 y los coloca.
 socket.on(texto_x, data => {
     console.log(data)
-    texto1.innerHTML = data.text;
+    const htmlRemoto = typeof data?.text === "string" ? data.text : "";
+    const guardadoRemoto = typeof data?.texto_guardado === "string" ? data.texto_guardado : "";
+    if (htmlRemoto.trim().length > 0) {
+        texto1.innerHTML = htmlRemoto;
+    } else if (guardadoRemoto.trim().length > 0) {
+        texto1.innerHTML = escapeHtml(guardadoRemoto).replace(/\n/g, "<br>");
+    } else {
+        texto1.innerHTML = htmlRemoto;
+    }
     actualizarPuntosMarcadorActor(data.points);
     //cambiar_color_puntuación()
         //texto1.style.height = ""; // resetear la altura
@@ -1380,6 +1538,19 @@ limpia el borrado del texto del jugador 1 y el blur de los jugadores y
 pausa el cambio de palabra.
 */
 socket.on("count", (data = {}) => {
+    if (!aceptarEventoModoActor(data)) {
+        return;
+    }
+    if (!aceptarTiempoActor(data)) {
+        return;
+    }
+    const countSeq = Number(data && data.count_seq);
+    if (Number.isFinite(countSeq) && countSeq > 0) {
+        if (countSeq <= ultimo_count_seq_actor) {
+            return;
+        }
+        ultimo_count_seq_actor = Math.trunc(countSeq);
+    }
     if (temporizador_gigante_actor_activo) {
         return;
     }
@@ -1454,6 +1625,7 @@ socket.on("temporizador_gigante_detener", () => {
 
 socket.on("resucitar_control", (data = {}) => {
     if (Number(data.player) !== Number(player)) return;
+    if (!aceptarTiempoActor(data)) return;
     esperando_resurreccion_actor = false;
     partida_finalizada_actor = false;
     stopConfetti();
@@ -1485,6 +1657,8 @@ socket.on("fin", (data) => {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    const revisionIntro = invalidarIntroActor();
+    limpiarAsincroniaVisualActor();
     const payloadInicio = (data && typeof data === "object") ? data : {};
     const parametrosInicio = (payloadInicio.parametros && typeof payloadInicio.parametros === "object")
         ? payloadInicio.parametros
@@ -1511,13 +1685,24 @@ socket.on('inicio', data => {
     var preparados = $('<span id="countdown"></span>');
     preparados.text(tJuego2P("countdown.ready", {}, "¿PREPARADOS?"));
     preparados.appendTo('body');
-    setTimeout(() => {
+    timeout_preparados_actor = setTimeout(() => {
+        if (!esRevisionIntroActorActiva(revisionIntro)) {
+            return;
+        }
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
     }, 20);
-    setTimeout(() => {
+    listener_cuenta_atras = setTimeout(() => {
+    if (!esRevisionIntroActorActiva(revisionIntro)) {
+        return;
+    }
     var counter = 3;
   
     timer = setInterval(function() {
+      if (!esRevisionIntroActorActiva(revisionIntro)) {
+        clearInterval(timer);
+        timer = null;
+        return;
+      }
       
       $('#countdown').remove();
       
@@ -1525,7 +1710,10 @@ socket.on('inicio', data => {
       countdown.text(counter == 0 ? tJuego2P("countdown.write", {}, "¡ESCRIBE!") : counter);
       countdown.appendTo('body');
   
-      setTimeout(() => {
+      timeout_animacion_countdown_actor = setTimeout(() => {
+        if (!esRevisionIntroActorActiva(revisionIntro)) {
+          return;
+        }
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
         } else {
@@ -1537,12 +1725,19 @@ socket.on('inicio', data => {
   
       if (counter <= -1) {
         clearInterval(timer);
-        setTimeout(() => {
+        timer = null;
+        timeout_remover_countdown_actor = setTimeout(() => {
+          if (!esRevisionIntroActorActiva(revisionIntro)) {
+            return;
+          }
           $('#countdown').remove();
         }, 1000);
   
         // Ejecuta tu función personalizada después de x segundos (por ejemplo, 2 segundos)
         listener_cuenta_atras = setTimeout(function(){
+            if (!esRevisionIntroActorActiva(revisionIntro)) {
+                return;
+            }
             if (modo_actual) {
                 setPendienteAnimacionEntradaBarraVida(true);
                 cancelarAnimacionEntradaBarraVida(tiempo);
@@ -1575,6 +1770,8 @@ socket.on('inicio', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
+    invalidarIntroActor();
+    limpiarAsincroniaVisualActor();
     esperando_resurreccion_actor = false;
     partida_finalizada_actor = false;
     ocultarAlertaTiempoLimiteActor();
@@ -1586,11 +1783,6 @@ socket.on('limpiar', () => {
     detenerTemporizadorGiganteActor();
     ultimo_count_valido_actor = "";
     ultimo_ts_count_actor = 0;
-
-    // Recibe el nombre del jugador y lo coloca en su sitio.
-    socket.on(nombre, data => {
-        nombre1.value = data;
-    });
 
     texto1.innerText = "";
     actualizarPuntosMarcadorActor(0, false);
@@ -1623,6 +1815,9 @@ socket.on(nombre, data => {
 });
 
 socket.on('activar_modo', data => {
+    if (!aceptarEventoModoActor(data)) {
+        return;
+    }
     const payload = (data && typeof data === "object") ? data : {};
     const modo_previo = modo_actual;
     const limpiarModoPrevio = LIMPIEZAS[modo_previo];
@@ -1673,6 +1868,11 @@ function cambiar_color_puntuación() {
 }
 
 socket.on("nueva letra", letra => {
+    const eventoLetra = extraerPayloadNuevaLetraActor(letra);
+    if (!aceptarEventoModoActor(eventoLetra.payload)) {
+        return;
+    }
+    letra = eventoLetra.letra;
     console.log("NUEVA LETRA")
     if(modo_actual == "letra prohibida"){
         cache_letra_prohibida_actor = String(letra || "").trim();
@@ -1685,11 +1885,17 @@ socket.on("nueva letra", letra => {
 });
 
 function recibir_palabra(data) {
+    if (!aceptarEventoModoActor(data, { actualizar: false })) {
+        return;
+    }
     actualizarCacheObjetivoActor("palabras bonus", data || {});
     renderInfoModoActor("palabras bonus", data || {}, { animar: true });
 }
 
 function recibir_palabra_prohibida(data) {
+    if (!aceptarEventoModoActor(data, { actualizar: false })) {
+        return;
+    }
     actualizarCacheObjetivoActor("palabras prohibidas", data || {});
     renderInfoModoActor("palabras prohibidas", data || {}, { animar: true });
 }
@@ -1698,8 +1904,8 @@ function limpiezas(){
     cancelarAnimacionEntradaBarraVida(tiempo);
     detenerProgresoNivelBarraActor(true);
     reiniciarProgresoFraseFinalActor();
-    clearTimeout(listener_cuenta_atras);
-    clearTimeout(timer);
+    invalidarIntroActor();
+    limpiarAsincroniaVisualActor();
 
     limpiarEstiloNivelesActor();
     setBarraNivelClaseActor("");
@@ -1746,25 +1952,29 @@ function convertirASegundos(tiempo) {
   var duration = 15 * 1000;
 var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 var isConfettiRunning = true; // Indicador para controlar la ejecución
+let confettiIntervalActor = null;
 
 function randomInRange(min, max) {
     return Math.random() * (max - min) + min;
   }
 
 function confetti_aux() {
+    stopConfetti();
     var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
     isConfettiRunning = true; // Habilita la ejecución de confetti
     console.log(isConfettiRunning);
     
-    var interval = setInterval(function() {
+    confettiIntervalActor = setInterval(function() {
       if (!isConfettiRunning) {
-        clearInterval(interval);
+        clearInterval(confettiIntervalActor);
+        confettiIntervalActor = null;
         return;
       }
   
       var timeLeft = animationEnd - Date.now();
       if (timeLeft <= 0) {
-        clearInterval(interval);
+        clearInterval(confettiIntervalActor);
+        confettiIntervalActor = null;
         return;
       }
   
@@ -1777,6 +1987,10 @@ function confetti_aux() {
 
 function stopConfetti() {
     isConfettiRunning = false; // Deshabilita la ejecución de confetti
+    if (confettiIntervalActor) {
+        clearInterval(confettiIntervalActor);
+        confettiIntervalActor = null;
+    }
     confetti.reset(); // Detiene la animación de confetti
   }
 

@@ -1,0 +1,27 @@
+﻿function cambiarValor(campoId, incremento) {
+  // Obtenemos el input por su id
+  const input = document.getElementById(campoId);
+
+  // Obtenemos el valor actual y lo convertimos a nÃºmero
+  let valorActual = parseInt(input.value, 10);
+  if (isNaN(valorActual)) {
+    valorActual = 0; // Si no es numÃ©rico, asumimos 0
+  }
+
+  // Calculamos el nuevo valor
+  let nuevoValor = valorActual + incremento;
+
+  // Leemos los lÃ­mites min y max del propio input
+  const min = parseInt(input.min, 10) || Number.MIN_SAFE_INTEGER;
+  const max = parseInt(input.max, 10) || Number.MAX_SAFE_INTEGER;
+
+  // Forzamos el nuevo valor a permanecer dentro de [min, max]
+  if (nuevoValor < min) {
+    nuevoValor = min;
+  } else if (nuevoValor > max) {
+    nuevoValor = max;
+  }
+
+  // Asignamos el valor calculado al input
+  input.value = nuevoValor;
+}

@@ -1,4 +1,4 @@
-let borrado; // Variable que almacena el identificador de la función temporizada de borrado.
+﻿let borrado; // Variable que almacena el identificador de la funciÃ³n temporizada de borrado.
 let atributos;
 const LIMITE_TOTAL = 10;
 const SECS_BASE = 2;
@@ -17,10 +17,10 @@ let asignada = false; // Variable boolena que dice si hay una palabra bonus asig
 let palabra_actual = ""; // Variable que almacena la palabra bonus actual.
 let puntos_palabra = 0; // Variable que almacena los puntos obtenidos por meter palabras bonus.
 let terminado = false; // Variable booleana que dice si la ronda ha terminado o no.
-let countInterval; // Variable que almacena el identificador de la función que será ejecutada cada x segundos para uso para actualizar el contador.
-let cambio_palabra; // Variable que almacena el identificador de la función temporizada de cambio de palabra.
+let countInterval; // Variable que almacena el identificador de la funciÃ³n que serÃ¡ ejecutada cada x segundos para uso para actualizar el contador.
+let cambio_palabra; // Variable que almacena el identificador de la funciÃ³n temporizada de cambio de palabra.
 let blurreado = false; // Variable booleana que si alguno de los dos textos ha sido blurreado.
-let puntuacion = 0; // Variable entera que almacena la puntuación de la palabra bonus.
+let puntuacion = 0; // Variable entera que almacena la puntuaciÃ³n de la palabra bonus.
 let puntos_ = 0; // Puntos del jugador 1.
 let puntos_escritura = 0;
 let puntuacion_acumulada_j2 = 0;
@@ -30,14 +30,15 @@ let envio_puntos;
 let caracteres_seguidos = 0;
 puntos_letra_prohibida = 0;
 puntos_letra_bendita = 0;
-//let saltos_línea_alineacion_1 = 0; // Variable entera que almacena los saltos de línea del jugador 1 para alínear los textos.
-//let saltos_línea_alineacion_2 = 0; // Variable entera que almacena los saltos de línea del jugador 2 para alínear los textos.
+//let saltos_lÃ­nea_alineacion_1 = 0; // Variable entera que almacena los saltos de lÃ­nea del jugador 1 para alÃ­near los textos.
+//let saltos_lÃ­nea_alineacion_2 = 0; // Variable entera que almacena los saltos de lÃ­nea del jugador 2 para alÃ­near los textos.
 const color_negativo = "red";
 const color_positivo = "greenyellow";
 let isFullscreen = false;
 let menu_modificador = false;
 let focusedButtonIndex = 0;
 let modificadorButtons = [];
+let revision_borrado_escritora = 0;
 
 function mostrarFeedbackTiempoEscritora(texto, tipo, color) {
   const contenido = String(texto ?? "").trim();
@@ -69,12 +70,35 @@ let lastTextNode;
 let caretPos;
 let caretNode;
 
+function cancelarTemporizadorBorradoEscritora() {
+  clearTimeout(borrado);
+  borrado = null;
+}
+
+function invalidarBorradoEscritora() {
+  revision_borrado_escritora += 1;
+  cancelarTemporizadorBorradoEscritora();
+  return revision_borrado_escritora;
+}
+
+function programarBorradoEscritora(delayMs, callback) {
+  const revisionProgramada = revision_borrado_escritora;
+  cancelarTemporizadorBorradoEscritora();
+  borrado = setTimeout(() => {
+    if (revisionProgramada !== revision_borrado_escritora) {
+      return;
+    }
+    callback(revisionProgramada);
+  }, delayMs);
+  return revisionProgramada;
+}
+
 
 
 document.addEventListener('keydown', function(event) {
 });
 
-// Función para guardar la posición del caret
+// FunciÃ³n para guardar la posiciÃ³n del caret
 function guardarPosicionCaret() {
   let sel = window.getSelection();
   if (sel.rangeCount > 0) {
@@ -90,7 +114,7 @@ function guardarPosicionCaret() {
   };
 }
 
-// Función para restaurar la posición del caret
+// FunciÃ³n para restaurar la posiciÃ³n del caret
 function restaurarPosicionCaret(caretNode, caretPos) {
   if (!caretNode) return;
   let sel = window.getSelection();
@@ -130,30 +154,34 @@ function borrarUltimoCaracterEditable() {
   return true;
 }
 
-function borrar() {
+function borrar(revisionEsperada = revision_borrado_escritora) {
+  if (revisionEsperada !== revision_borrado_escritora) {
+    return;
+  }
+  if (modo_actual === "frase final") {
+    cancelarTemporizadorBorradoEscritora();
+    return;
+  }
   if (!desactivar_borrar) {
-    // 1. Guardar la posición del caret usando la función
+    // 1. Guardar la posiciÃ³n del caret usando la funciÃ³n
     let { caretNode, caretPos } = guardarPosicionCaret();
 
-    // 2. Código existente
+    // 2. CÃ³digo existente
 
-    // En frase final no se modifica el tiempo por inactividad.
-    if (modo_actual !== "frase final") {
-      tiempo_feed = "-1 segs.";
-      mostrarFeedbackTiempoEscritora(tiempo_feed, "borrar", color_negativo);
+    tiempo_feed = "-1 segs.";
+    mostrarFeedbackTiempoEscritora(tiempo_feed, "borrar", color_negativo);
 
-      secs = -1;
-      if (typeof emitirCambioTiempoEscritora === "function") {
-        emitirCambioTiempoEscritora(secs);
-      } else {
-        socket.emit('aumentar_tiempo', {secs, player});
-      }
-      color = color_negativo;
-      tiempo_feed = "-1 segs.";
-      socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar" });
+    secs = -1;
+    if (typeof emitirCambioTiempoEscritora === "function") {
+      emitirCambioTiempoEscritora(secs);
+    } else {
+      socket.emit('aumentar_tiempo', {secs, player});
     }
+    color = color_negativo;
+    tiempo_feed = "-1 segs.";
+    socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar" });
     caracteres_seguidos = 0;
-    // 3. Borrar último carácter editable, saltando palabras benditas
+    // 3. Borrar Ãºltimo carÃ¡cter editable, saltando palabras benditas
     borrarUltimoCaracterEditable();
 
     // 8. Actualizar estado
@@ -168,27 +196,26 @@ function borrar() {
       puntos.innerHTML = puntos_ + " palabras";
     }
     //cambio_nivel(puntos_);
-    clearTimeout(borrado);
-    borrado = setTimeout(() => {
-      borrar();
+    programarBorradoEscritora(rapidez_borrado, (revisionProgramada) => {
+      borrar(revisionProgramada);
       console.log(rapidez_borrado, "rapidez_borrado")
-    }, rapidez_borrado);
+    });
 
-    // 9. Reposicionar caret usando la función
+    // 9. Reposicionar caret usando la funciÃ³n
     
     if (caretNode) {
       restaurarPosicionCaret(caretNode, caretPos);
     }
 
   } else {
-    clearTimeout(borrado);
+    cancelarTemporizadorBorradoEscritora();
   }
   
-  // 10. Envío de texto
+  // 10. EnvÃ­o de texto
   sendText();
 }
 
-// Función para obtener la posición del caret dentro de un contenedor
+// FunciÃ³n para obtener la posiciÃ³n del caret dentro de un contenedor
 function getCaretCharacterOffsetWithin(element) {
   let caretOffset = 0;
   const doc = element.ownerDocument || element.document;
@@ -204,7 +231,7 @@ function getCaretCharacterOffsetWithin(element) {
       preCaretRange.setEnd(range.endContainer, range.endOffset);
       caretOffset = preCaretRange.toString().length;
 
-      // Contando los saltos de línea
+      // Contando los saltos de lÃ­nea
       const div = document.createElement("div");
       div.appendChild(preCaretRange.cloneContents());
       const text = div.innerHTML;
@@ -217,9 +244,9 @@ function getCaretCharacterOffsetWithin(element) {
   return caretOffset;
 }
 
-//Función que modifica el comportamiento del juego.
+//FunciÃ³n que modifica el comportamiento del juego.
 function countChars(texto) {
-  var lastWordCount = puntos_; // Mantenemos el último recuento de palabras
+  var lastWordCount = puntos_; // Mantenemos el Ãºltimo recuento de palabras
 
   if(texto.innerText.match(/\b\w+\b/g) != null){
   puntos_ = texto.innerText.match(/\b\w+\b/g).length;
@@ -233,7 +260,7 @@ function countChars(texto) {
     puntos.innerHTML = puntos_ + " palabras";
   }
   //cambio_nivel(puntos_);
-  clearTimeout(borrado);
+  cancelarTemporizadorBorradoEscritora();
   
   // Ahora, en lugar de contar los caracteres, incrementamos palabras_seguidas si el recuento de palabras ha aumentado
   if (puntos_ > lastWordCount) {
@@ -253,15 +280,19 @@ function countChars(texto) {
     color = color_positivo;    socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "ganar_tiempo"});
   }
   console.log(rapidez_borrado, rapidez_inicio_borrado);
-  borrado = setTimeout(function () {
-    borrar();
-}, rapidez_inicio_borrado);
+  if (modo_actual !== "frase final") {
+    programarBorradoEscritora(rapidez_inicio_borrado, (revisionProgramada) => {
+      borrar(revisionProgramada);
+    });
+  }
 
 }
 
+window.countChars = countChars;
 
 
-//Función auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diéresis y similares.
+
+//FunciÃ³n auxiliar que, dado un string, lo devuelve en su forma normal, es decir, sin acentos, diÃ©resis y similares.
 function toNormalForm(str) {
     return str
         .normalize("NFD")
@@ -272,7 +303,7 @@ function toNormalForm(str) {
 }
 
 /*
-//Función auxiliar que cambia la rapidez y el inicio de borrado en función de la cantidad de caracteres escritos.
+//FunciÃ³n auxiliar que cambia la rapidez y el inicio de borrado en funciÃ³n de la cantidad de caracteres escritos.
 function cambio_nivel(caracteres) {
     if (0 <= caracteres && caracteres < 100) {
         nivel.innerHTML = "nivel 1";
@@ -385,25 +416,10 @@ function cambio_nivel(caracteres) {
 }
 */
 
-//Función auxiliar para crear las animaciones del feedback.
-const animateCSS = (element, animation, prefix = "animate__") =>
-    // We create a Promise and return it
-    new Promise((resolve, reject) => {
-        const animationName = `${prefix}${animation}`;
-        const node = document.querySelector(element);
+//FunciÃ³n auxiliar para crear las animaciones del feedback.
+const animateCSS = window.ScribRuntime.animateCSS;
 
-        node.classList.add(`${prefix}animated`, animationName);
-
-        // When the animation ends, we clean the classes and resolve the Promise
-        function handleAnimationEnd(event) {
-            event.stopPropagation();
-            node.classList.remove(`${prefix}animated`, animationName);
-            resolve("Animation ended");
-        }
-        node.addEventListener("animationend", handleAnimationEnd, { once: true });
-    });
-
-       // Esperar a que el DOM esté completamente cargado
+       // Esperar a que el DOM estÃ© completamente cargado
        document.addEventListener('DOMContentLoaded', () => {
         // Estado inicial de los atributos
         atributos = { fuerza: 0, agilidad: 0, destreza: 0 };
@@ -414,12 +430,12 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         const totalWrapEl = document.getElementById('total');
         const btnInicioEl = document.getElementById('btnInicio');
   
-        // Función para calcular la suma total
+        // FunciÃ³n para calcular la suma total
         function calcularTotal() {
           return Object.values(atributos).reduce((a, b) => a + b, 0);
         }
   
-    // Función para actualizar toda la interfaz tras un cambio
+    // FunciÃ³n para actualizar toda la interfaz tras un cambio
     function actualizarInterfaz() {
       // 1) Calculamos total de puntos usados
       const total = calcularTotal();
@@ -433,36 +449,36 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         const btnMas  = div.querySelector('button[data-action="increment"]');
         const puntos  = div.querySelectorAll('.punto');
 
-        // Actualiza la UI numérica
+        // Actualiza la UI numÃ©rica
         if (contadorEl) {
           contadorEl.textContent = valor;
         }
 
-        // Deshabilita botones según reglas
+        // Deshabilita botones segÃºn reglas
         btnMenos.disabled = (valor === 0);
         btnMas.disabled   = (total >= LIMITE_TOTAL);
 
-        // Sincroniza el botón de inicio legacy (oculto visualmente)
+        // Sincroniza el botÃ³n de inicio legacy (oculto visualmente)
         if (btnInicioEl) {
           btnInicioEl.disabled = (total !== LIMITE_TOTAL);
         }
 
-        // Rellena los puntitos de la barra según valor
+        // Rellena los puntitos de la barra segÃºn valor
         puntos.forEach((el, idx) => {
           el.classList.toggle('filled', idx < valor);
         });
       });
 
-      // 3) Actualiza el número total en pantalla
+      // 3) Actualiza el nÃºmero total en pantalla
       totalUsadosEl.textContent = total;
       actualizarTotalComoBoton(total);
 
-      // 4) Aplica clases de color según porcentaje usado
+      // 4) Aplica clases de color segÃºn porcentaje usado
       //    Calculamos ratio de uso (puede superar 1 si excede)
       const ratio = total / LIMITE_TOTAL;
       const ratioAjustado = Math.max(0, Math.min(ratio, 1));
 
-      // La cápsula de puntos usados transita de color:
+      // La cÃ¡psula de puntos usados transita de color:
       // azul -> verde para escritxr azul, rojo -> verde para escritxr rojo.
       if (totalWrapEl) {
         const equipoRojo = document.body.classList.contains('equipo-rojo');
@@ -517,7 +533,7 @@ const animateCSS = (element, animation, prefix = "animate__") =>
     }
 
   
-        // Delegación de eventos: manejar todos los botones desde el contenedor
+        // DelegaciÃ³n de eventos: manejar todos los botones desde el contenedor
         container.addEventListener('click', e => {
           const boton = e.target.closest('button[data-action]');
           if (!boton) return;
@@ -539,7 +555,7 @@ const animateCSS = (element, animation, prefix = "animate__") =>
             return;
           }
 
-          // Animación de pulsación en el botón
+          // AnimaciÃ³n de pulsaciÃ³n en el botÃ³n
           boton.classList.remove('is-pressed');
           void boton.offsetWidth;
           boton.classList.add('is-pressed');
@@ -551,7 +567,7 @@ const animateCSS = (element, animation, prefix = "animate__") =>
           atributoDiv.classList.add('is-burst');
           setTimeout(() => atributoDiv.classList.remove('is-burst'), 500);
 
-          // Pequeño "pop" en el punto afectado
+          // PequeÃ±o "pop" en el punto afectado
           if (indicePunto !== null) {
             const puntos = atributoDiv.querySelectorAll('.punto');
             const punto = puntos[indicePunto];
@@ -563,7 +579,7 @@ const animateCSS = (element, animation, prefix = "animate__") =>
             }
           }
 
-          // Animación del valor numérico del atributo
+          // AnimaciÃ³n del valor numÃ©rico del atributo
           if (contadorEl) {
             contadorEl.classList.remove('is-changing');
             void contadorEl.offsetWidth;
@@ -588,3 +604,4 @@ const animateCSS = (element, animation, prefix = "animate__") =>
         // Inicializar interfaz
         actualizarInterfaz();
       });
+

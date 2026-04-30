@@ -1,9 +1,9 @@
-// Se establece la conexi�f³n con el servidor seg�fºn si estamos abriendo el archivo localmente o no
+﻿// Se establece la conexiï¿½fÂ³n con el servidor segï¿½fÂºn si estamos abriendo el archivo localmente o no
 const serverUrl = isProduction
     ? SERVER_URL_PROD
     : SERVER_URL_DEV;
 
-const socket = io(serverUrl);
+const socket = io(serverUrl, { autoConnect: false });
 
 const getEl = id => document.getElementById(id); // Obtiene los elementos con id.
 const escapeHtml = (valor) => String(valor)
@@ -53,7 +53,7 @@ const traducirNombreEscritoraEspectador = (id, fallback = "") => (
         : (fallback || `ESCRITXR ${id}`)
 );
 const textoTiempoAgotadoEspectador = () => (
-    tJuego2P("timer.time_up", {}, "¡Tiempo!")
+    tJuego2P("timer.time_up", {}, "Â¡Tiempo!")
 );
 
 const paddedFormat = (num) => (num < 10 ? `0${num}` : `${num}`);
@@ -156,6 +156,7 @@ const contenedor_corazones_espectador = (() => {
 const DURACION_FULGOR_ESPECTADOR_MS = 900;
 const CLASES_FULGOR_LADO_ESPECTADOR = ["tipo-positivo", "tipo-negativo", "tipo-musa"];
 const timeout_fulgor_espectador = { 1: null, 2: null };
+const timeout_chip_regalo_musa_espectador = { 1: null, 2: null };
 
 const fulgores_espectador = (() => {
     const root = document.createElement("div");
@@ -194,15 +195,42 @@ function activarFulgorLadoEspectador(playerId, tipo) {
 const teleprompter_overlay = getEl("teleprompter_overlay");
 const teleprompter_screen = getEl("teleprompter_screen");
 const teleprompter_text = getEl("teleprompter_text");
-const teleprompter_estado = {
-    visible: false,
-    text: "",
-    fontSize: 36,
-    scroll: 0,
-    source: 0,
-    loadId: 0
+const TELEPROMPTER_LIMITS_ESPECTADOR = {
+    ...window.ScribTeleprompter.LIMITS,
+    fontMax: 80,
+    speedMax: 200
 };
+const TELEPROMPTER_FONT_MIN = TELEPROMPTER_LIMITS_ESPECTADOR.fontMin;
+const TELEPROMPTER_FONT_MAX = TELEPROMPTER_LIMITS_ESPECTADOR.fontMax;
+const TELEPROMPTER_SPEED_MIN = TELEPROMPTER_LIMITS_ESPECTADOR.speedMin;
+const TELEPROMPTER_SPEED_MAX = TELEPROMPTER_LIMITS_ESPECTADOR.speedMax;
+const TELEPROMPTER_GAMEPAD = {
+    deadzone: 0.18,
+    analogSpeed: 320
+};
+const teleprompter_estado = window.ScribTeleprompter.crearEstado();
+let teleprompter_revision_local = 0;
 let teleprompter_last_ack_load_id = 0;
+let teleprompter_emit_timeout = null;
+let teleprompter_play_raf = null;
+let teleprompter_last_tick = null;
+let teleprompter_gamepad_loop = null;
+let teleprompter_gamepad_last = null;
+let teleprompter_gamepad_prev_buttons = [];
+const teleprompter_feedback_hold_state = {
+    tp_dpad_up: false,
+    tp_dpad_down: false
+};
+
+const extraerRevisionTeleprompterEspectador = (state = {}) => {
+    return window.ScribTeleprompter.normalizarRevision(state && state.revision);
+};
+
+const marcarCambioTeleprompterLocalEspectador = () => {
+    teleprompter_revision_local = Math.max(teleprompter_revision_local + 1, Number(teleprompter_estado.revision) || 0);
+    teleprompter_estado.revision = teleprompter_revision_local;
+    return teleprompter_estado.revision;
+};
 
 const sincronizarTeleprompterScroll = () => {
     const screen = teleprompter_screen || getEl("teleprompter_screen");
@@ -215,6 +243,67 @@ const sincronizarTeleprompterScroll = () => {
     }
     objetivo = Math.max(0, Math.min(objetivo, maxScroll));
     text.style.transform = `translateY(${-objetivo}px)`;
+};
+
+const teleprompterTieneTexto = () => (
+    typeof teleprompter_estado.text === "string" && teleprompter_estado.text.trim().length > 0
+);
+
+const teleprompterPuedeMoverse = () => teleprompter_estado.visible && teleprompterTieneTexto();
+
+const teleprompterDebeReproducirse = () => (
+    teleprompterPuedeMoverse() && teleprompter_estado.playing && teleprompter_estado.speed > 0
+);
+
+const emitirTeleprompterEstadoEspectador = (inmediato = false) => {
+    if (!socket || typeof socket.emit !== "function") return;
+    if (inmediato) {
+        socket.emit("teleprompter_control", { state: { ...teleprompter_estado } });
+        return;
+    }
+    if (teleprompter_emit_timeout) return;
+    teleprompter_emit_timeout = setTimeout(() => {
+        teleprompter_emit_timeout = null;
+        socket.emit("teleprompter_control", { state: { ...teleprompter_estado } });
+    }, 60);
+};
+
+const emitirTeleprompterFeedbackEspectador = (payload = {}) => {
+    if (!socket || typeof socket.emit !== "function") return;
+    const type = typeof payload.type === "string" ? payload.type.trim() : "";
+    const id = typeof payload.id === "string" ? payload.id.trim() : "";
+    if (!type || !id) return;
+    socket.emit("teleprompter_feedback", {
+        type,
+        id,
+        active: Boolean(payload.active),
+        duration: Math.max(60, Math.trunc(Number(payload.duration) || 160))
+    });
+};
+
+const activarBotonFeedbackEspectador = (id, duration = 160) => {
+    emitirTeleprompterFeedbackEspectador({
+        type: "press",
+        id,
+        duration
+    });
+};
+
+const setHoldFeedbackEspectador = (id, active) => {
+    if (!id) return;
+    const activo = Boolean(active);
+    if (teleprompter_feedback_hold_state[id] === activo) return;
+    teleprompter_feedback_hold_state[id] = activo;
+    emitirTeleprompterFeedbackEspectador({
+        type: "held",
+        id,
+        active: activo
+    });
+};
+
+const resetHoldFeedbackEspectador = () => {
+    setHoldFeedbackEspectador("tp_dpad_up", false);
+    setHoldFeedbackEspectador("tp_dpad_down", false);
 };
 
 const emitirTeleprompterAck = (loadId) => {
@@ -239,49 +328,61 @@ const emitirTeleprompterAck = (loadId) => {
     });
 };
 
-const actualizarTeleprompterEstado = (state = {}) => {
-    if (!state) return;
+const detenerTeleprompterPlayEspectador = () => {
+    if (teleprompter_play_raf) {
+        cancelAnimationFrame(teleprompter_play_raf);
+    }
+    teleprompter_play_raf = null;
+    teleprompter_last_tick = null;
+};
+
+function teleprompterPlayLoopEspectador(ts) {
+    if (!teleprompterDebeReproducirse()) {
+        detenerTeleprompterPlayEspectador();
+        return;
+    }
+    if (teleprompter_last_tick === null) {
+        teleprompter_last_tick = ts;
+    }
+    const dt = (ts - teleprompter_last_tick) / 1000;
+    teleprompter_last_tick = ts;
+    if (dt > 0) {
+        teleprompter_estado.scroll += teleprompter_estado.speed * dt;
+        marcarCambioTeleprompterLocalEspectador();
+        sincronizarTeleprompterScroll();
+        emitirTeleprompterEstadoEspectador();
+    }
+    teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoopEspectador);
+}
+
+const sincronizarTeleprompterPlayEspectador = () => {
+    if (teleprompterDebeReproducirse()) {
+        if (!teleprompter_play_raf) {
+            teleprompter_last_tick = null;
+            teleprompter_play_raf = requestAnimationFrame(teleprompterPlayLoopEspectador);
+        }
+        return;
+    }
+    detenerTeleprompterPlayEspectador();
+};
+
+const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
     const overlay = teleprompter_overlay || getEl("teleprompter_overlay");
     const screen = teleprompter_screen || getEl("teleprompter_screen");
     const text = teleprompter_text || getEl("teleprompter_text");
-    let esNuevaCarga = false;
-    if (typeof state.visible === "boolean") {
-        teleprompter_estado.visible = state.visible;
-    }
-    if (typeof state.text === "string") {
-        teleprompter_estado.text = state.text;
-        if (text) {
-            text.textContent = state.text;
+    if (text) {
+        text.textContent = teleprompter_estado.text;
+        text.style.fontSize = `${teleprompter_estado.fontSize}px`;
+        if (esNuevaCarga) {
+            text.classList.add("teleprompter-text--no-anim");
         }
-    }
-    if (state.source !== undefined) {
-        const fuente = Number(state.source);
-        teleprompter_estado.source = fuente === 1 || fuente === 2 ? fuente : 0;
-    }
-    if (Number.isFinite(state.fontSize)) {
-        teleprompter_estado.fontSize = Math.min(96, Math.max(18, state.fontSize));
-        if (text) {
-            text.style.fontSize = `${teleprompter_estado.fontSize}px`;
-        }
-    }
-    if (Number.isFinite(state.scroll)) {
-        teleprompter_estado.scroll = state.scroll;
-    }
-    if (Number.isFinite(state.loadId)) {
-        const loadId = Math.max(0, Math.trunc(Number(state.loadId)));
-        esNuevaCarga = loadId > 0 && loadId !== teleprompter_estado.loadId;
-        teleprompter_estado.loadId = loadId;
-    }
-    if (esNuevaCarga && text) {
-        text.classList.add("teleprompter-text--no-anim");
     }
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
     }
     if (screen) {
-        const tieneTexto = typeof teleprompter_estado.text === "string" && teleprompter_estado.text.trim().length > 0;
         const equipo = teleprompter_estado.source;
-        const valor = tieneTexto && equipo === 1 ? "1" : tieneTexto && equipo === 2 ? "2" : "none";
+        const valor = teleprompterTieneTexto() && equipo === 1 ? "1" : teleprompterTieneTexto() && equipo === 2 ? "2" : "none";
         screen.setAttribute("data-team", valor);
         const frameColor = valor === "1"
             ? "rgba(69, 243, 255, 0.9)"
@@ -292,6 +393,7 @@ const actualizarTeleprompterEstado = (state = {}) => {
         screen.style.borderColor = frameColor;
         screen.style.boxShadow = `0 0 35px ${frameColor}, inset 0 0 30px rgba(0, 0, 0, 0.8)`;
     }
+    sincronizarTeleprompterPlayEspectador();
     programarAjusteViewportEspectador();
     requestAnimationFrame(() => {
         sincronizarTeleprompterScroll();
@@ -303,6 +405,202 @@ const actualizarTeleprompterEstado = (state = {}) => {
         }
     });
 };
+
+const actualizarTeleprompterEstado = (state = {}) => {
+    if (!state) return;
+    const revision = extraerRevisionTeleprompterEspectador(state);
+    if (window.ScribTeleprompter.esEstadoObsoleto(state, teleprompter_estado.revision)) {
+        return;
+    }
+    let esNuevaCarga = false;
+    if (Number.isFinite(state.loadId)) {
+        const loadId = Math.max(0, Math.trunc(Number(state.loadId)));
+        esNuevaCarga = loadId > 0 && loadId !== teleprompter_estado.loadId;
+    }
+    window.ScribTeleprompter.aplicarEstado(teleprompter_estado, state, TELEPROMPTER_LIMITS_ESPECTADOR);
+    if (revision !== null) {
+        teleprompter_revision_local = Math.max(teleprompter_revision_local, revision);
+    }
+    aplicarRenderTeleprompterEspectador({ esNuevaCarga });
+};
+
+const teleprompterSubirEspectador = () => {
+    teleprompter_estado.scroll = Math.max(0, teleprompter_estado.scroll - 60);
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador(true);
+};
+
+const teleprompterBajarEspectador = () => {
+    teleprompter_estado.scroll += 60;
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador(true);
+};
+
+const teleprompterBajarGrandeEspectador = () => {
+    teleprompter_estado.scroll += 260;
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador();
+};
+
+const teleprompterIrInicioEspectador = () => {
+    teleprompter_estado.scroll = 0;
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador(true);
+};
+
+const teleprompterIrFinalEspectador = () => {
+    teleprompter_estado.scroll = Number.MAX_SAFE_INTEGER;
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador(true);
+};
+
+const teleprompterCambiarFuenteEspectador = (delta) => {
+    teleprompter_estado.fontSize = Math.min(TELEPROMPTER_FONT_MAX, Math.max(TELEPROMPTER_FONT_MIN, teleprompter_estado.fontSize + delta));
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador(true);
+};
+
+const teleprompterCambiarVelocidadEspectador = (delta) => {
+    teleprompter_estado.speed = Math.min(TELEPROMPTER_SPEED_MAX, Math.max(TELEPROMPTER_SPEED_MIN, teleprompter_estado.speed + delta));
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador();
+};
+
+const teleprompterTogglePlayEspectador = () => {
+    teleprompter_estado.playing = !teleprompter_estado.playing;
+    marcarCambioTeleprompterLocalEspectador();
+    aplicarRenderTeleprompterEspectador();
+    emitirTeleprompterEstadoEspectador(true);
+};
+
+const obtenerGamepadActivoEspectador = () => {
+    if (!navigator.getGamepads) return null;
+    const pads = navigator.getGamepads();
+    if (!pads) return null;
+    for (let i = 0; i < pads.length; i++) {
+        const pad = pads[i];
+        if (pad && pad.connected) return pad;
+    }
+    return null;
+};
+
+const botonJustPressedEspectador = (pad, index, threshold = 0.5) => {
+    if (!pad || !pad.buttons || !pad.buttons[index]) return false;
+    const btn = pad.buttons[index];
+    const pressed = !!(btn.pressed || btn.value > threshold);
+    const prev = !!teleprompter_gamepad_prev_buttons[index];
+    teleprompter_gamepad_prev_buttons[index] = pressed;
+    return pressed && !prev;
+};
+
+function teleprompterGamepadLoopEspectador(ts) {
+    const pad = obtenerGamepadActivoEspectador();
+    if (!pad) {
+        teleprompter_gamepad_last = ts;
+        teleprompter_gamepad_prev_buttons = [];
+        resetHoldFeedbackEspectador();
+        teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoopEspectador);
+        return;
+    }
+    const tiempoActual = ts || performance.now();
+    const dt = teleprompter_gamepad_last ? (tiempoActual - teleprompter_gamepad_last) / 1000 : 0;
+    teleprompter_gamepad_last = tiempoActual;
+
+    if (teleprompterPuedeMoverse()) {
+        const axisY = pad.axes && pad.axes.length > 1 ? pad.axes[1] : 0;
+        const abs = Math.abs(axisY);
+        if (abs > TELEPROMPTER_GAMEPAD.deadzone && dt > 0) {
+            const factor = (abs - TELEPROMPTER_GAMEPAD.deadzone) / (1 - TELEPROMPTER_GAMEPAD.deadzone);
+            const delta = axisY * factor * TELEPROMPTER_GAMEPAD.analogSpeed * dt;
+            teleprompter_estado.scroll = Math.max(0, teleprompter_estado.scroll + delta);
+            sincronizarTeleprompterScroll();
+            emitirTeleprompterEstadoEspectador();
+        }
+
+        if (abs > TELEPROMPTER_GAMEPAD.deadzone) {
+            setHoldFeedbackEspectador("tp_dpad_up", axisY < 0);
+            setHoldFeedbackEspectador("tp_dpad_down", axisY > 0);
+        } else {
+            resetHoldFeedbackEspectador();
+        }
+
+        if (botonJustPressedEspectador(pad, 12)) {
+            teleprompterSubirEspectador();
+            activarBotonFeedbackEspectador("tp_dpad_up");
+        }
+        if (botonJustPressedEspectador(pad, 13)) {
+            teleprompterBajarEspectador();
+            activarBotonFeedbackEspectador("tp_dpad_down");
+        }
+        if (botonJustPressedEspectador(pad, 14)) {
+            teleprompterCambiarVelocidadEspectador(-5);
+            activarBotonFeedbackEspectador("tp_dpad_left");
+        }
+        if (botonJustPressedEspectador(pad, 15)) {
+            teleprompterCambiarVelocidadEspectador(5);
+            activarBotonFeedbackEspectador("tp_dpad_right");
+        }
+        if (botonJustPressedEspectador(pad, 0)) {
+            teleprompterTogglePlayEspectador();
+            activarBotonFeedbackEspectador("tp_x");
+        }
+        if (botonJustPressedEspectador(pad, 1)) {
+            teleprompterCambiarFuenteEspectador(2);
+            activarBotonFeedbackEspectador("tp_circle");
+        }
+        if (botonJustPressedEspectador(pad, 2)) {
+            teleprompterCambiarFuenteEspectador(-2);
+            activarBotonFeedbackEspectador("tp_square");
+        }
+        if (botonJustPressedEspectador(pad, 3)) {
+            teleprompterBajarGrandeEspectador();
+            activarBotonFeedbackEspectador("tp_triangle");
+        }
+        if (botonJustPressedEspectador(pad, 4)) {
+            teleprompterIrInicioEspectador();
+            activarBotonFeedbackEspectador("tp_l1");
+        }
+        if (botonJustPressedEspectador(pad, 5)) {
+            teleprompterIrFinalEspectador();
+            activarBotonFeedbackEspectador("tp_r1");
+        }
+        if (botonJustPressedEspectador(pad, 6, 0.6)) {
+            teleprompterCambiarFuenteEspectador(-2);
+            activarBotonFeedbackEspectador("tp_l2");
+        }
+        if (botonJustPressedEspectador(pad, 7, 0.6)) {
+            teleprompterCambiarFuenteEspectador(2);
+            activarBotonFeedbackEspectador("tp_r2");
+        }
+    } else {
+        teleprompter_gamepad_prev_buttons = pad.buttons.map((btn) => !!(btn && (btn.pressed || btn.value > 0.5)));
+        resetHoldFeedbackEspectador();
+    }
+
+    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoopEspectador);
+}
+
+const iniciarTeleprompterGamepadEspectador = () => {
+    if (teleprompter_gamepad_loop) return;
+    teleprompter_gamepad_loop = requestAnimationFrame(teleprompterGamepadLoopEspectador);
+};
+
+window.addEventListener("gamepadconnected", iniciarTeleprompterGamepadEspectador);
+window.addEventListener("gamepaddisconnected", () => {
+    const pad = obtenerGamepadActivoEspectador();
+    if (!pad) {
+        teleprompter_gamepad_prev_buttons = [];
+        resetHoldFeedbackEspectador();
+    }
+});
+window.addEventListener("load", iniciarTeleprompterGamepadEspectador);
 
 window.addEventListener("resize", () => {
     if (teleprompter_estado.visible) {
@@ -329,7 +627,7 @@ const crearCorazonFlotante = (equipo, x, y) => {
     const corazon = document.createElement("span");
     const claseEquipo = equipo === 1 ? "corazon-azul" : "corazon-rojo";
     corazon.className = `corazon-flotante ${claseEquipo}`;
-    corazon.textContent = equipo === 1 ? "💙" : "❤️";
+    corazon.textContent = equipo === 1 ? "ðŸ’™" : "â¤ï¸";
     const tamano = 22 + Math.random() * 22;
     const duracion = 2000 + Math.random() * 1200;
     const desplazamiento = -(90 + Math.random() * 140);
@@ -371,15 +669,15 @@ let musas1 = getEl("musas");
 let logo = getEl("logo");
 let palabra1 = getEl("palabra");
 let definicion1 = getEl("definicion");
-let explicacion = getEl("explicacion") || getEl("explicaci�n");
+let explicacion = getEl("explicacion") || getEl("explicaciï¿½n");
 
 let palabra2 = getEl("palabra1");
 let definicion2 = getEl("definicion1");
-let explicacion1 = getEl("explicacion1") || getEl("explicaci�n1");
+let explicacion1 = getEl("explicacion1") || getEl("explicaciï¿½n1");
 
 let palabra3 = getEl("palabra2");
 let definicion3 = getEl("definicion2");
-let explicacion2 = getEl("explicacion2") || getEl("explicaci�n2");
+let explicacion2 = getEl("explicacion2") || getEl("explicaciï¿½n2");
 let ultimo_texto1 = "";
 let ultimo_texto2 = "";
 let ultimo_paquete_texto1 = null;
@@ -391,7 +689,6 @@ let pendiente_texto2 = false;
 let tiempo = getEl("tiempo");
 let tiempo1 = getEl("tiempo1");
 let tema = getEl("temas");
-let temasLista = [];
 let info = getEl("info");
 let info1 = getEl("info1");
 let info2= getEl("info2");
@@ -632,6 +929,41 @@ function esInspiracionDesdeMusa(payload) {
     return origen === "musa" || origen === "musa_enemiga";
 }
 
+function esInspiracionMusaEnemiga(payload) {
+    if (!payload || payload.tipo !== "inspiracion") return false;
+    const origen = typeof payload.origen_musa === "string"
+        ? payload.origen_musa.trim().toLowerCase()
+        : "";
+    return origen === "musa_enemiga";
+}
+
+function esFeedbackInspiracionVigenteEspectador(payload = {}) {
+    if (!payload || payload.tipo !== "inspiracion") return false;
+    const seq = Number(payload.modo_seq);
+    if (Number.isFinite(seq) && seq > 0 && seq < modo_seq_actual_espectador) {
+        return false;
+    }
+    const modoPayload = typeof payload.modo_actual === "string"
+        ? payload.modo_actual.trim().toLowerCase()
+        : "";
+    const modoLocal = typeof modo_actual === "string" ? modo_actual.trim().toLowerCase() : "";
+    if (modoPayload && modoLocal && modoPayload !== modoLocal) {
+        return false;
+    }
+    return true;
+}
+
+function actualizarBarraInspiracionDesdeFeedbackEspectador(escritoraId, payload = {}) {
+    if (!esFeedbackInspiracionVigenteEspectador(payload)) return;
+    const jugadora = Number(escritoraId) === 2 ? 2 : 1;
+    const esEnemiga = esInspiracionMusaEnemiga(payload);
+    if (jugadora === 1) {
+        increment(esEnemiga ? "red" : "blue");
+        return;
+    }
+    increment(esEnemiga ? "blue" : "red");
+}
+
 function limpiarSugerenciaMusaModoLetrasEspectador(escritoraId, payload = {}) {
     const modoEsLetras = modo_actual === "letra bendita" || modo_actual === "letra prohibida";
     if (!modoEsLetras) return;
@@ -763,6 +1095,11 @@ function mostrarFeedbackFlotanteEspectador(playerId, texto, opciones = {}) {
     const nodo = document.createElement("span");
     nodo.className = `feedback-tiempo-float ${tipo}`;
     nodo.textContent = contenido;
+    if (typeof opciones.claseExtra === "string" && opciones.claseExtra.trim()) {
+        opciones.claseExtra.trim().split(/\s+/).forEach((clase) => {
+            if (clase) nodo.classList.add(clase);
+        });
+    }
 
     if (typeof opciones.color === "string" && opciones.color.trim()) {
         nodo.style.setProperty("--feedback-float-color", opciones.color.trim());
@@ -774,7 +1111,10 @@ function mostrarFeedbackFlotanteEspectador(playerId, texto, opciones = {}) {
     const margenSuperior = 24;
     const subidaMaxima = -Math.max(8, rectContenedor.top - margenSuperior);
     const subidaY = Math.max(subidaDeseada, subidaMaxima);
-    const duracion = 1100 + Math.round(Math.random() * 200);
+    const duracionPersonalizada = Number(opciones.duracionMs);
+    const duracion = Number.isFinite(duracionPersonalizada) && duracionPersonalizada > 0
+        ? Math.round(duracionPersonalizada)
+        : 1100 + Math.round(Math.random() * 200);
     nodo.style.setProperty("--feedback-float-drift-x", `${derivaX.toFixed(1)}px`);
     nodo.style.setProperty("--feedback-float-rise-y", `${subidaY.toFixed(1)}px`);
     nodo.style.animationDuration = `${duracion}ms`;
@@ -910,7 +1250,7 @@ let stats_slides_actuales = [];
 const stats_timeline_modos_local_espectador = [];
 const STATS_LAYOUT_HEATMAP = [
     [
-        { code: "Backquote", label: "º\nª" },
+        { code: "Backquote", label: "Âº\nÂª" },
         { code: "Digit1", label: "1\n!" },
         { code: "Digit2", label: "2\n\"" },
         { code: "Digit3", label: "3\n#" },
@@ -921,24 +1261,24 @@ const STATS_LAYOUT_HEATMAP = [
         { code: "Digit8", label: "8\n(" },
         { code: "Digit9", label: "9\n)" },
         { code: "Digit0", label: "0\n=" },
-        { code: "Minus", label: "¿\n?" },
-        { code: "Equal", label: "¡\n!" },
-        { code: "Backspace", label: "←", ancho: 2.4 }
+        { code: "Minus", label: "Â¿\n?" },
+        { code: "Equal", label: "Â¡\n!" },
+        { code: "Backspace", label: "â†", ancho: 2.4 }
     ],
     [
         { code: "Tab", label: "Tab", ancho: 1.6 },
         { code: "KeyQ", label: "Q" }, { code: "KeyW", label: "W" }, { code: "KeyE", label: "E" }, { code: "KeyR", label: "R" },
         { code: "KeyT", label: "T" }, { code: "KeyY", label: "Y" }, { code: "KeyU", label: "U" }, { code: "KeyI", label: "I" },
         { code: "KeyO", label: "O" }, { code: "KeyP", label: "P" },
-        { code: "BracketLeft", label: "´\n+" }, { code: "BracketRight", label: "`\n^" },
+        { code: "BracketLeft", label: "Â´\n+" }, { code: "BracketRight", label: "`\n^" },
         { code: "Backslash", label: "\\", ancho: 1.6 }
     ],
     [
         { code: "CapsLock", label: "Caps", ancho: 1.9 },
         { code: "KeyA", label: "A" }, { code: "KeyS", label: "S" }, { code: "KeyD", label: "D" }, { code: "KeyF", label: "F" },
         { code: "KeyG", label: "G" }, { code: "KeyH", label: "H" }, { code: "KeyJ", label: "J" }, { code: "KeyK", label: "K" },
-        { code: "KeyL", label: "L" }, { code: "Semicolon", label: "Ñ" },
-        { code: "Quote", label: "¨\n´" },
+        { code: "KeyL", label: "L" }, { code: "Semicolon", label: "Ã‘" },
+        { code: "Quote", label: "Â¨\nÂ´" },
         { code: "Enter", label: "Enter", ancho: 2.5 }
     ],
     [
@@ -946,7 +1286,7 @@ const STATS_LAYOUT_HEATMAP = [
         { code: "IntlBackslash", label: "<\n>" },
         { code: "KeyZ", label: "Z" }, { code: "KeyX", label: "X" }, { code: "KeyC", label: "C" }, { code: "KeyV", label: "V" },
         { code: "KeyB", label: "B" }, { code: "KeyN", label: "N" }, { code: "KeyM", label: "M" },
-        { code: "Comma", label: ",\n;" }, { code: "Period", label: ".\n:" }, { code: "Slash", label: "¿\n?" },
+        { code: "Comma", label: ",\n;" }, { code: "Period", label: ".\n:" }, { code: "Slash", label: "Â¿\n?" },
         { code: "ShiftRight", label: "Shift", ancho: 3 }
     ],
     [
@@ -989,36 +1329,10 @@ const PERMITIR_SCROLL_ESPECTADOR = false;
 const ESCALA_UI_ESPECTADOR_MIN = 0.82;
 const ESCALA_UI_ESPECTADOR_MAX = 1.28;
 let raf_ajuste_viewport_espectador = null;
+let timeout_ajuste_viewport_espectador = null;
 let resize_observer_fit_viewport_espectador = null;
-const CREDITOS_CAMPOS_ORDEN = [
-    ["❤️ ESCRITORA", "escritxr_rojo"],
-    ["❤️ INTÉRPRETE", "interprete_rojo_1"],
-    ["❤️ INTÉRPRETE", "interprete_rojo_2"],
-    ["💙 ESCRITOR", "escritxr_azul"],
-    ["💙 INTÉRPRETE", "interprete_azul_1"],
-    ["💙 INTÉRPRETE", "interprete_azul_2"],
-    ["👾 PROGRAMACIÓN", "programacion"],
-    ["✍️ DRAMATURGIA", "dramaturgia"],
-    ["💡 ILUMINACIÓN", "iluminacion"],
-    ["🎹 MÚSICA", "musica"],
-    ["🗣️ VOZ EN OFF", "voz_off"]
-];
-const ESTADO_CREDITOS_ESPECTADOR_POR_DEFECTO = {
-    escritxr_rojo: "ÁNGELA BUENO",
-    escritxr_azul: "MIRIAM DEL VALLE",
-    interprete_azul_1: "PAULA CM",
-    interprete_azul_2: "DIEGO VALVERDE",
-    interprete_rojo_1: "ANA SEMPERE",
-    interprete_rojo_2: "PABLO PINEÑO",
-    programacion: "DAVID VIÑAS",
-    dramaturgia: "ÁNGELA BUENO",
-    iluminacion: "TERESA TIMPER",
-    musica: "ARNY RAMÍREZ",
-    voz_off: "NINACHASKA ZL",
-    agradecimientos: "SALA EXLÍMITE\nJUAN CEACERO"
-};
 let estado_creditos_espectador = {
-    creditos: { ...ESTADO_CREDITOS_ESPECTADOR_POR_DEFECTO },
+    creditos: { ...window.ScribCredits.DEFAULT_STATE },
     mostrar: false,
     animacion_id: 0
 };
@@ -1114,7 +1428,13 @@ const iniciarAjusteViewportEspectador = () => {
         resize_observer_fit_viewport_espectador.observe(spectator_fit_root);
     }
     programarAjusteViewportEspectador();
-    setTimeout(programarAjusteViewportEspectador, 120);
+    if (timeout_ajuste_viewport_espectador) {
+        clearTimeout(timeout_ajuste_viewport_espectador);
+    }
+    timeout_ajuste_viewport_espectador = setTimeout(() => {
+        timeout_ajuste_viewport_espectador = null;
+        programarAjusteViewportEspectador();
+    }, 120);
 };
 const limitarPct = (valor, min, max) => Math.max(min, Math.min(max, valor));
 const normalizarModoVistaEspectador = (valor) => {
@@ -1167,33 +1487,7 @@ const normalizarSolicitudCalentamientoVista = (valor) => {
     const tipo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
     return TIPOS_SOLICITUD_CALENTAMIENTO_VISTA.has(tipo) ? tipo : SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO;
 };
-const normalizarTextoCreditosEspectador = (valor, max = 80) => String(valor ?? "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, max);
-const normalizarAgradecimientosCreditosEspectador = (valor, max = 420) => String(valor ?? "")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .split("\n")
-    .map((linea) => linea.trim())
-    .filter(Boolean)
-    .join("\n")
-    .slice(0, max);
-const normalizarPayloadCreditosEspectador = (payload = {}) => {
-    const data = (payload && typeof payload === "object") ? payload : {};
-    const entradaCreditos = (data.creditos && typeof data.creditos === "object") ? data.creditos : {};
-    const creditos = { ...ESTADO_CREDITOS_ESPECTADOR_POR_DEFECTO };
-    CREDITOS_CAMPOS_ORDEN.forEach(([, campo]) => {
-        creditos[campo] = normalizarTextoCreditosEspectador(entradaCreditos[campo], 80);
-    });
-    creditos.agradecimientos = normalizarAgradecimientosCreditosEspectador(entradaCreditos.agradecimientos, 420);
-    return {
-        creditos,
-        mostrar: Boolean(data.mostrar),
-        animacion_id: Number(data.animacion_id) || 0,
-        ts: Number(data.ts) || Date.now()
-    };
-};
+const normalizarPayloadCreditosEspectador = window.ScribCredits.normalizarPayload;
 const detenerAnimacionCreditosEspectador = (reiniciar = true) => {
     if (creditos_animacion_raf) {
         cancelAnimationFrame(creditos_animacion_raf);
@@ -1215,9 +1509,9 @@ const renderizarCreditosEspectador = () => {
     if (!creditos_content) return;
     const data = estado_creditos_espectador && estado_creditos_espectador.creditos
         ? estado_creditos_espectador.creditos
-        : ESTADO_CREDITOS_ESPECTADOR_POR_DEFECTO;
-    const lineas = CREDITOS_CAMPOS_ORDEN.map(([label, campo]) => {
-        const valor = data[campo] ? data[campo] : "—";
+        : window.ScribCredits.DEFAULT_STATE;
+    const lineas = window.ScribCredits.SPECTATOR_ORDER.map(([label, campo]) => {
+        const valor = data[campo] ? data[campo] : "â€”";
         return `<div class="credito-linea"><span class="credito-label">${escapeHtml(label)}</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">${escapeHtml(valor)}</span></div>`;
     }).join("");
     const agradecimientos = data.agradecimientos
@@ -2595,7 +2889,7 @@ const renderizarStatsEspectador = () => {
     stats_slide_count = slides.length;
     aplicarSlideStatsActual();
     const nombreModo = estado.modo_actual ? estado.modo_actual : "partida";
-    stats_estado.textContent = `Modo: ${nombreModo} · Heatmap + tiempo live · ${stats_slide_count} slides`;
+    stats_estado.textContent = `Modo: ${nombreModo} Â· Heatmap + tiempo live Â· ${stats_slide_count} slides`;
     stats_timestamp.textContent = `Actualizado: ${formatearHoraEspectador(estado.ts)}`;
     actualizarCabeceraSlideStats();
     renderizarEstadoStatsEspectador(resolverModoActivoStatsEspectador(estado));
@@ -3109,7 +3403,8 @@ const CLASES_FADE_TEXTAREA_ESPECTADOR = [
     "textarea-fade-bottom",
     "textarea-fade-both"
 ];
-const raf_degradado_textarea_espectador = new WeakMap();
+const raf_degradado_textarea_espectador = new Map();
+let timeout_degradado_textos_espectador = null;
 let degradado_textarea_espectador_iniciado = false;
 let observadores_mutacion_textarea_espectador = [];
 let observadores_resize_textarea_espectador = [];
@@ -3205,7 +3500,13 @@ function iniciarDegradadoDinamicoTextosEspectador() {
     }
 
     programarActualizacionDegradadoTextosEspectador();
-    setTimeout(programarActualizacionDegradadoTextosEspectador, 120);
+    if (timeout_degradado_textos_espectador) {
+        clearTimeout(timeout_degradado_textos_espectador);
+    }
+    timeout_degradado_textos_espectador = setTimeout(() => {
+        timeout_degradado_textos_espectador = null;
+        programarActualizacionDegradadoTextosEspectador();
+    }, 120);
 }
 
 if (document.readyState === "loading") {
@@ -3214,7 +3515,7 @@ if (document.readyState === "loading") {
     iniciarDegradadoDinamicoTextosEspectador();
 }
 
-const timeout_puntos_espectador = new WeakMap();
+const timeout_puntos_espectador = new Map();
 
 const formatearPuntosMarcador = (valor) => {
     return formatearPalabrasEspectador(valor);
@@ -3273,7 +3574,11 @@ function animarChipRegaloMusaEspectador(equipo) {
     chip.classList.remove("is-award");
     void chip.offsetWidth;
     chip.classList.add("is-award");
-    setTimeout(() => {
+    if (timeout_chip_regalo_musa_espectador[equipo]) {
+        clearTimeout(timeout_chip_regalo_musa_espectador[equipo]);
+    }
+    timeout_chip_regalo_musa_espectador[equipo] = setTimeout(() => {
+        timeout_chip_regalo_musa_espectador[equipo] = null;
         if (chip) {
             chip.classList.remove("is-award");
         }
@@ -3304,6 +3609,54 @@ function actualizarEstadoRegaloBanderaEspectador(payload = {}) {
     actualizarChipRegaloMusaEspectador(2, equipos[2] || null);
 }
 
+function limpiarAsincroniaVisualEspectador({ resetViewport = false } = {}) {
+    Object.keys(timeout_fulgor_espectador).forEach((key) => {
+        if (timeout_fulgor_espectador[key]) {
+            clearTimeout(timeout_fulgor_espectador[key]);
+            timeout_fulgor_espectador[key] = null;
+        }
+        const nodo = fulgores_espectador[key];
+        if (nodo) {
+            nodo.classList.remove("activa");
+            CLASES_FULGOR_LADO_ESPECTADOR.forEach((clase) => nodo.classList.remove(clase));
+        }
+    });
+    timeout_puntos_espectador.forEach((timeoutId, elemento) => {
+        clearTimeout(timeoutId);
+        if (elemento && elemento.classList) {
+            elemento.classList.remove("puntos-hit");
+        }
+    });
+    timeout_puntos_espectador.clear();
+    Object.keys(timeout_chip_regalo_musa_espectador).forEach((key) => {
+        if (timeout_chip_regalo_musa_espectador[key]) {
+            clearTimeout(timeout_chip_regalo_musa_espectador[key]);
+            timeout_chip_regalo_musa_espectador[key] = null;
+        }
+        const chip = obtenerChipRegaloMusaEspectador(Number(key));
+        if (chip) {
+            chip.classList.remove("is-award");
+        }
+    });
+    if (raf_ajuste_viewport_espectador) {
+        cancelAnimationFrame(raf_ajuste_viewport_espectador);
+        raf_ajuste_viewport_espectador = null;
+    }
+    if (timeout_ajuste_viewport_espectador) {
+        clearTimeout(timeout_ajuste_viewport_espectador);
+        timeout_ajuste_viewport_espectador = null;
+    }
+    raf_degradado_textarea_espectador.forEach((rafId) => cancelAnimationFrame(rafId));
+    raf_degradado_textarea_espectador.clear();
+    if (timeout_degradado_textos_espectador) {
+        clearTimeout(timeout_degradado_textos_espectador);
+        timeout_degradado_textos_espectador = null;
+    }
+    if (resetViewport) {
+        resetAjusteViewportEspectador();
+    }
+}
+
 let focalizador1 = getEl("focalizador1");
 let focalizador2 = getEl("focalizador2");
 let focalizador_id = 1;
@@ -3313,21 +3666,109 @@ let feedback_tiempo = getEl("feedback_tiempo");
 let terminado = false;
 let terminado1 = false;
 let modo_actual = "";
+let modo_seq_actual_espectador = 0;
+let ultimo_count_seq_espectador = { 1: 0, 2: 0 };
+let tiempo_seq_actual_espectador = { 1: 0, 2: 0 };
 let tempo_text_inverso1;
 let tempo_text_inverso2;
 let tempo_text_borroso1;
 let tempo_text_borroso2;
+let revision_contexto_transitorio_espectador = 0;
 let listener_modo;
 let activado_psico1 = false;
 let activado_psico2 = false;
 let listener_cuenta_atras = null;
 let timeout_countdown;
 let timeout_timer;
+let timeout_animacion_countdown_espectador = null;
+let timeout_remover_countdown_espectador = null;
+let timeout_fallback_countdown_espectador = null;
+let revision_countdown_inicio_espectador = 0;
 let cuenta_atras_activa = false;
 let modo_pendiente = null;
+
+function invalidarContextoTransitorioEspectador() {
+    revision_contexto_transitorio_espectador += 1;
+    clearTimeout(tempo_text_inverso1);
+    clearTimeout(tempo_text_inverso2);
+    clearTimeout(tempo_text_borroso1);
+    clearTimeout(tempo_text_borroso2);
+    tempo_text_inverso1 = null;
+    tempo_text_inverso2 = null;
+    tempo_text_borroso1 = null;
+    tempo_text_borroso2 = null;
+    detenerSonidosDesventaja();
+    if (typeof limpiarVisualPutadasEspectador === "function") {
+        limpiarVisualPutadasEspectador();
+    }
+    document.body.classList.remove("bg");
+    document.body.classList.remove("rain");
+    lightning.classList.remove("lightning");
+    if (texto1) {
+        texto1.classList.remove("rotate-vertical-center", "textarea_blur");
+    }
+    if (texto2) {
+        texto2.classList.remove("rotate-vertical-center", "textarea_blur");
+    }
+    if (typeof temp_text_borroso_activado1 !== "undefined") {
+        temp_text_borroso_activado1 = false;
+    }
+    if (typeof temp_text_borroso_activado2 !== "undefined") {
+        temp_text_borroso_activado2 = false;
+    }
+    if (typeof modo_texto_borroso1 !== "undefined") {
+        modo_texto_borroso1 = false;
+    }
+    if (typeof modo_texto_borroso2 !== "undefined") {
+        modo_texto_borroso2 = false;
+    }
+    return revision_contexto_transitorio_espectador;
+}
+
+function obtenerRevisionContextoTransitorioEspectador() {
+    return revision_contexto_transitorio_espectador;
+}
+
+function esRevisionContextoTransitorioEspectadorActiva(revision) {
+    return revision === revision_contexto_transitorio_espectador;
+}
+
+function invalidarCountdownInicioEspectador(opciones = {}) {
+    const { resetFlags = true } = opciones;
+    revision_countdown_inicio_espectador += 1;
+    clearTimeout(listener_cuenta_atras);
+    clearTimeout(timeout_countdown);
+    clearTimeout(timeout_timer);
+    clearTimeout(timeout_animacion_countdown_espectador);
+    clearTimeout(timeout_remover_countdown_espectador);
+    clearTimeout(timeout_fallback_countdown_espectador);
+    clearTimeout(timeout_inicio_modo);
+    clearInterval(timer);
+    listener_cuenta_atras = null;
+    timeout_countdown = null;
+    timeout_timer = null;
+    timeout_animacion_countdown_espectador = null;
+    timeout_remover_countdown_espectador = null;
+    timeout_fallback_countdown_espectador = null;
+    timeout_inicio_modo = null;
+    timer = null;
+    $('#countdown').remove();
+    if (resetFlags) {
+        cuenta_atras_activa = false;
+        inicio_modo_delay = false;
+        modo_pendiente = null;
+    }
+    return revision_countdown_inicio_espectador;
+}
+
+function esRevisionCountdownInicioEspectadorActiva(revision) {
+    return revision === revision_countdown_inicio_espectador;
+}
+
 let inicio_modo_delay = false;
 let timeout_inicio_modo = null;
 let cola_palabras_pendientes_espectador = [];
+let cola_putadas_pendientes_espectador = [];
 let Temasinterval;
 let estado_votacion_ventaja_espectador = "";
 let sonido_confetti_musa;
@@ -3351,6 +3792,78 @@ let musa_regalo_estado_j2 = getEl("musa_regalo_estado_j2");
 let TIEMPO_MODIFICADOR;
 let frase_final_j1;
 let frase_final_j2;
+
+function extraerModoSeqPayloadEspectador(payload = {}) {
+    const valor = Number(payload && payload.modo_seq);
+    return Number.isFinite(valor) ? Math.max(0, Math.trunc(valor)) : null;
+}
+
+function extraerTiempoSeqPayloadEspectador(payload = {}) {
+    const valor = Number(payload && payload.tiempo_seq);
+    return Number.isFinite(valor) ? Math.max(0, Math.trunc(valor)) : null;
+}
+
+function aceptarEventoModoEspectador(payload = {}, opciones = {}) {
+    const { actualizar = true } = opciones;
+    const seq = extraerModoSeqPayloadEspectador(payload);
+    if (seq === null) {
+        return true;
+    }
+    if (seq < modo_seq_actual_espectador) {
+        return false;
+    }
+    if (actualizar && seq > modo_seq_actual_espectador) {
+        modo_seq_actual_espectador = seq;
+        ultimo_count_seq_espectador[1] = 0;
+        ultimo_count_seq_espectador[2] = 0;
+        tiempo_seq_actual_espectador[1] = 0;
+        tiempo_seq_actual_espectador[2] = 0;
+    }
+    return true;
+}
+
+function aceptarCountEspectador(payload = {}) {
+    if (!aceptarEventoModoEspectador(payload)) {
+        return false;
+    }
+    const playerId = Number(payload && payload.player) === 2 ? 2 : 1;
+    const tiempoSeq = extraerTiempoSeqPayloadEspectador(payload);
+    if (tiempoSeq !== null) {
+        if (tiempoSeq < (tiempo_seq_actual_espectador[playerId] || 0)) {
+            return false;
+        }
+        if (tiempoSeq > (tiempo_seq_actual_espectador[playerId] || 0)) {
+            tiempo_seq_actual_espectador[playerId] = tiempoSeq;
+            ultimo_count_seq_espectador[playerId] = 0;
+        }
+    }
+    const countSeq = Number(payload && payload.count_seq);
+    if (Number.isFinite(countSeq) && countSeq > 0) {
+        if (countSeq <= (ultimo_count_seq_espectador[playerId] || 0)) {
+            return false;
+        }
+        ultimo_count_seq_espectador[playerId] = Math.trunc(countSeq);
+    }
+    return true;
+}
+
+function extraerPayloadNuevaLetraEspectador(payload) {
+    if (payload && typeof payload === "object") {
+        const letraPayload = typeof payload.letra === "string"
+            ? payload.letra
+            : (typeof payload.letra_bendita === "string"
+                ? payload.letra_bendita
+                : (typeof payload.letra_prohibida === "string" ? payload.letra_prohibida : ""));
+        return {
+            letra: String(letraPayload || "").trim(),
+            payload
+        };
+    }
+    return {
+        letra: String(payload || "").trim(),
+        payload: {}
+    };
+}
 const CLASE_INTRO_BLOQUE_ESPECTADOR = "intro-reveal-bloque";
 const CLASE_INTRO_OCULTO_ESPECTADOR = "is-intro-hidden";
 const FASE_INTRO_MAX_ESPECTADOR = 3;
@@ -3388,7 +3901,15 @@ function limpiarColaPalabrasPendientesEspectador() {
     cola_palabras_pendientes_espectador = [];
 }
 
+function limpiarColaPutadasPendientesEspectador() {
+    cola_putadas_pendientes_espectador = [];
+}
+
 function debeAplazarRenderPalabraEspectador() {
+    return Boolean(cuenta_atras_activa || inicio_modo_delay || modo_pendiente);
+}
+
+function debeAplazarPutadaEspectador() {
     return Boolean(cuenta_atras_activa || inicio_modo_delay || modo_pendiente);
 }
 
@@ -3407,6 +3928,25 @@ function vaciarColaPalabrasPendientesEspectador() {
     cola.forEach((item) => {
         if (!item) return;
         recibir_palabra(item.data, item.escritxr);
+    });
+}
+
+function encolarPutadaPendienteEspectador(player, putada, opciones = {}) {
+    const id = Number(player) === 2 ? 2 : 1;
+    cola_putadas_pendientes_espectador.push({ player: id, putada, opciones });
+    if (cola_putadas_pendientes_espectador.length > 20) {
+        cola_putadas_pendientes_espectador.shift();
+    }
+}
+
+function vaciarColaPutadasPendientesEspectador() {
+    if (debeAplazarPutadaEspectador()) return;
+    if (!cola_putadas_pendientes_espectador.length) return;
+    const cola = cola_putadas_pendientes_espectador.slice();
+    cola_putadas_pendientes_espectador = [];
+    cola.forEach((item) => {
+        if (!item) return;
+        anunciarPutadaEspectador(item.player, item.putada, item.opciones || {});
     });
 }
 
@@ -4069,9 +4609,107 @@ if (typeof animateCSS === "function") {
 //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
 
 const desventajaVaciaEspectador = function () {};
+const {
+    TORTUGA: PUTADA_TORTUGA,
+    RAYO: PUTADA_RAYO,
+    BRUMA: PUTADA_BORROSO,
+    ESPEJO: PUTADA_INVERSO,
+    BLOQUEO: PUTADA_PLUMA
+} = window.ScribDisadvantages.EMOJIS;
+const CLASES_VISUALES_PUTADA_ESPECTADOR = [
+    "putada-visual-activa",
+    "putada-visual--tortuga",
+    "putada-visual--rayo",
+    "putada-visual--borroso",
+    "putada-visual--inverso",
+    "putada-visual--pluma"
+];
+const temporizadores_visual_putada_espectador = { 1: null, 2: null };
+
+function obtenerDuracionModificadorEspectador() {
+    const duracion = Number(TIEMPO_MODIFICADOR);
+    if (Number.isFinite(duracion) && duracion > 0) {
+        return Math.round(duracion);
+    }
+    return 3500;
+}
+
+function obtenerDuracionFeedbackPutadaEspectador() {
+    const estimada = Math.round(obtenerDuracionModificadorEspectador() * 0.65);
+    return Math.max(2600, Math.min(4200, estimada));
+}
+
+function obtenerRaizVisualPutadaEspectador(player) {
+    const area = Number(player) === 2 ? texto2 : texto1;
+    if (!area || typeof area.closest !== "function") {
+        return null;
+    }
+    return area.closest(".jugador1, .jugador2");
+}
+
+function obtenerClaseVisualPutadaEspectador(putada) {
+    switch (normalizarPutada(putada)) {
+        case PUTADA_TORTUGA:
+            return "putada-visual--tortuga";
+        case PUTADA_RAYO:
+            return "putada-visual--rayo";
+        case PUTADA_BORROSO:
+            return "putada-visual--borroso";
+        case PUTADA_INVERSO:
+            return "putada-visual--inverso";
+        case PUTADA_PLUMA:
+            return "putada-visual--pluma";
+        default:
+            return "";
+    }
+}
+
+function obtenerEtiquetaVisualPutadaEspectador(putada) {
+    return window.ScribDisadvantages.etiqueta(normalizarPutada(putada));
+}
+
+function limpiarVisualPutadaEspectador(player) {
+    const id = Number(player) === 2 ? 2 : 1;
+    clearTimeout(temporizadores_visual_putada_espectador[id]);
+    temporizadores_visual_putada_espectador[id] = null;
+    const raiz = obtenerRaizVisualPutadaEspectador(id);
+    if (!raiz) {
+        return;
+    }
+    raiz.classList.remove(...CLASES_VISUALES_PUTADA_ESPECTADOR);
+    delete raiz.dataset.putadaVisual;
+}
+
+function limpiarVisualPutadasEspectador() {
+    limpiarVisualPutadaEspectador(1);
+    limpiarVisualPutadaEspectador(2);
+}
+
+function activarVisualPutadaEspectador(player, putada) {
+    const id = Number(player) === 2 ? 2 : 1;
+    const clave = normalizarPutada(putada);
+    const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
+    const clase = obtenerClaseVisualPutadaEspectador(clave);
+    const etiqueta = obtenerEtiquetaVisualPutadaEspectador(clave);
+    const raiz = obtenerRaizVisualPutadaEspectador(id);
+    limpiarVisualPutadaEspectador(id);
+    if (!raiz || !clase || !etiqueta) {
+        return false;
+    }
+    raiz.dataset.putadaVisual = etiqueta;
+    raiz.classList.add("putada-visual-activa", clase);
+    temporizadores_visual_putada_espectador[id] = setTimeout(() => {
+        if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
+            return;
+        }
+        limpiarVisualPutadaEspectador(id);
+    }, obtenerDuracionModificadorEspectador());
+    return true;
+}
 
 const desventajaRayoEspectador = function (player) {
     detenerSonidoRayo();
+    const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
     if (player == 1) {
         document.body.classList.add("bg");
         document.body.classList.add("rain");
@@ -4083,6 +4721,9 @@ const desventajaRayoEspectador = function (player) {
             reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
         }, 4000);
         setTimeout(function () {
+            if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
+                return;
+            }
             detenerSonidoRayo();
             document.body.classList.remove("bg");
             document.body.classList.remove("rain");
@@ -4099,6 +4740,9 @@ const desventajaRayoEspectador = function (player) {
             reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
         }, 4000);
         setTimeout(function () {
+            if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
+                return;
+            }
             detenerSonidoRayo();
             document.body.classList.remove("bg");
             document.body.classList.remove("rain");
@@ -4110,6 +4754,7 @@ const desventajaRayoEspectador = function (player) {
 const desventajaInversoEspectador = function (player) {
     detenerAudioInverso();
     audio_inverso = reproducirSonido("../../game/audio/FX/8. INVERSO LOOP.mp3", true);
+    const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
     if (player == 1) {
         texto1.classList.add("rotate-vertical-center");
         texto1.addEventListener("animationend", function () {
@@ -4117,6 +4762,9 @@ const desventajaInversoEspectador = function (player) {
             texto1.removeEventListener("animationend", arguments.callee);
         });
         tempo_text_inverso1 = setTimeout(function () {
+            if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
+                return;
+            }
             detenerAudioInverso();
             texto1.classList.add("rotate-vertical-center");
             texto1.addEventListener("animationend", function () {
@@ -4131,6 +4779,9 @@ const desventajaInversoEspectador = function (player) {
             texto2.removeEventListener("animationend", arguments.callee);
         });
         tempo_text_inverso2 = setTimeout(function () {
+            if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
+                return;
+            }
             detenerAudioInverso();
             texto2.classList.add("rotate-vertical-center");
             texto2.addEventListener("animationend", function () {
@@ -4144,11 +4795,15 @@ const desventajaInversoEspectador = function (player) {
 const desventajaBorrosoEspectador = function (player) {
     detenerAudioBorroso();
     audio_borroso = reproducirSonido("../../game/audio/FX/7. REMOLINO PARA LOOP.mp3", true);
+    const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
     modo_texto_borroso1 = true;
     tiempo_inicial = new Date();
     if (player == 1) {
         texto1.classList.add("textarea_blur");
         tempo_text_borroso1 = setTimeout(function () {
+            if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
+                return;
+            }
             detenerAudioBorroso();
             temp_text_borroso_activado1 = true;
             texto1.classList.remove("textarea_blur");
@@ -4157,6 +4812,9 @@ const desventajaBorrosoEspectador = function (player) {
         modo_texto_borroso2 = true;
         texto2.classList.add("textarea_blur");
         tempo_text_borroso2 = setTimeout(function () {
+            if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
+                return;
+            }
             detenerAudioBorroso();
             temp_text_borroso_activado2 = true;
             texto2.classList.remove("textarea_blur");
@@ -4165,36 +4823,64 @@ const desventajaBorrosoEspectador = function (player) {
 };
 
 const PUTADAS = {
-    "🐢": desventajaVaciaEspectador,
-    "⚡": desventajaRayoEspectador,
-    "🌪️": desventajaBorrosoEspectador,
-    "🙃": desventajaInversoEspectador,
-    "🖊️": desventajaVaciaEspectador
+    [PUTADA_TORTUGA]: desventajaVaciaEspectador,
+    [PUTADA_RAYO]: desventajaRayoEspectador,
+    [PUTADA_BORROSO]: desventajaBorrosoEspectador,
+    [PUTADA_INVERSO]: desventajaInversoEspectador,
+    [PUTADA_PLUMA]: desventajaVaciaEspectador
 };
 
 function normalizarPutada(putada) {
     const valor = String(putada || "").trim();
     const sinVs16 = valor.replace(/\uFE0F/g, "");
+    const valorTexto = typeof sinVs16.normalize === "function"
+        ? sinVs16.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+        : sinVs16.toLowerCase();
+    const normalizadaCompartida = window.ScribDisadvantages.normalizar(valor);
+    if (normalizadaCompartida !== valor) {
+        return normalizadaCompartida;
+    }
     const mapa = {
-        "🐢": "🐢",
-        "⚡": "⚡",
-        "🌪": "🌪️",
-        "🌪️": "🌪️",
-        "🙃": "🙃",
-        "🖊": "🖊️",
-        "🖊️": "🖊️",
-        "ï¿½sï¿½": "⚡",
-        "ï¿½YTf": "🙃",
-        "ï¿½YOï¿½ï¸": "🌪️",
-        "ï¿½Y-Sï¸": "🖊️",
-        "ï¿½Yï¿½ï¿½": "🐢",
-        "ï¿½O>": "🐢"
+        [PUTADA_TORTUGA]: PUTADA_TORTUGA,
+        [PUTADA_RAYO]: PUTADA_RAYO,
+        "\u{1F32A}": PUTADA_BORROSO,
+        [PUTADA_BORROSO]: PUTADA_BORROSO,
+        [PUTADA_INVERSO]: PUTADA_INVERSO,
+        "\u{1F58A}": PUTADA_PLUMA,
+        [PUTADA_PLUMA]: PUTADA_PLUMA,
+        "Ã¯Â¿Â½sÃ¯Â¿Â½": PUTADA_RAYO,
+        "Ã¯Â¿Â½YTf": PUTADA_INVERSO,
+        "Ã¯Â¿Â½YOÃ¯Â¿Â½Ã¯Â¸Â": PUTADA_BORROSO,
+        "Ã¯Â¿Â½Y-SÃ¯Â¸Â": PUTADA_PLUMA,
+        "Ã¯Â¿Â½YÃ¯Â¿Â½Ã¯Â¿Â½": PUTADA_TORTUGA,
+        "Ã¯Â¿Â½O>": PUTADA_TORTUGA
     };
-    return mapa[valor] || mapa[sinVs16] || valor;
+    const mapaTexto = {
+        tortuga: PUTADA_TORTUGA,
+        turtle: PUTADA_TORTUGA,
+        lento: PUTADA_TORTUGA,
+        "teclado lento": PUTADA_TORTUGA,
+        rayo: PUTADA_RAYO,
+        rapido: PUTADA_RAYO,
+        "borrado rapido": PUTADA_RAYO,
+        borroso: PUTADA_BORROSO,
+        remolino: PUTADA_BORROSO,
+        inverso: PUTADA_INVERSO,
+        "al reves": PUTADA_INVERSO,
+        pluma: PUTADA_PLUMA,
+        boligrafo: PUTADA_PLUMA,
+        "sin borrado": PUTADA_PLUMA,
+        "bloqueo borrado": PUTADA_PLUMA,
+        "bloqueo de borrado": PUTADA_PLUMA,
+        "borrado bloqueado": PUTADA_PLUMA,
+        "backspace bloqueado": PUTADA_PLUMA
+    };
+    return mapa[valor] || mapa[sinVs16] || mapaTexto[valorTexto] || valor;
 }
 
 function aplicarPutadaEnEspectador(putada, player) {
     const clave = normalizarPutada(putada);
+    activarVisualPutadaEspectador(player, clave);
     const handler = PUTADAS[clave];
     if (typeof handler === "function") {
         handler(player);
@@ -4271,8 +4957,8 @@ const MODOS = {
         activarEfectoCambioLetraEspectador("bendita");
     },
 
-    'psicod�f©lico': function (data, socket, player) {
-        //explicacion.innerHTML = "MODO PSICODï¿½?LICO";
+    'psicodï¿½fÂ©lico': function (data, socket, player) {
+        //explicacion.innerHTML = "MODO PSICODÃ¯Â¿Â½?LICO";
         //palabra1.innerHTML = "";
         //definicion1.innerHTML = "";
         if (player == 1) {
@@ -4321,8 +5007,8 @@ const MODOS = {
         explicacion.innerHTML = traducirDescripcionModoEspectador("frase final", "ULTIMA RONDA");
         palabra1.innerHTML = traducirTituloModoEspectador("frase final", "NIVEL FRASE FINAL");
         actualizarPalabraConVisibilidad(palabra2, "&laquo;" + frase_final_j1 + "&raquo;");
-        actualizarDefinicionConVisibilidad(definicion2, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
-        actualizarDefinicionConVisibilidad(definicion3, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
+        actualizarDefinicionConVisibilidad(definicion2, tJuego2P("mode.goal.last_one", {}, "Â¡Esta es la ultima!"), false);
+        actualizarDefinicionConVisibilidad(definicion3, tJuego2P("mode.goal.last_one", {}, "Â¡Esta es la ultima!"), false);
         actualizarPalabraConVisibilidad(palabra3, "&laquo;" + frase_final_j2 + "&raquo;");
         definicion2.style.maxWidth = "100%";
         definicion3.style.maxWidth = "100%";
@@ -4363,7 +5049,7 @@ const LIMPIEZAS = {
         limpiarEstiloPalabrasModoLetrasEspectador();
     },
 
-    "psicod�f©lico": function (data, player) {
+    "psicodï¿½fÂ©lico": function (data, player) {
         if(player == 1){
             activado_psico1 = false;
         }
@@ -4373,7 +5059,7 @@ const LIMPIEZAS = {
 
         if(activado_psico1 == false && activado_psico2 == false){
         restablecer_estilo();
-        //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicod�f©lico, se vuelve a limpiar.
+        //setTimeout(restablecer_estilo, 2000); //por si acaso no se ha limpiado el modo psicodï¿½fÂ©lico, se vuelve a limpiar.
         }
     },
 
@@ -4431,2571 +5117,23 @@ function ejecutarModo(nombreModo, data) {
     }
 }
 
-activar_sockets_extratextuales();
-
-socket.on("idioma_actual", (payload = {}) => {
-    if (window && typeof window.scribSetLanguage2P === "function") {
-        window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
-    }
-});
-
-socket.on('connect', () => {
-    console.log("Conectado al servidor por primera vez.");
-    actualizarEtiquetasCursorCalentamiento();
-    socket.emit('registrar_espectador');
-    socket.emit('pedir_idioma_actual');
-    socket.emit('pedir_calentamiento_estado');
-    socket.emit('pedir_estado_regalo_bandera_musas');
-    socket.emit('pedir_vista_espectador_modo');
-    socket.emit('pedir_stats_live');
-    socket.emit('pedir_nube_inspiracion');
-    socket.emit('pedir_creditos_estado');
-    iniciarSlidesStats();
-    if (!intervalo_estado_calentamiento) {
-        intervalo_estado_calentamiento = setInterval(() => {
-            if (!socket.connected) return;
-            if (Date.now() - ultimo_estado_calentamiento < 1500) return;
-            socket.emit('pedir_calentamiento_estado');
-        }, 2000);
-    }
-});
-
-socket.on('teleprompter_state', (payload = {}) => {
-    actualizarTeleprompterEstado(payload.state || {});
-});
-
-socket.on('musa_corazon', (data) => {
-    const equipo = data && Number(data.equipo);
-    if (equipo !== 1 && equipo !== 2) return;
-    lanzarCorazonEspectador(equipo);
-});
-
-socket.on('musa_regalo_bandera_estado', (payload = {}) => {
-    actualizarEstadoRegaloBanderaEspectador(payload);
-});
-
-socket.on('aumentar_tiempo_control', (payload = {}) => {
-    if (payload.origen !== 'musa_bandera') return;
-    const equipo = Number(payload.player);
-    if (equipo !== 1 && equipo !== 2) return;
-    const secs = Math.max(1, Math.abs(Number(payload.secs) || 0));
-    mostrarFeedbackFlotanteEspectador(equipo, `+${secs} SEG${secs === 1 ? '' : 'S'} MUSAS`, {
-        tipo: 'positivo'
-    });
-    activarFulgorLadoEspectador(equipo, 'positivo');
-    animarChipRegaloMusaEspectador(equipo);
-});
-
-socket.on('temporizador_gigante_inicio', (data) => {
-    iniciarTemporizadorGigante(data && data.duracion);
-});
-
-socket.on('temporizador_gigante_detener', () => {
-    detenerTemporizadorGigante();
-});
-
-socket.on('calentamiento_vista', (data) => {
-    actualizarVistaCalentamiento(data && data.activo);
-});
-
-socket.on('calentamiento_estado_espectador', (data) => {
-    ultimo_estado_calentamiento = Date.now();
-    actualizarCalentamientoEspectador(data);
-});
-
-socket.on('calentamiento_cursor', (payload = {}) => {
-    actualizarCursorCalentamientoRemoto(payload);
-});
-
-socket.on('vista_espectador_modo', (payload = {}) => {
-    actualizarModoVistaEspectadorRemota(payload);
-});
-
-socket.on('stats_live_estado', (payload = {}) => {
-    estado_stats_live_espectador = normalizarStatsLiveEspectador(payload);
-    registrarModoTimelineStatsEspectador(
-        estado_stats_live_espectador.modo_actual,
-        Math.max(
-            Number(estado_stats_live_espectador.players[1] && estado_stats_live_espectador.players[1].tiempoTotalMs) || 0,
-            Number(estado_stats_live_espectador.players[2] && estado_stats_live_espectador.players[2].tiempoTotalMs) || 0
-        )
-    );
-    actualizarHistorialVidaDesdeStatsEspectador(estado_stats_live_espectador);
-    if (vista_espectador_modo_resuelta === "stats") {
-        renderizarStatsEspectador();
-    }
-});
-
-socket.on('creditos_estado', (payload = {}) => {
-    actualizarCreditosEspectador(payload);
-});
-
-socket.on('disconnect', () => {
-    detenerSlidesStats();
-    detenerAnimacionNubeInspiracion();
-    detenerAnimacionCreditosEspectador();
-});
-
-socket.on('nube_inspiracion_estado', (payload = {}) => {
-    estado_nube_inspiracion_espectador = normalizarNubeInspiracionEspectador(payload);
-    sincronizarNubeDesdeSnapshot(estado_nube_inspiracion_espectador);
-    if (vista_espectador_modo_resuelta === "nube_inspiracion") {
-        renderizarNubeInspiracion();
-    }
-});
-
-
-socket.on('actualizar_contador_musas', contador_musas => {
-    console.log("actualizar_contador_musas")
-    actualizarMusasMarcadorEquipo(musas1, contador_musas.escritxr1);
-    actualizarMusasMarcadorEquipo(musas2, contador_musas.escritxr2);
-
-});
-
-const marcador_espectador_j1 = getEl("metadatos_j1");
-const marcador_espectador_j2 = getEl("metadatos_j2");
-const puntuacion_final_j1 = getEl("puntuacion_final1");
-const puntuacion_final_j2 = getEl("puntuacion_final2");
-let TEXTO_GANADOR_ESPECTADOR = tJuego2P("game.finished", {}, "¡TEXTO TERMINADO!");
-let TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR = tJuego2P("game.no_words_lost", {}, "¡PERDISTE, NO ESCRIBISTE NADA!");
-
-function obtenerMarcadorEquipoEspectador(jugadorId) {
-    const id = Number(jugadorId);
-    if (id === 1) return marcador_espectador_j1;
-    if (id === 2) return marcador_espectador_j2;
-    return null;
+function obtenerHandlerPsicodelicoEspectador(registro) {
+    if (!registro) return null;
+    const clave = Object.keys(registro).find(key => key.includes("psicod"));
+    return clave ? registro[clave] : null;
 }
 
-function setIndicadorGanadorMarcadorEspectador(jugadorId, visible, textoGanador = TEXTO_GANADOR_ESPECTADOR) {
-    const marcador = obtenerMarcadorEquipoEspectador(jugadorId);
-    if (!marcador) return;
-    if (!visible) {
-        marcador.removeAttribute("data-ganador");
-        return;
-    }
-    marcador.setAttribute("data-ganador", textoGanador || TEXTO_GANADOR_ESPECTADOR);
-}
-
-function obtenerTextoIndicadorGanadorEspectador(jugadorId) {
-    const marcador = obtenerMarcadorEquipoEspectador(jugadorId);
-    if (!marcador) return "";
-    return String(marcador.getAttribute("data-ganador") || "").trim();
-}
-
-function obtenerPalabrasMarcadorEspectador(jugadorId) {
-    const id = Number(jugadorId);
-    const nodo = id === 1 ? puntos1 : (id === 2 ? puntos2 : null);
-    if (!nodo) return 0;
-    const texto = String(nodo.textContent || "").trim();
-    const match = texto.match(/-?\d+/);
-    if (!match) return 0;
-    const valor = Number(match[0]);
-    return Number.isFinite(valor) ? valor : 0;
-}
-
-function setVisibilidadUiJugadorEspectador(jugadorId, visible) {
-    const id = Number(jugadorId);
-    const display = visible ? "" : "none";
-    if (id === 1) {
-        if (texto1) texto1.style.display = display;
-        if (alineador1) alineador1.style.display = display;
-        if (feedback1) feedback1.style.display = display;
-        if (focalizador1) focalizador1.style.display = display;
-        if (puntuacion_final_j1) puntuacion_final_j1.style.display = display;
-        if (info1) info1.style.display = display;
-        if (explicacion1) explicacion1.style.display = display;
-        if (!visible) {
-            actualizarPalabraConVisibilidad(palabra2, "");
-            actualizarDefinicionConVisibilidad(definicion2, "", false);
-            if (explicacion1) explicacion1.innerHTML = "";
-        }
-        return;
-    }
-    if (id === 2) {
-        if (texto2) texto2.style.display = display;
-        if (alineador2) alineador2.style.display = display;
-        if (feedback2) feedback2.style.display = display;
-        if (focalizador2) focalizador2.style.display = display;
-        if (puntuacion_final_j2) puntuacion_final_j2.style.display = display;
-        if (info2) info2.style.display = display;
-        if (explicacion2) explicacion2.style.display = display;
-        if (!visible) {
-            actualizarPalabraConVisibilidad(palabra3, "");
-            actualizarDefinicionConVisibilidad(definicion3, "", false);
-            if (explicacion2) explicacion2.innerHTML = "";
-        }
+function ejecutarModoPsicodelicoEspectador(data, socketRef, playerId) {
+    const activador = obtenerHandlerPsicodelicoEspectador(MODOS);
+    if (typeof activador === "function") {
+        activador(data, socketRef, playerId);
     }
 }
 
-function reiniciarEstadoCierrePartidaEspectador() {
-    frase_final_completada_j1 = false;
-    frase_final_completada_j2 = false;
-    confetti_cierre_partida_disparado = false;
-    fin_ultimo_nivel_por_tiempo = false;
-    suprimir_confetti_cierre_por_fin_control = false;
-    cierre_definitivo_j1 = false;
-    cierre_definitivo_j2 = false;
-    setIndicadorGanadorMarcadorEspectador(1, false);
-    setIndicadorGanadorMarcadorEspectador(2, false);
-    setVisibilidadUiJugadorEspectador(1, true);
-    setVisibilidadUiJugadorEspectador(2, true);
-    reiniciarProgresoFraseFinalEspectador();
-    resetearOscuridadGameOverEspectador();
-}
-
-function normalizarTextoCierreFraseFinalEspectador(valor) {
-    return String(valor || "").trim().toLowerCase();
-}
-
-function detectarFraseFinalCompletadaEspectador(textoPlano, fraseObjetivo) {
-    const objetivo = normalizarTextoCierreFraseFinalEspectador(fraseObjetivo);
-    if (!objetivo) return false;
-    const texto = normalizarTextoCierreFraseFinalEspectador(textoPlano);
-    return texto.endsWith(objetivo);
-}
-
-function actualizarEstadoFraseFinalEspectadorDesdeTexto(jugadorId, textoPlano) {
-    if (modo_actual !== "frase final") {
-        if (jugadorId === 1) frase_final_completada_j1 = false;
-        if (jugadorId === 2) frase_final_completada_j2 = false;
-        return;
-    }
-    if (jugadorId === 1) {
-        frase_final_completada_j1 = detectarFraseFinalCompletadaEspectador(textoPlano, frase_final_j1);
-    } else if (jugadorId === 2) {
-        frase_final_completada_j2 = detectarFraseFinalCompletadaEspectador(textoPlano, frase_final_j2);
+function limpiarModoPsicodelicoEspectador(data, playerId) {
+    const limpieza = obtenerHandlerPsicodelicoEspectador(LIMPIEZAS);
+    if (typeof limpieza === "function") {
+        limpieza(data, playerId);
     }
 }
 
-function animarFinJugadorEspectador(jugadorId, opciones = {}) {
-    const id = Number(jugadorId);
-    if (id !== 1 && id !== 2) return;
-    const mostrarEtiqueta = Boolean(opciones && opciones.mostrarEtiquetaFinal);
-    const textoEtiqueta = (opciones && typeof opciones.textoEtiqueta === "string" && opciones.textoEtiqueta.trim())
-        ? opciones.textoEtiqueta
-        : TEXTO_GANADOR_ESPECTADOR;
-    if (mostrarEtiqueta) {
-        setIndicadorGanadorMarcadorEspectador(id, true, textoEtiqueta);
-    }
-}
-
-function marcarJugadorTerminadoEspectador(jugadorId, opciones = {}) {
-    const id = Number(jugadorId);
-    const mostrarEtiquetaFinal = Boolean(opciones && opciones.mostrarEtiquetaFinal);
-    const textoEtiqueta = (opciones && typeof opciones.textoEtiqueta === "string" && opciones.textoEtiqueta.trim())
-        ? opciones.textoEtiqueta
-        : TEXTO_GANADOR_ESPECTADOR;
-    const yaTerminado = (id === 1 && terminado) || (id === 2 && terminado1);
-    if (yaTerminado) {
-        if (mostrarEtiquetaFinal) {
-            animarFinJugadorEspectador(id, { mostrarEtiquetaFinal: true, textoEtiqueta });
-        }
-        return;
-    }
-    if (id === 1) {
-        terminado = true;
-        registrarTiempoFraseFinalJugadorEspectador(1, 0);
-        feedback1.innerHTML = "";
-        setVisibilidadUiJugadorEspectador(1, false);
-        tiempo.style.color = "white";
-        tiempo.innerHTML = textoTiempoAgotadoEspectador();
-        actualizarBarraVida(tiempo, tiempo.innerHTML);
-        animarFinJugadorEspectador(1, { mostrarEtiquetaFinal, textoEtiqueta });
-        return;
-    }
-    if (id === 2) {
-        terminado1 = true;
-        registrarTiempoFraseFinalJugadorEspectador(2, 0);
-        feedback2.innerHTML = "";
-        setVisibilidadUiJugadorEspectador(2, false);
-        tiempo1.style.color = "white";
-        tiempo1.innerHTML = textoTiempoAgotadoEspectador();
-        actualizarBarraVida(tiempo1, tiempo1.innerHTML);
-        animarFinJugadorEspectador(2, { mostrarEtiquetaFinal, textoEtiqueta });
-    }
-}
-
-function ejecutarCierrePartidaEspectador(data = {}) {
-    if (confetti_cierre_partida_disparado) return;
-    confetti_cierre_partida_disparado = true;
-    if (!suprimir_confetti_cierre_por_fin_control) {
-        confetti_aux();
-    } else {
-        stopConfetti();
-        sonido_confetti = reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3");
-    }
-    ejecutarLimpiezaModo(modo_actual, data);
-    limpiezas_final();
-    activar_sockets_extratextuales();
-    texto1.style.height = "auto";
-    texto2.style.height = "auto";
-    texto1.style.height = (texto1.scrollHeight) + "px";
-    texto2.style.height = (texto2.scrollHeight) + "px";
-    animateCSS(".cabecera", "backInLeft").then((message) => {
-        animateCSS("#contenedor_espectador", "pulse");
-    });
-    logo.style.display = "";
-    neon.style.display = "";
-    LIMPIEZAS["psicodï¿½fÂ©lico"]("");
-    tiempo.style.color = "white";
-    tiempo1.style.color = "white";
-}
-
-function evaluarCierrePartidaEspectador(data = {}, opciones = {}) {
-    if (confetti_cierre_partida_disparado) return;
-    if (opciones && opciones.finTiempoUltimoNivel) {
-        fin_ultimo_nivel_por_tiempo = true;
-    }
-    const ambasFinalizadasDefinitivas = Boolean(cierre_definitivo_j1 && cierre_definitivo_j2);
-    if (ambasFinalizadasDefinitivas) {
-        if (!obtenerTextoIndicadorGanadorEspectador(1)) {
-            setIndicadorGanadorMarcadorEspectador(1, true);
-        }
-        if (!obtenerTextoIndicadorGanadorEspectador(2)) {
-            setIndicadorGanadorMarcadorEspectador(2, true);
-        }
-        suprimir_confetti_cierre_por_fin_control = false;
-        ejecutarCierrePartidaEspectador(data);
-        return;
-    }
-    const esFraseFinal = modo_actual === "frase final";
-    if (!esFraseFinal) return;
-    const j1Finalizado = frase_final_completada_j1 || terminado;
-    const j2Finalizado = frase_final_completada_j2 || terminado1;
-    const ambasFinalizadas = j1Finalizado && j2Finalizado;
-    const cierrePorFinNivel = fin_ultimo_nivel_por_tiempo && (terminado || terminado1);
-    if (!ambasFinalizadas && !cierrePorFinNivel) return;
-    ejecutarCierrePartidaEspectador(data);
-}
-
-// Recibe los datos del jugador 1 y los coloca.
-socket.on('texto1', data => {
-    ultimo_paquete_texto1 = data;
-    if (pendiente_texto1) return;
-    pendiente_texto1 = true;
-    requestAnimationFrame(() => {
-        pendiente_texto1 = false;
-        const paquete = ultimo_paquete_texto1;
-        if (!paquete) return;
-        if (typeof paquete.text === "string" && paquete.text !== ultimo_texto1) {
-            texto1.innerHTML = paquete.text;
-            ultimo_texto1 = paquete.text;
-        }
-        actualizarEstadoFraseFinalEspectadorDesdeTexto(1, texto1 ? texto1.innerText : "");
-        evaluarCierrePartidaEspectador(paquete);
-        actualizarPuntosMarcadorEquipo(puntos1, paquete.points);
-        console.log("CAMBIADDOO")
-        cambiar_color_puntuacion()
-        const caretLine = Number.isInteger(paquete.caretLine) ? paquete.caretLine : null;
-        const caretRatio = typeof paquete.caretRatio === "number" ? paquete.caretRatio : null;
-        const caretPos = typeof paquete.caretPos === "number"
-            ? paquete.caretPos
-            : (paquete.caretPos && typeof paquete.caretPos.caretPos === "number" ? paquete.caretPos.caretPos : null);
-        const caretPath = Array.isArray(paquete.caretPath) ? paquete.caretPath : null;
-        const caretOffset = Number.isInteger(paquete.caretOffset) ? paquete.caretOffset : null;
-        if (caretPos !== null) {
-            if (posicionarScrollPorCaretPosPreciso(texto1, caretPos)) {
-                programarActualizacionDegradadoTextareaEspectador(texto1);
-                return;
-            }
-        }
-        if (caretPath && caretOffset !== null) {
-            if (posicionarScrollPorCaretPath(texto1, caretPath, caretOffset)) {
-                programarActualizacionDegradadoTextareaEspectador(texto1);
-                return;
-            }
-        }
-        if (caretPos !== null) {
-            const maxPos = obtenerTextoPlanoConSaltos(texto1).length;
-            if (maxPos > 0 && caretPos >= maxPos - 1) {
-                texto1.scrollTop = texto1.scrollHeight;
-                programarActualizacionDegradadoTextareaEspectador(texto1);
-                return;
-            }
-            posicionarScrollPorCaretPos(texto1, Math.max(0, Math.min(caretPos, maxPos)));
-        } else if (caretLine !== null) {
-            posicionarScrollPorLinea(texto1, caretLine);
-        } else if (caretRatio !== null) {
-            posicionarScrollPorRatio(texto1, caretRatio);
-        }
-        if (activado_psico1) {
-            stylize();
-        }
-        /*if (texto2.scrollHeight >= texto1.scrollHeight) {
-        while (texto2.scrollHeight > texto1.scrollHeight) {
-            saltos_l�f­nea_alineacion_1 += 1;
-            texto1.innerText = "\n" + texto1.innerText;
-        }
-    }
-    else {
-        while (texto2.scrollHeight < texto1.scrollHeight) {
-            saltos_l�f­nea_alineacion_2 += 1;
-            texto2.innerText = "\n" + texto2.innerText;
-        }
-    }*/
-        texto1.style.height = "";
-        if (caretPos === null) {
-            texto1.scrollTop = texto1.scrollHeight;
-        }
-        programarActualizacionDegradadoTextareaEspectador(texto1);
-        //window.scrollTo(0, document.body.scrollHeight);
-        //focalizador1.scrollIntoView(false);
-    });
-});
-
-socket.on('texto2', data => {
-    ultimo_paquete_texto2 = data;
-    if (pendiente_texto2) return;
-    pendiente_texto2 = true;
-    requestAnimationFrame(() => {
-        pendiente_texto2 = false;
-        const paquete = ultimo_paquete_texto2;
-        if (!paquete) return;
-        if (typeof paquete.text === "string" && paquete.text !== ultimo_texto2) {
-            texto2.innerHTML = paquete.text;
-            ultimo_texto2 = paquete.text;
-        }
-        actualizarEstadoFraseFinalEspectadorDesdeTexto(2, texto2 ? texto2.innerText : "");
-        evaluarCierrePartidaEspectador(paquete);
-        actualizarPuntosMarcadorEquipo(puntos2, paquete.points);
-        cambiar_color_puntuacion()
-        const caretLine = Number.isInteger(paquete.caretLine) ? paquete.caretLine : null;
-        const caretRatio = typeof paquete.caretRatio === "number" ? paquete.caretRatio : null;
-        const caretPos = typeof paquete.caretPos === "number"
-            ? paquete.caretPos
-            : (paquete.caretPos && typeof paquete.caretPos.caretPos === "number" ? paquete.caretPos.caretPos : null);
-        const caretPath = Array.isArray(paquete.caretPath) ? paquete.caretPath : null;
-        const caretOffset = Number.isInteger(paquete.caretOffset) ? paquete.caretOffset : null;
-        if (caretPos !== null) {
-            if (posicionarScrollPorCaretPosPreciso(texto2, caretPos)) {
-                programarActualizacionDegradadoTextareaEspectador(texto2);
-                return;
-            }
-        }
-        if (caretPath && caretOffset !== null) {
-            if (posicionarScrollPorCaretPath(texto2, caretPath, caretOffset)) {
-                programarActualizacionDegradadoTextareaEspectador(texto2);
-                return;
-            }
-        }
-        if (caretPos !== null) {
-            const maxPos = obtenerTextoPlanoConSaltos(texto2).length;
-            if (maxPos > 0 && caretPos >= maxPos - 1) {
-                texto2.scrollTop = texto2.scrollHeight;
-                programarActualizacionDegradadoTextareaEspectador(texto2);
-                return;
-            }
-            posicionarScrollPorCaretPos(texto2, Math.max(0, Math.min(caretPos, maxPos)));
-        } else if (caretLine !== null) {
-            posicionarScrollPorLinea(texto2, caretLine);
-        } else if (caretRatio !== null) {
-            posicionarScrollPorRatio(texto2, caretRatio);
-        }
-        if (activado_psico2) {
-            stylize();
-        }
-        /*if (texto2.scrollHeight >= texto1.scrollHeight) {
-        while (texto2.scrollHeight > texto1.scrollHeight) {
-            saltos_l�f­nea_alineacion_1 += 1;
-            texto1.innerText = "\n" + texto1.innerText
-
-        }
-    }
-    else {
-        while (texto2.scrollHeight < texto1.scrollHeight) {
-            saltos_l�f­nea_alineacion_2 += 1;
-            texto2.innerText = "\n" + texto2.innerText
-        }
-    }*/
-        texto2.style.height = "";
-        if (caretPos === null) {
-            texto2.scrollTop = texto2.scrollHeight;
-        }
-        programarActualizacionDegradadoTextareaEspectador(texto2);
-        //window.scrollTo(0, document.body.scrollHeight);
-        //focalizador2.scrollIntoView(false);
-    });
-});
-
-activar_sockets_extratextuales()
-
-/* 
-Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
-limpia el borrado del texto del jugador 1 y el blur de los jugadores y
-pausa el cambio de palabra.
-*/
-socket.on("count", data => {
-    if(data.player == 1){
-    const segundosCount = convertirASegundos(data.count);
-    if (Number.isFinite(segundosCount)) {
-        terminado = false;
-        registrarTiempoFraseFinalJugadorEspectador(1, segundosCount);
-    }
-    if (Number.isFinite(segundosCount) && segundosCount >= 10 && activado_psico1) {
-        LIMPIEZAS["psicod�f©lico"](data, data.player);
-    }
-    if (Number.isFinite(segundosCount)) {
-        if (segundosCount >= 20) {
-            tiempo.style.color = "white";
-        } else if (segundosCount >= 10) {
-            tiempo.style.color = "yellow";
-        } else if (activado_psico1 == false) {
-            MODOS["psicod�f©lico"](data, socket, data.player);
-            tiempo.style.color = "red";
-        } else {
-            tiempo.style.color = "red";
-        }
-    }
-    const textoCountJ1 = String(data.count || "").toLowerCase().includes("tiempo")
-        ? textoTiempoAgotadoEspectador()
-        : data.count;
-    tiempo.innerHTML = textoCountJ1;
-    const animarEntradaVidaJ1 = Boolean(animacionEntradaVidaPendiente[1] && Number.isFinite(segundosCount));
-    actualizarBarraVida(tiempo, textoCountJ1, { animarEntrada: animarEntradaVidaJ1 });
-    if (animarEntradaVidaJ1) {
-        animacionEntradaVidaPendiente[1] = false;
-    }
-    if (String(data.count || "").toLowerCase().includes("tiempo")) {
-        LIMPIEZAS["psicod�f©lico"](data, data.player);
-        marcarJugadorTerminadoEspectador(1);
-    }
-    }
-
-    if(data.player == 2){
-        const segundosCount = convertirASegundos(data.count);
-        if (Number.isFinite(segundosCount)) {
-            terminado1 = false;
-            registrarTiempoFraseFinalJugadorEspectador(2, segundosCount);
-        }
-        if (Number.isFinite(segundosCount) && segundosCount >= 10 && activado_psico2) {
-            LIMPIEZAS["psicod�f©lico"](data, data.player);
-        }
-        if (Number.isFinite(segundosCount)) {
-            if (segundosCount >= 20) {
-                tiempo1.style.color = "white";
-            } else if (segundosCount >= 10) {
-                tiempo1.style.color = "yellow";
-            } else if (activado_psico2 == false) {
-                MODOS["psicod�f©lico"](data, socket, data.player);
-                tiempo1.style.color = "red";
-            } else {
-                tiempo1.style.color = "red";
-            }
-        }
-        const textoCountJ2 = String(data.count || "").toLowerCase().includes("tiempo")
-            ? textoTiempoAgotadoEspectador()
-            : data.count;
-        tiempo1.innerHTML = textoCountJ2;
-        const animarEntradaVidaJ2 = Boolean(animacionEntradaVidaPendiente[2] && Number.isFinite(segundosCount));
-        actualizarBarraVida(tiempo1, textoCountJ2, { animarEntrada: animarEntradaVidaJ2 });
-        if (animarEntradaVidaJ2) {
-            animacionEntradaVidaPendiente[2] = false;
-        }
-        if (String(data.count || "").toLowerCase().includes("tiempo")) {
-            LIMPIEZAS["psicod�f©lico"](data, data.player);
-            marcarJugadorTerminadoEspectador(2);
-        }
-    }
-    actualizarProgresoFraseFinalEspectador();
-    evaluarCierrePartidaEspectador(data);
-});
-
-socket.on('resucitar_control', data => {
-    if(data.player == 1){
-        reproducirEfectoVidaEspectador(AUDIO_RESUCITAR_ESPECTADOR);
-        terminado = false;
-        cierre_definitivo_j1 = false;
-        setIndicadorGanadorMarcadorEspectador(1, false);
-        setVisibilidadUiJugadorEspectador(1, true);
-        ocultarResucitarMini(1);
-    }
-    else if(data.player == 2){
-        reproducirEfectoVidaEspectador(AUDIO_RESUCITAR_ESPECTADOR);
-        terminado1 = false;
-        cierre_definitivo_j2 = false;
-        setIndicadorGanadorMarcadorEspectador(2, false);
-        setVisibilidadUiJugadorEspectador(2, true);
-        ocultarResucitarMini(2);
-    }
-});
-
-socket.on('resucitar_menu', data => {
-    const mantenerMenuPorSincronia = Boolean(data && data.visible);
-    if (modo_actual === "frase final" && !mantenerMenuPorSincronia) {
-        ocultarTodosResucitarMini();
-        return;
-    }
-    actualizarResucitarMini(data);
-});
-
-// Array con los audios en el orden que quieres reproducir
-var audios = [
-  "../../game/audio/5. PREPARADOS 2.mp3",
-  "../../game/audio/5. PREPARADOS 3.mp3",
-  "../../game/audio/5. PREPARADOS 4.mp3",
-  "../../game/audio/5. PREPARADOS 5.mp3"
-];
-
-
-// Inicia el juego.
-socket.on('inicio', data => {
-    if(sonido){
-    sonido.pause();
-    }
-    reiniciarEstadoCierrePartidaEspectador();
-    reiniciarHistorialVidaStatsEspectador();
-    reiniciarTimelineModosStatsEspectador();
-    limpiarColaPalabrasPendientesEspectador();
-    setPendienteAnimacionEntradaBarraVida(true);
-    cancelarAnimacionEntradaBarraVida(tiempo);
-    cancelarAnimacionEntradaBarraVida(tiempo1);
-    partida_activa_espectador = true;
-    modo_nivel_activo_espectador = "";
-    setBarraNivelClase("");
-    actualizarVisibilidadPanelNivelEspectador();
-    cuenta_atras_activa = true;
-    modo_pendiente = null;
-    inicio_modo_delay = false;
-    if (timeout_inicio_modo) {
-      clearTimeout(timeout_inicio_modo);
-      timeout_inicio_modo = null;
-    }
-    reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
-    animateCSS(".cabecera", "backOutLeft").then((message) => {
-        inspiracion.style.display = "block";
-        iniciarIntroCuentaAtrasEspectador();
-        animateCSS("#contenedor_espectador", "pulse");
-        animateCSS(".inspiracion", "pulse");
-        TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR;
-        actualizarDuracionNivelDesdeParametros(data && data.parametros ? data.parametros : {});
-        setProgresoNivelBarra(0);
-        socket.off('vote');
-        socket.off('exit');
-        socket.off('scroll');
-        socket.off('temas_jugadores');
-        //socket.off('recibir_comentario');
-        socket.off('recibir_postgame1');
-        socket.off('recibir_postgame2');
-            logo.style.display = "none";
-            neon.style.display = "none";
-
-    // Comprobamos que data.parametros existe y que cada campo es string
-if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
-    // S�f³lo si existe y es string hacemos .trim()
-    frase_final_j1 = data.parametros.FRASE_FINAL_J1.trim();
-  }
-  
-  if (data.parametros && typeof data.parametros.FRASE_FINAL_J2 === 'string') {
-    frase_final_j2 = data.parametros.FRASE_FINAL_J2.trim();
-  }
-
-
-    tiempo.innerHTML = "";
-    tiempo1.innerHTML = "";
-    actualizarBarraVida(tiempo, tiempo.innerHTML);
-    actualizarBarraVida(tiempo1, tiempo1.innerHTML);
-    tiempo.style.display = "";
-    tiempo1.style.display = "";
-
-    texto1.style.height = "";
-    texto2.style.height = "";
-    texto1.rows =  "6";
-    texto2.rows = "6";
-    // Se muestra "&iquest;PREPARADOS?" antes de comenzar la cuenta atras
-    $('#countdown').remove();
-    var preparados = $('<span id="countdown"></span>');
-    preparados.text(tJuego2P("countdown.ready", {}, "¿PREPARADOS?"));
-    preparados.appendTo($('.container'));
-    timeout_countdown = setTimeout(() => {
-        $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
-    }, 20);
-    timeout_timer = setTimeout(() => {
-        var counter = 3;
-        var index   = 0; // �fndice para recorrer el array de audios
-        
-        var timer = setInterval(function() {
-          // Eliminamos el anterior #countdown para volverlo a crear
-          $('#countdown').remove();
-          
-          // Creamos el nuevo elemento con el n�fºmero o el texto final
-          var countdown = $('<span id="countdown"></span>');
-          countdown.text(counter === 0 ? tJuego2P("countdown.write", {}, "¡ESCRIBE!") : counter);
-          countdown.appendTo($('.container'));
-          actualizarIntroCuentaAtrasSegunContador(counter);
-        
-          // Peque�f±a pausa para aplicar el CSS que hace el efecto
-          setTimeout(() => {
-            if (counter > -1) {
-              $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
-            } else {
-              $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
-            }
-          }, 20);
-        
-          // Reproducimos el siguiente sonido mientras haya disponibles en el array
-          if (counter === 0) {
-            if (index < audios.length) {
-              reproducirSonido(audios[index]);
-              index++;
-            }
-            cuenta_atras_activa = false;
-            inicio_modo_delay = true;
-            if (timeout_inicio_modo) {
-              clearTimeout(timeout_inicio_modo);
-            }
-            timeout_inicio_modo = setTimeout(() => {
-              inicio_modo_delay = false;
-              timeout_inicio_modo = null;
-              if (modo_pendiente) {
-                aplicarModo(modo_pendiente);
-                modo_pendiente = null;
-              }
-            }, 1000);
-          } else if (index < audios.length) {
-            reproducirSonido(audios[index]);
-            index++;
-          }
-          
-          counter--;
-        
-          // Cuando counter llega a -1, paramos el intervalo y quitamos el #countdown
-          if (counter <= -1) {
-            clearInterval(timer);
-            finalizarIntroCuentaAtrasEspectador();
-            setTimeout(() => {
-              $('#countdown').remove();
-            }, 1000);
-          }
-        
-        }, 1000);
-}, 1000);
-});
-});
-
-socket.on('post-inicio', data => {
-    if (sonido) {
-        sonido.pause();
-        sonido.currentTime = 0;
-    }
-    partida_activa_espectador = true;
-    finalizarIntroCuentaAtrasEspectador();
-    detenerTemporizadorGigante();
-    
-    limpiezas();
-    setPendienteAnimacionEntradaBarraVida(true);
-    cancelarAnimacionEntradaBarraVida(tiempo);
-    cancelarAnimacionEntradaBarraVida(tiempo1);
-    if (tiempo) {
-        tiempo.style.display = DISPLAY_BARRA_VIDA;
-        aplicarEstadoBarraVida(tiempo, 0);
-    }
-    if (tiempo1) {
-        tiempo1.style.display = DISPLAY_BARRA_VIDA;
-        aplicarEstadoBarraVida(tiempo1, 0);
-    }
-
-    texto1.style.display = "";
-    texto2.style.display = "";
-    palabra1.style.display = "";
-    definicion1.style.display = "";
-    explicacion.style.display = "";
-    actualizarPalabraConVisibilidad(palabra2, palabra2.innerHTML);
-    actualizarPalabraConVisibilidad(palabra3, palabra3.innerHTML);
-    definicion2.style.display = "";
-    explicacion.style.display = "";
-    setIndicadorGanadorMarcadorEspectador(1, false);
-    setIndicadorGanadorMarcadorEspectador(2, false);
-    setVisibilidadUiJugadorEspectador(1, true);
-    setVisibilidadUiJugadorEspectador(2, true);
-    actualizarVisibilidadPanelNivelEspectador();
-});
-
-// Resetea el tablero de juego.
-socket.on('limpiar', data => {
-    detenerTemporizadorGigante();
-    limpiarColaPalabrasPendientesEspectador();
-    reiniciarEstadoCierrePartidaEspectador();
-    reiniciarHistorialVidaStatsEspectador();
-    reiniciarTimelineModosStatsEspectador();
-    setPendienteAnimacionEntradaBarraVida(false);
-    partida_activa_espectador = false;
-    ocultarTodosResucitarMini();
-    modo_nivel_activo_espectador = "";
-    modo_actual = "";
-    setBarraNivelClase("");
-    actualizarVisibilidadPanelNivelEspectador();
-    finalizarIntroCuentaAtrasEspectador();
-    cuenta_atras_activa = false;
-    modo_pendiente = null;
-    inicio_modo_delay = false;
-    if (timeout_inicio_modo) {
-      clearTimeout(timeout_inicio_modo);
-      timeout_inicio_modo = null;
-    }
-
-    // Recibe el nombre del jugador 2 y lo coloca en su sitio.
-    socket.on('nombre2', data => {
-        nombre2.value = data;
-        actualizarEtiquetasCursorCalentamiento();
-    });
-
-    // Recibe el nombre del jugador 1 y lo coloca en su sitio.
-    socket.on('nombre1', data => {
-        nombre1.value = data;
-        actualizarEtiquetasCursorCalentamiento();
-    });
-    // Vaciar cualquier contenido HTML del elemento con id 'countdown'
-    $('#countdown').empty()
-    clearTimeout(timeout_countdown);
-    clearTimeout(timeout_timer);
-
-    limpiezas();
-    stopConfetti();
-    if (tema) {
-        tema.style.display = "none";
-        tema.innerHTML = "";
-    }
-    texto1.style.height = "";
-    texto2.style.height = "";
-    texto1.rows =  "1";
-    texto2.rows = "1";
-    //nombre1.value = "ESCRITXR 1";
-    //nombre2.value = "ESCRITXR 2";
-    
-    /*texto1.style.height = "40";
-    texto1.style.height = (texto1.scrollHeight) + "px";
-    texto2.style.height = "40";
-    texto2.style.height = (texto2.scrollHeight) + "px";
-    */
-
-    tiempo.style.display = "none";
-    tiempo1.style.display = "none";
-    animateCSS(".cabecera", "backInLeft").then((message) => {
-        animateCSS("#contenedor_espectador", "pulse");
-    });
-    logo.style.display = "";
-    neon.style.display = "";
-    inspiracion.style.display = "none";
-    if(sonido) sonido.pause();
-    //reproducirSonido("../../game/audio/1. MENU DE INICIO.mp3", true)
-    activar_sockets_extratextuales();
-});
-
-socket.on('activar_modo', data => {
-    if (cuenta_atras_activa || inicio_modo_delay) {
-        modo_pendiente = data;
-        return;
-    }
-    aplicarModo(data);
-});
-
-function aplicarModo(data) {
-    animacion_modo();
-    ejecutarLimpiezaModo(modo_actual, data);
-    refrescarEstadoVotacionVentaja();
-    modo_actual = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
-    registrarModoTimelineStatsEspectador(modo_actual);
-    ultimo_payload_modo_espectador = data || {};
-    if (data && typeof data.letra_bendita === "string" && data.letra_bendita.trim()) {
-        ultima_letra_bendita_espectador = data.letra_bendita.trim();
-    }
-    if (data && typeof data.letra_prohibida === "string" && data.letra_prohibida.trim()) {
-        ultima_letra_prohibida_espectador = data.letra_prohibida.trim();
-    }
-    frase_final_completada_j1 = false;
-    frase_final_completada_j2 = false;
-    fin_ultimo_nivel_por_tiempo = false;
-    reiniciarProgresoFraseFinalEspectador();
-    modo_nivel_activo_espectador = modo_actual;
-    actualizarDuracionNivelDesdeParametros(data || {});
-    setBarraNivelClase("");
-    ejecutarModo(modo_actual, data);
-    actualizarVisibilidadPanelNivelEspectador();
-    if (modo_actual) {
-        iniciarProgresoNivelBarra();
-    } else {
-        detenerProgresoNivelBarra(true);
-    }
-    blueCount = 0;
-    redCount = 0;
-    updateBar();
-    actualizarVisibilidadPanelNivelEspectador();
-    vaciarColaPalabrasPendientesEspectador();
-}
-
-function refrescarCabeceraModoActualEspectador() {
-    if (!modo_actual) return;
-    if (modo_actual === "letra prohibida") {
-        if (explicacion) explicacion.innerHTML = construirExplicacionNivelLetra("prohibida", ultima_letra_prohibida_espectador);
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("letra prohibida", "NIVEL LETRA PROHIBIDA");
-        return;
-    }
-    if (modo_actual === "letra bendita") {
-        if (explicacion) explicacion.innerHTML = construirExplicacionNivelLetra("bendita", ultima_letra_bendita_espectador);
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("letra bendita", "NIVEL LETRA BENDITA");
-        return;
-    }
-    if (modo_actual === "palabras bonus") {
-        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras bonus", "NIVEL PALABRAS BONUS");
-        return;
-    }
-    if (modo_actual === "palabras prohibidas") {
-        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
-        return;
-    }
-    if (modo_actual === "tertulia") {
-        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("tertulia", "DIALOGA CON TUS MUSAS");
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("tertulia", "NIVEL TERTULIA");
-        return;
-    }
-    if (modo_actual === "frase final") {
-        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("frase final", "ULTIMA RONDA");
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("frase final", "NIVEL FRASE FINAL");
-        if (typeof frase_final_j1 === "string") {
-            actualizarPalabraConVisibilidad(palabra2, "&laquo;" + frase_final_j1 + "&raquo;");
-        }
-        if (typeof frase_final_j2 === "string") {
-            actualizarPalabraConVisibilidad(palabra3, "&laquo;" + frase_final_j2 + "&raquo;");
-        }
-        actualizarDefinicionConVisibilidad(definicion2, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
-        actualizarDefinicionConVisibilidad(definicion3, tJuego2P("mode.goal.last_one", {}, "¡Esta es la ultima!"), false);
-    }
-}
-
-function refrescarUiIdiomaEspectador() {
-    const textoGanadorPrevio = TEXTO_GANADOR_ESPECTADOR;
-    const textoPerdidaPrevio = TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR;
-    TEXTO_GANADOR_ESPECTADOR = tJuego2P("game.finished", {}, "¡TEXTO TERMINADO!");
-    TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR = tJuego2P("game.no_words_lost", {}, "¡PERDISTE, NO ESCRIBISTE NADA!");
-
-    [1, 2].forEach((jugadorId) => {
-        const textoActual = obtenerTextoIndicadorGanadorEspectador(jugadorId);
-        if (!textoActual) return;
-        const esPerdida = textoActual === textoPerdidaPrevio;
-        const esGanador = textoActual === textoGanadorPrevio || !esPerdida;
-        setIndicadorGanadorMarcadorEspectador(
-            jugadorId,
-            true,
-            esPerdida ? TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR : (esGanador ? TEXTO_GANADOR_ESPECTADOR : textoActual)
-        );
-    });
-
-    actualizarPuntosMarcadorEquipo(puntos1, obtenerPalabrasMarcadorEspectador(1), false);
-    actualizarPuntosMarcadorEquipo(puntos2, obtenerPalabrasMarcadorEspectador(2), false);
-    actualizarMusasMarcadorEquipo(musas1, (String(musas1 && musas1.textContent || "").match(/-?\d+/) || [0])[0], false);
-    actualizarMusasMarcadorEquipo(musas2, (String(musas2 && musas2.textContent || "").match(/-?\d+/) || [0])[0], false);
-
-    actualizarEtiquetasCursorCalentamiento();
-    if (ultimo_payload_calentamiento_espectador) {
-        actualizarCalentamientoEspectador(ultimo_payload_calentamiento_espectador);
-    } else {
-        renderizarHistorialDetonadores();
-        actualizarConsignaCalentamientoEspectador(solicitud_calentamiento_espectador);
-    }
-
-    if (estado_stats_live_espectador) {
-        renderizarStatsEspectador();
-    } else {
-        renderizarEstadoStatsEspectador("");
-    }
-
-    renderizarCreditosEspectador();
-    refrescarCabeceraModoActualEspectador();
-    refrescarCountdownEspectador();
-
-    document.querySelectorAll(".resucitar-title-question").forEach((nodo) => {
-        if (window && typeof window.scribBuildResurrectionQuestionHtml2P === "function") {
-            nodo.innerHTML = window.scribBuildResurrectionQuestionHtml2P();
-        }
-    });
-    document.querySelectorAll(".quantity-title").forEach((nodo) => {
-        nodo.textContent = tJuego2P("res.quantity_title", {}, "Selecciona la cantidad de palabras");
-    });
-
-    [1, 2].forEach((jugadorId) => {
-        const estadoResucitar = ultimo_estado_resucitar_espectador[jugadorId];
-        if (estadoResucitar && estadoResucitar.visible) {
-            actualizarResucitarMini(estadoResucitar);
-        }
-    });
-
-    [tiempo, tiempo1].forEach((nodoTiempo) => {
-        if (!nodoTiempo) return;
-        const texto = String(nodoTiempo.textContent || "").trim();
-        if (texto && texto.indexOf(":") === -1) {
-            nodoTiempo.textContent = textoTiempoAgotadoEspectador();
-        }
-    });
-}
-
-if (window && typeof window.scribOnLanguageChange2P === "function") {
-    window.scribOnLanguageChange2P(() => {
-        refrescarUiIdiomaEspectador();
-    });
-}
-
-refrescarUiIdiomaEspectador();
-
-socket.on('recibir_feedback_modificador', data => {
-    const playerId = Number(data && data.player) === 2 ? 2 : 1;
-    const idMod = data && typeof data.id_mod === "string" ? data.id_mod : "";
-    const nodoMod = idMod ? getEl(idMod) : null;
-    const textoFeedback = nodoMod
-        ? (nodoMod.textContent || nodoMod.innerText || "")
-        : "";
-
-    if (textoFeedback.trim()) {
-        mostrarFeedbackFlotanteEspectador(playerId, textoFeedback, {
-            tipo: obtenerTipoFeedbackFlotanteDesdeTexto(textoFeedback)
-        });
-    }
-
-    if (playerId === 2) {
-        if (nodoMod) {
-            nodoMod.style.display = "none";
-        }
-    } else if (idMod) {
-        const idModLado1 = `${idMod.substring(0, Math.max(0, idMod.length - 1))}1`;
-        const nodoModLado1 = getEl(idModLado1);
-        if (nodoModLado1) {
-            nodoModLado1.style.display = "none";
-        }
-    }
-});
-
-socket.on('enviar_palabra_j1', data => {
-    if (debeAplazarRenderPalabraEspectador()) {
-        encolarPalabraPendienteEspectador(data, 1);
-        return;
-    }
-    recibir_palabra(data, 1);
-});
-
-socket.on('enviar_palabra_j2', data => {
-    if (debeAplazarRenderPalabraEspectador()) {
-        encolarPalabraPendienteEspectador(data, 2);
-        return;
-    }
-    recibir_palabra(data, 2);
-});
-
-// Suscripci�f³n al evento 'inspirar_j1'
-socket.on('inspirar_j1', data => {
-    const palabra = typeof data === "string" ? data : data?.palabra;
-    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
-    if (!palabra) return;
-    marcarPalabraInspirandoNube(1, palabra);
-    /*
-      Usamos un template literal en una sola l�f­nea para evitar
-      los espacios y saltos de l�f­nea inducidos por la indentaci�f³n.
-      De este modo, no quedan espacios antes o despu�f©s de las comillas �,« �,».
-    */
-    const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
-    actualizarDefinicionConVisibilidad(
-        definicion2,
-        `<span style="color: orange;">${musaLabel}</span><span style="color: white;">: </span><span style="color: white;">Podr&iacute;as escribir la palabra &laquo;</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: white;">&raquo;</span>`,
-        true
-    );
-    animateCSS(".definicion1", "flash");
-});
-
-// Suscripci�f³n al evento 'inspirar_j2'
-socket.on('inspirar_j2', data => {
-    const palabra = typeof data === "string" ? data : data?.palabra;
-    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
-    if (!palabra) return;
-    marcarPalabraInspirandoNube(2, palabra);
-    /*
-      Replica exacta del anterior, apuntando al elemento definicion3.
-      Mantener coherencia en el formato garantiza que no aparezcan espacios 
-      no deseados alrededor de �,«palabra�,».
-    */
-    const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
-    actualizarDefinicionConVisibilidad(
-        definicion3,
-        `<span style="color: orange;">${musaLabel}</span><span style="color: white;">: </span><span style="color: white;">Podr&iacute;as escribir la palabra &laquo;</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: white;">&raquo;</span>`,
-        true
-    );
-    animateCSS(".definicion2", "flash");
-});
-
-function recibir_palabra(data, escritxr) {
-    if ((Number(escritxr) === 1 && terminado) || (Number(escritxr) === 2 && terminado1)) {
-        return;
-    }
-    const animateCSS = (element, animation, prefix = 'animate__') =>
-        new Promise((resolve) => {
-            const animationName = `${prefix}${animation}`;
-            const node = typeof element === "string" ? document.querySelector(element) : element;
-
-            if (!node || !node.classList) {
-                resolve('Animation skipped');
-                return;
-            }
-
-            node.classList.add(`${prefix}animated`, animationName);
-
-            function handleAnimationEnd(event) {
-                event.stopPropagation();
-                node.classList.remove(`${prefix}animated`, animationName);
-                resolve('Animation ended');
-            }
-
-            node.addEventListener('animationend', handleAnimationEnd, { once: true });
-        });
-
-        const definicionFallback = extraerDefinicionPalabraEvento(data);
-        const textoPalabra = construirTextoPalabraEvento(data);
-        const palabraInspiracion = extraerPalabraPrincipalEvento(data);
-        if (escritxr == 1) {
-        const hayPalabra = actualizarPalabraConVisibilidad(palabra2, textoPalabra);
-        if (!hayPalabra) {
-            actualizarDefinicionConVisibilidad(definicion2, "", false);
-            return;
-        }
-        let definicionHTML = "";
-        if (data?.origen_musa === "musa") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-            definicionHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
-            marcarPalabraInspirandoNube(1, palabraInspiracion);
-        } else if (data?.origen_musa === "musa_enemiga") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
-            definicionHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>Me pega esta palabra</span>`;
-            marcarPalabraInspirandoNube(2, palabraInspiracion);
-        } else {
-            definicionHTML = definicionFallback;
-        }
-            actualizarDefinicionConVisibilidad(definicion2, definicionHTML, true);
-        
-            if (!animarCambioPalabraLetrasEspectador(palabra2, definicion2)) {
-                animateCSS(".explicacion1", "bounceInLeft");
-                animateCSS(".palabra1", "bounceInLeft");
-                animateCSS(".definicion1", "bounceInLeft");
-            }
-        }
-        
-    else{
-        const hayPalabra = actualizarPalabraConVisibilidad(palabra3, textoPalabra);
-        if (!hayPalabra) {
-            actualizarDefinicionConVisibilidad(definicion3, "", false);
-            return;
-        }
-        let definicionHTML = "";
-        if (data?.origen_musa === "musa") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-            definicionHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
-            marcarPalabraInspirandoNube(2, palabraInspiracion);
-        } else if (data?.origen_musa === "musa_enemiga") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
-            definicionHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>Me pega esta palabra</span>`;
-            marcarPalabraInspirandoNube(1, palabraInspiracion);
-        } else {
-            definicionHTML = definicionFallback;
-        }
-        actualizarDefinicionConVisibilidad(definicion3, definicionHTML, true);
-           
-        if (!animarCambioPalabraLetrasEspectador(palabra3, definicion3)) {
-            animateCSS(".explicacion2", "bounceInLeft");
-            animateCSS(".palabra2", "bounceInLeft");
-            animateCSS(".definicion2", "bounceInLeft");
-        }
-    }
-}
-
-socket.on('feedback_a_j2', data => {
-    var feedback = document.querySelector(".feedback1");
-    if (feedback) {
-        feedback.innerHTML = "";
-    }
-    mostrarFeedbackTiempoFlotanteEspectador(1, data);
-    aplicarFulgorTiempoDesdeFeedbackEspectador(1, data);
-
-    console.log(data.tiempo_feed)
-    console.log(data.tipo)
-    console.log(modo_actual)
-
-    if (data.tipo == "borrar") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
-
-    }
-
-    if(data.tipo == "inspiracion"){
-        procesarPalabraUsadaInspiracion(1, data);
-        limpiarSugerenciaMusaModoLetrasEspectador(1, data);
-        if (esInspiracionDesdeMusa(data)) {
-            activarFulgorLadoEspectador(1, "musa");
-        }
-        if(modo_actual == "letra bendita" || modo_actual == "letra prohibida" || modo_actual == "palabras bonus" ){
-        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
-          increment('blue');
-        }
-        
-        if(modo_actual == "palabras prohibidas"){
-            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
-            increment('red');
-        }
-    }
-
-    if (data.tipo == "lista_prohibidas" || data.tipo == "letra_prohibida") {
-        reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
-
-    }
-
-    if (data.tipo == "rae" || data.tipo == "letra_bendita") {
-            reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
-    }
-
-    if (data.tipo == "perder_tiempo") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
-
-    }
-    // Si empieza por "â±ï¸+" (ej.: "â±ï¸+2 segs." o "â±ï¸+6 segs.")
-    if (data.tipo == "ganar_tiempo") {
-        reproducirSonido("../../game/audio/GANAR 2 SEG.mp3");
-
-    }
-});
-
-socket.on('feedback_a_j1', data => {
-    var feedback1 = document.querySelector(".feedback2");
-    if (feedback1) {
-        feedback1.innerHTML = "";
-    }
-    mostrarFeedbackTiempoFlotanteEspectador(2, data);
-    aplicarFulgorTiempoDesdeFeedbackEspectador(2, data);
-
-    console.log(data.tiempo_feed)
-    console.log(data.tipo)
-    console.log(modo_actual)
-
-    if (data.tipo == "borrar") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
-
-    }
-
-    if(data.tipo == "inspiracion"){
-        procesarPalabraUsadaInspiracion(2, data);
-        limpiarSugerenciaMusaModoLetrasEspectador(2, data);
-        if (esInspiracionDesdeMusa(data)) {
-            activarFulgorLadoEspectador(2, "musa");
-        }
-        if(modo_actual == "letra bendita" || modo_actual == "letra prohibida" || modo_actual == "palabras bonus" ){
-        reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
-          increment('red');
-        }
-        
-        if(modo_actual == "palabras prohibidas"){
-            reproducirSonido("../../game/audio/PERDER PALABRA.mp3")
-            increment('blue');
-        }
-    }
-
-    if (data.tipo == "lista_prohibidas" || data.tipo == "letra_prohibida") {
-        reproducirSonido("../../game/audio/PERDER PALABRA.mp3");
-
-    }
-
-    if (data.tipo == "rae" || data.tipo == "letra_bendita") {
-            reproducirSonido("../../game/audio/GANAR PALABRA.mp3")
-    }
-
-    if (data.tipo == "perder_tiempo") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
-
-    }
-    // Si empieza por "â±ï¸+" (ej.: "â±ï¸+2 segs." o "â±ï¸+6 segs.")
-    if (data.tipo == "ganar_tiempo") {
-        reproducirSonido("../../game/audio/GANAR 2 SEG.mp3");
-
-    }
-});
-
-socket.on('recibir_comentario', data => {
-    tema.innerHTML = data;
-});
-
-socket.on('fin', data => {
-        const payload = (data && typeof data === "object") ? data : { player: data };
-        const jugadorFinalizado = Number(payload && payload.player);
-        const cierreSinPalabras = Boolean(
-            payload &&
-            payload.motivo === "sin_palabras"
-        ) || (
-            (jugadorFinalizado === 1 || jugadorFinalizado === 2) &&
-            obtenerPalabrasMarcadorEspectador(jugadorFinalizado) <= 0
-        );
-        const textoEtiqueta = cierreSinPalabras
-            ? TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR
-            : undefined;
-        if (
-            payload &&
-            payload.origen === "control" &&
-            payload.suprimir_confetti_espectador !== false
-        ) {
-            suprimir_confetti_cierre_por_fin_control = true;
-            stopConfetti();
-        }
-        if (jugadorFinalizado === 1 || jugadorFinalizado === 2) {
-            if (jugadorFinalizado === 1) {
-                cierre_definitivo_j1 = true;
-            } else if (jugadorFinalizado === 2) {
-                cierre_definitivo_j2 = true;
-            }
-            marcarJugadorTerminadoEspectador(jugadorFinalizado, {
-                mostrarEtiquetaFinal: true,
-                textoEtiqueta
-            });
-            ocultarResucitarMini(jugadorFinalizado);
-            actualizarProgresoFraseFinalEspectador();
-            evaluarCierrePartidaEspectador(payload);
-        }
-        detenerSonidosDesventaja();
-        //confetti_aux();
-});
-
-socket.on("enviar_repentizado", repentizado => {
-    //temas.innerHTML = "ï¿½sï¿½ï¸ "+ repentizado + " ï¿½sï¿½ï¸";
-    //animateCSS(".temas", "flash")
-});
-
-socket.on("enviar_ventaja_j1", putada => {
-    limpiarEstadoVotacionVentaja();
-    aplicarPutadaEnEspectador(putada, 1);
-    mostrarFeedbackFlotanteEspectador(1, `${putada} DESVENTAJA!`, { tipo: "negativo" });
-    mostrarFeedbackFlotanteEspectador(2, `${putada} VENTAJA!`, { tipo: "positivo" });
-});
-
-socket.on("enviar_ventaja_j2", putada => {
-    limpiarEstadoVotacionVentaja();
-    aplicarPutadaEnEspectador(putada, 2);
-    mostrarFeedbackFlotanteEspectador(2, `${putada} DESVENTAJA!`, { tipo: "negativo" });
-    mostrarFeedbackFlotanteEspectador(1, `${putada} VENTAJA!`, { tipo: "positivo" });
-});
-
-socket.on("nueva letra", letra => {
-    if(modo_actual == "letra prohibida"){
-        ultima_letra_prohibida_espectador = String(letra || "").trim();
-        animacion_modo();
-        explicacion.innerHTML = construirExplicacionNivelLetra("prohibida", letra);
-        activarEfectoCambioLetraEspectador("prohibida");
-        }
-    else if(modo_actual == "letra bendita"){
-        ultima_letra_bendita_espectador = String(letra || "").trim();
-        animacion_modo();
-        explicacion.innerHTML = construirExplicacionNivelLetra("bendita", letra);
-        activarEfectoCambioLetraEspectador("bendita");
-    }
-});
-
-socket.on('elegir_ventaja_j1', () => {
-    confetti_musas(0.25);
-    activarEstadoVotacionVentaja("azul");
-    
-});
-
-socket.on('elegir_ventaja_j2', () => {
-    confetti_musas(0.75);
-    activarEstadoVotacionVentaja("rojo");
-});
-
-//FUNCIONES AUXILIARES.
-
-function reproducirSonido(rutaArchivo, loop = false) {
-    // Creamos una nueva instancia de Audio con la ruta proporcionada
-    sonido = new Audio(rutaArchivo);
-
-    // Configuramos el bucle seg�fºn el par�f¡metro 'loop'
-    sonido.loop = loop;
-
-    // Intentamos reproducir el sonido
-    // Si el navegador requiere interacci�f³n del usuario,
-    // esta promesa puede fallar (por ejemplo, en navegadores m�f³viles).
-    sonido.play().catch(error => {
-      console.error('No se pudo reproducir el audio:', error);
-    });
-    return sonido;
-  }
-
-// Referencias a los elementos
-// Variables para guardar los IDs de intervalo si es necesario detenerlos despu�f©s
-
-// Ejemplo: iniciar animaciones seg�fºn un estado o condici�f³n
-function actualizarClaseVotacionVentajaEspectador() {
-  if (!document.body) return;
-  document.body.classList.toggle("votacion-desventaja-activa", Boolean(estado_votacion_ventaja_espectador));
-}
-
-function obtenerMensajeVotacionVentaja(condicion) {
-  if (condicion === "azul") {
-    return 'MUSAS <span style="color:aqua;">AZULES</span> ELIGIENDO <span style="color:lime;">DESVENTAJA</span>';
-  }
-  if (condicion === "rojo") {
-    return 'MUSAS <span style="color:red;">ROJAS</span> ELIGIENDO <span style="color:lime;">DESVENTAJA</span>';
-  }
-  return "";
-}
-
-function refrescarEstadoVotacionVentaja() {
-  if (Temasinterval) {
-    clearInterval(Temasinterval);
-    Temasinterval = null;
-  }
-  actualizarClaseVotacionVentajaEspectador();
-  if (!tema) return;
-  tema.innerHTML = "";
-  tema.style.display = "";
-  if (estado_votacion_ventaja_espectador) {
-    iniciarAnimacionesSegunCondicion(estado_votacion_ventaja_espectador);
-  }
-}
-
-function activarEstadoVotacionVentaja(condicion) {
-  estado_votacion_ventaja_espectador = condicion === "rojo" ? "rojo" : "azul";
-  refrescarEstadoVotacionVentaja();
-}
-
-function iniciarAnimacionesSegunCondicion(condicion) {
-  if (!tema) return;
-  if (condicion === "azul") {
-    // Inicia animaci�f³n para musas azules
-    Temasinterval = startDotAnimation(tema, obtenerMensajeVotacionVentaja("azul"));
-  } else if (condicion === "rojo") {
-    // Inicia animaci�f³n para musas rojas
-    Temasinterval = startDotAnimation(tema, obtenerMensajeVotacionVentaja("rojo"));
-  }
-}
-
-function startDotAnimation(element, baseText, maxDots = 3, intervalTime = 500) {
-    let dotCount = 0;
-  
-    // Configura y guarda el intervalo
-    animateCSS(".temas", "flash");
-    element.style.color = 'orange';
-    element.style.fontSize = '1.5em';
-    element.innerHTML = baseText;
-    const intervalId = setInterval(() => {
-      dotCount = (dotCount + 1) % (maxDots + 1);
-      element.innerHTML = baseText + ".".repeat(dotCount);
-    }, intervalTime);
-  
-    return intervalId;
-  }
-
-  function limpiarEstadoVotacionVentaja() {
-    estado_votacion_ventaja_espectador = "";
-    actualizarClaseVotacionVentajaEspectador();
-    if (tema) {
-        tema.innerHTML = "";
-        tema.style.display = "";
-    }
-    if (Temasinterval) {
-        clearInterval(Temasinterval);
-        Temasinterval = null;
-    }
-  }
-
-function activar_sockets_extratextuales() {
-
-    // Abre la votaci�f³n de los textos.
-    socket.on('vote', data => {
-        ventana = window.open("https://www.mentimeter.com/s/0f9582fcdbab7e15216ee66df67113d6/f14a05785a97", '_blank')
-    });
-
-    // Cierra la votaci�f³n de los textos.
-    socket.on('exit', data => {
-        ventana.close();
-    });
-
-    // Realiza el scroll.
-    socket.on('scroll', data => {
-        if (!PERMITIR_SCROLL_ESPECTADOR) return;
-        if (data == "arriba") {
-            window.scrollBy(0, -50);
-        }
-        else {
-            window.scrollBy(0, 50);
-        }
-    });
-
-    socket.on('scroll_sincro', data => {
-        if (!PERMITIR_SCROLL_ESPECTADOR) return;
-        window.scrollTo({ top: 0});
-    });
-
-/*
-    socket.on('impro', data => {
-        if(data){
-            document.getElementById("contenedor_espectador").style.display = "none";
-            tiempo.style.display = "none";
-            tiempo1.style.display = "none";
-        }
-        else{
-            document.getElementById("contenedor_espectador").style.display = "";
-            tiempo.style.display = "";
-            tiempo1.style.display = "none";
-
-        }
-    });
-*/
-    // Recibe el nombre del jugador 2 y lo coloca en su sitio.
-    socket.on('nombre2', data => {
-        nombre2.value = data;
-        actualizarEtiquetasCursorCalentamiento();
-    });
-
-    // Recibe el nombre del jugador 1 y lo coloca en su sitio.
-    socket.on('nombre1', data => {
-        nombre1.value = data;
-        actualizarEtiquetasCursorCalentamiento();
-    });
-
-    /*
-    Recibe los temas y llama a la funci�f³n erm() para
-    elegir uno aleatoriamente.
-    */
-    socket.on('temas_espectador', data => {
-        temasLista = Array.isArray(data) ? data : [];
-        erm();
-    });
-
-
-
-    /*socket.on("recibir_postgame1", (data) => {
-        focalizador2.innerHTML = "<br>ï¿½Y-<ï¸ Caracteres escritos = " + data.longitud + "<br>ï¿½Y"s Palabras bonus = " + data.puntos_palabra + "<br>ï¿½O Letra prohibida = " + data.puntos_letra_prohibida + "<br>ï¿½Y~? Letra bendita = " + data.puntos_letra_bendita;
-    });
-
-    socket.on("recibir_postgame2", (data) => {
-        focalizador1.innerHTML = "<br>ï¿½Y-<ï¸ Caracteres escritos = " + data.longitud + "<br>ï¿½Y"s Palabras bonus = " + data.puntos_palabra + "<br>ï¿½O Letra prohibida = " + data.puntos_letra_prohibida + "<br>ï¿½Y~? Letra bendita = " + data.puntos_letra_bendita;
-    });*/
-}
-
-function getRandColor() {
-    var hex = "01234567890ABCDEF",
-        res = "#";
-    for (var i = 0; i < 6; i += 1) {
-        res += hex[Math.floor(Math.random() * hex.length)];
-    }
-    return res;
-}
-
-function getRandNumber(s, e) {
-    return Math.floor(Math.random() * (e - s + 1)) + s;
-}
-
-function getRandFontFamily() {
-    var fontFamilies = ["Impact", "Georgia", "Tahoma", "Verdana", "Impact", "Marlet"]; // Add more
-    return fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
-}
-
-function getTextAlign() {
-    var aligns = ["center", "left", "right", "justify"]; // Add more
-    return aligns[Math.floor(Math.random() * aligns.length)];
-}
-
-function stylize() {
-    //texto1.style.fontFamily = getRandFontFamily();
-    texto1.style.color = getRandColor();
-    //var tama�f±o_letra = getRandNumber(7, 35)
-    //text.style.fontSize = tama�f±o_letra + "px"; // Font sizes between 15px and 35px
-    //texto1.style.textAlign = getTextAlign();
-    //texto2.style.textAlign = getTextAlign();
-    //texto2.style.fontFamily = getRandFontFamily();
-    texto2.style.color = getRandColor();
-    //text1.style.fontSize = tama�f±o_letra + "px"; // Font sizes between 15px and 35px
-    document.body.style.backgroundColor = getRandColor();
-    //texto1.style.height = texto1.scrollHeight + "px";
-    //texto2.style.height = texto2.scrollHeight + "px";
-    document.body.style.backgroundColor = getRandColor();
-}
-
-
-function animacion_modo() {
-    const animateCSS = (element, animation, prefix = 'animate__') =>
-        new Promise((resolve) => {
-            const animationName = `${prefix}${animation}`;
-            const node = typeof element === "string" ? document.querySelector(element) : element;
-
-            if (!node || !node.classList) {
-                resolve('Animation skipped');
-                return;
-            }
-
-            node.classList.add(`${prefix}animated`, animationName);
-
-            function handleAnimationEnd(event) {
-                event.stopPropagation();
-                node.classList.remove(`${prefix}animated`, animationName);
-                resolve('Animation ended');
-            }
-
-            node.addEventListener('animationend', handleAnimationEnd, { once: true });
-        });
-    animateCSS(".explicaci�f³n", "bounceInLeft");
-    animateCSS(".palabra", "bounceInLeft");
-    animateCSS(".definicion", "bounceInLeft");
-}
-
-// Funci�f³n auxiliar que reestablece el estilo inicial de la p�f¡gina modificado por el modo psicod�f©lico.
-function restablecer_estilo() {
-    //texto1.style.fontFamily = "monospace";
-    texto1.style.color = "white";
-    //texto1.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    //texto1.style.textAlign = "justify";
-    //texto2.style.fontFamily = "monospace";
-    texto2.style.color = "white";
-    //texto2.style.fontSize = 16 + "pt"; // Font sizes between 15px and 35px
-    //texto2.style.textAlign = "justify";
-    document.body.style.backgroundColor = "black";
-    //texto1.style.height = texto1.scrollHeight + "px";
-    //texto2.style.height = texto2.scrollHeight + "px";
-}
-
-// Funci�f³n auxiliar que elimina los saltos de l�f­nea al principio de un string.
-function eliminar_saltos_de_linea(texto) {
-    var i = 0;
-    while (texto[i] == "\n") {
-        i++;
-    }
-    return (texto.substring(i, texto.length));
-}
-
-// Funci�f³n auxiliar que genera un string con n saltos de l�f­nea.
-function crear_n_saltos_de_linea(n) {
-    var saltos = "";
-    var cont = 0;
-    while (cont <= n) {
-        saltos += "\n";
-        cont++;
-    }
-    return saltos;
-}
-
-// FUNCIONES AUXILIARES PARA LA ELECCIï¿½"N ALEATORIA DEL TEMA.
-(function ($) {
-
-    $.fn.wordsrotator = function (options) {
-        var defaults = {
-            autoLoop: true,
-            randomize: false,
-            stopOnHover: false,
-            changeOnClick: false,
-            words: null,
-            animationIn: "flipInY",
-            animationOut: "flipOutY",
-            speed: 40,
-            onRotate: function () { },//you add these 2 methods to allow the effetct
-            stopRotate: function () { }
-
-        };
-        var settings = $.extend({}, defaults, options);
-        var listItem
-        var array_bak = [];
-        var stopped = false;
-
-        settings.stopRotate = function () {//you call this one to stop rotate 
-            stopped = true;
-        }
-
-        return this.each(function () {
-            var el = $(this)
-            var cont = $("#" + el.attr("id"));
-            var array = [];
-
-            //if array is not empty
-            if ((settings.words) || (settings.words instanceof Array)) {
-                array = $.extend(true, [], settings.words);
-
-                //In random order, need a copy of array
-                if (settings.randomize) array_bak = $.extend(true, [], array);
-
-                listItem = 0
-                //if randomize pick a random value for the list item
-                if (settings.randomize) listItem = Math.floor(Math.random() * array.length)
-
-                //init value into container
-                cont.html(array[listItem]);
-
-                // animation option
-                var rotate = function () {
-                    data = array[listItem]
-                    socket.emit('envia_temas', array[listItem]);
-                    cont.html("<span id='temas'><span>" + array[listItem] + "</span></span>");
-                    texto1.focus();
-
-                    if (settings.randomize) {
-                        //remove printed element from array
-                        array.splice(listItem, 1);
-                        //refill the array from his copy, if empty
-                        if (array.length == 0) array = $.extend(true, [], array_bak);
-                        //generate new random number
-                        listItem = Math.floor(Math.random() * array.length);
-                    } else {
-                        //if reached the last element of the array, reset the index 
-                        if (array.length == listItem + 1) listItem = -1;
-                        //move to the next element
-                        listItem++;
-                    }
-
-                    settings.onRotate(); //this callback will allow to change the speed
-
-                    if (settings.autoLoop && !stopped) {
-                        //using timeout instead of interval will allow to change the speed
-                        t = setTimeout(function () {
-                            rotate()
-                        }, settings.speed, function () {
-                            rotate()
-                        });
-                        if (settings.stopOnHover) {
-                            cont.hover(function () {
-                                window.clearTimeout(t)
-                            }, function () {
-                                t = setTimeout(rotate, settings.speed, rotate);
-
-                            });
-                        };
-                    }
-                };
-
-                t = setTimeout(function () {
-                    rotate()
-                }, settings.speed, function () {
-                    rotate()
-                })
-                cont.on("click", function () {
-                    if (settings.changeOnClick) {
-                        rotate();
-                        return false;
-                    };
-                });
-            };
-
-        });
-    }
-
-}(jQuery));
-
-function eventFire(el, etype) {
-    if (el.fireEvent) {
-        el.fireEvent('on' + etype);
-    } else {
-        var evObj = document.createEvent('Events');
-        evObj.initEvent(etype, true, false);
-        el.dispatchEvent(evObj);
-    }
-}
-
-function erm() {
-    $(function () {
-        $("#temas").wordsrotator({
-            animationIn: "fadeOutIn", //css class for entrace animation
-            animationOut: "fadeOutDown", //css class for exit animation
-            randomize: true,
-            stopOnHover: false, //stop animation on hover
-            words: temasLista,
-            onRotate: function () {
-                //on each rotate you make the timeout longer, until it's slow enough
-                if (this.speed < 600) {
-                    this.speed += 20;
-                } else {
-                    this.stopRotate();
-                }
-            }
-        });
-    });
-    eventFire(document.getElementById('temas'), 'click');
-}
-
-function cambiar_color_puntuacion() {
-    // El color del marcador ahora es fijo por equipo (CSS). 
-    // Limpiamos cualquier inline style residual de l�f³gicas anteriores.
-    if (puntos1) puntos1.style.removeProperty("color");
-    if (puntos2) puntos2.style.removeProperty("color");
-}
-
-function limpiezas(){
-
-    finalizarIntroCuentaAtrasEspectador();
-    limpiarColaPalabrasPendientesEspectador();
-    reiniciarEstadoCierrePartidaEspectador();
-    detenerSonidosDesventaja();
-    ocultarTodosResucitarMini();
-    detenerProgresoNivelBarra(true);
-    limpiarEstiloPalabrasModoLetrasEspectador();
-    setPendienteAnimacionEntradaBarraVida(false);
-    cancelarAnimacionEntradaBarraVida(tiempo);
-    cancelarAnimacionEntradaBarraVida(tiempo1);
-
-    clearTimeout(listener_cuenta_atras);
-    clearTimeout(tempo_text_inverso1);
-    clearTimeout(tempo_text_inverso2);
-    clearTimeout(tempo_text_borroso1);
-    clearTimeout(tempo_text_borroso2);
-    if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
-        sonido_modo.pause();
-    }
-
-    document.body.classList.remove("bg");
-    document.body.classList.remove("rain");
-    lightning.classList.remove("lightning");
-
-    clearInterval(timer)
-    limpiarEstadoVotacionVentaja();
-    terminado = false;
-    terminado1 = false;
-
-    feedback1.innerHTML = "";
-    feedback2.innerHTML = "";
-    limpiarFeedbackFlotanteEspectador();
-
-    palabra1.innerHTML = "";
-    definicion1.innerHTML = "";
-    explicacion.innerHTML = "";
-    palabra2.innerHTML = "";
-    definicion2.innerHTML = "";
-    explicacion1.innerHTML = "";
-    palabra3.innerHTML = "";
-    definicion3.innerHTML = "";
-    explicacion2.innerHTML = "";
-
-    
-    texto1.innerText = "";
-    texto2.innerText = "";
-    texto1.style.height = "";
-    texto2.style.height = "";
-    texto1.rows =  "1";
-    texto2.rows = "1";
-    texto1.style.display = "none";
-    texto2.style.display = "none";
-    programarActualizacionDegradadoTextosEspectador();
-
-    actualizarPuntosMarcadorEquipo(puntos1, 0, false);
-    actualizarPuntosMarcadorEquipo(puntos2, 0, false);
-    
-    texto1.classList.remove('textarea_blur');
-    texto2.classList.remove('textarea_blur');
-    
-
-    focalizador1.innerHTML = "";
-    focalizador2.innerHTML = "";
-
-    for (let key in LIMPIEZAS) { 
-        LIMPIEZAS[key]();
-    }
-
-    feedback_tiempo.style.color = color_positivo;
-    feedback_tiempo1.style.color = color_positivo;
-
-    blueCount = 0;
-    redCount = 0;
-    updateBar();
-}
-
-function limpiezas_final(){
-
-    limpiarColaPalabrasPendientesEspectador();
-    limpiarEstiloPalabrasModoLetrasEspectador();
-    setPendienteAnimacionEntradaBarraVida(false);
-    cancelarAnimacionEntradaBarraVida(tiempo);
-    cancelarAnimacionEntradaBarraVida(tiempo1);
-    partida_activa_espectador = false;
-    modo_nivel_activo_espectador = "";
-    modo_actual = "";
-    setBarraNivelClase("");
-    actualizarVisibilidadPanelNivelEspectador();
-    finalizarIntroCuentaAtrasEspectador();
-    detenerProgresoNivelBarra(true);
-
-    if (typeof sonido_modo !== 'undefined' && sonido_modo !== null) {
-        sonido_modo.pause();
-    }
-
-    document.body.classList.remove("bg");
-    document.body.classList.remove("rain");
-    lightning.classList.remove("lightning");
-
-    if (tema) {
-        tema.style.display = "none";
-        tema.innerHTML = "";
-    }
-    feedback1.innerHTML = "";
-    feedback2.innerHTML = "";
-    limpiarFeedbackFlotanteEspectador();
-    
-    palabra1.innerHTML = "";
-    definicion1.innerHTML = "";
-    explicacion.innerHTML = "";
-    palabra2.innerHTML = "";
-    definicion2.innerHTML = "";
-    explicacion1.innerHTML = "";
-    palabra3.innerHTML = "";
-    definicion3.innerHTML = "";
-    explicacion2.innerHTML = "";
-    inspiracion.style.display = "none";
-
-    tiempo.style.color = "white";
-    tiempo1.style.color = "white";
-
-    texto1.innerText = "";
-    texto2.innerText = "";
-    texto1.style.display = "none";
-    texto2.style.display = "none";
-
-
-    texto1.style.height = "";
-    texto2.style.height = "";
-    texto1.rows =  "1";
-    texto2.rows = "1";
-
-    texto1.classList.remove('textarea_blur');
-    texto2.classList.remove('textarea_blur');
-
-    LIMPIEZAS["psicod�f©lico"]("");
-
-    feedback_tiempo.style.color = color_positivo;  
-    feedback_tiempo1.style.color = color_positivo;
-
-    clearTimeout(listener_cuenta_atras);
-    clearTimeout(tempo_text_inverso1);
-    clearTimeout(tempo_text_inverso2);
-    clearTimeout(tempo_text_borroso1);
-    clearTimeout(tempo_text_borroso2);
-
-    detenerSonidosDesventaja();
-
-    blueCount = 0;
-    redCount = 0;
-    updateBar();
-    limpiarEstadoVotacionVentaja();
-}
-
-var CONFETTI_TOP_Z_INDEX = 2147483647;
-var duration = 15 * 1000;
-var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: CONFETTI_TOP_Z_INDEX };
-var isConfettiRunning = true; // Indicador para controlar la ejecuci�f³n
-
-function randomInRange(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function confetti_aux() {
-    if (vista_espectador_modo_resuelta === "stats") {
-        stopConfetti();
-        return;
-    }
-
-    sonido_confetti = reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3")
-    
-  var animationEnd = Date.now() + duration; // Actualiza aqu�f­ dentro de la funci�f³n
-  isConfettiRunning = true; // Habilita la ejecuci�f³n de confetti
-  console.log(isConfettiRunning);
-  
-  var interval = setInterval(function() {
-    if (!isConfettiRunning) {
-      clearInterval(interval);
-      return;
-    }
-
-    var timeLeft = animationEnd - Date.now();
-    if (timeLeft <= 0) {
-      clearInterval(interval);
-      return;
-    }
-
-    var particleCount = 50 * (timeLeft / duration);
-    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-  }, 250);
-}
-
-function stopConfetti() {
-    if(sonido_confetti_musa) sonido_confetti_musa.pause();
-    if(sonido_confetti) sonido_confetti.pause();
-
-  isConfettiRunning = false; // Deshabilita la ejecuci�f³n de confetti
-  if (typeof confetti !== "undefined" && typeof confetti.reset === "function") {
-      confetti.reset(); // Detiene la animaci�f³n de confetti
-  }
-}
-
-function convertirASegundos(tiempo) {
-    let partes = tiempo.split(':'); // separamos los minutos de los segundos
-    let minutos = parseInt(partes[0], 10); // convertimos los minutos a un n�fºmero entero
-    let segundos = parseInt(partes[1], 10); // convertimos los segundos a un n�fºmero entero
-    return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
-  }
-
-  function confetti_musas(pos){
-    if (vista_espectador_modo_resuelta === "stats") {
-      stopConfetti();
-      return;
-    }
-
-    if (typeof confetti !== "function") {
-      return;
-    }
-
-    sonido_confetti_musa = reproducirSonido("../../game/audio/FX/9. ESTRELLAS.mp3")
-    
-    var scalar = 2;
-    var starShape = null;
-    if (typeof confetti.shapeFromText === "function") {
-      starShape = confetti.shapeFromText({
-        text: "⭐",
-        scalar,
-        color: "#ffd43b",
-        fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
-      });
-    }
-    isConfettiRunning = true; // Habilita la ejecuci�f³n de confetti
-    var end = Date.now() + (2 * 1000);
-    
-    (function frame() {
-      const opciones = {
-        startVelocity: 12,
-        particleCount: 2,
-        angle: 270,
-        spread: 1000,
-        origin: { y: 0, x: pos },
-        scalar: 3,
-        colors: ["#fff6ad", "#ffe066", "#ffd43b", "#ffffff"],
-        zIndex: CONFETTI_TOP_Z_INDEX
-      };
-      if (starShape) {
-        opciones.shapes = [starShape];
-      }
-      confetti(opciones);
-    
-      if ((Date.now() < end) && isConfettiRunning) {
-        requestAnimationFrame(frame);
-      }
-    }());
-    }
-
-// Funci�f³n para actualizar la barra
-function updateBar() {
-    const total = blueCount + redCount;
-    let bluePercentage, redPercentage;
-
-    if (total === 0) {
-        bluePercentage = 50;
-        redPercentage = 50;
-    } else {
-        bluePercentage = (blueCount / total) * 100;
-        redPercentage = (redCount / total) * 100;
-    }
-
-    if (!inspiracion) return;
-    const blueSegment = inspiracion.querySelector('.bar-segment.blue');
-    const redSegment = inspiracion.querySelector('.bar-segment.red');
-    if (!blueSegment || !redSegment) return;
-    const blueText = blueSegment.querySelector('.percentage-text');
-    const redText = redSegment.querySelector('.percentage-text');
-    if (!blueText || !redText) return;
-
-    blueSegment.style.width = `${bluePercentage}%`;
-    redSegment.style.width = `${redPercentage}%`;
-
-    // Ajuste din�f¡mico del tama�f±o de la fuente en vw
-    const baseFontSize = 0.5; // Tama�f±o de fuente base en vw
-    const maxFontSize = 2; // Tama�f±o de fuente m�f¡ximo en vw
-    const blueFontSize = Math.min(baseFontSize + (bluePercentage / 100) * (maxFontSize - baseFontSize), maxFontSize);
-    const redFontSize = Math.min(baseFontSize + (redPercentage / 100) * (maxFontSize - baseFontSize), maxFontSize);
-
-    // Eliminar ".00" si el valor es un n�fºmero entero
-    if (Number.isInteger(bluePercentage)) {
-        blueText.innerHTML = `${bluePercentage} %`;
-    } else {
-        blueText.innerHTML = `${bluePercentage.toFixed(0)} %`;
-    }
-    blueText.style.fontSize = `${blueFontSize}vw`;
-
-    if (Number.isInteger(redPercentage)) {
-        redText.innerHTML = `${redPercentage} %`;
-    } else {
-        redText.innerHTML = `${redPercentage.toFixed(0)} %`;
-    }
-    redText.style.fontSize = `${redFontSize}vw`;
-}
-
-
-function increment(color) {
-    if (inspiracion && inspiracion.style.display !== "block") {
-        inspiracion.style.display = "block";
-    }
-    if (color === 'blue') {
-        blueCount++;
-    } else if (color === 'red') {
-        redCount++;
-    }
-    updateBar();
-}
-
-// Inicializaci�f³n con valores iniciales
-blueCount = 0;
-redCount = 0;
-updateBar();
-
-// Funci�f³n para establecer la posici�f³n del caret
-function establecerPosicionCaret(node, pos) {
-    const range = document.createRange();
-    const selection = window.getSelection();
-    let offset = pos;
-
-    function setRange(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            if (node.length >= offset) {
-                range.setStart(node, offset);
-                return true;
-            } else {
-                offset -= node.length;
-            }
-        } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-                if (setRange(node.childNodes[i])) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    setRange(node);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
-}
-
-// Funci�f³n para centrar el scroll en la posici�f³n del caret
-function centrarScroll(node, pos) {
-    const range = document.createRange();
-    const selection = window.getSelection();
-    let offset = pos;
-
-    function setRange(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            if (node.length >= offset) {
-                range.setStart(node, offset);
-                return true;
-            } else {
-                offset -= node.length;
-            }
-        } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-                if (setRange(node.childNodes[i])) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    setRange(node);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    // Centramos el scroll en la posici�f³n del caret
-    const caretPosition = range.getBoundingClientRect();
-    const containerPosition = node.getBoundingClientRect();
-    offset = caretPosition.top - containerPosition.top;
-    node.scrollTop = offset - node.clientHeight / 2;
-}
-
-const mirrors = new WeakMap();
-
-const TAGS_SALTO_LINEA = new Set(["BR", "DIV", "P", "LI"]);
-
-function obtenerTextoPlanoConSaltos(contenedor) {
-    let texto = "";
-    function recorrer(nodo, esRaiz) {
-        if (nodo.nodeType === Node.TEXT_NODE) {
-            texto += nodo.textContent;
-            return;
-        }
-        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
-        const tag = nodo.tagName;
-        if (tag === "BR") {
-            texto += "\n";
-            return;
-        }
-        const hijos = nodo.childNodes;
-        if (!hijos || hijos.length === 0) {
-            if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
-                texto += "\n";
-            }
-            return;
-        }
-        for (let i = 0; i < hijos.length; i++) {
-            recorrer(hijos[i], false);
-        }
-        if (!esRaiz && TAGS_SALTO_LINEA.has(tag)) {
-            if (texto.length === 0 || texto[texto.length - 1] !== "\n") {
-                texto += "\n";
-            }
-        }
-    }
-    recorrer(contenedor, true);
-    return texto;
-}
-
-function prepararMirror(contenedor) {
-    let mirror = mirrors.get(contenedor);
-    if (!mirror) {
-        mirror = document.createElement("div");
-        mirror.setAttribute("data-mirror", "caret");
-        mirror.style.position = "absolute";
-        mirror.style.top = "0";
-        mirror.style.left = "-99999px";
-        mirror.style.visibility = "hidden";
-        mirror.style.pointerEvents = "none";
-        mirror.style.margin = "0";
-        document.body.appendChild(mirror);
-        mirrors.set(contenedor, mirror);
-    }
-    const estilos = getComputedStyle(contenedor);
-    mirror.style.fontFamily = estilos.fontFamily;
-    mirror.style.fontSize = estilos.fontSize;
-    mirror.style.fontWeight = estilos.fontWeight;
-    mirror.style.letterSpacing = estilos.letterSpacing;
-    mirror.style.wordSpacing = estilos.wordSpacing;
-    mirror.style.lineHeight = estilos.lineHeight;
-    mirror.style.whiteSpace = estilos.whiteSpace;
-    mirror.style.wordBreak = estilos.wordBreak;
-    mirror.style.overflowWrap = estilos.overflowWrap;
-    mirror.style.padding = estilos.padding;
-    mirror.style.border = estilos.border;
-    mirror.style.boxSizing = estilos.boxSizing;
-    mirror.style.width = `${contenedor.clientWidth}px`;
-    return mirror;
-}
-
-function posicionarScrollPorCaretPosPreciso(contenedor, caretPos) {
-    if (!Number.isInteger(caretPos)) return false;
-    if (contenedor.clientHeight === 0) return false;
-
-    const mirror = prepararMirror(contenedor);
-    const textoPlano = obtenerTextoPlanoConSaltos(contenedor);
-    mirror.textContent = textoPlano;
-
-    const total = textoPlano.length;
-    const pos = Math.max(0, Math.min(caretPos, total));
-    const lineHeight = Math.max(
-        parseFloat(getComputedStyle(contenedor).lineHeight) || 0,
-        16
-    );
-
-    if (!mirror.firstChild) {
-        contenedor.scrollTop = 0;
-        return true;
-    }
-
-    const textNode = mirror.firstChild;
-    const range = document.createRange();
-    range.setStart(textNode, pos);
-    range.collapse(true);
-
-    const marker = document.createElement("span");
-    marker.setAttribute("data-caret-marker", "1");
-    marker.style.display = "inline-block";
-    marker.style.width = "0px";
-    marker.style.height = `${lineHeight}px`;
-    marker.style.padding = "0";
-    marker.style.margin = "0";
-    marker.style.pointerEvents = "none";
-    marker.style.verticalAlign = "text-bottom";
-    range.insertNode(marker);
-
-    const rect = marker.getBoundingClientRect();
-    const mirrorRect = mirror.getBoundingClientRect();
-    marker.remove();
-
-    if (!rect || (!rect.height && !rect.width)) {
-        return false;
-    }
-
-    const padding = lineHeight * 0.2;
-    const offsetTop = rect.top - mirrorRect.top;
-    const target = offsetTop - (contenedor.clientHeight - lineHeight - padding);
-    const maxScroll = Math.max(0, contenedor.scrollHeight - contenedor.clientHeight);
-    contenedor.scrollTop = Math.max(0, Math.min(target, maxScroll));
-    return true;
-}
-
-function obtenerNodoPorRuta(raiz, ruta) {
-    let actual = raiz;
-    for (let i = 0; i < ruta.length; i++) {
-        if (!actual || !actual.childNodes || !actual.childNodes[ruta[i]]) {
-            return null;
-        }
-        actual = actual.childNodes[ruta[i]];
-    }
-    return actual;
-}
-
-function obtenerPrimerTexto(nodo) {
-    if (!nodo) return null;
-    if (nodo.nodeType === Node.TEXT_NODE) return nodo;
-    for (let i = 0; i < nodo.childNodes.length; i++) {
-        const encontrado = obtenerPrimerTexto(nodo.childNodes[i]);
-        if (encontrado) return encontrado;
-    }
-    return null;
-}
-
-function obtenerUltimoTexto(nodo) {
-    if (!nodo) return null;
-    if (nodo.nodeType === Node.TEXT_NODE) return nodo;
-    for (let i = nodo.childNodes.length - 1; i >= 0; i--) {
-        const encontrado = obtenerUltimoTexto(nodo.childNodes[i]);
-        if (encontrado) return encontrado;
-    }
-    return null;
-}
-
-function obtenerNodoTextoCercano(nodo, offset) {
-    if (nodo.nodeType === Node.TEXT_NODE) {
-        return { nodo, offset: Math.min(offset, nodo.length) };
-    }
-    if (nodo.nodeType !== Node.ELEMENT_NODE) return null;
-    const hijos = nodo.childNodes;
-    if (!hijos || hijos.length === 0) return null;
-    const anterior = offset > 0 ? hijos[offset - 1] : null;
-    const siguiente = offset < hijos.length ? hijos[offset] : null;
-    const textoAnterior = obtenerUltimoTexto(anterior);
-    if (textoAnterior) {
-        return { nodo: textoAnterior, offset: textoAnterior.length };
-    }
-    const textoSiguiente = obtenerPrimerTexto(siguiente);
-    if (textoSiguiente) {
-        return { nodo: textoSiguiente, offset: 0 };
-    }
-    return null;
-}
-
-function obtenerPrimerBr(nodo) {
-    if (!nodo) return null;
-    if (nodo.nodeType === Node.ELEMENT_NODE && nodo.tagName === "BR") return nodo;
-    if (!nodo.childNodes) return null;
-    for (let i = 0; i < nodo.childNodes.length; i++) {
-        const encontrado = obtenerPrimerBr(nodo.childNodes[i]);
-        if (encontrado) return encontrado;
-    }
-    return null;
-}
-
-function obtenerUltimoBr(nodo) {
-    if (!nodo) return null;
-    if (nodo.nodeType === Node.ELEMENT_NODE && nodo.tagName === "BR") return nodo;
-    if (!nodo.childNodes) return null;
-    for (let i = nodo.childNodes.length - 1; i >= 0; i--) {
-        const encontrado = obtenerUltimoBr(nodo.childNodes[i]);
-        if (encontrado) return encontrado;
-    }
-    return null;
-}
-
-function obtenerRectanguloPorBr(nodo, offset) {
-    if (!nodo || nodo.nodeType !== Node.ELEMENT_NODE) return null;
-    const hijos = nodo.childNodes;
-    if (!hijos || hijos.length === 0) return null;
-    const anterior = offset > 0 ? hijos[offset - 1] : null;
-    const siguiente = offset < hijos.length ? hijos[offset] : null;
-    const brAnterior = obtenerUltimoBr(anterior);
-    if (brAnterior) {
-        const rect = brAnterior.getBoundingClientRect();
-        if (rect && (rect.height || rect.width)) return rect;
-    }
-    const brSiguiente = obtenerPrimerBr(siguiente);
-    if (brSiguiente) {
-        const rect = brSiguiente.getBoundingClientRect();
-        if (rect && (rect.height || rect.width)) return rect;
-    }
-    const brInterno = obtenerUltimoBr(nodo);
-    if (brInterno) {
-        const rect = brInterno.getBoundingClientRect();
-        if (rect && (rect.height || rect.width)) return rect;
-    }
-    return null;
-}
-
-function obtenerRectanguloRange(range) {
-    const rects = range.getClientRects();
-    if (rects.length > 0) return rects[0];
-    const rect = range.getBoundingClientRect();
-    if (rect && (rect.height || rect.width)) return rect;
-    const nodo = range.startContainer;
-    if (nodo && nodo.nodeType === Node.TEXT_NODE && nodo.length > 0) {
-        const clone = range.cloneRange();
-        if (range.startOffset > 0) {
-            clone.setStart(nodo, range.startOffset - 1);
-            clone.setEnd(nodo, range.startOffset);
-        } else {
-            clone.setStart(nodo, 0);
-            clone.setEnd(nodo, Math.min(1, nodo.length));
-        }
-        const rectsClone = clone.getClientRects();
-        if (rectsClone.length > 0) return rectsClone[0];
-        const rectClone = clone.getBoundingClientRect();
-        if (rectClone && (rectClone.height || rectClone.width)) return rectClone;
-    }
-    return null;
-}
-
-function ajustarScrollPorRect(contenedor, rect) {
-    const contRect = contenedor.getBoundingClientRect();
-    const lineHeight = Math.max(
-        rect.height || 0,
-        parseFloat(getComputedStyle(contenedor).lineHeight) || 0,
-        16
-    );
-    const padding = lineHeight * 0.2;
-    const target = (rect.top - contRect.top) - (contenedor.clientHeight - lineHeight - padding);
-    const maxScroll = Math.max(0, contenedor.scrollHeight - contenedor.clientHeight);
-    contenedor.scrollTop = Math.max(0, Math.min(target, maxScroll));
-}
-
-function posicionarScrollPorCaretPath(contenedor, ruta, offset) {
-    const nodo = obtenerNodoPorRuta(contenedor, ruta);
-    if (!nodo) return false;
-    const range = document.createRange();
-    if (nodo.nodeType === Node.TEXT_NODE) {
-        const off = Math.max(0, Math.min(offset, nodo.length));
-        range.setStart(nodo, off);
-    } else if (nodo.nodeType === Node.ELEMENT_NODE) {
-        const off = Math.max(0, Math.min(offset, nodo.childNodes.length));
-        const cercano = obtenerNodoTextoCercano(nodo, off);
-        if (cercano) {
-            range.setStart(cercano.nodo, cercano.offset);
-        } else {
-            range.setStart(nodo, off);
-        }
-    } else {
-        return false;
-    }
-    range.collapse(true);
-    let rect = obtenerRectanguloRange(range);
-    if (!rect && nodo.nodeType === Node.ELEMENT_NODE) {
-        const off = Math.max(0, Math.min(offset, nodo.childNodes.length));
-        rect = obtenerRectanguloPorBr(nodo, off);
-    }
-    if (!rect) {
-        contenedor.scrollTop = contenedor.scrollHeight;
-        return true;
-    }
-    ajustarScrollPorRect(contenedor, rect);
-    return true;
-}
-
-function posicionarScrollPorRatio(node, ratio) {
-    const lineHeight = Math.max(
-        parseFloat(getComputedStyle(node).lineHeight) || 0,
-        16
-    );
-    const padding = lineHeight * 0.2;
-    const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
-    const caretOffset = ratio * node.scrollHeight;
-    const target = caretOffset - (node.clientHeight - lineHeight - padding);
-    node.scrollTop = Math.max(0, Math.min(target, maxScroll));
-}
-
-function posicionarScrollPorLinea(node, linea) {
-    const lineHeight = Math.max(
-        parseFloat(getComputedStyle(node).lineHeight) || 0,
-        16
-    );
-    const padding = lineHeight * 0.2;
-    const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
-    const offset = linea * lineHeight;
-    const target = offset - (node.clientHeight - lineHeight - padding);
-    node.scrollTop = Math.max(0, Math.min(target, maxScroll));
-}
-
-function posicionarScrollPorCaretPos(contenedor, pos) {
-    const range = document.createRange();
-    let restante = pos;
-    let encontrado = false;
-
-    function recorrer(nodo) {
-        if (encontrado) return;
-        if (nodo.nodeType === Node.TEXT_NODE) {
-            const len = nodo.textContent.length;
-            if (restante <= len) {
-                range.setStart(nodo, restante);
-                encontrado = true;
-                return;
-            }
-            restante -= len;
-            return;
-        }
-        if (nodo.nodeType === Node.ELEMENT_NODE) {
-            if (nodo.tagName === "BR") {
-                if (restante === 0) {
-                    range.setStartBefore(nodo);
-                    encontrado = true;
-                    return;
-                }
-                restante -= 1;
-                return;
-            }
-            for (let i = 0; i < nodo.childNodes.length; i++) {
-                recorrer(nodo.childNodes[i]);
-                if (encontrado) return;
-            }
-        }
-    }
-
-    recorrer(contenedor);
-    if (!encontrado) {
-        range.selectNodeContents(contenedor);
-        range.collapse(false);
-    } else {
-        range.collapse(true);
-    }
-
-    const rect = obtenerRectanguloRange(range);
-    if (!rect) {
-        contenedor.scrollTop = contenedor.scrollHeight;
-        return false;
-    }
-    ajustarScrollPorRect(contenedor, rect);
-    return true;
-}
-
-function posicionarScrollEnUltimaLinea(node, pos) {
-    const range = document.createRange();
-    let offset = pos;
-
-    function setRange(nodeActual) {
-        if (nodeActual.nodeType === Node.TEXT_NODE) {
-            if (nodeActual.length >= offset) {
-                range.setStart(nodeActual, offset);
-                return true;
-            }
-            offset -= nodeActual.length;
-        } else {
-            for (let i = 0; i < nodeActual.childNodes.length; i++) {
-                if (setRange(nodeActual.childNodes[i])) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    if (!setRange(node)) return;
-    range.collapse(true);
-
-    const caretPosition = range.getBoundingClientRect();
-    const containerPosition = node.getBoundingClientRect();
-    const lineHeight = Math.max(
-        caretPosition.height || 0,
-        parseFloat(getComputedStyle(node).lineHeight) || 0,
-        16
-    );
-    const padding = lineHeight * 0.2;
-    const target = (caretPosition.top - containerPosition.top) - (node.clientHeight - lineHeight - padding);
-    const maxScroll = Math.max(0, node.scrollHeight - node.clientHeight);
-    node.scrollTop = Math.max(0, Math.min(target, maxScroll));
-}

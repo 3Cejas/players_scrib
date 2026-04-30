@@ -1,2 +1,4 @@
 node_modules
 .DS_Store
+.e2e-cache
+.e2e-artifacts

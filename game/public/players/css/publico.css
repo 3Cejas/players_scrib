@@ -161,7 +161,16 @@ body.equipo-rojo {
     --musa-progress-loading-text-color: #f7fbff;
 }
 
-.container,
+.container {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    min-height: 100vh;
+    min-height: 100dvh;
+    z-index: 1500;
+    pointer-events: none;
+}
+
 #contenedor {
     position: relative;
     z-index: 1;
@@ -2519,6 +2528,41 @@ body.partida-finalizada-musa .niveles {
 
 #notificacion p {
     margin: 0;
+}
+
+.preview-tiempo-palabra {
+    min-height: 1.2em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45em;
+    letter-spacing: 0.04em;
+    font-size: clamp(12px, 1.4vw, 18px);
+    text-align: center;
+    color: rgba(236, 245, 255, 0.92);
+    text-shadow: 0 0 0.45em rgba(0, 0, 0, 0.42);
+}
+
+.preview-tiempo-palabra[hidden] {
+    display: none;
+}
+
+.preview-tiempo-palabra__label {
+    opacity: 0.84;
+}
+
+.preview-tiempo-palabra__value {
+    font-weight: 700;
+}
+
+.preview-tiempo-palabra--positivo .preview-tiempo-palabra__value {
+    color: #ffe773;
+    text-shadow: 0 0 0.55em rgba(255, 220, 108, 0.52);
+}
+
+.preview-tiempo-palabra--negativo .preview-tiempo-palabra__value {
+    color: #ff97d6;
+    text-shadow: 0 0 0.55em rgba(255, 151, 214, 0.46);
 }
 
 /* Votacion desventaja (musas) */

@@ -66,7 +66,61 @@ if (document.readyState === "loading") {
 if (window && typeof window.scribOnLanguageChange2P === "function") {
   window.scribOnLanguageChange2P(() => {
     refrescarTextosAccionesMusa();
+    actualizarPreviewTiempoPalabraMusa();
   });
+}
+
+function modoMusaConPreviewTiempo(modo = "") {
+  return window.ScribInspiration.tienePreviewTiempo(modo);
+}
+
+function obtenerModoPreviewTiempoMusa(modoForzado = null) {
+  if (typeof modoForzado === "string") {
+    return modoForzado;
+  }
+  if (window && typeof window.__scribModoActualMusaPreview === "string") {
+    return window.__scribModoActualMusaPreview;
+  }
+  return "";
+}
+
+function calcularTiempoPalabraMusa(word) {
+  return window.ScribInspiration.calcularTiempoPalabra(word);
+}
+
+function actualizarPreviewTiempoPalabraMusa(texto = null, modoForzado = null) {
+  const preview = document.getElementById("preview_tiempo_palabra");
+  if (!preview) return;
+
+  const input = document.getElementById("palabra");
+  const modo = obtenerModoPreviewTiempoMusa(modoForzado);
+  const valor = (texto === null || typeof texto === "undefined")
+    ? (input ? input.value : "")
+    : texto;
+  const limpia = String(valor || "").trim();
+  const esValida = modoMusaConPreviewTiempo(modo) && limpia && !/\s/.test(limpia);
+
+  preview.hidden = !esValida;
+  preview.classList.remove("preview-tiempo-palabra--positivo", "preview-tiempo-palabra--negativo");
+  preview.replaceChildren();
+
+  if (!esValida) return;
+
+  const esMaldita = modo === "palabras prohibidas";
+  const clase = esMaldita ? "preview-tiempo-palabra--negativo" : "preview-tiempo-palabra--positivo";
+  const signo = esMaldita ? "-" : "+";
+  const segundos = calcularTiempoPalabraMusa(limpia);
+
+  const label = document.createElement("span");
+  label.className = "preview-tiempo-palabra__label";
+  label.textContent = tJuego2P("warmup.preview.if_sent", {}, "Si la envias:");
+
+  const value = document.createElement("span");
+  value.className = "preview-tiempo-palabra__value";
+  value.textContent = `${signo}${segundos} ${tJuego2P("warmup.preview.seconds_short", {}, "s")}`;
+
+  preview.classList.add(clase);
+  preview.append(label, value);
 }
 
 const AGITADO_THRESHOLD_X = 7;
@@ -311,30 +365,10 @@ document.addEventListener('keydown', function (event) {
   }
 });
 
-function smoothScrollBy(value) {
-  window.scrollBy({
-      top: value,
-      behavior: 'smooth'
-  });
-}
+const smoothScrollBy = window.ScribRuntime.smoothScrollBy;
 
 //FunciÃ³n auxiliar para crear las animaciones del feedback.
-const animateCSS = (element, animation, prefix = "animate__") =>
-    // We create a Promise and return it
-    new Promise((resolve, reject) => {
-        const animationName = `${prefix}${animation}`;
-        const node = document.querySelector(element);
-
-        node.classList.add(`${prefix}animated`, animationName);
-
-        // When the animation ends, we clean the classes and resolve the Promise
-        function handleAnimationEnd(event) {
-            event.stopPropagation();
-            node.classList.remove(`${prefix}animated`, animationName);
-            resolve("Animation ended");
-        }
-        node.addEventListener("animationend", handleAnimationEnd, { once: true });
-    });
+const animateCSS = window.ScribRuntime.animateCSS;
 
 //FunciÃ³n auxiliar que envÃ­a una palabra al servidor.
 function enviarPalabra(button) {
@@ -347,11 +381,13 @@ function enviarPalabra(button) {
   }
 
   if (palabra.value != '' && palabra.value != null) {
-    const inspiracionTexto = String(palabra.value || "").trim();
-    const inspiracionNormalizada = normalizarTextoParaCompararLetra(inspiracionTexto);
-    const letraObjetivo = normalizarTextoParaCompararLetra(letra);
-    const contieneLetraObjetivo = Boolean(letraObjetivo) && inspiracionNormalizada.includes(letraObjetivo);
-    if (/\s/.test(inspiracionTexto)) {
+    const validacion = window.ScribInspiration.validarInspiracion({
+      modo: modo_actual,
+      texto: palabra.value,
+      letra
+    });
+    const inspiracionTexto = validacion.texto || String(palabra.value || "").trim();
+    if (validacion.motivo === "spaces") {
       recordatorio.innerHTML = `<span style='color: red;'>${tJuego2P("warmup.feedback.no_spaces", {}, "No se permiten espacios en la inspiracion.")}</span>`;
       animateCSS(".recordatorio", "flash").then(() => {
         delay_animacion_recordatorio = setTimeout(function () {
@@ -360,18 +396,14 @@ function enviarPalabra(button) {
       });
       return;
     }
-    if (
-      (modo_actual == "letra prohibida" && !contieneLetraObjetivo) ||
-      (modo_actual == "letra bendita" && contieneLetraObjetivo) ||
-      modo_actual == "palabras bonus" ||
-      modo_actual == "palabras prohibidas"
-    ) {
+    if (validacion.ok) {
       startProgress(button);
       socket.emit('enviar_inspiracion', {
         palabra: inspiracionTexto,
         nombre: window.nombre_musa || ""
       });
       palabra.value = "";
+      actualizarPreviewTiempoPalabraMusa("");
       recordatorio.innerHTML = `<span style='color: green;'>${tJuego2P("warmup.feedback.word_sent", {}, "Has mandado una inspiracion.")}</span>`;
       animateCSS(".recordatorio", "flash").then(() => {
         delay_animacion_recordatorio = setTimeout(function () {
@@ -555,8 +587,11 @@ function editar(boton) {
 
 function elegir_ventaja_publico(boton) {
   console.log("Elegida ventaja " + boton.value);
-  voto = boton.value;
-  socket.emit('enviar_voto_ventaja', voto);
+  const voto = boton.value;
+  socket.emit('enviar_voto_ventaja', {
+    voto,
+    client_id: window.musa_client_id || ""
+  });
   window.dispatchEvent(new CustomEvent('musa_voto_ventaja_emitido', { detail: { voto } }));
   votando = false;
   sincro = 0;
@@ -584,7 +619,7 @@ function toNormalForm(str) {
 }
 
 function normalizarTextoParaCompararLetra(str) {
-  return toNormalForm(String(str || "").toLowerCase());
+  return window.ScribInspiration.normalizarTexto(str);
 }
 
 function onMouseEnter() {
@@ -623,3 +658,4 @@ function startProgress(button) {
     }
   }, intervalo); // Usa el intervalo calculado para el temporizador
 }
+

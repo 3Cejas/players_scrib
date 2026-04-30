@@ -1,0 +1,26 @@
+{
+  "name": "players_scrib",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E2E harness for SCRIB players against server_scrib",
+  "scripts": {
+    "test:unit": "node --test \"tests/**/*.test.js\"",
+    "test:e2e": "node e2e/runner/index.js",
+    "test:e2e:headed": "node e2e/runner/index.js --headed",
+    "test:e2e:1p": "node e2e/runner/index.js --suite 1p --server-source local",
+    "test:e2e:smoke": "node e2e/runner/index.js --suite smoke",
+    "test:e2e:server-local": "node e2e/runner/index.js --server-source local",
+    "test:e2e:chaos": "node e2e/runner/index.js --suite chaos --server-source local",
+    "test:e2e:visual": "node e2e/runner/index.js --suite visual",
+    "test:e2e:visual:update": "node e2e/runner/index.js --suite visual --update-visual-baselines"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "live-server": "^1.2.2",
+    "pngjs": "^7.0.0",
+    "puppeteer": "^24.4.0",
+    "socket.io-client": "^2.2.0"
+  }
+}

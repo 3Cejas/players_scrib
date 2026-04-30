@@ -1,0 +1,59 @@
+name: E2E Smoke
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      SCRIB_SERVER_REMOTE_URL: https://github.com/3Cejas/server_scrib.git
+      SCRIB_SERVER_REMOTE_BRANCH: master
+    steps:
+      - name: Checkout players_scrib
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install players_scrib dependencies
+        run: npm ci
+
+      - name: Run players_scrib unit tests
+        run: npm run test:unit
+
+      - name: Run E2E smoke suite
+        run: npm run test:e2e:smoke
+
+      - name: Publish E2E smoke summary
+        if: always()
+        run: |
+          if [ -f ".e2e-artifacts/latest-run-summary.json" ]; then
+            node -e "const fs=require('fs'); const s=JSON.parse(fs.readFileSync('.e2e-artifacts/latest-run-summary.json','utf8')); const lines=['## E2E Smoke Summary','', '- Total: ' + s.total, '- Passed: ' + s.passed, '- Failed: ' + s.failures, '- Suite: ' + s.suite, '- Server source: ' + s.serverSource, '', '### Specs']; for (const r of s.results) { lines.push('- ' + r.status.toUpperCase() + ' ' + r.name + ' (' + r.durationMs + 'ms)' + (r.error ? ' - ' + r.error : '')); } fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');"
+          else
+            echo "No E2E summary file found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload E2E artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-smoke-artifacts-${{ github.run_id }}
+          path: .e2e-artifacts
+          if-no-files-found: ignore
+          retention-days: 7
