@@ -162,7 +162,6 @@ async function configureFastControlPanel(ctx, overrides = {}) {
     tiempo_cambio_palabras: 1,
     limite_tiempo_inspiracion: 5,
     tiempo_modificador: 1,
-    palabras_insertadas_meta: 1,
     tiempo_minutos: 2,
     tiempo_segundos: 0,
     modes: [
@@ -191,7 +190,6 @@ async function configureFastControlPanel(ctx, overrides = {}) {
     setNumericInput("tiempo_cambio_palabras", nextConfig.tiempo_cambio_palabras);
     setNumericInput("limite_tiempo_inspiracion", nextConfig.limite_tiempo_inspiracion);
     setNumericInput("tiempo_modificador", nextConfig.tiempo_modificador);
-    setNumericInput("palabras_insertadas_meta", nextConfig.palabras_insertadas_meta);
     setNumericInput("tiempo_minutos", nextConfig.tiempo_minutos);
     setNumericInput("tiempo_segundos", nextConfig.tiempo_segundos);
 
