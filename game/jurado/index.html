@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" href="../../img/logo.png" type="image/png" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title>SCRB - Jurado</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" type="text/css" href="./index.css?v=20260506t" />
+</head>
+<body class="page-jurado">
+    <main id="jurado_app" class="jury-shell">
+        <header class="jury-header">
+            <div class="jury-brand remote-brand-card">
+                <div class="ascii control-brand">
+                    <pre class="neon jury-brand__ascii" aria-label="SCRIB">    __     _____    _____   _____    _____    __       ____  
+   / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+  / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+ &lt; &lt;      \___ \  | |      |  _  /    | |       &gt; &gt;   |  _ &lt; 
+  \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+   \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/</pre>
+                </div>
+            </div>
+            <div class="jury-header-title" aria-label="Jurado">
+                <span class="remote-brand-control-label">JURADO</span>
+                <span class="jury-header-subtitle">LECTURA EN DIRECTO &middot; CRITERIO VIVO</span>
+            </div>
+            <div class="jury-status remote-status-card remote-status-card--jurado" aria-label="Conexion del jurado">
+                <span id="jurado_status_dot" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off" aria-hidden="true"></span>
+                <div class="remote-status-copy">
+                    <span id="jurado_status_text" class="remote-status-state is-off">DESCONECTADO</span>
+                </div>
+            </div>
+        </header>
+
+        <nav class="jury-tabs" aria-label="Paneles de jurado">
+            <button type="button" class="jury-tab is-active" data-jury-panel="textos" aria-selected="true"><span class="jury-tab__icon" aria-hidden="true">&#x1F58B;&#xFE0F;</span><span class="jury-tab__label">Textos</span></button>
+            <button type="button" class="jury-tab" data-jury-panel="estadisticas" aria-selected="false"><span class="jury-tab__icon" aria-hidden="true">&#x1F4CA;</span><span class="jury-tab__label">Estad&iacute;sticas</span></button>
+            <button type="button" class="jury-tab" data-jury-panel="inspiracion" aria-selected="false"><span class="jury-tab__icon" aria-hidden="true">&#x2601;&#xFE0F;</span><span class="jury-tab__label">Inspiraci&oacute;n</span></button>
+            <button type="button" class="jury-tab" data-jury-panel="notas" aria-selected="false"><span class="jury-tab__icon" aria-hidden="true">&#x1F4DD;</span><span class="jury-tab__label">Notas</span></button>
+            <button type="button" class="jury-tab" data-jury-panel="evaluacion" aria-selected="false"><span class="jury-tab__icon" aria-hidden="true">&#x1F3AF;</span><span class="jury-tab__label">Evaluaci&oacute;n</span></button>
+        </nav>
+
+        <section id="jurado_panel_textos" class="jury-panel is-active" data-jury-panel-target="textos">
+            <div class="jury-writer-grid">
+                <article class="writer-board writer-board--one writer-board--text">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_nombre_1">ESCRITXR 1</h1>
+                        </div>
+                        <div class="jury-writer-header-stats" aria-label="Metadatos escritxr 1">
+                            <div class="jury-compact-life" aria-label="Vida escritxr 1">
+                                <span class="jury-health-label">VIDA</span>
+                                <p id="jurado_vida_1" class="jury-tiempo-vida" title="Vida: sin datos">
+                                    <span id="jurado_vida_label_1" class="jury-vida-label">0s</span>
+                                </p>
+                            </div>
+                            <span class="writer-stat writer-stat--words"><span class="writer-stat-icon" aria-hidden="true">&#x1F58B;&#xFE0F;</span><span id="jurado_words_1" class="puntos">0 palabras</span></span>
+                            <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon" aria-hidden="true">&#x1F3A8;</span><span id="jurado_musas_1" class="musas-total">0 musas</span></span>
+                        </div>
+                    </header>
+                    <div class="jury-writer-text-shell jury-writer-text-shell--j1">
+                        <div class="jury-line-numbers" aria-hidden="true">1</div>
+                        <div id="jurado_texto_1" class="writer-text" aria-live="polite"></div>
+                    </div>
+                </article>
+
+                <article class="writer-board writer-board--two writer-board--text">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_nombre_2">ESCRITXR 2</h1>
+                        </div>
+                        <div class="jury-writer-header-stats" aria-label="Metadatos escritxr 2">
+                            <div class="jury-compact-life" aria-label="Vida escritxr 2">
+                                <span class="jury-health-label">VIDA</span>
+                                <p id="jurado_vida_2" class="jury-tiempo-vida" title="Vida: sin datos">
+                                    <span id="jurado_vida_label_2" class="jury-vida-label">0s</span>
+                                </p>
+                            </div>
+                            <span class="writer-stat writer-stat--words"><span class="writer-stat-icon" aria-hidden="true">&#x1F58B;&#xFE0F;</span><span id="jurado_words_2" class="puntos">0 palabras</span></span>
+                            <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon" aria-hidden="true">&#x1F3A8;</span><span id="jurado_musas_2" class="musas-total">0 musas</span></span>
+                        </div>
+                    </header>
+                    <div class="jury-writer-text-shell jury-writer-text-shell--j2">
+                        <div class="jury-line-numbers" aria-hidden="true">1</div>
+                        <div id="jurado_texto_2" class="writer-text" aria-live="polite"></div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section id="jurado_panel_estadisticas" class="jury-panel" data-jury-panel-target="estadisticas">
+            <div class="jury-toolbar">
+                <span id="jurado_last_update">Esperando estad&iacute;sticas...</span>
+            </div>
+            <div class="jury-writer-grid">
+                <article class="writer-board writer-board--one">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_stats_nombre_1">ESCRITXR 1</h1>
+                        </div>
+                    </header>
+                    <div id="jurado_stats_1" class="stats-grid"></div>
+                </article>
+                <article class="writer-board writer-board--two">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_stats_nombre_2">ESCRITXR 2</h1>
+                        </div>
+                    </header>
+                    <div id="jurado_stats_2" class="stats-grid"></div>
+                </article>
+            </div>
+        </section>
+
+        <section id="jurado_panel_inspiracion" class="jury-panel" data-jury-panel-target="inspiracion">
+            <div class="jury-writer-grid">
+                <article class="writer-board writer-board--one">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_cloud_nombre_1">ESCRITXR 1</h1>
+                        </div>
+                    </header>
+                    <div id="jurado_cloud_1" class="cloud-board" aria-live="polite"></div>
+                </article>
+                <article class="writer-board writer-board--two">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_cloud_nombre_2">ESCRITXR 2</h1>
+                        </div>
+                    </header>
+                    <div id="jurado_cloud_2" class="cloud-board" aria-live="polite"></div>
+                </article>
+            </div>
+        </section>
+
+        <section id="jurado_panel_notas" class="jury-panel" data-jury-panel-target="notas">
+            <div class="jury-writer-grid">
+                <article class="writer-board writer-board--one">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_notes_nombre_1">ESCRITXR 1</h1>
+                        </div>
+                    </header>
+                    <textarea id="jurado_nota_1" class="jury-notes" placeholder="Notas del jurado."></textarea>
+                </article>
+                <article class="writer-board writer-board--two">
+                    <header class="writer-board__header">
+                        <div>
+                            <h1 id="jurado_notes_nombre_2">ESCRITXR 2</h1>
+                        </div>
+                    </header>
+                    <textarea id="jurado_nota_2" class="jury-notes" placeholder="Notas del jurado."></textarea>
+                </article>
+            </div>
+        </section>
+
+        <section id="jurado_panel_evaluacion" class="jury-panel" data-jury-panel-target="evaluacion">
+            <div class="jury-evaluation-board">
+                <header class="jury-eval-scoreboard">
+                    <div class="jury-eval-team jury-eval-team--one writer-board--one">
+                        <h1 id="jurado_eval_nombre_1" class="jury-eval-team__name">ESCRITXR 1</h1>
+                        <div class="writer-board__score">
+                            <span id="jurado_eval_total_1">0.0</span>
+                            <small>media</small>
+                        </div>
+                    </div>
+                    <div class="jury-eval-team jury-eval-team--two writer-board--two">
+                        <h1 id="jurado_eval_nombre_2" class="jury-eval-team__name">ESCRITXR 2</h1>
+                        <div class="writer-board__score">
+                            <span id="jurado_eval_total_2">0.0</span>
+                            <small>media</small>
+                        </div>
+                    </div>
+                </header>
+                <section class="criteria-section" data-eval-scope="writing">
+                    <h2 class="criteria-title">Texto</h2>
+                    <div id="jurado_eval_writing" class="criteria-list criteria-list--comparison" data-eval-scope="writing"></div>
+                </section>
+                <section class="criteria-section" data-eval-scope="muses">
+                    <h2 class="criteria-title">Equipo de musas</h2>
+                    <div id="jurado_eval_muses" class="criteria-list criteria-list--comparison" data-eval-scope="muses"></div>
+                </section>
+            </div>
+            <div class="jury-actions">
+                <button type="button" id="jurado_copiar_resumen" class="jury-action-button">Copiar resumen</button>
+                <button type="button" id="jurado_reset_eval" class="jury-action-button jury-action-button--muted">Limpiar notas y evaluaci&oacute;n</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="../config.js"></script>
+    <script src="../dist/socket.io/socket.io.js"></script>
+    <script src="./js/state.js?v=20260506g"></script>
+    <script src="./js/socket-events.js?v=20260506b"></script>
+    <script src="./js/index.js?v=20260506a"></script>
+</body>
+</html>

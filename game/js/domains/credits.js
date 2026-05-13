@@ -1,6 +1,8 @@
 (function initScribCredits(global) {
     const TEXT_MAX = 80;
     const THANKS_MAX = 420;
+    const MUSES_MAX = 60;
+    const MUSE_NAME_MAX = 48;
 
     const DEFAULT_STATE = Object.freeze({
         escritxr_rojo: "\u00c1NGELA BUENO",
@@ -14,7 +16,11 @@
         iluminacion: "TERESA TIMPER",
         musica: "ARNY RAM\u00cdREZ",
         voz_off: "NINACHASKA ZL",
-        agradecimientos: "SALA EXL\u00cdMITE\nJUAN CEACERO"
+        agradecimientos: "SALA EXL\u00cdMITE\nJUAN CEACERO",
+        musas: Object.freeze({
+            azules: Object.freeze([]),
+            rojas: Object.freeze([])
+        })
     });
 
     const FIELDS = Object.freeze([
@@ -79,6 +85,24 @@
             .slice(0, max);
     }
 
+    function normalizarListaMusas(valor = []) {
+        return (Array.isArray(valor) ? valor : [])
+            .map((nombre) => normalizarTexto(nombre, MUSE_NAME_MAX))
+            .filter(Boolean)
+            .filter((nombre, indice, lista) => (
+                lista.findIndex((otro) => otro.toLocaleLowerCase() === nombre.toLocaleLowerCase()) === indice
+            ))
+            .slice(0, MUSES_MAX);
+    }
+
+    function normalizarMusas(entrada = {}) {
+        const data = (entrada && typeof entrada === "object") ? entrada : {};
+        return {
+            azules: normalizarListaMusas(data.azules),
+            rojas: normalizarListaMusas(data.rojas)
+        };
+    }
+
     function normalizarEstado(entrada = {}) {
         const data = (entrada && typeof entrada === "object") ? entrada : {};
         const salida = { ...DEFAULT_STATE };
@@ -86,6 +110,7 @@
             salida[campo] = normalizarTexto(data[campo], TEXT_MAX);
         });
         salida.agradecimientos = normalizarAgradecimientos(data.agradecimientos, THANKS_MAX);
+        salida.musas = normalizarMusas(data.musas);
         return salida;
     }
 
@@ -105,11 +130,15 @@
         CONTROL_THANKS_FIELD,
         DEFAULT_STATE,
         FIELDS,
+        MUSES_MAX,
+        MUSE_NAME_MAX,
         SPECTATOR_ORDER,
         TEXT_MAX,
         THANKS_MAX,
         normalizarAgradecimientos,
         normalizarEstado,
+        normalizarListaMusas,
+        normalizarMusas,
         normalizarPayload,
         normalizarTexto
     };

@@ -4,7 +4,7 @@ const LIMITE_TOTAL = 10;
 const SECS_BASE = 2;
 const maxIncremento =  3; // queremos +300% de habilidades en el mejor caso
 const maxIncrementoDestreza =  0.5; // queremos +300% de habilidades en el mejor caso
-let secs_palabras;
+let secs_palabras = SECS_BASE;
 var CLASE_PALABRA_BENDITA = window.CLASE_PALABRA_BENDITA || "palabra-bendita";
 window.CLASE_PALABRA_BENDITA = CLASE_PALABRA_BENDITA;
 const CLASE_PALABRA_MUSA = "palabra-musa";
@@ -62,6 +62,118 @@ function mostrarFeedbackTiempoEscritora(texto, tipo, color) {
       }, 2000);
     });
   }
+}
+
+function normalizarValorAtributoEscritora(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero)) return 0;
+  return Math.max(0, Math.min(LIMITE_TOTAL, Math.trunc(numero)));
+}
+
+function normalizarAtributosEscritora(valor = {}) {
+  const data = (valor && typeof valor === "object") ? valor : {};
+  return {
+    fuerza: normalizarValorAtributoEscritora(data.fuerza),
+    agilidad: normalizarValorAtributoEscritora(data.agilidad),
+    destreza: normalizarValorAtributoEscritora(data.destreza)
+  };
+}
+
+function calcularSegundosPalabrasPorFuerzaEscritora(fuerza) {
+  const fuerzaNormalizada = normalizarValorAtributoEscritora(fuerza);
+  if (typeof ajustarFuerza === "function") {
+    try {
+      const ajustado = Number(ajustarFuerza(SECS_BASE, fuerzaNormalizada));
+      if (Number.isFinite(ajustado) && ajustado > 0) {
+        return Math.max(1, Math.trunc(ajustado));
+      }
+    } catch (_error) {}
+  }
+  if (fuerzaNormalizada === 0) {
+    return Math.round(SECS_BASE);
+  }
+  const factorLog = Math.log(fuerzaNormalizada + 1) / Math.log(LIMITE_TOTAL + 1);
+  return Math.max(1, Math.round(SECS_BASE * (1 + (maxIncremento * factorLog))));
+}
+
+function recalcularBonosAtributosEscritora(opciones = {}) {
+  atributos = normalizarAtributosEscritora(atributos);
+  secs_palabras = calcularSegundosPalabrasPorFuerzaEscritora(atributos.fuerza);
+
+  if (typeof ajustarRapidez === "function") {
+    try {
+      ajustarRapidez(rapidez_borrado, rapidez_inicio_borrado, atributos.agilidad);
+    } catch (_error) {}
+  }
+
+  const tiempoModificadorBase = Number(opciones.tiempoModificadorBase);
+  if (
+    Number.isFinite(tiempoModificadorBase)
+    && tiempoModificadorBase > 0
+    && typeof TIEMPO_MODIFICADOR !== "undefined"
+    && typeof ajustarDestreza === "function"
+  ) {
+    try {
+      const ajusteDestreza = Number(ajustarDestreza(tiempoModificadorBase, atributos.destreza));
+      if (Number.isFinite(ajusteDestreza)) {
+        TIEMPO_MODIFICADOR = tiempoModificadorBase + ajusteDestreza;
+      }
+    } catch (_error) {}
+  }
+
+  return secs_palabras;
+}
+
+function pintarAtributosUiEscritora() {
+  if (typeof document === "undefined" || typeof document.querySelectorAll !== "function") {
+    return;
+  }
+  const atributosNormalizados = normalizarAtributosEscritora(atributos);
+  const total = Object.values(atributosNormalizados).reduce((suma, valor) => suma + valor, 0);
+  document.querySelectorAll(".atributo").forEach((div) => {
+    const key = div && div.dataset ? div.dataset.atributo : "";
+    const valor = atributosNormalizados[key] || 0;
+    const contadorEl = div.querySelector ? div.querySelector(".contador") : null;
+    if (contadorEl) {
+      contadorEl.textContent = valor;
+    }
+    if (div.querySelectorAll) {
+      div.querySelectorAll(".punto").forEach((el, idx) => {
+        if (el && el.classList) {
+          el.classList.toggle("filled", idx < valor);
+        }
+      });
+    }
+  });
+  const totalUsadosEl = document.getElementById ? document.getElementById("total-usados") : null;
+  if (totalUsadosEl) {
+    totalUsadosEl.textContent = total;
+  }
+  const totalWrapEl = document.getElementById ? document.getElementById("total") : null;
+  if (totalWrapEl) {
+    totalWrapEl.classList.toggle("total-ready", total === LIMITE_TOTAL);
+    totalWrapEl.setAttribute("aria-disabled", total === LIMITE_TOTAL ? "false" : "true");
+    totalWrapEl.tabIndex = total === LIMITE_TOTAL ? 0 : -1;
+  }
+  const btnInicioEl = document.getElementById ? document.getElementById("btnInicio") : null;
+  if (btnInicioEl) {
+    btnInicioEl.disabled = total !== LIMITE_TOTAL;
+  }
+}
+
+function aplicarAtributosEscritora(nuevosAtributos = {}, opciones = {}) {
+  atributos = normalizarAtributosEscritora(nuevosAtributos);
+  const segundos = recalcularBonosAtributosEscritora(opciones);
+  pintarAtributosUiEscritora();
+  return segundos;
+}
+
+function obtenerSegundosPalabrasEscritora() {
+  const actual = Number(secs_palabras);
+  if (Number.isFinite(actual) && actual > 0) {
+    return Math.max(1, Math.trunc(actual));
+  }
+  return recalcularBonosAtributosEscritora();
 }
 
 let lastLine;
@@ -131,6 +243,11 @@ function restaurarPosicionCaret(caretNode, caretPos) {
 }
 
 function obtenerUltimoNodoEditable() {
+  if (window.ScribEditorDeletion && typeof window.ScribEditorDeletion.obtenerUltimoNodoTextoEditable === "function") {
+    return window.ScribEditorDeletion.obtenerUltimoNodoTextoEditable(texto, {
+      protectedClasses: [CLASE_PALABRA_BENDITA, CLASE_PALABRA_MUSA, CLASE_LETRA_BENDITA]
+    });
+  }
   if (!texto) return null;
   const walker = document.createTreeWalker(texto, NodeFilter.SHOW_TEXT, null, false);
   let last = null;
@@ -145,6 +262,11 @@ function obtenerUltimoNodoEditable() {
 }
 
 function borrarUltimoCaracterEditable() {
+  if (window.ScribEditorDeletion && typeof window.ScribEditorDeletion.borrarUltimoCaracterEditable === "function") {
+    return window.ScribEditorDeletion.borrarUltimoCaracterEditable(texto, {
+      protectedClasses: [CLASE_PALABRA_BENDITA, CLASE_PALABRA_MUSA, CLASE_LETRA_BENDITA]
+    }).deleted;
+  }
   const nodo = obtenerUltimoNodoEditable();
   if (!nodo || !nodo.data) return false;
   nodo.data = nodo.data.substring(0, nodo.data.length - 1);
@@ -152,6 +274,24 @@ function borrarUltimoCaracterEditable() {
     nodo.parentNode.removeChild(nodo);
   }
   return true;
+}
+
+function nodoPerteneceAlEditor(nodo) {
+  if (!texto || !nodo) return false;
+  if (nodo === texto) return true;
+  if (typeof texto.contains === "function") {
+    try {
+      return texto.contains(nodo);
+    } catch (_error) {
+      return false;
+    }
+  }
+  let actual = nodo;
+  while (actual) {
+    if (actual === texto) return true;
+    actual = actual.parentNode;
+  }
+  return false;
 }
 
 function borrar(revisionEsperada = revision_borrado_escritora) {
@@ -165,6 +305,12 @@ function borrar(revisionEsperada = revision_borrado_escritora) {
   if (!desactivar_borrar) {
     // 1. Guardar la posiciÃ³n del caret usando la funciÃ³n
     let { caretNode, caretPos } = guardarPosicionCaret();
+    const haBorrado = borrarUltimoCaracterEditable();
+    if (!haBorrado) {
+      cancelarTemporizadorBorradoEscritora();
+      sendText();
+      return;
+    }
 
     // 2. CÃ³digo existente
 
@@ -181,8 +327,6 @@ function borrar(revisionEsperada = revision_borrado_escritora) {
     tiempo_feed = "-1 segs.";
     socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar" });
     caracteres_seguidos = 0;
-    // 3. Borrar Ãºltimo carÃ¡cter editable, saltando palabras benditas
-    borrarUltimoCaracterEditable();
 
     // 8. Actualizar estado
     if(texto.innerText.match(/\b\w+\b/g) != null){
@@ -203,8 +347,10 @@ function borrar(revisionEsperada = revision_borrado_escritora) {
 
     // 9. Reposicionar caret usando la funciÃ³n
     
-    if (caretNode) {
+    if (caretNode && nodoPerteneceAlEditor(caretNode)) {
       restaurarPosicionCaret(caretNode, caretPos);
+    } else if (typeof colocarCursorAlFinalEditor === "function") {
+      colocarCursorAlFinalEditor();
     }
 
   } else {
@@ -268,14 +414,15 @@ function countChars(texto) {
   }
 
   if (caracteres_seguidos == 3 && modo_actual !== "frase final") {
-    tiempo_feed = `+${secs_palabras} segs.`;
+    const segundosGanados = obtenerSegundosPalabrasEscritora();
+    tiempo_feed = `+${segundosGanados} segs.`;
     mostrarFeedbackTiempoEscritora(tiempo_feed, "ganar_tiempo", color_positivo);
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
-    console.log("fuerza: " + secs_palabras);
+    console.log("fuerza: " + segundosGanados);
     if (typeof emitirCambioTiempoEscritora === "function") {
-      emitirCambioTiempoEscritora(secs_palabras);
+      emitirCambioTiempoEscritora(segundosGanados);
     } else {
-      socket.emit('aumentar_tiempo', {secs: secs_palabras, player});
+      socket.emit('aumentar_tiempo', {secs: segundosGanados, player});
     }
     color = color_positivo;    socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "ganar_tiempo"});
   }
@@ -422,7 +569,7 @@ const animateCSS = window.ScribRuntime.animateCSS;
        // Esperar a que el DOM estÃ© completamente cargado
        document.addEventListener('DOMContentLoaded', () => {
         // Estado inicial de los atributos
-        atributos = { fuerza: 0, agilidad: 0, destreza: 0 };
+        atributos = normalizarAtributosEscritora(atributos);
   
         // Referencias a elementos del DOM
         const container = document.getElementById('atributos-container');

@@ -1,0 +1,1305 @@
+@font-face {
+    font-family: "Retro-gaming";
+    src: url("../css/fonts/Retro%20Gaming.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "VT323";
+    src: url("../css/fonts/VT323-Regular.ttf") format("truetype");
+}
+
+:root {
+    --jury-bg: #07090d;
+    --jury-panel: #101720;
+    --jury-panel-soft: #14202a;
+    --jury-border: rgba(216, 230, 240, 0.18);
+    --jury-text: #f2f7fb;
+    --jury-muted: #94aabc;
+    --jury-blue: #45e6ff;
+    --jury-red: #ff5a64;
+    --jury-gold: #ffcf5a;
+    --jury-green: #82f59d;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body.page-jurado {
+    min-height: 100dvh;
+    margin: 0;
+    background:
+        linear-gradient(180deg, rgba(8, 13, 18, 0.94), rgba(3, 4, 8, 0.98)),
+        var(--jury-bg);
+    color: var(--jury-text);
+    font-family: "Retro-gaming", "Courier New", monospace;
+}
+
+button,
+textarea,
+input {
+    font: inherit;
+}
+
+.jury-shell {
+    width: min(100%, 1680px);
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: 0.75rem;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 0.75rem;
+}
+
+.jury-header {
+    min-height: 4.25rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--jury-border);
+    border-radius: 8px;
+    background: rgba(9, 14, 20, 0.88);
+}
+
+.jury-brand {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.45rem, 0.7vw, 0.85rem);
+    min-width: 0;
+    justify-self: start;
+}
+
+.remote-brand-card {
+    min-height: 2.35rem;
+    padding: 0.42rem 0.62rem;
+    border: 1px solid rgba(203, 224, 255, 0.2);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(8, 18, 28, 0.8), rgba(1, 5, 10, 0.88)),
+        rgba(8, 14, 24, 0.9);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+
+.jury-brand.remote-brand-card {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.remote-brand-card .control-brand {
+    width: clamp(8.55rem, 11.1vw, 10.7rem);
+    height: clamp(1.38rem, 1.92vw, 1.78rem);
+    overflow: hidden;
+}
+
+.jury-brand .control-brand {
+    width: auto;
+    height: auto;
+    overflow: visible;
+}
+
+.jury-brand__ascii {
+    margin: 0;
+    white-space: pre;
+}
+
+.remote-brand-card .control-brand .neon {
+    font-family: "Courier New", "Consolas", monospace;
+    font-size: clamp(0.162rem, 0.235vw, 0.235rem);
+    font-weight: 100;
+    line-height: 1.06;
+    letter-spacing: 0;
+    color: #ffffff;
+    white-space: pre;
+    animation: neonEffect 5s infinite;
+}
+
+.jury-brand .control-brand .neon {
+    font-size: 0.56rem;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.remote-brand-control-label {
+    align-self: center;
+    color: #8ff8ff;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.94rem, 1.18vw, 1.38rem);
+    line-height: 1;
+    letter-spacing: 0;
+    text-shadow:
+        0.08em 0.08em #ff2d2d,
+        0 0 0.7rem rgba(69, 243, 255, 0.48);
+    white-space: nowrap;
+}
+
+.jury-header-title {
+    position: relative;
+    min-width: 0;
+    display: grid;
+    justify-items: center;
+    gap: 0.24rem;
+    padding: 0.08rem clamp(0.65rem, 1vw, 1rem);
+    text-align: center;
+}
+
+.jury-header-title::before,
+.jury-header-title::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: clamp(2.1rem, 4.4vw, 4.8rem);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(69, 230, 255, 0.72));
+    box-shadow: 0 0 0.48rem rgba(69, 230, 255, 0.42);
+}
+
+.jury-header-title::before {
+    right: 100%;
+}
+
+.jury-header-title::after {
+    left: 100%;
+    transform: scaleX(-1);
+}
+
+.jury-header-title .remote-brand-control-label {
+    font-size: clamp(1.1rem, 1.65vw, 1.85rem);
+    letter-spacing: 0.16em;
+}
+
+.jury-header-subtitle {
+    color: color-mix(in srgb, var(--jury-gold), white 18%);
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.46rem, 0.62vw, 0.68rem);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-shadow:
+        0 0 0.45rem rgba(255, 207, 90, 0.34),
+        0.06em 0.06em #140b02;
+    white-space: nowrap;
+}
+
+@keyframes neonEffect {
+    0%,
+    35%,
+    45%,
+    65%,
+    100% {
+        text-shadow:
+            white 0 0 12px,
+            #40f2fe 0 0 10px,
+            #40f2fe 0 0 10px;
+    }
+
+    40%,
+    60% {
+        text-shadow: none;
+    }
+}
+
+.jury-status {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-self: end;
+    gap: clamp(0.4rem, 0.55vw, 0.65rem);
+    min-width: 0;
+    min-height: 2.35rem;
+    padding: 0.42rem 0.62rem;
+}
+
+.remote-status-card {
+    border: 1px solid rgba(203, 224, 255, 0.2);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(8, 18, 28, 0.8), rgba(1, 5, 10, 0.88)),
+        rgba(8, 14, 24, 0.9);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+
+.remote-status-card--jurado {
+    border-color: rgba(255, 207, 90, 0.34);
+}
+
+.remote-status-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+}
+
+.remote-status-role {
+    color: #eefaff;
+    font-size: clamp(0.55rem, 0.68vw, 0.75rem);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.remote-status-state {
+    color: #7cff78;
+    font-size: clamp(0.46rem, 0.56vw, 0.62rem);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-shadow: 0 0 0.45rem rgba(124, 255, 120, 0.36);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.remote-status-state.is-off {
+    color: #ffad42;
+    text-shadow: 0 0 0.45rem rgba(255, 157, 46, 0.42);
+}
+
+.conexion-dot {
+    --dot-color: #555;
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: 0 0 auto;
+    border: 0.12rem solid rgba(255, 255, 255, 0.72);
+    border-radius: 50%;
+    background: var(--dot-color);
+    box-shadow: 0 0 0.45rem rgba(255, 255, 255, 0.12);
+}
+
+.conexion-dot--mini {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-width: 0.1rem;
+}
+
+.conexion-dot--ok {
+    --dot-color: #2cff6d;
+    box-shadow: 0 0 10px rgba(44, 255, 109, 0.65);
+}
+
+.conexion-dot--warn {
+    --dot-color: #ffd166;
+    box-shadow: 0 0 10px rgba(255, 209, 102, 0.55);
+}
+
+.conexion-dot--off {
+    --dot-color: #ff9d2e;
+    box-shadow: 0 0 0.55rem rgba(255, 157, 46, 0.62);
+}
+
+.conexion-dot--ping {
+    animation: conexionPing 0.6s ease;
+}
+
+@keyframes conexionPing {
+    0% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.45);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.jury-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.jury-tab,
+.jury-action-button {
+    min-height: 2.45rem;
+    border: 1px solid var(--jury-border);
+    border-radius: 8px;
+    background: rgba(16, 23, 32, 0.92);
+    color: var(--jury-text);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.jury-tab {
+    --tab-accent: var(--jury-blue);
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.42rem;
+    padding: 0.55rem 0.7rem;
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--tab-accent), transparent 58%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--tab-accent), transparent 88%), rgba(0, 0, 0, 0.12)),
+        rgba(16, 23, 32, 0.92);
+    color: color-mix(in srgb, var(--tab-accent), white 48%);
+    transition:
+        border-color 160ms ease,
+        background-color 160ms ease,
+        color 160ms ease,
+        transform 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.jury-tab[data-jury-panel="textos"] {
+    --tab-accent: var(--jury-blue);
+}
+
+.jury-tab[data-jury-panel="estadisticas"] {
+    --tab-accent: var(--jury-gold);
+}
+
+.jury-tab[data-jury-panel="inspiracion"] {
+    --tab-accent: var(--jury-green);
+}
+
+.jury-tab[data-jury-panel="notas"] {
+    --tab-accent: #ff84c7;
+}
+
+.jury-tab[data-jury-panel="evaluacion"] {
+    --tab-accent: #bda2ff;
+}
+
+.jury-tab::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--tab-accent), transparent 68%), transparent 64%);
+    opacity: 0;
+    transform: translateY(16%);
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.jury-tab__icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--tab-accent), transparent 86%);
+    color: #ffffff;
+    font-size: 0.95rem;
+    line-height: 1;
+    text-shadow: 0 0 0.4rem color-mix(in srgb, var(--tab-accent), transparent 35%);
+    transform-origin: 50% 70%;
+    transition:
+        transform 180ms ease,
+        background-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.jury-tab__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jury-tab:hover,
+.jury-tab:focus-visible,
+.jury-action-button:hover,
+.jury-action-button:focus-visible {
+    border-color: color-mix(in srgb, var(--tab-accent, var(--jury-blue)), white 10%);
+    color: #ffffff;
+    outline: 0;
+}
+
+.jury-tab:hover,
+.jury-tab:focus-visible {
+    transform: translateY(-0.06rem);
+    box-shadow: 0 0 0.85rem color-mix(in srgb, var(--tab-accent), transparent 76%);
+}
+
+.jury-tab:hover::before,
+.jury-tab:focus-visible::before {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.jury-tab:hover .jury-tab__icon,
+.jury-tab:focus-visible .jury-tab__icon {
+    transform: translateY(-0.08rem) scale(1.14) rotate(-6deg);
+    background: color-mix(in srgb, var(--tab-accent), transparent 68%);
+    box-shadow: 0 0 0.62rem color-mix(in srgb, var(--tab-accent), transparent 42%);
+}
+
+.jury-tab:active .jury-tab__icon {
+    animation: juryTabIconPop 220ms ease;
+}
+
+.jury-tab.is-active {
+    border-color: color-mix(in srgb, var(--tab-accent), white 8%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--tab-accent), transparent 76%), rgba(0, 0, 0, 0.18)),
+        rgba(16, 23, 32, 0.96);
+    color: #ffffff;
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--tab-accent), transparent 72%),
+        0 0 0.72rem color-mix(in srgb, var(--tab-accent), transparent 80%);
+}
+
+.jury-tab.is-active .jury-tab__icon {
+    background: color-mix(in srgb, var(--tab-accent), transparent 54%);
+}
+
+@keyframes juryTabIconPop {
+    0% {
+        transform: translateY(-0.08rem) scale(1.14) rotate(-6deg);
+    }
+
+    45% {
+        transform: translateY(-0.16rem) scale(1.28) rotate(7deg);
+    }
+
+    100% {
+        transform: translateY(-0.08rem) scale(1.14) rotate(-6deg);
+    }
+}
+
+.jury-panel {
+    --panel-accent: var(--jury-blue);
+    display: none;
+    min-height: 0;
+}
+
+.jury-panel[data-jury-panel-target="textos"] {
+    --panel-accent: var(--jury-blue);
+}
+
+.jury-panel[data-jury-panel-target="estadisticas"] {
+    --panel-accent: var(--jury-gold);
+}
+
+.jury-panel[data-jury-panel-target="inspiracion"] {
+    --panel-accent: var(--jury-green);
+}
+
+.jury-panel[data-jury-panel-target="notas"] {
+    --panel-accent: #ff84c7;
+}
+
+.jury-panel[data-jury-panel-target="evaluacion"] {
+    --panel-accent: #bda2ff;
+}
+
+.jury-panel.is-active {
+    position: relative;
+    display: grid;
+    gap: 0.75rem;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.jury-panel.is-active .jury-toolbar {
+    padding-inline: 0.55rem;
+    color: color-mix(in srgb, var(--panel-accent), white 22%);
+    text-shadow: 0 0 0.35rem color-mix(in srgb, var(--panel-accent), transparent 54%);
+}
+
+.jury-writer-grid {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.writer-board {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.65rem;
+    padding: 0.8rem;
+    border: 1px solid var(--jury-border);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(18, 28, 38, 0.96), rgba(9, 13, 20, 0.96)),
+        var(--jury-panel);
+}
+
+.writer-board--text {
+    gap: clamp(0.34rem, 0.5vw, 0.6rem);
+    padding: clamp(0.52rem, 0.85vw, 0.86rem);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.24)),
+        rgba(3, 7, 14, 0.86);
+    box-shadow:
+        inset 0 0 1.6rem rgba(0, 0, 0, 0.6),
+        0 0 1.25rem color-mix(in srgb, var(--writer-accent, #ffffff), transparent 82%);
+}
+
+.writer-board--one {
+    --writer-accent: var(--jury-blue);
+    --writer-accent-soft: rgba(69, 230, 255, 0.12);
+    --vida-color: #46f0ff;
+    border-color: rgba(69, 230, 255, 0.36);
+}
+
+.writer-board--two {
+    --writer-accent: var(--jury-red);
+    --writer-accent-soft: rgba(255, 90, 100, 0.12);
+    --vida-color: #ff5f67;
+    border-color: rgba(255, 90, 100, 0.36);
+}
+
+.writer-board__header {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(9rem, 1fr) minmax(0, auto);
+    align-items: start;
+    gap: clamp(0.32rem, 0.64vw, 0.72rem);
+}
+
+.writer-board__header h1 {
+    margin: 0;
+    color: var(--writer-accent, #ffffff);
+    font-size: 1.05rem;
+    line-height: 1.2;
+    text-shadow: 0 0 0.75rem color-mix(in srgb, var(--writer-accent, #ffffff), transparent 58%);
+    overflow-wrap: anywhere;
+}
+
+.stat-card {
+    --stat-accent: var(--panel-accent, var(--jury-gold));
+    position: relative;
+    min-width: 0;
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.58rem 0.66rem 0.58rem 0.78rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--stat-accent), transparent 78%);
+    border-left-color: color-mix(in srgb, var(--stat-accent), transparent 18%);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.045);
+    box-shadow:
+        inset 3px 0 0 color-mix(in srgb, var(--stat-accent), transparent 34%),
+        inset 0 1px 0 color-mix(in srgb, var(--stat-accent), transparent 88%);
+}
+
+.stat-card::after {
+    content: "";
+    position: absolute;
+    top: 0.46rem;
+    right: 0.5rem;
+    width: 0.32rem;
+    height: 0.32rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--stat-accent), white 8%);
+    box-shadow: 0 0 0.42rem color-mix(in srgb, var(--stat-accent), transparent 45%);
+}
+
+.jury-writer-header-stats {
+    display: inline-flex;
+    align-items: center;
+    justify-content: end;
+    gap: clamp(0.42rem, 0.66vw, 0.78rem);
+    min-width: 0;
+    color: var(--writer-accent);
+}
+
+.jury-compact-life {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    width: clamp(7.1rem, 10.4vw, 9.8rem);
+    min-width: 0;
+}
+
+.jury-health-label {
+    color: color-mix(in srgb, var(--writer-accent), white 28%);
+    font-size: clamp(0.72rem, 0.86vw, 1rem);
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-shadow: 0.06em 0.06em #000;
+}
+
+.jury-tiempo-vida {
+    --vida-pct: 0%;
+    position: relative;
+    width: 100%;
+    height: 0.72rem;
+    min-height: 0.72rem;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background:
+        linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--vida-color), white 18%) 0%,
+            var(--vida-color) var(--vida-pct),
+            rgba(255, 255, 255, 0.12) var(--vida-pct),
+            rgba(255, 255, 255, 0.12) 100%
+        );
+    box-shadow: none;
+    color: transparent;
+}
+
+.jury-vida-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+.writer-stat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.24rem;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    white-space: nowrap;
+}
+
+.writer-stat-icon {
+    flex: 0 0 auto;
+    font-size: clamp(0.92rem, 1.08vw, 1.24rem);
+    line-height: 1;
+    filter: drop-shadow(0 0 0.2rem color-mix(in srgb, var(--writer-accent), transparent 42%));
+}
+
+.jury-writer-header-stats .puntos,
+.jury-writer-header-stats .musas-total {
+    color: color-mix(in srgb, var(--writer-accent), white 36%);
+    font-size: clamp(0.86rem, 1vw, 1.15rem);
+    line-height: 1;
+    text-transform: none;
+    white-space: nowrap;
+    text-shadow: 0.06em 0.06em #000;
+}
+
+.jury-writer-text-shell {
+    min-height: clamp(26rem, 66vh, 50rem);
+    display: grid;
+    grid-template-columns: clamp(1.65rem, 2.2vw, 2.25rem) minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(0, 0, 0, 0.16)),
+        rgba(1, 4, 8, 0.72);
+    box-shadow:
+        inset 0 0 0 1px var(--writer-accent-soft, transparent),
+        inset 0 0 1.4rem rgba(0, 0, 0, 0.46);
+}
+
+.jury-line-numbers {
+    padding: 0.95rem 0.45rem 0.95rem 0.2rem;
+    border-right: 1px solid color-mix(in srgb, var(--writer-accent), transparent 72%);
+    color: color-mix(in srgb, var(--writer-accent), transparent 36%);
+    font-family: "VT323", "Courier New", monospace;
+    font-size: clamp(1.05rem, 1.25vw, 1.45rem);
+    font-weight: 700;
+    line-height: 1.28;
+    text-align: right;
+    user-select: none;
+}
+
+.writer-text {
+    min-height: 0;
+    overflow: auto;
+    padding: 1rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #f8fbff;
+    box-shadow: none;
+    font-family: "VT323", "Courier New", monospace;
+    font-size: clamp(1.25rem, 1.55vw, 1.9rem);
+    font-weight: 700;
+    line-height: 1.28;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.writer-text:empty::before,
+.cloud-board:empty::before,
+.stats-grid:empty::before {
+    content: "Sin datos todavía.";
+    color: color-mix(in srgb, var(--panel-accent), white 34%);
+    text-shadow: 0 0 0.38rem color-mix(in srgb, var(--panel-accent), transparent 62%);
+}
+
+.jury-toolbar {
+    min-height: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: var(--jury-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    align-content: start;
+}
+
+.stat-card__label {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+    color: color-mix(in srgb, var(--stat-accent), white 34%);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.stat-card__label em {
+    min-width: 0;
+    overflow: hidden;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stat-card__icon {
+    width: 1.14rem;
+    height: 1.14rem;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid color-mix(in srgb, var(--stat-accent), transparent 54%);
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 0.76rem;
+    letter-spacing: 0;
+    line-height: 1;
+    text-shadow: 0 0 0.32rem color-mix(in srgb, var(--stat-accent), transparent 24%);
+}
+
+.stat-card strong {
+    color: color-mix(in srgb, var(--stat-accent), white 54%);
+    font-size: 1.3rem;
+    line-height: 1.1;
+    text-shadow: 0 0 0.38rem color-mix(in srgb, var(--stat-accent), transparent 70%);
+}
+
+.stat-card--wide {
+    grid-column: 1 / -1;
+}
+
+.mini-stats-card {
+    gap: 0.55rem;
+    padding: 0.6rem;
+}
+
+.mini-stats-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.mini-stats-chart {
+    min-width: 0;
+    min-height: 7.1rem;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.38rem;
+    padding: 0.52rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--writer-accent), transparent 72%);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--writer-accent), transparent 91%), rgba(0, 0, 0, 0.14)),
+        rgba(1, 4, 8, 0.42);
+}
+
+.mini-stats-chart__title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.mini-stats-chart__title span {
+    color: color-mix(in srgb, var(--writer-accent), white 28%);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.mini-stats-chart__title i {
+    font-style: normal;
+    letter-spacing: 0;
+}
+
+.mini-stats-chart__title strong {
+    color: #ffffff;
+    font-size: 0.78rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.mini-stats-svg {
+    width: 100%;
+    height: clamp(3.2rem, 7vh, 4.4rem);
+    display: block;
+    overflow: visible;
+}
+
+.mini-stats-grid-line {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.16);
+    stroke-width: 1;
+    stroke-dasharray: 5 5;
+}
+
+.mini-stats-line {
+    fill: none;
+    stroke: var(--writer-accent);
+    stroke-width: 3.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 0.34rem color-mix(in srgb, var(--writer-accent), transparent 42%));
+}
+
+.mini-stats-dot {
+    fill: #ffffff;
+    stroke: var(--writer-accent);
+    stroke-width: 1.4;
+}
+
+.mini-stats-empty {
+    min-height: clamp(3.2rem, 7vh, 4.4rem);
+    display: grid;
+    place-items: center;
+    color: var(--jury-muted);
+    font-size: 0.68rem;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.mini-key-bars {
+    display: grid;
+    align-content: center;
+    gap: 0.28rem;
+    min-height: clamp(3.2rem, 7vh, 4.4rem);
+}
+
+.mini-key-row {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(1.8rem, 0.36fr) minmax(0, 1fr) minmax(1.9rem, auto);
+    align-items: center;
+    gap: 0.34rem;
+}
+
+.mini-key-label {
+    min-width: 0;
+    overflow: hidden;
+    color: #f8fbff;
+    font-size: 0.68rem;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mini-key-track {
+    height: 0.42rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.mini-key-fill {
+    width: var(--bar-pct, 0%);
+    height: 100%;
+    display: block;
+    border-radius: inherit;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--writer-accent), white 20%), var(--writer-accent));
+    box-shadow: 0 0 0.38rem color-mix(in srgb, var(--writer-accent), transparent 48%);
+}
+
+.mini-key-row em {
+    color: var(--jury-muted);
+    font-size: 0.66rem;
+    font-style: normal;
+    line-height: 1;
+    text-align: right;
+}
+
+.cloud-board {
+    min-height: clamp(22rem, 54vh, 42rem);
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 0.55rem;
+    padding: 0.85rem;
+    overflow: auto;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(1, 4, 8, 0.6);
+}
+
+.cloud-word {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.25rem 0.58rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8fbff;
+    line-height: 1;
+}
+
+.jury-panel[data-jury-panel-target="inspiracion"].is-active .cloud-word {
+    color: color-mix(in srgb, var(--panel-accent), white 46%);
+    text-shadow: 0 0 0.35rem color-mix(in srgb, var(--panel-accent), transparent 64%);
+}
+
+.cloud-word--1 {
+    border-color: rgba(69, 230, 255, 0.35);
+}
+
+.cloud-word--2 {
+    border-color: rgba(255, 90, 100, 0.35);
+}
+
+.cloud-word[data-size="2"] {
+    font-size: 1.12rem;
+}
+
+.cloud-word[data-size="3"] {
+    font-size: 1.32rem;
+    font-weight: 800;
+}
+
+.jury-notes {
+    width: 100%;
+    min-height: clamp(28rem, 68vh, 50rem);
+    resize: vertical;
+    padding: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(1, 4, 8, 0.72);
+    color: var(--jury-text);
+    font-family: "VT323", "Courier New", monospace;
+    font-size: clamp(1.18rem, 1.35vw, 1.65rem);
+    font-weight: 700;
+    line-height: 1.32;
+}
+
+.jury-panel[data-jury-panel-target="notas"].is-active .jury-notes {
+    border-left-color: color-mix(in srgb, var(--panel-accent), transparent 24%);
+    color: color-mix(in srgb, var(--panel-accent), white 58%);
+    caret-color: var(--panel-accent);
+}
+
+.jury-notes:focus {
+    border-color: rgba(255, 207, 90, 0.84);
+    outline: 0;
+}
+
+.jury-panel[data-jury-panel-target="notas"].is-active .jury-notes:focus {
+    border-color: color-mix(in srgb, var(--panel-accent), white 8%);
+}
+
+.jury-evaluation-board {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.8rem;
+    border: 1px solid var(--jury-border);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(18, 28, 38, 0.96), rgba(9, 13, 20, 0.96)),
+        var(--jury-panel);
+}
+
+.jury-eval-scoreboard {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.jury-eval-team {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--writer-accent), transparent 62%);
+    border-radius: 8px;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--writer-accent), transparent 91%), rgba(255, 255, 255, 0.025)),
+        rgba(255, 255, 255, 0.035);
+}
+
+.jury-eval-team__name {
+    margin: 0;
+    color: var(--writer-accent);
+    font-size: 1.08rem;
+    line-height: 1.1;
+    text-shadow: 0 0 0.65rem color-mix(in srgb, var(--writer-accent), transparent 54%);
+    overflow-wrap: anywhere;
+}
+
+.writer-board__score {
+    min-width: 4.8rem;
+    display: grid;
+    justify-items: end;
+    gap: 0.1rem;
+    padding: 0.42rem 0.52rem;
+    border: 1px solid color-mix(in srgb, var(--writer-accent), transparent 58%);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--writer-accent), transparent 86%), rgba(0, 0, 0, 0.18)),
+        rgba(1, 4, 8, 0.5);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--writer-accent), transparent 82%);
+}
+
+.writer-board__score span {
+    color: #ffffff;
+    font-size: 1.35rem;
+    line-height: 1;
+    text-shadow: 0 0 0.5rem color-mix(in srgb, var(--writer-accent), transparent 35%);
+}
+
+.writer-board__score small {
+    color: color-mix(in srgb, var(--writer-accent), white 34%);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.criteria-title {
+    margin: 0;
+    color: color-mix(in srgb, var(--criteria-section-accent), white 24%);
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: 0 0 0.45rem color-mix(in srgb, var(--criteria-section-accent), transparent 55%);
+}
+
+.criteria-section {
+    --criteria-section-accent: var(--panel-accent);
+    display: grid;
+    gap: 0.48rem;
+    padding: 0.62rem;
+    border: 1px solid color-mix(in srgb, var(--criteria-section-accent), transparent 66%);
+    border-left-width: 3px;
+    border-radius: 8px;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--criteria-section-accent), transparent 90%), rgba(255, 255, 255, 0.02)),
+        rgba(255, 255, 255, 0.025);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--criteria-section-accent), transparent 88%),
+        0 0 0.62rem color-mix(in srgb, var(--criteria-section-accent), transparent 92%);
+}
+
+.criteria-section[data-eval-scope="writing"] {
+    --criteria-section-accent: #bda2ff;
+}
+
+.criteria-section[data-eval-scope="muses"] {
+    --criteria-section-accent: var(--jury-green);
+}
+
+.criteria-list {
+    display: grid;
+    gap: 0.48rem;
+}
+
+.criteria-row {
+    --criteria-line: color-mix(in srgb, var(--criteria-section-accent), transparent 76%);
+    display: grid;
+    grid-template-columns: minmax(10rem, 1fr) minmax(8.5rem, 0.52fr) minmax(10rem, 1fr);
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 2.35rem;
+    padding: 0.46rem 0.55rem;
+    border: 1px solid var(--criteria-line);
+    border-radius: 8px;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--jury-blue), transparent 91%), color-mix(in srgb, var(--criteria-section-accent), transparent 93%), color-mix(in srgb, var(--jury-red), transparent 91%)),
+        rgba(255, 255, 255, 0.04);
+}
+
+.criteria-row__label {
+    grid-column: 2;
+    grid-row: 1;
+    color: color-mix(in srgb, var(--criteria-section-accent), white 42%);
+    font-size: 0.9rem;
+    font-weight: 850;
+    line-height: 1.1;
+    text-align: center;
+    text-shadow:
+        0.06em 0.06em #000,
+        0 0 0.35rem color-mix(in srgb, var(--criteria-section-accent), transparent 64%);
+}
+
+.criteria-control {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(8rem, 1fr) 2.4rem;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.criteria-control--1 {
+    --writer-accent: var(--jury-blue);
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.criteria-control--2 {
+    --writer-accent: var(--jury-red);
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.criteria-control output {
+    text-align: right;
+    color: color-mix(in srgb, var(--writer-accent), white 28%);
+    font-weight: 900;
+}
+
+.criteria-control input[type="range"] {
+    width: 100%;
+    accent-color: var(--writer-accent);
+}
+
+.jury-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+}
+
+.jury-action-button {
+    padding: 0.5rem 0.8rem;
+}
+
+.jury-action-button--muted {
+    color: var(--jury-muted);
+}
+
+@media (max-width: 980px) {
+    .jury-header {
+        align-items: flex-start;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .jury-brand,
+    .jury-header-title,
+    .jury-status {
+        width: 100%;
+        justify-self: stretch;
+    }
+
+    .jury-header-title {
+        order: -1;
+        justify-items: start;
+        text-align: left;
+        padding-inline: 0;
+    }
+
+    .jury-header-title::before,
+    .jury-header-title::after {
+        display: none;
+    }
+
+    .jury-status {
+        justify-content: flex-start;
+    }
+
+    .jury-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .jury-writer-grid,
+    .jury-eval-scoreboard {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .jury-writer-text-shell,
+    .jury-notes,
+    .cloud-board {
+        min-height: 26rem;
+    }
+}
+
+@media (max-width: 560px) {
+    .jury-shell {
+        padding: 0.5rem;
+    }
+
+    .jury-tabs {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .writer-board__header {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .jury-writer-header-stats {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .criteria-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .criteria-row__label,
+    .criteria-control--1,
+    .criteria-control--2 {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .criteria-row__label {
+        text-align: left;
+    }
+
+    .criteria-control {
+        grid-template-columns: minmax(0, 1fr) 2.4rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mini-stats-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

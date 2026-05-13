@@ -45,7 +45,7 @@ function modo_palabras_bonus(e) {
             ) {
             texto.focus();
             asignada = false;
-            recibir_palabra()
+            recibir_palabra(invalidarSolicitudesPalabraBonus1P())
             addSeconds(tiempo_palabras_bonus)
             mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(tiempo_palabras_bonus, { signo: "+" }), {
                 color: color_positivo,
@@ -303,7 +303,6 @@ function modo_letra_bendita(e) {
         if (nodoProtegido && nodoProtegido.classList.contains(CLASE_LETRA_BENDITA_LOCAL)) {
             e.preventDefault();
             addSeconds(-1);
-            addSeconds(-1);
             mostrarFeedbackFlotanteEscritora(formatearTiempoSegundosI18n1P(1, { signo: "-" }), {
                 color: color_negativo,
                 tipo: "letra_bendita"
@@ -343,12 +342,22 @@ function modo_letra_bendita(e) {
     }
 }
 function nueva_letra_bendita(){
-    indice_letra_bendita = Math.floor(Math.random() * letras_benditas_restantes.length);
-    letra_bendita = letras_benditas_restantes[indice_letra_bendita]
-    letras_benditas_restantes.splice(indice_letra_bendita, 1);
-    if(letras_benditas_restantes.length == 0){
-        letras_benditas_restantes = [...letras_benditas];
-    }
+    const selector = typeof elegir_letra_nivel_ponderada === "function"
+        ? elegir_letra_nivel_ponderada
+        : (restantes, base) => {
+            const lista = Array.isArray(restantes) && restantes.length > 0 ? [...restantes] : [...base];
+            const indice = Math.floor(Math.random() * lista.length);
+            const letra = lista[indice];
+            lista.splice(indice, 1);
+            return { letra, pendientes: lista.length === 0 ? [...base] : lista };
+        };
+    const seleccion = selector(
+        letras_benditas_restantes,
+        typeof letras_benditas_ponderadas !== "undefined" ? letras_benditas_ponderadas : letras_benditas,
+        "bendita"
+    );
+    letra_bendita = seleccion.letra;
+    letras_benditas_restantes = seleccion.pendientes;
     if (letra_bendita) {
         resumenPartida.letrasBenditas.add(String(letra_bendita).toUpperCase());
     }
@@ -358,12 +367,18 @@ function nueva_letra_bendita(){
 }
 
 function nueva_letra_prohibida(){
-    indice_letra_prohibida = Math.floor(Math.random() * letras_prohibidas_restantes.length);
-    letra_prohibida = letras_prohibidas_restantes[indice_letra_prohibida]
-    letras_prohibidas_restantes.splice(indice_letra_prohibida, 1);
-    if(letras_prohibidas_restantes.length == 0){
-        letras_prohibidas_restantes = [...letras_prohibidas];
-    }
+    const selector = typeof elegir_letra_nivel_ponderada === "function"
+        ? elegir_letra_nivel_ponderada
+        : (restantes, base) => {
+            const lista = Array.isArray(restantes) && restantes.length > 0 ? [...restantes] : [...base];
+            const indice = Math.floor(Math.random() * lista.length);
+            const letra = lista[indice];
+            lista.splice(indice, 1);
+            return { letra, pendientes: lista.length === 0 ? [...base] : lista };
+        };
+    const seleccion = selector(letras_prohibidas_restantes, letras_prohibidas, "prohibida");
+    letra_prohibida = seleccion.letra;
+    letras_prohibidas_restantes = seleccion.pendientes;
     if (letra_prohibida) {
         resumenPartida.letrasMalditas.add(String(letra_prohibida).toUpperCase());
     }

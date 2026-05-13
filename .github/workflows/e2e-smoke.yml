@@ -40,6 +40,9 @@ jobs:
       - name: Run E2E smoke suite
         run: npm run test:e2e:smoke
 
+      - name: Run 1P E2E smoke suite
+        run: npm run test:e2e:1p:smoke
+
       - name: Publish E2E smoke summary
         if: always()
         run: |

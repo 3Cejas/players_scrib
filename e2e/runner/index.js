@@ -8,6 +8,7 @@ const { spawn } = require("child_process");
 const puppeteer = require("puppeteer");
 const io = require("socket.io-client");
 
+const { createPuppeteerLaunchOptions } = require("./puppeteer-launch-options");
 const { compareOrUpdateVisualSnapshot } = require("./visual");
 const { smokeSpecs, onePlayerSpecs, coreSpecs, visualSpecs, chaosSpecs } = require("../specs");
 
@@ -25,11 +26,6 @@ const VISUAL_BASELINES_DIR = path.join(ROOT_DIR, "e2e", "visual-baselines");
 const STATIC_PORT = 4173;
 const SOCKET_PORT = 3000;
 const DEFAULT_TIMEOUT_MS = 10000;
-const PUPPETEER_CI_ARGS = [
-  "--no-sandbox",
-  "--disable-setuid-sandbox",
-  "--disable-dev-shm-usage"
-];
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".gif": "image/gif",
@@ -49,6 +45,7 @@ const MIME_TYPES = {
 function parseArgs(argv) {
   const args = {
     headed: false,
+    spec: "",
     suite: "full",
     serverSource: "remote",
     updateVisualBaselines: process.env.SCRIB_UPDATE_VISUAL_BASELINES === "1"
@@ -62,6 +59,11 @@ function parseArgs(argv) {
       index += 1;
     } else if (arg.startsWith("--suite=")) {
       args.suite = arg.split("=")[1] || "full";
+    } else if (arg === "--spec") {
+      args.spec = argv[index + 1] || "";
+      index += 1;
+    } else if (arg.startsWith("--spec=")) {
+      args.spec = arg.split("=")[1] || "";
     } else if (arg === "--server-source") {
       args.serverSource = argv[index + 1] || "remote";
       index += 1;
@@ -80,6 +82,26 @@ function sanitizeName(value) {
 
 async function ensureDir(dirPath) {
   await fsp.mkdir(dirPath, { recursive: true });
+}
+
+async function removeDirWithRetries(dirPath, options = {}) {
+  if (!dirPath || !fs.existsSync(dirPath)) {
+    return;
+  }
+  const attempts = Number.isFinite(options.attempts) ? options.attempts : 6;
+  const delayMs = Number.isFinite(options.delayMs) ? options.delayMs : 350;
+  let lastError = null;
+  for (let index = 0; index < attempts; index += 1) {
+    try {
+      await fsp.rm(dirPath, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, delayMs * (index + 1)));
+    }
+  }
+  const code = lastError && lastError.code ? ` (${lastError.code})` : "";
+  console.warn(`Could not remove E2E browser profile ${dirPath}${code}: ${lastError ? lastError.message : "unknown error"}`);
 }
 
 async function runCommand(command, args, options = {}) {
@@ -366,6 +388,7 @@ class E2EHarness {
     this.pages = new Map();
     this.runId = new Date().toISOString().replace(/[:.]/g, "-");
     this.runArtifactsDir = path.join(ARTIFACTS_ROOT, this.runId);
+    this.browserUserDataDir = path.join(this.runArtifactsDir, "chrome-profile");
     this.staticBaseUrl = `http://127.0.0.1:${STATIC_PORT}`;
     this.serverDir = null;
     this.testHooksEnabled = false;
@@ -428,11 +451,35 @@ class E2EHarness {
       }
     }
 
-    this.browser = await puppeteer.launch({
+    await this.launchBrowser();
+  }
+
+  async launchBrowser() {
+    await ensureDir(this.browserUserDataDir);
+    this.browser = await puppeteer.launch(createPuppeteerLaunchOptions({
       headless: this.options.headed ? false : true,
       defaultViewport: null,
-      args: process.env.CI ? PUPPETEER_CI_ARGS : []
-    });
+      userDataDir: this.browserUserDataDir
+    }));
+  }
+
+  async ensureBrowserReady() {
+    if (this.browser && this.browser.isConnected && this.browser.isConnected()) {
+      return;
+    }
+    this.pages.clear();
+    if (this.browser) {
+      try {
+        const proc = this.browser.process && this.browser.process();
+        if (proc && !proc.killed) {
+          proc.kill();
+        }
+      } catch (_error) {
+      }
+      this.browser = null;
+    }
+    await removeDirWithRetries(this.browserUserDataDir, { attempts: 3, delayMs: 250 });
+    await this.launchBrowser();
   }
 
   async stop() {
@@ -442,9 +489,22 @@ class E2EHarness {
       this.socket = null;
     }
     if (this.browser) {
-      await this.browser.close();
+      try {
+        if (!this.browser.isConnected || this.browser.isConnected()) {
+          await this.browser.close();
+        }
+      } catch (_error) {
+        try {
+          const proc = this.browser.process && this.browser.process();
+          if (proc && !proc.killed) {
+            proc.kill();
+          }
+        } catch (_killError) {
+        }
+      }
       this.browser = null;
     }
+    await removeDirWithRetries(this.browserUserDataDir);
     if (this.staticServer) {
       await new Promise((resolve) => this.staticServer.close(resolve));
       this.staticServer = null;
@@ -498,6 +558,7 @@ class E2EHarness {
   }
 
   async beforeSpec() {
+    await this.ensureBrowserReady();
     await this.closeAllPages();
     if (this.testHooksEnabled) {
       await this.emitHook("scrib_test:reset", {});
@@ -886,7 +947,14 @@ class E2EHarness {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const harness = new E2EHarness(options);
-  const specs = createSpecList(options.suite);
+  let specs = createSpecList(options.suite);
+  if (options.spec) {
+    const specFilter = options.spec.toLowerCase();
+    specs = specs.filter((spec) => spec.name.toLowerCase().includes(specFilter));
+    if (specs.length === 0) {
+      throw new Error(`No E2E specs matched --spec=${options.spec}`);
+    }
+  }
   const results = [];
 
   let failures = 0;

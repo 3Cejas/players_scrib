@@ -7,6 +7,8 @@ let timer = null;
 let sub_timer = null;
 let preparados_timer = null;
 let fallback_cuenta_atras_timer = null;
+let final_cuenta_atras_timer = null;
+let revision_cuenta_atras_1p = 0;
 let inicio_en_progreso_1p = false;
 let secondsRemaining = 0;
 let secondsPassed = 0;
@@ -20,6 +22,7 @@ let bloquear_borrado_putada = false;
 let desventajaSecuenciaId = 0;
 let desventajaDecisionTimeout = null;
 let desventajaDecisionInterval = null;
+let revision_teclado_lento_1p = 0;
 
 // Variables de los modos.
 let modo_actual = "";

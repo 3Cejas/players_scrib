@@ -55,6 +55,407 @@ body {
     overflow: hidden;             /* Oculta el contenido que se desborde del div */
     -webkit-appearance: none;     /* Estilo estándar para WebKit/Blink */
     box-shadow: none !important;  /* Sin sombra de caja */
+    transform-origin: center center;
+    transition: filter 180ms ease, transform 220ms ease;
+}
+
+.actor-annotation-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(11rem, 20vw, 20rem);
+    align-items: start;
+    gap: clamp(0.75rem, 2vw, 1.75rem);
+    width: min(94vw, 1480px);
+    margin: 0 auto;
+}
+
+.actor-text-shell {
+    min-width: 0;
+}
+
+.actor-annotation-layout .textarea {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.actor-annotation-toolbar {
+    position: fixed;
+    left: 50%;
+    top: 1rem;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: calc(100vw - 1rem);
+    padding: 0.42rem;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 8px;
+    background: rgba(3, 8, 18, 0.94);
+    box-shadow: 0 0 1.2rem rgba(70, 240, 255, 0.18), 0 0.35rem 1.2rem rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(8px);
+}
+
+.actor-annotation-toolbar[hidden] {
+    display: none;
+}
+
+.actor-annotation-note-editor {
+    position: fixed;
+    left: 50%;
+    top: 4.7rem;
+    z-index: 2147483647;
+    width: min(23rem, calc(100vw - 1rem));
+    padding: 0.58rem;
+    border: 1px solid rgba(70, 240, 255, 0.42);
+    border-radius: 8px;
+    background: rgba(3, 8, 18, 0.96);
+    box-shadow: 0 0 1.2rem rgba(70, 240, 255, 0.2), 0 0.35rem 1.4rem rgba(0, 0, 0, 0.5);
+    transform: translateX(-50%);
+    backdrop-filter: blur(8px);
+}
+
+.actor-annotation-note-editor[hidden] {
+    display: none;
+}
+
+.actor-annotation-note-input {
+    width: 100%;
+    min-height: 5.5rem;
+    display: block;
+    box-sizing: border-box;
+    resize: vertical;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8f9ff;
+    padding: 0.55rem 0.62rem;
+    font: 1.2rem/1.1 "VT323";
+    outline: none;
+}
+
+.actor-annotation-note-input:focus {
+    border-color: #46f0ff;
+    box-shadow: 0 0 0 2px rgba(70, 240, 255, 0.2);
+}
+
+.actor-annotation-note-editor__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    margin-top: 0.5rem;
+}
+
+.actor-annotation-note-editor__button {
+    min-height: 2rem;
+    padding: 0 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8f9ff;
+    font: 700 0.72rem/1 "Retro-gaming";
+    cursor: pointer;
+}
+
+.actor-annotation-note-editor__button:hover,
+.actor-annotation-note-editor__button:focus-visible {
+    border-color: #46f0ff;
+    background: rgba(70, 240, 255, 0.22);
+    outline: none;
+}
+
+.actor-annotation-note-editor__button--save {
+    color: #9ff8ff;
+}
+
+.actor-annotation-tool {
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8f9ff;
+    font: 700 0.95rem/1 "Retro-gaming";
+    cursor: pointer;
+}
+
+.actor-annotation-tool:hover,
+.actor-annotation-tool:focus-visible {
+    border-color: #46f0ff;
+    background: rgba(70, 240, 255, 0.22);
+    outline: none;
+}
+
+.actor-annotation-tool--underline {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.actor-annotation-underline-swatch--yellow {
+    color: #ffe95c;
+}
+
+.actor-annotation-underline-swatch--green {
+    color: #6bff83;
+}
+
+.actor-annotation-tool--clear {
+    color: #ff9ca3;
+}
+
+.actor-annotation-swatch::before {
+    content: "";
+    width: 1.12rem;
+    height: 1.12rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.52);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.38);
+}
+
+.actor-annotation-swatch {
+    position: relative;
+}
+
+.actor-annotation-swatch--text::after {
+    content: "A";
+    position: absolute;
+    margin-top: 1.25rem;
+    font-size: 0.5rem;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.actor-annotation-swatch[data-color="#f8f9ff"]::before {
+    background: #f8f9ff;
+}
+
+.actor-annotation-swatch[data-color="#46f0ff"]::before {
+    background: #46f0ff;
+}
+
+.actor-annotation-swatch[data-color="#ff6b6b"]::before {
+    background: #ff6b6b;
+}
+
+.actor-annotation-mark {
+    position: relative;
+    border-radius: 0;
+    padding: 0;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.actor-annotation-mark--underline {
+    text-decoration-line: underline;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.14em;
+    text-decoration-color: var(--annotation-underline-color, currentcolor);
+}
+
+.actor-annotation-mark--note {
+    box-shadow: inset 0 -0.09em 0 #46f0ff;
+}
+
+.actor-annotation-mark--note::after {
+    content: attr(data-annotation-index);
+    position: absolute;
+    right: -0.34em;
+    top: -0.82em;
+    z-index: 2;
+    display: inline-flex;
+    min-width: 0.95em;
+    height: 0.95em;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #46f0ff;
+    color: #03101a;
+    font-family: "Retro-gaming";
+    font-size: 0.34em;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.actor-annotation-mark--flash {
+    animation: actorAnnotationFlash 900ms ease-out 1;
+}
+
+.actor-fullscreen-toggle {
+    position: fixed;
+    top: clamp(8px, 1.4vw, 16px);
+    right: clamp(8px, 1.4vw, 16px);
+    z-index: 2147483647;
+    min-width: clamp(148px, 17vw, 230px);
+    height: clamp(34px, 4vw, 46px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 7px;
+    background: rgba(3, 8, 18, 0.82);
+    color: #f8f9ff;
+    box-shadow: 0 0 1rem rgba(70, 240, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    font: 700 clamp(0.62rem, 1vw, 0.82rem)/1 "Retro-gaming";
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    padding: 0 clamp(8px, 1vw, 13px);
+    cursor: pointer;
+    backdrop-filter: blur(7px);
+}
+
+.actor-fullscreen-toggle:hover,
+.actor-fullscreen-toggle:focus-visible {
+    border-color: #46f0ff;
+    background: rgba(70, 240, 255, 0.22);
+    outline: none;
+}
+
+.actor-fullscreen-toggle--active {
+    border-color: #ff6b6b;
+    color: #ffb0b8;
+}
+
+.actor-annotation-margin {
+    position: sticky;
+    top: clamp(0.75rem, 2vw, 1.5rem);
+    max-height: min(72vh, 620px);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.1rem;
+    font-family: "VT323";
+    font-size: clamp(1rem, 1.35vw, 1.45rem);
+}
+
+.actor-annotation-empty {
+    opacity: 0.48;
+    padding: 0.55rem 0.7rem;
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.actor-annotation-note {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.5rem;
+    padding: 0.58rem 0.62rem;
+    border-left: 3px solid #46f0ff;
+    border-radius: 6px;
+    background: rgba(2, 8, 20, 0.72);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0.4rem 1rem rgba(0, 0, 0, 0.22);
+}
+
+.actor-annotation-note__index {
+    min-width: 1.45rem;
+    height: 1.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(70, 240, 255, 0.18);
+    color: #9ff8ff;
+    font-size: 0.9em;
+}
+
+.actor-annotation-note__body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+.actor-annotation-note__body:focus-visible {
+    outline: 2px solid #46f0ff;
+    outline-offset: 3px;
+}
+
+.actor-annotation-note__excerpt {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.86em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actor-annotation-note__text {
+    color: #f8f9ff;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.actor-annotation-note__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.actor-annotation-note__action {
+    width: 1.55rem;
+    height: 1.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8f9ff;
+    font: 700 0.72rem/1 "Retro-gaming";
+    cursor: pointer;
+}
+
+.actor-annotation-note__action:hover,
+.actor-annotation-note__action:focus-visible {
+    border-color: #ff6b6b;
+    color: #ffb0b8;
+    outline: none;
+}
+
+@keyframes actorAnnotationFlash {
+    0% {
+        outline: 0.1em solid rgba(70, 240, 255, 0);
+    }
+    35% {
+        outline: 0.12em solid rgba(70, 240, 255, 0.95);
+        filter: brightness(1.35);
+    }
+    100% {
+        outline: 0.1em solid rgba(70, 240, 255, 0);
+    }
+}
+
+body.page-actors .textarea_blur,
+body.page-actors .actor-texto-borroso-activo {
+    filter: blur(clamp(5px, 0.8vw, 10px)) saturate(0.78);
+    -webkit-filter: blur(clamp(5px, 0.8vw, 10px)) saturate(0.78);
+}
+
+body.page-actors .actor-texto-inverso-activo {
+    transform: scaleX(-1);
+    text-align: right;
+}
+
+.rotate-vertical-center {
+    animation: rotate-vertical-center 2s;
+}
+
+@keyframes rotate-vertical-center {
+    0% {
+        transform: rotateY(0);
+    }
+    100% {
+        transform: rotateY(360deg);
+    }
 }
 
 p{
@@ -1323,6 +1724,17 @@ body.page-actors #definicion .palabra-tiempo--maldita {
 }
 
 @media (max-width: 900px){
+    .actor-annotation-layout {
+        grid-template-columns: minmax(0, 1fr);
+        width: min(92vw, 760px);
+    }
+
+    .actor-annotation-margin {
+        position: static;
+        max-height: 28vh;
+        font-size: clamp(1rem, 4vw, 1.3rem);
+    }
+
     .niveles{
         --nivel-size: clamp(40px, 12vw, 72px);
         --nivel-gap: clamp(6px, 2.2vw, 14px);
@@ -1331,6 +1743,17 @@ body.page-actors #definicion .palabra-tiempo--maldita {
 }
 
 @media (max-width: 640px){
+    .actor-annotation-toolbar {
+        gap: 0.22rem;
+        padding: 0.32rem;
+    }
+
+    .actor-annotation-tool {
+        width: 1.72rem;
+        height: 1.72rem;
+        font-size: 0.78rem;
+    }
+
     .niveles{
         margin: 6vw auto 4vw;
     }

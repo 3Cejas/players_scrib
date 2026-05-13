@@ -1,3 +1,20 @@
+let revision_palabra_bonus_1p = 0;
+
+function invalidarSolicitudesPalabraBonus1P() {
+    revision_palabra_bonus_1p += 1;
+    return revision_palabra_bonus_1p;
+}
+
+function obtenerRevisionPalabraBonus1P() {
+    return revision_palabra_bonus_1p;
+}
+
+function puedeAplicarPalabraBonus1P(revisionEsperada) {
+    return revisionEsperada === revision_palabra_bonus_1p
+        && modo_actual === "palabras bonus"
+        && terminado === false;
+}
+
 const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
@@ -10,7 +27,7 @@ const MODOS = {
         explicación.innerHTML = tJuego1P("mode.desc.bonus", {}, "SUMA TIEMPO CON PALABRAS BONUS");
         palabra.innerHTML = traducirTituloModo1P("palabras bonus");
         definicion.innerHTML = "";
-        recibir_palabra();
+        recibir_palabra(invalidarSolicitudesPalabraBonus1P());
         iniciarProgresoNivelBarraEscritora();
     },
 
@@ -20,12 +37,9 @@ const MODOS = {
         limpiarEstiloNivelesEscritora();
         setBarraNivelClaseEscritora("prohibida");
         aplicarEstiloNivelesEscritora("prohibida");
-        indice_letra_prohibida = Math.floor(Math.random() * letras_prohibidas_restantes.length);
-        letra_prohibida = letras_prohibidas_restantes[indice_letra_prohibida]
-        letras_prohibidas_restantes.splice(indice_letra_prohibida, 1);
-        if(letras_prohibidas_restantes.length == 0){
-            letras_prohibidas_restantes = [...letras_prohibidas];
-        }
+        const seleccion = elegir_letra_nivel_ponderada(letras_prohibidas_restantes, letras_prohibidas, "prohibida");
+        letra_prohibida = seleccion.letra;
+        letras_prohibidas_restantes = seleccion.pendientes;
 
         listener_cambio_letra_palabra = setTimeout(nueva_letra_prohibida, TIEMPO_CAMBIO_LETRA);
 
@@ -43,12 +57,9 @@ const MODOS = {
         limpiarEstiloNivelesEscritora();
         setBarraNivelClaseEscritora("bendita");
         aplicarEstiloNivelesEscritora("bendita");
-        indice_letra_bendita = Math.floor(Math.random() * letras_benditas_restantes.length);
-        letra_bendita = letras_benditas_restantes[indice_letra_bendita]
-        letras_benditas_restantes.splice(indice_letra_bendita, 1);
-        if(letras_benditas_restantes.length == 0){
-            letras_benditas_restantes = [...letras_benditas];
-        }
+        const seleccion = elegir_letra_nivel_ponderada(letras_benditas_restantes, letras_benditas_ponderadas, "bendita");
+        letra_bendita = seleccion.letra;
+        letras_benditas_restantes = seleccion.pendientes;
         listener_cambio_letra_palabra = setTimeout(nueva_letra_bendita, TIEMPO_CAMBIO_LETRA);
 
         explicación.style.color = "lime";
@@ -133,6 +144,7 @@ const LIMPIEZAS = {
 
     "palabras bonus": function (data) {
         //////socket.off(enviar_palabra);
+        invalidarSolicitudesPalabraBonus1P();
         asignada = false;
         texto.removeEventListener("keyup", listener_modo);
         definicion.style.fontSize = "1.5vw";
@@ -262,8 +274,11 @@ function nueva_letra (letra) {
     }
 };
 
-async function recibir_palabra() {
+async function recibir_palabra(revisionEsperada = obtenerRevisionPalabraBonus1P()) {
     const data = await getRandomSpanishWord();
+    if (!puedeAplicarPalabraBonus1P(revisionEsperada)) {
+        return;
+    }
     console.log(data)
     if (data) {
       console.log(`
@@ -291,7 +306,9 @@ async function recibir_palabra() {
     listener_modo = function (e) { modo_palabras_bonus(e) };
     texto.addEventListener("keyup", listener_modo);
     clearTimeout(listener_cambio_letra_palabra)
-    listener_cambio_letra_palabra = setTimeout(recibir_palabra, TIEMPO_CAMBIO_PALABRA);
+    listener_cambio_letra_palabra = setTimeout(() => {
+        recibir_palabra(invalidarSolicitudesPalabraBonus1P());
+    }, TIEMPO_CAMBIO_PALABRA);
 }
 
 function nueva_palabra_prohibida() {

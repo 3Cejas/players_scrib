@@ -627,7 +627,7 @@ const crearCorazonFlotante = (equipo, x, y) => {
     const corazon = document.createElement("span");
     const claseEquipo = equipo === 1 ? "corazon-azul" : "corazon-rojo";
     corazon.className = `corazon-flotante ${claseEquipo}`;
-    corazon.textContent = equipo === 1 ? "ðŸ’™" : "â¤ï¸";
+    corazon.textContent = equipo === 1 ? "\u{1F499}" : "\u2764\uFE0F";
     const tamano = 22 + Math.random() * 22;
     const duracion = 2000 + Math.random() * 1200;
     const desplazamiento = -(90 + Math.random() * 140);
@@ -875,6 +875,13 @@ function setPendienteAnimacionEntradaBarraVida(valor) {
     animacionEntradaVidaPendiente[2] = estado;
 }
 
+function debeAnimarEntradaBarraVida(elemento, opciones = {}) {
+    if (!elemento) return false;
+    if (opciones && opciones.animarEntrada) return true;
+    if (elemento.dataset && elemento.dataset.vidaVisible !== "1") return true;
+    return elemento.style && elemento.style.display === "none";
+}
+
 function cancelarAnimacionEntradaBarraVida(elemento) {
     if (!elemento) return;
     const frameId = animacionesEntradaBarraVida.get(elemento);
@@ -895,6 +902,7 @@ function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURAC
     if (!elemento) return;
     const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
     cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, 0);
 
     if (objetivo <= 0 || duracionMs <= 0) {
         aplicarEstadoBarraVida(elemento, objetivo);
@@ -1136,12 +1144,35 @@ function limpiarFeedbackFlotanteEspectador() {
     }
 }
 
+function normalizarFeedbacksTiempoFlotanteEspectador(payload = {}) {
+    const items = [];
+    const textoPrincipal = String(payload && payload.tiempo_feed != null ? payload.tiempo_feed : "").trim();
+    if (textoPrincipal) {
+        items.push(payload);
+    }
+    const extrasRaw = Array.isArray(payload?.feedback_extra)
+        ? payload.feedback_extra
+        : (payload?.feedback_extra ? [payload.feedback_extra] : []);
+    extrasRaw.forEach((item) => {
+        if (!item || typeof item !== "object") return;
+        const textoExtra = String(item.tiempo_feed != null ? item.tiempo_feed : "").trim();
+        if (textoExtra) {
+            items.push(item);
+        }
+    });
+    return items;
+}
+
 function mostrarFeedbackTiempoFlotanteEspectador(playerId, payload = {}) {
-    const texto = String(payload && payload.tiempo_feed != null ? payload.tiempo_feed : "").trim();
-    if (!texto) return;
-    mostrarFeedbackFlotanteEspectador(playerId, texto, {
-        tipo: obtenerClaseFeedbackTiempoFlotante(payload),
-        color: payload.color
+    const items = normalizarFeedbacksTiempoFlotanteEspectador(payload);
+    items.forEach((item) => {
+        const texto = String(item && item.tiempo_feed != null ? item.tiempo_feed : "").trim();
+        if (!texto) return;
+        mostrarFeedbackFlotanteEspectador(playerId, texto, {
+            tipo: obtenerClaseFeedbackTiempoFlotante(item),
+            color: item.color,
+            claseExtra: item.claseExtra
+        });
     });
 }
 
@@ -1149,18 +1180,20 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
-    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
         cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
+        if (elemento.dataset) elemento.dataset.vidaVisible = "0";
         return;
     }
+    const animarEntrada = debeAnimarEntradaBarraVida(elemento, opciones);
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
     elemento.style.display = DISPLAY_BARRA_VIDA;
+    if (elemento.dataset) elemento.dataset.vidaVisible = "1";
     if (animarEntrada) {
         animarEntradaBarraVida(elemento, porcentaje);
         return;
@@ -1199,6 +1232,7 @@ const spectator_fit_root = getEl("spectator_fit_root");
 const container_general = document.querySelector(".container");
 const cabecera = document.querySelector(".cabecera");
 const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
+const neon_espectador = getEl("neon");
 const MODOS_VISTA_ESPECTADOR = new Set(["partida", "calentamiento", "stats", "nube_inspiracion", "creditos"]);
 const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "stats", "nube_inspiracion", "creditos"]);
 let vista_calentamiento = false;
@@ -1215,6 +1249,28 @@ const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
 const MAX_NOMBRE_CURSOR_CALENTAMIENTO = 26;
 const ORDEN_SOLICITUD_CALENTAMIENTO_VISTA = ["lugares", "acciones", "frase_final"];
+
+function actualizarBrandingPartidaEspectador(opciones = {}) {
+    const modoPartida = vista_espectador_modo_resuelta === "partida";
+    const permitirIntro = Boolean(opciones && opciones.permitirIntro);
+    let introActiva = false;
+    try {
+        introActiva = permitirIntro && Boolean(cuenta_atras_activa);
+    } catch (_error) {
+        introActiva = false;
+    }
+    const ocultarBrandingPartida = Boolean(partida_activa_espectador && modoPartida && !introActiva);
+    if (cabecera) {
+        cabecera.style.display = modoPartida && !ocultarBrandingPartida ? (cabecera_display_inicial || "") : "none";
+    }
+    const displayBranding = ocultarBrandingPartida ? "none" : "";
+    if (logo) {
+        logo.style.display = displayBranding;
+    }
+    if (neon_espectador) {
+        neon_espectador.style.display = displayBranding;
+    }
+}
 const SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA = "ninguna";
 const SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO = SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA;
 const TIPOS_SOLICITUD_CALENTAMIENTO_VISTA = new Set([
@@ -1378,6 +1434,17 @@ const aplicarEscalaUiEspectador = () => {
 const resetAjusteViewportEspectador = () => {
     if (!spectator_fit_root) return;
     spectator_fit_root.style.removeProperty("transform");
+    spectator_fit_root.style.removeProperty("--spectator-veil-left");
+    spectator_fit_root.style.removeProperty("--spectator-veil-right");
+    spectator_fit_root.style.removeProperty("--spectator-veil-width");
+};
+
+const prepararMedicionViewportEspectador = () => {
+    if (!spectator_fit_root) return;
+    spectator_fit_root.style.transform = "none";
+    spectator_fit_root.style.setProperty("--spectator-veil-left", "0px");
+    spectator_fit_root.style.setProperty("--spectator-veil-right", "0px");
+    spectator_fit_root.style.setProperty("--spectator-veil-width", "52vw");
 };
 
 const ajustarViewportEspectador = () => {
@@ -1388,7 +1455,7 @@ const ajustarViewportEspectador = () => {
         return;
     }
 
-    spectator_fit_root.style.transform = "none";
+    prepararMedicionViewportEspectador();
     const viewportW = Math.max(window.innerWidth || 0, 1);
     const viewportH = Math.max(window.innerHeight || 0, 1);
     const anchoNatural = Math.max(Math.ceil(spectator_fit_root.scrollWidth || 0), 1);
@@ -1401,6 +1468,12 @@ const ajustarViewportEspectador = () => {
     }
 
     const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5);
+    const anchoCajaRoot = Math.max(Math.ceil(spectator_fit_root.offsetWidth || 0), 1);
+    const offsetRight = Math.max(0, viewportW - (offsetX + (anchoCajaRoot * escala)));
+    const escalaSegura = Math.max(escala, 0.0001);
+    spectator_fit_root.style.setProperty("--spectator-veil-left", `${(-offsetX / escalaSegura).toFixed(2)}px`);
+    spectator_fit_root.style.setProperty("--spectator-veil-right", `${(-offsetRight / escalaSegura).toFixed(2)}px`);
+    spectator_fit_root.style.setProperty("--spectator-veil-width", `${((viewportW * 0.52) / escalaSegura).toFixed(2)}px`);
     spectator_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, 0, 0) scale(${escala.toFixed(4)})`;
 };
 
@@ -1488,6 +1561,36 @@ const normalizarSolicitudCalentamientoVista = (valor) => {
     return TIPOS_SOLICITUD_CALENTAMIENTO_VISTA.has(tipo) ? tipo : SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO;
 };
 const normalizarPayloadCreditosEspectador = window.ScribCredits.normalizarPayload;
+const renderizarListaMusasCreditosEspectador = (musas = [], clase = "") => {
+    if (!Array.isArray(musas) || musas.length === 0) {
+        return `<p class="creditos-musas-vacio">${escapeHtml(tJuego2P("credits.muses_empty", {}, "Sin musas registradas"))}</p>`;
+    }
+    return `<ul class="creditos-musas-lista ${clase}">${musas.map((musa) => (
+        `<li>${escapeHtml(musa)}</li>`
+    )).join("")}</ul>`;
+};
+const renderizarMusasCreditosEspectador = (musas = {}) => {
+    const azules = Array.isArray(musas.azules) ? musas.azules : [];
+    const rojas = Array.isArray(musas.rojas) ? musas.rojas : [];
+    if (!azules.length && !rojas.length) {
+        return "";
+    }
+    return `
+        <div class="creditos-bloque creditos-bloque--musas">
+            <h3 class="creditos-subtitulo">${escapeHtml(tJuego2P("credits.muses_title", {}, "MUSAS"))}</h3>
+            <div class="creditos-musas-grid">
+                <section class="creditos-musas-columna creditos-musas-columna--azul">
+                    <h4>${escapeHtml(tJuego2P("credits.muses_blue", {}, "MUSAS AZULES"))}</h4>
+                    ${renderizarListaMusasCreditosEspectador(azules, "creditos-musas-lista--azul")}
+                </section>
+                <section class="creditos-musas-columna creditos-musas-columna--roja">
+                    <h4>${escapeHtml(tJuego2P("credits.muses_red", {}, "MUSAS ROJAS"))}</h4>
+                    ${renderizarListaMusasCreditosEspectador(rojas, "creditos-musas-lista--roja")}
+                </section>
+            </div>
+        </div>
+    `;
+};
 const detenerAnimacionCreditosEspectador = (reiniciar = true) => {
     if (creditos_animacion_raf) {
         cancelAnimationFrame(creditos_animacion_raf);
@@ -1517,10 +1620,12 @@ const renderizarCreditosEspectador = () => {
     const agradecimientos = data.agradecimientos
         ? escapeHtml(data.agradecimientos).replace(/\n/g, "<br>")
         : tJuego2P("credits.thanks_pending", {}, "Agradecimientos pendientes.");
+    const musas = renderizarMusasCreditosEspectador(data.musas);
     creditos_content.innerHTML = `
         <div class="creditos-bloque">
             <div class="creditos-lineas">${lineas}</div>
         </div>
+        ${musas}
         <div class="creditos-bloque creditos-bloque--agradecimientos">
             <h3 class="creditos-subtitulo">${tJuego2P("credits.thanks_title", {}, "AGRADECIMIENTOS:")}</h3>
             <p class="creditos-agradecimientos">${agradecimientos}</p>
@@ -2301,18 +2406,71 @@ const normalizarStatsLiveEspectador = (payload = {}) => {
         }
     };
 };
+const normalizarSuperbonusInspiracionEspectador = (payload = {}) => {
+    const meta = payload && typeof payload === "object" ? payload.superbonus : null;
+    if (!meta || typeof meta !== "object" || meta.activo !== true) {
+        return { activo: false, repeticiones: 1, musas: [] };
+    }
+    const repeticiones = Math.max(2, Math.trunc(Number(meta.repeticiones) || 2));
+    const musas = Array.isArray(meta.musas)
+        ? meta.musas
+            .map((musa) => String(musa || "").trim())
+            .filter(Boolean)
+            .slice(0, 6)
+        : [];
+    return { activo: true, repeticiones, musas };
+};
+const normalizarInfoPalabraNubeEspectador = (valor) => {
+    if (typeof valor === "string") {
+        const palabra = valor.trim().slice(0, 32);
+        return palabra ? { palabra, repeticiones: 1, superbonus: false, musas: [] } : null;
+    }
+    if (!valor || typeof valor !== "object") return null;
+    const palabra = String(valor.palabra ?? valor.word ?? valor.texto ?? "").trim().slice(0, 32);
+    if (!palabra) return null;
+    const repeticiones = Math.max(1, Math.trunc(Number(valor.repeticiones) || 1));
+    const musas = Array.isArray(valor.musas)
+        ? valor.musas
+            .map((musa) => String(musa || "").trim().slice(0, 24))
+            .filter(Boolean)
+            .slice(0, 6)
+        : [];
+    return {
+        palabra,
+        repeticiones,
+        superbonus: Boolean(valor.superbonus === true && repeticiones >= 2),
+        musas
+    };
+};
+const aplicarSuperbonusDefinicionEspectador = (nodo, payload = {}) => {
+    if (!nodo || !nodo.classList) return { activo: false, repeticiones: 1, musas: [] };
+    const superbonus = normalizarSuperbonusInspiracionEspectador(payload);
+    nodo.classList.toggle("definicion-superbonus", superbonus.activo);
+    if (nodo.dataset) {
+        if (superbonus.activo) {
+            nodo.dataset.superbonus = "true";
+            nodo.dataset.superbonusRepeticiones = String(superbonus.repeticiones);
+        } else {
+            delete nodo.dataset.superbonus;
+            delete nodo.dataset.superbonusRepeticiones;
+        }
+    }
+    return superbonus;
+};
 const normalizarNubeInspiracionEspectador = (payload = {}) => {
     const data = payload && typeof payload === "object" ? payload : {};
     const equipos = data.equipos && typeof data.equipos === "object" ? data.equipos : {};
     const normalizarEquipo = (entrada, fallbackNombre) => {
         const equipoData = entrada && typeof entrada === "object" ? entrada : {};
         const nombre = String(equipoData.nombre ?? "").trim().slice(0, 28) || fallbackNombre;
-        const palabras = Array.isArray(equipoData.palabras)
-            ? equipoData.palabras
-                .map((valor) => String(valor ?? "").trim().slice(0, 32))
-                .filter(Boolean)
-            : [];
-        return { nombre, palabras };
+        const palabrasInfoBase = Array.isArray(equipoData.palabras_info)
+            ? equipoData.palabras_info
+            : (Array.isArray(equipoData.palabras) ? equipoData.palabras : []);
+        const palabras_info = palabrasInfoBase
+            .map(normalizarInfoPalabraNubeEspectador)
+            .filter(Boolean);
+        const palabras = palabras_info.map((item) => item.palabra);
+        return { nombre, palabras, palabras_info };
     };
     return {
         ts: Number.isFinite(Number(data.ts)) ? Number(data.ts) : Date.now(),
@@ -2963,8 +3121,26 @@ const crearRegistroPalabraNube = (equipo, palabra, ahora = Date.now()) => ({
     entregadaTs: 0,
     expiraTs: 0,
     usadaTs: 0,
-    expirandoTs: 0
+    expirandoTs: 0,
+    superbonus: false,
+    repeticiones: 1,
+    musas: []
 });
+const actualizarMetadataPalabraNube = (registro, metadata = {}) => {
+    if (!registro) return;
+    const info = normalizarInfoPalabraNubeEspectador(metadata);
+    const superbonus = normalizarSuperbonusInspiracionEspectador(metadata);
+    if (superbonus.activo) {
+        registro.superbonus = true;
+        registro.repeticiones = superbonus.repeticiones;
+        registro.musas = superbonus.musas;
+        return;
+    }
+    if (!info) return;
+    registro.superbonus = Boolean(info.superbonus);
+    registro.repeticiones = Math.max(1, Number(info.repeticiones) || 1);
+    registro.musas = Array.isArray(info.musas) ? info.musas : [];
+};
 const obtenerPosicionNube = (equipo, clave, indice, ocupadas) => {
     const previa = posiciones_nube_inspiracion.get(clave);
     if (previa) {
@@ -3005,7 +3181,7 @@ const obtenerPosicionNube = (equipo, clave, indice, ocupadas) => {
     ocupadas.push(fallback);
     return fallback;
 };
-const garantizarPalabraNube = (equipo, palabra, ahora = Date.now()) => {
+const garantizarPalabraNube = (equipo, palabra, ahora = Date.now(), metadata = {}) => {
     const limpia = String(palabra || "").trim();
     if (!limpia) return "";
     const clave = clavePalabraNube(equipo, limpia);
@@ -3015,6 +3191,7 @@ const garantizarPalabraNube = (equipo, palabra, ahora = Date.now()) => {
     if (!palabras_nube_inspiracion.has(clave)) {
         palabras_nube_inspiracion.set(clave, crearRegistroPalabraNube(equipo, limpia, ahora));
     }
+    actualizarMetadataPalabraNube(palabras_nube_inspiracion.get(clave), metadata);
     return clave;
 };
 const sincronizarNubeDesdeSnapshot = (estado = {}) => {
@@ -3022,17 +3199,21 @@ const sincronizarNubeDesdeSnapshot = (estado = {}) => {
     const ahora = Date.now();
     const presentes = new Set();
     [1, 2].forEach((equipo) => {
-        const palabras = Array.isArray(equipos[equipo] && equipos[equipo].palabras)
-            ? equipos[equipo].palabras
-            : [];
-        palabras.forEach((palabra) => {
-            const limpia = String(palabra || "").trim();
+        const equipoData = equipos[equipo] && typeof equipos[equipo] === "object" ? equipos[equipo] : {};
+        const base = Array.isArray(equipoData.palabras_info)
+            ? equipoData.palabras_info
+            : (Array.isArray(equipoData.palabras) ? equipoData.palabras : []);
+        base.forEach((entrada) => {
+            const info = normalizarInfoPalabraNubeEspectador(entrada);
+            if (!info) return;
+            const limpia = String(info.palabra || "").trim();
             if (!limpia) return;
             const clave = clavePalabraNube(equipo, limpia);
             presentes.add(clave);
             if (!palabras_nube_inspiracion.has(clave) && !palabras_bloqueadas_nube.has(clave)) {
                 palabras_nube_inspiracion.set(clave, crearRegistroPalabraNube(equipo, limpia, ahora));
             }
+            actualizarMetadataPalabraNube(palabras_nube_inspiracion.get(clave), info);
         });
     });
     // Si una palabra ya no viene en snapshot y no fue entregada/usada, se retira.
@@ -3051,8 +3232,8 @@ const sincronizarNubeDesdeSnapshot = (estado = {}) => {
         }
     });
 };
-const marcarPalabraInspirandoNube = (equipo, palabra) => {
-    const clave = garantizarPalabraNube(equipo, palabra);
+const marcarPalabraInspirandoNube = (equipo, palabra, metadata = {}) => {
+    const clave = garantizarPalabraNube(equipo, palabra, Date.now(), metadata);
     if (!clave) return;
     const ahora = Date.now();
     clave_activa_nube_por_equipo[equipo] = clave;
@@ -3162,10 +3343,19 @@ const renderizarNubeInspiracion = () => {
         const estaActiva = clave_activa_nube_por_equipo[registro.equipo] === clave && !registro.usadaTs && !registro.expirandoTs;
         const estaUsada = Boolean(registro.usadaTs);
         const estaExpirando = Boolean(registro.expirandoTs);
+        const esSuperbonus = Boolean(registro.superbonus && Number(registro.repeticiones) >= 2);
 
         const nodo = document.createElement("span");
-        nodo.className = `nube-inspiracion-palabra equipo-${registro.equipo}${estaActiva ? " is-active" : ""}${estaUsada ? " is-used" : ""}${estaExpirando ? " is-expiring" : ""}`;
+        nodo.className = `nube-inspiracion-palabra equipo-${registro.equipo}${estaActiva ? " is-active" : ""}${estaUsada ? " is-used" : ""}${estaExpirando ? " is-expiring" : ""}${esSuperbonus ? " is-superbonus" : ""}`;
         nodo.textContent = registro.palabra;
+        if (esSuperbonus) {
+            nodo.dataset.superbonus = "true";
+            nodo.dataset.repeticiones = String(registro.repeticiones);
+            const badge = document.createElement("span");
+            badge.className = "nube-inspiracion-superbonus";
+            badge.textContent = `x${registro.repeticiones}`;
+            nodo.appendChild(badge);
+        }
         nodo.style.left = `${pos.x.toFixed(2)}%`;
         nodo.style.top = `${pos.y.toFixed(2)}%`;
         nodo.style.setProperty("--nube-scale", pos.scale.toFixed(2));
@@ -3212,9 +3402,7 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     if (creditos_espectador) {
         creditos_espectador.style.display = modo === "creditos" ? "flex" : "none";
     }
-    if (cabecera) {
-        cabecera.style.display = modo === "partida" ? (cabecera_display_inicial || "") : "none";
-    }
+    actualizarBrandingPartidaEspectador({ permitirIntro: true });
     if (modo === "stats") {
         limpiarFeedbackFlotanteEspectador();
         stopConfetti();
@@ -3669,6 +3857,7 @@ let modo_actual = "";
 let modo_seq_actual_espectador = 0;
 let ultimo_count_seq_espectador = { 1: 0, 2: 0 };
 let tiempo_seq_actual_espectador = { 1: 0, 2: 0 };
+let tempo_rayo_espectador = null;
 let tempo_text_inverso1;
 let tempo_text_inverso2;
 let tempo_text_borroso1;
@@ -3689,10 +3878,12 @@ let modo_pendiente = null;
 
 function invalidarContextoTransitorioEspectador() {
     revision_contexto_transitorio_espectador += 1;
+    clearTimeout(tempo_rayo_espectador);
     clearTimeout(tempo_text_inverso1);
     clearTimeout(tempo_text_inverso2);
     clearTimeout(tempo_text_borroso1);
     clearTimeout(tempo_text_borroso2);
+    tempo_rayo_espectador = null;
     tempo_text_inverso1 = null;
     tempo_text_inverso2 = null;
     tempo_text_borroso1 = null;
@@ -3704,6 +3895,7 @@ function invalidarContextoTransitorioEspectador() {
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
+    lightning.style.removeProperty("animation-duration");
     if (texto1) {
         texto1.classList.remove("rotate-vertical-center", "textarea_blur");
     }
@@ -3743,6 +3935,7 @@ function invalidarCountdownInicioEspectador(opciones = {}) {
     clearTimeout(timeout_remover_countdown_espectador);
     clearTimeout(timeout_fallback_countdown_espectador);
     clearTimeout(timeout_inicio_modo);
+    clearTimeout(timer);
     clearInterval(timer);
     listener_cuenta_atras = null;
     timeout_countdown = null;
@@ -4144,9 +4337,44 @@ function iniciarProgresoNivelBarra() {
     intervalo_progreso_nivel = setInterval(tickProgresoNivelBarra, 120);
 }
 
-function formatoLetraNivel(letra) {
+function sincronizarProgresoNivelBarraDesdeSegundos(payload = {}) {
+    if (!modo_actual || modo_actual === "frase final") return false;
+    const data = (payload && typeof payload === "object") ? payload : {};
+    const modoEvento = typeof data.modo_actual === "string" ? data.modo_actual : "";
+    if (modoEvento && modoEvento !== modo_actual) return false;
+    const segundos = Number(data.segundos_transcurridos);
+    if (!Number.isFinite(segundos) || segundos < 0) return false;
+
+    const ms = Math.max(0, Math.min(DURACION_NIVEL_MS, Math.round(segundos * 1000)));
+    inicio_nivel_ts = Date.now() - ms;
+    const pct = DURACION_NIVEL_MS > 0 ? (ms / DURACION_NIVEL_MS) * 100 : 0;
+    setProgresoNivelBarra(pct);
+
+    if (pct >= 100) {
+        detenerProgresoNivelBarra(false);
+    } else if (!intervalo_progreso_nivel) {
+        intervalo_progreso_nivel = setInterval(tickProgresoNivelBarra, 120);
+    }
+    return true;
+}
+
+function normalizarLetraNivel(letra) {
+    if (window && typeof window.scribNormalizeModeLetter2P === "function") {
+        return window.scribNormalizeModeLetter2P(letra);
+    }
     const valor = String(letra || "").trim();
-    return valor ? valor.toUpperCase() : "-";
+    if (!valor) return "";
+    const compacto = valor.replace(/\s+/g, "");
+    if (/[\u00b1\u2018\u2019\u0091]/u.test(compacto) && /[\u00c3\u00e3\u00c2\u0192]/u.test(compacto)) {
+        return "\u00f1";
+    }
+    const letraValida = Array.from(compacto).find((char) => /[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]/u.test(char));
+    return letraValida || Array.from(compacto)[0] || "";
+}
+
+function formatoLetraNivel(letra) {
+    const valor = normalizarLetraNivel(letra);
+    return valor ? valor.toLocaleUpperCase("es-ES") : "-";
 }
 
 function escaparHTML(texto) {
@@ -4382,6 +4610,11 @@ function limpiarEstiloPalabrasModoLetrasEspectador() {
     [definicion2, definicion3].forEach((nodo) => {
         if (!nodo || !nodo.classList) return;
         CLASES_ESTILO_DEFINICION_LETRA.forEach((clase) => nodo.classList.remove(clase));
+        nodo.classList.remove("definicion-superbonus");
+        if (nodo.dataset) {
+            delete nodo.dataset.superbonus;
+            delete nodo.dataset.superbonusRepeticiones;
+        }
         limpiarPropiedadesInlineModoLetras(nodo, PROPIEDADES_INLINE_DEFINICION_LETRAS);
         nodo.style.removeProperty("background-color");
         nodo.style.removeProperty("color");
@@ -4510,12 +4743,10 @@ function construirTextoPalabraEvento(data = {}) {
     }
     if (!palabra) return "";
     const palabraSegura = escaparHTML(palabra);
-    const tiempoRaw = data.tiempo_palabras_bonus;
-    const hayTiempo = !(tiempoRaw === null || typeof tiempoRaw === "undefined" || String(tiempoRaw).trim() === "");
-    if (!hayTiempo) return palabraSegura;
-    const tiempoLimpio = String(tiempoRaw).trim().replace(/^[+-]\s*/, "");
-    const signo = (modo_actual == "palabras prohibidas") ? "-" : "+";
-    const tiempoTexto = `${signo}${tiempoLimpio} segs.`;
+    const tiempoTexto = window.ScribInspiration && typeof window.ScribInspiration.formatearTiempoPalabraAsignada === "function"
+        ? window.ScribInspiration.formatearTiempoPalabraAsignada(data, { modo: modo_actual })
+        : "";
+    if (!tiempoTexto) return palabraSegura;
     const claseTiempo = obtenerClaseTiempoPalabraSegunModo();
     if (!claseTiempo) {
         return `${palabraSegura} ${escaparHTML(tiempoTexto)}`;
@@ -4579,6 +4810,26 @@ function detenerSonidoRayo() {
     }
 }
 
+function limpiarTimeoutRayoEspectador() {
+    if (tempo_rayo_espectador) {
+        clearTimeout(tempo_rayo_espectador);
+        tempo_rayo_espectador = null;
+    }
+}
+
+function ocultarRayoEspectador() {
+    limpiarTimeoutRayoEspectador();
+    detenerSonidoRayo();
+    if (document.body && document.body.classList) {
+        document.body.classList.remove("bg");
+        document.body.classList.remove("rain");
+    }
+    if (lightning && lightning.classList) {
+        lightning.classList.remove("lightning");
+        lightning.style.removeProperty("animation-duration");
+    }
+}
+
 function detenerAudioInverso() {
     if (audio_inverso) {
         audio_inverso.pause();
@@ -4625,8 +4876,18 @@ const CLASES_VISUALES_PUTADA_ESPECTADOR = [
     "putada-visual--pluma"
 ];
 const temporizadores_visual_putada_espectador = { 1: null, 2: null };
+const estado_visual_putada_espectador = { 1: null, 2: null };
 
-function obtenerDuracionModificadorEspectador() {
+function obtenerDuracionModificadorEspectador(opciones = {}) {
+    const duracionOverride = Number(
+        opciones.duracionMs
+        ?? opciones.duracion_ms
+        ?? opciones.tiempo_restante_ms
+        ?? opciones.restante_ms
+    );
+    if (Number.isFinite(duracionOverride) && duracionOverride > 0) {
+        return Math.round(duracionOverride);
+    }
     const duracion = Number(TIEMPO_MODIFICADOR);
     if (Number.isFinite(duracion) && duracion > 0) {
         return Math.round(duracion);
@@ -4668,10 +4929,17 @@ function obtenerEtiquetaVisualPutadaEspectador(putada) {
     return window.ScribDisadvantages.etiqueta(normalizarPutada(putada));
 }
 
-function limpiarVisualPutadaEspectador(player) {
+function limpiarVisualPutadaEspectador(player, opciones = {}) {
     const id = Number(player) === 2 ? 2 : 1;
+    if (opciones.limpiarEfecto === true) {
+        const activa = estado_visual_putada_espectador[id];
+        if (activa && activa.putada) {
+            limpiarTemporizadoresEfectoPutadaEspectador(id, activa.putada);
+        }
+    }
     clearTimeout(temporizadores_visual_putada_espectador[id]);
     temporizadores_visual_putada_espectador[id] = null;
+    estado_visual_putada_espectador[id] = null;
     const raiz = obtenerRaizVisualPutadaEspectador(id);
     if (!raiz) {
         return;
@@ -4681,80 +4949,148 @@ function limpiarVisualPutadaEspectador(player) {
 }
 
 function limpiarVisualPutadasEspectador() {
-    limpiarVisualPutadaEspectador(1);
-    limpiarVisualPutadaEspectador(2);
+    limpiarVisualPutadaEspectador(1, { limpiarEfecto: true });
+    limpiarVisualPutadaEspectador(2, { limpiarEfecto: true });
 }
 
-function activarVisualPutadaEspectador(player, putada) {
+function activarVisualPutadaEspectador(player, putada, opciones = {}) {
     const id = Number(player) === 2 ? 2 : 1;
     const clave = normalizarPutada(putada);
     const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
     const clase = obtenerClaseVisualPutadaEspectador(clave);
     const etiqueta = obtenerEtiquetaVisualPutadaEspectador(clave);
     const raiz = obtenerRaizVisualPutadaEspectador(id);
+    const activaAnterior = estado_visual_putada_espectador[id];
+    if (activaAnterior && activaAnterior.putada) {
+        limpiarTemporizadoresEfectoPutadaEspectador(id, activaAnterior.putada);
+    }
     limpiarVisualPutadaEspectador(id);
     if (!raiz || !clase || !etiqueta) {
         return false;
     }
+    const duracion = obtenerDuracionModificadorEspectador(opciones);
     raiz.dataset.putadaVisual = etiqueta;
     raiz.classList.add("putada-visual-activa", clase);
+    estado_visual_putada_espectador[id] = {
+        player: id,
+        putada: clave,
+        duracionMs: duracion,
+        restanteMs: duracion,
+        inicioTs: Date.now(),
+        pausada: false,
+        revision: revisionContexto
+    };
     temporizadores_visual_putada_espectador[id] = setTimeout(() => {
         if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
             return;
         }
         limpiarVisualPutadaEspectador(id);
-    }, obtenerDuracionModificadorEspectador());
+    }, duracion);
     return true;
 }
 
-const desventajaRayoEspectador = function (player) {
+function limpiarTemporizadoresEfectoPutadaEspectador(player, putada) {
+    const id = Number(player) === 2 ? 2 : 1;
+    const clave = normalizarPutada(putada);
+    clearTimeout(temporizadores_visual_putada_espectador[id]);
+    temporizadores_visual_putada_espectador[id] = null;
+    if (clave === PUTADA_BORROSO) {
+        if (id === 1) {
+            clearTimeout(tempo_text_borroso1);
+            tempo_text_borroso1 = null;
+        } else {
+            clearTimeout(tempo_text_borroso2);
+            tempo_text_borroso2 = null;
+        }
+        detenerAudioBorroso();
+    } else if (clave === PUTADA_INVERSO) {
+        if (id === 1) {
+            clearTimeout(tempo_text_inverso1);
+            tempo_text_inverso1 = null;
+        } else {
+            clearTimeout(tempo_text_inverso2);
+            tempo_text_inverso2 = null;
+        }
+        detenerAudioInverso();
+    } else if (clave === PUTADA_RAYO) {
+        ocultarRayoEspectador();
+    }
+}
+
+function pausarDesventajasVisualesEspectador() {
+    [1, 2].forEach((id) => {
+        const activa = estado_visual_putada_espectador[id];
+        if (!activa || activa.pausada) return;
+        const transcurrido = Math.max(0, Date.now() - activa.inicioTs);
+        activa.restanteMs = Math.max(0, activa.restanteMs - transcurrido);
+        activa.pausada = true;
+        limpiarTemporizadoresEfectoPutadaEspectador(id, activa.putada);
+    });
+}
+
+function reanudarDesventajasVisualesEspectador() {
+    [1, 2].forEach((id) => {
+        const activa = estado_visual_putada_espectador[id];
+        if (!activa || !activa.pausada) return;
+        const restanteMs = Math.max(0, Math.round(Number(activa.restanteMs) || 0));
+        const putada = activa.putada;
+        aplicarPutadaEnEspectador(putada, id, {
+            duracionMs: restanteMs,
+            mostrarFeedback: false,
+            mostrarVentajaRival: false
+        });
+    });
+}
+
+const desventajaRayoEspectador = function (player, opciones = {}) {
+    limpiarTimeoutRayoEspectador();
     detenerSonidoRayo();
     const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
+    const duracion = obtenerDuracionModificadorEspectador(opciones);
     if (player == 1) {
         document.body.classList.add("bg");
         document.body.classList.add("rain");
         lightning.classList.add("lightning");
+        lightning.style.animationDuration = "1.15s";
         lightning.style.right = "45%";
         lightning.style.left = "0%";
         reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
         intervaloSonidoRayo = setInterval(() => {
             reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
         }, 4000);
-        setTimeout(function () {
+        tempo_rayo_espectador = setTimeout(function () {
+            tempo_rayo_espectador = null;
             if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
                 return;
             }
-            detenerSonidoRayo();
-            document.body.classList.remove("bg");
-            document.body.classList.remove("rain");
-            lightning.classList.remove("lightning");
-        }, TIEMPO_MODIFICADOR);
+            ocultarRayoEspectador();
+        }, duracion);
     } else if (player == 2) {
         document.body.classList.add("bg");
         document.body.classList.add("rain");
         lightning.classList.add("lightning");
+        lightning.style.animationDuration = "1.15s";
         lightning.style.right = "0%";
         lightning.style.left = "45%";
         reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
         intervaloSonidoRayo = setInterval(() => {
             reproducirSonido("../../game/audio/FX/6. TRUENO 1.mp3");
         }, 4000);
-        setTimeout(function () {
+        tempo_rayo_espectador = setTimeout(function () {
+            tempo_rayo_espectador = null;
             if (!esRevisionContextoTransitorioEspectadorActiva(revisionContexto)) {
                 return;
             }
-            detenerSonidoRayo();
-            document.body.classList.remove("bg");
-            document.body.classList.remove("rain");
-            lightning.classList.remove("lightning");
-        }, TIEMPO_MODIFICADOR);
+            ocultarRayoEspectador();
+        }, duracion);
     }
 };
 
-const desventajaInversoEspectador = function (player) {
+const desventajaInversoEspectador = function (player, opciones = {}) {
     detenerAudioInverso();
     audio_inverso = reproducirSonido("../../game/audio/FX/8. INVERSO LOOP.mp3", true);
     const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
+    const duracion = obtenerDuracionModificadorEspectador(opciones);
     if (player == 1) {
         texto1.classList.add("rotate-vertical-center");
         texto1.addEventListener("animationend", function () {
@@ -4771,7 +5107,7 @@ const desventajaInversoEspectador = function (player) {
                 texto1.classList.remove("rotate-vertical-center");
                 texto1.removeEventListener("animationend", arguments.callee);
             });
-        }, TIEMPO_MODIFICADOR);
+        }, duracion);
     } else if (player == 2) {
         texto2.classList.add("rotate-vertical-center");
         texto2.addEventListener("animationend", function () {
@@ -4788,14 +5124,15 @@ const desventajaInversoEspectador = function (player) {
                 texto2.classList.remove("rotate-vertical-center");
                 texto2.removeEventListener("animationend", arguments.callee);
             });
-        }, TIEMPO_MODIFICADOR);
+        }, duracion);
     }
 };
 
-const desventajaBorrosoEspectador = function (player) {
+const desventajaBorrosoEspectador = function (player, opciones = {}) {
     detenerAudioBorroso();
     audio_borroso = reproducirSonido("../../game/audio/FX/7. REMOLINO PARA LOOP.mp3", true);
     const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
+    const duracion = obtenerDuracionModificadorEspectador(opciones);
     modo_texto_borroso1 = true;
     tiempo_inicial = new Date();
     if (player == 1) {
@@ -4807,7 +5144,7 @@ const desventajaBorrosoEspectador = function (player) {
             detenerAudioBorroso();
             temp_text_borroso_activado1 = true;
             texto1.classList.remove("textarea_blur");
-        }, TIEMPO_MODIFICADOR);
+        }, duracion);
     } else if (player == 2) {
         modo_texto_borroso2 = true;
         texto2.classList.add("textarea_blur");
@@ -4818,7 +5155,7 @@ const desventajaBorrosoEspectador = function (player) {
             detenerAudioBorroso();
             temp_text_borroso_activado2 = true;
             texto2.classList.remove("textarea_blur");
-        }, TIEMPO_MODIFICADOR);
+        }, duracion);
     }
 };
 
@@ -4878,12 +5215,12 @@ function normalizarPutada(putada) {
     return mapa[valor] || mapa[sinVs16] || mapaTexto[valorTexto] || valor;
 }
 
-function aplicarPutadaEnEspectador(putada, player) {
+function aplicarPutadaEnEspectador(putada, player, opciones = {}) {
     const clave = normalizarPutada(putada);
-    activarVisualPutadaEspectador(player, clave);
+    activarVisualPutadaEspectador(player, clave, opciones);
     const handler = PUTADAS[clave];
     if (typeof handler === "function") {
-        handler(player);
+        handler(player, opciones);
         return true;
     }
     console.warn("[Espectador] Desventaja desconocida:", putada, "->", clave);

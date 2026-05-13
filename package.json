@@ -8,6 +8,7 @@
     "test:e2e": "node e2e/runner/index.js",
     "test:e2e:headed": "node e2e/runner/index.js --headed",
     "test:e2e:1p": "node e2e/runner/index.js --suite 1p --server-source local",
+    "test:e2e:1p:smoke": "node e2e/runner/index.js --suite 1p",
     "test:e2e:smoke": "node e2e/runner/index.js --suite smoke",
     "test:e2e:server-local": "node e2e/runner/index.js --server-source local",
     "test:e2e:chaos": "node e2e/runner/index.js --suite chaos --server-source local",

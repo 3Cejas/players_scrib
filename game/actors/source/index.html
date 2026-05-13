@@ -3,22 +3,24 @@
 <head>
     <link  rel="icon"   href="../../../img/logo.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCRB - Intérpretes 🎭RB</title>
+    <title>SCRB - Intérpretes 🎭</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260302a7">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260505f">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="../../config.js"></script>
     <script src="../../js/runtime.js?v=20260424a"></script>
-    <script src="../../js/domains/inspiration.js?v=20260424a"></script>
+    <script src="../../js/domains/inspiration.js?v=20260504e"></script>
     <script src="../../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../../js/domains/teleprompter.js?v=20260424a"></script>
     <script src="../../js/domains/resurrection.js?v=20260424a"></script>
-    <script src="./js/actions.js?v=20260430a"></script>
+    <script src="./js/actions.js?v=20260505c"></script>
+    <script src="./js/annotations.js?v=20260505c"></script>
 </head>
 <body class="page-actors">
+        <button id="actor_fullscreen_toggle" class="actor-fullscreen-toggle" type="button" data-actor-annotation-ui aria-label="Activar pantalla completa" title="Pantalla completa">&#x1F5A5;&#xFE0F; Pantalla completa</button>
         <div id="contenedor" class="contenedor">
             <div class="container"></div>
             <p><span id="temas" class="temas"></span></p>
@@ -27,9 +29,31 @@
                 <input disabled id="nombre" class="nombre"></input>
                 <br><br>
                 <p id="alineador1"></p>
-                <div contenteditable="false" class="textarea" id="texto"
-                spellcheck="false">
-            </div>
+                <div class="actor-annotation-layout">
+                    <div class="actor-text-shell">
+                        <div contenteditable="false" class="textarea" id="texto"
+                        spellcheck="false">
+                    </div>
+                    </div>
+                    <aside id="actor_annotation_margin" class="actor-annotation-margin" data-actor-annotation-ui aria-label="Anotaciones locales del interprete"></aside>
+                </div>
+                <div id="actor_annotation_toolbar" class="actor-annotation-toolbar" data-actor-annotation-ui role="toolbar" aria-label="Herramientas de anotacion del interprete" hidden>
+                    <button type="button" class="actor-annotation-tool actor-annotation-tool--underline" data-annotation-action="underline" aria-label="Subrayar texto">U</button>
+                    <button type="button" class="actor-annotation-tool actor-annotation-tool--underline actor-annotation-underline-swatch actor-annotation-underline-swatch--yellow" data-annotation-action="underline" data-underline-color="#ffe95c" aria-label="Subrayar en amarillo">U</button>
+                    <button type="button" class="actor-annotation-tool actor-annotation-tool--underline actor-annotation-underline-swatch actor-annotation-underline-swatch--green" data-annotation-action="underline" data-underline-color="#6bff83" aria-label="Subrayar en verde">U</button>
+                    <button type="button" class="actor-annotation-tool actor-annotation-swatch actor-annotation-swatch--text" data-annotation-action="color" data-color="#f8f9ff" aria-label="Texto blanco"></button>
+                    <button type="button" class="actor-annotation-tool actor-annotation-swatch actor-annotation-swatch--text" data-annotation-action="color" data-color="#46f0ff" aria-label="Texto azul"></button>
+                    <button type="button" class="actor-annotation-tool actor-annotation-swatch actor-annotation-swatch--text" data-annotation-action="color" data-color="#ff6b6b" aria-label="Texto rojo"></button>
+                    <button type="button" class="actor-annotation-tool" data-annotation-action="note" aria-label="Anotar en margen">N</button>
+                    <button type="button" class="actor-annotation-tool actor-annotation-tool--clear" data-annotation-action="clear" aria-label="Quitar marcas">x</button>
+                </div>
+                <div id="actor_annotation_note_editor" class="actor-annotation-note-editor" data-actor-annotation-ui hidden>
+                    <textarea id="actor_annotation_note_input" class="actor-annotation-note-input" rows="3" maxlength="280" placeholder="Nota"></textarea>
+                    <div class="actor-annotation-note-editor__actions">
+                        <button type="button" id="actor_annotation_note_save" class="actor-annotation-note-editor__button actor-annotation-note-editor__button--save">Guardar</button>
+                        <button type="button" id="actor_annotation_note_cancel" class="actor-annotation-note-editor__button">Cancelar</button>
+                    </div>
+                </div>
                 <br><br>
                 <div class="tiempo-contenedor">
                     <p id="tiempo" class="tiempo tiempo-vida"></p>
@@ -107,6 +131,6 @@
         </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-<script src="../../js/i18n.js?v=20260312b"></script>
-<script src="./js/socket-events.js?v=20260430a"></script>
+    <script src="../../js/i18n.js?v=20260505g"></script>
+<script src="./js/socket-events.js?v=20260505c"></script>
 </html>

@@ -11,19 +11,16 @@
         window.resetTeleprompterSyncControl2P();
     }
     setEstadoServidor(true);
+    if (typeof registrarLogControl === "function") {
+        registrarLogControl("info", ["Control conectado al servidor"]);
+    }
     socket.emit('registrar_control');
     iniciarStatusPing();
-    forzar_solicitud_calentamiento_default_pendiente = true;
-    if (typeof actualizarSolicitudCalentamientoControl === "function") {
-        actualizarSolicitudCalentamientoControl({ tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO });
-    }
-    if (typeof actualizarModoVistaEspectadorControl === "function") {
-        actualizarModoVistaEspectadorControl({ modo: "partida" });
-    }
-    socket.emit('envÃ­o_nombre1', val_nombre1);
-    socket.emit('envÃ­o_nombre2', val_nombre2);
+    socket.emit('pedir_estado_control');
+    socket.emit('pedir_estado_palabras_musas_control');
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_vista_espectador_modo');
+    socket.emit('pedir_calentamiento_estado');
     socket.emit('pedir_creditos_estado');
     socket.emit('pedir_teleprompter_estado');
     socket.emit('pedir_idioma_actual');
@@ -35,6 +32,14 @@ socket.on('disconnect', () => {
     }
     setEstadoServidor(false);
     setEstadoPlayers(false, false);
+    if (typeof setEstadoRolRemoto === "function") {
+        setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, false, "espectador");
+        setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, false, "actorxs1");
+        setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, false, "actorxs2");
+    }
+    if (typeof registrarLogControl === "function") {
+        registrarLogControl("warn", ["Control desconectado del servidor"]);
+    }
     detenerStatusPing();
     detenerStatsLiveControl();
 });
@@ -44,6 +49,15 @@ socket.on('connect_error', () => {
         window.resetTeleprompterSyncControl2P();
     }
     setEstadoServidor(false);
+    setEstadoPlayers(false, false);
+    if (typeof setEstadoRolRemoto === "function") {
+        setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, false, "espectador");
+        setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, false, "actorxs1");
+        setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, false, "actorxs2");
+    }
+    if (typeof registrarLogControl === "function") {
+        registrarLogControl("error", ["Error de conexion con el servidor"]);
+    }
 });
 
 socket.on('health_pong', (estado) => {
@@ -51,42 +65,50 @@ socket.on('health_pong', (estado) => {
 });
 socket.on('calentamiento_vista', (data) => {
     vista_calentamiento = Boolean(data && data.activo);
-    forzar_solicitud_calentamiento_default_pendiente = true;
     if (typeof actualizarBotonVistaCalentamiento === "function") {
         actualizarBotonVistaCalentamiento();
     }
 });
 
 socket.on('calentamiento_estado_espectador', (data) => {
-    if (forzar_solicitud_calentamiento_default_pendiente) {
-        const vistaActiva = (data && typeof data.vista === "boolean")
-            ? Boolean(data.vista)
-            : vista_calentamiento;
-        const solicitudServidor = (data && typeof data.solicitud === "string")
-            ? data.solicitud.trim().toLowerCase()
-            : "";
-        if (
-            !vistaActiva &&
-            solicitudServidor &&
-            typeof pedir_solicitud_calentamiento === "function" &&
-            typeof SOLICITUD_CALENTAMIENTO_POR_DEFECTO === "string" &&
-            solicitudServidor !== SOLICITUD_CALENTAMIENTO_POR_DEFECTO
-        ) {
-            pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
-            if (typeof actualizarSolicitudCalentamientoControl === "function") {
-                actualizarSolicitudCalentamientoControl({
-                    ...(data || {}),
-                    solicitud: SOLICITUD_CALENTAMIENTO_POR_DEFECTO,
-                    tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO
-                });
-            }
-            forzar_solicitud_calentamiento_default_pendiente = false;
-            return;
-        }
-        forzar_solicitud_calentamiento_default_pendiente = false;
-    }
     if (typeof actualizarSolicitudCalentamientoControl === "function") {
         actualizarSolicitudCalentamientoControl(data || {});
+    }
+});
+socket.on('control_estado', (payload = {}) => {
+    if (typeof aplicarEstadoPersistenteControl === "function") {
+        aplicarEstadoPersistenteControl(payload);
+    }
+});
+socket.on('desventaja_activa_estado', (payload = {}) => {
+    if (typeof sincronizarDesventajaActivaControl === "function") {
+        sincronizarDesventajaActivaControl(payload);
+    }
+});
+socket.on('votacion_ventaja_estado', (payload = {}) => {
+    if (typeof sincronizarVotacionDesventajaControl === "function") {
+        sincronizarVotacionDesventajaControl(payload);
+    }
+});
+socket.on('estado_palabras_musas_control', (payload = {}) => {
+    if (typeof sincronizarEstadoPalabrasMusasControl === "function") {
+        sincronizarEstadoPalabrasMusasControl(payload);
+    }
+});
+socket.on('enviar_ventaja_j1', (payload = {}) => {
+    if (typeof sincronizarVotacionDesventajaControl === "function") {
+        sincronizarVotacionDesventajaControl({ activa: false });
+    }
+    if (typeof sincronizarDesventajaActivaControl === "function") {
+        sincronizarDesventajaActivaControl(payload, { player: 1 });
+    }
+});
+socket.on('enviar_ventaja_j2', (payload = {}) => {
+    if (typeof sincronizarVotacionDesventajaControl === "function") {
+        sincronizarVotacionDesventajaControl({ activa: false });
+    }
+    if (typeof sincronizarDesventajaActivaControl === "function") {
+        sincronizarDesventajaActivaControl(payload, { player: 2 });
     }
 });
 socket.on('vista_espectador_modo', (payload = {}) => {
@@ -115,6 +137,10 @@ socket.on('estado_banderas_musas', (data = {}) => {
     }
 });
 
+socket.on('resumen_musas_pdf', (payload = {}) => {
+    window.resumen_musas_pdf_estado = payload;
+});
+
 socket.on('creditos_estado', (payload = {}) => {
     if (typeof window.actualizarCreditosControlRemoto === "function") {
         window.actualizarCreditosControlRemoto(payload);
@@ -124,6 +150,58 @@ socket.on('creditos_estado', (payload = {}) => {
 socket.on('idioma_actual', (payload = {}) => {
     if (!window || typeof window.scribSetLanguage2P !== "function") return;
     window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
+});
+
+function aplicarEstadoPausaControlSocket(pausaActiva) {
+    const pausadoActivo = Boolean(pausaActiva);
+    if (typeof juego_iniciado !== "undefined" && typeof modo_actual !== "undefined" && modo_actual) {
+        juego_iniciado = true;
+    }
+    if (typeof pausado !== "undefined") {
+        pausado = pausadoActivo;
+    }
+    if (pausadoActivo) {
+        clearInterval(countInterval);
+        clearInterval(countInterval1);
+        countInterval = null;
+        countInterval1 = null;
+    }
+    const botonPausa = (typeof boton_pausar_reanudar !== "undefined" && boton_pausar_reanudar)
+        ? boton_pausar_reanudar
+        : getEl("boton_pausar_reanudar");
+    if (!botonPausa) return;
+    botonPausa.dataset.value = pausadoActivo ? 1 : 0;
+    if (typeof window.actualizarBotonPausaReanudarControl === "function") {
+        window.actualizarBotonPausaReanudarControl(botonPausa);
+    } else {
+        botonPausa.textContent = pausadoActivo ? "\u25B6\uFE0F REANUDAR" : "PAUSAR";
+    }
+}
+
+socket.on('pausar_js', () => {
+    if (typeof pausarTestigosDesventajaControl === "function") {
+        pausarTestigosDesventajaControl();
+    }
+    aplicarEstadoPausaControlSocket(true);
+});
+
+socket.on('reanudar_js', () => {
+    if (typeof reanudarTestigosDesventajaControl === "function") {
+        reanudarTestigosDesventajaControl();
+    }
+    aplicarEstadoPausaControlSocket(false);
+});
+
+socket.on('reanudar_tertulia_control', () => {
+    if (modo_actual !== "tertulia" || typeof reanudar_modo !== "function") {
+        return;
+    }
+    if (typeof window.detenerCuentaAtrasModoControl === "function") {
+        window.detenerCuentaAtrasModoControl();
+    }
+    clearTimeout(TimeoutTiempoMuerto);
+    TimeoutTiempoMuerto = null;
+    reanudar_modo();
 });
 
 socket.on('actualizar_contador_musas', (contador_musas = {}) => {
@@ -159,7 +237,7 @@ if (window && typeof window.scribOnLanguageChange2P === "function") {
         if (typeof window.actualizarCabeceraModoControl === "function") {
             window.actualizarCabeceraModoControl({
                 modo: modo_actual,
-                segundos: segundos_modo_actual_control
+                segundos: tiempo_restante_modo_actual_control
             });
         }
         if (typeof window.refrescarIdiomaControlUI === "function") {
@@ -209,10 +287,19 @@ function extraerTextoPlanoDesdeHtmlControl(html) {
         .trim();
 }
 
+function escapeHtmlControl(valor) {
+    return String(valor)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 function convertirTextoPlanoAHtmlControl(textoPlano) {
     const plano = String(textoPlano || "").trim();
     if (!plano) return "";
-    return escapeHtml(plano).replace(/\n/g, "<br>");
+    return escapeHtmlControl(plano).replace(/\n/g, "<br>");
 }
 
 function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
@@ -258,6 +345,9 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
         actualizarPuntosMarcadorControl(playerId, data.points);
     }
     textoEl.style.height = (textoEl.scrollHeight) + "px";
+    if (window.actualizarNumerosLineaControl) {
+        window.actualizarNumerosLineaControl(playerId);
+    }
 }
 
 // Recibe los datos del jugador 1 y los coloca.
@@ -287,15 +377,33 @@ socket.on('temp_modos', data => {
     if (!aceptarEventoModoControl(data)) {
         return;
     }
+    if (typeof window.detenerCuentaAtrasModoControl === "function") {
+        window.detenerCuentaAtrasModoControl();
+    }
     modo_actual = data && data.modo_actual ? data.modo_actual : modo_actual;
+    if (modo_actual && typeof juego_iniciado !== "undefined") {
+        juego_iniciado = true;
+    }
     segundos_modo_actual_control = Number(data && data.segundos_transcurridos) || 0;
+    duracion_modo_actual_control = Number(data && data.duracion_modo_segundos)
+        || Number(typeof TIEMPO_CAMBIO_MODOS !== "undefined" ? TIEMPO_CAMBIO_MODOS : 0)
+        || Number(typeof DURACION_TIEMPO_MODOS !== "undefined" ? DURACION_TIEMPO_MODOS : 0)
+        || 0;
+    tiempo_restante_modo_actual_control = Number(data && data.tiempo_restante_modo_segundos);
+    if (!Number.isFinite(tiempo_restante_modo_actual_control)) {
+        tiempo_restante_modo_actual_control = duracion_modo_actual_control > 0
+            ? Math.max(0, duracion_modo_actual_control - segundos_modo_actual_control)
+            : segundos_modo_actual_control;
+    }
     if (typeof window.actualizarCabeceraModoControl === "function") {
         window.actualizarCabeceraModoControl({
             modo: modo_actual,
-            segundos: segundos_modo_actual_control
+            segundos: segundos_modo_actual_control,
+            duracion: duracion_modo_actual_control,
+            restante: tiempo_restante_modo_actual_control
         });
     } else {
-        tiempo_modos_secs.textContent = `${segundos_modo_actual_control} segundos`;
+        tiempo_modos_secs.textContent = formatearSegundosControl(tiempo_restante_modo_actual_control);
         display_modo.textContent = data.modo_actual.toUpperCase();
         display_modo.style.color = COLORES_MODOS[data.modo_actual];
     }
@@ -319,14 +427,30 @@ socket.on('tiempo_muerto_control', data => {
     const revisionPartida = (typeof obtenerRevisionTemporizadoresControl === "function")
         ? obtenerRevisionTemporizadoresControl()
         : null;
+    duracion_modo_actual_control = Number(data && data.duracion_modo_segundos)
+        || Number(typeof TIEMPO_CAMBIO_MODOS !== "undefined" ? TIEMPO_CAMBIO_MODOS : 0)
+        || Number(typeof DURACION_TIEMPO_MODOS !== "undefined" ? DURACION_TIEMPO_MODOS : 0)
+        || 0;
+    tiempo_restante_modo_actual_control = Number(data && data.tiempo_restante_modo_segundos);
+    if (!Number.isFinite(tiempo_restante_modo_actual_control) || tiempo_restante_modo_actual_control <= 0) {
+        tiempo_restante_modo_actual_control = duracion_modo_actual_control;
+    }
     if (typeof window.actualizarCabeceraModoControl === "function") {
         window.actualizarCabeceraModoControl({
             modo: modo_actual,
-            segundos: segundos_modo_actual_control
+            duracion: duracion_modo_actual_control,
+            restante: tiempo_restante_modo_actual_control
         });
     } else {
         display_modo.style.color = COLORES_MODOS[modo_actual];
         display_modo.textContent = modo_actual.toUpperCase();
+    }
+    if (typeof window.iniciarCuentaAtrasModoControl === "function") {
+        window.iniciarCuentaAtrasModoControl({
+            modo: modo_actual,
+            duracion: duracion_modo_actual_control,
+            restante: tiempo_restante_modo_actual_control
+        });
     }
     if (typeof window.actualizarBotonPausaReanudarControl === "function") {
         boton_pausar_reanudar.dataset.value = 1;
@@ -343,12 +467,21 @@ socket.on('tiempo_muerto_control', data => {
         && !esRevisionTemporizadoresControlActiva(revisionPartida)) {
         return;
     }
+    if (modo_actual !== "tertulia" || typeof reanudar_modo !== "function") {
+        return;
+    }
     TimeoutTiempoMuerto = null;
     reanudar_modo();
   }, TIEMPO_CAMBIO_MODOS * 1000);
 });
 
 socket.on('fin_a_control', () => {
+    if (typeof window.detenerCuentaAtrasModoControl === "function") {
+        window.detenerCuentaAtrasModoControl();
+    }
+    if (typeof limpiarTestigosDesventajaControl === "function") {
+        limpiarTestigosDesventajaControl();
+    }
     fin_j1 = false;
     fin_j2 = false;
     final(1);
@@ -376,6 +509,9 @@ nombre1.addEventListener("input", evt => {
     actualizarTitulosHeatmap();
     actualizarNombresConexiones();
     socket.emit('envÃ­o_nombre1', val_nombre1);
+    if (typeof emitirEstadoControlPersistente === "function") {
+        emitirEstadoControlPersistente();
+    }
 });
 
 nombre2.addEventListener("input", evt => {
@@ -383,6 +519,9 @@ nombre2.addEventListener("input", evt => {
     actualizarTitulosHeatmap();
     actualizarNombresConexiones();
     socket.emit('envÃ­o_nombre2', val_nombre2);
+    if (typeof emitirEstadoControlPersistente === "function") {
+        emitirEstadoControlPersistente();
+    }
 });
 
 socket.on("recibir_postgame1", (data) => {
@@ -957,6 +1096,13 @@ const PDF_COLORES_NIVELES = {
     palabrasMalditas: [255, 110, 190],
 };
 
+function tPdfControl(clave, variables = {}, fallback = "") {
+    const traductor = typeof window !== "undefined" && typeof window.scribT2P === "function"
+        ? window.scribT2P
+        : null;
+    return traductor ? traductor(clave, variables, fallback) : (fallback || clave);
+}
+
 function dibujarGraficaVidaPdf(doc, serie, x, y, width, height, colorLinea) {
     doc.setDrawColor(90, 90, 90);
     doc.setLineWidth(0.3);
@@ -966,9 +1112,9 @@ function dibujarGraficaVidaPdf(doc, serie, x, y, width, height, colorLinea) {
         : [];
     if (serieValida.length < 2) {
         setPdfFont(doc, 10, [180, 180, 180]);
-    doc.text("Sin datos de vida registrados.", x + 4, y + height / 2);
-    return y + height + 6;
-}
+        doc.text(tPdfControl("pdf.life.no_data", {}, "Sin datos de vida registrados."), x + 4, y + height / 2);
+        return y + height + 6;
+    }
     const valores = serieValida.map(p => p.v);
     const maxValor = Math.max(...valores, 1);
     const minValor = Math.min(...valores, 0);
@@ -1035,7 +1181,7 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
 
     setPdfFont(doc, 16, [255, 255, 255], "bold");
     const limiteNombreX = headerRightX || (anchoPagina - margen);
-    const tituloInforme = "INFORME DE PARTIDA";
+    const tituloInforme = tPdfControl("pdf.match_report_title", {}, "INFORME DE PARTIDA");
     const tituloWidth = doc.getTextWidth(tituloInforme);
     const offsetTitulo = doc.getTextWidth("<SCRI> B - ");
     const tituloXBase = margen + offsetTitulo;
@@ -1136,8 +1282,8 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
             .filter(Boolean)
             .join("/");
         if (etiquetaLimpia) return etiquetaLimpia;
-        if (codigoNormalizado) return `Tecla ${codigoNormalizado}`;
-        return "Tecla desconocida";
+        if (codigoNormalizado) return tPdfControl("pdf.key_named", { key: codigoNormalizado }, `Tecla ${codigoNormalizado}`);
+        return tPdfControl("pdf.key_unknown", {}, "Tecla desconocida");
     };
 
     const serieVida = resumenPartida.tiempos[jugadorId] || [];
@@ -1178,7 +1324,7 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
         : "-";
 
     asegurarEspacio(70);
-    y = dibujarSeccion("Resumen rapido", y, (yContenido) => {
+    y = dibujarSeccion(tPdfControl("pdf.section.quick_summary", {}, "Resumen rapido"), y, (yContenido) => {
         const maxWidth = anchoPagina - (margen * 2) - 4;
         const colGap = 8;
         const colWidth = (maxWidth - colGap) / 2;
@@ -1186,14 +1332,14 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
         const rightX = margen + colWidth + colGap;
         const lineHeight = 5;
         const lineas = [
-            { label: "Duracion total", value: formatTiempo(duracionMs) },
-            { label: "Pulsaciones totales", value: totalPulsaciones || 0 },
-            { label: "Teclas distintas", value: teclasUsadas || 0 },
-            { label: "Ritmo estimado", value: ritmo ? `${ritmo} puls/min` : "-" },
-            { label: "Vida minima", value: vidaMin !== null ? vidaMin : "-" },
-            { label: "Vida maxima", value: vidaMax !== null ? vidaMax : "-" },
-            { label: "Vida media", value: vidaProm !== null ? vidaProm : "-" },
-            { label: "Top teclas", value: topTexto }
+            { label: tPdfControl("pdf.summary.total_duration", {}, "Duracion total"), value: formatTiempo(duracionMs) },
+            { label: tPdfControl("pdf.summary.total_keystrokes", {}, "Pulsaciones totales"), value: totalPulsaciones || 0 },
+            { label: tPdfControl("pdf.summary.distinct_keys", {}, "Teclas distintas"), value: teclasUsadas || 0 },
+            { label: tPdfControl("pdf.summary.estimated_pace", {}, "Ritmo estimado"), value: ritmo ? tPdfControl("pdf.unit.keystrokes_per_minute", { count: ritmo }, `${ritmo} puls/min`) : "-" },
+            { label: tPdfControl("pdf.summary.life_min", {}, "Vida minima"), value: vidaMin !== null ? vidaMin : "-" },
+            { label: tPdfControl("pdf.summary.life_max", {}, "Vida maxima"), value: vidaMax !== null ? vidaMax : "-" },
+            { label: tPdfControl("pdf.summary.life_avg", {}, "Vida media"), value: vidaProm !== null ? vidaProm : "-" },
+            { label: tPdfControl("pdf.summary.top_keys", {}, "Top teclas"), value: topTexto }
         ];
         const mid = Math.ceil(lineas.length / 2);
         const colLeft = lineas.slice(0, mid);
@@ -1247,12 +1393,12 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
     });
 
     asegurarEspacio(90);
-    y = dibujarSeccion("Mapa de calor", y, (yContenido) => {
+    y = dibujarSeccion(tPdfControl("pdf.section.heatmap", {}, "Mapa de calor"), y, (yContenido) => {
         return dibujarHeatmapPdf(doc, jugadorId, margen, yContenido, anchoPagina - (margen * 2));
     });
 
     asegurarEspacio(80);
-    y = dibujarSeccion("Letras destacadas", y, (yContenido) => {
+    y = dibujarSeccion(tPdfControl("pdf.section.highlighted_letters", {}, "Letras destacadas"), y, (yContenido) => {
         const colGap = 8;
         const colWidth = (anchoPagina - (margen * 2) - colGap) / 2;
         const leftX = margen;
@@ -1272,23 +1418,23 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
         const totalInsercionesMaldita = intentosLetra || 0;
 
         setPdfFont(doc, 11, PDF_COLORES_NIVELES.letraBendita, "bold");
-        doc.text("BENDITA", leftX, yCursor);
+        doc.text(tPdfControl("pdf.kind.blessed", {}, "BENDITA"), leftX, yCursor);
         setPdfFont(doc, 11, PDF_COLORES_NIVELES.letraMaldita, "bold");
-        doc.text("MALDITA", rightX, yCursor);
+        doc.text(tPdfControl("pdf.kind.cursed", {}, "MALDITA"), rightX, yCursor);
 
         yCursor += 5;
         setPdfFont(doc, 10, accentSoft, "bold");
-        doc.text(`${totalInsercionesBendita} insercciones`, leftX, yCursor);
-        doc.text(`${totalInsercionesMaldita} insercciones`, rightX, yCursor);
+        doc.text(tPdfControl("pdf.insertions_count", { count: totalInsercionesBendita }, `${totalInsercionesBendita} inserciones`), leftX, yCursor);
+        doc.text(tPdfControl("pdf.insertions_count", { count: totalInsercionesMaldita }, `${totalInsercionesMaldita} inserciones`), rightX, yCursor);
 
         const yList = yCursor + 6;
-        const yBenditas = dibujarLetrasPdf(doc, "Letras", letrasB, leftX, yList, PDF_COLORES_NIVELES.letraBendita, colWidth);
-        const yMalditas = dibujarLetrasPdf(doc, "Letras", letrasM, rightX, yList, PDF_COLORES_NIVELES.letraMaldita, colWidth);
+        const yBenditas = dibujarLetrasPdf(doc, tPdfControl("pdf.letters", {}, "Letras"), letrasB, leftX, yList, PDF_COLORES_NIVELES.letraBendita, colWidth);
+        const yMalditas = dibujarLetrasPdf(doc, tPdfControl("pdf.letters", {}, "Letras"), letrasM, rightX, yList, PDF_COLORES_NIVELES.letraMaldita, colWidth);
         return Math.max(yBenditas, yMalditas);
     });
 
     asegurarEspacio(80);
-    y = dibujarSeccion("Palabras destacadas", y, (yContenido) => {
+    y = dibujarSeccion(tPdfControl("pdf.section.highlighted_words", {}, "Palabras destacadas"), y, (yContenido) => {
         const colGap = 8;
         const colWidth = (anchoPagina - (margen * 2) - colGap) / 2;
         const leftX = margen;
@@ -1303,32 +1449,60 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
         const totalInsercionesMaldita = intentosPalabra || 0;
 
         setPdfFont(doc, 11, PDF_COLORES_NIVELES.palabrasBenditas, "bold");
-        doc.text("BENDITA", leftX, yCursor);
+        doc.text(tPdfControl("pdf.kind.blessed", {}, "BENDITA"), leftX, yCursor);
         setPdfFont(doc, 11, PDF_COLORES_NIVELES.palabrasMalditas, "bold");
-        doc.text("MALDITA", rightX, yCursor);
+        doc.text(tPdfControl("pdf.kind.cursed", {}, "MALDITA"), rightX, yCursor);
 
         yCursor += 5;
         setPdfFont(doc, 10, accentSoft, "bold");
-        doc.text(`${totalInsercionesBendita} insercciones`, leftX, yCursor);
-        doc.text(`${totalInsercionesMaldita} insercciones`, rightX, yCursor);
+        doc.text(tPdfControl("pdf.insertions_count", { count: totalInsercionesBendita }, `${totalInsercionesBendita} inserciones`), leftX, yCursor);
+        doc.text(tPdfControl("pdf.insertions_count", { count: totalInsercionesMaldita }, `${totalInsercionesMaldita} inserciones`), rightX, yCursor);
 
         const yPalabras = yCursor + 6;
-        const yBenditas = dibujarPalabrasPdf(doc, "Palabras", palabrasB, leftX, yPalabras, PDF_COLORES_NIVELES.palabrasBenditas, colWidth);
-        const yMalditas = dibujarPalabrasPdf(doc, "Palabras", palabrasM, rightX, yPalabras, PDF_COLORES_NIVELES.palabrasMalditas, colWidth);
+        const yBenditas = dibujarPalabrasPdf(doc, tPdfControl("pdf.words", {}, "Palabras"), palabrasB, leftX, yPalabras, PDF_COLORES_NIVELES.palabrasBenditas, colWidth);
+        const yMalditas = dibujarPalabrasPdf(doc, tPdfControl("pdf.words", {}, "Palabras"), palabrasM, rightX, yPalabras, PDF_COLORES_NIVELES.palabrasMalditas, colWidth);
         return Math.max(yBenditas, yMalditas);
     });
 
     asegurarEspacio(75);
-    y = dibujarSeccion("Evolucion de vida", y, (yContenido) => {
+    y = dibujarSeccion(tPdfControl("pdf.section.life_evolution", {}, "Evolucion de vida"), y, (yContenido) => {
         return dibujarGraficaVidaPdf(doc, serieVida, margen, yContenido + 2, anchoPagina - (margen * 2), 45, accent);
     });
 
+}
+
+function pedirResumenMusasPdfControl(timeoutMs = 1800) {
+    return new Promise((resolve) => {
+        if (!socket || typeof socket.emit !== "function") {
+            resolve(window.resumen_musas_pdf_estado || null);
+            return;
+        }
+        let resuelto = false;
+        const finalizar = (payload) => {
+            if (resuelto) return;
+            resuelto = true;
+            window.resumen_musas_pdf_estado = payload || window.resumen_musas_pdf_estado || null;
+            resolve(window.resumen_musas_pdf_estado);
+        };
+        const timer = setTimeout(() => finalizar(window.resumen_musas_pdf_estado || null), timeoutMs);
+        try {
+            socket.emit("pedir_resumen_musas_pdf", {}, (payload) => {
+                clearTimeout(timer);
+                finalizar(payload || null);
+            });
+        } catch (error) {
+            clearTimeout(timer);
+            console.error("No se pudo pedir el resumen de musas para PDF:", error);
+            finalizar(window.resumen_musas_pdf_estado || null);
+        }
+    });
 }
 
 function descargar_textos(opciones = {}) {
     const opcionesNormalizadas = (opciones && typeof opciones === "object") ? opciones : {};
     const descargar = opcionesNormalizadas.descargar !== false;
     const emitirMusas = opcionesNormalizadas.emitirMusas === true;
+    const resumenMusasPdf = opcionesNormalizadas.resumenMusasPdf || opcionesNormalizadas.resumenMusas || window.resumen_musas_pdf_estado || null;
     const { jsPDF } = window.jspdf;
     var doc = new jsPDF();
     prepararFuentePdf(doc);
@@ -1372,9 +1546,189 @@ function descargar_textos(opciones = {}) {
          doc.text(suturaTexto, suturaX, footerY);
     }
 
-    function emitirPdfMusas(playerId, nombre, documento) {
+    function obtenerResumenesMusaJugador(playerId) {
+        const equipos = resumenMusasPdf && resumenMusasPdf.equipos ? resumenMusasPdf.equipos : {};
+        const equipo = equipos[playerId] || equipos[String(playerId)] || {};
+        const musas = Array.isArray(equipo.musas) ? equipo.musas : [];
+        return musas.filter(musa => musa && musa.client_id);
+    }
+
+    function textoMusaPdf(valor, fallback = "-") {
+        const texto = String(valor ?? "").trim();
+        return texto || fallback;
+    }
+
+    function etiquetaModoMusaPdf(modo) {
+        switch (String(modo || "").trim().toLowerCase()) {
+            case "palabras bonus":
+                return tPdfControl("pdf.muse_mode_bonus", {}, "BONUS");
+            case "palabras prohibidas":
+                return tPdfControl("pdf.muse_mode_cursed_word", {}, "MALDITA");
+            case "letra bendita":
+                return tPdfControl("pdf.muse_mode_blessed_letter", {}, "LETRA BENDITA");
+            case "letra prohibida":
+                return tPdfControl("pdf.muse_mode_cursed_letter", {}, "LETRA MALDITA");
+            default:
+                return tPdfControl("pdf.muse_mode_generic", {}, "MUSA");
+        }
+    }
+
+    function agregarPaginaResumenMusa(playerId, nombreEscritor, resumenMusa) {
+        if (!resumenMusa) return;
+        const accent = playerId === 1 ? [70, 240, 255] : [255, 107, 107];
+        const accentSoft = [
+            Math.min(230, accent[0] + 75),
+            Math.min(230, accent[1] + 75),
+            Math.min(230, accent[2] + 75)
+        ];
+        const stats = resumenMusa.stats || {};
+        const palabras = Array.isArray(resumenMusa.palabras) ? resumenMusa.palabras : [];
+        const maxWidth = anchoPagina - (margen * 2);
+        let y = margen + 12;
+
+        const nuevaPagina = () => {
+            doc.addPage();
+            agregarPaginaTexto();
+            y = margen + 12;
+        };
+        const asegurarEspacio = (altura) => {
+            if (y + altura > altoPagina - margen) {
+                nuevaPagina();
+            }
+        };
+
+        doc.addPage();
+        agregarPaginaTexto();
+        setPdfFont(doc, 18, accent, "bold");
+        doc.text(tPdfControl("pdf.muse_gift_title", {}, "REGALO DE MUSA"), margen, y);
+        y += 8;
+        setPdfFont(doc, 12, [255, 255, 255], "bold");
+        doc.text(textoMusaPdf(resumenMusa.nombre, tPdfControl("pdf.muse_fallback", {}, "MUSA")), margen, y);
+        setPdfFont(doc, 9, [180, 180, 180]);
+        const nombreEscritorPdf = textoMusaPdf(nombreEscritor, tPdfControl("pdf.writer_fallback", {}, "ESCRITOR"));
+        doc.text(tPdfControl("pdf.muse_team_writer_line", {
+            team: `J${playerId}`,
+            writer: nombreEscritorPdf
+        }, `Equipo J${playerId} - ${nombreEscritorPdf}`), margen, y + 6);
+        y += 18;
+
+        const statLineas = [
+            [tPdfControl("pdf.muse_stat.sent", {}, "Enviadas"), stats.enviadas || 0],
+            [tPdfControl("pdf.muse_stat.entered", {}, "Introducidas"), stats.introducidas || 0],
+            [tPdfControl("pdf.muse_stat.effectiveness", {}, "Efectividad"), `${stats.efectividad_pct || 0}%`],
+            [tPdfControl("pdf.muse_stat.superbonus", {}, "Superbonus"), stats.superbonus || 0],
+            [tPdfControl("pdf.muse_stat.impact", {}, "Impacto"), `${stats.impacto_neto > 0 ? "+" : ""}${stats.impacto_neto || 0}s`]
+        ];
+        const colWidth = maxWidth / statLineas.length;
+        statLineas.forEach(([label, value], index) => {
+            const x = margen + (colWidth * index);
+            doc.setDrawColor(accent[0], accent[1], accent[2]);
+            doc.setLineWidth(0.25);
+            doc.rect(x, y, colWidth - 2, 18, "S");
+            setPdfFont(doc, 8, accentSoft, "bold");
+            doc.text(String(label).toUpperCase(), x + 2, y + 6);
+            setPdfFont(doc, 11, [255, 255, 255], "bold");
+            doc.text(String(value), x + 2, y + 14);
+        });
+        y += 28;
+
+        setPdfFont(doc, 13, accent, "bold");
+        doc.text(tPdfControl("pdf.muse_words_sent_title", {}, "PALABRAS ENVIADAS"), margen, y);
+        y += 7;
+        if (!palabras.length) {
+            setPdfFont(doc, 10, [190, 190, 190]);
+            doc.text(tPdfControl("pdf.muse_words_empty", {}, "No hay palabras registradas para esta musa."), margen, y);
+            return;
+        }
+
+        palabras.slice(-70).forEach((entrada) => {
+            asegurarEspacio(14);
+            const introducida = Boolean(entrada.introducida);
+            if (introducida) {
+                doc.setFillColor(24, 34, 30);
+                doc.rect(margen - 1, y - 5, maxWidth + 2, 10, "F");
+            }
+            const modo = etiquetaModoMusaPdf(entrada.modo);
+            const marca = introducida
+                ? (entrada.modo === "palabras prohibidas"
+                    ? tPdfControl("pdf.muse_status_entered_by_rival", {}, "[INTRODUCIDA POR RIVAL]")
+                    : tPdfControl("pdf.muse_status_entered", {}, "[INTRODUCIDA]"))
+                : tPdfControl("pdf.muse_status_pending", {}, "[EN COLA/NO USADA]");
+            const superbonus = entrada.superbonus ? ` [${tPdfControl("pdf.superbonus", {}, "SUPERBONUS")}]` : "";
+            setPdfFont(doc, 8, introducida ? [145, 255, 182] : accentSoft, "bold");
+            doc.text(`${modo}${superbonus}`, margen, y);
+            setPdfFont(doc, 10, introducida ? [255, 255, 255] : [220, 220, 220], introducida ? "bold" : "normal");
+            const palabra = recortarTextoPdf(doc, textoMusaPdf(entrada.palabra), maxWidth - 68);
+            doc.text(palabra, margen + 34, y);
+            setPdfFont(doc, 7, introducida ? [145, 255, 182] : [130, 130, 130], "bold");
+            doc.text(marca, anchoPagina - margen, y, { align: "right" });
+            y += 11;
+        });
+    }
+
+    function construirDocumentoJugador(playerId, nombre, contenido, palabrasBenditas, accent, shadow, resumenMusa = null) {
+        doc = new jsPDF();
+        prepararFuentePdf(doc);
+        if (resumenMusa && typeof doc.setProperties === "function") {
+            const palabrasMeta = Array.isArray(resumenMusa.palabras)
+                ? resumenMusa.palabras.map(entrada => entrada && entrada.palabra ? entrada.palabra : "").filter(Boolean).join(", ").slice(0, 220)
+                : "";
+            doc.setProperties({
+                title: tPdfControl("pdf.metadata.muse_title", {
+                    name: textoMusaPdf(resumenMusa.nombre, tPdfControl("pdf.muse_fallback", {}, "MUSA"))
+                }, `SCRIB regalo musa ${textoMusaPdf(resumenMusa.nombre, "MUSA")}`),
+                subject: tPdfControl("pdf.metadata.muse_subject", { words: palabrasMeta }, `Palabras musa: ${palabrasMeta}`),
+                keywords: tPdfControl("pdf.metadata.muse_keywords", {
+                    clientId: textoMusaPdf(resumenMusa.client_id, "sin_client_id")
+                }, `scrib,musa,${textoMusaPdf(resumenMusa.client_id, "sin_client_id")},personalizado`)
+            });
+        }
+        accentColor = accent;
+        agregarPaginaTexto();
+        let yActualLocal = dibujarNombreEnPagina(nombre, margen, margen + 13, 25, accentColor, shadow);
+        const segmentos = construirSegmentosColor(contenido.html || "");
+        if (segmentos.length) {
+            yActualLocal = agregarSegmentosEnPagina(doc, segmentos, margen, yActualLocal + 5, 15, agregarPaginaTexto, margen, anchoPagina, altoPagina);
+        } else {
+            yActualLocal = agregarTextoEnPagina(contenido.textoPlano, margen, yActualLocal + 5, 15, [230, 230, 230]);
+        }
+        agregarPaginaEstadisticas(doc, playerId, nombre, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas);
+        if (resumenMusa) {
+            agregarPaginaResumenMusa(playerId, nombre, resumenMusa);
+        }
+        return doc;
+    }
+
+    function emitirPdfMusas(playerId, nombre, documento, datosDocumento) {
         if (!emitirMusas || !documento) return;
         try {
+            const resumenesMusa = obtenerResumenesMusaJugador(playerId);
+            if (resumenesMusa.length && datosDocumento) {
+                resumenesMusa.forEach((resumenMusa) => {
+                    const docMusa = construirDocumentoJugador(
+                        playerId,
+                        nombre,
+                        datosDocumento.contenido,
+                        datosDocumento.palabrasBenditas,
+                        datosDocumento.accent,
+                        datosDocumento.shadow,
+                        resumenMusa
+                    );
+                    const dataUriMusa = docMusa.output('datauristring');
+                    if (!dataUriMusa) return;
+                    const nombreMusa = normalizarNombreDescargaArchivo(resumenMusa.nombre || "MUSA", "MUSA");
+                    const idMusa = normalizarNombreDescargaArchivo(String(resumenMusa.client_id || "").slice(-10), "MUSA");
+                    socket.emit('regalo_pdf_musas', {
+                        player: playerId,
+                        client_id: resumenMusa.client_id,
+                        musa_nombre: resumenMusa.nombre || "MUSA",
+                        personalizado: true,
+                        filename: `${crearBaseArchivoDescargaJugador(`${nombre}_${nombreMusa}_${idMusa}`, fechaDescarga, "MUSA_J" + playerId)}.pdf`,
+                        data: dataUriMusa
+                    });
+                });
+                return;
+            }
             const dataUri = documento.output('datauristring');
             if (dataUri) {
                 socket.emit('regalo_pdf_musas', {
@@ -1445,50 +1799,48 @@ function descargar_textos(opciones = {}) {
     const baseArchivoJ1 = crearBaseArchivoDescargaJugador(val_nombre1, fechaDescarga, "JUGADOR_1");
     const baseArchivoJ2 = crearBaseArchivoDescargaJugador(val_nombre2, fechaDescarga, "JUGADOR_2");
 
-    agregarPaginaTexto();
-
-    let yActual = dibujarNombreEnPagina(val_nombre1, margen, margen + 13, 25, accentColor, [255, 107, 107]);
-
-    const segmentos1 = construirSegmentosColor(contenidoJ1.html || "");
-    if (segmentos1.length) {
-        yActual = agregarSegmentosEnPagina(doc, segmentos1, margen, yActual + 5, 15, agregarPaginaTexto, margen, anchoPagina, altoPagina);
-    } else {
-        yActual = agregarTextoEnPagina(contenidoJ1.textoPlano, margen, yActual + 5, 15, [230, 230, 230]);
-    }
-
     const palabrasBenditas1 = extraerPalabrasConClase(contenidoJ1.html || "", CLASES_PALABRAS_DESTACADAS_PDF);
-    agregarPaginaEstadisticas(doc, 1, val_nombre1, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas1);
-    emitirPdfMusas(1, val_nombre1, doc);
+    const docJ1 = construirDocumentoJugador(
+        1,
+        val_nombre1,
+        contenidoJ1,
+        palabrasBenditas1,
+        [70, 240, 255],
+        [255, 107, 107]
+    );
+    emitirPdfMusas(1, val_nombre1, docJ1, {
+        contenido: contenidoJ1,
+        palabrasBenditas: palabrasBenditas1,
+        accent: [70, 240, 255],
+        shadow: [255, 107, 107]
+    });
     // Descargar el primer PDF y TXT
     if (descargar) {
-        doc.save(baseArchivoJ1 + '.pdf');
+        docJ1.save(baseArchivoJ1 + '.pdf');
     }
     // Combina el nombre del escritor y el contenido HTML
     console.log("ES ES FINAAAL", val_nombre1 + "\n" + texto_guardado1);
     if (descargar) {
         downloadTxtFile(baseArchivoJ1 + '.txt', val_nombre1 + "\n" + contenidoJ1.textoPlano);
     }
-    // Preparar el segundo documento
-    doc = new jsPDF();
-    prepararFuentePdf(doc);
-    accentColor = [255, 107, 107];
-    agregarPaginaTexto();
-
-    yActual = dibujarNombreEnPagina(val_nombre2, margen, margen + 13, 25, accentColor, [70, 240, 255]);
-
-    const segmentos2 = construirSegmentosColor(contenidoJ2.html || "");
-    if (segmentos2.length) {
-        yActual = agregarSegmentosEnPagina(doc, segmentos2, margen, yActual + 5, 15, agregarPaginaTexto, margen, anchoPagina, altoPagina);
-    } else {
-        yActual = agregarTextoEnPagina(contenidoJ2.textoPlano, margen, yActual + 5, 15, [230, 230, 230]);
-    }
-
     const palabrasBenditas2 = extraerPalabrasConClase(contenidoJ2.html || "", CLASES_PALABRAS_DESTACADAS_PDF);
-    agregarPaginaEstadisticas(doc, 2, val_nombre2, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas2);
-    emitirPdfMusas(2, val_nombre2, doc);
+    const docJ2 = construirDocumentoJugador(
+        2,
+        val_nombre2,
+        contenidoJ2,
+        palabrasBenditas2,
+        [255, 107, 107],
+        [70, 240, 255]
+    );
+    emitirPdfMusas(2, val_nombre2, docJ2, {
+        contenido: contenidoJ2,
+        palabrasBenditas: palabrasBenditas2,
+        accent: [255, 107, 107],
+        shadow: [70, 240, 255]
+    });
     // Descargar el segundo PDF y TXT
     if (descargar) {
-        doc.save(baseArchivoJ2 + '.pdf');
+        docJ2.save(baseArchivoJ2 + '.pdf');
     }
     // Combina el nombre del escritor y el contenido HTML
     if (descargar) {
@@ -1496,8 +1848,9 @@ function descargar_textos(opciones = {}) {
     }
 }
 
-window.emitirRegaloMusas = function emitirRegaloMusas() {
-    descargar_textos({ descargar: false, emitirMusas: true });
+window.emitirRegaloMusas = async function emitirRegaloMusas() {
+    const resumenMusas = await pedirResumenMusasPdfControl();
+    descargar_textos({ descargar: false, emitirMusas: true, resumenMusasPdf: resumenMusas });
 };
 
 const MODOS = {

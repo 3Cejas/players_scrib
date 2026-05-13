@@ -97,8 +97,12 @@ function actualizarPreviewTiempoPalabraMusa(texto = null, modoForzado = null) {
   const valor = (texto === null || typeof texto === "undefined")
     ? (input ? input.value : "")
     : texto;
-  const limpia = String(valor || "").trim();
-  const esValida = modoMusaConPreviewTiempo(modo) && limpia && !/\s/.test(limpia);
+  const previewTiempo = window.ScribInspiration.calcularPreviewTiempoPalabra
+    ? window.ScribInspiration.calcularPreviewTiempoPalabra({ modo, texto: valor })
+    : null;
+  const esValida = previewTiempo
+    ? previewTiempo.visible
+    : (modoMusaConPreviewTiempo(modo) && String(valor || "").trim() && !/\s/.test(String(valor || "").trim()));
 
   preview.hidden = !esValida;
   preview.classList.remove("preview-tiempo-palabra--positivo", "preview-tiempo-palabra--negativo");
@@ -106,14 +110,16 @@ function actualizarPreviewTiempoPalabraMusa(texto = null, modoForzado = null) {
 
   if (!esValida) return;
 
-  const esMaldita = modo === "palabras prohibidas";
+  const esMaldita = previewTiempo ? previewTiempo.tipo === "resta" : modo === "palabras prohibidas";
   const clase = esMaldita ? "preview-tiempo-palabra--negativo" : "preview-tiempo-palabra--positivo";
-  const signo = esMaldita ? "-" : "+";
-  const segundos = calcularTiempoPalabraMusa(limpia);
+  const signo = previewTiempo ? previewTiempo.signo : (esMaldita ? "-" : "+");
+  const segundos = previewTiempo ? previewTiempo.segundos : calcularTiempoPalabraMusa(String(valor || "").trim());
 
   const label = document.createElement("span");
   label.className = "preview-tiempo-palabra__label";
-  label.textContent = tJuego2P("warmup.preview.if_sent", {}, "Si la envias:");
+  label.textContent = esMaldita
+    ? tJuego2P("warmup.preview.if_sent_subtract", {}, "Restara si la envias:")
+    : tJuego2P("warmup.preview.if_sent_add", {}, "Sumara si la envias:");
 
   const value = document.createElement("span");
   value.className = "preview-tiempo-palabra__value";
@@ -400,7 +406,8 @@ function enviarPalabra(button) {
       startProgress(button);
       socket.emit('enviar_inspiracion', {
         palabra: inspiracionTexto,
-        nombre: window.nombre_musa || ""
+        nombre: window.nombre_musa || "",
+        client_id: window.musa_client_id || ""
       });
       palabra.value = "";
       actualizarPreviewTiempoPalabraMusa("");
@@ -570,7 +577,7 @@ function editar(boton) {
     mostrar_texto.value = 0;
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable= "true";
-    boton.innerHTML = "âœ‰ï¸";
+    boton.textContent = "\u2709\uFE0F";
     boton.value = 1;
   }
   else{
@@ -580,7 +587,7 @@ function editar(boton) {
     texto1.contentEditable = "false";
     socket.emit('aumentar_tiempo', {secs:-1, player});
     socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent});
-    boton.innerHTML = "âœï¸";
+    boton.textContent = "\u270F\uFE0F";
     boton.value = 0;
   }
 }

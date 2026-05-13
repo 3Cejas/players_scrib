@@ -4,6 +4,20 @@
     mostrarToastInspiracionMusa(payload);
 });
 
+function normalizarLetraModoMusa(letra) {
+    if (window && typeof window.scribNormalizeModeLetter2P === "function") {
+        return window.scribNormalizeModeLetter2P(letra);
+    }
+    const valor = String(letra || "").trim();
+    if (!valor) return "";
+    const compacto = valor.replace(/\s+/g, "");
+    if (/[\u00b1\u2018\u2019\u0091]/u.test(compacto) && /[\u00c3\u00e3\u00c2\u0192]/u.test(compacto)) {
+        return "\u00f1";
+    }
+    const letraValida = Array.from(compacto).find((char) => /[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]/u.test(char));
+    return letraValida || Array.from(compacto)[0] || "";
+}
+
 socket.on("idioma_actual", (payload = {}) => {
     if (window && typeof window.scribSetLanguage2P === "function") {
         window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
@@ -43,11 +57,11 @@ socket.on('modo_actual', (data) => {
         enviarPalabra_boton.style.display = "";
         campo_palabra.style.display = "";
     if(modo_actual == "letra bendita"){
-        letra_bendita = data.letra_bendita;
+        letra_bendita = normalizarLetraModoMusa(data.letra_bendita);
         pedir_inspiracion({modo_actual, letra_bendita})
     }
     if(modo_actual == "letra prohibida"){
-        letra_prohibida = data.letra_prohibida;
+        letra_prohibida = normalizarLetraModoMusa(data.letra_prohibida);
         pedir_inspiracion({modo_actual, letra_prohibida})
     }
 
@@ -196,6 +210,9 @@ socket.on('connect_error', () => {
 });
 
 socket.on('regalo_pdf_musas', (payload) => {
+    if (payload && payload.client_id && window.musa_client_id && String(payload.client_id) !== String(window.musa_client_id)) {
+        return;
+    }
     if (!player) {
         regalo_pdf_pendiente = payload;
         return;
@@ -803,6 +820,83 @@ socket.on("fin", (data) => {
     invalidarContextoCalentamientoMusa();
 });
 
+function calcularFontSizeCountdownMusa(textoCountdown, objetivoVw) {
+    const caracteres = Math.max(1, Array.from(String(textoCountdown || "").trim()).length);
+    const limitePorAncho = 88 / (caracteres * 0.7);
+    const valor = Math.min(Number(objetivoVw) || 10, limitePorAncho);
+    return Math.max(4, Math.min(valor, 40)).toFixed(2) + "vw";
+}
+
+function crearCountdownMusa(textoCountdown) {
+    $('#countdown').remove();
+    return $('<span id="countdown"></span>')
+        .text(textoCountdown)
+        .appendTo($('.container'));
+}
+
+function aplicarEstiloCountdownMusa(expandido = false) {
+    const countdown = $('#countdown');
+    const textoCountdown = countdown.text() || "";
+    const esNumero = /^\d+$/.test(String(textoCountdown).trim());
+    countdown.css({
+        'font-size': calcularFontSizeCountdownMusa(textoCountdown, expandido ? (esNumero ? 40 : 14) : 10),
+        'opacity': expandido ? 0 : 1,
+        'max-width': '92vw',
+        'white-space': 'nowrap',
+        'line-height': 1,
+        'text-align': 'center',
+        'overflow': 'visible'
+    });
+}
+
+function programarPasoCountdownMusa(paso, revisionIntro) {
+    if (!esRevisionIntroMusaActiva(revisionIntro)) {
+        return;
+    }
+    const pasoActual = Number(paso);
+    const textoPaso = pasoActual === 0 ? tJuego2P("countdown.write", {}, "\u00a1ESCRIBE!") : pasoActual;
+    crearCountdownMusa(textoPaso);
+
+    if (pasoActual === 3) {
+        revelarEtapaIntroPartidaMusa(2);
+    } else if (pasoActual === 2) {
+        revelarEtapaIntroPartidaMusa(3);
+    } else if (pasoActual === 1) {
+        revelarEtapaIntroPartidaMusa(4);
+        programarSincronizacionVisorNiveles();
+    }
+
+    clearTimeout(sub_timer);
+    sub_timer = setTimeout(() => {
+        sub_timer = null;
+        if (!esRevisionIntroMusaActiva(revisionIntro)) {
+            return;
+        }
+        aplicarEstiloCountdownMusa(true);
+    }, 20);
+
+    if (pasoActual <= 0) {
+        clearTimeout(timeout_remover_countdown_musa);
+        timeout_remover_countdown_musa = setTimeout(() => {
+            timeout_remover_countdown_musa = null;
+            if (!esRevisionIntroMusaActiva(revisionIntro)) {
+                return;
+            }
+            clearTimeout(fallback_cuenta_atras_timer);
+            fallback_cuenta_atras_timer = null;
+            $('#countdown').remove();
+            finalizarSecuenciaIntroPartidaMusa();
+        }, 1000);
+        return;
+    }
+
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+        timer = null;
+        programarPasoCountdownMusa(pasoActual - 1, revisionIntro);
+    }, 1000);
+}
+
 // Inicia el juego.
 socket.on('inicio', data => {
     limpiarTimersCosmeticosMusa();
@@ -837,80 +931,20 @@ socket.on('inicio', data => {
     animateCSS(".contenedor", "pulse");
     iniciarSecuenciaIntroPartidaMusa();
 
-    $('#countdown').remove();
-    var preparados = $('<span id="countdown"></span>');
-    preparados.text(tJuego2P("countdown.ready", {}, "¿PREPARADOS?"));
-    preparados.appendTo($('.container'));
+    crearCountdownMusa(tJuego2P("countdown.ready", {}, "\u00bfPREPARADOS?"));
     preparados_timer = setTimeout(() => {
         if (!esRevisionIntroMusaActiva(revisionIntro)) {
             return;
         }
         preparados_timer = null;
-        $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        aplicarEstiloCountdownMusa(false);
         revelarEtapaIntroPartidaMusa(1);
     }, 20);
 
     listener_cuenta_atras = setTimeout(() => {
-    if (!esRevisionIntroMusaActiva(revisionIntro)) {
-        return;
-    }
-    listener_cuenta_atras = null;
-
-    var counter = 3;
-  
-    timer = setInterval(function() {
-      if (!esRevisionIntroMusaActiva(revisionIntro)) {
-        clearInterval(timer);
-        timer = null;
-        return;
-      }
-      
-      $('#countdown').remove();
-      
-      var countdown = $('<span id="countdown"></span>');
-      countdown.text(counter == 0 ? tJuego2P("countdown.write", {}, "¡ESCRIBE!") : counter);
-      countdown.appendTo($('.container'));
-
-      if (counter === 3) {
-        revelarEtapaIntroPartidaMusa(2);
-      } else if (counter === 2) {
-        revelarEtapaIntroPartidaMusa(3);
-      } else if (counter === 1) {
-        revelarEtapaIntroPartidaMusa(4);
-        programarSincronizacionVisorNiveles();
-      }
-  
-      sub_timer = setTimeout(() => {
-        if (!esRevisionIntroMusaActiva(revisionIntro)) {
-          return;
-        }
-        if (counter > -1) {
-          $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
-        } else {
-          $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
-        }
-      }, 20);
-  
-      counter--;
-  
-      if (counter <= -1) {
-        clearInterval(timer);
-        timer = null;
-        timeout_remover_countdown_musa = setTimeout(() => {
-          if (!esRevisionIntroMusaActiva(revisionIntro)) {
-            return;
-          }
-          timeout_remover_countdown_musa = null;
-          clearTimeout(fallback_cuenta_atras_timer);
-          fallback_cuenta_atras_timer = null;
-          $('#countdown').remove();
-          finalizarSecuenciaIntroPartidaMusa();
-        }, 1000);
-  
-
-    }
-  }, 1000);
-}, 1000);
+        listener_cuenta_atras = null;
+        programarPasoCountdownMusa(3, revisionIntro);
+    }, 1000);
 
     // Failsafe para evitar que la intro se quede atascada en "PREPARADOS?".
     fallback_cuenta_atras_timer = setTimeout(() => {
@@ -919,7 +953,7 @@ socket.on('inicio', data => {
         }
         limpiarCountdownInicioMusa();
         finalizarSecuenciaIntroPartidaMusa();
-    }, 7000);
+    }, 12000);
 });
 
 function aplicarPostInicioMusa() {
@@ -1179,11 +1213,11 @@ function pedir_inspiracion(juego){
         tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que me inspire:";
     }
     if(juego.modo_actual == "letra bendita") {
-        letra = juego.letra_bendita;
+        letra = normalizarLetraModoMusa(juego.letra_bendita);
         tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que lleve la letra <span style='color: green;'>" + letra.toUpperCase() + "</span>:";
     }
     if(juego.modo_actual == "letra prohibida") {
-        letra = juego.letra_prohibida;
+        letra = normalizarLetraModoMusa(juego.letra_prohibida);
         tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que <span style='color: red;'>NO</span> lleve la letra <span style='color: red;'>" + letra.toUpperCase() + "</span>:";
     }
 
@@ -1579,7 +1613,7 @@ function stopConfetti() {
     stopConfetti();
     var scalar = 2;
     var starShape = confetti.shapeFromText({
-      text: "⭐",
+      text: "\u2B50",
       scalar,
       color: "#ffd43b",
       fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"

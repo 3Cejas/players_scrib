@@ -50,8 +50,17 @@ texto.addEventListener("beforeinput", (e) => {
         limpiarSnapshotProtegido();
         const esSaltoLinea = e.inputType === "insertParagraph" || e.inputType === "insertLineBreak";
         const data = esSaltoLinea ? "\n" : (e.data ?? "");
+        const revisionTecladoLento = typeof revision_teclado_lento_1p !== "undefined"
+            ? revision_teclado_lento_1p
+            : 0;
         setTimeout(() => {
             if (!teclado_lento_putada) return;
+            if (
+                typeof revision_teclado_lento_1p !== "undefined"
+                && revisionTecladoLento !== revision_teclado_lento_1p
+            ) {
+                return;
+            }
             insertarConRetrasoTecladoLento(data, esSaltoLinea);
         }, RETRASO_TECLADO_LENTO_MS);
     }
@@ -238,7 +247,7 @@ function detenerEfectoMaquina() {
 
 function confetti_musas(){
 var scalar = 2;
-var unicorn = confetti.shapeFromText({ text: '⭐', scalar });
+var unicorn = confetti.shapeFromText({ text: '\u2B50', scalar });
 isConfettiRunning = true;
 
 var end = Date.now() + (2 * 1000);

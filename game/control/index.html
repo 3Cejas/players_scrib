@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260328a">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260506c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -18,109 +18,106 @@
 <body>
     <script src="../config.js"></script>
     <script src="../js/runtime.js?v=20260424a"></script>
-    <script src="../js/domains/inspiration.js?v=20260424a"></script>
+    <script src="../js/domains/inspiration.js?v=20260504e"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260424a"></script>
     <script src="../js/domains/resurrection.js?v=20260424a"></script>
-    <script src="../js/domains/credits.js?v=20260428a"></script>
+    <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-    <script src="./js/actions.js?v=20260424b"></script>
-    <div class="ascii">
-        <pre class="neon">
-       __     _____    _____   _____    _____    __       ____  
-      / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
-     / /    | (___   | |      | |__) |   | |      \ \    | |_) |
-    < <      \___ \  | |      |  _  /    | |       > >   |  _ < 
-     \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
-      \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
-                                                                                                
-        </pre>
+<script src="./js/actions.js?v=20260506d"></script>
+    <div class="remote-status-bar" aria-label="Conexiones remotas">
+        <div class="remote-brand-card">
+            <div class="ascii control-brand">
+                <pre class="neon">    __     _____    _____   _____    _____    __       ____  
+   / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+  / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+ &lt; &lt;      \___ \  | |      |  _  /    | |       &gt; &gt;   |  _ &lt; 
+  \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+   \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/</pre>
+            </div>
+            <span class="remote-brand-control-label">CONTROL</span>
+        </div>
+        <div class="remote-status-card remote-status-card--control">
+            <span id="estado_servidor" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role">CONTROL</span>
+            <span id="estado_servidor_texto" class="remote-status-state is-off">DESCONECTADO</span>
+            </div>
+        </div>
+        <div class="remote-status-card">
+            <span id="estado_espectador" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role">ESPECTADOR</span>
+                <span id="estado_espectador_texto" class="remote-status-state is-off">DESCONECTADO</span>
+            </div>
+            <button id="boton_reiniciar_espectador" class="remote-restart-btn" type="button" onclick="reiniciarRolRemoto('espectador')" aria-label="Reiniciar espectador" data-restart-role="espectador" disabled aria-disabled="true">&#x21BB;</button>
+        </div>
+        <div class="remote-status-card">
+            <span id="estado_actor_1" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role remote-status-role--blue">ACTORES AZULES</span>
+                <span id="estado_actor_1_texto" class="remote-status-state is-off">DESCONECTADO</span>
+            </div>
+            <button id="boton_reiniciar_actorxs_1" class="remote-restart-btn" type="button" onclick="reiniciarRolRemoto('actorxs1')" aria-label="Reiniciar actores azules" data-restart-role="actorxs1" disabled aria-disabled="true">&#x21BB;</button>
+        </div>
+        <div class="remote-status-card">
+            <span id="estado_actor_2" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role remote-status-role--red">ACTORES ROJOS</span>
+                <span id="estado_actor_2_texto" class="remote-status-state is-off">DESCONECTADO</span>
+            </div>
+            <button id="boton_reiniciar_actorxs_2" class="remote-restart-btn" type="button" onclick="reiniciarRolRemoto('actorxs2')" aria-label="Reiniciar actores rojos" data-restart-role="actorxs2" disabled aria-disabled="true">&#x21BB;</button>
+        </div>
     </div>
     <div align="center">
     <table class="default">
-        <tbody id="panel_toggle">
-            <tr>
-                <td colspan="5">
-                    <div class="panel-toggle-header">
-                        <div class="panel-toggle-buttons">
-                            <span id="boton_parametros" class='btn' onclick="toggleParametros()">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
-                            <span id="boton_creditos" class='btn' onclick="toggleCreditos()">&#x1F3AC; CR&Eacute;DITOS</span>
-                        </div>
-                        <div class="control-language" role="group" aria-labelledby="selector_idioma_label">
-                            <span id="selector_idioma_label" data-i18n="options.language_label">IDIOMA</span>
-                            <select id="selector_idioma_control">
-                                <option value="es">Espa&ntilde;ol</option>
-                                <option value="en">English</option>
-                                <option value="fr">Fran&ccedil;ais</option>
-                            </select>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <div class="estado-modo">
-                        <p id="display_modo" class="display_modo">Ninguno</p>
-                        <p id="tiempo_modos_secs" class="tiempo">0 segundos</p>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
+        <tbody id="panel_toggle"></tbody>
         <tbody id="panel_controles">
             <tr>
                 <td colspan="5">
                     <div class="control-groups">
-                        <div class="control-group control-group--calentamiento">
-                            <div id="control_title_tutorial" class="control-group-title">&#x1F525; TUTORIAL</div>
+                        <div class="control-group control-group--calentamiento control-collapsible is-collapsed" data-control-section="tutorial">
+                            <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
                             <div class="control-group-buttons control-group-buttons--two">
-                                <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F525; VISTA TUTORIAL</span>
+                                <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F4D6; VISTA TUTORIAL</span>
                                 <span id="boton_reiniciar_calentamiento" class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
-                                <span id="boton_reiniciar_marcador_calentamiento" class='btn' onclick="reiniciar_marcador_calentamiento()">&#x1F3C6; REINICIAR MARCADOR</span>
-                                <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F3F3;&#xFE0F; BANDERAS DESACTIVADAS</span>
+                                <span id="boton_reiniciar_marcador_calentamiento" class='btn' onclick="reiniciar_marcador_calentamiento()">&#x21BB; REINICIAR MARCADOR</span>
+                                <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</span>
                             </div>
                             <div id="control_subtitle_musas" class="control-group-subtitle">DETONADORES PARA MUSAS</div>
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">
                                 <span id="boton_solicitud_lugares" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="lugares" onclick="pedir_solicitud_calentamiento('lugares')">&#x1F4CD; PEDIR LUGARES</span>
                                 <span id="boton_solicitud_acciones" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="acciones" onclick="pedir_solicitud_calentamiento('acciones')">&#x1F3C3; PEDIR ACCIONES</span>
-                                <span id="boton_solicitud_frase_final" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="frase_final" onclick="pedir_solicitud_calentamiento('frase_final')">&#x1F5E3;&#xFE0F; PEDIR FRASE FINAL</span>
+                                <span id="boton_solicitud_frase_final" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="frase_final" onclick="pedir_solicitud_calentamiento('frase_final')">&#x1F4AC; PEDIR FRASE FINAL</span>
                             </div>
-                            <p id="calentamiento_solicitud_actual" class="calentamiento-solicitud-estado">DETONADOR ACTUAL: SIN DETONADOR ACTIVO</p>
                             <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: ABIERTO | J2: ABIERTO</p>
                         </div>
-                        <div class="control-group control-group--juego">
-                            <div id="control_title_game" class="control-group-title">&#x1F3AE; JUEGO</div>
+                        <div class="control-group control-group--juego control-collapsible" data-control-section="juego">
+                            <button id="control_title_game" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="true" onclick="toggleSeccionControl('juego')">&#x1F3AE; JUEGO</button>
                             <div class="control-group-buttons control-group-buttons--two">
-                                <span id="boton_escribir" class='btn' onclick="temp()">&#x270D;&#xFE0F; ESCRIBIR</span>
+                                <span id="boton_escribir" class='btn' onclick="temp()">&#x270E; ESCRIBIR</span>
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
-                                <span id="boton_borrar_texto_guardado" class='btn' data-active="0" onclick="borrar_texto_guardado()">&#x1F9F9; BORRAR TEXTO: OFF</span>
                                 <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
                                 <span id="boton_skip_tertulia" class='btn btn-skip-tertulia' onclick="saltar_tertulia()">&#x23ED;&#xFE0F; SKIP TERTULIA</span>
                             </div>
                             <div id="stats_nav_control" class="stats-nav-control" hidden aria-hidden="true">
-                                <button id="stats_nav_prev" type="button" class="btn stats-nav-button" onclick="navegarSlidesStatsControl('prev')" aria-label="Slide anterior">&#x2B05;&#xFE0F;</button>
+                                <button id="stats_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev" onclick="navegarSlidesStatsControl('prev')" aria-label="Slide anterior"></button>
                                 <span id="stats_nav_label" class="stats-nav-label">&#x1F4CA; SLIDES STATS</span>
-                                <button id="stats_nav_next" type="button" class="btn stats-nav-button" onclick="navegarSlidesStatsControl('next')" aria-label="Slide siguiente">&#x27A1;&#xFE0F;</button>
-                            </div>
-                            <div id="spectator_scale_control" class="stats-nav-control spectator-scale-control" aria-live="polite">
-                                <span id="spectator_scale_label" class="stats-nav-label">&#x1F441;&#xFE0F; TAMA&Ntilde;O ESPECTADOR</span>
-                                <div class="spectator-scale-actions">
-                                    <button id="spectator_scale_down" type="button" class="btn stats-nav-button spectator-scale-button" onclick="ajustarEscalaEspectadorControl('down')" aria-label="Empeque&ntilde;ecer espectador">&#x2796;</button>
-                                    <button id="spectator_scale_reset" type="button" class="btn stats-nav-button spectator-scale-button spectator-scale-button--value" onclick="ajustarEscalaEspectadorControl('reset')" aria-label="Restablecer tama&ntilde;o del espectador">100%</button>
-                                    <button id="spectator_scale_up" type="button" class="btn stats-nav-button spectator-scale-button" onclick="ajustarEscalaEspectadorControl('up')" aria-label="Agrandar espectador">&#x2795;</button>
-                                </div>
+                                <button id="stats_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next" onclick="navegarSlidesStatsControl('next')" aria-label="Slide siguiente"></button>
                             </div>
                         </div>
-                        <div class="control-group control-group--representacion">
-                            <div id="control_title_representation" class="control-group-title">&#x1F3AD; REPRESENTACI&Oacute;N</div>
+                        <div class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion">
+                            <button id="control_title_representation" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
                             <div class="control-group-buttons">
-                                <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x1F4BE; DESCARGAR TEXTOS</span>
-                                <span id="boton_pedir_feedback" class='btn' onclick="pedirFeedbackMusas()">&#x1F4DD; PEDIR FEEDBACK</span>
+                                <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x2B07;&#xFE0F; DESCARGAR TEXTOS</span>
+                                <span id="boton_pedir_feedback" class='btn' onclick="pedirFeedbackMusas()">&#x1F5E8;&#xFE0F; PEDIR FEEDBACK</span>
                                 <span id="boton_temporizador_gigante" class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
-                                <span id="boton_mostrar_creditos" class='btn' onclick="mostrarCreditosEspectador()">&#x1F4DC; MOSTRAR CR&Eacute;DITOS</span>
+                                <span id="boton_mostrar_creditos" class='btn' onclick="mostrarCreditosEspectador()">&#x2B50; MOSTRAR CR&Eacute;DITOS</span>
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
                             </div>
+                            <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
                         </div>
                     </div>
                 </td>
@@ -130,6 +127,9 @@
             <tr>
                 <td colspan="5">
                     <div class="teleprompter-panel">
+                        <div class="teleprompter-panel-nav">
+                            <button id="boton_volver_representacion_teleprompter" type="button" class="btn teleprompter-back" onclick="volverMenuRepresentacionTeleprompter()">&#x2039; VOLVER</button>
+                        </div>
                         <div class="tp-row tp-row--text">
                             <div class="teleprompter-buttons">
                                 <button id="teleprompter_cargar_j1" type="button" class="btn teleprompter-cargar teleprompter-cargar--j1" onclick="teleprompterCargarTexto(1)">💾 CARGAR</button>
@@ -273,27 +273,50 @@
                 </td>
             </tr>
         </tbody>
-        <tbody id="panel_parametros" class="panel-oculto">
-            <tr class="panel-estado">
+        <tbody id="panel_parametros" class="control-params-panel">
+            <tr class="parametros-title-row">
                 <td colspan="4">
-                    <div class="conexion-panel">
-                        <div class="conexion-title" data-i18n="control.connection.title">CONEXI&Oacute;N</div>
-                        <div class="conexion-items">
-                            <div class="conexion-item">
-                                <span class="conexion-label" data-i18n="control.connection.server">SERVIDOR</span>
-                                <span id="estado_servidor" class="conexion-dot conexion-dot--off" data-status="off"></span>
-                                <span id="estado_servidor_texto" class="conexion-text">DESCONECTADO</span>
-                            </div>
-                            <div class="conexion-item conexion-item--players">
-                                <span class="conexion-label" data-i18n="control.connection.players">PLAYERS</span>
-                                <div class="conexion-players">
-                                    <span id="estado_player_1_label" class="conexion-player-name conexion-player-name--j1">ESCRITXR 1</span>
-                                    <span id="estado_player_1" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
-                                    <span id="estado_player_2_label" class="conexion-player-name conexion-player-name--j2">ESCRITXR 2</span>
-                                    <span id="estado_player_2" class="conexion-dot conexion-dot--mini conexion-dot--off" data-status="off"></span>
-                                </div>
-                            </div>
+                    <div id="control_title_parameters" class="control-group-title control-group-title--parametros">
+                        <span id="control_title_parameters_text" class="control-params-title-text">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
+                        <button
+                            id="boton_colapsar_parametros"
+                            class="control-params-collapse-btn"
+                            type="button"
+                            onclick="togglePanelParametrosControl()"
+                            aria-expanded="true"
+                            aria-controls="panel_parametros"
+                            title="Contraer par&aacute;metros"
+                        >&#x203A;</button>
+                    </div>
+                </td>
+            </tr>
+            <tr class="parametros-frase-row">
+                <td colspan="4">
+                    <div class="parametros-top-grid">
+                        <div class="control-language" role="group" aria-labelledby="selector_idioma_label">
+                            <span id="selector_idioma_label" data-i18n="options.language_label">IDIOMA</span>
+                            <select id="selector_idioma_control">
+                                <option value="es">Espa&ntilde;ol</option>
+                                <option value="en">English</option>
+                                <option value="fr">Fran&ccedil;ais</option>
+                            </select>
                         </div>
+                        <label id="param_frase_final_j1" class="param-frase-final param-frase-final--j1" for="frase_final_j1" data-final-phrase-player="1">
+                            <span id="frase_final_heading_j1" class="frase-final-heading">FRASE FINAL</span>
+                            <span id="frase_final_label_j1" class="frase_final_label frase_final_label--j1">ESCRITXR 1</span>
+                            <span class="frase_final_editor frase_final_editor--j1">
+                                <input id="frase_final_j1" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
+                                <span id="frase_final_estado_j1" class="frase-final-save-state" aria-live="polite" aria-label="Frase final guardada">&#x2713;</span>
+                            </span>
+                        </label>
+                        <label id="param_frase_final_j2" class="param-frase-final param-frase-final--j2" for="frase_final_j2" data-final-phrase-player="2">
+                            <span id="frase_final_heading_j2" class="frase-final-heading">FRASE FINAL</span>
+                            <span id="frase_final_label_j2" class="frase_final_label frase_final_label--j2">ESCRITXR 2</span>
+                            <span class="frase_final_editor frase_final_editor--j2">
+                                <input id="frase_final_j2" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
+                                <span id="frase_final_estado_j2" class="frase-final-save-state" aria-live="polite" aria-label="Frase final guardada">&#x2713;</span>
+                            </span>
+                        </label>
                     </div>
                 </td>
             </tr>
@@ -307,7 +330,7 @@
                                min="1" max="360" step="1" value="60">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_modificador', 5)">+</button>
                     </div>
-                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
                 <td>
                     <br>
@@ -318,7 +341,7 @@
                                min="1" max="360" step="1" value="30">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_votacion', 5)">+</button>
                     </div>
-                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
                 <td>
                     <br>
@@ -329,9 +352,9 @@
                                min="1" max="3600" step="1" value="300">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_modos', 5)">+</button>
                     </div>
-                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
-                <td>
+                <td class="param-start">
                     <br>
                     <label for="tiempo_minutos" data-i18n="control.param.start">INICIO</label><br>
                     <div class="spinner-container">
@@ -376,7 +399,7 @@
                                min="1" max="360" step="1" value="60">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_letra', 5)">+</button>
                     </div>
-                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
                 <td>
                     <br>
@@ -387,7 +410,7 @@
                                min="1" max="360" step="1" value="20">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_cambio_palabras', 5)">+</button>
                     </div>
-                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
                 <td>
                     <br>
@@ -398,112 +421,192 @@
                                min="5" max="120" step="1" value="30">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('limite_tiempo_inspiracion', 5)">+</button>
                     </div>
-                    <span class="parametro" data-i18n="control.unit.seconds">segundos</span>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
-                <td>
+                <td class="spectator-scale-param">
                     <br>
-                    <label for="palabras_insertadas_meta" data-i18n="control.param.inserted_goal">PALABRAS INSERTADAS META</label>
-                    <div class="spinner-container">
-                        <button type="button" class="spinner-button minus-button" onclick="cambiarValor('palabras_insertadas_meta', -5)">-</button>
-                        <input type="number" id="palabras_insertadas_meta" name="palabras_insertadas_meta" class="parametro"
-                               min="1" max="20" step="1" value="5">
-                        <button type="button" class="spinner-button plus-button" onclick="cambiarValor('palabras_insertadas_meta', 5)">+</button>
+                    <label for="escala_espectador" data-i18n="control.param.spectator_scale">TAMA&Ntilde;O ESPECTADOR</label>
+                    <div class="spectator-scale-slider-control">
+                        <input type="range" id="escala_espectador" name="escala_espectador" class="parametro spectator-scale-range"
+                               min="82" max="128" step="1" value="100" onchange="actualizarEscalaEspectadorControlDesdeParametro()" oninput="actualizarEscalaEspectadorControlDesdeParametro()">
+                        <span id="escala_espectador_valor" class="spectator-scale-value">100%</span>
                     </div>
-                    <span class="parametro" data-i18n="control.unit.words">palabras</span>
+                </td>
+            </tr>
+            <tr class="parametros-modos-row">
+                <td colspan="4">
+                    <div class="parametros-bottom-actions">
+                        <div id="parametros_modos_dropdown" class="parametros-modos-dropdown">
+                            <button
+                                id="boton_modos_dropdown"
+                                class="btn parametros-modos-toggle"
+                                type="button"
+                                aria-expanded="false"
+                                aria-haspopup="true"
+                                aria-controls="parametros_modos_menu"
+                                onclick="toggleDropdownModosControl()"
+                            >
+                                <span class="parametros-modos-toggle-label">NIVELES ACTIVOS</span>
+                                <span id="resumen_modos_control" class="parametros-modos-summary">6 activos</span>
+                                <span class="parametros-modos-caret" aria-hidden="true">&#x25BE;</span>
+                            </button>
+                            <div id="parametros_modos_menu" class="parametros-modos-menu" hidden>
+                                <form id="listaModosForm" class="parametros-modos-form">
+                                    <table>
+                                        <tr id="listaModos">
+                                            <!-- Las casillas de verificacion se generan aqui como <td> -->
+                                        </tr>
+                                    </table>
+                                </form>
+                            </div>
+                        </div>
+                        <button id="boton_borrar_texto_guardado" class="btn parametros-delete-toggle" type="button" data-active="0" aria-pressed="false" onclick="borrar_texto_guardado()">BORRAR TEXTO</button>
+                    </div>
                 </td>
             </tr>
         </tbody>
     </table>
-    <br>
-    <div id="panel_parametros_extra" class="panel-oculto">
-        <form id="listaModosForm">
-            <table>
-                <tr id="listaModos">
-                    <!-- Las casillas de verificacion se generan aqui como <td> -->
-                </tr>
-            </table>
-        </form>
+    <div class="control-status-strip">
+        <span id="control_clock" class="control-status-time">--:--:--</span>
+        <span class="control-status-separator"></span>
+        <span class="control-status-match"><span class="control-status-dot"></span> PARTIDA EN CURSO</span>
+        <span class="control-status-separator"></span>
+        <span class="control-status-id">ID DE PARTIDA: <strong id="control_match_id">LOCAL</strong></span>
+        <button id="boton_ver_logs" class="btn logs-toggle-btn" type="button" onclick="toggleLogsControl()">&#x2630; VER LOGS</button>
+    </div>
+    <div id="panel_logs_control" class="logs-panel panel-oculto" aria-live="polite">
+        <div class="logs-panel-header">
+            <span>LOGS DE CONTROL</span>
+            <button class="btn logs-clear-btn" type="button" onclick="limpiarLogsControl()">LIMPIAR</button>
+        </div>
+        <pre id="logs_control_output" class="logs-output">Sin logs todav&iacute;a.</pre>
     </div>
 </div>
 <div id="contenedor">
-        <div>
-                <div class="frase_final_bloque frase_final_bloque--j1">
-                <div class="fin_jugador fin_jugador--j1">
-                    <span id="boton_fin_j1" class='btn' onclick="fin(1)">&#x1F535; FIN</span>
+        <div class="writer-card writer-card--j1">
+            <div class="writer-card-header">
+                <div class="writer-title-group">
+                    <span id="estado_player_1" class="conexion-dot conexion-dot--writer conexion-dot--off" data-status="off"></span>
+                    <div class="writer-title-stack">
+                        <div class="writer-name-row writer-name-row--j1">
+                            <input style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre" value="ESCRITXR 1"></input>
+                        </div>
+                        <span class="writer-connection writer-connection--j1">
+                            <button id="boton_reiniciar_escritxr_1" class="remote-restart-btn writer-restart-btn writer-restart-btn--j1" type="button" onclick="reiniciarRolRemoto('escritxr1')" aria-label="Reiniciar escritxr 1" data-restart-role="escritxr1" disabled aria-disabled="true">&#x21BB;</button>
+                            <span id="estado_player_1_label" class="writer-connection-label">ESCRITXR 1</span>
+                            <span id="estado_player_1_texto" class="remote-status-state writer-connection-state is-off">DESCONECTADO</span>
+                        </span>
+                    </div>
                 </div>
-                <p id="frase_final_label_j1" class="frase_final_label frase_final_label--j1">FRASE FINAL:</p>
-                <div class="frase_final_editor frase_final_editor--j1">
-                    <span class="frase_final_quote">&laquo;</span>
-                    <input id="frase_final_j1" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
-                    <span class="frase_final_quote">&raquo;</span>
+                <div class="writer-header-actions writer-header-actions--j1">
+                    <div id="metadatos_control_1" class="writer-header-stats marcador-equipo marcador-equipo-1">
+                        <div class="writer-compact-life writer-compact-life--j1" aria-label="Vida escritxr 1">
+                            <span class="writer-health-label">VIDA</span>
+                            <p id="tiempo" class="tiempo tiempo-vida"></p>
+                        </div>
+                        <span class="writer-stat writer-stat--words"><span class="writer-stat-icon">&#x270E;</span><span id="puntos" class="puntos">0 palabras</span></span>
+                        <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon">&#x1F3A8;</span><span id="musas" class="musas-total">0 musas</span></span>
+                    </div>
+                    <div class="fin_jugador fin_jugador--j1">
+                        <span id="boton_fin_j1" class='btn btn-fin btn-fin--j1' onclick="fin(1)">&#x1F535; FIN</span>
+                    </div>
                 </div>
             </div>
-            <p id="tiempo" class="tiempo tiempo-vida"></p>
-            <input style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre" value="ESCRITXR 1"></input>
-            <br><br>
-            <div disabled id="texto" rows="1"
-            spellcheck="false" class="textarea">
+            <div class="writer-text-shell writer-text-shell--j1">
+                <div id="line_numbers_j1" class="line-numbers" aria-hidden="true">1</div>
+                <div disabled id="texto" rows="1" spellcheck="false" class="textarea writer-textarea"></div>
             </div>
-            <br><br>
             <div align="center">
-                <div id="metadatos_control_1" class="right metadatos-grid metadatos-grid--cabecera marcador-control marcador-equipo marcador-equipo-1">
-                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
-                        <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
-                        <div class="meta-copy">
-                            <span class="meta-label">Palabras</span>
-                            <span id="puntos" class="puntos">0 palabras</span>
-                        </div>
-                    </div>
-                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
-                        <span class="meta-icon">&#x1F3A8;</span>
-                        <div class="meta-copy">
-                            <span class="meta-label">Musas</span>
-                            <span id="musas" class="musas-total">0 musas</span>
-                        </div>
-                    </div>
-                </div>
                 <h1 id="feedback1" class="feedback1"></h1>
                 <h2 id="puntuacion_final1"></h1>
             </div>
         </div>
-        <div>
-            <div class="frase_final_bloque frase_final_bloque--j2">
-                <div class="fin_jugador fin_jugador--j2">
-                    <span id="boton_fin_j2" class='btn' onclick="fin(2)">&#x1F534; FIN</span>
+        <div class="level-card">
+            <div class="level-card-title">NIVEL</div>
+            <div class="level-card-current">
+                <span>ACTUAL</span>
+                <p id="display_modo" class="display_modo">Ninguno</p>
+            </div>
+            <div class="level-card-duration">
+                <span>TIEMPO RESTANTE</span>
+                <p id="tiempo_modos_secs" class="tiempo">0 segundos</p>
+            </div>
+            <div id="level_status_witnesses" class="level-status-witnesses" aria-label="Estado de desventajas e inspiracion de musas">
+                <div id="control_desventaja_activa" class="level-status-witness level-status-witness--disadvantage" data-active="0" data-team="">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span id="control_desventaja_activa_icon" class="level-status-witness__icon" aria-hidden="true">-</span>
+                    <span id="control_desventaja_activa_time" class="level-status-witness__time">--</span>
                 </div>
-                <p id="frase_final_label_j2" class="frase_final_label frase_final_label--j2">FRASE FINAL:</p>
-                <div class="frase_final_editor frase_final_editor--j2">
-                    <span class="frase_final_quote">&laquo;</span>
-                    <input id="frase_final_j2" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
-                    <span class="frase_final_quote">&raquo;</span>
+                <div id="control_votacion_desventaja" class="level-status-witness level-status-witness--vote" data-active="0" data-team="">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span class="level-status-witness__icon" aria-hidden="true">&#x1F5F3;&#xFE0F;</span>
+                    <span id="control_votacion_desventaja_time" class="level-status-witness__time">--</span>
+                </div>
+                <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Palabra de musas para Escritxr 1">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span class="level-status-witness__icon" aria-hidden="true">&#x1F3A8;</span>
+                    <span id="control_palabra_musa_j1_word" class="level-status-witness__word">-</span>
+                    <span class="level-status-witness__meta">
+                        <span id="control_palabra_musa_j1_time" class="level-status-witness__time">--</span>
+                        <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j1_queue">0</span></span>
+                    </span>
+                </div>
+                <div id="control_palabra_musa_j2" class="level-status-witness level-status-witness--muse-word level-status-witness--j2" data-active="0" data-queued="0" data-team="2" aria-label="Palabra de musas para Escritxr 2">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span class="level-status-witness__icon" aria-hidden="true">&#x1F3A8;</span>
+                    <span id="control_palabra_musa_j2_word" class="level-status-witness__word">-</span>
+                    <span class="level-status-witness__meta">
+                        <span id="control_palabra_musa_j2_time" class="level-status-witness__time">--</span>
+                        <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j2_queue">0</span></span>
+                    </span>
                 </div>
             </div>
-            <p id="tiempo1" class="tiempo tiempo-vida"></p>
-            <input style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre" value="ESCRITXR 2"></input>
-            <br><br>
-            <div disabled id="texto1" rows="1"
-            spellcheck="false" class="textarea">
+            <div class="level-sequence" aria-label="Secuencia de niveles">
+                <span data-mode="letra bendita">LB</span>
+                <span data-mode="letra prohibida">LP</span>
+                <span data-mode="tertulia">T</span>
+                <span data-mode="palabras bonus">PB</span>
+                <span data-mode="palabras prohibidas">PP</span>
+                <span data-mode="frase final">F</span>
             </div>
-            <br><br>
-                <div id="metadatos_control_2" class="right metadatos-grid metadatos-grid--cabecera marcador-control marcador-equipo marcador-equipo-2">
-                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
-                        <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
-                        <div class="meta-copy">
-                            <span class="meta-label">Palabras</span>
-                            <span id="puntos1" class="puntos">0 palabras</span>
+        </div>
+        <div class="writer-card writer-card--j2">
+            <div class="writer-card-header">
+                <div class="writer-title-group">
+                    <span id="estado_player_2" class="conexion-dot conexion-dot--writer conexion-dot--off" data-status="off"></span>
+                    <div class="writer-title-stack">
+                        <div class="writer-name-row writer-name-row--j2">
+                            <input style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre" value="ESCRITXR 2"></input>
                         </div>
-                    </div>
-                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
-                        <span class="meta-icon">&#x1F3A8;</span>
-                        <div class="meta-copy">
-                            <span class="meta-label">Musas</span>
-                            <span id="musas1" class="musas-total">0 musas</span>
-                        </div>
+                        <span class="writer-connection writer-connection--j2">
+                            <button id="boton_reiniciar_escritxr_2" class="remote-restart-btn writer-restart-btn writer-restart-btn--j2" type="button" onclick="reiniciarRolRemoto('escritxr2')" aria-label="Reiniciar escritxr 2" data-restart-role="escritxr2" disabled aria-disabled="true">&#x21BB;</button>
+                            <span id="estado_player_2_label" class="writer-connection-label">ESCRITXR 2</span>
+                            <span id="estado_player_2_texto" class="remote-status-state writer-connection-state is-off">DESCONECTADO</span>
+                        </span>
                     </div>
                 </div>
+                <div class="writer-header-actions writer-header-actions--j2">
+                    <div id="metadatos_control_2" class="writer-header-stats marcador-equipo marcador-equipo-2">
+                        <div class="writer-compact-life writer-compact-life--j2" aria-label="Vida escritxr 2">
+                            <span class="writer-health-label writer-health-label--j2">VIDA</span>
+                            <p id="tiempo1" class="tiempo tiempo-vida"></p>
+                        </div>
+                        <span class="writer-stat writer-stat--words"><span class="writer-stat-icon">&#x270E;</span><span id="puntos1" class="puntos">0 palabras</span></span>
+                        <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon">&#x1F3A8;</span><span id="musas1" class="musas-total">0 musas</span></span>
+                    </div>
+                    <div class="fin_jugador fin_jugador--j2">
+                        <span id="boton_fin_j2" class='btn btn-fin btn-fin--j2' onclick="fin(2)">&#x1F534; FIN</span>
+                    </div>
+                </div>
+            </div>
+            <div class="writer-text-shell writer-text-shell--j2">
+                <div id="line_numbers_j2" class="line-numbers" aria-hidden="true">1</div>
+                <div disabled id="texto1" rows="1" spellcheck="false" class="textarea writer-textarea"></div>
+            </div>
+            <div align="center">
                 <h1 id="feedback2" class="feedback2"></h1>
                 <h2 id="puntuacion_final2"></h1>
-                </br>
+            </div>
         </div>
     </div>
         <table>
@@ -523,21 +626,11 @@
                 </th>
             </tr>
         </table>
-        <div id="heatmap-container" class="heatmap-container">
-            <div class="heatmap-panel">
-                <h3 id="heatmap-title-j1" class="heatmap-title">Mapa de calor</h3>
-                <div id="heatmap-j1" class="heatmap-grid"></div>
-            </div>
-            <div class="heatmap-panel">
-                <h3 id="heatmap-title-j2" class="heatmap-title">Mapa de calor</h3>
-                <div id="heatmap-j2" class="heatmap-grid"></div>
-            </div>
-        </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="../js/i18n.js?v=20260317a"></script>
-<script src="./js/state.js?v=20260424b"></script>
-<script src="./js/socket-events.js?v=20260424b"></script>
-<script src="./js/index.js?v=20260424b"></script>
+    <script src="../js/i18n.js?v=20260505g"></script>
+    <script src="./js/state.js?v=20260506a"></script>
+<script src="./js/socket-events.js?v=20260506b"></script>
+<script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

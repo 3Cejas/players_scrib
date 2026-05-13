@@ -3088,6 +3088,13 @@ function log( text ) {
 
         }
 
+        if (cmdComponents === "s+7" || cmdComponents === "s7" || cmdComponents === "oulipo") {
+
+            this.s7();
+            return;
+
+        }
+
         this.executeTerminalCommand(cmdComponents, { recordHistory: true });
         return;
 
@@ -3460,6 +3467,20 @@ function log( text ) {
             this.type(result, this.unlock.bind(this));
 
             location.href='./game/bolzano/index.html?modo=musa';
+
+    }
+
+    //S+7 OULIPO (COMANDO OCULTO)
+
+        Terminal.prototype.s7 = function () {
+
+            this.clear();
+
+            var result = "**Abriendo laboratorio oculto S+7.**";
+
+            this.type(result, this.unlock.bind(this));
+
+            location.href='./game/s7/index.html';
 
     }
 

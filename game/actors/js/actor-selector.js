@@ -10,6 +10,37 @@ const botonEscritxr2 = document.getElementById("escritxr2");
 const nombreEscritxr1 = botonEscritxr1 ? botonEscritxr1.querySelector(".actor-select-name") : null;
 const nombreEscritxr2 = botonEscritxr2 ? botonEscritxr2.querySelector(".actor-select-name") : null;
 
+function solicitarPantallaCompletaSeleccionActor() {
+    const root = document.documentElement;
+    if (!root || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+        return Promise.resolve();
+    }
+    const request = root.requestFullscreen
+        || root.webkitRequestFullscreen
+        || root.mozRequestFullScreen
+        || root.msRequestFullscreen;
+    if (typeof request !== "function") {
+        return Promise.resolve();
+    }
+    try {
+        return Promise.resolve(request.call(root)).catch(() => {});
+    } catch (error) {
+        return Promise.resolve();
+    }
+}
+
+function activarSeleccionActor(boton) {
+    if (!boton) return;
+    boton.addEventListener("click", () => {
+        const destino = boton.dataset && boton.dataset.actorUrl;
+        if (!destino) return;
+        boton.disabled = true;
+        solicitarPantallaCompletaSeleccionActor().finally(() => {
+            window.location.href = destino;
+        });
+    });
+}
+
 function actualizarNombreEscritxrActor(target, fallback, nombreRecibido) {
     const nombre = (typeof nombreRecibido === "string" ? nombreRecibido.trim() : "") || fallback;
     if (target) {
@@ -25,3 +56,6 @@ socket.on('nombre1', (nombre) => {
 socket.on('nombre2', (nombre) => {
     actualizarNombreEscritxrActor(nombreEscritxr2, "ESCRITXR 2", nombre);
 });
+
+activarSeleccionActor(botonEscritxr1);
+activarSeleccionActor(botonEscritxr2);

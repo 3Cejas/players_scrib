@@ -49,6 +49,28 @@ const estadoPlayer1Dot = getEl("estado_player_1");
 const estadoPlayer2Dot = getEl("estado_player_2");
 const estadoPlayer1Label = getEl("estado_player_1_label");
 const estadoPlayer2Label = getEl("estado_player_2_label");
+const estadoPlayer1Texto = getEl("estado_player_1_texto");
+const estadoPlayer2Texto = getEl("estado_player_2_texto");
+const estadoEspectadorDot = getEl("estado_espectador");
+const estadoEspectadorTexto = getEl("estado_espectador_texto");
+const estadoActor1Dot = getEl("estado_actor_1");
+const estadoActor1Texto = getEl("estado_actor_1_texto");
+const estadoActor2Dot = getEl("estado_actor_2");
+const estadoActor2Texto = getEl("estado_actor_2_texto");
+const botonesReinicioRemotoControl = {
+    escritxr1: getEl("boton_reiniciar_escritxr_1"),
+    escritxr2: getEl("boton_reiniciar_escritxr_2"),
+    espectador: getEl("boton_reiniciar_espectador"),
+    actorxs1: getEl("boton_reiniciar_actorxs_1"),
+    actorxs2: getEl("boton_reiniciar_actorxs_2")
+};
+const estadoRolesRemotosControl = {
+    escritxr1: false,
+    escritxr2: false,
+    espectador: false,
+    actorxs1: false,
+    actorxs2: false
+};
 
 const formatearPuntosMarcadorControl = (valor) => {
     const texto = String(valor ?? "").trim();
@@ -67,6 +89,23 @@ const formatearMusasMarcadorControl = (valor) => {
     }
     return texto;
 };
+
+const esMarcadorCompactoControl = (elemento) => (
+    Boolean(elemento && typeof elemento.closest === "function" && elemento.closest(".writer-header-stats"))
+);
+
+const formatearNumeroMarcadorCompactoControl = (valor) => {
+    const numero = extraerNumeroMarcadorControl(valor);
+    return numero === null ? "0" : String(numero);
+};
+
+const formatearPuntosMarcadorCompactoControl = (valor) => (
+    formatearPuntosMarcadorControl(formatearNumeroMarcadorCompactoControl(valor))
+);
+
+const formatearMusasMarcadorCompactoControl = (valor) => (
+    formatearMusasMarcadorControl(formatearNumeroMarcadorCompactoControl(valor))
+);
 
 function destacarMarcadorControlHit(elemento) {
     if (!elemento) return;
@@ -98,6 +137,26 @@ const setEstadoDot = (el, estado) => {
     el.dataset.status = estado;
 };
 
+const setEstadoTextoConexion = (el, conectado, textoActivo = "CONECTADO") => {
+    if (!el) return;
+    el.textContent = conectado
+        ? textoActivo
+        : tJuego2P("control.connection.disconnected", {}, "DESCONECTADO");
+    el.classList.toggle("is-off", !conectado);
+};
+
+const setBotonReinicioRemoto = (rol, conectado) => {
+    const boton = botonesReinicioRemotoControl[rol];
+    estadoRolesRemotosControl[rol] = Boolean(conectado);
+    if (!boton) return;
+    boton.disabled = !conectado;
+    boton.setAttribute("aria-disabled", conectado ? "false" : "true");
+    boton.classList.toggle("is-disabled", !conectado);
+};
+
+const rolRemotoConectadoControl = (rol) => Boolean(estadoRolesRemotosControl[rol]);
+window.rolRemotoConectadoControl = rolRemotoConectadoControl;
+
 const blinkEstadoDot = (el) => {
     if (!el) return;
     el.classList.remove("conexion-dot--ping");
@@ -107,17 +166,30 @@ const blinkEstadoDot = (el) => {
 
 const setEstadoServidor = (conectado) => {
     setEstadoDot(estadoServidorDot, conectado ? "ok" : "off");
-    if (estadoServidorTexto) {
-        estadoServidorTexto.textContent = conectado
-            ? tJuego2P("control.connection.connected", {}, "CONECTADO")
-            : tJuego2P("control.connection.disconnected", {}, "DESCONECTADO");
-    }
+    setEstadoTextoConexion(
+        estadoServidorTexto,
+        conectado,
+        tJuego2P("control.connection.active", {}, "ACTIVO")
+    );
 };
 
 const setEstadoPlayers = (j1, j2) => {
     setEstadoDot(estadoPlayer1Dot, j1 ? "ok" : "off");
     setEstadoDot(estadoPlayer2Dot, j2 ? "ok" : "off");
+    setEstadoTextoConexion(estadoPlayer1Texto, j1);
+    setEstadoTextoConexion(estadoPlayer2Texto, j2);
+    setBotonReinicioRemoto("escritxr1", j1);
+    setBotonReinicioRemoto("escritxr2", j2);
 };
+
+const setEstadoRolRemoto = (dot, texto, conectado, rol = "") => {
+    setEstadoDot(dot, conectado ? "ok" : "off");
+    setEstadoTextoConexion(texto, conectado);
+    if (rol) {
+        setBotonReinicioRemoto(rol, conectado);
+    }
+};
+window.setEstadoRolRemoto = setEstadoRolRemoto;
 
 const actualizarNombresConexiones = () => {
     if (estadoPlayer1Label) {
@@ -132,10 +204,28 @@ const procesarEstadoConexiones = (estado) => {
     if (!estado || !estado.players) return;
     lastPongTs = Date.now();
     setEstadoServidor(true);
-    setEstadoPlayers(Boolean(estado.players.j1), Boolean(estado.players.j2));
+    const conexiones = estado.connections || {};
+    const writers = conexiones.writers || {};
+    const actors = conexiones.actors || {};
+    const j1Conectado = writers[1] && typeof writers[1].connected !== "undefined"
+        ? Boolean(writers[1].connected)
+        : Boolean(estado.players.j1);
+    const j2Conectado = writers[2] && typeof writers[2].connected !== "undefined"
+        ? Boolean(writers[2].connected)
+        : Boolean(estado.players.j2);
+    setEstadoPlayers(j1Conectado, j2Conectado);
+    setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, Boolean(conexiones.spectator && conexiones.spectator.connected), "espectador");
+    setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, Boolean(actors[1] && actors[1].connected), "actorxs1");
+    setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, Boolean(actors[2] && actors[2].connected), "actorxs2");
     blinkEstadoDot(estadoServidorDot);
-    if (estado.players.j1) blinkEstadoDot(estadoPlayer1Dot);
-    if (estado.players.j2) blinkEstadoDot(estadoPlayer2Dot);
+    if (j1Conectado) blinkEstadoDot(estadoPlayer1Dot);
+    if (j2Conectado) blinkEstadoDot(estadoPlayer2Dot);
+    if (conexiones.spectator && conexiones.spectator.connected) blinkEstadoDot(estadoEspectadorDot);
+    if (actors[1] && actors[1].connected) blinkEstadoDot(estadoActor1Dot);
+    if (actors[2] && actors[2].connected) blinkEstadoDot(estadoActor2Dot);
+    if (estado.palabras_musas_control && typeof window.sincronizarEstadoPalabrasMusasControl === "function") {
+        window.sincronizarEstadoPalabrasMusasControl(estado.palabras_musas_control);
+    }
 };
 
 const enviarPingEstado = () => {
@@ -155,6 +245,9 @@ const iniciarStatusPing = () => {
         if (lastPongTs && (Date.now() - lastPongTs) > STATUS_STALE_MS) {
             setEstadoServidor(false);
             setEstadoPlayers(false, false);
+            setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, false, "espectador");
+            setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, false, "actorxs1");
+            setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, false, "actorxs2");
         }
     }, 1000);
 };
@@ -192,7 +285,9 @@ function actualizarPuntosMarcadorControl(playerId, valor, animar = true) {
     const puntosEl = esJ2 ? puntos2 : puntos1;
     if (!puntosEl) return;
     const previo = (puntosEl.textContent || "").trim();
-    const siguiente = formatearPuntosMarcadorControl(valor);
+    const siguiente = esMarcadorCompactoControl(puntosEl)
+        ? formatearPuntosMarcadorCompactoControl(valor)
+        : formatearPuntosMarcadorControl(valor);
     puntosEl.textContent = siguiente;
     if (animar && siguiente !== previo) {
         destacarMarcadorControlHit(puntosEl);
@@ -204,7 +299,9 @@ function actualizarMusasMarcadorControl(playerId, valor, animar = true) {
     const musasEl = esJ2 ? musas2 : musas1;
     if (!musasEl) return;
     const previo = (musasEl.textContent || "").trim();
-    const siguiente = formatearMusasMarcadorControl(valor);
+    const siguiente = esMarcadorCompactoControl(musasEl)
+        ? formatearMusasMarcadorCompactoControl(valor)
+        : formatearMusasMarcadorControl(valor);
     musasEl.textContent = siguiente;
     if (animar && siguiente !== previo) {
         destacarMarcadorControlHit(musasEl);
@@ -226,7 +323,7 @@ let clasificacion = getEl("clasificacion");
 let limite_tiempo_inspiracion_input = document.getElementById('limite_tiempo_inspiracion');
 let tiempo_modificador_input = document.getElementById('tiempo_modificador');
 let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabras');
-let palabras_insertadas_meta_input = document.getElementById('palabras_insertadas_meta');
+let escala_espectador_input = document.getElementById('escala_espectador');
 let tiempo_votacion_input = document.getElementById('tiempo_votacion')
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
 let tiempo_modos_input = document.getElementById('tiempo_modos');
@@ -241,10 +338,17 @@ let postgame2;
 let texto_guardado1 = "";
 let texto_guardado2 = "";
 
+function obtenerEscalaUiEspectadorParametro() {
+    const valor = escala_espectador_input ? escala_espectador_input.valueAsNumber : 100;
+    const porcentaje = Number.isFinite(valor) ? valor : 100;
+    const limitado = Math.min(128, Math.max(82, porcentaje));
+    return limitado / 100;
+}
+
 let LIMITE_TIEMPO_INSPIRACION = limite_tiempo_inspiracion_input.valueAsNumber;
 let TIEMPO_MODIFICADOR = tiempo_modificador_input.valueAsNumber * 1000;
 let TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
-let PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
+let ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
 let TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
 let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
 let TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
@@ -259,12 +363,12 @@ let LISTA_MODOS = LISTA_MODOS_DISPONIBLES.slice();
 
 // Objeto que asocia cada modo con un color
 const COLORES_MODOS = {
-    "letra bendita": "green",
-    "letra prohibida": "red",
-    "tertulia": "blue",
-    "palabras bonus": "yellow",
-    "palabras prohibidas": "pink",
-    "frase final": "orange"
+    "letra bendita": "#6bff83",
+    "letra prohibida": "#ff8fa0",
+    "tertulia": "#64e8ff",
+    "palabras bonus": "#ffd65a",
+    "palabras prohibidas": "#ff71c8",
+    "frase final": "#ffad42"
 };
 
 // Funcion para generar las casillas de verificacion dentro de <td>
@@ -343,7 +447,7 @@ function actualizarVariables() {
     LIMITE_TIEMPO_INSPIRACION = limite_tiempo_inspiracion_input.valueAsNumber;
     TIEMPO_MODIFICADOR = tiempo_modificador_input.valueAsNumber * 1000;
     TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
-    PALABRAS_INSERTADAS_META = palabras_insertadas_meta_input.valueAsNumber;
+    ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
     TIEMPO_VOTACION = tiempo_votacion_input.valueAsNumber * 1000;
     TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
     TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
@@ -355,7 +459,7 @@ function actualizarVariables() {
    console.log('LIMITE_TIEMPO_INSPIRACION:', LIMITE_TIEMPO_INSPIRACION);
    console.log('TIEMPO_MODIFICADOR:', TIEMPO_MODIFICADOR);
    console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);
-   console.log('PALABRAS_INSERTADAS_META:', PALABRAS_INSERTADAS_META);
+   console.log('ESCALA_UI_ESPECTADOR:', ESCALA_UI_ESPECTADOR);
    console.log('TIEMPO_VOTACION:', TIEMPO_VOTACION);
    console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
    console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
@@ -402,6 +506,8 @@ document.addEventListener('DOMContentLoaded', function () {
 window.addEventListener('load', inicializarHeatmap);
 let modo_actual = "";
 let segundos_modo_actual_control = 0;
+let duracion_modo_actual_control = 0;
+let tiempo_restante_modo_actual_control = 0;
 let modo_seq_actual_control = 0;
 
 function extraerModoSeqPayloadControl(payload = {}) {

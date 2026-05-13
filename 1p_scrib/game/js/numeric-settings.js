@@ -12,8 +12,10 @@
   let nuevoValor = valorActual + incremento;
 
   // Leemos los lÃ­mites min y max del propio input
-  const min = parseInt(input.min, 10) || Number.MIN_SAFE_INTEGER;
-  const max = parseInt(input.max, 10) || Number.MAX_SAFE_INTEGER;
+  const minRaw = parseInt(input.min, 10);
+  const maxRaw = parseInt(input.max, 10);
+  const min = Number.isNaN(minRaw) ? Number.MIN_SAFE_INTEGER : minRaw;
+  const max = Number.isNaN(maxRaw) ? Number.MAX_SAFE_INTEGER : maxRaw;
 
   // Forzamos el nuevo valor a permanecer dentro de [min, max]
   if (nuevoValor < min) {

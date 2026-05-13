@@ -2,8 +2,6 @@ let delay_animacion;
 let isFullscreen = false;
 let letra = "";
 
-
-
 document.addEventListener('keydown', function (event) {
   const key = event.key;
 
@@ -16,32 +14,83 @@ document.addEventListener('keydown', function (event) {
   }
 });
 
-document.addEventListener('click', function(event) {
-  texto1.focus();
-  if (event.button === 0) {
-    if (isFullscreen) {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      }
-      isFullscreen = false;
-    } else {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        document.documentElement.webkitRequestFullscreen();
-      } else if (document.documentElement.mozRequestFullScreen) {
-        document.documentElement.mozRequestFullScreen();
-      }
-      isFullscreen = true;
-      texto1.focus();
-    }
-  }
+function obtenerElementoPantallaCompletaActor() {
+  return document.fullscreenElement
+    || document.webkitFullscreenElement
+    || document.mozFullScreenElement
+    || document.msFullscreenElement
+    || null;
+}
 
-});
+function solicitarPantallaCompletaActor() {
+  const root = document.documentElement;
+  const request = root.requestFullscreen
+    || root.webkitRequestFullscreen
+    || root.mozRequestFullScreen
+    || root.msRequestFullscreen;
+  if (typeof request === "function") {
+    return request.call(root);
+  }
+  return null;
+}
+
+function salirPantallaCompletaActor() {
+  const exit = document.exitFullscreen
+    || document.webkitExitFullscreen
+    || document.mozCancelFullScreen
+    || document.msExitFullscreen;
+  if (typeof exit === "function") {
+    return exit.call(document);
+  }
+  return null;
+}
+
+function actualizarBotonPantallaCompletaActor() {
+  const boton = document.getElementById("actor_fullscreen_toggle");
+  const activo = Boolean(obtenerElementoPantallaCompletaActor());
+  isFullscreen = activo;
+  if (!boton) return;
+  boton.textContent = activo ? "\u274C Salir pantalla completa" : "\u{1F5A5}\uFE0F Pantalla completa";
+  boton.setAttribute("aria-label", activo ? "Salir de pantalla completa" : "Activar pantalla completa");
+  boton.title = activo ? "Salir de pantalla completa" : "Pantalla completa";
+  boton.classList.toggle("actor-fullscreen-toggle--active", activo);
+}
+
+function alternarPantallaCompletaActor(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const resultado = obtenerElementoPantallaCompletaActor()
+    ? salirPantallaCompletaActor()
+    : solicitarPantallaCompletaActor();
+  if (resultado && typeof resultado.catch === "function") {
+    resultado.catch(() => {}).finally(actualizarBotonPantallaCompletaActor);
+  } else {
+    setTimeout(actualizarBotonPantallaCompletaActor, 0);
+  }
+  if (typeof texto1 !== "undefined" && texto1 && typeof texto1.focus === "function") {
+    texto1.focus();
+  }
+}
+
+function inicializarBotonPantallaCompletaActor() {
+  const boton = document.getElementById("actor_fullscreen_toggle");
+  if (!boton) return;
+  boton.addEventListener("click", alternarPantallaCompletaActor);
+  actualizarBotonPantallaCompletaActor();
+}
+
+document.addEventListener("fullscreenchange", actualizarBotonPantallaCompletaActor);
+document.addEventListener("webkitfullscreenchange", actualizarBotonPantallaCompletaActor);
+document.addEventListener("mozfullscreenchange", actualizarBotonPantallaCompletaActor);
+document.addEventListener("MSFullscreenChange", actualizarBotonPantallaCompletaActor);
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", inicializarBotonPantallaCompletaActor, { once: true });
+} else {
+  inicializarBotonPantallaCompletaActor();
+}
 
 const smoothScrollBy = window.ScribRuntime.smoothScrollBy;
 

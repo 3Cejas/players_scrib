@@ -25,6 +25,7 @@ function limpiar_bloqueo_putada() {
 }
 
 function limpiar_teclado_lento() {
+    revision_teclado_lento_1p += 1;
     teclado_lento_putada = false;
     if (timeout_teclado_lento) {
         clearTimeout(timeout_teclado_lento);
@@ -470,7 +471,12 @@ const PUTADAS = {
         }
         teclado_lento_putada = true;
         putada_actual = "🐢";
+        revision_teclado_lento_1p += 1;
+        const revisionActual = revision_teclado_lento_1p;
         timeout_teclado_lento = setTimeout(function () {
+            if (revisionActual !== revision_teclado_lento_1p) {
+                return;
+            }
             teclado_lento_putada = false;
             if (putada_actual === "🐢") {
                 putada_actual = "";

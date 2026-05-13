@@ -22,6 +22,8 @@ let es_pausa = false;
 let borrado_cambiado = false;
 let duracion;
 let texto_guardado = "";
+let texto_restaurado_desde_servidor = false;
+let texto_html_restaurado_desde_servidor = "";
 let pararEscritura = false;
 let inspirar;
 let enviar_palabra;
@@ -61,6 +63,33 @@ const traducirNombreEscritoraUi = (id, fallback = "") => (
         ? window.scribTranslateWriterName2P(id, fallback || `ESCRITXR ${id}`)
         : (fallback || `ESCRITXR ${id}`)
 );
+
+const obtenerContenidoMarqueeDefinicionEscritora = (elemento) => {
+    if (!elemento) return "";
+    const inner = elemento.querySelector(".definicion-marquee__inner");
+    return inner ? inner.innerHTML : elemento.innerHTML;
+};
+
+const aplicarMarqueeSiOverflowEscritora = (elemento) => {
+    if (!elemento) return;
+    const contenido = obtenerContenidoMarqueeDefinicionEscritora(elemento);
+    elemento.classList.remove("definicion--marquee");
+    elemento.innerHTML = contenido;
+    elemento.style.removeProperty("--marquee-distance");
+    elemento.style.removeProperty("--marquee-duration");
+
+    requestAnimationFrame(() => {
+        const distancia = elemento.scrollWidth - elemento.clientWidth;
+        if (distancia <= 1) return;
+        const velocidad = 35;
+        const duracion = Math.max(distancia / velocidad, 6);
+        elemento.style.setProperty("--marquee-distance", `${Math.ceil(distancia)}px`);
+        elemento.style.setProperty("--marquee-duration", `${duracion.toFixed(2)}s`);
+        elemento.innerHTML = `<span class="definicion-marquee__inner">${contenido}</span>`;
+        elemento.classList.add("definicion--marquee");
+    });
+};
+
 const formatearPalabrasJuego2P = (valor) => (
     (window && typeof window.scribFormatWordsCount2P === "function")
         ? window.scribFormatWordsCount2P(valor)
@@ -79,6 +108,37 @@ const construirCantidadResucitarJuego2P = (payload = {}) => (
 const normalizarSaltosTextoGuardado = (valor) => String(valor ?? "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n");
+
+function crearClientIdSesionEscritora() {
+    const randomPart = (() => {
+        try {
+            if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+                const bytes = new Uint32Array(2);
+                window.crypto.getRandomValues(bytes);
+                return Array.from(bytes, (value) => value.toString(36)).join("");
+            }
+        } catch (_error) {}
+        return Math.random().toString(36).slice(2);
+    })();
+    return `writer-${player || "x"}-${Date.now().toString(36)}-${randomPart}`;
+}
+
+function obtenerClientIdSesionEscritora() {
+    const key = `scrib_writer_client_id_${player || "x"}`;
+    try {
+        if (window.sessionStorage) {
+            const existente = window.sessionStorage.getItem(key);
+            if (existente) return existente;
+            const nuevo = crearClientIdSesionEscritora();
+            window.sessionStorage.setItem(key, nuevo);
+            return nuevo;
+        }
+    } catch (_error) {}
+    if (!window.__scribWriterClientId) {
+        window.__scribWriterClientId = crearClientIdSesionEscritora();
+    }
+    return window.__scribWriterClientId;
+}
 
 function capturarTextoGuardadoDesdeEditor() {
     if (!texto) {
@@ -148,6 +208,21 @@ const normalizarNombreMusaFeedback = (valor) => {
     return valor.trim().slice(0, 18).toUpperCase();
 };
 
+const normalizarSuperbonusInspiracionEscritora = (payload = {}) => {
+    const meta = payload && typeof payload === "object" ? payload.superbonus : null;
+    if (!meta || typeof meta !== "object" || meta.activo !== true) {
+        return { activo: false, repeticiones: 1, musas: [] };
+    }
+    const repeticiones = Math.max(2, Math.trunc(Number(meta.repeticiones) || 2));
+    const musas = Array.isArray(meta.musas)
+        ? meta.musas
+            .map((musa) => String(musa || "").trim())
+            .filter(Boolean)
+            .slice(0, 6)
+        : [];
+    return { activo: true, repeticiones, musas };
+};
+
 const establecerContextoMusaDefinicion = (origen, musaNombre = "") => {
     if (!definicion || !definicion.dataset) return;
     definicion.dataset.origenMusa = origen || "";
@@ -195,8 +270,8 @@ const CLASES_FULGOR_ESCRITOR = [
     "escritor-borde-fulgor-positivo",
     "escritor-borde-fulgor-negativo"
 ];
-let TEXTO_GANADOR_ESCRITORA = tJuego2P("game.finished", {}, "Â¡TEXTO TERMINADO!");
-let TEXTO_PERDISTE_SIN_PALABRAS = tJuego2P("game.no_words_lost", {}, "Â¡PERDISTE, NO ESCRIBISTE NADA!");
+let TEXTO_GANADOR_ESCRITORA = tJuego2P("game.finished", {}, "\u00a1TEXTO TERMINADO!");
+let TEXTO_PERDISTE_SIN_PALABRAS = tJuego2P("game.no_words_lost", {}, "\u00a1PERDISTE, NO ESCRIBISTE NADA!");
 let timeout_fulgor_escritor = null;
 let timeout_musa_regalo_estado_anim = null;
 
@@ -260,6 +335,22 @@ function sincronizarEstadoContadorEscritora(segundos, texto = "") {
     }
 }
 
+function setTextoTiempoVidaEscritora(textoContador = "") {
+    if (!tiempo) return;
+    const contenido = String(textoContador || "");
+    if (!contenido) {
+        tiempo.innerHTML = "";
+        if (tiempo.dataset) {
+            delete tiempo.dataset.displayText;
+        }
+        return;
+    }
+    if (tiempo.dataset) {
+        tiempo.dataset.displayText = contenido;
+    }
+    tiempo.innerHTML = `<span class="tiempo-vida__label">${escapeHtml(contenido)}</span>`;
+}
+
 function extraerSegundosContador(valor) {
     if (typeof valor !== "string") return null;
     const texto = valor.trim();
@@ -284,7 +375,7 @@ function aplicarAjusteLocalTiempoEscritora(secs, payload = {}) {
     const countAfter = typeof payload.count_after === "string" ? payload.count_after.trim() : "";
     const secondsAfter = Number(payload.count_seconds_after);
     if (countAfter) {
-        tiempo.innerHTML = countAfter;
+        setTextoTiempoVidaEscritora(countAfter);
         actualizarBarraVida(tiempo, countAfter);
         const absoluto = extraerSegundosContador(countAfter);
         ultimo_tiempo_contador_segundos = absoluto !== null ? absoluto : null;
@@ -295,8 +386,8 @@ function aplicarAjusteLocalTiempoEscritora(secs, payload = {}) {
     if (Number.isFinite(secondsAfter)) {
         const textoContadorAbsoluto = secondsAfter > 0
             ? formatearSegundosContador(secondsAfter)
-            : tJuego2P("timer.time_up", {}, "Ã‚Â¡Tiempo!");
-        tiempo.innerHTML = textoContadorAbsoluto;
+            : tJuego2P("timer.time_up", {}, "\u00a1Tiempo!");
+        setTextoTiempoVidaEscritora(textoContadorAbsoluto);
         actualizarBarraVida(tiempo, textoContadorAbsoluto);
         ultimo_tiempo_contador_segundos = secondsAfter > 0 ? Math.max(0, Math.trunc(secondsAfter)) : null;
         ultimo_tiempo_contador_ms = Date.now();
@@ -309,8 +400,8 @@ function aplicarAjusteLocalTiempoEscritora(secs, payload = {}) {
     const nuevo = Math.max(0, actual + delta);
     const textoContador = nuevo > 0
         ? formatearSegundosContador(nuevo)
-        : tJuego2P("timer.time_up", {}, "Â¡Tiempo!");
-    tiempo.innerHTML = textoContador;
+        : tJuego2P("timer.time_up", {}, "\u00a1Tiempo!");
+    setTextoTiempoVidaEscritora(textoContador);
     actualizarBarraVida(tiempo, textoContador);
     ultimo_tiempo_contador_segundos = nuevo > 0 ? nuevo : null;
     ultimo_tiempo_contador_ms = Date.now();
@@ -362,7 +453,7 @@ const crearCorazonFlotante = (equipo, x, y) => {
     const corazon = document.createElement("span");
     const claseEquipo = equipo === 1 ? "corazon-azul" : "corazon-rojo";
     corazon.className = `corazon-flotante ${claseEquipo}`;
-    corazon.textContent = equipo === 1 ? "ðŸ’™" : "â¤ï¸";
+    corazon.textContent = equipo === 1 ? "\u{1F499}" : "\u2764\uFE0F";
     const tamano = 22 + Math.random() * 22;
     const duracion = 2000 + Math.random() * 1200;
     const desplazamiento = -(90 + Math.random() * 140);
@@ -431,6 +522,11 @@ function mostrarFeedbackFlotanteEscritora(texto, opciones = {}) {
     const nodo = document.createElement("span");
     nodo.className = `feedback-tiempo-float ${tipo}`;
     nodo.textContent = contenido;
+    if (typeof opciones.claseExtra === "string" && opciones.claseExtra.trim()) {
+        opciones.claseExtra.trim().split(/\s+/).forEach((clase) => {
+            if (clase) nodo.classList.add(clase);
+        });
+    }
 
     if (typeof opciones.color === "string" && opciones.color.trim()) {
         nodo.style.setProperty("--feedback-float-color", opciones.color.trim());
@@ -455,6 +551,27 @@ function mostrarFeedbackFlotanteEscritora(texto, opciones = {}) {
     if (feedback) {
         feedback.innerHTML = "";
     }
+}
+
+function mostrarFeedbackInspiracionConTiempoEscritora(tiempoFeed, opciones = {}) {
+    const tiempo = String(tiempoFeed ?? "").trim();
+    if (!tiempo) return;
+    const colorTiempo = typeof opciones.color === "string" && opciones.color.trim()
+        ? opciones.color.trim()
+        : color_positivo;
+    const colorInspiracion = typeof opciones.colorInspiracion === "string" && opciones.colorInspiracion.trim()
+        ? opciones.colorInspiracion.trim()
+        : "#79ffe1";
+    mostrarFeedbackFlotanteEscritora(tiempo, {
+        color: colorTiempo,
+        tipo: "inspiracion",
+        claseExtra: "feedback-tiempo-float--bonus-tiempo"
+    });
+    mostrarFeedbackFlotanteEscritora("+insp.", {
+        color: colorInspiracion,
+        tipo: "inspiracion",
+        claseExtra: "feedback-tiempo-float--musa-inspiracion"
+    });
 }
 
 function limpiarFeedbackFlotanteEscritora() {
@@ -620,9 +737,44 @@ function iniciarProgresoNivelBarraEscritora() {
     intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
 }
 
-function formatoLetraNivelEscritora(letra) {
+function sincronizarProgresoNivelBarraEscritora(payload = {}) {
+    if (!modo_actual || modo_actual === "frase final") return false;
+    const data = (payload && typeof payload === "object") ? payload : {};
+    const modoEvento = typeof data.modo_actual === "string" ? data.modo_actual : "";
+    if (modoEvento && modoEvento !== modo_actual) return false;
+    const segundos = Number(data.segundos_transcurridos);
+    if (!Number.isFinite(segundos) || segundos < 0) return false;
+
+    const ms = Math.max(0, Math.min(DURACION_NIVEL_MS_ESCRITORA, Math.round(segundos * 1000)));
+    inicio_nivel_ts_escritora = Date.now() - ms;
+    const pct = DURACION_NIVEL_MS_ESCRITORA > 0 ? (ms / DURACION_NIVEL_MS_ESCRITORA) * 100 : 0;
+    setProgresoNivelBarraEscritora(pct);
+
+    if (pct >= 100) {
+        detenerProgresoNivelBarraEscritora(false);
+    } else if (!intervalo_progreso_nivel_escritora) {
+        intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
+    }
+    return true;
+}
+
+function normalizarLetraNivelEscritora(letra) {
+    if (window && typeof window.scribNormalizeModeLetter2P === "function") {
+        return window.scribNormalizeModeLetter2P(letra);
+    }
     const valor = String(letra || "").trim();
-    return valor ? valor.toUpperCase() : "-";
+    if (!valor) return "";
+    const compacto = valor.replace(/\s+/g, "");
+    if (/[\u00b1\u2018\u2019\u0091]/u.test(compacto) && /[\u00c3\u00e3\u00c2\u0192]/u.test(compacto)) {
+        return "\u00f1";
+    }
+    const letraValida = Array.from(compacto).find((char) => /[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]/u.test(char));
+    return letraValida || Array.from(compacto)[0] || "";
+}
+
+function formatoLetraNivelEscritora(letra) {
+    const valor = normalizarLetraNivelEscritora(letra);
+    return valor ? valor.toLocaleUpperCase("es-ES") : "-";
 }
 
 function renderLetraDestacadaNivelEscritora(letra) {
@@ -652,7 +804,12 @@ function limpiarEstiloNivelesEscritora() {
     }
     if (definicion && definicion.classList) {
         definicion.classList.remove("objetivo-nivel");
+        definicion.classList.remove("definicion-superbonus");
         CLASES_ESTILO_DEFINICION_NIVEL_ESCRITORA.forEach((clase) => definicion.classList.remove(clase));
+        if (definicion.dataset) {
+            delete definicion.dataset.superbonus;
+            delete definicion.dataset.superbonusRepeticiones;
+        }
     }
 }
 
@@ -679,16 +836,32 @@ function extraerTextoPalabraEventoEscritora(data = {}) {
     return "";
 }
 
+function resolverTiempoPalabraAsignadaEscritora(data = {}, fallback) {
+    if (window.ScribInspiration && typeof window.ScribInspiration.resolverTiempoPalabraAsignada === "function") {
+        return window.ScribInspiration.resolverTiempoPalabraAsignada(data, fallback);
+    }
+    const raw = data && typeof data === "object" ? data.tiempo_palabras_bonus : data;
+    const parsed = Number(raw ?? fallback);
+    return Number.isFinite(parsed) ? Math.trunc(Math.abs(parsed)) : null;
+}
+
+function formatearTiempoPalabraAsignadaEscritora(data = {}, opciones = {}) {
+    if (window.ScribInspiration && typeof window.ScribInspiration.formatearTiempoPalabraAsignada === "function") {
+        return window.ScribInspiration.formatearTiempoPalabraAsignada(data, opciones);
+    }
+    const segundos = resolverTiempoPalabraAsignadaEscritora(data, opciones.fallback);
+    if (segundos === null) return "";
+    const signo = opciones.maldita === true || opciones.modo === "palabras prohibidas" || opciones.tipo === "prohibidas" ? "-" : "+";
+    return `${signo}${segundos} segs.`;
+}
+
 function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, tipo = "bendita") {
     const base = String(palabraTexto || "").trim();
     if (!base) return "";
-    const tiempoRaw = String(tiempoSegundos ?? "").trim();
-    if (!tiempoRaw) return escapeHtml(base);
-    const tiempoLimpio = tiempoRaw.replace(/^[+-]\s*/, "");
     const esMaldita = tipo === "maldita";
-    const signo = esMaldita ? "-" : "+";
+    const tiempoTexto = formatearTiempoPalabraAsignadaEscritora(tiempoSegundos, { maldita: esMaldita });
+    if (!tiempoTexto) return escapeHtml(base);
     const claseTiempo = esMaldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
-    const tiempoTexto = `${signo}${tiempoLimpio} segs.`;
     return `${escapeHtml(base)} <span class="palabra-tiempo ${claseTiempo}">${escapeHtml(tiempoTexto)}</span>`;
 }
 
@@ -704,25 +877,45 @@ function construirBloqueObjetivoNivelEscritora(palabraTexto, opciones = {}) {
     if (!base) return "";
     const tipo = String(opciones.tipo || "bonus").trim().toLowerCase();
     const esMaldita = tipo === "prohibidas";
-    const tiempoRaw = String(opciones.tiempoSegundos ?? "").trim();
-    const palabraHtml = tiempoRaw
-        ? construirTextoPalabraConTiempoEscritora(base, tiempoRaw, esMaldita ? "maldita" : "bendita")
+    const superbonus = normalizarSuperbonusInspiracionEscritora({ superbonus: opciones.superbonus });
+    const tiempoSeguro = resolverTiempoPalabraAsignadaEscritora({
+        tiempo_palabras_bonus: opciones.tiempoSegundos,
+        palabras_var: base
+    });
+    const palabraHtml = tiempoSeguro !== null
+        ? construirTextoPalabraConTiempoEscritora(base, tiempoSeguro, esMaldita ? "maldita" : "bendita")
         : escapeHtml(base);
     const descripcion = normalizarTextoPlanoEscritora(opciones.descripcion);
+    const claseChip = `objetivo-chip objetivo-chip--${tipo}${superbonus.activo ? " objetivo-chip--superbonus" : ""}`;
+    const claseDef = `objetivo-def objetivo-def--${tipo}${superbonus.activo ? " objetivo-def--superbonus" : ""}`;
     const descripcionHtml = descripcion
-        ? `<span class="objetivo-def objetivo-def--${tipo}">${escapeHtml(descripcion)}</span>`
+        ? `<span class="${claseDef}">${escapeHtml(descripcion)}</span>`
         : "";
-    return `<span class="objetivo-chip objetivo-chip--${tipo}">${palabraHtml}</span>${descripcionHtml}`;
+    return `<span class="${claseChip}">${palabraHtml}</span>${descripcionHtml}`;
 }
 
 function renderObjetivoNivelEscritora(palabraTexto, opciones = {}) {
     if (!definicion) return false;
     const bloque = construirBloqueObjetivoNivelEscritora(palabraTexto, opciones);
     const tieneContenido = Boolean(String(bloque || "").trim());
+    const superbonus = normalizarSuperbonusInspiracionEscritora({ superbonus: opciones.superbonus });
     if (definicion.classList) {
         definicion.classList.toggle("objetivo-nivel", tieneContenido);
+        definicion.classList.toggle("definicion-superbonus", tieneContenido && superbonus.activo);
+    }
+    if (definicion.dataset) {
+        if (tieneContenido && superbonus.activo) {
+            definicion.dataset.superbonus = "true";
+            definicion.dataset.superbonusRepeticiones = String(superbonus.repeticiones);
+        } else {
+            delete definicion.dataset.superbonus;
+            delete definicion.dataset.superbonusRepeticiones;
+        }
     }
     definicion.innerHTML = tieneContenido ? bloque : "";
+    aplicarMarqueeSiOverflowEscritora(
+        tieneContenido ? (definicion.querySelector(".objetivo-def") || definicion) : definicion
+    );
     return tieneContenido;
 }
 
@@ -920,6 +1113,7 @@ let timeout_ajuste_viewport_escritora = null;
 let resize_observer_fit_viewport_escritora = null;
 let cursor_pluma_atributos_inicializado = false;
 let cursor_pluma_juego_escritora = null;
+let caret_neon_juego_escritora = null;
 let cursor_pluma_juego_inicializado = false;
 let cursor_pluma_juego_activo = false;
 let timeout_cursor_pluma_juego_inactivo = null;
@@ -930,8 +1124,10 @@ let ultimo_cursor_pluma_juego_y = Math.round((window.innerHeight || 0) * 0.5);
 let ultimo_cursor_pluma_atributos_x = Math.round((window.innerWidth || 0) * 0.5);
 let ultimo_cursor_pluma_atributos_y = Math.round((window.innerHeight || 0) * 0.5);
 let raf_cursor_pluma_juego = null;
+let raf_caret_neon_juego = null;
 let raf_cursor_pluma_atributos = null;
 let observador_cursor_pluma_juego_escritora = null;
+let bloqueo_selectionchange_caret_neon_juego = false;
 let raf_degradado_textarea_escritor = null;
 let timeout_degradado_textarea_escritor = null;
 let observador_degradado_textarea_escritor = null;
@@ -1043,6 +1239,11 @@ const ocultarCursorPlumaJuegoEscritora = () => {
     cursor_pluma_juego_escritora.classList.remove("activa");
 };
 
+const ocultarCaretNeonJuegoEscritora = () => {
+    if (!caret_neon_juego_escritora) return;
+    caret_neon_juego_escritora.classList.remove("activa");
+};
+
 const aplicarTransformCursorPlumaEscritora = (nodo, clientX, clientY) => {
     if (!nodo) return;
     nodo.style.transform = `translate3d(${Math.round(clientX)}px, ${Math.round(clientY)}px, 0) translate(-33px, -38px)`;
@@ -1080,6 +1281,12 @@ const sincronizarEquipoCursorPlumaJuegoEscritora = () => {
     cursor_pluma_juego_escritora.classList.add(playerNumber === 2 ? "equipo-2" : "equipo-1");
 };
 
+const sincronizarEquipoCaretNeonJuegoEscritora = () => {
+    if (!caret_neon_juego_escritora) return;
+    caret_neon_juego_escritora.classList.remove("equipo-1", "equipo-2");
+    caret_neon_juego_escritora.classList.add(playerNumber === 2 ? "equipo-2" : "equipo-1");
+};
+
 const crearCursorPlumaJuegoEscritora = () => {
     if (!document.body) return null;
     if (!cursor_pluma_juego_escritora) {
@@ -1094,6 +1301,20 @@ const crearCursorPlumaJuegoEscritora = () => {
     return cursor_pluma_juego_escritora;
 };
 
+const crearCaretNeonJuegoEscritora = () => {
+    if (!document.body) return null;
+    if (!caret_neon_juego_escritora) {
+        const nodo = document.createElement("div");
+        nodo.id = "caret_neon_juego_escritora";
+        nodo.className = "escritora-caret-neon";
+        nodo.setAttribute("aria-hidden", "true");
+        document.body.appendChild(nodo);
+        caret_neon_juego_escritora = nodo;
+    }
+    sincronizarEquipoCaretNeonJuegoEscritora();
+    return caret_neon_juego_escritora;
+};
+
 const debeMostrarCursorPlumaJuegoEscritora = () => (
     Boolean(
         texto &&
@@ -1105,6 +1326,104 @@ const debeMostrarCursorPlumaJuegoEscritora = () => (
         esElementoVisible(texto)
     )
 );
+
+const seleccionPerteneceATextoJuegoEscritora = () => {
+    if (!texto) return false;
+    const sel = window.getSelection();
+    return Boolean(sel && sel.rangeCount && texto.contains(sel.anchorNode));
+};
+
+const editorTextoTieneFocoJuegoEscritora = () => (
+    Boolean(
+        texto &&
+        (
+            document.activeElement === texto ||
+            (document.activeElement instanceof Node && texto.contains(document.activeElement)) ||
+            (typeof texto.matches === "function" && texto.matches(":focus-within"))
+        )
+    )
+);
+
+const posicionarCaretNeonJuegoEscritora = (rect) => {
+    if (!caret_neon_juego_escritora || !rect) return;
+    const altura = Math.max(26, Math.round((rect.height || 0) + 8));
+    caret_neon_juego_escritora.style.left = `${Math.round(rect.left)}px`;
+    caret_neon_juego_escritora.style.top = `${Math.round(rect.top)}px`;
+    caret_neon_juego_escritora.style.height = `${altura}px`;
+};
+
+const obtenerRectCaretActualJuegoEscritora = () => {
+    if (!texto) return null;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const original = sel.getRangeAt(0).cloneRange();
+    if (!original.collapsed || !texto.contains(original.startContainer)) return null;
+
+    let rect = original.getBoundingClientRect();
+    if (rect && rect.height > 0) {
+        return rect;
+    }
+
+    const marcador = document.createElement("span");
+    marcador.setAttribute("aria-hidden", "true");
+    marcador.textContent = "\u200b";
+    marcador.style.display = "inline-block";
+    marcador.style.width = "1px";
+    marcador.style.height = "1em";
+    marcador.style.padding = "0";
+    marcador.style.margin = "0";
+    marcador.style.opacity = "0";
+    marcador.style.pointerEvents = "none";
+
+    const rangoPrueba = original.cloneRange();
+    rangoPrueba.insertNode(marcador);
+    rect = marcador.getBoundingClientRect();
+    if (marcador.parentNode) {
+        marcador.parentNode.removeChild(marcador);
+    }
+    bloqueo_selectionchange_caret_neon_juego = true;
+    sel.removeAllRanges();
+    sel.addRange(original);
+    requestAnimationFrame(() => {
+        bloqueo_selectionchange_caret_neon_juego = false;
+    });
+    return rect && rect.height > 0 ? rect : null;
+};
+
+const actualizarCaretNeonJuegoEscritora = () => {
+    if (!texto || !caret_neon_juego_escritora || !cursor_pluma_juego_activo || !texto.isContentEditable) {
+        ocultarCaretNeonJuegoEscritora();
+        return;
+    }
+    if (!debeMostrarCursorPlumaJuegoEscritora()) {
+        ocultarCaretNeonJuegoEscritora();
+        return;
+    }
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !sel.isCollapsed) {
+        ocultarCaretNeonJuegoEscritora();
+        return;
+    }
+    if (!seleccionPerteneceATextoJuegoEscritora() || !editorTextoTieneFocoJuegoEscritora()) {
+        ocultarCaretNeonJuegoEscritora();
+        return;
+    }
+    const rect = obtenerRectCaretActualJuegoEscritora();
+    if (!rect || rect.height <= 0) {
+        ocultarCaretNeonJuegoEscritora();
+        return;
+    }
+    posicionarCaretNeonJuegoEscritora(rect);
+    caret_neon_juego_escritora.classList.add("activa");
+};
+
+const programarActualizacionCaretNeonJuegoEscritora = () => {
+    if (raf_caret_neon_juego) return;
+    raf_caret_neon_juego = requestAnimationFrame(() => {
+        raf_caret_neon_juego = null;
+        actualizarCaretNeonJuegoEscritora();
+    });
+};
 
 const programarOcultacionCursorPlumaJuegoEscritora = () => {
     limpiarOcultacionCursorPlumaJuegoEscritora();
@@ -1127,20 +1446,25 @@ const setCursorPlumaJuegoEscritoraActiva = (activa) => {
     retirarEstiloOcultarCursorEscritora();
     if (texto && texto.classList) {
         texto.classList.add("textarea--pluma-cursor");
-        texto.classList.toggle("textarea--pluma-cursor-visible", cursor_pluma_juego_activo && SOPORTA_CURSOR_PLUMA_JUEGO);
+        texto.classList.toggle("textarea--pluma-cursor-visible", cursor_pluma_juego_activo);
     }
     if (!cursor_pluma_juego_activo) {
         limpiarOcultacionCursorPlumaJuegoEscritora();
         ocultarCursorPlumaJuegoEscritora();
+        ocultarCaretNeonJuegoEscritora();
         return;
     }
-    if (!SOPORTA_CURSOR_PLUMA_JUEGO) return;
-    crearCursorPlumaJuegoEscritora();
-    mostrarCursorPlumaJuegoEscritora();
+    crearCaretNeonJuegoEscritora();
+    programarActualizacionCaretNeonJuegoEscritora();
+    if (SOPORTA_CURSOR_PLUMA_JUEGO) {
+        crearCursorPlumaJuegoEscritora();
+        mostrarCursorPlumaJuegoEscritora();
+    }
 };
 
 const sincronizarCursorPlumaJuegoEscritora = () => {
     sincronizarEquipoCursorPlumaJuegoEscritora();
+    sincronizarEquipoCaretNeonJuegoEscritora();
     setCursorPlumaJuegoEscritoraActiva(debeMostrarCursorPlumaJuegoEscritora());
 };
 
@@ -1148,6 +1472,7 @@ const iniciarCursorPlumaJuegoEscritora = () => {
     if (cursor_pluma_juego_inicializado || !texto) return;
     cursor_pluma_juego_inicializado = true;
     texto.classList.add("textarea--pluma-cursor");
+    crearCaretNeonJuegoEscritora();
     if (SOPORTA_CURSOR_PLUMA_JUEGO) {
         crearCursorPlumaJuegoEscritora();
     }
@@ -1172,17 +1497,33 @@ const iniciarCursorPlumaJuegoEscritora = () => {
     texto.addEventListener("focus", () => {
         sincronizarCursorPlumaJuegoEscritora();
         mostrarCursorPlumaJuegoEscritora();
+        programarActualizacionCaretNeonJuegoEscritora();
     });
     texto.addEventListener("click", () => {
         sincronizarCursorPlumaJuegoEscritora();
         mostrarCursorPlumaJuegoEscritora();
+        programarActualizacionCaretNeonJuegoEscritora();
     });
     texto.addEventListener("input", () => {
         sincronizarCursorPlumaJuegoEscritora();
         programarOcultacionCursorPlumaJuegoEscritora();
+        programarActualizacionCaretNeonJuegoEscritora();
     });
-    texto.addEventListener("keydown", programarOcultacionCursorPlumaJuegoEscritora);
-    texto.addEventListener("blur", ocultarCursorPlumaJuegoEscritora);
+    texto.addEventListener("keydown", () => {
+        programarOcultacionCursorPlumaJuegoEscritora();
+        programarActualizacionCaretNeonJuegoEscritora();
+    });
+    texto.addEventListener("keyup", programarActualizacionCaretNeonJuegoEscritora);
+    texto.addEventListener("mouseup", programarActualizacionCaretNeonJuegoEscritora);
+    texto.addEventListener("touchstart", programarActualizacionCaretNeonJuegoEscritora, { passive: true });
+    texto.addEventListener("touchend", () => {
+        requestAnimationFrame(programarActualizacionCaretNeonJuegoEscritora);
+    }, { passive: true });
+    texto.addEventListener("scroll", programarActualizacionCaretNeonJuegoEscritora);
+    texto.addEventListener("blur", () => {
+        ocultarCursorPlumaJuegoEscritora();
+        ocultarCaretNeonJuegoEscritora();
+    });
     texto.addEventListener("mouseleave", () => {
         limpiarOcultacionCursorPlumaJuegoEscritora();
         ocultarCursorPlumaJuegoEscritora();
@@ -1190,19 +1531,34 @@ const iniciarCursorPlumaJuegoEscritora = () => {
     window.addEventListener("blur", () => {
         limpiarOcultacionCursorPlumaJuegoEscritora();
         ocultarCursorPlumaJuegoEscritora();
+        ocultarCaretNeonJuegoEscritora();
     });
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
             limpiarOcultacionCursorPlumaJuegoEscritora();
             ocultarCursorPlumaJuegoEscritora();
+            ocultarCaretNeonJuegoEscritora();
             return;
         }
         sincronizarCursorPlumaJuegoEscritora();
     });
+    document.addEventListener("selectionchange", () => {
+        if (bloqueo_selectionchange_caret_neon_juego) return;
+        const sel = window.getSelection();
+        if (!texto || !sel || !sel.rangeCount) return;
+        if (!editorTextoTieneFocoJuegoEscritora() && !texto.contains(sel.anchorNode)) return;
+        programarActualizacionCaretNeonJuegoEscritora();
+    });
+    window.addEventListener("resize", programarActualizacionCaretNeonJuegoEscritora);
+    if (window.visualViewport && typeof window.visualViewport.addEventListener === "function") {
+        window.visualViewport.addEventListener("resize", programarActualizacionCaretNeonJuegoEscritora);
+        window.visualViewport.addEventListener("scroll", programarActualizacionCaretNeonJuegoEscritora);
+    }
 
     if (typeof MutationObserver === "function" && !observador_cursor_pluma_juego_escritora) {
         observador_cursor_pluma_juego_escritora = new MutationObserver(() => {
             sincronizarCursorPlumaJuegoEscritora();
+            programarActualizacionCaretNeonJuegoEscritora();
         });
         // El propio sincronizador cambia clases del editor; si observamos class/style
         // aquÃ­ entramos en un bucle de mutaciones al cargar la vista de escritora.
@@ -1324,12 +1680,19 @@ const limpiarAsincroniaVisualEscritora = ({ resetViewport = false } = {}) => {
         cancelAnimationFrame(raf_cursor_pluma_juego);
         raf_cursor_pluma_juego = null;
     }
+    if (raf_caret_neon_juego) {
+        cancelAnimationFrame(raf_caret_neon_juego);
+        raf_caret_neon_juego = null;
+    }
     if (raf_cursor_pluma_atributos) {
         cancelAnimationFrame(raf_cursor_pluma_atributos);
         raf_cursor_pluma_atributos = null;
     }
     if (cursor_pluma_juego_escritora) {
         cursor_pluma_juego_escritora.classList.remove("activa", "is-pressing");
+    }
+    if (caret_neon_juego_escritora) {
+        caret_neon_juego_escritora.classList.remove("activa");
     }
     if (cursor_pluma_atributos_escritora) {
         cursor_pluma_atributos_escritora.classList.remove("activo", "is-pressing");
@@ -1850,7 +2213,7 @@ const CLASE_PALABRA_MUSA_LOCAL = "palabra-musa";
 const CLASE_LETRA_BENDITA_LOCAL = "letra-verde";
 const SELECTOR_PALABRA_PROTEGIDA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}, .${CLASE_LETRA_BENDITA_LOCAL}`;
 const SELECTOR_PALABRA_MARCADA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}`;
-const PATRON_CARACTER_PALABRA = "A-Za-z0-9ÃÃ‰ÃÃ“ÃšÃœÃ‘Ã¡Ã©Ã­Ã³ÃºÃ¼Ã±";
+const PATRON_CARACTER_PALABRA = "A-Za-z0-9\\u00c1\\u00c9\\u00cd\\u00d3\\u00da\\u00dc\\u00d1\\u00e1\\u00e9\\u00ed\\u00f3\\u00fa\\u00fc\\u00f1";
 let estadoObjetivosMultipalabra = [];
 
 function nodoEnPalabraBendita(nodo) {
@@ -2125,6 +2488,63 @@ function obtenerNodoProtegidoAfectadoPorEdicion(e) {
     }
 
     return null;
+}
+
+function obtenerClasesProtegidasEscritora() {
+    return [CLASE_PALABRA_BENDITA_LOCAL, CLASE_PALABRA_MUSA_LOCAL, CLASE_LETRA_BENDITA_LOCAL];
+}
+
+function colocarCaretJuntoANodoProtegido(nodoProtegido, direccion) {
+    if (!nodoProtegido || !nodoProtegido.parentNode) return;
+    const sel = window.getSelection();
+    if (!sel) return;
+    const range = document.createRange();
+    if (direccion === "forward") {
+        range.setStartBefore(nodoProtegido);
+    } else {
+        range.setStartAfter(nodoProtegido);
+    }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function emitirInputBorradoManualProtegido(direccion) {
+    const tipo = direccion === "forward" ? "deleteContentForward" : "deleteContentBackward";
+    let evento;
+    try {
+        evento = new InputEvent("input", {
+            bubbles: true,
+            cancelable: false,
+            inputType: tipo,
+            data: null
+        });
+    } catch (_error) {
+        evento = new Event("input", { bubbles: true });
+    }
+    texto.dispatchEvent(evento);
+}
+
+function borrarCaracterEditableSaltandoProtegido(nodoProtegido, direccion) {
+    if (!texto || !nodoProtegido) return false;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !sel.getRangeAt(0).collapsed) return false;
+    if (
+        !window.ScribEditorDeletion
+        || typeof window.ScribEditorDeletion.borrarCaracterEditableJuntoAProtegido !== "function"
+    ) {
+        return false;
+    }
+    const resultado = window.ScribEditorDeletion.borrarCaracterEditableJuntoAProtegido(
+        texto,
+        nodoProtegido,
+        direccion,
+        { protectedClasses: obtenerClasesProtegidasEscritora() }
+    );
+    if (!resultado || !resultado.deleted) return false;
+    colocarCaretJuntoANodoProtegido(nodoProtegido, direccion);
+    emitirInputBorradoManualProtegido(direccion);
+    return true;
 }
 
 let snapshot_html_bendita = null;
@@ -2603,6 +3023,13 @@ function setPendienteAnimacionEntradaBarraVida(valor) {
     animacionEntradaVidaPendiente = Boolean(valor);
 }
 
+function debeAnimarEntradaBarraVida(elemento, opciones = {}) {
+    if (!elemento) return false;
+    if (opciones && opciones.animarEntrada) return true;
+    if (elemento.dataset && elemento.dataset.vidaVisible !== "1") return true;
+    return elemento.style && elemento.style.display === "none";
+}
+
 function cancelarAnimacionEntradaBarraVida(elemento) {
     if (!elemento) return;
     const frameId = animacionesEntradaBarraVida.get(elemento);
@@ -2623,6 +3050,7 @@ function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURAC
     if (!elemento) return;
     const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
     cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, 0);
 
     if (objetivo <= 0 || duracionMs <= 0) {
         aplicarEstadoBarraVida(elemento, objetivo);
@@ -2653,18 +3081,20 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
-    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
         cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
+        if (elemento.dataset) elemento.dataset.vidaVisible = "0";
         return;
     }
+    const animarEntrada = debeAnimarEntradaBarraVida(elemento, opciones);
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
     elemento.style.display = DISPLAY_BARRA_VIDA;
+    if (elemento.dataset) elemento.dataset.vidaVisible = "1";
     if (animarEntrada) {
         animarEntradaBarraVida(elemento, porcentaje);
         return;
@@ -2684,9 +3114,11 @@ let timer = null;
 let sub_timer = null;
 let preparados_timer = null;
 let fallback_cuenta_atras_timer = null;
+let revision_intro_escritora = 0;
 
 function limpiarCountdownInicioEscritora() {
     clearTimeout(listener_cuenta_atras);
+    clearTimeout(timer);
     clearInterval(timer);
     clearTimeout(sub_timer);
     clearTimeout(preparados_timer);
@@ -2697,6 +3129,16 @@ function limpiarCountdownInicioEscritora() {
     preparados_timer = null;
     fallback_cuenta_atras_timer = null;
     $('#countdown').remove();
+}
+
+function invalidarIntroEscritora() {
+    revision_intro_escritora += 1;
+    limpiarCountdownInicioEscritora();
+    return revision_intro_escritora;
+}
+
+function esRevisionIntroEscritoraActiva(revision) {
+    return revision === revision_intro_escritora;
 }
 
 // Variables de los modos.
@@ -2711,6 +3153,8 @@ let bloquear_borrado_putada = false;
 let timeout_bloqueo_putada = null;
 let teclado_lento_putada = false;
 let timeout_teclado_lento = null;
+let timeout_rayo_putada = null;
+let desventaja_activa_escritora = null;
 const RETRASO_TECLADO_LENTO_MS = 500;
 const RAYO_REDUCCION_K = 0.08;
 
@@ -2750,12 +3194,19 @@ let revision_contexto_transitorio_escritora = 0;
 
 function invalidarContextoTransitorioEscritora() {
     revision_contexto_transitorio_escritora += 1;
-    clearTimeout(tempo_text_inverso);
-    tempo_text_inverso = null;
-    clearTimeout(tempo_text_borroso);
-    tempo_text_borroso = null;
-    limpiar_bloqueo_putada();
-    limpiar_teclado_lento();
+    if (typeof limpiarDesventajasActivasEscritora === "function") {
+        limpiarDesventajasActivasEscritora();
+    } else {
+        clearTimeout(tempo_text_inverso);
+        tempo_text_inverso = null;
+        clearTimeout(tempo_text_borroso);
+        tempo_text_borroso = null;
+        clearTimeout(timeout_rayo_putada);
+        timeout_rayo_putada = null;
+        desventaja_activa_escritora = null;
+        limpiar_bloqueo_putada();
+        limpiar_teclado_lento();
+    }
     return revision_contexto_transitorio_escritora;
 }
 
@@ -2914,54 +3365,14 @@ texto.addEventListener("keydown", (e) => {
         }
     }
     if (e.key === "Backspace" || e.key === "Delete") {
-        const sel = window.getSelection();
         const direccion = e.key === "Backspace" ? "backward" : "forward";
-        if (caretAfectaPalabraBendita(direccion)) {
+        const nodoProtegido = obtenerNodoProtegidoAfectadoPorDireccion(direccion);
+        if (nodoProtegido) {
             e.preventDefault();
             e.stopImmediatePropagation();
+            borrarCaracterEditableSaltandoProtegido(nodoProtegido, direccion);
             return;
         }
-        const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
-        if (rangoBorrado && rangoIntersecaPalabraBendita(rangoBorrado)) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return;
-        }
-        if (hayPalabraBenditaAdyacente(sel, direccion)) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return;
-        }
-    }
-    if (e.key === "Backspace") {
-      const sel = window.getSelection();
-      if (sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        const startContainer = range.startContainer;
-        const startOffset = range.startOffset;
-  
-        // Si el cursor estÃ¡ justo antes de un `contenteditable="false"`, bloqueamos el retroceso
-        if (
-          startContainer.nodeType === 1 &&
-          startOffset === 0 &&
-          startContainer.previousSibling &&
-          startContainer.previousSibling.getAttribute &&
-          startContainer.previousSibling.getAttribute("contenteditable") === "false"
-        ) {
-          e.preventDefault(); // Bloquea la acciÃ³n de retroceso
-        }
-  
-        // Si el cursor estÃ¡ dentro de un nodo de texto, verificamos el anterior
-        if (
-          startContainer.nodeType === 3 &&
-          startOffset === 0 &&
-          startContainer.parentNode.previousSibling &&
-          startContainer.parentNode.previousSibling.getAttribute &&
-          startContainer.parentNode.previousSibling.getAttribute("contenteditable") === "false"
-        ) {
-          e.preventDefault(); // Bloquea la acciÃ³n de retroceso
-        }
-      }
     }
   });
 

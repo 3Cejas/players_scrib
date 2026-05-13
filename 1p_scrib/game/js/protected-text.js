@@ -1,7 +1,8 @@
 const CLASE_PALABRA_BENDITA_LOCAL = "palabra-bendita";
+const CLASE_PALABRA_MUSA_LOCAL = "palabra-musa";
 const CLASE_LETRA_BENDITA_LOCAL = "letra-verde";
-const SELECTOR_PALABRA_PROTEGIDA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_LETRA_BENDITA_LOCAL}`;
-const SELECTOR_PALABRA_MARCADA = `.${CLASE_PALABRA_BENDITA_LOCAL}`;
+const SELECTOR_PALABRA_PROTEGIDA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}, .${CLASE_LETRA_BENDITA_LOCAL}`;
+const SELECTOR_PALABRA_MARCADA = `.${CLASE_PALABRA_BENDITA_LOCAL}, .${CLASE_PALABRA_MUSA_LOCAL}`;
 
 function rangoIntersecaPalabraMarcada(rango) {
     if (!texto || !rango) return false;
@@ -341,6 +342,63 @@ function moverCursorPorPalabraBendita(direccion) {
 
 function debeBloquearEdicionPalabraBendita(e) {
     return Boolean(obtenerNodoProtegidoAfectadoPorEdicion(e));
+}
+
+function obtenerClasesProtegidasEscritora1P() {
+    return [CLASE_PALABRA_BENDITA_LOCAL, CLASE_PALABRA_MUSA_LOCAL, CLASE_LETRA_BENDITA_LOCAL];
+}
+
+function colocarCaretJuntoANodoProtegido1P(nodoProtegido, direccion) {
+    if (!nodoProtegido || !nodoProtegido.parentNode) return;
+    const sel = window.getSelection();
+    if (!sel) return;
+    const range = document.createRange();
+    if (direccion === "forward") {
+        range.setStartBefore(nodoProtegido);
+    } else {
+        range.setStartAfter(nodoProtegido);
+    }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function emitirInputBorradoManualProtegido1P(direccion) {
+    const tipo = direccion === "forward" ? "deleteContentForward" : "deleteContentBackward";
+    let evento;
+    try {
+        evento = new InputEvent("input", {
+            bubbles: true,
+            cancelable: false,
+            inputType: tipo,
+            data: null
+        });
+    } catch (_error) {
+        evento = new Event("input", { bubbles: true });
+    }
+    texto.dispatchEvent(evento);
+}
+
+function borrarCaracterEditableSaltandoProtegido1P(nodoProtegido, direccion) {
+    if (!texto || !nodoProtegido) return false;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !sel.getRangeAt(0).collapsed) return false;
+    if (
+        !window.ScribEditorDeletion
+        || typeof window.ScribEditorDeletion.borrarCaracterEditableJuntoAProtegido !== "function"
+    ) {
+        return false;
+    }
+    const resultado = window.ScribEditorDeletion.borrarCaracterEditableJuntoAProtegido(
+        texto,
+        nodoProtegido,
+        direccion,
+        { protectedClasses: obtenerClasesProtegidasEscritora1P() }
+    );
+    if (!resultado || !resultado.deleted) return false;
+    colocarCaretJuntoANodoProtegido1P(nodoProtegido, direccion);
+    emitirInputBorradoManualProtegido1P(direccion);
+    return true;
 }
 
 function obtenerRangoPorOffsets(contenedor, inicio, fin) {

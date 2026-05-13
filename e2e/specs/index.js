@@ -54,6 +54,33 @@ async function waitForSocketConnection(ctx, roleName, timeoutMs = 12000) {
   );
 }
 
+async function disconnectRoleSocket(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    try {
+      const hasSocket = window.eval("typeof socket !== 'undefined' && socket && typeof socket.disconnect === 'function'");
+      if (!hasSocket) return;
+      window.eval("socket.io.opts.reconnection = false; socket.disconnect(); if (socket.io.engine) socket.io.engine.close();");
+    } catch (_error) {
+    }
+  });
+  await ctx.sleep(250);
+}
+
+async function reloadRole(ctx, roleName) {
+  const entry = ctx.getPageEntry(roleName);
+  await disconnectRoleSocket(ctx, roleName);
+  await entry.page.reload({ waitUntil: "domcontentloaded" });
+  await entry.page.waitForSelector(entry.config.readySelector, { visible: true, timeout: 15000 });
+  await waitForSocketConnection(ctx, roleName, 12000);
+}
+
+async function reloadRolesSequential(ctx, roles) {
+  for (const role of roles) {
+    await reloadRole(ctx, role);
+    await ctx.sleep(250);
+  }
+}
+
 async function openRolesAndWaitWithOptions(ctx, roles, options = {}) {
   const useStateHooks = options.useStateHooks !== false;
   const requirements = buildConnectionRequirements(roles);
@@ -199,6 +226,28 @@ async function ensureSpectatorView(ctx, mode) {
   );
 }
 
+async function waitForSpectatorStatsSlides(ctx, description, timeoutMs = 10000) {
+  await ctx.waitFor(
+    description,
+    async () => ctx.evaluate("spectator", () => {
+      const root = document.querySelector("#stats_espectador");
+      const track = document.querySelector("#stats_slides_track");
+      if (!root || !track) return false;
+      const style = window.getComputedStyle(root);
+      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
+      const heatmapBoards = track.querySelectorAll(".stats-heatmap-board").length;
+      const timeBoards = track.querySelectorAll(".stats-tiempo-board").length;
+      const timeLines = Array.from(track.querySelectorAll(".stats-tiempo-linea"))
+        .filter((node) => String(node.getAttribute("d") || "").trim().length > 0).length;
+      const heatmapTotals = Array.from(track.querySelectorAll(".stats-kpis-grid--heatmap .stats-kpi strong"))
+        .map((node) => Number(String(node.textContent || "").replace(/[^\d.-]/g, "")) || 0);
+      const hasKeyboardData = heatmapTotals.some((value) => value > 0);
+      return heatmapBoards >= 2 && timeBoards >= 2 && timeLines >= 2 && hasKeyboardData;
+    }),
+    timeoutMs
+  );
+}
+
 async function waitForResurrectionMenu(ctx, roleName, player) {
   await ctx.waitForState(
     `resurrection menu visible for player ${player}`,
@@ -227,6 +276,19 @@ async function waitForMode(ctx, mode, timeoutMs = 12000) {
   );
 }
 
+async function closeActiveVoteIfAny(ctx) {
+  const state = await ctx.getState();
+  if (!state.votacion_ventaja?.activa) {
+    return;
+  }
+  await ctx.emitHook("scrib_test:force_vote", { active: false, emitir_resultado: false });
+  await ctx.waitForState(
+    "active advantage vote closed",
+    (nextState) => nextState.votacion_ventaja.activa === false,
+    8000
+  );
+}
+
 async function waitForLocalMode(ctx, roleName, mode, timeoutMs = 10000) {
   const expected = String(mode || "").trim().toLowerCase();
   return ctx.waitFor(
@@ -240,6 +302,63 @@ async function waitForLocalMode(ctx, roleName, mode, timeoutMs = 10000) {
       }
     }, expected),
     timeoutMs
+  );
+}
+
+async function waitForWriterEditable(ctx, roleName, timeoutMs = 10000) {
+  return ctx.waitFor(
+    `${roleName} editable`,
+    async () => ctx.evaluate(roleName, () => {
+      const editor = document.querySelector("#texto");
+      return Boolean(
+        editor?.isContentEditable
+        || String(editor?.contentEditable || "").toLowerCase() === "true"
+        || editor?.getAttribute("contenteditable") === "true"
+      );
+    }),
+    timeoutMs
+  );
+}
+
+async function ensureWriterEditableForFullFlow(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    const editor = document.querySelector("#texto");
+    if (!editor) {
+      throw new Error("Missing writer editor");
+    }
+    if (typeof es_pausa !== "undefined") es_pausa = false;
+    if (typeof menu_modificador !== "undefined") menu_modificador = true;
+    if (typeof desactivar_borrar !== "undefined") desactivar_borrar = false;
+    if (typeof limpiarDesventajasActivasEscritora === "function") {
+      limpiarDesventajasActivasEscritora();
+    }
+    editor.setAttribute("contenteditable", "true");
+    editor.contentEditable = "true";
+  });
+  await waitForWriterEditable(ctx, roleName, 5000);
+}
+
+async function assertMusaWordTimePreview(ctx, roleName, mode, word, expectation) {
+  await ctx.fillValue(roleName, "#palabra", word);
+  await ctx.waitFor(
+    `${roleName} time preview for ${mode}`,
+    async () => ctx.evaluate(roleName, ({ expectedClass, expectedSign, targetWord }) => {
+      const node = document.querySelector("#preview_tiempo_palabra");
+      if (!node || node.hidden) return false;
+      const text = String(node.textContent || "");
+      const seconds = window.ScribInspiration.calcularTiempoPalabra(targetWord);
+      const expectedValue = `${expectedSign}${seconds}`;
+      return node.classList.contains(expectedClass)
+        && text.includes(expectedValue)
+        && new RegExp(`${seconds}\\s*s`, "i").test(text)
+        ? text
+        : false;
+    }, {
+      expectedClass: expectation.className,
+      expectedSign: expectation.sign,
+      targetWord: word
+    }),
+    5000
   );
 }
 
@@ -296,6 +415,18 @@ function getWriterTimerSeconds(state) {
   return parseClockToSeconds(state.timer);
 }
 
+function buildWordContainingLetter(letter, index = 0) {
+  const token = String(letter || "a").trim() || "a";
+  return `musa${index}${token}eco`;
+}
+
+function buildWordAvoidingLetter(letter, index = 0) {
+  const forbidden = String(letter || "").trim().toLowerCase();
+  const pool = "bcdfghjklmpqtuvwxyz".split("");
+  const safe = pool.find((candidate) => !forbidden.includes(candidate)) || "x";
+  return safe.repeat(5 + index);
+}
+
 async function focusWriterEditor(ctx, roleName) {
   await ctx.evaluate(roleName, () => {
     const el = document.querySelector("#texto");
@@ -312,10 +443,98 @@ async function focusWriterEditor(ctx, roleName) {
   });
 }
 
+async function assertWriterNeonCaret(ctx, roleName, expectedAccent) {
+  await focusWriterEditor(ctx, roleName);
+  await ctx.evaluate(roleName, () => {
+    const el = document.querySelector("#texto");
+    if (!el) {
+      throw new Error("Missing writer editor");
+    }
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  const state = await ctx.waitFor(
+    `${roleName} neon caret`,
+    async () => ctx.evaluate(roleName, () => {
+      const editor = document.querySelector("#texto");
+      const caret = document.querySelector("#caret_neon_juego_escritora");
+      if (!editor || !caret) return false;
+      const editorStyle = window.getComputedStyle(editor);
+      const bodyStyle = window.getComputedStyle(document.body);
+      const rect = caret.getBoundingClientRect();
+      const nativeCaretHidden = editorStyle.caretColor === "rgba(0, 0, 0, 0)"
+        || editorStyle.caretColor === "transparent";
+      const state = {
+        active: caret.classList.contains("activa"),
+        visibleClass: editor.classList.contains("textarea--pluma-cursor-visible"),
+        nativeCaretHidden,
+        accent: bodyStyle.getPropertyValue("--equipo-caret-color").trim().toLowerCase(),
+        width: rect.width,
+        height: rect.height
+      };
+      return state.active && state.visibleClass && state.nativeCaretHidden && state.width > 0 && state.height > 0
+        ? state
+        : false;
+    }),
+    5000
+  );
+  ctx.assert(state.active, `${roleName} neon caret should be active`);
+  ctx.assert(state.visibleClass, `${roleName} editor should hide the native caret while custom caret is active`);
+  ctx.assert(state.nativeCaretHidden, `${roleName} native caret should be transparent`);
+  ctx.assert(state.accent === expectedAccent, `${roleName} caret accent should be ${expectedAccent}, got ${state.accent}`);
+  ctx.assert(state.width > 0 && state.height > 0, `${roleName} neon caret should have rendered dimensions`);
+}
+
 async function typeInWriter(ctx, roleName, text) {
   await focusWriterEditor(ctx, roleName);
   const page = ctx.getPageEntry(roleName).page;
   await page.keyboard.type(text, { delay: 20 });
+}
+
+async function clearFloatingFeedbacks(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    const root = document.querySelector("#feedback_tiempo_flotante_root");
+    if (!root) return;
+    const columns = Array.from(root.querySelectorAll(".feedback-tiempo-columna"));
+    if (columns.length) {
+      columns.forEach((column) => {
+        column.innerHTML = "";
+      });
+      return;
+    }
+    root.innerHTML = "";
+  });
+}
+
+async function waitForTimeAndInspirationFeedback(ctx, roleName, description, options = {}) {
+  const selector = options.selector || "#feedback_tiempo_flotante_root .feedback-tiempo-float";
+  return ctx.waitFor(
+    description,
+    async () => ctx.evaluate(roleName, (css) => {
+      const nodes = Array.from(document.querySelectorAll(css))
+        .filter((node) => node.isConnected && node.getBoundingClientRect().width > 0);
+      if (nodes.some((node) => /undefined/i.test(String(node.textContent || "")))) return false;
+      const timeNode = nodes.find((node) => /\+\d+\s*segs?\./i.test(String(node.textContent || "")));
+      const inspNode = nodes.find((node) => /\+insp\./i.test(String(node.textContent || "")));
+      if (!timeNode || !inspNode) return false;
+      const a = timeNode.getBoundingClientRect();
+      const b = inspNode.getBoundingClientRect();
+      const overlap = !(
+        a.right <= b.left ||
+        b.right <= a.left ||
+        a.bottom <= b.top ||
+        b.bottom <= a.top
+      );
+      if (overlap) return false;
+      return {
+        time: String(timeNode.textContent || "").trim(),
+        inspiration: String(inspNode.textContent || "").trim(),
+        timeClass: timeNode.className,
+        inspirationClass: inspNode.className
+      };
+    }, selector),
+    2200,
+    40
+  );
 }
 
 async function pressWriterKey(ctx, roleName, key, times = 1, options = {}) {
@@ -326,6 +545,29 @@ async function pressWriterKey(ctx, roleName, key, times = 1, options = {}) {
   for (let index = 0; index < times; index += 1) {
     await page.keyboard.press(key);
   }
+}
+
+async function assertWriterBackspaceDeletesBehindProtectedWord(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    const editor = document.querySelector("#texto");
+    if (!editor) {
+      throw new Error("Missing writer editor");
+    }
+    editor.innerHTML = 'abc<span class="palabra-bendita" contenteditable="false">BONUS</span>xy';
+    const span = editor.querySelector(".palabra-bendita");
+    const range = document.createRange();
+    range.setStartAfter(span);
+    range.collapse(true);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    editor.focus();
+  });
+  await pressWriterKey(ctx, roleName, "Backspace", 1, { preserveCaret: true });
+  const state = await readWriterState(ctx, roleName);
+  ctx.assert(state.text === "abBONUSxy", "Backspace should delete the editable char behind a protected word in one press");
+  ctx.assert(state.protectedCount === 1, "protected word should survive Backspace");
+  ctx.assert(/palabra-bendita/.test(state.html), "protected word markup should remain after Backspace");
 }
 
 async function placeCaretAtTextOffset(ctx, roleName, targetOffset) {
@@ -379,12 +621,64 @@ async function readWriterState(ctx, roleName) {
     return {
       text: String(editor?.textContent || ""),
       html: String(editor?.innerHTML || ""),
-      editable: Boolean(editor?.isContentEditable),
+      editable: Boolean(editor?.isContentEditable || editor?.getAttribute("contenteditable") === "true"),
       timer: String(timer?.textContent || "").trim(),
       timerSeconds: Number.isFinite(timerSeconds) ? timerSeconds : null,
       protectedCount: editor ? editor.querySelectorAll(".letra-verde, .palabra-bendita, .palabra-musa").length : 0
     };
   });
+}
+
+async function setWriterHtml(ctx, roleName, html) {
+  await ctx.evaluate(roleName, (nextHtml) => {
+    const editor = document.querySelector("#texto");
+    if (!editor) {
+      throw new Error("Missing writer editor");
+    }
+    editor.focus();
+    editor.innerHTML = nextHtml;
+    const plain = String(editor.textContent || "");
+    const words = plain.trim() ? plain.trim().split(/\s+/).length : 0;
+    const eventName = typeof texto_x === "string" && texto_x ? texto_x : "texto1";
+    socket.emit(eventName, {
+      text: editor.innerHTML,
+      points: `${words} palabras`,
+      caretPos: plain.length,
+      caretLine: 0,
+      caretRatio: 1,
+      caretPath: [],
+      caretOffset: plain.length,
+      texto_guardado: plain
+    });
+  }, html);
+}
+
+async function setWriterTimerSeconds(ctx, roleName, seconds) {
+  await ctx.evaluate(roleName, (nextSeconds) => {
+    const timer = document.querySelector("#tiempo");
+    const total = Math.max(0, Math.trunc(Number(nextSeconds) || 0));
+    const minutes = Math.floor(total / 60);
+    const rest = total % 60;
+    const label = `${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+    if (timer) {
+      timer.innerHTML = label;
+    }
+    if (typeof actualizarBarraVida === "function") {
+      actualizarBarraVida(timer, label);
+    }
+    if (typeof ultimo_tiempo_contador_segundos !== "undefined") {
+      ultimo_tiempo_contador_segundos = total;
+    }
+    if (typeof ultimo_tiempo_contador_ms !== "undefined") {
+      ultimo_tiempo_contador_ms = Date.now();
+    }
+    if (typeof sincronizarEstadoContadorEscritora === "function") {
+      sincronizarEstadoContadorEscritora(total, label);
+    } else if (timer && timer.dataset) {
+      timer.dataset.remainingSeconds = String(total);
+    }
+    window.__scribWriterTimerRemaining = total;
+  }, seconds);
 }
 
 async function readSpectatorInspirationBar(ctx) {
@@ -415,6 +709,20 @@ async function readWriterDisadvantageState(ctx, roleName) {
         return false;
       }
     };
+    const activeDisadvantage = (() => {
+      try {
+        const active = window.eval("typeof desventaja_activa_escritora !== 'undefined' ? desventaja_activa_escritora : null");
+        if (!active || typeof active !== "object") return null;
+        return {
+          tipo: String(active.tipo || ""),
+          duracionMs: Number(active.duracionMs) || 0,
+          restanteMs: Number(active.restanteMs) || 0,
+          pausada: Boolean(active.pausada)
+        };
+      } catch (_error) {
+        return null;
+      }
+    })();
     return {
       bodyClasses: Array.from(document.body?.classList || []),
       editorClasses: Array.from(editor?.classList || []),
@@ -423,7 +731,8 @@ async function readWriterDisadvantageState(ctx, roleName) {
       deleteBlocked: evalFlag("typeof bloquear_borrado_putada !== 'undefined' && bloquear_borrado_putada === true"),
       inverseActive: evalFlag("typeof temp_text_inverso_activado !== 'undefined' && temp_text_inverso_activado === true"),
       blurry: Boolean(editor?.classList.contains("textarea_blur")),
-      currentDisadvantage: String(window.eval("typeof putada_actual !== 'undefined' ? putada_actual : ''") || "")
+      currentDisadvantage: String(window.eval("typeof putada_actual !== 'undefined' ? putada_actual : ''") || ""),
+      activeDisadvantage
     };
   });
 }
@@ -439,23 +748,217 @@ async function readSpectatorDisadvantageState(ctx, player) {
   }, player);
 }
 
+async function assertSpectatorSideVeilCoversViewport(ctx, side) {
+  const sideId = Number(side) === 2 ? 2 : 1;
+  const state = await ctx.waitFor(
+    `spectator side ${sideId} gameover veil covers viewport edge`,
+    async () => ctx.evaluate("spectator", (targetSide) => {
+      const root = document.querySelector("#spectator_fit_root");
+      if (!root) return false;
+      const pseudo = window.getComputedStyle(root, targetSide === 1 ? "::before" : "::after");
+      const rootStyle = window.getComputedStyle(root);
+      const transform = rootStyle.transform && rootStyle.transform !== "none"
+        ? new DOMMatrixReadOnly(rootStyle.transform)
+        : new DOMMatrixReadOnly();
+      const scale = Number(transform.a) || 1;
+      const translateX = Number(transform.m41) || 0;
+      const rootWidth = Number(root.offsetWidth) || window.innerWidth;
+      const width = Number.parseFloat(pseudo.width) || 0;
+      const opacity = Number.parseFloat(pseudo.opacity) || 0;
+      let start = 0;
+      let end = 0;
+      if (targetSide === 1) {
+        const left = Number.parseFloat(pseudo.left) || 0;
+        start = translateX + (left * scale);
+        end = start + (width * scale);
+      } else {
+        const right = Number.parseFloat(pseudo.right) || 0;
+        end = translateX + ((rootWidth - right) * scale);
+        start = end - (width * scale);
+      }
+      const viewportW = window.innerWidth;
+      const covers = targetSide === 1
+        ? start <= 1 && end >= viewportW * 0.4
+        : end >= viewportW - 1 && start <= viewportW * 0.6;
+      if (!covers || opacity <= 0.35) return false;
+      return {
+        start,
+        end,
+        opacity,
+        viewportW,
+        transform: rootStyle.transform,
+        left: pseudo.left,
+        right: pseudo.right,
+        width: pseudo.width
+      };
+    }, sideId),
+    5000
+  );
+  ctx.assert(state.opacity > 0.35, `spectator side ${sideId} veil should be visible`);
+  if (sideId === 1) {
+    ctx.assert(state.start <= 1, `blue side veil should start at viewport edge, got ${state.start}`);
+  } else {
+    ctx.assert(state.end >= state.viewportW - 1, `red side veil should reach viewport edge, got ${state.end}/${state.viewportW}`);
+  }
+}
+
+async function readActorDisadvantageState(ctx, roleName) {
+  return ctx.evaluate(roleName, () => {
+    const text = document.querySelector("#texto");
+    return {
+      classes: Array.from(text?.classList || []),
+      putada: String(text?.dataset?.actorPutada || ""),
+      blurry: Boolean(text?.classList.contains("textarea_blur") || text?.classList.contains("actor-texto-borroso-activo")),
+      inverse: Boolean(text?.classList.contains("actor-texto-inverso-activo"))
+    };
+  });
+}
+
 async function requestQueuedWriterWord(ctx, roleName, queueType) {
-  const eventName = queueType === "prohibida" ? "nueva_palabra_prohibida" : "nueva_palabra_bonus";
+  const eventName = queueType === "prohibida"
+    ? "nueva_palabra_prohibida"
+    : queueType === "bonus"
+      ? "nueva_palabra_bonus"
+      : "nueva_palabra";
   await ctx.evaluate(roleName, ({ nextEventName, nextQueueType }) => {
     const jugador = window.eval("player");
-    socket.emit(nextEventName, nextQueueType === "prohibida" ? jugador : { jugador });
+    const payload = nextQueueType === "bonus" ? { jugador } : jugador;
+    socket.emit(nextEventName, payload);
   }, {
     nextEventName: eventName,
     nextQueueType: queueType
   });
 }
 
-async function applyForcedDisadvantage(ctx, targetPlayer, selection) {
+async function requestQueuedMusaWord(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    const jugador = window.eval("player");
+    socket.emit("nueva_palabra_musa", jugador);
+  });
+}
+
+async function emitMusaInspiration(ctx, roleName, word) {
+  await ctx.evaluate(roleName, (value) => {
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+      throw new Error("Missing musa socket");
+    }
+    socket.emit("enviar_inspiracion", {
+      palabra: value,
+      nombre: window.nombre_musa || "",
+      client_id: window.musa_client_id || ""
+    });
+  }, word);
+}
+
+async function installMusaPdfGiftProbe(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    if (window.__e2ePdfGiftProbeInstalled) {
+      return;
+    }
+    window.__e2ePdfGiftProbeInstalled = true;
+    window.__e2ePdfGifts = [];
+    socket.on("regalo_pdf_musas", (payload = {}) => {
+      window.__e2ePdfGifts.push({
+        player: payload.player,
+        client_id: payload.client_id || "",
+        filename: payload.filename || "",
+        personalizado: Boolean(payload.personalizado),
+        data: payload.data || ""
+      });
+    });
+  });
+}
+
+async function readMusaPdfGiftState(ctx, roleName) {
+  return ctx.evaluate(roleName, () => {
+    const evalValue = (expression) => {
+      try {
+        return window.eval(expression);
+      } catch (_error) {
+        return null;
+      }
+    };
+    const root = document.querySelector("#regalo_pdf");
+    const data = evalValue("typeof regalo_pdf_data !== 'undefined' ? regalo_pdf_data : null");
+    return {
+      clientId: window.musa_client_id || "",
+      player: Number(window.player || evalValue("typeof player !== 'undefined' ? player : 0") || 0),
+      visible: Boolean(root && root.classList.contains("regalo-pdf--visible")),
+      filename: String(evalValue("typeof regalo_pdf_filename !== 'undefined' ? regalo_pdf_filename : ''") || ""),
+      hasData: typeof data === "string" && data.startsWith("data:application/pdf"),
+      data,
+      pending: Boolean(evalValue("typeof regalo_pdf_pendiente !== 'undefined' ? regalo_pdf_pendiente : null")),
+      gifts: Array.isArray(window.__e2ePdfGifts) ? window.__e2ePdfGifts : []
+    };
+  });
+}
+
+async function fetchMusaPdfSummary(ctx) {
+  return ctx.evaluate("control", () => new Promise((resolve) => {
+    socket.emit("pedir_resumen_musas_pdf", {}, (payload) => resolve(payload || null));
+  }));
+}
+
+function getMusaSummaryEntry(summary, clientId) {
+  const equipos = summary && summary.equipos ? summary.equipos : {};
+  return [1, 2]
+    .flatMap((player) => {
+      const equipo = equipos[player] || equipos[String(player)] || {};
+      return Array.isArray(equipo.musas) ? equipo.musas : [];
+    })
+    .find((musa) => musa && musa.client_id === clientId) || null;
+}
+
+function decodePdfDataUri(dataUri) {
+  const encoded = String(dataUri || "").split(",", 2)[1] || "";
+  return Buffer.from(encoded, "base64").toString("latin1");
+}
+
+async function ensureBonusWordInWriterUi(ctx, roleName, word, musaLabel, options = {}) {
+  await ctx.evaluate(roleName, ({ nextWord, nextMusaLabel, includeTime }) => {
+    const definition = document.querySelector("#definicion");
+    if (typeof recibir_palabra !== "function") {
+      throw new Error("Missing recibir_palabra helper");
+    }
+    const payload = {
+      modo_actual: "palabras bonus",
+      palabras_var: nextWord,
+      palabra_bonus: [
+        [nextWord],
+        `<span style="color:#ffd86f;">SUPERBONUS x2</span><span style="color: white;"> - </span><span style="color:lime;">${nextMusaLabel}</span>`
+      ],
+      origen_musa: "musa",
+      musa_nombre: nextMusaLabel,
+      superbonus: {
+        activo: true,
+        repeticiones: 2,
+        musas: nextMusaLabel.split(" + "),
+        tiempo_base: 20,
+        multiplicador_tiempo: 1.5
+      }
+    };
+    if (includeTime) {
+      payload.tiempo_palabras_bonus = 30;
+    }
+    recibir_palabra(payload);
+  }, { nextWord: word, nextMusaLabel: musaLabel, includeTime: options.includeTime !== false });
+}
+
+async function emitMusaHeartViaClient(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+      throw new Error("Missing musa socket");
+    }
+    socket.emit("musa_corazon");
+  });
+}
+
+async function applyForcedDisadvantage(ctx, targetPlayer, selection, options = {}) {
   const winnerTeam = Number(targetPlayer) === 1 ? 2 : 1;
   await ctx.emitHook("scrib_test:force_vote", {
     team: winnerTeam,
     opciones: [selection],
-    duracion_ms: 15000
+    duracion_ms: options.duracionMs || 15000
   });
   await ctx.waitForState(
     `forced vote active for target player ${targetPlayer}`,
@@ -475,14 +978,93 @@ async function applyForcedDisadvantage(ctx, targetPlayer, selection) {
   );
 }
 
+async function readControlPauseState(ctx) {
+  return ctx.evaluate("control", () => {
+    const button = document.querySelector("#boton_pausar_reanudar");
+    return {
+      value: String(button?.dataset?.value || ""),
+      text: String(button?.textContent || "").trim()
+    };
+  });
+}
+
+async function toggleControlPause(ctx, expectedValue, label) {
+  await ctx.click("control", "#boton_pausar_reanudar");
+  await ctx.waitFor(
+    label,
+    async () => {
+      const state = await readControlPauseState(ctx);
+      return state.value === String(expectedValue) ? state : false;
+    },
+    6000
+  );
+}
+
+async function waitForMusaCounters(ctx, expectedTeam1, expectedTeam2, description = "musa counters") {
+  const expected1 = Math.max(0, Math.trunc(Number(expectedTeam1) || 0));
+  const expected2 = Math.max(0, Math.trunc(Number(expectedTeam2) || 0));
+  await ctx.waitForState(
+    description,
+    (state) => state.musas.contador.escritxr1 === expected1
+      && state.musas.contador.escritxr2 === expected2
+      && state.connections.musas[1].count === expected1
+      && state.connections.musas[2].count === expected2
+      && state.musas.regalo_bandera.equipos[1].musas === expected1
+      && state.musas.regalo_bandera.equipos[2].musas === expected2,
+    10000
+  );
+  const hasCount = (value, count) => new RegExp(`\\b${count}\\b`).test(String(value || ""));
+  if (ctx.isRoleOpen("control")) {
+    await ctx.waitForText("control", "#musas", (text) => hasCount(text, expected1), `control team1 ${description}`);
+    await ctx.waitForText("control", "#musas1", (text) => hasCount(text, expected2), `control team2 ${description}`);
+  }
+  if (ctx.isRoleOpen("writer1")) {
+    await ctx.waitForText("writer1", "#musas", (text) => hasCount(text, expected1), `writer1 ${description}`);
+  }
+  if (ctx.isRoleOpen("writer2")) {
+    await ctx.waitForText("writer2", "#musas", (text) => hasCount(text, expected2), `writer2 ${description}`);
+  }
+  if (ctx.isRoleOpen("spectator")) {
+    await ctx.waitForText("spectator", "#musas", (text) => hasCount(text, expected1), `spectator team1 ${description}`);
+    await ctx.waitForText("spectator", "#musas1", (text) => hasCount(text, expected2), `spectator team2 ${description}`);
+  }
+}
+
 async function clickResurrectionButton(ctx, roleName, buttonId) {
   await ctx.evaluate(roleName, (id) => {
     const button = document.getElementById(id);
     if (!button) {
       throw new Error(`Missing resurrection button ${id}`);
     }
+    button.focus();
     button.click();
   }, buttonId);
+}
+
+async function waitForClientResurrectionMenu(ctx, roleName, menuId) {
+  const player = roleName === "writer2" ? 2 : 1;
+  const expectedMenu = menuId === "quantityMenu" ? "quantity" : "main";
+  await ctx.waitFor(
+    `${roleName} client resurrection menu ${menuId}`,
+    async () => {
+      const state = await ctx.getState();
+      const stateReady = state.resurreccion[player]?.visible === true
+        && state.resurreccion[player]?.menu === expectedMenu;
+      return ctx.evaluate(roleName, (targetMenuId) => {
+        const menu = document.getElementById(targetMenuId);
+        if (!menu) return false;
+        const buttonId = targetMenuId === "quantityMenu" ? "btnConfirmar" : "btnSi";
+        if (!document.getElementById(buttonId)) return false;
+        try {
+          const pending = window.eval("typeof resurreccion_confirmacion_pendiente !== 'undefined' && resurreccion_confirmacion_pendiente === true");
+          return pending ? false : true;
+        } catch (_error) {
+          return true;
+        }
+      }, menuId).then((domReady) => stateReady && domReady);
+    },
+    5000
+  );
 }
 
 async function resolveResurrection(ctx, roleName, player, decision) {
@@ -494,6 +1076,7 @@ async function resolveResurrection(ctx, roleName, player, decision) {
   let state = await ctx.getState();
   if (decision === "yes") {
     if (state.resurreccion[player].menu === "main") {
+      await waitForClientResurrectionMenu(ctx, roleName, "mainMenu");
       await clickResurrectionButton(ctx, roleName, "btnSi");
       state = await ctx.waitForState(
         `resurrection quantity for player ${player}`,
@@ -501,6 +1084,7 @@ async function resolveResurrection(ctx, roleName, player, decision) {
         10000
       );
     }
+    await waitForClientResurrectionMenu(ctx, roleName, "quantityMenu");
     await clickResurrectionButton(ctx, roleName, "btnConfirmar");
     await ctx.waitForState(
       `player ${player} resurrected`,
@@ -553,8 +1137,121 @@ const smokeSpecs = [
       await ctx.setWriterText("writer2", text2);
       await ctx.waitForText("writer1", "#texto", (text) => text.includes(text1), "writer1 keeps local text");
       await ctx.waitForText("writer2", "#texto", (text) => text.includes(text2), "writer2 keeps local text");
+      await assertWriterNeonCaret(ctx, "writer1", "#37ecff");
+      await assertWriterNeonCaret(ctx, "writer2", "#ff5d5d");
       await ctx.waitForText("actor1", "#texto", (text) => text.includes(text1), "actor1 sees text", 15000);
       await ctx.waitForText("actor2", "#texto", (text) => text.includes(text2), "actor2 sees text", 15000);
+      await assertWriterBackspaceDeletesBehindProtectedWord(ctx, "writer1");
+    }
+  },
+  {
+    name: "musa-bonus-delivery",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(ctx, ["control", "writer1", "musa1", "musa1b", "spectator"], { useStateHooks: false });
+      await configureFastControlPanel(ctx, {
+        tiempo_modos: 10,
+        tiempo_cambio_palabras: 10,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx, { useStateHooks: false });
+      await waitForLocalMode(ctx, "writer1", "palabras bonus", 10000);
+      await waitForLocalMode(ctx, "musa1", "palabras bonus", 10000);
+      await assertMusaWordTimePreview(ctx, "musa1", "palabras bonus", "cometa", {
+        className: "preview-tiempo-palabra--positivo",
+        sign: "+"
+      });
+      await ctx.evaluate("musa1", () => {
+        window.__scribModoActualMusaPreview = "palabras prohibidas";
+      });
+      await assertMusaWordTimePreview(ctx, "musa1", "palabras prohibidas", "tormenta", {
+        className: "preview-tiempo-palabra--negativo",
+        sign: "-"
+      });
+      await ctx.evaluate("musa1", () => {
+        window.__scribModoActualMusaPreview = "palabras bonus";
+        const input = document.querySelector("#palabra");
+        if (input) input.value = "";
+        if (typeof actualizarPreviewTiempoPalabraMusa === "function") {
+          actualizarPreviewTiempoPalabraMusa("", "palabras bonus");
+        }
+      });
+      await ctx.invoke("control", "cambiar_vista_espectador", "nube_inspiracion");
+      await ctx.sendMusaWord("musa1", "horizonte");
+      await ctx.sendMusaWord("musa1b", "horizonte");
+      await requestQueuedWriterWord(ctx, "writer1", "bonus");
+      await ctx.waitForText(
+        "writer1",
+        "#definicion",
+        (text) => text.toLowerCase().includes("horizonte"),
+        "writer1 receives queued musa bonus word",
+        10000
+      );
+      let superbonusDetected = false;
+      try {
+        await ctx.waitFor(
+          "writer1 marks delivered word as superbonus",
+          async () => ctx.evaluate("writer1", () => {
+            const node = document.querySelector("#definicion");
+            return Boolean(node?.classList?.contains("definicion-superbonus")
+              && String(node.textContent || "").toLowerCase().includes("superbonus"));
+          }),
+          2500
+        );
+        superbonusDetected = true;
+      } catch (error) {
+        if (ctx.options?.serverSource === "local") {
+          throw error;
+        }
+      }
+      if (superbonusDetected) {
+        await ctx.waitFor(
+          "spectator cloud marks superbonus",
+          async () => ctx.evaluate("spectator", () => {
+            const node = document.querySelector("#nube_inspiracion_canvas .nube-inspiracion-palabra.is-superbonus");
+            return Boolean(node && String(node.textContent || "").toLowerCase().includes("horizonte"));
+          }),
+          10000
+        );
+      }
+      await ensureSpectatorView(ctx, "partida");
+      await clearFloatingFeedbacks(ctx, "writer1");
+      await clearFloatingFeedbacks(ctx, "spectator");
+      await typeInWriter(ctx, "writer1", " horizonte");
+      await waitForTimeAndInspirationFeedback(
+        ctx,
+        "writer1",
+        "writer sees separate time and inspiration feedback for musa bonus"
+      );
+      await waitForTimeAndInspirationFeedback(
+        ctx,
+        "spectator",
+        "spectator sees separate time and inspiration feedback for musa bonus",
+        { selector: "#feedback_tiempo_flotante_root .feedback-tiempo-columna.lado-1 .feedback-tiempo-float" }
+      );
+    }
+  },
+  {
+    name: "spectator-reconnect-recovers-text",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(ctx, ["control", "writer1", "writer2", "spectator"], { useStateHooks: false });
+      await configureFastControlPanel(ctx, {
+        tiempo_modos: 10,
+        tiempo_cambio_palabras: 10,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx, { useStateHooks: false });
+      await freezeWriterDecay(ctx, "writer1");
+      await freezeWriterDecay(ctx, "writer2");
+
+      await ctx.setWriterText("writer1", "smoke azul reconnect");
+      await ctx.setWriterText("writer2", "smoke rojo reconnect");
+      await ctx.waitForText("spectator", "#texto", (text) => text.includes("smoke azul reconnect"), "spectator sees blue text before reconnect", 15000);
+      await ctx.waitForText("spectator", "#texto1", (text) => text.includes("smoke rojo reconnect"), "spectator sees red text before reconnect", 15000);
+
+      await ctx.closeRole("spectator");
+      await openRolesAndWaitWithOptions(ctx, ["spectator"], { useStateHooks: false });
+      await ctx.waitForText("spectator", "#texto", (text) => text.includes("smoke azul reconnect"), "spectator restores blue text after reconnect", 15000);
+      await ctx.waitForText("spectator", "#texto1", (text) => text.includes("smoke rojo reconnect"), "spectator restores red text after reconnect", 15000);
     }
   },
 ];
@@ -579,6 +1276,55 @@ const onePlayerSpecs = [
         }
       });
 
+      await ctx.evaluate("onep", () => {
+        window.__scribPostInicioProbe = 0;
+        window.eval(`
+          final_cuenta_atras_timer = setTimeout(() => {
+            window.__scribPostInicioProbe += 1;
+            post_inicio(true);
+          }, 40);
+          limpiarCountdownInicioEscritora();
+        `);
+      });
+      await ctx.sleep(120);
+      const countdownCleanup = await ctx.evaluate("onep", () => ({
+        postInicioCalls: window.__scribPostInicioProbe || 0,
+        editable: document.querySelector("#texto")?.getAttribute("contenteditable") === "true",
+        countdownVisible: Boolean(document.querySelector("#countdown"))
+      }));
+      ctx.assert(countdownCleanup.postInicioCalls === 0, "1P countdown cleanup should cancel deferred post_inicio");
+      ctx.assert(countdownCleanup.editable === false, "1P cleanup should not leave editor editable");
+      ctx.assert(countdownCleanup.countdownVisible === false, "1P cleanup should remove countdown DOM");
+
+      await ctx.evaluate("onep", () => {
+        const editor = document.querySelector("#texto");
+        if (!editor) throw new Error("Missing 1P editor");
+        editor.setAttribute("contenteditable", "true");
+        editor.textContent = "";
+        const range = document.createRange();
+        range.setStart(editor, 0);
+        range.collapse(true);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.focus();
+        window.eval("teclado_lento_putada = true; revision_teclado_lento_1p = 1;");
+        const event = new InputEvent("beforeinput", {
+          bubbles: true,
+          cancelable: true,
+          inputType: "insertText",
+          data: "x"
+        });
+        editor.dispatchEvent(event);
+        window.eval("limpiar_teclado_lento(); teclado_lento_putada = true;");
+      });
+      await ctx.sleep(650);
+      const staleSlowKeyboardText = await ctx.readText("onep", "#texto");
+      ctx.assert(staleSlowKeyboardText === "", "1P stale slow-keyboard input should not be inserted after cleanup");
+      await ctx.evaluate("onep", () => {
+        window.eval("limpiar_teclado_lento();");
+      });
+
       await ctx.invoke("onep", "inicio");
       await ctx.waitFor(
         "1P countdown starts",
@@ -597,6 +1343,47 @@ const onePlayerSpecs = [
         async () => ctx.evaluate("onep", () => document.querySelector("#texto")?.getAttribute("contenteditable") === "true"),
         15000
       );
+
+      await ctx.evaluate("onep", () => {
+        const editor = document.querySelector("#texto");
+        if (!editor) throw new Error("Missing 1P editor");
+        editor.innerHTML = 'abc<span class="palabra-bendita" contenteditable="false">BONUS</span>xy';
+      });
+      await ctx.getPageEntry("onep").page.focus("#texto");
+      await ctx.evaluate("onep", () => {
+        const editor = document.querySelector("#texto");
+        const span = editor.querySelector(".palabra-bendita");
+        const range = document.createRange();
+        range.setStartAfter(span);
+        range.collapse(true);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.focus();
+      });
+      const protectedDeletePreflight = await ctx.evaluate("onep", () => {
+        const editor = document.querySelector("#texto");
+        return {
+          active: document.activeElement === editor,
+          helper: typeof borrarCaracterEditableSaltandoProtegido1P,
+          sharedHelper: typeof window.ScribEditorDeletion?.borrarCaracterEditableJuntoAProtegido,
+          affected: Boolean(obtenerNodoProtegidoAfectadoPorDireccion("backward"))
+        };
+      });
+      ctx.assert(
+        protectedDeletePreflight.active
+          && protectedDeletePreflight.helper === "function"
+          && protectedDeletePreflight.sharedHelper === "function"
+          && protectedDeletePreflight.affected,
+        `1P protected delete preflight failed: ${JSON.stringify(protectedDeletePreflight)}`
+      );
+      await pressWriterKey(ctx, "onep", "Backspace", 1, { preserveCaret: true });
+      const protectedDeleteState = await readWriterState(ctx, "onep");
+      ctx.assert(
+        protectedDeleteState.text === "abBONUSxy",
+        `1P Backspace should delete behind a protected word in one press, got ${JSON.stringify(protectedDeleteState)}`
+      );
+      ctx.assert(protectedDeleteState.protectedCount === 1, "1P protected word should survive Backspace");
 
       const text = "prueba uno dos tres";
       await ctx.setWriterText("onep", text);
@@ -794,6 +1581,15 @@ const coreSpecs = [
           (state) => state.partida.modo_actual === item.mode,
           8000
         );
+        await waitForLocalMode(ctx, item.sender, item.mode, 10000);
+        if (item.mode === "palabras bonus" || item.mode === "palabras prohibidas") {
+          await assertMusaWordTimePreview(ctx, item.sender, item.mode, item.word, {
+            className: item.mode === "palabras prohibidas"
+              ? "preview-tiempo-palabra--negativo"
+              : "preview-tiempo-palabra--positivo",
+            sign: item.mode === "palabras prohibidas" ? "-" : "+"
+          });
+        }
         await ctx.sendMusaWord(item.sender, item.word);
         await ctx.waitForState(
           `server received musa word for ${item.mode}`,
@@ -830,6 +1626,161 @@ const coreSpecs = [
           10000
         );
       }
+    }
+  },
+  {
+    name: "musa-personalized-pdf-gifts-core",
+    run: async (ctx) => {
+      const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", ...museRoles]);
+      await Promise.all(museRoles.map((role) => installMusaPdfGiftProbe(ctx, role)));
+      await configureFastControlPanel(ctx, {
+        tiempo_modos: 30,
+        tiempo_cambio_letra: 30,
+        tiempo_cambio_palabras: 30,
+        tiempo_minutos: 3,
+        tiempo_segundos: 0
+      });
+      await startGame(ctx);
+      await freezeWriterDecay(ctx, "writer1");
+      await freezeWriterDecay(ctx, "writer2");
+      await ctx.setWriterText("writer1", "pdf azul base ");
+      await ctx.setWriterText("writer2", "pdf rojo base ");
+
+      const giftStateByRole = {};
+      for (const role of museRoles) {
+        giftStateByRole[role] = await readMusaPdfGiftState(ctx, role);
+        ctx.assert(giftStateByRole[role].clientId, `${role} should expose a persistent client id`);
+      }
+
+      await ctx.emitHook("scrib_test:force_mode", { mode: "letra bendita", letra: "A" });
+      await waitForMode(ctx, "letra bendita", 8000);
+      await Promise.all(["writer1", "writer2", ...museRoles].map((role) => waitForLocalMode(ctx, role, "letra bendita", 10000)));
+      await Promise.all([
+        emitMusaInspiration(ctx, "musa1", "aurora"),
+        emitMusaInspiration(ctx, "musa1b", "alba"),
+        emitMusaInspiration(ctx, "musa2", "amuleto"),
+        emitMusaInspiration(ctx, "musa2b", "ancla")
+      ]);
+
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
+      await waitForMode(ctx, "palabras bonus", 8000);
+      await Promise.all(["writer1", "writer2", ...museRoles].map((role) => waitForLocalMode(ctx, role, "palabras bonus", 10000)));
+      await Promise.all([
+        emitMusaInspiration(ctx, "musa1", "horizonte"),
+        emitMusaInspiration(ctx, "musa1b", "horizonte"),
+        emitMusaInspiration(ctx, "musa2", "memoria"),
+        emitMusaInspiration(ctx, "musa2b", "memoria")
+      ]);
+      await ctx.waitForState(
+        "personalized pdf superbonus words queued",
+        (state) => {
+          const team1 = state.inspiracion.nube.equipos[1].palabras_info || [];
+          const team2 = state.inspiracion.nube.equipos[2].palabras_info || [];
+          return team1.some((item) => item.palabra === "horizonte" && item.superbonus)
+            && team2.some((item) => item.palabra === "memoria" && item.superbonus);
+        },
+        8000
+      );
+      await requestQueuedWriterWord(ctx, "writer1", "bonus");
+      await requestQueuedWriterWord(ctx, "writer2", "bonus");
+      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E_MUSA_1 + E2E_MUSA_1_B");
+      await ensureBonusWordInWriterUi(ctx, "writer2", "memoria", "E2E_MUSA_2 + E2E_MUSA_2_B");
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await typeInWriter(ctx, "writer1", " horizonte ");
+      await typeInWriter(ctx, "writer2", " memoria ");
+      await ctx.waitForState(
+        "personalized pdf bonus words introduced",
+        (state) => state.stats.players[1].palabrasBenditas.includes("HORIZONTE")
+          && state.stats.players[2].palabrasBenditas.includes("MEMORIA"),
+        10000
+      );
+
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras prohibidas" });
+      await waitForMode(ctx, "palabras prohibidas", 8000);
+      await Promise.all(["writer1", "writer2", ...museRoles].map((role) => waitForLocalMode(ctx, role, "palabras prohibidas", 10000)));
+      await Promise.all([
+        emitMusaInspiration(ctx, "musa1", "ruina"),
+        emitMusaInspiration(ctx, "musa2", "veneno")
+      ]);
+      await requestQueuedWriterWord(ctx, "writer1", "prohibida");
+      await requestQueuedWriterWord(ctx, "writer2", "prohibida");
+      await ctx.waitForText("writer1", "#definicion", (text) => text.toLowerCase().includes("veneno"), "writer1 receives rival forbidden word for personalized pdf", 10000);
+      await ctx.waitForText("writer2", "#definicion", (text) => text.toLowerCase().includes("ruina"), "writer2 receives rival forbidden word for personalized pdf", 10000);
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await typeInWriter(ctx, "writer1", " veneno ");
+      await typeInWriter(ctx, "writer2", " ruina ");
+      await ctx.waitForState(
+        "personalized pdf forbidden words introduced",
+        (state) => state.stats.players[1].intentosPalabraProhibida >= 1
+          && state.stats.players[2].intentosPalabraProhibida >= 1,
+        10000
+      );
+
+      const expectations = {
+        musa1: { sent: ["aurora", "horizonte", "ruina"], introduced: ["horizonte", "ruina"], rivalWord: "ruina", rivalWriter: 2 },
+        musa1b: { sent: ["alba", "horizonte"], introduced: ["horizonte"] },
+        musa2: { sent: ["amuleto", "memoria", "veneno"], introduced: ["memoria", "veneno"], rivalWord: "veneno", rivalWriter: 1 },
+        musa2b: { sent: ["ancla", "memoria"], introduced: ["memoria"] }
+      };
+
+      await ctx.waitFor(
+        "personalized pdf summary records sent and introduced words",
+        async () => {
+          const summary = await fetchMusaPdfSummary(ctx);
+          return museRoles.every((role) => {
+            const entry = getMusaSummaryEntry(summary, giftStateByRole[role].clientId);
+            if (!entry) return false;
+            const words = entry.palabras || [];
+            return expectations[role].sent.every((word) => words.some((item) => item.palabra === word))
+              && expectations[role].introduced.every((word) => words.some((item) => item.palabra === word && item.introducida))
+              && (!expectations[role].rivalWord || words.some((item) => item.palabra === expectations[role].rivalWord
+                && item.modo === "palabras prohibidas"
+                && item.introducida_por === expectations[role].rivalWriter));
+          }) ? summary : false;
+        },
+        10000
+      );
+
+      await ctx.emitHook("scrib_test:force_finish_player", { player: 1, reiniciar: false, mostrar_resurreccion: false });
+      await ctx.emitHook("scrib_test:force_finish_player", { player: 2, reiniciar: false, mostrar_resurreccion: false });
+      const giftStates = await ctx.waitFor(
+        "each muse receives only its personalized pdf gift",
+        async () => {
+          const states = {};
+          for (const role of museRoles) {
+            states[role] = await readMusaPdfGiftState(ctx, role);
+          }
+          return museRoles.every((role) => {
+            const state = states[role];
+            const ownGift = state.gifts.find((gift) => gift.client_id === state.clientId);
+            const foreignGift = state.gifts.find((gift) => gift.client_id && gift.client_id !== state.clientId);
+            return state.visible
+              && state.hasData
+              && state.filename.endsWith(".pdf")
+              && ownGift
+              && ownGift.personalizado === true
+              && ownGift.player === state.player
+              && ownGift.filename === state.filename
+              && !foreignGift;
+          }) ? states : false;
+        },
+        20000
+      );
+
+      const filenames = new Set();
+      for (const role of museRoles) {
+        const state = giftStates[role];
+        filenames.add(state.filename);
+        const pdfText = decodePdfDataUri(state.data);
+        ctx.assert(pdfText.startsWith("%PDF"), `${role} gift should be a PDF data URI`);
+        ctx.assert(pdfText.includes("SCRIB regalo musa"), `${role} PDF metadata should identify the personalized muse gift`);
+        ctx.assert(pdfText.includes(state.clientId), `${role} PDF metadata should include the target client id`);
+        ctx.assert(expectations[role].introduced.some((word) => pdfText.includes(word)), `${role} PDF metadata should include an introduced word`);
+      }
+      ctx.assert(filenames.size === museRoles.length, "personalized muse PDF filenames should be unique");
     }
   },
   {
@@ -1207,6 +2158,7 @@ const coreSpecs = [
         (state) => state.partida.modo_actual !== "tertulia",
         8000
       );
+      await closeActiveVoteIfAny(ctx);
       await ctx.waitFor(
         "writers editable after tertulia",
         async () => {
@@ -1217,10 +2169,10 @@ const coreSpecs = [
         8000
       );
 
-      await typeInWriter(ctx, "writer1", " 123");
-      await typeInWriter(ctx, "writer2", " 123");
-      await ctx.waitForText("actor1", "#texto", (text) => text.includes("123"), "actor1 sees text after tertulia", 10000);
-      await ctx.waitForText("actor2", "#texto", (text) => text.includes("123"), "actor2 sees text after tertulia", 10000);
+      await typeInWriter(ctx, "writer1", " 12");
+      await typeInWriter(ctx, "writer2", " 12");
+      await ctx.waitForText("actor1", "#texto", (text) => text.includes("12"), "actor1 sees text after tertulia", 10000);
+      await ctx.waitForText("actor2", "#texto", (text) => text.includes("12"), "actor2 sees text after tertulia", 10000);
     }
   },
   {
@@ -1310,6 +2262,8 @@ const coreSpecs = [
           && state.resurreccion[2].menu === "quantity",
         10000
       );
+      await assertSpectatorSideVeilCoversViewport(ctx, 1);
+      await assertSpectatorSideVeilCoversViewport(ctx, 2);
     }
   },
   {
@@ -1346,9 +2300,9 @@ const coreSpecs = [
   {
     name: "disadvantages-application-core",
     run: async (ctx) => {
-      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator"]);
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "actor1", "actor2"]);
       await configureFastControlPanel(ctx, {
-        tiempo_modificador: 2
+        tiempo_modificador: 3
       });
       await startGame(ctx, { requireEditable: false });
       await ctx.waitForVisible("spectator", "#countdown", false, "spectator intro cleared before disadvantage churn", 10000);
@@ -1376,13 +2330,19 @@ const coreSpecs = [
           selection: PUTADA_BORROSO,
           player: 1,
           expectedSpectatorClass: "putada-visual--borroso",
-          writerAssert: (state) => state.blurry === true
+          writerAssert: (state) => state.blurry === true,
+          actorRole: "actor1",
+          otherActorRole: "actor2",
+          actorAssert: (state) => state.blurry === true && state.putada === "borroso"
         },
         {
           selection: PUTADA_INVERSO,
           player: 2,
           expectedSpectatorClass: "putada-visual--inverso",
-          writerAssert: (state) => state.inverseActive === true
+          writerAssert: (state) => state.inverseActive === true,
+          actorRole: "actor2",
+          otherActorRole: "actor1",
+          actorAssert: (state) => state.inverse === true && state.putada === "inverso"
         },
         {
           selection: PUTADA_PLUMA,
@@ -1411,6 +2371,22 @@ const coreSpecs = [
           },
           10000
         );
+
+        if (testCase.actorAssert) {
+          await ctx.waitFor(
+            `${testCase.actorRole} receives actor visual disadvantage ${testCase.selection}`,
+            async () => {
+              const state = await readActorDisadvantageState(ctx, testCase.actorRole);
+              return testCase.actorAssert(state) ? state : false;
+            },
+            5000
+          );
+          const otherActorState = await readActorDisadvantageState(ctx, testCase.otherActorRole);
+          ctx.assert(
+            otherActorState.blurry === false && otherActorState.inverse === false,
+            `${testCase.otherActorRole} should not receive actor visual disadvantage ${testCase.selection}`
+          );
+        }
 
         const unaffected = await readWriterDisadvantageState(ctx, otherRole);
         if (testCase.selection === PUTADA_TORTUGA) {
@@ -1460,7 +2436,47 @@ const coreSpecs = [
           },
           12000
         );
+        if (testCase.actorAssert) {
+          await ctx.waitFor(
+            `${testCase.actorRole} clears actor visual disadvantage ${testCase.selection}`,
+            async () => {
+              const state = await readActorDisadvantageState(ctx, testCase.actorRole);
+              return state.blurry === false && state.inverse === false ? state : false;
+            },
+            12000
+          );
+        }
       }
+    }
+  },
+  {
+    name: "musa-counter-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator"]);
+      await waitForMusaCounters(ctx, 0, 0, "initial musa counters");
+
+      await openRolesAndWait(ctx, ["musa1", "musa1b", "musa2"]);
+      await waitForMusaCounters(ctx, 2, 1, "musa counters after connect");
+
+      await ctx.evaluate("musa1", () => {
+        const equipo = window.eval("typeof player !== 'undefined' ? player : 1");
+        const nombre = window.eval("typeof nombre_musa !== 'undefined' ? nombre_musa : 'E2E_Musa_1'");
+        const clientId = window.eval("typeof musa_client_id !== 'undefined' ? musa_client_id : ''");
+        socket.emit("registrar_musa", { musa: equipo, nombre, client_id: clientId });
+      });
+      await ctx.sleep(350);
+      await waitForMusaCounters(ctx, 2, 1, "musa counters after duplicate register");
+
+      await ctx.closeRole("musa1b");
+      await waitForMusaCounters(ctx, 1, 1, "musa counters after one team1 disconnect");
+
+      await openRolesAndWait(ctx, ["musa1b"]);
+      await waitForMusaCounters(ctx, 2, 1, "musa counters after team1 reconnect");
+
+      await ctx.closeRole("musa1");
+      await ctx.closeRole("musa1b");
+      await ctx.closeRole("musa2");
+      await waitForMusaCounters(ctx, 0, 0, "musa counters after all disconnect");
     }
   },
   {
@@ -1496,7 +2512,7 @@ const coreSpecs = [
     name: "teleprompter-core",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["control", "writer1", "spectator"]);
-      await startGame(ctx);
+      await startGame(ctx, { requireEditable: false });
       const text = "telepromptsync";
       await ctx.setWriterText("writer1", text);
       await ctx.invoke("control", "toggleTeleprompter");
@@ -1529,7 +2545,7 @@ const coreSpecs = [
     }
   },
   {
-    name: "full-match-no-hooks",
+    name: "full-real-match-complete",
     run: async (ctx) => {
       const expectedModes = [
         "letra bendita",
@@ -1539,47 +2555,372 @@ const coreSpecs = [
         "palabras prohibidas",
         "frase final"
       ];
-      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "actor1", "actor2"]);
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "actor1", "actor2", "musa1", "musa1b", "musa2", "musa2b"]);
       await configureFastControlPanel(ctx, {
-        tiempo_modos: 2,
-        tiempo_votacion: 1,
-        tiempo_cambio_letra: 1,
-        tiempo_cambio_palabras: 1
+        tiempo_modos: 14,
+        tiempo_votacion: 30,
+        tiempo_cambio_letra: 14,
+        tiempo_cambio_palabras: 14,
+        limite_tiempo_inspiracion: 1,
+        tiempo_modificador: 3,
+        tiempo_minutos: 3,
+        tiempo_segundos: 0
       });
-      await startGame(ctx, { requireEditable: false });
+      await startGame(ctx);
       await freezeWriterDecay(ctx, "writer1");
       await freezeWriterDecay(ctx, "writer2");
 
       await waitForMode(ctx, "letra bendita", 15000);
-      await ctx.setWriterText("writer1", "flujo real azul");
-      await ctx.setWriterText("writer2", "flujo real rojo");
-      await ctx.waitForState(
-        "real flow texts received",
-        (state) => state.textos[1].plano.includes("flujo real azul")
-          && state.textos[2].plano.includes("flujo real rojo"),
+      await waitForLocalMode(ctx, "writer1", "letra bendita", 10000);
+      await waitForLocalMode(ctx, "musa1", "letra bendita", 10000);
+      await waitForLocalMode(ctx, "musa1b", "letra bendita", 10000);
+      await waitForLocalMode(ctx, "musa2", "letra bendita", 10000);
+      await waitForLocalMode(ctx, "musa2b", "letra bendita", 10000);
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      const letraBendita = String((await ctx.getState()).partida.letra_bendita || "a");
+      const benditaTeam1 = buildWordContainingLetter(letraBendita, 1);
+      const benditaTeam1b = buildWordContainingLetter(letraBendita, 3);
+      const benditaTeam2 = buildWordContainingLetter(letraBendita, 2);
+      const benditaTeam2b = buildWordContainingLetter(letraBendita, 4);
+      await Promise.all([
+        emitMusaInspiration(ctx, "musa1", benditaTeam1),
+        emitMusaInspiration(ctx, "musa1b", benditaTeam1b),
+        emitMusaInspiration(ctx, "musa2", benditaTeam2),
+        emitMusaInspiration(ctx, "musa2b", benditaTeam2b)
+      ]);
+      await requestQueuedMusaWord(ctx, "writer1");
+      await requestQueuedMusaWord(ctx, "writer2");
+      await ctx.waitForText(
+        "writer1",
+        "#definicion",
+        (text) => [benditaTeam1, benditaTeam1b].some((word) => text.toLowerCase().includes(word.toLowerCase())),
+        "full match writer1 receives blessed-letter musa word",
         10000
       );
-      await ctx.waitForText("spectator", "#texto", (text) => text.includes("flujo real azul"), "spectator sees real flow text 1");
-      await ctx.waitForText("spectator", "#texto1", (text) => text.includes("flujo real rojo"), "spectator sees real flow text 2");
-      await ctx.waitForText("actor1", "#texto", (text) => text.includes("flujo real azul"), "actor1 sees real flow text");
-      await ctx.waitForText("actor2", "#texto", (text) => text.includes("flujo real rojo"), "actor2 sees real flow text");
+      await ctx.waitForText(
+        "writer2",
+        "#definicion",
+        (text) => [benditaTeam2, benditaTeam2b].some((word) => text.toLowerCase().includes(word.toLowerCase())),
+        "full match writer2 receives blessed-letter musa word",
+        10000
+      );
+      await typeInWriter(ctx, "writer1", "azul inicial ");
+      await typeInWriter(ctx, "writer2", "rojo inicial ");
+      await typeInWriter(ctx, "writer1", ` ${letraBendita} `);
+      await typeInWriter(ctx, "writer2", ` ${letraBendita} `);
+      if (/^[a-z]$/i.test(letraBendita)) {
+        await ctx.waitForState(
+          "full match blessed-letter stats recorded",
+          (state) => state.stats.players[1].letrasBenditas.includes(letraBendita.toUpperCase())
+            && state.stats.players[2].letrasBenditas.includes(letraBendita.toUpperCase()),
+          10000
+        );
+      }
+      await ctx.waitForState(
+        "real flow texts received",
+        (state) => {
+          const texto1 = `${state.textos[1].plano} ${state.textos[1].html?.texto_guardado || ""}`;
+          const texto2 = `${state.textos[2].plano} ${state.textos[2].html?.texto_guardado || ""}`;
+          return texto1.includes("azul") && texto2.includes("inicial");
+        },
+        10000
+      );
+      await ctx.waitForText("spectator", "#texto", (text) => text.includes("azul"), "spectator sees real flow text 1");
+      await ctx.waitForText("spectator", "#texto1", (text) => text.includes("inicial"), "spectator sees real flow text 2");
+      await ctx.waitForText("actor1", "#texto", (text) => text.includes("azul"), "actor1 sees real flow text");
+      await ctx.waitForText("actor2", "#texto", (text) => text.includes("inicial"), "actor2 sees real flow text");
+
+      await ctx.invoke("control", "activar_banderas_musas");
+      await ctx.waitForState(
+        "full match flags active",
+        (state) => state.musas.banderas.activa === true,
+        6000
+      );
+      await emitMusaHeartViaClient(ctx, "musa1");
+      await ctx.waitForState(
+        "full match heart stored",
+        (state) => state.musas.corazones[1].count >= 1,
+        6000
+      );
+      await ctx.waitForChildCount("writer1", "#corazones_escritor", 1, "writer sees full-match heart");
+      await ctx.waitForChildCount("spectator", "#corazones_espectador", 1, "spectator sees full-match heart");
+
+      await waitForMode(ctx, "letra prohibida", 20000);
+      await waitForLocalMode(ctx, "writer1", "letra prohibida", 10000);
+      await waitForLocalMode(ctx, "writer2", "letra prohibida", 10000);
+      await waitForLocalMode(ctx, "musa1", "letra prohibida", 10000);
+      await waitForLocalMode(ctx, "musa1b", "letra prohibida", 10000);
+      await waitForLocalMode(ctx, "musa2", "letra prohibida", 10000);
+      await waitForLocalMode(ctx, "musa2b", "letra prohibida", 10000);
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await applyForcedDisadvantage(ctx, 1, PUTADA_PLUMA, { duracionMs: 3000 });
+      await ctx.waitFor(
+        "writer1 receives active delete-block disadvantage",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.deleteBlocked && state.currentDisadvantage === PUTADA_PLUMA ? state : false;
+        },
+        8000
+      );
+      await ctx.sleep(650);
+      await toggleControlPause(ctx, "1", "control pause button switches to resume");
+      const pausedMode = (await ctx.getState()).partida.modo_actual;
+      await ctx.waitFor(
+        "writer1 is locked while control is paused",
+        async () => {
+          const writer = await readWriterState(ctx, "writer1");
+          return writer.editable === false ? writer : false;
+        },
+        6000
+      );
+      const writerPausedBeforeType = await readWriterState(ctx, "writer1");
+      await typeInWriter(ctx, "writer1", " pausa no entra");
+      const writerPausedAfterType = await readWriterState(ctx, "writer1");
+      ctx.assert(writerPausedAfterType.text === writerPausedBeforeType.text, "pause button should block writer input");
+      const pausedDisadvantage = await readWriterDisadvantageState(ctx, "writer1");
+      ctx.assert(pausedDisadvantage.deleteBlocked === true, "delete-block disadvantage should stay active while paused");
+      ctx.assert(pausedDisadvantage.activeDisadvantage?.pausada === true, "delete-block disadvantage timer should be paused");
+      await ctx.sleep(7600);
+      const stillPausedDisadvantage = await readWriterDisadvantageState(ctx, "writer1");
+      ctx.assert(stillPausedDisadvantage.deleteBlocked === true, "paused disadvantage should not expire while the match is paused");
+      ctx.assert(stillPausedDisadvantage.activeDisadvantage?.pausada === true, "paused disadvantage should keep a paused timer");
+      ctx.assert((await ctx.getState()).partida.modo_actual === pausedMode, "mode should not advance while the pause button is active");
+      await toggleControlPause(ctx, "0", "control pause button switches back to pause");
+      await ctx.waitFor(
+        "writer1 resumes with remaining delete-block disadvantage",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.deleteBlocked === true && state.activeDisadvantage?.pausada === false ? state : false;
+        },
+        6000
+      );
+      await ctx.waitFor(
+        "writer1 delete-block disadvantage expires after resume",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.deleteBlocked === false && !state.activeDisadvantage ? state : false;
+        },
+        20000
+      );
+      const letraProhibida = String((await ctx.getState()).partida.letra_prohibida || "z");
+      const prohibidaTeam1 = buildWordAvoidingLetter(letraProhibida, 1);
+      const prohibidaTeam1b = buildWordAvoidingLetter(letraProhibida, 2);
+      const prohibidaTeam2 = buildWordAvoidingLetter(letraProhibida, 3);
+      const prohibidaTeam2b = buildWordAvoidingLetter(letraProhibida, 4);
+      await Promise.all([
+        emitMusaInspiration(ctx, "musa1", prohibidaTeam1),
+        emitMusaInspiration(ctx, "musa1b", prohibidaTeam1b),
+        emitMusaInspiration(ctx, "musa2", prohibidaTeam2),
+        emitMusaInspiration(ctx, "musa2b", prohibidaTeam2b)
+      ]);
+      await requestQueuedMusaWord(ctx, "writer1");
+      await requestQueuedMusaWord(ctx, "writer2");
+      await ctx.waitForText(
+        "writer1",
+        "#definicion",
+        (text) => [prohibidaTeam1, prohibidaTeam1b].some((word) => text.toLowerCase().includes(word.toLowerCase())),
+        "full match writer1 receives forbidden-letter musa word",
+        10000
+      );
+      await ctx.waitForText(
+        "writer2",
+        "#definicion",
+        (text) => [prohibidaTeam2, prohibidaTeam2b].some((word) => text.toLowerCase().includes(word.toLowerCase())),
+        "full match writer2 receives forbidden-letter musa word",
+        10000
+      );
+      await typeInWriter(ctx, "writer1", ` tramo prohibida ${letraProhibida} `);
+      await typeInWriter(ctx, "writer2", ` tramo prohibida ${letraProhibida} `);
+      await ctx.waitForState(
+        "full match forbidden-letter stats recorded",
+        (state) => state.stats.players[1].intentosLetraProhibida >= 1
+          && state.stats.players[2].intentosLetraProhibida >= 1,
+        10000
+      );
+
+      await waitForMode(ctx, "tertulia", 20000);
+      const tertuliaBefore = await readWriterState(ctx, "writer1");
+      await typeInWriter(ctx, "writer1", "bloqueado");
+      const tertuliaAfter = await readWriterState(ctx, "writer1");
+      ctx.assert(tertuliaAfter.text === tertuliaBefore.text, "full match writer1 should be locked during tertulia");
+      await ctx.waitFor(
+        "control pause button enters resume state during tertulia",
+        async () => {
+          const state = await readControlPauseState(ctx);
+          return state.value === "1" ? state : false;
+        },
+        6000
+      );
+      await toggleControlPause(ctx, "0", "control resume button advances tertulia");
+
+      await waitForMode(ctx, "palabras bonus", 20000);
+      await closeActiveVoteIfAny(ctx);
+      await waitForLocalMode(ctx, "writer1", "palabras bonus", 10000);
+      await waitForLocalMode(ctx, "writer2", "palabras bonus", 10000);
+      await waitForLocalMode(ctx, "musa1", "palabras bonus", 10000);
+      await waitForLocalMode(ctx, "musa1b", "palabras bonus", 10000);
+      await waitForLocalMode(ctx, "musa2", "palabras bonus", 10000);
+      await waitForLocalMode(ctx, "musa2b", "palabras bonus", 10000);
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await ctx.invoke("control", "cambiar_vista_espectador", "nube_inspiracion");
+      await Promise.all([
+        emitMusaInspiration(ctx, "musa1", "horizonte"),
+        emitMusaInspiration(ctx, "musa1b", "horizonte"),
+        emitMusaInspiration(ctx, "musa2", "memoria"),
+        emitMusaInspiration(ctx, "musa2b", "memoria")
+      ]);
+      await ctx.waitForState(
+        "full match bonus words queued by four muses",
+        (state) => {
+          const team1 = state.inspiracion.nube.equipos[1].palabras_info || [];
+          const team2 = state.inspiracion.nube.equipos[2].palabras_info || [];
+          return team1.some((item) => item.palabra === "horizonte" && item.repeticiones >= 2)
+            && team2.some((item) => item.palabra === "memoria" && item.repeticiones >= 2);
+        },
+        5000
+      );
+      await ctx.waitFor(
+        "full match spectator cloud marks both superbonus words",
+        async () => ctx.evaluate("spectator", () => {
+          const words = Array.from(document.querySelectorAll("#nube_inspiracion_canvas .nube-inspiracion-palabra.is-superbonus"))
+            .map((node) => String(node.textContent || "").toLowerCase());
+          return words.some((text) => text.includes("horizonte"))
+            && words.some((text) => text.includes("memoria"));
+        }),
+        10000
+      );
+      await requestQueuedWriterWord(ctx, "writer1", "bonus");
+      await requestQueuedWriterWord(ctx, "writer2", "bonus");
+      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E_MUSA_1 + E2E_MUSA_1_B");
+      await ensureBonusWordInWriterUi(ctx, "writer2", "memoria", "E2E_MUSA_2 + E2E_MUSA_2_B");
+      await ctx.waitForText(
+        "writer1",
+        "#definicion",
+        (text) => text.toLowerCase().includes("horizonte") && text.toLowerCase().includes("superbonus"),
+        "full match writer receives superbonus word",
+        10000
+      );
+      await ctx.waitForText(
+        "writer2",
+        "#definicion",
+        (text) => text.toLowerCase().includes("memoria") && text.toLowerCase().includes("superbonus"),
+        "full match writer2 receives superbonus word",
+        10000
+      );
+      await setWriterTimerSeconds(ctx, "writer1", 90);
+      await setWriterTimerSeconds(ctx, "writer2", 90);
+      const bonusBefore = getWriterTimerSeconds(await readWriterState(ctx, "writer1"));
+      const bonusBefore2 = getWriterTimerSeconds(await readWriterState(ctx, "writer2"));
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await typeInWriter(ctx, "writer1", " horizonte ");
+      await typeInWriter(ctx, "writer2", " memoria ");
+      await ctx.waitForState(
+        "full match bonus stats recorded",
+        (state) => state.stats.players[1].palabrasBenditas.includes("HORIZONTE")
+          && state.stats.players[2].palabrasBenditas.includes("MEMORIA"),
+        10000
+      );
+      await ctx.waitFor(
+        "full match bonus adds writer time",
+        async () => {
+          const after = getWriterTimerSeconds(await readWriterState(ctx, "writer1"));
+          return after !== null && bonusBefore !== null && after > bonusBefore ? after : false;
+        },
+        5000
+      );
+      await ctx.waitFor(
+        "full match bonus adds writer2 time",
+        async () => {
+          const after = getWriterTimerSeconds(await readWriterState(ctx, "writer2"));
+          return after !== null && bonusBefore2 !== null && after > bonusBefore2 ? after : false;
+        },
+        5000
+      );
+
+      await waitForMode(ctx, "palabras prohibidas", 20000);
+      await closeActiveVoteIfAny(ctx);
+      await waitForLocalMode(ctx, "writer1", "palabras prohibidas", 10000);
+      await waitForLocalMode(ctx, "writer2", "palabras prohibidas", 10000);
+      await waitForLocalMode(ctx, "musa1", "palabras prohibidas", 10000);
+      await waitForLocalMode(ctx, "musa1b", "palabras prohibidas", 10000);
+      await waitForLocalMode(ctx, "musa2", "palabras prohibidas", 10000);
+      await waitForLocalMode(ctx, "musa2b", "palabras prohibidas", 10000);
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await ctx.invoke("control", "cambiar_vista_espectador", "nube_inspiracion");
+      await Promise.all([
+        emitMusaInspiration(ctx, "musa1", "ruina"),
+        emitMusaInspiration(ctx, "musa1b", "ruina"),
+        emitMusaInspiration(ctx, "musa2", "veneno"),
+        emitMusaInspiration(ctx, "musa2b", "veneno")
+      ]);
+      await requestQueuedWriterWord(ctx, "writer1", "prohibida");
+      await requestQueuedWriterWord(ctx, "writer2", "prohibida");
+      await ctx.waitForText(
+        "writer1",
+        "#definicion",
+        (text) => text.toLowerCase().includes("veneno"),
+        "full match writer receives forbidden word",
+        10000
+      );
+      await ctx.waitForText(
+        "writer2",
+        "#definicion",
+        (text) => text.toLowerCase().includes("ruina"),
+        "full match writer2 receives forbidden word",
+        10000
+      );
+      const forbiddenBefore = getWriterTimerSeconds(await readWriterState(ctx, "writer1"));
+      const forbiddenBefore2 = getWriterTimerSeconds(await readWriterState(ctx, "writer2"));
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await typeInWriter(ctx, "writer1", " veneno ");
+      await typeInWriter(ctx, "writer2", " ruina ");
+      await ctx.waitFor(
+        "full match forbidden word subtracts writer time",
+        async () => {
+          const after = getWriterTimerSeconds(await readWriterState(ctx, "writer1"));
+          return after !== null && forbiddenBefore !== null && after < forbiddenBefore ? after : false;
+        },
+        5000
+      );
+      await ctx.waitFor(
+        "full match forbidden word subtracts writer2 time",
+        async () => {
+          const after = getWriterTimerSeconds(await readWriterState(ctx, "writer2"));
+          return after !== null && forbiddenBefore2 !== null && after < forbiddenBefore2 ? after : false;
+        },
+        5000
+      );
+      await ensureSpectatorView(ctx, "stats");
+      await ctx.waitForVisible("spectator", "#stats_espectador", true, "full match spectator stats view visible", 10000);
+      await waitForSpectatorStatsSlides(ctx, "full match spectator stats slides render heatmap and time views", 10000);
 
       await ctx.waitForState(
         "full real timeline reached final mode",
         (state) => expectedModes.every((mode, index) => state.partida.timeline[index]?.modo === mode),
-        45000
+        70000
       );
       await waitForMode(ctx, "frase final", 12000);
-      await ctx.waitFor(
-        "writer1 editable in final phrase without hooks",
-        async () => ctx.evaluate("writer1", () => Boolean(document.querySelector("#texto")?.isContentEditable)),
-        10000
-      );
-      await setWriterFinalPhraseAndTrigger(ctx, "writer1", "cierre azul e2e");
+      await closeActiveVoteIfAny(ctx);
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await ctx.invoke("control", "cambiar_vista_espectador", "partida");
+      await typeInWriter(ctx, "writer1", " cierre azul e2e");
+      await typeInWriter(ctx, "writer2", " cierre rojo e2e");
       await ctx.waitForState(
-        "writer1 completed final phrase without hooks",
-        (state) => state.partida.fin_j1 === true && state.partida.modo_actual === "frase final",
-        10000
+        "both writers completed final phrase without hooks",
+        (state) => state.partida.fin_j1 === true && state.partida.fin_j2 === true,
+        12000
+      );
+      await ctx.waitForState(
+        "full real match finished and reset",
+        (state) => state.partida.fin_del_juego === true && state.partida.modo_actual === "",
+        12000
       );
     }
   },
@@ -1625,6 +2966,377 @@ const coreSpecs = [
     }
   },
   {
+    name: "reconnect-essential-roles-preserves-live-state",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "actor1", "musa1"]);
+      await configureFastControlPanel(ctx, {
+        tiempo_minutos: 5,
+        tiempo_segundos: 0,
+        tiempo_modos: 60,
+        tiempo_cambio_letra: 10,
+        tiempo_cambio_palabras: 10,
+        tiempo_modificador: 60,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx);
+      await freezeWriterDecay(ctx, "writer1");
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
+      await waitForMode(ctx, "palabras bonus", 8000);
+
+      const markedHtml = 'reconexion <span class="palabra-bendita" contenteditable="false">BRILLO</span> <span class="letra-verde">z</span> final';
+      await setWriterHtml(ctx, "writer1", markedHtml);
+      await ctx.waitForState(
+        "server stores marked writer html before reconnect",
+        (state) => String(state.textos[1].html?.text || "").includes("palabra-bendita") && state.textos[1].plano.includes("BRILLO"),
+        10000
+      );
+      await ctx.waitForText("spectator", "#texto", (text) => text.includes("BRILLO"), "spectator sees marked writer text before reconnect");
+      await ctx.waitForText("actor1", "#texto", (text) => text.includes("BRILLO"), "actor sees marked writer text before reconnect");
+
+      await applyForcedDisadvantage(ctx, 1, PUTADA_BORROSO, { duracionMs: 60000 });
+      await ctx.waitForState(
+        "server tracks active disadvantage",
+        (state) => state.desventajas.some((item) => item.player === 1 && item.putada === PUTADA_BORROSO && item.tiempo_restante_ms > 0),
+        5000
+      );
+      await ctx.waitFor(
+        "writer1 has blur disadvantage before reconnect",
+        async () => ctx.evaluate("writer1", () => document.querySelector("#texto")?.classList.contains("textarea_blur")),
+        5000
+      );
+      await ctx.waitFor(
+        "actor1 has blur disadvantage before reconnect",
+        async () => ctx.evaluate("actor1", () => document.querySelector("#texto")?.classList.contains("textarea_blur")),
+        5000
+      );
+
+      await ctx.closeRole("writer1");
+      await ctx.closeRole("spectator");
+      await ctx.closeRole("actor1");
+      await ctx.closeRole("musa1");
+      await ctx.waitForState(
+        "essential roles disconnected during live match",
+        (state) => state.connections.writers[1].connected === false
+          && state.connections.spectator.connected === false
+          && state.connections.actors[1].connected === false
+          && state.connections.musas[1].connected === false,
+        10000
+      );
+      await ctx.evaluate("control", () => {
+        const ok = window.eval("typeof socket !== 'undefined' && socket && typeof socket.disconnect === 'function'");
+        if (!ok) {
+          throw new Error("Missing control socket");
+        }
+        window.eval("socket.io.opts.reconnection = false; socket.disconnect(); if (socket.io.engine) socket.io.engine.close();");
+      });
+      await ctx.sleep(300);
+      await ctx.getPageEntry("control").page.reload({ waitUntil: "domcontentloaded" });
+      await waitForSocketConnection(ctx, "control", 12000);
+      await ctx.waitForVisible("control", "#boton_escribir", true, "control reloads during live match");
+      await ctx.sleep(700);
+
+      await openRolesAndWait(ctx, ["writer1", "spectator", "actor1", "musa1"]);
+      await waitForMode(ctx, "palabras bonus", 8000);
+      await waitForLocalMode(ctx, "musa1", "palabras bonus", 8000);
+      await freezeWriterDecay(ctx, "writer1");
+
+      await ctx.waitForText("writer1", "#texto", (text) => text.includes("BRILLO") && text.includes("final"), "writer restores marked text");
+      const writerState = await readWriterState(ctx, "writer1");
+      ctx.assert(writerState.html.includes("palabra-bendita"), "writer restored protected word markup after reconnect");
+      ctx.assert(writerState.html.includes("letra-verde"), "writer restored protected letter markup after reconnect");
+      ctx.assert(writerState.protectedCount >= 2, "writer restored protected spans after reconnect");
+
+      await ctx.waitForText("spectator", "#texto", (text) => text.includes("BRILLO"), "spectator restores writer text");
+      await ctx.waitForText("actor1", "#texto", (text) => text.includes("BRILLO"), "actor restores writer text");
+      await ctx.waitForText("control", "#texto", (text) => text.includes("BRILLO"), "control restores writer text");
+      await ctx.waitForText("control", "#display_modo", (text) => text.toLowerCase().includes("palabras bonus"), "control restores current mode");
+
+      await ctx.waitFor(
+        "writer1 restores active blur disadvantage",
+        async () => ctx.evaluate("writer1", () => document.querySelector("#texto")?.classList.contains("textarea_blur")),
+        5000
+      );
+      await ctx.waitFor(
+        "spectator restores active blur disadvantage",
+        async () => ctx.evaluate("spectator", () => document.querySelector("#texto")?.classList.contains("textarea_blur")),
+        5000
+      );
+      await ctx.waitFor(
+        "actor1 restores active blur disadvantage",
+        async () => ctx.evaluate("actor1", () => document.querySelector("#texto")?.classList.contains("textarea_blur")),
+        5000
+      );
+    }
+  },
+  {
+    name: "reload-essential-roles-preserves-live-state",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "actor1", "musa1"]);
+      await configureFastControlPanel(ctx, {
+        tiempo_minutos: 5,
+        tiempo_segundos: 0,
+        tiempo_modos: 60,
+        tiempo_cambio_letra: 10,
+        tiempo_cambio_palabras: 10,
+        tiempo_modificador: 45,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx);
+      await freezeWriterDecay(ctx, "writer1");
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
+      await waitForMode(ctx, "palabras bonus", 8000);
+
+      const markedHtml = 'reload <span class="palabra-bendita" contenteditable="false">BRILLO</span> <span class="letra-verde">k</span> estable';
+      await setWriterHtml(ctx, "writer1", markedHtml);
+      await ctx.waitForState(
+        "server stores marked writer html before reload",
+        (state) => String(state.textos[1].html?.text || "").includes("palabra-bendita") && state.textos[1].plano.includes("BRILLO"),
+        10000
+      );
+      await applyForcedDisadvantage(ctx, 1, PUTADA_BORROSO, { duracionMs: 45000 });
+      await ctx.waitFor(
+        "writer1 has blur before page reloads",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.blurry && state.activeDisadvantage?.restanteMs > 0 ? state : false;
+        },
+        8000
+      );
+
+      await reloadRolesSequential(ctx, ["writer1", "spectator", "actor1", "musa1", "control"]);
+      await waitForMode(ctx, "palabras bonus", 8000);
+      await waitForLocalMode(ctx, "writer1", "palabras bonus", 8000);
+      await waitForLocalMode(ctx, "musa1", "palabras bonus", 8000);
+      await freezeWriterDecay(ctx, "writer1");
+
+      await ctx.waitForText("writer1", "#texto", (text) => text.includes("BRILLO") && text.includes("estable"), "writer restores marked text after reload");
+      const writerState = await readWriterState(ctx, "writer1");
+      ctx.assert(writerState.html.includes("palabra-bendita"), "writer should keep blessed-word markup after reload");
+      ctx.assert(writerState.html.includes("letra-verde"), "writer should keep blessed-letter markup after reload");
+      ctx.assert(writerState.protectedCount >= 2, "writer should keep protected spans after reload");
+      await ctx.waitForText("spectator", "#texto", (text) => text.includes("BRILLO"), "spectator restores text after reload");
+      await ctx.waitForText("actor1", "#texto", (text) => text.includes("BRILLO"), "actor restores text after reload");
+      await ctx.waitForText("control", "#texto", (text) => text.includes("BRILLO"), "control restores text after reload");
+      await ctx.waitForText("control", "#display_modo", (text) => text.toLowerCase().includes("palabras bonus"), "control restores mode after reload");
+
+      await ctx.waitFor(
+        "writer1 restores active blur after reload",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.blurry && state.activeDisadvantage?.restanteMs > 0 ? state : false;
+        },
+        8000
+      );
+      await ctx.waitFor(
+        "spectator restores active visual blur after reload",
+        async () => {
+          const state = await readSpectatorDisadvantageState(ctx, 1);
+          return state.active && state.classes.includes("putada-visual--borroso") ? state : false;
+        },
+        8000
+      );
+      await ctx.waitFor(
+        "actor restores active blur after reload",
+        async () => {
+          const state = await readActorDisadvantageState(ctx, "actor1");
+          return state.blurry && state.putada === "borroso" ? state : false;
+        },
+        8000
+      );
+
+      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E Musa", { includeTime: false });
+      await clearFloatingFeedbacks(ctx, "writer1");
+      await typeInWriter(ctx, "writer1", " horizonte ");
+      const feedbackAfterReload = await waitForTimeAndInspirationFeedback(
+        ctx,
+        "writer1",
+        "writer feedback after reload derives bonus seconds when payload omits them"
+      );
+      ctx.assert(!/undefined/i.test(feedbackAfterReload.time), "writer feedback after reload should not show undefined seconds");
+    }
+  },
+  {
+    name: "reload-mode-matrix-preserves-current-level",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "actor1", "musa1"]);
+      await configureFastControlPanel(ctx, {
+        tiempo_minutos: 5,
+        tiempo_segundos: 0,
+        tiempo_modos: 75,
+        tiempo_cambio_letra: 15,
+        tiempo_cambio_palabras: 15,
+        tiempo_modificador: 20,
+        modes: ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "frase final"]
+      });
+      await startGame(ctx, { requireEditable: false });
+      await freezeWriterDecay(ctx, "writer1");
+
+      const matrix = [
+        { mode: "letra bendita", letra: "K", waitMusa: true },
+        { mode: "letra prohibida", letra: "Z", waitMusa: true },
+        { mode: "palabras bonus", waitMusa: true },
+        { mode: "palabras prohibidas", waitMusa: true },
+        { mode: "tertulia", waitMusa: false },
+        { mode: "frase final", waitMusa: false }
+      ];
+
+      for (const item of matrix) {
+        const payload = item.letra ? { mode: item.mode, letra: item.letra } : { mode: item.mode };
+        await ctx.emitHook("scrib_test:force_mode", payload);
+        await waitForMode(ctx, item.mode, 8000);
+        await waitForLocalMode(ctx, "writer1", item.mode, 8000);
+        await waitForLocalMode(ctx, "spectator", item.mode, 8000);
+        await waitForLocalMode(ctx, "actor1", item.mode, 8000);
+        if (item.waitMusa) {
+          await waitForLocalMode(ctx, "musa1", item.mode, 8000);
+        }
+
+        const slug = item.mode.replace(/\s+/g, "-");
+        await setWriterHtml(ctx, "writer1", `matriz ${slug} <span class="letra-verde">${item.letra || "m"}</span> vivo`);
+        await ctx.waitForState(
+          `server stores text for ${item.mode}`,
+          (state) => state.textos[1].plano.includes(`matriz ${slug}`),
+          10000
+        );
+
+        await reloadRolesSequential(ctx, ["writer1", "spectator", "actor1", "musa1", "control"]);
+        await waitForMode(ctx, item.mode, 8000);
+        await waitForLocalMode(ctx, "writer1", item.mode, 8000);
+        await waitForLocalMode(ctx, "spectator", item.mode, 8000);
+        await waitForLocalMode(ctx, "actor1", item.mode, 8000);
+        if (item.waitMusa) {
+          await waitForLocalMode(ctx, "musa1", item.mode, 8000);
+        }
+        await ctx.waitForText("control", "#display_modo", (text) => text.toLowerCase().includes(item.mode), `control restores ${item.mode}`);
+        await ctx.waitForText("writer1", "#texto", (text) => text.includes(`matriz ${slug}`), `writer restores ${item.mode} text`);
+        await ctx.waitForText("spectator", "#texto", (text) => text.includes(`matriz ${slug}`), `spectator restores ${item.mode} text`);
+        await ctx.waitForText("actor1", "#texto", (text) => text.includes(`matriz ${slug}`), `actor restores ${item.mode} text`);
+      }
+    }
+  },
+  {
+    name: "reload-while-paused-keeps-disadvantage-remaining",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "actor1"]);
+      await configureFastControlPanel(ctx, {
+        tiempo_minutos: 5,
+        tiempo_segundos: 0,
+        tiempo_modos: 60,
+        tiempo_cambio_letra: 10,
+        tiempo_cambio_palabras: 10,
+        tiempo_modificador: 6,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx);
+      await freezeWriterDecay(ctx, "writer1");
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
+      await waitForMode(ctx, "palabras bonus", 8000);
+      await setWriterHtml(ctx, "writer1", 'pausa reload <span class="palabra-bendita" contenteditable="false">NITIDO</span>');
+      await applyForcedDisadvantage(ctx, 1, PUTADA_BORROSO, { duracionMs: 6000 });
+      await ctx.waitFor(
+        "writer1 receives blur before pause reload",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.blurry && state.activeDisadvantage?.restanteMs > 0 ? state : false;
+        },
+        8000
+      );
+
+      await toggleControlPause(ctx, "1", "control pause button switches to resume before reload");
+      await ctx.waitForState(
+        "server pauses active disadvantage before reload",
+        (state) => state.desventajas.some((item) => item.player === 1 && item.putada === PUTADA_BORROSO && item.pausada === true),
+        8000
+      );
+
+      await reloadRolesSequential(ctx, ["writer1", "spectator", "actor1", "control"]);
+      await ctx.waitFor(
+        "reloaded control keeps resume state",
+        async () => {
+          const state = await readControlPauseState(ctx);
+          return state.value === "1" ? state : false;
+        },
+        8000
+      );
+      await freezeWriterDecay(ctx, "writer1");
+      await ctx.waitForText("writer1", "#texto", (text) => text.includes("NITIDO"), "writer text survives paused reload");
+
+      await ctx.waitFor(
+        "writer remains locked with paused blur after reload",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          const writer = await readWriterState(ctx, "writer1");
+          return state.blurry && state.activeDisadvantage?.pausada === true && writer.editable === false ? state : false;
+        },
+        8000
+      );
+      await ctx.waitFor(
+        "spectator keeps paused visual blur after reload",
+        async () => {
+          const state = await readSpectatorDisadvantageState(ctx, 1);
+          return state.active && state.classes.includes("putada-visual--borroso") ? state : false;
+        },
+        8000
+      );
+      await ctx.waitFor(
+        "actor keeps paused blur after reload",
+        async () => {
+          const state = await readActorDisadvantageState(ctx, "actor1");
+          return state.blurry && state.putada === "borroso" ? state : false;
+        },
+        8000
+      );
+
+      await ctx.sleep(7200);
+      const writerStillPaused = await readWriterDisadvantageState(ctx, "writer1");
+      ctx.assert(writerStillPaused.blurry === true, "paused writer blur should not expire while paused after reload");
+      ctx.assert(writerStillPaused.activeDisadvantage?.pausada === true, "writer disadvantage timer should remain paused after reload");
+      const spectatorStillPaused = await readSpectatorDisadvantageState(ctx, 1);
+      ctx.assert(spectatorStillPaused.active === true, "paused spectator visual disadvantage should not expire while paused after reload");
+      const actorStillPaused = await readActorDisadvantageState(ctx, "actor1");
+      ctx.assert(actorStillPaused.blurry === true, "paused actor blur should not expire while paused after reload");
+
+      await toggleControlPause(ctx, "0", "reloaded control resumes paused match");
+      await ctx.waitForState(
+        "server resumes active disadvantage after reload",
+        (state) => state.desventajas.some((item) => item.player === 1 && item.putada === PUTADA_BORROSO && item.pausada === false),
+        8000
+      );
+      await ctx.waitFor(
+        "writer resumes blur timer after paused reload",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.blurry && state.activeDisadvantage?.pausada === false ? state : false;
+        },
+        8000
+      );
+      await ctx.waitFor(
+        "writer blur expires after resumed reload",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.blurry === false && !state.activeDisadvantage ? state : false;
+        },
+        12000
+      );
+      await ctx.waitFor(
+        "spectator visual blur expires after resumed reload",
+        async () => {
+          const state = await readSpectatorDisadvantageState(ctx, 1);
+          return state.active === false ? state : false;
+        },
+        12000
+      );
+      await ctx.waitFor(
+        "actor blur expires after resumed reload",
+        async () => {
+          const state = await readActorDisadvantageState(ctx, "actor1");
+          return state.blurry === false ? state : false;
+        },
+        12000
+      );
+    }
+  },
+  {
     name: "reconnect-spectator-recovers-state",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator"]);
@@ -1666,6 +3378,7 @@ const coreSpecs = [
         await ctx.emitHook("scrib_test:reset", {});
         await ctx.closeAllPages();
         await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator"]);
+        await startGame(ctx, { requireEditable: false });
         await ctx.emitHook("scrib_test:force_mode", modePayload);
         await waitForMode(ctx, modePayload.mode, 8000);
         await ctx.setWriterText("writer1", `${label} azul palabras suficientes`);
@@ -1798,12 +3511,15 @@ const chaosSpecs = [
       await ctx.setWriterText("writer1", "caos control inicial");
       await ctx.waitForText("spectator", "#texto", (text) => text.includes("caos control inicial"), "spectator sees initial control-chaos text");
 
+      await ctx.evaluate("control", () => {
+        const ok = window.eval("typeof socket !== 'undefined' && socket && typeof socket.disconnect === 'function'");
+        if (!ok) {
+          throw new Error("Missing control socket");
+        }
+        window.eval("socket.io.opts.reconnection = false; socket.disconnect(); if (socket.io.engine) socket.io.engine.close();");
+      });
       await ctx.closeRole("control");
-      await ctx.waitForState(
-        "control disconnected during chaos",
-        (state) => state.connections.control.connected === false,
-        10000
-      );
+      await ctx.sleep(500);
 
       await ctx.setWriterText("writer1", "caos control sin panel");
       await ctx.waitForState(

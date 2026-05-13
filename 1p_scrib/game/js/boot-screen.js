@@ -288,52 +288,14 @@ texto.addEventListener("keydown", (e) => {
         }
     }
     if (e.key === "Backspace" || e.key === "Delete") {
-        const sel = window.getSelection();
         const direccion = e.key === "Backspace" ? "backward" : "forward";
-        if (caretAfectaPalabraBendita(direccion)) {
+        const nodoProtegido = obtenerNodoProtegidoAfectadoPorDireccion(direccion);
+        if (nodoProtegido) {
             e.preventDefault();
             e.stopImmediatePropagation();
+            borrarCaracterEditableSaltandoProtegido1P(nodoProtegido, direccion);
             return;
         }
-        const rangoBorrado = obtenerRangoBorradoCaracter(direccion);
-        if (rangoBorrado && rangoIntersecaPalabraBendita(rangoBorrado)) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return;
-        }
-        if (hayPalabraBenditaAdyacente(sel, direccion)) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return;
-        }
-    }
-    if (e.key === "Backspace") {
-      const sel = window.getSelection();
-      if (sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        const startContainer = range.startContainer;
-        const startOffset = range.startOffset;
-
-        if (
-          startContainer.nodeType === 1 &&
-          startOffset === 0 &&
-          startContainer.previousSibling &&
-          startContainer.previousSibling.getAttribute &&
-          startContainer.previousSibling.getAttribute("contenteditable") === "false"
-        ) {
-          e.preventDefault();
-        }
-
-        if (
-          startContainer.nodeType === 3 &&
-          startOffset === 0 &&
-          startContainer.parentNode.previousSibling &&
-          startContainer.parentNode.previousSibling.getAttribute &&
-          startContainer.parentNode.previousSibling.getAttribute("contenteditable") === "false"
-        ) {
-          e.preventDefault();
-        }
-      }
     }
 });
 

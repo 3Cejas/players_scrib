@@ -4,6 +4,10 @@
     }
 });
 
+socket.on("recargar_rol_remoto", () => {
+    window.location.reload();
+});
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     limpiarAsincroniaVisualEspectador({ resetViewport: true });
@@ -643,6 +647,146 @@ var audios = [
   "../../game/audio/5. PREPARADOS 5.mp3"
 ];
 
+function calcularFontSizeCountdownEspectador(texto, objetivoVw) {
+    const viewportW = Math.max(window.innerWidth || 0, 1);
+    const viewportH = Math.max(window.innerHeight || 0, 1);
+    const objetivoPx = Math.max(32, viewportW * ((Number(objetivoVw) || 10) / 100));
+    const maxWidthPx = viewportW * 0.72;
+    const maxHeightPx = viewportH * 0.48;
+    const medida = medirTextoCountdownEspectador(texto, 100);
+
+    if (!medida) {
+        const caracteres = Math.max(1, Array.from(String(texto || "").trim()).length);
+        const limitePorAncho = maxWidthPx / Math.max(1, caracteres * 0.7);
+        return Math.max(32, Math.min(objetivoPx, limitePorAncho, maxHeightPx)).toFixed(0) + "px";
+    }
+
+    const limitePorAncho = (maxWidthPx * 100) / medida.width;
+    const limitePorAlto = (maxHeightPx * 100) / medida.height;
+    return Math.max(32, Math.min(objetivoPx, limitePorAncho, limitePorAlto)).toFixed(0) + "px";
+}
+
+function medirTextoCountdownEspectador(texto, fontSizePx) {
+    if (typeof document === "undefined" || !document.body) return null;
+    const mirror = document.createElement("span");
+    mirror.textContent = String(texto || "");
+    mirror.style.position = "fixed";
+    mirror.style.left = "-10000px";
+    mirror.style.top = "0";
+    mirror.style.visibility = "hidden";
+    mirror.style.pointerEvents = "none";
+    mirror.style.whiteSpace = "nowrap";
+    mirror.style.lineHeight = "0.92";
+    mirror.style.fontFamily = '"Retro-gaming", monospace';
+    mirror.style.fontSize = `${Number(fontSizePx) || 100}px`;
+    mirror.style.fontWeight = "400";
+    mirror.style.letterSpacing = "0";
+    document.body.appendChild(mirror);
+    const rect = mirror.getBoundingClientRect();
+    const width = Math.max(1, rect.width || mirror.scrollWidth || 0);
+    const height = Math.max(1, rect.height || mirror.scrollHeight || 0);
+    mirror.remove();
+    return { width, height };
+}
+
+function crearCountdownEspectador(texto) {
+    $('#countdown').remove();
+    return $('<span id="countdown"></span>')
+        .text(texto)
+        .appendTo($('body'));
+}
+
+function aplicarEstiloCountdownEspectador(expandido = false) {
+    const countdown = $('#countdown');
+    const texto = countdown.text() || "";
+    const esNumero = /^\d+$/.test(String(texto).trim());
+    const objetivoVw = expandido
+        ? (esNumero ? 40 : 14)
+        : (esNumero ? 10 : 10);
+    countdown.css({
+        'font-size': calcularFontSizeCountdownEspectador(texto, objetivoVw),
+        'opacity': expandido ? 0 : 1,
+        'width': 'max-content',
+        'max-width': 'none',
+        'white-space': 'nowrap',
+        'line-height': 0.92,
+        'text-align': 'center',
+        'overflow': 'visible'
+    });
+}
+
+function programarAplicacionModoTrasCountdownEspectador(revisionCountdown) {
+    cuenta_atras_activa = false;
+    actualizarBrandingPartidaEspectador();
+    inicio_modo_delay = true;
+    if (timeout_inicio_modo) {
+        clearTimeout(timeout_inicio_modo);
+    }
+    timeout_inicio_modo = setTimeout(() => {
+        if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
+            return;
+        }
+        inicio_modo_delay = false;
+        timeout_inicio_modo = null;
+        if (modo_pendiente) {
+            aplicarModo(modo_pendiente);
+            modo_pendiente = null;
+        }
+        vaciarColaPutadasPendientesEspectador();
+    }, 1000);
+}
+
+function programarPasoCountdownEspectador(paso, revisionCountdown, indiceAudio) {
+    if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
+        return;
+    }
+    const pasoActual = Number(paso);
+    let siguienteIndiceAudio = Number(indiceAudio) || 0;
+    crearCountdownEspectador(pasoActual === 0 ? tJuego2P("countdown.write", {}, "\u00a1ESCRIBE!") : pasoActual);
+    actualizarIntroCuentaAtrasSegunContador(pasoActual);
+
+    clearTimeout(timeout_animacion_countdown_espectador);
+    timeout_animacion_countdown_espectador = setTimeout(() => {
+        timeout_animacion_countdown_espectador = null;
+        if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
+            return;
+        }
+        aplicarEstiloCountdownEspectador(true);
+    }, 20);
+
+    if (pasoActual === 0) {
+        if (siguienteIndiceAudio < audios.length) {
+            reproducirSonido(audios[siguienteIndiceAudio]);
+            siguienteIndiceAudio += 1;
+        }
+        programarAplicacionModoTrasCountdownEspectador(revisionCountdown);
+    } else if (siguienteIndiceAudio < audios.length) {
+        reproducirSonido(audios[siguienteIndiceAudio]);
+        siguienteIndiceAudio += 1;
+    }
+
+    if (pasoActual <= 0) {
+        timer = null;
+        clearTimeout(timeout_fallback_countdown_espectador);
+        timeout_fallback_countdown_espectador = null;
+        finalizarIntroCuentaAtrasEspectador();
+        timeout_remover_countdown_espectador = setTimeout(() => {
+            if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
+                return;
+            }
+            timeout_remover_countdown_espectador = null;
+            $('#countdown').remove();
+        }, 1000);
+        return;
+    }
+
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+        timer = null;
+        programarPasoCountdownEspectador(pasoActual - 1, revisionCountdown, siguienteIndiceAudio);
+    }, 1000);
+}
+
 
 // Inicia el juego.
 socket.on('inicio', data => {
@@ -661,6 +805,7 @@ socket.on('inicio', data => {
     cancelarAnimacionEntradaBarraVida(tiempo);
     cancelarAnimacionEntradaBarraVida(tiempo1);
     partida_activa_espectador = true;
+    actualizarBrandingPartidaEspectador({ permitirIntro: true });
     modo_nivel_activo_espectador = "";
     setBarraNivelClase("");
     actualizarVisibilidadPanelNivelEspectador();
@@ -712,98 +857,20 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
     texto1.rows =  "6";
     texto2.rows = "6";
     // Se muestra "&iquest;PREPARADOS?" antes de comenzar la cuenta atras
-    $('#countdown').remove();
-    var preparados = $('<span id="countdown"></span>');
-    preparados.text(tJuego2P("countdown.ready", {}, "Â¿PREPARADOS?"));
-    preparados.appendTo($('.container'));
+    crearCountdownEspectador(tJuego2P("countdown.ready", {}, "\u00bfPREPARADOS?"));
     timeout_countdown = setTimeout(() => {
         if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
             return;
         }
         timeout_countdown = null;
-        $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
+        aplicarEstiloCountdownEspectador(false);
     }, 20);
     timeout_timer = setTimeout(() => {
         if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
             return;
         }
         timeout_timer = null;
-        var counter = 3;
-        var index   = 0; // ï¿½fÂndice para recorrer el array de audios
-        
-        timer = setInterval(function() {
-          if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
-            clearInterval(timer);
-            timer = null;
-            return;
-          }
-          // Eliminamos el anterior #countdown para volverlo a crear
-          $('#countdown').remove();
-          
-          // Creamos el nuevo elemento con el nï¿½fÂºmero o el texto final
-          var countdown = $('<span id="countdown"></span>');
-          countdown.text(counter === 0 ? tJuego2P("countdown.write", {}, "Â¡ESCRIBE!") : counter);
-          countdown.appendTo($('.container'));
-          actualizarIntroCuentaAtrasSegunContador(counter);
-        
-          // Pequeï¿½fÂ±a pausa para aplicar el CSS que hace el efecto
-          timeout_animacion_countdown_espectador = setTimeout(() => {
-            if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
-              return;
-            }
-            timeout_animacion_countdown_espectador = null;
-            if (counter > -1) {
-              $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
-            } else {
-              $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
-            }
-          }, 20);
-        
-          // Reproducimos el siguiente sonido mientras haya disponibles en el array
-          if (counter === 0) {
-            if (index < audios.length) {
-              reproducirSonido(audios[index]);
-              index++;
-            }
-            cuenta_atras_activa = false;
-            inicio_modo_delay = true;
-            if (timeout_inicio_modo) {
-              clearTimeout(timeout_inicio_modo);
-            }
-            timeout_inicio_modo = setTimeout(() => {
-              if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
-                return;
-              }
-              inicio_modo_delay = false;
-              timeout_inicio_modo = null;
-              if (modo_pendiente) {
-                aplicarModo(modo_pendiente);
-                modo_pendiente = null;
-              }
-              vaciarColaPutadasPendientesEspectador();
-            }, 1000);
-          } else if (index < audios.length) {
-            reproducirSonido(audios[index]);
-            index++;
-          }
-          
-          counter--;
-        
-          // Cuando counter llega a -1, paramos el intervalo y quitamos el #countdown
-          if (counter <= -1) {
-            clearInterval(timer);
-            timer = null;
-            finalizarIntroCuentaAtrasEspectador();
-            timeout_remover_countdown_espectador = setTimeout(() => {
-              if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
-                return;
-              }
-              timeout_remover_countdown_espectador = null;
-              $('#countdown').remove();
-            }, 1000);
-          }
-        
-        }, 1000);
+        programarPasoCountdownEspectador(3, revisionCountdown, 0);
     }, 1000);
     timeout_fallback_countdown_espectador = setTimeout(() => {
         if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
@@ -817,7 +884,7 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
             aplicarModo(modoPendienteInicio);
         }
         vaciarColaPutadasPendientesEspectador();
-    }, 7000);
+    }, 12000);
 });
 });
 
@@ -827,6 +894,7 @@ socket.on('post-inicio', data => {
         sonido.currentTime = 0;
     }
     partida_activa_espectador = true;
+    actualizarBrandingPartidaEspectador();
     const modoPendienteInicio = modo_pendiente;
     invalidarCountdownInicioEspectador();
     finalizarIntroCuentaAtrasEspectador();
@@ -876,6 +944,7 @@ socket.on('limpiar', data => {
     reiniciarTimelineModosStatsEspectador();
     setPendienteAnimacionEntradaBarraVida(false);
     partida_activa_espectador = false;
+    actualizarBrandingPartidaEspectador();
     ocultarTodosResucitarMini();
     modo_nivel_activo_espectador = "";
     modo_actual = "";
@@ -949,6 +1018,13 @@ socket.on('modo_actual', (data = {}) => {
     if (siguienteModo !== modo_actual || !modo_nivel_activo_espectador) {
         aplicarModo({ ...(ultimo_payload_modo_espectador || {}), ...payload, modo_actual: siguienteModo });
     }
+});
+
+socket.on("temp_modos", (data = {}) => {
+    if (!aceptarEventoModoEspectador(data)) {
+        return;
+    }
+    sincronizarProgresoNivelBarraDesdeSegundos(data);
 });
 
 function aplicarModo(data) {
@@ -1152,12 +1228,27 @@ socket.on('enviar_palabra_j2', data => {
     recibir_palabra(data, 2);
 });
 
-// Suscripciï¿½fÂ³n al evento 'inspirar_j1'
-socket.on('inspirar_j1', data => {
+function esPayloadLimpiezaInspiracionEspectador(data) {
+    return Boolean(data && typeof data === "object" && (
+        data.limpiar_inspiracion ||
+        data.inspiracion_caducada ||
+        data.limpiar
+    ));
+}
+
+function limpiarInspiracionLetrasEspectador(definicionElemento) {
+    actualizarDefinicionConVisibilidad(definicionElemento, "", false);
+    aplicarSuperbonusDefinicionEspectador(definicionElemento, {});
+}
+
+function renderInspiracionLetrasEspectador(escritxr, data, definicionElemento, selectorAnimacion) {
     const palabra = typeof data === "string" ? data : data?.palabra;
     const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
-    if (!palabra) return;
-    marcarPalabraInspirandoNube(1, palabra);
+    if (esPayloadLimpiezaInspiracionEspectador(data) || !palabra) {
+        limpiarInspiracionLetrasEspectador(definicionElemento);
+        return;
+    }
+    marcarPalabraInspirandoNube(escritxr, palabra, data);
     /*
       Usamos un template literal en una sola lï¿½fÂ­nea para evitar
       los espacios y saltos de lï¿½fÂ­nea inducidos por la indentaciï¿½fÂ³n.
@@ -1165,31 +1256,21 @@ socket.on('inspirar_j1', data => {
     */
     const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
     actualizarDefinicionConVisibilidad(
-        definicion2,
+        definicionElemento,
         `<span style="color: orange;">${musaLabel}</span><span style="color: white;">: </span><span style="color: white;">Podr&iacute;as escribir la palabra &laquo;</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: white;">&raquo;</span>`,
         true
     );
-    animateCSS(".definicion1", "flash");
+    animateCSS(selectorAnimacion, "flash");
+}
+
+// Suscripciï¿½fÂ³n al evento 'inspirar_j1'
+socket.on('inspirar_j1', data => {
+    renderInspiracionLetrasEspectador(1, data, definicion2, ".definicion1");
 });
 
 // Suscripciï¿½fÂ³n al evento 'inspirar_j2'
 socket.on('inspirar_j2', data => {
-    const palabra = typeof data === "string" ? data : data?.palabra;
-    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
-    if (!palabra) return;
-    marcarPalabraInspirandoNube(2, palabra);
-    /*
-      Replica exacta del anterior, apuntando al elemento definicion3.
-      Mantener coherencia en el formato garantiza que no aparezcan espacios 
-      no deseados alrededor de ï¿½,Â«palabraï¿½,Â».
-    */
-    const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
-    actualizarDefinicionConVisibilidad(
-        definicion3,
-        `<span style="color: orange;">${musaLabel}</span><span style="color: white;">: </span><span style="color: white;">Podr&iacute;as escribir la palabra &laquo;</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: white;">&raquo;</span>`,
-        true
-    );
-    animateCSS(".definicion2", "flash");
+    renderInspiracionLetrasEspectador(2, data, definicion3, ".definicion2");
 });
 
 function recibir_palabra(data, escritxr) {
@@ -1223,6 +1304,7 @@ function recibir_palabra(data, escritxr) {
         const definicionFallback = extraerDefinicionPalabraEvento(data);
         const textoPalabra = construirTextoPalabraEvento(data);
         const palabraInspiracion = extraerPalabraPrincipalEvento(data);
+        const superbonus = normalizarSuperbonusInspiracionEspectador(data);
         if (escritxr == 1) {
         const hayPalabra = actualizarPalabraConVisibilidad(palabra2, textoPalabra);
         if (!hayPalabra) {
@@ -1232,14 +1314,18 @@ function recibir_palabra(data, escritxr) {
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
             const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-            definicionHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
-            marcarPalabraInspirandoNube(1, palabraInspiracion);
+            const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";
+            definicionHTML = `${superbonusLabel}<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
+            aplicarSuperbonusDefinicionEspectador(definicion2, data);
+            marcarPalabraInspirandoNube(1, palabraInspiracion, data);
         } else if (data?.origen_musa === "musa_enemiga") {
             const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
             definicionHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>Me pega esta palabra</span>`;
-            marcarPalabraInspirandoNube(2, palabraInspiracion);
+            aplicarSuperbonusDefinicionEspectador(definicion2, {});
+            marcarPalabraInspirandoNube(2, palabraInspiracion, data);
         } else {
             definicionHTML = definicionFallback;
+            aplicarSuperbonusDefinicionEspectador(definicion2, {});
         }
             actualizarDefinicionConVisibilidad(definicion2, definicionHTML, true);
         
@@ -1259,14 +1345,18 @@ function recibir_palabra(data, escritxr) {
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
             const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
-            definicionHTML = `<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
-            marcarPalabraInspirandoNube(2, palabraInspiracion);
+            const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";
+            definicionHTML = `${superbonusLabel}<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
+            aplicarSuperbonusDefinicionEspectador(definicion3, data);
+            marcarPalabraInspirandoNube(2, palabraInspiracion, data);
         } else if (data?.origen_musa === "musa_enemiga") {
             const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
             definicionHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>Me pega esta palabra</span>`;
-            marcarPalabraInspirandoNube(1, palabraInspiracion);
+            aplicarSuperbonusDefinicionEspectador(definicion3, {});
+            marcarPalabraInspirandoNube(1, palabraInspiracion, data);
         } else {
             definicionHTML = definicionFallback;
+            aplicarSuperbonusDefinicionEspectador(definicion3, {});
         }
         actualizarDefinicionConVisibilidad(definicion3, definicionHTML, true);
            
@@ -1448,7 +1538,7 @@ function anunciarPutadaEspectador(player, putada, opciones = {}) {
             duracionMs: duracionFeedback
         }
         : { tipo: "positivo" };
-    aplicarPutadaEnEspectador(putadaNormalizada, id);
+    aplicarPutadaEnEspectador(putadaNormalizada, id, opciones);
     if (opciones.mostrarFeedback !== false) {
         mostrarFeedbackFlotanteEspectador(id, `${putadaNormalizada} DESVENTAJA!`, opcionesNegativas);
         if (opciones.mostrarVentajaRival !== false) {
@@ -1465,22 +1555,70 @@ function recibirPutadaEspectador(player, putada, opciones = {}) {
     anunciarPutadaEspectador(player, putada, opciones);
 }
 
+function normalizarPayloadPutadaEspectador(playerFallback, payload) {
+    const data = (payload && typeof payload === "object") ? payload : { putada: payload };
+    const playerPayload = Number(data.player || data.target || data.jugador || playerFallback);
+    const putada = data.putada || data.seleccion || data.ventaja || data.tipo || "";
+    const duracion = Number(
+        data.tiempo_restante_ms
+        ?? data.restante_ms
+        ?? data.duracion_ms
+        ?? data.duracionMs
+    );
+    return {
+        player: Number(playerPayload) === 2 ? 2 : 1,
+        putada,
+        pausada: Boolean(data.pausada),
+        opciones: Number.isFinite(duracion) && duracion > 0 ? { duracionMs: Math.trunc(duracion) } : {}
+    };
+}
+
+function recibirPayloadPutadaEspectador(playerFallback, payload, opciones = {}) {
+    const data = normalizarPayloadPutadaEspectador(playerFallback, payload);
+    recibirPutadaEspectador(data.player, data.putada, {
+        ...data.opciones,
+        ...opciones
+    });
+    if (data.pausada && typeof pausarDesventajasVisualesEspectador === "function") {
+        pausarDesventajasVisualesEspectador();
+    }
+}
+
 socket.on("enviar_ventaja_j1", putada => {
     limpiarEstadoVotacionVentaja();
-    recibirPutadaEspectador(1, putada, { feedbackLargo: true });
+    recibirPayloadPutadaEspectador(1, putada, { feedbackLargo: true });
 });
 
 socket.on("enviar_ventaja_j2", putada => {
     limpiarEstadoVotacionVentaja();
-    recibirPutadaEspectador(2, putada, { feedbackLargo: true });
+    recibirPayloadPutadaEspectador(2, putada, { feedbackLargo: true });
 });
 
 socket.on("enviar_putada_de_j1", putada => {
-    recibirPutadaEspectador(1, putada, { feedbackLargo: true });
+    recibirPayloadPutadaEspectador(1, putada, { feedbackLargo: true });
 });
 
 socket.on("enviar_putada_de_j2", putada => {
-    recibirPutadaEspectador(2, putada, { feedbackLargo: true });
+    recibirPayloadPutadaEspectador(2, putada, { feedbackLargo: true });
+});
+
+socket.on("desventaja_activa_estado", payload => {
+    recibirPayloadPutadaEspectador(1, payload, {
+        mostrarFeedback: false,
+        mostrarVentajaRival: false
+    });
+});
+
+socket.on("pausar_js", () => {
+    if (typeof pausarDesventajasVisualesEspectador === "function") {
+        pausarDesventajasVisualesEspectador();
+    }
+});
+
+socket.on("reanudar_js", () => {
+    if (typeof reanudarDesventajasVisualesEspectador === "function") {
+        reanudarDesventajasVisualesEspectador();
+    }
 });
 
 socket.on("nueva letra", letra => {
@@ -2064,7 +2202,7 @@ function convertirASegundos(tiempo) {
     var starShape = null;
     if (typeof confetti.shapeFromText === "function") {
       starShape = confetti.shapeFromText({
-        text: "â­",
+        text: "\u2B50",
         scalar,
         color: "#ffd43b",
         fontFamily: "\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"

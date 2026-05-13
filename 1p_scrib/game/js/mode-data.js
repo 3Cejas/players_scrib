@@ -11,9 +11,13 @@ const COLORES_MODOS = {
     "frase final": "orange"
 };
 
-const letras_prohibidas = ['e','a','o','s','r','n','i','d','l','c'];
-const letras_benditas= ['z','j','ñ','x','k','w', 'y', 'q', 'h', 'f'];
-const frecuencia_letras = {
+const letras_prohibidas = (typeof window !== "undefined" && window.ScribLetterFrequency)
+    ? [...window.ScribLetterFrequency.ALFABETO_ES]
+    : ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','\u00f1','o','p','q','r','s','t','u','v','w','x','y','z'];
+const letras_benditas_ponderadas = [...letras_prohibidas];
+const frecuencia_letras = (typeof window !== "undefined" && window.ScribLetterFrequency)
+    ? window.ScribLetterFrequency.FRECUENCIA_LETRAS_ES
+    : {
     'a': 12.53,
     'b': 1.42,
     'c': 4.68,
@@ -28,7 +32,7 @@ const frecuencia_letras = {
     'l': 4.97,
     'm': 3.15,
     'n': 6.71,
-    'ñ': 0.31,
+    '\u00f1': 0.31,
     'o': 8.68,
     'p': 2.51,
     'q': 0.88,
@@ -41,10 +45,32 @@ const frecuencia_letras = {
     'x': 0.22,
     'y': 0.90,
     'z': 0.52
-}
+};
 
-let letras_benditas_restantes = [...letras_benditas];
+let letras_benditas_restantes = [...letras_benditas_ponderadas];
 let letras_prohibidas_restantes = [...letras_prohibidas];
+
+function elegir_letra_nivel_ponderada(restantes, base, tipo) {
+    if (
+        typeof window !== "undefined"
+        && window.ScribLetterFrequency
+        && typeof window.ScribLetterFrequency.elegirLetraPendientePonderada === "function"
+    ) {
+        return window.ScribLetterFrequency.elegirLetraPendientePonderada({
+            pendientes: restantes,
+            base,
+            tipo
+        });
+    }
+    const lista = Array.isArray(restantes) && restantes.length > 0 ? [...restantes] : [...base];
+    const indice = Math.floor(Math.random() * lista.length);
+    const letra = lista[indice];
+    lista.splice(indice, 1);
+    return {
+        letra,
+        pendientes: lista.length === 0 ? [...base] : lista
+    };
+};
 
 const palabras_prohibidas = [
     "de", "la", "que", "el", "en", "y", "a", "los", "se", "del",

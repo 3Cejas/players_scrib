@@ -1,14 +1,17 @@
 function limpiarCountdownInicioEscritora() {
+    revision_cuenta_atras_1p += 1;
     clearTimeout(listener_cuenta_atras);
     clearInterval(timer);
     clearTimeout(sub_timer);
     clearTimeout(preparados_timer);
     clearTimeout(fallback_cuenta_atras_timer);
+    clearTimeout(final_cuenta_atras_timer);
     listener_cuenta_atras = null;
     timer = null;
     sub_timer = null;
     preparados_timer = null;
     fallback_cuenta_atras_timer = null;
+    final_cuenta_atras_timer = null;
     $('#countdown').remove();
 }
 
@@ -61,10 +64,18 @@ function aplicarEstadoBarraVida(elemento, porcentaje) {
     elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
 }
 
+function debeAnimarEntradaBarraVida(elemento, opciones = {}) {
+    if (!elemento) return false;
+    if (opciones && opciones.animarEntrada) return true;
+    if (elemento.dataset && elemento.dataset.vidaVisible !== "1") return true;
+    return elemento.style && elemento.style.display === "none";
+}
+
 function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURACION_ANIMACION_ENTRADA_VIDA_MS) {
     if (!elemento) return;
     const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
     cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, 0);
 
     if (objetivo <= 0 || duracionMs <= 0) {
         aplicarEstadoBarraVida(elemento, objetivo);
@@ -93,18 +104,20 @@ function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURAC
 
 function actualizarBarraVida(elemento, textoTiempo, opciones = {}) {
     if (!elemento) return;
-    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(textoTiempo);
     if (total === null) {
         cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
+        if (elemento.dataset) elemento.dataset.vidaVisible = "0";
         return;
     }
+    const animarEntrada = debeAnimarEntradaBarraVida(elemento, opciones);
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
     elemento.style.display = DISPLAY_BARRA_VIDA;
+    if (elemento.dataset) elemento.dataset.vidaVisible = "1";
     if (animarEntrada) {
         animarEntradaBarraVida(elemento, porcentaje);
         return;
@@ -372,6 +385,7 @@ function inicio() {
     detenerProgresoNivelBarraEscritora(true);
     reiniciarProgresoFraseFinalEscritora();
     limpiarCountdownInicioEscritora();
+    const revisionCuentaAtras = revision_cuenta_atras_1p;
     post_inicio_pendiente_escritora = null;
     animarCSSJuego1P(".botones", "backOutLeft").then((message) => {
         btnOpciones.style.display = "none";
@@ -410,6 +424,7 @@ function inicio() {
     var preparados = $('<span id="countdown">' + tJuego1P("countdown.ready", {}, "&iquest;PREPARADOS?") + '</span>');
     preparados.appendTo($('.container'));
     preparados_timer = setTimeout(() => {
+        if (revisionCuentaAtras !== revision_cuenta_atras_1p) return;
         preparados_timer = null;
         $('#countdown').css({ 'font-size': '10vw', 'opacity': 50 });
         revelarEtapaIntroPartidaEscritora(1);
@@ -417,10 +432,16 @@ function inicio() {
     }, 20);
 
     listener_cuenta_atras = setTimeout(() => {
+    if (revisionCuentaAtras !== revision_cuenta_atras_1p) return;
     listener_cuenta_atras = null;
     var counter = 3;
 
     timer = setInterval(function() {
+      if (revisionCuentaAtras !== revision_cuenta_atras_1p) {
+        clearInterval(timer);
+        timer = null;
+        return;
+      }
 
       $('#countdown').remove();
 
@@ -438,6 +459,7 @@ function inicio() {
         revelarEtapaIntroPartidaEscritora(3);
       }
       sub_timer = setTimeout(() => {
+        if (revisionCuentaAtras !== revision_cuenta_atras_1p) return;
         if (counter > -1) {
           $('#countdown').css({ 'font-size': '40vw', 'opacity': 0 });
         } else {
@@ -450,9 +472,11 @@ function inicio() {
       if (counter <= -1) {
         clearInterval(timer);
         timer = null;
-        setTimeout(() => {
+        final_cuenta_atras_timer = setTimeout(() => {
+          if (revisionCuentaAtras !== revision_cuenta_atras_1p) return;
           clearTimeout(fallback_cuenta_atras_timer);
           fallback_cuenta_atras_timer = null;
+          final_cuenta_atras_timer = null;
           $('#countdown').remove();
           finalizarSecuenciaIntroPartidaEscritora();
           post_inicio(true);
@@ -460,6 +484,7 @@ function inicio() {
       }
     }, 1000);
     fallback_cuenta_atras_timer = setTimeout(() => {
+        if (revisionCuentaAtras !== revision_cuenta_atras_1p) return;
         fallback_cuenta_atras_timer = null;
         if (timer) {
             clearInterval(timer);

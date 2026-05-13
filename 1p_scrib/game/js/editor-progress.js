@@ -15,16 +15,61 @@
 
 // FunciÃ³n para restaurar la posiciÃ³n del caret
 function restaurarPosicionCaret(caretNode, caretPos) {
+  if (!caretNode) return;
   let sel = window.getSelection();
-  let range = sel.getRangeAt(0);
-  range.setStart(caretNode, Math.min(caretPos, caretNode.length));
-  range.setEnd(caretNode, Math.min(caretPos, caretNode.length));
+  if (!sel) return;
+  let range = sel.rangeCount > 0 ? sel.getRangeAt(0) : document.createRange();
+  const longitudNodo = typeof caretNode.length === "number"
+    ? caretNode.length
+    : (typeof caretNode.textContent === "string" ? caretNode.textContent.length : 0);
+  const offsetSeguro = Math.min(Math.max(0, caretPos), longitudNodo);
+  range.setStart(caretNode, offsetSeguro);
+  range.setEnd(caretNode, offsetSeguro);
   sel.removeAllRanges();
   sel.addRange(range);
 }
 
 function desventajaSeleccionActiva() {
   return typeof desventajaEnCurso !== "undefined" && desventajaEnCurso === true;
+}
+
+function borrarUltimoCaracterEditable1P() {
+  if (window.ScribEditorDeletion && typeof window.ScribEditorDeletion.borrarUltimoCaracterEditable === "function") {
+    return window.ScribEditorDeletion.borrarUltimoCaracterEditable(texto, {
+      protectedClasses: ["palabra-bendita", "palabra-musa", "letra-verde"]
+    }).deleted;
+  }
+
+  if (!texto || !texto.lastChild) return false;
+  let lastLine = texto.lastChild;
+  let lastTextNode = lastLine.lastChild || lastLine;
+  while (lastTextNode && lastTextNode.nodeType !== 3) {
+    lastTextNode = lastTextNode.previousSibling;
+  }
+  if (!lastTextNode || !lastTextNode.data) return false;
+  lastTextNode.data = lastTextNode.data.substring(0, lastTextNode.data.length - 1);
+  if (lastTextNode.data.length === 0 && lastTextNode.parentNode) {
+    lastTextNode.parentNode.removeChild(lastTextNode);
+  }
+  return true;
+}
+
+function nodoPerteneceAlEditor1P(nodo) {
+  if (!texto || !nodo) return false;
+  if (nodo === texto) return true;
+  if (typeof texto.contains === "function") {
+    try {
+      return texto.contains(nodo);
+    } catch (_error) {
+      return false;
+    }
+  }
+  let actual = nodo;
+  while (actual) {
+    if (actual === texto) return true;
+    actual = actual.parentNode;
+  }
+  return false;
 }
 
 function borrar() {
@@ -39,10 +84,13 @@ function borrar() {
   }
 
   if (!desactivar_borrar) {
-    let nodoBorrado = false;
-
     // 1. Guardar la posiciÃ³n del caret usando la funciÃ³n
     let { caretNode, caretPos } = guardarPosicionCaret();
+    const haBorrado = borrarUltimoCaracterEditable1P();
+    if (!haBorrado) {
+      clearTimeout(borrado);
+      return;
+    }
 
     // 2. CÃ³digo existente
 
@@ -69,42 +117,6 @@ function borrar() {
     caracteres_seguidos = 0;
     indice_buscar_palabra = texto.innerText.length;
 
-    // 3. Obtener Ãºltima lÃ­nea y Ãºltimo nodo de texto
-    lastLine = texto.lastChild;
-    lastTextNode = lastLine.lastChild;
-    if (!lastTextNode) {
-      lastTextNode = lastLine;
-    }
-    
-    // 4. Buscar Ãºltimo nodo de texto
-    while (lastTextNode && lastTextNode.nodeType !== 3) {
-      lastTextNode = lastTextNode.previousSibling;
-    }
-
-    // 5. Si nodo vacÃ­o, eliminar y avanzar
-    if (lastTextNode && lastTextNode.data.trim() === "") {
-      lastLine.removeChild(lastTextNode);
-      lastTextNode = lastLine.lastChild;
-      caretNode = lastTextNode;
-      caretPos = lastTextNode ? lastTextNode.length : 0;
-      nodoBorrado = true;
-    }
-
-    // 6. Si no hay nodo de texto, retroceder a la lÃ­nea anterior si existe
-    if (!lastTextNode && lastLine.previousSibling) {
-      lastLine.remove();
-      lastLine = texto.lastChild;
-      lastTextNode = lastLine ? lastLine.lastChild : null;
-      caretNode = lastTextNode;
-      caretPos = lastTextNode ? lastTextNode.length : 0;
-      nodoBorrado = true;
-    }
-
-    // 7. Borrar Ãºltimo carÃ¡cter si procede
-    if (!nodoBorrado && lastTextNode && lastTextNode.data && lastTextNode.data.length > 0) {
-      lastTextNode.data = lastTextNode.data.substring(0, lastTextNode.data.length - 1);
-    }
-
     // 8. Actualizar estado
     if(texto.innerText.match(/\b\w+\b/g) != null){
       puntos_ = texto.innerText.match(/\b\w+\b/g).length;
@@ -124,7 +136,7 @@ function borrar() {
 
     // 9. Reposicionar caret usando la funciÃ³n
     
-    if (caretNode) {
+    if (caretNode && nodoPerteneceAlEditor1P(caretNode)) {
       restaurarPosicionCaret(caretNode, caretPos);
     }
 

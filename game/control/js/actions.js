@@ -3,8 +3,10 @@ let countInterval1;
 let listener_cuenta_atras;
 let time_minutes; // Value in minutes
 let time_seconds; // Value in seconds
-let secondsRemaining;
-let secondsRemaining1;
+let count = "00:00";
+let count1 = "00:00";
+let secondsRemaining = null;
+let secondsRemaining1 = null;
 let secondsPassed;
 let impro_estado = false;
 let fin_j1 = false;
@@ -31,6 +33,33 @@ const tiempo_seq_control = { 1: 0, 2: 0 };
 const ESCALA_UI_ESPECTADOR_CONTROL_MIN = 0.82;
 const ESCALA_UI_ESPECTADOR_CONTROL_MAX = 1.28;
 const EVENTO_CAMBIO_IDIOMA_UI = "scrib:language-changed";
+const BANDERAS_IDIOMA_CONTROL = {
+    es: "\uD83C\uDDEA\uD83C\uDDF8",
+    en: "\uD83C\uDDEC\uD83C\uDDE7",
+    fr: "\uD83C\uDDEB\uD83C\uDDF7"
+};
+const PARAMETROS_CONTROL_PERSISTENTES = [
+    "tiempo_modificador",
+    "tiempo_votacion",
+    "tiempo_modos",
+    "tiempo_minutos",
+    "tiempo_segundos",
+    "tiempo_cambio_letra",
+    "tiempo_cambio_palabras",
+    "limite_tiempo_inspiracion",
+    "escala_espectador"
+];
+let aplicando_estado_control_persistente = false;
+let timeout_emision_estado_control_persistente = null;
+let persistencia_parametros_control_inicializada = false;
+
+function formatearIdiomaControl(option) {
+    const valor = String(option && option.value ? option.value : "").trim();
+    const codigo = valor.toLowerCase();
+    const etiqueta = String(valor || (option && option.textContent) || "").trim().toUpperCase();
+    const bandera = BANDERAS_IDIOMA_CONTROL[codigo] || "";
+    return `${bandera} ${etiqueta}`.trim();
+}
 
 function invalidarTemporizadoresPartidaControl() {
     revision_temporizadores_control += 1;
@@ -157,12 +186,24 @@ let cursor_pluma_control = null;
 let cursor_pluma_control_inicializado = false;
 let timeout_cursor_pluma_control_press = null;
 let selector_idioma_control_inicializado = false;
+let numeros_linea_control_inicializados = false;
+let logs_control_inicializados = false;
+let reloj_control_interval = null;
+const logs_control_buffer = [];
+const LOGS_CONTROL_MAX = 120;
+const DURACION_ANIMACION_MENU_CONTROL_MS = 220;
+const DURACION_ANIMACION_DROPDOWN_CONTROL_MS = 190;
+const DURACION_ANIMACION_IDIOMA_CONTROL_MS = 360;
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
 const DISPLAY_BARRA_VIDA = "flex";
 const DURACION_ANIMACION_ENTRADA_VIDA_MS = 880;
 const animacionesEntradaBarraVida = new WeakMap();
 const animacionEntradaVidaPendiente = { 1: false, 2: false };
+const COLOR_BARRA_VIDA_CONTROL = {
+    tiempo: "#46f0ff",
+    tiempo1: "#ff5f67"
+};
 
 function obtenerTextoModoControl(modo = modo_control_activo) {
     const modoNormalizado = typeof modo === "string" ? modo.trim() : "";
@@ -176,9 +217,49 @@ function formatearSegundosControl(segundos = segundos_modo_control) {
     return tJuego2PControl("control.time.seconds_count", { count: total }, `${total} segundos`);
 }
 
-function actualizarCabeceraModoControl({ modo = modo_control_activo, segundos = segundos_modo_control } = {}) {
+function normalizarModoNivelControl(modo) {
+    return typeof modo === "string" ? modo.trim().toLowerCase() : "";
+}
+
+function actualizarNivelActivoControl(modo = modo_control_activo) {
+    const modoNormalizado = normalizarModoNivelControl(modo);
+    document.querySelectorAll(".level-sequence [data-mode]").forEach((chip) => {
+        const activo = chip.dataset.mode === modoNormalizado;
+        chip.classList.toggle("is-active", activo);
+        if (activo) {
+            chip.setAttribute("aria-current", "true");
+        } else {
+            chip.removeAttribute("aria-current");
+        }
+    });
+}
+window.actualizarNivelActivoControl = actualizarNivelActivoControl;
+
+function actualizarCabeceraModoControl({
+    modo = modo_control_activo,
+    segundos = segundos_modo_control,
+    duracion = null,
+    restante = null
+} = {}) {
     modo_control_activo = typeof modo === "string" ? modo.trim() : "";
-    segundos_modo_control = Number.isFinite(Number(segundos)) ? Number(segundos) : 0;
+    const tieneRestanteExplicito = restante !== null && restante !== undefined;
+    const tieneDuracionExplicita = duracion !== null && duracion !== undefined;
+    const duracionNormalizada = tieneDuracionExplicita ? obtenerDuracionModoControl(duracion) : 0;
+    const restanteNormalizado = (tieneRestanteExplicito || tieneDuracionExplicita)
+        ? calcularTiempoRestanteModoControl({
+            segundos,
+            duracion: duracionNormalizada,
+            restante
+        })
+        : normalizarSegundosModoControl(segundos);
+    segundos_modo_control = restanteNormalizado;
+    if (typeof tiempo_restante_modo_actual_control !== "undefined") {
+        tiempo_restante_modo_actual_control = restanteNormalizado;
+    }
+    if (typeof duracion_modo_actual_control !== "undefined" && tieneDuracionExplicita) {
+        duracion_modo_actual_control = duracionNormalizada;
+    }
+    actualizarNivelActivoControl(modo_control_activo);
 
     const display = document.getElementById("display_modo");
     const tiempo = document.getElementById("tiempo_modos_secs");
@@ -189,10 +270,465 @@ function actualizarCabeceraModoControl({ modo = modo_control_activo, segundos = 
             : "white";
     }
     if (tiempo) {
-        tiempo.textContent = formatearSegundosControl(segundos_modo_control);
+        tiempo.textContent = formatearSegundosControl(restanteNormalizado);
     }
 }
 window.actualizarCabeceraModoControl = actualizarCabeceraModoControl;
+
+const INTERVALO_TESTIGOS_DESVENTAJA_CONTROL_MS = 500;
+const estado_testigos_desventaja_control = { 1: null, 2: null };
+let estado_testigo_votacion_desventaja_control = null;
+let player_testigo_desventaja_control = null;
+let intervalo_testigos_desventaja_control = null;
+let intervalo_cuenta_atras_modo_control = null;
+let fin_cuenta_atras_modo_control_ts = 0;
+let duracion_cuenta_atras_modo_control = 0;
+let modo_cuenta_atras_modo_control = "";
+
+function normalizarEquipoTestigoControl(valor) {
+    if (valor === 1 || valor === 2) return valor;
+    const texto = String(valor || "").trim().toLowerCase();
+    if (texto === "1" || texto === "j1" || texto === "azul" || texto === "blue") return 1;
+    if (texto === "2" || texto === "j2" || texto === "rojo" || texto === "red") return 2;
+    return null;
+}
+
+function crearPayloadTestigoDesventajaControl(payload = {}, playerFallback = null) {
+    const data = payload && typeof payload === "object"
+        ? { ...payload }
+        : { putada: String(payload || "") };
+    const player = normalizarEquipoTestigoControl(
+        playerFallback
+        || data.player
+        || data.target
+        || data.perdedor
+        || data.equipo
+    );
+    if (!player) return null;
+    return {
+        ...data,
+        player,
+        _recibido_en_ts: Date.now()
+    };
+}
+
+function obtenerMsTestigoControl(payload = {}) {
+    if (!payload || typeof payload !== "object") return 0;
+    const terminaEnTs = Number(payload.termina_en_ts || payload.terminaEnTs || 0);
+    if (Number.isFinite(terminaEnTs) && terminaEnTs > 0) {
+        return Math.max(0, Math.trunc(terminaEnTs - Date.now()));
+    }
+    const restante = Number(
+        payload.tiempo_restante_ms
+        ?? payload.restante_ms
+        ?? payload.restanteMs
+        ?? payload.duracion_ms
+        ?? payload.duracionMs
+        ?? 0
+    );
+    if (!Number.isFinite(restante) || restante <= 0) return 0;
+    if (payload.pausada === true) {
+        return Math.max(0, Math.trunc(restante));
+    }
+    const recibidoEnTs = Number(payload._recibido_en_ts || payload.recibido_en_ts || payload.recibidoEnTs || payload.now || 0);
+    const baseTs = Number.isFinite(recibidoEnTs) && recibidoEnTs > 0 ? recibidoEnTs : Date.now();
+    return Math.max(0, Math.trunc(restante - (Date.now() - baseTs)));
+}
+
+function formatearTiempoTestigoControl(ms) {
+    const totalSegundos = Math.max(0, Math.ceil((Number(ms) || 0) / 1000));
+    const minutos = Math.floor(totalSegundos / 60);
+    const segundos = totalSegundos % 60;
+    return `${minutos}:${paddedFormat(segundos)}`;
+}
+
+function normalizarSegundosModoControl(valor, fallback = 0) {
+    if (valor !== null && valor !== undefined && valor !== "") {
+        const numero = Number(valor);
+        if (Number.isFinite(numero)) {
+            return Math.max(0, Math.trunc(numero));
+        }
+    }
+    const fallbackNumero = Number(fallback);
+    return Number.isFinite(fallbackNumero) ? Math.trunc(fallbackNumero) : 0;
+}
+
+function obtenerDuracionModoControl(valor = null) {
+    const directa = normalizarSegundosModoControl(valor, -1);
+    if (directa >= 0) return directa;
+    if (typeof TIEMPO_CAMBIO_MODOS !== "undefined" && Number(TIEMPO_CAMBIO_MODOS) > 0) {
+        return normalizarSegundosModoControl(TIEMPO_CAMBIO_MODOS);
+    }
+    if (typeof DURACION_TIEMPO_MODOS !== "undefined" && Number(DURACION_TIEMPO_MODOS) > 0) {
+        return normalizarSegundosModoControl(DURACION_TIEMPO_MODOS);
+    }
+    return 0;
+}
+
+function calcularTiempoRestanteModoControl({ segundos = 0, duracion = null, restante = null } = {}) {
+    const restanteDirecto = normalizarSegundosModoControl(restante, -1);
+    if (restanteDirecto >= 0) return restanteDirecto;
+    const duracionNormalizada = obtenerDuracionModoControl(duracion);
+    const transcurridos = normalizarSegundosModoControl(segundos);
+    return duracionNormalizada > 0
+        ? Math.max(0, duracionNormalizada - transcurridos)
+        : transcurridos;
+}
+
+function detenerCuentaAtrasModoControl() {
+    if (intervalo_cuenta_atras_modo_control) {
+        clearInterval(intervalo_cuenta_atras_modo_control);
+        intervalo_cuenta_atras_modo_control = null;
+    }
+    fin_cuenta_atras_modo_control_ts = 0;
+    duracion_cuenta_atras_modo_control = 0;
+    modo_cuenta_atras_modo_control = "";
+}
+window.detenerCuentaAtrasModoControl = detenerCuentaAtrasModoControl;
+
+function refrescarCuentaAtrasModoControl() {
+    if (!fin_cuenta_atras_modo_control_ts) {
+        detenerCuentaAtrasModoControl();
+        return;
+    }
+    const restante = Math.max(0, Math.ceil((fin_cuenta_atras_modo_control_ts - Date.now()) / 1000));
+    actualizarCabeceraModoControl({
+        modo: modo_cuenta_atras_modo_control || modo_control_activo,
+        duracion: duracion_cuenta_atras_modo_control,
+        restante
+    });
+    if (restante <= 0) {
+        detenerCuentaAtrasModoControl();
+    }
+}
+
+function iniciarCuentaAtrasModoControl({ modo = modo_control_activo, duracion = null, restante = null } = {}) {
+    const duracionNormalizada = obtenerDuracionModoControl(duracion);
+    const restanteNormalizado = calcularTiempoRestanteModoControl({
+        duracion: duracionNormalizada,
+        restante: restante ?? duracionNormalizada
+    });
+    detenerCuentaAtrasModoControl();
+    modo_cuenta_atras_modo_control = typeof modo === "string" ? modo.trim() : "";
+    duracion_cuenta_atras_modo_control = duracionNormalizada;
+    fin_cuenta_atras_modo_control_ts = Date.now() + (restanteNormalizado * 1000);
+    refrescarCuentaAtrasModoControl();
+    if (restanteNormalizado > 0) {
+        intervalo_cuenta_atras_modo_control = setInterval(refrescarCuentaAtrasModoControl, 250);
+    }
+}
+window.iniciarCuentaAtrasModoControl = iniciarCuentaAtrasModoControl;
+
+function obtenerEmojiDesventajaControl(payload = {}) {
+    const valor = String(
+        payload.putada
+        || payload.seleccion
+        || payload.emoji
+        || ""
+    ).trim();
+    if (!valor) return "\u26A0\uFE0F";
+    if (window && window.ScribDisadvantages && typeof window.ScribDisadvantages.normalizar === "function") {
+        return window.ScribDisadvantages.normalizar(valor) || valor;
+    }
+    return valor;
+}
+
+function obtenerDesventajaVisibleControl() {
+    const preferida = normalizarEquipoTestigoControl(player_testigo_desventaja_control);
+    if (preferida && obtenerMsTestigoControl(estado_testigos_desventaja_control[preferida]) > 0) {
+        return {
+            player: preferida,
+            payload: estado_testigos_desventaja_control[preferida]
+        };
+    }
+
+    const activas = [1, 2]
+        .map((player) => ({
+            player,
+            payload: estado_testigos_desventaja_control[player],
+            restanteMs: obtenerMsTestigoControl(estado_testigos_desventaja_control[player])
+        }))
+        .filter((item) => item.payload && item.restanteMs > 0)
+        .sort((a, b) => Number(b.payload._recibido_en_ts || 0) - Number(a.payload._recibido_en_ts || 0));
+
+    return activas.length ? activas[0] : null;
+}
+
+function pintarTestigoDesventajaControl() {
+    const testigo = document.getElementById("control_desventaja_activa");
+    const iconoEl = document.getElementById("control_desventaja_activa_icon");
+    const tiempoEl = document.getElementById("control_desventaja_activa_time");
+    if (!testigo) return false;
+    const visible = obtenerDesventajaVisibleControl();
+    const payload = visible ? visible.payload : null;
+    const player = visible ? visible.player : null;
+    const restanteMs = obtenerMsTestigoControl(payload);
+    const activo = Boolean(payload && player && restanteMs > 0);
+    if (!activo && player_testigo_desventaja_control) {
+        player_testigo_desventaja_control = null;
+    }
+    testigo.dataset.active = activo ? "1" : "0";
+    testigo.dataset.team = activo ? String(player) : "";
+    if (iconoEl) {
+        iconoEl.textContent = activo ? obtenerEmojiDesventajaControl(payload) : "-";
+    }
+    if (tiempoEl) {
+        tiempoEl.textContent = activo ? formatearTiempoTestigoControl(restanteMs) : "--";
+    }
+    const equipo = player === 2 ? "rojo" : "azul";
+    const detalle = payload && (payload.putada || payload.seleccion) ? ` - ${payload.putada || payload.seleccion}` : "";
+    testigo.title = activo
+        ? `Desventaja ${equipo}${detalle}: ${formatearTiempoTestigoControl(restanteMs)}`
+        : "Sin desventaja activa";
+    return activo;
+}
+
+function pintarTestigoVotacionDesventajaControl(payload) {
+    const testigo = document.getElementById("control_votacion_desventaja");
+    const tiempoEl = document.getElementById("control_votacion_desventaja_time");
+    if (!testigo) return false;
+    const equipo = normalizarEquipoTestigoControl(payload && payload.equipo);
+    const restanteMs = obtenerMsTestigoControl(payload);
+    const activo = Boolean(payload && payload.activa && equipo && restanteMs > 0);
+    if (!activo) {
+        estado_testigo_votacion_desventaja_control = null;
+    }
+    testigo.dataset.active = activo ? "1" : "0";
+    testigo.dataset.team = activo ? String(equipo) : "";
+    const icono = testigo.querySelector(".level-status-witness__icon");
+    if (icono) {
+        icono.textContent = "\u{1F5F3}\uFE0F";
+    }
+    if (tiempoEl) {
+        tiempoEl.textContent = activo ? formatearTiempoTestigoControl(restanteMs) : "--";
+    }
+    testigo.title = activo
+        ? `Votacion de desventaja ${equipo === 2 ? "roja" : "azul"}: ${formatearTiempoTestigoControl(restanteMs)}`
+        : "Sin votacion de desventaja activa";
+    return activo;
+}
+
+function actualizarTestigosDesventajaControl() {
+    const activoDesventaja = pintarTestigoDesventajaControl();
+    const activoVoto = pintarTestigoVotacionDesventajaControl(estado_testigo_votacion_desventaja_control);
+    const hayActivos = activoDesventaja || activoVoto;
+    if (hayActivos && !intervalo_testigos_desventaja_control) {
+        intervalo_testigos_desventaja_control = setInterval(
+            actualizarTestigosDesventajaControl,
+            INTERVALO_TESTIGOS_DESVENTAJA_CONTROL_MS
+        );
+    } else if (!hayActivos && intervalo_testigos_desventaja_control) {
+        clearInterval(intervalo_testigos_desventaja_control);
+        intervalo_testigos_desventaja_control = null;
+    }
+}
+
+function sincronizarDesventajaActivaControl(payload = {}, opciones = {}) {
+    const data = crearPayloadTestigoDesventajaControl(payload, opciones.player);
+    if (!data) return;
+    if (data.activa === false || obtenerMsTestigoControl(data) <= 0) {
+        estado_testigos_desventaja_control[data.player] = null;
+        if (player_testigo_desventaja_control === data.player) {
+            player_testigo_desventaja_control = null;
+        }
+    } else {
+        estado_testigos_desventaja_control[data.player] = data;
+        player_testigo_desventaja_control = data.player;
+    }
+    actualizarTestigosDesventajaControl();
+}
+window.sincronizarDesventajaActivaControl = sincronizarDesventajaActivaControl;
+
+function sincronizarVotacionDesventajaControl(payload = {}) {
+    const data = payload && typeof payload === "object" ? { ...payload } : {};
+    const equipo = normalizarEquipoTestigoControl(data.equipo);
+    if (!data.activa || !equipo) {
+        estado_testigo_votacion_desventaja_control = null;
+    } else {
+        estado_testigo_votacion_desventaja_control = {
+            ...data,
+            equipo: `j${equipo}`,
+            _recibido_en_ts: Date.now()
+        };
+        if (obtenerMsTestigoControl(estado_testigo_votacion_desventaja_control) <= 0) {
+            estado_testigo_votacion_desventaja_control = null;
+        }
+    }
+    actualizarTestigosDesventajaControl();
+}
+window.sincronizarVotacionDesventajaControl = sincronizarVotacionDesventajaControl;
+
+const INTERVALO_TESTIGOS_PALABRAS_MUSAS_CONTROL_MS = 500;
+const estado_testigos_palabras_musas_control = { 1: null, 2: null };
+let intervalo_testigos_palabras_musas_control = null;
+
+function obtenerMsTestigoPalabraMusaControl(payload = {}) {
+    if (!payload || typeof payload !== "object") return 0;
+    const restante = Number(
+        payload.tiempo_restante_ms
+        ?? payload.restante_ms
+        ?? payload.restanteMs
+        ?? 0
+    );
+    if (Number.isFinite(restante) && restante > 0) {
+        const recibidoEnTs = Number(payload._recibido_en_ts || payload.recibido_en_ts || payload.now || 0);
+        const baseTs = Number.isFinite(recibidoEnTs) && recibidoEnTs > 0 ? recibidoEnTs : Date.now();
+        return Math.max(0, Math.trunc(restante - (Date.now() - baseTs)));
+    }
+    const caducaEnTs = Number(payload.caduca_en_ts || payload.caducaEnTs || 0);
+    if (Number.isFinite(caducaEnTs) && caducaEnTs > 0) {
+        return Math.max(0, Math.trunc(caducaEnTs - Date.now()));
+    }
+    return 0;
+}
+
+function formatearSegundosInspiracionMusaControl(restanteMs) {
+    const segundos = Math.max(0, Math.ceil((Number(restanteMs) || 0) / 1000));
+    return segundos > 0 ? `${segundos}s` : "--";
+}
+
+function normalizarEstadoPalabraMusaControl(payload = {}, playerFallback = null) {
+    const data = payload && typeof payload === "object" ? { ...payload } : {};
+    const player = normalizarEquipoTestigoControl(playerFallback || data.player || data.target_player || data.target);
+    if (!player) return null;
+    const cola = Math.max(0, Math.trunc(Number(
+        data.cola
+        ?? data.cola_palabras_musas
+        ?? data.queue_count
+        ?? data.queue
+        ?? 0
+    ) || 0));
+    return {
+        ...data,
+        player,
+        cola,
+        cola_palabras_musas: cola,
+        activa: Boolean(data.activa),
+        _recibido_en_ts: Date.now()
+    };
+}
+
+function pintarTestigoPalabraMusaControl(player) {
+    const id = Number(player) === 2 ? 2 : 1;
+    const testigo = document.getElementById(`control_palabra_musa_j${id}`);
+    const tiempoEl = document.getElementById(`control_palabra_musa_j${id}_time`);
+    const colaEl = document.getElementById(`control_palabra_musa_j${id}_queue`);
+    const palabraEl = document.getElementById(`control_palabra_musa_j${id}_word`);
+    if (!testigo) return false;
+    const payload = estado_testigos_palabras_musas_control[id];
+    const restanteMs = obtenerMsTestigoPalabraMusaControl(payload);
+    const cola = Math.max(0, Math.trunc(Number(payload && (payload.cola ?? payload.cola_palabras_musas)) || 0));
+    const activo = Boolean(payload && payload.activa && restanteMs > 0);
+    if (!activo && payload && payload.activa) {
+        estado_testigos_palabras_musas_control[id] = {
+            ...payload,
+            activa: false,
+            tiempo_restante_ms: 0,
+            caduca_en_ts: 0
+        };
+    }
+    testigo.dataset.active = activo ? "1" : "0";
+    testigo.dataset.queued = cola > 0 ? "1" : "0";
+    testigo.dataset.team = String(id);
+    if (tiempoEl) {
+        tiempoEl.textContent = activo ? formatearSegundosInspiracionMusaControl(restanteMs) : "--";
+    }
+    if (colaEl) {
+        colaEl.textContent = String(cola);
+    }
+    const palabraTexto = payload && payload.palabra ? String(payload.palabra) : "";
+    if (palabraEl) {
+        palabraEl.textContent = activo && palabraTexto ? palabraTexto : "-";
+    }
+    const equipo = id === 2 ? "rojo" : "azul";
+    const palabra = palabraTexto ? ` - ${palabraTexto}` : "";
+    const segundos = Math.max(0, Math.ceil(restanteMs / 1000));
+    testigo.title = activo
+        ? `Palabra de musas para escritxr ${equipo}${palabra}: ${segundos} segundos de inspiracion. Cola: ${cola}`
+        : `Sin palabra de musas activa para escritxr ${equipo}. Cola: ${cola}`;
+    return activo;
+}
+
+function actualizarTestigosPalabrasMusasControl() {
+    const activoJ1 = pintarTestigoPalabraMusaControl(1);
+    const activoJ2 = pintarTestigoPalabraMusaControl(2);
+    const hayActivos = activoJ1 || activoJ2;
+    if (hayActivos && !intervalo_testigos_palabras_musas_control) {
+        intervalo_testigos_palabras_musas_control = setInterval(
+            actualizarTestigosPalabrasMusasControl,
+            INTERVALO_TESTIGOS_PALABRAS_MUSAS_CONTROL_MS
+        );
+    } else if (!hayActivos && intervalo_testigos_palabras_musas_control) {
+        clearInterval(intervalo_testigos_palabras_musas_control);
+        intervalo_testigos_palabras_musas_control = null;
+    }
+}
+
+function sincronizarEstadoPalabrasMusasControl(payload = {}) {
+    const data = payload && typeof payload === "object" ? payload : {};
+    const players = data.players && typeof data.players === "object" ? data.players : data;
+    [1, 2].forEach((player) => {
+        const raw = players[player] || players[`j${player}`] || players[String(player)] || {};
+        const normalizado = normalizarEstadoPalabraMusaControl(raw, player);
+        if (normalizado) {
+            estado_testigos_palabras_musas_control[player] = normalizado;
+        }
+    });
+    actualizarTestigosPalabrasMusasControl();
+}
+window.sincronizarEstadoPalabrasMusasControl = sincronizarEstadoPalabrasMusasControl;
+
+function limpiarTestigosPalabrasMusasControl() {
+    estado_testigos_palabras_musas_control[1] = null;
+    estado_testigos_palabras_musas_control[2] = null;
+    actualizarTestigosPalabrasMusasControl();
+}
+window.limpiarTestigosPalabrasMusasControl = limpiarTestigosPalabrasMusasControl;
+
+function limpiarTestigosDesventajaControl() {
+    estado_testigos_desventaja_control[1] = null;
+    estado_testigos_desventaja_control[2] = null;
+    estado_testigo_votacion_desventaja_control = null;
+    player_testigo_desventaja_control = null;
+    actualizarTestigosDesventajaControl();
+}
+window.limpiarTestigosDesventajaControl = limpiarTestigosDesventajaControl;
+
+function pausarTestigosDesventajaControl() {
+    [1, 2].forEach((player) => {
+        const payload = estado_testigos_desventaja_control[player];
+        const restanteMs = obtenerMsTestigoControl(payload);
+        if (!payload || restanteMs <= 0) return;
+        estado_testigos_desventaja_control[player] = {
+            ...payload,
+            pausada: true,
+            tiempo_restante_ms: restanteMs,
+            restante_ms: restanteMs,
+            termina_en_ts: 0,
+            _recibido_en_ts: Date.now()
+        };
+    });
+    actualizarTestigosDesventajaControl();
+}
+window.pausarTestigosDesventajaControl = pausarTestigosDesventajaControl;
+
+function reanudarTestigosDesventajaControl() {
+    [1, 2].forEach((player) => {
+        const payload = estado_testigos_desventaja_control[player];
+        const restanteMs = obtenerMsTestigoControl(payload);
+        if (!payload || restanteMs <= 0) return;
+        estado_testigos_desventaja_control[player] = {
+            ...payload,
+            pausada: false,
+            tiempo_restante_ms: restanteMs,
+            restante_ms: restanteMs,
+            termina_en_ts: Date.now() + restanteMs,
+            _recibido_en_ts: Date.now()
+        };
+    });
+    actualizarTestigosDesventajaControl();
+}
+window.reanudarTestigosDesventajaControl = reanudarTestigosDesventajaControl;
 
 function extraerSegundosTiempo(texto) {
     if (!texto || typeof texto !== "string" || texto.indexOf(":") === -1) {
@@ -304,6 +840,21 @@ function inicializarSelectorIdiomaControl() {
     interfaz.appendChild(boton);
     interfaz.appendChild(lista);
     contenedor.appendChild(interfaz);
+    let ultimoValorIdiomaSincronizado = selector.value;
+
+    const animarCambioIdioma = () => {
+        if (timeout_animacion_idioma_control) {
+            clearTimeout(timeout_animacion_idioma_control);
+            timeout_animacion_idioma_control = null;
+        }
+        contenedor.classList.remove("is-changing");
+        void contenedor.offsetWidth;
+        contenedor.classList.add("is-changing");
+        timeout_animacion_idioma_control = setTimeout(() => {
+            contenedor.classList.remove("is-changing");
+            timeout_animacion_idioma_control = null;
+        }, DURACION_ANIMACION_IDIOMA_CONTROL_MS);
+    };
 
     const cerrar = ({ devolverFoco = false } = {}) => {
         contenedor.classList.remove("is-open");
@@ -324,11 +875,12 @@ function inicializarSelectorIdiomaControl() {
         }
     };
 
-    const sincronizar = () => {
+    const sincronizar = ({ animar = false } = {}) => {
         const opciones = Array.from(selector.options || []);
         const valorActual = selector.value;
         const seleccionada = opciones.find((option) => option.value === valorActual) || opciones[0] || null;
-        textoActual.textContent = seleccionada ? seleccionada.textContent : "";
+        const debeAnimarCambio = animar || (ultimoValorIdiomaSincronizado && ultimoValorIdiomaSincronizado !== valorActual);
+        textoActual.textContent = seleccionada ? formatearIdiomaControl(seleccionada) : "";
         lista.setAttribute("aria-label", selector.getAttribute("aria-label") || "Idioma");
         lista.innerHTML = "";
 
@@ -339,12 +891,17 @@ function inicializarSelectorIdiomaControl() {
             botonOpcion.dataset.value = option.value;
             botonOpcion.setAttribute("role", "option");
             botonOpcion.setAttribute("aria-selected", option.value === valorActual ? "true" : "false");
-            botonOpcion.textContent = option.textContent;
+            botonOpcion.setAttribute("aria-label", option.textContent || option.value);
+            botonOpcion.textContent = formatearIdiomaControl(option);
             if (option.value === valorActual) {
                 botonOpcion.classList.add("is-selected");
             }
             lista.appendChild(botonOpcion);
         });
+        ultimoValorIdiomaSincronizado = valorActual;
+        if (debeAnimarCambio) {
+            animarCambioIdioma();
+        }
     };
 
     const aplicarCambioIdioma = (nuevoValor) => {
@@ -384,10 +941,11 @@ function inicializarSelectorIdiomaControl() {
         const opcion = evento.target.closest(".control-language-option");
         if (!opcion) return;
         const nuevoValor = opcion.dataset.value || "es";
-        if (selector.value !== nuevoValor) {
+        const cambiaIdioma = selector.value !== nuevoValor;
+        if (cambiaIdioma) {
             aplicarCambioIdioma(nuevoValor);
         }
-        sincronizar();
+        sincronizar({ animar: cambiaIdioma });
         cerrar({ devolverFoco: true });
     });
 
@@ -425,25 +983,520 @@ function inicializarSelectorIdiomaControl() {
     });
 
     window.addEventListener("resize", () => cerrar());
-    window.addEventListener(EVENTO_CAMBIO_IDIOMA_UI, sincronizar);
-    selector.addEventListener("change", sincronizar);
+    window.addEventListener(EVENTO_CAMBIO_IDIOMA_UI, () => sincronizar({ animar: true }));
+    selector.addEventListener("change", () => sincronizar({ animar: true }));
     sincronizar();
+}
+
+function extraerLineasTextoControl(elemento) {
+    if (!elemento) return [""]; 
+    const texto = typeof elemento.innerText === "string"
+        ? elemento.innerText
+        : String(elemento.textContent || "");
+    const normalizado = texto.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const sinSaltoFinal = normalizado.endsWith("\n") ? normalizado.slice(0, -1) : normalizado;
+    return sinSaltoFinal ? sinSaltoFinal.split("\n") : [""];
+}
+
+function actualizarNumerosLineaControl(playerId) {
+    const id = Number(playerId) === 2 ? 2 : 1;
+    const textoEl = document.getElementById(id === 2 ? "texto1" : "texto");
+    const lineasEl = document.getElementById(id === 2 ? "line_numbers_j2" : "line_numbers_j1");
+    if (!textoEl || !lineasEl) return;
+    const totalLineas = Math.max(1, extraerLineasTextoControl(textoEl).length);
+    lineasEl.textContent = Array.from({ length: totalLineas }, (_, index) => String(index + 1)).join("\n");
+    lineasEl.scrollTop = textoEl.scrollTop || 0;
+}
+window.actualizarNumerosLineaControl = actualizarNumerosLineaControl;
+
+function inicializarNumerosLineaControl() {
+    if (numeros_linea_control_inicializados) return;
+    numeros_linea_control_inicializados = true;
+    [1, 2].forEach((playerId) => {
+        const textoEl = document.getElementById(playerId === 2 ? "texto1" : "texto");
+        const lineasEl = document.getElementById(playerId === 2 ? "line_numbers_j2" : "line_numbers_j1");
+        if (!textoEl || !lineasEl) return;
+        actualizarNumerosLineaControl(playerId);
+        textoEl.addEventListener("scroll", () => {
+            lineasEl.scrollTop = textoEl.scrollTop || 0;
+        }, { passive: true });
+        if (typeof MutationObserver !== "undefined") {
+            const observer = new MutationObserver(() => actualizarNumerosLineaControl(playerId));
+            observer.observe(textoEl, { childList: true, characterData: true, subtree: true });
+        }
+    });
+}
+
+function serializarLogControl(valor) {
+    if (typeof valor === "string") return valor;
+    if (valor instanceof Error) return valor.stack || valor.message;
+    try {
+        return JSON.stringify(valor);
+    } catch (_error) {
+        return String(valor);
+    }
+}
+
+function renderizarLogsControl() {
+    const output = document.getElementById("logs_control_output");
+    if (!output) return;
+    output.textContent = logs_control_buffer.length
+        ? logs_control_buffer.map((entrada) => `[${entrada.hora}] ${entrada.tipo.toUpperCase()} ${entrada.texto}`).join("\n")
+        : "Sin logs todavia.";
+    output.scrollTop = output.scrollHeight;
+}
+
+function registrarLogControl(tipo = "info", args = []) {
+    const fecha = new Date();
+    const hora = fecha.toLocaleTimeString("es-ES", { hour12: false });
+    const texto = Array.from(args || []).map(serializarLogControl).join(" ");
+    logs_control_buffer.push({
+        hora,
+        tipo: String(tipo || "info"),
+        texto: texto || "(sin detalle)"
+    });
+    while (logs_control_buffer.length > LOGS_CONTROL_MAX) {
+        logs_control_buffer.shift();
+    }
+    renderizarLogsControl();
+}
+window.registrarLogControl = registrarLogControl;
+
+function toggleLogsControl() {
+    const panel = document.getElementById("panel_logs_control");
+    const boton = document.getElementById("boton_ver_logs");
+    if (!panel) return;
+    const oculto = panel.classList.contains("panel-oculto");
+    panel.classList.toggle("panel-oculto", !oculto);
+    if (boton) {
+        boton.dataset.active = oculto ? "1" : "0";
+        boton.classList.toggle("is-active", oculto);
+    }
+    renderizarLogsControl();
+}
+window.toggleLogsControl = toggleLogsControl;
+
+const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "juego", "representacion"]);
+let dropdown_modos_control_inicializado = false;
+let observer_modos_control = null;
+let frases_finales_control_inicializadas = false;
+let parametros_colapsados_control = false;
+let timeout_animacion_parametros_control = null;
+let timeout_cierre_dropdown_modos_control = null;
+let timeout_apertura_dropdown_modos_control = null;
+let timeout_animacion_idioma_control = null;
+const timeouts_animacion_secciones_control = new WeakMap();
+const timeouts_guardado_frase_final_control = { 1: null, 2: null };
+
+function textoRepresentacionControl(corto = false) {
+    const fallback = corto ? "\u{1F3AD} REPR." : "\u{1F3AD} REPRESENTACI\u00d3N";
+    return tJuego2PControl(corto ? "control.title.representation_short" : "control.title.representation", {}, fallback);
+}
+
+function actualizarEtiquetaRepresentacionControl() {
+    const boton = document.getElementById("control_title_representation");
+    if (!boton) return;
+    const textoCompleto = textoRepresentacionControl(false);
+    const textoCorto = textoRepresentacionControl(true);
+    boton.textContent = textoCompleto;
+    boton.classList.remove("is-short-label");
+
+    const margen = 2;
+    if (boton.scrollWidth > boton.clientWidth + margen) {
+        boton.textContent = textoCorto;
+        boton.classList.add("is-short-label");
+    }
+}
+window.actualizarEtiquetaRepresentacionControl = actualizarEtiquetaRepresentacionControl;
+
+function marcarAnimacionSeccionControl(panel, clase, duracion = DURACION_ANIMACION_MENU_CONTROL_MS) {
+    if (!panel) return;
+    const timeoutPrevio = timeouts_animacion_secciones_control.get(panel);
+    if (timeoutPrevio) {
+        clearTimeout(timeoutPrevio);
+    }
+    panel.classList.remove("is-entering", "is-collapsing");
+    panel.classList.add(clase);
+    const timeout = setTimeout(() => {
+        panel.classList.remove(clase);
+        timeouts_animacion_secciones_control.delete(panel);
+    }, duracion);
+    timeouts_animacion_secciones_control.set(panel, timeout);
+}
+
+function activarSeccionControl(seccion) {
+    if (!SECCIONES_BOTONES_CONTROL.has(seccion)) return;
+    const contenedor = document.querySelector(`[data-control-section="${seccion}"]`);
+    if (!contenedor) return;
+    document.querySelectorAll("[data-control-section]").forEach((panel) => {
+        const activa = panel === contenedor;
+        const estabaActiva = !panel.classList.contains("is-collapsed");
+        panel.classList.toggle("is-collapsed", !activa);
+        if (activa && !estabaActiva) {
+            marcarAnimacionSeccionControl(panel, "is-entering");
+        } else if (!activa && estabaActiva) {
+            marcarAnimacionSeccionControl(panel, "is-collapsing");
+        } else if (activa) {
+            panel.classList.remove("is-collapsing");
+        } else {
+            panel.classList.remove("is-entering");
+        }
+        const boton = panel.querySelector(".control-collapsible-toggle");
+        if (boton) {
+            boton.setAttribute("aria-expanded", activa ? "true" : "false");
+        }
+    });
+}
+
+function toggleSeccionControl(seccion) {
+    if (!SECCIONES_BOTONES_CONTROL.has(seccion)) return;
+    if (teleprompter_visible) {
+        if (seccion === "representacion") {
+            volverMenuRepresentacionTeleprompter();
+            return;
+        }
+        teleprompter_visible = false;
+        teleprompter_state.visible = false;
+        teleprompter_state.playing = false;
+        marcarCambioTeleprompterLocalControl();
+        emitirTeleprompter(true);
+        invalidarContextoTeleprompterControl({ reiniciarEstadoCarga: true });
+        const panelTeleprompter = obtenerPanelTeleprompterRepresentacionControl();
+        const representacion = document.querySelector('[data-control-section="representacion"]');
+        if (panelTeleprompter) {
+            panelTeleprompter.classList.add("panel-oculto");
+            panelTeleprompter.setAttribute("aria-hidden", "true");
+        }
+        if (representacion) {
+            representacion.classList.remove("is-teleprompter-open");
+        }
+        actualizarTeleprompterUI();
+    }
+    activarSeccionControl(seccion);
+}
+window.toggleSeccionControl = toggleSeccionControl;
+
+function setPanelParametrosColapsadoControl(colapsado) {
+    parametros_colapsados_control = Boolean(colapsado);
+    const panel = document.getElementById("panel_parametros");
+    const tabla = panel ? panel.closest("table.default") : document.querySelector("table.default");
+    const boton = document.getElementById("boton_colapsar_parametros");
+
+    if (timeout_animacion_parametros_control) {
+        clearTimeout(timeout_animacion_parametros_control);
+        timeout_animacion_parametros_control = null;
+    }
+    if (panel) {
+        panel.classList.add("is-side-animating");
+        timeout_animacion_parametros_control = setTimeout(() => {
+            panel.classList.remove("is-side-animating");
+            timeout_animacion_parametros_control = null;
+        }, DURACION_ANIMACION_MENU_CONTROL_MS);
+    }
+
+    if (tabla) {
+        tabla.classList.toggle("parametros-colapsados", parametros_colapsados_control);
+    }
+    if (panel) {
+        panel.classList.toggle("is-side-collapsed", parametros_colapsados_control);
+    }
+    if (boton) {
+        boton.setAttribute("aria-expanded", parametros_colapsados_control ? "false" : "true");
+        boton.innerHTML = parametros_colapsados_control ? "&#x2039;" : "&#x203A;";
+        boton.title = parametros_colapsados_control ? "Expandir par\u00e1metros" : "Contraer par\u00e1metros";
+    }
+    if (parametros_colapsados_control && typeof setDropdownModosControl === "function") {
+        setDropdownModosControl(false);
+    }
+}
+window.setPanelParametrosColapsadoControl = setPanelParametrosColapsadoControl;
+
+function togglePanelParametrosControl() {
+    setPanelParametrosColapsadoControl(!parametros_colapsados_control);
+}
+window.togglePanelParametrosControl = togglePanelParametrosControl;
+
+function actualizarResumenModosControl() {
+    const resumen = document.getElementById("resumen_modos_control");
+    const lista = document.getElementById("listaModos");
+    if (!resumen || !lista) return;
+
+    const casillas = Array.from(lista.querySelectorAll('input[name="modos"]'));
+    const total = casillas.length;
+    const activas = casillas.filter((casilla) => casilla.checked).length;
+
+    if (total === 0) {
+        resumen.textContent = "Sin niveles";
+    } else if (activas === total) {
+        resumen.textContent = `${activas} activos`;
+    } else {
+        resumen.textContent = `${activas}/${total} activos`;
+    }
+    actualizarOpcionesFraseFinalControl();
+}
+window.actualizarResumenModosControl = actualizarResumenModosControl;
+
+function estaModoFraseFinalActivoControl() {
+    const checkbox = document.querySelector('input[name="modos"][value="frase final"]');
+    return checkbox ? checkbox.checked : true;
+}
+window.estaModoFraseFinalActivoControl = estaModoFraseFinalActivoControl;
+
+function actualizarOpcionesFraseFinalControl() {
+    const activo = estaModoFraseFinalActivoControl();
+    const contenedor = document.querySelector(".parametros-top-grid");
+    if (contenedor) {
+        contenedor.classList.toggle("frase-final-inactiva", !activo);
+    }
+    [1, 2].forEach((playerId) => {
+        const bloque = document.getElementById(`param_frase_final_j${playerId}`);
+        if (!bloque) return;
+        bloque.hidden = !activo;
+        bloque.setAttribute("aria-hidden", activo ? "false" : "true");
+    });
+}
+window.actualizarOpcionesFraseFinalControl = actualizarOpcionesFraseFinalControl;
+
+function obtenerInputFraseFinalControl(playerId) {
+    return document.getElementById(Number(playerId) === 2 ? "frase_final_j2" : "frase_final_j1");
+}
+
+function obtenerEditorFraseFinalControl(playerId) {
+    const bloque = document.getElementById(Number(playerId) === 2 ? "param_frase_final_j2" : "param_frase_final_j1");
+    return bloque ? bloque.querySelector(".frase_final_editor") : null;
+}
+
+function marcarEstadoGuardadoFraseFinalControl(playerId, estado) {
+    const id = Number(playerId) === 2 ? 2 : 1;
+    const editor = obtenerEditorFraseFinalControl(id);
+    const estadoNodo = document.getElementById(`frase_final_estado_j${id}`);
+    if (!editor || !estadoNodo) return;
+    editor.classList.toggle("is-saving", estado === "saving");
+    editor.classList.toggle("is-saved", estado === "saved");
+    estadoNodo.classList.toggle("is-saving", estado === "saving");
+    estadoNodo.classList.toggle("is-saved", estado === "saved");
+    estadoNodo.textContent = estado === "saving" ? "\u2026" : "\u2713";
+}
+
+function guardarFraseFinalControl(playerId, opciones = {}) {
+    const id = Number(playerId) === 2 ? 2 : 1;
+    const input = obtenerInputFraseFinalControl(id);
+    if (!input) return;
+    if (opciones.normalizar === true) {
+        input.value = normalizarFraseFinal(input.value);
+    }
+
+    if (timeouts_guardado_frase_final_control[id]) {
+        clearTimeout(timeouts_guardado_frase_final_control[id]);
+    }
+    marcarEstadoGuardadoFraseFinalControl(id, "saving");
+    timeouts_guardado_frase_final_control[id] = setTimeout(() => {
+        marcarEstadoGuardadoFraseFinalControl(id, "saved");
+        const editor = obtenerEditorFraseFinalControl(id);
+        if (editor) {
+            editor.classList.remove("frase-final-aplicada");
+            void editor.offsetWidth;
+            editor.classList.add("frase-final-aplicada");
+        }
+    }, 220);
+    emitirEstadoControlPersistente();
+}
+window.guardarFraseFinalControl = guardarFraseFinalControl;
+
+function obtenerNombreEscritoraFraseFinalControl(playerId) {
+    const id = Number(playerId) === 2 ? 2 : 1;
+    const input = document.getElementById(id === 2 ? "nombre1" : "nombre");
+    const fallback = id === 2
+        ? tJuego2PControl("ui.writer_2", {}, "ESCRITXR 2")
+        : tJuego2PControl("ui.writer_1", {}, "ESCRITXR 1");
+    return String(input && input.value ? input.value : fallback).trim() || fallback;
+}
+
+function actualizarEtiquetasFraseFinalControl() {
+    [1, 2].forEach((playerId) => {
+        const etiqueta = document.getElementById(`frase_final_label_j${playerId}`);
+        if (etiqueta) {
+            etiqueta.textContent = obtenerNombreEscritoraFraseFinalControl(playerId);
+        }
+    });
+}
+window.actualizarEtiquetasFraseFinalControl = actualizarEtiquetasFraseFinalControl;
+
+function setDropdownModosControl(abierto) {
+    const contenedor = document.getElementById("parametros_modos_dropdown");
+    const boton = document.getElementById("boton_modos_dropdown");
+    const menu = document.getElementById("parametros_modos_menu");
+    if (!contenedor || !boton || !menu) return;
+
+    const visible = Boolean(abierto);
+    boton.setAttribute("aria-expanded", visible ? "true" : "false");
+    if (timeout_cierre_dropdown_modos_control) {
+        clearTimeout(timeout_cierre_dropdown_modos_control);
+        timeout_cierre_dropdown_modos_control = null;
+    }
+    if (timeout_apertura_dropdown_modos_control) {
+        clearTimeout(timeout_apertura_dropdown_modos_control);
+        timeout_apertura_dropdown_modos_control = null;
+    }
+
+    if (visible) {
+        menu.hidden = false;
+        contenedor.classList.remove("is-closing");
+        contenedor.classList.add("is-open", "is-opening");
+        timeout_apertura_dropdown_modos_control = setTimeout(() => {
+            contenedor.classList.remove("is-opening");
+            timeout_apertura_dropdown_modos_control = null;
+        }, DURACION_ANIMACION_DROPDOWN_CONTROL_MS);
+    } else {
+        const estabaVisible = contenedor.classList.contains("is-open") || !menu.hidden;
+        contenedor.classList.remove("is-open", "is-opening");
+        if (estabaVisible) {
+            menu.hidden = false;
+            contenedor.classList.add("is-closing");
+            timeout_cierre_dropdown_modos_control = setTimeout(() => {
+                menu.hidden = true;
+                contenedor.classList.remove("is-closing");
+                timeout_cierre_dropdown_modos_control = null;
+            }, DURACION_ANIMACION_DROPDOWN_CONTROL_MS);
+        } else {
+            menu.hidden = true;
+            contenedor.classList.remove("is-closing");
+        }
+    }
+    actualizarResumenModosControl();
+}
+window.setDropdownModosControl = setDropdownModosControl;
+
+function toggleDropdownModosControl() {
+    const menu = document.getElementById("parametros_modos_menu");
+    setDropdownModosControl(!(menu && !menu.hidden));
+}
+window.toggleDropdownModosControl = toggleDropdownModosControl;
+
+function inicializarDropdownModosControl() {
+    if (dropdown_modos_control_inicializado) return;
+    const lista = document.getElementById("listaModos");
+    const contenedor = document.getElementById("parametros_modos_dropdown");
+    if (!lista || !contenedor) return;
+
+    dropdown_modos_control_inicializado = true;
+    lista.addEventListener("change", (evento) => {
+        if (evento.target && evento.target.matches('input[name="modos"]')) {
+            actualizarResumenModosControl();
+        }
+    });
+
+    if (typeof MutationObserver === "function") {
+        observer_modos_control = new MutationObserver(actualizarResumenModosControl);
+        observer_modos_control.observe(lista, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["checked"]
+        });
+    }
+
+    document.addEventListener("click", (evento) => {
+        if (!contenedor.contains(evento.target)) {
+            setDropdownModosControl(false);
+        }
+    });
+    document.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape") {
+            setDropdownModosControl(false);
+        }
+    });
+    actualizarResumenModosControl();
+}
+window.inicializarDropdownModosControl = inicializarDropdownModosControl;
+
+function inicializarFrasesFinalesControl() {
+    if (frases_finales_control_inicializadas) return;
+    frases_finales_control_inicializadas = true;
+    [1, 2].forEach((playerId) => {
+        const input = obtenerInputFraseFinalControl(playerId);
+        if (input) {
+            input.addEventListener("input", () => guardarFraseFinalControl(playerId, { normalizar: false }));
+            input.addEventListener("change", () => guardarFraseFinalControl(playerId, { normalizar: true }));
+            input.addEventListener("blur", () => guardarFraseFinalControl(playerId, { normalizar: true }));
+            marcarEstadoGuardadoFraseFinalControl(playerId, "saved");
+        }
+        const nombreInput = document.getElementById(playerId === 2 ? "nombre1" : "nombre");
+        if (nombreInput) {
+            nombreInput.addEventListener("input", actualizarEtiquetasFraseFinalControl);
+        }
+    });
+    actualizarEtiquetasFraseFinalControl();
+    actualizarOpcionesFraseFinalControl();
+}
+window.inicializarFrasesFinalesControl = inicializarFrasesFinalesControl;
+
+function limpiarLogsControl() {
+    logs_control_buffer.length = 0;
+    renderizarLogsControl();
+}
+window.limpiarLogsControl = limpiarLogsControl;
+
+function inicializarLogsControl() {
+    if (logs_control_inicializados) return;
+    logs_control_inicializados = true;
+    if (typeof console !== "undefined" && !console.__scribControlLogsWrapped) {
+        ["log", "warn", "error"].forEach((tipo) => {
+            const original = console[tipo];
+            if (typeof original !== "function") return;
+            console[tipo] = function consoleControlWrapper(...args) {
+                registrarLogControl(tipo, args);
+                return original.apply(console, args);
+            };
+        });
+        console.__scribControlLogsWrapped = true;
+    }
+    renderizarLogsControl();
+}
+
+function actualizarRelojControl() {
+    const reloj = document.getElementById("control_clock");
+    if (!reloj) return;
+    reloj.textContent = new Date().toLocaleTimeString("es-ES", { hour12: false });
+}
+
+function inicializarRelojControl() {
+    if (reloj_control_interval) return;
+    actualizarRelojControl();
+    reloj_control_interval = setInterval(actualizarRelojControl, 1000);
 }
 
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
         inicializarCursorPlumaControl();
         inicializarSelectorIdiomaControl();
+        inicializarNumerosLineaControl();
+        inicializarLogsControl();
+        inicializarRelojControl();
+        inicializarDropdownModosControl();
+        inicializarFrasesFinalesControl();
     }, { once: true });
 } else {
     inicializarCursorPlumaControl();
     inicializarSelectorIdiomaControl();
+    inicializarNumerosLineaControl();
+    inicializarLogsControl();
+    inicializarRelojControl();
+    inicializarDropdownModosControl();
+    inicializarFrasesFinalesControl();
 }
 
 function setPendienteAnimacionEntradaBarraVida(playerId, valor) {
     const id = Number(playerId);
     if (id !== 1 && id !== 2) return;
     animacionEntradaVidaPendiente[id] = Boolean(valor);
+}
+
+function debeAnimarEntradaBarraVida(elemento, opciones = {}) {
+    if (!elemento) return false;
+    if (opciones && opciones.animarEntrada) return true;
+    if (elemento.dataset && elemento.dataset.vidaVisible !== "1") return true;
+    return elemento.style && elemento.style.display === "none";
 }
 
 function cancelarAnimacionEntradaBarraVida(elemento) {
@@ -457,15 +1510,15 @@ function cancelarAnimacionEntradaBarraVida(elemento) {
 
 function aplicarEstadoBarraVida(elemento, porcentaje) {
     const pct = Math.max(0, Math.min(100, Number(porcentaje) || 0));
-    const tono = Math.max(0, Math.min(120, pct * 1.2));
     elemento.style.setProperty("--vida-pct", `${pct.toFixed(1)}%`);
-    elemento.style.setProperty("--vida-color", `hsl(${tono}, 85%, 55%)`);
+    elemento.style.setProperty("--vida-color", COLOR_BARRA_VIDA_CONTROL[elemento.id] || "#41d860");
 }
 
 function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURACION_ANIMACION_ENTRADA_VIDA_MS) {
     if (!elemento) return;
     const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
     cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, 0);
 
     if (objetivo <= 0 || duracionMs <= 0) {
         aplicarEstadoBarraVida(elemento, objetivo);
@@ -496,18 +1549,20 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
-    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
         cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
+        if (elemento.dataset) elemento.dataset.vidaVisible = "0";
         return;
     }
+    const animarEntrada = debeAnimarEntradaBarraVida(elemento, opciones);
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
     elemento.style.display = DISPLAY_BARRA_VIDA;
+    if (elemento.dataset) elemento.dataset.vidaVisible = "1";
     if (animarEntrada) {
         animarEntradaBarraVida(elemento, porcentaje);
         return;
@@ -519,6 +1574,46 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
 
 function paddedFormat(num) {
     return num < 10 ? "0" + num : num;
+}
+
+function formatearSegundosControl(segundos) {
+    const total = Math.max(0, Math.trunc(Number(segundos) || 0));
+    const minutos = parseInt(total / 60);
+    const segundosRestantes = parseInt(total % 60);
+    return `${paddedFormat(minutos)}:${paddedFormat(segundosRestantes)}`;
+}
+
+function obtenerSegundosParaReanudarControl(valorActual, elementoTiempo) {
+    const valor = Number(valorActual);
+    if (valorActual !== null && typeof valorActual !== "undefined" && Number.isFinite(valor) && valor >= 0) {
+        return Math.max(0, Math.trunc(valor));
+    }
+    const total = obtenerTotalSegundos();
+    const totalConfig = Math.max(0, Math.trunc(Number(total.totalSegundos) || 0));
+    if (typeof extraerSegundosTextoStatsControl === "function") {
+        const desdeTexto = extraerSegundosTextoStatsControl(
+            elementoTiempo ? (elementoTiempo.textContent || elementoTiempo.innerText || "") : ""
+        );
+        if (Number.isFinite(desdeTexto) && desdeTexto > 0) {
+            return Math.max(0, Math.trunc(desdeTexto));
+        }
+    }
+    return totalConfig;
+}
+
+function prepararContadoresReanudacionControl() {
+    secondsRemaining = obtenerSegundosParaReanudarControl(secondsRemaining, tiempo);
+    secondsRemaining1 = obtenerSegundosParaReanudarControl(secondsRemaining1, tiempo1);
+    count = formatearSegundosControl(secondsRemaining);
+    count1 = formatearSegundosControl(secondsRemaining1);
+    if (tiempo) {
+        tiempo.textContent = count;
+        actualizarBarraVida(tiempo, count);
+    }
+    if (tiempo1) {
+        tiempo1.textContent = count1;
+        actualizarBarraVida(tiempo1, count1);
+    }
 }
 
 function startCountDown_p1(duration, revisionEsperada = revision_temporizadores_control) {
@@ -671,15 +1766,181 @@ function normalizarFraseFinal(valor) {
     return texto;
 }
 
+function obtenerValorParametroPersistenteControl(id) {
+    const input = document.getElementById(id);
+    if (!input) return undefined;
+    const valor = Number(input.value);
+    return Number.isFinite(valor) ? Math.trunc(valor) : undefined;
+}
+
+function obtenerModosPersistentesControl() {
+    if (typeof rellenarListaModos === "function") {
+        rellenarListaModos();
+    }
+    return Array.from(document.querySelectorAll('input[name="modos"]:checked'))
+        .map((checkbox) => checkbox.value)
+        .filter(Boolean);
+}
+
+function obtenerEstadoPersistenteControl() {
+    const parametros = {};
+    PARAMETROS_CONTROL_PERSISTENTES.forEach((id) => {
+        const valor = obtenerValorParametroPersistenteControl(id);
+        if (Number.isFinite(valor)) {
+            parametros[id] = valor;
+        }
+    });
+    return {
+        borrar_texto: borrar_texto_en_inicio_activo === true,
+        frases_finales: {
+            1: String(frase_final_j1 && frase_final_j1.value ? frase_final_j1.value : ""),
+            2: String(frase_final_j2 && frase_final_j2.value ? frase_final_j2.value : "")
+        },
+        parametros,
+        modos: obtenerModosPersistentesControl(),
+        nombres: {
+            1: String(nombre1 && nombre1.value ? nombre1.value : ""),
+            2: String(nombre2 && nombre2.value ? nombre2.value : "")
+        }
+    };
+}
+window.obtenerEstadoPersistenteControl = obtenerEstadoPersistenteControl;
+
+function emitirEstadoControlPersistente(opciones = {}) {
+    if (aplicando_estado_control_persistente) return;
+    const emitir = () => {
+        timeout_emision_estado_control_persistente = null;
+        if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function" || !socket.connected) {
+            return;
+        }
+        socket.emit("control_estado_actualizar", obtenerEstadoPersistenteControl());
+    };
+    if (opciones.inmediato === true) {
+        if (timeout_emision_estado_control_persistente) {
+            clearTimeout(timeout_emision_estado_control_persistente);
+            timeout_emision_estado_control_persistente = null;
+        }
+        emitir();
+        return;
+    }
+    if (timeout_emision_estado_control_persistente) {
+        clearTimeout(timeout_emision_estado_control_persistente);
+    }
+    timeout_emision_estado_control_persistente = setTimeout(emitir, 140);
+}
+window.emitirEstadoControlPersistente = emitirEstadoControlPersistente;
+
+function aplicarEstadoPersistenteControl(payload = {}) {
+    const data = payload && typeof payload === "object" ? payload : {};
+    aplicando_estado_control_persistente = true;
+    try {
+        if (Object.prototype.hasOwnProperty.call(data, "borrar_texto")) {
+            borrar_texto_en_inicio_activo = data.borrar_texto === true;
+        }
+
+        const parametros = data.parametros && typeof data.parametros === "object" ? data.parametros : {};
+        PARAMETROS_CONTROL_PERSISTENTES.forEach((id) => {
+            if (!Object.prototype.hasOwnProperty.call(parametros, id)) return;
+            const input = document.getElementById(id);
+            const valor = Number(parametros[id]);
+            if (input && Number.isFinite(valor)) {
+                input.value = String(Math.trunc(valor));
+            }
+        });
+
+        if (Array.isArray(data.modos)) {
+            if (typeof generarCasillas === "function") {
+                generarCasillas(data.modos);
+            } else {
+                const activos = new Set(data.modos.map((modo) => String(modo || "").trim().toLowerCase()));
+                document.querySelectorAll('input[name="modos"]').forEach((checkbox) => {
+                    checkbox.checked = activos.has(String(checkbox.value || "").trim().toLowerCase());
+                });
+            }
+        }
+
+        const frases = data.frases_finales && typeof data.frases_finales === "object" ? data.frases_finales : {};
+        if (frase_final_j1 && Object.prototype.hasOwnProperty.call(frases, 1)) {
+            frase_final_j1.value = String(frases[1] || "");
+        }
+        if (frase_final_j2 && Object.prototype.hasOwnProperty.call(frases, 2)) {
+            frase_final_j2.value = String(frases[2] || "");
+        }
+
+        const nombres = data.nombres && typeof data.nombres === "object" ? data.nombres : {};
+        if (nombre1 && Object.prototype.hasOwnProperty.call(nombres, 1)) {
+            nombre1.value = String(nombres[1] || "ESCRITXR 1");
+            val_nombre1 = nombre1.value.toUpperCase();
+        }
+        if (nombre2 && Object.prototype.hasOwnProperty.call(nombres, 2)) {
+            nombre2.value = String(nombres[2] || "ESCRITXR 2");
+            val_nombre2 = nombre2.value.toUpperCase();
+        }
+
+        if (typeof actualizarVariables === "function") {
+            actualizarVariables();
+        }
+        if (typeof actualizarControlesEscalaEspectadorControl === "function") {
+            escala_ui_espectador_control = obtenerEscalaEspectadorParametroControl();
+            actualizarControlesEscalaEspectadorControl();
+        }
+        if (typeof rellenarListaModos === "function") {
+            rellenarListaModos();
+        }
+        if (typeof actualizarResumenModosControl === "function") {
+            actualizarResumenModosControl();
+        }
+        if (typeof actualizarOpcionesFraseFinalControl === "function") {
+            actualizarOpcionesFraseFinalControl();
+        }
+        if (typeof marcarEstadoGuardadoFraseFinalControl === "function") {
+            marcarEstadoGuardadoFraseFinalControl(1, "saved");
+            marcarEstadoGuardadoFraseFinalControl(2, "saved");
+        }
+        if (typeof actualizarEtiquetasFraseFinalControl === "function") {
+            actualizarEtiquetasFraseFinalControl();
+        }
+        if (typeof actualizarTitulosHeatmap === "function") {
+            actualizarTitulosHeatmap();
+        }
+        if (typeof actualizarNombresConexiones === "function") {
+            actualizarNombresConexiones();
+        }
+        actualizarBotonBorrarTextoGuardadoControl();
+    } finally {
+        aplicando_estado_control_persistente = false;
+    }
+}
+window.aplicarEstadoPersistenteControl = aplicarEstadoPersistenteControl;
+
+function inicializarPersistenciaParametrosControl() {
+    if (persistencia_parametros_control_inicializada) return;
+    persistencia_parametros_control_inicializada = true;
+    PARAMETROS_CONTROL_PERSISTENTES.forEach((id) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.addEventListener("input", () => emitirEstadoControlPersistente());
+        input.addEventListener("change", () => emitirEstadoControlPersistente());
+    });
+    const listaModos = document.getElementById("listaModos");
+    if (listaModos) {
+        listaModos.addEventListener("change", (evento) => {
+            if (evento.target && evento.target.matches('input[name="modos"]')) {
+                emitirEstadoControlPersistente();
+            }
+        });
+    }
+}
+window.inicializarPersistenciaParametrosControl = inicializarPersistenciaParametrosControl;
+
 function actualizarBotonBorrarTextoGuardadoControl() {
     const boton = document.getElementById("boton_borrar_texto_guardado");
     if (!boton) return;
     const activo = borrar_texto_en_inicio_activo === true;
     boton.dataset.active = activo ? "1" : "0";
     boton.classList.toggle("is-active", activo);
-    boton.innerHTML = activo
-        ? tJuego2PControl("control.button.delete_saved.on", {}, "\u{1F9F9} BORRAR TEXTO: ON")
-        : tJuego2PControl("control.button.delete_saved.off", {}, "\u{1F9F9} BORRAR TEXTO: OFF");
+    boton.setAttribute("aria-pressed", activo ? "true" : "false");
+    boton.textContent = tJuego2PControl("control.button.delete_saved", {}, "BORRAR TEXTO");
     boton.title = activo
         ? "La siguiente partida arrancara sin texto guardado."
         : "La siguiente partida recuperara el ultimo texto guardado.";
@@ -712,6 +1973,8 @@ function temp() {
     if (window.resetResumenPartida) {
         window.resetResumenPartida();
     }
+    detenerCuentaAtrasModoControl();
+    limpiarTestigosDesventajaControl();
     terminado = false;
     terminado1 = false;
     regalo_musas_enviado = false;
@@ -775,7 +2038,13 @@ function temp() {
             window.actualizarBotonesTeleprompterCarga();
         }
     }
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, PALABRAS_INSERTADAS_META, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    const escalaEspectador = normalizarEscalaUiEspectadorControl(
+        typeof ESCALA_UI_ESPECTADOR !== "undefined" ? ESCALA_UI_ESPECTADOR : escala_ui_espectador_control
+    );
+    escala_ui_espectador_control = escalaEspectador;
+    socket.emit("ajustar_escala_espectador", { valor: escalaEspectador });
+    emitirEstadoControlPersistente({ inmediato: true });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
@@ -855,6 +2124,10 @@ function cambiarValor(campoId, incremento) {
     }
 
     input.value = nuevoValor;
+    if (typeof actualizarVariables === "function") {
+        actualizarVariables();
+    }
+    emitirEstadoControlPersistente();
 }
 
 function vote() {
@@ -873,7 +2146,9 @@ function temas() {
 function limpiar() {
     //document.getElementById("nombre").value = "ESCRITXR 1";
     //document.getElementById("nombre1").value = "ESCRITXR 2";
+    detenerCuentaAtrasModoControl();
     actualizarCabeceraModoControl({ modo: "", segundos: 0 });
+    limpiarTestigosDesventajaControl();
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
         actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
@@ -966,6 +2241,7 @@ function limpiar() {
 function borrar_texto_guardado() {
     borrar_texto_en_inicio_activo = !borrar_texto_en_inicio_activo;
     actualizarBotonBorrarTextoGuardadoControl();
+    emitirEstadoControlPersistente({ inmediato: true });
 }
 
 function activar_temporizador_gigante() {
@@ -989,6 +2265,7 @@ function saltar_tertulia() {
     if (!juego_iniciado || modo_actual !== "tertulia") {
         return;
     }
+    detenerCuentaAtrasModoControl();
     clearTimeout(TimeoutTiempoMuerto);
     socket.emit('saltar_tertulia', {});
 }
@@ -1038,7 +2315,7 @@ function actualizarBotonVistaCalentamiento(boton) {
     if (!destino) return;
     destino.textContent = vista_calentamiento
         ? tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA")
-        : tJuego2PControl("control.button.tutorial_view", {}, "\u{1F525} VISTA TUTORIAL");
+        : tJuego2PControl("control.button.tutorial_view", {}, "\u{1F4D6} VISTA TUTORIAL");
     destino.dataset.activo = vista_calentamiento ? "1" : "0";
 }
 window.actualizarBotonVistaCalentamiento = actualizarBotonVistaCalentamiento;
@@ -1068,60 +2345,82 @@ const normalizarEscalaUiEspectadorControl = (valor) => {
 };
 
 function actualizarControlesEscalaEspectadorControl() {
-    const label = document.getElementById("spectator_scale_label");
-    const botonDown = document.getElementById("spectator_scale_down");
-    const botonReset = document.getElementById("spectator_scale_reset");
-    const botonUp = document.getElementById("spectator_scale_up");
+    const input = document.getElementById("escala_espectador");
+    const valor = document.getElementById("escala_espectador_valor");
     const porcentaje = Math.round(normalizarEscalaUiEspectadorControl(escala_ui_espectador_control) * 100);
-    const estaEnMin = porcentaje <= Math.round(ESCALA_UI_ESPECTADOR_CONTROL_MIN * 100);
-    const estaEnMax = porcentaje >= Math.round(ESCALA_UI_ESPECTADOR_CONTROL_MAX * 100);
-
-    if (label) {
-        label.textContent = tJuego2PControl(
-            "control.spectator_scale.label",
-            {},
-            "\u{1F441}\uFE0F TAMA\u00d1O ESPECTADOR"
-        );
+    if (input && Number(input.value) !== porcentaje) {
+        input.value = String(porcentaje);
     }
-    if (botonReset) {
-        botonReset.textContent = tJuego2PControl(
-            "control.spectator_scale.value",
-            { percent: porcentaje },
-            `${porcentaje}%`
-        );
-        botonReset.disabled = porcentaje === 100;
-        botonReset.setAttribute(
-            "aria-label",
-            tJuego2PControl(
-                "control.spectator_scale.reset_aria",
-                { percent: porcentaje },
-                `Restablecer tama\u00f1o del espectador (${porcentaje}%)`
-            )
-        );
+    if (valor) {
+        valor.textContent = `${porcentaje}%`;
     }
-    if (botonDown) {
-        botonDown.disabled = estaEnMin;
-        botonDown.setAttribute(
-            "aria-label",
-            tJuego2PControl(
-                "control.spectator_scale.decrease_aria",
-                {},
-                "Empeque\u00f1ecer espectador"
-            )
-        );
-    }
-    if (botonUp) {
-        botonUp.disabled = estaEnMax;
-        botonUp.setAttribute(
-            "aria-label",
-            tJuego2PControl(
-                "control.spectator_scale.increase_aria",
-                {},
-                "Agrandar espectador"
-            )
-        );
+    if (typeof ESCALA_UI_ESPECTADOR !== "undefined") {
+        ESCALA_UI_ESPECTADOR = porcentaje / 100;
     }
 }
+
+function obtenerEscalaEspectadorParametroControl() {
+    const input = document.getElementById("escala_espectador");
+    const porcentaje = input ? Number(input.value) : 100;
+    const escala = Number.isFinite(porcentaje) ? porcentaje / 100 : 1;
+    return normalizarEscalaUiEspectadorControl(escala);
+}
+
+function actualizarEscalaEspectadorControlDesdeParametro(opciones = {}) {
+    const emitir = opciones.emitir !== false;
+    escala_ui_espectador_control = obtenerEscalaEspectadorParametroControl();
+    if (typeof ESCALA_UI_ESPECTADOR !== "undefined") {
+        ESCALA_UI_ESPECTADOR = escala_ui_espectador_control;
+    }
+    actualizarControlesEscalaEspectadorControl();
+    if (!emitir || typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        emitirEstadoControlPersistente();
+        return;
+    }
+    socket.emit("ajustar_escala_espectador", { valor: escala_ui_espectador_control });
+    emitirEstadoControlPersistente();
+}
+window.actualizarEscalaEspectadorControlDesdeParametro = actualizarEscalaEspectadorControlDesdeParametro;
+
+const ROLES_REINICIO_REMOTO_CONTROL = new Set([
+    "escritxr1",
+    "escritxr2",
+    "espectador",
+    "actorxs1",
+    "actorxs2"
+]);
+
+function normalizarRolReinicioRemotoControl(rol) {
+    const valor = String(rol || "")
+        .toLowerCase()
+        .replace(/[\s_-]+/g, "");
+    if (valor === "escritora1" || valor === "escritor1" || valor === "writer1") return "escritxr1";
+    if (valor === "escritora2" || valor === "escritor2" || valor === "writer2") return "escritxr2";
+    if (valor === "spectator") return "espectador";
+    if (valor === "actores1" || valor === "actor1") return "actorxs1";
+    if (valor === "actores2" || valor === "actor2") return "actorxs2";
+    return ROLES_REINICIO_REMOTO_CONTROL.has(valor) ? valor : "";
+}
+
+function reiniciarRolRemoto(rol) {
+    const destino = normalizarRolReinicioRemotoControl(rol);
+    if (!destino || typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        return;
+    }
+    const boton = document.querySelector(`[data-restart-role="${destino}"]`);
+    if (
+        (boton && boton.disabled)
+        || (
+            window
+            && typeof window.rolRemotoConectadoControl === "function"
+            && !window.rolRemotoConectadoControl(destino)
+        )
+    ) {
+        return;
+    }
+    socket.emit("reiniciar_rol_remoto", { rol: destino });
+}
+window.reiniciarRolRemoto = reiniciarRolRemoto;
 
 function actualizarBotonesVistaEspectadorControl() {
     const botonStats = document.getElementById("boton_vista_stats");
@@ -1147,7 +2446,7 @@ function actualizarBotonesVistaEspectadorControl() {
         const activo = vista_espectador_modo === "creditos";
         botonCreditos.dataset.active = activo ? "1" : "0";
         botonCreditos.classList.toggle("is-active", activo);
-        botonCreditos.textContent = tJuego2PControl("control.button.show_credits", {}, "\u{1F4DC} MOSTRAR CR\u00c9DITOS");
+        botonCreditos.textContent = tJuego2PControl("control.button.show_credits", {}, "\u2B50 MOSTRAR CR\u00c9DITOS");
     }
     if (statsNavLabel) {
         statsNavLabel.textContent = tJuego2PControl("control.stats.slides", {}, "\u{1F4CA} SLIDES STATS");
@@ -1184,18 +2483,6 @@ function navegarSlidesStatsControl(direccion) {
     }
     socket.emit("stats_slide_control_navegar", { direccion: dir });
 }
-
-function ajustarEscalaEspectadorControl(accion) {
-    const siguienteAccion = typeof accion === "string" ? accion.trim().toLowerCase() : "";
-    if (siguienteAccion !== "down" && siguienteAccion !== "up" && siguienteAccion !== "reset") {
-        return;
-    }
-    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
-        return;
-    }
-    socket.emit("ajustar_escala_espectador", { accion: siguienteAccion });
-}
-window.ajustarEscalaEspectadorControl = ajustarEscalaEspectadorControl;
 
 function actualizarModoVistaEspectadorControl(payload = {}) {
     vista_espectador_modo = normalizarModoVistaEspectador(payload.modo);
@@ -1294,13 +2581,8 @@ function actualizarSolicitudCalentamientoControl(payload = {}) {
         const activo = boton.dataset.solicitudCalentamiento === tipo;
         boton.dataset.active = activo ? "1" : "0";
         boton.classList.toggle("is-active", activo);
+        boton.setAttribute("aria-pressed", activo ? "true" : "false");
     });
-
-    const estado = document.getElementById("calentamiento_solicitud_actual");
-    if (estado) {
-        const etiqueta = traducirSolicitudCalentamientoControl(tipo) || traducirSolicitudCalentamientoControl(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
-        estado.textContent = tJuego2PControl("control.warmup.current_trigger", { label: etiqueta }, `DETONADOR ACTUAL: ${etiqueta}`);
-    }
 
     const flujo = document.getElementById("calentamiento_flujo_estado");
     if (flujo && payload && payload.equipos) {
@@ -1578,6 +2860,25 @@ function actualizarBotonesPanelSuperiorControl() {
     }
 }
 
+function obtenerPanelTeleprompterRepresentacionControl() {
+    return document.getElementById("panel_teleprompter_representacion")
+        || document.getElementById("panel_teleprompter");
+}
+
+function prepararTeleprompterRepresentacionControl() {
+    const host = document.getElementById("panel_teleprompter_representacion");
+    const panelLegacy = document.getElementById("panel_teleprompter");
+    const panel = (host && host.querySelector(".teleprompter-panel"))
+        || (panelLegacy && panelLegacy.querySelector(".teleprompter-panel"));
+    if (host && panel && panel.parentElement !== host) {
+        host.appendChild(panel);
+    }
+    if (panelLegacy && panelLegacy !== host) {
+        panelLegacy.classList.add("panel-oculto");
+    }
+    return host || panelLegacy;
+}
+
 function aplicarVistaPanelControl(vistaDestino) {
     const destino = PANEL_CONTROL_MODOS.has(vistaDestino) ? vistaDestino : "controles";
     const salirDeTeleprompter = teleprompter_visible && destino !== "teleprompter";
@@ -1586,7 +2887,9 @@ function aplicarVistaPanelControl(vistaDestino) {
     const panelParametros = document.getElementById("panel_parametros");
     const panelParametrosExtra = document.getElementById("panel_parametros_extra");
     const panelCreditos = document.getElementById("panel_creditos");
-    const panelTeleprompter = document.getElementById("panel_teleprompter");
+    const panelTeleprompter = prepararTeleprompterRepresentacionControl();
+    const panelTeleprompterLegacy = document.getElementById("panel_teleprompter");
+    const panelRepresentacion = document.querySelector('[data-control-section="representacion"]');
 
     if (salirDeTeleprompter) {
         invalidarContextoTeleprompterControl({ reiniciarEstadoCarga: true });
@@ -1603,9 +2906,21 @@ function aplicarVistaPanelControl(vistaDestino) {
     if (panelParametros) panelParametros.classList.add("panel-oculto");
     if (panelParametrosExtra) panelParametrosExtra.classList.add("panel-oculto");
     if (panelCreditos) panelCreditos.classList.add("panel-oculto");
-    if (panelTeleprompter) panelTeleprompter.classList.add("panel-oculto");
+    if (panelTeleprompterLegacy && panelTeleprompterLegacy !== panelTeleprompter) {
+        panelTeleprompterLegacy.classList.add("panel-oculto");
+    }
+    if (panelTeleprompter) {
+        panelTeleprompter.classList.add("panel-oculto");
+        panelTeleprompter.setAttribute("aria-hidden", "true");
+    }
+    if (panelRepresentacion) {
+        panelRepresentacion.classList.remove("is-teleprompter-open");
+    }
 
     if (destino === "parametros") {
+        if (panelControles) {
+            panelControles.classList.remove("panel-oculto");
+        }
         if (panelParametros) {
             panelParametros.classList.remove("panel-oculto");
             animateCSS(panelParametros, "fadeInLeft");
@@ -1624,12 +2939,23 @@ function aplicarVistaPanelControl(vistaDestino) {
             animateCSS(panelCreditos, "fadeInLeft");
         }
     } else if (destino === "teleprompter") {
+        if (panelControles) {
+            panelControles.classList.remove("panel-oculto");
+        }
+        activarSeccionControl("representacion");
+        if (panelRepresentacion) {
+            panelRepresentacion.classList.add("is-teleprompter-open");
+        }
         if (panelTeleprompter) {
             panelTeleprompter.classList.remove("panel-oculto");
+            panelTeleprompter.setAttribute("aria-hidden", "false");
             animateCSS(panelTeleprompter, "fadeInLeft");
         }
     } else if (panelControles) {
         panelControles.classList.remove("panel-oculto");
+        if (panelParametros) {
+            panelParametros.classList.remove("panel-oculto");
+        }
         animateCSS(panelControles, "fadeInLeft");
     }
 
@@ -1782,6 +3108,20 @@ function toggleTeleprompter(forzarCerrar = false) {
     marcarCambioTeleprompterLocalControl();
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
+}
+
+function volverMenuRepresentacionTeleprompter() {
+    teleprompter_state.visible = false;
+    teleprompter_state.playing = false;
+    marcarCambioTeleprompterLocalControl();
+    aplicarVistaPanelControl("controles");
+    activarSeccionControl("representacion");
+    actualizarTeleprompterUI();
+    emitirTeleprompter(true);
+}
+
+if (typeof window !== "undefined") {
+    window.volverMenuRepresentacionTeleprompter = volverMenuRepresentacionTeleprompter;
 }
 
 function teleprompterCargarTexto(jugador) {
@@ -2023,9 +3363,15 @@ const configurarHoldTeleprompter = () => {
 
 if (typeof window !== "undefined") {
     window.addEventListener("load", configurarHoldTeleprompter);
+    window.addEventListener("resize", actualizarEtiquetaRepresentacionControl);
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(actualizarEtiquetaRepresentacionControl).catch(() => {});
+    }
     window.addEventListener("load", () => {
         refrescarTextosEstaticosControl();
         inicializarPanelCreditosControl();
+        inicializarPersistenciaParametrosControl();
+        actualizarTestigosDesventajaControl();
         aplicarCreditosEnPanelControl(creditos_estado_control);
     });
 }
@@ -2044,7 +3390,7 @@ function actualizarBotonBanderasMusasControl(estado = banderas_musas_activas) {
     boton.dataset.activo = banderas_musas_activas ? "1" : "0";
     boton.textContent = banderas_musas_activas
         ? tJuego2PControl("control.button.flags.on", {}, "\uD83D\uDEA9 BANDERAS ACTIVADAS")
-        : tJuego2PControl("control.button.flags.off", {}, "\uD83C\uDFF3\uFE0F BANDERAS DESACTIVADAS");
+        : tJuego2PControl("control.button.flags.off", {}, "\uD83D\uDEA9 BANDERAS DESACTIVADAS");
 }
 
 window.actualizarEstadoBanderasMusasControl = (payload = {}) => {
@@ -2054,24 +3400,24 @@ window.actualizarEstadoBanderasMusasControl = (payload = {}) => {
 
 function refrescarTextosEstaticosControl() {
     const textos = [
-        ["control_title_tutorial", "control.title.tutorial", "\u{1F525} TUTORIAL"],
+        ["control_title_tutorial", "control.title.tutorial", "\u{1F4D6} TUTORIAL"],
         ["control_title_game", "control.title.game", "\u{1F3AE} JUEGO"],
-        ["control_title_representation", "control.title.representation", "\u{1F3AD} REPRESENTACI\u00d3N"],
+        ["control_title_parameters_text", "control.button.parameters", "\u2699\uFE0F PAR\u00c1METROS"],
         ["control_subtitle_musas", "control.subtitle.muses", "DETONADORES PARA MUSAS"],
         ["boton_reiniciar_calentamiento", "control.button.clear", "\u{1F9F9} LIMPIAR"],
-        ["boton_reiniciar_marcador_calentamiento", "control.button.reset_score", "\u{1F3C6} REINICIAR MARCADOR"],
-        ["boton_escribir", "control.button.write", "\u270D\uFE0F ESCRIBIR"],
+        ["boton_reiniciar_marcador_calentamiento", "control.button.reset_score", "\u21BB REINICIAR MARCADOR"],
+        ["boton_escribir", "control.button.write", "\u270E ESCRIBIR"],
         ["boton_limpiar_juego", "control.button.clear", "\u{1F9F9} LIMPIAR"],
-        ["boton_descargar_textos", "control.button.download_texts", "\u{1F4BE} DESCARGAR TEXTOS"],
-        ["boton_pedir_feedback", "control.button.ask_feedback", "\u{1F4DD} PEDIR FEEDBACK"],
+        ["boton_descargar_textos", "control.button.download_texts", "\u2B07\uFE0F DESCARGAR TEXTOS"],
+        ["boton_pedir_feedback", "control.button.ask_feedback", "\u{1F5E8}\uFE0F PEDIR FEEDBACK"],
         ["boton_temporizador_gigante", "control.button.giant_timer", "\u23F1\uFE0F TEMPORIZADOR GIGANTE"],
         ["boton_fin_j1", "control.button.end.blue", "\uD83D\uDD35 FIN"],
         ["boton_fin_j2", "control.button.end.red", "\uD83D\uDD34 FIN"],
-        ["frase_final_label_j1", "control.label.final_phrase", "FRASE FINAL:"],
-        ["frase_final_label_j2", "control.label.final_phrase", "FRASE FINAL:"],
+        ["frase_final_heading_j1", "mode.name.frase_final", "FRASE FINAL"],
+        ["frase_final_heading_j2", "mode.name.frase_final", "FRASE FINAL"],
         ["boton_solicitud_lugares", "control.button.request_places", "\u{1F4CD} PEDIR LUGARES"],
         ["boton_solicitud_acciones", "control.button.request_actions", "\u{1F3C3} PEDIR ACCIONES"],
-        ["boton_solicitud_frase_final", "control.button.request_final_phrase", "\u{1F5E3}\uFE0F PEDIR FRASE FINAL"],
+        ["boton_solicitud_frase_final", "control.button.request_final_phrase", "\u{1F4AC} PEDIR FRASE FINAL"],
         ["teleprompter_cargar_j1", "control.button.load", "\u{1F4BE} CARGAR"],
         ["teleprompter_cargar_j2", "control.button.load", "\u{1F4BE} CARGAR"]
     ];
@@ -2082,12 +3428,15 @@ function refrescarTextosEstaticosControl() {
             nodo.textContent = tJuego2PControl(clave, {}, fallback);
         }
     });
+    actualizarEtiquetaRepresentacionControl();
 
     const fraseFinalJ1 = document.getElementById("frase_final_j1");
     const fraseFinalJ2 = document.getElementById("frase_final_j2");
     const placeholderFrase = tJuego2PControl("control.placeholder.final_phrase", {}, "Escribe la frase final...");
     if (fraseFinalJ1) fraseFinalJ1.setAttribute("placeholder", placeholderFrase);
     if (fraseFinalJ2) fraseFinalJ2.setAttribute("placeholder", placeholderFrase);
+    actualizarEtiquetasFraseFinalControl();
+    actualizarOpcionesFraseFinalControl();
 
     actualizarCabeceraModoControl();
     actualizarBotonesPanelSuperiorControl();
@@ -2139,9 +3488,9 @@ function puntuacion_final() {
         puntuacion = fila.insertCell(1);
         puntuacion.contentEditable = false;
         borrar = fila.insertCell(2);
-        borrar.innerHTML = '<input type="button" value="âŒ" onclick="deleteRow(this)">';
+        borrar.innerHTML = '<input type="button" value="\u274C" onclick="deleteRow(this)">';
         editar = fila.insertCell(3);
-        editar.innerHTML = '<input type="button" value="âœï¸" onclick="editableRow(this)"></input>';
+        editar.innerHTML = '<input type="button" value="\u270F\uFE0F" onclick="editableRow(this)"></input>';
         nombre.innerHTML = nombre1.value;
         puntuacion.innerHTML = pfinal1;
     }
@@ -2153,17 +3502,17 @@ function puntuacion_final() {
         puntuacion = fila.insertCell(1);
         puntuacion.contentEditable = false;
         borrar = fila.insertCell(2);
-        borrar.innerHTML = '<input type="button" value="âŒ" onclick="deleteRow(this)">'
+        borrar.innerHTML = '<input type="button" value="\u274C" onclick="deleteRow(this)">'
         editar = fila.insertCell(3);
-        editar.innerHTML = '<input type="button" value="âœï¸" onclick="editableRow(this)"></input>';
+        editar.innerHTML = '<input type="button" value="\u270F\uFE0F" onclick="editableRow(this)"></input>';
         nombre.innerHTML = nombre2.value;
         puntuacion.innerHTML = pfinal2;
     }
 
     sortTable();
 
-    puntuacion_final1.innerHTML = "ðŸ—³ï¸ PuntuaciÃ³n del pÃºblico = " + Math.round((v1 / suma) * maxima) + "<br>ðŸ PuntuaciÃ³n final = " + pfinal1;
-    puntuacion_final2.innerHTML = "ðŸ—³ï¸ PuntuaciÃ³n del pÃºblico = " + Math.round((v2 / suma) * maxima) + "<br>ðŸ PuntuaciÃ³n final = " + pfinal2;
+    puntuacion_final1.innerHTML = "\u{1F5F3}\uFE0F Puntuaci\u00f3n del p\u00fablico = " + Math.round((v1 / suma) * maxima) + "<br>\u{1F3C1} Puntuaci\u00f3n final = " + pfinal1;
+    puntuacion_final2.innerHTML = "\u{1F5F3}\uFE0F Puntuaci\u00f3n del p\u00fablico = " + Math.round((v2 / suma) * maxima) + "<br>\u{1F3C1} Puntuaci\u00f3n final = " + pfinal2;
    
     pfinal1 = puntuacion_final1.innerHTML;
     pfinal2 = puntuacion_final2.innerHTML;
@@ -2197,6 +3546,9 @@ function pausar_reanudar(boton) {
     console.log("Â¿Terminado?:", !(fin_j1 || fin_j2));
     console.log("Valor de data-value:", boton.dataset.value);
 
+    if (!juego_iniciado && modo_actual) {
+        juego_iniciado = true;
+    }
     if (juego_iniciado) {
       // Usamos comparaciÃ³n == para no preocuparnos de que sea string
       if (boton.dataset.value == 0) {
@@ -2215,6 +3567,7 @@ function pausar_reanudar(boton) {
 
 function reanudar(){
     if(modo_actual != "tertulia"){
+    prepararContadoresReanudacionControl();
     emitirCountControl({ count, player: 1 });
     emitirCountControl({ count: count1, player: 2 });
     console.log("estooo",secondsRemaining)
@@ -2232,6 +3585,10 @@ function reanudar(){
 }
 
 function reanudar_modo(){
+    if(modo_actual !== "tertulia"){
+        return false;
+    }
+    prepararContadoresReanudacionControl();
     console.log(count, secondsRemaining, tiempo)
     console.log(time_minutes, time_seconds)
     if(boton_pausar_reanudar.dataset.value == 1){
@@ -2245,7 +3602,8 @@ function reanudar_modo(){
     startCountDown_p1(secondsRemaining);
     startCountDown_p2(secondsRemaining1);
     pausado = false;
-    //socket.emit('reanudar_modo', '');
+    socket.emit('reanudar_modo', '');
+    return true;
 }
 function sortTable() {
     var table, rows, switching, i, x, y, shouldSwitch;
@@ -2308,13 +3666,13 @@ function editableRow(r) {
     rows_ = table_.rows;
     editando = rows_[i].getElementsByTagName("TD")[0].contentEditable;
     if(editando == 'true'){
-        r.value = "âœï¸";
+        r.value = "\u270F\uFE0F";
         rows_[i].getElementsByTagName("TD")[0].contentEditable = 'false';
         rows_[i].getElementsByTagName("TD")[1].contentEditable = 'false';
         sortTable();
     }
     else {
-        r.value = "âœ…";
+        r.value = "\u2705";
         rows_[i].getElementsByTagName("TD")[0].contentEditable = 'true';
         rows_[i].getElementsByTagName("TD")[1].contentEditable = 'true';
 
@@ -2373,6 +3731,7 @@ function final(player, opciones = {}){
     }
 
     if(terminado && terminado1){
+        detenerCuentaAtrasModoControl();
         actualizarCabeceraModoControl({ modo: "", segundos: 0 });
         console.log("PRUEBA FINAL", texto_guardado1)
         if (!regalo_musas_enviado && typeof window.emitirRegaloMusas === "function") {
@@ -2384,12 +3743,6 @@ function final(player, opciones = {}){
 }
 
 function frase_final(player){
-    const fraseTema = normalizarFraseFinal(tema.value);
-    if(player== 1){
-        frase_final_j1.value = fraseTema;
-    }
-    else{
-        frase_final_j2.value = fraseTema;
-    }
+    guardarFraseFinalControl(player, { normalizar: true });
 }
 

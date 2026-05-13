@@ -8,6 +8,7 @@ A continuación se explica en mayor profundidad el videojuego.
   - Escritxr: Jugador que se enfrenta al videojuego.
   - Control: Maneja el comportamiento del juego.
   - Espectador: Ilustra a los dos jugadores para que se pueda observar desde terceros.
+  - Jurado: Lee ambos textos, consulta estadisticas, toma notas y evalua escritura y cooperacion de musas.
   ### FUNCIONAMIENTO
   Cuando el juego comience, los escritxres podrán comenzar a escribir. Cada carácter es un punto y, además, si dejan de escribir, el juego comenzará a borrarles su texto; a medida que escriban, el texto se borrará antes y más rápido. Los escritxres deberán conseguir la mayor puntuación posible.
 #### MODOS

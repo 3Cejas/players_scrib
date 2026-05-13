@@ -183,6 +183,13 @@ function setPendienteAnimacionEntradaBarraVida(valor) {
     animacionEntradaVidaPendiente = Boolean(valor);
 }
 
+function debeAnimarEntradaBarraVida(elemento, opciones = {}) {
+    if (!elemento) return false;
+    if (opciones && opciones.animarEntrada) return true;
+    if (elemento.dataset && elemento.dataset.vidaVisible !== "1") return true;
+    return elemento.style && elemento.style.display === "none";
+}
+
 function cancelarAnimacionEntradaBarraVida(elemento) {
     if (!elemento) return;
     const frameId = animacionesEntradaBarraVida.get(elemento);
@@ -203,6 +210,7 @@ function animarEntradaBarraVida(elemento, porcentajeObjetivo, duracionMs = DURAC
     if (!elemento) return;
     const objetivo = Math.max(0, Math.min(100, Number(porcentajeObjetivo) || 0));
     cancelarAnimacionEntradaBarraVida(elemento);
+    aplicarEstadoBarraVida(elemento, 0);
 
     if (objetivo <= 0 || duracionMs <= 0) {
         aplicarEstadoBarraVida(elemento, objetivo);
@@ -233,18 +241,20 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
     if (!elemento) {
         return;
     }
-    const animarEntrada = Boolean(opciones && opciones.animarEntrada);
     const total = extraerSegundosTiempo(texto);
     if (total === null) {
         cancelarAnimacionEntradaBarraVida(elemento);
         elemento.style.setProperty("--vida-pct", "0%");
         elemento.style.setProperty("--vida-color", "#d94b4b");
         elemento.style.display = "none";
+        if (elemento.dataset) elemento.dataset.vidaVisible = "0";
         return;
     }
+    const animarEntrada = debeAnimarEntradaBarraVida(elemento, opciones);
     const limitado = Math.min(Math.max(total, 0), VIDA_MAX_SEGUNDOS);
     const porcentaje = (limitado / VIDA_MAX_SEGUNDOS) * 100;
     elemento.style.display = DISPLAY_BARRA_VIDA;
+    if (elemento.dataset) elemento.dataset.vidaVisible = "1";
     if (animarEntrada) {
         animarEntradaBarraVida(elemento, porcentaje);
         return;
@@ -345,6 +355,7 @@ if (typeof actualizarPreviewTiempoPalabraMusa === "function") {
 
 function limpiarCountdownInicioMusa(removerNodo = true) {
     clearTimeout(listener_cuenta_atras);
+    clearTimeout(timer);
     clearInterval(timer);
     clearTimeout(sub_timer);
     clearTimeout(preparados_timer);
@@ -1296,6 +1307,9 @@ function intentarMostrarRegaloPdfPendiente() {
 
 function mostrarRegaloPdf(payload) {
     if (!payload || !payload.data || !regalo_pdf) {
+        return;
+    }
+    if (payload.client_id && window.musa_client_id && String(payload.client_id) !== String(window.musa_client_id)) {
         return;
     }
     if (payload.player && player && Number(payload.player) !== Number(player)) {

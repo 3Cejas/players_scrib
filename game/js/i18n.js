@@ -133,6 +133,8 @@
             "warmup.feedback.word_highlighted": "{name} ha destacado tu palabra!",
             "warmup.feedback.destiny": "Se hara tu destino, Musa.",
             "warmup.preview.if_sent": "Si la envias:",
+            "warmup.preview.if_sent_add": "Sumara si la envias:",
+            "warmup.preview.if_sent_subtract": "Restara si la envias:",
             "warmup.preview.seconds_short": "s",
             "warmup.inspire": "INSPIRAR <span class=\"btn-emoji\" aria-hidden=\"true\">\ud83d\ude80</span>",
             "warmup.inspiring": "Inspirando...",
@@ -152,6 +154,10 @@
             "stats.axis.x_elapsed": "Tiempo transcurrido",
             "credits.thanks_title": "AGRADECIMIENTOS:",
             "credits.thanks_pending": "Agradecimientos pendientes.",
+            "credits.muses_title": "MUSAS",
+            "credits.muses_blue": "MUSAS AZULES",
+            "credits.muses_red": "MUSAS ROJAS",
+            "credits.muses_empty": "Sin musas registradas",
             "credits.closure": "Una produccion de SUTURA TEATRO.",
             "vote.chart_help": "Toca un quesito del grafico para votar.",
             "vote.remaining_aria": "Tiempo restante de votacion",
@@ -175,35 +181,37 @@
             "world.team.red": "ROJO",
             "control.button.pause": "\u23f8\ufe0f PAUSAR",
             "control.button.resume": "\u25b6\ufe0f REANUDAR",
-            "control.button.tutorial_view": "\ud83d\udd25 VISTA TUTORIAL",
+            "control.button.tutorial_view": "\ud83d\udcd6 VISTA TUTORIAL",
             "control.button.game_view": "\ud83c\udfae VISTA PARTIDA",
             "control.button.parameters": "\u2699\ufe0f PAR\u00c1METROS",
             "control.button.controls": "\ud83c\udfae CONTROLES",
             "control.button.credits": "\ud83c\udfac CR\u00c9DITOS",
-            "control.button.delete_saved.off": "\ud83e\uddf9 BORRAR TEXTO: OFF",
-            "control.button.delete_saved.on": "\ud83e\uddf9 BORRAR TEXTO: ON",
+            "control.button.delete_saved": "BORRAR TEXTO",
+            "control.button.delete_saved.off": "BORRAR TEXTO",
+            "control.button.delete_saved.on": "BORRAR TEXTO",
             "control.button.skip_tertulia": "\u23ed\ufe0f SKIP TERTULIA",
             "control.button.clear": "\ud83e\uddf9 LIMPIAR",
-            "control.button.reset_score": "\ud83c\udfc6 REINICIAR MARCADOR",
-            "control.button.write": "\u270d\ufe0f ESCRIBIR",
+            "control.button.reset_score": "\u21bb REINICIAR MARCADOR",
+            "control.button.write": "\u270e ESCRIBIR",
             "control.button.stats": "\ud83d\udcca STATS",
             "control.button.cloud": "\u2601\ufe0f NUBE DE INSPIRACI\u00d3N",
-            "control.button.download_texts": "\ud83d\udcbe DESCARGAR TEXTOS",
-            "control.button.ask_feedback": "\ud83d\udcdd PEDIR FEEDBACK",
+            "control.button.download_texts": "\u2b07\ufe0f DESCARGAR TEXTOS",
+            "control.button.ask_feedback": "\ud83d\udde8\ufe0f PEDIR FEEDBACK",
             "control.button.giant_timer": "\u23f1\ufe0f TEMPORIZADOR GIGANTE",
-            "control.button.show_credits": "\ud83d\udcdc MOSTRAR CR\u00c9DITOS",
+            "control.button.show_credits": "\u2b50 MOSTRAR CR\u00c9DITOS",
             "control.button.teleprompter": "\ud83c\udf99\ufe0f TELEPROMPTER",
             "control.button.load": "\ud83d\udcbe CARGAR",
             "control.button.flags.on": "\ud83d\udea9 BANDERAS ACTIVADAS",
-            "control.button.flags.off": "\ud83c\udff3\ufe0f BANDERAS DESACTIVADAS",
+            "control.button.flags.off": "\ud83d\udea9 BANDERAS DESACTIVADAS",
             "control.button.request_places": "\ud83d\udccd PEDIR LUGARES",
             "control.button.request_actions": "\ud83c\udfc3 PEDIR ACCIONES",
-            "control.button.request_final_phrase": "\ud83d\udde3\ufe0f PEDIR FRASE FINAL",
+            "control.button.request_final_phrase": "\ud83d\udcac PEDIR FRASE FINAL",
             "control.button.end.blue": "\ud83d\udd35 FIN",
             "control.button.end.red": "\ud83d\udd34 FIN",
-            "control.title.tutorial": "\ud83d\udd25 TUTORIAL",
+            "control.title.tutorial": "\ud83d\udcd6 TUTORIAL",
             "control.title.game": "\ud83c\udfae JUEGO",
             "control.title.representation": "\ud83c\udfad REPRESENTACI\u00d3N",
+            "control.title.representation_short": "\ud83c\udfad REPR.",
             "control.subtitle.muses": "DETONADORES PARA MUSAS",
             "control.label.final_phrase": "FRASE FINAL:",
             "control.placeholder.final_phrase": "Escribe la frase final...",
@@ -263,7 +271,7 @@
             "control.param.letter_change": "CAMBIO LETRA",
             "control.param.word_change": "CAMBIO PALABRA",
             "control.param.muse_limit": "L\u00cdMITE PALABRAS MUSAS",
-            "control.param.inserted_goal": "PALABRAS INSERTADAS META",
+            "control.param.spectator_scale": "TAMA\u00d1O ESPECTADOR",
             "control.unit.seconds": "segundos",
             "control.unit.minutes_short": "mins.",
             "control.unit.seconds_short": "segs.",
@@ -271,6 +279,52 @@
             "control.connection.connected": "CONECTADO",
             "control.connection.disconnected": "DESCONECTADO",
             "control.heatmap_title": "Mapa de calor {name}",
+            "pdf.match_report_title": "INFORME DE PARTIDA",
+            "pdf.life.no_data": "Sin datos de vida registrados.",
+            "pdf.key_named": "Tecla {key}",
+            "pdf.key_unknown": "Tecla desconocida",
+            "pdf.unit.keystrokes_per_minute": "{count} puls/min",
+            "pdf.section.quick_summary": "Resumen rapido",
+            "pdf.section.heatmap": "Mapa de calor",
+            "pdf.section.highlighted_letters": "Letras destacadas",
+            "pdf.section.highlighted_words": "Palabras destacadas",
+            "pdf.section.life_evolution": "Evolucion de vida",
+            "pdf.summary.total_duration": "Duracion total",
+            "pdf.summary.total_keystrokes": "Pulsaciones totales",
+            "pdf.summary.distinct_keys": "Teclas distintas",
+            "pdf.summary.estimated_pace": "Ritmo estimado",
+            "pdf.summary.life_min": "Vida minima",
+            "pdf.summary.life_max": "Vida maxima",
+            "pdf.summary.life_avg": "Vida media",
+            "pdf.summary.top_keys": "Top teclas",
+            "pdf.kind.blessed": "BENDITA",
+            "pdf.kind.cursed": "MALDITA",
+            "pdf.letters": "Letras",
+            "pdf.words": "Palabras",
+            "pdf.insertions_count": "{count} inserciones",
+            "pdf.muse_gift_title": "REGALO DE MUSA",
+            "pdf.muse_fallback": "MUSA",
+            "pdf.writer_fallback": "ESCRITOR",
+            "pdf.muse_team_writer_line": "Equipo {team} - {writer}",
+            "pdf.muse_stat.sent": "Enviadas",
+            "pdf.muse_stat.entered": "Introducidas",
+            "pdf.muse_stat.effectiveness": "Efectividad",
+            "pdf.muse_stat.superbonus": "Superbonus",
+            "pdf.muse_stat.impact": "Impacto",
+            "pdf.muse_words_sent_title": "PALABRAS ENVIADAS",
+            "pdf.muse_words_empty": "No hay palabras registradas para esta musa.",
+            "pdf.muse_mode_bonus": "BONUS",
+            "pdf.muse_mode_cursed_word": "MALDITA",
+            "pdf.muse_mode_blessed_letter": "LETRA BENDITA",
+            "pdf.muse_mode_cursed_letter": "LETRA MALDITA",
+            "pdf.muse_mode_generic": "MUSA",
+            "pdf.muse_status_entered_by_rival": "[INTRODUCIDA POR RIVAL]",
+            "pdf.muse_status_entered": "[INTRODUCIDA]",
+            "pdf.muse_status_pending": "[EN COLA/NO USADA]",
+            "pdf.superbonus": "SUPERBONUS",
+            "pdf.metadata.muse_title": "SCRIB regalo musa {name}",
+            "pdf.metadata.muse_subject": "Palabras musa: {words}",
+            "pdf.metadata.muse_keywords": "scrib,musa,{clientId},personalizado",
             "actor.time_limit": "\u00a1INTERPRETE, ES HORA DE ACTUAR!",
             "game.finished": "\u00a1TEXTO TERMINADO!",
             "game.no_words_lost": "\u00a1PERDISTE, NO ESCRIBISTE NADA!"
@@ -392,6 +446,8 @@
             "warmup.feedback.word_highlighted": "{name} highlighted your word!",
             "warmup.feedback.destiny": "Your fate shall be done, Muse.",
             "warmup.preview.if_sent": "If you send it:",
+            "warmup.preview.if_sent_add": "It will add if sent:",
+            "warmup.preview.if_sent_subtract": "It will subtract if sent:",
             "warmup.preview.seconds_short": "s",
             "warmup.inspire": "INSPIRE <span class=\"btn-emoji\" aria-hidden=\"true\">\ud83d\ude80</span>",
             "warmup.inspiring": "Inspiring...",
@@ -411,6 +467,10 @@
             "stats.axis.x_elapsed": "Elapsed time",
             "credits.thanks_title": "THANKS:",
             "credits.thanks_pending": "Thanks section pending.",
+            "credits.muses_title": "MUSES",
+            "credits.muses_blue": "BLUE MUSES",
+            "credits.muses_red": "RED MUSES",
+            "credits.muses_empty": "No registered muses",
             "credits.closure": "A production by SUTURA TEATRO.",
             "vote.chart_help": "Tap a chart slice to vote.",
             "vote.remaining_aria": "Remaining voting time",
@@ -434,35 +494,37 @@
             "world.team.red": "RED",
             "control.button.pause": "\u23f8\ufe0f PAUSE",
             "control.button.resume": "\u25b6\ufe0f RESUME",
-            "control.button.tutorial_view": "\ud83d\udd25 TUTORIAL VIEW",
+            "control.button.tutorial_view": "\ud83d\udcd6 TUTORIAL VIEW",
             "control.button.game_view": "\ud83c\udfae GAME VIEW",
             "control.button.parameters": "\u2699\ufe0f PARAMETERS",
             "control.button.controls": "\ud83c\udfae CONTROLS",
             "control.button.credits": "\ud83c\udfac CREDITS",
-            "control.button.delete_saved.off": "\ud83e\uddf9 CLEAR TEXT: OFF",
-            "control.button.delete_saved.on": "\ud83e\uddf9 CLEAR TEXT: ON",
+            "control.button.delete_saved": "CLEAR TEXT",
+            "control.button.delete_saved.off": "CLEAR TEXT",
+            "control.button.delete_saved.on": "CLEAR TEXT",
             "control.button.skip_tertulia": "\u23ed\ufe0f SKIP MUSE CHAT",
             "control.button.clear": "\ud83e\uddf9 CLEAR",
-            "control.button.reset_score": "\ud83c\udfc6 RESET SCORE",
-            "control.button.write": "\u270d\ufe0f WRITE",
+            "control.button.reset_score": "\u21bb RESET SCORE",
+            "control.button.write": "\u270e WRITE",
             "control.button.stats": "\ud83d\udcca STATS",
             "control.button.cloud": "\u2601\ufe0f INSPIRATION CLOUD",
-            "control.button.download_texts": "\ud83d\udcbe DOWNLOAD TEXTS",
-            "control.button.ask_feedback": "\ud83d\udcdd ASK FEEDBACK",
+            "control.button.download_texts": "\u2b07\ufe0f DOWNLOAD TEXTS",
+            "control.button.ask_feedback": "\ud83d\udde8\ufe0f ASK FEEDBACK",
             "control.button.giant_timer": "\u23f1\ufe0f GIANT TIMER",
-            "control.button.show_credits": "\ud83d\udcdc SHOW CREDITS",
+            "control.button.show_credits": "\u2b50 SHOW CREDITS",
             "control.button.teleprompter": "\ud83c\udf99\ufe0f TELEPROMPTER",
             "control.button.load": "\ud83d\udcbe LOAD",
             "control.button.flags.on": "\ud83d\udea9 FLAGS ON",
-            "control.button.flags.off": "\ud83c\udff3\ufe0f FLAGS OFF",
+            "control.button.flags.off": "\ud83d\udea9 FLAGS OFF",
             "control.button.request_places": "\ud83d\udccd ASK PLACES",
             "control.button.request_actions": "\ud83c\udfc3 ASK ACTIONS",
-            "control.button.request_final_phrase": "\ud83d\udde3\ufe0f ASK FINAL LINE",
+            "control.button.request_final_phrase": "\ud83d\udcac ASK FINAL LINE",
             "control.button.end.blue": "\ud83d\udd35 END",
             "control.button.end.red": "\ud83d\udd34 END",
-            "control.title.tutorial": "\ud83d\udd25 TUTORIAL",
+            "control.title.tutorial": "\ud83d\udcd6 TUTORIAL",
             "control.title.game": "\ud83c\udfae GAME",
             "control.title.representation": "\ud83c\udfad STAGE",
+            "control.title.representation_short": "\ud83c\udfad STAGE",
             "control.subtitle.muses": "TRIGGERS FOR MUSES",
             "control.label.final_phrase": "FINAL LINE:",
             "control.placeholder.final_phrase": "Type the final line...",
@@ -522,7 +584,7 @@
             "control.param.letter_change": "LETTER CHANGE",
             "control.param.word_change": "WORD CHANGE",
             "control.param.muse_limit": "MUSE WORD LIMIT",
-            "control.param.inserted_goal": "INSERTED WORD GOAL",
+            "control.param.spectator_scale": "SPECTATOR SIZE",
             "control.unit.seconds": "seconds",
             "control.unit.minutes_short": "mins.",
             "control.unit.seconds_short": "secs.",
@@ -530,6 +592,52 @@
             "control.connection.connected": "CONNECTED",
             "control.connection.disconnected": "DISCONNECTED",
             "control.heatmap_title": "Heat map {name}",
+            "pdf.match_report_title": "MATCH REPORT",
+            "pdf.life.no_data": "No life data recorded.",
+            "pdf.key_named": "Key {key}",
+            "pdf.key_unknown": "Unknown key",
+            "pdf.unit.keystrokes_per_minute": "{count} keys/min",
+            "pdf.section.quick_summary": "Quick summary",
+            "pdf.section.heatmap": "Heat map",
+            "pdf.section.highlighted_letters": "Highlighted letters",
+            "pdf.section.highlighted_words": "Highlighted words",
+            "pdf.section.life_evolution": "Life evolution",
+            "pdf.summary.total_duration": "Total duration",
+            "pdf.summary.total_keystrokes": "Total keystrokes",
+            "pdf.summary.distinct_keys": "Distinct keys",
+            "pdf.summary.estimated_pace": "Estimated pace",
+            "pdf.summary.life_min": "Minimum life",
+            "pdf.summary.life_max": "Maximum life",
+            "pdf.summary.life_avg": "Average life",
+            "pdf.summary.top_keys": "Top keys",
+            "pdf.kind.blessed": "BLESSED",
+            "pdf.kind.cursed": "CURSED",
+            "pdf.letters": "Letters",
+            "pdf.words": "Words",
+            "pdf.insertions_count": "{count} insertions",
+            "pdf.muse_gift_title": "MUSE GIFT",
+            "pdf.muse_fallback": "MUSE",
+            "pdf.writer_fallback": "WRITER",
+            "pdf.muse_team_writer_line": "Team {team} - {writer}",
+            "pdf.muse_stat.sent": "Sent",
+            "pdf.muse_stat.entered": "Entered",
+            "pdf.muse_stat.effectiveness": "Effectiveness",
+            "pdf.muse_stat.superbonus": "Superbonus",
+            "pdf.muse_stat.impact": "Impact",
+            "pdf.muse_words_sent_title": "SENT WORDS",
+            "pdf.muse_words_empty": "No words recorded for this muse.",
+            "pdf.muse_mode_bonus": "BONUS",
+            "pdf.muse_mode_cursed_word": "CURSED",
+            "pdf.muse_mode_blessed_letter": "BLESSED LETTER",
+            "pdf.muse_mode_cursed_letter": "CURSED LETTER",
+            "pdf.muse_mode_generic": "MUSE",
+            "pdf.muse_status_entered_by_rival": "[ENTERED BY RIVAL]",
+            "pdf.muse_status_entered": "[ENTERED]",
+            "pdf.muse_status_pending": "[QUEUED/UNUSED]",
+            "pdf.superbonus": "SUPERBONUS",
+            "pdf.metadata.muse_title": "SCRIB muse gift {name}",
+            "pdf.metadata.muse_subject": "Muse words: {words}",
+            "pdf.metadata.muse_keywords": "scrib,muse,{clientId},personalized",
             "actor.time_limit": "PERFORMER, IT'S TIME TO ACT!",
             "game.finished": "TEXT FINISHED!",
             "game.no_words_lost": "YOU LOST, YOU WROTE NOTHING!"
@@ -651,6 +759,8 @@
             "warmup.feedback.word_highlighted": "{name} a mis ton mot en valeur !",
             "warmup.feedback.destiny": "Ton destin sera accompli, Muse.",
             "warmup.preview.if_sent": "Si tu l'envoies :",
+            "warmup.preview.if_sent_add": "Ajoute si tu l'envoies :",
+            "warmup.preview.if_sent_subtract": "Retire si tu l'envoies :",
             "warmup.preview.seconds_short": "s",
             "warmup.inspire": "INSPIRER <span class=\"btn-emoji\" aria-hidden=\"true\">\ud83d\ude80</span>",
             "warmup.inspiring": "Inspiration...",
@@ -670,6 +780,10 @@
             "stats.axis.x_elapsed": "Temps ecoule",
             "credits.thanks_title": "REMERCIEMENTS :",
             "credits.thanks_pending": "Remerciements en attente.",
+            "credits.muses_title": "MUSES",
+            "credits.muses_blue": "MUSES BLEUES",
+            "credits.muses_red": "MUSES ROUGES",
+            "credits.muses_empty": "Aucune muse enregistree",
             "credits.closure": "Une production de SUTURA TEATRO.",
             "vote.chart_help": "Touche une part du graphique pour voter.",
             "vote.remaining_aria": "Temps restant pour le vote",
@@ -693,35 +807,37 @@
             "world.team.red": "ROUGE",
             "control.button.pause": "\u23f8\ufe0f PAUSE",
             "control.button.resume": "\u25b6\ufe0f REPRENDRE",
-            "control.button.tutorial_view": "\ud83d\udd25 VUE TUTORIEL",
+            "control.button.tutorial_view": "\ud83d\udcd6 VUE TUTORIEL",
             "control.button.game_view": "\ud83c\udfae VUE PARTIE",
             "control.button.parameters": "\u2699\ufe0f PARAM\u00c8TRES",
             "control.button.controls": "\ud83c\udfae COMMANDES",
             "control.button.credits": "\ud83c\udfac CR\u00c9DITS",
-            "control.button.delete_saved.off": "\ud83e\uddf9 EFFACER TEXTE : OFF",
-            "control.button.delete_saved.on": "\ud83e\uddf9 EFFACER TEXTE : ON",
+            "control.button.delete_saved": "EFFACER TEXTE",
+            "control.button.delete_saved.off": "EFFACER TEXTE",
+            "control.button.delete_saved.on": "EFFACER TEXTE",
             "control.button.skip_tertulia": "\u23ed\ufe0f PASSER TERTULIA",
             "control.button.clear": "\ud83e\uddf9 EFFACER",
-            "control.button.reset_score": "\ud83c\udfc6 R\u00c9INITIALISER LE SCORE",
-            "control.button.write": "\u270d\ufe0f \u00c9CRIRE",
+            "control.button.reset_score": "\u21bb R\u00c9INITIALISER LE SCORE",
+            "control.button.write": "\u270e \u00c9CRIRE",
             "control.button.stats": "\ud83d\udcca STATS",
             "control.button.cloud": "\u2601\ufe0f NUAGE D'INSPIRATION",
-            "control.button.download_texts": "\ud83d\udcbe T\u00c9L\u00c9CHARGER LES TEXTES",
-            "control.button.ask_feedback": "\ud83d\udcdd DEMANDER UN FEEDBACK",
+            "control.button.download_texts": "\u2b07\ufe0f T\u00c9L\u00c9CHARGER LES TEXTES",
+            "control.button.ask_feedback": "\ud83d\udde8\ufe0f DEMANDER UN FEEDBACK",
             "control.button.giant_timer": "\u23f1\ufe0f GRAND CHRONO",
-            "control.button.show_credits": "\ud83d\udcdc AFFICHER LES CR\u00c9DITS",
+            "control.button.show_credits": "\u2b50 AFFICHER LES CR\u00c9DITS",
             "control.button.teleprompter": "\ud83c\udf99\ufe0f T\u00c9L\u00c9PROMPTEUR",
             "control.button.load": "\ud83d\udcbe CHARGER",
             "control.button.flags.on": "\ud83d\udea9 DRAPEAUX ACTIV\u00c9S",
-            "control.button.flags.off": "\ud83c\udff3\ufe0f DRAPEAUX D\u00c9SACTIV\u00c9S",
+            "control.button.flags.off": "\ud83d\udea9 DRAPEAUX D\u00c9SACTIV\u00c9S",
             "control.button.request_places": "\ud83d\udccd DEMANDER DES LIEUX",
             "control.button.request_actions": "\ud83c\udfc3 DEMANDER DES ACTIONS",
-            "control.button.request_final_phrase": "\ud83d\udde3\ufe0f DEMANDER LA PHRASE FINALE",
+            "control.button.request_final_phrase": "\ud83d\udcac DEMANDER LA PHRASE FINALE",
             "control.button.end.blue": "\ud83d\udd35 FIN",
             "control.button.end.red": "\ud83d\udd34 FIN",
-            "control.title.tutorial": "\ud83d\udd25 TUTORIEL",
+            "control.title.tutorial": "\ud83d\udcd6 TUTORIEL",
             "control.title.game": "\ud83c\udfae JEU",
             "control.title.representation": "\ud83c\udfad REPR\u00c9SENTATION",
+            "control.title.representation_short": "\ud83c\udfad REPR.",
             "control.subtitle.muses": "D\u00c9CLENCHEURS POUR LES MUSES",
             "control.label.final_phrase": "PHRASE FINALE :",
             "control.placeholder.final_phrase": "\u00c9cris la phrase finale...",
@@ -781,7 +897,7 @@
             "control.param.letter_change": "CHANGEMENT LETTRE",
             "control.param.word_change": "CHANGEMENT MOT",
             "control.param.muse_limit": "LIMITE MOTS MUSES",
-            "control.param.inserted_goal": "OBJECTIF MOTS INS\u00c9R\u00c9S",
+            "control.param.spectator_scale": "TAILLE SPECTATEUR",
             "control.unit.seconds": "secondes",
             "control.unit.minutes_short": "min.",
             "control.unit.seconds_short": "sec.",
@@ -789,6 +905,52 @@
             "control.connection.connected": "CONNECTE",
             "control.connection.disconnected": "DECONNECTE",
             "control.heatmap_title": "Carte thermique {name}",
+            "pdf.match_report_title": "RAPPORT DE PARTIE",
+            "pdf.life.no_data": "Aucune donnee de vie enregistree.",
+            "pdf.key_named": "Touche {key}",
+            "pdf.key_unknown": "Touche inconnue",
+            "pdf.unit.keystrokes_per_minute": "{count} frappes/min",
+            "pdf.section.quick_summary": "Resume rapide",
+            "pdf.section.heatmap": "Carte thermique",
+            "pdf.section.highlighted_letters": "Lettres marquees",
+            "pdf.section.highlighted_words": "Mots marques",
+            "pdf.section.life_evolution": "Evolution de vie",
+            "pdf.summary.total_duration": "Duree totale",
+            "pdf.summary.total_keystrokes": "Frappes totales",
+            "pdf.summary.distinct_keys": "Touches distinctes",
+            "pdf.summary.estimated_pace": "Rythme estime",
+            "pdf.summary.life_min": "Vie minimale",
+            "pdf.summary.life_max": "Vie maximale",
+            "pdf.summary.life_avg": "Vie moyenne",
+            "pdf.summary.top_keys": "Top touches",
+            "pdf.kind.blessed": "BENIE",
+            "pdf.kind.cursed": "MAUDITE",
+            "pdf.letters": "Lettres",
+            "pdf.words": "Mots",
+            "pdf.insertions_count": "{count} insertions",
+            "pdf.muse_gift_title": "CADEAU DE MUSE",
+            "pdf.muse_fallback": "MUSE",
+            "pdf.writer_fallback": "ECRIVAIN",
+            "pdf.muse_team_writer_line": "Equipe {team} - {writer}",
+            "pdf.muse_stat.sent": "Envoyes",
+            "pdf.muse_stat.entered": "Saisies",
+            "pdf.muse_stat.effectiveness": "Efficacite",
+            "pdf.muse_stat.superbonus": "Superbonus",
+            "pdf.muse_stat.impact": "Impact",
+            "pdf.muse_words_sent_title": "MOTS ENVOYES",
+            "pdf.muse_words_empty": "Aucun mot enregistre pour cette muse.",
+            "pdf.muse_mode_bonus": "BONUS",
+            "pdf.muse_mode_cursed_word": "MAUDITE",
+            "pdf.muse_mode_blessed_letter": "LETTRE BENIE",
+            "pdf.muse_mode_cursed_letter": "LETTRE MAUDITE",
+            "pdf.muse_mode_generic": "MUSE",
+            "pdf.muse_status_entered_by_rival": "[SAISIE PAR RIVAL]",
+            "pdf.muse_status_entered": "[SAISIE]",
+            "pdf.muse_status_pending": "[EN FILE/NON UTILISEE]",
+            "pdf.superbonus": "SUPERBONUS",
+            "pdf.metadata.muse_title": "SCRIB cadeau de muse {name}",
+            "pdf.metadata.muse_subject": "Mots muse: {words}",
+            "pdf.metadata.muse_keywords": "scrib,muse,{clientId},personnalise",
             "actor.time_limit": "INTERPRETE, C'EST LE MOMENT D'AGIR !",
             "game.finished": "TEXTE TERMINE !",
             "game.no_words_lost": "TU AS PERDU, TU N'AS RIEN ECRIT !"
@@ -813,6 +975,107 @@
     const interpolar = (texto, variables = {}) => String(texto).replace(/\{(\w+)\}/g, (_, clave) => (
         Object.prototype.hasOwnProperty.call(variables, clave) ? variables[clave] : ""
     ));
+
+    const CP1252_BYTE_BY_CHAR = {
+        "\u20ac": 0x80,
+        "\u201a": 0x82,
+        "\u0192": 0x83,
+        "\u201e": 0x84,
+        "\u2026": 0x85,
+        "\u2020": 0x86,
+        "\u2021": 0x87,
+        "\u02c6": 0x88,
+        "\u2030": 0x89,
+        "\u0160": 0x8a,
+        "\u2039": 0x8b,
+        "\u0152": 0x8c,
+        "\u017d": 0x8e,
+        "\u2018": 0x91,
+        "\u2019": 0x92,
+        "\u201c": 0x93,
+        "\u201d": 0x94,
+        "\u2022": 0x95,
+        "\u2013": 0x96,
+        "\u2014": 0x97,
+        "\u02dc": 0x98,
+        "\u2122": 0x99,
+        "\u0161": 0x9a,
+        "\u203a": 0x9b,
+        "\u0153": 0x9c,
+        "\u017e": 0x9e,
+        "\u0178": 0x9f
+    };
+
+    const decodificarMojibakeUtf8 = (valor) => {
+        const bytes = [];
+        for (const char of String(valor || "")) {
+            const code = char.charCodeAt(0);
+            if (code <= 0xff) {
+                bytes.push(code);
+                continue;
+            }
+            if (Object.prototype.hasOwnProperty.call(CP1252_BYTE_BY_CHAR, char)) {
+                bytes.push(CP1252_BYTE_BY_CHAR[char]);
+                continue;
+            }
+            return "";
+        }
+        if (!bytes.length) return "";
+        try {
+            return decodeURIComponent(bytes.map((byte) => `%${byte.toString(16).padStart(2, "0")}`).join(""));
+        } catch (_error) {
+            return "";
+        }
+    };
+
+    const generarCandidatosLetraModo = (valor) => {
+        const candidatos = [String(valor || "")];
+        let actual = candidatos[0];
+        for (let i = 0; i < 3; i += 1) {
+            const reparado = decodificarMojibakeUtf8(actual);
+            if (!reparado || reparado === actual || candidatos.includes(reparado)) break;
+            candidatos.push(reparado);
+            actual = reparado;
+        }
+        return candidatos;
+    };
+
+    const normalizarLetraModo = (valor) => {
+        const texto = String(valor ?? "").trim();
+        if (!texto) return "";
+        const compacto = texto.replace(/\s+/g, "");
+        const candidatos = generarCandidatosLetraModo(compacto);
+        for (const candidato of candidatos) {
+            if (/^[\u00f1\u00d1]$/u.test(candidato)) {
+                return "\u00f1";
+            }
+        }
+        if (/[\u00b1\u2018\u2019\u0091]/u.test(compacto) && /[\u00c3\u00e3\u00c2\u0192]/u.test(compacto)) {
+            return "\u00f1";
+        }
+        for (const candidato of candidatos) {
+            const letraCandidata = Array.from(candidato).find((char) => /[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]/u.test(char));
+            if (letraCandidata) {
+                return letraCandidata.toLowerCase() === "\u00f1" ? "\u00f1" : letraCandidata;
+            }
+        }
+        const lower = compacto.toLowerCase();
+        const mojibakeEnye = new Set([
+            "ã±",
+            "ãƒâ±",
+            "ãƒÂ±".toLowerCase(),
+            "ãƒâ€˜".toLowerCase(),
+            "ã‘",
+            "�ƒâ±",
+            "ï¿½ƒâ±"
+        ]);
+        if (mojibakeEnye.has(lower) || (/[�ÃÂƒâ]/.test(compacto) && compacto.includes("±"))) {
+            return "\u00f1";
+        }
+        const letras = Array.from(compacto);
+        const letra = letras.find((char) => /[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]/u.test(char));
+        return letra || letras[0] || "";
+    };
 
     const tJuego2P = (clave, variables = {}, fallback = "") => {
         const idioma = I18N_TEXTS_2P[idiomaActual] || I18N_TEXTS_2P[I18N_DEFAULT_LANG_2P];
@@ -852,7 +1115,7 @@
     };
 
     const construirReglaModo = (tipo, letra) => {
-        const visible = `<span class="explicacion-letra-destacada">${String(letra || "-").trim().toUpperCase() || "-"}</span>`;
+        const visible = `<span class="explicacion-letra-destacada">${normalizarLetraModo(letra).toUpperCase() || "-"}</span>`;
         if (tipo === "bendita") return tJuego2P("mode.rule.bendita", { letter: visible });
         if (tipo === "prohibida") return tJuego2P("mode.rule.prohibida", { letter: visible });
         return "";
@@ -976,6 +1239,7 @@
     window.scribTranslateModeStrip2P = traducirStripModo;
     window.scribTranslateModeDescription2P = traducirDescripcionModo;
     window.scribBuildModeRule2P = construirReglaModo;
+    window.scribNormalizeModeLetter2P = normalizarLetraModo;
     window.scribFormatWordsCount2P = formatearPalabras;
     window.scribFormatMusesCount2P = formatearMusas;
     window.scribTranslateWarmupRequest2P = traducirSolicitudCalentamiento;

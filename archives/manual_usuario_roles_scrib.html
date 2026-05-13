@@ -1,0 +1,1737 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Manual de usuario &lt;SCRI&gt; B - roles</title>
+  <style>
+    @font-face {
+      font-family: "Retro-gaming";
+      src: url("../game/css/fonts/Retro Gaming.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "VT323";
+      src: url("../game/css/fonts/VT323-Regular.ttf") format("truetype");
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+
+    :root {
+      --bg: #02040a;
+      --panel: #101014;
+      --panel-2: #17171d;
+      --ink: #f6fbff;
+      --muted: #b7c4ca;
+      --cyan: #40f2fe;
+      --red: #ff5b5b;
+      --green: #59ff8d;
+      --yellow: #ffe55b;
+      --amber: #f7d07e;
+      --line: rgba(255, 255, 255, 0.18);
+      --attr-fuerza: #ff5b5b;
+      --attr-agilidad: #63e7ff;
+      --attr-destreza: #ffe55b;
+      --level-bendita: #5dff86;
+      --level-prohibida: #ff6a7e;
+      --level-bonus: #ffcf64;
+      --level-prohibidas: #ff8bda;
+      --level-tertulia: #75c8ff;
+      --level-final: #ffbb7a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 8mm 8mm,
+        linear-gradient(90deg, rgba(0,126,186,0.18) 0%, rgba(6,10,18,0.36) 42%, rgba(6,10,18,0.36) 58%, rgba(178,38,38,0.18) 100%),
+        radial-gradient(circle at 82% 18%, rgba(64,242,254,0.14), transparent 32mm),
+        radial-gradient(circle at 18% 78%, rgba(255,91,91,0.10), transparent 30mm),
+        #02040a;
+      color: var(--ink);
+      font-family: "Retro-gaming", "VT323", Consolas, monospace;
+    }
+
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    @media screen {
+      body {
+        width: 297mm;
+        margin: 0 auto;
+      }
+    }
+
+    .page {
+      position: relative;
+      width: 297mm;
+      height: 210mm;
+      overflow: hidden;
+      page-break-after: always;
+      padding: 20mm 17mm 14mm;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 8mm 8mm,
+        linear-gradient(90deg, rgba(0,126,186,0.18) 0%, rgba(6,10,18,0.36) 42%, rgba(6,10,18,0.36) 58%, rgba(178,38,38,0.18) 100%),
+        radial-gradient(circle at 82% 18%, rgba(64,242,254,0.14), transparent 32mm),
+        radial-gradient(circle at 18% 78%, rgba(255,91,91,0.10), transparent 30mm),
+        #02040a;
+    }
+
+    .page::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 1px solid rgba(64,242,254,0.18);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07);
+    }
+
+    .header {
+      position: absolute;
+      top: 7mm;
+      left: 17mm;
+      right: 17mm;
+      height: 10mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 2;
+      color: var(--muted);
+      font-size: 8.5pt;
+      text-transform: uppercase;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 6mm;
+    }
+
+    .sutura {
+      width: auto;
+      max-width: 26mm;
+      height: 8mm;
+      object-fit: contain;
+    }
+
+    .scrib-mark {
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 16pt;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--ink);
+      text-shadow: 1px 0 var(--cyan), -1px 0 var(--red);
+      white-space: nowrap;
+    }
+
+    .kicker {
+      font-family: "Retro-gaming", Consolas, monospace;
+      color: var(--cyan);
+      font-size: 9pt;
+      text-transform: uppercase;
+      margin: 0 0 4mm;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: "Retro-gaming", Consolas, monospace;
+      text-transform: uppercase;
+      line-height: 0.95;
+    }
+
+    h1 {
+      font-size: 43pt;
+      max-width: 206mm;
+      text-shadow: 2px 0 var(--cyan), -2px 0 var(--red);
+    }
+
+    h2 {
+      font-size: 29pt;
+      margin-bottom: 7mm;
+      text-shadow: 1.5px 0 var(--cyan), -1.5px 0 var(--red);
+    }
+
+    h3 {
+      font-size: 15pt;
+      margin-bottom: 3mm;
+      color: var(--yellow);
+    }
+
+    p {
+      margin: 0 0 3.8mm;
+      font-size: 9.8pt;
+      line-height: 1.48;
+    }
+
+    strong {
+      color: #fff;
+      font-weight: 800;
+      text-shadow: none;
+    }
+
+    .lead {
+      max-width: 202mm;
+      font-size: 13.2pt;
+      line-height: 1.36;
+      color: #fbfbf2;
+      margin-top: 8mm;
+    }
+
+    .rule {
+      margin-top: 9mm;
+      display: inline-block;
+      border: 1px solid var(--cyan);
+      background: rgba(0,240,255,0.08);
+      padding: 5mm 7mm;
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 16pt;
+      color: var(--cyan);
+      text-transform: uppercase;
+    }
+
+    .role-strip {
+      position: absolute;
+      left: 17mm;
+      right: 17mm;
+      bottom: 17mm;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3.2mm;
+    }
+
+    .role-chip,
+    .box,
+    .level,
+    .step,
+    .small-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+    }
+
+    .role-chip {
+      min-height: 31mm;
+      padding: 4mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .role-chip b {
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 11.8pt;
+      color: var(--green);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+    }
+
+    .role-chip span {
+      font-size: 8.3pt;
+      color: var(--muted);
+      line-height: 1.32;
+    }
+
+    .role-emoji {
+      font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+      line-height: 1;
+      text-transform: none;
+    }
+
+    .role-chip .role-emoji {
+      color: inherit;
+      font-size: 14pt;
+    }
+
+    h2 .role-emoji {
+      font-size: 0.72em;
+      margin-right: 2mm;
+      vertical-align: 0.06em;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7mm;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5mm;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4mm;
+    }
+
+    .box {
+      padding: 5mm;
+    }
+
+    .palette-row {
+      display: flex;
+      gap: 2.5mm;
+      margin-top: 5mm;
+      flex-wrap: wrap;
+    }
+
+    .font-note {
+      margin-top: 3mm;
+      color: var(--amber);
+      font-size: 8.5pt;
+      text-transform: uppercase;
+    }
+
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 2mm;
+      padding: 1.4mm 2.2mm;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(2,4,10,0.62);
+      color: var(--muted);
+      font-size: 7.8pt;
+      text-transform: uppercase;
+    }
+
+    .swatch::before {
+      content: "";
+      width: 4mm;
+      height: 4mm;
+      border-radius: 999px;
+      background: var(--swatch);
+      box-shadow: 0 0 0.55em var(--swatch);
+    }
+
+    .attribute-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3mm;
+    }
+
+    .attribute-card {
+      --attribute-color: var(--cyan);
+      border: 1px solid color-mix(in srgb, var(--attribute-color), transparent 30%);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--attribute-color), transparent 91%), rgba(255,255,255,0.02));
+      padding: 3.2mm 3.6mm;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--attribute-color), transparent 88%), 0 0 12px color-mix(in srgb, var(--attribute-color), transparent 88%);
+    }
+
+    .attribute-card b {
+      display: block;
+      color: var(--attribute-color);
+      font-size: 10.5pt;
+      text-transform: uppercase;
+      margin-bottom: 1.6mm;
+      text-shadow: 0 0 0.5em color-mix(in srgb, var(--attribute-color), transparent 35%);
+    }
+
+    .attribute-card p {
+      font-size: 8.8pt;
+    }
+
+    .attribute-fuerza {
+      --attribute-color: var(--attr-fuerza);
+    }
+
+    .attribute-agilidad {
+      --attribute-color: var(--attr-agilidad);
+    }
+
+    .attribute-destreza {
+      --attribute-color: var(--attr-destreza);
+    }
+
+    .box p:last-child,
+    .level p:last-child,
+    .step p:last-child,
+    .small-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 2.5mm;
+      padding: 1.2mm 2.5mm;
+      border: 1px solid currentColor;
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 8.5pt;
+      color: var(--cyan);
+      text-transform: uppercase;
+    }
+
+    .tag.red {
+      color: var(--red);
+    }
+
+    .tag.green {
+      color: var(--green);
+    }
+
+    .tag.yellow {
+      color: var(--yellow);
+    }
+
+    .shots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6mm;
+    }
+
+    .shot-card {
+      min-height: 70mm;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5mm;
+    }
+
+    .shot-card img {
+      width: 100%;
+      height: 54mm;
+      object-fit: contain;
+      background: #050505;
+      border: 1px solid rgba(255,255,255,0.22);
+      box-shadow: 0 0 0 1px rgba(0,240,255,0.10), 0 0 18px rgba(0,0,0,0.65);
+    }
+
+    .shot-card figcaption {
+      margin: 0;
+      font-size: 9.2pt;
+      line-height: 1.25;
+      color: var(--muted);
+    }
+
+    .shot-card figcaption b {
+      font-family: "Retro-gaming", Consolas, monospace;
+      color: var(--green);
+      text-transform: uppercase;
+    }
+
+    .role-layout {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 6mm;
+      align-items: start;
+    }
+
+    .role-visuals,
+    .role-options {
+      display: grid;
+      gap: 3mm;
+    }
+
+    .role-hero-shot,
+    .role-detail-shot {
+      margin: 0;
+      border: 1px solid rgba(64,242,254,0.30);
+      background: rgba(3,8,16,0.72);
+      padding: 2.5mm;
+      box-shadow: 0 0 18px rgba(0,0,0,0.55);
+    }
+
+    .role-hero-shot img,
+    .role-detail-shot img {
+      display: block;
+      width: 100%;
+      background: #02040a;
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+
+    .role-hero-shot img {
+      height: 58mm;
+      object-fit: contain;
+    }
+
+    .role-detail-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+    }
+
+    .role-detail-shot img {
+      height: 28mm;
+      object-fit: cover;
+    }
+
+    .role-hero-shot figcaption,
+    .role-detail-shot figcaption {
+      margin: 1.8mm 0 0;
+      color: var(--muted);
+      font-size: 7.5pt;
+      line-height: 1.25;
+    }
+
+    .role-option {
+      border: 1px solid rgba(255,255,255,0.15);
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+      padding: 3mm;
+      min-height: 25mm;
+    }
+
+    .role-option p,
+    .role-option li {
+      font-size: 7.8pt;
+      line-height: 1.30;
+      color: var(--muted);
+    }
+
+    .role-option li {
+      margin-bottom: 1.8mm;
+      padding-left: 4mm;
+    }
+
+    .role-option .tag {
+      margin-bottom: 1.8mm;
+      font-size: 7.3pt;
+    }
+
+    .role-warning {
+      border-color: rgba(255,229,91,0.46);
+      background: rgba(255,229,91,0.08);
+      color: var(--yellow);
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 8pt;
+      line-height: 1.28;
+      text-transform: uppercase;
+    }
+
+    .control-buttons-layout {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 6mm;
+      align-items: start;
+    }
+
+    .control-panel-shot {
+      margin: 0;
+      border: 1px solid rgba(64,242,254,0.32);
+      background: rgba(3,8,16,0.76);
+      padding: 3mm;
+      box-shadow: 0 0 18px rgba(0,0,0,0.55);
+    }
+
+    .control-panel-shot img {
+      display: block;
+      width: 100%;
+      height: 78mm;
+      object-fit: cover;
+      object-position: 44% 45%;
+      background: #02040a;
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+
+    .control-panel-shot figcaption {
+      margin: 2mm 0 0;
+      color: var(--muted);
+      font-size: 7.5pt;
+      line-height: 1.3;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5mm;
+    }
+
+    .button-card {
+      border: 1px solid rgba(255,255,255,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+      padding: 2.1mm;
+      min-height: 21mm;
+    }
+
+    .button-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 6.8pt;
+      line-height: 1.22;
+    }
+
+    .css-ref {
+      display: block;
+      margin-bottom: 0.8mm;
+      color: rgba(255,229,91,0.86);
+      font-size: 5.9pt;
+      line-height: 1.05;
+    }
+
+    .control-css-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 6.8mm;
+      margin: 0 0 1.35mm;
+      padding: 1.2mm 1.5mm;
+      border-radius: 2.88px;
+      box-sizing: border-box;
+      font-family: "Retro-gaming", "VT323", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif;
+      font-size: 6.6pt;
+      font-weight: 700;
+      line-height: 1.08;
+      text-align: center;
+      white-space: normal;
+    }
+
+    .control-css-button--game {
+      border: 1px solid rgba(69, 243, 255, 0.56);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.28)),
+        rgba(4,11,19,0.92);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        0 0 10.4px rgba(69,243,255,0.14);
+      color: #a9faff;
+      text-shadow:
+        0.07em 0.07em 0 #000,
+        0 0 0.45rem rgba(69,243,255,0.34);
+    }
+
+    .control-css-button--skip {
+      border: 1px solid rgba(74,246,255,0.85);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.28)),
+        rgba(4,11,19,0.92);
+      box-shadow:
+        0 0.2em #4af6ff,
+        0 0 0.6em rgba(74,246,255,0.35);
+      color: #9ffcff;
+      text-shadow: 0.06em 0.06em #ff3030;
+    }
+
+    .control-css-button--rep {
+      border: 1px solid rgba(176,112,255,0.58);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.28)),
+        rgba(4,11,19,0.92);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.035),
+        0 0 10.4px rgba(176,112,255,0.16);
+      color: #f1d8ff;
+      text-shadow:
+        0.07em 0.07em 0 #000,
+        0 0 0.45rem rgba(69,243,255,0.34);
+    }
+
+    .control-css-button--fin-j1,
+    .control-css-button--fin-j2 {
+      display: inline-flex;
+      width: calc(50% - 1mm);
+      min-height: 5.6mm;
+      margin-right: 1mm;
+      padding: 1mm 1.3mm;
+      font-size: 5.8pt;
+      border-radius: 0.2rem;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.28)),
+        rgba(4,11,19,0.92);
+    }
+
+    .control-css-button--fin-j1 {
+      border: 1px solid rgba(70,240,255,0.72);
+      color: #8ff8ff;
+      box-shadow:
+        inset 0 0 0.42rem rgba(70,240,255,0.12),
+        0 0 0.52rem rgba(70,240,255,0.24);
+      text-shadow: 0.07em 0.07em 0 #000;
+    }
+
+    .control-css-button--fin-j2 {
+      margin-right: 0;
+      border: 1px solid rgba(255,95,103,0.76);
+      color: #ff9aa0;
+      box-shadow:
+        inset 0 0 0.42rem rgba(255,95,103,0.12),
+        0 0 0.52rem rgba(255,95,103,0.24);
+      text-shadow: 0.06em 0.06em #000;
+    }
+
+    .control-tab-row,
+    .level-chip-row,
+    .spinner-sample-row {
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+      margin-bottom: 1.35mm;
+    }
+
+    .control-tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-height: 6.4mm;
+      padding: 1mm 1.2mm;
+      border-radius: 4.48px;
+      background: rgba(3,9,16,0.70);
+      border: 1px solid currentColor;
+      font-family: "Retro-gaming", "Segoe UI Emoji", sans-serif;
+      font-size: 5pt;
+      line-height: 1;
+      text-align: center;
+      text-shadow: 0.08em 0.08em #ff2d2d;
+    }
+
+    .control-tab--tutorial {
+      color: #ffb347;
+      border-color: rgba(255,143,63,0.48);
+    }
+
+    .control-tab--game {
+      color: #fff;
+      border-color: #5bf4ff;
+      background:
+        linear-gradient(180deg, rgba(69,243,255,0.18), rgba(0,0,0,0.18)),
+        rgba(4,12,20,0.86);
+      box-shadow:
+        inset 0 0 0 1px #58f4ff,
+        inset 0 0 16px rgba(69,243,255,0.28),
+        0 0 12.8px rgba(69,243,255,0.42);
+    }
+
+    .control-tab--rep {
+      color: #d6a7ff;
+      border-color: rgba(154,107,255,0.48);
+    }
+
+    .control-css-button--params {
+      justify-content: flex-start;
+      min-height: 7mm;
+      border: 1px solid rgba(69,243,255,0.45);
+      border-radius: 0.22rem;
+      background:
+        linear-gradient(180deg, rgba(7,21,30,0.96), rgba(0,5,9,0.98));
+      box-shadow:
+        inset 0 0 0.75rem rgba(69,243,255,0.08),
+        0 0 0.75rem rgba(69,243,255,0.14);
+      color: #46f3ff;
+      text-shadow: 0.07em 0.07em 0 #000;
+    }
+
+    .control-css-button--delete {
+      justify-content: space-between;
+      min-height: 7mm;
+      border: 1px solid rgba(255,95,103,0.68);
+      border-radius: 0.22rem;
+      background:
+        linear-gradient(180deg, rgba(54,12,18,0.94), rgba(14,3,7,0.98));
+      box-shadow:
+        inset 0 0 0.8rem rgba(255,95,103,0.10),
+        0 0 0.72rem rgba(255,95,103,0.18);
+      color: #ff9aa0;
+      text-shadow: 0.07em 0.07em #5a1016;
+    }
+
+    .control-css-button--delete::after {
+      content: "";
+      width: 2.2mm;
+      height: 2.2mm;
+      border-radius: 999px;
+      background: #ff5f67;
+      box-shadow: 0 0 0.55rem rgba(255,95,103,0.72);
+    }
+
+    .level-chip-row span {
+      flex: 1;
+      min-height: 6mm;
+      padding: 1.2mm 1mm;
+      border: 1px solid rgba(110,240,255,0.24);
+      border-radius: 0.2rem;
+      background: rgba(4,10,17,0.58);
+      font-family: "Retro-gaming", monospace;
+      font-size: 5.4pt;
+      text-align: center;
+    }
+
+    .level-chip-lb { color: #6bff83; }
+    .level-chip-lp { color: #ff8fa0; }
+    .level-chip-t { color: #64e8ff; }
+    .level-chip-pb { color: #ffd65a; }
+    .level-chip-pp { color: #ff71c8; }
+    .level-chip-f { color: #ffad42; }
+
+    .spinner-sample {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 7mm;
+      min-height: 5.6mm;
+      border: 1px solid rgba(107,255,160,0.34);
+      border-radius: 2.88px;
+      background: rgba(2,10,13,0.85);
+      color: #eaffef;
+      font-family: Arial, sans-serif;
+      font-size: 8pt;
+    }
+
+    .spinner-sample--minus {
+      text-shadow: 0.0625em 0.0625em aqua;
+    }
+
+    .spinner-sample--plus {
+      text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;
+    }
+
+    .button-note {
+      margin-top: 2mm;
+      padding: 2.2mm;
+      border: 1px solid rgba(255,229,91,0.50);
+      background: rgba(255,229,91,0.08);
+      color: var(--yellow);
+      font-size: 7.6pt;
+      line-height: 1.24;
+      text-transform: uppercase;
+    }
+
+    .crop-control-actions {
+      object-position: 10% 56%;
+    }
+
+    .crop-control-params {
+      object-position: 79% 44%;
+    }
+
+    .crop-spectator-top {
+      object-position: 50% 8%;
+    }
+
+    .crop-spectator-bottom {
+      object-position: 50% 88%;
+    }
+
+    .crop-actor-tools {
+      object-position: 50% 78%;
+    }
+
+    .crop-actor-text {
+      object-position: 50% 34%;
+    }
+
+    .crop-writer-attrs {
+      object-position: 50% 4%;
+    }
+
+    .crop-writer-level {
+      object-position: 50% 40%;
+    }
+
+    .resurrection-grid {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 6mm;
+      align-items: start;
+    }
+
+    .res-shot-card {
+      border: 1px solid rgba(64,242,254,0.35);
+      background: rgba(3,8,16,0.76);
+      padding: 3mm;
+      box-shadow: 0 0 18px rgba(64,242,254,0.06);
+    }
+
+    .res-shot-card img {
+      width: 100%;
+      height: 60mm;
+      object-fit: contain;
+      display: block;
+      background: #02040a;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .res-shot-card.small img {
+      height: 33mm;
+    }
+
+    .res-shot-card figcaption {
+      margin: 2mm 0 0;
+      color: var(--muted);
+      font-size: 7.4pt;
+      line-height: 1.35;
+    }
+
+    .res-steps {
+      display: grid;
+      gap: 2.4mm;
+    }
+
+    .res-steps .box {
+      padding: 3mm;
+    }
+
+    .res-steps .box p {
+      font-size: 8.3pt;
+      line-height: 1.34;
+    }
+
+    .res-formula {
+      border: 1px solid var(--yellow);
+      color: var(--yellow);
+      background: rgba(255,229,91,0.08);
+      padding: 2.6mm;
+      font-size: 10.5pt;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4mm;
+      margin-top: 2mm;
+    }
+
+    .timeline-title {
+      margin-top: 5mm;
+      margin-bottom: 0;
+      font-size: 12.5pt;
+    }
+
+    .step {
+      min-height: 45mm;
+      padding: 3.2mm;
+      position: relative;
+    }
+
+    .num {
+      display: block;
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 18pt;
+      color: var(--red);
+      margin-bottom: 2mm;
+    }
+
+    .step b {
+      display: block;
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 9.6pt;
+      color: var(--ink);
+      text-transform: uppercase;
+      margin-bottom: 2mm;
+    }
+
+    .step p {
+      font-size: 7.7pt;
+      line-height: 1.32;
+      color: var(--muted);
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5mm;
+    }
+
+    .level {
+      min-height: 48mm;
+      padding: 4.5mm;
+    }
+
+    .level h3 {
+      font-size: 12.5pt;
+      margin-bottom: 2.5mm;
+    }
+
+    .level p {
+      font-size: 9.5pt;
+      line-height: 1.34;
+      color: var(--muted);
+    }
+
+    .level-bendita {
+      border-color: rgba(93,255,134,0.58);
+      box-shadow: inset 0 0 0 1px rgba(93,255,134,0.10), 0 0 18px rgba(93,255,134,0.06);
+    }
+
+    .level-bendita h3 {
+      color: var(--level-bendita);
+    }
+
+    .level-prohibida {
+      border-color: rgba(255,106,126,0.62);
+      box-shadow: inset 0 0 0 1px rgba(255,106,126,0.10), 0 0 18px rgba(255,106,126,0.06);
+    }
+
+    .level-prohibida h3 {
+      color: var(--level-prohibida);
+    }
+
+    .level-bonus {
+      border-color: rgba(255,207,100,0.62);
+      box-shadow: inset 0 0 0 1px rgba(255,207,100,0.10), 0 0 18px rgba(255,207,100,0.06);
+    }
+
+    .level-bonus h3 {
+      color: var(--level-bonus);
+    }
+
+    .level-prohibidas {
+      border-color: rgba(255,139,218,0.62);
+      box-shadow: inset 0 0 0 1px rgba(255,139,218,0.10), 0 0 18px rgba(255,139,218,0.06);
+    }
+
+    .level-prohibidas h3 {
+      color: var(--level-prohibidas);
+    }
+
+    .level-tertulia {
+      border-color: rgba(117,200,255,0.62);
+      box-shadow: inset 0 0 0 1px rgba(117,200,255,0.10), 0 0 18px rgba(117,200,255,0.06);
+    }
+
+    .level-tertulia h3 {
+      color: var(--level-tertulia);
+    }
+
+    .level-final {
+      border-color: rgba(255,187,122,0.62);
+      box-shadow: inset 0 0 0 1px rgba(255,187,122,0.10), 0 0 18px rgba(255,187,122,0.06);
+    }
+
+    .level-final h3 {
+      color: var(--level-final);
+    }
+
+    .effect-list {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3mm;
+      margin-top: 5mm;
+    }
+
+    .small-card {
+      padding: 3.5mm;
+      min-height: 34mm;
+    }
+
+    .small-card b {
+      display: block;
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 10pt;
+      color: var(--yellow);
+      margin-bottom: 1.8mm;
+      text-transform: uppercase;
+    }
+
+    .small-card p {
+      font-size: 8.8pt;
+      line-height: 1.28;
+      color: var(--muted);
+    }
+
+    .disadvantage b {
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+      color: var(--yellow);
+    }
+
+    .emoji {
+      font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+      font-size: 16pt;
+      line-height: 1;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 7mm;
+      align-items: start;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      position: relative;
+      padding-left: 5mm;
+      margin-bottom: 2.7mm;
+      font-size: 10pt;
+      line-height: 1.34;
+      color: var(--muted);
+    }
+
+    li::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--cyan);
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-weight: 800;
+    }
+
+    .accent-red li::before {
+      color: var(--red);
+    }
+
+    .accent-green li::before {
+      color: var(--green);
+    }
+
+    .footer {
+      position: absolute;
+      left: 17mm;
+      right: 17mm;
+      bottom: 7mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 8pt;
+      color: rgba(255,255,255,0.42);
+      text-transform: uppercase;
+    }
+
+    .mono {
+      font-family: "Retro-gaming", Consolas, monospace;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+
+    .page-num {
+      color: var(--cyan);
+    }
+
+    .wide-note {
+      margin-top: 6mm;
+      padding: 4mm 5mm;
+      border: 1px solid rgba(255,233,92,0.55);
+      background: rgba(255,233,92,0.08);
+      color: var(--yellow);
+      font-family: "Retro-gaming", Consolas, monospace;
+      font-size: 11pt;
+      line-height: 1.35;
+      text-transform: uppercase;
+    }
+
+    .cover-logo {
+      position: absolute;
+      right: 20mm;
+      top: 29mm;
+      width: 43mm;
+      height: auto;
+      opacity: 0.92;
+    }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Manual de usuario / roles</div>
+    </header>
+    <img class="cover-logo" src="../game/img/logo.png" alt="Logo Sutura Teatro">
+    <div class="kicker">Videojuego escénico de escritura en directo</div>
+    <h1>Manual de usuario <span class="nowrap">&lt;SCRI&gt; B</span></h1>
+    <p class="lead">
+      &lt;SCRI&gt; B enfrenta a dos escritxrs en una partida de texto vivo. <strong>El tiempo, las musas, los niveles y las decisiones de Control</strong> transforman lo que se escribe y lo que después llega a escena.
+    </p>
+    <div class="rule"><strong>Regla principal:</strong> si el tiempo se acaba, el texto muere.</div>
+    <div class="palette-row" aria-label="Paleta visual del videojuego">
+      <span class="swatch" style="--swatch:#02040a">Fondo</span>
+      <span class="swatch" style="--swatch:#40f2fe">Cian</span>
+      <span class="swatch" style="--swatch:#ff5b5b">Rojo</span>
+      <span class="swatch" style="--swatch:#ffe55b">Amarillo</span>
+      <span class="swatch" style="--swatch:#f7d07e">Bonus</span>
+      <span class="swatch" style="--swatch:#5dff86">Vida</span>
+      <span class="swatch" style="--swatch:#ff8bda">Prohibidas</span>
+    </div>
+    <div class="font-note"><strong>Tipografía del videojuego:</strong> Retro-gaming / VT323.</div>
+    <div class="role-strip">
+      <div class="role-chip">
+        <b><span class="role-emoji">⚙️</span>Control</b>
+        <span>Orquesta la partida, cambia pantallas, <strong>activa niveles</strong>, pausa, limpia y decide el ritmo de la representación.</span>
+      </div>
+      <div class="role-chip">
+        <b><span class="role-emoji">🎨</span>Musas</b>
+        <span>Participan desde el móvil: inspiran, votan y pueden provocar ventajas o desventajas durante la partida.</span>
+      </div>
+      <div class="role-chip">
+        <b><span class="role-emoji">👀</span>Espectador</b>
+        <span>Muestra al público la escritura, los tiempos, las ayudas, los castigos y los estados de la partida.</span>
+      </div>
+      <div class="role-chip">
+        <b><span class="role-emoji">🎭</span>Actor</b>
+        <span>Ve en directo cómo su escritxr compone el texto, toma notas y prepara un montaje técnico para actuarlo.</span>
+      </div>
+      <div class="role-chip">
+        <b><span class="role-emoji">✍️</span>Escritxr</b>
+        <span><strong>Escribe bajo presión:</strong> gana segundos, pierde segundos, resucita si puede y llega a la frase final.</span>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">01</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Antes de empezar</div>
+    </header>
+    <h2>Preparación de la partida</h2>
+    <div class="grid-2">
+      <div class="box">
+        <span class="tag green">1 / Roles</span>
+        <p><strong><span class="role-emoji">⚙️</span> Control</strong> abre la mesa técnica. Desde ahí se comprueba que servidor, espectador, actores y escritxrs están conectados.</p>
+        <p><strong><span class="role-emoji">🎨</span> Musas</strong> participan desde el móvil. Inspiran a su escritxr, votan y pueden convertir su influencia en ayudas o desventajas.</p>
+        <p><strong><span class="role-emoji">👀</span> Espectador</strong> se coloca en la pantalla pública. No necesita intervenir: recibe los cambios enviados por Control.</p>
+        <p><strong><span class="role-emoji">🎭</span> Actor</strong> sigue el texto de su escritxr en directo. Sus notas sirven para preparar la actuación y compartir un montaje técnico con la técnica.</p>
+        <p><strong><span class="role-emoji">✍️</span> Escritxr</strong> entra en su puesto, reparte sus puntos de habilidad y queda listo para escribir cuando Control arranque.</p>
+      </div>
+      <div class="box">
+        <span class="tag yellow">2 / Puntos de habilidad</span>
+        <div class="attribute-list">
+          <div class="attribute-card attribute-fuerza">
+            <b>Fuerza</b>
+            <p><strong>Aumenta los segundos</strong> ganados por bloques de palabras.</p>
+          </div>
+          <div class="attribute-card attribute-agilidad">
+            <b>Agilidad</b>
+            <p><strong>Influye en el borrado</strong> y en la relación del escritxr con el ritmo de destrucción del texto.</p>
+          </div>
+          <div class="attribute-card attribute-destreza">
+            <b>Destreza</b>
+            <p><strong>Reduce la duración</strong> de las desventajas que recibe el escritxr.</p>
+          </div>
+        </div>
+        <p style="margin-top:3mm;"><strong>Son 10 puntos de habilidad en total.</strong> La elección define si se escribe para resistir, recuperar tiempo o sufrir menos castigos.</p>
+      </div>
+    </div>
+    <h3 class="timeline-title">Checklist antes de empezar</h3>
+    <div class="timeline">
+      <div class="step">
+        <span class="num">01</span>
+        <b>Servidor</b>
+        <p><strong>Servidor activo</strong> y todos los roles conectados antes de iniciar.</p>
+      </div>
+      <div class="step">
+        <span class="num">02</span>
+        <b>Espectador</b>
+        <p>Pantalla completa, escala correcta y vista pública preparada.</p>
+      </div>
+      <div class="step">
+        <span class="num">03</span>
+        <b>Escritxrs</b>
+        <p>Los <strong>10 puntos de habilidad</strong> ya están elegidos antes de arrancar.</p>
+      </div>
+      <div class="step">
+        <span class="num">04</span>
+        <b>Actores</b>
+        <p>Texto de su escritxr asignado, pantalla preparada y herramientas de notas comprobadas.</p>
+      </div>
+      <div class="step">
+        <span class="num">05</span>
+        <b>Control</b>
+        <p><strong>Niveles y tiempos revisados</strong>: duración, votos, escala y borrado.</p>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">02</span></footer>
+  </section>
+
+  <section class="page role-page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Rol / <span class="role-emoji">⚙️</span> Control</div>
+    </header>
+    <h2><span class="role-emoji">⚙️</span> Control: mesa técnica y ritmo</h2>
+    <div class="role-layout">
+      <div class="role-visuals">
+        <figure class="role-hero-shot">
+          <img src="control_actual.png" alt="Pantalla de Control actual">
+          <figcaption><strong>Vista general:</strong> Control reúne conexiones, textos, estado de partida, nivel actual, parámetros y herramientas de representación.</figcaption>
+        </figure>
+        <div class="role-detail-row">
+          <figure class="role-detail-shot">
+            <img class="crop-control-actions" src="control_actual.png" alt="Botones de Control">
+            <figcaption>Acciones directas: escribir, limpiar, pausar, estadísticas y nube de inspiración.</figcaption>
+          </figure>
+          <figure class="role-detail-shot">
+            <img class="crop-control-params" src="control_actual.png" alt="Parámetros de Control">
+            <figcaption>Parámetros: duración, niveles activos, votaciones, borrado y escala de espectador.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="role-options">
+        <div class="role-option">
+          <span class="tag green">Inicio y pausa</span>
+          <p><strong>Es el rol que abre y detiene la partida.</strong> Puede iniciar escritura, pausar, reanudar y decidir cuándo se protege la escena congelando el juego.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag yellow">Parámetros</span>
+          <p>Ajusta tiempos, duración de niveles, bonus, votaciones y borrado. <strong>Cada cambio altera la presión</strong> que sienten los escritxrs.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag">Pantalla pública</span>
+          <p>Cambia lo que ve el público: partida, estadísticas, nube, créditos, temporizador gigante o herramientas de escena.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag red">Consecuencia</span>
+          <p><strong>Limpiar borra la pantalla.</strong> Antes de limpiar o reiniciar conviene descargar textos si el material debe conservarse para archivo, ensayo o escena.</p>
+        </div>
+        <div class="role-option role-warning">Control debe hablar poco y mirar mucho: confirma conexiones antes de empezar, evita cambios innecesarios y usa pausa solo para sostener la escena.</div>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">03</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div><span class="role-emoji">⚙️</span> Control / botones</div>
+    </header>
+    <h2><span class="role-emoji">⚙️</span> Control: botones y funcionalidades</h2>
+    <div class="control-buttons-layout">
+      <figure class="control-panel-shot">
+        <img src="control_actual.png" alt="Botones y paneles de Control">
+        <figcaption><strong>Panel de Control:</strong> desde aquí se gobierna la partida. Los botones no son decorativos: cada uno cambia lo que ocurre en los escritxrs, en el espectador o en la escena.</figcaption>
+      </figure>
+      <div>
+        <div class="button-grid">
+          <div class="button-card">
+            <span class="control-css-button control-css-button--game">✎ ESCRIBIR</span>
+            <p><strong>Arranca o activa la escritura.</strong> Inicia la cuenta de tiempo y permite que los escritxrs empiecen a producir texto.</p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--game">🧹 LIMPIAR</span>
+            <p>Borra el contenido visible y prepara la pantalla para otro tramo. <strong>Usarlo sin descargar puede hacer perder material escénico.</strong></p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--game">⏸️ PAUSAR</span>
+            <p>Congela la acción. Sirve para resolver un problema técnico, dar una indicación o proteger un momento de escena.</p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--game">📊 STATS</span>
+            <p>Muestra estadísticas de la partida: tiempos, actividad, evolución y datos útiles para lectura pública o cierre.</p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--game">☁️ NUBE DE INSPIRACIÓN</span>
+            <p>Activa una vista de palabras e ideas recibidas. Ayuda a orientar el imaginario común sin intervenir directamente en el texto.</p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--fin-j1">🔵 FIN</span><span class="control-css-button control-css-button--fin-j2">🔴 FIN</span>
+            <p>Marca o fuerza el cierre de un escritxr. <strong>Debe usarse con intención escénica</strong>, porque cambia el estado final del texto.</p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--params">NIVELES ACTIVOS&nbsp;&nbsp; <strong style="color:#6bff83;">6 activos</strong>&nbsp; ▾</span>
+            <div class="level-chip-row">
+              <span class="level-chip-lb">LB</span>
+              <span class="level-chip-lp">LP</span>
+              <span class="level-chip-t">T</span>
+              <span class="level-chip-pb">PB</span>
+              <span class="level-chip-pp">PP</span>
+              <span class="level-chip-f">F</span>
+            </div>
+            <p>Abre los niveles activos; los chips colorean LB, LP, T, PB, PP y F.</p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--params">⚙️ PARÁMETROS ›</span>
+            <div class="spinner-sample-row"><span class="spinner-sample spinner-sample--minus">-</span><span class="spinner-sample spinner-sample--plus">+</span></div>
+            <p>Ajustan segundos, duración de niveles, votaciones, cambio de palabra, límite de palabras y escala del espectador.</p>
+          </div>
+          <div class="button-card">
+            <span class="control-css-button control-css-button--delete">BORRAR TEXTO</span>
+            <p>Activa o desactiva el borrado automático. Si está activo, la falta de ritmo destruye texto y aumenta la presión.</p>
+          </div>
+          <div class="button-card">
+            <div class="control-tab-row">
+              <span class="control-tab control-tab--tutorial">📖 TUTORIAL</span>
+              <span class="control-tab control-tab--game">🎮 JUEGO</span>
+              <span class="control-tab control-tab--rep">🎭 REPR.</span>
+            </div>
+            <p>Cambian el grupo de herramientas visibles: preparación, partida activa y recursos para llevar el material a escena.</p>
+          </div>
+        </div>
+        <div class="button-note"><strong>Regla práctica:</strong> las muestras reproducen el CSS real del Control; antes de pulsar, hay que saber qué pantalla cambia y a quién afecta.</div>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">04</span></footer>
+  </section>
+
+  <section class="page role-page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Rol / <span class="role-emoji">👀</span> Espectador</div>
+    </header>
+    <h2><span class="role-emoji">👀</span> Espectador: pantalla pública</h2>
+    <div class="role-layout">
+      <div class="role-visuals">
+        <figure class="role-hero-shot">
+          <img src="../.e2e-artifacts/2026-05-01T21-53-06-316Z/full-real-match-complete/spectator.png" alt="Pantalla de Espectador">
+          <figcaption><strong>Vista pública:</strong> enseña textos, tiempos, nivel activo, actividad de musas y consecuencias visibles de la partida.</figcaption>
+        </figure>
+        <div class="role-detail-row">
+          <figure class="role-detail-shot">
+            <img class="crop-spectator-top" src="../.e2e-artifacts/2026-05-01T21-53-06-316Z/full-real-match-complete/spectator.png" alt="Barra de inspiración del espectador">
+            <figcaption>Inspiración y votación: muestra qué equipo domina y qué desventaja puede aparecer.</figcaption>
+          </figure>
+          <figure class="role-detail-shot">
+            <img class="crop-spectator-bottom" src="../.e2e-artifacts/2026-05-01T21-53-06-316Z/full-real-match-complete/spectator.png" alt="Nivel visible en Espectador">
+            <figcaption>Nivel visible: el público entiende qué regla afecta al texto en ese momento.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="role-options">
+        <div class="role-option">
+          <span class="tag green">Lectura colectiva</span>
+          <p><strong>No edita nada.</strong> Su función es hacer legible la partida: textos, relojes, ayudas, castigos y estado de los equipos.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag yellow">Escala y foco</span>
+          <p>Control puede ampliar la escala, activar temporizador gigante o cambiar de vista para que el público no pierda el hilo.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag">Musas</span>
+          <p>Muestra cuántas musas participan, qué equipo empuja más y cuándo una votación puede convertir la participación en desventaja.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag red">Consecuencia</span>
+          <p><strong>Lo que aparece aquí ordena la atención del público.</strong> Si se muestran estadísticas o créditos, la escena cambia de lectura.</p>
+        </div>
+        <div class="role-option role-warning">El Espectador debe estar estable, visible y a pantalla completa: es la interfaz que convierte el juego privado en acontecimiento público.</div>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">05</span></footer>
+  </section>
+
+  <section class="page role-page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Rol / <span class="role-emoji">🎭</span> Actor</div>
+    </header>
+    <h2><span class="role-emoji">🎭</span> Actor: lectura y escena</h2>
+    <div class="role-layout">
+      <div class="role-visuals">
+        <figure class="role-hero-shot">
+          <img src="../.e2e-artifacts/2026-05-01T21-53-06-316Z/full-real-match-complete/actor1.png" alt="Pantalla de Actor">
+          <figcaption><strong>Vista de lectura:</strong> el intérprete ve en directo cómo su escritxr compone el texto que después actuará.</figcaption>
+        </figure>
+        <div class="role-detail-row">
+          <figure class="role-detail-shot">
+            <img class="crop-actor-text" src="../.e2e-artifacts/2026-05-01T21-53-06-316Z/full-real-match-complete/actor1.png" alt="Texto en Actor">
+            <figcaption>Texto vivo: permite seguir decisiones, errores, ritmos y hallazgos mientras se escriben.</figcaption>
+          </figure>
+          <figure class="role-detail-shot">
+            <img class="crop-actor-tools" src="../.e2e-artifacts/2026-05-01T21-53-06-316Z/full-real-match-complete/actor1.png" alt="Herramientas del Actor">
+            <figcaption>Herramientas: notas, desplazamiento, vista completa y apoyo de teleprompter para preparar el montaje.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="role-options">
+        <div class="role-option">
+          <span class="tag green">Ver componer</span>
+          <p><strong>El actor trabaja con el texto de su escritxr desde que nace.</strong> No recibe solo un resultado final: observa el proceso, los cortes, los accidentes y el ritmo de escritura.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag yellow">Preparar montaje</span>
+          <p>Puede subir, bajar y ampliar la pantalla para recuperar fragmentos, comparar tramos y decidir qué partes se actúan después de la escritura.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag">Anotar</span>
+          <p>Las notas y marcas son locales: <strong>sirven para construir un montaje técnico del texto</strong>, con entradas, cortes, énfasis y apoyos que pueden compartirse con la técnica.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag red">Consecuencia</span>
+          <p><strong>Después de la escritura, los intérpretes actúan el texto de su escritxr.</strong> Su escucha en directo convierte la partida en una escena preparada.</p>
+        </div>
+        <div class="role-option role-warning">El Actor no compite: acompaña la escritura, recoge restos, errores, ritmos y frases útiles para convertir la partida en material representable y coordinable con técnica.</div>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">06</span></footer>
+  </section>
+
+  <section class="page role-page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Rol / <span class="role-emoji">✍️</span> Escritxr</div>
+    </header>
+    <h2><span class="role-emoji">✍️</span> Escritxr: puntos de habilidad, texto y supervivencia</h2>
+    <div class="role-layout">
+      <div class="role-visuals">
+        <figure class="role-hero-shot">
+          <img src="escritxr_atributos_sin_nivel.png" alt="Pantalla de Escritxr en selección de puntos de habilidad">
+          <figcaption><strong>Antes de empezar:</strong> el escritxr reparte 10 puntos de habilidad entre fuerza, agilidad y destreza. <strong>Todavía no se muestra ningún nivel.</strong></figcaption>
+        </figure>
+        <div class="role-detail-row">
+          <figure class="role-detail-shot">
+            <img class="crop-writer-level" src="../.e2e-artifacts/2026-05-01T21-53-06-316Z/full-real-match-complete/writer1.png" alt="Escritxr durante un nivel">
+            <figcaption>Durante la partida sí aparecen texto, reloj, nivel activo, ayudas y penalizaciones.</figcaption>
+          </figure>
+          <figure class="role-detail-shot">
+            <img src="resurreccion_menu.png" alt="Menú de resurrección para Escritxr">
+            <figcaption>Resurrección: sacrifica palabras para recuperar segundos cuando el contador cae a cero.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="role-options">
+        <div class="role-option">
+          <span class="tag green">Puntos de habilidad</span>
+          <p><strong>Fuerza</strong> aumenta segundos ganados, <strong>agilidad</strong> afecta al borrado y <strong>destreza</strong> reduce desventajas.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag yellow">Escritura</span>
+          <p>Escribir sostiene el reloj. Las palabras útiles pueden sumar tiempo; los errores de nivel o la inactividad acercan borrado, pérdida o resurrección.</p>
+        </div>
+        <div class="role-option">
+          <span class="tag">Ayudas y ataques</span>
+          <p>Recibe palabras de musas aliadas y puede sufrir desventajas del equipo rival. <strong>Debe decidir qué aceptar, esquivar o sacrificar.</strong></p>
+        </div>
+        <div class="role-option">
+          <span class="tag red">Consecuencia</span>
+          <p>Cuando el tiempo llega a cero, puede resucitar si quedan palabras. <strong>Vuelve a vivir, pero el texto pierde material.</strong></p>
+        </div>
+        <div class="role-option role-warning">El Escritxr gana jugando con la presión: no se trata solo de escribir más, sino de sobrevivir sin perder la forma del texto.</div>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">07</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Funcionamiento base</div>
+    </header>
+    <h2>El texto vive con tiempo</h2>
+    <div class="grid-3">
+      <div class="box">
+        <span class="tag green">Escribir suma</span>
+        <p><strong>Cada bloque de palabras nuevas puede dar segundos</strong> al escritxr. La cantidad depende de sus puntos de habilidad y de la configuración de la partida.</p>
+        <p><strong>La escritura útil mantiene el texto con vida</strong> y retrasa el final.</p>
+      </div>
+      <div class="box">
+        <span class="tag red">Pararse cuesta</span>
+        <p>Si el escritxr no sostiene el ritmo, <strong>el juego activa el borrado automático.</strong> El texto pierde caracteres y el contador pierde segundos.</p>
+        <p>El borrado puede desactivarse desde Control si la escena lo necesita.</p>
+      </div>
+      <div class="box">
+        <span class="tag yellow">Llegar a cero</span>
+        <p><strong>Cuando el contador llega a cero, la escritura se detiene.</strong> Si todavía hay palabras, el escritxr puede sacrificar parte del texto para resucitar.</p>
+        <p><strong>Cada palabra sacrificada devuelve 3 segundos.</strong></p>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top: 7mm;">
+      <div class="box">
+        <h3>Resurrección</h3>
+        <p><strong>La resurrección convierte palabras ya escritas en tiempo.</strong> Es una decisión dramática: salva la partida, pero reduce el material disponible.</p>
+        <p>Si no quedan palabras, no hay resurrección posible. El texto queda cerrado para ese escritxr.</p>
+      </div>
+      <div class="box">
+        <h3>Frase final</h3>
+        <p>En frase final se busca el cierre. <strong>Ya no se premia ganar tiempo escribiendo</strong>, el borrado se detiene y el texto entra en su último tramo.</p>
+        <p><strong>Si el contador cae a cero durante este nivel, el final es definitivo.</strong></p>
+      </div>
+    </div>
+    <div class="wide-note"><strong>Consecuencia clave:</strong> cada acción deja marca. Sumar segundos alarga el texto; perder segundos acerca el borrado, la resurrección o el final.</div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">08</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Resurrección</div>
+    </header>
+    <h2>Resurrección: perder texto para ganar vida</h2>
+    <div class="resurrection-grid">
+      <figure class="res-shot-card">
+        <img src="resurreccion_contexto.png" alt="Vista de espectador durante una resurrección">
+        <figcaption><strong>Vista pública:</strong> el público ve qué escritxr ha caído, cuántas palabras le quedan y el menú de resurrección activo.</figcaption>
+      </figure>
+      <div class="res-steps">
+        <figure class="res-shot-card small">
+          <img src="resurreccion_menu.png" alt="Detalle del menú de resurrección">
+          <figcaption><strong>Detalle:</strong> el juego pide seleccionar una cantidad de palabras y muestra los segundos que volverán al contador.</figcaption>
+        </figure>
+        <div class="res-formula">1 palabra = 3 segundos</div>
+        <div class="box">
+          <span class="tag red">Game over temporal</span>
+          <p><strong>La resurrección solo aparece si el escritxr llega a cero y todavía conserva palabras.</strong> No es una vida gratis: se paga con texto ya escrito.</p>
+        </div>
+        <div class="box">
+          <span class="tag green">Confirmar</span>
+          <p>El escritxr elige cuántas palabras sacrifica y confirma. <strong>Las palabras desaparecen del material disponible</strong> y el contador recibe segundos.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">09</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Niveles de juego</div>
+    </header>
+    <h2>Niveles, interacciones y consecuencias</h2>
+    <div class="level-grid">
+      <div class="level level-bendita">
+        <h3>Letra bendita</h3>
+        <p>Aparece una letra favorable. Si el escritxr la usa, gana segundos y el carácter queda protegido visualmente.</p>
+        <p><strong>Consecuencia:</strong> escribir con esa letra <strong>ayuda a sobrevivir</strong>; borrarla puede penalizar.</p>
+      </div>
+      <div class="level level-prohibida">
+        <h3>Letra prohibida</h3>
+        <p>Aparece una letra que no debe escribirse. El sistema bloquea o castiga el intento.</p>
+        <p><strong>Consecuencia:</strong> <strong>cada error resta tiempo</strong> y rompe el ritmo del texto.</p>
+      </div>
+      <div class="level level-bonus">
+        <h3>Palabras bonus</h3>
+        <p>El escritxr recibe palabras que conviene integrar. Las musas pueden proponerlas.</p>
+        <p><strong>Consecuencia:</strong> usar una palabra bonus <strong>suma segundos</strong>; si varias musas coinciden, el bonus puede crecer.</p>
+      </div>
+      <div class="level level-prohibidas">
+        <h3>Palabras prohibidas</h3>
+        <p>El juego marca palabras que no deben aparecer. Las musas rivales pueden lanzar obstáculos.</p>
+        <p><strong>Consecuencia:</strong> escribir una palabra prohibida <strong>resta segundos</strong> y puede dar ventaja al equipo contrario.</p>
+      </div>
+      <div class="level level-tertulia">
+        <h3>Tertulia</h3>
+        <p>El juego abre una pausa de respiración y comentario. Control puede saltarla si la escena debe avanzar.</p>
+        <p><strong>Consecuencia:</strong> <strong>cambia el ritmo</strong>, permite escuchar y preparar el siguiente tramo.</p>
+      </div>
+      <div class="level level-final">
+        <h3>Frase final</h3>
+        <p>Último nivel de la partida. El texto busca cierre y deja de depender de premios de tiempo.</p>
+        <p><strong>Consecuencia:</strong> <strong>no hay vuelta atrás</strong>; cuando se acaba el tiempo, se acaba la escritura.</p>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">10</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Rol / <span class="role-emoji">🎨</span> Musas</div>
+    </header>
+    <h2><span class="role-emoji">🎨</span> Musas: inspiración, voto y presión</h2>
+    <div class="grid-2">
+      <div class="box">
+        <span class="tag green">Rol de musa</span>
+        <p><strong>La musa participa desde el móvil y se alía con un escritxr.</strong> No escribe el texto directamente: alimenta el juego con palabras, impulsos, votos y presión.</p>
+        <p><strong>Convierte al público en parte activa de la dramaturgia:</strong> altera tiempo, vocabulario, riesgo y tensión sin sustituir al escritxr.</p>
+      </div>
+      <div class="box">
+        <span class="tag yellow">Ayuda y ataque</span>
+        <p><strong>Como aliadas, sostienen a su escritxr según el nivel activo.</strong> Como rivales, pueden votar desventajas para el otro equipo.</p>
+        <ul class="accent-green">
+          <li>Envían palabras útiles, inspiraciones y apoyos.</li>
+          <li>Los corazones pueden sumar segundos si están activados.</li>
+          <li>Si ganan la votación, eligen una desventaja para el rival.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="effect-list">
+      <div class="small-card disadvantage">
+        <b><span class="emoji">🐢</span> Tortuga</b>
+        <p>Teclado más lento. El rival escribe con menos fluidez durante la desventaja.</p>
+      </div>
+      <div class="small-card disadvantage">
+        <b><span class="emoji">⚡</span> Rayo</b>
+        <p>Borrado rápido. El texto rival se destruye con más velocidad.</p>
+      </div>
+      <div class="small-card disadvantage">
+        <b><span class="emoji">🌪️</span> Bruma</b>
+        <p>Texto borroso. Leer y corregir se vuelve más difícil.</p>
+      </div>
+      <div class="small-card disadvantage">
+        <b><span class="emoji">🙃</span> Espejo</b>
+        <p>Texto invertido. La pantalla obliga a escribir bajo confusión visual.</p>
+      </div>
+      <div class="small-card disadvantage">
+        <b><span class="emoji">🖊️</span> Pluma</b>
+        <p>Borrado bloqueado. El rival no puede retroceder para corregir.</p>
+      </div>
+    </div>
+    <div class="wide-note">Las musas no escriben el texto: crean presión, oportunidad y accidente. El escritxr decide qué hacer con eso.</div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">11</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="header">
+      <div class="brand">
+        <img class="sutura" src="../img/logo_sutura.png" alt="Sutura">
+        <div class="scrib-mark">&lt;SCRI&gt; B</div>
+      </div>
+      <div>Cierre operativo</div>
+    </header>
+    <h2>Después de la partida</h2>
+    <div class="control-grid">
+      <div class="box">
+        <h3>Material escénico</h3>
+        <p><strong>Después de la escritura, los intérpretes actúan el texto de su escritxr.</strong> Durante la partida han visto en directo cómo se componía: silencios, errores, repeticiones, hallazgos y accidentes.</p>
+        <p><strong>Las notas sirven para preparar un montaje técnico del texto:</strong> cortes, entradas, énfasis, ritmo, teleprompter y decisiones que pueden compartirse con la técnica antes de actuar.</p>
+        <div class="wide-note"><strong>Guardar antes de limpiar:</strong> limpiar reinicia la pantalla, pero descargar conserva el material para archivo o ensayo.</div>
+      </div>
+      <div class="box">
+        <h3>Cierre y guardado</h3>
+        <p><strong>Descarga de textos realizada antes de reiniciar o limpiar.</strong> Este punto ocurre al final: conserva el material antes de borrar la pantalla o preparar otra sesión.</p>
+        <p>Después se decide qué fragmentos pasan a archivo, ensayo, teleprompter, montaje técnico o representación.</p>
+      </div>
+    </div>
+    <div class="grid-3" style="margin-top: 7mm;">
+      <div class="small-card">
+        <b>Si una pantalla cae</b>
+        <p>Reconectar el rol o usar el reinicio remoto desde Control. El estado de partida se recupera desde el servidor.</p>
+      </div>
+      <div class="small-card">
+        <b>Si el ritmo se rompe</b>
+        <p>Pausar, saltar tertulia o ajustar la representación. La pausa congela la acción hasta reanudar.</p>
+      </div>
+      <div class="small-card">
+        <b>Si falta claridad</b>
+        <p>Usar temporizador gigante, teleprompter, estadísticas o nube de inspiración para orientar al público.</p>
+      </div>
+    </div>
+    <footer class="footer"><span>Sutura / &lt;SCRI&gt; B</span><span class="page-num">12</span></footer>
+  </section>
+</body>
+</html>
