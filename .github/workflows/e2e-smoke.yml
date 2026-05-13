@@ -22,25 +22,29 @@ jobs:
       SCRIB_SERVER_REMOTE_BRANCH: master
     steps:
       - name: Checkout players_scrib
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: package-lock.json
 
       - name: Install players_scrib dependencies
+        timeout-minutes: 10
         run: npm ci
 
       - name: Run players_scrib unit tests
+        timeout-minutes: 5
         run: npm run test:unit
 
       - name: Run E2E smoke suite
+        timeout-minutes: 12
         run: npm run test:e2e:smoke
 
       - name: Run 1P E2E smoke suite
+        timeout-minutes: 5
         run: npm run test:e2e:1p:smoke
 
       - name: Publish E2E smoke summary

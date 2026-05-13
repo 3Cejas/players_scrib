@@ -26,6 +26,7 @@ const VISUAL_BASELINES_DIR = path.join(ROOT_DIR, "e2e", "visual-baselines");
 const STATIC_PORT = 4173;
 const SOCKET_PORT = 3000;
 const DEFAULT_TIMEOUT_MS = 10000;
+const CLEANUP_TIMEOUT_MS = 5000;
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".gif": "image/gif",
@@ -104,6 +105,29 @@ async function removeDirWithRetries(dirPath, options = {}) {
   console.warn(`Could not remove E2E browser profile ${dirPath}${code}: ${lastError ? lastError.message : "unknown error"}`);
 }
 
+function withTimeout(promise, timeoutMs, description) {
+  let timeoutId = null;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${description} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  return Promise.race([
+    Promise.resolve(promise).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+    }),
+    timeout
+  ]);
+}
+
+async function cleanupWithTimeout(description, action, timeoutMs = CLEANUP_TIMEOUT_MS) {
+  try {
+    await withTimeout(Promise.resolve().then(action), timeoutMs, description);
+  } catch (error) {
+    console.warn(`[e2e] ${description}: ${error.message}`);
+  }
+}
+
 async function runCommand(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const executable = process.platform === "win32" && command === "npm" ? "npm.cmd" : command;
@@ -124,10 +148,18 @@ async function runCommand(command, args, options = {}) {
     let stderr = "";
 
     child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString();
+      const text = chunk.toString();
+      stdout += text;
+      if (options.stream) {
+        process.stdout.write(text);
+      }
     });
     child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
+      const text = chunk.toString();
+      stderr += text;
+      if (options.stream) {
+        process.stderr.write(text);
+      }
     });
     child.on("error", reject);
     child.on("close", (code) => {
@@ -166,13 +198,18 @@ async function ensureRemoteServerCheckout() {
     throw new Error("Could not resolve origin URL for server_scrib");
   }
 
+  console.log(`[e2e] Preparing server_scrib from ${remoteUrl}#${SERVER_REMOTE_BRANCH}`);
   if (!fs.existsSync(path.join(REMOTE_SERVER_DIR, ".git"))) {
-    await runCommand("git", ["clone", "--branch", SERVER_REMOTE_BRANCH, remoteUrl, REMOTE_SERVER_DIR], {
-      cwd: CACHE_DIR
+    await runCommand("git", ["clone", "--depth", "1", "--branch", SERVER_REMOTE_BRANCH, remoteUrl, REMOTE_SERVER_DIR], {
+      cwd: CACHE_DIR,
+      stream: process.env.CI === "true"
     });
   }
 
-  await runCommand("git", ["fetch", "origin", SERVER_REMOTE_BRANCH], { cwd: REMOTE_SERVER_DIR });
+  await runCommand("git", ["fetch", "--depth", "1", "origin", SERVER_REMOTE_BRANCH], {
+    cwd: REMOTE_SERVER_DIR,
+    stream: process.env.CI === "true"
+  });
   await runCommand("git", ["reset", "--hard", `origin/${SERVER_REMOTE_BRANCH}`], { cwd: REMOTE_SERVER_DIR });
   await runCommand("git", ["clean", "-fd"], { cwd: REMOTE_SERVER_DIR });
 
@@ -184,8 +221,19 @@ async function ensureRemoteServerCheckout() {
     : "";
   const needsInstall = !fs.existsSync(path.join(REMOTE_SERVER_DIR, "node_modules")) || currentHash !== previousHash;
   if (needsInstall) {
-    await runCommand("npm", ["ci"], { cwd: REMOTE_SERVER_DIR });
+    console.log("[e2e] Installing server_scrib dependencies");
+    await runCommand("npm", ["ci"], {
+      cwd: REMOTE_SERVER_DIR,
+      env: {
+        ...process.env,
+        PUPPETEER_SKIP_DOWNLOAD: "true",
+        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      },
+      stream: process.env.CI === "true"
+    });
     fs.writeFileSync(installHashPath, `${currentHash}\n`, "utf8");
+  } else {
+    console.log("[e2e] Reusing cached server_scrib dependencies");
   }
 
   return REMOTE_SERVER_DIR;
@@ -319,6 +367,10 @@ function createSpecList(suite) {
   return [...smokeSpecs, ...onePlayerSpecs, ...coreSpecs];
 }
 
+function suiteRequiresSocketServer(suite) {
+  return suite !== "1p" && suite !== "one-player";
+}
+
 const ROLE_CONFIG = {
   control: {
     url: "/game/control/index.html",
@@ -392,6 +444,7 @@ class E2EHarness {
     this.staticBaseUrl = `http://127.0.0.1:${STATIC_PORT}`;
     this.serverDir = null;
     this.testHooksEnabled = false;
+    this.requiresSocketServer = suiteRequiresSocketServer(this.options.suite);
   }
 
   assert(condition, message) {
@@ -406,48 +459,52 @@ class E2EHarness {
 
   async start() {
     await ensureDir(this.runArtifactsDir);
-    if (await isPortListening(SOCKET_PORT)) {
+    if (this.requiresSocketServer && await isPortListening(SOCKET_PORT)) {
       throw new Error(`Port ${SOCKET_PORT} is already in use. Stop the existing server before running E2E.`);
     }
     if (await isPortListening(STATIC_PORT)) {
       throw new Error(`Port ${STATIC_PORT} is already in use. Stop the existing static server before running E2E.`);
     }
-    this.serverDir = this.options.serverSource === "local"
-      ? LOCAL_SERVER_DIR
-      : await ensureRemoteServerCheckout();
 
     this.staticServer = await createStaticServer(ROOT_DIR, STATIC_PORT);
-    this.serverProcess = spawn(process.execPath, ["server.js"], {
-      cwd: this.serverDir,
-      env: {
-        ...process.env,
-        PORT: String(SOCKET_PORT),
-        NODE_ENV: "test",
-        SCRIB_TEST_HOOKS: "1"
-      },
-      windowsHide: true
-    });
-    this.serverProcess.stdout.on("data", (chunk) => {
-      this.pushServerLog("stdout", chunk.toString());
-    });
-    this.serverProcess.stderr.on("data", (chunk) => {
-      this.pushServerLog("stderr", chunk.toString());
-    });
-    this.serverProcess.on("exit", (code) => {
-      this.pushServerLog("exit", `server exited with code ${code}`);
-    });
 
-    await waitForPort(SOCKET_PORT);
-    this.socket = await createSocketClient(SOCKET_PORT);
+    if (this.requiresSocketServer) {
+      this.serverDir = this.options.serverSource === "local"
+        ? LOCAL_SERVER_DIR
+        : await ensureRemoteServerCheckout();
 
-    try {
-      await emitAck(this.socket, "scrib_test:get_state", {}, 5000);
-      this.testHooksEnabled = true;
-    } catch (error) {
-      this.testHooksEnabled = false;
-      const suiteWithoutStateHooks = new Set(["smoke", "visual", "1p", "one-player"]);
-      if (!suiteWithoutStateHooks.has(this.options.suite)) {
-        throw new Error("The fresh origin/master copy of server_scrib does not expose the required test hooks yet.");
+      this.serverProcess = spawn(process.execPath, ["server.js"], {
+        cwd: this.serverDir,
+        env: {
+          ...process.env,
+          PORT: String(SOCKET_PORT),
+          NODE_ENV: "test",
+          SCRIB_TEST_HOOKS: "1"
+        },
+        windowsHide: true
+      });
+      this.serverProcess.stdout.on("data", (chunk) => {
+        this.pushServerLog("stdout", chunk.toString());
+      });
+      this.serverProcess.stderr.on("data", (chunk) => {
+        this.pushServerLog("stderr", chunk.toString());
+      });
+      this.serverProcess.on("exit", (code) => {
+        this.pushServerLog("exit", `server exited with code ${code}`);
+      });
+
+      await waitForPort(SOCKET_PORT);
+      this.socket = await createSocketClient(SOCKET_PORT);
+
+      try {
+        await emitAck(this.socket, "scrib_test:get_state", {}, 5000);
+        this.testHooksEnabled = true;
+      } catch (error) {
+        this.testHooksEnabled = false;
+        const suiteWithoutStateHooks = new Set(["smoke", "visual"]);
+        if (!suiteWithoutStateHooks.has(this.options.suite)) {
+          throw new Error("The fresh origin/master copy of server_scrib does not expose the required test hooks yet.");
+        }
       }
     }
 
@@ -489,30 +546,66 @@ class E2EHarness {
       this.socket = null;
     }
     if (this.browser) {
+      const browser = this.browser;
+      this.browser = null;
       try {
-        if (!this.browser.isConnected || this.browser.isConnected()) {
-          await this.browser.close();
+        if (!browser.isConnected || browser.isConnected()) {
+          await withTimeout(browser.close(), CLEANUP_TIMEOUT_MS, "browser.close");
         }
-      } catch (_error) {
+      } catch (error) {
+        console.warn(`[e2e] browser.close: ${error.message}`);
         try {
-          const proc = this.browser.process && this.browser.process();
+          const proc = browser.process && browser.process();
           if (proc && !proc.killed) {
             proc.kill();
           }
         } catch (_killError) {
         }
       }
-      this.browser = null;
     }
     await removeDirWithRetries(this.browserUserDataDir);
     if (this.staticServer) {
-      await new Promise((resolve) => this.staticServer.close(resolve));
+      const server = this.staticServer;
       this.staticServer = null;
+      await cleanupWithTimeout("static server close", () => new Promise((resolve) => server.close(resolve)));
     }
     if (this.serverProcess) {
-      this.serverProcess.kill();
+      const child = this.serverProcess;
       this.serverProcess = null;
+      await cleanupWithTimeout("server_scrib process stop", async () => {
+        if (child.exitCode !== null || child.signalCode) {
+          return;
+        }
+        child.kill();
+        await withTimeout(new Promise((resolve) => child.once("exit", resolve)), CLEANUP_TIMEOUT_MS, "server_scrib SIGTERM");
+      }, CLEANUP_TIMEOUT_MS + 1000);
+      if (child.exitCode === null) {
+        try {
+          child.kill("SIGKILL");
+        } catch (_error) {
+        }
+      }
     }
+  }
+
+  async closePageEntry(entry, description) {
+    await cleanupWithTimeout(`${description} page close`, () => entry.page.close({ runBeforeUnload: true }));
+    await cleanupWithTimeout(`${description} context close`, () => entry.context.close());
+  }
+
+  async closeAllPages() {
+    const entries = Array.from(this.pages.values());
+    this.pages.clear();
+    await Promise.all(entries.map((entry) => this.closePageEntry(entry, entry.roleName)));
+  }
+
+  async closeRole(roleName) {
+    const entry = this.pages.get(roleName);
+    if (!entry) {
+      return;
+    }
+    this.pages.delete(roleName);
+    await this.closePageEntry(entry, roleName);
   }
 
   pushServerLog(kind, message) {
@@ -523,37 +616,6 @@ class E2EHarness {
     this.serverLogs.push(...lines);
     if (this.serverLogs.length > 400) {
       this.serverLogs = this.serverLogs.slice(-400);
-    }
-  }
-
-  async closeAllPages() {
-    const entries = Array.from(this.pages.values());
-    this.pages.clear();
-    await Promise.all(entries.map(async (entry) => {
-      try {
-        await entry.page.close({ runBeforeUnload: true });
-      } catch (_error) {
-      }
-      try {
-        await entry.context.close();
-      } catch (_error) {
-      }
-    }));
-  }
-
-  async closeRole(roleName) {
-    const entry = this.pages.get(roleName);
-    if (!entry) {
-      return;
-    }
-    this.pages.delete(roleName);
-    try {
-      await entry.page.close({ runBeforeUnload: true });
-    } catch (_error) {
-    }
-    try {
-      await entry.context.close();
-    } catch (_error) {
     }
   }
 
