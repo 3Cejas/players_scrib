@@ -10,7 +10,7 @@ const I18N_VERSION = "20260505g";
 const PLAYER_ACTIONS_VERSION = "20260504f";
 const PLAYER_STATE_VERSION = "20260505d";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260506e";
-const SPECTATOR_STATE_VERSION = "20260505c";
+const SPECTATOR_STATE_VERSION = "20260517a";
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260506a";
 const JURY_CSS_VERSION = "20260506t";
 const JURY_STATE_VERSION = "20260506g";
@@ -847,13 +847,14 @@ test("spectator viewport fit resets side veil before measuring natural size", ()
   assert.match(helper, /--spectator-veil-width", "52vw"/);
 });
 
-test("spectator reconnect into active match hides menu branding", () => {
+test("spectator reconnect into active match keeps spectator branding visible", () => {
   const stateJs = read("game/spectator/js/state.js");
   const socketJs = read("game/spectator/js/socket-events.js");
 
   assert.match(stateJs, /function actualizarBrandingPartidaEspectador\(opciones = \{\}\)/);
-  assert.match(stateJs, /partida_activa_espectador && modoPartida && !introActiva/);
-  assert.match(stateJs, /cabecera\.style\.display = modoPartida && !ocultarBrandingPartida/);
+  assert.doesNotMatch(stateJs, /ocultarBrandingPartida/);
+  assert.match(stateJs, /cabecera\.style\.display = modoPartida \? \(cabecera_display_inicial \|\| ""\) : "none"/);
+  assert.match(stateJs, /const displayBranding = modoPartida \? "" : "none"/);
   assert.match(stateJs, /logo\.style\.display = displayBranding/);
   assert.match(stateJs, /neon_espectador\.style\.display = displayBranding/);
   assert.match(stateJs, /actualizarBrandingPartidaEspectador\(\{ permitirIntro: true \}\);/);

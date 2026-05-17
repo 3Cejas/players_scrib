@@ -1252,18 +1252,10 @@ const ORDEN_SOLICITUD_CALENTAMIENTO_VISTA = ["lugares", "acciones", "frase_final
 
 function actualizarBrandingPartidaEspectador(opciones = {}) {
     const modoPartida = vista_espectador_modo_resuelta === "partida";
-    const permitirIntro = Boolean(opciones && opciones.permitirIntro);
-    let introActiva = false;
-    try {
-        introActiva = permitirIntro && Boolean(cuenta_atras_activa);
-    } catch (_error) {
-        introActiva = false;
-    }
-    const ocultarBrandingPartida = Boolean(partida_activa_espectador && modoPartida && !introActiva);
     if (cabecera) {
-        cabecera.style.display = modoPartida && !ocultarBrandingPartida ? (cabecera_display_inicial || "") : "none";
+        cabecera.style.display = modoPartida ? (cabecera_display_inicial || "") : "none";
     }
-    const displayBranding = ocultarBrandingPartida ? "none" : "";
+    const displayBranding = modoPartida ? "" : "none";
     if (logo) {
         logo.style.display = displayBranding;
     }
@@ -5473,4 +5465,3 @@ function limpiarModoPsicodelicoEspectador(data, playerId) {
         limpieza(data, playerId);
     }
 }
-
