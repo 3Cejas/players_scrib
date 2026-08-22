@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#05070b" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>&lt;SCRI&gt; B · Dramaturgia</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./index.css?v=20260731r" />
+</head>
+<body class="page-dramaturgia">
+    <a id="dramaturgia_skip_link" class="skip-link" href="#dramaturgia_map">Saltar al mapa activo</a>
+
+    <main id="dramaturgia_app" class="dramaturgia-shell">
+        <header class="dramaturgia-header">
+            <a class="dramaturgia-brand" href="../index.html" aria-label="Volver a los roles de SCRIB">
+                <span class="dramaturgia-brand__scrib">&lt;SCRI&gt; B</span>
+                <span class="dramaturgia-brand__divider" aria-hidden="true"></span>
+                <span class="dramaturgia-brand__role">DRAMATURGIA</span>
+            </a>
+            <nav class="dramaturgia-workspace-tabs" role="tablist" aria-label="Herramientas de dramaturgia">
+                <button
+                    id="dramaturgia_tab_map"
+                    class="dramaturgia-workspace-tab is-active"
+                    type="button"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="dramaturgia_workspace_map"
+                    data-dramaturgia-workspace="mapa"
+                >
+                    <span aria-hidden="true">⌘</span>
+                    Mapa vivo
+                </button>
+                <button
+                    id="dramaturgia_tab_screens"
+                    class="dramaturgia-workspace-tab"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="dramaturgia_workspace_screens"
+                    tabindex="-1"
+                    data-dramaturgia-workspace="pantallas"
+                >
+                    <span aria-hidden="true">▦</span>
+                    Pantallas
+                </button>
+                <button
+                    id="dramaturgia_tab_lab"
+                    class="dramaturgia-workspace-tab"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="dramaturgia_workspace_lab"
+                    tabindex="-1"
+                    data-dramaturgia-workspace="laboratorio"
+                >
+                    <span aria-hidden="true">⚗</span>
+                    Laboratorio
+                </button>
+            </nav>
+        </header>
+
+        <section
+            id="dramaturgia_workspace_map"
+            class="dramaturgia-workspace is-active"
+            role="tabpanel"
+            aria-labelledby="dramaturgia_tab_map"
+            data-dramaturgia-workspace-panel="mapa"
+        >
+        <section id="dramaturgia_map" class="map-shell" aria-label="Mapa visual de la partida">
+            <div class="map-filters map-filters--show">
+                <div class="filter-group" aria-label="Filtrar por fase">
+                    <span class="filter-group__label">FASE</span>
+                    <button class="is-active" type="button" aria-pressed="true" data-phase-filter="todas">Todo el show</button>
+                    <button type="button" aria-pressed="false" data-phase-filter="calentamiento">Calentamiento</button>
+                    <button type="button" aria-pressed="false" data-phase-filter="juego">Niveles y votaciones</button>
+                    <button type="button" aria-pressed="false" data-phase-filter="representacion">Representación</button>
+                </div>
+                <div class="map-navigation" aria-label="Zoom local y desplazamiento del mapa">
+                    <span id="dramaturgia_pan_hint" class="map-navigation__hint">
+                        Mantén pulsado y arrastra para moverte
+                    </span>
+                    <span class="zoom-controls" aria-label="Zoom local del mapa">
+                        <button id="dramaturgia_zoom_out" type="button" aria-label="Alejar">−</button>
+                        <span id="dramaturgia_zoom_label" aria-live="polite">100%</span>
+                        <button id="dramaturgia_zoom_in" type="button" aria-label="Acercar">+</button>
+                        <button id="dramaturgia_zoom_fit" type="button">Encajar</button>
+                    </span>
+                </div>
+            </div>
+
+            <div class="map-workspace">
+                <div class="map-canvas">
+                    <section class="map-panel is-active">
+                        <div id="dramaturgia_graph_viewport" class="map-viewport graph-viewport" tabindex="0" aria-label="Vistas históricas por rol y momento" aria-describedby="dramaturgia_pan_hint"></div>
+                    </section>
+                </div>
+            </div>
+        </section>
+        </section>
+
+        <section
+            id="dramaturgia_workspace_screens"
+            class="dramaturgia-workspace tools-shell"
+            role="tabpanel"
+            aria-labelledby="dramaturgia_tab_screens"
+            data-dramaturgia-workspace-panel="pantallas"
+            hidden
+        >
+            <header class="screens-live-status" aria-label="Estado de la partida en curso">
+                <section class="dramaturgia-now" aria-label="Fase, modo y tiempo de la partida">
+                    <div class="dramaturgia-now__phase">
+                        <span class="eyebrow">FASE</span>
+                        <strong id="dramaturgia_phase" data-phase="espera">EN ESPERA</strong>
+                    </div>
+                    <div class="dramaturgia-now__mode">
+                        <span class="eyebrow">ESTADO VIVO</span>
+                        <strong id="dramaturgia_mode">Sin modo</strong>
+                        <span id="dramaturgia_sequence">MODO #0</span>
+                    </div>
+                    <div class="dramaturgia-now__clock">
+                        <span class="eyebrow">TIEMPO</span>
+                        <strong id="dramaturgia_mode_clock">—</strong>
+                    </div>
+                </section>
+
+                <section class="dramaturgia-connection" aria-label="Conexión con el servidor">
+                    <span id="dramaturgia_connection_dot" class="connection-dot is-offline" aria-hidden="true"></span>
+                    <span class="dramaturgia-connection__copy">
+                        <strong id="dramaturgia_connection" class="is-offline">DATOS CONGELADOS</strong>
+                        <small id="dramaturgia_connection_detail">Conectando con SCRIB</small>
+                    </span>
+                    <span id="dramaturgia_session" class="dramaturgia-session">SIN SESIÓN</span>
+                </section>
+            </header>
+            <p id="dramaturgia_frozen" class="frozen-notice" hidden></p>
+            <div id="dramaturgia_screens_mount" class="screen-grid-mount">
+                <div id="dramaturgia_screen_grid" class="screen-groups" aria-label="Miniaturas de roles"></div>
+            </div>
+        </section>
+
+        <section
+            id="dramaturgia_workspace_lab"
+            class="dramaturgia-workspace tools-shell"
+            role="tabpanel"
+            aria-labelledby="dramaturgia_tab_lab"
+            data-dramaturgia-workspace-panel="laboratorio"
+            hidden
+        >
+            <header class="tools-header">
+                <div>
+                    <span class="eyebrow">LABORATORIO DE PARTIDAS</span>
+                    <h1>Simulación automática para test manual</h1>
+                    <p>Los bots utilizan los protocolos reales de Control, escritxres y musas. Una partida o un rol humano activo bloquea el arranque.</p>
+                </div>
+                <div id="dramaturgia_sim_status" class="sim-status" role="status" data-state="idle">
+                    <span class="sim-status__dot" aria-hidden="true"></span>
+                    <span>
+                        <strong>LABORATORIO EN ESPERA</strong>
+                        <small>Configura un guion y comprueba el servidor.</small>
+                    </span>
+                </div>
+            </header>
+
+            <section class="lab-moment-room" aria-labelledby="dramaturgia_lab_moment_title">
+                <header class="lab-moment-room__header">
+                    <div>
+                        <span class="eyebrow">ENSAYO VISUAL</span>
+                        <h2 id="dramaturgia_lab_moment_title">Momento a momento</h2>
+                        <p>Pausa la simulación, revisa todas las vistas y abre cualquiera en grande.</p>
+                    </div>
+                    <div class="sim-actions lab-moment-room__transport" aria-label="Controles momento a momento">
+                        <button id="dramaturgia_sim_start" class="sim-action sim-action--start" type="submit" form="dramaturgia_sim_form">Iniciar simulación</button>
+                        <button id="dramaturgia_sim_pause" class="sim-action" type="button" disabled>Parar aquí</button>
+                        <button id="dramaturgia_sim_step" class="sim-action" type="button" disabled>Siguiente momento</button>
+                        <button id="dramaturgia_sim_resume" class="sim-action" type="button" disabled>Continuar</button>
+                        <button id="dramaturgia_sim_stop" class="sim-action sim-action--stop" type="button" disabled>Detener y limpiar</button>
+                    </div>
+                </header>
+                <div id="dramaturgia_lab_screens_mount" class="screen-grid-mount screen-grid-mount--lab"></div>
+            </section>
+
+            <div class="lab-layout">
+                <form id="dramaturgia_sim_form" class="sim-form">
+                    <fieldset class="sim-fieldset sim-fieldset--primary">
+                        <legend>Guion</legend>
+                        <label>
+                            <span>Preset</span>
+                            <select id="dramaturgia_sim_preset">
+                                <option value="visual">Visual · 14 s por modo</option>
+                                <option value="quick">Rápida · 10 s por modo</option>
+                                <option value="stress">Carga · 5 s por modo</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Semilla de interacciones</span>
+                            <input id="dramaturgia_sim_seed" type="text" maxlength="64" autocomplete="off" value="sutura-visual" />
+                        </label>
+                        <label>
+                            <span>Clave de roles</span>
+                            <input id="dramaturgia_sim_password" type="password" autocomplete="current-password" placeholder="Necesaria para iniciar" />
+                            <small class="sim-field-hint">También permite recuperar los controles desde otra pestaña.</small>
+                        </label>
+                    </fieldset>
+
+                    <fieldset class="sim-fieldset">
+                        <legend>Ritmo</legend>
+                        <label>
+                            <span>Reloj total · segundos</span>
+                            <input id="dramaturgia_sim_total_seconds" type="number" min="30" max="3600" step="5" value="150" />
+                        </label>
+                        <label>
+                            <span>Duración de modo · segundos</span>
+                            <input id="dramaturgia_sim_mode_seconds" type="number" min="5" max="300" step="1" value="14" />
+                        </label>
+                        <label>
+                            <span>Velocidad de bots</span>
+                            <select id="dramaturgia_sim_speed">
+                                <option value="0.5">0,5×</option>
+                                <option value="1" selected>1×</option>
+                                <option value="1.5">1,5×</option>
+                                <option value="2">2×</option>
+                                <option value="3">3×</option>
+                                <option value="4">4×</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Escritura · palabras/min</span>
+                            <input id="dramaturgia_sim_writer_ppm" type="number" min="5" max="600" step="1" value="52" />
+                        </label>
+                        <label>
+                            <span>Inspiración cada · segundos</span>
+                            <input id="dramaturgia_sim_muse_interval" type="number" min="1" max="120" step="1" value="7" />
+                        </label>
+                        <label>
+                            <span>Musas bot por equipo</span>
+                            <input id="dramaturgia_sim_muses" type="number" min="0" max="4" step="1" value="2" />
+                        </label>
+                    </fieldset>
+
+                    <fieldset class="sim-fieldset sim-fieldset--modes">
+                        <legend>Modos y automatismos</legend>
+                        <div class="sim-mode-grid">
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="letra bendita" checked /> Letra bendita</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="letra prohibida" checked /> Letra prohibida</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="tertulia" checked /> Tertulia</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="palabras bonus" checked /> Palabras bonus</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="palabras prohibidas" checked /> Palabras prohibidas</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="frase final" checked /> Frase final</label>
+                        </div>
+                        <div class="sim-switches">
+                            <label><input id="dramaturgia_sim_full_show" type="checkbox" checked /> Toda la partida</label>
+                            <label><input id="dramaturgia_sim_votes" type="checkbox" checked /> Votos automáticos</label>
+                            <label><input id="dramaturgia_sim_hearts" type="checkbox" checked /> Corazones de musas</label>
+                            <label><input id="dramaturgia_sim_auto_finish" type="checkbox" checked /> Final automático</label>
+                        </div>
+                    </fieldset>
+
+                    <div class="sim-preflight" id="dramaturgia_sim_preflight">
+                        <span>SEGURIDAD</span>
+                        <strong id="dramaturgia_sim_preflight_title">Sin comprobar</strong>
+                        <p id="dramaturgia_sim_preflight_detail">La simulación nunca reemplaza un rol humano.</p>
+                        <button id="dramaturgia_sim_check" type="button">Comprobar partida</button>
+                    </div>
+
+                </form>
+
+                <aside class="sim-console" aria-label="Actividad de la simulación">
+                    <header>
+                        <span class="eyebrow">EJECUCIÓN</span>
+                        <strong id="dramaturgia_sim_run">SIN RUN</strong>
+                    </header>
+                    <div
+                        id="dramaturgia_sim_progress"
+                        class="sim-progress"
+                        role="progressbar"
+                        aria-label="Progreso de la simulación"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow="0"
+                        aria-valuetext="00:00 de 00:00"
+                    >
+                        <span id="dramaturgia_sim_progress_bar"></span>
+                    </div>
+                    <dl class="sim-metrics">
+                        <div><dt>Tiempo simulado</dt><dd id="dramaturgia_sim_elapsed">00:00</dd></div>
+                        <div><dt>Modo</dt><dd id="dramaturgia_sim_mode">—</dd></div>
+                        <div><dt>Palabras</dt><dd id="dramaturgia_sim_words">0 / 0</dd></div>
+                        <div><dt>Inspiraciones</dt><dd id="dramaturgia_sim_inspirations">0</dd></div>
+                    </dl>
+                    <ol id="dramaturgia_sim_log" class="sim-log" aria-label="Registro acotado de acciones">
+                        <li>El laboratorio está preparado para comprobar el servidor.</li>
+                    </ol>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="dramaturgia_screen_dialog" class="screen-dialog" aria-labelledby="dramaturgia_screen_dialog_title">
+        <header>
+            <h2 id="dramaturgia_screen_dialog_title">Pantalla</h2>
+            <button id="dramaturgia_screen_dialog_close" type="button" aria-label="Cerrar pantalla ampliada">Cerrar ×</button>
+        </header>
+        <div id="dramaturgia_screen_dialog_viewport" class="screen-dialog__viewport"></div>
+    </dialog>
+
+    <p id="dramaturgia_live_region" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+
+    <script src="../config.js"></script>
+    <script src="../dist/socket.io/socket.io.js"></script>
+    <script src="./js/model.js?v=20260731c"></script>
+    <script src="./js/tools-model.js?v=20260731f"></script>
+    <script src="./js/history-snapshots.js?v=20260731b"></script>
+    <script src="./js/history-controller.js?v=20260731d"></script>
+    <script src="./reference-show/manifest.js?v=20260731f"></script>
+    <script src="./js/reference-show.js?v=20260731g"></script>
+    <script src="./js/state.js?v=20260731u"></script>
+    <script src="./js/socket-events.js?v=20260731d"></script>
+    <script src="./js/tools.js?v=20260731g"></script>
+    <script src="./js/index.js?v=20260731f"></script>
+</body>
+</html>

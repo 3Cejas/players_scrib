@@ -9,6 +9,7 @@ A continuación se explica en mayor profundidad el videojuego.
   - Control: Maneja el comportamiento del juego.
   - Espectador: Ilustra a los dos jugadores para que se pueda observar desde terceros.
   - Jurado: Lee ambos textos, consulta estadisticas, toma notas y evalua escritura y cooperacion de musas.
+  - Dramaturgia: Archiva el HTML real que ven los nueve roles en checkpoints causales y permite recorrerlo como grafo o cronología por rol. Las capturas empiezan al abrir Dramaturgia, quedan congeladas en el navegador y nunca reconstruyen el pasado con el estado presente. `Pantallas` conserva las nueve réplicas vivas de solo lectura e incluye un laboratorio protegido para simular partidas automáticas de test.
   ### FUNCIONAMIENTO
   Cuando el juego comience, los escritxres podrán comenzar a escribir. Cada carácter es un punto y, además, si dejan de escribir, el juego comenzará a borrarles su texto; a medida que escriban, el texto se borrará antes y más rápido. Los escritxres deberán conseguir la mayor puntuación posible.
 #### MODOS

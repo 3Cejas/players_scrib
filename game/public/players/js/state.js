@@ -1259,6 +1259,9 @@ function resolverUrlFeedbackMusa(payload = {}) {
 }
 
 function redirigirMusaAFeedback(payload = {}) {
+    if (window.__SCRIB_DRAMATURGIA_MONITOR__?.active) {
+        return;
+    }
     const payloadSeguro = (payload && typeof payload === "object") ? payload : {};
     const activo = !Object.prototype.hasOwnProperty.call(payloadSeguro, "activa") || Boolean(payloadSeguro.activa);
     if (!activo || redireccion_feedback_musa_en_curso) {

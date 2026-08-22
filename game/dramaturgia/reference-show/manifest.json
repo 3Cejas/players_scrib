@@ -1,0 +1,604 @@
+{
+  "schemaVersion": 1,
+  "id": "scrib-complete-reference-show-v1",
+  "generatedAt": "2026-08-22T19:23:39.410Z",
+  "source": "isolated-match-simulator",
+  "sessionId": "scrib-mt4rlvl2-1",
+  "checkpointCount": 68,
+  "screenIds": [
+    "control",
+    "writer1",
+    "musa1",
+    "spectator",
+    "actor1"
+  ],
+  "interactionChanges": {
+    "control": [
+      "warmup-lugares-open"
+    ],
+    "writer1": [
+      "warmup-lugares-open",
+      "warmup-lugares",
+      "warmup-acciones-open",
+      "warmup-acciones",
+      "warmup-frase-final-open",
+      "warmup-frase-final",
+      "level-letra-bendita",
+      "level-letra-prohibida-feedback",
+      "level-letra-prohibida",
+      "level-tertulia",
+      "level-palabras-bonus-feedback",
+      "level-palabras-bonus",
+      "level-palabras-prohibidas-feedback",
+      "level-palabras-prohibidas",
+      "level-frase-final-feedback",
+      "level-frase-final",
+      "representation-preparation"
+    ],
+    "musa1": [
+      "warmup-lugares-open",
+      "warmup-lugares",
+      "warmup-acciones-open",
+      "warmup-acciones",
+      "warmup-frase-final-open",
+      "warmup-frase-final",
+      "level-letra-bendita",
+      "vote-letra-bendita",
+      "level-letra-prohibida",
+      "level-tertulia",
+      "vote-letra-prohibida",
+      "level-palabras-bonus",
+      "vote-palabras-bonus",
+      "level-palabras-prohibidas",
+      "vote-palabras-prohibidas",
+      "level-frase-final",
+      "representation-preparation"
+    ],
+    "spectator": [
+      "warmup-lugares-open",
+      "warmup-lugares",
+      "warmup-acciones-open",
+      "warmup-acciones",
+      "warmup-frase-final-open",
+      "warmup-frase-final",
+      "level-letra-bendita",
+      "vote-letra-bendita",
+      "level-letra-prohibida",
+      "level-tertulia",
+      "vote-letra-prohibida",
+      "level-palabras-bonus",
+      "vote-palabras-bonus",
+      "level-palabras-prohibidas",
+      "vote-palabras-prohibidas",
+      "level-frase-final",
+      "representation-preparation"
+    ],
+    "actor1": [
+      "warmup-lugares-open",
+      "level-letra-bendita",
+      "level-letra-prohibida",
+      "level-tertulia",
+      "level-palabras-bonus",
+      "level-palabras-prohibidas",
+      "level-frase-final",
+      "representation-preparation"
+    ]
+  },
+  "milestones": {
+    "warmup-lugares-open": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:7",
+      "seq": 10,
+      "roles": {
+        "control": "reference-show/blobs/85137ca978d2e56e6863766282d581013b1a50aeafc9108dccad534b2d6fed60.html",
+        "writer1": "reference-show/blobs/142c0c7c3f0bb7296407f55a030c57df63d37d6df26a1f930de93cc73a4d52a3.html",
+        "musa1": "reference-show/blobs/93b377ccc239c8f44c819868f83b38fc52128e29dfed6a25d7354c1fefd6fc48.html",
+        "spectator": "reference-show/blobs/e08bbcf9356816e8a725a4da393fb3b6de25936a63b9fb7dc8b61efcc9ef4d98.html",
+        "actor1": "reference-show/blobs/329930a48969e2de42a76449dc6b8284f65a589bc34b1ceb302d7c374bb5a198.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "open",
+        "request": "lugares"
+      }
+    },
+    "warmup-lugares": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:9",
+      "seq": 12,
+      "roles": {
+        "control": "reference-show/blobs/b9ea905068b0e28123471bfa7bfe1f1115b7a7c96a6dec6e14e354f5cf10f66b.html",
+        "writer1": "reference-show/blobs/ed032bfc466fdb887696909d928375a11afcd9e46c2491e63100f28a306f4279.html",
+        "musa1": "reference-show/blobs/29ac630d6d72ad81a0b7de0c22debad28a280f0097434129369630b513487c10.html",
+        "spectator": "reference-show/blobs/5303f6a09b3e9c565a6f5054cf7b5ee2a58e84d404cd351fd8202a9b0ba44afd.html",
+        "actor1": "reference-show/blobs/329930a48969e2de42a76449dc6b8284f65a589bc34b1ceb302d7c374bb5a198.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "closed",
+        "request": "lugares"
+      }
+    },
+    "warmup-acciones-open": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:12",
+      "seq": 15,
+      "roles": {
+        "control": "reference-show/blobs/fb096b30f1e080eaa7d0e3d084cc689a163af96eac82afb3fcbe2babc23036e5.html",
+        "writer1": "reference-show/blobs/1d56c1311a61abef7995d653e378aaabc2225542c822cf2c0ef4616d6df21df7.html",
+        "musa1": "reference-show/blobs/24352ea44220d96c77ba75e4e2fea2b42b8a6655fdae64d4f3f193688672f94b.html",
+        "spectator": "reference-show/blobs/0a55b943475b8217ebd2e60fd9584c6a157be6724fda8d5983d06467da0d507e.html",
+        "actor1": "reference-show/blobs/329930a48969e2de42a76449dc6b8284f65a589bc34b1ceb302d7c374bb5a198.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "open",
+        "request": "acciones"
+      }
+    },
+    "warmup-acciones": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:14",
+      "seq": 17,
+      "roles": {
+        "control": "reference-show/blobs/ba5de59e4aafebe2134021c0b29b8eee2ce1ed0c33a0bbdbdd021f36d0f32573.html",
+        "writer1": "reference-show/blobs/f8ab11f3dc09ec82c9cf7a912573478c634f76e1e32ba997a3d9b1282b4ff7aa.html",
+        "musa1": "reference-show/blobs/b9f0f4e7f4b09bdc3808da88e7541f17d33b250f938025bad7dc0360d0bd8231.html",
+        "spectator": "reference-show/blobs/e9a5466ea214aa7859e9b999e0f59d05c709b8fd6773ffabb13d5229f9600ef7.html",
+        "actor1": "reference-show/blobs/329930a48969e2de42a76449dc6b8284f65a589bc34b1ceb302d7c374bb5a198.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "closed",
+        "request": "acciones"
+      }
+    },
+    "warmup-frase-final-open": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:17",
+      "seq": 20,
+      "roles": {
+        "control": "reference-show/blobs/20a3d2d8db48bed55328ede7a6ac68e83128ef0b0bfd158596271d0c1ad63db4.html",
+        "writer1": "reference-show/blobs/190dae4513521de056dc18d16c6c094ea0a2110bff9518f31f46dfabe5a11d53.html",
+        "musa1": "reference-show/blobs/3696eca55c833861c0ef8fb280d1a7308ef0f7570cc5f0966ebc58a04a99392e.html",
+        "spectator": "reference-show/blobs/bfbe3a913312560ddb9fb9bdf97e3c1af5a3bacd544ddfda1a6d5e75e39412a6.html",
+        "actor1": "reference-show/blobs/329930a48969e2de42a76449dc6b8284f65a589bc34b1ceb302d7c374bb5a198.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "open",
+        "request": "frase_final"
+      }
+    },
+    "warmup-frase-final": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:19",
+      "seq": 22,
+      "roles": {
+        "control": "reference-show/blobs/7967fe43b3f1bb9a88a4939e9f854ecdf38f124ad27c45655d114f14595deb4e.html",
+        "writer1": "reference-show/blobs/865640829e3c12046f877cb71d42b4e65179d0de017fb8eca410e34b4aad5170.html",
+        "musa1": "reference-show/blobs/9ebcb6126e6e77a34707b882638fe4cc80b87a32b7fe2632a13b07f5ccafccc6.html",
+        "spectator": "reference-show/blobs/a545d5bc19db8cf73b71cc0d0657930e2120acbb204f67431eb346937313ef89.html",
+        "actor1": "reference-show/blobs/329930a48969e2de42a76449dc6b8284f65a589bc34b1ceb302d7c374bb5a198.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "closed",
+        "request": "frase_final"
+      }
+    },
+    "level-letra-bendita": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:26",
+      "seq": 38,
+      "roles": {
+        "control": "reference-show/blobs/3298d9eb792efa052bc57e03733462e11a1f606cdf0395caf3d79880d857449d.html",
+        "writer1": "reference-show/blobs/d051269fac10cf2840cdf1b5b8df873bfb9f786d10b602255ba33bfdd93a8b7c.html",
+        "musa1": "reference-show/blobs/ee305b76193941d924efab375aff1e825f84cd32628018202d37e59b0eca19c8.html",
+        "spectator": "reference-show/blobs/3ccfe9c88fb775cb196ba599f2ec4c4c8e6330c64d30d2504567dcc7986dc23a.html",
+        "actor1": "reference-show/blobs/e0bcd2521af921c87b27553a89779ccde086d2ec13e6253d8ad51b462af5d37d.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "stable",
+        "mode": "letra bendita"
+      }
+    },
+    "vote-letra-bendita": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:27",
+      "seq": 44,
+      "roles": {
+        "control": "reference-show/blobs/e5c4858f4b4472c35097301a496f7125d5d86e2adc524ad8ac6685e608fafa10.html",
+        "writer1": "reference-show/blobs/2f6efd1b942288e04332402dc4db9c078d404c268eff7bcfc10ec831c7f69bb3.html",
+        "musa1": "reference-show/blobs/aedb8158c2400b847c2c24334af1fff0acaba0a5a6d11e5d2a07d39e9c869b3b.html",
+        "spectator": "reference-show/blobs/5a7c0d8759d4bcd2b5b1025e08acc78147d600d36789036bd115a004696e9e34.html",
+        "actor1": "reference-show/blobs/14eb346f7ab2e03585db1a656c33b0a9b73493364c0df647e7ffbe2935d5033b.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "voting",
+        "votingTeam": 1
+      }
+    },
+    "level-letra-prohibida-feedback": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:30",
+      "seq": 54,
+      "roles": {
+        "control": "reference-show/blobs/0791e32473a6594caf32a6827f5bda6c32871aa010b3d1a74692c4ce828cdb4c.html",
+        "writer1": "reference-show/blobs/a197caeca498d48447f98392d06f6a0e9b88e3825bad1e5c5d9add3e6d1d255d.html",
+        "musa1": "reference-show/blobs/6a7274e8fffb96d218bdc0f46e8ac1badc8844021aede09199dce3661aa83127.html",
+        "spectator": "reference-show/blobs/3c3efc51bdd40fde23305e61595e5e251228be97b1fd10d5178eb5859b84f9bf.html",
+        "actor1": "reference-show/blobs/2183ca8d8d05def03abd5e5d5730b5fe6acdf6469da96e16e6ca008428b87ee4.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer2",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "feedback",
+        "mode": "letra prohibida",
+        "disadvantagedPlayer": 2,
+        "disadvantage": "🌪️"
+      }
+    },
+    "level-letra-prohibida": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:31",
+      "seq": 58,
+      "roles": {
+        "control": "reference-show/blobs/8f5831180823e07b71e27470fb7ed4f23667dc27182b4d8424de4a6f4dda4cf6.html",
+        "writer1": "reference-show/blobs/1ff6682c5a484a1b7f5cc856904f3e77c37092761a4790748143833ba9d82d11.html",
+        "musa1": "reference-show/blobs/630963efab3e8dd798e0e7f148833c765ef2d1e3898f97f28b6963ccef348b84.html",
+        "spectator": "reference-show/blobs/d5577da34fa57ec6e120d5a4f24ea52c51926c2767cc0956b6c4017e6eb29e57.html",
+        "actor1": "reference-show/blobs/15b15af0f2af7a01f57d0115cf80765a201e827cac379b3902d4edcae0129bce.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer2",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "stable",
+        "mode": "letra prohibida",
+        "disadvantagedPlayer": 2
+      }
+    },
+    "level-tertulia": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:36",
+      "seq": 74,
+      "roles": {
+        "control": "reference-show/blobs/05e7c111ae9a581a86c56872f3ac7c7937b7b4e8923634ead44471d214d96ca7.html",
+        "writer1": "reference-show/blobs/fe2cfef19e2966668555dac1343352f5110ae04ad8b8984a53f818e0853c0e6e.html",
+        "musa1": "reference-show/blobs/96f1ea6b6a802bd3b352e1845b4699bdb90785c02ce68f93d91df1d1e74ba87d.html",
+        "spectator": "reference-show/blobs/9e35d065212b383affb4d1b4f49f6a2cd9c92fd446da654ff44dcf6a2736d1ae.html",
+        "actor1": "reference-show/blobs/13feb1956b2462739cf34cbbe655415c74066ba78d329b7c1a888e37efa0ba3d.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "stable",
+        "mode": "tertulia"
+      }
+    },
+    "vote-letra-prohibida": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:37",
+      "seq": 82,
+      "roles": {
+        "control": "reference-show/blobs/dad2ff5ec5aae629b92d75d8fa3aaea9ddd3b4855f47712160861d539bfa523c.html",
+        "writer1": "reference-show/blobs/f23703d48b0a7bb3eec572b1990b3a64a6a0e660e5eae2b2fc6d7e1cacc6191e.html",
+        "musa1": "reference-show/blobs/da475f47db4b65cfa3b5ab9bba2a1c47e2f0c5716e308fd80f660180292b0a43.html",
+        "spectator": "reference-show/blobs/ff1617db6e832354ada349123d04421adb62c8d7ca7eb1e14e2cd8f57ebe3cf1.html",
+        "actor1": "reference-show/blobs/298670e5e850fa1966e8808281fbda93ac4f89dbecdcdba23f53f21175539e5f.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa2",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "voting",
+        "votingTeam": 2
+      }
+    },
+    "level-palabras-bonus-feedback": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:40",
+      "seq": 92,
+      "roles": {
+        "control": "reference-show/blobs/821a7feb8dc22181fc29f7f02e00a2f11e17d87015258d8d22fcbed5f14856b3.html",
+        "writer1": "reference-show/blobs/ce67f690b0b89e27399dc749f9fde1cb20a4ce5f4534f3a15d097c3f0b730c54.html",
+        "musa1": "reference-show/blobs/1d9d5a6db23d34267e12a6d31bb920f45e229809029936ad82a239c15d9f7052.html",
+        "spectator": "reference-show/blobs/d632080f7bf2a1df4b5f8d2fee0c4a9ab970355ad2a0df6c57ca88f2c4260114.html",
+        "actor1": "reference-show/blobs/a1d5ba47f13a85bf5d1521477299f55dcaf3aa7122b75517877ab1da32788472.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "feedback",
+        "mode": "palabras bonus",
+        "disadvantagedPlayer": 1,
+        "disadvantage": "🌪️"
+      }
+    },
+    "level-palabras-bonus": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:41",
+      "seq": 94,
+      "roles": {
+        "control": "reference-show/blobs/1b10dca2f9003f8d53d7fe83438a20182bfa173ff9f054ee0b67b5411379477e.html",
+        "writer1": "reference-show/blobs/c696f416cb704980646042d624d5b9dc177937d5d1c79110340ba7cf2ac5a686.html",
+        "musa1": "reference-show/blobs/e5fb995947cdabcf6372ecd3f2fec208ecec2ee64002896e43b96c023bf0d2e1.html",
+        "spectator": "reference-show/blobs/33ccc200e0f6d7346650b1700723c7f1cda5d54183427fe2d76cbd2f9cee9e5d.html",
+        "actor1": "reference-show/blobs/ad89701ad5f9fd73abecccc79d4b40fb09d0bd41f7e7408a581a11d755db0b40.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "stable",
+        "mode": "palabras bonus",
+        "disadvantagedPlayer": 1
+      }
+    },
+    "vote-palabras-bonus": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:42",
+      "seq": 100,
+      "roles": {
+        "control": "reference-show/blobs/5158ca38db5050e5df2e1a47cd6cab51c3c31093584e280c64adcffb0ad11b54.html",
+        "writer1": "reference-show/blobs/21558b8ced002752852ff5758f0bed190f7136be9e179d0894b28c1231811111.html",
+        "musa1": "reference-show/blobs/493a35f70a5e76a692c85becb125ee62135e4d54b04824760cdcbd67e8933d10.html",
+        "spectator": "reference-show/blobs/ba99b1787e0bc0dccac0e55500b7e9e9f005296ce8460170378f50c55c9b1524.html",
+        "actor1": "reference-show/blobs/f585c8103a4fcbda59903abd8cc2175028164e19529887b2057b0f56801c9763.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa2",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "voting",
+        "votingTeam": 2
+      }
+    },
+    "level-palabras-prohibidas-feedback": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:45",
+      "seq": 111,
+      "roles": {
+        "control": "reference-show/blobs/6f53a30a085a5a5128b361b0f1a4f662a70f911a77c463240b1c70eb80bdb3ab.html",
+        "writer1": "reference-show/blobs/502f076cffa475cf96cfb5a34d6cc38a446b90773f8169a1d57379a02113f34c.html",
+        "musa1": "reference-show/blobs/7c6499a44e090cf4d84843141d1eaf9a99c089df461984282dec7943091b46c1.html",
+        "spectator": "reference-show/blobs/780a17b6acf0443b0351103d49e4c95956b0e394ed3f31596f51c273135cb18d.html",
+        "actor1": "reference-show/blobs/57054e6cb07d3c93cae840fb87b15e5c6756a01ea0410138c2f3553ff4645dc0.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "feedback",
+        "mode": "palabras prohibidas",
+        "disadvantagedPlayer": 1,
+        "disadvantage": "🙃"
+      }
+    },
+    "level-palabras-prohibidas": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:46",
+      "seq": 115,
+      "roles": {
+        "control": "reference-show/blobs/8a65339a1a01bf84ed893040f03658f60f84b20660b61f0fd0910a387d7da7c8.html",
+        "writer1": "reference-show/blobs/2f90b51d2ffacf2dfe2396294e67dad484e06451d827ce31347384d22e38e1a6.html",
+        "musa1": "reference-show/blobs/87a23d0d78ecf186d685617833b41a91a725c7a84ad405427c85350cf025569e.html",
+        "spectator": "reference-show/blobs/3213702ae8ac8fbbb7d23ae3e10626918081c70a8b86872abd34b78dc2edb66d.html",
+        "actor1": "reference-show/blobs/c444779cb35d311bc6e1de0f0db91ae088a1326b053a1275d1749d43c905f0de.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "stable",
+        "mode": "palabras prohibidas",
+        "disadvantagedPlayer": 1
+      }
+    },
+    "vote-palabras-prohibidas": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:47",
+      "seq": 121,
+      "roles": {
+        "control": "reference-show/blobs/de0e1c7d3597e220581f7e7f98a8534da9c30b9ac1bf67d5f3bd8c32afe9e213.html",
+        "writer1": "reference-show/blobs/79b61c94a010c7c3e82e0f309c2f22adfba804d17c3699a4d5079e25581fd1dc.html",
+        "musa1": "reference-show/blobs/36c2eacfc0fdedbbabb6521fa53bb5ba96a3a4a65d3e1dea7ee06774de093a0e.html",
+        "spectator": "reference-show/blobs/8ecf9f03187cf2ebdc9837429ec9e1765d9cc0f04deed56860a374b46bebc452.html",
+        "actor1": "reference-show/blobs/58c68a0846d6fc0741c5067cc79bd36cf31c01e86f9790179e711312b49df3ca.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "voting",
+        "votingTeam": 1
+      }
+    },
+    "level-frase-final-feedback": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:50",
+      "seq": 132,
+      "roles": {
+        "control": "reference-show/blobs/043fd4510eac0cf283af58b32f0558b6a4d2ae12f0f890aacbb7526eaa1eaf21.html",
+        "writer1": "reference-show/blobs/f62a31091b3a66d57c9a22d82bb5efe3bdc3b9c6adc40d3bf2db94e4cbdadf61.html",
+        "musa1": "reference-show/blobs/7eeacfbbe24014506cc84d6d5f1a3226aed14de67bb48a3ec929f1067966ea6a.html",
+        "spectator": "reference-show/blobs/b98fe09b98147b1fba2ba5f21c8e5e18bd9d972281f72617bc5a64b827b3aeed.html",
+        "actor1": "reference-show/blobs/f011213d9c481a6a68902e8ff3dbd5ab0c992645999de65b05ecd4f47abe0d77.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer2",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "feedback",
+        "mode": "frase final",
+        "disadvantagedPlayer": 2,
+        "disadvantage": "🐢"
+      }
+    },
+    "level-frase-final": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:61",
+      "seq": 165,
+      "roles": {
+        "control": "reference-show/blobs/326618a124ac18a5dbe7d77afdd771972c900c7695ef2f7b8b7b1fd502d420d4.html",
+        "writer1": "reference-show/blobs/cf66dcff97aab1e1a51ba9659887d24bb291a253997d09935ef145494546140a.html",
+        "musa1": "reference-show/blobs/0d7c1f928476e594978949838b9e2aaf31e60da37364a2e6a7912f6ba7b72f2b.html",
+        "spectator": "reference-show/blobs/7558a21115ab41c479c3e8856aaf66b9825df7f0efd5bf1c1a07894dd876a928.html",
+        "actor1": "reference-show/blobs/1e88a6bf9492691d30a6db307e9d3bc9dfadb79d892107731c2e4cd6138eb669.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer2",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "stable",
+        "mode": "frase final",
+        "disadvantagedPlayer": 2
+      }
+    },
+    "representation-preparation": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:62",
+      "seq": 172,
+      "roles": {
+        "control": "reference-show/blobs/cbd0f03a14ea37ad6f58321ce35cf7d6a0e084a2a5d371e19ba2e1fd121e824d.html",
+        "writer1": "reference-show/blobs/c45fc9fdb39d6afcd5770aef5ccb1534cfc8771484165646cc7612fff6d3d3dd.html",
+        "musa1": "reference-show/blobs/eb0efed74517301f2b2c93737f1e1f0c9ce55a9c732f952b182a80efa3561589.html",
+        "spectator": "reference-show/blobs/7c50893944344e22a0dd412ad1b9e560894b96fe530e7629b1924fe980cc4fc2.html",
+        "actor1": "reference-show/blobs/8d317df370467c33c678127919fd7de3c555bdd46753ee22b3128b1f813d71a4.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "preparation"
+      }
+    },
+    "representation-projection": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:63",
+      "seq": 173,
+      "roles": {
+        "control": "reference-show/blobs/cbd0f03a14ea37ad6f58321ce35cf7d6a0e084a2a5d371e19ba2e1fd121e824d.html",
+        "writer1": "reference-show/blobs/90a5f102b240e1c20766fb8bf68f714226088e7809bfd84d2d3d8ea2865dd2a4.html",
+        "musa1": "reference-show/blobs/eb0efed74517301f2b2c93737f1e1f0c9ce55a9c732f952b182a80efa3561589.html",
+        "spectator": "reference-show/blobs/7ca04cabaafcf73d9e5329b4856c67a8b31c21d4dff260fb7580816f246b97f2.html",
+        "actor1": "reference-show/blobs/24c22f0209b8724758efa79888e7b50714d0bcd5f7f7a979688aece35d6763de.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "projection"
+      }
+    },
+    "representation-final": {
+      "checkpointId": "scrib-mt4rlvl2-1:checkpoint:68",
+      "seq": 178,
+      "roles": {
+        "control": "reference-show/blobs/2adbed319a9bce2282769b22000c79aaf7f366488d4e7fa48afa08c5718c8c7e.html",
+        "writer1": "reference-show/blobs/2947c42f30c5adf0f66e8335a0e35f0bc9f83c4aadc6b80e5df446405b707d9c.html",
+        "musa1": "reference-show/blobs/eb0efed74517301f2b2c93737f1e1f0c9ce55a9c732f952b182a80efa3561589.html",
+        "spectator": "reference-show/blobs/bbc5f1037e8b41247c9a907c75c56f276e89cc79ce833d4a7c77c1afc5298a7d.html",
+        "actor1": "reference-show/blobs/cd36ddc4470ca6080bddd0bdcef4d945d0d3c3bfb9198fee25c5f5faadd7b541.html"
+      },
+      "sources": {
+        "control": "control",
+        "writer1": "writer1",
+        "musa1": "musa1",
+        "spectator": "spectator",
+        "actor1": "actor1"
+      },
+      "context": {
+        "moment": "final"
+      }
+    }
+  }
+}

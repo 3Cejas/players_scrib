@@ -1195,3 +1195,365 @@ test("actor fullscreen is selected explicitly instead of toggled by page clicks"
   assert.match(actions, /document\.addEventListener\("fullscreenchange", actualizarBotonPantallaCompletaActor\)/);
   assert.doesNotMatch(actions, /document\.addEventListener\('click', function\(event\)/);
 });
+
+test("dramaturgy map exposes a five-role HTML score for the complete show", () => {
+  const landing = read("game/index.html");
+  const html = read("game/dramaturgia/index.html");
+  const css = read("game/dramaturgia/index.css");
+  const model = read("game/dramaturgia/js/model.js");
+  const state = read("game/dramaturgia/js/state.js");
+  const socketEvents = read("game/dramaturgia/js/socket-events.js");
+  const index = read("game/dramaturgia/js/index.js");
+  const historySnapshots = read("game/dramaturgia/js/history-snapshots.js");
+  const historyController = read("game/dramaturgia/js/history-controller.js");
+  const referenceShow = read("game/dramaturgia/js/reference-show.js");
+
+  assert.match(landing, /href="\.\/dramaturgia\/index\.html\?ui=20260731u" data-pass="true"/);
+  assert.match(landing, /class="role-name">Dramaturgia<\/div>/);
+
+  assert.match(html, /id="dramaturgia_app"/);
+  assert.doesNotMatch(html, /data-dramaturgia-view=/);
+  assert.match(html, /id="dramaturgia_graph_viewport"/);
+  assert.doesNotMatch(html, /id="dramaturgia_timeline_viewport"|data-dramaturgia-panel="cronologia"/);
+  assert.doesNotMatch(html, /id="dramaturgia_detail"|class="live-strip"|ESPACIO DE ESCRITURA|ESPACIO ESCÉNICO/i);
+  assert.doesNotMatch(html, /id="dramaturgia_history_status"|class="history-status"/);
+  assert.doesNotMatch(html, /Recorrido completo/i);
+  assert.doesNotMatch(
+    html,
+    /Una partida completa, rol por rol|RECORRIDO VISUAL DE LA PARTIDA|Pulsa una pantalla para verla en grande|Cinco filas:|Elección inicial|→/
+  );
+  assert.doesNotMatch(html, /data-space-filter=/);
+  assert.match(html, /data-phase-filter="calentamiento"/);
+  assert.match(html, /data-phase-filter="juego"/);
+  assert.match(html, /data-phase-filter="representacion"/);
+  assert.match(html, /js\/model\.js\?v=20260731c/);
+  assert.match(html, /js\/history-snapshots\.js\?v=20260731b/);
+  assert.match(html, /index\.css\?v=20260731r/);
+  assert.match(html, /js\/history-controller\.js\?v=20260731d/);
+  assert.match(html, /reference-show\/manifest\.js\?v=20260731f/);
+  assert.match(html, /js\/reference-show\.js\?v=20260731g/);
+  assert.match(html, /js\/state\.js\?v=20260731u/);
+  assert.match(html, /js\/socket-events\.js\?v=20260731d/);
+  assert.match(html, /js\/index\.js\?v=20260731f/);
+
+  assert.match(css, /\.show-score/);
+  assert.match(css, /\.show-score__phase/);
+  assert.match(css, /\.show-score__role/);
+  assert.match(css, /\.show-score__cell/);
+  assert.match(css, /\.show-score__milestone-emoji/);
+  assert.match(css, /--milestone-accent/);
+  assert.match(css, /\.history-view/);
+  assert.match(css, /--score-column-width/);
+  assert.match(css, /--score-row-height/);
+  assert.match(css, /@media \(max-width: 720px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(css, /\.live-strip|\.live-card|\.stage-state/);
+
+  assert.match(model, /function normalizeEvent/);
+  assert.match(model, /const HISTORY_ROLE_ROWS/);
+  assert.match(model, /const SHOW_JOURNEY/);
+  assert.match(model, /function buildShowScore/);
+  assert.match(model, /function applySnapshot/);
+  assert.match(model, /function applyDelta/);
+  assert.match(model, /module\.exports = api/);
+  assert.match(state, /textContent =/);
+  assert.doesNotMatch(state, /\.innerHTML\s*=/);
+  assert.match(state, /renderShowScore/);
+  assert.match(state, /createHistoryView/);
+  assert.match(state, /createReferenceView/);
+  assert.match(state, /ScribDramaturgiaReferenceShow/);
+  assert.match(state, /DRAMATURGIA_UI_VERSION = "dramaturgia-complete-show-v10"/);
+  assert.match(state, /control: Object\.freeze\(\["warmup-lugares"\]\)/);
+  assert.match(state, /writer1: Object\.freeze\(\[/);
+  assert.match(state, /musa1: Object\.freeze\(\[/);
+  assert.match(state, /spectator: Object\.freeze\(\[/);
+  assert.match(state, /actor1: Object\.freeze\(\[/);
+  assert.match(state, /function shouldRenderRoleView\(row, column\)/);
+  assert.doesNotMatch(state, /row\.screenId !== "control"/);
+  assert.match(state, /if \(!Array\.isArray\(milestones\)\) return true/);
+  assert.match(state, /const roleViewChanged = shouldRenderRoleView\(row, column\)/);
+  assert.match(state, /\? "unchanged"/);
+  assert.match(state, /const DRAMATURGIA_LEVEL_VISUALS = Object\.freeze/);
+  assert.match(state, /"letra bendita": Object\.freeze\(\{ emoji: "🙏", accent: "#6bff83" \}\)/);
+  assert.match(state, /"letra prohibida": Object\.freeze\(\{ emoji: "😈", accent: "#ff8fa0" \}\)/);
+  assert.match(state, /tertulia: Object\.freeze\(\{ emoji: "💬", accent: "#64e8ff" \}\)/);
+  assert.match(state, /"palabras bonus": Object\.freeze\(\{ emoji: "📖", accent: "#ffd65a" \}\)/);
+  assert.match(state, /"palabras prohibidas": Object\.freeze\(\{ emoji: "⚔️", accent: "#ff71c8" \}\)/);
+  assert.match(state, /"frase final": Object\.freeze\(\{ emoji: "🏁", accent: "#ffad42" \}\)/);
+  assert.match(state, /function showColumnVisual\(column\)/);
+  assert.match(state, /"show-score__milestone-emoji", visual\.emoji/);
+  assert.match(state, /milestone\.style\.setProperty\("--milestone-accent", visual\.accent\)/);
+  assert.match(state, /function showScoreWithObservedSnapshot\(score\)/);
+  assert.match(state, /showScoreWithObservedSnapshot\(dramaturgiaModel\.buildShowScore\(checkpoints\)\)/);
+  assert.match(state, /screenById\.get\(row\.screenId\)/);
+  assert.doesNotMatch(state, /function eventButton/);
+  assert.doesNotMatch(state, /createHistoryCheckpointCard|history-mosaic|CHECKPOINT CAUSAL/);
+  assert.doesNotMatch(
+    state,
+    /milestoneDetail|Cargando HTML congelado|TIEMPO CAUSAL|HTML exacto|show-score__connector|show-score__pending|Pendiente de captura real/
+  );
+  assert.doesNotMatch(css, /\.show-score__connector|\.show-score__pending/);
+  assert.doesNotMatch(state, /renderDramaturgiaTimeline|dramaturgia_timeline_viewport|timelineRenderKey/);
+  assert.doesNotMatch(
+    html,
+    /CHECKPOINT CAUSAL|Presencias actualizadas|vistas HTML|HTML REAL CONGELADO|TIEMPO CAUSAL|Todos los cambios|cambios históricos/
+  );
+  assert.doesNotMatch(state, /renderDramaturgiaLiveState|dramaturgia_writer_|dramaturgia_stage_state/);
+  assert.match(socketEvents, /dramaturgiaSocket\.emit\("registrar_dramaturgia", \{/);
+  assert.match(socketEvents, /ui_version: DRAMATURGIA_UI_VERSION/);
+  assert.match(socketEvents, /dramaturgiaSocket\.on\("dramaturgia_estado"/);
+  assert.match(socketEvents, /dramaturgiaSocket\.on\("dramaturgia_evento"/);
+  assert.match(socketEvents, /dramaturgiaSocket\.on\("dramaturgia_checkpoint"/);
+  assert.match(historySnapshots, /function serializeDocument/);
+  assert.match(historySnapshots, /function hashSnapshot/);
+  assert.match(historySnapshots, /function openArchive/);
+  assert.match(historyController, /waitForFrameDocuments/);
+  assert.match(historyController, /sandbox", "allow-same-origin"/);
+  assert.match(historyController, /source:\s*"client_baseline"/);
+  assert.match(historyController, /Guardando pantallas…/);
+  assert.match(historyController, /momento\$\{count === 1 \? "" : "s"\} guardado/);
+  assert.match(historyController, /function isPresenceOnlyCheckpoint\(checkpoint\)/);
+  assert.match(historyController, /function visibleCheckpoints\(\)/);
+  assert.match(historyController, /filter\(\(checkpoint\) => !isPresenceOnlyCheckpoint\(checkpoint\)\)/);
+  assert.doesNotMatch(historyController, /Congelando las 9 vistas HTML|archivo local|memoria temporal|checkpoint visual/);
+  assert.match(index, /ScribDramaturgiaHistoryController\.initialize/);
+  assert.match(index, /ScribRoleModules\.dramaturgia/);
+  assert.match(index, /readOnly:\s*true/);
+  assert.match(referenceShow, /IntersectionObserver/);
+  assert.match(referenceShow, /MAX_CONCURRENT_PREVIEWS = 8/);
+  assert.match(referenceShow, /PREVIEW_LOAD_TIMEOUT_MS = 15000/);
+  assert.match(referenceShow, /const activePreviewJobs = new Set\(\)/);
+  assert.match(referenceShow, /function settlePreviewJob\(job\)/);
+  assert.match(referenceShow, /function releaseDisconnectedPreviewJobs\(\)/);
+  assert.doesNotMatch(referenceShow, /activePreviewLoads/);
+  assert.match(referenceShow, /manifest\.json\?v=20260731f/);
+  assert.match(referenceShow, /credentials: "same-origin"/);
+  assert.match(referenceShow, /scrib:dramaturgia-reference-ready/);
+  assert.match(referenceShow, /sandbox", "allow-same-origin"/);
+  assert.match(referenceShow, /openReferenceScreen/);
+});
+
+test("dramaturgy visual map owns local zoom controls and pointer-drag panning", () => {
+  const html = read("game/dramaturgia/index.html");
+  const css = read("game/dramaturgia/index.css");
+  const state = read("game/dramaturgia/js/state.js");
+  const index = read("game/dramaturgia/js/index.js");
+  const mapStart = html.indexOf('<section id="dramaturgia_map"');
+  const screensStart = html.indexOf('id="dramaturgia_workspace_screens"');
+  const mapMarkup = html.slice(mapStart, screensStart);
+  const workspaceStart = mapMarkup.indexOf('class="map-workspace"');
+  const filtersStart = mapMarkup.indexOf('class="map-filters map-filters--show"');
+  const navigationStart = mapMarkup.indexOf('class="map-navigation"');
+
+  assert.ok(mapStart >= 0 && screensStart > mapStart, "map controls belong to the map workspace");
+  assert.ok(
+    filtersStart >= 0 && navigationStart > filtersStart && navigationStart < workspaceStart,
+    "navigation must be rendered at the right of the phase filter bar"
+  );
+  assert.doesNotMatch(mapMarkup, /dramaturgia_latest|Ir al final|class="map-actions"/);
+  assert.doesNotMatch(index, /dramaturgia_latest/);
+  assert.match(
+    mapMarkup,
+    /class="map-navigation"[^>]*aria-label="Zoom local y desplazamiento del mapa"/
+  );
+  assert.match(mapMarkup, /class="zoom-controls"[^>]*aria-label="Zoom local del mapa"/);
+  assert.match(mapMarkup, /id="dramaturgia_zoom_out"[^>]*aria-label="Alejar"[^>]*>−<\/button>/);
+  assert.match(mapMarkup, /id="dramaturgia_zoom_label"[^>]*>100%<\/span>/);
+  assert.match(mapMarkup, /id="dramaturgia_zoom_in"[^>]*aria-label="Acercar"[^>]*>\+<\/button>/);
+  assert.match(mapMarkup, /id="dramaturgia_graph_viewport"/);
+  assert.doesNotMatch(mapMarkup, /Momento a momento|dramaturgia_timeline_viewport|cronologia/);
+
+  assert.match(state, /function setDramaturgiaZoom\(value\)/);
+  assert.match(state, /const DRAMATURGIA_ZOOM_MIN\s*=/);
+  assert.match(state, /const DRAMATURGIA_ZOOM_MAX\s*=/);
+  assert.match(
+    state,
+    /Math\.max\(\s*DRAMATURGIA_ZOOM_MIN,\s*Math\.min\(DRAMATURGIA_ZOOM_MAX,/
+  );
+  assert.match(state, /querySelector(?:All)?\([^)]*\.show-score/);
+  assert.match(state, /--score-column-width/);
+  assert.match(state, /--score-row-height/);
+  assert.match(state, /scrollLeft/);
+  assert.match(state, /scrollTop/);
+  assert.match(state, /clientWidth/);
+  assert.match(state, /clientHeight/);
+  assert.doesNotMatch(
+    `${state}\n${index}`,
+    /document\.(?:body|documentElement)\.style\.(?:zoom|transform)/,
+    "map zoom must never alter the browser page itself"
+  );
+
+  assert.match(index, /function bindDramaturgiaMapPan\(viewport\)/);
+  assert.match(index, /querySelector\("\.show-score"\)/);
+  assert.match(index, /addEventListener\("pointerdown"/);
+  assert.match(index, /addEventListener\("pointermove"/);
+  assert.match(index, /addEventListener\("pointerup"/);
+  assert.match(index, /addEventListener\("pointercancel"/);
+  assert.match(index, /addEventListener\("lostpointercapture"/);
+  assert.match(index, /button\s*!==?\s*0/, "only the primary pointer button may start panning");
+  assert.match(index, /pointerType[^;\n]*touch/, "native touch scrolling must not be intercepted");
+  assert.match(index, /setPointerCapture\(/);
+  assert.match(index, /releasePointerCapture\(/);
+  assert.match(index, /scrollLeft\s*=/);
+  assert.match(index, /scrollTop\s*=/);
+  assert.match(index, /const DRAMATURGIA_PAN_BLOCKING_SELECTOR\s*=\s*\[[\s\S]*"button"/);
+  assert.match(index, /DRAMATURGIA_PAN_BLOCKING_SELECTOR\s*=\s*\[[\s\S]*"iframe"/);
+  assert.match(index, /DRAMATURGIA_PAN_BLOCKING_SELECTOR\s*=\s*\[[\s\S]*"\[role=/);
+  assert.match(index, /closest\?\.\(DRAMATURGIA_PAN_BLOCKING_SELECTOR\)/);
+  assert.match(index, /history-view__open/, "snapshot previews remain valid drag handles");
+  assert.match(index, /Math\.(?:hypot|abs)\(/, "dragging should use a movement threshold");
+  assert.match(index, /addEventListener\("click"[\s\S]*preventDefault\(\)/);
+  assert.match(index, /addEventListener\("click"[\s\S]*stop(?:Immediate)?Propagation\(\)/);
+  assert.match(index, /dramaturgia_graph_viewport[\s\S]*bindDramaturgiaMapPan/);
+  assert.doesNotMatch(index, /dramaturgia_timeline_viewport|data-dramaturgia-view|setDramaturgiaView/);
+
+  assert.match(css, /\.map-navigation\s*\{/);
+  const navigationRule = css.match(/\.map-navigation\s*\{([^}]*)\}/)?.[1] || "";
+  assert.doesNotMatch(navigationRule, /position:\s*absolute|\btop:|\bright:/);
+  assert.match(css, /\.map-viewport[^}]*cursor:\s*grab/);
+  assert.match(css, /\.map-viewport\.is-panning[^}]*cursor:\s*grabbing/);
+  assert.match(css, /\.map-viewport\.is-panning[^}]*user-select:\s*none/);
+  assert.match(css, /touch-action:\s*pan-x\s+pan-y/);
+  const viewportRule = css.match(/\.map-viewport\s*\{([^}]*)\}/)?.[1] || "";
+  const scoreRule = css.match(/\.show-score\s*\{([^}]*)\}/)?.[1] || "";
+  assert.match(viewportRule, /overflow:\s*hidden/);
+  assert.match(viewportRule, /overscroll-behavior-y:\s*auto/);
+  assert.match(scoreRule, /overflow-x:\s*auto/);
+  assert.match(scoreRule, /overflow-y:\s*hidden/);
+  assert.match(scoreRule, /overscroll-behavior-y:\s*auto/);
+});
+
+test("dramaturgy adds a live screen room and an authenticated match laboratory", () => {
+  const html = read("game/dramaturgia/index.html");
+  const css = read("game/dramaturgia/index.css");
+  const toolsModel = read("game/dramaturgia/js/tools-model.js");
+  const tools = read("game/dramaturgia/js/tools.js");
+  const config = read("game/config.js");
+  const monitor = read("game/js/monitor-socket.js");
+  const museState = read("game/public/players/js/state.js");
+
+  assert.match(html, /data-dramaturgia-workspace="pantallas"/);
+  assert.match(html, /data-dramaturgia-workspace="laboratorio"/);
+  assert.match(html, /id="dramaturgia_screens_mount"/);
+  assert.match(html, /id="dramaturgia_lab_screens_mount"/);
+  assert.match(html, /id="dramaturgia_screen_grid"/);
+  assert.equal((html.match(/id="dramaturgia_screen_grid"/g) || []).length, 1);
+  assert.match(html, /id="dramaturgia_screen_dialog"/);
+  assert.match(html, /id="dramaturgia_skip_link"/);
+  assert.match(html, /id="dramaturgia_sim_form"/);
+  assert.match(html, /id="dramaturgia_sim_full_show"[\s\S]*Toda la partida/);
+  assert.match(html, /id="dramaturgia_sim_password"/);
+  assert.match(html, /id="dramaturgia_sim_step"/);
+  assert.match(html, /id="dramaturgia_sim_stop"/);
+  assert.match(html, /id="dramaturgia_sim_pause"[^>]*>Parar aquí<\/button>/);
+  assert.match(html, /id="dramaturgia_sim_step"[^>]*>Siguiente momento<\/button>/);
+  assert.match(html, /id="dramaturgia_sim_resume"[^>]*>Continuar<\/button>/);
+  assert.match(html, /id="dramaturgia_sim_progress"[\s\S]*role="progressbar"/);
+  assert.match(html, /index\.css\?v=20260731r/);
+  assert.match(html, /js\/tools-model\.js\?v=20260731f/);
+  assert.match(html, /js\/tools\.js\?v=20260731g/);
+  assert.doesNotMatch(html, /SALA DE PANTALLAS|Los nueve puntos de vista|dramaturgia_screens_live|screens-summary/i);
+  const tabsStart = html.indexOf('class="dramaturgia-workspace-tabs"');
+  const screensStart = html.indexOf('id="dramaturgia_workspace_screens"');
+  const headerIndex = html.indexOf('class="dramaturgia-header"');
+  const labStart = html.indexOf('id="dramaturgia_workspace_lab"');
+  assert.ok(headerIndex >= 0 && headerIndex < tabsStart && tabsStart < screensStart && screensStart < labStart);
+  const mapMarkup = html.slice(html.indexOf('id="dramaturgia_workspace_map"'), screensStart);
+  const globalHeaderMarkup = html.slice(headerIndex, tabsStart);
+  const globalHeaderEnd = html.indexOf("</header>", headerIndex);
+  const globalHeaderWithTabs = html.slice(headerIndex, globalHeaderEnd);
+  const screensMarkup = html.slice(screensStart, labStart);
+  const labMarkup = html.slice(labStart, html.indexOf('<dialog id="dramaturgia_screen_dialog"'));
+  assert.match(globalHeaderMarkup, /class="dramaturgia-brand"/);
+  assert.match(globalHeaderWithTabs, /class="dramaturgia-workspace-tabs"/);
+  assert.doesNotMatch(
+    globalHeaderMarkup,
+    /class="dramaturgia-(?:now|connection)"|id="dramaturgia_(?:phase|mode|sequence|mode_clock|connection|session|frozen)"/
+  );
+  assert.match(screensMarkup, /class="screens-live-status"/);
+  assert.match(screensMarkup, /class="dramaturgia-now"/);
+  assert.match(screensMarkup, /class="dramaturgia-connection"/);
+  assert.match(
+    screensMarkup,
+    /id="dramaturgia_phase"[\s\S]*id="dramaturgia_mode"[\s\S]*id="dramaturgia_mode_clock"[\s\S]*id="dramaturgia_connection"[\s\S]*id="dramaturgia_frozen"/
+  );
+  assert.doesNotMatch(mapMarkup, /map-toolbar|Recorrido completo/i);
+  assert.doesNotMatch(mapMarkup, /Momento a momento/);
+  assert.match(labMarkup, /Momento a momento/);
+  assert.match(labMarkup, /id="dramaturgia_lab_screens_mount"/);
+  assert.equal((html.match(/class="dramaturgia-header"/g) || []).length, 1);
+  const dialogMarkup = html.slice(
+    html.indexOf('<dialog id="dramaturgia_screen_dialog"'),
+    html.indexOf("</dialog>")
+  );
+  assert.match(dialogMarkup, /<header>\s*<h2 id="dramaturgia_screen_dialog_title">Pantalla<\/h2>\s*<button/);
+  assert.doesNotMatch(dialogMarkup, /class="eyebrow"|SOLO LECTURA|PANTALLA ·/);
+
+  assert.match(css, /\.screen-groups\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.doesNotMatch(css, /\.dramaturgia-workspace-tabs\s*\{[^}]*position:\s*sticky/);
+  assert.doesNotMatch(css, /\.dramaturgia-workspace-tabs\s*\{[^}]*\btop\s*:/);
+  assert.match(css, /\.dramaturgia-brand__role\s*\{[^}]*white-space:\s*nowrap/);
+  assert.doesNotMatch(css, /\.dramaturgia-brand__role\s*\{[^}]*writing-mode:/);
+  assert.doesNotMatch(css, /#dramaturgia_workspace_screens \.dramaturgia-header/);
+  assert.match(css, /\.screen-group__grid/);
+  assert.match(css, /height:\s*clamp\(4\.5rem, 5\.6vw, 5\.5rem\)/);
+  assert.match(css, /\.screen-tile__status\s*\{[\s\S]*width:\s*0\.48rem;[\s\S]*height:\s*0\.48rem;/);
+  assert.doesNotMatch(css, /\.screens-summary/);
+  assert.match(css, /\.screen-dialog/);
+  assert.match(css, /\.screen-dialog\s*\{[\s\S]*--screen-accent:\s*#edf7fb;[\s\S]*--screen-dialog-header-height:\s*3\.2rem;/);
+  assert.match(css, /\.screen-dialog > header\s*\{[\s\S]*min-height:\s*var\(--screen-dialog-header-height\);[\s\S]*padding:\s*0\.35rem 0\.9rem;/);
+  assert.match(css, /\.screen-dialog h2\s*\{[\s\S]*margin:\s*0;[\s\S]*color:\s*var\(--screen-accent, #edf7fb\);/);
+  assert.match(css, /\.screen-dialog__viewport\s*\{[\s\S]*height:\s*calc\(100% - var\(--screen-dialog-header-height\)\);/);
+  assert.match(css, /\.lab-layout/);
+  assert.match(css, /\.sim-status/);
+  assert.match(toolsModel, /const SCREENS = Object\.freeze/);
+  assert.equal((toolsModel.match(/label: "Intérprete"/g) || []).length, 2);
+  assert.match(toolsModel, /dramaturgia_monitor=1/);
+  assert.doesNotMatch(toolsModel, /Musa azul|Musa roja|Escritxr [12]|Actorxs [12]|MUSA 0[12]|PLUMA 0[12]|ESCENA 0[12]/);
+  assert.doesNotMatch(tools, /EQUIPO AZUL|EQUIPO ROJO|group\.label|screen-group__header/);
+  assert.match(tools, /dramaturgia_sim_autorizar/);
+  assert.match(tools, /dramaturgia_sim_preflight/);
+  assert.match(tools, /dramaturgia_sim_iniciar/);
+  assert.match(tools, /dramaturgia_sim_paso/);
+  assert.match(tools, /dramaturgia_sim_detener/);
+  assert.match(tools, /event\.origin !== global\.location\.origin/);
+  assert.match(tools, /event\.source !== nodes\.frame\.contentWindow/);
+  assert.match(tools, /frame\.tabIndex = -1/);
+  assert.match(tools, /status\.setAttribute\("role", "img"\)/);
+  assert.match(tools, /setScreenStatusLabel\(nodes\.status, screenById\(screenId\), normalized\)/);
+  assert.doesNotMatch(tools, /dramaturgia_screens_live|dramaturgia_screens_summary|en directo/i);
+  assert.match(tools, /dialog\.style\.setProperty\("--screen-accent", screen\.accent\)/);
+  assert.match(tools, /dialog\.style\.removeProperty\("--screen-accent"\)/);
+  assert.match(tools, /ScribDramaturgiaScreenPool/);
+  assert.match(tools, /openHistoryScreen/);
+  assert.match(tools, /function mountScreens\(/);
+  assert.match(tools, /mount\.moveBefore\(root, null\)/);
+  assert.match(tools, /mount\.appendChild\(root\)/);
+  assert.match(tools, /dramaturgia_screens_mount/);
+  assert.match(tools, /dramaturgia_lab_screens_mount/);
+  assert.doesNotMatch(tools, /cloneNode\s*\(/);
+  assert.match(tools, /if \(!modes\.length\) return null/);
+  assert.match(tools, /authorizeCurrentPanel/);
+  assert.match(tools, /result\.code === "NOT_AUTHORIZED"/);
+  assert.match(tools, /aria-valuetext/);
+
+  assert.match(config, /dramaturgia_monitor/);
+  assert.match(config, /js\/monitor-socket\.js/);
+  assert.match(monitor, /registrar_monitor_pantalla/);
+  assert.match(monitor, /EVENTOS_INTERNOS_SOCKET_IO/);
+  assert.match(monitor, /query\.dramaturgia_monitor = "1"/);
+  assert.match(monitor, /scrib-monitor-shield/);
+  assert.doesNotMatch(monitor, /REGISTROS_REALES\.has\(evento\)[\s\S]{0,160}emitirOriginal\(evento/);
+  assert.match(museState, /__SCRIB_DRAMATURGIA_MONITOR__\?\.active/);
+
+  [
+    "game/players/index.html",
+    "game/public/players/index.html",
+    "game/actors/source/index.html",
+    "game/control/index.html",
+    "game/spectator/index.html",
+    "game/jurado/index.html"
+  ].forEach((rolePath) => {
+    assert.match(read(rolePath), /config\.js/);
+  });
+});
