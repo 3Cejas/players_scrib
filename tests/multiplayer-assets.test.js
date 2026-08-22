@@ -21,8 +21,9 @@ const CONTROL_ACTIONS_VERSION = SCORE_ASSET_VERSION;
 const CONTROL_STATE_VERSION = SCORE_ASSET_VERSION;
 const CONTROL_SOCKET_EVENTS_VERSION = SCORE_ASSET_VERSION;
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
-const PUBLIC_PLAYER_STATE_VERSION = "20260822a";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260822a";
+const PUBLIC_PLAYER_STATE_VERSION = "20260822d";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260822d";
+const MUSA_ASSIGNMENT_VERSION = "20260822d";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260505f";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
@@ -55,12 +56,13 @@ test("multiplayer html references current changed shared assets", () => {
 
   [
     "game/players/index.html",
-    "game/public/players/index.html",
     "game/actors/source/index.html"
   ].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js");
     assertIncludesAsset(htmlRelPath, "js/i18n.js", I18N_VERSION);
   });
+  assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/public/players/index.html", "js/i18n.js", MUSA_ASSIGNMENT_VERSION);
   ["game/spectator/index.html", "game/control/index.html"].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js");
     assertIncludesAsset(htmlRelPath, "js/i18n.js", SCORE_ASSET_VERSION);
@@ -88,6 +90,10 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/public/players/index.html", "js/actions.js", PUBLIC_PLAYER_ACTIONS_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/state.js", PUBLIC_PLAYER_STATE_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/socket-events.js", PUBLIC_PLAYER_SOCKET_EVENTS_VERSION);
+  assertIncludesAsset("game/public/index.html", "js/i18n.js", MUSA_ASSIGNMENT_VERSION);
+  assertIncludesAsset("game/public/index.html", "js/musa-assignment.js", MUSA_ASSIGNMENT_VERSION);
+  assertIncludesAsset("game/public/index.html", "js/musa-selector.js", MUSA_ASSIGNMENT_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "js/musa-assignment.js", MUSA_ASSIGNMENT_VERSION);
 
   assertIncludesAsset("game/actors/index.html", "js/actor-selector.js", ACTOR_SELECTOR_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "css/publico.css", ACTOR_SOURCE_CSS_VERSION);

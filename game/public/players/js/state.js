@@ -2410,6 +2410,7 @@ const MAX_NOMBRE_MUSA = 10;
 const REGEX_NOMBRE_MUSA = /^[A-Za-z\u00C1\u00C9\u00CD\u00D3\u00DA\u00DC\u00D1\u00E1\u00E9\u00ED\u00F3\u00FA\u00FC\u00F10-9 _.-]+$/;
 const REGEX_LETRA_MUSA = /[A-Za-z\u00C1\u00C9\u00CD\u00D3\u00DA\u00DC\u00D1\u00E1\u00E9\u00ED\u00F3\u00FA\u00FC\u00F1]/;
 const CLAVE_CLIENTE_MUSA = "scrib_musa_client_id";
+const CLAVE_ASIGNACION_MUSA = "scrib_musa_assignment";
 
 function normalizarNombreMusa(valor) {
     if (typeof valor !== "string") return "";
@@ -2420,23 +2421,14 @@ function normalizarNombreMusa(valor) {
     return limpio.toUpperCase();
 }
 
-function generarIdClienteMusa() {
-    return `musa_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-}
-
 function obtenerIdClienteMusa() {
-    const fallbackKey = "__scribMusaClientIdFallback";
-    try {
-        const existente = window.localStorage.getItem(CLAVE_CLIENTE_MUSA);
-        if (existente) return existente;
-        const nuevo = generarIdClienteMusa();
-        window.localStorage.setItem(CLAVE_CLIENTE_MUSA, nuevo);
-        return nuevo;
-    } catch (error) {
-        if (window[fallbackKey]) return window[fallbackKey];
-        window[fallbackKey] = generarIdClienteMusa();
-        return window[fallbackKey];
+    if (window.ScribMusaAssignment && typeof window.ScribMusaAssignment.getOrCreateClientId === "function") {
+        return window.ScribMusaAssignment.getOrCreateClientId(window.sessionStorage, {
+            key: CLAVE_CLIENTE_MUSA,
+            windowRef: window
+        });
     }
+    throw new Error("No se pudo inicializar la identidad por pestaña de la musa.");
 }
 
 const nombre_musa = normalizarNombreMusa(
@@ -2462,6 +2454,60 @@ if (document.body) {
     document.body.classList.toggle("equipo-rojo", Number(player) === 2);
 }
 registrarNombreEscritxrPorEquipo(player, getParameterByName("escritxr") || "");
+
+function guardarAsignacionMusaSesion(asignacion) {
+    if (!asignacion || asignacion.ok !== true) return;
+    try {
+        window.sessionStorage.setItem(CLAVE_ASIGNACION_MUSA, JSON.stringify({
+            ...asignacion,
+            clientId: musa_client_id,
+            name: nombre_musa,
+            revealedAt: Date.now()
+        }));
+    } catch (_error) {}
+}
+
+function obtenerAsignacionMusaSesion() {
+    try {
+        const raw = window.sessionStorage.getItem(CLAVE_ASIGNACION_MUSA);
+        const payload = raw ? JSON.parse(raw) : null;
+        if (!payload || Number(payload.player) !== Number(player)) return null;
+        if (payload.clientId && String(payload.clientId) !== String(musa_client_id)) return null;
+        if (payload.name && String(payload.name).toUpperCase() !== String(nombre_musa).toUpperCase()) return null;
+        return payload;
+    } catch (_error) {
+        return null;
+    }
+}
+
+function construirUrlMusaAsignada(asignacion) {
+    if (!window.ScribMusaAssignment) return "";
+    return window.ScribMusaAssignment.buildGameUrl(
+        "./index.html",
+        asignacion,
+        nombre_musa
+    );
+}
+
+function aplicarAsignacionAutoritativaMusa(payload) {
+    const assignmentApi = window.ScribMusaAssignment;
+    if (!assignmentApi || !assignmentApi.assignmentBelongsToClient(payload, musa_client_id)) return false;
+    const asignacion = assignmentApi.normalizeAssignment(payload);
+    if (!asignacion || asignacion.ok !== true) return false;
+    guardarAsignacionMusaSesion(asignacion);
+
+    if (Number(asignacion.player) !== Number(player)) {
+        const destino = construirUrlMusaAsignada(asignacion);
+        if (destino) window.location.replace(destino);
+        return true;
+    }
+
+    registrarNombreEscritxrPorEquipo(asignacion.player, asignacion.writer);
+    if (nombre1) nombre1.value = asignacion.writer;
+    return true;
+}
+
+window.aplicarAsignacionAutoritativaMusa = aplicarAsignacionAutoritativaMusa;
 
 function obtenerNombreEscritxrEntradaMusa() {
     const equipo = normalizarEquipoVotacion(player) || 1;
@@ -2725,7 +2771,12 @@ let enviar_ventaja;
     }
 
 aplicarColorTemporizadorVotacionVentaja(player);
-reproducirEntradaMundoMusa();
+const asignacionMusaYaRevelada = getParameterByName("assigned") === "1";
+if (!asignacionMusaYaRevelada) {
+    reproducirEntradaMundoMusa();
+} else {
+    invalidarEntradaMundoMusa();
+}
 
 // Se restaura DESPUÉS de inicializar `player` y de aplicar el estilo del equipo.
 // Si se hace antes (como ocurría), `obtenerEstiloMusa()` cae en el fallback naranja
@@ -2735,4 +2786,3 @@ restaurarTemporizadorLecturaPersistente();
 configurarColorRegalo();
 actualizarNombreRegalo();
 intentarMostrarRegaloPdfPendiente();
-

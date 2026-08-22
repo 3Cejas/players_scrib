@@ -24,6 +24,50 @@ socket.on("idioma_actual", (payload = {}) => {
     }
 });
 
+let musa_request_id_activo = "";
+let musa_request_id_ultimo = "";
+let musa_request_seq = 0;
+let musa_registro_confirmado = false;
+
+function crearRequestIdRegistroMusa() {
+    const api = window.ScribMusaAssignment;
+    musa_request_seq += 1;
+    let requestId = api.createRequestId();
+    if (requestId === musa_request_id_ultimo) requestId = `${requestId}${musa_request_seq.toString(36)}`;
+    musa_request_id_ultimo = requestId;
+    return requestId;
+}
+
+function procesarAsignacionAutoritativaMusa(payload = {}, contexto = {}) {
+    const api = window.ScribMusaAssignment;
+    const payloadRequestId = api.normalizeRequestId(payload && payload.request_id);
+    const requestIdEsperado = api.normalizeRequestId(contexto.requestId || musa_request_id_activo);
+    const esReequilibrioSinRequest = !payloadRequestId
+        && musa_registro_confirmado
+        && String(payload && payload.motivo || "").trim().toLowerCase() === "reequilibrio";
+    if ((!payloadRequestId || payloadRequestId !== requestIdEsperado) && !esReequilibrioSinRequest) return false;
+    if (typeof window.aplicarAsignacionAutoritativaMusa !== "function") return false;
+    const aplicada = window.aplicarAsignacionAutoritativaMusa(payload);
+    if (aplicada) musa_registro_confirmado = true;
+    return aplicada;
+}
+
+socket.on("musa_asignacion", procesarAsignacionAutoritativaMusa);
+
+function manejarMusaReemplazadaEnJuego() {
+    if (window.__scribMusaReplacementInProgress) return;
+    window.__scribMusaReplacementInProgress = true;
+    musa_request_id_activo = "";
+    musa_registro_confirmado = false;
+    invalidarEntradaMundoMusa();
+    window.ScribMusaAssignment.clearAssignmentSession(window.sessionStorage);
+    window.musa_client_id = window.ScribMusaAssignment.rotateClientId(window.sessionStorage, { windowRef: window });
+    try { socket.disconnect(); } catch (_error) {}
+    window.location.replace("../index.html?notice=musa_reemplazada");
+}
+
+socket.on("musa_reemplazada", manejarMusaReemplazadaEnJuego);
+
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {
@@ -157,6 +201,7 @@ socket.on('feedback_musas_estado', (payload = {}) => {
 });
 
 socket.on('connect', () => {
+    if (window.__scribMusaReplacementInProgress) return;
     console.log("Conectado al servidor por primera vez.");
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
@@ -167,7 +212,18 @@ socket.on('connect', () => {
     ultimo_count_seq_musa = 0;
     tiempo_seq_actual_musa = 0;
     if (!nombre_musa) return;
-    socket.emit('registrar_musa', { musa: player, nombre: nombre_musa, client_id: musa_client_id });
+    musa_request_id_activo = crearRequestIdRegistroMusa();
+    musa_registro_confirmado = false;
+    const payloadRegistroMusa = window.ScribMusaAssignment.createRegistrationPayload({
+        clientId: musa_client_id,
+        name: nombre_musa,
+        requestId: musa_request_id_activo
+    });
+    const requestIdRegistroMusa = musa_request_id_activo;
+    socket.emit('registrar_musa', payloadRegistroMusa, (payload = {}) => {
+        if (requestIdRegistroMusa !== musa_request_id_activo) return false;
+        return procesarAsignacionAutoritativaMusa(payload, { requestId: requestIdRegistroMusa });
+    });
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_estado_regalo_bandera_musas');
@@ -184,6 +240,8 @@ socket.on('connect', () => {
 });
 
 socket.on('disconnect', () => {
+    musa_request_id_activo = "";
+    musa_registro_confirmado = false;
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
     if (timeout_pedir_texto_connect_musa) {

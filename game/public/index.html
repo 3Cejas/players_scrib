@@ -1369,6 +1369,97 @@ body.musa-eleccion-hecha .intro-choice-btn {
     pointer-events: none;
 }
 
+.intro-asignacion .intro-panel {
+    justify-content: center;
+    text-align: center;
+}
+
+.musa-assignment-lead {
+    max-width: 44rem;
+    margin: 0;
+    color: rgba(238, 248, 255, 0.82);
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    line-height: 1.55;
+}
+
+.musa-assignment-balance {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(0.75rem, 4vw, 2.4rem);
+    width: min(88vw, 38rem);
+    margin: clamp(0.5rem, 2vh, 1.2rem) auto;
+}
+
+.musa-assignment-balance__team {
+    display: grid;
+    place-items: center;
+    gap: 0.35rem;
+    min-height: clamp(6.5rem, 20vw, 9rem);
+    border: 1px solid currentColor;
+    border-radius: clamp(1rem, 3vw, 1.5rem);
+    background: rgba(4, 10, 18, 0.72);
+    font-size: clamp(0.82rem, 2.6vw, 1.15rem);
+    letter-spacing: 0.15em;
+    box-shadow: 0 0 1.4rem color-mix(in srgb, currentColor, transparent 78%);
+}
+
+.musa-assignment-balance__team img {
+    width: clamp(2.8rem, 10vw, 4.5rem);
+    height: auto;
+}
+
+.musa-assignment-balance__team--blue { color: #54f0ff; }
+.musa-assignment-balance__team--red { color: #ff6262; }
+
+.musa-assignment-balance__link {
+    color: #f7d06c;
+    font-size: clamp(1.8rem, 7vw, 3.2rem);
+    text-shadow: 0 0 1rem rgba(247, 208, 108, 0.55);
+    animation: musaBalanceLink 1200ms ease-in-out infinite alternate;
+}
+
+.musa-assignment-cta,
+.musa-assignment-action {
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
+    padding: clamp(0.8rem, 2.5vw, 1.05rem) clamp(1.2rem, 5vw, 2.4rem);
+    background: linear-gradient(100deg, #31ddec 0%, #f8fbff 48%, #ff575f 100%);
+    color: #05080d;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.76rem, 2.5vw, 1rem);
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 1.5rem rgba(84, 240, 255, 0.24), 0 0 2rem rgba(255, 98, 98, 0.18);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.musa-assignment-cta:hover,
+.musa-assignment-cta:focus-visible,
+.musa-assignment-action:hover,
+.musa-assignment-action:focus-visible {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 2rem rgba(84, 240, 255, 0.42), 0 0 2.5rem rgba(255, 98, 98, 0.28);
+    outline: 3px solid #fff;
+    outline-offset: 4px;
+}
+
+.musa-assignment-status {
+    min-height: 1.5em;
+    max-width: 42rem;
+    margin: 0;
+    color: rgba(235, 246, 255, 0.72);
+    font-size: clamp(0.72rem, 2vw, 0.92rem);
+    line-height: 1.45;
+}
+
+@keyframes musaBalanceLink {
+    from { transform: translateX(-0.18em); opacity: 0.58; }
+    to { transform: translateX(0.18em); opacity: 1; }
+}
+
 body.musa-boot-activa {
     overflow: hidden;
 }
@@ -1442,6 +1533,195 @@ body.musa-boot-activa .intro-flow {
 
 .musa-boot-overlay--rojo {
     --boot-accent: #ff6262;
+}
+
+.musa-boot-overlay.is-assigning {
+    --boot-accent: #f7d06c;
+}
+
+.musa-assignment-arena {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(0.6rem, 3vw, 2rem);
+    min-height: clamp(9rem, 27vw, 14rem);
+    padding: clamp(0.8rem, 2vw, 1.4rem);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background:
+        linear-gradient(90deg, rgba(35, 204, 229, 0.1), transparent 44% 56%, rgba(255, 68, 80, 0.1)),
+        rgba(1, 5, 10, 0.72);
+}
+
+.musa-assignment-arena::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.13), transparent);
+    transform: translateX(-110%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.musa-boot-overlay.is-assigning .musa-assignment-arena::before {
+    opacity: 1;
+    animation: musaAssignmentScan 950ms linear infinite;
+}
+
+.musa-assignment-team {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 0.45rem;
+    min-height: clamp(6.6rem, 18vw, 10.5rem);
+    border: 2px solid currentColor;
+    border-radius: 1rem;
+    background: rgba(3, 8, 15, 0.76);
+    font-size: clamp(0.7rem, 2vw, 1rem);
+    letter-spacing: 0.17em;
+    transition: opacity 400ms ease, transform 500ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 400ms ease;
+}
+
+.musa-assignment-team img {
+    width: clamp(2.8rem, 8vw, 5rem);
+    height: auto;
+}
+
+.musa-assignment-team--blue {
+    color: #54f0ff;
+    box-shadow: inset 0 0 1.5rem rgba(84, 240, 255, 0.12), 0 0 1.2rem rgba(84, 240, 255, 0.18);
+}
+
+.musa-assignment-team--red {
+    color: #ff6262;
+    box-shadow: inset 0 0 1.5rem rgba(255, 98, 98, 0.12), 0 0 1.2rem rgba(255, 98, 98, 0.18);
+}
+
+.musa-assignment-core {
+    display: grid;
+    place-items: center;
+    width: clamp(3.1rem, 9vw, 5rem);
+    aspect-ratio: 1;
+    border: 2px solid #f7d06c;
+    border-radius: 50%;
+    color: #f7d06c;
+    background: #05080d;
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    box-shadow: 0 0 1.6rem rgba(247, 208, 108, 0.42);
+}
+
+.musa-boot-overlay.is-assigning .musa-assignment-team--blue,
+.musa-boot-overlay.is-assigning .musa-assignment-team--red {
+    animation: musaAssignmentCandidate 820ms steps(2, end) infinite alternate;
+}
+
+.musa-boot-overlay.is-assigning .musa-assignment-team--red {
+    animation-delay: -410ms;
+}
+
+.musa-boot-overlay.is-assigning .musa-assignment-core {
+    animation: musaAssignmentCore 620ms ease-in-out infinite alternate;
+}
+
+.musa-boot-overlay.is-revealed .musa-assignment-core {
+    color: #fff;
+    border-color: var(--boot-accent);
+    box-shadow: 0 0 2.2rem color-mix(in srgb, var(--boot-accent), transparent 28%);
+    transform: rotate(360deg) scale(1.12);
+    transition: transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.musa-boot-overlay--azul.is-revealed .musa-assignment-team--blue,
+.musa-boot-overlay--rojo.is-revealed .musa-assignment-team--red {
+    transform: scale(1.06);
+    box-shadow: inset 0 0 2rem color-mix(in srgb, currentColor, transparent 82%), 0 0 2.6rem color-mix(in srgb, currentColor, transparent 42%);
+}
+
+.musa-boot-overlay--azul.is-revealed .musa-assignment-team--red,
+.musa-boot-overlay--rojo.is-revealed .musa-assignment-team--blue {
+    opacity: 0.16;
+    transform: scale(0.9);
+    filter: grayscale(0.9);
+}
+
+.musa-assignment-result {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    z-index: 3;
+    width: min(72%, 31rem);
+    padding: clamp(0.8rem, 2vw, 1.25rem);
+    transform: translate(-50%, -50%);
+    border: 1px solid color-mix(in srgb, var(--boot-accent), white 22%);
+    border-radius: 1rem;
+    background: rgba(2, 6, 12, 0.93);
+    box-shadow: 0 0 2.8rem color-mix(in srgb, var(--boot-accent), transparent 36%);
+    text-align: center;
+    animation: musaAssignmentReveal 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.musa-assignment-result[hidden],
+.musa-assignment-action[hidden] {
+    display: none;
+}
+
+.musa-assignment-result__label {
+    display: block;
+    color: rgba(239, 247, 255, 0.68);
+    font-size: clamp(0.62rem, 1.7vw, 0.82rem);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+}
+
+.musa-assignment-result__team,
+.musa-assignment-result__writer {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--boot-accent);
+    font-size: clamp(1.35rem, 5vw, 2.8rem);
+    line-height: 1.15;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 0 1.1rem color-mix(in srgb, var(--boot-accent), transparent 48%);
+}
+
+.musa-assignment-result__writer {
+    margin-top: 0.2rem;
+    color: #fff;
+    font-size: clamp(1rem, 3.5vw, 1.75rem);
+}
+
+.musa-assignment-actions {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.musa-assignment-action--retry {
+    background: #f7d06c;
+}
+
+@keyframes musaAssignmentCandidate {
+    0% { opacity: 0.38; transform: scale(0.94); }
+    100% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes musaAssignmentCore {
+    from { transform: rotate(-8deg) scale(0.92); }
+    to { transform: rotate(8deg) scale(1.08); }
+}
+
+@keyframes musaAssignmentScan {
+    to { transform: translateX(110%); }
+}
+
+@keyframes musaAssignmentReveal {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .musa-boot-panel {
@@ -1783,6 +2063,56 @@ body.musa-boot-activa .intro-flow {
     .musa-boot-logs li {
         padding-left: 1.35rem;
         line-height: 1.35;
+    }
+
+    .musa-assignment-arena {
+        min-height: 11rem;
+        gap: 0.45rem;
+        padding: 0.65rem;
+    }
+
+    .musa-assignment-result {
+        width: min(78%, 24rem);
+    }
+}
+
+@media (max-width: 430px) {
+    .musa-assignment-balance {
+        width: min(94vw, 30rem);
+        gap: 0.45rem;
+    }
+
+    .musa-assignment-balance__team {
+        min-height: 5.5rem;
+    }
+
+    .musa-assignment-arena {
+        grid-template-columns: minmax(0, 1fr) 2.6rem minmax(0, 1fr);
+    }
+
+    .musa-assignment-team {
+        min-height: 7.4rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .musa-assignment-balance__link,
+    .musa-boot-overlay::after,
+    .musa-boot-panel::before,
+    .musa-boot-overlay.is-assigning .musa-assignment-arena::before,
+    .musa-boot-overlay.is-assigning .musa-assignment-team,
+    .musa-boot-overlay.is-assigning .musa-assignment-core,
+    .musa-assignment-result {
+        animation: none !important;
+    }
+
+    .musa-assignment-cta,
+    .musa-assignment-action,
+    .musa-assignment-team,
+    .musa-assignment-core,
+    .musa-boot-overlay,
+    .musa-boot-bar-fill {
+        transition: none !important;
     }
 }
 
@@ -2800,81 +3130,37 @@ body.musa-boot-activa .intro-flow {
                     <div id="mensaje_musa" class="musa-alerta" aria-live="polite"></div>
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-niveles" aria-label="Volver a niveles"></button>
-                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-equipo-azul" data-validate="nombre_musa" aria-label="Ir a elegir escritxr"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-asignacion" data-validate="nombre_musa" data-i18n-attr="aria-label:muse.assignment.go_aria" aria-label="Ir a descubrir tu equipo"></button>
                     </div>
                 </div>
             </section>
-            <section id="intro-equipo-azul" class="intro-section intro-equipo">
+            <section id="intro-asignacion" class="intro-section intro-asignacion">
                 <div class="intro-panel">
                     <div class="intro-logos">
                         <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
                         <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
                     </div>
-                    <h1><span class="intro-musa-nombre">MUSA</span>,<br>&iquest;A QUI&Eacute;N INSPIRAS?</h1>
-                    <div class="intro-choice-grid">
-                        <div class="intro-choice-card intro-choice-card--azul">
-                            <img class="pluma-icono" src="./img/pluma_azul.png" alt="Pluma Pixel Art Azul Aqua">
-                            <p class="escritxr-nombre escritxr1" id="escritxr1">ESCRITXR 1</p>
-                            <div class="intro-equipo-skills">
-                                <div class="intro-equipo-habilidad" data-habilidad="fuerza">
-                                    <p class="intro-skill-label">Fuerza</p>
-                                    <p class="intro-skill-desc">Da m&aacute;s segundos por palabra.</p>
-                                    <div class="intro-skill-points" data-player="1" data-attr="fuerza" aria-label="Fuerza de escritxr 1">
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                    </div>
-                                </div>
-                                <div class="intro-equipo-habilidad" data-habilidad="agilidad">
-                                    <p class="intro-skill-label">Agilidad</p>
-                                    <p class="intro-skill-desc">Reduce la velocidad de borrado.</p>
-                                    <div class="intro-skill-points" data-player="1" data-attr="agilidad" aria-label="Agilidad de escritxr 1">
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                    </div>
-                                </div>
-                                <div class="intro-equipo-habilidad" data-habilidad="destreza">
-                                    <p class="intro-skill-label">Destreza</p>
-                                    <p class="intro-skill-desc">Acorta la duraci&oacute;n de desventajas.</p>
-                                    <div class="intro-skill-points" data-player="1" data-attr="destreza" aria-label="Destreza de escritxr 1">
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="intro-choice-btn intro-choice-btn--azul" type="button" onclick="entrarComoMusa(1)">INSPIRAR</button>
+                    <h1><span class="intro-musa-nombre">MUSA</span>,<br><span data-i18n="muse.assignment.section_title">EL JUEGO ELEGIRÁ TU EQUIPO</span></h1>
+                    <p class="musa-assignment-lead" data-i18n="muse.assignment.section_copy">
+                        Te asignaremos al equipo azul o rojo para que ambos tengan siempre el mismo número de musas, o una diferencia máxima de una.
+                    </p>
+                    <div class="musa-assignment-balance" aria-hidden="true">
+                        <div class="musa-assignment-balance__team musa-assignment-balance__team--blue">
+                            <img src="./img/pluma_azul.png" alt="">
+                            <span data-i18n="world.team.blue">AZUL</span>
                         </div>
-                        <div class="intro-choice-card intro-choice-card--rojo">
-                            <img class="pluma-icono" src="./img/pluma_roja.png" alt="Pluma Pixel Art Roja">
-                            <p class="escritxr-nombre escritxr2" id="escritxr2">ESCRITXR 2</p>
-                            <div class="intro-equipo-skills">
-                                <div class="intro-equipo-habilidad" data-habilidad="fuerza">
-                                    <p class="intro-skill-label">Fuerza</p>
-                                    <p class="intro-skill-desc">Da m&aacute;s segundos por palabra.</p>
-                                    <div class="intro-skill-points" data-player="2" data-attr="fuerza" aria-label="Fuerza de escritxr 2">
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                    </div>
-                                </div>
-                                <div class="intro-equipo-habilidad" data-habilidad="agilidad">
-                                    <p class="intro-skill-label">Agilidad</p>
-                                    <p class="intro-skill-desc">Reduce la velocidad de borrado.</p>
-                                    <div class="intro-skill-points" data-player="2" data-attr="agilidad" aria-label="Agilidad de escritxr 2">
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                    </div>
-                                </div>
-                                <div class="intro-equipo-habilidad" data-habilidad="destreza">
-                                    <p class="intro-skill-label">Destreza</p>
-                                    <p class="intro-skill-desc">Acorta la duraci&oacute;n de desventajas.</p>
-                                    <div class="intro-skill-points" data-player="2" data-attr="destreza" aria-label="Destreza de escritxr 2">
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                        <span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span><span class="intro-skill-point"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="intro-choice-btn intro-choice-btn--rojo" type="button" onclick="entrarComoMusa(2)">INSPIRAR</button>
+                        <span class="musa-assignment-balance__link">⇄</span>
+                        <div class="musa-assignment-balance__team musa-assignment-balance__team--red">
+                            <img src="./img/pluma_roja.png" alt="">
+                            <span data-i18n="world.team.red">ROJO</span>
                         </div>
                     </div>
+                    <button id="musa_assignment_start" class="musa-assignment-cta" type="button" data-i18n="muse.assignment.discover_button">
+                        DESCUBRIR MI EQUIPO
+                    </button>
+                    <p id="musa_assignment_status" class="musa-assignment-status" role="status" aria-live="polite">
+                        Los equipos se mantendrán equilibrados automáticamente.
+                    </p>
                     <div class="intro-nav intro-nav--up">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-nombre" aria-label="Volver a nombre"></button>
                     </div>
@@ -2882,39 +3168,45 @@ body.musa-boot-activa .intro-flow {
             </section>
         </div>
     </main>
-    <div id="musa_boot_overlay" class="musa-boot-overlay" aria-hidden="true">
+    <div id="musa_boot_overlay" class="musa-boot-overlay" role="dialog" aria-modal="true" aria-labelledby="musa_boot_title" aria-describedby="musa_boot_copy" aria-hidden="true" tabindex="-1">
         <div class="musa-boot-panel">
-            <div class="musa-boot-kicker">INICIANDO SISTEMA MUSA</div>
-            <h2 class="musa-boot-title">ENTRANDO EN UN NUEVO MUNDO</h2>
-            <p id="musa_boot_copy" class="musa-boot-copy">Preparando enlace creativo.</p>
-            <div class="musa-boot-world" aria-hidden="true">
-                <div class="musa-boot-world-base"></div>
-                <div class="musa-boot-world-fill"></div>
-                <div class="musa-boot-world-grid"></div>
-                <div class="musa-boot-world-orb"></div>
-                <div id="musa_boot_pixels" class="musa-boot-world-pixels">
-                    <span></span><span></span><span></span><span></span><span></span><span></span>
-                    <span></span><span></span><span></span><span></span><span></span><span></span>
+            <div class="musa-boot-kicker" data-i18n="muse.assignment.overlay_kicker">SISTEMA DE EQUILIBRIO DE MUSAS</div>
+            <h2 id="musa_boot_title" class="musa-boot-title" data-i18n="muse.assignment.overlay_title">ELIGIENDO TU EQUIPO</h2>
+            <p id="musa_boot_copy" class="musa-boot-copy" data-i18n="muse.assignment.overlay_copy">Comparando el número de musas de cada equipo…</p>
+            <div class="musa-assignment-arena">
+                <div class="musa-assignment-team musa-assignment-team--blue" aria-hidden="true">
+                    <img src="./img/pluma_azul.png" alt="">
+                    <span data-i18n="world.team.blue">AZUL</span>
+                </div>
+                <div class="musa-assignment-core" aria-hidden="true">?</div>
+                <div class="musa-assignment-team musa-assignment-team--red" aria-hidden="true">
+                    <img src="./img/pluma_roja.png" alt="">
+                    <span data-i18n="world.team.red">ROJO</span>
+                </div>
+                <div id="musa_assignment_result" class="musa-assignment-result" role="status" aria-live="assertive" aria-atomic="true" hidden>
+                    <span class="musa-assignment-result__label" data-i18n="muse.assignment.your_team">TU EQUIPO</span>
+                    <strong id="musa_assignment_team" class="musa-assignment-result__team">AZUL</strong>
+                    <span class="musa-assignment-result__label" data-i18n="muse.assignment.your_writer">TU ESCRITXR</span>
+                    <strong id="musa_assignment_writer" class="musa-assignment-result__writer">ESCRITXR 1</strong>
                 </div>
             </div>
             <div class="musa-boot-status-row">
-                <span id="musa_boot_status" class="musa-boot-status-text">ENLAZANDO CANAL DE INSPIRACION</span>
-                <span id="musa_boot_percent" class="musa-boot-status-percent">0%</span>
+                <span id="musa_boot_status" class="musa-boot-status-text" aria-live="polite">EQUILIBRANDO LOS EQUIPOS…</span>
+                <span id="musa_boot_percent" class="musa-boot-status-percent">…</span>
             </div>
             <div class="musa-boot-bar" aria-hidden="true">
                 <span id="musa_boot_bar" class="musa-boot-bar-fill"></span>
             </div>
-            <ul id="musa_boot_logs" class="musa-boot-logs" aria-live="polite">
-                <li></li>
-                <li></li>
-                <li></li>
-                <li></li>
-                <li></li>
-            </ul>
+            <div class="musa-assignment-actions">
+                <button id="musa_assignment_retry" class="musa-assignment-action musa-assignment-action--retry" type="button" data-i18n="muse.assignment.retry_button" hidden>REINTENTAR</button>
+                <button id="musa_assignment_enter" class="musa-assignment-action" type="button" data-i18n="muse.assignment.enter_button" hidden>ENTRAR AL JUEGO</button>
+            </div>
         </div>
     </div>
 </body>
 <script src="../config.js"></script>
 <script src="../dist/socket.io/socket.io.js"></script>
-<script src="./js/musa-selector.js?v=20260430a"></script>
+<script src="../js/i18n.js?v=20260822d"></script>
+<script src="./js/musa-assignment.js?v=20260822d"></script>
+<script src="./js/musa-selector.js?v=20260822d"></script>
 </html>
