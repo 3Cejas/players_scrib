@@ -26,6 +26,7 @@ socket.on('connect', () => {
     socket.emit('pedir_estado_regalo_bandera_musas');
     socket.emit('pedir_vista_espectador_modo');
     socket.emit('pedir_stats_live');
+    socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_nube_inspiracion');
     socket.emit('pedir_creditos_estado');
     iniciarSlidesStats();
@@ -107,6 +108,10 @@ socket.on('stats_live_estado', (payload = {}) => {
     if (vista_espectador_modo_resuelta === "stats") {
         renderizarStatsEspectador();
     }
+});
+
+socket.on('puntuacion_final_estado', (payload = {}) => {
+    actualizarPuntuacionFinalEspectador(payload);
 });
 
 socket.on('creditos_estado', (payload = {}) => {
@@ -1146,6 +1151,10 @@ function refrescarUiIdiomaEspectador() {
         renderizarStatsEspectador();
     } else {
         renderizarEstadoStatsEspectador("");
+    }
+
+    if (estado_puntuacion_final_espectador) {
+        renderizarPuntuacionFinalEspectador({ animar: false });
     }
 
     renderizarCreditosEspectador();

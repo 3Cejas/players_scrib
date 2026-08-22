@@ -7,18 +7,19 @@ const ROOT = path.resolve(__dirname, "..");
 const ASSET_VERSION = "20260504e";
 const CSS_VERSION = "20260505i";
 const I18N_VERSION = "20260822a";
+const SCORE_ASSET_VERSION = "20260822c";
 const PLAYER_ACTIONS_VERSION = "20260504f";
 const PLAYER_STATE_VERSION = "20260505d";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260506e";
-const SPECTATOR_STATE_VERSION = "20260517a";
-const SPECTATOR_SOCKET_EVENTS_VERSION = "20260506a";
+const SPECTATOR_STATE_VERSION = SCORE_ASSET_VERSION;
+const SPECTATOR_SOCKET_EVENTS_VERSION = SCORE_ASSET_VERSION;
 const JURY_CSS_VERSION = "20260506t";
 const JURY_STATE_VERSION = "20260506g";
 const JURY_SOCKET_EVENTS_VERSION = "20260506b";
-const CONTROL_CSS_VERSION = "20260506c";
-const CONTROL_ACTIONS_VERSION = "20260506d";
-const CONTROL_STATE_VERSION = "20260506a";
-const CONTROL_SOCKET_EVENTS_VERSION = "20260506b";
+const CONTROL_CSS_VERSION = SCORE_ASSET_VERSION;
+const CONTROL_ACTIONS_VERSION = SCORE_ASSET_VERSION;
+const CONTROL_STATE_VERSION = SCORE_ASSET_VERSION;
+const CONTROL_SOCKET_EVENTS_VERSION = SCORE_ASSET_VERSION;
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
 const PUBLIC_PLAYER_STATE_VERSION = "20260822a";
 const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260822a";
@@ -45,22 +46,24 @@ test("multiplayer html references current changed shared assets", () => {
   [
     "game/index.html",
     "game/players/index.html",
-    "game/spectator/index.html",
     "game/public/index.html",
     "game/actors/index.html"
   ].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "dashboard-players.css", CSS_VERSION);
   });
+  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SCORE_ASSET_VERSION);
 
   [
     "game/players/index.html",
-    "game/spectator/index.html",
     "game/public/players/index.html",
-    "game/control/index.html",
     "game/actors/source/index.html"
   ].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js");
     assertIncludesAsset(htmlRelPath, "js/i18n.js", I18N_VERSION);
+  });
+  ["game/spectator/index.html", "game/control/index.html"].forEach((htmlRelPath) => {
+    assertIncludesAsset(htmlRelPath, "domains/inspiration.js");
+    assertIncludesAsset(htmlRelPath, "js/i18n.js", SCORE_ASSET_VERSION);
   });
 
   assertIncludesAsset("game/players/index.html", "js/actions.js", PLAYER_ACTIONS_VERSION);

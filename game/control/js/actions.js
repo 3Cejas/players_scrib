@@ -19,6 +19,10 @@ let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
 let vista_espectador_modo = "partida";
+let puntuacion_slide_step_control = 0;
+let estado_puntuacion_final_control = null;
+let puntuacion_final_captura_solicitada = false;
+let timeout_feedback_puntuacion_control = null;
 let escala_ui_espectador_control = 1;
 let temporizador_gigante_activo = false;
 let regalo_musas_enviado = false;
@@ -1978,6 +1982,7 @@ function temp() {
     terminado = false;
     terminado1 = false;
     regalo_musas_enviado = false;
+    puntuacion_final_captura_solicitada = false;
     fin_j1 = false;
     fin_j2 = false;
     document.getElementById("palabra").innerHTML = "";
@@ -2163,6 +2168,7 @@ function limpiar() {
     fin_j1 = false;
     fin_j2 = false;
     regalo_musas_enviado = false;
+    puntuacion_final_captura_solicitada = false;
     if (typeof window.actualizarPuntosMarcadorControl === "function") {
         window.actualizarPuntosMarcadorControl(1, 0, false);
         window.actualizarPuntosMarcadorControl(2, 0, false);
@@ -2328,7 +2334,16 @@ function actualizarBotonPausaReanudarControl(boton) {
 }
 window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl;
 
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "stats", "nube_inspiracion", "creditos"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+const PUNTUACION_CATEGORIAS_CONTROL = [
+    "produccion",
+    "ritmo",
+    "riqueza_lexica",
+    "bonus",
+    "precision",
+    "resistencia"
+];
+const PUNTUACION_PASO_MAX_CONTROL = PUNTUACION_CATEGORIAS_CONTROL.length + 1;
 const normalizarModoVistaEspectador = (valor) => {
     const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
     return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "partida";
@@ -2424,17 +2439,36 @@ window.reiniciarRolRemoto = reiniciarRolRemoto;
 
 function actualizarBotonesVistaEspectadorControl() {
     const botonStats = document.getElementById("boton_vista_stats");
+    const botonPuntuacion = document.getElementById("boton_vista_puntuacion");
     const botonNube = document.getElementById("boton_vista_nube_inspiracion");
     const botonCreditos = document.getElementById("boton_mostrar_creditos");
     const statsNav = document.getElementById("stats_nav_control");
     const statsNavLabel = document.getElementById("stats_nav_label");
     const statsPrev = document.getElementById("stats_nav_prev");
     const statsNext = document.getElementById("stats_nav_next");
+    const puntuacionNav = document.getElementById("puntuacion_nav_control");
+    const puntuacionLabel = document.getElementById("puntuacion_nav_label");
+    const puntuacionPrev = document.getElementById("puntuacion_nav_prev");
+    const puntuacionNext = document.getElementById("puntuacion_nav_next");
+    const puntuacionReset = document.getElementById("puntuacion_nav_reset");
+    const puntuacionHide = document.getElementById("puntuacion_nav_hide");
     if (botonStats) {
         const activo = vista_espectador_modo === "stats";
         botonStats.dataset.active = activo ? "1" : "0";
         botonStats.classList.toggle("is-active", activo);
         botonStats.textContent = tJuego2PControl("control.button.stats", {}, "\u{1F4CA} STATS");
+    }
+    if (botonPuntuacion) {
+        const activo = vista_espectador_modo === "puntuacion";
+        const disponible = Boolean(estado_puntuacion_final_control && estado_puntuacion_final_control.disponible);
+        botonPuntuacion.dataset.active = activo ? "1" : "0";
+        botonPuntuacion.dataset.available = disponible ? "1" : "0";
+        botonPuntuacion.classList.toggle("is-active", activo);
+        botonPuntuacion.textContent = tJuego2PControl("control.button.result", {}, "\u{1F3C6} RESULTADO");
+        botonPuntuacion.title = disponible
+            ? tJuego2PControl("control.score.ready", {}, "Resultado listo para mostrar")
+            : tJuego2PControl("control.score.unavailable", {}, "El resultado estara disponible cuando terminen ambas escritoras.");
+        botonPuntuacion.setAttribute("aria-label", `${botonPuntuacion.textContent}. ${botonPuntuacion.title}`);
     }
     if (botonNube) {
         const activo = vista_espectador_modo === "nube_inspiracion";
@@ -2462,6 +2496,39 @@ function actualizarBotonesVistaEspectadorControl() {
         statsNav.hidden = !visible;
         statsNav.setAttribute("aria-hidden", visible ? "false" : "true");
     }
+    if (puntuacionPrev) {
+        puntuacionPrev.textContent = tJuego2PControl("control.score.back", {}, "\u2190 ATRAS");
+        puntuacionPrev.setAttribute("aria-label", tJuego2PControl("control.score.prev_aria", {}, "Revelacion anterior"));
+        puntuacionPrev.disabled = puntuacion_slide_step_control <= 0;
+    }
+    if (puntuacionNext) {
+        puntuacionNext.textContent = tJuego2PControl("control.score.reveal", {}, "REVELAR \u2192");
+        puntuacionNext.setAttribute("aria-label", tJuego2PControl("control.score.next_aria", {}, "Revelar siguiente apartado"));
+        puntuacionNext.disabled = puntuacion_slide_step_control >= PUNTUACION_PASO_MAX_CONTROL;
+    }
+    if (puntuacionReset) {
+        puntuacionReset.textContent = tJuego2PControl("control.score.reset", {}, "\u21BB REINICIAR");
+        puntuacionReset.setAttribute("aria-label", tJuego2PControl("control.score.reset_aria", {}, "Volver a la introduccion"));
+    }
+    if (puntuacionHide) {
+        puntuacionHide.textContent = tJuego2PControl("control.score.hide", {}, "\u2715 OCULTAR");
+        puntuacionHide.setAttribute("aria-label", tJuego2PControl("control.score.hide_aria", {}, "Ocultar resultado"));
+    }
+    if (puntuacionLabel) {
+        let etiquetaPaso = tJuego2PControl("score.step.intro", {}, "INTRO");
+        if (puntuacion_slide_step_control === PUNTUACION_PASO_MAX_CONTROL) {
+            etiquetaPaso = tJuego2PControl("score.step.final", {}, "GANADOR");
+        } else if (puntuacion_slide_step_control > 0) {
+            const idCategoria = PUNTUACION_CATEGORIAS_CONTROL[puntuacion_slide_step_control - 1];
+            etiquetaPaso = tJuego2PControl(`score.category.${idCategoria}.label`, {}, idCategoria.replace(/_/g, " ").toUpperCase());
+        }
+        puntuacionLabel.textContent = `${etiquetaPaso} \u00b7 ${puntuacion_slide_step_control}/${PUNTUACION_PASO_MAX_CONTROL}`;
+    }
+    if (puntuacionNav) {
+        const visible = vista_espectador_modo === "puntuacion";
+        puntuacionNav.hidden = !visible;
+        puntuacionNav.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
     actualizarControlesEscalaEspectadorControl();
 }
 
@@ -2484,8 +2551,89 @@ function navegarSlidesStatsControl(direccion) {
     socket.emit("stats_slide_control_navegar", { direccion: dir });
 }
 
+function mostrarPuntuacionFinal() {
+    if (!socket || typeof socket.emit !== "function") return;
+    if (!estado_puntuacion_final_control || estado_puntuacion_final_control.disponible !== true) {
+        mostrarFeedbackPuntuacionControl(
+            tJuego2PControl("control.score.unavailable", {}, "El resultado estara disponible cuando terminen ambas escritoras."),
+            "pendiente"
+        );
+        socket.emit("pedir_puntuacion_final");
+        return;
+    }
+    socket.emit("mostrar_puntuacion_final", {}, (respuesta = {}) => {
+        if (respuesta && respuesta.ok === true) return;
+        mostrarFeedbackPuntuacionControl(
+            tJuego2PControl("control.score.error", {}, "No se pudo mostrar el resultado. Vuelve a intentarlo."),
+            "error"
+        );
+    });
+}
+
+function mostrarFeedbackPuntuacionControl(mensaje, tipo = "pendiente") {
+    if (!document || !document.body) return;
+    let feedback = document.getElementById("puntuacion_feedback_control");
+    if (!feedback) {
+        feedback = document.createElement("div");
+        feedback.id = "puntuacion_feedback_control";
+        feedback.className = "puntuacion-feedback-control";
+        feedback.setAttribute("role", "status");
+        feedback.setAttribute("aria-live", "polite");
+        document.body.appendChild(feedback);
+    }
+    if (timeout_feedback_puntuacion_control) {
+        clearTimeout(timeout_feedback_puntuacion_control);
+    }
+    feedback.dataset.tipo = tipo === "error" ? "error" : "pendiente";
+    feedback.textContent = String(mensaje || "");
+    feedback.classList.remove("is-visible");
+    requestAnimationFrame(() => feedback.classList.add("is-visible"));
+    timeout_feedback_puntuacion_control = setTimeout(() => {
+        feedback.classList.remove("is-visible");
+        timeout_feedback_puntuacion_control = null;
+    }, 3600);
+}
+
+function navegarPuntuacionFinal(direccion) {
+    if (!socket || typeof socket.emit !== "function" || vista_espectador_modo !== "puntuacion") return;
+    if (direccion === "anterior") {
+        socket.emit("puntuacion_final_anterior");
+        return;
+    }
+    if (direccion === "siguiente") {
+        socket.emit("puntuacion_final_siguiente");
+    }
+}
+
+function reiniciarPuntuacionFinal() {
+    mostrarPuntuacionFinal();
+}
+
+function ocultarPuntuacionFinal() {
+    if (!socket || typeof socket.emit !== "function") return;
+    socket.emit("ocultar_puntuacion_final");
+}
+
+function actualizarEstadoPuntuacionFinalControl(payload = {}) {
+    estado_puntuacion_final_control = payload && typeof payload === "object" ? payload : null;
+    actualizarBotonesVistaEspectadorControl();
+}
+
+window.mostrarPuntuacionFinal = mostrarPuntuacionFinal;
+window.navegarPuntuacionFinal = navegarPuntuacionFinal;
+window.reiniciarPuntuacionFinal = reiniciarPuntuacionFinal;
+window.ocultarPuntuacionFinal = ocultarPuntuacionFinal;
+window.actualizarEstadoPuntuacionFinalControl = actualizarEstadoPuntuacionFinalControl;
+window.mostrarFeedbackPuntuacionControl = mostrarFeedbackPuntuacionControl;
+
 function actualizarModoVistaEspectadorControl(payload = {}) {
     vista_espectador_modo = normalizarModoVistaEspectador(payload.modo);
+    if (payload && Object.prototype.hasOwnProperty.call(payload, "puntuacion_slide_step")) {
+        const paso = Number(payload.puntuacion_slide_step);
+        puntuacion_slide_step_control = Number.isFinite(paso)
+            ? Math.max(0, Math.min(PUNTUACION_PASO_MAX_CONTROL, Math.trunc(paso)))
+            : 0;
+    }
     if (payload && Object.prototype.hasOwnProperty.call(payload, "escala_ui")) {
         escala_ui_espectador_control = normalizarEscalaUiEspectadorControl(payload.escala_ui);
     }
@@ -3731,6 +3879,10 @@ function final(player, opciones = {}){
     }
 
     if(terminado && terminado1){
+        if (!puntuacion_final_captura_solicitada && socket && typeof socket.emit === "function") {
+            puntuacion_final_captura_solicitada = true;
+            socket.emit("capturar_puntuacion_final");
+        }
         detenerCuentaAtrasModoControl();
         actualizarCabeceraModoControl({ modo: "", segundos: 0 });
         console.log("PRUEBA FINAL", texto_guardado1)
@@ -3745,4 +3897,3 @@ function final(player, opciones = {}){
 function frase_final(player){
     guardarFraseFinalControl(player, { normalizar: true });
 }
-

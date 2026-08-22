@@ -4,6 +4,7 @@
   "private": true,
   "description": "E2E harness for SCRIB players against server_scrib",
   "scripts": {
+    "test": "node --test",
     "test:unit": "node --test",
     "test:e2e": "node e2e/runner/index.js",
     "test:e2e:headed": "node e2e/runner/index.js --headed",

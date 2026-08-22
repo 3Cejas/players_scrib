@@ -20,6 +20,7 @@
     socket.emit('pedir_estado_palabras_musas_control');
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_vista_espectador_modo');
+    socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_calentamiento_estado');
     socket.emit('pedir_creditos_estado');
     socket.emit('pedir_teleprompter_estado');
@@ -114,6 +115,11 @@ socket.on('enviar_ventaja_j2', (payload = {}) => {
 socket.on('vista_espectador_modo', (payload = {}) => {
     if (typeof actualizarModoVistaEspectadorControl === "function") {
         actualizarModoVistaEspectadorControl(payload);
+    }
+});
+socket.on('puntuacion_final_estado', (payload = {}) => {
+    if (typeof window.actualizarEstadoPuntuacionFinalControl === "function") {
+        window.actualizarEstadoPuntuacionFinalControl(payload);
     }
 });
 socket.on('teleprompter_ack', (payload = {}) => {

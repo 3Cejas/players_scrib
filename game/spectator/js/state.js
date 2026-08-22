@@ -1083,6 +1083,7 @@ function obtenerClaseFeedbackTiempoFlotante(payload = {}) {
 function mostrarFeedbackFlotanteEspectador(playerId, texto, opciones = {}) {
     if (
         vista_espectador_modo_resuelta === "stats" ||
+        vista_espectador_modo_resuelta === "puntuacion" ||
         vista_espectador_modo_resuelta === "nube_inspiracion" ||
         vista_espectador_modo_resuelta === "creditos"
     ) {
@@ -1220,6 +1221,12 @@ const stats_slides_track = getEl("stats_slides_track");
 const stats_dots = getEl("stats_dots");
 const stats_estado = getEl("stats_estado");
 const stats_timestamp = getEl("stats_timestamp");
+const puntuacion_espectador = getEl("puntuacion_espectador");
+const puntuacion_stage = getEl("puntuacion_stage");
+const puntuacion_paso = getEl("puntuacion_paso");
+const puntuacion_formula = getEl("puntuacion_formula");
+const puntuacion_dots = getEl("puntuacion_dots");
+const puntuacion_particulas = getEl("puntuacion_particulas");
 const nube_inspiracion_espectador = getEl("nube_inspiracion_espectador");
 const nube_inspiracion_canvas = getEl("nube_inspiracion_canvas");
 const creditos_espectador = getEl("creditos_espectador");
@@ -1233,8 +1240,8 @@ const container_general = document.querySelector(".container");
 const cabecera = document.querySelector(".cabecera");
 const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
 const neon_espectador = getEl("neon");
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "calentamiento", "stats", "nube_inspiracion", "creditos"]);
-const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "stats", "nube_inspiracion", "creditos"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
 let vista_calentamiento = false;
 let vista_espectador_override = "partida";
 let vista_espectador_modo_resuelta = "partida";
@@ -1295,6 +1302,9 @@ let stats_slide_step_remoto = 0;
 let stats_slide_index = 0;
 let stats_slide_count = 0;
 let stats_slides_actuales = [];
+let estado_puntuacion_final_espectador = null;
+let puntuacion_slide_step_remoto = 0;
+let puntuacion_firma_render_espectador = "";
 const stats_timeline_modos_local_espectador = [];
 const STATS_LAYOUT_HEATMAP = [
     [
@@ -1513,6 +1523,7 @@ const normalizarOverrideVistaEspectador = (valor) => {
 const resolverModoVistaEspectadorLocal = () => {
     if (
         vista_espectador_override === "stats"
+        || vista_espectador_override === "puntuacion"
         || vista_espectador_override === "nube_inspiracion"
         || vista_espectador_override === "creditos"
     ) {
@@ -3050,6 +3061,346 @@ const iniciarSlidesStats = () => {
 const detenerSlidesStats = () => {
     return;
 };
+
+const PUNTUACION_ICONOS_CATEGORIA = Object.freeze({
+    produccion: "\u270D\uFE0F",
+    ritmo: "\u26A1",
+    riqueza_lexica: "\u{1F4DA}",
+    bonus: "\u2728",
+    precision: "\u{1F3AF}",
+    resistencia: "\u{1F6E1}\uFE0F"
+});
+const PUNTUACION_UNIDADES_I18N = Object.freeze({
+    produccion: "score.unit.words",
+    ritmo: "score.unit.ppm",
+    riqueza_lexica: "score.unit.unique_words",
+    bonus: "score.unit.bonus",
+    precision: "score.unit.attempts",
+    resistencia: "score.unit.average_life"
+});
+
+const obtenerApiPuntuacionEspectador = () => (
+    window && window.ScribFinalScore && typeof window.ScribFinalScore.normalizarPayload === "function"
+        ? window.ScribFinalScore
+        : null
+);
+
+const idiomaFormatoPuntuacionEspectador = () => {
+    const idioma = window && typeof window.scribGetLanguage2P === "function"
+        ? window.scribGetLanguage2P()
+        : "es";
+    if (idioma === "en") return "en-GB";
+    if (idioma === "fr") return "fr-FR";
+    return "es-ES";
+};
+
+const formatearNumeroPuntuacionEspectador = (valor) => {
+    const numero = Number(valor);
+    const seguro = Number.isFinite(numero) ? numero : 0;
+    try {
+        return new Intl.NumberFormat(idiomaFormatoPuntuacionEspectador(), {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: Number.isInteger(seguro) ? 0 : 2
+        }).format(seguro);
+    } catch (_error) {
+        return String(Math.round(seguro * 100) / 100);
+    }
+};
+
+const traducirCategoriaPuntuacionEspectador = (categoria = {}) => {
+    const id = String(categoria.id || "").trim().toLowerCase();
+    const fallback = String(categoria.etiqueta || id.replace(/_/g, " ")).toUpperCase();
+    return tJuego2P(`score.category.${id}.label`, {}, fallback);
+};
+
+const explicarCategoriaPuntuacionEspectador = (categoria = {}) => {
+    const id = String(categoria.id || "").trim().toLowerCase();
+    return tJuego2P(
+        `score.category.${id}.explanation`,
+        {},
+        String(categoria.explicacion || "")
+    );
+};
+
+const traducirUnidadPuntuacionEspectador = (categoria = {}) => {
+    const id = String(categoria.id || "").trim().toLowerCase();
+    const clave = PUNTUACION_UNIDADES_I18N[id];
+    return clave ? tJuego2P(clave, {}, String(categoria.unidad || "")) : String(categoria.unidad || "");
+};
+
+const crearParticulasPuntuacionEspectador = () => {
+    if (!puntuacion_particulas || puntuacion_particulas.childElementCount) return;
+    const fragment = document.createDocumentFragment();
+    for (let indice = 0; indice < 28; indice += 1) {
+        const particula = document.createElement("span");
+        particula.className = `puntuacion-particula puntuacion-particula--${indice % 3 === 0 ? "oro" : (indice % 2 === 0 ? "azul" : "roja")}`;
+        particula.style.setProperty("--particula-x", `${4 + ((indice * 37) % 92)}%`);
+        particula.style.setProperty("--particula-delay", `${(indice % 9) * 45}ms`);
+        particula.style.setProperty("--particula-drift", `${-48 + ((indice * 29) % 96)}px`);
+        particula.style.setProperty("--particula-rot", `${90 + ((indice * 47) % 300)}deg`);
+        fragment.appendChild(particula);
+    }
+    puntuacion_particulas.appendChild(fragment);
+};
+
+const activarParticulasPuntuacionEspectador = (final = false, animar = true) => {
+    if (!puntuacion_particulas) return;
+    crearParticulasPuntuacionEspectador();
+    puntuacion_particulas.classList.remove("is-active", "is-final");
+    if (!animar) return;
+    requestAnimationFrame(() => {
+        if (vista_espectador_modo_resuelta !== "puntuacion") return;
+        puntuacion_particulas.classList.toggle("is-final", Boolean(final));
+        puntuacion_particulas.classList.add("is-active");
+    });
+};
+
+const construirPuntosEquipoPuntuacionEspectador = (estado, totales, player, opciones = {}) => {
+    const jugador = estado.jugadores[player];
+    const total = Number(totales[player]) || 0;
+    const clase = player === 1 ? "azul" : "rojo";
+    const ganador = Number(opciones.ganador) === player;
+    return `
+        <article class="puntuacion-marcador-equipo puntuacion-marcador-equipo--${clase}${ganador ? " is-winner" : ""}">
+            <span class="puntuacion-marcador-equipo__lado">${player === 1 ? "01" : "02"}</span>
+            <strong>${escapeHtml(jugador.nombre)}</strong>
+            <span class="puntuacion-marcador-equipo__total">${escapeHtml(formatearNumeroPuntuacionEspectador(total))}</span>
+            <small>PTS</small>
+        </article>
+    `;
+};
+
+const construirMarcadorProvisionalPuntuacionEspectador = (estado, categoriasReveladas) => {
+    const api = obtenerApiPuntuacionEspectador();
+    const totales = api && typeof api.totalesParciales === "function"
+        ? api.totalesParciales(estado, categoriasReveladas)
+        : { 1: 0, 2: 0 };
+    return `
+        <section class="puntuacion-provisional" aria-label="${escapeHtml(tJuego2P("score.provisional", {}, "MARCADOR PROVISIONAL"))}">
+            <span class="puntuacion-provisional__label">${escapeHtml(tJuego2P("score.provisional", {}, "MARCADOR PROVISIONAL"))}</span>
+            <div class="puntuacion-provisional__duelo">
+                ${construirPuntosEquipoPuntuacionEspectador(estado, totales, 1)}
+                <span class="puntuacion-vs" aria-hidden="true">VS</span>
+                ${construirPuntosEquipoPuntuacionEspectador(estado, totales, 2)}
+            </div>
+        </section>
+    `;
+};
+
+const construirIntroPuntuacionEspectador = (vista) => {
+    const estado = vista.estado;
+    const chips = estado.categorias.map((categoria) => `
+        <li>
+            <span aria-hidden="true">${PUNTUACION_ICONOS_CATEGORIA[categoria.id] || "\u25C6"}</span>
+            <strong>${escapeHtml(traducirCategoriaPuntuacionEspectador(categoria))}</strong>
+            <small>${escapeHtml(tJuego2P("score.category.weight", { weight: formatearNumeroPuntuacionEspectador(categoria.peso) }, `${categoria.peso} PTS`))}</small>
+        </li>
+    `).join("");
+    return `
+        <article class="puntuacion-panel puntuacion-panel--intro">
+            <span class="puntuacion-kicker">${escapeHtml(tJuego2P("score.intro.kicker", {}, "EL DUELO EN NUMEROS"))}</span>
+            <div class="puntuacion-trofeo" aria-hidden="true"><span>\u{1F3C6}</span></div>
+            <h3>${escapeHtml(tJuego2P("score.intro.title", {}, "QUIEN JUGO MEJOR?"))}</h3>
+            <div class="puntuacion-intro-duelo">
+                <strong class="equipo-azul">${escapeHtml(estado.jugadores[1].nombre)}</strong>
+                <span>VS</span>
+                <strong class="equipo-rojo">${escapeHtml(estado.jugadores[2].nombre)}</strong>
+            </div>
+            <p class="puntuacion-intro-copy">${escapeHtml(tJuego2P("score.intro.copy", {}, "Seis apartados medidos con las mismas reglas."))}</p>
+            <ul class="puntuacion-categorias-intro">${chips}</ul>
+            <p class="puntuacion-reveal-hint"><span aria-hidden="true">\u25B6</span> ${escapeHtml(tJuego2P("score.intro.reveal_hint", {}, "CONTROL REVELA CADA APARTADO"))}</p>
+            <p class="puntuacion-disclaimer">${escapeHtml(tJuego2P("score.disclaimer", {}, "Mide rendimiento de juego; no valora la calidad literaria."))}</p>
+        </article>
+    `;
+};
+
+const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player) => {
+    const jugador = estado.jugadores[player];
+    const valor = Number(categoria.valores[player]) || 0;
+    const puntos = Number(categoria.puntos[player]) || 0;
+    const peso = Math.max(0, Number(categoria.peso) || 0);
+    const porcentaje = peso > 0 ? Math.max(0, Math.min(100, (puntos / peso) * 100)) : 50;
+    const clase = player === 1 ? "azul" : "rojo";
+    const gana = Number(categoria.ganador) === player;
+    const empata = categoria.empate === true;
+    return `
+        <article class="puntuacion-categoria-equipo puntuacion-categoria-equipo--${clase}${gana ? " is-winner" : ""}${empata ? " is-tie" : ""}">
+            <span class="puntuacion-categoria-equipo__numero">0${player}</span>
+            <h4>${escapeHtml(jugador.nombre)}</h4>
+            <div class="puntuacion-categoria-equipo__metrica">
+                <strong>${escapeHtml(formatearNumeroPuntuacionEspectador(valor))}</strong>
+                <span>${escapeHtml(traducirUnidadPuntuacionEspectador(categoria))}</span>
+            </div>
+            <div class="puntuacion-categoria-barra" aria-hidden="true">
+                <span style="--puntuacion-fill:${porcentaje.toFixed(2)}%"></span>
+            </div>
+            <div class="puntuacion-categoria-equipo__puntos">
+                <strong>+${escapeHtml(formatearNumeroPuntuacionEspectador(puntos))}</strong>
+                <span>PTS</span>
+            </div>
+            ${gana ? `<span class="puntuacion-categoria-ganador">${escapeHtml(tJuego2P("score.category.leader", {}, "GANA EL APARTADO"))}</span>` : ""}
+            ${empata ? `<span class="puntuacion-categoria-ganador puntuacion-categoria-ganador--empate">${escapeHtml(tJuego2P("score.category.tie", {}, "EMPATE EN EL APARTADO"))}</span>` : ""}
+        </article>
+    `;
+};
+
+const construirCategoriaPuntuacionEspectador = (vista) => {
+    const estado = vista.estado;
+    const categoria = vista.categoria;
+    const numeroCategoria = vista.indiceCategoria + 1;
+    return `
+        <article class="puntuacion-panel puntuacion-panel--categoria" data-categoria="${escapeHtml(categoria.id)}">
+            <header class="puntuacion-categoria-header">
+                <span class="puntuacion-categoria-icono" aria-hidden="true">${PUNTUACION_ICONOS_CATEGORIA[categoria.id] || "\u25C6"}</span>
+                <div>
+                    <span class="puntuacion-kicker">${escapeHtml(tJuego2P("score.category.progress", { current: numeroCategoria, total: estado.categorias.length }, `APARTADO ${numeroCategoria}`))}</span>
+                    <h3>${escapeHtml(traducirCategoriaPuntuacionEspectador(categoria))}</h3>
+                    <p>${escapeHtml(explicarCategoriaPuntuacionEspectador(categoria))}</p>
+                </div>
+                <strong class="puntuacion-peso">${escapeHtml(tJuego2P("score.category.weight", { weight: formatearNumeroPuntuacionEspectador(categoria.peso) }, `${categoria.peso} PTS`))}</strong>
+            </header>
+            <div class="puntuacion-categoria-duelo">
+                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 1)}
+                <span class="puntuacion-vs puntuacion-vs--categoria" aria-hidden="true">VS</span>
+                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 2)}
+            </div>
+            ${construirMarcadorProvisionalPuntuacionEspectador(estado, numeroCategoria)}
+        </article>
+    `;
+};
+
+const construirDesgloseFinalPuntuacionEspectador = (estado) => estado.categorias.map((categoria) => {
+    const ganador = Number(categoria.ganador);
+    const resultado = categoria.empate
+        ? tJuego2P("score.category.tie_short", {}, "EMPATE")
+        : (estado.jugadores[ganador] ? estado.jugadores[ganador].nombre : "-");
+    return `
+        <li class="puntuacion-desglose-fila${ganador === 1 ? " gana-azul" : (ganador === 2 ? " gana-rojo" : " is-tie")}">
+            <span class="puntuacion-desglose-icono" aria-hidden="true">${PUNTUACION_ICONOS_CATEGORIA[categoria.id] || "\u25C6"}</span>
+            <strong>${escapeHtml(traducirCategoriaPuntuacionEspectador(categoria))}</strong>
+            <span class="puntuacion-desglose-puntos puntuacion-desglose-puntos--azul">${escapeHtml(formatearNumeroPuntuacionEspectador(categoria.puntos[1]))}</span>
+            <span class="puntuacion-desglose-ganador">${escapeHtml(resultado)}</span>
+            <span class="puntuacion-desglose-puntos puntuacion-desglose-puntos--rojo">${escapeHtml(formatearNumeroPuntuacionEspectador(categoria.puntos[2]))}</span>
+        </li>
+    `;
+}).join("");
+
+const construirFinalPuntuacionEspectador = (vista) => {
+    const estado = vista.estado;
+    const ganador = Number(estado.ganador);
+    const empate = estado.empate === true || (ganador !== 1 && ganador !== 2);
+    const tituloResultado = empate
+        ? tJuego2P("score.final.tie", {}, "EMPATE TECNICO")
+        : estado.jugadores[ganador].nombre;
+    const subtitulo = empate
+        ? tJuego2P("score.final.tie_copy", {}, "Los dos equipos terminan con la misma puntuacion.")
+        : tJuego2P("score.final.winner", {}, "GANADOR DE LA PARTIDA");
+    return `
+        <article class="puntuacion-panel puntuacion-panel--final${empate ? " is-tie" : ` ganador-${ganador}`}">
+            <span class="puntuacion-kicker">${escapeHtml(tJuego2P("score.final.kicker", {}, "RESULTADO FINAL"))}</span>
+            <div class="puntuacion-corona" aria-hidden="true">${empate ? "\u2696\uFE0F" : "\u{1F451}"}</div>
+            <p class="puntuacion-final-subtitulo">${escapeHtml(subtitulo)}</p>
+            <h3>${escapeHtml(tituloResultado)}</h3>
+            ${empate ? "" : `<p class="puntuacion-final-margen">${escapeHtml(tJuego2P("score.final.margin", { difference: formatearNumeroPuntuacionEspectador(estado.diferencia) }, `VENTAJA: ${estado.diferencia} PTS`))}</p>`}
+            <div class="puntuacion-final-marcador">
+                ${construirPuntosEquipoPuntuacionEspectador(estado, { 1: estado.jugadores[1].total, 2: estado.jugadores[2].total }, 1, { ganador })}
+                <span class="puntuacion-vs" aria-hidden="true">${empate ? "=" : "VS"}</span>
+                ${construirPuntosEquipoPuntuacionEspectador(estado, { 1: estado.jugadores[1].total, 2: estado.jugadores[2].total }, 2, { ganador })}
+            </div>
+            <section class="puntuacion-desglose">
+                <h4>${escapeHtml(tJuego2P("score.final.breakdown", {}, "DUELO POR APARTADOS"))}</h4>
+                <ul>${construirDesgloseFinalPuntuacionEspectador(estado)}</ul>
+            </section>
+            <p class="puntuacion-disclaimer">${escapeHtml(tJuego2P("score.disclaimer", {}, "Mide rendimiento de juego; no valora la calidad literaria."))}</p>
+        </article>
+    `;
+};
+
+const construirEsperaPuntuacionEspectador = (vista) => {
+    const insuficiente = vista.tipo === "insuficiente";
+    return `
+        <article class="puntuacion-panel puntuacion-panel--espera${insuficiente ? " is-warning" : ""}">
+            <span class="puntuacion-espera-icono" aria-hidden="true">${insuficiente ? "\u26A0\uFE0F" : "\u{1F3C6}"}</span>
+            <h3>${escapeHtml(tJuego2P(insuficiente ? "score.insufficient.title" : "score.waiting.title", {}, insuficiente ? "DATOS INCOMPLETOS" : "RESULTADO PENDIENTE"))}</h3>
+            <p>${escapeHtml(tJuego2P(insuficiente ? "score.insufficient" : "score.waiting", {}, insuficiente ? "Faltan datos de una escritora." : "El resultado estara disponible al terminar la partida."))}</p>
+        </article>
+    `;
+};
+
+const renderizarDotsPuntuacionEspectador = (paso) => {
+    const api = obtenerApiPuntuacionEspectador();
+    if (!puntuacion_dots || !api) return;
+    puntuacion_dots.innerHTML = "";
+    const fragment = document.createDocumentFragment();
+    for (let indice = 0; indice <= api.MAX_STEP; indice += 1) {
+        const dot = document.createElement("span");
+        dot.className = `puntuacion-dot${indice === paso ? " is-active" : ""}${indice < paso ? " is-revealed" : ""}`;
+        fragment.appendChild(dot);
+    }
+    puntuacion_dots.appendChild(fragment);
+};
+
+const etiquetaPasoPuntuacionEspectador = (vista) => {
+    if (vista.tipo === "final") return tJuego2P("score.step.final", {}, "GANADOR");
+    if (vista.tipo === "categoria" && vista.categoria) {
+        return traducirCategoriaPuntuacionEspectador(vista.categoria);
+    }
+    return tJuego2P("score.step.intro", {}, "INTRO");
+};
+
+const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
+    if (!puntuacion_stage) return;
+    const api = obtenerApiPuntuacionEspectador();
+    if (!api) {
+        puntuacion_stage.innerHTML = `<p>${escapeHtml(tJuego2P("score.waiting", {}, "Resultado pendiente."))}</p>`;
+        return;
+    }
+    const estado = estado_puntuacion_final_espectador || api.normalizarPayload({});
+    const vista = api.obtenerVista(estado, puntuacion_slide_step_remoto);
+    const firma = `${estado.calculadoEnTs || 0}:${vista.paso}:${vista.tipo}`;
+    const animar = opciones.animar === true && firma !== puntuacion_firma_render_espectador;
+    let html = "";
+    if (vista.tipo === "intro") html = construirIntroPuntuacionEspectador(vista);
+    else if (vista.tipo === "categoria") html = construirCategoriaPuntuacionEspectador(vista);
+    else if (vista.tipo === "final") html = construirFinalPuntuacionEspectador(vista);
+    else html = construirEsperaPuntuacionEspectador(vista);
+
+    puntuacion_stage.classList.remove("is-revealing", "is-final");
+    puntuacion_stage.innerHTML = html;
+    puntuacion_stage.dataset.step = String(vista.paso);
+    if (puntuacion_paso) {
+        puntuacion_paso.textContent = `${etiquetaPasoPuntuacionEspectador(vista)} \u00b7 ${vista.paso}/${api.MAX_STEP}`;
+    }
+    if (puntuacion_formula) {
+        puntuacion_formula.textContent = tJuego2P(
+            "score.formula",
+            { version: estado.formulaVersion || "scrib-puntuacion-v1" },
+            `SCRIB \u00b7 ${estado.formulaVersion || "scrib-puntuacion-v1"}`
+        );
+    }
+    renderizarDotsPuntuacionEspectador(vista.paso);
+    activarParticulasPuntuacionEspectador(vista.tipo === "final", animar);
+    if (animar) {
+        requestAnimationFrame(() => {
+            if (vista_espectador_modo_resuelta !== "puntuacion") return;
+            puntuacion_stage.classList.toggle("is-final", vista.tipo === "final");
+            puntuacion_stage.classList.add("is-revealing");
+        });
+    }
+    puntuacion_firma_render_espectador = firma;
+};
+
+const actualizarPuntuacionFinalEspectador = (payload = {}) => {
+    const api = obtenerApiPuntuacionEspectador();
+    if (!api) return;
+    estado_puntuacion_final_espectador = api.normalizarPayload(payload);
+    if (vista_espectador_modo_resuelta === "puntuacion") {
+        renderizarPuntuacionFinalEspectador({ animar: true });
+    }
+};
+
+window.actualizarPuntuacionFinalEspectador = actualizarPuntuacionFinalEspectador;
+
 const hashCadenaInspiracion = (texto) => {
     const valor = String(texto || "");
     let hash = 2166136261;
@@ -3379,6 +3730,7 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         document.body.classList.toggle("vista-partida", modo === "partida");
         document.body.classList.toggle("vista-calentamiento", modo === "calentamiento");
         document.body.classList.toggle("vista-stats", modo === "stats");
+        document.body.classList.toggle("vista-puntuacion", modo === "puntuacion");
         document.body.classList.toggle("vista-nube-inspiracion", modo === "nube_inspiracion");
         document.body.classList.toggle("vista-creditos", modo === "creditos");
     }
@@ -3387,6 +3739,9 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     }
     if (stats_espectador) {
         stats_espectador.style.display = modo === "stats" ? "grid" : "none";
+    }
+    if (puntuacion_espectador) {
+        puntuacion_espectador.style.display = modo === "puntuacion" ? "grid" : "none";
     }
     if (nube_inspiracion_espectador) {
         nube_inspiracion_espectador.style.display = modo === "nube_inspiracion" ? "flex" : "none";
@@ -3406,6 +3761,14 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
         renderizarStatsEspectador();
+    } else if (modo === "puntuacion") {
+        limpiarFeedbackFlotanteEspectador();
+        stopConfetti();
+        detenerSlidesStats();
+        detenerAnimacionNubeInspiracion();
+        detenerAnimacionCreditosEspectador();
+        puntuacion_firma_render_espectador = "";
+        renderizarPuntuacionFinalEspectador({ animar: true });
     } else if (modo === "nube_inspiracion") {
         iniciarAnimacionNubeInspiracion();
         renderizarNubeInspiracion();
@@ -3420,6 +3783,9 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
     }
+    if (modoPrevio === "puntuacion" && modo !== "puntuacion" && puntuacion_particulas) {
+        puntuacion_particulas.classList.remove("is-active", "is-final");
+    }
     actualizarVisibilidadPanelNivelEspectador();
     programarAjusteViewportEspectador();
 };
@@ -3429,12 +3795,21 @@ const actualizarVistaCalentamiento = (activa) => {
 };
 const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     let cambioPasoStats = false;
+    let cambioPasoPuntuacion = false;
     let cambioEscalaUi = false;
     if (payload && typeof payload === "object") {
         if (Object.prototype.hasOwnProperty.call(payload, "stats_slide_step")) {
             const nuevoPaso = normalizarPasoSlideStatsEspectador(payload.stats_slide_step);
             cambioPasoStats = nuevoPaso !== stats_slide_step_remoto;
             stats_slide_step_remoto = nuevoPaso;
+        }
+        if (Object.prototype.hasOwnProperty.call(payload, "puntuacion_slide_step")) {
+            const api = obtenerApiPuntuacionEspectador();
+            const nuevoPaso = api && typeof api.normalizarPaso === "function"
+                ? api.normalizarPaso(payload.puntuacion_slide_step)
+                : 0;
+            cambioPasoPuntuacion = nuevoPaso !== puntuacion_slide_step_remoto;
+            puntuacion_slide_step_remoto = nuevoPaso;
         }
         if (Object.prototype.hasOwnProperty.call(payload, "escala_ui")) {
             const nuevaEscala = normalizarEscalaUiEspectador(payload.escala_ui, escala_ui_espectador);
@@ -3454,6 +3829,9 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
                 if (modoServidor === "stats" && cambioPasoStats) {
                     aplicarSlideStatsActual();
                 }
+                if (modoServidor === "puntuacion" && cambioPasoPuntuacion) {
+                    renderizarPuntuacionFinalEspectador({ animar: true });
+                }
                 if (cambioEscalaUi) {
                     programarAjusteViewportEspectador();
                 }
@@ -3466,7 +3844,10 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     if (vista_espectador_modo_resuelta === "stats" && cambioPasoStats) {
         aplicarSlideStatsActual();
     }
-    if (cambioEscalaUi || cambioPasoStats) {
+    if (vista_espectador_modo_resuelta === "puntuacion" && cambioPasoPuntuacion) {
+        renderizarPuntuacionFinalEspectador({ animar: true });
+    }
+    if (cambioEscalaUi || cambioPasoStats || cambioPasoPuntuacion) {
         programarAjusteViewportEspectador();
         return;
     }

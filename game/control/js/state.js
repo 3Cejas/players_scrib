@@ -802,6 +802,21 @@ function obtenerConteoPalabrasControl(playerId) {
     return textoPlano.split(/\s+/).filter(Boolean).length;
 }
 
+function tokenizarPalabrasUnicodeStatsControl(textoPlano = "") {
+    const normalizado = String(textoPlano || "")
+        .normalize("NFKC")
+        .toLocaleLowerCase();
+    return normalizado.match(/[\p{L}\p{N}](?:[\p{L}\p{N}\p{M}]|['’\u2010-\u2015-](?=[\p{L}\p{N}]))*/gu) || [];
+}
+
+function obtenerPalabrasUnicasControl(playerId) {
+    const textoEl = Number(playerId) === 2 ? texto2 : texto1;
+    const textoPlano = textoEl ? extraerTextoPlanoDesdeHtmlControl(textoEl.innerHTML || "") : "";
+    return new Set(tokenizarPalabrasUnicodeStatsControl(textoPlano)).size;
+}
+
+window.tokenizarPalabrasUnicodeStatsControl = tokenizarPalabrasUnicodeStatsControl;
+
 function obtenerResumenVidaControl(serie = []) {
     const valores = Array.isArray(serie) ? serie.map((p) => Number(p && p.v)).filter(Number.isFinite) : [];
     if (!valores.length) {
@@ -871,6 +886,7 @@ function obtenerResumenJugadorStatsControl(playerId) {
         id: playerId,
         nombre: (playerId === 2 ? val_nombre2 : val_nombre1) || `ESCRITXR ${playerId}`,
         palabrasTotal: obtenerConteoPalabrasControl(playerId),
+        palabrasUnicas: obtenerPalabrasUnicasControl(playerId),
         pulsacionesTotal,
         teclasDistintas: datosHeatmap.teclasDistintas,
         topTeclas: topTeclas.map((item) => ({ ...item })),
@@ -1002,5 +1018,4 @@ actualizarNombresConexiones();
 if (window.actualizarBotonesTeleprompterCarga) {
     window.actualizarBotonesTeleprompterCarga();
 }
-
 
