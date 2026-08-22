@@ -1877,6 +1877,8 @@ let timeout_feedback_calentamiento = null;
 let timeout_feedback_calentamiento_salida = null;
 let calentamiento_cooldown = false;
 let calentamiento_interval_cooldown = null;
+let calentamiento_envio_pendiente = false;
+let calentamiento_timeout_respuesta = null;
 let calentamiento_solicitud_actual = "ninguna";
 let calentamiento_bloqueado = false;
 let calentamiento_final_actual = null;
@@ -2102,6 +2104,11 @@ const animarCambioConsignaCalentamiento = () => {
 
 function invalidarContextoCalentamientoMusa() {
     revision_contexto_calentamiento_musa += 1;
+    calentamiento_envio_pendiente = false;
+    if (calentamiento_timeout_respuesta) {
+        clearTimeout(calentamiento_timeout_respuesta);
+        calentamiento_timeout_respuesta = null;
+    }
     limpiarCooldownCalentamiento();
     if (timeout_feedback_calentamiento) {
         clearTimeout(timeout_feedback_calentamiento);
@@ -2254,10 +2261,10 @@ const actualizarCalentamiento = (data = {}) => {
     if (calentamiento_input) {
         calentamiento_input.placeholder = mensajeSolicitud.placeholder;
         calentamiento_input.maxLength = obtenerMaxLongitudCalentamiento();
-        calentamiento_input.disabled = calentamiento_bloqueado;
+        calentamiento_input.disabled = calentamiento_bloqueado || calentamiento_envio_pendiente;
     }
     if (calentamiento_enviar) {
-        calentamiento_enviar.disabled = calentamiento_bloqueado;
+        calentamiento_enviar.disabled = calentamiento_bloqueado || calentamiento_envio_pendiente;
     }
     if (calentamiento_bloqueado) {
         limpiarCooldownCalentamiento();
@@ -2269,6 +2276,19 @@ const actualizarCalentamiento = (data = {}) => {
         animarCambioConsignaCalentamiento();
     }
     actualizarBloqueoCalentamientoMusa(calentamiento_bloqueado, calentamiento_final_actual);
+};
+
+const mensajeErrorCalentamiento = (data = {}) => {
+    if (data && data.codigo === "CONTENIDO_NO_PERMITIDO") {
+        return tJuego2P(
+            "warmup.feedback.inappropriate_language",
+            {},
+            "No se permiten palabrotas ni lenguaje ofensivo."
+        );
+    }
+    return data && data.mensaje
+        ? data.mensaje
+        : tJuego2P("warmup.feedback.generic_error", {}, "Error.");
 };
 
 const enviarCalentamiento = () => {
@@ -2283,7 +2303,7 @@ const enviarCalentamiento = () => {
         mostrarFeedbackCalentamiento(tJuego2P("warmup.feedback.closed_by_writer", {}, "La consigna esta cerrada por tu escritxr."), true);
         return;
     }
-    if (calentamiento_cooldown) {
+    if (calentamiento_cooldown || calentamiento_envio_pendiente) {
         if (calentamiento_text_progress) {
             calentamiento_text_progress.classList.add("disabled-click-feedback");
             setTimeout(() => {
@@ -2316,15 +2336,49 @@ const enviarCalentamiento = () => {
         );
         return;
     }
-    socket.emit("calentamiento_intento", { palabra: contenido });
-    startProgressCalentamiento(calentamiento_enviar);
-    calentamiento_input.value = "";
-    mostrarFeedbackCalentamiento(
-        esFraseFinal
-            ? tJuego2P("warmup.feedback.phrase_sent", {}, "Frase enviada.")
-            : tJuego2P("warmup.feedback.word_sent", {}, "Palabra enviada."),
-        false
-    );
+    const revisionContexto = obtenerRevisionContextoCalentamientoMusa();
+    let respuestaProcesada = false;
+    let timeoutRespuesta = null;
+    calentamiento_envio_pendiente = true;
+    calentamiento_input.disabled = true;
+    if (calentamiento_enviar) calentamiento_enviar.disabled = true;
+
+    const procesarRespuesta = (respuesta = {}) => {
+        if (respuestaProcesada) return;
+        respuestaProcesada = true;
+        if (timeoutRespuesta) {
+            clearTimeout(timeoutRespuesta);
+            if (calentamiento_timeout_respuesta === timeoutRespuesta) {
+                calentamiento_timeout_respuesta = null;
+            }
+            timeoutRespuesta = null;
+        }
+        if (!esRevisionContextoCalentamientoMusaActiva(revisionContexto)) return;
+        calentamiento_envio_pendiente = false;
+        calentamiento_input.disabled = calentamiento_bloqueado;
+        if (calentamiento_enviar) calentamiento_enviar.disabled = calentamiento_bloqueado;
+        if (!respuesta || respuesta.ok !== true) {
+            mostrarFeedbackCalentamiento(mensajeErrorCalentamiento(respuesta), true);
+            return;
+        }
+        startProgressCalentamiento(calentamiento_enviar);
+        calentamiento_input.value = "";
+        mostrarFeedbackCalentamiento(
+            esFraseFinal
+                ? tJuego2P("warmup.feedback.phrase_sent", {}, "Frase enviada.")
+                : tJuego2P("warmup.feedback.word_sent", {}, "Palabra enviada."),
+            false
+        );
+    };
+
+    timeoutRespuesta = setTimeout(() => {
+        procesarRespuesta({
+            ok: false,
+            mensaje: tJuego2P("warmup.feedback.generic_error", {}, "No se pudo confirmar el envio.")
+        });
+    }, 5000);
+    calentamiento_timeout_respuesta = timeoutRespuesta;
+    socket.emit("calentamiento_intento", { palabra: contenido }, procesarRespuesta);
 };
 
 if (calentamiento_enviar) {

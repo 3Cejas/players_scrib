@@ -6,7 +6,7 @@ const path = require("node:path");
 const ROOT = path.resolve(__dirname, "..");
 const ASSET_VERSION = "20260504e";
 const CSS_VERSION = "20260505i";
-const I18N_VERSION = "20260505g";
+const I18N_VERSION = "20260822a";
 const PLAYER_ACTIONS_VERSION = "20260504f";
 const PLAYER_STATE_VERSION = "20260505d";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260506e";
@@ -20,8 +20,8 @@ const CONTROL_ACTIONS_VERSION = "20260506d";
 const CONTROL_STATE_VERSION = "20260506a";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260506b";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
-const PUBLIC_PLAYER_STATE_VERSION = "20260504g";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260504h";
+const PUBLIC_PLAYER_STATE_VERSION = "20260822a";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260822a";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260505f";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
@@ -91,6 +91,22 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/actors/source/index.html", "js/actions.js", ACTOR_SOURCE_ACTIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/annotations.js", ACTOR_SOURCE_ANNOTATIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/socket-events.js", ACTOR_SOURCE_SOCKET_EVENTS_VERSION);
+});
+
+test("muse tutorial localizes server-side offensive-language rejections", () => {
+  const i18n = read("game/js/i18n.js");
+  const state = read("game/public/players/js/state.js");
+  const socketEvents = read("game/public/players/js/socket-events.js");
+
+  assert.equal((i18n.match(/"warmup\.feedback\.inappropriate_language"/g) || []).length, 3);
+  assert.match(state, /data && data\.codigo === "CONTENIDO_NO_PERMITIDO"/);
+  assert.match(state, /warmup\.feedback\.inappropriate_language/);
+  assert.match(state, /let timeoutRespuesta = null/);
+  assert.match(state, /calentamiento_timeout_respuesta === timeoutRespuesta/);
+  assert.match(state, /socket\.emit\("calentamiento_intento", \{ palabra: contenido \}, procesarRespuesta\)/);
+  assert.match(state, /if \(!respuesta \|\| respuesta\.ok !== true\)/);
+  assert.match(state, /if \(!respuesta \|\| respuesta\.ok !== true\)[\s\S]*return;[\s\S]*calentamiento_input\.value = ""/);
+  assert.match(socketEvents, /mostrarFeedbackCalentamiento\(\s*mensajeErrorCalentamiento\(data\),\s*true\s*\)/);
 });
 
 test("writer role scripts are inside body before live-server injection point", () => {

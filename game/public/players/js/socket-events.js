@@ -231,7 +231,7 @@ socket.on('calentamiento_estado_musa', (data) => {
 
 socket.on('calentamiento_error', (data) => {
     mostrarFeedbackCalentamiento(
-        data && data.mensaje ? data.mensaje : tJuego2P("warmup.feedback.generic_error", {}, "Error."),
+        mensajeErrorCalentamiento(data),
         true
     );
 });
