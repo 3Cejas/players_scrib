@@ -10,6 +10,7 @@ socket.on("recargar_rol_remoto", () => {
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
+    reiniciarSeguimientoTransicionNivelEspectador();
     limpiarAsincroniaVisualEspectador({ resetViewport: true });
     invalidarContextoTransitorioEspectador();
     modo_seq_actual_espectador = 0;
@@ -40,6 +41,7 @@ socket.on('connect', () => {
 });
 
 socket.on('connect_error', () => {
+    ocultarTransicionNivelEspectador();
     limpiarAsincroniaVisualEspectador({ resetViewport: true });
     invalidarContextoTransitorioEspectador();
 });
@@ -119,6 +121,7 @@ socket.on('creditos_estado', (payload = {}) => {
 });
 
 socket.on('disconnect', () => {
+    ocultarTransicionNivelEspectador();
     limpiarAsincroniaVisualEspectador({ resetViewport: true });
     detenerSlidesStats();
     detenerAnimacionNubeInspiracion();
@@ -311,6 +314,7 @@ function marcarJugadorTerminadoEspectador(jugadorId, opciones = {}) {
 }
 
 function ejecutarCierrePartidaEspectador(data = {}) {
+    ocultarTransicionNivelEspectador();
     if (confetti_cierre_partida_disparado) return;
     confetti_cierre_partida_disparado = true;
     if (!suprimir_confetti_cierre_por_fin_control) {
@@ -940,6 +944,7 @@ socket.on('post-inicio', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', data => {
+    reiniciarSeguimientoTransicionNivelEspectador({ primeEmpty: true });
     limpiarAsincroniaVisualEspectador();
     detenerTemporizadorGigante();
     limpiarColaPalabrasPendientesEspectador();
@@ -1010,11 +1015,17 @@ socket.on('modo_actual', (data = {}) => {
         return;
     }
     const payload = (data && typeof data === "object") ? data : {};
+    const observacionTransicion = observarModoCanonicoTransicionEspectador(payload);
     const siguienteModo = Object.prototype.hasOwnProperty.call(payload, "modo_actual")
         ? String(payload.modo_actual || "")
         : modo_actual;
     if (cuenta_atras_activa || inicio_modo_delay) {
-        modo_pendiente = { ...(modo_pendiente || {}), ...payload, modo_actual: siguienteModo };
+        aplazarTransicionNivelEspectador(observacionTransicion, payload);
+        modo_pendiente = {
+            ...(modo_pendiente || {}),
+            ...payload,
+            modo_actual: siguienteModo
+        };
         return;
     }
     if (!siguienteModo) {
@@ -1023,6 +1034,7 @@ socket.on('modo_actual', (data = {}) => {
     if (siguienteModo !== modo_actual || !modo_nivel_activo_espectador) {
         aplicarModo({ ...(ultimo_payload_modo_espectador || {}), ...payload, modo_actual: siguienteModo });
     }
+    mostrarTransicionNivelEspectador(observacionTransicion, payload);
 });
 
 socket.on("temp_modos", (data = {}) => {
@@ -1073,6 +1085,7 @@ function aplicarModo(data) {
     if (cambioRealDeModo) {
         vaciarColaPalabrasPendientesEspectador();
     }
+    mostrarTransicionNivelPendienteEspectador(modo_actual);
 }
 
 function refrescarCabeceraModoActualEspectador() {

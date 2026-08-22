@@ -8,6 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260505f">
+    <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260823a">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="../../config.js"></script>
@@ -20,6 +21,24 @@
     <script src="./js/annotations.js?v=20260505c"></script>
 </head>
 <body class="page-actors">
+        <div id="level_transition" class="level-transition level-transition--compact" aria-hidden="true">
+            <div class="level-transition__backdrop" aria-hidden="true"></div>
+            <div class="level-transition__rays" aria-hidden="true"></div>
+            <div class="level-transition__burst" aria-hidden="true"></div>
+            <article class="level-transition__panel" aria-hidden="true">
+                <p class="level-transition__eyebrow" data-level-eyebrow>NUEVO NIVEL</p>
+                <div class="level-transition__icon-shell" aria-hidden="true">
+                    <span class="level-transition__icon" data-level-icon></span>
+                </div>
+                <h2 class="level-transition__title" data-level-title>NIVEL</h2>
+                <p class="level-transition__detail" data-level-detail></p>
+                <div class="level-transition__meter" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </article>
+            <div class="level-transition__scanlines" aria-hidden="true"></div>
+        </div>
+        <p id="level_transition_status" class="scrib-visually-hidden" role="status" aria-live="assertive" aria-atomic="true"></p>
         <button id="actor_fullscreen_toggle" class="actor-fullscreen-toggle" type="button" data-actor-annotation-ui aria-label="Activar pantalla completa" title="Pantalla completa">&#x1F5A5;&#xFE0F; Pantalla completa</button>
         <div id="contenedor" class="contenedor">
             <div class="container"></div>
@@ -131,6 +150,7 @@
         </div>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-    <script src="../../js/i18n.js?v=20260822a"></script>
-<script src="./js/socket-events.js?v=20260505c"></script>
+    <script src="../../js/i18n.js?v=20260823a"></script>
+<script src="../../js/domains/level-transition.js?v=20260823a"></script>
+<script src="./js/socket-events.js?v=20260823a"></script>
 </html>

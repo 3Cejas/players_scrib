@@ -1,0 +1,636 @@
+.scrib-visually-hidden {
+    position: fixed !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.level-transition {
+    --level-accent: #6bff83;
+    --level-accent-soft: rgba(107, 255, 131, 0.28);
+    --level-accent-deep: #168c40;
+    --level-ink: #f7fff9;
+    position: fixed;
+    inset: 0;
+    z-index: 2147482000;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 100vw;
+    min-height: 100dvh;
+    padding:
+        max(18px, env(safe-area-inset-top))
+        max(18px, env(safe-area-inset-right))
+        max(18px, env(safe-area-inset-bottom))
+        max(18px, env(safe-area-inset-left));
+    overflow: hidden;
+    color: var(--level-ink);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    isolation: isolate;
+}
+
+.level-transition.is-visible {
+    visibility: visible;
+    opacity: 1;
+    animation: scribLevelCurtain 2800ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.level-transition[data-level-theme="forbidden-letter"] {
+    --level-accent: #ff526d;
+    --level-accent-soft: rgba(255, 82, 109, 0.3);
+    --level-accent-deep: #a70e31;
+}
+
+.level-transition[data-level-theme="bonus-words"] {
+    --level-accent: #ffe05f;
+    --level-accent-soft: rgba(255, 224, 95, 0.3);
+    --level-accent-deep: #bc7611;
+}
+
+.level-transition[data-level-theme="forbidden-words"] {
+    --level-accent: #ff91dc;
+    --level-accent-soft: rgba(255, 145, 220, 0.3);
+    --level-accent-deep: #a83287;
+}
+
+.level-transition[data-level-theme="muse-chat"] {
+    --level-accent: #62c9ff;
+    --level-accent-soft: rgba(98, 201, 255, 0.3);
+    --level-accent-deep: #176cb8;
+}
+
+.level-transition[data-level-theme="final-line"] {
+    --level-accent: #ffb45e;
+    --level-accent-soft: rgba(255, 180, 94, 0.32);
+    --level-accent-deep: #b64d12;
+}
+
+.level-transition__backdrop,
+.level-transition__rays,
+.level-transition__scanlines,
+.level-transition__burst {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.level-transition__backdrop {
+    z-index: -4;
+    background:
+        radial-gradient(circle at 50% 46%, var(--level-accent-soft) 0 7%, transparent 42%),
+        linear-gradient(112deg, rgba(2, 7, 18, 0.98) 0 39%, color-mix(in srgb, var(--level-accent-deep), #030610 70%) 50%, rgba(2, 7, 18, 0.98) 61% 100%);
+    backdrop-filter: blur(8px) saturate(0.72);
+}
+
+.level-transition__rays {
+    z-index: -3;
+    left: 50%;
+    top: 50%;
+    width: min(150vmax, 1800px);
+    height: min(150vmax, 1800px);
+    transform: translate(-50%, -50%);
+    background: repeating-conic-gradient(
+        from -4deg,
+        transparent 0deg 10deg,
+        color-mix(in srgb, var(--level-accent), transparent 88%) 10deg 12deg,
+        transparent 12deg 24deg
+    );
+    mask-image: radial-gradient(circle, #000 0 18%, rgba(0, 0, 0, 0.7) 52%, transparent 76%);
+}
+
+.level-transition__scanlines {
+    z-index: 3;
+    opacity: 0.15;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.12) 0 1px,
+        transparent 1px 5px
+    );
+    mix-blend-mode: overlay;
+}
+
+.level-transition__burst {
+    z-index: -2;
+    top: 50%;
+    left: 50%;
+    width: clamp(320px, 56vmin, 760px);
+    height: clamp(320px, 56vmin, 760px);
+    border: clamp(2px, 0.28vmin, 5px) solid color-mix(in srgb, var(--level-accent), white 16%);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 clamp(16px, 3vmin, 44px) color-mix(in srgb, var(--level-accent), transparent 92%),
+        0 0 clamp(70px, 18vmin, 240px) var(--level-accent-soft),
+        inset 0 0 clamp(30px, 8vmin, 100px) var(--level-accent-soft);
+    transform: translate(-50%, -50%) scale(0.12);
+    opacity: 0;
+}
+
+.level-transition__panel {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    width: min(860px, calc(100vw - 36px));
+    max-height: calc(100dvh - 36px);
+    box-sizing: border-box;
+    padding: clamp(24px, 5vmin, 62px) clamp(20px, 6vw, 84px);
+    overflow: hidden;
+    text-align: center;
+    border: clamp(2px, 0.22vmin, 4px) solid color-mix(in srgb, var(--level-accent), white 24%);
+    border-radius: clamp(18px, 3vw, 38px);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.11), transparent 28%),
+        linear-gradient(160deg, rgba(3, 10, 24, 0.97), color-mix(in srgb, var(--level-accent-deep), #050817 76%));
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+        0 0 0 clamp(7px, 1.2vmin, 15px) rgba(2, 5, 14, 0.78),
+        0 0 clamp(60px, 12vw, 180px) var(--level-accent-soft);
+    transform: translate3d(0, 7vh, 0) scale(0.72) rotateX(12deg);
+    opacity: 0;
+}
+
+.level-transition__panel::before,
+.level-transition__panel::after {
+    content: "";
+    position: absolute;
+    width: 45%;
+    height: 5px;
+    top: clamp(15px, 2.5vmin, 28px);
+    background: linear-gradient(90deg, transparent, var(--level-accent));
+    box-shadow: 0 0 18px var(--level-accent);
+}
+
+.level-transition__panel::before {
+    right: 52%;
+}
+
+.level-transition__panel::after {
+    left: 52%;
+    transform: scaleX(-1);
+}
+
+.level-transition__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65em;
+    margin: 0 0 clamp(10px, 2vmin, 22px);
+    color: var(--level-accent);
+    font: 800 clamp(0.82rem, 1.8vmin, 1.2rem)/1.1 "Retro-gaming", monospace;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    text-shadow: 0 0 18px var(--level-accent);
+}
+
+.level-transition__eyebrow::before,
+.level-transition__eyebrow::after {
+    content: "";
+    width: clamp(26px, 6vw, 78px);
+    height: 2px;
+    background: currentColor;
+    box-shadow: 0 0 12px currentColor;
+}
+
+.level-transition__icon-shell {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: clamp(92px, 17vmin, 168px);
+    height: clamp(92px, 17vmin, 168px);
+    margin-bottom: clamp(10px, 2.2vmin, 24px);
+    border: clamp(3px, 0.38vmin, 6px) solid var(--level-accent);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.16), var(--level-accent-soft) 52%, rgba(0, 0, 0, 0.25) 72%);
+    box-shadow:
+        0 0 clamp(22px, 5vmin, 68px) var(--level-accent-soft),
+        inset 0 0 clamp(18px, 4vmin, 48px) var(--level-accent-soft);
+}
+
+.level-transition__icon-shell::before,
+.level-transition__icon-shell::after {
+    content: "";
+    position: absolute;
+    inset: -14%;
+    border: 2px solid color-mix(in srgb, var(--level-accent), transparent 48%);
+    border-radius: 50%;
+    border-left-color: transparent;
+    border-right-color: transparent;
+}
+
+.level-transition__icon-shell::after {
+    inset: -28%;
+    border-width: 1px;
+    opacity: 0.58;
+}
+
+.level-transition__icon {
+    display: block;
+    font-size: clamp(3rem, 9vmin, 6.4rem);
+    line-height: 1;
+    filter: drop-shadow(0 0 16px var(--level-accent));
+}
+
+.level-transition__title {
+    max-width: 100%;
+    margin: 0;
+    color: #fff;
+    font: 900 clamp(2rem, 7.4vmin, 6.7rem)/0.98 "Retro-gaming", "Arial Black", sans-serif;
+    letter-spacing: clamp(0.01em, 0.4vw, 0.07em);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+    text-shadow:
+        0.035em 0.035em 0 color-mix(in srgb, var(--level-accent-deep), black 20%),
+        0 0 0.32em var(--level-accent),
+        0 0 0.82em var(--level-accent-soft);
+}
+
+.level-transition__detail {
+    max-width: 42em;
+    margin: clamp(14px, 2.8vmin, 30px) 0 0;
+    color: rgba(255, 255, 255, 0.9);
+    font: 700 clamp(0.9rem, 2.1vmin, 1.4rem)/1.45 "Retro-gaming", monospace;
+    letter-spacing: 0.045em;
+    text-wrap: balance;
+    text-transform: uppercase;
+}
+
+.level-transition__meter {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: clamp(5px, 1vw, 12px);
+    width: min(360px, 72vw);
+    margin-top: clamp(20px, 3.6vmin, 38px);
+}
+
+.level-transition__meter span {
+    height: clamp(3px, 0.5vmin, 6px);
+    border-radius: 999px;
+    background: var(--level-accent);
+    box-shadow: 0 0 12px var(--level-accent);
+    opacity: 0.2;
+    transform: scaleX(0.22);
+}
+
+.level-transition.is-visible .level-transition__backdrop {
+    animation: scribLevelBackdrop 2800ms ease both;
+}
+
+.level-transition.is-visible .level-transition__rays {
+    animation: scribLevelRays 2800ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.level-transition.is-visible .level-transition__burst {
+    animation: scribLevelBurst 2100ms 80ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+
+.level-transition.is-visible .level-transition__panel {
+    animation: scribLevelPanel 2800ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+
+.level-transition.is-visible .level-transition__icon-shell::before {
+    animation: scribLevelOrbit 2400ms linear both;
+}
+
+.level-transition.is-visible .level-transition__icon-shell::after {
+    animation: scribLevelOrbitReverse 2600ms linear both;
+}
+
+.level-transition.is-visible .level-transition__icon {
+    animation: scribLevelIcon 2200ms 120ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+
+.level-transition.is-visible .level-transition__meter span {
+    animation: scribLevelMeter 1500ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+
+.level-transition.is-visible .level-transition__meter span:nth-child(2) { animation-delay: 70ms; }
+.level-transition.is-visible .level-transition__meter span:nth-child(3) { animation-delay: 140ms; }
+.level-transition.is-visible .level-transition__meter span:nth-child(4) { animation-delay: 210ms; }
+.level-transition.is-visible .level-transition__meter span:nth-child(5) { animation-delay: 280ms; }
+.level-transition.is-visible .level-transition__meter span:nth-child(6) { animation-delay: 350ms; }
+
+/* Intérpretes conservan el texto legible: la misma señal se presenta como
+   una banda superior inequívoca y nunca captura interacción. */
+.level-transition--compact {
+    align-items: start;
+    justify-items: center;
+    padding-top: max(14px, env(safe-area-inset-top));
+}
+
+.level-transition--compact .level-transition__backdrop,
+.level-transition--compact .level-transition__rays,
+.level-transition--compact .level-transition__scanlines,
+.level-transition--compact .level-transition__burst {
+    display: none;
+}
+
+.level-transition--compact .level-transition__panel {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    column-gap: clamp(14px, 2.4vw, 30px);
+    row-gap: 5px;
+    justify-items: start;
+    width: min(760px, calc(100vw - 28px));
+    max-height: min(46dvh, 360px);
+    padding: clamp(14px, 2.2vmin, 24px) clamp(18px, 3vw, 38px);
+    text-align: left;
+    border-radius: clamp(14px, 1.8vw, 24px);
+    transform: translate3d(0, -5vh, 0) scale(0.94);
+}
+
+.level-transition--compact .level-transition__eyebrow {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-size: clamp(0.68rem, 1.35vmin, 0.95rem);
+    letter-spacing: 0.18em;
+}
+
+.level-transition--compact .level-transition__eyebrow::before,
+.level-transition--compact .level-transition__eyebrow::after {
+    display: none;
+}
+
+.level-transition--compact .level-transition__icon-shell {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: center;
+    width: clamp(62px, 9vmin, 96px);
+    height: clamp(62px, 9vmin, 96px);
+    margin: 0;
+}
+
+.level-transition--compact .level-transition__icon {
+    font-size: clamp(2.1rem, 5vmin, 3.8rem);
+}
+
+.level-transition--compact .level-transition__title {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: clamp(1.3rem, 3.6vmin, 2.7rem);
+    line-height: 1.02;
+}
+
+.level-transition--compact .level-transition__detail {
+    grid-column: 2;
+    grid-row: 3;
+    margin: 2px 0 0;
+    font-size: clamp(0.62rem, 1.35vmin, 0.9rem);
+    line-height: 1.35;
+}
+
+.level-transition--compact .level-transition__meter {
+    display: none;
+}
+
+.level-transition--compact.is-visible .level-transition__panel {
+    animation-name: scribLevelCompactPanel;
+}
+
+@keyframes scribLevelCurtain {
+    0% { opacity: 0; }
+    8%, 86% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes scribLevelBackdrop {
+    0% { opacity: 0; filter: saturate(0.4); }
+    14%, 88% { opacity: 1; filter: saturate(1); }
+    100% { opacity: 0; filter: saturate(0.7); }
+}
+
+@keyframes scribLevelRays {
+    0% { opacity: 0; transform: translate(-50%, -50%) rotate(-18deg) scale(0.72); }
+    22% { opacity: 1; }
+    86% { opacity: 0.72; }
+    100% { opacity: 0; transform: translate(-50%, -50%) rotate(20deg) scale(1.16); }
+}
+
+@keyframes scribLevelBurst {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.12); }
+    36% { opacity: 0.95; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.58); }
+}
+
+@keyframes scribLevelPanel {
+    0% { opacity: 0; transform: translate3d(0, 7vh, 0) scale(0.72) rotateX(12deg); filter: blur(16px); }
+    14% { opacity: 1; }
+    24%, 82% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotateX(0); filter: blur(0); }
+    100% { opacity: 0; transform: translate3d(0, -3vh, 0) scale(1.04); filter: blur(6px); }
+}
+
+@keyframes scribLevelCompactPanel {
+    0% { opacity: 0; transform: translate3d(0, -5vh, 0) scale(0.94); filter: blur(8px); }
+    14%, 84% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+    100% { opacity: 0; transform: translate3d(0, -2vh, 0) scale(0.98); filter: blur(3px); }
+}
+
+@keyframes scribLevelOrbit {
+    from { transform: rotate(0deg) scale(0.78); opacity: 0; }
+    14% { opacity: 1; }
+    to { transform: rotate(230deg) scale(1); opacity: 0.5; }
+}
+
+@keyframes scribLevelOrbitReverse {
+    from { transform: rotate(190deg) scale(0.84); opacity: 0; }
+    18% { opacity: 0.58; }
+    to { transform: rotate(-70deg) scale(1.06); opacity: 0.2; }
+}
+
+@keyframes scribLevelIcon {
+    0% { opacity: 0; transform: scale(0.22) rotate(-18deg); }
+    28% { opacity: 1; transform: scale(1.14) rotate(4deg); }
+    42%, 88% { opacity: 1; transform: scale(1) rotate(0); }
+    100% { opacity: 0; transform: scale(0.92); }
+}
+
+@keyframes scribLevelMeter {
+    0% { opacity: 0.15; transform: scaleX(0.22); }
+    38%, 78% { opacity: 1; transform: scaleX(1); }
+    100% { opacity: 0.2; transform: scaleX(0.45); }
+}
+
+@media (max-width: 620px), (max-height: 560px) {
+    .level-transition__panel {
+        width: min(680px, calc(100vw - 24px));
+        padding: clamp(20px, 4.6vmin, 34px) clamp(16px, 5vw, 34px);
+        border-radius: 18px;
+    }
+
+    .level-transition__eyebrow {
+        margin-bottom: 10px;
+        letter-spacing: 0.16em;
+    }
+
+    .level-transition__icon-shell {
+        width: clamp(72px, 15vmin, 112px);
+        height: clamp(72px, 15vmin, 112px);
+        margin-bottom: 9px;
+    }
+
+    .level-transition__title {
+        font-size: clamp(1.75rem, 8vmin, 4rem);
+    }
+
+    .level-transition__detail {
+        margin-top: 12px;
+        font-size: clamp(0.72rem, 2.6vmin, 1rem);
+    }
+
+    .level-transition__meter {
+        margin-top: 16px;
+    }
+}
+
+/* En proyectores ultrapanorámicos y móviles apaisados la composición se
+   compacta horizontalmente para que ningún texto quede recortado. */
+@media (max-height: 440px) {
+    .level-transition {
+        padding:
+            max(8px, env(safe-area-inset-top))
+            max(8px, env(safe-area-inset-right))
+            max(8px, env(safe-area-inset-bottom))
+            max(8px, env(safe-area-inset-left));
+    }
+
+    .level-transition__panel,
+    .level-transition--compact .level-transition__panel {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        column-gap: clamp(12px, 3vw, 28px);
+        row-gap: 3px;
+        justify-items: start;
+        width: min(760px, calc(100vw - 16px));
+        max-height: calc(100dvh - 16px);
+        padding: clamp(10px, 3vh, 18px) clamp(14px, 3vw, 30px);
+        text-align: left;
+        border-radius: 14px;
+    }
+
+    .level-transition__eyebrow,
+    .level-transition--compact .level-transition__eyebrow {
+        grid-column: 2;
+        grid-row: 1;
+        margin: 0;
+        font-size: clamp(0.58rem, 2.6vh, 0.78rem);
+        letter-spacing: 0.14em;
+    }
+
+    .level-transition__eyebrow::before,
+    .level-transition__eyebrow::after {
+        display: none;
+    }
+
+    .level-transition__icon-shell,
+    .level-transition--compact .level-transition__icon-shell {
+        grid-column: 1;
+        grid-row: 1 / span 3;
+        align-self: center;
+        width: clamp(52px, 20vh, 82px);
+        height: clamp(52px, 20vh, 82px);
+        margin: 0;
+    }
+
+    .level-transition__icon,
+    .level-transition--compact .level-transition__icon {
+        font-size: clamp(1.8rem, 10vh, 3.2rem);
+    }
+
+    .level-transition__title,
+    .level-transition--compact .level-transition__title {
+        grid-column: 2;
+        grid-row: 2;
+        font-size: clamp(1.15rem, 7.5vh, 2.25rem);
+        line-height: 1;
+    }
+
+    .level-transition__detail,
+    .level-transition--compact .level-transition__detail {
+        grid-column: 2;
+        grid-row: 3;
+        margin: 2px 0 0;
+        font-size: clamp(0.58rem, 2.8vh, 0.82rem);
+        line-height: 1.25;
+    }
+
+    .level-transition__meter {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .level-transition.is-visible,
+    .level-transition.is-visible .level-transition__backdrop,
+    .level-transition.is-visible .level-transition__rays,
+    .level-transition.is-visible .level-transition__burst,
+    .level-transition.is-visible .level-transition__panel,
+    .level-transition.is-visible .level-transition__icon-shell::before,
+    .level-transition.is-visible .level-transition__icon-shell::after,
+    .level-transition.is-visible .level-transition__icon,
+    .level-transition.is-visible .level-transition__meter span {
+        animation: none;
+    }
+
+    .level-transition.is-visible,
+    .level-transition.is-visible .level-transition__backdrop,
+    .level-transition.is-visible .level-transition__panel,
+    .level-transition.is-visible .level-transition__icon {
+        opacity: 1;
+    }
+
+    .level-transition.is-visible .level-transition__panel {
+        transform: none;
+        filter: none;
+    }
+
+    .level-transition.is-visible .level-transition__rays {
+        opacity: 0.38;
+        transform: translate(-50%, -50%);
+    }
+
+    .level-transition.is-visible .level-transition__burst {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .level-transition.is-visible .level-transition__meter span {
+        opacity: 0.85;
+        transform: none;
+    }
+}
+
+@media (forced-colors: active) {
+    .level-transition {
+        --level-accent: Highlight;
+        --level-ink: CanvasText;
+        background: Canvas;
+    }
+
+    .level-transition__backdrop,
+    .level-transition__rays,
+    .level-transition__scanlines,
+    .level-transition__burst,
+    .level-transition__panel::before,
+    .level-transition__panel::after {
+        display: none;
+    }
+
+    .level-transition__panel,
+    .level-transition__icon-shell {
+        color: CanvasText;
+        background: Canvas;
+        border-color: Highlight;
+        box-shadow: none;
+    }
+
+    .level-transition--compact {
+        background: transparent;
+    }
+}

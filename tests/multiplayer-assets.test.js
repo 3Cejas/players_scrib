@@ -8,11 +8,12 @@ const ASSET_VERSION = "20260504e";
 const CSS_VERSION = "20260505i";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260822c";
+const LEVEL_TRANSITION_VERSION = "20260823a";
 const PLAYER_ACTIONS_VERSION = "20260504f";
 const PLAYER_STATE_VERSION = "20260505d";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260506e";
-const SPECTATOR_STATE_VERSION = SCORE_ASSET_VERSION;
-const SPECTATOR_SOCKET_EVENTS_VERSION = SCORE_ASSET_VERSION;
+const SPECTATOR_STATE_VERSION = LEVEL_TRANSITION_VERSION;
+const SPECTATOR_SOCKET_EVENTS_VERSION = LEVEL_TRANSITION_VERSION;
 const JURY_CSS_VERSION = "20260506t";
 const JURY_STATE_VERSION = "20260506g";
 const JURY_SOCKET_EVENTS_VERSION = "20260506b";
@@ -28,7 +29,7 @@ const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260505f";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
 const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260505c";
-const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260505c";
+const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = LEVEL_TRANSITION_VERSION;
 
 function read(relPath) {
   return fs.readFileSync(path.join(ROOT, relPath), "utf8");
@@ -54,19 +55,18 @@ test("multiplayer html references current changed shared assets", () => {
   });
   assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SCORE_ASSET_VERSION);
 
-  [
-    "game/players/index.html",
-    "game/actors/source/index.html"
-  ].forEach((htmlRelPath) => {
+  ["game/players/index.html"].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js");
     assertIncludesAsset(htmlRelPath, "js/i18n.js", I18N_VERSION);
   });
+  assertIncludesAsset("game/actors/source/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/actors/source/index.html", "js/i18n.js", LEVEL_TRANSITION_VERSION);
   assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js");
   assertIncludesAsset("game/public/players/index.html", "js/i18n.js", MUSA_ASSIGNMENT_VERSION);
-  ["game/spectator/index.html", "game/control/index.html"].forEach((htmlRelPath) => {
-    assertIncludesAsset(htmlRelPath, "domains/inspiration.js");
-    assertIncludesAsset(htmlRelPath, "js/i18n.js", SCORE_ASSET_VERSION);
-  });
+  assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/spectator/index.html", "js/i18n.js", LEVEL_TRANSITION_VERSION);
+  assertIncludesAsset("game/control/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/control/index.html", "js/i18n.js", SCORE_ASSET_VERSION);
 
   assertIncludesAsset("game/players/index.html", "js/actions.js", PLAYER_ACTIONS_VERSION);
   assertIncludesAsset("game/players/index.html", "js/state.js", PLAYER_STATE_VERSION);
@@ -76,6 +76,8 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/spectator/index.html", "js/state.js", SPECTATOR_STATE_VERSION);
   assertIncludesAsset("game/spectator/index.html", "js/socket-events.js", SPECTATOR_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/spectator/index.html", "domains/credits.js");
+  assertIncludesAsset("game/spectator/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
 
   assertIncludesAsset("game/jurado/index.html", "index.css", JURY_CSS_VERSION);
   assertIncludesAsset("game/jurado/index.html", "js/state.js", JURY_STATE_VERSION);
@@ -100,6 +102,8 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/actors/source/index.html", "js/actions.js", ACTOR_SOURCE_ACTIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/annotations.js", ACTOR_SOURCE_ANNOTATIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/socket-events.js", ACTOR_SOURCE_SOCKET_EVENTS_VERSION);
+  assertIncludesAsset("game/actors/source/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
+  assertIncludesAsset("game/actors/source/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
 });
 
 test("muse tutorial localizes server-side offensive-language rejections", () => {

@@ -27,6 +27,65 @@ const tJuego2P = (clave, variables = {}, fallback = "") => (
         ? window.scribT2P(clave, variables, fallback)
         : (fallback || clave)
 );
+const apiTransicionNivelActor = window && window.ScribLevelTransition;
+const controladorTransicionNivelActor = apiTransicionNivelActor
+    ? apiTransicionNivelActor.createController({
+        root: getEl("level_transition"),
+        liveRegion: getEl("level_transition_status"),
+        translate: tJuego2P,
+        windowRef: window,
+        documentRef: document
+    })
+    : null;
+const seguimientoTransicionNivelActor = apiTransicionNivelActor
+    ? apiTransicionNivelActor.createModeTracker()
+    : null;
+let transicionNivelPendienteActor = null;
+let introTransicionNivelActivaActor = false;
+
+function observarModoCanonicoTransicionActor(payload = {}) {
+    if (!seguimientoTransicionNivelActor) {
+        return { accepted: false, baseline: false, transition: false };
+    }
+    return seguimientoTransicionNivelActor.observe(payload);
+}
+
+function mostrarTransicionNivelActor(observacion, payload = {}) {
+    if (!observacion || !observacion.transition || !controladorTransicionNivelActor) return false;
+    return controladorTransicionNivelActor.show(observacion.mode, payload);
+}
+
+function aplazarTransicionNivelActor(observacion, payload = {}) {
+    if (!observacion || !observacion.transition) return false;
+    transicionNivelPendienteActor = {
+        observacion: { ...observacion },
+        payload: (payload && typeof payload === "object") ? { ...payload } : {}
+    };
+    return true;
+}
+
+function mostrarTransicionNivelPendienteActor(modoAplicado) {
+    if (!transicionNivelPendienteActor) return false;
+    const pendiente = transicionNivelPendienteActor;
+    transicionNivelPendienteActor = null;
+    const modoNormalizado = apiTransicionNivelActor?.normalizeMode(modoAplicado);
+    if (modoNormalizado !== pendiente.observacion.mode) return false;
+    return mostrarTransicionNivelActor(pendiente.observacion, pendiente.payload);
+}
+
+function ocultarTransicionNivelActor() {
+    controladorTransicionNivelActor?.hide();
+}
+
+function reiniciarSeguimientoTransicionNivelActor(opciones = {}) {
+    seguimientoTransicionNivelActor?.reset();
+    transicionNivelPendienteActor = null;
+    introTransicionNivelActivaActor = false;
+    ocultarTransicionNivelActor();
+    if (opciones.primeEmpty) {
+        seguimientoTransicionNivelActor?.observe({ modo_actual: "", modo_seq: 0 });
+    }
+}
 const traducirTituloModoActor = (modo, fallback = "") => (
     (window && typeof window.scribTranslateModeTitle2P === "function")
         ? window.scribTranslateModeTitle2P(modo, fallback || String(modo || "").toUpperCase())
@@ -538,6 +597,8 @@ const timeouts_actualizar_flechas_niveles_actor = new Set();
 
 function invalidarIntroActor() {
     revision_intro_actor += 1;
+    introTransicionNivelActivaActor = false;
+    transicionNivelPendienteActor = null;
     clearTimeout(listener_cuenta_atras);
     clearTimeout(timeout_preparados_actor);
     clearTimeout(timeout_animacion_countdown_actor);
@@ -1660,6 +1721,7 @@ socket.on("recargar_rol_remoto", () => {
 });
 
 socket.on("connect", () => {
+    reiniciarSeguimientoTransicionNivelActor();
     limpiarAsincroniaVisualActor();
     invalidarIntroActor();
     modo_seq_actual_actor = 0;
@@ -1671,11 +1733,13 @@ socket.on("connect", () => {
 });
 
 socket.on("disconnect", () => {
+    ocultarTransicionNivelActor();
     limpiarAsincroniaVisualActor();
     invalidarIntroActor();
 });
 
 socket.on("connect_error", () => {
+    ocultarTransicionNivelActor();
     limpiarAsincroniaVisualActor();
     invalidarIntroActor();
 });
@@ -1686,6 +1750,7 @@ socket.on('modo_actual', (data = {}) => {
         return;
     }
     const payload = (data && typeof data === "object") ? data : {};
+    const observacionTransicion = observarModoCanonicoTransicionActor(payload);
     const traeModo = Object.prototype.hasOwnProperty.call(payload, "modo_actual");
     const siguiente_modo = traeModo ? String(payload.modo_actual || "") : modo_actual;
     modo_actual = siguiente_modo;
@@ -1705,6 +1770,11 @@ socket.on('modo_actual', (data = {}) => {
     } else {
         detenerProgresoNivelBarraActor(true);
         reiniciarProgresoFraseFinalActor();
+    }
+    if (introTransicionNivelActivaActor) {
+        aplazarTransicionNivelActor(observacionTransicion, payload);
+    } else {
+        mostrarTransicionNivelActor(observacionTransicion, payload);
     }
 });
 
@@ -1930,6 +2000,7 @@ socket.on("resucitar_control", (data = {}) => {
 socket.on("fin", (data) => {
     const payload = (data && typeof data === "object") ? data : { player: data };
     if (Number(payload.player) !== Number(player)) return;
+    ocultarTransicionNivelActor();
     if (partida_finalizada_actor) return;
     esperando_resurreccion_actor = false;
     partida_finalizada_actor = true;
@@ -1976,6 +2047,7 @@ function finalizarCuentaAtrasActor(revisionIntro) {
     if (!esRevisionIntroActorActiva(revisionIntro)) {
         return;
     }
+    introTransicionNivelActivaActor = false;
     if (modo_actual) {
         setPendienteAnimacionEntradaBarraVida(true);
         cancelarAnimacionEntradaBarraVida(tiempo);
@@ -1983,6 +2055,7 @@ function finalizarCuentaAtrasActor(revisionIntro) {
             tiempo.style.display = DISPLAY_BARRA_VIDA;
             aplicarEstadoBarraVida(tiempo, 0);
         }
+        mostrarTransicionNivelPendienteActor(modo_actual);
         return;
     }
     limpiarAnotacionesLocalesActor();
@@ -2048,6 +2121,7 @@ function programarPasoCountdownActor(paso, revisionIntro) {
 // Inicia el juego.
 socket.on('inicio', data => {
     const revisionIntro = invalidarIntroActor();
+    introTransicionNivelActivaActor = true;
     limpiarAsincroniaVisualActor();
     const payloadInicio = (data && typeof data === "object") ? data : {};
     const parametrosInicio = (payloadInicio.parametros && typeof payloadInicio.parametros === "object")
@@ -2088,6 +2162,7 @@ socket.on('inicio', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
+    reiniciarSeguimientoTransicionNivelActor({ primeEmpty: true });
     invalidarIntroActor();
     limpiarAsincroniaVisualActor();
     esperando_resurreccion_actor = false;

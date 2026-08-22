@@ -17,6 +17,65 @@ const tJuego2P = (clave, variables = {}, fallback = "") => (
         ? window.scribT2P(clave, variables, fallback)
         : (fallback || clave)
 );
+const apiTransicionNivelEspectador = window && window.ScribLevelTransition;
+const controladorTransicionNivelEspectador = apiTransicionNivelEspectador
+    ? apiTransicionNivelEspectador.createController({
+        root: getEl("level_transition"),
+        liveRegion: getEl("level_transition_status"),
+        translate: tJuego2P,
+        windowRef: window,
+        documentRef: document
+    })
+    : null;
+const seguimientoTransicionNivelEspectador = apiTransicionNivelEspectador
+    ? apiTransicionNivelEspectador.createModeTracker()
+    : null;
+let transicionNivelPendienteEspectador = null;
+
+function observarModoCanonicoTransicionEspectador(payload = {}) {
+    if (!seguimientoTransicionNivelEspectador) {
+        return { accepted: false, baseline: false, transition: false };
+    }
+    return seguimientoTransicionNivelEspectador.observe(payload);
+}
+
+function mostrarTransicionNivelEspectador(observacion, payload = {}) {
+    if (!observacion || !observacion.transition || !controladorTransicionNivelEspectador) return false;
+    if (vista_espectador_modo_resuelta !== "partida") return false;
+    return controladorTransicionNivelEspectador.show(observacion.mode, payload);
+}
+
+function ocultarTransicionNivelEspectador() {
+    controladorTransicionNivelEspectador?.hide();
+}
+
+function aplazarTransicionNivelEspectador(observacion, payload = {}) {
+    if (!observacion || !observacion.transition) return false;
+    transicionNivelPendienteEspectador = {
+        observacion,
+        payload: payload && typeof payload === "object" ? { ...payload } : {}
+    };
+    return true;
+}
+
+function mostrarTransicionNivelPendienteEspectador(modoAplicado) {
+    if (!transicionNivelPendienteEspectador) return false;
+    const pendiente = transicionNivelPendienteEspectador;
+    transicionNivelPendienteEspectador = null;
+    if (apiTransicionNivelEspectador?.normalizeMode(modoAplicado) !== pendiente.observacion.mode) {
+        return false;
+    }
+    return mostrarTransicionNivelEspectador(pendiente.observacion, pendiente.payload);
+}
+
+function reiniciarSeguimientoTransicionNivelEspectador(opciones = {}) {
+    seguimientoTransicionNivelEspectador?.reset();
+    transicionNivelPendienteEspectador = null;
+    ocultarTransicionNivelEspectador();
+    if (opciones.primeEmpty) {
+        seguimientoTransicionNivelEspectador?.observe({ modo_actual: "", modo_seq: 0 });
+    }
+}
 const traducirTituloModoEspectador = (modo, fallback = "") => (
     (window && typeof window.scribTranslateModeTitle2P === "function")
         ? window.scribTranslateModeTitle2P(modo, fallback || String(modo || "").toUpperCase())
@@ -3723,6 +3782,9 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     const modoPrevio = vista_espectador_modo_resuelta;
     const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
     vista_espectador_modo_resuelta = modo;
+    if (modo !== "partida") {
+        ocultarTransicionNivelEspectador();
+    }
     if (modo === "nube_inspiracion") {
         limpiarFeedbackFlotanteEspectador();
     }
