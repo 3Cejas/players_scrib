@@ -1107,7 +1107,7 @@ function toggleLogsControl() {
 }
 window.toggleLogsControl = toggleLogsControl;
 
-const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "juego", "representacion"]);
+const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "juego", "representacion", "asistencia"]);
 let dropdown_modos_control_inicializado = false;
 let observer_modos_control = null;
 let frases_finales_control_inicializadas = false;
@@ -1159,6 +1159,10 @@ function activarSeccionControl(seccion) {
     if (!SECCIONES_BOTONES_CONTROL.has(seccion)) return;
     const contenedor = document.querySelector(`[data-control-section="${seccion}"]`);
     if (!contenedor) return;
+    const tablaPrincipal = document.querySelector("table.default");
+    if (tablaPrincipal) {
+        tablaPrincipal.classList.toggle("asistencia-activa", seccion === "asistencia");
+    }
     document.querySelectorAll("[data-control-section]").forEach((panel) => {
         const activa = panel === contenedor;
         const estabaActiva = !panel.classList.contains("is-collapsed");

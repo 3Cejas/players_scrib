@@ -257,11 +257,25 @@
     <script src="./dist/socket.io/socket.io.js"></script>
     <script>
         const SESSION_KEY = "scrib_roles_ok";
+        const ACCESS_TOKEN_KEY = "scrib_roles_access_token";
+        const ACCESS_TOKEN_EXPIRES_KEY = "scrib_roles_access_expires_ts";
         const serverUrl = (window.isProduction ? window.SERVER_URL_PROD : window.SERVER_URL_DEV);
         const socket = window.io ? window.io(serverUrl) : null;
 
+        function limpiarAccesoRoles() {
+            sessionStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+            sessionStorage.removeItem(ACCESS_TOKEN_EXPIRES_KEY);
+        }
+
         function accesoConcedido() {
-            return sessionStorage.getItem(SESSION_KEY) === "1";
+            const token = String(sessionStorage.getItem(ACCESS_TOKEN_KEY) || "").trim();
+            const expiresTs = Number(sessionStorage.getItem(ACCESS_TOKEN_EXPIRES_KEY)) || 0;
+            const vigente = sessionStorage.getItem(SESSION_KEY) === "1"
+                && token.length >= 32
+                && expiresTs > Date.now();
+            if (!vigente) limpiarAccesoRoles();
+            return vigente;
         }
 
         function pedirContrasena() {
@@ -276,16 +290,33 @@
                     resolve(false);
                     return;
                 }
+                let completado = false;
+                const timeout = setTimeout(() => {
+                    if (completado) return;
+                    completado = true;
+                    window.alert("El servidor no respondió a tiempo.");
+                    resolve(false);
+                }, 4000);
                 socket.emit("validar_password_roles", { password: pwd }, (response) => {
-                    if (!response || !response.ok) {
-                        window.alert("Contraseña incorrecta.");
+                    if (completado) return;
+                    completado = true;
+                    clearTimeout(timeout);
+                    const token = String(response && response.access_token || "").trim();
+                    const expiresTs = Number(response && response.expires_ts) || 0;
+                    if (!response || !response.ok || token.length < 32 || expiresTs <= Date.now()) {
+                        limpiarAccesoRoles();
+                        const espera = Math.max(0, Math.ceil((Number(response && response.retry_after_ms) || 0) / 1000));
+                        window.alert(espera
+                            ? `Demasiados intentos. Espera ${espera} segundos.`
+                            : "Contraseña incorrecta.");
                         resolve(false);
                         return;
                     }
                     sessionStorage.setItem(SESSION_KEY, "1");
+                    sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+                    sessionStorage.setItem(ACCESS_TOKEN_EXPIRES_KEY, String(expiresTs));
                     resolve(true);
                 });
-                setTimeout(() => resolve(false), 4000);
             });
         }
 

@@ -3086,6 +3086,255 @@ const coreSpecs = [
     }
   },
   {
+    name: "muse-help-assistance-core",
+    run: async (ctx) => {
+      const museRoles = ["musa1", "musa2"];
+      await openRolesAndWaitWithOptions(ctx, ["control", ...museRoles], { useStateHooks: false });
+      const assignments = await readAuthoritativeMuseAssignments(ctx, museRoles);
+      const assignmentByRole = new Map(assignments.map((assignment) => [assignment.roleName, assignment]));
+
+      for (const roleName of museRoles) {
+        await ctx.waitForVisible(roleName, "#musa_help_fab", true, `${roleName} always shows the floating help button`);
+        const floatingButton = await ctx.evaluate(roleName, () => {
+          const button = document.querySelector("#musa_help_fab");
+          const rect = button && button.getBoundingClientRect();
+          const style = button && getComputedStyle(button);
+          return button && rect && style ? {
+            position: style.position,
+            top: rect.top,
+            right: window.innerWidth - rect.right,
+            width: rect.width,
+            height: rect.height,
+            zIndex: Number(style.zIndex) || 0
+          } : null;
+        });
+        ctx.assert(floatingButton && floatingButton.position === "fixed", `${roleName} help button should float with fixed positioning`);
+        ctx.assert(floatingButton.top >= 0 && floatingButton.right >= 0, `${roleName} help button should remain inside the viewport`);
+        ctx.assert(floatingButton.width >= 44 && floatingButton.height >= 44, `${roleName} help button should remain touch accessible`);
+        ctx.assert(floatingButton.zIndex >= 2147483000, `${roleName} help button should stay above full-screen game overlays`);
+
+        await ctx.click(roleName, "#musa_help_fab");
+        await ctx.waitForVisible(roleName, "#musa_help_confirm", true, `${roleName} sees the explicit help confirmation`);
+        await ctx.waitForText(
+          roleName,
+          "#musa_help_confirm_copy",
+          (text) => /Control recibir.+aviso/i.test(text),
+          `${roleName} confirmation explains the physical help request`
+        );
+        const privacyText = await ctx.readText(roleName, ".musa-help-confirm__privacy");
+        ctx.assert(/SOLO esta p.gina/i.test(privacyText), `${roleName} confirmation must limit remote assistance to this SCRIB page`);
+        ctx.assert(/cancelar.+momento/i.test(privacyText), `${roleName} confirmation must explain revocation`);
+        await ctx.click(roleName, "#musa_help_confirm_accept");
+        await ctx.waitForVisible(roleName, "#musa_help_flag", true, `${roleName} receives a full-screen physical help flag`);
+      }
+
+      const museTickets = {};
+      for (const roleName of museRoles) {
+        museTickets[roleName] = await ctx.waitFor(
+          `${roleName} receives an authoritative help ticket`,
+          async () => ctx.evaluate(roleName, () => {
+            const controller = window.ayudaMusaController;
+            const state = controller && typeof controller.getState === "function" ? controller.getState() : null;
+            const ticket = state && state.ticket;
+            return ticket && ticket.ticket_id && ticket.estado === "pendiente" ? {
+              ticketId: ticket.ticket_id,
+              color: ticket.color,
+              colorName: ticket.color_nombre,
+              name: ticket.nombre_musa,
+              team: ticket.equipo
+            } : false;
+          }),
+          10000
+        );
+        const assignment = assignmentByRole.get(roleName);
+        ctx.assert(museTickets[roleName].team === assignment.team, `${roleName} help ticket should retain its authoritative team`);
+        const flagColor = await ctx.readText(roleName, "#musa_help_flag_color");
+        ctx.assert(flagColor === museTickets[roleName].colorName, `${roleName} flag should name its server-assigned color`);
+      }
+      ctx.assert(museTickets.musa1.ticketId !== museTickets.musa2.ticketId, "help requests must create individual opaque tickets");
+      ctx.assert(museTickets.musa1.color !== museTickets.musa2.color, "simultaneous muses should receive different physical flag colors");
+
+      await ctx.evaluate("control", () => {
+        const group = document.querySelector('[data-control-section="asistencia"]');
+        if (group && group.classList.contains("is-collapsed")) {
+          document.querySelector("#control_title_assistance")?.click();
+        }
+      });
+      await ctx.waitForVisible("control", "#asistencia_control", true, "Control opens the assistance workspace");
+      await ctx.waitForText(
+        "control",
+        "#asistencia_tab_contador",
+        (text) => text.trim() === "2",
+        "Control reports both active incidents",
+        10000
+      );
+      const controlTickets = await ctx.waitFor(
+        "Control receives both individual help tickets",
+        async () => ctx.evaluate("control", () => {
+          const api = window.ScribMuseHelpControl;
+          const state = api && typeof api.obtenerEstado === "function" ? api.obtenerEstado() : null;
+          if (!state || !state.synced) return false;
+          const active = state.tickets.filter((ticket) => ticket.status === "solicitada" || ticket.status === "atendida");
+          return active.length === 2 ? active.map((ticket) => ({
+            ticketId: ticket.ticketId,
+            name: ticket.museName,
+            team: ticket.team.id,
+            color: ticket.color,
+            status: ticket.status
+          })) : false;
+        }),
+        10000
+      );
+      const serializedControlTickets = JSON.stringify(controlTickets);
+      ctx.assert(!/client[_-]?id/i.test(serializedControlTickets), "Control help state must not expose stable muse client ids");
+      for (const roleName of museRoles) {
+        const assignment = assignmentByRole.get(roleName);
+        ctx.assert(
+          controlTickets.some((ticket) => ticket.ticketId === museTickets[roleName].ticketId
+            && ticket.team === assignment.team
+            && ticket.name.toUpperCase() === assignment.name),
+          `Control should identify ${roleName} by public name and team`
+        );
+      }
+
+      await ctx.evaluate("control", (ticketId) => {
+        if (!window.ScribMuseHelpControl.seleccionar(ticketId)) throw new Error("Could not select first muse help ticket");
+      }, museTickets.musa1.ticketId);
+      await ctx.click("control", "#asistencia_atender");
+      await ctx.waitFor(
+        "first muse sees that Control is attending",
+        async () => ctx.evaluate("musa1", () => {
+          const state = window.ayudaMusaController && window.ayudaMusaController.getState();
+          return state && state.ticket && state.ticket.estado === "atendiendo";
+        }),
+        10000
+      );
+      await ctx.waitForVisible("musa1", "#musa_help_flag", false, "attended help flag minimizes so Control can inspect the page");
+      await ctx.click("musa1", "#musa_help_fab");
+      await ctx.waitForVisible("musa1", "#musa_help_flag", true, "the muse can reopen help controls while being attended");
+      await ctx.click("musa1", "#musa_help_flag_minimize");
+      await ctx.waitForVisible("musa1", "#musa_help_flag", false, "the muse can minimize the physical flag again");
+
+      await ctx.click("control", "#asistencia_diagnostico_abrir");
+      await ctx.waitFor(
+        "consented diagnostic session becomes active",
+        async () => {
+          const control = await ctx.evaluate("control", (ticketId) => {
+            const state = window.ScribMuseHelpControl && window.ScribMuseHelpControl.obtenerEstado();
+            const ticket = state && state.tickets.find((entry) => entry.ticketId === ticketId);
+            return Boolean(ticket && ticket.diagnostic.status === "activo" && ticket.diagnostic.sessionId);
+          }, museTickets.musa1.ticketId);
+          const muse = await ctx.evaluate("musa1", () => {
+            const state = window.ayudaMusaController && window.ayudaMusaController.getState();
+            return Boolean(state && state.diagnostico && state.diagnostico.session_id);
+          });
+          return control && muse;
+        },
+        10000
+      );
+      await ctx.waitForVisible("musa1", "#musa_help_remote_indicator", true, "muse sees a persistent remote-assistance indicator");
+      await ctx.waitFor(
+        "Control receives a real live page frame",
+        async () => ctx.evaluate("control", () => {
+          const image = document.querySelector("#asistencia_preview");
+          return Boolean(image && !image.hidden && image.complete && image.naturalWidth > 0
+            && /^data:image\/(?:jpeg|png|webp);base64,/.test(image.src));
+        }),
+        20000,
+        200
+      );
+
+      await ctx.evaluate("musa1", () => {
+        const spacer = document.createElement("div");
+        spacer.id = "e2e_muse_help_scroll_space";
+        spacer.style.height = "1800px";
+        spacer.setAttribute("aria-hidden", "true");
+        document.body.append(spacer);
+        window.scrollTo(0, 0);
+        window.__e2eMuseHelpReloadMarker = "musa1-before";
+      });
+      await ctx.evaluate("musa2", () => {
+        window.__e2eMuseHelpReloadMarker = "musa2-before";
+      });
+      await ctx.click("control", "#asistencia_scroll_abajo");
+      await ctx.waitFor(
+        "remote safe scroll changes only the selected muse page",
+        async () => (await ctx.evaluate("musa1", () => window.scrollY)) > 0,
+        8000
+      );
+
+      await ctx.evaluate("control", () => {
+        window.confirm = () => true;
+        if (!window.ScribMuseHelpControl.recargarMusa()) throw new Error("Could not request exact muse reload");
+      });
+      await ctx.waitFor(
+        "only the selected muse reloads remotely",
+        async () => {
+          let firstReloaded = false;
+          let secondUntouched = false;
+          try {
+            firstReloaded = await ctx.evaluate("musa1", () => (
+              window.__e2eMuseHelpReloadMarker !== "musa1-before"
+              && Boolean(window.ayudaMusaController)
+            ));
+            secondUntouched = await ctx.evaluate("musa2", () => window.__e2eMuseHelpReloadMarker === "musa2-before");
+          } catch (_error) {
+            return false;
+          }
+          return firstReloaded && secondUntouched;
+        },
+        15000,
+        250
+      );
+      await waitForSocketConnection(ctx, "musa1", 12000);
+      await ctx.waitFor(
+        "reloaded muse reconnects to the same help ticket",
+        async () => ctx.evaluate("musa1", (ticketId) => {
+          const state = window.ayudaMusaController && window.ayudaMusaController.getState();
+          return Boolean(state && state.ticket && state.ticket.ticket_id === ticketId);
+        }, museTickets.musa1.ticketId),
+        12000
+      );
+
+      await ctx.evaluate("control", (ticketId) => {
+        window.ScribMuseHelpControl.seleccionar(ticketId);
+      }, museTickets.musa1.ticketId);
+      await ctx.click("control", "#asistencia_resolver");
+      await ctx.waitFor(
+        "resolved muse returns to idle help state",
+        async () => ctx.evaluate("musa1", () => {
+          const state = window.ayudaMusaController && window.ayudaMusaController.getState();
+          return Boolean(state && !state.ticket);
+        }),
+        10000
+      );
+      await ctx.waitForVisible("musa1", "#musa_help_fab", true, "resolved muse keeps the floating help button available");
+
+      await ctx.click("musa2", "#musa_help_flag_cancel");
+      await ctx.waitFor(
+        "second muse can cancel its own incident",
+        async () => ctx.evaluate("musa2", () => {
+          const state = window.ayudaMusaController && window.ayudaMusaController.getState();
+          return Boolean(state && !state.ticket);
+        }),
+        10000
+      );
+      await ctx.waitForText(
+        "control",
+        "#asistencia_tab_contador",
+        (text) => text.trim() === "0",
+        "Control clears the active incident counter after resolve and cancel",
+        10000
+      );
+      const closedStatuses = await ctx.evaluate("control", () => {
+        const state = window.ScribMuseHelpControl && window.ScribMuseHelpControl.obtenerEstado();
+        return state ? state.tickets.map((ticket) => ticket.status) : [];
+      });
+      ctx.assert(closedStatuses.includes("resuelta"), "Control history should retain the resolved incident");
+      ctx.assert(closedStatuses.includes("cancelada"), "Control history should retain the muse-cancelled incident");
+    }
+  },
+  {
     name: "musa-pre-show-core",
     run: async (ctx) => {
       await openRolesAndWaitWithOptions(ctx, ["control", "spectator", "musa1"], { useStateHooks: false });

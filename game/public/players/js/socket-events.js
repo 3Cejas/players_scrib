@@ -1,4 +1,12 @@
-﻿socket.on("feedback_musa_inspiracion", (payload = {}) => {
+﻿const ayuda_musa_controlador = window.ScribMusaHelp.createController({
+    socket,
+    windowRef: window,
+    documentRef: document,
+    html2canvas: window.html2canvas
+});
+window.ayudaMusaController = ayuda_musa_controlador;
+
+socket.on("feedback_musa_inspiracion", (payload = {}) => {
     if (!payload || payload.tipo !== "inspiracion") return;
     activarFulgorBordesMusa();
     mostrarToastInspiracionMusa(payload);
@@ -230,6 +238,7 @@ socket.on('connect', () => {
         if (aplicada) {
             socket.emit('pedir_pre_show_estado');
             socket.emit('pedir_video_tutorial_estado');
+            ayuda_musa_controlador.requestState();
         }
         return aplicada;
     });

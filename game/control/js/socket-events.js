@@ -1,24 +1,36 @@
-﻿socket.on('connect', () => {
-    console.log("Conectado al servidor por primera vez.");
-    modo_seq_actual_control = 0;
-    if (window && typeof window.reiniciarCountSeqControl2P === "function") {
-        window.reiniciarCountSeqControl2P();
+﻿const CONTROL_ACCESS_TOKEN_KEY = "scrib_roles_access_token";
+let registro_control_confirmado = false;
+
+function obtenerAccessTokenControl() {
+    try {
+        const token = window.sessionStorage.getItem(CONTROL_ACCESS_TOKEN_KEY);
+        return typeof token === "string" ? token.trim().slice(0, 512) : "";
+    } catch (_) {
+        return "";
     }
-    if (window && typeof window.reiniciarTiempoSeqControl2P === "function") {
-        window.reiniciarTiempoSeqControl2P();
+}
+
+function limpiarAccessTokenControl() {
+    try {
+        window.sessionStorage.removeItem(CONTROL_ACCESS_TOKEN_KEY);
+    } catch (_) {
+        // El almacenamiento puede estar bloqueado; el rechazo seguirá visible.
     }
-    if (window && typeof window.resetTeleprompterSyncControl2P === "function") {
-        window.resetTeleprompterSyncControl2P();
-    }
+}
+
+function sincronizarControlAutorizado() {
+    if (registro_control_confirmado) return;
+    registro_control_confirmado = true;
+    document.body.dataset.controlAccess = "authorized";
     setEstadoServidor(true);
-    if (typeof registrarLogControl === "function") {
-        registrarLogControl("info", ["Control conectado al servidor"]);
-    }
-    socket.emit('registrar_control');
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(true);
     }
+    if (window && window.ScribMuseHelpControl) {
+        window.ScribMuseHelpControl.marcarConexion(true);
+    }
     socket.emit('pedir_video_tutorial_estado');
+    socket.emit('pedir_ayuda_musas_estado');
     iniciarStatusPing();
     socket.emit('pedir_estado_control');
     socket.emit('pedir_estado_palabras_musas_control');
@@ -30,8 +42,98 @@
     socket.emit('pedir_teleprompter_estado');
     socket.emit('pedir_idioma_actual');
     iniciarStatsLiveControl();
+    if (typeof registrarLogControl === "function") {
+        registrarLogControl("info", ["Acceso de Control autorizado"]);
+    }
+}
+
+function esReplicaDramaturgiaControl() {
+    return Boolean(window.__SCRIB_DRAMATURGIA_MONITOR__?.active);
+}
+
+function sincronizarReplicaControlSoloLectura() {
+    document.body.dataset.controlAccess = "monitor";
+    setEstadoServidor(true);
+    if (window && window.ScribVideotutorialControl) {
+        window.ScribVideotutorialControl.marcarConexion(false);
+    }
+    if (window && window.ScribMuseHelpControl) {
+        window.ScribMuseHelpControl.marcarConexion(false);
+    }
+    iniciarStatusPing();
+    socket.emit('pedir_estado_control');
+    socket.emit('pedir_estado_palabras_musas_control');
+    socket.emit('pedir_estado_banderas_musas');
+    socket.emit('pedir_vista_espectador_modo');
+    socket.emit('pedir_calentamiento_estado');
+    socket.emit('pedir_creditos_estado');
+    socket.emit('pedir_teleprompter_estado');
+    socket.emit('pedir_idioma_actual');
+    socket.emit('pedir_stats_live');
+    if (typeof registrarLogControl === "function") {
+        registrarLogControl("info", ["Réplica de Control conectada en modo solo lectura"]);
+    }
+}
+
+function procesarRegistroControl(payload = {}) {
+    const respuesta = payload && typeof payload === "object" ? payload : {};
+    if (respuesta.ok === true) {
+        sincronizarControlAutorizado();
+        return true;
+    }
+    if (respuesta.ok !== false) return false;
+    registro_control_confirmado = false;
+    const code = String(respuesta.code || "ACCESS_TOKEN_REQUIRED").trim().slice(0, 80);
+    if (code === "INVALID_ACCESS_TOKEN" || code === "ACCESS_TOKEN_EXPIRED") {
+        limpiarAccessTokenControl();
+    }
+    document.body.dataset.controlAccess = "denied";
+    detenerStatusPing();
+    detenerStatsLiveControl();
+    setEstadoServidor(false);
+    setEstadoPlayers(false, false);
+    const estadoTexto = document.getElementById("estado_servidor_texto");
+    if (estadoTexto) {
+        estadoTexto.textContent = code === "ACCESS_TOKEN_EXPIRED" ? "SESIÓN CADUCADA" : "ACCESO REQUERIDO";
+    }
+    if (window && window.ScribVideotutorialControl) {
+        window.ScribVideotutorialControl.marcarConexion(false);
+    }
+    if (window && window.ScribMuseHelpControl) {
+        window.ScribMuseHelpControl.marcarConexion(false);
+    }
+    if (typeof registrarLogControl === "function") {
+        registrarLogControl("error", [`Registro de Control rechazado: ${code}`]);
+    }
+    return false;
+}
+
+socket.on('connect', () => {
+    console.log("Conectado al servidor por primera vez.");
+    modo_seq_actual_control = 0;
+    if (window && typeof window.reiniciarCountSeqControl2P === "function") {
+        window.reiniciarCountSeqControl2P();
+    }
+    if (window && typeof window.reiniciarTiempoSeqControl2P === "function") {
+        window.reiniciarTiempoSeqControl2P();
+    }
+    if (window && typeof window.resetTeleprompterSyncControl2P === "function") {
+        window.resetTeleprompterSyncControl2P();
+    }
+    registro_control_confirmado = false;
+    document.body.dataset.controlAccess = "pending";
+    setEstadoServidor(true);
+    if (typeof registrarLogControl === "function") {
+        registrarLogControl("info", ["Control conectado al servidor"]);
+    }
+    const accessToken = obtenerAccessTokenControl();
+    socket.emit('registrar_control', { access_token: accessToken }, procesarRegistroControl);
+    if (esReplicaDramaturgiaControl()) {
+        sincronizarReplicaControlSoloLectura();
+    }
 });
 socket.on('disconnect', () => {
+    registro_control_confirmado = false;
     if (window && typeof window.resetTeleprompterSyncControl2P === "function") {
         window.resetTeleprompterSyncControl2P();
     }
@@ -50,6 +152,13 @@ socket.on('disconnect', () => {
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
     }
+    if (window && window.ScribMuseHelpControl) {
+        window.ScribMuseHelpControl.marcarConexion(false);
+    }
+});
+
+socket.on('control_registro_estado', (payload = {}) => {
+    procesarRegistroControl(payload);
 });
 
 socket.on('connect_error', () => {
@@ -68,6 +177,9 @@ socket.on('connect_error', () => {
     }
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
+    }
+    if (window && window.ScribMuseHelpControl) {
+        window.ScribMuseHelpControl.marcarConexion(false);
     }
 });
 
@@ -150,6 +262,16 @@ socket.on('teleprompter_feedback', (payload = {}) => {
 socket.on('video_tutorial_estado', (payload = {}) => {
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.aplicarEstado(payload);
+    }
+});
+socket.on('ayuda_musas_estado', (payload = {}) => {
+    if (window && window.ScribMuseHelpControl) {
+        window.ScribMuseHelpControl.aplicarEstado(payload);
+    }
+});
+socket.on('ayuda_musa_diagnostico_frame', (payload = {}) => {
+    if (window && window.ScribMuseHelpControl) {
+        window.ScribMuseHelpControl.procesarFrame(payload);
     }
 });
 socket.on('estado_banderas_musas', (data = {}) => {

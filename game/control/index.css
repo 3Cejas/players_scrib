@@ -1108,6 +1108,757 @@ table {
     }
 }
 
+/* Centro de asistencia para musas: cola individual y diagnóstico consentido. */
+.control-group--asistencia {
+    --group-accent: #ffd84d;
+}
+
+#panel_controles .control-groups {
+    grid-template-columns:
+        minmax(0, 0.76fr)
+        minmax(0, 0.88fr)
+        minmax(0, 1.12fr)
+        minmax(0, 0.92fr);
+}
+
+#panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+    grid-column: 4;
+    color: #ffe680;
+    border-color: rgba(255, 216, 77, 0.5);
+}
+
+.asistencia-tab-contador {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.24rem;
+    height: 1.24rem;
+    margin-left: auto;
+    padding: 0 0.28rem;
+    border: 1px solid rgba(255, 216, 77, 0.58);
+    border-radius: 999px;
+    color: #fff3aa;
+    background: rgba(255, 216, 77, 0.12);
+    font: 700 0.62rem/1 "Courier New", monospace;
+}
+
+.asistencia-tab-contador[data-active="1"] {
+    color: #120d00;
+    background: #ffd84d;
+    box-shadow: 0 0 0.7rem rgba(255, 216, 77, 0.58);
+    animation: asistenciaBadgePulse 1.7s ease-in-out infinite;
+}
+
+#panel_controles .control-group--asistencia:not(.is-collapsed) > .asistencia-control {
+    display: grid !important;
+    grid-column: 1 / -1;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    min-width: 0;
+    min-height: clamp(18rem, 38vh, 29rem);
+    max-height: min(32rem, calc(100vh - 10rem));
+    gap: 0.42rem;
+    padding-top: 0.14rem;
+    overflow: hidden;
+    font-family: "Retro-gaming", "Courier New", monospace;
+}
+
+.asistencia-control [hidden] {
+    display: none !important;
+}
+
+.asistencia-control__header,
+.asistencia-control__queue-heading,
+.asistencia-detail__header,
+.asistencia-diagnostic__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.58rem;
+}
+
+.asistencia-control__header {
+    padding: 0.46rem 0.58rem;
+    border: 1px solid rgba(255, 216, 77, 0.32);
+    border-radius: 0.38rem;
+    background:
+        linear-gradient(90deg, rgba(255, 216, 77, 0.11), transparent 58%),
+        rgba(3, 8, 13, 0.92);
+}
+
+.asistencia-control__header > div,
+.asistencia-diagnostic__header > div:first-child {
+    display: grid;
+    min-width: 0;
+    gap: 0.12rem;
+}
+
+.asistencia-control__header strong {
+    color: #fff0a3;
+    font-size: clamp(0.68rem, 0.84vw, 0.92rem);
+    letter-spacing: 0.08em;
+}
+
+.asistencia-control__header span,
+.asistencia-diagnostic__header span {
+    color: #9fb0bf;
+    font: 500 clamp(0.52rem, 0.64vw, 0.68rem)/1.28 "Courier New", monospace;
+}
+
+.asistencia-control__refresh.btn {
+    min-height: 1.78rem;
+    padding: 0.34rem 0.64rem;
+    color: #ffe680;
+    border-color: rgba(255, 216, 77, 0.44);
+    background: rgba(255, 216, 77, 0.08);
+    white-space: nowrap;
+}
+
+.asistencia-control__global-status {
+    min-height: 1rem;
+    margin: 0;
+    color: #9fb0bf;
+    font: 600 0.58rem/1.25 "Courier New", monospace;
+}
+
+.asistencia-control__global-status[data-state="error"] {
+    color: #ff9caa;
+}
+
+.asistencia-control__global-status[data-state="offline"] {
+    color: #ffb45c;
+}
+
+.asistencia-control__workspace {
+    display: grid;
+    grid-template-columns: minmax(13rem, 0.64fr) minmax(23rem, 1.36fr);
+    min-height: 0;
+    gap: 0.56rem;
+    overflow: hidden;
+}
+
+.asistencia-control__queue,
+.asistencia-detail {
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid rgba(137, 173, 194, 0.2);
+    border-radius: 0.42rem;
+    background: rgba(2, 7, 12, 0.92);
+    overflow: hidden;
+}
+
+.asistencia-control__queue {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+}
+
+.asistencia-control__queue-heading {
+    padding: 0.48rem 0.54rem;
+    color: #d7e7f1;
+    border-bottom: 1px solid rgba(137, 173, 194, 0.17);
+    font-size: 0.58rem;
+}
+
+.asistencia-control__queue-heading span {
+    color: #ffd84d;
+    font: 700 0.58rem/1 "Courier New", monospace;
+}
+
+.asistencia-control__list {
+    display: grid;
+    align-content: start;
+    min-height: 0;
+    margin: 0;
+    padding: 0.34rem;
+    gap: 0.3rem;
+    overflow: auto;
+    list-style: none;
+    scrollbar-color: rgba(255, 216, 77, 0.45) transparent;
+}
+
+.asistencia-control__empty {
+    grid-row: 2;
+    align-self: center;
+    margin: 0;
+    padding: 1.4rem 0.8rem;
+    color: #71818e;
+    font: 500 0.64rem/1.4 "Courier New", monospace;
+    text-align: center;
+}
+
+.asistencia-ticket {
+    --help-team: #ffd84d;
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    gap: 0.44rem;
+    padding: 0.5rem 0.46rem;
+    border: 1px solid rgba(137, 173, 194, 0.18);
+    border-left: 3px solid var(--help-team);
+    border-radius: 0.34rem;
+    color: #e9f6ff;
+    background: rgba(8, 16, 24, 0.88);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.asistencia-ticket.is-blue {
+    --help-team: #2adfff;
+}
+
+.asistencia-ticket.is-red {
+    --help-team: #ff536b;
+}
+
+.asistencia-ticket:hover,
+.asistencia-ticket:focus-visible,
+.asistencia-ticket[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--help-team), transparent 22%);
+    background: color-mix(in srgb, var(--help-team), rgba(6, 13, 20, 0.94) 88%);
+    outline: none;
+}
+
+.asistencia-ticket:hover {
+    transform: translateX(0.12rem);
+}
+
+.asistencia-ticket__flag,
+.asistencia-detail__flag {
+    --help-flag: #ffd84d;
+    position: relative;
+    display: block;
+    width: 1.05rem;
+    height: 0.76rem;
+    margin-left: 0.22rem;
+    background: var(--help-flag);
+    clip-path: polygon(0 0, 100% 0, 78% 50%, 100% 100%, 0 100%);
+    filter: drop-shadow(0 0 0.32rem color-mix(in srgb, var(--help-flag), transparent 34%));
+}
+
+.asistencia-ticket__flag::before,
+.asistencia-detail__flag::before {
+    position: absolute;
+    content: "";
+    top: -0.12rem;
+    bottom: -0.38rem;
+    left: -0.2rem;
+    width: 0.1rem;
+    border-radius: 999px;
+    background: #dce8ef;
+}
+
+.asistencia-ticket__copy {
+    display: grid;
+    min-width: 0;
+    gap: 0.12rem;
+}
+
+.asistencia-ticket__copy strong {
+    overflow: hidden;
+    font-size: clamp(0.54rem, 0.7vw, 0.7rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.asistencia-ticket__copy span,
+.asistencia-ticket__status {
+    color: #8fa3b2;
+    font: 600 clamp(0.46rem, 0.56vw, 0.58rem)/1.2 "Courier New", monospace;
+}
+
+.asistencia-ticket__status {
+    color: #ffd84d;
+    white-space: nowrap;
+}
+
+.asistencia-ticket[data-status="resuelta"],
+.asistencia-ticket[data-status="cancelada"] {
+    opacity: 0.56;
+}
+
+.asistencia-ticket[data-status="resuelta"] .asistencia-ticket__status {
+    color: #72f3a5;
+}
+
+.asistencia-ticket[data-status="cancelada"] .asistencia-ticket__status {
+    color: #9eabb5;
+}
+
+.asistencia-detail {
+    padding: 0.46rem;
+    overflow: auto;
+}
+
+.asistencia-detail__placeholder {
+    display: grid;
+    min-height: 100%;
+    place-content: center;
+    justify-items: center;
+    gap: 0.36rem;
+    padding: 1.2rem;
+    color: #7c8c99;
+    text-align: center;
+}
+
+.asistencia-detail__placeholder > span {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    filter: grayscale(1);
+    opacity: 0.48;
+}
+
+.asistencia-detail__placeholder strong {
+    font-size: 0.68rem;
+}
+
+.asistencia-detail__placeholder small {
+    max-width: 25rem;
+    font: 500 0.62rem/1.4 "Courier New", monospace;
+}
+
+.asistencia-detail__incident {
+    display: grid;
+    min-height: 0;
+    gap: 0.42rem;
+}
+
+.asistencia-detail__header {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    min-height: 2.4rem;
+    padding: 0.34rem 0.42rem;
+    border-bottom: 1px solid rgba(137, 173, 194, 0.16);
+}
+
+.asistencia-detail__flag {
+    width: 1.3rem;
+    height: 0.92rem;
+}
+
+.asistencia-detail__identity {
+    display: grid;
+    min-width: 0;
+    gap: 0.14rem;
+}
+
+.asistencia-detail__identity strong {
+    overflow: hidden;
+    color: #f2f9ff;
+    font-size: clamp(0.66rem, 0.84vw, 0.88rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.asistencia-detail__identity span {
+    color: #8fa3b2;
+    font: 600 0.56rem/1.2 "Courier New", monospace;
+}
+
+.asistencia-state {
+    padding: 0.27rem 0.42rem;
+    border: 1px solid rgba(255, 216, 77, 0.4);
+    border-radius: 999px;
+    color: #ffe680;
+    background: rgba(255, 216, 77, 0.08);
+    font: 700 0.5rem/1 "Courier New", monospace;
+    white-space: nowrap;
+}
+
+.asistencia-state[data-status="atendida"] {
+    color: #69eaff;
+    border-color: rgba(65, 224, 255, 0.44);
+    background: rgba(65, 224, 255, 0.08);
+}
+
+.asistencia-state[data-status="resuelta"] {
+    color: #72f3a5;
+    border-color: rgba(114, 243, 165, 0.42);
+    background: rgba(114, 243, 165, 0.08);
+}
+
+.asistencia-state[data-status="cancelada"] {
+    color: #a9b5bf;
+    border-color: rgba(169, 181, 191, 0.32);
+}
+
+.asistencia-detail__actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.3rem;
+}
+
+.asistencia-control .btn {
+    min-width: 0;
+    min-height: 1.68rem;
+    padding: 0.3rem 0.42rem;
+    font-size: clamp(0.42rem, 0.54vw, 0.58rem);
+    line-height: 1.1;
+}
+
+.asistencia-control .btn:disabled,
+.asistencia-control .btn[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.34;
+    filter: grayscale(0.75);
+}
+
+.asistencia-action--attend {
+    color: #6de8ff;
+    border-color: rgba(70, 225, 255, 0.42);
+}
+
+.asistencia-action--resolve {
+    color: #74f0a6;
+    border-color: rgba(91, 238, 151, 0.4);
+}
+
+.asistencia-action--cancel {
+    color: #c2ccd3;
+    border-color: rgba(194, 204, 211, 0.3);
+}
+
+.asistencia-action--reload {
+    color: #ffb45c;
+    border-color: rgba(255, 162, 71, 0.42);
+}
+
+.asistencia-diagnostic {
+    display: grid;
+    min-height: 0;
+    gap: 0.38rem;
+    padding: 0.42rem;
+    border: 1px solid rgba(131, 168, 190, 0.2);
+    border-radius: 0.38rem;
+    background: rgba(5, 12, 18, 0.76);
+}
+
+.asistencia-diagnostic__header strong {
+    color: #cfeaf8;
+    font-size: clamp(0.58rem, 0.72vw, 0.74rem);
+}
+
+.asistencia-diagnostic__session-actions {
+    display: flex !important;
+    flex-direction: row;
+    gap: 0.28rem !important;
+}
+
+.asistencia-diagnostic__session-actions .btn {
+    color: #8ceeff;
+    border-color: rgba(70, 225, 255, 0.35);
+}
+
+.asistencia-diagnostic__consent {
+    margin: 0;
+    padding: 0.3rem 0.38rem;
+    border-left: 2px solid rgba(255, 216, 77, 0.58);
+    color: #a7b8c5;
+    background: rgba(255, 216, 77, 0.045);
+    font: 500 0.56rem/1.35 "Courier New", monospace;
+}
+
+.asistencia-diagnostic__consent[data-state="activo"] {
+    border-left-color: #65ef9e;
+    color: #b8f8d2;
+    background: rgba(78, 231, 140, 0.055);
+}
+
+.asistencia-diagnostic__body {
+    display: grid;
+    grid-template-columns: minmax(8.2rem, 0.56fr) minmax(11rem, 1fr);
+    align-items: center;
+    min-height: 0;
+    gap: 0.54rem;
+}
+
+.asistencia-preview {
+    position: relative;
+    display: grid;
+    width: min(100%, 11rem);
+    aspect-ratio: 9 / 16;
+    max-height: 20rem;
+    place-items: center;
+    justify-self: center;
+    border: 0.28rem solid #202d37;
+    border-radius: 1.12rem;
+    background:
+        radial-gradient(circle at 50% 35%, rgba(73, 224, 255, 0.08), transparent 48%),
+        #020507;
+    box-shadow: 0 0 0 1px rgba(130, 186, 212, 0.25), 0 0.72rem 1.4rem rgba(0, 0, 0, 0.44);
+    overflow: hidden;
+    touch-action: none;
+    cursor: default;
+}
+
+.asistencia-preview::before {
+    position: absolute;
+    z-index: 4;
+    content: "";
+    top: 0.24rem;
+    left: 50%;
+    width: 2.6rem;
+    height: 0.28rem;
+    border-radius: 999px;
+    background: #263541;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.asistencia-preview[data-state="live"] {
+    border-color: #3b5967;
+    cursor: crosshair;
+    box-shadow: 0 0 0 1px rgba(87, 232, 255, 0.5), 0 0 1.15rem rgba(62, 225, 255, 0.16);
+}
+
+.asistencia-preview:focus-visible {
+    outline: 2px solid #71eaff;
+    outline-offset: 0.18rem;
+}
+
+.asistencia-preview img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    user-select: none;
+    pointer-events: none;
+}
+
+.asistencia-preview__fallback {
+    display: grid;
+    width: 100%;
+    min-height: 100%;
+    place-content: center;
+    justify-items: center;
+    gap: 0.32rem;
+    padding: 1.2rem 0.58rem 0.72rem;
+    color: #72838f;
+    text-align: center;
+}
+
+.asistencia-preview__fallback > span:first-child {
+    font-size: 1.4rem;
+    opacity: 0.68;
+}
+
+.asistencia-preview__fallback strong {
+    color: #a4b5c1;
+    font-size: 0.54rem;
+}
+
+.asistencia-preview__fallback > span:not(:first-child) {
+    font: 500 0.52rem/1.28 "Courier New", monospace;
+}
+
+.asistencia-preview__facts {
+    display: grid;
+    width: 100%;
+    margin: 0.38rem 0 0;
+    gap: 0.24rem;
+    text-align: left;
+}
+
+.asistencia-preview__facts > div {
+    display: grid;
+    grid-template-columns: 3.8rem minmax(0, 1fr);
+    gap: 0.3rem;
+}
+
+.asistencia-preview__facts dt,
+.asistencia-preview__facts dd {
+    margin: 0;
+    overflow: hidden;
+    color: #71838f;
+    font: 600 0.44rem/1.15 "Courier New", monospace;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.asistencia-preview__facts dd {
+    color: #a9b9c4;
+    text-align: right;
+}
+
+.asistencia-preview__cursor {
+    position: absolute;
+    z-index: 5;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid #fff7b2;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55);
+    pointer-events: none;
+}
+
+.asistencia-preview__cursor.is-visible {
+    animation: asistenciaTap 500ms ease-out both;
+}
+
+.asistencia-remote {
+    display: grid;
+    align-content: center;
+    gap: 0.42rem;
+}
+
+.asistencia-remote > p {
+    margin: 0;
+    color: #91a5b3;
+    font: 500 0.56rem/1.36 "Courier New", monospace;
+}
+
+.asistencia-remote__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem;
+}
+
+.asistencia-remote__grid .btn {
+    min-height: 2.1rem;
+    color: #a9effa;
+    border-color: rgba(79, 218, 239, 0.3);
+}
+
+.asistencia-remote__timestamp {
+    color: #728592;
+    font: 500 0.5rem/1.2 "Courier New", monospace;
+}
+
+@keyframes asistenciaBadgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+@keyframes asistenciaTap {
+    0% { opacity: 0.95; transform: translate(-50%, -50%) scale(0.52); }
+    65% { opacity: 0.74; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.48); }
+}
+
+@media (max-width: 1500px) and (min-width: 1101px) {
+    #panel_controles .control-groups {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    #panel_controles .control-group > .control-collapsible-toggle,
+    #panel_controles .control-group[data-control-section="representacion"] > .control-collapsible-toggle,
+    #panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+        font-size: clamp(0.31rem, 0.48vw, 0.46rem);
+    }
+
+    .asistencia-control__workspace {
+        grid-template-columns: minmax(10rem, 0.58fr) minmax(18rem, 1.42fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    #panel_controles .control-groups {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .asistencia-control__workspace {
+        grid-template-columns: minmax(9rem, 0.6fr) minmax(16rem, 1.4fr);
+    }
+
+    .asistencia-detail__actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+    #panel_controles .control-groups {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        overflow: visible;
+    }
+
+    #panel_controles .control-group[data-control-section="tutorial"] > .control-collapsible-toggle,
+    #panel_controles .control-group[data-control-section="juego"] > .control-collapsible-toggle {
+        grid-row: 1;
+    }
+
+    #panel_controles .control-group[data-control-section="representacion"] > .control-collapsible-toggle,
+    #panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+        grid-row: 2;
+    }
+
+    #panel_controles .control-group[data-control-section="representacion"] > .control-collapsible-toggle {
+        grid-column: 1;
+    }
+
+    #panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+        grid-column: 2;
+    }
+
+    #panel_controles .control-group--asistencia:not(.is-collapsed) > .asistencia-control {
+        grid-row: 3;
+        min-height: 38rem;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .asistencia-control__workspace {
+        grid-template-columns: minmax(0, 1fr);
+        overflow: visible;
+    }
+
+    .asistencia-control__queue {
+        max-height: 14rem;
+    }
+
+    .asistencia-detail {
+        overflow: visible;
+    }
+}
+
+table.default.asistencia-activa {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+table.default.asistencia-activa #panel_controles {
+    grid-column: 1 / -1;
+}
+
+table.default.asistencia-activa #panel_parametros {
+    display: none !important;
+}
+
+@media (max-width: 620px) {
+    .asistencia-control__header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .asistencia-detail__actions,
+    .asistencia-diagnostic__body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .asistencia-diagnostic__header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .asistencia-preview {
+        width: min(100%, 14rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .asistencia-tab-contador[data-active="1"],
+    .asistencia-preview__cursor.is-visible {
+        animation: none;
+    }
+
+    .asistencia-ticket {
+        transition: none;
+    }
+
+    .asistencia-ticket:hover {
+        transform: none;
+    }
+}
+
 .marcador-control .marcador-chip--puntos .meta-icon,
 .marcador-control .marcador-chip--puntos .meta-label {
     color: color-mix(in srgb, currentColor, white 24%);
@@ -8944,5 +9695,48 @@ table.default {
     #panel_controles .control-group > .control-collapsible-toggle {
         padding-inline: 0.12rem;
         font-size: clamp(0.28rem, 0.84vw, 0.4rem);
+    }
+}
+
+/* La pestaña de asistencia se añade tras los últimos ajustes responsivos del panel. */
+#panel_controles .control-groups {
+    grid-template-columns:
+        minmax(0, 0.76fr)
+        minmax(0, 0.88fr)
+        minmax(0, 1.12fr)
+        minmax(0, 0.92fr);
+}
+
+#panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+    grid-column: 4;
+}
+
+@media (max-width: 1500px) {
+    #panel_controles .control-groups {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+    #panel_controles .control-groups {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #panel_controles .control-group[data-control-section="tutorial"] > .control-collapsible-toggle,
+    #panel_controles .control-group[data-control-section="juego"] > .control-collapsible-toggle {
+        grid-row: 1;
+    }
+
+    #panel_controles .control-group[data-control-section="representacion"] > .control-collapsible-toggle,
+    #panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+        grid-row: 2;
+    }
+
+    #panel_controles .control-group[data-control-section="representacion"] > .control-collapsible-toggle {
+        grid-column: 1;
+    }
+
+    #panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+        grid-column: 2;
     }
 }

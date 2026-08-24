@@ -401,22 +401,22 @@ const ROLE_CONFIG = {
   },
   musa1: {
     url: "/game/public/players/index.html?player=1&name=E2E_Luna",
-    readySelector: "#musa_world_entry",
+    readySelector: "#musa_help_fab",
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa1b: {
     url: "/game/public/players/index.html?player=1&name=E2E_Sol",
-    readySelector: "#musa_world_entry",
+    readySelector: "#musa_help_fab",
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa2: {
     url: "/game/public/players/index.html?player=2&name=E2E_Rosa",
-    readySelector: "#musa_world_entry",
+    readySelector: "#musa_help_fab",
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa2b: {
     url: "/game/public/players/index.html?player=2&name=E2E_Iris",
-    readySelector: "#musa_world_entry",
+    readySelector: "#musa_help_fab",
     viewport: { width: 430, height: 932, isMobile: true }
   },
   actor1: {

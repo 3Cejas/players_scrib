@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260824d">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260824e">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/resurrection.js?v=20260424a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260824c"></script>
+<script src="./js/actions.js?v=20260824e"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -159,6 +159,95 @@
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
                             </div>
                             <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
+                        </div>
+                        <div class="control-group control-group--asistencia control-collapsible is-collapsed" data-control-section="asistencia">
+                            <button id="control_title_assistance" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" aria-controls="asistencia_control" onclick="toggleSeccionControl('asistencia')">
+                                <span aria-hidden="true">&#x1F6A9;</span>
+                                <span>ASISTENCIA</span>
+                                <span id="asistencia_tab_contador" class="asistencia-tab-contador" aria-label="0 incidencias activas">0</span>
+                            </button>
+                            <section id="asistencia_control" class="asistencia-control" aria-labelledby="control_title_assistance">
+                                <header class="asistencia-control__header">
+                                    <div>
+                                        <strong>CENTRO DE ASISTENCIA</strong>
+                                        <span>Atiende cada aviso y, con autorizaci&oacute;n temporal, revisa esta app.</span>
+                                    </div>
+                                    <button id="asistencia_actualizar" class="btn asistencia-control__refresh" type="button">&#x21BB; ACTUALIZAR</button>
+                                </header>
+                                <p id="asistencia_estado_global" class="asistencia-control__global-status" role="status" aria-live="polite" aria-atomic="true">Esperando el estado del servidor.</p>
+                                <div class="asistencia-control__workspace">
+                                    <aside class="asistencia-control__queue" aria-label="Incidencias de musas">
+                                        <div class="asistencia-control__queue-heading">
+                                            <strong>INCIDENCIAS</strong>
+                                            <span id="asistencia_contador">0 activas</span>
+                                        </div>
+                                        <ul id="asistencia_lista" class="asistencia-control__list"></ul>
+                                        <p id="asistencia_lista_vacia" class="asistencia-control__empty">No hay peticiones de ayuda.</p>
+                                    </aside>
+                                    <main id="asistencia_detalle" class="asistencia-detail" aria-live="polite">
+                                        <div id="asistencia_sin_seleccion" class="asistencia-detail__placeholder">
+                                            <span aria-hidden="true">&#x1F4F1;</span>
+                                            <strong>SELECCIONA UNA INCIDENCIA</strong>
+                                            <small>Aqu&iacute; aparecer&aacute;n las acciones y el diagn&oacute;stico autorizado.</small>
+                                        </div>
+                                        <div id="asistencia_incidente" class="asistencia-detail__incident" hidden>
+                                            <header class="asistencia-detail__header">
+                                                <span id="asistencia_color" class="asistencia-detail__flag" aria-hidden="true"></span>
+                                                <div class="asistencia-detail__identity">
+                                                    <strong id="asistencia_nombre">MUSA</strong>
+                                                    <span id="asistencia_meta">Equipo &middot; antig&uuml;edad</span>
+                                                </div>
+                                                <span id="asistencia_estado" class="asistencia-state">PENDIENTE</span>
+                                            </header>
+                                            <div class="asistencia-detail__actions" aria-label="Gestionar incidencia">
+                                                <button id="asistencia_atender" class="btn asistencia-action asistencia-action--attend" type="button">ATENDER</button>
+                                                <button id="asistencia_resolver" class="btn asistencia-action asistencia-action--resolve" type="button">RESOLVER</button>
+                                                <button id="asistencia_cancelar" class="btn asistencia-action asistencia-action--cancel" type="button">CANCELAR</button>
+                                                <button id="asistencia_recargar" class="btn asistencia-action asistencia-action--reload" type="button">RECARGAR P&Aacute;GINA</button>
+                                            </div>
+                                            <section class="asistencia-diagnostic" aria-labelledby="asistencia_diagnostico_title">
+                                                <header class="asistencia-diagnostic__header">
+                                                    <div>
+                                                        <strong id="asistencia_diagnostico_title">DIAGN&Oacute;STICO EN DIRECTO</strong>
+                                                        <span id="asistencia_diagnostico_estado">Sin solicitar</span>
+                                                    </div>
+                                                    <div class="asistencia-diagnostic__session-actions">
+                                                        <button id="asistencia_diagnostico_abrir" class="btn" type="button">ABRIR DIAGN&Oacute;STICO</button>
+                                                        <button id="asistencia_diagnostico_cerrar" class="btn" type="button" hidden>DETENER</button>
+                                                    </div>
+                                                </header>
+                                                <p id="asistencia_diagnostico_ayuda" class="asistencia-diagnostic__consent">La musa ya autoriz&oacute; temporalmente esta p&aacute;gina al pedir ayuda y puede revocarlo cancelando. No permite escribir ni acceder a c&aacute;mara, micr&oacute;fono u otras aplicaciones.</p>
+                                                <div class="asistencia-diagnostic__body">
+                                                    <div id="asistencia_preview_shell" class="asistencia-preview" data-state="idle" tabindex="0" role="application" aria-label="Vista remota del tel&eacute;fono; al activarse, pulsa sobre la imagen para tocar en esa posici&oacute;n">
+                                                        <img id="asistencia_preview" alt="Pantalla en directo de la musa seleccionada" draggable="false" hidden>
+                                                        <div id="asistencia_preview_cursor" class="asistencia-preview__cursor" aria-hidden="true"></div>
+                                                        <div id="asistencia_preview_fallback" class="asistencia-preview__fallback">
+                                                            <span aria-hidden="true">&#x1F512;</span>
+                                                            <strong id="asistencia_preview_fallback_title">VISTA BLOQUEADA</strong>
+                                                            <span id="asistencia_preview_fallback_detail">Solicita permiso para iniciar el diagn&oacute;stico.</span>
+                                                            <dl class="asistencia-preview__facts">
+                                                                <div><dt>RUTA</dt><dd id="asistencia_diagnostico_ruta">—</dd></div>
+                                                                <div><dt>PANTALLA</dt><dd id="asistencia_diagnostico_viewport">—</dd></div>
+                                                                <div><dt>CONEXI&Oacute;N</dt><dd id="asistencia_diagnostico_conexion">—</dd></div>
+                                                            </dl>
+                                                        </div>
+                                                    </div>
+                                                    <div class="asistencia-remote" aria-label="Controles remotos limitados">
+                                                        <p>Toca directamente la vista o usa estos controles.</p>
+                                                        <div class="asistencia-remote__grid">
+                                                            <button id="asistencia_scroll_arriba" class="btn" type="button" data-help-command="scroll-up" aria-label="Desplazar hacia arriba">&#x2191; SUBIR</button>
+                                                            <button id="asistencia_scroll_abajo" class="btn" type="button" data-help-command="scroll-down" aria-label="Desplazar hacia abajo">&#x2193; BAJAR</button>
+                                                            <button id="asistencia_volver" class="btn" type="button" data-help-command="back">&#x2190; ATR&Aacute;S</button>
+                                                            <button id="asistencia_reconectar" class="btn" type="button" data-help-command="reconnect">&#x21BB; RECONECTAR</button>
+                                                        </div>
+                                                        <span id="asistencia_ultimo_frame" class="asistencia-remote__timestamp">Sin imagen recibida</span>
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </main>
+                                </div>
+                            </section>
                         </div>
                     </div>
                 </td>
@@ -681,7 +770,8 @@
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260824a"></script>
 <script src="./js/videotutorial-control.js?v=20260824d"></script>
-<script src="./js/socket-events.js?v=20260824d"></script>
+<script src="./js/muse-help-control.js?v=20260824e"></script>
+<script src="./js/socket-events.js?v=20260824e"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>
