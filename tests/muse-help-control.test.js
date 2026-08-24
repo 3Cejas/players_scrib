@@ -207,14 +207,19 @@ test("individual actions use authoritative ticket IDs, explicit resolution and e
   assert.match(emissions[0].payload.request_id, /^control-help-/);
   emissions[0].ack({ ok: true });
 
-  assert.equal(api.cancelar(), true);
+  assert.equal(api.resolver(), true);
   assert.equal(emissions[1].event, "ayuda_musa_resolver");
-  assert.equal(emissions[1].payload.resolucion, "cancelada");
+  assert.equal(emissions[1].payload.resolucion, "resuelta");
   emissions[1].ack({ ok: true });
 
+  assert.equal(api.cancelar(), true);
+  assert.equal(emissions[2].event, "ayuda_musa_resolver");
+  assert.equal(emissions[2].payload.resolucion, "cancelada");
+  emissions[2].ack({ ok: true });
+
   assert.equal(api.recargarMusa(), true);
-  assert.equal(emissions[2].event, "ayuda_musa_recargar");
-  assert.equal(emissions[2].payload.ticket_id, "help-2");
+  assert.equal(emissions[3].event, "ayuda_musa_recargar");
+  assert.equal(emissions[3].payload.ticket_id, "help-2");
 });
 
 test("remote control is consent-bound and limited to normalized tap, scroll, back and reconnect commands", () => {
@@ -259,9 +264,11 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(html, /id="control_title_assistance"[\s\S]*aria-controls="asistencia_control"[\s\S]*toggleSeccionControl\('asistencia'\)/);
   assert.match(html, /id="asistencia_estado_global"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(html, /id="asistencia_preview_shell"[\s\S]*role="application"/);
+  assert.match(html, /id="asistencia_resolver"[^>]*>CERRAR INCIDENCIA<\/button>/);
+  assert.doesNotMatch(html, /id="asistencia_resolver"[^>]*>RESOLVER<\/button>/);
   assert.match(html, /ya autoriz&oacute; temporalmente esta p&aacute;gina al pedir ayuda[\s\S]*No permite escribir ni acceder a c&aacute;mara, micr&oacute;fono u otras aplicaciones/);
   assert.doesNotMatch(assistance, /<input|<textarea/);
-  assert.match(html, /muse-help-control\.js\?v=20260824e/);
+  assert.match(html, /muse-help-control\.js\?v=20260824f/);
 
   assert.match(actions, /new Set\(\["tutorial", "juego", "representacion", "asistencia"\]\)/);
   assert.match(actions, /classList\.toggle\("asistencia-activa", seccion === "asistencia"\)/);

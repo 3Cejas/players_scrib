@@ -11,7 +11,8 @@ const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
 const CONTROL_VIDEO_VERSION = "20260824d";
 const CONTROL_HELP_VERSION = "20260824e";
-const MUSA_HELP_VERSION = CONTROL_HELP_VERSION;
+const CONTROL_HELP_MODULE_VERSION = "20260824f";
+const MUSA_HELP_VERSION = "20260824f";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260822c";
 const LEVEL_TRANSITION_VERSION = "20260823a";
@@ -29,7 +30,7 @@ const CONTROL_STATE_VERSION = PLAYER_DISCARD_VERSION;
 const CONTROL_SOCKET_EVENTS_VERSION = CONTROL_HELP_VERSION;
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
 const PUBLIC_PLAYER_STATE_VERSION = MUSE_AUTHOR_VERSION;
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = MUSA_HELP_VERSION;
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = CONTROL_HELP_VERSION;
 const MUSA_ASSIGNMENT_VERSION = "20260822d";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260505f";
@@ -95,7 +96,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/control/index.html", "js/actions.js", CONTROL_ACTIONS_VERSION);
   assertIncludesAsset("game/control/index.html", "js/state.js", CONTROL_STATE_VERSION);
   assertIncludesAsset("game/control/index.html", "js/videotutorial-control.js", CONTROL_VIDEO_VERSION);
-  assertIncludesAsset("game/control/index.html", "js/muse-help-control.js", CONTROL_HELP_VERSION);
+  assertIncludesAsset("game/control/index.html", "js/muse-help-control.js", CONTROL_HELP_MODULE_VERSION);
   assertIncludesAsset("game/control/index.html", "js/socket-events.js", CONTROL_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/credits.js");
 
@@ -497,6 +498,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /id="control_title_tutorial"[\s\S]*aria-expanded="false"[\s\S]*toggleSeccionControl\('tutorial'\)/);
   assert.match(html, /id="control_title_game"[\s\S]*aria-expanded="true"[\s\S]*toggleSeccionControl\('juego'\)/);
   assert.match(html, /id="control_title_assistance"[\s\S]*aria-expanded="false"[\s\S]*toggleSeccionControl\('asistencia'\)/);
+  assert.match(html, /id="asistencia_resolver"[^>]*>CERRAR INCIDENCIA<\/button>/);
   assert.match(html, /id="control_title_parameters" class="control-group-title control-group-title--parametros"/);
   assert.match(html, /id="control_title_parameters_text" class="control-params-title-text"/);
   assert.match(html, /id="boton_colapsar_parametros"[\s\S]*onclick="togglePanelParametrosControl\(\)"[\s\S]*aria-expanded="true"[\s\S]*aria-controls="panel_parametros"/);

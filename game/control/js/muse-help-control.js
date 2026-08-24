@@ -584,7 +584,7 @@
         return emitAction(
             "ayuda_musa_resolver",
             { resolucion: normalized },
-            normalized === "cancelada" ? "Cancelando la incidencia…" : "Resolviendo la incidencia…"
+            normalized === "cancelada" ? "Cancelando la incidencia…" : "Cerrando la incidencia…"
         );
     }
 

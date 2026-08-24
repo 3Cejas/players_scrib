@@ -148,6 +148,21 @@
         return objetivo;
     }
 
+    function obtenerAvisoAtencion(ticket, diagnosticoLocal) {
+        if (!ticket || ticket.estado !== "atendiendo") {
+            return { visible: false, diagnostico: false, texto: "" };
+        }
+        const diagnosticoActivo = Boolean(diagnosticoLocal)
+            || (ticket.diagnostico && ticket.diagnostico.estado === "activo");
+        return {
+            visible: true,
+            diagnostico: diagnosticoActivo,
+            texto: diagnosticoActivo
+                ? "CONTROL ESTÁ REVISANDO ESTA PÁGINA"
+                : "CONTROL TE ESTÁ ATENDIENDO"
+        };
+    }
+
     function crearControlador(opciones) {
         const options = opciones || {};
         const globalRef = options.windowRef || (typeof window !== "undefined" ? window : null);
@@ -241,7 +256,20 @@
             remoteIndicator.setAttribute("aria-live", "assertive");
             remoteIndicator.textContent = "ASISTENCIA REMOTA ACTIVA";
 
-            documentRef.body.append(fab, confirmacion, bandera, remoteIndicator);
+            const attendingHalo = documentRef.createElement("div");
+            attendingHalo.id = "musa_help_attending_indicator";
+            attendingHalo.className = "musa-help-attending-halo";
+            attendingHalo.hidden = true;
+            attendingHalo.setAttribute("role", "status");
+            attendingHalo.setAttribute("aria-live", "polite");
+            attendingHalo.setAttribute("aria-atomic", "true");
+            const attendingHaloText = documentRef.createElement("span");
+            attendingHaloText.id = "musa_help_attending_halo_text";
+            attendingHaloText.className = "musa-help-attending-halo__text";
+            attendingHaloText.textContent = "CONTROL TE ESTÁ ATENDIENDO";
+            attendingHalo.append(attendingHaloText);
+
+            documentRef.body.append(fab, confirmacion, bandera, attendingHalo, remoteIndicator);
             return {
                 fab,
                 fabStatus: fab.querySelector("#musa_help_fab_status"),
@@ -254,7 +282,9 @@
                 flagState: bandera.querySelector("#musa_help_flag_state"),
                 flagMinimize: bandera.querySelector("#musa_help_flag_minimize"),
                 flagCancel: bandera.querySelector("#musa_help_flag_cancel"),
-                remoteIndicator
+                remoteIndicator,
+                attendingHalo,
+                attendingHaloText
             };
         }
 
@@ -326,11 +356,15 @@
         function renderizar() {
             const ticket = estadoLocal.ticket;
             const visual = estadoVisualTicket(ticket);
+            const avisoAtencion = obtenerAvisoAtencion(ticket, estadoLocal.diagnostico);
             ui.fab.dataset.state = estadoLocal.solicitudPendiente ? "pending" : visual.key;
             ui.fabStatus.textContent = estadoLocal.solicitudPendiente ? "ENVIANDO AVISO…" : visual.fab;
             ui.fab.setAttribute("aria-label", ticket ? `Ayuda activa. Bandera ${ticket.color_nombre}` : "Pedir ayuda a Control");
             ui.fab.disabled = estadoLocal.solicitudPendiente;
             ui.flagCancel.disabled = estadoLocal.solicitudPendiente;
+            ui.attendingHalo.hidden = !avisoAtencion.visible;
+            ui.attendingHalo.dataset.diagnostic = avisoAtencion.diagnostico ? "1" : "0";
+            ui.attendingHaloText.textContent = avisoAtencion.texto || "CONTROL TE ESTÁ ATENDIENDO";
             if (!ticket) {
                 definirColor("#ffd60a");
                 ui.bandera.hidden = true;
@@ -905,6 +939,7 @@
         normalizeCommand: normalizarComando,
         isTextualControl: esControlTextual,
         getSafeTapTarget: obtenerObjetivoTap,
+        getAttendingNotice: obtenerAvisoAtencion,
         createController: crearControlador
     });
 });

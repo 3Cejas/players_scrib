@@ -144,8 +144,8 @@ test("muse page keeps SOS above all overlays and explains scoped remote consent"
   const css = read("game/public/players/css/musa-help.css");
   const js = read("game/public/players/js/musa-help.js");
 
-  assert.match(html, /musa-help\.css\?v=20260824e/);
-  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260824e/);
+  assert.match(html, /musa-help\.css\?v=20260824f/);
+  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260824f/);
   assert.match(css, /\.musa-help-fab\s*\{[\s\S]*position:\s*fixed;[\s\S]*z-index:\s*2147483630;/);
   assert.match(css, /\.musa-help-remote-indicator\s*\{[\s\S]*z-index:\s*2147483620;/);
   assert.match(js, /ver y manejar <strong>SOLO esta página<\/strong>/);
@@ -190,4 +190,46 @@ test("an attended muse can reopen the flag and revoke an active diagnostic", () 
   );
   assert.match(js, /NO SE PUDO CERRAR EL AVISO · ACCESO REMOTO REVOCADO/);
   assert.match(js, /Date\.now\(\) \+ MAX_DIAGNOSTICO_MS/);
+});
+
+test("authoritative attended tickets keep an accessible non-blocking screen halo", () => {
+  const pending = help.normalizeTicket({
+    ticket_id: "ticket-pending",
+    estado: "pendiente",
+    diagnostico: { estado: "inactivo" }
+  });
+  const attended = help.normalizeTicket({
+    ticket_id: "ticket-attended",
+    estado: "atendiendo",
+    diagnostico: { estado: "inactivo" }
+  });
+  const diagnosing = help.normalizeTicket({
+    ticket_id: "ticket-diagnostic",
+    estado: "atendiendo",
+    diagnostico: { estado: "activo" }
+  });
+
+  assert.deepEqual(help.getAttendingNotice(pending), { visible: false, diagnostico: false, texto: "" });
+  assert.deepEqual(help.getAttendingNotice(attended), {
+    visible: true,
+    diagnostico: false,
+    texto: "CONTROL TE ESTÁ ATENDIENDO"
+  });
+  assert.deepEqual(help.getAttendingNotice(diagnosing), {
+    visible: true,
+    diagnostico: true,
+    texto: "CONTROL ESTÁ REVISANDO ESTA PÁGINA"
+  });
+  assert.deepEqual(help.getAttendingNotice(null), { visible: false, diagnostico: false, texto: "" });
+
+  const js = read("game/public/players/js/musa-help.js");
+  const css = read("game/public/players/css/musa-help.css");
+  assert.match(js, /id = "musa_help_attending_indicator"/);
+  assert.match(js, /setAttribute\("role", "status"\)/);
+  assert.match(js, /setAttribute\("aria-live", "polite"\)/);
+  assert.match(js, /ui\.attendingHalo\.hidden = !avisoAtencion\.visible/);
+  assert.match(css, /\.musa-help-attending-halo\s*\{[\s\S]*position:\s*fixed;[\s\S]*z-index:\s*2147483590;[\s\S]*pointer-events:\s*none;/);
+  assert.match(css, /bottom:\s*max\(14px, calc\(env\(safe-area-inset-bottom\) \+ 8px\)\)/);
+  assert.match(css, /\.musa-help-fab\s*\{[\s\S]*z-index:\s*2147483630;/);
+  assert.match(css, /\.musa-help-confirm,[\s\S]*\.musa-help-flag\s*\{[\s\S]*z-index:\s*2147483610;/);
 });

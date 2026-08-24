@@ -3209,6 +3209,34 @@ const coreSpecs = [
         }),
         10000
       );
+      await ctx.waitForVisible(
+        "musa1",
+        "#musa_help_attending_indicator",
+        true,
+        "attended muse sees the persistent screen halo"
+      );
+      const attendingHalo = await ctx.evaluate("musa1", () => {
+        const halo = document.querySelector("#musa_help_attending_indicator");
+        const rect = halo && halo.getBoundingClientRect();
+        const style = halo && getComputedStyle(halo);
+        return halo && rect && style ? {
+          text: halo.textContent.trim(),
+          position: style.position,
+          pointerEvents: style.pointerEvents,
+          top: Math.round(rect.top),
+          left: Math.round(rect.left),
+          right: Math.round(window.innerWidth - rect.right),
+          bottom: Math.round(window.innerHeight - rect.bottom),
+          zIndex: Number(style.zIndex) || 0
+        } : null;
+      });
+      ctx.assert(attendingHalo && /CONTROL TE EST.+ATENDIENDO/i.test(attendingHalo.text), "attending halo should explain that Control is helping");
+      ctx.assert(attendingHalo.position === "fixed" && attendingHalo.pointerEvents === "none", "attending halo must persist without blocking muse input");
+      ctx.assert(
+        attendingHalo.top === 0 && attendingHalo.left === 0 && attendingHalo.right === 0 && attendingHalo.bottom === 0,
+        "attending halo should frame the complete muse viewport"
+      );
+      ctx.assert(attendingHalo.zIndex < 2147483610, "attending halo should remain below help dialogs and the floating button");
       await ctx.waitForVisible("musa1", "#musa_help_flag", false, "attended help flag minimizes so Control can inspect the page");
       await ctx.click("musa1", "#musa_help_fab");
       await ctx.waitForVisible("musa1", "#musa_help_flag", true, "the muse can reopen help controls while being attended");
@@ -3295,10 +3323,28 @@ const coreSpecs = [
         }, museTickets.musa1.ticketId),
         12000
       );
+      await ctx.waitForVisible(
+        "musa1",
+        "#musa_help_attending_indicator",
+        true,
+        "reloaded muse restores the attending halo from authoritative state"
+      );
+      await ctx.waitForText(
+        "musa1",
+        "#musa_help_attending_indicator",
+        (text) => /CONTROL TE EST.+ATENDIENDO/i.test(text),
+        "reloaded muse keeps the attending message"
+      );
 
       await ctx.evaluate("control", (ticketId) => {
         window.ScribMuseHelpControl.seleccionar(ticketId);
       }, museTickets.musa1.ticketId);
+      await ctx.waitForText(
+        "control",
+        "#asistencia_resolver",
+        (text) => text.trim() === "CERRAR INCIDENCIA",
+        "Control exposes an explicit close-incident button"
+      );
       await ctx.click("control", "#asistencia_resolver");
       await ctx.waitFor(
         "resolved muse returns to idle help state",
@@ -3309,6 +3355,7 @@ const coreSpecs = [
         10000
       );
       await ctx.waitForVisible("musa1", "#musa_help_fab", true, "resolved muse keeps the floating help button available");
+      await ctx.waitForVisible("musa1", "#musa_help_attending_indicator", false, "closing the incident removes the attending halo");
 
       await ctx.click("musa2", "#musa_help_flag_cancel");
       await ctx.waitFor(
