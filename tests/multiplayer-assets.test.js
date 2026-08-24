@@ -13,11 +13,12 @@ const CONTROL_VIDEO_VERSION = "20260824d";
 const CONTROL_HELP_VERSION = "20260824e";
 const CONTROL_HELP_MODULE_VERSION = "20260824f";
 const MUSA_HELP_VERSION = "20260824f";
+const WRITER_DELETE_BLOCK_VERSION = "20260824g";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260822c";
 const LEVEL_TRANSITION_VERSION = "20260823a";
-const PLAYER_ACTIONS_VERSION = "20260504f";
-const PLAYER_STATE_VERSION = MUSE_AUTHOR_VERSION;
+const PLAYER_ACTIONS_VERSION = WRITER_DELETE_BLOCK_VERSION;
+const PLAYER_STATE_VERSION = WRITER_DELETE_BLOCK_VERSION;
 const PLAYER_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
 const SPECTATOR_STATE_VERSION = MUSE_AUTHOR_VERSION;
 const SPECTATOR_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
@@ -79,7 +80,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/players/index.html", "js/actions.js", PLAYER_ACTIONS_VERSION);
   assertIncludesAsset("game/players/index.html", "js/state.js", PLAYER_STATE_VERSION);
   assertIncludesAsset("game/players/index.html", "js/socket-events.js", PLAYER_SOCKET_EVENTS_VERSION);
-  assertIncludesAsset("game/players/index.html", "domains/editor-deletion.js");
+  assertIncludesAsset("game/players/index.html", "domains/editor-deletion.js", WRITER_DELETE_BLOCK_VERSION);
 
   assertIncludesAsset("game/spectator/index.html", "js/state.js", SPECTATOR_STATE_VERSION);
   assertIncludesAsset("game/spectator/index.html", "js/socket-events.js", SPECTATOR_SOCKET_EVENTS_VERSION);

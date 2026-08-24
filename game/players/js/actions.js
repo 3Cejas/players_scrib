@@ -205,6 +205,18 @@ function programarBorradoEscritora(delayMs, callback) {
   return revisionProgramada;
 }
 
+function estaBloqueadoBorradoEscritora() {
+  return typeof bloquear_borrado_putada !== "undefined" && bloquear_borrado_putada === true;
+}
+
+function posponerBorradoAutomaticoBloqueado() {
+  if (!estaBloqueadoBorradoEscritora()) return false;
+  programarBorradoEscritora(rapidez_borrado, (revisionProgramada) => {
+    borrar(revisionProgramada);
+  });
+  return true;
+}
+
 
 
 document.addEventListener('keydown', function(event) {
@@ -300,6 +312,9 @@ function borrar(revisionEsperada = revision_borrado_escritora) {
   }
   if (modo_actual === "frase final") {
     cancelarTemporizadorBorradoEscritora();
+    return;
+  }
+  if (posponerBorradoAutomaticoBloqueado()) {
     return;
   }
   if (!desactivar_borrar) {
@@ -751,4 +766,3 @@ const animateCSS = window.ScribRuntime.animateCSS;
         // Inicializar interfaz
         actualizarInterfaz();
       });
-

@@ -733,6 +733,61 @@ async function pressWriterKey(ctx, roleName, key, times = 1, options = {}) {
   }
 }
 
+async function pressWriterShortcut(ctx, roleName, modifiers, key, options = {}) {
+  if (options.preserveCaret !== true) {
+    await focusWriterEditor(ctx, roleName);
+  }
+  const page = ctx.getPageEntry(roleName).page;
+  const keys = Array.isArray(modifiers) ? modifiers : [modifiers];
+  for (const modifier of keys) {
+    await page.keyboard.down(modifier);
+  }
+  try {
+    await page.keyboard.press(key);
+  } finally {
+    for (const modifier of [...keys].reverse()) {
+      await page.keyboard.up(modifier);
+    }
+  }
+}
+
+async function selectWriterTextRange(ctx, roleName, startOffset, endOffset) {
+  await ctx.evaluate(roleName, ({ start, end }) => {
+    const editor = document.querySelector("#texto");
+    if (!editor) {
+      throw new Error("Missing writer editor");
+    }
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    const locate = (target) => {
+      let consumed = 0;
+      let node = walker.nextNode();
+      while (node) {
+        const length = String(node.textContent || "").length;
+        if (target <= consumed + length) {
+          return { node, offset: Math.max(0, target - consumed) };
+        }
+        consumed += length;
+        node = walker.nextNode();
+      }
+      return null;
+    };
+
+    const startPoint = locate(Math.max(0, Number(start) || 0));
+    walker.currentNode = editor;
+    const endPoint = locate(Math.max(0, Number(end) || 0));
+    if (!startPoint || !endPoint) {
+      throw new Error("Could not select writer text range");
+    }
+    const range = document.createRange();
+    range.setStart(startPoint.node, startPoint.offset);
+    range.setEnd(endPoint.node, endPoint.offset);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    editor.focus();
+  }, { start: startOffset, end: endOffset });
+}
+
 async function assertWriterBackspaceDeletesBehindProtectedWord(ctx, roleName) {
   await ctx.evaluate(roleName, () => {
     const editor = document.querySelector("#texto");
@@ -4111,6 +4166,134 @@ const coreSpecs = [
           );
         }
       }
+    }
+  },
+  {
+    name: "delete-block-semantics-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2"]);
+      await configureFastControlPanel(ctx, {
+        tiempo_modificador: 8,
+        tiempo_modos: 60,
+        tiempo_minutos: 5,
+        tiempo_segundos: 0,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx, { requireEditable: false });
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
+      await waitForMode(ctx, "palabras bonus", 8000);
+      await waitForLocalMode(ctx, "writer1", "palabras bonus", 10000);
+      await waitForLocalMode(ctx, "writer2", "palabras bonus", 10000);
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+
+      await ctx.setWriterText("writer1", "UNO DOS TRES");
+      await ctx.setWriterText("writer2", "RIVAL");
+      await Promise.all(["writer1", "writer2"].map((roleName) => ctx.evaluate(roleName, () => {
+        if (typeof cancelarTemporizadorBorradoEscritora === "function") {
+          cancelarTemporizadorBorradoEscritora();
+        }
+        window.eval(`
+          if (typeof rapidez_borrado !== "undefined") rapidez_borrado = 60000;
+          if (typeof rapidez_inicio_borrado !== "undefined") rapidez_inicio_borrado = 60000;
+        `);
+      })));
+
+      await applyForcedDisadvantage(ctx, 1, PUTADA_PLUMA);
+      await ctx.waitFor(
+        "writer1 receives comprehensive delete block",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.deleteBlocked && state.currentDisadvantage === PUTADA_PLUMA ? state : false;
+        },
+        8000
+      );
+
+      const initial = await readWriterState(ctx, "writer1");
+      await pressWriterKey(ctx, "writer1", "Backspace");
+      ctx.assert((await readWriterState(ctx, "writer1")).text === initial.text, "Backspace must be blocked");
+
+      await placeCaretAtTextOffset(ctx, "writer1", 0);
+      await pressWriterKey(ctx, "writer1", "Delete", 1, { preserveCaret: true });
+      ctx.assert((await readWriterState(ctx, "writer1")).text === initial.text, "Delete/Supr must be blocked");
+
+      await pressWriterShortcut(ctx, "writer1", "Control", "Backspace");
+      await placeCaretAtTextOffset(ctx, "writer1", 0);
+      await pressWriterShortcut(ctx, "writer1", "Control", "Delete", { preserveCaret: true });
+      ctx.assert((await readWriterState(ctx, "writer1")).text === initial.text, "word deletion shortcuts must be blocked");
+
+      await selectWriterTextRange(ctx, "writer1", 4, 7);
+      await ctx.getPageEntry("writer1").page.keyboard.type("X");
+      ctx.assert((await readWriterState(ctx, "writer1")).text === initial.text, "typing over a selection must not replace text");
+
+      await selectWriterTextRange(ctx, "writer1", 0, 3);
+      await pressWriterShortcut(ctx, "writer1", "Control", "x", { preserveCaret: true });
+      ctx.assert((await readWriterState(ctx, "writer1")).text === initial.text, "cut must not remove selected text");
+
+      await typeInWriter(ctx, "writer1", " Z");
+      const afterInsert = await readWriterState(ctx, "writer1");
+      ctx.assert(afterInsert.text === `${initial.text} Z`, "pure insertion must remain available during delete block");
+      await pressWriterShortcut(ctx, "writer1", "Control", "z");
+      ctx.assert((await readWriterState(ctx, "writer1")).text === afterInsert.text, "undo must not remove newly written text");
+
+      await setWriterHtml(
+        ctx,
+        "writer1",
+        'abc<span class="palabra-bendita" contenteditable="false">BONUS</span>xy'
+      );
+      const protectedBefore = await readWriterState(ctx, "writer1");
+      await ctx.evaluate("writer1", () => {
+        const editor = document.querySelector("#texto");
+        const protectedWord = editor && editor.querySelector(".palabra-bendita");
+        if (!editor || !protectedWord) throw new Error("Missing protected writer fixture");
+        const range = document.createRange();
+        range.setStartBefore(protectedWord);
+        range.collapse(true);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.focus();
+      });
+      await pressWriterKey(ctx, "writer1", "Delete", 1, { preserveCaret: true });
+      const protectedAfter = await readWriterState(ctx, "writer1");
+      ctx.assert(protectedAfter.html === protectedBefore.html, "Delete must not bypass the block beside protected words");
+
+      const rivalBefore = await readWriterState(ctx, "writer2");
+      await pressWriterKey(ctx, "writer2", "Backspace");
+      const rivalAfter = await readWriterState(ctx, "writer2");
+      ctx.assert(rivalAfter.text.length === rivalBefore.text.length - 1, "the other writer must keep normal deletion");
+
+      await ctx.setWriterText("writer1", "DECAY PROTEGIDO");
+      await ctx.evaluate("writer1", () => {
+        window.eval(`
+          if (typeof rapidez_borrado !== "undefined") rapidez_borrado = 1000;
+          if (typeof rapidez_inicio_borrado !== "undefined") rapidez_inicio_borrado = 100;
+        `);
+        if (typeof countChars === "function") countChars(document.querySelector("#texto"));
+      });
+      const decayBefore = await readWriterState(ctx, "writer1");
+      ctx.assert(decayBefore.text === "DECAY PROTEGIDO", "system text synchronization must remain allowed while delete block is active");
+      await ctx.sleep(700);
+      const decayWhileBlocked = await readWriterState(ctx, "writer1");
+      ctx.assert(decayWhileBlocked.text === decayBefore.text, "automatic decay must not mutate text while blocked");
+
+      await ctx.waitFor(
+        "delete block expires",
+        async () => {
+          const state = await readWriterDisadvantageState(ctx, "writer1");
+          return state.deleteBlocked === false ? state : false;
+        },
+        12000
+      );
+      await ctx.waitFor(
+        "automatic decay resumes once delete block expires",
+        async () => {
+          const state = await readWriterState(ctx, "writer1");
+          return state.text.length < decayBefore.text.length ? state : false;
+        },
+        3000,
+        50
+      );
     }
   },
   {

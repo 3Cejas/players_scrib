@@ -175,10 +175,206 @@
         };
     }
 
+    function esInputTypeBorrado(inputType) {
+        const tipo = String(inputType || "").trim().toLowerCase();
+        return tipo.startsWith("delete") || tipo === "historyundo" || tipo === "historyredo";
+    }
+
+    function esTeclaBorrado(evento) {
+        if (!evento) return false;
+        const tecla = String(evento.key || "").trim().toLowerCase();
+        const codigoNumerico = Number(evento.keyCode || evento.which || 0);
+
+        if (
+            tecla === "backspace"
+            || tecla === "delete"
+            || tecla === "del"
+            || tecla === "undo"
+            || tecla === "redo"
+            || tecla === "cut"
+            || codigoNumerico === 8
+            || codigoNumerico === 46
+        ) {
+            return true;
+        }
+
+        const modificadorEdicion = evento.ctrlKey === true || evento.metaKey === true;
+        if (!modificadorEdicion || evento.altKey === true) return false;
+
+        // Cortar y deshacer/rehacer pueden eliminar contenido sin una tecla
+        // Backspace/Delete. Los demás atajos se dejan al beforeinput destructivo.
+        return ["x", "z", "y"].includes(tecla);
+    }
+
+    function esRangoNoColapsado(rango) {
+        if (!rango) return false;
+        if (typeof rango.collapsed === "boolean") return !rango.collapsed;
+        return rango.startContainer !== rango.endContainer || rango.startOffset !== rango.endOffset;
+    }
+
+    function obtenerSeleccionEditor(editor) {
+        const documento = editor && editor.ownerDocument;
+        if (documento && typeof documento.getSelection === "function") {
+            return documento.getSelection();
+        }
+        if (global && typeof global.getSelection === "function") {
+            return global.getSelection();
+        }
+        return null;
+    }
+
+    function seleccionNoColapsadaEnEditor(editor, evento) {
+        const rangosObjetivo = typeof evento?.getTargetRanges === "function"
+            ? evento.getTargetRanges()
+            : [];
+        if (Array.from(rangosObjetivo || []).some(esRangoNoColapsado)) return true;
+
+        const seleccion = obtenerSeleccionEditor(editor);
+        if (!seleccion || !seleccion.rangeCount) return false;
+        const rango = seleccion.getRangeAt(0);
+        if (!esRangoNoColapsado(rango)) return false;
+        if (!editor || typeof editor.contains !== "function") return true;
+        const ancestro = rango.commonAncestorContainer || rango.startContainer;
+        return ancestro === editor || editor.contains(ancestro);
+    }
+
+    function esReemplazoDeSeleccion(evento, editor, opciones = {}) {
+        const tipo = String(evento?.inputType || "").trim().toLowerCase();
+        if (tipo === "insertreplacementtext") return true;
+        if (!tipo.startsWith("insert")) return false;
+        if (tipo.includes("composition") && opciones.composicionIniciadaEnCaret === true) return false;
+        return seleccionNoColapsadaEnEditor(editor, evento);
+    }
+
+    function esArrastreConBorrado(evento, editor) {
+        const tipoEvento = String(evento?.type || "").toLowerCase();
+        if (tipoEvento !== "dragstart" && tipoEvento !== "drop") return false;
+        const efecto = String(evento?.dataTransfer?.dropEffect || evento?.dataTransfer?.effectAllowed || "")
+            .toLowerCase();
+        return efecto.includes("move") || seleccionNoColapsadaEnEditor(editor, evento);
+    }
+
+    function esEventoBorradoManual(evento, editor, opciones = {}) {
+        if (!evento) return false;
+        const tipoEvento = String(evento.type || "").toLowerCase();
+        if (tipoEvento === "cut") return true;
+        if (tipoEvento === "beforeinput") {
+            return esInputTypeBorrado(evento.inputType) || esReemplazoDeSeleccion(evento, editor, opciones);
+        }
+        if (tipoEvento === "keydown") return esTeclaBorrado(evento);
+        return esArrastreConBorrado(evento, editor);
+    }
+
+    function cancelarEventoBorrado(evento) {
+        if (typeof evento?.preventDefault === "function") evento.preventDefault();
+        if (typeof evento?.stopImmediatePropagation === "function") evento.stopImmediatePropagation();
+        if (typeof evento?.stopPropagation === "function") evento.stopPropagation();
+    }
+
+    function capturarEstadoEditor(editor) {
+        if (!editor || typeof editor.innerHTML !== "string") return null;
+        return { html: editor.innerHTML };
+    }
+
+    function restaurarEstadoEditor(editor, estado) {
+        if (!editor || !estado || typeof estado.html !== "string") return false;
+        editor.innerHTML = estado.html;
+        if (typeof editor.focus === "function") editor.focus();
+        return true;
+    }
+
+    function instalarBloqueoBorradoManual(editor, estaActivo) {
+        if (!editor || typeof editor.addEventListener !== "function") {
+            return function () {};
+        }
+
+        const leerActivo = typeof estaActivo === "function" ? estaActivo : function () { return false; };
+        let ultimoEstadoSeguro = capturarEstadoEditor(editor);
+        let restauracionPendiente = null;
+        let composicionIniciadaEnCaret = false;
+        const bloquear = function (evento) {
+            const tipoEvento = String(evento?.type || "").toLowerCase();
+            if (tipoEvento === "compositionstart") {
+                const reemplazaSeleccion = seleccionNoColapsadaEnEditor(editor, evento);
+                composicionIniciadaEnCaret = !reemplazaSeleccion;
+                if (!leerActivo() || !reemplazaSeleccion) return;
+                cancelarEventoBorrado(evento);
+                return;
+            }
+            if (tipoEvento === "compositionend") {
+                composicionIniciadaEnCaret = false;
+                return;
+            }
+            if (!leerActivo()) return;
+            const opcionesEvento = { composicionIniciadaEnCaret };
+            if (!esEventoBorradoManual(evento, editor, opcionesEvento)) {
+                if (tipoEvento === "beforeinput") {
+                    restauracionPendiente = null;
+                }
+                return;
+            }
+            // Solo un beforeinput que el navegador declara no cancelable puede
+            // necesitar rollback. Guardar una instantánea tras keydown/cut/drag
+            // dejaría estado obsoleto que podría revertir una mutación legítima
+            // posterior del propio ciclo de juego.
+            restauracionPendiente = tipoEvento === "beforeinput" && evento.cancelable === false
+                ? {
+                    estado: capturarEstadoEditor(editor) || ultimoEstadoSeguro,
+                    reemplazo: esReemplazoDeSeleccion(evento, editor, opcionesEvento)
+                }
+                : null;
+            cancelarEventoBorrado(evento);
+        };
+        const vigilarInput = function (evento) {
+            if (!leerActivo()) {
+                ultimoEstadoSeguro = capturarEstadoEditor(editor);
+                restauracionPendiente = null;
+                return;
+            }
+            const tipo = String(evento?.inputType || "");
+            const borrarSinBeforeInput = esInputTypeBorrado(tipo);
+            const reemplazoNoCancelable = Boolean(restauracionPendiente?.reemplazo && tipo.toLowerCase().startsWith("insert"));
+            const mutacionSinTipoTrasBloqueo = Boolean(restauracionPendiente && !tipo);
+            if (!borrarSinBeforeInput && !reemplazoNoCancelable && !mutacionSinTipoTrasBloqueo) {
+                ultimoEstadoSeguro = capturarEstadoEditor(editor);
+                restauracionPendiente = null;
+                return;
+            }
+
+            const estado = restauracionPendiente?.estado || ultimoEstadoSeguro;
+            restaurarEstadoEditor(editor, estado);
+            restauracionPendiente = null;
+            ultimoEstadoSeguro = capturarEstadoEditor(editor) || estado;
+            cancelarEventoBorrado(evento);
+        };
+        const eventos = [
+            "keydown",
+            "beforeinput",
+            "cut",
+            "dragstart",
+            "drop",
+            "compositionstart",
+            "compositionend"
+        ];
+        eventos.forEach((tipo) => editor.addEventListener(tipo, bloquear, true));
+        editor.addEventListener("input", vigilarInput, true);
+
+        return function desinstalarBloqueoBorradoManual() {
+            if (typeof editor.removeEventListener !== "function") return;
+            eventos.forEach((tipo) => editor.removeEventListener(tipo, bloquear, true));
+            editor.removeEventListener("input", vigilarInput, true);
+        };
+    }
+
     global.ScribEditorDeletion = {
         borrarCaracterEditableJuntoAProtegido,
         borrarUltimoCaracterEditable,
+        esEventoBorradoManual,
+        esInputTypeBorrado,
+        esReemplazoDeSeleccion,
+        esTeclaBorrado,
         esNodoProtegido,
+        instalarBloqueoBorradoManual,
         obtenerNodosTextoEditablesAlrededor,
         obtenerUltimoNodoTextoEditable
     };

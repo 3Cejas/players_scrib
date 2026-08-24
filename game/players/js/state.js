@@ -3335,6 +3335,16 @@ let desventaja_activa_escritora = null;
 const RETRASO_TECLADO_LENTO_MS = 500;
 const RAYO_REDUCCION_K = 0.08;
 
+if (
+    window.ScribEditorDeletion
+    && typeof window.ScribEditorDeletion.instalarBloqueoBorradoManual === "function"
+) {
+    window.ScribEditorDeletion.instalarBloqueoBorradoManual(
+        texto,
+        () => bloquear_borrado_putada === true
+    );
+}
+
 function limpiar_bloqueo_putada() {
     bloquear_borrado_putada = false;
     putada_actual = "";
