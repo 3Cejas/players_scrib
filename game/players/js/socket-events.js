@@ -455,7 +455,7 @@ const MODOS = {
         }
         palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BONUS");
         definicion.innerHTML = "";
-        socket.emit("nueva_palabra", player);
+        socket.emit("nueva_palabra", { player, accion: "solicitar", modo_seq: modo_seq_actual });
         socket.on(enviar_palabra, data => {
           console.log(data)
             recibir_palabra(data);
@@ -476,7 +476,7 @@ const MODOS = {
         }
         palabra.innerHTML = traducirTituloModoEscritora("letra prohibida", "NIVEL LETRA PROHIBIDA");
         definicion.innerHTML = "";
-        socket.emit("nueva_palabra_musa", player);
+        socket.emit("nueva_palabra_musa", { player, accion: "solicitar", modo_seq: modo_seq_actual });
     },
 
     "letra bendita": function (data) {
@@ -492,7 +492,7 @@ const MODOS = {
         }
         palabra.innerHTML = traducirTituloModoEscritora("letra bendita", "NIVEL LETRA BENDITA");
         definicion.innerHTML = "";
-        socket.emit("nueva_palabra_musa", player);
+        socket.emit("nueva_palabra_musa", { player, accion: "solicitar", modo_seq: modo_seq_actual });
     },
 
     "texto borroso": function (data) {
@@ -544,7 +544,7 @@ const MODOS = {
         }
         palabra.innerHTML = traducirTituloModoEscritora("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
         definicion.innerHTML = "";
-        socket.emit("nueva_palabra_prohibida", player);
+        socket.emit("nueva_palabra_prohibida", { player, accion: "solicitar", modo_seq: modo_seq_actual });
         socket.on(enviar_palabra, data => {
             console.log("ESTA FUNCIONANDOOOOOO")
             recibir_palabra_prohibida(data);
@@ -634,6 +634,437 @@ texto.addEventListener("keydown", (evt) => {
         socket.emit('tecla_jugador', { player, code: evt.code || "", key: evt.key || "" });
     }
 });
+
+const MODOS_DESCARTE_INSPIRACION_ESCRITORA = new Set([
+    "palabras bonus",
+    "letra bendita",
+    "letra prohibida"
+]);
+const TIMEOUT_DESCARTE_INSPIRACION_MS = 6000;
+let descarte_inspiracion_en_vuelo = null;
+let aprovechamiento_inspiracion_en_vuelo = null;
+let secuencia_request_inspiracion = 0;
+let caret_previo_boton_descartar = null;
+let timeout_estado_descartar = null;
+let timeout_animacion_descartar = null;
+
+function crearRequestIdInspiracionEscritora(prefijo = "inspiracion") {
+    secuencia_request_inspiracion += 1;
+    const clientId = typeof obtenerClientIdSesionEscritora === "function"
+        ? obtenerClientIdSesionEscritora()
+        : `writer-${player || "x"}`;
+    return `${prefijo}-${clientId}-${Date.now().toString(36)}-${secuencia_request_inspiracion.toString(36)}`;
+}
+
+function normalizarMetaEntregaInspiracionEscritora(payload = {}) {
+    if (window.ScribInspiration && typeof window.ScribInspiration.normalizarMetaEntregaInspiracion === "function") {
+        return window.ScribInspiration.normalizarMetaEntregaInspiracion(payload);
+    }
+    const descartes = Math.max(0, Math.trunc(Number(payload?.descartes_consecutivos) || 0));
+    const factorFallback = descartes <= 0 ? 1 : (descartes === 1 ? 0.75 : (descartes === 2 ? 0.5 : 0.25));
+    const factorRaw = Number(payload?.factor_inspiracion);
+    const factor = Number.isFinite(factorRaw) ? Math.max(0, Math.min(1, factorRaw)) : factorFallback;
+    const valorRaw = Number(payload?.valor_inspiracion);
+    return {
+        inspiracion_id: String(payload?.inspiracion_id || "").trim(),
+        descartes_consecutivos: descartes,
+        factor_inspiracion: factor,
+        valor_inspiracion: Number.isFinite(valorRaw) ? Math.max(0, Math.min(1, valorRaw)) : factor,
+        porcentaje_tiempo: Math.round(factorFallback * 100)
+    };
+}
+
+function esModoDescartableInspiracionEscritora(modo = modo_actual) {
+    return MODOS_DESCARTE_INSPIRACION_ESCRITORA.has(String(modo || "").trim().toLowerCase());
+}
+
+function puedeDescartarInspiracionEscritora() {
+    return Boolean(
+        meta_inspiracion_activa_escritora?.inspiracion_id
+        && esModoDescartableInspiracionEscritora()
+        && asignada === true
+        && descarte_inspiracion_en_vuelo === null
+        && aprovechamiento_inspiracion_en_vuelo === null
+        && es_pausa !== true
+        && !estaResurreccionActiva()
+        && terminado !== true
+        && partida_global_finalizada !== true
+        && (!socket || socket.connected !== false)
+    );
+}
+
+function limpiarTimeoutEstadoDescartarInspiracionEscritora() {
+    if (timeout_estado_descartar) {
+        clearTimeout(timeout_estado_descartar);
+        timeout_estado_descartar = null;
+    }
+}
+
+function anunciarEstadoDescartarInspiracionEscritora(mensaje = "", duracionMs = 0) {
+    if (!inspiration_discard_status) return;
+    limpiarTimeoutEstadoDescartarInspiracionEscritora();
+    inspiration_discard_status.textContent = mensaje;
+    if (mensaje && duracionMs > 0) {
+        timeout_estado_descartar = setTimeout(() => {
+            timeout_estado_descartar = null;
+            if (inspiration_discard_status) inspiration_discard_status.textContent = "";
+        }, duracionMs);
+    }
+}
+
+function actualizarUiDescartarInspiracionEscritora(opciones = {}) {
+    if (!inspiration_discard || !inspiration_discard_button) return;
+    const meta = meta_inspiracion_activa_escritora;
+    const tieneEntrega = Boolean(meta?.inspiracion_id && esModoDescartableInspiracionEscritora());
+    inspiration_discard.hidden = !tieneEntrega;
+    inspiration_discard.classList.toggle("has-penalty", Boolean(tieneEntrega && meta.descartes_consecutivos > 0));
+    inspiration_discard.classList.toggle("is-pending", descarte_inspiracion_en_vuelo !== null);
+    inspiration_discard_button.disabled = !puedeDescartarInspiracionEscritora();
+    inspiration_discard_button.setAttribute(
+        "aria-label",
+        tJuego2P("writer.inspiration.discard_aria", {}, "Descartar inspiracion. Atajo F8")
+    );
+
+    const descartes = tieneEntrega ? Math.max(0, Number(meta.descartes_consecutivos) || 0) : 0;
+    if (inspiration_discard_penalty) {
+        inspiration_discard_penalty.hidden = descartes <= 0;
+    }
+    if (inspiration_discard_streak) {
+        inspiration_discard_streak.textContent = descartes > 0
+            ? tJuego2P("writer.inspiration.streak", { count: descartes }, `RACHA x${descartes}`)
+            : "";
+    }
+    if (inspiration_discard_effect) {
+        const scorePercent = Math.round((Number(meta?.factor_inspiracion) || 0) * 100);
+        const timePercent = Number(meta?.porcentaje_tiempo) || 100;
+        const esMusa = meta?.es_musa === true;
+        const modoNormalizado = String(modo_actual || "").trim().toLowerCase();
+        const esModoLetras = modoNormalizado === "letra bendita" || modoNormalizado === "letra prohibida";
+        const clavePenalizacion = esModoLetras
+            ? "writer.inspiration.penalty_score"
+            : (esMusa ? "writer.inspiration.penalty" : "writer.inspiration.penalty_time_final");
+        const fallbackPenalizacion = esModoLetras
+            ? `ESTA INSPIRACION: MARCADOR ${scorePercent}%`
+            : (esMusa
+                ? `ESTA INSPIRACION: TIEMPO ${timePercent}% · MARCADOR ${scorePercent}%`
+                : `ESTA INSPIRACION: TIEMPO ${timePercent}% · PUNTUACION FINAL ${scorePercent}%`);
+        inspiration_discard_effect.textContent = descartes > 0
+            ? tJuego2P(
+                clavePenalizacion,
+                { time: timePercent, score: scorePercent },
+                fallbackPenalizacion
+            )
+            : "";
+    }
+
+    if (opciones.animarEntrada === true && tieneEntrega) {
+        inspiration_discard.classList.remove("is-arriving");
+        void inspiration_discard.offsetWidth;
+        inspiration_discard.classList.add("is-arriving");
+        if (timeout_animacion_descartar) clearTimeout(timeout_animacion_descartar);
+        timeout_animacion_descartar = setTimeout(() => {
+            timeout_animacion_descartar = null;
+            if (inspiration_discard) inspiration_discard.classList.remove("is-arriving");
+        }, 520);
+    }
+}
+
+function resolverDescartePendientePorNuevaEntrega(metaNueva) {
+    if (!descarte_inspiracion_en_vuelo || !metaNueva?.inspiracion_id) return;
+    if (metaNueva.inspiracion_id === descarte_inspiracion_en_vuelo.inspiracion_id) return;
+    clearTimeout(descarte_inspiracion_en_vuelo.timeoutId);
+    descarte_inspiracion_en_vuelo = null;
+    anunciarEstadoDescartarInspiracionEscritora(
+        tJuego2P("writer.inspiration.discarded", {}, "Inspiracion descartada"),
+        1800
+    );
+}
+
+function registrarEntregaInspiracionEscritora(payload = {}, opciones = {}) {
+    const meta = normalizarMetaEntregaInspiracionEscritora(payload);
+    if (
+        meta.inspiracion_id
+        && meta_inspiracion_activa_escritora?.inspiracion_id === meta.inspiracion_id
+    ) {
+        return false;
+    }
+    resolverDescartePendientePorNuevaEntrega(meta);
+    const origenMusa = typeof payload?.origen_musa === "string"
+        ? payload.origen_musa.trim().toLowerCase()
+        : "";
+    meta_inspiracion_activa_escritora = {
+        ...meta,
+        origen_musa: origenMusa,
+        es_musa: opciones.esMusa === true
+            || payload?.origen_musa === true
+            || origenMusa === "musa"
+            || origenMusa === "musa_enemiga",
+        modo_seq: Number.isFinite(Number(payload?.modo_seq))
+            ? Math.max(0, Math.trunc(Number(payload.modo_seq)))
+            : modo_seq_actual,
+        tiempo_palabras_bonus: resolverTiempoPalabraAsignadaEscritora(payload)
+    };
+    if (definicion) definicion.classList.remove("is-discarding");
+    if (inspiration_discard) inspiration_discard.classList.remove("is-discarding", "is-discarded");
+    actualizarUiDescartarInspiracionEscritora({ animarEntrada: true });
+    return true;
+}
+
+function limpiarEntregaInspiracionEscritora(opciones = {}) {
+    if (descarte_inspiracion_en_vuelo && opciones.conservarPeticion !== true) {
+        clearTimeout(descarte_inspiracion_en_vuelo.timeoutId);
+        descarte_inspiracion_en_vuelo = null;
+    }
+    if (aprovechamiento_inspiracion_en_vuelo && opciones.conservarAprovechamiento !== true) {
+        clearTimeout(aprovechamiento_inspiracion_en_vuelo.timeoutId);
+        aprovechamiento_inspiracion_en_vuelo = null;
+    }
+    meta_inspiracion_activa_escritora = null;
+    if (inspiration_discard) {
+        inspiration_discard.classList.remove("is-arriving", "is-discarding", "has-penalty", "is-pending");
+    }
+    if (definicion) definicion.classList.remove("is-discarding");
+    actualizarUiDescartarInspiracionEscritora();
+    if (opciones.conservarMensaje !== true) {
+        anunciarEstadoDescartarInspiracionEscritora("");
+    }
+}
+
+function enfocarEditorTrasDescartarInspiracionEscritora(caretGuardado = null) {
+    if (!texto || es_pausa || estaResurreccionActiva() || terminado || partida_global_finalizada) return;
+    try {
+        texto.focus({ preventScroll: true });
+    } catch (_error) {
+        texto.focus();
+    }
+    const caret = caretGuardado && caretGuardado.caretNode ? caretGuardado : null;
+    if (caret && typeof nodoPerteneceAlEditor === "function" && nodoPerteneceAlEditor(caret.caretNode)) {
+        restaurarPosicionCaret(caret.caretNode, caret.caretPos);
+    }
+}
+
+function respuestaAckDescartarCorrecta(respuesta) {
+    return respuesta === true || Boolean(respuesta && typeof respuesta === "object" && respuesta.ok === true);
+}
+
+function normalizarResultadoAckAprovechamientoEscritora(respuesta = {}) {
+    if (window.ScribInspiration && typeof window.ScribInspiration.normalizarResultadoAprovechamiento === "function") {
+        return window.ScribInspiration.normalizarResultadoAprovechamiento(respuesta);
+    }
+    if (!respuesta || typeof respuesta !== "object") return null;
+    const resultado = respuesta.resultado && typeof respuesta.resultado === "object"
+        ? respuesta.resultado
+        : {};
+    const valorRaw = respuesta.valor_inspiracion ?? resultado.valor_inspiracion;
+    const tiempoRaw = respuesta.tiempo_otorgado ?? resultado.tiempo_otorgado;
+    if (
+        valorRaw === null || typeof valorRaw === "undefined" || String(valorRaw).trim() === ""
+        || tiempoRaw === null || typeof tiempoRaw === "undefined" || String(tiempoRaw).trim() === ""
+    ) {
+        return null;
+    }
+    const valorInspiracion = Number(valorRaw);
+    const tiempoOtorgado = Number(tiempoRaw);
+    if (!Number.isFinite(valorInspiracion) || !Number.isFinite(tiempoOtorgado)) return null;
+    return {
+        valor_inspiracion: Math.max(0, Math.min(1, valorInspiracion)),
+        tiempo_otorgado: tiempoOtorgado
+    };
+}
+
+function limpiarObjetivoInspiracionDescartadoEscritora(inspiracionId) {
+    if (meta_inspiracion_activa_escritora?.inspiracion_id !== inspiracionId) return false;
+    asignada = false;
+    palabra_actual = [];
+    limpiarDeteccionMultipalabraAsignada();
+    if (modo_actual === "palabras bonus" || modo_actual === "palabras prohibidas") {
+        texto.removeEventListener("keyup", listener_modo);
+    } else if (modo_actual === "letra bendita" || modo_actual === "letra prohibida") {
+        texto.removeEventListener("keyup", listener_modo1);
+        inspiracionLetraMusaActual = null;
+    }
+    if (definicion) {
+        definicion.innerHTML = "";
+        definicion.classList.remove("objetivo-nivel", "definicion-superbonus", "definicion--marquee");
+        aplicarMarqueeSiOverflowEscritora(definicion);
+        establecerContextoMusaDefinicion("");
+    }
+    meta_inspiracion_activa_escritora = null;
+    return true;
+}
+
+function completarDescarteInspiracionEscritora(requestId, respuesta, caretGuardado) {
+    if (!descarte_inspiracion_en_vuelo || descarte_inspiracion_en_vuelo.request_id !== requestId) return;
+    const pendiente = descarte_inspiracion_en_vuelo;
+    clearTimeout(pendiente.timeoutId);
+    descarte_inspiracion_en_vuelo = null;
+    const ok = respuestaAckDescartarCorrecta(respuesta);
+    if (!ok) {
+        asignada = pendiente.asignadaPrevia;
+        if (inspiration_discard) inspiration_discard.classList.remove("is-discarding");
+        if (definicion) definicion.classList.remove("is-discarding");
+        actualizarUiDescartarInspiracionEscritora();
+        anunciarEstadoDescartarInspiracionEscritora(
+            tJuego2P("writer.inspiration.discard_error", {}, "No se pudo descartar. Intentalo de nuevo."),
+            2800
+        );
+        enfocarEditorTrasDescartarInspiracionEscritora(caretGuardado);
+        return;
+    }
+
+    setTimeout(() => {
+        const objetivoRetirado = limpiarObjetivoInspiracionDescartadoEscritora(pendiente.inspiracion_id);
+        if (objetivoRetirado && inspiration_discard) {
+            inspiration_discard.classList.remove("is-discarding");
+            inspiration_discard.classList.add("is-discarded");
+            setTimeout(() => inspiration_discard?.classList.remove("is-discarded"), 420);
+        }
+        if (objetivoRetirado && definicion) definicion.classList.remove("is-discarding");
+        actualizarUiDescartarInspiracionEscritora();
+    }, 260);
+    anunciarEstadoDescartarInspiracionEscritora(
+        tJuego2P("writer.inspiration.discarded", {}, "Inspiracion descartada"),
+        1800
+    );
+    enfocarEditorTrasDescartarInspiracionEscritora(caretGuardado);
+}
+
+function descartarInspiracionActivaEscritora(caretGuardado = null) {
+    if (!puedeDescartarInspiracionEscritora()) return false;
+    const meta = { ...meta_inspiracion_activa_escritora };
+    const requestId = crearRequestIdInspiracionEscritora("descartar");
+    const payload = {
+        player,
+        inspiracion_id: meta.inspiracion_id,
+        modo_seq: Number.isFinite(Number(meta.modo_seq)) ? Number(meta.modo_seq) : modo_seq_actual,
+        request_id: requestId
+    };
+    const timeoutId = setTimeout(() => {
+        completarDescarteInspiracionEscritora(requestId, { ok: false, motivo: "timeout" }, caretGuardado);
+    }, TIMEOUT_DESCARTE_INSPIRACION_MS);
+    descarte_inspiracion_en_vuelo = {
+        request_id: requestId,
+        inspiracion_id: meta.inspiracion_id,
+        asignadaPrevia: asignada,
+        timeoutId
+    };
+    asignada = false;
+    if (inspiration_discard) inspiration_discard.classList.add("is-discarding");
+    if (definicion) definicion.classList.add("is-discarding");
+    actualizarUiDescartarInspiracionEscritora();
+    anunciarEstadoDescartarInspiracionEscritora(
+        tJuego2P("writer.inspiration.discarding", {}, "Descartando inspiracion...")
+    );
+    socket.emit("descartar_inspiracion", payload, (respuesta) => {
+        completarDescarteInspiracionEscritora(requestId, respuesta, caretGuardado);
+    });
+    return true;
+}
+
+function emitirAprovecharInspiracionEscritora(evento, opciones = {}) {
+    if (aprovechamiento_inspiracion_en_vuelo) return false;
+    const meta = meta_inspiracion_activa_escritora && typeof meta_inspiracion_activa_escritora === "object"
+        ? { ...meta_inspiracion_activa_escritora }
+        : null;
+    if (!meta?.inspiracion_id) {
+        if (typeof opciones.alRechazar === "function") opciones.alRechazar({ ok: false, motivo: "sin_entrega" });
+        return false;
+    }
+    const requestId = crearRequestIdInspiracionEscritora("aprovechar");
+    const modoSeq = Number.isFinite(Number(meta.modo_seq)) ? Number(meta.modo_seq) : modo_seq_actual;
+    const payload = {
+        player,
+        accion: "aprovechar",
+        inspiracion_id: meta.inspiracion_id,
+        request_id: requestId,
+        modo_seq: modoSeq
+    };
+    const completar = (respuesta) => {
+        if (!aprovechamiento_inspiracion_en_vuelo || aprovechamiento_inspiracion_en_vuelo.request_id !== requestId) {
+            return;
+        }
+        clearTimeout(aprovechamiento_inspiracion_en_vuelo.timeoutId);
+        aprovechamiento_inspiracion_en_vuelo = null;
+        const resultadoAck = normalizarResultadoAckAprovechamientoEscritora(respuesta);
+        const ok = Boolean(
+            respuesta
+            && typeof respuesta === "object"
+            && respuesta.ok === true
+            && resultadoAck
+        );
+        if (!ok) {
+            if (
+                meta_inspiracion_activa_escritora?.inspiracion_id === meta.inspiracion_id
+                && Number(modo_seq_actual) === Number(modoSeq)
+            ) {
+                asignada = true;
+                actualizarUiDescartarInspiracionEscritora();
+            }
+            if (typeof opciones.alRechazar === "function") opciones.alRechazar(respuesta || { ok: false });
+            return;
+        }
+        if (typeof opciones.alConfirmar === "function") opciones.alConfirmar(meta, respuesta, resultadoAck);
+    };
+    const timeoutId = setTimeout(() => completar({ ok: false, motivo: "timeout" }), TIMEOUT_DESCARTE_INSPIRACION_MS);
+    aprovechamiento_inspiracion_en_vuelo = {
+        request_id: requestId,
+        inspiracion_id: meta.inspiracion_id,
+        modo_seq: modoSeq,
+        timeoutId
+    };
+    asignada = false;
+    actualizarUiDescartarInspiracionEscritora();
+    socket.emit(evento, payload, completar);
+    return true;
+}
+
+function esF8InspiracionEscritora(evento = {}) {
+    return evento.code === "F8" || evento.key === "F8";
+}
+
+function manejarKeydownDescartarInspiracionEscritora(evento) {
+    const esAtajo = window.ScribInspiration?.esAtajoDescartarInspiracion
+        ? window.ScribInspiration.esAtajoDescartarInspiracion(evento)
+        : Boolean(
+            esF8InspiracionEscritora(evento)
+            && !evento.defaultPrevented
+            && !evento.repeat
+            && !evento.isComposing
+            && Number(evento.keyCode) !== 229
+            && !evento.altKey
+            && !evento.ctrlKey
+            && !evento.metaKey
+            && !evento.shiftKey
+        );
+    if (!esAtajo || !puedeDescartarInspiracionEscritora()) return;
+    const caretGuardado = guardarPosicionCaret();
+    evento.preventDefault();
+    evento.stopImmediatePropagation();
+    descartarInspiracionActivaEscritora(caretGuardado);
+}
+
+function manejarKeyupDescartarInspiracionEscritora(evento) {
+    const modoConObjetivoPorKeyup = esModoDescartableInspiracionEscritora()
+        || String(modo_actual || "").trim().toLowerCase() === "palabras prohibidas";
+    if (!esF8InspiracionEscritora(evento) || !modoConObjetivoPorKeyup) return;
+    evento.preventDefault();
+    evento.stopImmediatePropagation();
+}
+
+document.addEventListener("keydown", manejarKeydownDescartarInspiracionEscritora, true);
+document.addEventListener("keyup", manejarKeyupDescartarInspiracionEscritora, true);
+
+if (inspiration_discard_button) {
+    inspiration_discard_button.addEventListener("pointerdown", () => {
+        caret_previo_boton_descartar = guardarPosicionCaret();
+    });
+    inspiration_discard_button.addEventListener("click", () => {
+        const caretGuardado = caret_previo_boton_descartar || guardarPosicionCaret();
+        caret_previo_boton_descartar = null;
+        descartarInspiracionActivaEscritora(caretGuardado);
+        enfocarEditorTrasDescartarInspiracionEscritora(caretGuardado);
+    });
+}
 
 socket.on("idioma_actual", (payload = {}) => {
     if (window && typeof window.scribSetLanguage2P === "function") {
@@ -748,6 +1179,7 @@ socket.on('connect', () => {
     tiempo_seq_actual_escritora = 0;
     resurreccion_confirmacion_pendiente = false;
     sincronizarEstadoContadorEscritora(null, "");
+    limpiarEntregaInspiracionEscritora();
     actualizarEtiquetasCursorCalentamientoEscritor();
     socket.emit('registrar_escritor', {
         player,
@@ -761,11 +1193,13 @@ socket.on('connect', () => {
 });
 
 socket.on('disconnect', () => {
+    limpiarEntregaInspiracionEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
 });
 
 socket.on('connect_error', () => {
+    limpiarEntregaInspiracionEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
 });
@@ -1442,6 +1876,7 @@ socket.on("activar_modo", (data) => {
     }
     if (!esReactivacionModoPausado) {
         invalidarEstadoAsincronoEscritora();
+        limpiarEntregaInspiracionEscritora();
     }
     LIMPIEZAS[modo_actual](data);
     if (!esReactivacionModoPausado) {
@@ -1494,6 +1929,7 @@ socket.on('pausar_js', data => {
     LIMPIEZAS[modo_actual](data);
     tiempo_restante = TIEMPO_MODIFICADOR - (new Date().getTime() - tiempo_inicial.getTime());
     pausa();
+    actualizarUiDescartarInspiracionEscritora();
 });
 
 socket.on('fin', data => {
@@ -1568,6 +2004,7 @@ function limpiarInspiracionLetraMusa(data = {}) {
     }
     palabra_actual = [];
     inspiracionLetraMusaActual = null;
+    limpiarEntregaInspiracionEscritora();
     asignada = false;
     limpiarDeteccionMultipalabraAsignada();
     texto.removeEventListener("keyup", listener_modo1);
@@ -1587,6 +2024,7 @@ socket.on(inspirar, data => {
         return;
     }
     if (palabra != "") {
+        if (!registrarEntregaInspiracionEscritora(data, { esMusa: true })) return;
         inspiracionLetraMusaActual = {
             palabra,
             caduca_en_ts: Number(data && typeof data === "object" ? data.caduca_en_ts : 0) || 0
@@ -1603,6 +2041,7 @@ socket.on(inspirar, data => {
         animateCSS(".definicion", "flash");
         prepararDeteccionMultipalabraAsignada();
         asignada = true;
+        actualizarUiDescartarInspiracionEscritora();
         texto.removeEventListener("keyup", listener_modo1);
         listener_modo1 = function (e) { palabras_musas(e) };
         texto.addEventListener("keyup", listener_modo1);
@@ -1691,6 +2130,7 @@ function recibir_palabra(data) {
     if (!aceptarEventoModoEscritora(data, { actualizar: false })) {
         return;
     }
+    if (!registrarEntregaInspiracionEscritora(data)) return;
     animacion_modo();
     setBarraNivelClaseEscritora("bonus");
     const textoPalabra = extraerTextoPalabraEventoEscritora(data);
@@ -1729,6 +2169,7 @@ function recibir_palabra(data) {
     texto.removeEventListener("keyup", listener_modo);
     prepararDeteccionMultipalabraAsignada();
     asignada = true;
+    actualizarUiDescartarInspiracionEscritora();
     listener_modo = function (e) { modo_palabras_bonus(e) };
     texto.addEventListener("keyup", listener_modo);
     if (!es_pausa && modo_actual !== "tertulia") {
@@ -1746,6 +2187,7 @@ function recibir_palabra_prohibida(data) {
     if (!aceptarEventoModoEscritora(data, { actualizar: false })) {
         return;
     }
+    if (!registrarEntregaInspiracionEscritora(data)) return;
     animacion_modo();
     setBarraNivelClaseEscritora("prohibidas");
     const textoPalabra = extraerTextoPalabraEventoEscritora(data);
@@ -2410,6 +2852,7 @@ function refrescarUiIdiomaEscritora() {
 
     refrescarCabeceraModoActualEscritora();
     refrescarCountdownEscritora();
+    actualizarUiDescartarInspiracionEscritora();
 
     if (typeof quantityMenu !== "undefined" && quantityMenu && quantityMenu.style.display !== "none") {
         actualizarTextoCantidad();
@@ -2797,43 +3240,8 @@ function modo_palabras_bonus(e) {
 
         if (coincidenciaMultipalabra || palabraDetectadaToken) {
             texto.focus();
-            asignada = false;
-            limpiarDeteccionMultipalabraAsignada();
-            socket.emit("nueva_palabra", player);
-            const segundosBonus = resolverTiempoPalabraAsignadaEscritora({
-                tiempo_palabras_bonus,
-                palabras_var: palabra_actual
-            });
-            if (segundosBonus !== null) {
-                tiempo_palabras_bonus = segundosBonus;
-                emitirCambioTiempoEscritora(segundosBonus);
-            }
             const color = color_positivo;
-            const tiempo_feed = formatearTiempoPalabraAsignadaEscritora(segundosBonus, { modo: "palabras bonus" });
             const tipo = (definicion.dataset.origenMusa === "musa") ? "inspiracion" : "rae";
-            if (tipo === "inspiracion" && typeof mostrarFeedbackInspiracionConTiempoEscritora === "function") {
-                mostrarFeedbackInspiracionConTiempoEscritora(tiempo_feed, { color });
-            } else if (tiempo_feed) {
-                mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo });
-            }
-            const payloadFeedback = (tipo === "inspiracion")
-                ? construirPayloadFeedbackInspiracion({
-                    color,
-                    tiempo_feed,
-                    tipo,
-                    feedback_extra: {
-                        tiempo_feed: "+insp.",
-                        tipo: "inspiracion",
-                        color: "#79ffe1",
-                        claseExtra: "feedback-tiempo-float--musa-inspiracion"
-                    }
-                })
-                : { color, tiempo_feed, tipo };
-            socket.emit(feedback_de_j_x, payloadFeedback);
-            if (tipo === "inspiracion") {
-                activarFulgorInspiracionEscritora();
-                socket.emit("feedback_musa_inspiracion", { ...payloadFeedback, player });
-            }
 
             let inicioMarca = startingIndex;
             let finMarca = endingIndex;
@@ -2855,9 +3263,58 @@ function modo_palabras_bonus(e) {
             }
 
             const esMusa = definicion?.dataset?.origenMusa === "musa";
-            marcarPalabraBenditaActual(inicioMarca, finMarca, esMusa);
-            countChars(texto);
-            sendText();
+            emitirAprovecharInspiracionEscritora("nueva_palabra", {
+                alConfirmar(metaConfirmada, _respuesta, resultadoAck) {
+                    if (meta_inspiracion_activa_escritora?.inspiracion_id === metaConfirmada.inspiracion_id) {
+                        limpiarDeteccionMultipalabraAsignada();
+                    }
+                    const segundosBonus = Math.abs(resultadoAck.tiempo_otorgado);
+                    tiempo_palabras_bonus = segundosBonus;
+                    const tiempo_feed = formatearTiempoPalabraAsignadaEscritora(segundosBonus, { modo: "palabras bonus" });
+                    const payloadFeedback = construirPayloadFeedbackInspiracion({
+                        color,
+                        tiempo_feed,
+                        tipo,
+                        valor_inspiracion: resultadoAck.valor_inspiracion,
+                        tiempo_otorgado: resultadoAck.tiempo_otorgado,
+                        inspiracion_id: metaConfirmada.inspiracion_id,
+                        ...(tipo === "inspiracion" ? {
+                            feedback_extra: {
+                                tiempo_feed: "+insp.",
+                                tipo: "inspiracion",
+                                color: "#79ffe1",
+                                claseExtra: "feedback-tiempo-float--musa-inspiracion"
+                            }
+                        } : {})
+                    });
+                    if (tipo === "inspiracion" && typeof mostrarFeedbackInspiracionConTiempoEscritora === "function") {
+                        mostrarFeedbackInspiracionConTiempoEscritora(tiempo_feed, { color });
+                    } else if (tiempo_feed) {
+                        mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo });
+                    }
+                    socket.emit(feedback_de_j_x, payloadFeedback);
+                    if (tipo === "inspiracion") {
+                        activarFulgorInspiracionEscritora();
+                        socket.emit("feedback_musa_inspiracion", { ...payloadFeedback, player });
+                    }
+                    marcarPalabraBenditaActual(
+                        inicioMarca,
+                        finMarca,
+                        esMusa,
+                        resultadoAck.valor_inspiracion
+                    );
+                    countChars(texto);
+                    sendText();
+                    limpiarObjetivoInspiracionDescartadoEscritora(metaConfirmada.inspiracion_id);
+                    actualizarUiDescartarInspiracionEscritora();
+                },
+                alRechazar() {
+                    anunciarEstadoDescartarInspiracionEscritora(
+                        tJuego2P("writer.inspiration.use_error", {}, "La inspiracion ya no estaba disponible."),
+                        2600
+                    );
+                }
+            });
         }
     }
 }
@@ -2907,34 +3364,50 @@ function modo_palabras_prohibidas(e) {
                     .includes((palabra || "").toLowerCase()))
                 : palabra_actual;
             const palabraReportada = palabraEncontrada || textContent.substring(startingIndex, endingIndex);
-            socket.emit("intento_prohibido", { player, tipo: "palabra", valor: palabraReportada });
             texto.focus();
-            asignada = false;
-            limpiarDeteccionMultipalabraAsignada();
-            socket.emit("nueva_palabra_prohibida", player);
-            const segundosBase = resolverTiempoPalabraAsignadaEscritora({
-                tiempo_palabras_bonus,
-                palabras_var: palabra_actual
-            });
-            const deltaTiempo = segundosBase === null ? null : -Math.abs(segundosBase);
-            if (deltaTiempo !== null) {
-                tiempo_palabras_bonus = segundosBase;
-                emitirCambioTiempoEscritora(deltaTiempo);
-            }
             const color = color_negativo;
-            const tiempo_feed = formatearTiempoPalabraAsignadaEscritora(segundosBase, { modo: "palabras prohibidas" });
             const tipo = (definicion.dataset.origenMusa === "musa_enemiga") ? "inspiracion" : "lista_prohibidas";
-            if (tiempo_feed) {
-                mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo });
-            }
-            const payloadFeedback = (tipo === "inspiracion")
-                ? construirPayloadFeedbackInspiracion({ color, tiempo_feed, tipo })
-                : { color, tiempo_feed, tipo };
-            socket.emit(feedback_de_j_x, payloadFeedback);
-            if (tipo === "inspiracion") {
-                activarFulgorInspiracionEscritora();
-                socket.emit("feedback_musa_inspiracion", { ...payloadFeedback, player });
-            }
+            emitirAprovecharInspiracionEscritora("nueva_palabra_prohibida", {
+                alConfirmar(metaConfirmada, _respuesta, resultadoAck) {
+                    if (meta_inspiracion_activa_escritora?.inspiracion_id === metaConfirmada.inspiracion_id) {
+                        limpiarDeteccionMultipalabraAsignada();
+                    }
+                    socket.emit("intento_prohibido", { player, tipo: "palabra", valor: palabraReportada });
+                    const segundosBase = Math.abs(resultadoAck.tiempo_otorgado);
+                    const deltaTiempo = resultadoAck.tiempo_otorgado > 0
+                        ? -segundosBase
+                        : resultadoAck.tiempo_otorgado;
+                    tiempo_palabras_bonus = segundosBase;
+                    if (deltaTiempo !== 0) {
+                        emitirCambioTiempoEscritora(deltaTiempo);
+                    }
+                    const tiempo_feed = formatearTiempoPalabraAsignadaEscritora(segundosBase, { modo: "palabras prohibidas" });
+                    const payloadFeedback = construirPayloadFeedbackInspiracion({
+                        color,
+                        tiempo_feed,
+                        tipo,
+                        valor_inspiracion: resultadoAck.valor_inspiracion,
+                        tiempo_otorgado: resultadoAck.tiempo_otorgado,
+                        inspiracion_id: metaConfirmada.inspiracion_id
+                    });
+                    if (tiempo_feed) {
+                        mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo });
+                    }
+                    socket.emit(feedback_de_j_x, payloadFeedback);
+                    if (tipo === "inspiracion") {
+                        activarFulgorInspiracionEscritora();
+                        socket.emit("feedback_musa_inspiracion", { ...payloadFeedback, player });
+                    }
+                    limpiarObjetivoInspiracionDescartadoEscritora(metaConfirmada.inspiracion_id);
+                    actualizarUiDescartarInspiracionEscritora();
+                },
+                alRechazar() {
+                    anunciarEstadoDescartarInspiracionEscritora(
+                        tJuego2P("writer.inspiration.use_error", {}, "La inspiracion ya no estaba disponible."),
+                        2600
+                    );
+                }
+            });
         }
     }
 }
@@ -2982,17 +3455,9 @@ function palabras_musas(e) {
         console.log("Indices:", startingIndex, endingIndex); // Debugging
 
         if (coincidenciaMultipalabra || palabraEncontrada) {
-
-            definicion.innerHTML = "";
             texto.focus();
-            asignada = false;
-            limpiarDeteccionMultipalabraAsignada();
             const tiempo_feed = "+insp.";
             const color = "white";
-            mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo: "inspiracion" });
-            socket.emit("nueva_palabra_musa", player);
-            socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "inspiracion" });
-            activarFulgorInspiracionEscritora();
 
             let inicioMarca = startingIndex;
             let finMarca = endingIndex;
@@ -3012,11 +3477,41 @@ function palabras_musas(e) {
                     ? inicioMarca + palabraLower.length
                     : endingIndex;
             }
-
-            if (marcarPalabraMusaActual(inicioMarca, finMarca)) {
-                countChars(texto);
-                sendText();
-            }
+            emitirAprovecharInspiracionEscritora("nueva_palabra_musa", {
+                alConfirmar(metaConfirmada, _respuesta, resultadoAck) {
+                    if (meta_inspiracion_activa_escritora?.inspiracion_id === metaConfirmada.inspiracion_id) {
+                        limpiarDeteccionMultipalabraAsignada();
+                    }
+                    const payloadFeedback = construirPayloadFeedbackInspiracion({
+                        color,
+                        tiempo_feed,
+                        tipo: "inspiracion",
+                        valor_inspiracion: resultadoAck.valor_inspiracion,
+                        tiempo_otorgado: resultadoAck.tiempo_otorgado,
+                        inspiracion_id: metaConfirmada.inspiracion_id
+                    });
+                    mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo: "inspiracion" });
+                    socket.emit(feedback_de_j_x, payloadFeedback);
+                    socket.emit("feedback_musa_inspiracion", { ...payloadFeedback, player });
+                    activarFulgorInspiracionEscritora();
+                    if (marcarPalabraMusaActual(
+                        inicioMarca,
+                        finMarca,
+                        resultadoAck.valor_inspiracion
+                    )) {
+                        countChars(texto);
+                        sendText();
+                    }
+                    limpiarObjetivoInspiracionDescartadoEscritora(metaConfirmada.inspiracion_id);
+                    actualizarUiDescartarInspiracionEscritora();
+                },
+                alRechazar() {
+                    anunciarEstadoDescartarInspiracionEscritora(
+                        tJuego2P("writer.inspiration.use_error", {}, "La inspiracion ya no estaba disponible."),
+                        2600
+                    );
+                }
+            });
         }
     }
 }
@@ -3269,6 +3764,7 @@ function modo_letra_bendita(e) {
 }
 
 function limpieza(){
+    limpiarEntregaInspiracionEscritora();
     setPendienteAnimacionEntradaBarraVida(false);
     cancelarAnimacionEntradaBarraVida(tiempo);
     detenerProgresoNivelBarraEscritora(true);
@@ -3363,6 +3859,7 @@ function limpieza(){
 }
 
 function limpieza_final(){
+    limpiarEntregaInspiracionEscritora();
     setPendienteAnimacionEntradaBarraVida(false);
     cancelarAnimacionEntradaBarraVida(tiempo);
     detenerProgresoNivelBarraEscritora(true);
@@ -3430,6 +3927,7 @@ function pausa(){
         invalidarBorradoEscritora();
     }
     desactivar_borrar = true;
+    actualizarUiDescartarInspiracionEscritora();
 }
 
 function reanudar(){
@@ -3438,6 +3936,7 @@ function reanudar(){
     texto.contentEditable = "true";
 
     desactivar_borrar = false;
+    actualizarUiDescartarInspiracionEscritora();
     reanudarDesventajaActivaEscritora();
     
     texto.focus();

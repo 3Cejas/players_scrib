@@ -233,6 +233,24 @@ const construirPayloadFeedbackInspiracion = (basePayload = {}) => {
     const payload = { ...(basePayload || {}) };
     payload.modo_actual = typeof modo_actual === "string" ? modo_actual : "";
     payload.modo_seq = Number.isFinite(modo_seq_actual) ? modo_seq_actual : 0;
+    const metaActiva = meta_inspiracion_activa_escritora && typeof meta_inspiracion_activa_escritora === "object"
+        ? meta_inspiracion_activa_escritora
+        : {};
+    const valorInspiracion = Number(payload.valor_inspiracion);
+    if (Object.prototype.hasOwnProperty.call(payload, "valor_inspiracion") && Number.isFinite(valorInspiracion)) {
+        payload.valor_inspiracion = Math.max(0, Math.min(1, valorInspiracion));
+    } else {
+        delete payload.valor_inspiracion;
+    }
+    if (!payload.inspiracion_id && metaActiva.inspiracion_id) {
+        payload.inspiracion_id = String(metaActiva.inspiracion_id);
+    }
+    const tiempoOtorgado = Number(payload.tiempo_otorgado);
+    if (Object.prototype.hasOwnProperty.call(payload, "tiempo_otorgado") && Number.isFinite(tiempoOtorgado)) {
+        payload.tiempo_otorgado = tiempoOtorgado;
+    } else {
+        delete payload.tiempo_otorgado;
+    }
     const origenMusa = definicion?.dataset?.origenMusa
         ? String(definicion.dataset.origenMusa).trim().toLowerCase()
         : "";
@@ -595,6 +613,13 @@ let musa_regalo_estado = getEl("musa_regalo_estado");
 let palabra = getEl("palabra");
 let definicion = getEl("definicion");
 let metadatos = getEl("metadatos");
+let inspiration_discard = getEl("inspiration_discard");
+let inspiration_discard_button = getEl("inspiration_discard_button");
+let inspiration_discard_penalty = getEl("inspiration_discard_penalty");
+let inspiration_discard_streak = getEl("inspiration_discard_streak");
+let inspiration_discard_effect = getEl("inspiration_discard_effect");
+let inspiration_discard_status = getEl("inspiration_discard_status");
+let meta_inspiracion_activa_escritora = null;
 
 function setIndicadorGanadoraEscritora(visible, texto = TEXTO_GANADOR_ESCRITORA) {
     if (!metadatos) return;
@@ -2736,7 +2761,7 @@ function obtenerRangoPalabraActual() {
     return rango;
 }
 
-function marcarPalabraBenditaActual(inicio, fin, esMusa) {
+function marcarPalabraBenditaActual(inicio, fin, esMusa, valorInspiracionEntrega = null) {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
     const rango = Number.isInteger(inicio) && Number.isInteger(fin)
@@ -2751,6 +2776,12 @@ function marcarPalabraBenditaActual(inicio, fin, esMusa) {
     if (esMusa) {
         span.classList.add("palabra-bendita-musa");
     }
+    if (valorInspiracionEntrega === null || typeof valorInspiracionEntrega === "undefined") return;
+    const valorInspiracion = Number(valorInspiracionEntrega);
+    if (!Number.isFinite(valorInspiracion)) return;
+    span.dataset.inspirationValue = String(
+        Number.isFinite(valorInspiracion) ? Math.max(0, Math.min(1, valorInspiracion)) : 1
+    );
     span.setAttribute("contenteditable", "false");
     const fragmento = rango.extractContents();
     span.appendChild(fragmento);
@@ -2762,7 +2793,7 @@ function marcarPalabraBenditaActual(inicio, fin, esMusa) {
     sel.addRange(nuevoRango);
 }
 
-function marcarPalabraMusaActual(inicio, fin) {
+function marcarPalabraMusaActual(inicio, fin, valorInspiracionEntrega = null) {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return false;
     const rango = Number.isInteger(inicio) && Number.isInteger(fin)
@@ -2774,6 +2805,12 @@ function marcarPalabraMusaActual(inicio, fin) {
     if (rangoIntersecaPalabraMarcada(rango)) return false;
     const span = document.createElement("span");
     span.className = CLASE_PALABRA_MUSA_LOCAL;
+    if (valorInspiracionEntrega === null || typeof valorInspiracionEntrega === "undefined") return false;
+    const valorInspiracion = Number(valorInspiracionEntrega);
+    if (!Number.isFinite(valorInspiracion)) return false;
+    span.dataset.inspirationValue = String(
+        Number.isFinite(valorInspiracion) ? Math.max(0, Math.min(1, valorInspiracion)) : 1
+    );
     span.setAttribute("contenteditable", "false");
     const fragmento = rango.extractContents();
     span.appendChild(fragmento);
@@ -3462,4 +3499,3 @@ const serverUrl = isProduction
     : SERVER_URL_DEV;
 
 const socket = io(serverUrl, { autoConnect: false });
-

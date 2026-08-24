@@ -123,6 +123,72 @@
         return `${signo}${segundos} segs.`;
     }
 
+    function esAtajoDescartarInspiracion(evento = {}) {
+        const esF8 = evento.code === "F8" || evento.key === "F8";
+        if (!esF8) return false;
+        if (
+            evento.defaultPrevented ||
+            evento.repeat ||
+            evento.isComposing ||
+            Number(evento.keyCode) === 229 ||
+            evento.altKey ||
+            evento.ctrlKey ||
+            evento.metaKey ||
+            evento.shiftKey
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    function normalizarFactorInspiracion(valor, fallback = 1) {
+        const tieneValor = valor !== null && typeof valor !== "undefined" && String(valor).trim() !== "";
+        const tieneFallback = fallback !== null && typeof fallback !== "undefined" && String(fallback).trim() !== "";
+        const numero = tieneValor ? Number(valor) : Number.NaN;
+        const respaldo = tieneFallback ? Number(fallback) : 1;
+        const candidato = Number.isFinite(numero) ? numero : (Number.isFinite(respaldo) ? respaldo : 1);
+        return Math.max(0, Math.min(1, candidato));
+    }
+
+    function normalizarMetaEntregaInspiracion(payload = {}) {
+        const fuente = payload && typeof payload === "object" ? payload : {};
+        const inspiracionId = String(fuente.inspiracion_id || "").trim().slice(0, 160);
+        const descartes = Math.max(0, Math.trunc(Number(fuente.descartes_consecutivos) || 0));
+        const factorPorRacha = descartes <= 0 ? 1 : (descartes === 1 ? 0.75 : (descartes === 2 ? 0.5 : 0.25));
+        const factor = normalizarFactorInspiracion(fuente.factor_inspiracion, factorPorRacha);
+        const valor = normalizarFactorInspiracion(fuente.valor_inspiracion, factor);
+        const porcentajeTiempo = descartes <= 0 ? 100 : (descartes === 1 ? 75 : (descartes === 2 ? 50 : 25));
+        return {
+            inspiracion_id: inspiracionId,
+            descartes_consecutivos: descartes,
+            factor_inspiracion: factor,
+            valor_inspiracion: valor,
+            porcentaje_tiempo: porcentajeTiempo
+        };
+    }
+
+    function normalizarResultadoAprovechamiento(respuesta = {}) {
+        if (!respuesta || typeof respuesta !== "object" || respuesta.ok !== true) return null;
+        const resultado = respuesta.resultado && typeof respuesta.resultado === "object"
+            ? respuesta.resultado
+            : {};
+        const valorRaw = respuesta.valor_inspiracion ?? resultado.valor_inspiracion;
+        const tiempoRaw = respuesta.tiempo_otorgado ?? resultado.tiempo_otorgado;
+        if (
+            valorRaw === null || typeof valorRaw === "undefined" || String(valorRaw).trim() === ""
+            || tiempoRaw === null || typeof tiempoRaw === "undefined" || String(tiempoRaw).trim() === ""
+        ) {
+            return null;
+        }
+        const valorInspiracion = Number(valorRaw);
+        const tiempoOtorgado = Number(tiempoRaw);
+        if (!Number.isFinite(valorInspiracion) || !Number.isFinite(tiempoOtorgado)) return null;
+        return {
+            valor_inspiracion: normalizarFactorInspiracion(valorInspiracion),
+            tiempo_otorgado: tiempoOtorgado
+        };
+    }
+
     function calcularPreviewTiempoPalabra({ modo = "", texto = "" } = {}) {
         const modoActual = String(modo || "").trim();
         const palabra = String(texto || "").trim();
@@ -209,7 +275,11 @@
         calcularPreviewTiempoPalabra,
         calcularTiempoPalabra,
         extraerPalabraObjetivo,
+        esAtajoDescartarInspiracion,
         formatearTiempoPalabraAsignada,
+        normalizarFactorInspiracion,
+        normalizarMetaEntregaInspiracion,
+        normalizarResultadoAprovechamiento,
         normalizarTexto,
         normalizarSegundosTiempo,
         resolverTiempoPalabraAsignada,

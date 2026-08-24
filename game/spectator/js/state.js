@@ -1004,8 +1004,8 @@ function esInspiracionMusaEnemiga(payload) {
     return origen === "musa_enemiga";
 }
 
-function esFeedbackInspiracionVigenteEspectador(payload = {}) {
-    if (!payload || payload.tipo !== "inspiracion") return false;
+function esEventoInspiracionVigenteEspectador(payload = {}) {
+    if (!payload || payload.autoritativa !== true) return false;
     const seq = Number(payload.modo_seq);
     if (Number.isFinite(seq) && seq > 0 && seq < modo_seq_actual_espectador) {
         return false;
@@ -1020,15 +1020,15 @@ function esFeedbackInspiracionVigenteEspectador(payload = {}) {
     return true;
 }
 
-function actualizarBarraInspiracionDesdeFeedbackEspectador(escritoraId, payload = {}) {
-    if (!esFeedbackInspiracionVigenteEspectador(payload)) return;
-    const jugadora = Number(escritoraId) === 2 ? 2 : 1;
-    const esEnemiga = esInspiracionMusaEnemiga(payload);
-    if (jugadora === 1) {
-        increment(esEnemiga ? "red" : "blue");
-        return;
-    }
-    increment(esEnemiga ? "blue" : "red");
+function actualizarBarraInspiracionAutoritativaEspectador(payload = {}) {
+    if (!esEventoInspiracionVigenteEspectador(payload)) return;
+    const equipo = Number(payload.equipo);
+    if (equipo !== 1 && equipo !== 2) return;
+    const valorRaw = Number(payload && payload.valor_inspiracion);
+    const valorInspiracion = Number.isFinite(valorRaw)
+        ? Math.max(0, Math.min(1, valorRaw))
+        : 1;
+    increment(equipo === 1 ? "blue" : "red", valorInspiracion);
 }
 
 function limpiarSugerenciaMusaModoLetrasEspectador(escritoraId, payload = {}) {

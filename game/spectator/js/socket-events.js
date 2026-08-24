@@ -136,6 +136,10 @@ socket.on('nube_inspiracion_estado', (payload = {}) => {
     }
 });
 
+socket.on('inspiracion_aprovechada', (payload = {}) => {
+    actualizarBarraInspiracionAutoritativaEspectador(payload);
+});
+
 
 socket.on('actualizar_contador_musas', contador_musas => {
     console.log("actualizar_contador_musas")
@@ -1418,7 +1422,6 @@ socket.on('feedback_a_j2', data => {
                 ? "../../game/audio/PERDER PALABRA.mp3"
                 : "../../game/audio/GANAR PALABRA.mp3"
         );
-        actualizarBarraInspiracionDesdeFeedbackEspectador(1, data);
     }
 
     if (data.tipo == "lista_prohibidas" || data.tipo == "letra_prohibida") {
@@ -1469,7 +1472,6 @@ socket.on('feedback_a_j1', data => {
                 ? "../../game/audio/PERDER PALABRA.mp3"
                 : "../../game/audio/GANAR PALABRA.mp3"
         );
-        actualizarBarraInspiracionDesdeFeedbackEspectador(2, data);
     }
 
     if (data.tipo == "lista_prohibidas" || data.tipo == "letra_prohibida") {
@@ -2304,14 +2306,16 @@ function updateBar() {
 }
 
 
-function increment(color) {
+function increment(color, valor = 1) {
+    const cantidad = Number(valor);
+    const incremento = Number.isFinite(cantidad) ? Math.max(0, Math.min(1, cantidad)) : 1;
     if (inspiracion && inspiracion.style.display !== "block") {
         inspiracion.style.display = "block";
     }
     if (color === 'blue') {
-        blueCount++;
+        blueCount += incremento;
     } else if (color === 'red') {
-        redCount++;
+        redCount += incremento;
     }
     updateBar();
 }

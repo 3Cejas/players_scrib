@@ -76,6 +76,19 @@ test("partial totals add only the categories already revealed", () => {
     assert.deepEqual(score.totalesParciales(estado, 99), { 1: 56.66, 2: 43.34 });
 });
 
+test("final comparison preserves and displays weighted inspiration decimals", () => {
+    const payload = payloadCompleto();
+    payload.formula_version = "scrib-puntuacion-v2";
+    payload.categorias.find((categoria) => categoria.id === "bonus").valores = { 1: 1.75, 2: 0.5 };
+    const vistaBonus = score.obtenerVista(payload, 4);
+    const spectatorState = read("game/spectator/js/state.js");
+
+    assert.equal(vistaBonus.categoria.id, "bonus");
+    assert.deepEqual(vistaBonus.categoria.valores, { 1: 1.75, 2: 0.5 });
+    assert.match(spectatorState, /formatearNumeroPuntuacionEspectador\(valor\)/);
+    assert.match(spectatorState, /maximumFractionDigits:\s*Number\.isInteger\(seguro\) \? 0 : 2/);
+});
+
 test("control and spectator wire the final score protocol and accessible presentation", () => {
     const controlHtml = read("game/control/index.html");
     const controlActions = read("game/control/js/actions.js");

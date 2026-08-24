@@ -627,6 +627,163 @@ async function readWriterState(ctx, roleName) {
   });
 }
 
+async function readWriterInspirationState(ctx, roleName) {
+  return ctx.evaluate(roleName, () => {
+    const evalValue = (expression, fallback = null) => {
+      try {
+        const value = window.eval(expression);
+        return typeof value === "undefined" ? fallback : value;
+      } catch (_error) {
+        return fallback;
+      }
+    };
+    const editor = document.querySelector("#texto");
+    const selection = window.getSelection();
+    const metaRaw = evalValue(
+      "typeof meta_inspiracion_activa_escritora !== 'undefined' ? meta_inspiracion_activa_escritora : null",
+      null
+    );
+    const meta = metaRaw && typeof metaRaw === "object"
+      ? {
+          inspiracion_id: String(metaRaw.inspiracion_id || ""),
+          descartes_consecutivos: Number(metaRaw.descartes_consecutivos) || 0,
+          factor_inspiracion: Number(metaRaw.factor_inspiracion),
+          valor_inspiracion: Number(metaRaw.valor_inspiracion),
+          porcentaje_tiempo: Number(metaRaw.porcentaje_tiempo),
+          tiempo_palabras_bonus: Number(metaRaw.tiempo_palabras_bonus),
+          modo_seq: Number(metaRaw.modo_seq),
+          origen_musa: String(metaRaw.origen_musa || ""),
+          es_musa: metaRaw.es_musa === true
+        }
+      : null;
+    const targetRaw = evalValue(
+      "typeof palabra_actual !== 'undefined' ? palabra_actual : []",
+      []
+    );
+    const targets = Array.isArray(targetRaw)
+      ? targetRaw.map((value) => String(value || "")).filter(Boolean)
+      : [String(targetRaw || "")].filter(Boolean);
+    let caretPos = null;
+    if (editor && typeof window.obtenerCaretInfo === "function") {
+      const info = window.obtenerCaretInfo(editor);
+      caretPos = Number.isFinite(Number(info && info.caretPos)) ? Number(info.caretPos) : null;
+    } else if (editor && selection && selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
+      const range = selection.getRangeAt(0).cloneRange();
+      const pre = range.cloneRange();
+      pre.selectNodeContents(editor);
+      pre.setEnd(range.startContainer, range.startOffset);
+      caretPos = pre.toString().length;
+    }
+    const discardRoot = document.querySelector("#inspiration_discard");
+    const discardButton = document.querySelector("#inspiration_discard_button");
+    const effect = document.querySelector("#inspiration_discard_effect");
+    const definition = document.querySelector("#definicion");
+    return {
+      meta,
+      targets,
+      mode: String(evalValue("typeof modo_actual !== 'undefined' ? modo_actual : ''", "") || ""),
+      assigned: evalValue("typeof asignada !== 'undefined' ? asignada === true : false", false) === true,
+      text: String(editor && editor.textContent || ""),
+      html: String(editor && editor.innerHTML || ""),
+      definition: String(definition && definition.textContent || "").trim(),
+      caretPos,
+      discardHidden: Boolean(discardRoot && (discardRoot.hidden || window.getComputedStyle(discardRoot).display === "none")),
+      discardDisabled: Boolean(discardButton && discardButton.disabled),
+      discardEffect: String(effect && effect.textContent || "").trim()
+    };
+  });
+}
+
+async function installWriterInspirationProbe(ctx, roleName) {
+  await ctx.evaluate(roleName, () => {
+    if (window.__scribE2EInspirationProbeInstalled) return;
+    const clone = (value) => {
+      try {
+        return JSON.parse(JSON.stringify(value));
+      } catch (_error) {
+        return value;
+      }
+    };
+    const trackedUses = new Set(["nueva_palabra", "nueva_palabra_musa", "nueva_palabra_prohibida"]);
+    window.__scribE2EInspirationProbe = {
+      discards: [],
+      uses: [],
+      timeAdjustments: []
+    };
+    const originalEmit = socket.emit;
+    socket.emit = function patchedInspirationEmit(eventName, ...args) {
+      const isDiscard = eventName === "descartar_inspiracion";
+      const isUse = trackedUses.has(eventName)
+        && args[0]
+        && typeof args[0] === "object"
+        && args[0].accion === "aprovechar";
+      let entry = null;
+      if (isDiscard || isUse) {
+        entry = {
+          event: eventName,
+          payload: clone(args[0]),
+          ack: null,
+          ts: Date.now()
+        };
+        (isDiscard
+          ? window.__scribE2EInspirationProbe.discards
+          : window.__scribE2EInspirationProbe.uses).push(entry);
+        const callbackIndex = args.findIndex((value, index) => index > 0 && typeof value === "function");
+        if (callbackIndex >= 0) {
+          const callback = args[callbackIndex];
+          args[callbackIndex] = (response) => {
+            entry.ack = clone(response);
+            return callback(response);
+          };
+        }
+      }
+      return originalEmit.call(this, eventName, ...args);
+    };
+    socket.on("aumentar_tiempo_control", (payload = {}) => {
+      if (Number(payload.player) !== Number(window.eval("player"))) return;
+      window.__scribE2EInspirationProbe.timeAdjustments.push(clone(payload));
+    });
+    window.__scribE2EInspirationProbeInstalled = true;
+  });
+}
+
+async function readWriterInspirationProbe(ctx, roleName) {
+  return ctx.evaluate(roleName, () => JSON.parse(JSON.stringify(
+    window.__scribE2EInspirationProbe || { discards: [], uses: [], timeAdjustments: [] }
+  )));
+}
+
+async function installSpectatorInspirationProbe(ctx) {
+  await ctx.evaluate("spectator", () => {
+    if (window.__scribE2ESpectatorInspirationProbeInstalled) return;
+    const clone = (value) => {
+      try {
+        return JSON.parse(JSON.stringify(value));
+      } catch (_error) {
+        return value;
+      }
+    };
+    window.__scribE2ESpectatorInspirationFeedback = [];
+    window.__scribE2EAuthoritativeInspirations = [];
+    socket.on("feedback_a_j2", (payload = {}) => {
+      window.__scribE2ESpectatorInspirationFeedback.push(clone(payload));
+    });
+    socket.on("inspiracion_aprovechada", (payload = {}) => {
+      window.__scribE2EAuthoritativeInspirations.push(clone(payload));
+    });
+    window.__scribE2ESpectatorInspirationProbeInstalled = true;
+  });
+}
+
+async function readSpectatorInspirationProbe(ctx) {
+  return ctx.evaluate("spectator", () => ({
+    feedback: JSON.parse(JSON.stringify(window.__scribE2ESpectatorInspirationFeedback || [])),
+    authoritative: JSON.parse(JSON.stringify(window.__scribE2EAuthoritativeInspirations || [])),
+    blueCount: Number(window.blueCount),
+    redCount: Number(window.redCount)
+  }));
+}
+
 async function setWriterHtml(ctx, roleName, html) {
   await ctx.evaluate(roleName, (nextHtml) => {
     const editor = document.querySelector("#texto");
@@ -1872,6 +2029,279 @@ const coreSpecs = [
           return after !== null && malditaBefore2 !== null && after < malditaBefore2 ? after : false;
         },
         10000
+      );
+    }
+  },
+  {
+    name: "inspiration-discard-protocol-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "spectator", "musa1", "musa2"]);
+      await startGame(ctx);
+      await freezeWriterDecay(ctx, "writer1");
+      await installWriterInspirationProbe(ctx, "writer1");
+      await installSpectatorInspirationProbe(ctx);
+
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
+      const queuedWords = ["orbita", "brujula", "candil", "dalia", "esfera"];
+      for (const word of queuedWords) {
+        await emitMusaInspiration(ctx, "musa1", word);
+      }
+      await waitForMode(ctx, "palabras bonus", 8000);
+
+      const firstDelivery = await ctx.waitFor(
+        "writer1 receives initial discardable muse inspiration",
+        async () => {
+          const state = await readWriterInspirationState(ctx, "writer1");
+          return state.meta
+            && state.assigned
+            && state.meta.es_musa
+            && state.meta.factor_inspiracion === 1
+            && state.targets.length > 0
+            ? state
+            : false;
+        },
+        15000
+      );
+      ctx.assert(!firstDelivery.discardHidden, "discard control should be visible for a bonus inspiration");
+      ctx.assert(!firstDelivery.discardDisabled, "discard control should be enabled for an active bonus inspiration");
+
+      await ctx.setWriterText("writer1", "inicio medio final");
+      await placeCaretAtTextOffset(ctx, "writer1", 7);
+      const beforeF8 = await readWriterInspirationState(ctx, "writer1");
+      await pressWriterKey(ctx, "writer1", "F8", 1, { preserveCaret: true });
+
+      const afterFirstDiscard = await ctx.waitFor(
+        "first F8 discard delivers a 75 percent inspiration",
+        async () => {
+          const state = await readWriterInspirationState(ctx, "writer1");
+          return state.meta
+            && state.meta.inspiracion_id !== firstDelivery.meta.inspiracion_id
+            && state.meta.descartes_consecutivos === 1
+            && state.meta.factor_inspiracion === 0.75
+            && state.assigned
+            ? state
+            : false;
+        },
+        10000
+      );
+      ctx.assert(afterFirstDiscard.text === beforeF8.text, "F8 must not insert or remove writer text");
+      ctx.assert(afterFirstDiscard.caretPos === beforeF8.caretPos, "F8 must preserve the writer caret position");
+      ctx.assert(/75/.test(afterFirstDiscard.discardEffect), "discard UI should expose the cumulative 75 percent penalty");
+
+      const firstDiscardAck = await ctx.waitFor(
+        "first discard receives authoritative ACK",
+        async () => {
+          const probe = await readWriterInspirationProbe(ctx, "writer1");
+          const entry = probe.discards[0];
+          return entry && entry.ack ? entry : false;
+        },
+        5000
+      );
+      ctx.assert(firstDiscardAck.ack.ok === true, "first discard ACK should be successful");
+      ctx.assert(firstDiscardAck.ack.factor_siguiente === 0.75, "first discard ACK should announce factor 0.75");
+
+      await pressWriterKey(ctx, "writer1", "F8", 1, { preserveCaret: true });
+      const halfDelivery = await ctx.waitFor(
+        "second F8 discard delivers a 50 percent inspiration",
+        async () => {
+          const state = await readWriterInspirationState(ctx, "writer1");
+          return state.meta
+            && state.meta.inspiracion_id !== afterFirstDiscard.meta.inspiracion_id
+            && state.meta.descartes_consecutivos === 2
+            && state.meta.factor_inspiracion === 0.5
+            && state.assigned
+            ? state
+            : false;
+        },
+        10000
+      );
+      ctx.assert(/50/.test(halfDelivery.discardEffect), "discard UI should expose the cumulative 50 percent penalty");
+
+      const halfDeliveryId = halfDelivery.meta.inspiracion_id;
+      await reloadRole(ctx, "writer1");
+      const restoredHalfDelivery = await ctx.waitFor(
+        "writer reconnect restores active inspiration id and discard streak",
+        async () => {
+          const state = await readWriterInspirationState(ctx, "writer1");
+          return state.meta
+            && state.meta.inspiracion_id === halfDeliveryId
+            && state.meta.descartes_consecutivos === 2
+            && state.meta.factor_inspiracion === 0.5
+            && state.assigned
+            ? state
+            : false;
+        },
+        12000
+      );
+      ctx.assert(restoredHalfDelivery.meta.inspiracion_id === halfDeliveryId, "reconnect must keep the same active inspiration id");
+      await freezeWriterDecay(ctx, "writer1");
+      await installWriterInspirationProbe(ctx, "writer1");
+
+      await pressWriterKey(ctx, "writer1", "F8", 1, { preserveCaret: true });
+      const quarterDelivery = await ctx.waitFor(
+        "third F8 discard delivers the 25 percent floor",
+        async () => {
+          const state = await readWriterInspirationState(ctx, "writer1");
+          return state.meta
+            && state.meta.inspiracion_id !== halfDeliveryId
+            && state.meta.descartes_consecutivos === 3
+            && state.meta.factor_inspiracion === 0.25
+            && state.meta.valor_inspiracion === 0.25
+            && state.meta.es_musa
+            && state.assigned
+            ? state
+            : false;
+        },
+        10000
+      );
+      ctx.assert(/25/.test(quarterDelivery.discardEffect), "discard UI should expose the cumulative 25 percent floor");
+
+      const thirdDiscard = await ctx.waitFor(
+        "third discard receives ACK",
+        async () => {
+          const probe = await readWriterInspirationProbe(ctx, "writer1");
+          const entry = probe.discards[0];
+          return entry && entry.ack ? entry : false;
+        },
+        5000
+      );
+      const replayAck = await ctx.evaluate("writer1", (payload) => new Promise((resolve) => {
+        socket.emit("descartar_inspiracion", payload, resolve);
+      }), thirdDiscard.payload);
+      ctx.assert(replayAck && replayAck.ok === true && replayAck.idempotente === true, "replayed discard must be acknowledged idempotently");
+      await ctx.sleep(300);
+      const afterReplay = await readWriterInspirationState(ctx, "writer1");
+      ctx.assert(
+        afterReplay.meta && afterReplay.meta.inspiracion_id === quarterDelivery.meta.inspiracion_id,
+        "idempotent replay must not skip the current inspiration"
+      );
+      ctx.assert(afterReplay.meta.descartes_consecutivos === 3, "idempotent replay must not increase the discard streak");
+
+      const expectedTime = quarterDelivery.meta.tiempo_palabras_bonus;
+      const acceptedWord = quarterDelivery.targets[0];
+      ctx.assert(expectedTime > 0 && expectedTime < 999, "quarter inspiration should carry a finite penalized time");
+      ctx.assert(Boolean(acceptedWord), "quarter inspiration should expose a target word");
+      await ctx.evaluate("writer1", () => {
+        window.eval(`
+          if (meta_inspiracion_activa_escritora) {
+            meta_inspiracion_activa_escritora.factor_inspiracion = 1;
+            meta_inspiracion_activa_escritora.valor_inspiracion = 1;
+            meta_inspiracion_activa_escritora.tiempo_palabras_bonus = 999;
+          }
+          tiempo_palabras_bonus = 999;
+        `);
+      });
+      await typeInWriter(ctx, "writer1", ` ${acceptedWord}`);
+
+      const useEntry = await ctx.waitFor(
+        "accepted inspiration receives server-authoritative value and time",
+        async () => {
+          const probe = await readWriterInspirationProbe(ctx, "writer1");
+          const entry = probe.uses.find((item) => item.payload
+            && item.payload.inspiracion_id === quarterDelivery.meta.inspiracion_id
+            && item.ack);
+          return entry || false;
+        },
+        10000
+      );
+      ctx.assert(useEntry.ack.ok === true, "use ACK should be successful");
+      ctx.assert(useEntry.ack.valor_inspiracion === 0.25, "server ACK must override forged client marker value");
+      ctx.assert(useEntry.ack.tiempo_otorgado === expectedTime, "server ACK must override forged client time");
+
+      const acceptedEffects = await ctx.waitFor(
+        "authoritative use effects reach writer and spectator",
+        async () => {
+          const writerProbe = await readWriterInspirationProbe(ctx, "writer1");
+          const timeAdjustment = writerProbe.timeAdjustments.find((item) => (
+            item.origen === "inspiracion_bonus"
+            && String(item.inspiracion_id) === quarterDelivery.meta.inspiracion_id
+          ));
+          const markedValue = await ctx.evaluate("writer1", () => {
+            const marked = Array.from(document.querySelectorAll("#texto [data-inspiration-value]"));
+            const last = marked[marked.length - 1];
+            return last ? Number(last.dataset.inspirationValue) : null;
+          });
+          const spectatorProbe = await readSpectatorInspirationProbe(ctx);
+          const feedback = spectatorProbe.feedback.find((item) => (
+            String(item.inspiracion_id) === quarterDelivery.meta.inspiracion_id
+          ));
+          const authoritative = spectatorProbe.authoritative.find((item) => (
+            String(item.inspiracion_id) === quarterDelivery.meta.inspiracion_id
+          ));
+          return timeAdjustment
+            && markedValue === 0.25
+            && feedback
+            && Number(feedback.valor_inspiracion) === 0.25
+            && authoritative
+            && authoritative.autoritativa === true
+            && Number(authoritative.equipo) === 1
+            && Number(authoritative.valor_inspiracion) === 0.25
+            && spectatorProbe.blueCount === 0.25
+            ? { timeAdjustment, markedValue, spectatorProbe, feedback, authoritative }
+            : false;
+        },
+        10000
+      );
+      ctx.assert(acceptedEffects.timeAdjustment.secs === expectedTime, "authoritative server time adjustment must match the ACK");
+      ctx.assert(acceptedEffects.timeAdjustment.tiempo_seq > 0, "authoritative time adjustment should carry a monotonic time sequence");
+      ctx.assert(acceptedEffects.markedValue === 0.25, "writer score marker must retain the authoritative fractional value");
+      ctx.assert(acceptedEffects.spectatorProbe.redCount === 0, "fractional blue inspiration must not increment red");
+
+      await ctx.waitForState(
+        "accepted quarter inspiration is recorded once in live stats",
+        (state) => state.stats.players[1].palabrasBenditas
+          .filter((word) => String(word).toLowerCase() === acceptedWord.toLowerCase()).length === 1,
+        10000
+      );
+
+      await ctx.emitHook("scrib_test:force_mode", { mode: "palabras prohibidas" });
+      await emitMusaInspiration(ctx, "musa2", "veneno");
+      await waitForMode(ctx, "palabras prohibidas", 8000);
+      const forbiddenDelivery = await ctx.waitFor(
+        "writer1 receives a non-discardable forbidden inspiration",
+        async () => {
+          const state = await readWriterInspirationState(ctx, "writer1");
+          return state.mode === "palabras prohibidas"
+            && state.meta
+            && state.meta.inspiracion_id
+            && state.targets.some((word) => word.toLowerCase() === "veneno")
+            && state.assigned
+            ? state
+            : false;
+        },
+        10000
+      );
+      ctx.assert(forbiddenDelivery.discardHidden, "discard control must stay hidden for forbidden words");
+      const probeBeforeForbiddenF8 = await readWriterInspirationProbe(ctx, "writer1");
+      await placeCaretAtTextOffset(ctx, "writer1", 2);
+      const forbiddenBeforeF8 = await readWriterInspirationState(ctx, "writer1");
+      await pressWriterKey(ctx, "writer1", "F8", 1, { preserveCaret: true });
+      await ctx.sleep(500);
+      const forbiddenAfterF8 = await readWriterInspirationState(ctx, "writer1");
+      const probeAfterForbiddenF8 = await readWriterInspirationProbe(ctx, "writer1");
+      ctx.assert(
+        probeAfterForbiddenF8.discards.length === probeBeforeForbiddenF8.discards.length,
+        "F8 must not emit a discard request in palabras prohibidas"
+      );
+      ctx.assert(forbiddenAfterF8.text === forbiddenBeforeF8.text, "forbidden-mode F8 must not alter text");
+      ctx.assert(forbiddenAfterF8.caretPos === forbiddenBeforeF8.caretPos, "forbidden-mode F8 must preserve caret");
+      ctx.assert(forbiddenAfterF8.meta.inspiracion_id === forbiddenDelivery.meta.inspiracion_id, "forbidden-mode F8 must keep the active word");
+      ctx.assert(forbiddenAfterF8.definition === forbiddenBeforeF8.definition, "forbidden-mode F8 must keep the visible objective");
+
+      const forbiddenDirectAck = await ctx.evaluate("writer1", ({ inspirationId, modeSeq }) => new Promise((resolve) => {
+        socket.emit("descartar_inspiracion", {
+          player: window.eval("player"),
+          inspiracion_id: inspirationId,
+          modo_seq: modeSeq,
+          request_id: "e2e-forbidden-discard"
+        }, resolve);
+      }), {
+        inspirationId: forbiddenDelivery.meta.inspiracion_id,
+        modeSeq: forbiddenDelivery.meta.modo_seq
+      });
+      ctx.assert(
+        forbiddenDirectAck && forbiddenDirectAck.ok === false && forbiddenDirectAck.code === "MODE_NOT_DISCARDABLE",
+        "server must authoritatively reject discards in palabras prohibidas"
       );
     }
   },

@@ -877,6 +877,12 @@ function obtenerResumenJugadorStatsControl(playerId) {
     const textoEl = playerId === 2 ? texto2 : texto1;
     const html = textoEl && typeof textoEl.innerHTML === "string" ? textoEl.innerHTML : "";
     const palabrasBenditas = extraerPalabrasConClase(html, CLASES_PALABRAS_DESTACADAS_PDF);
+    const valorInspiracionCalculado = window.ScribInspirationScore
+        ? window.ScribInspirationScore.sumarDesdeHtml(html, CLASES_PALABRAS_DESTACADAS_PDF)
+        : null;
+    const valorInspiracion = Number.isFinite(valorInspiracionCalculado)
+        ? valorInspiracionCalculado
+        : palabrasBenditas.length;
     const palabrasMalditasMap = resumenPartida.palabrasProhibidasUsadas[playerId];
     const palabrasMalditas = palabrasMalditasMap && typeof palabrasMalditasMap.keys === "function"
         ? Array.from(palabrasMalditasMap.keys()).map((valor) => String(valor).toUpperCase()).sort()
@@ -898,6 +904,7 @@ function obtenerResumenJugadorStatsControl(playerId) {
         letrasBenditas: Array.from(resumenPartida.letrasBenditas).sort(),
         letrasMalditas: Array.from(resumenPartida.letrasMalditas).sort(),
         palabrasBenditas,
+        valorInspiracion,
         palabrasMalditas,
         intentosLetraProhibida: Number(resumenPartida.intentosLetraProhibida[playerId] || 0),
         intentosPalabraProhibida: Number(resumenPartida.intentosPalabraProhibida[playerId] || 0)
@@ -1018,4 +1025,3 @@ actualizarNombresConexiones();
 if (window.actualizarBotonesTeleprompterCarga) {
     window.actualizarBotonesTeleprompterCarga();
 }
-
