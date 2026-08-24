@@ -237,6 +237,7 @@ test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
     "index.html": "./game/js/activity-heartbeat.js?v=20260824a",
     "1p_scrib/index.html": "../game/js/activity-heartbeat.js?v=20260824a",
     "1p_scrib/game/index.html": "../../game/js/activity-heartbeat.js?v=20260824a",
+    "game/repentizados-demo.html": "./js/activity-heartbeat.js?v=20260824a",
     "game/s7/index.html": "../js/activity-heartbeat.js?v=20260824a"
   };
   for (const [page, asset] of Object.entries(standalonePages)) {
