@@ -11,6 +11,33 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const normalizarFirmaMusaPublico = (payload = {}, opciones = {}) => {
+    if (window.ScribInspiration && typeof window.ScribInspiration.normalizarFirmaMusa === "function") {
+        return window.ScribInspiration.normalizarFirmaMusa(payload, opciones);
+    }
+    const valor = payload && typeof payload === "object"
+        ? (payload.musa_nombre || payload.nombre_musa || payload.musa || "")
+        : payload;
+    const nombre = String(valor || "").trim().slice(0, 24).toUpperCase() || (opciones.fallback === false ? "" : "MUSA");
+    return { autores: nombre ? [nombre] : [], texto: nombre, completo: nombre };
+};
+const crearNodoFirmaMusaPublico = (payload = {}, clase = "") => {
+    const firma = normalizarFirmaMusaPublico(payload);
+    if (!firma.texto) return null;
+    const nodo = document.createElement("span");
+    nodo.className = ["inspiration-author", clase].filter(Boolean).join(" ");
+    nodo.title = firma.completo;
+    nodo.setAttribute("aria-label", `Musa: ${firma.completo}`);
+    const destello = document.createElement("span");
+    destello.className = "inspiration-author__spark";
+    destello.setAttribute("aria-hidden", "true");
+    destello.textContent = "✦";
+    const nombre = document.createElement("span");
+    nombre.className = "inspiration-author__name";
+    nombre.textContent = firma.texto;
+    nodo.append(destello, nombre);
+    return nodo;
+};
 // Reutiliza helpers globales de traduccion para evitar colisiones globales.
 const traducirStripModoMusa = (modo) => (
     (window && typeof window.scribTranslateModeStrip2P === "function")
@@ -1915,6 +1942,10 @@ const normalizarFinalCalentamientoMusa = (entrada) => {
     return {
         id: entrada.id,
         palabra: entrada.palabra.trim(),
+        musa_nombre: typeof (entrada.musa_nombre ?? entrada.nombre_musa) === "string"
+            ? (entrada.musa_nombre ?? entrada.nombre_musa)
+            : "",
+        musas: Array.isArray(entrada.musas) ? entrada.musas.slice(0, 6) : [],
         ts: Number(entrada.ts) || 0
     };
 };
@@ -2177,11 +2208,15 @@ const actualizarBloqueoCalentamientoMusa = (bloqueado, finalPalabra) => {
         calentamiento_final_id_previo = "";
         return;
     }
-    const palabraSegura = escapeHtml(finalPalabra.palabra);
-    calentamiento_final_musa.innerHTML = [
-        `<span class="calentamiento-final-label">${escapeHtml(tJuego2P("warmup.word_chosen", {}, "PALABRA ELEGIDA"))}</span>`,
-        `<span class="calentamiento-final-chip">${palabraSegura}</span>`
-    ].join(" ");
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "calentamiento-final-label";
+    etiqueta.textContent = tJuego2P("warmup.word_chosen", {}, "PALABRA ELEGIDA");
+    const palabra = document.createElement("span");
+    palabra.className = "calentamiento-final-chip";
+    palabra.textContent = finalPalabra.palabra;
+    calentamiento_final_musa.replaceChildren(etiqueta, palabra);
+    const firma = crearNodoFirmaMusaPublico(finalPalabra, "inspiration-author--final");
+    if (firma) calentamiento_final_musa.appendChild(firma);
     calentamiento_final_musa.classList.add("activa");
     if (calentamiento_final_id_previo !== finalPalabra.id) {
         calentamiento_final_musa.classList.remove("reveal");

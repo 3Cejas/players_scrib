@@ -591,6 +591,24 @@ function formatearSegundosInspiracionMusaControl(restanteMs) {
     return segundos > 0 ? `${segundos}s` : "--";
 }
 
+function obtenerFirmaInspiracionMusaControl(payload = {}) {
+    if (window.ScribInspiration && typeof window.ScribInspiration.normalizarFirmaMusa === "function") {
+        return window.ScribInspiration.normalizarFirmaMusa(payload, {
+            fallback: false,
+            maxAutores: 6,
+            maxNombre: 24,
+            maxVisibles: 2
+        });
+    }
+    const nombre = String(payload && (payload.musa_nombre ?? payload.musa) || "")
+        .replace(/[\u0000-\u001f\u007f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 24)
+        .toUpperCase();
+    return { autores: nombre ? [nombre] : [], texto: nombre, completo: nombre };
+}
+
 function normalizarEstadoPalabraMusaControl(payload = {}, playerFallback = null) {
     const data = payload && typeof payload === "object" ? { ...payload } : {};
     const player = normalizarEquipoTestigoControl(playerFallback || data.player || data.target_player || data.target);
@@ -618,6 +636,7 @@ function pintarTestigoPalabraMusaControl(player) {
     const tiempoEl = document.getElementById(`control_palabra_musa_j${id}_time`);
     const colaEl = document.getElementById(`control_palabra_musa_j${id}_queue`);
     const palabraEl = document.getElementById(`control_palabra_musa_j${id}_word`);
+    const autorEl = document.getElementById(`control_palabra_musa_j${id}_author`);
     if (!testigo) return false;
     const payload = estado_testigos_palabras_musas_control[id];
     const restanteMs = obtenerMsTestigoPalabraMusaControl(payload);
@@ -644,11 +663,19 @@ function pintarTestigoPalabraMusaControl(player) {
     if (palabraEl) {
         palabraEl.textContent = activo && palabraTexto ? palabraTexto : "-";
     }
+    const firma = obtenerFirmaInspiracionMusaControl(payload || {});
+    const mostrarAutor = Boolean(activo && firma.texto);
+    if (autorEl) {
+        autorEl.textContent = mostrarAutor ? `\u2726 ${firma.texto}` : "";
+        autorEl.hidden = !mostrarAutor;
+        autorEl.title = mostrarAutor ? `Inspiraci\u00f3n de ${firma.completo}` : "";
+    }
     const equipo = id === 2 ? "rojo" : "azul";
     const palabra = palabraTexto ? ` - ${palabraTexto}` : "";
+    const autora = mostrarAutor ? `, enviada por ${firma.completo}` : "";
     const segundos = Math.max(0, Math.ceil(restanteMs / 1000));
     testigo.title = activo
-        ? `Palabra de musas para escritxr ${equipo}${palabra}: ${segundos} segundos de inspiracion. Cola: ${cola}`
+        ? `Palabra de musas para escritxr ${equipo}${palabra}${autora}: ${segundos} segundos de inspiracion. Cola: ${cola}`
         : `Sin palabra de musas activa para escritxr ${equipo}. Cola: ${cola}`;
     return activo;
 }
@@ -2672,8 +2699,8 @@ const TIPOS_SOLICITUD_CALENTAMIENTO = new Set([
 let solicitud_calentamiento_actual = SOLICITUD_CALENTAMIENTO_POR_DEFECTO;
 let ultimo_payload_solicitud_calentamiento_control = { tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO };
 const estado_autofill_frase_final_calentamiento = {
-    1: { id: "", palabra: "" },
-    2: { id: "", palabra: "" }
+    1: { id: "", palabra: "", musa_nombre: "" },
+    2: { id: "", palabra: "", musa_nombre: "" }
 };
 
 function normalizarFinalCalentamientoControl(entrada) {
@@ -2682,19 +2709,27 @@ function normalizarFinalCalentamientoControl(entrada) {
     if (!palabra) return null;
     return {
         id: typeof entrada.id === "string" ? entrada.id.trim() : "",
-        palabra
+        palabra,
+        musa_nombre: obtenerFirmaInspiracionMusaControl(entrada).completo
     };
 }
 
 function sincronizarFraseFinalControlDesdeCalentamiento(equipo, dataEquipo = {}) {
     const input = equipo === 1 ? frase_final_j1 : frase_final_j2;
     if (!input) return;
-    const estadoPrevio = estado_autofill_frase_final_calentamiento[equipo] || { id: "", palabra: "" };
+    const autorEl = document.getElementById(`frase_final_musa_j${equipo}`);
+    const estadoPrevio = estado_autofill_frase_final_calentamiento[equipo] || { id: "", palabra: "", musa_nombre: "" };
     const finalCalentamiento = normalizarFinalCalentamientoControl(dataEquipo && dataEquipo.final);
     if (!finalCalentamiento) {
         estadoPrevio.id = "";
         estadoPrevio.palabra = "";
+        estadoPrevio.musa_nombre = "";
         estado_autofill_frase_final_calentamiento[equipo] = estadoPrevio;
+        if (autorEl) {
+            autorEl.textContent = "";
+            autorEl.hidden = true;
+            autorEl.title = "";
+        }
         return;
     }
 
@@ -2711,7 +2746,17 @@ function sincronizarFraseFinalControlDesdeCalentamiento(equipo, dataEquipo = {})
 
     estadoPrevio.id = idServidor;
     estadoPrevio.palabra = finalCalentamiento.palabra;
+    estadoPrevio.musa_nombre = finalCalentamiento.musa_nombre;
     estado_autofill_frase_final_calentamiento[equipo] = estadoPrevio;
+    if (autorEl) {
+        autorEl.textContent = finalCalentamiento.musa_nombre
+            ? `\u2726 ${finalCalentamiento.musa_nombre}`
+            : "";
+        autorEl.hidden = !finalCalentamiento.musa_nombre;
+        autorEl.title = finalCalentamiento.musa_nombre
+            ? `Inspiraci\u00f3n de ${finalCalentamiento.musa_nombre}`
+            : "";
+    }
 }
 
 function actualizarSolicitudCalentamientoControl(payload = {}) {

@@ -1278,7 +1278,6 @@ function limpiarInspiracionLetrasEspectador(definicionElemento) {
 
 function renderInspiracionLetrasEspectador(escritxr, data, definicionElemento, selectorAnimacion) {
     const palabra = typeof data === "string" ? data : data?.palabra;
-    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
     if (esPayloadLimpiezaInspiracionEspectador(data) || !palabra) {
         limpiarInspiracionLetrasEspectador(definicionElemento);
         return;
@@ -1289,10 +1288,9 @@ function renderInspiracionLetrasEspectador(escritxr, data, definicionElemento, s
       los espacios y saltos de lï¿½fÂ­nea inducidos por la indentaciï¿½fÂ³n.
       De este modo, no quedan espacios antes o despuï¿½fÂ©s de las comillas ï¿½,Â« ï¿½,Â».
     */
-    const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
     actualizarDefinicionConVisibilidad(
         definicionElemento,
-        `<span style="color: orange;">${musaLabel}</span><span style="color: white;">: </span><span style="color: white;">Podr&iacute;as escribir la palabra &laquo;</span><span style="color: lime; text-decoration: underline;">${escapeHtml(palabra)}</span><span style="color: white;">&raquo;</span>`,
+        `${construirFirmaMusaHtmlEspectador(data)}<span class="inspiration-guidance">Podr&iacute;as escribir la palabra &laquo;<span class="inspiration-guidance__word">${escapeHtml(palabra)}</span>&raquo;</span>`,
         true
     );
     animateCSS(selectorAnimacion, "flash");
@@ -1348,14 +1346,12 @@ function recibir_palabra(data, escritxr) {
         }
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
             const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";
-            definicionHTML = `${superbonusLabel}<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
+            definicionHTML = `${superbonusLabel}${construirFirmaMusaHtmlEspectador(data)}<span class="inspiration-guidance">Podr&iacute;as escribir esta palabra</span>`;
             aplicarSuperbonusDefinicionEspectador(definicion2, data);
             marcarPalabraInspirandoNube(1, palabraInspiracion, data);
         } else if (data?.origen_musa === "musa_enemiga") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
-            definicionHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>Me pega esta palabra</span>`;
+            definicionHTML = `${construirFirmaMusaHtmlEspectador(data, "is-enemy")}<span class="inspiration-guidance inspiration-guidance--enemy">Me pega esta palabra</span>`;
             aplicarSuperbonusDefinicionEspectador(definicion2, {});
             marcarPalabraInspirandoNube(2, palabraInspiracion, data);
         } else {
@@ -1379,14 +1375,12 @@ function recibir_palabra(data, escritxr) {
         }
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA";
             const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";
-            definicionHTML = `${superbonusLabel}<span style="color:lime;">${musaLabel}</span><span style="color: white;">: </span><span style='color: white;'>Podr&iacute;as escribir esta palabra</span>`;
+            definicionHTML = `${superbonusLabel}${construirFirmaMusaHtmlEspectador(data)}<span class="inspiration-guidance">Podr&iacute;as escribir esta palabra</span>`;
             aplicarSuperbonusDefinicionEspectador(definicion3, data);
             marcarPalabraInspirandoNube(2, palabraInspiracion, data);
         } else if (data?.origen_musa === "musa_enemiga") {
-            const musaLabel = data?.musa_nombre ? escapeHtml(data.musa_nombre) : "MUSA ENEMIGA";
-            definicionHTML = `<span style="color:red;">${musaLabel}</span>: <span style='color: orange;'>Me pega esta palabra</span>`;
+            definicionHTML = `${construirFirmaMusaHtmlEspectador(data, "is-enemy")}<span class="inspiration-guidance inspiration-guidance--enemy">Me pega esta palabra</span>`;
             aplicarSuperbonusDefinicionEspectador(definicion3, {});
             marcarPalabraInspirandoNube(1, palabraInspiracion, data);
         } else {

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260822c">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260824c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -18,13 +18,13 @@
 <body>
     <script src="../config.js"></script>
     <script src="../js/runtime.js?v=20260424a"></script>
-    <script src="../js/domains/inspiration.js?v=20260504e"></script>
+    <script src="../js/domains/inspiration.js?v=20260824c"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260424a"></script>
     <script src="../js/domains/resurrection.js?v=20260424a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260822c"></script>
+<script src="./js/actions.js?v=20260824c"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -312,6 +312,7 @@
                         <label id="param_frase_final_j1" class="param-frase-final param-frase-final--j1" for="frase_final_j1" data-final-phrase-player="1">
                             <span id="frase_final_heading_j1" class="frase-final-heading">FRASE FINAL</span>
                             <span id="frase_final_label_j1" class="frase_final_label frase_final_label--j1">ESCRITXR 1</span>
+                            <span id="frase_final_musa_j1" class="frase-final-musa-chip" hidden></span>
                             <span class="frase_final_editor frase_final_editor--j1">
                                 <input id="frase_final_j1" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
                                 <span id="frase_final_estado_j1" class="frase-final-save-state" aria-live="polite" aria-label="Frase final guardada">&#x2713;</span>
@@ -320,6 +321,7 @@
                         <label id="param_frase_final_j2" class="param-frase-final param-frase-final--j2" for="frase_final_j2" data-final-phrase-player="2">
                             <span id="frase_final_heading_j2" class="frase-final-heading">FRASE FINAL</span>
                             <span id="frase_final_label_j2" class="frase_final_label frase_final_label--j2">ESCRITXR 2</span>
+                            <span id="frase_final_musa_j2" class="frase-final-musa-chip" hidden></span>
                             <span class="frase_final_editor frase_final_editor--j2">
                                 <input id="frase_final_j2" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false">
                                 <span id="frase_final_estado_j2" class="frase-final-save-state" aria-live="polite" aria-label="Frase final guardada">&#x2713;</span>
@@ -553,7 +555,10 @@
                 <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Palabra de musas para Escritxr 1">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
                     <span class="level-status-witness__icon" aria-hidden="true">&#x1F3A8;</span>
-                    <span id="control_palabra_musa_j1_word" class="level-status-witness__word">-</span>
+                    <span class="level-status-witness__content">
+                        <span id="control_palabra_musa_j1_word" class="level-status-witness__word">-</span>
+                        <span id="control_palabra_musa_j1_author" class="level-status-witness__author" hidden></span>
+                    </span>
                     <span class="level-status-witness__meta">
                         <span id="control_palabra_musa_j1_time" class="level-status-witness__time">--</span>
                         <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j1_queue">0</span></span>
@@ -562,7 +567,10 @@
                 <div id="control_palabra_musa_j2" class="level-status-witness level-status-witness--muse-word level-status-witness--j2" data-active="0" data-queued="0" data-team="2" aria-label="Palabra de musas para Escritxr 2">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
                     <span class="level-status-witness__icon" aria-hidden="true">&#x1F3A8;</span>
-                    <span id="control_palabra_musa_j2_word" class="level-status-witness__word">-</span>
+                    <span class="level-status-witness__content">
+                        <span id="control_palabra_musa_j2_word" class="level-status-witness__word">-</span>
+                        <span id="control_palabra_musa_j2_author" class="level-status-witness__author" hidden></span>
+                    </span>
                     <span class="level-status-witness__meta">
                         <span id="control_palabra_musa_j2_time" class="level-status-witness__time">--</span>
                         <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j2_queue">0</span></span>

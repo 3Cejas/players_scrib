@@ -2018,7 +2018,7 @@ socket.on(inspirar, data => {
         return;
     }
     const palabra = typeof data === "string" ? data : data?.palabra;
-    const musa_nombre = (data && typeof data === "object") ? (data.musa_nombre || data.musa) : "";
+    const firmaMusa = normalizarFirmaMusaEscritora(data);
     if (esPayloadLimpiezaInspiracion(data) || !palabra) {
         limpiarInspiracionLetraMusa(data);
         return;
@@ -2030,14 +2030,9 @@ socket.on(inspirar, data => {
             caduca_en_ts: Number(data && typeof data === "object" ? data.caduca_en_ts : 0) || 0
         };
         palabra_actual = [palabra];
-        const musaLabel = musa_nombre ? escapeHtml(musa_nombre) : "MUSA";
-        definicion.innerHTML = (`<span style='color: orange;'>${musaLabel}</span>` +
-        "<span style='color: white;'>: </span>" +
-        "<span style='color: white;'>Podr&iacute;as escribir la palabra &laquo;</span>" +
-        "<span style='color: lime; text-decoration: underline;'>" + escapeHtml(palabra) +
-        "</span><span style='color: white;'>&raquo;</span>");
+        definicion.innerHTML = `${construirFirmaMusaHtmlEscritora(data)}<span class="inspiration-guidance">Podr&iacute;as escribir la palabra &laquo;<span class="inspiration-guidance__word">${escapeHtml(palabra)}</span>&raquo;</span>`;
         aplicarMarqueeSiOverflowEscritora(definicion);
-        establecerContextoMusaDefinicion("musa", musa_nombre);
+        establecerContextoMusaDefinicion("musa", firmaMusa.completo);
         animateCSS(".definicion", "flash");
         prepararDeteccionMultipalabraAsignada();
         asignada = true;
@@ -2141,17 +2136,17 @@ function recibir_palabra(data) {
     const superbonus = normalizarSuperbonusInspiracionEscritora(data);
     palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BONUS");
     if (data.origen_musa === "musa") {
-        const musaLabel = data.musa_nombre ? String(data.musa_nombre) : "MUSA";
         const descripcion = superbonus.activo
-            ? `SUPERBONUS x${superbonus.repeticiones} - ${musaLabel}: Podr\u00edas escribir esta palabra`
-            : `${musaLabel}: Podr\u00edas escribir esta palabra`;
+            ? `SUPERBONUS x${superbonus.repeticiones} · Podr\u00edas escribir esta palabra`
+            : "Podr\u00edas escribir esta palabra";
         renderObjetivoNivelEscritora(textoPalabra, {
             tipo: "bonus",
             tiempoSegundos: tiempoAsignado,
             descripcion,
-            superbonus: data.superbonus
+            superbonus: data.superbonus,
+            autoria: data
         });
-        establecerContextoMusaDefinicion("musa", data.musa_nombre);
+        establecerContextoMusaDefinicion("musa", normalizarFirmaMusaEscritora(data).completo);
     } else {
         const descripcionBase = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[1] : data && data.definicion;
         const descripcion = normalizarTextoPlanoEscritora(descripcionBase);
@@ -2198,14 +2193,14 @@ function recibir_palabra_prohibida(data) {
     palabra.innerHTML = traducirTituloModoEscritora("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
 
     if (data.origen_musa === "musa_enemiga") {
-        const musaLabel = data.musa_nombre ? String(data.musa_nombre) : "MUSA ENEMIGA";
-        const descripcion = `${musaLabel}: me pega esta palabra`;
+        const descripcion = "Me pega esta palabra";
         renderObjetivoNivelEscritora(textoPalabra, {
             tipo: "prohibidas",
             tiempoSegundos: tiempoAsignado,
-            descripcion
+            descripcion,
+            autoria: data
         });
-        establecerContextoMusaDefinicion("musa_enemiga", data.musa_nombre);
+        establecerContextoMusaDefinicion("musa_enemiga", normalizarFirmaMusaEscritora(data).completo);
     } else {
         const descripcionBase = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[1] : data && data.definicion;
         const descripcion = normalizarTextoPlanoEscritora(descripcionBase);

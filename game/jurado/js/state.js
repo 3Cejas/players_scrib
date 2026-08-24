@@ -569,13 +569,24 @@ function renderStatsJurado(id) {
 function normalizarPalabraNubeJurado(entrada) {
     if (typeof entrada === "string") {
         const palabra = entrada.trim();
-        return palabra ? { palabra, count: 1 } : null;
+        return palabra ? { palabra, count: 1, musas: [] } : null;
     }
     const data = entrada && typeof entrada === "object" ? entrada : {};
     const palabra = String(data.palabra ?? data.texto ?? data.word ?? data.valor ?? "").trim();
     if (!palabra) return null;
-    const count = Math.max(1, extraerNumeroJurado(data.count ?? data.usos ?? data.total ?? data.veces ?? 1, 1));
-    return { palabra, count };
+    const count = Math.max(1, extraerNumeroJurado(
+        data.count ?? data.repeticiones ?? data.usos ?? data.total ?? data.veces ?? 1,
+        1
+    ));
+    const firma = window.ScribInspiration && typeof window.ScribInspiration.normalizarFirmaMusa === "function"
+        ? window.ScribInspiration.normalizarFirmaMusa(data, {
+            fallback: false,
+            maxAutores: 6,
+            maxNombre: 24,
+            maxVisibles: 2
+        })
+        : { autores: [], texto: "", completo: "" };
+    return { palabra, count, musas: firma.autores };
 }
 
 function aplicarNubeInspiracionJurado(payload = {}) {
@@ -605,8 +616,28 @@ function renderNubeJurado(id) {
         const span = document.createElement("span");
         span.className = `cloud-word cloud-word--${id}`;
         span.dataset.size = String(Math.min(3, Math.max(1, item.count)));
-        span.textContent = item.palabra;
-        span.title = `${item.count} usos`;
+        const palabra = document.createElement("span");
+        palabra.className = "cloud-word__text";
+        palabra.textContent = item.palabra;
+        span.appendChild(palabra);
+        const firma = window.ScribInspiration && typeof window.ScribInspiration.normalizarFirmaMusa === "function"
+            ? window.ScribInspiration.normalizarFirmaMusa({ musas: item.musas }, {
+                fallback: false,
+                maxAutores: 6,
+                maxNombre: 24,
+                maxVisibles: 2
+            })
+            : { texto: "", completo: "" };
+        if (firma.texto) {
+            const autora = document.createElement("span");
+            autora.className = "cloud-word__author";
+            autora.textContent = `\u2726 ${firma.texto}`;
+            autora.title = `Inspiraci\u00f3n de ${firma.completo}`;
+            span.appendChild(autora);
+        }
+        const detalleAutora = firma.completo ? `, inspiraci\u00f3n de ${firma.completo}` : "";
+        span.title = `${item.count} usos${detalleAutora}`;
+        span.setAttribute("aria-label", `${item.palabra}, ${item.count} usos${detalleAutora}`);
         fragment.appendChild(span);
     });
     contenedor.appendChild(fragment);

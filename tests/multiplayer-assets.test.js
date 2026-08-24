@@ -8,23 +8,24 @@ const ASSET_VERSION = "20260504e";
 const CSS_VERSION = "20260505i";
 const PLAYER_DISCARD_VERSION = "20260824a";
 const PRE_SHOW_VERSION = "20260824b";
+const MUSE_AUTHOR_VERSION = "20260824c";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260822c";
 const LEVEL_TRANSITION_VERSION = "20260823a";
 const PLAYER_ACTIONS_VERSION = "20260504f";
-const PLAYER_STATE_VERSION = PLAYER_DISCARD_VERSION;
-const PLAYER_SOCKET_EVENTS_VERSION = PLAYER_DISCARD_VERSION;
-const SPECTATOR_STATE_VERSION = PRE_SHOW_VERSION;
-const SPECTATOR_SOCKET_EVENTS_VERSION = PRE_SHOW_VERSION;
-const JURY_CSS_VERSION = "20260506t";
-const JURY_STATE_VERSION = "20260506g";
+const PLAYER_STATE_VERSION = MUSE_AUTHOR_VERSION;
+const PLAYER_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
+const SPECTATOR_STATE_VERSION = MUSE_AUTHOR_VERSION;
+const SPECTATOR_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
+const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
+const JURY_STATE_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_SOCKET_EVENTS_VERSION = "20260506b";
-const CONTROL_CSS_VERSION = SCORE_ASSET_VERSION;
-const CONTROL_ACTIONS_VERSION = SCORE_ASSET_VERSION;
+const CONTROL_CSS_VERSION = MUSE_AUTHOR_VERSION;
+const CONTROL_ACTIONS_VERSION = MUSE_AUTHOR_VERSION;
 const CONTROL_STATE_VERSION = PLAYER_DISCARD_VERSION;
 const CONTROL_SOCKET_EVENTS_VERSION = SCORE_ASSET_VERSION;
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
-const PUBLIC_PLAYER_STATE_VERSION = PRE_SHOW_VERSION;
+const PUBLIC_PLAYER_STATE_VERSION = MUSE_AUTHOR_VERSION;
 const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = PRE_SHOW_VERSION;
 const MUSA_ASSIGNMENT_VERSION = "20260822d";
 const ACTOR_SELECTOR_VERSION = "20260505a";
@@ -54,20 +55,20 @@ test("multiplayer html references current changed shared assets", () => {
   ].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "dashboard-players.css", CSS_VERSION);
   });
-  assertIncludesAsset("game/players/index.html", "dashboard-players.css", PLAYER_DISCARD_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", PRE_SHOW_VERSION);
+  assertIncludesAsset("game/players/index.html", "dashboard-players.css", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", MUSE_AUTHOR_VERSION);
 
   ["game/players/index.html"].forEach((htmlRelPath) => {
-    assertIncludesAsset(htmlRelPath, "domains/inspiration.js", PLAYER_DISCARD_VERSION);
+    assertIncludesAsset(htmlRelPath, "domains/inspiration.js", MUSE_AUTHOR_VERSION);
     assertIncludesAsset(htmlRelPath, "js/i18n.js", PLAYER_DISCARD_VERSION);
   });
   assertIncludesAsset("game/actors/source/index.html", "domains/inspiration.js");
   assertIncludesAsset("game/actors/source/index.html", "js/i18n.js", LEVEL_TRANSITION_VERSION);
-  assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/i18n.js", PRE_SHOW_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
   assertIncludesAsset("game/spectator/index.html", "js/i18n.js", PRE_SHOW_VERSION);
-  assertIncludesAsset("game/control/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/control/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/inspiration-score.js", PLAYER_DISCARD_VERSION);
   assertIncludesAsset("game/control/index.html", "js/i18n.js", PLAYER_DISCARD_VERSION);
 
@@ -83,6 +84,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/spectator/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
 
   assertIncludesAsset("game/jurado/index.html", "index.css", JURY_CSS_VERSION);
+  assertIncludesAsset("game/jurado/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
   assertIncludesAsset("game/jurado/index.html", "js/state.js", JURY_STATE_VERSION);
   assertIncludesAsset("game/jurado/index.html", "js/socket-events.js", JURY_SOCKET_EVENTS_VERSION);
 
@@ -93,6 +95,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/control/index.html", "domains/credits.js");
 
   assertIncludesAsset("game/public/players/index.html", "js/actions.js", PUBLIC_PLAYER_ACTIONS_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "css/publico.css", MUSE_AUTHOR_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/state.js", PUBLIC_PLAYER_STATE_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/socket-events.js", PUBLIC_PLAYER_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/public/index.html", "js/i18n.js", MUSA_ASSIGNMENT_VERSION);
@@ -234,6 +237,7 @@ test("jury role exposes read-only judging workflow", () => {
   assert.match(css, /\.writer-board--one\s*\{[\s\S]*--writer-accent:\s*var\(--jury-blue\)/);
   assert.match(css, /\.writer-board--two\s*\{[\s\S]*--writer-accent:\s*var\(--jury-red\)/);
   assert.match(css, /\.cloud-board/);
+  assert.match(css, /\.cloud-word__author\s*\{/);
   assert.match(css, /\.jury-evaluation-board/);
   assert.match(css, /\.jury-eval-scoreboard\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
   assert.match(css, /\.criteria-row\s*\{[\s\S]*grid-template-columns:\s*minmax\(10rem, 1fr\) minmax\(8\.5rem, 0\.52fr\) minmax\(10rem, 1fr\);/);
@@ -287,6 +291,10 @@ test("jury role exposes read-only judging workflow", () => {
   assert.doesNotMatch(state, /crearStatCardJurado\("\\u\{1F3A8\} Musas"/);
   assert.doesNotMatch(state, /crearStatCardJurado\("Caracteres"/);
   assert.match(state, /function copiarResumenJurado\(\)/);
+  assert.match(state, /data\.count \?\? data\.repeticiones/);
+  assert.match(state, /window\.ScribInspiration\.normalizarFirmaMusa/);
+  assert.match(state, /autora\.textContent = `\\u2726 \$\{firma\.texto\}`/);
+  assert.match(state, /autora\.className = "cloud-word__author"/);
   assert.match(state, /window\.scribJurado/);
 
   assert.match(socketEvents, /socket\.emit\("registrar_jurado"\)/);
@@ -449,6 +457,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.doesNotMatch(html, /<span>DURACI&Oacute;N<\/span>/);
   assert.match(html, /id="level_status_witnesses" class="level-status-witnesses"[\s\S]*id="control_desventaja_activa"[\s\S]*id="control_desventaja_activa_icon"[\s\S]*id="control_desventaja_activa_time"[\s\S]*id="control_votacion_desventaja"[\s\S]*&#x1F5F3;&#xFE0F;[\s\S]*id="control_palabra_musa_j1"[\s\S]*id="control_palabra_musa_j1_word"[\s\S]*id="control_palabra_musa_j1_time"[\s\S]*id="control_palabra_musa_j1_queue"[\s\S]*id="control_palabra_musa_j2"[\s\S]*id="control_palabra_musa_j2_word"[\s\S]*id="control_palabra_musa_j2_time"[\s\S]*id="control_palabra_musa_j2_queue"/);
   assert.match(html, /id="control_palabra_musa_j1"[\s\S]*&#x1F3A8;[\s\S]*id="control_palabra_musa_j2"[\s\S]*&#x1F3A8;/);
+  assert.match(html, /id="control_palabra_musa_j1_author" class="level-status-witness__author" hidden/);
+  assert.match(html, /id="control_palabra_musa_j2_author" class="level-status-witness__author" hidden/);
   assert.doesNotMatch(html, />M1<|>M2</);
   assert.doesNotMatch(html, /id="control_desventaja_j1"|id="control_desventaja_j2"|D AZUL|D ROJO/);
   assert.doesNotMatch(html, /level-legend|LB: Letra Bendita|LP: Letra Prohibida/);
@@ -487,6 +497,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /<tbody id="panel_parametros"[\s\S]*id="frase_final_j1"[\s\S]*id="frase_final_j2"/);
   assert.match(html, /id="param_frase_final_j1" class="param-frase-final param-frase-final--j1"[\s\S]*id="frase_final_heading_j1"[\s\S]*id="frase_final_label_j1"[\s\S]*id="frase_final_estado_j1"/);
   assert.match(html, /id="param_frase_final_j2" class="param-frase-final param-frase-final--j2"[\s\S]*id="frase_final_heading_j2"[\s\S]*id="frase_final_label_j2"[\s\S]*id="frase_final_estado_j2"/);
+  assert.match(html, /id="frase_final_musa_j1" class="frase-final-musa-chip" hidden/);
+  assert.match(html, /id="frase_final_musa_j2" class="frase-final-musa-chip" hidden/);
   assert.doesNotMatch(html, /frase-final-apply|onclick="frase_final\(1\)"|onclick="frase_final\(2\)">APLICAR/);
   assert.doesNotMatch(html, /id="panel_parametros_extra"/);
   assert.doesNotMatch(html, /<tbody id="panel_parametros"[\s\S]*class="conexion-panel"/);
@@ -530,6 +542,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /\.level-status-witness__icon--text\s*\{[\s\S]*font-family: "Retro-gaming"/);
   assert.match(css, /\.level-status-witness__label,[\s\S]*\.level-status-witness__word,[\s\S]*\.level-status-witness__time\s*\{[\s\S]*text-overflow: ellipsis;/);
   assert.match(css, /\.level-status-witness__word\s*\{[\s\S]*text-transform: uppercase;/);
+  assert.match(css, /\.level-status-witness__author\s*\{[\s\S]*text-overflow: ellipsis;/);
+  assert.match(css, /\.frase-final-musa-chip\s*\{[\s\S]*text-overflow: ellipsis;/);
   assert.match(css, /\.level-status-witness--muse-word \.level-status-witness__dot\s*\{[\s\S]*display: none;/);
   assert.match(css, /\.level-status-witness--muse-word \.level-status-witness__time\s*\{[\s\S]*font-variant-numeric: tabular-nums;/);
   assert.match(css, /\.level-status-witness__queue::before\s*\{[\s\S]*content: "Q";/);
@@ -764,12 +778,16 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(actions, /const estado_testigos_palabras_musas_control = \{ 1: null, 2: null \};/);
   assert.match(actions, /function sincronizarEstadoPalabrasMusasControl\(payload = \{\}\)/);
   assert.match(actions, /function formatearSegundosInspiracionMusaControl\(restanteMs\)/);
+  assert.match(actions, /function obtenerFirmaInspiracionMusaControl\(payload = \{\}\)/);
+  assert.match(actions, /autorEl\.textContent = mostrarAutor \? `\\u2726 \$\{firma\.texto\}` : "";/);
+  assert.match(actions, /autorEl\.hidden = !mostrarAutor;/);
   assert.match(actions, /tiempoEl\.textContent = activo \? formatearSegundosInspiracionMusaControl\(restanteMs\) : "--";/);
   assert.match(actions, /control_palabra_musa_j\$\{id\}_word/);
   assert.match(actions, /palabraEl\.textContent = activo && palabraTexto \? palabraTexto : "-";/);
   assert.match(actions, /control_palabra_musa_j\$\{id\}_time/);
   assert.match(actions, /data\.cola_palabras_musas/);
   assert.match(actions, /window\.sincronizarEstadoPalabrasMusasControl = sincronizarEstadoPalabrasMusasControl;/);
+  assert.match(actions, /musa_nombre: obtenerFirmaInspiracionMusaControl\(entrada\)\.completo/);
   assert.match(actions, /"frase_final_heading_j1", "mode\.name\.frase_final", "FRASE FINAL"/);
   assert.doesNotMatch(actions, /FRASE FINAL ESCRITXR 1/);
   assert.match(socketEvents, /function escapeHtmlControl\(valor\)/);

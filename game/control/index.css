@@ -7008,6 +7008,14 @@ table.default {
     display: none;
 }
 
+.level-status-witness__content {
+    display: inline-grid;
+    align-content: center;
+    gap: 0.08rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
 .level-status-witness__label,
 .level-status-witness__word,
 .level-status-witness__time {
@@ -7025,6 +7033,22 @@ table.default {
     color: color-mix(in srgb, var(--witness-color), white 16%);
     text-align: left;
     text-transform: uppercase;
+}
+
+.level-status-witness__author {
+    min-width: 0;
+    overflow: hidden;
+    color: color-mix(in srgb, var(--witness-color), white 8%);
+    font-size: 0.72em;
+    line-height: 1;
+    letter-spacing: 0.035em;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.level-status-witness__author[hidden] {
+    display: none !important;
 }
 
 .level-status-witness__time {
@@ -7167,6 +7191,36 @@ table.default {
         -0.05em -0.05em #000,
         0.05em 0.05em #ff0000,
         0 0 0.42rem rgba(255, 95, 103, 0.34);
+}
+
+.frase-final-musa-chip {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 0.14rem 0.34rem;
+    border: 1px solid color-mix(in srgb, currentColor, transparent 60%);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.28);
+    color: #dcebf3;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.42rem, 0.48vw, 0.58rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.frase-final-musa-chip[hidden] {
+    display: none !important;
+}
+
+.param-frase-final--j1 .frase-final-musa-chip {
+    color: #46f3ff;
+}
+
+.param-frase-final--j2 .frase-final-musa-chip {
+    color: #ff6f76;
 }
 
 .param-frase-final .frase_final_editor {

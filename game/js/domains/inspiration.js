@@ -17,6 +17,68 @@
             .normalize("NFC");
     }
 
+    function normalizarNombreAutorMusa(valor, max = 24) {
+        const limite = Math.max(1, Math.trunc(Number(max) || 24));
+        return Array.from(String(valor ?? "")
+            .normalize("NFKC")
+            .replace(/[\p{Cc}\p{Cf}]/gu, "")
+            .replace(/\s+/gu, " ")
+            .trim())
+            .slice(0, limite)
+            .join("")
+            .toLocaleUpperCase();
+    }
+
+    function extraerAutoresMusa(payload = {}, opciones = {}) {
+        const fuente = payload && typeof payload === "object" ? payload : {};
+        const superbonus = fuente.superbonus && typeof fuente.superbonus === "object"
+            ? fuente.superbonus
+            : {};
+        const listas = [superbonus.musas, fuente.musas, fuente.autores];
+        let candidatos = listas.find((lista) => Array.isArray(lista) && lista.length) || [];
+        if (!candidatos.length) {
+            const unico = typeof payload === "string"
+                ? payload
+                : (fuente.musa_nombre ?? fuente.nombre_musa ?? fuente.musa ?? fuente.autor ?? "");
+            candidatos = String(unico || "")
+                .split(/\s+\+\s+/u)
+                .filter(Boolean);
+        }
+
+        const maxAutores = Math.max(1, Math.min(12, Math.trunc(Number(opciones.maxAutores) || 6)));
+        const maxNombre = Math.max(1, Math.min(48, Math.trunc(Number(opciones.maxNombre) || 24)));
+        const vistos = new Set();
+        const autores = [];
+        candidatos.forEach((candidato) => {
+            if (autores.length >= maxAutores) return;
+            const nombre = normalizarNombreAutorMusa(candidato, maxNombre);
+            if (!nombre) return;
+            const clave = nombre.toLocaleLowerCase();
+            if (vistos.has(clave)) return;
+            vistos.add(clave);
+            autores.push(nombre);
+        });
+        const fallback = opciones.fallback === false
+            ? ""
+            : normalizarNombreAutorMusa(opciones.fallback || "MUSA", maxNombre);
+        if (!autores.length && fallback) autores.push(fallback);
+        return autores;
+    }
+
+    function normalizarFirmaMusa(payload = {}, opciones = {}) {
+        const autores = extraerAutoresMusa(payload, opciones);
+        const maxVisibles = Math.max(1, Math.min(3, Math.trunc(Number(opciones.maxVisibles) || 2)));
+        let texto = autores.slice(0, maxVisibles).join(" + ");
+        if (autores.length > maxVisibles) {
+            texto = `${autores[0]} +${autores.length - 1}`;
+        }
+        return {
+            autores,
+            texto,
+            completo: autores.join(" + ")
+        };
+    }
+
     function normalizarLetraObjetivo(valor) {
         if (global && typeof global.scribNormalizeModeLetter2P === "function") {
             return global.scribNormalizeModeLetter2P(valor);
@@ -277,7 +339,10 @@
         extraerPalabraObjetivo,
         esAtajoDescartarInspiracion,
         formatearTiempoPalabraAsignada,
+        extraerAutoresMusa,
         normalizarFactorInspiracion,
+        normalizarFirmaMusa,
+        normalizarNombreAutorMusa,
         normalizarMetaEntregaInspiracion,
         normalizarResultadoAprovechamiento,
         normalizarTexto,

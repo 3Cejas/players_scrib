@@ -392,23 +392,28 @@ const ROLE_CONFIG = {
     readySelector: "#contenedor_espectador",
     viewport: { width: 1600, height: 1000 }
   },
+  jury: {
+    url: "/game/jurado/index.html",
+    readySelector: "#jurado_app",
+    viewport: { width: 1500, height: 1000 }
+  },
   musa1: {
-    url: "/game/public/players/index.html?player=1&name=E2E_Musa_1",
+    url: "/game/public/players/index.html?player=1&name=E2E_Luna",
     readySelector: "#musa_world_entry",
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa1b: {
-    url: "/game/public/players/index.html?player=1&name=E2E_Musa_1_B",
+    url: "/game/public/players/index.html?player=1&name=E2E_Sol",
     readySelector: "#musa_world_entry",
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa2: {
-    url: "/game/public/players/index.html?player=2&name=E2E_Musa_2",
+    url: "/game/public/players/index.html?player=2&name=E2E_Rosa",
     readySelector: "#musa_world_entry",
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa2b: {
-    url: "/game/public/players/index.html?player=2&name=E2E_Musa_2_B",
+    url: "/game/public/players/index.html?player=2&name=E2E_Iris",
     readySelector: "#musa_world_entry",
     viewport: { width: 430, height: 932, isMobile: true }
   },

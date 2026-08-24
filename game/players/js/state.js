@@ -223,6 +223,41 @@ const normalizarSuperbonusInspiracionEscritora = (payload = {}) => {
     return { activo: true, repeticiones, musas };
 };
 
+const normalizarFirmaMusaEscritora = (payload = {}, opciones = {}) => {
+    if (window.ScribInspiration && typeof window.ScribInspiration.normalizarFirmaMusa === "function") {
+        return window.ScribInspiration.normalizarFirmaMusa(payload, opciones);
+    }
+    const nombre = normalizarNombreMusaFeedback(
+        payload && typeof payload === "object" ? (payload.musa_nombre || payload.nombre_musa || payload.musa || "") : payload
+    ) || (opciones.fallback === false ? "" : "MUSA");
+    return { autores: nombre ? [nombre] : [], texto: nombre, completo: nombre };
+};
+
+const construirFirmaMusaHtmlEscritora = (payload = {}, clase = "") => {
+    const firma = normalizarFirmaMusaEscritora(payload);
+    if (!firma.texto) return "";
+    const clases = ["inspiration-author", clase].filter(Boolean).join(" ");
+    return `<span class="${clases}" title="${escapeHtml(firma.completo)}"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">${escapeHtml(firma.texto)}</span></span>`;
+};
+
+const crearNodoFirmaMusaEscritora = (payload = {}, clase = "") => {
+    const firma = normalizarFirmaMusaEscritora(payload);
+    if (!firma.texto) return null;
+    const nodo = document.createElement("span");
+    nodo.className = ["inspiration-author", clase].filter(Boolean).join(" ");
+    nodo.title = firma.completo;
+    nodo.setAttribute("aria-label", `Musa: ${firma.completo}`);
+    const destello = document.createElement("span");
+    destello.className = "inspiration-author__spark";
+    destello.setAttribute("aria-hidden", "true");
+    destello.textContent = "✦";
+    const nombre = document.createElement("span");
+    nombre.className = "inspiration-author__name";
+    nombre.textContent = firma.texto;
+    nodo.append(destello, nombre);
+    return nodo;
+};
+
 const establecerContextoMusaDefinicion = (origen, musaNombre = "") => {
     if (!definicion || !definicion.dataset) return;
     definicion.dataset.origenMusa = origen || "";
@@ -916,7 +951,13 @@ function construirBloqueObjetivoNivelEscritora(palabraTexto, opciones = {}) {
     const descripcionHtml = descripcion
         ? `<span class="${claseDef}">${escapeHtml(descripcion)}</span>`
         : "";
-    return `<span class="${claseChip}">${palabraHtml}</span>${descripcionHtml}`;
+    const autoriaHtml = opciones.autoria
+        ? construirFirmaMusaHtmlEscritora(opciones.autoria, esMaldita ? "is-enemy" : "")
+        : "";
+    const detalleHtml = descripcionHtml || autoriaHtml
+        ? `<span class="objetivo-meta">${autoriaHtml}${descripcionHtml}</span>`
+        : "";
+    return `<span class="${claseChip}">${palabraHtml}</span>${detalleHtml}`;
 }
 
 function renderObjetivoNivelEscritora(palabraTexto, opciones = {}) {
@@ -1834,6 +1875,10 @@ const normalizarFinalCalentamientoEscritor = (entrada) => {
     return {
         id: entrada.id,
         palabra: entrada.palabra.trim(),
+        musa_nombre: typeof (entrada.musa_nombre ?? entrada.nombre_musa) === "string"
+            ? (entrada.musa_nombre ?? entrada.nombre_musa)
+            : "",
+        musas: Array.isArray(entrada.musas) ? entrada.musas.slice(0, 6) : [],
         ts: Number(entrada.ts) || 0,
         animTs: Number(entrada.animTs) || 0
     };
@@ -1898,6 +1943,75 @@ const obtenerRectStageCalentamientoEscritor = () => {
     return rect;
 };
 
+const contextoMedicionCalentamientoEscritor = (() => {
+    if (typeof document === "undefined") return null;
+    const canvas = document.createElement("canvas");
+    return canvas && typeof canvas.getContext === "function" ? canvas.getContext("2d") : null;
+})();
+
+const medirCajaPalabraCalentamientoEscritor = (entrada, maxAnchoPx) => {
+    const textoPalabra = String(entrada && entrada.palabra || "").trim();
+    const firma = normalizarFirmaMusaEscritora(entrada || {});
+    const tamFuente = Math.max(15, Math.min(34, Math.max(window.innerWidth || 1, 1) * 0.022));
+    const maxAncho = Math.max(130, Number(maxAnchoPx) || 320);
+    const medir = (texto, fuentePx) => {
+        let ancho = Array.from(String(texto || "")).length * (fuentePx * 0.62);
+        if (contextoMedicionCalentamientoEscritor && typeof contextoMedicionCalentamientoEscritor.measureText === "function") {
+            contextoMedicionCalentamientoEscritor.font = `${fuentePx}px "Retro-gaming", monospace`;
+            ancho = Math.max(ancho, contextoMedicionCalentamientoEscritor.measureText(String(texto || "")).width);
+        }
+        return ancho;
+    };
+    const anchoPalabra = medir(textoPalabra, tamFuente);
+    const tamFirma = Math.max(9, tamFuente * 0.38);
+    const anchoFirma = firma.texto ? medir(`✦ ${firma.texto}`, tamFirma) + (tamFirma * 1.5) : 0;
+    const lineas = Math.max(1, Math.ceil((anchoPalabra + (tamFuente * 0.16)) / maxAncho));
+    const ancho = Math.max(tamFuente * 2.4, Math.min(maxAncho, Math.max(anchoPalabra + (tamFuente * 0.9), anchoFirma)));
+    const altoPalabra = (lineas * tamFuente * 1.08) + (tamFuente * 0.56);
+    const altoFirma = firma.texto ? (tamFirma * 1.65) + Math.max(2, tamFuente * 0.08) : 0;
+    const factorReserva = entrada && (entrada.destacada || entrada.esFinal) ? 1.34 : 1.06;
+    return { ancho: ancho * factorReserva, alto: (altoPalabra + altoFirma) * factorReserva, maxAncho };
+};
+
+const resolverPosicionPalabraCalentamientoEscritor = (entrada, ocupadas, stageW, stageH, minY) => {
+    const maxAncho = entrada && entrada.esFinal
+        ? Math.max(170, Math.min(stageW * 0.54, 620))
+        : Math.max(140, Math.min(stageW * 0.4, 500));
+    const caja = medirCajaPalabraCalentamientoEscritor(entrada, maxAncho);
+    const margen = 7;
+    const minX = (caja.ancho * 0.5) + margen;
+    const maxX = stageW - (caja.ancho * 0.5) - margen;
+    const minYPx = ((limitarPct(minY, 0, 100) / 100) * stageH) + (caja.alto * 0.5) + margen;
+    const maxY = stageH - (caja.alto * 0.5) - margen;
+    if (minX > maxX || minYPx > maxY) return null;
+    const xBase = Math.max(minX, Math.min(maxX, (limitarPct(entrada.x, 0, 100) / 100) * stageW));
+    const yBase = Math.max(minYPx, Math.min(maxY, (limitarPct(entrada.y, minY, 96) / 100) * stageH));
+    const separacion = Math.max(5, Math.min(18, caja.alto * 0.14));
+    const libre = (cx, cy) => !ocupadas.some((otra) => (
+        Math.abs(cx - otra.cx) < (((caja.ancho + otra.w) * 0.5) + separacion)
+        && Math.abs(cy - otra.cy) < (((caja.alto + otra.h) * 0.5) + separacion)
+    ));
+    const candidatos = [{ x: xBase, y: yBase }];
+    for (let anillo = 1; anillo <= 9; anillo += 1) {
+        const pasos = Math.max(8, anillo * 10);
+        for (let paso = 0; paso < pasos; paso += 1) {
+            const angulo = (Math.PI * 2 * paso) / pasos;
+            candidatos.push({
+                x: Math.max(minX, Math.min(maxX, xBase + Math.cos(angulo) * anillo * (caja.ancho * 0.42 + 8))),
+                y: Math.max(minYPx, Math.min(maxY, yBase + Math.sin(angulo) * anillo * (caja.alto * 0.58 + 7)))
+            });
+        }
+    }
+    const posicion = candidatos.find(({ x, y }) => libre(x, y));
+    if (!posicion) return null;
+    ocupadas.push({ cx: posicion.x, cy: posicion.y, w: caja.ancho, h: caja.alto });
+    return {
+        xPct: limitarPct((posicion.x / stageW) * 100, 0, 100),
+        yPct: limitarPct((posicion.y / stageH) * 100, minY, 96),
+        maxAncho: caja.maxAncho
+    };
+};
+
 const aplicarCursorCalentamientoEscritor = (elemento, cursor) => {
     if (!elemento) return;
     const visible = Boolean(cursor && cursor.visible);
@@ -1931,7 +2045,18 @@ const renderizarPalabrasCalentamientoEscritor = () => {
     const equipoEscritor = playerNumber === 1 || playerNumber === 2 ? playerNumber : null;
     const ahora = Date.now();
     const minY = obtenerMinYPalabrasCalentamientoEscritor();
-    calentamiento_palabras_escritor.forEach((entrada) => {
+    const rectStage = obtenerRectStageCalentamientoEscritor();
+    const stageW = Math.max(1, Number(rectStage && rectStage.width) || window.innerWidth || 1);
+    const stageH = Math.max(1, Number(rectStage && rectStage.height) || window.innerHeight || 1);
+    const ocupadas = [];
+    const entradasVisibles = calentamiento_palabras_escritor.slice().sort((a, b) => {
+        const prioridadA = Number(Boolean(a.esFinal)) * 4 + Number(Boolean(a.destacada)) * 2;
+        const prioridadB = Number(Boolean(b.esFinal)) * 4 + Number(Boolean(b.destacada)) * 2;
+        return prioridadB - prioridadA || (Number(b.ts) || 0) - (Number(a.ts) || 0);
+    }).slice(0, 80);
+    entradasVisibles.forEach((entrada) => {
+        const posicion = resolverPosicionPalabraCalentamientoEscritor(entrada, ocupadas, stageW, stageH, minY);
+        if (!posicion) return;
         const propia = equipoEscritor !== null && entrada.equipo === equipoEscritor;
         const nodo = document.createElement("span");
         const clases = [`calentamiento-palabra`, `equipo-${entrada.equipo}`];
@@ -1945,9 +2070,15 @@ const renderizarPalabrasCalentamientoEscritor = () => {
         }
         if (propia && entrada.id) clases.push("calentamiento-palabra-clickable");
         nodo.className = clases.join(" ");
-        nodo.textContent = entrada.palabra;
-        nodo.style.left = `${Math.max(0, Math.min(100, entrada.x))}%`;
-        nodo.style.top = `${limitarPct(entrada.y, minY, 96)}%`;
+        const palabraTexto = document.createElement("span");
+        palabraTexto.className = "calentamiento-palabra__texto";
+        palabraTexto.textContent = entrada.palabra;
+        nodo.appendChild(palabraTexto);
+        const firma = crearNodoFirmaMusaEscritora(entrada, "inspiration-author--warmup");
+        if (firma) nodo.appendChild(firma);
+        nodo.style.left = `${posicion.xPct}%`;
+        nodo.style.top = `${posicion.yPct}%`;
+        nodo.style.setProperty("--calentamiento-word-max-width", `${Math.round(posicion.maxAncho)}px`);
         const duracionMs = Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS;
         const edadMs = Math.max(0, Date.now() - (Number(entrada.ts) || Date.now()));
         const delayMs = entrada.destacada ? 0 : -Math.min(edadMs, duracionMs);
@@ -1981,6 +2112,10 @@ const normalizarPalabrasCalentamientoEscritor = (equipos = {}) => {
             lista.push({
                 id: typeof entrada.id === "string" ? entrada.id : "",
                 palabra: entrada.palabra,
+                musa_nombre: typeof (entrada.musa_nombre ?? entrada.nombre_musa) === "string"
+                    ? (entrada.musa_nombre ?? entrada.nombre_musa)
+                    : "",
+                musas: Array.isArray(entrada.musas) ? entrada.musas.slice(0, 6) : [],
                 equipo,
                 x: typeof entrada.x === "number" ? entrada.x : 50,
                 y: limitarPct(typeof entrada.y === "number" ? entrada.y : 50, minY, 96),
@@ -2064,11 +2199,16 @@ const actualizarFinalCalentamientoEscritor = (finalPalabra) => {
         calentamiento_ultimo_final_escritor = "";
         return;
     }
-    calentamiento_final_escritor.textContent = tJuego2P(
+    const textoFinal = document.createElement("span");
+    textoFinal.className = "calentamiento-final-chip__word";
+    textoFinal.textContent = tJuego2P(
         "warmup.final_word",
         { word: finalValido.palabra.toUpperCase() },
         `PALABRA FINAL: ${finalValido.palabra.toUpperCase()}`
     );
+    calentamiento_final_escritor.replaceChildren(textoFinal);
+    const firma = crearNodoFirmaMusaEscritora(finalValido, "inspiration-author--final");
+    if (firma) calentamiento_final_escritor.appendChild(firma);
     calentamiento_final_escritor.classList.add("activo");
     if (calentamiento_ultimo_final_escritor !== finalValido.id) {
         calentamiento_final_escritor.classList.remove("reveal");

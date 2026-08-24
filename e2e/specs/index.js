@@ -3,6 +3,7 @@ const FULL_ROLE_SET = [
   "writer1",
   "writer2",
   "spectator",
+  "jury",
   "musa1",
   "musa2",
   "actor1",
@@ -20,7 +21,7 @@ function buildConnectionRequirements(roles) {
     control: 0,
     spectator: 0,
     writers: { 1: 0, 2: 0 },
-    musas: { 1: 0, 2: 0 },
+    musas: { total: 0 },
     actors: { 1: 0, 2: 0 }
   };
   for (const role of roles) {
@@ -28,8 +29,7 @@ function buildConnectionRequirements(roles) {
     else if (role === "spectator") requirements.spectator += 1;
     else if (role === "writer1") requirements.writers[1] += 1;
     else if (role === "writer2") requirements.writers[2] += 1;
-    else if (role === "musa1" || role === "musa1b") requirements.musas[1] += 1;
-    else if (role === "musa2" || role === "musa2b") requirements.musas[2] += 1;
+    else if (role === "musa1" || role === "musa1b" || role === "musa2" || role === "musa2b") requirements.musas.total += 1;
     else if (role === "actor1") requirements.actors[1] += 1;
     else if (role === "actor2") requirements.actors[2] += 1;
   }
@@ -106,11 +106,12 @@ async function openRolesAndWaitWithOptions(ctx, roles, options = {}) {
       if (requirements.writers[2] > 0 && (!state.connections.writers[2].connected || state.connections.writers[2].count < requirements.writers[2])) {
         return false;
       }
-      if (requirements.musas[1] > 0 && (!state.connections.musas[1].connected || state.connections.musas[1].count < requirements.musas[1])) {
-        return false;
-      }
-      if (requirements.musas[2] > 0 && (!state.connections.musas[2].connected || state.connections.musas[2].count < requirements.musas[2])) {
-        return false;
+      if (requirements.musas.total > 0) {
+        const blueCount = Number(state.connections.musas[1].count) || 0;
+        const redCount = Number(state.connections.musas[2].count) || 0;
+        if ((blueCount + redCount) < requirements.musas.total || Math.abs(blueCount - redCount) > 1) {
+          return false;
+        }
       }
       if (requirements.actors[1] > 0 && (!state.connections.actors[1].connected || state.connections.actors[1].count < requirements.actors[1])) {
         return false;
@@ -121,6 +122,121 @@ async function openRolesAndWaitWithOptions(ctx, roles, options = {}) {
       return true;
     },
     12000
+  );
+}
+
+async function waitForAttributedInspiration(
+  ctx,
+  roleName,
+  selector,
+  word,
+  expectedMuseNames,
+  description,
+  timeoutMs = 10000
+) {
+  const expected = expectedMuseNames.map((name) => String(name).toUpperCase());
+  return ctx.waitFor(
+    description,
+    async () => ctx.evaluate(roleName, ({ css, targetWord, museNames }) => {
+      const card = Array.from(document.querySelectorAll(css)).find((node) => (
+        String(node.textContent || "").toLowerCase().includes(String(targetWord).toLowerCase())
+      ));
+      if (!card) return false;
+      const author = card.querySelector(".inspiration-author, .cloud-word__author, .level-status-witness__author");
+      const authorText = String(author && author.textContent || "").trim().toUpperCase();
+      if (!author || !museNames.every((name) => authorText.includes(name))) return false;
+      return { text: String(card.textContent || "").trim(), author: authorText };
+    }, { css: selector, targetWord: word, museNames: expected }),
+    timeoutMs
+  );
+}
+
+async function assertCardsDoNotOverlap(ctx, roleName, selector, description, minCards = 2) {
+  const result = await ctx.evaluate(roleName, ({ css, minimum }) => {
+    const cards = Array.from(document.querySelectorAll(css))
+      .filter((node) => {
+        const style = getComputedStyle(node);
+        const rect = node.getBoundingClientRect();
+        return style.display !== "none" && style.visibility !== "hidden" && rect.width > 1 && rect.height > 1;
+      })
+      .map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          text: String(node.textContent || "").trim(),
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom
+        };
+      });
+    const overlaps = [];
+    for (let index = 0; index < cards.length; index += 1) {
+      for (let other = index + 1; other < cards.length; other += 1) {
+        const overlapX = Math.min(cards[index].right, cards[other].right) - Math.max(cards[index].left, cards[other].left);
+        const overlapY = Math.min(cards[index].bottom, cards[other].bottom) - Math.max(cards[index].top, cards[other].top);
+        if (overlapX > 1 && overlapY > 1) {
+          overlaps.push({
+            first: cards[index],
+            second: cards[other],
+            overlapX,
+            overlapY
+          });
+        }
+      }
+    }
+    return { count: cards.length, overlaps };
+  }, { css: selector, minimum: minCards });
+  ctx.assert(result.count >= minCards, `${description}: expected at least ${minCards} visible cards, got ${result.count}`);
+  ctx.assert(result.overlaps.length === 0, `${description}: overlapping cards ${JSON.stringify(result.overlaps)}`);
+}
+
+async function readAuthoritativeMuseAssignments(ctx, roleNames) {
+  let previousKey = "";
+  let stableSince = 0;
+  return ctx.waitFor(
+    "muses have stable authoritative assignments",
+    async () => {
+      const assignments = [];
+      for (const roleName of roleNames) {
+        let assignment = false;
+        try {
+          assignment = await ctx.evaluate(roleName, () => {
+            try {
+              const confirmed = Boolean(window.eval(
+                "typeof musa_registro_confirmado !== 'undefined' && musa_registro_confirmado"
+              ));
+              const team = Number(window.eval("typeof player !== 'undefined' ? player : 0"));
+              const name = String(window.eval("typeof nombre_musa !== 'undefined' ? nombre_musa : ''")).trim().toUpperCase();
+              return confirmed && (team === 1 || team === 2) && name
+                ? { team, name, href: window.location.href }
+                : false;
+            } catch (_error) {
+              return false;
+            }
+          });
+        } catch (_error) {
+          return false;
+        }
+        if (!assignment) return false;
+        assignments.push({ roleName, ...assignment });
+      }
+      const blueCount = assignments.filter(({ team }) => team === 1).length;
+      const redCount = assignments.filter(({ team }) => team === 2).length;
+      if (Math.abs(blueCount - redCount) > 1) {
+        previousKey = "";
+        stableSince = 0;
+        return false;
+      }
+      const key = assignments.map(({ roleName, team, name, href }) => `${roleName}:${team}:${name}:${href}`).join("|");
+      if (key !== previousKey) {
+        previousKey = key;
+        stableSince = Date.now();
+        return false;
+      }
+      return (Date.now() - stableSince) >= 500 ? assignments : false;
+    },
+    15000,
+    100
   );
 }
 
@@ -1269,6 +1385,7 @@ const smokeSpecs = [
       await ctx.waitForVisible("writer1", "#texto", true, "writer1 editor visible");
       await ctx.waitForVisible("musa1", "#musa_world_entry", true, "musa1 page visible");
       await ctx.waitForVisible("spectator", "#contenedor_espectador", true, "spectator booted");
+      await ctx.waitForVisible("jury", "#jurado_app", true, "jury booted");
     }
   },
   {
@@ -1302,10 +1419,15 @@ const smokeSpecs = [
   {
     name: "musa-bonus-delivery",
     run: async (ctx) => {
-      await openRolesAndWaitWithOptions(ctx, ["control", "writer1", "musa1", "musa1b", "spectator"], { useStateHooks: false });
+      const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];
+      await openRolesAndWaitWithOptions(ctx, ["control", "writer1", ...museRoles, "spectator", "jury"], { useStateHooks: false });
+      const museAssignments = await readAuthoritativeMuseAssignments(ctx, museRoles);
+      const blueMuses = museAssignments.filter(({ team }) => team === 1);
+      const redMuses = museAssignments.filter(({ team }) => team === 2);
+      ctx.assert(blueMuses.length === 2 && redMuses.length === 2, "four muses should be balanced two per team");
       await configureFastControlPanel(ctx, {
-        tiempo_modos: 10,
-        tiempo_cambio_palabras: 10,
+        tiempo_modos: 90,
+        tiempo_cambio_palabras: 30,
         modes: ["palabras bonus"]
       });
       await startGame(ctx, { useStateHooks: false });
@@ -1331,15 +1453,73 @@ const smokeSpecs = [
         }
       });
       await ctx.invoke("control", "cambiar_vista_espectador", "nube_inspiracion");
-      await ctx.sendMusaWord("musa1", "horizonte");
-      await ctx.sendMusaWord("musa1b", "horizonte");
-      await requestQueuedWriterWord(ctx, "writer1", "bonus");
+      await ctx.click("jury", "[data-jury-panel=\"inspiracion\"]");
+      await ctx.sendMusaWord(blueMuses[0].roleName, "destello");
+      await waitForAttributedInspiration(
+        ctx,
+        "writer1",
+        "#definicion",
+        "destello",
+        [blueMuses[0].name],
+        "first muse word satisfies the automatic delivery"
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "control",
+        "#control_palabra_musa_j1",
+        "destello",
+        [blueMuses[0].name],
+        "control identifies the muse behind the active delivered word"
+      );
+      await ctx.sendMusaWord(blueMuses[0].roleName, "horizonte");
+      await ctx.sendMusaWord(blueMuses[1].roleName, "horizonte");
+      await ctx.sendMusaWord(blueMuses[0].roleName, "bruma");
+      await ctx.sendMusaWord(blueMuses[1].roleName, "cristal");
+      await waitForAttributedInspiration(
+        ctx,
+        "spectator",
+        "#nube_inspiracion_canvas .nube-inspiracion-palabra",
+        "horizonte",
+        blueMuses.map(({ name }) => name),
+        "spectator cloud identifies both muses"
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "jury",
+        "#jurado_cloud_1 .cloud-word",
+        "horizonte",
+        blueMuses.map(({ name }) => name),
+        "jury cloud identifies both muses"
+      );
+      await assertCardsDoNotOverlap(
+        ctx,
+        "spectator",
+        "#nube_inspiracion_canvas .nube-inspiracion-palabra",
+        "spectator inspiration cloud",
+        3
+      );
+      await assertCardsDoNotOverlap(
+        ctx,
+        "jury",
+        "#jurado_cloud_1 .cloud-word",
+        "jury inspiration cloud",
+        3
+      );
+      await typeInWriter(ctx, "writer1", " destello");
       await ctx.waitForText(
         "writer1",
         "#definicion",
         (text) => text.toLowerCase().includes("horizonte"),
         "writer1 receives queued musa bonus word",
         10000
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "writer1",
+        "#definicion",
+        "horizonte",
+        blueMuses.map(({ name }) => name),
+        "writer identifies both muses on the delivered word"
       );
       let superbonusDetected = false;
       try {
@@ -1369,6 +1549,20 @@ const smokeSpecs = [
         );
       }
       await ensureSpectatorView(ctx, "partida");
+      await reloadRole(ctx, "spectator");
+      await ctx.waitFor(
+        "reconnected spectator restores the active word and both muse authors",
+        async () => ctx.evaluate("spectator", ({ targetWord, museNames }) => {
+          const wordText = String(document.querySelector("#palabra1")?.textContent || "").toLowerCase();
+          const authorText = String(document.querySelector("#definicion1 .inspiration-author")?.textContent || "").toUpperCase();
+          return wordText.includes(targetWord)
+            && museNames.every((name) => authorText.includes(name));
+        }, {
+          targetWord: "horizonte",
+          museNames: blueMuses.map(({ name }) => name)
+        }),
+        10000
+      );
       await clearFloatingFeedbacks(ctx, "writer1");
       await clearFloatingFeedbacks(ctx, "spectator");
       await typeInWriter(ctx, "writer1", " horizonte");
@@ -1839,8 +2033,8 @@ const coreSpecs = [
       );
       await requestQueuedWriterWord(ctx, "writer1", "bonus");
       await requestQueuedWriterWord(ctx, "writer2", "bonus");
-      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E_MUSA_1 + E2E_MUSA_1_B");
-      await ensureBonusWordInWriterUi(ctx, "writer2", "memoria", "E2E_MUSA_2 + E2E_MUSA_2_B");
+      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E_LUNA + E2E_SOL");
+      await ensureBonusWordInWriterUi(ctx, "writer2", "memoria", "E2E_ROSA + E2E_IRIS");
       await ensureWriterEditableForFullFlow(ctx, "writer1");
       await ensureWriterEditableForFullFlow(ctx, "writer2");
       await typeInWriter(ctx, "writer1", " horizonte ");
@@ -2584,7 +2778,7 @@ const coreSpecs = [
       ctx.assert(rendered.text === publishedMessage, "spectator must render the server-sanitized message literally");
       ctx.assert(rendered.html.includes("&amp;copy;"), "spectator message must escape HTML entities via textContent");
       ctx.assert(rendered.textElementChildren === 0, "spectator message must not create injected child elements");
-      ctx.assert(rendered.muse === "E2E_MUSA_1", "spectator message must identify its muse");
+      ctx.assert(rendered.muse === "E2E_LUNA", "spectator message must identify its muse");
       ctx.assert(
         rendered.classes.includes(`pre-show-message--team-${assignedTeam}`),
         "spectator message must identify the authoritative muse team"
@@ -2725,7 +2919,12 @@ const coreSpecs = [
   {
     name: "tutorial-core",
     run: async (ctx) => {
-      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "musa1", "musa2"]);
+      const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", ...museRoles]);
+      const museAssignments = await readAuthoritativeMuseAssignments(ctx, museRoles);
+      const blueMuses = museAssignments.filter(({ team }) => team === 1);
+      const redMuses = museAssignments.filter(({ team }) => team === 2);
+      ctx.assert(blueMuses.length === 2 && redMuses.length === 2, "tutorial muses should stay balanced two per team");
 
       await ctx.invoke("control", "cambiar_vista_calentamiento");
       await ctx.waitForState(
@@ -2735,14 +2934,54 @@ const coreSpecs = [
       );
 
       await ctx.invoke("control", "pedir_solicitud_calentamiento", "lugares");
-      await ctx.sendWarmupWord("musa1", "biblioteca");
-      await ctx.sendWarmupWord("musa2", "observatorio");
+      await ctx.sendWarmupWord(blueMuses[0].roleName, "biblioteca");
+      await ctx.sendWarmupWord(blueMuses[1].roleName, "azotea");
+      await ctx.sendWarmupWord(redMuses[0].roleName, "observatorio");
       await ctx.waitForState(
         "warmup places received",
         (state) => state.tutorial.solicitud === "lugares"
-          && state.tutorial.equipos[1].palabras.some((item) => item.palabra === "biblioteca")
-          && state.tutorial.equipos[2].palabras.some((item) => item.palabra === "observatorio"),
+          && state.tutorial.equipos[1].palabras.some((item) => item.palabra === "biblioteca" && item.nombre_musa === blueMuses[0].name)
+          && state.tutorial.equipos[1].palabras.some((item) => item.palabra === "azotea" && item.nombre_musa === blueMuses[1].name)
+          && state.tutorial.equipos[2].palabras.some((item) => item.palabra === "observatorio" && item.nombre_musa === redMuses[0].name),
         10000
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "spectator",
+        "#calentamiento_nube .calentamiento-palabra",
+        "biblioteca",
+        [blueMuses[0].name],
+        "spectator tutorial identifies the first blue muse"
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "spectator",
+        "#calentamiento_nube .calentamiento-palabra",
+        "azotea",
+        [blueMuses[1].name],
+        "spectator tutorial identifies the second blue muse"
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "writer1",
+        "#calentamiento_nube_escritor .calentamiento-palabra",
+        "observatorio",
+        [redMuses[0].name],
+        "writer tutorial identifies the red muse"
+      );
+      await assertCardsDoNotOverlap(
+        ctx,
+        "spectator",
+        "#calentamiento_nube .calentamiento-palabra",
+        "spectator tutorial cloud",
+        3
+      );
+      await assertCardsDoNotOverlap(
+        ctx,
+        "writer1",
+        "#calentamiento_nube_escritor .calentamiento-palabra",
+        "writer tutorial cloud",
+        3
       );
       await ctx.clickWarmupWord("writer1", "biblioteca");
       await ctx.clickWarmupWord("writer2", "observatorio");
@@ -2753,14 +2992,64 @@ const coreSpecs = [
       );
 
       await ctx.invoke("control", "pedir_solicitud_calentamiento", "frase_final");
-      await ctx.sendWarmupWord("musa1", "la luna entra por la ventana");
-      await ctx.sendWarmupWord("musa2", "el teatro respira humo azul");
+      await ctx.sendWarmupWord(blueMuses[0].roleName, "la luna entra por la ventana");
+      await ctx.sendWarmupWord(redMuses[0].roleName, "el teatro respira humo azul");
       await ctx.waitForState(
         "warmup final phrases received",
         (state) => state.tutorial.solicitud === "frase_final"
           && state.tutorial.equipos[1].palabras.some((item) => item.palabra === "la luna entra por la ventana")
           && state.tutorial.equipos[2].palabras.some((item) => item.palabra === "el teatro respira humo azul"),
         10000
+      );
+      await ctx.clickWarmupWord("writer1", "la luna entra por la ventana");
+      await ctx.clickWarmupWord("writer2", "el teatro respira humo azul");
+      await ctx.evaluate("writer1", () => socket.emit("calentamiento_bloquear_equipo"));
+      await ctx.evaluate("writer2", () => socket.emit("calentamiento_bloquear_equipo"));
+      await ctx.waitForState(
+        "writers locked their final warmup choices",
+        (state) => state.tutorial.equipos[1].bloqueado === true
+          && state.tutorial.equipos[2].bloqueado === true,
+        10000
+      );
+      await ctx.clickWarmupWord("writer1", "la luna entra por la ventana");
+      await ctx.clickWarmupWord("writer2", "el teatro respira humo azul");
+      await ctx.waitForState(
+        "warmup final phrases keep their muse authors",
+        (state) => state.tutorial.equipos[1].final?.palabra === "la luna entra por la ventana"
+          && state.tutorial.equipos[1].final?.nombre_musa === blueMuses[0].name
+          && state.tutorial.equipos[2].final?.palabra === "el teatro respira humo azul"
+          && state.tutorial.equipos[2].final?.nombre_musa === redMuses[0].name,
+        10000
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "spectator",
+        "#calentamiento_final_j1",
+        "la luna entra por la ventana",
+        [blueMuses[0].name],
+        "spectator final phrase keeps its muse"
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "writer1",
+        "#calentamiento_final_escritor",
+        "la luna entra por la ventana",
+        [blueMuses[0].name],
+        "writer final phrase keeps its muse"
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        blueMuses[0].roleName,
+        "#calentamiento_final_musa",
+        "la luna entra por la ventana",
+        [blueMuses[0].name],
+        "muse tutorial final keeps its author"
+      );
+      await ctx.waitForText(
+        "control",
+        "#frase_final_musa_j1",
+        (text) => text.toUpperCase().includes(blueMuses[0].name),
+        "control final phrase identifies its muse"
       );
       await ctx.waitForText(
         "spectator",
@@ -3129,7 +3418,7 @@ const coreSpecs = [
 
       await ctx.evaluate("musa1", () => {
         const equipo = window.eval("typeof player !== 'undefined' ? player : 1");
-        const nombre = window.eval("typeof nombre_musa !== 'undefined' ? nombre_musa : 'E2E_Musa_1'");
+        const nombre = window.eval("typeof nombre_musa !== 'undefined' ? nombre_musa : 'E2E_Luna'");
         const clientId = window.eval("typeof musa_client_id !== 'undefined' ? musa_client_id : ''");
         socket.emit("registrar_musa", { musa: equipo, nombre, client_id: clientId });
       });
@@ -3463,8 +3752,8 @@ const coreSpecs = [
       );
       await requestQueuedWriterWord(ctx, "writer1", "bonus");
       await requestQueuedWriterWord(ctx, "writer2", "bonus");
-      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E_MUSA_1 + E2E_MUSA_1_B");
-      await ensureBonusWordInWriterUi(ctx, "writer2", "memoria", "E2E_MUSA_2 + E2E_MUSA_2_B");
+      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E_LUNA + E2E_SOL");
+      await ensureBonusWordInWriterUi(ctx, "writer2", "memoria", "E2E_ROSA + E2E_IRIS");
       await ctx.waitForText(
         "writer1",
         "#definicion",

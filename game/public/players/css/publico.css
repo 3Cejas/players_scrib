@@ -4458,3 +4458,39 @@ body.equipo-rojo .pre-show-musa {
         box-shadow: none;
     }
 }
+
+/* Autoría compacta de la inspiración elegida en el tutorial de la musa. */
+.calentamiento.calentamiento--nuevo .inspiration-author {
+    --inspiration-author-accent: #ffd86f;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3em;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: min(18ch, 100%);
+    padding: 0.2em 0.52em;
+    border: 0.06em solid color-mix(in srgb, var(--inspiration-author-accent), transparent 42%);
+    border-radius: 999px;
+    background: color-mix(in srgb, #07101f, var(--inspiration-author-accent) 12%);
+    color: color-mix(in srgb, var(--inspiration-author-accent), white 22%);
+    font-size: clamp(0.62rem, 1.8vw, 0.84rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: 0 0 0.5em color-mix(in srgb, var(--inspiration-author-accent), transparent 48%);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.calentamiento.calentamiento--nuevo .inspiration-author__spark {
+    flex: 0 0 auto;
+    color: var(--inspiration-author-accent);
+}
+
+.calentamiento.calentamiento--nuevo .inspiration-author__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

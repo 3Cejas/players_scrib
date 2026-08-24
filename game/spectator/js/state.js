@@ -12,6 +12,39 @@ const escapeHtml = (valor) => String(valor)
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+const normalizarFirmaMusaEspectador = (payload = {}, opciones = {}) => {
+    if (window.ScribInspiration && typeof window.ScribInspiration.normalizarFirmaMusa === "function") {
+        return window.ScribInspiration.normalizarFirmaMusa(payload, opciones);
+    }
+    const valor = payload && typeof payload === "object"
+        ? (payload.musa_nombre || payload.nombre_musa || payload.musa || "")
+        : payload;
+    const nombre = String(valor || "").trim().slice(0, 24).toUpperCase() || (opciones.fallback === false ? "" : "MUSA");
+    return { autores: nombre ? [nombre] : [], texto: nombre, completo: nombre };
+};
+const construirFirmaMusaHtmlEspectador = (payload = {}, clase = "") => {
+    const firma = normalizarFirmaMusaEspectador(payload);
+    if (!firma.texto) return "";
+    const clases = ["inspiration-author", clase].filter(Boolean).join(" ");
+    return `<span class="${clases}" title="${escapeHtml(firma.completo)}"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">${escapeHtml(firma.texto)}</span></span>`;
+};
+const crearNodoFirmaMusaEspectador = (payload = {}, clase = "") => {
+    const firma = normalizarFirmaMusaEspectador(payload);
+    if (!firma.texto) return null;
+    const nodo = document.createElement("span");
+    nodo.className = ["inspiration-author", clase].filter(Boolean).join(" ");
+    nodo.title = firma.completo;
+    nodo.setAttribute("aria-label", `Musa: ${firma.completo}`);
+    const destello = document.createElement("span");
+    destello.className = "inspiration-author__spark";
+    destello.setAttribute("aria-hidden", "true");
+    destello.textContent = "✦";
+    const nombre = document.createElement("span");
+    nombre.className = "inspiration-author__name";
+    nombre.textContent = firma.texto;
+    nodo.append(destello, nombre);
+    return nodo;
+};
 const tJuego2P = (clave, variables = {}, fallback = "") => (
     (window && typeof window.scribT2P === "function")
         ? window.scribT2P(clave, variables, fallback)
@@ -1492,7 +1525,8 @@ const crearHistorialDetonadoresBase = () => (
     ORDEN_SOLICITUD_CALENTAMIENTO_VISTA.map((tipo) => ({
         tipo,
         titulo: traducirSolicitudCalentamientoEspectador(tipo).toUpperCase(),
-        valor: traducirSolicitudCalentamientoEspectador(SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA, { corta: true }).toUpperCase()
+        valor: traducirSolicitudCalentamientoEspectador(SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA, { corta: true }).toUpperCase(),
+        detalles: []
     }))
 );
 let solicitud_calentamiento_espectador = SOLICITUD_CALENTAMIENTO_VISTA_POR_DEFECTO;
@@ -1766,6 +1800,10 @@ const normalizarFinalCalentamientoEspectador = (entrada) => {
     return {
         id: entrada.id,
         palabra: entrada.palabra.trim(),
+        musa_nombre: typeof (entrada.musa_nombre ?? entrada.nombre_musa) === "string"
+            ? (entrada.musa_nombre ?? entrada.nombre_musa)
+            : "",
+        musas: Array.isArray(entrada.musas) ? entrada.musas.slice(0, 6) : [],
         ts: Number(entrada.ts) || 0,
         animTs: Number(entrada.animTs) || 0
     };
@@ -1935,6 +1973,17 @@ const obtenerDetonadorElegidoHistorial = (equipos = {}) => {
     if (palabraJ2) return palabraJ2.toUpperCase();
     return traducirSolicitudCalentamientoEspectador(SOLICITUD_CALENTAMIENTO_VISTA_NINGUNA, { corta: true }).toUpperCase();
 };
+const obtenerDetallesDetonadorHistorial = (equipos = {}) => [1, 2]
+    .map((equipo) => {
+        const final = normalizarFinalCalentamientoEspectador(equipos && equipos[equipo] ? equipos[equipo].final : null);
+        if (!final) return null;
+        return {
+            equipo,
+            palabra: normalizarTextoDetonadorHistorial(final.palabra).toUpperCase(),
+            autoria: final
+        };
+    })
+    .filter(Boolean);
 const renderizarHistorialDetonadores = () => {
     if (!calentamiento_detonadores_historial) return;
     calentamiento_detonadores_historial.innerHTML = "";
@@ -1953,7 +2002,23 @@ const renderizarHistorialDetonadores = () => {
         const textoValor = valoresVacios.has(textoValorGuardado) || !textoValorGuardado
             ? textoVacio
             : textoValorGuardado;
-        valor.textContent = textoValor;
+        const detalles = Array.isArray(entrada.detalles) ? entrada.detalles : [];
+        if (detalles.length) {
+            valor.classList.add("has-pairs");
+            detalles.forEach((detalle) => {
+                const par = document.createElement("span");
+                par.className = `detonador-historial-pair equipo-${detalle.equipo}`;
+                const palabra = document.createElement("span");
+                palabra.className = "detonador-historial-pair__word";
+                palabra.textContent = detalle.palabra;
+                par.appendChild(palabra);
+                const firma = crearNodoFirmaMusaEspectador(detalle.autoria, "inspiration-author--history");
+                if (firma) par.appendChild(firma);
+                valor.appendChild(par);
+            });
+        } else {
+            valor.textContent = textoValor;
+        }
         if (textoValor === textoVacio) {
             item.classList.add("is-empty");
         }
@@ -1981,6 +2046,7 @@ const registrarDetonadorHistorial = (solicitud, equipos = {}) => {
     const detonadorElegido = obtenerDetonadorElegidoHistorial(equipos);
     if (detonadorElegido && detonadorElegido !== "NINGUNO") {
         entrada.valor = detonadorElegido;
+        entrada.detalles = obtenerDetallesDetonadorHistorial(equipos);
     }
     renderizarHistorialDetonadores();
 };
@@ -2062,6 +2128,10 @@ const normalizarPalabrasCalentamiento = (equipos = {}) => {
             lista.push({
                 id: entrada.id,
                 palabra: entrada.palabra,
+                musa_nombre: typeof (entrada.musa_nombre ?? entrada.nombre_musa) === "string"
+                    ? (entrada.musa_nombre ?? entrada.nombre_musa)
+                    : "",
+                musas: Array.isArray(entrada.musas) ? entrada.musas.slice(0, 6) : [],
                 equipo,
                 x: typeof entrada.x === "number" ? entrada.x : 50,
                 y: limitarPct(typeof entrada.y === "number" ? entrada.y : 50, minY, 96),
@@ -2096,8 +2166,9 @@ const obtenerTamFuentePalabraCalentamientoPx = () => {
     return Math.max(15, Math.min(34, viewport * 0.022));
 };
 
-const medirCajaPalabraCalentamiento = (texto, maxAnchoPx) => {
-    const contenido = String(texto ?? "").trim();
+const medirCajaPalabraCalentamiento = (entrada, maxAnchoPx) => {
+    const contenido = String(entrada && entrada.palabra || "").trim();
+    const firma = normalizarFirmaMusaEspectador(entrada || {});
     const tamFuente = obtenerTamFuentePalabraCalentamientoPx();
     const maxAnchoSeguro = Math.max(120, Number(maxAnchoPx) || 320);
     let anchoTexto = contenido.length * (tamFuente * 0.62);
@@ -2105,15 +2176,23 @@ const medirCajaPalabraCalentamiento = (texto, maxAnchoPx) => {
         contextoMedicionCalentamiento.font = `${tamFuente}px "Retro-gaming", monospace`;
         anchoTexto = Math.max(anchoTexto, contextoMedicionCalentamiento.measureText(contenido).width);
     }
+    const tamFirma = Math.max(9, tamFuente * 0.38);
+    let anchoFirma = firma.texto ? Array.from(`✦ ${firma.texto}`).length * (tamFirma * 0.62) : 0;
+    if (firma.texto && contextoMedicionCalentamiento && typeof contextoMedicionCalentamiento.measureText === "function") {
+        contextoMedicionCalentamiento.font = `${tamFirma}px "Retro-gaming", monospace`;
+        anchoFirma = Math.max(anchoFirma, contextoMedicionCalentamiento.measureText(`✦ ${firma.texto}`).width);
+    }
     const paddingX = tamFuente * 0.9;
     const paddingY = tamFuente * 0.56;
-    const anchoCaja = Math.max(tamFuente * 2.4, Math.min(maxAnchoSeguro, anchoTexto + paddingX));
+    const anchoCaja = Math.max(tamFuente * 2.4, Math.min(maxAnchoSeguro, Math.max(anchoTexto + paddingX, anchoFirma + (tamFirma * 1.5))));
     const lineas = Math.max(1, Math.ceil((anchoTexto + (tamFuente * 0.16)) / maxAnchoSeguro));
     const altoLinea = tamFuente * 1.08;
-    const altoCaja = Math.max(altoLinea + paddingY, (lineas * altoLinea) + paddingY);
+    const altoFirma = firma.texto ? (tamFirma * 1.65) + Math.max(2, tamFuente * 0.08) : 0;
+    const altoCaja = Math.max(altoLinea + paddingY, (lineas * altoLinea) + paddingY) + altoFirma;
+    const factorReserva = entrada && (entrada.destacada || entrada.esFinal) ? 1.34 : 1.06;
     return {
-        ancho: anchoCaja,
-        alto: altoCaja,
+        ancho: anchoCaja * factorReserva,
+        alto: altoCaja * factorReserva,
         maxAncho: maxAnchoSeguro
     };
 };
@@ -2128,7 +2207,7 @@ const resolverPosicionSeguraPalabraCalentamiento = (entrada, cajasOcupadas, stag
     const maxAnchoTexto = entrada && entrada.esFinal
         ? Math.max(170, Math.min(stageW * 0.54, 620))
         : Math.max(150, Math.min(stageW * 0.4, 500));
-    const caja = medirCajaPalabraCalentamiento(entrada && entrada.palabra, maxAnchoTexto);
+    const caja = medirCajaPalabraCalentamiento(entrada, maxAnchoTexto);
     const minXPx = (caja.ancho * 0.5) + margenExteriorPx;
     const maxXPx = stageW - (caja.ancho * 0.5) - margenExteriorPx;
     const minYPx = ((limitarPct(minY, 0, 100) / 100) * stageH) + (caja.alto * 0.5) + margenExteriorPx;
@@ -2150,9 +2229,8 @@ const resolverPosicionSeguraPalabraCalentamiento = (entrada, cajasOcupadas, stag
         separacion
     ));
 
-    let xFinal = xBase;
-    let yFinal = yBase;
-    if (existeColision(xFinal, yFinal)) {
+    let posicionEncontrada = existeColision(xBase, yBase) ? null : { x: xBase, y: yBase };
+    if (!posicionEncontrada) {
         const maxIntentos = 30;
         for (let intento = 1; intento <= maxIntentos; intento += 1) {
             const salto = Math.ceil(intento / 2);
@@ -2168,26 +2246,23 @@ const resolverPosicionSeguraPalabraCalentamiento = (entrada, cajasOcupadas, stag
                 : xBase;
 
             if (!existeColision(xCandidato, yCandidato)) {
-                xFinal = xCandidato;
-                yFinal = yCandidato;
+                posicionEncontrada = { x: xCandidato, y: yCandidato };
                 break;
             }
             if (!existeColision(xBase, yCandidato)) {
-                xFinal = xBase;
-                yFinal = yCandidato;
+                posicionEncontrada = { x: xBase, y: yCandidato };
                 break;
             }
             if (!existeColision(xCandidato, yBase)) {
-                xFinal = xCandidato;
-                yFinal = yBase;
+                posicionEncontrada = { x: xCandidato, y: yBase };
                 break;
-            }
-            if (intento === maxIntentos) {
-                xFinal = xCandidato;
-                yFinal = yCandidato;
             }
         }
     }
+
+    if (!posicionEncontrada) return null;
+    const xFinal = posicionEncontrada.x;
+    const yFinal = posicionEncontrada.y;
 
     cajasOcupadas.push({
         cx: xFinal,
@@ -2213,7 +2288,20 @@ const renderizarPalabrasCalentamiento = () => {
     const stageW = Math.max(1, Number(rectStage && rectStage.width) || window.innerWidth || 1);
     const stageH = Math.max(1, Number(rectStage && rectStage.height) || window.innerHeight || 1);
     const cajasOcupadas = [];
-    palabras_calentamiento.forEach((entrada) => {
+    const entradasVisibles = palabras_calentamiento.slice().sort((a, b) => {
+        const prioridadA = Number(Boolean(a.esFinal)) * 4 + Number(Boolean(a.destacada)) * 2;
+        const prioridadB = Number(Boolean(b.esFinal)) * 4 + Number(Boolean(b.destacada)) * 2;
+        return prioridadB - prioridadA || (Number(b.ts) || 0) - (Number(a.ts) || 0);
+    }).slice(0, 80);
+    entradasVisibles.forEach((entrada) => {
+        const posicionSegura = resolverPosicionSeguraPalabraCalentamiento(
+            entrada,
+            cajasOcupadas,
+            stageW,
+            stageH,
+            minY
+        );
+        if (!posicionSegura) return;
         const nodo = document.createElement("span");
         const clases = [`calentamiento-palabra`, `equipo-${entrada.equipo}`];
         if (entrada.destacada) clases.push("is-highlighted");
@@ -2225,14 +2313,12 @@ const renderizarPalabrasCalentamiento = () => {
             clases.push("is-highlight-exit");
         }
         nodo.className = clases.join(" ");
-        nodo.textContent = entrada.palabra;
-        const posicionSegura = resolverPosicionSeguraPalabraCalentamiento(
-            entrada,
-            cajasOcupadas,
-            stageW,
-            stageH,
-            minY
-        );
+        const palabraTexto = document.createElement("span");
+        palabraTexto.className = "calentamiento-palabra__texto";
+        palabraTexto.textContent = entrada.palabra;
+        nodo.appendChild(palabraTexto);
+        const firma = crearNodoFirmaMusaEspectador(entrada, "inspiration-author--warmup");
+        if (firma) nodo.appendChild(firma);
         nodo.style.left = `${posicionSegura.xPct}%`;
         nodo.style.top = `${posicionSegura.yPct}%`;
         nodo.style.setProperty("--calentamiento-word-max-width", `${Math.round(posicionSegura.maxAncho)}px`);
@@ -2643,12 +2729,11 @@ const normalizarInfoPalabraNubeEspectador = (valor) => {
     const palabra = String(valor.palabra ?? valor.word ?? valor.texto ?? "").trim().slice(0, 32);
     if (!palabra) return null;
     const repeticiones = Math.max(1, Math.trunc(Number(valor.repeticiones) || 1));
-    const musas = Array.isArray(valor.musas)
+    const autorDirecto = valor.musa_nombre ?? valor.nombre_musa ?? valor.musa ?? "";
+    const musasBase = Array.isArray(valor.musas) && valor.musas.length
         ? valor.musas
-            .map((musa) => String(musa || "").trim().slice(0, 24))
-            .filter(Boolean)
-            .slice(0, 6)
-        : [];
+        : (String(autorDirecto || "").trim() ? [autorDirecto] : []);
+    const musas = normalizarFirmaMusaEspectador({ musas: musasBase }, { fallback: false }).autores;
     return {
         palabra,
         repeticiones,
@@ -3684,56 +3769,96 @@ const actualizarMetadataPalabraNube = (registro, metadata = {}) => {
     if (!registro) return;
     const info = normalizarInfoPalabraNubeEspectador(metadata);
     const superbonus = normalizarSuperbonusInspiracionEspectador(metadata);
+    const autoresDirectos = normalizarFirmaMusaEspectador(metadata, { fallback: false }).autores;
     if (superbonus.activo) {
         registro.superbonus = true;
         registro.repeticiones = superbonus.repeticiones;
-        registro.musas = superbonus.musas;
+        registro.musas = normalizarFirmaMusaEspectador({
+            musas: [
+                ...registro.musas,
+                ...(superbonus.musas.length ? superbonus.musas : (info && info.musas || [])),
+                ...autoresDirectos
+            ]
+        }, { fallback: false }).autores;
         return;
     }
-    if (!info) return;
+    if (!info) {
+        if (autoresDirectos.length) {
+            registro.musas = normalizarFirmaMusaEspectador({
+                musas: [...registro.musas, ...autoresDirectos]
+            }, { fallback: false }).autores;
+        }
+        return;
+    }
     registro.superbonus = Boolean(info.superbonus);
     registro.repeticiones = Math.max(1, Number(info.repeticiones) || 1);
-    registro.musas = Array.isArray(info.musas) ? info.musas : [];
+    registro.musas = normalizarFirmaMusaEspectador({
+        musas: [...registro.musas, ...(Array.isArray(info.musas) ? info.musas : []), ...autoresDirectos]
+    }, { fallback: false }).autores;
 };
-const obtenerPosicionNube = (equipo, clave, indice, ocupadas) => {
-    const previa = posiciones_nube_inspiracion.get(clave);
-    if (previa) {
-        ocupadas.push(previa);
-        return previa;
-    }
-    const base = hashCadenaInspiracion(clave);
-    const minX = equipo === 1 ? 7 : 52;
-    const maxX = equipo === 1 ? 46 : 93;
-    for (let i = 0; i < 80; i += 1) {
-        const semilla = base + (i * 379) + (indice * 941);
-        const x = minX + (randomSemilla(semilla + 11) * (maxX - minX));
-        const y = 12 + (randomSemilla(semilla + 23) * 78);
-        const scale = 0.9 + (randomSemilla(semilla + 37) * 0.8);
-        const rot = Math.round((randomSemilla(semilla + 51) - 0.5) * 18);
-        const radio = 6 + (scale * 2.8);
-        const colisiona = ocupadas.some((ocupada) => {
-            const dx = ocupada.x - x;
-            const dy = ocupada.y - y;
-            const dist = Math.sqrt((dx * dx) + (dy * dy));
-            return dist < (ocupada.radio + radio);
-        });
-        if (!colisiona) {
-            const salida = { x, y, scale, rot, radio };
-            posiciones_nube_inspiracion.set(clave, salida);
-            ocupadas.push(salida);
-            return salida;
+const medirCajaNubeInspiracion = (registro, canvasW) => {
+    const tamFuente = Math.max(16, Math.min(34, Math.max(window.innerWidth || 1, 1) * 0.023));
+    const firma = normalizarFirmaMusaEspectador({ musas: registro && registro.musas || [] });
+    const medir = (texto, fuentePx) => {
+        let ancho = Array.from(String(texto || "")).length * (fuentePx * 0.62);
+        if (contextoMedicionCalentamiento && typeof contextoMedicionCalentamiento.measureText === "function") {
+            contextoMedicionCalentamiento.font = `${fuentePx}px "Retro-gaming", monospace`;
+            ancho = Math.max(ancho, contextoMedicionCalentamiento.measureText(String(texto || "")).width);
         }
-    }
-    const fallback = {
-        x: minX + ((indice * 13) % Math.max(8, (maxX - minX))),
-        y: 15 + ((indice * 9) % 76),
-        scale: 1,
-        rot: 0,
-        radio: 8
+        return ancho;
     };
-    posiciones_nube_inspiracion.set(clave, fallback);
-    ocupadas.push(fallback);
-    return fallback;
+    const tamFirma = Math.max(9, tamFuente * 0.36);
+    const anchoPalabra = medir(registro && registro.palabra, tamFuente) + (tamFuente * 0.9);
+    const anchoFirma = firma.texto ? medir(`✦ ${firma.texto}`, tamFirma) + (tamFirma * 1.7) : 0;
+    const anchoBadge = registro && registro.superbonus ? tamFuente * 2.15 : 0;
+    const limiteMitad = Math.max(130, (Number(canvasW) || 1) * 0.43);
+    // Reserva el pulso máximo, el borde superbonus y la altura real de la firma.
+    // El texto se mide antes de aplicar CSS, por lo que un margen amplio evita
+    // que dos tarjetas que no colisionan en reposo se rocen durante la animación.
+    const factorAnimacion = 1.55;
+    const anchoContenido = Math.min(limiteMitad / factorAnimacion, Math.max(anchoPalabra + anchoBadge, anchoFirma, tamFuente * 2.5));
+    const lineasPalabra = Math.max(1, Math.min(2, Math.ceil((anchoPalabra + anchoBadge) / Math.max(1, anchoContenido))));
+    return {
+        w: anchoContenido * factorAnimacion,
+        h: ((tamFuente * 1.25 * lineasPalabra) + (firma.texto ? tamFirma * 1.75 : 0)) * factorAnimacion,
+        maxAncho: anchoContenido
+    };
+};
+const obtenerPosicionNube = (equipo, clave, indice, ocupadas, caja, canvasW, canvasH) => {
+    const base = hashCadenaInspiracion(clave);
+    const mitadInicio = equipo === 1 ? 0 : canvasW * 0.5;
+    const mitadFin = equipo === 1 ? canvasW * 0.5 : canvasW;
+    const margen = 8;
+    const minX = mitadInicio + (caja.w * 0.5) + margen;
+    const maxX = mitadFin - (caja.w * 0.5) - margen;
+    const minY = Math.max(canvasH * 0.12, (caja.h * 0.5) + margen);
+    const maxY = canvasH - (caja.h * 0.5) - margen;
+    if (minX > maxX || minY > maxY) return null;
+    const separacion = 6;
+    for (let i = 0; i < 180; i += 1) {
+        const semilla = base + (i * 379) + (indice * 941);
+        const cx = minX + (randomSemilla(semilla + 11) * (maxX - minX));
+        const cy = minY + (randomSemilla(semilla + 23) * (maxY - minY));
+        const colisiona = ocupadas.some((ocupada) => (
+            Math.abs(ocupada.cx - cx) < (((ocupada.w + caja.w) * 0.5) + separacion)
+            && Math.abs(ocupada.cy - cy) < (((ocupada.h + caja.h) * 0.5) + separacion)
+        ));
+        if (colisiona) continue;
+        const salida = {
+            cx,
+            cy,
+            x: (cx / canvasW) * 100,
+            y: (cy / canvasH) * 100,
+            w: caja.w,
+            h: caja.h,
+            scale: 1,
+            rot: 0
+        };
+        posiciones_nube_inspiracion.set(clave, salida);
+        ocupadas.push(salida);
+        return salida;
+    }
+    return null;
 };
 const garantizarPalabraNube = (equipo, palabra, ahora = Date.now(), metadata = {}) => {
     const limpia = String(palabra || "").trim();
@@ -3885,15 +4010,35 @@ const detenerAnimacionNubeInspiracion = () => {
 const renderizarNubeInspiracion = () => {
     if (!nube_inspiracion_canvas) return;
     depurarPalabrasNube();
+    posiciones_nube_inspiracion.clear();
     const ocupadas = [];
     const fragment = document.createDocumentFragment();
-    const entradas = Array.from(palabras_nube_inspiracion.entries())
+    const rectCanvas = typeof nube_inspiracion_canvas.getBoundingClientRect === "function"
+        ? nube_inspiracion_canvas.getBoundingClientRect()
+        : null;
+    const canvasW = Math.max(1, Number(rectCanvas && rectCanvas.width) || window.innerWidth || 1);
+    const canvasH = Math.max(1, Number(rectCanvas && rectCanvas.height) || window.innerHeight || 1);
+    const capacidadPorEquipo = Math.max(6, Math.min(22, Math.floor((canvasW * canvasH) / 50000)));
+    const candidatas = Array.from(palabras_nube_inspiracion.entries())
         .map(([clave, registro]) => ({ clave, registro }))
         .filter(({ registro }) => registro && typeof registro.palabra === "string" && registro.palabra.trim())
-        .sort((a, b) => a.registro.ts - b.registro.ts);
+        .sort((a, b) => {
+            const prioridad = ({ clave, registro }) => (
+                Number(clave_activa_nube_por_equipo[registro.equipo] === clave) * 8
+                + Number(Boolean(registro.usadaTs)) * 6
+                + Number(Boolean(registro.expirandoTs)) * 4
+                + Number(Boolean(registro.superbonus)) * 2
+            );
+            return prioridad(b) - prioridad(a) || (Number(b.registro.ts) || 0) - (Number(a.registro.ts) || 0);
+        });
+    const entradas = [1, 2].flatMap((equipo) => candidatas
+        .filter(({ registro }) => registro.equipo === equipo)
+        .slice(0, capacidadPorEquipo));
 
     entradas.forEach(({ clave, registro }, indice) => {
-        const pos = obtenerPosicionNube(registro.equipo, clave, indice, ocupadas);
+        const caja = medirCajaNubeInspiracion(registro, canvasW);
+        const pos = obtenerPosicionNube(registro.equipo, clave, indice, ocupadas, caja, canvasW, canvasH);
+        if (!pos) return;
         const estaActiva = clave_activa_nube_por_equipo[registro.equipo] === clave && !registro.usadaTs && !registro.expirandoTs;
         const estaUsada = Boolean(registro.usadaTs);
         const estaExpirando = Boolean(registro.expirandoTs);
@@ -3901,15 +4046,24 @@ const renderizarNubeInspiracion = () => {
 
         const nodo = document.createElement("span");
         nodo.className = `nube-inspiracion-palabra equipo-${registro.equipo}${estaActiva ? " is-active" : ""}${estaUsada ? " is-used" : ""}${estaExpirando ? " is-expiring" : ""}${esSuperbonus ? " is-superbonus" : ""}`;
-        nodo.textContent = registro.palabra;
+        nodo.style.setProperty("--nube-item-max-width", `${Math.round(caja.maxAncho)}px`);
+        const filaPalabra = document.createElement("span");
+        filaPalabra.className = "nube-inspiracion-word-row";
+        const textoPalabra = document.createElement("span");
+        textoPalabra.className = "nube-inspiracion-word";
+        textoPalabra.textContent = registro.palabra;
+        filaPalabra.appendChild(textoPalabra);
         if (esSuperbonus) {
             nodo.dataset.superbonus = "true";
             nodo.dataset.repeticiones = String(registro.repeticiones);
             const badge = document.createElement("span");
             badge.className = "nube-inspiracion-superbonus";
             badge.textContent = `x${registro.repeticiones}`;
-            nodo.appendChild(badge);
+            filaPalabra.appendChild(badge);
         }
+        nodo.appendChild(filaPalabra);
+        const firma = crearNodoFirmaMusaEspectador({ musas: registro.musas }, "inspiration-author--cloud");
+        if (firma) nodo.appendChild(firma);
         nodo.style.left = `${pos.x.toFixed(2)}%`;
         nodo.style.top = `${pos.y.toFixed(2)}%`;
         nodo.style.setProperty("--nube-scale", pos.scale.toFixed(2));
@@ -4089,7 +4243,12 @@ const actualizarFinalCardCalentamiento = (equipo, dataEquipo = {}) => {
     }
     if (word) {
         if (final) {
-            word.textContent = final.palabra.toUpperCase();
+            const textoFinal = document.createElement("span");
+            textoFinal.className = "final-word__text";
+            textoFinal.textContent = final.palabra.toUpperCase();
+            word.replaceChildren(textoFinal);
+            const firma = crearNodoFirmaMusaEspectador(final, "inspiration-author--final");
+            if (firma) word.appendChild(firma);
         } else if (bloqueado) {
             word.textContent = tJuego2P("warmup.final.choosing", {}, "ELIGIENDO...");
         } else {
