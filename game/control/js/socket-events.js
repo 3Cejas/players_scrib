@@ -15,6 +15,10 @@
         registrarLogControl("info", ["Control conectado al servidor"]);
     }
     socket.emit('registrar_control');
+    if (window && window.ScribVideotutorialControl) {
+        window.ScribVideotutorialControl.marcarConexion(true);
+    }
+    socket.emit('pedir_video_tutorial_estado');
     iniciarStatusPing();
     socket.emit('pedir_estado_control');
     socket.emit('pedir_estado_palabras_musas_control');
@@ -43,6 +47,9 @@ socket.on('disconnect', () => {
     }
     detenerStatusPing();
     detenerStatsLiveControl();
+    if (window && window.ScribVideotutorialControl) {
+        window.ScribVideotutorialControl.marcarConexion(false);
+    }
 });
 
 socket.on('connect_error', () => {
@@ -58,6 +65,9 @@ socket.on('connect_error', () => {
     }
     if (typeof registrarLogControl === "function") {
         registrarLogControl("error", ["Error de conexion con el servidor"]);
+    }
+    if (window && window.ScribVideotutorialControl) {
+        window.ScribVideotutorialControl.marcarConexion(false);
     }
 });
 
@@ -135,6 +145,11 @@ socket.on('teleprompter_state', (payload = {}) => {
 socket.on('teleprompter_feedback', (payload = {}) => {
     if (window && typeof window.procesarTeleprompterFeedbackControl === "function") {
         window.procesarTeleprompterFeedbackControl(payload);
+    }
+});
+socket.on('video_tutorial_estado', (payload = {}) => {
+    if (window && window.ScribVideotutorialControl) {
+        window.ScribVideotutorialControl.aplicarEstado(payload);
     }
 });
 socket.on('estado_banderas_musas', (data = {}) => {

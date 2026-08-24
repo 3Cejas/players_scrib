@@ -22,6 +22,7 @@ socket.on('connect', () => {
     teleprompter_estado.revision = 0;
     actualizarEtiquetasCursorCalentamiento();
     socket.emit('registrar_espectador');
+    socket.emit('pedir_video_tutorial_estado');
     socket.emit('pedir_pre_show_estado');
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');

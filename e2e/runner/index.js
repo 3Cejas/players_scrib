@@ -36,8 +36,10 @@ const MIME_TYPES = {
   ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".mjs": "application/javascript; charset=utf-8",
+  ".mp4": "video/mp4",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".vtt": "text/vtt; charset=utf-8",
   ".webp": "image/webp",
   ".woff": "font/woff",
   ".woff2": "font/woff2"
@@ -484,7 +486,8 @@ class E2EHarness {
           ...process.env,
           PORT: String(SOCKET_PORT),
           NODE_ENV: "test",
-          SCRIB_TEST_HOOKS: "1"
+          SCRIB_TEST_HOOKS: "1",
+          SCRIB_PRE_SHOW_VIDEO_CONFIG: path.join(this.runArtifactsDir, "pre-show-video-config.json")
         },
         windowsHide: true
       });

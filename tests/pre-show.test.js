@@ -97,7 +97,7 @@ test("muse wiring is session-bound, IME-safe, acknowledged and tutorial-scoped",
   assert.match(state, /String\(respuesta\.session_id \|\| ""\) !== contexto\.sessionId/);
   assert.match(state, /nuevaSesion && siguiente\.activo && window\.ScribPreShow\.tieneSesionSincronizada/);
   assert.match(sockets, /socket\.on\("pre_show_estado"/);
-  assert.match(sockets, /const aplicada = procesarAsignacionAutoritativaMusa[\s\S]*if \(aplicada\) socket\.emit\('pedir_pre_show_estado'\)/);
+  assert.match(sockets, /const aplicada = procesarAsignacionAutoritativaMusa[\s\S]*if \(aplicada\) \{[\s\S]*socket\.emit\('pedir_pre_show_estado'\)[\s\S]*socket\.emit\('pedir_video_tutorial_estado'\)[\s\S]*\}/);
   assert.match(sockets, /socket\.on\('inicio'[\s\S]*cerrarPreShowMusaPorTutorial\(\)/);
 });
 

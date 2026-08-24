@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260824c">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260824d">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -78,6 +78,39 @@
                     <div class="control-groups">
                         <div class="control-group control-group--calentamiento control-collapsible is-collapsed" data-control-section="tutorial">
                             <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
+                            <section id="videotutorial_control" class="videotutorial-control" data-state="waiting" aria-labelledby="videotutorial_control_title">
+                                <header class="videotutorial-control__header">
+                                    <span class="videotutorial-control__icon" aria-hidden="true">&#x25B6;</span>
+                                    <span class="videotutorial-control__copy">
+                                        <strong id="videotutorial_control_title" class="videotutorial-control__title">VIDEOTUTORIAL PREVIO</strong>
+                                        <span class="videotutorial-control__hint">Programa su repetici&oacute;n antes de abrir el tutorial.</span>
+                                    </span>
+                                    <span id="videotutorial_estado_dot" class="videotutorial-control__dot" aria-hidden="true"></span>
+                                </header>
+                                <form id="videotutorial_config_form" class="videotutorial-control__config" novalidate>
+                                    <label for="videotutorial_intervalo">INTERVALO AUTOM&Aacute;TICO</label>
+                                    <span class="videotutorial-control__input-shell">
+                                        <input id="videotutorial_intervalo" name="videotutorial_intervalo" type="number" min="1" max="1440" step="1" value="3" inputmode="numeric" aria-describedby="videotutorial_intervalo_ayuda">
+                                        <span aria-hidden="true">MIN</span>
+                                    </span>
+                                    <button id="videotutorial_configurar" class="btn videotutorial-control__button videotutorial-control__button--save" type="submit">GUARDAR</button>
+                                    <label class="videotutorial-control__toggle" for="videotutorial_habilitado">
+                                        <input id="videotutorial_habilitado" name="videotutorial_habilitado" type="checkbox" role="switch" aria-describedby="videotutorial_repeticion_ayuda">
+                                        <span class="videotutorial-control__toggle-track" aria-hidden="true"></span>
+                                        <span>REPETIR AUTOM&Aacute;TICAMENTE</span>
+                                    </label>
+                                </form>
+                                <span id="videotutorial_intervalo_ayuda" class="videotutorial-control__sr-only">Intervalo entre reproducciones, de 1 a 1440 minutos.</span>
+                                <span id="videotutorial_repeticion_ayuda" class="videotutorial-control__sr-only">Activa o desactiva la repetici&oacute;n autom&aacute;tica del videotutorial.</span>
+                                <div class="videotutorial-control__actions">
+                                    <button id="videotutorial_mostrar" class="btn videotutorial-control__button videotutorial-control__button--play" type="button">&#x25B6; REPRODUCIR AHORA</button>
+                                    <button id="videotutorial_ocultar" class="btn videotutorial-control__button videotutorial-control__button--stop" type="button">&#x2715; QUITAR / DETENER</button>
+                                </div>
+                                <p id="videotutorial_estado" class="videotutorial-control__status" role="status" aria-live="polite" aria-atomic="true">
+                                    <strong id="videotutorial_estado_texto">ESPERANDO SERVIDOR</strong>
+                                    <span id="videotutorial_estado_detalle">El estado se sincronizar&aacute; al conectar.</span>
+                                </p>
+                            </section>
                             <div class="control-group-buttons control-group-buttons--two">
                                 <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F4D6; VISTA TUTORIAL</span>
                                 <span id="boton_reiniciar_calentamiento" class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
@@ -647,7 +680,8 @@
     <script src="../js/i18n.js?v=20260824a"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260824a"></script>
-<script src="./js/socket-events.js?v=20260822c"></script>
+<script src="./js/videotutorial-control.js?v=20260824d"></script>
+<script src="./js/socket-events.js?v=20260824d"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

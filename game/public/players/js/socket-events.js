@@ -227,7 +227,10 @@ socket.on('connect', () => {
     socket.emit('registrar_musa', payloadRegistroMusa, (payload = {}) => {
         if (requestIdRegistroMusa !== musa_request_id_activo) return false;
         const aplicada = procesarAsignacionAutoritativaMusa(payload, { requestId: requestIdRegistroMusa });
-        if (aplicada) socket.emit('pedir_pre_show_estado');
+        if (aplicada) {
+            socket.emit('pedir_pre_show_estado');
+            socket.emit('pedir_video_tutorial_estado');
+        }
         return aplicada;
     });
     socket.emit('pedir_idioma_actual');

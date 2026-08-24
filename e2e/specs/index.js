@@ -240,6 +240,78 @@ async function readAuthoritativeMuseAssignments(ctx, roleNames) {
   );
 }
 
+async function requestVideoTutorialState(ctx, roleName) {
+  return ctx.evaluate(roleName, () => new Promise((resolve) => {
+    let pageSocket = null;
+    try {
+      pageSocket = window.eval("socket");
+    } catch (_error) {
+      resolve(null);
+      return;
+    }
+    const timer = window.setTimeout(() => resolve(null), 5000);
+    pageSocket.emit("pedir_video_tutorial_estado", {}, (response = {}) => {
+      window.clearTimeout(timer);
+      resolve(response && response.ok === true ? response.estado : null);
+    });
+  }));
+}
+
+async function configureVideoTutorialRaw(ctx, roleName, config, requestSuffix) {
+  return ctx.evaluate(roleName, ({ nextConfig, suffix }) => new Promise((resolve) => {
+    let pageSocket = null;
+    try {
+      pageSocket = window.eval("socket");
+    } catch (_error) {
+      resolve({ ok: false, code: "SOCKET_UNAVAILABLE" });
+      return;
+    }
+    const timer = window.setTimeout(
+      () => resolve({ ok: false, code: "ACK_TIMEOUT" }),
+      5000
+    );
+    pageSocket.emit("video_tutorial_configurar", {
+      ...nextConfig,
+      request_id: `e2e-video-config-${suffix}-${Date.now().toString(36)}`
+    }, (response = {}) => {
+      window.clearTimeout(timer);
+      resolve(response);
+    });
+  }), { nextConfig: config, suffix: requestSuffix });
+}
+
+async function renderLocalVideoTutorialPosition(ctx, roleName, authoritativeState, positionSeconds) {
+  return ctx.evaluate(roleName, ({ rawState, position }) => {
+    const controller = window.__scribVideoTutorialController;
+    if (!controller || typeof controller.handleState !== "function") {
+      throw new Error("Missing synchronized video tutorial controller");
+    }
+    controller.handleState({
+      ...rawState,
+      visible: true,
+      reproduciendo: true,
+      posicion_segundos: position
+    });
+    const root = document.querySelector("#video_tutorial_musa");
+    const title = root && root.querySelector("[data-video-tutorial-title]");
+    const confirm = root && root.querySelector(".scrib-video-tutorial-device__confirm");
+    const rect = root ? root.getBoundingClientRect() : null;
+    return root ? {
+      phase: String(root.dataset.phase || ""),
+      background: window.getComputedStyle(root).backgroundColor,
+      title: String(title && title.textContent || "").trim(),
+      confirmHidden: Boolean(confirm && confirm.hidden),
+      coversViewport: Boolean(
+        rect
+        && Math.abs(rect.left) < 1
+        && Math.abs(rect.top) < 1
+        && Math.abs(rect.width - window.innerWidth) < 1
+        && Math.abs(rect.height - window.innerHeight) < 1
+      )
+    } : null;
+  }, { rawState: authoritativeState, position: positionSeconds });
+}
+
 async function startGame(ctx, options = {}) {
   const requireEditable = options.requireEditable !== false;
   const useStateHooks = options.useStateHooks !== false;
@@ -2673,6 +2745,344 @@ const coreSpecs = [
         },
         6000
       );
+    }
+  },
+  {
+    name: "video-tutorial-pre-show-core",
+    run: async (ctx) => {
+      const museRoles = ["musa1", "musa2"];
+      let initialConfig = null;
+
+      await openRolesAndWaitWithOptions(
+        ctx,
+        ["control", "spectator", ...museRoles],
+        { useStateHooks: false }
+      );
+      const assignments = await readAuthoritativeMuseAssignments(ctx, museRoles);
+      ctx.assert(
+        assignments.filter(({ team }) => team === 1).length === 1
+          && assignments.filter(({ team }) => team === 2).length === 1,
+        "video tutorial test muses should be balanced one per team"
+      );
+
+      const initialState = await ctx.waitFor(
+        "authoritative pre-tutorial video state is available",
+        async () => {
+          const state = await requestVideoTutorialState(ctx, "control");
+          return state && state.activo === true && state.session_id && state.phase_seq > 0
+            ? state
+            : false;
+        },
+        10000
+      );
+      initialConfig = { ...initialState.configuracion };
+
+      try {
+        const deterministicConfig = await configureVideoTutorialRaw(ctx, "control", {
+          video_url: "../media/tutorial-scrib.mp4",
+          intervalo_segundos: 180,
+          duracion_segundos: 60,
+          habilitado: false,
+          silenciado: false
+        }, "prepare");
+        ctx.assert(
+          deterministicConfig && deterministicConfig.ok === true,
+          `video tutorial deterministic setup failed: ${deterministicConfig && deterministicConfig.code || "unknown"}`
+        );
+
+        await ctx.evaluate("control", () => {
+          const panel = document.querySelector('[data-control-section="tutorial"]');
+          if (panel && panel.classList.contains("is-collapsed")) {
+            document.querySelector("#control_title_tutorial")?.click();
+          }
+        });
+        await ctx.waitForVisible(
+          "control",
+          "#videotutorial_control",
+          true,
+          "video tutorial controls are visible"
+        );
+        await ctx.waitFor(
+          "Control has synchronized the video tutorial state",
+          async () => ctx.evaluate("control", () => {
+            const api = window.ScribVideotutorialControl;
+            const state = api && typeof api.obtenerEstado === "function" ? api.obtenerEstado() : null;
+            return Boolean(state && state.sincronizado && state.faseActiva && state.sessionId);
+          }),
+          10000
+        );
+
+        await ctx.fillValue("control", "#videotutorial_intervalo", "1");
+        await ctx.evaluate("control", () => {
+          const toggle = document.querySelector("#videotutorial_habilitado");
+          if (!toggle) throw new Error("Missing video tutorial repeat toggle");
+          toggle.checked = true;
+          toggle.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        await ctx.click("control", "#videotutorial_configurar");
+
+        const scheduled = await ctx.waitFor(
+          "Control saves the one-minute automatic video tutorial interval",
+          async () => {
+            const state = await requestVideoTutorialState(ctx, "control");
+            return state
+              && state.configuracion
+              && state.configuracion.intervalo_segundos === 60
+              && state.configuracion.habilitado === true
+              && state.proxima_reproduccion_ts > Date.now()
+              ? state
+              : false;
+          },
+          10000
+        );
+        ctx.assert(scheduled.visible === false, "saving the schedule must not start playback immediately");
+        await ctx.waitForText(
+          "control",
+          "#videotutorial_estado_texto",
+          (text) => /PROGRAMADO.+1 MIN/i.test(text),
+          "Control reports the automatic one-minute schedule"
+        );
+
+        await ctx.click("control", "#videotutorial_mostrar");
+        const playing = await ctx.waitFor(
+          "manual video tutorial playback becomes authoritative",
+          async () => {
+            const state = await requestVideoTutorialState(ctx, "spectator");
+            return state
+              && state.visible === true
+              && state.reproduciendo === true
+              && state.reproduccion_seq > 0
+              && state.configuracion.duracion_segundos === 60
+              ? state
+              : false;
+          },
+          10000
+        );
+        ctx.assert(playing.origen === "manual", "Control play should mark the playback as manual");
+        ctx.assert(
+          playing.verificacion.conectadas === 2 && playing.verificacion.verificadas === 0,
+          "a fresh playback should await both connected muses"
+        );
+
+        await ctx.waitForVisible(
+          "spectator",
+          "#video_tutorial_overlay",
+          true,
+          "spectator video tutorial overlay appears"
+        );
+        for (const roleName of museRoles) {
+          await ctx.waitForVisible(
+            roleName,
+            "#video_tutorial_musa",
+            true,
+            `${roleName} calibration overlay appears`
+          );
+        }
+        await ctx.waitForText(
+          "control",
+          "#videotutorial_estado_texto",
+          (text) => /REPRODUCIENDO AHORA/i.test(text),
+          "Control reports manual playback"
+        );
+        await ctx.waitForText(
+          "spectator",
+          "[data-video-tutorial-counter]",
+          (text) => /^0\/2 MUSAS VERIFICADAS$/i.test(text.trim()),
+          "spectator starts with both muses pending"
+        );
+
+        const mediaProbe = await ctx.waitFor(
+          "spectator loads the local narrated MP4",
+          async () => ctx.evaluate("spectator", () => {
+            const video = document.querySelector("#video_tutorial_overlay video");
+            if (!video || video.error || video.readyState < 1 || !/tutorial-scrib\.mp4(?:$|[?#])/i.test(video.currentSrc)) {
+              return false;
+            }
+            const join = document.querySelector("[data-video-tutorial-join-url]");
+            const overlay = document.querySelector("#video_tutorial_overlay");
+            const rect = overlay && overlay.getBoundingClientRect();
+            return {
+              duration: video.duration,
+              currentSrc: video.currentSrc,
+              joinUrl: String(join && join.textContent || "").trim(),
+              coversViewport: Boolean(
+                rect
+                && Math.abs(rect.left) < 1
+                && Math.abs(rect.top) < 1
+                && Math.abs(rect.width - window.innerWidth) < 1
+                && Math.abs(rect.height - window.innerHeight) < 1
+              )
+            };
+          }),
+          15000
+        );
+        ctx.assert(
+          Number.isFinite(mediaProbe.duration) && mediaProbe.duration >= 59 && mediaProbe.duration <= 61,
+          `narrated video should last about 60 seconds, got ${mediaProbe.duration}`
+        );
+        ctx.assert(mediaProbe.joinUrl.length > 0, "spectator HUD should show the application join URL");
+        ctx.assert(mediaProbe.coversViewport, "spectator video tutorial should cover the full viewport");
+
+        const colorPhases = [
+          { position: 34.2, phase: "red", title: "ROJO", background: "rgb(242, 13, 53)" },
+          { position: 38.2, phase: "blue", title: "AZUL", background: "rgb(9, 101, 255)" },
+          { position: 42.2, phase: "green", title: "VERDE", background: "rgb(0, 182, 92)" },
+          { position: 46.2, phase: "white", title: "BLANCO", background: "rgb(255, 255, 255)" }
+        ];
+        for (const expected of colorPhases) {
+          for (const roleName of museRoles) {
+            const rendered = await renderLocalVideoTutorialPosition(
+              ctx,
+              roleName,
+              playing,
+              expected.position
+            );
+            ctx.assert(rendered && rendered.phase === expected.phase, `${roleName} should enter ${expected.phase} calibration`);
+            ctx.assert(rendered.title === expected.title, `${roleName} should label the ${expected.phase} calibration`);
+            ctx.assert(rendered.background === expected.background, `${roleName} should render a solid ${expected.phase} screen`);
+            ctx.assert(rendered.coversViewport, `${roleName} ${expected.phase} calibration should cover its viewport`);
+          }
+        }
+
+        let confirmState = await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 50.2);
+        ctx.assert(confirmState.phase === "confirm" && confirmState.confirmHidden === false, "first muse should reach confirmation");
+        await ctx.click("musa1", ".scrib-video-tutorial-device__confirm");
+
+        const oneVerified = await ctx.waitFor(
+          "first muse confirms against the authoritative server",
+          async () => {
+            const state = await requestVideoTutorialState(ctx, "spectator");
+            return state
+              && state.reproduccion_seq === playing.reproduccion_seq
+              && state.verificacion.verificadas === 1
+              ? state
+              : false;
+          },
+          10000
+        );
+        await ctx.waitForText(
+          "spectator",
+          "[data-video-tutorial-counter]",
+          (text) => /^1\/2 MUSAS VERIFICADAS$/i.test(text.trim()),
+          "spectator updates after the first real confirmation"
+        );
+        await ctx.waitForText(
+          "control",
+          "#videotutorial_estado_detalle",
+          (text) => /Verificaci.n:\s*1\/2 musas/i.test(text),
+          "Control shows one of two muses verified"
+        );
+        await ctx.waitForText(
+          "musa1",
+          "#video_tutorial_musa_title",
+          (text) => /CONFIGURACI.N VERIFICADA/i.test(text),
+          "first muse receives successful verification feedback"
+        );
+
+        confirmState = await renderLocalVideoTutorialPosition(ctx, "musa2", oneVerified, 50.2);
+        ctx.assert(confirmState.phase === "confirm" && confirmState.confirmHidden === false, "second muse should reach confirmation");
+        await ctx.click("musa2", ".scrib-video-tutorial-device__confirm");
+
+        const allVerified = await ctx.waitFor(
+          "both muses confirm against the authoritative server",
+          async () => {
+            const state = await requestVideoTutorialState(ctx, "spectator");
+            return state
+              && state.reproduccion_seq === playing.reproduccion_seq
+              && state.verificacion.conectadas === 2
+              && state.verificacion.verificadas === 2
+              && state.verificacion.pendientes === 0
+              ? state
+              : false;
+          },
+          10000
+        );
+        const verifiedNames = new Set(
+          allVerified.verificacion.nombres_verificados.map((name) => String(name).toUpperCase())
+        );
+        for (const assignment of assignments) {
+          ctx.assert(verifiedNames.has(assignment.name), `server verification should include ${assignment.name}`);
+        }
+        await ctx.waitForText(
+          "spectator",
+          "[data-video-tutorial-counter]",
+          (text) => /^2\/2 MUSAS VERIFICADAS$/i.test(text.trim()),
+          "spectator shows the completed two-muse verification"
+        );
+        await ctx.waitForText(
+          "control",
+          "#videotutorial_estado_detalle",
+          (text) => /Verificaci.n:\s*2\/2 musas/i.test(text),
+          "Control shows both muses verified"
+        );
+
+        await ctx.click("control", "#videotutorial_ocultar");
+        const stopped = await ctx.waitFor(
+          "Control manually stops and removes the video tutorial",
+          async () => {
+            const state = await requestVideoTutorialState(ctx, "control");
+            return state
+              && state.visible === false
+              && state.reproduciendo === false
+              && state.configuracion.habilitado === true
+              && state.proxima_reproduccion_ts > Date.now()
+              ? state
+              : false;
+          },
+          10000
+        );
+        ctx.assert(
+          stopped.reproduccion_seq === playing.reproduccion_seq,
+          "stopping should preserve the completed playback sequence"
+        );
+        await ctx.waitForVisible(
+          "spectator",
+          "#video_tutorial_overlay",
+          false,
+          "spectator overlay is removed manually"
+        );
+        for (const roleName of museRoles) {
+          await ctx.waitForVisible(
+            roleName,
+            "#video_tutorial_musa",
+            false,
+            `${roleName} calibration overlay is removed manually`
+          );
+        }
+
+        await ctx.evaluate("control", () => {
+          const toggle = document.querySelector("#videotutorial_habilitado");
+          if (!toggle) throw new Error("Missing video tutorial repeat toggle");
+          toggle.checked = false;
+          toggle.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        await ctx.click("control", "#videotutorial_configurar");
+        await ctx.waitFor(
+          "Control disables automatic video tutorial repetition",
+          async () => {
+            const state = await requestVideoTutorialState(ctx, "control");
+            return state
+              && state.configuracion.habilitado === false
+              && state.proxima_reproduccion_ts === 0
+              ? state
+              : false;
+          },
+          10000
+        );
+        await ctx.waitForText(
+          "control",
+          "#videotutorial_estado_texto",
+          (text) => /REPETICI.N DESACTIVADA/i.test(text),
+          "Control reports automatic repetition disabled"
+        );
+      } finally {
+        if (initialConfig) {
+          try {
+            await configureVideoTutorialRaw(ctx, "control", initialConfig, "restore");
+          } catch (_error) {
+          }
+        }
+      }
     }
   },
   {

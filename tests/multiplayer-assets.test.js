@@ -9,6 +9,7 @@ const CSS_VERSION = "20260505i";
 const PLAYER_DISCARD_VERSION = "20260824a";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
+const CONTROL_VIDEO_VERSION = "20260824d";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260822c";
 const LEVEL_TRANSITION_VERSION = "20260823a";
@@ -20,10 +21,10 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_SOCKET_EVENTS_VERSION = "20260506b";
-const CONTROL_CSS_VERSION = MUSE_AUTHOR_VERSION;
+const CONTROL_CSS_VERSION = CONTROL_VIDEO_VERSION;
 const CONTROL_ACTIONS_VERSION = MUSE_AUTHOR_VERSION;
 const CONTROL_STATE_VERSION = PLAYER_DISCARD_VERSION;
-const CONTROL_SOCKET_EVENTS_VERSION = SCORE_ASSET_VERSION;
+const CONTROL_SOCKET_EVENTS_VERSION = CONTROL_VIDEO_VERSION;
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
 const PUBLIC_PLAYER_STATE_VERSION = MUSE_AUTHOR_VERSION;
 const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = PRE_SHOW_VERSION;
@@ -91,6 +92,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/control/index.html", "index.css", CONTROL_CSS_VERSION);
   assertIncludesAsset("game/control/index.html", "js/actions.js", CONTROL_ACTIONS_VERSION);
   assertIncludesAsset("game/control/index.html", "js/state.js", CONTROL_STATE_VERSION);
+  assertIncludesAsset("game/control/index.html", "js/videotutorial-control.js", CONTROL_VIDEO_VERSION);
   assertIncludesAsset("game/control/index.html", "js/socket-events.js", CONTROL_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/credits.js");
 

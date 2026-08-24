@@ -5,6 +5,352 @@
     src: url('../css/fonts/Retro\ Gaming.ttf') format('truetype');
 }
 
+/* Videotutorial previo: programación y control remoto desde la pestaña Tutorial. */
+#panel_controles .control-group--calentamiento:not(.is-collapsed) > .videotutorial-control {
+    --video-control-accent: #73e6ff;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid !important;
+    grid-template-columns: minmax(10rem, 0.8fr) minmax(18rem, 1.5fr);
+    gap: 0.34rem 0.58rem;
+    align-items: center;
+    min-width: 0;
+    padding: clamp(0.42rem, 0.7vw, 0.66rem);
+    border: 1px solid color-mix(in srgb, var(--video-control-accent), transparent 48%);
+    border-radius: 0.48rem;
+    background:
+        linear-gradient(120deg, color-mix(in srgb, var(--video-control-accent), transparent 91%), transparent 52%),
+        rgba(2, 9, 16, 0.9);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 0.85rem color-mix(in srgb, var(--video-control-accent), transparent 80%);
+    color: #f4fbff;
+}
+
+#panel_controles .control-group--calentamiento:not(.is-collapsed) > .control-group-buttons--two {
+    grid-row: 3;
+}
+
+#panel_controles .control-group--calentamiento:not(.is-collapsed) > .control-group-subtitle {
+    grid-row: 4;
+}
+
+#panel_controles .control-group--calentamiento:not(.is-collapsed) > .control-group-buttons--solicitud {
+    grid-row: 5;
+}
+
+#panel_controles .control-group--calentamiento:not(.is-collapsed) > .calentamiento-flujo-estado {
+    grid-row: 6;
+}
+
+.videotutorial-control[data-state="playing"] {
+    --video-control-accent: #65ff9b !important;
+}
+
+.videotutorial-control[data-state="scheduled"] {
+    --video-control-accent: #73e6ff !important;
+}
+
+.videotutorial-control[data-state="pending"] {
+    --video-control-accent: #ffd166 !important;
+}
+
+.videotutorial-control[data-state="error"] {
+    --video-control-accent: #ff6978 !important;
+}
+
+.videotutorial-control[data-state="waiting"],
+.videotutorial-control[data-state="inactive"],
+.videotutorial-control[data-state="disconnected"] {
+    --video-control-accent: #92a6b2 !important;
+}
+
+.videotutorial-control__header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.42rem;
+    min-width: 0;
+    grid-row: 1 / 3;
+}
+
+.videotutorial-control__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.9rem;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--video-control-accent), transparent 36%);
+    border-radius: 50%;
+    color: var(--video-control-accent);
+    background: color-mix(in srgb, var(--video-control-accent), transparent 88%);
+    box-shadow: 0 0 0.7rem color-mix(in srgb, var(--video-control-accent), transparent 64%);
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+.videotutorial-control__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.16rem;
+    min-width: 0;
+}
+
+.videotutorial-control__title {
+    color: color-mix(in srgb, var(--video-control-accent), white 20%);
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.54rem, 0.72vw, 0.76rem);
+    letter-spacing: 0.08em;
+    line-height: 1.05;
+    text-shadow: 0 0 0.48rem color-mix(in srgb, var(--video-control-accent), transparent 42%);
+}
+
+.videotutorial-control__hint {
+    color: rgba(224, 237, 247, 0.72);
+    font-size: clamp(0.48rem, 0.62vw, 0.66rem);
+    line-height: 1.25;
+}
+
+.videotutorial-control__dot {
+    width: 0.62rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--video-control-accent);
+    box-shadow: 0 0 0.72rem var(--video-control-accent);
+}
+
+.videotutorial-control[data-state="playing"] .videotutorial-control__dot,
+.videotutorial-control[data-state="pending"] .videotutorial-control__dot {
+    animation: videotutorialControlPulse 920ms ease-in-out infinite alternate;
+}
+
+.videotutorial-control__config {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, 1fr) auto auto;
+    gap: 0.38rem;
+    align-items: center;
+    min-width: 0;
+}
+
+.videotutorial-control__button--save {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    align-self: stretch;
+}
+
+.videotutorial-control__toggle {
+    grid-column: 1 / 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    width: max-content;
+    max-width: 100%;
+    color: rgba(229, 243, 252, 0.86);
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.44rem, 0.54vw, 0.58rem);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+.videotutorial-control__toggle > input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.videotutorial-control__toggle-track {
+    position: relative;
+    flex: 0 0 auto;
+    width: 1.82rem;
+    height: 0.9rem;
+    border: 1px solid rgba(146, 166, 178, 0.72);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.46);
+    transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.videotutorial-control__toggle-track::after {
+    content: "";
+    position: absolute;
+    top: 0.12rem;
+    left: 0.14rem;
+    width: 0.58rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #92a6b2;
+    transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.videotutorial-control__toggle > input:checked + .videotutorial-control__toggle-track {
+    border-color: color-mix(in srgb, var(--video-control-accent), white 12%);
+    background: color-mix(in srgb, var(--video-control-accent), transparent 76%);
+    box-shadow: 0 0 0.46rem color-mix(in srgb, var(--video-control-accent), transparent 58%);
+}
+
+.videotutorial-control__toggle > input:checked + .videotutorial-control__toggle-track::after {
+    transform: translateX(0.86rem);
+    background: color-mix(in srgb, var(--video-control-accent), white 20%);
+}
+
+.videotutorial-control__toggle > input:focus-visible + .videotutorial-control__toggle-track {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.videotutorial-control__toggle > input:disabled ~ * {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+
+.videotutorial-control__config > label {
+    color: rgba(229, 243, 252, 0.86);
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.46rem, 0.58vw, 0.62rem);
+    letter-spacing: 0.05em;
+}
+
+.videotutorial-control__input-shell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.26rem;
+    min-width: 0;
+    padding: 0.16rem 0.36rem;
+    border: 1px solid color-mix(in srgb, var(--video-control-accent), transparent 58%);
+    border-radius: 0.34rem;
+    background: rgba(0, 0, 0, 0.42);
+    color: color-mix(in srgb, var(--video-control-accent), white 16%);
+    font-family: "Retro-gaming", monospace;
+    font-size: 0.5rem;
+}
+
+#videotutorial_intervalo {
+    box-sizing: border-box;
+    width: 3.6rem;
+    min-height: 1.55rem;
+    padding: 0.18rem 0.28rem;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font-family: "Retro-gaming", monospace;
+    font-size: 0.7rem;
+    text-align: center;
+}
+
+#videotutorial_intervalo:focus-visible {
+    box-shadow: 0 0 0 2px var(--video-control-accent);
+}
+
+.videotutorial-control__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.38rem;
+}
+
+.videotutorial-control .videotutorial-control__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 1.72rem;
+    height: auto;
+    margin: 0;
+    padding: 0.34rem 0.48rem;
+    font-size: clamp(0.46rem, 0.6vw, 0.66rem);
+    line-height: 1.05;
+    white-space: normal;
+}
+
+.videotutorial-control__button--play {
+    border-color: rgba(101, 255, 155, 0.68) !important;
+}
+
+.videotutorial-control__button--stop {
+    border-color: rgba(255, 105, 120, 0.66) !important;
+}
+
+.videotutorial-control__button:disabled,
+.videotutorial-control__button[aria-disabled="true"],
+#videotutorial_intervalo:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+    filter: grayscale(0.72);
+}
+
+.videotutorial-control__status {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.42rem;
+    align-items: baseline;
+    min-width: 0;
+    margin: 0;
+    padding-top: 0.25rem;
+    border-top: 1px solid color-mix(in srgb, var(--video-control-accent), transparent 76%);
+    color: rgba(226, 239, 247, 0.76);
+    font-size: clamp(0.46rem, 0.58vw, 0.62rem);
+}
+
+.videotutorial-control__status strong {
+    color: color-mix(in srgb, var(--video-control-accent), white 20%);
+    font-family: "Retro-gaming", monospace;
+    font-size: 0.54rem;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.videotutorial-control__sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+@keyframes videotutorialControlPulse {
+    from {
+        opacity: 0.54;
+        transform: scale(0.84);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1.16);
+    }
+}
+
+@media (max-width: 1000px) {
+    #panel_controles .control-group--calentamiento:not(.is-collapsed) > .videotutorial-control {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .videotutorial-control__header,
+    .videotutorial-control__status {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .videotutorial-control__config {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .videotutorial-control__dot,
+    .videotutorial-control__toggle-track,
+    .videotutorial-control__toggle-track::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
 @font-face {
     font-family: 'VT323';
     src: url('../css/fonts/VT323-Regular.ttf') format('truetype');
