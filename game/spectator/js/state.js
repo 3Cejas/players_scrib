@@ -439,6 +439,9 @@ const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
     }
+    if (typeof refrescarVisibilidadPreShowEspectador === "function") {
+        refrescarVisibilidadPreShowEspectador();
+    }
     if (screen) {
         const equipo = teleprompter_estado.source;
         const valor = teleprompterTieneTexto() && equipo === 1 ? "1" : teleprompterTieneTexto() && equipo === 2 ? "2" : "none";
@@ -1315,6 +1318,155 @@ const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
 const MAX_NOMBRE_CURSOR_CALENTAMIENTO = 26;
 const ORDEN_SOLICITUD_CALENTAMIENTO_VISTA = ["lugares", "acciones", "frase_final"];
+
+const pre_show_espectador = getEl("pre_show_espectador");
+const pre_show_espectador_mensajes = getEl("pre_show_espectador_mensajes");
+const pre_show_espectador_anuncio = getEl("pre_show_espectador_anuncio");
+let pre_show_estado_espectador = window.ScribPreShow.normalizarEstado({ activo: false });
+let pre_show_bloqueado_por_tutorial_espectador = false;
+const pre_show_ids_vistos_espectador = new Set();
+const PRE_SHOW_MENSAJES_VISIBLES_ESPECTADOR = 8;
+
+function puedeMostrarPreShowEspectador() {
+    return Boolean(
+        pre_show_estado_espectador.activo
+        && !pre_show_bloqueado_por_tutorial_espectador
+        && !partida_activa_espectador
+        && !vista_calentamiento
+        && vista_espectador_modo_resuelta === "partida"
+        && !(teleprompter_estado && teleprompter_estado.visible)
+    );
+}
+
+function crearVacioPreShowEspectador() {
+    const vacio = document.createElement("div");
+    vacio.className = "pre-show-espectador__empty";
+    const icono = document.createElement("span");
+    icono.className = "pre-show-espectador__empty-icon";
+    icono.setAttribute("aria-hidden", "true");
+    icono.textContent = "\u2726";
+    const texto = document.createElement("p");
+    texto.textContent = tJuego2P(
+        "preshow.spectator.waiting",
+        {},
+        "Esperando la primera transmision de una musa..."
+    );
+    vacio.append(icono, texto);
+    return vacio;
+}
+
+function crearMensajePreShowEspectador(mensaje, esNuevo, indice) {
+    const tarjeta = document.createElement("article");
+    tarjeta.className = "pre-show-message";
+    tarjeta.setAttribute("role", "listitem");
+    if (mensaje.equipo === 1 || mensaje.equipo === 2) {
+        tarjeta.classList.add(`pre-show-message--team-${mensaje.equipo}`);
+    }
+    tarjeta.classList.toggle("is-new", Boolean(esNuevo));
+    tarjeta.classList.toggle("is-static", !esNuevo);
+    tarjeta.dataset.messageId = mensaje.id;
+    if (esNuevo) tarjeta.style.animationDelay = `${Math.min(indice * 55, 280)}ms`;
+
+    const musa = document.createElement("p");
+    musa.className = "pre-show-message__muse";
+    musa.textContent = mensaje.nombre_musa;
+    const texto = document.createElement("p");
+    texto.className = "pre-show-message__text";
+    texto.textContent = mensaje.texto;
+    tarjeta.append(musa, texto);
+    return tarjeta;
+}
+
+function renderizarPreShowEspectador() {
+    if (!pre_show_espectador_mensajes) return;
+    if (!pre_show_estado_espectador.activo || pre_show_bloqueado_por_tutorial_espectador) {
+        pre_show_espectador_mensajes.replaceChildren();
+        return;
+    }
+    const mensajes = pre_show_estado_espectador.mensajes.slice(-PRE_SHOW_MENSAJES_VISIBLES_ESPECTADOR);
+    if (!mensajes.length) {
+        pre_show_espectador_mensajes.replaceChildren(crearVacioPreShowEspectador());
+        return;
+    }
+    const fragmento = document.createDocumentFragment();
+    const mensajesNuevos = [];
+    mensajes.forEach((mensaje, indice) => {
+        const esNuevo = !pre_show_ids_vistos_espectador.has(mensaje.id);
+        fragmento.appendChild(crearMensajePreShowEspectador(mensaje, esNuevo, indice));
+        if (esNuevo) mensajesNuevos.push(mensaje);
+        pre_show_ids_vistos_espectador.add(mensaje.id);
+    });
+    pre_show_espectador_mensajes.replaceChildren(fragmento);
+    const ultimoNuevo = mensajesNuevos[mensajesNuevos.length - 1];
+    if (ultimoNuevo && pre_show_espectador_anuncio) {
+        pre_show_espectador_anuncio.textContent = `${ultimoNuevo.nombre_musa}: ${ultimoNuevo.texto}`;
+    }
+}
+
+function refrescarVisibilidadPreShowEspectador() {
+    const visible = puedeMostrarPreShowEspectador();
+    if (document.body) {
+        document.body.classList.toggle("pre-show-espectador-activo", visible);
+    }
+    if (pre_show_espectador) {
+        pre_show_espectador.hidden = !visible;
+        pre_show_espectador.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
+    if (visible) renderizarPreShowEspectador();
+    return visible;
+}
+
+function actualizarEstadoPreShowEspectador(payload = {}) {
+    const siguiente = window.ScribPreShow.normalizarEstado(payload);
+    const nuevaSesion = Boolean(
+        siguiente.session_id
+        && siguiente.session_id !== pre_show_estado_espectador.session_id
+    );
+    const cambioFase = nuevaSesion || siguiente.phase_seq !== pre_show_estado_espectador.phase_seq;
+    if (cambioFase || !siguiente.activo) pre_show_ids_vistos_espectador.clear();
+    if (nuevaSesion && siguiente.activo && window.ScribPreShow.tieneSesionSincronizada(siguiente)) {
+        pre_show_bloqueado_por_tutorial_espectador = false;
+        partida_activa_espectador = false;
+        vista_calentamiento = false;
+        vista_espectador_override = "partida";
+    }
+    pre_show_estado_espectador = siguiente;
+    if (!siguiente.activo && pre_show_espectador_mensajes) {
+        pre_show_espectador_mensajes.replaceChildren();
+    }
+    if (!siguiente.activo && pre_show_espectador_anuncio) {
+        pre_show_espectador_anuncio.textContent = "";
+    }
+    if (nuevaSesion && siguiente.activo && typeof actualizarModoVistaEspectadorUi === "function") {
+        actualizarModoVistaEspectadorUi("partida");
+    } else {
+        refrescarVisibilidadPreShowEspectador();
+    }
+    return siguiente;
+}
+
+function cerrarPreShowEspectadorPorTutorial() {
+    pre_show_bloqueado_por_tutorial_espectador = true;
+    pre_show_estado_espectador = window.ScribPreShow.normalizarEstado({
+        activo: false,
+        session_id: pre_show_estado_espectador.session_id,
+        phase_seq: pre_show_estado_espectador.phase_seq,
+        limite_texto: pre_show_estado_espectador.limite_texto,
+        cooldown_ms: pre_show_estado_espectador.cooldown_ms
+    });
+    pre_show_ids_vistos_espectador.clear();
+    if (pre_show_espectador_mensajes) pre_show_espectador_mensajes.replaceChildren();
+    if (pre_show_espectador_anuncio) pre_show_espectador_anuncio.textContent = "";
+    refrescarVisibilidadPreShowEspectador();
+}
+
+function suspenderPreShowEspectadorPorConexion() {
+    if (document.body) document.body.classList.remove("pre-show-espectador-activo");
+    if (pre_show_espectador) {
+        pre_show_espectador.hidden = true;
+        pre_show_espectador.setAttribute("aria-hidden", "true");
+    }
+}
 
 function actualizarBrandingPartidaEspectador(opciones = {}) {
     const modoPartida = vista_espectador_modo_resuelta === "partida";
@@ -3849,10 +4001,12 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         puntuacion_particulas.classList.remove("is-active", "is-final");
     }
     actualizarVisibilidadPanelNivelEspectador();
+    refrescarVisibilidadPreShowEspectador();
     programarAjusteViewportEspectador();
 };
 const actualizarVistaCalentamiento = (activa) => {
     vista_calentamiento = Boolean(activa);
+    if (vista_calentamiento) cerrarPreShowEspectadorPorTutorial();
     actualizarModoVistaEspectadorUi();
 };
 const actualizarModoVistaEspectadorRemota = (payload = {}) => {
@@ -3971,6 +4125,9 @@ const actualizarCalentamientoEspectador = (data) => {
     if (!data) return;
     ultimo_payload_calentamiento_espectador = data;
     const activoServidor = Boolean(data.activo);
+    if (activoServidor || data.vista === true) {
+        cerrarPreShowEspectadorPorTutorial();
+    }
     if (activoServidor && !calentamiento_activo_previo_espectador) {
         limpiarHistorialDetonadores();
     }

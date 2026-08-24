@@ -15,7 +15,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260824a">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260824b">
     <link rel="stylesheet" type="text/css" href="../css/level-transition.css?v=20260823a">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -29,6 +29,7 @@
     <script src="../js/domains/teleprompter.js?v=20260424a"></script>
     <script src="../js/domains/resurrection.js?v=20260424a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
+    <script src="../js/domains/pre-show.js?v=20260824b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
     <script src="./js/actions.js?v=20260504e"></script>
     <div id="level_transition" class="level-transition" aria-hidden="true">
@@ -49,6 +50,31 @@
         <div class="level-transition__scanlines" aria-hidden="true"></div>
     </div>
     <p id="level_transition_status" class="scrib-visually-hidden" role="status" aria-live="assertive" aria-atomic="true"></p>
+    <section id="pre_show_espectador" class="pre-show-espectador" hidden aria-labelledby="pre_show_espectador_titulo">
+        <div class="pre-show-espectador__ambient" aria-hidden="true">
+            <span class="pre-show-espectador__orb pre-show-espectador__orb--blue"></span>
+            <span class="pre-show-espectador__orb pre-show-espectador__orb--red"></span>
+            <span class="pre-show-espectador__grid"></span>
+            <span class="pre-show-espectador__scan"></span>
+        </div>
+        <header class="pre-show-espectador__header">
+            <span class="pre-show-espectador__live"><span aria-hidden="true"></span><span data-i18n="preshow.live">EN DIRECTO</span></span>
+            <p class="pre-show-espectador__eyebrow" data-i18n="preshow.spectator.eyebrow">ANTES DEL TUTORIAL</p>
+            <h1 id="pre_show_espectador_titulo" data-i18n="preshow.spectator.title">LAS MUSAS TOMAN EL CANAL</h1>
+            <p data-i18n="preshow.spectator.copy">Mensajes en directo para ir calentando al publico.</p>
+        </header>
+        <div id="pre_show_espectador_mensajes" class="pre-show-espectador__messages" role="list" data-i18n-attr="aria-label:preshow.spectator.messages_aria" aria-label="Mensajes de las musas">
+            <div class="pre-show-espectador__empty">
+                <span class="pre-show-espectador__empty-icon" aria-hidden="true">&#x2726;</span>
+                <p data-i18n="preshow.spectator.waiting">Esperando la primera transmision de una musa...</p>
+            </div>
+        </div>
+        <p id="pre_show_espectador_anuncio" class="scrib-visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
+        <footer class="pre-show-espectador__footer">
+            <span aria-hidden="true">SCRIB / PRE-SHOW</span>
+            <span data-i18n="preshow.spectator.until_tutorial">EL CANAL TERMINA AL EMPEZAR EL TUTORIAL</span>
+        </footer>
+    </section>
     <div id="corazones_espectador" class="corazones-flotantes"></div>
     <div id="teleprompter_overlay" class="teleprompter-overlay">
         <div id="teleprompter_screen" class="teleprompter-screen">
@@ -331,10 +357,10 @@
     </div>
 </body>
 <script src="../dist/socket.io/socket.io.js"></script>
-    <script src="../js/i18n.js?v=20260824a"></script>
+    <script src="../js/i18n.js?v=20260824b"></script>
 <script src="../js/domains/final-score.js?v=20260822c"></script>
 <script src="../js/domains/level-transition.js?v=20260823a"></script>
-<script src="./js/state.js?v=20260824a"></script>
-<script src="./js/socket-events.js?v=20260824a"></script>
+<script src="./js/state.js?v=20260824b"></script>
+<script src="./js/socket-events.js?v=20260824b"></script>
 <script src="./js/index.js?v=20260504e"></script>
 </html>

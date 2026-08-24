@@ -2482,6 +2482,247 @@ const coreSpecs = [
     }
   },
   {
+    name: "musa-pre-show-core",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(ctx, ["control", "spectator", "musa1"], { useStateHooks: false });
+
+      await ctx.waitForVisible(
+        "spectator",
+        "#pre_show_espectador",
+        true,
+        "spectator pre-show is visible on entry"
+      );
+      await ctx.waitForVisible(
+        "musa1",
+        "#pre_show_musa",
+        true,
+        "musa pre-show composer is visible on entry"
+      );
+      await ctx.waitFor(
+        "musa pre-show composer is ready",
+        async () => ctx.evaluate("musa1", () => {
+          const input = document.querySelector("#pre_show_musa_input");
+          return Boolean(input && !input.disabled);
+        }),
+        10000
+      );
+      const assignedTeam = await ctx.evaluate("musa1", () => {
+        try {
+          return Number(window.eval("player"));
+        } catch (_error) {
+          return 0;
+        }
+      });
+      ctx.assert(assignedTeam === 1 || assignedTeam === 2, "musa must have an authoritative balanced team before posting");
+
+      const openPhase = await ctx.evaluate("musa1", () => new Promise((resolve) => {
+        const musaSocket = window.eval("socket");
+        const timer = setTimeout(() => resolve(null), 5000);
+        musaSocket.emit("pedir_pre_show_estado", {}, (response = {}) => {
+          clearTimeout(timer);
+          resolve(response && response.ok === true ? response.estado : null);
+        });
+      }));
+      ctx.assert(openPhase && openPhase.activo === true, "musa must receive the authoritative open pre-show phase");
+      ctx.assert(Boolean(openPhase.session_id), "open pre-show phase must include a session id");
+      ctx.assert(Number.isInteger(openPhase.phase_seq), "open pre-show phase must include a phase sequence");
+
+      const rawMessage = 'Canal &copy; <b>EN VIVO</b> "E2E"';
+      const publishedMessage = 'Canal &copy; EN VIVO "E2E"';
+      await ctx.fillValue("musa1", "#pre_show_musa_input", rawMessage);
+      await ctx.waitFor(
+        "pre-show send button enabled",
+        async () => ctx.evaluate("musa1", () => {
+          const button = document.querySelector("#pre_show_musa_enviar");
+          return Boolean(button && !button.disabled);
+        })
+      );
+      await ctx.click("musa1", "#pre_show_musa_enviar");
+
+      await ctx.waitForText(
+        "musa1",
+        "#pre_show_musa_feedback",
+        (text) => /enviado.+espectador/i.test(text),
+        "musa receives successful pre-show ACK",
+        10000
+      );
+      await ctx.waitFor(
+        "spectator receives the authoritative pre-show card",
+        async () => ctx.evaluate("spectator", (expectedText) => {
+          const card = document.querySelector("#pre_show_espectador_mensajes .pre-show-message[data-message-id]");
+          const text = card && card.querySelector(".pre-show-message__text");
+          return Boolean(
+            card
+            && card.dataset.messageId
+            && String(text?.textContent || "").trim() === expectedText
+          );
+        }, publishedMessage),
+        10000
+      );
+
+      const rendered = await ctx.evaluate("spectator", () => {
+        const cards = Array.from(document.querySelectorAll("#pre_show_espectador_mensajes .pre-show-message"));
+        const card = cards[0];
+        const text = card && card.querySelector(".pre-show-message__text");
+        const muse = card && card.querySelector(".pre-show-message__muse");
+        if (!card || !text || !muse) return null;
+        return {
+          cardCount: cards.length,
+          messageIds: cards.map((item) => String(item.dataset.messageId || "")),
+          text: String(text.textContent || "").trim(),
+          html: String(text.innerHTML || ""),
+          textElementChildren: text.childElementCount,
+          muse: String(muse.textContent || "").trim(),
+          classes: Array.from(card.classList),
+          animationName: window.getComputedStyle(card).animationName,
+          messageId: String(card.dataset.messageId || "")
+        };
+      });
+      ctx.assert(Boolean(rendered), "spectator should render a pre-show message card");
+      ctx.assert(rendered.cardCount === 1, "one accepted submit must render exactly one spectator card");
+      ctx.assert(new Set(rendered.messageIds).size === 1, "spectator pre-show card ids must be unique");
+      ctx.assert(rendered.text === publishedMessage, "spectator must render the server-sanitized message literally");
+      ctx.assert(rendered.html.includes("&amp;copy;"), "spectator message must escape HTML entities via textContent");
+      ctx.assert(rendered.textElementChildren === 0, "spectator message must not create injected child elements");
+      ctx.assert(rendered.muse === "E2E_MUSA_1", "spectator message must identify its muse");
+      ctx.assert(
+        rendered.classes.includes(`pre-show-message--team-${assignedTeam}`),
+        "spectator message must identify the authoritative muse team"
+      );
+      ctx.assert(rendered.classes.includes("is-new"), "new spectator message must use its entrance animation state");
+      ctx.assert(
+        rendered.animationName && rendered.animationName !== "none",
+        "new spectator message must have a CSS entrance animation"
+      );
+      ctx.assert(Boolean(rendered.messageId), "spectator message must expose its authoritative id");
+
+      const ackUi = await ctx.evaluate("musa1", () => ({
+        inputValue: String(document.querySelector("#pre_show_musa_input")?.value || ""),
+        buttonDisabled: Boolean(document.querySelector("#pre_show_musa_enviar")?.disabled)
+      }));
+      ctx.assert(ackUi.inputValue === "", "successful ACK must clear the musa composer");
+      ctx.assert(ackUi.buttonDisabled, "successful ACK must begin a musa send cooldown");
+
+      await ctx.fillValue("musa1", "#pre_show_musa_input", "Segundo mensaje bloqueado por cooldown");
+      const disabledDuringCooldown = await ctx.evaluate(
+        "musa1",
+        () => Boolean(document.querySelector("#pre_show_musa_enviar")?.disabled)
+      );
+      ctx.assert(disabledDuringCooldown, "musa must not be able to submit again during cooldown");
+      await ctx.waitFor(
+        "pre-show cooldown releases composer",
+        async () => ctx.evaluate(
+          "musa1",
+          () => !document.querySelector("#pre_show_musa_enviar")?.disabled
+        ),
+        6000
+      );
+
+      await ctx.invoke("control", "cambiar_vista_calentamiento");
+      await ctx.waitForState(
+        "production tutorial view starts",
+        (state) => state.tutorial.activo === true && state.tutorial.vista === true,
+        10000
+      );
+      await ctx.waitForVisible(
+        "spectator",
+        "#pre_show_espectador",
+        false,
+        "spectator pre-show closes when tutorial starts"
+      );
+      await ctx.waitForVisible(
+        "musa1",
+        "#pre_show_musa",
+        false,
+        "musa pre-show closes when tutorial starts"
+      );
+
+      const lateAck = await ctx.evaluate("musa1", (phase) => new Promise((resolve) => {
+        const musaSocket = window.eval("socket");
+        const timer = setTimeout(() => resolve({ ok: false, code: "ACK_TIMEOUT" }), 5000);
+        musaSocket.emit("pre_show_musa_enviar", {
+          texto: "ENVIO TARDIO E2E",
+          request_id: "e2e_pre_show_late",
+          client_id: window.musa_client_id || "",
+          session_id: phase.session_id,
+          phase_seq: phase.phase_seq
+        }, (response = {}) => {
+          clearTimeout(timer);
+          resolve(response);
+        });
+      }), openPhase);
+      ctx.assert(lateAck && lateAck.ok === false, "late pre-show submit must be rejected");
+      ctx.assert(lateAck.code === "STALE_PHASE", "late packet from the open phase must be rejected as stale");
+
+      const closedSnapshot = await ctx.evaluate("spectator", () => new Promise((resolve) => {
+        const spectatorSocket = window.eval("socket");
+        const timer = setTimeout(() => resolve(null), 5000);
+        spectatorSocket.emit("pedir_pre_show_estado", {}, (response = {}) => {
+          clearTimeout(timer);
+          resolve(response && response.ok === true ? response.estado : null);
+        });
+      }));
+      ctx.assert(closedSnapshot && closedSnapshot.activo === false, "authoritative pre-show snapshot must remain closed");
+      ctx.assert(
+        closedSnapshot.session_id === openPhase.session_id && closedSnapshot.phase_seq > openPhase.phase_seq,
+        "tutorial must advance the pre-show phase without reusing the open sequence"
+      );
+      ctx.assert(
+        Array.isArray(closedSnapshot.mensajes) && closedSnapshot.mensajes.length === 0,
+        "late pre-show packet must not persist or publish any message"
+      );
+      ctx.assert(
+        !JSON.stringify(closedSnapshot).includes("ENVIO TARDIO E2E"),
+        "authoritative snapshot must not contain the late packet text"
+      );
+
+      const previousSession = closedSnapshot.session_id;
+      await ctx.invoke("control", "limpiar");
+      await ctx.waitForVisible(
+        "spectator",
+        "#pre_show_espectador",
+        true,
+        "spectator pre-show reopens after production limpiar in the same tab",
+        10000
+      );
+      await ctx.waitForVisible(
+        "musa1",
+        "#pre_show_musa",
+        true,
+        "musa pre-show reopens after production limpiar in the same tab",
+        10000
+      );
+      const reopened = await ctx.waitFor(
+        "fresh pre-show session after production limpiar",
+        async () => ctx.evaluate("musa1", (oldSession) => new Promise((resolve) => {
+          const musaSocket = window.eval("socket");
+          const timer = setTimeout(() => resolve(false), 3000);
+          musaSocket.emit("pedir_pre_show_estado", {}, (response = {}) => {
+            clearTimeout(timer);
+            const state = response && response.ok === true ? response.estado : null;
+            resolve(
+              state
+              && state.activo === true
+              && state.session_id
+              && state.session_id !== oldSession
+              && Array.isArray(state.mensajes)
+              && state.mensajes.length === 0
+                ? state
+                : false
+            );
+          });
+        }), previousSession),
+        10000
+      );
+      ctx.assert(reopened.mensajes.length === 0, "production limpiar must reopen without messages from the previous show");
+      const spectatorCardsAfterReset = await ctx.evaluate(
+        "spectator",
+        () => document.querySelectorAll("#pre_show_espectador_mensajes .pre-show-message").length
+      );
+      ctx.assert(spectatorCardsAfterReset === 0, "spectator must not retain pre-reset message cards");
+    }
+  },
+  {
     name: "tutorial-core",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "musa1", "musa2"]);

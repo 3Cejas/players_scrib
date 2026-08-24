@@ -22,6 +22,7 @@ socket.on('connect', () => {
     teleprompter_estado.revision = 0;
     actualizarEtiquetasCursorCalentamiento();
     socket.emit('registrar_espectador');
+    socket.emit('pedir_pre_show_estado');
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');
     socket.emit('pedir_estado_regalo_bandera_musas');
@@ -44,10 +45,15 @@ socket.on('connect_error', () => {
     ocultarTransicionNivelEspectador();
     limpiarAsincroniaVisualEspectador({ resetViewport: true });
     invalidarContextoTransitorioEspectador();
+    suspenderPreShowEspectadorPorConexion();
 });
 
 socket.on('teleprompter_state', (payload = {}) => {
     actualizarTeleprompterEstado(payload.state || {});
+});
+
+socket.on('pre_show_estado', (payload = {}) => {
+    actualizarEstadoPreShowEspectador(payload);
 });
 
 socket.on('musa_corazon', (data) => {
@@ -126,6 +132,7 @@ socket.on('disconnect', () => {
     detenerSlidesStats();
     detenerAnimacionNubeInspiracion();
     detenerAnimacionCreditosEspectador();
+    suspenderPreShowEspectadorPorConexion();
 });
 
 socket.on('nube_inspiracion_estado', (payload = {}) => {
@@ -803,6 +810,7 @@ function programarPasoCountdownEspectador(paso, revisionCountdown, indiceAudio) 
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    cerrarPreShowEspectadorPorTutorial();
     limpiarAsincroniaVisualEspectador();
     invalidarContextoTransitorioEspectador();
     const revisionCountdown = invalidarCountdownInicioEspectador({ resetFlags: false });
@@ -902,6 +910,7 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
 });
 
 socket.on('post-inicio', data => {
+    cerrarPreShowEspectadorPorTutorial();
     if (sonido) {
         sonido.pause();
         sonido.currentTime = 0;

@@ -91,6 +91,9 @@ function setUiPartidaActivaMusa(activa) {
     ui_partida_activa_musa = Boolean(activa);
     if (ui_partida_activa_musa) {
         ui_partida_finalizada_musa = false;
+        if (typeof cerrarPreShowMusaPorTutorial === "function") {
+            cerrarPreShowMusaPorTutorial();
+        }
     }
     refrescarClasesUiPartidaMusa();
 }
@@ -99,6 +102,9 @@ function setUiPartidaFinalizadaMusa(finalizada) {
     ui_partida_finalizada_musa = Boolean(finalizada);
     if (ui_partida_finalizada_musa) {
         ui_partida_activa_musa = false;
+        if (typeof cerrarPreShowMusaPorTutorial === "function") {
+            cerrarPreShowMusaPorTutorial();
+        }
     }
     refrescarClasesUiPartidaMusa();
 }
@@ -2190,6 +2196,9 @@ const actualizarCalentamiento = (data = {}) => {
     const mensajesCalentamiento = obtenerMensajesSolicitudCalentamiento();
     calentamiento_activo = Boolean(data.activo);
     calentamiento_vista = Boolean(data.vista);
+    if (calentamiento_activo || calentamiento_vista) {
+        cerrarPreShowMusaPorTutorial();
+    }
     calentamiento_bloqueado = Boolean(data.bloqueado);
     calentamiento_final_actual = normalizarFinalCalentamientoMusa(data.final);
     actualizarTemaCalentamiento(data.equipo || player);
@@ -2734,6 +2743,333 @@ function reproducirEntradaMundoMusa() {
 
     musa_world_entry_frame = requestAnimationFrame(paso);
 }
+
+const pre_show_musa = getEl("pre_show_musa");
+const pre_show_musa_form = getEl("pre_show_musa_form");
+const pre_show_musa_input = getEl("pre_show_musa_input");
+const pre_show_musa_enviar = getEl("pre_show_musa_enviar");
+const pre_show_musa_contador = getEl("pre_show_musa_contador");
+const pre_show_musa_feedback = getEl("pre_show_musa_feedback");
+let pre_show_estado_musa = window.ScribPreShow.normalizarEstado({ activo: false });
+let pre_show_bloqueado_por_tutorial_musa = false;
+let pre_show_envio_pendiente_musa = null;
+let pre_show_envio_revision_musa = 0;
+let pre_show_cooldown_musa = false;
+let pre_show_cooldown_timer_musa = null;
+let pre_show_timeout_ack_musa = null;
+let pre_show_ime_activo_musa = false;
+
+function traducirErrorPreShowMusa(respuesta = {}) {
+    const code = String(respuesta.code || respuesta.codigo || "").trim().toUpperCase();
+    if (code === "INVALID_TEXT") {
+        return tJuego2P("preshow.muse.feedback.empty", {}, "Escribe un mensaje antes de enviarlo.");
+    }
+    if (code === "TEXT_TOO_LONG") {
+        return tJuego2P(
+            "preshow.muse.feedback.too_long",
+            { max: pre_show_estado_musa.limite_texto },
+            `El mensaje no puede superar ${pre_show_estado_musa.limite_texto} caracteres.`
+        );
+    }
+    if (code === "OFFENSIVE_TEXT") {
+        return tJuego2P("preshow.muse.feedback.offensive", {}, "Ese mensaje contiene lenguaje no permitido.");
+    }
+    if (code === "RATE_LIMITED" || code === "DUPLICATE_MESSAGE") {
+        return tJuego2P("preshow.muse.feedback.rate_limited", {}, "Espera un momento antes de volver a enviar.");
+    }
+    if (code === "NOT_ACTIVE") {
+        return tJuego2P("preshow.muse.feedback.closed", {}, "El canal ya se ha cerrado: empieza el tutorial.");
+    }
+    return tJuego2P("preshow.muse.feedback.error", {}, "No se pudo enviar. Intentalo de nuevo.");
+}
+
+function mostrarFeedbackPreShowMusa(mensaje = "", esError = false) {
+    if (!pre_show_musa_feedback) return;
+    pre_show_musa_feedback.textContent = String(mensaje || "");
+    pre_show_musa_feedback.classList.toggle("is-error", Boolean(esError));
+}
+
+function actualizarContadorPreShowMusa() {
+    if (!pre_show_musa_input || !pre_show_musa_contador) return;
+    const limite = pre_show_estado_musa.limite_texto || window.ScribPreShow.MAX_TEXTO;
+    const longitud = Array.from(pre_show_musa_input.value || "").length;
+    pre_show_musa_contador.textContent = `${longitud} / ${limite}`;
+    pre_show_musa_contador.classList.toggle("is-near-limit", longitud >= Math.floor(limite * 0.85));
+    pre_show_musa_contador.classList.toggle("is-over-limit", longitud > limite);
+}
+
+function tieneSesionPreShowMusaSincronizada() {
+    return window.ScribPreShow.tieneSesionSincronizada(pre_show_estado_musa);
+}
+
+function preShowMusaVisible() {
+    return Boolean(
+        pre_show_estado_musa.activo
+        && !pre_show_bloqueado_por_tutorial_musa
+        && !calentamiento_activo
+        && !calentamiento_vista
+        && !ui_partida_activa_musa
+        && !ui_partida_finalizada_musa
+        && !secuencia_inicio_musa_activa
+    );
+}
+
+function refrescarControlesPreShowMusa() {
+    const visible = preShowMusaVisible();
+    const pendiente = Boolean(pre_show_envio_pendiente_musa);
+    const textoActual = pre_show_musa_input ? String(pre_show_musa_input.value || "") : "";
+    const limite = pre_show_estado_musa.limite_texto || window.ScribPreShow.MAX_TEXTO;
+    const textoValido = Boolean(textoActual.trim()) && Array.from(textoActual).length <= limite;
+    const sesionLista = tieneSesionPreShowMusaSincronizada();
+    if (pre_show_musa_input) {
+        pre_show_musa_input.disabled = !visible || pendiente || !sesionLista;
+    }
+    if (pre_show_musa_enviar) {
+        pre_show_musa_enviar.disabled = !visible || pendiente || pre_show_cooldown_musa || !textoValido || !sesionLista;
+    }
+    actualizarContadorPreShowMusa();
+}
+
+function cancelarEnvioPreShowMusa() {
+    pre_show_envio_revision_musa += 1;
+    pre_show_envio_pendiente_musa = null;
+    if (pre_show_timeout_ack_musa) {
+        clearTimeout(pre_show_timeout_ack_musa);
+        pre_show_timeout_ack_musa = null;
+    }
+}
+
+function limpiarCooldownPreShowMusa() {
+    if (pre_show_cooldown_timer_musa) {
+        clearTimeout(pre_show_cooldown_timer_musa);
+        pre_show_cooldown_timer_musa = null;
+    }
+    pre_show_cooldown_musa = false;
+}
+
+function iniciarCooldownPreShowMusa(duracionMs = pre_show_estado_musa.cooldown_ms) {
+    limpiarCooldownPreShowMusa();
+    pre_show_cooldown_musa = true;
+    refrescarControlesPreShowMusa();
+    const revision = pre_show_envio_revision_musa;
+    pre_show_cooldown_timer_musa = setTimeout(() => {
+        if (revision !== pre_show_envio_revision_musa) return;
+        pre_show_cooldown_timer_musa = null;
+        pre_show_cooldown_musa = false;
+        refrescarControlesPreShowMusa();
+    }, Math.max(500, Number(duracionMs) || pre_show_estado_musa.cooldown_ms));
+}
+
+function aplicarVisibilidadPreShowMusa() {
+    const visible = preShowMusaVisible();
+    if (document.body) {
+        document.body.classList.toggle("pre-show-musa-activo", visible);
+    }
+    if (pre_show_musa) {
+        pre_show_musa.hidden = !visible;
+        pre_show_musa.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
+    if (!visible) {
+        cancelarEnvioPreShowMusa();
+        limpiarCooldownPreShowMusa();
+        if (pre_show_musa_input) {
+            pre_show_musa_input.value = "";
+            pre_show_musa_input.blur();
+        }
+        mostrarFeedbackPreShowMusa("");
+    }
+    refrescarControlesPreShowMusa();
+}
+
+function actualizarEstadoPreShowMusa(payload = {}) {
+    const siguiente = window.ScribPreShow.normalizarEstado(payload);
+    const nuevaSesion = Boolean(
+        siguiente.session_id
+        && siguiente.session_id !== pre_show_estado_musa.session_id
+    );
+    const cambioFase = siguiente.session_id !== pre_show_estado_musa.session_id
+        || siguiente.phase_seq !== pre_show_estado_musa.phase_seq;
+    if (cambioFase) {
+        cancelarEnvioPreShowMusa();
+        limpiarCooldownPreShowMusa();
+    }
+    if (nuevaSesion && siguiente.activo && window.ScribPreShow.tieneSesionSincronizada(siguiente)) {
+        pre_show_bloqueado_por_tutorial_musa = false;
+        calentamiento_activo = false;
+        calentamiento_vista = false;
+        terminado = false;
+        setUiPartidaActivaMusa(false);
+        setUiPartidaFinalizadaMusa(false);
+        if (document.body) document.body.classList.remove("vista-calentamiento-musa");
+        if (calentamiento_section) calentamiento_section.classList.remove("activo");
+    }
+    pre_show_estado_musa = siguiente;
+    aplicarVisibilidadPreShowMusa();
+    return siguiente;
+}
+
+function cerrarPreShowMusaPorTutorial() {
+    pre_show_bloqueado_por_tutorial_musa = true;
+    pre_show_estado_musa = window.ScribPreShow.normalizarEstado({
+        activo: false,
+        session_id: pre_show_estado_musa.session_id,
+        phase_seq: pre_show_estado_musa.phase_seq,
+        limite_texto: pre_show_estado_musa.limite_texto,
+        cooldown_ms: pre_show_estado_musa.cooldown_ms
+    });
+    aplicarVisibilidadPreShowMusa();
+}
+
+function suspenderPreShowMusaPorConexion() {
+    cancelarEnvioPreShowMusa();
+    limpiarCooldownPreShowMusa();
+    if (document.body) document.body.classList.remove("pre-show-musa-activo");
+    if (pre_show_musa) {
+        pre_show_musa.hidden = true;
+        pre_show_musa.setAttribute("aria-hidden", "true");
+    }
+    if (pre_show_musa_input) {
+        pre_show_musa_input.disabled = true;
+        pre_show_musa_input.blur();
+    }
+}
+
+function enviarMensajePreShowMusa() {
+    if (!preShowMusaVisible() || pre_show_envio_pendiente_musa || pre_show_cooldown_musa) return false;
+    if (!tieneSesionPreShowMusaSincronizada()) {
+        socket.emit("pedir_pre_show_estado");
+        mostrarFeedbackPreShowMusa(tJuego2P("preshow.muse.feedback.error", {}, "No se pudo enviar. Intentalo de nuevo."), true);
+        refrescarControlesPreShowMusa();
+        return false;
+    }
+    const validacion = window.ScribPreShow.validarTexto(
+        pre_show_musa_input ? pre_show_musa_input.value : "",
+        pre_show_estado_musa.limite_texto
+    );
+    if (!validacion.ok) {
+        mostrarFeedbackPreShowMusa(traducirErrorPreShowMusa(validacion), true);
+        return false;
+    }
+
+    const requestId = window.ScribPreShow.crearRequestId();
+    const revision = ++pre_show_envio_revision_musa;
+    const contexto = Object.freeze({
+        requestId,
+        revision,
+        sessionId: pre_show_estado_musa.session_id,
+        phaseSeq: pre_show_estado_musa.phase_seq,
+        texto: validacion.texto
+    });
+    pre_show_envio_pendiente_musa = contexto;
+    mostrarFeedbackPreShowMusa("");
+    refrescarControlesPreShowMusa();
+
+    let procesado = false;
+    const procesarRespuesta = (respuesta = {}) => {
+        if (procesado) return;
+        procesado = true;
+        const pendienteActual = pre_show_envio_pendiente_musa;
+        if (
+            !pendienteActual
+            || pendienteActual.requestId !== contexto.requestId
+            || contexto.revision !== pre_show_envio_revision_musa
+            || contexto.sessionId !== pre_show_estado_musa.session_id
+            || contexto.phaseSeq !== pre_show_estado_musa.phase_seq
+        ) return;
+        if (pre_show_timeout_ack_musa) {
+            clearTimeout(pre_show_timeout_ack_musa);
+            pre_show_timeout_ack_musa = null;
+        }
+        pre_show_envio_pendiente_musa = null;
+        if (respuesta && respuesta.ok === true) {
+            if (
+                String(respuesta.session_id || "") !== contexto.sessionId
+                || Number(respuesta.phase_seq) !== contexto.phaseSeq
+            ) {
+                socket.emit("pedir_pre_show_estado");
+                mostrarFeedbackPreShowMusa(
+                    tJuego2P("preshow.muse.feedback.error", {}, "No se pudo enviar. Intentalo de nuevo."),
+                    true
+                );
+                refrescarControlesPreShowMusa();
+                return;
+            }
+            if (pre_show_musa_input) pre_show_musa_input.value = "";
+            mostrarFeedbackPreShowMusa(
+                tJuego2P("preshow.muse.feedback.sent", {}, "Mensaje enviado al espectador."),
+                false
+            );
+            iniciarCooldownPreShowMusa(pre_show_estado_musa.cooldown_ms);
+            return;
+        }
+        const code = String(respuesta && (respuesta.code || respuesta.codigo) || "").toUpperCase();
+        if (code === "NOT_ACTIVE") {
+            cerrarPreShowMusaPorTutorial();
+            return;
+        }
+        if (code === "STALE_PHASE" || code === "STALE_SESSION") {
+            socket.emit("pedir_pre_show_estado");
+        }
+        if (code === "RATE_LIMITED" || code === "DUPLICATE_MESSAGE") {
+            iniciarCooldownPreShowMusa(respuesta.retry_after_ms || pre_show_estado_musa.cooldown_ms);
+        }
+        mostrarFeedbackPreShowMusa(traducirErrorPreShowMusa(respuesta), true);
+        refrescarControlesPreShowMusa();
+    };
+
+    pre_show_timeout_ack_musa = setTimeout(() => {
+        pre_show_timeout_ack_musa = null;
+        procesarRespuesta({ ok: false, code: "TIMEOUT" });
+    }, 6000);
+    socket.emit("pre_show_musa_enviar", {
+        texto: contexto.texto,
+        client_id: musa_client_id,
+        request_id: contexto.requestId,
+        session_id: contexto.sessionId,
+        phase_seq: contexto.phaseSeq
+    }, procesarRespuesta);
+    return true;
+}
+
+if (pre_show_musa_form) {
+    pre_show_musa_form.addEventListener("submit", (evt) => {
+        evt.preventDefault();
+        enviarMensajePreShowMusa();
+    });
+}
+
+if (pre_show_musa_input) {
+    pre_show_musa_input.addEventListener("input", () => {
+        mostrarFeedbackPreShowMusa("");
+        refrescarControlesPreShowMusa();
+    });
+    pre_show_musa_input.addEventListener("compositionstart", () => {
+        pre_show_ime_activo_musa = true;
+    });
+    pre_show_musa_input.addEventListener("compositionend", () => {
+        pre_show_ime_activo_musa = false;
+    });
+    pre_show_musa_input.addEventListener("keydown", (evt) => {
+        if (
+            evt.key !== "Enter"
+            || evt.shiftKey
+            || evt.altKey
+            || evt.ctrlKey
+            || evt.metaKey
+            || evt.isComposing
+            || pre_show_ime_activo_musa
+            || evt.keyCode === 229
+        ) return;
+        evt.preventDefault();
+        if (pre_show_musa_form && typeof pre_show_musa_form.requestSubmit === "function") {
+            pre_show_musa_form.requestSubmit();
+        } else {
+            enviarMensajePreShowMusa();
+        }
+    });
+}
+
+refrescarControlesPreShowMusa();
 
 actualizarTemaCalentamiento(player);
 let enviar_ventaja;

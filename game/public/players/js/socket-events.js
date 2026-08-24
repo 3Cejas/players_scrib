@@ -68,6 +68,10 @@ function manejarMusaReemplazadaEnJuego() {
 
 socket.on("musa_reemplazada", manejarMusaReemplazadaEnJuego);
 
+socket.on("pre_show_estado", (payload = {}) => {
+    actualizarEstadoPreShowMusa(payload);
+});
+
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {
@@ -222,7 +226,9 @@ socket.on('connect', () => {
     const requestIdRegistroMusa = musa_request_id_activo;
     socket.emit('registrar_musa', payloadRegistroMusa, (payload = {}) => {
         if (requestIdRegistroMusa !== musa_request_id_activo) return false;
-        return procesarAsignacionAutoritativaMusa(payload, { requestId: requestIdRegistroMusa });
+        const aplicada = procesarAsignacionAutoritativaMusa(payload, { requestId: requestIdRegistroMusa });
+        if (aplicada) socket.emit('pedir_pre_show_estado');
+        return aplicada;
     });
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_estado_banderas_musas');
@@ -252,6 +258,7 @@ socket.on('disconnect', () => {
     invalidarIntroMusa();
     invalidarContextoDesventajasMusa();
     invalidarContextoCalentamientoMusa();
+    suspenderPreShowMusaPorConexion();
 });
 
 socket.on('connect_error', () => {
@@ -265,6 +272,7 @@ socket.on('connect_error', () => {
     invalidarIntroMusa();
     invalidarContextoDesventajasMusa();
     invalidarContextoCalentamientoMusa();
+    suspenderPreShowMusaPorConexion();
 });
 
 socket.on('regalo_pdf_musas', (payload) => {
@@ -957,6 +965,7 @@ function programarPasoCountdownMusa(paso, revisionIntro) {
 
 // Inicia el juego.
 socket.on('inicio', data => {
+    cerrarPreShowMusaPorTutorial();
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
     invalidarEntradaMundoMusa();
@@ -1053,6 +1062,7 @@ function aplicarPostInicioMusa() {
 }
 
 socket.on("post-inicio", () => {
+    cerrarPreShowMusaPorTutorial();
     if (hayCountdownInicioActivoMusa()) {
         post_inicio_pendiente_musa = true;
         // Si por cualquier carrera el contador quedo visible pero sin timers,

@@ -8,7 +8,7 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260418b">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260824b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="../../config.js"></script>
@@ -17,6 +17,7 @@
     <script src="../../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../../js/domains/teleprompter.js?v=20260424a"></script>
     <script src="../../js/domains/resurrection.js?v=20260424a"></script>
+    <script src="../../js/domains/pre-show.js?v=20260824b"></script>
     <script src="./js/actions.js?v=20260504f"></script>
 </head>
 <body>
@@ -137,6 +138,29 @@
                             <div id="votacion_ventaja_legend_inline" class="votacion-ventaja-legend"></div>
                         </div>
                     </div>
+                    <section id="pre_show_musa" class="pre-show-musa" hidden aria-labelledby="pre_show_musa_titulo">
+                        <div class="pre-show-musa__halo" aria-hidden="true"></div>
+                        <header class="pre-show-musa__header">
+                            <span class="pre-show-musa__live"><span aria-hidden="true"></span><span data-i18n="preshow.live">EN DIRECTO</span></span>
+                            <span class="pre-show-musa__eyebrow" data-i18n="preshow.muse.eyebrow">ANTES DEL TUTORIAL</span>
+                        </header>
+                        <div class="pre-show-musa__signal" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+                        <h2 id="pre_show_musa_titulo" class="pre-show-musa__title" data-i18n="preshow.muse.title">TOMA EL CANAL</h2>
+                        <p class="pre-show-musa__copy" data-i18n="preshow.muse.copy">Escribe algo para entretener al publico mientras empieza el tutorial.</p>
+                        <form id="pre_show_musa_form" class="pre-show-musa__form">
+                            <label class="scrib-visually-hidden" for="pre_show_musa_input" data-i18n="preshow.muse.input_label">Mensaje para el publico</label>
+                            <textarea id="pre_show_musa_input" rows="3" enterkeyhint="send" autocomplete="off" aria-describedby="pre_show_musa_contador pre_show_musa_feedback" data-i18n-attr="placeholder:preshow.muse.placeholder" placeholder="Di algo al publico..."></textarea>
+                            <div class="pre-show-musa__form-footer">
+                                <span id="pre_show_musa_contador" class="pre-show-musa__counter" aria-hidden="true">0 / 180</span>
+                                <button id="pre_show_musa_enviar" class="pre-show-musa__send" type="submit">
+                                    <span data-i18n="preshow.muse.send">ENVIAR AL ESPECTADOR</span>
+                                    <span aria-hidden="true">&#x2197;</span>
+                                </button>
+                            </div>
+                        </form>
+                        <p id="pre_show_musa_feedback" class="pre-show-musa__feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+                        <p class="pre-show-musa__hint" data-i18n="preshow.muse.hint">El canal se cerrara al comenzar el tutorial.</p>
+                    </section>
                     <section id="calentamiento" class="calentamiento calentamiento--nuevo">
                         <h2 class="calentamiento-titulo">TUTORIAL</h2>
                         <p id="calentamiento_estado" class="calentamiento-estado">Tutorial inactivo.</p>
@@ -263,9 +287,9 @@
     </div>
 </body>
     <script src="../../dist/socket.io/socket.io.js"></script>
-    <script src="../../js/i18n.js?v=20260822d"></script>
+    <script src="../../js/i18n.js?v=20260824b"></script>
     <script src="../js/musa-assignment.js?v=20260822d"></script>
-<script src="./js/state.js?v=20260822d"></script>
-<script src="./js/socket-events.js?v=20260822d"></script>
+<script src="./js/state.js?v=20260824b"></script>
+<script src="./js/socket-events.js?v=20260824b"></script>
 <script src="./js/index.js?v=20260504e"></script>
 </html>
