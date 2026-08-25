@@ -139,7 +139,7 @@ test("ScribInspiration validates letter-mode inspiration and preserves ene", () 
   }).motivo, "not-useful");
 });
 
-test("ScribInspiration resolves bonus-word time when reconnect payload omits seconds", () => {
+test("ScribInspiration resolves a reconnect word and displays inspiration instead of life time", () => {
   const { ScribInspiration } = cargarDominio("game/js/domains/inspiration.js");
   const expectedBonus = ScribInspiration.calcularTiempoPalabra("horizonte");
   const expectedProhibida = ScribInspiration.calcularTiempoPalabra("veneno");
@@ -155,12 +155,18 @@ test("ScribInspiration resolves bonus-word time when reconnect payload omits sec
     modo_actual: "palabras bonus",
     palabra_bonus: [["horizonte"], "musa"],
     tiempo_palabras_bonus: "undefined"
-  }, { modo: "palabras bonus" }), `+${expectedBonus} segs.`);
+  }, { modo: "palabras bonus" }), "+1 insp.");
   assert.equal(ScribInspiration.formatearTiempoPalabraAsignada({
     modo_actual: "palabras prohibidas",
     palabras_var: ["veneno"],
     tiempo_palabras_bonus: undefined
-  }, { modo: "palabras prohibidas" }), `-${expectedProhibida} segs.`);
+  }, { modo: "palabras prohibidas" }), "-1 insp.");
+  assert.equal(ScribInspiration.formatearTiempoPalabraAsignada({
+    palabra: "luz",
+    origen_musa: "musa",
+    musa_nombre: "ANA",
+    valor_inspiracion: 0.5
+  }, { modo: "palabras bonus" }), "+2.5 insp.");
 });
 
 test("i18n normalizes mojibake blessed letters before rendering mode rules", () => {
@@ -306,21 +312,6 @@ test("ScribTeleprompter applies bounded state updates", () => {
   assert.equal(ScribTeleprompter.normalizarRevision("nope"), null);
   assert.equal(ScribTeleprompter.esEstadoObsoleto({ revision: 2 }, 4), true);
   assert.equal(ScribTeleprompter.esEstadoObsoleto({ revision: "bad" }, 4), false);
-});
-
-test("ScribResurrection normalizes menu state", () => {
-  const { ScribResurrection } = cargarDominio("game/js/domains/resurrection.js");
-  const state = ScribResurrection.crearEstadoMenu("2", {
-    visible: true,
-    palabras: 3
-  });
-
-  assert.equal(state.player, 2);
-  assert.equal(state.visible, true);
-  assert.equal(state.palabras, 3);
-  assert.equal(ScribResurrection.estaActiva(state), true);
-  assert.equal(ScribResurrection.normalizarPlayer("bad"), null);
-  assert.equal(ScribResurrection.crearEstadoMenu("bad").player, 1);
 });
 
 test("ScribCredits normalizes server-like payloads for spectator rendering", () => {

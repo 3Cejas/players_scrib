@@ -10,14 +10,14 @@ const dramaturgiaSocket = window.io
 
 const dramaturgiaModel = window.ScribDramaturgiaModel;
 const dramaturgiaStore = dramaturgiaModel.createStore({ maxEvents: 240 });
-const DRAMATURGIA_UI_VERSION = "dramaturgia-complete-show-v10";
+const DRAMATURGIA_UI_VERSION = "dramaturgia-competition-clock-v11";
 const DRAMATURGIA_ZOOM_MIN = 0.35;
 const DRAMATURGIA_ZOOM_MAX = 1.8;
 const DRAMATURGIA_SCORE_COLUMN_WIDTH = 190;
 const DRAMATURGIA_SCORE_ROW_HEIGHT = 116;
 const DRAMATURGIA_LEVEL_VISUALS = Object.freeze({
     "letra bendita": Object.freeze({ emoji: "🙏", accent: "#6bff83" }),
-    "letra prohibida": Object.freeze({ emoji: "😈", accent: "#ff8fa0" }),
+    "letra prohibida": Object.freeze({ emoji: "😈", accent: "#ff8fa0", label: "Letra maldita" }),
     tertulia: Object.freeze({ emoji: "💬", accent: "#64e8ff" }),
     "palabras bonus": Object.freeze({ emoji: "📖", accent: "#ffd65a" }),
     "palabras prohibidas": Object.freeze({ emoji: "⚔️", accent: "#ff71c8" }),
@@ -42,14 +42,14 @@ const DRAMATURGIA_ROLE_INTERACTION_MILESTONES = Object.freeze({
         "warmup-acciones",
         "warmup-frase-final",
         "level-letra-bendita",
-        "vote-letra-bendita",
+        "competition-letra-bendita",
         "level-letra-prohibida",
         "level-tertulia",
-        "vote-letra-prohibida",
+        "competition-letra-prohibida",
         "level-palabras-bonus",
-        "vote-palabras-bonus",
+        "competition-palabras-bonus",
         "level-palabras-prohibidas",
-        "vote-palabras-prohibidas",
+        "competition-palabras-prohibidas",
         "level-frase-final",
         "representation-preparation"
     ]),
@@ -58,14 +58,14 @@ const DRAMATURGIA_ROLE_INTERACTION_MILESTONES = Object.freeze({
         "warmup-acciones",
         "warmup-frase-final",
         "level-letra-bendita",
-        "vote-letra-bendita",
+        "competition-letra-bendita",
         "level-letra-prohibida",
         "level-tertulia",
-        "vote-letra-prohibida",
+        "competition-letra-prohibida",
         "level-palabras-bonus",
-        "vote-palabras-bonus",
+        "competition-palabras-bonus",
         "level-palabras-prohibidas",
-        "vote-palabras-prohibidas",
+        "competition-palabras-prohibidas",
         "level-frase-final",
         "representation-preparation"
     ]),
@@ -273,7 +273,15 @@ function renderDramaturgiaHeader() {
         phaseLabel.dataset.phase = summary.phase;
         phaseLabel.style.setProperty("--phase-accent", phase.accent);
     }
-    if (modeLabel) modeLabel.textContent = summary.modeLabel;
+    if (modeLabel) {
+        const marcador = summary.score && summary.mode && summary.mode !== "tertulia"
+            ? ` · ${summary.score[1]} ↔ ${summary.score[2]}`
+            : "";
+        const desventaja = summary.disadvantagePlayer
+            ? ` · ${summary.disadvantage || "DESVENTAJA"} E${summary.disadvantagePlayer}`
+            : "";
+        modeLabel.textContent = `${summary.modeLabel}${marcador}${desventaja}`;
+    }
     if (clockLabel) {
         clockLabel.textContent = summary.remainingSeconds > 0
             ? `${String(Math.floor(summary.remainingSeconds / 60)).padStart(2, "0")}:${String(summary.remainingSeconds % 60).padStart(2, "0")}`

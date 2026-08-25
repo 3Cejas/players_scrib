@@ -3778,8 +3778,8 @@ body.page-spectator .textarea-container .textarea-gradient {
 
 .textarea_blur {
     font-family: "VT323";
-    filter: blur(10px);
-    -webkit-filter: blur(10px);
+    filter: blur(var(--desventaja-blur, 10px));
+    -webkit-filter: blur(var(--desventaja-blur, 10px));
     font-family: "VT323";
     position: sticky;
     font-size: 3vw;

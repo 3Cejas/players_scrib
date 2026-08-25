@@ -176,13 +176,22 @@
     }
 
     function formatearTiempoPalabraAsignada(data = {}, opciones = {}) {
-        const segundos = resolverTiempoPalabraAsignada(data, opciones.fallback);
-        if (segundos === null) return "";
+        const referencia = resolverTiempoPalabraAsignada(data, opciones.fallback);
+        if (referencia === null) return "";
         const modo = String(opciones.modo || "").trim();
         const tipo = String(opciones.tipo || "").trim();
         const esMaldita = opciones.maldita === true || modo === "palabras prohibidas" || tipo === "prohibidas" || tipo === "maldita";
+        const factor = normalizarFactorInspiracion(
+            data && typeof data === "object" ? data.valor_inspiracion : opciones.valor_inspiracion
+        );
+        const esMusa = Boolean(
+            data
+            && typeof data === "object"
+            && (data.origen_musa || data.musa_nombre || data.musa || (Array.isArray(data.musas) && data.musas.length))
+        );
+        const valor = Number(((esMusa ? 5 : 1) * factor).toFixed(2));
         const signo = esMaldita ? "-" : "+";
-        return `${signo}${segundos} segs.`;
+        return `${signo}${valor} insp.`;
     }
 
     function esAtajoDescartarInspiracion(evento = {}) {

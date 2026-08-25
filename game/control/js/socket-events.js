@@ -108,6 +108,8 @@ function procesarRegistroControl(payload = {}) {
     return false;
 }
 
+window.ScribCompetitionUI?.conectar(socket, { role: "control" });
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     modo_seq_actual_control = 0;
@@ -208,9 +210,10 @@ socket.on('desventaja_activa_estado', (payload = {}) => {
         sincronizarDesventajaActivaControl(payload);
     }
 });
-socket.on('votacion_ventaja_estado', (payload = {}) => {
-    if (typeof sincronizarVotacionDesventajaControl === "function") {
-        sincronizarVotacionDesventajaControl(payload);
+
+socket.on('desventaja_ronda_limpiar', () => {
+    if (typeof limpiarTestigosDesventajaControl === "function") {
+        limpiarTestigosDesventajaControl();
     }
 });
 socket.on('estado_palabras_musas_control', (payload = {}) => {
@@ -219,17 +222,11 @@ socket.on('estado_palabras_musas_control', (payload = {}) => {
     }
 });
 socket.on('enviar_ventaja_j1', (payload = {}) => {
-    if (typeof sincronizarVotacionDesventajaControl === "function") {
-        sincronizarVotacionDesventajaControl({ activa: false });
-    }
     if (typeof sincronizarDesventajaActivaControl === "function") {
         sincronizarDesventajaActivaControl(payload, { player: 1 });
     }
 });
 socket.on('enviar_ventaja_j2', (payload = {}) => {
-    if (typeof sincronizarVotacionDesventajaControl === "function") {
-        sincronizarVotacionDesventajaControl({ activa: false });
-    }
     if (typeof sincronizarDesventajaActivaControl === "function") {
         sincronizarDesventajaActivaControl(payload, { player: 2 });
     }
@@ -627,24 +624,9 @@ socket.on('fin_a_control', () => {
     }
     fin_j1 = false;
     fin_j2 = false;
-    final(1);
-    final(2);
-    socket.emit('fin_de_control', 1);
-    socket.emit('fin_de_control', 2);
+    final(1, { emitirConteoFinal: false });
+    final(2, { emitirConteoFinal: false });
   });
-
-
-socket.on('fin_de_player_a_control', (player) => {
-if(player == 1){
-    fin_j1 = false;
-    final(1);
-
-}
-else if(player == 2){
-    fin_j2 = false;
-    final(2);
-}
-});
 
 
 nombre1.addEventListener("input", evt => {
@@ -673,21 +655,6 @@ socket.on("recibir_postgame1", (data) => {
 
 socket.on("recibir_postgame2", (data) => {
     postgame1 = "\n\uD83D\uDD8B\uFE0F Caracteres escritos = " + data.longitud + "\n\uD83D\uDCDA Palabras bonus = " + data.puntos_palabra + "\n\u274C Letra prohibida = " + data.puntos_letra_prohibida + "\n";
-});
-
-socket.on("aumentar_tiempo_control", (data) => {
-    if (window && typeof window.sincronizarTiempoSeqControl2P === "function") {
-        window.sincronizarTiempoSeqControl2P(data.player, data.tiempo_seq);
-    }
-    if(data.player == 1){
-        addSeconds(data.secs);
-    }
-    else {
-        console.log(data.player);
-        console.log(data.secs);
-        addSeconds1(data.secs);
-    }
-    emitirStatsLiveControl();
 });
 
 socket.on('activar_modo', (data) => {
@@ -748,28 +715,6 @@ socket.on('intento_prohibido', (data) => {
     }
     emitirStatsLiveControl();
 });
-
-socket.on('resucitar_control', (data) => {
- if (window && typeof window.sincronizarTiempoSeqControl2P === "function") {
-    window.sincronizarTiempoSeqControl2P(data.player, data.tiempo_seq);
- }
- if(data.player == 1){
-    terminado = false;
-    fin_j1 = false;
-    secondsPassed = 0
-    emitirStatsLiveControl();
-    startCountDown_p1(data.secs);
- }
- else if(data.player == 2){
-    terminado1 = false;
-    fin_j2 = false;
-    secondsPassed1 = 0
-    emitirStatsLiveControl();
-    startCountDown_p2(data.secs);
-
- }
-});
-
 
 function downloadTxtFile(filename, htmlContent) {
     // Reemplazar etiquetas <br> y separar bloques de <div> con saltos de linea
@@ -1246,73 +1191,6 @@ function tPdfControl(clave, variables = {}, fallback = "") {
     return traductor ? traductor(clave, variables, fallback) : (fallback || clave);
 }
 
-function dibujarGraficaVidaPdf(doc, serie, x, y, width, height, colorLinea) {
-    doc.setDrawColor(90, 90, 90);
-    doc.setLineWidth(0.3);
-    doc.rect(x, y, width, height);
-    const serieValida = Array.isArray(serie)
-        ? serie.filter(p => p && Number.isFinite(p.t) && Number.isFinite(p.v))
-        : [];
-    if (serieValida.length < 2) {
-        setPdfFont(doc, 10, [180, 180, 180]);
-        doc.text(tPdfControl("pdf.life.no_data", {}, "Sin datos de vida registrados."), x + 4, y + height / 2);
-        return y + height + 6;
-    }
-    const valores = serieValida.map(p => p.v);
-    const maxValor = Math.max(...valores, 1);
-    const minValor = Math.min(...valores, 0);
-    const rangoValor = Math.max(maxValor - minValor, 1);
-    const tInicio = serieValida[0].t;
-    const tFin = serieValida[serieValida.length - 1].t;
-    const rangoTiempo = Math.max(tFin - tInicio, 1);
-
-    for (let i = 0; i <= 4; i += 1) {
-        const yLine = y + (height * (i / 4));
-        doc.setDrawColor(70, 70, 70);
-        doc.setLineWidth(0.2);
-        doc.line(x, yLine, x + width, yLine);
-    }
-
-    const colorSegura = Array.isArray(colorLinea) ? colorLinea : [255, 255, 255];
-    doc.setDrawColor(colorSegura[0], colorSegura[1], colorSegura[2]);
-    doc.setLineWidth(0.6);
-
-    // Etiquetas de ejes
-    const formatTiempoVida = (segundos) => {
-        const total = Math.max(0, Math.round(segundos));
-        const min = Math.floor(total / 60);
-        const sec = total % 60;
-        return min > 0 ? `${min}:${String(sec).padStart(2, "0")}` : `${sec}s`;
-    };
-    setPdfFont(doc, 7, [170, 170, 170]);
-    for (let i = 0; i <= 4; i += 2) {
-        const ratio = i / 4;
-        const valor = maxValor - (rangoValor * ratio);
-        const yLine = y + (height * ratio);
-        doc.text(formatTiempoVida(valor), x + 2, yLine + 2);
-    }
-    const totalSegundos = Math.round(rangoTiempo / 1000);
-    const mitadSegundos = Math.round(totalSegundos / 2);
-    const yEtiquetasX = y + height - 1.5;
-    doc.text(formatTiempoVida(0), x + 4, yEtiquetasX);
-    doc.text(formatTiempoVida(mitadSegundos), x + (width / 2), yEtiquetasX, { align: "center" });
-    doc.text(formatTiempoVida(totalSegundos), x + width - 4, yEtiquetasX, { align: "right" });
-
-    let prev = null;
-    serieValida.forEach(punto => {
-        const xPos = x + ((punto.t - tInicio) / rangoTiempo) * width;
-        const yPos = y + height - ((punto.v - minValor) / rangoValor) * height;
-        if (!Number.isFinite(xPos) || !Number.isFinite(yPos)) {
-            return;
-        }
-        if (prev) {
-            doc.line(prev.x, prev.y, xPos, yPos);
-        }
-        prev = { x: xPos, y: yPos };
-    });
-    return y + height + 6;
-}
-
 function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, margen, anchoPagina, altoPagina, headerRightX, palabrasBenditas) {
     const accent = jugadorId === 1 ? [70, 240, 255] : [255, 107, 107];
     const accentSoft = [
@@ -1429,8 +1307,7 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
         return tPdfControl("pdf.key_unknown", {}, "Tecla desconocida");
     };
 
-    const serieVida = resumenPartida.tiempos[jugadorId] || [];
-    const duracionMs = serieVida.length ? serieVida[serieVida.length - 1].t : 0;
+    const duracionMs = resumenPartida.inicio ? Math.max(0, Date.now() - resumenPartida.inicio) : 0;
     const formatTiempo = (ms) => {
         if (!ms) return "-";
         const totalSec = Math.max(0, Math.round(ms / 1000));
@@ -1438,16 +1315,11 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
         const segundos = String(totalSec % 60).padStart(2, "0");
         return `${minutos}:${segundos}`;
     };
-    const duracionMin = duracionMs ? (duracionMs / 60000) : 0;
     const duracionEscrituraMs = obtenerTiempoEscrituraMs();
     const duracionEscrituraMin = duracionEscrituraMs ? (duracionEscrituraMs / 60000) : 0;
     const ritmo = duracionEscrituraMin > 0 ? Math.round(totalPulsaciones / duracionEscrituraMin) : 0;
-    const valoresVida = serieVida.map(p => p.v);
-    const vidaMin = valoresVida.length ? Math.min(...valoresVida) : null;
-    const vidaMax = valoresVida.length ? Math.max(...valoresVida) : null;
-    const vidaProm = valoresVida.length
-        ? Math.round(valoresVida.reduce((acc, v) => acc + v, 0) / valoresVida.length)
-        : null;
+    const palabrasTotal = obtenerConteoPalabrasControl(jugadorId);
+    const palabrasUnicas = obtenerPalabrasUnicasControl(jugadorId);
     const topTexto = topTeclas.length
         ? topTeclas.slice(0, 3).map(item => `${nombreTecla(item.code)} (${item.count})`).join(" - ")
         : "-";
@@ -1479,9 +1351,9 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
             { label: tPdfControl("pdf.summary.total_keystrokes", {}, "Pulsaciones totales"), value: totalPulsaciones || 0 },
             { label: tPdfControl("pdf.summary.distinct_keys", {}, "Teclas distintas"), value: teclasUsadas || 0 },
             { label: tPdfControl("pdf.summary.estimated_pace", {}, "Ritmo estimado"), value: ritmo ? tPdfControl("pdf.unit.keystrokes_per_minute", { count: ritmo }, `${ritmo} puls/min`) : "-" },
-            { label: tPdfControl("pdf.summary.life_min", {}, "Vida minima"), value: vidaMin !== null ? vidaMin : "-" },
-            { label: tPdfControl("pdf.summary.life_max", {}, "Vida maxima"), value: vidaMax !== null ? vidaMax : "-" },
-            { label: tPdfControl("pdf.summary.life_avg", {}, "Vida media"), value: vidaProm !== null ? vidaProm : "-" },
+            { label: tPdfControl("pdf.summary.total_words", {}, "Palabras totales"), value: palabrasTotal },
+            { label: tPdfControl("pdf.summary.unique_words", {}, "Palabras unicas"), value: palabrasUnicas },
+            { label: tPdfControl("pdf.summary.muse_inspiration", {}, "Inspiraciones de musas"), value: Array.isArray(palabrasBenditas) ? palabrasBenditas.length : 0 },
             { label: tPdfControl("pdf.summary.top_keys", {}, "Top teclas"), value: topTexto }
         ];
         const mid = Math.ceil(lineas.length / 2);
@@ -1605,11 +1477,6 @@ function agregarPaginaEstadisticas(doc, jugadorId, nombre, agregarLogoEnPagina, 
         const yBenditas = dibujarPalabrasPdf(doc, tPdfControl("pdf.words", {}, "Palabras"), palabrasB, leftX, yPalabras, PDF_COLORES_NIVELES.palabrasBenditas, colWidth);
         const yMalditas = dibujarPalabrasPdf(doc, tPdfControl("pdf.words", {}, "Palabras"), palabrasM, rightX, yPalabras, PDF_COLORES_NIVELES.palabrasMalditas, colWidth);
         return Math.max(yBenditas, yMalditas);
-    });
-
-    asegurarEspacio(75);
-    y = dibujarSeccion(tPdfControl("pdf.section.life_evolution", {}, "Evolucion de vida"), y, (yContenido) => {
-        return dibujarGraficaVidaPdf(doc, serieVida, margen, yContenido + 2, anchoPagina - (margen * 2), 45, accent);
     });
 
 }

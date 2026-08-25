@@ -18,26 +18,33 @@ const EXPECTED_MILESTONES = [
   "warmup-acciones",
   "warmup-frase-final-open",
   "warmup-frase-final",
+  "level-letra-bendita-feedback",
   "level-letra-bendita",
-  "vote-letra-bendita",
+  "competition-letra-bendita",
   "level-letra-prohibida-feedback",
   "level-letra-prohibida",
+  "competition-letra-prohibida",
   "level-tertulia",
-  "vote-letra-prohibida",
   "level-palabras-bonus-feedback",
   "level-palabras-bonus",
-  "vote-palabras-bonus",
+  "competition-palabras-bonus",
   "level-palabras-prohibidas-feedback",
   "level-palabras-prohibidas",
-  "vote-palabras-prohibidas",
-  "level-frase-final-feedback",
+  "competition-palabras-prohibidas",
   "level-frase-final",
   "representation-preparation",
   "representation-projection",
   "representation-final"
 ];
 const EXPECTED_INTERACTION_CHANGES = {
-  control: ["warmup-lugares-open"],
+  control: [
+    "warmup-lugares-open",
+    "competition-letra-bendita",
+    "competition-letra-prohibida",
+    "competition-palabras-bonus",
+    "competition-palabras-prohibidas",
+    "representation-preparation"
+  ],
   writer1: [
     "warmup-lugares-open",
     "warmup-lugares",
@@ -45,15 +52,19 @@ const EXPECTED_INTERACTION_CHANGES = {
     "warmup-acciones",
     "warmup-frase-final-open",
     "warmup-frase-final",
+    "level-letra-bendita-feedback",
     "level-letra-bendita",
+    "competition-letra-bendita",
     "level-letra-prohibida-feedback",
     "level-letra-prohibida",
+    "competition-letra-prohibida",
     "level-tertulia",
     "level-palabras-bonus-feedback",
     "level-palabras-bonus",
+    "competition-palabras-bonus",
     "level-palabras-prohibidas-feedback",
     "level-palabras-prohibidas",
-    "level-frase-final-feedback",
+    "competition-palabras-prohibidas",
     "level-frase-final",
     "representation-preparation"
   ],
@@ -64,15 +75,19 @@ const EXPECTED_INTERACTION_CHANGES = {
     "warmup-acciones",
     "warmup-frase-final-open",
     "warmup-frase-final",
+    "level-letra-bendita-feedback",
     "level-letra-bendita",
-    "vote-letra-bendita",
+    "competition-letra-bendita",
+    "level-letra-prohibida-feedback",
     "level-letra-prohibida",
+    "competition-letra-prohibida",
     "level-tertulia",
-    "vote-letra-prohibida",
+    "level-palabras-bonus-feedback",
     "level-palabras-bonus",
-    "vote-palabras-bonus",
+    "competition-palabras-bonus",
+    "level-palabras-prohibidas-feedback",
     "level-palabras-prohibidas",
-    "vote-palabras-prohibidas",
+    "competition-palabras-prohibidas",
     "level-frase-final",
     "representation-preparation"
   ],
@@ -83,15 +98,19 @@ const EXPECTED_INTERACTION_CHANGES = {
     "warmup-acciones",
     "warmup-frase-final-open",
     "warmup-frase-final",
+    "level-letra-bendita-feedback",
     "level-letra-bendita",
-    "vote-letra-bendita",
+    "competition-letra-bendita",
+    "level-letra-prohibida-feedback",
     "level-letra-prohibida",
+    "competition-letra-prohibida",
     "level-tertulia",
-    "vote-letra-prohibida",
+    "level-palabras-bonus-feedback",
     "level-palabras-bonus",
-    "vote-palabras-bonus",
+    "competition-palabras-bonus",
+    "level-palabras-prohibidas-feedback",
     "level-palabras-prohibidas",
-    "vote-palabras-prohibidas",
+    "competition-palabras-prohibidas",
     "level-frase-final",
     "representation-preparation"
   ],
@@ -125,36 +144,36 @@ const WARMUP_PAIRS = [
   { request: "acciones", openId: "warmup-acciones-open", closedId: "warmup-acciones" },
   { request: "frase_final", openId: "warmup-frase-final-open", closedId: "warmup-frase-final" }
 ];
-const VOTING_IDS = [
-  "vote-letra-bendita",
-  "vote-letra-prohibida",
-  "vote-palabras-bonus",
-  "vote-palabras-prohibidas"
+const COMPETITION_LEVELS = [
+  { mode: "letra bendita", id: "competition-letra-bendita" },
+  { mode: "letra prohibida", id: "competition-letra-prohibida" },
+  { mode: "palabras bonus", id: "competition-palabras-bonus" },
+  { mode: "palabras prohibidas", id: "competition-palabras-prohibidas" }
 ];
 const DISADVANTAGE_PAIRS = [
+  {
+    mode: "letra bendita",
+    feedbackId: "level-letra-bendita-feedback",
+    stableId: "level-letra-bendita",
+    levelText: "NIVEL LETRA BENDITA"
+  },
   {
     mode: "letra prohibida",
     feedbackId: "level-letra-prohibida-feedback",
     stableId: "level-letra-prohibida",
-    levelText: "NIVEL LETRA PROHIBIDA"
+    levelText: "NIVEL LETRA MALDITA"
   },
   {
     mode: "palabras bonus",
     feedbackId: "level-palabras-bonus-feedback",
     stableId: "level-palabras-bonus",
-    levelText: "NIVEL PALABRAS BONUS"
+    levelText: "NIVEL PALABRAS BENDITAS"
   },
   {
     mode: "palabras prohibidas",
     feedbackId: "level-palabras-prohibidas-feedback",
     stableId: "level-palabras-prohibidas",
-    levelText: "NIVEL PALABRAS PROHIBIDAS"
-  },
-  {
-    mode: "frase final",
-    feedbackId: "level-frase-final-feedback",
-    stableId: "level-frase-final",
-    levelText: "NIVEL FRASE FINAL"
+    levelText: "NIVEL PALABRAS MALDITAS"
   }
 ];
 
@@ -264,7 +283,7 @@ test("reference show renders only substantial changes for each role", () => {
       previousPath = currentPath;
     });
   });
-  assert.equal(renderableViews, 60);
+  assert.equal(renderableViews, 77);
   assert.ok(renderableViews < (model.SHOW_JOURNEY.length * EXPECTED_SCREENS.length));
 
   const sandbox = { window: {} };
@@ -315,30 +334,35 @@ test("every warmup trigger preserves its open and closed interaction states", ()
   });
 });
 
-test("every voting milestone uses the Muse team that can actually vote", () => {
-  VOTING_IDS.forEach((milestoneId) => {
+test("every competitive level freezes a numeric inspiration marker and the global clock", () => {
+  COMPETITION_LEVELS.forEach(({ mode, id: milestoneId }) => {
     const milestone = manifest.milestones[milestoneId];
     assert.ok(milestone, `${milestoneId} exists`);
-    assert.ok(milestone.context, `${milestoneId} has voting context`);
-    assert.ok(milestone.sources, `${milestoneId} declares its source screens`);
-    const votingTeam = Number(milestone.context.votingTeam);
-    const disadvantagedPlayer = votingTeam === 1 ? 2 : 1;
-    assert.ok(votingTeam === 1 || votingTeam === 2, `${milestoneId} declares its voting team`);
-    assert.equal(milestone.sources.musa1, `musa${votingTeam}`);
+    assert.equal(milestone.context.moment, "competition");
+    assert.equal(milestone.context.mode, mode);
+    assert.ok(milestone.context.marker && typeof milestone.context.marker === "object");
+    assert.ok(Number.isFinite(Number(milestone.context.marker[1])));
+    assert.ok(Number.isFinite(Number(milestone.context.marker[2])));
+    assert.equal(milestone.sources.writer1, "writer1");
+    assert.equal(milestone.sources.musa1, "musa1");
 
-    const html = readRole(milestoneId, "musa1");
-    assert.match(html, new RegExp(`data-snapshot-screen-id="musa${votingTeam}"`));
-    assert.match(
-      html,
-      /id="votacion_ventaja_modal" class="[^"]*\bactiva\b[^"]*"/i,
-      `${milestoneId} freezes the open voting modal`
-    );
-    assert.match(
-      html,
-      new RegExp(`votacion-ventaja-escritxr--${disadvantagedPlayer}`),
-      `${milestoneId} votes a disadvantage for the opposing writer`
-    );
+    ["control", "writer1", "spectator"].forEach((screenId) => {
+      const html = readRole(milestoneId, screenId);
+      const hud = elementMarkup(html, "scrib_competition_hud", "section");
+      assert.match(hud, /data-active="1"/i, `${milestoneId}/${screenId} shows the competition`);
+      assert.match(hud, /data-clock="1"/i, `${milestoneId}/${screenId} shows the global clock`);
+      const scoreTexts = [...hud.matchAll(/<strong\b[^>]*scrib-competition-score[^>]*>([^<]+)<\/strong>/gi)]
+        .map((match) => match[1].trim());
+      assert.equal(scoreTexts.length, 2);
+      scoreTexts.forEach((score) => {
+        assert.match(score, /^-?\d+(?:\.\d+)?$/);
+        assert.doesNotMatch(score, /%/);
+      });
+      assert.doesNotMatch(hud, /votacion|votar/i);
+    });
   });
+
+  assert.equal(Object.keys(manifest.milestones).some((id) => id.startsWith("vote-")), false);
 });
 
 test("disadvantage levels preserve visible feedback followed by the stable level", () => {
@@ -369,7 +393,8 @@ test("disadvantage levels preserve visible feedback followed by the stable level
     assert.match(feedbackFreezeRule, /opacity:\s*1\s*!important/i);
     assert.match(feedbackFreezeRule, /transform:\s*none\s*!important/i);
     assert.match(stableHtml, new RegExp(levelText, "i"));
-    assert.doesNotMatch(stableHtml, /DESVENTAJA!/i);
+    assert.match(stableHtml, /id="scrib_competition_hud"[^>]*data-active="1"/i);
+    assert.doesNotMatch(stableHtml, /votacion_ventaja_modal[^>]*\bactiva\b/i);
   });
 });
 

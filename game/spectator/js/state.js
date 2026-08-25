@@ -789,152 +789,6 @@ let info1 = getEl("info1");
 let info2= getEl("info2");
 let inspiracion = getEl("inspiracion");
 
-const construirResucitarMini = (root) => {
-    if (!root) return null;
-    return {
-        root,
-        mainPanel: root.querySelector(".resucitar-main-panel"),
-        quantityPanel: root.querySelector(".resucitar-quantity-panel"),
-        btnSi: root.querySelector('[data-btn="si"]'),
-        btnNo: root.querySelector('[data-btn="no"]'),
-        btnConfirmar: root.querySelector('[data-btn="confirmar"]'),
-        btnAtras: root.querySelector('[data-btn="atras"]'),
-        quantityDisplay: root.querySelector("[data-resucitar-display]")
-    };
-};
-
-const resucitarMini = {
-    1: construirResucitarMini(getEl("resucitar_mini_1")),
-    2: construirResucitarMini(getEl("resucitar_mini_2"))
-};
-
-const AUDIO_GAME_OVER_ESPECTADOR = "../../game/audio/PERDER PALABRA.mp3";
-const AUDIO_RESUCITAR_ESPECTADOR = "../../game/audio/GANAR PALABRA.mp3";
-const estadoOscuridadGameOverEspectador = { 1: false, 2: false };
-
-const reproducirEfectoVidaEspectador = (ruta, volumen = 0.9) => {
-    try {
-        const audio = new Audio(ruta);
-        audio.volume = Math.max(0, Math.min(1, Number(volumen) || 0.9));
-        audio.play().catch(() => {});
-    } catch (_) {}
-};
-
-const actualizarOscuridadGameOverEspectador = (playerId, activa) => {
-    const id = Number(playerId) === 2 ? 2 : 1;
-    const nueva = Boolean(activa);
-    if (estadoOscuridadGameOverEspectador[id] === nueva) return false;
-    estadoOscuridadGameOverEspectador[id] = nueva;
-    if (document.body) {
-        document.body.classList.toggle(`gameover-lado-${id}`, nueva);
-    }
-    return true;
-};
-
-const resetearOscuridadGameOverEspectador = () => {
-    actualizarOscuridadGameOverEspectador(1, false);
-    actualizarOscuridadGameOverEspectador(2, false);
-};
-
-const actualizarClaseResucitarActivaEspectador = () => {
-    if (!document.body) return;
-    const lado1Activo = Boolean(
-        resucitarMini[1] &&
-        resucitarMini[1].root &&
-        resucitarMini[1].root.classList.contains("activa")
-    );
-    const lado2Activo = Boolean(
-        resucitarMini[2] &&
-        resucitarMini[2].root &&
-        resucitarMini[2].root.classList.contains("activa")
-    );
-    document.body.classList.toggle("resucitar-activo-lado-1", lado1Activo);
-    document.body.classList.toggle("resucitar-activo-lado-2", lado2Activo);
-};
-
-const ocultarTodosResucitarMini = () => {
-    ocultarResucitarMini(1);
-    ocultarResucitarMini(2);
-};
-
-const ocultarResucitarMini = (playerId) => {
-    const ui = resucitarMini[playerId];
-    if (!ui || !ui.root) return;
-    ui.root.classList.remove("activa");
-    ui.root.style.display = "none";
-    actualizarOscuridadGameOverEspectador(playerId, false);
-    actualizarClaseResucitarActivaEspectador();
-    programarAjusteViewportEspectador();
-};
-
-const renderizarCantidadResucitarMini = (ui, data = {}) => {
-    if (!ui || !ui.quantityDisplay) return;
-    const palabras = Math.max(0, Math.floor(Number(data.palabras) || 0));
-    const segundos = Math.max(0, Math.floor(Number(data.segundos) || 0));
-    const max = Math.max(0, Math.floor(Number(data.max) || 0));
-    if (window && typeof window.scribBuildResurrectionQuantityHtml2P === "function") {
-        ui.quantityDisplay.innerHTML = window.scribBuildResurrectionQuantityHtml2P({ palabras, segundos, max });
-        return;
-    }
-    ui.quantityDisplay.innerHTML = `
-      <div class="resucitar-stepper" aria-hidden="true">
-        <div class="resucitar-stepper-arrow">&uarr;</div>
-        <div class="resucitar-stepper-arrow">&darr;</div>
-      </div>
-      <div class="resucitar-metric">
-        <span class="resucitar-label">Palabras</span>
-        <span class="resucitar-value resucitar-pop palabras">${palabras}</span>
-        <span class="resucitar-max">MAX ${max}</span>
-      </div>
-      <div class="resucitar-arrow">&rarr;</div>
-      <div class="resucitar-metric">
-        <span class="resucitar-label">Segundos</span>
-        <span class="resucitar-value resucitar-pop segundos">${segundos}</span>
-      </div>
-    `;
-};
-
-const actualizarResucitarMini = (data) => {
-    if (!data) return;
-    const playerId = Number(data.player);
-    const ui = resucitarMini[playerId];
-    if (!ui || !ui.root) return;
-    ultimo_estado_resucitar_espectador[playerId] = data;
-    const menu = data.menu;
-    const visible = data.visible && (menu === "main" || menu === "quantity");
-    if (!visible) {
-        ocultarResucitarMini(playerId);
-        return;
-    }
-    ui.root.classList.add("activa");
-    ui.root.style.display = "grid";
-    if (playerId === 1) {
-        cierre_definitivo_j1 = false;
-    } else if (playerId === 2) {
-        cierre_definitivo_j2 = false;
-    }
-    setIndicadorGanadorMarcadorEspectador(playerId, false);
-    if (actualizarOscuridadGameOverEspectador(playerId, true)) {
-        reproducirEfectoVidaEspectador(AUDIO_GAME_OVER_ESPECTADOR);
-    }
-    actualizarClaseResucitarActivaEspectador();
-    if (ui.mainPanel) ui.mainPanel.style.display = menu === "main" ? "block" : "none";
-    if (ui.quantityPanel) ui.quantityPanel.style.display = menu === "quantity" ? "block" : "none";
-
-    const setActivo = (el, activo) => {
-        if (!el) return;
-        el.classList.toggle("selected", activo);
-        el.classList.toggle("active", activo);
-    };
-    setActivo(ui.btnSi, data.mainIndex === 0);
-    setActivo(ui.btnNo, data.mainIndex === 1);
-    setActivo(ui.btnConfirmar, data.quantityIndex === 0);
-    setActivo(ui.btnAtras, data.quantityIndex === 1);
-
-    renderizarCantidadResucitarMini(ui, data);
-    programarAjusteViewportEspectador();
-};
-
 if (tiempo) {
     tiempo.style.display = "none";
 }
@@ -1534,7 +1388,6 @@ let historial_detonadores_espectador = crearHistorialDetonadoresBase();
 let calentamiento_activo_previo_espectador = false;
 let ultimo_payload_calentamiento_espectador = null;
 let ultimo_payload_modo_espectador = null;
-let ultimo_estado_resucitar_espectador = { 1: null, 2: null };
 let ultima_letra_bendita_espectador = "";
 let ultima_letra_prohibida_espectador = "";
 let finales_calentamiento_previos = { 1: "", 2: "" };
@@ -1893,7 +1746,6 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     renderizarCreditosEspectador();
     detenerAnimacionCreditosEspectador(false);
     creditos_espectador.classList.remove("creditos-finalizados");
-    resetearOscuridadGameOverEspectador();
     creditos_track.style.opacity = "1";
     const altoViewportInicial = Math.max(window.innerHeight || 0, 1);
     const yInicioVisible = Math.round(altoViewportInicial * 0.82);
@@ -2619,7 +2471,7 @@ const registrarPuntoVidaStatsEspectador = (equipo, ts, valorVida) => {
         const ventanaArranqueMs = Math.min(2500, STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS);
         const pareceArranqueDePartida = ultimo.t <= ventanaArranqueMs
             && timestamp <= (ventanaArranqueMs * 2);
-        // Solo reinicia al principio real de la partida; un resucitar debe mantenerse en la curva.
+        // Solo reinicia al principio real de la partida.
         if (subidaBrusca && veniaAgotado && pareceArranqueDePartida) {
             serie.length = 0;
         }
@@ -3364,7 +3216,7 @@ const PUNTUACION_ICONOS_CATEGORIA = Object.freeze({
     riqueza_lexica: "\u{1F4DA}",
     bonus: "\u2728",
     precision: "\u{1F3AF}",
-    resistencia: "\u{1F6E1}\uFE0F"
+    pulsaciones: "\u2328\uFE0F"
 });
 const PUNTUACION_UNIDADES_I18N = Object.freeze({
     produccion: "score.unit.words",
@@ -3372,7 +3224,7 @@ const PUNTUACION_UNIDADES_I18N = Object.freeze({
     riqueza_lexica: "score.unit.unique_words",
     bonus: "score.unit.bonus",
     precision: "score.unit.attempts",
-    resistencia: "score.unit.average_life"
+    pulsaciones: "score.unit.keystrokes"
 });
 
 const obtenerApiPuntuacionEspectador = () => (
@@ -4534,12 +4386,11 @@ function actualizarChipRegaloMusaEspectador(equipo, estado = null) {
     }
     const objetivo = Math.max(1, Number(estado.objetivo) || 1);
     const progreso = Math.max(0, Math.min(objetivo, Number(estado.progreso) || 0));
-    const regaloSegs = Math.max(1, Number(estado.regalo_secs) || 1);
     const cooldownMs = Math.max(0, Number(estado.cooldown_ms) || 0);
     chip.hidden = false;
     chip.textContent = cooldownMs > 0 && progreso === 0
-        ? `REGALO +${regaloSegs}S | RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
-        : `REGALO +${regaloSegs}S | ${progreso}/${objetivo}`;
+        ? `APOYO DE MUSAS | RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
+        : `APOYO DE MUSAS | ${progreso}/${objetivo}`;
 }
 
 function actualizarEstadoRegaloBanderaEspectador(payload = {}) {
@@ -5990,8 +5841,8 @@ const MODOS = {
         actualizarPalabraConVisibilidad(palabra3, "");
         setBarraNivelClase("bonus");
         explicacion.style.color = "yellow";
-        explicacion.innerHTML = traducirDescripcionModoEspectador("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
-        palabra1.innerHTML = traducirTituloModoEspectador("palabras bonus", "NIVEL PALABRAS BONUS");
+        explicacion.innerHTML = traducirDescripcionModoEspectador("palabras bonus", "GANA QUIEN ESCRIBE MAS PALABRAS");
+        palabra1.innerHTML = traducirTituloModoEspectador("palabras bonus", "NIVEL PALABRAS BENDITAS");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
         definicion2.style.maxWidth = "100%";
         actualizarDefinicionConVisibilidad(definicion3, "", false);
@@ -6012,7 +5863,7 @@ const MODOS = {
         setBarraNivelClase("prohibida");
         explicacion.style.color = "red";
         explicacion.innerHTML = construirExplicacionNivelLetra("prohibida", data.letra_prohibida);
-        palabra1.innerHTML = traducirTituloModoEspectador("letra prohibida", "NIVEL LETRA PROHIBIDA");
+        palabra1.innerHTML = traducirTituloModoEspectador("letra prohibida", "NIVEL LETRA MALDITA");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
         definicion2.style.maxWidth = "100%";
         actualizarDefinicionConVisibilidad(definicion3, "", false);
@@ -6066,8 +5917,8 @@ const MODOS = {
         actualizarPalabraConVisibilidad(palabra3, "");
         setBarraNivelClase("prohibidas");
         explicacion.style.color = "pink";
-        explicacion.innerHTML = traducirDescripcionModoEspectador("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
-        palabra1.innerHTML = traducirTituloModoEspectador("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
+        explicacion.innerHTML = traducirDescripcionModoEspectador("palabras prohibidas", "EVITA LAS PALABRAS MALDITAS");
+        palabra1.innerHTML = traducirTituloModoEspectador("palabras prohibidas", "NIVEL PALABRAS MALDITAS");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
         definicion2.style.maxWidth = "100%";
         actualizarDefinicionConVisibilidad(definicion3, "", false);

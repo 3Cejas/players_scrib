@@ -18,7 +18,6 @@
     <script src="../../js/domains/inspiration.js?v=20260824c"></script>
     <script src="../../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../../js/domains/teleprompter.js?v=20260424a"></script>
-    <script src="../../js/domains/resurrection.js?v=20260424a"></script>
     <script src="../../js/domains/pre-show.js?v=20260824b"></script>
     <script src="./js/actions.js?v=20260504f"></script>
 </head>
@@ -102,7 +101,7 @@
                     <p id="feedback_texto_editado" class="feedback_texto_editado"></p>
                     <table>
                         <tr>
-                            <p id="tiempo" class="tiempo tiempo-vida"></p>
+                            <p id="tiempo" hidden aria-hidden="true"></p>
                         </tr>
                     </table>
                     <div id="metadatos_acciones" class="metadatos-grid metadatos-grid--acciones">
@@ -118,26 +117,10 @@
                         <div class="meta-item meta-bottom-right marcador-accion marcador-accion--bandera">
                             <button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">&#x1F3F3;&#xFE0F;&#x200D;&#x1F308; BANDERA</button>
                             <div id="bandera_regalo_estado" class="bandera-regalo-chip" hidden aria-live="polite">
-                                <span id="bandera_regalo_titulo" class="bandera-regalo-chip__titulo">REGALO +1S</span>
+                                <span id="bandera_regalo_titulo" class="bandera-regalo-chip__titulo">APOYO DE MUSAS</span>
                                 <span id="bandera_regalo_valor" class="bandera-regalo-chip__valor">0/10</span>
                                 <span class="bandera-regalo-chip__barra"><span id="bandera_regalo_fill" class="bandera-regalo-chip__fill"></span></span>
                             </div>
-                        </div>
-                    </div>
-                    <div id="votacion_ventaja_inline" class="votacion-ventaja-inline" aria-live="polite">
-                        <div class="votacion-ventaja-inline-header">VOTACION EN CURSO</div>
-                        <div id="votacion_ventaja_timer_inline" class="votacion-ventaja-timer" role="timer" aria-label="Tiempo restante de votacion">
-                            <span id="votacion_ventaja_timer_fill_inline" class="votacion-ventaja-timer-fill"></span>
-                            <span id="votacion_ventaja_timer_text_inline" class="votacion-ventaja-timer-text">00:00</span>
-                        </div>
-                        <div class="votacion-ventaja-inline-body">
-                            <div id="votacion_ventaja_pie_inline" class="votacion-ventaja-pie">
-                                <div class="votacion-ventaja-pie-center">
-                                    <div id="votacion_ventaja_total_inline" class="votacion-ventaja-pie-total">0</div>
-                                    <div class="votacion-ventaja-pie-label">VOTOS</div>
-                                </div>
-                            </div>
-                            <div id="votacion_ventaja_legend_inline" class="votacion-ventaja-legend"></div>
                         </div>
                     </div>
                     <section id="pre_show_musa" class="pre-show-musa" hidden aria-labelledby="pre_show_musa_titulo">
@@ -264,26 +247,6 @@
                 </br>
             </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div id="votacion_ventaja_modal" class="votacion-ventaja-modal" aria-live="assertive">
-        <div class="votacion-ventaja-modal-card">
-            <div id="votacion_ventaja_modal_titulo" class="votacion-ventaja-modal-titulo">ELIGE UNA DESVENTAJA</div>
-            <div id="votacion_ventaja_modal_opciones" class="votacion-ventaja-modal-opciones"></div>
-            <div id="votacion_ventaja_timer_modal" class="votacion-ventaja-timer" role="timer" aria-label="Tiempo restante de votacion">
-                <span id="votacion_ventaja_timer_fill_modal" class="votacion-ventaja-timer-fill"></span>
-                <span id="votacion_ventaja_timer_text_modal" class="votacion-ventaja-timer-text">00:00</span>
-            </div>
-            <div id="votacion_ventaja_modal_explicaciones" class="votacion-ventaja-modal-explicaciones"></div>
-            <div class="votacion-ventaja-modal-grafico">
-                <div id="votacion_ventaja_pie_modal" class="votacion-ventaja-pie">
-                    <div class="votacion-ventaja-pie-center">
-                        <div id="votacion_ventaja_total_modal" class="votacion-ventaja-pie-total">0</div>
-                        <div class="votacion-ventaja-pie-label">VOTOS</div>
-                    </div>
-                </div>
-                <div id="votacion_ventaja_legend_modal" class="votacion-ventaja-legend"></div>
             </div>
         </div>
     </div>

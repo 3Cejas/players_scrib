@@ -28,6 +28,7 @@
     };
 
     const ui = {
+        initialized: false,
         workspace: "mapa",
         screensBuilt: false,
         screenStates: new Map(),
@@ -463,7 +464,6 @@
         byId("dramaturgia_sim_writer_ppm").value = config.writer_ppm;
         byId("dramaturgia_sim_muse_interval").value = config.muse_interval_seconds;
         byId("dramaturgia_sim_muses").value = config.muses_per_team;
-        byId("dramaturgia_sim_votes").checked = config.votes;
         byId("dramaturgia_sim_hearts").checked = config.hearts;
         byId("dramaturgia_sim_auto_finish").checked = config.auto_finish;
         byId("dramaturgia_sim_full_show").checked = config.full_show;
@@ -484,7 +484,7 @@
             writer_ppm: byId("dramaturgia_sim_writer_ppm").value,
             muse_interval_seconds: byId("dramaturgia_sim_muse_interval").value,
             muses_per_team: byId("dramaturgia_sim_muses").value,
-            votes: byId("dramaturgia_sim_votes").checked,
+            votes: false,
             hearts: byId("dramaturgia_sim_hearts").checked,
             auto_finish: byId("dramaturgia_sim_auto_finish").checked,
             full_show: byId("dramaturgia_sim_full_show").checked,
@@ -712,7 +712,7 @@
     }
 
     function initialize() {
-        if (!toolsModel) return;
+        if (!toolsModel || ui.initialized) return;
         document.querySelectorAll("[data-dramaturgia-workspace]").forEach((button, index, buttons) => {
             button.addEventListener("click", () => setWorkspace(button.dataset.dramaturgiaWorkspace));
             button.addEventListener("keydown", (event) => {
@@ -784,6 +784,7 @@
         }
         ui.statusTimer = global.setInterval(updateScreenPresence, 2000);
         global.addEventListener("resize", fitAllScreens);
+        ui.initialized = true;
     }
 
     global.initializeDramaturgiaTools = initialize;
@@ -796,5 +797,8 @@
         getSources: getScreenSources,
         openHistoryScreen,
         openReferenceScreen
+    };
+    global.ScribDramaturgiaSimulatorControls = {
+        start: () => authorizeAndStart({ preventDefault() {} })
     };
 })(window);

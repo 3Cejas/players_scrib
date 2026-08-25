@@ -43,8 +43,6 @@ const BANDERAS_IDIOMA_CONTROL = {
     fr: "\uD83C\uDDEB\uD83C\uDDF7"
 };
 const PARAMETROS_CONTROL_PERSISTENTES = [
-    "tiempo_modificador",
-    "tiempo_votacion",
     "tiempo_modos",
     "tiempo_minutos",
     "tiempo_segundos",
@@ -673,9 +671,8 @@ function pintarTestigoPalabraMusaControl(player) {
     const equipo = id === 2 ? "rojo" : "azul";
     const palabra = palabraTexto ? ` - ${palabraTexto}` : "";
     const autora = mostrarAutor ? `, enviada por ${firma.completo}` : "";
-    const segundos = Math.max(0, Math.ceil(restanteMs / 1000));
     testigo.title = activo
-        ? `Palabra de musas para escritxr ${equipo}${palabra}${autora}: ${segundos} segundos de inspiracion. Cola: ${cola}`
+        ? `Palabra de musas para escritxr ${equipo}${palabra}${autora}: inspiracion x5. Cola: ${cola}`
         : `Sin palabra de musas activa para escritxr ${equipo}. Cola: ${cola}`;
     return activo;
 }
@@ -2018,35 +2015,10 @@ function temp() {
     fin_j2 = false;
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
-    tiempo.style.color = "white"
-    tiempo1.style.color = "white"
-
     clearInterval(countInterval);
     clearInterval(countInterval1);
-
-    let duration;
-
-    // --------------------------------------------------
-// 3A. DESESTRUCTURACION DE OBJETO
-// --------------------------------------------------
-// Nota: al asignar a variables ya declaradas, debemos envolver
-// la destructuracion entre parentesis para evitar que JS lo interprete
-// como un bloque de codigo.
-({
-    minutos: time_minutes,
-    segundos: time_seconds,
-    totalSegundos: duration
-  } = obtenerTotalSegundos());
-  
-  console.log('Objeto ->', time_minutes, time_seconds, duration);
-
-    tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
-    tiempo1.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;
-    actualizarBarraVida(tiempo, tiempo.textContent);
-    actualizarBarraVida(tiempo1, tiempo1.textContent);
-
-    count = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;    
-    count1 = tiempo.textContent = `${paddedFormat(time_minutes)}:${paddedFormat(time_seconds)}`;   
+    count = "00:00";
+    count1 = "00:00";
 
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
@@ -2080,39 +2052,13 @@ function temp() {
     escala_ui_espectador_control = escalaEspectador;
     socket.emit("ajustar_escala_espectador", { valor: escalaEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, TIEMPO_MODIFICADOR, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
   
     DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
-    const revisionPartida = invalidarTemporizadoresPartidaControl();
-    
-    listener_cuenta_atras = setTimeout(function(){
-        if (!esRevisionTemporizadoresControlActiva(revisionPartida)) {
-            return;
-        }
-        setPendienteAnimacionEntradaBarraVida(1, true);
-        setPendienteAnimacionEntradaBarraVida(2, true);
-        cancelarAnimacionEntradaBarraVida(tiempo);
-        cancelarAnimacionEntradaBarraVida(tiempo1);
-        if (tiempo) {
-            tiempo.style.display = DISPLAY_BARRA_VIDA;
-            aplicarEstadoBarraVida(tiempo, 0);
-        }
-        if (tiempo1) {
-            tiempo1.style.display = DISPLAY_BARRA_VIDA;
-            aplicarEstadoBarraVida(tiempo1, 0);
-        }
-        console.log({count1, player:2})
-        emitirCountControl({ count, player: 1 });
-        emitirCountControl({ count: count1, player: 2 });
-        console.log(duration, tiempo)
-        duration = duration - 1;
-        startCountDown_p1(duration, revisionPartida);
-        startCountDown_p2(duration, revisionPartida);
-
-    }, 8000);
+    invalidarTemporizadoresPartidaControl();
 }
 };
 
@@ -2307,33 +2253,6 @@ function saltar_tertulia() {
     socket.emit('saltar_tertulia', {});
 }
 
-function fin(player) {
-    if(player == 1){
-        fin_j1 = true
-        socket.emit('fin_de_control', {
-            player: 1,
-            forzar_fin: true,
-            suprimir_confetti_espectador: true
-        });
-        final(1, { emitirConteoFinal: false });
-    }
-    else if(player == 2){
-        fin_j2 = true
-        socket.emit('fin_de_control', {
-            player: 2,
-            forzar_fin: true,
-            suprimir_confetti_espectador: true
-        });
-        final(2, { emitirConteoFinal: false });
-    }
-    if(fin_j1 && fin_j2){
-        fin_j1 = false;
-        fin_j2 = false;
-        juego_iniciado = false;
-
-    }
-};
-
 function cambiar_vista() {
     socket.emit('cambiar_vista', 'nada');
 };
@@ -2345,6 +2264,11 @@ function cambiar_vista_calentamiento(boton) {
     if (vista_calentamiento) {
         pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
     }
+}
+
+function fin_partida_global() {
+    if (!juego_iniciado && !modo_actual) return;
+    socket.emit("finalizar_partida");
 }
 
 function actualizarBotonVistaCalentamiento(boton) {
@@ -2372,7 +2296,7 @@ const PUNTUACION_CATEGORIAS_CONTROL = [
     "riqueza_lexica",
     "bonus",
     "precision",
-    "resistencia"
+    "pulsaciones"
 ];
 const PUNTUACION_PASO_MAX_CONTROL = PUNTUACION_CATEGORIAS_CONTROL.length + 1;
 const normalizarModoVistaEspectador = (valor) => {
@@ -3764,13 +3688,6 @@ function pausar_reanudar(boton) {
 
 function reanudar(){
     if(modo_actual != "tertulia"){
-    prepararContadoresReanudacionControl();
-    emitirCountControl({ count, player: 1 });
-    emitirCountControl({ count: count1, player: 2 });
-    console.log("estooo",secondsRemaining)
-    console.log("estooo", TIEMPO_MODOS - secondsRemaining)
-    startCountDown_p1(secondsRemaining);
-    startCountDown_p2(secondsRemaining);
     pausado = false;
     socket.emit('reanudar', '');
     }
@@ -3785,19 +3702,10 @@ function reanudar_modo(){
     if(modo_actual !== "tertulia"){
         return false;
     }
-    prepararContadoresReanudacionControl();
-    console.log(count, secondsRemaining, tiempo)
-    console.log(time_minutes, time_seconds)
     if(boton_pausar_reanudar.dataset.value == 1){
         boton_pausar_reanudar.dataset.value = 0;
         actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     }
-    emitirCountControl({ count, player: 1 });
-    emitirCountControl({ count: count1, player: 2 });
-
-
-    startCountDown_p1(secondsRemaining);
-    startCountDown_p2(secondsRemaining1);
     pausado = false;
     socket.emit('reanudar_modo', '');
     return true;

@@ -8,6 +8,8 @@ socket.on("recargar_rol_remoto", () => {
     window.location.reload();
 });
 
+window.ScribCompetitionUI?.conectar(socket, { role: "spectator" });
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     reiniciarSeguimientoTransicionNivelEspectador();
@@ -65,18 +67,6 @@ socket.on('musa_corazon', (data) => {
 
 socket.on('musa_regalo_bandera_estado', (payload = {}) => {
     actualizarEstadoRegaloBanderaEspectador(payload);
-});
-
-socket.on('aumentar_tiempo_control', (payload = {}) => {
-    if (payload.origen !== 'musa_bandera') return;
-    const equipo = Number(payload.player);
-    if (equipo !== 1 && equipo !== 2) return;
-    const secs = Math.max(1, Math.abs(Number(payload.secs) || 0));
-    mostrarFeedbackFlotanteEspectador(equipo, `+${secs} SEG${secs === 1 ? '' : 'S'} MUSAS`, {
-        tipo: 'positivo'
-    });
-    activarFulgorLadoEspectador(equipo, 'positivo');
-    animarChipRegaloMusaEspectador(equipo);
 });
 
 socket.on('temporizador_gigante_inicio', (data) => {
@@ -244,7 +234,6 @@ function reiniciarEstadoCierrePartidaEspectador() {
     setVisibilidadUiJugadorEspectador(1, true);
     setVisibilidadUiJugadorEspectador(2, true);
     reiniciarProgresoFraseFinalEspectador();
-    resetearOscuridadGameOverEspectador();
 }
 
 function normalizarTextoCierreFraseFinalEspectador(valor) {
@@ -614,52 +603,6 @@ socket.on("count", data => {
     evaluarCierrePartidaEspectador(data);
 });
 
-socket.on('resucitar_control', data => {
-    const jugadorTiempo = Number(data && data.player) === 2 ? 2 : 1;
-    const tiempoSeq = extraerTiempoSeqPayloadEspectador(data);
-    if (tiempoSeq !== null) {
-        tiempo_seq_actual_espectador[jugadorTiempo] = Math.max(tiempo_seq_actual_espectador[jugadorTiempo] || 0, tiempoSeq);
-    }
-    if(data.player == 1){
-        reproducirEfectoVidaEspectador(AUDIO_RESUCITAR_ESPECTADOR);
-        terminado = false;
-        cierre_definitivo_j1 = false;
-        setIndicadorGanadorMarcadorEspectador(1, false);
-        setVisibilidadUiJugadorEspectador(1, true);
-        ocultarResucitarMini(1);
-    }
-    else if(data.player == 2){
-        reproducirEfectoVidaEspectador(AUDIO_RESUCITAR_ESPECTADOR);
-        terminado1 = false;
-        cierre_definitivo_j2 = false;
-        setIndicadorGanadorMarcadorEspectador(2, false);
-        setVisibilidadUiJugadorEspectador(2, true);
-        ocultarResucitarMini(2);
-    }
-});
-
-socket.on('resucitar_menu', data => {
-    const jugador = Number(data && data.player);
-    if (!partida_activa_espectador || !modo_actual) {
-        if (jugador === 1 || jugador === 2) {
-            ultimo_estado_resucitar_espectador[jugador] = {
-                ...(data && typeof data === "object" ? data : {}),
-                player: jugador,
-                menu: "hidden",
-                visible: false
-            };
-        }
-        ocultarTodosResucitarMini();
-        return;
-    }
-    const mantenerMenuPorSincronia = Boolean(data && data.visible);
-    if (modo_actual === "frase final" && !mantenerMenuPorSincronia) {
-        ocultarTodosResucitarMini();
-        return;
-    }
-    actualizarResucitarMini(data);
-});
-
 // Array con los audios en el orden que quieres reproducir
 var audios = [
   "../../game/audio/5. PREPARADOS 2.mp3",
@@ -969,7 +912,6 @@ socket.on('limpiar', data => {
     setPendienteAnimacionEntradaBarraVida(false);
     partida_activa_espectador = false;
     actualizarBrandingPartidaEspectador();
-    ocultarTodosResucitarMini();
     modo_nivel_activo_espectador = "";
     modo_actual = "";
     setBarraNivelClase("");
@@ -1106,7 +1048,7 @@ function refrescarCabeceraModoActualEspectador() {
     if (!modo_actual) return;
     if (modo_actual === "letra prohibida") {
         if (explicacion) explicacion.innerHTML = construirExplicacionNivelLetra("prohibida", ultima_letra_prohibida_espectador);
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("letra prohibida", "NIVEL LETRA PROHIBIDA");
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("letra prohibida", "NIVEL LETRA MALDITA");
         return;
     }
     if (modo_actual === "letra bendita") {
@@ -1115,13 +1057,13 @@ function refrescarCabeceraModoActualEspectador() {
         return;
     }
     if (modo_actual === "palabras bonus") {
-        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras bonus", "NIVEL PALABRAS BONUS");
+        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras bonus", "GANA QUIEN ESCRIBE MAS PALABRAS");
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras bonus", "NIVEL PALABRAS BENDITAS");
         return;
     }
     if (modo_actual === "palabras prohibidas") {
-        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
-        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
+        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("palabras prohibidas", "EVITA LAS PALABRAS MALDITAS");
+        if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("palabras prohibidas", "NIVEL PALABRAS MALDITAS");
         return;
     }
     if (modo_actual === "tertulia") {
@@ -1187,22 +1129,6 @@ function refrescarUiIdiomaEspectador() {
     renderizarCreditosEspectador();
     refrescarCabeceraModoActualEspectador();
     refrescarCountdownEspectador();
-
-    document.querySelectorAll(".resucitar-title-question").forEach((nodo) => {
-        if (window && typeof window.scribBuildResurrectionQuestionHtml2P === "function") {
-            nodo.innerHTML = window.scribBuildResurrectionQuestionHtml2P();
-        }
-    });
-    document.querySelectorAll(".quantity-title").forEach((nodo) => {
-        nodo.textContent = tJuego2P("res.quantity_title", {}, "Selecciona la cantidad de palabras");
-    });
-
-    [1, 2].forEach((jugadorId) => {
-        const estadoResucitar = ultimo_estado_resucitar_espectador[jugadorId];
-        if (estadoResucitar && estadoResucitar.visible) {
-            actualizarResucitarMini(estadoResucitar);
-        }
-    });
 
     [tiempo, tiempo1].forEach((nodoTiempo) => {
         if (!nodoTiempo) return;
@@ -1533,7 +1459,6 @@ socket.on('fin', data => {
                 mostrarEtiquetaFinal: true,
                 textoEtiqueta
             });
-            ocultarResucitarMini(jugadorFinalizado);
             actualizarProgresoFraseFinalEspectador();
             evaluarCierrePartidaEspectador(payload);
         }
@@ -1637,6 +1562,12 @@ socket.on("desventaja_activa_estado", payload => {
     });
 });
 
+socket.on("desventaja_ronda_limpiar", () => {
+    if (typeof limpiarDesventajasVisualesEspectador === "function") {
+        limpiarDesventajasVisualesEspectador();
+    }
+});
+
 socket.on("pausar_js", () => {
     if (typeof pausarDesventajasVisualesEspectador === "function") {
         pausarDesventajasVisualesEspectador();
@@ -1667,17 +1598,6 @@ socket.on("nueva letra", letra => {
         explicacion.innerHTML = construirExplicacionNivelLetra("bendita", letra);
         activarEfectoCambioLetraEspectador("bendita");
     }
-});
-
-socket.on('elegir_ventaja_j1', () => {
-    confetti_musas(0.25);
-    activarEstadoVotacionVentaja("azul");
-    
-});
-
-socket.on('elegir_ventaja_j2', () => {
-    confetti_musas(0.75);
-    activarEstadoVotacionVentaja("rojo");
 });
 
 //FUNCIONES AUXILIARES.
@@ -1992,7 +1912,6 @@ function limpiezas(){
     reiniciarEstadoCierrePartidaEspectador();
     detenerSonidosDesventaja();
     limpiarVisualPutadasEspectador();
-    ocultarTodosResucitarMini();
     detenerProgresoNivelBarra(true);
     limpiarEstiloPalabrasModoLetrasEspectador();
     setPendienteAnimacionEntradaBarraVida(false);

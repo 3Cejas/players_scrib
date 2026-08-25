@@ -54,7 +54,7 @@ test("dramaturgy simulator config applies presets, limits and valid modes", () =
     writer_ppm: -20,
     muse_interval_seconds: 0,
     muses_per_team: 12,
-    votes: false,
+    votes: true,
     hearts: false,
     auto_finish: false,
     full_show: false,

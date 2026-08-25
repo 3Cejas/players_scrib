@@ -21,7 +21,7 @@
             theme: "bonus-words",
             icon: "\u{1F4D6}",
             detailKey: "mode.desc.bonus",
-            detailFallback: "Suma tiempo con palabras bonus."
+            detailFallback: "Gana quien escriba mas palabras."
         }),
         "palabras prohibidas": Object.freeze({
             suffix: "palabras_prohibidas",

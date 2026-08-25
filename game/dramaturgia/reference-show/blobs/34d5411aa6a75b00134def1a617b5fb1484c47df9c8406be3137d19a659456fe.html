@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html data-scrib-reference-show="complete-v1" lang="es" class="" style="overflow: hidden;" data-scrib-snapshot-frozen="" data-snapshot-screen-id="spectator" data-snapshot-width="1600" data-snapshot-height="1000"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'; form-action 'none'; base-uri http: https:; img-src data: blob: http: https:; media-src data: blob: http: https:; font-src data: http: https:; style-src 'unsafe-inline' http: https:"><base href="../../../spectator/">
+    <link rel="icon" href="../../img/logo.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>SCRB - Espectador 👀</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260824c">
+    <link rel="stylesheet" type="text/css" href="../css/level-transition.css?v=20260823a">
+    <link rel="stylesheet" type="text/css" href="../css/video-tutorial.css?v=20260824d">
+    
+    
+<style id="scrib-competition-style">
+      .scrib-competition-hud{--azul:#46f0ff;--rojo:#ff5f67;--oro:#ffe475;position:fixed;z-index:2147481200;left:50%;top:clamp(8px,1.4vh,18px);transform:translateX(-50%);width:min(760px,72vw);font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:none;filter:drop-shadow(0 10px 26px #000a);transition:opacity .35s,transform .35s}
+      body:has(#scrib_competition_hud) #inspiracion{display:none!important}
+      .scrib-competition-hud[data-role="spectator"]{top:clamp(114px,15vh,166px);width:min(940px,72vw)}
+      .scrib-competition-hud[data-active="0"][data-clock="0"]{opacity:0;transform:translate(-50%,-20px)}
+      .scrib-competition-shell{position:relative;border:1px solid #ffffff38;border-radius:18px;padding:9px 14px 11px;background:linear-gradient(180deg,#101423f2,#060914ed);box-shadow:inset 0 0 26px #ffffff0b,0 0 0 1px #000}
+      .scrib-competition-top{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:7px}
+      .scrib-competition-mode{font-size:clamp(10px,.8vw,13px);font-weight:900;letter-spacing:.13em;text-align:left;color:#d7dcf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .scrib-competition-clock{font-variant-numeric:tabular-nums;font-size:clamp(19px,1.8vw,30px);font-weight:1000;letter-spacing:.08em;color:#fff;border:1px solid #ffffff30;border-radius:999px;padding:2px 13px;background:#050711}
+      .scrib-competition-clock::before{content:'TIEMPO ';font-size:.44em;color:#abb2cb;vertical-align:middle}
+      .scrib-competition-criterion{text-align:right;font-size:clamp(8px,.68vw,11px);font-weight:800;letter-spacing:.07em;color:#abb2cb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .scrib-competition-scoreline{display:grid;grid-template-columns:minmax(54px,auto) 1fr minmax(54px,auto);gap:9px;align-items:center}
+      .scrib-competition-score{position:relative;display:flex;align-items:center;justify-content:center;min-width:58px;height:42px;border-radius:12px;font-size:clamp(22px,2.1vw,36px);font-weight:1000;font-variant-numeric:tabular-nums;background:#090c18;border:1px solid currentColor;transition:transform .2s,box-shadow .25s}
+      .scrib-competition-score--1{color:var(--azul);box-shadow:inset 0 0 18px #46f0ff24}
+      .scrib-competition-score--2{color:var(--rojo);box-shadow:inset 0 0 18px #ff5f6724}
+      .scrib-competition-score.is-leading{transform:scale(1.08);box-shadow:0 0 24px currentColor,inset 0 0 18px #ffffff24}
+      .scrib-competition-score.is-hit{animation:scribScoreHit .42s ease-out}
+      .scrib-competition-bar{position:relative;height:28px;display:flex;overflow:hidden;border:1px solid #fff5;border-radius:999px;background:#060812;box-shadow:inset 0 0 15px #000;isolation:isolate}
+      .scrib-competition-segment{height:100%;transition:width .65s cubic-bezier(.2,.9,.2,1);position:relative}
+      .scrib-competition-segment--1{background:linear-gradient(90deg,#087c9d,var(--azul))}
+      .scrib-competition-segment--2{background:linear-gradient(90deg,var(--rojo),#9d1731)}
+      .scrib-competition-center{position:absolute;z-index:3;left:var(--marker-position,50%);top:50%;width:11px;height:34px;transform:translate(-50%,-50%) skewX(-12deg);background:#fff;box-shadow:0 0 15px #fff;transition:left .65s cubic-bezier(.2,.9,.2,1)}
+      .scrib-competition-curse{position:absolute;z-index:4;top:50%;left:var(--curse-position,50%);transform:translate(-50%,-50%);font-size:19px;filter:drop-shadow(0 0 5px #000);transition:left .7s cubic-bezier(.2,.9,.2,1)}
+      .scrib-competition-streak{position:absolute;top:100%;margin-top:7px;padding:4px 9px;border-radius:999px;background:#090c18e8;border:1px solid currentColor;font-size:11px;font-weight:1000;letter-spacing:.08em;opacity:0;transform:translateY(-5px);transition:.2s}
+      .scrib-competition-streak[data-active="1"]{opacity:1;transform:none}
+      .scrib-competition-streak--1{left:2%;color:var(--azul)}.scrib-competition-streak--2{right:2%;color:var(--rojo)}
+      .scrib-competition-fly{position:fixed;z-index:2147483000;left:0;top:0;padding:5px 10px;border-radius:999px;border:1px solid currentColor;background:#090c18f2;font:1000 16px/1 Inter,system-ui,sans-serif;color:var(--fly-color,#fff);white-space:nowrap;pointer-events:none;animation:scribFly var(--fly-duration,800ms) cubic-bezier(.18,.8,.22,1) forwards}
+      .scrib-competition-fly.is-muse{color:var(--oro);box-shadow:0 0 20px #ffe475b0}
+      .scrib-competition-change{position:fixed;z-index:2147483100;left:50%;top:43%;transform:translate(-50%,-50%) scale(.7);opacity:0;text-align:center;font:1000 clamp(25px,4vw,64px)/.95 Inter,system-ui,sans-serif;letter-spacing:.04em;color:#fff;text-shadow:0 0 8px #fff,0 0 32px #8b5cff,4px 4px 0 #000;pointer-events:none;animation:scribLeaderChange 1.55s ease-out forwards}
+      .scrib-competition-change small{display:block;margin-top:10px;font-size:.3em;letter-spacing:.18em;color:var(--change-color,#fff)}
+      .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
+      @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+      @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
+      @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-3deg)}18%,65%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(1.1)}}
+      @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
+      @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"]{width:84vw}}
+      @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly,.scrib-competition-change,.scrib-competition-burst{animation-duration:.01ms!important}}
+    </style><style data-scrib-snapshot-freeze="">html[data-scrib-snapshot-frozen] body *,html[data-scrib-snapshot-frozen] body *::before,html[data-scrib-snapshot-frozen] body *::after{animation:none!important;transition:none!important;caret-color:transparent!important;}html[data-scrib-snapshot-frozen] body .feedback-tiempo-float{opacity:1!important;transform:none!important;animation:none!important;}html,body{scroll-behavior:auto!important;}body{pointer-events:none!important;}</style></head>
+
+<body class="page-spectator vista-partida modo-palabras-bonus-espectador bg rain" style="--spectator-ui-scale: 1.000; --spectator-name-scale: 1.025; --spectator-time-scale: 1.010; --spectator-meta-scale: 1.030; --spectator-level-scale: 1.010; --spectator-text-lines: 6.59; overflow: hidden; background-color: black;" inert="">
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div id="level_transition" class="level-transition" aria-hidden="true" data-level-theme="bonus-words">
+        <div class="level-transition__backdrop" aria-hidden="true"></div>
+        <div class="level-transition__rays" aria-hidden="true"></div>
+        <div class="level-transition__burst" aria-hidden="true"></div>
+        <article class="level-transition__panel" aria-hidden="true">
+            <p class="level-transition__eyebrow" data-level-eyebrow="">NUEVO NIVEL</p>
+            <div class="level-transition__icon-shell" aria-hidden="true">
+                <span class="level-transition__icon" data-level-icon="">📖</span>
+            </div>
+            <h2 class="level-transition__title" data-level-title="">NIVEL PALABRAS BENDITAS</h2>
+            <p class="level-transition__detail" data-level-detail="">GANA QUIEN ESCRIBE MAS PALABRAS</p>
+            <div class="level-transition__meter" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </article>
+        <div class="level-transition__scanlines" aria-hidden="true"></div>
+    </div>
+    <p id="level_transition_status" class="scrib-visually-hidden" role="status" aria-live="assertive" aria-atomic="true">NUEVO NIVEL: NIVEL PALABRAS BENDITAS. GANA QUIEN ESCRIBE MAS PALABRAS</p>
+    <section id="pre_show_espectador" class="pre-show-espectador" aria-labelledby="pre_show_espectador_titulo" aria-hidden="true" hidden="">
+        <div class="pre-show-espectador__ambient" aria-hidden="true">
+            <span class="pre-show-espectador__orb pre-show-espectador__orb--blue"></span>
+            <span class="pre-show-espectador__orb pre-show-espectador__orb--red"></span>
+            <span class="pre-show-espectador__grid"></span>
+            <span class="pre-show-espectador__scan"></span>
+        </div>
+        <header class="pre-show-espectador__header">
+            <span class="pre-show-espectador__live"><span aria-hidden="true"></span><span data-i18n="preshow.live">EN DIRECTO</span></span>
+            <p class="pre-show-espectador__eyebrow" data-i18n="preshow.spectator.eyebrow">ANTES DEL TUTORIAL</p>
+            <h1 id="pre_show_espectador_titulo" data-i18n="preshow.spectator.title">LAS MUSAS TOMAN EL CANAL</h1>
+            <p data-i18n="preshow.spectator.copy">Mensajes en directo para ir calentando al publico.</p>
+        </header>
+        <div id="pre_show_espectador_mensajes" class="pre-show-espectador__messages" role="list" data-i18n-attr="aria-label:preshow.spectator.messages_aria" aria-label="Mensajes de las musas"></div>
+        <p id="pre_show_espectador_anuncio" class="scrib-visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
+        <footer class="pre-show-espectador__footer">
+            <span aria-hidden="true">SCRIB / PRE-SHOW</span>
+            <span data-i18n="preshow.spectator.until_tutorial">EL CANAL TERMINA AL EMPEZAR EL TUTORIAL</span>
+        </footer>
+    </section>
+    <div id="corazones_espectador" class="corazones-flotantes"><span class="corazon-flotante corazon-azul" style="left: 524.699px; top: 582.911px; font-size: 40.698px; --corazon-duracion: 2863.1356742148528ms; --corazon-dy: -229.04059056092026px;">💙</span><span class="corazon-flotante corazon-rojo" style="left: 1249.5px; top: 483.472px; font-size: 40.6866px; --corazon-duracion: 2526.6048160715154ms; --corazon-dy: -191.17730843377853px;">❤️</span></div>
+    <div id="teleprompter_overlay" class="teleprompter-overlay">
+        <div id="teleprompter_screen" class="teleprompter-screen" data-team="none" style="--tp-frame: rgba(120, 120, 120, 0.6); border-color: rgba(120, 120, 120, 0.6); box-shadow: rgba(120, 120, 120, 0.6) 0px 0px 35px, rgba(0, 0, 0, 0.8) 0px 0px 30px inset;">
+            <div id="teleprompter_text" class="teleprompter-text" lang="es" style="font-size: 36px; transform: translateY(0px);"></div>
+        </div>
+    </div>
+    <div id="spectator_fit_root" align="center" style="transform: translate3d(105.32px, 0px, 0px) scale(0.8576); --spectator-veil-left: -122.80px; --spectator-veil-right: -142.80px; --spectator-veil-width: 970.11px;">
+        <div class="cabecera" style="">
+        <pre id="neon" class="neon_espectador" style="">        __     _____    _____   _____    _____    __       ____  
+       / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+      / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+     &lt; &lt;      \___ \  | |      |  _  /    | |       &gt; &gt;   |  _ &lt; 
+      \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
+                                                                                                  
+    </pre>
+    <div id="logo" class="logo" style="">
+        <p class="sub">powered by</p><br><img src="../img/logo.png" alt="" width="10%">
+    </div>
+    </div>
+    <div id="lightning" class="lightning" style="right: 0%; left: 45%; animation-duration: 1.15s;">
+    </div>
+    <div id="info">
+        <h1 id="feedback1" class="feedback1"></h1>
+        <h1 id="feedback2" class="feedback2"></h1>
+    </div>
+        <br>
+        <div class="container"></div>
+        <p id="temas_container"><span id="temas" class="temas"></span></p>
+        <br>
+        <div id="inspiracion" class="inspiracion intro-reveal-bloque animate__animated animate__pulse" data-intro-from="down" style="display: block;">
+            <p class="inspiracion-title" data-i18n="ui.inspiration_title">INSPIRACION</p>
+            <div class="bar">
+                <div class="bar-segment blue" style="width: 50%;">
+                    <span class="percentage-text" style="font-size: 1.25vw;">50 %</span>
+                </div>
+                <div class="bar-segment red" style="width: 50%;">
+                    <span class="percentage-text" style="font-size: 1.25vw;">50 %</span>
+                </div>
+            </div>
+            
+    </div>        <section id="calentamiento_espectador" class="calentamiento-espectador" style="display: none;">
+            <div class="calentamiento-stage">
+                <div id="calentamiento_nube" class="calentamiento-nube" aria-live="polite"></div>
+                <div id="calentamiento_cursor_1" class="calentamiento-cursor equipo-1" aria-hidden="true">
+                    <span class="cursor-punto"></span>
+                    <span class="cursor-label">BOT AZUL</span>
+                </div>
+                <div id="calentamiento_cursor_2" class="calentamiento-cursor equipo-2" aria-hidden="true">
+                    <span class="cursor-punto"></span>
+                    <span class="cursor-label">BOT ROJO</span>
+                </div>
+            </div>
+            <div class="calentamiento-overlay-ui">
+                <h2 class="calentamiento-titulo" data-i18n="warmup.title">TUTORIAL</h2>
+                <p id="calentamiento_consigna_espectador" class="calentamiento-consigna-chip tipo-ninguna">DETONADOR ACTUAL: SIN DETONADOR ACTIVO</p>
+                <div id="calentamiento_detonadores_historial" class="calentamiento-detonadores-historial" aria-live="polite"><div class="detonador-historial-item tipo-lugares"><span class="detonador-historial-caso">LUGARES</span><span class="detonador-historial-label has-pairs"><span class="detonador-historial-pair equipo-1"><span class="detonador-historial-pair__word">AZOTEA</span><span class="inspiration-author inspiration-author--history" title="BOT 11" aria-label="Musa: BOT 11"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 11</span></span></span><span class="detonador-historial-pair equipo-2"><span class="detonador-historial-pair__word">ESTACIÓN</span><span class="inspiration-author inspiration-author--history" title="BOT 21" aria-label="Musa: BOT 21"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 21</span></span></span></span></div><div class="detonador-historial-item tipo-acciones"><span class="detonador-historial-caso">ACCIONES</span><span class="detonador-historial-label has-pairs"><span class="detonador-historial-pair equipo-1"><span class="detonador-historial-pair__word">HUIR</span><span class="inspiration-author inspiration-author--history" title="BOT 11" aria-label="Musa: BOT 11"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 11</span></span></span><span class="detonador-historial-pair equipo-2"><span class="detonador-historial-pair__word">COSER</span><span class="inspiration-author inspiration-author--history" title="BOT 21" aria-label="Musa: BOT 21"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 21</span></span></span></span></div><div class="detonador-historial-item tipo-frase_final"><span class="detonador-historial-caso">FRASE FINAL</span><span class="detonador-historial-label has-pairs"><span class="detonador-historial-pair equipo-1"><span class="detonador-historial-pair__word">Y ENTONCES LA COSTURA DEL MUNDO VOLVIÓ A ABRIRSE</span><span class="inspiration-author inspiration-author--history" title="BOT 11" aria-label="Musa: BOT 11"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 11</span></span></span><span class="detonador-historial-pair equipo-2"><span class="detonador-historial-pair__word">NADIE SUPO SI AQUELLO ERA UN FINAL O UNA PUERTA.</span><span class="inspiration-author inspiration-author--history" title="BOT 21" aria-label="Musa: BOT 21"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 21</span></span></span></span></div></div>
+                <p id="calentamiento_global_estado" class="calentamiento-global-estado" data-i18n="warmup.state.inactive">Tutorial inactivo.</p>
+                <div id="calentamiento_finales" class="calentamiento-finales">
+                    <div id="calentamiento_final_j1" class="calentamiento-final-card equipo-1">
+                        <span class="final-label">BOT AZUL</span>
+                        <span class="final-word">PENDIENTE</span>
+                    </div>
+                    <div id="calentamiento_final_j2" class="calentamiento-final-card equipo-2">
+                        <span class="final-label">BOT ROJO</span>
+                        <span class="final-word">PENDIENTE</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="stats_espectador" class="stats-espectador" aria-live="polite" style="display: none;">
+            <div class="stats-overlay-ui">
+                <div class="stats-header-row">
+                    <h2 class="stats-titulo" data-i18n="ui.stats_live_title">STATS DE LA PARTIDA</h2>
+                    <p id="stats_timestamp" class="stats-timestamp" aria-hidden="false"><span class="stats-slide-player-name equipo-1">ESCRITXR 1</span> · MAPA DE CALOR</p>
+                </div>
+                <p id="stats_estado" class="stats-estado" data-i18n="stats.state.waiting">Esperando estadisticas de las escritoras...</p>
+            </div>
+            <div class="stats-slider stats-slider--heatmap">
+                <div id="stats_slides_track" class="stats-slides-track" style="transform: translateX(0%);"><article class="stats-slide">
+            
+            <div class="stats-slide-body stats-slide-body--heatmap">
+        <div class="stats-kpis-grid stats-kpis-grid--heatmap equipo-1">
+            <div class="stats-kpi"><span>⌨️ Pulsaciones</span><strong>0</strong></div>
+            <div class="stats-kpi"><span>🎯 Teclas activas</span><strong>0</strong></div>
+            <div class="stats-kpi"><span>🔥 Maximo en una tecla</span><strong>0</strong></div>
+        </div>
+        <div class="stats-heatmap-board equipo-1">
+            <div class="stats-heatmap-row" style="--stats-hm-cols:31;">
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Âº/Âª (0)">
+                    <span class="stats-hm-key-label">Âº<br>Âª</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="1/! (0)">
+                    <span class="stats-hm-key-label">1<br>!</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="2/&quot; (0)">
+                    <span class="stats-hm-key-label">2<br>"</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="3/# (0)">
+                    <span class="stats-hm-key-label">3<br>#</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="4/$ (0)">
+                    <span class="stats-hm-key-label">4<br>$</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="5/% (0)">
+                    <span class="stats-hm-key-label">5<br>%</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="6/&amp; (0)">
+                    <span class="stats-hm-key-label">6<br>&amp;</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="7// (0)">
+                    <span class="stats-hm-key-label">7<br>/</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="8/( (0)">
+                    <span class="stats-hm-key-label">8<br>(</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="9/) (0)">
+                    <span class="stats-hm-key-label">9<br>)</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="0/= (0)">
+                    <span class="stats-hm-key-label">0<br>=</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Â¿/? (0)">
+                    <span class="stats-hm-key-label">Â¿<br>?</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Â¡/! (0)">
+                    <span class="stats-hm-key-label">Â¡<br>!</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:5;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="â† (0)">
+                    <span class="stats-hm-key-label">â†</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:30;">
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Tab (0)">
+                    <span class="stats-hm-key-label">Tab</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Q (0)">
+                    <span class="stats-hm-key-label">Q</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="W (0)">
+                    <span class="stats-hm-key-label">W</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="E (0)">
+                    <span class="stats-hm-key-label">E</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="R (0)">
+                    <span class="stats-hm-key-label">R</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="T (0)">
+                    <span class="stats-hm-key-label">T</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Y (0)">
+                    <span class="stats-hm-key-label">Y</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="U (0)">
+                    <span class="stats-hm-key-label">U</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="I (0)">
+                    <span class="stats-hm-key-label">I</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="O (0)">
+                    <span class="stats-hm-key-label">O</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="P (0)">
+                    <span class="stats-hm-key-label">P</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Â´/+ (0)">
+                    <span class="stats-hm-key-label">Â´<br>+</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="`/^ (0)">
+                    <span class="stats-hm-key-label">`<br>^</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="\ (0)">
+                    <span class="stats-hm-key-label">\</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:31;">
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:4;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Caps (0)">
+                    <span class="stats-hm-key-label">Caps</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="A (0)">
+                    <span class="stats-hm-key-label">A</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="S (0)">
+                    <span class="stats-hm-key-label">S</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="D (0)">
+                    <span class="stats-hm-key-label">D</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="F (0)">
+                    <span class="stats-hm-key-label">F</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="G (0)">
+                    <span class="stats-hm-key-label">G</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="H (0)">
+                    <span class="stats-hm-key-label">H</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="J (0)">
+                    <span class="stats-hm-key-label">J</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="K (0)">
+                    <span class="stats-hm-key-label">K</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="L (0)">
+                    <span class="stats-hm-key-label">L</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Ã‘ (0)">
+                    <span class="stats-hm-key-label">Ã‘</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Â¨/Â´ (0)">
+                    <span class="stats-hm-key-label">Â¨<br>Â´</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:5;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Enter (0)">
+                    <span class="stats-hm-key-label">Enter</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:33;">
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:5;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Shift (0)">
+                    <span class="stats-hm-key-label">Shift</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="&lt;/&gt; (0)">
+                    <span class="stats-hm-key-label">&lt;<br>&gt;</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Z (0)">
+                    <span class="stats-hm-key-label">Z</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="X (0)">
+                    <span class="stats-hm-key-label">X</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="C (0)">
+                    <span class="stats-hm-key-label">C</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="V (0)">
+                    <span class="stats-hm-key-label">V</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="B (0)">
+                    <span class="stats-hm-key-label">B</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="N (0)">
+                    <span class="stats-hm-key-label">N</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="M (0)">
+                    <span class="stats-hm-key-label">M</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title=",/; (0)">
+                    <span class="stats-hm-key-label">,<br>;</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="./: (0)">
+                    <span class="stats-hm-key-label">.<br>:</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:2;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Â¿/? (0)">
+                    <span class="stats-hm-key-label">Â¿<br>?</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:6;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Shift (0)">
+                    <span class="stats-hm-key-label">Shift</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:34;">
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Ctrl (0)">
+                    <span class="stats-hm-key-label">Ctrl</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Win (0)">
+                    <span class="stats-hm-key-label">Win</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Alt (0)">
+                    <span class="stats-hm-key-label">Alt</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:13;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Espacio (0)">
+                    <span class="stats-hm-key-label">Espacio</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Alt (0)">
+                    <span class="stats-hm-key-label">Alt</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Win (0)">
+                    <span class="stats-hm-key-label">Win</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Menu (0)">
+                    <span class="stats-hm-key-label">Menu</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-1" style="--stats-hm-span:3;--hm-fill-a:20, 49, 61;--hm-fill-b:10, 26, 35;--hm-border:81, 122, 146;--hm-glow:44, 133, 150;--hm-glow-alpha:0.120;" title="Ctrl (0)">
+                    <span class="stats-hm-key-label">Ctrl</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div>
+        </div>
+    </div>
+        </article><article class="stats-slide">
+            
+            <div class="stats-slide-body stats-slide-body--heatmap">
+        <div class="stats-kpis-grid stats-kpis-grid--heatmap equipo-2">
+            <div class="stats-kpi"><span>⌨️ Pulsaciones</span><strong>0</strong></div>
+            <div class="stats-kpi"><span>🎯 Teclas activas</span><strong>0</strong></div>
+            <div class="stats-kpi"><span>🔥 Maximo en una tecla</span><strong>0</strong></div>
+        </div>
+        <div class="stats-heatmap-board equipo-2">
+            <div class="stats-heatmap-row" style="--stats-hm-cols:31;">
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Âº/Âª (0)">
+                    <span class="stats-hm-key-label">Âº<br>Âª</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="1/! (0)">
+                    <span class="stats-hm-key-label">1<br>!</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="2/&quot; (0)">
+                    <span class="stats-hm-key-label">2<br>"</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="3/# (0)">
+                    <span class="stats-hm-key-label">3<br>#</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="4/$ (0)">
+                    <span class="stats-hm-key-label">4<br>$</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="5/% (0)">
+                    <span class="stats-hm-key-label">5<br>%</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="6/&amp; (0)">
+                    <span class="stats-hm-key-label">6<br>&amp;</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="7// (0)">
+                    <span class="stats-hm-key-label">7<br>/</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="8/( (0)">
+                    <span class="stats-hm-key-label">8<br>(</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="9/) (0)">
+                    <span class="stats-hm-key-label">9<br>)</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="0/= (0)">
+                    <span class="stats-hm-key-label">0<br>=</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Â¿/? (0)">
+                    <span class="stats-hm-key-label">Â¿<br>?</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Â¡/! (0)">
+                    <span class="stats-hm-key-label">Â¡<br>!</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:5;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="â† (0)">
+                    <span class="stats-hm-key-label">â†</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:30;">
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Tab (0)">
+                    <span class="stats-hm-key-label">Tab</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Q (0)">
+                    <span class="stats-hm-key-label">Q</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="W (0)">
+                    <span class="stats-hm-key-label">W</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="E (0)">
+                    <span class="stats-hm-key-label">E</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="R (0)">
+                    <span class="stats-hm-key-label">R</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="T (0)">
+                    <span class="stats-hm-key-label">T</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Y (0)">
+                    <span class="stats-hm-key-label">Y</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="U (0)">
+                    <span class="stats-hm-key-label">U</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="I (0)">
+                    <span class="stats-hm-key-label">I</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="O (0)">
+                    <span class="stats-hm-key-label">O</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="P (0)">
+                    <span class="stats-hm-key-label">P</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Â´/+ (0)">
+                    <span class="stats-hm-key-label">Â´<br>+</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="`/^ (0)">
+                    <span class="stats-hm-key-label">`<br>^</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="\ (0)">
+                    <span class="stats-hm-key-label">\</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:31;">
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:4;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Caps (0)">
+                    <span class="stats-hm-key-label">Caps</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="A (0)">
+                    <span class="stats-hm-key-label">A</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="S (0)">
+                    <span class="stats-hm-key-label">S</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="D (0)">
+                    <span class="stats-hm-key-label">D</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="F (0)">
+                    <span class="stats-hm-key-label">F</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="G (0)">
+                    <span class="stats-hm-key-label">G</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="H (0)">
+                    <span class="stats-hm-key-label">H</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="J (0)">
+                    <span class="stats-hm-key-label">J</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="K (0)">
+                    <span class="stats-hm-key-label">K</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="L (0)">
+                    <span class="stats-hm-key-label">L</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Ã‘ (0)">
+                    <span class="stats-hm-key-label">Ã‘</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Â¨/Â´ (0)">
+                    <span class="stats-hm-key-label">Â¨<br>Â´</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:5;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Enter (0)">
+                    <span class="stats-hm-key-label">Enter</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:33;">
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:5;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Shift (0)">
+                    <span class="stats-hm-key-label">Shift</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="&lt;/&gt; (0)">
+                    <span class="stats-hm-key-label">&lt;<br>&gt;</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Z (0)">
+                    <span class="stats-hm-key-label">Z</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="X (0)">
+                    <span class="stats-hm-key-label">X</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="C (0)">
+                    <span class="stats-hm-key-label">C</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="V (0)">
+                    <span class="stats-hm-key-label">V</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="B (0)">
+                    <span class="stats-hm-key-label">B</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="N (0)">
+                    <span class="stats-hm-key-label">N</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="M (0)">
+                    <span class="stats-hm-key-label">M</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title=",/; (0)">
+                    <span class="stats-hm-key-label">,<br>;</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="./: (0)">
+                    <span class="stats-hm-key-label">.<br>:</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:2;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Â¿/? (0)">
+                    <span class="stats-hm-key-label">Â¿<br>?</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:6;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Shift (0)">
+                    <span class="stats-hm-key-label">Shift</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div><div class="stats-heatmap-row" style="--stats-hm-cols:34;">
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Ctrl (0)">
+                    <span class="stats-hm-key-label">Ctrl</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Win (0)">
+                    <span class="stats-hm-key-label">Win</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Alt (0)">
+                    <span class="stats-hm-key-label">Alt</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:13;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Espacio (0)">
+                    <span class="stats-hm-key-label">Espacio</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Alt (0)">
+                    <span class="stats-hm-key-label">Alt</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Win (0)">
+                    <span class="stats-hm-key-label">Win</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Menu (0)">
+                    <span class="stats-hm-key-label">Menu</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            
+                <div class="stats-hm-key equipo-2" style="--stats-hm-span:3;--hm-fill-a:46, 30, 40;--hm-fill-b:23, 17, 24;--hm-border:115, 98, 119;--hm-glow:137, 67, 76;--hm-glow-alpha:0.120;" title="Ctrl (0)">
+                    <span class="stats-hm-key-label">Ctrl</span>
+                    <em class="stats-hm-key-count"></em>
+                </div>
+            </div>
+        </div>
+    </div>
+        </article><article class="stats-slide">
+            
+            <div class="stats-slide-body stats-slide-body--tiempo">
+        <div class="stats-tiempo-layout equipo-1">
+            <section class="stats-vida-panel equipo-1" aria-label="VIDA">
+                <h4 class="stats-vida-panel-title">
+                    <span class="stats-tiempo-axis-icon stats-tiempo-axis-icon--vida equipo-1">♥</span>
+                    <span>VIDA</span>
+                </h4>
+                <div class="stats-vida-grid">
+                    <div class="stats-kpi"><span>🟢 Actual</span><strong>0 s</strong></div>
+                    <div class="stats-kpi"><span>🚀 Max</span><strong>0 s</strong></div>
+                    <div class="stats-kpi"><span>📉 Min</span><strong>0 s</strong></div>
+                    <div class="stats-kpi"><span>📊 Media</span><strong>0 s</strong></div>
+                </div>
+            </section>
+            <div class="stats-tiempo-board equipo-1">
+                <div class="stats-tiempo-vacio">Esperando datos de tiempo en vivo...</div>
+            </div>
+        </div>
+    </div>
+        </article><article class="stats-slide">
+            
+            <div class="stats-slide-body stats-slide-body--tiempo">
+        <div class="stats-tiempo-layout equipo-2">
+            <section class="stats-vida-panel equipo-2" aria-label="VIDA">
+                <h4 class="stats-vida-panel-title">
+                    <span class="stats-tiempo-axis-icon stats-tiempo-axis-icon--vida equipo-2">♥</span>
+                    <span>VIDA</span>
+                </h4>
+                <div class="stats-vida-grid">
+                    <div class="stats-kpi"><span>🟢 Actual</span><strong>0 s</strong></div>
+                    <div class="stats-kpi"><span>🚀 Max</span><strong>0 s</strong></div>
+                    <div class="stats-kpi"><span>📉 Min</span><strong>0 s</strong></div>
+                    <div class="stats-kpi"><span>📊 Media</span><strong>0 s</strong></div>
+                </div>
+            </section>
+            <div class="stats-tiempo-board equipo-2">
+                <div class="stats-tiempo-vacio">Esperando datos de tiempo en vivo...</div>
+            </div>
+        </div>
+    </div>
+        </article></div>
+            </div>
+            <div id="stats_dots" class="stats-dots" aria-label="Paginas de estadisticas"><span class="stats-dot activo" aria-hidden="true"></span><span class="stats-dot" aria-hidden="true"></span><span class="stats-dot" aria-hidden="true"></span><span class="stats-dot" aria-hidden="true"></span></div>
+        </section>
+        <section id="puntuacion_espectador" class="puntuacion-espectador" aria-labelledby="puntuacion_titulo" style="display: none;">
+            <div class="puntuacion-fondo" aria-hidden="true">
+                <span class="puntuacion-fondo__orb puntuacion-fondo__orb--azul"></span>
+                <span class="puntuacion-fondo__orb puntuacion-fondo__orb--rojo"></span>
+                <span class="puntuacion-fondo__scanlines"></span>
+            </div>
+            <div id="puntuacion_particulas" class="puntuacion-particulas" aria-hidden="true"><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 4%; --particula-delay: 0ms; --particula-drift: -48px; --particula-rot: 90deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 41%; --particula-delay: 45ms; --particula-drift: -19px; --particula-rot: 137deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 78%; --particula-delay: 90ms; --particula-drift: 10px; --particula-rot: 184deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 23%; --particula-delay: 135ms; --particula-drift: 39px; --particula-rot: 231deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 60%; --particula-delay: 180ms; --particula-drift: -28px; --particula-rot: 278deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 5%; --particula-delay: 225ms; --particula-drift: 1px; --particula-rot: 325deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 42%; --particula-delay: 270ms; --particula-drift: 30px; --particula-rot: 372deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 79%; --particula-delay: 315ms; --particula-drift: -37px; --particula-rot: 119deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 24%; --particula-delay: 360ms; --particula-drift: -8px; --particula-rot: 166deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 61%; --particula-delay: 0ms; --particula-drift: 21px; --particula-rot: 213deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 6%; --particula-delay: 45ms; --particula-drift: -46px; --particula-rot: 260deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 43%; --particula-delay: 90ms; --particula-drift: -17px; --particula-rot: 307deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 80%; --particula-delay: 135ms; --particula-drift: 12px; --particula-rot: 354deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 25%; --particula-delay: 180ms; --particula-drift: 41px; --particula-rot: 101deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 62%; --particula-delay: 225ms; --particula-drift: -26px; --particula-rot: 148deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 7%; --particula-delay: 270ms; --particula-drift: 3px; --particula-rot: 195deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 44%; --particula-delay: 315ms; --particula-drift: 32px; --particula-rot: 242deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 81%; --particula-delay: 360ms; --particula-drift: -35px; --particula-rot: 289deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 26%; --particula-delay: 0ms; --particula-drift: -6px; --particula-rot: 336deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 63%; --particula-delay: 45ms; --particula-drift: 23px; --particula-rot: 383deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 8%; --particula-delay: 90ms; --particula-drift: -44px; --particula-rot: 130deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 45%; --particula-delay: 135ms; --particula-drift: -15px; --particula-rot: 177deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 82%; --particula-delay: 180ms; --particula-drift: 14px; --particula-rot: 224deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 27%; --particula-delay: 225ms; --particula-drift: 43px; --particula-rot: 271deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 64%; --particula-delay: 270ms; --particula-drift: -24px; --particula-rot: 318deg;"></span><span class="puntuacion-particula puntuacion-particula--roja" style="--particula-x: 9%; --particula-delay: 315ms; --particula-drift: 5px; --particula-rot: 365deg;"></span><span class="puntuacion-particula puntuacion-particula--azul" style="--particula-x: 46%; --particula-delay: 360ms; --particula-drift: 34px; --particula-rot: 112deg;"></span><span class="puntuacion-particula puntuacion-particula--oro" style="--particula-x: 83%; --particula-delay: 0ms; --particula-drift: -33px; --particula-rot: 159deg;"></span></div>
+            <header class="puntuacion-cabecera">
+                <div>
+                    <span class="puntuacion-eyebrow" data-i18n="score.eyebrow">ANÁLISIS DE PARTIDA</span>
+                    <h2 id="puntuacion_titulo" data-i18n="score.title">PUNTUACIÓN OBJETIVA</h2>
+                </div>
+                <span id="puntuacion_paso" class="puntuacion-paso">INTRO · 0/7</span>
+            </header>
+            <div id="puntuacion_stage" class="puntuacion-stage" aria-live="polite" aria-atomic="true" data-step="0">
+        <article class="puntuacion-panel puntuacion-panel--espera">
+            <span class="puntuacion-espera-icono" aria-hidden="true">🏆</span>
+            <h3>RESULTADO PENDIENTE</h3>
+            <p>El resultado estará disponible al terminar la partida.</p>
+        </article>
+    </div>
+            <footer class="puntuacion-pie">
+                <span id="puntuacion_formula">SCRIB · PUNTUACIÓN DE JUEGO · scrib-puntuacion-v3</span>
+                <div id="puntuacion_dots" class="puntuacion-dots" aria-hidden="true"><span class="puntuacion-dot is-active"></span><span class="puntuacion-dot"></span><span class="puntuacion-dot"></span><span class="puntuacion-dot"></span><span class="puntuacion-dot"></span><span class="puntuacion-dot"></span><span class="puntuacion-dot"></span><span class="puntuacion-dot"></span></div>
+            </footer>
+        </section>
+        <section id="nube_inspiracion_espectador" class="nube-inspiracion-espectador" aria-live="polite" style="display: none;">
+            <div id="nube_inspiracion_canvas" class="nube-inspiracion-canvas"></div>
+            <div class="nube-inspiracion-overlay-ui">
+                <h2 class="nube-inspiracion-titulo" data-i18n="ui.cloud_title">NUBE DE INSPIRACION</h2>
+            </div>
+        </section>
+        <section id="creditos_espectador" class="creditos-espectador" aria-live="polite" style="display: none;">
+            <div id="creditos_track" class="creditos-track" style="transform: translate3d(-50%, 140vh, 0px); opacity: 1;">
+                <div id="creditos_content" class="creditos-content">
+        <div class="creditos-bloque">
+            <div class="creditos-lineas"><div class="credito-linea"><span class="credito-label">❤️ ESCRITORA</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">ÁNGELA BUENO</span></div><div class="credito-linea"><span class="credito-label">❤️ INTÉRPRETE</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">ANA SEMPERE</span></div><div class="credito-linea"><span class="credito-label">❤️ INTÉRPRETE</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">PABLO PINEÑO</span></div><div class="credito-linea"><span class="credito-label">💙 ESCRITOR</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">MIRIAM DEL VALLE</span></div><div class="credito-linea"><span class="credito-label">💙 INTÉRPRETE</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">PAULA CM</span></div><div class="credito-linea"><span class="credito-label">💙 INTÉRPRETE</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">DIEGO VALVERDE</span></div><div class="credito-linea"><span class="credito-label">👾 PROGRAMACIÓN</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">DAVID VIÑAS</span></div><div class="credito-linea"><span class="credito-label">✍️ DRAMATURGIA</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">ÁNGELA BUENO</span></div><div class="credito-linea"><span class="credito-label">💡 ILUMINACIÓN</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">TERESA TIMPER</span></div><div class="credito-linea"><span class="credito-label">🎹 MÚSICA</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">ARNY RAMÍREZ</span></div><div class="credito-linea"><span class="credito-label">🗣️ VOZ EN OFF</span><span class="credito-leader" aria-hidden="true"></span><span class="credito-valor">NINACHASKA ZL</span></div></div>
+        </div>
+        
+        <div class="creditos-bloque creditos-bloque--agradecimientos">
+            <h3 class="creditos-subtitulo">AGRADECIMIENTOS:</h3>
+            <p class="creditos-agradecimientos">SALA EXLÍMITE<br>JUAN CEACERO</p>
+        </div>
+        <p class="creditos-cierre">Una produccion de SUTURA TEATRO.</p>
+    </div>
+            </div>
+        </section>
+        <div class="contenedor" id="contenedor_espectador">
+            <div class="jugador1 intro-reveal-bloque putada-visual-activa putada-visual--rayo" data-intro-from="left" data-putada-visual="⚡ BORRADO RAPIDO">
+                <p id="feedback_tiempo" class="feedback_tiempo" style="color: greenyellow;"></p>
+                <p id="tiempo" hidden="" aria-hidden="true" style="--vida-pct: 7.0%; --vida-color: hsl(8.4, 85%, 55%); display: inline-flex; color: white;" data-vida-visible="1">00:21</p>
+                <input disabled="" style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre" value="BOT AZUL">
+                <br><br>
+                <p id="alineador1"></p>
+                <div disabled="" id="texto" rows="1" spellcheck="false" class="textarea1 textarea-fade-top" style="color: white;">jardín noche incendio desvelo respirar tiempo respirar respirar secreto hambre sombra bosque marea silencio silencio pluma memoria. ceniza costura hambre herida raíz latido ceniza arena vértigo costura hilo arena latido noche bosque herida marea. ceniza cuerpo espejo silencio secreto secreto pluma pluma marea hilo silencio incendio órbita arena desvelo cuerpo pluma. órbita máscara raíz cuerpo escena cuerpo hambre eco incendio escena hilo sombra ceniza respirar pluma órbita desvelo. hambre espejo silencio relámpago noche relámpago herida hilo jardín</div>
+                <br><br>
+                <div align="center">
+                                        <div id="metadatos_j1" class="right metadatos-grid metadatos-grid--cabecera marcador-equipo marcador-equipo-1">
+                        <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                            <span class="meta-icon">🖋️</span>
+                            <div class="meta-copy">
+                                <span class="meta-label" data-i18n="score.words_label">Palabras</span>
+                                <span id="puntos" class="puntos puntos-hit">77 palabras</span>
+                            </div>
+                        </div>
+                        <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                            <span class="meta-icon">🎨</span>
+                            <div class="meta-copy">
+                                <span class="meta-label" data-i18n="score.muses_label">Musas</span>
+                                <span id="musas" class="musas-total">2 musas</span>
+                                <span id="musa_regalo_estado_j1" class="musa-regalo-chip" hidden=""></span>
+                            </div>
+                        </div>
+                    </div>
+                    <h1 id="focalizador1" class="focalizador"></h1>
+                    <h2 id="puntuacion_final1"></h2>
+                </div>
+                <br>
+                <p id="explicacion1" class="explicación1"></p><p id="palabra1" class="palabra1 palabra-letras--bonus animate__animated animate__bounceInLeft" style="display: flex !important; align-items: center !important; justify-content: center !important; flex-wrap: wrap !important; box-sizing: border-box !important; width: min(92vw, 1100px) !important; max-width: 100% !important; min-height: clamp(34px, 3vw, 58px) !important; margin: clamp(4px, 0.45vw, 9px) auto 0px !important; padding: clamp(6px, 0.55vw, 11px) clamp(14px, 1.6vw, 28px) !important; border: clamp(2px, 0.16vw, 4px) solid rgb(255, 216, 111) !important; border-radius: clamp(10px, 1vw, 18px) !important; background: linear-gradient(110deg, rgb(255, 242, 124) 0%, rgb(243, 179, 64) 100%) !important; color: rgb(18, 24, 37) !important; font-family: Retro-gaming !important; font-size: clamp(22px, 1.9vw, 36px) !important; font-weight: 700 !important; line-height: 1.08 !important; text-align: center !important; word-break: break-word !important; overflow-wrap: anywhere !important; letter-spacing: clamp(0.02em, 0.08vw, 0.08em) !important; text-shadow: rgba(255, 255, 255, 0.35) 0.05em 0.05em 0px, rgba(0, 0, 0, 0.38) 0px 0.12em 0.25em !important; box-shadow: rgba(255, 255, 255, 0.14) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.25) 0px -0.2em 0px inset, rgba(0, 0, 0, 0.28) 0px 0.18em 0px !important; white-space: normal !important; overflow: hidden !important; text-overflow: clip !important; position: relative !important; isolation: isolate !important;">vendaval <span class="palabra-tiempo palabra-tiempo--bendita">+5 insp.</span></p><p id="definicion1" class="definicion1 definicion-letras--bonus animate__animated animate__bounceInLeft" style="display: block !important; box-sizing: border-box !important; width: min(92vw, 1100px) !important; max-width: 100%; min-height: clamp(26px, 2.3vw, 42px) !important; max-height: none !important; margin: clamp(4px, 0.35vw, 8px) auto 0px !important; padding: clamp(6px, 0.5vw, 10px) clamp(12px, 1.2vw, 20px) !important; border: clamp(1px, 0.12vw, 3px) solid rgb(255, 216, 111) !important; border-radius: clamp(8px, 0.8vw, 14px) !important; background: linear-gradient(160deg, rgba(21, 17, 7, 0.94) 0%, rgba(46, 32, 8, 0.92) 100%) !important; color: rgb(242, 248, 255) !important; font-family: Retro-gaming !important; font-size: clamp(15px, 1.12vw, 24px) !important; font-weight: 700 !important; line-height: 1.08 !important; letter-spacing: clamp(0.02em, 0.04vw, 0.06em) !important; text-shadow: rgba(0, 0, 0, 0.62) 0.06em 0.06em 0px !important; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; scrollbar-width: none !important; box-shadow: rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset !important;"><span class="inspiration-author" title="BOT 11"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 11</span></span><span class="inspiration-guidance">Podrías escribir esta palabra</span></p><table id="info1" class="info">
+                    <tbody><tr>
+                        
+                    </tr>
+                        
+                    
+                    <tr>
+                        
+                    </tr>
+                </tbody></table>
+                <br>
+            </div>
+                <div class="jugador2 intro-reveal-bloque putada-visual-activa putada-visual--rayo" data-intro-from="right" data-putada-visual="⚡ BORRADO RAPIDO">
+                    <p id="feedback_tiempo1" class="feedback_tiempo" style="color: greenyellow;"></p>
+                    <p id="tiempo1" hidden="" aria-hidden="true" style="--vida-pct: 7.0%; --vida-color: hsl(8.4, 85%, 55%); display: inline-flex; color: white;" data-vida-visible="1">00:21</p>
+                <input disabled="" style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre" value="BOT ROJO">
+                <br><br>
+                <p id="alineador2"></p>
+                <div disabled="" id="texto1" rows="1" spellcheck="false" class="textarea1 textarea-fade-top" style="color: white;">hambre pluma ceniza herida vértigo escena herida raíz raíz órbita sombra eco bosque marea cuerpo espejo secreto. noche arena umbral herida relámpago incendio voz sombra tiempo órbita bosque voz herida hilo cuerpo relámpago umbral. puerta relámpago umbral marea tiempo hilo vértigo cuerpo máscara máscara silencio herida hilo vértigo marea máscara puerta. hilo raíz vértigo sombra costura eco tiempo relámpago secreto vértigo arena espejo hambre silencio umbral memoria pluma. puerta jardín latido respirar cuerpo desvelo umbral desvelo umbral</div>
+                <br><br>
+                <div align="center">
+                                        <div id="metadatos_j2" class="right metadatos-grid metadatos-grid--cabecera marcador-equipo marcador-equipo-2">
+                        <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                            <span class="meta-icon">🖋️</span>
+                            <div class="meta-copy">
+                                <span class="meta-label" data-i18n="score.words_label">Palabras</span>
+                                <span id="puntos1" class="puntos puntos-hit">77 palabras</span>
+                            </div>
+                        </div>
+                        <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                            <span class="meta-icon">🎨</span>
+                            <div class="meta-copy">
+                                <span class="meta-label" data-i18n="score.muses_label">Musas</span>
+                                <span id="musas1" class="musas-total">2 musas</span>
+                                <span id="musa_regalo_estado_j2" class="musa-regalo-chip" hidden=""></span>
+                            </div>
+                        </div>
+                    </div>
+                    <h1 id="focalizador2" class="focalizador"></h1>
+                    <h2 id="puntuacion_final2"></h2>
+                </div>
+                <br>
+                <p id="explicacion2" class="explicación2"></p><p id="palabra2" class="palabra2 palabra-letras--bonus animate__animated animate__bounceInLeft" style="display: flex !important; align-items: center !important; justify-content: center !important; flex-wrap: wrap !important; box-sizing: border-box !important; width: min(92vw, 1100px) !important; max-width: 100% !important; min-height: clamp(34px, 3vw, 58px) !important; margin: clamp(4px, 0.45vw, 9px) auto 0px !important; padding: clamp(6px, 0.55vw, 11px) clamp(14px, 1.6vw, 28px) !important; border: clamp(2px, 0.16vw, 4px) solid rgb(255, 216, 111) !important; border-radius: clamp(10px, 1vw, 18px) !important; background: linear-gradient(110deg, rgb(255, 242, 124) 0%, rgb(243, 179, 64) 100%) !important; color: rgb(18, 24, 37) !important; font-family: Retro-gaming !important; font-size: clamp(22px, 1.9vw, 36px) !important; font-weight: 700 !important; line-height: 1.08 !important; text-align: center !important; word-break: break-word !important; overflow-wrap: anywhere !important; letter-spacing: clamp(0.02em, 0.08vw, 0.08em) !important; text-shadow: rgba(255, 255, 255, 0.35) 0.05em 0.05em 0px, rgba(0, 0, 0, 0.38) 0px 0.12em 0.25em !important; box-shadow: rgba(255, 255, 255, 0.14) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.25) 0px -0.2em 0px inset, rgba(0, 0, 0, 0.28) 0px 0.18em 0px !important; white-space: normal !important; overflow: hidden !important; text-overflow: clip !important; position: relative !important; isolation: isolate !important;">laberinto <span class="palabra-tiempo palabra-tiempo--bendita">+5 insp.</span></p><p id="definicion2" class="definicion2 definicion-letras--bonus animate__animated animate__bounceInLeft" style="display: block !important; box-sizing: border-box !important; width: min(92vw, 1100px) !important; max-width: 100%; min-height: clamp(26px, 2.3vw, 42px) !important; max-height: none !important; margin: clamp(4px, 0.35vw, 8px) auto 0px !important; padding: clamp(6px, 0.5vw, 10px) clamp(12px, 1.2vw, 20px) !important; border: clamp(1px, 0.12vw, 3px) solid rgb(255, 216, 111) !important; border-radius: clamp(8px, 0.8vw, 14px) !important; background: linear-gradient(160deg, rgba(21, 17, 7, 0.94) 0%, rgba(46, 32, 8, 0.92) 100%) !important; color: rgb(242, 248, 255) !important; font-family: Retro-gaming !important; font-size: clamp(15px, 1.12vw, 24px) !important; font-weight: 700 !important; line-height: 1.08 !important; letter-spacing: clamp(0.02em, 0.04vw, 0.06em) !important; text-shadow: rgba(0, 0, 0, 0.62) 0.06em 0.06em 0px !important; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; scrollbar-width: none !important; box-shadow: rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset !important;"><span class="inspiration-author" title="BOT 21"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 21</span></span><span class="inspiration-guidance">Podrías escribir esta palabra</span></p><table id="info2" class="info">
+                    <tbody><tr>
+                        
+                    </tr>
+                        
+                    
+                    <tr>
+                        
+                    </tr>
+                </tbody></table>
+                <br>
+            </div>
+        </div>
+        <section id="info_general" class="info info-general-panel intro-reveal-bloque" aria-live="polite" data-intro-from="up">
+        <p id="explicacion" class="explicación" style="color: yellow;">GANA QUIEN ESCRIBE MAS PALABRAS</p>
+        <p id="palabra" class="palabra animate__animated animate__bounceInLeft barra-nivel--bonus" style="--nivel-progress: 93.18%;">NIVEL PALABRAS BENDITAS</p>
+        <p id="definicion" class="definicion animate__animated animate__bounceInLeft"></p>
+    </section>
+    </div>
+<!-- Code injected by live-server -->
+
+
+
+    
+
+
+<div id="temporizador_gigante" class="temporizador-gigante"></div><div id="espectador_fulgor_root"><div class="espectador-fulgor-lado lado-1"></div><div class="espectador-fulgor-lado lado-2"></div></div><div id="feedback_tiempo_flotante_root"><div class="feedback-tiempo-columna lado-1"></div><div class="feedback-tiempo-columna lado-2"></div></div>
+
+<section id="scrib_competition_hud" class="scrib-competition-hud" aria-live="polite" data-role="spectator" data-active="1" data-clock="1">
+      <div class="scrib-competition-shell">
+        <div class="scrib-competition-top">
+          <span class="scrib-competition-mode">PALABRAS BENDITAS</span>
+          <span class="scrib-competition-clock">00:11</span>
+          <span class="scrib-competition-criterion">PALABRAS BENDITAS INCORPORADAS</span>
+        </div>
+        <div class="scrib-competition-scoreline">
+          <strong class="scrib-competition-score scrib-competition-score--1 is-hit">19</strong>
+          <div class="scrib-competition-bar" style="--marker-position: 50%; --curse-position: 89%;">
+            <span class="scrib-competition-segment scrib-competition-segment--1" style="width: 50%;"></span>
+            <span class="scrib-competition-segment scrib-competition-segment--2" style="width: 50%;"></span>
+            <span class="scrib-competition-center"></span>
+            <span class="scrib-competition-curse" aria-label="Desventaja">⚡</span>
+          </div>
+          <strong class="scrib-competition-score scrib-competition-score--2 is-hit">19</strong>
+        </div>
+        <span class="scrib-competition-streak scrib-competition-streak--1" data-active="1">RACHA ×18</span>
+        <span class="scrib-competition-streak scrib-competition-streak--2" data-active="1">RACHA ×18</span>
+      </div></section>
+
+
+<section id="video_tutorial_overlay" class="scrib-video-tutorial scrib-video-tutorial--spectator" hidden="" aria-label="Videotutorial para conectarse a SCRIB" aria-hidden="true">
+            <div class="scrib-video-tutorial__ambient" aria-hidden="true"></div>
+            <video class="scrib-video-tutorial__media" playsinline="" preload="auto"></video>
+            <div class="scrib-video-tutorial__hud">
+                <div class="scrib-video-tutorial__topline">
+                    <span class="scrib-video-tutorial__live"><i aria-hidden="true"></i> GUÍA DE CONEXIÓN</span>
+                    <span class="scrib-video-tutorial__join">ENTRA EN <strong data-video-tutorial-join-url="">local-snapshot.invalid:4173/game/public/</strong></span>
+                    <span class="scrib-video-tutorial__counter" data-video-tutorial-counter="">0/0 MUSAS VERIFICADAS</span>
+                </div>
+                <div class="scrib-video-tutorial__footer">
+                    <div class="scrib-video-tutorial__progress" aria-hidden="true"><span data-video-tutorial-progress=""></span></div>
+                    <span data-video-tutorial-time="">01:00</span>
+                </div>
+            </div>
+            <button class="scrib-video-tutorial__sound" type="button" hidden="">
+                <span aria-hidden="true">🔊</span>
+                ACTIVAR NARRACIÓN
+            </button>
+            <div class="scrib-video-tutorial__fallback" hidden="">
+                <span aria-hidden="true">▶</span>
+                <strong>PREPARANDO VIDEOTUTORIAL</strong>
+                <small>La guía continuará en cuanto el vídeo esté disponible.</small>
+            </div>
+            <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live=""></p>
+        </section><div data-mirror="caret" style="position: absolute; top: 0px; left: -99999px; visibility: hidden; pointer-events: none; margin: 0px; font-family: VT323; font-size: 32px; font-weight: 700; letter-spacing: normal; word-spacing: 0px; line-height: normal; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; padding: 0px; border: 0px rgb(255, 255, 255); box-sizing: content-box; width: 560px;">jardín noche incendio desvelo respirar tiempo respirar respirar secreto hambre sombra bosque marea silencio silencio pluma memoria. ceniza costura hambre herida raíz latido ceniza arena vértigo costura hilo arena latido noche bosque herida marea. ceniza cuerpo espejo silencio secreto secreto pluma pluma marea hilo silencio incendio órbita arena desvelo cuerpo pluma. órbita máscara raíz cuerpo escena cuerpo hambre eco incendio escena hilo sombra ceniza respirar pluma órbita desvelo. hambre espejo silencio relámpago noche relámpago herida hilo jardín</div><div data-mirror="caret" style="position: absolute; top: 0px; left: -99999px; visibility: hidden; pointer-events: none; margin: 0px; font-family: VT323; font-size: 32px; font-weight: 700; letter-spacing: normal; word-spacing: 0px; line-height: normal; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; padding: 0px; border: 0px rgb(255, 255, 255); box-sizing: content-box; width: 560px;">hambre pluma ceniza herida vértigo escena herida raíz raíz órbita sombra eco bosque marea cuerpo espejo secreto. noche arena umbral herida relámpago incendio voz sombra tiempo órbita bosque voz herida hilo cuerpo relámpago umbral. puerta relámpago umbral marea tiempo hilo vértigo cuerpo máscara máscara silencio herida hilo vértigo marea máscara puerta. hilo raíz vértigo sombra costura eco tiempo relámpago secreto vértigo arena espejo hambre silencio umbral memoria pluma. puerta jardín latido respirar cuerpo desvelo umbral desvelo umbral</div><canvas width="1600" style="position: fixed; top: 0px; left: 0px; pointer-events: none; z-index: 100;;background-image:url(&quot;data:image/png;base64,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mVIhQIAAAQIEFijgdgIECBBon0B/Y3F45ujSvQMkFzzOyO0nMsTLcrs3xvhsXlsIlEognnz1EzngVsurg4uPwToIYUWAAAECdRKYtgBSJwS5EiBAgAABAgQIECBAgECbBVpfgL5keykKILngsTK3V+V2flZofXH7H+fCx1/mVor4c8wLWtxcUQEfg1XRiZUWAQIECMxFQAFkLlquJUCAAIGqC8iPAAECBAgQaJdAX9oXb7ppuF3ddaKfXPDoz6313Qgn5/6/kgset+R2V26FjjvHaiFwZIHWx2DFtD2k5u0hhs+FocEbj3yTKwgQIFAbAYnWREABpCYTLU0CBAgQIECAAAECBAhMLdChozvC+I/f6dAwC+k2FzqGcrszt2/l1lxIX+4lUDSB1sdgxVOvui6edvUfxlM/+LW47rodRYtRPAQIECBAoNMCCiCdFtY/AQLlEhAtAQIECBAgQIBAWwTi5zfvbktHOiFAgAABAp0Q0CcBArUQUACpxTRLkgABAgQIECBAgMD0As4QIECAAAECBAgQIECgigIKIFWcVTktRMC9BAgQIECAAAECBAgQIECAQPUFZEiAAAECNRBQAKnBJEuRAAECBAgQIDCzgLMECBAgQIAAAQIECBAgQKB6AgogE+fUPgECBAgQIECAAAECBAgQIFB9ARkSIECAAAEClRdQAKn8FEuQAAECBAgcWcAVBAgQIECAAAECBAgQIECAQPUF6pahAkjdZly+BAgQIECAAAECBAgQINAS0AgQIECAAAECBCouoABS8QmWHgECBGYn4CoCBAgQIECAAAECBAgQIECg+gIyJFAvAQWQes23bAkQIECAAAECBAgQGBWwJkCAAAECBAgQIECg0gIKIJWeXskRmL2AKwkQIECAAAECBAgQIECAAIHqC8iQAAECdRJQAKnTbMuVAAECBAgQIEBgrIBtAgQIECBAgAABAgQIEKiwgAJIhSd3bqm5mgABAgSKKJBSelNupxcxNjERIECAAAECBAiUUUDMBAgQIECgPgIKIPWZa5kSIECAQDkFjs5h/5tcBLk0N4WQjNHWRWcECBAgQIAAAQIECBAgQIBAZQUOFUAqm6HECBAgQIBAuQWeOBj+urxuFUKOy2sLAQIECBAgQGDeAm4kQIAAAQIECNRFQAGkLjMtTwIECBCYSqAMx3ZMCPKcCft2CRAgQIAA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ECBAgAABAgQIEKiGgCwIECBAgAABAgRqLqAAUvMfAOkTIFAXAXkSIECAAAECBAgQIECAAAEC1ReQIQECYwUUQMZq2CZAgAABAgQIECBAoDoCMiFAgAABAgQIECBAoNYCCiC1nn7J10lArgQIECBAgAABAgQIECBAgED1BWRIgAABAocFFEAOW9giQIAAAQIECBColoBsCBAgQIAAAQIECBAgQKDGAgogtZl8iRIgQIAAAQIECBAgQIAAAQLVF5AhAQIECBAgMCqgADIqYU2AAAECBAhUT0BGBAgQIECAAAECBAgQIECAQPUFpslQAWQaGIcJECBAgAABAgQIECBAgEAZBcRMgAABAgQIECBwQEAB5ICDZwIECBCopoCsCBAgQIAAAQIECBAgQIAAgeoLyJDAlAIKIFOyOEiAAAECBAgQIECAAIGyCoibAAECBAgQIECAAIGWgAJIS0EjQKC6AjIjQIAAAQIECBAgQIAAAQIEqi8gQwIECEwhoAAyBYpDBAgQIECAAAECBMosIHYCBAgQIECAAAECBAgQCEEBxE9B1QXkR4BADwVSSstyOy235+d2TA9DMTQBAgQIECBAgAABAtUWkB0BAgQIEJgkoAAyicQBAgQIEFioQC52LMntzNzP2bmdmNuq3NbmZiFAoCsCBiFAgAABAgQIECBAgAABAgSqXwAxxwQIECDQVYFc+DglD3hObqtzG7s8NXbHNgECBAgQIECAAIG2CuiMAAECBAgQIDBBQAFkAohdAgQIEJi/QC5+rMt3twogMa9Hl+G8cX+M8f68tnRJwDAECBAgQIAAAQIECBAgQIBA9QVkOLOAAsjMPs4SIECAwCwFcvGjP196fG6jS8obj+V2R4zx0by2ECBAgAABAgQ6KaBvAgQIECBAgAABAuMEFEDGcdghQIBAVQS6n0cucgzlUR/IbUduD+X29XzsvtwG87aFAAECBAgQIECAAAECBAgQaLuADgkQmElAAWQmHecIECBAYE4CudjxSG7fze3B3PbP6WYXEyBAgACBhQq4nwABAgQIECBAgAABAmMEFEDGYNgkUCUBuRAgQIAAAQIECBAgQIAAAQLVF5AhAQIECEwvoAAyvY0zBAgQIECAAAEC5RIQLQECBAgQIECAAAECBAgQOCSgAHKIomob8iFAgAABAgQIECBAgAABAgSqLyBDAgQIECBAYDoBBZDpZBwnQIAAAQIEyicgYgIECFRMIKVNjfTIxqNSCrFiqUmHAAECBAgQIECAwPwFZnmnAsgsoVxGgAABAgQIECBAgACBbgqMFD0e3PniMNh4cdi68cXpDy7q6+b4xiqPgEgJECBAgAABAgSmFlAAmdrFUQIECBAop4CoCRAgQIBAdQTuee+KEAaWjiQUG8vCj5553Mi2JwIECBAgQIAAAQIEZiXQmNVVLiJAgAABAgQIECBAYEaBH3w8Lb/w6XTWjBc5SWAuAssai8Zdvmto1bj9Qzs2CBAgQIAAAQIECBCYSkABZCoVxwgQKK+AyAkQIECAQJcFRgsfRy8KL4wprOjy8IarskDan8alt2hoybh9OwQIECBAoM4CcidAgMAsBBRAZoHkEgIECBAgQIAAAQLTCRy9LJzZ68LHdLE5XjGBZv9AxTKSDgECBAgQIECAAIGOCiiAdJRX5z0QMCQBAgQIECBAoKsCQ82wt6sDGqw+AvuWPzs+2eE4ft8eAQIEai0geQIECBAgcEQBBZAjErmAAAECBAgQIFB0AfH1UqCvP+zp5fjGrq5AXLdpb0jN3YcyjP2KbYcwbBAgQIAAAQIECBA4skD1CiBHztkVBAgQIECAAAECBNomMLQr7G9bZzqqlUC6+52L07bL18yY9PDQgyENp9AXmiHs3zbjtU4SqJuAfAkQIECAAAECRxBQADkCkNMECBAgQKAMAmIkQKB3As1FYV/vRjdyGQVSCjFtffcpYfHSc0Iz5cLG9FnEddftCE8/8PXw1LI74pprn5r+SmcIECBAgAABAgTqICDHuQkogMzNy9UECBAgQIAAAQIExgvsPfAdIMPNMLgrhbvHn7RHYLxAuvddq8KDG88JYeCUEEMjDK18MhzhEc++aX88e5N3Gk12coQAAQIECBAgQIDAjAKNGc86SYAAAQIlERAmAQIECPRK4LbjR74D5KmhVeEbf7Uqbu9VHMYtvkC6d9OS0L/o+SE0lhyINu4Z+Z6PAzueCRAgQIAAAQKzEHAJAQJzEVAAmYuWawkQIECAAAECBAhMFIhx+Isr4/dui3Fo4in7HRYoW/f9O48dH/J+H2k1HsQeAQIECBAgQIAAgbYKKIC0lVNnBHonYGQCBAgQIECAAIGiCyw6ZlyEs/j4q3HX2yFAgAABAiEECAQIECAwewEFkNlbuZIAAQIECBAgQKBYAqIhUBqBkY+/CmnpgYCbe8PQ/u/6+KsDGp4JECBAgAABAgQIdEpAAaRTsl3v14AECBAgQIAAAQIECBRWoPXxVyk0QxjcFk696htx3XU7ChurwAgQKLiA8AgQIECAAIHZCiiAzFbKdQQIECBAgEDxBEREgACBsgg0YiPs2/ONuObabTGGVJawxUmAAAECBAgQIECgEALzDEIBZJ5wbiNAgAABAgQIECBAgMBsBeIp12yNZ35432yvdx2BmQScI0CAAAECBAgQmJ2AAsjsnFxFgAABAsUUEBUBAgQIECBAgAABAgQIECBQfQEZEpiXgALIvNjcRIAAAQIECBAgQIAAgV4JGJcAAQIECBAgQIAAgdkIKIDMRsk1BAgUV0BkBAgQIECAAAECBAgQIECAQPUFZEiAAIF5CCiAzAPNLQQIECBAgAABAgR6KWBsAgsRSCE00kUbVqY3/8zadMnbXrKQvtxLgAABAgQIECBAoMgCCiBFnh2xzUbANQQIECBAgAABAgQIHEEgvf6di9Ob3nZCuuTtzw8Xv+PlYWnjBaF/4IQQ+pcc4VanCRAgUBQBcRAgQIAAgTkLNOZ8hxsIECBAgAABAgR6LGB4AgQIzF4gXXbZ8nD84EvDQP/aEPpWhRQGQxp6PAw27wl7nvza7HtyJQECBAgQIECAAIFyCZS/AFIub9ESIECAAAECBAgQIECguwKDjePGFjziZz769Xjjx++Nn938RLzppv3dDcZoBBYg4FYCBAgQIECAwBwFFEDmCOZyAgQIECBQBAExECBAgACB2QqMFDsUPGbL5ToCBAgQIECAQKEEBLMwAQWQhfm5mwABAgQIECBAgAABAgS6I2AUAgQIECBAgAABAnMSUACZE5eLCRAgUBQBcRAgQIAAAQIECBAgQIAAAQLVF5AhAQILEVAAWYieewkQIECAAAECBAgQ6J6AkQgQIECAAAECBAgQIDAHAQWQOWC5lECRBMRCgAABAgQIECBAgAABAgQIVF9AhgQIECAwfwEFkPnbuZMAAQIECBAgQKC7AkYjQIAAAQIECBAgQIAAAQKzFlAAmTVV0S4UDwECBAgQIECAAAECBAgQIFB9ARkSIECAAAEC8xVQAJmvnPsIECBAgACB7gsYkQABAgQIECBAgAABAgQIEKi+QJsyVABpE6RuCBAgQIAAAQIECBAgQIBAJwT0SYAAAQIECBAgMD8BBZD5ubmLAAECBHojYFQCBAgQIECAAAECBAgQIECg+gIyJNAWAQWQtjDqhAABAgQIECBAgAABAp0S0C8BAgQIECBAgAABAvMRUACZj5p7CBDonYCRCRAgQIAAAQIECBAgQIAAgeoLyJAAAQJtEFAAaQOiLggQIECAAAECBAh0UkDfBAgQIECAAAECBAgQIDB3AQWQuZu5o7cCRidAgAABAgQIECBAgAABAgSqLyBDAgQIECCwYAEFkAUT6oAAAQIECBAg0GkB/RMgQIAAAQIECBAgQIAAAQJzFShfAWSuGbqeAAECBAgQIECAAAECBAgQKJ+AiAkQIECAAAECCxRQAFkgoNsJECBAgEA3BIxBgAABAgQIECBAgAABAgQIVF9Ahu0VUABpr6feCBAgQIAAAQIECBAgQKA9AnohQIAAAQIECBAgsCABBZAF8bmZAAEC3RIwDgECBAgQIECAAAECBAgQIFB9ARkSINCteofXAAAQAElEQVROAQWQdmrqiwABAgQIECBAgACB9gnoiQABAgQIECBAgAABAgsQUABZAJ5bCXRTwFgECBAgQIAAAQIECBAgQIBA9QVkSIAAAQLtE1AAaZ+lnggQIECAAAECBNoroDcCBAgQIECAAAECBAgQIDBvAQWQedN1+0bjESBAgAABAgQIECBAgAABAtUXkCEBAgQIECDQLgEFkHZJ6ocAAQIECBBov4AeCRAgQIAAAQIECBAgQIAAgeoLdChDBZAOweqWAAECBAgQIECAAAECBAjMR8A9BAgQIECAAAEC7RFQAGmPo14IECBAoDMCeiXQNYGUUiO3o3M75mA7umuDG4gAAQJzEEgXbVg5h8tdSoAAAQIECBAog4AYCXREQAGkI6w6JUCAAAECBIoukIscy3JrFTuOy+uTcrzH59aMMT51sD2b9y0ECBDogcD0Q6b16/tDf2j9P2v6i5whQIAAAQIECBAgQGBEQAFkhMETAQKFFRAYAQIEOiCQCx79uduhg4WOJ/L64dwezW13Pm4hQIBAcQXWPn9tiHG4uAGKjAABAgQIzFPAbQQIEOiAgAJIB1B1SYAAAQIECBRbIBc6WsWP/cWOUnR1FpA7gakE0kUX9YXUODb0pX1TnXeMAAECBAgQIECAAIHxAgog4z3sFU9ARAQIECBAgAABAgQIHBBYOrIaaiqAjEB4IkCgYgLSIUCAAAECbRdQAGk7qQ4JECBAgAABAgcE0tZ3n5IevPyl6ZGN69JDVxyX0qZFB84c6dl5AgQITCHQv3rJyNG42zvYRiA8zUcgpbQqt9Z3YA3M5373ECBAgAABAgTKJFD8AkiZNMVKgAABAgQIEDgo0Cp+hDBwSkj9i8Ng4/gw3Pfc8ODulymIHASyIkBg7gIDjcUjNz1ztHeAjEB4mo1ALnbE3FoFj9Pyem2+pxljfCq3wbxdrEU0BAgQIECAAIE2CzTa3J/uCBAgQIAAgTYI6KICAqc++Ejo23FnOHr/d8OiffeHvvhICGl76BsYCsNxdc7wuPDE7gMvZuYdCwECBI4okIYOvItsyXYFkCNiuSAXO5bl9pwscVxue2KMD+R2f25P530LAQIECBAgUBABYXRWQAGks756J0CAAAECBGoqEONNw/Hkzbvj6ut2xBM+9Gg8+f0PxDUfvDue9P674ikf/Go8+epvx+M/8ExNeaRNgMB8BJp9re8A2RZvuml4PreX4B4htkkgFz76c1fNXOx4LLfHc9uT9y0ECBAgQIAAgdoJKIDUbsolTIBAOQRESYAAAQIECBCYINAcfjLe8DvbJhy1S2CSQC54DOW2d9IJBwgQIECggAJCIkCgkwIKIJ3U1TcBAgQIECBAgAABArMXcOWMAvGzH390xgucJECAAAECBAgQIEBgnIACyDgOOwSKIyASAgQIECBAgAABAgQIECBAoPoCMiRAgACBzgkogHTOVs8ECBAgQIAAAQJzE3A1AQIECBAgQIAAAQIECBBom4ACSNso292R/ggQIECAAAECBAgQIECAAIHqC8iQAAECBAgQ6JSAAkinZPVLgAABAgQIzF3AHQQIECBAYIJACiGmf3npqvSWDSelSy45NngQIFAZgXTZZcsrk4xECBAgQGBuAl26WgGkS9CGIUCAAAECBAgQIECAAIHZC6RXbBhIP3XZyeFNb39RGIgD4TObH4k33PDk7Hsoz5UiJVBbgWb/KbXNXeIECBAg0BUBBZCuMBuEAAECBGYpUMjLUtq0qJCBCYoAAQIECFRQIL3+nYvTW37mjHBOOCssTYPhsx/7ZrzpU4/HEFIF05USgXoLNBsr6g0gewK1FpA8ga4IKIB0hdkgBAgQIFBqgYef8RezUk+g4AkQIFB0AfGNCqSLfv7osHr3iSHtfSxev/kb8VMKH6M21gQIECBAgAABAnMXUACZu5k7CBDopIC+CRRMIN27aUnBQhIOAQIECBCorEC86SPPxt/7xP3xd3/36comKTECBAgQOCDgmQABAl0QUADpArIhCBAgQKDEAsv2rwwnLfciTImnUOgEyiAgRgIECBAgQIAAAQIECBBov4ACSPtN9bgwAXcTIECgWAK7dy+NcdP+YgUlGgIECBAgQIAAAQKlF5AAAQIECBDouIACSMeJDUCAAAECZRVIKcQQfAJWWeevXHGLlgABAgQIECBAgAABAgQIEGi3QPEKIO3OUH8ECBAgQGC+Ave8d0VYPPjsfG93HwECBAgQIECAwAwCThFoNH3UrJ8CAgQIEOiogAJIR3l1ToAAAQKlFlgauvb9H6V2EjwBAgQIECBAgACB+Qg0hrbN5zb3ECBAoMwCYu+ugAJId72NRoAAAQJlEhje/6zv/yjThImVAAECBEomIFwCBGouED/5yWdqTiB9AgQIEOiwgAJIh4F1T4AAgdkJuKqIAnHNtU8VMS4xESBAgAABAgQIECBAgEBZBcRNgEA3BRRAuqltLAIECBAgQIAAAQIEDgvYIkCAAAECBAgQIECAQAcFFEA6iKtrAnMRcC0BAgQIECBAgAABAgQIECBQfQEZEiBAgED3BBRAumdtJAIECBAgQIAAgfEC9ggQIECAAAECBAgQIECAQMcEFEA6RjvXjl1PgAABAgQIECBAgAABAgQIVF9AhgQIECBAgEC3BBRAuiVtHAIECBAgQGCygCMECBAgQIAAAQIECBAgQIBA9QV6lKECSI/gDUuAAAECBAgQIECAAAEC9RSQNQECBAgQIECAQHcEFEC642wUAgQIEJhawFECBAgQIECAAAECBAgQIECg+gIyJNATAQWQnrAblAABAgQIECBAgACB+grInAABAgQIECBAgACBbggogHRD2RgECEwv4AwBAgQIECBAgAABAgQIECBQfQEZEiBAoAcCCiA9QDckAQIECBAgQIBAvQVkT4AAAQIECBAgQIAAAQKdF1AA6byxEWYWcJYAAQIECBAgQIAAAQIECBCovoAMCRAgQIBA1wUUQLpObkACBAgQIECAAAECBAgQIECAAAECBAgQIECg0wK9L4B0OkP9EyBAgAABAgQIECBAgAABAr0XEAEBAgQIECBAoMsCCiBdBjcc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7I645tpv5LbtwLtDuhWEcQgQIFBqAcETqKvAnpCGHg83/s4340037akrgrwJECBAgEARBRRAijgrYiJAoAICUiBAoGwCrUJHLngoepRt4sRLgAABAgR6LJCLHsPxxo/fG0No9jgUwxMg0BMBgxIgUGQBBZAiz47YCBAgQIAAAQIECJRJQKwECBAgQIAAAQIECBAokIACSIEmQyjVEpANAQIECBAgQIAAAQIECBBIaVN/evSXTkgPv/fF6fH3LCdSPQEZESBAgEBxBRRAijs3IiNAgAABAgQIlE1AvAQIECBAgEAWSCHEdP+/W522Xnlm2PrMuWH/4rVhKB0VBodPCR4ECBAgQIBA1wQUQDpGrWMCBAgQIECAAAECBAgQIECg+gKHM0wPbViWtl2+Jtx3+ctCo3lmCHF1iH0xDA8NhsbQwyE880DwIECAAAECBLomoADSNWoDESBAgACBGghIkQABAgQIECBQa4Hlp4Vm/0mhr38gpOEUQtoemo27w+nXfC2ecs3WePLm3bXmkTwBAgQIVEegJJkogJRkooRJgAABAgQIECBAgAABAsUUEBWBQwIDfdtCf9wVFu27P6xZfntc88G749r3bY+5EnLoGhsECBAgQIBA1wQUQLpGbSACBAjUQkCSBAgQIECAAAECBGorEI//wDPxpPffFU/40KMxbhqqLYTECRCog4AcCZRCQAGkFNMkSAIECBAgQIAAAQIEiisgMgIECBAgQIAAAQIEiiigAFLEWRETgTILiJ0AAQIECBAgQIAAAQIECBCovoAMCRAgUAIBBZASTJIQCRAgQIAAAQIEii0gOgIECBAgQIAAAQIECBAonoACSPHmpOwRiZ8AAQIECBAgQIAAAQIECBCovoAMCRAgQIBA4QUUQAo/RQIkQIAAAQIEii8gQgIECBAgQIAAAQIECBAgQKBoAu0vgBQtQ/EQIECAAAECBAgQIECAAAEC7RfQIwECBAgQIECg4AIKIAWfIOERIECAQDkEREmAAAECBAgQIECAAAECBAhUX0CG5RJQACnXfImWAAECBAgQIECAAAECRREQBwECBAgQIECAAIFCCyiAFHp6BEeAQHkEREqAAAECBAgQIECAAAECBAhUX0CGBAiUSUABpEyzJVYCBAgQIECAAAECRRIQCwECBAgQIECAAAECBAosoABS4MkRWrkEREuAAAECBAgQIECAAAECBAhUX0CGBAgQIFAeAQWQ8syVSAkQIECAAAECRRMQDwECBAgQIECAAAECBAgQKKyAAkjbpkZHBAgQIECAAAECBAgQIECAQPUFZEiAAAECBAiURUABpCwzJU4CBAgQIFBEATERIECAAAECBAgQIECAAAEC1RcoaYYKICWdOGETIECAAAECBAgQIECAQG8EjEqAAAECBAgQIFAOAQWQcsyTKAkQIFBUAXERIECAAAECBAgQIECAAAEC1ReQIYFSCiiAlHLaBE2AAAECBAgQIECAQO8EjEyAAAECBAgQIECAQBkEFEDKMEtiJFBkAbERIECAAAECBAgQIECAAAEC1ReQIQECBEoooABSwkkTMgECBAgQIECAQG8FjE6AAAECBAgQIECAAAECxRdQACn+HBU9QvERIECAAAECBAgQIECAAAEC1ReQIQECBAgQKJ2AAkjppkzABAgQIECAQO8FRECAAAECBAgQIECAAAECBAgUXWDhBZCiZyg+AgQIECBAgAABAgQIECBAYOECeiBAgAABAgQIlExAAaRkEyZcAgQIECiGgCgIECBAgAABAgQIECBAgACB6gvIsNwCCiDlnj/REyBAgAABAgQIECBAoFsCxiFAgAABAgQIECBQKgEFkFJNl2AJECiOgEgIECBAgAABAgQIECBAgACB6gvIkACBMgsogJR59sROgAABAgQIECBAoJsCxiJAgAABAgQIECBAgECJBBRASjRZQi2WgGgIECBAgAABAgQIECBAgACB6gvIkAABAgTKK6AAUt65EzkBAgQIECBAoNsCxiNAgAABAgQIECBAgAABAqURUACZ91S5kQABAgQIECBAgAABAgQIEKi+gAwJECBAgACBsgoogJR15sRNgAABAgR6IWBMAgQIECBAgAABAgQIECBAoPoCFclQAaQiEykNAgQIECBAgAABAgQIEOiMgF4JECBAgAABAgTKKaAAUs55EzUBAgR6JWBcAgQIECBAgAABAgQIECBAoPoCMiRQCQEFkEpMoyQIECBAgAABAgQIEOicgJ4JECBAgAABAgQIECijgAJIGWdNzAR6KWBsAgQIECBAgAABAgQIECBAoPoCMiRAgEAFBBRAKjCJUiBAgAABAgQIEOisgN4JECBAgAABAgQIECBAoHwCCiDlm7NeR2x8AgQIECBAgAABAgQIECBA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ECBAgAABAgQIECBAgED1BWRYbwEFkHrPv+wJECBAgAABAgQIEKiPgEwJECBAgAABAgQI1EpAAaRW0y1ZAgQOC9giQIAAAQIECBAgQIAAAQIEqi8gQwIE6iygAFLn2Zc7AQIECBAgQIBAvQRkS4AAAQIECBAgQIAAgRoJKIDUaLKlOl7AHgECBAgQIECAAAECBAgQIFB9ARkSIECAQH0FFEDqO/cyJ0CAAAECBOonIGMCBAgQIECAAAECBAgQIFAbgRoXQGozxxIlQIAAAQIECBAgQIAAAQI1FpA6AQIECBAgUFcBBZC6zry8CRAgQKCeArImQIAAAQIECBAgQIAAAQIEqi8gwxEBBZARBk8ECBAgQIAAAQIECBAgUFUBeREgQIAAAQIECNRTQAGknvMuawIE6isgcwIECBAgQIAAAQIECBAgQKD6AjIkQCALKIBkBAsBAgQIECBAgAABAlUWkBsBAgQIECBAgAABAnUUUACp46zLud4CsidAgAABAgQIECBAgAABAgSqLyBDAgQIEAgKIH4ICBAgQIAAAQIEKi8gQQIECBAgQIAAAQIECBCon4ACSP3mXMYECBAgQIAAAQIECBAgQIBA9QVkSIAAAQIEai+gAFL7HwEABAgQIECgDgJyJECAAAECBAgQIN5KCMAAABAASURBVECAAAECBKovMD5DBZDxHvYIECBAgAABAgQIECBAgEA1BGRBgAABAgQIEKi5gAJIzX8ApE+AAIG6CMiTAAECBAgQIECAAAECBAgQqL6ADAmMFVAAGathmwABAgQIECBAgAABAtURkAkBAgQIECBAgACBWgsogNR6+iVPoE4CciVAgAABAgQIECBAgAABAgSqLyBDAgQIHBZQADlsYYsAAQIECBAgQIBAtQRkQ4AAAQIECBAgQIAAgRoLKIDUePLrlrp8CRAgQIAAAQIECBAgQIAAgeoLyJAAAQIECIwKKICMSlgTIECAAAECBKonICMCBAgQIECAAAECBAgQIFBbgRoVQGo7xxInQIAAAQIECBAgQIAAAQI1EpAqAQIECBAgQOCAgALIAQfPBAgQIECgmgKyIkCAAAECBAgQIECAAAECBKovIMMpBRRApmRxkAABAgQIECBAgAABAgTKKiBuAgQIECBAgAABAi0BBZCWgkaAAIHqCsiMAAECBAgQIECAAAECBAgQqL6ADAkQmEJAAWQKFIcIECBAgAABAgQIECizgNgJECBAgAABAgQIECAQggKInwICVReQHwECBAgQIECAAAECBAgQIFB9ARkSIECAwCQBBZBJJA4QIECAAAECBAiUXUD8BAgQIECAAAECBAgQIEBAAaT6PwMyJECAAAECBAgQIECAAAECBKovIEMCBAgQIEBggoACyAQQuwQIECBAgEAVBORAgAABAgQIECBAgAABAgQIVF9g5gwVQGb2cZYAAQIECBAgQIAAAQIECJRDQJQECBAgQIAAAQLjBBRAxnHYIUCAAIGqCMiDAAECBAgQIECAAAECBAgQqL6ADAnMJKAAMpOOcwQIECBAgAABAgQIECiPgEgJECBAgAABAgQIEBgjoAAyBsMmAQJVEpALAQIECBAgQIAAAQIECBAgUH0BGRIgQGB6AQWQ6W2cIUCAAAECBAgQIFAuAdESIECAAAECBAgQIECAwCEBBZBDFDaqJiAfAgQIECBAgAABAgQIECBAoPoCMiRAgAABAtMJKIBMJ+M4AQIECBAgQKB8AiImQIAAAQIECBAgQIAAAQIEDgpUuAByMEMrAgQIECBAgAABAgQIECBAoMICUiNAgAABAgQITC2gADK1i6MECBAgQKCcAqImQIAAAQIECBAgQIAAAQIEqi8gw1kJKIDMislFBAgQIECAAAECBAgQIFBUAXERIECAAAECBAgQmEpAAWQqFccIECBQXgGREyBAgAABAgQIECBAgAABAtUXkCEBArMQUACZBZJLCBAgQIAAAQIECBAosoDYCBAgQIAAAQIECBAgMFlAAWSyiSMEyi0gegIECBAgQIAAAQIECBAgQKD6AjIkQIAAgSMKKIAckcgFBAgQIECAAAECRRcQHwECBAgQIECAAAECBAgQmCigADJRpPz7MiBAgAABAgQIECBAgAABAgSqLyBDAgQIECBA4AgCCiBHAHKaAAECBAgQKIOAGAkQIECAAAECBAgQIECAAIHqC8wtQwWQuXm5mgABAgQIECBAgAABAgQIFENAFAQIECBAgAABAjMKKIDMyOMkAQIECJRFQJwECBAgQIAAAQIECBAgQIBA9QVkSGAuAgogc9FyLQECBAgQIECAAAECBIojIBICBAgQIECAAAECBGYQUACZAccpAgTKJCBWAgQIECBAgAABAgQIECBAoPoCMiRAgMDsBRRAZm/lSgIECBAgQIAAAQLFEhANAQIECBAgQIAAAQIECEwroAAyLY0TZRMQLwECBAgQIECAAAECBAgQIFB9ARkSIECAAIHZCiiAzFbKdQQIECBAgACB4gmIiAABAgQIECBAgAABAgQIEJhGoEIFkGkydJgAAQIECBAgQIAAAQIECBCokIBUCBAgQIAAAQKzE1AAmZ2TqwgQIECAQDEFREWAAAECBAgQIECAAAECBAhUX0CG8xJQAJkXm5sIECBAgAABAgQIECBAoFcCxiVAgAABAgQIECAwGwEFkNkouYYAAQLFFRAZAQIECBAgQIAAAQIECBAgUH0BGRIgMA8BBZB5oLmFAAECBAgQIECAAIFeChibAAECBAgQIECAAAECRxZQADmykSsIFFtAdAQIECBAgAABAgQIECBAgED1BWRIgAABAnMWUACZM5kbCBAgQIAAAQIEei1gfAIECBAgQIAAAQIECBAgcCQBBZAjCRX/vAgJECBAgAABAgQIECBAgACB6gvIkAABAgQIEJijgALIHMFcToAAAQIECBRBQAwECBAgQIAAAQIECBAgQIBA9QUWlqECyML83E2AAAECBAgQIECAAAECBLojYBQCBAgQIECAAIE5CSiAzInLxQQIECBQFAFxECBAgAABAgQIECBAgAABAtUXkCGBhQgogCxEz70ECBAgQIAAAQIECBDonoCRCBAgQIAAAQIECBCYg4ACyBywXEqAQJEExEKAAAECBAgQIECAAAECBAhUX0CGBAgQmL+AAsj87dxJgAABAgQIECBAoLsCRiNAgAABAgQIECBAgACBWQsogMyayoVFExAPAQIECBAgQIAAAQIECBAgUH0BGRIgQIAAgfkKKIDMV859BAgQIECAAIHuCxiRAAECBAgQIECAAAECBAgQmKVAiQsgs8zQZQQIECBAgAABAgQIECBAgECJBYROgAABAgQIEJifgALI/NzcRYAAAQIEeiNgVAIECBAgQIAAAQIECBAgQKD6AjJsi4ACSFsYdUKAAAECBAgQIECAAAECnRLQLwECBAgQIECAAIH5CCiAzEfNPQQIEOidgJEJECBAgAABAgQIECBAgACB6gvIkACBNggogLQBURcECBAgQIAAAQIECHRSQN8ECBAgQIAAAQIECBCYu4ACyNzN3EGgtwJGJ0CAAAECBAgQIECAAAECBKovIEMCBAgQ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CQkQIECAwGIBBchicNcRIECAAAECBH4I+EOAAAECBAgQIECAAAECBAjMFahQgMxN6HQCBAgQIECAAAECBAgQIECggoAZCBAgQIAAAQJLBRQgS7ldRoAAAQIEfgn4mwABAgQIECA6L2odAAAQAElEQVRAgAABAgQIEMgXkHCngAJkp767CRAgQIAAAQIECBAgcJKArAQIECBAgAABAgQWCihAFmK7igABAu8F/EyAAAECBAgQIECAAAECBAjkC0hIgMA+AQXIPns3EyBAgAABAgQIEDhNQF4CBAgQIECAAAECBAgsE1CALKN2EYG/BfxOgAABAgQIECBAgAABAgQI5AtISIAAAQK7BBQgu+TdS4AAAQIECBA4UUBmAgQIECBAgAABAgQIECCwSEABsgj6s2t8RoAAAQIECBAgQIAAAQIECOQLSEiAAAECBAjsEVCA7HF3KwECBAgQOFVAbgIECBAgQIAAAQIECBAgQCBfoERCBUiJNRiCAAECBAgQIECAAAECBHIFJCNAgAABAgQIENghoADZoe5OAgQInCwgOwECBAgQIECAAAECBAgQIJAvICGBAgIKkAJLMAIBAgQIECBAgAABAtkC0hEgQIAAAQIECBAgsF5AAbLe3I0ETheQnwABAgQIECBAgAABAgQIEMgXkJAAAQLbBRQg21dgAAIECBAgQIAAgXwBCQkQIECAAAECBAgQIEBgtYACZLW4+97eGBAgQIAAAQIECBAgQIAAAQL5AhISIECAAIHNAgqQzQtwPQECBAgQIHCGgJQECBAgQIAAAQIECBAgQIDAWoEdBcjahG4jQIAAAQIECBAgQIAAAQIEdgi4kwABAgQIECCwVUABspXf5QQIECBwjoCkBAgQIECAAAECBAgQIECAQL6AhJUEFCCVtmEWAgQIECBAgAABAgQIJAnIQoAAAQIECBAgQGCjgAJkI76rCRA4S0BaAgQIECBAgAABAgQIECBAIF9AQgIE6ggoQOrswiQECBAgQIAAAQIE0gTkIUCAAAECBAgQIECAwDYBBcg2ehefJyAxAQIECBAgQIAAAQIECBAgkC8gIQECBAhUEVCAVNmEOQgQIECAAAECiQIyESBAgAABAgQIECBAgACBTQIKkIXwriJAgAABAgQIECBAgAABAgTyBSQkQIAAAQIEaggoQGrswRQECBAgQCBVQC4CBAgQIECAAAECBAgQIEAgX6BkQgVIybUYigABAgQIECBAgAABAgT6CpicAAECBAgQIECggoACpMIWzECAAIFkAdkIECBAgAABAgQIECBAgACBfAEJCRQUUIAUXIqRCBAgQIAAAQIECBDoLWB6AgQIECBAgAABAgT2CyhA9u/ABATSBeQjQIAAAQIECBAgQIAAAQIE8gUkJECAQDkBBUi5lRiIAAECBAgQIECgv4AEBAgQIECAAAECBAgQILBbQAGyewMn3C8jAQIECBAgQIAAAQIECBAgkC8gIQECBAgQKCagACm2EOMQIECAAAECGQJSECBAgAABAgQIECBAgAABAnsFVhQgexO6nQABAgQIECBAgAABAgQIEFgh4A4CBAgQIECAQCkBBUipdRiGAAECBHIEJCFAgAABAgQIECBAgAABAgTyBSSsLKAAqbwdsxEgQIAAAQIECBAgQKCTgFkJECBAgAABAgQIFBJQgBRahlEIEMgSkIYAAQIECBAgQIAAAQIECBDIF5CQAIG6AgqQursxGQECBAgQIECAAIFuAuYlQIAAAQIECBAgQIBAGQEFSJlVGCRPQCICBAgQIECAAAECBAgQIEAgX0BCAgQIEKgqoACpuhlzESBAgAABAgQ6CpiZAAECBAgQIECAAAECBAgUEVCATFyEowkQIECAAAECBAgQIECAAIF8AQkJECBAgACBmgIKkJp7MRUBAgQIEOgqYG4CBAgQIECAAAECBAgQIEAgX6BFQgVIizUZkgABAgQIECBAgAABAgTqCpiMAAECBAgQIECgooACpOJWzESAAIHOAmYnQIAAAQIECBAgQIAAAQIE8gUkJNBAQAHSYElGJECAAAECBAgQIECgtoDpCBAgQIAAAQIECBCoJ6AAqbcTExHoLmB+AgQIECBAgAABAgQIECBAIF9AQgIECJQXUICUX5EBCRAgQIAAAQIE6guYkAABAgQIECBAgAABAgSqCShAqm0kYR4ZCBAgQIAAAQIECBAgQIAAgXwBCQkQIECAQHEBBUjxBRmPAAECBAgQ6CFgSgIECBAgQIAAAQIECBAgQKCWwIwCpFZC0xAgQIAAAQIECBAgQIAAAQIzBJxJgAABAgQIECgtoAApvR7DESBAgEAfAZMSIECAAAECBAgQIECAAAEC+QISdhJQgHTallkJECBAgAABAgQIECBQScAsBAgQIECAAAECBAoLKEAKL8doBAj0EjAtAQIECBAgQIAAAQIECBAgkC8gIQECfQQUIH12ZVICBAgQIECAAAEC1QTMQ4AAAQIECBAgQIAAgbICCpCyqzFYPwETEyBAgAABAgQIECBAgAABAvkCEhIgQIBAFwEFSJdNmZMAAQIECBAgUFHATAQIECBAgAABAgQIECBAoKiAAmTgYhxFgAABAgQIECBAgAABAgQI5AtISIAAAQIECPQQUID02JMpCRAgQIBAVQFzESBAgAABAgQIECBAgAABAvkCLRMqQFquzdAECBAgQIAAAQIECBAgsE/AzQQIECBAgAABAh0EFCAdtmRGAgQIVBYwGwECBAgQIECAAAECBAgQIJAvICGBhgIKkIZLMzIBAgQIECBAgAABAnsF3E6AAAECBAgQIECAQH0BBUj9HZmQQHUB8xEgQIAAAQIECBAgQIAAAQL5AhISIECgnYACpN3KDEyAAAECBAgQILBfwAQECBAgQIAAAQIECBAgUF1AAVJ9Qx3mMyMBAgQIECBAgAABAgQIECCQLyAhAQIECBBoJqAAabYw4xIgQIAAAQI1BExBgAABAgQIECBAgAABAgQI1BYYUYDUTmg6AgQIECBAgAABAgQIECBAYISAMwgQIECAAAECrQQUIK3WZVgCBAgQqCNgEgIECBAgQIAAAQIECBAgQCBfQMLOAgqQztszOwECBAgQIECAAAECBFYKuIsAAQIECBAgQIBAIwEFSKNlGZUAgVoCpiFAgAABAgQIECBAgAABAgTyBSQkQKCvgAKk7+5MToAAAQIECBAgQGC1gPsIECBAgAABAgQIECDQRkAB0mZVBq0nYCICBAgQIECAAAECBAgQIEAgX0BCAgQIEOgqoADpujlzEyBAgAABAgR2CLiTAAECBAgQIECAAAECBAg0EVCA3FiUVwkQIECAAAECBAgQIECAAIF8AQkJECBAgACBngIKkJ57MzUBAgQIENgl4F4CBAgQIECAAAECBAgQIEAgXyAioQIkYo1CECBAgAABAgQIECBAgMA8AScTIECAAAECBAh0FFCAdNyamQkQILBTwN0ECBAgQIAAAQIECBAgQIBAvoCEBAIEFCABSxSBAAECBAgQIECAAIG5Ak4nQIAAAQIECBAgQKCfgAKk385MTGC3gPsJECBAgAABAgQIECBAgACBfAEJCRAg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zE+AAAECBAgQIECAAAEFiH8DBPIFJCRAgAABAgQIECBAgAABAgTyBSQkQIAAgb8EFCB/gfiVAAECBAgQIEAgQUAGAgQIECBAgAABAgQIEDhdQAFywr8AGQkQIECAAAECBAgQIECAAIF8AQkJECBAgACBPwQUIH9w+IUAAQIECBBIEZCDAAECBAgQIECAAAECBAgQyBd4lFAB8kjHdwQIECBAgAABAgQIECBAoI+ASQkQIECAAAECBN4JKEDeYfiRAAECBJIEZCFAgAABAgQIECBAgAABAgTyBSQk8LWAAuRrG98QIECAAAECBAgQIECgl4BpCRAgQIAAAQIECBD4T0AB8h+FHwgQSBOQhwABAgQIECBAgAABAgQIEMgXkJAAAQJfCShAvpLxOQECBAgQIECAAIF+AiYmQIAAAQIECBAgQIAAgX8FFCD/QvgrUUAmAgQIECBAgAABAgQIECBAIF9AQgIECBAg8LmAAuRzF58SIECAAAECBHoKmJoAAQIECBAgQIAAAQIECBD4RyC6APknof8RIECAAAECBAgQIECAAAEC0QLCESBAgAABAgQ+E1CAfKbiMwIECBAg0FfA5AQIECBAgAABAgQIECBAgEC+gIRPCChAnkDyCAECBAgQIECAAAECBAhUFjAbAQIECBAgQIAAgY8CCpCPJj4hQIBAbwHTEyBAgAABAgQIECBAgAABAvkCEhIg8K2AAuRbIg8QIECAAAECBAgQIFBdwHwECBAgQIAAAQIECBD4W0AB8reI3wn0F5CAAAECBAgQIECAAAECBAgQyBeQkAABAgS+EVCAfAPkawIECBAgQIAAgQ4CZiRAgAABAgQIECBAgAABAn8KKED+9Mj4TQoCBAgQIECAAAECBAgQIEAgX0BCAgQIECBA4KGAAuQhjy8JECBAgACBLgLmJECAAAECBAgQIECAAAECBPIFriRUgFzR8iwBAgQIECBAgAABAgQIEKgjYBICBAgQIECAAIEHAgqQBzi+IkCAAIFOAmYlQIAAAQIECBAgQIAAAQIE8gUkJPC8gALkeStPEiBAgAABAgQIECBAoJaAaQgQIECAAAECBAgQ+FJAAfIljS8IEOgmYF4CBAgQIECAAAECBAgQIEAgX0BCAgQIPCugAHlWynMECBAgQIAAAQIE6gmYiAABAgQIECBAgAABAgS+EFCAfAHj444CZiZAgAABAgQIECBAgAABAgTyBSQkQIAAAQLPCShAnnPyFAECBAgQIECgpoCpCBAgQIAAAQIECBAgQIAAgU8FogqQTxP6kAABAgQIECBAgAABAgQIEIgSEIYAAQIECBAg8IyAAuQZJc8QIECAAIG6AiYjQIAAAQIECBAgQIAAAQIE8gUkfEFAAfICmlcIECBAgAABAgQIECBAYKeAuwkQIECAAAECBAh8L6AA+d7IEwQIEKgtYDoCBAgQIECAAAECBAgQIEAgX0BCAgQuCyhALpN5gQABAgQIECBAgACB3QLuJ0CAAAECBAgQIECAwHcCCpDvhHxPoL6ACQkQIECAAAECBAgQIECAAIF8AQkJECBA4KKAAuQimMcJECBAgAABAgQqCJiBAAECBAgQIECAAAECBAg8FlCAPPbp8a0pCRAgQIAAAQIECBAgQIAAgXwBCQkQIECAAIFLAgqQS1weJkCAAAECBKoImIMAAQIECBAgQIAAAQIECBDIF7iTUAFyR8+7BAgQIECAAAECBAgQIEBgnYCbCBAgQIAAAQIELggoQC5geZQAAQIEKgmYhQABAgQIECBAgAABAgQIEMgXkJDA6wIKkNftvEmAAAECBAgQIECAAIG1Am4jQIAAAQIECBAgQOBpAQXI01QeJECgmoB5CBAgQIAAAQIECBAgQIAAgXwBCQkQIPCqgALkVTnvESBAgAABAgQIEFgv4EYCBAgQIECAAAECBAgQeFJAAfIklMcqCpiJAAECBAgQIECAAAECBAgQyBeQkAABAgQIvCagAHnNzVsECBAgQIAAgT0CbiVAgAABAgQIECBAgAABAgSeEmhdgDyV0EMECBAgQIAAAQIECBAgQIBAawHDEyBAgAABAgReEVCAvKLmHQIECBAgsE/AzQQIECBAgAABAgQIECBAgEC+gIQDBBQgAxAdQYAAAQIECBAgQIAAAQIzBZxNgAABAgQIECBA4LqAAuS6mTcIECCwV8DtBAgQIECAAAECBAgQIECAQL6AhAQI3BZQgNwmdAABAgQIECBAgAABArMFnE+AAAECBAgQIECAAIGrAgqQq2KeJ7BfwAQECBAgQIAAAQIECBAgQIBAvoCEBAgQIHBTQAFyE9DrBAgQIECAAAECKwTcQYAAAQIECBAgQIAAAQIErgkoQK551XjaFAQIECBAgAABAgQIECBAgEC+gIQECBAgQIDALQEFyC0+LxMgQIAAAQKrBNxDgAABAgQIECBAgAABAgQI5AuMTKgAGanpLAIECBAgQIAAAQIECBAgME7ASQQIECBAgAABAjcEFCA38LxKgAABAisF3EWAAAECBAgQIECAAAECBAjkC0hIYJyAAmScpZMIECBAgAABAgQIECAwVsBpBAgQIECAAAECBAi8LKAAeZnOiwQIrBZwHwECBAgQIECAAAECBAgQIJAvICEBAgRGCShARkk6hwABAgQIECBAgMB4AScSIECAAAECBAgQIECAwIsCCpAX4by2Q8CdBAgQIECAAAECBAgQIECAQL6AhAQIECBAYIyAAmSMo1MIECBAgAABAnMEnEqAAAECBAgQIECAAAECBAi8JNCqAHkpoZcIECBAgAABAgQIECBAgACBVgKGJUCAAAECBAiMEFCAjFB0BgECBAgQmCfgZAIECBAgQIAAAQIECBAgQCBfQMIJAgqQCaiOJECAAAECBAgQIECAAIE7At4lQIAAAQIECBAgcF9AAXLf0AkECBCYK+B0AgQIECBAgAABAgQIECBAIF9AQgIEhgsoQIaTOpAAAQIECBAgQIAAgbsC3idAgAABAgQIECBAgMBdAQXIXUHvE5gv4AYCBAgQIECAAAECBAgQIEAgX0BCAgQIEBgsoAAZDOo4AgQIECBAgACBEQLOIECAAAECBAgQIECAAAEC9wQUIPf81rztFgIECBAgQIAAAQIECBAgQCBfQEICBAgQIEBgqIACZCinwwgQIECAAIFRAs4hQIAAAQIECBAgQIAAAQIE8gVmJlSAzNR1NgECBAgQIECAAAECBAgQeF7AkwQIECBAgAABAgMFFCADMR1FgAABAiMFnEWAAAECBAgQIECAAAECBAjkC0hIYJ6AAmSerZMJECBAgAABAgQIECBwTcDTBAgQIECAAAECBAgME1CADKN0EAECowWcR4AAAQIECBAgQIAAAQIECOQLSEiAAIFZAgqQWbLOJUCAAAECBAgQIHBdwBsECBAgQIAAAQIECBAgMEhAATII0jEzBJxJgAABAgQIECBAgAABAgQI5AtISIAAAQIE5ggoQOa4OpUAAQIECBAg8JqAtwgQIECAAAECBAgQIECAAIEhAqULkCEJHUKAAAECBAgQIECAAAECBAiUFjAcAQIECBAgQGCGgAJkhqozCRAgQIDA6wLeJECAAAECBAgQIECAAAECBPIFJFwgoABZgOwKAgQIECBAgAABAgQIEHgk4DsCBAgQIECAAAEC4wUUIONNnUiAAIF7At4mQIAAAQIECBAgQIAAAQIE8gUkJEBguoACZDqxCwgQIECAAAECBAgQ+E7A9wQIECBAgAABAgQIEBgtoAAZLeo8AvcFnECAAAECBAgQIECAAAECBAjkC0hIgAABApMFFCCTgR1PgAABAgQIECDwjIBnCBAgQIAAAQIECBAgQIDAWAEFyFjPMac5hQABAgQIEDgqKegAABAASURBVCBAgAABAgQIEMgXkJAAAQIECBCYKqAAmcrrcAIECBAgQOBZAc8RIECAAAECBAgQIECAAAEC+QIrEypAVmq7iwABAgQIECBAgAABAgQI/BbwEwECBAgQIECAwEQBBchEXEcTIECAwBUBzxIgQIAAAQIECBAgQIAAAQL5AhISWCegAFln7SYCBAgQIECAAAECBAj8KeA3AgQIECBAgAABAgSmCShAptE6mACBqwKeJ0CAAAECBAgQIECAAAECBPIFJCRAgMAqAQXIKmn3ECBAgAABAgQIEPgo4BMCBAgQIECAAAECBAgQmCSgAJkE69hXBLxDgAABAgQIECBAgAABAgQI5AtISIAAAQIE1ggoQNY4u4UAAQIECBAg8LmATwkQIECAAAECBAgQIECAAIEpAqUKkCkJHUqAAAECBAgQIECAAAECBAiUEjAMAQIECBAgQGCFgAJkhbI7CBAgQIDA1wK+IUCAAAECBAgQIECAAAECBPIFJNwgoADZgO5KAgQIECBAgAABAgQInC0gPQECBAgQIECAAIH5AgqQ+cZuIECAwGMB3xIgQIAAAQIECBAgQIAAAQL5AhISILBcQAGynNyFBAgQIECAAAECBAgQIECAAAECBAgQIECAwGwBBchsYecT+F7AEwQIECBAgAABAgQIECBAgEC+gIQECBAgsFhAAbIY3HUECBAgQIAAAQI/BPwhQIAAAQIECBAgQIAAAQJzBRQgc32fO91TBAgQIECAAAECBAgQIECAQL6AhAQIECBAgMBSAQXIUm6XESBAgAABAr8E/E2AAAECBAgQIECAAAECBAjkC+xMqADZqe9uAgQIECBAgAABAgQIEDhJQFYCBAgQIECAAIGFAgqQhdiuIkCAAIH3An4mQIAAAQIECBAgQIAAAQIE8gUkJLBPQAGyz97NBAgQIECAAAECBAicJiAvAQIECBAgQIAAAQLLBBQgy6hdRIDA3wJ+J0CAAAECBAgQIECAAAECBPIFJCRAgMAuAQXILnn3EiBAgAABAgQInCggMwECBAgQIECAAAECBAgsElCALIJ2zWcCPiNAgAABAgQIECBAgAABAgTyBSQkQIAAAQJ7BBQge9zdSoAAAQIECJwqIDcBAgQIECBAgAABAgQIECCwRGBrAbIkoUsIECBAgAABAgQIECBAgACBrQIuJ0CAAAECBAjsEFCA7FB3JwECBAicLCA7AQIECBAgQIAAAQIECBAgkC8gYQEBBUiBJRiBAAECBAgQIECAAAEC2QLSESBAgAABAgQIEFgvoABZb+5GAgROF5CfAAECBAgQIECAAAECBAgQyBeQkACB7QIKkO0rMAABAgQIECBAgACBfAEJCRAgQIAAAQIECBAgsFpAAbJa3H0E3t4YECBAgAABAgQIECBAgAABAvkCEhIgQIDAZgEFyOYFuJ4AAQIECBAgcIaAlAQIECBAgAABAgQIECBAYK2AAmSt98/b/J8AAQIECBAgQIAAAQIECBDIF5CQAAECBAgQ2CqgANnK73ICBAgQIHCOgKQECBAgQIAAAQIECBAgQIBAvkClhAqQStswCwECBAgQIECAAAECBAgkCchCgAABAgQIECCwUUABshHf1QQIEDhLQFoCBAgQIECAAAECBAgQIEAgX0BCAnUEFCB1dmESAgQIECBAgAABAgTSBOQhQIAAAQIECBAgQGCbgAJkG72LCZwnIDEBAgQIECBAgAABAgQIECCQLyAhAQIEqggoQKpswhwECBAgQIAAAQKJAjIRIECAAAECBAgQIECAwCYBBcgm+DOvlZoAAQIECBAgQIAAAQIECBDIF5CQAAECBAjUEFCA1NiDKQgQIECAAIFUAbkIECBAgAABAgQIECBAgACBLQJLC5AtCV1KgAABAgQIECBAgAABAgQILBVwGQECBAgQIECggoACpMIWzECAAAECyQKyESBAgAABAgQIECBAgAABAvkCEhYUUIAUXIqRCBAgQIAAAQIECBAg0FvA9AQIECBAgAABAgT2CyhA9u/ABAQIpAvIR4AAAQIECBAgQIAAAQIECOQLSEiAQDkBBUi5lRiIAAECBAgQIECAQH8BCQgQIECAAAECBAgQILBbQAGyewPuP0FARgIECBAgQIAAAQIECBAgQCBfQEICBAgQKCagACm2EOMQIECAAAECBDIEpCBAgAABAgQIECBAgAABAnsFFCAr/N1BgAABAgQIECBAgAABAgQI5AtISIAAAQIECJQSUICUWodhCBAgQIBAjoAkBAgQIECAAAECBAgQIECAQL5A5YQKkMrbMRsBAgQIECBAgAABAgQIdBIwKwECBAgQIECAQCEBBUihZRiFAAECWQLSECBAgAABAgQIECBAgAABAvkCEhKoK6AAqbsbkxEgQIAAAQIECBAg0E3AvAQIECBAgAABAgQIlBFQgJRZhUEI5AlIRIAAAQIECBAgQIAAAQIECOQLSEiAAIGqAgqQqpsxFwECBAgQIECAQEcBMxMgQIAAAQIECBAgQIBAEQEFSJFFZI4hFQECBAgQIECAAAECBAgQIJAvICEBAgQIEKgpoACpuRdTESBAgAABAl0FzE2AAAECBAgQIECAAAECBAiUEJhagJRIaAgCBAgQIECAAAECBAgQIEBgqoDDCRAgQIAAAQIVBRQgFbdiJgIECBDoLGB2AgQIECBAgAABAgQIECBAIF9AwgYCCpAGSzIiAQIECBAgQIAAAQIEaguYjgABAgQIECBAgEA9AQVIvZ2YiACB7gLmJ0CAAAECBAgQIECAAAECBPIFJCRAoLyAAqT8igxIgAABAgQIECBAoL6ACQkQIECAAAECBAgQIFBNQAFSbSPmSRCQgQABAgQIECBAgAABAgQIEMgXkJAAAQIEigsoQIovyHgECBAgQIAAgR4CpiRAgAABAgQIECBAgAABArUEFCAz9uFMAgQIECBAgAABAgQIECBAIF9AQgIECBAgQKC0gAKk9HoMR4AAAQIE+giYlAABAgQIECBAgAABAgQIEMgX6JRQAdJpW2YlQIAAAQIECBAgQIAAgUoCZiFAgAABAgQIECgsoAApvByjESBAoJeAaQkQIECAAAECBAgQIECAAIF8AQkJ9BFQgPTZlUkJECBAgAABAgQIEKgmYB4CBAgQIECAAAECBMoKKEDKrsZgBPoJmJgAAQIECBAgQIAAAQIECBDIF5CQAAECXQQUIF02ZU4CBAgQIECAAIGKAmYiQIAAAQIECBAgQIAAgaICCpCii+k5lqkJECBAgAABAgQIECBAgACBfAEJCRAgQIBADwEFSI89mZIAAQIECBCoKmAuAgQIECBAgAABAgQIECBAoKTA0AKkZEJDESBAgAABAgQIECBAgAABAkMFHEaAAAECBAgQ6CCgAOmwJTMSIECAQGUBsxEgQIAAAQIECBAgQIAAAQL5AhI2FFCANFyakQkQIECAAAECBAgQILBXwO0ECBAgQIAAAQIE6gsoQOrvyIQECFQXMB8BAgQIECBAgAABAgQIECCQLyAhAQLtBBQg7VZmYAIECBAgQIAAAQL7BUxAgAABAgQIECBAgACB6gIKkOobMl8HATMSIECAAAECBAgQIECAAAEC+QISEiBAgEAzAQVIs4UZlwABAgQIECBQQ8AUBAgQIECAAAECBAgQIECgtoACZMR+nEGAAAECBAgQIECAAAECBAjkC0hIgAABAgQItBJQgLRal2EJECBAgEAdAZMQIECAAAECBAgQIECAAAEC+QKdEypAOm/P7AQIECBAgAABAgQIECCwUsBdBAgQIECAAAECjQQUII2WZVQCBAjUEjANAQIECBAgQIAAAQIECBAgkC8gIYG+AgqQvrszOQECBAgQIECAAAECqwXcR4AAAQIECBAgQIBAGwEFSJtVGZRAPQETESBAgAABAgQIECBAgAABAvkCEhIgQKCrgAKk6+bMTYAAAQIECBAgsEPAnQQIECBAgAABAgQIECDQREAB0mRRNcc0FQECBAgQIECAAAECBAgQIJAvICEBAgQIEOgpoADpuTdTEyBAgAABArsE3EuAAAECBAgQIECAAAECBAi0ELhVgLRIaEgCBAgQIECAAAECBAgQIEDgloCXCRAgQIAAAQIdBRQgHbdmZgIECBDYKeBuAgQIECBAgAABAgQIECBAIF9AwgABBUjAEkUgQIAAAQIECBAgQIDAXAGnEyBAgAABAgQIEOgnoADptzMTEyCwW8D9BAgQIECAAAECBAgQIECAQL6AhAQItBdQgLRfoQAECBAgQIAAAQIE5gu4gQABAgQIECBAgAABAt0EFCDdNmbeCgJmIECAAAECBAgQIECAAAECBPIFJCRAgACB5gIKkOYLND4BAgQIECBAYI2AWwgQIECAAAECBAgQIECAQC8BBcgr+/IOAQIECBAgQIAAAQIECBAgkC8gIQECBAgQINBaQAHSen2GJ0CAAAEC6wTcRIAAAQIECBAgQIAAAQIECOQLJCVUgCRtUxYCBAgQIECAAAECBAgQGCngLAIECBAgQIAAgcYCCpDGyzM6AQIE1gq4jQABAgQIECBAgAABAgQIEMgXkJBAjoACJGeXkhAgQIAAAQIECBAgMFrAeQQIECBAgAABAgQItBVQgLRdncEJrBdwIwECBAgQIECAAAECBAgQIJAvICEBAgRSBBQgKZuUgwABAgQIECBAYIaAMwkQIECAAAECBAgQIECgqYACpOni9oztVgIECBAgQIAAAQIECBAgQCBfQEICBAgQIJAhoADJ2KMUBAgQIECAwCwB5xIgQIAAAQIECBAgQIAAAQItBS4VIC0TGpoAAQIECBAgQIAAAQIECBC4JOBhAgQIECBAgECCgAIkYYsyECBAgMBMAWcTIECAAAECBAgQIECAAAEC+QISBgooQAKXKhIBAgQIECBAgAABAgTuCXibAAECBAgQIECAQH8BBUj/HUpAgMBsAecTIECAAAECBAgQIECAAAEC+QISEiAQJ6AAiVupQAQIECBAgAABAgTuCziBAAECBAgQIECAAAEC3QUUIN03aP4VAu4gQIAAAQIECBAgQIAAAQIE8gUkJECAAIEwAQVI2ELFIUCAAAECBAiMEXAKAQIECBAgQIAAAQIECBDoLaAAeWZ/niFAgAABAgQIECBAgAABAgTyBSQkQIAAAQIEogQUIFHrFIYAAQIECIwTcBIBAgQIECBAgAABAgQIECCQL5CcUAGSvF3ZCBAgQIAAAQIECBAgQOCKgGcJECBAgAABAgSCBBQgQcsUhQABAmMFnEaAAAECBAgQIECAAAECBAjkC0hIIFdAAZK7W8kIECBAgAABAgQIELgq4HkCBAgQIECAAAECBGIEFCAxqxSEwHgBJxIgQIAAAQIECBAgQIAAAQL5AhISIEAgVUABkrpZuQgQIECAAAECBF4R8A4BAgQIECBAgAABAgQIhAgoQEIWOSeGUwkQIEApBEwIAAAApklEQVSAAAECBAgQIECAAIF8AQkJECBAgECmgAIkc69SESBAgAABAq8KeI8AAQIECBAgQIAAAQIECBCIEHhYgEQkFIIAAQIECBAgQIAAAQIECBB4KOBLAgQIECBAgECigAIkcasyESBAgMAdAe8SIECAAAECBAgQIECAAAEC+QISHiCgADlgySISIECAAAECBAgQIEDgsYBvCRAgQIAAAQIECOQJ/A8AAP//7ky0pgAAAAZJREFUAwB5h23fghBT0gAAAABJRU5ErkJggg==&quot;);background-size:100% 100%;" height="1000" data-snapshot-canvas=""></canvas><span class="scrib-competition-fly" style="--fly-color: #46f0ff; --x0: 482.66400146484375px; --y0: 514.6001892089844px; --xm: 289.8699493408203px; --ym: 130.28285217285156px; --x1: 375px; --y1: 228px;">relámpago <b>+1</b></span><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 73.78795167838796px; --by: 0px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 36.684142802683596px; --by: 21.17959972212004px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 34.568325108477616px; --by: 59.87409542044214px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 4.125796756750589e-15px; --by: 67.37937435713104px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -34.10634683156148px; --by: 59.07392557283031px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -41.672012292352186px; --by: 24.05934751466292px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -34.141965063743px; --by: 4.1811848231913626e-15px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -52.18733458740425px; --by: -30.130371672326888px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -28.38435527467245px; --by: -49.16314547581828px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -1.1225513882040101e-14px; --by: -61.10885135673808px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 25.700874446068198px; --by: -44.51522033953873px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 49.917304669922785px; --by: -28.81976928840052px;"></i><span class="scrib-competition-fly" style="--fly-color: #ff5f67; --x0: 1100.1359558105469px; --y0: 514.6001892089844px; --xm: 1023.6059265136719px; --ym: 130.28285217285156px; --x1: 1225px; --y1: 228px;">desvelo <b>+1</b></span><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 37.08493674936726px; --by: 0px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 44.33736550637194px; --by: 25.59818991026266px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 25.592754143363123px; --by: 44.327950481923814px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 2.4137756806532036e-15px; --by: 39.419948385669535px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -16.76724544447946px; --by: 29.041721012816243px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -61.795396863072526px; --by: 35.67758901357467px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -44.77634662714898px; --by: 5.483520957445038e-15px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -41.54865734180075px; --by: -23.988128500756165px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -19.383257836758066px; --by: -33.57278738947254px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -1.3110340627586192e-14px; --by: -71.36937026367724px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 28.674664659366208px; --by: -49.66597608002197px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 42.367880814264495px; --by: -24.461107393109614px;"></i><span class="scrib-competition-fly" style="--fly-color: #46f0ff; --x0: 482.66400146484375px; --y0: 514.6001892089844px; --xm: 289.56373596191406px; --ym: 129.833740234375px; --x1: 375px; --y1: 228px;">herida <b>+1</b></span><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 69.68310514222354px; --by: 0px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 46.54012978002759px; --by: 26.869956456619043px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 30.408278602943852px; --by: 52.6686835110083px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 2.03972527020153e-15px; --by: 33.311241602422285px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -19.716445575005636px; --by: 34.149885480576344px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -38.757717933920205px; --by: 22.376778882324412px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -53.71021789703631px; --by: 6.57760464291124e-15px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -61.98263048006732px; --by: -35.78568839274794px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -28.945674037049752px; --by: -50.13537809149745px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -1.2312071776833737e-14px; --by: -67.02379704039772px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 33.76514650695534px; --by: -58.482949275053436px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 48.92895171399789px; --by: -28.249143443242918px;"></i><span class="scrib-competition-fly" style="--fly-color: #ff5f67; --x0: 1100.1359558105469px; --y0: 514.6001892089844px; --xm: 1023.2997741699219px; --ym: 129.833740234375px; --x1: 1225.0000610351562px; --y1: 228px;">umbral <b>+1</b></span><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 48.37417945565639px; --by: 0px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 38.47888703566428px; --by: 22.215795788157966px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 27.228453149095692px; --by: 47.16106426574252px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 3.73235531301234e-15px; --by: 60.95398796797495px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -26.360147433920364px; --by: 45.65711465055646px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -50.56610464175554px; --by: 29.19435412678834px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -33.589072700713814px; --by: 4.1134750369256916e-15px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -39.041779952300196px; --by: -22.540782165102634px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -18.62305375867187px; --by: -32.25607530210618px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -7.158921846110655e-15px; --by: -38.971355393217465px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 31.206628332912757px; --by: -54.051465805523335px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 36.72375496170431px; --by: -21.20246981279386px;"></i><span class="scrib-competition-fly" style="--fly-color: #46f0ff; --x0: 482.66400146484375px; --y0: 514.6001892089844px; --xm: 289.5646209716797px; --ym: 129.83502197265625px; --x1: 375.00001525878906px; --y1: 228px;">hilo <b>+1</b></span><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 70.65480367196315px; --by: 0px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 62.625221996949975px; --by: 36.15668877799913px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 34.446134178588885px; --by: 59.662454521650766px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 4.3315159630057e-15px; --by: 70.73902395403263px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -29.621720128789704px; --by: 51.306324270649505px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -62.84465201072032px; --by: 36.28337675551772px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -67.63028998534523px; --by: 8.282321815596033e-15px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -36.504660051820096px; --by: -21.075975307594096px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -20.282354240559062px; --by: -35.13006804175833px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: -9.232873727312635e-15px; --by: -50.261423586190574px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 28.63376045002326px; --by: -49.59512791119655px;"></i><i class="scrib-competition-burst" style="left: 375px; top: 228px; --burst-color: #46f0ff; --bx: 49.411984154731144px; --by: -28.528022352927582px;"></i><span class="scrib-competition-fly" style="--fly-color: #ff5f67; --x0: 1100.1359558105469px; --y0: 514.6001892089844px; --xm: 1023.3006286621094px; --ym: 129.83502197265625px; --x1: 1225px; --y1: 228px;">desvelo <b>+1</b></span><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 54.439548115662184px; --by: 0px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 54.06622169617925px; --by: 31.215147650355068px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 36.601569090044784px; --by: 63.39577730070011px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 2.089864251734617e-15px; --by: 34.130073310764566px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -32.67976662171425px; --by: 56.60301616830264px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -49.123005554767374px; --by: 28.36118048044842px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -32.8385530976483px; --by: 4.0215628939665394e-15px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -53.10583026521674px; --by: -30.660665399161434px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -36.47934846006731px; --by: -63.184084959845976px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: -6.721763846878837e-15px; --by: -36.59157808634452px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 36.28580480266559px; --by: -62.84885751174356px;"></i><i class="scrib-competition-burst" style="left: 1225px; top: 228px; --burst-color: #ff5f67; --bx: 49.31141603572897px; --by: -28.469959322349784px;"></i></body></html>

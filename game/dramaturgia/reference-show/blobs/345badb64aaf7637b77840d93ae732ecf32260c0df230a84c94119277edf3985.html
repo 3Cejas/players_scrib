@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html data-scrib-reference-show="complete-v1" lang="es" class="" data-scrib-snapshot-frozen="" data-snapshot-screen-id="control" data-snapshot-width="1600" data-snapshot-height="1100"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'; form-action 'none'; base-uri http: https:; img-src data: blob: http: https:; media-src data: blob: http: https:; font-src data: http: https:; style-src 'unsafe-inline' http: https:"><base href="../../../control/">
+    <link rel="icon" href="../../img/logo.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB - Control 🎨</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260824e">
+    <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
+    <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
+<style id="scrib-competition-style">
+      .scrib-competition-hud{--azul:#46f0ff;--rojo:#ff5f67;--oro:#ffe475;position:fixed;z-index:2147481200;left:50%;top:clamp(8px,1.4vh,18px);transform:translateX(-50%);width:min(760px,72vw);font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:none;filter:drop-shadow(0 10px 26px #000a);transition:opacity .35s,transform .35s}
+      body:has(#scrib_competition_hud) #inspiracion{display:none!important}
+      .scrib-competition-hud[data-role="spectator"]{top:clamp(114px,15vh,166px);width:min(940px,72vw)}
+      .scrib-competition-hud[data-active="0"][data-clock="0"]{opacity:0;transform:translate(-50%,-20px)}
+      .scrib-competition-shell{position:relative;border:1px solid #ffffff38;border-radius:18px;padding:9px 14px 11px;background:linear-gradient(180deg,#101423f2,#060914ed);box-shadow:inset 0 0 26px #ffffff0b,0 0 0 1px #000}
+      .scrib-competition-top{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:7px}
+      .scrib-competition-mode{font-size:clamp(10px,.8vw,13px);font-weight:900;letter-spacing:.13em;text-align:left;color:#d7dcf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .scrib-competition-clock{font-variant-numeric:tabular-nums;font-size:clamp(19px,1.8vw,30px);font-weight:1000;letter-spacing:.08em;color:#fff;border:1px solid #ffffff30;border-radius:999px;padding:2px 13px;background:#050711}
+      .scrib-competition-clock::before{content:'TIEMPO ';font-size:.44em;color:#abb2cb;vertical-align:middle}
+      .scrib-competition-criterion{text-align:right;font-size:clamp(8px,.68vw,11px);font-weight:800;letter-spacing:.07em;color:#abb2cb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .scrib-competition-scoreline{display:grid;grid-template-columns:minmax(54px,auto) 1fr minmax(54px,auto);gap:9px;align-items:center}
+      .scrib-competition-score{position:relative;display:flex;align-items:center;justify-content:center;min-width:58px;height:42px;border-radius:12px;font-size:clamp(22px,2.1vw,36px);font-weight:1000;font-variant-numeric:tabular-nums;background:#090c18;border:1px solid currentColor;transition:transform .2s,box-shadow .25s}
+      .scrib-competition-score--1{color:var(--azul);box-shadow:inset 0 0 18px #46f0ff24}
+      .scrib-competition-score--2{color:var(--rojo);box-shadow:inset 0 0 18px #ff5f6724}
+      .scrib-competition-score.is-leading{transform:scale(1.08);box-shadow:0 0 24px currentColor,inset 0 0 18px #ffffff24}
+      .scrib-competition-score.is-hit{animation:scribScoreHit .42s ease-out}
+      .scrib-competition-bar{position:relative;height:28px;display:flex;overflow:hidden;border:1px solid #fff5;border-radius:999px;background:#060812;box-shadow:inset 0 0 15px #000;isolation:isolate}
+      .scrib-competition-segment{height:100%;transition:width .65s cubic-bezier(.2,.9,.2,1);position:relative}
+      .scrib-competition-segment--1{background:linear-gradient(90deg,#087c9d,var(--azul))}
+      .scrib-competition-segment--2{background:linear-gradient(90deg,var(--rojo),#9d1731)}
+      .scrib-competition-center{position:absolute;z-index:3;left:var(--marker-position,50%);top:50%;width:11px;height:34px;transform:translate(-50%,-50%) skewX(-12deg);background:#fff;box-shadow:0 0 15px #fff;transition:left .65s cubic-bezier(.2,.9,.2,1)}
+      .scrib-competition-curse{position:absolute;z-index:4;top:50%;left:var(--curse-position,50%);transform:translate(-50%,-50%);font-size:19px;filter:drop-shadow(0 0 5px #000);transition:left .7s cubic-bezier(.2,.9,.2,1)}
+      .scrib-competition-streak{position:absolute;top:100%;margin-top:7px;padding:4px 9px;border-radius:999px;background:#090c18e8;border:1px solid currentColor;font-size:11px;font-weight:1000;letter-spacing:.08em;opacity:0;transform:translateY(-5px);transition:.2s}
+      .scrib-competition-streak[data-active="1"]{opacity:1;transform:none}
+      .scrib-competition-streak--1{left:2%;color:var(--azul)}.scrib-competition-streak--2{right:2%;color:var(--rojo)}
+      .scrib-competition-fly{position:fixed;z-index:2147483000;left:0;top:0;padding:5px 10px;border-radius:999px;border:1px solid currentColor;background:#090c18f2;font:1000 16px/1 Inter,system-ui,sans-serif;color:var(--fly-color,#fff);white-space:nowrap;pointer-events:none;animation:scribFly var(--fly-duration,800ms) cubic-bezier(.18,.8,.22,1) forwards}
+      .scrib-competition-fly.is-muse{color:var(--oro);box-shadow:0 0 20px #ffe475b0}
+      .scrib-competition-change{position:fixed;z-index:2147483100;left:50%;top:43%;transform:translate(-50%,-50%) scale(.7);opacity:0;text-align:center;font:1000 clamp(25px,4vw,64px)/.95 Inter,system-ui,sans-serif;letter-spacing:.04em;color:#fff;text-shadow:0 0 8px #fff,0 0 32px #8b5cff,4px 4px 0 #000;pointer-events:none;animation:scribLeaderChange 1.55s ease-out forwards}
+      .scrib-competition-change small{display:block;margin-top:10px;font-size:.3em;letter-spacing:.18em;color:var(--change-color,#fff)}
+      .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
+      @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+      @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
+      @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-3deg)}18%,65%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(1.1)}}
+      @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
+      @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"]{width:84vw}}
+      @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly,.scrib-competition-change,.scrib-competition-burst{animation-duration:.01ms!important}}
+    </style><style data-scrib-snapshot-freeze="">html[data-scrib-snapshot-frozen] body *,html[data-scrib-snapshot-frozen] body *::before,html[data-scrib-snapshot-frozen] body *::after{animation:none!important;transition:none!important;caret-color:transparent!important;}html[data-scrib-snapshot-frozen] body .feedback-tiempo-float{opacity:1!important;transform:none!important;animation:none!important;}html,body{scroll-behavior:auto!important;}body{pointer-events:none!important;}</style></head>
+
+
+
+<body data-control-access="monitor" class="" inert="">
+    
+    
+    
+    
+    
+    
+    
+    
+
+    <div class="remote-status-bar" aria-label="Conexiones remotas">
+        <div class="remote-brand-card">
+            <div class="ascii control-brand">
+                <pre class="neon">    __     _____    _____   _____    _____    __       ____  
+   / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+  / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+ &lt; &lt;      \___ \  | |      |  _  /    | |       &gt; &gt;   |  _ &lt; 
+  \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+   \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/</pre>
+            </div>
+            <span class="remote-brand-control-label">CONTROL</span>
+        </div>
+        <div class="remote-status-card remote-status-card--control">
+            <span id="estado_servidor" class="conexion-dot conexion-dot--mini conexion-dot--ok conexion-dot--ping" data-status="ok"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role">CONTROL</span>
+            <span id="estado_servidor_texto" class="remote-status-state">ACTIVO</span>
+            </div>
+        </div>
+        <div class="remote-status-card">
+            <span id="estado_espectador" class="conexion-dot conexion-dot--mini conexion-dot--ok conexion-dot--ping" data-status="ok"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role">ESPECTADOR</span>
+                <span id="estado_espectador_texto" class="remote-status-state">CONECTADO</span>
+            </div>
+            <button id="boton_reiniciar_espectador" class="remote-restart-btn" type="button" aria-label="Reiniciar espectador" data-restart-role="espectador" aria-disabled="false">↻</button>
+        </div>
+        <div class="remote-status-card">
+            <span id="estado_actor_1" class="conexion-dot conexion-dot--mini conexion-dot--ok conexion-dot--ping" data-status="ok"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role remote-status-role--blue">ACTORES AZULES</span>
+                <span id="estado_actor_1_texto" class="remote-status-state">CONECTADO</span>
+            </div>
+            <button id="boton_reiniciar_actorxs_1" class="remote-restart-btn" type="button" aria-label="Reiniciar actores azules" data-restart-role="actorxs1" aria-disabled="false">↻</button>
+        </div>
+        <div class="remote-status-card">
+            <span id="estado_actor_2" class="conexion-dot conexion-dot--mini conexion-dot--ok conexion-dot--ping" data-status="ok"></span>
+            <div class="remote-status-copy">
+                <span class="remote-status-role remote-status-role--red">ACTORES ROJOS</span>
+                <span id="estado_actor_2_texto" class="remote-status-state">CONECTADO</span>
+            </div>
+            <button id="boton_reiniciar_actorxs_2" class="remote-restart-btn" type="button" aria-label="Reiniciar actores rojos" data-restart-role="actorxs2" aria-disabled="false">↻</button>
+        </div>
+    </div>
+    <div align="center">
+    <table class="default">
+        <tbody id="panel_toggle"></tbody>
+        <tbody id="panel_controles">
+            <tr>
+                <td colspan="5">
+                    <div class="control-groups">
+                        <div class="control-group control-group--calentamiento control-collapsible is-collapsed" data-control-section="tutorial">
+                            <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false">📖 TUTORIAL</button>
+                            <section id="videotutorial_control" class="videotutorial-control" data-state="inactive" aria-labelledby="videotutorial_control_title" aria-busy="false">
+                                <header class="videotutorial-control__header">
+                                    <span class="videotutorial-control__icon" aria-hidden="true">▶</span>
+                                    <span class="videotutorial-control__copy">
+                                        <strong id="videotutorial_control_title" class="videotutorial-control__title">VIDEOTUTORIAL PREVIO</strong>
+                                        <span class="videotutorial-control__hint">Programa su repetición antes de abrir el tutorial.</span>
+                                    </span>
+                                    <span id="videotutorial_estado_dot" class="videotutorial-control__dot" aria-hidden="true"></span>
+                                </header>
+                                <form id="videotutorial_config_form" class="videotutorial-control__config" novalidate="">
+                                    <label for="videotutorial_intervalo">INTERVALO AUTOMÁTICO</label>
+                                    <span class="videotutorial-control__input-shell">
+                                        <input id="videotutorial_intervalo" name="videotutorial_intervalo" type="number" min="1" max="1440" step="1" value="3" inputmode="numeric" aria-describedby="videotutorial_intervalo_ayuda" aria-disabled="false">
+                                        <span aria-hidden="true">MIN</span>
+                                    </span>
+                                    <button id="videotutorial_configurar" class="btn videotutorial-control__button videotutorial-control__button--save" type="submit" aria-disabled="false">GUARDAR</button>
+                                    <label class="videotutorial-control__toggle" for="videotutorial_habilitado">
+                                        <input id="videotutorial_habilitado" name="videotutorial_habilitado" type="checkbox" role="switch" aria-describedby="videotutorial_repeticion_ayuda" aria-disabled="false">
+                                        <span class="videotutorial-control__toggle-track" aria-hidden="true"></span>
+                                        <span>REPETIR AUTOMÁTICAMENTE</span>
+                                    </label>
+                                </form>
+                                <span id="videotutorial_intervalo_ayuda" class="videotutorial-control__sr-only">Intervalo entre reproducciones, de 1 a 1440 minutos.</span>
+                                <span id="videotutorial_repeticion_ayuda" class="videotutorial-control__sr-only">Activa o desactiva la repetición automática del videotutorial.</span>
+                                <div class="videotutorial-control__actions">
+                                    <button id="videotutorial_mostrar" class="btn videotutorial-control__button videotutorial-control__button--play" type="button" aria-disabled="true" disabled="">▶ REPRODUCIR AHORA</button>
+                                    <button id="videotutorial_ocultar" class="btn videotutorial-control__button videotutorial-control__button--stop" type="button" aria-disabled="true" disabled="">✕ QUITAR / DETENER</button>
+                                </div>
+                                <p id="videotutorial_estado" class="videotutorial-control__status" role="status" aria-live="polite" aria-atomic="true">
+                                    <strong id="videotutorial_estado_texto">FUERA DE FASE</strong>
+                                    <span id="videotutorial_estado_detalle">La configuración se conservará para la próxima fase previa. Verificación: 0/4 musas.</span>
+                                </p>
+                            </section>
+                            <div class="control-group-buttons control-group-buttons--two">
+                                <span id="boton_vista_calentamiento" class="btn" data-activo="1">🎮 VISTA PARTIDA</span>
+                                <span id="boton_reiniciar_calentamiento" class="btn">🧹 LIMPIAR</span>
+                                <span id="boton_reiniciar_marcador_calentamiento" class="btn">↻ REINICIAR MARCADOR</span>
+                                <span id="boton_banderas_musas" class="btn" data-activo="0">🚩 BANDERAS DESACTIVADAS</span>
+                            </div>
+                            <div id="control_subtitle_musas" class="control-group-subtitle">DETONADORES PARA MUSAS</div>
+                            <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">
+                                <span id="boton_solicitud_lugares" class="btn btn-calentamiento-solicitud is-active" data-solicitud-calentamiento="lugares" data-active="1" aria-pressed="true">📍 PEDIR LUGARES</span>
+                                <span id="boton_solicitud_acciones" class="btn btn-calentamiento-solicitud" data-solicitud-calentamiento="acciones" data-active="0" aria-pressed="false">🏃 PEDIR ACCIONES</span>
+                                <span id="boton_solicitud_frase_final" class="btn btn-calentamiento-solicitud" data-solicitud-calentamiento="frase_final" data-active="0" aria-pressed="false">💬 PEDIR FRASE FINAL</span>
+                            </div>
+                            <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: FINAL AZOTEA | J2: FINAL ESTACIÓN</p>
+                        </div>
+                        <div class="control-group control-group--juego control-collapsible" data-control-section="juego">
+                            <button id="control_title_game" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="true">🎮 JUEGO</button>
+                            <div class="control-group-buttons control-group-buttons--two">
+                                <span id="boton_escribir" class="btn">✎ ESCRIBIR</span>
+                                <span id="boton_limpiar_juego" class="btn">🧹 LIMPIAR</span>
+                                <span id="boton_pausar_reanudar" data-value="0" class="btn">⏸️ PAUSAR</span>
+                                <span id="boton_vista_stats" class="btn" data-active="0">📊 STATS</span>
+                                <button id="boton_vista_puntuacion" class="btn boton-vista-puntuacion" type="button" data-active="0" data-available="0" title="El resultado estará disponible cuando terminen ambas escritoras." aria-label="🏆 RESULTADO. El resultado estará disponible cuando terminen ambas escritoras.">🏆 RESULTADO</button>
+                                <span id="boton_vista_nube_inspiracion" class="btn" data-active="0">☁️ NUBE DE INSPIRACIÓN</span>
+                                <span id="boton_skip_tertulia" class="btn btn-skip-tertulia">⏭️ SKIP TERTULIA</span>
+                            </div>
+                            <div id="stats_nav_control" class="stats-nav-control" hidden="" aria-hidden="true">
+                                <button id="stats_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev" aria-label="Slide anterior"></button>
+                                <span id="stats_nav_label" class="stats-nav-label">📊 SLIDES STATS</span>
+                                <button id="stats_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next" aria-label="Slide siguiente"></button>
+                            </div>
+                            <div id="puntuacion_nav_control" class="puntuacion-nav-control" hidden="" aria-hidden="true">
+                                <button id="puntuacion_nav_prev" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--prev" aria-label="Revelación anterior" disabled="">← ATRÁS</button>
+                                <span id="puntuacion_nav_label" class="puntuacion-nav-label" aria-live="polite">INTRO · 0/7</span>
+                                <button id="puntuacion_nav_next" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--next" aria-label="Revelar siguiente apartado">REVELAR →</button>
+                                <button id="puntuacion_nav_reset" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--reset" aria-label="Volver a la introducción del resultado">↻ REINICIAR</button>
+                                <button id="puntuacion_nav_hide" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--hide" aria-label="Ocultar resultado del espectador">✕ OCULTAR</button>
+                            </div>
+                        </div>
+                        <div class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion">
+                            <button id="control_title_representation" class="control-group-title control-collapsible-toggle is-short-label" type="button" aria-expanded="false">🎭 REPR.</button>
+                            <div class="control-group-buttons">
+                                <span id="boton_descargar_textos" class="btn">⬇️ DESCARGAR TEXTOS</span>
+                                <span id="boton_pedir_feedback" class="btn">🗨️ PEDIR FEEDBACK</span>
+                                <span id="boton_temporizador_gigante" class="btn">⏱️ TEMPORIZADOR GIGANTE</span>
+                                <span id="boton_mostrar_creditos" class="btn" data-active="0">⭐ MOSTRAR CRÉDITOS</span>
+                                <span id="boton_teleprompter" class="btn">🎙️ TELEPROMPTER</span>
+                            </div>
+                            <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
+                        </div>
+                        <div class="control-group control-group--asistencia control-collapsible is-collapsed" data-control-section="asistencia">
+                            <button id="control_title_assistance" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" aria-controls="asistencia_control">
+                                <span aria-hidden="true">🚩</span>
+                                <span>ASISTENCIA</span>
+                                <span id="asistencia_tab_contador" class="asistencia-tab-contador" aria-label="0 incidencias activas" data-active="0">0</span>
+                            </button>
+                            <section id="asistencia_control" class="asistencia-control" aria-labelledby="control_title_assistance">
+                                <header class="asistencia-control__header">
+                                    <div>
+                                        <strong>CENTRO DE ASISTENCIA</strong>
+                                        <span>Atiende cada aviso y, con autorización temporal, revisa esta app.</span>
+                                    </div>
+                                    <button id="asistencia_actualizar" class="btn asistencia-control__refresh" type="button" aria-disabled="false">↻ ACTUALIZAR</button>
+                                </header>
+                                <p id="asistencia_estado_global" class="asistencia-control__global-status" role="status" aria-live="polite" aria-atomic="true" data-state="ready">Sincronizando incidencias…</p>
+                                <div class="asistencia-control__workspace">
+                                    <aside class="asistencia-control__queue" aria-label="Incidencias de musas">
+                                        <div class="asistencia-control__queue-heading">
+                                            <strong>INCIDENCIAS</strong>
+                                            <span id="asistencia_contador">0 activas</span>
+                                        </div>
+                                        <ul id="asistencia_lista" class="asistencia-control__list"></ul>
+                                        <p id="asistencia_lista_vacia" class="asistencia-control__empty">No hay peticiones de ayuda.</p>
+                                    </aside>
+                                    <main id="asistencia_detalle" class="asistencia-detail" aria-live="polite">
+                                        <div id="asistencia_sin_seleccion" class="asistencia-detail__placeholder">
+                                            <span aria-hidden="true">📱</span>
+                                            <strong>SELECCIONA UNA INCIDENCIA</strong>
+                                            <small>Aquí aparecerán las acciones y el diagnóstico autorizado.</small>
+                                        </div>
+                                        <div id="asistencia_incidente" class="asistencia-detail__incident" hidden="">
+                                            <header class="asistencia-detail__header">
+                                                <span id="asistencia_color" class="asistencia-detail__flag" aria-hidden="true"></span>
+                                                <div class="asistencia-detail__identity">
+                                                    <strong id="asistencia_nombre">MUSA</strong>
+                                                    <span id="asistencia_meta">Equipo · antigüedad</span>
+                                                </div>
+                                                <span id="asistencia_estado" class="asistencia-state">PENDIENTE</span>
+                                            </header>
+                                            <div class="asistencia-detail__actions" aria-label="Gestionar incidencia">
+                                                <button id="asistencia_atender" class="btn asistencia-action asistencia-action--attend" type="button">ATENDER</button>
+                                                <button id="asistencia_resolver" class="btn asistencia-action asistencia-action--resolve" type="button">CERRAR INCIDENCIA</button>
+                                                <button id="asistencia_cancelar" class="btn asistencia-action asistencia-action--cancel" type="button">CANCELAR</button>
+                                                <button id="asistencia_recargar" class="btn asistencia-action asistencia-action--reload" type="button">RECARGAR PÁGINA</button>
+                                            </div>
+                                            <section class="asistencia-diagnostic" aria-labelledby="asistencia_diagnostico_title">
+                                                <header class="asistencia-diagnostic__header">
+                                                    <div>
+                                                        <strong id="asistencia_diagnostico_title">DIAGNÓSTICO EN DIRECTO</strong>
+                                                        <span id="asistencia_diagnostico_estado">Sin solicitar</span>
+                                                    </div>
+                                                    <div class="asistencia-diagnostic__session-actions">
+                                                        <button id="asistencia_diagnostico_abrir" class="btn" type="button">ABRIR DIAGNÓSTICO</button>
+                                                        <button id="asistencia_diagnostico_cerrar" class="btn" type="button" hidden="">DETENER</button>
+                                                    </div>
+                                                </header>
+                                                <p id="asistencia_diagnostico_ayuda" class="asistencia-diagnostic__consent">La musa ya autorizó temporalmente esta página al pedir ayuda y puede revocarlo cancelando. No permite escribir ni acceder a cámara, micrófono u otras aplicaciones.</p>
+                                                <div class="asistencia-diagnostic__body">
+                                                    <div id="asistencia_preview_shell" class="asistencia-preview" data-state="idle" tabindex="0" role="application" aria-label="Vista remota del teléfono; al activarse, pulsa sobre la imagen para tocar en esa posición">
+                                                        <img id="asistencia_preview" alt="Pantalla en directo de la musa seleccionada" draggable="false" hidden="">
+                                                        <div id="asistencia_preview_cursor" class="asistencia-preview__cursor" aria-hidden="true"></div>
+                                                        <div id="asistencia_preview_fallback" class="asistencia-preview__fallback">
+                                                            <span aria-hidden="true">🔒</span>
+                                                            <strong id="asistencia_preview_fallback_title">VISTA BLOQUEADA</strong>
+                                                            <span id="asistencia_preview_fallback_detail">Solicita permiso para iniciar el diagnóstico.</span>
+                                                            <dl class="asistencia-preview__facts">
+                                                                <div><dt>RUTA</dt><dd id="asistencia_diagnostico_ruta">—</dd></div>
+                                                                <div><dt>PANTALLA</dt><dd id="asistencia_diagnostico_viewport">—</dd></div>
+                                                                <div><dt>CONEXIÓN</dt><dd id="asistencia_diagnostico_conexion">—</dd></div>
+                                                            </dl>
+                                                        </div>
+                                                    </div>
+                                                    <div class="asistencia-remote" aria-label="Controles remotos limitados">
+                                                        <p>Toca directamente la vista o usa estos controles.</p>
+                                                        <div class="asistencia-remote__grid">
+                                                            <button id="asistencia_scroll_arriba" class="btn" type="button" data-help-command="scroll-up" aria-label="Desplazar hacia arriba">↑ SUBIR</button>
+                                                            <button id="asistencia_scroll_abajo" class="btn" type="button" data-help-command="scroll-down" aria-label="Desplazar hacia abajo">↓ BAJAR</button>
+                                                            <button id="asistencia_volver" class="btn" type="button" data-help-command="back">← ATRÁS</button>
+                                                            <button id="asistencia_reconectar" class="btn" type="button" data-help-command="reconnect">↻ RECONECTAR</button>
+                                                        </div>
+                                                        <span id="asistencia_ultimo_frame" class="asistencia-remote__timestamp">Sin imagen recibida</span>
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </main>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+        <tbody id="panel_teleprompter" class="panel-oculto">
+            <tr>
+                <td colspan="5">
+                    <div class="teleprompter-panel">
+                        <div class="teleprompter-panel-nav">
+                            <button id="boton_volver_representacion_teleprompter" type="button" class="btn teleprompter-back">‹ VOLVER</button>
+                        </div>
+                        <div class="tp-row tp-row--text">
+                            <div class="teleprompter-buttons">
+                                <button id="teleprompter_cargar_j1" type="button" class="btn teleprompter-cargar teleprompter-cargar--j1 teleprompter-btn-disabled" disabled="">💾 CARGAR</button>
+                                <button id="teleprompter_cargar_j2" type="button" class="btn teleprompter-cargar teleprompter-cargar--j2 teleprompter-btn-disabled" disabled="">💾 CARGAR</button>
+                            </div>
+                            <div id="teleprompter_estado_carga" class="teleprompter-status teleprompter-status--idle">Sin carga en teleprompter</div>
+                        </div>
+                        <div class="tp-pad">
+                            <div class="tp-top">
+                                <div class="tp-stack tp-stack--left">
+                                    <button id="tp_l2" class="tp-btn tp-btn--trigger tp-btn--l2" data-hold="font-down" aria-label="Disminuir tamaño de letra" data-tp-hold-active="0">L2</button>
+                                    <button id="tp_l1" class="tp-btn tp-btn--shoulder tp-btn--l1" aria-label="Inicio del texto" data-tp-hold-active="0">L1</button>
+                                </div>
+                                <div class="tp-title">TELEPROMPTER 🎬</div>
+                                <div class="tp-stack tp-stack--right">
+                                    <button id="tp_r2" class="tp-btn tp-btn--trigger tp-btn--r2" data-hold="font-up" aria-label="Aumentar tamaño de letra" data-tp-hold-active="0">R2</button>
+                                    <button id="tp_r1" class="tp-btn tp-btn--shoulder tp-btn--r1" aria-label="Final del texto" data-tp-hold-active="0">R1</button>
+                                </div>
+                            </div>
+                            <div class="tp-dpad" aria-label="Cruceta">
+                                <button id="tp_dpad_up" class="tp-btn tp-btn--up" data-hold="scroll-up" data-tp-hold-active="0">▲</button>
+                                <button id="tp_dpad_left" class="tp-btn tp-btn--left" data-hold="speed-down" data-tp-hold-active="0">◀</button>
+                                <div class="tp-dpad-center"></div>
+                                <button id="tp_dpad_right" class="tp-btn tp-btn--right" data-hold="speed-up" data-tp-hold-active="0">▶</button>
+                                <button id="tp_dpad_down" class="tp-btn tp-btn--down" data-hold="scroll-down" data-tp-hold-active="0">▼</button>
+                            </div>
+                            <div class="tp-center">
+                            </div>
+                            <div class="tp-face" aria-label="Tamaño">
+                                <button id="tp_triangle" class="tp-btn tp-btn--triangle" aria-label="Salto grande hacia abajo" data-tp-hold-active="0">△</button>
+                                <button id="tp_circle" class="tp-btn tp-btn--circle" data-hold="font-up" aria-label="Aumentar tamaño" data-tp-hold-active="0">○</button>
+                                <button id="tp_x" class="tp-btn tp-btn--cross" data-tp-hold-active="0">✕</button>
+                                <button id="tp_square" class="tp-btn tp-btn--square" data-hold="font-down" aria-label="Disminuir tamaño" data-tp-hold-active="0">□</button>
+                            </div>
+                        </div>
+                        <div class="tp-metrics">
+                            <div class="tp-meter">
+                                <div class="tp-meter-header">
+                                    <span class="tp-meter-title">TAMAÑO</span>
+                                    <span class="tp-meter-value"><strong id="teleprompter_font_size">36</strong></span>
+                                </div>
+                                <div class="tp-meter-track">
+                                    <div id="teleprompter_font_meter" class="tp-meter-fill" style="width: 29.0323%;"></div>
+                                </div>
+                                <div class="tp-meter-range">18 — 80</div>
+                            </div>
+                            <div class="tp-meter">
+                                <div class="tp-meter-header">
+                                    <span class="tp-meter-title">VELOCIDAD</span>
+                                    <span class="tp-meter-value"><strong id="teleprompter_speed">25</strong></span>
+                                </div>
+                                <div class="tp-meter-track">
+                                    <div id="teleprompter_speed_meter" class="tp-meter-fill tp-meter-fill--speed" style="width: 10.2564%;"></div>
+                                </div>
+                                <div class="tp-meter-range">5 — 200</div>
+                            </div>
+                        </div>
+                        <div class="tp-legend tp-legend--split">
+                            <div class="tp-legend-col tp-legend-col--left">
+                                <span class="tp-legend-item tp-legend-item--l1"><span class="tp-legend-icon">L1</span> Inicio</span>
+                                <span class="tp-legend-item tp-legend-item--l2"><span class="tp-legend-icon">L2</span> Tamaño -</span>
+                                <span class="tp-legend-item tp-legend-item--dpad"><span class="tp-legend-icon">◀▶</span> Velocidad</span>
+                                <span class="tp-legend-item tp-legend-item--dpad"><span class="tp-legend-icon">▲▼</span> Salto</span>
+                                <span class="tp-legend-item tp-legend-item--stick"><span class="tp-legend-icon">🕹️</span> Scroll</span>
+                            </div>
+                            <div class="tp-legend-col tp-legend-col--center">
+                                <span class="tp-legend-item tp-legend-item--x"><span class="tp-legend-icon tp-legend-x">✕</span> Pausa / Play</span>
+                                <span class="tp-legend-item tp-legend-item--triangle"><span class="tp-legend-icon">△</span> Salto ↓↓</span>
+                            </div>
+                            <div class="tp-legend-col tp-legend-col--right">
+                                <span class="tp-legend-item tp-legend-item--r1"><span class="tp-legend-icon">R1</span> Final</span>
+                                <span class="tp-legend-item tp-legend-item--r2"><span class="tp-legend-icon">R2</span> Tamaño +</span>
+                                <span class="tp-legend-item tp-legend-item--square"><span class="tp-legend-icon">□</span> Tamaño -</span>
+                                <span class="tp-legend-item tp-legend-item--circle"><span class="tp-legend-icon">○</span> Tamaño +</span>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+        <tbody id="panel_creditos" class="panel-oculto">
+            <tr>
+                <td colspan="5">
+                    <div class="creditos-panel">
+                        <div class="creditos-panel-header">
+                            <h3 class="creditos-panel-title" data-i18n="control.credits.title">CRÉDITOS DEL SHOW</h3>
+                            <p class="creditos-panel-help" data-i18n="control.credits.help">Editar estos campos actualiza el pase de créditos del espectador.</p>
+                        </div>
+                        <div class="creditos-form-grid">
+                            <label class="creditos-field" for="credito_escritxr_rojo">
+                                <span data-i18n="control.credits.field.escritxr_rojo">ESCRITXR ROJO</span>
+                                <input id="credito_escritxr_rojo" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr rojo" data-i18n-attr="placeholder:control.credits.placeholder.escritxr_rojo" autocomplete="off" value="ÁNGELA BUENO">
+                            </label>
+                            <label class="creditos-field" for="credito_escritxr_azul">
+                                <span data-i18n="control.credits.field.escritxr_azul">ESCRITXR AZUL</span>
+                                <input id="credito_escritxr_azul" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr azul" data-i18n-attr="placeholder:control.credits.placeholder.escritxr_azul" autocomplete="off" value="MIRIAM DEL VALLE">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_azul_1">
+                                <span data-i18n="control.credits.field.interprete_azul_1">INTÉRPRETE AZUL 1</span>
+                                <input id="credito_interprete_azul_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre intérprete azul 1" data-i18n-attr="placeholder:control.credits.placeholder.interprete_azul_1" autocomplete="off" value="PAULA CM">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_azul_2">
+                                <span data-i18n="control.credits.field.interprete_azul_2">INTÉRPRETE AZUL 2</span>
+                                <input id="credito_interprete_azul_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre intérprete azul 2" data-i18n-attr="placeholder:control.credits.placeholder.interprete_azul_2" autocomplete="off" value="DIEGO VALVERDE">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_rojo_1">
+                                <span data-i18n="control.credits.field.interprete_rojo_1">INTÉRPRETE ROJO 1</span>
+                                <input id="credito_interprete_rojo_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre intérprete rojo 1" data-i18n-attr="placeholder:control.credits.placeholder.interprete_rojo_1" autocomplete="off" value="ANA SEMPERE">
+                            </label>
+                            <label class="creditos-field" for="credito_interprete_rojo_2">
+                                <span data-i18n="control.credits.field.interprete_rojo_2">INTÉRPRETE ROJO 2</span>
+                                <input id="credito_interprete_rojo_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre intérprete rojo 2" data-i18n-attr="placeholder:control.credits.placeholder.interprete_rojo_2" autocomplete="off" value="PABLO PINEÑO">
+                            </label>
+                            <label class="creditos-field" for="credito_programacion">
+                                <span data-i18n="control.credits.field.programacion">PROGRAMACIÓN</span>
+                                <input id="credito_programacion" class="credito-input" type="text" maxlength="80" placeholder="Programación" data-i18n-attr="placeholder:control.credits.placeholder.programacion" autocomplete="off" value="DAVID VIÑAS">
+                            </label>
+                            <label class="creditos-field" for="credito_dramaturgia">
+                                <span data-i18n="control.credits.field.dramaturgia">DRAMATURGIA</span>
+                                <input id="credito_dramaturgia" class="credito-input" type="text" maxlength="80" placeholder="Dramaturgia" data-i18n-attr="placeholder:control.credits.placeholder.dramaturgia" autocomplete="off" value="ÁNGELA BUENO">
+                            </label>
+                            <label class="creditos-field" for="credito_iluminacion">
+                                <span data-i18n="control.credits.field.iluminacion">ILUMINACIÓN</span>
+                                <input id="credito_iluminacion" class="credito-input" type="text" maxlength="80" placeholder="Iluminación" data-i18n-attr="placeholder:control.credits.placeholder.iluminacion" autocomplete="off" value="TERESA TIMPER">
+                            </label>
+                            <label class="creditos-field" for="credito_musica">
+                                <span data-i18n="control.credits.field.musica">MÚSICA</span>
+                                <input id="credito_musica" class="credito-input" type="text" maxlength="80" placeholder="Música" data-i18n-attr="placeholder:control.credits.placeholder.musica" autocomplete="off" value="ARNY RAMÍREZ">
+                            </label>
+                            <label class="creditos-field" for="credito_voz_off">
+                                <span data-i18n="control.credits.field.voz_off">VOZ EN OFF</span>
+                                <input id="credito_voz_off" class="credito-input" type="text" maxlength="80" placeholder="Voz en off" data-i18n-attr="placeholder:control.credits.placeholder.voz_off" autocomplete="off" value="NINACHASKA ZL">
+                            </label>
+                        </div>
+                        <label class="creditos-field creditos-field--full" for="credito_agradecimientos">
+                            <span data-i18n="control.credits.field.agradecimientos">AGRADECIMIENTOS</span>
+                            <textarea id="credito_agradecimientos" class="credito-textarea" rows="4" maxlength="420" placeholder="Agradecimientos del show" data-i18n-attr="placeholder:control.credits.placeholder.agradecimientos">SALA EXLÍMITE
+JUAN CEACERO</textarea>
+                        </label>
+                        <p class="creditos-produccion" data-i18n="control.credits.production">UNA PRODUCCIÓN DE SUTURA TEATRO</p>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+        <tbody id="panel_parametros" class="control-params-panel">
+            <tr class="parametros-title-row">
+                <td colspan="4">
+                    <div id="control_title_parameters" class="control-group-title control-group-title--parametros">
+                        <span id="control_title_parameters_text" class="control-params-title-text">⚙️ PARÁMETROS</span>
+                        <button id="boton_colapsar_parametros" class="control-params-collapse-btn" type="button" aria-expanded="true" aria-controls="panel_parametros" title="Contraer parámetros">›</button>
+                    </div>
+                </td>
+            </tr>
+            <tr class="parametros-frase-row">
+                <td colspan="4">
+                    <div class="parametros-top-grid">
+                        <div class="control-language" role="group" aria-labelledby="selector_idioma_label">
+                            <span id="selector_idioma_label" data-i18n="options.language_label">IDIOMA</span>
+                            <select id="selector_idioma_control" tabindex="-1" aria-hidden="true" aria-label="Idioma">
+                                <option value="es" selected="">Español</option>
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                            </select>
+                        <div class="control-language-ui"><button type="button" class="control-language-button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="selector_idioma_label"><span class="control-language-current">🇪🇸 ES</span></button><div class="control-language-list" role="listbox" aria-label="Idioma"><button type="button" class="control-language-option is-selected" data-value="es" role="option" aria-selected="true" aria-label="Español">🇪🇸 ES</button><button type="button" class="control-language-option" data-value="en" role="option" aria-selected="false" aria-label="English">🇬🇧 EN</button><button type="button" class="control-language-option" data-value="fr" role="option" aria-selected="false" aria-label="Français">🇫🇷 FR</button></div></div></div>
+                        <label id="param_frase_final_j1" class="param-frase-final param-frase-final--j1" for="frase_final_j1" data-final-phrase-player="1" aria-hidden="false">
+                            <span id="frase_final_heading_j1" class="frase-final-heading">FRASE FINAL</span>
+                            <span id="frase_final_label_j1" class="frase_final_label frase_final_label--j1">ESCRITXR 1</span>
+                            <span id="frase_final_musa_j1" class="frase-final-musa-chip" title="Inspiración de BOT 11">✦ BOT 11</span>
+                            <span class="frase_final_editor frase_final_editor--j1 is-saved">
+                                <input id="frase_final_j1" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false" value="azotea">
+                                <span id="frase_final_estado_j1" class="frase-final-save-state is-saved" aria-live="polite" aria-label="Frase final guardada">✓</span>
+                            </span>
+                        </label>
+                        <label id="param_frase_final_j2" class="param-frase-final param-frase-final--j2" for="frase_final_j2" data-final-phrase-player="2" aria-hidden="false">
+                            <span id="frase_final_heading_j2" class="frase-final-heading">FRASE FINAL</span>
+                            <span id="frase_final_label_j2" class="frase_final_label frase_final_label--j2">ESCRITXR 2</span>
+                            <span id="frase_final_musa_j2" class="frase-final-musa-chip" title="Inspiración de BOT 21">✦ BOT 21</span>
+                            <span class="frase_final_editor frase_final_editor--j2 is-saved">
+                                <input id="frase_final_j2" class="frase_final" placeholder="Escribe la frase final..." autocomplete="off" spellcheck="false" value="estación">
+                                <span id="frase_final_estado_j2" class="frase-final-save-state is-saved" aria-live="polite" aria-label="Frase final guardada">✓</span>
+                            </span>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <br>
+                    <label for="tiempo_modos" data-i18n="control.param.level">NIVEL</label>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button">-</button>
+                        <input type="number" id="tiempo_modos" name="tiempo_modos" class="parametro" min="1" max="3600" step="1" value="300">
+                        <button type="button" class="spinner-button plus-button">+</button>
+                    </div>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
+                </td>
+                <td class="param-start" hidden="" aria-hidden="true">
+                    <br>
+                    <label for="tiempo_minutos" data-i18n="control.param.start">INICIO</label><br>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button">-</button>
+                        <input type="number" id="tiempo_minutos" name="tiempo_minutos" class="parametro_inicial" min="0" max="60" step="1" value="5">
+                        <button type="button" class="spinner-button plus-button">+</button>
+                    </div>
+                    <span class="parametro_inicial" data-i18n="control.unit.minutes_short">mins.</span>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button">-</button>
+                        <input type="number" id="tiempo_segundos" name="tiempo_segundos" class="parametro_inicial" min="0" max="59" step="5" value="0">
+                        <button type="button" class="spinner-button plus-button">+</button>
+                    </div>
+                    <span class="parametro_inicial" data-i18n="control.unit.seconds_short">segs.</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <br>
+                    <label for="tiempo_cambio_letra" data-i18n="control.param.letter_change">CAMBIO LETRA</label>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button">-</button>
+                        <input type="number" id="tiempo_cambio_letra" name="tiempo_cambio_letra" class="parametro" min="1" max="360" step="1" value="60">
+                        <button type="button" class="spinner-button plus-button">+</button>
+                    </div>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
+                </td>
+                <td>
+                    <br>
+                    <label for="tiempo_cambio_palabras" data-i18n="control.param.word_change">CAMBIO PALABRA</label>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button">-</button>
+                        <input type="number" id="tiempo_cambio_palabras" name="tiempo_cambio_palabras" class="parametro" min="1" max="360" step="1" value="20">
+                        <button type="button" class="spinner-button plus-button">+</button>
+                    </div>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
+                </td>
+                <td>
+                    <br>
+                    <label for="limite_tiempo_inspiracion" data-i18n="control.param.muse_limit">LÍMITE PALABRAS MUSAS</label>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button">-</button>
+                        <input type="number" id="limite_tiempo_inspiracion" name="limite_tiempo_inspiracion" class="parametro" min="5" max="120" step="1" value="30">
+                        <button type="button" class="spinner-button plus-button">+</button>
+                    </div>
+                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
+                </td>
+                <td class="spectator-scale-param">
+                    <br>
+                    <label for="escala_espectador" data-i18n="control.param.spectator_scale">TAMAÑO ESPECTADOR</label>
+                    <div class="spectator-scale-slider-control">
+                        <input type="range" id="escala_espectador" name="escala_espectador" class="parametro spectator-scale-range" min="82" max="128" step="1" value="100">
+                        <span id="escala_espectador_valor" class="spectator-scale-value">100%</span>
+                    </div>
+                </td>
+            </tr>
+            <tr class="parametros-modos-row">
+                <td colspan="4">
+                    <div class="parametros-bottom-actions">
+                        <div id="parametros_modos_dropdown" class="parametros-modos-dropdown">
+                            <button id="boton_modos_dropdown" class="btn parametros-modos-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="parametros_modos_menu">
+                                <span class="parametros-modos-toggle-label">NIVELES ACTIVOS</span>
+                                <span id="resumen_modos_control" class="parametros-modos-summary">6 activos</span>
+                                <span class="parametros-modos-caret" aria-hidden="true">▾</span>
+                            </button>
+                            <div id="parametros_modos_menu" class="parametros-modos-menu" hidden="">
+                                <form id="listaModosForm" class="parametros-modos-form">
+                                    <table>
+                                        <tbody><tr id="listaModos"><td style="text-align: center;"><input type="checkbox" id="modo-0" name="modos" value="letra bendita" checked=""><label for="modo-0" style="display: block; color: rgb(107, 255, 131); padding-left: 0.2vw; padding-right: 0.2vw;">LETRA BENDITA</label></td><td style="text-align: center;"><input type="checkbox" id="modo-1" name="modos" value="letra prohibida" checked=""><label for="modo-1" style="display: block; color: rgb(255, 143, 160); padding-left: 0.2vw; padding-right: 0.2vw;">LETRA MALDITA</label></td><td style="text-align: center;"><input type="checkbox" id="modo-2" name="modos" value="tertulia" checked=""><label for="modo-2" style="display: block; color: rgb(100, 232, 255); padding-left: 0.2vw; padding-right: 0.2vw;">TERTULIA</label></td><td style="text-align: center;"><input type="checkbox" id="modo-3" name="modos" value="palabras bonus" checked=""><label for="modo-3" style="display: block; color: rgb(255, 214, 90); padding-left: 0.2vw; padding-right: 0.2vw;">PALABRAS BENDITAS</label></td><td style="text-align: center;"><input type="checkbox" id="modo-4" name="modos" value="palabras prohibidas" checked=""><label for="modo-4" style="display: block; color: rgb(255, 113, 200); padding-left: 0.2vw; padding-right: 0.2vw;">PALABRAS MALDITAS</label></td><td style="text-align: center;"><input type="checkbox" id="modo-5" name="modos" value="frase final" checked=""><label for="modo-5" style="display: block; color: rgb(255, 173, 66); padding-left: 0.2vw; padding-right: 0.2vw;">FRASE FINAL</label></td></tr>
+                                    </tbody></table>
+                                </form>
+                            </div>
+                        </div>
+                        <button id="boton_borrar_texto_guardado" class="btn parametros-delete-toggle" type="button" data-active="0" aria-pressed="false" title="La siguiente partida recuperara el ultimo texto guardado.">BORRAR TEXTO</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="control-status-strip">
+        <span id="control_clock" class="control-status-time">18:53:26</span>
+        <span class="control-status-separator"></span>
+        <span class="control-status-match"><span class="control-status-dot"></span> PARTIDA EN CURSO</span>
+        <span class="control-status-separator"></span>
+        <span class="control-status-id">ID DE PARTIDA: <strong id="control_match_id">LOCAL</strong></span>
+        <button id="boton_ver_logs" class="btn logs-toggle-btn" type="button">☰ VER LOGS</button>
+    </div>
+    <div id="panel_logs_control" class="logs-panel panel-oculto" aria-live="polite">
+        <div class="logs-panel-header">
+            <span>LOGS DE CONTROL</span>
+            <button class="btn logs-clear-btn" type="button">LIMPIAR</button>
+        </div>
+        <pre id="logs_control_output" class="logs-output">[18:53:17] INFO Control conectado al servidor
+[18:53:17] INFO Réplica de Control conectada en modo solo lectura
+[18:53:17] LOG LIMITE_TIEMPO_INSPIRACION: 30
+[18:53:17] LOG TIEMPO_CAMBIO_PALABRAS: 20000
+[18:53:17] LOG ESCALA_UI_ESPECTADOR: 1
+[18:53:17] LOG TIEMPO_CAMBIO_LETRA: 60000
+[18:53:17] LOG TIEMPO_MODOS: 300
+[18:53:17] LOG LIMITE_TIEMPO_INSPIRACION: 30
+[18:53:17] LOG TIEMPO_CAMBIO_PALABRAS: 20000
+[18:53:17] LOG ESCALA_UI_ESPECTADOR: 1
+[18:53:17] LOG TIEMPO_CAMBIO_LETRA: 60000
+[18:53:17] LOG TIEMPO_MODOS: 300
+[18:53:17] LOG LISTA_MODOS: ["letra bendita","letra prohibida","tertulia","palabras bonus","palabras prohibidas","frase final"]</pre>
+    </div>
+</div>
+<div id="contenedor">
+        <div class="writer-card writer-card--j1">
+            <div class="writer-card-header">
+                <div class="writer-title-group">
+                    <span id="estado_player_1" class="conexion-dot conexion-dot--writer conexion-dot--ok conexion-dot--ping" data-status="ok"></span>
+                    <div class="writer-title-stack">
+                        <div class="writer-name-row writer-name-row--j1">
+                            <input style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre" value="ESCRITXR 1">
+                        </div>
+                        <span class="writer-connection writer-connection--j1">
+                            <button id="boton_reiniciar_escritxr_1" class="remote-restart-btn writer-restart-btn writer-restart-btn--j1" type="button" aria-label="Reiniciar escritxr 1" data-restart-role="escritxr1" aria-disabled="false">↻</button>
+                            <span id="estado_player_1_label" class="writer-connection-label">ESCRITXR 1</span>
+                            <span id="estado_player_1_texto" class="remote-status-state writer-connection-state">CONECTADO</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="writer-header-actions writer-header-actions--j1">
+                    <div id="metadatos_control_1" class="writer-header-stats marcador-equipo marcador-equipo-1">
+                        <p id="tiempo" hidden="" aria-hidden="true" style="display: none;"></p>
+                        <span class="writer-stat writer-stat--words"><span class="writer-stat-icon">✎</span><span id="puntos" class="puntos">0 palabras</span></span>
+                        <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon">🎨</span><span id="musas" class="musas-total">2 musas</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="writer-text-shell writer-text-shell--j1">
+                <div id="line_numbers_j1" class="line-numbers" aria-hidden="true">1</div>
+                <div disabled="" id="texto" rows="1" spellcheck="false" class="textarea writer-textarea"></div>
+            </div>
+            <div align="center">
+                <h1 id="feedback1" class="feedback1"></h1>
+                <h2 id="puntuacion_final1"></h2>
+            </div>
+        </div>
+        <div class="level-card">
+            <div class="level-card-title">NIVEL</div>
+            <div class="level-card-current">
+                <span>ACTUAL</span>
+                <p id="display_modo" class="display_modo" style="color: white;">Ninguno</p>
+            </div>
+            <div class="level-card-duration">
+                <span>TIEMPO RESTANTE</span>
+                <p id="tiempo_modos_secs" class="tiempo">00:00</p>
+            </div>
+            <button id="boton_fin_partida" class="btn btn-fin" type="button">⏹️ FIN PARTIDA</button>
+            <div id="level_status_witnesses" class="level-status-witnesses" aria-label="Estado de desventajas e inspiracion de musas">
+                <div id="control_desventaja_activa" class="level-status-witness level-status-witness--disadvantage" data-active="0" data-team="" title="Sin desventaja activa">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span id="control_desventaja_activa_icon" class="level-status-witness__icon" aria-hidden="true">-</span>
+                    <span id="control_desventaja_activa_time" class="level-status-witness__time">--</span>
+                </div>
+                <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Palabra de musas para Escritxr 1" title="Sin palabra de musas activa para escritxr azul. Cola: 0">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span class="level-status-witness__icon" aria-hidden="true">🎨</span>
+                    <span class="level-status-witness__content">
+                        <span id="control_palabra_musa_j1_word" class="level-status-witness__word">-</span>
+                        <span id="control_palabra_musa_j1_author" class="level-status-witness__author" hidden="" title=""></span>
+                    </span>
+                    <span class="level-status-witness__meta">
+                        <span id="control_palabra_musa_j1_time" class="level-status-witness__time">--</span>
+                        <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j1_queue">0</span></span>
+                    </span>
+                </div>
+                <div id="control_palabra_musa_j2" class="level-status-witness level-status-witness--muse-word level-status-witness--j2" data-active="0" data-queued="0" data-team="2" aria-label="Palabra de musas para Escritxr 2" title="Sin palabra de musas activa para escritxr rojo. Cola: 0">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span class="level-status-witness__icon" aria-hidden="true">🎨</span>
+                    <span class="level-status-witness__content">
+                        <span id="control_palabra_musa_j2_word" class="level-status-witness__word">-</span>
+                        <span id="control_palabra_musa_j2_author" class="level-status-witness__author" hidden="" title=""></span>
+                    </span>
+                    <span class="level-status-witness__meta">
+                        <span id="control_palabra_musa_j2_time" class="level-status-witness__time">--</span>
+                        <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j2_queue">0</span></span>
+                    </span>
+                </div>
+            </div>
+            <div class="level-sequence" aria-label="Secuencia de niveles">
+                <span data-mode="letra bendita">LB</span>
+                <span data-mode="letra prohibida">LM</span>
+                <span data-mode="tertulia">T</span>
+                <span data-mode="palabras bonus">PB</span>
+                <span data-mode="palabras prohibidas">PM</span>
+                <span data-mode="frase final">F</span>
+            </div>
+        </div>
+        <div class="writer-card writer-card--j2">
+            <div class="writer-card-header">
+                <div class="writer-title-group">
+                    <span id="estado_player_2" class="conexion-dot conexion-dot--writer conexion-dot--ok conexion-dot--ping" data-status="ok"></span>
+                    <div class="writer-title-stack">
+                        <div class="writer-name-row writer-name-row--j2">
+                            <input style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre" value="ESCRITXR 2">
+                        </div>
+                        <span class="writer-connection writer-connection--j2">
+                            <button id="boton_reiniciar_escritxr_2" class="remote-restart-btn writer-restart-btn writer-restart-btn--j2" type="button" aria-label="Reiniciar escritxr 2" data-restart-role="escritxr2" aria-disabled="false">↻</button>
+                            <span id="estado_player_2_label" class="writer-connection-label">ESCRITXR 2</span>
+                            <span id="estado_player_2_texto" class="remote-status-state writer-connection-state">CONECTADO</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="writer-header-actions writer-header-actions--j2">
+                    <div id="metadatos_control_2" class="writer-header-stats marcador-equipo marcador-equipo-2">
+                        <p id="tiempo1" hidden="" aria-hidden="true" style="display: none;"></p>
+                        <span class="writer-stat writer-stat--words"><span class="writer-stat-icon">✎</span><span id="puntos1" class="puntos">0 palabras</span></span>
+                        <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon">🎨</span><span id="musas1" class="musas-total">2 musas</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="writer-text-shell writer-text-shell--j2">
+                <div id="line_numbers_j2" class="line-numbers" aria-hidden="true">1</div>
+                <div disabled="" id="texto1" rows="1" spellcheck="false" class="textarea writer-textarea"></div>
+            </div>
+            <div align="center">
+                <h1 id="feedback2" class="feedback2"></h1>
+                <h2 id="puntuacion_final2"></h2>
+            </div>
+        </div>
+    </div>
+        <table>
+            <tbody><tr>
+            </tr><tr>
+                <th>
+                    <p id="explicación" class="explicación"></p>
+                </th>
+            </tr>
+            <tr><th>
+                <p id="palabra" class="palabra"></p>
+            </th>
+            </tr>
+            <tr>
+                <th>
+                    <p id="definicion" class="definicion"></p>
+                </th>
+            </tr>
+        </tbody></table>
+<!-- Code injected by live-server -->
+
+
+
+    
+    
+    
+
+
+<section id="scrib_competition_hud" class="scrib-competition-hud" aria-live="polite" data-role="control" data-active="0" data-clock="0">
+      <div class="scrib-competition-shell">
+        <div class="scrib-competition-top">
+          <span class="scrib-competition-mode">ESPERANDO NIVEL</span>
+          <span class="scrib-competition-clock">00:00</span>
+          <span class="scrib-competition-criterion">MARCADOR DE INSPIRACIÓN</span>
+        </div>
+        <div class="scrib-competition-scoreline">
+          <strong class="scrib-competition-score scrib-competition-score--1">0</strong>
+          <div class="scrib-competition-bar">
+            <span class="scrib-competition-segment scrib-competition-segment--1"></span>
+            <span class="scrib-competition-segment scrib-competition-segment--2"></span>
+            <span class="scrib-competition-center"></span>
+            <span class="scrib-competition-curse" aria-label="Desventaja"></span>
+          </div>
+          <strong class="scrib-competition-score scrib-competition-score--2">0</strong>
+        </div>
+        <span class="scrib-competition-streak scrib-competition-streak--1"></span>
+        <span class="scrib-competition-streak scrib-competition-streak--2"></span>
+      </div></section>
+
+
+
+</body></html>

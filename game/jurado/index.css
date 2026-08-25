@@ -616,7 +616,7 @@ input {
     color: var(--writer-accent);
 }
 
-.jury-compact-life {
+.jury-compact-pulses {
     display: inline-flex;
     align-items: center;
     gap: 0.38rem;
@@ -624,7 +624,7 @@ input {
     min-width: 0;
 }
 
-.jury-health-label {
+.jury-pulses-label {
     color: color-mix(in srgb, var(--writer-accent), white 28%);
     font-size: clamp(0.72rem, 0.86vw, 1rem);
     line-height: 1;
@@ -632,8 +632,8 @@ input {
     text-shadow: 0.06em 0.06em #000;
 }
 
-.jury-tiempo-vida {
-    --vida-pct: 0%;
+.jury-pulse-meter {
+    --pulse-pct: 0%;
     position: relative;
     width: 100%;
     height: 0.72rem;
@@ -647,15 +647,15 @@ input {
         linear-gradient(
             90deg,
             color-mix(in srgb, var(--vida-color), white 18%) 0%,
-            var(--vida-color) var(--vida-pct),
-            rgba(255, 255, 255, 0.12) var(--vida-pct),
+            var(--vida-color) var(--pulse-pct),
+            rgba(255, 255, 255, 0.12) var(--pulse-pct),
             rgba(255, 255, 255, 0.12) 100%
         );
     box-shadow: none;
     color: transparent;
 }
 
-.jury-vida-label {
+.jury-pulse-value {
     position: absolute;
     width: 1px;
     height: 1px;

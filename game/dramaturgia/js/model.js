@@ -35,10 +35,10 @@
 
     const MODE_LABELS = Object.freeze({
         "letra bendita": "Letra bendita",
-        "letra prohibida": "Letra prohibida",
+        "letra prohibida": "Letra maldita",
         "tertulia": "Tertulia",
         "palabras bonus": "Palabras benditas",
-        "palabras prohibidas": "Palabras prohibidas",
+        "palabras prohibidas": "Palabras malditas",
         "frase final": "Frase final"
     });
 
@@ -117,143 +117,31 @@
             label: "Frase final · cerrado",
             order: 5
         }),
-        Object.freeze({
-            id: "level-letra-bendita",
+        ...[
+            ["level-letra-bendita-feedback", "level", "letra bendita", "feedback", "Desventaja inicial"],
+            ["level-letra-bendita", "level", "letra bendita", "stable", "Letra bendita"],
+            ["competition-letra-bendita", "competition", "letra bendita", "score", "Marcador · Letra bendita"],
+            ["level-letra-prohibida-feedback", "level", "letra prohibida", "feedback", "Desventaja inicial"],
+            ["level-letra-prohibida", "level", "letra prohibida", "stable", "Letra maldita"],
+            ["competition-letra-prohibida", "competition", "letra prohibida", "score", "Marcador · Letra maldita"],
+            ["level-tertulia", "level", "tertulia", "stable", "Tertulia"],
+            ["level-palabras-bonus-feedback", "level", "palabras bonus", "feedback", "Desventaja inicial"],
+            ["level-palabras-bonus", "level", "palabras bonus", "stable", "Palabras benditas"],
+            ["competition-palabras-bonus", "competition", "palabras bonus", "score", "Marcador · Palabras benditas"],
+            ["level-palabras-prohibidas-feedback", "level", "palabras prohibidas", "feedback", "Desventaja inicial"],
+            ["level-palabras-prohibidas", "level", "palabras prohibidas", "stable", "Palabras malditas"],
+            ["competition-palabras-prohibidas", "competition", "palabras prohibidas", "score", "Marcador · Palabras malditas"],
+            ["level-frase-final", "level", "frase final", "stable", "Frase final"]
+        ].map(([id, kind, mode, moment, label], index) => Object.freeze({
+            id,
             section: "niveles",
             sectionLabel: "Niveles",
-            kind: "level",
-            mode: "letra bendita",
-            moment: "stable",
-            label: "Letra bendita",
-            order: 6
-        }),
-        Object.freeze({
-            id: "vote-letra-bendita",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "voting",
-            afterMode: "letra bendita",
-            label: "Votación de Musa",
-            order: 7
-        }),
-        Object.freeze({
-            id: "level-letra-prohibida-feedback",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "letra prohibida",
-            moment: "feedback",
-            label: "Desventaja recibida",
-            order: 8
-        }),
-        Object.freeze({
-            id: "level-letra-prohibida",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "letra prohibida",
-            moment: "stable",
-            label: "Letra prohibida",
-            order: 9
-        }),
-        Object.freeze({
-            id: "level-tertulia",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "tertulia",
-            moment: "stable",
-            label: "Tertulia",
-            order: 10
-        }),
-        Object.freeze({
-            id: "vote-letra-prohibida",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "voting",
-            afterMode: "letra prohibida",
-            operationalAfterMode: "tertulia",
-            label: "Votación de Musa",
-            order: 11
-        }),
-        Object.freeze({
-            id: "level-palabras-bonus-feedback",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "palabras bonus",
-            moment: "feedback",
-            label: "Desventaja recibida",
-            order: 12
-        }),
-        Object.freeze({
-            id: "level-palabras-bonus",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "palabras bonus",
-            moment: "stable",
-            label: "Palabras benditas",
-            order: 13
-        }),
-        Object.freeze({
-            id: "vote-palabras-bonus",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "voting",
-            afterMode: "palabras bonus",
-            label: "Votación de Musa",
-            order: 14
-        }),
-        Object.freeze({
-            id: "level-palabras-prohibidas-feedback",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "palabras prohibidas",
-            moment: "feedback",
-            label: "Desventaja recibida",
-            order: 15
-        }),
-        Object.freeze({
-            id: "level-palabras-prohibidas",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "palabras prohibidas",
-            moment: "stable",
-            label: "Palabras prohibidas",
-            order: 16
-        }),
-        Object.freeze({
-            id: "vote-palabras-prohibidas",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "voting",
-            afterMode: "palabras prohibidas",
-            label: "Votación de Musa",
-            order: 17
-        }),
-        Object.freeze({
-            id: "level-frase-final-feedback",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "frase final",
-            moment: "feedback",
-            label: "Desventaja recibida",
-            order: 18
-        }),
-        Object.freeze({
-            id: "level-frase-final",
-            section: "niveles",
-            sectionLabel: "Niveles",
-            kind: "level",
-            mode: "frase final",
-            moment: "stable",
-            label: "Frase final",
-            order: 19
-        }),
+            kind,
+            mode,
+            moment,
+            label,
+            order: 6 + index
+        })),
         Object.freeze({
             id: "representation-preparation",
             section: "representacion",
@@ -345,8 +233,8 @@
         if (/escena|actor|intérprete|interprete|teleprompter|espectador/.test(raw)) return "escena";
         if (/escrit/.test(raw) && player === 2) return "escritxr2";
         if (/escrit/.test(raw) && player === 1) return "escritxr1";
-        if (player === 2 && /texto|escrit|resurre/.test(String(event.tipo || event.kind || ""))) return "escritxr2";
-        if (player === 1 && /texto|escrit|resurre/.test(String(event.tipo || event.kind || ""))) return "escritxr1";
+        if (player === 2 && /texto|escrit/.test(String(event.tipo || event.kind || ""))) return "escritxr2";
+        if (player === 1 && /texto|escrit/.test(String(event.tipo || event.kind || ""))) return "escritxr1";
         return "sistema";
     }
 
@@ -508,6 +396,11 @@
         ) {
             store.current.temporizador = previousCurrent.temporizador;
         }
+        ["reloj_partida", "competicion_ronda"].forEach((key) => {
+            if (!store.current[key] && previousCurrent[key] && typeof previousCurrent[key] === "object") {
+                store.current[key] = previousCurrent[key];
+            }
+        });
         const rawEvents = Array.isArray(snapshot.eventos)
             ? snapshot.eventos
             : (Array.isArray(snapshot.events) ? snapshot.events : []);
@@ -560,8 +453,21 @@
                 musas.contador = data;
                 break;
             }
-            case "votacion_ventaja_estado":
-                current.votacion_ventaja = data;
+            case "competicion_ronda_estado":
+                current.competicion_ronda = data;
+                break;
+            case "competicion_ronda_punto":
+                if (data.estado && typeof data.estado === "object") current.competicion_ronda = data.estado;
+                break;
+            case "competicion_cambio_lider": {
+                const competicion = ensureCurrentObject(store, "competicion_ronda");
+                competicion.lider = integer(data.lider, 0) || null;
+                competicion.desventaja_player = integer(data.desventaja_player, 0) || null;
+                competicion.desventaja = safeText(data.desventaja, 20);
+                break;
+            }
+            case "reloj_partida_estado":
+                current.reloj_partida = data;
                 break;
             case "teleprompter_state": {
                 const teleprompter = ensureCurrentObject(store, "teleprompter");
@@ -946,6 +852,18 @@
             if (descriptor.voting || disadvantage) return 0;
             return 100 + (explicitModeEvent(descriptor, expected) ? 100 : 0)
                 + (descriptorHasPhase(descriptor, "juego") ? 10 : 0);
+        }
+        if (milestone.kind === "competition") {
+            const expected = journeyMode(milestone.mode);
+            const scoreEvent = descriptor.events.find((event) => {
+                const type = journeyKey(event.tipo || event.kind);
+                const facts = eventFacts(event);
+                return type === "competicion ronda"
+                    && journeyMode(event.modo || event.mode || facts.modo || facts.mode) === expected;
+            });
+            if (!scoreEvent) return 0;
+            const facts = eventFacts(scoreEvent);
+            return facts.activa === false ? 120 : 230;
         }
         if (milestone.kind === "voting") {
             const voting = descriptor.voting || votingCheckpoint(descriptor.checkpoint);
@@ -1391,7 +1309,6 @@
         const plain = typeof rawText.plano === "string"
             ? safeText(rawText.plano, 50000)
             : editorPlainText(rawText.html ?? rawText);
-        const life = rawStats.vida && typeof rawStats.vida === "object" ? rawStats.vida : {};
         return {
             id,
             nombre: safeText(
@@ -1401,30 +1318,33 @@
             texto: plain,
             palabras: Math.max(0, integer(rawStats.palabrasTotal, plain ? plain.split(/\s+/).filter(Boolean).length : 0)),
             ritmo: Math.max(0, Number(rawStats.ritmoPpm) || 0),
-            vida: Math.max(0, Number(life.actual) || 0),
+            pulsaciones: Math.max(0, integer(rawStats.pulsacionesTotal, 0)),
             musas: Math.max(0, integer(museCount, 0))
         };
     }
 
     function currentSummary(snapshot = {}) {
         const partida = snapshot.partida && typeof snapshot.partida === "object" ? snapshot.partida : {};
-        const timer = snapshot.temporizador && typeof snapshot.temporizador === "object" ? snapshot.temporizador : {};
+        const timer = snapshot.reloj_partida && typeof snapshot.reloj_partida === "object"
+            ? snapshot.reloj_partida
+            : (snapshot.temporizador && typeof snapshot.temporizador === "object" ? snapshot.temporizador : {});
+        const competition = snapshot.competicion_ronda && typeof snapshot.competicion_ronda === "object"
+            ? snapshot.competicion_ronda
+            : {};
         const teleprompter = snapshot.teleprompter && typeof snapshot.teleprompter === "object"
             ? snapshot.teleprompter.state || {}
             : {};
         const spectatorSource = snapshot.espectador || snapshot.vista_espectador;
         const spectator = spectatorSource && typeof spectatorSource === "object" ? spectatorSource : {};
-        const vote = snapshot.votacion_ventaja && typeof snapshot.votacion_ventaja === "object"
-            ? snapshot.votacion_ventaja
-            : {};
         const phase = phaseFromSnapshot(snapshot);
         const remainingAtReceipt = Math.max(0, integer(
-            timer.tiempo_restante_modo_segundos
+            timer.tiempo_restante_segundos
+            ?? timer.tiempo_restante_modo_segundos
             ?? timer.segundos_restantes
             ?? timer.remaining_seconds,
             0
         ));
-        const timerReference = timestamp(timer.recibido_en_ts || timer.ts, 0);
+        const timerReference = timestamp(timer.now || timer.recibido_en_ts || timer.ts, 0);
         const elapsedSinceTimer = timerReference
             ? Math.max(0, Math.floor((Date.now() - timerReference) / 1000))
             : 0;
@@ -1439,7 +1359,14 @@
             spectatorMode: safeText(spectator.modo || "", 80),
             teleprompterVisible: Boolean(teleprompter.visible),
             teleprompterSource: integer(teleprompter.source, 0),
-            voteActive: Boolean(vote.activa),
+            voteActive: false,
+            score: {
+                1: Number(competition.marcador && competition.marcador[1]) || 0,
+                2: Number(competition.marcador && competition.marcador[2]) || 0
+            },
+            leader: integer(competition.lider, 0) || null,
+            disadvantagePlayer: integer(competition.desventaja_player, 0) || null,
+            disadvantage: safeText(competition.desventaja, 20),
             writer1: currentWriter(snapshot, 1),
             writer2: currentWriter(snapshot, 2)
         };

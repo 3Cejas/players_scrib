@@ -140,15 +140,6 @@ function mostrarTextoCompleto(boton) {
   }
 }
 
-function elegir_ventaja_publico(boton) {
-  console.log("Elegida ventaja " + boton.value);
-  voto = boton.value;
-  socket.emit('enviar_voto_ventaja', voto);
-  recordatorio.innerHTML = "<span style='color: green;'>Has votado por la ventaja " + voto + ".</span>";
-  votando = false;
-  sincro = 0;
-  socket.emit('pedir_nombre');
-}
 function toNormalForm(str) {
   return str
       .normalize("NFD")

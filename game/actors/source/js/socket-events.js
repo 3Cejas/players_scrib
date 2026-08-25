@@ -356,8 +356,8 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
         setBarraNivelClaseActor("bonus");
         aplicarEstiloNivelesActor("bonus");
         explicación.style.color = "yellow";
-        explicación.innerHTML = traducirDescripcionModoActor("palabras bonus", "SUMA TIEMPO CON PALABRAS BONUS");
-        palabra.innerHTML = traducirTituloModoActor("palabras bonus", "NIVEL PALABRAS BONUS");
+        explicación.innerHTML = traducirDescripcionModoActor("palabras bonus", "GANA QUIEN ESCRIBE MAS PALABRAS");
+        palabra.innerHTML = traducirTituloModoActor("palabras bonus", "NIVEL PALABRAS BENDITAS");
         definicion.innerHTML = "";
         return;
     }
@@ -370,7 +370,7 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
             : cache_letra_prohibida_actor;
         explicación.style.color = "red";
         explicación.innerHTML = construirExplicacionNivelLetraActor("prohibida", letra);
-        palabra.innerHTML = traducirTituloModoActor("letra prohibida", "NIVEL LETRA PROHIBIDA");
+        palabra.innerHTML = traducirTituloModoActor("letra prohibida", "NIVEL LETRA MALDITA");
         definicion.innerHTML = "";
         return;
     }
@@ -392,8 +392,8 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
         setBarraNivelClaseActor("prohibidas");
         aplicarEstiloNivelesActor("prohibidas");
         explicación.style.color = "pink";
-        explicación.innerHTML = traducirDescripcionModoActor("palabras prohibidas", "EVITA LAS PALABRAS PROHIBIDAS");
-        palabra.innerHTML = traducirTituloModoActor("palabras prohibidas", "NIVEL PALABRAS PROHIBIDAS");
+        explicación.innerHTML = traducirDescripcionModoActor("palabras prohibidas", "EVITA LAS PALABRAS MALDITAS");
+        palabra.innerHTML = traducirTituloModoActor("palabras prohibidas", "NIVEL PALABRAS MALDITAS");
         definicion.innerHTML = "";
         return;
     }
@@ -567,7 +567,6 @@ let timeout_remover_countdown_actor = null;
 let modo_actual = "";
 let modo_seq_actual_actor = 0;
 let partida_finalizada_actor = false;
-let esperando_resurreccion_actor = false;
 texto1.style.height = "auto";
 texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
 texto1.scrollTop = texto1.scrollHeight;
@@ -1677,7 +1676,6 @@ var player = getParameterByName("player");
         recibir_postgame_x = 'recibir_postgame1';
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
-        elegir_ventaja = "elegir_ventaja_j1";
         enviar_palabra = 'enviar_palabra_j1'
         nombre1.style="color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
         aplicarTemaMarcadorActor(1);
@@ -1693,7 +1691,6 @@ var player = getParameterByName("player");
         recibir_postgame_x = 'recibir_postgame2';
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
-        elegir_ventaja = "elegir_ventaja_j2";
         enviar_palabra = 'enviar_palabra_j2'
         nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
         aplicarTemaMarcadorActor(2);
@@ -1951,9 +1948,6 @@ socket.on("count", (data = {}) => {
         setPendienteAnimacionEntradaBarraVida(false);
         cancelarAnimacionEntradaBarraVida(tiempo);
         detenerProgresoNivelBarraActor(false);
-        const finDefinitivoPorTiempo = modo_actual === "frase final";
-        esperando_resurreccion_actor = !finDefinitivoPorTiempo;
-        partida_finalizada_actor = finDefinitivoPorTiempo;
         stopConfetti();
         mostrarAlertaTiempoLimiteActor();
 
@@ -1967,8 +1961,6 @@ socket.on("count", (data = {}) => {
         //texto1.classList.remove('textarea_blur');
         texto1.style.height = "auto";
         texto1.style.height = (texto1.scrollHeight) + "px"; //Reajustamos el tamaño del área de texto del j1.
-    } else if (Number.isFinite(segundosCount) && segundosCount > 0 && !partida_finalizada_actor) {
-        esperando_resurreccion_actor = false;
     }
 });
 
@@ -1981,28 +1973,11 @@ socket.on("temporizador_gigante_detener", () => {
     detenerTemporizadorGiganteActor();
 });
 
-socket.on("resucitar_control", (data = {}) => {
-    if (Number(data.player) !== Number(player)) return;
-    if (!aceptarTiempoActor(data)) return;
-    esperando_resurreccion_actor = false;
-    partida_finalizada_actor = false;
-    stopConfetti();
-    ocultarAlertaTiempoLimiteActor();
-    niveles_bloqueados = !modo_actual;
-    setNivelesDesactivados(!modo_actual);
-    actualizarNiveles(modo_actual);
-    renderInfoModoActor(modo_actual, {}, { animar: true });
-    if (modo_actual) {
-        iniciarProgresoNivelBarraActor();
-    }
-});
-
 socket.on("fin", (data) => {
     const payload = (data && typeof data === "object") ? data : { player: data };
-    if (Number(payload.player) !== Number(player)) return;
+    if (payload.partida_finalizada !== true || Number(payload.player) !== Number(player)) return;
     ocultarTransicionNivelActor();
     if (partida_finalizada_actor) return;
-    esperando_resurreccion_actor = false;
     partida_finalizada_actor = true;
     tiempo.innerHTML = textoTiempoAgotadoActor();
     actualizarBarraVida(tiempo, tiempo.innerHTML);
@@ -2129,7 +2104,6 @@ socket.on('inicio', data => {
         : payloadInicio;
     actualizarDuracionNivelDesdeParametrosActor(parametrosInicio || {});
     actualizarDuracionModificadorDesdeParametrosActor(parametrosInicio || {});
-    esperando_resurreccion_actor = false;
     partida_finalizada_actor = false;
     stopConfetti();
     ocultarAlertaTiempoLimiteActor();
@@ -2165,7 +2139,6 @@ socket.on('limpiar', () => {
     reiniciarSeguimientoTransicionNivelActor({ primeEmpty: true });
     invalidarIntroActor();
     limpiarAsincroniaVisualActor();
-    esperando_resurreccion_actor = false;
     partida_finalizada_actor = false;
     ocultarAlertaTiempoLimiteActor();
     limpiarCacheInfoNivelesActor();

@@ -28,7 +28,7 @@
     <script src="../js/domains/inspiration.js?v=20260824c"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260424a"></script>
-    <script src="../js/domains/resurrection.js?v=20260424a"></script>
+    <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/domains/pre-show.js?v=20260824b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
@@ -198,41 +198,9 @@
         </section>
         <div class="contenedor" id="contenedor_espectador">
             <div class="jugador1">
-                <p id="tiempo" class="tiempo tiempo-vida"></p>
                 <p id="feedback_tiempo" class="feedback_tiempo"></p>
+                <p id="tiempo" hidden aria-hidden="true"></p>
                 <input disabled style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;" id="nombre" class="nombre"></input>
-                <div id="resucitar_mini_1" class="resucitar-spectator equipo-azul">
-                    <div class="resucitar-panel resucitar-main-panel" data-menu="main">
-                        <div class="resucitar-header">
-                            <h1 class="main-title">
-                                <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
-                                <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
-                            </h1>
-                        </div>
-                        <div class="resucitar-row">
-                            <div class="resucitar-actions">
-                                <div class="button-container resucitar-buttons">
-                                    <button class="selected" type="button" data-btn="si" data-i18n="res.btn_yes">S&iacute;</button>
-                                    <button type="button" data-btn="no" data-i18n="res.btn_no">No</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="resucitar-panel resucitar-quantity-panel" data-menu="quantity">
-                        <div class="resucitar-header">
-                            <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
-                            <h2 class="quantity-title" data-i18n="res.quantity_title">Selecciona la cantidad de palabras</h2>
-                        </div>
-                        <div class="resucitar-row">
-                            <div class="resucitar-actions">
-                                <div class="quantity-display" data-resucitar-display></div>
-                                <div class="button-container resucitar-buttons">
-                                    <button type="button" data-btn="confirmar" data-i18n="res.btn_confirm">Confirmar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <br><br>
                 <p id="alineador1"></p>
                 <div disabled id="texto" rows="1"
@@ -253,7 +221,7 @@
                             <div class="meta-copy">
                                 <span class="meta-label" data-i18n="score.muses_label">Musas</span>
                                 <span id="musas" class="musas-total">0 musas</span>
-                                <span id="musa_regalo_estado_j1" class="musa-regalo-chip" hidden>REGALO +1S | 0/10</span>
+                                <span id="musa_regalo_estado_j1" class="musa-regalo-chip" hidden>APOYO DE MUSAS | 0/10</span>
                             </div>
                         </div>
                     </div>
@@ -274,41 +242,9 @@
                 <br>
             </div>
                 <div class="jugador2">
-                    <p id="tiempo1" class="tiempo tiempo-vida"></p>
                     <p id="feedback_tiempo1" class="feedback_tiempo"></p>
+                    <p id="tiempo1" hidden aria-hidden="true"></p>
                 <input disabled style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;" id="nombre1" class="nombre"></input>
-                <div id="resucitar_mini_2" class="resucitar-spectator equipo-rojo">
-                    <div class="resucitar-panel resucitar-main-panel" data-menu="main">
-                        <div class="resucitar-header">
-                            <h1 class="main-title">
-                                <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
-                                <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
-                            </h1>
-                        </div>
-                        <div class="resucitar-row">
-                            <div class="resucitar-actions">
-                                <div class="button-container resucitar-buttons">
-                                    <button class="selected" type="button" data-btn="si" data-i18n="res.btn_yes">S&iacute;</button>
-                                    <button type="button" data-btn="no" data-i18n="res.btn_no">No</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="resucitar-panel resucitar-quantity-panel" data-menu="quantity">
-                        <div class="resucitar-header">
-                            <span class="resucitar-title-over">&#x1F480; GAME OVER</span>
-                            <h2 class="quantity-title" data-i18n="res.quantity_title">Selecciona la cantidad de palabras</h2>
-                        </div>
-                        <div class="resucitar-row">
-                            <div class="resucitar-actions">
-                                <div class="quantity-display" data-resucitar-display></div>
-                                <div class="button-container resucitar-buttons">
-                                    <button type="button" data-btn="confirmar" data-i18n="res.btn_confirm">Confirmar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <br><br>
                 <p id="alineador2"></p>
                 <div disabled id="texto1" rows="1"
@@ -329,7 +265,7 @@
                             <div class="meta-copy">
                                 <span class="meta-label" data-i18n="score.muses_label">Musas</span>
                                 <span id="musas1" class="musas-total">0 musas</span>
-                                <span id="musa_regalo_estado_j2" class="musa-regalo-chip" hidden>REGALO +1S | 0/10</span>
+                                <span id="musa_regalo_estado_j2" class="musa-regalo-chip" hidden>APOYO DE MUSAS | 0/10</span>
                             </div>
                         </div>
                     </div>

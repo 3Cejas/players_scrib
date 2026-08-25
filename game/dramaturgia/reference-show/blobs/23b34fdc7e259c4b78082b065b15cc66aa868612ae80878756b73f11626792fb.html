@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html data-scrib-reference-show="complete-v1" lang="es" style="--musa-progress-color: rgba(123, 239, 255, 0.92); --musa-progress-text-color: #8fefff; --musa-progress-loading-text-color: #f2fbff; --equipo-color: red;" class="" data-scrib-snapshot-frozen="" data-snapshot-screen-id="musa1" data-snapshot-width="430" data-snapshot-height="932"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'; form-action 'none'; base-uri http: https:; img-src data: blob: http: https:; media-src data: blob: http: https:; font-src data: http: https:; style-src 'unsafe-inline' http: https:"><base href="../../../public/players/">
+    <meta charset="utf-8">
+    <link rel="icon" href="../../../img/logo.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB - Musas 👁️</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260824c">
+    <link rel="stylesheet" type="text/css" href="../../css/video-tutorial.css?v=20260824d">
+    <link rel="stylesheet" type="text/css" href="./css/musa-help.css?v=20260824f">
+    
+    
+    
+    
+    
+    
+    
+    
+    
+<style data-scrib-snapshot-freeze="">html[data-scrib-snapshot-frozen] body *,html[data-scrib-snapshot-frozen] body *::before,html[data-scrib-snapshot-frozen] body *::after{animation:none!important;transition:none!important;caret-color:transparent!important;}html[data-scrib-snapshot-frozen] body .feedback-tiempo-float{opacity:1!important;transform:none!important;animation:none!important;}html,body{scroll-behavior:auto!important;}body{pointer-events:none!important;}</style></head>
+<body class="equipo-azul partida-activa" inert="">
+    <div id="background-effects" aria-hidden="true">
+        <span class="aquarium-glow aquarium-glow--blue"></span>
+        <span class="aquarium-glow aquarium-glow--red"></span>
+        <span class="aquarium-current aquarium-current--one"></span>
+        <span class="aquarium-current aquarium-current--two"></span>
+        <span class="aquarium-shimmer"></span>
+        <span class="aquarium-bloom aquarium-bloom--blue"></span>
+        <span class="aquarium-bloom aquarium-bloom--red"></span>
+    </div>
+    <div id="musa_world_entry" class="musa-world-entry" aria-hidden="true" style="--world-entry-progress: 0%; --world-entry-world-progress: 0%;">
+        <div class="musa-world-entry__panel">
+            <div class="musa-world-entry__eyebrow">INICIANDO SISTEMA MUSA</div>
+            <div class="musa-world-entry__title">ENTRANDO EN UN NUEVO MUNDO</div>
+            <div id="musa_world_entry_copy" class="musa-world-entry__copy"><span class="musa-world-entry__name musa-world-entry__name--musa">OBSERVA</span> ha elegido apoyar a <span class="musa-world-entry__name musa-world-entry__name--azul">ESCRITXR 1</span>. Preparando la entrada al mundo de juego.</div>
+            <div class="musa-world-entry__world" aria-hidden="true">
+                <div class="musa-world-entry__world-base"></div>
+                <div class="musa-world-entry__world-fill"></div>
+                <div class="musa-world-entry__world-grid"></div>
+                <div class="musa-world-entry__world-orb"></div>
+                <div id="musa_world_entry_pixels" class="musa-world-entry__world-pixels">
+                    <span class=""></span><span></span><span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="musa-world-entry__status-row">
+                <span id="musa_world_entry_status" class="musa-world-entry__status-text">🔗 ENLAZANDO CANAL DE INSPIRACION</span>
+                <span id="musa_world_entry_percent" class="musa-world-entry__status-percent">0%</span>
+            </div>
+            <div class="musa-world-entry__bar" aria-hidden="true">
+                <span id="musa_world_entry_bar" class="musa-world-entry__bar-fill"></span>
+            </div>
+            <ul id="musa_world_entry_logs" class="musa-world-entry__logs" aria-live="polite">
+                <li class="is-active">🔗 ENLAZANDO A <span class="musa-world-entry__name musa-world-entry__name--musa">OBSERVA</span></li>
+                <li>🖋️ SINCRONIZANDO PLUMA AZUL</li>
+                <li>📖 CARGANDO IMAGINARIO DE <span class="musa-world-entry__name musa-world-entry__name--azul">ESCRITXR 1</span></li>
+                <li>🎨 PINTANDO EL COLOR DEL MUNDO</li>
+                <li>🌀 ABRIENDO PORTAL DE INSPIRACION</li>
+            </ul>
+        </div>
+    </div>
+    <div class="container"></div>
+        <div id="contenedor" class="contenedor">
+            <div class="jugador">
+                <input disabled="" id="nombre" class="nombre" style="color: red; text-shadow: black -0.0625em -0.0625em, aqua 0.0625em 0.0625em;" value="ESCRITXR">
+                <br><br>
+                <p id="alineador1"></p>
+                <div id="metadatos" class="right metadatos-grid metadatos-grid--cabecera" style="color: aqua; text-shadow: red 0.0625em 0.0625em;">
+                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                        <span class="meta-icon">🖋️</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Palabras</span>
+                            <span id="puntos" class="puntos puntos-hit" style="color: white;">98 palabras</span>
+                        </div>
+                    </div>
+                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                        <span class="meta-label">Musa</span>
+                        <span id="nombre_musa_label" class="musa-nombre">OBSERVA</span>
+                    </div>
+                </div>
+                <div class="textarea" id="texto" spellcheck="false" style="color: red; height: 4.5em;">hambre pluma ceniza herida vértigo escena herida raíz raíz órbita sombra eco bosque marea cuerpo espejo secreto. noche arena umbral herida relámpago incendio voz sombra tiempo órbita bosque voz herida hilo cuerpo relámpago umbral. puerta relámpago umbral marea tiempo hilo vértigo cuerpo máscara máscara silencio herida hilo vértigo marea máscara puerta. hilo raíz vértigo sombra costura eco tiempo relámpago secreto vértigo arena espejo hambre silencio umbral memoria pluma. puerta jardín latido respirar cuerpo desvelo umbral desvelo umbral herida jardín vértigo memoria latido máscara respirar eco. escena órbita desvelo tiempo raíz bosque raíz incendio incendio memoria noche cuerpo ceniza</div>
+                <br>
+                <div align="center">
+                    <table>
+                        <tbody><tr>
+                            <td>
+                                <div id="skill_cancel" class="skill skill-cancel" style="display: none;">❌</div>
+                                </td>
+                            <td>
+                            <div id="skill" class="skill" style="display: none; border: 0.5vw solid greenyellow;">✏️</div>
+                          </td>
+                          <td>
+                          </td>
+                        </tr>
+                      </tbody></table>
+                    <p id="feedback_texto_editado" class="feedback_texto_editado"></p>
+                    <p id="tiempo" hidden="" aria-hidden="true" style="--vida-pct: 5.3%; --vida-color: hsl(6.4, 85%, 55%); color: yellow; display: inline-flex;" class="tiempo-vida" data-vida-visible="1">00:16</p><table>
+                        <tbody><tr>
+                            
+                        </tr>
+                    </tbody></table>
+                    <div id="metadatos_acciones" class="metadatos-grid metadatos-grid--acciones">
+                        <div class="meta-item meta-bottom-left marcador-accion marcador-accion--texto">
+                            <button id="mostrar_texto" class="btn mostrarTexto" value="0" data-estado="OFF" aria-pressed="false">👀 TEXTO COMPLETO</button>
+                            <!-- Contenedor de la pantalla superpuesta -->
+                            <div id="overlay" style="display: none;">
+                                <p>¡MUSA, AGITA TU BANDERA!</p>
+                                <p id="motion_permiso" class="motion-permiso" style="display: none;"></p>
+                                <button id="btn_volver" class="btn bandera">⬅️ VOLVER</button>
+                            </div>
+                        </div>
+                        <div class="meta-item meta-bottom-right marcador-accion marcador-accion--bandera">
+                            <button id="btn_bandera" class="btn bandera" value="0">🏳️‍🌈 BANDERA</button>
+                            <div id="bandera_regalo_estado" class="bandera-regalo-chip" hidden="" aria-live="polite">
+                                <span id="bandera_regalo_titulo" class="bandera-regalo-chip__titulo">APOYO DE MUSAS</span>
+                                <span id="bandera_regalo_valor" class="bandera-regalo-chip__valor">0/10</span>
+                                <span class="bandera-regalo-chip__barra"><span id="bandera_regalo_fill" class="bandera-regalo-chip__fill" style="width: 0%;"></span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <section id="pre_show_musa" class="pre-show-musa" aria-labelledby="pre_show_musa_titulo" aria-hidden="true" hidden="">
+                        <div class="pre-show-musa__halo" aria-hidden="true"></div>
+                        <header class="pre-show-musa__header">
+                            <span class="pre-show-musa__live"><span aria-hidden="true"></span><span data-i18n="preshow.live">EN DIRECTO</span></span>
+                            <span class="pre-show-musa__eyebrow" data-i18n="preshow.muse.eyebrow">ANTES DEL TUTORIAL</span>
+                        </header>
+                        <div class="pre-show-musa__signal" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+                        <h2 id="pre_show_musa_titulo" class="pre-show-musa__title" data-i18n="preshow.muse.title">TOMA EL CANAL</h2>
+                        <p class="pre-show-musa__copy" data-i18n="preshow.muse.copy">Escribe algo para entretener al publico mientras empieza el tutorial.</p>
+                        <form id="pre_show_musa_form" class="pre-show-musa__form">
+                            <label class="scrib-visually-hidden" for="pre_show_musa_input" data-i18n="preshow.muse.input_label">Mensaje para el publico</label>
+                            <textarea id="pre_show_musa_input" rows="3" enterkeyhint="send" autocomplete="off" aria-describedby="pre_show_musa_contador pre_show_musa_feedback" data-i18n-attr="placeholder:preshow.muse.placeholder" placeholder="Di algo al publico..." disabled=""></textarea>
+                            <div class="pre-show-musa__form-footer">
+                                <span id="pre_show_musa_contador" class="pre-show-musa__counter" aria-hidden="true">0 / 180</span>
+                                <button id="pre_show_musa_enviar" class="pre-show-musa__send" type="submit" disabled="">
+                                    <span data-i18n="preshow.muse.send">ENVIAR AL ESPECTADOR</span>
+                                    <span aria-hidden="true">↗</span>
+                                </button>
+                            </div>
+                        </form>
+                        <p id="pre_show_musa_feedback" class="pre-show-musa__feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+                        <p class="pre-show-musa__hint" data-i18n="preshow.muse.hint">El canal se cerrara al comenzar el tutorial.</p>
+                    </section>
+                    <section id="calentamiento" class="calentamiento calentamiento--nuevo calentamiento-equipo-1">
+                        <h2 class="calentamiento-titulo">TUTORIAL</h2>
+                        <p id="calentamiento_estado" class="calentamiento-estado">Tutorial inactivo.</p>
+                        <div class="calentamiento-input">
+                            <input id="calentamiento_input" class="input_publico" maxlength="48" placeholder="Ejemplo: hacia el destino final" disabled="" value="">
+                            <button id="calentamiento_enviar" class="btn btn-edicion inspirar" type="button" disabled="">
+                                <span id="calentamiento_text_progress" class="calentamiento-progress-text" style="">INSPIRAR <span class="btn-emoji" aria-hidden="true">🚀</span></span>
+                                <span id="calentamiento_bar_progress" class="progress" style="width: 0%;"></span>
+                            </button>
+                        </div>
+                        <p id="calentamiento_feedback" class="calentamiento-feedback"></p>
+                        <p id="calentamiento_estado_cierre" class="calentamiento-cierre"></p>
+                        <p id="calentamiento_final_musa" class="calentamiento-final-musa"></p>
+                    </section>
+                    <section class="niveles" style="--equipo-color: red; --linea-top-global: 76.96875px;">
+                        <div class="niveles-scroll">
+                            <div class="niveles-linea" role="list" aria-label="Niveles de la partida" style="--linea-inicio: 476.546875px; --linea-longitud: 0px; --linea-top: 50.96875px; --progreso: 80%; --progreso-px: 0px;">
+                            <div class="nivel-item nivel-verde nivel-futuro" data-modo="letra bendita" role="listitem" aria-current="false" style="order: 5;">
+                                <div class="nivel-icono" aria-hidden="true">🙏</div>
+                                <div class="nivel-texto">
+                                    <span>LETRA</span>
+                                    <span>BENDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-rojo nivel-pasado" data-modo="letra prohibida" role="listitem" aria-current="false" style="order: 0;">
+                                <div class="nivel-icono" aria-hidden="true">😈</div>
+                                <div class="nivel-texto">
+                                    <span>LETRA</span>
+                                    <span>MALDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-azul nivel-pasado" data-modo="tertulia" role="listitem" aria-current="false" style="order: 1;">
+                                <div class="nivel-icono" aria-hidden="true">💬</div>
+                                <div class="nivel-texto">
+                                    <span>TERTULIA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-amarillo nivel-pasado" data-modo="palabras bonus" role="listitem" aria-current="false" style="order: 2;">
+                                <div class="nivel-icono" aria-hidden="true">📖</div>
+                                <div class="nivel-texto">
+                                    <span>PALABRA</span>
+                                    <span>BENDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-rosa nivel-activo" data-modo="palabras prohibidas" role="listitem" aria-current="step" style="order: 3;">
+                                <div class="nivel-icono" aria-hidden="true">⚔️</div>
+                                <div class="nivel-texto">
+                                    <span>PALABRA</span>
+                                    <span>MALDITA</span>
+                                </div>
+                            </div>
+                            <div class="nivel-item nivel-naranja nivel-futuro" data-modo="frase final" role="listitem" aria-current="false" style="order: 4;">
+                                <div class="nivel-icono" aria-hidden="true">🏁</div>
+                                <div class="nivel-texto">
+                                    <span>FRASE</span>
+                                    <span>FINAL</span>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </section>
+                    <br>
+                    <table id="notificacion" class="notificacion" style="display: block;">
+                        <tbody><tr>
+                            <th><p id="tarea"><span style="color: pink;">Incordia</span> a mi oponente, <span style="color: orange;">OBSERVA</span>, con una palabra que no pueda usar:</p></th>
+                        </tr>
+                        <tr>
+                            <th><input id="palabra" maxlength="20" class="input_publico" style="" value=""></th>
+                        </tr>
+                        <tr>
+                            <th><p id="preview_tiempo_palabra" class="preview-tiempo-palabra" hidden=""></p></th>
+                        </tr>
+                        <tr>
+                            <th><p id="recordatorio" class="recordatorio"></p></th>
+                        </tr>
+                        <tr>
+                            <th>
+                                <button id="progressButton" class="btn btn-edicion inspirar" style="">
+                                    <span id="text-progress" class="text-progress calentamiento-progress-text">INSPIRAR <span class="btn-emoji" aria-hidden="true">🚀</span></span>
+                                    <span id="bar-progress" class="progress" style="width: 0%;"></span>
+                                </button>
+                            </th>
+                                                        
+                        </tr>
+                    </tbody></table>
+                    <br>
+                    <div id="fin_pag"></div>
+                    <div id="regalo_pdf" class="regalo-pdf" aria-hidden="true" style="--regalo-color: #35f0ff;">
+                        <div class="regalo-overlay" aria-hidden="true"></div>
+                        <div class="regalo-card" role="dialog" aria-live="polite">
+                            <button id="regalo_btn" class="regalo-boton" type="button" aria-label="Descargar regalo">
+                                🎁
+                            </button>
+                            <div class="regalo-texto"><span id="regalo_nombre" class="regalo-nombre" style="color: rgb(0, 255, 255); text-shadow: rgb(0, 0, 0) -2.15px -2.15px 0px, rgb(255, 0, 0) 2.15px 2.15px 0px; font-family: Retro-gaming; letter-spacing: normal;">BOT AZUL</span> quiere regalarte algo.</div>
+                            <div class="regalo-subtexto">Pulsa para descargarlo.</div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+                </div>
+            
+        
+    
+<!-- Code injected by live-server -->
+
+
+    
+    
+    
+
+
+
+
+<button id="musa_help_fab" class="musa-help-fab" type="button" data-state="idle" aria-haspopup="dialog" aria-controls="musa_help_confirm musa_help_flag" aria-expanded="false" aria-label="Pedir ayuda a Control" style="--musa-help-color: #ffd60a; --musa-help-ink: #071018;"><span class="musa-help-fab__icon" aria-hidden="true">!</span><span class="musa-help-fab__copy"><span class="musa-help-fab__title">AYUDA</span><span id="musa_help_fab_status" class="musa-help-fab__status">PEDIR ASISTENCIA</span></span></button><div id="musa_help_confirm" class="musa-help-confirm" hidden="" data-musa-help-private="true"><section class="musa-help-confirm__card" role="dialog" aria-modal="true" aria-labelledby="musa_help_confirm_title" aria-describedby="musa_help_confirm_copy"><p class="musa-help-confirm__eyebrow">CANAL DE ASISTENCIA</p><h2 id="musa_help_confirm_title" class="musa-help-confirm__title">¿PEDIR AYUDA?</h2><p id="musa_help_confirm_copy" class="musa-help-confirm__copy">Control recibirá tu aviso y te asignaremos un color para localizarte en la sala.</p><p class="musa-help-confirm__privacy"><span aria-hidden="true">🔒</span><span>Mientras la incidencia esté abierta, autorizas a Control a ver y manejar <strong>SOLO esta página</strong>: tocar botones, desplazarse, volver, reintentar la conexión o reiniciarla. Puedes cancelar el acceso en cualquier momento.</span></p><div class="musa-help-confirm__actions"><button id="musa_help_confirm_cancel" class="musa-help-action musa-help-action--dark" type="button">VOLVER</button><button id="musa_help_confirm_accept" class="musa-help-action musa-help-action--primary" type="button">SÍ, PEDIR AYUDA</button></div><p id="musa_help_confirm_feedback" class="musa-help-confirm__feedback" role="status" aria-live="polite"></p></section></div><section id="musa_help_flag" class="musa-help-flag" hidden="" role="dialog" aria-modal="true" aria-labelledby="musa_help_flag_title" style="--musa-help-color: #ffd60a; --musa-help-ink: #071018;"><div class="musa-help-flag__card"><p class="musa-help-flag__eyebrow">AYUDA SOLICITADA</p><span class="musa-help-flag__symbol" aria-hidden="true">🚩</span><h2 id="musa_help_flag_title" class="musa-help-flag__title">AGITA ESTA BANDERA EN EL AIRE</h2><p id="musa_help_flag_color" class="musa-help-flag__color">AMARILLO</p><p class="musa-help-flag__copy">Levanta la pantalla y muévela suavemente para que el equipo pueda encontrarte.</p><p id="musa_help_flag_state" class="musa-help-flag__state" role="status" aria-live="polite">AVISO ENVIADO · ESPERANDO A CONTROL</p><div class="musa-help-flag__actions"><button id="musa_help_flag_minimize" class="musa-help-action musa-help-action--dark" type="button">MINIMIZAR BANDERA</button><button id="musa_help_flag_cancel" class="musa-help-action musa-help-action--dark" type="button">CANCELAR AYUDA</button></div></div></section><div id="musa_help_attending_indicator" class="musa-help-attending-halo" hidden="" role="status" aria-live="polite" aria-atomic="true" data-diagnostic="0"><span id="musa_help_attending_halo_text" class="musa-help-attending-halo__text">CONTROL TE ESTÁ ATENDIENDO</span></div><div id="musa_help_remote_indicator" class="musa-help-remote-indicator" hidden="" role="status" aria-live="assertive">ASISTENCIA REMOTA ACTIVA</div>
+
+
+<section id="video_tutorial_musa" class="scrib-video-tutorial-device" hidden="" aria-labelledby="video_tutorial_musa_title" aria-hidden="true">
+            <div class="scrib-video-tutorial-device__grid" aria-hidden="true"></div>
+            <div class="scrib-video-tutorial-device__card">
+                <span class="scrib-video-tutorial-device__eyebrow" data-video-tutorial-eyebrow="">PRUEBA DE CONEXIÓN</span>
+                <div class="scrib-video-tutorial-device__check" aria-hidden="true">✓</div>
+                <h1 id="video_tutorial_musa_title" data-video-tutorial-title="">CONEXIÓN RECIBIDA</h1>
+                <p data-video-tutorial-copy="">Sigue las instrucciones de la pantalla principal.</p>
+                <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity=""></div>
+                <button class="scrib-video-tutorial-device__confirm" type="button" hidden="">SÍ, FUNCIONA</button>
+                <span class="scrib-video-tutorial-device__timer" data-video-tutorial-device-time="">00:60</span>
+            </div>
+            <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live=""></p>
+        </section></body></html>

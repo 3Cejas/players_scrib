@@ -11,7 +11,7 @@ const JURADO_STAT_META = {
     palabras: { icon: "\u{1F58B}\uFE0F", label: "Palabras" },
     ritmo: { icon: "\u26A1", label: "Ritmo PPM" },
     pulsaciones: { icon: "\u2328\uFE0F", label: "Pulsaciones" },
-    vida: { icon: "\u2764\uFE0F", label: "Vida" },
+    teclasDistintas: { icon: "\u{1F3B9}", label: "Teclas distintas" },
     tiempoTotal: { icon: "\u23F1\uFE0F", label: "Tiempo total" },
     tiempoEscritura: { icon: "\u270D\uFE0F", label: "Tiempo escritura" },
     topTeclas: { icon: "\u{1F51D}", label: "Top teclas" },
@@ -152,14 +152,6 @@ function formatearCantidadJurado(valor, singular, plural) {
     return `${formatearNumeroJurado(numero)} ${unidad}`;
 }
 
-function formatearVidaJurado(valor) {
-    const numero = Math.max(0, Number(valor) || 0);
-    if (numero >= 10 || Number.isInteger(numero)) {
-        return `${formatearNumeroJurado(numero, 0)}s`;
-    }
-    return `${formatearNumeroJurado(numero, 1)}s`;
-}
-
 function setTextoJurado(id, texto) {
     const el = getEl(id);
     if (el) el.textContent = texto;
@@ -265,21 +257,19 @@ function renderWriterTextoJurado(id) {
     setHtmlJurado(`jurado_texto_${id}`, writer.html || "");
     setTextoJurado(`jurado_words_${id}`, formatearCantidadJurado(writer.words, "palabra", "palabras"));
     setTextoJurado(`jurado_musas_${id}`, formatearCantidadJurado(writer.musas, "musa", "musas"));
-    renderVidaJurado(id);
+    renderPulsacionesJurado(id);
 }
 
-function renderVidaJurado(id) {
+function renderPulsacionesJurado(id) {
     const writer = estado_jurado.writers[id];
-    const bar = getEl(`jurado_vida_${id}`);
-    const label = getEl(`jurado_vida_label_${id}`);
+    const bar = getEl(`jurado_pulsaciones_${id}`);
+    const label = getEl(`jurado_pulsaciones_label_${id}`);
     if (!writer || !bar) return;
     const stats = writer.stats || {};
-    const actual = Math.max(0, Number(stats.vidaActual) || 0);
-    const max = Math.max(actual, Number(stats.vidaMax) || 0, 1);
-    const pct = Math.max(0, Math.min(100, (actual / max) * 100));
-    const texto = formatearVidaJurado(actual);
-    bar.style.setProperty("--vida-pct", `${pct.toFixed(2)}%`);
-    bar.title = `Vida: ${texto}`;
+    const actual = Math.max(0, Number(stats.pulsacionesTotal) || 0);
+    const texto = formatearNumeroJurado(actual);
+    bar.style.setProperty("--pulse-pct", actual > 0 ? "100%" : "0%");
+    bar.title = `Pulsaciones: ${texto}`;
     if (label) label.textContent = texto;
 }
 
@@ -302,7 +292,6 @@ function obtenerJugadorStatsJurado(payload, id) {
 }
 
 function normalizarStatsJugadorJurado(data = {}, id) {
-    const vida = data.vida && typeof data.vida === "object" ? data.vida : {};
     const topTeclas = Array.isArray(data.topTeclas) ? data.topTeclas.slice(0, 8) : [];
     return {
         nombre: String(data.nombre || estado_jurado.writers[id].nombre || `ESCRITXR ${id}`),
@@ -312,10 +301,6 @@ function normalizarStatsJugadorJurado(data = {}, id) {
         ritmoPpm: Math.max(0, Number(data.ritmoPpm ?? data.ppm ?? 0) || 0),
         tiempoTotalMs: Math.max(0, Number(data.tiempoTotalMs ?? data.totalMs ?? 0) || 0),
         tiempoEscrituraMs: Math.max(0, Number(data.tiempoEscrituraMs ?? data.writingMs ?? 0) || 0),
-        vidaActual: Math.max(0, Number(vida.actual ?? vida.current ?? data.vidaActual ?? 0) || 0),
-        vidaMax: Math.max(0, Number(vida.max ?? data.vidaMax ?? 0) || 0),
-        vidaMin: Math.max(0, Number(vida.min ?? data.vidaMin ?? 0) || 0),
-        vidaMedia: Math.max(0, Number(vida.media ?? vida.avg ?? 0) || 0),
         topTeclas,
         heatmap: normalizarHeatmapJurado(data.heatmap, topTeclas)
     };
@@ -371,11 +356,10 @@ function normalizarHeatmapJurado(entrada, topTeclasFallback = []) {
 function registrarMiniStatsJurado(id, stats = {}) {
     const writer = estado_jurado.writers[id];
     if (!writer) return;
-    const vida = Number(stats.vidaActual);
     const ritmo = Number(stats.ritmoPpm);
     const palabras = Number(stats.palabrasTotal);
     const pulsaciones = Number(stats.pulsacionesTotal);
-    const hayDato = [vida, ritmo, palabras, pulsaciones].some(Number.isFinite);
+    const hayDato = [ritmo, palabras, pulsaciones].some(Number.isFinite);
     if (!hayDato) return;
     let t = Number(stats.tiempoTotalMs);
     if (!Number.isFinite(t) || t <= 0) {
@@ -383,7 +367,6 @@ function registrarMiniStatsJurado(id, stats = {}) {
     }
     const punto = {
         t: Math.max(0, t),
-        v: Number.isFinite(vida) ? Math.max(0, vida) : null,
         r: Number.isFinite(ritmo) ? Math.max(0, ritmo) : null,
         p: Number.isFinite(palabras) ? Math.max(0, palabras) : null,
         k: Number.isFinite(pulsaciones) ? Math.max(0, pulsaciones) : null
@@ -444,45 +427,6 @@ function crearStatCardJurado(statId, value, wide = false) {
     `;
 }
 
-function crearSerieMiniVidaSvgJurado(id, stats = {}) {
-    const writer = estado_jurado.writers[id];
-    const serie = writer && Array.isArray(writer.statsHistory)
-        ? writer.statsHistory.filter((punto) => Number.isFinite(Number(punto && punto.v))).slice(-40)
-        : [];
-    if (serie.length < 2) {
-        return `<div class="mini-stats-empty">Esperando vida</div>`;
-    }
-    const width = 180;
-    const height = 58;
-    const pad = 5;
-    const minT = Math.min(...serie.map((punto) => Number(punto.t)));
-    const maxT = Math.max(...serie.map((punto) => Number(punto.t)));
-    const spanT = Math.max(1, maxT - minT);
-    const maxVida = Math.max(
-        1,
-        Number(stats.vidaMax) || 0,
-        ...serie.map((punto) => Math.max(0, Number(punto.v) || 0))
-    );
-    const puntos = serie.map((punto, index) => {
-        const usarIndice = spanT <= 5;
-        const ratioX = usarIndice ? index / Math.max(1, serie.length - 1) : (Number(punto.t) - minT) / spanT;
-        const ratioY = Math.max(0, Math.min(1, (Number(punto.v) || 0) / maxVida));
-        const x = pad + (ratioX * (width - pad * 2));
-        const y = height - pad - (ratioY * (height - pad * 2));
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(" ");
-    const ultimo = serie[serie.length - 1];
-    const [lastX, lastY] = puntos.split(" ").pop().split(",");
-    const title = `Vida: ${formatearVidaJurado(ultimo.v)}`;
-    return `
-        <svg class="mini-stats-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtmlJurado(title)}">
-            <polyline class="mini-stats-grid-line" points="${pad},${height - pad} ${width - pad},${height - pad}"></polyline>
-            <polyline class="mini-stats-line" points="${puntos}"></polyline>
-            <circle class="mini-stats-dot" cx="${escapeHtmlJurado(lastX)}" cy="${escapeHtmlJurado(lastY)}" r="2.8"></circle>
-        </svg>
-    `;
-}
-
 function obtenerTopTeclasMiniJurado(stats = {}) {
     const top = normalizarTopTeclasGraficaJurado(stats.topTeclas);
     if (top.length) return top;
@@ -527,13 +471,6 @@ function renderMiniGraficasStatsJurado(id, stats = {}) {
                 <em>${escapeHtmlJurado(meta.label)}</em>
             </span>
             <div class="mini-stats-layout">
-                <section class="mini-stats-chart" aria-label="Grafica de vida">
-                    <header class="mini-stats-chart__title">
-                        <span><i aria-hidden="true">\u2764\uFE0F</i> VIDA</span>
-                        <strong>${escapeHtmlJurado(formatearVidaJurado(stats.vidaActual || 0))}</strong>
-                    </header>
-                    ${crearSerieMiniVidaSvgJurado(id, stats)}
-                </section>
                 <section class="mini-stats-chart" aria-label="Grafica de teclas">
                     <header class="mini-stats-chart__title">
                         <span><i aria-hidden="true">\u2328\uFE0F</i> TECLAS</span>
@@ -548,7 +485,7 @@ function renderMiniGraficasStatsJurado(id, stats = {}) {
 
 function renderStatsJurado(id) {
     const writer = estado_jurado.writers[id];
-    if (writer) renderVidaJurado(id);
+    if (writer) renderPulsacionesJurado(id);
     const contenedor = getEl(`jurado_stats_${id}`);
     if (!writer || !contenedor) return;
     const stats = writer.stats || {};
@@ -557,7 +494,7 @@ function renderStatsJurado(id) {
         crearStatCardJurado("palabras", formatearNumeroJurado(palabras)),
         crearStatCardJurado("ritmo", formatearNumeroJurado(stats.ritmoPpm || 0, 1)),
         crearStatCardJurado("pulsaciones", formatearNumeroJurado(stats.pulsacionesTotal || 0)),
-        crearStatCardJurado("vida", `${formatearNumeroJurado(stats.vidaActual || 0, 1)}s`),
+        crearStatCardJurado("teclasDistintas", formatearNumeroJurado(stats.teclasDistintas || 0)),
         crearStatCardJurado("tiempoTotal", formatearMsJurado(stats.tiempoTotalMs || 0)),
         crearStatCardJurado("tiempoEscritura", formatearMsJurado(stats.tiempoEscrituraMs || 0)),
         crearStatCardJurado("topTeclas", resumirTopTeclasJurado(stats.topTeclas), true),

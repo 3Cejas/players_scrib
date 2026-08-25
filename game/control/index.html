@@ -21,7 +21,7 @@
     <script src="../js/domains/inspiration.js?v=20260824c"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260424a"></script>
-    <script src="../js/domains/resurrection.js?v=20260424a"></script>
+    <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
 <script src="./js/actions.js?v=20260824e"></script>
@@ -455,28 +455,6 @@
             <tr>
                 <td>
                     <br>
-                    <label for="tiempo_modificador" data-i18n="control.param.advantage">VENTAJA</label>
-                    <div class="spinner-container">
-                        <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_modificador', -5)">-</button>
-                        <input type="number" id="tiempo_modificador" name="tiempo_modificador" class="parametro"
-                               min="1" max="360" step="1" value="60">
-                        <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_modificador', 5)">+</button>
-                    </div>
-                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
-                </td>
-                <td>
-                    <br>
-                    <label for="tiempo_votacion" data-i18n="control.param.advantage_vote">VOTACI&Oacute;N VENTAJA</label>
-                    <div class="spinner-container">
-                        <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_votacion', -5)">-</button>
-                        <input type="number" id="tiempo_votacion" name="tiempo_votacion" class="parametro"
-                               min="1" max="360" step="1" value="30">
-                        <button type="button" class="spinner-button plus-button" onclick="cambiarValor('tiempo_votacion', 5)">+</button>
-                    </div>
-                    <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
-                </td>
-                <td>
-                    <br>
                     <label for="tiempo_modos" data-i18n="control.param.level">NIVEL</label>
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('tiempo_modos', -5)">-</button>
@@ -486,7 +464,7 @@
                     </div>
                     <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>
                 </td>
-                <td class="param-start">
+                <td class="param-start" hidden aria-hidden="true">
                     <br>
                     <label for="tiempo_minutos" data-i18n="control.param.start">INICIO</label><br>
                     <div class="spinner-container">
@@ -632,15 +610,9 @@
                 </div>
                 <div class="writer-header-actions writer-header-actions--j1">
                     <div id="metadatos_control_1" class="writer-header-stats marcador-equipo marcador-equipo-1">
-                        <div class="writer-compact-life writer-compact-life--j1" aria-label="Vida escritxr 1">
-                            <span class="writer-health-label">VIDA</span>
-                            <p id="tiempo" class="tiempo tiempo-vida"></p>
-                        </div>
+                        <p id="tiempo" hidden aria-hidden="true"></p>
                         <span class="writer-stat writer-stat--words"><span class="writer-stat-icon">&#x270E;</span><span id="puntos" class="puntos">0 palabras</span></span>
                         <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon">&#x1F3A8;</span><span id="musas" class="musas-total">0 musas</span></span>
-                    </div>
-                    <div class="fin_jugador fin_jugador--j1">
-                        <span id="boton_fin_j1" class='btn btn-fin btn-fin--j1' onclick="fin(1)">&#x1F535; FIN</span>
                     </div>
                 </div>
             </div>
@@ -663,16 +635,12 @@
                 <span>TIEMPO RESTANTE</span>
                 <p id="tiempo_modos_secs" class="tiempo">0 segundos</p>
             </div>
+            <button id="boton_fin_partida" class="btn btn-fin" type="button" onclick="fin_partida_global()">&#x23F9;&#xFE0F; FIN PARTIDA</button>
             <div id="level_status_witnesses" class="level-status-witnesses" aria-label="Estado de desventajas e inspiracion de musas">
                 <div id="control_desventaja_activa" class="level-status-witness level-status-witness--disadvantage" data-active="0" data-team="">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
                     <span id="control_desventaja_activa_icon" class="level-status-witness__icon" aria-hidden="true">-</span>
                     <span id="control_desventaja_activa_time" class="level-status-witness__time">--</span>
-                </div>
-                <div id="control_votacion_desventaja" class="level-status-witness level-status-witness--vote" data-active="0" data-team="">
-                    <span class="level-status-witness__dot" aria-hidden="true"></span>
-                    <span class="level-status-witness__icon" aria-hidden="true">&#x1F5F3;&#xFE0F;</span>
-                    <span id="control_votacion_desventaja_time" class="level-status-witness__time">--</span>
                 </div>
                 <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Palabra de musas para Escritxr 1">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
@@ -701,10 +669,10 @@
             </div>
             <div class="level-sequence" aria-label="Secuencia de niveles">
                 <span data-mode="letra bendita">LB</span>
-                <span data-mode="letra prohibida">LP</span>
+                <span data-mode="letra prohibida">LM</span>
                 <span data-mode="tertulia">T</span>
                 <span data-mode="palabras bonus">PB</span>
-                <span data-mode="palabras prohibidas">PP</span>
+                <span data-mode="palabras prohibidas">PM</span>
                 <span data-mode="frase final">F</span>
             </div>
         </div>
@@ -725,15 +693,9 @@
                 </div>
                 <div class="writer-header-actions writer-header-actions--j2">
                     <div id="metadatos_control_2" class="writer-header-stats marcador-equipo marcador-equipo-2">
-                        <div class="writer-compact-life writer-compact-life--j2" aria-label="Vida escritxr 2">
-                            <span class="writer-health-label writer-health-label--j2">VIDA</span>
-                            <p id="tiempo1" class="tiempo tiempo-vida"></p>
-                        </div>
+                        <p id="tiempo1" hidden aria-hidden="true"></p>
                         <span class="writer-stat writer-stat--words"><span class="writer-stat-icon">&#x270E;</span><span id="puntos1" class="puntos">0 palabras</span></span>
                         <span class="writer-stat writer-stat--muses"><span class="writer-stat-icon">&#x1F3A8;</span><span id="musas1" class="musas-total">0 musas</span></span>
-                    </div>
-                    <div class="fin_jugador fin_jugador--j2">
-                        <span id="boton_fin_j2" class='btn btn-fin btn-fin--j2' onclick="fin(2)">&#x1F534; FIN</span>
                     </div>
                 </div>
             </div>

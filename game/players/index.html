@@ -28,7 +28,7 @@
     <script src="../js/domains/inspiration.js?v=20260824c"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260424a"></script>
-    <script src="../js/domains/resurrection.js?v=20260424a"></script>
+    <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/editor-deletion.js?v=20260824g"></script>
     <script src="./js/actions.js?v=20260824g"></script>
     <div id="corazones_escritor" class="corazones-flotantes"></div>
@@ -93,9 +93,9 @@
             <!-- Sustituimos el "?" por tu imagen -->
             <img src="../img/tooltip.png" alt="Ayuda fuerza" />
             <span class="tooltiptext" role="tooltip">
-              La fuerza determina la cantidad de tiempo que obtienes por cada palabra añadida.
+              La fuerza aumenta la mini inspiraci&oacute;n que consigues escribiendo.
               <br><br>
-              A mayor fuerza, se obtiene mayor cantidad de tiempo por palabra.
+              Las palabras de las musas siguen teniendo mucho m&aacute;s peso.
             </span>
           </span>
         </h2>
@@ -147,7 +147,7 @@
             <span class="tooltiptext" role="tooltip">
               La destreza indica la precisión y rapidez al actuar.
               <br><br>
-              Las desventajas durarán menos tiempo.
+              Reduce la intensidad de las desventajas: menos desenfoque, menor aceleraci&oacute;n y m&aacute;s oportunidades de correcci&oacute;n.
             </span>
           </span>
         </h2>
@@ -180,75 +180,12 @@
     <div id="contenedor" class="contenedor">
         <br>
         <div class="jugador">
-            <p id="tiempo" class="tiempo tiempo-vida"></p>
             <p id="feedback_tiempo" class="feedback_tiempo"></p>
+            <p id="tiempo" hidden aria-hidden="true"></p>
             <input disabled="" id="nombre" class="nombre" data-darkreader-inline-color="">
             <br><br>
             <p id="alineador1"></p>
     
-    <!-- MENU PRINCIPAL -->
-    <div id="mainMenu" class="mainMenu resucitar-panel">
-        <div class="resucitar-header">
-                    <h1 class="main-title">
-            <span class="resucitar-title-over">GAME OVER</span>
-            <span class="resucitar-title-question">&iquest;QUIERES <span class="resucitar-highlight">RESUCITAR</span> A CAMBIO DE PALABRAS?</span>
-          </h1>
-        </div>
-        <div class="resucitar-row">
-          <div class="resucitar-actions">
-            <div class="button-container resucitar-buttons">
-              <button id="btnSi" class="selected" type="button">S&iacute;</button>
-              <button id="btnNo" type="button">No</button>
-            </div>
-          </div>
-          <div class="resucitar-keys">
-  <div class="resucitar-keys-title">Usa flechas y Enter</div>
-  <div class="resucitar-keypad" aria-hidden="true">
-    <div class="keycap keycap-up">&uarr;</div>
-    <div class="keycap keycap-left">&larr;</div>
-    <div class="keycap keycap-down">&darr;</div>
-    <div class="keycap keycap-right">&rarr;</div>
-    <div class="keycap keycap-enter">ENTER</div>
-  </div>
-</div>
-          </div>
-        </div>
-      </div>
-  
-      <!-- MENU DE SELECCION DE CANTIDAD (APARECE AL DAR "S&Iacute;") -->
-      <div id="quantityMenu" class="resucitar-panel">
-        <div class="resucitar-header">
-          <h2 class="quantity-title">Selecciona la cantidad de palabras</h2>
-        </div>
-        <div class="resucitar-row">
-          <div class="resucitar-actions">
-            <!-- 
-              Este elemento mostrar&aacute; la cantidad y su conversi&oacute;n a segundos.
-              Lo tratamos como "elemento navegable" en nuestro &iacute;ndice para flechas.
-            -->
-            <div id="quantityDisplay" class="quantity-display">
-              <!-- Aqu&iacute; inyectaremos el texto "X palabras => Y segundos" -->
-            </div>
-  
-            <!-- Botones de abajo: "Confirmar" y "Atras" -->
-            <div class="button-container resucitar-buttons">
-              <button id="btnConfirmar" type="button">Confirmar</button>
-              <button id="btnAtras" type="button">Atr&aacute;s</button>
-            </div>
-          </div>
-          <div class="resucitar-keys">
-  <div class="resucitar-keys-title">Usa flechas y Enter</div>
-  <div class="resucitar-keypad" aria-hidden="true">
-    <div class="keycap keycap-up">&uarr;</div>
-    <div class="keycap keycap-left">&larr;</div>
-    <div class="keycap keycap-down">&darr;</div>
-    <div class="keycap keycap-right">&rarr;</div>
-    <div class="keycap keycap-enter">ENTER</div>
-  </div>
-</div>
-          </div>
-        </div>
-      </div>
 <div class="textarea-container">
             <div contenteditable="false" class="textarea" id="texto" spellcheck="false"> </div>
                 <div class="textarea-gradient top" id="gradientTop"></div>
@@ -270,7 +207,7 @@
                         <div class="meta-copy">
                             <span class="meta-label">Musas</span>
                             <span id="musas" class="musas-total">0 musas</span>
-                            <span id="musa_regalo_estado" class="musa-regalo-chip" hidden>REGALO +1S | 0/10</span>
+                                <span id="musa_regalo_estado" class="musa-regalo-chip" hidden>APOYO DE MUSAS | 0/10</span>
                         </div>
                     </div>
                 </div>

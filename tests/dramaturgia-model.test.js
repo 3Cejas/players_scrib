@@ -78,7 +78,7 @@ test("dramaturgy store accepts the server's nested Spanish snapshot aliases", ()
       textos: { 1: { plano: "Texto vivo" } },
       estadisticas: {
         players: {
-          1: { palabrasTotal: 2, ritmoPpm: 21, vida: { actual: 17 } }
+          1: { palabrasTotal: 2, ritmoPpm: 21, pulsacionesTotal: 17 }
         }
       },
       vista_espectador: { modo: "duelo" }
@@ -181,7 +181,7 @@ test("dramaturgy live deltas update real text and stats without creating fake ev
         nombre: "Ada",
         palabrasTotal: 2,
         ritmoPpm: 42,
-        vida: { actual: 18 }
+        pulsacionesTotal: 18
       }
     }
   });
@@ -195,7 +195,7 @@ test("dramaturgy live deltas update real text and stats without creating fake ev
   assert.equal(writer.texto, "Hola escena");
   assert.equal(writer.palabras, 2);
   assert.equal(writer.ritmo, 42);
-  assert.equal(writer.vida, 18);
+  assert.equal(writer.pulsaciones, 18);
   assert.equal(writer.musas, 4);
   assert.equal(store.events.length, 0);
 });
@@ -288,19 +288,19 @@ test("show journey declares open and closed warmups, disadvantage feedback, stab
       ["warmup-acciones", "Acciones · cerrado"],
       ["warmup-frase-final-open", "Frase final · abierto"],
       ["warmup-frase-final", "Frase final · cerrado"],
+      ["level-letra-bendita-feedback", "Desventaja inicial"],
       ["level-letra-bendita", "Letra bendita"],
-      ["vote-letra-bendita", "Votación de Musa"],
-      ["level-letra-prohibida-feedback", "Desventaja recibida"],
-      ["level-letra-prohibida", "Letra prohibida"],
+      ["competition-letra-bendita", "Marcador · Letra bendita"],
+      ["level-letra-prohibida-feedback", "Desventaja inicial"],
+      ["level-letra-prohibida", "Letra maldita"],
+      ["competition-letra-prohibida", "Marcador · Letra maldita"],
       ["level-tertulia", "Tertulia"],
-      ["vote-letra-prohibida", "Votación de Musa"],
-      ["level-palabras-bonus-feedback", "Desventaja recibida"],
+      ["level-palabras-bonus-feedback", "Desventaja inicial"],
       ["level-palabras-bonus", "Palabras benditas"],
-      ["vote-palabras-bonus", "Votación de Musa"],
-      ["level-palabras-prohibidas-feedback", "Desventaja recibida"],
-      ["level-palabras-prohibidas", "Palabras prohibidas"],
-      ["vote-palabras-prohibidas", "Votación de Musa"],
-      ["level-frase-final-feedback", "Desventaja recibida"],
+      ["competition-palabras-bonus", "Marcador · Palabras benditas"],
+      ["level-palabras-prohibidas-feedback", "Desventaja inicial"],
+      ["level-palabras-prohibidas", "Palabras malditas"],
+      ["competition-palabras-prohibidas", "Marcador · Palabras malditas"],
       ["level-frase-final", "Frase final"],
       ["representation-preparation", "Preparación"],
       ["representation-projection", "Proyección"],
@@ -324,16 +324,13 @@ test("show journey declares open and closed warmups, disadvantage feedback, stab
     model.SHOW_JOURNEY
       .filter(({ kind, moment }) => kind === "level" && moment === "feedback")
       .map(({ mode }) => mode),
-    ["letra prohibida", "palabras bonus", "palabras prohibidas", "frase final"]
-  );
-  assert.deepEqual(
-    model.SHOW_JOURNEY.filter(({ kind }) => kind === "voting").map(({ afterMode }) => afterMode),
     ["letra bendita", "letra prohibida", "palabras bonus", "palabras prohibidas"]
   );
-  assert.equal(
-    model.SHOW_JOURNEY.find(({ id }) => id === "vote-letra-prohibida").operationalAfterMode,
-    "tertulia"
+  assert.deepEqual(
+    model.SHOW_JOURNEY.filter(({ kind }) => kind === "competition").map(({ mode }) => mode),
+    ["letra bendita", "letra prohibida", "palabras bonus", "palabras prohibidas"]
   );
+  assert.equal(model.SHOW_JOURNEY.some(({ kind }) => kind === "voting"), false);
 });
 
 test("show score keeps every expected column pending instead of inventing snapshots", () => {
@@ -355,7 +352,7 @@ test("show score keeps every expected column pending instead of inventing snapsh
   });
 });
 
-test("show score matches real event shapes and retains voting and transition checkpoints", () => {
+test("show score matches real event shapes and retains transition checkpoints", () => {
   const openWarmupTeams = {
     1: { estado: "jugando", intentos: 1, aciertos: 1, bloqueado: false, final: null },
     2: { estado: "jugando", intentos: 1, aciertos: 1, bloqueado: false, final: null }
@@ -410,83 +407,83 @@ test("show score matches real event shapes and retains voting and transition che
       fase: "calentamiento",
       hechos: { activo: true, vista: true, solicitud: "frase_final", equipos: closedWarmupTeams }
     }),
-    historicalCheckpoint("level-bendita", 7, {
+    historicalCheckpoint("feedback-bendita", 7, {
+      tipo: "desventaja",
+      titulo: "Desventaja activa",
+      modo: "letra bendita",
+      hechos: activeDisadvantage(1, "⚡")
+    }),
+    historicalCheckpoint("level-bendita", 8, {
       tipo: "modo",
       modo: "letra bendita",
       hechos: { modo: "letra bendita" }
     }),
-    historicalCheckpoint("vote", 8, {
-      tipo: "votacion",
-      titulo: "Votación iniciada",
+    historicalCheckpoint("competition-bendita", 9, {
+      tipo: "competicion_ronda",
+      titulo: "Competición · letra bendita",
       modo: "letra bendita",
-      hechos: { activa: true, equipo: "j1" }
+      hechos: { activa: true, modo: "letra bendita", marcador: { 1: 12, 2: 9 }, lider: 1 }
     }),
-    historicalCheckpoint("feedback-prohibida", 9, {
+    historicalCheckpoint("feedback-prohibida", 10, {
       tipo: "desventaja",
       titulo: "Desventaja activa",
       modo: "letra prohibida",
       hechos: activeDisadvantage(2, "🌪️")
     }),
-    historicalCheckpoint("level-prohibida", 10, {
+    historicalCheckpoint("level-prohibida", 11, {
       tipo: "modo",
       modo: "letra prohibida",
       hechos: { modo: "letra prohibida" }
     }),
-    historicalCheckpoint("level-tertulia", 11, {
+    historicalCheckpoint("competition-prohibida", 12, {
+      tipo: "competicion_ronda",
+      titulo: "Competición · letra prohibida",
+      modo: "letra prohibida",
+      hechos: { activa: true, modo: "letra prohibida", marcador: { 1: -2, 2: -1 }, lider: 2 }
+    }),
+    historicalCheckpoint("level-tertulia", 13, {
       tipo: "modo",
       modo: "tertulia",
       hechos: { modo: "tertulia" }
     }),
-    historicalCheckpoint("vote-prohibida", 12, {
-      tipo: "votacion",
-      titulo: "Votación iniciada",
-      modo: "tertulia",
-      hechos: { activa: true, equipo: "j2" }
-    }),
-    historicalCheckpoint("level-close", 13, {
+    historicalCheckpoint("level-close", 14, {
       tipo: "modo",
       modo: "",
       hechos: { modo_anterior: "tertulia" }
     }),
-    historicalCheckpoint("feedback-bonus", 14, {
+    historicalCheckpoint("feedback-bonus", 15, {
       tipo: "desventaja",
       titulo: "Desventaja activa",
       modo: "palabras bonus",
       hechos: activeDisadvantage(1, "⚡")
     }),
-    historicalCheckpoint("level-bonus", 15, {
+    historicalCheckpoint("level-bonus", 16, {
       tipo: "modo",
       modo: "palabras bonus",
       hechos: { modo: "palabras bonus" }
     }),
-    historicalCheckpoint("vote-bonus", 16, {
-      tipo: "votacion",
-      titulo: "Votación iniciada",
+    historicalCheckpoint("competition-bonus", 17, {
+      tipo: "competicion_ronda",
+      titulo: "Competición · palabras bonus",
       modo: "palabras bonus",
-      hechos: { activa: true, equipo: "j1" }
+      hechos: { activa: true, modo: "palabras bonus", marcador: { 1: 8, 2: 6 }, lider: 1 }
     }),
-    historicalCheckpoint("feedback-malditas", 17, {
+    historicalCheckpoint("feedback-malditas", 18, {
       tipo: "desventaja",
       titulo: "Desventaja activa",
       modo: "palabras prohibidas",
       hechos: activeDisadvantage(2, "🙃")
     }),
-    historicalCheckpoint("level-malditas", 18, {
+    historicalCheckpoint("level-malditas", 19, {
       tipo: "modo",
       modo: "palabras prohibidas",
       hechos: { modo: "palabras prohibidas" }
     }),
-    historicalCheckpoint("vote-malditas", 19, {
-      tipo: "votacion",
-      titulo: "Votación iniciada",
+    historicalCheckpoint("competition-malditas", 20, {
+      tipo: "competicion_ronda",
+      titulo: "Competición · palabras prohibidas",
       modo: "palabras prohibidas",
-      hechos: { activa: true, equipo: "j2" }
-    }),
-    historicalCheckpoint("feedback-frase", 20, {
-      tipo: "desventaja",
-      titulo: "Desventaja activa",
-      modo: "frase final",
-      hechos: activeDisadvantage(1, "🖋️")
+      hechos: { activa: true, modo: "palabras prohibidas", marcador: { 1: -3, 2: -1 }, lider: 2 }
     }),
     historicalCheckpoint("level-frase", 21, {
       tipo: "modo",
@@ -520,19 +517,19 @@ test("show score matches real event shapes and retains voting and transition che
       "warm-acciones",
       "warm-frase-open",
       "warm-frase",
+      "feedback-bendita",
       "level-bendita",
-      "vote",
+      "competition-bendita",
       "feedback-prohibida",
       "level-prohibida",
+      "competition-prohibida",
       "level-tertulia",
-      "vote-prohibida",
       "feedback-bonus",
       "level-bonus",
-      "vote-bonus",
+      "competition-bonus",
       "feedback-malditas",
       "level-malditas",
-      "vote-malditas",
-      "feedback-frase",
+      "competition-malditas",
       "level-frase",
       "representation-ready",
       "representation-play",
@@ -550,22 +547,24 @@ test("show score matches real event shapes and retains voting and transition che
   });
 
   const visible = score.columns.map((column) => [column.kind, column.label, column.checkpoint?.id]);
-  const voteIndex = visible.findIndex(([, , id]) => id === "vote");
+  const competitionIndex = visible.findIndex(([, , id]) => id === "competition-bendita");
+  const blessedFeedbackIndex = visible.findIndex(([, , id]) => id === "feedback-bendita");
   const blessedIndex = visible.findIndex(([, , id]) => id === "level-bendita");
   const prohibitedFeedbackIndex = visible.findIndex(([, , id]) => id === "feedback-prohibida");
   const prohibitedIndex = visible.findIndex(([, , id]) => id === "level-prohibida");
-  assert.deepEqual(visible[voteIndex].slice(0, 2), ["voting", "Votación de Musa"]);
-  assert.equal(score.columns.filter((column) => column.kind === "voting").length, 4);
+  assert.deepEqual(visible[competitionIndex].slice(0, 2), ["competition", "Marcador · Letra bendita"]);
+  assert.equal(score.columns.filter((column) => column.kind === "voting").length, 0);
   assert.ok(
-    blessedIndex < voteIndex
-    && voteIndex < prohibitedFeedbackIndex
+    blessedFeedbackIndex < blessedIndex
+    && blessedIndex < competitionIndex
+    && competitionIndex < prohibitedFeedbackIndex
     && prohibitedFeedbackIndex < prohibitedIndex
   );
   assert.deepEqual(
     score.expectedColumns
       .filter(({ moment }) => moment === "feedback")
       .map(({ checkpoint }) => checkpoint && checkpoint.id),
-    ["feedback-prohibida", "feedback-bonus", "feedback-malditas", "feedback-frase"]
+    ["feedback-bendita", "feedback-prohibida", "feedback-bonus", "feedback-malditas"]
   );
   assert.deepEqual(
     score.expectedColumns
@@ -588,7 +587,7 @@ test("show score matches real event shapes and retains voting and transition che
   assert.ok(tertuliaIndex < closeIndex && closeIndex < bonusIndex);
 });
 
-test("show score pairs causal voting openings and closings without duplicate extras", () => {
+test("show score no longer reserves voting columns and expects four competition markers", () => {
   const child = historicalCheckpoint("vote-child", 1, {
     tipo: "votacion",
     titulo: "Votación finalizada",
@@ -605,14 +604,10 @@ test("show score pairs causal voting openings and closings without duplicate ext
 
   const score = model.buildShowScore([child, parent]);
   const voting = score.expectedColumns.filter((column) => column.kind === "voting");
-  assert.equal(voting.length, 4);
-  assert.equal(voting[0].checkpoint.id, "vote-parent");
-  assert.equal(voting[0].openingCheckpoint.id, "vote-parent");
-  assert.equal(voting[0].closingCheckpoint.id, "vote-child");
-  assert.deepEqual(voting[0].relatedCheckpoints.map(({ id }) => id), ["vote-parent", "vote-child"]);
-  assert.ok(voting.slice(1).every((column) => column.status === "pending"));
-  assert.equal(voting[0].status, "partial");
-  assert.deepEqual(voting[0].missingScreenIds, ["actor1"]);
+  const competition = score.expectedColumns.filter((column) => column.kind === "competition");
+  assert.equal(voting.length, 0);
+  assert.equal(competition.length, 4);
+  assert.ok(competition.every((column) => column.status === "pending"));
   assert.equal(score.columns.filter((column) => !column.expected && column.kind === "voting").length, 0);
-  assert.deepEqual(score.unplacedCheckpoints, []);
+  assert.deepEqual(score.unplacedCheckpoints.map(({ id }) => id), ["vote-parent", "vote-child"]);
 });

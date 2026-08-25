@@ -377,6 +377,6 @@ test("automatic deletion is postponed before mutation and keeps rescheduling", (
   );
   assert.match(
     state,
-    /instalarBloqueoBorradoManual\([\s\S]*texto,[\s\S]*\(\) => bloquear_borrado_putada === true/
+    /instalarBloqueoBorradoManual\([\s\S]*texto,[\s\S]*\(\) => debeBloquearBorradoPorDestreza\(\)/
   );
 });

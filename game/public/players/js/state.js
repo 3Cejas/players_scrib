@@ -297,7 +297,6 @@ function actualizarBarraVida(elemento, texto, opciones = {}) {
 }
 
 let terminado = false;
-let esperando_resurreccion_musa = false;
 let clasificacion = getEl("clasificacion");
 let notificacion = getEl("notificacion");
 let fin_pag = getEl("fin_pag");
@@ -608,26 +607,24 @@ function actualizarEstadoRegaloBanderaMusa(payload = {}) {
     const musasActivas = Math.max(0, Number(estado.musas) || 0);
     const objetivo = Math.max(1, Number(estado.objetivo) || 1);
     const progreso = Math.max(0, Math.min(objetivo, Number(estado.progreso) || 0));
-    const regaloSegs = Math.max(1, Number(estado.regalo_secs) || 1);
     const cooldownMs = Math.max(0, Number(estado.cooldown_ms) || 0);
 
     bandera_regalo_estado.hidden = false;
-    bandera_regalo_titulo.textContent = `${musasActivas} MUSA${musasActivas === 1 ? "" : "S"} | +${regaloSegs}S`;
+    bandera_regalo_titulo.textContent = `${musasActivas} MUSA${musasActivas === 1 ? "" : "S"} | APOYO VISUAL`;
     bandera_regalo_valor.textContent = cooldownMs > 0 && progreso === 0
         ? `RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
         : `${progreso}/${objetivo}`;
     bandera_regalo_fill.style.width = `${Math.max(0, Math.min(100, Number(estado.progreso_pct) || 0))}%`;
-    bandera_regalo_estado.setAttribute("aria-label", `Regalo de bandera: ${progreso} de ${objetivo}, +${regaloSegs} segundos.`);
+    bandera_regalo_estado.setAttribute("aria-label", `Apoyo visual de musas: ${progreso} de ${objetivo}.`);
 }
 
 function mostrarToastRegaloBanderaMusa(payload = {}) {
     if (Number(payload && payload.player) !== Number(player)) return;
-    const secs = Math.max(1, Math.abs(Number(payload && payload.secs) || 0));
     const nombreEscritxr = obtenerNombreEscritxrInspiracion({ escritxr: player });
     const toast = obtenerToastInspiracionMusa();
     toast.classList.remove("musa-inspiracion-toast--propia", "musa-inspiracion-toast--ajena");
     toast.classList.add("musa-inspiracion-toast--regalo");
-    toast.textContent = `+${secs}S PARA ${nombreEscritxr}`;
+    toast.textContent = `APOYO DE MUSAS PARA ${nombreEscritxr}`;
     toast.classList.remove("activa");
     void toast.offsetWidth;
     toast.classList.add("activa");
@@ -1094,19 +1091,7 @@ function obtenerEmojiPorClickPie(pieEl, evt) {
 }
 
 function votarVentajaPorEmoji(emoji) {
-    if (!emoji || !votacion_ventaja_activa || votacion_ventaja_ya_voto || votacion_ventaja_voto_emitido) {
-        return;
-    }
-    votacion_ventaja_voto_emitido = true;
-    if (typeof elegir_ventaja_publico === "function") {
-        elegir_ventaja_publico({ value: emoji });
-        return;
-    }
-    socket.emit("enviar_voto_ventaja", {
-        voto: emoji,
-        client_id: window.musa_client_id || ""
-    });
-    window.dispatchEvent(new CustomEvent("musa_voto_ventaja_emitido", { detail: { voto: emoji } }));
+    return false;
 }
 
 function obtenerEquipoEscritxrObjetivo(nombreEscritxr) {
@@ -3118,7 +3103,6 @@ let enviar_ventaja;
         recibir_postgame_x = 'recibir_postgame1';
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
-        elegir_ventaja = "elegir_ventaja_j1";
         enviar_ventaja = "enviar_ventaja_j1";
         nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
         metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
@@ -3134,7 +3118,6 @@ let enviar_ventaja;
         recibir_postgame_x = 'recibir_postgame2';
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
-        elegir_ventaja = "elegir_ventaja_j2"; 
         enviar_ventaja = "enviar_ventaja_j2";
         nombre1.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
         metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";

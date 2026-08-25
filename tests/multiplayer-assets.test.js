@@ -122,6 +122,24 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/actors/source/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
 });
 
+test("no role loads or waits for the removed resurrection system", () => {
+  const roleFiles = [
+    "game/players/index.html",
+    "game/players/js/socket-events.js",
+    "game/public/players/index.html",
+    "game/public/players/js/state.js",
+    "game/public/players/js/socket-events.js",
+    "game/spectator/index.html",
+    "game/spectator/js/socket-events.js",
+    "game/actors/source/index.html",
+    "game/actors/source/js/socket-events.js"
+  ];
+  roleFiles.forEach((relPath) => {
+    assert.doesNotMatch(read(relPath), /resurrection\.js|resucitar|resurrecci[oó]n/i, relPath);
+  });
+  assert.equal(fs.existsSync(path.join(ROOT, "game/js/domains/resurrection.js")), false);
+});
+
 test("muse tutorial localizes server-side offensive-language rejections", () => {
   const i18n = read("game/js/i18n.js");
   const state = read("game/public/players/js/state.js");
@@ -170,7 +188,7 @@ test("jury role exposes read-only judging workflow", () => {
   assert.doesNotMatch(html, /id="jurado_refresh_data"/);
   assert.doesNotMatch(html, /AZUL|ROJO|ROJA/);
   assert.doesNotMatch(html, /jurado_chars_|caracteres/);
-  assert.match(html, /id="jurado_vida_1" class="jury-tiempo-vida"/);
+  assert.match(html, /id="jurado_pulsaciones_1" class="jury-pulse-meter"/);
   assert.match(html, /class="jury-writer-header-stats"/);
   assert.match(html, /class="jury-writer-text-shell jury-writer-text-shell--j1"/);
   assert.match(html, /writer-stat-icon"[^>]*>&#x1F58B;&#xFE0F;<\/span><span id="jurado_words_1"/);
@@ -237,10 +255,10 @@ test("jury role exposes read-only judging workflow", () => {
   assert.match(css, /\.conexion-dot--ok\s*\{[\s\S]*#2cff6d/);
   assert.match(css, /\.conexion-dot--off\s*\{[\s\S]*#ff9d2e/);
   assert.match(css, /\.remote-status-state\.is-off\s*\{[\s\S]*#ffad42/);
-  assert.match(css, /\.jury-tiempo-vida\s*\{[\s\S]*--vida-pct:\s*0%/);
-  assert.match(css, /\.jury-compact-life\s*\{[\s\S]*width:\s*clamp\(7\.1rem, 10\.4vw, 9\.8rem\);/);
-  assert.match(css, /\.jury-health-label\s*\{[\s\S]*font-size:\s*clamp\(0\.72rem, 0\.86vw, 1rem\);/);
-  assert.match(css, /\.jury-tiempo-vida\s*\{[\s\S]*height:\s*0\.72rem;/);
+  assert.match(css, /\.jury-pulse-meter\s*\{[\s\S]*--pulse-pct:\s*0%/);
+  assert.match(css, /\.jury-compact-pulses\s*\{[\s\S]*width:\s*clamp\(7\.1rem, 10\.4vw, 9\.8rem\);/);
+  assert.match(css, /\.jury-pulses-label\s*\{[\s\S]*font-size:\s*clamp\(0\.72rem, 0\.86vw, 1rem\);/);
+  assert.match(css, /\.jury-pulse-meter\s*\{[\s\S]*height:\s*0\.72rem;/);
   assert.match(css, /\.writer-stat-icon\s*\{[\s\S]*font-size:\s*clamp\(0\.92rem, 1\.08vw, 1\.24rem\);/);
   assert.match(css, /\.jury-writer-header-stats \.puntos,[\s\S]*\.jury-writer-header-stats \.musas-total\s*\{[\s\S]*font-size:\s*clamp\(0\.86rem, 1vw, 1\.15rem\);/);
   assert.match(css, /\.jury-writer-text-shell\s*\{[\s\S]*grid-template-columns:/);
@@ -280,12 +298,12 @@ test("jury role exposes read-only judging workflow", () => {
   assert.match(state, /getEl\("jurado_eval_writing"\)/);
   assert.match(state, /getEl\("jurado_eval_muses"\)/);
   assert.doesNotMatch(state, /jurado_eval_writing_\$\{id\}|jurado_eval_muses_\$\{id\}/);
-  assert.match(state, /function renderVidaJurado\(id\)/);
+  assert.match(state, /function renderPulsacionesJurado\(id\)/);
   assert.match(state, /dot\.classList\.remove\("conexion-dot--ok", "conexion-dot--warn", "conexion-dot--off", "conexion-dot--ping"\)/);
   assert.match(state, /dot\.classList\.add\(activo \? "conexion-dot--ok" : "conexion-dot--off"\)/);
   assert.match(state, /text\.textContent = activo \? "CONECTADO" : "DESCONECTADO"/);
   assert.doesNotMatch(state, /setTextoJurado\("jurado_modo"/);
-  assert.match(state, /bar\.style\.setProperty\("--vida-pct"/);
+  assert.match(state, /bar\.style\.setProperty\("--pulse-pct"/);
   assert.match(state, /formatearCantidadJurado\(writer\.words, "palabra", "palabras"\)/);
   assert.match(state, /statsHistory:\s*\[\]/);
   assert.match(state, /function registrarMiniStatsJurado\(id, stats = \{\}\)/);
@@ -294,7 +312,7 @@ test("jury role exposes read-only judging workflow", () => {
   assert.match(state, /palabras:\s*\{ icon: "\\u\{1F58B\}\\uFE0F", label: "Palabras" \}/);
   assert.match(state, /ritmo:\s*\{ icon: "\\u26A1", label: "Ritmo PPM" \}/);
   assert.match(state, /pulsaciones:\s*\{ icon: "\\u2328\\uFE0F", label: "Pulsaciones" \}/);
-  assert.match(state, /vida:\s*\{ icon: "\\u2764\\uFE0F", label: "Vida" \}/);
+  assert.doesNotMatch(state, /vidaActual|vidaMedia|Esperando vida/);
   assert.match(state, /topTeclas:\s*\{ icon: "\\u\{1F51D\}", label: "Top teclas" \}/);
   assert.match(state, /class="stat-card__icon" aria-hidden="true"/);
   assert.match(state, /crearStatCardJurado\("pulsaciones"/);
@@ -357,14 +375,14 @@ test("writer visible text fallbacks avoid mojibake sequences", () => {
   assert.match(playerSocketEvents, /&raquo;/);
   assert.match(playerSocketEvents, /Podr\\u00edas escribir esta palabra/);
   assert.doesNotMatch(playerSocketEvents, /PodrÃ|Podrias|Â«|Â»|Ã‚Â¡Tiempo|Â¡Tiempo|Â¡GRACIAS/);
-  assert.match(playerSocketEvents, /"\\u00a1GRACIAS POR JUGAR!"/);
+  assert.doesNotMatch(playerSocketEvents, /GRACIAS POR JUGAR|GAME OVER|RESUCITAR/i);
   assert.match(playerSocketEvents, /"\\u00f1"/);
   assert.match(playerSocketEvents, /\\u00c1\\u00c9\\u00cd\\u00d3\\u00da\\u00dc\\u00d1/);
 
   assert.doesNotMatch(playerState, /Ã‚Â¡Tiempo|Â¡Tiempo|Â¡TEXTO|Â¡PERDISTE|Ã/);
   assert.match(playerState, /"\\u00a1Tiempo!"/);
   assert.match(playerState, /"\\u00a1TEXTO TERMINADO!"/);
-  assert.match(playerState, /"\\u00a1PERDISTE, NO ESCRIBISTE NADA!"/);
+  assert.doesNotMatch(playerState, /GAME OVER|RESUCITAR/i);
   assert.match(playerState, /\\\\u00c1\\\\u00c9\\\\u00cd\\\\u00d3\\\\u00da\\\\u00dc\\\\u00d1/);
 });
 
@@ -440,17 +458,15 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.doesNotMatch(html, /class="writer-avatar/);
   assert.match(html, /id="metadatos_control_1" class="writer-header-stats[\s\S]*id="puntos"[\s\S]*id="musas"/);
   assert.match(html, /id="metadatos_control_2" class="writer-header-stats[\s\S]*id="puntos1"[\s\S]*id="musas1"/);
-  assert.match(html, /id="metadatos_control_1" class="writer-header-stats[\s\S]*class="writer-compact-life writer-compact-life--j1"[\s\S]*id="tiempo"[\s\S]*id="puntos"/);
-  assert.match(html, /id="metadatos_control_2" class="writer-header-stats[\s\S]*class="writer-compact-life writer-compact-life--j2"[\s\S]*id="tiempo1"[\s\S]*id="puntos1"/);
+  assert.match(html, /id="metadatos_control_1" class="writer-header-stats[\s\S]*id="tiempo" hidden aria-hidden="true"[\s\S]*id="puntos"/);
+  assert.match(html, /id="metadatos_control_2" class="writer-header-stats[\s\S]*id="tiempo1" hidden aria-hidden="true"[\s\S]*id="puntos1"/);
   assert.match(html, /id="puntos" class="puntos">0 palabras<\/span>/);
   assert.match(html, /id="musas" class="musas-total">0 musas<\/span>/);
   assert.match(html, /id="puntos1" class="puntos">0 palabras<\/span>/);
   assert.match(html, /id="musas1" class="musas-total">0 musas<\/span>/);
   assert.doesNotMatch(html, /class="writer-meta-row"/);
-  assert.match(html, /id="boton_fin_j1" class='btn btn-fin btn-fin--j1'/);
-  assert.match(html, /id="boton_fin_j2" class='btn btn-fin btn-fin--j2'/);
-  assert.match(html, /<span class="writer-health-label">VIDA<\/span>/);
-  assert.match(html, /<span class="writer-health-label writer-health-label--j2">VIDA<\/span>/);
+  assert.match(html, /id="boton_fin_partida"[\s\S]*onclick="fin_partida_global\(\)"/);
+  assert.doesNotMatch(html, /id="boton_fin_j[12]"|writer-health-label|>VIDA</);
   assert.doesNotMatch(html, /SALUD \/ TIEMPO/);
   assert.match(html, /id="boton_ver_logs"/);
   assert.match(html, /id="boton_skip_tertulia"/);
@@ -461,11 +477,12 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /id="line_numbers_j2"/);
   assert.match(
     html,
-    /<span data-mode="letra bendita">LB<\/span>\s*<span data-mode="letra prohibida">LP<\/span>\s*<span data-mode="tertulia">T<\/span>\s*<span data-mode="palabras bonus">PB<\/span>\s*<span data-mode="palabras prohibidas">PP<\/span>\s*<span data-mode="frase final">F<\/span>/
+    /<span data-mode="letra bendita">LB<\/span>\s*<span data-mode="letra prohibida">LM<\/span>\s*<span data-mode="tertulia">T<\/span>\s*<span data-mode="palabras bonus">PB<\/span>\s*<span data-mode="palabras prohibidas">PM<\/span>\s*<span data-mode="frase final">F<\/span>/
   );
   assert.match(html, /<span>TIEMPO RESTANTE<\/span>/);
   assert.doesNotMatch(html, /<span>DURACI&Oacute;N<\/span>/);
-  assert.match(html, /id="level_status_witnesses" class="level-status-witnesses"[\s\S]*id="control_desventaja_activa"[\s\S]*id="control_desventaja_activa_icon"[\s\S]*id="control_desventaja_activa_time"[\s\S]*id="control_votacion_desventaja"[\s\S]*&#x1F5F3;&#xFE0F;[\s\S]*id="control_palabra_musa_j1"[\s\S]*id="control_palabra_musa_j1_word"[\s\S]*id="control_palabra_musa_j1_time"[\s\S]*id="control_palabra_musa_j1_queue"[\s\S]*id="control_palabra_musa_j2"[\s\S]*id="control_palabra_musa_j2_word"[\s\S]*id="control_palabra_musa_j2_time"[\s\S]*id="control_palabra_musa_j2_queue"/);
+  assert.match(html, /id="level_status_witnesses" class="level-status-witnesses"[\s\S]*id="control_desventaja_activa"[\s\S]*id="control_desventaja_activa_icon"[\s\S]*id="control_desventaja_activa_time"[\s\S]*id="control_palabra_musa_j1"[\s\S]*id="control_palabra_musa_j1_word"[\s\S]*id="control_palabra_musa_j1_time"[\s\S]*id="control_palabra_musa_j1_queue"[\s\S]*id="control_palabra_musa_j2"[\s\S]*id="control_palabra_musa_j2_word"[\s\S]*id="control_palabra_musa_j2_time"[\s\S]*id="control_palabra_musa_j2_queue"/);
+  assert.doesNotMatch(html, /control_votacion_desventaja|votacion_ventaja/);
   assert.match(html, /id="control_palabra_musa_j1"[\s\S]*&#x1F3A8;[\s\S]*id="control_palabra_musa_j2"[\s\S]*&#x1F3A8;/);
   assert.match(html, /id="control_palabra_musa_j1_author" class="level-status-witness__author" hidden/);
   assert.match(html, /id="control_palabra_musa_j2_author" class="level-status-witness__author" hidden/);
@@ -542,7 +559,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /Reorganizacion amplia de parametros en dos columnas/);
   assert.match(css, /#panel_parametros > tr:not\(\.parametros-title-row\):not\(\.parametros-frase-row\):not\(\.parametros-modos-row\)\s*\{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/);
   assert.match(css, /#panel_parametros > tr:not\(\.parametros-title-row\):not\(\.parametros-frase-row\):not\(\.parametros-modos-row\) > td\.param-start\s*\{[\s\S]*grid-template-columns: minmax\(7rem, 1fr\) auto auto;/);
-  assert.match(html, /<td class="param-start">[\s\S]*id="tiempo_minutos"[\s\S]*id="tiempo_segundos"/);
+  assert.match(html, /<td class="param-start" hidden aria-hidden="true">[\s\S]*id="tiempo_minutos"[\s\S]*id="tiempo_segundos"/);
   assert.match(css, /\.level-card-duration\s*\{[\s\S]*border-top: 0 !important;[\s\S]*border-bottom: 0 !important;/);
   assert.match(css, /\.level-sequence\s*\{[\s\S]*gap: clamp\(0\.46rem, 0\.72vw, 0\.72rem\);/);
   assert.match(css, /--level-glow: rgba\(255, 214, 90, 0\.7\);/);
@@ -785,7 +802,6 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(actions, /function obtenerEmojiDesventajaControl\(payload = \{\}\)/);
   assert.match(actions, /window\.ScribDisadvantages\.normalizar\(valor\)/);
   assert.match(actions, /player_testigo_desventaja_control = data\.player;/);
-  assert.match(actions, /function sincronizarVotacionDesventajaControl\(payload = \{\}\)/);
   assert.match(actions, /function pausarTestigosDesventajaControl\(\)/);
   assert.match(actions, /function reanudarTestigosDesventajaControl\(\)/);
   assert.match(actions, /const estado_testigos_palabras_musas_control = \{ 1: null, 2: null \};/);
@@ -811,7 +827,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(socketEvents, /socket\.on\('control_estado', \(payload = \{\}\) => \{[\s\S]*aplicarEstadoPersistenteControl\(payload\);/);
   assert.match(socketEvents, /socket\.on\('estado_palabras_musas_control', \(payload = \{\}\) => \{[\s\S]*sincronizarEstadoPalabrasMusasControl\(payload\);/);
   assert.match(socketEvents, /socket\.on\('desventaja_activa_estado', \(payload = \{\}\) => \{[\s\S]*sincronizarDesventajaActivaControl\(payload\);/);
-  assert.match(socketEvents, /socket\.on\('votacion_ventaja_estado', \(payload = \{\}\) => \{[\s\S]*sincronizarVotacionDesventajaControl\(payload\);/);
+  assert.doesNotMatch(socketEvents, /votacion_ventaja_estado|enviar_voto_ventaja/);
   assert.match(socketEvents, /socket\.on\('enviar_ventaja_j1', \(payload = \{\}\) => \{[\s\S]*sincronizarDesventajaActivaControl\(payload, \{ player: 1 \}\);/);
   assert.match(socketEvents, /socket\.on\('enviar_ventaja_j2', \(payload = \{\}\) => \{[\s\S]*sincronizarDesventajaActivaControl\(payload, \{ player: 2 \}\);/);
   assert.match(socketEvents, /duracion_modo_actual_control = Number\(data && data\.duracion_modo_segundos\)/);
@@ -820,7 +836,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.doesNotMatch(socketEvents, /actualizarModoVistaEspectadorControl\(\{ modo: "partida" \}\)/);
   assert.doesNotMatch(socketEvents, /actualizarSolicitudCalentamientoControl\(\{ tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO \}\)/);
   assert.doesNotMatch(socketEvents, /forzar_solicitud_calentamiento_default_pendiente = true/);
-  assert.match(actions, /COLOR_BARRA_VIDA_CONTROL/);
+  assert.match(html, /js\/domains\/competition\.js\?v=/);
   assert.match(actions, /BANDERAS_IDIOMA_CONTROL/);
   assert.match(actions, /es: "\\uD83C\\uDDEA\\uD83C\\uDDF8"/);
   assert.match(actions, /en: "\\uD83C\\uDDEC\\uD83C\\uDDE7"/);
@@ -1306,7 +1322,7 @@ test("dramaturgy map exposes a five-role HTML score for the complete show", () =
   assert.match(state, /createHistoryView/);
   assert.match(state, /createReferenceView/);
   assert.match(state, /ScribDramaturgiaReferenceShow/);
-  assert.match(state, /DRAMATURGIA_UI_VERSION = "dramaturgia-complete-show-v10"/);
+  assert.match(state, /DRAMATURGIA_UI_VERSION = "dramaturgia-competition-clock-v11"/);
   assert.match(state, /control: Object\.freeze\(\["warmup-lugares"\]\)/);
   assert.match(state, /writer1: Object\.freeze\(\[/);
   assert.match(state, /musa1: Object\.freeze\(\[/);
@@ -1319,7 +1335,7 @@ test("dramaturgy map exposes a five-role HTML score for the complete show", () =
   assert.match(state, /\? "unchanged"/);
   assert.match(state, /const DRAMATURGIA_LEVEL_VISUALS = Object\.freeze/);
   assert.match(state, /"letra bendita": Object\.freeze\(\{ emoji: "🙏", accent: "#6bff83" \}\)/);
-  assert.match(state, /"letra prohibida": Object\.freeze\(\{ emoji: "😈", accent: "#ff8fa0" \}\)/);
+  assert.match(state, /"letra prohibida": Object\.freeze\(\{ emoji: "😈", accent: "#ff8fa0", label: "Letra maldita" \}\)/);
   assert.match(state, /tertulia: Object\.freeze\(\{ emoji: "💬", accent: "#64e8ff" \}\)/);
   assert.match(state, /"palabras bonus": Object\.freeze\(\{ emoji: "📖", accent: "#ffd65a" \}\)/);
   assert.match(state, /"palabras prohibidas": Object\.freeze\(\{ emoji: "⚔️", accent: "#ff71c8" \}\)/);

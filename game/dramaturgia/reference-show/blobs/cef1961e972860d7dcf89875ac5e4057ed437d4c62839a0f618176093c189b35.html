@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html data-scrib-reference-show="complete-v1" lang="es" class="" style="overflow: hidden;" data-scrib-snapshot-frozen="" data-snapshot-screen-id="writer1" data-snapshot-width="1400" data-snapshot-height="1000"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'; form-action 'none'; base-uri http: https:; img-src data: blob: http: https:; media-src data: blob: http: https:; font-src data: http: https:; style-src 'unsafe-inline' http: https:"><base href="../../../players/">
+    <meta charset="utf-8">
+    <link rel="icon" href="../../img/logo.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRB - Escritxr ✍️</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260824c">
+    
+    
+<style id="scrib-competition-style">
+      .scrib-competition-hud{--azul:#46f0ff;--rojo:#ff5f67;--oro:#ffe475;position:fixed;z-index:2147481200;left:50%;top:clamp(8px,1.4vh,18px);transform:translateX(-50%);width:min(760px,72vw);font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:none;filter:drop-shadow(0 10px 26px #000a);transition:opacity .35s,transform .35s}
+      body:has(#scrib_competition_hud) #inspiracion{display:none!important}
+      .scrib-competition-hud[data-role="spectator"]{top:clamp(114px,15vh,166px);width:min(940px,72vw)}
+      .scrib-competition-hud[data-active="0"][data-clock="0"]{opacity:0;transform:translate(-50%,-20px)}
+      .scrib-competition-shell{position:relative;border:1px solid #ffffff38;border-radius:18px;padding:9px 14px 11px;background:linear-gradient(180deg,#101423f2,#060914ed);box-shadow:inset 0 0 26px #ffffff0b,0 0 0 1px #000}
+      .scrib-competition-top{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:7px}
+      .scrib-competition-mode{font-size:clamp(10px,.8vw,13px);font-weight:900;letter-spacing:.13em;text-align:left;color:#d7dcf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .scrib-competition-clock{font-variant-numeric:tabular-nums;font-size:clamp(19px,1.8vw,30px);font-weight:1000;letter-spacing:.08em;color:#fff;border:1px solid #ffffff30;border-radius:999px;padding:2px 13px;background:#050711}
+      .scrib-competition-clock::before{content:'TIEMPO ';font-size:.44em;color:#abb2cb;vertical-align:middle}
+      .scrib-competition-criterion{text-align:right;font-size:clamp(8px,.68vw,11px);font-weight:800;letter-spacing:.07em;color:#abb2cb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .scrib-competition-scoreline{display:grid;grid-template-columns:minmax(54px,auto) 1fr minmax(54px,auto);gap:9px;align-items:center}
+      .scrib-competition-score{position:relative;display:flex;align-items:center;justify-content:center;min-width:58px;height:42px;border-radius:12px;font-size:clamp(22px,2.1vw,36px);font-weight:1000;font-variant-numeric:tabular-nums;background:#090c18;border:1px solid currentColor;transition:transform .2s,box-shadow .25s}
+      .scrib-competition-score--1{color:var(--azul);box-shadow:inset 0 0 18px #46f0ff24}
+      .scrib-competition-score--2{color:var(--rojo);box-shadow:inset 0 0 18px #ff5f6724}
+      .scrib-competition-score.is-leading{transform:scale(1.08);box-shadow:0 0 24px currentColor,inset 0 0 18px #ffffff24}
+      .scrib-competition-score.is-hit{animation:scribScoreHit .42s ease-out}
+      .scrib-competition-bar{position:relative;height:28px;display:flex;overflow:hidden;border:1px solid #fff5;border-radius:999px;background:#060812;box-shadow:inset 0 0 15px #000;isolation:isolate}
+      .scrib-competition-segment{height:100%;transition:width .65s cubic-bezier(.2,.9,.2,1);position:relative}
+      .scrib-competition-segment--1{background:linear-gradient(90deg,#087c9d,var(--azul))}
+      .scrib-competition-segment--2{background:linear-gradient(90deg,var(--rojo),#9d1731)}
+      .scrib-competition-center{position:absolute;z-index:3;left:var(--marker-position,50%);top:50%;width:11px;height:34px;transform:translate(-50%,-50%) skewX(-12deg);background:#fff;box-shadow:0 0 15px #fff;transition:left .65s cubic-bezier(.2,.9,.2,1)}
+      .scrib-competition-curse{position:absolute;z-index:4;top:50%;left:var(--curse-position,50%);transform:translate(-50%,-50%);font-size:19px;filter:drop-shadow(0 0 5px #000);transition:left .7s cubic-bezier(.2,.9,.2,1)}
+      .scrib-competition-streak{position:absolute;top:100%;margin-top:7px;padding:4px 9px;border-radius:999px;background:#090c18e8;border:1px solid currentColor;font-size:11px;font-weight:1000;letter-spacing:.08em;opacity:0;transform:translateY(-5px);transition:.2s}
+      .scrib-competition-streak[data-active="1"]{opacity:1;transform:none}
+      .scrib-competition-streak--1{left:2%;color:var(--azul)}.scrib-competition-streak--2{right:2%;color:var(--rojo)}
+      .scrib-competition-fly{position:fixed;z-index:2147483000;left:0;top:0;padding:5px 10px;border-radius:999px;border:1px solid currentColor;background:#090c18f2;font:1000 16px/1 Inter,system-ui,sans-serif;color:var(--fly-color,#fff);white-space:nowrap;pointer-events:none;animation:scribFly var(--fly-duration,800ms) cubic-bezier(.18,.8,.22,1) forwards}
+      .scrib-competition-fly.is-muse{color:var(--oro);box-shadow:0 0 20px #ffe475b0}
+      .scrib-competition-change{position:fixed;z-index:2147483100;left:50%;top:43%;transform:translate(-50%,-50%) scale(.7);opacity:0;text-align:center;font:1000 clamp(25px,4vw,64px)/.95 Inter,system-ui,sans-serif;letter-spacing:.04em;color:#fff;text-shadow:0 0 8px #fff,0 0 32px #8b5cff,4px 4px 0 #000;pointer-events:none;animation:scribLeaderChange 1.55s ease-out forwards}
+      .scrib-competition-change small{display:block;margin-top:10px;font-size:.3em;letter-spacing:.18em;color:var(--change-color,#fff)}
+      .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
+      @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+      @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
+      @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-3deg)}18%,65%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(1.1)}}
+      @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
+      @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"]{width:84vw}}
+      @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly,.scrib-competition-change,.scrib-competition-burst{animation-duration:.01ms!important}}
+    </style><style data-scrib-snapshot-freeze="">html[data-scrib-snapshot-frozen] body *,html[data-scrib-snapshot-frozen] body *::before,html[data-scrib-snapshot-frozen] body *::after{animation:none!important;transition:none!important;caret-color:transparent!important;}html[data-scrib-snapshot-frozen] body .feedback-tiempo-float{opacity:1!important;transform:none!important;animation:none!important;}html,body{scroll-behavior:auto!important;}body{pointer-events:none!important;}</style></head>
+
+<body class="page-players equipo-azul ocultar-marcador-escritora vista-calentamiento-escritor" style="overflow: hidden;" inert="">
+    <div id="background-effects" aria-hidden="true">
+        <span class="aquarium-glow aquarium-glow--blue"></span>
+        <span class="aquarium-glow aquarium-glow--red"></span>
+        <span class="aquarium-current aquarium-current--one"></span>
+        <span class="aquarium-current aquarium-current--two"></span>
+        <span class="aquarium-shimmer"></span>
+        <span class="aquarium-bloom aquarium-bloom--blue"></span>
+        <span class="aquarium-bloom aquarium-bloom--red"></span>
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    <div id="corazones_escritor" class="corazones-flotantes"></div>
+    <div id="players_fit_root" align="center" style="">
+    <div class="cabecera">
+    <pre id="neon" class="neon">        __     _____    _____   _____    _____    __       ____  
+       / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
+      / /    | (___   | |      | |__) |   | |      \ \    | |_) |
+     &lt; &lt;      \___ \  | |      |  _  /    | |       &gt; &gt;   |  _ &lt; 
+      \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
+       \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/ 
+                                                                                                  
+    </pre>
+    <div id="logo">
+        <p class="sub">powered by</p>
+        <br>
+        <img src="../img/logo.png" alt="" width="10%">
+    </div>
+    </div>
+    <div id="lightning">
+    </div>
+
+    <div id="info">
+        <h1 id="feedback1" class="feedback1"></h1>
+    </div>
+    <section id="calentamiento_escritor" class="calentamiento-escritor" aria-hidden="false" style="display: flex;">
+        <div class="calentamiento-stage">
+            <div id="calentamiento_nube_escritor" class="calentamiento-nube"><span class="calentamiento-palabra equipo-2 is-highlighted is-highlight-enter" style="left: 27.74%; top: 62.23%; --calentamiento-word-max-width: 500px; --calentamiento-decay-duration: 10000ms; --calentamiento-decay-delay: 0ms;"><span class="calentamiento-palabra__texto">estación</span><span class="inspiration-author inspiration-author--warmup" title="BOT 21" aria-label="Musa: BOT 21"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 21</span></span></span><span class="calentamiento-palabra equipo-1 is-highlighted is-highlight-enter calentamiento-palabra-clickable" data-id="1-1787676801615-80620" style="left: 16.86%; top: 35.38%; --calentamiento-word-max-width: 500px; --calentamiento-decay-duration: 10000ms; --calentamiento-decay-delay: 0ms;"><span class="calentamiento-palabra__texto">azotea</span><span class="inspiration-author inspiration-author--warmup" title="BOT 11" aria-label="Musa: BOT 11"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 11</span></span></span><span class="calentamiento-palabra equipo-2" style="left: 72.07%; top: 67.66%; --calentamiento-word-max-width: 500px; --calentamiento-decay-duration: 10000ms; --calentamiento-decay-delay: -1273ms;"><span class="calentamiento-palabra__texto">laberinto</span><span class="inspiration-author inspiration-author--warmup" title="BOT 21" aria-label="Musa: BOT 21"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 21</span></span></span><span class="calentamiento-palabra equipo-1 calentamiento-palabra-clickable" data-id="1-1787676801616-28958" style="left: 91.49%; top: 45.07%; --calentamiento-word-max-width: 500px; --calentamiento-decay-duration: 10000ms; --calentamiento-decay-delay: -1275ms;"><span class="calentamiento-palabra__texto">bosque</span><span class="inspiration-author inspiration-author--warmup" title="BOT 11" aria-label="Musa: BOT 11"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">BOT 11</span></span></span></div>
+            <div id="calentamiento_cursor_escritor_1" class="calentamiento-cursor equipo-1" aria-hidden="true">
+                <span class="cursor-punto"></span>
+                <span class="cursor-label">BOT AZUL</span>
+            </div>
+            <div id="calentamiento_cursor_escritor_2" class="calentamiento-cursor equipo-2" aria-hidden="true">
+                <span class="cursor-punto"></span>
+                <span class="cursor-label">BOT ROJO</span>
+            </div>
+        </div>
+        <div class="calentamiento-overlay-ui">
+            <h2 class="calentamiento-titulo">TUTORIAL</h2>
+            <p id="calentamiento_consigna_escritor" class="calentamiento-consigna-chip tipo-lugares">DETONADOR: LUGARES</p>
+            <p id="calentamiento_estado_escritor" class="calentamiento-global-estado">Selecciona palabras de tu equipo y pulsa CERRAR DETONADOR.</p>
+            <div class="calentamiento-overlay-actions">
+                <button id="calentamiento_bloquear_escritor" class="calentamiento-bloquear-btn" type="button">CERRAR DETONADOR (1)</button>
+            </div>
+            <div id="calentamiento_final_escritor" class="calentamiento-final-chip" aria-live="polite"></div>
+        </div>
+    </section>
+    <div class="container">
+    <br>
+    <p><span id="temas" class="temas"></span></p>
+    <div class="atributos-wrap">
+      <div class="atributos" id="atributos-container">
+
+      <!-- FUERZA -->
+      <div class="atributo" data-atributo="fuerza">
+        <h2>
+          Fuerza
+          <span class="tooltip" tabindex="0" aria-label="¿Qué es la fuerza?">
+            <!-- Sustituimos el "?" por tu imagen -->
+            <img src="../img/tooltip.png" alt="Ayuda fuerza">
+            <span class="tooltiptext" role="tooltip">
+              La fuerza aumenta la mini inspiración que consigues escribiendo.
+              <br><br>
+              Las palabras de las musas siguen teniendo mucho más peso.
+            </span>
+          </span>
+        </h2>
+        <div class="controls">
+          <button type="button" data-action="decrement" disabled="">-</button>
+          <span class="contador">0</span>
+          <button type="button" data-action="increment">+</button>
+        </div>
+        <div class="barra-puntos">
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span>
+        </div>
+      </div>
+  
+      <!-- AGILIDAD -->
+      <div class="atributo" data-atributo="agilidad">
+        <h2>
+          Agilidad
+          <span class="tooltip" tabindex="0" aria-label="¿Qué es la agilidad?">
+            <img src="../img/tooltip.png" alt="Ayuda agilidad">
+            <span class="tooltiptext" role="tooltip">
+              La agilidad mide la rapidez y destreza de movimientos.
+              <br><br>
+              Influye en la rapidez con la que se borra el texto.
+            </span>
+          </span>
+        </h2>
+        <div class="controls">
+          <button type="button" data-action="decrement" disabled="">-</button>
+          <span class="contador">0</span>
+          <button type="button" data-action="increment">+</button>
+        </div>
+        <div class="barra-puntos">
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span>
+        </div>
+      </div>
+  
+      <!-- DESTREZA -->
+      <div class="atributo" data-atributo="destreza">
+        <h2>
+          Destreza
+          <span class="tooltip" tabindex="0" aria-label="¿Qué es la destreza?">
+            <img src="../img/tooltip.png" alt="Ayuda destreza">
+            <span class="tooltiptext" role="tooltip">
+              La destreza indica la precisión y rapidez al actuar.
+              <br><br>
+              Reduce la intensidad de las desventajas: menos desenfoque, menor aceleración y más oportunidades de corrección.
+            </span>
+          </span>
+        </h2>
+        <div class="controls">
+          <button type="button" data-action="decrement" disabled="">-</button>
+          <span class="contador">0</span>
+          <button type="button" data-action="increment">+</button>
+        </div>
+        <div class="barra-puntos">
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+          <span class="punto"></span>
+        </div>
+      </div>
+  
+      </div>
+  
+            <div id="total" class="total" role="button" aria-disabled="true" tabindex="-1" title="Reparte 10 puntos para comenzar" style="--total-border-color: hsla(188, 95%, 63%, 0.6); --total-bg-a: hsla(188, 95%, 56%, 0.24); --total-bg-b: hsla(188, 95%, 38%, 0.10); --total-glow: hsla(188, 95%, 56%, 0.34);">
+        <span class="total-label">PUNTOS USADOS:</span>
+        <span class="total-fraction">
+          <span id="total-usados" class="estado-ok">0</span>
+          <span class="total-divider">de</span>
+          <span class="total-max">10</span>
+        </span>
+        <span class="total-cta">¡A ESCRIBIR!</span>
+      </div>
+    </div>
+    <button type="button" id="btnInicio" class="btnInicio" aria-hidden="true" tabindex="-1" disabled="">¡A ESCRIBIR!</button>
+    <div id="contenedor" class="contenedor">
+        <br>
+        <div class="jugador">
+            <p id="feedback_tiempo" class="feedback_tiempo"></p>
+            <p id="tiempo" hidden="" aria-hidden="true" data-remaining-seconds="0" style="display: none;"></p>
+            <input disabled="" id="nombre" class="nombre" data-darkreader-inline-color="" style="color: aqua; text-shadow: black -0.0625em -0.0625em, red 0.0625em 0.0625em;" value="BOT AZUL">
+            <br><br>
+            <p id="alineador1"></p>
+    
+<div class="textarea-container">
+            <div class="textarea textarea--pluma-cursor textarea-fade-none" id="texto" spellcheck="false"> </div>
+                <div class="textarea-gradient top" id="gradientTop" style="opacity: 0;"></div>
+                <div class="textarea-gradient bottom" id="gradientBottom" style="opacity: 0;"></div></div>
+           
+        </div> 
+            <br><br>
+            <div class="info-total">
+                                <div id="metadatos" class="right metadatos-grid metadatos-grid--cabecera marcador-escritor marcador-equipo marcador-equipo-1">
+                    <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                        <span class="meta-icon">🖋️</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Palabras</span>
+                            <span id="puntos" class="puntos">0 palabras</span>
+                        </div>
+                    </div>
+                    <div class="meta-item meta-top-right marcador-chip marcador-chip--musa">
+                        <span class="meta-icon">🎨</span>
+                        <div class="meta-copy">
+                            <span class="meta-label">Musas</span>
+                            <span id="musas" class="musas-total">2 musas</span>
+                                <span id="musa_regalo_estado" class="musa-regalo-chip" hidden=""></span>
+                        </div>
+                    </div>
+                </div>
+            <div>
+                <p id="explicacion" class="explicación"></p><p id="palabra"></p><p id="definicion" class="definicion"></p><table class="info">
+                    <tbody><tr>
+                        
+                    </tr>
+                    
+                    
+                    <tr>
+                        
+                    </tr>
+                </tbody></table>
+                <div id="inspiration_discard" class="inspiration-discard" hidden="">
+                    <button type="button" id="inspiration_discard_button" class="inspiration-discard__button" aria-describedby="inspiration_discard_penalty" disabled="" aria-label="Descartar inspiración. Atajo F8">
+                        <span data-i18n="writer.inspiration.discard">DESCARTAR</span>
+                        <span aria-hidden="true" class="inspiration-discard__separator">·</span>
+                        <kbd>F8</kbd>
+                    </button>
+                    <div id="inspiration_discard_penalty" class="inspiration-discard__penalty" hidden="">
+                        <span id="inspiration_discard_streak" class="inspiration-discard__streak"></span>
+                        <span id="inspiration_discard_effect" class="inspiration-discard__effect"></span>
+                    </div>
+                </div>
+                <span id="inspiration_discard_status" class="inspiration-discard__status" role="status" aria-live="polite" aria-atomic="true"></span>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    
+    
+<!-- Code injected by live-server -->
+
+
+
+</div></div><div id="feedback_tiempo_flotante_root"><div class="feedback-tiempo-columna lado-1"></div></div><div id="caret_neon_juego_escritora" class="escritora-caret-neon equipo-1" aria-hidden="true"></div><section id="scrib_competition_hud" class="scrib-competition-hud" aria-live="polite" data-role="writer" data-active="0" data-clock="0">
+      <div class="scrib-competition-shell">
+        <div class="scrib-competition-top">
+          <span class="scrib-competition-mode">ESPERANDO NIVEL</span>
+          <span class="scrib-competition-clock">00:00</span>
+          <span class="scrib-competition-criterion">MARCADOR DE INSPIRACIÓN</span>
+        </div>
+        <div class="scrib-competition-scoreline">
+          <strong class="scrib-competition-score scrib-competition-score--1">0</strong>
+          <div class="scrib-competition-bar">
+            <span class="scrib-competition-segment scrib-competition-segment--1"></span>
+            <span class="scrib-competition-segment scrib-competition-segment--2"></span>
+            <span class="scrib-competition-center"></span>
+            <span class="scrib-competition-curse" aria-label="Desventaja"></span>
+          </div>
+          <strong class="scrib-competition-score scrib-competition-score--2">0</strong>
+        </div>
+        <span class="scrib-competition-streak scrib-competition-streak--1"></span>
+        <span class="scrib-competition-streak scrib-competition-streak--2"></span>
+      </div></section></body></html>

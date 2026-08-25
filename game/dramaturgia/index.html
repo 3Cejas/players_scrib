@@ -74,7 +74,7 @@
                     <span class="filter-group__label">FASE</span>
                     <button class="is-active" type="button" aria-pressed="true" data-phase-filter="todas">Todo el show</button>
                     <button type="button" aria-pressed="false" data-phase-filter="calentamiento">Calentamiento</button>
-                    <button type="button" aria-pressed="false" data-phase-filter="juego">Niveles y votaciones</button>
+                    <button type="button" aria-pressed="false" data-phase-filter="juego">Niveles y competición</button>
                     <button type="button" aria-pressed="false" data-phase-filter="representacion">Representación</button>
                 </div>
                 <div class="map-navigation" aria-label="Zoom local y desplazamiento del mapa">
@@ -243,15 +243,14 @@
                         <legend>Modos y automatismos</legend>
                         <div class="sim-mode-grid">
                             <label><input type="checkbox" name="dramaturgia_sim_mode" value="letra bendita" checked /> Letra bendita</label>
-                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="letra prohibida" checked /> Letra prohibida</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="letra prohibida" checked /> Letra maldita</label>
                             <label><input type="checkbox" name="dramaturgia_sim_mode" value="tertulia" checked /> Tertulia</label>
-                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="palabras bonus" checked /> Palabras bonus</label>
-                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="palabras prohibidas" checked /> Palabras prohibidas</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="palabras bonus" checked /> Palabras benditas</label>
+                            <label><input type="checkbox" name="dramaturgia_sim_mode" value="palabras prohibidas" checked /> Palabras malditas</label>
                             <label><input type="checkbox" name="dramaturgia_sim_mode" value="frase final" checked /> Frase final</label>
                         </div>
                         <div class="sim-switches">
                             <label><input id="dramaturgia_sim_full_show" type="checkbox" checked /> Toda la partida</label>
-                            <label><input id="dramaturgia_sim_votes" type="checkbox" checked /> Votos automáticos</label>
                             <label><input id="dramaturgia_sim_hearts" type="checkbox" checked /> Corazones de musas</label>
                             <label><input id="dramaturgia_sim_auto_finish" type="checkbox" checked /> Final automático</label>
                         </div>

@@ -28,7 +28,6 @@ let pararEscritura = false;
 let inspirar;
 let enviar_palabra;
 let enviar_ventaja;
-let elegir_ventaja
 
 
 const getEl = (id) => document.getElementById(id); // Obtiene los elementos con id.
@@ -99,11 +98,6 @@ const formatearMusasJuego2P = (valor) => (
     (window && typeof window.scribFormatMusesCount2P === "function")
         ? window.scribFormatMusesCount2P(valor)
         : `${Number(valor) || 0} musas`
-);
-const construirCantidadResucitarJuego2P = (payload = {}) => (
-    (window && typeof window.scribBuildResurrectionQuantityHtml2P === "function")
-        ? window.scribBuildResurrectionQuantityHtml2P(payload)
-        : ""
 );
 const normalizarSaltosTextoGuardado = (valor) => String(valor ?? "")
     .replace(/\r\n/g, "\n")
@@ -192,17 +186,6 @@ function colocarCursorAlFinalEditor() {
     selection.addRange(range);
     texto.scrollTo(0, texto.scrollHeight);
 }
-const AUDIO_GAME_OVER_ESCRITORA = "../../game/audio/PERDER PALABRA.mp3";
-const AUDIO_RESUCITAR_ESCRITORA = "../../game/audio/GANAR PALABRA.mp3";
-
-function reproducirEfectoVidaEscritora(ruta, volumen = 0.9) {
-    try {
-        const audio = new Audio(ruta);
-        audio.volume = Math.max(0, Math.min(1, Number(volumen) || 0.9));
-        audio.play().catch(() => {});
-    } catch (_) {}
-}
-
 const normalizarNombreMusaFeedback = (valor) => {
     if (typeof valor !== "string") return "";
     return valor.trim().slice(0, 18).toUpperCase();
@@ -361,10 +344,7 @@ function animarFinEscritora(textoGanador) {
 function emitirCambioTiempoEscritora(secs) {
     const delta = Number(secs);
     if (!Number.isFinite(delta) || delta === 0) return;
-    // En frase final no se permite ganar tiempo escribiendo.
-    if (modo_actual === "frase final" && delta > 0) return;
     activarFulgorCambioTiempoEscritora(delta);
-    socket.emit("aumentar_tiempo", { secs: delta, player });
 }
 
 let ultimo_tiempo_contador_segundos = null;
@@ -909,10 +889,14 @@ function formatearTiempoPalabraAsignadaEscritora(data = {}, opciones = {}) {
     if (window.ScribInspiration && typeof window.ScribInspiration.formatearTiempoPalabraAsignada === "function") {
         return window.ScribInspiration.formatearTiempoPalabraAsignada(data, opciones);
     }
-    const segundos = resolverTiempoPalabraAsignadaEscritora(data, opciones.fallback);
-    if (segundos === null) return "";
+    const referencia = resolverTiempoPalabraAsignadaEscritora(data, opciones.fallback);
+    if (referencia === null || referencia === 0) return "";
+    const factorRaw = Number(data && typeof data === "object" ? data.valor_inspiracion : 1);
+    const factor = Number.isFinite(factorRaw) ? Math.max(0.25, Math.min(1, factorRaw)) : 1;
+    const esMusa = Boolean(data && typeof data === "object" && (data.origen_musa || data.musa_nombre || data.musa));
+    const valor = Number(((esMusa ? 5 : 1) * factor).toFixed(2));
     const signo = opciones.maldita === true || opciones.modo === "palabras prohibidas" || opciones.tipo === "prohibidas" ? "-" : "+";
-    return `${signo}${segundos} segs.`;
+    return `${signo}${valor} insp.`;
 }
 
 function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, tipo = "bendita") {
@@ -1064,12 +1048,11 @@ function actualizarEstadoRegaloBanderaEscritora(payload = {}) {
     }
     const objetivo = Math.max(1, Number(estado.objetivo) || 1);
     const progreso = Math.max(0, Math.min(objetivo, Number(estado.progreso) || 0));
-    const regaloSegs = Math.max(1, Number(estado.regalo_secs) || 1);
     const cooldownMs = Math.max(0, Number(estado.cooldown_ms) || 0);
     musa_regalo_estado.hidden = false;
     musa_regalo_estado.textContent = cooldownMs > 0 && progreso === 0
-        ? `REGALO +${regaloSegs}S | RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
-        : `REGALO +${regaloSegs}S | ${progreso}/${objetivo}`;
+        ? `APOYO DE MUSAS | RECARGA ${Math.max(1, Math.ceil(cooldownMs / 1000))}S`
+        : `APOYO DE MUSAS | ${progreso}/${objetivo}`;
 }
 
 function mostrarFeedbackRegaloBanderaEscritora(data = {}) {
@@ -1388,7 +1371,6 @@ const debeMostrarCursorPlumaJuegoEscritora = () => (
         document.body &&
         document.body.classList.contains("partida-activa") &&
         !vista_calentamiento_escritor &&
-        !estaResurreccionActiva() &&
         esElementoVisible(texto)
     )
 );
@@ -3327,6 +3309,9 @@ let putada_actual = "";
 let modo_texto_borroso = 0;
 let desactivar_borrar = false;
 let bloquear_borrado_putada = false;
+let intensidad_desventaja_escritora = 1;
+let contador_bloqueo_destreza = 0;
+let ultima_decision_bloqueo_destreza = { ts: 0, bloquear: true };
 let timeout_bloqueo_putada = null;
 let teclado_lento_putada = false;
 let timeout_teclado_lento = null;
@@ -3335,18 +3320,32 @@ let desventaja_activa_escritora = null;
 const RETRASO_TECLADO_LENTO_MS = 500;
 const RAYO_REDUCCION_K = 0.08;
 
+function debeBloquearBorradoPorDestreza() {
+    if (!bloquear_borrado_putada) return false;
+    const ahora = Date.now();
+    if ((ahora - ultima_decision_bloqueo_destreza.ts) < 80) {
+        return ultima_decision_bloqueo_destreza.bloquear;
+    }
+    const intensidad = Math.max(0.6, Math.min(1, Number(intensidad_desventaja_escritora) || 1));
+    contador_bloqueo_destreza = (contador_bloqueo_destreza + 1) % 10;
+    const bloquear = contador_bloqueo_destreza < Math.round(intensidad * 10);
+    ultima_decision_bloqueo_destreza = { ts: ahora, bloquear };
+    return bloquear;
+}
+
 if (
     window.ScribEditorDeletion
     && typeof window.ScribEditorDeletion.instalarBloqueoBorradoManual === "function"
 ) {
     window.ScribEditorDeletion.instalarBloqueoBorradoManual(
         texto,
-        () => bloquear_borrado_putada === true
+        () => debeBloquearBorradoPorDestreza()
     );
 }
 
 function limpiar_bloqueo_putada() {
     bloquear_borrado_putada = false;
+    contador_bloqueo_destreza = 0;
     putada_actual = "";
     if (timeout_bloqueo_putada) {
         clearTimeout(timeout_bloqueo_putada);
@@ -3368,11 +3367,6 @@ let frase_final;
 let listener_modo;
 let listener_modo1;
 let timeoutID_menu;
-let resurreccion_obligatoria_activa = false;
-let esperando_resurreccion_tiempo = false;
-let resurreccion_confirmacion_pendiente = false;
-let gameover_ui_activa_escritora = false;
-let permitir_fin_por_decision_local = false;
 let partida_global_finalizada = false;
 let listener_modo_psico;
 let activado_psico = false;
@@ -3504,7 +3498,6 @@ if (player == 1) {
     inspirar = 'inspirar_j1';
     enviar_palabra = 'enviar_palabra_j1';
     enviar_ventaja = 'enviar_ventaja_j1';
-    elegir_ventaja = "elegir_ventaja_j1";
     nombre.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
     if (metadatos) {
         metadatos.style.removeProperty("color");
@@ -3526,7 +3519,6 @@ if (player == 1) {
     inspirar = 'inspirar_j2';
     enviar_palabra = 'enviar_palabra_j2'
     enviar_ventaja = 'enviar_ventaja_j2';
-    elegir_ventaja = "elegir_ventaja_j2";
     nombre.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
     if (metadatos) {
         metadatos.style.removeProperty("color");
@@ -3539,7 +3531,7 @@ if (player == 1) {
 actualizarEtiquetasCursorCalentamientoEscritor();
 
 texto.addEventListener("keydown", (e) => {
-    if (bloquear_borrado_putada && e.key === "Backspace") {
+    if (debeBloquearBorradoPorDestreza() && e.key === "Backspace") {
         e.preventDefault();
         e.stopImmediatePropagation();
         return;

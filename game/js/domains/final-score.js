@@ -5,7 +5,7 @@
         "riqueza_lexica",
         "bonus",
         "precision",
-        "resistencia"
+        "pulsaciones"
     ]);
     const MAX_STEP = CATEGORY_IDS.length + 1;
 

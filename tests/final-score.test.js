@@ -22,7 +22,7 @@ const payloadCompleto = () => ({
         { id: "precision", peso: 20, unidad: "intentos", mejor: "menor", valores: { 1: 1, 2: 3 }, puntos: { 1: 13.33, 2: 6.67 }, ganador: 1, empate: false },
         { id: "bonus", peso: 20, unidad: "bonus", mejor: "mayor", valores: { 1: 4, 2: 2 }, puntos: { 1: 13.33, 2: 6.67 }, ganador: 1, empate: false },
         { id: "produccion", peso: 20, unidad: "palabras", mejor: "mayor", valores: { 1: 300, 2: 260 }, puntos: { 1: 10.71, 2: 9.29 }, ganador: 1, empate: false },
-        { id: "resistencia", peso: 10, unidad: "vida media", mejor: "mayor", valores: { 1: 45, 2: 55 }, puntos: { 1: 4.5, 2: 5.5 }, ganador: 2, empate: false },
+        { id: "pulsaciones", peso: 10, unidad: "pulsaciones", mejor: "mayor", valores: { 1: 4500, 2: 5500 }, puntos: { 1: 4.5, 2: 5.5 }, ganador: 2, empate: false },
         { id: "riqueza_lexica", peso: 15, unidad: "palabras unicas", mejor: "mayor", valores: { 1: 150, 2: 145 }, puntos: { 1: 7.63, 2: 7.37 }, ganador: 1, empate: false },
         { id: "ritmo", peso: 15, unidad: "ppm", mejor: "mayor", valores: { 1: 210, 2: 230 }, puntos: { 1: 7.16, 2: 7.84 }, ganador: 2, empate: false }
     ],
@@ -78,7 +78,7 @@ test("partial totals add only the categories already revealed", () => {
 
 test("final comparison preserves and displays weighted inspiration decimals", () => {
     const payload = payloadCompleto();
-    payload.formula_version = "scrib-puntuacion-v2";
+    payload.formula_version = "scrib-puntuacion-v3";
     payload.categorias.find((categoria) => categoria.id === "bonus").valores = { 1: 1.75, 2: 0.5 };
     const vistaBonus = score.obtenerVista(payload, 4);
     const spectatorState = read("game/spectator/js/state.js");

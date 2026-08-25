@@ -90,7 +90,6 @@ socket.on('modo_actual', (data) => {
     const cambioRealModo = siguiente_modo !== modo_actual;
     console.log("MODO_ACTUAL", siguiente_modo)
     texto1.style.color = "white";
-    esperando_resurreccion_musa = false;
     if (cambioRealModo) {
         limpiarTimersCosmeticosMusa();
         cancelarSincronizacionVisorNivelesMusa();
@@ -312,11 +311,6 @@ socket.on('calentamiento_error', (data) => {
         mensajeErrorCalentamiento(data),
         true
     );
-});
-
-socket.on("aumentar_tiempo_control", (payload = {}) => {
-    if (payload.origen !== "musa_bandera") return;
-    mostrarToastRegaloBanderaMusa(payload);
 });
 
 const obtenerEquipoDestacadoCalentamiento = (payload = {}) => {
@@ -817,9 +811,6 @@ socket.on("count", data => {
     }
     if(data.player == player){
     const segundosRestantes = extraerSegundosTiempo(data.count);
-    if (segundosRestantes !== null) {
-        esperando_resurreccion_musa = false;
-    }
     const introEnCurso = secuencia_inicio_musa_activa || (document.body && document.body.classList.contains(CLASE_INTRO_PARTIDA_MUSA));
     if (segundosRestantes !== null && !ui_partida_activa_musa && !introEnCurso) {
         setUiPartidaActivaMusa(true);
@@ -848,14 +839,6 @@ socket.on("count", data => {
         }
     }
     if (data.count == "\u00A1Tiempo!") {
-        const finDefinitivoPorTiempo = modo_actual === "frase final";
-        if (finDefinitivoPorTiempo) {
-            esperando_resurreccion_musa = false;
-            confetti_aux();
-            limpiezas_final();
-        } else {
-            esperando_resurreccion_musa = true;
-        }
         limpiarEfectosVisualesDesventajaMusa();
 
         //texto1.innerText = (texto1.innerText).substring(saltos_lÃ­nea_alineacion_1, texto1.innerText.length);
@@ -880,17 +863,9 @@ socket.on("count", data => {
 }
 });
 
-socket.on("resucitar_control", (data = {}) => {
-    if (Number(data.player) !== Number(player)) return;
-    if (!aceptarTiempoMusa(data)) return;
-    esperando_resurreccion_musa = false;
-    terminado = false;
-});
-
 socket.on("fin", (data) => {
     const payload = (data && typeof data === "object") ? data : { player: data };
-    if (Number(payload.player) !== Number(player)) return;
-    esperando_resurreccion_musa = false;
+    if (payload.partida_finalizada !== true || Number(payload.player) !== Number(player)) return;
     if (terminado) return;
     confetti_aux();
     limpiezas_final();
@@ -998,7 +973,6 @@ socket.on('inicio', data => {
     invalidarContextoDesventajasMusa();
     invalidarContextoCalentamientoMusa();
     terminado = false;
-    esperando_resurreccion_musa = false;
     niveles_bloqueados = true;
     setNivelesDesactivados(false);
     actualizarNiveles("");
@@ -1115,7 +1089,6 @@ socket.on('limpiar', () => {
 
     modo_actual = "";
     terminado = true;
-    esperando_resurreccion_musa = false;
     niveles_bloqueados = true;
     setNivelesDesactivados(true);
     actualizarNiveles("");
@@ -1142,105 +1115,6 @@ socket.on(nombre, data => {
     actualizarNombreRegalo();
 });
 
-socket.on(elegir_ventaja, (data = {}) => {
-    console.log("MODO ACTUAL", modo_actual);
-    console.log("REVERTIR", false);
-    cambiar_jugadores(false);
-    texto1.style.color = "white";
-    const overlay = getEl("overlay");
-    if (overlay && overlay.style.display !== "none") {
-        if (typeof desactivarPantalla === "function") {
-            desactivarPantalla({ forzadoControl: true });
-        } else {
-            overlay.style.display = "none";
-        }
-    }
-    votando = true;
-    confetti_musas();
-    votacion_ventaja_participo = true;
-    votacion_ventaja_activa = true;
-    votacion_ventaja_ya_voto = false;
-    votacion_ventaja_voto_emitido = false;
-    votacion_ventaja_equipo = normalizarEquipoVotacion(data.equipo) || Number(player) || null;
-    pedirNombreMusa(obtenerEquipoObjetivoVotacionVentaja());
-    const opciones = obtenerOpcionesVentaja(data.opciones);
-    votacion_ventaja_opciones = opciones.map(op => op.emoji);
-    votacion_ventaja_votos = inicializarVotosVentajaEquilibrado(votacion_ventaja_opciones);
-    aplicarColorTemporizadorVotacionVentaja(votacion_ventaja_equipo);
-    sincronizarTemporizadorVotacionVentaja(data);
-    renderizarModalVotacionVentaja(opciones);
-    actualizarPiesVotacionVentaja();
-    if (votacion_ventaja_duracion_ms > 0 && obtenerMsRestantesVotacionVentaja() <= 0) {
-        manejarFinTiempoVotacionVentaja();
-    } else {
-        mostrarModalVotacionVentaja();
-        ocultarInlineVotacionVentaja();
-    }
-    enviarPalabra_boton.style.display = "none";
-    campo_palabra.style.display = "none";
-    recordatorio.innerHTML = "";
-    notificacion.style.display = "block";
-    animateCSS(".notificacion", "flash");
-});
-
-socket.on('votacion_ventaja_estado', (data = {}) => {
-    if (!data || typeof data !== "object") return;
-
-    const equipo = normalizarEquipoVotacion(data.equipo);
-    votacion_ventaja_equipo = equipo;
-    aplicarColorTemporizadorVotacionVentaja(equipo || player);
-    const esEquipoActual = Boolean(equipo) && Number(player) === equipo;
-    if (Object.prototype.hasOwnProperty.call(data, "ya_voto")) {
-        votacion_ventaja_ya_voto = Boolean(data.ya_voto);
-        votacion_ventaja_voto_emitido = votacion_ventaja_ya_voto;
-    }
-
-    if (Array.isArray(data.opciones) && data.opciones.length > 0) {
-        votacion_ventaja_opciones = data.opciones.slice(0, 3);
-    }
-    if (data.votos && typeof data.votos === "object") {
-        votacion_ventaja_votos = { ...data.votos };
-    }
-
-    if (votacion_ventaja_opciones.length > 0) {
-        const opcionesRender = obtenerOpcionesVentaja(votacion_ventaja_opciones);
-        renderizarModalVotacionVentaja(opcionesRender);
-        actualizarPiesVotacionVentaja();
-    }
-
-    if (data.activa === true) {
-        votacion_ventaja_activa = true;
-        sincronizarTemporizadorVotacionVentaja(data);
-        votando = Boolean(esEquipoActual);
-        if (esEquipoActual) {
-            votacion_ventaja_participo = true;
-            pedirNombreMusa(obtenerEquipoObjetivoVotacionVentaja());
-            if (votacion_ventaja_ya_voto) {
-                ocultarModalVotacionVentaja();
-                mostrarInlineVotacionVentaja();
-            } else {
-                const tiempoAgotado = votacion_ventaja_duracion_ms > 0 && obtenerMsRestantesVotacionVentaja() <= 0;
-                if (tiempoAgotado) {
-                    manejarFinTiempoVotacionVentaja();
-                } else {
-                    votacion_ventaja_voto_emitido = false;
-                    mostrarModalVotacionVentaja();
-                    ocultarInlineVotacionVentaja();
-                }
-            }
-        } else if (!votacion_ventaja_participo) {
-            ocultarModalVotacionVentaja();
-            ocultarInlineVotacionVentaja();
-        }
-        return;
-    }
-
-    if (data.activa === false) {
-        votando = false;
-        resetearEstadoVotacionVentaja();
-    }
-});
-
 socket.on("elegir_repentizado", ({seleccionados, TIEMPO_VOTACION}) => {
     votando = true;
     tarea.innerHTML = "<p>&iquest;Por donde quieres que continue la historia?</p><button class='btn repentizado' value = '1' onclick='elegir_repentizado_publico(this)'>" + seleccionados[0] + "</button><br><br><button class='btn' value = '2' onclick='elegir_repentizado_publico(this)'>" + seleccionados[1] + "</button><br><br><button class='btn' value = '3' onclick='elegir_repentizado_publico(this)'>" + seleccionados[2] + "</button>";
@@ -1263,7 +1137,6 @@ socket.on("pedir_inspiracion_musa", juego => {
         return;
     }
     const es_prohibidas = juego.modo_actual === "palabras prohibidas";
-    esperando_resurreccion_musa = false;
     cambiar_jugadores(es_prohibidas);
     texto1.style.color = es_prohibidas ? "red" : "white";
     actualizarNiveles(juego.modo_actual);
@@ -1288,7 +1161,7 @@ function pedir_inspiracion(juego){
     window.__scribModoActualMusaPreview = modo_actual;
     recordatorio.innerHTML = "";
     const etiquetaMusa = "<span style='color: orange;'>" + nombre_musa + "</span>";
-    if(terminado == false && votando == false && esperando_resurreccion_musa == false){
+    if(terminado == false && votando == false){
     if(juego.modo_actual == "palabras bonus"){
         tarea.innerHTML = "Cantame a mí, " + etiquetaMusa + ", una palabra que me inspire:";
     }
@@ -1590,7 +1463,6 @@ const activateSkill = (event) => {
     editando = false;
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable = "false";
-    socket.emit('aumentar_tiempo', {secs:-1, player});
     socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent});
     skill_cancel.style.display = "none";
     target.textContent = EMOJI_EDITAR;

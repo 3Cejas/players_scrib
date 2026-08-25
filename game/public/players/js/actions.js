@@ -113,7 +113,6 @@ function actualizarPreviewTiempoPalabraMusa(texto = null, modoForzado = null) {
   const esMaldita = previewTiempo ? previewTiempo.tipo === "resta" : modo === "palabras prohibidas";
   const clase = esMaldita ? "preview-tiempo-palabra--negativo" : "preview-tiempo-palabra--positivo";
   const signo = previewTiempo ? previewTiempo.signo : (esMaldita ? "-" : "+");
-  const segundos = previewTiempo ? previewTiempo.segundos : calcularTiempoPalabraMusa(String(valor || "").trim());
 
   const label = document.createElement("span");
   label.className = "preview-tiempo-palabra__label";
@@ -123,7 +122,7 @@ function actualizarPreviewTiempoPalabraMusa(texto = null, modoForzado = null) {
 
   const value = document.createElement("span");
   value.className = "preview-tiempo-palabra__value";
-  value.textContent = `${signo}${segundos} ${tJuego2P("warmup.preview.seconds_short", {}, "s")}`;
+  value.textContent = `${signo}5 insp.`;
 
   preview.classList.add(clase);
   preview.append(label, value);
@@ -585,24 +584,10 @@ function editar(boton) {
     editando = false;
     mostrarTextoCompleto(mostrar_texto);
     texto1.contentEditable = "false";
-    socket.emit('aumentar_tiempo', {secs:-1, player});
     socket.emit(texto_x, { text: texto1.innerText, points: puntos1.textContent});
     boton.textContent = "\u270F\uFE0F";
     boton.value = 0;
   }
-}
-
-function elegir_ventaja_publico(boton) {
-  console.log("Elegida ventaja " + boton.value);
-  const voto = boton.value;
-  socket.emit('enviar_voto_ventaja', {
-    voto,
-    client_id: window.musa_client_id || ""
-  });
-  window.dispatchEvent(new CustomEvent('musa_voto_ventaja_emitido', { detail: { voto } }));
-  votando = false;
-  sincro = 0;
-  socket.emit('pedir_nombre');
 }
 
 function elegir_repentizado_publico(boton) {
@@ -665,4 +650,3 @@ function startProgress(button) {
     }
   }, intervalo); // Usa el intervalo calculado para el temporizador
 }
-
