@@ -117,7 +117,7 @@ test("activity endpoint follows the gateway contract on both production hosts", 
   );
 });
 
-test("activity heartbeat pauses while hidden and resumes immediately when visible", () => {
+test("an open SCRIB page keeps its heartbeat while hidden and refreshes on return", () => {
   const harness = createHarness();
   const controller = heartbeat.createController(harness.globalObject);
 
@@ -132,13 +132,13 @@ test("activity heartbeat pauses while hidden and resumes immediately when visibl
 
   harness.document.visibilityState = "hidden";
   harness.listeners.get("visibilitychange")();
-  assert.equal(harness.intervals.size, 0, "hidden documents do not retain a timer");
+  assert.equal(harness.intervals.size, 1, "an open hidden page retains its timer");
   firstTick();
-  assert.equal(harness.beaconCalls.length, 2, "even a stale timer cannot send while hidden");
+  assert.equal(harness.beaconCalls.length, 3, "hidden tabs keep Sutura awake while they remain open");
 
   harness.document.visibilityState = "visible";
   harness.listeners.get("visibilitychange")();
-  assert.equal(harness.beaconCalls.length, 3, "returning to the page sends immediately");
+  assert.equal(harness.beaconCalls.length, 4, "returning to the page sends immediately");
   assert.equal(harness.intervals.size, 1);
 
   controller.stop();
@@ -146,19 +146,19 @@ test("activity heartbeat pauses while hidden and resumes immediately when visibl
   assert.equal(harness.listeners.has("visibilitychange"), false);
 });
 
-test("an initially hidden page waits for a visible state before starting its timer", () => {
+test("an initially hidden page starts its heartbeat because it is still open", () => {
   const harness = createHarness();
   harness.document.visibilityState = "hidden";
   const controller = heartbeat.createController(harness.globalObject);
 
   controller.start();
-  assert.equal(harness.beaconCalls.length, 0);
+  assert.equal(harness.beaconCalls.length, 1);
   assert.equal(harness.fetchCalls.length, 0);
-  assert.equal(harness.intervals.size, 0);
+  assert.equal(harness.intervals.size, 1);
 
   harness.document.visibilityState = "visible";
   harness.listeners.get("visibilitychange")();
-  assert.equal(harness.beaconCalls.length, 1);
+  assert.equal(harness.beaconCalls.length, 2);
   assert.equal(harness.intervals.size, 1);
 });
 
@@ -212,7 +212,7 @@ test("file, development and duplicate gateway injection do not start network act
 
 test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
   const config = read("game/config.js");
-  assert.match(config, /activity-heartbeat\.js\?v=20260824a/);
+  assert.match(config, /activity-heartbeat\.js\?v=20260827b/);
   assert.match(config, /document\.createElement\("script"\)/);
 
   const multiplayerPages = [
@@ -230,15 +230,15 @@ test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
     "game/spectator/index.html"
   ];
   for (const page of multiplayerPages) {
-    assert.match(read(page), /config\.js\?v=20260824a/, `${page} must refresh the shared loader`);
+    assert.match(read(page), /config\.js\?v=20260827b/, `${page} must refresh the shared loader`);
   }
 
   const standalonePages = {
-    "index.html": "./game/js/activity-heartbeat.js?v=20260824a",
-    "1p_scrib/index.html": "../game/js/activity-heartbeat.js?v=20260824a",
-    "1p_scrib/game/index.html": "../../game/js/activity-heartbeat.js?v=20260824a",
-    "game/repentizados-demo.html": "./js/activity-heartbeat.js?v=20260824a",
-    "game/s7/index.html": "../js/activity-heartbeat.js?v=20260824a"
+    "index.html": "./game/js/activity-heartbeat.js?v=20260827b",
+    "1p_scrib/index.html": "../game/js/activity-heartbeat.js?v=20260827b",
+    "1p_scrib/game/index.html": "../../game/js/activity-heartbeat.js?v=20260827b",
+    "game/repentizados-demo.html": "./js/activity-heartbeat.js?v=20260827b",
+    "game/s7/index.html": "../js/activity-heartbeat.js?v=20260827b"
   };
   for (const [page, asset] of Object.entries(standalonePages)) {
     assert.ok(read(page).includes(asset), `${page} must load ${asset}`);

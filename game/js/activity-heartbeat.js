@@ -92,7 +92,7 @@
         }
 
         function send() {
-            if (!started || !target || !isVisible()) return false;
+            if (!started || !target) return false;
 
             try {
                 if (
@@ -131,16 +131,14 @@
         }
 
         function startTimer() {
-            if (!started || !target || !isVisible() || intervalId !== null) return;
+            if (!started || !target || intervalId !== null) return;
             send();
             intervalId = setIntervalRef(send, intervalMs);
         }
 
         function handleVisibilityChange() {
             if (isVisible()) {
-                startTimer();
-            } else {
-                stopTimer();
+                send();
             }
         }
 

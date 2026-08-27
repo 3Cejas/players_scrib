@@ -8,7 +8,7 @@ if (typeof document !== "undefined") {
         const configScriptBase = document.currentScript && document.currentScript.src
             ? document.currentScript.src
             : `${window.location.origin}/scrib/game/config.js`;
-        const activityScriptUrl = new URL("./js/activity-heartbeat.js?v=20260824a", configScriptBase).href;
+        const activityScriptUrl = new URL("./js/activity-heartbeat.js?v=20260827b", configScriptBase).href;
         const activityScriptLoaded = Array.from(document.scripts || []).some(function (script) {
             return script.src === activityScriptUrl;
         });
