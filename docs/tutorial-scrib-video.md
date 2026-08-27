@@ -1,22 +1,25 @@
 # Videotutorial de acceso de musas
 
-El activo publicado es `game/media/tutorial-scrib.mp4`. Es un vídeo 16:9 fijo de 60 segundos, sin paneos, cronómetro ni barra de progreso, con voz mexicana en español, subtítulos quemados y una pista WebVTT adicional en `game/media/tutorial-scrib.vtt`. No necesita red ni servicios externos durante la reproducción. La URL real de acceso se superpone únicamente durante la primera escena desde la aplicación, por lo que no se hornea una dirección dependiente del servidor dentro del vídeo.
+El activo publicado es `game/media/tutorial-scrib.mp4`. Es un vídeo 16:9 de 60 segundos, sin paneos laterales, cronómetro ni barra de progreso, con transiciones animadas, un acercamiento central muy suave, voz mexicana en español, música de show de fondo, subtítulos quemados y una pista WebVTT adicional en `game/media/tutorial-scrib.vtt`. No necesita red ni servicios externos durante la reproducción. La URL real de acceso se muestra en una banda reservada durante la primera escena, por lo que no se hornea una dirección dependiente del servidor ni se tapa ningún texto del vídeo.
+
+Las pantallas del móvil reproducen únicamente estados que existen en la aplicación: bienvenida, botón `Omitir tutorial`, nombre, asignación equilibrada, revelación de equipo y escritxr, entrada al juego, calibración de color y confirmación.
 
 ## Línea temporal
 
 | Tiempo | Contenido |
 | --- | --- |
-| 00–06 s | Abrir la URL o escanear el QR de la sala. |
-| 06–12 s | Escribir el nombre y tocar `DESCUBRIR MI EQUIPO`. |
-| 12–20 s | Ver equipo y escritxr asignados; tocar `ENTRAR AL JUEGO`. |
-| 20–26 s | Comprobar nombre, equipo y escritxr. |
-| 26–30 s | Mantener abierta la pantalla. |
+| 00–06 s | Abrir en el móvil la URL de la sala. |
+| 06–11 s | Tocar `Omitir tutorial` en la bienvenida real. |
+| 11–17 s | Escribir el nombre y tocar la flecha azul. |
+| 17–23 s | Tocar `DESCUBRIR MI EQUIPO`. |
+| 23–30 s | Ver equipo y escritxr asignados; tocar `ENTRAR AL JUEGO`. |
 | 30–34 s | Aviso de la prueba visual. |
 | 34–38 s | ROJO. |
 | 38–42 s | AZUL. |
 | 42–46 s | VERDE. |
 | 46–50 s | BLANCO. |
-| 50–60 s | Tocar `SÍ, FUNCIONA` y ver la confirmación. |
+| 50–56 s | Tocar `SÍ, FUNCIONA`. |
+| 56–60 s | Ver la confirmación real del dispositivo. |
 
 ## Regeneración
 
@@ -40,6 +43,7 @@ El generador comprueba automáticamente duración de 60 s, H.264 a 1920×1080 y 
 ## Procedencia y licencias
 
 - Motion graphics, guion, subtítulos, tonos y código de generación: creados específicamente para SCRIB; los tonos son ondas seno sintetizadas por FFmpeg. No se reutiliza vídeo, música ni imagen de la pieza tomada como referencia de ritmo.
+- Música de fondo: `game/audio/2. ACOMPAÑAR VOZ CON MELODIA.mp3`, activo propio ya incluido en SCRIB; se reproduce en bucle, con entrada/salida suave y reducción automática de volumen bajo la narración.
 - Logotipo: `img/logo.png`, activo ya existente del proyecto SCRIB.
 - Tipografía visual VT323: SIL Open Font License 1.1. El vídeo la incrusta en los gráficos rasterizados.
 - Motor Piper 1.7.0: GPL-3.0-or-later, usado únicamente como herramienta de compilación y no distribuido dentro del MP4 ni del repositorio por este generador.

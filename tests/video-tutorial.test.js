@@ -61,7 +61,7 @@ test("video tutorial rejects executable media URLs and clamps progress", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
   assert.equal(
     tutorial.safeVideoUrl("../media/tutorial-scrib.mp4", locationRef),
-    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260827d"
+    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260827e"
   );
   assert.equal(tutorial.safeVideoUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_VIDEO_URL);
   assert.equal(tutorial.safeVideoUrl("data:video/mp4;base64,AAAA", locationRef), tutorial.DEFAULT_VIDEO_URL);
@@ -74,8 +74,8 @@ test("spectator and muse load the synchronized tutorial before socket handlers",
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260827d/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260827d/);
+    assert.match(html, /video-tutorial\.css\?v=20260827e/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260827e/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -127,7 +127,39 @@ test("generated tutorial has fixed scenes without baked timecode or progress chr
   const generator = read("scripts/generate-tutorial-scrib-video.sh");
 
   assert.doesNotMatch(renderer, /class="timecode"|class="progress"|class="progress-labels"|VIDEOTUTORIAL DE ACCESO/);
-  assert.match(renderer, /URL DE ESTA SALA/);
-  assert.doesNotMatch(generator, /sin\(t|cos\(t|crop=1920/);
-  assert.match(generator, /scale=1920:1080:flags=lanczos,fps=30,format=yuv420p/);
+  for (const realScreen of [
+    "MUSA</span>, BIENVENIDA A",
+    "Omitir tutorial",
+    "¿CUÁL SERÁ TU NOMBRE?",
+    "DESCUBRIR MI EQUIPO",
+    "¡EQUIPO ASIGNADO!",
+    "ENTRAR AL JUEGO",
+    "PREPARA TU PANTALLA",
+    "SÍ, FUNCIONA",
+    "CONFIGURACIÓN VERIFICADA"
+  ]) {
+    assert.match(renderer, new RegExp(realScreen));
+  }
+  for (const inventedScreen of [
+    "URL DE ESTA SALA",
+    "Código QR ilustrativo",
+    "COMPRUEBA TU PANTALLA",
+    "PANTALLA LISTA",
+    "REPORTADO AL SERVIDOR"
+  ]) {
+    assert.doesNotMatch(renderer, new RegExp(inventedScreen));
+  }
+  assert.match(generator, /zoompan=/);
+  assert.match(generator, /xfade=transition=fade/);
+  assert.match(generator, /2\. ACOMPAÑAR VOZ CON MELODIA\.mp3/);
+  assert.match(generator, /sidechaincompress=/);
+});
+
+test("room URL has its own top-right layer and cannot cover tutorial copy", () => {
+  const css = read("game/css/video-tutorial.css");
+  const block = css.match(/\.scrib-video-tutorial__slide-url\s*\{([\s\S]*?)\}/)?.[1] || "";
+  assert.match(block, /top:\s*4\.2%/);
+  assert.match(block, /right:\s*4\.4%/);
+  assert.doesNotMatch(block, /left:\s*8\.45%|top:\s*61%/);
+  assert.match(block, /z-index:\s*5/);
 });

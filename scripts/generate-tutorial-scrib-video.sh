@@ -66,16 +66,17 @@ node - "${manifest_path}" >"${manifest_tsv}" <<'NODE'
 const fs = require("fs");
 const manifest = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 for (const scene of manifest) {
-  process.stdout.write([scene.key, scene.duration, scene.leadMs, scene.image, scene.narration].join("\t") + "\n");
+  process.stdout.write([scene.key, scene.start, scene.duration, scene.leadMs, scene.image, scene.narration].join("\t") + "\n");
 }
 NODE
 
 audio_concat="${build_dir}/audio/slots.txt"
-video_concat="${build_dir}/video/segments.txt"
 : >"${audio_concat}"
-: >"${video_concat}"
+transition_duration="0.32"
+video_inputs=()
+scene_starts=()
 
-while IFS=$'\t' read -r -u 3 scene_key scene_duration lead_ms image_path narration_path; do
+while IFS=$'\t' read -r -u 3 scene_key scene_start scene_duration lead_ms image_path narration_path; do
   raw_wav="${build_dir}/audio/raw/${scene_key}.wav"
   slot_wav="${build_dir}/audio/slots/${scene_key}.wav"
   clip_path="${build_dir}/video/${scene_key}.mp4"
@@ -97,11 +98,13 @@ while IFS=$'\t' read -r -u 3 scene_key scene_duration lead_ms image_path narrati
     -ar 48000 -ac 1 -c:a pcm_s16le "${slot_wav}"
   printf "file '%s'\n" "${slot_wav}" >>"${audio_concat}"
 
-  frame_count="$((scene_duration * 30))"
+  clip_duration="$(awk -v slot="${scene_duration}" -v transition="${transition_duration}" 'BEGIN { printf "%.6f", slot + transition }')"
+  frame_count="$(awk -v duration="${clip_duration}" 'BEGIN { printf "%d", (duration * 30) + 0.5 }')"
   ffmpeg -nostdin -hide_banner -loglevel error -y -loop 1 -i "${image_path}" \
-    -vf "scale=1920:1080:flags=lanczos,fps=30,format=yuv420p" \
+    -vf "scale=2020:1136:flags=lanczos,zoompan=z='min(zoom+0.00009,1.018)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frame_count}:s=1920x1080:fps=30,noise=alls=1.2:allf=t+u,format=yuv420p" \
     -frames:v "${frame_count}" -an -c:v libx264 -preset ultrafast -crf 12 -g 60 -keyint_min 60 -sc_threshold 0 "${clip_path}"
-  printf "file '%s'\n" "${clip_path}" >>"${video_concat}"
+  video_inputs+=("${clip_path}")
+  scene_starts+=("${scene_start}")
 done 3<"${manifest_tsv}"
 
 narration_wav="${build_dir}/audio/narration.wav"
@@ -109,7 +112,21 @@ mixed_wav="${build_dir}/audio/mixed.wav"
 visual_mp4="${build_dir}/video/visual.mp4"
 
 ffmpeg -nostdin -hide_banner -loglevel error -y -f concat -safe 0 -i "${audio_concat}" -ar 48000 -ac 1 -c:a pcm_s16le "${narration_wav}"
-ffmpeg -nostdin -hide_banner -loglevel error -y -f concat -safe 0 -i "${video_concat}" -c copy "${visual_mp4}"
+
+video_command=(ffmpeg -nostdin -hide_banner -loglevel error -y)
+for clip_path in "${video_inputs[@]}"; do
+  video_command+=(-i "${clip_path}")
+done
+video_filter=""
+previous_stream="[0:v]"
+for ((scene_index = 1; scene_index < ${#video_inputs[@]}; scene_index += 1)); do
+  output_stream="[xfade${scene_index}]"
+  video_filter+="${previous_stream}[${scene_index}:v]xfade=transition=fade:duration=${transition_duration}:offset=${scene_starts[scene_index]}${output_stream};"
+  previous_stream="${output_stream}"
+done
+video_filter+="${previous_stream}trim=start=0:end=60,setpts=PTS-STARTPTS[visual]"
+"${video_command[@]}" -filter_complex "${video_filter}" -map "[visual]" \
+  -an -c:v libx264 -preset ultrafast -crf 14 -pix_fmt yuv420p -r 30 -g 60 "${visual_mp4}"
 
 ffmpeg -nostdin -hide_banner -loglevel error -y \
   -i "${narration_wav}" \
@@ -118,14 +135,17 @@ ffmpeg -nostdin -hide_banner -loglevel error -y \
   -f lavfi -i "sine=frequency=659.25:sample_rate=48000:duration=0.24" \
   -f lavfi -i "sine=frequency=783.99:sample_rate=48000:duration=0.28" \
   -f lavfi -i "sine=frequency=659.25:sample_rate=48000:duration=0.55" \
+  -stream_loop -1 -i "${repo_dir}/game/audio/2. ACOMPAÑAR VOZ CON MELODIA.mp3" \
   -filter_complex \
-    "[0:a]volume=1.0[voice];\
+    "[0:a]volume=1.0,asplit=2[voice][voice_sidechain];\
      [1:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=34000[c1];\
      [2:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=38000[c2];\
      [3:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=42000[c3];\
      [4:a]afade=t=out:st=0:d=0.28,volume=0.075,adelay=46000[c4];\
      [5:a]afade=t=out:st=0:d=0.55,volume=0.06,adelay=50000[ok];\
-     [voice][c1][c2][c3][c4][ok]amix=inputs=6:duration=longest:normalize=0,\
+     [6:a]volume=0.16,afade=t=in:st=0:d=1.2,afade=t=out:st=57:d=3,atrim=start=0:end=60[music];\
+     [music][voice_sidechain]sidechaincompress=threshold=0.025:ratio=8:attack=18:release=420[music_ducked];\
+     [voice][music_ducked][c1][c2][c3][c4][ok]amix=inputs=7:duration=longest:normalize=0,\
      loudnorm=I=-16:TP=-1.5:LRA=7,atrim=start=0:end=60,apad=pad_dur=60[a]" \
   -map "[a]" -ar 48000 -ac 2 -c:a pcm_s16le "${mixed_wav}"
 

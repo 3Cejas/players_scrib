@@ -67,12 +67,12 @@ body.scrib-video-tutorial-active {
 
 .scrib-video-tutorial__slide-url {
     position: absolute;
-    left: 8.45%;
-    top: 61%;
-    z-index: 2;
-    max-width: 43%;
+    top: 4.2%;
+    right: 4.4%;
+    z-index: 5;
+    max-width: 48%;
     overflow: hidden;
-    padding: 0.48em 0.72em;
+    padding: 0.58em 0.9em;
     border: 1px solid rgba(85, 244, 255, 0.55);
     border-radius: 0.32em;
     color: #d9fbff;
@@ -81,6 +81,7 @@ body.scrib-video-tutorial-active {
     font-size: clamp(0.78rem, 1.6vw, 1.9rem);
     font-weight: 400;
     letter-spacing: 0.04em;
+    text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
     animation: videoTutorialUrlIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;

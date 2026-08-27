@@ -31,7 +31,7 @@
 
     const DEFAULT_DURATION_SECONDS = 60;
     const DEFAULT_VIDEO_URL = "../media/tutorial-scrib.mp4";
-    const VIDEO_ASSET_VERSION = "20260827d";
+    const VIDEO_ASSET_VERSION = "20260827e";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
