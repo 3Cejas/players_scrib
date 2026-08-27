@@ -1104,7 +1104,7 @@ function toggleLogsControl() {
 }
 window.toggleLogsControl = toggleLogsControl;
 
-const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "juego", "representacion", "asistencia"]);
+const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "representacion", "asistencia"]);
 let dropdown_modos_control_inicializado = false;
 let observer_modos_control = null;
 let frases_finales_control_inicializadas = false;
@@ -1173,11 +1173,17 @@ function activarSeccionControl(seccion) {
         } else {
             panel.classList.remove("is-entering");
         }
-        const boton = panel.querySelector(".control-collapsible-toggle");
+        const nombrePanel = panel.dataset.controlSection || "";
+        const boton = document.querySelector(`[data-control-tab="${nombrePanel}"]`)
+            || panel.querySelector(".control-collapsible-toggle");
         if (boton) {
             boton.setAttribute("aria-expanded", activa ? "true" : "false");
+            boton.setAttribute("aria-selected", activa ? "true" : "false");
+            boton.tabIndex = activa ? 0 : -1;
         }
     });
+    desplazarPestanaControlAVisible(seccion);
+    actualizarFlechasPestanasControl();
 }
 
 function toggleSeccionControl(seccion) {
@@ -1207,6 +1213,89 @@ function toggleSeccionControl(seccion) {
     activarSeccionControl(seccion);
 }
 window.toggleSeccionControl = toggleSeccionControl;
+
+let pestanas_control_inicializadas = false;
+let observer_pestanas_control = null;
+
+function actualizarFlechasPestanasControl() {
+    const viewport = document.getElementById("control_tabs_viewport");
+    const anterior = document.getElementById("control_tabs_prev");
+    const siguiente = document.getElementById("control_tabs_next");
+    if (!viewport || !anterior || !siguiente) return;
+    const maximo = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+    const hayDesbordamiento = maximo > 2;
+    const mostrarAnterior = hayDesbordamiento && viewport.scrollLeft > 2;
+    const mostrarSiguiente = hayDesbordamiento && viewport.scrollLeft < maximo - 2;
+    anterior.hidden = !mostrarAnterior;
+    siguiente.hidden = !mostrarSiguiente;
+    anterior.setAttribute("aria-hidden", mostrarAnterior ? "false" : "true");
+    siguiente.setAttribute("aria-hidden", mostrarSiguiente ? "false" : "true");
+}
+
+function desplazarPestanaControlAVisible(seccion, comportamiento = "smooth") {
+    const viewport = document.getElementById("control_tabs_viewport");
+    const boton = document.querySelector(`[data-control-tab="${seccion}"]`);
+    if (!viewport || !boton) return;
+    const izquierda = boton.offsetLeft;
+    const derecha = izquierda + boton.offsetWidth;
+    const visibleIzquierda = viewport.scrollLeft;
+    const visibleDerecha = visibleIzquierda + viewport.clientWidth;
+    if (izquierda < visibleIzquierda) {
+        viewport.scrollTo({ left: Math.max(0, izquierda - 4), behavior: comportamiento });
+    } else if (derecha > visibleDerecha) {
+        viewport.scrollTo({ left: Math.max(0, derecha - viewport.clientWidth + 4), behavior: comportamiento });
+    }
+}
+
+function desplazarPestanasControl(direccion) {
+    const viewport = document.getElementById("control_tabs_viewport");
+    if (!viewport) return;
+    const signo = direccion === "prev" ? -1 : 1;
+    const maximo = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+    const distancia = Math.max(180, viewport.clientWidth * 0.72);
+    const destino = Math.max(0, Math.min(maximo, viewport.scrollLeft + (signo * distancia)));
+    viewport.dataset.scrollDirection = direccion;
+    viewport.scrollTo({ left: destino, behavior: "smooth" });
+}
+
+function inicializarPestanasControl() {
+    if (pestanas_control_inicializadas) return;
+    const viewport = document.getElementById("control_tabs_viewport");
+    const anterior = document.getElementById("control_tabs_prev");
+    const siguiente = document.getElementById("control_tabs_next");
+    if (!viewport || !anterior || !siguiente) return;
+    pestanas_control_inicializadas = true;
+    viewport.addEventListener("scroll", actualizarFlechasPestanasControl, { passive: true });
+    viewport.addEventListener("keydown", (evento) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(evento.key)) return;
+        const pestanas = Array.from(viewport.querySelectorAll("[data-control-tab]"));
+        if (!pestanas.length) return;
+        const actual = Math.max(0, pestanas.indexOf(document.activeElement));
+        let indice = actual;
+        if (evento.key === "ArrowLeft") indice = Math.max(0, actual - 1);
+        if (evento.key === "ArrowRight") indice = Math.min(pestanas.length - 1, actual + 1);
+        if (evento.key === "Home") indice = 0;
+        if (evento.key === "End") indice = pestanas.length - 1;
+        evento.preventDefault();
+        const destino = pestanas[indice];
+        destino.focus();
+        toggleSeccionControl(destino.dataset.controlTab);
+    });
+    if (typeof ResizeObserver === "function") {
+        observer_pestanas_control = new ResizeObserver(actualizarFlechasPestanasControl);
+        observer_pestanas_control.observe(viewport);
+    }
+    window.addEventListener("resize", actualizarFlechasPestanasControl);
+    requestAnimationFrame(() => {
+        const activa = document.querySelector('[data-control-section]:not(.is-collapsed)');
+        if (activa) desplazarPestanaControlAVisible(activa.dataset.controlSection, "auto");
+        actualizarFlechasPestanasControl();
+    });
+}
+
+window.actualizarFlechasPestanasControl = actualizarFlechasPestanasControl;
+window.desplazarPestanasControl = desplazarPestanasControl;
+window.inicializarPestanasControl = inicializarPestanasControl;
 
 function setPanelParametrosColapsadoControl(colapsado) {
     parametros_colapsados_control = Boolean(colapsado);
@@ -2278,6 +2367,26 @@ function cambiar_vista_calentamiento(boton) {
     }
 }
 
+function mostrar_vista_tutorial() {
+    if (vista_calentamiento) {
+        vista_calentamiento = false;
+        actualizarBotonVistaCalentamiento();
+        socket.emit('cambiar_vista_calentamiento', { activo: false });
+    }
+    if (vista_espectador_modo !== "partida") {
+        vista_espectador_modo = "partida";
+        actualizarBotonesVistaEspectadorControl();
+        socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
+    }
+    if (window.ScribVideotutorialControl) {
+        const estadoVideo = window.ScribVideotutorialControl.obtenerEstado();
+        if (estadoVideo.visible || estadoVideo.reproduciendo) {
+            window.ScribVideotutorialControl.ocultar();
+        }
+    }
+}
+window.mostrar_vista_tutorial = mostrar_vista_tutorial;
+
 function fin_partida_global() {
     if (!juego_iniciado && !modo_actual) return;
     socket.emit("finalizar_partida");
@@ -2288,7 +2397,7 @@ function actualizarBotonVistaCalentamiento(boton) {
     if (!destino) return;
     destino.textContent = vista_calentamiento
         ? tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA")
-        : tJuego2PControl("control.button.tutorial_view", {}, "\u{1F4D6} VISTA TUTORIAL");
+        : tJuego2PControl("control.button.detonators_view", {}, "\u{1F4A5} VISTA DETONADORES");
     destino.dataset.activo = vista_calentamiento ? "1" : "0";
 }
 window.actualizarBotonVistaCalentamiento = actualizarBotonVistaCalentamiento;
@@ -3501,6 +3610,7 @@ if (typeof window !== "undefined") {
         document.fonts.ready.then(actualizarEtiquetaRepresentacionControl).catch(() => {});
     }
     window.addEventListener("load", () => {
+        inicializarPestanasControl();
         refrescarTextosEstaticosControl();
         inicializarPanelCreditosControl();
         inicializarPersistenciaParametrosControl();
@@ -3534,9 +3644,11 @@ window.actualizarEstadoBanderasMusasControl = (payload = {}) => {
 function refrescarTextosEstaticosControl() {
     const textos = [
         ["control_title_tutorial", "control.title.tutorial", "\u{1F4D6} TUTORIAL"],
+        ["control_title_detonadores", "control.title.detonators", "\u{1F4A5} DETONADORES"],
         ["control_title_game", "control.title.game", "\u{1F3AE} JUEGO"],
         ["control_title_parameters_text", "control.button.parameters", "\u2699\uFE0F PAR\u00c1METROS"],
         ["control_subtitle_musas", "control.subtitle.muses", "DETONADORES PARA MUSAS"],
+        ["boton_vista_tutorial", "control.button.tutorial_view", "\u{1F4D6} VISTA TUTORIAL"],
         ["boton_reiniciar_calentamiento", "control.button.clear", "\u{1F9F9} LIMPIAR"],
         ["boton_reiniciar_marcador_calentamiento", "control.button.reset_score", "\u21BB REINICIAR MARCADOR"],
         ["boton_escribir", "control.button.write", "\u270E ESCRIBIR"],

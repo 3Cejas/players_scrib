@@ -258,10 +258,10 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   const actions = read("game/control/js/actions.js");
   const socketEvents = read("game/control/js/socket-events.js");
   const source = read("game/control/js/muse-help-control.js");
-  const assistance = html.match(/<div class="control-group control-group--asistencia[\s\S]*?<\/section>\s*<\/div>\s*<\/div>/)?.[0] || "";
+  const assistance = html.match(/<div id="control_panel_asistencia"[\s\S]*?<\/section>\s*<\/div>/)?.[0] || "";
 
   assert.match(html, /data-control-section="asistencia"/);
-  assert.match(html, /id="control_title_assistance"[\s\S]*aria-controls="asistencia_control"[\s\S]*toggleSeccionControl\('asistencia'\)/);
+  assert.match(html, /id="control_title_assistance"[\s\S]*role="tab"[\s\S]*aria-controls="control_panel_asistencia"[\s\S]*toggleSeccionControl\('asistencia'\)/);
   assert.match(html, /id="asistencia_estado_global"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.match(html, /id="asistencia_preview_shell"[\s\S]*role="application"/);
   assert.match(html, /id="asistencia_resolver"[^>]*>CERRAR INCIDENCIA<\/button>/);
@@ -270,7 +270,7 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.doesNotMatch(assistance, /<input|<textarea/);
   assert.match(html, /muse-help-control\.js\?v=20260824f/);
 
-  assert.match(actions, /new Set\(\["tutorial", "juego", "representacion", "asistencia"\]\)/);
+  assert.match(actions, /new Set\(\["tutorial", "detonadores", "juego", "representacion", "asistencia"\]\)/);
   assert.match(actions, /classList\.toggle\("asistencia-activa", seccion === "asistencia"\)/);
   assert.match(socketEvents, /socket\.emit\('pedir_ayuda_musas_estado'\)/);
   assert.match(socketEvents, /socket\.on\('ayuda_musas_estado'/);

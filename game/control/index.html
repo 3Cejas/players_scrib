@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260827d">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260827j">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260827d"></script>
+<script src="./js/actions.js?v=20260827j"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -75,9 +75,24 @@
         <tbody id="panel_controles">
             <tr>
                 <td colspan="5">
-                    <div class="control-groups">
-                        <div class="control-group control-group--calentamiento control-collapsible is-collapsed" data-control-section="tutorial">
-                            <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
+                    <div class="control-panel-shell">
+                        <nav class="control-tabs-shell" aria-label="Secciones de Control">
+                            <button id="control_tabs_prev" class="control-tabs-arrow control-tabs-arrow--prev" type="button" aria-label="Ver pesta&ntilde;as anteriores" onclick="document.getElementById('control_tabs_viewport').scrollBy({ left: -280, behavior: 'smooth' })" hidden>&#x2039;</button>
+                            <div id="control_tabs_viewport" class="control-tabs-viewport" role="tablist" aria-label="Secciones de Control">
+                                <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="tutorial" aria-selected="false" aria-expanded="false" aria-controls="control_panel_tutorial" tabindex="-1" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
+                                <button id="control_title_detonadores" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="detonadores" aria-selected="false" aria-expanded="false" aria-controls="control_panel_detonadores" tabindex="-1" onclick="toggleSeccionControl('detonadores')">&#x1F4A5; DETONADORES</button>
+                                <button id="control_title_game" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="juego" aria-selected="true" aria-expanded="true" aria-controls="control_panel_juego" tabindex="0" onclick="toggleSeccionControl('juego')">&#x1F3AE; JUEGO</button>
+                                <button id="control_title_representation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="representacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_representacion" tabindex="-1" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
+                                <button id="control_title_assistance" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="asistencia" aria-selected="false" aria-expanded="false" aria-controls="control_panel_asistencia" tabindex="-1" onclick="toggleSeccionControl('asistencia')">
+                                    <span aria-hidden="true">&#x1F6A9;</span>
+                                    <span>ASISTENCIA</span>
+                                    <span id="asistencia_tab_contador" class="asistencia-tab-contador" aria-label="0 incidencias activas">0</span>
+                                </button>
+                            </div>
+                            <button id="control_tabs_next" class="control-tabs-arrow control-tabs-arrow--next" type="button" aria-label="Ver m&aacute;s pesta&ntilde;as" onclick="document.getElementById('control_tabs_viewport').scrollBy({ left: 280, behavior: 'smooth' })" hidden>&#x203A;</button>
+                        </nav>
+                        <div class="control-groups">
+                        <div id="control_panel_tutorial" class="control-group control-group--tutorial control-collapsible is-collapsed" data-control-section="tutorial" role="tabpanel" aria-labelledby="control_title_tutorial">
                             <section id="videotutorial_control" class="videotutorial-control" data-state="waiting" aria-labelledby="videotutorial_control_title">
                                 <header class="videotutorial-control__header">
                                     <span class="videotutorial-control__icon" aria-hidden="true">&#x25B6;</span>
@@ -111,8 +126,13 @@
                                     <span id="videotutorial_estado_detalle">El estado se sincronizar&aacute; al conectar.</span>
                                 </p>
                             </section>
-                            <div class="control-group-buttons control-group-buttons--two">
-                                <span id="boton_vista_calentamiento" class='btn' onclick="cambiar_vista_calentamiento(this)">&#x1F4D6; VISTA TUTORIAL</span>
+                            <div class="control-group-buttons control-group-buttons--tutorial">
+                                <button id="boton_vista_tutorial" class="btn" type="button" onclick="mostrar_vista_tutorial()">&#x1F4D6; VISTA TUTORIAL</button>
+                            </div>
+                        </div>
+                        <div id="control_panel_detonadores" class="control-group control-group--calentamiento control-collapsible is-collapsed" data-control-section="detonadores" role="tabpanel" aria-labelledby="control_title_detonadores">
+                            <div class="control-group-buttons control-group-buttons--two control-group-buttons--detonadores">
+                                <button id="boton_vista_calentamiento" class="btn" type="button" onclick="cambiar_vista_calentamiento(this)">&#x1F4A5; VISTA DETONADORES</button>
                                 <span id="boton_reiniciar_calentamiento" class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_reiniciar_marcador_calentamiento" class='btn' onclick="reiniciar_marcador_calentamiento()">&#x21BB; REINICIAR MARCADOR</span>
                                 <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</span>
@@ -125,8 +145,7 @@
                             </div>
                             <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: ABIERTO | J2: ABIERTO</p>
                         </div>
-                        <div class="control-group control-group--juego control-collapsible" data-control-section="juego">
-                            <button id="control_title_game" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="true" onclick="toggleSeccionControl('juego')">&#x1F3AE; JUEGO</button>
+                        <div id="control_panel_juego" class="control-group control-group--juego control-collapsible" data-control-section="juego" role="tabpanel" aria-labelledby="control_title_game">
                             <div class="control-group-buttons control-group-buttons--two">
                                 <span id="boton_escribir" class='btn' onclick="temp()">&#x270E; ESCRIBIR</span>
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
@@ -149,8 +168,7 @@
                                 <button id="puntuacion_nav_hide" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--hide" onclick="ocultarPuntuacionFinal()">&#x2715; OCULTAR</button>
                             </div>
                         </div>
-                        <div class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion">
-                            <button id="control_title_representation" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
+                        <div id="control_panel_representacion" class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion" role="tabpanel" aria-labelledby="control_title_representation">
                             <div class="control-group-buttons">
                                 <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x2B07;&#xFE0F; DESCARGAR TEXTOS</span>
                                 <span id="boton_pedir_feedback" class='btn' onclick="pedirFeedbackMusas()">&#x1F5E8;&#xFE0F; PEDIR FEEDBACK</span>
@@ -160,12 +178,7 @@
                             </div>
                             <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
                         </div>
-                        <div class="control-group control-group--asistencia control-collapsible is-collapsed" data-control-section="asistencia">
-                            <button id="control_title_assistance" class="control-group-title control-collapsible-toggle" type="button" aria-expanded="false" aria-controls="asistencia_control" onclick="toggleSeccionControl('asistencia')">
-                                <span aria-hidden="true">&#x1F6A9;</span>
-                                <span>ASISTENCIA</span>
-                                <span id="asistencia_tab_contador" class="asistencia-tab-contador" aria-label="0 incidencias activas">0</span>
-                            </button>
+                        <div id="control_panel_asistencia" class="control-group control-group--asistencia control-collapsible is-collapsed" data-control-section="asistencia" role="tabpanel" aria-labelledby="control_title_assistance">
                             <section id="asistencia_control" class="asistencia-control" aria-labelledby="control_title_assistance">
                                 <header class="asistencia-control__header">
                                     <div>
@@ -249,6 +262,7 @@
                                 </div>
                             </section>
                         </div>
+                    </div>
                     </div>
                 </td>
             </tr>
