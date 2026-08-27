@@ -9855,8 +9855,8 @@ body.page-spectator .pre-show-espectador {
   inset: 0;
   z-index: 21000;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: clamp(16px, 3vh, 30px);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
   min-width: 0;
   min-height: 0;
   padding: clamp(22px, 4.5vw, 64px) clamp(20px, 6vw, 96px) clamp(18px, 3.5vw, 48px);
@@ -10014,9 +10014,8 @@ body.page-spectator:not(.pre-show-espectador-activo) .pre-show-espectador {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 13px;
   min-height: min(42vh, 360px);
-  color: rgba(255, 255, 255, 0.43);
+  color: rgba(255, 255, 255, 0.94);
   text-align: center;
 }
 
@@ -10036,8 +10035,15 @@ body.page-spectator:not(.pre-show-espectador-activo) .pre-show-espectador {
 
 .pre-show-espectador__empty p {
   margin: 0;
-  font-family: "VT323", monospace;
-  font-size: clamp(1.25rem, 2.3vw, 1.85rem);
+  max-width: min(1120px, 92vw);
+  font-family: "Retro-gaming", monospace;
+  font-size: clamp(2rem, 5.2vw, 5rem);
+  line-height: 1.12;
+  letter-spacing: 0.025em;
+  text-wrap: balance;
+  text-shadow:
+    0 0 34px rgba(130, 226, 255, 0.2),
+    0 0 62px rgba(255, 92, 116, 0.12);
 }
 
 .pre-show-message {

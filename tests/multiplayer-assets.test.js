@@ -13,6 +13,7 @@ const CONTROL_VIDEO_VERSION = "20260824d";
 const CONTROL_HELP_VERSION = "20260824e";
 const CONTROL_HELP_MODULE_VERSION = "20260824f";
 const CONTROL_AUTH_VERSION = "20260827a";
+const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const MUSA_HELP_VERSION = "20260824f";
 const WRITER_DELETE_BLOCK_VERSION = "20260824g";
 const I18N_VERSION = "20260822a";
@@ -21,7 +22,7 @@ const LEVEL_TRANSITION_VERSION = "20260823a";
 const PLAYER_ACTIONS_VERSION = WRITER_DELETE_BLOCK_VERSION;
 const PLAYER_STATE_VERSION = WRITER_DELETE_BLOCK_VERSION;
 const PLAYER_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
-const SPECTATOR_STATE_VERSION = MUSE_AUTHOR_VERSION;
+const SPECTATOR_STATE_VERSION = SPECTATOR_PRE_SHOW_VERSION;
 const SPECTATOR_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = MUSE_AUTHOR_VERSION;
@@ -62,7 +63,7 @@ test("multiplayer html references current changed shared assets", () => {
     assertIncludesAsset(htmlRelPath, "dashboard-players.css", CSS_VERSION);
   });
   assertIncludesAsset("game/players/index.html", "dashboard-players.css", MUSE_AUTHOR_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_PRE_SHOW_VERSION);
 
   ["game/players/index.html"].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js", MUSE_AUTHOR_VERSION);
@@ -73,7 +74,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/i18n.js", PRE_SHOW_VERSION);
   assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "js/i18n.js", PRE_SHOW_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "js/i18n.js", SPECTATOR_PRE_SHOW_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/inspiration-score.js", PLAYER_DISCARD_VERSION);
   assertIncludesAsset("game/control/index.html", "js/i18n.js", PLAYER_DISCARD_VERSION);

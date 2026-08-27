@@ -1228,17 +1228,13 @@ function puedeMostrarPreShowEspectador() {
 function crearVacioPreShowEspectador() {
     const vacio = document.createElement("div");
     vacio.className = "pre-show-espectador__empty";
-    const icono = document.createElement("span");
-    icono.className = "pre-show-espectador__empty-icon";
-    icono.setAttribute("aria-hidden", "true");
-    icono.textContent = "\u2726";
     const texto = document.createElement("p");
     texto.textContent = tJuego2P(
         "preshow.spectator.waiting",
         {},
-        "Esperando la primera transmision de una musa..."
+        "MUSAS, \u00a1HACEDLES ESCRIBIR!"
     );
-    vacio.append(icono, texto);
+    vacio.append(texto);
     return vacio;
 }
 

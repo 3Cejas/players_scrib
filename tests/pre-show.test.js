@@ -111,7 +111,7 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
     state.indexOf("function renderizarPreShowEspectador")
   );
 
-  assert.match(html, /id="pre_show_espectador"[^>]*hidden[^>]*aria-labelledby/);
+  assert.match(html, /id="pre_show_espectador"[^>]*hidden[^>]*aria-label/);
   assert.match(html, /id="pre_show_espectador_anuncio"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(state, /PRE_SHOW_MENSAJES_VISIBLES_ESPECTADOR = 8/);
   assert.match(state, /\.mensajes\.slice\(-PRE_SHOW_MENSAJES_VISIBLES_ESPECTADOR\)/);
@@ -125,14 +125,26 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.match(css, /@media \(max-width: 720px\), \(max-height: 620px\)/);
 });
 
+test("spectator pre-show keeps one motivating sentence and removes explanatory chrome", () => {
+  const html = read("game/spectator/index.html");
+  const state = read("game/spectator/js/state.js");
+  const section = html.match(/<section id="pre_show_espectador"[\s\S]*?<\/section>/)?.[0] || "";
+
+  assert.match(section, /preshow\.spectator\.waiting[^>]*>MUSAS, \u00a1HACEDLES ESCRIBIR!</);
+  assert.doesNotMatch(section, /pre-show-espectador__(?:header|live|eyebrow|footer)/);
+  assert.doesNotMatch(section, /EN DIRECTO|ANTES DEL TUTORIAL|LAS MUSAS TOMAN EL CANAL|Mensajes en directo|EL CANAL TERMINA/);
+  assert.doesNotMatch(section, /pre-show-espectador__empty-icon/);
+  assert.match(state, /"MUSAS, \\u00a1HACEDLES ESCRIBIR!"/);
+});
+
 test("all supported languages include the pre-show interface and feedback", () => {
   const i18n = read("game/js/i18n.js");
   [
     "preshow.live",
     "preshow.muse.title",
     "preshow.muse.feedback.offensive",
-    "preshow.spectator.title",
-    "preshow.spectator.until_tutorial"
+    "preshow.spectator.messages_aria",
+    "preshow.spectator.waiting"
   ].forEach((key) => {
     assert.equal((i18n.match(new RegExp(`"${key.replace(/\./g, "\\.")}"`, "g")) || []).length, 3);
   });
