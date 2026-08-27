@@ -35,3 +35,18 @@ test("Control waits for server authorization while dramaturgy replicas stay read
   assert.match(monitorSync, /ScribMuseHelpControl\.marcarConexion\(false\)/);
   assert.doesNotMatch(monitorSync, /pedir_ayuda_musas_estado|iniciarStatsLiveControl/);
 });
+
+test("Control recovers from credentials invalidated by a server restart", () => {
+  const source = read("game/control/js/socket-events.js");
+  const redirect = source.match(/function redirigirASelectorRolesControl\(code\) \{[\s\S]*?\n\}/)?.[0] || "";
+  const html = read("game/control/index.html");
+
+  assert.match(source, /CONTROL_ACCESS_REJECTION_CODES = new Set\(\[[\s\S]*ACCESS_TOKEN_REQUIRED[\s\S]*INVALID_ACCESS_TOKEN[\s\S]*ACCESS_TOKEN_EXPIRED/);
+  assert.match(source, /redireccion_acceso_control_pendiente/);
+  assert.match(redirect, /esReplicaDramaturgiaControl\(\)/);
+  assert.match(redirect, /limpiarAccessTokenControl\(\)/);
+  assert.match(redirect, /new URL\("\.\.\/index\.html", window\.location\.href\)/);
+  assert.match(redirect, /window\.location\.replace\(destino\.href\)/);
+  assert.match(source, /redirigirASelectorRolesControl\(code\)/);
+  assert.match(html, /socket-events\.js\?v=20260827a/);
+});

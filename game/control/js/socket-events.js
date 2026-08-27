@@ -1,5 +1,11 @@
 ﻿const CONTROL_ACCESS_TOKEN_KEY = "scrib_roles_access_token";
+const CONTROL_ACCESS_REJECTION_CODES = new Set([
+    "ACCESS_TOKEN_REQUIRED",
+    "INVALID_ACCESS_TOKEN",
+    "ACCESS_TOKEN_EXPIRED"
+]);
 let registro_control_confirmado = false;
+let redireccion_acceso_control_pendiente = false;
 
 function obtenerAccessTokenControl() {
     try {
@@ -51,6 +57,21 @@ function esReplicaDramaturgiaControl() {
     return Boolean(window.__SCRIB_DRAMATURGIA_MONITOR__?.active);
 }
 
+function redirigirASelectorRolesControl(code) {
+    if (esReplicaDramaturgiaControl()
+        || redireccion_acceso_control_pendiente
+        || !CONTROL_ACCESS_REJECTION_CODES.has(code)) {
+        return;
+    }
+    redireccion_acceso_control_pendiente = true;
+    limpiarAccessTokenControl();
+    window.setTimeout(() => {
+        const destino = new URL("../index.html", window.location.href);
+        destino.searchParams.set("renovar_acceso", "control");
+        window.location.replace(destino.href);
+    }, 600);
+}
+
 function sincronizarReplicaControlSoloLectura() {
     document.body.dataset.controlAccess = "monitor";
     setEstadoServidor(true);
@@ -82,9 +103,10 @@ function procesarRegistroControl(payload = {}) {
         return true;
     }
     if (respuesta.ok !== false) return false;
+    if (esReplicaDramaturgiaControl()) return false;
     registro_control_confirmado = false;
     const code = String(respuesta.code || "ACCESS_TOKEN_REQUIRED").trim().slice(0, 80);
-    if (code === "INVALID_ACCESS_TOKEN" || code === "ACCESS_TOKEN_EXPIRED") {
+    if (CONTROL_ACCESS_REJECTION_CODES.has(code)) {
         limpiarAccessTokenControl();
     }
     document.body.dataset.controlAccess = "denied";
@@ -105,6 +127,7 @@ function procesarRegistroControl(payload = {}) {
     if (typeof registrarLogControl === "function") {
         registrarLogControl("error", [`Registro de Control rechazado: ${code}`]);
     }
+    redirigirASelectorRolesControl(code);
     return false;
 }
 
