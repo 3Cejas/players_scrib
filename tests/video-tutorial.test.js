@@ -61,7 +61,7 @@ test("video tutorial rejects executable media URLs and clamps progress", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
   assert.equal(
     tutorial.safeVideoUrl("../media/tutorial-scrib.mp4", locationRef),
-    "https://scrib.test/game/media/tutorial-scrib.mp4"
+    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260827d"
   );
   assert.equal(tutorial.safeVideoUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_VIDEO_URL);
   assert.equal(tutorial.safeVideoUrl("data:video/mp4;base64,AAAA", locationRef), tutorial.DEFAULT_VIDEO_URL);
@@ -74,8 +74,8 @@ test("spectator and muse load the synchronized tutorial before socket handlers",
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260824d/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260824d/);
+    assert.match(html, /video-tutorial\.css\?v=20260827d/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260827d/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -97,4 +97,37 @@ test("mobile calibration has four solid colors, confirmation and reduced-motion 
   assert.match(js, /video_tutorial_verificar/);
   assert.match(js, /S\\u00cd, FUNCIONA/);
   assert.match(js, /session_id:[\s\S]*phase_seq:[\s\S]*reproduccion_seq:/);
+});
+
+test("spectator tutorial is clean, narrated and enters and leaves with a transition", () => {
+  const css = read("game/css/video-tutorial.css");
+  const js = read("game/js/domains/video-tutorial.js");
+
+  for (const obsoleteChrome of [
+    "MUSAS VERIFICADAS",
+    "ACTIVAR NARRACI\\u00d3N",
+    "GU\\u00cdA DE CONEXI\\u00d3N",
+    "data-video-tutorial-progress",
+    "data-video-tutorial-time"
+  ]) {
+    assert.doesNotMatch(js, new RegExp(obsoleteChrome));
+  }
+  assert.match(js, /data-video-tutorial-slide-url hidden/);
+  assert.match(js, /position >= 0 && position < 6/);
+  assert.match(js, /media\.defaultMuted = false;[\s\S]*media\.muted = false;[\s\S]*media\.volume = 1;/);
+  assert.doesNotMatch(js, /mutedAttempt|soundButton/);
+  assert.match(js, /root\.classList\.add\("is-visible"\)/);
+  assert.match(js, /root\.classList\.add\("is-leaving"\)[\s\S]*VISIBILITY_TRANSITION_MS/);
+  assert.match(css, /\.scrib-video-tutorial\.is-visible[\s\S]*opacity: 1;[\s\S]*transform: scale\(1\)/);
+  assert.match(css, /\.scrib-video-tutorial__slide-url/);
+});
+
+test("generated tutorial has fixed scenes without baked timecode or progress chrome", () => {
+  const renderer = read("scripts/render-tutorial-scrib-scenes.js");
+  const generator = read("scripts/generate-tutorial-scrib-video.sh");
+
+  assert.doesNotMatch(renderer, /class="timecode"|class="progress"|class="progress-labels"|VIDEOTUTORIAL DE ACCESO/);
+  assert.match(renderer, /URL DE ESTA SALA/);
+  assert.doesNotMatch(generator, /sin\(t|cos\(t|crop=1920/);
+  assert.match(generator, /scale=1920:1080:flags=lanczos,fps=30,format=yuv420p/);
 });

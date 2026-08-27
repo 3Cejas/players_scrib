@@ -48,5 +48,5 @@ test("Control recovers from credentials invalidated by a server restart", () => 
   assert.match(redirect, /new URL\("\.\.\/index\.html", window\.location\.href\)/);
   assert.match(redirect, /window\.location\.replace\(destino\.href\)/);
   assert.match(source, /redirigirASelectorRolesControl\(code\)/);
-  assert.match(html, /socket-events\.js\?v=20260827a/);
+  assert.match(html, /socket-events\.js\?v=20260827d/);
 });

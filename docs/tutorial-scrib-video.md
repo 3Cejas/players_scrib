@@ -1,6 +1,6 @@
 # Videotutorial de acceso de musas
 
-El activo publicado es `game/media/tutorial-scrib.mp4`. Es un vídeo 16:9 de 60 segundos, con voz mexicana en español, subtítulos quemados y una pista WebVTT adicional en `game/media/tutorial-scrib.vtt`. No necesita red ni servicios externos durante la reproducción.
+El activo publicado es `game/media/tutorial-scrib.mp4`. Es un vídeo 16:9 fijo de 60 segundos, sin paneos, cronómetro ni barra de progreso, con voz mexicana en español, subtítulos quemados y una pista WebVTT adicional en `game/media/tutorial-scrib.vtt`. No necesita red ni servicios externos durante la reproducción. La URL real de acceso se superpone únicamente durante la primera escena desde la aplicación, por lo que no se hornea una dirección dependiente del servidor dentro del vídeo.
 
 ## Línea temporal
 

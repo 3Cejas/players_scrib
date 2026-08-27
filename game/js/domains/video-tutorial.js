@@ -31,9 +31,12 @@
 
     const DEFAULT_DURATION_SECONDS = 60;
     const DEFAULT_VIDEO_URL = "../media/tutorial-scrib.mp4";
+    const VIDEO_ASSET_VERSION = "20260827d";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
+    const VISIBILITY_TRANSITION_MS = 560;
+    const NARRATION_RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     const TIMELINE = Object.freeze([
         Object.freeze({ id: "connected", start: 0, end: 30, label: "CONEXI\u00d3N RECIBIDA", copy: "Sigue las instrucciones de la pantalla principal." }),
@@ -134,6 +137,9 @@
         try {
             const resolved = new URL(raw, locationRef.href);
             if (!/^https?:$/i.test(resolved.protocol)) return DEFAULT_VIDEO_URL;
+            if (/\/tutorial-scrib\.mp4$/i.test(resolved.pathname) && !resolved.searchParams.has("v")) {
+                resolved.searchParams.set("v", VIDEO_ASSET_VERSION);
+            }
             return resolved.href;
         } catch (_error) {
             return DEFAULT_VIDEO_URL;
@@ -173,22 +179,8 @@
         root.setAttribute("aria-label", "Videotutorial para conectarse a SCRIB");
         root.innerHTML = `
             <div class="scrib-video-tutorial__ambient" aria-hidden="true"></div>
-            <video class="scrib-video-tutorial__media" playsinline preload="auto"></video>
-            <div class="scrib-video-tutorial__hud">
-                <div class="scrib-video-tutorial__topline">
-                    <span class="scrib-video-tutorial__live"><i aria-hidden="true"></i> GU\u00cdA DE CONEXI\u00d3N</span>
-                    <span class="scrib-video-tutorial__join">ENTRA EN <strong data-video-tutorial-join-url></strong></span>
-                    <span class="scrib-video-tutorial__counter" data-video-tutorial-counter>0/0 MUSAS VERIFICADAS</span>
-                </div>
-                <div class="scrib-video-tutorial__footer">
-                    <div class="scrib-video-tutorial__progress" aria-hidden="true"><span data-video-tutorial-progress></span></div>
-                    <span data-video-tutorial-time>01:00</span>
-                </div>
-            </div>
-            <button class="scrib-video-tutorial__sound" type="button" hidden>
-                <span aria-hidden="true">\ud83d\udd0a</span>
-                ACTIVAR NARRACI\u00d3N
-            </button>
+            <video class="scrib-video-tutorial__media" playsinline preload="auto" autoplay></video>
+            <strong class="scrib-video-tutorial__slide-url" data-video-tutorial-slide-url hidden></strong>
             <div class="scrib-video-tutorial__fallback" hidden>
                 <span aria-hidden="true">\u25b6</span>
                 <strong>PREPARANDO VIDEOTUTORIAL</strong>
@@ -235,7 +227,6 @@
             : createMuseOverlay(documentRef);
         const media = root.querySelector("video");
         const liveRegion = root.querySelector("[data-video-tutorial-live]");
-        const soundButton = root.querySelector(".scrib-video-tutorial__sound");
         const confirmButton = root.querySelector(".scrib-video-tutorial-device__confirm");
         const storage = (() => {
             try { return windowRef.sessionStorage; } catch (_error) { return null; }
@@ -256,9 +247,10 @@
         let lastPhaseId = "";
         let verifying = false;
         let locallyVerified = false;
+        let hideTransitionTimer = null;
 
         if (role === "spectator") {
-            const joinNode = root.querySelector("[data-video-tutorial-join-url]");
+            const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
             if (joinNode) {
                 try {
                     const joinUrl = new URL("../public/index.html", windowRef.location.href);
@@ -291,12 +283,33 @@
         }
 
         function setVisible(visible) {
-            root.hidden = !visible;
-            root.setAttribute("aria-hidden", visible ? "false" : "true");
-            documentRef.body.classList.toggle("scrib-video-tutorial-active", visible);
-            if (!visible && media) {
+            if (hideTransitionTimer != null) {
+                windowRef.clearTimeout(hideTransitionTimer);
+                hideTransitionTimer = null;
+            }
+            if (visible) {
+                root.hidden = false;
+                root.classList.remove("is-leaving");
+                root.setAttribute("aria-hidden", "false");
+                documentRef.body.classList.add("scrib-video-tutorial-active");
+                void root.offsetWidth;
+                root.classList.add("is-visible");
+                return;
+            }
+
+            root.setAttribute("aria-hidden", "true");
+            documentRef.body.classList.remove("scrib-video-tutorial-active");
+            root.classList.remove("is-visible");
+            root.classList.add("is-leaving");
+            if (media) {
                 try { media.pause(); } catch (_error) {}
             }
+            const reducedMotion = Boolean(windowRef.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+            hideTransitionTimer = windowRef.setTimeout(() => {
+                root.hidden = true;
+                root.classList.remove("is-leaving");
+                hideTransitionTimer = null;
+            }, reducedMotion ? 0 : VISIBILITY_TRANSITION_MS);
         }
 
         function showFallback(show) {
@@ -313,7 +326,10 @@
                 activePlaybackKey = nextKey;
                 activeVideoUrl = nextUrl;
                 media.src = nextUrl;
-                media.muted = state.config.muted;
+                media.defaultMuted = false;
+                media.muted = false;
+                media.volume = 1;
+                media.removeAttribute("muted");
                 media.currentTime = 0;
                 media.load();
             }
@@ -326,13 +342,11 @@
                 } catch (_error) {}
                 const attempt = media.play();
                 if (!attempt || typeof attempt.catch !== "function") return;
-                attempt.then(() => showFallback(false)).catch(() => {
-                    media.muted = true;
-                    const mutedAttempt = media.play();
-                    if (mutedAttempt && typeof mutedAttempt.catch === "function") {
-                        mutedAttempt.catch(() => showFallback(true));
-                    }
-                    if (soundButton && !state.config.muted) soundButton.hidden = false;
+                attempt.then(() => {
+                    delete media.dataset.narrationBlocked;
+                    showFallback(false);
+                }).catch(() => {
+                    media.dataset.narrationBlocked = "true";
                 });
             };
 
@@ -341,15 +355,8 @@
         }
 
         function renderSpectator(position) {
-            const progress = progressAt(position, state.config.durationSeconds);
-            const counter = root.querySelector("[data-video-tutorial-counter]");
-            const progressBar = root.querySelector("[data-video-tutorial-progress]");
-            const time = root.querySelector("[data-video-tutorial-time]");
-            if (counter) {
-                counter.textContent = `${state.verification.verified}/${state.verification.connected} MUSAS VERIFICADAS`;
-            }
-            if (progressBar) progressBar.style.transform = `scaleX(${progress})`;
-            if (time) time.textContent = formatTime(state.config.durationSeconds - position);
+            const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
+            if (joinNode) joinNode.hidden = !(position >= 0 && position < 6);
         }
 
         function museIdentity() {
@@ -461,17 +468,13 @@
             media.addEventListener("error", () => showFallback(true));
             media.addEventListener("playing", () => showFallback(false));
         }
-        if (soundButton) {
-            soundButton.addEventListener("click", () => {
-                if (!media) return;
-                media.muted = false;
-                soundButton.hidden = true;
-                const attempt = media.play();
-                if (attempt && typeof attempt.catch === "function") {
-                    attempt.catch(() => { soundButton.hidden = false; });
-                }
-            });
-        }
+        const retryNarration = () => {
+            if (role !== "spectator" || !state || !state.visible || !media?.paused) return;
+            playMedia(currentPosition());
+        };
+        NARRATION_RETRY_EVENTS.forEach((eventName) => {
+            documentRef.addEventListener(eventName, retryNarration, { passive: true });
+        });
         if (confirmButton) confirmButton.addEventListener("click", verify);
 
         socketRef.on(STATE_EVENT, handleState);
@@ -490,6 +493,10 @@
             getPosition: currentPosition,
             destroy() {
                 if (frameId != null) cancelFrame(frameId);
+                if (hideTransitionTimer != null) windowRef.clearTimeout(hideTransitionTimer);
+                NARRATION_RETRY_EVENTS.forEach((eventName) => {
+                    documentRef.removeEventListener(eventName, retryNarration);
+                });
                 try { media?.pause(); } catch (_error) {}
                 root.remove();
             }

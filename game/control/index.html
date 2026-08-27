@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260824e">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260827d">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260824e"></script>
+<script src="./js/actions.js?v=20260827d"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -635,7 +635,7 @@
                 <span>TIEMPO RESTANTE</span>
                 <p id="tiempo_modos_secs" class="tiempo">0 segundos</p>
             </div>
-            <button id="boton_fin_partida" class="btn btn-fin" type="button" onclick="fin_partida_global()">&#x23F9;&#xFE0F; FIN PARTIDA</button>
+            <button id="boton_fin_partida" class="btn btn-fin" type="button" onclick="fin_partida_global()" aria-label="Finalizar partida" title="Finalizar partida" hidden>&#x23F9;&#xFE0F; FIN</button>
             <div id="level_status_witnesses" class="level-status-witnesses" aria-label="Estado de desventajas e inspiracion de musas">
                 <div id="control_desventaja_activa" class="level-status-witness level-status-witness--disadvantage" data-active="0" data-team="">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
@@ -733,7 +733,7 @@
     <script src="./js/state.js?v=20260824a"></script>
 <script src="./js/videotutorial-control.js?v=20260824d"></script>
 <script src="./js/muse-help-control.js?v=20260824f"></script>
-<script src="./js/socket-events.js?v=20260827a"></script>
+<script src="./js/socket-events.js?v=20260827d"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </html>

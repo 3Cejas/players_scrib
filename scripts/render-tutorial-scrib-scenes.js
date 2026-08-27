@@ -194,7 +194,7 @@ function phoneScreen(scene) {
     return `
       <div class="mobile-kicker">ENTRA COMO MUSA</div>
       ${qrMarkup()}
-      <div class="url-pill">scrib.local/musas</div>
+      <div class="url-pill">URL DE ESTA SALA</div>
       <div class="mobile-help">URL o QR de la sala</div>`;
   }
   if (scene.screen === "name") {
@@ -259,8 +259,6 @@ function phoneScreen(scene) {
 function sceneHtml(scene, logoData, fontData) {
   const accent = scene.color || (scene.screen === "success" ? "#70ff9a" : "#45e6ff");
   const title = scene.title.split("\n").map(escapeHtml).join("<br>");
-  const elapsed = scene.start + scene.duration;
-  const progress = (elapsed / 60) * 100;
   return `<!doctype html>
   <html lang="es"><head><meta charset="utf-8"><style>
     @font-face { font-family: VT323; src: url(data:font/ttf;base64,${fontData}) format("truetype"); }
@@ -273,19 +271,16 @@ function sceneHtml(scene, logoData, fontData) {
       linear-gradient(135deg, #050912 0%, #06131c 52%, #08070e 100%); }
     .stage::before { content:""; position:absolute; inset:0; opacity:.13; background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(255,255,255,.06) 6px); mix-blend-mode:screen; }
     .stage::after { content:""; position:absolute; width:850px; height:850px; border:1px solid color-mix(in srgb, var(--accent), transparent 80%); border-radius:50%; right:-260px; top:90px; box-shadow:0 0 90px color-mix(in srgb, var(--accent), transparent 85%); }
-    .chrome { position:absolute; left:72px; right:72px; top:42px; height:72px; display:flex; align-items:center; justify-content:space-between; z-index:3; }
+    .chrome { position:absolute; left:72px; right:72px; top:42px; height:72px; display:flex; align-items:center; z-index:3; }
     .brand { display:flex; align-items:center; gap:18px; font:34px VT323, monospace; letter-spacing:4px; }
     .brand img { width:54px; height:54px; object-fit:contain; filter:drop-shadow(0 0 12px var(--accent)); }
     .brand b { color:var(--accent); font-weight:400; }
-    .timecode { font:28px VT323, monospace; letter-spacing:2px; color:#9bb1c2; border:1px solid rgba(190,220,240,.18); background:rgba(3,8,14,.72); padding:10px 18px; border-radius:8px; }
     .layout { position:absolute; z-index:2; left:120px; right:120px; top:150px; bottom:130px; display:grid; grid-template-columns: 1.1fr .9fr; align-items:center; gap:100px; }
     .copy { padding-left:42px; }
     .eyebrow { display:inline-flex; align-items:center; gap:12px; font:29px VT323, monospace; letter-spacing:3px; color:var(--accent); border:1px solid color-mix(in srgb, var(--accent), transparent 35%); background:color-mix(in srgb, var(--accent), transparent 91%); box-shadow:0 0 28px color-mix(in srgb, var(--accent), transparent 88%); padding:10px 18px; border-radius:999px; }
     .eyebrow::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 14px var(--accent); }
     h1 { margin:32px 0 26px; font:400 78px/0.91 VT323, monospace; letter-spacing:3px; text-shadow:4px 4px 0 rgba(255,60,70,.25), -3px -2px 0 rgba(45,220,255,.2), 0 0 35px color-mix(in srgb, var(--accent), transparent 78%); }
     .note { max-width:690px; margin:0; color:#c5d4de; font-size:28px; line-height:1.35; }
-    .micro { margin-top:38px; display:flex; align-items:center; gap:14px; color:#8399aa; font:25px VT323, monospace; letter-spacing:1px; }
-    .micro i { width:54px; height:2px; background:linear-gradient(90deg,var(--accent),transparent); }
     .device-wrap { position:relative; display:flex; justify-content:center; align-items:center; min-height:790px; }
     .device-shadow { position:absolute; width:520px; height:140px; bottom:10px; border-radius:50%; background:color-mix(in srgb, var(--accent), transparent 78%); filter:blur(48px); opacity:.55; }
     .phone { position:relative; width:418px; height:770px; padding:18px; border-radius:54px; background:linear-gradient(145deg,#25313d,#070a0f 35%,#202935 100%); box-shadow:0 0 0 2px rgba(255,255,255,.24), 0 28px 70px rgba(0,0,0,.65), 0 0 50px color-mix(in srgb,var(--accent),transparent 83%); }
@@ -347,19 +342,13 @@ function sceneHtml(scene, logoData, fontData) {
     .verified-card small { margin:0; }
     .verified-card strong { color:#9affb9;font:30px/1 VT323,monospace;font-weight:400;letter-spacing:1px; }
     .connection-pill--verified { margin-top:20px;font-size:16px; }
-    .progress { position:absolute;z-index:5;left:72px;right:72px;bottom:54px;height:6px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden; }
-    .progress i { display:block;width:${progress}%;height:100%;background:linear-gradient(90deg,#45e6ff,var(--accent));box-shadow:0 0 18px var(--accent); }
-    .progress-labels { position:absolute;z-index:5;left:72px;right:72px;bottom:70px;display:flex;justify-content:space-between;color:#718696;font:19px VT323,monospace;letter-spacing:1px; }
-    .progress-labels b { color:var(--accent);font-weight:400; }
   </style></head><body>
     <main class="stage">
-      <header class="chrome"><div class="brand"><img src="${logoData}" alt=""><span>SCRIB</span><b>· MUSA</b></div><div class="timecode">${String(scene.start).padStart(2, "0")}–${String(elapsed).padStart(2, "0")} s</div></header>
+      <header class="chrome"><div class="brand"><img src="${logoData}" alt=""><span>SCRIB</span><b>· MUSA</b></div></header>
       <section class="layout">
-        <div class="copy"><div class="eyebrow">${escapeHtml(scene.eyebrow)}</div><h1>${title}</h1><p class="note">${escapeHtml(scene.note)}</p><div class="micro"><i></i><span>VIDEOTUTORIAL DE ACCESO</span></div></div>
+        <div class="copy"><div class="eyebrow">${escapeHtml(scene.eyebrow)}</div><h1>${title}</h1><p class="note">${escapeHtml(scene.note)}</p></div>
         <div class="device-wrap"><div class="device-shadow"></div><div class="phone"><div class="screen">${phoneScreen(scene)}</div></div></div>
       </section>
-      <div class="progress-labels"><span>ENTRADA</span><b>${escapeHtml(scene.eyebrow.split("·").pop().trim())}</b><span>VERIFICACIÓN</span></div>
-      <div class="progress"><i></i></div>
     </main>
   </body></html>`;
 }
@@ -402,7 +391,7 @@ async function main() {
     scene.caption,
     ""
   ])).join("\n");
-  fs.writeFileSync(vttPath, `${vtt}\n`, "utf8");
+  fs.writeFileSync(vttPath, vtt, "utf8");
 
   const srt = scenes.flatMap((scene, index) => [
     String(index + 1),

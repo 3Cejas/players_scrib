@@ -1987,6 +1987,16 @@ function actualizarBotonSkipTertuliaControl() {
     boton.classList.toggle("is-visible", visible);
 }
 
+function actualizarBotonFinPartidaControl() {
+    const boton = document.getElementById("boton_fin_partida");
+    if (!boton) return;
+    const visible = juego_iniciado === true;
+    boton.hidden = !visible;
+    boton.setAttribute("aria-hidden", visible ? "false" : "true");
+    boton.tabIndex = visible ? 0 : -1;
+}
+window.actualizarBotonFinPartidaControl = actualizarBotonFinPartidaControl;
+
 function temp() {
     console.log(frase_final_j1.value)
     const fraseJ1 = normalizarFraseFinal(frase_final_j1.value);
@@ -2056,6 +2066,7 @@ function temp() {
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
+    actualizarBotonFinPartidaControl();
   
     DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
     invalidarTemporizadoresPartidaControl();
@@ -2140,6 +2151,7 @@ function limpiar() {
     //texto1.innerText = "";
     //texto2.innerText = "";
     juego_iniciado = false;
+    actualizarBotonFinPartidaControl();
     terminado = false;
     terminado1 = false;
     fin_j1 = false;

@@ -99,7 +99,7 @@ while IFS=$'\t' read -r -u 3 scene_key scene_duration lead_ms image_path narrati
 
   frame_count="$((scene_duration * 30))"
   ffmpeg -nostdin -hide_banner -loglevel error -y -loop 1 -i "${image_path}" \
-    -vf "scale=1960:1102:flags=lanczos,crop=1920:1080:x='20+8*sin(t*0.72)':y='11+5*cos(t*0.61)',fps=30,format=yuv420p" \
+    -vf "scale=1920:1080:flags=lanczos,fps=30,format=yuv420p" \
     -frames:v "${frame_count}" -an -c:v libx264 -preset ultrafast -crf 12 -g 60 -keyint_min 60 -sc_threshold 0 "${clip_path}"
   printf "file '%s'\n" "${clip_path}" >>"${video_concat}"
 done 3<"${manifest_tsv}"
