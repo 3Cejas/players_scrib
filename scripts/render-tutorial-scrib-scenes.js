@@ -12,18 +12,19 @@ const scenesDir = path.join(buildDir, "scenes");
 const textDir = path.join(buildDir, "narration");
 
 const scenes = [
-  { key: "00-acceso", start: 0, duration: 6, leadMs: 300, caption: "Abre en tu móvil el enlace que aparece en esta pantalla.", eyebrow: "PASO 1 · CONEXIÓN", title: "ABRE EL ENLACE\nEN TU MÓVIL", note: "Al cargarlo verás la bienvenida real de SCRIB.", screen: "welcome" },
-  { key: "01-omitir", start: 6, duration: 5, leadMs: 320, caption: "En la bienvenida, toca OMITIR TUTORIAL.", eyebrow: "PASO 2 · ACCESO RÁPIDO", title: "TOCA\n“OMITIR TUTORIAL”", note: "Ese botón te lleva directamente a elegir tu nombre.", screen: "skip" },
-  { key: "02-nombre", start: 11, duration: 6, leadMs: 320, caption: "Escribe tu nombre de musa y toca la flecha azul.", eyebrow: "PASO 3 · NOMBRE", title: "ESCRIBE CÓMO\nQUIERES APARECER", note: "Este es el nombre que verá el público con tus mensajes.", screen: "name" },
-  { key: "03-asignacion", start: 17, duration: 6, leadMs: 300, caption: "Toca DESCUBRIR MI EQUIPO. SCRIB mantendrá los dos equipos equilibrados.", burnedCaption: "Toca DESCUBRIR MI EQUIPO.\nSCRIB mantendrá los dos equipos equilibrados.", eyebrow: "PASO 4 · EQUIPO", title: "DESCUBRE\nTU EQUIPO", note: "La asignación azul o roja la hace el servidor automáticamente.", screen: "assignment" },
-  { key: "04-resultado", start: 23, duration: 7, leadMs: 280, caption: "Verás tu equipo y tu escritxr. Después, toca ENTRAR AL JUEGO.", burnedCaption: "Verás tu equipo y tu escritxr.\nDespués, toca ENTRAR AL JUEGO.", eyebrow: "PASO 5 · RESULTADO", title: "REVISA TU EQUIPO\nY TU ESCRITXR", note: "La aplicación muestra ambos datos antes de entrar.", screen: "reveal" },
-  { key: "05-aviso", start: 30, duration: 4, leadMs: 220, caption: "Ahora comenzará la prueba real de pantalla.", eyebrow: "PRUEBA DE PANTALLA", title: "MIRA TU MÓVIL", note: "La aplicación cubrirá tu pantalla con cuatro colores.", screen: "warning" },
-  { key: "06-rojo", start: 34, duration: 4, leadMs: 620, caption: "ROJO", eyebrow: "COLOR 1 DE 4", title: "ROJO", note: "Tu móvil mostrará esta pantalla roja.", screen: "color", colorName: "ROJO", color: "#f20d35", remaining: "00:22" },
-  { key: "07-azul", start: 38, duration: 4, leadMs: 620, caption: "AZUL", eyebrow: "COLOR 2 DE 4", title: "AZUL", note: "Después la pantalla cambia a azul.", screen: "color", colorName: "AZUL", color: "#0965ff", remaining: "00:18" },
-  { key: "08-verde", start: 42, duration: 4, leadMs: 620, caption: "VERDE", eyebrow: "COLOR 3 DE 4", title: "VERDE", note: "El tercer color es verde.", screen: "color", colorName: "VERDE", color: "#00b65c", remaining: "00:14" },
-  { key: "09-blanco", start: 46, duration: 4, leadMs: 620, caption: "BLANCO", eyebrow: "COLOR 4 DE 4", title: "BLANCO", note: "Por último verás la pantalla blanca.", screen: "color", colorName: "BLANCO", color: "#ffffff", remaining: "00:10" },
-  { key: "10-confirmacion", start: 50, duration: 6, leadMs: 260, caption: "Si viste los cuatro colores, toca SÍ, FUNCIONA.", eyebrow: "ÚLTIMO PASO", title: "TOCA\n“SÍ, FUNCIONA”", note: "Usa el botón verde que aparece realmente en tu móvil.", screen: "confirm" },
-  { key: "11-verificada", start: 56, duration: 4, leadMs: 220, caption: "Configuración verificada. Ya puedes participar.", eyebrow: "CONEXIÓN COMPLETA", title: "TODO LISTO", note: "La confirmación se muestra en tu propia pantalla.", screen: "verified" }
+  { key: "00-bienvenida", start: 0, duration: 6, leadMs: 180, caption: "¡Hola! Bienvenida a SCRIB. Nos alegra que estés aquí.", narration: "¡Hola! Bienvenida a Escrib. Qué alegría tenerte aquí.", voiceRate: "-2%", voicePitch: "+3Hz", eyebrow: "TE DAMOS LA BIENVENIDA", title: "¡HOLA, MUSA!", note: "En menos de un minuto tendrás tu móvil preparado para participar.", screen: "welcome" },
+  { key: "01-acceso", start: 6, duration: 5, leadMs: 180, caption: "Para empezar, abre en tu móvil el enlace de esta pantalla.", narration: "Para empezar, abre en tu móvil el enlace que ves en esta pantalla.", voiceRate: "-3%", voicePitch: "+2Hz", eyebrow: "PASO 1 · CONEXIÓN", title: "ABRE EL ENLACE\nEN TU MÓVIL", note: "Al cargarlo verás la bienvenida real de SCRIB.", screen: "welcome" },
+  { key: "02-omitir", start: 11, duration: 4, leadMs: 150, caption: "En la bienvenida, pulsa OMITIR TUTORIAL.", narration: "En la bienvenida, pulsa omitir tutorial.", voiceRate: "-1%", voicePitch: "+2Hz", eyebrow: "PASO 2 · ACCESO RÁPIDO", title: "PULSA\n“OMITIR TUTORIAL”", note: "Ese botón te lleva directamente a elegir tu nombre.", screen: "skip" },
+  { key: "03-nombre", start: 15, duration: 5, leadMs: 150, caption: "Escribe tu nombre de musa y avanza con la flecha azul.", narration: "Escribe tu nombre de musa, y avanza con la flecha azul.", voiceRate: "-1%", voicePitch: "+2Hz", eyebrow: "PASO 3 · NOMBRE", title: "ESCRIBE CÓMO\nQUIERES APARECER", note: "Este es el nombre que verá el público con tus mensajes.", screen: "name" },
+  { key: "04-asignacion", start: 20, duration: 5, leadMs: 140, caption: "Descubre tu equipo. SCRIB mantendrá los dos grupos equilibrados.", narration: "Descubre tu equipo. El juego los equilibrará.", voiceRate: "+1%", voicePitch: "+2Hz", eyebrow: "PASO 4 · EQUIPO", title: "DESCUBRE\nTU EQUIPO", note: "La asignación azul o roja la hace el servidor automáticamente.", screen: "assignment" },
+  { key: "05-resultado", start: 25, duration: 5, leadMs: 120, caption: "Aquí aparecen tu equipo y tu escritxr. Después, entra al juego.", narration: "Verás tu equipo y quién escribe contigo. Después, entra.", voiceRate: "+2%", voicePitch: "+1Hz", eyebrow: "PASO 5 · RESULTADO", title: "REVISA TU EQUIPO\nY TU ESCRITXR", note: "La aplicación muestra ambos datos antes de entrar.", screen: "reveal" },
+  { key: "06-aviso", start: 30, duration: 4, leadMs: 100, caption: "¡Muy bien! Ahora vamos a probar los colores.", narration: "¡Muy bien! Probemos los colores.", voiceRate: "+1%", voicePitch: "+4Hz", eyebrow: "PRUEBA DE PANTALLA", title: "MIRA TU MÓVIL", note: "La aplicación cubrirá tu pantalla con cuatro colores.", screen: "warning" },
+  { key: "07-rojo", start: 34, duration: 4, leadMs: 480, caption: "ROJO", narration: "¡Rojo!", voiceRate: "-8%", voicePitch: "+5Hz", eyebrow: "COLOR 1 DE 4", title: "ROJO", note: "Tu móvil mostrará esta pantalla roja.", screen: "color", colorName: "ROJO", color: "#f20d35", remaining: "00:22" },
+  { key: "08-azul", start: 38, duration: 4, leadMs: 480, caption: "AZUL", narration: "¡Azul!", voiceRate: "-8%", voicePitch: "+5Hz", eyebrow: "COLOR 2 DE 4", title: "AZUL", note: "Después la pantalla cambia a azul.", screen: "color", colorName: "AZUL", color: "#0965ff", remaining: "00:18" },
+  { key: "09-verde", start: 42, duration: 4, leadMs: 480, caption: "VERDE", narration: "¡Verde!", voiceRate: "-8%", voicePitch: "+5Hz", eyebrow: "COLOR 3 DE 4", title: "VERDE", note: "El tercer color es verde.", screen: "color", colorName: "VERDE", color: "#00b65c", remaining: "00:14" },
+  { key: "10-blanco", start: 46, duration: 4, leadMs: 480, caption: "BLANCO", narration: "¡Blanco!", voiceRate: "-8%", voicePitch: "+5Hz", eyebrow: "COLOR 4 DE 4", title: "BLANCO", note: "Por último verás la pantalla blanca.", screen: "color", colorName: "BLANCO", color: "#ffffff", remaining: "00:10" },
+  { key: "11-confirmacion", start: 50, duration: 6, leadMs: 160, caption: "Si viste los cuatro colores, pulsa el botón verde para confirmar.", narration: "Si viste los cuatro colores, pulsa el botón verde para confirmar.", voiceRate: "-2%", voicePitch: "+2Hz", eyebrow: "ÚLTIMO PASO", title: "PULSA\n“SÍ, FUNCIONA”", note: "Usa el botón verde que aparece realmente en tu móvil.", screen: "confirm" },
+  { key: "12-verificada", start: 56, duration: 4, leadMs: 100, caption: "¡Perfecto! Tu pantalla está lista. Ya puedes inspirar.", narration: "¡Perfecto! Todo está listo.", voiceRate: "-1%", voicePitch: "+4Hz", eyebrow: "CONEXIÓN COMPLETA", title: "TODO LISTO", note: "La confirmación se muestra en tu propia pantalla.", screen: "verified" }
 ];
 
 function escapeHtml(value) {
@@ -104,12 +105,16 @@ async function main() {
       await page.setContent(sceneHtml(scene, assets), { waitUntil: "load" });
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({ path: path.join(scenesDir, `${scene.key}.png`), type: "png" });
-      fs.writeFileSync(path.join(textDir, `${scene.key}.txt`), `${scene.caption}\n`, "utf8");
+      fs.writeFileSync(path.join(textDir, `${scene.key}.txt`), `${scene.narration || scene.caption}\n`, "utf8");
     }
   } finally {
     await browser.close();
   }
-  const manifest = scenes.map((scene) => ({ ...scene, image: path.join(scenesDir, `${scene.key}.png`), narration: path.join(textDir, `${scene.key}.txt`) }));
+  const manifest = scenes.map((scene) => ({
+    ...scene,
+    image: path.join(scenesDir, `${scene.key}.png`),
+    narrationPath: path.join(textDir, `${scene.key}.txt`)
+  }));
   fs.writeFileSync(path.join(buildDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
   const vtt = ["WEBVTT", ""].concat(scenes.flatMap((scene) => [`${timestamp(scene.start)} --> ${timestamp(scene.start + scene.duration)}`, scene.caption, ""])).join("\n");
   fs.writeFileSync(vttPath, vtt, "utf8");

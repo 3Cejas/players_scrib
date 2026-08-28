@@ -31,7 +31,7 @@
 
     const DEFAULT_DURATION_SECONDS = 60;
     const DEFAULT_VIDEO_URL = "../media/tutorial-scrib.mp4";
-    const VIDEO_ASSET_VERSION = "20260827e";
+    const VIDEO_ASSET_VERSION = "20260828a";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
@@ -356,7 +356,7 @@
 
         function renderSpectator(position) {
             const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
-            if (joinNode) joinNode.hidden = !(position >= 0 && position < 6);
+            if (joinNode) joinNode.hidden = !(position >= 6 && position < 11);
         }
 
         function museIdentity() {

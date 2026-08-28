@@ -8,7 +8,7 @@ vtt_path="${repo_dir}/game/media/tutorial-scrib.vtt"
 tts_cache="${SCRIB_TTS_CACHE_DIR:-/tmp/scrib-tutorial-tts-cache}"
 keep_build="${SCRIB_KEEP_TUTORIAL_BUILD:-0}"
 
-for command_name in node ffmpeg ffprobe curl sha256sum; do
+for command_name in node ffmpeg ffprobe curl; do
   if ! command -v "${command_name}" >/dev/null 2>&1; then
     echo "Falta la herramienta requerida: ${command_name}" >&2
     exit 1
@@ -31,32 +31,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "${tts_cache}/site" "${tts_cache}/voice" "${build_dir}/audio/raw" "${build_dir}/audio/slots" "${build_dir}/video"
+mkdir -p "${tts_cache}/site" "${build_dir}/audio/raw" "${build_dir}/audio/slots" "${build_dir}/video"
 
-piper_version="1.7.0"
-piper_model="${tts_cache}/voice/es_MX-claude-high.onnx"
-piper_config="${piper_model}.json"
-piper_model_url="https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx?download=true"
-piper_config_url="https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx.json?download=true"
-piper_model_sha256="3ef40a71ea63852cd8ab7e6fa7d2ecdcfa67a0b47c9c48e3f10e02ee02083ea0"
-piper_config_sha256="1afc81f703c0e4cb3b4d7c0dca096b8b54a98806807f0170cf5eb5557723c12d"
-
-if [[ ! -f "${tts_cache}/site/piper/__main__.py" ]]; then
-  if [[ ! -f "${tts_cache}/pip.pyz" ]]; then
-    curl -fsSL --retry 3 -o "${tts_cache}/pip.pyz" https://bootstrap.pypa.io/pip/pip.pyz
-  fi
-  python3 "${tts_cache}/pip.pyz" install --disable-pip-version-check --target "${tts_cache}/site" "piper-tts==${piper_version}"
+edge_tts_version="7.2.8"
+edge_tts_voice="es-MX-DaliaNeural"
+if [[ ! -f "${tts_cache}/pip.pyz" ]]; then
+  curl -fsSL --retry 3 -o "${tts_cache}/pip.pyz" https://bootstrap.pypa.io/pip/pip.pyz
 fi
-
-if [[ ! -f "${piper_model}" ]]; then
-  curl -fL --retry 3 -o "${piper_model}" "${piper_model_url}"
+installed_edge_tts_version="$(PYTHONPATH="${tts_cache}/site" python3 -c 'import importlib.metadata; print(importlib.metadata.version("edge-tts"))' 2>/dev/null || true)"
+if [[ "${installed_edge_tts_version}" != "${edge_tts_version}" ]]; then
+  python3 "${tts_cache}/pip.pyz" install --disable-pip-version-check --upgrade \
+    --target "${tts_cache}/site" "edge-tts==${edge_tts_version}"
 fi
-if [[ ! -f "${piper_config}" ]]; then
-  curl -fL --retry 3 -o "${piper_config}" "${piper_config_url}"
-fi
-printf '%s  %s\n%s  %s\n' \
-  "${piper_model_sha256}" "${piper_model}" \
-  "${piper_config_sha256}" "${piper_config}" | sha256sum --check --status
 
 node "${script_dir}/render-tutorial-scrib-scenes.js" "${build_dir}" "${vtt_path}" >/dev/null
 
@@ -66,7 +52,16 @@ node - "${manifest_path}" >"${manifest_tsv}" <<'NODE'
 const fs = require("fs");
 const manifest = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 for (const scene of manifest) {
-  process.stdout.write([scene.key, scene.start, scene.duration, scene.leadMs, scene.image, scene.narration].join("\t") + "\n");
+  process.stdout.write([
+    scene.key,
+    scene.start,
+    scene.duration,
+    scene.leadMs,
+    scene.image,
+    scene.narrationPath,
+    scene.voiceRate || "-2%",
+    scene.voicePitch || "+2Hz"
+  ].join("\t") + "\n");
 }
 NODE
 
@@ -76,24 +71,38 @@ transition_duration="0.32"
 video_inputs=()
 scene_starts=()
 
-while IFS=$'\t' read -r -u 3 scene_key scene_start scene_duration lead_ms image_path narration_path; do
-  raw_wav="${build_dir}/audio/raw/${scene_key}.wav"
+while IFS=$'\t' read -r -u 3 scene_key scene_start scene_duration lead_ms image_path narration_path voice_rate voice_pitch; do
+  raw_audio="${build_dir}/audio/raw/${scene_key}.mp3"
   slot_wav="${build_dir}/audio/slots/${scene_key}.wav"
   clip_path="${build_dir}/video/${scene_key}.mp4"
 
-  PYTHONPATH="${tts_cache}/site" python3 -m piper \
-    --model "${piper_model}" \
-    --config "${piper_config}" \
-    --input-file "${narration_path}" \
-    --output-file "${raw_wav}" \
-    --length-scale 1.02 \
-    --volume 1.0
+  generated_voice="no"
+  for voice_attempt in 1 2 3; do
+    if PYTHONPATH="${tts_cache}/site" python3 -m edge_tts \
+      --voice "${edge_tts_voice}" \
+      --rate="${voice_rate}" \
+      --pitch="${voice_pitch}" \
+      --file "${narration_path}" \
+      --write-media "${raw_audio}"; then
+      generated_voice="yes"
+      break
+    fi
+  done
+  if [[ "${generated_voice}" != "yes" || ! -s "${raw_audio}" ]]; then
+    echo "No se pudo generar la locución neuronal de ${scene_key}." >&2
+    exit 1
+  fi
 
-  raw_duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "${raw_wav}")"
+  raw_duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "${raw_audio}")"
   available_duration="$(awk -v slot="${scene_duration}" -v lead="${lead_ms}" 'BEGIN { printf "%.6f", slot - (lead / 1000) - 0.28 }')"
+  tempo_too_high="$(awk -v raw="${raw_duration}" -v available="${available_duration}" 'BEGIN { print (raw / available > 1.15) ? "yes" : "no" }')"
+  if [[ "${tempo_too_high}" == "yes" ]]; then
+    echo "La locución de ${scene_key} requiere demasiada aceleración (${raw_duration}s en ${available_duration}s)." >&2
+    exit 1
+  fi
   tempo="$(awk -v raw="${raw_duration}" -v available="${available_duration}" 'BEGIN { if (raw > available) printf "%.6f", raw / available; else print "1.0" }')"
 
-  ffmpeg -nostdin -hide_banner -loglevel error -y -i "${raw_wav}" \
+  ffmpeg -nostdin -hide_banner -loglevel error -y -i "${raw_audio}" \
     -af "atempo=${tempo},adelay=${lead_ms},apad=pad_dur=60,atrim=start=0:end=${scene_duration},asetpts=N/SR/TB" \
     -ar 48000 -ac 1 -c:a pcm_s16le "${slot_wav}"
   printf "file '%s'\n" "${slot_wav}" >>"${audio_concat}"
@@ -101,7 +110,7 @@ while IFS=$'\t' read -r -u 3 scene_key scene_start scene_duration lead_ms image_
   clip_duration="$(awk -v slot="${scene_duration}" -v transition="${transition_duration}" 'BEGIN { printf "%.6f", slot + transition }')"
   frame_count="$(awk -v duration="${clip_duration}" 'BEGIN { printf "%d", (duration * 30) + 0.5 }')"
   ffmpeg -nostdin -hide_banner -loglevel error -y -loop 1 -i "${image_path}" \
-    -vf "scale=2020:1136:flags=lanczos,zoompan=z='min(zoom+0.00009,1.018)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frame_count}:s=1920x1080:fps=30,noise=alls=1.2:allf=t+u,format=yuv420p" \
+    -vf "scale=1920:1080:flags=lanczos,fps=30,format=yuv420p" \
     -frames:v "${frame_count}" -an -c:v libx264 -preset ultrafast -crf 12 -g 60 -keyint_min 60 -sc_threshold 0 "${clip_path}"
   video_inputs+=("${clip_path}")
   scene_starts+=("${scene_start}")

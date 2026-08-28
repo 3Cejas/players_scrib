@@ -61,7 +61,7 @@ test("video tutorial rejects executable media URLs and clamps progress", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
   assert.equal(
     tutorial.safeVideoUrl("../media/tutorial-scrib.mp4", locationRef),
-    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260827e"
+    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260828a"
   );
   assert.equal(tutorial.safeVideoUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_VIDEO_URL);
   assert.equal(tutorial.safeVideoUrl("data:video/mp4;base64,AAAA", locationRef), tutorial.DEFAULT_VIDEO_URL);
@@ -74,8 +74,8 @@ test("spectator and muse load the synchronized tutorial before socket handlers",
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260827e/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260827e/);
+    assert.match(html, /video-tutorial\.css\?v=20260828a/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260828a/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -113,7 +113,7 @@ test("spectator tutorial is clean, narrated and enters and leaves with a transit
     assert.doesNotMatch(js, new RegExp(obsoleteChrome));
   }
   assert.match(js, /data-video-tutorial-slide-url hidden/);
-  assert.match(js, /position >= 0 && position < 6/);
+  assert.match(js, /position >= 6 && position < 11/);
   assert.match(js, /media\.defaultMuted = false;[\s\S]*media\.muted = false;[\s\S]*media\.volume = 1;/);
   assert.doesNotMatch(js, /mutedAttempt|soundButton/);
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
@@ -149,7 +149,14 @@ test("generated tutorial has fixed scenes without baked timecode or progress chr
   ]) {
     assert.doesNotMatch(renderer, new RegExp(inventedScreen));
   }
-  assert.match(generator, /zoompan=/);
+  assert.match(renderer, /¡Hola! Bienvenida a Escrib\. Qué alegría tenerte aquí\./);
+  assert.match(renderer, /scene\.narration \|\| scene\.caption/);
+  assert.match(generator, /es-MX-DaliaNeural/);
+  assert.match(generator, /--rate="\$\{voice_rate\}"/);
+  assert.match(generator, /--pitch="\$\{voice_pitch\}"/);
+  assert.match(generator, /raw \/ available > 1\.15/);
+  assert.doesNotMatch(generator, /piper|zoompan=|noise=alls/);
+  assert.match(generator, /scale=1920:1080:flags=lanczos,fps=30,format=yuv420p/);
   assert.match(generator, /xfade=transition=fade/);
   assert.match(generator, /2\. ACOMPAÑAR VOZ CON MELODIA\.mp3/);
   assert.match(generator, /sidechaincompress=/);
