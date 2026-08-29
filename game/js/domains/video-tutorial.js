@@ -29,9 +29,9 @@
 }(typeof window !== "undefined" ? window : null, function () {
     "use strict";
 
-    const DEFAULT_DURATION_SECONDS = 100;
+    const DEFAULT_DURATION_SECONDS = 120;
     const DEFAULT_VIDEO_URL = "../media/tutorial-scrib.mp4";
-    const VIDEO_ASSET_VERSION = "20260829a";
+    const VIDEO_ASSET_VERSION = "20260829b";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
@@ -39,13 +39,13 @@
     const NARRATION_RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     const TIMELINE = Object.freeze([
-        Object.freeze({ id: "connected", start: 0, end: 53, label: "CONEXI\u00d3N RECIBIDA", copy: "Sigue las instrucciones de la pantalla principal." }),
-        Object.freeze({ id: "ready", start: 53, end: 60, label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos el color y el brillo." }),
-        Object.freeze({ id: "red", start: 60, end: 65, label: "ROJO", copy: "Comprueba que toda la pantalla se vea roja." }),
-        Object.freeze({ id: "blue", start: 65, end: 70, label: "AZUL", copy: "Comprueba que toda la pantalla se vea azul." }),
-        Object.freeze({ id: "green", start: 70, end: 75, label: "VERDE", copy: "Comprueba que toda la pantalla se vea verde." }),
-        Object.freeze({ id: "white", start: 75, end: 80, label: "BLANCO", copy: "Comprueba el brillo y que no haya filtros activos." }),
-        Object.freeze({ id: "confirm", start: 80, end: 100, label: "\u00bfVISTE LOS CUATRO COLORES?", copy: "Confirma para terminar la prueba de este dispositivo." })
+        Object.freeze({ id: "connected", start: 0, end: 72, label: "CONEXI\u00d3N RECIBIDA", copy: "Sigue las instrucciones de la pantalla principal." }),
+        Object.freeze({ id: "ready", start: 72, end: 79, label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos el color y el brillo." }),
+        Object.freeze({ id: "red", start: 79, end: 85, label: "ROJO", copy: "\u00bfVes toda la pantalla roja?" }),
+        Object.freeze({ id: "blue", start: 85, end: 91, label: "AZUL", copy: "\u00bfHa cambiado correctamente a azul?" }),
+        Object.freeze({ id: "green", start: 91, end: 97, label: "VERDE", copy: "\u00bfYa ves toda la pantalla verde?" }),
+        Object.freeze({ id: "white", start: 97, end: 103, label: "BLANCO", copy: "\u00bfHa funcionado el \u00faltimo cambio?" }),
+        Object.freeze({ id: "complete", start: 103, end: 120, label: "\u00a1PRUEBA COMPLETADA!", copy: "Los cuatro colores se han mostrado correctamente." })
     ]);
 
     function clamp(value, min, max) {
@@ -206,8 +206,7 @@
                 <h1 id="video_tutorial_musa_title" data-video-tutorial-title>CONEXI\u00d3N RECIBIDA</h1>
                 <p data-video-tutorial-copy>Sigue las instrucciones de la pantalla principal.</p>
                 <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity></div>
-                <button class="scrib-video-tutorial-device__confirm" type="button" hidden>S\u00cd, FUNCIONA</button>
-                <span class="scrib-video-tutorial-device__timer" data-video-tutorial-device-time>01:40</span>
+                <span class="scrib-video-tutorial-device__timer" data-video-tutorial-device-time>02:00</span>
             </div>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live></p>
         `;
@@ -227,7 +226,6 @@
             : createMuseOverlay(documentRef);
         const media = root.querySelector("video");
         const liveRegion = root.querySelector("[data-video-tutorial-live]");
-        const confirmButton = root.querySelector(".scrib-video-tutorial-device__confirm");
         const storage = (() => {
             try { return windowRef.sessionStorage; } catch (_error) { return null; }
         })();
@@ -248,19 +246,11 @@
         let verifying = false;
         let locallyVerified = false;
         let hideTransitionTimer = null;
+        let verificationRetryTimer = null;
 
         if (role === "spectator") {
             const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
-            if (joinNode) {
-                try {
-                    const joinUrl = new URL("../public/index.html", windowRef.location.href);
-                    joinUrl.search = "";
-                    joinUrl.hash = "";
-                    joinNode.textContent = `${joinUrl.host}${joinUrl.pathname.replace(/index\.html$/i, "")}`;
-                } catch (_error) {
-                    joinNode.textContent = "SCRIB";
-                }
-            }
+            if (joinNode) joinNode.textContent = "scribshow.es/musa";
         }
 
         function currentPosition() {
@@ -356,7 +346,7 @@
 
         function renderSpectator(position) {
             const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
-            if (joinNode) joinNode.hidden = !(position >= 8 && position < 17);
+            if (joinNode) joinNode.hidden = !(position >= 8 && position < 36);
         }
 
         function museIdentity() {
@@ -386,15 +376,19 @@
             if (eyebrow) eyebrow.textContent = locallyVerified ? "TODO FUNCIONA" : "PRUEBA DE CONEXI\u00d3N";
             if (identity) identity.textContent = museIdentity();
             if (time) time.textContent = formatTime(state.config.durationSeconds - position);
-            if (confirmButton) {
-                confirmButton.hidden = phase.id !== "confirm" || locallyVerified;
-                confirmButton.disabled = verifying;
-                confirmButton.textContent = verifying ? "VERIFICANDO\u2026" : "S\u00cd, FUNCIONA";
-            }
             if (phase.id !== lastPhaseId) {
                 lastPhaseId = phase.id;
                 if (liveRegion) liveRegion.textContent = phase.label;
+                if (phase.id === "complete" && !locallyVerified) scheduleAutomaticVerification();
             }
+        }
+
+        function scheduleAutomaticVerification(delay = 0) {
+            if (verificationRetryTimer != null || locallyVerified || verifying) return;
+            verificationRetryTimer = windowRef.setTimeout(() => {
+                verificationRetryTimer = null;
+                verify();
+            }, delay);
         }
 
         function tick() {
@@ -420,6 +414,8 @@
             if (nextKey !== previousKey) {
                 verifying = false;
                 lastPhaseId = "";
+                if (verificationRetryTimer != null) windowRef.clearTimeout(verificationRetryTimer);
+                verificationRetryTimer = null;
                 restoreLocalVerification();
             }
             setVisible(state.visible);
@@ -439,7 +435,7 @@
 
         function verify() {
             if (!state || !state.visible || verifying || locallyVerified) return;
-            if (phaseAt(currentPosition()).id !== "confirm") return;
+            if (phaseAt(currentPosition()).id !== "complete") return;
             verifying = true;
             renderMuse(currentPosition());
             const payload = {
@@ -457,6 +453,8 @@
                     locallyVerified = true;
                     try { storage?.setItem(verificationStorageKey(), "1"); } catch (_error) {}
                     if (liveRegion) liveRegion.textContent = "Configuraci\u00f3n verificada correctamente.";
+                } else if (state?.visible) {
+                    scheduleAutomaticVerification(1800);
                 }
                 renderMuse(currentPosition());
             };
@@ -475,8 +473,6 @@
         NARRATION_RETRY_EVENTS.forEach((eventName) => {
             documentRef.addEventListener(eventName, retryNarration, { passive: true });
         });
-        if (confirmButton) confirmButton.addEventListener("click", verify);
-
         socketRef.on(STATE_EVENT, handleState);
         socketRef.on("disconnect", () => setVisible(false));
         socketRef.on("connect", () => {
@@ -494,6 +490,7 @@
             destroy() {
                 if (frameId != null) cancelFrame(frameId);
                 if (hideTransitionTimer != null) windowRef.clearTimeout(hideTransitionTimer);
+                if (verificationRetryTimer != null) windowRef.clearTimeout(verificationRetryTimer);
                 NARRATION_RETRY_EVENTS.forEach((eventName) => {
                     documentRef.removeEventListener(eventName, retryNarration);
                 });

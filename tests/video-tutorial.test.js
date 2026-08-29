@@ -8,18 +8,18 @@ const tutorial = require("../game/js/domains/video-tutorial.js");
 
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
-test("video tutorial timeline is contiguous and reserves the final confirmation", () => {
+test("video tutorial timeline is contiguous and completes verification automatically", () => {
   assert.equal(tutorial.TIMELINE[0].start, 0);
-  assert.equal(tutorial.TIMELINE.at(-1).end, 100);
+  assert.equal(tutorial.TIMELINE.at(-1).end, 120);
   tutorial.TIMELINE.slice(1).forEach((phase, index) => {
     assert.equal(phase.start, tutorial.TIMELINE[index].end);
   });
   assert.deepEqual(
-    [60, 65, 70, 75].map((second) => tutorial.phaseAt(second).id),
+    [79, 85, 91, 97].map((second) => tutorial.phaseAt(second).id),
     ["red", "blue", "green", "white"]
   );
-  assert.equal(tutorial.phaseAt(80).id, "confirm");
-  assert.equal(tutorial.phaseAt(999).id, "confirm");
+  assert.equal(tutorial.phaseAt(103).id, "complete");
+  assert.equal(tutorial.phaseAt(999).id, "complete");
 });
 
 test("video tutorial normalizes authoritative playback and verification state", () => {
@@ -36,7 +36,7 @@ test("video tutorial normalizes authoritative playback and verification state", 
       habilitado: true,
       silenciado: false,
       intervalo_segundos: 420,
-      duracion_segundos: 100,
+      duracion_segundos: 120,
       video_url: "../media/tutorial-scrib.mp4"
     },
     verificacion: {
@@ -61,21 +61,21 @@ test("video tutorial rejects executable media URLs and clamps progress", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
   assert.equal(
     tutorial.safeVideoUrl("../media/tutorial-scrib.mp4", locationRef),
-    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260829a"
+    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260829b"
   );
   assert.equal(tutorial.safeVideoUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_VIDEO_URL);
   assert.equal(tutorial.safeVideoUrl("data:video/mp4;base64,AAAA", locationRef), tutorial.DEFAULT_VIDEO_URL);
-  assert.equal(tutorial.progressAt(-2, 100), 0);
-  assert.equal(tutorial.progressAt(50, 100), 0.5);
-  assert.equal(tutorial.progressAt(120, 100), 1);
+  assert.equal(tutorial.progressAt(-2, 120), 0);
+  assert.equal(tutorial.progressAt(60, 120), 0.5);
+  assert.equal(tutorial.progressAt(130, 120), 1);
 });
 
 test("spectator and muse load the synchronized tutorial before socket handlers", () => {
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829a/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829a/);
+    assert.match(html, /video-tutorial\.css\?v=20260829b/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829b/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -86,7 +86,7 @@ test("spectator and muse load the synchronized tutorial before socket handlers",
   assert.match(museEvents, /if \(aplicada\)[\s\S]*pedir_video_tutorial_estado/);
 });
 
-test("mobile calibration has four solid colors, confirmation and reduced-motion support", () => {
+test("mobile calibration has four solid colors, automatic verification and reduced-motion support", () => {
   const css = read("game/css/video-tutorial.css");
   const js = read("game/js/domains/video-tutorial.js");
 
@@ -95,7 +95,8 @@ test("mobile calibration has four solid colors, confirmation and reduced-motion 
   }
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(js, /video_tutorial_verificar/);
-  assert.match(js, /S\\u00cd, FUNCIONA/);
+  assert.doesNotMatch(js, /S\\u00cd, FUNCIONA|device__confirm/);
+  assert.match(js, /phase\.id === "complete"[\s\S]*scheduleAutomaticVerification/);
   assert.match(js, /session_id:[\s\S]*phase_seq:[\s\S]*reproduccion_seq:/);
 });
 
@@ -113,7 +114,8 @@ test("spectator tutorial is clean, narrated and enters and leaves with a transit
     assert.doesNotMatch(js, new RegExp(obsoleteChrome));
   }
   assert.match(js, /data-video-tutorial-slide-url hidden/);
-  assert.match(js, /position >= 8 && position < 17/);
+  assert.match(js, /joinNode\.textContent = "scribshow\.es\/musa"/);
+  assert.match(js, /position >= 8 && position < 36/);
   assert.match(js, /media\.defaultMuted = false;[\s\S]*media\.muted = false;[\s\S]*media\.volume = 1;/);
   assert.doesNotMatch(js, /mutedAttempt|soundButton/);
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
@@ -135,7 +137,6 @@ test("generated tutorial has fixed scenes without baked timecode or progress chr
     "¡EQUIPO ASIGNADO!",
     "ENTRAR AL JUEGO",
     "PREPARA TU PANTALLA",
-    "SÍ, FUNCIONA",
     "CONFIGURACIÓN VERIFICADA"
   ]) {
     assert.match(renderer, new RegExp(realScreen));
@@ -150,11 +151,21 @@ test("generated tutorial has fixed scenes without baked timecode or progress chr
     assert.doesNotMatch(renderer, new RegExp(inventedScreen));
   }
   assert.match(renderer, /¡Hola! Bienvenida a Escrib\. Qué alegría tenerte aquí\./);
+  assert.match(renderer, /scribshow punto es, barra musa/);
+  assert.match(renderer, /¿Ya lo has escaneado\?[\s\S]*Tómate tu tiempo/);
+  assert.match(renderer, /¿Ya estás dentro\?[\s\S]*¡Genial![\s\S]*Pasemos a lo siguiente/);
+  assert.match(renderer, /¿Ha cambiado\?[\s\S]*¿Ha funcionado\?/);
   assert.match(renderer, /Gracias por acompañarnos\.[\s\S]*¡Nos vemos dentro!/);
-  assert.doesNotMatch(renderer, /equilibrad|equilibrio|automáticamente/i);
-  for (const action of ["01-acceso", "02-omitir", "03-nombre", "04-asignacion", "05-resultado", "11-confirmacion"]) {
+  assert.doesNotMatch(renderer, /equilibrad|equilibrio|automáticamente|SÍ, FUNCIONA|botón verde/i);
+  assert.doesNotMatch(renderer, /screen: "confirm"/);
+  assert.match(renderer, /key: "01-acceso"[^\n]+duration: 10/);
+  for (const action of ["02-espera-acceso", "03-acceso-listo", "04-omitir", "05-nombre", "06-asignacion", "07-resultado"]) {
     assert.match(renderer, new RegExp(`key: "${action}"[^\\n]+duration: 9`));
   }
+  assert.match(renderer, /showQr: true/);
+  assert.match(renderer, /scribshow-musa-qr\.svg/);
+  assert.match(renderer, /assets\.qr/);
+  assert.ok(fs.existsSync(path.join(ROOT, "game/media/scribshow-musa-qr.svg")));
   assert.match(renderer, /scene\.narration \|\| scene\.caption/);
   assert.match(generator, /es-MX-DaliaNeural/);
   assert.match(generator, /--rate="\$\{voice_rate\}"/);

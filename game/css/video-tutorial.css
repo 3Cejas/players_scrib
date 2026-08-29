@@ -208,26 +208,6 @@ body.scrib-video-tutorial-active {
     letter-spacing: 0.15em;
 }
 
-.scrib-video-tutorial-device__confirm {
-    min-height: 3.5rem;
-    width: min(19rem, 100%);
-    padding: 0.9rem 1.2rem;
-    border: 1px solid rgba(255, 255, 255, 0.62);
-    border-radius: 999px;
-    color: #03120b;
-    background: var(--video-tutorial-green);
-    box-shadow: 0 0 2.3rem rgba(77, 255, 154, 0.46);
-    font: 800 clamp(0.8rem, 3.5vw, 1rem)/1 "Retro-gaming", "Courier New", monospace;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    animation: videoTutorialConfirm 1.7s ease-in-out infinite;
-}
-
-.scrib-video-tutorial-device__confirm:disabled {
-    opacity: 0.62;
-    cursor: wait;
-}
-
 .scrib-video-tutorial-device__check {
     display: none;
     width: clamp(4rem, 18vw, 6.5rem);
@@ -301,10 +281,6 @@ body.scrib-video-tutorial-active {
     color: var(--video-tutorial-green);
 }
 
-@keyframes videoTutorialConfirm {
-    50% { transform: translateY(-0.18rem); box-shadow: 0 0 3.5rem rgba(77, 255, 154, 0.65); }
-}
-
 @keyframes videoTutorialUrlIn {
     from { opacity: 0; transform: translateY(0.6rem) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
@@ -323,7 +299,6 @@ body.scrib-video-tutorial-active {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .scrib-video-tutorial-device__confirm,
     .scrib-video-tutorial-device.is-verified .scrib-video-tutorial-device__check,
     .scrib-video-tutorial__slide-url {
         animation: none !important;
