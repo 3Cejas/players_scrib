@@ -2002,11 +2002,18 @@ function aplicarEstadoPersistenteControl(payload = {}) {
 
         const nombres = data.nombres && typeof data.nombres === "object" ? data.nombres : {};
         if (nombre1 && Object.prototype.hasOwnProperty.call(nombres, 1)) {
-            nombre1.value = String(nombres[1] || "ESCRITXR 1");
+            // El servidor recorta los espacios de los extremos. Mientras se escribe,
+            // no debemos devolver ese valor al campo porque borraria el espacio que
+            // separa nombre y apellido antes de que llegue la siguiente letra.
+            if (document.activeElement !== nombre1) {
+                nombre1.value = String(nombres[1] || "ESCRITXR 1");
+            }
             val_nombre1 = nombre1.value.toUpperCase();
         }
         if (nombre2 && Object.prototype.hasOwnProperty.call(nombres, 2)) {
-            nombre2.value = String(nombres[2] || "ESCRITXR 2");
+            if (document.activeElement !== nombre2) {
+                nombre2.value = String(nombres[2] || "ESCRITXR 2");
+            }
             val_nombre2 = nombre2.value.toUpperCase();
         }
 

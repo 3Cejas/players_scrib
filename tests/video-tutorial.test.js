@@ -15,13 +15,13 @@ test("the CSS tutorial timeline is contiguous and leaves enough time for every a
     assert.equal(phase.start, tutorial.TIMELINE[index].end);
   });
   assert.deepEqual(
-    [110, 117, 124, 131].map((second) => tutorial.phaseAt(second).id),
+    [110.42, 117.42, 124.42, 131.42].map((second) => tutorial.phaseAt(second).id),
     ["red", "blue", "green", "white"]
   );
-  assert.equal(tutorial.phaseAt(138).id, "complete");
-  assert.equal(tutorial.phaseAt(146).id, "farewell");
-  assert.equal(tutorial.TIMELINE.find(({ id }) => id === "access").end, 37);
-  assert.equal(tutorial.TIMELINE.find(({ id }) => id === "access-wait").end, 47);
+  assert.equal(tutorial.phaseAt(138.28).id, "complete");
+  assert.equal(tutorial.phaseAt(146.24).id, "farewell");
+  assert.equal(tutorial.TIMELINE.find(({ id }) => id === "access").end, 37.38);
+  assert.equal(tutorial.TIMELINE.find(({ id }) => id === "access-wait").end, 47.32);
   assert.equal(tutorial.phaseAt(999).id, "farewell");
 });
 
@@ -76,8 +76,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829l/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829l/);
+    assert.match(html, /video-tutorial\.css\?v=20260829n/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829n/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -93,7 +93,7 @@ test("spectator tutorial is live HTML and CSS, with the phone only in practical 
   assert.match(js, /<audio class="scrib-video-tutorial__audio"/);
   assert.doesNotMatch(js, /<video\b/);
   for (const element of [
-    "scrib-video-tutorial__access-card",
+    "scrib-video-tutorial__welcome-qr",
     "scrib-video-tutorial__phone",
     "scrib-video-tutorial__team-card--blue",
     "scrib-video-tutorial__team-card--red",
@@ -118,6 +118,7 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   const css = read("game/css/video-tutorial.css");
   const js = read("game/js/domains/video-tutorial.js");
   const spectatorMarkup = js.match(/function createSpectatorOverlay[\s\S]*?function createMuseOverlay/)?.[0] || "";
+  const brandMarkup = spectatorMarkup.match(/<header class="scrib-video-tutorial__brand"[\s\S]*?<\/header>/)?.[0] || "";
 
   assert.match(css, /\.scrib-video-tutorial,[\s\S]*width:\s*100vw;[\s\S]*height:\s*100dvh;/);
   assert.match(css, /\.scrib-video-tutorial__scene\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*100%;[\s\S]*?height:\s*100%;/);
@@ -128,10 +129,12 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   assert.doesNotMatch(js, /subtitle\.innerHTML/);
   assert.match(css, /\.scrib-video-tutorial__subtitles\s*\{[\s\S]*?inset:\s*0;[\s\S]*?pointer-events:\s*none/);
   assert.match(css, /\.scrib-video-tutorial__subtitles p\s*\{[\s\S]*?bottom:[\s\S]*?background:\s*rgba\(0, 4, 10, 0\.88\)/);
+  assert.match(css, /\.scrib-video-tutorial \.scrib-visually-hidden,[\s\S]*clip-path:\s*inset\(50%\)/);
   assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
-  assert.match(spectatorMarkup, /<header class="scrib-video-tutorial__brand"[\s\S]*logo%20scrib\.png[\s\S]*<b>· MUSA<\/b>/);
-  assert.doesNotMatch(spectatorMarkup, /<header class="scrib-video-tutorial__brand"[\s\S]*?<span>&lt;SCRI&gt; B<\/span>/);
+  assert.match(brandMarkup, /\/img\/logo\.png/);
+  assert.doesNotMatch(brandMarkup, /<b>|MUSA/);
+  assert.doesNotMatch(brandMarkup, /<span>&lt;SCRI&gt; B<\/span>/);
   assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
 });
 
@@ -174,8 +177,13 @@ test("narration manifest, generated MP3 and CSS timeline stay synchronized", () 
 
   assert.equal(manifest.length, tutorial.TIMELINE.length);
   manifest.forEach((scene, index) => {
-    assert.equal(scene.start, tutorial.TIMELINE[index].start);
-    assert.equal(scene.start + scene.duration, tutorial.TIMELINE[index].end);
+    const expectedStart = index === 0 ? 0 : scene.start + (scene.leadMs / 1000);
+    const nextScene = manifest[index + 1];
+    const expectedEnd = nextScene
+      ? nextScene.start + (nextScene.leadMs / 1000)
+      : scene.start + scene.duration;
+    assert.equal(tutorial.TIMELINE[index].start, expectedStart);
+    assert.equal(tutorial.TIMELINE[index].end, expectedEnd);
     assert.equal(scene.text, tutorial.TIMELINE[index].subtitle);
   });
   assert.ok(fs.statSync(audioPath).size > 100_000);
@@ -201,5 +209,8 @@ test("mobile calibration changes through four solid colors and verifies automati
   assert.match(js, /scrib:video-tutorial-visibility/);
   assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.svg[\s\S]*scribshow\.es\/musa/);
   assert.match(css, /scrib-video-tutorial-device__share/);
-  assert.match(css, /data-phase="red"[^\n]+scrib-video-tutorial-device__share/);
+  assert.match(css, /data-phase="access"[^\n]+scrib-video-tutorial-device__share/);
+  assert.match(css, /scrib-video-tutorial-device__share\s*\{\s*display:\s*none/);
+  assert.match(css, /@keyframes vtDeviceColorSweep/);
+  assert.match(css, /@keyframes vtDeviceColorNameGlow/);
 });

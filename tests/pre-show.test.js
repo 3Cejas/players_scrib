@@ -101,6 +101,16 @@ test("muse wiring is session-bound, IME-safe, acknowledged and tutorial-scoped",
   assert.match(sockets, /socket\.on\('inicio'[\s\S]*cerrarPreShowMusaPorTutorial\(\)/);
 });
 
+test("muse pre-show keeps the invitation compact and uses a short send action", () => {
+  const html = read("game/public/players/index.html");
+  const section = html.match(/<section id="pre_show_musa"[\s\S]*?<\/section>/)?.[0] || "";
+
+  assert.match(section, /preshow\.muse\.title[^>]*>TOMA EL CANAL</);
+  assert.match(section, /preshow\.muse\.send[^>]*>ENVIAR</);
+  assert.doesNotMatch(section, /pre-show-musa__(?:header|live|eyebrow|hint)/);
+  assert.doesNotMatch(section, /EN DIRECTO|ANTES DEL TUTORIAL|EL CANAL SE CERRAR|ENVIAR AL ESPECTADOR/);
+});
+
 test("spectator renders only recent messages as text and yields to tutorial/teleprompter", () => {
   const html = read("game/spectator/index.html");
   const state = read("game/spectator/js/state.js");
