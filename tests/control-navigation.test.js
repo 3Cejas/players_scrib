@@ -63,6 +63,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /function mostrar_vista_tutorial\(\)\s*\{\s*aplicarVistaPrincipalControl\("tutorial"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
+  assert.match(actions, /const modoEspectador = destino === "tutorial" \? "tutorial" : "partida"/);
+  assert.match(actions, /vista_espectador_modo === "tutorial"/);
+  assert.match(actions, /modoServidor === "calentamiento" \|\| vista_calentamiento/);
   assert.match(actions, /function actualizarBotonesVistaPrincipalControl\(\)[\s\S]*document\.querySelectorAll\("\[data-vista-principal\]"\)[\s\S]*aria-pressed/);
   assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)\s*\{\s*setPanelParametrosColapsadoControl\(true\);/);
   assert.doesNotMatch(actions, /classList\.toggle\("asistencia-activa"/);

@@ -126,8 +126,9 @@ body.scrib-video-tutorial-active {
 }
 
 .scrib-video-tutorial__brand img {
-    width: clamp(2.1rem, 3.6vw, 4.3rem);
-    filter: drop-shadow(0 0 1rem rgba(85, 244, 255, 0.42));
+    width: clamp(9rem, 18vw, 20rem);
+    height: auto;
+    filter: invert(1) drop-shadow(0 0 1rem rgba(85, 244, 255, 0.42));
 }
 
 .scrib-video-tutorial__brand b {

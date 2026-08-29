@@ -10,16 +10,18 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), "u
 
 test("the CSS tutorial timeline is contiguous and leaves enough time for every action", () => {
   assert.equal(tutorial.TIMELINE[0].start, 0);
-  assert.equal(tutorial.TIMELINE.at(-1).end, 138);
+  assert.equal(tutorial.TIMELINE.at(-1).end, 153);
   tutorial.TIMELINE.slice(1).forEach((phase, index) => {
     assert.equal(phase.start, tutorial.TIMELINE[index].end);
   });
   assert.deepEqual(
-    [95, 102, 109, 116].map((second) => tutorial.phaseAt(second).id),
+    [110, 117, 124, 131].map((second) => tutorial.phaseAt(second).id),
     ["red", "blue", "green", "white"]
   );
-  assert.equal(tutorial.phaseAt(123).id, "complete");
-  assert.equal(tutorial.phaseAt(131).id, "farewell");
+  assert.equal(tutorial.phaseAt(138).id, "complete");
+  assert.equal(tutorial.phaseAt(146).id, "farewell");
+  assert.equal(tutorial.TIMELINE.find(({ id }) => id === "access").end, 37);
+  assert.equal(tutorial.TIMELINE.find(({ id }) => id === "access-wait").end, 47);
   assert.equal(tutorial.phaseAt(999).id, "farewell");
 });
 
@@ -36,7 +38,7 @@ test("tutorial state migrates legacy MP4 configuration to the narration track", 
       habilitado: true,
       silenciado: false,
       intervalo_segundos: 420,
-      duracion_segundos: 138,
+      duracion_segundos: 153,
       video_url: "../media/tutorial-scrib.mp4"
     },
     verificacion: {
@@ -50,7 +52,7 @@ test("tutorial state migrates legacy MP4 configuration to the narration track", 
   assert.equal(state.visible, true);
   assert.equal(state.positionSeconds, 43.5);
   assert.equal(state.config.intervalSeconds, 420);
-  assert.equal(state.config.durationSeconds, 138);
+  assert.equal(state.config.durationSeconds, 153);
   assert.equal(state.config.audioUrl, tutorial.DEFAULT_AUDIO_URL);
   assert.equal(state.verification.verified, 4);
   assert.equal(state.verification.pending, 0);
@@ -60,22 +62,22 @@ test("tutorial state migrates legacy MP4 configuration to the narration track", 
 
 test("tutorial accepts only safe audio URLs and versions its bundled narration", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
-  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829e";
+  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829j";
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib-audio.mp3", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib.mp4", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_AUDIO_URL);
   assert.equal(tutorial.safeAudioUrl("data:audio/mp3;base64,AAAA", locationRef), tutorial.DEFAULT_AUDIO_URL);
-  assert.equal(tutorial.progressAt(-2, 138), 0);
-  assert.equal(tutorial.progressAt(69, 138), 0.5);
-  assert.equal(tutorial.progressAt(150, 138), 1);
+  assert.equal(tutorial.progressAt(-2, 153), 0);
+  assert.equal(tutorial.progressAt(76.5, 153), 0.5);
+  assert.equal(tutorial.progressAt(160, 153), 1);
 });
 
 test("spectator and muse load the synchronized CSS tutorial before socket handlers", () => {
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829i/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829i/);
+    assert.match(html, /video-tutorial\.css\?v=20260829j/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829j/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -128,7 +130,8 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   assert.match(css, /\.scrib-video-tutorial__subtitles p\s*\{[\s\S]*?bottom:[\s\S]*?background:\s*rgba\(0, 4, 10, 0\.88\)/);
   assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
-  assert.match(spectatorMarkup, /&lt;SCRI&gt; B/);
+  assert.match(spectatorMarkup, /<header class="scrib-video-tutorial__brand"[\s\S]*logo%20scrib\.png[\s\S]*<b>· MUSA<\/b>/);
+  assert.doesNotMatch(spectatorMarkup, /<header class="scrib-video-tutorial__brand"[\s\S]*?<span>&lt;SCRI&gt; B<\/span>/);
   assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
 });
 
@@ -195,4 +198,5 @@ test("mobile calibration changes through four solid colors and verifies automati
   assert.match(js, /session_id:[\s\S]*phase_seq:[\s\S]*reproduccion_seq:/);
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
   assert.match(js, /root\.classList\.add\("is-leaving"\)[\s\S]*VISIBILITY_TRANSITION_MS/);
+  assert.match(js, /scrib:video-tutorial-visibility/);
 });

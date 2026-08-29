@@ -120,6 +120,7 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.doesNotMatch(renderer, /innerHTML/);
   assert.match(state, /teleprompter_estado && teleprompter_estado\.visible/);
   assert.match(state, /cerrarPreShowEspectadorPorTutorial/);
+  assert.match(state, /vista_espectador_modo_resuelta === "tutorial"/);
   assert.match(sockets, /socket\.emit\('pedir_pre_show_estado'\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.pre-show-message/);
   assert.match(css, /@media \(max-width: 720px\), \(max-height: 620px\)/);

@@ -1190,8 +1190,8 @@ const container_general = document.querySelector(".container");
 const cabecera = document.querySelector(".cabecera");
 const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
 const neon_espectador = getEl("neon");
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
-const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
 let vista_calentamiento = false;
 let vista_espectador_override = "partida";
 let vista_espectador_modo_resuelta = "partida";
@@ -1204,6 +1204,15 @@ const controlador_transicion_vista_espectador = window.ScribViewTransition
             window.matchMedia
             && window.matchMedia("(prefers-reduced-motion: reduce)").matches
         )
+    })
+    : null;
+const controlador_audio_vista_espectador = window.ScribViewTransition
+    ? window.ScribViewTransition.createAudioController({
+        windowRef: window,
+        documentRef: document,
+        musicUrl: "../audio/1.%20MENU%20DE%20INICIO.mp3",
+        transitionUrl: "../audio/FX/cambio-vista.mp3",
+        fadeDurationMs: 3000
     })
     : null;
 let partida_activa_espectador = false;
@@ -1232,7 +1241,7 @@ function puedeMostrarPreShowEspectador() {
         && !pre_show_bloqueado_por_tutorial_espectador
         && !partida_activa_espectador
         && !vista_calentamiento
-        && vista_espectador_modo_resuelta === "partida"
+        && vista_espectador_modo_resuelta === "tutorial"
         && !(teleprompter_estado && teleprompter_estado.visible)
     );
 }
@@ -1628,7 +1637,8 @@ const normalizarOverrideVistaEspectador = (valor) => {
 };
 const resolverModoVistaEspectadorLocal = () => {
     if (
-        vista_espectador_override === "stats"
+        vista_espectador_override === "tutorial"
+        || vista_espectador_override === "stats"
         || vista_espectador_override === "puntuacion"
         || vista_espectador_override === "nube_inspiracion"
         || vista_espectador_override === "creditos"
@@ -3955,6 +3965,7 @@ const aplicarModoVistaEspectadorUi = (modo) => {
     }
     if (document.body) {
         document.body.classList.toggle("vista-partida", modo === "partida");
+        document.body.classList.toggle("vista-tutorial", modo === "tutorial");
         document.body.classList.toggle("vista-calentamiento", modo === "calentamiento");
         document.body.classList.toggle("vista-stats", modo === "stats");
         document.body.classList.toggle("vista-puntuacion", modo === "puntuacion");
@@ -4019,6 +4030,9 @@ const aplicarModoVistaEspectadorUi = (modo) => {
 };
 const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
+    controlador_audio_vista_espectador?.setMode(modo, {
+        initial: !vista_espectador_ui_inicializada
+    });
     if (!vista_espectador_ui_inicializada) {
         vista_espectador_ui_inicializada = true;
         vista_espectador_modo_solicitada = modo;

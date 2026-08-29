@@ -2387,9 +2387,11 @@ function cerrarVideotutorialDesdeVistaControl() {
 }
 
 function actualizarBotonesVistaPrincipalControl() {
-    const vistaBaseVisible = vista_espectador_modo === "partida";
     document.querySelectorAll("[data-vista-principal]").forEach((boton) => {
-        const activa = vistaBaseVisible && boton.dataset.vistaPrincipal === vista_principal_control;
+        const destino = boton.dataset.vistaPrincipal;
+        const activa = destino === "tutorial"
+            ? vista_espectador_modo === "tutorial"
+            : vista_espectador_modo === "partida" && destino === vista_principal_control;
         boton.dataset.active = activa ? "1" : "0";
         boton.classList.toggle("is-active", activa);
         boton.setAttribute("aria-pressed", activa ? "true" : "false");
@@ -2407,14 +2409,15 @@ function actualizarBotonesVistaPrincipalControl() {
 function aplicarVistaPrincipalControl(vista) {
     const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "partida";
     const activarDetonadores = destino === "detonadores";
+    const modoEspectador = destino === "tutorial" ? "tutorial" : "partida";
     vista_principal_control = destino;
     if (vista_calentamiento !== activarDetonadores) {
         vista_calentamiento = activarDetonadores;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: activarDetonadores });
     }
-    if (vista_espectador_modo !== "partida") {
-        vista_espectador_modo = "partida";
-        emitirVistaControl("cambiar_vista_espectador_modo", { modo: "partida" });
+    if (vista_espectador_modo !== modoEspectador) {
+        vista_espectador_modo = modoEspectador;
+        emitirVistaControl("cambiar_vista_espectador_modo", { modo: modoEspectador });
     }
     cerrarVideotutorialDesdeVistaControl();
     actualizarBotonesVistaEspectadorControl();
@@ -2466,7 +2469,7 @@ function actualizarBotonPausaReanudarControl(boton) {
 }
 window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl;
 
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
 const PUNTUACION_CATEGORIAS_CONTROL = [
     "produccion",
     "ritmo",
@@ -2770,7 +2773,18 @@ window.actualizarEstadoPuntuacionFinalControl = actualizarEstadoPuntuacionFinalC
 window.mostrarFeedbackPuntuacionControl = mostrarFeedbackPuntuacionControl;
 
 function actualizarModoVistaEspectadorControl(payload = {}) {
-    vista_espectador_modo = normalizarModoVistaEspectador(payload.modo);
+    const modoServidor = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "partida";
+    vista_espectador_modo = normalizarModoVistaEspectador(modoServidor);
+    if (Object.prototype.hasOwnProperty.call(payload, "calentamiento_vista")) {
+        vista_calentamiento = Boolean(payload.calentamiento_vista);
+    }
+    if (modoServidor === "tutorial") {
+        vista_principal_control = "tutorial";
+    } else if (modoServidor === "calentamiento" || vista_calentamiento) {
+        vista_principal_control = "detonadores";
+    } else if (vista_espectador_modo === "partida") {
+        vista_principal_control = "partida";
+    }
     if (payload && Object.prototype.hasOwnProperty.call(payload, "puntuacion_slide_step")) {
         const paso = Number(payload.puntuacion_slide_step);
         puntuacion_slide_step_control = Number.isFinite(paso)

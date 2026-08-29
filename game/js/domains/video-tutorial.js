@@ -29,9 +29,9 @@
 }(typeof window !== "undefined" ? window : null, function () {
     "use strict";
 
-    const DEFAULT_DURATION_SECONDS = 138;
+    const DEFAULT_DURATION_SECONDS = 153;
     const DEFAULT_AUDIO_URL = "../media/tutorial-scrib-audio.mp3";
-    const AUDIO_ASSET_VERSION = "20260829e";
+    const AUDIO_ASSET_VERSION = "20260829j";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
@@ -40,20 +40,20 @@
 
     const TIMELINE = Object.freeze([
         Object.freeze({ id: "welcome", start: 0, end: 9, title: "¡HOLA, MUSA!", label: "BIENVENIDA A <SCRI> B", copy: "Vamos a preparar tu móvil con calma para entrar al juego.", subtitle: "¡Hola! Bienvenida a Escrib. Vamos a preparar tu móvil con calma para que puedas jugar y darle ideas a tu escritora." }),
-        Object.freeze({ id: "access", start: 9, end: 22, title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR.", subtitle: "Para entrar, abre scribshow punto es, barra musa, o escanea este código QR. Lo dejamos unos segundos para que tengas tiempo." }),
-        Object.freeze({ id: "access-wait", start: 22, end: 32, title: "¿YA ESTÁS DENTRO?", label: "TÓMATE TU TIEMPO", copy: "El código seguirá en pantalla mientras terminas de entrar.", subtitle: "¿Ya lo has escaneado? ¡Perfecto! Y si todavía estás entrando, tranquila: te esperamos." }),
-        Object.freeze({ id: "name", start: 32, end: 42, title: "ESCRIBE TU NOMBRE", label: "ESCRIBE TU NOMBRE", copy: "Escribe el nombre con el que quieres aparecer durante el show.", subtitle: "Cuando aparezca la pantalla de acceso, escribe el nombre con el que quieres que te reconozcan durante el show." }),
-        Object.freeze({ id: "choices", start: 42, end: 53, title: "ELIGE TU EQUIPO", label: "ELIGE TU ESCRITXR", copy: "Puedes escoger directamente una escritxr o usar la detección automática.", subtitle: "Después verás dos formas de elegir. Puedes tocar directamente a la escritora con la que quieres jugar, en azul o en rojo." }),
-        Object.freeze({ id: "manual", start: 53, end: 65, title: "AZUL O ROJO", label: "ELECCIÓN DIRECTA", copy: "Pulsa la tarjeta de la escritxr con la que quieras jugar.", subtitle: "Si ya sabes con quién quieres estar, pulsa su tarjeta. Verás claramente su nombre antes de confirmar." }),
-        Object.freeze({ id: "automatic", start: 65, end: 78, title: "DETECCIÓN AUTOMÁTICA", label: "DETECCIÓN AUTOMÁTICA", copy: "Mantén el dedo sobre la huella hasta terminar.", subtitle: "¿Prefieres que sea sorpresa? Pulsa detección automática y mantén el dedo sobre la huella hasta que termine la animación." }),
-        Object.freeze({ id: "assigned", start: 78, end: 88, title: "EQUIPO ASIGNADO", label: "EQUIPO Y ESCRITXR", copy: "Verás tu equipo y el nombre de tu escritxr antes de entrar.", subtitle: "Al finalizar verás tu equipo y el nombre de tu escritora. Revísalos y entra al juego." }),
-        Object.freeze({ id: "ready", start: 88, end: 95, title: "PRUEBA DE PANTALLA", label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos cuatro cambios de color.", subtitle: "¡Ya casi está! Ahora vamos a comprobar que tu pantalla responde bien con cuatro colores." }),
-        Object.freeze({ id: "red", start: 95, end: 102, title: "ROJO", label: "ROJO", copy: "¿Ves toda la pantalla roja?", subtitle: "Primera prueba: rojo. ¿Lo ves? ¡Perfecto!" }),
-        Object.freeze({ id: "blue", start: 102, end: 109, title: "AZUL", label: "AZUL", copy: "¿Ha cambiado toda la pantalla a azul?", subtitle: "Ahora azul. ¿Ha cambiado toda la pantalla?" }),
-        Object.freeze({ id: "green", start: 109, end: 116, title: "VERDE", label: "VERDE", copy: "¿Ya ves toda la pantalla verde?", subtitle: "Seguimos con verde. ¡Esto marcha genial!" }),
-        Object.freeze({ id: "white", start: 116, end: 123, title: "BLANCO", label: "BLANCO", copy: "¿Ha funcionado también el último cambio?", subtitle: "Y por último, blanco. ¿Ha funcionado también?" }),
-        Object.freeze({ id: "complete", start: 123, end: 131, title: "¡TODO FUNCIONA!", label: "CONFIGURACIÓN VERIFICADA", copy: "Tu móvil está conectado y listo para participar.", subtitle: "¡Prueba completada! Tu móvil está conectado y listo para participar." }),
-        Object.freeze({ id: "farewell", start: 131, end: 138, title: "¡A INSPIRAR!", label: "YA ESTÁS PREPARADA", copy: "Prepárate para jugar y dar vida a la historia.", subtitle: "Gracias, musa. Prepárate para inspirar y disfrutar. ¡Nos vemos dentro!" })
+        Object.freeze({ id: "access", start: 9, end: 37, title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR.", subtitle: "Para entrar, abre scribshow punto es, barra musa, o escanea este código QR. Lo dejamos unos segundos para que tengas tiempo." }),
+        Object.freeze({ id: "access-wait", start: 37, end: 47, title: "¿YA ESTÁS DENTRO?", label: "TÓMATE TU TIEMPO", copy: "El código seguirá en pantalla mientras terminas de entrar.", subtitle: "¿Ya lo has escaneado? ¡Perfecto! Y si todavía estás entrando, tranquila: te esperamos." }),
+        Object.freeze({ id: "name", start: 47, end: 57, title: "ESCRIBE TU NOMBRE", label: "ESCRIBE TU NOMBRE", copy: "Escribe el nombre con el que quieres aparecer durante el show.", subtitle: "Cuando aparezca la pantalla de acceso, escribe el nombre con el que quieres que te reconozcan durante el show." }),
+        Object.freeze({ id: "choices", start: 57, end: 68, title: "ELIGE TU EQUIPO", label: "ELIGE TU ESCRITXR", copy: "Puedes escoger directamente una escritxr o usar la detección automática.", subtitle: "Después verás dos formas de elegir. Puedes tocar directamente a la escritora con la que quieres jugar, en azul o en rojo." }),
+        Object.freeze({ id: "manual", start: 68, end: 80, title: "AZUL O ROJO", label: "ELECCIÓN DIRECTA", copy: "Pulsa la tarjeta de la escritxr con la que quieras jugar.", subtitle: "Si ya sabes con quién quieres estar, pulsa su tarjeta. Verás claramente su nombre antes de confirmar." }),
+        Object.freeze({ id: "automatic", start: 80, end: 93, title: "DETECCIÓN AUTOMÁTICA", label: "DETECCIÓN AUTOMÁTICA", copy: "Mantén el dedo sobre la huella hasta terminar.", subtitle: "¿Prefieres que sea sorpresa? Pulsa detección automática y mantén el dedo sobre la huella hasta que termine la animación." }),
+        Object.freeze({ id: "assigned", start: 93, end: 103, title: "EQUIPO ASIGNADO", label: "EQUIPO Y ESCRITXR", copy: "Verás tu equipo y el nombre de tu escritxr antes de entrar.", subtitle: "Al finalizar verás tu equipo y el nombre de tu escritora. Revísalos y entra al juego." }),
+        Object.freeze({ id: "ready", start: 103, end: 110, title: "PRUEBA DE PANTALLA", label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos cuatro cambios de color.", subtitle: "¡Ya casi está! Ahora vamos a comprobar que tu pantalla responde bien con cuatro colores." }),
+        Object.freeze({ id: "red", start: 110, end: 117, title: "ROJO", label: "ROJO", copy: "¿Ves toda la pantalla roja?", subtitle: "Primera prueba: rojo. ¿Lo ves? ¡Perfecto!" }),
+        Object.freeze({ id: "blue", start: 117, end: 124, title: "AZUL", label: "AZUL", copy: "¿Ha cambiado toda la pantalla a azul?", subtitle: "Ahora azul. ¿Ha cambiado toda la pantalla?" }),
+        Object.freeze({ id: "green", start: 124, end: 131, title: "VERDE", label: "VERDE", copy: "¿Ya ves toda la pantalla verde?", subtitle: "Seguimos con verde. ¡Esto marcha genial!" }),
+        Object.freeze({ id: "white", start: 131, end: 138, title: "BLANCO", label: "BLANCO", copy: "¿Ha funcionado también el último cambio?", subtitle: "Y por último, blanco. ¿Ha funcionado también?" }),
+        Object.freeze({ id: "complete", start: 138, end: 146, title: "¡TODO FUNCIONA!", label: "CONFIGURACIÓN VERIFICADA", copy: "Tu móvil está conectado y listo para participar.", subtitle: "¡Prueba completada! Tu móvil está conectado y listo para participar." }),
+        Object.freeze({ id: "farewell", start: 146, end: 153, title: "¡A INSPIRAR!", label: "YA ESTÁS PREPARADA", copy: "Prepárate para jugar y dar vida a la historia.", subtitle: "Gracias, musa. Prepárate para inspirar y disfrutar. ¡Nos vemos dentro!" })
     ]);
 
     function clamp(value, min, max) {
@@ -190,8 +190,7 @@
                 <i class="scrib-video-tutorial__grid"></i>
             </div>
             <header class="scrib-video-tutorial__brand" aria-hidden="true">
-                <img src="../../img/logo.png" alt="">
-                <span>&lt;SCRI&gt; B</span>
+                <img src="../img/logo%20scrib.png" alt="">
                 <b>· MUSA</b>
             </header>
             <div class="scrib-video-tutorial__scene">
@@ -298,6 +297,7 @@
         let locallyVerified = false;
         let hideTransitionTimer = null;
         let verificationRetryTimer = null;
+        let spectatorTutorialVisible = false;
 
         function currentPosition() {
             if (!state || !state.visible) return 0;
@@ -319,6 +319,8 @@
         }
 
         function setVisible(visible) {
+            const visibilityChanged = role === "spectator" && spectatorTutorialVisible !== Boolean(visible);
+            spectatorTutorialVisible = Boolean(visible);
             if (hideTransitionTimer != null) {
                 windowRef.clearTimeout(hideTransitionTimer);
                 hideTransitionTimer = null;
@@ -330,6 +332,11 @@
                 documentRef.body.classList.add("scrib-video-tutorial-active");
                 void root.offsetWidth;
                 root.classList.add("is-visible");
+                if (visibilityChanged && typeof windowRef.CustomEvent === "function") {
+                    documentRef.dispatchEvent(new windowRef.CustomEvent("scrib:video-tutorial-visibility", {
+                        detail: { visible: true }
+                    }));
+                }
                 return;
             }
 
@@ -337,6 +344,11 @@
             documentRef.body.classList.remove("scrib-video-tutorial-active");
             root.classList.remove("is-visible");
             root.classList.add("is-leaving");
+            if (visibilityChanged && typeof windowRef.CustomEvent === "function") {
+                documentRef.dispatchEvent(new windowRef.CustomEvent("scrib:video-tutorial-visibility", {
+                    detail: { visible: false }
+                }));
+            }
             if (audio) {
                 try { audio.pause(); } catch (_error) {}
             }

@@ -65,14 +65,96 @@ test("same scene and reduced-motion users switch immediately", () => {
   assert.equal(swaps, 2);
 });
 
+test("tutorial and detonator views share looped music with three-second fades and transition sound", () => {
+  let clock = 0;
+  const timers = [];
+  const media = [];
+  const createAudio = (url) => {
+    const audio = {
+      url,
+      volume: 1,
+      currentTime: 0,
+      loop: false,
+      paused: true,
+      playCalls: 0,
+      pauseCalls: 0,
+      setAttribute() {},
+      play() { this.paused = false; this.playCalls += 1; },
+      pause() { this.paused = true; this.pauseCalls += 1; }
+    };
+    media.push(audio);
+    return audio;
+  };
+  const setTimer = (callback, delay) => {
+    const timer = { callback, delay, cancelled: false };
+    timers.push(timer);
+    return timer;
+  };
+  const clearTimer = (timer) => { if (timer) timer.cancelled = true; };
+  const drainTimers = () => {
+    while (timers.length) {
+      const timer = timers.shift();
+      if (timer.cancelled) continue;
+      clock += timer.delay;
+      timer.callback();
+    }
+  };
+  const controller = transitions.createAudioController({
+    createAudio,
+    musicUrl: "menu.mp3",
+    transitionUrl: "view.mp3",
+    setTimer,
+    clearTimer,
+    now: () => clock,
+    fadeDurationMs: 3000,
+    musicVolume: 0.5
+  });
+  const music = media[0];
+  const sound = media[1];
+
+  controller.setMode("partida", { initial: true });
+  assert.equal(sound.playCalls, 0);
+  controller.setMode("tutorial");
+  assert.equal(sound.playCalls, 1);
+  assert.equal(music.loop, true);
+  drainTimers();
+  assert.equal(music.volume, 0.5);
+  assert.equal(music.paused, false);
+
+  controller.setMode("calentamiento");
+  assert.equal(sound.playCalls, 2);
+  assert.equal(music.volume, 0.5, "music continues between both musical views");
+
+  controller.setMode("partida");
+  assert.equal(sound.playCalls, 3);
+  assert.equal(timers[0].delay, 50);
+  drainTimers();
+  assert.equal(music.volume, 0);
+  assert.equal(music.paused, true);
+
+  controller.setMode("tutorial");
+  drainTimers();
+  controller.setDucked(true);
+  drainTimers();
+  assert.equal(music.volume, 0, "the narrated tutorial ducks the separate background loop");
+  controller.setDucked(false);
+  drainTimers();
+  assert.equal(music.volume, 0.5);
+});
+
 test("spectator wires the animated curtain into every resolved view change", () => {
   const html = fs.readFileSync(path.join(ROOT, "game/spectator/index.html"), "utf8");
   const css = fs.readFileSync(path.join(ROOT, "game/css/dashboard-players.css"), "utf8");
   const state = fs.readFileSync(path.join(ROOT, "game/spectator/js/state.js"), "utf8");
 
   assert.match(html, /id="spectator_view_transition"[\s\S]*data-view-transition-label/);
-  assert.match(html, /domains\/view-transition\.js\?v=20260829a/);
+  assert.match(html, /domains\/view-transition\.js\?v=20260829b/);
   assert.match(css, /spectatorViewCoverBlue[\s\S]*spectatorViewRevealRed/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spectator-view-transition/);
   assert.match(state, /controlador_transicion_vista_espectador\.transition\(\{[\s\S]*swap: \(\) => aplicarModoVistaEspectadorUi\(modo\)/);
+  assert.match(state, /musicUrl: "\.\.\/audio\/1\.%20MENU%20DE%20INICIO\.mp3"/);
+  assert.match(state, /transitionUrl: "\.\.\/audio\/FX\/cambio-vista\.mp3"/);
+  assert.match(state, /fadeDurationMs: 3000/);
+  assert.ok(fs.statSync(path.join(ROOT, "game/audio/FX/cambio-vista.mp3")).size > 5_000);
+  assert.equal(transitions.viewLabel("tutorial"), "VISTA TUTORIAL");
 });

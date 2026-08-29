@@ -117,11 +117,11 @@ ffmpeg -nostdin -hide_banner -loglevel error -y \
   -stream_loop -1 -i "${repo_dir}/game/audio/2. ACOMPAÑAR VOZ CON MELODIA.mp3" \
   -filter_complex \
     "[0:a]volume=1.0,asplit=2[voice][voice_sidechain];\
-     [1:a]afade=t=out:st=0:d=0.26,volume=0.075,adelay=95000[c1];\
-     [2:a]afade=t=out:st=0:d=0.26,volume=0.075,adelay=102000[c2];\
-     [3:a]afade=t=out:st=0:d=0.26,volume=0.075,adelay=109000[c3];\
-     [4:a]afade=t=out:st=0:d=0.3,volume=0.075,adelay=116000[c4];\
-     [5:a]afade=t=out:st=0:d=0.65,volume=0.07,adelay=123000[ok];\
+     [1:a]afade=t=out:st=0:d=0.26,volume=0.075,adelay=110000[c1];\
+     [2:a]afade=t=out:st=0:d=0.26,volume=0.075,adelay=117000[c2];\
+     [3:a]afade=t=out:st=0:d=0.26,volume=0.075,adelay=124000[c3];\
+     [4:a]afade=t=out:st=0:d=0.3,volume=0.075,adelay=131000[c4];\
+     [5:a]afade=t=out:st=0:d=0.65,volume=0.07,adelay=138000[ok];\
      [6:a]volume=0.16,afade=t=in:st=0:d=1.4,afade=t=out:st=${music_fade_start}:d=4,atrim=start=0:end=${total_duration}[music];\
      [music][voice_sidechain]sidechaincompress=threshold=0.025:ratio=8:attack=18:release=420[music_ducked];\
      [voice][music_ducked][c1][c2][c3][c4][ok]amix=inputs=7:duration=longest:normalize=0,\
