@@ -1,4 +1,4 @@
-// Landing de musas: el servidor asigna el equipo de forma autoritativa.
+// Landing de musas: elección manual o asignación automática autoritativa.
 const serverUrl = isProduction ? SERVER_URL_PROD : SERVER_URL_DEV;
 const socket = io(serverUrl);
 const musaAssignment = window.ScribMusaAssignment;
@@ -6,6 +6,7 @@ const nombreMusaInput = document.getElementById("nombre_musa");
 const mensajeMusa = document.getElementById("mensaje_musa");
 const musaNombreTitulos = document.querySelectorAll(".intro-musa-nombre");
 const introScroll = document.querySelector(".intro-scroll");
+const escritorasDisponibles = { 1: "ESCRITXR 1", 2: "ESCRITXR 2" };
 const MAX_NOMBRE_MUSA = 10;
 const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
 const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
@@ -20,6 +21,8 @@ let estadoAsignacion = "ready";
 let inicioSolicitudAsignacion = 0;
 let revealTimeout = null;
 let redirectTimeout = null;
+let fingerprintCompleteTimeout = null;
+let seleccionPendiente = { assignmentMode: "automatica", player: null };
 let claveAvisoMusa = "";
 
 const tMusa = (key, variables = {}, fallback = "") => (
@@ -60,6 +63,42 @@ function actualizarNombreIntro() {
   musaNombreTitulos.forEach((titulo) => {
     titulo.textContent = nombre || tMusa("ui.muse_label", {}, "MUSA").toUpperCase();
   });
+}
+
+function normalizarNombreEscritxr(valor, player) {
+  const limpio = String(valor || "").replace(/\s+/g, " ").trim().slice(0, 80);
+  return limpio || `ESCRITXR ${player}`;
+}
+
+function actualizarEscritxrDisponible(player, nombre) {
+  const equipo = musaAssignment.normalizeTeam(player);
+  if (!equipo) return;
+  escritorasDisponibles[equipo] = normalizarNombreEscritxr(nombre, equipo);
+  const destino = document.getElementById(equipo === 1 ? "musa_writer_blue" : "musa_writer_red");
+  if (destino) destino.textContent = escritorasDisponibles[equipo];
+  const boton = document.getElementById(equipo === 1 ? "musa_assignment_blue" : "musa_assignment_red");
+  if (boton) {
+    boton.setAttribute(
+      "aria-label",
+      `Elegir a ${escritorasDisponibles[equipo]}, equipo ${equipo === 1 ? "azul" : "rojo"}`
+    );
+  }
+}
+
+function aplicarOpcionesEquipoMusa(payload = {}) {
+  const equipos = Array.isArray(payload.equipos) ? payload.equipos : [];
+  equipos.forEach((equipo) => {
+    actualizarEscritxrDisponible(
+      equipo && (equipo.player ?? equipo.equipo),
+      equipo && (equipo.nombre_escritxr || equipo.escritxr)
+    );
+  });
+}
+
+function pedirOpcionesEquipoMusa() {
+  if (!socket.connected) return false;
+  socket.emit("pedir_opciones_equipo_musa", (payload = {}) => aplicarOpcionesEquipoMusa(payload));
+  return true;
 }
 
 function scrollToSeccion(objetivo) {
@@ -138,8 +177,10 @@ function puedeAvanzarDesdeSeccionNombre() {
 function limpiarTemporizadoresAsignacion() {
   if (revealTimeout) clearTimeout(revealTimeout);
   if (redirectTimeout) clearTimeout(redirectTimeout);
+  if (fingerprintCompleteTimeout) clearTimeout(fingerprintCompleteTimeout);
   revealTimeout = null;
   redirectTimeout = null;
+  fingerprintCompleteTimeout = null;
 }
 
 function obtenerNombreEquipoVisible(asignacion) {
@@ -156,7 +197,9 @@ function obtenerTextoEstadoAsignacion() {
     return tMusa("muse.assignment.status.revalidating", {}, "Reconectando y confirmando tu equipo…");
   }
   if (estadoAsignacion === "assigning") {
-    return tMusa("muse.assignment.status.balancing", {}, "Equilibrando los equipos…");
+    return seleccionPendiente.assignmentMode === "manual"
+      ? `Conectando con ${escritorasDisponibles[seleccionPendiente.player] || "tu escritxr"}…`
+      : tMusa("muse.assignment.status.balancing", {}, "Equilibrando los equipos…");
   }
   if (estadoAsignacion === "error") {
     return tMusa("muse.assignment.status.error", {}, "No pudimos asignarte equipo. Inténtalo de nuevo.");
@@ -169,7 +212,7 @@ function obtenerTextoEstadoAsignacion() {
       `Asignación completada: ${team}.`
     );
   }
-  return tMusa("muse.assignment.status.ready", {}, "Los equipos se mantendrán equilibrados automáticamente.");
+  return "Elige una escritora o usa la detección automática para equilibrar los equipos.";
 }
 
 function actualizarEstadoAsignacion() {
@@ -188,20 +231,47 @@ function refrescarTextosAsignacion() {
   if (claveAvisoMusa) mostrarAvisoMusa(tMusa(claveAvisoMusa), claveAvisoMusa);
 }
 
-function mostrarOverlayAsignacion() {
+function mostrarOverlayAsignacion({ scanning = false } = {}) {
   const overlay = document.getElementById("musa_boot_overlay");
   if (!overlay) return;
-  overlay.classList.remove("musa-boot-overlay--azul", "musa-boot-overlay--rojo", "is-revealed", "has-error");
-  overlay.classList.add("is-active", "is-assigning");
+  overlay.classList.remove(
+    "musa-boot-overlay--azul", "musa-boot-overlay--rojo", "is-revealed",
+    "has-error", "is-assigning", "is-scanning"
+  );
+  overlay.classList.add("is-active", scanning ? "is-scanning" : "is-assigning");
   overlay.setAttribute("aria-hidden", "false");
-  overlay.style.setProperty("--boot-bar-progress", "38%");
+  overlay.style.setProperty("--boot-bar-progress", scanning ? "0%" : "38%");
   document.body.classList.add("musa-boot-activa");
   const flujoIntro = document.querySelector(".intro-flow");
   if (flujoIntro) flujoIntro.inert = true;
   document.getElementById("musa_assignment_result")?.setAttribute("hidden", "");
   document.getElementById("musa_assignment_enter")?.setAttribute("hidden", "");
   document.getElementById("musa_assignment_retry")?.setAttribute("hidden", "");
-  setTimeout(() => overlay.focus({ preventScroll: true }), usaMovimientoReducido() ? 0 : 180);
+  const cancelar = document.getElementById("musa_assignment_cancel_scan");
+  const fingerprintStageNode = document.getElementById("musa_fingerprint_stage");
+  if (scanning) fingerprintStageNode?.removeAttribute("hidden");
+  else fingerprintStageNode?.setAttribute("hidden", "");
+  if (scanning) cancelar?.removeAttribute("hidden");
+  else cancelar?.setAttribute("hidden", "");
+  const kicker = document.getElementById("musa_boot_kicker");
+  const title = document.getElementById("musa_boot_title");
+  const copy = document.getElementById("musa_boot_copy");
+  if (scanning) {
+    if (kicker) kicker.textContent = "DETECCIÓN AUTOMÁTICA";
+    if (title) title.textContent = "PON TU DEDO";
+    if (copy) copy.textContent = "Mantén pulsada la huella hasta completar la detección.";
+  } else if (seleccionPendiente.assignmentMode === "manual") {
+    const escritxr = escritorasDisponibles[seleccionPendiente.player] || `ESCRITXR ${seleccionPendiente.player}`;
+    if (kicker) kicker.textContent = "ELECCIÓN DE MUSA";
+    if (title) title.textContent = "CONECTANDO CON TU ESCRITXR";
+    if (copy) copy.textContent = `Preparando el canal creativo de ${escritxr}.`;
+  } else {
+    if (kicker) kicker.textContent = "SISTEMA DE EQUILIBRIO DE MUSAS";
+    if (title) title.textContent = "DETECTANDO TU EQUIPO";
+    if (copy) copy.textContent = "Comparando el número actual de musas de cada equipo…";
+  }
+  const foco = scanning ? document.getElementById("musa_fingerprint") : overlay;
+  setTimeout(() => foco?.focus({ preventScroll: true }), usaMovimientoReducido() ? 0 : 180);
 }
 
 function invalidarRevelacionPorDesconexion() {
@@ -272,7 +342,7 @@ function revelarAsignacion(asignacion) {
   const enter = document.getElementById("musa_assignment_enter");
   if (overlay) {
     overlay.classList.remove(
-      "is-assigning", "has-error",
+      "is-assigning", "is-scanning", "has-error",
       "musa-boot-overlay--azul", "musa-boot-overlay--rojo"
     );
     overlay.classList.add(asignacion.player === 2 ? "musa-boot-overlay--rojo" : "musa-boot-overlay--azul", "is-revealed");
@@ -282,6 +352,8 @@ function revelarAsignacion(asignacion) {
   actualizarEstadoAsignacion();
   result?.removeAttribute("hidden");
   enter?.removeAttribute("hidden");
+  document.getElementById("musa_assignment_cancel_scan")?.setAttribute("hidden", "");
+  document.getElementById("musa_fingerprint_stage")?.setAttribute("hidden", "");
   const overlayStatus = document.getElementById("musa_boot_status");
   if (overlayStatus) {
     overlayStatus.textContent = tMusa("muse.assignment.status.authorized", {}, "Equipo asignado · acceso autorizado");
@@ -353,23 +425,107 @@ function manejarMusaReemplazada() {
 }
 
 socket.on("musa_reemplazada", manejarMusaReemplazada);
+socket.on("nombre1", (nombre) => actualizarEscritxrDisponible(1, nombre));
+socket.on("nombre2", (nombre) => actualizarEscritxrDisponible(2, nombre));
+socket.on("musa_opciones_equipo", aplicarOpcionesEquipoMusa);
+socket.on("actualizar_contador_musas", pedirOpcionesEquipoMusa);
+socket.on("connect", pedirOpcionesEquipoMusa);
 
-function solicitarAsignacionMusa() {
-  if (asignacionBloqueada) return;
-  const nombre = normalizarNombreMusa(nombreMusaInput?.value || "");
-  if (!nombre) {
-    mostrarAvisoMusa(mensajeNombreInvalido(), "muse.assignment.name_error");
-    nombreMusaInput?.focus();
-    return;
+const fingerprintButton = document.getElementById("musa_fingerprint");
+const fingerprintStage = document.getElementById("musa_fingerprint_stage");
+const fingerprintPercent = document.getElementById("musa_fingerprint_percent");
+const fingerprintHint = document.getElementById("musa_fingerprint_hint");
+const fingerprintController = musaAssignment.createHoldController({
+  durationMs: 1900,
+  now: () => performance.now(),
+  onProgress: (progress, meta = {}) => {
+    const pct = Math.round(progress * 100);
+    fingerprintStage?.style.setProperty("--finger-progress", `${Math.round(progress * 360)}deg`);
+    if (fingerprintPercent) fingerprintPercent.textContent = `${pct}%`;
+    if (fingerprintHint && meta.cancelled) {
+      fingerprintHint.textContent = "MANTÉN EL DEDO HASTA COMPLETAR";
+    }
+  },
+  onComplete: () => {
+    fingerprintButton?.classList.remove("is-holding");
+    fingerprintButton?.classList.add("is-complete");
+    if (fingerprintHint) fingerprintHint.textContent = "¡DETECCIÓN COMPLETADA!";
+    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+      navigator.vibrate([45, 30, 90]);
+    }
+    fingerprintCompleteTimeout = setTimeout(() => {
+      fingerprintCompleteTimeout = null;
+      solicitarAsignacionMusa({ assignmentMode: "automatica", player: null });
+    }, usaMovimientoReducido() ? 120 : 620);
   }
+});
+
+function validarNombreAsignacion() {
+  const nombre = normalizarNombreMusa(nombreMusaInput?.value || "");
+  if (nombre) return nombre;
+  mostrarAvisoMusa(mensajeNombreInvalido(), "muse.assignment.name_error");
+  nombreMusaInput?.focus();
+  return "";
+}
+
+function mostrarEscanerAutomatico() {
+  if (asignacionBloqueada) return;
+  const nombre = validarNombreAsignacion();
+  if (!nombre) return;
   mostrarAvisoMusa("");
   nombrePendiente = nombre;
+  asignacionActual = null;
+  seleccionPendiente = { assignmentMode: "automatica", player: null };
+  limpiarTemporizadoresAsignacion();
+  fingerprintController.reset();
+  fingerprintButton?.classList.remove("is-holding", "is-complete");
+  if (fingerprintHint) fingerprintHint.textContent = "MANTÉN EL DEDO SOBRE LA HUELLA";
+  mostrarOverlayAsignacion({ scanning: true });
+}
+
+function solicitarAsignacionMusa({ assignmentMode = "automatica", player = null } = {}) {
+  if (asignacionBloqueada) return;
+  const nombre = validarNombreAsignacion();
+  if (!nombre) return;
+  const modo = musaAssignment.normalizeAssignmentMode(assignmentMode);
+  const equipo = modo === "manual" ? musaAssignment.normalizeTeam(player) : null;
+  if (modo === "manual" && !equipo) return;
+  mostrarAvisoMusa("");
+  nombrePendiente = nombre;
+  seleccionPendiente = { assignmentMode: modo, player: equipo };
   asignacionActual = null;
   asignacionBloqueada = true;
   inicioSolicitudAsignacion = performance.now();
   limpiarTemporizadoresAsignacion();
   mostrarOverlayAsignacion();
-  coordinadorAsignacion.request({ clientId: window.musa_client_id, name: nombre });
+  coordinadorAsignacion.request({
+    clientId: window.musa_client_id,
+    name: nombre,
+    assignmentMode: modo,
+    player: equipo
+  });
+}
+
+function cancelarEscanerAutomatico() {
+  fingerprintController.reset();
+  fingerprintButton?.classList.remove("is-holding", "is-complete");
+  restablecerVistaAsignacion();
+}
+
+function iniciarPulsacionHuella(evento) {
+  if (evento) evento.preventDefault();
+  if (evento && typeof evento.pointerId === "number") {
+    try { fingerprintButton?.setPointerCapture(evento.pointerId); } catch (_error) {}
+  }
+  if (!fingerprintController.start()) return;
+  fingerprintButton?.classList.add("is-holding");
+  if (fingerprintHint) fingerprintHint.textContent = "LEYENDO TU ENERGÍA CREATIVA…";
+}
+
+function cancelarPulsacionHuella(evento) {
+  if (evento) evento.preventDefault();
+  if (!fingerprintController.cancel()) return;
+  fingerprintButton?.classList.remove("is-holding");
 }
 
 function reintentarAsignacionMusa() {
@@ -387,7 +543,7 @@ function restablecerVistaAsignacion() {
   const overlay = document.getElementById("musa_boot_overlay");
   if (overlay) {
     overlay.classList.remove(
-      "is-active", "is-assigning", "is-revealed", "has-error",
+      "is-active", "is-assigning", "is-scanning", "is-revealed", "has-error",
       "musa-boot-overlay--azul", "musa-boot-overlay--rojo"
     );
     overlay.setAttribute("aria-hidden", "true");
@@ -396,11 +552,27 @@ function restablecerVistaAsignacion() {
   document.body.classList.remove("musa-boot-activa");
   const flujoIntro = document.querySelector(".intro-flow");
   if (flujoIntro) flujoIntro.inert = false;
+  document.getElementById("musa_assignment_cancel_scan")?.setAttribute("hidden", "");
+  document.getElementById("musa_fingerprint_stage")?.setAttribute("hidden", "");
   actualizarEstadoAsignacion();
 }
 
 window.solicitarAsignacionMusa = solicitarAsignacionMusa;
 window.entrarEnJuegoAsignado = entrarEnJuegoAsignado;
+
+fingerprintButton?.addEventListener("pointerdown", iniciarPulsacionHuella);
+fingerprintButton?.addEventListener("pointerup", cancelarPulsacionHuella);
+fingerprintButton?.addEventListener("pointercancel", cancelarPulsacionHuella);
+fingerprintButton?.addEventListener("lostpointercapture", cancelarPulsacionHuella);
+fingerprintButton?.addEventListener("contextmenu", (evento) => evento.preventDefault());
+fingerprintButton?.addEventListener("keydown", (evento) => {
+  if ((evento.key !== " " && evento.key !== "Enter") || evento.repeat) return;
+  iniciarPulsacionHuella(evento);
+});
+fingerprintButton?.addEventListener("keyup", (evento) => {
+  if (evento.key !== " " && evento.key !== "Enter") return;
+  cancelarPulsacionHuella(evento);
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   window.musa_client_id = musaAssignment.getOrCreateClientId(window.sessionStorage, { windowRef: window });
@@ -450,12 +622,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.getElementById("musa_assignment_start")?.addEventListener("click", solicitarAsignacionMusa);
+  document.getElementById("musa_assignment_blue")?.addEventListener("click", () => {
+    solicitarAsignacionMusa({ assignmentMode: "manual", player: 1 });
+  });
+  document.getElementById("musa_assignment_red")?.addEventListener("click", () => {
+    solicitarAsignacionMusa({ assignmentMode: "manual", player: 2 });
+  });
+  document.getElementById("musa_assignment_start")?.addEventListener("click", mostrarEscanerAutomatico);
+  document.getElementById("musa_assignment_cancel_scan")?.addEventListener("click", cancelarEscanerAutomatico);
   document.getElementById("musa_assignment_retry")?.addEventListener("click", reintentarAsignacionMusa);
   document.getElementById("musa_assignment_enter")?.addEventListener("click", entrarEnJuegoAsignado);
 
   const contenedorScroll = document.querySelector(".intro-scroll");
   if (contenedorScroll) configurarNavegacionIntro(contenedorScroll);
+  actualizarEscritxrDisponible(1, escritorasDisponibles[1]);
+  actualizarEscritxrDisponible(2, escritorasDisponibles[2]);
+  pedirOpcionesEquipoMusa();
   refrescarTextosAsignacion();
 });
 

@@ -228,7 +228,9 @@ socket.on('connect', () => {
     const payloadRegistroMusa = window.ScribMusaAssignment.createRegistrationPayload({
         clientId: musa_client_id,
         name: nombre_musa,
-        requestId: musa_request_id_activo
+        requestId: musa_request_id_activo,
+        assignmentMode: modo_asignacion_musa,
+        player: modo_asignacion_musa === "manual" ? player : null
     });
     const requestIdRegistroMusa = musa_request_id_activo;
     socket.emit('registrar_musa', payloadRegistroMusa, (payload = {}) => {

@@ -2942,6 +2942,298 @@ body.musa-boot-activa .intro-flow {
     }
 }
 
+/* Selector de escritxr y detección automática por pulsación mantenida. */
+.intro-asignacion .intro-panel {
+    gap: clamp(0.55rem, 1.8vh, 1rem);
+    padding-top: max(env(safe-area-inset-top), clamp(0.8rem, 3vh, 1.7rem));
+    padding-bottom: max(env(safe-area-inset-bottom), clamp(2.8rem, 8vh, 4.6rem));
+}
+
+.musa-team-picker {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.7rem, 3vw, 1.5rem);
+    width: min(92vw, 46rem);
+    margin: 0 auto;
+}
+
+.musa-team-choice {
+    --team-color: #54f0ff;
+    --team-glow: rgba(84, 240, 255, 0.48);
+    position: relative;
+    min-width: 0;
+    min-height: clamp(9.5rem, 31vw, 13rem);
+    padding: clamp(0.75rem, 2.5vw, 1.2rem);
+    border: 1px solid color-mix(in srgb, var(--team-color), white 20%);
+    border-radius: clamp(0.9rem, 3vw, 1.4rem);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: clamp(0.35rem, 1.2vw, 0.65rem);
+    overflow: hidden;
+    color: var(--team-color);
+    background:
+        radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--team-color), transparent 72%), transparent 58%),
+        linear-gradient(160deg, rgba(9, 19, 30, 0.94), rgba(2, 6, 12, 0.96));
+    box-shadow: inset 0 0 1.6rem color-mix(in srgb, var(--team-color), transparent 88%), 0 0 1.2rem color-mix(in srgb, var(--team-color), transparent 80%);
+    font-family: "Retro-gaming", "Courier New", monospace;
+    cursor: pointer;
+    isolation: isolate;
+    transition: transform 180ms ease, box-shadow 220ms ease, filter 220ms ease;
+}
+
+.musa-team-choice::before {
+    content: "";
+    position: absolute;
+    inset: -80% -40%;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.18) 50%, transparent 62%);
+    transform: translateX(-55%) rotate(12deg);
+    transition: transform 680ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.musa-team-choice:hover,
+.musa-team-choice:focus-visible {
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: inset 0 0 2rem color-mix(in srgb, var(--team-color), transparent 82%), 0 0 2.2rem var(--team-glow);
+    filter: brightness(1.08);
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+.musa-team-choice:hover::before,
+.musa-team-choice:focus-visible::before {
+    transform: translateX(55%) rotate(12deg);
+}
+
+.musa-team-choice:active { transform: scale(0.975); }
+
+.musa-team-choice--red {
+    --team-color: #ff6262;
+    --team-glow: rgba(255, 98, 98, 0.48);
+}
+
+.musa-team-choice img {
+    width: clamp(2.4rem, 8.5vw, 4.2rem);
+    height: auto;
+    filter: drop-shadow(0 0 0.75rem var(--team-glow));
+}
+
+.musa-team-choice__team {
+    font-size: clamp(0.62rem, 2vw, 0.85rem);
+    letter-spacing: 0.14em;
+}
+
+.musa-team-choice__writer {
+    width: 100%;
+    min-height: 2.35em;
+    display: grid;
+    place-items: center;
+    overflow-wrap: anywhere;
+    color: #fff;
+    font-size: clamp(0.84rem, 3.2vw, 1.3rem);
+    line-height: 1.15;
+    letter-spacing: 0.06em;
+    text-shadow: 0 0 0.8rem var(--team-glow);
+}
+
+.musa-team-choice__action {
+    padding: 0.45em 1em;
+    border-radius: 999px;
+    background: var(--team-color);
+    color: #03070b;
+    font-size: clamp(0.58rem, 1.8vw, 0.76rem);
+    letter-spacing: 0.12em;
+}
+
+.musa-assignment-cta--automatic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    background: linear-gradient(115deg, #ffd86b, #fff7cf 48%, #ff9f43);
+    box-shadow: 0 0 1.8rem rgba(255, 204, 93, 0.36);
+}
+
+.musa-assignment-cta__finger {
+    font-size: 1.35em;
+    transform: translateY(-0.08em);
+}
+
+.musa-fingerprint-stage {
+    --finger-progress: 0deg;
+    display: none;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: clamp(11rem, 34vw, 17rem);
+    place-items: center;
+    align-content: center;
+    gap: 0.6rem;
+}
+
+.musa-fingerprint-stage[hidden] { display: none !important; }
+
+.musa-boot-overlay.is-scanning { --boot-accent: #f7d06c; }
+
+.musa-boot-overlay.is-scanning .musa-fingerprint-stage {
+    display: grid;
+    animation: musaFingerprintArrive 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.musa-boot-overlay.is-scanning .musa-assignment-team,
+.musa-boot-overlay.is-scanning .musa-assignment-core,
+.musa-boot-overlay.is-scanning .musa-boot-status-row,
+.musa-boot-overlay.is-scanning .musa-boot-bar {
+    display: none;
+}
+
+.musa-fingerprint {
+    position: relative;
+    width: clamp(8.5rem, 32vw, 12.5rem);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: #f7d06c;
+    background: radial-gradient(circle, rgba(247, 208, 108, 0.13), rgba(3, 8, 15, 0.94) 64%);
+    box-shadow: inset 0 0 1.6rem rgba(247, 208, 108, 0.12), 0 0 2rem rgba(247, 208, 108, 0.18);
+    font: inherit;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.musa-fingerprint::before,
+.musa-fingerprint::after {
+    content: "";
+    position: absolute;
+    border: 1px solid rgba(247, 208, 108, 0.34);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.musa-fingerprint::before { inset: -0.65rem; }
+.musa-fingerprint::after { inset: -1.35rem; opacity: 0.45; }
+
+.musa-fingerprint__ring {
+    position: absolute;
+    inset: -0.25rem;
+    border-radius: 50%;
+    background: conic-gradient(#f7d06c var(--finger-progress), rgba(247, 208, 108, 0.1) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 0);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 0);
+    filter: drop-shadow(0 0 0.65rem rgba(247, 208, 108, 0.7));
+}
+
+.musa-fingerprint__icon {
+    width: 56%;
+    height: 64%;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.72;
+    filter: drop-shadow(0 0 0.55rem rgba(247, 208, 108, 0.45));
+    transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.musa-fingerprint__percent {
+    position: absolute;
+    bottom: 0.8rem;
+    color: #fff7cf;
+    font-size: clamp(0.58rem, 2vw, 0.75rem);
+    letter-spacing: 0.12em;
+}
+
+.musa-fingerprint.is-holding {
+    box-shadow: inset 0 0 2.4rem rgba(247, 208, 108, 0.25), 0 0 3rem rgba(247, 208, 108, 0.45);
+}
+
+.musa-fingerprint.is-holding::before {
+    animation: musaFingerprintPulse 720ms ease-in-out infinite alternate;
+}
+
+.musa-fingerprint.is-holding::after {
+    animation: musaFingerprintPulse 720ms ease-in-out 160ms infinite alternate;
+}
+
+.musa-fingerprint.is-holding .musa-fingerprint__icon {
+    opacity: 1;
+    transform: scale(1.04);
+}
+
+.musa-fingerprint.is-complete {
+    color: #8bff6a;
+    box-shadow: inset 0 0 2.4rem rgba(139, 255, 106, 0.24), 0 0 3.2rem rgba(139, 255, 106, 0.5);
+    animation: musaFingerprintComplete 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.musa-fingerprint__hint,
+.musa-fingerprint__privacy { margin: 0; text-align: center; }
+
+.musa-fingerprint__hint {
+    color: #fff7cf;
+    font-size: clamp(0.66rem, 2vw, 0.85rem);
+    letter-spacing: 0.12em;
+}
+
+.musa-fingerprint__privacy {
+    color: rgba(232, 241, 248, 0.48);
+    font-size: clamp(0.58rem, 1.6vw, 0.72rem);
+}
+
+.musa-assignment-action--cancel {
+    border-color: rgba(255, 255, 255, 0.36);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+@keyframes musaFingerprintArrive {
+    from { opacity: 0; transform: scale(0.72) rotate(-6deg); }
+    to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes musaFingerprintPulse {
+    from { transform: scale(0.96); opacity: 0.35; }
+    to { transform: scale(1.08); opacity: 0.9; }
+}
+
+@keyframes musaFingerprintComplete {
+    0% { transform: scale(1); }
+    55% { transform: scale(1.13); }
+    100% { transform: scale(1.04); }
+}
+
+@media (max-width: 430px) {
+    .musa-team-picker { width: min(94vw, 28rem); gap: 0.55rem; }
+    .musa-team-choice { min-height: 9rem; padding: 0.65rem 0.45rem; }
+    .musa-team-choice__writer { font-size: clamp(0.72rem, 3.4vw, 1rem); }
+}
+
+@media (max-height: 700px) {
+    .intro-asignacion .intro-logos { margin-bottom: 0; }
+    .intro-asignacion .intro-logo-img { width: clamp(44px, 10vh, 70px); }
+    .musa-team-choice { min-height: clamp(7.2rem, 25vh, 9rem); }
+    .musa-team-choice img { width: clamp(2rem, 7vh, 3rem); }
+    .musa-assignment-status { font-size: 0.65rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .musa-team-choice::before,
+    .musa-fingerprint,
+    .musa-fingerprint::before,
+    .musa-fingerprint::after,
+    .musa-fingerprint-stage {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -3140,26 +3432,30 @@ body.musa-boot-activa .intro-flow {
                         <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
                         <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
                     </div>
-                    <h1><span class="intro-musa-nombre">MUSA</span>,<br><span data-i18n="muse.assignment.section_title">EL JUEGO ELEGIRÁ TU EQUIPO</span></h1>
-                    <p class="musa-assignment-lead" data-i18n="muse.assignment.section_copy">
-                        Te asignaremos al equipo azul o rojo para que ambos tengan siempre el mismo número de musas, o una diferencia máxima de una.
+                    <h1><span class="intro-musa-nombre">MUSA</span>,<br>ELIGE TU ESCRITXR</h1>
+                    <p class="musa-assignment-lead">
+                        Puedes elegir directamente o dejar que el juego equilibre los equipos por ti.
                     </p>
-                    <div class="musa-assignment-balance" aria-hidden="true">
-                        <div class="musa-assignment-balance__team musa-assignment-balance__team--blue">
-                            <img src="./img/pluma_azul.png" alt="">
-                            <span data-i18n="world.team.blue">AZUL</span>
-                        </div>
-                        <span class="musa-assignment-balance__link">⇄</span>
-                        <div class="musa-assignment-balance__team musa-assignment-balance__team--red">
-                            <img src="./img/pluma_roja.png" alt="">
-                            <span data-i18n="world.team.red">ROJO</span>
-                        </div>
+                    <div class="musa-team-picker" aria-label="Escritoras disponibles">
+                        <button id="musa_assignment_blue" class="musa-team-choice musa-team-choice--blue" type="button" data-team="1">
+                            <span class="musa-team-choice__team">EQUIPO AZUL</span>
+                            <img src="./img/pluma_azul.png" alt="" aria-hidden="true">
+                            <strong id="musa_writer_blue" class="musa-team-choice__writer">ESCRITXR 1</strong>
+                            <span class="musa-team-choice__action">ELEGIR</span>
+                        </button>
+                        <button id="musa_assignment_red" class="musa-team-choice musa-team-choice--red" type="button" data-team="2">
+                            <span class="musa-team-choice__team">EQUIPO ROJO</span>
+                            <img src="./img/pluma_roja.png" alt="" aria-hidden="true">
+                            <strong id="musa_writer_red" class="musa-team-choice__writer">ESCRITXR 2</strong>
+                            <span class="musa-team-choice__action">ELEGIR</span>
+                        </button>
                     </div>
-                    <button id="musa_assignment_start" class="musa-assignment-cta" type="button" data-i18n="muse.assignment.discover_button">
-                        DESCUBRIR MI EQUIPO
+                    <button id="musa_assignment_start" class="musa-assignment-cta musa-assignment-cta--automatic" type="button">
+                        <span class="musa-assignment-cta__finger" aria-hidden="true">☝</span>
+                        DETECCIÓN AUTOMÁTICA
                     </button>
                     <p id="musa_assignment_status" class="musa-assignment-status" role="status" aria-live="polite">
-                        Los equipos se mantendrán equilibrados automáticamente.
+                        El modo automático te asignará al equipo con menos musas.
                     </p>
                     <div class="intro-nav intro-nav--up">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-nombre" aria-label="Volver a nombre"></button>
@@ -3170,10 +3466,28 @@ body.musa-boot-activa .intro-flow {
     </main>
     <div id="musa_boot_overlay" class="musa-boot-overlay" role="dialog" aria-modal="true" aria-labelledby="musa_boot_title" aria-describedby="musa_boot_copy" aria-hidden="true" tabindex="-1">
         <div class="musa-boot-panel">
-            <div class="musa-boot-kicker" data-i18n="muse.assignment.overlay_kicker">SISTEMA DE EQUILIBRIO DE MUSAS</div>
-            <h2 id="musa_boot_title" class="musa-boot-title" data-i18n="muse.assignment.overlay_title">ELIGIENDO TU EQUIPO</h2>
-            <p id="musa_boot_copy" class="musa-boot-copy" data-i18n="muse.assignment.overlay_copy">Comparando el número de musas de cada equipo…</p>
+            <div id="musa_boot_kicker" class="musa-boot-kicker">DETECCIÓN AUTOMÁTICA</div>
+            <h2 id="musa_boot_title" class="musa-boot-title">PON TU DEDO</h2>
+            <p id="musa_boot_copy" class="musa-boot-copy">Mantén pulsada la huella hasta completar la detección.</p>
             <div class="musa-assignment-arena">
+                <div id="musa_fingerprint_stage" class="musa-fingerprint-stage" hidden>
+                    <button id="musa_fingerprint" class="musa-fingerprint" type="button" aria-label="Mantén pulsado para detectar tu equipo">
+                        <span class="musa-fingerprint__ring" aria-hidden="true"></span>
+                        <svg class="musa-fingerprint__icon" viewBox="0 0 120 140" aria-hidden="true" focusable="false">
+                            <path d="M60 10C31 10 10 32 10 61" />
+                            <path d="M110 61C110 32 89 10 60 10" />
+                            <path d="M23 72V61C23 39 39 24 60 24s37 15 37 37v20" />
+                            <path d="M36 85V62c0-14 10-25 24-25s24 11 24 25v30" />
+                            <path d="M48 98V63c0-7 5-13 12-13s12 6 12 13v40" />
+                            <path d="M60 64v48" />
+                            <path d="M24 88c1 19 8 34 19 43" />
+                            <path d="M96 94c-1 17-6 29-15 38" />
+                        </svg>
+                        <span id="musa_fingerprint_percent" class="musa-fingerprint__percent">0%</span>
+                    </button>
+                    <p id="musa_fingerprint_hint" class="musa-fingerprint__hint">MANTÉN EL DEDO SOBRE LA HUELLA</p>
+                    <p class="musa-fingerprint__privacy">No se registra ningún dato biométrico.</p>
+                </div>
                 <div class="musa-assignment-team musa-assignment-team--blue" aria-hidden="true">
                     <img src="./img/pluma_azul.png" alt="">
                     <span data-i18n="world.team.blue">AZUL</span>
@@ -3198,6 +3512,7 @@ body.musa-boot-activa .intro-flow {
                 <span id="musa_boot_bar" class="musa-boot-bar-fill"></span>
             </div>
             <div class="musa-assignment-actions">
+                <button id="musa_assignment_cancel_scan" class="musa-assignment-action musa-assignment-action--cancel" type="button" hidden>VOLVER</button>
                 <button id="musa_assignment_retry" class="musa-assignment-action musa-assignment-action--retry" type="button" data-i18n="muse.assignment.retry_button" hidden>REINTENTAR</button>
                 <button id="musa_assignment_enter" class="musa-assignment-action" type="button" data-i18n="muse.assignment.enter_button" hidden>ENTRAR AL JUEGO</button>
             </div>
@@ -3207,6 +3522,6 @@ body.musa-boot-activa .intro-flow {
 <script src="../config.js?v=20260827b"></script>
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260822d"></script>
-<script src="./js/musa-assignment.js?v=20260822d"></script>
-<script src="./js/musa-selector.js?v=20260822d"></script>
+<script src="./js/musa-assignment.js?v=20260829e"></script>
+<script src="./js/musa-selector.js?v=20260829e"></script>
 </html>

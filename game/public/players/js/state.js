@@ -2509,6 +2509,13 @@ function obtenerAsignacionMusaSesion() {
     }
 }
 
+const asignacion_musa_inicial = obtenerAsignacionMusaSesion();
+const modo_asignacion_musa = window.ScribMusaAssignment.normalizeAssignmentMode(
+    getParameterByName("modo_asignacion")
+    || (asignacion_musa_inicial && asignacion_musa_inicial.assignmentMode)
+);
+window.modo_asignacion_musa = modo_asignacion_musa;
+
 function construirUrlMusaAsignada(asignacion) {
     if (!window.ScribMusaAssignment) return "";
     return window.ScribMusaAssignment.buildGameUrl(

@@ -25,6 +25,12 @@
         return null;
     }
 
+    function normalizeAssignmentMode(value) {
+        return String(value || "").trim().toLowerCase() === "manual"
+            ? "manual"
+            : "automatica";
+    }
+
     function cleanText(value, fallback = "") {
         const text = typeof value === "string" ? value.trim() : "";
         return text || fallback;
@@ -56,6 +62,7 @@
             color,
             teamName: cleanText(payload.nombre_equipo || payload.teamName, color.toUpperCase()),
             writer,
+            assignmentMode: normalizeAssignmentMode(payload.modo_asignacion || payload.assignmentMode),
             reassigned: Boolean(payload.reasignada ?? payload.reassigned),
             reconnection: Boolean(payload.reconexion ?? payload.reconnection),
             clientId: cleanText(payload.client_id || payload.clientId),
@@ -67,11 +74,16 @@
     }
 
     function createRegistrationPayload(identity = {}) {
-        return {
+        const mode = normalizeAssignmentMode(identity.assignmentMode || identity.modo_asignacion);
+        const payload = {
             client_id: cleanText(identity.clientId || identity.client_id),
             nombre: cleanText(identity.name || identity.nombre),
-            request_id: normalizeRequestId(identity.requestId || identity.request_id)
+            request_id: normalizeRequestId(identity.requestId || identity.request_id),
+            modo_asignacion: mode
         };
+        const team = normalizeTeam(identity.player ?? identity.equipo ?? identity.team);
+        if (mode === "manual" && team) payload.equipo = team;
+        return payload;
     }
 
     function createOpaqueId(prefix, now = Date.now, random = Math.random) {
@@ -184,6 +196,7 @@
             player: String(normalized.player),
             name: cleanText(name),
             escritxr: cleanText(normalized.writer, `ESCRITXR ${normalized.player}`),
+            modo_asignacion: normalizeAssignmentMode(normalized.assignmentMode),
             assigned: "1"
         });
         return `${baseUrl}${separator}${params.toString()}`;
@@ -286,7 +299,11 @@
         function request(nextIdentity) {
             identity = {
                 clientId: cleanText(nextIdentity && (nextIdentity.clientId || nextIdentity.client_id)),
-                name: cleanText(nextIdentity && (nextIdentity.name || nextIdentity.nombre))
+                name: cleanText(nextIdentity && (nextIdentity.name || nextIdentity.nombre)),
+                assignmentMode: normalizeAssignmentMode(
+                    nextIdentity && (nextIdentity.assignmentMode || nextIdentity.modo_asignacion)
+                ),
+                player: normalizeTeam(nextIdentity && (nextIdentity.player ?? nextIdentity.equipo ?? nextIdentity.team))
             };
             delivered = false;
             lastFingerprint = "";
@@ -341,10 +358,85 @@
         };
     }
 
+    function createHoldController(options = {}) {
+        const durationMs = Math.max(300, Number(options.durationMs) || 1800);
+        const now = typeof options.now === "function"
+            ? options.now
+            : () => (typeof performance !== "undefined" && typeof performance.now === "function"
+                ? performance.now()
+                : Date.now());
+        const requestFrame = typeof options.requestFrame === "function"
+            ? options.requestFrame
+            : (callback) => {
+                if (typeof requestAnimationFrame === "function") return requestAnimationFrame(callback);
+                return setTimeout(() => callback(now()), 16);
+            };
+        const cancelFrame = typeof options.cancelFrame === "function"
+            ? options.cancelFrame
+            : (frameId) => {
+                if (typeof cancelAnimationFrame === "function") cancelAnimationFrame(frameId);
+                else clearTimeout(frameId);
+            };
+        const onProgress = typeof options.onProgress === "function" ? options.onProgress : function () {};
+        const onComplete = typeof options.onComplete === "function" ? options.onComplete : function () {};
+        let active = false;
+        let completed = false;
+        let startedAt = 0;
+        let frameId = null;
+
+        function stopFrame() {
+            if (frameId === null) return;
+            cancelFrame(frameId);
+            frameId = null;
+        }
+
+        function tick(timestamp) {
+            if (!active) return;
+            const current = Number.isFinite(Number(timestamp)) ? Number(timestamp) : now();
+            const progress = Math.max(0, Math.min(1, (current - startedAt) / durationMs));
+            onProgress(progress);
+            if (progress >= 1) {
+                active = false;
+                completed = true;
+                frameId = null;
+                onComplete();
+                return;
+            }
+            frameId = requestFrame(tick);
+        }
+
+        return {
+            start() {
+                if (active || completed) return false;
+                active = true;
+                startedAt = now();
+                onProgress(0);
+                frameId = requestFrame(tick);
+                return true;
+            },
+            cancel() {
+                if (!active) return false;
+                active = false;
+                stopFrame();
+                onProgress(0, { cancelled: true });
+                return true;
+            },
+            reset() {
+                active = false;
+                completed = false;
+                stopFrame();
+                onProgress(0, { reset: true });
+            },
+            isActive() { return active; },
+            isComplete() { return completed; }
+        };
+    }
+
     return {
         CLIENT_STORAGE_KEY,
         ASSIGNMENT_SESSION_KEY,
         normalizeTeam,
+        normalizeAssignmentMode,
         normalizeAssignment,
         createRegistrationPayload,
         createClientId,
@@ -356,6 +448,7 @@
         clearAssignmentSession,
         assignmentBelongsToClient,
         buildGameUrl,
-        createCoordinator
+        createCoordinator,
+        createHoldController
     };
 });

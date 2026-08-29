@@ -59,6 +59,7 @@ test("normalizes authoritative muse assignments and server aliases", () => {
       color: "rojo",
       teamName: "EQUIPO ROJO",
       writer: "Ada",
+      assignmentMode: "automatica",
       reassigned: true,
       reconnection: false,
       clientId: "",
@@ -73,8 +74,8 @@ test("normalizes authoritative muse assignments and server aliases", () => {
   );
 });
 
-test("registration payload never lets the browser choose a team", () => {
-  const payload = assignment.createRegistrationPayload({
+test("registration payload distinguishes automatic balancing from a manual team choice", () => {
+  const automatic = assignment.createRegistrationPayload({
     clientId: "musa_stable",
     name: "LUNA",
     requestId: "req_abc_123456",
@@ -82,10 +83,28 @@ test("registration payload never lets the browser choose a team", () => {
     equipo: 2,
     musa: 2
   });
-  assert.deepEqual(payload, { client_id: "musa_stable", nombre: "LUNA", request_id: "req_abc_123456" });
-  assert.equal(Object.hasOwn(payload, "player"), false);
-  assert.equal(Object.hasOwn(payload, "equipo"), false);
-  assert.equal(Object.hasOwn(payload, "musa"), false);
+  assert.deepEqual(automatic, {
+    client_id: "musa_stable",
+    nombre: "LUNA",
+    request_id: "req_abc_123456",
+    modo_asignacion: "automatica"
+  });
+  assert.equal(Object.hasOwn(automatic, "equipo"), false);
+
+  const manual = assignment.createRegistrationPayload({
+    clientId: "musa_stable",
+    name: "LUNA",
+    requestId: "req_abc_123456",
+    assignmentMode: "manual",
+    player: 2
+  });
+  assert.deepEqual(manual, {
+    client_id: "musa_stable",
+    nombre: "LUNA",
+    request_id: "req_abc_123456",
+    modo_asignacion: "manual",
+    equipo: 2
+  });
   assert.equal(assignment.normalizeRequestId("not a request"), "");
 });
 
@@ -134,6 +153,7 @@ test("game URL contains only the authoritative assignment and marks the reveal a
   assert.equal(parsed.searchParams.get("player"), "1");
   assert.equal(parsed.searchParams.get("name"), "MUSA 7");
   assert.equal(parsed.searchParams.get("escritxr"), "María");
+  assert.equal(parsed.searchParams.get("modo_asignacion"), "automatica");
   assert.equal(parsed.searchParams.get("assigned"), "1");
 
   const normalized = assignment.normalizeAssignment({
@@ -301,18 +321,54 @@ test("coordinator revalidates an existing assignment on reconnect and rejects st
   assert.equal(received[2].value.writer, "Berta");
 });
 
-test("landing exposes one assignment CTA and one accessible, motion-safe reveal", () => {
+test("press-and-hold controller completes only after an uninterrupted hold", () => {
+  let frame = null;
+  let now = 100;
+  const progress = [];
+  let completed = 0;
+  const controller = assignment.createHoldController({
+    durationMs: 1000,
+    now: () => now,
+    requestFrame: (callback) => { frame = callback; return 7; },
+    cancelFrame: () => { frame = null; },
+    onProgress: (value) => progress.push(value),
+    onComplete: () => { completed += 1; }
+  });
+
+  assert.equal(controller.start(), true);
+  frame(600);
+  assert.equal(progress.at(-1), 0.5);
+  assert.equal(controller.cancel(), true);
+  assert.equal(completed, 0);
+  assert.equal(progress.at(-1), 0);
+
+  now = 2000;
+  controller.start();
+  frame(3000);
+  assert.equal(controller.isComplete(), true);
+  assert.equal(completed, 1);
+  assert.equal(controller.start(), false);
+});
+
+test("landing exposes both writers and an accessible, motion-safe automatic fingerprint", () => {
   const html = read("game/public/index.html");
   const selector = read("game/public/js/musa-selector.js");
   const i18n = read("game/js/i18n.js");
 
   assert.equal((html.match(/id="musa_assignment_start"/g) || []).length, 1);
+  assert.equal((html.match(/id="musa_assignment_blue"/g) || []).length, 1);
+  assert.equal((html.match(/id="musa_assignment_red"/g) || []).length, 1);
+  assert.match(html, /id="musa_writer_blue"[^>]*>ESCRITXR 1/);
+  assert.match(html, /id="musa_writer_red"[^>]*>ESCRITXR 2/);
+  assert.match(html, /DETECCIÓN AUTOMÁTICA/);
+  assert.match(html, /id="musa_fingerprint"[^>]*aria-label=/);
+  assert.match(html, /No se registra ningún dato biométrico/);
   assert.doesNotMatch(html, /entrarComoMusa|onclick="[^"]*player|onclick="[^"]*Musa\([12]\)/);
   assert.match(html, /role="dialog" aria-modal="true"/);
   assert.match(html, /aria-hidden="true" tabindex="-1"/);
   assert.match(html, /aria-live="assertive" aria-atomic="true"/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(html, /musa-assignment\.js\?v=20260822d/);
+  assert.match(html, /musa-assignment\.js\?v=20260829e/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -321,7 +377,13 @@ test("landing exposes one assignment CTA and one accessible, motion-safe reveal"
   assert.match(selector, /socket\.on\("musa_reemplazada", manejarMusaReemplazada\)/);
   assert.match(selector, /rotateClientId\(window\.sessionStorage/);
   assert.match(selector, /meta\.invalidated/);
-  assert.match(selector, /overlay\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(selector, /createHoldController/);
+  assert.match(selector, /addEventListener\("pointerdown", iniciarPulsacionHuella\)/);
+  assert.match(selector, /addEventListener\("pointercancel", cancelarPulsacionHuella\)/);
+  assert.match(selector, /assignmentMode: "manual", player: 1/);
+  assert.match(selector, /assignmentMode: "manual", player: 2/);
+  assert.match(selector, /socket\.on\("nombre1"/);
+  assert.match(selector, /socket\.on\("nombre2"/);
   assert.match(selector, /flujoIntro\.inert = true/);
   assert.match(selector, /meta\.updated && estadoAsignacion === "assigned"/);
   assert.equal((i18n.match(/"muse\.assignment\.discover_button"/g) || []).length, 3);
@@ -329,20 +391,23 @@ test("landing exposes one assignment CTA and one accessible, motion-safe reveal"
   assert.equal((i18n.match(/"muse\.assignment\.replaced_notice"/g) || []).length, 3);
 });
 
-test("game reconnects with identity only and never replays the reveal after assigned entry", () => {
+test("game reconnects with its assignment mode and never replays the reveal after assigned entry", () => {
   const html = read("game/public/players/index.html");
   const state = read("game/public/players/js/state.js");
   const events = read("game/public/players/js/socket-events.js");
 
-  assert.match(html, /musa-assignment\.js\?v=20260822d/);
+  assert.match(html, /musa-assignment\.js\?v=20260829e/);
   assert.match(events, /socket\.on\("musa_asignacion", procesarAsignacionAutoritativaMusa\)/);
   assert.match(events, /createRegistrationPayload\(\{[\s\S]*clientId: musa_client_id,[\s\S]*requestId: musa_request_id_activo/);
+  assert.match(events, /assignmentMode: modo_asignacion_musa/);
+  assert.match(events, /modo_asignacion_musa === "manual" \? player : null/);
   assert.match(events, /socket\.emit\('registrar_musa', payloadRegistroMusa/);
   assert.match(events, /socket\.on\("musa_reemplazada", manejarMusaReemplazadaEnJuego\)/);
   assert.match(events, /motivo[\s\S]*reequilibrio/);
   assert.doesNotMatch(events, /registrar_musa', \{ musa:/);
   assert.doesNotMatch(state, /getParameterByName\("client_id"\)|window\.localStorage/);
   assert.match(state, /getOrCreateClientId\(window\.sessionStorage/);
+  assert.match(state, /getParameterByName\("modo_asignacion"\)/);
   assert.match(state, /getParameterByName\("assigned"\) === "1"/);
   assert.match(state, /if \(!asignacionMusaYaRevelada\) \{\s*reproducirEntradaMundoMusa\(\)/);
   assert.match(state, /window\.location\.replace\(destino\)/);
