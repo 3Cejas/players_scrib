@@ -141,6 +141,8 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.match(state, /restaurarVistaEspectadorTrasVideoTutorial[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
   assert.doesNotMatch(state, /nuevaSesion[\s\S]{0,500}actualizarModoVistaEspectadorUi\("partida"\)/);
   assert.match(sockets, /socket\.emit\('pedir_pre_show_estado'\)/);
+  assert.match(css, /body\.page-spectator:not\(\.vista-partida\):not\(\.vista-tutorial\) \.pre-show-espectador/);
+  assert.doesNotMatch(css, /body\.page-spectator:not\(\.vista-partida\) \.pre-show-espectador,/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.pre-show-message/);
   assert.match(css, /@media \(max-width: 720px\), \(max-height: 620px\)/);
 });

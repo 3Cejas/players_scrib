@@ -3521,16 +3521,25 @@ const coreSpecs = [
       await openRolesAndWaitWithOptions(ctx, ["control", "spectator", "musa1"], { useStateHooks: false });
 
       await ctx.waitForVisible(
-        "spectator",
-        "#pre_show_espectador",
-        true,
-        "spectator pre-show is visible on entry"
-      );
-      await ctx.waitForVisible(
         "musa1",
         "#pre_show_musa",
         true,
         "musa pre-show composer is visible on entry"
+      );
+      await ctx.click("control", "#boton_vista_tutorial");
+      await ctx.waitFor(
+        "spectator keeps the pre-show visible in the explicit tutorial view",
+        async () => ctx.evaluate("spectator", () => {
+          const panel = document.querySelector("#pre_show_espectador");
+          return Boolean(
+            document.body.classList.contains("vista-tutorial")
+            && document.body.classList.contains("pre-show-espectador-activo")
+            && panel
+            && panel.hidden === false
+            && getComputedStyle(panel).display !== "none"
+          );
+        }),
+        10000
       );
       await ctx.waitFor(
         "musa pre-show composer is ready",
