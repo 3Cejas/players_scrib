@@ -2460,12 +2460,19 @@ function obtenerIdClienteMusa() {
     throw new Error("No se pudo inicializar la identidad por pestaña de la musa.");
 }
 
-const nombre_musa = normalizarNombreMusa(
+const nombre_musa_solicitado = normalizarNombreMusa(
     getParameterByName("name") ||
     getParameterByName("nombre") ||
     getParameterByName("musa")
 );
 const musa_client_id = obtenerIdClienteMusa();
+const asignacion_musa_guardada = window.ScribMusaAssignment.readAssignmentSession(
+    window.sessionStorage,
+    musa_client_id
+);
+const nombre_musa = normalizarNombreMusa(
+    (asignacion_musa_guardada && asignacion_musa_guardada.name) || nombre_musa_solicitado
+);
 
 if (!nombre_musa) {
     window.location.href = "../index.html?error=nombre_musa";
@@ -2477,12 +2484,19 @@ if (nombre_musa_label && nombre_musa) {
     nombre_musa_label.textContent = nombre_musa;
 }
 
-var player = getParameterByName("player");
+var player = asignacion_musa_guardada
+    ? String(asignacion_musa_guardada.assignment.player)
+    : getParameterByName("player");
 if (document.body) {
     document.body.classList.toggle("equipo-azul", Number(player) !== 2);
     document.body.classList.toggle("equipo-rojo", Number(player) === 2);
 }
-registrarNombreEscritxrPorEquipo(player, getParameterByName("escritxr") || "");
+registrarNombreEscritxrPorEquipo(
+    player,
+    (asignacion_musa_guardada && asignacion_musa_guardada.assignment.writer)
+        || getParameterByName("escritxr")
+        || ""
+);
 
 function guardarAsignacionMusaSesion(asignacion) {
     if (!asignacion || asignacion.ok !== true) return;
@@ -2497,22 +2511,18 @@ function guardarAsignacionMusaSesion(asignacion) {
 }
 
 function obtenerAsignacionMusaSesion() {
-    try {
-        const raw = window.sessionStorage.getItem(CLAVE_ASIGNACION_MUSA);
-        const payload = raw ? JSON.parse(raw) : null;
-        if (!payload || Number(payload.player) !== Number(player)) return null;
-        if (payload.clientId && String(payload.clientId) !== String(musa_client_id)) return null;
-        if (payload.name && String(payload.name).toUpperCase() !== String(nombre_musa).toUpperCase()) return null;
-        return payload;
-    } catch (_error) {
-        return null;
-    }
+    if (!asignacion_musa_guardada) return null;
+    return {
+        ...asignacion_musa_guardada.assignment,
+        clientId: asignacion_musa_guardada.clientId,
+        name: asignacion_musa_guardada.name
+    };
 }
 
 const asignacion_musa_inicial = obtenerAsignacionMusaSesion();
 const modo_asignacion_musa = window.ScribMusaAssignment.normalizeAssignmentMode(
-    getParameterByName("modo_asignacion")
-    || (asignacion_musa_inicial && asignacion_musa_inicial.assignmentMode)
+    (asignacion_musa_inicial && asignacion_musa_inicial.assignmentMode)
+    || getParameterByName("modo_asignacion")
 );
 window.modo_asignacion_musa = modo_asignacion_musa;
 
@@ -2524,6 +2534,18 @@ function construirUrlMusaAsignada(asignacion) {
         nombre_musa
     );
 }
+
+function canonicalizarUrlAsignacionMusa() {
+    if (!asignacion_musa_inicial || !window.history || typeof window.history.replaceState !== "function") return;
+    const destino = construirUrlMusaAsignada(asignacion_musa_inicial);
+    if (!destino) return;
+    const actual = new URL(window.location.href);
+    const canonica = new URL(destino, actual);
+    if (actual.pathname === canonica.pathname && actual.search === canonica.search) return;
+    window.history.replaceState(null, "", `${canonica.pathname}${canonica.search}${canonica.hash}`);
+}
+
+canonicalizarUrlAsignacionMusa();
 
 function aplicarAsignacionAutoritativaMusa(payload) {
     const assignmentApi = window.ScribMusaAssignment;
@@ -2547,6 +2569,10 @@ window.aplicarAsignacionAutoritativaMusa = aplicarAsignacionAutoritativaMusa;
 
 function obtenerNombreEscritxrEntradaMusa() {
     const equipo = normalizarEquipoVotacion(player) || 1;
+    const nombreAsignado = asignacion_musa_inicial && asignacion_musa_inicial.writer;
+    if (nombreAsignado) {
+        return normalizarNombreEscritxrUi(nombreAsignado, `ESCRITXR ${equipo}`);
+    }
     const nombreQuery = typeof getParameterByName("escritxr") === "string"
         ? getParameterByName("escritxr").trim()
         : "";

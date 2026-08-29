@@ -68,8 +68,6 @@ function manejarMusaReemplazadaEnJuego() {
     musa_request_id_activo = "";
     musa_registro_confirmado = false;
     invalidarEntradaMundoMusa();
-    window.ScribMusaAssignment.clearAssignmentSession(window.sessionStorage);
-    window.musa_client_id = window.ScribMusaAssignment.rotateClientId(window.sessionStorage, { windowRef: window });
     try { socket.disconnect(); } catch (_error) {}
     window.location.replace("../index.html?notice=musa_reemplazada");
 }

@@ -3147,7 +3147,8 @@ window.actualizarCreditosControlRemoto = (payload = {}) => {
 
 function actualizarBotonesPanelSuperiorControl() {
     const botonParametros = document.getElementById("boton_parametros");
-    const botonCreditos = document.getElementById("boton_creditos");
+    const botonCreditos = document.getElementById("boton_editar_creditos")
+        || document.getElementById("boton_creditos");
     if (botonParametros) {
         botonParametros.dataset.active = parametros_visibles ? "1" : "0";
         botonParametros.classList.toggle("is-active", parametros_visibles);
@@ -3158,10 +3159,25 @@ function actualizarBotonesPanelSuperiorControl() {
     if (botonCreditos) {
         botonCreditos.dataset.active = creditos_visibles ? "1" : "0";
         botonCreditos.classList.toggle("is-active", creditos_visibles);
+        botonCreditos.setAttribute("aria-expanded", creditos_visibles ? "true" : "false");
         botonCreditos.textContent = creditos_visibles
-            ? tJuego2PControl("control.button.controls", {}, "\u{1F3AE} CONTROLES")
-            : tJuego2PControl("control.button.credits", {}, "\u{1F3AC} CR\u00c9DITOS");
+            ? tJuego2PControl("control.button.close_credits_editor", {}, "\u2715 CERRAR EDITOR")
+            : tJuego2PControl("control.button.edit_credits", {}, "\u{1F4DD} EDITAR CR\u00c9DITOS");
     }
+}
+
+function prepararCreditosRepresentacionControl() {
+    const host = document.getElementById("panel_creditos_representacion");
+    const panelLegacy = document.getElementById("panel_creditos");
+    const panel = (host && host.querySelector(".creditos-panel"))
+        || (panelLegacy && panelLegacy.querySelector(".creditos-panel"));
+    if (host && panel && panel.parentElement !== host) {
+        host.appendChild(panel);
+    }
+    if (panelLegacy && panelLegacy !== host) {
+        panelLegacy.classList.add("panel-oculto");
+    }
+    return host || panelLegacy;
 }
 
 function obtenerPanelTeleprompterRepresentacionControl() {
@@ -3190,7 +3206,8 @@ function aplicarVistaPanelControl(vistaDestino) {
     const panelControles = document.getElementById("panel_controles");
     const panelParametros = document.getElementById("panel_parametros");
     const panelParametrosExtra = document.getElementById("panel_parametros_extra");
-    const panelCreditos = document.getElementById("panel_creditos");
+    const panelCreditos = prepararCreditosRepresentacionControl();
+    const panelCreditosLegacy = document.getElementById("panel_creditos");
     const panelTeleprompter = prepararTeleprompterRepresentacionControl();
     const panelTeleprompterLegacy = document.getElementById("panel_teleprompter");
     const panelRepresentacion = document.querySelector('[data-control-section="representacion"]');
@@ -3209,7 +3226,13 @@ function aplicarVistaPanelControl(vistaDestino) {
     if (panelControles) panelControles.classList.add("panel-oculto");
     if (panelParametros) panelParametros.classList.add("panel-oculto");
     if (panelParametrosExtra) panelParametrosExtra.classList.add("panel-oculto");
-    if (panelCreditos) panelCreditos.classList.add("panel-oculto");
+    if (panelCreditosLegacy && panelCreditosLegacy !== panelCreditos) {
+        panelCreditosLegacy.classList.add("panel-oculto");
+    }
+    if (panelCreditos) {
+        panelCreditos.classList.add("panel-oculto");
+        panelCreditos.setAttribute("aria-hidden", "true");
+    }
     if (panelTeleprompterLegacy && panelTeleprompterLegacy !== panelTeleprompter) {
         panelTeleprompterLegacy.classList.add("panel-oculto");
     }
@@ -3219,6 +3242,7 @@ function aplicarVistaPanelControl(vistaDestino) {
     }
     if (panelRepresentacion) {
         panelRepresentacion.classList.remove("is-teleprompter-open");
+        panelRepresentacion.classList.remove("is-creditos-open");
     }
 
     if (destino === "parametros") {
@@ -3238,8 +3262,16 @@ function aplicarVistaPanelControl(vistaDestino) {
         }
     } else if (destino === "creditos") {
         inicializarPanelCreditosControl();
+        if (panelControles) {
+            panelControles.classList.remove("panel-oculto");
+        }
+        activarSeccionControl("representacion");
+        if (panelRepresentacion) {
+            panelRepresentacion.classList.add("is-creditos-open");
+        }
         if (panelCreditos) {
             panelCreditos.classList.remove("panel-oculto");
+            panelCreditos.setAttribute("aria-hidden", "false");
             animateCSS(panelCreditos, "fadeInLeft");
         }
     } else if (destino === "teleprompter") {

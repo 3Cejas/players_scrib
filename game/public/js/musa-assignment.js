@@ -182,6 +182,28 @@
         }
     }
 
+    function readAssignmentSession(sessionStorage, clientId) {
+        const expectedClientId = normalizeClientId(clientId);
+        if (!expectedClientId) return null;
+        try {
+            const raw = sessionStorage?.getItem(ASSIGNMENT_SESSION_KEY);
+            const stored = raw ? JSON.parse(raw) : null;
+            const storedClientId = normalizeClientId(stored && (stored.clientId || stored.client_id));
+            const assignment = normalizeAssignment(stored);
+            const name = cleanText(stored && (stored.name || stored.nombre));
+            if (!assignment || assignment.ok !== true || !name || storedClientId !== expectedClientId) {
+                return null;
+            }
+            return {
+                assignment: { ...assignment, clientId: expectedClientId },
+                clientId: expectedClientId,
+                name
+            };
+        } catch (_error) {
+            return null;
+        }
+    }
+
     function assignmentBelongsToClient(payload, clientId) {
         const payloadClientId = cleanText(payload && payload.client_id);
         const expectedClientId = cleanText(clientId);
@@ -446,6 +468,7 @@
         getOrCreateClientId,
         rotateClientId,
         clearAssignmentSession,
+        readAssignmentSession,
         assignmentBelongsToClient,
         buildGameUrl,
         createCoordinator,

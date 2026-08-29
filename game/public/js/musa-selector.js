@@ -24,6 +24,7 @@ let redirectTimeout = null;
 let fingerprintCompleteTimeout = null;
 let seleccionPendiente = { assignmentMode: "automatica", player: null };
 let claveAvisoMusa = "";
+let restaurandoAsignacionPersistida = false;
 
 const tMusa = (key, variables = {}, fallback = "") => (
   typeof window.scribT2P === "function"
@@ -277,7 +278,6 @@ function mostrarOverlayAsignacion({ scanning = false } = {}) {
 function invalidarRevelacionPorDesconexion() {
   limpiarTemporizadoresAsignacion();
   asignacionActual = null;
-  musaAssignment.clearAssignmentSession(window.sessionStorage);
   mostrarOverlayAsignacion();
   const title = document.getElementById("musa_boot_title");
   const copy = document.getElementById("musa_boot_copy");
@@ -330,10 +330,12 @@ function entrarEnJuegoAsignado() {
   if (!asignacionActual) return;
   limpiarTemporizadoresAsignacion();
   const destino = construirDestinoJuego();
-  if (destino) window.location.assign(destino);
+  if (destino) window.location.replace(destino);
 }
 
 function revelarAsignacion(asignacion) {
+  const esRestaurada = restaurandoAsignacionPersistida;
+  restaurandoAsignacionPersistida = false;
   asignacionActual = asignacion;
   estadoAsignacion = "assigned";
   guardarAsignacionSesion(asignacion);
@@ -363,7 +365,9 @@ function revelarAsignacion(asignacion) {
   setTimeout(() => enter?.focus({ preventScroll: true }), usaMovimientoReducido() ? 0 : 450);
   redirectTimeout = setTimeout(
     entrarEnJuegoAsignado,
-    usaMovimientoReducido() ? REVEAL_REDIRECT_REDUCED_MS : REVEAL_REDIRECT_MS
+    esRestaurada
+      ? (usaMovimientoReducido() ? 80 : 620)
+      : (usaMovimientoReducido() ? REVEAL_REDIRECT_REDUCED_MS : REVEAL_REDIRECT_MS)
   );
 }
 
@@ -393,12 +397,22 @@ function manejarAsignacionRecibida(asignacion, meta = {}) {
 }
 
 function manejarErrorAsignacion() {
+  const tieneAsignacionGuardada = Boolean(musaAssignment.readAssignmentSession(
+    window.sessionStorage,
+    window.musa_client_id
+  ));
   estadoAsignacion = "error";
-  asignacionBloqueada = false;
+  asignacionBloqueada = tieneAsignacionGuardada;
   const overlay = document.getElementById("musa_boot_overlay");
   overlay?.classList.remove("is-assigning");
   overlay?.classList.add("has-error");
   document.getElementById("musa_assignment_retry")?.removeAttribute("hidden");
+  if (tieneAsignacionGuardada) {
+    const title = document.getElementById("musa_boot_title");
+    const copy = document.getElementById("musa_boot_copy");
+    if (title) title.textContent = "NO PODEMOS CONFIRMAR TU EQUIPO";
+    if (copy) copy.textContent = "Tu asignación sigue protegida. Reintenta cuando vuelva la conexión.";
+  }
   actualizarEstadoAsignacion();
 }
 
@@ -418,8 +432,6 @@ function manejarMusaReemplazada() {
   window.__scribMusaReplacementInProgress = true;
   limpiarTemporizadoresAsignacion();
   coordinadorAsignacion.destroy();
-  musaAssignment.clearAssignmentSession(window.sessionStorage);
-  window.musa_client_id = musaAssignment.rotateClientId(window.sessionStorage, { windowRef: window });
   try { socket.disconnect(); } catch (_error) {}
   window.location.replace("./index.html?notice=musa_reemplazada");
 }
@@ -557,6 +569,58 @@ function restablecerVistaAsignacion() {
   actualizarEstadoAsignacion();
 }
 
+function restaurarAsignacionGuardadaMusa() {
+  const guardada = musaAssignment.readAssignmentSession(
+    window.sessionStorage,
+    window.musa_client_id
+  );
+  if (!guardada) return false;
+  const asignacion = guardada.assignment;
+  nombrePendiente = normalizarNombreMusa(guardada.name) || guardada.name;
+  if (nombreMusaInput) nombreMusaInput.value = nombrePendiente;
+  seleccionPendiente = {
+    assignmentMode: asignacion.assignmentMode,
+    player: asignacion.player
+  };
+  asignacionActual = null;
+  asignacionBloqueada = true;
+  restaurandoAsignacionPersistida = true;
+  estadoAsignacion = socket.connected ? "revalidating" : "connecting";
+  inicioSolicitudAsignacion = performance.now() - REVEAL_MIN_MS;
+  actualizarNombreIntro();
+  mostrarOverlayAsignacion();
+  const kicker = document.getElementById("musa_boot_kicker");
+  const title = document.getElementById("musa_boot_title");
+  const copy = document.getElementById("musa_boot_copy");
+  if (kicker) kicker.textContent = "ASIGNACIÓN BLOQUEADA";
+  if (title) title.textContent = "YA TIENES EQUIPO";
+  if (copy) copy.textContent = "Confirmando tu escritxr para devolverte al juego…";
+  coordinadorAsignacion.request({
+    clientId: window.musa_client_id,
+    name: nombrePendiente,
+    assignmentMode: asignacion.assignmentMode,
+    player: asignacion.player
+  });
+  return true;
+}
+
+function bloquearMusaReemplazada() {
+  asignacionBloqueada = true;
+  estadoAsignacion = "assigned";
+  mostrarOverlayAsignacion();
+  const kicker = document.getElementById("musa_boot_kicker");
+  const title = document.getElementById("musa_boot_title");
+  const copy = document.getElementById("musa_boot_copy");
+  const status = document.getElementById("musa_boot_status");
+  if (kicker) kicker.textContent = "SESIÓN PROTEGIDA";
+  if (title) title.textContent = "TU EQUIPO SIGUE ASIGNADO";
+  if (copy) copy.textContent = "Esta musa ya está abierta en otra pestaña. No puedes elegir otro equipo desde aquí.";
+  if (status) status.textContent = "Continúa desde la pestaña activa";
+  document.getElementById("musa_assignment_result")?.setAttribute("hidden", "");
+  document.getElementById("musa_assignment_enter")?.setAttribute("hidden", "");
+  document.getElementById("musa_assignment_retry")?.setAttribute("hidden", "");
+}
+
 window.solicitarAsignacionMusa = solicitarAsignacionMusa;
 window.entrarEnJuegoAsignado = entrarEnJuegoAsignado;
 
@@ -584,14 +648,9 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => nombreMusaInput?.focus(), usaMovimientoReducido() ? 0 : 350);
   }
   if (params.get("notice") === "musa_reemplazada") {
-    mostrarAvisoMusa(tMusa(
-      "muse.assignment.replaced_notice",
-      {},
-      "Esta pestaña fue sustituida por otra conexión. Vuelve a entrar para recibir una identidad nueva."
-    ), "muse.assignment.replaced_notice");
-    const seccionNombre = document.getElementById("intro-nombre");
-    if (seccionNombre) scrollToSeccion(seccionNombre);
-    setTimeout(() => nombreMusaInput?.focus(), usaMovimientoReducido() ? 0 : 350);
+    bloquearMusaReemplazada();
+  } else {
+    restaurarAsignacionGuardadaMusa();
   }
 
   nombreMusaInput?.addEventListener("input", () => {
@@ -738,5 +797,10 @@ if (typeof window.scribOnLanguageChange2P === "function") {
 }
 
 window.addEventListener("pageshow", (evento) => {
-  if (evento.persisted) restablecerVistaAsignacion();
+  if (!evento.persisted) return;
+  if (new URLSearchParams(window.location.search).get("notice") === "musa_reemplazada") {
+    bloquearMusaReemplazada();
+    return;
+  }
+  if (!restaurarAsignacionGuardadaMusa()) restablecerVistaAsignacion();
 });

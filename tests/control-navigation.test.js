@@ -12,6 +12,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   const actions = read("game/control/js/actions.js");
   const tutorial = html.match(/<div id="control_panel_tutorial"[\s\S]*?<\/div>\s*<\/div>\s*<div id="control_panel_detonadores"/)?.[0] || "";
   const detonadores = html.match(/<div id="control_panel_detonadores"[\s\S]*?<\/div>\s*<div id="control_panel_juego"/)?.[0] || "";
+  const representacion = html.match(/<div id="control_panel_representacion"[\s\S]*?<div id="control_panel_asistencia"/)?.[0] || "";
 
   assert.match(html, /id="control_tabs_viewport"[^>]*role="tablist"/);
   assert.equal((html.match(/data-control-tab="(?:tutorial|detonadores|juego|representacion|asistencia)"/g) || []).length, 5);
@@ -33,6 +34,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.doesNotMatch(detonadores, /id="videotutorial_control"/);
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_vista_partida"[^>]*data-vista-principal="partida"[^>]*onclick="mostrar_vista_partida\(\)"/);
   assert.match(html, /id="boton_vista_puntuacion" class="btn"/);
+  assert.match(representacion, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_representacion"[^>]*onclick="toggleCreditos\(\)"/);
+  assert.match(representacion, /id="panel_creditos_representacion" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
   assert.ok(
     html.indexOf("./js/muse-help-control.js?v=20260829c") < html.lastIndexOf("</body>"),
     "Control interaction modules must execute inside body"
@@ -43,6 +46,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /\.control-tabs-arrow\[hidden\]\s*\{[\s\S]*display: inline-grid !important;[\s\S]*visibility: hidden;/);
   assert.match(css, /#boton_vista_tutorial\[data-active="1"\][\s\S]*#boton_vista_calentamiento\[data-active="1"\][\s\S]*#boton_vista_partida\[data-active="1"\]/);
   assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
+  assert.match(css, /control-group--representacion\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*overflow: auto;/);
 
   assert.match(actions, /function actualizarFlechasPestanasControl\(\)/);
   assert.match(actions, /viewport\.scrollTo\(\{ left: destino, behavior: "smooth" \}\)/);
@@ -54,5 +58,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)\s*\{\s*setPanelParametrosColapsadoControl\(true\);/);
   assert.doesNotMatch(actions, /classList\.toggle\("asistencia-activa"/);
   assert.match(actions, /control\.button\.detonators_view[\s\S]*VISTA DETONADORES/);
+  assert.match(actions, /function prepararCreditosRepresentacionControl\(\)/);
+  assert.match(actions, /panelRepresentacion\.classList\.add\("is-creditos-open"\)/);
+  assert.match(actions, /socket\.emit\("creditos_actualizar", \{ creditos/);
   assert.doesNotMatch(actions, /destino\.textContent\s*=\s*vista_calentamiento\s*\?/);
 });

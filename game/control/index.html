@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260829c">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260829e">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260829c"></script>
+<script src="./js/actions.js?v=20260829e"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -175,8 +175,10 @@
                                 <span id="boton_pedir_feedback" class='btn' onclick="pedirFeedbackMusas()">&#x1F5E8;&#xFE0F; PEDIR FEEDBACK</span>
                                 <span id="boton_temporizador_gigante" class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
                                 <span id="boton_mostrar_creditos" class='btn' onclick="mostrarCreditosEspectador()">&#x2B50; MOSTRAR CR&Eacute;DITOS</span>
+                                <button id="boton_editar_creditos" class="btn" type="button" data-active="0" aria-expanded="false" aria-controls="panel_creditos_representacion" onclick="toggleCreditos()">&#x1F4DD; EDITAR CR&Eacute;DITOS</button>
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
                             </div>
+                            <div id="panel_creditos_representacion" class="creditos-host panel-oculto" aria-hidden="true"></div>
                             <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
                         </div>
                         <div id="control_panel_asistencia" class="control-group control-group--asistencia control-collapsible is-collapsed" data-control-section="asistencia" role="tabpanel" aria-labelledby="control_title_assistance">
