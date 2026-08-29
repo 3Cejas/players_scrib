@@ -157,13 +157,6 @@
         return "idle";
     }
 
-    function formatearIntervalo(segundos) {
-        const total = limitarSegundos(segundos, 180);
-        if (total % 3600 === 0) return `${total / 3600} H`;
-        if (total % 60 === 0) return `${total / 60} MIN`;
-        return `${total} S`;
-    }
-
     function actualizarUI() {
         const panel = getEl("videotutorial_control");
         if (!panel) return;
@@ -181,12 +174,11 @@
         }
         const bloqueado = !estado.conectado || !estado.sincronizado || Boolean(estado.pendiente);
         const accionBloqueada = bloqueado || !estado.faseActiva || !estado.sessionId || estado.phaseSeq <= 0;
-        ["videotutorial_configurar", "videotutorial_mostrar", "videotutorial_ocultar"].forEach((id) => {
+        ["videotutorial_reproduccion_toggle"].forEach((id) => {
             const boton = getEl(id);
             if (!boton) return;
-            const deshabilitado = id === "videotutorial_configurar" ? bloqueado : accionBloqueada;
-            boton.disabled = deshabilitado;
-            boton.setAttribute("aria-disabled", deshabilitado ? "true" : "false");
+            boton.disabled = accionBloqueada;
+            boton.setAttribute("aria-disabled", accionBloqueada ? "true" : "false");
         });
         if (input) {
             input.disabled = bloqueado;
@@ -197,8 +189,29 @@
             repeticion.setAttribute("aria-disabled", bloqueado ? "true" : "false");
         }
 
+        ["videotutorial_intervalo_menos", "videotutorial_intervalo_mas"].forEach((id) => {
+            const boton = getEl(id);
+            if (!boton) return;
+            boton.disabled = bloqueado;
+            boton.setAttribute("aria-disabled", bloqueado ? "true" : "false");
+        });
+
+        const reproduccion = getEl("videotutorial_reproduccion_toggle");
+        const estaReproduciendo = Boolean(estado.reproduciendo || estado.visible);
+        if (reproduccion) {
+            reproduccion.textContent = estaReproduciendo ? "■" : "▶";
+            reproduccion.dataset.playing = estaReproduciendo ? "1" : "0";
+            reproduccion.classList?.toggle("is-playing", estaReproduciendo);
+            reproduccion.setAttribute("aria-pressed", estaReproduciendo ? "true" : "false");
+            reproduccion.setAttribute(
+                "aria-label",
+                estaReproduciendo ? "Detener videotutorial" : "Reproducir videotutorial"
+            );
+        }
+
         const titulo = getEl("videotutorial_estado_texto");
-        let texto = "REPETICIÓN DESACTIVADA";
+        const contenedorEstado = getEl("videotutorial_estado");
+        let texto = "";
         if (codigo === "disconnected") {
             texto = "SIN CONEXIÓN";
         } else if (codigo === "waiting") {
@@ -209,12 +222,9 @@
             texto = "NO SE PUDO CAMBIAR";
         } else if (codigo === "inactive") {
             texto = "FUERA DE FASE";
-        } else if (codigo === "playing") {
-            texto = "REPRODUCIENDO AHORA";
-        } else if (codigo === "scheduled") {
-            texto = `PROGRAMADO · ${formatearIntervalo(estado.intervaloSegundos)}`;
         }
         if (titulo) titulo.textContent = texto;
+        if (contenedorEstado) contenedorEstado.hidden = !texto;
     }
 
     function limpiarPendiente(requestId = "") {
@@ -353,6 +363,8 @@
             return false;
         }
         if (input) input.setCustomValidity("");
+        estado.intervaloSegundos = valor * 60;
+        estado.programado = Boolean(repeticion && repeticion.checked);
         return emitirOperacion(
             "video_tutorial_configurar",
             "configurar",
@@ -384,6 +396,27 @@
         "Deteniendo y retirando la reproducción actual."
     );
 
+    function alternarReproduccion() {
+        return (estado.reproduciendo || estado.visible) ? ocultar() : mostrar();
+    }
+
+    function ajustarIntervalo(delta) {
+        const input = getEl("videotutorial_intervalo");
+        if (!input || input.disabled) return false;
+        const actual = Number(input.value);
+        const base = Number.isFinite(actual) ? Math.round(actual) : segundosAMinutos(estado.intervaloSegundos);
+        input.value = String(Math.max(
+            INTERVALO_MIN_MINUTOS,
+            Math.min(INTERVALO_MAX_MINUTOS, base + Number(delta || 0))
+        ));
+        input.setCustomValidity("");
+        if (estado.error) {
+            estado.error = "";
+            actualizarUI();
+        }
+        return configurar();
+    }
+
     function inicializar() {
         if (inicializado || !global.document) return;
         const panel = getEl("videotutorial_control");
@@ -392,8 +425,9 @@
         const form = getEl("videotutorial_config_form");
         const input = getEl("videotutorial_intervalo");
         const repeticion = getEl("videotutorial_habilitado");
-        const botonMostrar = getEl("videotutorial_mostrar");
-        const botonOcultar = getEl("videotutorial_ocultar");
+        const botonReproduccion = getEl("videotutorial_reproduccion_toggle");
+        const botonMenos = getEl("videotutorial_intervalo_menos");
+        const botonMas = getEl("videotutorial_intervalo_mas");
         if (form) {
             form.addEventListener("submit", (evento) => {
                 evento.preventDefault();
@@ -415,16 +449,20 @@
                     estado.error = "";
                     actualizarUI();
                 }
+                configurar();
             });
         }
-        if (botonMostrar) botonMostrar.addEventListener("click", mostrar);
-        if (botonOcultar) botonOcultar.addEventListener("click", ocultar);
+        if (botonReproduccion) botonReproduccion.addEventListener("click", alternarReproduccion);
+        if (botonMenos) botonMenos.addEventListener("click", () => ajustarIntervalo(-1));
+        if (botonMas) botonMas.addEventListener("click", () => ajustarIntervalo(1));
         const socketActual = obtenerSocket();
         marcarConexion(Boolean(socketActual && socketActual.connected));
     }
 
     const api = {
         aplicarEstado,
+        ajustarIntervalo,
+        alternarReproduccion,
         configurar,
         inicializar,
         marcarConexion,

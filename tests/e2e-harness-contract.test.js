@@ -46,3 +46,13 @@ test("E2E waits for every role disconnect before reusing identities in the next 
   assert.match(releaseGuard, /\["writers", "musas", "actors"\]/);
   assert.match(releaseGuard, /await this\.sleep\(300\)/);
 });
+
+test("E2E can isolate its socket server from local browser sessions", () => {
+  const runner = read("e2e/runner/index.js");
+
+  assert.match(runner, /SCRIB_E2E_SOCKET_PORT \|\| 3000/);
+  assert.match(runner, /SCRIB_E2E_STATIC_PORT \|\| 4173/);
+  assert.match(runner, /page\.evaluateOnNewDocument\(\(serverUrl\) => \{/);
+  assert.match(runner, /Object\.defineProperty\(window, "SERVER_URL_DEV"/);
+  assert.match(runner, /`http:\/\/127\.0\.0\.1:\$\{SOCKET_PORT\}`/);
+});

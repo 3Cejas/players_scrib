@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260829h">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260829p">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260829n"></script>
+<script src="./js/actions.js?v=20260829p"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -96,18 +96,17 @@
                             <section id="videotutorial_control" class="videotutorial-control" data-state="waiting" aria-labelledby="videotutorial_control_title">
                                 <header class="videotutorial-control__header">
                                     <span class="videotutorial-control__copy">
-                                        <strong id="videotutorial_control_title" class="videotutorial-control__title">VIDEOTUTORIAL PREVIO</strong>
-                                        <span class="videotutorial-control__hint">Puedes reproducirlo antes o durante el tutorial.</span>
+                                        <strong id="videotutorial_control_title" class="videotutorial-control__title">VIDEOTUTORIAL</strong>
                                     </span>
-                                    <span id="videotutorial_estado_dot" class="videotutorial-control__dot" aria-hidden="true"></span>
                                 </header>
                                 <form id="videotutorial_config_form" class="videotutorial-control__config" novalidate>
-                                    <label for="videotutorial_intervalo">INTERVALO AUTOM&Aacute;TICO</label>
-                                    <span class="videotutorial-control__input-shell">
+                                    <label for="videotutorial_intervalo">INTERVALO</label>
+                                    <span class="videotutorial-control__stepper">
+                                        <button id="videotutorial_intervalo_menos" class="videotutorial-control__step" type="button" aria-label="Reducir intervalo">&minus;</button>
                                         <input id="videotutorial_intervalo" name="videotutorial_intervalo" type="number" min="1" max="1440" step="1" value="3" inputmode="numeric" aria-describedby="videotutorial_intervalo_ayuda">
+                                        <button id="videotutorial_intervalo_mas" class="videotutorial-control__step" type="button" aria-label="Aumentar intervalo">+</button>
                                         <span aria-hidden="true">MIN</span>
                                     </span>
-                                    <button id="videotutorial_configurar" class="btn videotutorial-control__button videotutorial-control__button--save" type="submit">GUARDAR</button>
                                     <label class="videotutorial-control__toggle" for="videotutorial_habilitado">
                                         <input id="videotutorial_habilitado" name="videotutorial_habilitado" type="checkbox" role="switch" aria-describedby="videotutorial_repeticion_ayuda">
                                         <span class="videotutorial-control__toggle-track" aria-hidden="true"></span>
@@ -117,10 +116,9 @@
                                 <span id="videotutorial_intervalo_ayuda" class="videotutorial-control__sr-only">Intervalo entre reproducciones, de 1 a 1440 minutos.</span>
                                 <span id="videotutorial_repeticion_ayuda" class="videotutorial-control__sr-only">Activa o desactiva la repetici&oacute;n autom&aacute;tica del videotutorial.</span>
                                 <div class="videotutorial-control__actions">
-                                    <button id="videotutorial_mostrar" class="btn videotutorial-control__button videotutorial-control__button--play" type="button">&#x25B6; REPRODUCIR AHORA</button>
-                                    <button id="videotutorial_ocultar" class="btn videotutorial-control__button videotutorial-control__button--stop" type="button">&#x2715; QUITAR / DETENER</button>
+                                    <button id="videotutorial_reproduccion_toggle" class="btn videotutorial-control__button videotutorial-control__button--play" type="button" aria-label="Reproducir videotutorial" aria-pressed="false"><span aria-hidden="true">&#x25B6;</span></button>
                                 </div>
-                                <p id="videotutorial_estado" class="videotutorial-control__status" role="status" aria-live="polite" aria-atomic="true">
+                                <p id="videotutorial_estado" class="videotutorial-control__status" role="status" aria-live="polite" aria-atomic="true" hidden>
                                     <strong id="videotutorial_estado_texto">ESPERANDO SERVIDOR</strong>
                                 </p>
                             </section>
@@ -431,7 +429,6 @@
             <tr class="parametros-title-row">
                 <td colspan="4">
                     <div id="control_title_parameters" class="control-group-title control-group-title--parametros">
-                        <span id="control_title_parameters_text" class="control-params-title-text">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
                         <button
                             id="boton_colapsar_parametros"
                             class="control-params-collapse-btn"
@@ -441,6 +438,7 @@
                             aria-controls="panel_parametros"
                             title="Contraer par&aacute;metros"
                         >&#x203A;</button>
+                        <span id="control_title_parameters_text" class="control-params-title-text">&#x2699;&#xFE0F; PAR&Aacute;METROS</span>
                     </div>
                 </td>
             </tr>
@@ -754,7 +752,7 @@
     <script src="../js/i18n.js?v=20260824a"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260824a"></script>
-<script src="./js/videotutorial-control.js?v=20260829h"></script>
+<script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/muse-help-control.js?v=20260829c"></script>
 <script src="./js/socket-events.js?v=20260829d"></script>
 <script src="./js/index.js?v=20260504e"></script>

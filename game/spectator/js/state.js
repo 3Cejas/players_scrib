@@ -1332,7 +1332,6 @@ function actualizarEstadoPreShowEspectador(payload = {}) {
         pre_show_bloqueado_por_tutorial_espectador = false;
         partida_activa_espectador = false;
         vista_calentamiento = false;
-        vista_espectador_override = "partida";
     }
     pre_show_estado_espectador = siguiente;
     if (!siguiente.activo && pre_show_espectador_mensajes) {
@@ -1342,7 +1341,7 @@ function actualizarEstadoPreShowEspectador(payload = {}) {
         pre_show_espectador_anuncio.textContent = "";
     }
     if (nuevaSesion && siguiente.activo && typeof actualizarModoVistaEspectadorUi === "function") {
-        actualizarModoVistaEspectadorUi("partida");
+        actualizarModoVistaEspectadorUi();
     } else {
         refrescarVisibilidadPreShowEspectador();
     }

@@ -17,7 +17,9 @@
         stats: "ESTADÍSTICAS",
         puntuacion: "RESULTADO",
         nube_inspiracion: "NUBE DE INSPIRACIÓN",
-        creditos: "CRÉDITOS"
+        creditos: "CRÉDITOS",
+        espera: "ESPERA CREATIVA",
+        resultado: "FIN DE PARTIDA"
     });
 
     function viewLabel(mode) {

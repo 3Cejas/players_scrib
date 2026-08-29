@@ -25,7 +25,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   );
 
   assert.match(tutorial, /id="videotutorial_control"/);
-  assert.match(tutorial, /Puedes reproducirlo antes o durante el tutorial\./);
+  assert.doesNotMatch(tutorial, /Puedes reproducirlo antes o durante el tutorial\.|VIDEOTUTORIAL PREVIO|INTERVALO AUTOM&Aacute;TICO/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-vista-principal="tutorial"[^>]*onclick="mostrar_vista_tutorial\(\)"[^>]*>[^<]*VISTA TUTORIAL/);
   assert.doesNotMatch(tutorial, /boton_banderas_musas|data-solicitud-calentamiento/);
 
@@ -54,6 +54,12 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /#contenedor\s*\{[\s\S]*flex: 0 0 auto;[\s\S]*position: relative;[\s\S]*z-index: 1;/);
   assert.match(css, /table\.default\s*\{[\s\S]*position: relative;[\s\S]*z-index: 3;[\s\S]*isolation: isolate;/);
   assert.match(css, /> \.creditos-host\s*\{[\s\S]*max-height: 100%;[\s\S]*overscroll-behavior: contain;[\s\S]*contain: layout paint;/);
+  assert.ok(
+    html.indexOf('id="boton_colapsar_parametros"') < html.indexOf('id="control_title_parameters_text"'),
+    "the Parameters collapse action must be the leftmost item in its header"
+  );
+  assert.match(css, /#control_title_parameters\s*\{[\s\S]*justify-content: flex-start;/);
+  assert.match(css, /control-group--representacion #boton_editar_creditos[\s\S]*color: var\(--group-text\);[\s\S]*box-shadow: 0 0\.2em var\(--group-shadow\);/);
 
   assert.match(actions, /function actualizarFlechasPestanasControl\(\)/);
   assert.match(actions, /shell\.dataset\.hasPrevious = mostrarAnterior \? "true" : "false"/);

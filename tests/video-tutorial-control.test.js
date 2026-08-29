@@ -46,15 +46,26 @@ function crearHarness() {
     "videotutorial_config_form",
     "videotutorial_intervalo",
     "videotutorial_habilitado",
-    "videotutorial_configurar",
-    "videotutorial_mostrar",
-    "videotutorial_ocultar",
+    "videotutorial_intervalo_menos",
+    "videotutorial_intervalo_mas",
+    "videotutorial_reproduccion_toggle",
+    "videotutorial_estado",
     "videotutorial_estado_texto"
   ];
   const elementos = new Map(ids.map((id) => [id, crearElemento(
     id,
     id === "videotutorial_intervalo" ? "3" : ""
   )]));
+  elementos.forEach((elemento) => {
+    const clases = new Set();
+    elemento.classList = {
+      toggle(clase, activa) {
+        if (activa) clases.add(clase);
+        else clases.delete(clase);
+      },
+      contains(clase) { return clases.has(clase); }
+    };
+  });
   const emisiones = [];
   const timers = new Map();
   let timerId = 0;
@@ -139,8 +150,8 @@ test("video tutorial state follows the definitive singular server contract", () 
 
 test("control waits for authoritative config and preserves media fields when changing interval", () => {
   const { api, elementos, emisiones } = crearHarness();
-  const guardar = elementos.get("videotutorial_configurar");
-  assert.equal(guardar.disabled, true, "actions stay locked before the first state snapshot");
+  const reproducir = elementos.get("videotutorial_reproduccion_toggle");
+  assert.equal(reproducir.disabled, true, "actions stay locked before the first state snapshot");
 
   api.aplicarEstado({
     activo: true,
@@ -156,7 +167,7 @@ test("control waits for authoritative config and preserves media fields when cha
       silenciado: false
     }
   });
-  assert.equal(guardar.disabled, false);
+  assert.equal(reproducir.disabled, false);
   assert.equal(elementos.get("videotutorial_intervalo").value, "5");
   assert.equal(elementos.get("videotutorial_habilitado").checked, true);
 
@@ -182,7 +193,7 @@ test("control waits for authoritative config and preserves media fields when cha
   assert.equal(api.obtenerEstado().programado, false);
 });
 
-test("play and stop are serialized, acknowledged and reflected accessibly", () => {
+test("the single play control toggles state, serializes ACKs and glows while active", () => {
   const { api, elementos, emisiones } = crearHarness();
   api.aplicarEstado({
     activo: true,
@@ -207,15 +218,35 @@ test("play and stop are serialized, acknowledged and reflected accessibly", () =
   assert.equal(elementos.get("videotutorial_control").attributes["aria-busy"], "true");
   emisiones[0].ack({ ok: true });
   assert.equal(api.obtenerEstado().reproduciendo, true);
-  assert.equal(elementos.get("videotutorial_estado_texto").textContent, "REPRODUCIENDO AHORA");
+  assert.equal(elementos.get("videotutorial_reproduccion_toggle").textContent, "■");
+  assert.equal(elementos.get("videotutorial_reproduccion_toggle").attributes["aria-pressed"], "true");
+  assert.equal(elementos.get("videotutorial_reproduccion_toggle").classList.contains("is-playing"), true);
+  assert.equal(elementos.get("videotutorial_estado").hidden, true);
 
-  assert.equal(api.ocultar(), true);
+  assert.equal(api.alternarReproduccion(), true);
   assert.equal(emisiones[1].evento, "video_tutorial_detener");
   assert.equal(emisiones[1].payload.session_id, "video-session");
   assert.equal(emisiones[1].payload.phase_seq, 7);
   emisiones[1].ack({ ok: true });
   assert.equal(api.obtenerEstado().reproduciendo, false);
   assert.equal(elementos.get("videotutorial_control").attributes["aria-busy"], "false");
+  assert.equal(elementos.get("videotutorial_reproduccion_toggle").textContent, "▶");
+});
+
+test("interval stepper clamps minute changes and saves them immediately", () => {
+  const { api, elementos, emisiones } = crearHarness();
+  api.aplicarEstado({
+    activo: true,
+    session_id: "video-session",
+    phase_seq: 3,
+    configuracion: { intervalo_segundos: 180, habilitado: false }
+  });
+  assert.equal(api.ajustarIntervalo(1), true);
+  assert.equal(elementos.get("videotutorial_intervalo").value, "4");
+  assert.equal(emisiones[0].evento, "video_tutorial_configurar");
+  emisiones[0].ack({ ok: true });
+  assert.equal(api.ajustarIntervalo(-20), true);
+  assert.equal(elementos.get("videotutorial_intervalo").value, "1");
 });
 
 test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe interface", () => {
@@ -227,13 +258,15 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(html, /id="videotutorial_control"[\s\S]*aria-labelledby="videotutorial_control_title"/);
   assert.match(html, /id="videotutorial_intervalo"[\s\S]*min="1"[\s\S]*max="1440"/);
   assert.match(html, /id="videotutorial_habilitado"[\s\S]*type="checkbox"[\s\S]*role="switch"/);
-  assert.match(html, /id="videotutorial_configurar"[\s\S]*type="submit"/);
-  assert.match(html, /id="videotutorial_mostrar"[\s\S]*type="button"/);
-  assert.match(html, /id="videotutorial_ocultar"[\s\S]*type="button"/);
+  assert.doesNotMatch(html, /id="videotutorial_configurar"|>GUARDAR<|REPRODUCCI&Oacute;N AHORA|REPETICI&Oacute;N DESACTIVADA/);
+  assert.match(html, /id="videotutorial_intervalo_menos"[\s\S]*id="videotutorial_intervalo_mas"/);
+  assert.match(html, /id="videotutorial_reproduccion_toggle"[\s\S]*aria-pressed="false"/);
+  assert.doesNotMatch(html, /VIDEOTUTORIAL PREVIO|INTERVALO AUTOM&Aacute;TICO|Puedes reproducirlo antes o durante el tutorial/);
+  assert.doesNotMatch(html, /id="videotutorial_estado_dot"|id="videotutorial_mostrar"|id="videotutorial_ocultar"/);
   assert.match(html, /id="videotutorial_estado"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.doesNotMatch(html, /videotutorial-control__icon/);
   assert.doesNotMatch(html, /id="videotutorial_estado_detalle"/);
-  assert.match(html, /videotutorial-control\.js\?v=20260829h/);
+  assert.match(html, /videotutorial-control\.js\?v=20260829p/);
 
   assert.match(socketEvents, /socket\.emit\('pedir_video_tutorial_estado'\)/);
   assert.match(socketEvents, /socket\.on\('video_tutorial_estado'/);
@@ -251,5 +284,6 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(css, /\.videotutorial-control\[data-state="error"\]/);
   assert.match(css, /\.control-group--tutorial \{[\s\S]*--group-accent: #ffb04a/);
   assert.match(css, /\.videotutorial-control \.videotutorial-control__button \{[\s\S]*--tutorial-control-accent/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.videotutorial-control__dot/);
+  assert.match(css, /\.videotutorial-control__button--play\.is-playing/);
+  assert.match(css, /\.videotutorial-control__stepper/);
 });

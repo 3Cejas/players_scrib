@@ -148,7 +148,7 @@ test("spectator wires the animated curtain into every resolved view change", () 
   const state = fs.readFileSync(path.join(ROOT, "game/spectator/js/state.js"), "utf8");
 
   assert.match(html, /id="spectator_view_transition"[\s\S]*data-view-transition-label/);
-  assert.match(html, /domains\/view-transition\.js\?v=20260829b/);
+  assert.match(html, /domains\/view-transition\.js\?v=20260829p/);
   assert.match(css, /spectatorViewCoverBlue[\s\S]*spectatorViewRevealRed/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spectator-view-transition/);
   assert.match(state, /controlador_transicion_vista_espectador\.transition\(\{[\s\S]*swap: \(\) => aplicarModoVistaEspectadorUi\(modo\)/);
@@ -157,4 +157,21 @@ test("spectator wires the animated curtain into every resolved view change", () 
   assert.match(state, /fadeDurationMs: 3000/);
   assert.ok(fs.statSync(path.join(ROOT, "game/audio/FX/cambio-vista.mp3")).size > 5_000);
   assert.equal(transitions.viewLabel("tutorial"), "VISTA TUTORIAL");
+});
+
+test("muses reuse the curtain for tutorial, detonators, game and result changes", () => {
+  const html = fs.readFileSync(path.join(ROOT, "game/public/players/index.html"), "utf8");
+  const css = fs.readFileSync(path.join(ROOT, "game/public/players/css/publico.css"), "utf8");
+  const state = fs.readFileSync(path.join(ROOT, "game/public/players/js/state.js"), "utf8");
+  const sockets = fs.readFileSync(path.join(ROOT, "game/public/players/js/socket-events.js"), "utf8");
+
+  assert.match(html, /id="musa_view_transition"[\s\S]*data-view-transition-label/);
+  assert.match(css, /musaViewCoverBlue[\s\S]*musaViewRevealRed/);
+  assert.match(css, /body\.musa-vista-cambiando #contenedor[\s\S]*musaViewContentReveal/);
+  assert.match(state, /function animarTransicionVistaMusa\(destino\)/);
+  ["tutorial", "calentamiento", "partida", "resultado"].forEach((modo) => {
+    assert.match(state, new RegExp(`animarTransicionVistaMusa\\("${modo}"\\)`));
+  });
+  assert.match(sockets, /socket\.on\("vista_espectador_modo"[\s\S]*actualizarModoVistaMusaRemoto/);
+  assert.equal(transitions.viewLabel("resultado"), "FIN DE PARTIDA");
 });

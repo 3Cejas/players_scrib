@@ -23,8 +23,8 @@ const CACHE_DIR = path.join(ROOT_DIR, ".e2e-cache");
 const REMOTE_SERVER_DIR = path.join(CACHE_DIR, "server_scrib-master");
 const ARTIFACTS_ROOT = path.join(ROOT_DIR, ".e2e-artifacts");
 const VISUAL_BASELINES_DIR = path.join(ROOT_DIR, "e2e", "visual-baselines");
-const STATIC_PORT = 4173;
-const SOCKET_PORT = 3000;
+const STATIC_PORT = Number(process.env.SCRIB_E2E_STATIC_PORT || 4173);
+const SOCKET_PORT = Number(process.env.SCRIB_E2E_SOCKET_PORT || 3000);
 const DEFAULT_TIMEOUT_MS = 10000;
 const CLEANUP_TIMEOUT_MS = 5000;
 const MIME_TYPES = {
@@ -723,6 +723,16 @@ class E2EHarness {
       page.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
       page.setDefaultNavigationTimeout(20000);
       await page.setViewport(config.viewport);
+      await page.evaluateOnNewDocument((serverUrl) => {
+        Object.defineProperty(window, "SERVER_URL_DEV", {
+          configurable: true,
+          enumerable: true,
+          get() {
+            return serverUrl;
+          },
+          set() {}
+        });
+      }, `http://127.0.0.1:${SOCKET_PORT}`);
 
       const logs = [];
       page.on("console", (msg) => {

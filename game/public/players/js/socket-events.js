@@ -156,6 +156,10 @@ socket.on("pre_show_estado", (payload = {}) => {
     actualizarEstadoPreShowMusa(payload);
 });
 
+socket.on("vista_espectador_modo", (payload = {}) => {
+    actualizarModoVistaMusaRemoto(payload);
+});
+
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {

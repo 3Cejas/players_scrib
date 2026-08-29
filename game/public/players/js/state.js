@@ -107,9 +107,49 @@ let text_progress = getEl("text-progress");
 let bar_progress = getEl("bar-progress");
 let ui_partida_activa_musa = false;
 let ui_partida_finalizada_musa = false;
+const musa_view_transition = getEl("musa_view_transition");
+let vista_visual_musa = "espera";
+let timeout_revelado_vista_musa = null;
+const controlador_transicion_vista_musa = window.ScribViewTransition
+    ? window.ScribViewTransition.createController({
+        overlay: musa_view_transition,
+        reducedMotion: () => Boolean(
+            window.matchMedia
+            && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        )
+    })
+    : null;
+
+function animarTransicionVistaMusa(destino) {
+    const siguiente = String(destino || "espera").trim().toLowerCase() || "espera";
+    if (siguiente === vista_visual_musa) return false;
+    const anterior = vista_visual_musa;
+    vista_visual_musa = siguiente;
+    if (document.body) {
+        document.body.classList.remove("musa-vista-cambiando");
+        void document.body.offsetWidth;
+        document.body.classList.add("musa-vista-cambiando");
+        if (timeout_revelado_vista_musa) clearTimeout(timeout_revelado_vista_musa);
+        timeout_revelado_vista_musa = setTimeout(() => {
+            document.body?.classList.remove("musa-vista-cambiando");
+            timeout_revelado_vista_musa = null;
+        }, 980);
+    }
+    if (!controlador_transicion_vista_musa) return false;
+    return controlador_transicion_vista_musa.transition({
+        from: anterior,
+        to: siguiente,
+        swap() {}
+    });
+}
 
 function refrescarClasesUiPartidaMusa() {
     if (!document.body) return;
+    if (ui_partida_finalizada_musa) {
+        animarTransicionVistaMusa("resultado");
+    } else if (ui_partida_activa_musa) {
+        animarTransicionVistaMusa("partida");
+    }
     document.body.classList.toggle("partida-activa", ui_partida_activa_musa);
     document.body.classList.toggle("partida-finalizada-musa", ui_partida_finalizada_musa);
 }
@@ -2238,6 +2278,10 @@ const actualizarCalentamiento = (data = {}) => {
     const mensajeSolicitud = mensajesCalentamiento[solicitud] || mensajesCalentamiento.ninguna;
     const visible = calentamiento_activo && calentamiento_vista;
 
+    if (visible) {
+        animarTransicionVistaMusa("calentamiento");
+    }
+
     if (document.body) {
         document.body.classList.toggle("vista-calentamiento-musa", visible);
     }
@@ -2805,6 +2849,7 @@ const pre_show_musa_contador = getEl("pre_show_musa_contador");
 const pre_show_musa_feedback = getEl("pre_show_musa_feedback");
 let pre_show_estado_musa = window.ScribPreShow.normalizarEstado({ activo: false });
 let pre_show_bloqueado_por_tutorial_musa = false;
+let vista_tutorial_musa_permitida = true;
 let pre_show_envio_pendiente_musa = null;
 let pre_show_envio_revision_musa = 0;
 let pre_show_cooldown_musa = false;
@@ -2859,6 +2904,7 @@ function preShowMusaVisible() {
     return Boolean(
         pre_show_estado_musa.activo
         && !pre_show_bloqueado_por_tutorial_musa
+        && vista_tutorial_musa_permitida
         && !calentamiento_activo
         && !calentamiento_vista
         && !ui_partida_activa_musa
@@ -2915,6 +2961,11 @@ function iniciarCooldownPreShowMusa(duracionMs = pre_show_estado_musa.cooldown_m
 
 function aplicarVisibilidadPreShowMusa() {
     const visible = preShowMusaVisible();
+    if (visible) {
+        animarTransicionVistaMusa("tutorial");
+    } else if (!calentamiento_activo && !calentamiento_vista && !ui_partida_activa_musa && !ui_partida_finalizada_musa) {
+        animarTransicionVistaMusa("espera");
+    }
     if (document.body) {
         document.body.classList.toggle("pre-show-musa-activo", visible);
     }
@@ -2932,6 +2983,14 @@ function aplicarVisibilidadPreShowMusa() {
         mostrarFeedbackPreShowMusa("");
     }
     refrescarControlesPreShowMusa();
+}
+
+function actualizarModoVistaMusaRemoto(payload = {}) {
+    if (!musa_registro_confirmado) return false;
+    const modo = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "";
+    vista_tutorial_musa_permitida = modo === "tutorial";
+    aplicarVisibilidadPreShowMusa();
+    return true;
 }
 
 function actualizarEstadoPreShowMusa(payload = {}) {
