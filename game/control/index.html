@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260830a">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260830c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260829p"></script>
+<script src="./js/actions.js?v=20260830c"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -123,7 +123,7 @@
                                 </p>
                             </section>
                             <div class="control-group-buttons control-group-buttons--tutorial">
-                                <button id="boton_vista_tutorial" class="btn btn-vista-espectador" type="button" data-vista-principal="tutorial" data-active="0" aria-pressed="false" onclick="mostrar_vista_tutorial()">&#x1F4D6; VISTA TUTORIAL</button>
+                                <button id="boton_vista_tutorial" class="btn btn-vista-espectador" type="button" data-vista-principal="tutorial" data-active="1" aria-pressed="true" onclick="mostrar_vista_tutorial()">&#x1F4D6; VISTA TUTORIAL</button>
                             </div>
                         </div>
                         <div id="control_panel_detonadores" class="control-group control-group--calentamiento control-collapsible is-collapsed" data-control-section="detonadores" role="tabpanel" aria-labelledby="control_title_detonadores">
@@ -146,7 +146,7 @@
                                 <span id="boton_escribir" class='btn' onclick="temp()">&#x270E; ESCRIBIR</span>
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
-                                <button id="boton_vista_partida" class="btn btn-vista-espectador" type="button" data-vista-principal="partida" data-active="1" aria-pressed="true" onclick="mostrar_vista_partida()">&#x1F3AE; VISTA PARTIDA</button>
+                                <button id="boton_vista_partida" class="btn btn-vista-espectador" type="button" data-vista-principal="partida" data-active="0" aria-pressed="false" onclick="mostrar_vista_partida()">&#x1F3AE; VISTA PARTIDA</button>
                                 <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
                                 <button id="boton_vista_puntuacion" class="btn" type="button" onclick="mostrarPuntuacionFinal()">&#x1F3C6; RESULTADO</button>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
@@ -374,28 +374,28 @@
                             <p class="creditos-panel-help" data-i18n="control.credits.help">Editar estos campos actualiza el pase de cr&eacute;ditos del espectador.</p>
                         </div>
                         <div class="creditos-form-grid">
-                            <label class="creditos-field" for="credito_escritxr_rojo">
-                                <span data-i18n="control.credits.field.escritxr_rojo">ESCRITXR ROJO</span>
+                            <label class="creditos-field creditos-field--team-red" for="credito_escritxr_rojo">
+                                <span data-i18n="control.credits.field.escritxr_rojo">ESCRITXR</span>
                                 <input id="credito_escritxr_rojo" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr rojo" data-i18n-attr="placeholder:control.credits.placeholder.escritxr_rojo" autocomplete="off">
                             </label>
-                            <label class="creditos-field" for="credito_escritxr_azul">
-                                <span data-i18n="control.credits.field.escritxr_azul">ESCRITXR AZUL</span>
+                            <label class="creditos-field creditos-field--team-blue" for="credito_escritxr_azul">
+                                <span data-i18n="control.credits.field.escritxr_azul">ESCRITXR</span>
                                 <input id="credito_escritxr_azul" class="credito-input" type="text" maxlength="80" placeholder="Nombre escritxr azul" data-i18n-attr="placeholder:control.credits.placeholder.escritxr_azul" autocomplete="off">
                             </label>
-                            <label class="creditos-field" for="credito_interprete_azul_1">
-                                <span data-i18n="control.credits.field.interprete_azul_1">INT&Eacute;RPRETE AZUL 1</span>
+                            <label class="creditos-field creditos-field--team-blue" for="credito_interprete_azul_1">
+                                <span data-i18n="control.credits.field.interprete_azul_1">INT&Eacute;RPRETE 1</span>
                                 <input id="credito_interprete_azul_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 1" data-i18n-attr="placeholder:control.credits.placeholder.interprete_azul_1" autocomplete="off">
                             </label>
-                            <label class="creditos-field" for="credito_interprete_azul_2">
-                                <span data-i18n="control.credits.field.interprete_azul_2">INT&Eacute;RPRETE AZUL 2</span>
+                            <label class="creditos-field creditos-field--team-blue" for="credito_interprete_azul_2">
+                                <span data-i18n="control.credits.field.interprete_azul_2">INT&Eacute;RPRETE 2</span>
                                 <input id="credito_interprete_azul_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete azul 2" data-i18n-attr="placeholder:control.credits.placeholder.interprete_azul_2" autocomplete="off">
                             </label>
-                            <label class="creditos-field" for="credito_interprete_rojo_1">
-                                <span data-i18n="control.credits.field.interprete_rojo_1">INT&Eacute;RPRETE ROJO 1</span>
+                            <label class="creditos-field creditos-field--team-red" for="credito_interprete_rojo_1">
+                                <span data-i18n="control.credits.field.interprete_rojo_1">INT&Eacute;RPRETE 1</span>
                                 <input id="credito_interprete_rojo_1" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 1" data-i18n-attr="placeholder:control.credits.placeholder.interprete_rojo_1" autocomplete="off">
                             </label>
-                            <label class="creditos-field" for="credito_interprete_rojo_2">
-                                <span data-i18n="control.credits.field.interprete_rojo_2">INT&Eacute;RPRETE ROJO 2</span>
+                            <label class="creditos-field creditos-field--team-red" for="credito_interprete_rojo_2">
+                                <span data-i18n="control.credits.field.interprete_rojo_2">INT&Eacute;RPRETE 2</span>
                                 <input id="credito_interprete_rojo_2" class="credito-input" type="text" maxlength="80" placeholder="Nombre int&eacute;rprete rojo 2" data-i18n-attr="placeholder:control.credits.placeholder.interprete_rojo_2" autocomplete="off">
                             </label>
                             <label class="creditos-field" for="credito_programacion">
@@ -752,7 +752,7 @@
             </tr>
         </table>
 <script src="../dist/socket.io/socket.io.js"></script>
-    <script src="../js/i18n.js?v=20260824a"></script>
+    <script src="../js/i18n.js?v=20260830c"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260824a"></script>
 <script src="./js/videotutorial-control.js?v=20260829p"></script>

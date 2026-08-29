@@ -27,6 +27,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(tutorial, /id="videotutorial_control"/);
   assert.doesNotMatch(tutorial, /Puedes reproducirlo antes o durante el tutorial\.|VIDEOTUTORIAL PREVIO|INTERVALO AUTOM&Aacute;TICO/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-vista-principal="tutorial"[^>]*onclick="mostrar_vista_tutorial\(\)"[^>]*>[^<]*VISTA TUTORIAL/);
+  assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-active="1"[^>]*aria-pressed="true"/);
   assert.doesNotMatch(tutorial, /boton_banderas_musas|data-solicitud-calentamiento/);
 
   assert.match(detonadores, /id="boton_vista_calentamiento"[^>]*data-vista-principal="detonadores"[^>]*onclick="mostrar_vista_detonadores\(\)"[^>]*>[^<]*VISTA DETONADORES/);
@@ -34,6 +35,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.equal((detonadores.match(/data-solicitud-calentamiento=/g) || []).length, 3);
   assert.doesNotMatch(detonadores, /id="videotutorial_control"/);
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_vista_partida"[^>]*data-vista-principal="partida"[^>]*onclick="mostrar_vista_partida\(\)"/);
+  assert.match(html, /id="boton_vista_partida"[^>]*data-active="0"[^>]*aria-pressed="false"/);
   assert.match(html, /id="boton_vista_puntuacion" class="btn"/);
   assert.match(representacion, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_representacion"[^>]*onclick="toggleCreditos\(\)"/);
   assert.match(representacion, /id="panel_creditos_representacion" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
@@ -59,7 +61,14 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
     "the Parameters collapse action must be the leftmost item in its header"
   );
   assert.match(css, /#control_title_parameters\s*\{[\s\S]*justify-content: flex-start;/);
-  assert.match(css, /control-group--representacion #boton_editar_creditos[\s\S]*color: var\(--group-text\);[\s\S]*box-shadow: 0 0\.2em var\(--group-shadow\);/);
+  assert.doesNotMatch(css, /control-group--representacion #boton_editar_creditos/);
+  assert.doesNotMatch(css, /#boton_editar_creditos\[data-active="1"\]/);
+  assert.match(html, /creditos-field creditos-field--team-red[^>]*>[\s\S]*control\.credits\.field\.escritxr_rojo[^>]*>ESCRITXR</);
+  assert.match(html, /creditos-field creditos-field--team-blue[^>]*>[\s\S]*control\.credits\.field\.escritxr_azul[^>]*>ESCRITXR</);
+  assert.match(html, /control\.credits\.field\.interprete_azul_1[^>]*>INT&Eacute;RPRETE 1/);
+  assert.match(html, /control\.credits\.field\.interprete_rojo_1[^>]*>INT&Eacute;RPRETE 1/);
+  assert.match(css, /\.creditos-field--team-blue\s*\{[\s\S]*--creditos-team-color: #45f3ff/);
+  assert.match(css, /\.creditos-field--team-red\s*\{[\s\S]*--creditos-team-color: #ff7182/);
 
   assert.match(actions, /function actualizarFlechasPestanasControl\(\)/);
   assert.match(actions, /shell\.dataset\.hasPrevious = mostrarAnterior \? "true" : "false"/);
@@ -70,6 +79,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
   assert.match(actions, /const modoEspectador = destino === "tutorial" \? "tutorial" : "partida"/);
+  assert.match(actions, /let vista_espectador_modo = "tutorial";[\s\S]*let vista_principal_control = "tutorial";/);
   assert.match(actions, /vista_espectador_modo === "tutorial"/);
   assert.match(actions, /modoServidor === "calentamiento" \|\| vista_calentamiento/);
   assert.match(actions, /function actualizarBotonesVistaPrincipalControl\(\)[\s\S]*document\.querySelectorAll\("\[data-vista-principal\]"\)[\s\S]*aria-pressed/);

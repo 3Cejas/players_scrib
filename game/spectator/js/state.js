@@ -1193,9 +1193,9 @@ const neon_espectador = getEl("neon");
 const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
 const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
 let vista_calentamiento = false;
-let vista_espectador_override = "partida";
-let vista_espectador_modo_resuelta = "partida";
-let vista_espectador_modo_solicitada = "partida";
+let vista_espectador_override = "tutorial";
+let vista_espectador_modo_resuelta = "tutorial";
+let vista_espectador_modo_solicitada = "tutorial";
 let vista_espectador_ui_inicializada = false;
 const controlador_transicion_vista_espectador = window.ScribViewTransition
     ? window.ScribViewTransition.createController({
@@ -1628,11 +1628,11 @@ const iniciarAjusteViewportEspectador = () => {
 const limitarPct = (valor, min, max) => Math.max(min, Math.min(max, valor));
 const normalizarModoVistaEspectador = (valor) => {
     const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
-    return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "partida";
+    return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "tutorial";
 };
 const normalizarOverrideVistaEspectador = (valor) => {
     const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
-    return MODOS_OVERRIDE_ESPECTADOR.has(modo) ? modo : "partida";
+    return MODOS_OVERRIDE_ESPECTADOR.has(modo) ? modo : "tutorial";
 };
 const resolverModoVistaEspectadorLocal = () => {
     if (

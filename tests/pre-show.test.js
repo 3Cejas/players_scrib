@@ -136,6 +136,7 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.match(state, /teleprompter_estado && teleprompter_estado\.visible/);
   assert.match(state, /cerrarPreShowEspectadorPorTutorial/);
   assert.match(state, /vista_espectador_modo_resuelta === "tutorial"/);
+  assert.match(state, /vista_espectador_override = "tutorial";[\s\S]*vista_espectador_modo_resuelta = "tutorial";[\s\S]*vista_espectador_modo_solicitada = "tutorial";/);
   assert.match(state, /modoServidor === "tutorial"[\s\S]*pre_show_bloqueado_por_tutorial_espectador = false/);
   assert.match(state, /scrib:video-tutorial-visibility[\s\S]*restaurarVistaEspectadorTrasVideoTutorial/);
   assert.match(state, /restaurarVistaEspectadorTrasVideoTutorial[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);

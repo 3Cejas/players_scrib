@@ -18,8 +18,8 @@ let pausado = false;
 let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
-let vista_espectador_modo = "partida";
-let vista_principal_control = "partida";
+let vista_espectador_modo = "tutorial";
+let vista_principal_control = "tutorial";
 let puntuacion_slide_step_control = 0;
 let estado_puntuacion_final_control = null;
 let puntuacion_final_captura_solicitada = false;
@@ -2414,7 +2414,7 @@ function actualizarBotonesVistaPrincipalControl() {
 }
 
 function aplicarVistaPrincipalControl(vista) {
-    const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "partida";
+    const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "tutorial";
     const activarDetonadores = destino === "detonadores";
     const modoEspectador = destino === "tutorial" ? "tutorial" : "partida";
     vista_principal_control = destino;
@@ -2488,7 +2488,7 @@ const PUNTUACION_CATEGORIAS_CONTROL = [
 const PUNTUACION_PASO_MAX_CONTROL = PUNTUACION_CATEGORIAS_CONTROL.length + 1;
 const normalizarModoVistaEspectador = (valor) => {
     const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
-    return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "partida";
+    return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "tutorial";
 };
 const normalizarEscalaUiEspectadorControl = (valor) => {
     const numero = Number(valor);
@@ -2780,7 +2780,7 @@ window.actualizarEstadoPuntuacionFinalControl = actualizarEstadoPuntuacionFinalC
 window.mostrarFeedbackPuntuacionControl = mostrarFeedbackPuntuacionControl;
 
 function actualizarModoVistaEspectadorControl(payload = {}) {
-    const modoServidor = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "partida";
+    const modoServidor = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "tutorial";
     vista_espectador_modo = normalizarModoVistaEspectador(modoServidor);
     if (Object.prototype.hasOwnProperty.call(payload, "calentamiento_vista")) {
         vista_calentamiento = Boolean(payload.calentamiento_vista);
