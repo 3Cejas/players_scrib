@@ -105,7 +105,7 @@ test("video tutorial state follows the definitive singular server contract", () 
     posicion_segundos: 4.5,
     proxima_reproduccion_ts: 90000,
     configuracion: {
-      video_url: "/media/tutorial.mp4",
+      video_url: "/media/tutorial.mp3",
       intervalo_segundos: 420,
       duracion_segundos: 60,
       habilitado: true,
@@ -124,7 +124,7 @@ test("video tutorial state follows the definitive singular server contract", () 
     programado: true,
     visible: true,
     reproduciendo: true,
-    videoUrl: "/media/tutorial.mp4",
+    videoUrl: "/media/tutorial.mp3",
     duracionSegundos: 60,
     silenciado: true,
     inicioTs: 1000,
@@ -150,7 +150,7 @@ test("control waits for authoritative config and preserves media fields when cha
     visible: false,
     reproduciendo: false,
     configuracion: {
-      video_url: "https://cdn.example.test/tutorial.mp4",
+      video_url: "https://cdn.example.test/tutorial.mp3",
       intervalo_segundos: 300,
       duracion_segundos: 75,
       habilitado: true,
@@ -169,7 +169,7 @@ test("control waits for authoritative config and preserves media fields when cha
   assert.deepEqual(
     { ...emisiones[0].payload, request_id: "<dynamic>" },
     {
-      video_url: "https://cdn.example.test/tutorial.mp4",
+      video_url: "https://cdn.example.test/tutorial.mp3",
       intervalo_segundos: 480,
       duracion_segundos: 75,
       habilitado: false,
@@ -191,7 +191,7 @@ test("play and stop are serialized, acknowledged and reflected accessibly", () =
     phase_seq: 7,
     proxima_reproduccion_ts: Date.now() + 60000,
     configuracion: {
-      video_url: "/tutorial.mp4",
+      video_url: "/tutorial.mp3",
       intervalo_segundos: 300,
       duracion_segundos: 60,
       habilitado: true,

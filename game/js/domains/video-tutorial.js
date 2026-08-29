@@ -29,23 +29,31 @@
 }(typeof window !== "undefined" ? window : null, function () {
     "use strict";
 
-    const DEFAULT_DURATION_SECONDS = 120;
-    const DEFAULT_VIDEO_URL = "../media/tutorial-scrib.mp4";
-    const VIDEO_ASSET_VERSION = "20260829b";
+    const DEFAULT_DURATION_SECONDS = 138;
+    const DEFAULT_AUDIO_URL = "../media/tutorial-scrib-audio.mp3";
+    const AUDIO_ASSET_VERSION = "20260829c";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
-    const VISIBILITY_TRANSITION_MS = 560;
+    const VISIBILITY_TRANSITION_MS = 620;
     const NARRATION_RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     const TIMELINE = Object.freeze([
-        Object.freeze({ id: "connected", start: 0, end: 72, label: "CONEXI\u00d3N RECIBIDA", copy: "Sigue las instrucciones de la pantalla principal." }),
-        Object.freeze({ id: "ready", start: 72, end: 79, label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos el color y el brillo." }),
-        Object.freeze({ id: "red", start: 79, end: 85, label: "ROJO", copy: "\u00bfVes toda la pantalla roja?" }),
-        Object.freeze({ id: "blue", start: 85, end: 91, label: "AZUL", copy: "\u00bfHa cambiado correctamente a azul?" }),
-        Object.freeze({ id: "green", start: 91, end: 97, label: "VERDE", copy: "\u00bfYa ves toda la pantalla verde?" }),
-        Object.freeze({ id: "white", start: 97, end: 103, label: "BLANCO", copy: "\u00bfHa funcionado el \u00faltimo cambio?" }),
-        Object.freeze({ id: "complete", start: 103, end: 120, label: "\u00a1PRUEBA COMPLETADA!", copy: "Los cuatro colores se han mostrado correctamente." })
+        Object.freeze({ id: "welcome", start: 0, end: 9, kicker: "TE DAMOS LA BIENVENIDA", title: "¡HOLA, MUSA!", label: "BIENVENIDA A SCRIB", copy: "Vamos a preparar tu móvil con calma para entrar al juego." }),
+        Object.freeze({ id: "access", start: 9, end: 22, kicker: "PASO 1 · ENTRA", title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR." }),
+        Object.freeze({ id: "access-wait", start: 22, end: 32, kicker: "TE ESPERAMOS", title: "¿YA ESTÁS DENTRO?", label: "TÓMATE TU TIEMPO", copy: "El código seguirá en pantalla mientras terminas de entrar." }),
+        Object.freeze({ id: "name", start: 32, end: 42, kicker: "PASO 2 · TU NOMBRE", title: "PRESÉNTATE", label: "ESCRIBE TU NOMBRE", copy: "Escribe el nombre con el que quieres aparecer durante el show." }),
+        Object.freeze({ id: "choices", start: 42, end: 53, kicker: "PASO 3 · ELIGE", title: "DOS CAMINOS", label: "ELIGE TU ESCRITXR", copy: "Puedes escoger directamente una escritxr o usar la detección automática." }),
+        Object.freeze({ id: "manual", start: 53, end: 65, kicker: "OPCIÓN A · ELECCIÓN DIRECTA", title: "TOCA SU TARJETA", label: "ELECCIÓN DIRECTA", copy: "Pulsa la tarjeta azul o roja de la escritxr con la que quieras jugar." }),
+        Object.freeze({ id: "automatic", start: 65, end: 78, kicker: "OPCIÓN B · SORPRESA", title: "MANTÉN EL DEDO", label: "DETECCIÓN AUTOMÁTICA", copy: "Pulsa detección automática y mantén el dedo sobre la huella hasta terminar." }),
+        Object.freeze({ id: "assigned", start: 78, end: 88, kicker: "ASIGNACIÓN COMPLETADA", title: "REVISA EL RESULTADO", label: "EQUIPO Y ESCRITXR", copy: "Verás tu equipo y el nombre de tu escritxr antes de entrar." }),
+        Object.freeze({ id: "ready", start: 88, end: 95, kicker: "PRUEBA DE PANTALLA", title: "¡YA CASI ESTÁ!", label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos cuatro cambios de color." }),
+        Object.freeze({ id: "red", start: 95, end: 102, kicker: "COLOR 1 DE 4", title: "ROJO", label: "ROJO", copy: "¿Ves toda la pantalla roja?" }),
+        Object.freeze({ id: "blue", start: 102, end: 109, kicker: "COLOR 2 DE 4", title: "AZUL", label: "AZUL", copy: "¿Ha cambiado toda la pantalla a azul?" }),
+        Object.freeze({ id: "green", start: 109, end: 116, kicker: "COLOR 3 DE 4", title: "VERDE", label: "VERDE", copy: "¿Ya ves toda la pantalla verde?" }),
+        Object.freeze({ id: "white", start: 116, end: 123, kicker: "COLOR 4 DE 4", title: "BLANCO", label: "BLANCO", copy: "¿Ha funcionado también el último cambio?" }),
+        Object.freeze({ id: "complete", start: 123, end: 131, kicker: "TODO FUNCIONA", title: "¡PRUEBA COMPLETADA!", label: "CONFIGURACIÓN VERIFICADA", copy: "Tu móvil está conectado y listo para participar." }),
+        Object.freeze({ id: "farewell", start: 131, end: 138, kicker: "NOS VEMOS DENTRO", title: "¡A INSPIRAR!", label: "YA ESTÁS PREPARADA", copy: "Prepárate para jugar y dar vida a la historia." })
     ]);
 
     function clamp(value, min, max) {
@@ -94,6 +102,7 @@
             durationSeconds
         );
         const visible = Boolean(raw.visible && raw.reproduciendo);
+        const configuredAudio = cleanText(config.audio_url || config.video_url, 500);
 
         return {
             version: Math.max(1, Math.trunc(asFiniteNumber(raw.version, 1))),
@@ -114,7 +123,7 @@
                 muted: Boolean(config.silenciado),
                 intervalSeconds: clamp(asFiniteNumber(config.intervalo_segundos, 300), 15, 86400),
                 durationSeconds,
-                videoUrl: cleanText(config.video_url, 500) || DEFAULT_VIDEO_URL
+                audioUrl: /\.mp4(?:$|[?#])/i.test(configuredAudio) ? DEFAULT_AUDIO_URL : (configuredAudio || DEFAULT_AUDIO_URL)
             },
             verification: normalizeVerification(raw.verificacion || {})
         };
@@ -130,19 +139,20 @@
         return clamp(asFiniteNumber(seconds, 0) / Math.max(1, asFiniteNumber(durationSeconds, DEFAULT_DURATION_SECONDS)), 0, 1);
     }
 
-    function safeVideoUrl(value, locationRef = null) {
-        const raw = cleanText(value, 500) || DEFAULT_VIDEO_URL;
-        if (/^(?:javascript|data|blob):/i.test(raw)) return DEFAULT_VIDEO_URL;
+    function safeAudioUrl(value, locationRef = null) {
+        const candidate = cleanText(value, 500);
+        const raw = !candidate || /\.mp4(?:$|[?#])/i.test(candidate) ? DEFAULT_AUDIO_URL : candidate;
+        if (/^(?:javascript|data|blob):/i.test(raw)) return DEFAULT_AUDIO_URL;
         if (!locationRef || !locationRef.href || typeof URL !== "function") return raw;
         try {
             const resolved = new URL(raw, locationRef.href);
-            if (!/^https?:$/i.test(resolved.protocol)) return DEFAULT_VIDEO_URL;
-            if (/\/tutorial-scrib\.mp4$/i.test(resolved.pathname) && !resolved.searchParams.has("v")) {
-                resolved.searchParams.set("v", VIDEO_ASSET_VERSION);
+            if (!/^https?:$/i.test(resolved.protocol)) return DEFAULT_AUDIO_URL;
+            if (/\/tutorial-scrib-audio\.mp3$/i.test(resolved.pathname) && !resolved.searchParams.has("v")) {
+                resolved.searchParams.set("v", AUDIO_ASSET_VERSION);
             }
             return resolved.href;
         } catch (_error) {
-            return DEFAULT_VIDEO_URL;
+            return DEFAULT_AUDIO_URL;
         }
     }
 
@@ -160,11 +170,6 @@
         return `vt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
     }
 
-    function formatTime(seconds) {
-        const safe = Math.max(0, Math.ceil(asFiniteNumber(seconds, 0)));
-        return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
-    }
-
     function inferRole(documentRef) {
         if (documentRef.body && documentRef.body.classList.contains("page-spectator")) return "spectator";
         if (documentRef.getElementById("nombre_musa_label")) return "muse";
@@ -176,16 +181,62 @@
         root.id = "video_tutorial_overlay";
         root.className = "scrib-video-tutorial scrib-video-tutorial--spectator";
         root.hidden = true;
-        root.setAttribute("aria-label", "Videotutorial para conectarse a SCRIB");
+        root.setAttribute("aria-label", "Tutorial animado para conectarse a SCRIB");
         root.innerHTML = `
-            <div class="scrib-video-tutorial__ambient" aria-hidden="true"></div>
-            <video class="scrib-video-tutorial__media" playsinline preload="auto" autoplay></video>
-            <strong class="scrib-video-tutorial__slide-url" data-video-tutorial-slide-url hidden></strong>
-            <div class="scrib-video-tutorial__fallback" hidden>
-                <span aria-hidden="true">\u25b6</span>
-                <strong>PREPARANDO VIDEOTUTORIAL</strong>
-                <small>La gu\u00eda continuar\u00e1 en cuanto el v\u00eddeo est\u00e9 disponible.</small>
+            <div class="scrib-video-tutorial__ambient" aria-hidden="true">
+                <i class="scrib-video-tutorial__orb scrib-video-tutorial__orb--one"></i>
+                <i class="scrib-video-tutorial__orb scrib-video-tutorial__orb--two"></i>
+                <i class="scrib-video-tutorial__beam"></i>
+                <i class="scrib-video-tutorial__grid"></i>
             </div>
+            <header class="scrib-video-tutorial__brand" aria-hidden="true">
+                <img src="../../img/logo.png" alt="">
+                <span>&lt;SCRI&gt; B</span>
+                <b>· MUSA</b>
+            </header>
+            <div class="scrib-video-tutorial__scene">
+                <div class="scrib-video-tutorial__copy">
+                    <span class="scrib-video-tutorial__kicker" data-video-tutorial-kicker></span>
+                    <h1 data-video-tutorial-title></h1>
+                    <p data-video-tutorial-copy></p>
+                    <div class="scrib-video-tutorial__access-card" aria-label="Acceso de musas">
+                        <img src="../media/scribshow-musa-qr.svg" alt="Código QR para entrar en scribshow.es/musa">
+                        <div><strong>scribshow.es/musa</strong><span>Escanea el código o escribe el enlace.</span></div>
+                    </div>
+                </div>
+                <div class="scrib-video-tutorial__visual" aria-hidden="true">
+                    <div class="scrib-video-tutorial__welcome-mark"><span>✦</span><strong>INSPIRA</strong><i>JUEGA · CREA · SORPRENDE</i></div>
+                    <div class="scrib-video-tutorial__phone">
+                        <div class="scrib-video-tutorial__phone-speaker"></div>
+                        <div class="scrib-video-tutorial__phone-screen">
+                            <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--name">
+                                <span>SCRIB · MUSA</span><h2>¿CUÁL SERÁ<br>TU NOMBRE?</h2><div class="scrib-video-tutorial__fake-input">LUNA<i></i></div><b>⌄</b>
+                            </div>
+                            <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--choices">
+                                <span>LUNA,</span><h2>ELIGE TU ESCRITXR</h2>
+                                <div class="scrib-video-tutorial__team-grid">
+                                    <div class="scrib-video-tutorial__team-card scrib-video-tutorial__team-card--blue"><small>EQUIPO AZUL</small><img src="../public/img/pluma_azul.png" alt=""><strong data-video-writer-blue>ESCRITXR 1</strong><b>ELEGIR</b></div>
+                                    <div class="scrib-video-tutorial__team-card scrib-video-tutorial__team-card--red"><small>EQUIPO ROJO</small><img src="../public/img/pluma_roja.png" alt=""><strong data-video-writer-red>ESCRITXR 2</strong><b>ELEGIR</b></div>
+                                </div>
+                                <div class="scrib-video-tutorial__auto-button">☝ DETECCIÓN AUTOMÁTICA</div>
+                            </div>
+                            <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--fingerprint">
+                                <span>DETECCIÓN AUTOMÁTICA</span><h2>PON TU DEDO</h2>
+                                <div class="scrib-video-tutorial__fingerprint"><i></i><svg viewBox="0 0 120 140"><path d="M60 10C31 10 10 32 10 61M110 61C110 32 89 10 60 10M23 72V61C23 39 39 24 60 24s37 15 37 37v20M36 85V62c0-14 10-25 24-25s24 11 24 25v30M48 98V63c0-7 5-13 12-13s12 6 12 13v40M60 64v48"/></svg></div>
+                                <p>MANTÉN EL DEDO SOBRE LA HUELLA</p>
+                            </div>
+                            <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--result">
+                                <span>ASIGNACIÓN COMPLETADA</span><div class="scrib-video-tutorial__result-check">✓</div><small>TU EQUIPO</small><strong>AZUL</strong><small>TU ESCRITXR</small><b data-video-writer-result>ESCRITXR 1</b><i>ENTRAR AL JUEGO</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="scrib-video-tutorial__tap"><i></i><span>TOCA PARA ELEGIR</span></div>
+                    <div class="scrib-video-tutorial__color-stage"><i></i><strong data-video-color-title></strong><span data-video-color-copy></span></div>
+                    <div class="scrib-video-tutorial__complete-mark"><i>✓</i><strong>TODO FUNCIONA</strong><span>TU MÓVIL ESTÁ LISTO</span></div>
+                </div>
+            </div>
+            <div class="scrib-video-tutorial__confetti" aria-hidden="true">${"<i></i>".repeat(18)}</div>
+            <audio class="scrib-video-tutorial__audio" preload="auto" autoplay></audio>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live></p>
         `;
         documentRef.body.appendChild(root);
@@ -201,12 +252,11 @@
         root.innerHTML = `
             <div class="scrib-video-tutorial-device__grid" aria-hidden="true"></div>
             <div class="scrib-video-tutorial-device__card">
-                <span class="scrib-video-tutorial-device__eyebrow" data-video-tutorial-eyebrow>PRUEBA DE CONEXI\u00d3N</span>
-                <div class="scrib-video-tutorial-device__check" aria-hidden="true">\u2713</div>
-                <h1 id="video_tutorial_musa_title" data-video-tutorial-title>CONEXI\u00d3N RECIBIDA</h1>
+                <span class="scrib-video-tutorial-device__eyebrow" data-video-tutorial-eyebrow>PRUEBA DE CONEXIÓN</span>
+                <div class="scrib-video-tutorial-device__check" aria-hidden="true">✓</div>
+                <h1 id="video_tutorial_musa_title" data-video-tutorial-title>CONEXIÓN RECIBIDA</h1>
                 <p data-video-tutorial-copy>Sigue las instrucciones de la pantalla principal.</p>
                 <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity></div>
-                <span class="scrib-video-tutorial-device__timer" data-video-tutorial-device-time>02:00</span>
             </div>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live></p>
         `;
@@ -224,7 +274,7 @@
         const root = role === "spectator"
             ? createSpectatorOverlay(documentRef)
             : createMuseOverlay(documentRef);
-        const media = root.querySelector("video");
+        const audio = root.querySelector("audio");
         const liveRegion = root.querySelector("[data-video-tutorial-live]");
         const storage = (() => {
             try { return windowRef.sessionStorage; } catch (_error) { return null; }
@@ -241,17 +291,12 @@
         let syncPosition = 0;
         let frameId = null;
         let activePlaybackKey = "";
-        let activeVideoUrl = "";
+        let activeAudioUrl = "";
         let lastPhaseId = "";
         let verifying = false;
         let locallyVerified = false;
         let hideTransitionTimer = null;
         let verificationRetryTimer = null;
-
-        if (role === "spectator") {
-            const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
-            if (joinNode) joinNode.textContent = "scribshow.es/musa";
-        }
 
         function currentPosition() {
             if (!state || !state.visible) return 0;
@@ -291,8 +336,8 @@
             documentRef.body.classList.remove("scrib-video-tutorial-active");
             root.classList.remove("is-visible");
             root.classList.add("is-leaving");
-            if (media) {
-                try { media.pause(); } catch (_error) {}
+            if (audio) {
+                try { audio.pause(); } catch (_error) {}
             }
             const reducedMotion = Boolean(windowRef.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
             hideTransitionTimer = windowRef.setTimeout(() => {
@@ -302,51 +347,71 @@
             }, reducedMotion ? 0 : VISIBILITY_TRANSITION_MS);
         }
 
-        function showFallback(show) {
-            const fallback = root.querySelector(".scrib-video-tutorial__fallback");
-            if (fallback) fallback.hidden = !show;
-        }
-
-        function playMedia(position, force = false) {
-            if (!media || !state || !state.visible) return;
-            const nextUrl = safeVideoUrl(state.config.videoUrl, windowRef.location);
+        function playSoundtrack(position, force = false) {
+            if (!audio || !state || !state.visible) return;
+            const nextUrl = safeAudioUrl(state.config.audioUrl, windowRef.location);
             const nextKey = playbackKey(state);
-            const changed = force || nextKey !== activePlaybackKey || nextUrl !== activeVideoUrl;
+            const changed = force || nextKey !== activePlaybackKey || nextUrl !== activeAudioUrl;
             if (changed) {
                 activePlaybackKey = nextKey;
-                activeVideoUrl = nextUrl;
-                media.src = nextUrl;
-                media.defaultMuted = false;
-                media.muted = false;
-                media.volume = 1;
-                media.removeAttribute("muted");
-                media.currentTime = 0;
-                media.load();
+                activeAudioUrl = nextUrl;
+                audio.src = nextUrl;
+                audio.defaultMuted = false;
+                audio.muted = false;
+                audio.volume = 1;
+                audio.removeAttribute("muted");
+                audio.currentTime = 0;
+                audio.load();
             }
 
             const seekAndPlay = () => {
                 try {
-                    if (Number.isFinite(media.duration) && media.duration > 0) {
-                        media.currentTime = Math.min(position, Math.max(0, media.duration - 0.05));
+                    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+                        const target = Math.min(position, Math.max(0, audio.duration - 0.05));
+                        if (changed || Math.abs(audio.currentTime - target) > 1.2) audio.currentTime = target;
                     }
                 } catch (_error) {}
-                const attempt = media.play();
+                const attempt = audio.play();
                 if (!attempt || typeof attempt.catch !== "function") return;
-                attempt.then(() => {
-                    delete media.dataset.narrationBlocked;
-                    showFallback(false);
-                }).catch(() => {
-                    media.dataset.narrationBlocked = "true";
-                });
+                attempt.then(() => delete audio.dataset.narrationBlocked)
+                    .catch(() => { audio.dataset.narrationBlocked = "true"; });
             };
 
-            if (media.readyState >= 1) seekAndPlay();
-            else media.addEventListener("loadedmetadata", seekAndPlay, { once: true });
+            if (audio.readyState >= 1) seekAndPlay();
+            else audio.addEventListener("loadedmetadata", seekAndPlay, { once: true });
         }
 
-        function renderSpectator(position) {
-            const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
-            if (joinNode) joinNode.hidden = !(position >= 8 && position < 36);
+        function writerName(id, fallback) {
+            const node = documentRef.getElementById(id);
+            return cleanText(node && (node.value || node.textContent), 34) || fallback;
+        }
+
+        function refreshWriterNames() {
+            if (role !== "spectator") return;
+            const blue = writerName("nombre", "ESCRITXR 1");
+            const red = writerName("nombre1", "ESCRITXR 2");
+            root.querySelectorAll("[data-video-writer-blue]").forEach((node) => { node.textContent = blue; });
+            root.querySelectorAll("[data-video-writer-red]").forEach((node) => { node.textContent = red; });
+            root.querySelectorAll("[data-video-writer-result]").forEach((node) => { node.textContent = blue; });
+        }
+
+        function enterSpectatorPhase(phase) {
+            root.dataset.scene = phase.id;
+            const kicker = root.querySelector("[data-video-tutorial-kicker]");
+            const title = root.querySelector("[data-video-tutorial-title]");
+            const copy = root.querySelector("[data-video-tutorial-copy]");
+            const colorTitle = root.querySelector("[data-video-color-title]");
+            const colorCopy = root.querySelector("[data-video-color-copy]");
+            if (kicker) kicker.textContent = phase.kicker;
+            if (title) title.textContent = phase.title;
+            if (copy) copy.textContent = phase.copy;
+            if (colorTitle) colorTitle.textContent = phase.title;
+            if (colorCopy) colorCopy.textContent = phase.copy;
+            refreshWriterNames();
+            root.classList.remove("is-scene-entering");
+            void root.offsetWidth;
+            root.classList.add("is-scene-entering");
+            if (liveRegion) liveRegion.textContent = `${phase.label}. ${phase.copy}`;
         }
 
         function museIdentity() {
@@ -357,7 +422,7 @@
                 const player = new URLSearchParams(windowRef.location.search).get("player");
                 team = player === "1" ? "EQUIPO AZUL" : (player === "2" ? "EQUIPO ROJO" : "");
             } catch (_error) {}
-            return [muse, team, writer && `ESCRITXR: ${writer}`].filter(Boolean).join(" \u00b7 ");
+            return [muse, team, writer && `ESCRITXR: ${writer}`].filter(Boolean).join(" · ");
         }
 
         function renderMuse(position) {
@@ -366,21 +431,26 @@
             const copy = root.querySelector("[data-video-tutorial-copy]");
             const eyebrow = root.querySelector("[data-video-tutorial-eyebrow]");
             const identity = root.querySelector("[data-video-tutorial-identity]");
-            const time = root.querySelector("[data-video-tutorial-device-time]");
             root.dataset.phase = locallyVerified ? "verified" : phase.id;
             root.classList.toggle("is-verified", locallyVerified);
-            if (title) title.textContent = locallyVerified ? "CONFIGURACI\u00d3N VERIFICADA" : phase.label;
+            if (title) title.textContent = locallyVerified ? "CONFIGURACIÓN VERIFICADA" : phase.label;
             if (copy) copy.textContent = locallyVerified
-                ? "Tu dispositivo est\u00e1 conectado y listo para inspirar."
+                ? "Tu dispositivo está conectado y listo para inspirar."
                 : phase.copy;
-            if (eyebrow) eyebrow.textContent = locallyVerified ? "TODO FUNCIONA" : "PRUEBA DE CONEXI\u00d3N";
+            if (eyebrow) eyebrow.textContent = locallyVerified ? "TODO FUNCIONA" : "PRUEBA DE CONEXIÓN";
             if (identity) identity.textContent = museIdentity();
-            if (time) time.textContent = formatTime(state.config.durationSeconds - position);
             if (phase.id !== lastPhaseId) {
                 lastPhaseId = phase.id;
                 if (liveRegion) liveRegion.textContent = phase.label;
                 if (phase.id === "complete" && !locallyVerified) scheduleAutomaticVerification();
             }
+        }
+
+        function renderSpectator(position) {
+            const phase = phaseAt(position);
+            if (phase.id === lastPhaseId) return;
+            lastPhaseId = phase.id;
+            enterSpectatorPhase(phase);
         }
 
         function scheduleAutomaticVerification(delay = 0) {
@@ -426,7 +496,7 @@
             }
             if (role === "spectator") {
                 renderSpectator(syncPosition);
-                playMedia(syncPosition, nextKey !== previousKey);
+                playSoundtrack(syncPosition, nextKey !== previousKey);
             } else {
                 renderMuse(syncPosition);
             }
@@ -435,7 +505,7 @@
 
         function verify() {
             if (!state || !state.visible || verifying || locallyVerified) return;
-            if (phaseAt(currentPosition()).id !== "complete") return;
+            if (!["complete", "farewell"].includes(phaseAt(currentPosition()).id)) return;
             verifying = true;
             renderMuse(currentPosition());
             const payload = {
@@ -452,7 +522,7 @@
                 if (response && response.ok === true) {
                     locallyVerified = true;
                     try { storage?.setItem(verificationStorageKey(), "1"); } catch (_error) {}
-                    if (liveRegion) liveRegion.textContent = "Configuraci\u00f3n verificada correctamente.";
+                    if (liveRegion) liveRegion.textContent = "Configuración verificada correctamente.";
                 } else if (state?.visible) {
                     scheduleAutomaticVerification(1800);
                 }
@@ -462,13 +532,9 @@
             windowRef.setTimeout(() => settle({ ok: false }), 4500);
         }
 
-        if (media) {
-            media.addEventListener("error", () => showFallback(true));
-            media.addEventListener("playing", () => showFallback(false));
-        }
         const retryNarration = () => {
-            if (role !== "spectator" || !state || !state.visible || !media?.paused) return;
-            playMedia(currentPosition());
+            if (role !== "spectator" || !state || !state.visible || !audio?.paused) return;
+            playSoundtrack(currentPosition());
         };
         NARRATION_RETRY_EVENTS.forEach((eventName) => {
             documentRef.addEventListener(eventName, retryNarration, { passive: true });
@@ -494,7 +560,7 @@
                 NARRATION_RETRY_EVENTS.forEach((eventName) => {
                     documentRef.removeEventListener(eventName, retryNarration);
                 });
-                try { media?.pause(); } catch (_error) {}
+                try { audio?.pause(); } catch (_error) {}
                 root.remove();
             }
         };
@@ -502,13 +568,13 @@
 
     return Object.freeze({
         DEFAULT_DURATION_SECONDS,
-        DEFAULT_VIDEO_URL,
+        DEFAULT_AUDIO_URL,
         TIMELINE,
         normalizeState,
         normalizeVerification,
         phaseAt,
         progressAt,
-        safeVideoUrl,
+        safeAudioUrl,
         playbackKey,
         createController
     });

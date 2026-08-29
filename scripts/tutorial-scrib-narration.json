@@ -1,0 +1,17 @@
+[
+  { "key": "00-welcome", "start": 0, "duration": 9, "leadMs": 260, "rate": "-4%", "pitch": "+4Hz", "text": "¡Hola! Bienvenida a Escrib. Vamos a preparar tu móvil con calma para que puedas jugar y darle ideas a tu escritora." },
+  { "key": "01-access", "start": 9, "duration": 13, "leadMs": 300, "rate": "-5%", "pitch": "+3Hz", "text": "Para entrar, abre scribshow punto es, barra musa, o escanea este código QR. Lo dejamos unos segundos para que tengas tiempo." },
+  { "key": "02-wait", "start": 22, "duration": 10, "leadMs": 380, "rate": "-5%", "pitch": "+4Hz", "text": "¿Ya lo has escaneado? ¡Perfecto! Y si todavía estás entrando, tranquila: te esperamos." },
+  { "key": "03-name", "start": 32, "duration": 10, "leadMs": 320, "rate": "-4%", "pitch": "+3Hz", "text": "Cuando aparezca la pantalla de acceso, escribe el nombre con el que quieres que te reconozcan durante el show." },
+  { "key": "04-choices", "start": 42, "duration": 11, "leadMs": 320, "rate": "-4%", "pitch": "+3Hz", "text": "Después verás dos formas de elegir. Puedes tocar directamente a la escritora con la que quieres jugar, en azul o en rojo." },
+  { "key": "05-manual", "start": 53, "duration": 12, "leadMs": 340, "rate": "-4%", "pitch": "+3Hz", "text": "Si ya sabes con quién quieres estar, pulsa su tarjeta. Verás claramente su nombre antes de confirmar." },
+  { "key": "06-automatic", "start": 65, "duration": 13, "leadMs": 340, "rate": "-4%", "pitch": "+4Hz", "text": "¿Prefieres que sea sorpresa? Pulsa detección automática y mantén el dedo sobre la huella hasta que termine la animación." },
+  { "key": "07-assigned", "start": 78, "duration": 10, "leadMs": 300, "rate": "-3%", "pitch": "+3Hz", "text": "Al finalizar verás tu equipo y el nombre de tu escritora. Revísalos y entra al juego." },
+  { "key": "08-ready", "start": 88, "duration": 7, "leadMs": 260, "rate": "-3%", "pitch": "+5Hz", "text": "¡Ya casi está! Ahora vamos a comprobar que tu pantalla responde bien con cuatro colores." },
+  { "key": "09-red", "start": 95, "duration": 7, "leadMs": 420, "rate": "-4%", "pitch": "+6Hz", "text": "Primera prueba: rojo. ¿Lo ves? ¡Perfecto!" },
+  { "key": "10-blue", "start": 102, "duration": 7, "leadMs": 420, "rate": "-4%", "pitch": "+6Hz", "text": "Ahora azul. ¿Ha cambiado toda la pantalla?" },
+  { "key": "11-green", "start": 109, "duration": 7, "leadMs": 420, "rate": "-4%", "pitch": "+6Hz", "text": "Seguimos con verde. ¡Esto marcha genial!" },
+  { "key": "12-white", "start": 116, "duration": 7, "leadMs": 420, "rate": "-4%", "pitch": "+6Hz", "text": "Y por último, blanco. ¿Ha funcionado también?" },
+  { "key": "13-complete", "start": 123, "duration": 8, "leadMs": 280, "rate": "-3%", "pitch": "+6Hz", "text": "¡Prueba completada! Tu móvil está conectado y listo para participar." },
+  { "key": "14-farewell", "start": 131, "duration": 7, "leadMs": 240, "rate": "-2%", "pitch": "+6Hz", "text": "Gracias, musa. Prepárate para inspirar y disfrutar. ¡Nos vemos dentro!" }
+]
