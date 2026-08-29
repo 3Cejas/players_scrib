@@ -25,6 +25,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   );
 
   assert.match(tutorial, /id="videotutorial_control"/);
+  assert.match(tutorial, /Puedes reproducirlo antes o durante el tutorial\./);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-vista-principal="tutorial"[^>]*onclick="mostrar_vista_tutorial\(\)"[^>]*>[^<]*VISTA TUTORIAL/);
   assert.doesNotMatch(tutorial, /boton_banderas_musas|data-solicitud-calentamiento/);
 
@@ -44,6 +45,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /\.control-tabs-viewport\s*\{[\s\S]*overflow-x: auto;[\s\S]*scroll-behavior: smooth;/);
   assert.match(css, /\.control-tabs-shell\s*\{[\s\S]*grid-template-columns:\s*2rem minmax\(0, 1fr\) 2rem;/);
   assert.match(css, /\.control-tabs-arrow\[hidden\]\s*\{[\s\S]*display: inline-grid !important;[\s\S]*visibility: hidden;/);
+  assert.match(css, /\.control-tabs-shell::before,[\s\S]*\.control-tabs-shell::after[\s\S]*pointer-events: none;/);
+  assert.match(css, /\.control-tabs-shell\[data-has-previous="true"\]::before,[\s\S]*\.control-tabs-shell\[data-has-next="true"\]::after[\s\S]*opacity: 1;/);
   assert.match(css, /#boton_vista_tutorial\[data-active="1"\][\s\S]*#boton_vista_calentamiento\[data-active="1"\][\s\S]*#boton_vista_partida\[data-active="1"\]/);
   assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
   assert.match(css, /control-group--representacion\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*overflow: auto;/);
@@ -53,6 +56,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /> \.creditos-host\s*\{[\s\S]*max-height: 100%;[\s\S]*overscroll-behavior: contain;[\s\S]*contain: layout paint;/);
 
   assert.match(actions, /function actualizarFlechasPestanasControl\(\)/);
+  assert.match(actions, /shell\.dataset\.hasPrevious = mostrarAnterior \? "true" : "false"/);
+  assert.match(actions, /shell\.dataset\.hasNext = mostrarSiguiente \? "true" : "false"/);
   assert.match(actions, /viewport\.scrollTo\(\{ left: destino, behavior: "smooth" \}\)/);
   assert.match(actions, /boton\.setAttribute\("aria-selected", activa \? "true" : "false"\)/);
   assert.match(actions, /function mostrar_vista_tutorial\(\)\s*\{\s*aplicarVistaPrincipalControl\("tutorial"\);\s*\}/);

@@ -10097,9 +10097,49 @@ table.default {
     width: 100%;
     max-width: 100%;
     overflow: hidden;
+    isolation: isolate;
+}
+
+/* El final de la lista se desvanece bajo la flecha: deja claro que quedan
+   pestanas por descubrir sin mostrar un boton cortado de golpe. */
+.control-tabs-shell::before,
+.control-tabs-shell::after {
+    content: "";
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    bottom: 0;
+    width: clamp(2.1rem, 3.2vw, 3.7rem);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
+
+.control-tabs-shell::before {
+    left: 2.3rem;
+    background: linear-gradient(90deg, rgba(1, 8, 14, 0.98), rgba(1, 8, 14, 0));
+}
+
+.control-tabs-shell::after {
+    right: 2.3rem;
+    background: linear-gradient(90deg, rgba(1, 8, 14, 0), rgba(1, 8, 14, 0.98));
+}
+
+.control-tabs-shell[data-has-previous="true"]::before,
+.control-tabs-shell[data-has-next="true"]::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .control-tabs-shell::before,
+    .control-tabs-shell::after {
+        transition: none;
+    }
 }
 
 .control-tabs-arrow {
+    position: relative;
+    z-index: 5;
     width: 100%;
     min-width: 0;
     box-sizing: border-box;

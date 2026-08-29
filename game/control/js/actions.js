@@ -1229,10 +1229,15 @@ function actualizarFlechasPestanasControl() {
     const anterior = document.getElementById("control_tabs_prev");
     const siguiente = document.getElementById("control_tabs_next");
     if (!viewport || !anterior || !siguiente) return;
+    const shell = viewport.closest(".control-tabs-shell");
     const maximo = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
     const hayDesbordamiento = maximo > 2;
     const mostrarAnterior = hayDesbordamiento && viewport.scrollLeft > 2;
     const mostrarSiguiente = hayDesbordamiento && viewport.scrollLeft < maximo - 2;
+    if (shell) {
+        shell.dataset.hasPrevious = mostrarAnterior ? "true" : "false";
+        shell.dataset.hasNext = mostrarSiguiente ? "true" : "false";
+    }
     anterior.hidden = !mostrarAnterior;
     siguiente.hidden = !mostrarSiguiente;
     anterior.setAttribute("aria-hidden", mostrarAnterior ? "false" : "true");
