@@ -133,6 +133,7 @@ test("diagnostic frames only accept bounded raster data for the exact ticket ses
   const frame = {
     ticket_id: "help-1",
     session_id: "session-1",
+    stream_id: "mstream_browserone",
     seq: 4,
     mime: "image/jpeg",
     data: "AQID",
@@ -142,12 +143,14 @@ test("diagnostic frames only accept bounded raster data for the exact ticket ses
   };
   assert.equal(api.procesarFrame(frame), true);
   assert.equal(api.procesarFrame(frame), false, "duplicate sequences are rejected");
+  assert.equal(api.procesarFrame({ ...frame, seq: 1, stream_id: "mstream_browsertwo" }), true, "a reloaded muse replaces the stale stream immediately");
   assert.equal(api.procesarFrame({ ...frame, seq: 5, session_id: "other" }), false);
   assert.equal(api.procesarFrame({ ...frame, seq: 5, mime: "image/svg+xml" }), false);
   assert.equal(api.procesarFrame({ ...frame, seq: 5, data: "not base64!" }), false);
 
   const safe = plain(api.normalizarFrame(frame));
   assert.equal(safe.src, "data:image/jpeg;base64,AQID");
+  assert.equal(safe.streamId, "mstream_browserone");
   assert.equal(safe.width, 390);
   assert.equal(safe.height, 844);
 });
@@ -305,7 +308,7 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(html, /class="asistencia-modal__dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
   assert.match(html, /id="asistencia_modal_fondo"[^>]*aria-label="Cerrar detalle de asistencia"/);
   assert.match(html, /id="asistencia_modal_cerrar"[^>]*>[^<]*CERRAR<\/button>/);
-  assert.match(html, /muse-help-control\.js\?v=20260829r/);
+  assert.match(html, /muse-help-control\.js\?v=20260830a/);
 
   assert.match(actions, /new Set\(\["tutorial", "detonadores", "juego", "representacion", "asistencia"\]\)/);
   assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)[\s\S]*setPanelParametrosColapsadoControl\(true\)/);
@@ -336,6 +339,9 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(source, /event\.key === "Escape" && detailModalOpen/);
   assert.match(source, /cerrarDetalle: closeDetail/);
   assert.match(source, /limpiar: clearAll/);
+  assert.match(source, /previous\.streamId === frame\.streamId/);
+  assert.match(source, /name\.className = `asistencia-ticket__name \$\{ticket\.team\.className\}`/);
+  assert.doesNotMatch(source, /meta\.textContent = `\$\{teamColorLabel/);
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /eval\s*\(|new Function/);
 
@@ -347,6 +353,7 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(css, /\.asistencia-modal \[hidden\]\s*\{[\s\S]*display:\s*none !important;/);
   assert.match(css, /@media \(max-width: 900px\) and \(orientation: portrait\)[\s\S]*\.control-group\[data-control-section="asistencia"\]/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.asistencia-tab-contador/);
+  assert.match(css, /\.asistencia-control__list\s*\{[\s\S]*grid-auto-rows:\s*minmax\(3\.15rem, auto\);/);
 });
 
 test("dramaturgy Control replica synchronizes only allowlisted reads and keeps assistance disabled", () => {

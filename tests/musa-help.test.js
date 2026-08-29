@@ -144,8 +144,8 @@ test("muse page centers SOS and explains scoped help without internal role jargo
   const css = read("game/public/players/css/musa-help.css");
   const js = read("game/public/players/js/musa-help.js");
 
-  assert.match(html, /musa-help\.css\?v=20260829r/);
-  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260829r/);
+  assert.match(html, /musa-help\.css\?v=20260830a/);
+  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260830a/);
   assert.match(css, /\.musa-help-fab\s*\{[\s\S]*position:\s*fixed;[\s\S]*z-index:\s*2147483630;/);
   assert.match(css, /\.musa-help-remote-indicator\s*\{[\s\S]*z-index:\s*2147483620;/);
   assert.match(css, /@media \(max-width: 540px\)[\s\S]*\.musa-help-fab\s*\{[\s\S]*grid-template-columns:\s*1fr;[\s\S]*justify-items:\s*center;/);
@@ -166,7 +166,7 @@ test("diagnostic stream is local, app-only, bounded and server-authoritative", (
   assert.match(js, /globalRef\.html2canvas/);
   assert.match(js, /return crearCanvasEstructural\(\)/, "native structural fallback remains available offline");
   assert.match(js, /dataUrl\.slice\(coma \+ 1\)/, "frames strip the data URL prefix");
-  assert.match(js, /ticket_id:[\s\S]*session_id:[\s\S]*seq:[\s\S]*mime:[\s\S]*data:[\s\S]*width:[\s\S]*height:[\s\S]*ts: Date\.now\(\)/);
+  assert.match(js, /ticket_id:[\s\S]*session_id:[\s\S]*stream_id:[\s\S]*seq:[\s\S]*mime:[\s\S]*data:[\s\S]*width:[\s\S]*height:[\s\S]*ts: Date\.now\(\)/);
   assert.match(js, /TIPOS_COMANDO = new Set\(\["tap", "scroll", "back", "reconnect"\]\)/);
   assert.doesNotMatch(js, /history\.back\(/, "remote back never leaves SCRIB");
   assert.match(js, /No hay una ventana interna segura que cerrar/);
@@ -218,23 +218,23 @@ test("authoritative attended tickets keep an accessible non-blocking screen halo
   assert.deepEqual(help.getAttendingNotice(attended), {
     visible: true,
     diagnostico: false,
-    texto: "YA TE ESTÁN ATENDIENDO"
+    texto: ""
   });
   assert.deepEqual(help.getAttendingNotice(diagnosing), {
     visible: true,
     diagnostico: true,
-    texto: "ESTAMOS REVISANDO ESTA PÁGINA"
+    texto: ""
   });
   assert.deepEqual(help.getAttendingNotice(null), { visible: false, diagnostico: false, texto: "" });
 
   const js = read("game/public/players/js/musa-help.js");
   const css = read("game/public/players/css/musa-help.css");
   assert.match(js, /id = "musa_help_attending_indicator"/);
-  assert.match(js, /setAttribute\("role", "status"\)/);
-  assert.match(js, /setAttribute\("aria-live", "polite"\)/);
+  assert.match(js, /attendingHalo\.setAttribute\("aria-hidden", "true"\)/);
   assert.match(js, /ui\.attendingHalo\.hidden = !avisoAtencion\.visible/);
   assert.match(css, /\.musa-help-attending-halo\s*\{[\s\S]*position:\s*fixed;[\s\S]*z-index:\s*2147483590;[\s\S]*pointer-events:\s*none;/);
-  assert.match(css, /bottom:\s*max\(14px, calc\(env\(safe-area-inset-bottom\) \+ 8px\)\)/);
+  assert.match(css, /\.musa-help-attending-halo__text\s*\{[\s\S]*display:\s*none !important;/);
+  assert.doesNotMatch(js, /SOLO ESTA PÁGINA|ESTAMOS REVISANDO ESTA PÁGINA/);
   assert.match(css, /\.musa-help-fab\s*\{[\s\S]*z-index:\s*2147483630;/);
   assert.match(css, /\.musa-help-confirm,[\s\S]*\.musa-help-flag\s*\{[\s\S]*z-index:\s*2147483610;/);
 });

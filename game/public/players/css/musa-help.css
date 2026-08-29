@@ -354,27 +354,7 @@
 }
 
 .musa-help-attending-halo__text {
-    position: absolute;
-    left: 50%;
-    bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
-    display: inline-flex;
-    width: max-content;
-    max-width: calc(100vw - max(32px, env(safe-area-inset-left)) - max(32px, env(safe-area-inset-right)));
-    min-height: 38px;
-    box-sizing: border-box;
-    align-items: center;
-    justify-content: center;
-    padding: 9px 14px;
-    transform: translateX(-50%);
-    border: 1px solid color-mix(in srgb, var(--musa-help-color), white 42%);
-    border-radius: 999px;
-    background: rgba(2, 11, 20, 0.94);
-    color: #f4fdff;
-    box-shadow: 0 0 18px color-mix(in srgb, var(--musa-help-color), transparent 40%);
-    font: 800 clamp(9px, 2.7vw, 13px)/1.25 "Retro-gaming", "Courier New", monospace;
-    letter-spacing: 0.05em;
-    text-align: center;
-    text-wrap: balance;
+    display: none !important;
 }
 
 .musa-help-attending-halo[data-diagnostic="1"] .musa-help-attending-halo__text::before {

@@ -3379,7 +3379,7 @@ const coreSpecs = [
           zIndex: Number(style.zIndex) || 0
         } : null;
       });
-      ctx.assert(attendingHalo && /YA TE EST.+ATENDIENDO/i.test(attendingHalo.text), "attending halo should explain that the team is helping");
+      ctx.assert(attendingHalo && attendingHalo.text === "", "attending halo should frame the page without an extra message");
       ctx.assert(attendingHalo.position === "fixed" && attendingHalo.pointerEvents === "none", "attending halo must persist without blocking muse input");
       ctx.assert(
         attendingHalo.top === 0 && attendingHalo.left === 0 && attendingHalo.right === 0 && attendingHalo.bottom === 0,
@@ -3410,6 +3410,12 @@ const coreSpecs = [
         10000
       );
       await ctx.waitForVisible("musa1", "#musa_help_remote_indicator", true, "muse sees a persistent remote-assistance indicator");
+      await ctx.waitForText(
+        "musa1",
+        "#musa_help_remote_indicator",
+        (text) => text.trim() === "ASISTENCIA ACTIVA",
+        "muse sees the concise assistance label"
+      );
       await ctx.waitFor(
         "Control receives a real live page frame",
         async () => ctx.evaluate("control", () => {
@@ -3478,12 +3484,10 @@ const coreSpecs = [
         true,
         "reloaded muse restores the attending halo from authoritative state"
       );
-      await ctx.waitForText(
-        "musa1",
-        "#musa_help_attending_indicator",
-        (text) => /YA TE EST.+ATENDIENDO/i.test(text),
-        "reloaded muse keeps the attending message"
-      );
+      const reloadedHaloText = await ctx.evaluate("musa1", () => (
+        document.querySelector("#musa_help_attending_indicator")?.textContent.trim() || ""
+      ));
+      ctx.assert(reloadedHaloText === "", "reloaded muse keeps the clean attending frame without extra copy");
 
       await ctx.evaluate("control", (ticketId) => {
         window.ScribMuseHelpControl.seleccionar(ticketId);

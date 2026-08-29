@@ -200,10 +200,10 @@
         })[status] || "PENDIENTE";
     }
 
-    function teamColorLabel(team) {
-        if (team && team.id === 1) return "AZUL";
-        if (team && team.id === 2) return "ROJO";
-        return "SIN ASIGNAR";
+    function applyTeamNameStyle(element, ticket) {
+        if (!element || !ticket) return;
+        element.classList.remove("is-blue", "is-red", "is-neutral");
+        element.classList.add(ticket.team.className);
     }
 
     function diagnosticLabel(status) {
@@ -275,14 +275,15 @@
             button.dataset.ticketId = ticket.ticketId;
             button.dataset.status = ticket.status;
             button.setAttribute("aria-pressed", ticket.ticketId === state.selectedId ? "true" : "false");
-            button.setAttribute("aria-label", `${ticket.museName}, ${teamColorLabel(ticket.team)}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}, ${ticket.connected ? "conectada" : "desconectada"}`);
+            button.setAttribute("aria-label", `${ticket.museName}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}, ${ticket.connected ? "conectada" : "desconectada"}`);
             swatch.className = "asistencia-ticket__flag";
             swatch.style.setProperty("--help-flag", ticket.color);
             swatch.setAttribute("aria-hidden", "true");
             copy.className = "asistencia-ticket__copy";
+            name.className = `asistencia-ticket__name ${ticket.team.className}`;
             name.textContent = ticket.museName;
             meta.className = "asistencia-ticket__meta";
-            meta.textContent = `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`;
+            meta.textContent = relativeAge(ticket.requestedTs);
             connection.className = "asistencia-connection";
             connection.dataset.connected = ticket.connected ? "1" : "0";
             connection.setAttribute("role", "img");
@@ -378,7 +379,8 @@
         const diagnosticActive = ticket.diagnostic.status === "activo" && Boolean(ticket.diagnostic.sessionId);
         const diagnosticPending = ticket.diagnostic.status === "solicitado";
         setText("asistencia_nombre", ticket.museName);
-        setText("asistencia_meta", `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`);
+        setText("asistencia_meta", relativeAge(ticket.requestedTs));
+        applyTeamNameStyle(getEl("asistencia_nombre"), ticket);
         const connection = getEl("asistencia_conexion");
         if (connection) {
             connection.dataset.connected = ticket.connected ? "1" : "0";
@@ -448,12 +450,12 @@
             const button = ticketButtons.get(ticket.ticketId);
             if (!button) return;
             const meta = button.querySelector(".asistencia-ticket__meta");
-            if (meta) meta.textContent = `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`;
-            button.setAttribute("aria-label", `${ticket.museName}, ${teamColorLabel(ticket.team)}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}, ${ticket.connected ? "conectada" : "desconectada"}`);
+            if (meta) meta.textContent = relativeAge(ticket.requestedTs);
+            button.setAttribute("aria-label", `${ticket.museName}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}, ${ticket.connected ? "conectada" : "desconectada"}`);
         });
         const ticket = selectedTicket();
         if (!ticket) return;
-        setText("asistencia_meta", `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`);
+        setText("asistencia_meta", relativeAge(ticket.requestedTs));
         const frame = frames.get(ticket.ticketId);
         if (frame && ticket.diagnostic.status === "activo" && frame.sessionId === ticket.diagnostic.sessionId) {
             setText("asistencia_ultimo_frame", `Imagen ${relativeAge(frame.ts)}`);
@@ -724,6 +726,7 @@
         const frame = payload && typeof payload === "object" ? payload : {};
         const ticketId = cleanText(frame.ticket_id ?? frame.ticketId, 128);
         const sessionId = cleanText(frame.session_id ?? frame.sessionId, 128);
+        const streamId = cleanText(frame.stream_id ?? frame.streamId, 128);
         const mime = cleanText(frame.mime, 32).toLowerCase();
         const data = typeof frame.data === "string" ? frame.data : "";
         const seq = Math.max(0, Math.floor(Number(frame.seq) || 0));
@@ -732,6 +735,7 @@
         return {
             ticketId,
             sessionId,
+            streamId,
             seq,
             mime,
             src: `data:${mime};base64,${data}`,
@@ -754,7 +758,7 @@
         const ticket = state.tickets.find((item) => item.ticketId === frame.ticketId);
         if (!ticket || ticket.diagnostic.status !== "activo" || ticket.diagnostic.sessionId !== frame.sessionId) return false;
         const previous = frames.get(frame.ticketId);
-        if (previous && frame.seq <= previous.seq) return false;
+        if (previous && previous.streamId === frame.streamId && frame.seq <= previous.seq) return false;
         frames.set(frame.ticketId, frame);
         if (state.selectedId === frame.ticketId) {
             renderPreview(ticket);

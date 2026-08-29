@@ -157,9 +157,7 @@
         return {
             visible: true,
             diagnostico: diagnosticoActivo,
-            texto: diagnosticoActivo
-                ? "ESTAMOS REVISANDO ESTA PÁGINA"
-                : "YA TE ESTÁN ATENDIENDO"
+            texto: ""
         };
     }
 
@@ -180,6 +178,7 @@
             banderaMinimizada: false,
             diagnostico: null,
             frameSeq: 0,
+            frameStreamId: crearRequestId(globalRef).replace(/^mhelp_/, "mstream_"),
             frameTimer: null,
             frameEnCurso: false,
             ultimoError: "",
@@ -258,13 +257,11 @@
             attendingHalo.id = "musa_help_attending_indicator";
             attendingHalo.className = "musa-help-attending-halo";
             attendingHalo.hidden = true;
-            attendingHalo.setAttribute("role", "status");
-            attendingHalo.setAttribute("aria-live", "polite");
-            attendingHalo.setAttribute("aria-atomic", "true");
+            attendingHalo.setAttribute("aria-hidden", "true");
             const attendingHaloText = documentRef.createElement("span");
             attendingHaloText.id = "musa_help_attending_halo_text";
             attendingHaloText.className = "musa-help-attending-halo__text";
-            attendingHaloText.textContent = "YA TE ESTÁN ATENDIENDO";
+            attendingHaloText.hidden = true;
             attendingHalo.append(attendingHaloText);
 
             documentRef.body.append(fab, confirmacion, bandera, attendingHalo, remoteIndicator);
@@ -360,7 +357,8 @@
             ui.flagCancel.disabled = estadoLocal.solicitudPendiente;
             ui.attendingHalo.hidden = !avisoAtencion.visible;
             ui.attendingHalo.dataset.diagnostic = avisoAtencion.diagnostico ? "1" : "0";
-            ui.attendingHaloText.textContent = avisoAtencion.texto || "YA TE ESTÁN ATENDIENDO";
+            ui.attendingHaloText.hidden = true;
+            ui.attendingHaloText.textContent = "";
             if (!ticket) {
                 definirColor("#ffd60a");
                 ui.bandera.hidden = true;
@@ -657,6 +655,7 @@
                 socket.emit(EVENTOS.diagnosticoFrame, {
                     ticket_id: diagnostico.ticket_id,
                     session_id: diagnostico.session_id,
+                    stream_id: estadoLocal.frameStreamId,
                     seq: estadoLocal.frameSeq,
                     mime: frame.mime,
                     data: frame.data,
@@ -725,22 +724,23 @@
                 estadoLocal.diagnostico = { ticket_id: ticketId, session_id: sessionId, expires_ts: expiracionActiva };
                 estadoLocal.banderaMinimizada = true;
                 estadoLocal.frameSeq = 0;
+                estadoLocal.frameStreamId = crearRequestId(globalRef).replace(/^mhelp_/, "mstream_");
                 ui.remoteIndicator.hidden = false;
-                ui.remoteIndicator.textContent = "ASISTENCIA ACTIVA · SOLO ESTA PÁGINA";
+                ui.remoteIndicator.textContent = "ASISTENCIA ACTIVA";
                 renderizar();
                 programarFrame(0);
             });
         }
 
-        function mostrarActividadRemota(texto) {
+        function mostrarActividadRemota() {
             if (estadoLocal.remoteActivityTimer) globalRef.clearTimeout(estadoLocal.remoteActivityTimer);
             ui.remoteIndicator.hidden = false;
-            ui.remoteIndicator.textContent = textoSeguro(texto, 80) || "ASISTENCIA ACTIVA";
+            ui.remoteIndicator.textContent = "ASISTENCIA ACTIVA";
             estadoLocal.remoteActivityTimer = globalRef.setTimeout(() => {
                 estadoLocal.remoteActivityTimer = null;
                 if (diagnosticoVigente()) {
                     ui.remoteIndicator.hidden = false;
-                    ui.remoteIndicator.textContent = "ASISTENCIA ACTIVA · SOLO ESTA PÁGINA";
+                    ui.remoteIndicator.textContent = "ASISTENCIA ACTIVA";
                 } else {
                     ui.remoteIndicator.hidden = true;
                 }

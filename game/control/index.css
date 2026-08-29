@@ -1267,6 +1267,11 @@ table {
     overflow: auto;
     list-style: none;
     scrollbar-color: rgba(255, 216, 77, 0.45) transparent;
+    grid-auto-rows: minmax(3.15rem, auto);
+}
+
+.asistencia-control__list > li {
+    min-width: 0;
 }
 
 .asistencia-control__empty {
@@ -1284,6 +1289,8 @@ table {
     display: grid;
     grid-template-columns: 1.4rem minmax(0, 1fr) auto auto;
     width: 100%;
+    min-height: 3.15rem;
+    box-sizing: border-box;
     min-width: 0;
     align-items: center;
     gap: 0.44rem;
@@ -1296,6 +1303,7 @@ table {
     text-align: left;
     cursor: pointer;
     transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+    overflow: hidden;
 }
 
 .asistencia-ticket.is-blue {
@@ -1356,6 +1364,22 @@ table {
     text-overflow: ellipsis;
 }
 
+.asistencia-ticket__name,
+.asistencia-detail__identity strong {
+    color: var(--help-team, #ffd84d);
+    text-shadow: 0 0 0.55rem color-mix(in srgb, var(--help-team, #ffd84d), transparent 44%);
+}
+
+.asistencia-ticket__name.is-blue,
+.asistencia-detail__identity strong.is-blue {
+    --help-team: #2adfff;
+}
+
+.asistencia-ticket__name.is-red,
+.asistencia-detail__identity strong.is-red {
+    --help-team: #ff536b;
+}
+
 .asistencia-ticket__copy span,
 .asistencia-ticket__status {
     color: #8fa3b2;
@@ -1381,6 +1405,10 @@ table {
 
 .asistencia-ticket__status {
     color: #ffd84d;
+    min-width: 0;
+    max-width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
@@ -1455,7 +1483,7 @@ table {
 
 .asistencia-detail__identity strong {
     overflow: hidden;
-    color: #f2f9ff;
+    color: var(--help-team, #ffd84d);
     font-size: clamp(0.66rem, 0.84vw, 0.88rem);
     white-space: nowrap;
     text-overflow: ellipsis;
