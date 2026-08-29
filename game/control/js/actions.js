@@ -19,6 +19,7 @@ let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
 let vista_espectador_modo = "partida";
+let vista_principal_control = "partida";
 let puntuacion_slide_step_control = 0;
 let estado_puntuacion_final_control = null;
 let puntuacion_final_captura_solicitada = false;
@@ -1158,7 +1159,10 @@ function activarSeccionControl(seccion) {
     if (!contenedor) return;
     const tablaPrincipal = document.querySelector("table.default");
     if (tablaPrincipal) {
-        tablaPrincipal.classList.toggle("asistencia-activa", seccion === "asistencia");
+        tablaPrincipal.classList.remove("asistencia-activa");
+    }
+    if (seccion === "asistencia" && !parametros_colapsados_control) {
+        setPanelParametrosColapsadoControl(true);
     }
     document.querySelectorAll("[data-control-section]").forEach((panel) => {
         const activa = panel === contenedor;
@@ -1188,6 +1192,9 @@ function activarSeccionControl(seccion) {
 
 function toggleSeccionControl(seccion) {
     if (!SECCIONES_BOTONES_CONTROL.has(seccion)) return;
+    if (seccion !== "asistencia" && window.ScribMuseHelpControl?.cerrarDetalle) {
+        window.ScribMuseHelpControl.cerrarDetalle();
+    }
     if (teleprompter_visible) {
         if (seccion === "representacion") {
             volverMenuRepresentacionTeleprompter();
@@ -2358,26 +2365,14 @@ function cambiar_vista() {
     socket.emit('cambiar_vista', 'nada');
 };
 
-function cambiar_vista_calentamiento(boton) {
-    vista_calentamiento = !vista_calentamiento;
-    actualizarBotonVistaCalentamiento(boton);
-    socket.emit('cambiar_vista_calentamiento', { activo: vista_calentamiento });
-    if (vista_calentamiento) {
-        pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
-    }
+const VISTAS_PRINCIPALES_CONTROL = new Set(["tutorial", "detonadores", "partida"]);
+
+function emitirVistaControl(evento, payload) {
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") return;
+    socket.emit(evento, payload);
 }
 
-function mostrar_vista_tutorial() {
-    if (vista_calentamiento) {
-        vista_calentamiento = false;
-        actualizarBotonVistaCalentamiento();
-        socket.emit('cambiar_vista_calentamiento', { activo: false });
-    }
-    if (vista_espectador_modo !== "partida") {
-        vista_espectador_modo = "partida";
-        actualizarBotonesVistaEspectadorControl();
-        socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
-    }
+function cerrarVideotutorialDesdeVistaControl() {
     if (window.ScribVideotutorialControl) {
         const estadoVideo = window.ScribVideotutorialControl.obtenerEstado();
         if (estadoVideo.visible || estadoVideo.reproduciendo) {
@@ -2385,7 +2380,63 @@ function mostrar_vista_tutorial() {
         }
     }
 }
+
+function actualizarBotonesVistaPrincipalControl() {
+    const vistaBaseVisible = vista_espectador_modo === "partida";
+    document.querySelectorAll("[data-vista-principal]").forEach((boton) => {
+        const activa = vistaBaseVisible && boton.dataset.vistaPrincipal === vista_principal_control;
+        boton.dataset.active = activa ? "1" : "0";
+        boton.classList.toggle("is-active", activa);
+        boton.setAttribute("aria-pressed", activa ? "true" : "false");
+    });
+    const botonDetonadores = document.getElementById("boton_vista_calentamiento");
+    const botonPartida = document.getElementById("boton_vista_partida");
+    if (botonDetonadores) {
+        botonDetonadores.textContent = tJuego2PControl("control.button.detonators_view", {}, "\u{1F4A5} VISTA DETONADORES");
+    }
+    if (botonPartida) {
+        botonPartida.textContent = tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA");
+    }
+}
+
+function aplicarVistaPrincipalControl(vista) {
+    const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "partida";
+    const activarDetonadores = destino === "detonadores";
+    vista_principal_control = destino;
+    if (vista_calentamiento !== activarDetonadores) {
+        vista_calentamiento = activarDetonadores;
+        emitirVistaControl("cambiar_vista_calentamiento", { activo: activarDetonadores });
+    }
+    if (vista_espectador_modo !== "partida") {
+        vista_espectador_modo = "partida";
+        emitirVistaControl("cambiar_vista_espectador_modo", { modo: "partida" });
+    }
+    cerrarVideotutorialDesdeVistaControl();
+    actualizarBotonesVistaEspectadorControl();
+    if (activarDetonadores) {
+        pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
+    }
+}
+
+function cambiar_vista_calentamiento() {
+    aplicarVistaPrincipalControl("detonadores");
+}
+
+function mostrar_vista_detonadores() {
+    aplicarVistaPrincipalControl("detonadores");
+}
+
+function mostrar_vista_tutorial() {
+    aplicarVistaPrincipalControl("tutorial");
+}
+
+function mostrar_vista_partida() {
+    aplicarVistaPrincipalControl("partida");
+}
+
 window.mostrar_vista_tutorial = mostrar_vista_tutorial;
+window.mostrar_vista_detonadores = mostrar_vista_detonadores;
+window.mostrar_vista_partida = mostrar_vista_partida;
 
 function fin_partida_global() {
     if (!juego_iniciado && !modo_actual) return;
@@ -2395,12 +2446,12 @@ function fin_partida_global() {
 function actualizarBotonVistaCalentamiento(boton) {
     const destino = boton || document.getElementById("boton_vista_calentamiento");
     if (!destino) return;
-    destino.textContent = vista_calentamiento
-        ? tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA")
-        : tJuego2PControl("control.button.detonators_view", {}, "\u{1F4A5} VISTA DETONADORES");
-    destino.dataset.activo = vista_calentamiento ? "1" : "0";
+    if (vista_calentamiento) vista_principal_control = "detonadores";
+    destino.textContent = tJuego2PControl("control.button.detonators_view", {}, "\u{1F4A5} VISTA DETONADORES");
+    actualizarBotonesVistaPrincipalControl();
 }
 window.actualizarBotonVistaCalentamiento = actualizarBotonVistaCalentamiento;
+window.actualizarBotonesVistaPrincipalControl = actualizarBotonesVistaPrincipalControl;
 
 function actualizarBotonPausaReanudarControl(boton) {
     if (!boton) return;
@@ -2605,12 +2656,18 @@ function actualizarBotonesVistaEspectadorControl() {
         puntuacionNav.hidden = !visible;
         puntuacionNav.setAttribute("aria-hidden", visible ? "false" : "true");
     }
+    actualizarBotonesVistaPrincipalControl();
     actualizarControlesEscalaEspectadorControl();
 }
 
 function cambiar_vista_espectador(modo) {
     const destino = normalizarModoVistaEspectador(modo);
     const siguiente = vista_espectador_modo === destino ? "partida" : destino;
+    if (siguiente !== "partida" && vista_calentamiento) {
+        vista_calentamiento = false;
+        emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
+    }
+    if (siguiente !== "partida") vista_principal_control = "partida";
     vista_espectador_modo = siguiente;
     actualizarBotonesVistaEspectadorControl();
     socket.emit("cambiar_vista_espectador_modo", { modo: siguiente });
@@ -2637,6 +2694,11 @@ function mostrarPuntuacionFinal() {
         socket.emit("pedir_puntuacion_final");
         return;
     }
+    if (vista_calentamiento) {
+        vista_calentamiento = false;
+        emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
+    }
+    vista_principal_control = "partida";
     socket.emit("mostrar_puntuacion_final", {}, (respuesta = {}) => {
         if (respuesta && respuesta.ok === true) return;
         mostrarFeedbackPuntuacionControl(
@@ -3649,6 +3711,7 @@ function refrescarTextosEstaticosControl() {
         ["control_title_parameters_text", "control.button.parameters", "\u2699\uFE0F PAR\u00c1METROS"],
         ["control_subtitle_musas", "control.subtitle.muses", "DETONADORES PARA MUSAS"],
         ["boton_vista_tutorial", "control.button.tutorial_view", "\u{1F4D6} VISTA TUTORIAL"],
+        ["boton_vista_partida", "control.button.game_view", "\u{1F3AE} VISTA PARTIDA"],
         ["boton_reiniciar_calentamiento", "control.button.clear", "\u{1F9F9} LIMPIAR"],
         ["boton_reiniciar_marcador_calentamiento", "control.button.reset_score", "\u21BB REINICIAR MARCADOR"],
         ["boton_escribir", "control.button.write", "\u270E ESCRIBIR"],
@@ -3673,6 +3736,7 @@ function refrescarTextosEstaticosControl() {
             nodo.textContent = tJuego2PControl(clave, {}, fallback);
         }
     });
+    actualizarBotonesVistaPrincipalControl();
     actualizarEtiquetaRepresentacionControl();
 
     const fraseFinalJ1 = document.getElementById("frase_final_j1");

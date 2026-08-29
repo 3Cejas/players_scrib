@@ -268,10 +268,15 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.doesNotMatch(html, /id="asistencia_resolver"[^>]*>RESOLVER<\/button>/);
   assert.match(html, /ya autoriz&oacute; temporalmente esta p&aacute;gina al pedir ayuda[\s\S]*No permite escribir ni acceder a c&aacute;mara, micr&oacute;fono u otras aplicaciones/);
   assert.doesNotMatch(assistance, /<input|<textarea/);
-  assert.match(html, /muse-help-control\.js\?v=20260824f/);
+  assert.match(html, /id="asistencia_modal"[^>]*hidden[^>]*aria-hidden="true"/);
+  assert.match(html, /class="asistencia-modal__dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
+  assert.match(html, /id="asistencia_modal_fondo"[^>]*aria-label="Cerrar detalle de asistencia"/);
+  assert.match(html, /id="asistencia_modal_cerrar"[^>]*>[^<]*CERRAR<\/button>/);
+  assert.match(html, /muse-help-control\.js\?v=20260829c/);
 
   assert.match(actions, /new Set\(\["tutorial", "detonadores", "juego", "representacion", "asistencia"\]\)/);
-  assert.match(actions, /classList\.toggle\("asistencia-activa", seccion === "asistencia"\)/);
+  assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)[\s\S]*setPanelParametrosColapsadoControl\(true\)/);
+  assert.doesNotMatch(actions, /classList\.toggle\("asistencia-activa"/);
   assert.match(socketEvents, /socket\.emit\('pedir_ayuda_musas_estado'\)/);
   assert.match(socketEvents, /socket\.on\('ayuda_musas_estado'/);
   assert.match(socketEvents, /socket\.on\('ayuda_musa_diagnostico_frame'/);
@@ -292,12 +297,18 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(source, /"ayuda_musa_diagnostico_solicitar"/);
   assert.match(source, /"ayuda_musa_diagnostico_detener"/);
   assert.match(source, /new Set\(\["tap", "scroll", "back", "reconnect"\]\)/);
+  assert.match(source, /global\.document\.body\.appendChild\(modal\)/);
+  assert.match(source, /on\("asistencia_modal_fondo", "click", closeDetail\)/);
+  assert.match(source, /event\.key === "Escape" && detailModalOpen/);
+  assert.match(source, /cerrarDetalle: closeDetail/);
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /eval\s*\(|new Function/);
 
-  assert.match(css, /\.asistencia-control__workspace/);
+  assert.match(css, /\.asistencia-control__workspace\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) !important;/);
   assert.match(css, /\.asistencia-preview\[data-state="live"\]/);
-  assert.match(css, /table\.default\.asistencia-activa[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) !important/);
+  assert.match(css, /\.asistencia-modal\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*0;/);
+  assert.match(css, /\.asistencia-modal__backdrop\s*\{[\s\S]*background:\s*rgba\(0, 3, 8, 0\.82\);/);
+  assert.match(css, /\.asistencia-modal__dialog\s*\{[\s\S]*height:\s*min\(48rem, calc\(100vh - 2rem\)\);/);
   assert.match(css, /@media \(max-width: 900px\) and \(orientation: portrait\)[\s\S]*\.control-group\[data-control-section="asistencia"\]/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.asistencia-tab-contador/);
 });

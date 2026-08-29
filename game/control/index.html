@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260827j">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260829c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260827j"></script>
+<script src="./js/actions.js?v=20260829c"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -77,19 +77,19 @@
                 <td colspan="5">
                     <div class="control-panel-shell">
                         <nav class="control-tabs-shell" aria-label="Secciones de Control">
-                            <button id="control_tabs_prev" class="control-tabs-arrow control-tabs-arrow--prev" type="button" aria-label="Ver pesta&ntilde;as anteriores" onclick="document.getElementById('control_tabs_viewport').scrollBy({ left: -280, behavior: 'smooth' })" hidden>&#x2039;</button>
+                            <button id="control_tabs_prev" class="control-tabs-arrow control-tabs-arrow--prev" type="button" aria-label="Ver pesta&ntilde;as anteriores" onclick="desplazarPestanasControl('prev')" hidden>&#x2039;</button>
                             <div id="control_tabs_viewport" class="control-tabs-viewport" role="tablist" aria-label="Secciones de Control">
-                                <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="tutorial" aria-selected="false" aria-expanded="false" aria-controls="control_panel_tutorial" tabindex="-1" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
-                                <button id="control_title_detonadores" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="detonadores" aria-selected="false" aria-expanded="false" aria-controls="control_panel_detonadores" tabindex="-1" onclick="toggleSeccionControl('detonadores')">&#x1F4A5; DETONADORES</button>
-                                <button id="control_title_game" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="juego" aria-selected="true" aria-expanded="true" aria-controls="control_panel_juego" tabindex="0" onclick="toggleSeccionControl('juego')">&#x1F3AE; JUEGO</button>
-                                <button id="control_title_representation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="representacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_representacion" tabindex="-1" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
                                 <button id="control_title_assistance" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="asistencia" aria-selected="false" aria-expanded="false" aria-controls="control_panel_asistencia" tabindex="-1" onclick="toggleSeccionControl('asistencia')">
                                     <span aria-hidden="true">&#x1F6A9;</span>
                                     <span>ASISTENCIA</span>
                                     <span id="asistencia_tab_contador" class="asistencia-tab-contador" aria-label="0 incidencias activas">0</span>
                                 </button>
+                                <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="tutorial" aria-selected="false" aria-expanded="false" aria-controls="control_panel_tutorial" tabindex="-1" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
+                                <button id="control_title_detonadores" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="detonadores" aria-selected="false" aria-expanded="false" aria-controls="control_panel_detonadores" tabindex="-1" onclick="toggleSeccionControl('detonadores')">&#x1F4A5; DETONADORES</button>
+                                <button id="control_title_game" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="juego" aria-selected="true" aria-expanded="true" aria-controls="control_panel_juego" tabindex="0" onclick="toggleSeccionControl('juego')">&#x1F3AE; JUEGO</button>
+                                <button id="control_title_representation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="representacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_representacion" tabindex="-1" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
                             </div>
-                            <button id="control_tabs_next" class="control-tabs-arrow control-tabs-arrow--next" type="button" aria-label="Ver m&aacute;s pesta&ntilde;as" onclick="document.getElementById('control_tabs_viewport').scrollBy({ left: 280, behavior: 'smooth' })" hidden>&#x203A;</button>
+                            <button id="control_tabs_next" class="control-tabs-arrow control-tabs-arrow--next" type="button" aria-label="Ver m&aacute;s pesta&ntilde;as" onclick="desplazarPestanasControl('next')" hidden>&#x203A;</button>
                         </nav>
                         <div class="control-groups">
                         <div id="control_panel_tutorial" class="control-group control-group--tutorial control-collapsible is-collapsed" data-control-section="tutorial" role="tabpanel" aria-labelledby="control_title_tutorial">
@@ -127,12 +127,12 @@
                                 </p>
                             </section>
                             <div class="control-group-buttons control-group-buttons--tutorial">
-                                <button id="boton_vista_tutorial" class="btn" type="button" onclick="mostrar_vista_tutorial()">&#x1F4D6; VISTA TUTORIAL</button>
+                                <button id="boton_vista_tutorial" class="btn btn-vista-espectador" type="button" data-vista-principal="tutorial" data-active="0" aria-pressed="false" onclick="mostrar_vista_tutorial()">&#x1F4D6; VISTA TUTORIAL</button>
                             </div>
                         </div>
                         <div id="control_panel_detonadores" class="control-group control-group--calentamiento control-collapsible is-collapsed" data-control-section="detonadores" role="tabpanel" aria-labelledby="control_title_detonadores">
                             <div class="control-group-buttons control-group-buttons--two control-group-buttons--detonadores">
-                                <button id="boton_vista_calentamiento" class="btn" type="button" onclick="cambiar_vista_calentamiento(this)">&#x1F4A5; VISTA DETONADORES</button>
+                                <button id="boton_vista_calentamiento" class="btn btn-vista-espectador" type="button" data-vista-principal="detonadores" data-active="0" aria-pressed="false" onclick="mostrar_vista_detonadores()">&#x1F4A5; VISTA DETONADORES</button>
                                 <span id="boton_reiniciar_calentamiento" class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_reiniciar_marcador_calentamiento" class='btn' onclick="reiniciar_marcador_calentamiento()">&#x21BB; REINICIAR MARCADOR</span>
                                 <span id="boton_banderas_musas" class='btn' onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</span>
@@ -150,8 +150,9 @@
                                 <span id="boton_escribir" class='btn' onclick="temp()">&#x270E; ESCRIBIR</span>
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
+                                <button id="boton_vista_partida" class="btn btn-vista-espectador" type="button" data-vista-principal="partida" data-active="1" aria-pressed="true" onclick="mostrar_vista_partida()">&#x1F3AE; VISTA PARTIDA</button>
                                 <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
-                                <button id="boton_vista_puntuacion" class="btn boton-vista-puntuacion" type="button" onclick="mostrarPuntuacionFinal()">&#x1F3C6; RESULTADO</button>
+                                <button id="boton_vista_puntuacion" class="btn" type="button" onclick="mostrarPuntuacionFinal()">&#x1F3C6; RESULTADO</button>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
                                 <span id="boton_skip_tertulia" class='btn btn-skip-tertulia' onclick="saltar_tertulia()">&#x23ED;&#xFE0F; SKIP TERTULIA</span>
                             </div>
@@ -197,7 +198,14 @@
                                         <ul id="asistencia_lista" class="asistencia-control__list"></ul>
                                         <p id="asistencia_lista_vacia" class="asistencia-control__empty">No hay peticiones de ayuda.</p>
                                     </aside>
-                                    <main id="asistencia_detalle" class="asistencia-detail" aria-live="polite">
+                                    <div id="asistencia_modal" class="asistencia-modal" hidden aria-hidden="true">
+                                        <button id="asistencia_modal_fondo" class="asistencia-modal__backdrop" type="button" aria-label="Cerrar detalle de asistencia"></button>
+                                        <section class="asistencia-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="asistencia_nombre" aria-describedby="asistencia_meta">
+                                            <div class="asistencia-modal__toolbar">
+                                                <strong>DETALLE DE INCIDENCIA</strong>
+                                                <button id="asistencia_modal_cerrar" class="btn asistencia-modal__close" type="button" aria-label="Cerrar detalle">&#x2715; CERRAR</button>
+                                            </div>
+                                            <main id="asistencia_detalle" class="asistencia-detail" aria-live="polite">
                                         <div id="asistencia_sin_seleccion" class="asistencia-detail__placeholder">
                                             <span aria-hidden="true">&#x1F4F1;</span>
                                             <strong>SELECCIONA UNA INCIDENCIA</strong>
@@ -258,7 +266,9 @@
                                                 </div>
                                             </section>
                                         </div>
-                                    </main>
+                                            </main>
+                                        </section>
+                                    </div>
                                 </div>
                             </section>
                         </div>
@@ -740,14 +750,14 @@
                 </th>
             </tr>
         </table>
-</body>
 <script src="../dist/socket.io/socket.io.js"></script>
     <script src="../js/i18n.js?v=20260824a"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260824a"></script>
 <script src="./js/videotutorial-control.js?v=20260824d"></script>
-<script src="./js/muse-help-control.js?v=20260824f"></script>
-<script src="./js/socket-events.js?v=20260827d"></script>
+<script src="./js/muse-help-control.js?v=20260829c"></script>
+<script src="./js/socket-events.js?v=20260829c"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+</body>
 </html>

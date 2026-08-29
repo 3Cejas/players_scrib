@@ -18,24 +18,41 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(html, /id="control_tabs_prev"[^>]*hidden/);
   assert.match(html, /id="control_tabs_next"[^>]*hidden/);
   assert.match(html, /data-control-tab="juego"[^>]*aria-selected="true"[^>]*tabindex="0"/);
+  assert.ok(
+    html.indexOf('data-control-tab="asistencia"') < html.indexOf('data-control-tab="tutorial"'),
+    "Assistance must be the first tab, immediately before Tutorial"
+  );
 
   assert.match(tutorial, /id="videotutorial_control"/);
-  assert.match(tutorial, /id="boton_vista_tutorial"[^>]*>[^<]*VISTA TUTORIAL/);
+  assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-vista-principal="tutorial"[^>]*onclick="mostrar_vista_tutorial\(\)"[^>]*>[^<]*VISTA TUTORIAL/);
   assert.doesNotMatch(tutorial, /boton_banderas_musas|data-solicitud-calentamiento/);
 
-  assert.match(detonadores, /id="boton_vista_calentamiento"[^>]*>[^<]*VISTA DETONADORES/);
+  assert.match(detonadores, /id="boton_vista_calentamiento"[^>]*data-vista-principal="detonadores"[^>]*onclick="mostrar_vista_detonadores\(\)"[^>]*>[^<]*VISTA DETONADORES/);
   assert.match(detonadores, /id="boton_banderas_musas"/);
   assert.equal((detonadores.match(/data-solicitud-calentamiento=/g) || []).length, 3);
   assert.doesNotMatch(detonadores, /id="videotutorial_control"/);
+  assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_vista_partida"[^>]*data-vista-principal="partida"[^>]*onclick="mostrar_vista_partida\(\)"/);
+  assert.match(html, /id="boton_vista_puntuacion" class="btn"/);
+  assert.ok(
+    html.indexOf("./js/muse-help-control.js?v=20260829c") < html.lastIndexOf("</body>"),
+    "Control interaction modules must execute inside body"
+  );
 
   assert.match(css, /\.control-tabs-viewport\s*\{[\s\S]*overflow-x: auto;[\s\S]*scroll-behavior: smooth;/);
-  assert.match(css, /\.control-tabs-arrow\[hidden\]\s*\{[\s\S]*display: none !important;/);
-  assert.match(css, /table\.default\.asistencia-activa\s*\{[\s\S]*position: fixed;[\s\S]*inset:/);
-  assert.match(css, /table\.default\.asistencia-activa[\s\S]*\.asistencia-control[\s\S]*height: 100%;/);
+  assert.match(css, /\.control-tabs-shell\s*\{[\s\S]*grid-template-columns:\s*2rem minmax\(0, 1fr\) 2rem;/);
+  assert.match(css, /\.control-tabs-arrow\[hidden\]\s*\{[\s\S]*display: inline-grid !important;[\s\S]*visibility: hidden;/);
+  assert.match(css, /#boton_vista_tutorial\[data-active="1"\][\s\S]*#boton_vista_calentamiento\[data-active="1"\][\s\S]*#boton_vista_partida\[data-active="1"\]/);
+  assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
 
   assert.match(actions, /function actualizarFlechasPestanasControl\(\)/);
   assert.match(actions, /viewport\.scrollTo\(\{ left: destino, behavior: "smooth" \}\)/);
   assert.match(actions, /boton\.setAttribute\("aria-selected", activa \? "true" : "false"\)/);
-  assert.match(actions, /function mostrar_vista_tutorial\(\)[\s\S]*cambiar_vista_calentamiento[\s\S]*cambiar_vista_espectador_modo/);
+  assert.match(actions, /function mostrar_vista_tutorial\(\)\s*\{\s*aplicarVistaPrincipalControl\("tutorial"\);\s*\}/);
+  assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
+  assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
+  assert.match(actions, /function actualizarBotonesVistaPrincipalControl\(\)[\s\S]*document\.querySelectorAll\("\[data-vista-principal\]"\)[\s\S]*aria-pressed/);
+  assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)\s*\{\s*setPanelParametrosColapsadoControl\(true\);/);
+  assert.doesNotMatch(actions, /classList\.toggle\("asistencia-activa"/);
   assert.match(actions, /control\.button\.detonators_view[\s\S]*VISTA DETONADORES/);
+  assert.doesNotMatch(actions, /destino\.textContent\s*=\s*vista_calentamiento\s*\?/);
 });

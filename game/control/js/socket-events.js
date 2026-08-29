@@ -213,6 +213,11 @@ socket.on('health_pong', (estado) => {
 });
 socket.on('calentamiento_vista', (data) => {
     vista_calentamiento = Boolean(data && data.activo);
+    if (vista_calentamiento) {
+        vista_principal_control = "detonadores";
+    } else if (vista_principal_control === "detonadores") {
+        vista_principal_control = "partida";
+    }
     if (typeof actualizarBotonVistaCalentamiento === "function") {
         actualizarBotonVistaCalentamiento();
     }

@@ -13,6 +13,8 @@
     let cursorTimer = null;
     let lastRemoteCommandAt = 0;
     let initialized = false;
+    let detailModalOpen = false;
+    let lastFocusedTicketButton = null;
     let state = {
         connected: false,
         synced: false,
@@ -224,6 +226,28 @@
         if (element) element.hidden = Boolean(hidden);
     }
 
+    function setDetailModalOpen(open) {
+        const next = Boolean(open && selectedTicket());
+        detailModalOpen = next;
+        const modal = getEl("asistencia_modal");
+        if (!modal) return next;
+        modal.hidden = !next;
+        modal.setAttribute("aria-hidden", next ? "false" : "true");
+        global.document?.body?.classList.toggle("asistencia-modal-abierta", next);
+        if (next) {
+            const focusClose = () => getEl("asistencia_modal_cerrar")?.focus();
+            if (typeof global.requestAnimationFrame === "function") global.requestAnimationFrame(focusClose);
+            else global.setTimeout(focusClose, 0);
+        } else if (lastFocusedTicketButton && typeof lastFocusedTicketButton.focus === "function") {
+            lastFocusedTicketButton.focus();
+        }
+        return next;
+    }
+
+    function closeDetail() {
+        return setDetailModalOpen(false);
+    }
+
     function renderList() {
         const list = getEl("asistencia_lista");
         if (!list || !global.document) return;
@@ -254,7 +278,10 @@
             status.textContent = statusLabel(ticket.status);
             copy.append(name, meta);
             button.append(swatch, copy, status);
-            button.addEventListener("click", () => selectTicket(ticket.ticketId));
+            button.addEventListener("click", () => {
+                lastFocusedTicketButton = button;
+                selectTicket(ticket.ticketId);
+            });
             item.append(button);
             list.append(item);
         });
@@ -329,7 +356,10 @@
         const ticket = selectedTicket();
         setHidden("asistencia_sin_seleccion", Boolean(ticket));
         setHidden("asistencia_incidente", !ticket);
-        if (!ticket) return;
+        if (!ticket) {
+            if (detailModalOpen) closeDetail();
+            return;
+        }
         const open = isOpen(ticket);
         const busy = pending.has(ticket.ticketId);
         const diagnosticActive = ticket.diagnostic.status === "activo" && Boolean(ticket.diagnostic.sessionId);
@@ -433,6 +463,7 @@
             const firstOpen = normalized.tickets.find(isOpen);
             selectedId = firstOpen ? firstOpen.ticketId : (normalized.tickets[0] ? normalized.tickets[0].ticketId : "");
         }
+        if (!selectedId && detailModalOpen) closeDetail();
         pending.forEach((entry) => {
             if (entry.timeout) global.clearTimeout(entry.timeout);
         });
@@ -572,6 +603,7 @@
         state.error = "";
         state.message = "";
         render();
+        setDetailModalOpen(true);
         return true;
     }
 
@@ -734,11 +766,17 @@
     function initialize() {
         if (initialized || !global.document || !getEl("asistencia_control")) return;
         initialized = true;
+        const modal = getEl("asistencia_modal");
+        if (modal && global.document.body && modal.parentElement !== global.document.body) {
+            global.document.body.appendChild(modal);
+        }
         const on = (id, event, handler, options) => {
             const element = getEl(id);
             if (element) element.addEventListener(event, handler, options);
         };
         on("asistencia_actualizar", "click", requestState);
+        on("asistencia_modal_cerrar", "click", closeDetail);
+        on("asistencia_modal_fondo", "click", closeDetail);
         on("asistencia_atender", "click", attend);
         on("asistencia_resolver", "click", () => resolve("resuelta"));
         on("asistencia_cancelar", "click", () => resolve("cancelada"));
@@ -756,6 +794,12 @@
             event.preventDefault();
             emitRemoteCommand("scroll", { deltaX: event.deltaX, deltaY: event.deltaY });
         }, { passive: false });
+        global.document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && detailModalOpen) {
+                event.preventDefault();
+                closeDetail();
+            }
+        });
         ageInterval = global.setInterval(() => {
             refreshRelativeTimes();
         }, 1000);
@@ -785,6 +829,7 @@
         atender: attend,
         calcularTapContenido: calculateContainedTap,
         cancelar: () => resolve("cancelada"),
+        cerrarDetalle: closeDetail,
         detenerDiagnostico: stopDiagnostic,
         enviarComandoRemoto: emitRemoteCommand,
         inicializar: initialize,

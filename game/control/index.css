@@ -10082,7 +10082,218 @@ table.default {
         grid-column: 1;
     }
 
-    #panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
-        grid-column: 2;
+#panel_controles .control-group[data-control-section="asistencia"] > .control-collapsible-toggle {
+    grid-column: 2;
+}
+}
+
+/* Ajustes finales de navegacion y asistencia. Las flechas conservan su hueco
+   aunque esten ocultas para que las pestanas no salten ni invadan Parametros. */
+.control-tabs-shell {
+    grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+    gap: 0.3rem;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.control-tabs-arrow {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    align-self: stretch;
+}
+
+.control-tabs-arrow[hidden] {
+    display: inline-grid !important;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#panel_controles .control-tab[data-control-tab="asistencia"] {
+    flex-basis: clamp(9.4rem, 11.5vw, 12rem);
+}
+
+/* Las tres vistas base comparten exactamente el lenguaje visual del resto de
+   vistas de Juego (incluida Nube de inspiracion). */
+#panel_controles .btn-vista-espectador {
+    appearance: none;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    line-height: 1.15;
+}
+
+#boton_vista_tutorial[data-active="1"],
+#boton_vista_tutorial.is-active,
+#boton_vista_calentamiento[data-active="1"],
+#boton_vista_calentamiento.is-active,
+#boton_vista_partida[data-active="1"],
+#boton_vista_partida.is-active {
+    box-shadow: 0 0.22em #8ef2ff, 0 0 0.9em rgba(142, 242, 255, 0.45);
+    color: #f5fdff;
+    text-shadow: 0.06em 0.06em #104960;
+    background: linear-gradient(180deg, #1f4763 0%, #123144 100%);
+}
+
+/* Resultado deja de tener una decoracion propia: se comporta como cualquier
+   otro boton de Juego y solo usa el estado activo compartido. */
+#boton_vista_puntuacion,
+#boton_vista_puntuacion[data-available="1"] {
+    position: static;
+    border: 1px solid rgba(69, 243, 255, 0.56);
+    color: #a9faff;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.28)),
+        rgba(4, 11, 19, 0.92);
+    text-shadow:
+        0.07em 0.07em 0 #000,
+        0 0 0.45rem rgba(69, 243, 255, 0.34);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 0.65rem rgba(69, 243, 255, 0.14);
+}
+
+#boton_vista_puntuacion[data-available="1"]::after {
+    display: none;
+    content: none;
+}
+
+#boton_vista_puntuacion[data-active="1"],
+#boton_vista_puntuacion.is-active {
+    box-shadow: 0 0.22em #8ef2ff, 0 0 0.9em rgba(142, 242, 255, 0.45);
+    color: #f5fdff;
+    text-shadow: 0.06em 0.06em #104960;
+    background: linear-gradient(180deg, #1f4763 0%, #123144 100%);
+}
+
+/* Asistencia permanece dentro del hueco de Control. Solo la incidencia elegida
+   se eleva a una ventana modal para trabajar con ella sin desbordamientos. */
+#panel_controles .control-group--asistencia:not(.is-collapsed) > .asistencia-control {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+}
+
+.asistencia-control__workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.asistencia-control__queue {
+    min-height: clamp(15rem, 34vh, 26rem);
+}
+
+.asistencia-modal {
+    position: fixed;
+    z-index: 10000;
+    inset: 0;
+    display: grid;
+    box-sizing: border-box;
+    place-items: center;
+    padding: clamp(0.75rem, 2.5vw, 2rem);
+    isolation: isolate;
+}
+
+.asistencia-modal[hidden] {
+    display: none !important;
+}
+
+.asistencia-modal__backdrop {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 3, 8, 0.82);
+    backdrop-filter: blur(7px) saturate(0.72);
+    cursor: pointer;
+}
+
+.asistencia-modal__dialog {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: min(72rem, calc(100vw - 2rem));
+    height: min(48rem, calc(100vh - 2rem));
+    min-width: 0;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid rgba(255, 216, 77, 0.5);
+    border-radius: 0.72rem;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(255, 216, 77, 0.1), transparent 34%),
+        rgba(2, 7, 13, 0.98);
+    box-shadow: 0 1.3rem 4.5rem rgba(0, 0, 0, 0.78), 0 0 1.5rem rgba(255, 216, 77, 0.12);
+}
+
+.asistencia-modal__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 2.8rem;
+    padding: 0.45rem 0.6rem 0.45rem 0.85rem;
+    border-bottom: 1px solid rgba(255, 216, 77, 0.22);
+    color: #fff0a3;
+    font: 700 clamp(0.6rem, 0.82vw, 0.78rem)/1 "Retro-gaming", monospace;
+    letter-spacing: 0.07em;
+}
+
+.asistencia-modal__close.btn {
+    width: auto;
+    min-height: 2rem;
+    margin: 0;
+    padding: 0.42rem 0.72rem;
+    color: #ffd4da;
+    border: 1px solid rgba(255, 83, 107, 0.48);
+    background: rgba(75, 14, 27, 0.82);
+    box-shadow: 0 0.16em #ff536b;
+    font: 700 clamp(0.5rem, 0.68vw, 0.64rem)/1 "Retro-gaming", monospace;
+}
+
+.asistencia-modal .asistencia-detail {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 0;
+    overflow: auto;
+}
+
+.asistencia-modal .btn {
+    box-sizing: border-box;
+    font-family: "Retro-gaming", "Courier New", monospace;
+}
+
+body.asistencia-modal-abierta {
+    overflow: hidden !important;
+}
+
+@media (max-width: 720px) {
+    .asistencia-modal {
+        padding: 0.5rem;
+    }
+
+    .asistencia-modal__dialog {
+        width: calc(100vw - 1rem);
+        height: calc(100vh - 1rem);
+    }
+
+    .asistencia-modal .asistencia-detail__actions,
+    .asistencia-modal .asistencia-diagnostic__body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .asistencia-modal__backdrop {
+        backdrop-filter: none;
     }
 }
