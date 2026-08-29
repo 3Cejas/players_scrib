@@ -2943,14 +2943,14 @@ const coreSpecs = [
           async () => ctx.evaluate("spectator", () => {
             const audio = document.querySelector("#video_tutorial_overlay audio");
             const qr = document.querySelector(".scrib-video-tutorial__welcome-qr");
-            const logo = document.querySelector(".scrib-video-tutorial__brand img");
+            const logo = document.querySelector(".scrib-video-tutorial__brand-mark");
             if (!audio || audio.error || audio.readyState < 1 || !/tutorial-scrib-audio\.mp3(?:$|[?#])/i.test(audio.currentSrc)) {
               return false;
             }
             const overlay = document.querySelector("#video_tutorial_overlay");
             const rect = overlay && overlay.getBoundingClientRect();
-            const qrWidth = Number(qr && qr.naturalWidth || 0);
-            const logoWidth = Number(logo && logo.naturalWidth || 0);
+            const qrBackground = qr && getComputedStyle(qr).backgroundImage || "";
+            const logoBackground = logo && getComputedStyle(logo).backgroundImage || "";
             const coversViewport = Boolean(
               rect
               && Math.abs(rect.left) < 1
@@ -2958,12 +2958,14 @@ const coreSpecs = [
               && Math.abs(rect.width - window.innerWidth) < 1
               && Math.abs(rect.height - window.innerHeight) < 1
             );
-            if (qrWidth < 512 || logoWidth < 256 || !coversViewport) return false;
+            if (!/scribshow-musa-qr\.png\?v=20260829r/.test(qrBackground)
+              || !/scrib-logo-mark\.png\?v=20260829r/.test(logoBackground)
+              || !coversViewport) return false;
             return {
               duration: audio.duration,
               currentSrc: audio.currentSrc,
-              qrWidth,
-              logoWidth,
+              qrBackground,
+              logoBackground,
               coversViewport
             };
           }),
@@ -2973,9 +2975,38 @@ const coreSpecs = [
           Number.isFinite(mediaProbe.duration) && mediaProbe.duration >= 152.8 && mediaProbe.duration <= 153.1,
           `narrated tutorial should last about 153 seconds, got ${mediaProbe.duration}`
         );
-        ctx.assert(mediaProbe.qrWidth >= 512, "spectator QR should be a loaded raster image");
-        ctx.assert(mediaProbe.logoWidth >= 256, "spectator SCRI logo should be loaded");
+        ctx.assert(/scribshow-musa-qr\.png\?v=20260829r/.test(mediaProbe.qrBackground), "spectator QR should be painted as an isolated background");
+        ctx.assert(/scrib-logo-mark\.png\?v=20260829r/.test(mediaProbe.logoBackground), "spectator SCRI logo should be painted as an isolated background");
         ctx.assert(mediaProbe.coversViewport, "spectator video tutorial should cover the full viewport");
+
+        const spectatorAccess = await ctx.evaluate("spectator", async ({ rawState }) => {
+          const controller = window.__scribVideoTutorialController;
+          if (!controller || typeof controller.handleState !== "function") return null;
+          controller.handleState({
+            ...rawState,
+            visible: true,
+            reproduciendo: true,
+            posicion_segundos: 12
+          });
+          await new Promise((resolve) => window.setTimeout(resolve, 850));
+          const root = document.querySelector("#video_tutorial_overlay");
+          const qr = root && root.querySelector(".scrib-video-tutorial__welcome-qr");
+          const logo = root && root.querySelector(".scrib-video-tutorial__brand-mark");
+          const qrRect = qr && qr.getBoundingClientRect();
+          const logoRect = logo && logo.getBoundingClientRect();
+          return {
+            scene: String(root && root.dataset.scene || ""),
+            qrBackground: qr ? getComputedStyle(qr).backgroundImage : "",
+            logoBackground: logo ? getComputedStyle(logo).backgroundImage : "",
+            qrVisible: Boolean(qrRect && qrRect.width >= 300 && qrRect.height >= 300 && getComputedStyle(qr).opacity === "1"),
+            logoVisible: Boolean(logoRect && logoRect.width >= 70 && logoRect.height >= 70 && getComputedStyle(logo).opacity === "1")
+          };
+        }, { rawState: playing });
+        ctx.assert(spectatorAccess && spectatorAccess.scene === "access", "spectator should enter the QR access scene");
+        ctx.assert(spectatorAccess.qrVisible, "spectator QR should occupy a visible square in the access scene");
+        ctx.assert(spectatorAccess.logoVisible, "spectator SCRI logo should remain visible in the access scene");
+        ctx.assert(/scribshow-musa-qr\.png\?v=20260829r/.test(spectatorAccess.qrBackground), "spectator access scene should paint the current QR asset");
+        ctx.assert(/scrib-logo-mark\.png\?v=20260829r/.test(spectatorAccess.logoBackground), "spectator access scene should paint the current logo asset");
 
         const colorPhases = [
           { position: 111, phase: "red", title: "ROJO", background: "rgb(242, 13, 53)" },

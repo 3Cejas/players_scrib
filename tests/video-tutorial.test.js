@@ -2,11 +2,28 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { PNG } = require("pngjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const tutorial = require("../game/js/domains/video-tutorial.js");
 
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+
+function rasterStats(relativePath) {
+  const png = PNG.sync.read(fs.readFileSync(path.join(ROOT, relativePath)));
+  let opaque = 0;
+  let dark = 0;
+  let light = 0;
+  for (let offset = 0; offset < png.data.length; offset += 4) {
+    const alpha = png.data[offset + 3];
+    if (alpha < 128) continue;
+    opaque += 1;
+    const luminance = (png.data[offset] + png.data[offset + 1] + png.data[offset + 2]) / 3;
+    if (luminance < 64) dark += 1;
+    if (luminance > 220) light += 1;
+  }
+  return { width: png.width, height: png.height, opaque, dark, light };
+}
 
 test("the CSS tutorial timeline is contiguous and leaves enough time for every action", () => {
   assert.equal(tutorial.TIMELINE[0].start, 0);
@@ -76,8 +93,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829q/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829q/);
+    assert.match(html, /video-tutorial\.css\?v=20260829r/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829r/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -132,11 +149,28 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   assert.match(css, /\.scrib-video-tutorial \.scrib-visually-hidden,[\s\S]*clip-path:\s*inset\(50%\)/);
   assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
-  assert.match(brandMarkup, /\/game\/media\/scrib-logo-mark\.png\?v=20260829q/);
-  assert.match(spectatorMarkup, /\/game\/media\/scribshow-musa-qr\.png\?v=20260829q/);
+  assert.match(brandMarkup, /scrib-video-tutorial__brand-mark/);
+  assert.match(spectatorMarkup, /<div class="scrib-video-tutorial__welcome-qr"><\/div>/);
+  assert.doesNotMatch(spectatorMarkup, /<span class="scrib-video-tutorial__welcome-qr"/);
+  assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*scrib-logo-mark\.png\?v=20260829r/);
+  assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*scribshow-musa-qr\.png\?v=20260829r/);
+  assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*mix-blend-mode:\s*normal/);
+  assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*mix-blend-mode:\s*normal/);
   assert.doesNotMatch(brandMarkup, /<b>|MUSA/);
   assert.doesNotMatch(brandMarkup, /<span>&lt;SCRI&gt; B<\/span>/);
   assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
+});
+
+test("spectator logo and QR raster assets contain visible pixels", () => {
+  const logo = rasterStats("game/media/scrib-logo-mark.png");
+  const qr = rasterStats("game/media/scribshow-musa-qr.png");
+
+  assert.deepEqual([logo.width, logo.height], [500, 500]);
+  assert.ok(logo.opaque > 10_000, "the SCRI mark must not be an empty transparent image");
+  assert.ok(logo.light > 10_000, "the SCRI mark must contain its white artwork");
+  assert.deepEqual([qr.width, qr.height], [1024, 1024]);
+  assert.ok(qr.dark > 100_000, "the QR must contain dark modules");
+  assert.ok(qr.light > 100_000, "the QR must retain its light modules and quiet zone");
 });
 
 test("the spectator CRT texture covers every view without blocking interaction", () => {

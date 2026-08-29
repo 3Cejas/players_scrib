@@ -192,7 +192,7 @@
                 <i class="scrib-video-tutorial__grid"></i>
             </div>
             <header class="scrib-video-tutorial__brand" aria-hidden="true">
-                <img src="/game/media/scrib-logo-mark.png?v=20260829q" alt="">
+                <span class="scrib-video-tutorial__brand-mark"></span>
             </header>
             <div class="scrib-video-tutorial__scene">
                 <div class="scrib-video-tutorial__copy">
@@ -202,7 +202,7 @@
                     <div class="scrib-video-tutorial__welcome-mark">
                         <span>✦</span>
                         <strong>INSPIRA</strong>
-                        <img class="scrib-video-tutorial__welcome-qr" src="/game/media/scribshow-musa-qr.png?v=20260829q" alt="">
+                        <div class="scrib-video-tutorial__welcome-qr"></div>
                     </div>
                     <div class="scrib-video-tutorial__phone">
                         <div class="scrib-video-tutorial__phone-speaker"></div>

@@ -148,13 +148,15 @@ body.scrib-video-tutorial-active {
     letter-spacing: 0.12em;
 }
 
-.scrib-video-tutorial__brand img {
+.scrib-video-tutorial__brand-mark {
     display: block;
     width: clamp(4.4rem, 6.5vw, 7.6rem);
-    height: auto;
     aspect-ratio: 1;
     border: 0;
-    object-fit: contain;
+    background: transparent url("/game/media/scrib-logo-mark.png?v=20260829r") center / contain no-repeat;
+    background-blend-mode: normal;
+    mix-blend-mode: normal;
+    opacity: 1;
     filter: drop-shadow(0 0 1.15rem rgba(85, 244, 255, 0.5));
 }
 
@@ -289,7 +291,7 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__welcome-mark span { color: var(--vt-cyan); font: 400 clamp(4rem, 8vw, 9rem)/1 serif; filter: drop-shadow(0 0 1.4rem var(--vt-cyan)); animation: vtSpark 1.4s ease-in-out infinite alternate; }
 .scrib-video-tutorial__welcome-mark strong { color: #fff; font-size: clamp(1.4rem, 2.5vw, 3rem); letter-spacing: 0.18em; }
 .scrib-video-tutorial__welcome-mark i { color: #94afbd; font: normal clamp(0.62rem, 0.9vw, 1rem)/1.4 "Retro-gaming", monospace; letter-spacing: 0.14em; }
-.scrib-video-tutorial__welcome-qr { position: relative; z-index: 3; display: none; width: min(72%, 29rem); height: auto; aspect-ratio: 1; padding: clamp(0.5rem, 1vw, 0.9rem); border: 0; border-radius: clamp(0.9rem, 2vw, 1.6rem); object-fit: contain; background: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.7), 0 0 4rem rgba(85,244,255,.38); }
+.scrib-video-tutorial__welcome-qr { position: relative; z-index: 3; display: none; width: min(72%, 29rem); aspect-ratio: 1; border: clamp(0.5rem, 1vw, 0.9rem) solid #fff; border-radius: clamp(0.9rem, 2vw, 1.6rem); overflow: hidden; background: #fff url("/game/media/scribshow-musa-qr.png?v=20260829r") center / contain no-repeat; background-blend-mode: normal; mix-blend-mode: normal; opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,.7), 0 0 4rem rgba(85,244,255,.38); }
 
 .scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__welcome-mark,
 .scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__welcome-mark {
