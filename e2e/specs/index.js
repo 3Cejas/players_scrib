@@ -70,7 +70,10 @@ async function reloadRole(ctx, roleName) {
   const entry = ctx.getPageEntry(roleName);
   await disconnectRoleSocket(ctx, roleName);
   await entry.page.reload({ waitUntil: "domcontentloaded" });
-  await entry.page.waitForSelector(entry.config.readySelector, { visible: true, timeout: 15000 });
+  await entry.page.waitForSelector(entry.config.readySelector, {
+    ...(entry.config.readyVisible === false ? {} : { visible: true }),
+    timeout: 15000
+  });
   await waitForSocketConnection(ctx, roleName, 12000);
 }
 
@@ -344,12 +347,10 @@ async function startGame(ctx, options = {}) {
 
 async function configureFastControlPanel(ctx, overrides = {}) {
   const config = {
-    tiempo_votacion: 1,
     tiempo_modos: 2,
     tiempo_cambio_letra: 1,
     tiempo_cambio_palabras: 1,
     limite_tiempo_inspiracion: 5,
-    tiempo_modificador: 1,
     tiempo_minutos: 2,
     tiempo_segundos: 0,
     modes: [
@@ -372,12 +373,10 @@ async function configureFastControlPanel(ctx, overrides = {}) {
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
     };
-    setNumericInput("tiempo_votacion", nextConfig.tiempo_votacion);
     setNumericInput("tiempo_modos", nextConfig.tiempo_modos);
     setNumericInput("tiempo_cambio_letra", nextConfig.tiempo_cambio_letra);
     setNumericInput("tiempo_cambio_palabras", nextConfig.tiempo_cambio_palabras);
     setNumericInput("limite_tiempo_inspiracion", nextConfig.limite_tiempo_inspiracion);
-    setNumericInput("tiempo_modificador", nextConfig.tiempo_modificador);
     setNumericInput("tiempo_minutos", nextConfig.tiempo_minutos);
     setNumericInput("tiempo_segundos", nextConfig.tiempo_segundos);
 
@@ -524,25 +523,23 @@ async function ensureWriterEditableForFullFlow(ctx, roleName) {
   await waitForWriterEditable(ctx, roleName, 5000);
 }
 
-async function assertMusaWordTimePreview(ctx, roleName, mode, word, expectation) {
+async function assertMusaWordInspirationPreview(ctx, roleName, mode, word, expectation) {
   await ctx.fillValue(roleName, "#palabra", word);
   await ctx.waitFor(
-    `${roleName} time preview for ${mode}`,
-    async () => ctx.evaluate(roleName, ({ expectedClass, expectedSign, targetWord }) => {
+    `${roleName} inspiration preview for ${mode}`,
+    async () => ctx.evaluate(roleName, ({ expectedClass, expectedSign }) => {
       const node = document.querySelector("#preview_tiempo_palabra");
       if (!node || node.hidden) return false;
       const text = String(node.textContent || "");
-      const seconds = window.ScribInspiration.calcularTiempoPalabra(targetWord);
-      const expectedValue = `${expectedSign}${seconds}`;
+      const expectedValue = `${expectedSign}5`;
       return node.classList.contains(expectedClass)
         && text.includes(expectedValue)
-        && new RegExp(`${seconds}\\s*s`, "i").test(text)
+        && /5\s*insp\./i.test(text)
         ? text
         : false;
     }, {
       expectedClass: expectation.className,
-      expectedSign: expectation.sign,
-      targetWord: word
+      expectedSign: expectation.sign
     }),
     5000
   );
@@ -691,7 +688,7 @@ async function clearFloatingFeedbacks(ctx, roleName) {
   });
 }
 
-async function waitForTimeAndInspirationFeedback(ctx, roleName, description, options = {}) {
+async function waitForQuantifiedInspirationFeedback(ctx, roleName, description, options = {}) {
   const selector = options.selector || "#feedback_tiempo_flotante_root .feedback-tiempo-float";
   return ctx.waitFor(
     description,
@@ -699,23 +696,11 @@ async function waitForTimeAndInspirationFeedback(ctx, roleName, description, opt
       const nodes = Array.from(document.querySelectorAll(css))
         .filter((node) => node.isConnected && node.getBoundingClientRect().width > 0);
       if (nodes.some((node) => /undefined/i.test(String(node.textContent || "")))) return false;
-      const timeNode = nodes.find((node) => /\+\d+\s*segs?\./i.test(String(node.textContent || "")));
-      const inspNode = nodes.find((node) => /\+insp\./i.test(String(node.textContent || "")));
-      if (!timeNode || !inspNode) return false;
-      const a = timeNode.getBoundingClientRect();
-      const b = inspNode.getBoundingClientRect();
-      const overlap = !(
-        a.right <= b.left ||
-        b.right <= a.left ||
-        a.bottom <= b.top ||
-        b.bottom <= a.top
-      );
-      if (overlap) return false;
+      const inspirationNode = nodes.find((node) => /\+\d+(?:[.,]\d+)?\s*insp\./i.test(String(node.textContent || "")));
+      if (!inspirationNode) return false;
       return {
-        time: String(timeNode.textContent || "").trim(),
-        inspiration: String(inspNode.textContent || "").trim(),
-        timeClass: timeNode.className,
-        inspirationClass: inspNode.className
+        inspiration: String(inspirationNode.textContent || "").trim(),
+        inspirationClass: inspirationNode.className
       };
     }, selector),
     2200,
@@ -1509,8 +1494,8 @@ const smokeSpecs = [
     run: async (ctx) => {
       await openRolesAndWaitWithOptions(ctx, FULL_ROLE_SET, { useStateHooks: false });
       await ctx.waitForVisible("control", "#boton_escribir", true, "control button visible");
-      await ctx.waitForVisible("writer1", "#texto", true, "writer1 editor visible");
-      await ctx.waitForVisible("musa1", "#musa_world_entry", true, "musa1 page visible");
+      await ctx.waitForVisible("writer1", "#atributos-container", true, "writer1 setup visible");
+      await ctx.waitForVisible("musa1", "#musa_help_fab", true, "musa1 help control visible");
       await ctx.waitForVisible("spectator", "#contenedor_espectador", true, "spectator booted");
       await ctx.waitForVisible("jury", "#jurado_app", true, "jury booted");
     }
@@ -1521,7 +1506,6 @@ const smokeSpecs = [
       await openRolesAndWaitWithOptions(ctx, ["control", "writer1", "writer2", "spectator", "actor1", "actor2"], { useStateHooks: false });
       await configureFastControlPanel(ctx, {
         tiempo_modos: 10,
-        tiempo_votacion: 1,
         tiempo_cambio_letra: 1,
         tiempo_cambio_palabras: 1,
         modes: ["palabras bonus"]
@@ -1560,14 +1544,14 @@ const smokeSpecs = [
       await startGame(ctx, { useStateHooks: false });
       await waitForLocalMode(ctx, "writer1", "palabras bonus", 10000);
       await waitForLocalMode(ctx, "musa1", "palabras bonus", 10000);
-      await assertMusaWordTimePreview(ctx, "musa1", "palabras bonus", "cometa", {
+      await assertMusaWordInspirationPreview(ctx, "musa1", "palabras bonus", "cometa", {
         className: "preview-tiempo-palabra--positivo",
         sign: "+"
       });
       await ctx.evaluate("musa1", () => {
         window.__scribModoActualMusaPreview = "palabras prohibidas";
       });
-      await assertMusaWordTimePreview(ctx, "musa1", "palabras prohibidas", "tormenta", {
+      await assertMusaWordInspirationPreview(ctx, "musa1", "palabras prohibidas", "tormenta", {
         className: "preview-tiempo-palabra--negativo",
         sign: "-"
       });
@@ -1693,15 +1677,15 @@ const smokeSpecs = [
       await clearFloatingFeedbacks(ctx, "writer1");
       await clearFloatingFeedbacks(ctx, "spectator");
       await typeInWriter(ctx, "writer1", " horizonte");
-      await waitForTimeAndInspirationFeedback(
+      await waitForQuantifiedInspirationFeedback(
         ctx,
         "writer1",
-        "writer sees separate time and inspiration feedback for musa bonus"
+        "writer sees quantified inspiration feedback for musa bonus"
       );
-      await waitForTimeAndInspirationFeedback(
+      await waitForQuantifiedInspirationFeedback(
         ctx,
         "spectator",
-        "spectator sees separate time and inspiration feedback for musa bonus",
+        "spectator sees quantified inspiration feedback for musa bonus",
         { selector: "#feedback_tiempo_flotante_root .feedback-tiempo-columna.lado-1 .feedback-tiempo-float" }
       );
     }
@@ -2059,7 +2043,7 @@ const coreSpecs = [
         );
         await waitForLocalMode(ctx, item.sender, item.mode, 10000);
         if (item.mode === "palabras bonus" || item.mode === "palabras prohibidas") {
-          await assertMusaWordTimePreview(ctx, item.sender, item.mode, item.word, {
+          await assertMusaWordInspirationPreview(ctx, item.sender, item.mode, item.word, {
             className: item.mode === "palabras prohibidas"
               ? "preview-tiempo-palabra--negativo"
               : "preview-tiempo-palabra--positivo",
@@ -4994,12 +4978,12 @@ const coreSpecs = [
       await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E Musa", { includeTime: false });
       await clearFloatingFeedbacks(ctx, "writer1");
       await typeInWriter(ctx, "writer1", " horizonte ");
-      const feedbackAfterReload = await waitForTimeAndInspirationFeedback(
+      const feedbackAfterReload = await waitForQuantifiedInspirationFeedback(
         ctx,
         "writer1",
-        "writer feedback after reload derives bonus seconds when payload omits them"
+        "writer feedback after reload derives quantified inspiration when payload omits it"
       );
-      ctx.assert(!/undefined/i.test(feedbackAfterReload.time), "writer feedback after reload should not show undefined seconds");
+      ctx.assert(!/undefined/i.test(feedbackAfterReload.inspiration), "writer feedback after reload should not show undefined inspiration");
     }
   },
   {

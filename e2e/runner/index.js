@@ -381,12 +381,12 @@ const ROLE_CONFIG = {
   },
   writer1: {
     url: "/game/players/index.html?player=1",
-    readySelector: "#texto",
+    readySelector: "#atributos-container",
     viewport: { width: 1400, height: 1000 }
   },
   writer2: {
     url: "/game/players/index.html?player=2",
-    readySelector: "#texto",
+    readySelector: "#atributos-container",
     viewport: { width: 1400, height: 1000 }
   },
   spectator: {
@@ -401,22 +401,26 @@ const ROLE_CONFIG = {
   },
   musa1: {
     url: "/game/public/players/index.html?player=1&name=E2E_Luna",
-    readySelector: "#musa_help_fab",
+    readySelector: "#musa_world_entry",
+    readyVisible: false,
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa1b: {
     url: "/game/public/players/index.html?player=1&name=E2E_Sol",
-    readySelector: "#musa_help_fab",
+    readySelector: "#musa_world_entry",
+    readyVisible: false,
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa2: {
     url: "/game/public/players/index.html?player=2&name=E2E_Rosa",
-    readySelector: "#musa_help_fab",
+    readySelector: "#musa_world_entry",
+    readyVisible: false,
     viewport: { width: 430, height: 932, isMobile: true }
   },
   musa2b: {
     url: "/game/public/players/index.html?player=2&name=E2E_Iris",
-    readySelector: "#musa_help_fab",
+    readySelector: "#musa_world_entry",
+    readyVisible: false,
     viewport: { width: 430, height: 932, isMobile: true }
   },
   actor1: {
@@ -712,7 +716,10 @@ class E2EHarness {
       });
 
       await page.goto(`${this.staticBaseUrl}${config.url}`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector(config.readySelector, { visible: true, timeout: 15000 });
+      await page.waitForSelector(config.readySelector, {
+        ...(config.readyVisible === false ? {} : { visible: true }),
+        timeout: 15000
+      });
 
       this.pages.set(roleName, {
         roleName,
