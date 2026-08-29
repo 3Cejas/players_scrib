@@ -42,6 +42,8 @@ test("E2E waits for every role disconnect before reusing identities in the next 
 
   assert.match(beforeSpec, /await this\.closeAllPages\(\);\s+await this\.waitForRoleConnectionsReleased\(\);/);
   assert.match(afterSpec, /await this\.closeAllPages\(\);\s+await this\.waitForRoleConnectionsReleased\(\);/);
+  assert.match(runner, /async disconnectPageSocket\(entry\)[\s\S]*connectedSocket\.io\.opts\.reconnection = false[\s\S]*connectedSocket\.disconnect\(\)[\s\S]*connectedSocket\.io\.engine\.close\(\)/);
+  assert.match(runner, /await Promise\.all\(entries\.map\(\(entry\) => this\.disconnectPageSocket\(entry\)\)\);\s+await Promise\.all\(entries\.map\(\(entry\) => this\.closePageEntry/);
   assert.match(releaseGuard, /\["control", "spectator", "jury", "dramaturgia"\]/);
   assert.match(releaseGuard, /\["writers", "musas", "actors"\]/);
   assert.match(releaseGuard, /await this\.sleep\(300\)/);

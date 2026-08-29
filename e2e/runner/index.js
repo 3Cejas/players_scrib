@@ -605,9 +605,23 @@ class E2EHarness {
     await cleanupWithTimeout(`${description} context close`, () => entry.context.close());
   }
 
+  async disconnectPageSocket(entry) {
+    await cleanupWithTimeout(`${entry.roleName} socket disconnect`, () => entry.page.evaluate(() => {
+      try {
+        const connectedSocket = window.eval("typeof socket !== 'undefined' && socket ? socket : null");
+        if (!connectedSocket) return;
+        if (connectedSocket.io && connectedSocket.io.opts) connectedSocket.io.opts.reconnection = false;
+        if (typeof connectedSocket.disconnect === "function") connectedSocket.disconnect();
+        if (connectedSocket.io && connectedSocket.io.engine) connectedSocket.io.engine.close();
+      } catch (_error) {
+      }
+    }));
+  }
+
   async closeAllPages() {
     const entries = Array.from(this.pages.values());
     this.pages.clear();
+    await Promise.all(entries.map((entry) => this.disconnectPageSocket(entry)));
     await Promise.all(entries.map((entry) => this.closePageEntry(entry, entry.roleName)));
   }
 
