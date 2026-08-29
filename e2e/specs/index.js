@@ -2978,8 +2978,8 @@ const coreSpecs = [
             );
             if (!qr.complete || qr.naturalWidth < 1
               || !logo.complete || logo.naturalWidth < 1
-              || !/scribshow-musa-qr\.png\?v=20260829s/.test(qrSource)
-              || !/scrib-logo-mark\.png\?v=20260829s/.test(logoSource)
+              || !/scribshow-musa-qr\.png\?v=20260829t/.test(qrSource)
+              || !/scrib-logo-mark\.png\?v=20260829t/.test(logoSource)
               || !coversViewport) return false;
             return {
               duration: audio.duration,
@@ -2995,8 +2995,8 @@ const coreSpecs = [
           Number.isFinite(mediaProbe.duration) && mediaProbe.duration >= 152.8 && mediaProbe.duration <= 153.1,
           `narrated tutorial should last about 153 seconds, got ${mediaProbe.duration}`
         );
-        ctx.assert(/scribshow-musa-qr\.png\?v=20260829s/.test(mediaProbe.qrSource), "spectator QR should load as an explicit image");
-        ctx.assert(/scrib-logo-mark\.png\?v=20260829s/.test(mediaProbe.logoSource), "spectator SCRI logo should load as an explicit image");
+        ctx.assert(/scribshow-musa-qr\.png\?v=20260829t/.test(mediaProbe.qrSource), "spectator QR should load as an explicit image");
+        ctx.assert(/scrib-logo-mark\.png\?v=20260829t/.test(mediaProbe.logoSource), "spectator SCRI logo should load as an explicit image");
         ctx.assert(mediaProbe.coversViewport, "spectator video tutorial should cover the full viewport");
 
         const spectatorAccess = await ctx.evaluate("spectator", ({ rawState }) => {
@@ -3012,25 +3012,35 @@ const coreSpecs = [
           const qr = root && root.querySelector(".scrib-video-tutorial__welcome-qr");
           const logo = root && root.querySelector(".scrib-video-tutorial__brand-mark");
           const accessUrl = root && root.querySelector(".scrib-video-tutorial__access-url");
+          const title = root && root.querySelector("[data-video-tutorial-title]");
+          const subtitleLink = root && root.querySelector(".scrib-video-tutorial__subtitle-accent--link");
           root && root.classList.remove("is-scene-entering");
           if (qr) qr.style.animation = "none";
           const qrRect = qr && qr.getBoundingClientRect();
           const logoRect = logo && logo.getBoundingClientRect();
+          const accessRect = accessUrl && accessUrl.getBoundingClientRect();
+          const titleRect = title && title.getBoundingClientRect();
           return {
             scene: String(root && root.dataset.scene || ""),
             accessUrl: String(accessUrl && accessUrl.textContent || "").trim(),
             qrSource: qr && qr.currentSrc || "",
             logoSource: logo && logo.currentSrc || "",
+            urlAligned: Boolean(accessRect && titleRect && Math.abs(accessRect.left - titleRect.left) < 1),
+            subtitleLink: String(subtitleLink && subtitleLink.textContent || "").trim(),
+            subtitleLinkColor: subtitleLink && getComputedStyle(subtitleLink).color || "",
             qrVisible: Boolean(qr && qr.complete && qr.naturalWidth > 0 && qrRect && qrRect.width >= 300 && qrRect.height >= 300 && getComputedStyle(qr).opacity === "1"),
             logoVisible: Boolean(logo && logo.complete && logo.naturalWidth > 0 && logoRect && logoRect.width >= 70 && logoRect.height >= 70 && getComputedStyle(logo).opacity === "1")
           };
         }, { rawState: playing });
         ctx.assert(spectatorAccess && spectatorAccess.scene === "access", "spectator should enter the QR access scene");
-        ctx.assert(spectatorAccess.accessUrl === "scribshow.es/musa", "spectator access scene should display the written URL");
+        ctx.assert(spectatorAccess.accessUrl === "www.scribshow.es/musa", "spectator access scene should display the written URL with www");
+        ctx.assert(spectatorAccess.urlAligned, "spectator URL should align with the access title");
+        ctx.assert(spectatorAccess.subtitleLink === "www.scribshow.es/musa", "spectator subtitle should preserve the written URL");
+        ctx.assert(spectatorAccess.subtitleLinkColor === "rgb(85, 244, 255)", "spectator subtitle URL should use its own accent color");
         ctx.assert(spectatorAccess.qrVisible, "spectator QR should occupy a visible square in the access scene");
         ctx.assert(spectatorAccess.logoVisible, "spectator SCRI logo should remain visible in the access scene");
-        ctx.assert(/scribshow-musa-qr\.png\?v=20260829s/.test(spectatorAccess.qrSource), "spectator access scene should load the current QR asset");
-        ctx.assert(/scrib-logo-mark\.png\?v=20260829s/.test(spectatorAccess.logoSource), "spectator access scene should load the current logo asset");
+        ctx.assert(/scribshow-musa-qr\.png\?v=20260829t/.test(spectatorAccess.qrSource), "spectator access scene should load the current QR asset");
+        ctx.assert(/scrib-logo-mark\.png\?v=20260829t/.test(spectatorAccess.logoSource), "spectator access scene should load the current logo asset");
 
         const colorPhases = [
           { position: 111, phase: "red", title: "ROJO", background: "rgb(242, 13, 53)" },
@@ -3038,6 +3048,23 @@ const coreSpecs = [
           { position: 125, phase: "green", title: "VERDE", background: "rgb(0, 182, 92)" },
           { position: 132, phase: "white", title: "BLANCO", background: "rgb(248, 251, 255)" }
         ];
+        const subtitleColorExpectations = {
+          red: "rgb(255, 89, 109)",
+          blue: "rgb(85, 186, 255)",
+          green: "rgb(92, 255, 156)",
+          white: "rgb(255, 255, 255)"
+        };
+        const spectatorSubtitleColors = await ctx.evaluate("spectator", ({ rawState, phases }) => {
+          const controller = window.__scribVideoTutorialController;
+          return Object.fromEntries(phases.map(({ position, phase }) => {
+            controller.handleState({ ...rawState, visible: true, reproduciendo: true, posicion_segundos: position });
+            const accent = document.querySelector(`.scrib-video-tutorial__subtitle-accent--${phase}`);
+            return [phase, accent ? getComputedStyle(accent).color : ""];
+          }));
+        }, { rawState: playing, phases: colorPhases });
+        for (const [phase, expectedColor] of Object.entries(subtitleColorExpectations)) {
+          ctx.assert(spectatorSubtitleColors[phase] === expectedColor, `spectator subtitle should color ${phase} with its scene color`);
+        }
         for (const expected of colorPhases) {
           for (const roleName of museRoles) {
             const rendered = await renderLocalVideoTutorialPosition(
@@ -3058,7 +3085,7 @@ const coreSpecs = [
         const invitation = await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 12);
         ctx.assert(invitation.phase === "access", "connected muses should see the synchronized QR scene");
         ctx.assert(invitation.title === "ENTRA EN LA WEB O ESCANEA", "the muse QR scene should use the concise access title");
-        ctx.assert(invitation.shareUrl === "scribshow.es/musa", "the muse QR scene should display the written URL");
+        ctx.assert(invitation.shareUrl === "www.scribshow.es/musa", "the muse QR scene should display the written URL with www");
         ctx.assert(invitation.shareIsAnchor === false, "the displayed muse URL must not be clickable");
         ctx.assert(invitation.shareQrLoaded && invitation.shareQrWidth >= 120, "the muse QR should load at a readable mobile size");
         ctx.assert(invitation.museName && invitation.museColor === "rgb(255, 215, 106)", "the muse name should use the muse-yellow identity color");

@@ -79,7 +79,7 @@ test("tutorial state migrates legacy MP4 configuration to the narration track", 
 
 test("tutorial accepts only safe audio URLs and versions its bundled narration", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
-  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829q";
+  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829r";
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib-audio.mp3", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib.mp4", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_AUDIO_URL);
@@ -93,8 +93,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829s/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829s/);
+    assert.match(html, /video-tutorial\.css\?v=20260829t/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829t/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -142,26 +142,41 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   assert.doesNotMatch(spectatorMarkup, /data-video-tutorial-kicker|data-video-tutorial-copy|data-video-color-copy/);
   assert.match(spectatorMarkup, /scrib-video-tutorial__subtitles" aria-hidden="true"/);
   assert.match(spectatorMarkup, /data-video-tutorial-subtitle/);
-  assert.match(js, /subtitle\.textContent = phase\.subtitle \|\| phase\.copy/);
+  assert.match(js, /renderSubtitle\(documentRef, subtitle, phase\.subtitle \|\| phase\.copy\)/);
   assert.doesNotMatch(js, /subtitle\.innerHTML/);
+  assert.match(js, /createTextNode/);
+  assert.match(js, /replaceChildren\(fragment\)/);
+  for (const accent of ["link", "blue", "red", "green", "white", "yellow", "orange", "violet"]) {
+    assert.match(css, new RegExp(`subtitle-accent--${accent}`));
+  }
   assert.match(css, /\.scrib-video-tutorial__subtitles\s*\{[\s\S]*?inset:\s*0;[\s\S]*?pointer-events:\s*none/);
   assert.match(css, /\.scrib-video-tutorial__subtitles p\s*\{[\s\S]*?bottom:[\s\S]*?background:\s*rgba\(0, 4, 10, 0\.88\)/);
   assert.match(css, /\.scrib-video-tutorial \.scrib-visually-hidden,[\s\S]*clip-path:\s*inset\(50%\)/);
   assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
   assert.match(brandMarkup, /scrib-video-tutorial__brand-mark/);
-  assert.match(brandMarkup, /<img class="scrib-video-tutorial__brand-mark" src="\/game\/media\/scrib-logo-mark\.png\?v=20260829s" alt="">/);
-  assert.match(spectatorMarkup, /<img class="scrib-video-tutorial__welcome-qr" src="\/game\/media\/scribshow-musa-qr\.png\?v=20260829s" alt="Código QR de scribshow\.es\/musa">/);
+  assert.match(brandMarkup, /<img class="scrib-video-tutorial__brand-mark" src="\.\.\/media\/scrib-logo-mark\.png\?v=20260829t" alt="">/);
+  assert.match(spectatorMarkup, /<img class="scrib-video-tutorial__welcome-qr" src="\.\.\/media\/scribshow-musa-qr\.png\?v=20260829t" alt="Código QR de www\.scribshow\.es\/musa">/);
   assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*object-fit:\s*contain/);
   assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*object-fit:\s*contain/);
   assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*mix-blend-mode:\s*normal/);
   assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*mix-blend-mode:\s*normal/);
-  assert.match(spectatorMarkup, /scrib-video-tutorial__access-url">scribshow\.es\/musa/);
-  assert.match(css, /scrib-video-tutorial__access-url[\s\S]*font:\s*800 clamp\(1\.45rem,[\s\S]*text-decoration:\s*underline/);
+  assert.match(spectatorMarkup, /scrib-video-tutorial__access-url">www\.scribshow\.es\/musa/);
+  assert.match(css, /scrib-video-tutorial__access-url[\s\S]*align-self:\s*start[\s\S]*justify-self:\s*start[\s\S]*font:\s*800 clamp\(1\.45rem,[\s\S]*text-decoration:\s*underline/);
   assert.match(css, /welcome-qr[\s\S]*width:\s*min\(88%,\s*34rem\)/);
   assert.doesNotMatch(brandMarkup, /<b>|MUSA/);
   assert.doesNotMatch(brandMarkup, /<span>&lt;SCRI&gt; B<\/span>/);
   assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
+});
+
+test("spectator tutorial media remains inside both direct and Sutura-prefixed game roots", () => {
+  const direct = new URL("../media/scrib-logo-mark.png", "https://www.scribshow.es/game/spectator/index.html");
+  const prefixed = new URL("../media/scrib-logo-mark.png", "https://sutura-gateway.ddns.net/scrib/game/spectator/index.html");
+  const prefixedQr = new URL("../media/scribshow-musa-qr.png", "https://sutura-gateway.ddns.net/scrib/game/spectator/index.html");
+
+  assert.equal(direct.pathname, "/game/media/scrib-logo-mark.png");
+  assert.equal(prefixed.pathname, "/scrib/game/media/scrib-logo-mark.png");
+  assert.equal(prefixedQr.pathname, "/scrib/game/media/scribshow-musa-qr.png");
 });
 
 test("spectator logo and QR raster assets contain visible pixels", () => {
@@ -204,9 +219,9 @@ test("tutorial explains direct choice and automatic assignment using the real mu
   assert.match(narration, /puedes tocar directamente/i);
   assert.match(narration, /detección automática/i);
   assert.match(narration, /Bienvenida a Escribe\./);
-  assert.match(narration, /Escribe show punto es, barra musa/);
+  assert.match(narration, /tres uves dobles punto, Escribe show punto es, barra musa/);
   assert.match(js, /Bienvenida a <SCRI> B\./);
-  assert.match(js, /abre scribshow\.es\/musa o escanea/);
+  assert.match(js, /abre www\.scribshow\.es\/musa o escanea/);
   assert.doesNotMatch(narration, /equilibr/i);
   assert.doesNotMatch(js, /SÍ, FUNCIONA|TODO FUNCIONA|Tu dispositivo está conectado|device__confirm|data-video-tutorial-time|data-video-tutorial-progress/);
   assert.match(js, /phase\.id === "access" \? "ENTRA EN LA WEB O ESCANEA"/);
@@ -252,7 +267,7 @@ test("mobile calibration changes through four solid colors and verifies automati
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
   assert.match(js, /root\.classList\.add\("is-leaving"\)[\s\S]*VISIBILITY_TRANSITION_MS/);
   assert.match(js, /scrib:video-tutorial-visibility/);
-  assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.png\?v=20260829s[\s\S]*scrib-video-tutorial-device__url[\s\S]*scribshow\.es\/musa/);
+  assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.png\?v=20260829t[\s\S]*scrib-video-tutorial-device__url[\s\S]*www\.scribshow\.es\/musa/);
   assert.doesNotMatch(js, /<a[^>]+scribshow\.es\/musa/);
   assert.match(css, /scrib-video-tutorial-device__share/);
   assert.match(css, /scrib-video-tutorial-device__url[\s\S]*text-decoration:\s*underline/);

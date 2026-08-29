@@ -220,6 +220,9 @@ body.scrib-video-tutorial-active {
 
 .scrib-video-tutorial__access-url {
     display: none;
+    align-self: start;
+    justify-self: start;
+    width: fit-content;
     margin: clamp(1rem, 2.4vh, 1.8rem) 0 0;
     padding: .42em .72em .5em;
     border: 1px solid rgba(85, 244, 255, .58);
@@ -232,6 +235,7 @@ body.scrib-video-tutorial-active {
     text-decoration: underline;
     text-decoration-thickness: .08em;
     text-underline-offset: .18em;
+    text-align: center;
     text-shadow: 0 0 .8em rgba(85, 244, 255, .42);
 }
 
@@ -634,6 +638,23 @@ body.scrib-video-tutorial-active {
     text-wrap: balance;
     transform: translateX(-50%);
 }
+
+.scrib-video-tutorial__subtitle-accent {
+    display: inline;
+    padding: 0 .08em;
+    border-radius: .18em;
+    font-weight: 900;
+    text-shadow: 0 0 .55em currentColor, 0 2px 3px #000;
+}
+
+.scrib-video-tutorial__subtitle-accent--link { color: #55f4ff; text-decoration: underline; text-underline-offset: .14em; }
+.scrib-video-tutorial__subtitle-accent--blue { color: #55baff; }
+.scrib-video-tutorial__subtitle-accent--red { color: #ff596d; }
+.scrib-video-tutorial__subtitle-accent--green { color: #5cff9c; }
+.scrib-video-tutorial__subtitle-accent--yellow { color: #ffe15c; }
+.scrib-video-tutorial__subtitle-accent--orange { color: #ff9d4d; }
+.scrib-video-tutorial__subtitle-accent--violet { color: #c77dff; }
+.scrib-video-tutorial__subtitle-accent--white { color: #fff; background: rgba(255, 255, 255, .16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .44); }
 
 .scrib-video-tutorial.is-scene-entering .scrib-video-tutorial__subtitles p {
     animation: vtSubtitleIn 420ms 140ms cubic-bezier(0.16, 1, 0.3, 1) both;

@@ -31,7 +31,7 @@
 
     const DEFAULT_DURATION_SECONDS = 153;
     const DEFAULT_AUDIO_URL = "../media/tutorial-scrib-audio.mp3";
-    const AUDIO_ASSET_VERSION = "20260829q";
+    const AUDIO_ASSET_VERSION = "20260829r";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
@@ -43,7 +43,7 @@
     // silencio de cada pista. Asi subtitulo, escena y narracion llegan juntos.
     const TIMELINE = Object.freeze([
         Object.freeze({ id: "welcome", start: 0, end: 9.3, title: "¡HOLA, MUSA!", label: "BIENVENIDA A <SCRI> B", copy: "Vamos a preparar tu móvil con calma para entrar al juego.", subtitle: "¡Hola! Bienvenida a <SCRI> B. Vamos a preparar tu móvil con calma para que puedas jugar y darle ideas a tu escritora." }),
-        Object.freeze({ id: "access", start: 9.3, end: 37.38, title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR.", subtitle: "Para entrar, abre scribshow.es/musa o escanea este código QR. Lo dejamos unos segundos para que tengas tiempo." }),
+        Object.freeze({ id: "access", start: 9.3, end: 37.38, title: "ESCANEA O ESCRIBE", label: "ENTRA EN WWW.SCRIBSHOW.ES/MUSA", copy: "Abre www.scribshow.es/musa o escanea el código QR.", subtitle: "Para entrar, abre www.scribshow.es/musa o escanea este código QR. Lo dejamos unos segundos para que tengas tiempo." }),
         Object.freeze({ id: "access-wait", start: 37.38, end: 47.32, title: "¿YA ESTÁS DENTRO?", label: "TÓMATE TU TIEMPO", copy: "El código seguirá en pantalla mientras terminas de entrar.", subtitle: "¿Ya lo has escaneado? ¡Perfecto! Y si todavía estás entrando, tranquila: te esperamos." }),
         Object.freeze({ id: "name", start: 47.32, end: 57.32, title: "ESCRIBE TU NOMBRE", label: "ESCRIBE TU NOMBRE", copy: "Escribe el nombre con el que quieres aparecer durante el show.", subtitle: "Cuando aparezca la pantalla de acceso, escribe el nombre con el que quieres que te reconozcan durante el show." }),
         Object.freeze({ id: "choices", start: 57.32, end: 68.34, title: "ELIGE TU EQUIPO", label: "ELIGE TU ESCRITXR", copy: "Puedes escoger directamente una escritxr o usar la detección automática.", subtitle: "Después verás dos formas de elegir. Puedes tocar directamente a la escritora con la que quieres jugar, en azul o en rojo." }),
@@ -73,6 +73,36 @@
             .replace(/[\u0000-\u001f\u007f]/g, "")
             .trim()
             .slice(0, maxLength);
+    }
+
+    const SUBTITLE_ACCENTS = Object.freeze({
+        "www.scribshow.es/musa": "link",
+        azul: "blue",
+        rojo: "red",
+        verde: "green",
+        blanco: "white",
+        amarillo: "yellow",
+        naranja: "orange",
+        violeta: "violet",
+        morado: "violet"
+    });
+
+    function renderSubtitle(documentRef, node, value) {
+        if (!node) return;
+        const text = String(value || "");
+        const matcher = /(www\.scribshow\.es\/musa|azul|rojo|verde|blanco|amarillo|naranja|violeta|morado)/gi;
+        const fragment = documentRef.createDocumentFragment();
+        let cursor = 0;
+        for (const match of text.matchAll(matcher)) {
+            if (match.index > cursor) fragment.appendChild(documentRef.createTextNode(text.slice(cursor, match.index)));
+            const accent = documentRef.createElement("span");
+            accent.className = `scrib-video-tutorial__subtitle-accent scrib-video-tutorial__subtitle-accent--${SUBTITLE_ACCENTS[match[0].toLowerCase()]}`;
+            accent.textContent = match[0];
+            fragment.appendChild(accent);
+            cursor = match.index + match[0].length;
+        }
+        if (cursor < text.length) fragment.appendChild(documentRef.createTextNode(text.slice(cursor)));
+        node.replaceChildren(fragment);
     }
 
     function normalizeVerification(raw = {}) {
@@ -193,18 +223,18 @@
                 <i class="scrib-video-tutorial__grid"></i>
             </div>
             <header class="scrib-video-tutorial__brand" aria-hidden="true">
-                <img class="scrib-video-tutorial__brand-mark" src="/game/media/scrib-logo-mark.png?v=20260829s" alt="">
+                <img class="scrib-video-tutorial__brand-mark" src="../media/scrib-logo-mark.png?v=20260829t" alt="">
             </header>
             <div class="scrib-video-tutorial__scene">
                 <div class="scrib-video-tutorial__copy">
                     <h1 data-video-tutorial-title></h1>
-                    <p class="scrib-video-tutorial__access-url">scribshow.es/musa</p>
+                    <p class="scrib-video-tutorial__access-url">www.scribshow.es/musa</p>
                 </div>
                 <div class="scrib-video-tutorial__visual" aria-hidden="true">
                     <div class="scrib-video-tutorial__welcome-mark">
                         <span>✦</span>
                         <strong>INSPIRA</strong>
-                        <img class="scrib-video-tutorial__welcome-qr" src="/game/media/scribshow-musa-qr.png?v=20260829s" alt="Código QR de scribshow.es/musa">
+                        <img class="scrib-video-tutorial__welcome-qr" src="../media/scribshow-musa-qr.png?v=20260829t" alt="Código QR de www.scribshow.es/musa">
                     </div>
                     <div class="scrib-video-tutorial__phone">
                         <div class="scrib-video-tutorial__phone-speaker"></div>
@@ -272,8 +302,8 @@
                 <h1 id="video_tutorial_musa_title" data-video-tutorial-title>CONEXIÓN RECIBIDA</h1>
                 <p data-video-tutorial-copy>Sigue las instrucciones de la pantalla principal.</p>
                 <div class="scrib-video-tutorial-device__share" aria-label="Código QR para invitar a otra musa">
-                    <img src="../../media/scribshow-musa-qr.png?v=20260829s" alt="Código QR de scribshow.es/musa">
-                    <div><strong>¿FALTA ALGUIEN?</strong><span class="scrib-video-tutorial-device__url">scribshow.es/musa</span><small>ENSÉÑALE ESTE CÓDIGO</small></div>
+                    <img src="../../media/scribshow-musa-qr.png?v=20260829t" alt="Código QR de www.scribshow.es/musa">
+                    <div><strong>¿FALTA ALGUIEN?</strong><span class="scrib-video-tutorial-device__url">www.scribshow.es/musa</span><small>ENSÉÑALE ESTE CÓDIGO</small></div>
                 </div>
                 <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity><span data-video-tutorial-muse-name></span><span data-video-tutorial-writer-name></span></div>
             </div>
@@ -435,7 +465,7 @@
             const subtitle = root.querySelector("[data-video-tutorial-subtitle]");
             if (title) title.textContent = phase.title;
             if (colorTitle) colorTitle.textContent = phase.title;
-            if (subtitle) subtitle.textContent = phase.subtitle || phase.copy;
+            renderSubtitle(documentRef, subtitle, phase.subtitle || phase.copy);
             refreshWriterNames();
             root.classList.remove("is-scene-entering");
             void root.offsetWidth;
