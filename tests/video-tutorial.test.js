@@ -89,12 +89,22 @@ test("tutorial accepts only safe audio URLs and versions its bundled narration",
   assert.equal(tutorial.progressAt(160, 153), 1);
 });
 
+test("verification updates do not rewind or repeatedly seek an active narration", () => {
+  assert.equal(tutorial.continuousPosition(138.82, 138, true, 153), 138.82);
+  assert.equal(tutorial.continuousPosition(138.2, 139, true, 153), 139);
+  assert.equal(tutorial.continuousPosition(145, 2, false, 153), 2);
+
+  assert.equal(tutorial.shouldSeekAudio(false, 138.82, 138), false);
+  assert.equal(tutorial.shouldSeekAudio(false, 138.82, 136.9), true);
+  assert.equal(tutorial.shouldSeekAudio(true, 138.82, 138.8), true);
+});
+
 test("spectator and muse load the synchronized CSS tutorial before socket handlers", () => {
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
     assert.match(html, /video-tutorial\.css\?v=20260829t/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829t/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260830b/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }

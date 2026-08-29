@@ -283,8 +283,8 @@ async function configureVideoTutorialRaw(ctx, roleName, config, requestSuffix) {
   }), { nextConfig: config, suffix: requestSuffix });
 }
 
-async function renderLocalVideoTutorialPosition(ctx, roleName, authoritativeState, positionSeconds) {
-  return ctx.evaluate(roleName, ({ rawState, position }) => {
+async function renderLocalVideoTutorialPosition(ctx, roleName, authoritativeState, positionSeconds, preservePlayback = false) {
+  return ctx.evaluate(roleName, ({ rawState, position, preserve }) => {
     const controller = window.__scribVideoTutorialController;
     if (!controller || typeof controller.handleState !== "function") {
       throw new Error("Missing synchronized video tutorial controller");
@@ -293,6 +293,7 @@ async function renderLocalVideoTutorialPosition(ctx, roleName, authoritativeStat
       ...rawState,
       visible: true,
       reproduciendo: true,
+      phase_seq: preserve ? rawState.phase_seq : rawState.phase_seq + 100000 + Math.round(position * 100),
       posicion_segundos: position
     });
     const root = document.querySelector("#video_tutorial_musa");
@@ -342,7 +343,7 @@ async function renderLocalVideoTutorialPosition(ctx, roleName, authoritativeStat
         && Math.abs(rect.height - window.innerHeight) < 1
       )
     } : null;
-  }, { rawState: authoritativeState, position: positionSeconds });
+  }, { rawState: authoritativeState, position: positionSeconds, preserve: preservePlayback });
 }
 
 async function startGame(ctx, options = {}) {
@@ -3065,6 +3066,28 @@ const coreSpecs = [
         for (const [phase, expectedColor] of Object.entries(subtitleColorExpectations)) {
           ctx.assert(spectatorSubtitleColors[phase] === expectedColor, `spectator subtitle should color ${phase} with its scene color`);
         }
+        const narrationContinuity = await ctx.evaluate("spectator", ({ rawState }) => {
+          const controller = window.__scribVideoTutorialController;
+          const audio = document.querySelector("#video_tutorial_overlay audio");
+          controller.handleState({ ...rawState, visible: true, reproduciendo: true, posicion_segundos: 138.82 });
+          const positionBefore = controller.getPosition();
+          const audioBefore = audio.currentTime;
+          controller.handleState({ ...rawState, visible: true, reproduciendo: true, posicion_segundos: 138 });
+          return {
+            positionBefore,
+            positionAfter: controller.getPosition(),
+            audioBefore,
+            audioAfter: audio.currentTime
+          };
+        }, { rawState: playing });
+        ctx.assert(
+          narrationContinuity.positionAfter + 0.02 >= narrationContinuity.positionBefore,
+          "rounded verification updates must not rewind the completed-test narration"
+        );
+        ctx.assert(
+          narrationContinuity.audioAfter + 0.05 >= narrationContinuity.audioBefore,
+          "rounded verification updates must not seek the active audio backwards"
+        );
         for (const expected of colorPhases) {
           for (const roleName of museRoles) {
             const rendered = await renderLocalVideoTutorialPosition(
@@ -3096,7 +3119,7 @@ const coreSpecs = [
         const museChoiceAnimation = await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 60);
         ctx.assert(museChoiceAnimation.phase === "choices" && museChoiceAnimation.miniPhoneVisible, "muses should see the simplified animated choice preview");
 
-        await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 139);
+        await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 139, true);
 
         const oneVerified = await ctx.waitFor(
           "first muse verifies automatically against the authoritative server",
@@ -3117,7 +3140,7 @@ const coreSpecs = [
           "first muse receives successful verification feedback"
         );
 
-        await renderLocalVideoTutorialPosition(ctx, "musa2", oneVerified, 139);
+        await renderLocalVideoTutorialPosition(ctx, "musa2", oneVerified, 139, true);
 
         const allVerified = await ctx.waitFor(
           "both muses verify automatically against the authoritative server",

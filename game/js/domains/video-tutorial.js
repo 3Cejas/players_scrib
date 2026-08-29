@@ -37,6 +37,7 @@
     const VERIFY_EVENT = "video_tutorial_verificar";
     const VISIBILITY_TRANSITION_MS = 620;
     const MUSIC_PREROLL_SECONDS = 3;
+    const MAX_CONTINUOUS_AUDIO_DRIFT_SECONDS = 1.5;
     const NARRATION_RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     // Los cambios visuales empiezan al entrar la voz, no al principio del pequeño
@@ -192,6 +193,21 @@
     function playbackKey(state) {
         if (!state) return "";
         return `${state.sessionId}:${state.phaseSeq}:${state.playbackSeq}`;
+    }
+
+    function continuousPosition(previousPosition, incomingPosition, samePlayback, durationSeconds = DEFAULT_DURATION_SECONDS) {
+        const duration = Math.max(1, asFiniteNumber(durationSeconds, DEFAULT_DURATION_SECONDS));
+        const incoming = clamp(asFiniteNumber(incomingPosition, 0), 0, duration);
+        if (!samePlayback) return incoming;
+        return clamp(Math.max(asFiniteNumber(previousPosition, 0), incoming), 0, duration);
+    }
+
+    function shouldSeekAudio(changed, currentPosition, targetPosition, maxDriftSeconds = MAX_CONTINUOUS_AUDIO_DRIFT_SECONDS) {
+        if (changed) return true;
+        const current = Number(currentPosition);
+        const target = Number(targetPosition);
+        if (!Number.isFinite(current) || !Number.isFinite(target)) return false;
+        return Math.abs(current - target) > Math.max(0, asFiniteNumber(maxDriftSeconds, MAX_CONTINUOUS_AUDIO_DRIFT_SECONDS));
     }
 
     function requestId(windowRef) {
@@ -431,7 +447,7 @@
                 try {
                     if (Number.isFinite(audio.duration) && audio.duration > 0) {
                         const target = Math.min(position, Math.max(0, audio.duration - 0.05));
-                        if (changed || Math.abs(audio.currentTime - target) > 0.35) audio.currentTime = target;
+                        if (shouldSeekAudio(changed, audio.currentTime, target)) audio.currentTime = target;
                     }
                 } catch (_error) {}
                 const attempt = audio.play();
@@ -593,11 +609,26 @@
         }
 
         function handleState(raw = {}) {
+            const previousState = state;
             const previousKey = playbackKey(state);
-            state = normalizeState(raw);
+            const previousPosition = currentPosition();
+            const nextState = normalizeState(raw);
+            const nextKey = playbackKey(nextState);
+            const samePlayback = Boolean(
+                previousState
+                && previousState.visible
+                && nextState.visible
+                && previousKey
+                && nextKey === previousKey
+            );
+            state = nextState;
             syncReceivedAt = Date.now();
-            syncPosition = state.positionSeconds;
-            const nextKey = playbackKey(state);
+            syncPosition = continuousPosition(
+                previousPosition,
+                state.positionSeconds,
+                samePlayback,
+                state.config.durationSeconds
+            );
             if (nextKey !== previousKey) {
                 verifying = false;
                 lastPhaseId = "";
@@ -696,6 +727,8 @@
         progressAt,
         safeAudioUrl,
         playbackKey,
+        continuousPosition,
+        shouldSeekAudio,
         createController
     });
 }));
