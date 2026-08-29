@@ -47,6 +47,10 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /#boton_vista_tutorial\[data-active="1"\][\s\S]*#boton_vista_calentamiento\[data-active="1"\][\s\S]*#boton_vista_partida\[data-active="1"\]/);
   assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
   assert.match(css, /control-group--representacion\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*overflow: auto;/);
+  assert.match(css, /Separacion de capas: escritoras no invaden la navegacion ni Parametros/);
+  assert.match(css, /#contenedor\s*\{[\s\S]*flex: 0 0 auto;[\s\S]*position: relative;[\s\S]*z-index: 1;/);
+  assert.match(css, /table\.default\s*\{[\s\S]*position: relative;[\s\S]*z-index: 3;[\s\S]*isolation: isolate;/);
+  assert.match(css, /> \.creditos-host\s*\{[\s\S]*max-height: 100%;[\s\S]*overscroll-behavior: contain;[\s\S]*contain: layout paint;/);
 
   assert.match(actions, /function actualizarFlechasPestanasControl\(\)/);
   assert.match(actions, /viewport\.scrollTo\(\{ left: destino, behavior: "smooth" \}\)/);
