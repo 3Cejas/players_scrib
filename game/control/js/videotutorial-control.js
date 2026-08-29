@@ -157,20 +157,6 @@
         return "idle";
     }
 
-    function formatearProximaReproduccion(ts) {
-        const numero = Number(ts);
-        if (!Number.isFinite(numero) || numero <= Date.now()) return "";
-        try {
-            return new Intl.DateTimeFormat("es", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit"
-            }).format(new Date(numero));
-        } catch (_) {
-            return new Date(numero).toLocaleTimeString();
-        }
-    }
-
     function formatearIntervalo(segundos) {
         const total = limitarSegundos(segundos, 180);
         if (total % 3600 === 0) return `${total / 3600} H`;
@@ -212,48 +198,23 @@
         }
 
         const titulo = getEl("videotutorial_estado_texto");
-        const detalle = getEl("videotutorial_estado_detalle");
         let texto = "REPETICIÓN DESACTIVADA";
-        let descripcion = "Puedes reproducir ahora o activar la repetición automática.";
         if (codigo === "disconnected") {
             texto = "SIN CONEXIÓN";
-            descripcion = "Conecta Control al servidor para gestionar el videotutorial.";
         } else if (codigo === "waiting") {
             texto = "SINCRONIZANDO…";
-            descripcion = "Esperando la configuración autoritativa del servidor.";
         } else if (codigo === "pending") {
             texto = "ENVIANDO…";
-            descripcion = estado.pendiente && estado.pendiente.etiqueta
-                ? estado.pendiente.etiqueta
-                : "Esperando confirmación del servidor.";
         } else if (codigo === "error") {
             texto = "NO SE PUDO CAMBIAR";
-            descripcion = estado.error;
         } else if (codigo === "inactive") {
             texto = "FUERA DE FASE";
-            descripcion = "La configuración se conservará para la próxima fase previa.";
         } else if (codigo === "playing") {
             texto = "REPRODUCIENDO AHORA";
-            const fin = formatearProximaReproduccion(estado.finTs);
-            descripcion = fin
-                ? `Termina a las ${fin}. Intervalo: ${formatearIntervalo(estado.intervaloSegundos)}.`
-                : `Intervalo automático: ${formatearIntervalo(estado.intervaloSegundos)}.`;
         } else if (codigo === "scheduled") {
             texto = `PROGRAMADO · ${formatearIntervalo(estado.intervaloSegundos)}`;
-            descripcion = "El videotutorial se repetirá automáticamente.";
-        }
-        if (estado.mensaje && codigo !== "pending" && codigo !== "error") {
-            descripcion = estado.mensaje;
-        }
-        const hora = formatearProximaReproduccion(estado.proximaReproduccionTs);
-        if (hora && !["disconnected", "waiting", "pending", "error"].includes(codigo)) {
-            descripcion = `${descripcion} Próxima reproducción: ${hora}.`;
-        }
-        if (estado.verificacionDisponible && !["disconnected", "waiting"].includes(codigo)) {
-            descripcion = `${descripcion} Verificación: ${estado.musasVerificadas}/${estado.musasConectadas} musas.`;
         }
         if (titulo) titulo.textContent = texto;
-        if (detalle) detalle.textContent = descripcion;
     }
 
     function limpiarPendiente(requestId = "") {

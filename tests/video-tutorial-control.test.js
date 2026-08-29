@@ -49,8 +49,7 @@ function crearHarness() {
     "videotutorial_configurar",
     "videotutorial_mostrar",
     "videotutorial_ocultar",
-    "videotutorial_estado_texto",
-    "videotutorial_estado_detalle"
+    "videotutorial_estado_texto"
   ];
   const elementos = new Map(ids.map((id) => [id, crearElemento(
     id,
@@ -200,11 +199,6 @@ test("play and stop are serialized, acknowledged and reflected accessibly", () =
     verificacion: { conectadas: 4, verificadas: 2 }
   });
 
-  assert.match(
-    elementos.get("videotutorial_estado_detalle").textContent,
-    /Próxima reproducción: .+ Verificación: 2\/4 musas\./
-  );
-
   assert.equal(api.mostrar(), true);
   assert.equal(api.ocultar(), false, "a second action cannot overtake an in-flight ACK");
   assert.equal(emisiones[0].evento, "video_tutorial_reproducir");
@@ -237,7 +231,9 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(html, /id="videotutorial_mostrar"[\s\S]*type="button"/);
   assert.match(html, /id="videotutorial_ocultar"[\s\S]*type="button"/);
   assert.match(html, /id="videotutorial_estado"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
-  assert.match(html, /videotutorial-control\.js\?v=20260824d/);
+  assert.doesNotMatch(html, /videotutorial-control__icon/);
+  assert.doesNotMatch(html, /id="videotutorial_estado_detalle"/);
+  assert.match(html, /videotutorial-control\.js\?v=20260829h/);
 
   assert.match(socketEvents, /socket\.emit\('pedir_video_tutorial_estado'\)/);
   assert.match(socketEvents, /socket\.on\('video_tutorial_estado'/);
@@ -246,10 +242,14 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(moduleSource, /"video_tutorial_detener"/);
   assert.match(moduleSource, /intervalo_segundos:\s*valor \* 60/);
   assert.match(moduleSource, /session_id:\s*estado\.sessionId/);
+  assert.doesNotMatch(moduleSource, /Puedes reproducir ahora o activar la repetición automática/);
+  assert.doesNotMatch(moduleSource, /Termina a las|Verificación:/);
   assert.doesNotMatch(moduleSource, /\.innerHTML\s*=/);
   assert.doesNotMatch(moduleSource, /emitirOperacion\(\s*"videotutorial_/);
 
   assert.match(css, /\.videotutorial-control\[data-state="playing"\]/);
   assert.match(css, /\.videotutorial-control\[data-state="error"\]/);
+  assert.match(css, /\.control-group--tutorial \{[\s\S]*--group-accent: #ffb04a/);
+  assert.match(css, /\.videotutorial-control \.videotutorial-control__button \{[\s\S]*--tutorial-control-accent/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.videotutorial-control__dot/);
 });
