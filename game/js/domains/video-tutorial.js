@@ -31,7 +31,7 @@
 
     const DEFAULT_DURATION_SECONDS = 138;
     const DEFAULT_AUDIO_URL = "../media/tutorial-scrib-audio.mp3";
-    const AUDIO_ASSET_VERSION = "20260829c";
+    const AUDIO_ASSET_VERSION = "20260829e";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
@@ -39,21 +39,21 @@
     const NARRATION_RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     const TIMELINE = Object.freeze([
-        Object.freeze({ id: "welcome", start: 0, end: 9, kicker: "TE DAMOS LA BIENVENIDA", title: "¡HOLA, MUSA!", label: "BIENVENIDA A SCRIB", copy: "Vamos a preparar tu móvil con calma para entrar al juego." }),
-        Object.freeze({ id: "access", start: 9, end: 22, kicker: "PASO 1 · ENTRA", title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR." }),
-        Object.freeze({ id: "access-wait", start: 22, end: 32, kicker: "TE ESPERAMOS", title: "¿YA ESTÁS DENTRO?", label: "TÓMATE TU TIEMPO", copy: "El código seguirá en pantalla mientras terminas de entrar." }),
-        Object.freeze({ id: "name", start: 32, end: 42, kicker: "PASO 2 · TU NOMBRE", title: "PRESÉNTATE", label: "ESCRIBE TU NOMBRE", copy: "Escribe el nombre con el que quieres aparecer durante el show." }),
-        Object.freeze({ id: "choices", start: 42, end: 53, kicker: "PASO 3 · ELIGE", title: "DOS CAMINOS", label: "ELIGE TU ESCRITXR", copy: "Puedes escoger directamente una escritxr o usar la detección automática." }),
-        Object.freeze({ id: "manual", start: 53, end: 65, kicker: "OPCIÓN A · ELECCIÓN DIRECTA", title: "TOCA SU TARJETA", label: "ELECCIÓN DIRECTA", copy: "Pulsa la tarjeta azul o roja de la escritxr con la que quieras jugar." }),
-        Object.freeze({ id: "automatic", start: 65, end: 78, kicker: "OPCIÓN B · SORPRESA", title: "MANTÉN EL DEDO", label: "DETECCIÓN AUTOMÁTICA", copy: "Pulsa detección automática y mantén el dedo sobre la huella hasta terminar." }),
-        Object.freeze({ id: "assigned", start: 78, end: 88, kicker: "ASIGNACIÓN COMPLETADA", title: "REVISA EL RESULTADO", label: "EQUIPO Y ESCRITXR", copy: "Verás tu equipo y el nombre de tu escritxr antes de entrar." }),
-        Object.freeze({ id: "ready", start: 88, end: 95, kicker: "PRUEBA DE PANTALLA", title: "¡YA CASI ESTÁ!", label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos cuatro cambios de color." }),
-        Object.freeze({ id: "red", start: 95, end: 102, kicker: "COLOR 1 DE 4", title: "ROJO", label: "ROJO", copy: "¿Ves toda la pantalla roja?" }),
-        Object.freeze({ id: "blue", start: 102, end: 109, kicker: "COLOR 2 DE 4", title: "AZUL", label: "AZUL", copy: "¿Ha cambiado toda la pantalla a azul?" }),
-        Object.freeze({ id: "green", start: 109, end: 116, kicker: "COLOR 3 DE 4", title: "VERDE", label: "VERDE", copy: "¿Ya ves toda la pantalla verde?" }),
-        Object.freeze({ id: "white", start: 116, end: 123, kicker: "COLOR 4 DE 4", title: "BLANCO", label: "BLANCO", copy: "¿Ha funcionado también el último cambio?" }),
-        Object.freeze({ id: "complete", start: 123, end: 131, kicker: "TODO FUNCIONA", title: "¡PRUEBA COMPLETADA!", label: "CONFIGURACIÓN VERIFICADA", copy: "Tu móvil está conectado y listo para participar." }),
-        Object.freeze({ id: "farewell", start: 131, end: 138, kicker: "NOS VEMOS DENTRO", title: "¡A INSPIRAR!", label: "YA ESTÁS PREPARADA", copy: "Prepárate para jugar y dar vida a la historia." })
+        Object.freeze({ id: "welcome", start: 0, end: 9, title: "¡HOLA, MUSA!", label: "BIENVENIDA A <SCRI> B", copy: "Vamos a preparar tu móvil con calma para entrar al juego." }),
+        Object.freeze({ id: "access", start: 9, end: 22, title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR." }),
+        Object.freeze({ id: "access-wait", start: 22, end: 32, title: "¿YA ESTÁS DENTRO?", label: "TÓMATE TU TIEMPO", copy: "El código seguirá en pantalla mientras terminas de entrar." }),
+        Object.freeze({ id: "name", start: 32, end: 42, title: "ESCRIBE TU NOMBRE", label: "ESCRIBE TU NOMBRE", copy: "Escribe el nombre con el que quieres aparecer durante el show." }),
+        Object.freeze({ id: "choices", start: 42, end: 53, title: "ELIGE TU EQUIPO", label: "ELIGE TU ESCRITXR", copy: "Puedes escoger directamente una escritxr o usar la detección automática." }),
+        Object.freeze({ id: "manual", start: 53, end: 65, title: "AZUL O ROJO", label: "ELECCIÓN DIRECTA", copy: "Pulsa la tarjeta de la escritxr con la que quieras jugar." }),
+        Object.freeze({ id: "automatic", start: 65, end: 78, title: "DETECCIÓN AUTOMÁTICA", label: "DETECCIÓN AUTOMÁTICA", copy: "Mantén el dedo sobre la huella hasta terminar." }),
+        Object.freeze({ id: "assigned", start: 78, end: 88, title: "EQUIPO ASIGNADO", label: "EQUIPO Y ESCRITXR", copy: "Verás tu equipo y el nombre de tu escritxr antes de entrar." }),
+        Object.freeze({ id: "ready", start: 88, end: 95, title: "PRUEBA DE PANTALLA", label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos cuatro cambios de color." }),
+        Object.freeze({ id: "red", start: 95, end: 102, title: "ROJO", label: "ROJO", copy: "¿Ves toda la pantalla roja?" }),
+        Object.freeze({ id: "blue", start: 102, end: 109, title: "AZUL", label: "AZUL", copy: "¿Ha cambiado toda la pantalla a azul?" }),
+        Object.freeze({ id: "green", start: 109, end: 116, title: "VERDE", label: "VERDE", copy: "¿Ya ves toda la pantalla verde?" }),
+        Object.freeze({ id: "white", start: 116, end: 123, title: "BLANCO", label: "BLANCO", copy: "¿Ha funcionado también el último cambio?" }),
+        Object.freeze({ id: "complete", start: 123, end: 131, title: "¡TODO FUNCIONA!", label: "CONFIGURACIÓN VERIFICADA", copy: "Tu móvil está conectado y listo para participar." }),
+        Object.freeze({ id: "farewell", start: 131, end: 138, title: "¡A INSPIRAR!", label: "YA ESTÁS PREPARADA", copy: "Prepárate para jugar y dar vida a la historia." })
     ]);
 
     function clamp(value, min, max) {
@@ -181,7 +181,7 @@
         root.id = "video_tutorial_overlay";
         root.className = "scrib-video-tutorial scrib-video-tutorial--spectator";
         root.hidden = true;
-        root.setAttribute("aria-label", "Tutorial animado para conectarse a SCRIB");
+        root.setAttribute("aria-label", "Tutorial animado para conectarse a <SCRI> B");
         root.innerHTML = `
             <div class="scrib-video-tutorial__ambient" aria-hidden="true">
                 <i class="scrib-video-tutorial__orb scrib-video-tutorial__orb--one"></i>
@@ -196,21 +196,19 @@
             </header>
             <div class="scrib-video-tutorial__scene">
                 <div class="scrib-video-tutorial__copy">
-                    <span class="scrib-video-tutorial__kicker" data-video-tutorial-kicker></span>
                     <h1 data-video-tutorial-title></h1>
-                    <p data-video-tutorial-copy></p>
                     <div class="scrib-video-tutorial__access-card" aria-label="Acceso de musas">
                         <img src="../media/scribshow-musa-qr.svg" alt="Código QR para entrar en scribshow.es/musa">
-                        <div><strong>scribshow.es/musa</strong><span>Escanea el código o escribe el enlace.</span></div>
+                        <div><strong>scribshow.es/musa</strong></div>
                     </div>
                 </div>
                 <div class="scrib-video-tutorial__visual" aria-hidden="true">
-                    <div class="scrib-video-tutorial__welcome-mark"><span>✦</span><strong>INSPIRA</strong><i>JUEGA · CREA · SORPRENDE</i></div>
+                    <div class="scrib-video-tutorial__welcome-mark"><span>✦</span><strong>INSPIRA</strong></div>
                     <div class="scrib-video-tutorial__phone">
                         <div class="scrib-video-tutorial__phone-speaker"></div>
                         <div class="scrib-video-tutorial__phone-screen">
                             <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--name">
-                                <span>SCRIB · MUSA</span><h2>¿CUÁL SERÁ<br>TU NOMBRE?</h2><div class="scrib-video-tutorial__fake-input">LUNA<i></i></div><b>⌄</b>
+                                <span>&lt;SCRI&gt; B · MUSA</span><h2>¿CUÁL SERÁ<br>TU NOMBRE?</h2><div class="scrib-video-tutorial__fake-input">LUNA<i></i></div><b>⌄</b>
                             </div>
                             <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--choices">
                                 <span>LUNA,</span><h2>ELIGE TU ESCRITXR</h2>
@@ -230,9 +228,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="scrib-video-tutorial__tap"><i></i><span>TOCA PARA ELEGIR</span></div>
-                    <div class="scrib-video-tutorial__color-stage"><i></i><strong data-video-color-title></strong><span data-video-color-copy></span></div>
-                    <div class="scrib-video-tutorial__complete-mark"><i>✓</i><strong>TODO FUNCIONA</strong><span>TU MÓVIL ESTÁ LISTO</span></div>
+                    <div class="scrib-video-tutorial__tap"><i></i></div>
+                    <div class="scrib-video-tutorial__color-stage"><i></i><strong data-video-color-title></strong></div>
+                    <div class="scrib-video-tutorial__complete-mark"><i>✓</i><strong>TODO FUNCIONA</strong></div>
                 </div>
             </div>
             <div class="scrib-video-tutorial__confetti" aria-hidden="true">${"<i></i>".repeat(18)}</div>
@@ -397,16 +395,10 @@
 
         function enterSpectatorPhase(phase) {
             root.dataset.scene = phase.id;
-            const kicker = root.querySelector("[data-video-tutorial-kicker]");
             const title = root.querySelector("[data-video-tutorial-title]");
-            const copy = root.querySelector("[data-video-tutorial-copy]");
             const colorTitle = root.querySelector("[data-video-color-title]");
-            const colorCopy = root.querySelector("[data-video-color-copy]");
-            if (kicker) kicker.textContent = phase.kicker;
             if (title) title.textContent = phase.title;
-            if (copy) copy.textContent = phase.copy;
             if (colorTitle) colorTitle.textContent = phase.title;
-            if (colorCopy) colorCopy.textContent = phase.copy;
             refreshWriterNames();
             root.classList.remove("is-scene-entering");
             void root.offsetWidth;

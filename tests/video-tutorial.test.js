@@ -60,7 +60,7 @@ test("tutorial state migrates legacy MP4 configuration to the narration track", 
 
 test("tutorial accepts only safe audio URLs and versions its bundled narration", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
-  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829c";
+  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829e";
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib-audio.mp3", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib.mp4", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_AUDIO_URL);
@@ -74,8 +74,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829c/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829c/);
+    assert.match(html, /video-tutorial\.css\?v=20260829e/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829e/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -110,6 +110,35 @@ test("spectator tutorial is live HTML and CSS, with the phone only in practical 
   assert.match(css, /@keyframes vtColorArrive/);
   assert.match(css, /@keyframes vtConfetti/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test("spectator tutorial fills the viewport and renders only essential scene titles", () => {
+  const css = read("game/css/video-tutorial.css");
+  const js = read("game/js/domains/video-tutorial.js");
+  const spectatorMarkup = js.match(/function createSpectatorOverlay[\s\S]*?function createMuseOverlay/)?.[0] || "";
+
+  assert.match(css, /\.scrib-video-tutorial,[\s\S]*width:\s*100vw;[\s\S]*height:\s*100dvh;/);
+  assert.match(css, /\.scrib-video-tutorial__scene\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*100%;[\s\S]*?height:\s*100%;/);
+  assert.doesNotMatch(spectatorMarkup, /data-video-tutorial-kicker|data-video-tutorial-copy|data-video-color-copy/);
+  assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
+  assert.match(spectatorMarkup, /&lt;SCRI&gt; B/);
+  assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
+});
+
+test("the spectator CRT texture covers every view without blocking interaction", () => {
+  const html = read("game/spectator/index.html");
+  const css = read("game/css/dashboard-players.css");
+  const block = css.match(/\.spectator-crt-overlay\s*\{([\s\S]*?)\}/)?.[1] || "";
+
+  assert.match(html, /<div class="spectator-crt-overlay" aria-hidden="true"><i><\/i><\/div>/);
+  assert.match(block, /position:\s*fixed/);
+  assert.match(block, /inset:\s*0/);
+  assert.match(block, /pointer-events:\s*none/);
+  assert.match(css, /\.spectator-crt-overlay::before[\s\S]*repeating-linear-gradient/);
+  assert.match(css, /\.spectator-crt-overlay::after[\s\S]*repeating-linear-gradient/);
+  assert.match(css, /@keyframes spectatorCrtScan/);
+  assert.match(css, /@keyframes spectatorCrtFlicker/);
+  assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*\.spectator-crt-overlay/);
 });
 
 test("tutorial explains direct choice and automatic assignment using the real muse controls", () => {

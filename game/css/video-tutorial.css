@@ -6,6 +6,9 @@
     --vt-green: #5cff9c;
     position: fixed;
     inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100vh;
     z-index: 2147483000;
     box-sizing: border-box;
     overflow: hidden;
@@ -136,11 +139,15 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__scene {
     position: absolute;
     z-index: 2;
-    inset: clamp(6.2rem, 14vh, 10rem) clamp(3rem, 6vw, 8rem) clamp(3rem, 7vh, 5rem);
+    inset: 0;
     display: grid;
     grid-template-columns: minmax(0, 1.06fr) minmax(25rem, 0.94fr);
     align-items: center;
-    gap: clamp(2.5rem, 6vw, 8rem);
+    gap: clamp(2rem, 5vw, 7rem);
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: clamp(5.5rem, 11vh, 8rem) clamp(2rem, 5vw, 6rem) clamp(2rem, 5vh, 4rem);
 }
 
 .scrib-video-tutorial__copy {
@@ -176,10 +183,10 @@ body.scrib-video-tutorial-active {
 }
 
 .scrib-video-tutorial__copy h1 {
-    max-width: 10ch;
-    margin: clamp(1.1rem, 2.8vh, 2.1rem) 0 clamp(0.8rem, 2vh, 1.4rem);
+    max-width: 12ch;
+    margin: 0;
     color: #fff;
-    font: 400 clamp(3.4rem, 6.4vw, 8rem)/0.86 "VT323", "Retro-gaming", monospace;
+    font: 400 clamp(4.5rem, 8vw, 10rem)/0.84 "VT323", "Retro-gaming", monospace;
     letter-spacing: 0.025em;
     text-wrap: balance;
     text-shadow:
@@ -211,7 +218,7 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__access-card {
     display: none;
     width: min(43rem, 100%);
-    margin-top: clamp(1.1rem, 2.5vh, 2rem);
+    margin-top: clamp(1.4rem, 3.5vh, 2.8rem);
     padding: clamp(0.85rem, 1.4vw, 1.35rem);
     grid-template-columns: clamp(7rem, 11vw, 13rem) minmax(0, 1fr);
     align-items: center;
@@ -247,7 +254,8 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__visual {
     position: relative;
     min-width: 0;
-    min-height: min(72vh, 47rem);
+    min-height: 100%;
+    height: 100%;
     display: grid;
     place-items: center;
 }
@@ -267,7 +275,7 @@ body.scrib-video-tutorial-active {
 }
 
 .scrib-video-tutorial__welcome-mark {
-    width: min(31rem, 80%);
+    width: min(38rem, 92%);
     aspect-ratio: 1;
     place-items: center;
     align-content: center;
@@ -283,14 +291,14 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__welcome-mark::after {
     content: "";
     position: absolute;
-    width: min(31rem, 80%);
+    width: min(38rem, 92%);
     aspect-ratio: 1;
     border: 1px dashed rgba(85, 244, 255, 0.26);
     border-radius: 50%;
     animation: vtOrbit 18s linear infinite;
 }
 
-.scrib-video-tutorial__welcome-mark::after { width: min(38rem, 96%); animation-direction: reverse; animation-duration: 24s; }
+.scrib-video-tutorial__welcome-mark::after { width: min(45rem, 100%); animation-direction: reverse; animation-duration: 24s; }
 .scrib-video-tutorial__welcome-mark span { color: var(--vt-cyan); font: 400 clamp(4rem, 8vw, 9rem)/1 serif; filter: drop-shadow(0 0 1.4rem var(--vt-cyan)); animation: vtSpark 1.4s ease-in-out infinite alternate; }
 .scrib-video-tutorial__welcome-mark strong { color: #fff; font-size: clamp(1.4rem, 2.5vw, 3rem); letter-spacing: 0.18em; }
 .scrib-video-tutorial__welcome-mark i { color: #94afbd; font: normal clamp(0.62rem, 0.9vw, 1rem)/1.4 "Retro-gaming", monospace; letter-spacing: 0.14em; }
@@ -307,7 +315,7 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__phone {
     position: relative;
     box-sizing: border-box;
-    width: min(22rem, 72%, calc(72vh * 0.535));
+    width: min(26rem, 88%, calc(82vh * 0.535));
     aspect-ratio: 0.535;
     padding: clamp(0.65rem, 1vw, 1rem);
     border-radius: clamp(2.2rem, 4vw, 3.5rem);
@@ -701,13 +709,13 @@ body.scrib-video-tutorial-active {
 @keyframes vtConfetti { 0% { opacity: 0; transform: translateY(-5vh) rotate(0); } 12% { opacity: 1; } 100% { opacity: 0; transform: translateY(116vh) rotate(720deg); } }
 
 @media (max-width: 900px) {
-    .scrib-video-tutorial__scene { inset: 5.5rem 1.4rem 1.6rem; grid-template-columns: minmax(0, 1fr) minmax(18rem, .8fr); gap: 1.5rem; }
+    .scrib-video-tutorial__scene { padding: 5.5rem 1.4rem 1.6rem; grid-template-columns: minmax(0, 1fr) minmax(18rem, .8fr); gap: 1.5rem; }
     .scrib-video-tutorial__copy h1 { font-size: clamp(2.5rem, 7vw, 4.5rem); }
     .scrib-video-tutorial__phone { width: min(20rem, 82%); }
 }
 
 @media (max-width: 680px), (max-aspect-ratio: 1/1) {
-    .scrib-video-tutorial__scene { inset: 5.2rem 1.1rem 1.1rem; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-content: start; gap: .8rem; }
+    .scrib-video-tutorial__scene { padding: 5.2rem 1.1rem 1.1rem; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-content: start; gap: .8rem; }
     .scrib-video-tutorial__copy { justify-items: center; text-align: center; }
     .scrib-video-tutorial__copy h1 { max-width: 13ch; margin: .65rem 0 .45rem; font-size: clamp(2.3rem, 10vw, 4rem); }
     .scrib-video-tutorial__copy > p { font-size: clamp(.85rem, 3.4vw, 1.12rem); }

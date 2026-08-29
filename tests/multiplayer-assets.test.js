@@ -16,6 +16,7 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829g";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260829d";
+const SPECTATOR_CSS_VERSION = "20260829e";
 const VIEW_TRANSITION_MODULE_VERSION = "20260829a";
 const MUSA_HELP_VERSION = "20260824f";
 const WRITER_DELETE_BLOCK_VERSION = "20260824g";
@@ -66,7 +67,7 @@ test("multiplayer html references current changed shared assets", () => {
     assertIncludesAsset(htmlRelPath, "dashboard-players.css", CSS_VERSION);
   });
   assertIncludesAsset("game/players/index.html", "dashboard-players.css", MUSE_AUTHOR_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_VIEW_TRANSITION_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_CSS_VERSION);
 
   ["game/players/index.html"].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js", MUSE_AUTHOR_VERSION);
