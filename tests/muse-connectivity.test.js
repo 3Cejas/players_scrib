@@ -20,14 +20,14 @@ function runConfig(url) {
   return window;
 }
 
-test("public SCRIB hosts connect Socket.IO to their own origin, never to the muse phone", () => {
+test("public SCRIB hosts connect Socket.IO to the public Sutura gateway, never to Netlify or the muse phone", () => {
   const production = runConfig("https://www.scribshow.es/game/public/players/index.html");
   assert.equal(production.isProduction, true);
-  assert.equal(production.SERVER_URL_PROD, "https://www.scribshow.es");
+  assert.equal(production.SERVER_URL_PROD, "https://sutura-gateway.ddns.net");
 
   const canonical = runConfig("https://scribshow.es/game/public/players/index.html");
   assert.equal(canonical.isProduction, true);
-  assert.equal(canonical.SERVER_URL_PROD, "https://scribshow.es");
+  assert.equal(canonical.SERVER_URL_PROD, "https://sutura-gateway.ddns.net");
 
   const development = runConfig("http://localhost:8080/game/public/players/index.html");
   assert.equal(development.isProduction, false);
