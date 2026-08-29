@@ -48,5 +48,17 @@ test("Control recovers from credentials invalidated by a server restart", () => 
   assert.match(redirect, /new URL\("\.\.\/index\.html", window\.location\.href\)/);
   assert.match(redirect, /window\.location\.replace\(destino\.href\)/);
   assert.match(source, /redirigirASelectorRolesControl\(code\)/);
-  assert.match(html, /socket-events\.js\?v=20260829c/);
+  assert.match(html, /socket-events\.js\?v=20260829d/);
+});
+
+test("an active Control session renews its signed credential without leaving the role", () => {
+  const source = read("game/control/js/socket-events.js");
+
+  assert.match(source, /CONTROL_ACCESS_EXPIRES_KEY = "scrib_roles_access_expires_ts"/);
+  assert.match(source, /CONTROL_ACCESS_RENEW_MAX_DELAY_MS = 30 \* 60 \* 1000/);
+  assert.match(source, /function guardarAccessTokenControl\(payload = \{\}\)[\s\S]*sessionStorage\.setItem\(CONTROL_ACCESS_TOKEN_KEY, token\)[\s\S]*sessionStorage\.setItem\(CONTROL_ACCESS_EXPIRES_KEY, String\(expiresTs\)\)/);
+  assert.match(source, /function programarRenovacionAccesoControl\(expiresTs\)[\s\S]*Math\.floor\(restante \/ 2\)[\s\S]*renovarAccesoControl\(\)/);
+  assert.match(source, /function renovarAccesoControl\(\)[\s\S]*socket\.emit\('registrar_control',[\s\S]*renovacion: true[\s\S]*procesarRegistroControl/);
+  assert.match(source, /if \(respuesta\.ok === true\)[\s\S]*guardarAccessTokenControl\(respuesta\);[\s\S]*programarRenovacionAccesoControl\(respuesta\.expires_ts\);[\s\S]*sincronizarControlAutorizado\(\)/);
+  assert.match(source, /socket\.on\('disconnect',[\s\S]*cancelarRenovacionAccesoControl\(\)/);
 });

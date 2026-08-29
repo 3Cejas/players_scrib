@@ -1,4 +1,8 @@
 ﻿const CONTROL_ACCESS_TOKEN_KEY = "scrib_roles_access_token";
+const CONTROL_ACCESS_EXPIRES_KEY = "scrib_roles_access_expires_ts";
+const CONTROL_ACCESS_SESSION_KEY = "scrib_roles_ok";
+const CONTROL_ACCESS_RENEW_MAX_DELAY_MS = 30 * 60 * 1000;
+const CONTROL_ACCESS_RENEW_MIN_DELAY_MS = 60 * 1000;
 const CONTROL_ACCESS_REJECTION_CODES = new Set([
     "ACCESS_TOKEN_REQUIRED",
     "INVALID_ACCESS_TOKEN",
@@ -6,6 +10,7 @@ const CONTROL_ACCESS_REJECTION_CODES = new Set([
 ]);
 let registro_control_confirmado = false;
 let redireccion_acceso_control_pendiente = false;
+let timeout_renovacion_acceso_control = null;
 
 function obtenerAccessTokenControl() {
     try {
@@ -18,11 +23,69 @@ function obtenerAccessTokenControl() {
 
 function limpiarAccessTokenControl() {
     try {
+        window.sessionStorage.removeItem(CONTROL_ACCESS_SESSION_KEY);
         window.sessionStorage.removeItem(CONTROL_ACCESS_TOKEN_KEY);
+        window.sessionStorage.removeItem(CONTROL_ACCESS_EXPIRES_KEY);
     } catch (_) {
         // El almacenamiento puede estar bloqueado; el rechazo seguirá visible.
     }
 }
+
+function guardarAccessTokenControl(payload = {}) {
+    const token = typeof payload.access_token === "string"
+        ? payload.access_token.trim().slice(0, 512)
+        : "";
+    const expiresTs = Number(payload.expires_ts) || 0;
+    if (token.length < 32 || expiresTs <= Date.now()) return false;
+    try {
+        window.sessionStorage.setItem(CONTROL_ACCESS_SESSION_KEY, "1");
+        window.sessionStorage.setItem(CONTROL_ACCESS_TOKEN_KEY, token);
+        window.sessionStorage.setItem(CONTROL_ACCESS_EXPIRES_KEY, String(expiresTs));
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function cancelarRenovacionAccesoControl() {
+    if (timeout_renovacion_acceso_control) {
+        window.clearTimeout(timeout_renovacion_acceso_control);
+        timeout_renovacion_acceso_control = null;
+    }
+}
+
+function programarRenovacionAccesoControl(expiresTs) {
+    cancelarRenovacionAccesoControl();
+    const restante = Math.max(0, Number(expiresTs) - Date.now());
+    if (!restante) return false;
+    const espera = Math.min(
+        CONTROL_ACCESS_RENEW_MAX_DELAY_MS,
+        Math.max(CONTROL_ACCESS_RENEW_MIN_DELAY_MS, Math.floor(restante / 2))
+    );
+    timeout_renovacion_acceso_control = window.setTimeout(() => {
+        timeout_renovacion_acceso_control = null;
+        renovarAccesoControl();
+    }, espera);
+    return true;
+}
+
+function renovarAccesoControl() {
+    if (!registro_control_confirmado || !socket || !socket.connected) {
+        cancelarRenovacionAccesoControl();
+        return false;
+    }
+    const accessToken = obtenerAccessTokenControl();
+    if (!accessToken) {
+        procesarRegistroControl({ ok: false, code: "ACCESS_TOKEN_REQUIRED" });
+        return false;
+    }
+    socket.emit('registrar_control', {
+        access_token: accessToken,
+        renovacion: true
+    }, procesarRegistroControl);
+    return true;
+}
+window.renovarAccesoControl = renovarAccesoControl;
 
 function sincronizarControlAutorizado() {
     if (registro_control_confirmado) return;
@@ -99,12 +162,15 @@ function sincronizarReplicaControlSoloLectura() {
 function procesarRegistroControl(payload = {}) {
     const respuesta = payload && typeof payload === "object" ? payload : {};
     if (respuesta.ok === true) {
+        guardarAccessTokenControl(respuesta);
+        programarRenovacionAccesoControl(respuesta.expires_ts);
         sincronizarControlAutorizado();
         return true;
     }
     if (respuesta.ok !== false) return false;
     if (esReplicaDramaturgiaControl()) return false;
     registro_control_confirmado = false;
+    cancelarRenovacionAccesoControl();
     const code = String(respuesta.code || "ACCESS_TOKEN_REQUIRED").trim().slice(0, 80);
     if (CONTROL_ACCESS_REJECTION_CODES.has(code)) {
         limpiarAccessTokenControl();
@@ -159,6 +225,7 @@ socket.on('connect', () => {
 });
 socket.on('disconnect', () => {
     registro_control_confirmado = false;
+    cancelarRenovacionAccesoControl();
     if (window && typeof window.resetTeleprompterSyncControl2P === "function") {
         window.resetTeleprompterSyncControl2P();
     }
