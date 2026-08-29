@@ -297,13 +297,25 @@ async function renderLocalVideoTutorialPosition(ctx, roleName, authoritativeStat
     });
     const root = document.querySelector("#video_tutorial_musa");
     const title = root && root.querySelector("[data-video-tutorial-title]");
-    const confirm = root && root.querySelector(".scrib-video-tutorial-device__confirm");
+    const card = root && root.querySelector(".scrib-video-tutorial-device__card");
+    const identity = root && root.querySelector("[data-video-tutorial-identity]");
+    const shareUrl = root && root.querySelector(".scrib-video-tutorial-device__url");
     const rect = root ? root.getBoundingClientRect() : null;
+    const cardRect = card ? card.getBoundingClientRect() : null;
     return root ? {
       phase: String(root.dataset.phase || ""),
       background: window.getComputedStyle(root).backgroundColor,
       title: String(title && title.textContent || "").trim(),
-      confirmHidden: Boolean(confirm && confirm.hidden),
+      identity: String(identity && identity.textContent || "").trim(),
+      shareUrl: String(shareUrl && shareUrl.textContent || "").trim(),
+      shareIsAnchor: Boolean(shareUrl && shareUrl.closest("a")),
+      cardWithinViewport: Boolean(
+        cardRect
+        && cardRect.left >= 0
+        && cardRect.top >= 0
+        && cardRect.right <= window.innerWidth
+        && cardRect.bottom <= window.innerHeight
+      ),
       coversViewport: Boolean(
         rect
         && Math.abs(rect.left) < 1
@@ -2818,9 +2830,9 @@ const coreSpecs = [
 
       try {
         const deterministicConfig = await configureVideoTutorialRaw(ctx, "control", {
-          video_url: "../media/tutorial-scrib.mp4",
+          audio_url: "../media/tutorial-scrib-audio.mp3",
           intervalo_segundos: 180,
-          duracion_segundos: 60,
+          duracion_segundos: 153,
           habilitado: false,
           silenciado: false
         }, "prepare");
@@ -2858,7 +2870,6 @@ const coreSpecs = [
           toggle.checked = true;
           toggle.dispatchEvent(new Event("change", { bubbles: true }));
         });
-        await ctx.click("control", "#videotutorial_configurar");
 
         const scheduled = await ctx.waitFor(
           "Control saves the one-minute automatic video tutorial interval",
@@ -2875,14 +2886,8 @@ const coreSpecs = [
           10000
         );
         ctx.assert(scheduled.visible === false, "saving the schedule must not start playback immediately");
-        await ctx.waitForText(
-          "control",
-          "#videotutorial_estado_texto",
-          (text) => /PROGRAMADO.+1 MIN/i.test(text),
-          "Control reports the automatic one-minute schedule"
-        );
 
-        await ctx.click("control", "#videotutorial_mostrar");
+        await ctx.click("control", "#videotutorial_reproduccion_toggle");
         const playing = await ctx.waitFor(
           "manual video tutorial playback becomes authoritative",
           async () => {
@@ -2891,7 +2896,7 @@ const coreSpecs = [
               && state.visible === true
               && state.reproduciendo === true
               && state.reproduccion_seq > 0
-              && state.configuracion.duracion_segundos === 60
+              && state.configuracion.duracion_segundos === 153
               ? state
               : false;
           },
@@ -2917,56 +2922,66 @@ const coreSpecs = [
             `${roleName} calibration overlay appears`
           );
         }
-        await ctx.waitForText(
-          "control",
-          "#videotutorial_estado_texto",
-          (text) => /REPRODUCIENDO AHORA/i.test(text),
-          "Control reports manual playback"
-        );
-        await ctx.waitForText(
-          "spectator",
-          "[data-video-tutorial-counter]",
-          (text) => /^0\/2 MUSAS VERIFICADAS$/i.test(text.trim()),
-          "spectator starts with both muses pending"
+        const playingToggle = await ctx.evaluate("control", () => {
+          const button = document.querySelector("#videotutorial_reproduccion_toggle");
+          return button ? {
+            pressed: button.getAttribute("aria-pressed"),
+            playing: button.dataset.playing,
+            label: button.getAttribute("aria-label")
+          } : null;
+        });
+        ctx.assert(
+          playingToggle
+            && playingToggle.pressed === "true"
+            && playingToggle.playing === "1"
+            && /detener/i.test(playingToggle.label),
+          "the single Control button should expose active playback"
         );
 
         const mediaProbe = await ctx.waitFor(
-          "spectator loads the local narrated MP4",
+          "spectator loads the narrated CSS tutorial and its raster assets",
           async () => ctx.evaluate("spectator", () => {
-            const video = document.querySelector("#video_tutorial_overlay video");
-            if (!video || video.error || video.readyState < 1 || !/tutorial-scrib\.mp4(?:$|[?#])/i.test(video.currentSrc)) {
+            const audio = document.querySelector("#video_tutorial_overlay audio");
+            const qr = document.querySelector(".scrib-video-tutorial__welcome-qr");
+            const logo = document.querySelector(".scrib-video-tutorial__brand img");
+            if (!audio || audio.error || audio.readyState < 1 || !/tutorial-scrib-audio\.mp3(?:$|[?#])/i.test(audio.currentSrc)) {
               return false;
             }
-            const join = document.querySelector("[data-video-tutorial-join-url]");
             const overlay = document.querySelector("#video_tutorial_overlay");
             const rect = overlay && overlay.getBoundingClientRect();
+            const qrWidth = Number(qr && qr.naturalWidth || 0);
+            const logoWidth = Number(logo && logo.naturalWidth || 0);
+            const coversViewport = Boolean(
+              rect
+              && Math.abs(rect.left) < 1
+              && Math.abs(rect.top) < 1
+              && Math.abs(rect.width - window.innerWidth) < 1
+              && Math.abs(rect.height - window.innerHeight) < 1
+            );
+            if (qrWidth < 512 || logoWidth < 256 || !coversViewport) return false;
             return {
-              duration: video.duration,
-              currentSrc: video.currentSrc,
-              joinUrl: String(join && join.textContent || "").trim(),
-              coversViewport: Boolean(
-                rect
-                && Math.abs(rect.left) < 1
-                && Math.abs(rect.top) < 1
-                && Math.abs(rect.width - window.innerWidth) < 1
-                && Math.abs(rect.height - window.innerHeight) < 1
-              )
+              duration: audio.duration,
+              currentSrc: audio.currentSrc,
+              qrWidth,
+              logoWidth,
+              coversViewport
             };
           }),
           15000
         );
         ctx.assert(
-          Number.isFinite(mediaProbe.duration) && mediaProbe.duration >= 59 && mediaProbe.duration <= 61,
-          `narrated video should last about 60 seconds, got ${mediaProbe.duration}`
+          Number.isFinite(mediaProbe.duration) && mediaProbe.duration >= 152.8 && mediaProbe.duration <= 153.1,
+          `narrated tutorial should last about 153 seconds, got ${mediaProbe.duration}`
         );
-        ctx.assert(mediaProbe.joinUrl.length > 0, "spectator HUD should show the application join URL");
+        ctx.assert(mediaProbe.qrWidth >= 512, "spectator QR should be a loaded raster image");
+        ctx.assert(mediaProbe.logoWidth >= 256, "spectator SCRI logo should be loaded");
         ctx.assert(mediaProbe.coversViewport, "spectator video tutorial should cover the full viewport");
 
         const colorPhases = [
-          { position: 34.2, phase: "red", title: "ROJO", background: "rgb(242, 13, 53)" },
-          { position: 38.2, phase: "blue", title: "AZUL", background: "rgb(9, 101, 255)" },
-          { position: 42.2, phase: "green", title: "VERDE", background: "rgb(0, 182, 92)" },
-          { position: 46.2, phase: "white", title: "BLANCO", background: "rgb(255, 255, 255)" }
+          { position: 111, phase: "red", title: "ROJO", background: "rgb(242, 13, 53)" },
+          { position: 118, phase: "blue", title: "AZUL", background: "rgb(9, 101, 255)" },
+          { position: 125, phase: "green", title: "VERDE", background: "rgb(0, 182, 92)" },
+          { position: 132, phase: "white", title: "BLANCO", background: "rgb(248, 251, 255)" }
         ];
         for (const expected of colorPhases) {
           for (const roleName of museRoles) {
@@ -2980,15 +2995,21 @@ const coreSpecs = [
             ctx.assert(rendered.title === expected.title, `${roleName} should label the ${expected.phase} calibration`);
             ctx.assert(rendered.background === expected.background, `${roleName} should render a solid ${expected.phase} screen`);
             ctx.assert(rendered.coversViewport, `${roleName} ${expected.phase} calibration should cover its viewport`);
+            ctx.assert(rendered.cardWithinViewport, `${roleName} ${expected.phase} card should stay inside its viewport`);
+            ctx.assert(!/EQUIPO\s+(?:AZUL|ROJO)/i.test(rendered.identity), `${roleName} should rely on color instead of a team label`);
           }
         }
 
-        let confirmState = await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 50.2);
-        ctx.assert(confirmState.phase === "confirm" && confirmState.confirmHidden === false, "first muse should reach confirmation");
-        await ctx.click("musa1", ".scrib-video-tutorial-device__confirm");
+        const invitation = await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 12);
+        ctx.assert(invitation.phase === "access", "connected muses should see the synchronized QR scene");
+        ctx.assert(invitation.shareUrl === "scribshow.es/musa", "the muse QR scene should display the written URL");
+        ctx.assert(invitation.shareIsAnchor === false, "the displayed muse URL must not be clickable");
+        ctx.assert(invitation.cardWithinViewport, "the muse QR card should stay inside the viewport");
+
+        await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 139);
 
         const oneVerified = await ctx.waitFor(
-          "first muse confirms against the authoritative server",
+          "first muse verifies automatically against the authoritative server",
           async () => {
             const state = await requestVideoTutorialState(ctx, "spectator");
             return state
@@ -3000,30 +3021,16 @@ const coreSpecs = [
           10000
         );
         await ctx.waitForText(
-          "spectator",
-          "[data-video-tutorial-counter]",
-          (text) => /^1\/2 MUSAS VERIFICADAS$/i.test(text.trim()),
-          "spectator updates after the first real confirmation"
-        );
-        await ctx.waitForText(
-          "control",
-          "#videotutorial_estado_detalle",
-          (text) => /Verificaci.n:\s*1\/2 musas/i.test(text),
-          "Control shows one of two muses verified"
-        );
-        await ctx.waitForText(
           "musa1",
           "#video_tutorial_musa_title",
           (text) => /CONFIGURACI.N VERIFICADA/i.test(text),
           "first muse receives successful verification feedback"
         );
 
-        confirmState = await renderLocalVideoTutorialPosition(ctx, "musa2", oneVerified, 50.2);
-        ctx.assert(confirmState.phase === "confirm" && confirmState.confirmHidden === false, "second muse should reach confirmation");
-        await ctx.click("musa2", ".scrib-video-tutorial-device__confirm");
+        await renderLocalVideoTutorialPosition(ctx, "musa2", oneVerified, 139);
 
         const allVerified = await ctx.waitFor(
-          "both muses confirm against the authoritative server",
+          "both muses verify automatically against the authoritative server",
           async () => {
             const state = await requestVideoTutorialState(ctx, "spectator");
             return state
@@ -3042,20 +3049,8 @@ const coreSpecs = [
         for (const assignment of assignments) {
           ctx.assert(verifiedNames.has(assignment.name), `server verification should include ${assignment.name}`);
         }
-        await ctx.waitForText(
-          "spectator",
-          "[data-video-tutorial-counter]",
-          (text) => /^2\/2 MUSAS VERIFICADAS$/i.test(text.trim()),
-          "spectator shows the completed two-muse verification"
-        );
-        await ctx.waitForText(
-          "control",
-          "#videotutorial_estado_detalle",
-          (text) => /Verificaci.n:\s*2\/2 musas/i.test(text),
-          "Control shows both muses verified"
-        );
 
-        await ctx.click("control", "#videotutorial_ocultar");
+        await ctx.click("control", "#videotutorial_reproduccion_toggle");
         const stopped = await ctx.waitFor(
           "Control manually stops and removes the video tutorial",
           async () => {
@@ -3095,7 +3090,6 @@ const coreSpecs = [
           toggle.checked = false;
           toggle.dispatchEvent(new Event("change", { bubbles: true }));
         });
-        await ctx.click("control", "#videotutorial_configurar");
         await ctx.waitFor(
           "Control disables automatic video tutorial repetition",
           async () => {
@@ -3108,11 +3102,21 @@ const coreSpecs = [
           },
           10000
         );
-        await ctx.waitForText(
-          "control",
-          "#videotutorial_estado_texto",
-          (text) => /REPETICI.N DESACTIVADA/i.test(text),
-          "Control reports automatic repetition disabled"
+        const stoppedToggle = await ctx.evaluate("control", () => {
+          const button = document.querySelector("#videotutorial_reproduccion_toggle");
+          const status = document.querySelector("#videotutorial_estado");
+          return button && status ? {
+            pressed: button.getAttribute("aria-pressed"),
+            playing: button.dataset.playing,
+            statusHidden: status.hidden
+          } : null;
+        });
+        ctx.assert(
+          stoppedToggle
+            && stoppedToggle.pressed === "false"
+            && stoppedToggle.playing === "0"
+            && stoppedToggle.statusHidden === true,
+          "Control should show the stopped state without redundant status copy"
         );
       } finally {
         if (initialConfig) {

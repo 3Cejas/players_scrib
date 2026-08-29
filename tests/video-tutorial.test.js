@@ -62,7 +62,7 @@ test("tutorial state migrates legacy MP4 configuration to the narration track", 
 
 test("tutorial accepts only safe audio URLs and versions its bundled narration", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
-  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829j";
+  const bundled = "https://scrib.test/game/media/tutorial-scrib-audio.mp3?v=20260829q";
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib-audio.mp3", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("../media/tutorial-scrib.mp4", locationRef), bundled);
   assert.equal(tutorial.safeAudioUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_AUDIO_URL);
@@ -76,8 +76,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829n/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829n/);
+    assert.match(html, /video-tutorial\.css\?v=20260829q/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829q/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -132,7 +132,8 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   assert.match(css, /\.scrib-video-tutorial \.scrib-visually-hidden,[\s\S]*clip-path:\s*inset\(50%\)/);
   assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
-  assert.match(brandMarkup, /\/img\/logo\.png/);
+  assert.match(brandMarkup, /\/game\/media\/scrib-logo-mark\.png\?v=20260829q/);
+  assert.match(spectatorMarkup, /\/game\/media\/scribshow-musa-qr\.png\?v=20260829q/);
   assert.doesNotMatch(brandMarkup, /<b>|MUSA/);
   assert.doesNotMatch(brandMarkup, /<span>&lt;SCRI&gt; B<\/span>/);
   assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
@@ -160,14 +161,17 @@ test("tutorial explains direct choice and automatic assignment using the real mu
   const narration = manifest.map(({ text }) => text).join(" ");
 
   assert.match(js, /ELIGE TU ESCRITXR/);
-  assert.match(js, /EQUIPO AZUL/);
-  assert.match(js, /EQUIPO ROJO/);
+  assert.doesNotMatch(js, /EQUIPO AZUL|EQUIPO ROJO/);
   assert.match(js, /DETECCIÓN AUTOMÁTICA/);
   assert.match(js, /MANTÉN EL DEDO/);
   assert.match(narration, /puedes tocar directamente/i);
   assert.match(narration, /detección automática/i);
+  assert.match(narration, /Bienvenida a Escribe\./);
+  assert.match(narration, /Escribe show punto es, barra musa/);
+  assert.match(js, /Bienvenida a <SCRI> B\./);
+  assert.match(js, /abre scribshow\.es\/musa o escanea/);
   assert.doesNotMatch(narration, /equilibr/i);
-  assert.doesNotMatch(js, /SÍ, FUNCIONA|device__confirm|data-video-tutorial-time|data-video-tutorial-progress/);
+  assert.doesNotMatch(js, /SÍ, FUNCIONA|TODO FUNCIONA|Tu dispositivo está conectado|device__confirm|data-video-tutorial-time|data-video-tutorial-progress/);
 });
 
 test("narration manifest, generated MP3 and CSS timeline stay synchronized", () => {
@@ -184,7 +188,7 @@ test("narration manifest, generated MP3 and CSS timeline stay synchronized", () 
       : scene.start + scene.duration;
     assert.equal(tutorial.TIMELINE[index].start, expectedStart);
     assert.equal(tutorial.TIMELINE[index].end, expectedEnd);
-    assert.equal(scene.text, tutorial.TIMELINE[index].subtitle);
+    assert.equal(scene.subtitle || scene.text, tutorial.TIMELINE[index].subtitle);
   });
   assert.ok(fs.statSync(audioPath).size > 100_000);
   assert.match(generator, /es-MX-DaliaNeural/);
@@ -207,8 +211,13 @@ test("mobile calibration changes through four solid colors and verifies automati
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
   assert.match(js, /root\.classList\.add\("is-leaving"\)[\s\S]*VISIBILITY_TRANSITION_MS/);
   assert.match(js, /scrib:video-tutorial-visibility/);
-  assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.svg[\s\S]*scribshow\.es\/musa/);
+  assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.png\?v=20260829q[\s\S]*scrib-video-tutorial-device__url[\s\S]*scribshow\.es\/musa/);
+  assert.doesNotMatch(js, /<a[^>]+scribshow\.es\/musa/);
   assert.match(css, /scrib-video-tutorial-device__share/);
+  assert.match(css, /scrib-video-tutorial-device__url[\s\S]*text-decoration:\s*underline/);
+  assert.match(css, /scrib-video-tutorial-device__phase-visual/);
+  assert.match(css, /is-phase-entering[\s\S]*vtDeviceCardIn/);
+  assert.match(css, /\.scrib-video-tutorial \*,[\s\S]*\.scrib-video-tutorial-device \*::after[\s\S]*box-sizing:\s*border-box/);
   assert.match(css, /data-phase="access"[^\n]+scrib-video-tutorial-device__share/);
   assert.match(css, /scrib-video-tutorial-device__share\s*\{\s*display:\s*none/);
   assert.match(css, /@keyframes vtDeviceColorSweep/);

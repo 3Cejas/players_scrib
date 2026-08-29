@@ -31,7 +31,7 @@
 
     const DEFAULT_DURATION_SECONDS = 153;
     const DEFAULT_AUDIO_URL = "../media/tutorial-scrib-audio.mp3";
-    const AUDIO_ASSET_VERSION = "20260829j";
+    const AUDIO_ASSET_VERSION = "20260829q";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
@@ -41,8 +41,8 @@
     // Los cambios visuales empiezan al entrar la voz, no al principio del pequeño
     // silencio de cada pista. Asi subtitulo, escena y narracion llegan juntos.
     const TIMELINE = Object.freeze([
-        Object.freeze({ id: "welcome", start: 0, end: 9.3, title: "¡HOLA, MUSA!", label: "BIENVENIDA A <SCRI> B", copy: "Vamos a preparar tu móvil con calma para entrar al juego.", subtitle: "¡Hola! Bienvenida a Escrib. Vamos a preparar tu móvil con calma para que puedas jugar y darle ideas a tu escritora." }),
-        Object.freeze({ id: "access", start: 9.3, end: 37.38, title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR.", subtitle: "Para entrar, abre scribshow punto es, barra musa, o escanea este código QR. Lo dejamos unos segundos para que tengas tiempo." }),
+        Object.freeze({ id: "welcome", start: 0, end: 9.3, title: "¡HOLA, MUSA!", label: "BIENVENIDA A <SCRI> B", copy: "Vamos a preparar tu móvil con calma para entrar al juego.", subtitle: "¡Hola! Bienvenida a <SCRI> B. Vamos a preparar tu móvil con calma para que puedas jugar y darle ideas a tu escritora." }),
+        Object.freeze({ id: "access", start: 9.3, end: 37.38, title: "ESCANEA O ESCRIBE", label: "ENTRA EN SCRIBSHOW.ES/MUSA", copy: "Abre scribshow.es/musa o escanea el código QR.", subtitle: "Para entrar, abre scribshow.es/musa o escanea este código QR. Lo dejamos unos segundos para que tengas tiempo." }),
         Object.freeze({ id: "access-wait", start: 37.38, end: 47.32, title: "¿YA ESTÁS DENTRO?", label: "TÓMATE TU TIEMPO", copy: "El código seguirá en pantalla mientras terminas de entrar.", subtitle: "¿Ya lo has escaneado? ¡Perfecto! Y si todavía estás entrando, tranquila: te esperamos." }),
         Object.freeze({ id: "name", start: 47.32, end: 57.32, title: "ESCRIBE TU NOMBRE", label: "ESCRIBE TU NOMBRE", copy: "Escribe el nombre con el que quieres aparecer durante el show.", subtitle: "Cuando aparezca la pantalla de acceso, escribe el nombre con el que quieres que te reconozcan durante el show." }),
         Object.freeze({ id: "choices", start: 57.32, end: 68.34, title: "ELIGE TU EQUIPO", label: "ELIGE TU ESCRITXR", copy: "Puedes escoger directamente una escritxr o usar la detección automática.", subtitle: "Después verás dos formas de elegir. Puedes tocar directamente a la escritora con la que quieres jugar, en azul o en rojo." }),
@@ -54,7 +54,7 @@
         Object.freeze({ id: "blue", start: 117.42, end: 124.42, title: "AZUL", label: "AZUL", copy: "¿Ha cambiado toda la pantalla a azul?", subtitle: "Ahora azul. ¿Ha cambiado toda la pantalla?" }),
         Object.freeze({ id: "green", start: 124.42, end: 131.42, title: "VERDE", label: "VERDE", copy: "¿Ya ves toda la pantalla verde?", subtitle: "Seguimos con verde. ¡Esto marcha genial!" }),
         Object.freeze({ id: "white", start: 131.42, end: 138.28, title: "BLANCO", label: "BLANCO", copy: "¿Ha funcionado también el último cambio?", subtitle: "Y por último, blanco. ¿Ha funcionado también?" }),
-        Object.freeze({ id: "complete", start: 138.28, end: 146.24, title: "¡TODO FUNCIONA!", label: "CONFIGURACIÓN VERIFICADA", copy: "Tu móvil está conectado y listo para participar.", subtitle: "¡Prueba completada! Tu móvil está conectado y listo para participar." }),
+        Object.freeze({ id: "complete", start: 138.28, end: 146.24, title: "PRUEBA COMPLETADA", label: "CONFIGURACIÓN VERIFICADA", copy: "Ya está todo preparado.", subtitle: "¡Prueba completada! Tu móvil está conectado y listo para participar." }),
         Object.freeze({ id: "farewell", start: 146.24, end: 153, title: "¡A INSPIRAR!", label: "YA ESTÁS PREPARADA", copy: "Prepárate para jugar y dar vida a la historia.", subtitle: "Gracias, musa. Prepárate para inspirar y disfrutar. ¡Nos vemos dentro!" })
     ]);
 
@@ -192,7 +192,7 @@
                 <i class="scrib-video-tutorial__grid"></i>
             </div>
             <header class="scrib-video-tutorial__brand" aria-hidden="true">
-                <img src="/img/logo.png" alt="">
+                <img src="/game/media/scrib-logo-mark.png?v=20260829q" alt="">
             </header>
             <div class="scrib-video-tutorial__scene">
                 <div class="scrib-video-tutorial__copy">
@@ -202,7 +202,7 @@
                     <div class="scrib-video-tutorial__welcome-mark">
                         <span>✦</span>
                         <strong>INSPIRA</strong>
-                        <img class="scrib-video-tutorial__welcome-qr" src="/game/media/scribshow-musa-qr.svg" alt="">
+                        <img class="scrib-video-tutorial__welcome-qr" src="/game/media/scribshow-musa-qr.png?v=20260829q" alt="">
                     </div>
                     <div class="scrib-video-tutorial__phone">
                         <div class="scrib-video-tutorial__phone-speaker"></div>
@@ -213,8 +213,8 @@
                             <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--choices">
                                 <span>LUNA,</span><h2>ELIGE TU ESCRITXR</h2>
                                 <div class="scrib-video-tutorial__team-grid">
-                                    <div class="scrib-video-tutorial__team-card scrib-video-tutorial__team-card--blue"><small>EQUIPO AZUL</small><img src="../public/img/pluma_azul.png" alt=""><strong data-video-writer-blue>ESCRITXR 1</strong><b>ELEGIR</b></div>
-                                    <div class="scrib-video-tutorial__team-card scrib-video-tutorial__team-card--red"><small>EQUIPO ROJO</small><img src="../public/img/pluma_roja.png" alt=""><strong data-video-writer-red>ESCRITXR 2</strong><b>ELEGIR</b></div>
+                                    <div class="scrib-video-tutorial__team-card scrib-video-tutorial__team-card--blue"><img src="../public/img/pluma_azul.png" alt=""><strong data-video-writer-blue>ESCRITXR 1</strong><b>ELEGIR</b></div>
+                                    <div class="scrib-video-tutorial__team-card scrib-video-tutorial__team-card--red"><img src="../public/img/pluma_roja.png" alt=""><strong data-video-writer-red>ESCRITXR 2</strong><b>ELEGIR</b></div>
                                 </div>
                                 <div class="scrib-video-tutorial__auto-button">☝ DETECCIÓN AUTOMÁTICA</div>
                             </div>
@@ -224,13 +224,13 @@
                                 <p>MANTÉN EL DEDO SOBRE LA HUELLA</p>
                             </div>
                             <div class="scrib-video-tutorial__mobile-screen scrib-video-tutorial__mobile-screen--result">
-                                <span>ASIGNACIÓN COMPLETADA</span><div class="scrib-video-tutorial__result-check">✓</div><small>TU EQUIPO</small><strong>AZUL</strong><small>TU ESCRITXR</small><b data-video-writer-result>ESCRITXR 1</b><i>ENTRAR AL JUEGO</i>
+                                <span>ASIGNACIÓN COMPLETADA</span><div class="scrib-video-tutorial__result-check">✓</div><small>TU ESCRITXR</small><b data-video-writer-result>ESCRITXR 1</b><i>ENTRAR AL JUEGO</i>
                             </div>
                         </div>
                     </div>
                     <div class="scrib-video-tutorial__tap"><i></i></div>
                     <div class="scrib-video-tutorial__color-stage"><i></i><strong data-video-color-title></strong></div>
-                    <div class="scrib-video-tutorial__complete-mark"><i>✓</i><strong>TODO FUNCIONA</strong></div>
+                    <div class="scrib-video-tutorial__complete-mark"><i>✓</i><strong>LISTA PARA INSPIRAR</strong></div>
                 </div>
             </div>
             <div class="scrib-video-tutorial__subtitles" aria-hidden="true">
@@ -252,14 +252,17 @@
         root.setAttribute("aria-labelledby", "video_tutorial_musa_title");
         root.innerHTML = `
             <div class="scrib-video-tutorial-device__grid" aria-hidden="true"></div>
+            <div class="scrib-video-tutorial-device__ambient" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="scrib-video-tutorial-device__scan" aria-hidden="true"></div>
             <div class="scrib-video-tutorial-device__card">
                 <span class="scrib-video-tutorial-device__eyebrow" data-video-tutorial-eyebrow>PRUEBA DE CONEXIÓN</span>
                 <div class="scrib-video-tutorial-device__check" aria-hidden="true">✓</div>
+                <div class="scrib-video-tutorial-device__phase-visual" aria-hidden="true"><i></i><strong data-video-tutorial-device-symbol>✦</strong><b></b></div>
                 <h1 id="video_tutorial_musa_title" data-video-tutorial-title>CONEXIÓN RECIBIDA</h1>
                 <p data-video-tutorial-copy>Sigue las instrucciones de la pantalla principal.</p>
                 <div class="scrib-video-tutorial-device__share" aria-label="Código QR para invitar a otra musa">
-                    <img src="../../media/scribshow-musa-qr.svg" alt="Código QR de scribshow.es/musa">
-                    <div><strong>¿FALTA ALGUIEN?</strong><span>scribshow.es/musa</span><small>ENSÉÑALE ESTE CÓDIGO</small></div>
+                    <img src="../../media/scribshow-musa-qr.png?v=20260829q" alt="Código QR de scribshow.es/musa">
+                    <div><strong>¿FALTA ALGUIEN?</strong><span class="scrib-video-tutorial-device__url">scribshow.es/musa</span><small>ENSÉÑALE ESTE CÓDIGO</small></div>
                 </div>
                 <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity></div>
             </div>
@@ -428,33 +431,59 @@
             if (liveRegion) liveRegion.textContent = phase.subtitle || `${phase.label}. ${phase.copy}`;
         }
 
-        function museIdentity() {
+        function museContext() {
             const muse = cleanText(documentRef.getElementById("nombre_musa_label")?.textContent, 24);
             const writer = cleanText(documentRef.getElementById("nombre")?.value || documentRef.getElementById("nombre")?.textContent, 36);
-            let team = "";
+            let player = "";
             try {
-                const player = new URLSearchParams(windowRef.location.search).get("player");
-                team = player === "1" ? "EQUIPO AZUL" : (player === "2" ? "EQUIPO ROJO" : "");
+                player = new URLSearchParams(windowRef.location.search).get("player") || "";
             } catch (_error) {}
-            return [muse, team, writer && `ESCRITXR: ${writer}`].filter(Boolean).join(" · ");
+            return {
+                player: player === "1" || player === "2" ? player : "",
+                identity: [muse, writer && `ESCRITXR: ${writer}`].filter(Boolean).join(" · ")
+            };
         }
 
         function renderMuse(position) {
             const phase = phaseAt(position);
+            const visualPhase = locallyVerified ? "verified" : phase.id;
             const title = root.querySelector("[data-video-tutorial-title]");
             const copy = root.querySelector("[data-video-tutorial-copy]");
             const eyebrow = root.querySelector("[data-video-tutorial-eyebrow]");
             const identity = root.querySelector("[data-video-tutorial-identity]");
-            root.dataset.phase = locallyVerified ? "verified" : phase.id;
+            const symbol = root.querySelector("[data-video-tutorial-device-symbol]");
+            const context = museContext();
+            const symbols = {
+                welcome: "✦",
+                name: "✎",
+                choices: "◆",
+                manual: "☝",
+                automatic: "◎",
+                assigned: "✓",
+                ready: "••••",
+                complete: "✓",
+                farewell: "✦",
+                verified: "✓"
+            };
+            root.dataset.phase = visualPhase;
+            root.dataset.team = context.player;
             root.classList.toggle("is-verified", locallyVerified);
             if (title) title.textContent = locallyVerified ? "CONFIGURACIÓN VERIFICADA" : phase.label;
-            if (copy) copy.textContent = locallyVerified
-                ? "Tu dispositivo está conectado y listo para inspirar."
-                : phase.copy;
-            if (eyebrow) eyebrow.textContent = locallyVerified ? "TODO FUNCIONA" : "PRUEBA DE CONEXIÓN";
-            if (identity) identity.textContent = museIdentity();
-            if (phase.id !== lastPhaseId) {
-                lastPhaseId = phase.id;
+            if (copy) {
+                copy.hidden = locallyVerified;
+                copy.textContent = locallyVerified ? "" : phase.copy;
+            }
+            if (eyebrow) {
+                eyebrow.hidden = locallyVerified;
+                eyebrow.textContent = locallyVerified ? "" : "PRUEBA DE CONEXIÓN";
+            }
+            if (identity) identity.textContent = context.identity;
+            if (symbol) symbol.textContent = symbols[visualPhase] || "✦";
+            if (visualPhase !== lastPhaseId) {
+                lastPhaseId = visualPhase;
+                root.classList.remove("is-phase-entering");
+                void root.offsetWidth;
+                root.classList.add("is-phase-entering");
                 if (liveRegion) liveRegion.textContent = phase.label;
                 if (phase.id === "complete" && !locallyVerified) scheduleAutomaticVerification();
             }
