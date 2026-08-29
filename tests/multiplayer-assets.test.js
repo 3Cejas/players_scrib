@@ -15,6 +15,8 @@ const CONTROL_HELP_MODULE_VERSION = "20260829c";
 const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829c";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
+const SPECTATOR_VIEW_TRANSITION_VERSION = "20260829d";
+const VIEW_TRANSITION_MODULE_VERSION = "20260829a";
 const MUSA_HELP_VERSION = "20260824f";
 const WRITER_DELETE_BLOCK_VERSION = "20260824g";
 const I18N_VERSION = "20260822a";
@@ -23,7 +25,6 @@ const LEVEL_TRANSITION_VERSION = "20260823a";
 const PLAYER_ACTIONS_VERSION = WRITER_DELETE_BLOCK_VERSION;
 const PLAYER_STATE_VERSION = WRITER_DELETE_BLOCK_VERSION;
 const PLAYER_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
-const SPECTATOR_STATE_VERSION = SPECTATOR_PRE_SHOW_VERSION;
 const SPECTATOR_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = MUSE_AUTHOR_VERSION;
@@ -65,7 +66,7 @@ test("multiplayer html references current changed shared assets", () => {
     assertIncludesAsset(htmlRelPath, "dashboard-players.css", CSS_VERSION);
   });
   assertIncludesAsset("game/players/index.html", "dashboard-players.css", MUSE_AUTHOR_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_PRE_SHOW_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_VIEW_TRANSITION_VERSION);
 
   ["game/players/index.html"].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js", MUSE_AUTHOR_VERSION);
@@ -86,8 +87,9 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/players/index.html", "js/socket-events.js", PLAYER_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/players/index.html", "domains/editor-deletion.js", WRITER_DELETE_BLOCK_VERSION);
 
-  assertIncludesAsset("game/spectator/index.html", "js/state.js", SPECTATOR_STATE_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "js/state.js", SPECTATOR_VIEW_TRANSITION_VERSION);
   assertIncludesAsset("game/spectator/index.html", "js/socket-events.js", SPECTATOR_SOCKET_EVENTS_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "domains/view-transition.js", VIEW_TRANSITION_MODULE_VERSION);
   assertIncludesAsset("game/spectator/index.html", "domains/credits.js");
   assertIncludesAsset("game/spectator/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
   assertIncludesAsset("game/spectator/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);

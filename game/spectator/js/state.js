@@ -1185,6 +1185,7 @@ const contenedor_espectador = getEl("contenedor_espectador");
 const temas_container = getEl("temas_container");
 const info_general = getEl("info_general");
 const spectator_fit_root = getEl("spectator_fit_root");
+const spectator_view_transition = getEl("spectator_view_transition");
 const container_general = document.querySelector(".container");
 const cabecera = document.querySelector(".cabecera");
 const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
@@ -1194,6 +1195,17 @@ const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "stats", "puntuacion", "nu
 let vista_calentamiento = false;
 let vista_espectador_override = "partida";
 let vista_espectador_modo_resuelta = "partida";
+let vista_espectador_modo_solicitada = "partida";
+let vista_espectador_ui_inicializada = false;
+const controlador_transicion_vista_espectador = window.ScribViewTransition
+    ? window.ScribViewTransition.createController({
+        overlay: spectator_view_transition,
+        reducedMotion: () => Boolean(
+            window.matchMedia
+            && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        )
+    })
+    : null;
 let partida_activa_espectador = false;
 let modo_nivel_activo_espectador = "";
 let ultimo_estado_calentamiento = 0;
@@ -3932,9 +3944,8 @@ const actualizarVisibilidadPanelNivelEspectador = () => {
     programarAjusteViewportEspectador();
 };
 
-const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
+const aplicarModoVistaEspectadorUi = (modo) => {
     const modoPrevio = vista_espectador_modo_resuelta;
-    const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
     vista_espectador_modo_resuelta = modo;
     if (modo !== "partida") {
         ocultarTransicionNivelEspectador();
@@ -4006,6 +4017,33 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     refrescarVisibilidadPreShowEspectador();
     programarAjusteViewportEspectador();
 };
+const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
+    const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
+    if (!vista_espectador_ui_inicializada) {
+        vista_espectador_ui_inicializada = true;
+        vista_espectador_modo_solicitada = modo;
+        aplicarModoVistaEspectadorUi(modo);
+        return;
+    }
+    if (
+        modo === vista_espectador_modo_solicitada
+        && modo !== vista_espectador_modo_resuelta
+        && controlador_transicion_vista_espectador
+        && controlador_transicion_vista_espectador.isRunningTo(modo)
+    ) {
+        return;
+    }
+    vista_espectador_modo_solicitada = modo;
+    if (!controlador_transicion_vista_espectador) {
+        aplicarModoVistaEspectadorUi(modo);
+        return;
+    }
+    controlador_transicion_vista_espectador.transition({
+        from: vista_espectador_modo_resuelta,
+        to: modo,
+        swap: () => aplicarModoVistaEspectadorUi(modo)
+    });
+};
 const actualizarVistaCalentamiento = (activa) => {
     vista_calentamiento = Boolean(activa);
     if (vista_calentamiento) cerrarPreShowEspectadorPorTutorial();
@@ -4043,7 +4081,7 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
         }
         if (Object.prototype.hasOwnProperty.call(payload, "modo")) {
             const modoServidor = normalizarModoVistaEspectador(payload.modo);
-            if (modoServidor === vista_espectador_modo_resuelta) {
+            if (modoServidor === vista_espectador_modo_solicitada) {
                 if (modoServidor === "stats" && cambioPasoStats) {
                     aplicarSlideStatsActual();
                 }
