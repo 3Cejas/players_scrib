@@ -29,9 +29,9 @@
 }(typeof window !== "undefined" ? window : null, function () {
     "use strict";
 
-    const DEFAULT_DURATION_SECONDS = 60;
+    const DEFAULT_DURATION_SECONDS = 100;
     const DEFAULT_VIDEO_URL = "../media/tutorial-scrib.mp4";
-    const VIDEO_ASSET_VERSION = "20260828a";
+    const VIDEO_ASSET_VERSION = "20260829a";
     const REQUEST_EVENT = "pedir_video_tutorial_estado";
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
@@ -39,13 +39,13 @@
     const NARRATION_RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     const TIMELINE = Object.freeze([
-        Object.freeze({ id: "connected", start: 0, end: 30, label: "CONEXI\u00d3N RECIBIDA", copy: "Sigue las instrucciones de la pantalla principal." }),
-        Object.freeze({ id: "ready", start: 30, end: 34, label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos el color y el brillo." }),
-        Object.freeze({ id: "red", start: 34, end: 38, label: "ROJO", copy: "Comprueba que toda la pantalla se vea roja." }),
-        Object.freeze({ id: "blue", start: 38, end: 42, label: "AZUL", copy: "Comprueba que toda la pantalla se vea azul." }),
-        Object.freeze({ id: "green", start: 42, end: 46, label: "VERDE", copy: "Comprueba que toda la pantalla se vea verde." }),
-        Object.freeze({ id: "white", start: 46, end: 50, label: "BLANCO", copy: "Comprueba el brillo y que no haya filtros activos." }),
-        Object.freeze({ id: "confirm", start: 50, end: 60, label: "\u00bfVISTE LOS CUATRO COLORES?", copy: "Confirma para terminar la prueba de este dispositivo." })
+        Object.freeze({ id: "connected", start: 0, end: 53, label: "CONEXI\u00d3N RECIBIDA", copy: "Sigue las instrucciones de la pantalla principal." }),
+        Object.freeze({ id: "ready", start: 53, end: 60, label: "PREPARA TU PANTALLA", copy: "Ahora comprobaremos juntos el color y el brillo." }),
+        Object.freeze({ id: "red", start: 60, end: 65, label: "ROJO", copy: "Comprueba que toda la pantalla se vea roja." }),
+        Object.freeze({ id: "blue", start: 65, end: 70, label: "AZUL", copy: "Comprueba que toda la pantalla se vea azul." }),
+        Object.freeze({ id: "green", start: 70, end: 75, label: "VERDE", copy: "Comprueba que toda la pantalla se vea verde." }),
+        Object.freeze({ id: "white", start: 75, end: 80, label: "BLANCO", copy: "Comprueba el brillo y que no haya filtros activos." }),
+        Object.freeze({ id: "confirm", start: 80, end: 100, label: "\u00bfVISTE LOS CUATRO COLORES?", copy: "Confirma para terminar la prueba de este dispositivo." })
     ]);
 
     function clamp(value, min, max) {
@@ -207,7 +207,7 @@
                 <p data-video-tutorial-copy>Sigue las instrucciones de la pantalla principal.</p>
                 <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity></div>
                 <button class="scrib-video-tutorial-device__confirm" type="button" hidden>S\u00cd, FUNCIONA</button>
-                <span class="scrib-video-tutorial-device__timer" data-video-tutorial-device-time>00:60</span>
+                <span class="scrib-video-tutorial-device__timer" data-video-tutorial-device-time>01:40</span>
             </div>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live></p>
         `;
@@ -356,7 +356,7 @@
 
         function renderSpectator(position) {
             const joinNode = root.querySelector("[data-video-tutorial-slide-url]");
-            if (joinNode) joinNode.hidden = !(position >= 6 && position < 11);
+            if (joinNode) joinNode.hidden = !(position >= 8 && position < 17);
         }
 
         function museIdentity() {

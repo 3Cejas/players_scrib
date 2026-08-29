@@ -1,26 +1,27 @@
 # Videotutorial de acceso de musas
 
-El activo publicado es `game/media/tutorial-scrib.mp4`. Es un vídeo 16:9 de 60 segundos, sin paneos, zoom, ruido animado, cronómetro ni barra de progreso. Cada plano permanece completamente estable y la animación se concentra en fundidos breves entre escenas. Incluye una voz neuronal mexicana con prosodia ajustada por frase, música de show de fondo, subtítulos quemados y una pista WebVTT adicional en `game/media/tutorial-scrib.vtt`. No necesita red ni servicios externos durante la reproducción. La URL real de acceso se muestra en una banda reservada durante la segunda escena, por lo que no se hornea una dirección dependiente del servidor ni se tapa ningún texto del vídeo.
+El activo publicado es `game/media/tutorial-scrib.mp4`. Es un vídeo 16:9 de 100 segundos, sin paneos, zoom, ruido animado, cronómetro ni barra de progreso. Cada acción principal permanece nueve segundos en pantalla para dejar varios segundos de lectura después de la locución. Cada plano permanece completamente estable y la animación se concentra en fundidos breves entre escenas. Incluye una voz neuronal mexicana con prosodia ajustada por frase, música de show de fondo, subtítulos quemados y una pista WebVTT adicional en `game/media/tutorial-scrib.vtt`. No necesita red ni servicios externos durante la reproducción. La URL real de acceso se muestra en una banda reservada durante la segunda escena, por lo que no se hornea una dirección dependiente del servidor ni se tapa ningún texto del vídeo.
 
-Las pantallas del móvil reproducen únicamente estados que existen en la aplicación: bienvenida, botón `Omitir tutorial`, nombre, asignación equilibrada, revelación de equipo y escritxr, entrada al juego, calibración de color y confirmación.
+Las pantallas del móvil reproducen únicamente estados que existen en la aplicación: bienvenida, botón `Omitir tutorial`, nombre, descubrimiento del equipo, revelación de equipo y escritxr, entrada al juego, calibración de color y confirmación.
 
 ## Línea temporal
 
 | Tiempo | Contenido |
 | --- | --- |
-| 00–06 s | Bienvenida cálida a SCRIB. |
-| 06–11 s | Abrir en el móvil la URL de la sala. |
-| 11–15 s | Pulsar `Omitir tutorial` en la bienvenida real. |
-| 15–20 s | Escribir el nombre y tocar la flecha azul. |
-| 20–25 s | Tocar `DESCUBRIR MI EQUIPO`. |
-| 25–30 s | Ver equipo y escritxr asignados; tocar `ENTRAR AL JUEGO`. |
-| 30–34 s | Aviso de la prueba visual. |
-| 34–38 s | ROJO. |
-| 38–42 s | AZUL. |
-| 42–46 s | VERDE. |
-| 46–50 s | BLANCO. |
-| 50–56 s | Tocar `SÍ, FUNCIONA`. |
-| 56–60 s | Ver la confirmación real del dispositivo. |
+| 00–08 s | Bienvenida cálida a SCRIB. |
+| 08–17 s | Abrir en el móvil la URL de la sala. |
+| 17–26 s | Pulsar `Omitir tutorial` en la bienvenida real. |
+| 26–35 s | Escribir el nombre y tocar la flecha azul. |
+| 35–44 s | Tocar `DESCUBRIR MI EQUIPO`. |
+| 44–53 s | Leer equipo y escritxr asignados; tocar `ENTRAR AL JUEGO`. |
+| 53–60 s | Aviso de la prueba visual. |
+| 60–65 s | ROJO. |
+| 65–70 s | AZUL. |
+| 70–75 s | VERDE. |
+| 75–80 s | BLANCO. |
+| 80–89 s | Tocar `SÍ, FUNCIONA`. |
+| 89–94 s | Ver la confirmación real del dispositivo. |
+| 94–100 s | Despedida y entrada a la experiencia. |
 
 ## Regeneración
 
@@ -39,7 +40,7 @@ Variables opcionales:
 - `SCRIB_TUTORIAL_BUILD_DIR`: conserva los intermedios en la ruta indicada.
 - `SCRIB_KEEP_TUTORIAL_BUILD=1`: conserva un build temporal creado por el script.
 
-El generador comprueba automáticamente duración de 60 s, H.264 a 1920×1080 y 30 fps, píxel `yuv420p`, AAC estéreo a 48 kHz y un tamaño máximo de 8 MiB.
+El generador comprueba automáticamente duración de 100 s, H.264 a 1920×1080 y 30 fps, píxel `yuv420p`, AAC estéreo a 48 kHz y un tamaño máximo de 12 MiB.
 
 ## Procedencia y licencias
 

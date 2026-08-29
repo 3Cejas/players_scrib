@@ -10,15 +10,15 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), "u
 
 test("video tutorial timeline is contiguous and reserves the final confirmation", () => {
   assert.equal(tutorial.TIMELINE[0].start, 0);
-  assert.equal(tutorial.TIMELINE.at(-1).end, 60);
+  assert.equal(tutorial.TIMELINE.at(-1).end, 100);
   tutorial.TIMELINE.slice(1).forEach((phase, index) => {
     assert.equal(phase.start, tutorial.TIMELINE[index].end);
   });
   assert.deepEqual(
-    [34, 38, 42, 46].map((second) => tutorial.phaseAt(second).id),
+    [60, 65, 70, 75].map((second) => tutorial.phaseAt(second).id),
     ["red", "blue", "green", "white"]
   );
-  assert.equal(tutorial.phaseAt(50).id, "confirm");
+  assert.equal(tutorial.phaseAt(80).id, "confirm");
   assert.equal(tutorial.phaseAt(999).id, "confirm");
 });
 
@@ -36,7 +36,7 @@ test("video tutorial normalizes authoritative playback and verification state", 
       habilitado: true,
       silenciado: false,
       intervalo_segundos: 420,
-      duracion_segundos: 60,
+      duracion_segundos: 100,
       video_url: "../media/tutorial-scrib.mp4"
     },
     verificacion: {
@@ -61,21 +61,21 @@ test("video tutorial rejects executable media URLs and clamps progress", () => {
   const locationRef = { href: "https://scrib.test/game/spectator/index.html" };
   assert.equal(
     tutorial.safeVideoUrl("../media/tutorial-scrib.mp4", locationRef),
-    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260828a"
+    "https://scrib.test/game/media/tutorial-scrib.mp4?v=20260829a"
   );
   assert.equal(tutorial.safeVideoUrl("javascript:alert(1)", locationRef), tutorial.DEFAULT_VIDEO_URL);
   assert.equal(tutorial.safeVideoUrl("data:video/mp4;base64,AAAA", locationRef), tutorial.DEFAULT_VIDEO_URL);
-  assert.equal(tutorial.progressAt(-2, 60), 0);
-  assert.equal(tutorial.progressAt(30, 60), 0.5);
-  assert.equal(tutorial.progressAt(90, 60), 1);
+  assert.equal(tutorial.progressAt(-2, 100), 0);
+  assert.equal(tutorial.progressAt(50, 100), 0.5);
+  assert.equal(tutorial.progressAt(120, 100), 1);
 });
 
 test("spectator and muse load the synchronized tutorial before socket handlers", () => {
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260828a/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260828a/);
+    assert.match(html, /video-tutorial\.css\?v=20260829a/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829a/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -113,7 +113,7 @@ test("spectator tutorial is clean, narrated and enters and leaves with a transit
     assert.doesNotMatch(js, new RegExp(obsoleteChrome));
   }
   assert.match(js, /data-video-tutorial-slide-url hidden/);
-  assert.match(js, /position >= 6 && position < 11/);
+  assert.match(js, /position >= 8 && position < 17/);
   assert.match(js, /media\.defaultMuted = false;[\s\S]*media\.muted = false;[\s\S]*media\.volume = 1;/);
   assert.doesNotMatch(js, /mutedAttempt|soundButton/);
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
@@ -150,11 +150,17 @@ test("generated tutorial has fixed scenes without baked timecode or progress chr
     assert.doesNotMatch(renderer, new RegExp(inventedScreen));
   }
   assert.match(renderer, /¡Hola! Bienvenida a Escrib\. Qué alegría tenerte aquí\./);
+  assert.match(renderer, /Gracias por acompañarnos\.[\s\S]*¡Nos vemos dentro!/);
+  assert.doesNotMatch(renderer, /equilibrad|equilibrio|automáticamente/i);
+  for (const action of ["01-acceso", "02-omitir", "03-nombre", "04-asignacion", "05-resultado", "11-confirmacion"]) {
+    assert.match(renderer, new RegExp(`key: "${action}"[^\\n]+duration: 9`));
+  }
   assert.match(renderer, /scene\.narration \|\| scene\.caption/);
   assert.match(generator, /es-MX-DaliaNeural/);
   assert.match(generator, /--rate="\$\{voice_rate\}"/);
   assert.match(generator, /--pitch="\$\{voice_pitch\}"/);
   assert.match(generator, /raw \/ available > 1\.15/);
+  assert.match(generator, /total_duration=.*last\.start \+ last\.duration/);
   assert.doesNotMatch(generator, /piper|zoompan=|noise=alls/);
   assert.match(generator, /scale=1920:1080:flags=lanczos,fps=30,format=yuv420p/);
   assert.match(generator, /xfade=transition=fade/);

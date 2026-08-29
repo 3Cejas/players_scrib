@@ -48,6 +48,8 @@ node "${script_dir}/render-tutorial-scrib-scenes.js" "${build_dir}" "${vtt_path}
 
 manifest_path="${build_dir}/manifest.json"
 manifest_tsv="${build_dir}/manifest.tsv"
+total_duration="$(node -e 'const scenes=require(process.argv[1]); const last=scenes.at(-1); process.stdout.write(String(last.start + last.duration));' "${manifest_path}")"
+music_fade_start="$(awk -v total="${total_duration}" 'BEGIN { printf "%.3f", total - 3 }')"
 node - "${manifest_path}" >"${manifest_tsv}" <<'NODE'
 const fs = require("fs");
 const manifest = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
@@ -103,7 +105,7 @@ while IFS=$'\t' read -r -u 3 scene_key scene_start scene_duration lead_ms image_
   tempo="$(awk -v raw="${raw_duration}" -v available="${available_duration}" 'BEGIN { if (raw > available) printf "%.6f", raw / available; else print "1.0" }')"
 
   ffmpeg -nostdin -hide_banner -loglevel error -y -i "${raw_audio}" \
-    -af "atempo=${tempo},adelay=${lead_ms},apad=pad_dur=60,atrim=start=0:end=${scene_duration},asetpts=N/SR/TB" \
+    -af "atempo=${tempo},adelay=${lead_ms},apad=pad_dur=${total_duration},atrim=start=0:end=${scene_duration},asetpts=N/SR/TB" \
     -ar 48000 -ac 1 -c:a pcm_s16le "${slot_wav}"
   printf "file '%s'\n" "${slot_wav}" >>"${audio_concat}"
 
@@ -133,7 +135,7 @@ for ((scene_index = 1; scene_index < ${#video_inputs[@]}; scene_index += 1)); do
   video_filter+="${previous_stream}[${scene_index}:v]xfade=transition=fade:duration=${transition_duration}:offset=${scene_starts[scene_index]}${output_stream};"
   previous_stream="${output_stream}"
 done
-video_filter+="${previous_stream}trim=start=0:end=60,setpts=PTS-STARTPTS[visual]"
+video_filter+="${previous_stream}trim=start=0:end=${total_duration},setpts=PTS-STARTPTS[visual]"
 "${video_command[@]}" -filter_complex "${video_filter}" -map "[visual]" \
   -an -c:v libx264 -preset ultrafast -crf 14 -pix_fmt yuv420p -r 30 -g 60 "${visual_mp4}"
 
@@ -147,22 +149,22 @@ ffmpeg -nostdin -hide_banner -loglevel error -y \
   -stream_loop -1 -i "${repo_dir}/game/audio/2. ACOMPAÑAR VOZ CON MELODIA.mp3" \
   -filter_complex \
     "[0:a]volume=1.0,asplit=2[voice][voice_sidechain];\
-     [1:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=34000[c1];\
-     [2:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=38000[c2];\
-     [3:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=42000[c3];\
-     [4:a]afade=t=out:st=0:d=0.28,volume=0.075,adelay=46000[c4];\
-     [5:a]afade=t=out:st=0:d=0.55,volume=0.06,adelay=50000[ok];\
-     [6:a]volume=0.16,afade=t=in:st=0:d=1.2,afade=t=out:st=57:d=3,atrim=start=0:end=60[music];\
+     [1:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=60000[c1];\
+     [2:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=65000[c2];\
+     [3:a]afade=t=out:st=0:d=0.24,volume=0.075,adelay=70000[c3];\
+     [4:a]afade=t=out:st=0:d=0.28,volume=0.075,adelay=75000[c4];\
+     [5:a]afade=t=out:st=0:d=0.55,volume=0.06,adelay=80000[ok];\
+     [6:a]volume=0.16,afade=t=in:st=0:d=1.2,afade=t=out:st=${music_fade_start}:d=3,atrim=start=0:end=${total_duration}[music];\
      [music][voice_sidechain]sidechaincompress=threshold=0.025:ratio=8:attack=18:release=420[music_ducked];\
      [voice][music_ducked][c1][c2][c3][c4][ok]amix=inputs=7:duration=longest:normalize=0,\
-     loudnorm=I=-16:TP=-1.5:LRA=7,atrim=start=0:end=60,apad=pad_dur=60[a]" \
+     loudnorm=I=-16:TP=-1.5:LRA=7,atrim=start=0:end=${total_duration},apad=pad_dur=${total_duration}[a]" \
   -map "[a]" -ar 48000 -ac 2 -c:a pcm_s16le "${mixed_wav}"
 
 subtitle_filter="ass=${build_dir}/captions.ass:fontsdir=${repo_dir}/game/css/fonts"
 ffmpeg -nostdin -hide_banner -loglevel error -y \
   -i "${visual_mp4}" -i "${mixed_wav}" \
   -filter:v "${subtitle_filter}" \
-  -map 0:v:0 -map 1:a:0 -t 60 \
+  -map 0:v:0 -map 1:a:0 -t "${total_duration}" \
   -c:v libx264 -preset medium -crf 23 -profile:v high -level 4.1 -pix_fmt yuv420p -r 30 -g 60 \
   -c:a aac -b:a 112k -ar 48000 -ac 2 \
   -metadata title="SCRIB · Acceso y verificación de musa" \
@@ -170,7 +172,7 @@ ffmpeg -nostdin -hide_banner -loglevel error -y \
   -movflags +faststart "${output_path}"
 
 duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "${output_path}")"
-duration_ok="$(awk -v value="${duration}" 'BEGIN { print (value >= 59.99 && value <= 60.01) ? "yes" : "no" }')"
+duration_ok="$(awk -v value="${duration}" -v expected="${total_duration}" 'BEGIN { print (value >= expected - 0.01 && value <= expected + 0.01) ? "yes" : "no" }')"
 if [[ "${duration_ok}" != "yes" ]]; then
   echo "Duración inesperada: ${duration} s" >&2
   exit 1
@@ -188,8 +190,8 @@ if [[ "${audio_info}" != aac,48000,2 ]]; then
 fi
 
 size_bytes="$(stat -c '%s' "${output_path}")"
-if (( size_bytes > 8388608 )); then
-  echo "El vídeo supera el objetivo ligero de 8 MiB: ${size_bytes} bytes" >&2
+if (( size_bytes > 12582912 )); then
+  echo "El vídeo supera el objetivo ligero de 12 MiB: ${size_bytes} bytes" >&2
   exit 1
 fi
 
