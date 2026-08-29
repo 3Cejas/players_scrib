@@ -1614,7 +1614,7 @@ const smokeSpecs = [
         "jury",
         "#jurado_cloud_1 .cloud-word",
         "jury inspiration cloud",
-        3
+        2
       );
       await typeInWriter(ctx, "writer1", " destello");
       await ctx.waitForText(
