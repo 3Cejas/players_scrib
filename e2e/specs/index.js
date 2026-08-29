@@ -3161,12 +3161,13 @@ const coreSpecs = [
         await ctx.waitForText(
           roleName,
           "#musa_help_confirm_copy",
-          (text) => /Control recibir.+aviso/i.test(text),
+          (text) => /enviaremos tu aviso al equipo/i.test(text),
           `${roleName} confirmation explains the physical help request`
         );
         const privacyText = await ctx.readText(roleName, ".musa-help-confirm__privacy");
-        ctx.assert(/SOLO esta p.gina/i.test(privacyText), `${roleName} confirmation must limit remote assistance to this SCRIB page`);
-        ctx.assert(/cancelar.+momento/i.test(privacyText), `${roleName} confirmation must explain revocation`);
+        ctx.assert(/ayudarte dentro de esta p.gina/i.test(privacyText), `${roleName} confirmation must limit remote assistance to this SCRIB page`);
+        ctx.assert(/cancelar.+cuando quieras/i.test(privacyText), `${roleName} confirmation must explain revocation`);
+        ctx.assert(!/Control/i.test(`${await ctx.readText(roleName, "#musa_help_confirm_copy")} ${privacyText}`), `${roleName} confirmation must avoid internal role jargon`);
         await ctx.click(roleName, "#musa_help_confirm_accept");
         await ctx.waitForVisible(roleName, "#musa_help_flag", true, `${roleName} receives a full-screen physical help flag`);
       }
@@ -3191,8 +3192,23 @@ const coreSpecs = [
         );
         const assignment = assignmentByRole.get(roleName);
         ctx.assert(museTickets[roleName].team === assignment.team, `${roleName} help ticket should retain its authoritative team`);
-        const flagColor = await ctx.readText(roleName, "#musa_help_flag_color");
-        ctx.assert(flagColor === museTickets[roleName].colorName, `${roleName} flag should name its server-assigned color`);
+        const flagPresentation = await ctx.evaluate(roleName, () => {
+          const flag = document.querySelector("#musa_help_flag");
+          return flag ? {
+            copy: flag.querySelector(".musa-help-flag__copy")?.textContent.trim() || "",
+            obsoleteCopy: Boolean(flag.querySelector("#musa_help_flag_color, #musa_help_flag_state, .musa-help-flag__eyebrow")),
+            assignedColor: flag.style.getPropertyValue("--musa-help-color").trim()
+          } : null;
+        });
+        ctx.assert(
+          flagPresentation && flagPresentation.copy === "Levanta la pantalla y muévela para que el equipo pueda encontrarte",
+          `${roleName} flag should show only the concise physical instruction`
+        );
+        ctx.assert(flagPresentation && !flagPresentation.obsoleteCopy, `${roleName} flag should omit redundant labels and status copy`);
+        ctx.assert(
+          flagPresentation && flagPresentation.assignedColor.toLowerCase() === museTickets[roleName].color.toLowerCase(),
+          `${roleName} flag should still use its server-assigned color visually`
+        );
       }
       ctx.assert(museTickets.musa1.ticketId !== museTickets.musa2.ticketId, "help requests must create individual opaque tickets");
       ctx.assert(museTickets.musa1.color !== museTickets.musa2.color, "simultaneous muses should receive different physical flag colors");
@@ -3273,7 +3289,7 @@ const coreSpecs = [
           zIndex: Number(style.zIndex) || 0
         } : null;
       });
-      ctx.assert(attendingHalo && /CONTROL TE EST.+ATENDIENDO/i.test(attendingHalo.text), "attending halo should explain that Control is helping");
+      ctx.assert(attendingHalo && /YA TE EST.+ATENDIENDO/i.test(attendingHalo.text), "attending halo should explain that the team is helping");
       ctx.assert(attendingHalo.position === "fixed" && attendingHalo.pointerEvents === "none", "attending halo must persist without blocking muse input");
       ctx.assert(
         attendingHalo.top === 0 && attendingHalo.left === 0 && attendingHalo.right === 0 && attendingHalo.bottom === 0,
@@ -3375,7 +3391,7 @@ const coreSpecs = [
       await ctx.waitForText(
         "musa1",
         "#musa_help_attending_indicator",
-        (text) => /CONTROL TE EST.+ATENDIENDO/i.test(text),
+        (text) => /YA TE EST.+ATENDIENDO/i.test(text),
         "reloaded muse keeps the attending message"
       );
 
@@ -3422,6 +3438,18 @@ const coreSpecs = [
       });
       ctx.assert(closedStatuses.includes("resuelta"), "Control history should retain the resolved incident");
       ctx.assert(closedStatuses.includes("cancelada"), "Control history should retain the muse-cancelled incident");
+      await ctx.click("control", "#asistencia_modal_cerrar");
+      await ctx.evaluate("control", () => { window.confirm = () => true; });
+      await ctx.click("control", "#asistencia_limpiar");
+      await ctx.waitFor(
+        "Control clears active and historical incidents through the server",
+        async () => ctx.evaluate("control", () => {
+          const state = window.ScribMuseHelpControl && window.ScribMuseHelpControl.obtenerEstado();
+          return Boolean(state && state.synced && state.tickets.length === 0
+            && document.querySelectorAll("#asistencia_lista .asistencia-ticket").length === 0);
+        }),
+        10000
+      );
     }
   },
   {

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260829p">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260829r">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -184,7 +184,10 @@
                                         <strong>CENTRO DE ASISTENCIA</strong>
                                         <span>Atiende cada aviso y, con autorizaci&oacute;n temporal, revisa esta app.</span>
                                     </div>
-                                    <button id="asistencia_actualizar" class="btn asistencia-control__refresh" type="button">&#x21BB; ACTUALIZAR</button>
+                                    <div class="asistencia-control__header-actions">
+                                        <button id="asistencia_actualizar" class="btn asistencia-control__refresh" type="button">&#x21BB; ACTUALIZAR</button>
+                                        <button id="asistencia_limpiar" class="btn asistencia-control__clear" type="button">&#x1F9F9; LIMPIAR</button>
+                                    </div>
                                 </header>
                                 <p id="asistencia_estado_global" class="asistencia-control__global-status" role="status" aria-live="polite" aria-atomic="true">Esperando el estado del servidor.</p>
                                 <div class="asistencia-control__workspace">
@@ -214,8 +217,9 @@
                                                 <span id="asistencia_color" class="asistencia-detail__flag" aria-hidden="true"></span>
                                                 <div class="asistencia-detail__identity">
                                                     <strong id="asistencia_nombre">MUSA</strong>
-                                                    <span id="asistencia_meta">Equipo &middot; antig&uuml;edad</span>
+                                                    <span id="asistencia_meta">Color &middot; antig&uuml;edad</span>
                                                 </div>
+                                                <span id="asistencia_conexion" class="asistencia-connection" data-connected="0" role="img" aria-label="Desconectada"></span>
                                                 <span id="asistencia_estado" class="asistencia-state">PENDIENTE</span>
                                             </header>
                                             <div class="asistencia-detail__actions" aria-label="Gestionar incidencia">
@@ -235,10 +239,9 @@
                                                         <button id="asistencia_diagnostico_cerrar" class="btn" type="button" hidden>DETENER</button>
                                                     </div>
                                                 </header>
-                                                <p id="asistencia_diagnostico_ayuda" class="asistencia-diagnostic__consent">La musa ya autoriz&oacute; temporalmente esta p&aacute;gina al pedir ayuda y puede revocarlo cancelando. No permite escribir ni acceder a c&aacute;mara, micr&oacute;fono u otras aplicaciones.</p>
                                                 <div class="asistencia-diagnostic__body">
                                                     <div id="asistencia_preview_shell" class="asistencia-preview" data-state="idle" tabindex="0" role="application" aria-label="Vista remota del tel&eacute;fono; al activarse, pulsa sobre la imagen para tocar en esa posici&oacute;n">
-                                                        <img id="asistencia_preview" alt="Pantalla en directo de la musa seleccionada" draggable="false" hidden>
+                                                        <img id="asistencia_preview" alt="" draggable="false" hidden>
                                                         <div id="asistencia_preview_cursor" class="asistencia-preview__cursor" aria-hidden="true"></div>
                                                         <div id="asistencia_preview_fallback" class="asistencia-preview__fallback">
                                                             <span aria-hidden="true">&#x1F512;</span>
@@ -753,7 +756,7 @@
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260824a"></script>
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
-<script src="./js/muse-help-control.js?v=20260829c"></script>
+<script src="./js/muse-help-control.js?v=20260829r"></script>
 <script src="./js/socket-events.js?v=20260829d"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>

@@ -144,14 +144,16 @@ test("muse page centers SOS and explains scoped help without internal role jargo
   const css = read("game/public/players/css/musa-help.css");
   const js = read("game/public/players/js/musa-help.js");
 
-  assert.match(html, /musa-help\.css\?v=20260829l/);
-  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260829l/);
+  assert.match(html, /musa-help\.css\?v=20260829r/);
+  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260829r/);
   assert.match(css, /\.musa-help-fab\s*\{[\s\S]*position:\s*fixed;[\s\S]*z-index:\s*2147483630;/);
   assert.match(css, /\.musa-help-remote-indicator\s*\{[\s\S]*z-index:\s*2147483620;/);
   assert.match(css, /@media \(max-width: 540px\)[\s\S]*\.musa-help-fab\s*\{[\s\S]*grid-template-columns:\s*1fr;[\s\S]*justify-items:\s*center;/);
   assert.match(js, /Si hace falta, podremos ayudarte dentro de esta página/);
   assert.doesNotMatch(js, /["'`][^"'`\n]*(?:\bControl\b|\bCONTROL\b)[^"'`\n]*["'`]/);
   assert.match(js, /AGITA ESTA BANDERA EN EL AIRE/);
+  assert.match(js, /Levanta la pantalla y muévela para que el equipo pueda encontrarte/);
+  assert.doesNotMatch(js, /AYUDA SOLICITADA|AVISO ENVIADO|musa_help_flag_color|musa_help_flag_state/);
   assert.match(js, /CANCELAR AYUDA/);
 });
 

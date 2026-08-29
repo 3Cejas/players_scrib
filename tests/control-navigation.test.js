@@ -38,7 +38,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(representacion, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_representacion"[^>]*onclick="toggleCreditos\(\)"/);
   assert.match(representacion, /id="panel_creditos_representacion" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
   assert.ok(
-    html.indexOf("./js/muse-help-control.js?v=20260829c") < html.lastIndexOf("</body>"),
+    html.indexOf("./js/muse-help-control.js?v=20260829r") < html.lastIndexOf("</body>"),
     "Control interaction modules must execute inside body"
   );
 

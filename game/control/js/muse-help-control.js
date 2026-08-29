@@ -15,6 +15,8 @@
     let initialized = false;
     let detailModalOpen = false;
     let lastFocusedTicketButton = null;
+    let clearing = false;
+    let clearTimer = null;
     let state = {
         connected: false,
         synced: false,
@@ -198,6 +200,12 @@
         })[status] || "PENDIENTE";
     }
 
+    function teamColorLabel(team) {
+        if (team && team.id === 1) return "AZUL";
+        if (team && team.id === 2) return "ROJO";
+        return "SIN ASIGNAR";
+    }
+
     function diagnosticLabel(status) {
         return ({
             inactivo: "Sin solicitar",
@@ -260,24 +268,29 @@
             const copy = global.document.createElement("span");
             const name = global.document.createElement("strong");
             const meta = global.document.createElement("span");
+            const connection = global.document.createElement("span");
             const status = global.document.createElement("span");
             button.type = "button";
             button.className = `asistencia-ticket ${ticket.team.className}`;
             button.dataset.ticketId = ticket.ticketId;
             button.dataset.status = ticket.status;
             button.setAttribute("aria-pressed", ticket.ticketId === state.selectedId ? "true" : "false");
-            button.setAttribute("aria-label", `${ticket.museName}, ${ticket.team.label}, bandera ${ticket.colorName}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}`);
+            button.setAttribute("aria-label", `${ticket.museName}, ${teamColorLabel(ticket.team)}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}, ${ticket.connected ? "conectada" : "desconectada"}`);
             swatch.className = "asistencia-ticket__flag";
             swatch.style.setProperty("--help-flag", ticket.color);
             swatch.setAttribute("aria-hidden", "true");
             copy.className = "asistencia-ticket__copy";
             name.textContent = ticket.museName;
             meta.className = "asistencia-ticket__meta";
-            meta.textContent = `${ticket.team.label} · ${ticket.colorName} · ${relativeAge(ticket.requestedTs)}`;
+            meta.textContent = `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`;
+            connection.className = "asistencia-connection";
+            connection.dataset.connected = ticket.connected ? "1" : "0";
+            connection.setAttribute("role", "img");
+            connection.setAttribute("aria-label", ticket.connected ? "Conectada" : "Desconectada");
             status.className = "asistencia-ticket__status";
             status.textContent = statusLabel(ticket.status);
             copy.append(name, meta);
-            button.append(swatch, copy, status);
+            button.append(swatch, copy, connection, status);
             button.addEventListener("click", () => {
                 lastFocusedTicketButton = button;
                 selectTicket(ticket.ticketId);
@@ -365,7 +378,12 @@
         const diagnosticActive = ticket.diagnostic.status === "activo" && Boolean(ticket.diagnostic.sessionId);
         const diagnosticPending = ticket.diagnostic.status === "solicitado";
         setText("asistencia_nombre", ticket.museName);
-        setText("asistencia_meta", `${ticket.team.label} · BANDERA ${ticket.colorName} · ${relativeAge(ticket.requestedTs)} · ${ticket.connected ? "CONECTADA" : "DESCONECTADA"}`);
+        setText("asistencia_meta", `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`);
+        const connection = getEl("asistencia_conexion");
+        if (connection) {
+            connection.dataset.connected = ticket.connected ? "1" : "0";
+            connection.setAttribute("aria-label", ticket.connected ? "Conectada" : "Desconectada");
+        }
         const status = getEl("asistencia_estado");
         if (status) {
             status.textContent = statusLabel(ticket.status);
@@ -374,18 +392,9 @@
         const flag = getEl("asistencia_color");
         if (flag) {
             flag.style.setProperty("--help-flag", ticket.color);
-            flag.title = `Bandera ${ticket.colorName} (${ticket.color})`;
+            flag.removeAttribute("title");
         }
         setText("asistencia_diagnostico_estado", diagnosticLabel(ticket.diagnostic.status));
-        const consent = getEl("asistencia_diagnostico_ayuda");
-        if (consent) {
-            consent.dataset.state = ticket.diagnostic.status;
-            consent.textContent = diagnosticActive
-                ? "Autorización temporal activa: el control se limita a tocar, desplazar, volver y reconectar. La musa puede revocarla cancelando."
-                : (diagnosticPending
-                    ? "Abriendo la vista segura que la musa autorizó al confirmar su petición de ayuda."
-                    : "La musa ya autorizó temporalmente esta página al pedir ayuda y puede revocarlo cancelando. No permite escribir ni acceder a cámara, micrófono u otras aplicaciones.");
-        }
         setButtonDisabled("asistencia_atender", !state.connected || busy || ticket.status !== "solicitada");
         setButtonDisabled("asistencia_resolver", !state.connected || busy || !open);
         setButtonDisabled("asistencia_cancelar", !state.connected || busy || !open);
@@ -406,6 +415,7 @@
             refresh.disabled = !state.connected;
             refresh.setAttribute("aria-disabled", state.connected ? "false" : "true");
         }
+        setButtonDisabled("asistencia_limpiar", !state.connected || !state.synced || clearing || state.tickets.length === 0);
         let text = "Asistencia sincronizada.";
         if (!state.connected) text = "Sin conexión con el servidor.";
         else if (!state.synced) text = "Sincronizando incidencias…";
@@ -438,12 +448,12 @@
             const button = ticketButtons.get(ticket.ticketId);
             if (!button) return;
             const meta = button.querySelector(".asistencia-ticket__meta");
-            if (meta) meta.textContent = `${ticket.team.label} · ${ticket.colorName} · ${relativeAge(ticket.requestedTs)}`;
-            button.setAttribute("aria-label", `${ticket.museName}, ${ticket.team.label}, bandera ${ticket.colorName}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}`);
+            if (meta) meta.textContent = `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`;
+            button.setAttribute("aria-label", `${ticket.museName}, ${teamColorLabel(ticket.team)}, ${statusLabel(ticket.status)}, ${relativeAge(ticket.requestedTs)}, ${ticket.connected ? "conectada" : "desconectada"}`);
         });
         const ticket = selectedTicket();
         if (!ticket) return;
-        setText("asistencia_meta", `${ticket.team.label} · BANDERA ${ticket.colorName} · ${relativeAge(ticket.requestedTs)} · ${ticket.connected ? "CONECTADA" : "DESCONECTADA"}`);
+        setText("asistencia_meta", `${teamColorLabel(ticket.team)} · ${relativeAge(ticket.requestedTs)}`);
         const frame = frames.get(ticket.ticketId);
         if (frame && ticket.diagnostic.status === "activo" && frame.sessionId === ticket.diagnostic.sessionId) {
             setText("asistencia_ultimo_frame", `Imagen ${relativeAge(frame.ts)}`);
@@ -593,6 +603,59 @@
                 applyState(response);
             }
         });
+        return true;
+    }
+
+    function clearAll() {
+        const socketNow = getSocket();
+        if (!state.connected || !state.synced || !state.tickets.length || clearing
+            || !socketNow || !socketNow.connected || typeof socketNow.emit !== "function") {
+            return false;
+        }
+        const accepted = typeof global.confirm !== "function" || global.confirm(
+            "¿Limpiar todas las incidencias, incluidas las activas, resueltas y canceladas?"
+        );
+        if (!accepted) return false;
+        const requestId = createRequestId();
+        clearing = true;
+        state.message = "Limpiando incidencias…";
+        state.error = "";
+        render();
+        clearTimer = global.setTimeout(() => {
+            if (!clearing) return;
+            clearing = false;
+            clearTimer = null;
+            state.message = "";
+            state.error = "El servidor no confirmó la limpieza. Revisa la conexión.";
+            render();
+        }, ACK_TIMEOUT_MS);
+        try {
+            socketNow.emit("ayuda_musas_limpiar", { request_id: requestId }, (response = {}) => {
+                if (!clearing) return;
+                clearing = false;
+                if (clearTimer) global.clearTimeout(clearTimer);
+                clearTimer = null;
+                if (!response || response.ok === false || response.success === false) {
+                    state.message = "";
+                    state.error = errorMessage(response);
+                    render();
+                    return;
+                }
+                if (response.estado || response.state || response.tickets || response.incidencias) {
+                    applyState(response);
+                    return;
+                }
+                requestState();
+            });
+        } catch (_) {
+            clearing = false;
+            if (clearTimer) global.clearTimeout(clearTimer);
+            clearTimer = null;
+            state.message = "";
+            state.error = "No se pudo enviar la limpieza al servidor.";
+            render();
+            return false;
+        }
         return true;
     }
 
@@ -775,6 +838,7 @@
             if (element) element.addEventListener(event, handler, options);
         };
         on("asistencia_actualizar", "click", requestState);
+        on("asistencia_limpiar", "click", clearAll);
         on("asistencia_modal_cerrar", "click", closeDetail);
         on("asistencia_modal_fondo", "click", closeDetail);
         on("asistencia_atender", "click", attend);
@@ -833,6 +897,7 @@
         detenerDiagnostico: stopDiagnostic,
         enviarComandoRemoto: emitRemoteCommand,
         inicializar: initialize,
+        limpiar: clearAll,
         marcarConexion: markConnected,
         normalizarEstado: normalizeState,
         normalizarFrame: normalizeFrame,

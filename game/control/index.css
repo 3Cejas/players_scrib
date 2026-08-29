@@ -1192,6 +1192,21 @@ table {
     white-space: nowrap;
 }
 
+.asistencia-control__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.36rem;
+}
+
+.asistencia-control__clear.btn {
+    min-height: 1.78rem;
+    padding: 0.34rem 0.64rem;
+    color: #fff0a3;
+    border-color: rgba(255, 216, 77, 0.58);
+    background: rgba(255, 216, 77, 0.12);
+    white-space: nowrap;
+}
+
 .asistencia-control__global-status {
     min-height: 1rem;
     margin: 0;
@@ -1267,7 +1282,7 @@ table {
 .asistencia-ticket {
     --help-team: #ffd84d;
     display: grid;
-    grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+    grid-template-columns: 1.4rem minmax(0, 1fr) auto auto;
     width: 100%;
     min-width: 0;
     align-items: center;
@@ -1347,6 +1362,23 @@ table {
     font: 600 clamp(0.46rem, 0.56vw, 0.58rem)/1.2 "Courier New", monospace;
 }
 
+.asistencia-connection {
+    display: inline-block;
+    width: 0.62rem;
+    height: 0.62rem;
+    flex: 0 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    background: #66747e;
+    box-shadow: 0 0 0.38rem rgba(102, 116, 126, 0.52);
+}
+
+.asistencia-connection[data-connected="1"] {
+    border-color: rgba(183, 255, 209, 0.86);
+    background: #62ee9a;
+    box-shadow: 0 0 0.55rem rgba(98, 238, 154, 0.72);
+}
+
 .asistencia-ticket__status {
     color: #ffd84d;
     white-space: nowrap;
@@ -1404,7 +1436,7 @@ table {
 
 .asistencia-detail__header {
     display: grid;
-    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto auto;
     min-height: 2.4rem;
     padding: 0.34rem 0.42rem;
     border-bottom: 1px solid rgba(137, 173, 194, 0.16);
@@ -1467,39 +1499,43 @@ table {
     gap: 0.3rem;
 }
 
-.asistencia-control .btn {
+.asistencia-control .btn,
+.asistencia-modal .btn {
     min-width: 0;
     min-height: 1.68rem;
     padding: 0.3rem 0.42rem;
     font-size: clamp(0.42rem, 0.54vw, 0.58rem);
     line-height: 1.1;
+    border-color: rgba(255, 216, 77, 0.48);
+    background: linear-gradient(180deg, rgba(95, 73, 9, 0.88), rgba(43, 34, 7, 0.94));
+    color: #fff0a3;
+    text-shadow: none;
+    box-shadow: 0 0.16em #d9a918, 0 0 0.55rem rgba(255, 216, 77, 0.12);
 }
 
 .asistencia-control .btn:disabled,
-.asistencia-control .btn[aria-disabled="true"] {
+.asistencia-control .btn[aria-disabled="true"],
+.asistencia-modal .btn:disabled,
+.asistencia-modal .btn[aria-disabled="true"] {
     pointer-events: none;
     opacity: 0.34;
     filter: grayscale(0.75);
 }
 
 .asistencia-action--attend {
-    color: #6de8ff;
-    border-color: rgba(70, 225, 255, 0.42);
+    color: #fff4b5;
 }
 
 .asistencia-action--resolve {
-    color: #74f0a6;
-    border-color: rgba(91, 238, 151, 0.4);
+    color: #fff4b5;
 }
 
 .asistencia-action--cancel {
-    color: #c2ccd3;
-    border-color: rgba(194, 204, 211, 0.3);
+    color: #eadca0;
 }
 
 .asistencia-action--reload {
-    color: #ffb45c;
-    border-color: rgba(255, 162, 71, 0.42);
+    color: #fff4b5;
 }
 
 .asistencia-diagnostic {
@@ -1524,28 +1560,12 @@ table {
 }
 
 .asistencia-diagnostic__session-actions .btn {
-    color: #8ceeff;
-    border-color: rgba(70, 225, 255, 0.35);
-}
-
-.asistencia-diagnostic__consent {
-    margin: 0;
-    padding: 0.3rem 0.38rem;
-    border-left: 2px solid rgba(255, 216, 77, 0.58);
-    color: #a7b8c5;
-    background: rgba(255, 216, 77, 0.045);
-    font: 500 0.56rem/1.35 "Courier New", monospace;
-}
-
-.asistencia-diagnostic__consent[data-state="activo"] {
-    border-left-color: #65ef9e;
-    color: #b8f8d2;
-    background: rgba(78, 231, 140, 0.055);
+    color: #fff0a3;
 }
 
 .asistencia-diagnostic__body {
     display: grid;
-    grid-template-columns: minmax(8.2rem, 0.56fr) minmax(11rem, 1fr);
+    grid-template-columns: minmax(13rem, 0.72fr) minmax(13rem, 1fr);
     align-items: center;
     min-height: 0;
     gap: 0.54rem;
@@ -1554,9 +1574,9 @@ table {
 .asistencia-preview {
     position: relative;
     display: grid;
-    width: min(100%, 11rem);
+    width: min(100%, 15rem);
     aspect-ratio: 9 / 16;
-    max-height: 20rem;
+    max-height: 28rem;
     place-items: center;
     justify-self: center;
     border: 0.28rem solid #202d37;
@@ -1696,8 +1716,7 @@ table {
 
 .asistencia-remote__grid .btn {
     min-height: 2.1rem;
-    color: #a9effa;
-    border-color: rgba(79, 218, 239, 0.3);
+    color: #fff0a3;
 }
 
 .asistencia-remote__timestamp {
@@ -10428,6 +10447,10 @@ table.default {
 }
 
 .asistencia-modal[hidden] {
+    display: none !important;
+}
+
+.asistencia-modal [hidden] {
     display: none !important;
 }
 

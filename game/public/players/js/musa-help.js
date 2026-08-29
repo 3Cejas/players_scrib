@@ -236,12 +236,9 @@
             bandera.setAttribute("aria-labelledby", "musa_help_flag_title");
             bandera.innerHTML = [
                 '<div class="musa-help-flag__card">',
-                '<p class="musa-help-flag__eyebrow">AYUDA SOLICITADA</p>',
                 '<span class="musa-help-flag__symbol" aria-hidden="true">&#x1F6A9;</span>',
                 '<h2 id="musa_help_flag_title" class="musa-help-flag__title">AGITA ESTA BANDERA EN EL AIRE</h2>',
-                '<p id="musa_help_flag_color" class="musa-help-flag__color">AMARILLO</p>',
-                '<p class="musa-help-flag__copy">Levanta la pantalla y muévela suavemente para que el equipo pueda encontrarte.</p>',
-                '<p id="musa_help_flag_state" class="musa-help-flag__state" role="status" aria-live="polite">AVISO ENVIADO · YA VAMOS</p>',
+                '<p class="musa-help-flag__copy">Levanta la pantalla y muévela para que el equipo pueda encontrarte</p>',
                 '<div class="musa-help-flag__actions">',
                 '<button id="musa_help_flag_minimize" class="musa-help-action musa-help-action--dark" type="button">MINIMIZAR BANDERA</button>',
                 '<button id="musa_help_flag_cancel" class="musa-help-action musa-help-action--dark" type="button">CANCELAR AYUDA</button>',
@@ -279,8 +276,6 @@
                 confirmCancel: confirmacion.querySelector("#musa_help_confirm_cancel"),
                 confirmFeedback: confirmacion.querySelector("#musa_help_confirm_feedback"),
                 bandera,
-                flagColor: bandera.querySelector("#musa_help_flag_color"),
-                flagState: bandera.querySelector("#musa_help_flag_state"),
                 flagMinimize: bandera.querySelector("#musa_help_flag_minimize"),
                 flagCancel: bandera.querySelector("#musa_help_flag_cancel"),
                 remoteIndicator,
@@ -341,17 +336,17 @@
         }
 
         function estadoVisualTicket(ticket) {
-            if (!ticket) return { key: "idle", fab: "PEDIR ASISTENCIA", flag: "" };
+            if (!ticket) return { key: "idle", fab: "PEDIR ASISTENCIA" };
             if (estadoLocal.errorAyuda) {
-                return { key: "attending", fab: "REINTENTA CANCELAR", flag: estadoLocal.errorAyuda };
+                return { key: "attending", fab: "REINTENTA CANCELAR" };
             }
             if (estadoLocal.diagnostico || ticket.diagnostico.estado === "activo") {
-                return { key: "diagnostic", fab: "REVISIÓN EN CURSO", flag: "ASISTENCIA ACTIVA" };
+                return { key: "diagnostic", fab: "REVISIÓN EN CURSO" };
             }
             if (ticket.estado === "atendiendo") {
-                return { key: "attending", fab: "TE ESTÁN ATENDIENDO", flag: "YA TE ESTÁN ATENDIENDO" };
+                return { key: "attending", fab: "TE ESTÁN ATENDIENDO" };
             }
-            return { key: "pending", fab: `BANDERA ${ticket.color_nombre}`, flag: "AVISO ENVIADO · YA VAMOS" };
+            return { key: "pending", fab: "AYUDA ENVIADA" };
         }
 
         function renderizar() {
@@ -360,7 +355,7 @@
             const avisoAtencion = obtenerAvisoAtencion(ticket, estadoLocal.diagnostico);
             ui.fab.dataset.state = estadoLocal.solicitudPendiente ? "pending" : visual.key;
             ui.fabStatus.textContent = estadoLocal.solicitudPendiente ? "ENVIANDO AVISO…" : visual.fab;
-            ui.fab.setAttribute("aria-label", ticket ? `Ayuda activa. Bandera ${ticket.color_nombre}` : "Pedir ayuda");
+            ui.fab.setAttribute("aria-label", ticket ? "Ayuda activa" : "Pedir ayuda");
             ui.fab.disabled = estadoLocal.solicitudPendiente;
             ui.flagCancel.disabled = estadoLocal.solicitudPendiente;
             ui.attendingHalo.hidden = !avisoAtencion.visible;
@@ -373,8 +368,6 @@
                 return;
             }
             definirColor(ticket.color);
-            ui.flagColor.textContent = ticket.color_nombre;
-            ui.flagState.textContent = visual.flag;
             ui.bandera.hidden = estadoLocal.banderaMinimizada;
             ui.fab.setAttribute("aria-expanded", ui.bandera.hidden ? "false" : "true");
         }

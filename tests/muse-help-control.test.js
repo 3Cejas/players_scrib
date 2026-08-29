@@ -222,6 +222,36 @@ test("individual actions use authoritative ticket IDs, explicit resolution and e
   assert.equal(emissions[3].payload.ticket_id, "help-2");
 });
 
+test("global clear is confirmed and removes active and historical incidents through the server", () => {
+  const { api, emissions } = createHarness({ confirm: true });
+  api.marcarConexion(true);
+  api.aplicarEstado({
+    tickets: [{
+      ticket_id: "help-active",
+      nombre_musa: "Luna",
+      equipo: 1,
+      estado: "pendiente",
+      conectada: true
+    }],
+    historial: [{
+      ticket_id: "help-cancelled",
+      nombre_musa: "Sol",
+      equipo: 2,
+      estado: "cancelada"
+    }]
+  });
+
+  assert.equal(api.limpiar(), true);
+  assert.equal(emissions[0].event, "ayuda_musas_limpiar");
+  assert.match(emissions[0].payload.request_id, /^control-help-/);
+  emissions[0].ack({
+    ok: true,
+    eliminadas: 2,
+    estado: { revision: 4, tickets: [], historial: [] }
+  });
+  assert.equal(api.obtenerEstado().tickets.length, 0);
+});
+
 test("remote control is consent-bound and limited to normalized tap, scroll, back and reconnect commands", () => {
   const { api, emissions } = createHarness();
   api.marcarConexion(true);
@@ -266,13 +296,16 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(html, /id="asistencia_preview_shell"[\s\S]*role="application"/);
   assert.match(html, /id="asistencia_resolver"[^>]*>CERRAR INCIDENCIA<\/button>/);
   assert.doesNotMatch(html, /id="asistencia_resolver"[^>]*>RESOLVER<\/button>/);
-  assert.match(html, /ya autoriz&oacute; temporalmente esta p&aacute;gina al pedir ayuda[\s\S]*No permite escribir ni acceder a c&aacute;mara, micr&oacute;fono u otras aplicaciones/);
+  assert.match(html, /id="asistencia_limpiar"[^>]*>[^<]*LIMPIAR<\/button>/);
+  assert.match(html, /id="asistencia_conexion"[^>]*data-connected="0"[^>]*role="img"/);
+  assert.match(html, /id="asistencia_preview" alt=""[^>]*hidden/);
+  assert.doesNotMatch(html, /ya autoriz&oacute; temporalmente esta p&aacute;gina al pedir ayuda|Pantalla en directo de la musa seleccionada/);
   assert.doesNotMatch(assistance, /<input|<textarea/);
   assert.match(html, /id="asistencia_modal"[^>]*hidden[^>]*aria-hidden="true"/);
   assert.match(html, /class="asistencia-modal__dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
   assert.match(html, /id="asistencia_modal_fondo"[^>]*aria-label="Cerrar detalle de asistencia"/);
   assert.match(html, /id="asistencia_modal_cerrar"[^>]*>[^<]*CERRAR<\/button>/);
-  assert.match(html, /muse-help-control\.js\?v=20260829c/);
+  assert.match(html, /muse-help-control\.js\?v=20260829r/);
 
   assert.match(actions, /new Set\(\["tutorial", "detonadores", "juego", "representacion", "asistencia"\]\)/);
   assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)[\s\S]*setPanelParametrosColapsadoControl\(true\)/);
@@ -296,11 +329,13 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(source, /"ayuda_musa_recargar"/);
   assert.match(source, /"ayuda_musa_diagnostico_solicitar"/);
   assert.match(source, /"ayuda_musa_diagnostico_detener"/);
+  assert.match(source, /"ayuda_musas_limpiar"/);
   assert.match(source, /new Set\(\["tap", "scroll", "back", "reconnect"\]\)/);
   assert.match(source, /global\.document\.body\.appendChild\(modal\)/);
   assert.match(source, /on\("asistencia_modal_fondo", "click", closeDetail\)/);
   assert.match(source, /event\.key === "Escape" && detailModalOpen/);
   assert.match(source, /cerrarDetalle: closeDetail/);
+  assert.match(source, /limpiar: clearAll/);
   assert.doesNotMatch(source, /\.innerHTML\s*=/);
   assert.doesNotMatch(source, /eval\s*\(|new Function/);
 
@@ -309,6 +344,7 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(css, /\.asistencia-modal\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*0;/);
   assert.match(css, /\.asistencia-modal__backdrop\s*\{[\s\S]*background:\s*rgba\(0, 3, 8, 0\.82\);/);
   assert.match(css, /\.asistencia-modal__dialog\s*\{[\s\S]*height:\s*min\(48rem, calc\(100vh - 2rem\)\);/);
+  assert.match(css, /\.asistencia-modal \[hidden\]\s*\{[\s\S]*display:\s*none !important;/);
   assert.match(css, /@media \(max-width: 900px\) and \(orientation: portrait\)[\s\S]*\.control-group\[data-control-section="asistencia"\]/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.asistencia-tab-contador/);
 });
