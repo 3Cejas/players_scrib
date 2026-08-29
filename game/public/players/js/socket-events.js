@@ -36,6 +36,38 @@ let musa_request_id_activo = "";
 let musa_request_id_ultimo = "";
 let musa_request_seq = 0;
 let musa_registro_confirmado = false;
+let musa_aviso_conexion_timer = null;
+
+const musa_aviso_conexion = document.getElementById("musa_connection_notice");
+const musa_aviso_conexion_boton = document.getElementById("musa_connection_retry");
+const musa_aviso_conexion_estado = document.getElementById("musa_connection_status");
+
+function ocultarAvisoConexionMusa() {
+    if (musa_aviso_conexion_timer) {
+        clearTimeout(musa_aviso_conexion_timer);
+        musa_aviso_conexion_timer = null;
+    }
+    if (musa_aviso_conexion) musa_aviso_conexion.hidden = true;
+    if (musa_aviso_conexion_boton) musa_aviso_conexion_boton.disabled = false;
+    if (musa_aviso_conexion_estado) musa_aviso_conexion_estado.textContent = "";
+}
+
+function mostrarAvisoConexionMusa(mensaje = "") {
+    if (!musa_aviso_conexion || musa_registro_confirmado) return;
+    musa_aviso_conexion.hidden = false;
+    if (musa_aviso_conexion_boton) musa_aviso_conexion_boton.disabled = false;
+    if (musa_aviso_conexion_estado) musa_aviso_conexion_estado.textContent = mensaje;
+}
+
+function programarAvisoConexionMusa(delay = 2800) {
+    if (musa_aviso_conexion_timer) clearTimeout(musa_aviso_conexion_timer);
+    musa_aviso_conexion_timer = setTimeout(() => {
+        musa_aviso_conexion_timer = null;
+        if (!musa_registro_confirmado) {
+            mostrarAvisoConexionMusa(socket.connected ? "TERMINANDO DE ENLAZAR…" : "AÚN NO HAY CONEXIÓN");
+        }
+    }, Math.max(0, Number(delay) || 0));
+}
 
 function crearRequestIdRegistroMusa() {
     const api = window.ScribMusaAssignment;
@@ -58,6 +90,52 @@ function procesarAsignacionAutoritativaMusa(payload = {}, contexto = {}) {
     const aplicada = window.aplicarAsignacionAutoritativaMusa(payload);
     if (aplicada) musa_registro_confirmado = true;
     return aplicada;
+}
+
+function registrarMusaEnServidor() {
+    if (!nombre_musa || !socket.connected) {
+        programarAvisoConexionMusa();
+        return false;
+    }
+    musa_request_id_activo = crearRequestIdRegistroMusa();
+    musa_registro_confirmado = false;
+    ayuda_musa_controlador.setRegistrationReady(false);
+    const payloadRegistroMusa = window.ScribMusaAssignment.createRegistrationPayload({
+        clientId: musa_client_id,
+        name: nombre_musa,
+        requestId: musa_request_id_activo,
+        assignmentMode: modo_asignacion_musa,
+        player: modo_asignacion_musa === "manual" ? player : null
+    });
+    const requestIdRegistroMusa = musa_request_id_activo;
+    programarAvisoConexionMusa();
+    socket.emit('registrar_musa', payloadRegistroMusa, (payload = {}) => {
+        if (requestIdRegistroMusa !== musa_request_id_activo) return false;
+        const aplicada = procesarAsignacionAutoritativaMusa(payload, { requestId: requestIdRegistroMusa });
+        if (!aplicada) {
+            mostrarAvisoConexionMusa("NO HEMOS PODIDO ENLAZAR. VUELVE A INTENTARLO.");
+            return false;
+        }
+        ayuda_musa_controlador.setRegistrationReady(true);
+        ocultarAvisoConexionMusa();
+        socket.emit('pedir_pre_show_estado');
+        socket.emit('pedir_video_tutorial_estado');
+        return true;
+    });
+    return true;
+}
+
+if (musa_aviso_conexion_boton) {
+    musa_aviso_conexion_boton.addEventListener("click", () => {
+        musa_aviso_conexion_boton.disabled = true;
+        if (musa_aviso_conexion_estado) musa_aviso_conexion_estado.textContent = "RECONECTANDO…";
+        if (socket.connected) {
+            registrarMusaEnServidor();
+        } else if (typeof socket.connect === "function") {
+            socket.connect();
+            programarAvisoConexionMusa(3600);
+        }
+    });
 }
 
 socket.on("musa_asignacion", procesarAsignacionAutoritativaMusa);
@@ -221,26 +299,7 @@ socket.on('connect', () => {
     ultimo_count_seq_musa = 0;
     tiempo_seq_actual_musa = 0;
     if (!nombre_musa) return;
-    musa_request_id_activo = crearRequestIdRegistroMusa();
-    musa_registro_confirmado = false;
-    const payloadRegistroMusa = window.ScribMusaAssignment.createRegistrationPayload({
-        clientId: musa_client_id,
-        name: nombre_musa,
-        requestId: musa_request_id_activo,
-        assignmentMode: modo_asignacion_musa,
-        player: modo_asignacion_musa === "manual" ? player : null
-    });
-    const requestIdRegistroMusa = musa_request_id_activo;
-    socket.emit('registrar_musa', payloadRegistroMusa, (payload = {}) => {
-        if (requestIdRegistroMusa !== musa_request_id_activo) return false;
-        const aplicada = procesarAsignacionAutoritativaMusa(payload, { requestId: requestIdRegistroMusa });
-        if (aplicada) {
-            socket.emit('pedir_pre_show_estado');
-            socket.emit('pedir_video_tutorial_estado');
-            ayuda_musa_controlador.requestState();
-        }
-        return aplicada;
-    });
+    registrarMusaEnServidor();
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_estado_regalo_bandera_musas');
@@ -259,6 +318,8 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
     musa_request_id_activo = "";
     musa_registro_confirmado = false;
+    ayuda_musa_controlador.setRegistrationReady(false);
+    programarAvisoConexionMusa(1600);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
     if (timeout_pedir_texto_connect_musa) {
@@ -273,6 +334,8 @@ socket.on('disconnect', () => {
 });
 
 socket.on('connect_error', () => {
+    ayuda_musa_controlador.setRegistrationReady(false);
+    programarAvisoConexionMusa(900);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
     if (timeout_pedir_texto_connect_musa) {
@@ -1651,5 +1714,6 @@ function cambiar_jugadores(revertir) {
 }
 
 if (socket && typeof socket.connect === "function" && !socket.connected) {
+    programarAvisoConexionMusa();
     socket.connect();
 }

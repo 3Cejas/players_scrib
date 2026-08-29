@@ -76,8 +76,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829j/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829j/);
+    assert.match(html, /video-tutorial\.css\?v=20260829l/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829l/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -199,4 +199,7 @@ test("mobile calibration changes through four solid colors and verifies automati
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
   assert.match(js, /root\.classList\.add\("is-leaving"\)[\s\S]*VISIBILITY_TRANSITION_MS/);
   assert.match(js, /scrib:video-tutorial-visibility/);
+  assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.svg[\s\S]*scribshow\.es\/musa/);
+  assert.match(css, /scrib-video-tutorial-device__share/);
+  assert.match(css, /data-phase="red"[^\n]+scrib-video-tutorial-device__share/);
 });

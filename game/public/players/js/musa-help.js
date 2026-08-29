@@ -158,8 +158,8 @@
             visible: true,
             diagnostico: diagnosticoActivo,
             texto: diagnosticoActivo
-                ? "CONTROL ESTÁ REVISANDO ESTA PÁGINA"
-                : "CONTROL TE ESTÁ ATENDIENDO"
+                ? "ESTAMOS REVISANDO ESTA PÁGINA"
+                : "YA TE ESTÁN ATENDIENDO"
         };
     }
 
@@ -184,6 +184,7 @@
             frameEnCurso: false,
             ultimoError: "",
             errorAyuda: "",
+            registroListo: false,
             comandosVistos: new Set(),
             remoteActivityTimer: null,
             destruido: false
@@ -198,7 +199,7 @@
             fab.setAttribute("aria-haspopup", "dialog");
             fab.setAttribute("aria-controls", "musa_help_confirm musa_help_flag");
             fab.setAttribute("aria-expanded", "false");
-            fab.setAttribute("aria-label", "Pedir ayuda a Control");
+            fab.setAttribute("aria-label", "Pedir ayuda");
             fab.innerHTML = [
                 '<span class="musa-help-fab__icon" aria-hidden="true">!</span>',
                 '<span class="musa-help-fab__copy">',
@@ -216,8 +217,8 @@
                 '<section class="musa-help-confirm__card" role="dialog" aria-modal="true" aria-labelledby="musa_help_confirm_title" aria-describedby="musa_help_confirm_copy">',
                 '<p class="musa-help-confirm__eyebrow">CANAL DE ASISTENCIA</p>',
                 '<h2 id="musa_help_confirm_title" class="musa-help-confirm__title">¿PEDIR AYUDA?</h2>',
-                '<p id="musa_help_confirm_copy" class="musa-help-confirm__copy">Control recibirá tu aviso y te asignaremos un color para localizarte en la sala.</p>',
-                '<p class="musa-help-confirm__privacy"><span aria-hidden="true">&#x1F512;</span><span>Mientras la incidencia esté abierta, autorizas a Control a ver y manejar <strong>SOLO esta página</strong>: tocar botones, desplazarse, volver, reintentar la conexión o reiniciarla. Puedes cancelar el acceso en cualquier momento.</span></p>',
+                '<p id="musa_help_confirm_copy" class="musa-help-confirm__copy">Enviaremos tu aviso al equipo y te daremos un color para encontrarte en la sala.</p>',
+                '<p class="musa-help-confirm__privacy"><span aria-hidden="true">&#x1F512;</span><span>Si hace falta, podremos ayudarte dentro de esta página. Puedes cancelar la ayuda cuando quieras.</span></p>',
                 '<div class="musa-help-confirm__actions">',
                 '<button id="musa_help_confirm_cancel" class="musa-help-action musa-help-action--dark" type="button">VOLVER</button>',
                 '<button id="musa_help_confirm_accept" class="musa-help-action musa-help-action--primary" type="button">SÍ, PEDIR AYUDA</button>',
@@ -240,7 +241,7 @@
                 '<h2 id="musa_help_flag_title" class="musa-help-flag__title">AGITA ESTA BANDERA EN EL AIRE</h2>',
                 '<p id="musa_help_flag_color" class="musa-help-flag__color">AMARILLO</p>',
                 '<p class="musa-help-flag__copy">Levanta la pantalla y muévela suavemente para que el equipo pueda encontrarte.</p>',
-                '<p id="musa_help_flag_state" class="musa-help-flag__state" role="status" aria-live="polite">AVISO ENVIADO · ESPERANDO A CONTROL</p>',
+                '<p id="musa_help_flag_state" class="musa-help-flag__state" role="status" aria-live="polite">AVISO ENVIADO · YA VAMOS</p>',
                 '<div class="musa-help-flag__actions">',
                 '<button id="musa_help_flag_minimize" class="musa-help-action musa-help-action--dark" type="button">MINIMIZAR BANDERA</button>',
                 '<button id="musa_help_flag_cancel" class="musa-help-action musa-help-action--dark" type="button">CANCELAR AYUDA</button>',
@@ -266,7 +267,7 @@
             const attendingHaloText = documentRef.createElement("span");
             attendingHaloText.id = "musa_help_attending_halo_text";
             attendingHaloText.className = "musa-help-attending-halo__text";
-            attendingHaloText.textContent = "CONTROL TE ESTÁ ATENDIENDO";
+            attendingHaloText.textContent = "YA TE ESTÁN ATENDIENDO";
             attendingHalo.append(attendingHaloText);
 
             documentRef.body.append(fab, confirmacion, bandera, attendingHalo, remoteIndicator);
@@ -345,12 +346,12 @@
                 return { key: "attending", fab: "REINTENTA CANCELAR", flag: estadoLocal.errorAyuda };
             }
             if (estadoLocal.diagnostico || ticket.diagnostico.estado === "activo") {
-                return { key: "diagnostic", fab: "CONTROL REMOTO", flag: "ASISTENCIA REMOTA ACTIVA" };
+                return { key: "diagnostic", fab: "REVISIÓN EN CURSO", flag: "ASISTENCIA ACTIVA" };
             }
             if (ticket.estado === "atendiendo") {
-                return { key: "attending", fab: "TE ESTÁN ATENDIENDO", flag: "CONTROL YA TE ESTÁ ATENDIENDO" };
+                return { key: "attending", fab: "TE ESTÁN ATENDIENDO", flag: "YA TE ESTÁN ATENDIENDO" };
             }
-            return { key: "pending", fab: `BANDERA ${ticket.color_nombre}`, flag: "AVISO ENVIADO · ESPERANDO A CONTROL" };
+            return { key: "pending", fab: `BANDERA ${ticket.color_nombre}`, flag: "AVISO ENVIADO · YA VAMOS" };
         }
 
         function renderizar() {
@@ -359,12 +360,12 @@
             const avisoAtencion = obtenerAvisoAtencion(ticket, estadoLocal.diagnostico);
             ui.fab.dataset.state = estadoLocal.solicitudPendiente ? "pending" : visual.key;
             ui.fabStatus.textContent = estadoLocal.solicitudPendiente ? "ENVIANDO AVISO…" : visual.fab;
-            ui.fab.setAttribute("aria-label", ticket ? `Ayuda activa. Bandera ${ticket.color_nombre}` : "Pedir ayuda a Control");
+            ui.fab.setAttribute("aria-label", ticket ? `Ayuda activa. Bandera ${ticket.color_nombre}` : "Pedir ayuda");
             ui.fab.disabled = estadoLocal.solicitudPendiente;
             ui.flagCancel.disabled = estadoLocal.solicitudPendiente;
             ui.attendingHalo.hidden = !avisoAtencion.visible;
             ui.attendingHalo.dataset.diagnostic = avisoAtencion.diagnostico ? "1" : "0";
-            ui.attendingHaloText.textContent = avisoAtencion.texto || "CONTROL TE ESTÁ ATENDIENDO";
+            ui.attendingHaloText.textContent = avisoAtencion.texto || "YA TE ESTÁN ATENDIENDO";
             if (!ticket) {
                 definirColor("#ffd60a");
                 ui.bandera.hidden = true;
@@ -395,11 +396,17 @@
 
         function solicitarAyuda() {
             if (estadoLocal.ticket || estadoLocal.solicitudPendiente) return;
+            if (!socket.connected || !estadoLocal.registroListo) {
+                ui.confirmFeedback.textContent = socket.connected
+                    ? "Estamos terminando de enlazar tu móvil. Espera un momento y vuelve a pulsar."
+                    : "Todavía no hay conexión. Revisa el aviso de pantalla y vuelve a intentarlo.";
+                return;
+            }
             estadoLocal.solicitudPendiente = true;
             estadoLocal.consentimientoPendiente = true;
             ui.confirmAccept.disabled = true;
             ui.confirmCancel.disabled = true;
-            ui.confirmFeedback.textContent = "Enviando tu aviso a Control…";
+            ui.confirmFeedback.textContent = "Enviando tu aviso…";
             renderizar();
             emitirConTimeout(EVENTOS.solicitar, { request_id: crearRequestId(globalRef) }, (respuesta) => {
                 ui.confirmAccept.disabled = false;
@@ -407,7 +414,10 @@
                 estadoLocal.solicitudPendiente = false;
                 if (!respuesta || respuesta.ok !== true) {
                     estadoLocal.consentimientoPendiente = false;
-                    ui.confirmFeedback.textContent = "No se pudo enviar el aviso. Comprueba la conexión e inténtalo otra vez.";
+                    const code = textoSeguro(respuesta && respuesta.code, 40).toUpperCase();
+                    ui.confirmFeedback.textContent = new Set(["MUSA_NOT_REGISTERED", "MUSA_SESSION_INACTIVE"]).has(code)
+                        ? "Estamos terminando de enlazar tu móvil. Espera un momento y vuelve a pulsar."
+                        : "No hemos podido enviar el aviso. Comprueba la conexión e inténtalo otra vez.";
                     renderizar();
                     return;
                 }
@@ -723,7 +733,7 @@
                 estadoLocal.banderaMinimizada = true;
                 estadoLocal.frameSeq = 0;
                 ui.remoteIndicator.hidden = false;
-                ui.remoteIndicator.textContent = "ASISTENCIA REMOTA ACTIVA · SOLO ESTA PÁGINA";
+                ui.remoteIndicator.textContent = "ASISTENCIA ACTIVA · SOLO ESTA PÁGINA";
                 renderizar();
                 programarFrame(0);
             });
@@ -732,12 +742,12 @@
         function mostrarActividadRemota(texto) {
             if (estadoLocal.remoteActivityTimer) globalRef.clearTimeout(estadoLocal.remoteActivityTimer);
             ui.remoteIndicator.hidden = false;
-            ui.remoteIndicator.textContent = textoSeguro(texto, 80) || "CONTROL REMOTO ACTIVO";
+            ui.remoteIndicator.textContent = textoSeguro(texto, 80) || "ASISTENCIA ACTIVA";
             estadoLocal.remoteActivityTimer = globalRef.setTimeout(() => {
                 estadoLocal.remoteActivityTimer = null;
                 if (diagnosticoVigente()) {
                     ui.remoteIndicator.hidden = false;
-                    ui.remoteIndicator.textContent = "ASISTENCIA REMOTA ACTIVA · SOLO ESTA PÁGINA";
+                    ui.remoteIndicator.textContent = "ASISTENCIA ACTIVA · SOLO ESTA PÁGINA";
                 } else {
                     ui.remoteIndicator.hidden = true;
                 }
@@ -786,7 +796,7 @@
                     emitirResultadoComando(comando, false, "No hay un botón seguro en ese punto");
                     return false;
                 }
-                mostrarActividadRemota("CONTROL · TOCANDO UN BOTÓN");
+                mostrarActividadRemota("ASISTENCIA · TOCANDO UN BOTÓN");
                 objetivo.classList.add("musa-help-remote-target");
                 globalRef.setTimeout(() => objetivo.classList.remove("musa-help-remote-target"), 700);
                 objetivo.click();
@@ -794,7 +804,7 @@
                 return true;
             }
             if (comando.tipo === "scroll") {
-                mostrarActividadRemota("CONTROL · DESPLAZANDO LA PÁGINA");
+                mostrarActividadRemota("ASISTENCIA · DESPLAZANDO LA PÁGINA");
                 globalRef.scrollBy({ left: comando.delta_x, top: comando.delta_y, behavior: "smooth" });
                 emitirResultadoComando(comando, true, "Desplazamiento aplicado");
                 return true;
@@ -822,7 +832,7 @@
                         cerrado = true;
                     }
                 }
-                mostrarActividadRemota(cerrado ? "CONTROL · CERRANDO UNA VENTANA" : "CONTROL · NO HAY NADA QUE CERRAR");
+                mostrarActividadRemota(cerrado ? "ASISTENCIA · CERRANDO UNA VENTANA" : "NO HAY NADA QUE CERRAR");
                 emitirResultadoComando(
                     comando,
                     cerrado,
@@ -831,7 +841,7 @@
                 return cerrado;
             }
             if (comando.tipo === "reconnect") {
-                mostrarActividadRemota("CONTROL · REINTENTANDO CONEXIÓN");
+                mostrarActividadRemota("ASISTENCIA · REINTENTANDO CONEXIÓN");
                 if (!socket.connected && typeof socket.connect === "function") socket.connect();
                 emitirResultadoComando(comando, true, socket.connected ? "Conexión ya activa" : "Reconexión solicitada");
                 return true;
@@ -846,7 +856,7 @@
             const ticketId = textoSeguro(raw.ticket_id, 96);
             if (rol && rol !== "musa") return false;
             if (!estadoLocal.ticket || (ticketId && ticketId !== estadoLocal.ticket.ticket_id)) return false;
-            mostrarActividadRemota("CONTROL · REINICIANDO ESTA PÁGINA");
+            mostrarActividadRemota("ASISTENCIA · REINICIANDO ESTA PÁGINA");
             globalRef.setTimeout(() => globalRef.location.reload(), 420);
             return true;
         }
@@ -899,18 +909,25 @@
         socket.on(EVENTOS.comando, ejecutarComando);
         socket.on(EVENTOS.recargar, manejarRecarga);
         socket.on("disconnect", () => {
+            estadoLocal.registroListo = false;
             if (estadoLocal.ticket) {
                 ui.fabStatus.textContent = "RECONECTANDO…";
                 mostrarActividadRemota("CONEXIÓN INTERRUMPIDA · REINTENTANDO");
             }
         });
         socket.on("connect", () => {
+            estadoLocal.registroListo = false;
             if (estadoLocal.ticket) pedirEstado();
         });
 
         renderizar();
         return Object.freeze({
             requestState: pedirEstado,
+            setRegistrationReady(ready) {
+                estadoLocal.registroListo = ready === true;
+                if (estadoLocal.registroListo) pedirEstado();
+                return estadoLocal.registroListo;
+            },
             applyState: aplicarEstado,
             handleDiagnosticRequest: consentirDiagnostico,
             handleCommand: ejecutarComando,

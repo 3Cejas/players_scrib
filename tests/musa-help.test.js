@@ -139,16 +139,18 @@ test("remote tap never targets text-entry controls", () => {
   assert.equal(help.getSafeTapTarget(link), null, "links cannot be activated remotely");
 });
 
-test("muse page keeps SOS above all overlays and explains scoped remote consent", () => {
+test("muse page centers SOS and explains scoped help without internal role jargon", () => {
   const html = read("game/public/players/index.html");
   const css = read("game/public/players/css/musa-help.css");
   const js = read("game/public/players/js/musa-help.js");
 
-  assert.match(html, /musa-help\.css\?v=20260824f/);
-  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260824f/);
+  assert.match(html, /musa-help\.css\?v=20260829l/);
+  assert.match(html, /vendor\/html2canvas\/html2canvas\.min\.js\?v=1\.4\.1[\s\S]*musa-help\.js\?v=20260829l/);
   assert.match(css, /\.musa-help-fab\s*\{[\s\S]*position:\s*fixed;[\s\S]*z-index:\s*2147483630;/);
   assert.match(css, /\.musa-help-remote-indicator\s*\{[\s\S]*z-index:\s*2147483620;/);
-  assert.match(js, /ver y manejar <strong>SOLO esta página<\/strong>/);
+  assert.match(css, /@media \(max-width: 540px\)[\s\S]*\.musa-help-fab\s*\{[\s\S]*grid-template-columns:\s*1fr;[\s\S]*justify-items:\s*center;/);
+  assert.match(js, /Si hace falta, podremos ayudarte dentro de esta página/);
+  assert.doesNotMatch(js, /["'`][^"'`\n]*(?:\bControl\b|\bCONTROL\b)[^"'`\n]*["'`]/);
   assert.match(js, /AGITA ESTA BANDERA EN EL AIRE/);
   assert.match(js, /CANCELAR AYUDA/);
 });
@@ -170,7 +172,8 @@ test("diagnostic stream is local, app-only, bounded and server-authoritative", (
   assert.match(js, /ui\.bandera\.hidden = estadoLocal\.banderaMinimizada;/);
   assert.doesNotMatch(js, /getDisplayMedia|MediaRecorder|eval\(|new Function/);
   assert.match(events, /ScribMusaHelp\.createController\([\s\S]*html2canvas: window\.html2canvas/);
-  assert.match(events, /if \(aplicada\)[\s\S]*ayuda_musa_controlador\.requestState\(\)/);
+  assert.match(events, /if \(!aplicada\)[\s\S]*ayuda_musa_controlador\.setRegistrationReady\(true\)/);
+  assert.match(js, /setRegistrationReady\(ready\)/);
 });
 
 test("an attended muse can reopen the flag and revoke an active diagnostic", () => {
@@ -213,12 +216,12 @@ test("authoritative attended tickets keep an accessible non-blocking screen halo
   assert.deepEqual(help.getAttendingNotice(attended), {
     visible: true,
     diagnostico: false,
-    texto: "CONTROL TE ESTÁ ATENDIENDO"
+    texto: "YA TE ESTÁN ATENDIENDO"
   });
   assert.deepEqual(help.getAttendingNotice(diagnosing), {
     visible: true,
     diagnostico: true,
-    texto: "CONTROL ESTÁ REVISANDO ESTA PÁGINA"
+    texto: "ESTAMOS REVISANDO ESTA PÁGINA"
   });
   assert.deepEqual(help.getAttendingNotice(null), { visible: false, diagnostico: false, texto: "" });
 

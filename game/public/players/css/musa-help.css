@@ -116,11 +116,9 @@
     overflow: auto;
     box-sizing: border-box;
     padding: clamp(20px, 5vw, 34px);
-    border: 1px solid rgba(255, 95, 132, 0.75);
+    border: 2px solid #ff5f84;
     border-radius: 22px;
-    background:
-        linear-gradient(145deg, rgba(255, 46, 99, 0.14), transparent 42%),
-        #07111d;
+    background: #07111d;
     color: #f8fbff;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72), 0 0 38px rgba(255, 46, 99, 0.25);
     font-family: "Retro-gaming", "Courier New", monospace;
@@ -153,7 +151,7 @@
     gap: 10px;
     margin: 0 0 22px;
     padding: 13px 14px;
-    border: 1px solid rgba(94, 232, 255, 0.38);
+    border: 2px solid rgba(94, 232, 255, 0.68);
     border-radius: 12px;
     background: rgba(29, 207, 235, 0.08);
     color: #dffbff;
@@ -170,7 +168,7 @@
 .musa-help-action {
     min-height: 48px;
     padding: 11px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.62);
+    border: 2px solid rgba(255, 255, 255, 0.78);
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
@@ -439,9 +437,20 @@
 
 @media (max-width: 540px) {
     .musa-help-fab {
-        min-width: 54px;
-        min-height: 54px;
-        padding: 7px;
+        width: 60px;
+        min-width: 60px;
+        height: 60px;
+        min-height: 60px;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 0;
+        padding: 6px;
+        text-align: center;
+    }
+
+    .musa-help-fab__icon {
+        width: 42px;
+        height: 42px;
     }
 
     .musa-help-fab__copy {

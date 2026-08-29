@@ -1,5 +1,7 @@
 // config.js (versión sin ES Modules)
-window.isProduction = false;
+const scribHostname = String(window.location && window.location.hostname || "").toLowerCase();
+window.isProduction = !new Set(["localhost", "127.0.0.1", "::1", "[::1]"]).has(scribHostname)
+    && !scribHostname.endsWith(".localhost");
 window.SERVER_URL_PROD = window.location.origin;
 window.SERVER_URL_DEV = "http://localhost:3000";
 

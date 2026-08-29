@@ -4118,6 +4118,83 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
 }
 
 /* Canal de entretenimiento de musas antes del tutorial. */
+
+.musa-connection-notice {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483600;
+    display: grid;
+    box-sizing: border-box;
+    padding: max(1.25rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    place-items: center;
+    background: rgba(1, 6, 13, 0.82);
+    backdrop-filter: blur(12px);
+}
+
+.musa-connection-notice[hidden] {
+    display: none !important;
+}
+
+.musa-connection-notice__card {
+    width: min(31rem, 100%);
+    box-sizing: border-box;
+    padding: clamp(1.35rem, 5vw, 2.4rem);
+    border: 2px solid #5ee8ff;
+    border-radius: 1.35rem;
+    background: #07131f;
+    color: #f5fbff;
+    box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.62), 0 0 2rem rgba(94, 232, 255, 0.2);
+    text-align: center;
+}
+
+.musa-connection-notice__eyebrow {
+    color: #5ee8ff;
+    font: 700 clamp(0.68rem, 3vw, 0.82rem)/1 "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.14em;
+}
+
+.musa-connection-notice h2 {
+    margin: 0.8rem 0 1rem;
+    color: #fff;
+    font: 700 clamp(1.35rem, 6.8vw, 2.4rem)/1.08 "Retro-gaming", "Courier New", monospace;
+    text-wrap: balance;
+}
+
+.musa-connection-notice p {
+    margin: 0 auto 1.35rem;
+    color: #d8e7f0;
+    font: 600 clamp(0.95rem, 4vw, 1.1rem)/1.5 system-ui, sans-serif;
+}
+
+.musa-connection-notice__button {
+    width: 100%;
+    min-height: 3.4rem;
+    padding: 0.85rem 1rem;
+    border: 2px solid #5ee8ff;
+    border-radius: 0.8rem;
+    background: #0c3445;
+    color: #fff;
+    font: 700 clamp(0.72rem, 3vw, 0.9rem)/1.25 "Retro-gaming", "Courier New", monospace;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.musa-connection-notice__button:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+}
+
+.musa-connection-notice__button:disabled {
+    cursor: wait;
+    opacity: 0.68;
+}
+
+.musa-connection-notice .musa-connection-notice__status {
+    min-height: 1.4em;
+    margin: 0.9rem 0 0;
+    color: #8ff3ff;
+    font-size: 0.88rem;
+}
 .pre-show-musa[hidden] {
     display: none !important;
 }

@@ -256,6 +256,10 @@
                 <div class="scrib-video-tutorial-device__check" aria-hidden="true">✓</div>
                 <h1 id="video_tutorial_musa_title" data-video-tutorial-title>CONEXIÓN RECIBIDA</h1>
                 <p data-video-tutorial-copy>Sigue las instrucciones de la pantalla principal.</p>
+                <div class="scrib-video-tutorial-device__share" aria-label="Código QR para invitar a otra musa">
+                    <img src="../../media/scribshow-musa-qr.svg" alt="Código QR de scribshow.es/musa">
+                    <div><strong>¿FALTA ALGUIEN?</strong><span>scribshow.es/musa</span><small>ENSÉÑALE ESTE CÓDIGO</small></div>
+                </div>
                 <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity></div>
             </div>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live></p>

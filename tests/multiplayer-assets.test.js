@@ -18,7 +18,7 @@ const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260829f";
 const SPECTATOR_CSS_VERSION = "20260829e";
 const VIEW_TRANSITION_MODULE_VERSION = "20260829b";
-const MUSA_HELP_VERSION = "20260824f";
+const MUSA_HELP_VERSION = "20260829l";
 const WRITER_DELETE_BLOCK_VERSION = "20260824g";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260822c";
@@ -38,7 +38,8 @@ const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
 const MUSA_ASSIGNMENT_VERSION = "20260829f";
 const MUSA_SELECTOR_I18N_VERSION = "20260822d";
 const PUBLIC_PLAYER_STATE_VERSION = "20260829g";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = MUSA_ASSIGNMENT_VERSION;
+const PUBLIC_PLAYER_CSS_VERSION = "20260829l";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260829l";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260505f";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
@@ -109,7 +110,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/control/index.html", "domains/credits.js");
 
   assertIncludesAsset("game/public/players/index.html", "js/actions.js", PUBLIC_PLAYER_ACTIONS_VERSION);
-  assertIncludesAsset("game/public/players/index.html", "css/publico.css", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "css/publico.css", PUBLIC_PLAYER_CSS_VERSION);
   assertIncludesAsset("game/public/players/index.html", "css/musa-help.css", MUSA_HELP_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/state.js", PUBLIC_PLAYER_STATE_VERSION);
   assertIncludesAsset("game/public/players/index.html", "vendor/html2canvas/html2canvas.min.js", "1.4.1");
