@@ -2535,9 +2535,9 @@ function construirUrlMusaAsignada(asignacion) {
     );
 }
 
-function canonicalizarUrlAsignacionMusa() {
-    if (!asignacion_musa_inicial || !window.history || typeof window.history.replaceState !== "function") return;
-    const destino = construirUrlMusaAsignada(asignacion_musa_inicial);
+function canonicalizarUrlAsignacionMusa(asignacion = asignacion_musa_inicial) {
+    if (!asignacion || !window.history || typeof window.history.replaceState !== "function") return;
+    const destino = construirUrlMusaAsignada(asignacion);
     if (!destino) return;
     const actual = new URL(window.location.href);
     const canonica = new URL(destino, actual);
@@ -2554,14 +2554,14 @@ function aplicarAsignacionAutoritativaMusa(payload) {
     if (!asignacion || asignacion.ok !== true) return false;
     guardarAsignacionMusaSesion(asignacion);
 
-    if (Number(asignacion.player) !== Number(player)) {
-        const destino = construirUrlMusaAsignada(asignacion);
-        if (destino) window.location.replace(destino);
-        return true;
+    player = String(asignacion.player);
+    if (document.body) {
+        document.body.classList.toggle("equipo-azul", Number(player) !== 2);
+        document.body.classList.toggle("equipo-rojo", Number(player) === 2);
     }
-
     registrarNombreEscritxrPorEquipo(asignacion.player, asignacion.writer);
     if (nombre1) nombre1.value = asignacion.writer;
+    canonicalizarUrlAsignacionMusa(asignacion);
     return true;
 }
 

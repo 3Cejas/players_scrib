@@ -634,6 +634,7 @@ class E2EHarness {
   async beforeSpec() {
     await this.ensureBrowserReady();
     await this.closeAllPages();
+    await this.waitForRoleConnectionsReleased();
     if (this.testHooksEnabled) {
       await this.emitHook("scrib_test:reset", {});
     }
@@ -641,9 +642,31 @@ class E2EHarness {
 
   async afterSpec() {
     await this.closeAllPages();
+    await this.waitForRoleConnectionsReleased();
     if (this.testHooksEnabled) {
       await this.emitHook("scrib_test:reset", {});
     }
+  }
+
+  async waitForRoleConnectionsReleased(timeoutMs = 5000) {
+    if (!this.requiresSocketServer) return;
+    if (!this.testHooksEnabled) {
+      await this.sleep(300);
+      return;
+    }
+    await this.waitForState(
+      "role connections released",
+      (state) => {
+        const connections = state && state.connections ? state.connections : {};
+        const directRoles = ["control", "spectator", "jury", "dramaturgia"];
+        const groupedRoles = ["writers", "musas", "actors"];
+        return directRoles.every((role) => Number(connections[role] && connections[role].count || 0) === 0)
+          && groupedRoles.every((group) => [1, 2].every(
+            (player) => Number(connections[group] && connections[group][player] && connections[group][player].count || 0) === 0
+          ));
+      },
+      timeoutMs
+    );
   }
 
   async getState() {
@@ -715,19 +738,25 @@ class E2EHarness {
         if (logs.length > 120) logs.shift();
       });
 
-      await page.goto(`${this.staticBaseUrl}${config.url}`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector(config.readySelector, {
-        ...(config.readyVisible === false ? {} : { visible: true }),
-        timeout: 15000
-      });
-
-      this.pages.set(roleName, {
+      const entry = {
         roleName,
         context,
         page,
         logs,
         config
-      });
+      };
+      this.pages.set(roleName, entry);
+
+      try {
+        await page.goto(`${this.staticBaseUrl}${config.url}`, { waitUntil: "domcontentloaded" });
+        await page.waitForSelector(config.readySelector, {
+          ...(config.readyVisible === false ? {} : { visible: true }),
+          timeout: 15000
+        });
+      } catch (error) {
+        const finalUrl = page.url();
+        throw new Error(`${error.message} (role=${roleName}, url=${finalUrl})`, { cause: error });
+      }
     }
   }
 

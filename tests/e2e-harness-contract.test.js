@@ -33,3 +33,16 @@ test("E2E writers become ready on the real pre-match setup screen", () => {
   assert.doesNotMatch(specs, /waitForTimeAndInspirationFeedback/);
   assert.doesNotMatch(specs, /\\s\*segs\?/);
 });
+
+test("E2E waits for every role disconnect before reusing identities in the next spec", () => {
+  const runner = read("e2e/runner/index.js");
+  const beforeSpec = runner.match(/async beforeSpec\(\) \{[\s\S]*?\n  \}/)?.[0] || "";
+  const afterSpec = runner.match(/async afterSpec\(\) \{[\s\S]*?\n  \}/)?.[0] || "";
+  const releaseGuard = runner.match(/async waitForRoleConnectionsReleased[\s\S]*?\n  \}/)?.[0] || "";
+
+  assert.match(beforeSpec, /await this\.closeAllPages\(\);\s+await this\.waitForRoleConnectionsReleased\(\);/);
+  assert.match(afterSpec, /await this\.closeAllPages\(\);\s+await this\.waitForRoleConnectionsReleased\(\);/);
+  assert.match(releaseGuard, /\["control", "spectator", "jury", "dramaturgia"\]/);
+  assert.match(releaseGuard, /\["writers", "musas", "actors"\]/);
+  assert.match(releaseGuard, /await this\.sleep\(300\)/);
+});

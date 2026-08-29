@@ -449,9 +449,11 @@ test("game reconnects with its assignment mode and never replays the reveal afte
   assert.match(state, /readAssignmentSession\([\s\S]*window\.sessionStorage,[\s\S]*musa_client_id/);
   assert.match(state, /var player = asignacion_musa_guardada[\s\S]*assignment\.player[\s\S]*getParameterByName\("player"\)/);
   assert.match(state, /\(asignacion_musa_inicial && asignacion_musa_inicial\.assignmentMode\)[\s\S]*getParameterByName\("modo_asignacion"\)/);
-  assert.match(state, /function canonicalizarUrlAsignacionMusa\(\)[\s\S]*window\.history\.replaceState/);
+  assert.match(state, /function canonicalizarUrlAsignacionMusa\([^)]*\)[\s\S]*window\.history\.replaceState/);
   assert.match(state, /getParameterByName\("modo_asignacion"\)/);
   assert.match(state, /getParameterByName\("assigned"\) === "1"/);
   assert.match(state, /if \(!asignacionMusaYaRevelada\) \{\s*reproducirEntradaMundoMusa\(\)/);
-  assert.match(state, /window\.location\.replace\(destino\)/);
+  assert.match(state, /player = String\(asignacion\.player\)/);
+  assert.match(state, /canonicalizarUrlAsignacionMusa\(asignacion\)/);
+  assert.doesNotMatch(state, /window\.location\.replace\(destino\)/);
 });
