@@ -147,7 +147,7 @@ body.scrib-video-tutorial-active {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    padding: clamp(5.5rem, 11vh, 8rem) clamp(2rem, 5vw, 6rem) clamp(2rem, 5vh, 4rem);
+    padding: clamp(5.5rem, 11vh, 8rem) clamp(2rem, 5vw, 6rem) clamp(7rem, 15vh, 10rem);
 }
 
 .scrib-video-tutorial__copy {
@@ -578,6 +578,39 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__complete-mark strong { color: #fff; font-size: clamp(1.2rem, 2.1vw, 2.5rem); letter-spacing: 0.1em; }
 .scrib-video-tutorial__complete-mark span { color: var(--vt-green); font-size: clamp(0.65rem, 1vw, 1.15rem); letter-spacing: 0.13em; }
 
+.scrib-video-tutorial__subtitles {
+    position: absolute;
+    z-index: 14;
+    inset: 0;
+    pointer-events: none;
+}
+
+.scrib-video-tutorial__subtitles p {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1rem, 2.5vh, 2rem);
+    box-sizing: border-box;
+    width: min(78rem, calc(100% - clamp(2rem, 8vw, 8rem)));
+    max-width: 64ch;
+    margin: 0;
+    padding: 0.58em 0.9em 0.65em;
+    border: 1px solid color-mix(in srgb, var(--scene-accent), transparent 62%);
+    border-radius: 0.55em;
+    color: #fff;
+    background: rgba(0, 4, 10, 0.88);
+    box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.58), inset 0 0 1.2rem color-mix(in srgb, var(--scene-accent), transparent 94%);
+    backdrop-filter: blur(12px);
+    font: 750 clamp(1rem, 1.45vw, 1.65rem)/1.34 system-ui, sans-serif;
+    text-align: center;
+    text-shadow: 0 2px 3px #000;
+    text-wrap: balance;
+    transform: translateX(-50%);
+}
+
+.scrib-video-tutorial.is-scene-entering .scrib-video-tutorial__subtitles p {
+    animation: vtSubtitleIn 420ms 140ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .scrib-video-tutorial__confetti { position: absolute; inset: 0; z-index: 12; overflow: hidden; pointer-events: none; }
 .scrib-video-tutorial__confetti i { position: absolute; top: -8%; width: 0.7rem; height: 1.2rem; opacity: 0; background: var(--vt-cyan); }
 .scrib-video-tutorial[data-scene="complete"] .scrib-video-tutorial__confetti i,
@@ -706,16 +739,18 @@ body.scrib-video-tutorial-active {
 @keyframes vtColorBreathe { 50% { transform: scale(1.045); } }
 @keyframes vtCheckIn { from { opacity: 0; transform: scale(.45) rotate(-18deg); } to { opacity: 1; transform: scale(1); } }
 @keyframes vtCompleteIn { from { opacity: 0; transform: scale(.55); filter: blur(.7rem); } to { opacity: 1; transform: scale(1); filter: none; } }
+@keyframes vtSubtitleIn { from { opacity: 0; transform: translate(-50%, 0.75rem); } to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes vtConfetti { 0% { opacity: 0; transform: translateY(-5vh) rotate(0); } 12% { opacity: 1; } 100% { opacity: 0; transform: translateY(116vh) rotate(720deg); } }
 
 @media (max-width: 900px) {
-    .scrib-video-tutorial__scene { padding: 5.5rem 1.4rem 1.6rem; grid-template-columns: minmax(0, 1fr) minmax(18rem, .8fr); gap: 1.5rem; }
+    .scrib-video-tutorial__scene { padding: 5.5rem 1.4rem 7rem; grid-template-columns: minmax(0, 1fr) minmax(18rem, .8fr); gap: 1.5rem; }
     .scrib-video-tutorial__copy h1 { font-size: clamp(2.5rem, 7vw, 4.5rem); }
     .scrib-video-tutorial__phone { width: min(20rem, 82%); }
+    .scrib-video-tutorial__subtitles p { width: calc(100% - 2rem); bottom: 0.8rem; font-size: clamp(0.92rem, 2.3vw, 1.2rem); }
 }
 
 @media (max-width: 680px), (max-aspect-ratio: 1/1) {
-    .scrib-video-tutorial__scene { padding: 5.2rem 1.1rem 1.1rem; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-content: start; gap: .8rem; }
+    .scrib-video-tutorial__scene { padding: 5.2rem 1.1rem 7.2rem; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-content: start; gap: .8rem; }
     .scrib-video-tutorial__copy { justify-items: center; text-align: center; }
     .scrib-video-tutorial__copy h1 { max-width: 13ch; margin: .65rem 0 .45rem; font-size: clamp(2.3rem, 10vw, 4rem); }
     .scrib-video-tutorial__copy > p { font-size: clamp(.85rem, 3.4vw, 1.12rem); }
@@ -726,6 +761,7 @@ body.scrib-video-tutorial-active {
     .scrib-video-tutorial__welcome-mark,
     .scrib-video-tutorial__color-stage,
     .scrib-video-tutorial__complete-mark { width: min(42vh, 78vw); }
+    .scrib-video-tutorial__subtitles p { width: calc(100% - 1.4rem); bottom: max(0.55rem, env(safe-area-inset-bottom)); padding: 0.5em 0.7em 0.55em; font-size: clamp(0.82rem, 3.4vw, 1.05rem); line-height: 1.28; }
 }
 
 @media (prefers-reduced-motion: reduce) {

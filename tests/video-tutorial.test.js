@@ -74,8 +74,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829e/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829e/);
+    assert.match(html, /video-tutorial\.css\?v=20260829i/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829i/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -112,7 +112,7 @@ test("spectator tutorial is live HTML and CSS, with the phone only in practical 
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test("spectator tutorial fills the viewport and renders only essential scene titles", () => {
+test("spectator tutorial fills the viewport and adds readable synchronized subtitles", () => {
   const css = read("game/css/video-tutorial.css");
   const js = read("game/js/domains/video-tutorial.js");
   const spectatorMarkup = js.match(/function createSpectatorOverlay[\s\S]*?function createMuseOverlay/)?.[0] || "";
@@ -120,6 +120,13 @@ test("spectator tutorial fills the viewport and renders only essential scene tit
   assert.match(css, /\.scrib-video-tutorial,[\s\S]*width:\s*100vw;[\s\S]*height:\s*100dvh;/);
   assert.match(css, /\.scrib-video-tutorial__scene\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*100%;[\s\S]*?height:\s*100%;/);
   assert.doesNotMatch(spectatorMarkup, /data-video-tutorial-kicker|data-video-tutorial-copy|data-video-color-copy/);
+  assert.match(spectatorMarkup, /scrib-video-tutorial__subtitles" aria-hidden="true"/);
+  assert.match(spectatorMarkup, /data-video-tutorial-subtitle/);
+  assert.match(js, /subtitle\.textContent = phase\.subtitle \|\| phase\.copy/);
+  assert.doesNotMatch(js, /subtitle\.innerHTML/);
+  assert.match(css, /\.scrib-video-tutorial__subtitles\s*\{[\s\S]*?inset:\s*0;[\s\S]*?pointer-events:\s*none/);
+  assert.match(css, /\.scrib-video-tutorial__subtitles p\s*\{[\s\S]*?bottom:[\s\S]*?background:\s*rgba\(0, 4, 10, 0\.88\)/);
+  assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
   assert.match(spectatorMarkup, /&lt;SCRI&gt; B/);
   assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
@@ -166,6 +173,7 @@ test("narration manifest, generated MP3 and CSS timeline stay synchronized", () 
   manifest.forEach((scene, index) => {
     assert.equal(scene.start, tutorial.TIMELINE[index].start);
     assert.equal(scene.start + scene.duration, tutorial.TIMELINE[index].end);
+    assert.equal(scene.text, tutorial.TIMELINE[index].subtitle);
   });
   assert.ok(fs.statSync(audioPath).size > 100_000);
   assert.match(generator, /es-MX-DaliaNeural/);
