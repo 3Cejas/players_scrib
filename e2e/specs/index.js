@@ -299,16 +299,34 @@ async function renderLocalVideoTutorialPosition(ctx, roleName, authoritativeStat
     const title = root && root.querySelector("[data-video-tutorial-title]");
     const card = root && root.querySelector(".scrib-video-tutorial-device__card");
     const identity = root && root.querySelector("[data-video-tutorial-identity]");
+    const museName = root && root.querySelector("[data-video-tutorial-muse-name]");
+    const writerName = root && root.querySelector("[data-video-tutorial-writer-name]");
     const shareUrl = root && root.querySelector(".scrib-video-tutorial-device__url");
+    const shareQr = root && root.querySelector(".scrib-video-tutorial-device__share img");
+    const miniPhone = root && root.querySelector(".scrib-video-tutorial-device__mini-phone");
     const rect = root ? root.getBoundingClientRect() : null;
     const cardRect = card ? card.getBoundingClientRect() : null;
+    const qrRect = shareQr ? shareQr.getBoundingClientRect() : null;
+    const miniPhoneRect = miniPhone ? miniPhone.getBoundingClientRect() : null;
     return root ? {
       phase: String(root.dataset.phase || ""),
       background: window.getComputedStyle(root).backgroundColor,
       title: String(title && title.textContent || "").trim(),
       identity: String(identity && identity.textContent || "").trim(),
+      museName: String(museName && museName.textContent || "").trim(),
+      museColor: museName ? window.getComputedStyle(museName).color : "",
+      writerName: String(writerName && writerName.textContent || "").trim(),
+      writerColor: writerName ? window.getComputedStyle(writerName).color : "",
       shareUrl: String(shareUrl && shareUrl.textContent || "").trim(),
       shareIsAnchor: Boolean(shareUrl && shareUrl.closest("a")),
+      shareQrLoaded: Boolean(shareQr && shareQr.complete && shareQr.naturalWidth > 0),
+      shareQrWidth: qrRect ? qrRect.width : 0,
+      miniPhoneVisible: Boolean(
+        miniPhoneRect
+        && miniPhoneRect.width > 0
+        && miniPhoneRect.height > 0
+        && window.getComputedStyle(miniPhone).display !== "none"
+      ),
       cardWithinViewport: Boolean(
         cardRect
         && cardRect.left >= 0
@@ -2949,8 +2967,8 @@ const coreSpecs = [
             }
             const overlay = document.querySelector("#video_tutorial_overlay");
             const rect = overlay && overlay.getBoundingClientRect();
-            const qrBackground = qr && getComputedStyle(qr).backgroundImage || "";
-            const logoBackground = logo && getComputedStyle(logo).backgroundImage || "";
+            const qrSource = qr && qr.currentSrc || "";
+            const logoSource = logo && logo.currentSrc || "";
             const coversViewport = Boolean(
               rect
               && Math.abs(rect.left) < 1
@@ -2958,14 +2976,16 @@ const coreSpecs = [
               && Math.abs(rect.width - window.innerWidth) < 1
               && Math.abs(rect.height - window.innerHeight) < 1
             );
-            if (!/scribshow-musa-qr\.png\?v=20260829r/.test(qrBackground)
-              || !/scrib-logo-mark\.png\?v=20260829r/.test(logoBackground)
+            if (!qr.complete || qr.naturalWidth < 1
+              || !logo.complete || logo.naturalWidth < 1
+              || !/scribshow-musa-qr\.png\?v=20260829s/.test(qrSource)
+              || !/scrib-logo-mark\.png\?v=20260829s/.test(logoSource)
               || !coversViewport) return false;
             return {
               duration: audio.duration,
               currentSrc: audio.currentSrc,
-              qrBackground,
-              logoBackground,
+              qrSource,
+              logoSource,
               coversViewport
             };
           }),
@@ -2975,11 +2995,11 @@ const coreSpecs = [
           Number.isFinite(mediaProbe.duration) && mediaProbe.duration >= 152.8 && mediaProbe.duration <= 153.1,
           `narrated tutorial should last about 153 seconds, got ${mediaProbe.duration}`
         );
-        ctx.assert(/scribshow-musa-qr\.png\?v=20260829r/.test(mediaProbe.qrBackground), "spectator QR should be painted as an isolated background");
-        ctx.assert(/scrib-logo-mark\.png\?v=20260829r/.test(mediaProbe.logoBackground), "spectator SCRI logo should be painted as an isolated background");
+        ctx.assert(/scribshow-musa-qr\.png\?v=20260829s/.test(mediaProbe.qrSource), "spectator QR should load as an explicit image");
+        ctx.assert(/scrib-logo-mark\.png\?v=20260829s/.test(mediaProbe.logoSource), "spectator SCRI logo should load as an explicit image");
         ctx.assert(mediaProbe.coversViewport, "spectator video tutorial should cover the full viewport");
 
-        const spectatorAccess = await ctx.evaluate("spectator", async ({ rawState }) => {
+        const spectatorAccess = await ctx.evaluate("spectator", ({ rawState }) => {
           const controller = window.__scribVideoTutorialController;
           if (!controller || typeof controller.handleState !== "function") return null;
           controller.handleState({
@@ -2988,25 +3008,29 @@ const coreSpecs = [
             reproduciendo: true,
             posicion_segundos: 12
           });
-          await new Promise((resolve) => window.setTimeout(resolve, 850));
           const root = document.querySelector("#video_tutorial_overlay");
           const qr = root && root.querySelector(".scrib-video-tutorial__welcome-qr");
           const logo = root && root.querySelector(".scrib-video-tutorial__brand-mark");
+          const accessUrl = root && root.querySelector(".scrib-video-tutorial__access-url");
+          root && root.classList.remove("is-scene-entering");
+          if (qr) qr.style.animation = "none";
           const qrRect = qr && qr.getBoundingClientRect();
           const logoRect = logo && logo.getBoundingClientRect();
           return {
             scene: String(root && root.dataset.scene || ""),
-            qrBackground: qr ? getComputedStyle(qr).backgroundImage : "",
-            logoBackground: logo ? getComputedStyle(logo).backgroundImage : "",
-            qrVisible: Boolean(qrRect && qrRect.width >= 300 && qrRect.height >= 300 && getComputedStyle(qr).opacity === "1"),
-            logoVisible: Boolean(logoRect && logoRect.width >= 70 && logoRect.height >= 70 && getComputedStyle(logo).opacity === "1")
+            accessUrl: String(accessUrl && accessUrl.textContent || "").trim(),
+            qrSource: qr && qr.currentSrc || "",
+            logoSource: logo && logo.currentSrc || "",
+            qrVisible: Boolean(qr && qr.complete && qr.naturalWidth > 0 && qrRect && qrRect.width >= 300 && qrRect.height >= 300 && getComputedStyle(qr).opacity === "1"),
+            logoVisible: Boolean(logo && logo.complete && logo.naturalWidth > 0 && logoRect && logoRect.width >= 70 && logoRect.height >= 70 && getComputedStyle(logo).opacity === "1")
           };
         }, { rawState: playing });
         ctx.assert(spectatorAccess && spectatorAccess.scene === "access", "spectator should enter the QR access scene");
+        ctx.assert(spectatorAccess.accessUrl === "scribshow.es/musa", "spectator access scene should display the written URL");
         ctx.assert(spectatorAccess.qrVisible, "spectator QR should occupy a visible square in the access scene");
         ctx.assert(spectatorAccess.logoVisible, "spectator SCRI logo should remain visible in the access scene");
-        ctx.assert(/scribshow-musa-qr\.png\?v=20260829r/.test(spectatorAccess.qrBackground), "spectator access scene should paint the current QR asset");
-        ctx.assert(/scrib-logo-mark\.png\?v=20260829r/.test(spectatorAccess.logoBackground), "spectator access scene should paint the current logo asset");
+        ctx.assert(/scribshow-musa-qr\.png\?v=20260829s/.test(spectatorAccess.qrSource), "spectator access scene should load the current QR asset");
+        ctx.assert(/scrib-logo-mark\.png\?v=20260829s/.test(spectatorAccess.logoSource), "spectator access scene should load the current logo asset");
 
         const colorPhases = [
           { position: 111, phase: "red", title: "ROJO", background: "rgb(242, 13, 53)" },
@@ -3033,9 +3057,17 @@ const coreSpecs = [
 
         const invitation = await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 12);
         ctx.assert(invitation.phase === "access", "connected muses should see the synchronized QR scene");
+        ctx.assert(invitation.title === "ENTRA EN LA WEB O ESCANEA", "the muse QR scene should use the concise access title");
         ctx.assert(invitation.shareUrl === "scribshow.es/musa", "the muse QR scene should display the written URL");
         ctx.assert(invitation.shareIsAnchor === false, "the displayed muse URL must not be clickable");
+        ctx.assert(invitation.shareQrLoaded && invitation.shareQrWidth >= 120, "the muse QR should load at a readable mobile size");
+        ctx.assert(invitation.museName && invitation.museColor === "rgb(255, 215, 106)", "the muse name should use the muse-yellow identity color");
+        ctx.assert(invitation.writerName && !/ESCRITXR\s*:/i.test(invitation.identity), "the writer should appear directly without an ESCRITXR prefix");
+        ctx.assert(["rgb(85, 244, 255)", "rgb(255, 113, 130)"].includes(invitation.writerColor), "the writer name should use its team color");
         ctx.assert(invitation.cardWithinViewport, "the muse QR card should stay inside the viewport");
+
+        const museChoiceAnimation = await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 60);
+        ctx.assert(museChoiceAnimation.phase === "choices" && museChoiceAnimation.miniPhoneVisible, "muses should see the simplified animated choice preview");
 
         await renderLocalVideoTutorialPosition(ctx, "musa1", playing, 139);
 

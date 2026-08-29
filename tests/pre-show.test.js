@@ -99,6 +99,9 @@ test("muse wiring is session-bound, IME-safe, acknowledged and tutorial-scoped",
   assert.match(sockets, /socket\.on\("pre_show_estado"/);
   assert.match(sockets, /socket\.on\("vista_espectador_modo"[\s\S]*actualizarModoVistaMusaRemoto/);
   assert.match(state, /vista_tutorial_musa_permitida = modo === "tutorial"/);
+  assert.match(state, /vista_tutorial_musa_permitida[\s\S]*pre_show_bloqueado_por_tutorial_musa = false/);
+  assert.match(state, /scrib:video-tutorial-visibility[\s\S]*restaurarVistaMusaTrasVideoTutorial/);
+  assert.match(state, /restaurarVistaMusaTrasVideoTutorial[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
   assert.match(sockets, /const aplicada = procesarAsignacionAutoritativaMusa[\s\S]*if \(!aplicada\)[\s\S]*ayuda_musa_controlador\.setRegistrationReady\(true\)[\s\S]*socket\.emit\('pedir_pre_show_estado'\)[\s\S]*socket\.emit\('pedir_video_tutorial_estado'\)/);
   assert.match(sockets, /socket\.on\('inicio'[\s\S]*cerrarPreShowMusaPorTutorial\(\)/);
 });
@@ -133,6 +136,9 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.match(state, /teleprompter_estado && teleprompter_estado\.visible/);
   assert.match(state, /cerrarPreShowEspectadorPorTutorial/);
   assert.match(state, /vista_espectador_modo_resuelta === "tutorial"/);
+  assert.match(state, /modoServidor === "tutorial"[\s\S]*pre_show_bloqueado_por_tutorial_espectador = false/);
+  assert.match(state, /scrib:video-tutorial-visibility[\s\S]*restaurarVistaEspectadorTrasVideoTutorial/);
+  assert.match(state, /restaurarVistaEspectadorTrasVideoTutorial[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
   assert.doesNotMatch(state, /nuevaSesion[\s\S]{0,500}actualizarModoVistaEspectadorUi\("partida"\)/);
   assert.match(sockets, /socket\.emit\('pedir_pre_show_estado'\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.pre-show-message/);

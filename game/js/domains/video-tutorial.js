@@ -36,6 +36,7 @@
     const STATE_EVENT = "video_tutorial_estado";
     const VERIFY_EVENT = "video_tutorial_verificar";
     const VISIBILITY_TRANSITION_MS = 620;
+    const MUSIC_PREROLL_SECONDS = 3;
     const NARRATION_RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     // Los cambios visuales empiezan al entrar la voz, no al principio del pequeño
@@ -192,17 +193,18 @@
                 <i class="scrib-video-tutorial__grid"></i>
             </div>
             <header class="scrib-video-tutorial__brand" aria-hidden="true">
-                <span class="scrib-video-tutorial__brand-mark"></span>
+                <img class="scrib-video-tutorial__brand-mark" src="/game/media/scrib-logo-mark.png?v=20260829s" alt="">
             </header>
             <div class="scrib-video-tutorial__scene">
                 <div class="scrib-video-tutorial__copy">
                     <h1 data-video-tutorial-title></h1>
+                    <p class="scrib-video-tutorial__access-url">scribshow.es/musa</p>
                 </div>
                 <div class="scrib-video-tutorial__visual" aria-hidden="true">
                     <div class="scrib-video-tutorial__welcome-mark">
                         <span>✦</span>
                         <strong>INSPIRA</strong>
-                        <div class="scrib-video-tutorial__welcome-qr"></div>
+                        <img class="scrib-video-tutorial__welcome-qr" src="/game/media/scribshow-musa-qr.png?v=20260829s" alt="Código QR de scribshow.es/musa">
                     </div>
                     <div class="scrib-video-tutorial__phone">
                         <div class="scrib-video-tutorial__phone-speaker"></div>
@@ -258,13 +260,22 @@
                 <span class="scrib-video-tutorial-device__eyebrow" data-video-tutorial-eyebrow>PRUEBA DE CONEXIÓN</span>
                 <div class="scrib-video-tutorial-device__check" aria-hidden="true">✓</div>
                 <div class="scrib-video-tutorial-device__phase-visual" aria-hidden="true"><i></i><strong data-video-tutorial-device-symbol>✦</strong><b></b></div>
+                <div class="scrib-video-tutorial-device__mini-phone" aria-hidden="true">
+                    <i class="scrib-video-tutorial-device__mini-speaker"></i>
+                    <div class="scrib-video-tutorial-device__mini-screen">
+                        <div class="scrib-video-tutorial-device__mini-step scrib-video-tutorial-device__mini-step--name"><small>TU NOMBRE</small><strong>LUNA<i></i></strong></div>
+                        <div class="scrib-video-tutorial-device__mini-step scrib-video-tutorial-device__mini-step--choices"><span></span><span></span></div>
+                        <div class="scrib-video-tutorial-device__mini-step scrib-video-tutorial-device__mini-step--fingerprint"><i></i><b>◎</b></div>
+                        <div class="scrib-video-tutorial-device__mini-step scrib-video-tutorial-device__mini-step--assigned"><i>✓</i><strong>TU ESCRITXR</strong></div>
+                    </div>
+                </div>
                 <h1 id="video_tutorial_musa_title" data-video-tutorial-title>CONEXIÓN RECIBIDA</h1>
                 <p data-video-tutorial-copy>Sigue las instrucciones de la pantalla principal.</p>
                 <div class="scrib-video-tutorial-device__share" aria-label="Código QR para invitar a otra musa">
-                    <img src="../../media/scribshow-musa-qr.png?v=20260829q" alt="Código QR de scribshow.es/musa">
+                    <img src="../../media/scribshow-musa-qr.png?v=20260829s" alt="Código QR de scribshow.es/musa">
                     <div><strong>¿FALTA ALGUIEN?</strong><span class="scrib-video-tutorial-device__url">scribshow.es/musa</span><small>ENSÉÑALE ESTE CÓDIGO</small></div>
                 </div>
-                <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity></div>
+                <div class="scrib-video-tutorial-device__identity" data-video-tutorial-identity><span data-video-tutorial-muse-name></span><span data-video-tutorial-writer-name></span></div>
             </div>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-video-tutorial-live></p>
         `;
@@ -306,6 +317,7 @@
         let hideTransitionTimer = null;
         let verificationRetryTimer = null;
         let spectatorTutorialVisible = false;
+        let musicPrerollAnnounced = false;
 
         function currentPosition() {
             if (!state || !state.visible) return 0;
@@ -433,14 +445,18 @@
 
         function museContext() {
             const muse = cleanText(documentRef.getElementById("nombre_musa_label")?.textContent, 24);
-            const writer = cleanText(documentRef.getElementById("nombre")?.value || documentRef.getElementById("nombre")?.textContent, 36);
+            const writerFromPage = cleanText(documentRef.getElementById("nombre")?.value || documentRef.getElementById("nombre")?.textContent, 36);
             let player = "";
+            let writerFromUrl = "";
             try {
-                player = new URLSearchParams(windowRef.location.search).get("player") || "";
+                const params = new URLSearchParams(windowRef.location.search);
+                player = params.get("player") || "";
+                writerFromUrl = cleanText(params.get("escritxr"), 36);
             } catch (_error) {}
             return {
                 player: player === "1" || player === "2" ? player : "",
-                identity: [muse, writer && `ESCRITXR: ${writer}`].filter(Boolean).join(" · ")
+                muse,
+                writer: writerFromPage || writerFromUrl
             };
         }
 
@@ -451,6 +467,8 @@
             const copy = root.querySelector("[data-video-tutorial-copy]");
             const eyebrow = root.querySelector("[data-video-tutorial-eyebrow]");
             const identity = root.querySelector("[data-video-tutorial-identity]");
+            const museName = root.querySelector("[data-video-tutorial-muse-name]");
+            const writerName = root.querySelector("[data-video-tutorial-writer-name]");
             const symbol = root.querySelector("[data-video-tutorial-device-symbol]");
             const context = museContext();
             const symbols = {
@@ -468,16 +486,23 @@
             root.dataset.phase = visualPhase;
             root.dataset.team = context.player;
             root.classList.toggle("is-verified", locallyVerified);
-            if (title) title.textContent = locallyVerified ? "CONFIGURACIÓN VERIFICADA" : phase.label;
+            const accessPhase = phase.id === "access" || phase.id === "access-wait";
+            if (title) {
+                title.textContent = locallyVerified
+                    ? "CONFIGURACIÓN VERIFICADA"
+                    : (phase.id === "access" ? "ENTRA EN LA WEB O ESCANEA" : phase.label);
+            }
             if (copy) {
-                copy.hidden = locallyVerified;
-                copy.textContent = locallyVerified ? "" : phase.copy;
+                copy.hidden = locallyVerified || accessPhase;
+                copy.textContent = locallyVerified || accessPhase ? "" : phase.copy;
             }
             if (eyebrow) {
                 eyebrow.hidden = locallyVerified;
                 eyebrow.textContent = locallyVerified ? "" : "PRUEBA DE CONEXIÓN";
             }
-            if (identity) identity.textContent = context.identity;
+            if (identity) identity.hidden = locallyVerified;
+            if (museName) museName.textContent = context.muse;
+            if (writerName) writerName.textContent = context.writer;
             if (symbol) symbol.textContent = symbols[visualPhase] || "✦";
             if (visualPhase !== lastPhaseId) {
                 lastPhaseId = visualPhase;
@@ -496,6 +521,22 @@
             enterSpectatorPhase(phase);
         }
 
+        function announceMusicPreroll(position) {
+            if (
+                role !== "spectator"
+                || musicPrerollAnnounced
+                || !state
+                || !state.visible
+                || position < Math.max(0, state.config.durationSeconds - MUSIC_PREROLL_SECONDS)
+            ) return;
+            musicPrerollAnnounced = true;
+            if (typeof windowRef.CustomEvent === "function") {
+                documentRef.dispatchEvent(new windowRef.CustomEvent("scrib:video-tutorial-ending", {
+                    detail: { secondsRemaining: Math.max(0, state.config.durationSeconds - position) }
+                }));
+            }
+        }
+
         function scheduleAutomaticVerification(delay = 0) {
             if (verificationRetryTimer != null || locallyVerified || verifying) return;
             verificationRetryTimer = windowRef.setTimeout(() => {
@@ -508,7 +549,10 @@
             frameId = null;
             if (!state || !state.visible) return;
             const position = currentPosition();
-            if (role === "spectator") renderSpectator(position);
+            if (role === "spectator") {
+                announceMusicPreroll(position);
+                renderSpectator(position);
+            }
             else renderMuse(position);
             frameId = scheduleFrame(tick);
         }
@@ -527,6 +571,7 @@
             if (nextKey !== previousKey) {
                 verifying = false;
                 lastPhaseId = "";
+                musicPrerollAnnounced = false;
                 if (verificationRetryTimer != null) windowRef.clearTimeout(verificationRetryTimer);
                 verificationRetryTimer = null;
                 restoreLocalVerification();
@@ -538,6 +583,7 @@
                 return;
             }
             if (role === "spectator") {
+                announceMusicPreroll(syncPosition);
                 renderSpectator(syncPosition);
                 playSoundtrack(syncPosition, nextKey !== previousKey);
             } else {
@@ -612,6 +658,7 @@
     return Object.freeze({
         DEFAULT_DURATION_SECONDS,
         DEFAULT_AUDIO_URL,
+        MUSIC_PREROLL_SECONDS,
         TIMELINE,
         normalizeState,
         normalizeVerification,

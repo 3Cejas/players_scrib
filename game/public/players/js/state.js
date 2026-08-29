@@ -2989,9 +2989,29 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     if (!musa_registro_confirmado) return false;
     const modo = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "";
     vista_tutorial_musa_permitida = modo === "tutorial";
+    if (vista_tutorial_musa_permitida) {
+        pre_show_bloqueado_por_tutorial_musa = false;
+    }
     aplicarVisibilidadPreShowMusa();
     return true;
 }
+
+function restaurarVistaMusaTrasVideoTutorial() {
+    if (vista_tutorial_musa_permitida) {
+        pre_show_bloqueado_por_tutorial_musa = false;
+    }
+    refrescarClasesUiPartidaMusa();
+    aplicarVisibilidadPreShowMusa();
+    if (socket.connected) {
+        socket.emit("pedir_vista_espectador_modo");
+        socket.emit("pedir_pre_show_estado");
+    }
+}
+
+document.addEventListener("scrib:video-tutorial-visibility", (event) => {
+    if (event && event.detail && event.detail.visible) return;
+    restaurarVistaMusaTrasVideoTutorial();
+});
 
 function actualizarEstadoPreShowMusa(payload = {}) {
     const siguiente = window.ScribPreShow.normalizarEstado(payload);

@@ -153,8 +153,7 @@ body.scrib-video-tutorial-active {
     width: clamp(4.4rem, 6.5vw, 7.6rem);
     aspect-ratio: 1;
     border: 0;
-    background: transparent url("/game/media/scrib-logo-mark.png?v=20260829r") center / contain no-repeat;
-    background-blend-mode: normal;
+    object-fit: contain;
     mix-blend-mode: normal;
     opacity: 1;
     filter: drop-shadow(0 0 1.15rem rgba(85, 244, 255, 0.5));
@@ -218,6 +217,26 @@ body.scrib-video-tutorial-active {
         -0.035em -0.02em 0 rgba(69, 230, 255, 0.28),
         0 0 0.5em color-mix(in srgb, var(--scene-accent), transparent 80%);
 }
+
+.scrib-video-tutorial__access-url {
+    display: none;
+    margin: clamp(1rem, 2.4vh, 1.8rem) 0 0;
+    padding: .42em .72em .5em;
+    border: 1px solid rgba(85, 244, 255, .58);
+    border-radius: .42em;
+    color: var(--vt-cyan);
+    background: rgba(3, 16, 25, .82);
+    box-shadow: 0 0 2rem rgba(85, 244, 255, .18), inset 0 0 1.2rem rgba(85, 244, 255, .06);
+    font: 800 clamp(1.45rem, 2.35vw, 2.75rem)/1.1 system-ui, sans-serif;
+    letter-spacing: .025em;
+    text-decoration: underline;
+    text-decoration-thickness: .08em;
+    text-underline-offset: .18em;
+    text-shadow: 0 0 .8em rgba(85, 244, 255, .42);
+}
+
+.scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__access-url,
+.scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__access-url { display: block; }
 
 .scrib-video-tutorial__copy > p {
     max-width: 34ch;
@@ -291,7 +310,7 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial__welcome-mark span { color: var(--vt-cyan); font: 400 clamp(4rem, 8vw, 9rem)/1 serif; filter: drop-shadow(0 0 1.4rem var(--vt-cyan)); animation: vtSpark 1.4s ease-in-out infinite alternate; }
 .scrib-video-tutorial__welcome-mark strong { color: #fff; font-size: clamp(1.4rem, 2.5vw, 3rem); letter-spacing: 0.18em; }
 .scrib-video-tutorial__welcome-mark i { color: #94afbd; font: normal clamp(0.62rem, 0.9vw, 1rem)/1.4 "Retro-gaming", monospace; letter-spacing: 0.14em; }
-.scrib-video-tutorial__welcome-qr { position: relative; z-index: 3; display: none; width: min(72%, 29rem); aspect-ratio: 1; border: clamp(0.5rem, 1vw, 0.9rem) solid #fff; border-radius: clamp(0.9rem, 2vw, 1.6rem); overflow: hidden; background: #fff url("/game/media/scribshow-musa-qr.png?v=20260829r") center / contain no-repeat; background-blend-mode: normal; mix-blend-mode: normal; opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,.7), 0 0 4rem rgba(85,244,255,.38); }
+.scrib-video-tutorial__welcome-qr { position: relative; z-index: 3; display: none; box-sizing: border-box; width: min(88%, 34rem); aspect-ratio: 1; border: clamp(0.5rem, 1vw, 0.9rem) solid #fff; border-radius: clamp(0.9rem, 2vw, 1.6rem); overflow: hidden; object-fit: contain; background: #fff; mix-blend-mode: normal; opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,.7), 0 0 4rem rgba(85,244,255,.38); }
 
 .scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__welcome-mark,
 .scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__welcome-mark {
@@ -741,15 +760,19 @@ body.scrib-video-tutorial-active {
 .scrib-video-tutorial-device__eyebrow { color: var(--vt-cyan); font-size: clamp(.62rem,2.5vw,.85rem); letter-spacing: .16em; }
 .scrib-video-tutorial-device h1 { max-width: 14ch; margin: 0; color: #fff; font-size: clamp(1.65rem,8vw,3.4rem); line-height: 1.02; letter-spacing: .035em; text-wrap: balance; text-shadow: 0 0 1.4rem rgba(255,255,255,.22); }
 .scrib-video-tutorial-device p { max-width: 34ch; margin: 0; color: rgba(255,255,255,.78); font-family: system-ui,sans-serif; font-size: clamp(.95rem,4vw,1.22rem); line-height: 1.45; }
-.scrib-video-tutorial-device__share { display: none; width: min(25rem,100%); grid-template-columns: clamp(5.2rem,22vw,7rem) minmax(0,1fr); gap: 1rem; align-items: center; padding: .75rem; border: 2px solid rgba(85,244,255,.72); border-radius: 1rem; background: #06131f; box-shadow: 0 0 1.8rem rgba(85,244,255,.16); text-align: left; }
+.scrib-video-tutorial-device__share { display: none; width: min(29rem,100%); grid-template-columns: clamp(8rem,34vw,11rem) minmax(0,1fr); gap: clamp(.8rem,3vw,1.2rem); align-items: center; padding: clamp(.72rem,3vw,1rem); border: 2px solid rgba(85,244,255,.72); border-radius: 1.15rem; background: #06131f; box-shadow: 0 0 1.8rem rgba(85,244,255,.16); text-align: left; }
 .scrib-video-tutorial-device__share img { display: block; width: 100%; aspect-ratio: 1; padding: .28rem; box-sizing: border-box; border-radius: .65rem; background: #fff; }
 .scrib-video-tutorial-device__share div { display: grid; gap: .38rem; min-width: 0; }
 .scrib-video-tutorial-device__share strong { color: #fff; font-size: clamp(.7rem,3vw,.92rem); line-height: 1.2; }
 .scrib-video-tutorial-device__share span { overflow-wrap: anywhere; color: var(--vt-cyan); font: 800 clamp(.78rem,3.4vw,1.05rem)/1.25 system-ui,sans-serif; }
 .scrib-video-tutorial-device__url { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .22em; text-decoration-color: rgba(85,244,255,.72); text-shadow: 0 0 .8rem rgba(85,244,255,.42); cursor: default; }
 .scrib-video-tutorial-device__share small { color: rgba(255,255,255,.68); font-size: clamp(.52rem,2.3vw,.68rem); line-height: 1.3; letter-spacing: .08em; }
-.scrib-video-tutorial-device__identity { min-height: 1.1em; color: var(--vt-cyan); font-size: clamp(.62rem,2.7vw,.88rem); line-height: 1.45; letter-spacing: .09em; }
-.scrib-video-tutorial-device[data-team="2"] .scrib-video-tutorial-device__identity { color: #ff7182; }
+.scrib-video-tutorial-device__identity { min-height: 1.1em; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .42em .72em; font-size: clamp(.68rem,3vw,.96rem); line-height: 1.4; letter-spacing: .09em; }
+.scrib-video-tutorial-device__identity span:empty { display: none; }
+.scrib-video-tutorial-device__identity [data-video-tutorial-muse-name] { color: var(--vt-gold); text-shadow: 0 0 .8rem rgba(255,215,106,.46); }
+.scrib-video-tutorial-device__identity [data-video-tutorial-writer-name] { color: var(--vt-cyan); }
+.scrib-video-tutorial-device[data-team="2"] .scrib-video-tutorial-device__identity [data-video-tutorial-writer-name] { color: #ff7182; }
+.scrib-video-tutorial-device__identity [data-video-tutorial-writer-name]:not(:empty)::before { content: "◆"; margin-right: .55em; font-size: .72em; }
 .scrib-video-tutorial-device__check { display: none; width: clamp(4rem,18vw,6.5rem); aspect-ratio: 1; place-items: center; border: 2px solid var(--vt-green); border-radius: 50%; color: var(--vt-green); font: 800 clamp(2rem,10vw,4rem)/1 system-ui,sans-serif; box-shadow: 0 0 3rem rgba(77,255,154,.42), inset 0 0 1.8rem rgba(77,255,154,.12); }
 
 .scrib-video-tutorial-device__phase-visual {
@@ -792,6 +815,52 @@ body.scrib-video-tutorial-active {
     text-shadow: 0 0 .7em var(--phase-color);
     animation: vtDeviceVisualPulse 1.15s ease-in-out infinite alternate;
 }
+
+.scrib-video-tutorial-device__mini-phone {
+    position: relative;
+    display: none;
+    width: clamp(6.4rem, 29vw, 9rem);
+    aspect-ratio: .62;
+    padding: .62rem .42rem .48rem;
+    border: 2px solid rgba(238, 250, 255, .82);
+    border-radius: 1.35rem;
+    background: linear-gradient(150deg, #102336, #02070d 72%);
+    box-shadow: 0 0 2.4rem rgba(85,244,255,.28), inset 0 0 1.4rem rgba(85,244,255,.08);
+    animation: vtMiniPhoneIn 560ms cubic-bezier(.16,1,.3,1) both, vtMiniPhoneFloat 3s 560ms ease-in-out infinite;
+}
+
+.scrib-video-tutorial-device__mini-speaker { position: absolute; top: .28rem; left: 50%; width: 28%; height: .18rem; border-radius: 1rem; background: rgba(255,255,255,.52); transform: translateX(-50%); }
+.scrib-video-tutorial-device__mini-screen { position: relative; width: 100%; height: 100%; overflow: hidden; display: grid; place-items: center; border: 1px solid rgba(85,244,255,.2); border-radius: .95rem; background: radial-gradient(circle at 50% 25%, rgba(85,244,255,.12), transparent 48%), #03101a; }
+.scrib-video-tutorial-device__mini-step { display: none; width: 100%; height: 100%; place-items: center; align-content: center; padding: .55rem; }
+.scrib-video-tutorial-device__mini-step--name { gap: .65rem; }
+.scrib-video-tutorial-device__mini-step--name small { color: var(--vt-cyan); font-size: clamp(.42rem,1.8vw,.56rem); letter-spacing: .1em; }
+.scrib-video-tutorial-device__mini-step--name strong { position: relative; width: 90%; padding: .55rem .35rem; border: 1px solid rgba(85,244,255,.6); border-radius: .5rem; color: #fff; font-size: clamp(.72rem,3.1vw,1rem); }
+.scrib-video-tutorial-device__mini-step--name strong i { display: inline-block; width: 2px; height: 1em; margin-left: .2em; background: var(--vt-cyan); animation: vtCaret .8s steps(1) infinite; }
+.scrib-video-tutorial-device__mini-step--choices { grid-template-columns: 1fr 1fr; gap: .48rem; }
+.scrib-video-tutorial-device__mini-step--choices span { width: 100%; aspect-ratio: .72; border: 1px solid currentColor; border-radius: .65rem; color: #42dfff; background: radial-gradient(circle, currentColor 0 12%, transparent 14%), color-mix(in srgb,currentColor,transparent 86%); box-shadow: 0 0 1rem color-mix(in srgb,currentColor,transparent 55%); animation: vtMiniChoice 1.35s ease-in-out infinite alternate; }
+.scrib-video-tutorial-device__mini-step--choices span + span { color: #ff5065; animation-delay: -.7s; }
+.scrib-video-tutorial-device__mini-step--fingerprint { position: relative; }
+.scrib-video-tutorial-device__mini-step--fingerprint i { position: absolute; width: 68%; aspect-ratio: 1; border: 2px solid var(--vt-gold); border-radius: 50%; animation: vtFingerProgress 2.2s linear infinite; border-left-color: transparent; }
+.scrib-video-tutorial-device__mini-step--fingerprint b { color: var(--vt-gold); font: 400 clamp(2.6rem,12vw,4rem)/1 system-ui,sans-serif; text-shadow: 0 0 1rem rgba(255,215,106,.72); animation: vtDeviceVisualPulse 1.1s ease-in-out infinite alternate; }
+.scrib-video-tutorial-device__mini-step--assigned { gap: .6rem; color: var(--vt-green); }
+.scrib-video-tutorial-device__mini-step--assigned i { width: 3rem; aspect-ratio: 1; display: grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; font: normal 800 1.6rem/1 system-ui,sans-serif; box-shadow: 0 0 1.4rem rgba(92,255,156,.44); }
+.scrib-video-tutorial-device__mini-step--assigned strong { color: #fff; font-size: clamp(.5rem,2.2vw,.72rem); letter-spacing: .08em; }
+
+.scrib-video-tutorial-device[data-phase="name"] .scrib-video-tutorial-device__mini-phone,
+.scrib-video-tutorial-device[data-phase="choices"] .scrib-video-tutorial-device__mini-phone,
+.scrib-video-tutorial-device[data-phase="manual"] .scrib-video-tutorial-device__mini-phone,
+.scrib-video-tutorial-device[data-phase="automatic"] .scrib-video-tutorial-device__mini-phone,
+.scrib-video-tutorial-device[data-phase="assigned"] .scrib-video-tutorial-device__mini-phone { display: block; }
+.scrib-video-tutorial-device[data-phase="name"] .scrib-video-tutorial-device__mini-step--name,
+.scrib-video-tutorial-device[data-phase="choices"] .scrib-video-tutorial-device__mini-step--choices,
+.scrib-video-tutorial-device[data-phase="manual"] .scrib-video-tutorial-device__mini-step--choices,
+.scrib-video-tutorial-device[data-phase="automatic"] .scrib-video-tutorial-device__mini-step--fingerprint,
+.scrib-video-tutorial-device[data-phase="assigned"] .scrib-video-tutorial-device__mini-step--assigned { display: grid; }
+.scrib-video-tutorial-device[data-phase="name"] .scrib-video-tutorial-device__phase-visual,
+.scrib-video-tutorial-device[data-phase="choices"] .scrib-video-tutorial-device__phase-visual,
+.scrib-video-tutorial-device[data-phase="manual"] .scrib-video-tutorial-device__phase-visual,
+.scrib-video-tutorial-device[data-phase="automatic"] .scrib-video-tutorial-device__phase-visual,
+.scrib-video-tutorial-device[data-phase="assigned"] .scrib-video-tutorial-device__phase-visual { display: none; }
 
 .scrib-video-tutorial-device[data-phase="automatic"] .scrib-video-tutorial-device__phase-visual { --phase-color: var(--vt-gold); }
 .scrib-video-tutorial-device[data-phase="assigned"] .scrib-video-tutorial-device__phase-visual,
@@ -857,13 +926,18 @@ body.scrib-video-tutorial-active {
     max-width: 100%;
     padding: clamp(1.25rem,4vw,2rem) clamp(1.2rem,5vw,2.4rem);
     overflow: hidden;
-    border: 2px solid rgba(255,255,255,.86);
-    border-radius: clamp(1.3rem, 5vw, 2rem);
-    background: linear-gradient(125deg, rgba(1,8,20,.88), rgba(3,18,36,.64));
-    box-shadow: 0 1.4rem 4.5rem rgba(0,0,0,.35), 0 0 3rem var(--device-glow), inset 0 0 2.2rem rgba(255,255,255,.12);
+    isolation: isolate;
+    border: 3px solid transparent;
+    border-radius: clamp(1.3rem, 5vw, 2rem) clamp(.65rem, 3vw, 1rem);
+    background: linear-gradient(125deg, rgba(1,8,20,.94), rgba(3,18,36,.72)) padding-box, conic-gradient(from 90deg, #fff, var(--device-color), #fff, var(--device-color), #fff) border-box;
+    box-shadow: 0 1.4rem 4.5rem rgba(0,0,0,.35), 0 0 4.2rem var(--device-glow), inset 0 0 3rem rgba(255,255,255,.14);
     backdrop-filter: blur(10px) saturate(1.3);
     animation: vtDeviceColorNameIn 620ms cubic-bezier(.16,1,.3,1) both, vtDeviceColorNameGlow 1.6s 620ms ease-in-out infinite alternate;
 }
+.scrib-video-tutorial-device[data-phase="red"] .scrib-video-tutorial-device__card::before,
+.scrib-video-tutorial-device[data-phase="blue"] .scrib-video-tutorial-device__card::before,
+.scrib-video-tutorial-device[data-phase="green"] .scrib-video-tutorial-device__card::before,
+.scrib-video-tutorial-device[data-phase="white"] .scrib-video-tutorial-device__card::before { content: ""; position: absolute; z-index: -1; inset: -45% -20%; background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.42) 49%, transparent 60%); transform: translateX(-55%); animation: vtColorCardSweep 2.2s ease-in-out infinite; }
 .scrib-video-tutorial-device[data-phase="red"] h1,
 .scrib-video-tutorial-device[data-phase="blue"] h1,
 .scrib-video-tutorial-device[data-phase="green"] h1,
@@ -937,6 +1011,10 @@ body.scrib-video-tutorial-active {
 @keyframes vtDeviceScan { from { transform: translateY(-15vh); } to { transform: translateY(125vh); } }
 @keyframes vtDeviceVisualRing { to { transform: rotate(360deg); } }
 @keyframes vtDeviceVisualPulse { to { transform: scale(1.12); filter: brightness(1.25); } }
+@keyframes vtMiniPhoneIn { from { opacity: 0; transform: translateY(1rem) scale(.82) rotate(4deg); } to { opacity: 1; transform: none; } }
+@keyframes vtMiniPhoneFloat { 50% { transform: translateY(-.42rem); } }
+@keyframes vtMiniChoice { to { transform: translateY(-.3rem) scale(1.035); filter: brightness(1.25); } }
+@keyframes vtColorCardSweep { 0%,28% { transform: translateX(-55%); opacity: 0; } 52% { opacity: .8; } 78%,100% { transform: translateX(55%); opacity: 0; } }
 
 @media (max-width: 900px) {
     .scrib-video-tutorial__scene { padding: 5.5rem 1.4rem 7rem; grid-template-columns: minmax(0, 1fr) minmax(18rem, .8fr); gap: 1.5rem; }

@@ -69,6 +69,7 @@ test("tutorial and detonator views share looped music with three-second fades an
   let clock = 0;
   const timers = [];
   const media = [];
+  const documentListeners = new Map();
   const createAudio = (url) => {
     const audio = {
       url,
@@ -101,6 +102,10 @@ test("tutorial and detonator views share looped music with three-second fades an
   };
   const controller = transitions.createAudioController({
     createAudio,
+    documentRef: {
+      addEventListener(name, listener) { documentListeners.set(name, listener); },
+      removeEventListener(name) { documentListeners.delete(name); }
+    },
     musicUrl: "menu.mp3",
     transitionUrl: "view.mp3",
     setTimer,
@@ -137,9 +142,12 @@ test("tutorial and detonator views share looped music with three-second fades an
   controller.setDucked(true);
   drainTimers();
   assert.equal(music.volume, 0, "the narrated tutorial ducks the separate background loop");
-  controller.setDucked(false);
+  documentListeners.get("scrib:video-tutorial-ending")();
+  assert.equal(music.paused, false, "the menu loop starts before the tutorial overlay disappears");
   drainTimers();
   assert.equal(music.volume, 0.5);
+  controller.destroy();
+  assert.equal(documentListeners.has("scrib:video-tutorial-ending"), false);
 });
 
 test("spectator wires the animated curtain into every resolved view change", () => {
@@ -148,7 +156,7 @@ test("spectator wires the animated curtain into every resolved view change", () 
   const state = fs.readFileSync(path.join(ROOT, "game/spectator/js/state.js"), "utf8");
 
   assert.match(html, /id="spectator_view_transition"[\s\S]*data-view-transition-label/);
-  assert.match(html, /domains\/view-transition\.js\?v=20260829p/);
+  assert.match(html, /domains\/view-transition\.js\?v=20260829s/);
   assert.match(css, /spectatorViewCoverBlue[\s\S]*spectatorViewRevealRed/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spectator-view-transition/);
   assert.match(state, /controlador_transicion_vista_espectador\.transition\(\{[\s\S]*swap: \(\) => aplicarModoVistaEspectadorUi\(modo\)/);

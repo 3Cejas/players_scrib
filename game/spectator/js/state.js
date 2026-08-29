@@ -4094,7 +4094,14 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
         }
         if (Object.prototype.hasOwnProperty.call(payload, "modo")) {
             const modoServidor = normalizarModoVistaEspectador(payload.modo);
+            if (modoServidor === "tutorial") {
+                pre_show_bloqueado_por_tutorial_espectador = false;
+            }
             if (modoServidor === vista_espectador_modo_solicitada) {
+                if (modoServidor === "tutorial") {
+                    aplicarModoVistaEspectadorUi(modoServidor);
+                    socket.emit("pedir_pre_show_estado");
+                }
                 if (modoServidor === "stats" && cambioPasoStats) {
                     aplicarSlideStatsActual();
                 }
@@ -4122,6 +4129,23 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     }
     actualizarModoVistaEspectadorUi();
 };
+
+const restaurarVistaEspectadorTrasVideoTutorial = () => {
+    const modo = normalizarModoVistaEspectador(resolverModoVistaEspectadorLocal());
+    if (modo === "tutorial") {
+        pre_show_bloqueado_por_tutorial_espectador = false;
+    }
+    vista_espectador_modo_solicitada = "";
+    aplicarModoVistaEspectadorUi(modo);
+    socket.emit("pedir_vista_espectador_modo");
+    socket.emit("pedir_pre_show_estado");
+};
+
+document.addEventListener("scrib:video-tutorial-visibility", (event) => {
+    if (event && event.detail && event.detail.visible) return;
+    restaurarVistaEspectadorTrasVideoTutorial();
+});
+
 actualizarModoVistaEspectadorUi();
 renderizarCreditosEspectador();
 aplicarEscalaUiEspectador();

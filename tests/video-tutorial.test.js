@@ -93,8 +93,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829r/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260829r/);
+    assert.match(html, /video-tutorial\.css\?v=20260829s/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260829s/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -150,12 +150,15 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
   assert.match(brandMarkup, /scrib-video-tutorial__brand-mark/);
-  assert.match(spectatorMarkup, /<div class="scrib-video-tutorial__welcome-qr"><\/div>/);
-  assert.doesNotMatch(spectatorMarkup, /<span class="scrib-video-tutorial__welcome-qr"/);
-  assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*scrib-logo-mark\.png\?v=20260829r/);
-  assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*scribshow-musa-qr\.png\?v=20260829r/);
+  assert.match(brandMarkup, /<img class="scrib-video-tutorial__brand-mark" src="\/game\/media\/scrib-logo-mark\.png\?v=20260829s" alt="">/);
+  assert.match(spectatorMarkup, /<img class="scrib-video-tutorial__welcome-qr" src="\/game\/media\/scribshow-musa-qr\.png\?v=20260829s" alt="Código QR de scribshow\.es\/musa">/);
+  assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*object-fit:\s*contain/);
+  assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*object-fit:\s*contain/);
   assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*mix-blend-mode:\s*normal/);
   assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*mix-blend-mode:\s*normal/);
+  assert.match(spectatorMarkup, /scrib-video-tutorial__access-url">scribshow\.es\/musa/);
+  assert.match(css, /scrib-video-tutorial__access-url[\s\S]*font:\s*800 clamp\(1\.45rem,[\s\S]*text-decoration:\s*underline/);
+  assert.match(css, /welcome-qr[\s\S]*width:\s*min\(88%,\s*34rem\)/);
   assert.doesNotMatch(brandMarkup, /<b>|MUSA/);
   assert.doesNotMatch(brandMarkup, /<span>&lt;SCRI&gt; B<\/span>/);
   assert.doesNotMatch(spectatorMarkup, /SCRIB · MUSA|conectarse a SCRIB/);
@@ -206,6 +209,10 @@ test("tutorial explains direct choice and automatic assignment using the real mu
   assert.match(js, /abre scribshow\.es\/musa o escanea/);
   assert.doesNotMatch(narration, /equilibr/i);
   assert.doesNotMatch(js, /SÍ, FUNCIONA|TODO FUNCIONA|Tu dispositivo está conectado|device__confirm|data-video-tutorial-time|data-video-tutorial-progress/);
+  assert.match(js, /phase\.id === "access" \? "ENTRA EN LA WEB O ESCANEA"/);
+  assert.match(js, /copy\.hidden = locallyVerified \|\| accessPhase/);
+  assert.match(js, /data-video-tutorial-muse-name[\s\S]*data-video-tutorial-writer-name/);
+  assert.doesNotMatch(js, /`ESCRITXR:\s*\$\{writer\}`/);
 });
 
 test("narration manifest, generated MP3 and CSS timeline stay synchronized", () => {
@@ -245,7 +252,7 @@ test("mobile calibration changes through four solid colors and verifies automati
   assert.match(js, /root\.classList\.add\("is-visible"\)/);
   assert.match(js, /root\.classList\.add\("is-leaving"\)[\s\S]*VISIBILITY_TRANSITION_MS/);
   assert.match(js, /scrib:video-tutorial-visibility/);
-  assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.png\?v=20260829q[\s\S]*scrib-video-tutorial-device__url[\s\S]*scribshow\.es\/musa/);
+  assert.match(js, /scrib-video-tutorial-device__share[\s\S]*scribshow-musa-qr\.png\?v=20260829s[\s\S]*scrib-video-tutorial-device__url[\s\S]*scribshow\.es\/musa/);
   assert.doesNotMatch(js, /<a[^>]+scribshow\.es\/musa/);
   assert.match(css, /scrib-video-tutorial-device__share/);
   assert.match(css, /scrib-video-tutorial-device__url[\s\S]*text-decoration:\s*underline/);
@@ -256,4 +263,12 @@ test("mobile calibration changes through four solid colors and verifies automati
   assert.match(css, /scrib-video-tutorial-device__share\s*\{\s*display:\s*none/);
   assert.match(css, /@keyframes vtDeviceColorSweep/);
   assert.match(css, /@keyframes vtDeviceColorNameGlow/);
+  assert.match(js, /scrib-video-tutorial-device__mini-phone/);
+  for (const phase of ["name", "choices", "manual", "automatic", "assigned"]) {
+    assert.match(css, new RegExp(`data-phase="${phase}"[^\\n]+scrib-video-tutorial-device__mini`));
+  }
+  assert.match(css, /conic-gradient\(from 90deg,[\s\S]*@keyframes vtColorCardSweep/);
+  assert.match(css, /data-video-tutorial-muse-name[\s\S]*var\(--vt-gold\)/);
+  assert.match(js, /MUSIC_PREROLL_SECONDS = 3/);
+  assert.match(js, /scrib:video-tutorial-ending/);
 });

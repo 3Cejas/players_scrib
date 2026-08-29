@@ -155,6 +155,9 @@
         const onTutorialVisibility = (event) => {
             setDucked(Boolean(event && event.detail && event.detail.visible));
         };
+        const onTutorialEnding = () => {
+            setDucked(false);
+        };
         const onPageHide = () => {
             clearFade();
             music?.pause?.();
@@ -164,6 +167,7 @@
             documentRef?.addEventListener?.(eventName, retryPlayback, { passive: true });
         });
         documentRef?.addEventListener?.("scrib:video-tutorial-visibility", onTutorialVisibility);
+        documentRef?.addEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
         windowRef?.addEventListener?.("pagehide", onPageHide);
 
         return {
@@ -179,6 +183,7 @@
                     documentRef?.removeEventListener?.(eventName, retryPlayback);
                 });
                 documentRef?.removeEventListener?.("scrib:video-tutorial-visibility", onTutorialVisibility);
+                documentRef?.removeEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
                 windowRef?.removeEventListener?.("pagehide", onPageHide);
             }
         };
