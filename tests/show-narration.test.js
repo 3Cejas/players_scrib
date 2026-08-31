@@ -51,8 +51,8 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     const spectator = read("game/spectator/index.html");
     const muse = read("game/public/players/index.html");
     for (const html of [spectator, muse]) {
-        assert.match(html, /show-narration\.css\?v=20260831a/);
-        assert.match(html, /domains\/show-narration\.js\?v=20260831a/);
+        assert.match(html, /show-narration\.css\?v=20260831b/);
+        assert.match(html, /domains\/show-narration\.js\?v=20260831b/);
     }
     assert.ok(fs.statSync(path.join(ROOT, "game/media/narracion-show.mp3")).size > 3_000_000);
     const png = fs.readFileSync(path.join(ROOT, "game/media/narracion-final.png"));
@@ -60,8 +60,12 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     const css = read("game/css/show-narration.css");
     assert.match(css, /scrib-show-lights/);
     assert.match(css, /data-scene="final"[\s\S]*scrib-show-narration__final/);
-    assert.match(css, /object-fit:\s*contain/);
+    assert.match(css, /object-fit:\s*fill/);
     assert.match(css, /data-scene="black"[\s\S]*visibility:\s*hidden/);
+    assert.match(css, /scrib-show-lights__subtitle/);
+    const source = read("game/js/domains/show-narration.js");
+    assert.match(source, /scrib-show-lights__subtitle[\s\S]*data-show-subtitle/);
+    assert.doesNotMatch(source, /scrib-show-narration__copy|data-show-title|data-show-kicker/);
 });
 
 test("Control exposes one stateful play-pause button without another interval", () => {
@@ -83,5 +87,6 @@ test("tutorial music is silent during narration and starts instantly on the fina
     const transitions = read("game/js/domains/view-transition.js");
     assert.match(transitions, /scrib:show-narration-visibility/);
     assert.match(transitions, /scrib:show-narration-final/);
+    assert.match(transitions, /music\.currentTime = 0/);
     assert.match(transitions, /fadeMusic\(musicVolume, 0\)/);
 });

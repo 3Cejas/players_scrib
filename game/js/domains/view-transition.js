@@ -174,6 +174,10 @@
         const onShowNarrationFinal = () => {
             ducked = false;
             forcedMusic = true;
+            try {
+                music?.pause?.();
+                if (music) music.currentTime = 0;
+            } catch (_error) {}
             fadeMusic(musicVolume, 0);
         };
         const onPageHide = () => {

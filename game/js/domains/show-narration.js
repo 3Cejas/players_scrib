@@ -144,10 +144,6 @@
                 <div class="scrib-show-narration__fusion"><i></i><i></i><b></b></div>
                 <div class="scrib-show-narration__glyph" data-show-glyph></div>
             </div>
-            <div class="scrib-show-narration__copy">
-                <p data-show-kicker></p>
-                <h1 data-show-title></h1>
-            </div>
             <div class="scrib-show-narration__subtitle" aria-hidden="true"><p data-show-subtitle></p></div>
             <img class="scrib-show-narration__final" data-show-final alt="&lt;SCRI&gt; B, el primer videojuego de escritura improvisada">
             <audio class="scrib-show-narration__audio" preload="auto"></audio>
@@ -168,6 +164,7 @@
             <div class="scrib-show-lights__rings" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="scrib-show-lights__particles" aria-hidden="true">${"<i></i>".repeat(16)}</div>
             <strong class="scrib-show-lights__glyph" data-show-glyph aria-hidden="true"></strong>
+            <div class="scrib-show-lights__subtitle" aria-hidden="true"><p data-show-subtitle></p></div>
             <p class="scrib-visually-hidden" role="status" aria-live="polite" data-show-live></p>`;
         documentRef.body.appendChild(root);
         return root;
@@ -274,25 +271,21 @@
             if (scene.id !== renderedScene) {
                 renderedScene = scene.id;
                 root.dataset.scene = scene.id;
-                const title = root.querySelector("[data-show-title]");
-                const kicker = root.querySelector("[data-show-kicker]");
                 const glyph = root.querySelector("[data-show-glyph]");
-                if (title) title.textContent = scene.title;
-                if (kicker) kicker.textContent = scene.kicker;
                 if (glyph) glyph.textContent = scene.glyph || "";
                 root.classList.remove("is-scene-entering");
                 void root.offsetWidth;
                 root.classList.add("is-scene-entering");
                 if (live && scene.title) live.textContent = `${scene.title}. ${scene.kicker}`;
             }
+            const cue = subtitleAt(position);
+            const subtitle = cue ? cue.text : "";
+            if (subtitle !== renderedSubtitle) {
+                renderedSubtitle = subtitle;
+                const node = root.querySelector("[data-show-subtitle]");
+                if (node) node.textContent = subtitle;
+            }
             if (role === "spectator") {
-                const cue = subtitleAt(position);
-                const subtitle = cue ? cue.text : "";
-                if (subtitle !== renderedSubtitle) {
-                    renderedSubtitle = subtitle;
-                    const node = root.querySelector("[data-show-subtitle]");
-                    if (node) node.textContent = subtitle;
-                }
                 if (scene.id === "final" && !finalAnnounced) {
                     finalAnnounced = true;
                     dispatch("scrib:show-narration-final", { immediate: true });
