@@ -442,14 +442,16 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.equal((i18n.match(/"muse\.assignment\.replaced_notice"/g) || []).length, 3);
 });
 
-test("muse onboarding is a short image-free mini tutorial with two clear messages", () => {
+test("muse onboarding keeps its original welcome and branded headers in the short tutorial", () => {
   const html = read("game/public/index.html");
   const selector = read("game/public/js/musa-selector.js");
 
   assert.equal((html.match(/class="intro-section/g) || []).length, 4);
-  assert.match(html, /id="intro-bienvenida"[\s\S]*TÚ DAS[\s\S]*LA CHISPA/);
+  assert.match(html, /id="intro-bienvenida" class="intro-section"[\s\S]*MUSA<\/span>, BIENVENIDA A[\s\S]*intro-logo-img--center[\s\S]*COMENZAR/);
   assert.match(html, /id="intro-como-jugar"[\s\S]*ENVÍA UNA PALABRA[\s\S]*ENTRA EN LA HISTORIA/);
   assert.match(html, /class="onboarding-demo__phone"[\s\S]*class="onboarding-demo__story"/);
+  assert.equal((html.match(/class="intro-logos"/g) || []).length, 3);
+  assert.equal((html.match(/src="\.\.\/\.\.\/img\/logo_sutura\.png"/g) || []).length, 3);
   assert.doesNotMatch(html, /src="\.\.\/\.\.\/img\/(?:scrib|el_tiempo|escritoras|la_representacion)\.png"/);
   assert.doesNotMatch(html, /Puedes elegir directamente o dejar que el juego equilibre los equipos por ti/);
   assert.doesNotMatch(selector, /Elige una escritora o usa la detección automática para equilibrar los equipos/);
