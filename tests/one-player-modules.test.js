@@ -91,6 +91,36 @@ test("1P gameplay state exposes shared constants and mutable timers", () => {
   assert.equal(shared.terminado, true);
 });
 
+test("1P direct game entry receives a valid default skill distribution", () => {
+  const context = loadScript("1p_scrib/game/js/attributes-panel.js", {
+    LIMITE_TOTAL: 10,
+    URLSearchParams,
+    document: { addEventListener() {} },
+    window: { location: { search: "?name=ESCRITXR" } }
+  });
+
+  const attributes = context.resolverAtributosIniciales(false);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(attributes)),
+    { fuerza: 4, agilidad: 3, destreza: 3 }
+  );
+  assert.equal(Object.values(attributes).reduce((sum, value) => sum + value, 0), 10);
+});
+
+test("1P game entry keeps the skill distribution selected in its intro", () => {
+  const context = loadScript("1p_scrib/game/js/attributes-panel.js", {
+    LIMITE_TOTAL: 10,
+    URLSearchParams,
+    document: { addEventListener() {} },
+    window: { location: { search: "?name=ESCRITXR&fuerza=2&agilidad=5&destreza=3" } }
+  });
+
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(context.resolverAtributosIniciales(false))),
+    { fuerza: 2, agilidad: 5, destreza: 3 }
+  );
+});
+
 test("1P weighted Spanish letter picker favors opposite letters by mode", () => {
   const context = loadScript("1p_scrib/game/js/letter-frequency.js");
   const api = context.window.ScribLetterFrequency;

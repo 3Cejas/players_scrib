@@ -24,21 +24,42 @@
   return attrs;
 }
 
+function resolverAtributosIniciales(tieneSelectorAtributos) {
+  const atributosURL = leerAtributosDesdeURL();
+  if (atributosURL) {
+    return atributosURL;
+  }
+
+  if (tieneSelectorAtributos) {
+    return { fuerza: 0, agilidad: 0, destreza: 0 };
+  }
+
+  // La pantalla de partida también puede abrirse directamente (marcadores,
+  // enlaces guardados o recargas). Como aquí no existe el selector previo,
+  // usamos un reparto equilibrado y válido para no dejar "ESCRIBIR" bloqueado.
+  return { fuerza: 4, agilidad: 3, destreza: 3 };
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 
   generarCasillas()
   // Inicializa las variables con los valores por defecto
   actualizarVariables();
 
-  // Estado inicial de los atributos
-  atributos = leerAtributosDesdeURL() || { fuerza: 0, agilidad: 0, destreza: 0 };
-
   // Referencias a elementos del DOM
   const container = document.getElementById('atributos-container');
   const totalUsadosEl = document.getElementById('total-usados');
   const btnEscribir = document.getElementById('btn_escribir');
 
+  // Conserva el reparto elegido en la pantalla anterior. Si se entra
+  // directamente a la partida, aplica un reparto válido automáticamente.
+  atributos = resolverAtributosIniciales(Boolean(container && totalUsadosEl));
+
   if (!container || !totalUsadosEl) {
+    if (btnEscribir) {
+      btnEscribir.classList.remove('disabled');
+      btnEscribir.setAttribute('aria-disabled', 'false');
+    }
     return;
   }
 

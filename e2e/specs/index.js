@@ -1794,20 +1794,22 @@ const onePlayerSpecs = [
     name: "one-player-start-and-write",
     run: async (ctx) => {
       await ctx.openRoles(["onep"]);
-      await ctx.evaluate("onep", () => {
+      const initialAttributes = await ctx.evaluate("onep", () => {
         if (!window.scrib1pGameplayShared) {
           throw new Error("Missing 1P shared gameplay state");
         }
-        window.scrib1pGameplayShared.atributos = { fuerza: 10, agilidad: 0, destreza: 0 };
-        if (typeof actualizarVariables === "function") {
-          actualizarVariables();
-        }
         const writeButton = document.getElementById("btn_escribir");
-        if (writeButton) {
-          writeButton.classList.remove("disabled");
-          writeButton.setAttribute("aria-disabled", "false");
-        }
+        return {
+          attributes: window.scrib1pGameplayShared.atributos,
+          writeEnabled: writeButton?.getAttribute("aria-disabled") !== "true"
+            && !writeButton?.classList.contains("disabled")
+        };
       });
+      ctx.assert(
+        Object.values(initialAttributes.attributes || {}).reduce((sum, value) => sum + Number(value || 0), 0) === 10,
+        "direct 1P entry should receive a valid default skill distribution"
+      );
+      ctx.assert(initialAttributes.writeEnabled, "direct 1P entry should enable the write action");
 
       await ctx.evaluate("onep", () => {
         window.__scribPostInicioProbe = 0;
