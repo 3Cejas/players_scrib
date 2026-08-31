@@ -54,6 +54,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /#panel_controles \.control-group--tutorial #boton_nueva_partida\s*\{[\s\S]*?background:/);
   assert.match(css, /--tutorial-button-accent: #73e6ff[\s\S]*--tutorial-button-accent: #c286ff/);
   assert.match(css, /videotutorial-control__header[\s\S]*grid-column: 1 !important;[\s\S]*videotutorial-control__actions[\s\S]*grid-column: 1 !important;[\s\S]*grid-row: 2 !important;/);
+  assert.match(css, /videotutorial-control__actions\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) !important;[\s\S]*?justify-items: center;/);
   assert.match(css, /container-name:\s*tutorial-controls/);
   assert.match(css, /@container tutorial-controls \(max-width: 34rem\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*#boton_nueva_partida\[data-pending="1"\][\s\S]*animation: none;/);

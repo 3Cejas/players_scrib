@@ -66,8 +66,8 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     const spectator = read("game/spectator/index.html");
     const muse = read("game/public/players/index.html");
     for (const html of [spectator, muse]) {
-        assert.match(html, /show-narration\.css\?v=20260831f/);
-        assert.match(html, /domains\/show-narration\.js\?v=20260831f/);
+        assert.match(html, /show-narration\.css\?v=20260831g/);
+        assert.match(html, /domains\/show-narration\.js\?v=20260831g/);
     }
     assert.ok(fs.statSync(path.join(ROOT, "game/media/narracion-show.mp3")).size > 3_000_000);
     const png = fs.readFileSync(path.join(ROOT, "game/media/narracion-final.png"));
@@ -90,6 +90,8 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     assert.doesNotMatch(source, /ORIGEN DEL CÓDIGO/);
     assert.match(source, /subtitleBox\.hidden = !subtitle/);
     assert.match(source, /requestUnderlyingView[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
+    assert.match(source, /root\.dataset\.scene = sceneAt\(syncPosition\)\.id;[\s\S]*setVisible\(state\.active\)/);
+    assert.match(source, /root\.hidden = true;[\s\S]{0,180}root\.dataset\.scene = "black";/);
     assert.doesNotMatch(source, /glyph: "SURGIRÍA/);
     assert.doesNotMatch(source, /scrib-show-narration__copy|data-show-title|data-show-kicker/);
 });

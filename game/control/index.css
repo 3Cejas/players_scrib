@@ -10964,6 +10964,7 @@ table.default {
 #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__actions {
     grid-column: 1 !important;
     grid-row: 2 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     align-self: start;
     justify-self: stretch;
     justify-items: center;

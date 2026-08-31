@@ -27,7 +27,7 @@
     const DEFAULT_AUDIO_SECONDS = 80.013;
     const DEFAULT_AUDIO_URL = "../media/narracion-show.mp3";
     const DEFAULT_SLIDE_URL = "../media/narracion-final.png";
-    const ASSET_VERSION = "20260831f";
+    const ASSET_VERSION = "20260831g";
     const MAX_AUDIO_DRIFT_SECONDS = 1.25;
     const RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
@@ -142,6 +142,7 @@
         const root = documentRef.createElement("section");
         root.id = "show_narration_overlay";
         root.className = "scrib-show-narration scrib-show-narration--spectator";
+        root.dataset.scene = "black";
         root.hidden = true;
         root.setAttribute("aria-hidden", "true");
         root.innerHTML = `
@@ -170,6 +171,7 @@
         const root = documentRef.createElement("section");
         root.id = "show_narration_muse";
         root.className = "scrib-show-lights";
+        root.dataset.scene = "black";
         root.hidden = true;
         root.setAttribute("aria-hidden", "true");
         root.innerHTML = `
@@ -252,6 +254,7 @@
             root.classList.remove("is-visible");
             root.setAttribute("aria-hidden", "true");
             root.hidden = true;
+            root.dataset.scene = "black";
             documentRef.body.classList.remove("scrib-show-narration-active");
             pauseAudio(true);
             if (changed) {
@@ -355,6 +358,9 @@
                     finalImage.src = versionedAssetUrl(state.config.slideUrl, DEFAULT_SLIDE_URL, windowRef.location, "png");
                 }
             }
+            // Fijar la escena antes de revelar la capa evita que sobreviva un
+            // fotograma `final` de la reproducción anterior.
+            if (state.active) root.dataset.scene = sceneAt(syncPosition).id;
             setVisible(state.active);
             if (frameId != null) cancelFrame(frameId);
             frameId = null;

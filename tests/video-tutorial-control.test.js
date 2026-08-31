@@ -290,4 +290,5 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(css, /@container tutorial-controls \(max-width: 34rem\)/);
   assert.match(css, /control-group-buttons--tutorial[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) !important/);
   assert.match(css, /#panel_controles \.control-group--tutorial #boton_nueva_partida\s*\{[\s\S]{0,320}background:/);
+  assert.match(css, /videotutorial-control__actions\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) !important;/);
 });
