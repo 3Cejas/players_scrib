@@ -286,4 +286,8 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(css, /\.videotutorial-control \.videotutorial-control__button \{[\s\S]*--tutorial-control-accent/);
   assert.match(css, /\.videotutorial-control__button--play\.is-playing/);
   assert.match(css, /\.videotutorial-control__stepper/);
+  assert.match(css, /container-name:\s*tutorial-controls/);
+  assert.match(css, /@container tutorial-controls \(max-width: 34rem\)/);
+  assert.match(css, /control-group-buttons--tutorial[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) !important/);
+  assert.doesNotMatch(css, /#boton_nueva_partida\s*\{[\s\S]{0,240}background:/);
 });

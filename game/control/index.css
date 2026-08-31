@@ -2046,24 +2046,6 @@ table {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
 
-#boton_nueva_partida {
-    border-color: rgba(255, 176, 74, 0.72);
-    color: #ffe4b8;
-    background:
-        linear-gradient(180deg, rgba(255, 176, 74, 0.16), rgba(0, 0, 0, 0.32)),
-        rgba(15, 10, 4, 0.94);
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-        0 0 0.72rem rgba(255, 176, 74, 0.18);
-}
-
-#boton_nueva_partida:hover:not(:disabled),
-#boton_nueva_partida:focus-visible {
-    border-color: #ffc36f;
-    color: #fff;
-    box-shadow: 0 0.2em #ffb04a, 0 0 1rem rgba(255, 176, 74, 0.42);
-}
-
 #boton_nueva_partida[data-pending="1"] {
     opacity: 0.72;
     cursor: wait;
@@ -10815,5 +10797,123 @@ table.default {
     #panel_parametros .param-duration__controls {
         margin: 8px 0 0;
         flex-wrap: wrap;
+    }
+}
+
+/* El panel Tutorial comparte espacio con Parametros. Su distribucion responde
+   al ancho real del panel, no al ancho total de la ventana. */
+#panel_controles .control-group--tutorial {
+    container-name: tutorial-controls;
+    container-type: inline-size;
+}
+
+#panel_controles .control-group--tutorial:not(.is-collapsed) > .control-group-buttons--tutorial {
+    height: auto;
+    grid-template-rows: auto;
+}
+
+#panel_controles .control-group--tutorial:not(.is-collapsed) > .control-group-buttons--tutorial .btn {
+    min-width: 0;
+    min-height: 3rem;
+    height: auto;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+@container tutorial-controls (max-width: 34rem) {
+    #panel_controles .control-group--tutorial:not(.is-collapsed) > .videotutorial-control,
+    #panel_controles .control-group--tutorial:not(.is-collapsed) > .show-narration-control {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        grid-template-rows: auto auto auto !important;
+        gap: 0.58rem 0.5rem;
+        align-items: center;
+        padding: 0.7rem;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__header {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__actions {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        align-self: center;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__config {
+        grid-column: 1 / -1 !important;
+        grid-row: 2 !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto !important;
+        justify-items: center;
+        gap: 0.42rem;
+        min-width: 0;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__config > label[for="videotutorial_intervalo"] {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: center;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__stepper {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: center;
+        max-width: 100%;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__toggle {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: center;
+        width: auto;
+        white-space: normal;
+        line-height: 1.25;
+        text-align: left;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__status:not([hidden]) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) > .control-group-buttons--tutorial {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+@container tutorial-controls (max-width: 15rem) {
+    #panel_controles .control-group--tutorial:not(.is-collapsed) > .videotutorial-control,
+    #panel_controles .control-group--tutorial:not(.is-collapsed) > .show-narration-control {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__header,
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__actions {
+        grid-column: 1 !important;
+        justify-self: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__actions {
+        grid-row: 2 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__config {
+        grid-row: 3 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__status:not([hidden]) {
+        grid-row: 4 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__stepper {
+        grid-template-columns: 1.55rem minmax(2.8rem, 3.4rem) 1.55rem auto;
     }
 }
