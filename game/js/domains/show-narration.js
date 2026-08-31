@@ -27,7 +27,7 @@
     const DEFAULT_AUDIO_SECONDS = 80.013;
     const DEFAULT_AUDIO_URL = "../media/narracion-show.mp3";
     const DEFAULT_SLIDE_URL = "../media/narracion-final.png";
-    const ASSET_VERSION = "20260831d";
+    const ASSET_VERSION = "20260831e";
     const MAX_AUDIO_DRIFT_SECONDS = 1.25;
     const RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
@@ -223,6 +223,12 @@
             documentRef.dispatchEvent(new windowRef.CustomEvent(name, { detail }));
         };
 
+        const requestUnderlyingView = () => {
+            if (socketRef.connected === false || typeof socketRef.emit !== "function") return;
+            socketRef.emit("pedir_vista_espectador_modo");
+            socketRef.emit("pedir_pre_show_estado");
+        };
+
         const pauseAudio = (reset = false) => {
             if (!audio) return;
             try {
@@ -248,7 +254,10 @@
             root.hidden = true;
             documentRef.body.classList.remove("scrib-show-narration-active");
             pauseAudio(true);
-            if (changed) dispatch("scrib:show-narration-visibility", { visible: false, immediate: false });
+            if (changed) {
+                dispatch("scrib:show-narration-visibility", { visible: false, immediate: false });
+                requestUnderlyingView();
+            }
             finalAnnounced = false;
             renderedScene = "";
             renderedSubtitle = "";
