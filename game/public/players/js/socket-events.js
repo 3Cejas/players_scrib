@@ -126,6 +126,7 @@ function registrarMusaEnServidor() {
         ocultarAvisoConexionMusa();
         socket.emit('pedir_pre_show_estado');
         socket.emit('pedir_video_tutorial_estado');
+        socket.emit('pedir_narracion_show_estado');
         return true;
     });
     return true;

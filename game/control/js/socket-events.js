@@ -95,10 +95,14 @@ function sincronizarControlAutorizado() {
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(true);
     }
+    if (window && window.ScribShowNarrationControl) {
+        window.ScribShowNarrationControl.markConnection(true);
+    }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(true);
     }
     socket.emit('pedir_video_tutorial_estado');
+    socket.emit('pedir_narracion_show_estado');
     socket.emit('pedir_ayuda_musas_estado');
     iniciarStatusPing();
     socket.emit('pedir_estado_control');
@@ -140,6 +144,9 @@ function sincronizarReplicaControlSoloLectura() {
     setEstadoServidor(true);
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
+    }
+    if (window && window.ScribShowNarrationControl) {
+        window.ScribShowNarrationControl.markConnection(false);
     }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(false);
@@ -186,6 +193,9 @@ function procesarRegistroControl(payload = {}) {
     }
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
+    }
+    if (window && window.ScribShowNarrationControl) {
+        window.ScribShowNarrationControl.markConnection(false);
     }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(false);
@@ -244,6 +254,9 @@ socket.on('disconnect', () => {
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
     }
+    if (window && window.ScribShowNarrationControl) {
+        window.ScribShowNarrationControl.markConnection(false);
+    }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(false);
     }
@@ -269,6 +282,9 @@ socket.on('connect_error', () => {
     }
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
+    }
+    if (window && window.ScribShowNarrationControl) {
+        window.ScribShowNarrationControl.markConnection(false);
     }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(false);
@@ -354,6 +370,11 @@ socket.on('teleprompter_feedback', (payload = {}) => {
 socket.on('video_tutorial_estado', (payload = {}) => {
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.aplicarEstado(payload);
+    }
+});
+socket.on('narracion_show_estado', (payload = {}) => {
+    if (window && window.ScribShowNarrationControl) {
+        window.ScribShowNarrationControl.applyState(payload);
     }
 });
 socket.on('ayuda_musas_estado', (payload = {}) => {

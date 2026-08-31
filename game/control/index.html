@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260831b">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260831c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -120,6 +120,19 @@
                                 </div>
                                 <p id="videotutorial_estado" class="videotutorial-control__status" role="status" aria-live="polite" aria-atomic="true" hidden>
                                     <strong id="videotutorial_estado_texto">ESPERANDO SERVIDOR</strong>
+                                </p>
+                            </section>
+                            <section id="show_narration_control" class="videotutorial-control show-narration-control" data-state="waiting" aria-labelledby="show_narration_control_title">
+                                <header class="videotutorial-control__header">
+                                    <span class="videotutorial-control__copy">
+                                        <strong id="show_narration_control_title" class="videotutorial-control__title">NARRACI&Oacute;N DE APERTURA</strong>
+                                    </span>
+                                </header>
+                                <div class="videotutorial-control__actions">
+                                    <button id="show_narration_toggle" class="btn videotutorial-control__button videotutorial-control__button--play" type="button" aria-label="Iniciar narraci&oacute;n visual" aria-pressed="false"><span aria-hidden="true">&#x25B6;</span></button>
+                                </div>
+                                <p id="show_narration_status" class="videotutorial-control__status" role="status" aria-live="polite" aria-atomic="true" hidden>
+                                    <strong id="show_narration_status_text">ESPERANDO SERVIDOR</strong>
                                 </p>
                             </section>
                             <div class="control-group-buttons control-group-buttons--two control-group-buttons--tutorial">
@@ -731,8 +744,9 @@
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260831b"></script>
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
+<script src="./js/show-narration-control.js?v=20260831a"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260831b"></script>
+<script src="./js/socket-events.js?v=20260831c"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

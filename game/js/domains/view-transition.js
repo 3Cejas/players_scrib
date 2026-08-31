@@ -43,6 +43,7 @@
         const transitionSound = createAudio(options.transitionUrl || "");
         let currentMode = "";
         let ducked = false;
+        let forcedMusic = false;
         let blocked = false;
         let fadeTimer = null;
         let fadeSequence = 0;
@@ -125,7 +126,7 @@
         };
 
         const targetMusicVolume = () => (
-            musicModes.has(currentMode) && !ducked ? musicVolume : 0
+            (forcedMusic || musicModes.has(currentMode)) && !ducked ? musicVolume : 0
         );
 
         const setMode = (value, config = {}) => {
@@ -158,6 +159,23 @@
         const onTutorialEnding = () => {
             setDucked(false);
         };
+        const onShowNarrationVisibility = (event) => {
+            const visible = Boolean(event && event.detail && event.detail.visible);
+            if (visible) {
+                forcedMusic = false;
+                ducked = true;
+                fadeMusic(0, 0);
+                return;
+            }
+            forcedMusic = false;
+            ducked = false;
+            fadeMusic(targetMusicVolume(), fadeDurationMs);
+        };
+        const onShowNarrationFinal = () => {
+            ducked = false;
+            forcedMusic = true;
+            fadeMusic(musicVolume, 0);
+        };
         const onPageHide = () => {
             clearFade();
             music?.pause?.();
@@ -168,6 +186,8 @@
         });
         documentRef?.addEventListener?.("scrib:video-tutorial-visibility", onTutorialVisibility);
         documentRef?.addEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
+        documentRef?.addEventListener?.("scrib:show-narration-visibility", onShowNarrationVisibility);
+        documentRef?.addEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
         windowRef?.addEventListener?.("pagehide", onPageHide);
 
         return {
@@ -184,6 +204,8 @@
                 });
                 documentRef?.removeEventListener?.("scrib:video-tutorial-visibility", onTutorialVisibility);
                 documentRef?.removeEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
+                documentRef?.removeEventListener?.("scrib:show-narration-visibility", onShowNarrationVisibility);
+                documentRef?.removeEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
                 windowRef?.removeEventListener?.("pagehide", onPageHide);
             }
         };

@@ -29,7 +29,26 @@
 }
 
 #panel_controles .control-group--tutorial:not(.is-collapsed) > .control-group-buttons--tutorial {
+    grid-row: 3;
+}
+
+#panel_controles .control-group--tutorial:not(.is-collapsed) > .show-narration-control {
     grid-row: 2;
+    grid-template-columns: minmax(10rem, 0.8fr) minmax(8rem, 1.5fr);
+    --video-control-accent: #c286ff;
+}
+
+.show-narration-control .videotutorial-control__header {
+    grid-row: 1;
+}
+
+.show-narration-control .videotutorial-control__actions {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.show-narration-control .videotutorial-control__status {
+    grid-column: 1 / -1;
 }
 
 .videotutorial-control[data-state="playing"] {
