@@ -14,6 +14,7 @@
     const WINDOW_NAME_PREFIX = "scrib:musa-client:";
     const CLIENT_ID_PATTERN = /^musa_[a-z0-9]{1,24}_[a-z0-9]{6,32}$/i;
     const REQUEST_ID_PATTERN = /^req_[a-z0-9]{1,24}_[a-z0-9]{6,32}$/i;
+    const SESSION_ID_PATTERN = /^partida_[a-z0-9]+_[a-z0-9]+$/i;
 
     function normalizeTeam(value) {
         if (value === 1 || value === "1" || value === "j1" || value === "azul" || value === "blue") {
@@ -42,7 +43,8 @@
             return {
                 ok: false,
                 code: cleanText(payload.codigo || payload.code, "ASIGNACION_RECHAZADA"),
-                message: cleanText(payload.mensaje || payload.message || payload.error)
+                message: cleanText(payload.mensaje || payload.message || payload.error),
+                sessionId: normalizeSessionId(payload.session_id || payload.sessionId)
             };
         }
 
@@ -66,6 +68,7 @@
             reassigned: Boolean(payload.reasignada ?? payload.reassigned),
             reconnection: Boolean(payload.reconexion ?? payload.reconnection),
             clientId: cleanText(payload.client_id || payload.clientId),
+            sessionId: normalizeSessionId(payload.session_id || payload.sessionId),
             timestamp: rawTimestamp !== null && rawTimestamp !== undefined && rawTimestamp !== ""
                 && Number.isFinite(Number(rawTimestamp))
                 ? Number(rawTimestamp)
@@ -81,6 +84,8 @@
             request_id: normalizeRequestId(identity.requestId || identity.request_id),
             modo_asignacion: mode
         };
+        const sessionId = normalizeSessionId(identity.sessionId || identity.session_id);
+        if (sessionId) payload.session_id = sessionId;
         const team = normalizeTeam(identity.player ?? identity.equipo ?? identity.team);
         if (mode === "manual" && team) payload.equipo = team;
         return payload;
@@ -109,6 +114,11 @@
     function normalizeRequestId(value) {
         const normalized = cleanText(value);
         return REQUEST_ID_PATTERN.test(normalized) ? normalized : "";
+    }
+
+    function normalizeSessionId(value) {
+        const normalized = cleanText(value);
+        return SESSION_ID_PATTERN.test(normalized) ? normalized : "";
     }
 
     function readClientIdFromWindowName(windowRef) {
@@ -221,6 +231,7 @@
             modo_asignacion: normalizeAssignmentMode(normalized.assignmentMode),
             assigned: "1"
         });
+        if (normalized.sessionId) params.set("session_id", normalized.sessionId);
         return `${baseUrl}${separator}${params.toString()}`;
     }
 
@@ -325,6 +336,7 @@
                 assignmentMode: normalizeAssignmentMode(
                     nextIdentity && (nextIdentity.assignmentMode || nextIdentity.modo_asignacion)
                 ),
+                sessionId: normalizeSessionId(nextIdentity && (nextIdentity.sessionId || nextIdentity.session_id)),
                 player: normalizeTeam(nextIdentity && (nextIdentity.player ?? nextIdentity.equipo ?? nextIdentity.team))
             };
             delivered = false;
@@ -465,6 +477,7 @@
         createRequestId,
         normalizeClientId,
         normalizeRequestId,
+        normalizeSessionId,
         getOrCreateClientId,
         rotateClientId,
         clearAssignmentSession,

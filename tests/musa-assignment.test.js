@@ -63,6 +63,7 @@ test("normalizes authoritative muse assignments and server aliases", () => {
       reassigned: true,
       reconnection: false,
       clientId: "",
+      sessionId: "",
       timestamp: 42
     }
   );
@@ -70,7 +71,7 @@ test("normalizes authoritative muse assignments and server aliases", () => {
   assert.equal(assignment.normalizeAssignment({ player: 7 }), null);
   assert.deepEqual(
     assignment.normalizeAssignment({ ok: false, codigo: "SIN_EQUIPO", mensaje: "No disponible" }),
-    { ok: false, code: "SIN_EQUIPO", message: "No disponible" }
+    { ok: false, code: "SIN_EQUIPO", message: "No disponible", sessionId: "" }
   );
 });
 
@@ -95,6 +96,7 @@ test("registration payload distinguishes automatic balancing from a manual team 
     clientId: "musa_stable",
     name: "LUNA",
     requestId: "req_abc_123456",
+    sessionId: "partida_abc_2",
     assignmentMode: "manual",
     player: 2
   });
@@ -103,9 +105,12 @@ test("registration payload distinguishes automatic balancing from a manual team 
     nombre: "LUNA",
     request_id: "req_abc_123456",
     modo_asignacion: "manual",
+    session_id: "partida_abc_2",
     equipo: 2
   });
   assert.equal(assignment.normalizeRequestId("not a request"), "");
+  assert.equal(assignment.normalizeSessionId("partida_abc_2"), "partida_abc_2");
+  assert.equal(assignment.normalizeSessionId("../partida"), "");
 });
 
 test("client id is scoped to session storage and uses a namespaced window.name fallback", () => {
@@ -150,6 +155,7 @@ test("stored muse assignment is restored only for the same tab identity", () => 
     player: 2,
     nombre_escritxr: "Berta",
     assignmentMode: "manual",
+    session_id: "partida_restore_7",
     clientId,
     name: "LUNA"
   })]]);
@@ -167,6 +173,7 @@ test("stored muse assignment is restored only for the same tab identity", () => 
       reassigned: false,
       reconnection: false,
       clientId,
+      sessionId: "partida_restore_7",
       timestamp: null
     },
     clientId,
@@ -180,7 +187,7 @@ test("stored muse assignment is restored only for the same tab identity", () => 
 test("game URL contains only the authoritative assignment and marks the reveal as completed", () => {
   const url = assignment.buildGameUrl(
     "./players/index.html",
-    { player: 1, nombre_escritxr: "María" },
+    { player: 1, nombre_escritxr: "María", session_id: "partida_url_3" },
     "MUSA 7"
   );
   const parsed = new URL(url, "https://scrib.test/public/");
@@ -189,6 +196,7 @@ test("game URL contains only the authoritative assignment and marks the reveal a
   assert.equal(parsed.searchParams.get("escritxr"), "María");
   assert.equal(parsed.searchParams.get("modo_asignacion"), "automatica");
   assert.equal(parsed.searchParams.get("assigned"), "1");
+  assert.equal(parsed.searchParams.get("session_id"), "partida_url_3");
 
   const normalized = assignment.normalizeAssignment({
     player: 2,
@@ -221,11 +229,12 @@ test("coordinator accepts event or ACK, deduplicates identical data, and applies
     clearTimer: () => {}
   });
 
-  coordinator.request({ clientId: "client-a", name: "NORA" });
+  coordinator.request({ clientId: "client-a", name: "NORA", sessionId: "partida_live_4" });
   assert.equal(socket.emissions.length, 1);
   assert.equal(socket.emissions[0].event, "registrar_musa");
   assert.equal(socket.emissions[0].payload.client_id, "client-a");
   assert.equal(socket.emissions[0].payload.nombre, "NORA");
+  assert.equal(socket.emissions[0].payload.session_id, "partida_live_4");
   assert.match(socket.emissions[0].payload.request_id, /^req_/);
   assert.deepEqual(waiting, ["assigning"]);
 
@@ -402,7 +411,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /aria-hidden="true" tabindex="-1"/);
   assert.match(html, /aria-live="assertive" aria-atomic="true"/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(html, /musa-assignment\.js\?v=20260829f/);
+  assert.match(html, /musa-assignment\.js\?v=20260831a/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -413,7 +422,9 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(selector, /getOrCreateClientId\(window\.sessionStorage, \{ windowRef: window \}\)/);
   assert.doesNotMatch(selector, /window\.localStorage|client_id:/);
   assert.match(selector, /socket\.on\("musa_reemplazada", manejarMusaReemplazada\)/);
-  assert.doesNotMatch(selector, /rotateClientId\(window\.sessionStorage|clearAssignmentSession\(window\.sessionStorage/);
+  assert.match(selector, /socket\.on\("musa_sesion_actualizada"/);
+  assert.match(selector, /MUSE_SESSION_EXPIRED/);
+  assert.doesNotMatch(selector, /rotateClientId\(window\.sessionStorage/);
   assert.match(selector, /meta\.invalidated/);
   assert.match(selector, /createHoldController/);
   assert.match(selector, /addEventListener\("pointerdown", iniciarPulsacionHuella\)/);
@@ -434,19 +445,23 @@ test("game reconnects with its assignment mode and never replays the reveal afte
   const state = read("game/public/players/js/state.js");
   const events = read("game/public/players/js/socket-events.js");
 
-  assert.match(html, /musa-assignment\.js\?v=20260829f/);
+  assert.match(html, /musa-assignment\.js\?v=20260831a/);
   assert.match(events, /socket\.on\("musa_asignacion", procesarAsignacionAutoritativaMusa\)/);
   assert.match(events, /createRegistrationPayload\(\{[\s\S]*clientId: musa_client_id,[\s\S]*requestId: musa_request_id_activo/);
   assert.match(events, /assignmentMode: modo_asignacion_musa/);
   assert.match(events, /modo_asignacion_musa === "manual" \? player : null/);
   assert.match(events, /socket\.emit\('registrar_musa', payloadRegistroMusa/);
   assert.match(events, /socket\.on\("musa_reemplazada", manejarMusaReemplazadaEnJuego\)/);
-  assert.doesNotMatch(events, /rotateClientId\(window\.sessionStorage|clearAssignmentSession\(window\.sessionStorage/);
+  assert.match(events, /socket\.on\("musa_sesion_actualizada"/);
+  assert.match(events, /sessionId: window\.sesion_partida_musa/);
+  assert.match(events, /clearAssignmentSession\(window\.sessionStorage\)/);
+  assert.doesNotMatch(events, /rotateClientId\(window\.sessionStorage/);
   assert.match(events, /motivo[\s\S]*reequilibrio/);
   assert.doesNotMatch(events, /registrar_musa', \{ musa:/);
   assert.doesNotMatch(state, /getParameterByName\("client_id"\)|window\.localStorage/);
   assert.match(state, /getOrCreateClientId\(window\.sessionStorage/);
   assert.match(state, /readAssignmentSession\([\s\S]*window\.sessionStorage,[\s\S]*musa_client_id/);
+  assert.match(state, /getParameterByName\("session_id"\)/);
   assert.match(state, /var player = asignacion_musa_guardada[\s\S]*assignment\.player[\s\S]*getParameterByName\("player"\)/);
   assert.match(state, /\(asignacion_musa_inicial && asignacion_musa_inicial\.assignmentMode\)[\s\S]*getParameterByName\("modo_asignacion"\)/);
   assert.match(state, /function canonicalizarUrlAsignacionMusa\([^)]*\)[\s\S]*window\.history\.replaceState/);

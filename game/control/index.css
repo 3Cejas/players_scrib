@@ -2024,7 +2024,42 @@ table {
 }
 
 #panel_controles .control-group:not(.is-collapsed) > .control-group-buttons--tutorial {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+#boton_nueva_partida {
+    border-color: rgba(255, 176, 74, 0.72);
+    color: #ffe4b8;
+    background:
+        linear-gradient(180deg, rgba(255, 176, 74, 0.16), rgba(0, 0, 0, 0.32)),
+        rgba(15, 10, 4, 0.94);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 0 0.72rem rgba(255, 176, 74, 0.18);
+}
+
+#boton_nueva_partida:hover:not(:disabled),
+#boton_nueva_partida:focus-visible {
+    border-color: #ffc36f;
+    color: #fff;
+    box-shadow: 0 0.2em #ffb04a, 0 0 1rem rgba(255, 176, 74, 0.42);
+}
+
+#boton_nueva_partida[data-pending="1"] {
+    opacity: 0.72;
+    cursor: wait;
+    animation: nuevaPartidaControlPulse 850ms ease-in-out infinite alternate;
+}
+
+@keyframes nuevaPartidaControlPulse {
+    from { filter: brightness(0.88); }
+    to { filter: brightness(1.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #boton_nueva_partida[data-pending="1"] {
+        animation: none;
+    }
 }
 
 #panel_controles .control-group:not(.is-collapsed) > .control-group-buttons .btn {

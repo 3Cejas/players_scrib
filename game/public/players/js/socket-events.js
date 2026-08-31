@@ -80,6 +80,11 @@ function crearRequestIdRegistroMusa() {
 
 function procesarAsignacionAutoritativaMusa(payload = {}, contexto = {}) {
     const api = window.ScribMusaAssignment;
+    const normalizada = api.normalizeAssignment(payload);
+    if (normalizada && normalizada.ok === false && normalizada.code === "MUSE_SESSION_EXPIRED") {
+        redirigirMusaANuevaPartida();
+        return false;
+    }
     const payloadRequestId = api.normalizeRequestId(payload && payload.request_id);
     const requestIdEsperado = api.normalizeRequestId(contexto.requestId || musa_request_id_activo);
     const esReequilibrioSinRequest = !payloadRequestId
@@ -104,6 +109,7 @@ function registrarMusaEnServidor() {
         clientId: musa_client_id,
         name: nombre_musa,
         requestId: musa_request_id_activo,
+        sessionId: window.sesion_partida_musa,
         assignmentMode: modo_asignacion_musa,
         player: modo_asignacion_musa === "manual" ? player : null
     });
@@ -151,6 +157,23 @@ function manejarMusaReemplazadaEnJuego() {
 }
 
 socket.on("musa_reemplazada", manejarMusaReemplazadaEnJuego);
+
+function redirigirMusaANuevaPartida() {
+    if (window.__scribMusaNewMatchInProgress) return;
+    window.__scribMusaNewMatchInProgress = true;
+    musa_request_id_activo = "";
+    musa_registro_confirmado = false;
+    invalidarEntradaMundoMusa();
+    window.ScribMusaAssignment.clearAssignmentSession(window.sessionStorage);
+    try { socket.disconnect(); } catch (_error) {}
+    window.location.replace("../index.html?notice=nueva_partida");
+}
+
+socket.on("musa_sesion_actualizada", (payload = {}) => {
+    const siguiente = window.ScribMusaAssignment.normalizeSessionId(payload.session_id || payload.sessionId);
+    if (!siguiente || siguiente === window.sesion_partida_musa) return;
+    redirigirMusaANuevaPartida();
+});
 
 socket.on("pre_show_estado", (payload = {}) => {
     actualizarEstadoPreShowMusa(payload);

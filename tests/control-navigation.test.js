@@ -25,6 +25,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   );
 
   assert.match(tutorial, /id="videotutorial_control"/);
+  assert.match(tutorial, /id="boton_nueva_partida"[^>]*onclick="nueva_partida\(\)"[^>]*>[^<]*NUEVA PARTIDA/);
   assert.doesNotMatch(tutorial, /Puedes reproducirlo antes o durante el tutorial\.|VIDEOTUTORIAL PREVIO|INTERVALO AUTOM&Aacute;TICO/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-vista-principal="tutorial"[^>]*onclick="mostrar_vista_tutorial\(\)"[^>]*>[^<]*VISTA TUTORIAL/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-active="1"[^>]*aria-pressed="true"/);
@@ -50,6 +51,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /\.control-tabs-shell::before,[\s\S]*\.control-tabs-shell::after[\s\S]*pointer-events: none;/);
   assert.match(css, /\.control-tabs-shell\[data-has-previous="true"\]::before,[\s\S]*\.control-tabs-shell\[data-has-next="true"\]::after[\s\S]*opacity: 1;/);
   assert.match(css, /#boton_vista_tutorial\[data-active="1"\][\s\S]*#boton_vista_calentamiento\[data-active="1"\][\s\S]*#boton_vista_partida\[data-active="1"\]/);
+  assert.match(css, /#boton_nueva_partida[\s\S]*border-color: rgba\(255, 176, 74, 0\.72\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*#boton_nueva_partida\[data-pending="1"\][\s\S]*animation: none;/);
   assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
   assert.match(css, /control-group--representacion\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*overflow: auto;/);
   assert.match(css, /Separacion de capas: escritoras no invaden la navegacion ni Parametros/);
@@ -78,6 +81,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /function mostrar_vista_tutorial\(\)\s*\{\s*aplicarVistaPrincipalControl\("tutorial"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
+  assert.match(actions, /function nueva_partida\(\)[\s\S]*socket\.timeout\(8000\)\.emit\("nueva_partida"/);
+  assert.match(actions, /limpiar\(\{ emitirServidor: false \}\);[\s\S]*mostrar_vista_tutorial\(\)/);
+  assert.match(actions, /function limpiar\(\{ emitirServidor = true \} = \{\}\)[\s\S]*if \(emitirServidor\) socket\.emit\('limpiar', false\)/);
   assert.match(actions, /const modoEspectador = destino === "tutorial" \? "tutorial" : "partida"/);
   assert.match(actions, /let vista_espectador_modo = "tutorial";[\s\S]*let vista_principal_control = "tutorial";/);
   assert.match(actions, /vista_espectador_modo === "tutorial"/);

@@ -2514,6 +2514,10 @@ const asignacion_musa_guardada = window.ScribMusaAssignment.readAssignmentSessio
     window.sessionStorage,
     musa_client_id
 );
+const sesion_partida_musa = window.ScribMusaAssignment.normalizeSessionId(
+    (asignacion_musa_guardada && asignacion_musa_guardada.assignment.sessionId)
+    || getParameterByName("session_id")
+);
 const nombre_musa = normalizarNombreMusa(
     (asignacion_musa_guardada && asignacion_musa_guardada.name) || nombre_musa_solicitado
 );
@@ -2522,8 +2526,14 @@ if (!nombre_musa) {
     window.location.href = "../index.html?error=nombre_musa";
 }
 
+if (!sesion_partida_musa) {
+    window.ScribMusaAssignment.clearAssignmentSession(window.sessionStorage);
+    window.location.replace("../index.html?notice=nueva_partida");
+}
+
 window.nombre_musa = nombre_musa;
 window.musa_client_id = musa_client_id;
+window.sesion_partida_musa = sesion_partida_musa;
 if (nombre_musa_label && nombre_musa) {
     nombre_musa_label.textContent = nombre_musa;
 }

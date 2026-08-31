@@ -25,6 +25,7 @@ let fingerprintCompleteTimeout = null;
 let seleccionPendiente = { assignmentMode: "automatica", player: null };
 let claveAvisoMusa = "";
 let restaurandoAsignacionPersistida = false;
+let sesionPartidaMusa = "";
 
 const tMusa = (key, variables = {}, fallback = "") => (
   typeof window.scribT2P === "function"
@@ -87,6 +88,8 @@ function actualizarEscritxrDisponible(player, nombre) {
 }
 
 function aplicarOpcionesEquipoMusa(payload = {}) {
+  const sesionRecibida = musaAssignment.normalizeSessionId(payload.session_id || payload.sessionId);
+  if (sesionRecibida) sesionPartidaMusa = sesionRecibida;
   const equipos = Array.isArray(payload.equipos) ? payload.equipos : [];
   equipos.forEach((equipo) => {
     actualizarEscritxrDisponible(
@@ -396,7 +399,16 @@ function manejarAsignacionRecibida(asignacion, meta = {}) {
   }, Math.max(0, minimo - transcurrido));
 }
 
-function manejarErrorAsignacion() {
+function manejarErrorAsignacion(error = {}) {
+  if (error.code === "MUSE_SESSION_EXPIRED") {
+    musaAssignment.clearAssignmentSession(window.sessionStorage);
+    sesionPartidaMusa = musaAssignment.normalizeSessionId(error.sessionId) || sesionPartidaMusa;
+    asignacionBloqueada = false;
+    restaurandoAsignacionPersistida = false;
+    restablecerVistaAsignacion();
+    mostrarAvisoMusa("Ha empezado una nueva partida. Vuelve a elegir escritxr.");
+    return;
+  }
   const tieneAsignacionGuardada = Boolean(musaAssignment.readAssignmentSession(
     window.sessionStorage,
     window.musa_client_id
@@ -437,6 +449,16 @@ function manejarMusaReemplazada() {
 }
 
 socket.on("musa_reemplazada", manejarMusaReemplazada);
+socket.on("musa_sesion_actualizada", (payload = {}) => {
+  const siguiente = musaAssignment.normalizeSessionId(payload.session_id || payload.sessionId);
+  if (!siguiente || siguiente === sesionPartidaMusa) return;
+  sesionPartidaMusa = siguiente;
+  musaAssignment.clearAssignmentSession(window.sessionStorage);
+  asignacionBloqueada = false;
+  restaurandoAsignacionPersistida = false;
+  restablecerVistaAsignacion();
+  mostrarAvisoMusa("Nueva partida preparada. Elige de nuevo tu escritxr.");
+});
 socket.on("nombre1", (nombre) => actualizarEscritxrDisponible(1, nombre));
 socket.on("nombre2", (nombre) => actualizarEscritxrDisponible(2, nombre));
 socket.on("musa_opciones_equipo", aplicarOpcionesEquipoMusa);
@@ -502,6 +524,11 @@ function solicitarAsignacionMusa({ assignmentMode = "automatica", player = null 
   const modo = musaAssignment.normalizeAssignmentMode(assignmentMode);
   const equipo = modo === "manual" ? musaAssignment.normalizeTeam(player) : null;
   if (modo === "manual" && !equipo) return;
+  if (!sesionPartidaMusa) {
+    mostrarAvisoMusa("Preparando la nueva partida…");
+    pedirOpcionesEquipoMusa();
+    return;
+  }
   mostrarAvisoMusa("");
   nombrePendiente = nombre;
   seleccionPendiente = { assignmentMode: modo, player: equipo };
@@ -514,6 +541,7 @@ function solicitarAsignacionMusa({ assignmentMode = "automatica", player = null 
     clientId: window.musa_client_id,
     name: nombre,
     assignmentMode: modo,
+    sessionId: sesionPartidaMusa,
     player: equipo
   });
 }
@@ -576,6 +604,7 @@ function restaurarAsignacionGuardadaMusa() {
   );
   if (!guardada) return false;
   const asignacion = guardada.assignment;
+  sesionPartidaMusa = musaAssignment.normalizeSessionId(asignacion.sessionId);
   nombrePendiente = normalizarNombreMusa(guardada.name) || guardada.name;
   if (nombreMusaInput) nombreMusaInput.value = nombrePendiente;
   seleccionPendiente = {
@@ -599,6 +628,7 @@ function restaurarAsignacionGuardadaMusa() {
     clientId: window.musa_client_id,
     name: nombrePendiente,
     assignmentMode: asignacion.assignmentMode,
+    sessionId: sesionPartidaMusa,
     player: asignacion.player
   });
   return true;
@@ -651,6 +681,9 @@ document.addEventListener("DOMContentLoaded", () => {
     bloquearMusaReemplazada();
   } else {
     restaurarAsignacionGuardadaMusa();
+    if (params.get("notice") === "nueva_partida") {
+      mostrarAvisoMusa("Nueva partida preparada. Elige de nuevo tu escritxr.");
+    }
   }
 
   nombreMusaInput?.addEventListener("input", () => {

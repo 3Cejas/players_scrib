@@ -2181,6 +2181,59 @@ function temp() {
 }
 };
 
+let nueva_partida_pendiente = false;
+
+function actualizarBotonNuevaPartidaControl(pendiente = nueva_partida_pendiente) {
+    const boton = document.getElementById("boton_nueva_partida");
+    if (!boton) return;
+    boton.dataset.pending = pendiente ? "1" : "0";
+    boton.disabled = Boolean(pendiente);
+    boton.setAttribute("aria-busy", pendiente ? "true" : "false");
+    boton.textContent = pendiente
+        ? tJuego2PControl("control.button.new_match_pending", {}, "PREPARANDO…")
+        : tJuego2PControl("control.button.new_match", {}, "✨ NUEVA PARTIDA");
+}
+
+function nueva_partida() {
+    if (nueva_partida_pendiente) return;
+    const confirmar = window.confirm(
+        tJuego2PControl(
+            "control.confirm.new_match",
+            {},
+            "¿Preparar una nueva partida? Las musas tendrán que volver a elegir escritxr."
+        )
+    );
+    if (!confirmar) return;
+    if (!socket || !socket.connected) {
+        window.alert("Control no está conectado al servidor.");
+        return;
+    }
+
+    nueva_partida_pendiente = true;
+    actualizarBotonNuevaPartidaControl(true);
+    let completada = false;
+    const terminar = (error, respuesta = {}) => {
+        if (completada) return;
+        completada = true;
+        nueva_partida_pendiente = false;
+        actualizarBotonNuevaPartidaControl(false);
+        if (error || !respuesta || respuesta.ok !== true) {
+            window.alert("No se pudo preparar la nueva partida. Inténtalo de nuevo.");
+            return;
+        }
+        limpiar({ emitirServidor: false });
+        mostrar_vista_tutorial();
+    };
+
+    if (typeof socket.timeout === "function") {
+        socket.timeout(8000).emit("nueva_partida", {}, terminar);
+    } else {
+        socket.emit("nueva_partida", {}, (respuesta) => terminar(null, respuesta));
+    }
+}
+
+window.nueva_partida = nueva_partida;
+
 
 function obtenerTotalSegundos() {
     // Lectura y saneado de los inputs (suponemos que existen en el DOM)
@@ -2244,7 +2297,7 @@ function temas() {
     socket.emit('temas', palabras);
 };
 
-function limpiar() {
+function limpiar({ emitirServidor = true } = {}) {
     //document.getElementById("nombre").value = "ESCRITXR 1";
     //document.getElementById("nombre1").value = "ESCRITXR 2";
     detenerCuentaAtrasModoControl();
@@ -2291,7 +2344,7 @@ function limpiar() {
     const explicacionControl = document.querySelector('[id^="explicaci"]');
     if (definicionControl) definicionControl.innerHTML = "";
     if (explicacionControl) explicacionControl.innerHTML = "";
-    socket.emit('limpiar', false);
+    if (emitirServidor) socket.emit('limpiar', false);
     invalidarEmisionCreditosControl({ emitirPendiente: true });
     invalidarContextoTeleprompterControl({ reiniciarEstadoCarga: true });
     teleprompter_state.text = "";
@@ -3768,6 +3821,7 @@ function refrescarTextosEstaticosControl() {
         ["control_title_game", "control.title.game", "\u{1F3AE} JUEGO"],
         ["control_title_parameters_text", "control.button.parameters", "\u2699\uFE0F PAR\u00c1METROS"],
         ["control_subtitle_musas", "control.subtitle.muses", "DETONADORES PARA MUSAS"],
+        ["boton_nueva_partida", "control.button.new_match", "\u2728 NUEVA PARTIDA"],
         ["boton_vista_tutorial", "control.button.tutorial_view", "\u{1F4D6} VISTA TUTORIAL"],
         ["boton_vista_partida", "control.button.game_view", "\u{1F3AE} VISTA PARTIDA"],
         ["boton_reiniciar_calentamiento", "control.button.clear", "\u{1F9F9} LIMPIAR"],
@@ -3812,6 +3866,7 @@ function refrescarTextosEstaticosControl() {
     actualizarBotonVistaCalentamiento();
     actualizarBotonBorrarTextoGuardadoControl();
     actualizarBotonBanderasMusasControl();
+    actualizarBotonNuevaPartidaControl();
     if (typeof boton_pausar_reanudar !== "undefined" && boton_pausar_reanudar) {
         actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     } else {
