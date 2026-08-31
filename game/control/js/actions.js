@@ -2448,7 +2448,9 @@ function actualizarBotonesVistaPrincipalControl() {
         const destino = boton.dataset.vistaPrincipal;
         const activa = destino === "tutorial"
             ? vista_espectador_modo === "tutorial"
-            : vista_espectador_modo === "partida" && destino === vista_principal_control;
+            : destino === "detonadores"
+                ? vista_espectador_modo === "calentamiento" || vista_calentamiento
+                : vista_espectador_modo === "partida" && destino === vista_principal_control;
         boton.dataset.active = activa ? "1" : "0";
         boton.classList.toggle("is-active", activa);
         boton.setAttribute("aria-pressed", activa ? "true" : "false");
@@ -2526,7 +2528,10 @@ function actualizarBotonPausaReanudarControl(boton) {
 }
 window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl;
 
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+// `calentamiento` es un modo resuelto que llega desde el servidor cuando la
+// vista Detonadores está activa. Conservarlo evita confundirlo con Tutorial y,
+// sobre todo, garantiza que al pulsar Tutorial se envíe el cambio autoritativo.
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
 const PUNTUACION_CATEGORIAS_CONTROL = [
     "produccion",
     "ritmo",

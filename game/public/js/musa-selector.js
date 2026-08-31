@@ -406,7 +406,7 @@ function manejarErrorAsignacion(error = {}) {
     asignacionBloqueada = false;
     restaurandoAsignacionPersistida = false;
     restablecerVistaAsignacion();
-    mostrarAvisoMusa("Ha empezado una nueva partida. Vuelve a elegir escritxr.");
+    mostrarAvisoMusa("");
     return;
   }
   const tieneAsignacionGuardada = Boolean(musaAssignment.readAssignmentSession(
@@ -457,7 +457,7 @@ socket.on("musa_sesion_actualizada", (payload = {}) => {
   asignacionBloqueada = false;
   restaurandoAsignacionPersistida = false;
   restablecerVistaAsignacion();
-  mostrarAvisoMusa("Nueva partida preparada. Elige de nuevo tu escritxr.");
+  mostrarAvisoMusa("");
 });
 socket.on("nombre1", (nombre) => actualizarEscritxrDisponible(1, nombre));
 socket.on("nombre2", (nombre) => actualizarEscritxrDisponible(2, nombre));
@@ -682,7 +682,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     restaurarAsignacionGuardadaMusa();
     if (params.get("notice") === "nueva_partida") {
-      mostrarAvisoMusa("Nueva partida preparada. Elige de nuevo tu escritxr.");
+      mostrarAvisoMusa("");
     }
   }
 

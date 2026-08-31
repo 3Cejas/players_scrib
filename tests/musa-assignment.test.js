@@ -411,7 +411,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /aria-hidden="true" tabindex="-1"/);
   assert.match(html, /aria-live="assertive" aria-atomic="true"/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(html, /musa-assignment\.js\?v=20260831a/);
+  assert.match(html, /musa-assignment\.js\?v=20260831b/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -424,6 +424,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(selector, /socket\.on\("musa_reemplazada", manejarMusaReemplazada\)/);
   assert.match(selector, /socket\.on\("musa_sesion_actualizada"/);
   assert.match(selector, /MUSE_SESSION_EXPIRED/);
+  assert.doesNotMatch(selector, /Nueva partida preparada|Ha empezado una nueva partida/);
   assert.doesNotMatch(selector, /rotateClientId\(window\.sessionStorage/);
   assert.match(selector, /meta\.invalidated/);
   assert.match(selector, /createHoldController/);
@@ -445,7 +446,7 @@ test("game reconnects with its assignment mode and never replays the reveal afte
   const state = read("game/public/players/js/state.js");
   const events = read("game/public/players/js/socket-events.js");
 
-  assert.match(html, /musa-assignment\.js\?v=20260831a/);
+  assert.match(html, /musa-assignment\.js\?v=20260831b/);
   assert.match(events, /socket\.on\("musa_asignacion", procesarAsignacionAutoritativaMusa\)/);
   assert.match(events, /createRegistrationPayload\(\{[\s\S]*clientId: musa_client_id,[\s\S]*requestId: musa_request_id_activo/);
   assert.match(events, /assignmentMode: modo_asignacion_musa/);

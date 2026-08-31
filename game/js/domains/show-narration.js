@@ -27,44 +27,55 @@
     const DEFAULT_AUDIO_SECONDS = 80.013;
     const DEFAULT_AUDIO_URL = "../media/narracion-show.mp3";
     const DEFAULT_SLIDE_URL = "../media/narracion-final.png";
-    const ASSET_VERSION = "20260831a";
+    const ASSET_VERSION = "20260831b";
     const MAX_AUDIO_DRIFT_SECONDS = 1.25;
     const RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
     const SCENES = Object.freeze([
         Object.freeze({ id: "black", start: 0, title: "", kicker: "" }),
         Object.freeze({ id: "binary", start: 5, title: "DOS SÍMBOLOS", kicker: "UN LENGUAJE INFINITO", glyph: "0  1" }),
-        Object.freeze({ id: "speed", start: 12.83, title: "VELOCIDAD", kicker: "MÁS ALLÁ DE LO HUMANO", glyph: "∞" }),
-        Object.freeze({ id: "origin-code", start: 20.42, title: "200 AÑOS", kicker: "EL ORIGEN DEL CÓDIGO", glyph: "1820" }),
-        Object.freeze({ id: "precision", start: 26.16, title: "PRECISIÓN", kicker: "UN ORDEN PERFECTO", glyph: "{ }" }),
-        Object.freeze({ id: "programming", start: 35.22, title: "PROGRAMACIÓN", kicker: "LA TECNOLOGÍA DEL CÓDIGO", glyph: "</>" }),
-        Object.freeze({ id: "writing-origin", start: 42.04, title: "5.000 AÑOS", kicker: "EL NACIMIENTO DE LA ESCRITURA", glyph: "𓂀" }),
-        Object.freeze({ id: "journey", start: 48.94, title: "TIEMPO Y ESPACIO", kicker: "UN VIAJE HACIA EL FUTURO", glyph: "→" }),
-        Object.freeze({ id: "eternal", start: 54.67, title: "ETERNIDAD", kicker: "LO ESCRITO PERMANECE", glyph: "∞" }),
-        Object.freeze({ id: "writing", start: 63.04, title: "ESCRITURA", kicker: "LA TECNOLOGÍA DE LAS PALABRAS", glyph: "Aa" }),
-        Object.freeze({ id: "fusion", start: 68.49, title: "CÓDIGO + PALABRA", kicker: "DOS MUNDOS SE ENCUENTRAN", glyph: "0|A" }),
-        Object.freeze({ id: "today", start: 76.2, title: "¿Y SI FUERA HOY?", kicker: "ALGO ESTÁ A PUNTO DE NACER", glyph: "?" }),
-        Object.freeze({ id: "reveal", start: 81.72, title: "SURGIRÍA…", kicker: "", glyph: "< >" }),
+        Object.freeze({ id: "speed", start: 15.28, title: "VELOCIDAD", kicker: "MÁS ALLÁ DE LO HUMANO", glyph: "∞" }),
+        Object.freeze({ id: "origin-code", start: 18.8, title: "200 AÑOS", kicker: "EL ORIGEN DEL CÓDIGO", glyph: "" }),
+        Object.freeze({ id: "precision", start: 21.94, title: "PRECISIÓN", kicker: "UN ORDEN PERFECTO", glyph: "{ }" }),
+        Object.freeze({ id: "programming", start: 34.06, title: "PROGRAMACIÓN", kicker: "LA TECNOLOGÍA DEL CÓDIGO", glyph: "</>" }),
+        Object.freeze({ id: "writing-origin", start: 46.26, title: "5.000 AÑOS", kicker: "EL NACIMIENTO DE LA ESCRITURA", glyph: "𓂀" }),
+        Object.freeze({ id: "journey", start: 49.44, title: "TIEMPO Y ESPACIO", kicker: "UN VIAJE HACIA EL FUTURO", glyph: "→" }),
+        Object.freeze({ id: "eternal", start: 56.36, title: "ETERNIDAD", kicker: "LO ESCRITO PERMANECE", glyph: "∞" }),
+        Object.freeze({ id: "writing", start: 65.48, title: "ESCRITURA", kicker: "LA TECNOLOGÍA DE LAS PALABRAS", glyph: "Aa" }),
+        Object.freeze({ id: "fusion", start: 70.26, title: "CÓDIGO + PALABRA", kicker: "DOS MUNDOS SE ENCUENTRAN", glyph: "0   A" }),
+        Object.freeze({ id: "today", start: 76.02, title: "¿Y SI FUERA HOY?", kicker: "ALGO ESTÁ A PUNTO DE NACER", glyph: "?" }),
+        Object.freeze({ id: "reveal", start: 80, title: "SURGIRÍA…", kicker: "", glyph: "SURGIRÍA…" }),
+        Object.freeze({ id: "brand", start: 82.38, title: "<SCRI> B", kicker: "", glyph: "" }),
         Object.freeze({ id: "final", start: 85.013, title: "", kicker: "" })
     ]);
 
+    // Marcas obtenidas de la locución real (tiempo de audio + 5 s de pre-roll).
+    // Los huecos respetan las pausas de la voz: el siguiente texto nunca se
+    // adelanta a una palabra que todavía no se ha pronunciado.
     const SUBTITLES = Object.freeze([
-        Object.freeze({ start: 5, end: 11.07, text: "¿Y si existe un lenguaje de tan solo dos símbolos," }),
-        Object.freeze({ start: 11.07, end: 17.63, text: "capaz de expresar aquello que los humanos no podemos," }),
-        Object.freeze({ start: 17.63, end: 20.42, text: "a una velocidad inimaginable, que nos dirige doscientos años atrás," }),
-        Object.freeze({ start: 20.42, end: 23.87, text: "cuando se inventó? Con un orden perfecto," }),
-        Object.freeze({ start: 23.87, end: 30.88, text: "con una exactitud en su semántica que puede detener guerras enteras" }),
-        Object.freeze({ start: 30.88, end: 35.22, text: "y firmar paces eternas. ¿Realmente hay un lenguaje así?" }),
-        Object.freeze({ start: 35.22, end: 39, text: "Esa es la tecnología de la programación." }),
-        Object.freeze({ start: 39, end: 45.51, text: "¿Qué pasaría si les dijera que cada día todos aquí usan una tecnología" }),
-        Object.freeze({ start: 45.51, end: 48.94, text: "en la que apenas reparan? Una que nos lleva cinco mil años atrás," }),
-        Object.freeze({ start: 48.94, end: 54.67, text: "cuando la inventamos. Ha recorrido grandes distancias en el tiempo y el espacio" }),
-        Object.freeze({ start: 54.67, end: 60, text: "hasta llegar al futuro. Es tan sencilla que un niño la puede usar" }),
-        Object.freeze({ start: 60, end: 63.04, text: "y hace que verdaderamente seamos eternos. ¿No es eso magia?" }),
-        Object.freeze({ start: 63.04, end: 68.49, text: "Hay una tecnología así. Esa tecnología es la escritura." }),
-        Object.freeze({ start: 68.49, end: 72.73, text: "¿Y si un día la programación y la escritura se fusionaran," }),
-        Object.freeze({ start: 72.73, end: 81.72, text: "creando un videojuego? ¿Y si ese día fuera hoy? ¿Qué surgiría?" }),
-        Object.freeze({ start: 81.72, end: 85.013, text: "¡Surgiría <SCRI> B!" })
+        Object.freeze({ start: 6.38, end: 10.82, text: "¿Y si existe un lenguaje de tan solo dos símbolos?" }),
+        Object.freeze({ start: 10.98, end: 14.22, text: "Capaz de expresar aquello que los humanos no podemos." }),
+        Object.freeze({ start: 14.78, end: 17.34, text: "A una velocidad inimaginable." }),
+        Object.freeze({ start: 17.74, end: 21.48, text: "Que nos dirige doscientos años atrás, cuando se inventó." }),
+        Object.freeze({ start: 21.94, end: 23.48, text: "Con un orden perfecto." }),
+        Object.freeze({ start: 23.78, end: 30.74, text: "Con una exactitud en su semántica que puede detener guerras enteras y firmar paces eternas." }),
+        Object.freeze({ start: 31.64, end: 33.48, text: "¿Realmente hay un lenguaje así?" }),
+        Object.freeze({ start: 34.06, end: 36.82, text: "Esa es la tecnología de la programación." }),
+        Object.freeze({ start: 37.94, end: 40.12, text: "¿Qué pasaría si les dijera…" }),
+        Object.freeze({ start: 40.68, end: 44.48, text: "que cada día todos aquí usan una tecnología en la que apenas reparan?" }),
+        Object.freeze({ start: 45.58, end: 48.78, text: "Una que nos lleva cinco mil años atrás, cuando la inventamos." }),
+        Object.freeze({ start: 49.44, end: 53.32, text: "Ha recorrido grandes distancias en el tiempo y el espacio hasta llegar al futuro." }),
+        Object.freeze({ start: 54.08, end: 56.36, text: "Es tan sencilla que un niño la puede usar." }),
+        Object.freeze({ start: 56.36, end: 59.4, text: "Y hace que verdaderamente seamos eternos." }),
+        Object.freeze({ start: 60.76, end: 62.4, text: "¿No es eso magia?" }),
+        Object.freeze({ start: 62.82, end: 65.12, text: "Hay una tecnología así." }),
+        Object.freeze({ start: 65.48, end: 68.76, text: "Esa tecnología es la escritura." }),
+        Object.freeze({ start: 70.26, end: 74.4, text: "¿Y si un día la programación y la escritura se fusionaran…" }),
+        Object.freeze({ start: 74.4, end: 75.62, text: "creando un videojuego?" }),
+        Object.freeze({ start: 76.02, end: 77.96, text: "¿Y si ese día fuera hoy?" }),
+        Object.freeze({ start: 79.22, end: 80, text: "¿Qué surgiría?" }),
+        Object.freeze({ start: 80, end: 82.38, text: "¡Surgiría…!", tone: "reveal" }),
+        Object.freeze({ start: 82.38, end: 83.76, text: "<SCRI> B", tone: "brand" })
     ]);
 
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -142,6 +153,8 @@
                 <div class="scrib-show-narration__paper">${"<i></i>".repeat(9)}</div>
                 <div class="scrib-show-narration__stroke"></div>
                 <div class="scrib-show-narration__fusion"><i></i><i></i><b></b></div>
+                <div class="scrib-show-narration__date" aria-hidden="true"><span>18</span><span>20</span><small>ORIGEN DEL CÓDIGO</small></div>
+                <img class="scrib-show-narration__brand" src="../media/scrib-logo-mark.png?v=${ASSET_VERSION}" alt="" aria-hidden="true">
                 <div class="scrib-show-narration__glyph" data-show-glyph></div>
             </div>
             <div class="scrib-show-narration__subtitle" aria-hidden="true"><p data-show-subtitle></p></div>
@@ -163,6 +176,8 @@
             <div class="scrib-show-lights__beams" aria-hidden="true">${"<i></i>".repeat(8)}</div>
             <div class="scrib-show-lights__rings" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="scrib-show-lights__particles" aria-hidden="true">${"<i></i>".repeat(16)}</div>
+            <div class="scrib-show-lights__date" aria-hidden="true"><span>18</span><span>20</span></div>
+            <img class="scrib-show-lights__brand" src="../../media/scrib-logo-mark.png?v=${ASSET_VERSION}" alt="" aria-hidden="true">
             <strong class="scrib-show-lights__glyph" data-show-glyph aria-hidden="true"></strong>
             <div class="scrib-show-lights__subtitle" aria-hidden="true"><p data-show-subtitle></p></div>
             <p class="scrib-visually-hidden" role="status" aria-live="polite" data-show-live></p>`;
@@ -283,7 +298,13 @@
             if (subtitle !== renderedSubtitle) {
                 renderedSubtitle = subtitle;
                 const node = root.querySelector("[data-show-subtitle]");
-                if (node) node.textContent = subtitle;
+                if (node) {
+                    node.textContent = subtitle;
+                    node.dataset.tone = cue && cue.tone ? cue.tone : "narration";
+                    node.classList.remove("is-entering");
+                    void node.offsetWidth;
+                    if (subtitle) node.classList.add("is-entering");
+                }
             }
             if (role === "spectator") {
                 if (scene.id === "final" && !finalAnnounced) {

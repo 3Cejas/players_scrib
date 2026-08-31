@@ -52,6 +52,8 @@
 .scrib-show-narration__paper,
 .scrib-show-narration__stroke,
 .scrib-show-narration__fusion,
+.scrib-show-narration__date,
+.scrib-show-narration__brand,
 .scrib-show-narration__glyph,
 .scrib-show-narration__orbit {
     position: absolute;
@@ -222,6 +224,73 @@
     transition: color 600ms ease, text-shadow 600ms ease;
 }
 
+.scrib-show-narration__date {
+    left: 50%;
+    top: 44%;
+    width: min(76vw, 980px);
+    transform: translate(-50%, -50%) perspective(900px) rotateX(8deg);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(12px, 2vw, 32px);
+    opacity: 0;
+    filter: drop-shadow(0 0 36px rgba(255, 201, 92, 0.36));
+    transition: opacity 380ms ease;
+}
+
+.scrib-show-narration__date span {
+    position: relative;
+    padding: 0.08em 0.12em 0.12em;
+    overflow: hidden;
+    border: 2px solid rgba(255, 220, 144, 0.82);
+    border-radius: 0.16em;
+    background:
+        linear-gradient(180deg, rgba(255, 219, 139, 0.16), rgba(5, 12, 24, 0.92) 48%, rgba(255, 82, 101, 0.1)),
+        #050811;
+    color: #fff4cf;
+    font: 900 clamp(6rem, 16vw, 16rem)/0.92 "Courier New", monospace;
+    letter-spacing: -0.12em;
+    text-align: center;
+    text-indent: -0.08em;
+    text-shadow: -0.025em 0 var(--show-red), 0.025em 0 var(--show-cyan), 0 0 32px var(--show-gold);
+    box-shadow: inset 0 0 42px rgba(255, 199, 91, 0.14), 0 0 0 8px rgba(255, 201, 92, 0.04);
+}
+
+.scrib-show-narration__date span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: rgba(255, 241, 204, 0.44);
+    box-shadow: 0 0 18px rgba(255, 201, 92, 0.8);
+}
+
+.scrib-show-narration__date small {
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin-top: 0.25em;
+    padding: 0.55em 1.25em;
+    border: 1px solid rgba(53, 231, 255, 0.44);
+    border-radius: 999px;
+    background: rgba(0, 7, 18, 0.82);
+    color: var(--show-gold);
+    font: 800 clamp(0.9rem, 1.7vw, 1.5rem)/1 "Courier New", monospace;
+    letter-spacing: 0.22em;
+    text-shadow: 0 0 16px rgba(255, 201, 92, 0.72);
+}
+
+.scrib-show-narration__brand {
+    left: 50%;
+    top: 44%;
+    width: min(24vw, 330px);
+    height: auto;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.48) rotate(-7deg);
+    filter: drop-shadow(-10px 0 0 rgba(255, 73, 111, 0.48)) drop-shadow(10px 0 0 rgba(53, 231, 255, 0.48)) drop-shadow(0 0 42px rgba(255, 255, 255, 0.72));
+    transition: opacity 220ms ease, transform 620ms cubic-bezier(0.15, 0.95, 0.2, 1.2);
+}
+
 .scrib-show-narration__subtitle {
     position: absolute;
     z-index: 8;
@@ -235,6 +304,8 @@
 }
 
 .scrib-show-narration__subtitle p {
+    position: relative;
+    overflow: hidden;
     min-height: 1.4em;
     margin: 0;
     padding: 0.48em 0.9em 0.56em;
@@ -246,6 +317,33 @@
     text-align: center;
     text-wrap: balance;
     box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45), inset 0 0 30px rgba(19, 155, 190, 0.08);
+}
+
+.scrib-show-narration__subtitle p.is-entering {
+    animation: showSubtitleEnter 520ms cubic-bezier(0.16, 0.9, 0.25, 1) both;
+}
+
+.scrib-show-narration__subtitle p.is-entering::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 22%, rgba(255, 255, 255, 0.22) 48%, transparent 72%);
+    transform: translateX(-130%);
+    animation: showSubtitleSweep 720ms ease-out both;
+    pointer-events: none;
+}
+
+.scrib-show-narration__subtitle p[data-tone="reveal"] {
+    border-color: rgba(255, 201, 92, 0.78);
+    color: #fff0b8;
+    text-shadow: 0 0 22px rgba(255, 201, 92, 0.72);
+}
+
+.scrib-show-narration__subtitle p[data-tone="brand"] {
+    border-color: rgba(53, 231, 255, 0.82);
+    color: #fff;
+    letter-spacing: 0.16em;
+    text-shadow: -2px 0 var(--show-red), 2px 0 var(--show-cyan), 0 0 24px #fff;
 }
 
 .scrib-show-narration__final {
@@ -289,6 +387,27 @@
     opacity: 0.5;
 }
 
+.scrib-show-narration[data-scene="origin-code"] .scrib-show-narration__date {
+    opacity: 1;
+    animation: showDateArrival 760ms cubic-bezier(0.16, 0.9, 0.25, 1) both;
+}
+
+.scrib-show-narration[data-scene="fusion"] .scrib-show-narration__glyph {
+    white-space: pre;
+    letter-spacing: 0.12em;
+}
+
+.scrib-show-narration[data-scene="reveal"] .scrib-show-narration__glyph {
+    width: 92vw;
+    font-size: clamp(4.2rem, 12vw, 12rem);
+    letter-spacing: 0.02em;
+}
+
+.scrib-show-narration[data-scene="brand"] .scrib-show-narration__brand {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0);
+}
+
 .scrib-show-narration[data-scene="writing-origin"] .scrib-show-narration__paper,
 .scrib-show-narration[data-scene="journey"] .scrib-show-narration__paper,
 .scrib-show-narration[data-scene="eternal"] .scrib-show-narration__paper,
@@ -322,11 +441,13 @@
 
 .scrib-show-narration[data-scene="fusion"] .scrib-show-narration__fusion,
 .scrib-show-narration[data-scene="today"] .scrib-show-narration__fusion,
-.scrib-show-narration[data-scene="reveal"] .scrib-show-narration__fusion {
+.scrib-show-narration[data-scene="reveal"] .scrib-show-narration__fusion,
+.scrib-show-narration[data-scene="brand"] .scrib-show-narration__fusion {
     opacity: 1;
 }
 
-.scrib-show-narration[data-scene="reveal"] .scrib-show-narration__world {
+.scrib-show-narration[data-scene="reveal"] .scrib-show-narration__world,
+.scrib-show-narration[data-scene="brand"] .scrib-show-narration__world {
     animation: showRevealFlash 820ms ease-in-out infinite alternate;
 }
 
@@ -342,6 +463,8 @@
 .scrib-show-lights__beams,
 .scrib-show-lights__rings,
 .scrib-show-lights__particles,
+.scrib-show-lights__date,
+.scrib-show-lights__brand,
 .scrib-show-lights__glyph,
 .scrib-show-lights__subtitle {
     position: absolute;
@@ -418,6 +541,43 @@
     animation: showLightGlyph 1.2s ease-in-out infinite alternate;
 }
 
+.scrib-show-lights__date {
+    z-index: 4;
+    left: 50%;
+    top: 46%;
+    width: min(86vw, 420px);
+    transform: translate(-50%, -50%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    opacity: 0;
+}
+
+.scrib-show-lights__date span {
+    padding: 0.2em 0.08em;
+    border: 2px solid var(--light-c);
+    border-radius: 14px;
+    background: rgba(0, 4, 13, 0.82);
+    color: #fff4c9;
+    font: 900 clamp(3.6rem, 21vw, 7rem)/1 "Courier New", monospace;
+    letter-spacing: -0.12em;
+    text-align: center;
+    text-indent: -0.08em;
+    text-shadow: 0 0 16px #fff, 0 0 36px var(--light-a);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--light-a) 55%, transparent);
+}
+
+.scrib-show-lights__brand {
+    z-index: 5;
+    left: 50%;
+    top: 47%;
+    width: min(48vw, 220px);
+    height: auto;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+    filter: drop-shadow(-6px 0 0 rgba(255, 40, 95, 0.62)) drop-shadow(6px 0 0 rgba(0, 237, 255, 0.62)) drop-shadow(0 0 30px #fff);
+}
+
 .scrib-show-lights__subtitle {
     z-index: 8;
     left: max(16px, env(safe-area-inset-left));
@@ -429,6 +589,8 @@
 }
 
 .scrib-show-lights__subtitle p {
+    position: relative;
+    overflow: hidden;
     width: 100%;
     margin: 0;
     padding: 0.72em 0.85em 0.78em;
@@ -442,10 +604,16 @@
     box-shadow: 0 12px 38px rgba(0, 0, 0, 0.48), 0 0 24px color-mix(in srgb, var(--light-a) 28%, transparent);
 }
 
+.scrib-show-lights__subtitle p.is-entering {
+    animation: showSubtitleEnter 520ms cubic-bezier(0.16, 0.9, 0.25, 1) both;
+}
+
 .scrib-show-lights[data-scene="black"] .scrib-show-lights__wash,
 .scrib-show-lights[data-scene="black"] .scrib-show-lights__beams,
 .scrib-show-lights[data-scene="black"] .scrib-show-lights__rings,
 .scrib-show-lights[data-scene="black"] .scrib-show-lights__particles,
+.scrib-show-lights[data-scene="black"] .scrib-show-lights__date,
+.scrib-show-lights[data-scene="black"] .scrib-show-lights__brand,
 .scrib-show-lights[data-scene="black"] .scrib-show-lights__glyph,
 .scrib-show-lights[data-scene="black"] .scrib-show-lights__subtitle,
 .scrib-show-lights[data-scene="final"] .scrib-show-lights__subtitle {
@@ -461,6 +629,32 @@
     --light-c: #d9feff;
 }
 
+.scrib-show-lights[data-scene="origin-code"] .scrib-show-lights__date {
+    opacity: 1;
+    animation: showDateArrival 720ms cubic-bezier(0.16, 0.9, 0.25, 1) both;
+}
+
+.scrib-show-lights[data-scene="origin-code"] .scrib-show-lights__glyph,
+.scrib-show-lights[data-scene="brand"] .scrib-show-lights__glyph {
+    opacity: 0;
+}
+
+.scrib-show-lights[data-scene="fusion"] .scrib-show-lights__glyph {
+    white-space: pre;
+    letter-spacing: 0.1em;
+}
+
+.scrib-show-lights[data-scene="reveal"] .scrib-show-lights__glyph {
+    width: 94vw;
+    font-size: clamp(2.5rem, 12vw, 5rem);
+    letter-spacing: 0;
+}
+
+.scrib-show-lights[data-scene="brand"] .scrib-show-lights__brand {
+    opacity: 1;
+    animation: showBrandArrival 680ms cubic-bezier(0.12, 0.9, 0.2, 1.2) both;
+}
+
 .scrib-show-lights[data-scene="writing-origin"],
 .scrib-show-lights[data-scene="journey"],
 .scrib-show-lights[data-scene="eternal"],
@@ -473,6 +667,7 @@
 .scrib-show-lights[data-scene="fusion"],
 .scrib-show-lights[data-scene="today"],
 .scrib-show-lights[data-scene="reveal"],
+.scrib-show-lights[data-scene="brand"],
 .scrib-show-lights[data-scene="final"] {
     --light-a: #00edff;
     --light-b: #ff285f;
@@ -480,7 +675,8 @@
 }
 
 .scrib-show-lights[data-scene="today"] .scrib-show-lights__wash,
-.scrib-show-lights[data-scene="reveal"] .scrib-show-lights__wash {
+.scrib-show-lights[data-scene="reveal"] .scrib-show-lights__wash,
+.scrib-show-lights[data-scene="brand"] .scrib-show-lights__wash {
     animation-duration: 0.72s;
 }
 
@@ -496,6 +692,10 @@
 @keyframes showFusionRight { 0%, 100% { transform: translate(0, -50%) scale(0.86); } 50% { transform: translate(-78%, -50%) scale(1.08); } }
 @keyframes showFusionCore { to { transform: translate(-50%, -50%) scale(1.15); } }
 @keyframes showRevealFlash { to { filter: brightness(1.8) saturate(1.4); } }
+@keyframes showDateArrival { from { opacity: 0; transform: translate(-50%, -50%) perspective(900px) rotateX(24deg) scale(0.7); filter: blur(12px); } to { opacity: 1; transform: translate(-50%, -50%) perspective(900px) rotateX(8deg) scale(1); filter: blur(0) drop-shadow(0 0 36px rgba(255, 201, 92, 0.36)); } }
+@keyframes showBrandArrival { from { opacity: 0; transform: translate(-50%, -50%) scale(0.45) rotate(-9deg); } to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+@keyframes showSubtitleEnter { from { opacity: 0; transform: translateY(18px) scale(0.96); filter: blur(7px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@keyframes showSubtitleSweep { to { transform: translateX(130%); } }
 @keyframes showLightWash { from { transform: rotate(-8deg) scale(1); filter: saturate(1.1) brightness(0.8); } to { transform: rotate(8deg) scale(1.18); filter: saturate(1.5) brightness(1.25); } }
 @keyframes showLightSpin { to { transform: rotate(360deg); } }
 @keyframes showLightRing { 0% { transform: scale(0.15); opacity: 0.9; } 100% { transform: scale(1.8); opacity: 0; } }

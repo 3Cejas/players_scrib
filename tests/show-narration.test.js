@@ -12,18 +12,31 @@ test("show narration starts with five black seconds and keeps the final scene op
     assert.equal(narration.sceneAt(0).id, "black");
     assert.equal(narration.sceneAt(4.999).id, "black");
     assert.equal(narration.sceneAt(5).id, "binary");
+    assert.equal(narration.sceneAt(80).id, "reveal");
+    assert.equal(narration.sceneAt(82.38).id, "brand");
     assert.equal(narration.sceneAt(85.013).id, "final");
     assert.equal(narration.sceneAt(9_999).id, "final");
 });
 
-test("subtitles cover the narrated section and expose the SCRI B reveal", () => {
+test("subtitles follow the spoken words without anticipating pauses", () => {
     assert.equal(narration.subtitleAt(4.9), null);
-    assert.match(narration.subtitleAt(5).text, /dos símbolos/);
-    assert.match(narration.subtitleAt(82).text, /<SCRI> B/);
+    assert.equal(narration.subtitleAt(5.5), null);
+    assert.match(narration.subtitleAt(6.4).text, /dos símbolos/);
+    assert.equal(narration.subtitleAt(10.9), null);
+    assert.match(narration.subtitleAt(82).text, /Surgiría/);
+    assert.match(narration.subtitleAt(82.5).text, /<SCRI> B/);
     assert.equal(narration.subtitleAt(85.013), null);
-    for (let second = 5; second < 85; second += 0.5) {
-        assert.ok(narration.subtitleAt(second), `missing subtitle at ${second}s`);
-    }
+    narration.SUBTITLES.forEach((cue, index) => {
+        assert.ok(cue.end > cue.start, `invalid subtitle ${index}`);
+        if (index > 0) assert.ok(cue.start >= narration.SUBTITLES[index - 1].end, `overlap at subtitle ${index}`);
+    });
+});
+
+test("fusion, historical date and final brand use the requested visual symbols", () => {
+    assert.equal(narration.SCENES.find(({ id }) => id === "fusion").glyph, "0   A");
+    assert.equal(narration.SCENES.find(({ id }) => id === "origin-code").glyph, "");
+    assert.equal(narration.SCENES.find(({ id }) => id === "reveal").glyph, "SURGIRÍA…");
+    assert.equal(narration.SCENES.find(({ id }) => id === "brand").glyph, "");
 });
 
 test("authoritative state normalizes late-join playback safely", () => {
@@ -51,8 +64,8 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     const spectator = read("game/spectator/index.html");
     const muse = read("game/public/players/index.html");
     for (const html of [spectator, muse]) {
-        assert.match(html, /show-narration\.css\?v=20260831b/);
-        assert.match(html, /domains\/show-narration\.js\?v=20260831b/);
+        assert.match(html, /show-narration\.css\?v=20260831c/);
+        assert.match(html, /domains\/show-narration\.js\?v=20260831c/);
     }
     assert.ok(fs.statSync(path.join(ROOT, "game/media/narracion-show.mp3")).size > 3_000_000);
     const png = fs.readFileSync(path.join(ROOT, "game/media/narracion-final.png"));
@@ -63,8 +76,13 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     assert.match(css, /object-fit:\s*fill/);
     assert.match(css, /data-scene="black"[\s\S]*visibility:\s*hidden/);
     assert.match(css, /scrib-show-lights__subtitle/);
+    assert.match(css, /scrib-show-narration__date/);
+    assert.match(css, /data-scene="brand"[\s\S]*scrib-show-narration__brand/);
+    assert.match(css, /showSubtitleEnter/);
     const source = read("game/js/domains/show-narration.js");
     assert.match(source, /scrib-show-lights__subtitle[\s\S]*data-show-subtitle/);
+    assert.match(source, /\.\.\/media\/scrib-logo-mark\.png/);
+    assert.match(source, /\.\.\/\.\.\/media\/scrib-logo-mark\.png/);
     assert.doesNotMatch(source, /scrib-show-narration__copy|data-show-title|data-show-kicker/);
 });
 
