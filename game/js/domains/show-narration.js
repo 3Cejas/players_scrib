@@ -27,7 +27,7 @@
     const DEFAULT_AUDIO_SECONDS = 80.013;
     const DEFAULT_AUDIO_URL = "../media/narracion-show.mp3";
     const DEFAULT_SLIDE_URL = "../media/narracion-final.png";
-    const ASSET_VERSION = "20260831b";
+    const ASSET_VERSION = "20260831d";
     const MAX_AUDIO_DRIFT_SECONDS = 1.25;
     const RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
@@ -38,13 +38,14 @@
         Object.freeze({ id: "origin-code", start: 18.8, title: "200 AÑOS", kicker: "EL ORIGEN DEL CÓDIGO", glyph: "" }),
         Object.freeze({ id: "precision", start: 21.94, title: "PRECISIÓN", kicker: "UN ORDEN PERFECTO", glyph: "{ }" }),
         Object.freeze({ id: "programming", start: 34.06, title: "PROGRAMACIÓN", kicker: "LA TECNOLOGÍA DEL CÓDIGO", glyph: "</>" }),
-        Object.freeze({ id: "writing-origin", start: 46.26, title: "5.000 AÑOS", kicker: "EL NACIMIENTO DE LA ESCRITURA", glyph: "𓂀" }),
+        Object.freeze({ id: "writing-question", start: 37.94, title: "OTRA TECNOLOGÍA", kicker: "LA ESCRITURA YA ESTABA AQUÍ", glyph: "Aa" }),
+        Object.freeze({ id: "writing-origin", start: 45.58, title: "5.000 AÑOS", kicker: "EL NACIMIENTO DE LA ESCRITURA", glyph: "𓂀" }),
         Object.freeze({ id: "journey", start: 49.44, title: "TIEMPO Y ESPACIO", kicker: "UN VIAJE HACIA EL FUTURO", glyph: "→" }),
         Object.freeze({ id: "eternal", start: 56.36, title: "ETERNIDAD", kicker: "LO ESCRITO PERMANECE", glyph: "∞" }),
         Object.freeze({ id: "writing", start: 65.48, title: "ESCRITURA", kicker: "LA TECNOLOGÍA DE LAS PALABRAS", glyph: "Aa" }),
-        Object.freeze({ id: "fusion", start: 70.26, title: "CÓDIGO + PALABRA", kicker: "DOS MUNDOS SE ENCUENTRAN", glyph: "0   A" }),
+        Object.freeze({ id: "fusion", start: 70.26, title: "CÓDIGO + PALABRA", kicker: "DOS MUNDOS SE ENCUENTRAN", glyph: "0 A" }),
         Object.freeze({ id: "today", start: 76.02, title: "¿Y SI FUERA HOY?", kicker: "ALGO ESTÁ A PUNTO DE NACER", glyph: "?" }),
-        Object.freeze({ id: "reveal", start: 80, title: "SURGIRÍA…", kicker: "", glyph: "SURGIRÍA…" }),
+        Object.freeze({ id: "reveal", start: 80, title: "", kicker: "", glyph: "" }),
         Object.freeze({ id: "brand", start: 82.38, title: "<SCRI> B", kicker: "", glyph: "" }),
         Object.freeze({ id: "final", start: 85.013, title: "", kicker: "" })
     ]);
@@ -153,11 +154,11 @@
                 <div class="scrib-show-narration__paper">${"<i></i>".repeat(9)}</div>
                 <div class="scrib-show-narration__stroke"></div>
                 <div class="scrib-show-narration__fusion"><i></i><i></i><b></b></div>
-                <div class="scrib-show-narration__date" aria-hidden="true"><span>18</span><span>20</span><small>ORIGEN DEL CÓDIGO</small></div>
+                <div class="scrib-show-narration__date" aria-hidden="true"><span>1820</span><small>ORIGEN DEL CÓDIGO</small></div>
                 <img class="scrib-show-narration__brand" src="../media/scrib-logo-mark.png?v=${ASSET_VERSION}" alt="" aria-hidden="true">
                 <div class="scrib-show-narration__glyph" data-show-glyph></div>
             </div>
-            <div class="scrib-show-narration__subtitle" aria-hidden="true"><p data-show-subtitle></p></div>
+            <div class="scrib-show-narration__subtitle" aria-hidden="true" hidden><p data-show-subtitle></p></div>
             <img class="scrib-show-narration__final" data-show-final alt="&lt;SCRI&gt; B, el primer videojuego de escritura improvisada">
             <audio class="scrib-show-narration__audio" preload="auto"></audio>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-show-live></p>`;
@@ -176,10 +177,10 @@
             <div class="scrib-show-lights__beams" aria-hidden="true">${"<i></i>".repeat(8)}</div>
             <div class="scrib-show-lights__rings" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="scrib-show-lights__particles" aria-hidden="true">${"<i></i>".repeat(16)}</div>
-            <div class="scrib-show-lights__date" aria-hidden="true"><span>18</span><span>20</span></div>
+            <div class="scrib-show-lights__date" aria-hidden="true"><span>1820</span></div>
             <img class="scrib-show-lights__brand" src="../../media/scrib-logo-mark.png?v=${ASSET_VERSION}" alt="" aria-hidden="true">
             <strong class="scrib-show-lights__glyph" data-show-glyph aria-hidden="true"></strong>
-            <div class="scrib-show-lights__subtitle" aria-hidden="true"><p data-show-subtitle></p></div>
+            <div class="scrib-show-lights__subtitle" aria-hidden="true" hidden><p data-show-subtitle></p></div>
             <p class="scrib-visually-hidden" role="status" aria-live="polite" data-show-live></p>`;
         documentRef.body.appendChild(root);
         return root;
@@ -196,6 +197,8 @@
         const audio = root.querySelector("audio");
         const finalImage = root.querySelector("[data-show-final]");
         const live = root.querySelector("[data-show-live]");
+        const subtitleNode = root.querySelector("[data-show-subtitle]");
+        const subtitleBox = subtitleNode ? subtitleNode.parentElement : null;
         const scheduleFrame = typeof windowRef.requestAnimationFrame === "function"
             ? windowRef.requestAnimationFrame.bind(windowRef)
             : (callback) => windowRef.setTimeout(callback, 50);
@@ -295,9 +298,10 @@
             }
             const cue = subtitleAt(position);
             const subtitle = cue ? cue.text : "";
+            if (subtitleBox) subtitleBox.hidden = !subtitle;
             if (subtitle !== renderedSubtitle) {
                 renderedSubtitle = subtitle;
-                const node = root.querySelector("[data-show-subtitle]");
+                const node = subtitleNode;
                 if (node) {
                     node.textContent = subtitle;
                     node.dataset.tone = cue && cue.tone ? cue.tone : "narration";

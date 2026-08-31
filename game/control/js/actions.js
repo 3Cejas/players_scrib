@@ -2470,14 +2470,12 @@ function aplicarVistaPrincipalControl(vista) {
     const activarDetonadores = destino === "detonadores";
     const modoEspectador = destino === "tutorial" ? "tutorial" : "partida";
     vista_principal_control = destino;
-    if (vista_calentamiento !== activarDetonadores) {
-        vista_calentamiento = activarDetonadores;
-        emitirVistaControl("cambiar_vista_calentamiento", { activo: activarDetonadores });
-    }
-    if (vista_espectador_modo !== modoEspectador) {
-        vista_espectador_modo = modoEspectador;
-        emitirVistaControl("cambiar_vista_espectador_modo", { modo: modoEspectador });
-    }
+    // Cada pulsacion confirma el estado autoritativo. Esto permite reabrir el
+    // canal del tutorial aunque Control ya creyera tener seleccionada la vista.
+    vista_calentamiento = activarDetonadores;
+    emitirVistaControl("cambiar_vista_calentamiento", { activo: activarDetonadores });
+    vista_espectador_modo = modoEspectador;
+    emitirVistaControl("cambiar_vista_espectador_modo", { modo: modoEspectador });
     cerrarVideotutorialDesdeVistaControl();
     actualizarBotonesVistaEspectadorControl();
     if (activarDetonadores) {

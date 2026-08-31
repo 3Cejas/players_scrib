@@ -87,6 +87,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /limpiar\(\{ emitirServidor: false \}\);[\s\S]*mostrar_vista_tutorial\(\)/);
   assert.match(actions, /function limpiar\(\{ emitirServidor = true \} = \{\}\)[\s\S]*if \(emitirServidor\) socket\.emit\('limpiar', false\)/);
   assert.match(actions, /const modoEspectador = destino === "tutorial" \? "tutorial" : "partida"/);
+  assert.match(actions, /vista_calentamiento = activarDetonadores;\s*emitirVistaControl\("cambiar_vista_calentamiento"/);
+  assert.match(actions, /vista_espectador_modo = modoEspectador;\s*emitirVistaControl\("cambiar_vista_espectador_modo"/);
   assert.match(actions, /MODOS_VISTA_ESPECTADOR = new Set\(\["partida", "tutorial", "calentamiento"/);
   assert.match(actions, /let vista_espectador_modo = "tutorial";[\s\S]*let vista_principal_control = "tutorial";/);
   assert.match(actions, /vista_espectador_modo === "tutorial"/);
