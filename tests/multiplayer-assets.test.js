@@ -31,7 +31,7 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260831c";
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_SOCKET_EVENTS_VERSION = "20260506b";
-const CONTROL_CSS_VERSION = "20260831d";
+const CONTROL_CSS_VERSION = "20260831e";
 const CONTROL_ACTIONS_VERSION = "20260831c";
 const CONTROL_I18N_VERSION = "20260831b";
 const CONTROL_STATE_VERSION = "20260831b";
@@ -580,6 +580,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /#panel_parametros > tr:not\(\.parametros-title-row\):not\(\.parametros-frase-row\):not\(\.parametros-modos-row\)\s*\{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/);
   assert.match(css, /#panel_parametros > tr:not\(\.parametros-title-row\):not\(\.parametros-frase-row\):not\(\.parametros-modos-row\) > td\.param-start\s*\{[\s\S]*grid-template-columns: minmax\(7rem, 1fr\) auto auto;/);
   assert.match(html, /class="param-duration"[\s\S]*data-i18n="control\.param\.duration"[\s\S]*id="duracion_minutos"[\s\S]*id="duracion_segundos"/);
+  assert.match(css, /> td\.param-duration\s*\{[\s\S]*grid-template-columns:\s*max-content max-content;[\s\S]*justify-content:\s*center;[\s\S]*column-gap:/);
+  assert.match(css, /\.param-duration__controls\s*\{[\s\S]*margin-left:\s*0;/);
   assert.doesNotMatch(html, /id="tiempo_modos"|id="tiempo_minutos"|id="tiempo_segundos"|data-i18n="control\.param\.(?:level|start)"/);
   assert.match(css, /\.level-card-duration\s*\{[\s\S]*border-top: 0 !important;[\s\S]*border-bottom: 0 !important;/);
   assert.match(css, /\.level-sequence\s*\{[\s\S]*gap: clamp\(0\.46rem, 0\.72vw, 0\.72rem\);/);
