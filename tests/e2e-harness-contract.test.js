@@ -23,6 +23,9 @@ test("E2E writers become ready on the real pre-match setup screen", () => {
     assert.match(block, /readyVisible: false/);
     assert.doesNotMatch(block, /readySelector: "#musa_help_fab"/);
   });
+  assert.match(runner, /async function emitAckWithoutPayload[\s\S]*socket\.emit\(eventName, \(response\)/);
+  assert.match(runner, /async resolveRoleUrl\(roleName, config\)[\s\S]*emitAckWithoutPayload\(this\.socket, "pedir_opciones_equipo_musa"[\s\S]*searchParams\.set\("session_id", sessionId\)/);
+  assert.match(runner, /const roleUrl = await this\.resolveRoleUrl\(roleName, config\);\s+await page\.goto\(roleUrl/);
   assert.match(runner, /config\.readyVisible === false \? \{\} : \{ visible: true \}/);
   assert.match(specs, /"writer1", "#atributos-container", true, "writer1 setup visible"/);
   assert.doesNotMatch(specs, /setNumericInput\("tiempo_votacion"/);

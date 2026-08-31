@@ -353,6 +353,19 @@ async function emitAck(socket, eventName, payload = {}, timeoutMs = DEFAULT_TIME
   });
 }
 
+async function emitAckWithoutPayload(socket, eventName, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Timed out waiting ack for ${eventName}`));
+    }, timeoutMs);
+
+    socket.emit(eventName, (response) => {
+      clearTimeout(timer);
+      resolve(response);
+    });
+  });
+}
+
 function createSpecList(suite) {
   if (suite === "smoke") {
     return smokeSpecs;
@@ -668,19 +681,25 @@ class E2EHarness {
       await this.sleep(300);
       return;
     }
-    await this.waitForState(
-      "role connections released",
-      (state) => {
-        const connections = state && state.connections ? state.connections : {};
-        const directRoles = ["control", "spectator", "jury", "dramaturgia"];
-        const groupedRoles = ["writers", "musas", "actors"];
-        return directRoles.every((role) => Number(connections[role] && connections[role].count || 0) === 0)
-          && groupedRoles.every((group) => [1, 2].every(
-            (player) => Number(connections[group] && connections[group][player] && connections[group][player].count || 0) === 0
-          ));
-      },
-      timeoutMs
-    );
+    let lastConnections = {};
+    try {
+      await this.waitForState(
+        "role connections released",
+        (state) => {
+          const connections = state && state.connections ? state.connections : {};
+          lastConnections = connections;
+          const directRoles = ["control", "spectator", "jury", "dramaturgia"];
+          const groupedRoles = ["writers", "musas", "actors"];
+          return directRoles.every((role) => Number(connections[role] && connections[role].count || 0) === 0)
+            && groupedRoles.every((group) => [1, 2].every(
+              (player) => Number(connections[group] && connections[group][player] && connections[group][player].count || 0) === 0
+            ));
+        },
+        timeoutMs
+      );
+    } catch (error) {
+      throw new Error(`${error.message}; remaining=${JSON.stringify(lastConnections)}`, { cause: error });
+    }
   }
 
   async getState() {
@@ -719,6 +738,23 @@ class E2EHarness {
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
     }
     throw new Error(lastError ? `${description}: ${lastError.message}` : `Timed out waiting for ${description}`);
+  }
+
+  async resolveRoleUrl(roleName, config) {
+    const roleUrl = new URL(config.url, this.staticBaseUrl);
+    if (!/^musa(?:1|1b|2|2b)$/.test(roleName)) {
+      return roleUrl.href;
+    }
+    if (!this.socket) {
+      throw new Error(`Cannot open ${roleName} without the active match session`);
+    }
+    const options = await emitAckWithoutPayload(this.socket, "pedir_opciones_equipo_musa", 5000);
+    const sessionId = String(options && options.session_id || "").trim();
+    if (!/^partida_[a-z0-9]+_[a-z0-9]+$/i.test(sessionId)) {
+      throw new Error(`Server did not provide the active match session for ${roleName}`);
+    }
+    roleUrl.searchParams.set("session_id", sessionId);
+    return roleUrl.href;
   }
 
   async openRoles(roleNames) {
@@ -772,7 +808,8 @@ class E2EHarness {
       this.pages.set(roleName, entry);
 
       try {
-        await page.goto(`${this.staticBaseUrl}${config.url}`, { waitUntil: "domcontentloaded" });
+        const roleUrl = await this.resolveRoleUrl(roleName, config);
+        await page.goto(roleUrl, { waitUntil: "domcontentloaded" });
         await page.waitForSelector(config.readySelector, {
           ...(config.readyVisible === false ? {} : { visible: true }),
           timeout: 15000
