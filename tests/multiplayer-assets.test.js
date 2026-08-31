@@ -38,6 +38,7 @@ const CONTROL_STATE_VERSION = "20260831b";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260831c";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
+const MUSA_SELECTOR_VERSION = "20260831h";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
 const PUBLIC_PLAYER_STATE_VERSION = "20260831c";
 const PUBLIC_PLAYER_CSS_VERSION = "20260831b";
@@ -121,7 +122,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/public/players/index.html", "js/socket-events.js", PUBLIC_PLAYER_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/public/index.html", "js/i18n.js", MUSA_SELECTOR_I18N_VERSION);
   assertIncludesAsset("game/public/index.html", "js/musa-assignment.js", MUSA_ASSIGNMENT_VERSION);
-  assertIncludesAsset("game/public/index.html", "js/musa-selector.js", MUSA_ASSIGNMENT_VERSION);
+  assertIncludesAsset("game/public/index.html", "js/musa-selector.js", MUSA_SELECTOR_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/musa-assignment.js", MUSA_ASSIGNMENT_VERSION);
   assertIncludesAsset("game/public/players/index.html", "domains/view-transition.js", VIEW_TRANSITION_MODULE_VERSION);
 

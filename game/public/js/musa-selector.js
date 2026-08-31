@@ -203,7 +203,7 @@ function obtenerTextoEstadoAsignacion() {
   if (estadoAsignacion === "assigning") {
     return seleccionPendiente.assignmentMode === "manual"
       ? `Conectando con ${escritorasDisponibles[seleccionPendiente.player] || "tu escritxr"}…`
-      : tMusa("muse.assignment.status.balancing", {}, "Equilibrando los equipos…");
+      : "Buscando tu equipo…";
   }
   if (estadoAsignacion === "error") {
     return tMusa("muse.assignment.status.error", {}, "No pudimos asignarte equipo. Inténtalo de nuevo.");
@@ -216,7 +216,7 @@ function obtenerTextoEstadoAsignacion() {
       `Asignación completada: ${team}.`
     );
   }
-  return "Elige una escritora o usa la detección automática para equilibrar los equipos.";
+  return "";
 }
 
 function actualizarEstadoAsignacion() {
@@ -263,16 +263,16 @@ function mostrarOverlayAsignacion({ scanning = false } = {}) {
   if (scanning) {
     if (kicker) kicker.textContent = "DETECCIÓN AUTOMÁTICA";
     if (title) title.textContent = "PON TU DEDO";
-    if (copy) copy.textContent = "Mantén pulsada la huella hasta completar la detección.";
+    if (copy) copy.textContent = "Mantén el dedo sobre la huella.";
   } else if (seleccionPendiente.assignmentMode === "manual") {
     const escritxr = escritorasDisponibles[seleccionPendiente.player] || `ESCRITXR ${seleccionPendiente.player}`;
     if (kicker) kicker.textContent = "ELECCIÓN DE MUSA";
     if (title) title.textContent = "CONECTANDO CON TU ESCRITXR";
     if (copy) copy.textContent = `Preparando el canal creativo de ${escritxr}.`;
   } else {
-    if (kicker) kicker.textContent = "SISTEMA DE EQUILIBRIO DE MUSAS";
-    if (title) title.textContent = "DETECTANDO TU EQUIPO";
-    if (copy) copy.textContent = "Comparando el número actual de musas de cada equipo…";
+    if (kicker) kicker.textContent = "DETECCIÓN AUTOMÁTICA";
+    if (title) title.textContent = "DESCUBRIENDO TU EQUIPO";
+    if (copy) copy.textContent = "Un momento…";
   }
   const foco = scanning ? document.getElementById("musa_fingerprint") : overlay;
   setTimeout(() => foco?.focus({ preventScroll: true }), usaMovimientoReducido() ? 0 : 180);

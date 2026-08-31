@@ -3234,6 +3234,393 @@ body.musa-boot-activa .intro-flow {
     }
 }
 
+/* Onboarding de musas: cuatro pantallas, dos ideas clave y grafismo nativo. */
+.intro-onboarding-welcome .intro-panel,
+.intro-onboarding-demo .intro-panel,
+#intro-nombre .intro-panel,
+#intro-asignacion .intro-panel {
+    width: min(100%, 48rem);
+}
+
+.intro-onboarding-welcome .intro-panel {
+    position: relative;
+    grid-template-rows: auto auto auto 1fr auto;
+    align-content: stretch;
+    justify-items: center;
+    gap: clamp(0.45rem, 1.7vh, 1rem);
+    padding: max(env(safe-area-inset-top), 1.25rem) 1.15rem max(env(safe-area-inset-bottom), 1.4rem);
+}
+
+.intro-onboarding-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.72rem;
+    color: rgba(225, 248, 255, 0.72);
+    font-family: "Retro-gaming", "Courier New", monospace;
+}
+
+.intro-onboarding-brand__mark {
+    width: 2.75rem;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(83, 232, 255, 0.46);
+    border-radius: 0.8rem;
+    color: #5cecff;
+    background: rgba(4, 17, 28, 0.72);
+    box-shadow: inset 0 0 1rem rgba(83, 232, 255, 0.1), 0 0 1.3rem rgba(83, 232, 255, 0.13);
+}
+
+.intro-onboarding-brand__name,
+.intro-onboarding-logo {
+    font-family: "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.11em;
+}
+
+.intro-onboarding-brand__name { font-size: clamp(0.72rem, 2.6vw, 0.95rem); }
+
+.intro-onboarding-logo {
+    color: rgba(225, 248, 255, 0.6);
+    font-size: clamp(0.65rem, 2.5vw, 0.86rem);
+}
+
+.intro-onboarding-eyebrow {
+    margin: 0;
+    color: #ffbd4a;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.68rem, 2.7vw, 0.92rem);
+    letter-spacing: 0.19em;
+    text-align: center;
+}
+
+.intro-onboarding-hero {
+    margin: 0;
+    color: #fff;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(2.55rem, 12.5vw, 5.4rem);
+    line-height: 0.94;
+    letter-spacing: 0.02em;
+    text-align: center;
+    text-shadow: 0 0 1.1rem rgba(255, 184, 68, 0.2), 0.08em 0.06em 0 rgba(255, 68, 99, 0.2);
+}
+
+.intro-onboarding-promise {
+    max-width: 23rem;
+    margin: 0;
+    color: rgba(239, 247, 252, 0.78);
+    font-size: clamp(1rem, 4.3vw, 1.35rem);
+    line-height: 1.35;
+    text-align: center;
+}
+
+.intro-spark-stage {
+    position: relative;
+    width: min(52vw, 13rem);
+    aspect-ratio: 1;
+    align-self: center;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+}
+
+.intro-spark-stage::before {
+    content: "";
+    position: absolute;
+    inset: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 196, 69, 0.23), rgba(255, 73, 103, 0.08) 46%, transparent 70%);
+    filter: blur(0.2rem);
+    animation: onboardingSparkGlow 1.8s ease-in-out infinite alternate;
+}
+
+.intro-spark-stage__core {
+    z-index: 2;
+    color: #fff2a6;
+    font-size: clamp(3.5rem, 18vw, 6.5rem);
+    line-height: 1;
+    text-shadow: 0 0 0.6rem #ffc74f, 0 0 2.2rem rgba(255, 78, 105, 0.75);
+    animation: onboardingSparkCore 2.1s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+
+.intro-spark-stage__orbit {
+    position: absolute;
+    inset: 15%;
+    border: 1px solid rgba(89, 232, 255, 0.25);
+    border-radius: 50%;
+    animation: onboardingOrbit 7s linear infinite;
+}
+
+.intro-spark-stage__orbit--two {
+    inset: 3%;
+    border-color: rgba(255, 94, 119, 0.2);
+    animation-direction: reverse;
+    animation-duration: 9s;
+}
+
+.intro-spark-stage__particle {
+    position: absolute;
+    width: 0.48rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #63ecff;
+    box-shadow: 0 0 0.7rem currentColor;
+    animation: onboardingParticle 2.2s ease-in-out infinite;
+}
+
+.intro-spark-stage__particle--one { top: 13%; left: 24%; }
+.intro-spark-stage__particle--two { right: 10%; bottom: 31%; animation-delay: -0.7s; background: #ff6e8b; }
+.intro-spark-stage__particle--three { left: 13%; bottom: 17%; animation-delay: -1.3s; background: #ffd25f; }
+
+.intro-onboarding-welcome .intro-nav-bottom {
+    width: min(100%, 31rem);
+}
+
+.intro-onboarding-demo .intro-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(0.45rem, 1.45vh, 0.85rem);
+    padding: max(env(safe-area-inset-top), 0.9rem) 1rem max(env(safe-area-inset-bottom), 1.1rem);
+}
+
+.intro-onboarding-demo__title {
+    margin: 0;
+    color: #fff;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(1.35rem, 6.3vw, 2.45rem);
+    line-height: 1.08;
+    text-align: center;
+    text-shadow: 0 0 1rem rgba(82, 232, 255, 0.2);
+}
+
+.onboarding-demo {
+    position: relative;
+    width: min(100%, 38rem);
+    min-height: clamp(13.5rem, 41vh, 19rem);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(4rem, 0.38fr) minmax(0, 1.15fr);
+    align-items: center;
+    gap: clamp(0.3rem, 1.5vw, 0.8rem);
+}
+
+.onboarding-demo__phone,
+.onboarding-demo__story {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    background: rgba(3, 10, 18, 0.88);
+    box-shadow: inset 0 0 1.6rem rgba(74, 228, 255, 0.05), 0 1.1rem 2.7rem rgba(0, 0, 0, 0.28);
+}
+
+.onboarding-demo__phone {
+    aspect-ratio: 0.62;
+    border: 1px solid rgba(255, 184, 69, 0.55);
+    border-radius: 1.25rem;
+    padding: clamp(0.65rem, 2.4vw, 1rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.7rem;
+    color: #ffd56c;
+    animation: onboardingPhoneFloat 3.3s ease-in-out infinite;
+}
+
+.onboarding-demo__phone::before {
+    content: "";
+    position: absolute;
+    top: 0.42rem;
+    left: 50%;
+    width: 30%;
+    height: 0.24rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-50%);
+}
+
+.onboarding-demo__phone-label,
+.onboarding-demo__story-label {
+    color: rgba(225, 245, 250, 0.48);
+    font: 0.55rem/1.2 "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.12em;
+}
+
+.onboarding-demo__phone strong {
+    color: #fff;
+    font: clamp(0.82rem, 3.2vw, 1.2rem)/1.2 "Retro-gaming", "Courier New", monospace;
+    overflow-wrap: anywhere;
+}
+
+.onboarding-demo__send {
+    align-self: stretch;
+    padding: 0.7em 0.35em;
+    border-radius: 0.55rem;
+    background: linear-gradient(115deg, #ffb934, #ff6b55);
+    color: #091019;
+    font: clamp(0.48rem, 1.7vw, 0.68rem)/1 "Retro-gaming", "Courier New", monospace;
+    text-align: center;
+    box-shadow: 0 0 1rem rgba(255, 159, 55, 0.25);
+}
+
+.onboarding-demo__send i { font-style: normal; }
+
+.onboarding-demo__flight {
+    position: relative;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.onboarding-demo__flight::before {
+    content: "";
+    position: absolute;
+    left: -12%;
+    right: -12%;
+    height: 1px;
+    background: linear-gradient(90deg, #ffc54e, #62edff);
+    box-shadow: 0 0 0.9rem rgba(89, 232, 255, 0.65);
+}
+
+.onboarding-demo__flight span {
+    z-index: 1;
+    width: 0.35rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0.7rem #5cecff;
+    animation: onboardingDataDot 1.5s linear infinite;
+}
+
+.onboarding-demo__flight span:nth-child(2) { animation-delay: -0.5s; }
+.onboarding-demo__flight span:nth-child(3) { animation-delay: -1s; }
+
+.onboarding-demo__flight b {
+    position: absolute;
+    z-index: 2;
+    padding: 0.48em 0.65em;
+    border: 1px solid rgba(94, 237, 255, 0.54);
+    border-radius: 999px;
+    color: #fff;
+    background: #08131d;
+    box-shadow: 0 0 1.2rem rgba(94, 237, 255, 0.25);
+    font: clamp(0.45rem, 1.65vw, 0.65rem)/1 "Retro-gaming", "Courier New", monospace;
+    animation: onboardingWordFlight 4s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+
+.onboarding-demo__story {
+    min-height: clamp(9rem, 25vh, 13rem);
+    border: 1px solid rgba(83, 232, 255, 0.46);
+    border-radius: 1rem;
+    padding: clamp(0.8rem, 2.7vw, 1.25rem);
+    color: rgba(235, 246, 250, 0.72);
+}
+
+.onboarding-demo__story p {
+    margin: 1.15rem 0 0.35rem;
+    font-size: clamp(0.72rem, 2.7vw, 1rem);
+    line-height: 1.45;
+}
+
+.onboarding-demo__story strong {
+    color: #5cecff;
+    font: clamp(0.9rem, 3.4vw, 1.35rem)/1.3 "Retro-gaming", "Courier New", monospace;
+    text-shadow: 0 0 0.8rem rgba(83, 232, 255, 0.5);
+    animation: onboardingTypedWord 4s steps(1, end) infinite;
+}
+
+.onboarding-demo__story i {
+    display: inline-block;
+    width: 0.12em;
+    height: 1.15em;
+    margin-left: 0.12em;
+    vertical-align: -0.17em;
+    background: #fff;
+    animation: onboardingCaret 0.8s steps(1, end) infinite;
+}
+
+.intro-onboarding-keys {
+    width: min(100%, 38rem);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.intro-onboarding-keys article {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.85rem;
+    background: rgba(5, 13, 22, 0.68);
+}
+
+.intro-onboarding-keys article > span {
+    color: #ffbd4a;
+    font: 0.68rem/1 "Retro-gaming", "Courier New", monospace;
+}
+
+.intro-onboarding-keys article div { min-width: 0; display: grid; gap: 0.24rem; }
+.intro-onboarding-keys strong { color: #fff; font: clamp(0.55rem, 2vw, 0.72rem)/1.25 "Retro-gaming", "Courier New", monospace; }
+.intro-onboarding-keys small { color: rgba(231, 243, 248, 0.58); font-size: clamp(0.68rem, 2.4vw, 0.84rem); line-height: 1.25; }
+
+#intro-nombre .intro-onboarding-logo,
+#intro-asignacion .intro-onboarding-logo {
+    margin-bottom: clamp(0.3rem, 1vh, 0.7rem);
+}
+
+#intro-nombre .intro-onboarding-eyebrow { margin-bottom: 0.15rem; }
+.musa-assignment-status:empty { display: none; }
+
+@keyframes onboardingSparkGlow {
+    from { transform: scale(0.84); opacity: 0.58; }
+    to { transform: scale(1.18); opacity: 1; }
+}
+
+@keyframes onboardingSparkCore {
+    0%, 100% { transform: scale(0.94) rotate(-4deg); }
+    48% { transform: scale(1.1) rotate(4deg); }
+}
+
+@keyframes onboardingOrbit { to { transform: rotate(360deg) scaleX(0.78); } }
+@keyframes onboardingParticle { 50% { transform: translateY(-0.85rem) scale(1.35); opacity: 0.5; } }
+@keyframes onboardingPhoneFloat { 50% { transform: translateY(-0.45rem) rotate(-1.2deg); } }
+@keyframes onboardingDataDot { from { transform: translateX(-1.2rem) scale(0.5); opacity: 0; } 50% { opacity: 1; } to { transform: translateX(1.2rem) scale(1.1); opacity: 0; } }
+@keyframes onboardingWordFlight { 0%, 22% { transform: translateX(-42%) scale(0.78); opacity: 0; } 34% { opacity: 1; } 72% { transform: translateX(42%) scale(1); opacity: 1; } 86%, 100% { transform: translateX(52%) scale(0.75); opacity: 0; } }
+@keyframes onboardingTypedWord { 0%, 60% { opacity: 0.12; filter: blur(0.3rem); } 68%, 100% { opacity: 1; filter: none; } }
+@keyframes onboardingCaret { 50% { opacity: 0; } }
+
+@media (max-width: 520px) {
+    .intro-onboarding-welcome .intro-panel { grid-template-rows: auto auto auto minmax(8rem, 1fr) auto; }
+    .onboarding-demo { grid-template-columns: minmax(0, 0.9fr) 3rem minmax(0, 1.15fr); }
+    .onboarding-demo__phone { border-radius: 0.95rem; }
+    .intro-onboarding-keys { gap: 0.45rem; }
+    .intro-onboarding-keys article { align-items: flex-start; gap: 0.45rem; padding: 0.65rem 0.55rem; }
+}
+
+@media (max-height: 690px) {
+    .intro-spark-stage { width: min(33vh, 9rem); }
+    .intro-onboarding-hero { font-size: clamp(2.15rem, 9vh, 3.65rem); }
+    .intro-onboarding-demo .intro-panel { gap: 0.3rem; }
+    .onboarding-demo { min-height: 11rem; }
+    .onboarding-demo__phone { aspect-ratio: 0.72; }
+    .intro-onboarding-keys article { padding-block: 0.55rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .intro-spark-stage *,
+    .intro-spark-stage::before,
+    .onboarding-demo * {
+        animation: none !important;
+        transition: none !important;
+    }
+    .onboarding-demo__story strong { opacity: 1; filter: none; }
+}
+
 </style>
 </head>
 <body>
@@ -3248,194 +3635,88 @@ body.musa-boot-activa .intro-flow {
     </div>
     <main class="intro-flow">
         <div class="intro-scroll">
-            <section id="intro-bienvenida" class="intro-section">
+            <section id="intro-bienvenida" class="intro-section intro-onboarding-welcome">
                 <div class="intro-panel">
-                    <h1 class="intro-title"><span class="intro-musa-bienvenida">MUSA</span>, BIENVENIDA A <span class="intro-logo-inline">&lt;SCRI&gt; B</span></h1>
-                    <img class="intro-logo-img intro-logo-img--center" src="../../img/logo.png" alt="SCRIB">
+                    <div class="intro-onboarding-brand" aria-hidden="true">
+                        <span class="intro-onboarding-brand__mark">&lt;&gt;</span>
+                        <span class="intro-onboarding-brand__name">&lt;SCRI&gt; B</span>
+                    </div>
+                    <p class="intro-onboarding-eyebrow">BIENVENIDA, MUSA</p>
+                    <h1 class="intro-onboarding-hero">TÚ DAS<br>LA CHISPA</h1>
+                    <p class="intro-onboarding-promise">Inspira una historia que nace en directo.</p>
+                    <div class="intro-spark-stage" aria-hidden="true">
+                        <span class="intro-spark-stage__core">✦</span>
+                        <span class="intro-spark-stage__orbit intro-spark-stage__orbit--one"></span>
+                        <span class="intro-spark-stage__orbit intro-spark-stage__orbit--two"></span>
+                        <span class="intro-spark-stage__particle intro-spark-stage__particle--one"></span>
+                        <span class="intro-spark-stage__particle intro-spark-stage__particle--two"></span>
+                        <span class="intro-spark-stage__particle intro-spark-stage__particle--three"></span>
+                    </div>
                     <div class="intro-nav-bottom">
-                        <button class="intro-skip-btn" type="button" data-scroll-target="#intro-nombre" data-focus="nombre_musa" aria-label="Omitir tutorial">
-                            Omitir tutorial
+                        <button class="intro-skip-btn" type="button" data-scroll-target="#intro-nombre" data-focus="nombre_musa" aria-label="Omitir mini tutorial">
+                            Omitir
                         </button>
-                        <button class="intro-cta intro-cta-btn" type="button" data-scroll-target="#intro-que-es" aria-label="Comenzar">
-                            <span class="intro-cta-text">COMENZAR</span>
+                        <button class="intro-cta intro-cta-btn" type="button" data-scroll-target="#intro-como-jugar" aria-label="Ver cómo se juega">
+                            <span class="intro-cta-text">VER CÓMO SE JUEGA</span>
                             <span class="intro-cta-icon intro-arrow--down" aria-hidden="true"></span>
                         </button>
                     </div>
                 </div>
             </section>
-            <section id="intro-que-es" class="intro-section intro-explica intro-explica--azul">
+            <section id="intro-como-jugar" class="intro-section intro-onboarding-demo">
                 <div class="intro-panel">
-                    <div class="intro-logos">
-                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
-                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    <span class="intro-onboarding-logo">&lt;SCRI&gt; B</span>
+                    <p class="intro-onboarding-eyebrow">ASÍ SE JUEGA</p>
+                    <h2 class="intro-onboarding-demo__title">LANZA UNA IDEA.<br>MIRA CÓMO CRECE.</h2>
+                    <div class="onboarding-demo" aria-label="Una palabra enviada por una musa llega al texto de su escritxr">
+                        <div class="onboarding-demo__phone" aria-hidden="true">
+                            <span class="onboarding-demo__phone-label">TU IDEA</span>
+                            <strong>VOLCÁN</strong>
+                            <span class="onboarding-demo__send">ENVIAR <i>↗</i></span>
+                        </div>
+                        <div class="onboarding-demo__flight" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                            <b>VOLCÁN</b>
+                        </div>
+                        <div class="onboarding-demo__story" aria-hidden="true">
+                            <span class="onboarding-demo__story-label">HISTORIA EN DIRECTO</span>
+                            <p>La ciudad dormía bajo el</p>
+                            <strong>VOLCÁN</strong><i></i>
+                        </div>
                     </div>
-                    <h2 class="intro-explica-title intro-explica-title--azul">¿QUÉ ES <span class="intro-logo-inline">&lt;SCRI&gt; B</span>?</h2>
-                    <p class="intro-explica-text">
-                        <span class="intro-accent">&lt;SCRI&gt; B es un videojuego de escritura rápida</span> donde el tiempo responde a las teclas de quien escribe.
-                    </p>
-                    <div class="intro-que-es-wrap">
-                        <img class="intro-que-es-img" src="../../img/scrib.png" alt="SCRIB">
+                    <div class="intro-onboarding-keys">
+                        <article>
+                            <span>01</span>
+                            <div><strong>ENVÍA UNA PALABRA</strong><small>Lo que se te ocurra.</small></div>
+                        </article>
+                        <article>
+                            <span>02</span>
+                            <div><strong>ENTRA EN LA HISTORIA</strong><small>Tu escritxr decide cómo usarla.</small></div>
+                        </article>
                     </div>
-                    <p class="intro-explica-text">
-                        Si quien escribe se detiene, <span class="intro-accent">el texto empieza a borrarse</span>. Tu labor como musa es guiar para llegar al final antes de que el contador llegue a cero.
-                    </p>
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
-                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-tiempo" aria-label="Ir al tiempo"></button>
-                    </div>
-                </div>
-            </section>
-            <section id="intro-tiempo" class="intro-section intro-explica intro-explica--azul">
-                <div class="intro-panel">
-                    <div class="intro-logos">
-                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
-                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
-                    </div>
-                    <h2 class="intro-explica-title intro-explica-title--azul">EL TIEMPO</h2>
-                    <p class="intro-explica-text">
-                        Al inicio, <span class="intro-accent">cada escritxr dispone de X minutos</span>.
-                    </p>
-                    <p class="intro-explica-text">
-                        <span class="intro-accent">Cuando escribe,</span> se le irán añadiendo segundos a su marcador.
-                    </p>
-                    <p class="intro-explica-text">
-                        <span class="intro-accent">Si deja de escribir,</span> el texto comenzará a borrarse y se restará tiempo.
-                    </p>
-                    <p class="intro-explica-text">
-                        <span class="intro-accent">Si el contador llega a cero,</span> el texto escrito se autodestruirá.
-                    </p>
-                    <div class="intro-tiempo-wrap">
-                        <img class="intro-tiempo-img intro-que-es-img" src="../../img/el_tiempo.png" alt="El tiempo">
-                    </div>
-                    <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-que-es" aria-label="Volver a Qué es"></button>
-                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-musas" aria-label="Ir a las musas"></button>
-                    </div>
-                </div>
-            </section>
-            <section id="intro-musas" class="intro-section intro-explica intro-explica--rojo">
-                <div class="intro-panel">
-                    <div class="intro-logos">
-                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
-                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
-                    </div>
-                    <h2 class="intro-explica-title intro-explica-title--rojo">ERES UNA MUSA</h2>
-                    <p class="intro-explica-text">
-                        Tu papel como <span class="intro-accent">musa</span> es <span class="intro-accent">acompañar a tu escritor o escritora</span> en su proceso creativo.
-                    </p>
-                    <p class="intro-explica-text">
-                        Le podrás <span class="intro-accent">sugerir palabras</span>, <span class="intro-accent">dar consejos</span> e incluso elegir una <span class="intro-accent">desventaja para el equipo contrario</span>.
-                    </p>
-                    <div class="intro-escritoras-wrap">
-                        <img class="intro-escritoras-img" src="../../img/escritoras.png" alt="Escritoras">
-                    </div>
-                    <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-tiempo" aria-label="Volver al tiempo"></button>
-                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-representacion" aria-label="Ir a la representación"></button>
-                    </div>
-                </div>
-            </section>
-            <section id="intro-representacion" class="intro-section intro-explica intro-explica--rojo">
-                <div class="intro-panel">
-                    <div class="intro-logos">
-                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
-                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
-                    </div>
-                    <h2 class="intro-explica-title intro-explica-title--rojo">LA REPRESENTACIÓN</h2>
-                    <p class="intro-explica-text">
-                        Al final de la velada, <span class="intro-accent">dos equipos de intérpretes representarán las obras creadas</span> por sus respectivos escritores o escritoras.
-                    </p>
-                    <div class="intro-repre-art intro-repre-art--full">
-                        <img class="intro-repre-img" src="../../img/la_representacion.png" alt="La representación">
-                    </div>
-                    <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-musas" aria-label="Volver a las musas"></button>
-                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-niveles" aria-label="Ir a los niveles"></button>
-                    </div>
-                </div>
-            </section>
-            <section id="intro-niveles" class="intro-section intro-explica intro-explica--azul">
-                <div class="intro-panel">
-                    <div class="intro-logos">
-                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
-                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
-                    </div>
-                    <h2 class="intro-explica-title intro-explica-title--azul">LOS NIVELES</h2>
-                    <div class="intro-niveles-list">
-                        <div class="intro-nivel intro-nivel--verde">
-                            <div class="intro-nivel-icon">🙏</div>
-                            <div>
-                                <h3 class="intro-nivel-title">LETRA BENDITA</h3>
-                                <p class="intro-nivel-desc">Se elige una de las diez letras menos usadas en el español. <span class="intro-accent">Si quien escribe la emplea, se añade tiempo al marcador</span>.</p>
-                            </div>
-                        </div>
-                        <div class="intro-nivel intro-nivel--rojo">
-                            <div class="intro-nivel-icon">😈</div>
-                            <div>
-                                <h3 class="intro-nivel-title">LETRA MALDITA</h3>
-                                <p class="intro-nivel-desc">El opuesto de Letra Bendita: <span class="intro-accent">si quien escribe la emplea, perderá tiempo</span>.</p>
-                            </div>
-                        </div>
-                        <div class="intro-nivel intro-nivel--azul">
-                            <div class="intro-nivel-icon">💬</div>
-                            <div>
-                                <h3 class="intro-nivel-title">TERTULIA</h3>
-                                <p class="intro-nivel-desc"><span class="intro-accent">Quien escribe</span> dialoga con sus musas y pregunta sobre el curso de la historia.</p>
-                            </div>
-                        </div>
-                        <div class="intro-nivel intro-nivel--amarillo">
-                            <div class="intro-nivel-icon">📖</div>
-                            <div>
-                                <h3 class="intro-nivel-title">PALABRA BENDITA</h3>
-                                <p class="intro-nivel-desc">El juego ofrece palabras [aleatorias] y propuestas por las musas. Si quien escribe las usa, ganará tiempo.</p>
-                            </div>
-                        </div>
-                        <div class="intro-nivel intro-nivel--rosa">
-                            <div class="intro-nivel-icon">⚔️</div>
-                            <div>
-                                <h3 class="intro-nivel-title">PALABRA MALDITA</h3>
-                                <p class="intro-nivel-desc"><span class="intro-accent">Se prohíbe el uso de palabras lanzadas por el equipo contrario</span>. Si quien escribe las usa, perderá tiempo.</p>
-                            </div>
-                        </div>
-                        <div class="intro-nivel intro-nivel--naranja">
-                            <div class="intro-nivel-icon">🏁</div>
-                            <div>
-                                <h3 class="intro-nivel-title">FRASE FINAL</h3>
-                                <p class="intro-nivel-desc"><span class="intro-accent">Quien escribe deberá introducir una frase final</span> para cerrar el texto antes de que acabe el tiempo.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-representacion" aria-label="Volver a la representación"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-nombre" data-focus="nombre_musa" aria-label="Ir a elegir nombre"></button>
                     </div>
                 </div>
             </section>
             <section id="intro-nombre" class="intro-section intro-nombre">
                 <div class="intro-panel">
-                    <div class="intro-logos">
-                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
-                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
-                    </div>
-                    <h1>¿CUÁL SERÁ TU NOMBRE?</h1>
-                    <input id="nombre_musa" class="nombre" maxlength="10" style="color:orange;text-transform: uppercase;">
+                    <span class="intro-onboarding-logo">&lt;SCRI&gt; B</span>
+                    <p class="intro-onboarding-eyebrow">CASI ESTÁ</p>
+                    <h1>¿CÓMO TE LLAMAMOS?</h1>
+                    <input id="nombre_musa" class="nombre" maxlength="10" autocomplete="nickname" aria-label="Tu nombre" style="color:orange;text-transform: uppercase;">
                     <div id="mensaje_musa" class="musa-alerta" aria-live="polite"></div>
                     <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-niveles" aria-label="Volver a niveles"></button>
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-como-jugar" aria-label="Volver al mini tutorial"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-asignacion" data-validate="nombre_musa" data-i18n-attr="aria-label:muse.assignment.go_aria" aria-label="Ir a descubrir tu equipo"></button>
                     </div>
                 </div>
             </section>
             <section id="intro-asignacion" class="intro-section intro-asignacion">
                 <div class="intro-panel">
-                    <div class="intro-logos">
-                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
-                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
-                    </div>
+                    <span class="intro-onboarding-logo">&lt;SCRI&gt; B</span>
                     <h1><span class="intro-musa-nombre">MUSA</span>,<br>ELIGE TU ESCRITXR</h1>
-                    <p class="musa-assignment-lead">
-                        Puedes elegir directamente o dejar que el juego equilibre los equipos por ti.
-                    </p>
                     <div class="musa-team-picker" aria-label="Escritoras disponibles">
                         <button id="musa_assignment_blue" class="musa-team-choice musa-team-choice--blue" type="button" data-team="1">
                             <span class="musa-team-choice__team">EQUIPO AZUL</span>
@@ -3454,9 +3735,7 @@ body.musa-boot-activa .intro-flow {
                         <span class="musa-assignment-cta__finger" aria-hidden="true">☝</span>
                         DETECCIÓN AUTOMÁTICA
                     </button>
-                    <p id="musa_assignment_status" class="musa-assignment-status" role="status" aria-live="polite">
-                        El modo automático te asignará al equipo con menos musas.
-                    </p>
+                    <p id="musa_assignment_status" class="musa-assignment-status" role="status" aria-live="polite"></p>
                     <div class="intro-nav intro-nav--up">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-nombre" aria-label="Volver a nombre"></button>
                     </div>
@@ -3468,7 +3747,7 @@ body.musa-boot-activa .intro-flow {
         <div class="musa-boot-panel">
             <div id="musa_boot_kicker" class="musa-boot-kicker">DETECCIÓN AUTOMÁTICA</div>
             <h2 id="musa_boot_title" class="musa-boot-title">PON TU DEDO</h2>
-            <p id="musa_boot_copy" class="musa-boot-copy">Mantén pulsada la huella hasta completar la detección.</p>
+            <p id="musa_boot_copy" class="musa-boot-copy">Mantén el dedo sobre la huella.</p>
             <div class="musa-assignment-arena">
                 <div id="musa_fingerprint_stage" class="musa-fingerprint-stage" hidden>
                     <button id="musa_fingerprint" class="musa-fingerprint" type="button" aria-label="Mantén pulsado para detectar tu equipo">
@@ -3505,7 +3784,7 @@ body.musa-boot-activa .intro-flow {
                 </div>
             </div>
             <div class="musa-boot-status-row">
-                <span id="musa_boot_status" class="musa-boot-status-text" aria-live="polite">EQUILIBRANDO LOS EQUIPOS…</span>
+                <span id="musa_boot_status" class="musa-boot-status-text" aria-live="polite">CONECTANDO…</span>
                 <span id="musa_boot_percent" class="musa-boot-status-percent">…</span>
             </div>
             <div class="musa-boot-bar" aria-hidden="true">
@@ -3523,5 +3802,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260831b"></script>
+<script src="./js/musa-selector.js?v=20260831h"></script>
 </html>
