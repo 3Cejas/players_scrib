@@ -31,18 +31,18 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260829s";
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_SOCKET_EVENTS_VERSION = "20260506b";
-const CONTROL_CSS_VERSION = "20260831a";
-const CONTROL_ACTIONS_VERSION = "20260831a";
-const CONTROL_I18N_VERSION = "20260831a";
-const CONTROL_STATE_VERSION = PLAYER_DISCARD_VERSION;
-const CONTROL_SOCKET_EVENTS_VERSION = "20260829d";
+const CONTROL_CSS_VERSION = "20260831b";
+const CONTROL_ACTIONS_VERSION = "20260831b";
+const CONTROL_I18N_VERSION = "20260831b";
+const CONTROL_STATE_VERSION = "20260831b";
+const CONTROL_SOCKET_EVENTS_VERSION = "20260831b";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
 const MUSA_ASSIGNMENT_VERSION = "20260831a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260831a";
-const PUBLIC_PLAYER_CSS_VERSION = "20260829p";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260831a";
-const PUBLIC_PLAYER_I18N_VERSION = "20260831a";
+const PUBLIC_PLAYER_STATE_VERSION = "20260831b";
+const PUBLIC_PLAYER_CSS_VERSION = "20260831b";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260831b";
+const PUBLIC_PLAYER_I18N_VERSION = "20260831b";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260505f";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
@@ -579,7 +579,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /Reorganizacion amplia de parametros en dos columnas/);
   assert.match(css, /#panel_parametros > tr:not\(\.parametros-title-row\):not\(\.parametros-frase-row\):not\(\.parametros-modos-row\)\s*\{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/);
   assert.match(css, /#panel_parametros > tr:not\(\.parametros-title-row\):not\(\.parametros-frase-row\):not\(\.parametros-modos-row\) > td\.param-start\s*\{[\s\S]*grid-template-columns: minmax\(7rem, 1fr\) auto auto;/);
-  assert.match(html, /<td class="param-start" hidden aria-hidden="true">[\s\S]*id="tiempo_minutos"[\s\S]*id="tiempo_segundos"/);
+  assert.match(html, /class="param-duration"[\s\S]*data-i18n="control\.param\.duration"[\s\S]*id="duracion_minutos"[\s\S]*id="duracion_segundos"/);
+  assert.doesNotMatch(html, /id="tiempo_modos"|id="tiempo_minutos"|id="tiempo_segundos"|data-i18n="control\.param\.(?:level|start)"/);
   assert.match(css, /\.level-card-duration\s*\{[\s\S]*border-top: 0 !important;[\s\S]*border-bottom: 0 !important;/);
   assert.match(css, /\.level-sequence\s*\{[\s\S]*gap: clamp\(0\.46rem, 0\.72vw, 0\.72rem\);/);
   assert.match(css, /--level-glow: rgba\(255, 214, 90, 0\.7\);/);
@@ -798,7 +799,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(actions, /function borrar_texto_guardado\(\)[\s\S]*emitirEstadoControlPersistente\(\{ inmediato: true \}\);/);
   assert.match(actions, /function guardarFraseFinalControl\(playerId, opciones = \{\}\)[\s\S]*emitirEstadoControlPersistente\(\);/);
   assert.match(actions, /function cambiarValor\(campoId, incremento\)[\s\S]*emitirEstadoControlPersistente\(\);/);
-  assert.match(actions, /PARAMETROS_CONTROL_PERSISTENTES = \[[\s\S]*"tiempo_modos"[\s\S]*"escala_espectador"/);
+  assert.match(actions, /PARAMETROS_CONTROL_PERSISTENTES = \[[\s\S]*"duracion_minutos"[\s\S]*"duracion_segundos"[\s\S]*"escala_espectador"/);
+  assert.match(actions, /socket\.emit\('inicio',[\s\S]*DURACION_PARTIDA[\s\S]*LISTA_MODOS/);
   assert.match(actions, /boton\.textContent = tJuego2PControl\("control\.button\.delete_saved", \{\}, "BORRAR TEXTO"\);/);
   assert.doesNotMatch(actions, /BORRAR TEXTO: (?:ON|OFF)/);
   assert.doesNotMatch(actions, /\\u232B BORRAR TEXTO/);
@@ -1113,6 +1115,23 @@ test("control PDF generator uses selected language translations", () => {
   assert.doesNotMatch(js, /doc\.text\("REGALO DE MUSA"/);
   assert.doesNotMatch(js, /doc\.text\("PALABRAS ENVIADAS"/);
   assert.doesNotMatch(js, /\["Enviadas",/);
+});
+
+test("muse gift opens a personalized postgame reader for both final texts", () => {
+  const html = read("game/public/players/index.html");
+  const css = read("game/public/players/css/publico.css");
+  const state = read("game/public/players/js/state.js");
+  const socketEvents = read("game/public/players/js/socket-events.js");
+  const i18n = read("game/js/i18n.js");
+
+  assert.match(html, /id="musa_postgame"[\s\S]*id="musa_postgame_enviadas"[\s\S]*id="musa_postgame_tab_propio"[\s\S]*id="musa_postgame_tab_rival"[\s\S]*id="musa_postgame_texto"/);
+  assert.match(css, /\.musa-postgame\.musa-postgame--visible[\s\S]*\.musa-postgame__stats[\s\S]*\.musa-postgame__text/);
+  assert.match(state, /regalo_postgame_data = payload\.postgame/);
+  assert.match(state, /function mostrarPostgameMusa\(\)/);
+  assert.match(state, /await descargarArchivoRegalo\(regalo_pdf_data, regalo_pdf_filename\)[\s\S]*mostrarPostgameMusa\(\)/);
+  assert.match(state, /function pintarTextoPostgameMusa\(playerId\)[\s\S]*escritxr\.texto/);
+  assert.match(socketEvents, /regalo_pdf_musas_reset[\s\S]*ocultarPostgameMusa\(\{ limpiar: true \}\)/);
+  assert.match(i18n, /"muse\.postgame\.title"/);
 });
 
 test("control parameters own spectator scale and removed inserted word goal", () => {

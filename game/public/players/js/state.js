@@ -346,6 +346,15 @@ let regalo_nombre = getEl("regalo_nombre");
 let regalo_pdf_data = null;
 let regalo_pdf_filename = null;
 let regalo_pdf_pendiente = null;
+let regalo_pdf_ultimo_data = null;
+let regalo_pdf_ultimo_filename = null;
+let regalo_postgame_data = null;
+let regalo_postgame_escritxr_activo = 1;
+let musa_postgame = getEl("musa_postgame");
+let musa_postgame_cerrar = getEl("musa_postgame_cerrar");
+let musa_postgame_pdf = getEl("musa_postgame_pdf");
+let musa_postgame_tab_propio = getEl("musa_postgame_tab_propio");
+let musa_postgame_tab_rival = getEl("musa_postgame_tab_rival");
 let campo_palabra = getEl("palabra");
 let tarea = getEl("tarea");
 let mostrar_texto = getEl("mostrar_texto");
@@ -1383,10 +1392,119 @@ function mostrarRegaloPdf(payload) {
     actualizarNombreRegalo();
     regalo_pdf_data = payload.data;
     regalo_pdf_filename = payload.filename || "regalo.pdf";
+    regalo_pdf_ultimo_data = regalo_pdf_data;
+    regalo_pdf_ultimo_filename = regalo_pdf_filename;
+    regalo_postgame_data = payload.postgame && typeof payload.postgame === "object" ? payload.postgame : null;
     regalo_pdf.classList.add("regalo-pdf--visible");
     regalo_pdf.classList.remove("regalo-pdf--claimed");
     regalo_pdf.setAttribute("aria-hidden", "false");
     regalo_pdf_pendiente = null;
+}
+
+function traducirPostgameMusa(clave, fallback) {
+    return window && typeof window.scribT2P === "function" ? window.scribT2P(clave, {}, fallback) : fallback;
+}
+
+function valorPostgameMusa(id, valor) {
+    const elemento = getEl(id);
+    if (elemento) elemento.textContent = String(valor);
+}
+
+function escritorPostgameMusa(playerId) {
+    const escritores = regalo_postgame_data && regalo_postgame_data.escritores;
+    return escritores && (escritores[playerId] || escritores[String(playerId)])
+        ? (escritores[playerId] || escritores[String(playerId)])
+        : { nombre: `ESCRITXR ${playerId}`, texto: "", stats: {} };
+}
+
+function pintarTextoPostgameMusa(playerId) {
+    const id = Number(playerId) === 2 ? 2 : 1;
+    regalo_postgame_escritxr_activo = id;
+    const escritxr = escritorPostgameMusa(id);
+    const stats = escritxr.stats && typeof escritxr.stats === "object" ? escritxr.stats : {};
+    valorPostgameMusa("musa_postgame_escritxr_nombre", escritxr.nombre || `ESCRITXR ${id}`);
+    valorPostgameMusa("musa_postgame_palabras", Math.max(0, Number(stats.palabras) || 0));
+    valorPostgameMusa("musa_postgame_pulsaciones", Math.max(0, Number(stats.pulsaciones) || 0));
+    valorPostgameMusa("musa_postgame_ritmo", Math.max(0, Number(stats.ritmo_ppm) || 0));
+    valorPostgameMusa(
+        "musa_postgame_texto",
+        String(escritxr.texto || "").trim() || traducirPostgameMusa("muse.postgame.empty_text", "Este texto quedó vacío.")
+    );
+    const propio = Number(regalo_postgame_data && regalo_postgame_data.player) === id;
+    [musa_postgame_tab_propio, musa_postgame_tab_rival].forEach((tab) => {
+        if (!tab) return;
+        const tabPlayer = Number(tab.dataset.player);
+        const activo = tabPlayer === id;
+        tab.classList.toggle("is-active", activo);
+        tab.setAttribute("aria-selected", activo ? "true" : "false");
+    });
+    if (musa_postgame) {
+        musa_postgame.style.setProperty("--postgame-reader-color", propio ? "var(--postgame-team-color)" : "var(--postgame-rival-color)");
+    }
+}
+
+function pintarPostgameMusa() {
+    if (!regalo_postgame_data || !musa_postgame) return false;
+    const equipo = Number(regalo_postgame_data.player) === 2 ? 2 : 1;
+    const rival = equipo === 1 ? 2 : 1;
+    const datosMusa = regalo_postgame_data.musa && typeof regalo_postgame_data.musa === "object"
+        ? regalo_postgame_data.musa
+        : {};
+    const stats = datosMusa.stats && typeof datosMusa.stats === "object" ? datosMusa.stats : {};
+    valorPostgameMusa("musa_postgame_musa_nombre", datosMusa.nombre || "MUSA");
+    valorPostgameMusa("musa_postgame_enviadas", Math.max(0, Number(stats.enviadas) || 0));
+    valorPostgameMusa("musa_postgame_introducidas", Math.max(0, Number(stats.introducidas) || 0));
+    valorPostgameMusa("musa_postgame_efectividad", `${Math.max(0, Number(stats.efectividad_pct) || 0)}%`);
+    const impacto = Number(stats.impacto_neto) || 0;
+    valorPostgameMusa("musa_postgame_impacto", `${impacto > 0 ? "+" : ""}${impacto}`);
+    if (musa_postgame_tab_propio) {
+        musa_postgame_tab_propio.dataset.player = String(equipo);
+        musa_postgame_tab_propio.textContent = traducirPostgameMusa("muse.postgame.your_writer", "TU ESCRITXR");
+    }
+    if (musa_postgame_tab_rival) {
+        musa_postgame_tab_rival.dataset.player = String(rival);
+        musa_postgame_tab_rival.textContent = traducirPostgameMusa("muse.postgame.other_writer", "OTRX ESCRITXR");
+    }
+    musa_postgame.style.setProperty("--postgame-team-color", equipo === 2 ? "#ff6578" : "#43eaff");
+    musa_postgame.style.setProperty("--postgame-rival-color", equipo === 2 ? "#43eaff" : "#ff6578");
+    pintarTextoPostgameMusa(equipo);
+    return true;
+}
+
+function mostrarPostgameMusa() {
+    if (!pintarPostgameMusa()) return;
+    musa_postgame.classList.add("musa-postgame--visible");
+    musa_postgame.setAttribute("aria-hidden", "false");
+    document.body.classList.add("musa-postgame-activo");
+}
+
+function ocultarPostgameMusa({ limpiar = false } = {}) {
+    if (musa_postgame) {
+        musa_postgame.classList.remove("musa-postgame--visible");
+        musa_postgame.setAttribute("aria-hidden", "true");
+    }
+    document.body.classList.remove("musa-postgame-activo");
+    if (limpiar) {
+        regalo_postgame_data = null;
+        regalo_pdf_ultimo_data = null;
+        regalo_pdf_ultimo_filename = null;
+    }
+}
+
+async function descargarArchivoRegalo(data, filename) {
+    if (!data) return false;
+    const respuesta = await fetch(data);
+    if (!respuesta.ok) throw new Error(`PDF HTTP ${respuesta.status}`);
+    const blob = await respuesta.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename || "regalo.pdf";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return true;
 }
 
 function ocultarRegaloPdf() {
@@ -1407,30 +1525,51 @@ async function descargarRegaloPdf() {
     regalo_btn.disabled = true;
     regalo_pdf.classList.add("regalo-pdf--claimed");
     try {
-        const respuesta = await fetch(regalo_pdf_data);
-        const blob = await respuesta.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = regalo_pdf_filename || "regalo.pdf";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        await descargarArchivoRegalo(regalo_pdf_data, regalo_pdf_filename);
         if (typeof confetti_musas === "function") {
             confetti_musas();
         }
     } catch (error) {
         console.error("No se pudo descargar el regalo PDF:", error);
+        regalo_pdf.classList.remove("regalo-pdf--claimed");
+        regalo_btn.disabled = false;
+        return;
     }
     setTimeout(() => {
         ocultarRegaloPdf();
         regalo_btn.disabled = false;
+        mostrarPostgameMusa();
     }, 900);
 }
 
 if (regalo_btn) {
     regalo_btn.addEventListener("click", descargarRegaloPdf);
+}
+if (musa_postgame_tab_propio) {
+    musa_postgame_tab_propio.addEventListener("click", () => pintarTextoPostgameMusa(musa_postgame_tab_propio.dataset.player));
+}
+if (musa_postgame_tab_rival) {
+    musa_postgame_tab_rival.addEventListener("click", () => pintarTextoPostgameMusa(musa_postgame_tab_rival.dataset.player));
+}
+if (musa_postgame_cerrar) {
+    musa_postgame_cerrar.addEventListener("click", () => ocultarPostgameMusa());
+}
+if (musa_postgame_pdf) {
+    musa_postgame_pdf.addEventListener("click", async () => {
+        musa_postgame_pdf.disabled = true;
+        try {
+            await descargarArchivoRegalo(regalo_pdf_ultimo_data, regalo_pdf_ultimo_filename);
+        } catch (error) {
+            console.error("No se pudo volver a descargar el PDF:", error);
+        } finally {
+            musa_postgame_pdf.disabled = false;
+        }
+    });
+}
+if (window && typeof window.scribOnLanguageChange2P === "function") {
+    window.scribOnLanguageChange2P(() => {
+        if (regalo_postgame_data) pintarPostgameMusa();
+    });
 }
 const CLAVE_TEMPORIZADOR_LECTURA = "scrib_temporizador_lectura_fin";
 

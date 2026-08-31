@@ -700,7 +700,7 @@ socket.on('tiempo_muerto_control', data => {
         boton_pausar_reanudar.innerHTML = "\u25B6\uFE0F REANUDAR";
         boton_pausar_reanudar.dataset.value = 1;
     }
-    pausar();
+    pausar({ motivo: "tertulia" });
     clearTimeout(TimeoutTiempoMuerto);
   TimeoutTiempoMuerto = setTimeout(function(){
     if (revisionPartida !== null
@@ -713,7 +713,7 @@ socket.on('tiempo_muerto_control', data => {
     }
     TimeoutTiempoMuerto = null;
     reanudar_modo();
-  }, TIEMPO_CAMBIO_MODOS * 1000);
+  }, Math.max(1, duracion_modo_actual_control) * 1000);
 });
 
 socket.on('fin_a_control', () => {
@@ -1618,7 +1618,7 @@ function pedirResumenMusasPdfControl(timeoutMs = 1800) {
     });
 }
 
-function descargar_textos(opciones = {}) {
+async function descargar_textos(opciones = {}) {
     const opcionesNormalizadas = (opciones && typeof opciones === "object") ? opciones : {};
     const descargar = opcionesNormalizadas.descargar !== false;
     const emitirMusas = opcionesNormalizadas.emitirMusas === true;
@@ -1819,12 +1819,28 @@ function descargar_textos(opciones = {}) {
         return doc;
     }
 
-    function emitirPdfMusas(playerId, nombre, documento, datosDocumento) {
+    function emitirRegaloPdfMusa(payload) {
+        return new Promise((resolve) => {
+            let resuelto = false;
+            const finalizar = (respuesta = null) => {
+                if (resuelto) return;
+                resuelto = true;
+                resolve(respuesta);
+            };
+            const timer = setTimeout(() => finalizar({ ok: false, code: "TIMEOUT" }), 6000);
+            socket.emit('regalo_pdf_musas', payload, (respuesta) => {
+                clearTimeout(timer);
+                finalizar(respuesta || { ok: false });
+            });
+        });
+    }
+
+    async function emitirPdfMusas(playerId, nombre, documento, datosDocumento) {
         if (!emitirMusas || !documento) return;
         try {
             const resumenesMusa = obtenerResumenesMusaJugador(playerId);
             if (resumenesMusa.length && datosDocumento) {
-                resumenesMusa.forEach((resumenMusa) => {
+                for (const resumenMusa of resumenesMusa) {
                     const docMusa = construirDocumentoJugador(
                         playerId,
                         nombre,
@@ -1835,10 +1851,10 @@ function descargar_textos(opciones = {}) {
                         resumenMusa
                     );
                     const dataUriMusa = docMusa.output('datauristring');
-                    if (!dataUriMusa) return;
+                    if (!dataUriMusa) continue;
                     const nombreMusa = normalizarNombreDescargaArchivo(resumenMusa.nombre || "MUSA", "MUSA");
                     const idMusa = normalizarNombreDescargaArchivo(String(resumenMusa.client_id || "").slice(-10), "MUSA");
-                    socket.emit('regalo_pdf_musas', {
+                    const respuesta = await emitirRegaloPdfMusa({
                         player: playerId,
                         client_id: resumenMusa.client_id,
                         musa_nombre: resumenMusa.nombre || "MUSA",
@@ -1846,16 +1862,22 @@ function descargar_textos(opciones = {}) {
                         filename: `${crearBaseArchivoDescargaJugador(`${nombre}_${nombreMusa}_${idMusa}`, fechaDescarga, "MUSA_J" + playerId)}.pdf`,
                         data: dataUriMusa
                     });
-                });
+                    if (!respuesta || respuesta.ok !== true) {
+                        console.warn("No se pudo entregar el PDF personalizado a la musa:", resumenMusa.client_id, respuesta);
+                    }
+                }
                 return;
             }
             const dataUri = documento.output('datauristring');
             if (dataUri) {
-                socket.emit('regalo_pdf_musas', {
+                const respuesta = await emitirRegaloPdfMusa({
                     player: playerId,
                     filename: `${crearBaseArchivoDescargaJugador(nombre, fechaDescarga, "JUGADOR_" + playerId)}.pdf`,
                     data: dataUri
                 });
+                if (!respuesta || respuesta.ok !== true) {
+                    console.warn("No se pudo entregar el PDF del equipo:", playerId, respuesta);
+                }
             }
         } catch (error) {
             console.error("Error al generar PDF para musas:", error);
@@ -1928,7 +1950,7 @@ function descargar_textos(opciones = {}) {
         [70, 240, 255],
         [255, 107, 107]
     );
-    emitirPdfMusas(1, val_nombre1, docJ1, {
+    await emitirPdfMusas(1, val_nombre1, docJ1, {
         contenido: contenidoJ1,
         palabrasBenditas: palabrasBenditas1,
         accent: [70, 240, 255],
@@ -1952,7 +1974,7 @@ function descargar_textos(opciones = {}) {
         [255, 107, 107],
         [70, 240, 255]
     );
-    emitirPdfMusas(2, val_nombre2, docJ2, {
+    await emitirPdfMusas(2, val_nombre2, docJ2, {
         contenido: contenidoJ2,
         palabrasBenditas: palabrasBenditas2,
         accent: [255, 107, 107],
@@ -1970,7 +1992,7 @@ function descargar_textos(opciones = {}) {
 
 window.emitirRegaloMusas = async function emitirRegaloMusas() {
     const resumenMusas = await pedirResumenMusasPdfControl();
-    descargar_textos({ descargar: false, emitirMusas: true, resumenMusasPdf: resumenMusas });
+    await descargar_textos({ descargar: false, emitirMusas: true, resumenMusasPdf: resumenMusas });
 };
 
 const MODOS = {

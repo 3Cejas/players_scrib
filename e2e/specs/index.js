@@ -16,6 +16,16 @@ const PUTADA_BORROSO = "\u{1F32A}\uFE0F";
 const PUTADA_INVERSO = "\u{1F643}";
 const PUTADA_PLUMA = "\u{1F58A}\uFE0F";
 
+function emitTestSocketAck(ctx, eventName, payload = {}, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timed out waiting ack for ${eventName}`)), timeoutMs);
+    ctx.socket.emit(eventName, payload, (response) => {
+      clearTimeout(timer);
+      resolve(response || null);
+    });
+  });
+}
+
 function buildConnectionRequirements(roles) {
   const requirements = {
     control: 0,
@@ -404,12 +414,17 @@ async function configureFastControlPanel(ctx, overrides = {}) {
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
     };
-    setNumericInput("tiempo_modos", nextConfig.tiempo_modos);
+    const cantidadNiveles = Array.isArray(nextConfig.modes) && nextConfig.modes.length
+      ? nextConfig.modes.length
+      : 1;
+    const duracionTotal = Number.isFinite(Number(nextConfig.duracion_total_segundos))
+      ? Math.max(1, Math.trunc(Number(nextConfig.duracion_total_segundos)))
+      : Math.max(1, Math.trunc(Number(nextConfig.tiempo_modos) || 1) * cantidadNiveles);
+    setNumericInput("duracion_minutos", Math.floor(duracionTotal / 60));
+    setNumericInput("duracion_segundos", duracionTotal % 60);
     setNumericInput("tiempo_cambio_letra", nextConfig.tiempo_cambio_letra);
     setNumericInput("tiempo_cambio_palabras", nextConfig.tiempo_cambio_palabras);
     setNumericInput("limite_tiempo_inspiracion", nextConfig.limite_tiempo_inspiracion);
-    setNumericInput("tiempo_minutos", nextConfig.tiempo_minutos);
-    setNumericInput("tiempo_segundos", nextConfig.tiempo_segundos);
 
     if (typeof window.asegurarCasillasModos === "function") {
       window.asegurarCasillasModos();
@@ -1251,6 +1266,30 @@ async function requestQueuedMusaWord(ctx, roleName) {
   });
 }
 
+async function useActiveWriterInspiration(ctx, roleName, eventName) {
+  const response = await ctx.evaluate(roleName, (socketEvent) => new Promise((resolve, reject) => {
+    const meta = window.eval("meta_inspiracion_activa_escritora");
+    const currentPlayer = Number(window.eval("player"));
+    if (!meta?.inspiracion_id) {
+      reject(new Error("Missing active inspiration metadata"));
+      return;
+    }
+    const timer = setTimeout(() => reject(new Error(`Timed out using ${socketEvent}`)), 5000);
+    socket.emit(socketEvent, {
+      player: currentPlayer,
+      accion: "aprovechar",
+      inspiracion_id: meta.inspiracion_id,
+      request_id: `e2e_use_${Date.now()}_${currentPlayer}`,
+      modo_seq: meta.modo_seq
+    }, (payload) => {
+      clearTimeout(timer);
+      resolve(payload || null);
+    });
+  }), eventName);
+  ctx.assert(response?.ok === true, `${roleName} should use its authoritative inspiration (${JSON.stringify(response)})`);
+  return response;
+}
+
 async function emitMusaInspiration(ctx, roleName, word) {
   await ctx.evaluate(roleName, (value) => {
     if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
@@ -1277,7 +1316,8 @@ async function installMusaPdfGiftProbe(ctx, roleName) {
         client_id: payload.client_id || "",
         filename: payload.filename || "",
         personalizado: Boolean(payload.personalizado),
-        data: payload.data || ""
+        data: payload.data || "",
+        postgame: payload.postgame || null
       });
     });
   });
@@ -1302,6 +1342,8 @@ async function readMusaPdfGiftState(ctx, roleName) {
       hasData: typeof data === "string" && data.startsWith("data:application/pdf"),
       data,
       pending: Boolean(evalValue("typeof regalo_pdf_pendiente !== 'undefined' ? regalo_pdf_pendiente : null")),
+      postgameVisible: Boolean(document.querySelector("#musa_postgame")?.classList.contains("musa-postgame--visible")),
+      socketConnected: Boolean(window.eval("socket.connected")),
       gifts: Array.isArray(window.__e2ePdfGifts) ? window.__e2ePdfGifts : []
     };
   });
@@ -2014,6 +2056,84 @@ const visualSpecs = [
 
 const coreSpecs = [
   {
+    name: "musa-postgame-menu-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "musa1"]);
+      await configureFastControlPanel(ctx, {
+        tiempo_modos: 60,
+        tiempo_cambio_palabras: 30,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx);
+      await waitForLocalMode(ctx, "musa1", "palabras bonus", 10000);
+      await ctx.setWriterText("writer1", "Texto final azul para la musa");
+      await ctx.setWriterText("writer2", "Texto final rojo para comparar");
+      await ctx.waitForState(
+        "both final texts reach the server before the gift",
+        (state) => state.textos[1].plano.includes("Texto final azul")
+          && state.textos[2].plano.includes("Texto final rojo"),
+        10000
+      );
+      const target = await readMusaPdfGiftState(ctx, "musa1");
+      await emitMusaInspiration(ctx, "musa1", "luciernaga");
+      await ctx.waitFor(
+        "the target muse's personal inspiration is included in the summary",
+        async () => {
+          const summary = await fetchMusaPdfSummary(ctx);
+          const entry = getMusaSummaryEntry(summary, target.clientId);
+          return Number(entry?.stats?.enviadas || 0) === 1 ? entry : false;
+        },
+        10000
+      );
+      ctx.assert(target.player === 1 || target.player === 2, "postgame target muse should have an assigned writer");
+      ctx.assert(Boolean(target.clientId), "postgame target muse should have a persistent client id");
+      await installMusaPdfGiftProbe(ctx, "musa1");
+      const giftAck = await emitTestSocketAck(ctx, "regalo_pdf_musas", {
+        player: target.player,
+        client_id: target.clientId,
+        musa_nombre: "E2E_LUNA",
+        filename: "postgame-e2e.pdf",
+        data: "data:application/pdf;base64,JVBERi0xLjQKJSVFT0YK"
+      }, 5000);
+      ctx.assert(giftAck?.ok === true, `server should accept the postgame gift (${JSON.stringify(giftAck)})`);
+      ctx.assert(giftAck?.destinatarios > 0, `postgame target room should contain the muse (${JSON.stringify(giftAck)})`);
+      await ctx.waitFor(
+        "target muse receives the enriched postgame gift",
+        async () => {
+          const state = await readMusaPdfGiftState(ctx, "musa1");
+          const gift = state.gifts.find((item) => item.filename === "postgame-e2e.pdf");
+          return gift && gift.postgame && gift.postgame.escritores ? state : false;
+        },
+        10000
+      );
+      await ctx.evaluate("musa1", () => {
+        window.eval("terminado = true");
+        window.eval("intentarMostrarRegaloPdfPendiente()");
+      });
+      await ctx.waitFor(
+        "completed muse sees the PDF gift",
+        async () => (await readMusaPdfGiftState(ctx, "musa1")).visible,
+        5000
+      );
+      await ctx.click("musa1", "#regalo_btn");
+      await ctx.waitForVisible("musa1", "#musa_postgame", true, "postgame opens after gift download", 5000);
+      const own = await ctx.evaluate("musa1", () => ({
+        sent: Number(document.querySelector("#musa_postgame_enviadas")?.textContent || 0),
+        text: document.querySelector("#musa_postgame_texto")?.textContent || ""
+      }));
+      ctx.assert(own.sent === 1, "postgame should include the muse's personal inspiration count");
+      ctx.assert(own.text.includes(target.player === 1 ? "Texto final azul" : "Texto final rojo"), "postgame should open the assigned writer text");
+      await ctx.click("musa1", "#musa_postgame_tab_rival");
+      await ctx.waitForText(
+        "musa1",
+        "#musa_postgame_texto",
+        (text) => text.includes(target.player === 1 ? "Texto final rojo" : "Texto final azul"),
+        "postgame switches to the opposing writer text",
+        5000
+      );
+    }
+  },
+  {
     name: "mode-transitions-core",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["control", "writer1", "spectator", "actor1"]);
@@ -2124,7 +2244,6 @@ const coreSpecs = [
     run: async (ctx) => {
       const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];
       await openRolesAndWait(ctx, ["control", "writer1", "writer2", ...museRoles]);
-      await Promise.all(museRoles.map((role) => installMusaPdfGiftProbe(ctx, role)));
       await configureFastControlPanel(ctx, {
         tiempo_modos: 30,
         tiempo_cambio_letra: 30,
@@ -2143,26 +2262,35 @@ const coreSpecs = [
         giftStateByRole[role] = await readMusaPdfGiftState(ctx, role);
         ctx.assert(giftStateByRole[role].clientId, `${role} should expose a persistent client id`);
       }
+      const museRolesByTeam = {
+        1: museRoles.filter((role) => giftStateByRole[role].player === 1),
+        2: museRoles.filter((role) => giftStateByRole[role].player === 2)
+      };
+      ctx.assert(museRolesByTeam[1].length === 2 && museRolesByTeam[2].length === 2, "automatic muse assignment should keep the two E2E teams balanced");
+      const musePlan = {
+        [museRolesByTeam[1][0]]: { letter: "aurora", bonusWarmup: "bruma", bonus: "horizonte", forbidden: "ruina", rivalWriter: 2 },
+        [museRolesByTeam[1][1]]: { letter: "alba", bonus: "horizonte" },
+        [museRolesByTeam[2][0]]: { letter: "amuleto", bonusWarmup: "eco", bonus: "memoria", forbidden: "veneno", rivalWriter: 1 },
+        [museRolesByTeam[2][1]]: { letter: "ancla", bonus: "memoria" }
+      };
 
       await ctx.emitHook("scrib_test:force_mode", { mode: "letra bendita", letra: "A" });
       await waitForMode(ctx, "letra bendita", 8000);
       await Promise.all(["writer1", "writer2", ...museRoles].map((role) => waitForLocalMode(ctx, role, "letra bendita", 10000)));
-      await Promise.all([
-        emitMusaInspiration(ctx, "musa1", "aurora"),
-        emitMusaInspiration(ctx, "musa1b", "alba"),
-        emitMusaInspiration(ctx, "musa2", "amuleto"),
-        emitMusaInspiration(ctx, "musa2b", "ancla")
-      ]);
+      await Promise.all(museRoles.map((role) => emitMusaInspiration(ctx, role, musePlan[role].letter)));
 
       await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
       await waitForMode(ctx, "palabras bonus", 8000);
       await Promise.all(["writer1", "writer2", ...museRoles].map((role) => waitForLocalMode(ctx, role, "palabras bonus", 10000)));
       await Promise.all([
-        emitMusaInspiration(ctx, "musa1", "horizonte"),
-        emitMusaInspiration(ctx, "musa1b", "horizonte"),
-        emitMusaInspiration(ctx, "musa2", "memoria"),
-        emitMusaInspiration(ctx, "musa2b", "memoria")
+        emitMusaInspiration(ctx, museRolesByTeam[1][0], musePlan[museRolesByTeam[1][0]].bonusWarmup),
+        emitMusaInspiration(ctx, museRolesByTeam[2][0], musePlan[museRolesByTeam[2][0]].bonusWarmup)
       ]);
+      await Promise.all([
+        ctx.waitForText("writer1", "#definicion", (text) => text.toLowerCase().includes("bruma"), "writer1 receives the warmup muse word", 10000),
+        ctx.waitForText("writer2", "#definicion", (text) => text.toLowerCase().includes("eco"), "writer2 receives the warmup muse word", 10000)
+      ]);
+      await Promise.all(museRoles.map((role) => emitMusaInspiration(ctx, role, musePlan[role].bonus)));
       await ctx.waitForState(
         "personalized pdf superbonus words queued",
         (state) => {
@@ -2173,18 +2301,29 @@ const coreSpecs = [
         },
         8000
       );
-      await requestQueuedWriterWord(ctx, "writer1", "bonus");
-      await requestQueuedWriterWord(ctx, "writer2", "bonus");
-      await ensureBonusWordInWriterUi(ctx, "writer1", "horizonte", "E2E_LUNA + E2E_SOL");
-      await ensureBonusWordInWriterUi(ctx, "writer2", "memoria", "E2E_ROSA + E2E_IRIS");
-      await ensureWriterEditableForFullFlow(ctx, "writer1");
-      await ensureWriterEditableForFullFlow(ctx, "writer2");
-      await typeInWriter(ctx, "writer1", " horizonte ");
-      await typeInWriter(ctx, "writer2", " memoria ");
-      await ctx.waitForState(
+      await Promise.all(["writer1", "writer2"].map((role) => ctx.evaluate(role, () => {
+        const discarded = window.eval("descartarInspiracionActivaEscritora()");
+        if (!discarded) throw new Error("warmup inspiration was not discardable");
+      })));
+      await Promise.all([
+        ctx.waitForText("writer1", "#definicion", (text) => text.toLowerCase().includes("horizonte"), "writer1 receives the queued superbonus word", 10000),
+        ctx.waitForText("writer2", "#definicion", (text) => text.toLowerCase().includes("memoria"), "writer2 receives the queued superbonus word", 10000)
+      ]);
+      await Promise.all([
+        useActiveWriterInspiration(ctx, "writer1", "nueva_palabra"),
+        useActiveWriterInspiration(ctx, "writer2", "nueva_palabra")
+      ]);
+      await ctx.setWriterText("writer1", "pdf azul base horizonte ");
+      await ctx.setWriterText("writer2", "pdf rojo base memoria ");
+      await ctx.waitFor(
         "personalized pdf bonus words introduced",
-        (state) => state.stats.players[1].palabrasBenditas.includes("HORIZONTE")
-          && state.stats.players[2].palabrasBenditas.includes("MEMORIA"),
+        async () => {
+          const summary = await fetchMusaPdfSummary(ctx);
+          return museRoles.every((role) => {
+            const entry = getMusaSummaryEntry(summary, giftStateByRole[role].clientId);
+            return entry?.palabras?.some((item) => item.palabra === musePlan[role].bonus && item.introducida);
+          }) ? summary : false;
+        },
         10000
       );
 
@@ -2192,30 +2331,29 @@ const coreSpecs = [
       await waitForMode(ctx, "palabras prohibidas", 8000);
       await Promise.all(["writer1", "writer2", ...museRoles].map((role) => waitForLocalMode(ctx, role, "palabras prohibidas", 10000)));
       await Promise.all([
-        emitMusaInspiration(ctx, "musa1", "ruina"),
-        emitMusaInspiration(ctx, "musa2", "veneno")
+        emitMusaInspiration(ctx, museRolesByTeam[1][0], "ruina"),
+        emitMusaInspiration(ctx, museRolesByTeam[2][0], "veneno")
       ]);
       await requestQueuedWriterWord(ctx, "writer1", "prohibida");
       await requestQueuedWriterWord(ctx, "writer2", "prohibida");
       await ctx.waitForText("writer1", "#definicion", (text) => text.toLowerCase().includes("veneno"), "writer1 receives rival forbidden word for personalized pdf", 10000);
       await ctx.waitForText("writer2", "#definicion", (text) => text.toLowerCase().includes("ruina"), "writer2 receives rival forbidden word for personalized pdf", 10000);
-      await ensureWriterEditableForFullFlow(ctx, "writer1");
-      await ensureWriterEditableForFullFlow(ctx, "writer2");
-      await typeInWriter(ctx, "writer1", " veneno ");
-      await typeInWriter(ctx, "writer2", " ruina ");
-      await ctx.waitForState(
-        "personalized pdf forbidden words introduced",
-        (state) => state.stats.players[1].intentosPalabraProhibida >= 1
-          && state.stats.players[2].intentosPalabraProhibida >= 1,
-        10000
-      );
+      await Promise.all([
+        useActiveWriterInspiration(ctx, "writer1", "nueva_palabra_prohibida"),
+        useActiveWriterInspiration(ctx, "writer2", "nueva_palabra_prohibida")
+      ]);
+      await ctx.setWriterText("writer1", "pdf azul base horizonte veneno ");
+      await ctx.setWriterText("writer2", "pdf rojo base memoria ruina ");
 
-      const expectations = {
-        musa1: { sent: ["aurora", "horizonte", "ruina"], introduced: ["horizonte", "ruina"], rivalWord: "ruina", rivalWriter: 2 },
-        musa1b: { sent: ["alba", "horizonte"], introduced: ["horizonte"] },
-        musa2: { sent: ["amuleto", "memoria", "veneno"], introduced: ["memoria", "veneno"], rivalWord: "veneno", rivalWriter: 1 },
-        musa2b: { sent: ["ancla", "memoria"], introduced: ["memoria"] }
-      };
+      const expectations = Object.fromEntries(museRoles.map((role) => {
+        const plan = musePlan[role];
+        return [role, {
+          sent: [plan.letter, ...(plan.bonusWarmup ? [plan.bonusWarmup] : []), plan.bonus, ...(plan.forbidden ? [plan.forbidden] : [])],
+          introduced: [plan.bonus, ...(plan.forbidden ? [plan.forbidden] : [])],
+          rivalWord: plan.forbidden,
+          rivalWriter: plan.rivalWriter
+        }];
+      }));
 
       await ctx.waitFor(
         "personalized pdf summary records sent and introduced words",
@@ -2235,35 +2373,107 @@ const coreSpecs = [
         10000
       );
 
-      await ctx.emitHook("scrib_test:force_finish_player", { player: 1, reiniciar: false, mostrar_resurreccion: false });
-      await ctx.emitHook("scrib_test:force_finish_player", { player: 2, reiniciar: false, mostrar_resurreccion: false });
-      const giftStates = await ctx.waitFor(
-        "each muse receives only its personalized pdf gift",
-        async () => {
-          const states = {};
-          for (const role of museRoles) {
-            states[role] = await readMusaPdfGiftState(ctx, role);
+      await Promise.all(museRoles.map((role) => installMusaPdfGiftProbe(ctx, role)));
+      await ctx.evaluate("control", () => {
+        if (window.__e2eGiftEmitProbeInstalled) return;
+        window.__e2eGiftEmitProbeInstalled = true;
+        window.__e2eGiftEmits = [];
+        window.__e2eGiftAcks = [];
+        const originalEmit = socket.emit.bind(socket);
+        socket.emit = (eventName, ...args) => {
+          if (eventName === "regalo_pdf_musas") {
+            const payload = args[0] || {};
+            window.__e2eGiftEmits.push({
+              clientId: payload.client_id || "",
+              size: String(payload.data || "").length
+            });
+            const callbackIndex = args.findIndex((item, index) => index > 0 && typeof item === "function");
+            if (callbackIndex >= 0) {
+              const originalCallback = args[callbackIndex];
+              args[callbackIndex] = (response) => {
+                window.__e2eGiftAcks.push(response || null);
+                originalCallback(response);
+              };
+            }
           }
-          return museRoles.every((role) => {
-            const state = states[role];
-            const ownGift = state.gifts.find((gift) => gift.client_id === state.clientId);
-            const foreignGift = state.gifts.find((gift) => gift.client_id && gift.client_id !== state.clientId);
-            return state.visible
-              && state.hasData
-              && state.filename.endsWith(".pdf")
-              && ownGift
-              && ownGift.personalizado === true
-              && ownGift.player === state.player
-              && ownGift.filename === state.filename
-              && !foreignGift;
-          }) ? states : false;
+          return originalEmit(eventName, ...args);
+        };
+      });
+      await ctx.evaluate("control", () => window.emitirRegaloMusas());
+      const giftEmitProbe = await ctx.evaluate("control", () => ({
+        connected: Boolean(socket.connected),
+        emits: window.__e2eGiftEmits || [],
+        acks: window.__e2eGiftAcks || []
+      }));
+      ctx.assert(giftEmitProbe.emits.length === museRoles.length, `Control should generate one PDF per muse (${JSON.stringify(giftEmitProbe)})`);
+      ctx.assert(Math.max(...giftEmitProbe.emits.map((item) => item.size)) < 950000, `personalized PDF payloads should fit the Socket.IO message limit (${JSON.stringify(giftEmitProbe)})`);
+      ctx.assert(giftEmitProbe.acks.length === museRoles.length && giftEmitProbe.acks.every((item) => item?.ok && item?.destinatarios > 0), `server should acknowledge every private muse delivery (${JSON.stringify(giftEmitProbe)})`);
+      ctx.assert(giftEmitProbe.connected, `Control should remain connected after emitting muse PDFs (${JSON.stringify(giftEmitProbe)})`);
+      let lastGiftStates = {};
+      let giftStates;
+      try {
+        giftStates = await ctx.waitFor(
+          "each muse receives only its personalized pdf gift",
+          async () => {
+            const states = {};
+            for (const role of museRoles) {
+              states[role] = await readMusaPdfGiftState(ctx, role);
+            }
+            lastGiftStates = states;
+            return museRoles.every((role) => {
+              const state = states[role];
+              const ownGift = state.gifts.find((gift) => gift.client_id === state.clientId);
+              return ownGift
+                && ownGift.filename.endsWith(".pdf")
+                && ownGift.postgame;
+            }) ? states : false;
+          },
+          20000
+        );
+      } catch (error) {
+        const compact = Object.fromEntries(museRoles.map((role) => {
+          const state = lastGiftStates[role] || {};
+          return [role, {
+            player: state.player,
+            clientId: state.clientId,
+            hasData: state.hasData,
+            filename: state.filename,
+            pending: state.pending,
+            socketConnected: state.socketConnected,
+            gifts: Array.isArray(state.gifts) ? state.gifts.map((gift) => ({
+              player: gift.player,
+              clientId: gift.client_id,
+              filename: gift.filename,
+              hasPostgame: Boolean(gift.postgame)
+            })) : []
+          }];
+        }));
+        throw new Error(`${error.message}; states=${JSON.stringify(compact)}`, { cause: error });
+      }
+      await Promise.all(museRoles.map((role) => ctx.evaluate(role, () => {
+        window.eval("terminado = true");
+        window.eval("intentarMostrarRegaloPdfPendiente()");
+      })));
+      giftStates = await ctx.waitFor(
+        "all completed muses see their personalized PDF gift",
+        async () => {
+          const entries = await Promise.all(museRoles.map(async (role) => [role, await readMusaPdfGiftState(ctx, role)]));
+          const states = Object.fromEntries(entries);
+          return entries.every(([, state]) => state.visible && state.hasData && state.filename.endsWith(".pdf")) ? states : false;
         },
-        20000
+        5000
       );
 
       const filenames = new Set();
       for (const role of museRoles) {
         const state = giftStates[role];
+        const ownGift = state.gifts.find((gift) => gift.client_id === state.clientId);
+        const foreignGift = state.gifts.find((gift) => gift.client_id && gift.client_id !== state.clientId);
+        ctx.assert(ownGift?.personalizado === true, `${role} gift should be personalized`);
+        ctx.assert(ownGift?.player === state.player, `${role} gift should target its assigned writer`);
+        ctx.assert(Boolean(ownGift?.postgame?.musa), `${role} gift should include personal postgame statistics`);
+        ctx.assert(Boolean(ownGift?.postgame?.escritores?.[1] && ownGift?.postgame?.escritores?.[2]), `${role} gift should include both writer texts`);
+        ctx.assert(!foreignGift, `${role} should not receive another muse's personalized gift`);
         filenames.add(state.filename);
         const pdfText = decodePdfDataUri(state.data);
         ctx.assert(pdfText.startsWith("%PDF"), `${role} gift should be a PDF data URI`);
@@ -2272,6 +2482,30 @@ const coreSpecs = [
         ctx.assert(expectations[role].introduced.some((word) => pdfText.includes(word)), `${role} PDF metadata should include an introduced word`);
       }
       ctx.assert(filenames.size === museRoles.length, "personalized muse PDF filenames should be unique");
+
+      const sampleRole = museRoles[0];
+      const sampleGift = giftStates[sampleRole];
+      await ctx.click(sampleRole, "#regalo_btn");
+      await ctx.waitForVisible(sampleRole, "#musa_postgame", true, "personalized postgame opens after downloading gift", 5000);
+      const ownPostgame = await ctx.evaluate(sampleRole, () => ({
+        sent: Number(document.querySelector("#musa_postgame_enviadas")?.textContent || 0),
+        introduced: Number(document.querySelector("#musa_postgame_introducidas")?.textContent || 0),
+        text: document.querySelector("#musa_postgame_texto")?.textContent || "",
+        ownTab: document.querySelector("#musa_postgame_tab_propio")?.textContent || "",
+        rivalTab: document.querySelector("#musa_postgame_tab_rival")?.textContent || ""
+      }));
+      ctx.assert(ownPostgame.sent === expectations[sampleRole].sent.length, "postgame should show the muse's sent inspirations");
+      ctx.assert(ownPostgame.introduced === expectations[sampleRole].introduced.length, "postgame should show the muse's incorporated inspirations");
+      ctx.assert(ownPostgame.text.includes(sampleGift.player === 1 ? "pdf azul base" : "pdf rojo base"), "postgame should open the muse's own writer text first");
+      ctx.assert(ownPostgame.ownTab && ownPostgame.rivalTab, "postgame should expose both writer tabs");
+      await ctx.click(sampleRole, "#musa_postgame_tab_rival");
+      await ctx.waitForText(
+        sampleRole,
+        "#musa_postgame_texto",
+        (text) => text.includes(sampleGift.player === 1 ? "pdf rojo base" : "pdf azul base"),
+        "postgame can read the opposing writer text",
+        5000
+      );
     }
   },
   {

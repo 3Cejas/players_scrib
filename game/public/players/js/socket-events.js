@@ -390,6 +390,7 @@ socket.on('regalo_pdf_musas', (payload) => {
 socket.on('regalo_pdf_musas_reset', () => {
     regalo_pdf_pendiente = null;
     ocultarRegaloPdf();
+    ocultarPostgameMusa({ limpiar: true });
 });
 
 socket.on('calentamiento_estado_musa', (data) => {

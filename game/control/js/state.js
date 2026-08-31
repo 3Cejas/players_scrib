@@ -324,9 +324,8 @@ let limite_tiempo_inspiracion_input = document.getElementById('limite_tiempo_ins
 let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabras');
 let escala_espectador_input = document.getElementById('escala_espectador');
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
-let tiempo_modos_input = document.getElementById('tiempo_modos');
-let minInput  = document.getElementById('tiempo_minutos');
-let segInput  = document.getElementById('tiempo_segundos');
+let duracion_minutos_input = document.getElementById('duracion_minutos');
+let duracion_segundos_input = document.getElementById('duracion_segundos');
 
 let tempo_text_borroso;
 
@@ -349,11 +348,13 @@ let TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
 let ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
 let TIEMPO_VOTACION = 0;
 let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
-let TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
-
-let DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
+let DURACION_PARTIDA = Math.max(1,
+    (Number(duracion_minutos_input && duracion_minutos_input.valueAsNumber) || 0) * 60
+    + (Number(duracion_segundos_input && duracion_segundos_input.valueAsNumber) || 0)
+);
+let DURACION_TIEMPO_MODOS = Math.max(1, Math.floor(DURACION_PARTIDA / 6));
 let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
-let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
+let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS;
 
 // Lista de modos disponibles (catalogo fijo para que nunca desaparezcan del panel).
 const LISTA_MODOS_DISPONIBLES = ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "frase final"];
@@ -446,17 +447,19 @@ function actualizarVariables() {
     TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
     ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
     TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
-    TIEMPO_MODOS = tiempo_modos_input.valueAsNumber;
-
-    DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
+    DURACION_PARTIDA = Math.max(1,
+        (Number(duracion_minutos_input && duracion_minutos_input.valueAsNumber) || 0) * 60
+        + (Number(duracion_segundos_input && duracion_segundos_input.valueAsNumber) || 0)
+    );
+    DURACION_TIEMPO_MODOS = Math.max(1, Math.floor(DURACION_PARTIDA / Math.max(1, LISTA_MODOS.length)));
     DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
-    TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS - 1;
+    TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS;
 
    console.log('LIMITE_TIEMPO_INSPIRACION:', LIMITE_TIEMPO_INSPIRACION);
    console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);
    console.log('ESCALA_UI_ESPECTADOR:', ESCALA_UI_ESPECTADOR);
    console.log('TIEMPO_CAMBIO_LETRA:', TIEMPO_CAMBIO_LETRA);
-   console.log('TIEMPO_MODOS:', TIEMPO_MODOS);
+   console.log('DURACION_PARTIDA:', DURACION_PARTIDA);
 }
 
 let heatmapInicializado = false;

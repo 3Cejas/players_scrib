@@ -10771,3 +10771,30 @@ table.default {
         grid-row: 1 / 3;
     }
 }
+/* Duración única de la partida: dos spinners, un solo parámetro. */
+#panel_parametros .param-duration {
+    padding-block: clamp(8px, 1vh, 14px);
+    text-align: center;
+}
+
+#panel_parametros .param-duration__controls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(7px, 0.7vw, 14px);
+    margin-left: clamp(12px, 1.5vw, 28px);
+    vertical-align: middle;
+}
+
+#panel_parametros .param-duration__controls .spinner-container {
+    display: inline-flex;
+    width: auto;
+    min-width: 126px;
+}
+
+@media (max-width: 760px) {
+    #panel_parametros .param-duration__controls {
+        margin: 8px 0 0;
+        flex-wrap: wrap;
+    }
+}

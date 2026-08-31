@@ -44,9 +44,8 @@ const BANDERAS_IDIOMA_CONTROL = {
     fr: "\uD83C\uDDEB\uD83C\uDDF7"
 };
 const PARAMETROS_CONTROL_PERSISTENTES = [
-    "tiempo_modos",
-    "tiempo_minutos",
-    "tiempo_segundos",
+    "duracion_minutos",
+    "duracion_segundos",
     "tiempo_cambio_letra",
     "tiempo_cambio_palabras",
     "limite_tiempo_inspiracion",
@@ -2170,13 +2169,12 @@ function temp() {
     escala_ui_espectador_control = escalaEspectador;
     socket.emit("ajustar_escala_espectador", { valor: escalaEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
     actualizarBotonFinPartidaControl();
   
-    DURACION_TIEMPO_MODOS = TIEMPO_MODOS;
     invalidarTemporizadoresPartidaControl();
 }
 };
@@ -2237,11 +2235,11 @@ window.nueva_partida = nueva_partida;
 
 function obtenerTotalSegundos() {
     // Lectura y saneado de los inputs (suponemos que existen en el DOM)
-    const mRaw = parseInt(document.getElementById('tiempo_minutos').value, 10);
-    const sRaw = parseInt(document.getElementById('tiempo_segundos').value, 10);
+    const mRaw = parseInt(document.getElementById('duracion_minutos').value, 10);
+    const sRaw = parseInt(document.getElementById('duracion_segundos').value, 10);
   
     // ValidaciÃ³n de rangos y normalizaciÃ³n
-    const m = Math.min(Math.max(mRaw || 0, 0), 60);
+    const m = Math.min(Math.max(mRaw || 0, 0), 360);
     const s = Math.min(Math.max(sRaw || 0, 0), 59);
   
     // Retornamos un objeto con los tres valores
@@ -2361,7 +2359,6 @@ function limpiar({ emitirServidor = true } = {}) {
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
 
-    DURACION_TIEMPO_MODOS = DURACION_TIEMPO_MODOS;
     invalidarTemporizadoresPartidaControl();
     setPendienteAnimacionEntradaBarraVida(1, false);
     setPendienteAnimacionEntradaBarraVida(2, false);
@@ -3950,14 +3947,14 @@ function enviar_clasificacion(){
       socket.emit('enviar_clasificacion', data);
   }
 
-function pausar(){
+function pausar(opciones = {}){
     pausado = true;
     clearInterval(countInterval);
     clearInterval(countInterval1);
     countInterval = null;
     countInterval1 = null;
     // Variables para llevar el conteo y controlar el intervalo
-    socket.emit('pausar', '');
+    socket.emit('pausar', opciones && typeof opciones === "object" ? opciones : {});
 }
 
 
