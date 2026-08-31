@@ -231,6 +231,12 @@ var main = (function () {
 
     };
 
+    var commandKey = function (command) {
+
+        return window.ScribCommandNormalizer.normalizeCommand(command);
+
+    };
+
     var SCRIB_BRAND_TEXT = "<SCRI> B";
 
     var normalizeScribBrand = function (str) {
@@ -2626,7 +2632,7 @@ function log( text ) {
 
     Terminal.prototype.handleDirectNavigation = function (command) {
 
-        var normalizedCommand = command.toLowerCase().trim();
+        var normalizedCommand = commandKey(command);
 
         if (normalizedCommand === "materiales") {
 
@@ -2636,12 +2642,12 @@ function log( text ) {
 
         switch (normalizedCommand) {
 
-            case cmds.JUEGO.value:
+            case commandKey(cmds.JUEGO.value):
             case "juego":
                 location.href = "./1p_scrib/index.html";
                 return true;
 
-            case cmds.NEWSLETTER.value:
+            case commandKey(cmds.NEWSLETTER.value):
                 window.open("https://suturateatro.substack.com/subscribe", "_blank", "noopener,noreferrer");
                 return true;
 
@@ -2730,7 +2736,7 @@ function log( text ) {
 
     Terminal.prototype.executeTerminalCommand = function (command, options) {
 
-        var normalizedCommand = command.toLowerCase().trim();
+        var normalizedCommand = commandKey(command);
         var shouldRecordHistory = !options || options.recordHistory !== false;
         var remember = function (historyCommand) {
 
@@ -2742,7 +2748,7 @@ function log( text ) {
 
         }.bind(this);
 
-        if (normalizedCommand === cmds.IMAGENES.value) {
+        if (normalizedCommand === commandKey(cmds.IMAGENES.value)) {
 
             remember(cmds.IMAGENES.value);
             this.prensa();
@@ -2750,7 +2756,7 @@ function log( text ) {
 
         }
 
-        if (normalizedCommand === "imÃ¡genes" || normalizedCommand === "imagenes") {
+        if (normalizedCommand === "imagenes") {
 
             remember("imagenes");
             this.prensa_imagenes();
@@ -2758,7 +2764,7 @@ function log( text ) {
 
         }
 
-        if (normalizedCommand === "vÃ­deos" || normalizedCommand === "videos") {
+        if (normalizedCommand === "videos") {
 
             remember("videos");
             this.prensa_videos();
@@ -2776,96 +2782,94 @@ function log( text ) {
 
         switch (normalizedCommand) {
 
-            case cmds.CAT.value:
+            case commandKey(cmds.CAT.value):
                 this.cat(normalizedCommand);
                 break;
 
-            case cmds.HELP.value:
+            case commandKey(cmds.HELP.value):
                 remember(cmds.HELP.value);
                 this.help();
                 break;
 
-            case cmds.CLEAR.value:
+            case commandKey(cmds.CLEAR.value):
                 this.clear();
                 break;
 
-            case cmds.REBOOT.value:
+            case commandKey(cmds.REBOOT.value):
                 remember(null);
                 this.reboot();
                 break;
 
-            case cmds.EL_JUEGO.value:
+            case commandKey(cmds.EL_JUEGO.value):
                 this.el_juego();
                 break;
 
-            case cmds.MUSA.value:
+            case commandKey(cmds.MUSA.value):
                 this.musa();
                 break;
 
-            case cmds.EL_ESPECTÁCULO.value:
+            case commandKey(cmds.EL_ESPECTÁCULO.value):
                 remember(cmds.EL_ESPECTÁCULO.value);
                 this.el_espectáculo();
                 break;
 
-            case cmds.LIGA.value:
+            case commandKey(cmds.LIGA.value):
                 remember(cmds.LIGA.value);
                 this.liga();
                 break;
 
-            case cmds.CLASIFICACIÓN.value:
+            case commandKey(cmds.CLASIFICACIÓN.value):
                 remember(cmds.CLASIFICACIÓN.value);
                 this.clasificación();
                 break;
 
-            case cmds.TEXTOS_DEL_MES.value:
+            case commandKey(cmds.TEXTOS_DEL_MES.value):
                 remember(cmds.TEXTOS_DEL_MES.value);
                 this.textos_del_mes();
                 break;
 
-            case cmds.FECHAS.value:
+            case commandKey(cmds.FECHAS.value):
                 remember(cmds.FECHAS.value);
                 this.fechas();
                 break;
 
-            case cmds.FINANCIACIÓN.value:
+            case commandKey(cmds.FINANCIACIÓN.value):
                 remember(cmds.FINANCIACIÓN.value);
                 this.financiación();
                 break;
 
-            case cmds.IMAGENES.value:
-            case "imágenes":
+            case commandKey(cmds.IMAGENES.value):
             case "imagenes":
                 remember(cmds.IMAGENES.value);
                 this.materiales();
                 break;
 
-            case cmds.ARTICULOS.value:
-            case "articulos":
+            case commandKey(cmds.ARTICULOS.value):
                 remember(cmds.ARTICULOS.value);
                 this.articulos();
                 break;
 
-            case cmds.LA_COMPAÑÍA.value:
+            case commandKey(cmds.LA_COMPAÑÍA.value):
                 remember(cmds.LA_COMPAÑÍA.value);
                 this.la_compañía();
                 break;
 
-            case cmds.ANGELA_BUENO.value:
+            case commandKey(cmds.ANGELA_BUENO.value):
                 remember(cmds.ANGELA_BUENO.value);
                 this.angela_bueno();
                 break;
 
-            case cmds.DAVID_VIÑAS.value:
+            case commandKey(cmds.DAVID_VIÑAS.value):
                 remember(cmds.DAVID_VIÑAS.value);
                 this.david_viñas();
                 break;
 
-            case cmds.CONTACTO.value:
+            case commandKey(cmds.CONTACTO.value):
                 remember(cmds.CONTACTO.value);
                 this.contacto();
                 break;
 
-            case cmds.ENTRADAS.value:
+            case commandKey(cmds.ENTRADAS.value):
                 this.entradas();
                 break;
 
@@ -3049,7 +3053,7 @@ function log( text ) {
 
     Terminal.prototype.handleCmd = function () {
 
-        var cmdComponents = this.cmdLine.value.toLowerCase().trim();
+        var cmdComponents = commandKey(this.cmdLine.value);
 
         if (cmdComponents === "materiales") {
 
@@ -4325,4 +4329,3 @@ TypeSimulator.prototype.type = function (text, callback) {
 
 
 window.onload = main.listener;
-
