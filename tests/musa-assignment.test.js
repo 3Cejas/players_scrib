@@ -409,10 +409,10 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.doesNotMatch(html, /entrarComoMusa|onclick="[^"]*player|onclick="[^"]*Musa\([12]\)/);
   assert.match(html, /role="dialog" aria-modal="true"/);
   assert.match(html, /aria-hidden="true" tabindex="-1"/);
-  assert.match(html, /aria-live="assertive" aria-atomic="true"/);
+  assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260831h/);
+  assert.match(html, /musa-selector\.js\?v=20260831i/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -455,6 +455,20 @@ test("muse onboarding is a short image-free mini tutorial with two clear message
   assert.doesNotMatch(selector, /Elige una escritora o usa la detección automática para equilibrar los equipos/);
   assert.match(html, /@keyframes onboardingWordFlight/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.onboarding-demo \*/);
+});
+
+test("writer choice uses team color and assignment flows through an automatic game load", () => {
+  const html = read("game/public/index.html");
+  const selector = read("game/public/js/musa-selector.js");
+
+  assert.doesNotMatch(html, /musa-team-choice__team">EQUIPO (?:AZUL|ROJO)/);
+  assert.match(html, /\.musa-team-choice__writer\s*\{[\s\S]{0,160}color:\s*var\(--team-color\)/);
+  assert.doesNotMatch(html, /id="musa_assignment_enter"/);
+  assert.match(html, /id="musa_game_loading"[\s\S]*musa-boot-world[\s\S]*data-load-step="0"/);
+  assert.match(selector, /Preparando el canal creativo de \$\{asignacion\.writer\}/);
+  assert.match(selector, /iniciarCargaJuego\(asignacion, duracionCarga\)/);
+  assert.match(selector, /setTimeout\(entrarEnJuegoAsignado, duracionCarga \+ 120\)/);
+  assert.doesNotMatch(selector, /Equipo asignado · acceso autorizado|Tu equipo: \$\{teamName\}|Preparando el canal creativo de \$\{escritxr\}/);
 });
 
 test("game reconnects with its assignment mode and never replays the reveal after assigned entry", () => {

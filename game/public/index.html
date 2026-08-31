@@ -3576,6 +3576,44 @@ body.musa-boot-activa .intro-flow {
 #intro-nombre .intro-onboarding-eyebrow { margin-bottom: 0.15rem; }
 .musa-assignment-status:empty { display: none; }
 
+.musa-team-choice__writer {
+    color: var(--team-color);
+    text-shadow: 0 0 0.9rem var(--team-glow);
+}
+
+.musa-game-loading {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: clamp(0.8rem, 2vh, 1.25rem);
+}
+
+.musa-game-loading[hidden] { display: none !important; }
+
+.musa-boot-overlay.is-loading .musa-assignment-arena { display: none; }
+.musa-boot-overlay.is-loading .musa-game-loading { display: grid; }
+
+.musa-boot-overlay.is-loading .musa-boot-kicker {
+    color: color-mix(in srgb, var(--boot-accent), white 28%);
+}
+
+.musa-boot-overlay.is-loading .musa-boot-title {
+    color: var(--boot-accent);
+    overflow-wrap: anywhere;
+    text-shadow: 0 0 1.25rem color-mix(in srgb, var(--boot-accent), transparent 34%);
+}
+
+.musa-boot-copy:empty { display: none; }
+
+.musa-boot-overlay.is-loading .musa-boot-panel {
+    animation: musaGameLoadArrive 520ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes musaGameLoadArrive {
+    from { transform: translateY(1.1rem) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
 @keyframes onboardingSparkGlow {
     from { transform: scale(0.84); opacity: 0.58; }
     to { transform: scale(1.18); opacity: 1; }
@@ -3618,6 +3656,7 @@ body.musa-boot-activa .intro-flow {
         animation: none !important;
         transition: none !important;
     }
+    .musa-boot-overlay.is-loading .musa-boot-panel { animation: none !important; }
     .onboarding-demo__story strong { opacity: 1; filter: none; }
 }
 
@@ -3719,13 +3758,11 @@ body.musa-boot-activa .intro-flow {
                     <h1><span class="intro-musa-nombre">MUSA</span>,<br>ELIGE TU ESCRITXR</h1>
                     <div class="musa-team-picker" aria-label="Escritoras disponibles">
                         <button id="musa_assignment_blue" class="musa-team-choice musa-team-choice--blue" type="button" data-team="1">
-                            <span class="musa-team-choice__team">EQUIPO AZUL</span>
                             <img src="./img/pluma_azul.png" alt="" aria-hidden="true">
                             <strong id="musa_writer_blue" class="musa-team-choice__writer">ESCRITXR 1</strong>
                             <span class="musa-team-choice__action">ELEGIR</span>
                         </button>
                         <button id="musa_assignment_red" class="musa-team-choice musa-team-choice--red" type="button" data-team="2">
-                            <span class="musa-team-choice__team">EQUIPO ROJO</span>
                             <img src="./img/pluma_roja.png" alt="" aria-hidden="true">
                             <strong id="musa_writer_red" class="musa-team-choice__writer">ESCRITXR 2</strong>
                             <span class="musa-team-choice__action">ELEGIR</span>
@@ -3776,12 +3813,23 @@ body.musa-boot-activa .intro-flow {
                     <img src="./img/pluma_roja.png" alt="">
                     <span data-i18n="world.team.red">ROJO</span>
                 </div>
-                <div id="musa_assignment_result" class="musa-assignment-result" role="status" aria-live="assertive" aria-atomic="true" hidden>
-                    <span class="musa-assignment-result__label" data-i18n="muse.assignment.your_team">TU EQUIPO</span>
-                    <strong id="musa_assignment_team" class="musa-assignment-result__team">AZUL</strong>
-                    <span class="musa-assignment-result__label" data-i18n="muse.assignment.your_writer">TU ESCRITXR</span>
-                    <strong id="musa_assignment_writer" class="musa-assignment-result__writer">ESCRITXR 1</strong>
+            </div>
+            <div id="musa_game_loading" class="musa-game-loading" hidden>
+                <div class="musa-boot-world" aria-hidden="true">
+                    <span class="musa-boot-world-base"></span>
+                    <span class="musa-boot-world-fill"></span>
+                    <span class="musa-boot-world-grid"></span>
+                    <span class="musa-boot-world-orb"></span>
+                    <span class="musa-boot-world-pixels">
+                        <span></span><span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span>
+                    </span>
                 </div>
+                <ul class="musa-boot-logs" aria-hidden="true">
+                    <li data-load-step="0">Preparando el canal creativo</li>
+                    <li data-load-step="1">Sincronizando la partida</li>
+                    <li data-load-step="2">Abriendo &lt;SCRI&gt; B</li>
+                </ul>
             </div>
             <div class="musa-boot-status-row">
                 <span id="musa_boot_status" class="musa-boot-status-text" aria-live="polite">CONECTANDO…</span>
@@ -3793,7 +3841,6 @@ body.musa-boot-activa .intro-flow {
             <div class="musa-assignment-actions">
                 <button id="musa_assignment_cancel_scan" class="musa-assignment-action musa-assignment-action--cancel" type="button" hidden>VOLVER</button>
                 <button id="musa_assignment_retry" class="musa-assignment-action musa-assignment-action--retry" type="button" data-i18n="muse.assignment.retry_button" hidden>REINTENTAR</button>
-                <button id="musa_assignment_enter" class="musa-assignment-action" type="button" data-i18n="muse.assignment.enter_button" hidden>ENTRAR AL JUEGO</button>
             </div>
         </div>
     </div>
@@ -3802,5 +3849,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260831h"></script>
+<script src="./js/musa-selector.js?v=20260831i"></script>
 </html>
