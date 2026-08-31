@@ -27,7 +27,7 @@
     const DEFAULT_AUDIO_SECONDS = 80.013;
     const DEFAULT_AUDIO_URL = "../media/narracion-show.mp3";
     const DEFAULT_SLIDE_URL = "../media/narracion-final.png";
-    const ASSET_VERSION = "20260831e";
+    const ASSET_VERSION = "20260831f";
     const MAX_AUDIO_DRIFT_SECONDS = 1.25;
     const RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
 
@@ -35,7 +35,7 @@
         Object.freeze({ id: "black", start: 0, title: "", kicker: "" }),
         Object.freeze({ id: "binary", start: 5, title: "DOS SÍMBOLOS", kicker: "UN LENGUAJE INFINITO", glyph: "0  1" }),
         Object.freeze({ id: "speed", start: 15.28, title: "VELOCIDAD", kicker: "MÁS ALLÁ DE LO HUMANO", glyph: "∞" }),
-        Object.freeze({ id: "origin-code", start: 18.8, title: "200 AÑOS", kicker: "EL ORIGEN DEL CÓDIGO", glyph: "" }),
+        Object.freeze({ id: "origin-code", start: 18.8, title: "200 AÑOS", kicker: "", glyph: "" }),
         Object.freeze({ id: "precision", start: 21.94, title: "PRECISIÓN", kicker: "UN ORDEN PERFECTO", glyph: "{ }" }),
         Object.freeze({ id: "programming", start: 34.06, title: "PROGRAMACIÓN", kicker: "LA TECNOLOGÍA DEL CÓDIGO", glyph: "</>" }),
         Object.freeze({ id: "writing-question", start: 37.94, title: "OTRA TECNOLOGÍA", kicker: "LA ESCRITURA YA ESTABA AQUÍ", glyph: "Aa" }),
@@ -154,7 +154,7 @@
                 <div class="scrib-show-narration__paper">${"<i></i>".repeat(9)}</div>
                 <div class="scrib-show-narration__stroke"></div>
                 <div class="scrib-show-narration__fusion"><i></i><i></i><b></b></div>
-                <div class="scrib-show-narration__date" aria-hidden="true"><span>1820</span><small>ORIGEN DEL CÓDIGO</small></div>
+                <div class="scrib-show-narration__date" aria-hidden="true"><span>1820</span></div>
                 <img class="scrib-show-narration__brand" src="../media/scrib-logo-mark.png?v=${ASSET_VERSION}" alt="" aria-hidden="true">
                 <div class="scrib-show-narration__glyph" data-show-glyph></div>
             </div>

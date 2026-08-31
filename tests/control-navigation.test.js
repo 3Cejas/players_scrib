@@ -25,7 +25,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   );
 
   assert.match(tutorial, /id="videotutorial_control"/);
-  assert.match(tutorial, /id="boton_nueva_partida"[^>]*onclick="nueva_partida\(\)"[^>]*>[^<]*NUEVA PARTIDA/);
+  assert.match(tutorial, /id="boton_nueva_partida"[^>]*class="[^"]*btn-vista-espectador[^"]*"[^>]*onclick="nueva_partida\(\)"[^>]*>[^<]*NUEVA PARTIDA/);
   assert.doesNotMatch(tutorial, /Puedes reproducirlo antes o durante el tutorial\.|VIDEOTUTORIAL PREVIO|INTERVALO AUTOM&Aacute;TICO/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-vista-principal="tutorial"[^>]*onclick="mostrar_vista_tutorial\(\)"[^>]*>[^<]*VISTA TUTORIAL/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-active="1"[^>]*aria-pressed="true"/);
@@ -51,7 +51,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /\.control-tabs-shell::before,[\s\S]*\.control-tabs-shell::after[\s\S]*pointer-events: none;/);
   assert.match(css, /\.control-tabs-shell\[data-has-previous="true"\]::before,[\s\S]*\.control-tabs-shell\[data-has-next="true"\]::after[\s\S]*opacity: 1;/);
   assert.match(css, /#boton_vista_tutorial\[data-active="1"\][\s\S]*#boton_vista_calentamiento\[data-active="1"\][\s\S]*#boton_vista_partida\[data-active="1"\]/);
-  assert.doesNotMatch(css, /#boton_nueva_partida\s*\{[\s\S]{0,240}background:/);
+  assert.match(css, /#panel_controles \.control-group--tutorial #boton_nueva_partida\s*\{[\s\S]*?background:/);
+  assert.match(css, /--tutorial-button-accent: #73e6ff[\s\S]*--tutorial-button-accent: #c286ff/);
+  assert.match(css, /videotutorial-control__header[\s\S]*grid-column: 1 !important;[\s\S]*videotutorial-control__actions[\s\S]*grid-column: 1 !important;[\s\S]*grid-row: 2 !important;/);
   assert.match(css, /container-name:\s*tutorial-controls/);
   assert.match(css, /@container tutorial-controls \(max-width: 34rem\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*#boton_nueva_partida\[data-pending="1"\][\s\S]*animation: none;/);

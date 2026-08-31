@@ -102,6 +102,18 @@ test("muse wiring is session-bound, IME-safe, acknowledged and tutorial-scoped",
   assert.match(state, /vista_tutorial_musa_permitida[\s\S]*pre_show_bloqueado_por_tutorial_musa = false/);
   assert.match(state, /scrib:video-tutorial-visibility[\s\S]*restaurarVistaMusaTrasVideoTutorial/);
   assert.match(state, /restaurarVistaMusaTrasVideoTutorial[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
+  const visibleRule = state.slice(
+    state.indexOf("function preShowMusaVisible"),
+    state.indexOf("function refrescarControlesPreShowMusa")
+  );
+  const warmupRule = state.slice(
+    state.indexOf("const actualizarCalentamiento ="),
+    state.indexOf("const mensajeErrorCalentamiento =")
+  );
+  assert.match(visibleRule, /!calentamiento_vista/);
+  assert.doesNotMatch(visibleRule, /!calentamiento_activo/);
+  assert.match(warmupRule, /if \(calentamiento_vista\)\s*\{\s*cerrarPreShowMusaPorTutorial\(\)/);
+  assert.doesNotMatch(warmupRule, /calentamiento_activo \|\| calentamiento_vista/);
   assert.match(sockets, /const aplicada = procesarAsignacionAutoritativaMusa[\s\S]*if \(!aplicada\)[\s\S]*ayuda_musa_controlador\.setRegistrationReady\(true\)[\s\S]*socket\.emit\('pedir_pre_show_estado'\)[\s\S]*socket\.emit\('pedir_video_tutorial_estado'\)/);
   assert.match(sockets, /socket\.on\('inicio'[\s\S]*cerrarPreShowMusaPorTutorial\(\)/);
 });
@@ -140,6 +152,12 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.match(state, /modoServidor === "tutorial"[\s\S]*pre_show_bloqueado_por_tutorial_espectador = false/);
   assert.match(state, /scrib:video-tutorial-visibility[\s\S]*restaurarVistaEspectadorTrasVideoTutorial/);
   assert.match(state, /restaurarVistaEspectadorTrasVideoTutorial[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
+  const warmupRule = state.slice(
+    state.indexOf("const actualizarCalentamientoEspectador ="),
+    state.indexOf("const actualizarCursorCalentamientoRemoto =")
+  );
+  assert.match(warmupRule, /if \(data\.vista === true\)\s*\{\s*cerrarPreShowEspectadorPorTutorial\(\)/);
+  assert.doesNotMatch(warmupRule, /activoServidor \|\| data\.vista/);
   assert.doesNotMatch(state, /nuevaSesion[\s\S]{0,500}actualizarModoVistaEspectadorUi\("partida"\)/);
   assert.match(sockets, /socket\.emit\('pedir_pre_show_estado'\)/);
   assert.match(css, /body\.page-spectator:not\(\.vista-partida\):not\(\.vista-tutorial\) \.pre-show-espectador/);

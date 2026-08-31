@@ -35,6 +35,7 @@ test("subtitles follow the spoken words without anticipating pauses", () => {
 test("fusion, historical date and final brand use the requested visual symbols", () => {
     assert.equal(narration.SCENES.find(({ id }) => id === "fusion").glyph, "0 A");
     assert.equal(narration.SCENES.find(({ id }) => id === "origin-code").glyph, "");
+    assert.equal(narration.SCENES.find(({ id }) => id === "origin-code").kicker, "");
     assert.equal(narration.SCENES.find(({ id }) => id === "reveal").glyph, "");
     assert.equal(narration.SCENES.find(({ id }) => id === "brand").glyph, "");
     assert.equal(narration.sceneAt(37.94).id, "writing-question");
@@ -65,8 +66,8 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     const spectator = read("game/spectator/index.html");
     const muse = read("game/public/players/index.html");
     for (const html of [spectator, muse]) {
-        assert.match(html, /show-narration\.css\?v=20260831e/);
-        assert.match(html, /domains\/show-narration\.js\?v=20260831e/);
+        assert.match(html, /show-narration\.css\?v=20260831f/);
+        assert.match(html, /domains\/show-narration\.js\?v=20260831f/);
     }
     assert.ok(fs.statSync(path.join(ROOT, "game/media/narracion-show.mp3")).size > 3_000_000);
     const png = fs.readFileSync(path.join(ROOT, "game/media/narracion-final.png"));
@@ -86,6 +87,7 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     assert.match(source, /\.\.\/media\/scrib-logo-mark\.png/);
     assert.match(source, /\.\.\/\.\.\/media\/scrib-logo-mark\.png/);
     assert.match(source, /scrib-show-narration__date[^\n]*<span>1820<\/span>/);
+    assert.doesNotMatch(source, /ORIGEN DEL CÓDIGO/);
     assert.match(source, /subtitleBox\.hidden = !subtitle/);
     assert.match(source, /requestUnderlyingView[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
     assert.doesNotMatch(source, /glyph: "SURGIRÍA/);

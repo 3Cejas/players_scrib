@@ -4072,6 +4072,38 @@ const coreSpecs = [
         6000
       );
 
+      await ctx.invoke("control", "mostrar_vista_tutorial");
+      await ctx.waitForState(
+        "detonator view hidden behind tutorial",
+        (state) => state.tutorial.activo === true && state.tutorial.vista === false,
+        6000
+      );
+      await ctx.waitForVisible(
+        "spectator",
+        "#pre_show_espectador",
+        true,
+        "spectator tutorial view reopens after detonators"
+      );
+      await ctx.waitForVisible(
+        blueMuses[0].roleName,
+        "#pre_show_musa",
+        true,
+        "musa tutorial view reopens after detonators"
+      );
+      await ctx.sleep(3200);
+      const tutorialPersisted = await ctx.evaluate("spectator", () => {
+        const node = document.querySelector("#pre_show_espectador");
+        return Boolean(node && !node.hidden && window.getComputedStyle(node).display !== "none");
+      });
+      ctx.assert(tutorialPersisted, "periodic active detonator state must not hide the selected tutorial view");
+
+      await ctx.invoke("control", "mostrar_vista_detonadores");
+      await ctx.waitForState(
+        "tutorial detonator view active again",
+        (state) => state.tutorial.activo === true && state.tutorial.vista === true,
+        6000
+      );
+
       await ctx.invoke("control", "pedir_solicitud_calentamiento", "lugares");
       await ctx.sendWarmupWord(blueMuses[0].roleName, "biblioteca");
       await ctx.sendWarmupWord(blueMuses[1].roleName, "azotea");
@@ -4107,6 +4139,17 @@ const coreSpecs = [
         "observatorio",
         [redMuses[0].name],
         "writer tutorial identifies the red muse"
+      );
+      await ctx.waitFor(
+        "spectator tutorial cards finish entering after the view round trip",
+        async () => ctx.evaluate("spectator", () => Array.from(
+          document.querySelectorAll("#calentamiento_nube .calentamiento-palabra")
+        ).filter((node) => {
+          const rect = node.getBoundingClientRect();
+          const style = window.getComputedStyle(node);
+          return style.display !== "none" && style.visibility !== "hidden" && rect.width > 1 && rect.height > 1;
+        }).length >= 3),
+        5000
       );
       await assertCardsDoNotOverlap(
         ctx,

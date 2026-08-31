@@ -2395,7 +2395,9 @@ const actualizarCalentamiento = (data = {}) => {
     const mensajesCalentamiento = obtenerMensajesSolicitudCalentamiento();
     calentamiento_activo = Boolean(data.activo);
     calentamiento_vista = Boolean(data.vista);
-    if (calentamiento_activo || calentamiento_vista) {
+    // `activo` describe la dinamica interna y puede mantenerse a true aunque
+    // Control ya haya vuelto a Tutorial. Solo la vista visible la bloquea.
+    if (calentamiento_vista) {
         cerrarPreShowMusaPorTutorial();
     }
     calentamiento_bloqueado = Boolean(data.bloqueado);
@@ -3054,7 +3056,6 @@ function preShowMusaVisible() {
         pre_show_estado_musa.activo
         && !pre_show_bloqueado_por_tutorial_musa
         && vista_tutorial_musa_permitida
-        && !calentamiento_activo
         && !calentamiento_vista
         && !ui_partida_activa_musa
         && !ui_partida_finalizada_musa
@@ -3112,7 +3113,7 @@ function aplicarVisibilidadPreShowMusa() {
     const visible = preShowMusaVisible();
     if (visible) {
         animarTransicionVistaMusa("tutorial");
-    } else if (!calentamiento_activo && !calentamiento_vista && !ui_partida_activa_musa && !ui_partida_finalizada_musa) {
+    } else if (!calentamiento_vista && !ui_partida_activa_musa && !ui_partida_finalizada_musa) {
         animarTransicionVistaMusa("espera");
     }
     if (document.body) {

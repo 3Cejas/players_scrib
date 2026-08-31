@@ -1239,7 +1239,6 @@ function puedeMostrarPreShowEspectador() {
     return Boolean(
         pre_show_estado_espectador.activo
         && !pre_show_bloqueado_por_tutorial_espectador
-        && !partida_activa_espectador
         && !vista_calentamiento
         && vista_espectador_modo_resuelta === "tutorial"
         && !(teleprompter_estado && teleprompter_estado.visible)
@@ -4207,7 +4206,10 @@ const actualizarCalentamientoEspectador = (data) => {
     if (!data) return;
     ultimo_payload_calentamiento_espectador = data;
     const activoServidor = Boolean(data.activo);
-    if (activoServidor || data.vista === true) {
+    // La dinamica de detonadores puede seguir activa en segundo plano. Solo su
+    // vista visible debe ocultar Tutorial; el estado periodico no puede echar
+    // al publico del canal que Control acaba de seleccionar.
+    if (data.vista === true) {
         cerrarPreShowEspectadorPorTutorial();
     }
     if (activoServidor && !calentamiento_activo_previo_espectador) {
