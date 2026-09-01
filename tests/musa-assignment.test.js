@@ -449,6 +449,8 @@ test("muse onboarding keeps its original welcome and branded headers in the shor
   assert.equal((html.match(/class="intro-section/g) || []).length, 4);
   assert.match(html, /id="intro-bienvenida" class="intro-section"[\s\S]*MUSA<\/span>, BIENVENIDA A[\s\S]*intro-logo-img--center[\s\S]*COMENZAR/);
   assert.match(html, /id="intro-como-jugar"[\s\S]*ENVÍA UNA PALABRA[\s\S]*ENTRA EN LA HISTORIA/);
+  assert.match(html, /id="intro-nombre"[\s\S]*¿CUÁL SERÁ TU NOMBRE\?/);
+  assert.doesNotMatch(html, /CASI ESTÁ|¿CÓMO TE LLAMAMOS\?/);
   assert.match(html, /class="onboarding-demo__phone"[\s\S]*class="onboarding-demo__story"/);
   assert.equal((html.match(/class="intro-logos"/g) || []).length, 3);
   assert.equal((html.match(/src="\.\.\/\.\.\/img\/logo_sutura\.png"/g) || []).length, 3);
