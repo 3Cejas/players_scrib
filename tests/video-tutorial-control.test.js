@@ -291,4 +291,7 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(css, /control-group-buttons--tutorial[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) !important/);
   assert.match(css, /#panel_controles \.control-group--tutorial #boton_nueva_partida\s*\{[\s\S]{0,320}background:/);
   assert.match(css, /videotutorial-control__actions\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) !important;/);
+  assert.match(css, /control-group--tutorial:not\(\.is-collapsed\)\s*\{[\s\S]{0,180}grid-template-rows:\s*max-content max-content max-content !important;/);
+  assert.match(css, /#videotutorial_config_form\s*\{[\s\S]{0,260}grid-template-columns:\s*max-content max-content !important;[\s\S]{0,220}width:\s*max-content;/);
+  assert.match(css, /#videotutorial_config_form > \.videotutorial-control__toggle\s*\{[\s\S]{0,180}grid-column:\s*1 \/ -1 !important;[\s\S]{0,180}justify-self:\s*start;/);
 });

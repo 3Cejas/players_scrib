@@ -11041,3 +11041,108 @@ table.default {
         grid-row: 3 !important;
     }
 }
+
+/* La pestaña Tutorial conserva el tamaño real de cada bloque. De este modo los
+   controles no se montan entre sí cuando el panel dispone de poca altura. */
+#panel_controles .control-group--tutorial:not(.is-collapsed) {
+    grid-template-rows: max-content max-content max-content !important;
+    grid-auto-rows: max-content !important;
+    align-content: start;
+    overflow-y: auto;
+}
+
+#panel_controles .control-group--tutorial:not(.is-collapsed) > .videotutorial-control {
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Intervalo y repetición forman una única agrupación compacta en vez de
+   repartirse por todo el ancho libre de Control. */
+#panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form {
+    grid-template-columns: max-content max-content !important;
+    grid-template-rows: max-content max-content !important;
+    justify-content: start;
+    justify-self: start;
+    align-content: center;
+    width: max-content;
+    max-width: 100%;
+    gap: 0.42rem 0.58rem;
+}
+
+#panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > label[for="videotutorial_intervalo"] {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center;
+    justify-self: start;
+}
+
+#panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > .videotutorial-control__stepper {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: start;
+}
+
+#panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > .videotutorial-control__toggle {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    justify-self: start;
+    width: max-content;
+    margin: 0;
+    white-space: nowrap;
+}
+
+@container tutorial-controls (max-width: 26rem) {
+    #panel_controles .control-group--tutorial:not(.is-collapsed) > .videotutorial-control,
+    #panel_controles .control-group--tutorial:not(.is-collapsed) > .show-narration-control {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: max-content max-content max-content !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__header,
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__actions {
+        grid-column: 1 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__header {
+        grid-row: 1 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) .videotutorial-control__actions {
+        grid-row: 2 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form {
+        grid-column: 1 !important;
+        grid-row: 3 !important;
+        justify-self: center;
+    }
+}
+
+@container tutorial-controls (max-width: 18rem) {
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form {
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100%;
+        justify-items: center;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > label[for="videotutorial_intervalo"],
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > .videotutorial-control__stepper,
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > .videotutorial-control__toggle {
+        grid-column: 1 !important;
+        justify-self: center;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > label[for="videotutorial_intervalo"] {
+        grid-row: 1 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > .videotutorial-control__stepper {
+        grid-row: 2 !important;
+    }
+
+    #panel_controles .control-group--tutorial:not(.is-collapsed) #videotutorial_config_form > .videotutorial-control__toggle {
+        grid-row: 3 !important;
+        white-space: normal;
+        text-align: center;
+    }
+}
