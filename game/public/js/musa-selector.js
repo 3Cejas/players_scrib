@@ -10,9 +10,11 @@ const escritorasDisponibles = { 1: "ESCRITXR 1", 2: "ESCRITXR 2" };
 const MAX_NOMBRE_MUSA = 10;
 const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
 const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
-const REVEAL_MIN_MS = 1450;
+const REVEAL_MIN_AUTOMATIC_MS = 2200;
+const REVEAL_MIN_MANUAL_MS = 1350;
 const REVEAL_MIN_REDUCED_MS = 120;
-const ASSIGNMENT_REVEAL_MS = 1700;
+const ASSIGNMENT_REVEAL_AUTOMATIC_MS = 2800;
+const ASSIGNMENT_REVEAL_MANUAL_MS = 2200;
 const ASSIGNMENT_REVEAL_RESTORED_MS = 520;
 const ASSIGNMENT_REVEAL_REDUCED_MS = 240;
 const GAME_LOAD_MS = 4300;
@@ -49,6 +51,21 @@ function normalizarNombreMusa(valor) {
 function usaMovimientoReducido() {
   return typeof window.matchMedia === "function"
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function obtenerEsperaMinimaAsignacion() {
+  if (usaMovimientoReducido()) return REVEAL_MIN_REDUCED_MS;
+  return seleccionPendiente.assignmentMode === "manual"
+    ? REVEAL_MIN_MANUAL_MS
+    : REVEAL_MIN_AUTOMATIC_MS;
+}
+
+function obtenerDuracionRevelacion(esRestaurada = false) {
+  if (usaMovimientoReducido()) return ASSIGNMENT_REVEAL_REDUCED_MS;
+  if (esRestaurada) return ASSIGNMENT_REVEAL_RESTORED_MS;
+  return seleccionPendiente.assignmentMode === "manual"
+    ? ASSIGNMENT_REVEAL_MANUAL_MS
+    : ASSIGNMENT_REVEAL_AUTOMATIC_MS;
 }
 
 function mostrarAvisoMusa(texto, claveI18n = "") {
@@ -254,9 +271,19 @@ function mostrarOverlayAsignacion({ scanning = false } = {}) {
   if (!overlay) return;
   overlay.classList.remove(
     "musa-boot-overlay--azul", "musa-boot-overlay--rojo", "is-revealed",
-    "has-error", "is-assigning", "is-scanning", "is-revealing", "is-loading"
+    "has-error", "is-assigning", "is-scanning", "is-revealing", "is-loading",
+    "is-restored-assignment", "musa-boot-flow--manual", "musa-boot-flow--automatic",
+    "musa-boot-selection--blue", "musa-boot-selection--red"
   );
-  overlay.classList.add("is-active", scanning ? "is-scanning" : "is-assigning");
+  const esManual = seleccionPendiente.assignmentMode === "manual";
+  overlay.classList.add(
+    "is-active",
+    scanning ? "is-scanning" : "is-assigning",
+    esManual ? "musa-boot-flow--manual" : "musa-boot-flow--automatic"
+  );
+  if (esManual) {
+    overlay.classList.add(seleccionPendiente.player === 2 ? "musa-boot-selection--red" : "musa-boot-selection--blue");
+  }
   overlay.setAttribute("aria-hidden", "false");
   overlay.style.setProperty("--boot-bar-progress", scanning ? "0%" : "38%");
   document.body.classList.add("musa-boot-activa");
@@ -277,15 +304,15 @@ function mostrarOverlayAsignacion({ scanning = false } = {}) {
   if (scanning) {
     if (kicker) kicker.textContent = "DETECCIÓN AUTOMÁTICA";
     if (title) title.textContent = "PON TU DEDO";
-    if (copy) copy.textContent = "Mantén el dedo sobre la huella.";
+    if (copy) copy.textContent = "";
   } else if (seleccionPendiente.assignmentMode === "manual") {
     if (kicker) kicker.textContent = "ELECCIÓN DE MUSA";
-    if (title) title.textContent = "CONECTANDO CON TU ESCRITXR";
-    if (copy) copy.textContent = "Confirmando tu elección…";
+    if (title) title.textContent = "ABRIENDO TU ELECCIÓN";
+    if (copy) copy.textContent = "";
   } else {
     if (kicker) kicker.textContent = "DETECCIÓN AUTOMÁTICA";
-    if (title) title.textContent = "DESCUBRIENDO TU EQUIPO";
-    if (copy) copy.textContent = "Un momento…";
+    if (title) title.textContent = "¿QUIÉN SERÁ TU ESCRITXR?";
+    if (copy) copy.textContent = "La señal está eligiendo…";
   }
   const foco = scanning ? document.getElementById("musa_fingerprint") : overlay;
   setTimeout(() => foco?.focus({ preventScroll: true }), usaMovimientoReducido() ? 0 : 180);
@@ -310,7 +337,7 @@ function renderizarResultadoAsignacion(asignacion) {
   const title = document.getElementById("musa_boot_title");
   const copy = document.getElementById("musa_boot_copy");
   const feather = document.getElementById("musa_assignment_reveal_feather");
-  if (kicker) kicker.textContent = "TU ESCRITXR";
+  if (kicker) kicker.textContent = "TU ESCRITXR ES";
   if (title) title.textContent = asignacion.writer;
   if (copy) copy.textContent = "";
   if (feather) feather.src = asignacion.player === 2 ? "./img/pluma_roja.png" : "./img/pluma_azul.png";
@@ -410,14 +437,13 @@ function revelarAsignacion(asignacion) {
   const duracionCarga = usaMovimientoReducido()
     ? GAME_LOAD_REDUCED_MS
     : (esRestaurada ? GAME_LOAD_RESTORED_MS : GAME_LOAD_MS);
-  const duracionRevelacion = usaMovimientoReducido()
-    ? ASSIGNMENT_REVEAL_REDUCED_MS
-    : (esRestaurada ? ASSIGNMENT_REVEAL_RESTORED_MS : ASSIGNMENT_REVEAL_MS);
+  const duracionRevelacion = obtenerDuracionRevelacion(esRestaurada);
   if (overlay) {
     overlay.classList.remove(
       "is-assigning", "is-scanning", "has-error",
       "musa-boot-overlay--azul", "musa-boot-overlay--rojo"
     );
+    overlay.classList.toggle("is-restored-assignment", esRestaurada);
     overlay.classList.add(asignacion.player === 2 ? "musa-boot-overlay--rojo" : "musa-boot-overlay--azul", "is-revealing");
     overlay.style.setProperty("--boot-world-progress", "0%");
     overlay.style.setProperty("--boot-bar-progress", "0%");
@@ -451,7 +477,7 @@ function manejarAsignacionRecibida(asignacion, meta = {}) {
     actualizarEstadoAsignacion();
   }
   const transcurrido = performance.now() - inicioSolicitudAsignacion;
-  const minimo = usaMovimientoReducido() ? REVEAL_MIN_REDUCED_MS : REVEAL_MIN_MS;
+  const minimo = obtenerEsperaMinimaAsignacion();
   revealTimeout = setTimeout(() => {
     revealTimeout = null;
     revelarAsignacion(asignacion);
@@ -542,7 +568,7 @@ const fingerprintController = musaAssignment.createHoldController({
   onComplete: () => {
     fingerprintButton?.classList.remove("is-holding");
     fingerprintButton?.classList.add("is-complete");
-    if (fingerprintHint) fingerprintHint.textContent = "¡DETECCIÓN COMPLETADA!";
+  if (fingerprintHint) fingerprintHint.textContent = "¡SEÑAL CAPTURADA!";
     if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
       navigator.vibrate([45, 30, 90]);
     }
@@ -643,7 +669,10 @@ function restablecerVistaAsignacion() {
   if (overlay) {
     overlay.classList.remove(
       "is-active", "is-assigning", "is-scanning", "is-revealed", "has-error",
-      "is-revealing", "is-loading", "musa-boot-overlay--azul", "musa-boot-overlay--rojo"
+      "is-revealing", "is-loading", "is-restored-assignment",
+      "musa-boot-overlay--azul", "musa-boot-overlay--rojo",
+      "musa-boot-flow--manual", "musa-boot-flow--automatic",
+      "musa-boot-selection--blue", "musa-boot-selection--red"
     );
     overlay.setAttribute("aria-hidden", "true");
     overlay.style.setProperty("--boot-bar-progress", "0%");
@@ -676,7 +705,7 @@ function restaurarAsignacionGuardadaMusa() {
   asignacionBloqueada = true;
   restaurandoAsignacionPersistida = true;
   estadoAsignacion = socket.connected ? "revalidating" : "connecting";
-  inicioSolicitudAsignacion = performance.now() - REVEAL_MIN_MS;
+  inicioSolicitudAsignacion = performance.now() - obtenerEsperaMinimaAsignacion();
   actualizarNombreIntro();
   mostrarOverlayAsignacion();
   const kicker = document.getElementById("musa_boot_kicker");

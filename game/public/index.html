@@ -1476,6 +1476,7 @@ body.musa-boot-activa .intro-flow {
     --boot-accent: #54f0ff;
     --boot-world-progress: 0%;
     --boot-bar-progress: 0%;
+    --reveal-time: 2200ms;
     position: fixed;
     inset: 0;
     z-index: 9999;
@@ -1566,6 +1567,19 @@ body.musa-boot-activa .intro-flow {
     pointer-events: none;
 }
 
+.musa-assignment-arena::after {
+    content: "✦";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    z-index: 2;
+    color: #fff4b1;
+    font-size: clamp(2.8rem, 12vw, 6rem);
+    text-shadow: 0 0 0.4rem #fff, 0 0 2.4rem #f7d06c;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2) rotate(-45deg);
+    pointer-events: none;
+}
+
 .musa-boot-overlay.is-assigning .musa-assignment-arena::before {
     opacity: 1;
     animation: musaAssignmentScan 950ms linear infinite;
@@ -1624,6 +1638,39 @@ body.musa-boot-activa .intro-flow {
 
 .musa-boot-overlay.is-assigning .musa-assignment-core {
     animation: musaAssignmentCore 620ms ease-in-out infinite alternate;
+}
+
+.musa-boot-flow--automatic.is-assigning .musa-assignment-arena {
+    animation: musaLootArenaCharge 1.1s ease-in-out infinite alternate;
+}
+
+.musa-boot-flow--automatic.is-assigning .musa-assignment-team--blue {
+    animation: musaLootCandidateBlue 760ms cubic-bezier(.45,0,.55,1) infinite;
+}
+
+.musa-boot-flow--automatic.is-assigning .musa-assignment-team--red {
+    animation: musaLootCandidateRed 760ms cubic-bezier(.45,0,.55,1) infinite;
+}
+
+.musa-boot-flow--automatic.is-assigning .musa-assignment-core {
+    animation: musaLootCoreMystery 540ms steps(2,end) infinite;
+}
+
+.musa-boot-flow--automatic.is-assigning .musa-assignment-arena::after {
+    animation: musaLootMysteryFlash 1.5s ease-in-out infinite;
+}
+
+.musa-boot-flow--manual.musa-boot-selection--blue.is-assigning .musa-assignment-team--blue,
+.musa-boot-flow--manual.musa-boot-selection--red.is-assigning .musa-assignment-team--red {
+    z-index: 2;
+    animation: musaLootManualChosen 1.05s ease-in-out infinite alternate;
+}
+
+.musa-boot-flow--manual.musa-boot-selection--blue.is-assigning .musa-assignment-team--red,
+.musa-boot-flow--manual.musa-boot-selection--red.is-assigning .musa-assignment-team--blue {
+    opacity: 0.18;
+    transform: scale(0.82);
+    filter: grayscale(0.8);
 }
 
 .musa-boot-overlay.is-revealed .musa-assignment-core {
@@ -1722,6 +1769,38 @@ body.musa-boot-activa .intro-flow {
 @keyframes musaAssignmentReveal {
     from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes musaLootArenaCharge {
+    from { transform: perspective(520px) rotateX(1deg) scale(.985); box-shadow: inset 0 0 1.2rem rgba(247,208,108,.05); }
+    to { transform: perspective(520px) rotateX(-1deg) scale(1.01); box-shadow: inset 0 0 3rem rgba(247,208,108,.16), 0 0 2rem rgba(247,208,108,.18); }
+}
+
+@keyframes musaLootCandidateBlue {
+    0%, 100% { opacity: .2; transform: translateY(.7rem) scale(.9); filter: brightness(.75); }
+    45%, 55% { opacity: 1; transform: translateY(-.35rem) scale(1.07); filter: brightness(1.28); }
+}
+
+@keyframes musaLootCandidateRed {
+    0%, 100% { opacity: 1; transform: translateY(-.35rem) scale(1.07); filter: brightness(1.28); }
+    45%, 55% { opacity: .2; transform: translateY(.7rem) scale(.9); filter: brightness(.75); }
+}
+
+@keyframes musaLootCoreMystery {
+    0% { transform: rotate(-16deg) scale(.9); color: #54f0ff; border-color: #54f0ff; }
+    50% { transform: rotate(16deg) scale(1.14); color: #fff4b1; border-color: #fff4b1; }
+    100% { transform: rotate(-16deg) scale(.9); color: #ff6262; border-color: #ff6262; }
+}
+
+@keyframes musaLootMysteryFlash {
+    0%, 72%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(.2) rotate(-45deg); }
+    82% { opacity: .9; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    94% { opacity: 0; transform: translate(-50%, -50%) scale(1.8) rotate(35deg); }
+}
+
+@keyframes musaLootManualChosen {
+    from { transform: translateY(.25rem) scale(.98); filter: brightness(1); }
+    to { transform: translateY(-.35rem) scale(1.08); filter: brightness(1.3); box-shadow: inset 0 0 2.2rem currentColor, 0 0 2.8rem currentColor; }
 }
 
 .musa-boot-panel {
@@ -2102,7 +2181,17 @@ body.musa-boot-activa .intro-flow {
     .musa-boot-overlay.is-assigning .musa-assignment-arena::before,
     .musa-boot-overlay.is-assigning .musa-assignment-team,
     .musa-boot-overlay.is-assigning .musa-assignment-core,
-    .musa-assignment-result {
+    .musa-assignment-result,
+    .musa-assignment-reveal::before,
+    .musa-assignment-reveal::after,
+    .musa-assignment-reveal__portal,
+    .musa-assignment-reveal__portal::before,
+    .musa-assignment-reveal__portal::after,
+    .musa-assignment-reveal__flash,
+    .musa-assignment-reveal__shards i::before,
+    .musa-assignment-reveal__feather,
+    .musa-boot-overlay.is-revealing .musa-boot-title,
+    .musa-boot-overlay.is-revealing .musa-boot-kicker {
         animation: none !important;
     }
 
@@ -2113,6 +2202,15 @@ body.musa-boot-activa .intro-flow {
     .musa-boot-overlay,
     .musa-boot-bar-fill {
         transition: none !important;
+    }
+
+    .musa-assignment-reveal__portal,
+    .musa-assignment-reveal__feather,
+    .musa-boot-overlay.is-revealing .musa-boot-title,
+    .musa-boot-overlay.is-revealing .musa-boot-kicker {
+        opacity: 1;
+        transform: none;
+        filter: none;
     }
 }
 
@@ -2964,7 +3062,7 @@ body.musa-boot-activa .intro-flow {
     min-width: 0;
     min-height: clamp(9.5rem, 31vw, 13rem);
     padding: clamp(0.75rem, 2.5vw, 1.2rem);
-    border: 1px solid color-mix(in srgb, var(--team-color), white 20%);
+    border: 3px solid color-mix(in srgb, var(--team-color), white 30%);
     border-radius: clamp(0.9rem, 3vw, 1.4rem);
     display: grid;
     place-items: center;
@@ -2979,34 +3077,72 @@ body.musa-boot-activa .intro-flow {
     font-family: "Retro-gaming", "Courier New", monospace;
     cursor: pointer;
     isolation: isolate;
-    transition: transform 180ms ease, box-shadow 220ms ease, filter 220ms ease;
+    transform: translateY(0);
+    box-shadow:
+        inset 0 0.22rem 0 rgba(255, 255, 255, 0.26),
+        inset 0 -0.55rem 0 color-mix(in srgb, var(--team-color), black 76%),
+        inset 0 0 1.8rem color-mix(in srgb, var(--team-color), transparent 84%),
+        0 0.42rem 0 color-mix(in srgb, var(--team-color), black 62%),
+        0 0.8rem 1.6rem rgba(0, 0, 0, 0.42),
+        0 0 1.45rem color-mix(in srgb, var(--team-color), transparent 72%);
+    transition: transform 150ms ease, box-shadow 180ms ease, filter 180ms ease;
+    animation: musaSlotChoiceIdle 2.4s ease-in-out infinite;
 }
 
 .musa-team-choice::before {
     content: "";
     position: absolute;
     inset: -80% -40%;
-    z-index: -1;
-    background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.18) 50%, transparent 62%);
-    transform: translateX(-55%) rotate(12deg);
-    transition: transform 680ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 0;
+    background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.38) 50%, transparent 62%);
+    transform: translateX(-58%) rotate(12deg);
+    animation: musaSlotChoiceSweep 3.2s cubic-bezier(.2,.8,.2,1) infinite;
+    pointer-events: none;
+}
+
+.musa-team-choice::after {
+    content: "";
+    position: absolute;
+    inset: 0.42rem;
+    z-index: 1;
+    border: 2px dotted color-mix(in srgb, var(--team-color), white 34%);
+    border-radius: calc(clamp(0.9rem, 3vw, 1.4rem) - 0.28rem);
+    opacity: 0.68;
+    filter: drop-shadow(0 0 0.3rem var(--team-glow));
+    animation: musaSlotChoiceLights 920ms steps(2, end) infinite;
+    pointer-events: none;
 }
 
 .musa-team-choice:hover,
 .musa-team-choice:focus-visible {
-    transform: translateY(-3px) scale(1.015);
-    box-shadow: inset 0 0 2rem color-mix(in srgb, var(--team-color), transparent 82%), 0 0 2.2rem var(--team-glow);
-    filter: brightness(1.08);
+    transform: translateY(-0.28rem) scale(1.025);
+    box-shadow:
+        inset 0 0.25rem 0 rgba(255, 255, 255, 0.34),
+        inset 0 -0.55rem 0 color-mix(in srgb, var(--team-color), black 72%),
+        inset 0 0 2rem color-mix(in srgb, var(--team-color), transparent 76%),
+        0 0.62rem 0 color-mix(in srgb, var(--team-color), black 58%),
+        0 1rem 2rem rgba(0, 0, 0, 0.46),
+        0 0 2.4rem var(--team-glow);
+    filter: brightness(1.13) saturate(1.12);
     outline: 2px solid #fff;
     outline-offset: 3px;
 }
 
 .musa-team-choice:hover::before,
 .musa-team-choice:focus-visible::before {
-    transform: translateX(55%) rotate(12deg);
+    animation-duration: 1.25s;
 }
 
-.musa-team-choice:active { transform: scale(0.975); }
+.musa-team-choice:active {
+    transform: translateY(0.34rem) scale(0.985);
+    box-shadow:
+        inset 0 0.2rem 0 rgba(255, 255, 255, 0.2),
+        inset 0 -0.24rem 0 color-mix(in srgb, var(--team-color), black 72%),
+        0 0.1rem 0 color-mix(in srgb, var(--team-color), black 60%),
+        0 0.45rem 1rem rgba(0, 0, 0, 0.4),
+        0 0 1.8rem var(--team-glow);
+    animation-play-state: paused;
+}
 
 .musa-team-choice--red {
     --team-color: #ff6262;
@@ -3014,9 +3150,12 @@ body.musa-boot-activa .intro-flow {
 }
 
 .musa-team-choice img {
+    position: relative;
+    z-index: 2;
     width: clamp(2.4rem, 8.5vw, 4.2rem);
     height: auto;
     filter: drop-shadow(0 0 0.75rem var(--team-glow));
+    animation: musaSlotFeatherFloat 1.45s ease-in-out infinite alternate;
 }
 
 .musa-team-choice__team {
@@ -3025,6 +3164,8 @@ body.musa-boot-activa .intro-flow {
 }
 
 .musa-team-choice__writer {
+    position: relative;
+    z-index: 2;
     width: 100%;
     min-height: 2.35em;
     display: grid;
@@ -3038,17 +3179,105 @@ body.musa-boot-activa .intro-flow {
 }
 
 .musa-assignment-cta--automatic {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: clamp(3.8rem, 11vw, 4.8rem);
+    border: 3px solid #fff4ba;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
-    background: linear-gradient(115deg, #ffd86b, #fff7cf 48%, #ff9f43);
-    box-shadow: 0 0 1.8rem rgba(255, 204, 93, 0.36);
+    background:
+        repeating-linear-gradient(115deg, transparent 0 0.8rem, rgba(255,255,255,.12) 0.8rem 1.05rem),
+        linear-gradient(180deg, #fff4a9 0%, #ffd86b 42%, #ff9f43 100%);
+    box-shadow:
+        inset 0 0.22rem 0 rgba(255, 255, 255, 0.62),
+        inset 0 -0.55rem 0 #c86616,
+        0 0.48rem 0 #8c450f,
+        0 0.9rem 1.5rem rgba(0, 0, 0, 0.44),
+        0 0 2.2rem rgba(255, 204, 93, 0.48);
+    animation: musaSlotAutomaticPulse 1.8s ease-in-out infinite;
+}
+
+.musa-assignment-cta--automatic::before {
+    content: "";
+    position: absolute;
+    inset: -70% -30%;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.8) 50%, transparent 62%);
+    transform: translateX(-70%) rotate(12deg);
+    animation: musaSlotAutomaticSweep 2.15s cubic-bezier(.2,.8,.2,1) infinite;
+}
+
+.musa-assignment-cta--automatic::after {
+    content: "✦";
+    position: absolute;
+    right: 0.9rem;
+    color: rgba(111, 50, 4, 0.72);
+    font-size: 0.9em;
+    animation: musaSlotAutomaticStar 780ms steps(2,end) infinite;
+}
+
+.musa-assignment-cta--automatic:hover,
+.musa-assignment-cta--automatic:focus-visible {
+    transform: translateY(-0.28rem) scale(1.035);
+    box-shadow:
+        inset 0 0.25rem 0 rgba(255, 255, 255, 0.72),
+        inset 0 -0.55rem 0 #c86616,
+        0 0.68rem 0 #8c450f,
+        0 1rem 1.8rem rgba(0, 0, 0, 0.46),
+        0 0 3rem rgba(255, 204, 93, 0.7);
+}
+
+.musa-assignment-cta--automatic:active {
+    transform: translateY(0.38rem) scale(0.985);
+    box-shadow:
+        inset 0 0.18rem 0 rgba(255, 255, 255, 0.5),
+        inset 0 -0.22rem 0 #c86616,
+        0 0.12rem 0 #8c450f,
+        0 0.35rem 1rem rgba(0,0,0,.4),
+        0 0 2.2rem rgba(255, 204, 93, 0.58);
 }
 
 .musa-assignment-cta__finger {
     font-size: 1.35em;
     transform: translateY(-0.08em);
+}
+
+@keyframes musaSlotChoiceIdle {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.08) saturate(1.08); }
+}
+
+@keyframes musaSlotChoiceSweep {
+    0%, 28% { transform: translateX(-58%) rotate(12deg); }
+    72%, 100% { transform: translateX(58%) rotate(12deg); }
+}
+
+@keyframes musaSlotChoiceLights {
+    0%, 100% { opacity: 0.48; }
+    50% { opacity: 0.95; }
+}
+
+@keyframes musaSlotFeatherFloat {
+    from { transform: translateY(0.12rem) rotate(-4deg) scale(0.96); }
+    to { transform: translateY(-0.28rem) rotate(4deg) scale(1.05); }
+}
+
+@keyframes musaSlotAutomaticPulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.12) saturate(1.08); }
+}
+
+@keyframes musaSlotAutomaticSweep {
+    0%, 25% { transform: translateX(-70%) rotate(12deg); }
+    70%, 100% { transform: translateX(70%) rotate(12deg); }
+}
+
+@keyframes musaSlotAutomaticStar {
+    0%, 100% { opacity: .4; transform: rotate(-12deg) scale(.8); }
+    50% { opacity: 1; transform: rotate(12deg) scale(1.25); }
 }
 
 .musa-fingerprint-stage {
@@ -3164,18 +3393,12 @@ body.musa-boot-activa .intro-flow {
     animation: musaFingerprintComplete 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.musa-fingerprint__hint,
-.musa-fingerprint__privacy { margin: 0; text-align: center; }
+.musa-fingerprint__hint { margin: 0; text-align: center; }
 
 .musa-fingerprint__hint {
     color: #fff7cf;
     font-size: clamp(0.66rem, 2vw, 0.85rem);
     letter-spacing: 0.12em;
-}
-
-.musa-fingerprint__privacy {
-    color: rgba(232, 241, 248, 0.48);
-    font-size: clamp(0.58rem, 1.6vw, 0.72rem);
 }
 
 .musa-assignment-action--cancel {
@@ -3216,6 +3439,12 @@ body.musa-boot-activa .intro-flow {
 
 @media (prefers-reduced-motion: reduce) {
     .musa-team-choice::before,
+    .musa-team-choice::after,
+    .musa-team-choice,
+    .musa-team-choice img,
+    .musa-assignment-cta--automatic,
+    .musa-assignment-cta--automatic::before,
+    .musa-assignment-cta--automatic::after,
     .musa-fingerprint,
     .musa-fingerprint::before,
     .musa-fingerprint::after,
@@ -3573,11 +3802,14 @@ body.musa-boot-activa .intro-flow {
 }
 
 .musa-assignment-reveal {
+    --reveal-time: 2200ms;
     position: relative;
     z-index: 1;
-    min-height: clamp(10rem, 34vw, 17rem);
+    min-height: clamp(15rem, 48vw, 23rem);
     display: grid;
     place-items: center;
+    isolation: isolate;
+    perspective: 700px;
 }
 
 .musa-assignment-reveal[hidden] { display: none !important; }
@@ -3586,27 +3818,123 @@ body.musa-boot-activa .intro-flow {
 .musa-assignment-reveal::after {
     content: "";
     position: absolute;
-    width: clamp(8.5rem, 31vw, 14rem);
+    width: clamp(15rem, 58vw, 29rem);
     aspect-ratio: 1;
-    border: 1px solid color-mix(in srgb, var(--boot-accent), transparent 38%);
     border-radius: 50%;
-    box-shadow: 0 0 2.7rem color-mix(in srgb, var(--boot-accent), transparent 62%);
-    animation: musaAssignmentRevealOrbit 1800ms ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+.musa-assignment-reveal::before {
+    z-index: -2;
+    background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--boot-accent), transparent 74%) 0 8deg, transparent 8deg 19deg);
+    opacity: 0;
+    animation: musaLootRevealRays var(--reveal-time) cubic-bezier(.16,1,.3,1) both;
 }
 
 .musa-assignment-reveal::after {
-    width: clamp(6.3rem, 23vw, 10.5rem);
-    animation-direction: alternate-reverse;
+    z-index: -1;
+    width: clamp(9rem, 33vw, 16rem);
+    border: 2px solid color-mix(in srgb, var(--boot-accent), white 22%);
+    box-shadow: 0 0 2.7rem color-mix(in srgb, var(--boot-accent), transparent 48%);
+    opacity: 0;
+    animation: musaLootRevealShockwave var(--reveal-time) ease-out both;
 }
+
+.musa-assignment-reveal__portal {
+    position: relative;
+    width: clamp(10.5rem, 38vw, 18rem);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: clamp(0.35rem, 1.4vw, 0.7rem) solid color-mix(in srgb, var(--boot-accent), white 25%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.98) 0 4%, color-mix(in srgb, var(--boot-accent), white 28%) 5% 14%, color-mix(in srgb, var(--boot-accent), black 50%) 34%, #03070d 66%);
+    box-shadow: inset 0 0 1.2rem rgba(255,255,255,.38), inset 0 0 3.2rem color-mix(in srgb, var(--boot-accent), transparent 24%), 0 0 0 .35rem color-mix(in srgb, var(--boot-accent), transparent 66%), 0 0 3.6rem color-mix(in srgb, var(--boot-accent), transparent 32%);
+    opacity: 0;
+    transform: rotateY(90deg) scale(.42);
+    animation: musaLootRevealPortal var(--reveal-time) cubic-bezier(.16,1,.3,1) both;
+}
+
+.musa-assignment-reveal__portal::before,
+.musa-assignment-reveal__portal::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.musa-assignment-reveal__portal::before {
+    inset: -1.25rem;
+    border: 1px dashed color-mix(in srgb, var(--boot-accent), white 28%);
+    animation: musaLootRevealOrbit 2.1s linear infinite;
+}
+
+.musa-assignment-reveal__portal::after {
+    inset: 8%;
+    border: 2px solid rgba(255,255,255,.55);
+    box-shadow: 0 0 1.2rem rgba(255,255,255,.42);
+    animation: musaLootRevealInnerRing 900ms ease-in-out infinite alternate;
+}
+
+.musa-assignment-reveal__flash {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    z-index: 4;
+    width: 42%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 1rem #fff, 0 0 4rem var(--boot-accent), 0 0 8rem var(--boot-accent);
+    opacity: 0;
+    transform: translate(-50%,-50%) scale(.15);
+    animation: musaLootRevealFlash var(--reveal-time) ease-out both;
+}
+
+.musa-assignment-reveal__shards,
+.musa-assignment-reveal__shards i {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.musa-assignment-reveal__shards i::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(.4rem, 1.7vw, .8rem);
+    aspect-ratio: 1;
+    background: color-mix(in srgb, var(--boot-accent), white 35%);
+    box-shadow: 0 0 .8rem var(--boot-accent);
+    clip-path: polygon(50% 0, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0 50%, 37% 37%);
+    opacity: 0;
+    animation: musaLootRevealShard var(--reveal-time) ease-out both;
+}
+
+.musa-assignment-reveal__shards i:nth-child(1) { transform: rotate(0deg); }
+.musa-assignment-reveal__shards i:nth-child(2) { transform: rotate(45deg); }
+.musa-assignment-reveal__shards i:nth-child(3) { transform: rotate(90deg); }
+.musa-assignment-reveal__shards i:nth-child(4) { transform: rotate(135deg); }
+.musa-assignment-reveal__shards i:nth-child(5) { transform: rotate(180deg); }
+.musa-assignment-reveal__shards i:nth-child(6) { transform: rotate(225deg); }
+.musa-assignment-reveal__shards i:nth-child(7) { transform: rotate(270deg); }
+.musa-assignment-reveal__shards i:nth-child(8) { transform: rotate(315deg); }
+.musa-assignment-reveal__shards i:nth-child(even)::before { animation-delay: 90ms; }
 
 .musa-assignment-reveal__feather {
     position: relative;
-    z-index: 1;
-    width: clamp(4.6rem, 17vw, 7.8rem);
+    z-index: 5;
+    width: clamp(5.7rem, 21vw, 9.6rem);
     height: auto;
     filter: drop-shadow(0 0 1.6rem color-mix(in srgb, var(--boot-accent), transparent 18%));
-    animation: musaAssignmentRevealFeather 1300ms ease-in-out infinite alternate;
+    opacity: 0;
+    animation: musaLootRevealReward var(--reveal-time) cubic-bezier(.16,1,.3,1) both;
 }
+
+.musa-boot-flow--automatic.is-revealing { --reveal-time: 2800ms; }
+.musa-boot-flow--manual.is-revealing { --reveal-time: 2200ms; }
+.musa-boot-overlay.is-restored-assignment { --reveal-time: 520ms; }
+.musa-boot-overlay.is-revealing .musa-assignment-reveal { --reveal-time: inherit; }
 
 .musa-boot-overlay.is-revealing .musa-assignment-arena,
 .musa-boot-overlay.is-revealing .musa-game-loading,
@@ -3621,6 +3949,11 @@ body.musa-boot-activa .intro-flow {
     color: var(--boot-accent);
     overflow-wrap: anywhere;
     text-shadow: 0 0 1.25rem color-mix(in srgb, var(--boot-accent), transparent 34%);
+    animation: musaLootRevealTitle var(--reveal-time, 2200ms) cubic-bezier(.16,1,.3,1) both;
+}
+
+.musa-boot-overlay.is-revealing .musa-boot-kicker {
+    animation: musaLootRevealTitle var(--reveal-time, 2200ms) cubic-bezier(.16,1,.3,1) both;
 }
 
 .musa-game-loading {
@@ -3656,14 +3989,50 @@ body.musa-boot-activa .intro-flow {
     to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-@keyframes musaAssignmentRevealOrbit {
-    from { transform: scale(0.82) rotate(-12deg); opacity: 0.36; }
-    to { transform: scale(1.08) rotate(12deg); opacity: 0.92; }
+@keyframes musaLootRevealRays {
+    0%, 25% { opacity: 0; transform: rotate(-22deg) scale(.35); }
+    42% { opacity: .55; }
+    100% { opacity: .82; transform: rotate(72deg) scale(1.08); }
 }
 
-@keyframes musaAssignmentRevealFeather {
-    from { transform: translateY(0.45rem) rotate(-4deg) scale(0.96); }
-    to { transform: translateY(-0.45rem) rotate(4deg) scale(1.04); }
+@keyframes musaLootRevealShockwave {
+    0%, 38% { opacity: 0; transform: scale(.18); }
+    52% { opacity: 1; }
+    88%, 100% { opacity: 0; transform: scale(2.5); }
+}
+
+@keyframes musaLootRevealPortal {
+    0%, 24% { opacity: 0; transform: rotateY(90deg) scale(.42); filter: brightness(.45); }
+    39% { opacity: 1; transform: rotateY(0) scale(.82); filter: brightness(1.8); }
+    54% { transform: rotateY(0) scale(1.13); }
+    72%, 100% { opacity: 1; transform: rotateY(0) scale(1); filter: brightness(1.12); }
+}
+
+@keyframes musaLootRevealOrbit { to { transform: rotate(360deg); } }
+@keyframes musaLootRevealInnerRing { from { transform: scale(.92); opacity: .45; } to { transform: scale(1.05); opacity: 1; } }
+
+@keyframes musaLootRevealFlash {
+    0%, 38% { opacity: 0; transform: translate(-50%,-50%) scale(.15); }
+    46% { opacity: 1; transform: translate(-50%,-50%) scale(1.45); }
+    59%, 100% { opacity: 0; transform: translate(-50%,-50%) scale(2.2); }
+}
+
+@keyframes musaLootRevealShard {
+    0%, 43% { opacity: 0; transform: translate(-50%,-50%) translateX(0) scale(.3); }
+    54% { opacity: 1; }
+    86%, 100% { opacity: 0; transform: translate(-50%,-50%) translateX(clamp(7rem, 26vw, 12rem)) scale(1.1) rotate(180deg); }
+}
+
+@keyframes musaLootRevealReward {
+    0%, 42% { opacity: 0; transform: translateY(1.4rem) rotate(-540deg) scale(.05); filter: brightness(4) blur(.25rem); }
+    58% { opacity: 1; transform: translateY(-.8rem) rotate(12deg) scale(1.35); filter: brightness(2) blur(0); }
+    74% { transform: translateY(.2rem) rotate(-5deg) scale(.96); }
+    88%, 100% { opacity: 1; transform: translateY(-.35rem) rotate(3deg) scale(1.08); filter: brightness(1.15); }
+}
+
+@keyframes musaLootRevealTitle {
+    0%, 48% { opacity: 0; transform: translateY(.7rem) scale(.9); filter: blur(.25rem); }
+    64%, 100% { opacity: 1; transform: none; filter: none; }
 }
 
 @keyframes onboardingSparkGlow {
@@ -4330,7 +4699,7 @@ body.musa-boot-activa .intro-flow {
         <div class="musa-boot-panel">
             <div id="musa_boot_kicker" class="musa-boot-kicker">DETECCIÓN AUTOMÁTICA</div>
             <h2 id="musa_boot_title" class="musa-boot-title">PON TU DEDO</h2>
-            <p id="musa_boot_copy" class="musa-boot-copy">Mantén el dedo sobre la huella.</p>
+            <p id="musa_boot_copy" class="musa-boot-copy"></p>
             <div class="musa-assignment-arena">
                 <div id="musa_fingerprint_stage" class="musa-fingerprint-stage" hidden>
                     <button id="musa_fingerprint" class="musa-fingerprint" type="button" aria-label="Mantén pulsado para detectar tu equipo">
@@ -4348,7 +4717,6 @@ body.musa-boot-activa .intro-flow {
                         <span id="musa_fingerprint_percent" class="musa-fingerprint__percent">0%</span>
                     </button>
                     <p id="musa_fingerprint_hint" class="musa-fingerprint__hint">MANTÉN EL DEDO SOBRE LA HUELLA</p>
-                    <p class="musa-fingerprint__privacy">No se registra ningún dato biométrico.</p>
                 </div>
                 <div class="musa-assignment-team musa-assignment-team--blue" aria-hidden="true">
                     <img src="./img/pluma_azul.png" alt="">
@@ -4361,7 +4729,13 @@ body.musa-boot-activa .intro-flow {
                 </div>
             </div>
             <div id="musa_assignment_reveal" class="musa-assignment-reveal" hidden aria-hidden="true">
-                <img id="musa_assignment_reveal_feather" class="musa-assignment-reveal__feather" src="./img/pluma_azul.png" alt="">
+                <div class="musa-assignment-reveal__portal">
+                    <span class="musa-assignment-reveal__flash" aria-hidden="true"></span>
+                    <span class="musa-assignment-reveal__shards" aria-hidden="true">
+                        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                    </span>
+                    <img id="musa_assignment_reveal_feather" class="musa-assignment-reveal__feather" src="./img/pluma_azul.png" alt="">
+                </div>
             </div>
             <div id="musa_game_loading" class="musa-game-loading" hidden>
                 <div class="musa-boot-world" aria-hidden="true">
@@ -4398,5 +4772,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260901a"></script>
+<script src="./js/musa-selector.js?v=20260901b"></script>
 </html>

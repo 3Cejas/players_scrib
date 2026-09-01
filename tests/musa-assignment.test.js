@@ -405,14 +405,14 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_writer_red"[^>]*>ESCRITXR 2/);
   assert.match(html, /DETECCIÓN AUTOMÁTICA/);
   assert.match(html, /id="musa_fingerprint"[^>]*aria-label=/);
-  assert.match(html, /No se registra ningún dato biométrico/);
+  assert.doesNotMatch(html, /No se registra ningún dato biométrico/);
   assert.doesNotMatch(html, /entrarComoMusa|onclick="[^"]*player|onclick="[^"]*Musa\([12]\)/);
   assert.match(html, /role="dialog" aria-modal="true"/);
   assert.match(html, /aria-hidden="true" tabindex="-1"/);
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260901a/);
+  assert.match(html, /musa-selector\.js\?v=20260901b/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -472,12 +472,18 @@ test("writer choice stays clean and game loading closes the assignment reveal", 
 
   assert.doesNotMatch(html, /musa-team-choice__team">EQUIPO (?:AZUL|ROJO)/);
   assert.doesNotMatch(html, /musa-team-choice__action|>ELEGIR<\/span>/);
+  assert.doesNotMatch(html, /No se registra ningún dato biométrico|musa-boot-copy">Mantén el dedo sobre la huella/);
   assert.match(html, /\.musa-team-choice__writer\s*\{[\s\S]{0,160}color:\s*var\(--team-color\)/);
+  assert.match(html, /@keyframes musaSlotChoiceIdle[\s\S]*@keyframes musaSlotAutomaticPulse/);
+  assert.match(html, /musa-assignment-reveal__portal[\s\S]*musa-assignment-reveal__shards[\s\S]*musa_assignment_reveal_feather/);
+  assert.match(html, /@keyframes musaLootRevealPortal[\s\S]*@keyframes musaLootRevealReward/);
   assert.doesNotMatch(html, /id="musa_assignment_enter"/);
   assert.match(html, /id="musa_assignment_reveal"[\s\S]*id="musa_game_loading"/);
   assert.match(html, /id="musa_game_loading"[\s\S]*musa-boot-world[\s\S]*data-load-step="0"/);
   assert.match(selector, /Preparando el canal creativo de \$\{asignacion\.writer\}/);
   assert.match(selector, /classList\.add\([^;]*"is-revealing"\)/);
+  assert.match(selector, /musa-boot-flow--manual[\s\S]*musa-boot-flow--automatic/);
+  assert.match(selector, /REVEAL_MIN_AUTOMATIC_MS = 2200[\s\S]*ASSIGNMENT_REVEAL_AUTOMATIC_MS = 2800/);
   assert.match(selector, /loadingStartTimeout = setTimeout\([\s\S]*iniciarFaseCargaJuego\(asignacion, duracionCarga\)/);
   assert.match(selector, /function iniciarFaseCargaJuego[\s\S]*iniciarCargaJuego\(asignacion, duracionCarga\)/);
   assert.match(selector, /setTimeout\(entrarEnJuegoAsignado, duracionCarga \+ 120\)/);
