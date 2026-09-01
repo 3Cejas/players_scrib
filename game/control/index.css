@@ -11146,3 +11146,45 @@ table.default {
         text-align: center;
     }
 }
+
+/* Composición definitiva del apartado Tutorial. En paneles panorámicos las dos
+   piezas audiovisuales comparten fila; al abrir Parámetros se apilan sin
+   sacrificar la fila compacta de acciones. */
+#panel_controles #control_panel_tutorial.control-group--tutorial:not(.is-collapsed) {
+    display: flex !important;
+    flex-flow: row wrap !important;
+    align-content: start;
+    gap: 0.5rem;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #videotutorial_control {
+    flex: 1 1 48rem;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control {
+    flex: 0.45 1 20rem;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > .control-group-buttons--tutorial {
+    flex: 1 0 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-self: start;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > .videotutorial-control {
+    min-width: 0;
+    height: auto;
+    align-self: stretch;
+}
+
+@container tutorial-controls (max-width: 62rem) {
+    #panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control {
+        flex-grow: 1;
+    }
+}
+
+@container tutorial-controls (max-width: 30rem) {
+    #panel_controles #control_panel_tutorial:not(.is-collapsed) > .control-group-buttons--tutorial {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

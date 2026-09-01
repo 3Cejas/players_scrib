@@ -294,4 +294,9 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(css, /control-group--tutorial:not\(\.is-collapsed\)\s*\{[\s\S]{0,180}grid-template-rows:\s*max-content max-content max-content !important;/);
   assert.match(css, /#videotutorial_config_form\s*\{[\s\S]{0,260}grid-template-columns:\s*max-content max-content !important;[\s\S]{0,220}width:\s*max-content;/);
   assert.match(css, /#videotutorial_config_form > \.videotutorial-control__toggle\s*\{[\s\S]{0,180}grid-column:\s*1 \/ -1 !important;[\s\S]{0,180}justify-self:\s*start;/);
+  assert.match(css, /#control_panel_tutorial\.control-group--tutorial:not\(\.is-collapsed\)\s*\{[\s\S]{0,180}display:\s*flex !important;[\s\S]{0,100}flex-flow:\s*row wrap !important;/);
+  assert.match(css, /#control_panel_tutorial:not\(\.is-collapsed\) > #videotutorial_control\s*\{[\s\S]{0,100}flex:\s*1 1 48rem;/);
+  assert.match(css, /#control_panel_tutorial:not\(\.is-collapsed\) > #show_narration_control\s*\{[\s\S]{0,100}flex:\s*0\.45 1 20rem;/);
+  assert.match(css, /@container tutorial-controls \(max-width: 62rem\)[\s\S]{0,220}#show_narration_control[\s\S]{0,100}flex-grow:\s*1;/);
+  assert.match(css, /#control_panel_tutorial:not\(\.is-collapsed\) > \.control-group-buttons--tutorial\s*\{[\s\S]{0,220}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\) !important;/);
 });
