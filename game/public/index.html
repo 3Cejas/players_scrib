@@ -3225,7 +3225,7 @@ body.musa-boot-activa .intro-flow {
     }
 }
 
-/* Onboarding de musas: cuatro pantallas, dos ideas clave y grafismo nativo. */
+/* Onboarding de musas: seis pantallas, mensajes breves y grafismo nativo. */
 .intro-onboarding-welcome .intro-panel,
 .intro-onboarding-demo .intro-panel,
 #intro-nombre .intro-panel,
@@ -3684,12 +3684,351 @@ body.musa-boot-activa .intro-flow {
 @keyframes onboardingTypedWord { 0%, 60% { opacity: 0.12; filter: blur(0.3rem); } 68%, 100% { opacity: 1; filter: none; } }
 @keyframes onboardingCaret { 50% { opacity: 0; } }
 
+/* Dos escenas de juego: ritmo de escritura y valor de las inspiraciones. */
+.intro-onboarding-mechanic .intro-panel {
+    width: min(100%, 48rem);
+    position: relative;
+    justify-content: center;
+    gap: clamp(0.45rem, 1.45vh, 0.85rem);
+    padding: max(env(safe-area-inset-top), 0.9rem) 1rem max(env(safe-area-inset-bottom), 1.1rem);
+}
+
+.onboarding-score-demo {
+    --score-cycle: 6.4s;
+    width: min(100%, 38rem);
+    margin: 0 auto;
+    padding: clamp(0.75rem, 2.8vw, 1.2rem);
+    border: 1px solid rgba(93, 232, 255, 0.3);
+    border-radius: 1.15rem;
+    background:
+        linear-gradient(135deg, rgba(65, 223, 255, 0.08), transparent 42%),
+        rgba(3, 10, 18, 0.88);
+    box-shadow: inset 0 0 2rem rgba(74, 228, 255, 0.05), 0 1.1rem 2.7rem rgba(0, 0, 0, 0.28);
+}
+
+.onboarding-rhythm-writer {
+    position: relative;
+    min-height: clamp(8rem, 25vh, 11rem);
+    padding: clamp(0.75rem, 2.7vw, 1.15rem);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 0.85rem;
+    background: rgba(0, 4, 10, 0.7);
+}
+
+.onboarding-rhythm-writer::after {
+    content: "";
+    position: absolute;
+    inset: auto 8% 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #63edff, transparent);
+    box-shadow: 0 0 1rem #63edff;
+    animation: onboardingWriterPulse var(--score-cycle) ease-in-out infinite;
+}
+
+.onboarding-rhythm-writer__head,
+.onboarding-score-meter__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    color: rgba(226, 244, 249, 0.52);
+    font: clamp(0.5rem, 1.8vw, 0.68rem)/1.2 "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.1em;
+}
+
+.onboarding-rhythm-status {
+    position: relative;
+    min-width: 8.4rem;
+    height: 1.3em;
+    color: #72f6bb;
+    text-align: right;
+}
+
+.onboarding-rhythm-status span {
+    position: absolute;
+    inset: 0 0 auto auto;
+    white-space: nowrap;
+}
+
+.onboarding-rhythm-status__write {
+    animation: onboardingWritingState var(--score-cycle) steps(1, end) infinite;
+}
+
+.onboarding-rhythm-status__rest {
+    color: #ff7186;
+    animation: onboardingRestState var(--score-cycle) steps(1, end) infinite;
+}
+
+.onboarding-rhythm-copy {
+    margin: clamp(1rem, 4vh, 2rem) 0 0;
+    color: rgba(237, 247, 250, 0.72);
+    font-size: clamp(0.76rem, 3vw, 1.06rem);
+    line-height: 1.55;
+}
+
+.onboarding-rhythm-copy strong {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    color: #fff;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    white-space: nowrap;
+    vertical-align: bottom;
+    text-shadow: 0 0 0.8rem rgba(93, 232, 255, 0.42);
+    animation: onboardingWriterTyping var(--score-cycle) steps(18, end) infinite;
+}
+
+.onboarding-rhythm-caret {
+    display: inline-block;
+    width: 0.12em;
+    height: 1.1em;
+    margin-left: 0.12em;
+    vertical-align: -0.16em;
+    background: #fff;
+    animation: onboardingWriterCaret var(--score-cycle) steps(1, end) infinite;
+}
+
+.onboarding-score-meter {
+    margin-top: clamp(0.7rem, 2.3vh, 1rem);
+}
+
+.onboarding-score-value {
+    color: #fff0a4;
+    font-size: clamp(0.72rem, 2.6vw, 0.96rem);
+    text-shadow: 0 0 0.8rem rgba(255, 212, 84, 0.65);
+}
+
+.onboarding-score-value::after {
+    content: "18";
+    animation: onboardingRhythmValue var(--score-cycle) steps(1, end) infinite;
+}
+
+.onboarding-score-meter__track {
+    height: clamp(0.72rem, 2.5vw, 0.95rem);
+    margin-top: 0.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.onboarding-score-meter__fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #57e8ff, #78f6b8 58%, #ffe066);
+    box-shadow: 0 0 1.2rem rgba(92, 236, 255, 0.75);
+    transform: scaleX(0.18);
+    transform-origin: left center;
+    animation: onboardingRhythmFill var(--score-cycle) cubic-bezier(.45, 0, .2, 1) infinite;
+}
+
+.onboarding-score-legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-top: 0.75rem;
+}
+
+.onboarding-score-legend span {
+    padding: 0.62em 0.45em;
+    border-radius: 0.6rem;
+    font: clamp(0.48rem, 1.75vw, 0.65rem)/1.2 "Retro-gaming", "Courier New", monospace;
+    text-align: center;
+}
+
+.onboarding-score-legend__up {
+    color: #74f6ba;
+    background: rgba(64, 230, 160, 0.09);
+}
+
+.onboarding-score-legend__down {
+    color: #ff8091;
+    background: rgba(255, 82, 108, 0.09);
+}
+
+.onboarding-boost-demo {
+    position: relative;
+    min-height: clamp(14rem, 42vh, 19rem);
+    display: grid;
+    grid-template-columns: minmax(0, 0.78fr) minmax(3.2rem, 0.38fr) minmax(0, 1.25fr);
+    align-items: center;
+    gap: clamp(0.3rem, 1.5vw, 0.75rem);
+}
+
+.onboarding-boost-source,
+.onboarding-boost-story {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 0.9rem;
+    background: rgba(1, 7, 13, 0.8);
+}
+
+.onboarding-boost-source {
+    min-height: clamp(8.5rem, 26vh, 12rem);
+    display: grid;
+    place-content: center;
+    gap: 0.75rem;
+    padding: 0.7rem;
+    border: 1px solid rgba(255, 191, 73, 0.46);
+    text-align: center;
+}
+
+.onboarding-boost-source span,
+.onboarding-boost-story__label {
+    color: rgba(225, 245, 250, 0.48);
+    font: clamp(0.48rem, 1.65vw, 0.62rem)/1.2 "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.1em;
+}
+
+.onboarding-boost-source strong {
+    color: #ffd76c;
+    font: clamp(0.78rem, 3vw, 1.08rem)/1.2 "Retro-gaming", "Courier New", monospace;
+    text-shadow: 0 0 0.9rem rgba(255, 198, 73, 0.58);
+    animation: onboardingBoostSource var(--score-cycle) ease-in-out infinite;
+}
+
+.onboarding-boost-flight {
+    position: relative;
+    height: 3rem;
+}
+
+.onboarding-boost-flight::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -12%;
+    right: -12%;
+    height: 1px;
+    background: linear-gradient(90deg, #ffc94f, #63edff);
+    box-shadow: 0 0 0.8rem rgba(92, 236, 255, 0.65);
+}
+
+.onboarding-boost-flight b {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    padding: 0.5em 0.65em;
+    border: 1px solid rgba(255, 221, 115, 0.72);
+    border-radius: 999px;
+    color: #fff6c7;
+    background: #10120d;
+    font: clamp(0.44rem, 1.55vw, 0.62rem)/1 "Retro-gaming", "Courier New", monospace;
+    box-shadow: 0 0 1rem rgba(255, 208, 81, 0.38);
+    animation: onboardingBoostFlight var(--score-cycle) cubic-bezier(.5, 0, .2, 1) infinite;
+}
+
+.onboarding-boost-story {
+    min-height: clamp(10.5rem, 31vh, 14rem);
+    padding: clamp(0.7rem, 2.5vw, 1rem);
+    border: 1px solid rgba(92, 236, 255, 0.42);
+}
+
+.onboarding-boost-story p {
+    margin: clamp(1rem, 3vh, 1.45rem) 0 0.7rem;
+    color: rgba(235, 246, 250, 0.74);
+    font-size: clamp(0.65rem, 2.45vw, 0.9rem);
+    line-height: 1.45;
+}
+
+.onboarding-boost-used {
+    color: #ffdc6d;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    text-shadow: 0 0 0.8rem rgba(255, 204, 75, 0.65);
+    animation: onboardingBoostWord var(--score-cycle) steps(1, end) infinite;
+}
+
+.onboarding-boost-meter {
+    position: relative;
+    height: 0.72rem;
+    overflow: visible;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.onboarding-boost-meter span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #5cecff, #ffd95d);
+    transform: scaleX(0.3);
+    transform-origin: left center;
+    animation: onboardingBoostFill var(--score-cycle) cubic-bezier(.2, .9, .2, 1) infinite;
+}
+
+.onboarding-boost-bonus {
+    position: absolute;
+    right: 0.7rem;
+    bottom: 1.45rem;
+    padding: 0.48em 0.58em;
+    border: 1px solid rgba(255, 224, 105, 0.68);
+    border-radius: 999px;
+    color: #fff4a9;
+    background: rgba(31, 24, 4, 0.92);
+    font: clamp(0.45rem, 1.65vw, 0.62rem)/1 "Retro-gaming", "Courier New", monospace;
+    box-shadow: 0 0 1.2rem rgba(255, 210, 70, 0.4);
+    animation: onboardingBoostBonus var(--score-cycle) cubic-bezier(.2, .9, .2, 1) infinite;
+}
+
+@keyframes onboardingWriterPulse {
+    0%, 7%, 64%, 100% { transform: scaleX(0.22); opacity: 0.18; }
+    18%, 56% { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes onboardingWritingState { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0; } }
+@keyframes onboardingRestState { 0%, 62% { opacity: 0; } 63%, 100% { opacity: 1; } }
+@keyframes onboardingWriterTyping { 0%, 8% { width: 0; } 53%, 100% { width: 18ch; } }
+@keyframes onboardingWriterCaret { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0; } }
+
+@keyframes onboardingRhythmFill {
+    0%, 7% { transform: scaleX(0.18); filter: saturate(0.7); }
+    20% { transform: scaleX(0.34); }
+    36% { transform: scaleX(0.58); }
+    52%, 62% { transform: scaleX(0.86); filter: saturate(1.2); }
+    76% { transform: scaleX(0.64); }
+    92%, 100% { transform: scaleX(0.32); filter: saturate(0.75); }
+}
+
+@keyframes onboardingRhythmValue {
+    0%, 10% { content: "18"; }
+    11%, 24% { content: "27"; }
+    25%, 39% { content: "39"; }
+    40%, 64% { content: "57"; }
+    65%, 80% { content: "46"; }
+    81%, 100% { content: "31"; }
+}
+
+@keyframes onboardingBoostSource {
+    0%, 22%, 100% { transform: scale(1); opacity: 1; }
+    32%, 48% { transform: scale(0.86); opacity: 0.34; }
+    64% { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes onboardingBoostFlight {
+    0%, 18% { transform: translate(-92%, -50%) scale(0.7); opacity: 0; }
+    28% { opacity: 1; }
+    56% { transform: translate(-10%, -50%) scale(1); opacity: 1; }
+    66%, 100% { transform: translate(45%, -50%) scale(0.72); opacity: 0; }
+}
+
+@keyframes onboardingBoostWord { 0%, 55% { opacity: 0.15; filter: blur(0.22rem); } 64%, 100% { opacity: 1; filter: none; } }
+@keyframes onboardingBoostFill { 0%, 55% { transform: scaleX(0.3); } 66%, 88% { transform: scaleX(0.9); } 100% { transform: scaleX(0.3); } }
+@keyframes onboardingBoostBonus { 0%, 57%, 100% { opacity: 0; transform: translateY(0.7rem) scale(0.7); } 66%, 84% { opacity: 1; transform: translateY(0) scale(1); } }
+
 @media (max-width: 520px) {
     .intro-onboarding-welcome .intro-panel { grid-template-rows: auto auto auto minmax(8rem, 1fr) auto; }
     .onboarding-demo { grid-template-columns: minmax(0, 0.9fr) 3rem minmax(0, 1.15fr); }
     .onboarding-demo__phone { border-radius: 0.95rem; }
     .intro-onboarding-keys { gap: 0.45rem; }
     .intro-onboarding-keys article { align-items: flex-start; gap: 0.45rem; padding: 0.65rem 0.55rem; }
+    .onboarding-score-demo { padding: 0.68rem; }
+    .onboarding-boost-demo { grid-template-columns: minmax(0, 0.76fr) 2.8rem minmax(0, 1.2fr); }
+    .onboarding-score-legend { gap: 0.35rem; }
 }
 
 @media (max-height: 690px) {
@@ -3699,12 +4038,19 @@ body.musa-boot-activa .intro-flow {
     .onboarding-demo { min-height: 11rem; }
     .onboarding-demo__phone { aspect-ratio: 0.72; }
     .intro-onboarding-keys article { padding-block: 0.55rem; }
+    .intro-onboarding-mechanic .intro-panel { gap: 0.3rem; }
+    .onboarding-rhythm-writer { min-height: 7rem; }
+    .onboarding-rhythm-copy { margin-top: 0.7rem; }
+    .onboarding-boost-demo { min-height: 11.5rem; }
+    .onboarding-boost-source { min-height: 7.5rem; }
+    .onboarding-boost-story { min-height: 8.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .intro-spark-stage *,
     .intro-spark-stage::before,
-    .onboarding-demo * {
+    .onboarding-demo *,
+    .onboarding-score-demo * {
         animation: none !important;
         transition: none !important;
     }
@@ -3713,6 +4059,13 @@ body.musa-boot-activa .intro-flow {
     .musa-assignment-reveal::after,
     .musa-assignment-reveal__feather { animation: none !important; }
     .onboarding-demo__story strong { opacity: 1; filter: none; }
+    .onboarding-score-meter__fill { transform: scaleX(0.72); }
+    .onboarding-score-value::after { content: "52"; }
+    .onboarding-rhythm-status__rest { display: none; }
+    .onboarding-rhythm-copy strong { width: 18ch; }
+    .onboarding-boost-used { opacity: 1; filter: none; }
+    .onboarding-boost-meter span { transform: scaleX(0.9); }
+    .onboarding-boost-bonus { opacity: 1; transform: none; }
 }
 
 </style>
@@ -3780,6 +4133,70 @@ body.musa-boot-activa .intro-flow {
                     </div>
                     <div class="intro-nav">
                         <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-ritmo" aria-label="Ver cómo funciona la inspiración"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-ritmo" class="intro-section intro-onboarding-mechanic">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <p class="intro-onboarding-eyebrow">RITMO DE ESCRITURA</p>
+                    <h2 class="intro-onboarding-demo__title">SI ESCRIBE, SUBE.<br>SI PARA, BAJA.</h2>
+                    <div class="onboarding-score-demo" aria-label="La inspiración del escritxr sube mientras escribe y baja cuando se detiene">
+                        <div class="onboarding-rhythm-writer" aria-hidden="true">
+                            <div class="onboarding-rhythm-writer__head">
+                                <span>ESCRITXR</span>
+                                <span class="onboarding-rhythm-status">
+                                    <span class="onboarding-rhythm-status__write">ESCRIBIENDO ↑</span>
+                                    <span class="onboarding-rhythm-status__rest">SIN ESCRIBIR ↓</span>
+                                </span>
+                            </div>
+                            <p class="onboarding-rhythm-copy">La historia <strong>encuentra su ritmo</strong><i class="onboarding-rhythm-caret"></i></p>
+                        </div>
+                        <div class="onboarding-score-meter" aria-hidden="true">
+                            <div class="onboarding-score-meter__head">
+                                <span>INSPIRACIÓN</span>
+                                <strong class="onboarding-score-value"></strong>
+                            </div>
+                            <div class="onboarding-score-meter__track"><span class="onboarding-score-meter__fill"></span></div>
+                            <div class="onboarding-score-legend">
+                                <span class="onboarding-score-legend__up">ESCRIBE · SUMA</span>
+                                <span class="onboarding-score-legend__down">SE DETIENE · RESTA</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-como-jugar" aria-label="Volver al envío de ideas"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-potencia" aria-label="Ver cuánto vale una inspiración"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-potencia" class="intro-section intro-onboarding-mechanic">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <p class="intro-onboarding-eyebrow">TU INSPIRACIÓN</p>
+                    <h2 class="intro-onboarding-demo__title">SI USA TU IDEA,<br>GANA INSPIRACIÓN.</h2>
+                    <div class="onboarding-score-demo onboarding-boost-demo" aria-label="Cuando el escritxr usa tu inspiración, gana inspiración extra">
+                        <div class="onboarding-boost-source" aria-hidden="true">
+                            <span>TU IDEA</span>
+                            <strong>VOLCÁN</strong>
+                        </div>
+                        <div class="onboarding-boost-flight" aria-hidden="true"><b>VOLCÁN</b></div>
+                        <div class="onboarding-boost-story" aria-hidden="true">
+                            <span class="onboarding-boost-story__label">HISTORIA EN DIRECTO</span>
+                            <p>La ciudad despertó bajo el <strong class="onboarding-boost-used">VOLCÁN</strong>.</p>
+                            <div class="onboarding-boost-meter"><span></span></div>
+                            <strong class="onboarding-boost-bonus">+ INSPIRACIÓN</strong>
+                        </div>
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-ritmo" aria-label="Volver al ritmo de escritura"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-nombre" data-focus="nombre_musa" aria-label="Ir a elegir nombre"></button>
                     </div>
                 </div>
@@ -3794,7 +4211,7 @@ body.musa-boot-activa .intro-flow {
                     <input id="nombre_musa" class="nombre" maxlength="10" autocomplete="nickname" aria-label="Tu nombre" style="color:orange;text-transform: uppercase;">
                     <div id="mensaje_musa" class="musa-alerta" aria-live="polite"></div>
                     <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-como-jugar" aria-label="Volver al mini tutorial"></button>
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-potencia" aria-label="Volver al mini tutorial"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-asignacion" data-validate="nombre_musa" data-i18n-attr="aria-label:muse.assignment.go_aria" aria-label="Ir a descubrir tu equipo"></button>
                     </div>
                 </div>

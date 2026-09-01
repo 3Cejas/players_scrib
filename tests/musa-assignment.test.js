@@ -446,14 +446,17 @@ test("muse onboarding keeps its original welcome and branded headers in the shor
   const html = read("game/public/index.html");
   const selector = read("game/public/js/musa-selector.js");
 
-  assert.equal((html.match(/class="intro-section/g) || []).length, 4);
+  assert.equal((html.match(/class="intro-section/g) || []).length, 6);
   assert.match(html, /id="intro-bienvenida" class="intro-section"[\s\S]*MUSA<\/span>, BIENVENIDA A[\s\S]*intro-logo-img--center[\s\S]*COMENZAR/);
   assert.match(html, /id="intro-como-jugar"[\s\S]*ENVÍA UNA PALABRA[\s\S]*ENTRA EN LA HISTORIA/);
   assert.match(html, /id="intro-nombre"[\s\S]*¿CUÁL SERÁ TU NOMBRE\?/);
   assert.doesNotMatch(html, /CASI ESTÁ|¿CÓMO TE LLAMAMOS\?/);
   assert.match(html, /class="onboarding-demo__phone"[\s\S]*class="onboarding-demo__story"/);
-  assert.equal((html.match(/class="intro-logos"/g) || []).length, 3);
-  assert.equal((html.match(/src="\.\.\/\.\.\/img\/logo_sutura\.png"/g) || []).length, 3);
+  assert.match(html, /id="intro-ritmo"[\s\S]*SI ESCRIBE, SUBE\.[\s\S]*SI PARA, BAJA\.[\s\S]*ESCRIBIENDO ↑[\s\S]*SIN ESCRIBIR ↓/);
+  assert.match(html, /id="intro-potencia"[\s\S]*SI USA TU IDEA,[\s\S]*GANA INSPIRACIÓN\.[\s\S]*\+ INSPIRACIÓN/);
+  assert.match(html, /@keyframes onboardingRhythmFill[\s\S]*@keyframes onboardingBoostFill/);
+  assert.equal((html.match(/class="intro-logos"/g) || []).length, 5);
+  assert.equal((html.match(/src="\.\.\/\.\.\/img\/logo_sutura\.png"/g) || []).length, 5);
   assert.doesNotMatch(html, /src="\.\.\/\.\.\/img\/(?:scrib|el_tiempo|escritoras|la_representacion)\.png"/);
   assert.doesNotMatch(html, /Puedes elegir directamente o dejar que el juego equilibre los equipos por ti/);
   assert.doesNotMatch(selector, /Elige una escritora o usa la detección automática para equilibrar los equipos/);
