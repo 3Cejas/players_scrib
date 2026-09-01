@@ -412,7 +412,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260831i/);
+  assert.match(html, /musa-selector\.js\?v=20260901a/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -461,17 +461,22 @@ test("muse onboarding keeps its original welcome and branded headers in the shor
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.onboarding-demo \*/);
 });
 
-test("writer choice uses team color and assignment flows through an automatic game load", () => {
+test("writer choice stays clean and game loading closes the assignment reveal", () => {
   const html = read("game/public/index.html");
   const selector = read("game/public/js/musa-selector.js");
 
   assert.doesNotMatch(html, /musa-team-choice__team">EQUIPO (?:AZUL|ROJO)/);
+  assert.doesNotMatch(html, /musa-team-choice__action|>ELEGIR<\/span>/);
   assert.match(html, /\.musa-team-choice__writer\s*\{[\s\S]{0,160}color:\s*var\(--team-color\)/);
   assert.doesNotMatch(html, /id="musa_assignment_enter"/);
+  assert.match(html, /id="musa_assignment_reveal"[\s\S]*id="musa_game_loading"/);
   assert.match(html, /id="musa_game_loading"[\s\S]*musa-boot-world[\s\S]*data-load-step="0"/);
   assert.match(selector, /Preparando el canal creativo de \$\{asignacion\.writer\}/);
-  assert.match(selector, /iniciarCargaJuego\(asignacion, duracionCarga\)/);
+  assert.match(selector, /classList\.add\([^;]*"is-revealing"\)/);
+  assert.match(selector, /loadingStartTimeout = setTimeout\([\s\S]*iniciarFaseCargaJuego\(asignacion, duracionCarga\)/);
+  assert.match(selector, /function iniciarFaseCargaJuego[\s\S]*iniciarCargaJuego\(asignacion, duracionCarga\)/);
   assert.match(selector, /setTimeout\(entrarEnJuegoAsignado, duracionCarga \+ 120\)/);
+  assert.doesNotMatch(selector, /Preparando la nueva partida/);
   assert.doesNotMatch(selector, /Equipo asignado · acceso autorizado|Tu equipo: \$\{teamName\}|Preparando el canal creativo de \$\{escritxr\}/);
 });
 

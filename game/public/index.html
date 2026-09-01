@@ -3037,15 +3037,6 @@ body.musa-boot-activa .intro-flow {
     text-shadow: 0 0 0.8rem var(--team-glow);
 }
 
-.musa-team-choice__action {
-    padding: 0.45em 1em;
-    border-radius: 999px;
-    background: var(--team-color);
-    color: #03070b;
-    font-size: clamp(0.58rem, 1.8vw, 0.76rem);
-    letter-spacing: 0.12em;
-}
-
 .musa-assignment-cta--automatic {
     display: inline-flex;
     align-items: center;
@@ -3581,6 +3572,57 @@ body.musa-boot-activa .intro-flow {
     text-shadow: 0 0 0.9rem var(--team-glow);
 }
 
+.musa-assignment-reveal {
+    position: relative;
+    z-index: 1;
+    min-height: clamp(10rem, 34vw, 17rem);
+    display: grid;
+    place-items: center;
+}
+
+.musa-assignment-reveal[hidden] { display: none !important; }
+
+.musa-assignment-reveal::before,
+.musa-assignment-reveal::after {
+    content: "";
+    position: absolute;
+    width: clamp(8.5rem, 31vw, 14rem);
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--boot-accent), transparent 38%);
+    border-radius: 50%;
+    box-shadow: 0 0 2.7rem color-mix(in srgb, var(--boot-accent), transparent 62%);
+    animation: musaAssignmentRevealOrbit 1800ms ease-in-out infinite alternate;
+}
+
+.musa-assignment-reveal::after {
+    width: clamp(6.3rem, 23vw, 10.5rem);
+    animation-direction: alternate-reverse;
+}
+
+.musa-assignment-reveal__feather {
+    position: relative;
+    z-index: 1;
+    width: clamp(4.6rem, 17vw, 7.8rem);
+    height: auto;
+    filter: drop-shadow(0 0 1.6rem color-mix(in srgb, var(--boot-accent), transparent 18%));
+    animation: musaAssignmentRevealFeather 1300ms ease-in-out infinite alternate;
+}
+
+.musa-boot-overlay.is-revealing .musa-assignment-arena,
+.musa-boot-overlay.is-revealing .musa-game-loading,
+.musa-boot-overlay.is-revealing .musa-boot-status-row,
+.musa-boot-overlay.is-revealing .musa-boot-bar {
+    display: none;
+}
+
+.musa-boot-overlay.is-revealing .musa-assignment-reveal { display: grid; }
+
+.musa-boot-overlay.is-revealing .musa-boot-title {
+    color: var(--boot-accent);
+    overflow-wrap: anywhere;
+    text-shadow: 0 0 1.25rem color-mix(in srgb, var(--boot-accent), transparent 34%);
+}
+
 .musa-game-loading {
     position: relative;
     z-index: 1;
@@ -3612,6 +3654,16 @@ body.musa-boot-activa .intro-flow {
 @keyframes musaGameLoadArrive {
     from { transform: translateY(1.1rem) scale(0.96); opacity: 0; }
     to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes musaAssignmentRevealOrbit {
+    from { transform: scale(0.82) rotate(-12deg); opacity: 0.36; }
+    to { transform: scale(1.08) rotate(12deg); opacity: 0.92; }
+}
+
+@keyframes musaAssignmentRevealFeather {
+    from { transform: translateY(0.45rem) rotate(-4deg) scale(0.96); }
+    to { transform: translateY(-0.45rem) rotate(4deg) scale(1.04); }
 }
 
 @keyframes onboardingSparkGlow {
@@ -3656,7 +3708,10 @@ body.musa-boot-activa .intro-flow {
         animation: none !important;
         transition: none !important;
     }
-    .musa-boot-overlay.is-loading .musa-boot-panel { animation: none !important; }
+    .musa-boot-overlay.is-loading .musa-boot-panel,
+    .musa-assignment-reveal::before,
+    .musa-assignment-reveal::after,
+    .musa-assignment-reveal__feather { animation: none !important; }
     .onboarding-demo__story strong { opacity: 1; filter: none; }
 }
 
@@ -3755,12 +3810,10 @@ body.musa-boot-activa .intro-flow {
                         <button id="musa_assignment_blue" class="musa-team-choice musa-team-choice--blue" type="button" data-team="1">
                             <img src="./img/pluma_azul.png" alt="" aria-hidden="true">
                             <strong id="musa_writer_blue" class="musa-team-choice__writer">ESCRITXR 1</strong>
-                            <span class="musa-team-choice__action">ELEGIR</span>
                         </button>
                         <button id="musa_assignment_red" class="musa-team-choice musa-team-choice--red" type="button" data-team="2">
                             <img src="./img/pluma_roja.png" alt="" aria-hidden="true">
                             <strong id="musa_writer_red" class="musa-team-choice__writer">ESCRITXR 2</strong>
-                            <span class="musa-team-choice__action">ELEGIR</span>
                         </button>
                     </div>
                     <button id="musa_assignment_start" class="musa-assignment-cta musa-assignment-cta--automatic" type="button">
@@ -3809,6 +3862,9 @@ body.musa-boot-activa .intro-flow {
                     <span data-i18n="world.team.red">ROJO</span>
                 </div>
             </div>
+            <div id="musa_assignment_reveal" class="musa-assignment-reveal" hidden aria-hidden="true">
+                <img id="musa_assignment_reveal_feather" class="musa-assignment-reveal__feather" src="./img/pluma_azul.png" alt="">
+            </div>
             <div id="musa_game_loading" class="musa-game-loading" hidden>
                 <div class="musa-boot-world" aria-hidden="true">
                     <span class="musa-boot-world-base"></span>
@@ -3844,5 +3900,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260831i"></script>
+<script src="./js/musa-selector.js?v=20260901a"></script>
 </html>

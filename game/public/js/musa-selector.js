@@ -12,6 +12,9 @@ const REGEX_NOMBRE_MUSA = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]+$/;
 const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
 const REVEAL_MIN_MS = 1450;
 const REVEAL_MIN_REDUCED_MS = 120;
+const ASSIGNMENT_REVEAL_MS = 1700;
+const ASSIGNMENT_REVEAL_RESTORED_MS = 520;
+const ASSIGNMENT_REVEAL_REDUCED_MS = 240;
 const GAME_LOAD_MS = 4300;
 const GAME_LOAD_RESTORED_MS = 1400;
 const GAME_LOAD_REDUCED_MS = 900;
@@ -21,6 +24,7 @@ let nombrePendiente = "";
 let estadoAsignacion = "ready";
 let inicioSolicitudAsignacion = 0;
 let revealTimeout = null;
+let loadingStartTimeout = null;
 let redirectTimeout = null;
 let fingerprintCompleteTimeout = null;
 let loadingFrame = null;
@@ -182,10 +186,12 @@ function puedeAvanzarDesdeSeccionNombre() {
 
 function limpiarTemporizadoresAsignacion() {
   if (revealTimeout) clearTimeout(revealTimeout);
+  if (loadingStartTimeout) clearTimeout(loadingStartTimeout);
   if (redirectTimeout) clearTimeout(redirectTimeout);
   if (fingerprintCompleteTimeout) clearTimeout(fingerprintCompleteTimeout);
   if (loadingFrame) cancelAnimationFrame(loadingFrame);
   revealTimeout = null;
+  loadingStartTimeout = null;
   redirectTimeout = null;
   fingerprintCompleteTimeout = null;
   loadingFrame = null;
@@ -235,7 +241,11 @@ function refrescarTextosAsignacion() {
   if (typeof window.scribApplyLanguageDom2P === "function") window.scribApplyLanguageDom2P();
   actualizarNombreIntro();
   actualizarEstadoAsignacion();
-  if (asignacionActual) renderizarResultadoAsignacion(asignacionActual);
+  if (asignacionActual) {
+    const cargando = document.getElementById("musa_boot_overlay")?.classList.contains("is-loading");
+    if (cargando) renderizarCabeceraCarga(asignacionActual);
+    else renderizarResultadoAsignacion(asignacionActual);
+  }
   if (claveAvisoMusa) mostrarAvisoMusa(tMusa(claveAvisoMusa), claveAvisoMusa);
 }
 
@@ -244,7 +254,7 @@ function mostrarOverlayAsignacion({ scanning = false } = {}) {
   if (!overlay) return;
   overlay.classList.remove(
     "musa-boot-overlay--azul", "musa-boot-overlay--rojo", "is-revealed",
-    "has-error", "is-assigning", "is-scanning", "is-loading"
+    "has-error", "is-assigning", "is-scanning", "is-revealing", "is-loading"
   );
   overlay.classList.add("is-active", scanning ? "is-scanning" : "is-assigning");
   overlay.setAttribute("aria-hidden", "false");
@@ -253,6 +263,7 @@ function mostrarOverlayAsignacion({ scanning = false } = {}) {
   const flujoIntro = document.querySelector(".intro-flow");
   if (flujoIntro) flujoIntro.inert = true;
   document.getElementById("musa_game_loading")?.setAttribute("hidden", "");
+  document.getElementById("musa_assignment_reveal")?.setAttribute("hidden", "");
   document.getElementById("musa_assignment_retry")?.setAttribute("hidden", "");
   const cancelar = document.getElementById("musa_assignment_cancel_scan");
   const fingerprintStageNode = document.getElementById("musa_fingerprint_stage");
@@ -295,6 +306,17 @@ function invalidarRevelacionPorDesconexion() {
 }
 
 function renderizarResultadoAsignacion(asignacion) {
+  const kicker = document.getElementById("musa_boot_kicker");
+  const title = document.getElementById("musa_boot_title");
+  const copy = document.getElementById("musa_boot_copy");
+  const feather = document.getElementById("musa_assignment_reveal_feather");
+  if (kicker) kicker.textContent = "TU ESCRITXR";
+  if (title) title.textContent = asignacion.writer;
+  if (copy) copy.textContent = "";
+  if (feather) feather.src = asignacion.player === 2 ? "./img/pluma_roja.png" : "./img/pluma_azul.png";
+}
+
+function renderizarCabeceraCarga(asignacion) {
   const kicker = document.getElementById("musa_boot_kicker");
   const title = document.getElementById("musa_boot_title");
   const copy = document.getElementById("musa_boot_copy");
@@ -367,6 +389,17 @@ function entrarEnJuegoAsignado() {
   if (destino) window.location.replace(destino);
 }
 
+function iniciarFaseCargaJuego(asignacion, duracionCarga) {
+  const overlay = document.getElementById("musa_boot_overlay");
+  overlay?.classList.remove("is-revealing");
+  overlay?.classList.add("is-loading");
+  document.getElementById("musa_assignment_reveal")?.setAttribute("hidden", "");
+  document.getElementById("musa_game_loading")?.removeAttribute("hidden");
+  renderizarCabeceraCarga(asignacion);
+  iniciarCargaJuego(asignacion, duracionCarga);
+  redirectTimeout = setTimeout(entrarEnJuegoAsignado, duracionCarga + 120);
+}
+
 function revelarAsignacion(asignacion) {
   const esRestaurada = restaurandoAsignacionPersistida;
   restaurandoAsignacionPersistida = false;
@@ -377,21 +410,27 @@ function revelarAsignacion(asignacion) {
   const duracionCarga = usaMovimientoReducido()
     ? GAME_LOAD_REDUCED_MS
     : (esRestaurada ? GAME_LOAD_RESTORED_MS : GAME_LOAD_MS);
+  const duracionRevelacion = usaMovimientoReducido()
+    ? ASSIGNMENT_REVEAL_REDUCED_MS
+    : (esRestaurada ? ASSIGNMENT_REVEAL_RESTORED_MS : ASSIGNMENT_REVEAL_MS);
   if (overlay) {
     overlay.classList.remove(
       "is-assigning", "is-scanning", "has-error",
       "musa-boot-overlay--azul", "musa-boot-overlay--rojo"
     );
-    overlay.classList.add(asignacion.player === 2 ? "musa-boot-overlay--rojo" : "musa-boot-overlay--azul", "is-loading");
+    overlay.classList.add(asignacion.player === 2 ? "musa-boot-overlay--rojo" : "musa-boot-overlay--azul", "is-revealing");
     overlay.style.setProperty("--boot-world-progress", "0%");
     overlay.style.setProperty("--boot-bar-progress", "0%");
   }
   renderizarResultadoAsignacion(asignacion);
-  document.getElementById("musa_game_loading")?.removeAttribute("hidden");
+  document.getElementById("musa_assignment_reveal")?.removeAttribute("hidden");
+  document.getElementById("musa_game_loading")?.setAttribute("hidden", "");
   document.getElementById("musa_assignment_cancel_scan")?.setAttribute("hidden", "");
   document.getElementById("musa_fingerprint_stage")?.setAttribute("hidden", "");
-  iniciarCargaJuego(asignacion, duracionCarga);
-  redirectTimeout = setTimeout(entrarEnJuegoAsignado, duracionCarga + 120);
+  loadingStartTimeout = setTimeout(() => {
+    loadingStartTimeout = null;
+    iniciarFaseCargaJuego(asignacion, duracionCarga);
+  }, duracionRevelacion);
 }
 
 function manejarAsignacionRecibida(asignacion, meta = {}) {
@@ -404,9 +443,10 @@ function manejarAsignacionRecibida(asignacion, meta = {}) {
     limpiarTemporizadoresAsignacion();
     estadoAsignacion = "assigning";
     const overlay = document.getElementById("musa_boot_overlay");
-    overlay?.classList.remove("is-revealed", "is-loading", "musa-boot-overlay--azul", "musa-boot-overlay--rojo");
+    overlay?.classList.remove("is-revealed", "is-revealing", "is-loading", "musa-boot-overlay--azul", "musa-boot-overlay--rojo");
     overlay?.classList.add("is-assigning");
     document.getElementById("musa_game_loading")?.setAttribute("hidden", "");
+    document.getElementById("musa_assignment_reveal")?.setAttribute("hidden", "");
     inicioSolicitudAsignacion = performance.now();
     actualizarEstadoAsignacion();
   }
@@ -544,7 +584,7 @@ function solicitarAsignacionMusa({ assignmentMode = "automatica", player = null 
   const equipo = modo === "manual" ? musaAssignment.normalizeTeam(player) : null;
   if (modo === "manual" && !equipo) return;
   if (!sesionPartidaMusa) {
-    mostrarAvisoMusa("Preparando la nueva partida…");
+    mostrarAvisoMusa("");
     pedirOpcionesEquipoMusa();
     return;
   }
@@ -603,7 +643,7 @@ function restablecerVistaAsignacion() {
   if (overlay) {
     overlay.classList.remove(
       "is-active", "is-assigning", "is-scanning", "is-revealed", "has-error",
-      "is-loading", "musa-boot-overlay--azul", "musa-boot-overlay--rojo"
+      "is-revealing", "is-loading", "musa-boot-overlay--azul", "musa-boot-overlay--rojo"
     );
     overlay.setAttribute("aria-hidden", "true");
     overlay.style.setProperty("--boot-bar-progress", "0%");
@@ -614,6 +654,7 @@ function restablecerVistaAsignacion() {
   document.getElementById("musa_assignment_cancel_scan")?.setAttribute("hidden", "");
   document.getElementById("musa_fingerprint_stage")?.setAttribute("hidden", "");
   document.getElementById("musa_game_loading")?.setAttribute("hidden", "");
+  document.getElementById("musa_assignment_reveal")?.setAttribute("hidden", "");
   actualizarEstadoAsignacion();
 }
 
@@ -667,6 +708,7 @@ function bloquearMusaReemplazada() {
   if (copy) copy.textContent = "Esta musa ya está abierta en otra pestaña. No puedes elegir otro equipo desde aquí.";
   if (status) status.textContent = "Continúa desde la pestaña activa";
   document.getElementById("musa_game_loading")?.setAttribute("hidden", "");
+  document.getElementById("musa_assignment_reveal")?.setAttribute("hidden", "");
   document.getElementById("musa_assignment_retry")?.setAttribute("hidden", "");
 }
 
