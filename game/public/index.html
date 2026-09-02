@@ -551,6 +551,98 @@
     color: orange;
 }
 
+.intro-welcome-motion::before,
+.intro-welcome-motion::after,
+#intro-nombre::before,
+#intro-nombre::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.intro-welcome-motion::before {
+    width: min(74vw, 30rem);
+    aspect-ratio: 1;
+    border: 1px solid rgba(76, 236, 255, 0.2);
+    box-shadow: 0 0 3rem rgba(76, 236, 255, 0.08), inset 0 0 3rem rgba(255, 71, 92, 0.05);
+    animation: onboardingWelcomeOrbit 9s linear infinite;
+}
+
+.intro-welcome-motion::after {
+    width: min(42vw, 12rem);
+    aspect-ratio: 1;
+    background: radial-gradient(circle, rgba(255, 183, 54, 0.18), transparent 68%);
+    filter: blur(0.18rem);
+    animation: onboardingWelcomeGlow 2.8s ease-in-out infinite alternate;
+}
+
+.intro-welcome-motion .intro-panel,
+#intro-nombre .intro-panel {
+    position: relative;
+    z-index: 1;
+}
+
+.intro-welcome-motion .intro-title {
+    animation: onboardingWelcomeTitle 4.6s ease-in-out infinite;
+}
+
+.intro-welcome-motion .intro-logo-img--center {
+    filter: drop-shadow(0 0 0.65rem rgba(74, 235, 255, 0.56));
+    animation: onboardingWelcomeLogo 2.5s ease-in-out infinite alternate;
+}
+
+.intro-welcome-motion .intro-nav-bottom {
+    animation: onboardingWelcomeControls 1s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+#intro-nombre::before {
+    width: min(76vw, 32rem);
+    aspect-ratio: 1;
+    border: 1px dashed rgba(255, 179, 58, 0.2);
+    animation: onboardingNameOrbit 12s linear infinite;
+}
+
+#intro-nombre::after {
+    width: min(34vw, 10rem);
+    aspect-ratio: 1;
+    background: radial-gradient(circle, rgba(255, 173, 42, 0.2), transparent 70%);
+    animation: onboardingNameGlow 2.4s ease-in-out infinite alternate;
+}
+
+#intro-nombre h1 {
+    animation: onboardingNameQuestion 3s ease-in-out infinite;
+}
+
+#intro-nombre .nombre {
+    border: 2px solid rgba(255, 181, 60, 0.68);
+    background: linear-gradient(135deg, rgba(5, 17, 27, 0.96), rgba(24, 8, 16, 0.96));
+    box-shadow: inset 0 0 1rem rgba(255, 174, 45, 0.08), 0 0 1rem rgba(255, 174, 45, 0.18);
+    animation: onboardingNameInput 2.2s ease-in-out infinite alternate;
+}
+
+#intro-nombre .intro-logos img {
+    animation: onboardingNameLogo 3.4s ease-in-out infinite alternate;
+}
+
+#intro-nombre .intro-logos img:last-child { animation-delay: -1.7s; }
+
+@keyframes onboardingWelcomeOrbit {
+    from { transform: rotate(0) scale(.88); opacity: .35; }
+    50% { opacity: .8; }
+    to { transform: rotate(360deg) scale(1.05); opacity: .35; }
+}
+
+@keyframes onboardingWelcomeGlow { from { transform: scale(.82); opacity: .42; } to { transform: scale(1.2); opacity: 1; } }
+@keyframes onboardingWelcomeTitle { 0%, 100% { transform: translateY(0); filter: brightness(1); } 48% { transform: translateY(-.28rem); filter: brightness(1.12); } 51% { transform: translate(.06rem, -.28rem); } 53% { transform: translate(-.06rem, -.28rem); } }
+@keyframes onboardingWelcomeLogo { from { transform: translateY(.3rem) rotate(-2deg) scale(.96); } to { transform: translateY(-.35rem) rotate(2deg) scale(1.06); } }
+@keyframes onboardingWelcomeControls { from { opacity: 0; transform: translateY(1.1rem); } to { opacity: 1; transform: none; } }
+@keyframes onboardingNameOrbit { from { transform: rotate(0) scale(.9); opacity: .28; } 50% { opacity: .72; } to { transform: rotate(-360deg) scale(1.05); opacity: .28; } }
+@keyframes onboardingNameGlow { from { transform: scale(.8); opacity: .35; } to { transform: scale(1.25); opacity: .9; } }
+@keyframes onboardingNameQuestion { 0%, 100% { transform: translateY(0); text-shadow: .08em .08em 0 #000; } 50% { transform: translateY(-.22rem); text-shadow: .08em .08em 0 #000, 0 0 1rem rgba(255, 183, 61, .34); } }
+@keyframes onboardingNameInput { from { transform: scale(.992); box-shadow: inset 0 0 1rem rgba(255,174,45,.08), 0 0 .8rem rgba(255,174,45,.16); } to { transform: scale(1.008); box-shadow: inset 0 0 1.4rem rgba(255,174,45,.13), 0 0 1.6rem rgba(255,174,45,.42); } }
+@keyframes onboardingNameLogo { 50% { transform: translateY(-.24rem); filter: brightness(1.22); } }
+
 .intro-logo-mark {
     align-self: flex-start;
     margin-bottom: clamp(0.4rem, 2vw, 0.8rem);
@@ -4053,17 +4145,20 @@ body.musa-boot-activa .intro-flow {
 @keyframes onboardingTypedWord { 0%, 60% { opacity: 0.12; filter: blur(0.3rem); } 68%, 100% { opacity: 1; filter: none; } }
 @keyframes onboardingCaret { 50% { opacity: 0; } }
 
-/* Una sola slide encadena las tres reglas esenciales del juego. */
+/* Cada regla del juego ocupa una slide para poder verla con calma. */
 .onboarding-feedback-tint {
     position: absolute;
     inset: 0;
     z-index: 9;
     opacity: 0;
     pointer-events: none;
-    animation: onboardingFeedbackTint 21s linear infinite;
 }
 
-.onboarding-game-sequence {
+.onboarding-feedback-tint--rhythm {
+    animation: onboardingFeedbackTint 12s linear infinite;
+}
+
+.onboarding-game-slide {
     position: relative;
     width: min(100%, 38rem);
     min-height: clamp(23rem, 58vh, 30rem);
@@ -4072,20 +4167,13 @@ body.musa-boot-activa .intro-flow {
 }
 
 .onboarding-game-act {
-    position: absolute;
-    inset: 0;
+    position: relative;
     display: grid;
     grid-template-rows: auto 1fr;
     align-items: center;
     gap: clamp(0.55rem, 1.7vh, 0.9rem);
-    opacity: 0;
-    transform: translateY(1.1rem) scale(0.97);
-    pointer-events: none;
+    width: 100%;
 }
-
-.onboarding-game-act--rhythm { animation: onboardingActRhythm 21s cubic-bezier(.2, .8, .2, 1) infinite; }
-.onboarding-game-act--idea { animation: onboardingActIdea 21s cubic-bezier(.2, .8, .2, 1) infinite; }
-.onboarding-game-act--disadvantage { animation: onboardingActDisadvantage 21s cubic-bezier(.2, .8, .2, 1) infinite; }
 
 .onboarding-game-act__title {
     margin: 0;
@@ -4127,7 +4215,7 @@ body.musa-boot-activa .intro-flow {
     height: 1px;
     background: linear-gradient(90deg, transparent, #63edff, transparent);
     box-shadow: 0 0 1rem #63edff;
-    animation: onboardingWriterPulse 7s ease-in-out infinite;
+    animation: onboardingWriterPulse 12s ease-in-out infinite;
 }
 
 .onboarding-writer-window__head,
@@ -4150,8 +4238,8 @@ body.musa-boot-activa .intro-flow {
 }
 
 .onboarding-writer-status span { position: absolute; inset: 0 0 auto auto; white-space: nowrap; }
-.onboarding-writer-status__write { animation: onboardingWritingState 7s steps(1, end) infinite; }
-.onboarding-writer-status__rest { color: #ff7186; animation: onboardingRestState 7s steps(1, end) infinite; }
+.onboarding-writer-status__write { animation: onboardingWritingState 12s steps(1, end) infinite; }
+.onboarding-writer-status__rest { color: #ff7186; animation: onboardingRestState 12s steps(1, end) infinite; }
 
 .onboarding-writer-copy {
     margin: clamp(1rem, 4vh, 1.8rem) 0 0;
@@ -4168,7 +4256,7 @@ body.musa-boot-activa .intro-flow {
     font: inherit;
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingWriterTyping 7s steps(18, end) infinite;
+    animation: onboardingWriterTyping 12s steps(18, end) infinite;
 }
 
 .onboarding-writer-caret {
@@ -4178,7 +4266,7 @@ body.musa-boot-activa .intro-flow {
     margin-left: 0.12em;
     vertical-align: -0.16em;
     background: currentColor;
-    animation: onboardingWriterCaret 7s steps(1, end) infinite;
+    animation: onboardingWriterCaret 12s steps(1, end) infinite;
 }
 
 /* Réplica compacta del marcador de inspiración azul/rojo del juego. */
@@ -4240,8 +4328,35 @@ body.musa-boot-activa .intro-flow {
     box-shadow: inset 0 -0.22em 0 rgba(39, 10, 18, 0.34), 0 0 0.95em rgba(255, 107, 107, 0.52);
 }
 
-.onboarding-game-act--rhythm .onboarding-inspiration-segment--blue { animation: onboardingRhythmBlue 7s cubic-bezier(.2,.8,.2,1) infinite; }
-.onboarding-game-act--rhythm .onboarding-inspiration-segment--red { animation: onboardingRhythmRed 7s cubic-bezier(.2,.8,.2,1) infinite; }
+.onboarding-game-act--rhythm .onboarding-inspiration-segment--blue { animation: onboardingRhythmBlue 12s cubic-bezier(.2,.8,.2,1) infinite; }
+.onboarding-game-act--rhythm .onboarding-inspiration-segment--red { animation: onboardingRhythmRed 12s cubic-bezier(.2,.8,.2,1) infinite; }
+
+.onboarding-rhythm-feedback {
+    position: absolute;
+    right: clamp(0.75rem, 3vw, 1.1rem);
+    bottom: clamp(3.1rem, 9vw, 3.8rem);
+    z-index: 5;
+    padding: 0.52em 0.68em;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font: clamp(0.48rem, 1.85vw, 0.68rem)/1 "Retro-gaming", "Courier New", monospace;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.onboarding-rhythm-feedback--gain {
+    color: #8bffc1;
+    background: rgba(4, 36, 24, 0.94);
+    box-shadow: 0 0 1.2rem rgba(75, 255, 166, 0.52);
+    animation: onboardingRhythmGain 12s cubic-bezier(.2,.9,.2,1) infinite;
+}
+
+.onboarding-rhythm-feedback--loss {
+    color: #ff8da0;
+    background: rgba(48, 4, 17, 0.94);
+    box-shadow: 0 0 1.2rem rgba(255, 65, 94, 0.5);
+    animation: onboardingRhythmLoss 12s cubic-bezier(.2,.9,.2,1) infinite;
+}
 
 .onboarding-idea-demo {
     display: grid;
@@ -4426,40 +4541,15 @@ body.musa-boot-activa .intro-flow {
     text-align: center;
 }
 
-.onboarding-sequence-dots {
-    position: absolute;
-    left: 50%;
-    bottom: -0.2rem;
-    z-index: 6;
-    display: flex;
-    gap: 0.48rem;
-    transform: translateX(-50%);
-}
-
-.onboarding-sequence-dots i {
-    width: 0.46rem;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: rgba(225, 244, 250, 0.2);
-}
-
-.onboarding-sequence-dots i:nth-child(1) { animation: onboardingDotOne 21s steps(1,end) infinite; }
-.onboarding-sequence-dots i:nth-child(2) { animation: onboardingDotTwo 21s steps(1,end) infinite; }
-.onboarding-sequence-dots i:nth-child(3) { animation: onboardingDotThree 21s steps(1,end) infinite; }
-
-.onboarding-sequence-summary { display: none; }
-
-@keyframes onboardingActRhythm { 0%, 28% { opacity: 1; transform: none; } 31%, 100% { opacity: 0; transform: translateY(-1rem) scale(.97); } }
-@keyframes onboardingActIdea { 0%, 31% { opacity: 0; transform: translateY(1rem) scale(.97); } 34%, 62% { opacity: 1; transform: none; } 65%, 100% { opacity: 0; transform: translateY(-1rem) scale(.97); } }
-@keyframes onboardingActDisadvantage { 0%, 65% { opacity: 0; transform: translateY(1rem) scale(.97); } 68%, 97% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-1rem) scale(.97); } }
-
-@keyframes onboardingWriterPulse { 0%, 7%, 64%, 100% { transform: scaleX(.22); opacity: .18; } 18%, 56% { transform: scaleX(1); opacity: 1; } }
-@keyframes onboardingWritingState { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0; } }
-@keyframes onboardingRestState { 0%, 62% { opacity: 0; } 63%, 100% { opacity: 1; } }
-@keyframes onboardingWriterTyping { 0%, 8% { width: 0; } 53%, 100% { width: 18ch; } }
-@keyframes onboardingWriterCaret { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0; } }
-@keyframes onboardingRhythmBlue { 0%, 7% { width: 42%; } 20% { width: 50%; } 36% { width: 59%; } 52%, 62% { width: 69%; } 76% { width: 61%; } 92%, 100% { width: 48%; } }
-@keyframes onboardingRhythmRed { 0%, 7% { width: 58%; } 20% { width: 50%; } 36% { width: 41%; } 52%, 62% { width: 31%; } 76% { width: 39%; } 92%, 100% { width: 52%; } }
+@keyframes onboardingWriterPulse { 0%, 6%, 52%, 100% { transform: scaleX(.22); opacity: .18; } 15%, 47% { transform: scaleX(1); opacity: 1; } }
+@keyframes onboardingWritingState { 0%, 52% { opacity: 1; } 53%, 100% { opacity: 0; } }
+@keyframes onboardingRestState { 0%, 52% { opacity: 0; } 53%, 100% { opacity: 1; } }
+@keyframes onboardingWriterTyping { 0%, 9% { width: 0; } 47%, 100% { width: 18ch; } }
+@keyframes onboardingWriterCaret { 0%, 52% { opacity: 1; } 53%, 100% { opacity: 0; } }
+@keyframes onboardingRhythmBlue { 0%, 7% { width: 42%; } 19% { width: 50%; } 33% { width: 60%; } 47%, 53% { width: 69%; } 66% { width: 61%; } 80% { width: 52%; } 94%, 100% { width: 44%; } }
+@keyframes onboardingRhythmRed { 0%, 7% { width: 58%; } 19% { width: 50%; } 33% { width: 40%; } 47%, 53% { width: 31%; } 66% { width: 39%; } 80% { width: 48%; } 94%, 100% { width: 56%; } }
+@keyframes onboardingRhythmGain { 0%, 11%, 51%, 100% { opacity: 0; transform: translateY(.7rem) scale(.72); } 17%, 24%, 32%, 40%, 48% { opacity: 1; transform: none; } 20%, 28%, 36%, 44% { opacity: .35; transform: translateY(-.2rem) scale(1.08); } }
+@keyframes onboardingRhythmLoss { 0%, 56%, 100% { opacity: 0; transform: translateY(.7rem) scale(.72); } 62%, 70%, 78%, 86%, 94% { opacity: 1; transform: none; } 66%, 74%, 82%, 90% { opacity: .35; transform: translateY(-.2rem) scale(1.08); } }
 @keyframes onboardingBarSweep { 0%, 18% { transform: translateX(-130%); } 70%, 100% { transform: translateX(130%); } }
 
 @keyframes onboardingIdeaSource { 0%, 22%, 100% { transform: scale(1); opacity: 1; } 32%, 48% { transform: scale(.86); opacity: .34; } 64% { transform: scale(1.06); opacity: 1; } }
@@ -4477,18 +4567,29 @@ body.musa-boot-activa .intro-flow {
 @keyframes onboardingDisadvantageResult { 0%, 57% { opacity: 0; transform: translateY(.5rem); } 65%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 
 @keyframes onboardingFeedbackTint {
-    0%, 4%, 8%, 12%, 18%, 22%, 28%, 49%, 53%, 58%, 80%, 84%, 100% { opacity: 0; }
-    6%, 10%, 20%, 51%, 56%, 82% { opacity: .2; background: #28f083; }
-    24%, 27%, 70%, 74% { opacity: .18; background: #ff3155; }
+    0%, 12%, 20%, 28%, 36%, 44%, 53%, 60%, 68%, 76%, 84%, 92%, 100% { opacity: 0; }
+    16%, 24%, 32%, 40%, 48% { opacity: .18; background: #28f083; }
+    64%, 72%, 80%, 88%, 96% { opacity: .18; background: #ff3155; }
 }
 
-@keyframes onboardingDotOne { 0%, 32% { background: #67efff; box-shadow: 0 0 .7rem #67efff; } 33%, 100% { background: rgba(225,244,250,.2); box-shadow: none; } }
-@keyframes onboardingDotTwo { 0%, 32%, 66%, 100% { background: rgba(225,244,250,.2); box-shadow: none; } 33%, 65% { background: #ffd45f; box-shadow: 0 0 .7rem #ffd45f; } }
-@keyframes onboardingDotThree { 0%, 65% { background: rgba(225,244,250,.2); box-shadow: none; } 66%, 100% { background: #8bffc1; box-shadow: 0 0 .7rem #8bffc1; } }
+.intro-onboarding-demo:not(.is-onboarding-active) .onboarding-feedback-tint,
+.intro-onboarding-demo:not(.is-onboarding-active) .onboarding-game-slide *,
+.intro-welcome-motion:not(.is-onboarding-active)::before,
+.intro-welcome-motion:not(.is-onboarding-active)::after,
+.intro-welcome-motion:not(.is-onboarding-active) .intro-title,
+.intro-welcome-motion:not(.is-onboarding-active) .intro-logo-img--center,
+.intro-welcome-motion:not(.is-onboarding-active) .intro-nav-bottom,
+#intro-nombre:not(.is-onboarding-active)::before,
+#intro-nombre:not(.is-onboarding-active)::after,
+#intro-nombre:not(.is-onboarding-active) h1,
+#intro-nombre:not(.is-onboarding-active) .nombre,
+#intro-nombre:not(.is-onboarding-active) .intro-logos img {
+    animation: none !important;
+}
 
 @media (max-width: 520px) {
     .intro-onboarding-welcome .intro-panel { grid-template-rows: auto auto auto minmax(8rem, 1fr) auto; }
-    .onboarding-game-sequence { min-height: clamp(22rem, 58vh, 27rem); }
+    .onboarding-game-slide { min-height: clamp(22rem, 58vh, 27rem); }
     .onboarding-game-card { padding: 0.68rem; }
     .onboarding-idea-demo { grid-template-columns: minmax(0, .76fr) 2.7rem minmax(0, 1.2fr); }
     .onboarding-idea-bonus { bottom: 3.35rem; }
@@ -4498,7 +4599,7 @@ body.musa-boot-activa .intro-flow {
     .intro-spark-stage { width: min(33vh, 9rem); }
     .intro-onboarding-hero { font-size: clamp(2.15rem, 9vh, 3.65rem); }
     .intro-onboarding-demo .intro-panel { gap: 0.3rem; }
-    .onboarding-game-sequence { min-height: 20rem; }
+    .onboarding-game-slide { min-height: 20rem; }
     .onboarding-game-card { min-height: 14.3rem; }
     .onboarding-writer-window { min-height: 6.9rem; }
     .onboarding-writer-copy { margin-top: 0.7rem; }
@@ -4510,7 +4611,17 @@ body.musa-boot-activa .intro-flow {
 @media (prefers-reduced-motion: reduce) {
     .intro-spark-stage *,
     .intro-spark-stage::before,
-    .onboarding-game-sequence * {
+    .onboarding-game-slide *,
+    .intro-welcome-motion::before,
+    .intro-welcome-motion::after,
+    .intro-welcome-motion .intro-title,
+    .intro-welcome-motion .intro-logo-img--center,
+    .intro-welcome-motion .intro-nav-bottom,
+    #intro-nombre::before,
+    #intro-nombre::after,
+    #intro-nombre h1,
+    #intro-nombre .nombre,
+    #intro-nombre .intro-logos img {
         animation: none !important;
         transition: none !important;
     }
@@ -4519,26 +4630,7 @@ body.musa-boot-activa .intro-flow {
     .musa-assignment-reveal::after,
     .musa-assignment-reveal__feather { animation: none !important; }
     .onboarding-feedback-tint,
-    .onboarding-game-act,
-    .onboarding-sequence-dots { display: none; }
-    .onboarding-sequence-summary {
-        min-height: 19rem;
-        display: grid;
-        align-content: center;
-        gap: 0.85rem;
-        padding: 1rem;
-        border: 1px solid rgba(93, 232, 255, 0.32);
-        border-radius: 1.1rem;
-        background: rgba(3, 10, 18, 0.9);
-    }
-    .onboarding-sequence-summary p {
-        margin: 0;
-        padding: 0.85rem;
-        border-left: 3px solid #63edff;
-        color: rgba(239, 247, 252, 0.84);
-        font-size: 0.82rem;
-        line-height: 1.45;
-    }
+    .onboarding-rhythm-feedback { display: none; }
 }
 
 </style>
@@ -4555,7 +4647,7 @@ body.musa-boot-activa .intro-flow {
     </div>
     <main class="intro-flow">
         <div class="intro-scroll">
-            <section id="intro-bienvenida" class="intro-section">
+            <section id="intro-bienvenida" class="intro-section intro-welcome-motion">
                 <div class="intro-panel">
                     <h1 class="intro-title"><span class="intro-musa-bienvenida">MUSA</span>, BIENVENIDA A <span class="intro-logo-inline">&lt;SCRI&gt; B</span></h1>
                     <img class="intro-logo-img intro-logo-img--center" src="../../img/logo.png" alt="SCRIB">
@@ -4563,23 +4655,23 @@ body.musa-boot-activa .intro-flow {
                         <button class="intro-skip-btn" type="button" data-scroll-target="#intro-nombre" data-focus="nombre_musa" aria-label="Omitir tutorial">
                             Omitir tutorial
                         </button>
-                        <button class="intro-cta intro-cta-btn" type="button" data-scroll-target="#intro-como-jugar" aria-label="Comenzar">
+                        <button class="intro-cta intro-cta-btn" type="button" data-scroll-target="#intro-ritmo" aria-label="Comenzar">
                             <span class="intro-cta-text">COMENZAR</span>
                             <span class="intro-cta-icon intro-arrow--down" aria-hidden="true"></span>
                         </button>
                     </div>
                 </div>
             </section>
-            <section id="intro-como-jugar" class="intro-section intro-onboarding-demo">
-                <span class="onboarding-feedback-tint" aria-hidden="true"></span>
+            <section id="intro-ritmo" class="intro-section intro-onboarding-demo">
+                <span class="onboarding-feedback-tint onboarding-feedback-tint--rhythm" aria-hidden="true"></span>
                 <div class="intro-panel">
                     <div class="intro-logos">
                         <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
                         <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
                     </div>
                     <p class="intro-onboarding-eyebrow">ASÍ SE JUEGA</p>
-                    <div class="onboarding-game-sequence" aria-label="El escritxr gana inspiración al escribir, gana más al usar tus palabras y puede librarse de las desventajas con tu ayuda">
-                        <article class="onboarding-game-act onboarding-game-act--rhythm" aria-hidden="true">
+                    <div class="onboarding-game-slide" aria-label="El escritxr gana inspiración al escribir y la pierde cuando deja de hacerlo">
+                        <article class="onboarding-game-act onboarding-game-act--rhythm">
                             <h2 class="onboarding-game-act__title">SI ESCRIBE, GANA.<br>SI PARA, PIERDE.</h2>
                             <div class="onboarding-game-card">
                                 <div class="onboarding-writer-window">
@@ -4593,15 +4685,32 @@ body.musa-boot-activa .intro-flow {
                                     <p class="onboarding-writer-copy"><span class="onboarding-writer-copy__typed">La historia encuentra su ritmo</span><i class="onboarding-writer-caret"></i></p>
                                 </div>
                                 <div class="onboarding-inspiration-meter">
-                                    <div class="onboarding-inspiration-head"><span>INSPIRACIÓN</span><strong>MARCADOR</strong></div>
+                                    <div class="onboarding-inspiration-head"><span>INSPIRACIÓN</span></div>
                                     <div class="onboarding-inspiration-bar">
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--blue">TÚ</span>
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--red">RIVAL</span>
                                     </div>
                                 </div>
+                                <strong class="onboarding-rhythm-feedback onboarding-rhythm-feedback--gain">+ INSPIRACIÓN</strong>
+                                <strong class="onboarding-rhythm-feedback onboarding-rhythm-feedback--loss">− INSPIRACIÓN</strong>
                             </div>
                         </article>
-                        <article class="onboarding-game-act onboarding-game-act--idea" aria-hidden="true">
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-inspiracion" aria-label="Continuar al uso de inspiraciones"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-inspiracion" class="intro-section intro-onboarding-demo">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <p class="intro-onboarding-eyebrow">TUS INSPIRACIONES</p>
+                    <div class="onboarding-game-slide" aria-label="El escritxr gana más inspiración al usar una palabra enviada por la musa">
+                        <article class="onboarding-game-act onboarding-game-act--idea">
                             <h2 class="onboarding-game-act__title">SI USA TU IDEA,<br>GANA INSPIRACIÓN.</h2>
                             <div class="onboarding-game-card">
                                 <div class="onboarding-idea-demo">
@@ -4625,7 +4734,22 @@ body.musa-boot-activa .intro-flow {
                                 <strong class="onboarding-idea-bonus">+ INSPIRACIÓN</strong>
                             </div>
                         </article>
-                        <article class="onboarding-game-act onboarding-game-act--disadvantage" aria-hidden="true">
+                    </div>
+                    <div class="intro-nav">
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-ritmo" aria-label="Volver al ritmo de escritura"></button>
+                        <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-desventajas" aria-label="Continuar a las desventajas"></button>
+                    </div>
+                </div>
+            </section>
+            <section id="intro-desventajas" class="intro-section intro-onboarding-demo">
+                <div class="intro-panel">
+                    <div class="intro-logos">
+                        <img class="intro-logo-img" src="../../img/logo.png" alt="SCRIB">
+                        <img class="intro-logo-img intro-logo-sutura" src="../../img/logo_sutura.png" alt="Sutura">
+                    </div>
+                    <p class="intro-onboarding-eyebrow">AYUDA A TU ESCRITXR</p>
+                    <div class="onboarding-game-slide" aria-label="La inspiración de la musa ayuda a librarse de las desventajas">
+                        <article class="onboarding-game-act onboarding-game-act--disadvantage">
                             <h2 class="onboarding-game-act__title">TU INSPIRACIÓN<br>ROMPE DESVENTAJAS.</h2>
                             <div class="onboarding-game-card onboarding-disadvantage-demo">
                                 <div class="onboarding-disadvantage-editor">
@@ -4638,15 +4762,9 @@ body.musa-boot-activa .intro-flow {
                                 <p class="onboarding-disadvantage-copy">Tu escritxr sufrirá desventajas. Tu inspiración le ayudará a quitárselas.</p>
                             </div>
                         </article>
-                        <div class="onboarding-sequence-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-                        <div class="onboarding-sequence-summary">
-                            <p>Escribir suma inspiración; detenerse la resta.</p>
-                            <p>Si el escritxr usa tu palabra, gana más inspiración.</p>
-                            <p>Tu inspiración le ayuda a librarse de las desventajas.</p>
-                        </div>
                     </div>
                     <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-bienvenida" aria-label="Volver a bienvenida"></button>
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-inspiracion" aria-label="Volver al uso de inspiraciones"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-nombre" data-focus="nombre_musa" aria-label="Ir a elegir nombre"></button>
                     </div>
                 </div>
@@ -4661,7 +4779,7 @@ body.musa-boot-activa .intro-flow {
                     <input id="nombre_musa" class="nombre" maxlength="10" autocomplete="nickname" aria-label="Tu nombre" style="color:orange;text-transform: uppercase;">
                     <div id="mensaje_musa" class="musa-alerta" aria-live="polite"></div>
                     <div class="intro-nav">
-                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-como-jugar" aria-label="Volver al mini tutorial"></button>
+                        <button class="intro-arrow intro-arrow--up" type="button" data-scroll-target="#intro-desventajas" aria-label="Volver al mini tutorial"></button>
                         <button class="intro-arrow intro-arrow--down" type="button" data-scroll-target="#intro-asignacion" data-validate="nombre_musa" data-i18n-attr="aria-label:muse.assignment.go_aria" aria-label="Ir a descubrir tu equipo"></button>
                     </div>
                 </div>
@@ -4772,5 +4890,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260901b"></script>
+<script src="./js/musa-selector.js?v=20260902a"></script>
 </html>

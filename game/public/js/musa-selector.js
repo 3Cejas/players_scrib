@@ -128,18 +128,29 @@ function pedirOpcionesEquipoMusa() {
   return true;
 }
 
+function marcarSeccionOnboardingActiva(objetivo) {
+  const secciones = Array.from(document.querySelectorAll(".intro-section"));
+  secciones.forEach((seccion) => seccion.classList.remove("is-onboarding-active"));
+  if (!objetivo) return;
+  void objetivo.offsetWidth;
+  objetivo.classList.add("is-onboarding-active");
+}
+
 function scrollToSeccion(objetivo) {
   if (!objetivo) return;
   if (!introScroll) {
     objetivo.scrollIntoView({ behavior: usaMovimientoReducido() ? "auto" : "smooth", block: "start" });
+    marcarSeccionOnboardingActiva(objetivo);
     return;
   }
+  marcarSeccionOnboardingActiva(null);
   const inicio = introScroll.scrollTop;
   const destino = objetivo.offsetTop;
   const distancia = destino - inicio;
   const duracion = usaMovimientoReducido() ? 0 : 1200;
   if (!duracion) {
     introScroll.scrollTop = destino;
+    marcarSeccionOnboardingActiva(objetivo);
     return;
   }
   let inicioTiempo = null;
@@ -148,6 +159,7 @@ function scrollToSeccion(objetivo) {
     const progreso = Math.min((marca - inicioTiempo) / duracion, 1);
     introScroll.scrollTop = inicio + (distancia * (1 - Math.pow(1 - progreso, 3)));
     if (progreso < 1) requestAnimationFrame(animar);
+    else marcarSeccionOnboardingActiva(objetivo);
   };
   requestAnimationFrame(animar);
 }
@@ -759,6 +771,7 @@ fingerprintButton?.addEventListener("keyup", (evento) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  marcarSeccionOnboardingActiva(document.querySelector(".intro-section"));
   window.musa_client_id = musaAssignment.getOrCreateClientId(window.sessionStorage, { windowRef: window });
   const params = new URLSearchParams(window.location.search);
   if (params.get("error") === "nombre_musa") {
