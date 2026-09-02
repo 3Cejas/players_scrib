@@ -1840,10 +1840,8 @@ const renderizarCreditosEspectador = () => {
     const musas = renderizarMusasCreditosEspectador(data.musas);
     creditos_content.innerHTML = `
         <header class="creditos-apertura">
-            <div class="creditos-apertura__logos" aria-label="SCRI B, una producción de Sutura">
+            <div class="creditos-apertura__logos" aria-label="SCRI B">
                 <img class="creditos-apertura__marca creditos-apertura__marca--scrib" src="../media/scrib-logo-mark.png" alt="SCRI B">
-                <span class="creditos-apertura__sutura-crop"><img class="creditos-apertura__marca creditos-apertura__marca--sutura" src="../img/logo.png" alt="Sutura"></span>
-                <small>UNA PRODUCCI&Oacute;N DE</small>
             </div>
             <p>CR&Eacute;DITOS DEL SHOW</p>
         </header>
@@ -1855,7 +1853,13 @@ const renderizarCreditosEspectador = () => {
             <h3 class="creditos-subtitulo">${tJuego2P("credits.thanks_title", {}, "AGRADECIMIENTOS:")}</h3>
             <p class="creditos-agradecimientos">${agradecimientos}</p>
         </div>
-        <p class="creditos-cierre">GRACIAS POR HACERLO POSIBLE</p>
+        <footer class="creditos-cierre">
+            <div class="creditos-cierre__produccion" aria-label="Una producci&oacute;n de Sutura">
+                <small>UNA PRODUCCI&Oacute;N DE</small>
+                <span class="creditos-cierre__sutura-crop"><img class="creditos-cierre__marca--sutura" src="../img/logo.png" alt="Sutura"></span>
+            </div>
+            <p>GRACIAS POR HACERLO POSIBLE</p>
+        </footer>
     `;
 };
 const iniciarAnimacionCreditosEspectador = (forzar = false) => {

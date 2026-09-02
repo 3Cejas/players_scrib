@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260902e">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260902f">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260902d"></script>
+<script src="./js/actions.js?v=20260902e"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <img class="control-brand-logo" src="../media/scrib-logo-mark.png" alt="&lt;SCRI&gt; B">
@@ -196,10 +196,10 @@
                         </div>
                         <div id="control_panel_final" class="control-group control-group--final control-collapsible is-collapsed" data-control-section="final" role="tabpanel" aria-labelledby="control_title_final">
                             <div class="control-group-buttons control-group-buttons--final">
-                                <span id="boton_mostrar_creditos" class='btn' onclick="mostrarCreditosEspectador()">&#x2B50; MOSTRAR CR&Eacute;DITOS</span>
+                                <button id="boton_mostrar_creditos" class="btn" type="button" data-active="0" aria-pressed="false" onclick="mostrarCreditosEspectador()">&#x2B50; VISTA CR&Eacute;DITOS</button>
                                 <span id="boton_pedir_feedback" class='btn' onclick="pedirFeedbackMusas()">&#x1F5E8;&#xFE0F; PEDIR FEEDBACK</span>
                                 <button id="boton_editar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-expanded="false" aria-controls="panel_creditos_final" onclick="toggleCreditos()">&#x1F4DD; EDITAR CR&Eacute;DITOS</button>
-                                <button id="boton_banderas_musas_final" class="btn" type="button" data-banderas-musas-control onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</button>
+                                <button id="boton_banderas_musas_final" class="btn btn-estandar-seccion" type="button" data-banderas-musas-control onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</button>
                             </div>
                             <div id="panel_creditos_final" class="creditos-host panel-oculto" aria-hidden="true"></div>
                         </div>
@@ -757,7 +757,7 @@
             </tr>
         </table>
 <script src="../dist/socket.io/socket.io.js"></script>
-    <script src="../js/i18n.js?v=20260831b"></script>
+    <script src="../js/i18n.js?v=20260902a"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260831b"></script>
 <script src="./js/videotutorial-control.js?v=20260829p"></script>

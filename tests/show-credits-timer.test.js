@@ -27,14 +27,18 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   assert.match(museState, /animarTransicionVistaMusa\("creditos"\)/);
   assert.match(museState, /animationName !== "creditosMusaRoll"[\s\S]*finalizarCreditosMusa/);
   assert.doesNotMatch(museState, /timeout_feedback_post_creditos_musa|CREDITOS_MUSA_SOCIALES_DURACION_MS/);
-  assert.match(museState, /GRACIAS, \$\{nombreMusaCreditos\}, POR FORMAR PARTE DE <SCRI> B/);
+  assert.match(museState, /GRACIAS, <strong>\$\{escapeHtml\(nombreMusaCreditos\)\}<\/strong>, POR HACERLO POSIBLE/);
+  assert.match(museState, /creditos-musa__produccion[\s\S]*UNA PRODUCCI&Oacute;N DE[\s\S]*creditos-musa__cierre-sutura-crop[\s\S]*<p>\$\{cierrePersonalizado\}<\/p>/);
+  assert.match(spectatorState, /creditos-cierre__produccion[\s\S]*UNA PRODUCCI&Oacute;N DE[\s\S]*creditos-cierre__sutura-crop[\s\S]*<p>GRACIAS POR HACERLO POSIBLE<\/p>/);
+  assert.doesNotMatch(spectatorState, /creditos-apertura__sutura-crop/);
+  assert.doesNotMatch(museState, /creditos-musa__apertura[\s\S]{0,500}creditos-musa__sutura-crop/);
   assert.match(museCss, /\.creditos-musa--finalizados \.creditos-musa__sociales/);
   assert.match(spectatorCss, /\.creditos-espectador\.creditos-finalizados \.creditos-sociales-final/);
   for (const html of [spectatorHtml, museHtml]) {
     assert.match(html, /https:\/\/www\.instagram\.com\/su\.tu\.ra\//);
     assert.match(html, /https:\/\/www\.instagram\.com\/scrib_show\//);
     assert.match(html, /https:\/\/es\.linkedin\.com\/company\/suturateatro/);
-    assert.match(html, /GRACIAS POR FORMAR PARTE DE &lt;SCRI&gt; B/);
+    assert.doesNotMatch(html, /GRACIAS POR FORMAR PARTE DE &lt;SCRI&gt; B/);
     assert.match(html, /creditos-social-card--feedback/);
     assert.doesNotMatch(html, /<strong>Instagram<\/strong>|<strong>LinkedIn<\/strong>/);
   }
@@ -65,9 +69,22 @@ test("giant timer is a dedicated synced scene on spectator and muse screens", ()
 test("credits editor and result use the standard section button style", () => {
   const controlHtml = read("game/control/index.html");
   const controlCss = read("game/control/index.css");
+  const controlActions = read("game/control/js/actions.js");
 
   assert.match(controlHtml, /id="boton_vista_puntuacion" class="btn btn-estandar-seccion"/);
   assert.match(controlHtml, /id="boton_editar_creditos" class="btn btn-estandar-seccion"/);
+  assert.match(controlHtml, /id="boton_banderas_musas_final" class="btn btn-estandar-seccion"/);
+  assert.match(controlHtml, /id="boton_mostrar_creditos"[\s\S]{0,220}VISTA CR&Eacute;DITOS/);
   assert.match(controlCss, /#panel_controles #boton_vista_puntuacion\.btn-estandar-seccion/);
   assert.match(controlCss, /#panel_controles #boton_editar_creditos\.btn-estandar-seccion/);
+  assert.match(controlCss, /Ajuste final: las frases no invaden idioma[\s\S]*#boton_banderas_musas_final\[data-active="1"\]/);
+  assert.match(controlActions, /if \(vista_espectador_modo === "creditos"\) \{[\s\S]{0,180}return;/);
+  assert.doesNotMatch(controlActions, /vista_espectador_modo = vista_espectador_modo === "creditos" \? "partida" : "creditos"/);
+});
+
+test("parameters reserve independent room for language and both final phrases", () => {
+  const controlCss = read("game/control/index.css");
+
+  assert.match(controlCss, /Ajuste final: las frases no invaden idioma[\s\S]*grid-template-columns: minmax\(12rem, 0\.52fr\) repeat\(2, minmax\(16rem, 1fr\)\) !important;/);
+  assert.match(controlCss, /@media \(max-width: 1100px\)[\s\S]*#panel_parametros \.control-language \{[\s\S]*grid-column: 1 \/ -1;/);
 });

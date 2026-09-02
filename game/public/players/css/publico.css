@@ -1975,13 +1975,13 @@ th{
 
 .creditos-musa__content {
     display: grid;
-    gap: clamp(1.15rem, 4vh, 2rem);
+    gap: clamp(0.85rem, 2.7vh, 1.5rem);
     padding: 0 0 32vh;
     color: white;
 }
 
 .creditos-musa__apertura {
-    min-height: 64vh;
+    min-height: 38vh;
     display: grid;
     place-content: center;
     gap: 0.9rem;
@@ -2116,11 +2116,54 @@ th{
 }
 
 .creditos-musa__cierre {
-    min-height: 60vh;
+    min-height: 68vh;
     display: grid;
     place-content: center;
+    justify-items: center;
+    gap: clamp(0.9rem, 4vh, 1.5rem);
     text-align: center;
     font-size: clamp(0.82rem, 4.5vw, 1.2rem);
+}
+
+.creditos-musa__cierre > p {
+    max-width: 31rem;
+    margin: 0;
+    line-height: 1.45;
+}
+
+.creditos-musa__cierre > p strong {
+    display: inline-block;
+    color: #ffca53;
+    font-size: 1.12em;
+    text-shadow: -0.05em 0 #42edff, 0.05em 0 #ff5872, 0 0 0.8em rgba(255, 202, 83, 0.54);
+}
+
+.creditos-musa__produccion {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    color: #ffd978;
+    font: clamp(0.52rem, 2.7vw, 0.72rem)/1.35 "Retro-gaming", monospace;
+    letter-spacing: 0.1em;
+}
+
+.creditos-musa__cierre-sutura-crop {
+    position: relative;
+    display: block;
+    width: clamp(4.6rem, 24vw, 7rem);
+    aspect-ratio: 1;
+    overflow: hidden;
+    filter: drop-shadow(-0.08rem 0 #43eaff) drop-shadow(0.08rem 0 #ff596f) drop-shadow(0 0 1rem rgba(255,255,255,0.2));
+}
+
+.creditos-musa__cierre-marca--sutura {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: auto;
+    max-width: none;
+    height: 170%;
+    transform: translateX(-50%);
 }
 
 .creditos-musa__sociales {
@@ -2165,24 +2208,16 @@ th{
     animation: creditosMusaSocialesGlow 2.6s ease-in-out infinite alternate;
 }
 
-.creditos-musa__sociales-gracias,
 .creditos-musa__sociales > p,
 .creditos-musa__sociales > h2,
 .creditos-musa__feedback-aviso { margin: 0; }
-
-.creditos-musa__sociales-gracias {
-    color: #ffd970;
-    font: clamp(0.62rem, 3.2vw, 0.86rem)/1.45 "Retro-gaming", monospace;
-    letter-spacing: 0.09em;
-    text-shadow: 0 0 1rem rgba(255, 205, 85, 0.58);
-}
 
 .creditos-musa__sociales h2 {
     font: clamp(1.45rem, 8vw, 2.35rem)/1.05 "Retro-gaming", monospace;
     text-shadow: -0.045em 0 #48eaff, 0.045em 0 #ff5b72;
 }
 
-.creditos-musa__sociales > p:not(.creditos-musa__sociales-gracias) {
+.creditos-musa__sociales > p {
     max-width: 27rem;
     color: rgba(235, 247, 252, 0.78);
     font: clamp(1.2rem, 6vw, 1.7rem)/1.12 "VT323", monospace;

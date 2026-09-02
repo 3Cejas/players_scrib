@@ -2692,7 +2692,8 @@ function actualizarBotonesVistaEspectadorControl() {
         const activo = vista_espectador_modo === "creditos";
         botonCreditos.dataset.active = activo ? "1" : "0";
         botonCreditos.classList.toggle("is-active", activo);
-        botonCreditos.textContent = tJuego2PControl("control.button.show_credits", {}, "\u2B50 MOSTRAR CR\u00c9DITOS");
+        botonCreditos.setAttribute("aria-pressed", activo ? "true" : "false");
+        botonCreditos.textContent = tJuego2PControl("control.button.show_credits", {}, "\u2B50 VISTA CR\u00c9DITOS");
     }
     if (botonDeliberacion) {
         const activo = vista_espectador_modo === "deliberacion";
@@ -2954,16 +2955,13 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
 function mostrarCreditosEspectador() {
     const creditos = obtenerCreditosDesdePanelControl();
     creditos_estado_control = { ...creditos };
-    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
-        vista_espectador_modo = vista_espectador_modo === "creditos" ? "partida" : "creditos";
+    if (vista_espectador_modo === "creditos") {
         actualizarBotonesVistaEspectadorControl();
         return;
     }
-
-    if (vista_espectador_modo === "creditos") {
-        vista_espectador_modo = "partida";
+    if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
+        vista_espectador_modo = "creditos";
         actualizarBotonesVistaEspectadorControl();
-        socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
         return;
     }
 

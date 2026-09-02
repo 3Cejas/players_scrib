@@ -1575,7 +1575,6 @@ const creditos_musa = getEl("creditos_musa");
 const creditos_musa_track = getEl("creditos_musa_track");
 const creditos_musa_content = getEl("creditos_musa_content");
 const creditos_musa_sociales = getEl("creditos_musa_sociales");
-const creditos_musa_sociales_gracias = getEl("creditos_musa_sociales_gracias");
 let estado_creditos_musa = window.ScribCredits
     ? window.ScribCredits.normalizarPayload({})
     : { creditos: {}, mostrar: false, animacion_id: 0 };
@@ -1702,17 +1701,13 @@ function renderizarCreditosMusa() {
         ? escapeHtml(data.agradecimientos).replace(/\n/g, "<br>")
         : "GRACIAS POR INSPIRAR";
     const nombreMusaCreditos = String(window.nombre_musa || "").trim();
-    if (creditos_musa_sociales_gracias) {
-        creditos_musa_sociales_gracias.textContent = nombreMusaCreditos
-            ? `GRACIAS, ${nombreMusaCreditos}, POR FORMAR PARTE DE <SCRI> B`
-            : "GRACIAS POR FORMAR PARTE DE <SCRI> B";
-    }
+    const cierrePersonalizado = nombreMusaCreditos
+        ? `GRACIAS, <strong>${escapeHtml(nombreMusaCreditos)}</strong>, POR HACERLO POSIBLE`
+        : "GRACIAS POR HACERLO POSIBLE";
     creditos_musa_content.innerHTML = `
         <header class="creditos-musa__apertura">
-            <div class="creditos-musa__logos" aria-label="SCRI B, una producción de Sutura">
+            <div class="creditos-musa__logos" aria-label="SCRI B">
                 <img class="creditos-musa__marca creditos-musa__marca--scrib" src="../../media/scrib-logo-mark.png" alt="SCRI B">
-                <span class="creditos-musa__sutura-crop"><img class="creditos-musa__marca creditos-musa__marca--sutura" src="../../img/logo.png" alt="Sutura"></span>
-                <small>UNA PRODUCCI&Oacute;N DE</small>
             </div>
             <p>CR&Eacute;DITOS DEL SHOW</p>
         </header>
@@ -1722,7 +1717,13 @@ function renderizarCreditosMusa() {
             <h3 class="creditos-musa__titulo">AGRADECIMIENTOS</h3>
             <p class="creditos-musa__agradecimientos">${agradecimientos}</p>
         </section>
-        <footer class="creditos-musa__cierre">GRACIAS POR HACERLO POSIBLE</footer>
+        <footer class="creditos-musa__cierre">
+            <div class="creditos-musa__produccion" aria-label="Una producci&oacute;n de Sutura">
+                <small>UNA PRODUCCI&Oacute;N DE</small>
+                <span class="creditos-musa__cierre-sutura-crop"><img class="creditos-musa__cierre-marca--sutura" src="../../img/logo.png" alt="Sutura"></span>
+            </div>
+            <p>${cierrePersonalizado}</p>
+        </footer>
     `;
     if (creditos_musa_track) {
         const nombresMusas = (Array.isArray(musas.azules) ? musas.azules.length : 0)
