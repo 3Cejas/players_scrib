@@ -9039,23 +9039,17 @@ body.vista-resultado-jurado #creditos_espectador {
   text-shadow: 0 0 1rem rgba(255, 208, 92, 0.65);
 }
 
-.creditos-cierre__sutura-crop {
-  position: relative;
+.creditos-cierre__sutura-lockup {
   display: block;
-  width: clamp(6.5rem, 12vw, 10.5rem);
-  aspect-ratio: 1;
-  overflow: hidden;
+  width: clamp(13rem, 24vw, 23rem);
   filter: drop-shadow(-0.12rem 0 #48eaff) drop-shadow(0.12rem 0 #ff5b72) drop-shadow(0 0 1.1rem rgba(255,255,255,0.2));
 }
 
 .creditos-cierre__marca--sutura {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: auto;
-  max-width: none;
-  height: 170%;
-  transform: translateX(-50%);
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 @keyframes creditosGridVivo { to { transform: rotate(-7deg) translate3d(8vw, 8vw, 0) scale(1.18); } }
@@ -9097,17 +9091,15 @@ body.vista-resultado-jurado #creditos_espectador {
 }
 
 .creditos-espectador.creditos-finalizados .creditos-track {
-  opacity: 0;
-  transition: opacity 1.1s ease-out;
+  opacity: 1;
 }
 
 .creditos-sociales-final {
-  position: absolute;
-  inset: clamp(1.5rem, 4vh, 4rem) clamp(2rem, 6vw, 7rem);
+  position: relative;
   z-index: 6;
   width: min(88vw, 1350px);
   height: fit-content;
-  margin: auto;
+  margin: 0 auto clamp(1.5rem, 4vh, 4rem);
   display: grid;
   place-items: center;
   gap: clamp(1rem, 2.3vh, 2rem);
@@ -9123,16 +9115,12 @@ body.vista-resultado-jurado #creditos_espectador {
     rgba(2, 9, 18, 0.88);
   box-shadow: inset 0 0 4rem rgba(255,255,255,0.04), 0 0 5rem rgba(255, 197, 73, 0.22);
   backdrop-filter: blur(16px);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(110vh) scale(0.96);
-  transition: opacity 240ms linear, transform 1500ms cubic-bezier(.2, .78, .24, 1);
-}
-
-.creditos-espectador.creditos-finalizados .creditos-sociales-final {
   opacity: 1;
   pointer-events: auto;
   transform: none;
+}
+
+.creditos-espectador.creditos-finalizados .creditos-sociales-final {
   animation: creditosSocialesFinalGlow 2.7s ease-in-out infinite alternate;
 }
 

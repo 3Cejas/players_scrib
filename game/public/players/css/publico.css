@@ -1976,7 +1976,7 @@ th{
 .creditos-musa__content {
     display: grid;
     gap: clamp(0.85rem, 2.7vh, 1.5rem);
-    padding: 0 0 32vh;
+    padding: 0 0 clamp(1.2rem, 4vh, 2.4rem);
     color: white;
 }
 
@@ -2147,39 +2147,31 @@ th{
     letter-spacing: 0.1em;
 }
 
-.creditos-musa__cierre-sutura-crop {
-    position: relative;
+.creditos-musa__cierre-sutura-lockup {
     display: block;
-    width: clamp(4.6rem, 24vw, 7rem);
-    aspect-ratio: 1;
-    overflow: hidden;
+    width: clamp(10rem, 50vw, 17rem);
     filter: drop-shadow(-0.08rem 0 #43eaff) drop-shadow(0.08rem 0 #ff596f) drop-shadow(0 0 1rem rgba(255,255,255,0.2));
 }
 
 .creditos-musa__cierre-marca--sutura {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    width: auto;
-    max-width: none;
-    height: 170%;
-    transform: translateX(-50%);
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
 }
 
 .creditos-musa__sociales {
-    position: absolute;
-    inset: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    position: relative;
     z-index: 5;
-    width: min(92vw, 34rem);
+    width: 100%;
     height: fit-content;
-    max-height: calc(100% - 2rem);
-    margin: auto;
+    margin: 0 auto max(1rem, env(safe-area-inset-bottom));
     display: grid;
     place-items: center;
     gap: clamp(0.75rem, 3vh, 1.2rem);
     padding: clamp(1.25rem, 6vw, 2.15rem);
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow: visible;
     border: 1px solid rgba(255, 220, 116, 0.72);
     border-radius: clamp(1.2rem, 6vw, 2rem);
     color: #f8fbff;
@@ -2190,21 +2182,16 @@ th{
         rgba(2, 9, 18, 0.9);
     box-shadow: inset 0 0 2.5rem rgba(255,255,255,0.04), 0 0 3rem rgba(255, 193, 73, 0.24);
     backdrop-filter: blur(16px);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(110vh) scale(0.96);
-    transition: opacity 220ms linear, transform 1400ms cubic-bezier(.2, .78, .24, 1);
-}
-
-.creditos-musa--finalizados .creditos-musa__track {
-    opacity: 0;
-    transition: opacity 600ms ease;
-}
-
-.creditos-musa--finalizados .creditos-musa__sociales {
     opacity: 1;
     pointer-events: auto;
     transform: none;
+}
+
+.creditos-musa--finalizados .creditos-musa__track {
+    opacity: 1;
+}
+
+.creditos-musa--finalizados .creditos-musa__sociales {
     animation: creditosMusaSocialesGlow 2.6s ease-in-out infinite alternate;
 }
 
@@ -2425,8 +2412,8 @@ th{
 }
 
 @keyframes creditosMusaRoll {
-    from { transform: translate3d(0, 72vh, 0); }
-    to { transform: translate3d(0, calc(-100% - 18vh), 0); }
+    from { transform: translate3d(0, var(--creditos-musa-y-inicio, 72vh), 0); }
+    to { transform: translate3d(0, var(--creditos-musa-y-fin, calc(-100% + 50vh)), 0); }
 }
 @keyframes creditosMusaGrid { to { transform: rotate(-8deg) translate3d(10vw, 10vw, 0) scale(1.2); } }
 @keyframes creditosMusaAurora { to { transform: rotate(12deg) scale(1.12); filter: blur(34px) saturate(1.3); } }

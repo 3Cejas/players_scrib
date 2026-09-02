@@ -50,10 +50,10 @@ test("credits use the real graphic marks and timer rings count down", () => {
 
   assert.match(spectatorState, /src="\.\.\/media\/scrib-logo-mark\.png"/);
   assert.match(spectatorState, /src="\.\.\/img\/logo\.png"/);
-  assert.match(spectatorState, /creditos-cierre__sutura-crop/);
+  assert.match(spectatorState, /creditos-cierre__sutura-lockup/);
   assert.match(museState, /src="\.\.\/\.\.\/media\/scrib-logo-mark\.png"/);
   assert.match(museState, /src="\.\.\/\.\.\/img\/logo\.png"/);
-  assert.match(museState, /creditos-musa__cierre-sutura-crop/);
+  assert.match(museState, /creditos-musa__cierre-sutura-lockup/);
   assert.match(spectatorState, /temporizador_gigante_restante \/ duracion/);
   assert.match(museState, /temporizador_lectura_restante \/ duracion/);
 });

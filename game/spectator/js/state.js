@@ -1856,9 +1856,9 @@ const renderizarCreditosEspectador = () => {
         <footer class="creditos-cierre">
             <div class="creditos-cierre__produccion" aria-label="Una producci&oacute;n de Sutura">
                 <small>UNA PRODUCCI&Oacute;N DE</small>
-                <span class="creditos-cierre__sutura-crop"><img class="creditos-cierre__marca--sutura" src="../img/logo.png" alt="Sutura"></span>
+                <span class="creditos-cierre__sutura-lockup"><img class="creditos-cierre__marca--sutura" src="../img/logo.png" alt="Sutura Teatro"></span>
             </div>
-            <p>GRACIAS POR HACERLO POSIBLE</p>
+            <p>GRACIAS POR HACERLO POSIBLE.</p>
         </footer>
     `;
 };
@@ -1870,7 +1870,7 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     renderizarCreditosEspectador();
     detenerAnimacionCreditosEspectador(false);
     creditos_espectador.classList.remove("creditos-finalizados");
-    if (creditos_sociales_final) creditos_sociales_final.setAttribute("aria-hidden", "true");
+    if (creditos_sociales_final) creditos_sociales_final.setAttribute("aria-hidden", "false");
     reproducirMusicaCreditosEspectador();
     creditos_track.style.opacity = "1";
     const altoViewportInicial = Math.max(window.innerHeight || 0, 1);
@@ -1879,13 +1879,15 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     requestAnimationFrame(() => {
         if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") return;
         const altoViewport = Math.max(window.innerHeight || 0, 1);
-        const altoTrack = Math.max(
-            Math.ceil(creditos_track.scrollHeight || 0),
-            Math.ceil(creditos_track.getBoundingClientRect().height || 0),
-            1
-        );
         const yInicio = yInicioVisible;
-        const yFin = -(altoTrack + CREDITOS_SCROLL_MARGEN_SALIDA_PX);
+        const centroSocial = creditos_sociales_final
+            ? (creditos_sociales_final.offsetTop + (creditos_sociales_final.offsetHeight * 0.5))
+            : Math.max(
+                Math.ceil(creditos_track.scrollHeight || 0),
+                Math.ceil(creditos_track.getBoundingClientRect().height || 0),
+                1
+            ) + CREDITOS_SCROLL_MARGEN_SALIDA_PX;
+        const yFin = Math.round((altoViewport * 0.5) - centroSocial);
         const distancia = Math.max(1, yInicio - yFin);
         const duracionMs = Math.max(
             CREDITOS_SCROLL_DURACION_MIN_MS,
@@ -1916,7 +1918,6 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
             if (progreso >= 1) {
                 creditos_animacion_raf = null;
                 creditos_espectador.classList.add("creditos-finalizados");
-                if (creditos_sociales_final) creditos_sociales_final.setAttribute("aria-hidden", "false");
                 creditos_track.style.transform = `translate3d(-50%, ${creditos_animacion_y_fin.toFixed(2)}px, 0)`;
                 return;
             }

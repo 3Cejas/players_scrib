@@ -1702,8 +1702,8 @@ function renderizarCreditosMusa() {
         : "GRACIAS POR INSPIRAR";
     const nombreMusaCreditos = String(window.nombre_musa || "").trim();
     const cierrePersonalizado = nombreMusaCreditos
-        ? `GRACIAS, <strong>${escapeHtml(nombreMusaCreditos)}</strong>, POR HACERLO POSIBLE`
-        : "GRACIAS POR HACERLO POSIBLE";
+        ? `GRACIAS, <strong>${escapeHtml(nombreMusaCreditos)}</strong>, POR HACERLO POSIBLE.`
+        : "GRACIAS POR HACERLO POSIBLE.";
     creditos_musa_content.innerHTML = `
         <header class="creditos-musa__apertura">
             <div class="creditos-musa__logos" aria-label="SCRI B">
@@ -1720,16 +1720,23 @@ function renderizarCreditosMusa() {
         <footer class="creditos-musa__cierre">
             <div class="creditos-musa__produccion" aria-label="Una producci&oacute;n de Sutura">
                 <small>UNA PRODUCCI&Oacute;N DE</small>
-                <span class="creditos-musa__cierre-sutura-crop"><img class="creditos-musa__cierre-marca--sutura" src="../../img/logo.png" alt="Sutura"></span>
+                <span class="creditos-musa__cierre-sutura-lockup"><img class="creditos-musa__cierre-marca--sutura" src="../../img/logo.png" alt="Sutura Teatro"></span>
             </div>
             <p>${cierrePersonalizado}</p>
         </footer>
     `;
-    if (creditos_musa_track) {
-        const nombresMusas = (Array.isArray(musas.azules) ? musas.azules.length : 0)
-            + (Array.isArray(musas.rojas) ? musas.rojas.length : 0);
-        creditos_musa_track.style.setProperty("--creditos-musa-duracion", `${Math.max(46, 42 + (nombresMusas * 1.15))}s`);
-    }
+}
+
+function configurarTrayectoCreditosMusa() {
+    if (!creditos_musa_track || !creditos_musa_sociales) return;
+    const altoViewport = Math.max(window.innerHeight || 0, 1);
+    const yInicio = altoViewport * 0.72;
+    const centroSocial = creditos_musa_sociales.offsetTop + (creditos_musa_sociales.offsetHeight * 0.5);
+    const yFin = (altoViewport * 0.5) - centroSocial;
+    const distancia = Math.max(1, yInicio - yFin);
+    creditos_musa_track.style.setProperty("--creditos-musa-y-inicio", `${yInicio.toFixed(2)}px`);
+    creditos_musa_track.style.setProperty("--creditos-musa-y-fin", `${yFin.toFixed(2)}px`);
+    creditos_musa_track.style.setProperty("--creditos-musa-duracion", `${Math.max(46, distancia / 24).toFixed(2)}s`);
 }
 
 function ocultarCreditosMusa() {
@@ -1755,6 +1762,8 @@ function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
     renderizarCreditosMusa();
     creditos_musa.hidden = false;
     creditos_musa.setAttribute("aria-hidden", "false");
+    if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "false");
+    configurarTrayectoCreditosMusa();
     const animacionCreditosActiva = Boolean(
         creditos_musa_track
         && typeof creditos_musa_track.getAnimations === "function"
@@ -1762,7 +1771,7 @@ function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
     );
     if (creditos_musa_track && (forzarReinicio || !animacionCreditosActiva)) {
         creditos_musa.classList.remove("creditos-musa--finalizados");
-        if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "true");
+        if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "false");
         creditos_musa_track.style.animation = "none";
         void creditos_musa_track.offsetWidth;
         creditos_musa_track.style.removeProperty("animation");
