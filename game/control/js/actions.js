@@ -3908,12 +3908,15 @@ function reiniciar_marcador_calentamiento() {
 
 function actualizarBotonBanderasMusasControl(estado = banderas_musas_activas) {
     banderas_musas_activas = Boolean(estado);
-    const boton = document.getElementById("boton_banderas_musas");
-    if (!boton) return;
-    boton.dataset.activo = banderas_musas_activas ? "1" : "0";
-    boton.textContent = banderas_musas_activas
-        ? tJuego2PControl("control.button.flags.on", {}, "\uD83D\uDEA9 BANDERAS ACTIVADAS")
-        : tJuego2PControl("control.button.flags.off", {}, "\uD83D\uDEA9 BANDERAS DESACTIVADAS");
+    document.querySelectorAll("[data-banderas-musas-control]").forEach((boton) => {
+        boton.dataset.activo = banderas_musas_activas ? "1" : "0";
+        boton.dataset.active = banderas_musas_activas ? "1" : "0";
+        boton.classList.toggle("is-active", banderas_musas_activas);
+        boton.setAttribute("aria-pressed", banderas_musas_activas ? "true" : "false");
+        boton.textContent = banderas_musas_activas
+            ? tJuego2PControl("control.button.flags.on", {}, "\uD83D\uDEA9 BANDERAS ACTIVADAS")
+            : tJuego2PControl("control.button.flags.off", {}, "\uD83D\uDEA9 BANDERAS DESACTIVADAS");
+    });
 }
 
 window.actualizarEstadoBanderasMusasControl = (payload = {}) => {

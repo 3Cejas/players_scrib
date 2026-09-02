@@ -412,7 +412,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260902c/);
+  assert.match(html, /musa-selector\.js\?v=20260902d/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -507,7 +507,7 @@ test("writer choice stays clean and game loading closes the assignment reveal", 
   assert.match(selector, /Preparando el canal creativo de \$\{asignacion\.writer\}/);
   assert.match(selector, /classList\.add\([^;]*"is-revealing"\)/);
   assert.match(selector, /musa-boot-flow--manual[\s\S]*musa-boot-flow--automatic/);
-  assert.match(selector, /REVEAL_MIN_AUTOMATIC_MS = 2200[\s\S]*ASSIGNMENT_REVEAL_AUTOMATIC_MS = 2800/);
+  assert.match(selector, /REVEAL_MIN_AUTOMATIC_MS = 2200[\s\S]*ASSIGNMENT_REVEAL_AUTOMATIC_MS = 4400[\s\S]*ASSIGNMENT_REVEAL_MANUAL_MS = 3600/);
   assert.match(selector, /loadingStartTimeout = setTimeout\([\s\S]*iniciarFaseCargaJuego\(asignacion, duracionCarga\)/);
   assert.match(selector, /function iniciarFaseCargaJuego[\s\S]*iniciarCargaJuego\(asignacion, duracionCarga\)/);
   assert.match(selector, /setTimeout\(entrarEnJuegoAsignado, duracionCarga \+ 120\)/);

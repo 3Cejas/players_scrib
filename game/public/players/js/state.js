@@ -1575,12 +1575,11 @@ const creditos_musa = getEl("creditos_musa");
 const creditos_musa_track = getEl("creditos_musa_track");
 const creditos_musa_content = getEl("creditos_musa_content");
 const creditos_musa_sociales = getEl("creditos_musa_sociales");
+const creditos_musa_sociales_gracias = getEl("creditos_musa_sociales_gracias");
 let estado_creditos_musa = window.ScribCredits
     ? window.ScribCredits.normalizarPayload({})
     : { creditos: {}, mostrar: false, animacion_id: 0 };
 let vista_modo_remota_musa = "tutorial";
-let timeout_feedback_post_creditos_musa = null;
-const CREDITOS_MUSA_SOCIALES_DURACION_MS = 10000;
 const deliberacion_musa = getEl("deliberacion_musa");
 const resultado_videojuego_musa = getEl("resultado_videojuego_musa");
 const resultado_videojuego_musa_stage = getEl("resultado_videojuego_musa_stage");
@@ -1679,21 +1678,10 @@ function actualizarResultadoJuradoMusa(payload = {}) {
 window.actualizarPuntuacionFinalMusa = actualizarPuntuacionFinalMusa;
 window.actualizarResultadoJuradoMusa = actualizarResultadoJuradoMusa;
 
-function cancelarRedireccionFeedbackPostCreditosMusa() {
-    if (!timeout_feedback_post_creditos_musa) return;
-    clearTimeout(timeout_feedback_post_creditos_musa);
-    timeout_feedback_post_creditos_musa = null;
-}
-
 function finalizarCreditosMusa() {
     if (!creditos_musa || creditos_musa.hidden || vista_modo_remota_musa !== "creditos") return;
     creditos_musa.classList.add("creditos-musa--finalizados");
     if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "false");
-    cancelarRedireccionFeedbackPostCreditosMusa();
-    timeout_feedback_post_creditos_musa = setTimeout(() => {
-        timeout_feedback_post_creditos_musa = null;
-        redirigirMusaAFeedback({ activa: true, url: FEEDBACK_MUSA_URL_WEB });
-    }, CREDITOS_MUSA_SOCIALES_DURACION_MS);
 }
 
 function renderizarListaCreditosMusa(musas, clase) {
@@ -1713,12 +1701,18 @@ function renderizarCreditosMusa() {
     const agradecimientos = data.agradecimientos
         ? escapeHtml(data.agradecimientos).replace(/\n/g, "<br>")
         : "GRACIAS POR INSPIRAR";
+    const nombreMusaCreditos = String(window.nombre_musa || "").trim();
+    if (creditos_musa_sociales_gracias) {
+        creditos_musa_sociales_gracias.textContent = nombreMusaCreditos
+            ? `GRACIAS, ${nombreMusaCreditos}, POR FORMAR PARTE DE <SCRI> B`
+            : "GRACIAS POR FORMAR PARTE DE <SCRI> B";
+    }
     creditos_musa_content.innerHTML = `
         <header class="creditos-musa__apertura">
-            <div class="creditos-musa__logos" aria-label="SCRI B y Sutura Teatro">
+            <div class="creditos-musa__logos" aria-label="SCRI B, una producción de Sutura">
                 <img class="creditos-musa__marca creditos-musa__marca--scrib" src="../../media/scrib-logo-mark.png" alt="SCRI B">
-                <span aria-hidden="true">&times;</span>
-                <img class="creditos-musa__marca creditos-musa__marca--sutura" src="../../img/logo.png" alt="Sutura Teatro">
+                <span class="creditos-musa__sutura-crop"><img class="creditos-musa__marca creditos-musa__marca--sutura" src="../../img/logo.png" alt="Sutura"></span>
+                <small>UNA PRODUCCI&Oacute;N DE</small>
             </div>
             <p>CR&Eacute;DITOS DEL SHOW</p>
         </header>
@@ -1728,7 +1722,7 @@ function renderizarCreditosMusa() {
             <h3 class="creditos-musa__titulo">AGRADECIMIENTOS</h3>
             <p class="creditos-musa__agradecimientos">${agradecimientos}</p>
         </section>
-        <footer class="creditos-musa__cierre">UNA PRODUCCI&Oacute;N DE SUTURA TEATRO</footer>
+        <footer class="creditos-musa__cierre">GRACIAS POR HACERLO POSIBLE</footer>
     `;
     if (creditos_musa_track) {
         const nombresMusas = (Array.isArray(musas.azules) ? musas.azules.length : 0)
@@ -1738,7 +1732,6 @@ function renderizarCreditosMusa() {
 }
 
 function ocultarCreditosMusa() {
-    cancelarRedireccionFeedbackPostCreditosMusa();
     if (creditos_musa) {
         creditos_musa.classList.remove("creditos-musa--finalizados");
         creditos_musa.hidden = true;
@@ -1767,7 +1760,6 @@ function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
         && creditos_musa_track.getAnimations().length
     );
     if (creditos_musa_track && (forzarReinicio || !animacionCreditosActiva)) {
-        cancelarRedireccionFeedbackPostCreditosMusa();
         creditos_musa.classList.remove("creditos-musa--finalizados");
         if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "true");
         creditos_musa_track.style.animation = "none";

@@ -8667,10 +8667,11 @@ body.vista-creditos .creditos-espectador::after {
 }
 
 .creditos-apertura__logos {
-  display: flex;
+  display: grid;
   align-items: center;
   justify-content: center;
-  gap: clamp(1.4rem, 4vw, 4rem);
+  justify-items: center;
+  gap: clamp(0.55rem, 1.4vh, 1rem);
   animation: creditosLogoVivo 1.8s steps(2, end) infinite;
 }
 
@@ -8682,11 +8683,30 @@ body.vista-creditos .creditos-espectador::after {
   filter: drop-shadow(-0.15rem 0 #48eaff) drop-shadow(0.15rem 0 #ff5b72) drop-shadow(0 0 1.4rem rgba(255,255,255,0.22));
 }
 
-.creditos-apertura__marca--scrib { height: clamp(5rem, 14vw, 11rem); }
-.creditos-apertura__marca--sutura { height: clamp(6rem, 16vw, 13rem); }
-.creditos-apertura__union {
+.creditos-apertura__marca--scrib {
+  height: clamp(5rem, 12vw, 9.5rem);
+  margin-bottom: clamp(0.7rem, 2vh, 1.4rem);
+}
+.creditos-apertura__sutura-crop {
+  position: relative;
+  display: block;
+  width: clamp(5.5rem, 11vw, 9rem);
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+.creditos-apertura__marca--sutura {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: auto;
+  max-width: none;
+  height: 170%;
+  transform: translateX(-50%);
+}
+.creditos-apertura__logos > small {
   color: #ffe07a;
-  font: clamp(2rem, 5vw, 4rem)/1 "Retro-gaming", monospace;
+  font: clamp(0.72rem, 1.25vw, 1.2rem)/1.3 "Retro-gaming", monospace;
+  letter-spacing: 0.14em;
   text-shadow: 0 0 1rem rgba(255, 208, 92, 0.65);
 }
 
@@ -9070,8 +9090,8 @@ body.vista-resultado-jurado #creditos_espectador {
   backdrop-filter: blur(16px);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(4vh) scale(0.7) rotateX(10deg);
-  transition: opacity 800ms ease, transform 1100ms cubic-bezier(.16, 1.18, .28, 1);
+  transform: translateY(110vh) scale(0.96);
+  transition: opacity 240ms linear, transform 1500ms cubic-bezier(.2, .78, .24, 1);
 }
 
 .creditos-espectador.creditos-finalizados .creditos-sociales-final {
@@ -9105,7 +9125,7 @@ body.vista-resultado-jurado #creditos_espectador {
 .creditos-sociales-final__redes {
   width: min(100%, 1050px);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(1rem, 2vw, 2rem);
 }
 
@@ -9113,7 +9133,6 @@ body.vista-resultado-jurado #creditos_espectador {
   min-width: 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
   align-items: center;
   column-gap: clamp(0.8rem, 1.5vw, 1.4rem);
   padding: clamp(1rem, 2vw, 1.8rem);
@@ -9127,10 +9146,37 @@ body.vista-resultado-jurado #creditos_espectador {
   animation: creditosSocialRed 1.9s ease-in-out infinite alternate;
 }
 
-.creditos-sociales-final__redes a:nth-child(2) { animation-delay: -0.95s; }
-.creditos-sociales-final__redes span { grid-row: 1 / 3; width: clamp(3.2rem, 5vw, 5.2rem); aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; color: #06101b; background: linear-gradient(135deg, #65edff, #ffd469 52%, #ff637d); font: 700 clamp(1.2rem, 2.1vw, 2rem)/1 sans-serif; box-shadow: 0 0 1.4rem rgba(255, 218, 106, 0.34); }
-.creditos-sociales-final__redes strong { font: clamp(0.85rem, 1.45vw, 1.4rem)/1.2 "Retro-gaming", monospace; }
+.creditos-sociales-final__redes a:nth-child(2) { animation-delay: -0.45s; }
+.creditos-sociales-final__redes a:nth-child(3) { animation-delay: -0.9s; }
+.creditos-sociales-final__redes a:nth-child(4) { animation-delay: -1.35s; }
+.creditos-sociales-final__redes svg {
+  width: clamp(2.4rem, 3.8vw, 4.1rem);
+  aspect-ratio: 1;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 0.7rem currentColor);
+}
 .creditos-sociales-final__redes small { color: rgba(205, 239, 247, 0.72); font: clamp(1.45rem, 2.2vw, 2.25rem)/1 "VT323", monospace; }
+.creditos-social-card--instagram {
+  border-color: rgba(255, 111, 157, 0.72) !important;
+  background: linear-gradient(135deg, rgba(73, 65, 186, 0.62), rgba(211, 48, 118, 0.54) 52%, rgba(255, 176, 72, 0.48)) !important;
+}
+.creditos-social-card--linkedin {
+  border-color: rgba(84, 184, 255, 0.74) !important;
+  background: linear-gradient(145deg, rgba(7, 118, 177, 0.62), rgba(5, 42, 78, 0.72)) !important;
+}
+.creditos-social-card--feedback {
+  border-color: rgba(255, 213, 101, 0.76) !important;
+  background: linear-gradient(145deg, rgba(126, 84, 18, 0.62), rgba(54, 25, 50, 0.72)) !important;
+  color: #ffe58f !important;
+}
+
+@media (max-width: 980px) {
+  .creditos-sociales-final__redes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 @keyframes creditosSocialesFinalGlow { to { box-shadow: inset 0 0 4rem rgba(255,255,255,0.06), 0 0 6rem rgba(74, 230, 255, 0.3), 0 0 3rem rgba(255, 77, 111, 0.22); } }
 @keyframes creditosSocialRed { to { transform: translateY(-0.25rem); filter: brightness(1.14); } }

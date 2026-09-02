@@ -10,6 +10,7 @@ const CONTROL_ACCESS_REJECTION_CODES = new Set([
 ]);
 let registro_control_confirmado = false;
 let redireccion_acceso_control_pendiente = false;
+let vista_inicial_tutorial_aplicada = false;
 let timeout_renovacion_acceso_control = null;
 
 function obtenerAccessTokenControl() {
@@ -108,7 +109,12 @@ function sincronizarControlAutorizado() {
     socket.emit('pedir_estado_control');
     socket.emit('pedir_estado_palabras_musas_control');
     socket.emit('pedir_estado_banderas_musas');
-    socket.emit('pedir_vista_espectador_modo');
+    if (!vista_inicial_tutorial_aplicada && typeof mostrar_vista_tutorial === "function") {
+        vista_inicial_tutorial_aplicada = true;
+        mostrar_vista_tutorial();
+    } else {
+        socket.emit('pedir_vista_espectador_modo');
+    }
     socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_jurado_resultado');
     socket.emit('pedir_calentamiento_estado');

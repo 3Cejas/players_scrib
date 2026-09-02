@@ -13,8 +13,10 @@ const REGEX_LETRA_MUSA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
 const REVEAL_MIN_AUTOMATIC_MS = 2200;
 const REVEAL_MIN_MANUAL_MS = 1350;
 const REVEAL_MIN_REDUCED_MS = 120;
-const ASSIGNMENT_REVEAL_AUTOMATIC_MS = 2800;
-const ASSIGNMENT_REVEAL_MANUAL_MS = 2200;
+// La pluma elegida permanece el tiempo suficiente para que la musa pueda
+// reconocer a su escritxr antes de que empiece la carga del juego.
+const ASSIGNMENT_REVEAL_AUTOMATIC_MS = 4400;
+const ASSIGNMENT_REVEAL_MANUAL_MS = 3600;
 const ASSIGNMENT_REVEAL_RESTORED_MS = 520;
 const ASSIGNMENT_REVEAL_REDUCED_MS = 240;
 const GAME_LOAD_MS = 4300;

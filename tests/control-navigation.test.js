@@ -10,6 +10,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   const html = read("game/control/index.html");
   const css = read("game/control/index.css");
   const actions = read("game/control/js/actions.js");
+  const socketEvents = read("game/control/js/socket-events.js");
   const tutorial = html.match(/<div id="control_panel_tutorial"[\s\S]*?<\/div>\s*<\/div>\s*<div id="control_panel_detonadores"/)?.[0] || "";
   const detonadores = html.match(/<div id="control_panel_detonadores"[\s\S]*?<\/div>\s*<div id="control_panel_juego"/)?.[0] || "";
   const representacion = html.match(/<div id="control_panel_representacion"[\s\S]*?<div id="control_panel_deliberacion"/)?.[0] || "";
@@ -49,6 +50,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.doesNotMatch(representacion, /boton_mostrar_creditos|boton_pedir_feedback|boton_editar_creditos/);
   assert.match(final, /id="boton_mostrar_creditos"/);
   assert.match(final, /id="boton_pedir_feedback"/);
+  assert.match(final, /id="boton_banderas_musas_final"[^>]*data-banderas-musas-control/);
   assert.match(final, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_final"[^>]*onclick="toggleCreditos\(\)"/);
   assert.match(final, /id="panel_creditos_final" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
   assert.ok(
@@ -105,6 +107,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /vista_espectador_modo = modoEspectador;\s*emitirVistaControl\("cambiar_vista_espectador_modo"/);
   assert.match(actions, /MODOS_VISTA_ESPECTADOR = new Set\(\["partida", "tutorial", "calentamiento"/);
   assert.match(actions, /let vista_espectador_modo = "tutorial";[\s\S]*let vista_principal_control = "tutorial";/);
+  assert.match(actions, /querySelectorAll\("\[data-banderas-musas-control\]"\)/);
+  assert.match(socketEvents, /vista_inicial_tutorial_aplicada = false/);
+  assert.match(socketEvents, /!vista_inicial_tutorial_aplicada[\s\S]*vista_inicial_tutorial_aplicada = true;[\s\S]*mostrar_vista_tutorial\(\)/);
   assert.match(actions, /vista_espectador_modo === "tutorial"/);
   assert.match(actions, /destino === "detonadores"[\s\S]*vista_espectador_modo === "calentamiento" \|\| vista_calentamiento/);
   assert.match(actions, /modoServidor === "calentamiento" \|\| vista_calentamiento/);

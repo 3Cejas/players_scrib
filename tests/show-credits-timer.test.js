@@ -26,13 +26,17 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   assert.match(museState, /estado_creditos_musa\.mostrar[\s\S]*vista_modo_remota_musa === "creditos"/);
   assert.match(museState, /animarTransicionVistaMusa\("creditos"\)/);
   assert.match(museState, /animationName !== "creditosMusaRoll"[\s\S]*finalizarCreditosMusa/);
-  assert.match(museState, /redirigirMusaAFeedback\(\{ activa: true, url: FEEDBACK_MUSA_URL_WEB \}\)/);
+  assert.doesNotMatch(museState, /timeout_feedback_post_creditos_musa|CREDITOS_MUSA_SOCIALES_DURACION_MS/);
+  assert.match(museState, /GRACIAS, \$\{nombreMusaCreditos\}, POR FORMAR PARTE DE <SCRI> B/);
   assert.match(museCss, /\.creditos-musa--finalizados \.creditos-musa__sociales/);
   assert.match(spectatorCss, /\.creditos-espectador\.creditos-finalizados \.creditos-sociales-final/);
   for (const html of [spectatorHtml, museHtml]) {
     assert.match(html, /https:\/\/www\.instagram\.com\/su\.tu\.ra\//);
+    assert.match(html, /https:\/\/www\.instagram\.com\/scrib_show\//);
     assert.match(html, /https:\/\/es\.linkedin\.com\/company\/suturateatro/);
     assert.match(html, /GRACIAS POR FORMAR PARTE DE &lt;SCRI&gt; B/);
+    assert.match(html, /creditos-social-card--feedback/);
+    assert.doesNotMatch(html, /<strong>Instagram<\/strong>|<strong>LinkedIn<\/strong>/);
   }
   assert.match(museSockets, /socket\.on\('creditos_estado'/);
   assert.match(museSockets, /socket\.emit\('pedir_creditos_estado'\)/);
