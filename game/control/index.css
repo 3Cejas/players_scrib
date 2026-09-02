@@ -11193,6 +11193,22 @@ table.default {
     font: clamp(0.54rem, 0.75vw, 0.72rem)/1.35 "Retro-gaming", monospace;
 }
 
+#panel_controles .control-group--deliberacion:not(.is-collapsed) > .deliberacion-nav-control {
+    display: grid;
+    width: 100%;
+    margin-top: 0.15rem;
+    border-color: rgba(255, 215, 104, 0.5);
+}
+
+#panel_controles .control-group--deliberacion:not(.is-collapsed) > .deliberacion-nav-control[hidden] {
+    display: none;
+}
+
+#panel_controles .deliberacion-nav-control--jurado {
+    grid-template-columns: auto minmax(8rem, 1fr) auto auto;
+    background: linear-gradient(105deg, rgba(44, 23, 62, 0.94), rgba(17, 15, 28, 0.97) 52%, rgba(72, 39, 20, 0.92));
+}
+
 @media (max-width: 760px) {
     #panel_controles .control-group--deliberacion:not(.is-collapsed) > .control-group-buttons--three {
         grid-template-columns: 1fr;

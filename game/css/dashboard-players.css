@@ -10542,6 +10542,174 @@ body.page-players .inspiration-discard__status {
   }
 }
 
+/* Deliberacion dirigida: cada revelado se dispara una sola vez desde Control. */
+body.vista-puntuacion .puntuacion-espectador {
+  grid-template-rows: minmax(0, 1fr);
+  padding: clamp(1rem, 2vw, 2.4rem);
+}
+
+body.vista-puntuacion .puntuacion-stage {
+  width: 100%;
+  max-width: 112rem;
+}
+
+.puntuacion-panel--intro {
+  gap: clamp(0.7rem, 1.8vh, 1.5rem);
+}
+
+.puntuacion-panel--intro h3 {
+  font-size: clamp(2.2rem, 5.2vw, 5.7rem);
+}
+
+.puntuacion-categorias-intro {
+  width: min(96vw, 104rem);
+  gap: clamp(0.7rem, 1.2vw, 1.35rem);
+}
+
+.puntuacion-categorias-intro li {
+  min-height: clamp(8.5rem, 19vh, 13rem);
+  padding: clamp(1rem, 1.8vw, 1.8rem) clamp(0.6rem, 1vw, 1rem);
+  border-width: 2px;
+}
+
+.puntuacion-categorias-intro li > span { font-size: clamp(2rem, 4vw, 4rem); }
+.puntuacion-categorias-intro strong { font-size: clamp(0.58rem, 0.92vw, 1rem); }
+.puntuacion-categorias-intro small { font-size: clamp(0.44rem, 0.7vw, 0.72rem); }
+
+.puntuacion-stage.is-revealing::before,
+.resultado-jurado-stage.is-revealing::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 229, 126, 0.48), transparent 18%),
+    linear-gradient(90deg, rgba(45, 220, 255, 0.32), transparent 48%, rgba(255, 72, 105, 0.3));
+  animation: deliberacionTensionFlash 1.15s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.puntuacion-stage.is-revealing .puntuacion-panel,
+.resultado-jurado-stage.is-revealing > article {
+  animation: deliberacionRevelado 1.05s cubic-bezier(.16,1,.3,1) both;
+}
+
+body.vista-deliberacion #resultado_final_espectador,
+body.vista-resultado-jurado #resultado_final_espectador,
+body.vista-resultado-final #contenedor_espectador,
+body.vista-resultado-final #inspiracion,
+body.vista-resultado-final #info,
+body.vista-resultado-final #temas_container,
+body.vista-resultado-final #info_general,
+body.vista-resultado-final #corazones_espectador,
+body.vista-resultado-final .container,
+body.vista-resultado-final .cabecera,
+body.vista-resultado-final #logo,
+body.vista-resultado-final #neon,
+body.vista-resultado-final #calentamiento_espectador,
+body.vista-resultado-final #stats_espectador,
+body.vista-resultado-final #puntuacion_espectador,
+body.vista-resultado-final #nube_inspiracion_espectador,
+body.vista-resultado-final #creditos_espectador,
+body.vista-resultado-final #deliberacion_espectador,
+body.vista-resultado-final #resultado_jurado_espectador {
+  display: none !important;
+}
+
+.deliberacion-espectador__balanza {
+  display: block;
+  width: auto;
+  height: auto;
+  margin: clamp(0.7rem, 2vh, 1.5rem);
+  font-size: clamp(7rem, 19vw, 17rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 2.6rem rgba(85, 221, 255, 0.45));
+  animation: deliberacionBalanzaEmoji 3.2s ease-in-out infinite;
+}
+
+.resultado-jurado-espectador,
+.resultado-final-espectador {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1710;
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+  place-items: center;
+  padding: clamp(1rem, 2vw, 2.5rem);
+  color: #fff;
+  text-align: center;
+  isolation: isolate;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,0.025) 4px),
+    radial-gradient(circle at 50% 42%, rgba(255, 209, 91, 0.2), transparent 28%),
+    radial-gradient(circle at 12% 70%, rgba(56, 225, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 88% 28%, rgba(255, 74, 109, 0.18), transparent 34%),
+    linear-gradient(135deg, #06111d, #100b1b 50%, #210b18);
+}
+
+.resultado-jurado-stage,
+.resultado-final-stage { width: min(94vw, 100rem); }
+.resultado-jurado-stage > article,
+.resultado-final-stage > article { display: grid; justify-items: center; gap: clamp(0.8rem, 2vh, 1.8rem); }
+.resultado-jurado-intro small,
+.resultado-jurado-kicker,
+.resultado-final-kicker { color: #ffdd76; font: clamp(0.7rem, 1.3vw, 1.25rem)/1.3 "Retro-gaming", monospace; letter-spacing: 0.16em; }
+.resultado-jurado-intro h2,
+.resultado-jurado-panel > h2,
+.resultado-final-panel > h2 { margin: 0; font: clamp(3rem, 8vw, 8rem)/0.98 "Retro-gaming", monospace; text-shadow: -0.045em 0 #49e9ff, 0.045em 0 #ff5c76, 0 0 0.8em rgba(255,221,105,.2); }
+.resultado-jurado-balanza { font-size: clamp(7rem, 19vw, 17rem); filter: drop-shadow(0 0 2rem rgba(91, 221, 255, .45)); }
+.resultado-jurado-panel { width: 100%; }
+.resultado-jurado-cards { width: 100%; }
+
+.resultado-final-panel { position: relative; width: 100%; }
+.resultado-final-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 3vw, 3rem); width: 100%; }
+.resultado-final-card { padding: clamp(1.3rem, 2.5vw, 2.6rem); border: 2px solid rgba(255,255,255,.22); border-radius: 1.5rem; background: rgba(3,12,22,.82); opacity: .66; }
+.resultado-final-card--1 { border-color: #42dcff; }
+.resultado-final-card--2 { border-color: #ff6078; }
+.resultado-final-card.is-winner { opacity: 1; transform: scale(1.04); box-shadow: 0 0 4rem rgba(255,220,103,.5), inset 0 0 3rem rgba(255,255,255,.07); }
+.resultado-final-card h3 { margin: 0 0 1rem; font: clamp(1.2rem, 2.6vw, 2.8rem)/1.1 "Retro-gaming", monospace; }
+.resultado-final-card dl { display: flex; justify-content: center; gap: clamp(1rem, 3vw, 3rem); margin: 0 0 1rem; }
+.resultado-final-card dl div { display: grid; gap: .25rem; }
+.resultado-final-card dt { color: rgba(255,255,255,.64); font: clamp(.48rem,.8vw,.78rem)/1.2 "Retro-gaming", monospace; }
+.resultado-final-card dd { margin: 0; color: #ffdd76; font: clamp(1rem,1.7vw,1.8rem)/1 "Retro-gaming", monospace; }
+.resultado-final-card > strong { font: clamp(4rem,8vw,8rem)/1 "Retro-gaming", monospace; }
+.resultado-final-card > span { font: clamp(1rem,1.7vw,1.8rem)/1 "Retro-gaming", monospace; }
+.resultado-final-formula { margin: 0; color: rgba(255,255,255,.74); font: clamp(1.2rem,2vw,2rem)/1 "VT323", monospace; text-transform: uppercase; }
+.resultado-final-celebracion { margin: 0; color: #ffe179; font: clamp(1rem,2vw,2rem)/1.3 "Retro-gaming", monospace; }
+.resultado-final-stage.is-celebrating .resultado-final-panel { animation: resultadoFinalEstallido 1.3s cubic-bezier(.16,1,.3,1) both; }
+
+@keyframes deliberacionTensionFlash {
+  0% { opacity: 0; transform: scale(1.08); filter: brightness(.4); }
+  28% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1); filter: brightness(1.8); }
+}
+@keyframes deliberacionRevelado {
+  0% { opacity: 0; transform: scale(.82); filter: blur(16px) brightness(.45); }
+  52% { opacity: .15; transform: scale(.96); filter: blur(7px) brightness(.7); }
+  100% { opacity: 1; transform: scale(1); filter: none; }
+}
+@keyframes deliberacionBalanzaEmoji { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) scale(1.05); } }
+@keyframes resultadoFinalEstallido { 0% { opacity: 0; transform: scale(.55); filter: blur(18px) brightness(2.2); } 64% { opacity: 1; transform: scale(1.07); filter: blur(0) brightness(1.35); } 100% { transform: scale(1); filter: none; } }
+
+@media (max-width: 900px), (max-height: 650px) {
+  .puntuacion-categorias-intro li { min-height: 6rem; }
+  .resultado-jurado-card { padding: 1rem; }
+  .resultado-jurado-card strong,
+  .resultado-final-card > strong { font-size: clamp(2.4rem, 8vw, 5rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puntuacion-stage.is-revealing::before,
+  .resultado-jurado-stage.is-revealing::before,
+  .puntuacion-stage.is-revealing .puntuacion-panel,
+  .resultado-jurado-stage.is-revealing > article,
+  .resultado-final-stage.is-celebrating .resultado-final-panel,
+  .deliberacion-espectador__balanza { animation: none !important; }
+}
+
 /* Firma compacta y segura de la musa que originó cada inspiración. */
 .inspiration-author {
   --inspiration-author-accent: #ffd86f;

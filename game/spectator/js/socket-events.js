@@ -34,6 +34,7 @@ socket.on('connect', () => {
     socket.emit('pedir_stats_live');
     socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_jurado_resultado');
+    socket.emit('pedir_resultado_final');
     socket.emit('pedir_nube_inspiracion');
     socket.emit('pedir_creditos_estado');
     socket.emit('pedir_temporizador_gigante_estado');
@@ -126,6 +127,10 @@ socket.on('puntuacion_final_estado', (payload = {}) => {
 
 socket.on('jurado_resultado_estado', (payload = {}) => {
     actualizarResultadoJuradoEspectador(payload);
+});
+
+socket.on('resultado_final_estado', (payload = {}) => {
+    actualizarResultadoFinalEspectador(payload);
 });
 
 socket.on('creditos_estado', (payload = {}) => {

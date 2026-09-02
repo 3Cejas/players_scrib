@@ -114,7 +114,8 @@ test("control and spectator wire the final score protocol and accessible present
     assert.match(spectatorSockets, /socket\.on\('puntuacion_final_estado'/);
     assert.match(spectatorState, /classList\.toggle\("vista-puntuacion", modo === "puntuacion"\)/);
     assert.match(spectatorState, /renderizarPuntuacionFinalEspectador\(\{ animar: true \}\)/);
-    assert.match(spectatorState, /score\.disclaimer/);
+    assert.doesNotMatch(spectatorState, /Mide rendimiento de juego; no valora la calidad literaria/);
+    assert.match(spectatorState, /firma === puntuacion_firma_render_espectador[\s\S]*return/);
 
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);

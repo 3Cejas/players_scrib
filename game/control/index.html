@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260902i">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260902j">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260902f"></script>
+<script src="./js/actions.js?v=20260902g"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <img class="control-brand-logo" src="../media/scrib-logo-mark.png" alt="&lt;SCRI&gt; B">
@@ -166,13 +166,6 @@
                                 <span id="stats_nav_label" class="stats-nav-label">&#x1F4CA; SLIDES STATS</span>
                                 <button id="stats_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next" onclick="navegarSlidesStatsControl('next')" aria-label="Slide siguiente"></button>
                             </div>
-                            <div id="puntuacion_nav_control" class="puntuacion-nav-control" hidden aria-hidden="true">
-                                <button id="puntuacion_nav_prev" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--prev" onclick="navegarPuntuacionFinal('anterior')">&#x2190; ATR&Aacute;S</button>
-                                <span id="puntuacion_nav_label" class="puntuacion-nav-label" aria-live="polite">INTRO &middot; 0/7</span>
-                                <button id="puntuacion_nav_next" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--next" onclick="navegarPuntuacionFinal('siguiente')">REVELAR &#x2192;</button>
-                                <button id="puntuacion_nav_reset" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--reset" onclick="reiniciarPuntuacionFinal()">&#x21BB; REINICIAR</button>
-                                <button id="puntuacion_nav_hide" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--hide" onclick="ocultarPuntuacionFinal()">&#x2715; OCULTAR</button>
-                            </div>
                         </div>
                         <div id="control_panel_representacion" class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion" role="tabpanel" aria-labelledby="control_title_representation">
                             <div class="control-group-buttons">
@@ -191,6 +184,19 @@
                                 <button id="boton_vista_deliberacion" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarVistaDeliberacion()">&#x2696;&#xFE0F; VISTA DELIBERACI&Oacute;N</button>
                                 <button id="boton_resultado_videojuego" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoVideojuego()">&#x1F3AE; MOSTRAR RESULTADO VIDEOJUEGO</button>
                                 <button id="boton_resultado_jurado" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoJurado()">&#x1F3AD; MOSTRAR RESULTADO JURADO</button>
+                            </div>
+                            <div id="puntuacion_nav_control" class="puntuacion-nav-control deliberacion-nav-control" hidden aria-hidden="true">
+                                <button id="puntuacion_nav_prev" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--prev" onclick="navegarPuntuacionFinal('anterior')">&#x2190; ATR&Aacute;S</button>
+                                <span id="puntuacion_nav_label" class="puntuacion-nav-label" aria-live="polite">PRESENTACI&Oacute;N</span>
+                                <button id="puntuacion_nav_next" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--next" onclick="navegarPuntuacionFinal('siguiente')">REVELAR &#x2192;</button>
+                                <button id="puntuacion_nav_reset" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--reset" onclick="reiniciarPuntuacionFinal()">&#x21BB; REINICIAR</button>
+                                <button id="puntuacion_nav_hide" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--hide" onclick="mostrarVistaDeliberacion()">&#x2696;&#xFE0F; DELIBERACI&Oacute;N</button>
+                            </div>
+                            <div id="jurado_nav_control" class="puntuacion-nav-control deliberacion-nav-control deliberacion-nav-control--jurado" hidden aria-hidden="true">
+                                <button id="jurado_nav_prev" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--prev" onclick="navegarResultadoJurado('anterior')">&#x2190; ATR&Aacute;S</button>
+                                <span id="jurado_nav_label" class="puntuacion-nav-label" aria-live="polite">PRESENTACI&Oacute;N</span>
+                                <button id="jurado_nav_next" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--next" onclick="navegarResultadoJurado('siguiente')">REVELAR &#x2192;</button>
+                                <button id="jurado_nav_reset" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--reset" onclick="reiniciarResultadoJurado()">&#x21BB; REINICIAR</button>
                             </div>
                             <p id="deliberacion_estado_control" class="deliberacion-control__estado" role="status" aria-live="polite">El resultado del jurado aparecer&aacute; cuando haya puntuado a ambas escritoras.</p>
                         </div>
@@ -765,7 +771,7 @@
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260831a"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260902c"></script>
+<script src="./js/socket-events.js?v=20260902d"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

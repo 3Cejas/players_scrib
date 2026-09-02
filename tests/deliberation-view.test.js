@@ -15,9 +15,11 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(html, /id="boton_vista_deliberacion"/);
   assert.match(html, /id="boton_resultado_videojuego"/);
   assert.match(html, /id="boton_resultado_jurado"/);
+  assert.match(html, /id="jurado_nav_control"/);
   assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion"\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
   assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
   assert.match(actions, /function mostrarResultadoJurado\(\)[\s\S]*mostrar_resultado_jurado/);
+  assert.match(actions, /function navegarResultadoJurado\(direccion\)[\s\S]*jurado_resultado_(?:anterior|siguiente)/);
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
   assert.match(actions, /function mostrarCreditosEspectador\(\)[\s\S]*temporizador_gigante_detener/);
   assert.match(sockets, /socket\.on\('jurado_resultado_estado'/);
@@ -33,15 +35,23 @@ test("spectator and muses render both deliberation outcomes", () => {
 
   assert.match(spectatorHtml, /id="deliberacion_espectador"/);
   assert.match(spectatorHtml, /id="resultado_jurado_espectador"/);
+  assert.match(spectatorHtml, /id="resultado_final_espectador"/);
+  assert.match(spectatorHtml, /deliberacion-espectador__balanza"[^>]*>&#x2696;&#xFE0F;/);
+  assert.doesNotMatch(spectatorHtml, /AN&Aacute;LISIS DE PARTIDA|PUNTUACI&Oacute;N OBJETIVA|INTRO &middot; 0\/7/);
   assert.match(spectatorState, /vista-deliberacion/);
   assert.match(spectatorState, /vista-resultado-jurado/);
+  assert.match(spectatorState, /vista-resultado-final/);
+  assert.match(spectatorState, /firma === puntuacion_firma_render_espectador[\s\S]*return/);
   assert.match(spectatorSockets, /pedir_jurado_resultado/);
   assert.match(museHtml, /id="deliberacion_musa"/);
   assert.match(museHtml, /id="resultado_videojuego_musa"/);
   assert.match(museHtml, /id="resultado_jurado_musa"/);
-  assert.match(museState, /function sincronizarVistaDeliberacionMusa\(\)/);
+  assert.match(museHtml, /id="resultado_final_musa"/);
+  assert.match(museState, /function sincronizarVistaDeliberacionMusa\(opciones = \{\}\)/);
+  assert.match(museState, /is-local-winner/);
   assert.match(museSockets, /puntuacion_final_estado/);
   assert.match(museSockets, /jurado_resultado_estado/);
+  assert.match(museSockets, /resultado_final_estado/);
 });
 
 test("credits use the real graphic marks and timer rings count down", () => {

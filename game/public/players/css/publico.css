@@ -2462,6 +2462,41 @@ th{
 .resultado-musa__card strong { font: clamp(2rem, 10vw, 3.3rem)/1 "Retro-gaming", monospace; }
 .resultado-musa__card span { color: rgba(255,255,255,0.65); font: 0.65rem/1 "Retro-gaming", monospace; }
 .resultado-musa__veredicto, .resultado-musa__espera { margin: 1.5rem 0 0; color: #ffdc77; font: clamp(0.72rem, 3.7vw, 1rem)/1.5 "Retro-gaming", monospace; }
+.resultado-musa > div { position: relative; z-index: 2; }
+.resultado-musa > div.is-revealing { animation: resultadoMusaRevelado 1.05s cubic-bezier(.16,1,.3,1) both; }
+.resultado-musa::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+}
+.resultado-musa.is-local-winner::before {
+    background: radial-gradient(circle at center, rgba(255,255,255,.72), transparent 30%), var(--resultado-equipo, rgba(74,230,255,.42));
+    animation: resultadoMusaPantallaGanadora 1.35s cubic-bezier(.16,1,.3,1) both;
+}
+.resultado-musa.team-1 { --resultado-equipo: rgba(45, 219, 255, .52); }
+.resultado-musa.team-2 { --resultado-equipo: rgba(255, 72, 101, .52); }
+.resultado-musa__intro,
+.resultado-musa__apartado { display: grid; justify-items: center; gap: clamp(.7rem, 3vh, 1.2rem); }
+.resultado-musa__intro > span { font-size: clamp(5rem, 27vw, 9rem); filter: drop-shadow(0 0 1.3rem rgba(255,220,108,.45)); }
+.resultado-musa__intro h2,
+.resultado-musa__apartado h2 { margin: 0; font: clamp(1.7rem, 8vw, 3.1rem)/1.05 "Retro-gaming", monospace; text-shadow: -.04em 0 #49eaff, .04em 0 #ff5c76; }
+.resultado-musa__intro ul { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .5rem; width: 100%; margin: .5rem 0 0; padding: 0; list-style: none; }
+.resultado-musa__intro li { min-width: 0; padding: .72rem .4rem; border: 1px solid rgba(255,220,108,.3); border-radius: .7rem; background: rgba(2,10,18,.7); color: #fff2b1; font: clamp(.45rem,2.3vw,.65rem)/1.25 "Retro-gaming", monospace; overflow-wrap: anywhere; }
+.resultado-musa__card b { display: block; margin: .5rem 0 0; color: #ffdf79; font: clamp(.45rem,2.3vw,.65rem)/1.25 "Retro-gaming", monospace; }
+.resultado-musa__apartado--final > h2 { color: #ffe47e; font-size: clamp(2rem,10vw,3.6rem); }
+@keyframes resultadoMusaRevelado {
+    0% { opacity: 0; transform: scale(.78); filter: blur(12px) brightness(.45); }
+    55% { opacity: .18; transform: scale(.96); filter: blur(5px) brightness(.75); }
+    100% { opacity: 1; transform: scale(1); filter: none; }
+}
+@keyframes resultadoMusaPantallaGanadora {
+    0% { opacity: 0; transform: scale(1.2); }
+    22% { opacity: .96; }
+    100% { opacity: 0; transform: scale(1); }
+}
 @keyframes deliberacionMusaEntrada { from { opacity: 0; transform: scale(0.86) translateY(4vh); } }
 @keyframes deliberacionMusaIcono { 50% { transform: rotate(5deg) scale(1.08); } }
 @keyframes resultadoMusaGanador { to { filter: brightness(1.22); transform: translateY(-0.55rem) scale(1.02); } }
@@ -2482,7 +2517,9 @@ th{
     .deliberacion-musa:not([hidden]),
     .deliberacion-musa__icon,
     .resultado-musa:not([hidden]),
-    .resultado-musa__card.is-winner {
+    .resultado-musa__card.is-winner,
+    .resultado-musa > div.is-revealing,
+    .resultado-musa.is-local-winner::before {
         animation: none !important;
     }
     .creditos-musa__track { animation-duration: 80s; }

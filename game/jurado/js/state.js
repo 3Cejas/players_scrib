@@ -617,12 +617,25 @@ function calcularTotalResultadoJurado(id) {
 function construirResultadoJurado() {
     const total1 = calcularTotalResultadoJurado(1);
     const total2 = calcularTotalResultadoJurado(2);
+    const criterios = [
+        ...JURADO_CRITERIOS_ESCRITURA.map((criterio) => ({ scope: "writing", ...criterio })),
+        ...JURADO_CRITERIOS_MUSAS.map((criterio) => ({ scope: "muses", ...criterio }))
+    ].map((criterio) => ({
+        id: criterio.id,
+        scope: criterio.scope,
+        label: criterio.label,
+        valores: {
+            1: obtenerValorCriterioJurado(1, criterio.scope, criterio.id),
+            2: obtenerValorCriterioJurado(2, criterio.scope, criterio.id)
+        }
+    }));
     return {
         disponible: total1 > 0 && total2 > 0,
         jugadores: {
             1: { nombre: estado_jurado.writers[1].nombre, total: total1 },
             2: { nombre: estado_jurado.writers[2].nombre, total: total2 }
-        }
+        },
+        criterios
     };
 }
 

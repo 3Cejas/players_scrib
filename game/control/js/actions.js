@@ -21,6 +21,7 @@ let vista_calentamiento = false;
 let vista_espectador_modo = "tutorial";
 let vista_principal_control = "tutorial";
 let puntuacion_slide_step_control = 0;
+let jurado_slide_step_control = 0;
 let estado_puntuacion_final_control = null;
 let estado_resultado_jurado_control = null;
 let puntuacion_final_captura_solicitada = false;
@@ -2545,7 +2546,7 @@ window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl
 // `calentamiento` es un modo resuelto que llega desde el servidor cuando la
 // vista Detonadores está activa. Conservarlo evita confundirlo con Tutorial y,
 // sobre todo, garantiza que al pulsar Tutorial se envíe el cambio autoritativo.
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
 const PUNTUACION_CATEGORIAS_CONTROL = [
     "produccion",
     "ritmo",
@@ -2555,6 +2556,18 @@ const PUNTUACION_CATEGORIAS_CONTROL = [
     "pulsaciones"
 ];
 const PUNTUACION_PASO_MAX_CONTROL = PUNTUACION_CATEGORIAS_CONTROL.length + 1;
+const JURADO_CATEGORIAS_CONTROL = [
+    "IDEA Y MUNDO",
+    "VOZ",
+    "ESTRUCTURA",
+    "RIESGO",
+    "CIERRE",
+    "INSPIRACIÓN ÚTIL",
+    "ESCUCHA",
+    "RITMO",
+    "COOPERACIÓN"
+];
+const JURADO_PASO_MAX_CONTROL = JURADO_CATEGORIAS_CONTROL.length + 1;
 const normalizarModoVistaEspectador = (valor) => {
     const modo = typeof valor === "string" ? valor.trim().toLowerCase() : "";
     return MODOS_VISTA_ESPECTADOR.has(modo) ? modo : "tutorial";
@@ -2666,6 +2679,11 @@ function actualizarBotonesVistaEspectadorControl() {
     const puntuacionNext = document.getElementById("puntuacion_nav_next");
     const puntuacionReset = document.getElementById("puntuacion_nav_reset");
     const puntuacionHide = document.getElementById("puntuacion_nav_hide");
+    const juradoNav = document.getElementById("jurado_nav_control");
+    const juradoLabel = document.getElementById("jurado_nav_label");
+    const juradoPrev = document.getElementById("jurado_nav_prev");
+    const juradoNext = document.getElementById("jurado_nav_next");
+    const juradoReset = document.getElementById("jurado_nav_reset");
     if (botonStats) {
         const activo = vista_espectador_modo === "stats";
         botonStats.dataset.active = activo ? "1" : "0";
@@ -2749,8 +2767,8 @@ function actualizarBotonesVistaEspectadorControl() {
         puntuacionReset.setAttribute("aria-label", tJuego2PControl("control.score.reset_aria", {}, "Volver a la introduccion"));
     }
     if (puntuacionHide) {
-        puntuacionHide.textContent = tJuego2PControl("control.score.hide", {}, "\u2715 OCULTAR");
-        puntuacionHide.setAttribute("aria-label", tJuego2PControl("control.score.hide_aria", {}, "Ocultar resultado"));
+        puntuacionHide.textContent = "\u2696\uFE0F DELIBERACIÓN";
+        puntuacionHide.setAttribute("aria-label", "Volver a la vista de deliberación");
     }
     if (puntuacionLabel) {
         let etiquetaPaso = tJuego2PControl("score.step.intro", {}, "INTRO");
@@ -2766,6 +2784,20 @@ function actualizarBotonesVistaEspectadorControl() {
         const visible = vista_espectador_modo === "puntuacion";
         puntuacionNav.hidden = !visible;
         puntuacionNav.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
+    if (juradoPrev) juradoPrev.disabled = jurado_slide_step_control <= 0;
+    if (juradoNext) juradoNext.disabled = jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL;
+    if (juradoReset) juradoReset.disabled = jurado_slide_step_control <= 0;
+    if (juradoLabel) {
+        let etiqueta = "PRESENTACIÓN";
+        if (jurado_slide_step_control === JURADO_PASO_MAX_CONTROL) etiqueta = "VEREDICTO DEL JURADO";
+        else if (jurado_slide_step_control > 0) etiqueta = JURADO_CATEGORIAS_CONTROL[jurado_slide_step_control - 1];
+        juradoLabel.textContent = `${etiqueta} · ${jurado_slide_step_control}/${JURADO_PASO_MAX_CONTROL}`;
+    }
+    if (juradoNav) {
+        const visible = vista_espectador_modo === "resultado_jurado";
+        juradoNav.hidden = !visible;
+        juradoNav.setAttribute("aria-hidden", visible ? "false" : "true");
     }
     actualizarBotonesVistaPrincipalControl();
     actualizarControlesEscalaEspectadorControl();
@@ -2928,10 +2960,22 @@ function actualizarResultadoJuradoControl(payload = {}) {
     actualizarBotonesVistaEspectadorControl();
 }
 
+function navegarResultadoJurado(direccion) {
+    if (!socket || typeof socket.emit !== "function" || vista_espectador_modo !== "resultado_jurado") return;
+    socket.emit(direccion === "anterior" ? "jurado_resultado_anterior" : "jurado_resultado_siguiente");
+}
+
+function reiniciarResultadoJurado() {
+    if (!socket || typeof socket.emit !== "function") return;
+    socket.emit("mostrar_resultado_jurado");
+}
+
 window.mostrarVistaDeliberacion = mostrarVistaDeliberacion;
 window.mostrarResultadoVideojuego = mostrarResultadoVideojuego;
 window.mostrarResultadoJurado = mostrarResultadoJurado;
 window.actualizarResultadoJuradoControl = actualizarResultadoJuradoControl;
+window.navegarResultadoJurado = navegarResultadoJurado;
+window.reiniciarResultadoJurado = reiniciarResultadoJurado;
 
 function actualizarModoVistaEspectadorControl(payload = {}) {
     const modoServidor = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "tutorial";
@@ -2951,6 +2995,16 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
         puntuacion_slide_step_control = Number.isFinite(paso)
             ? Math.max(0, Math.min(PUNTUACION_PASO_MAX_CONTROL, Math.trunc(paso)))
             : 0;
+    }
+    if (payload && Object.prototype.hasOwnProperty.call(payload, "jurado_slide_step")) {
+        const paso = Number(payload.jurado_slide_step);
+        jurado_slide_step_control = Number.isFinite(paso)
+            ? Math.max(0, Math.min(JURADO_PASO_MAX_CONTROL, Math.trunc(paso)))
+            : 0;
+    }
+    const estadoDeliberacion = document.getElementById("deliberacion_estado_control");
+    if (estadoDeliberacion && vista_espectador_modo === "resultado_final") {
+        estadoDeliberacion.textContent = "Ganador final revelado con la puntuación del videojuego y del jurado.";
     }
     if (payload && Object.prototype.hasOwnProperty.call(payload, "escala_ui")) {
         escala_ui_espectador_control = normalizarEscalaUiEspectadorControl(payload.escala_ui);

@@ -117,6 +117,7 @@ function sincronizarControlAutorizado() {
     }
     socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_jurado_resultado');
+    socket.emit('pedir_resultado_final');
     socket.emit('pedir_calentamiento_estado');
     socket.emit('pedir_creditos_estado');
     socket.emit('pedir_temporizador_gigante_estado');
