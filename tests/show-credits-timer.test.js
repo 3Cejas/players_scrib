@@ -9,17 +9,31 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 test("credits are rendered and scored locally on spectator and muse screens", () => {
   const spectatorHtml = read("game/spectator/index.html");
   const spectatorState = read("game/spectator/js/state.js");
+  const spectatorCss = read("game/css/dashboard-players.css");
   const museHtml = read("game/public/players/index.html");
   const museState = read("game/public/players/js/state.js");
+  const museCss = read("game/public/players/css/publico.css");
   const museSockets = read("game/public/players/js/socket-events.js");
 
   assert.match(spectatorHtml, /id="creditos_audio_espectador"[\s\S]*3\.%20CREDITOS\.mp3/);
   assert.match(spectatorState, /reproducirMusicaCreditosEspectador/);
   assert.match(spectatorState, /creditos-apertura__logo/);
-  assert.match(museHtml, /id="creditos_musa"[\s\S]*id="creditos_audio_musa"/);
+  assert.match(museHtml, /id="creditos_musa"[\s\S]*id="creditos_musa_sociales"/);
+  assert.doesNotMatch(museHtml, /id="creditos_audio_musa"/);
+  assert.doesNotMatch(museState, /reproducirMusicaCreditosMusa|detenerMusicaCreditosMusa/);
   assert.match(museHtml, /domains\/credits\.js/);
   assert.match(museState, /function actualizarCreditosMusa/);
   assert.match(museState, /estado_creditos_musa\.mostrar[\s\S]*vista_modo_remota_musa === "creditos"/);
+  assert.match(museState, /animarTransicionVistaMusa\("creditos"\)/);
+  assert.match(museState, /animationName !== "creditosMusaRoll"[\s\S]*finalizarCreditosMusa/);
+  assert.match(museState, /redirigirMusaAFeedback\(\{ activa: true, url: FEEDBACK_MUSA_URL_WEB \}\)/);
+  assert.match(museCss, /\.creditos-musa--finalizados \.creditos-musa__sociales/);
+  assert.match(spectatorCss, /\.creditos-espectador\.creditos-finalizados \.creditos-sociales-final/);
+  for (const html of [spectatorHtml, museHtml]) {
+    assert.match(html, /https:\/\/www\.instagram\.com\/su\.tu\.ra\//);
+    assert.match(html, /https:\/\/es\.linkedin\.com\/company\/suturateatro/);
+    assert.match(html, /GRACIAS POR FORMAR PARTE DE &lt;SCRI&gt; B/);
+  }
   assert.match(museSockets, /socket\.on\('creditos_estado'/);
   assert.match(museSockets, /socket\.emit\('pedir_creditos_estado'\)/);
   assert.equal(fs.existsSync(path.join(root, "game/audio/3. CREDITOS.mp3")), true);

@@ -464,7 +464,9 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.match(html, /@keyframes onboardingDisadvantageBlue[\s\S]*25% \{ width: 30%; \}[\s\S]*49% \{ width: 42%; \}[\s\S]*68%, 91% \{ width: 72%; \}/);
   assert.match(html, /onboarding-rhythm-feedback--gain">\+ INSPIRACIÓN<[\s\S]*onboarding-rhythm-feedback--loss">− INSPIRACIÓN</);
   assert.doesNotMatch(html, /ESCRIBE · SUMA|SE DETIENE · RESTA|<strong>MARCADOR<\/strong>|id="intro-como-jugar"|id="intro-potencia"/);
-  assert.match(html, /onboardingWritingState 12s[\s\S]*onboardingRhythmBlue 12s[\s\S]*onboardingRhythmGain 12s[\s\S]*onboardingRhythmLoss 12s/);
+  assert.match(html, /onboardingWritingState 18s[\s\S]*onboardingRhythmBlue 18s steps\(30, end\)[\s\S]*onboardingRhythmGain 18s[\s\S]*onboardingRhythmLoss 18s/);
+  assert.match(html, /onboardingDisadvantageTyping 16s steps\(33, end\)[\s\S]*onboardingDisadvantageBlue 16s steps\(33, end\)/);
+  assert.match(html, /\.onboarding-inspiration-head \{[\s\S]{0,180}justify-content: flex-start;[\s\S]{0,180}text-align: left;/);
   assert.match(html, /@keyframes onboardingRhythmBlue[\s\S]*@keyframes onboardingIdeaBlue[\s\S]*@keyframes onboardingDisadvantageText/);
   assert.match(html, /@keyframes onboardingFeedbackTint[\s\S]*background: #28f083[\s\S]*background: #ff3155/);
   assert.match(html, /@keyframes onboardingWelcomeLogo[\s\S]*@keyframes onboardingNameInput/);

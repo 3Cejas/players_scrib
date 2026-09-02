@@ -1574,32 +1574,29 @@ if (window && typeof window.scribOnLanguageChange2P === "function") {
 const creditos_musa = getEl("creditos_musa");
 const creditos_musa_track = getEl("creditos_musa_track");
 const creditos_musa_content = getEl("creditos_musa_content");
-const creditos_audio_musa = getEl("creditos_audio_musa");
+const creditos_musa_sociales = getEl("creditos_musa_sociales");
 let estado_creditos_musa = window.ScribCredits
     ? window.ScribCredits.normalizarPayload({})
     : { creditos: {}, mostrar: false, animacion_id: 0 };
 let vista_modo_remota_musa = "tutorial";
+let timeout_feedback_post_creditos_musa = null;
+const CREDITOS_MUSA_SOCIALES_DURACION_MS = 10000;
 
-function reproducirMusicaCreditosMusa() {
-    if (!creditos_audio_musa) return;
-    creditos_audio_musa.loop = true;
-    creditos_audio_musa.volume = 0.82;
-    const promesa = creditos_audio_musa.play();
-    if (promesa && typeof promesa.catch === "function") {
-        promesa.catch(() => {
-            const reintentar = () => {
-                if (!creditos_musa || creditos_musa.hidden) return;
-                creditos_audio_musa.play().catch(() => {});
-            };
-            document.addEventListener("pointerdown", reintentar, { once: true });
-        });
-    }
+function cancelarRedireccionFeedbackPostCreditosMusa() {
+    if (!timeout_feedback_post_creditos_musa) return;
+    clearTimeout(timeout_feedback_post_creditos_musa);
+    timeout_feedback_post_creditos_musa = null;
 }
 
-function detenerMusicaCreditosMusa() {
-    if (!creditos_audio_musa) return;
-    creditos_audio_musa.pause();
-    try { creditos_audio_musa.currentTime = 0; } catch (_error) {}
+function finalizarCreditosMusa() {
+    if (!creditos_musa || creditos_musa.hidden || vista_modo_remota_musa !== "creditos") return;
+    creditos_musa.classList.add("creditos-musa--finalizados");
+    if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "false");
+    cancelarRedireccionFeedbackPostCreditosMusa();
+    timeout_feedback_post_creditos_musa = setTimeout(() => {
+        timeout_feedback_post_creditos_musa = null;
+        redirigirMusaAFeedback({ activa: true, url: FEEDBACK_MUSA_URL_WEB });
+    }, CREDITOS_MUSA_SOCIALES_DURACION_MS);
 }
 
 function renderizarListaCreditosMusa(musas, clase) {
@@ -1640,11 +1637,13 @@ function renderizarCreditosMusa() {
 }
 
 function ocultarCreditosMusa() {
+    cancelarRedireccionFeedbackPostCreditosMusa();
     if (creditos_musa) {
+        creditos_musa.classList.remove("creditos-musa--finalizados");
         creditos_musa.hidden = true;
         creditos_musa.setAttribute("aria-hidden", "true");
     }
-    detenerMusicaCreditosMusa();
+    if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "true");
 }
 
 function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
@@ -1657,6 +1656,7 @@ function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
         ocultarCreditosMusa();
         return false;
     }
+    animarTransicionVistaMusa("creditos");
     renderizarCreditosMusa();
     creditos_musa.hidden = false;
     creditos_musa.setAttribute("aria-hidden", "false");
@@ -1666,11 +1666,13 @@ function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
         && creditos_musa_track.getAnimations().length
     );
     if (creditos_musa_track && (forzarReinicio || !animacionCreditosActiva)) {
+        cancelarRedireccionFeedbackPostCreditosMusa();
+        creditos_musa.classList.remove("creditos-musa--finalizados");
+        if (creditos_musa_sociales) creditos_musa_sociales.setAttribute("aria-hidden", "true");
         creditos_musa_track.style.animation = "none";
         void creditos_musa_track.offsetWidth;
         creditos_musa_track.style.removeProperty("animation");
     }
-    reproducirMusicaCreditosMusa();
     return true;
 }
 
@@ -1682,6 +1684,13 @@ function actualizarCreditosMusa(payload = {}) {
     return sincronizarVisibilidadCreditosMusa(
         Number(estado_creditos_musa.animacion_id) !== animacionPrevia
     );
+}
+
+if (creditos_musa_track) {
+    creditos_musa_track.addEventListener("animationend", (event) => {
+        if (event.target !== creditos_musa_track || event.animationName !== "creditosMusaRoll") return;
+        finalizarCreditosMusa();
+    });
 }
 
 const CLAVE_TEMPORIZADOR_LECTURA = "scrib_temporizador_lectura_fin";

@@ -4153,7 +4153,7 @@ body.musa-boot-activa .intro-flow {
 }
 
 .onboarding-feedback-tint--rhythm {
-    animation: onboardingFeedbackTint 12s linear infinite;
+    animation: onboardingFeedbackTint 18s linear infinite;
 }
 
 .onboarding-game-slide {
@@ -4213,7 +4213,7 @@ body.musa-boot-activa .intro-flow {
     height: 1px;
     background: linear-gradient(90deg, transparent, #63edff, transparent);
     box-shadow: 0 0 1rem #63edff;
-    animation: onboardingWriterPulse 12s ease-in-out infinite;
+    animation: onboardingWriterPulse 18s ease-in-out infinite;
 }
 
 .onboarding-writer-window__head,
@@ -4236,8 +4236,8 @@ body.musa-boot-activa .intro-flow {
 }
 
 .onboarding-writer-status span { position: absolute; inset: 0 0 auto auto; white-space: nowrap; }
-.onboarding-writer-status__write { animation: onboardingWritingState 12s steps(1, end) infinite; }
-.onboarding-writer-status__rest { color: #ff7186; animation: onboardingRestState 12s steps(1, end) infinite; }
+.onboarding-writer-status__write { animation: onboardingWritingState 18s steps(1, end) infinite; }
+.onboarding-writer-status__rest { color: #ff7186; animation: onboardingRestState 18s steps(1, end) infinite; }
 
 .onboarding-writer-copy {
     margin: clamp(1rem, 4vh, 1.8rem) 0 0;
@@ -4254,7 +4254,7 @@ body.musa-boot-activa .intro-flow {
     font: inherit;
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingWriterTyping 12s steps(30, end) infinite;
+    animation: onboardingWriterTyping 18s steps(30, end) infinite;
 }
 
 .onboarding-writer-caret {
@@ -4264,11 +4264,21 @@ body.musa-boot-activa .intro-flow {
     margin-left: 0.12em;
     vertical-align: -0.16em;
     background: currentColor;
-    animation: onboardingWriterCaret 12s steps(1, end) infinite;
+    animation: onboardingWriterCaret 18s steps(1, end) infinite;
 }
 
 /* Réplica compacta del marcador de inspiración azul/rojo del juego. */
-.onboarding-inspiration-meter { margin-top: clamp(0.75rem, 2.3vh, 1.05rem); }
+.onboarding-inspiration-meter {
+    width: 100%;
+    margin-top: clamp(0.75rem, 2.3vh, 1.05rem);
+}
+.onboarding-inspiration-head {
+    width: 100%;
+    justify-content: flex-start;
+    padding-inline: 0.1rem;
+    box-sizing: border-box;
+    text-align: left;
+}
 .onboarding-inspiration-head strong { color: #eaf9ff; }
 
 .onboarding-inspiration-bar {
@@ -4327,8 +4337,8 @@ body.musa-boot-activa .intro-flow {
     box-shadow: inset 0 -0.22em 0 rgba(39, 10, 18, 0.34), 0 0 0.95em rgba(255, 107, 107, 0.52);
 }
 
-.onboarding-game-act--rhythm .onboarding-inspiration-segment--blue { animation: onboardingRhythmBlue 12s cubic-bezier(.2,.8,.2,1) infinite; }
-.onboarding-game-act--rhythm .onboarding-inspiration-segment--red { animation: onboardingRhythmRed 12s cubic-bezier(.2,.8,.2,1) infinite; }
+.onboarding-game-act--rhythm .onboarding-inspiration-segment--blue { animation: onboardingRhythmBlue 18s steps(30, end) infinite; }
+.onboarding-game-act--rhythm .onboarding-inspiration-segment--red { animation: onboardingRhythmRed 18s steps(30, end) infinite; }
 
 .onboarding-rhythm-feedback {
     position: absolute;
@@ -4347,14 +4357,14 @@ body.musa-boot-activa .intro-flow {
     color: #8bffc1;
     background: rgba(4, 36, 24, 0.94);
     box-shadow: 0 0 1.2rem rgba(75, 255, 166, 0.52);
-    animation: onboardingRhythmGain 12s cubic-bezier(.2,.9,.2,1) infinite;
+    animation: onboardingRhythmGain 18s cubic-bezier(.2,.9,.2,1) infinite;
 }
 
 .onboarding-rhythm-feedback--loss {
     color: #ff8da0;
     background: rgba(48, 4, 17, 0.94);
     box-shadow: 0 0 1.2rem rgba(255, 65, 94, 0.5);
-    animation: onboardingRhythmLoss 12s cubic-bezier(.2,.9,.2,1) infinite;
+    animation: onboardingRhythmLoss 18s cubic-bezier(.2,.9,.2,1) infinite;
 }
 
 .onboarding-idea-demo {
@@ -4491,7 +4501,7 @@ body.musa-boot-activa .intro-flow {
     border: 1px solid rgba(255, 92, 118, 0.5);
     border-radius: 0.9rem;
     background: rgba(14, 3, 9, 0.84);
-    animation: onboardingDisadvantageRestore 11s ease-in-out infinite;
+    animation: onboardingDisadvantageRestore 16s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-badge {
@@ -4507,7 +4517,7 @@ body.musa-boot-activa .intro-flow {
     font: clamp(0.46rem, 1.7vw, 0.64rem)/1 "Retro-gaming", "Courier New", monospace;
     box-shadow: 0 0 1rem rgba(255, 57, 91, 0.35);
     transform: translateX(-50%);
-    animation: onboardingDisadvantageBadge 11s ease-in-out infinite;
+    animation: onboardingDisadvantageBadge 16s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-text {
@@ -4516,7 +4526,7 @@ body.musa-boot-activa .intro-flow {
     font-size: clamp(0.78rem, 3vw, 1.04rem);
     filter: blur(0.28rem);
     transform: skewX(-6deg);
-    animation: onboardingDisadvantageText 11s ease-in-out infinite;
+    animation: onboardingDisadvantageText 16s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-text span {
@@ -4526,7 +4536,7 @@ body.musa-boot-activa .intro-flow {
     overflow: hidden;
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingDisadvantageTyping 11s steps(33, end) infinite;
+    animation: onboardingDisadvantageTyping 16s steps(33, end) infinite;
 }
 
 .onboarding-disadvantage-text i {
@@ -4536,7 +4546,7 @@ body.musa-boot-activa .intro-flow {
     margin-left: 0.12em;
     vertical-align: -0.14em;
     background: currentColor;
-    animation: onboardingDisadvantageCaret 11s steps(1, end) infinite;
+    animation: onboardingDisadvantageCaret 16s steps(1, end) infinite;
 }
 
 .onboarding-disadvantage-power {
@@ -4551,7 +4561,7 @@ body.musa-boot-activa .intro-flow {
     background: rgba(31, 24, 4, 0.95);
     font: clamp(0.45rem, 1.65vw, 0.62rem)/1 "Retro-gaming", "Courier New", monospace;
     box-shadow: 0 0 1.1rem rgba(255, 210, 70, 0.48);
-    animation: onboardingDisadvantagePower 11s cubic-bezier(.2,.9,.2,1) infinite;
+    animation: onboardingDisadvantagePower 16s cubic-bezier(.2,.9,.2,1) infinite;
 }
 
 .onboarding-disadvantage-burst {
@@ -4560,7 +4570,7 @@ body.musa-boot-activa .intro-flow {
     color: #8bffc1;
     font-size: clamp(3rem, 14vw, 5.5rem);
     text-shadow: 0 0 0.5rem #64ffb0, 0 0 2rem rgba(91, 255, 169, 0.76);
-    animation: onboardingDisadvantageBurst 11s ease-out infinite;
+    animation: onboardingDisadvantageBurst 16s ease-out infinite;
 }
 
 .onboarding-disadvantage-result {
@@ -4568,7 +4578,7 @@ body.musa-boot-activa .intro-flow {
     font: clamp(0.58rem, 2.2vw, 0.78rem)/1.3 "Retro-gaming", "Courier New", monospace;
     text-align: center;
     text-shadow: 0 0 0.9rem rgba(91, 255, 169, 0.5);
-    animation: onboardingDisadvantageResult 11s ease-in-out infinite;
+    animation: onboardingDisadvantageResult 16s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-meter {
@@ -4577,12 +4587,12 @@ body.musa-boot-activa .intro-flow {
 
 .onboarding-game-act--disadvantage .onboarding-inspiration-segment--blue {
     width: 46%;
-    animation: onboardingDisadvantageBlue 11s cubic-bezier(.2,.8,.2,1) infinite;
+    animation: onboardingDisadvantageBlue 16s steps(33, end) infinite;
 }
 
 .onboarding-game-act--disadvantage .onboarding-inspiration-segment--red {
     width: 54%;
-    animation: onboardingDisadvantageRed 11s cubic-bezier(.2,.8,.2,1) infinite;
+    animation: onboardingDisadvantageRed 16s steps(33, end) infinite;
 }
 
 .onboarding-disadvantage-copy {

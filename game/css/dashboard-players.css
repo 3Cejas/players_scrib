@@ -8886,6 +8886,95 @@ body.vista-creditos .creditos-espectador::after {
   transition: opacity 1.1s ease-out;
 }
 
+.creditos-sociales-final {
+  position: absolute;
+  inset: clamp(1.5rem, 4vh, 4rem) clamp(2rem, 6vw, 7rem);
+  z-index: 6;
+  width: min(88vw, 1350px);
+  height: fit-content;
+  margin: auto;
+  display: grid;
+  place-items: center;
+  gap: clamp(1rem, 2.3vh, 2rem);
+  padding: clamp(2rem, 4vw, 4rem);
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 220, 116, 0.68);
+  border-radius: clamp(1.3rem, 2.5vw, 2.7rem);
+  color: #f7fbff;
+  text-align: center;
+  background:
+    radial-gradient(circle at 16% 16%, rgba(70, 233, 255, 0.2), transparent 36%),
+    radial-gradient(circle at 84% 84%, rgba(255, 80, 113, 0.21), transparent 38%),
+    rgba(2, 9, 18, 0.88);
+  box-shadow: inset 0 0 4rem rgba(255,255,255,0.04), 0 0 5rem rgba(255, 197, 73, 0.22);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4vh) scale(0.7) rotateX(10deg);
+  transition: opacity 800ms ease, transform 1100ms cubic-bezier(.16, 1.18, .28, 1);
+}
+
+.creditos-espectador.creditos-finalizados .creditos-sociales-final {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  animation: creditosSocialesFinalGlow 2.7s ease-in-out infinite alternate;
+}
+
+.creditos-sociales-final__gracias,
+.creditos-sociales-final > h2,
+.creditos-sociales-final > p { margin: 0; }
+
+.creditos-sociales-final__gracias {
+  color: #ffdc70;
+  font: clamp(1rem, 1.8vw, 1.8rem)/1.35 "Retro-gaming", monospace;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 1.1em rgba(255, 204, 80, 0.55);
+}
+
+.creditos-sociales-final h2 {
+  font: clamp(3rem, 6vw, 6.8rem)/1 "Retro-gaming", monospace;
+  text-shadow: -0.045em 0 #48eaff, 0.045em 0 #ff5b72, 0 0 0.7em rgba(255,255,255,0.16);
+}
+
+.creditos-sociales-final > p:not(.creditos-sociales-final__gracias) {
+  color: rgba(231, 246, 251, 0.78);
+  font: clamp(1.8rem, 3vw, 3rem)/1.1 "VT323", monospace;
+}
+
+.creditos-sociales-final__redes {
+  width: min(100%, 1050px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 2rem);
+}
+
+.creditos-sociales-final__redes a {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: clamp(0.8rem, 1.5vw, 1.4rem);
+  padding: clamp(1rem, 2vw, 1.8rem);
+  border: 1px solid rgba(115, 235, 255, 0.54);
+  border-radius: clamp(0.8rem, 1.5vw, 1.4rem);
+  color: #f8fbff;
+  text-align: left;
+  text-decoration: none;
+  background: linear-gradient(145deg, rgba(27, 105, 128, 0.34), rgba(112, 22, 63, 0.33));
+  box-shadow: inset 0 0 1.8rem rgba(255,255,255,0.04), 0 0 1.3rem rgba(76, 230, 255, 0.1);
+  animation: creditosSocialRed 1.9s ease-in-out infinite alternate;
+}
+
+.creditos-sociales-final__redes a:nth-child(2) { animation-delay: -0.95s; }
+.creditos-sociales-final__redes span { grid-row: 1 / 3; width: clamp(3.2rem, 5vw, 5.2rem); aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; color: #06101b; background: linear-gradient(135deg, #65edff, #ffd469 52%, #ff637d); font: 700 clamp(1.2rem, 2.1vw, 2rem)/1 sans-serif; box-shadow: 0 0 1.4rem rgba(255, 218, 106, 0.34); }
+.creditos-sociales-final__redes strong { font: clamp(0.85rem, 1.45vw, 1.4rem)/1.2 "Retro-gaming", monospace; }
+.creditos-sociales-final__redes small { color: rgba(205, 239, 247, 0.72); font: clamp(1.45rem, 2.2vw, 2.25rem)/1 "VT323", monospace; }
+
+@keyframes creditosSocialesFinalGlow { to { box-shadow: inset 0 0 4rem rgba(255,255,255,0.06), 0 0 6rem rgba(74, 230, 255, 0.3), 0 0 3rem rgba(255, 77, 111, 0.22); } }
+@keyframes creditosSocialRed { to { transform: translateY(-0.25rem); filter: brightness(1.14); } }
+
 .stats-overlay-ui {
   display: grid;
   gap: 0.45rem;

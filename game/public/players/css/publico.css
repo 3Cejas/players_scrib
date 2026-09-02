@@ -2099,6 +2099,119 @@ th{
     font-size: clamp(0.82rem, 4.5vw, 1.2rem);
 }
 
+.creditos-musa__sociales {
+    position: absolute;
+    inset: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    z-index: 5;
+    width: min(92vw, 34rem);
+    height: fit-content;
+    max-height: calc(100% - 2rem);
+    margin: auto;
+    display: grid;
+    place-items: center;
+    gap: clamp(0.75rem, 3vh, 1.2rem);
+    padding: clamp(1.25rem, 6vw, 2.15rem);
+    box-sizing: border-box;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 220, 116, 0.72);
+    border-radius: clamp(1.2rem, 6vw, 2rem);
+    color: #f8fbff;
+    text-align: center;
+    background:
+        radial-gradient(circle at 16% 12%, rgba(73, 234, 255, 0.18), transparent 38%),
+        radial-gradient(circle at 84% 88%, rgba(255, 86, 116, 0.2), transparent 42%),
+        rgba(2, 9, 18, 0.9);
+    box-shadow: inset 0 0 2.5rem rgba(255,255,255,0.04), 0 0 3rem rgba(255, 193, 73, 0.24);
+    backdrop-filter: blur(16px);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(2rem) scale(0.72) rotateX(12deg);
+    transition: opacity 700ms ease, transform 900ms cubic-bezier(.16, 1.18, .28, 1);
+}
+
+.creditos-musa--finalizados .creditos-musa__track {
+    opacity: 0;
+    transition: opacity 600ms ease;
+}
+
+.creditos-musa--finalizados .creditos-musa__sociales {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    animation: creditosMusaSocialesGlow 2.6s ease-in-out infinite alternate;
+}
+
+.creditos-musa__sociales-gracias,
+.creditos-musa__sociales > p,
+.creditos-musa__sociales > h2,
+.creditos-musa__feedback-aviso { margin: 0; }
+
+.creditos-musa__sociales-gracias {
+    color: #ffd970;
+    font: clamp(0.62rem, 3.2vw, 0.86rem)/1.45 "Retro-gaming", monospace;
+    letter-spacing: 0.09em;
+    text-shadow: 0 0 1rem rgba(255, 205, 85, 0.58);
+}
+
+.creditos-musa__sociales h2 {
+    font: clamp(1.45rem, 8vw, 2.35rem)/1.05 "Retro-gaming", monospace;
+    text-shadow: -0.045em 0 #48eaff, 0.045em 0 #ff5b72;
+}
+
+.creditos-musa__sociales > p:not(.creditos-musa__sociales-gracias) {
+    max-width: 27rem;
+    color: rgba(235, 247, 252, 0.78);
+    font: clamp(1.2rem, 6vw, 1.7rem)/1.12 "VT323", monospace;
+}
+
+.creditos-musa__redes {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.6rem, 3vw, 0.9rem);
+}
+
+.creditos-musa__redes a {
+    min-width: 0;
+    display: grid;
+    place-items: center;
+    gap: 0.35rem;
+    padding: clamp(0.8rem, 4vw, 1.15rem) 0.5rem;
+    border: 1px solid color-mix(in srgb, #62edff 58%, #ff6680);
+    border-radius: 0.9rem;
+    color: #f8fbff;
+    text-decoration: none;
+    background: linear-gradient(145deg, rgba(27, 102, 125, 0.32), rgba(111, 22, 62, 0.32));
+    box-shadow: inset 0 0 1.2rem rgba(255,255,255,0.04), 0 0 1rem rgba(78, 226, 255, 0.11);
+    animation: creditosMusaRed 1.9s ease-in-out infinite alternate;
+}
+
+.creditos-musa__redes a:nth-child(2) { animation-delay: -0.95s; }
+.creditos-musa__redes a:active { transform: scale(0.96); }
+
+.creditos-musa__redes span {
+    width: 2.25rem;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #06101b;
+    background: linear-gradient(135deg, #65edff, #ffd469 52%, #ff637d);
+    font: 700 1rem/1 sans-serif;
+    box-shadow: 0 0 1rem rgba(255, 218, 106, 0.36);
+}
+
+.creditos-musa__redes strong {
+    font: clamp(0.55rem, 2.7vw, 0.74rem)/1.2 "Retro-gaming", monospace;
+}
+
+.creditos-musa__redes small,
+.creditos-musa__feedback-aviso {
+    overflow-wrap: anywhere;
+    color: rgba(204, 239, 247, 0.68);
+    font: clamp(0.9rem, 4.6vw, 1.25rem)/1.05 "VT323", monospace;
+}
+
 /* Temporizador escenico para las musas. */
 .temporizador-musa {
     --temporizador-progreso: 0deg;
@@ -2246,6 +2359,8 @@ th{
 @keyframes creditosMusaAurora { to { transform: rotate(12deg) scale(1.12); filter: blur(34px) saturate(1.3); } }
 @keyframes creditosMusaLogo { 50% { transform: translateX(0.04em); filter: brightness(1.25); } }
 @keyframes creditosMusaTarjeta { to { border-color: rgba(255, 111, 132, 0.42); box-shadow: inset 0 0 1.8rem rgba(255, 90, 118, 0.07), 0 0 1.5rem rgba(76, 230, 255, 0.15); } }
+@keyframes creditosMusaSocialesGlow { to { box-shadow: inset 0 0 2.5rem rgba(255,255,255,0.06), 0 0 4rem rgba(73, 232, 255, 0.3), 0 0 2rem rgba(255, 84, 116, 0.23); } }
+@keyframes creditosMusaRed { to { transform: translateY(-0.18rem); filter: brightness(1.15); } }
 @keyframes temporizadorMusaRayos { to { transform: rotate(360deg); } }
 @keyframes temporizadorMusaPanel { from { opacity: 0; transform: scale(0.84) translateY(2rem); } }
 @keyframes temporizadorMusaUrgente { to { transform: scale(1.025); box-shadow: 0 0 2.6rem rgba(255, 87, 102, 0.48), inset 0 0 1rem rgba(255,255,255,0.2); } }
@@ -2256,6 +2371,8 @@ th{
     .creditos-musa::after,
     .creditos-musa__logo,
     .creditos-musa__bloque,
+    .creditos-musa__sociales,
+    .creditos-musa__redes a,
     .temporizador-musa__rayos,
     .temporizador-musa__panel,
     .temporizador-musa.is-urgent .temporizador-musa__ring,

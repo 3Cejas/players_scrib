@@ -1243,6 +1243,7 @@ const nube_inspiracion_canvas = getEl("nube_inspiracion_canvas");
 const creditos_espectador = getEl("creditos_espectador");
 const creditos_track = getEl("creditos_track");
 const creditos_content = getEl("creditos_content");
+const creditos_sociales_final = getEl("creditos_sociales_final");
 const creditos_audio_espectador = getEl("creditos_audio_espectador");
 const contenedor_espectador = getEl("contenedor_espectador");
 const temas_container = getEl("temas_container");
@@ -1811,6 +1812,9 @@ const detenerAnimacionCreditosEspectador = (reiniciar = true) => {
     if (creditos_espectador) {
         creditos_espectador.classList.remove("creditos-finalizados");
     }
+    if (creditos_sociales_final) {
+        creditos_sociales_final.setAttribute("aria-hidden", "true");
+    }
 };
 const renderizarCreditosEspectador = () => {
     if (!creditos_content) return;
@@ -1849,6 +1853,7 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     renderizarCreditosEspectador();
     detenerAnimacionCreditosEspectador(false);
     creditos_espectador.classList.remove("creditos-finalizados");
+    if (creditos_sociales_final) creditos_sociales_final.setAttribute("aria-hidden", "true");
     reproducirMusicaCreditosEspectador();
     creditos_track.style.opacity = "1";
     const altoViewportInicial = Math.max(window.innerHeight || 0, 1);
@@ -1894,6 +1899,7 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
             if (progreso >= 1) {
                 creditos_animacion_raf = null;
                 creditos_espectador.classList.add("creditos-finalizados");
+                if (creditos_sociales_final) creditos_sociales_final.setAttribute("aria-hidden", "false");
                 creditos_track.style.transform = `translate3d(-50%, ${creditos_animacion_y_fin.toFixed(2)}px, 0)`;
                 return;
             }
