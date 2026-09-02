@@ -227,7 +227,7 @@ function actualizarTemporizadorGigante() {
     if (valor) valor.textContent = `${paddedFormat(minutos)}:${paddedFormat(segundos)}`;
     if (ring) {
         const duracion = Math.max(1, temporizador_gigante_duracion || temporizador_gigante_restante);
-        const progreso = Math.max(0, Math.min(1, 1 - (temporizador_gigante_restante / duracion)));
+        const progreso = Math.max(0, Math.min(1, temporizador_gigante_restante / duracion));
         ring.style.setProperty("--temporizador-progreso", `${(progreso * 360).toFixed(2)}deg`);
     }
     temporizador_gigante.classList.toggle("urgente", temporizador_gigante_restante <= 10);
@@ -246,6 +246,7 @@ function detenerTemporizadorGigante() {
     temporizador_gigante.classList.remove("urgente");
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = true;
+    controlador_audio_vista_espectador?.setMode(vista_espectador_modo_resuelta || "partida");
 }
 
 function iniciarTemporizadorGigante(duracion, finTimestamp = null) {
@@ -257,6 +258,7 @@ function iniciarTemporizadorGigante(duracion, finTimestamp = null) {
     temporizador_gigante.classList.remove("fin");
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = true;
+    controlador_audio_vista_espectador?.setMode("temporizador");
     actualizarTemporizadorGigante();
     if (temporizador_gigante_restante <= 0) {
         finalizarTemporizadorGigante();
@@ -1238,6 +1240,9 @@ const puntuacion_paso = getEl("puntuacion_paso");
 const puntuacion_formula = getEl("puntuacion_formula");
 const puntuacion_dots = getEl("puntuacion_dots");
 const puntuacion_particulas = getEl("puntuacion_particulas");
+const deliberacion_espectador = getEl("deliberacion_espectador");
+const resultado_jurado_espectador = getEl("resultado_jurado_espectador");
+const resultado_jurado_stage = getEl("resultado_jurado_stage");
 const nube_inspiracion_espectador = getEl("nube_inspiracion_espectador");
 const nube_inspiracion_canvas = getEl("nube_inspiracion_canvas");
 const creditos_espectador = getEl("creditos_espectador");
@@ -1254,8 +1259,8 @@ const container_general = document.querySelector(".container");
 const cabecera = document.querySelector(".cabecera");
 const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
 const neon_espectador = getEl("neon");
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
-const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado"]);
+const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado"]);
 let vista_calentamiento = false;
 let vista_espectador_override = "tutorial";
 let vista_espectador_modo_resuelta = "tutorial";
@@ -1276,7 +1281,8 @@ const controlador_audio_vista_espectador = window.ScribViewTransition
         documentRef: document,
         musicUrl: "../audio/1.%20MENU%20DE%20INICIO.mp3",
         transitionUrl: "../audio/FX/cambio-vista.mp3",
-        fadeDurationMs: 3000
+        fadeDurationMs: 3000,
+        musicModes: ["tutorial", "calentamiento", "temporizador"]
     })
     : null;
 let partida_activa_espectador = false;
@@ -1480,6 +1486,7 @@ let stats_slide_index = 0;
 let stats_slide_count = 0;
 let stats_slides_actuales = [];
 let estado_puntuacion_final_espectador = null;
+let estado_resultado_jurado_espectador = null;
 let puntuacion_slide_step_remoto = 0;
 let puntuacion_firma_render_espectador = "";
 const stats_timeline_modos_local_espectador = [];
@@ -1724,6 +1731,8 @@ const resolverModoVistaEspectadorLocal = () => {
         || vista_espectador_override === "puntuacion"
         || vista_espectador_override === "nube_inspiracion"
         || vista_espectador_override === "creditos"
+        || vista_espectador_override === "deliberacion"
+        || vista_espectador_override === "resultado_jurado"
     ) {
         return vista_espectador_override;
     }
@@ -1831,7 +1840,11 @@ const renderizarCreditosEspectador = () => {
     const musas = renderizarMusasCreditosEspectador(data.musas);
     creditos_content.innerHTML = `
         <header class="creditos-apertura">
-            <div class="creditos-apertura__logo">&lt;SCRI&gt; B</div>
+            <div class="creditos-apertura__logos" aria-label="SCRI B y Sutura Teatro">
+                <img class="creditos-apertura__marca creditos-apertura__marca--scrib" src="../media/scrib-logo-mark.png" alt="SCRI B">
+                <span class="creditos-apertura__union" aria-hidden="true">&times;</span>
+                <img class="creditos-apertura__marca creditos-apertura__marca--sutura" src="../img/logo.png" alt="Sutura Teatro">
+            </div>
             <p>CR&Eacute;DITOS DEL SHOW</p>
         </header>
         <div class="creditos-bloque">
@@ -3659,6 +3672,54 @@ const actualizarPuntuacionFinalEspectador = (payload = {}) => {
 
 window.actualizarPuntuacionFinalEspectador = actualizarPuntuacionFinalEspectador;
 
+const normalizarResultadoJuradoEspectador = (payload = {}) => {
+    const jugadores = payload && payload.jugadores && typeof payload.jugadores === "object"
+        ? payload.jugadores
+        : {};
+    const normalizarJugador = (id) => {
+        const jugador = jugadores[id] || jugadores[String(id)] || {};
+        return {
+            nombre: String(jugador.nombre || `ESCRITXR ${id}`).trim() || `ESCRITXR ${id}`,
+            total: Math.max(0, Math.min(10, Number(jugador.total) || 0))
+        };
+    };
+    return {
+        disponible: Boolean(payload && payload.disponible),
+        empate: Boolean(payload && payload.empate),
+        ganador: Number(payload && payload.ganador) || 0,
+        jugadores: { 1: normalizarJugador(1), 2: normalizarJugador(2) }
+    };
+};
+
+const renderizarResultadoJuradoEspectador = () => {
+    if (!resultado_jurado_stage) return;
+    const estado = normalizarResultadoJuradoEspectador(estado_resultado_jurado_espectador || {});
+    if (!estado.disponible) {
+        resultado_jurado_stage.innerHTML = `<p class="resultado-jurado-espera">EL VEREDICTO A&Uacute;N NO EST&Aacute; LISTO</p>`;
+        return;
+    }
+    const tarjeta = (id) => {
+        const jugador = estado.jugadores[id];
+        const ganadora = !estado.empate && estado.ganador === id;
+        return `
+            <article class="resultado-jurado-card resultado-jurado-card--${id}${ganadora ? " is-winner" : ""}">
+                <small>${ganadora ? "ELECCI&Oacute;N DEL JURADO" : "FINALISTA"}</small>
+                <h3>${escapeHtml(jugador.nombre)}</h3>
+                <strong>${jugador.total.toFixed(1)}</strong><span>/ 10</span>
+            </article>`;
+    };
+    resultado_jurado_stage.innerHTML = `
+        <div class="resultado-jurado-cards">${tarjeta(1)}${tarjeta(2)}</div>
+        <p class="resultado-jurado-veredicto">${estado.empate ? "EMPATE DEL JURADO" : `EL JURADO ELIGE A ${escapeHtml(estado.jugadores[estado.ganador]?.nombre || "")}`}</p>`;
+};
+
+const actualizarResultadoJuradoEspectador = (payload = {}) => {
+    estado_resultado_jurado_espectador = normalizarResultadoJuradoEspectador(payload);
+    if (vista_espectador_modo_resuelta === "resultado_jurado") renderizarResultadoJuradoEspectador();
+};
+
+window.actualizarResultadoJuradoEspectador = actualizarResultadoJuradoEspectador;
+
 const hashCadenaInspiracion = (texto) => {
     const valor = String(texto || "");
     let hash = 2166136261;
@@ -4063,6 +4124,8 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         document.body.classList.toggle("vista-puntuacion", modo === "puntuacion");
         document.body.classList.toggle("vista-nube-inspiracion", modo === "nube_inspiracion");
         document.body.classList.toggle("vista-creditos", modo === "creditos");
+        document.body.classList.toggle("vista-deliberacion", modo === "deliberacion");
+        document.body.classList.toggle("vista-resultado-jurado", modo === "resultado_jurado");
     }
     if (calentamiento_espectador) {
         calentamiento_espectador.style.display = modo === "calentamiento" ? "flex" : "none";
@@ -4078,6 +4141,12 @@ const aplicarModoVistaEspectadorUi = (modo) => {
     }
     if (creditos_espectador) {
         creditos_espectador.style.display = modo === "creditos" ? "flex" : "none";
+    }
+    if (deliberacion_espectador) {
+        deliberacion_espectador.style.display = modo === "deliberacion" ? "grid" : "none";
+    }
+    if (resultado_jurado_espectador) {
+        resultado_jurado_espectador.style.display = modo === "resultado_jurado" ? "grid" : "none";
     }
     actualizarBrandingPartidaEspectador({ permitirIntro: true });
     if (modo === "stats") {
@@ -4110,6 +4179,15 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         if (modoPrevio !== "creditos") {
             iniciarAnimacionCreditosEspectador(true);
         }
+    } else if (modo === "deliberacion") {
+        detenerSlidesStats();
+        detenerAnimacionNubeInspiracion();
+        detenerAnimacionCreditosEspectador();
+    } else if (modo === "resultado_jurado") {
+        detenerSlidesStats();
+        detenerAnimacionNubeInspiracion();
+        detenerAnimacionCreditosEspectador();
+        renderizarResultadoJuradoEspectador();
     } else {
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();

@@ -1581,6 +1581,103 @@ let estado_creditos_musa = window.ScribCredits
 let vista_modo_remota_musa = "tutorial";
 let timeout_feedback_post_creditos_musa = null;
 const CREDITOS_MUSA_SOCIALES_DURACION_MS = 10000;
+const deliberacion_musa = getEl("deliberacion_musa");
+const resultado_videojuego_musa = getEl("resultado_videojuego_musa");
+const resultado_videojuego_musa_stage = getEl("resultado_videojuego_musa_stage");
+const resultado_jurado_musa = getEl("resultado_jurado_musa");
+const resultado_jurado_musa_stage = getEl("resultado_jurado_musa_stage");
+let estado_puntuacion_final_musa = null;
+let estado_resultado_jurado_musa = null;
+
+function normalizarResultadoJuradoMusa(payload = {}) {
+    const jugadores = payload && payload.jugadores && typeof payload.jugadores === "object" ? payload.jugadores : {};
+    const normalizarJugador = (id) => {
+        const jugador = jugadores[id] || jugadores[String(id)] || {};
+        return {
+            nombre: String(jugador.nombre || `ESCRITXR ${id}`).trim() || `ESCRITXR ${id}`,
+            total: Math.max(0, Math.min(10, Number(jugador.total) || 0))
+        };
+    };
+    return {
+        disponible: Boolean(payload && payload.disponible),
+        empate: Boolean(payload && payload.empate),
+        ganador: Number(payload && payload.ganador) || 0,
+        jugadores: { 1: normalizarJugador(1), 2: normalizarJugador(2) }
+    };
+}
+
+function tarjetaResultadoMusa(jugador, id, ganador, escala = 100) {
+    const total = Number(jugador && jugador.total) || 0;
+    const esGanador = Number(ganador) === id;
+    return `<article class="resultado-musa__card resultado-musa__card--${id}${esGanador ? " is-winner" : ""}">
+        <small>${esGanador ? "GANADOR" : "FINALISTA"}</small>
+        <h3>${escapeHtml(jugador && jugador.nombre ? jugador.nombre : `ESCRITXR ${id}`)}</h3>
+        <strong>${total.toFixed(1)}</strong><span>/ ${escala}</span>
+    </article>`;
+}
+
+function renderizarPuntuacionFinalMusa() {
+    if (!resultado_videojuego_musa_stage) return;
+    const api = window.ScribFinalScore;
+    const estado = api ? api.normalizarPayload(estado_puntuacion_final_musa || {}) : (estado_puntuacion_final_musa || {});
+    if (!estado.disponible) {
+        resultado_videojuego_musa_stage.innerHTML = '<p class="resultado-musa__espera">CALCULANDO EL RESULTADO&hellip;</p>';
+        return;
+    }
+    resultado_videojuego_musa_stage.innerHTML = `<div class="resultado-musa__cards">
+        ${tarjetaResultadoMusa(estado.jugadores[1], 1, estado.empate ? 0 : estado.ganador, 100)}
+        ${tarjetaResultadoMusa(estado.jugadores[2], 2, estado.empate ? 0 : estado.ganador, 100)}
+    </div><p class="resultado-musa__veredicto">${estado.empate ? "EMPATE" : "RESULTADO DEL JUEGO"}</p>`;
+}
+
+function renderizarResultadoJuradoMusa() {
+    if (!resultado_jurado_musa_stage) return;
+    const estado = normalizarResultadoJuradoMusa(estado_resultado_jurado_musa || {});
+    if (!estado.disponible) {
+        resultado_jurado_musa_stage.innerHTML = '<p class="resultado-musa__espera">EL JURADO SIGUE DELIBERANDO&hellip;</p>';
+        return;
+    }
+    resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__cards">
+        ${tarjetaResultadoMusa(estado.jugadores[1], 1, estado.empate ? 0 : estado.ganador, 10)}
+        ${tarjetaResultadoMusa(estado.jugadores[2], 2, estado.empate ? 0 : estado.ganador, 10)}
+    </div><p class="resultado-musa__veredicto">${estado.empate ? "EMPATE DEL JURADO" : "DECISI&Oacute;N DEL JURADO"}</p>`;
+}
+
+function sincronizarVistaDeliberacionMusa() {
+    const pantallas = [deliberacion_musa, resultado_videojuego_musa, resultado_jurado_musa];
+    pantallas.forEach((pantalla) => {
+        if (!pantalla) return;
+        pantalla.hidden = true;
+        pantalla.setAttribute("aria-hidden", "true");
+    });
+    let activa = null;
+    if (vista_modo_remota_musa === "deliberacion") activa = deliberacion_musa;
+    else if (vista_modo_remota_musa === "puntuacion") {
+        renderizarPuntuacionFinalMusa();
+        activa = resultado_videojuego_musa;
+    } else if (vista_modo_remota_musa === "resultado_jurado") {
+        renderizarResultadoJuradoMusa();
+        activa = resultado_jurado_musa;
+    }
+    if (!activa) return false;
+    animarTransicionVistaMusa(vista_modo_remota_musa);
+    activa.hidden = false;
+    activa.setAttribute("aria-hidden", "false");
+    return true;
+}
+
+function actualizarPuntuacionFinalMusa(payload = {}) {
+    estado_puntuacion_final_musa = payload;
+    if (vista_modo_remota_musa === "puntuacion") renderizarPuntuacionFinalMusa();
+}
+
+function actualizarResultadoJuradoMusa(payload = {}) {
+    estado_resultado_jurado_musa = normalizarResultadoJuradoMusa(payload);
+    if (vista_modo_remota_musa === "resultado_jurado") renderizarResultadoJuradoMusa();
+}
+
+window.actualizarPuntuacionFinalMusa = actualizarPuntuacionFinalMusa;
+window.actualizarResultadoJuradoMusa = actualizarResultadoJuradoMusa;
 
 function cancelarRedireccionFeedbackPostCreditosMusa() {
     if (!timeout_feedback_post_creditos_musa) return;
@@ -1618,7 +1715,11 @@ function renderizarCreditosMusa() {
         : "GRACIAS POR INSPIRAR";
     creditos_musa_content.innerHTML = `
         <header class="creditos-musa__apertura">
-            <div class="creditos-musa__logo">&lt;SCRI&gt; B</div>
+            <div class="creditos-musa__logos" aria-label="SCRI B y Sutura Teatro">
+                <img class="creditos-musa__marca creditos-musa__marca--scrib" src="../../media/scrib-logo-mark.png" alt="SCRI B">
+                <span aria-hidden="true">&times;</span>
+                <img class="creditos-musa__marca creditos-musa__marca--sutura" src="../../img/logo.png" alt="Sutura Teatro">
+            </div>
             <p>CR&Eacute;DITOS DEL SHOW</p>
         </header>
         <section class="creditos-musa__bloque">${lineas}</section>
@@ -2128,7 +2229,7 @@ function actualizarTemporizadorLectura(forzarRestante = null) {
     if (valor) valor.textContent = texto;
     if (ring) {
         const duracion = Math.max(1, temporizador_lectura_duracion || temporizador_lectura_restante);
-        const progreso = Math.max(0, Math.min(1, 1 - (temporizador_lectura_restante / duracion)));
+        const progreso = Math.max(0, Math.min(1, temporizador_lectura_restante / duracion));
         ring.style.setProperty("--temporizador-progreso", `${(progreso * 360).toFixed(2)}deg`);
     }
     if (overlay) overlay.classList.toggle("is-urgent", temporizador_lectura_restante <= 10);
@@ -3308,6 +3409,7 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     }
     aplicarVisibilidadPreShowMusa();
     sincronizarVisibilidadCreditosMusa();
+    sincronizarVistaDeliberacionMusa();
     return true;
 }
 

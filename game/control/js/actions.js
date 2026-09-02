@@ -22,6 +22,7 @@ let vista_espectador_modo = "tutorial";
 let vista_principal_control = "tutorial";
 let puntuacion_slide_step_control = 0;
 let estado_puntuacion_final_control = null;
+let estado_resultado_jurado_control = null;
 let puntuacion_final_captura_solicitada = false;
 let timeout_feedback_puntuacion_control = null;
 let escala_ui_espectador_control = 1;
@@ -1104,7 +1105,7 @@ function toggleLogsControl() {
 }
 window.toggleLogsControl = toggleLogsControl;
 
-const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "representacion", "asistencia"]);
+const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "deliberacion", "representacion", "asistencia"]);
 let dropdown_modos_control_inicializado = false;
 let observer_modos_control = null;
 let frases_finales_control_inicializadas = false;
@@ -2403,6 +2404,14 @@ function activar_temporizador_gigante() {
         socket.emit('temporizador_gigante_detener', {});
         return;
     }
+    if (vista_calentamiento) {
+        vista_calentamiento = false;
+        emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
+    }
+    cerrarVideotutorialDesdeVistaControl();
+    vista_principal_control = "partida";
+    vista_espectador_modo = "partida";
+    socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
     temporizador_gigante_activo = true;
     socket.emit('activar_temporizador_gigante', { duracion: 10 * 60 });
 }
@@ -2452,6 +2461,12 @@ function cerrarVideotutorialDesdeVistaControl() {
             window.ScribVideotutorialControl.ocultar();
         }
     }
+    if (window.ScribShowNarrationControl && typeof window.ScribShowNarrationControl.getState === "function") {
+        const estadoNarracion = window.ScribShowNarrationControl.getState();
+        if (estadoNarracion && estadoNarracion.active && typeof socket !== "undefined" && socket) {
+            socket.emit("narracion_show_detener", {});
+        }
+    }
 }
 
 function actualizarBotonesVistaPrincipalControl() {
@@ -2477,6 +2492,10 @@ function actualizarBotonesVistaPrincipalControl() {
 }
 
 function aplicarVistaPrincipalControl(vista) {
+    if (temporizador_gigante_activo) {
+        temporizador_gigante_activo = false;
+        socket.emit("temporizador_gigante_detener", {});
+    }
     const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "tutorial";
     const activarDetonadores = destino === "detonadores";
     const modoEspectador = destino === "tutorial" ? "tutorial" : "partida";
@@ -2540,7 +2559,7 @@ window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl
 // `calentamiento` es un modo resuelto que llega desde el servidor cuando la
 // vista Detonadores está activa. Conservarlo evita confundirlo con Tutorial y,
 // sobre todo, garantiza que al pulsar Tutorial se envíe el cambio autoritativo.
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado"]);
 const PUNTUACION_CATEGORIAS_CONTROL = [
     "produccion",
     "ritmo",
@@ -2648,6 +2667,9 @@ function actualizarBotonesVistaEspectadorControl() {
     const botonPuntuacion = document.getElementById("boton_vista_puntuacion");
     const botonNube = document.getElementById("boton_vista_nube_inspiracion");
     const botonCreditos = document.getElementById("boton_mostrar_creditos");
+    const botonDeliberacion = document.getElementById("boton_vista_deliberacion");
+    const botonResultadoVideojuego = document.getElementById("boton_resultado_videojuego");
+    const botonResultadoJurado = document.getElementById("boton_resultado_jurado");
     const statsNav = document.getElementById("stats_nav_control");
     const statsNavLabel = document.getElementById("stats_nav_label");
     const statsPrev = document.getElementById("stats_nav_prev");
@@ -2687,6 +2709,29 @@ function actualizarBotonesVistaEspectadorControl() {
         botonCreditos.dataset.active = activo ? "1" : "0";
         botonCreditos.classList.toggle("is-active", activo);
         botonCreditos.textContent = tJuego2PControl("control.button.show_credits", {}, "\u2B50 MOSTRAR CR\u00c9DITOS");
+    }
+    if (botonDeliberacion) {
+        const activo = vista_espectador_modo === "deliberacion";
+        botonDeliberacion.dataset.active = activo ? "1" : "0";
+        botonDeliberacion.classList.toggle("is-active", activo);
+        botonDeliberacion.setAttribute("aria-pressed", activo ? "true" : "false");
+    }
+    if (botonResultadoVideojuego) {
+        const activo = vista_espectador_modo === "puntuacion";
+        botonResultadoVideojuego.dataset.active = activo ? "1" : "0";
+        botonResultadoVideojuego.classList.toggle("is-active", activo);
+        botonResultadoVideojuego.setAttribute("aria-pressed", activo ? "true" : "false");
+    }
+    if (botonResultadoJurado) {
+        const activo = vista_espectador_modo === "resultado_jurado";
+        const disponible = Boolean(estado_resultado_jurado_control?.disponible);
+        botonResultadoJurado.dataset.active = activo ? "1" : "0";
+        botonResultadoJurado.dataset.available = disponible ? "1" : "0";
+        botonResultadoJurado.classList.toggle("is-active", activo);
+        botonResultadoJurado.setAttribute("aria-pressed", activo ? "true" : "false");
+        botonResultadoJurado.title = disponible
+            ? "Veredicto listo para mostrar"
+            : "El jurado todav\u00eda no ha completado su puntuaci\u00f3n";
     }
     if (statsNavLabel) {
         statsNavLabel.textContent = tJuego2PControl("control.stats.slides", {}, "\u{1F4CA} SLIDES STATS");
@@ -2740,6 +2785,10 @@ function actualizarBotonesVistaEspectadorControl() {
 }
 
 function cambiar_vista_espectador(modo) {
+    if (temporizador_gigante_activo) {
+        temporizador_gigante_activo = false;
+        socket.emit("temporizador_gigante_detener", {});
+    }
     const destino = normalizarModoVistaEspectador(modo);
     const siguiente = vista_espectador_modo === destino ? "partida" : destino;
     if (siguiente !== "partida" && vista_calentamiento) {
@@ -2747,6 +2796,7 @@ function cambiar_vista_espectador(modo) {
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
     }
     if (siguiente !== "partida") vista_principal_control = "partida";
+    cerrarVideotutorialDesdeVistaControl();
     vista_espectador_modo = siguiente;
     actualizarBotonesVistaEspectadorControl();
     socket.emit("cambiar_vista_espectador_modo", { modo: siguiente });
@@ -2765,6 +2815,10 @@ function navegarSlidesStatsControl(direccion) {
 
 function mostrarPuntuacionFinal() {
     if (!socket || typeof socket.emit !== "function") return;
+    if (temporizador_gigante_activo) {
+        temporizador_gigante_activo = false;
+        socket.emit("temporizador_gigante_detener", {});
+    }
     if (!estado_puntuacion_final_control || estado_puntuacion_final_control.disponible !== true) {
         mostrarFeedbackPuntuacionControl(
             tJuego2PControl("control.score.unavailable", {}, "El resultado estara disponible cuando terminen ambas escritoras."),
@@ -2777,6 +2831,7 @@ function mostrarPuntuacionFinal() {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
     }
+    cerrarVideotutorialDesdeVistaControl();
     vista_principal_control = "partida";
     socket.emit("mostrar_puntuacion_final", {}, (respuesta = {}) => {
         if (respuesta && respuesta.ok === true) return;
@@ -2843,6 +2898,50 @@ window.ocultarPuntuacionFinal = ocultarPuntuacionFinal;
 window.actualizarEstadoPuntuacionFinalControl = actualizarEstadoPuntuacionFinalControl;
 window.mostrarFeedbackPuntuacionControl = mostrarFeedbackPuntuacionControl;
 
+function mostrarVistaDeliberacion() {
+    cambiar_vista_espectador("deliberacion");
+}
+
+function mostrarResultadoVideojuego() {
+    mostrarPuntuacionFinal();
+}
+
+function mostrarResultadoJurado() {
+    if (!socket || typeof socket.emit !== "function") return;
+    if (!estado_resultado_jurado_control?.disponible) {
+        const estado = document.getElementById("deliberacion_estado_control");
+        if (estado) estado.textContent = "El jurado todav\u00eda no ha completado su puntuaci\u00f3n.";
+        socket.emit("pedir_jurado_resultado");
+        return;
+    }
+    if (temporizador_gigante_activo) {
+        temporizador_gigante_activo = false;
+        socket.emit("temporizador_gigante_detener", {});
+    }
+    cerrarVideotutorialDesdeVistaControl();
+    socket.emit("mostrar_resultado_jurado", {}, (respuesta = {}) => {
+        if (respuesta.ok === true) return;
+        const estado = document.getElementById("deliberacion_estado_control");
+        if (estado) estado.textContent = "No se pudo mostrar el resultado del jurado.";
+    });
+}
+
+function actualizarResultadoJuradoControl(payload = {}) {
+    estado_resultado_jurado_control = payload && typeof payload === "object" ? payload : null;
+    const estado = document.getElementById("deliberacion_estado_control");
+    if (estado) {
+        estado.textContent = estado_resultado_jurado_control?.disponible
+            ? "Veredicto del jurado listo para mostrar."
+            : "El resultado del jurado aparecer\u00e1 cuando haya puntuado a ambas escritoras.";
+    }
+    actualizarBotonesVistaEspectadorControl();
+}
+
+window.mostrarVistaDeliberacion = mostrarVistaDeliberacion;
+window.mostrarResultadoVideojuego = mostrarResultadoVideojuego;
+window.mostrarResultadoJurado = mostrarResultadoJurado;
+window.actualizarResultadoJuradoControl = actualizarResultadoJuradoControl;
+
 function actualizarModoVistaEspectadorControl(payload = {}) {
     const modoServidor = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "tutorial";
     vista_espectador_modo = normalizarModoVistaEspectador(modoServidor);
@@ -2883,6 +2982,16 @@ function mostrarCreditosEspectador() {
         socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
         return;
     }
+
+    if (temporizador_gigante_activo) {
+        temporizador_gigante_activo = false;
+        socket.emit("temporizador_gigante_detener", {});
+    }
+    if (vista_calentamiento) {
+        vista_calentamiento = false;
+        emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
+    }
+    cerrarVideotutorialDesdeVistaControl();
 
     vista_espectador_modo = "creditos";
     actualizarBotonesVistaEspectadorControl();

@@ -4254,7 +4254,7 @@ body.musa-boot-activa .intro-flow {
     font: inherit;
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingWriterTyping 18s steps(30, end) infinite;
+    animation: onboardingWriterTyping 18s steps(27, end) infinite;
 }
 
 .onboarding-writer-caret {
@@ -4337,8 +4337,8 @@ body.musa-boot-activa .intro-flow {
     box-shadow: inset 0 -0.22em 0 rgba(39, 10, 18, 0.34), 0 0 0.95em rgba(255, 107, 107, 0.52);
 }
 
-.onboarding-game-act--rhythm .onboarding-inspiration-segment--blue { animation: onboardingRhythmBlue 18s steps(30, end) infinite; }
-.onboarding-game-act--rhythm .onboarding-inspiration-segment--red { animation: onboardingRhythmRed 18s steps(30, end) infinite; }
+.onboarding-game-act--rhythm .onboarding-inspiration-segment--blue { animation: onboardingRhythmBlue 18s linear infinite; }
+.onboarding-game-act--rhythm .onboarding-inspiration-segment--red { animation: onboardingRhythmRed 18s linear infinite; }
 
 .onboarding-inspiration-feedback-row {
     position: relative;
@@ -4506,8 +4506,8 @@ body.musa-boot-activa .intro-flow {
     animation: onboardingIdeaCaret 12s steps(1, end) infinite;
 }
 
-.onboarding-game-act--idea .onboarding-inspiration-segment--blue { width: 38%; animation: onboardingIdeaBlue 12s steps(7, end) infinite; }
-.onboarding-game-act--idea .onboarding-inspiration-segment--red { width: 62%; animation: onboardingIdeaRed 12s steps(7, end) infinite; }
+.onboarding-game-act--idea .onboarding-inspiration-segment--blue { width: 38%; animation: onboardingIdeaBlue 12s ease-in-out infinite; }
+.onboarding-game-act--idea .onboarding-inspiration-segment--red { width: 62%; animation: onboardingIdeaRed 12s ease-in-out infinite; }
 
 .onboarding-idea-bonus {
     position: relative;
@@ -4651,7 +4651,7 @@ body.musa-boot-activa .intro-flow {
 
 .onboarding-inspiration-threshold {
     position: absolute;
-    left: 61%;
+    left: 50%;
     top: -0.28rem;
     bottom: -0.28rem;
     z-index: 5;
@@ -4674,12 +4674,12 @@ body.musa-boot-activa .intro-flow {
 
 .onboarding-game-act--disadvantage .onboarding-inspiration-segment--blue {
     width: 46%;
-    animation: onboardingDisadvantageBlue 20s steps(23, end) infinite;
+    animation: onboardingDisadvantageBlue 20s ease-in-out infinite;
 }
 
 .onboarding-game-act--disadvantage .onboarding-inspiration-segment--red {
     width: 54%;
-    animation: onboardingDisadvantageRed 20s steps(23, end) infinite;
+    animation: onboardingDisadvantageRed 20s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-feedback {
@@ -4719,7 +4719,7 @@ body.musa-boot-activa .intro-flow {
 @keyframes onboardingWriterPulse { 0%, 6%, 52%, 100% { transform: scaleX(.22); opacity: .18; } 15%, 47% { transform: scaleX(1); opacity: 1; } }
 @keyframes onboardingWritingState { 0%, 52% { opacity: 1; } 53%, 100% { opacity: 0; } }
 @keyframes onboardingRestState { 0%, 52% { opacity: 0; } 53%, 100% { opacity: 1; } }
-@keyframes onboardingWriterTyping { 0%, 9% { width: 0; } 47%, 53% { width: 30ch; } 94%, 100% { width: 0; } }
+@keyframes onboardingWriterTyping { 0%, 9% { width: 0; } 47%, 53% { width: 27ch; } 94%, 100% { width: 0; } }
 @keyframes onboardingWriterCaret { 0%, 52% { opacity: 1; } 53%, 100% { opacity: 0; } }
 @keyframes onboardingRhythmBlue { 0%, 7% { width: 42%; } 19% { width: 50%; } 33% { width: 60%; } 47%, 53% { width: 69%; } 66% { width: 61%; } 80% { width: 52%; } 94%, 100% { width: 44%; } }
 @keyframes onboardingRhythmRed { 0%, 7% { width: 58%; } 19% { width: 50%; } 33% { width: 40%; } 47%, 53% { width: 31%; } 66% { width: 39%; } 80% { width: 48%; } 94%, 100% { width: 56%; } }
@@ -4869,7 +4869,7 @@ body.musa-boot-activa .intro-flow {
                                             <span class="onboarding-writer-status__rest">SIN ESCRIBIR ↓</span>
                                         </span>
                                     </div>
-                                    <p class="onboarding-writer-copy"><span class="onboarding-writer-copy__typed">La historia encuentra su ritmo</span><i class="onboarding-writer-caret"></i></p>
+                                    <p class="onboarding-writer-copy"><span class="onboarding-writer-copy__typed">La historia despierta VOLCÁN</span><i class="onboarding-writer-caret"></i></p>
                                 </div>
                                 <div class="onboarding-inspiration-meter">
                                     <div class="onboarding-inspiration-head"><span>INSPIRACIÓN</span></div>

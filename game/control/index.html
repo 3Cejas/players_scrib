@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260902a">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260902b">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260902a"></script>
+<script src="./js/actions.js?v=20260902b"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <div class="ascii control-brand">
@@ -87,6 +87,7 @@
                                 <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="tutorial" aria-selected="false" aria-expanded="false" aria-controls="control_panel_tutorial" tabindex="-1" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
                                 <button id="control_title_detonadores" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="detonadores" aria-selected="false" aria-expanded="false" aria-controls="control_panel_detonadores" tabindex="-1" onclick="toggleSeccionControl('detonadores')">&#x1F4A5; DETONADORES</button>
                                 <button id="control_title_game" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="juego" aria-selected="true" aria-expanded="true" aria-controls="control_panel_juego" tabindex="0" onclick="toggleSeccionControl('juego')">&#x1F3AE; JUEGO</button>
+                                <button id="control_title_deliberation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="deliberacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_deliberacion" tabindex="-1" onclick="toggleSeccionControl('deliberacion')">&#x2696;&#xFE0F; DELIBERACI&Oacute;N</button>
                                 <button id="control_title_representation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="representacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_representacion" tabindex="-1" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
                             </div>
                             <button id="control_tabs_next" class="control-tabs-arrow control-tabs-arrow--next" type="button" aria-label="Ver m&aacute;s pesta&ntilde;as" onclick="desplazarPestanasControl('next')" hidden>&#x203A;</button>
@@ -178,6 +179,18 @@
                                 <button id="puntuacion_nav_reset" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--reset" onclick="reiniciarPuntuacionFinal()">&#x21BB; REINICIAR</button>
                                 <button id="puntuacion_nav_hide" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--hide" onclick="ocultarPuntuacionFinal()">&#x2715; OCULTAR</button>
                             </div>
+                        </div>
+                        <div id="control_panel_deliberacion" class="control-group control-group--deliberacion control-collapsible is-collapsed" data-control-section="deliberacion" role="tabpanel" aria-labelledby="control_title_deliberation">
+                            <div class="deliberacion-control__intro">
+                                <span aria-hidden="true">&#x2696;&#xFE0F;</span>
+                                <div><strong>DELIBERACI&Oacute;N FINAL</strong><small>Elige qu&eacute; ve el p&uacute;blico mientras llega el veredicto.</small></div>
+                            </div>
+                            <div class="control-group-buttons control-group-buttons--three control-group-buttons--deliberacion">
+                                <button id="boton_vista_deliberacion" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarVistaDeliberacion()">&#x2696;&#xFE0F; VISTA DELIBERACI&Oacute;N</button>
+                                <button id="boton_resultado_videojuego" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoVideojuego()">&#x1F3AE; MOSTRAR RESULTADO VIDEOJUEGO</button>
+                                <button id="boton_resultado_jurado" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoJurado()">&#x1F3AD; MOSTRAR RESULTADO JURADO</button>
+                            </div>
+                            <p id="deliberacion_estado_control" class="deliberacion-control__estado" role="status" aria-live="polite">El resultado del jurado aparecer&aacute; cuando haya puntuado a ambas escritoras.</p>
                         </div>
                         <div id="control_panel_representacion" class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion" role="tabpanel" aria-labelledby="control_title_representation">
                             <div class="control-group-buttons">
@@ -746,7 +759,7 @@
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260831a"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260902a"></script>
+<script src="./js/socket-events.js?v=20260902b"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

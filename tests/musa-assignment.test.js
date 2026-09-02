@@ -452,8 +452,8 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.match(html, /id="intro-ritmo"[\s\S]*SI ESCRIBE, GANA\.[\s\S]*SI PARA, PIERDE\.[\s\S]*id="intro-inspiracion"[\s\S]*SI USA TU IDEA,[\s\S]*id="intro-desventajas"[\s\S]*ROMPE DESVENTAJAS/);
   assert.match(html, /id="intro-nombre"[\s\S]*¿CUÁL SERÁ TU NOMBRE\?/);
   assert.doesNotMatch(html, /CASI ESTÁ|¿CÓMO TE LLAMAMOS\?/);
-  assert.match(html, /class="onboarding-writer-copy__typed">La historia encuentra su ritmo<\/span>/);
-  assert.match(html, /@keyframes onboardingWriterTyping[\s\S]*47%, 53% \{ width: 30ch; \}[\s\S]*94%, 100% \{ width: 0; \}/);
+  assert.match(html, /class="onboarding-writer-copy__typed">La historia despierta VOLCÁN<\/span>/);
+  assert.match(html, /@keyframes onboardingWriterTyping[\s\S]*47%, 53% \{ width: 27ch; \}[\s\S]*94%, 100% \{ width: 0; \}/);
   assert.match(html, /class="onboarding-idea-source"[\s\S]*VOLCÁN[\s\S]*class="onboarding-idea-story"[\s\S]*class="onboarding-idea-used">VOLCÁN\.<\/strong>/);
   assert.match(html, /@keyframes onboardingIdeaWord[\s\S]*width: 7ch[\s\S]*@keyframes onboardingIdeaCaret/);
   assert.match(html, /¡ESCRITXR ha destacado tu palabra!/);
@@ -466,8 +466,9 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.match(html, /@keyframes onboardingDisadvantageBlue[\s\S]*48%, 59% \{ width: 49%; \}[\s\S]*72%, 96% \{ width: 74%; \}/);
   assert.match(html, /onboarding-rhythm-feedback--gain">\+ INSPIRACIÓN<[\s\S]*onboarding-rhythm-feedback--loss">− INSPIRACIÓN</);
   assert.doesNotMatch(html, /ESCRIBE · SUMA|SE DETIENE · RESTA|<strong>MARCADOR<\/strong>|id="intro-como-jugar"|id="intro-potencia"/);
-  assert.match(html, /onboardingWritingState 18s[\s\S]*onboardingRhythmBlue 18s steps\(30, end\)[\s\S]*onboardingRhythmGain 18s[\s\S]*onboardingRhythmLoss 18s/);
-  assert.match(html, /onboardingDisadvantageTyping 20s steps\(23, end\)[\s\S]*onboardingDisadvantageMuseWord 20s steps\(6, end\)[\s\S]*onboardingDisadvantageBlue 20s steps\(23, end\)/);
+  assert.match(html, /onboardingWritingState 18s[\s\S]*onboardingRhythmBlue 18s linear[\s\S]*onboardingRhythmGain 18s[\s\S]*onboardingRhythmLoss 18s/);
+  assert.match(html, /onboardingDisadvantageTyping 20s steps\(23, end\)[\s\S]*onboardingDisadvantageMuseWord 20s steps\(6, end\)[\s\S]*onboardingDisadvantageBlue 20s ease-in-out/);
+  assert.match(html, /\.onboarding-inspiration-threshold \{[\s\S]*left: 50%;/);
   assert.match(html, /\.onboarding-inspiration-head \{[\s\S]{0,180}justify-content: center;[\s\S]{0,180}text-align: center;/);
   assert.match(html, /\.intro-section\.is-onboarding-restarting \*/);
   assert.match(selector, /classList\.add\("is-onboarding-restarting"\)[\s\S]*void objetivo\.offsetWidth[\s\S]*classList\.remove\("is-onboarding-restarting"\)[\s\S]*void objetivo\.offsetWidth[\s\S]*classList\.add\("is-onboarding-active"\)/);

@@ -110,6 +110,7 @@ function sincronizarControlAutorizado() {
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_vista_espectador_modo');
     socket.emit('pedir_puntuacion_final');
+    socket.emit('pedir_jurado_resultado');
     socket.emit('pedir_calentamiento_estado');
     socket.emit('pedir_creditos_estado');
     socket.emit('pedir_temporizador_gigante_estado');
@@ -351,6 +352,11 @@ socket.on('vista_espectador_modo', (payload = {}) => {
 socket.on('puntuacion_final_estado', (payload = {}) => {
     if (typeof window.actualizarEstadoPuntuacionFinalControl === "function") {
         window.actualizarEstadoPuntuacionFinalControl(payload);
+    }
+});
+socket.on('jurado_resultado_estado', (payload = {}) => {
+    if (typeof window.actualizarResultadoJuradoControl === "function") {
+        window.actualizarResultadoJuradoControl(payload);
     }
 });
 socket.on('teleprompter_ack', (payload = {}) => {

@@ -31,6 +31,7 @@ const JURADO_CRITERIOS_MUSAS = [
     { id: "cooperacion", label: "Cooperacion" }
 ];
 const JURADO_STATS_HISTORY_MAX = 80;
+let jurado_resultado_emit_timeout = null;
 
 const estado_jurado = {
     panel: "textos",
@@ -211,6 +212,7 @@ function actualizarNombreJurado(id, nombre) {
         `jurado_notes_nombre_${writerId}`,
         `jurado_eval_nombre_${writerId}`
     ].forEach((domId) => setTextoJurado(domId, texto));
+    programarResultadoJurado();
 }
 
 function extraerNumeroJurado(valor, fallback = 0) {
@@ -602,6 +604,40 @@ function setValorCriterioJurado(id, scope, criterioId, valor) {
     writer[scope][criterioId] = Math.max(0, Math.min(10, Number(valor) || 0));
     guardarEstadoJurado();
     actualizarTotalEvaluacionJurado(id);
+    programarResultadoJurado();
+}
+
+function calcularTotalResultadoJurado(id) {
+    const valores = [];
+    JURADO_CRITERIOS_ESCRITURA.forEach((criterio) => valores.push(obtenerValorCriterioJurado(id, "writing", criterio.id)));
+    JURADO_CRITERIOS_MUSAS.forEach((criterio) => valores.push(obtenerValorCriterioJurado(id, "muses", criterio.id)));
+    return valores.length ? valores.reduce((sum, valor) => sum + valor, 0) / valores.length : 0;
+}
+
+function construirResultadoJurado() {
+    const total1 = calcularTotalResultadoJurado(1);
+    const total2 = calcularTotalResultadoJurado(2);
+    return {
+        disponible: total1 > 0 && total2 > 0,
+        jugadores: {
+            1: { nombre: estado_jurado.writers[1].nombre, total: total1 },
+            2: { nombre: estado_jurado.writers[2].nombre, total: total2 }
+        }
+    };
+}
+
+function emitirResultadoJurado() {
+    if (!socket || !socket.connected) return false;
+    socket.emit("jurado_resultado_actualizar", construirResultadoJurado());
+    return true;
+}
+
+function programarResultadoJurado() {
+    if (jurado_resultado_emit_timeout) clearTimeout(jurado_resultado_emit_timeout);
+    jurado_resultado_emit_timeout = setTimeout(() => {
+        jurado_resultado_emit_timeout = null;
+        emitirResultadoJurado();
+    }, 140);
 }
 
 function crearControlCriterioJurado(id, scope, criterio, labelId) {
@@ -731,6 +767,7 @@ function limpiarEvaluacionJurado() {
     guardarEstadoJurado();
     inicializarNotasJurado();
     renderEvaluacionJurado();
+    programarResultadoJurado();
 }
 
 function inicializarInterfazJurado() {
@@ -761,7 +798,8 @@ window.scribJurado = {
     estado: estado_jurado,
     setPanelJurado,
     refrescarDatosJurado,
-    copiarResumenJurado
+    copiarResumenJurado,
+    emitirResultadoJurado
 };
 window.setConexionJurado = setConexionJurado;
 window.actualizarModoJurado = actualizarModoJurado;

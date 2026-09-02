@@ -126,6 +126,8 @@ function registrarMusaEnServidor() {
         ocultarAvisoConexionMusa();
         socket.emit('pedir_vista_espectador_modo');
         socket.emit('pedir_creditos_estado');
+        socket.emit('pedir_puntuacion_final');
+        socket.emit('pedir_jurado_resultado');
         socket.emit('pedir_temporizador_gigante_estado');
         socket.emit('pedir_pre_show_estado');
         socket.emit('pedir_video_tutorial_estado');
@@ -185,6 +187,14 @@ socket.on("pre_show_estado", (payload = {}) => {
 
 socket.on("vista_espectador_modo", (payload = {}) => {
     actualizarModoVistaMusaRemoto(payload);
+});
+
+socket.on("puntuacion_final_estado", (payload = {}) => {
+    actualizarPuntuacionFinalMusa(payload);
+});
+
+socket.on("jurado_resultado_estado", (payload = {}) => {
+    actualizarResultadoJuradoMusa(payload);
 });
 
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
@@ -347,6 +357,8 @@ socket.on('connect', () => {
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_estado_regalo_bandera_musas');
     socket.emit('pedir_creditos_estado');
+    socket.emit('pedir_puntuacion_final');
+    socket.emit('pedir_jurado_resultado');
     socket.emit('pedir_temporizador_gigante_estado');
     pedirNombreMusa();
     socket.emit('pedir_estado_musa');

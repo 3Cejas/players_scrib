@@ -5,6 +5,7 @@ if (typeof socket !== "undefined" && socket) {
         socket.emit("pedir_stats_live");
         socket.emit("pedir_nube_inspiracion");
         socket.emit("pedir_idioma_actual");
+        setTimeout(() => window.scribJurado?.emitirResultadoJurado?.(), 0);
     });
 
     socket.on("disconnect", () => {

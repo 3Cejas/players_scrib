@@ -164,7 +164,7 @@ test("spectator wires the animated curtain into every resolved view change", () 
   const state = fs.readFileSync(path.join(ROOT, "game/spectator/js/state.js"), "utf8");
 
   assert.match(html, /id="spectator_view_transition"[\s\S]*data-view-transition-label/);
-  assert.match(html, /domains\/view-transition\.js\?v=20260831b/);
+  assert.match(html, /domains\/view-transition\.js\?v=20260902c/);
   assert.match(css, /spectatorViewCoverBlue[\s\S]*spectatorViewRevealRed/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spectator-view-transition/);
   assert.match(state, /controlador_transicion_vista_espectador\.transition\(\{[\s\S]*swap: \(\) => aplicarModoVistaEspectadorUi\(modo\)/);

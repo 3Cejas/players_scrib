@@ -18,6 +18,9 @@
         puntuacion: "RESULTADO",
         nube_inspiracion: "NUBE DE INSPIRACIÓN",
         creditos: "CRÉDITOS",
+        deliberacion: "DELIBERACIÓN",
+        resultado_jurado: "RESULTADO DEL JURADO",
+        temporizador: "TEMPORIZADOR",
         espera: "ESPERA CREATIVA",
         resultado: "FIN DE PARTIDA"
     });
