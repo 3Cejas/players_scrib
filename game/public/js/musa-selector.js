@@ -130,8 +130,13 @@ function pedirOpcionesEquipoMusa() {
 
 function marcarSeccionOnboardingActiva(objetivo) {
   const secciones = Array.from(document.querySelectorAll(".intro-section"));
-  secciones.forEach((seccion) => seccion.classList.remove("is-onboarding-active"));
+  secciones.forEach((seccion) => {
+    seccion.classList.remove("is-onboarding-active", "is-onboarding-restarting");
+  });
   if (!objetivo) return;
+  objetivo.classList.add("is-onboarding-restarting");
+  void objetivo.offsetWidth;
+  objetivo.classList.remove("is-onboarding-restarting");
   void objetivo.offsetWidth;
   objetivo.classList.add("is-onboarding-active");
 }

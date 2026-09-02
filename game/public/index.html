@@ -4274,10 +4274,10 @@ body.musa-boot-activa .intro-flow {
 }
 .onboarding-inspiration-head {
     width: 100%;
-    justify-content: flex-start;
-    padding-inline: 0.1rem;
+    justify-content: center;
+    padding-inline: 0;
     box-sizing: border-box;
-    text-align: left;
+    text-align: center;
 }
 .onboarding-inspiration-head strong { color: #eaf9ff; }
 
@@ -4340,10 +4340,17 @@ body.musa-boot-activa .intro-flow {
 .onboarding-game-act--rhythm .onboarding-inspiration-segment--blue { animation: onboardingRhythmBlue 18s steps(30, end) infinite; }
 .onboarding-game-act--rhythm .onboarding-inspiration-segment--red { animation: onboardingRhythmRed 18s steps(30, end) infinite; }
 
+.onboarding-inspiration-feedback-row {
+    position: relative;
+    min-height: clamp(1.9rem, 5.6vw, 2.3rem);
+    margin-top: 0.38rem;
+    display: grid;
+    place-items: center;
+}
+
 .onboarding-rhythm-feedback {
-    position: absolute;
-    right: clamp(0.75rem, 3vw, 1.1rem);
-    bottom: 0.72rem;
+    position: relative;
+    grid-area: 1 / 1;
     z-index: 5;
     padding: 0.52em 0.68em;
     border: 1px solid currentColor;
@@ -4404,7 +4411,40 @@ body.musa-boot-activa .intro-flow {
     color: #ffd76c;
     font: clamp(0.75rem, 2.8vw, 1.05rem)/1.2 "Retro-gaming", "Courier New", monospace;
     text-shadow: 0 0 0.9rem rgba(255, 198, 73, 0.58);
-    animation: onboardingIdeaSource 9s ease-in-out infinite;
+    animation: onboardingIdeaSource 12s ease-in-out infinite;
+}
+
+.onboarding-idea-confirmation {
+    position: absolute;
+    inset: 0.45rem;
+    z-index: 4;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem;
+    border: 1px solid rgba(100, 255, 185, 0.72);
+    border-radius: 0.72rem;
+    color: #9affc8;
+    background: rgba(3, 31, 23, 0.96);
+    box-shadow: inset 0 0 1.2rem rgba(83, 255, 175, 0.12), 0 0 1.1rem rgba(65, 255, 170, 0.32);
+    text-align: center;
+    opacity: 0;
+    transform: scale(0.72) translateY(0.8rem);
+    animation: onboardingIdeaConfirmation 12s cubic-bezier(.2,.9,.2,1) infinite;
+}
+
+.onboarding-idea-confirmation span {
+    color: #9affc8;
+    font-size: clamp(1.5rem, 7vw, 2.35rem);
+    text-shadow: 0 0 1rem rgba(83, 255, 175, 0.8);
+}
+
+.onboarding-idea-confirmation strong {
+    color: inherit;
+    font: clamp(0.45rem, 1.7vw, 0.62rem)/1.35 "Retro-gaming", "Courier New", monospace;
+    text-shadow: 0 0 0.8rem rgba(83, 255, 175, 0.58);
+    animation: none;
 }
 
 .onboarding-idea-flight { position: relative; height: 3rem; }
@@ -4426,7 +4466,7 @@ body.musa-boot-activa .intro-flow {
     background: #10120d;
     font: clamp(0.42rem, 1.5vw, 0.6rem)/1 "Retro-gaming", "Courier New", monospace;
     box-shadow: 0 0 1rem rgba(255, 208, 81, 0.38);
-    animation: onboardingIdeaFlight 9s cubic-bezier(.5,0,.2,1) infinite;
+    animation: onboardingIdeaFlight 12s cubic-bezier(.5,0,.2,1) infinite;
 }
 
 .onboarding-idea-story {
@@ -4451,7 +4491,7 @@ body.musa-boot-activa .intro-flow {
     text-shadow: 0 0 0.8rem rgba(255, 204, 75, 0.65);
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingIdeaWord 9s steps(7, end) infinite;
+    animation: onboardingIdeaWord 12s steps(7, end) infinite;
 }
 
 .onboarding-idea-used::after {
@@ -4463,16 +4503,15 @@ body.musa-boot-activa .intro-flow {
     height: 1.05em;
     background: #fff6b5;
     box-shadow: 0 0 0.55rem #ffd45f;
-    animation: onboardingIdeaCaret 9s steps(1, end) infinite;
+    animation: onboardingIdeaCaret 12s steps(1, end) infinite;
 }
 
-.onboarding-game-act--idea .onboarding-inspiration-segment--blue { width: 38%; animation: onboardingIdeaBlue 9s cubic-bezier(.2,.9,.2,1) infinite; }
-.onboarding-game-act--idea .onboarding-inspiration-segment--red { width: 62%; animation: onboardingIdeaRed 9s cubic-bezier(.2,.9,.2,1) infinite; }
+.onboarding-game-act--idea .onboarding-inspiration-segment--blue { width: 38%; animation: onboardingIdeaBlue 12s steps(7, end) infinite; }
+.onboarding-game-act--idea .onboarding-inspiration-segment--red { width: 62%; animation: onboardingIdeaRed 12s steps(7, end) infinite; }
 
 .onboarding-idea-bonus {
-    position: absolute;
-    right: 0.72rem;
-    bottom: 0.72rem;
+    position: relative;
+    grid-area: 1 / 1;
     z-index: 4;
     padding: 0.48em 0.58em;
     border: 1px solid rgba(255, 224, 105, 0.68);
@@ -4481,7 +4520,7 @@ body.musa-boot-activa .intro-flow {
     background: rgba(31, 24, 4, 0.92);
     font: clamp(0.44rem, 1.6vw, 0.61rem)/1 "Retro-gaming", "Courier New", monospace;
     box-shadow: 0 0 1.2rem rgba(255, 210, 70, 0.4);
-    animation: onboardingIdeaBonus 9s cubic-bezier(.2,.9,.2,1) infinite;
+    animation: onboardingIdeaBonus 12s cubic-bezier(.2,.9,.2,1) infinite;
 }
 
 .onboarding-disadvantage-demo {
@@ -4501,7 +4540,7 @@ body.musa-boot-activa .intro-flow {
     border: 1px solid rgba(255, 92, 118, 0.5);
     border-radius: 0.9rem;
     background: rgba(14, 3, 9, 0.84);
-    animation: onboardingDisadvantageRestore 16s ease-in-out infinite;
+    animation: onboardingDisadvantageRestore 20s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-badge {
@@ -4517,16 +4556,44 @@ body.musa-boot-activa .intro-flow {
     font: clamp(0.46rem, 1.7vw, 0.64rem)/1 "Retro-gaming", "Courier New", monospace;
     box-shadow: 0 0 1rem rgba(255, 57, 91, 0.35);
     transform: translateX(-50%);
-    animation: onboardingDisadvantageBadge 16s ease-in-out infinite;
+    animation: onboardingDisadvantageBadge 20s ease-in-out infinite;
+}
+
+.onboarding-disadvantage-muse-send {
+    position: absolute;
+    top: 0.72rem;
+    right: 0.72rem;
+    z-index: 4;
+    display: grid;
+    gap: 0.18rem;
+    padding: 0.5rem 0.62rem;
+    border: 1px solid rgba(255, 213, 91, 0.78);
+    border-radius: 0.65rem;
+    color: #ffe170;
+    background: rgba(40, 28, 2, 0.96);
+    box-shadow: 0 0 1.1rem rgba(255, 207, 73, 0.36);
+    text-align: center;
+    opacity: 0;
+    animation: onboardingDisadvantageMuseSend 20s cubic-bezier(.3,.8,.2,1) infinite;
+}
+
+.onboarding-disadvantage-muse-send small {
+    color: rgba(255, 240, 183, 0.72);
+    font: clamp(0.34rem, 1.25vw, 0.48rem)/1 "Retro-gaming", "Courier New", monospace;
+}
+
+.onboarding-disadvantage-muse-send strong {
+    font: clamp(0.58rem, 2vw, 0.82rem)/1 "Retro-gaming", "Courier New", monospace;
 }
 
 .onboarding-disadvantage-text {
     margin: 1.5rem 0 0;
     color: #f4f8fb;
     font-size: clamp(0.78rem, 3vw, 1.04rem);
+    white-space: nowrap;
     filter: blur(0.28rem);
     transform: skewX(-6deg);
-    animation: onboardingDisadvantageText 16s ease-in-out infinite;
+    animation: onboardingDisadvantageText 20s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-text span {
@@ -4536,7 +4603,19 @@ body.musa-boot-activa .intro-flow {
     overflow: hidden;
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingDisadvantageTyping 16s steps(33, end) infinite;
+    animation: onboardingDisadvantageTyping 20s steps(23, end) infinite;
+}
+
+.onboarding-disadvantage-text strong {
+    display: inline-block;
+    width: 0;
+    overflow: hidden;
+    color: #ffdb64;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    text-shadow: 0 0 0.8rem rgba(255, 205, 64, 0.75);
+    white-space: nowrap;
+    vertical-align: bottom;
+    animation: onboardingDisadvantageMuseWord 20s steps(6, end) infinite;
 }
 
 .onboarding-disadvantage-text i {
@@ -4546,22 +4625,7 @@ body.musa-boot-activa .intro-flow {
     margin-left: 0.12em;
     vertical-align: -0.14em;
     background: currentColor;
-    animation: onboardingDisadvantageCaret 16s steps(1, end) infinite;
-}
-
-.onboarding-disadvantage-power {
-    position: absolute;
-    left: 50%;
-    bottom: 0.85rem;
-    z-index: 3;
-    padding: 0.58em 0.75em;
-    border: 1px solid rgba(255, 221, 115, 0.76);
-    border-radius: 999px;
-    color: #fff3a4;
-    background: rgba(31, 24, 4, 0.95);
-    font: clamp(0.45rem, 1.65vw, 0.62rem)/1 "Retro-gaming", "Courier New", monospace;
-    box-shadow: 0 0 1.1rem rgba(255, 210, 70, 0.48);
-    animation: onboardingDisadvantagePower 16s cubic-bezier(.2,.9,.2,1) infinite;
+    animation: onboardingDisadvantageCaret 20s steps(1, end) infinite;
 }
 
 .onboarding-disadvantage-burst {
@@ -4570,7 +4634,7 @@ body.musa-boot-activa .intro-flow {
     color: #8bffc1;
     font-size: clamp(3rem, 14vw, 5.5rem);
     text-shadow: 0 0 0.5rem #64ffb0, 0 0 2rem rgba(91, 255, 169, 0.76);
-    animation: onboardingDisadvantageBurst 16s ease-out infinite;
+    animation: onboardingDisadvantageBurst 20s ease-out infinite;
 }
 
 .onboarding-disadvantage-result {
@@ -4578,21 +4642,70 @@ body.musa-boot-activa .intro-flow {
     font: clamp(0.58rem, 2.2vw, 0.78rem)/1.3 "Retro-gaming", "Courier New", monospace;
     text-align: center;
     text-shadow: 0 0 0.9rem rgba(91, 255, 169, 0.5);
-    animation: onboardingDisadvantageResult 16s ease-in-out infinite;
+    animation: onboardingDisadvantageResult 20s ease-in-out infinite;
 }
 
 .onboarding-disadvantage-meter {
     margin-top: 0;
 }
 
+.onboarding-inspiration-threshold {
+    position: absolute;
+    left: 61%;
+    top: -0.28rem;
+    bottom: -0.28rem;
+    z-index: 5;
+    width: 0.13rem;
+    border-radius: 999px;
+    background: #ffd95f;
+    box-shadow: 0 0 0.65rem #ffd95f, 0 0 1.25rem rgba(255, 82, 112, 0.62);
+    animation: onboardingDisadvantageThreshold 20s ease-in-out infinite;
+}
+
+.onboarding-inspiration-threshold small {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    color: #ffe583;
+    font: clamp(0.34rem, 1.2vw, 0.45rem)/1 "Retro-gaming", "Courier New", monospace;
+    white-space: nowrap;
+    transform: translate(-50%, -50%) rotate(-90deg);
+}
+
 .onboarding-game-act--disadvantage .onboarding-inspiration-segment--blue {
     width: 46%;
-    animation: onboardingDisadvantageBlue 16s steps(33, end) infinite;
+    animation: onboardingDisadvantageBlue 20s steps(23, end) infinite;
 }
 
 .onboarding-game-act--disadvantage .onboarding-inspiration-segment--red {
     width: 54%;
-    animation: onboardingDisadvantageRed 16s steps(33, end) infinite;
+    animation: onboardingDisadvantageRed 20s steps(23, end) infinite;
+}
+
+.onboarding-disadvantage-feedback {
+    position: relative;
+    grid-area: 1 / 1;
+    z-index: 5;
+    padding: 0.52em 0.68em;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font: clamp(0.48rem, 1.85vw, 0.68rem)/1 "Retro-gaming", "Courier New", monospace;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.onboarding-disadvantage-feedback--writing {
+    color: #8bffc1;
+    background: rgba(4, 36, 24, 0.94);
+    box-shadow: 0 0 1.2rem rgba(75, 255, 166, 0.52);
+    animation: onboardingDisadvantageWritingGain 20s cubic-bezier(.2,.9,.2,1) infinite;
+}
+
+.onboarding-disadvantage-feedback--muse {
+    color: #ffe477;
+    background: rgba(47, 32, 2, 0.96);
+    box-shadow: 0 0 1.35rem rgba(255, 209, 72, 0.58);
+    animation: onboardingDisadvantageMuseGain 20s cubic-bezier(.2,.9,.2,1) infinite;
 }
 
 .onboarding-disadvantage-copy {
@@ -4621,17 +4734,22 @@ body.musa-boot-activa .intro-flow {
 @keyframes onboardingIdeaBlue { 0%, 66% { width: 38%; } 74%, 90% { width: 68%; } 100% { width: 38%; } }
 @keyframes onboardingIdeaRed { 0%, 66% { width: 62%; } 74%, 90% { width: 32%; } 100% { width: 62%; } }
 @keyframes onboardingIdeaBonus { 0%, 67%, 100% { opacity: 0; transform: translateY(.7rem) scale(.7); } 74%, 88% { opacity: 1; transform: none; } }
+@keyframes onboardingIdeaConfirmation { 0%, 70%, 100% { opacity: 0; transform: scale(.72) translateY(.8rem); } 77%, 93% { opacity: 1; transform: none; } }
 
-@keyframes onboardingDisadvantageRestore { 0%, 62% { border-color: rgba(255,92,118,.5); box-shadow: inset 0 0 2rem rgba(255,35,72,.08); } 72%, 91% { border-color: rgba(91,255,169,.7); box-shadow: inset 0 0 2.5rem rgba(91,255,169,.13), 0 0 1.4rem rgba(91,255,169,.25); } }
-@keyframes onboardingDisadvantageBadge { 0%, 63% { opacity: 1; transform: translateX(-50%) scale(1); } 72%, 100% { opacity: 0; transform: translateX(-50%) scale(1.35) rotate(5deg); } }
-@keyframes onboardingDisadvantageText { 0%, 63% { filter: blur(.28rem); transform: skewX(-6deg); } 72%, 100% { filter: none; transform: none; } }
-@keyframes onboardingDisadvantageTyping { 0%, 18% { width: 0; } 49%, 92% { width: 33ch; } 100% { width: 0; } }
-@keyframes onboardingDisadvantageCaret { 0%, 18%, 54%, 100% { opacity: 0; } 22%, 30%, 38%, 46%, 52% { opacity: 1; } 26%, 34%, 42%, 49% { opacity: .18; } }
-@keyframes onboardingDisadvantagePower { 0%, 50% { opacity: 0; transform: translate(-50%, 3rem) scale(.72); } 59%, 68% { opacity: 1; transform: translate(-50%, -3.8rem) scale(1); } 77%, 100% { opacity: 0; transform: translate(-50%, -5.8rem) scale(.4); } }
-@keyframes onboardingDisadvantageBlue { 0% { width: 46%; } 25% { width: 30%; } 49% { width: 42%; } 68%, 91% { width: 72%; } 100% { width: 46%; } }
-@keyframes onboardingDisadvantageRed { 0% { width: 54%; } 25% { width: 70%; } 49% { width: 58%; } 68%, 91% { width: 28%; } 100% { width: 54%; } }
-@keyframes onboardingDisadvantageBurst { 0%, 62% { opacity: 0; transform: scale(.2) rotate(-30deg); } 72% { opacity: 1; transform: scale(1.12) rotate(4deg); } 84%, 100% { opacity: 0; transform: scale(1.8) rotate(24deg); } }
-@keyframes onboardingDisadvantageResult { 0%, 70% { opacity: 0; transform: translateY(.5rem); } 77%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes onboardingDisadvantageRestore { 0%, 70% { border-color: rgba(255,92,118,.5); box-shadow: inset 0 0 2rem rgba(255,35,72,.08); } 77%, 95% { border-color: rgba(91,255,169,.7); box-shadow: inset 0 0 2.5rem rgba(91,255,169,.13), 0 0 1.4rem rgba(91,255,169,.25); } }
+@keyframes onboardingDisadvantageBadge { 0%, 70% { opacity: 1; transform: translateX(-50%) scale(1); } 77%, 100% { opacity: 0; transform: translateX(-50%) scale(1.35) rotate(5deg); } }
+@keyframes onboardingDisadvantageText { 0%, 70% { filter: blur(.28rem); transform: skewX(-6deg); } 77%, 100% { filter: none; transform: none; } }
+@keyframes onboardingDisadvantageTyping { 0%, 10% { width: 0; } 48%, 100% { width: 23ch; } }
+@keyframes onboardingDisadvantageMuseSend { 0%, 49%, 100% { opacity: 0; transform: translate(0, -.45rem) scale(.72); } 54%, 59% { opacity: 1; transform: none; } 67% { opacity: 0; transform: translate(-7rem, 4.4rem) scale(.58); } }
+@keyframes onboardingDisadvantageMuseWord { 0%, 60% { width: 0; opacity: 0; } 61% { opacity: 1; } 71%, 96% { width: 6ch; opacity: 1; } 100% { width: 0; opacity: 0; } }
+@keyframes onboardingDisadvantageCaret { 0%, 10%, 50%, 59%, 74%, 100% { opacity: 0; } 14%, 22%, 30%, 38%, 46%, 62%, 68%, 72% { opacity: 1; } 18%, 26%, 34%, 42%, 65%, 70% { opacity: .18; } }
+@keyframes onboardingDisadvantageBlue { 0%, 10% { width: 32%; } 48%, 59% { width: 49%; } 72%, 96% { width: 74%; } 100% { width: 32%; } }
+@keyframes onboardingDisadvantageRed { 0%, 10% { width: 68%; } 48%, 59% { width: 51%; } 72%, 96% { width: 26%; } 100% { width: 68%; } }
+@keyframes onboardingDisadvantageThreshold { 0%, 69% { opacity: 1; transform: scaleY(1); } 75%, 100% { opacity: 0; transform: scale(3) rotate(18deg); filter: blur(.15rem); } }
+@keyframes onboardingDisadvantageWritingGain { 0%, 12%, 50%, 100% { opacity: 0; transform: translateY(.55rem) scale(.72); } 17%, 25%, 33%, 41%, 48% { opacity: 1; transform: none; } 21%, 29%, 37%, 45% { opacity: .32; transform: translateY(-.18rem) scale(1.08); } }
+@keyframes onboardingDisadvantageMuseGain { 0%, 66%, 100% { opacity: 0; transform: translateY(.55rem) scale(.72); } 72%, 84% { opacity: 1; transform: none; } }
+@keyframes onboardingDisadvantageBurst { 0%, 69% { opacity: 0; transform: scale(.2) rotate(-30deg); } 77% { opacity: 1; transform: scale(1.12) rotate(4deg); } 88%, 100% { opacity: 0; transform: scale(1.8) rotate(24deg); } }
+@keyframes onboardingDisadvantageResult { 0%, 74% { opacity: 0; transform: translateY(.5rem); } 80%, 95% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 
 @keyframes onboardingFeedbackTint {
     0%, 12%, 20%, 28%, 36%, 44%, 53%, 60%, 68%, 76%, 84%, 92%, 100% { opacity: 0; }
@@ -4641,6 +4759,7 @@ body.musa-boot-activa .intro-flow {
 
 .intro-onboarding-demo:not(.is-onboarding-active) .onboarding-feedback-tint,
 .intro-onboarding-demo:not(.is-onboarding-active) .onboarding-game-slide *,
+.intro-section.is-onboarding-restarting *,
 .intro-welcome-motion:not(.is-onboarding-active)::before,
 .intro-welcome-motion:not(.is-onboarding-active)::after,
 .intro-welcome-motion:not(.is-onboarding-active) .intro-title,
@@ -4659,7 +4778,6 @@ body.musa-boot-activa .intro-flow {
     .onboarding-game-slide { min-height: clamp(22rem, 58vh, 27rem); }
     .onboarding-game-card { padding: 0.68rem; }
     .onboarding-idea-demo { grid-template-columns: minmax(0, .76fr) 2.7rem minmax(0, 1.2fr); }
-    .onboarding-idea-bonus { bottom: 3.35rem; }
 }
 
 @media (max-height: 690px) {
@@ -4697,7 +4815,9 @@ body.musa-boot-activa .intro-flow {
     .musa-assignment-reveal::after,
     .musa-assignment-reveal__feather { animation: none !important; }
     .onboarding-feedback-tint,
-    .onboarding-rhythm-feedback { display: none; }
+    .onboarding-rhythm-feedback,
+    .onboarding-idea-bonus,
+    .onboarding-disadvantage-feedback { display: none; }
 }
 
 </style>
@@ -4757,9 +4877,11 @@ body.musa-boot-activa .intro-flow {
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--blue">TU EQUIPO</span>
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--red">EQUIPO RIVAL</span>
                                     </div>
+                                    <div class="onboarding-inspiration-feedback-row" aria-hidden="true">
+                                        <strong class="onboarding-rhythm-feedback onboarding-rhythm-feedback--gain">+ INSPIRACIÓN</strong>
+                                        <strong class="onboarding-rhythm-feedback onboarding-rhythm-feedback--loss">− INSPIRACIÓN</strong>
+                                    </div>
                                 </div>
-                                <strong class="onboarding-rhythm-feedback onboarding-rhythm-feedback--gain">+ INSPIRACIÓN</strong>
-                                <strong class="onboarding-rhythm-feedback onboarding-rhythm-feedback--loss">− INSPIRACIÓN</strong>
                             </div>
                         </article>
                     </div>
@@ -4784,6 +4906,10 @@ body.musa-boot-activa .intro-flow {
                                     <div class="onboarding-idea-source">
                                         <span>TU PALABRA</span>
                                         <strong>VOLCÁN</strong>
+                                        <div class="onboarding-idea-confirmation" aria-hidden="true">
+                                            <span>✦</span>
+                                            <strong>¡ESCRITXR ha destacado tu palabra!</strong>
+                                        </div>
                                     </div>
                                     <div class="onboarding-idea-flight"><b>VOLCÁN</b></div>
                                     <div class="onboarding-idea-story">
@@ -4797,8 +4923,10 @@ body.musa-boot-activa .intro-flow {
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--blue">TU EQUIPO</span>
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--red">EQUIPO RIVAL</span>
                                     </div>
+                                    <div class="onboarding-inspiration-feedback-row" aria-hidden="true">
+                                        <strong class="onboarding-idea-bonus">+ INSPIRACIÓN</strong>
+                                    </div>
                                 </div>
-                                <strong class="onboarding-idea-bonus">+ INSPIRACIÓN</strong>
                             </div>
                         </article>
                     </div>
@@ -4821,8 +4949,10 @@ body.musa-boot-activa .intro-flow {
                             <div class="onboarding-game-card onboarding-disadvantage-demo">
                                 <div class="onboarding-disadvantage-editor">
                                     <strong class="onboarding-disadvantage-badge">DESVENTAJA · TEXTO BORROSO</strong>
-                                    <p class="onboarding-disadvantage-text"><span>La historia vuelve a estar clara.</span><i aria-hidden="true"></i></p>
-                                    <strong class="onboarding-disadvantage-power">TU INSPIRACIÓN</strong>
+                                    <div class="onboarding-disadvantage-muse-send" aria-hidden="true">
+                                        <small>TU PALABRA</small><strong>VOLCÁN</strong>
+                                    </div>
+                                    <p class="onboarding-disadvantage-text"><span>La historia encontró un </span><strong>VOLCÁN</strong><i aria-hidden="true"></i></p>
                                     <span class="onboarding-disadvantage-burst">✦</span>
                                 </div>
                                 <div class="onboarding-inspiration-meter onboarding-disadvantage-meter">
@@ -4830,9 +4960,14 @@ body.musa-boot-activa .intro-flow {
                                     <div class="onboarding-inspiration-bar">
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--blue">TU EQUIPO</span>
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--red">EQUIPO RIVAL</span>
+                                        <span class="onboarding-inspiration-threshold" aria-hidden="true"><small>BARRERA</small></span>
+                                    </div>
+                                    <div class="onboarding-inspiration-feedback-row" aria-hidden="true">
+                                        <strong class="onboarding-disadvantage-feedback onboarding-disadvantage-feedback--writing">+ INSPIRACIÓN</strong>
+                                        <strong class="onboarding-disadvantage-feedback onboarding-disadvantage-feedback--muse">+ INSPIRACIÓN</strong>
                                     </div>
                                 </div>
-                                <strong class="onboarding-disadvantage-result">DESVENTAJA FUERA</strong>
+                                <strong class="onboarding-disadvantage-result">BARRERA SUPERADA · DESVENTAJA FUERA</strong>
                                 <p class="onboarding-disadvantage-copy">Tu escritxr sufrirá desventajas. Tu inspiración le ayudará a quitárselas.</p>
                             </div>
                         </article>
@@ -4964,5 +5099,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260902a"></script>
+<script src="./js/musa-selector.js?v=20260902b"></script>
 </html>
