@@ -5075,6 +5075,23 @@ body.page-spectator #inspiracion .bar::after {
   pointer-events: none;
 }
 
+body.page-spectator #inspiracion .bar::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.18em;
+  bottom: -0.18em;
+  z-index: 6;
+  width: clamp(2px, 0.16vw, 4px);
+  border-radius: 999px;
+  background: #ffe06a;
+  box-shadow:
+      0 0 0.38em #ffd95f,
+      0 0 0.78em rgba(255, 105, 92, 0.45);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 body.page-spectator #inspiracion .bar-segment {
   height: 100%;
   min-width: 0;

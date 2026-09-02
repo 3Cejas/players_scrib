@@ -34,6 +34,7 @@ let seleccionPendiente = { assignmentMode: "automatica", player: null };
 let claveAvisoMusa = "";
 let restaurandoAsignacionPersistida = false;
 let sesionPartidaMusa = "";
+let onboardingTextTimer = null;
 
 const tMusa = (key, variables = {}, fallback = "") => (
   typeof window.scribT2P === "function"
@@ -128,7 +129,87 @@ function pedirOpcionesEquipoMusa() {
   return true;
 }
 
+function detenerTextoAnimadoOnboarding() {
+  if (onboardingTextTimer) clearTimeout(onboardingTextTimer);
+  onboardingTextTimer = null;
+}
+
+function caracteresVisiblesOnboarding(texto, cantidad) {
+  return Array.from(String(texto || "")).slice(0, Math.max(0, cantidad)).join("");
+}
+
+function cantidadProgresivaOnboarding(progreso, inicio, fin, total, inversa = false) {
+  if (progreso <= inicio) return inversa ? total : 0;
+  if (progreso >= fin) return inversa ? 0 : total;
+  const avance = (progreso - inicio) / (fin - inicio);
+  return inversa
+    ? total - Math.ceil(avance * total)
+    : Math.floor(avance * total);
+}
+
+function animarTextoOnboarding(seccion) {
+  detenerTextoAnimadoOnboarding();
+  if (!seccion) return;
+
+  const textoRitmo = seccion.querySelector(".onboarding-writer-copy__typed");
+  const textoDesventaja = seccion.querySelector(".onboarding-disadvantage-text span");
+  const palabraDesventaja = seccion.querySelector(".onboarding-disadvantage-text strong");
+  const elementos = [textoRitmo, textoDesventaja, palabraDesventaja].filter(Boolean);
+  if (!elementos.length) return;
+
+  const textoCompleto = (elemento) => String(elemento?.dataset.fullText || elemento?.textContent || "");
+  const escribirCompleto = () => elementos.forEach((elemento) => {
+    elemento.textContent = textoCompleto(elemento);
+  });
+  if (usaMovimientoReducido()) {
+    escribirCompleto();
+    return;
+  }
+
+  const duracion = seccion.id === "intro-ritmo" ? 18000 : 20000;
+  const inicio = performance.now();
+  const actualizar = () => {
+    if (!seccion.classList.contains("is-onboarding-active")) return;
+    const progreso = ((performance.now() - inicio) % duracion) / duracion;
+
+    if (textoRitmo) {
+      const completo = textoCompleto(textoRitmo);
+      const total = Array.from(completo).length;
+      let visibles = 0;
+      if (progreso < 0.47) visibles = cantidadProgresivaOnboarding(progreso, 0.09, 0.47, total);
+      else if (progreso <= 0.53) visibles = total;
+      else if (progreso < 0.94) visibles = cantidadProgresivaOnboarding(progreso, 0.53, 0.94, total, true);
+      textoRitmo.textContent = caracteresVisiblesOnboarding(completo, visibles);
+    }
+
+    if (textoDesventaja) {
+      const completo = textoCompleto(textoDesventaja);
+      const total = Array.from(completo).length;
+      const visibles = progreso < 0.48
+        ? cantidadProgresivaOnboarding(progreso, 0.1, 0.48, total)
+        : total;
+      textoDesventaja.textContent = caracteresVisiblesOnboarding(completo, visibles);
+    }
+
+    if (palabraDesventaja) {
+      const completo = textoCompleto(palabraDesventaja);
+      const total = Array.from(completo).length;
+      let visibles = 0;
+      if (progreso >= 0.6 && progreso < 0.71) {
+        visibles = cantidadProgresivaOnboarding(progreso, 0.6, 0.71, total);
+      } else if (progreso >= 0.71 && progreso <= 0.96) {
+        visibles = total;
+      }
+      palabraDesventaja.textContent = caracteresVisiblesOnboarding(completo, visibles);
+    }
+
+    onboardingTextTimer = setTimeout(actualizar, 60);
+  };
+  actualizar();
+}
+
 function marcarSeccionOnboardingActiva(objetivo) {
+  detenerTextoAnimadoOnboarding();
   const secciones = Array.from(document.querySelectorAll(".intro-section"));
   secciones.forEach((seccion) => {
     seccion.classList.remove("is-onboarding-active", "is-onboarding-restarting");
@@ -139,6 +220,7 @@ function marcarSeccionOnboardingActiva(objetivo) {
   objetivo.classList.remove("is-onboarding-restarting");
   void objetivo.offsetWidth;
   objetivo.classList.add("is-onboarding-active");
+  animarTextoOnboarding(objetivo);
 }
 
 function scrollToSeccion(objetivo) {

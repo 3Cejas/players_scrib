@@ -4249,12 +4249,10 @@ body.musa-boot-activa .intro-flow {
 .onboarding-writer-copy__typed {
     display: inline-block;
     max-width: 100%;
-    overflow: hidden;
     color: inherit;
     font: inherit;
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingWriterTyping 18s steps(27, end) infinite;
 }
 
 .onboarding-writer-caret {
@@ -4302,6 +4300,33 @@ body.musa-boot-activa .intro-flow {
     background: linear-gradient(112deg, transparent 26%, rgba(255, 255, 255, 0.35) 48%, transparent 74%);
     transform: translateX(-130%);
     animation: onboardingBarSweep 3.2s ease-in-out infinite;
+}
+
+.onboarding-inspiration-midpoint {
+    position: absolute;
+    left: 50%;
+    top: -0.22rem;
+    bottom: -0.22rem;
+    z-index: 6;
+    width: 0.13rem;
+    border-radius: 999px;
+    background: #ffe06a;
+    box-shadow: 0 0 0.52rem #ffd95f, 0 0 1rem rgba(255, 105, 92, 0.38);
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.onboarding-inspiration-midpoint::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.38rem;
+    height: 0.38rem;
+    border: 1px solid rgba(255, 248, 190, 0.9);
+    background: #ffd95f;
+    box-shadow: 0 0 0.55rem rgba(255, 217, 95, 0.85);
+    transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .onboarding-inspiration-segment {
@@ -4598,24 +4623,19 @@ body.musa-boot-activa .intro-flow {
 
 .onboarding-disadvantage-text span {
     display: inline-block;
-    width: 0;
     max-width: 100%;
-    overflow: hidden;
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingDisadvantageTyping 20s steps(23, end) infinite;
 }
 
 .onboarding-disadvantage-text strong {
     display: inline-block;
-    width: 0;
-    overflow: hidden;
+    margin-left: 0.3em;
     color: #ffdb64;
     font-family: "Retro-gaming", "Courier New", monospace;
     text-shadow: 0 0 0.8rem rgba(255, 205, 64, 0.75);
     white-space: nowrap;
     vertical-align: bottom;
-    animation: onboardingDisadvantageMuseWord 20s steps(6, end) infinite;
 }
 
 .onboarding-disadvantage-text i {
@@ -4650,13 +4670,6 @@ body.musa-boot-activa .intro-flow {
 }
 
 .onboarding-inspiration-threshold {
-    position: absolute;
-    left: 50%;
-    top: -0.28rem;
-    bottom: -0.28rem;
-    z-index: 5;
-    width: 0.13rem;
-    border-radius: 999px;
     background: #ffd95f;
     box-shadow: 0 0 0.65rem #ffd95f, 0 0 1.25rem rgba(255, 82, 112, 0.62);
     animation: onboardingDisadvantageThreshold 20s ease-in-out infinite;
@@ -4719,7 +4732,6 @@ body.musa-boot-activa .intro-flow {
 @keyframes onboardingWriterPulse { 0%, 6%, 52%, 100% { transform: scaleX(.22); opacity: .18; } 15%, 47% { transform: scaleX(1); opacity: 1; } }
 @keyframes onboardingWritingState { 0%, 52% { opacity: 1; } 53%, 100% { opacity: 0; } }
 @keyframes onboardingRestState { 0%, 52% { opacity: 0; } 53%, 100% { opacity: 1; } }
-@keyframes onboardingWriterTyping { 0%, 9% { width: 0; } 47%, 53% { width: 27ch; } 94%, 100% { width: 0; } }
 @keyframes onboardingWriterCaret { 0%, 52% { opacity: 1; } 53%, 100% { opacity: 0; } }
 @keyframes onboardingRhythmBlue { 0%, 7% { width: 42%; } 19% { width: 50%; } 33% { width: 60%; } 47%, 53% { width: 69%; } 66% { width: 61%; } 80% { width: 52%; } 94%, 100% { width: 44%; } }
 @keyframes onboardingRhythmRed { 0%, 7% { width: 58%; } 19% { width: 50%; } 33% { width: 40%; } 47%, 53% { width: 31%; } 66% { width: 39%; } 80% { width: 48%; } 94%, 100% { width: 56%; } }
@@ -4739,13 +4751,11 @@ body.musa-boot-activa .intro-flow {
 @keyframes onboardingDisadvantageRestore { 0%, 70% { border-color: rgba(255,92,118,.5); box-shadow: inset 0 0 2rem rgba(255,35,72,.08); } 77%, 95% { border-color: rgba(91,255,169,.7); box-shadow: inset 0 0 2.5rem rgba(91,255,169,.13), 0 0 1.4rem rgba(91,255,169,.25); } }
 @keyframes onboardingDisadvantageBadge { 0%, 70% { opacity: 1; transform: translateX(-50%) scale(1); } 77%, 100% { opacity: 0; transform: translateX(-50%) scale(1.35) rotate(5deg); } }
 @keyframes onboardingDisadvantageText { 0%, 70% { filter: blur(.28rem); transform: skewX(-6deg); } 77%, 100% { filter: none; transform: none; } }
-@keyframes onboardingDisadvantageTyping { 0%, 10% { width: 0; } 48%, 100% { width: 23ch; } }
 @keyframes onboardingDisadvantageMuseSend { 0%, 49%, 100% { opacity: 0; transform: translate(0, -.45rem) scale(.72); } 54%, 59% { opacity: 1; transform: none; } 67% { opacity: 0; transform: translate(-7rem, 4.4rem) scale(.58); } }
-@keyframes onboardingDisadvantageMuseWord { 0%, 60% { width: 0; opacity: 0; } 61% { opacity: 1; } 71%, 96% { width: 6ch; opacity: 1; } 100% { width: 0; opacity: 0; } }
 @keyframes onboardingDisadvantageCaret { 0%, 10%, 50%, 59%, 74%, 100% { opacity: 0; } 14%, 22%, 30%, 38%, 46%, 62%, 68%, 72% { opacity: 1; } 18%, 26%, 34%, 42%, 65%, 70% { opacity: .18; } }
 @keyframes onboardingDisadvantageBlue { 0%, 10% { width: 32%; } 48%, 59% { width: 49%; } 72%, 96% { width: 74%; } 100% { width: 32%; } }
 @keyframes onboardingDisadvantageRed { 0%, 10% { width: 68%; } 48%, 59% { width: 51%; } 72%, 96% { width: 26%; } 100% { width: 68%; } }
-@keyframes onboardingDisadvantageThreshold { 0%, 69% { opacity: 1; transform: scaleY(1); } 75%, 100% { opacity: 0; transform: scale(3) rotate(18deg); filter: blur(.15rem); } }
+@keyframes onboardingDisadvantageThreshold { 0%, 69% { opacity: 1; transform: translateX(-50%) scaleY(1); } 75%, 100% { opacity: 0; transform: translateX(-50%) scale(3) rotate(18deg); filter: blur(.15rem); } }
 @keyframes onboardingDisadvantageWritingGain { 0%, 12%, 50%, 100% { opacity: 0; transform: translateY(.55rem) scale(.72); } 17%, 25%, 33%, 41%, 48% { opacity: 1; transform: none; } 21%, 29%, 37%, 45% { opacity: .32; transform: translateY(-.18rem) scale(1.08); } }
 @keyframes onboardingDisadvantageMuseGain { 0%, 66%, 100% { opacity: 0; transform: translateY(.55rem) scale(.72); } 72%, 84% { opacity: 1; transform: none; } }
 @keyframes onboardingDisadvantageBurst { 0%, 69% { opacity: 0; transform: scale(.2) rotate(-30deg); } 77% { opacity: 1; transform: scale(1.12) rotate(4deg); } 88%, 100% { opacity: 0; transform: scale(1.8) rotate(24deg); } }
@@ -4869,13 +4879,14 @@ body.musa-boot-activa .intro-flow {
                                             <span class="onboarding-writer-status__rest">SIN ESCRIBIR ↓</span>
                                         </span>
                                     </div>
-                                    <p class="onboarding-writer-copy"><span class="onboarding-writer-copy__typed">La historia despierta VOLCÁN</span><i class="onboarding-writer-caret"></i></p>
+                                    <p class="onboarding-writer-copy"><span class="onboarding-writer-copy__typed" data-full-text="La historia despierta VOLCÁN">La historia despierta VOLCÁN</span><i class="onboarding-writer-caret"></i></p>
                                 </div>
                                 <div class="onboarding-inspiration-meter">
                                     <div class="onboarding-inspiration-head"><span>INSPIRACIÓN</span></div>
                                     <div class="onboarding-inspiration-bar">
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--blue">TU EQUIPO</span>
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--red">EQUIPO RIVAL</span>
+                                        <span class="onboarding-inspiration-midpoint" aria-hidden="true"></span>
                                     </div>
                                     <div class="onboarding-inspiration-feedback-row" aria-hidden="true">
                                         <strong class="onboarding-rhythm-feedback onboarding-rhythm-feedback--gain">+ INSPIRACIÓN</strong>
@@ -4922,6 +4933,7 @@ body.musa-boot-activa .intro-flow {
                                     <div class="onboarding-inspiration-bar">
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--blue">TU EQUIPO</span>
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--red">EQUIPO RIVAL</span>
+                                        <span class="onboarding-inspiration-midpoint" aria-hidden="true"></span>
                                     </div>
                                     <div class="onboarding-inspiration-feedback-row" aria-hidden="true">
                                         <strong class="onboarding-idea-bonus">+ INSPIRACIÓN</strong>
@@ -4952,7 +4964,7 @@ body.musa-boot-activa .intro-flow {
                                     <div class="onboarding-disadvantage-muse-send" aria-hidden="true">
                                         <small>TU PALABRA</small><strong>VOLCÁN</strong>
                                     </div>
-                                    <p class="onboarding-disadvantage-text"><span>La historia encontró un </span><strong>VOLCÁN</strong><i aria-hidden="true"></i></p>
+                                    <p class="onboarding-disadvantage-text"><span data-full-text="La historia encontró un">La historia encontró un</span><strong data-full-text="VOLCÁN">VOLCÁN</strong><i aria-hidden="true"></i></p>
                                     <span class="onboarding-disadvantage-burst">✦</span>
                                 </div>
                                 <div class="onboarding-inspiration-meter onboarding-disadvantage-meter">
@@ -4960,7 +4972,7 @@ body.musa-boot-activa .intro-flow {
                                     <div class="onboarding-inspiration-bar">
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--blue">TU EQUIPO</span>
                                         <span class="onboarding-inspiration-segment onboarding-inspiration-segment--red">EQUIPO RIVAL</span>
-                                        <span class="onboarding-inspiration-threshold" aria-hidden="true"><small>BARRERA</small></span>
+                                        <span class="onboarding-inspiration-midpoint onboarding-inspiration-threshold" aria-hidden="true"><small>BARRERA</small></span>
                                     </div>
                                     <div class="onboarding-inspiration-feedback-row" aria-hidden="true">
                                         <strong class="onboarding-disadvantage-feedback onboarding-disadvantage-feedback--writing">+ INSPIRACIÓN</strong>
@@ -5099,5 +5111,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260902b"></script>
+<script src="./js/musa-selector.js?v=20260902c"></script>
 </html>

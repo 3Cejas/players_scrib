@@ -412,7 +412,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260902b/);
+  assert.match(html, /musa-selector\.js\?v=20260902c/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -446,20 +446,23 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
 test("muse onboarding separates the three animated rules and keeps the original welcome", () => {
   const html = read("game/public/index.html");
   const selector = read("game/public/js/musa-selector.js");
+  const dashboardCss = read("game/css/dashboard-players.css");
 
   assert.equal((html.match(/class="intro-section/g) || []).length, 6);
   assert.match(html, /id="intro-bienvenida" class="intro-section intro-welcome-motion"[\s\S]*MUSA<\/span>, BIENVENIDA A[\s\S]*intro-logo-img--center[\s\S]*COMENZAR/);
   assert.match(html, /id="intro-ritmo"[\s\S]*SI ESCRIBE, GANA\.[\s\S]*SI PARA, PIERDE\.[\s\S]*id="intro-inspiracion"[\s\S]*SI USA TU IDEA,[\s\S]*id="intro-desventajas"[\s\S]*ROMPE DESVENTAJAS/);
   assert.match(html, /id="intro-nombre"[\s\S]*¿CUÁL SERÁ TU NOMBRE\?/);
   assert.doesNotMatch(html, /CASI ESTÁ|¿CÓMO TE LLAMAMOS\?/);
-  assert.match(html, /class="onboarding-writer-copy__typed">La historia despierta VOLCÁN<\/span>/);
-  assert.match(html, /@keyframes onboardingWriterTyping[\s\S]*47%, 53% \{ width: 27ch; \}[\s\S]*94%, 100% \{ width: 0; \}/);
+  assert.match(html, /class="onboarding-writer-copy__typed" data-full-text="La historia despierta VOLCÁN">La historia despierta VOLCÁN<\/span>/);
+  assert.doesNotMatch(html, /@keyframes onboardingWriterTyping|onboardingWriterTyping 18s/);
   assert.match(html, /class="onboarding-idea-source"[\s\S]*VOLCÁN[\s\S]*class="onboarding-idea-story"[\s\S]*class="onboarding-idea-used">VOLCÁN\.<\/strong>/);
   assert.match(html, /@keyframes onboardingIdeaWord[\s\S]*width: 7ch[\s\S]*@keyframes onboardingIdeaCaret/);
   assert.match(html, /¡ESCRITXR ha destacado tu palabra!/);
   assert.match(html, /DESVENTAJA · TEXTO BORROSO[\s\S]*TU PALABRA[\s\S]*VOLCÁN[\s\S]*BARRERA SUPERADA · DESVENTAJA FUERA[\s\S]*Tu inspiración le ayudará a quitárselas/);
   assert.equal((html.match(/onboarding-inspiration-segment--blue">TU EQUIPO<\/span>/g) || []).length, 3);
   assert.equal((html.match(/onboarding-inspiration-segment--red">EQUIPO RIVAL<\/span>/g) || []).length, 3);
+  assert.equal((html.match(/class="onboarding-inspiration-midpoint(?: onboarding-inspiration-threshold)?"/g) || []).length, 3);
+  assert.match(dashboardCss, /body\.page-spectator #inspiracion \.bar::before \{[\s\S]*left: 50%;[\s\S]*background: #ffe06a;/);
   assert.equal((html.match(/class="onboarding-inspiration-feedback-row"/g) || []).length, 3);
   assert.doesNotMatch(html, />TÚ<\/span>|>RIVAL<\/span>|\+ TU IDEA/);
   assert.match(html, /onboarding-disadvantage-meter[\s\S]*TU EQUIPO[\s\S]*EQUIPO RIVAL[\s\S]*BARRERA/);
@@ -467,11 +470,13 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.match(html, /onboarding-rhythm-feedback--gain">\+ INSPIRACIÓN<[\s\S]*onboarding-rhythm-feedback--loss">− INSPIRACIÓN</);
   assert.doesNotMatch(html, /ESCRIBE · SUMA|SE DETIENE · RESTA|<strong>MARCADOR<\/strong>|id="intro-como-jugar"|id="intro-potencia"/);
   assert.match(html, /onboardingWritingState 18s[\s\S]*onboardingRhythmBlue 18s linear[\s\S]*onboardingRhythmGain 18s[\s\S]*onboardingRhythmLoss 18s/);
-  assert.match(html, /onboardingDisadvantageTyping 20s steps\(23, end\)[\s\S]*onboardingDisadvantageMuseWord 20s steps\(6, end\)[\s\S]*onboardingDisadvantageBlue 20s ease-in-out/);
-  assert.match(html, /\.onboarding-inspiration-threshold \{[\s\S]*left: 50%;/);
+  assert.doesNotMatch(html, /onboardingDisadvantageTyping|onboardingDisadvantageMuseWord/);
+  assert.match(html, /\.onboarding-inspiration-midpoint \{[\s\S]*left: 50%;/);
+  assert.match(html, /data-full-text="La historia encontró un">La historia encontró un<\/span><strong data-full-text="VOLCÁN">VOLCÁN<\/strong>/);
   assert.match(html, /\.onboarding-inspiration-head \{[\s\S]{0,180}justify-content: center;[\s\S]{0,180}text-align: center;/);
   assert.match(html, /\.intro-section\.is-onboarding-restarting \*/);
   assert.match(selector, /classList\.add\("is-onboarding-restarting"\)[\s\S]*void objetivo\.offsetWidth[\s\S]*classList\.remove\("is-onboarding-restarting"\)[\s\S]*void objetivo\.offsetWidth[\s\S]*classList\.add\("is-onboarding-active"\)/);
+  assert.match(selector, /function animarTextoOnboarding\(seccion\)[\s\S]*Array\.from[\s\S]*textoRitmo\.textContent = caracteresVisiblesOnboarding[\s\S]*textoDesventaja\.textContent = caracteresVisiblesOnboarding[\s\S]*palabraDesventaja\.textContent = caracteresVisiblesOnboarding/);
   assert.match(html, /@keyframes onboardingRhythmBlue[\s\S]*@keyframes onboardingIdeaBlue[\s\S]*@keyframes onboardingDisadvantageText/);
   assert.match(html, /@keyframes onboardingFeedbackTint[\s\S]*background: #28f083[\s\S]*background: #ff3155/);
   assert.match(html, /@keyframes onboardingWelcomeLogo[\s\S]*@keyframes onboardingNameInput/);

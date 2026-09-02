@@ -16,7 +16,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   const final = html.match(/<div id="control_panel_final"[\s\S]*?<div id="control_panel_asistencia"/)?.[0] || "";
 
   assert.match(html, /id="control_tabs_viewport"[^>]*role="tablist"/);
-  assert.match(html, /class="control-brand-logo"[^>]*src="\.\.\/media\/scrib-logo-wordmark\.png"[^>]*alt="&lt;SCRI&gt; B"/);
+  assert.match(html, /class="control-brand-logo"[^>]*src="\.\.\/media\/scrib-logo-mark\.png"[^>]*alt="&lt;SCRI&gt; B"/);
   assert.doesNotMatch(html, /<div class="ascii control-brand">/);
   assert.equal((html.match(/data-control-tab="(?:tutorial|detonadores|juego|representacion|deliberacion|final|asistencia)"/g) || []).length, 7);
   assert.match(html, /id="control_tabs_prev"[^>]*hidden/);
