@@ -3937,7 +3937,6 @@ function refrescarTextosEstaticosControl() {
         ["boton_escribir", "control.button.write", "\u270E ESCRIBIR"],
         ["boton_limpiar_juego", "control.button.clear", "\u{1F9F9} LIMPIAR"],
         ["boton_descargar_textos", "control.button.download_texts", "\u2B07\uFE0F DESCARGAR TEXTOS"],
-        ["boton_pedir_feedback", "control.button.ask_feedback", "\u{1F5E8}\uFE0F PEDIR FEEDBACK"],
         ["boton_temporizador_gigante", "control.button.giant_timer", "\u23F1\uFE0F TEMPORIZADOR GIGANTE"],
         ["boton_fin_j1", "control.button.end.blue", "\uD83D\uDD35 FIN"],
         ["boton_fin_j2", "control.button.end.red", "\uD83D\uDD34 FIN"],

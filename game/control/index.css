@@ -355,15 +355,16 @@
     src: url('../css/fonts/VT323-Regular.ttf') format('truetype');
 }
 
-/* ¿Se usa? */
+/* El foco de ratón no deja un neón animado persistente tras pulsar.
+   El teclado conserva un indicador estático y accesible. */
 button:focus {
     outline: none;
-    color: white;
-    box-shadow: 0 0 0 3px #40f2fe;
-    border: none;
-    cursor: pointer;
-    animation: neonEffect 5s infinite;
-  }
+}
+
+button:focus-visible {
+    outline: 2px solid #40f2fe;
+    outline-offset: 2px;
+}
 
 /* Unused */
 
@@ -9411,6 +9412,12 @@ table.default.parametros-colapsados {
     background: transparent;
     color: transparent;
     box-shadow: none;
+    transform: none;
+}
+
+#panel_parametros.is-side-collapsed .control-params-collapse-btn:hover,
+#panel_parametros.is-side-collapsed .control-params-collapse-btn:focus-visible {
+    transform: none;
 }
 
 #panel_parametros.is-side-collapsed .control-params-collapse-btn::after {

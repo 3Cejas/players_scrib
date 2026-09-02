@@ -32,7 +32,7 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260902b";
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = "20260902a";
 const JURY_SOCKET_EVENTS_VERSION = "20260902a";
-const CONTROL_CSS_VERSION = "20260902g";
+const CONTROL_CSS_VERSION = "20260902h";
 const CONTROL_ACTIONS_VERSION = "20260902e";
 const CONTROL_I18N_VERSION = "20260902a";
 const CONTROL_STATE_VERSION = "20260831b";
@@ -528,7 +528,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /data-control-section="final"/);
   assert.match(html, /data-control-section="asistencia"/);
   assert.match(html, /data-control-section="representacion"[\s\S]*id="boton_teleprompter"[\s\S]*id="panel_teleprompter_representacion"/);
-  assert.match(html, /data-control-section="final"[\s\S]*id="boton_mostrar_creditos"[\s\S]*id="boton_pedir_feedback"[\s\S]*id="boton_editar_creditos"[\s\S]*id="panel_creditos_final"/);
+  assert.match(html, /data-control-section="final"[\s\S]*id="boton_mostrar_creditos"[\s\S]*id="boton_editar_creditos"[\s\S]*id="panel_creditos_final"/);
+  assert.doesNotMatch(html, /id="boton_pedir_feedback"|PEDIR FEEDBACK/);
   assert.match(html, /id="boton_volver_representacion_teleprompter"[\s\S]*onclick="volverMenuRepresentacionTeleprompter\(\)"/);
   assert.doesNotMatch(html, /calentamiento_solicitud_actual|DETONADOR ACTUAL/);
   assert.match(html, /id="boton_solicitud_lugares"[\s\S]*data-solicitud-calentamiento="lugares"/);
@@ -729,6 +730,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /#panel_parametros\.is-side-collapsed #control_title_parameters\s*\{[\s\S]*place-items: center;/);
   assert.match(css, /#panel_parametros\.is-side-collapsed \.control-params-title-text\s*\{[\s\S]*position: absolute;[\s\S]*left: 50%;[\s\S]*top: 50%;[\s\S]*display: inline-flex;[\s\S]*align-items: center;[\s\S]*justify-content: center;[\s\S]*transform: translate\(-50%, -50%\) rotate\(180deg\);/);
   assert.match(css, /#panel_parametros\.is-side-collapsed \.control-params-collapse-btn\s*\{[\s\S]*position: absolute;[\s\S]*inset: 0;[\s\S]*width: 100%;[\s\S]*height: 100%;/);
+  assert.match(css, /#panel_parametros\.is-side-collapsed \.control-params-collapse-btn:hover,[\s\S]*focus-visible[\s\S]*transform: none;/);
+  assert.doesNotMatch(css, /button:focus\s*\{[^}]*animation:\s*neonEffect/s);
   assert.match(css, /#panel_parametros\.is-side-collapsed \.control-params-collapse-btn::after\s*\{[\s\S]*content: "\\2039";[\s\S]*top: 0\.16rem;[\s\S]*border: 0;[\s\S]*background: transparent;[\s\S]*box-shadow: none;/);
   assert.match(css, /Animaciones de paneles de control, parametros, niveles activos e idioma/);
   assert.match(css, /@keyframes controlMenuExpand/);

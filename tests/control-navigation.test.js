@@ -49,7 +49,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(html, /id="boton_vista_puntuacion" class="btn btn-estandar-seccion"/);
   assert.doesNotMatch(representacion, /boton_mostrar_creditos|boton_pedir_feedback|boton_editar_creditos/);
   assert.match(final, /id="boton_mostrar_creditos"/);
-  assert.match(final, /id="boton_pedir_feedback"/);
+  assert.doesNotMatch(final, /boton_pedir_feedback|PEDIR FEEDBACK/);
   assert.match(final, /id="boton_banderas_musas_final"[^>]*data-banderas-musas-control/);
   assert.match(final, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_final"[^>]*onclick="toggleCreditos\(\)"/);
   assert.match(final, /id="panel_creditos_final" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
