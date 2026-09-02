@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260902b">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260902c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,17 +24,10 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260504e"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260902b"></script>
+<script src="./js/actions.js?v=20260902c"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
-            <div class="ascii control-brand">
-                <pre class="neon">    __     _____    _____   _____    _____    __       ____  
-   / /    / ____|  / ____| |  __ \  |_   _|   \ \     |  _ \ 
-  / /    | (___   | |      | |__) |   | |      \ \    | |_) |
- &lt; &lt;      \___ \  | |      |  _  /    | |       &gt; &gt;   |  _ &lt; 
-  \ \     ____) | | |____  | | \ \   _| |_     / /    | |_) |
-   \_\   |_____/   \_____| |_|  \_\ |_____|   /_/     |____/</pre>
-            </div>
+            <img class="control-brand-logo" src="../media/scrib-logo-wordmark.png" alt="&lt;SCRI&gt; B">
             <span class="remote-brand-control-label">CONTROL</span>
         </div>
         <div class="remote-status-card remote-status-card--control">
@@ -87,8 +80,9 @@
                                 <button id="control_title_tutorial" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="tutorial" aria-selected="false" aria-expanded="false" aria-controls="control_panel_tutorial" tabindex="-1" onclick="toggleSeccionControl('tutorial')">&#x1F4D6; TUTORIAL</button>
                                 <button id="control_title_detonadores" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="detonadores" aria-selected="false" aria-expanded="false" aria-controls="control_panel_detonadores" tabindex="-1" onclick="toggleSeccionControl('detonadores')">&#x1F4A5; DETONADORES</button>
                                 <button id="control_title_game" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="juego" aria-selected="true" aria-expanded="true" aria-controls="control_panel_juego" tabindex="0" onclick="toggleSeccionControl('juego')">&#x1F3AE; JUEGO</button>
-                                <button id="control_title_deliberation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="deliberacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_deliberacion" tabindex="-1" onclick="toggleSeccionControl('deliberacion')">&#x2696;&#xFE0F; DELIBERACI&Oacute;N</button>
                                 <button id="control_title_representation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="representacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_representacion" tabindex="-1" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
+                                <button id="control_title_deliberation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="deliberacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_deliberacion" tabindex="-1" onclick="toggleSeccionControl('deliberacion')">&#x2696;&#xFE0F; DELIBERACI&Oacute;N</button>
+                                <button id="control_title_final" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="final" aria-selected="false" aria-expanded="false" aria-controls="control_panel_final" tabindex="-1" onclick="toggleSeccionControl('final')">&#x2728; FINAL</button>
                             </div>
                             <button id="control_tabs_next" class="control-tabs-arrow control-tabs-arrow--next" type="button" aria-label="Ver m&aacute;s pesta&ntilde;as" onclick="desplazarPestanasControl('next')" hidden>&#x203A;</button>
                         </nav>
@@ -180,6 +174,14 @@
                                 <button id="puntuacion_nav_hide" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--hide" onclick="ocultarPuntuacionFinal()">&#x2715; OCULTAR</button>
                             </div>
                         </div>
+                        <div id="control_panel_representacion" class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion" role="tabpanel" aria-labelledby="control_title_representation">
+                            <div class="control-group-buttons">
+                                <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x2B07;&#xFE0F; DESCARGAR TEXTOS</span>
+                                <span id="boton_temporizador_gigante" class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
+                                <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
+                            </div>
+                            <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
+                        </div>
                         <div id="control_panel_deliberacion" class="control-group control-group--deliberacion control-collapsible is-collapsed" data-control-section="deliberacion" role="tabpanel" aria-labelledby="control_title_deliberation">
                             <div class="deliberacion-control__intro">
                                 <span aria-hidden="true">&#x2696;&#xFE0F;</span>
@@ -192,17 +194,13 @@
                             </div>
                             <p id="deliberacion_estado_control" class="deliberacion-control__estado" role="status" aria-live="polite">El resultado del jurado aparecer&aacute; cuando haya puntuado a ambas escritoras.</p>
                         </div>
-                        <div id="control_panel_representacion" class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion" role="tabpanel" aria-labelledby="control_title_representation">
-                            <div class="control-group-buttons">
-                                <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x2B07;&#xFE0F; DESCARGAR TEXTOS</span>
-                                <span id="boton_pedir_feedback" class='btn' onclick="pedirFeedbackMusas()">&#x1F5E8;&#xFE0F; PEDIR FEEDBACK</span>
-                                <span id="boton_temporizador_gigante" class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
+                        <div id="control_panel_final" class="control-group control-group--final control-collapsible is-collapsed" data-control-section="final" role="tabpanel" aria-labelledby="control_title_final">
+                            <div class="control-group-buttons control-group-buttons--three control-group-buttons--final">
                                 <span id="boton_mostrar_creditos" class='btn' onclick="mostrarCreditosEspectador()">&#x2B50; MOSTRAR CR&Eacute;DITOS</span>
-                                <button id="boton_editar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-expanded="false" aria-controls="panel_creditos_representacion" onclick="toggleCreditos()">&#x1F4DD; EDITAR CR&Eacute;DITOS</button>
-                                <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
+                                <span id="boton_pedir_feedback" class='btn' onclick="pedirFeedbackMusas()">&#x1F5E8;&#xFE0F; PEDIR FEEDBACK</span>
+                                <button id="boton_editar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-expanded="false" aria-controls="panel_creditos_final" onclick="toggleCreditos()">&#x1F4DD; EDITAR CR&Eacute;DITOS</button>
                             </div>
-                            <div id="panel_creditos_representacion" class="creditos-host panel-oculto" aria-hidden="true"></div>
-                            <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
+                            <div id="panel_creditos_final" class="creditos-host panel-oculto" aria-hidden="true"></div>
                         </div>
                         <div id="control_panel_asistencia" class="control-group control-group--asistencia control-collapsible is-collapsed" data-control-section="asistencia" role="tabpanel" aria-labelledby="control_title_assistance">
                             <section id="asistencia_control" class="asistencia-control" aria-labelledby="control_title_assistance">
@@ -663,10 +661,15 @@
             </div>
             <button id="boton_fin_partida" class="btn btn-fin" type="button" onclick="fin_partida_global()" aria-label="Finalizar partida" title="Finalizar partida" hidden>&#x23F9;&#xFE0F; FIN</button>
             <div id="level_status_witnesses" class="level-status-witnesses" aria-label="Estado de desventajas e inspiracion de musas">
-                <div id="control_desventaja_activa" class="level-status-witness level-status-witness--disadvantage" data-active="0" data-team="">
+                <div id="control_desventaja_activa_j1" class="level-status-witness level-status-witness--disadvantage level-status-witness--j1" data-active="0" data-team="1" aria-label="Desventaja de Escritxr 1">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
-                    <span id="control_desventaja_activa_icon" class="level-status-witness__icon" aria-hidden="true">-</span>
-                    <span id="control_desventaja_activa_time" class="level-status-witness__time">--</span>
+                    <span id="control_desventaja_activa_icon_j1" class="level-status-witness__icon" aria-hidden="true">-</span>
+                    <span id="control_desventaja_activa_time_j1" class="level-status-witness__time">--</span>
+                </div>
+                <div id="control_desventaja_activa_j2" class="level-status-witness level-status-witness--disadvantage level-status-witness--j2" data-active="0" data-team="2" aria-label="Desventaja de Escritxr 2">
+                    <span class="level-status-witness__dot" aria-hidden="true"></span>
+                    <span id="control_desventaja_activa_icon_j2" class="level-status-witness__icon" aria-hidden="true">-</span>
+                    <span id="control_desventaja_activa_time_j2" class="level-status-witness__time">--</span>
                 </div>
                 <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Palabra de musas para Escritxr 1">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>

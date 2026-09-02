@@ -281,7 +281,6 @@ window.actualizarCabeceraModoControl = actualizarCabeceraModoControl;
 const INTERVALO_TESTIGOS_DESVENTAJA_CONTROL_MS = 500;
 const estado_testigos_desventaja_control = { 1: null, 2: null };
 let estado_testigo_votacion_desventaja_control = null;
-let player_testigo_desventaja_control = null;
 let intervalo_testigos_desventaja_control = null;
 let intervalo_cuenta_atras_modo_control = null;
 let fin_cuenta_atras_modo_control_ts = 0;
@@ -436,42 +435,21 @@ function obtenerEmojiDesventajaControl(payload = {}) {
     return valor;
 }
 
-function obtenerDesventajaVisibleControl() {
-    const preferida = normalizarEquipoTestigoControl(player_testigo_desventaja_control);
-    if (preferida && obtenerMsTestigoControl(estado_testigos_desventaja_control[preferida]) > 0) {
-        return {
-            player: preferida,
-            payload: estado_testigos_desventaja_control[preferida]
-        };
-    }
-
-    const activas = [1, 2]
-        .map((player) => ({
-            player,
-            payload: estado_testigos_desventaja_control[player],
-            restanteMs: obtenerMsTestigoControl(estado_testigos_desventaja_control[player])
-        }))
-        .filter((item) => item.payload && item.restanteMs > 0)
-        .sort((a, b) => Number(b.payload._recibido_en_ts || 0) - Number(a.payload._recibido_en_ts || 0));
-
-    return activas.length ? activas[0] : null;
-}
-
-function pintarTestigoDesventajaControl() {
-    const testigo = document.getElementById("control_desventaja_activa");
-    const iconoEl = document.getElementById("control_desventaja_activa_icon");
-    const tiempoEl = document.getElementById("control_desventaja_activa_time");
+function pintarTestigoDesventajaControl(playerSolicitado) {
+    const player = normalizarEquipoTestigoControl(playerSolicitado);
+    if (!player) return false;
+    const testigo = document.getElementById(`control_desventaja_activa_j${player}`);
+    const iconoEl = document.getElementById(`control_desventaja_activa_icon_j${player}`);
+    const tiempoEl = document.getElementById(`control_desventaja_activa_time_j${player}`);
     if (!testigo) return false;
-    const visible = obtenerDesventajaVisibleControl();
-    const payload = visible ? visible.payload : null;
-    const player = visible ? visible.player : null;
+    const payload = estado_testigos_desventaja_control[player];
     const restanteMs = obtenerMsTestigoControl(payload);
     const activo = Boolean(payload && player && restanteMs > 0);
-    if (!activo && player_testigo_desventaja_control) {
-        player_testigo_desventaja_control = null;
+    if (!activo) {
+        estado_testigos_desventaja_control[player] = null;
     }
     testigo.dataset.active = activo ? "1" : "0";
-    testigo.dataset.team = activo ? String(player) : "";
+    testigo.dataset.team = String(player);
     if (iconoEl) {
         iconoEl.textContent = activo ? obtenerEmojiDesventajaControl(payload) : "-";
     }
@@ -512,7 +490,11 @@ function pintarTestigoVotacionDesventajaControl(payload) {
 }
 
 function actualizarTestigosDesventajaControl() {
-    const activoDesventaja = pintarTestigoDesventajaControl();
+    // Renderizar siempre ambos equipos. Array#some cortocircuitaba al hallar
+    // una desventaja azul y dejaba sin refrescar el indicador rojo.
+    const activoDesventaja = [1, 2]
+        .map((player) => pintarTestigoDesventajaControl(player))
+        .some(Boolean);
     const activoVoto = pintarTestigoVotacionDesventajaControl(estado_testigo_votacion_desventaja_control);
     const hayActivos = activoDesventaja || activoVoto;
     if (hayActivos && !intervalo_testigos_desventaja_control) {
@@ -531,12 +513,8 @@ function sincronizarDesventajaActivaControl(payload = {}, opciones = {}) {
     if (!data) return;
     if (data.activa === false || obtenerMsTestigoControl(data) <= 0) {
         estado_testigos_desventaja_control[data.player] = null;
-        if (player_testigo_desventaja_control === data.player) {
-            player_testigo_desventaja_control = null;
-        }
     } else {
         estado_testigos_desventaja_control[data.player] = data;
-        player_testigo_desventaja_control = data.player;
     }
     actualizarTestigosDesventajaControl();
 }
@@ -718,7 +696,6 @@ function limpiarTestigosDesventajaControl() {
     estado_testigos_desventaja_control[1] = null;
     estado_testigos_desventaja_control[2] = null;
     estado_testigo_votacion_desventaja_control = null;
-    player_testigo_desventaja_control = null;
     actualizarTestigosDesventajaControl();
 }
 window.limpiarTestigosDesventajaControl = limpiarTestigosDesventajaControl;
@@ -1105,7 +1082,7 @@ function toggleLogsControl() {
 }
 window.toggleLogsControl = toggleLogsControl;
 
-const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "deliberacion", "representacion", "asistencia"]);
+const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "representacion", "deliberacion", "final", "asistencia"]);
 let dropdown_modos_control_inicializado = false;
 let observer_modos_control = null;
 let frases_finales_control_inicializadas = false;
@@ -1216,6 +1193,13 @@ function toggleSeccionControl(seccion) {
             representacion.classList.remove("is-teleprompter-open");
         }
         actualizarTeleprompterUI();
+    }
+    if (creditos_visibles) {
+        if (seccion === "final") {
+            toggleCreditos();
+            return;
+        }
+        aplicarVistaPanelControl("controles");
     }
     activarSeccionControl(seccion);
 }
@@ -3365,8 +3349,8 @@ function actualizarBotonesPanelSuperiorControl() {
     }
 }
 
-function prepararCreditosRepresentacionControl() {
-    const host = document.getElementById("panel_creditos_representacion");
+function prepararCreditosFinalControl() {
+    const host = document.getElementById("panel_creditos_final");
     const panelLegacy = document.getElementById("panel_creditos");
     const panel = (host && host.querySelector(".creditos-panel"))
         || (panelLegacy && panelLegacy.querySelector(".creditos-panel"));
@@ -3405,11 +3389,12 @@ function aplicarVistaPanelControl(vistaDestino) {
     const panelControles = document.getElementById("panel_controles");
     const panelParametros = document.getElementById("panel_parametros");
     const panelParametrosExtra = document.getElementById("panel_parametros_extra");
-    const panelCreditos = prepararCreditosRepresentacionControl();
+    const panelCreditos = prepararCreditosFinalControl();
     const panelCreditosLegacy = document.getElementById("panel_creditos");
     const panelTeleprompter = prepararTeleprompterRepresentacionControl();
     const panelTeleprompterLegacy = document.getElementById("panel_teleprompter");
     const panelRepresentacion = document.querySelector('[data-control-section="representacion"]');
+    const panelFinal = document.querySelector('[data-control-section="final"]');
 
     if (salirDeTeleprompter) {
         invalidarContextoTeleprompterControl({ reiniciarEstadoCarga: true });
@@ -3441,7 +3426,9 @@ function aplicarVistaPanelControl(vistaDestino) {
     }
     if (panelRepresentacion) {
         panelRepresentacion.classList.remove("is-teleprompter-open");
-        panelRepresentacion.classList.remove("is-creditos-open");
+    }
+    if (panelFinal) {
+        panelFinal.classList.remove("is-creditos-open");
     }
 
     if (destino === "parametros") {
@@ -3464,9 +3451,9 @@ function aplicarVistaPanelControl(vistaDestino) {
         if (panelControles) {
             panelControles.classList.remove("panel-oculto");
         }
-        activarSeccionControl("representacion");
-        if (panelRepresentacion) {
-            panelRepresentacion.classList.add("is-creditos-open");
+        activarSeccionControl("final");
+        if (panelFinal) {
+            panelFinal.classList.add("is-creditos-open");
         }
         if (panelCreditos) {
             panelCreditos.classList.remove("panel-oculto");

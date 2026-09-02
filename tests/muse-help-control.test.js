@@ -310,7 +310,7 @@ test("Control exposes an accessible responsive assistance tab and definitive Soc
   assert.match(html, /id="asistencia_modal_cerrar"[^>]*>[^<]*CERRAR<\/button>/);
   assert.match(html, /muse-help-control\.js\?v=20260830a/);
 
-  assert.match(actions, /new Set\(\["tutorial", "detonadores", "juego", "deliberacion", "representacion", "asistencia"\]\)/);
+  assert.match(actions, /new Set\(\["tutorial", "detonadores", "juego", "representacion", "deliberacion", "final", "asistencia"\]\)/);
   assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)[\s\S]*setPanelParametrosColapsadoControl\(true\)/);
   assert.doesNotMatch(actions, /classList\.toggle\("asistencia-activa"/);
   assert.match(socketEvents, /socket\.emit\('pedir_ayuda_musas_estado'\)/);

@@ -12,16 +12,24 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   const actions = read("game/control/js/actions.js");
   const tutorial = html.match(/<div id="control_panel_tutorial"[\s\S]*?<\/div>\s*<\/div>\s*<div id="control_panel_detonadores"/)?.[0] || "";
   const detonadores = html.match(/<div id="control_panel_detonadores"[\s\S]*?<\/div>\s*<div id="control_panel_juego"/)?.[0] || "";
-  const representacion = html.match(/<div id="control_panel_representacion"[\s\S]*?<div id="control_panel_asistencia"/)?.[0] || "";
+  const representacion = html.match(/<div id="control_panel_representacion"[\s\S]*?<div id="control_panel_deliberacion"/)?.[0] || "";
+  const final = html.match(/<div id="control_panel_final"[\s\S]*?<div id="control_panel_asistencia"/)?.[0] || "";
 
   assert.match(html, /id="control_tabs_viewport"[^>]*role="tablist"/);
-  assert.equal((html.match(/data-control-tab="(?:tutorial|detonadores|juego|representacion|asistencia)"/g) || []).length, 5);
+  assert.match(html, /class="control-brand-logo"[^>]*src="\.\.\/media\/scrib-logo-wordmark\.png"[^>]*alt="&lt;SCRI&gt; B"/);
+  assert.doesNotMatch(html, /<div class="ascii control-brand">/);
+  assert.equal((html.match(/data-control-tab="(?:tutorial|detonadores|juego|representacion|deliberacion|final|asistencia)"/g) || []).length, 7);
   assert.match(html, /id="control_tabs_prev"[^>]*hidden/);
   assert.match(html, /id="control_tabs_next"[^>]*hidden/);
   assert.match(html, /data-control-tab="juego"[^>]*aria-selected="true"[^>]*tabindex="0"/);
   assert.ok(
     html.indexOf('data-control-tab="asistencia"') < html.indexOf('data-control-tab="tutorial"'),
     "Assistance must be the first tab, immediately before Tutorial"
+  );
+  assert.ok(
+    html.indexOf('data-control-tab="representacion"') < html.indexOf('data-control-tab="deliberacion"')
+      && html.indexOf('data-control-tab="deliberacion"') < html.indexOf('data-control-tab="final"'),
+    "Representation, Deliberation and Final must appear consecutively in that order"
   );
 
   assert.match(tutorial, /id="videotutorial_control"/);
@@ -38,8 +46,11 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_vista_partida"[^>]*data-vista-principal="partida"[^>]*onclick="mostrar_vista_partida\(\)"/);
   assert.match(html, /id="boton_vista_partida"[^>]*data-active="0"[^>]*aria-pressed="false"/);
   assert.match(html, /id="boton_vista_puntuacion" class="btn btn-estandar-seccion"/);
-  assert.match(representacion, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_representacion"[^>]*onclick="toggleCreditos\(\)"/);
-  assert.match(representacion, /id="panel_creditos_representacion" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
+  assert.doesNotMatch(representacion, /boton_mostrar_creditos|boton_pedir_feedback|boton_editar_creditos/);
+  assert.match(final, /id="boton_mostrar_creditos"/);
+  assert.match(final, /id="boton_pedir_feedback"/);
+  assert.match(final, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_final"[^>]*onclick="toggleCreditos\(\)"/);
+  assert.match(final, /id="panel_creditos_final" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
   assert.ok(
     html.indexOf("./js/muse-help-control.js?v=20260830a") < html.lastIndexOf("</body>"),
     "Control interaction modules must execute inside body"
@@ -59,7 +70,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /@container tutorial-controls \(max-width: 34rem\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*#boton_nueva_partida\[data-pending="1"\][\s\S]*animation: none;/);
   assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
-  assert.match(css, /control-group--representacion\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*overflow: auto;/);
+  assert.match(css, /control-group--final\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*overflow: auto;/);
   assert.match(css, /Separacion de capas: escritoras no invaden la navegacion ni Parametros/);
   assert.match(css, /#contenedor\s*\{[\s\S]*flex: 0 0 auto;[\s\S]*position: relative;[\s\S]*z-index: 1;/);
   assert.match(css, /table\.default\s*\{[\s\S]*position: relative;[\s\S]*z-index: 3;[\s\S]*isolation: isolate;/);
@@ -101,8 +112,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /if \(seccion === "asistencia" && !parametros_colapsados_control\)\s*\{\s*setPanelParametrosColapsadoControl\(true\);/);
   assert.doesNotMatch(actions, /classList\.toggle\("asistencia-activa"/);
   assert.match(actions, /control\.button\.detonators_view[\s\S]*VISTA DETONADORES/);
-  assert.match(actions, /function prepararCreditosRepresentacionControl\(\)/);
-  assert.match(actions, /panelRepresentacion\.classList\.add\("is-creditos-open"\)/);
+  assert.match(actions, /function prepararCreditosFinalControl\(\)/);
+  assert.match(actions, /activarSeccionControl\("final"\)/);
+  assert.match(actions, /panelFinal\.classList\.add\("is-creditos-open"\)/);
   assert.match(actions, /socket\.emit\("creditos_actualizar", \{ creditos/);
   assert.doesNotMatch(actions, /destino\.textContent\s*=\s*vista_calentamiento\s*\?/);
 });

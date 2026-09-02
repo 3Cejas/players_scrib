@@ -31,8 +31,8 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260902b";
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = "20260902a";
 const JURY_SOCKET_EVENTS_VERSION = "20260902a";
-const CONTROL_CSS_VERSION = "20260902b";
-const CONTROL_ACTIONS_VERSION = "20260902b";
+const CONTROL_CSS_VERSION = "20260902c";
+const CONTROL_ACTIONS_VERSION = "20260902c";
 const CONTROL_I18N_VERSION = "20260831b";
 const CONTROL_STATE_VERSION = "20260831b";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260902b";
@@ -446,7 +446,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
 
   assert.match(html, /class="remote-status-bar"/);
   assert.match(html, /class="remote-brand-card"/);
-  assert.match(html, /<pre class="neon">[\s\S]*__\s+_____[\s\S]*\/ ____\|[\s\S]*&lt; &lt;[\s\S]*&gt; &gt;[\s\S]*\|____\/<\/pre>/);
+  assert.match(html, /class="control-brand-logo"[^>]*src="\.\.\/media\/scrib-logo-wordmark\.png"[^>]*alt="&lt;SCRI&gt; B"/);
   assert.match(html, /class="remote-brand-control-label">CONTROL<\/span>/);
   assert.doesNotMatch(html, /\/&lt;SCRI&gt;\\ B\s*\\_______\//);
   assert.doesNotMatch(html, /remote-brand-powered|remote-brand-sutura|powered by|Sutura Teatro/);
@@ -498,13 +498,13 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   );
   assert.match(html, /<span>TIEMPO RESTANTE<\/span>/);
   assert.doesNotMatch(html, /<span>DURACI&Oacute;N<\/span>/);
-  assert.match(html, /id="level_status_witnesses" class="level-status-witnesses"[\s\S]*id="control_desventaja_activa"[\s\S]*id="control_desventaja_activa_icon"[\s\S]*id="control_desventaja_activa_time"[\s\S]*id="control_palabra_musa_j1"[\s\S]*id="control_palabra_musa_j1_word"[\s\S]*id="control_palabra_musa_j1_time"[\s\S]*id="control_palabra_musa_j1_queue"[\s\S]*id="control_palabra_musa_j2"[\s\S]*id="control_palabra_musa_j2_word"[\s\S]*id="control_palabra_musa_j2_time"[\s\S]*id="control_palabra_musa_j2_queue"/);
+  assert.match(html, /id="level_status_witnesses" class="level-status-witnesses"[\s\S]*id="control_desventaja_activa_j1"[\s\S]*id="control_desventaja_activa_icon_j1"[\s\S]*id="control_desventaja_activa_time_j1"[\s\S]*id="control_desventaja_activa_j2"[\s\S]*id="control_desventaja_activa_icon_j2"[\s\S]*id="control_desventaja_activa_time_j2"[\s\S]*id="control_palabra_musa_j1"[\s\S]*id="control_palabra_musa_j1_word"[\s\S]*id="control_palabra_musa_j1_time"[\s\S]*id="control_palabra_musa_j1_queue"[\s\S]*id="control_palabra_musa_j2"[\s\S]*id="control_palabra_musa_j2_word"[\s\S]*id="control_palabra_musa_j2_time"[\s\S]*id="control_palabra_musa_j2_queue"/);
   assert.doesNotMatch(html, /control_votacion_desventaja|votacion_ventaja/);
   assert.match(html, /id="control_palabra_musa_j1"[\s\S]*&#x1F3A8;[\s\S]*id="control_palabra_musa_j2"[\s\S]*&#x1F3A8;/);
   assert.match(html, /id="control_palabra_musa_j1_author" class="level-status-witness__author" hidden/);
   assert.match(html, /id="control_palabra_musa_j2_author" class="level-status-witness__author" hidden/);
   assert.doesNotMatch(html, />M1<|>M2</);
-  assert.doesNotMatch(html, /id="control_desventaja_j1"|id="control_desventaja_j2"|D AZUL|D ROJO/);
+  assert.doesNotMatch(html, /D AZUL|D ROJO/);
   assert.doesNotMatch(html, /level-legend|LB: Letra Bendita|LP: Letra Prohibida/);
   assert.match(html, /<tbody id="panel_parametros" class="control-params-panel">/);
   assert.doesNotMatch(html, /id="panel_parametros" class="[^"]*control-collapsible/);
@@ -522,9 +522,10 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /data-control-section="juego"/);
   assert.match(html, /data-control-section="deliberacion"/);
   assert.match(html, /data-control-section="representacion"/);
+  assert.match(html, /data-control-section="final"/);
   assert.match(html, /data-control-section="asistencia"/);
   assert.match(html, /data-control-section="representacion"[\s\S]*id="boton_teleprompter"[\s\S]*id="panel_teleprompter_representacion"/);
-  assert.match(html, /data-control-section="representacion"[\s\S]*id="boton_editar_creditos"[\s\S]*id="panel_creditos_representacion"/);
+  assert.match(html, /data-control-section="final"[\s\S]*id="boton_mostrar_creditos"[\s\S]*id="boton_pedir_feedback"[\s\S]*id="boton_editar_creditos"[\s\S]*id="panel_creditos_final"/);
   assert.match(html, /id="boton_volver_representacion_teleprompter"[\s\S]*onclick="volverMenuRepresentacionTeleprompter\(\)"/);
   assert.doesNotMatch(html, /calentamiento_solicitud_actual|DETONADOR ACTUAL/);
   assert.match(html, /id="boton_solicitud_lugares"[\s\S]*data-solicitud-calentamiento="lugares"/);
@@ -532,7 +533,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /id="boton_solicitud_frase_final"[\s\S]*data-solicitud-calentamiento="frase_final"/);
   assert.match(html, /id="control_title_representation"[\s\S]*REPRESENTACI&Oacute;N/);
   assert.doesNotMatch(html, /data-control-section="parametros"/);
-  assert.equal((html.match(/class="[^"]*control-collapsible[^"]*is-collapsed/g) || []).length, 5);
+  assert.equal((html.match(/class="[^"]*control-collapsible[^"]*is-collapsed/g) || []).length, 6);
   assert.match(html, /id="control_title_tutorial"[\s\S]*aria-expanded="false"[\s\S]*toggleSeccionControl\('tutorial'\)/);
   assert.match(html, /id="control_title_game"[\s\S]*aria-expanded="true"[\s\S]*toggleSeccionControl\('juego'\)/);
   assert.match(html, /id="control_title_assistance"[\s\S]*aria-expanded="false"[\s\S]*toggleSeccionControl\('asistencia'\)/);
@@ -568,7 +569,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /#panel_controles \.control-group--representacion\.is-teleprompter-open:not\(\.is-collapsed\) > \.control-group-buttons\s*\{[\s\S]*display: none !important;/);
   assert.match(css, /#panel_controles \.control-group--representacion\.is-teleprompter-open:not\(\.is-collapsed\) > \.teleprompter-host\s*\{[\s\S]*display: flex !important;/);
   assert.match(css, /\.teleprompter-host \.teleprompter-panel\s*\{[\s\S]*width: 100%;[\s\S]*height: 100%;/);
-  assert.match(css, /Editor de creditos integrado en la pestana Representacion/);
+  assert.match(css, /Editor de creditos integrado en la pestana Final/);
   assert.match(css, /\.creditos-host \.creditos-panel\s*\{[\s\S]*width: 100%;/);
   assert.match(css, /#panel_parametros\s*\{[\s\S]*display: grid !important;[\s\S]*height: 100% !important;/);
   assert.match(css, /#panel_parametros > tr:not\(\.parametros-title-row\):not\(\.parametros-frase-row\):not\(\.parametros-modos-row\)\s*\{[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
@@ -608,7 +609,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /#boton_skip_tertulia\s*\{[\s\S]*display: none/);
   assert.match(css, /#boton_skip_tertulia\.is-visible\s*\{[\s\S]*display: inline-flex/);
   assert.match(actions, /function prepararTeleprompterRepresentacionControl\(\)/);
-  assert.match(actions, /function prepararCreditosRepresentacionControl\(\)/);
+  assert.match(actions, /function prepararCreditosFinalControl\(\)/);
   assert.match(actions, /document\.getElementById\("boton_editar_creditos"\)/);
   assert.match(actions, /activarSeccionControl\("representacion"\)/);
   assert.match(actions, /function volverMenuRepresentacionTeleprompter\(\)/);
@@ -716,9 +717,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /#panel_parametros\.is-side-collapsed > tr:not\(\.parametros-title-row\)\s*\{[\s\S]*display: none !important;/);
   assert.match(css, /#panel_parametros\.is-side-collapsed \.control-params-title-text\s*\{[\s\S]*writing-mode: vertical-rl;/);
   assert.match(css, /\.control-params-collapse-btn\s*\{[\s\S]*width: clamp\(1\.78rem, 2\.12vw, 2\.08rem\);[\s\S]*height: clamp\(1\.42rem, 1\.7vw, 1\.72rem\);/);
-  assert.match(css, /ASCII completo de marca en control, reducido para la barra superior/);
-  assert.match(css, /\.remote-brand-card \.control-brand\s*\{[\s\S]*width: clamp\(8\.55rem, 11\.1vw, 10\.7rem\);[\s\S]*height: clamp\(1\.38rem, 1\.92vw, 1\.78rem\);[\s\S]*overflow: hidden;/);
-  assert.match(css, /\.remote-brand-card \.control-brand \.neon\s*\{[\s\S]*font-family: "Courier New", "Consolas", monospace;[\s\S]*font-size: clamp\(0\.162rem, 0\.235vw, 0\.235rem\);/);
+  assert.match(css, /Marca compacta real de <SCRI> B/);
+  assert.match(css, /\.remote-brand-card \.control-brand-logo\s*\{[\s\S]*object-fit: contain;[\s\S]*drop-shadow/);
   assert.match(css, /\.remote-brand-control-label\s*\{[\s\S]*font-family: "Retro-gaming", "Courier New", monospace;[\s\S]*font-size: clamp\(0\.94rem, 1\.18vw, 1\.38rem\);[\s\S]*text-shadow:/);
   assert.match(css, /En parametros contraidos, toda la pestaña vertical es zona de expansion/);
   assert.match(css, /#panel_parametros\.is-side-collapsed #control_title_parameters\s*\{[\s\S]*position: relative;[\s\S]*cursor: pointer;/);
@@ -830,7 +830,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(actions, /function sincronizarDesventajaActivaControl\(payload = \{\}, opciones = \{\}\)/);
   assert.match(actions, /function obtenerEmojiDesventajaControl\(payload = \{\}\)/);
   assert.match(actions, /window\.ScribDisadvantages\.normalizar\(valor\)/);
-  assert.match(actions, /player_testigo_desventaja_control = data\.player;/);
+  assert.match(actions, /function pintarTestigoDesventajaControl\(playerSolicitado\)[\s\S]*control_desventaja_activa_j\$\{player\}/);
+  assert.match(actions, /\[1, 2\][\s\S]*\.map\(\(player\) => pintarTestigoDesventajaControl\(player\)\)[\s\S]*\.some\(Boolean\)/);
   assert.match(actions, /function pausarTestigosDesventajaControl\(\)/);
   assert.match(actions, /function reanudarTestigosDesventajaControl\(\)/);
   assert.match(actions, /const estado_testigos_palabras_musas_control = \{ 1: null, 2: null \};/);
