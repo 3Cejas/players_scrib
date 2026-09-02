@@ -35,6 +35,7 @@ socket.on('connect', () => {
     socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_nube_inspiracion');
     socket.emit('pedir_creditos_estado');
+    socket.emit('pedir_temporizador_gigante_estado');
     iniciarSlidesStats();
     if (!intervalo_estado_calentamiento) {
         intervalo_estado_calentamiento = setInterval(() => {
@@ -71,11 +72,19 @@ socket.on('musa_regalo_bandera_estado', (payload = {}) => {
 });
 
 socket.on('temporizador_gigante_inicio', (data) => {
-    iniciarTemporizadorGigante(data && data.duracion);
+    iniciarTemporizadorGigante(data && data.duracion, data && data.fin_ts);
 });
 
 socket.on('temporizador_gigante_detener', () => {
     detenerTemporizadorGigante();
+});
+
+socket.on('temporizador_gigante_estado', (payload = {}) => {
+    aplicarEstadoTemporizadorGigante(payload);
+});
+
+socket.on('temporizador_gigante_final', () => {
+    finalizarTemporizadorGigante();
 });
 
 socket.on('calentamiento_vista', (data) => {
@@ -124,6 +133,7 @@ socket.on('disconnect', () => {
     detenerSlidesStats();
     detenerAnimacionNubeInspiracion();
     detenerAnimacionCreditosEspectador();
+    detenerMusicaCreditosEspectador();
     suspenderPreShowEspectadorPorConexion();
 });
 

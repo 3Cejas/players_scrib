@@ -450,7 +450,6 @@ body.page-spectator:not(.vista-partida) #spectator_fit_root::after {
 }
 
 body.page-spectator:not(.vista-partida) #teleprompter_overlay,
-body.page-spectator:not(.vista-partida) #temporizador_gigante,
 body.page-spectator:not(.vista-partida) #espectador_fulgor_root,
 body.page-spectator:not(.vista-partida) #feedback_tiempo_flotante_root,
 body.page-spectator:not(.vista-partida) #lightning,
@@ -1168,28 +1167,141 @@ body.page-players.equipo-rojo .tiempo-vida {
 }
 
 .temporizador-gigante {
+    --temporizador-progreso: 0deg;
     position: fixed;
     inset: 0;
     display: none;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.94);
+    padding: clamp(1rem, 3vw, 3rem);
+    box-sizing: border-box;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 44%, rgba(255, 197, 75, 0.2), transparent 30%),
+        radial-gradient(circle at 10% 15%, rgba(52, 225, 255, 0.28), transparent 34%),
+        radial-gradient(circle at 90% 85%, rgba(255, 64, 96, 0.28), transparent 35%),
+        linear-gradient(145deg, #051827, #100c1c 52%, #2a0d18);
     color: #fff;
-    font-family: "Retro-gaming";
-    font-size: clamp(4rem, 18vw, 12rem);
-    text-shadow: 0.12em 0.12em 0 #000;
     z-index: 9999;
+    isolation: isolate;
 }
 
 .temporizador-gigante.activo {
     display: flex;
 }
 
-.temporizador-gigante.fin {
-    background: #000;
-    color: transparent;
-    text-shadow: none;
+.temporizador-gigante__rayos {
+    position: absolute;
+    inset: -45%;
+    z-index: -1;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 218, 117, 0.075) 0 4deg, transparent 4deg 17deg);
+    animation: temporizadorShowRayos 24s linear infinite;
 }
+
+.temporizador-gigante__panel {
+    width: min(88vw, 78rem);
+    min-height: min(78vh, 48rem);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: clamp(1rem, 3vh, 2rem);
+    padding: clamp(1.2rem, 3vw, 3rem);
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 222, 127, 0.5);
+    border-radius: clamp(1.2rem, 3vw, 2.5rem);
+    background: rgba(3, 10, 18, 0.72);
+    box-shadow: inset 0 0 3rem rgba(255, 200, 84, 0.07), 0 0 3.5rem rgba(255, 171, 54, 0.18);
+    backdrop-filter: blur(12px);
+    animation: temporizadorShowEntrada 1.1s cubic-bezier(.16,1,.3,1) both;
+}
+
+.temporizador-gigante__eyebrow {
+    margin: 0;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.8rem, 1.7vw, 1.45rem);
+    letter-spacing: 0.16em;
+    color: #ffd970;
+    text-shadow: 0 0 0.8em rgba(255, 206, 91, 0.56);
+}
+
+.temporizador-gigante__ring {
+    width: min(46vh, 34vw, 25rem);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    padding: clamp(0.65rem, 1.2vw, 1rem);
+    border-radius: 50%;
+    box-sizing: border-box;
+    background: conic-gradient(#55efff 0 var(--temporizador-progreso), rgba(255,255,255,0.08) var(--temporizador-progreso) 360deg);
+    box-shadow: 0 0 2.8rem rgba(75, 234, 255, 0.3), inset 0 0 1.2rem rgba(255,255,255,0.12);
+}
+
+.temporizador-gigante__ring-inner {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-content: center;
+    gap: 0.8rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, #10283d, #050a12 73%);
+    box-shadow: inset 0 0 2rem rgba(65, 227, 255, 0.16);
+    text-align: center;
+}
+
+#temporizador_gigante_valor {
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(3rem, 8vw, 7rem);
+    line-height: 1;
+    color: white;
+    text-shadow: -0.045em 0 #50eaff, 0.045em 0 #ff6176, 0 0 0.6em rgba(255,255,255,0.22);
+}
+
+.temporizador-gigante__ring-inner span {
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.48rem, 1vw, 0.85rem);
+    color: rgba(221, 245, 255, 0.72);
+}
+
+.temporizador-gigante.urgente .temporizador-gigante__ring {
+    background: conic-gradient(#ffd263 0 var(--temporizador-progreso), rgba(255, 74, 97, 0.2) var(--temporizador-progreso) 360deg);
+    animation: temporizadorShowUrgente 620ms ease-in-out infinite alternate;
+}
+
+.temporizador-gigante__final {
+    text-align: center;
+}
+
+.temporizador-gigante__final:not([hidden]) {
+    display: grid;
+    place-items: center;
+    gap: clamp(0.8rem, 2vh, 1.4rem);
+    animation: temporizadorShowFinal 900ms cubic-bezier(.16,1,.3,1) both;
+}
+
+.temporizador-gigante__final > span { font-size: clamp(4rem, 10vw, 9rem); }
+.temporizador-gigante__final h2 {
+    margin: 0;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(3rem, 9vw, 8rem);
+    color: #ffe27c;
+    text-shadow: -0.04em 0 #4eeaff, 0.04em 0 #ff5a72, 0 0 0.65em rgba(255, 211, 91, 0.58);
+}
+.temporizador-gigante__final p {
+    margin: 0;
+    font-family: "VT323", monospace;
+    font-size: clamp(2rem, 4vw, 4rem);
+    color: #fff;
+}
+
+.temporizador-gigante.fin .temporizador-gigante__ring,
+.temporizador-gigante.fin .temporizador-gigante__eyebrow {
+    display: none;
+}
+
+@keyframes temporizadorShowRayos { to { transform: rotate(360deg); } }
+@keyframes temporizadorShowEntrada { from { opacity: 0; transform: scale(0.82) translateY(3vh); } }
+@keyframes temporizadorShowUrgente { to { transform: scale(1.035); box-shadow: 0 0 3.5rem rgba(255, 81, 103, 0.52), inset 0 0 1.2rem rgba(255,255,255,0.2); } }
+@keyframes temporizadorShowFinal { from { opacity: 0; transform: scale(0.7) rotate(-2deg); } 68% { transform: scale(1.05) rotate(0.5deg); } }
 
 .explicación {
     font-size: 2vw;
@@ -7323,7 +7435,6 @@ body.vista-puntuacion #stats_espectador,
 body.vista-puntuacion #nube_inspiracion_espectador,
 body.vista-puntuacion #creditos_espectador,
 body.vista-puntuacion #teleprompter_overlay,
-body.vista-puntuacion #temporizador_gigante,
 body.vista-puntuacion #espectador_fulgor_root,
 body.vista-puntuacion #feedback_tiempo_flotante_root,
 body.vista-puntuacion #lightning,
@@ -7344,7 +7455,6 @@ body.vista-stats #calentamiento_espectador,
 body.vista-stats #nube_inspiracion_espectador,
 body.vista-stats #creditos_espectador,
 body.vista-stats #teleprompter_overlay,
-body.vista-stats #temporizador_gigante,
 body.vista-stats #espectador_fulgor_root,
 body.vista-stats #feedback_tiempo_flotante_root,
 body.vista-stats #lightning,
@@ -7365,7 +7475,6 @@ body.vista-nube-inspiracion #calentamiento_espectador,
 body.vista-nube-inspiracion #stats_espectador,
 body.vista-nube-inspiracion #creditos_espectador,
 body.vista-nube-inspiracion #teleprompter_overlay,
-body.vista-nube-inspiracion #temporizador_gigante,
 body.vista-nube-inspiracion #espectador_fulgor_root,
 body.vista-nube-inspiracion #feedback_tiempo_flotante_root,
 body.vista-nube-inspiracion #lightning,
@@ -7383,7 +7492,6 @@ body.vista-creditos #calentamiento_espectador,
 body.vista-creditos #stats_espectador,
 body.vista-creditos #nube_inspiracion_espectador,
 body.vista-creditos #teleprompter_overlay,
-body.vista-creditos #temporizador_gigante,
 body.vista-creditos #espectador_fulgor_root,
 body.vista-creditos #feedback_tiempo_flotante_root,
 body.vista-creditos #lightning {
@@ -8453,8 +8561,66 @@ body.vista-creditos .creditos-espectador {
   align-items: stretch;
   justify-content: center;
   overflow: hidden;
-  background: #000;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(40, 226, 255, 0.27), transparent 31%),
+    radial-gradient(circle at 86% 78%, rgba(255, 66, 100, 0.28), transparent 33%),
+    radial-gradient(circle at 50% 50%, rgba(255, 208, 95, 0.1), transparent 24%),
+    linear-gradient(145deg, #061a2a 0%, #100c1b 50%, #2b0d19 100%);
+  isolation: isolate;
 }
+
+body.vista-creditos .creditos-espectador::before,
+body.vista-creditos .creditos-espectador::after {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body.vista-creditos .creditos-espectador::before {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8vw, rgba(75, 231, 255, 0.055) 8.1vw 8.22vw),
+    repeating-linear-gradient(0deg, transparent 0 8vw, rgba(255, 91, 118, 0.045) 8.1vw 8.22vw);
+  transform: rotate(-7deg) scale(1.18);
+  animation: creditosGridVivo 16s linear infinite;
+}
+
+body.vista-creditos .creditos-espectador::after {
+  background: conic-gradient(from 80deg at 50% 50%, transparent 0 12%, rgba(68, 230, 255, 0.14) 20%, transparent 31% 52%, rgba(255, 74, 108, 0.13) 62%, transparent 73%);
+  filter: blur(34px);
+  animation: creditosAuroraViva 10s ease-in-out infinite alternate;
+}
+
+.creditos-ambiente {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.creditos-ambiente::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 4px);
+  mix-blend-mode: screen;
+}
+
+.creditos-ambiente span {
+  position: absolute;
+  width: clamp(2.8rem, 5vw, 5.5rem);
+  aspect-ratio: 0.72;
+  border: 1px solid rgba(255, 224, 148, 0.4);
+  background: linear-gradient(145deg, rgba(255, 239, 185, 0.19), rgba(255, 181, 83, 0.07));
+  box-shadow: 0 0 1.2rem rgba(255, 205, 98, 0.13);
+  animation: creditosPapel 13s ease-in-out infinite;
+}
+
+.creditos-ambiente span:nth-child(1) { left: 8%; top: 18%; animation-delay: -3s; }
+.creditos-ambiente span:nth-child(2) { left: 88%; top: 12%; animation-delay: -8s; transform: rotate(14deg); }
+.creditos-ambiente span:nth-child(3) { left: 16%; top: 72%; animation-delay: -6s; transform: rotate(-18deg); }
+.creditos-ambiente span:nth-child(4) { left: 80%; top: 68%; animation-delay: -11s; transform: rotate(8deg); }
 
 .creditos-track {
   position: absolute;
@@ -8475,9 +8641,42 @@ body.vista-creditos .creditos-espectador {
   box-shadow: none;
 }
 
+.creditos-apertura {
+  min-height: 68vh;
+  display: grid;
+  place-content: center;
+  gap: clamp(0.8rem, 2vh, 1.5rem);
+  text-align: center;
+}
+
+.creditos-apertura__logo {
+  font-family: "Retro-gaming", monospace;
+  font-size: clamp(3.5rem, 9vw, 8rem);
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-shadow: -0.055em 0 #48eaff, 0.055em 0 #ff5b72, 0 0 0.65em rgba(255,255,255,0.24);
+  animation: creditosLogoVivo 1.8s steps(2, end) infinite;
+}
+
+.creditos-apertura p {
+  margin: 0;
+  font-family: "Retro-gaming", monospace;
+  font-size: clamp(1.2rem, 2.4vw, 2.2rem);
+  letter-spacing: 0.18em;
+  color: #ffe07a;
+  text-shadow: 0 0 0.8em rgba(255, 206, 88, 0.58);
+}
+
 .creditos-bloque {
   display: grid;
   gap: clamp(1rem, 2vh, 1.8rem);
+  padding: clamp(1.2rem, 2.2vw, 2.2rem);
+  border: 1px solid rgba(116, 234, 255, 0.28);
+  border-radius: clamp(0.8rem, 1.5vw, 1.4rem);
+  background: linear-gradient(145deg, rgba(7, 25, 40, 0.66), rgba(35, 10, 29, 0.64));
+  box-shadow: inset 0 0 2rem rgba(68, 230, 255, 0.05), 0 0 1.8rem rgba(255, 78, 110, 0.09);
+  backdrop-filter: blur(8px);
+  animation: creditosBloqueVivo 4.2s ease-in-out infinite alternate;
 }
 
 .creditos-titulo,
@@ -8637,7 +8836,18 @@ body.vista-creditos .creditos-espectador {
   text-align: center;
   font-size: clamp(2.1rem, 4.2vw, 3.8rem);
   text-transform: none;
+  min-height: 54vh;
+  display: grid;
+  place-content: center;
+  color: #ffe28b;
+  text-shadow: 0 0 0.8em rgba(255, 204, 88, 0.46);
 }
+
+@keyframes creditosGridVivo { to { transform: rotate(-7deg) translate3d(8vw, 8vw, 0) scale(1.18); } }
+@keyframes creditosAuroraViva { to { transform: rotate(10deg) scale(1.1); filter: blur(42px) saturate(1.35); } }
+@keyframes creditosPapel { 0%,100% { translate: 0 -1.5vh; rotate: -4deg; } 50% { translate: 1.2vw 1.8vh; rotate: 7deg; } }
+@keyframes creditosLogoVivo { 50% { transform: translateX(0.035em); filter: brightness(1.25); } }
+@keyframes creditosBloqueVivo { to { border-color: rgba(255, 100, 126, 0.34); box-shadow: inset 0 0 2.2rem rgba(255, 90, 118, 0.05), 0 0 2rem rgba(72, 231, 255, 0.12); } }
 
 @media (max-width: 760px) {
   .creditos-musas-grid {

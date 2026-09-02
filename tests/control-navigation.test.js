@@ -37,7 +37,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.doesNotMatch(detonadores, /id="videotutorial_control"/);
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_vista_partida"[^>]*data-vista-principal="partida"[^>]*onclick="mostrar_vista_partida\(\)"/);
   assert.match(html, /id="boton_vista_partida"[^>]*data-active="0"[^>]*aria-pressed="false"/);
-  assert.match(html, /id="boton_vista_puntuacion" class="btn"/);
+  assert.match(html, /id="boton_vista_puntuacion" class="btn btn-estandar-seccion"/);
   assert.match(representacion, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_representacion"[^>]*onclick="toggleCreditos\(\)"/);
   assert.match(representacion, /id="panel_creditos_representacion" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
   assert.ok(

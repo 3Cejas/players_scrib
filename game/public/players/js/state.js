@@ -1571,6 +1571,119 @@ if (window && typeof window.scribOnLanguageChange2P === "function") {
         if (regalo_postgame_data) pintarPostgameMusa();
     });
 }
+const creditos_musa = getEl("creditos_musa");
+const creditos_musa_track = getEl("creditos_musa_track");
+const creditos_musa_content = getEl("creditos_musa_content");
+const creditos_audio_musa = getEl("creditos_audio_musa");
+let estado_creditos_musa = window.ScribCredits
+    ? window.ScribCredits.normalizarPayload({})
+    : { creditos: {}, mostrar: false, animacion_id: 0 };
+let vista_modo_remota_musa = "tutorial";
+
+function reproducirMusicaCreditosMusa() {
+    if (!creditos_audio_musa) return;
+    creditos_audio_musa.loop = true;
+    creditos_audio_musa.volume = 0.82;
+    const promesa = creditos_audio_musa.play();
+    if (promesa && typeof promesa.catch === "function") {
+        promesa.catch(() => {
+            const reintentar = () => {
+                if (!creditos_musa || creditos_musa.hidden) return;
+                creditos_audio_musa.play().catch(() => {});
+            };
+            document.addEventListener("pointerdown", reintentar, { once: true });
+        });
+    }
+}
+
+function detenerMusicaCreditosMusa() {
+    if (!creditos_audio_musa) return;
+    creditos_audio_musa.pause();
+    try { creditos_audio_musa.currentTime = 0; } catch (_error) {}
+}
+
+function renderizarListaCreditosMusa(musas, clase) {
+    const lista = Array.isArray(musas) ? musas : [];
+    if (!lista.length) return "";
+    return `<section class="creditos-musa__equipo ${clase}"><h4>MUSAS</h4><ul>${lista.map((musa) => `<li>${escapeHtml(musa)}</li>`).join("")}</ul></section>`;
+}
+
+function renderizarCreditosMusa() {
+    if (!creditos_musa_content || !window.ScribCredits) return;
+    const data = estado_creditos_musa.creditos || window.ScribCredits.DEFAULT_STATE;
+    const lineas = window.ScribCredits.SPECTATOR_ORDER.map(([label, campo]) => (
+        `<div class="creditos-musa__linea"><span>${escapeHtml(label)}</span><strong>${escapeHtml(data[campo] || "—")}</strong></div>`
+    )).join("");
+    const musas = data.musas || {};
+    const equiposMusas = `${renderizarListaCreditosMusa(musas.azules, "creditos-musa__equipo--azul")}${renderizarListaCreditosMusa(musas.rojas, "creditos-musa__equipo--rojo")}`;
+    const agradecimientos = data.agradecimientos
+        ? escapeHtml(data.agradecimientos).replace(/\n/g, "<br>")
+        : "GRACIAS POR INSPIRAR";
+    creditos_musa_content.innerHTML = `
+        <header class="creditos-musa__apertura">
+            <div class="creditos-musa__logo">&lt;SCRI&gt; B</div>
+            <p>CR&Eacute;DITOS DEL SHOW</p>
+        </header>
+        <section class="creditos-musa__bloque">${lineas}</section>
+        ${equiposMusas ? `<section class="creditos-musa__bloque"><h3 class="creditos-musa__titulo">LAS MUSAS</h3><div class="creditos-musa__musas">${equiposMusas}</div></section>` : ""}
+        <section class="creditos-musa__bloque">
+            <h3 class="creditos-musa__titulo">AGRADECIMIENTOS</h3>
+            <p class="creditos-musa__agradecimientos">${agradecimientos}</p>
+        </section>
+        <footer class="creditos-musa__cierre">UNA PRODUCCI&Oacute;N DE SUTURA TEATRO</footer>
+    `;
+    if (creditos_musa_track) {
+        const nombresMusas = (Array.isArray(musas.azules) ? musas.azules.length : 0)
+            + (Array.isArray(musas.rojas) ? musas.rojas.length : 0);
+        creditos_musa_track.style.setProperty("--creditos-musa-duracion", `${Math.max(46, 42 + (nombresMusas * 1.15))}s`);
+    }
+}
+
+function ocultarCreditosMusa() {
+    if (creditos_musa) {
+        creditos_musa.hidden = true;
+        creditos_musa.setAttribute("aria-hidden", "true");
+    }
+    detenerMusicaCreditosMusa();
+}
+
+function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
+    const visible = Boolean(
+        creditos_musa
+        && estado_creditos_musa.mostrar
+        && vista_modo_remota_musa === "creditos"
+    );
+    if (!visible) {
+        ocultarCreditosMusa();
+        return false;
+    }
+    renderizarCreditosMusa();
+    creditos_musa.hidden = false;
+    creditos_musa.setAttribute("aria-hidden", "false");
+    const animacionCreditosActiva = Boolean(
+        creditos_musa_track
+        && typeof creditos_musa_track.getAnimations === "function"
+        && creditos_musa_track.getAnimations().length
+    );
+    if (creditos_musa_track && (forzarReinicio || !animacionCreditosActiva)) {
+        creditos_musa_track.style.animation = "none";
+        void creditos_musa_track.offsetWidth;
+        creditos_musa_track.style.removeProperty("animation");
+    }
+    reproducirMusicaCreditosMusa();
+    return true;
+}
+
+function actualizarCreditosMusa(payload = {}) {
+    const animacionPrevia = Number(estado_creditos_musa.animacion_id) || 0;
+    estado_creditos_musa = window.ScribCredits
+        ? window.ScribCredits.normalizarPayload(payload)
+        : payload;
+    return sincronizarVisibilidadCreditosMusa(
+        Number(estado_creditos_musa.animacion_id) !== animacionPrevia
+    );
+}
+
 const CLAVE_TEMPORIZADOR_LECTURA = "scrib_temporizador_lectura_fin";
 
 function paddedFormat(num) {
@@ -1974,56 +2087,100 @@ function detenerTemporizadorLectura() {
 
 function resetearTemporizadorLectura() {
     detenerTemporizadorLectura();
-    lectura_estado_guardado = null;
     limpiarTemporizadorLecturaPersistente();
-    forzarVisibilidadAccionesLecturaFinal(false);
-    mostrarBarraVida();
 }
 
 function cancelarTemporizadorLectura() {
     detenerTemporizadorLectura();
-    restaurarEstadoLectura();
     limpiarTemporizadorLecturaPersistente();
-    forzarVisibilidadAccionesLecturaFinal(false);
-    tiempo.innerHTML = "";
-    tiempo.style.display = "none";
-    ocultarBarraVida();
+    const overlay = getEl("temporizador_musa");
+    if (overlay) {
+        overlay.hidden = true;
+        overlay.setAttribute("aria-hidden", "true");
+        overlay.classList.remove("is-urgent", "is-finished");
+    }
 }
 
-function actualizarTemporizadorLectura() {
+let temporizador_lectura_duracion = 0;
+let temporizador_lectura_fin_ts = 0;
+
+function actualizarTemporizadorLectura(forzarRestante = null) {
+    if (forzarRestante !== null && typeof forzarRestante !== "undefined" && Number.isFinite(Number(forzarRestante))) {
+        temporizador_lectura_restante = Math.max(0, Math.ceil(Number(forzarRestante)));
+    } else if (temporizador_lectura_fin_ts > 0) {
+        temporizador_lectura_restante = Math.max(0, Math.ceil((temporizador_lectura_fin_ts - Date.now()) / 1000));
+    }
     const minutos = Math.floor(temporizador_lectura_restante / 60);
     const segundos = temporizador_lectura_restante % 60;
     const texto = `${paddedFormat(minutos)}:${paddedFormat(segundos)}`;
-    tiempo.innerHTML = texto;
+    const valor = getEl("temporizador_musa_valor");
+    const ring = getEl("temporizador_musa_ring");
+    const overlay = getEl("temporizador_musa");
+    if (valor) valor.textContent = texto;
+    if (ring) {
+        const duracion = Math.max(1, temporizador_lectura_duracion || temporizador_lectura_restante);
+        const progreso = Math.max(0, Math.min(1, 1 - (temporizador_lectura_restante / duracion)));
+        ring.style.setProperty("--temporizador-progreso", `${(progreso * 360).toFixed(2)}deg`);
+    }
+    if (overlay) overlay.classList.toggle("is-urgent", temporizador_lectura_restante <= 10);
 }
 
 function iniciarTemporizadorLectura(duracion, finTimestamp) {
     resetearTemporizadorLectura();
-    guardarEstadoLectura();
-    mostrarMensajeLecturaFinal();
-    forzarVisibilidadAccionesLecturaFinal(true);
-    temporizador_lectura_restante = Math.max(0, Number(duracion) || (10 * 60));
+    const overlay = getEl("temporizador_musa");
+    const final = getEl("temporizador_musa_final");
+    temporizador_lectura_duracion = Math.max(1, Number(duracion) || (10 * 60));
+    temporizador_lectura_fin_ts = Number(finTimestamp) || (Date.now() + (temporizador_lectura_duracion * 1000));
+    temporizador_lectura_restante = Math.max(0, Math.ceil((temporizador_lectura_fin_ts - Date.now()) / 1000));
     temporizador_lectura_activo = true;
-    tiempo.style.display = "";
-    tiempo.style.color = "white";
-    ocultarBarraVida();
-    const fin = finTimestamp || (Date.now() + (temporizador_lectura_restante * 1000));
-    guardarTemporizadorLecturaPersistente(fin);
+    guardarTemporizadorLecturaPersistente(temporizador_lectura_fin_ts);
+    if (overlay) {
+        overlay.hidden = false;
+        overlay.setAttribute("aria-hidden", "false");
+        overlay.classList.remove("is-finished");
+    }
+    if (final) final.hidden = true;
     actualizarTemporizadorLectura();
+    if (temporizador_lectura_restante <= 0) {
+        finalizarTemporizadorLectura();
+        return;
+    }
     temporizador_lectura_interval = setInterval(() => {
-        temporizador_lectura_restante -= 1;
-        if (temporizador_lectura_restante < 0) {
-            clearInterval(temporizador_lectura_interval);
-            temporizador_lectura_interval = null;
-            temporizador_lectura_restante = 0;
-            actualizarTemporizadorLectura();
-            temporizador_lectura_activo = false;
-            limpiarTemporizadorLecturaPersistente();
-            mostrarMensajeLecturaFinal();
+        actualizarTemporizadorLectura();
+        if (temporizador_lectura_restante <= 0) {
+            finalizarTemporizadorLectura();
             return;
         }
-        actualizarTemporizadorLectura();
-    }, 1000);
+    }, 250);
+}
+
+function finalizarTemporizadorLectura() {
+    detenerTemporizadorLectura();
+    limpiarTemporizadorLecturaPersistente();
+    const overlay = getEl("temporizador_musa");
+    const final = getEl("temporizador_musa_final");
+    if (overlay) {
+        overlay.hidden = false;
+        overlay.setAttribute("aria-hidden", "false");
+        overlay.classList.remove("is-urgent");
+        overlay.classList.add("is-finished");
+    }
+    if (final) final.hidden = false;
+}
+
+function aplicarEstadoTemporizadorMusa(payload = {}) {
+    const estado = String(payload.estado || "").trim().toLowerCase();
+    if (estado === "oculto" || payload.mostrar === false) {
+        cancelarTemporizadorLectura();
+        return;
+    }
+    if (estado === "finalizado") {
+        finalizarTemporizadorLectura();
+        return;
+    }
+    const duracion = Math.max(1, Number(payload.duracion) || Number(payload.restante) || (10 * 60));
+    const finTs = Number(payload.fin_ts) || (Date.now() + (Math.max(0, Number(payload.restante) || duracion) * 1000));
+    iniciarTemporizadorLectura(duracion, finTs);
 }
 
 function restaurarTemporizadorLecturaPersistente() {
@@ -2034,10 +2191,7 @@ function restaurarTemporizadorLecturaPersistente() {
         iniciarTemporizadorLectura(restante, finTimestamp);
     } else {
         limpiarTemporizadorLecturaPersistente();
-        temporizador_lectura_activo = false;
-        ocultarBarraVida();
-        mostrarMensajeLecturaFinal();
-        forzarVisibilidadAccionesLecturaFinal(true);
+        finalizarTemporizadorLectura();
     }
 }
 
@@ -3138,11 +3292,13 @@ function aplicarVisibilidadPreShowMusa() {
 function actualizarModoVistaMusaRemoto(payload = {}) {
     if (!musa_registro_confirmado) return false;
     const modo = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "";
+    vista_modo_remota_musa = modo || "tutorial";
     vista_tutorial_musa_permitida = modo === "tutorial";
     if (vista_tutorial_musa_permitida) {
         pre_show_bloqueado_por_tutorial_musa = false;
     }
     aplicarVisibilidadPreShowMusa();
+    sincronizarVisibilidadCreditosMusa();
     return true;
 }
 

@@ -11003,6 +11003,60 @@ table.default {
         0 0 0.65rem rgba(255, 176, 74, 0.17);
 }
 
+/* Los botones nativos de estas dos acciones comparten exactamente la caja,
+   tipografia y respuesta tactil de los demas controles de su apartado. */
+#panel_controles #boton_vista_puntuacion.btn-estandar-seccion,
+#panel_controles #boton_editar_creditos.btn-estandar-seccion {
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.2rem;
+    margin: 0;
+    padding: 0.48em 0.62em;
+    border-radius: 0.26rem;
+    font: inherit;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    line-height: 1.12;
+    text-align: center;
+}
+
+#panel_controles #boton_temporizador_gigante[data-active="1"],
+#panel_controles #boton_temporizador_gigante.is-active {
+    border-color: #d9a8ff;
+    color: #fff5ff;
+    background: linear-gradient(180deg, rgba(117, 62, 166, 0.96), rgba(55, 25, 82, 0.98));
+    box-shadow: 0 0.2em #b770ff, 0 0 1rem rgba(183, 112, 255, 0.42);
+}
+
+#panel_controles #boton_vista_puntuacion.btn-estandar-seccion {
+    position: static;
+    border: 1px solid rgba(69, 243, 255, 0.56);
+    color: #a9faff;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.28)),
+        rgba(4, 11, 19, 0.92);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 0.65rem rgba(69, 243, 255, 0.14);
+    text-shadow: 0.07em 0.07em 0 #000, 0 0 0.45rem rgba(69, 243, 255, 0.34);
+}
+
+#panel_controles #boton_editar_creditos.btn-estandar-seccion {
+    border: 1px solid rgba(176, 112, 255, 0.58);
+    color: #f1d8ff;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.28)),
+        rgba(4, 11, 19, 0.92);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+        0 0 0.65rem rgba(176, 112, 255, 0.16);
+}
+
 @container tutorial-controls (max-width: 34rem) {
     #panel_controles .control-group--tutorial:not(.is-collapsed) > .videotutorial-control,
     #panel_controles .control-group--tutorial:not(.is-collapsed) > .show-narration-control {

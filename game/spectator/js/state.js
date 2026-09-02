@@ -192,16 +192,45 @@ const temporizador_gigante = (() => {
         nodo.className = "temporizador-gigante";
         document.body.appendChild(nodo);
     }
+    nodo.innerHTML = `
+        <div class="temporizador-gigante__rayos" aria-hidden="true"></div>
+        <div class="temporizador-gigante__panel">
+            <p class="temporizador-gigante__eyebrow">CUENTA ATR&Aacute;S PARA LA REPRESENTACI&Oacute;N</p>
+            <div class="temporizador-gigante__ring" aria-hidden="true">
+                <div class="temporizador-gigante__ring-inner">
+                    <strong id="temporizador_gigante_valor">10:00</strong>
+                    <span>PREPARAD EL ESCENARIO</span>
+                </div>
+            </div>
+            <div class="temporizador-gigante__final" hidden>
+                <span aria-hidden="true">&#x2728;</span>
+                <h2>&iexcl;ES LA HORA!</h2>
+                <p>Es hora de ver la representaci&oacute;n de los textos.</p>
+            </div>
+        </div>`;
     return nodo;
 })();
 
 let temporizador_gigante_interval = null;
 let temporizador_gigante_restante = 0;
+let temporizador_gigante_duracion = 0;
+let temporizador_gigante_fin_ts = 0;
 
 function actualizarTemporizadorGigante() {
+    if (temporizador_gigante_fin_ts > 0) {
+        temporizador_gigante_restante = Math.max(0, Math.ceil((temporizador_gigante_fin_ts - Date.now()) / 1000));
+    }
     const minutos = Math.floor(temporizador_gigante_restante / 60);
     const segundos = temporizador_gigante_restante % 60;
-    temporizador_gigante.textContent = `${paddedFormat(minutos)}:${paddedFormat(segundos)}`;
+    const valor = getEl("temporizador_gigante_valor");
+    const ring = temporizador_gigante.querySelector(".temporizador-gigante__ring");
+    if (valor) valor.textContent = `${paddedFormat(minutos)}:${paddedFormat(segundos)}`;
+    if (ring) {
+        const duracion = Math.max(1, temporizador_gigante_duracion || temporizador_gigante_restante);
+        const progreso = Math.max(0, Math.min(1, 1 - (temporizador_gigante_restante / duracion)));
+        ring.style.setProperty("--temporizador-progreso", `${(progreso * 360).toFixed(2)}deg`);
+    }
+    temporizador_gigante.classList.toggle("urgente", temporizador_gigante_restante <= 10);
 }
 
 function detenerTemporizadorGigante() {
@@ -210,28 +239,61 @@ function detenerTemporizadorGigante() {
         temporizador_gigante_interval = null;
     }
     temporizador_gigante_restante = 0;
-    temporizador_gigante.textContent = "";
+    temporizador_gigante_duracion = 0;
+    temporizador_gigante_fin_ts = 0;
     temporizador_gigante.classList.remove("activo");
     temporizador_gigante.classList.remove("fin");
+    temporizador_gigante.classList.remove("urgente");
+    const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
+    if (final) final.hidden = true;
 }
 
-function iniciarTemporizadorGigante(duracion) {
+function iniciarTemporizadorGigante(duracion, finTimestamp = null) {
     detenerTemporizadorGigante();
-    temporizador_gigante_restante = Math.max(0, Number(duracion) || (10 * 60));
+    temporizador_gigante_duracion = Math.max(1, Number(duracion) || (10 * 60));
+    temporizador_gigante_fin_ts = Number(finTimestamp) || (Date.now() + (temporizador_gigante_duracion * 1000));
+    temporizador_gigante_restante = Math.max(0, Math.ceil((temporizador_gigante_fin_ts - Date.now()) / 1000));
     temporizador_gigante.classList.add("activo");
     temporizador_gigante.classList.remove("fin");
+    const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
+    if (final) final.hidden = true;
     actualizarTemporizadorGigante();
+    if (temporizador_gigante_restante <= 0) {
+        finalizarTemporizadorGigante();
+        return;
+    }
     temporizador_gigante_interval = setInterval(() => {
-        temporizador_gigante_restante -= 1;
-        if (temporizador_gigante_restante < 0) {
-            clearInterval(temporizador_gigante_interval);
-            temporizador_gigante_interval = null;
-            temporizador_gigante.textContent = "";
-            temporizador_gigante.classList.add("fin");
+        actualizarTemporizadorGigante();
+        if (temporizador_gigante_restante <= 0) {
+            finalizarTemporizadorGigante();
             return;
         }
-        actualizarTemporizadorGigante();
-    }, 1000);
+    }, 250);
+}
+
+function finalizarTemporizadorGigante() {
+    if (temporizador_gigante_interval) {
+        clearInterval(temporizador_gigante_interval);
+        temporizador_gigante_interval = null;
+    }
+    temporizador_gigante_restante = 0;
+    temporizador_gigante.classList.add("activo", "fin");
+    temporizador_gigante.classList.remove("urgente");
+    const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
+    if (final) final.hidden = false;
+}
+
+function aplicarEstadoTemporizadorGigante(payload = {}) {
+    const estado = String(payload.estado || "").trim().toLowerCase();
+    if (estado === "oculto" || payload.mostrar === false) {
+        detenerTemporizadorGigante();
+        return;
+    }
+    if (estado === "finalizado") {
+        finalizarTemporizadorGigante();
+        return;
+    }
+    iniciarTemporizadorGigante(payload.duracion, payload.fin_ts);
 }
 
 const contenedor_corazones_espectador = (() => {
@@ -1181,6 +1243,7 @@ const nube_inspiracion_canvas = getEl("nube_inspiracion_canvas");
 const creditos_espectador = getEl("creditos_espectador");
 const creditos_track = getEl("creditos_track");
 const creditos_content = getEl("creditos_content");
+const creditos_audio_espectador = getEl("creditos_audio_espectador");
 const contenedor_espectador = getEl("contenedor_espectador");
 const temas_container = getEl("temas_container");
 const info_general = getEl("info_general");
@@ -1516,6 +1579,26 @@ let creditos_animacion_duracion_ms = 0;
 const CREDITOS_SCROLL_VELOCIDAD_PX_S = 34;
 const CREDITOS_SCROLL_DURACION_MIN_MS = 28000;
 const CREDITOS_SCROLL_MARGEN_SALIDA_PX = 100;
+const reproducirMusicaCreditosEspectador = () => {
+    if (!creditos_audio_espectador) return;
+    creditos_audio_espectador.loop = true;
+    creditos_audio_espectador.volume = 0.84;
+    const promesa = creditos_audio_espectador.play();
+    if (promesa && typeof promesa.catch === "function") {
+        promesa.catch(() => {
+            const reintentar = () => {
+                if (vista_espectador_modo_resuelta !== "creditos") return;
+                creditos_audio_espectador.play().catch(() => {});
+            };
+            document.addEventListener("pointerdown", reintentar, { once: true });
+        });
+    }
+};
+const detenerMusicaCreditosEspectador = () => {
+    if (!creditos_audio_espectador) return;
+    creditos_audio_espectador.pause();
+    try { creditos_audio_espectador.currentTime = 0; } catch (_error) {}
+};
 const interpolarEscalaUiEspectador = (valor, salidaMin, salidaMax) => {
     const escala = normalizarEscalaUiEspectador(valor);
     const rangoEntrada = ESCALA_UI_ESPECTADOR_MAX - ESCALA_UI_ESPECTADOR_MIN;
@@ -1743,6 +1826,10 @@ const renderizarCreditosEspectador = () => {
         : tJuego2P("credits.thanks_pending", {}, "Agradecimientos pendientes.");
     const musas = renderizarMusasCreditosEspectador(data.musas);
     creditos_content.innerHTML = `
+        <header class="creditos-apertura">
+            <div class="creditos-apertura__logo">&lt;SCRI&gt; B</div>
+            <p>CR&Eacute;DITOS DEL SHOW</p>
+        </header>
         <div class="creditos-bloque">
             <div class="creditos-lineas">${lineas}</div>
         </div>
@@ -1762,6 +1849,7 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     renderizarCreditosEspectador();
     detenerAnimacionCreditosEspectador(false);
     creditos_espectador.classList.remove("creditos-finalizados");
+    reproducirMusicaCreditosEspectador();
     creditos_track.style.opacity = "1";
     const altoViewportInicial = Math.max(window.innerHeight || 0, 1);
     const yInicioVisible = Math.round(altoViewportInicial * 0.82);
@@ -4012,12 +4100,16 @@ const aplicarModoVistaEspectadorUi = (modo) => {
     } else if (modo === "creditos") {
         detenerSlidesStats();
         detenerAnimacionNubeInspiracion();
+        reproducirMusicaCreditosEspectador();
         if (modoPrevio !== "creditos") {
             iniciarAnimacionCreditosEspectador(true);
         }
     } else {
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
+    }
+    if (modo !== "creditos") {
+        detenerMusicaCreditosEspectador();
     }
     if (modoPrevio === "puntuacion" && modo !== "puntuacion" && puntuacion_particulas) {
         puntuacion_particulas.classList.remove("is-active", "is-final");

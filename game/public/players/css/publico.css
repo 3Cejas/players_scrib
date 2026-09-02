@@ -1915,6 +1915,356 @@ th{
     }
 }
 
+/* Creditos sincronizados: una escena propia, luminosa y legible en movil. */
+.creditos-musa {
+    position: fixed;
+    inset: 0;
+    z-index: 180000;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 14% 18%, rgba(32, 220, 255, 0.28), transparent 32%),
+        radial-gradient(circle at 86% 76%, rgba(255, 61, 94, 0.28), transparent 34%),
+        linear-gradient(145deg, #061b2b 0%, #120d20 48%, #2b0d1b 100%);
+    isolation: isolate;
+}
+
+.creditos-musa[hidden] {
+    display: none !important;
+}
+
+.creditos-musa::before,
+.creditos-musa::after {
+    content: "";
+    position: absolute;
+    inset: -18%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.creditos-musa::before {
+    background:
+        repeating-linear-gradient(90deg, transparent 0 10vw, rgba(91, 236, 255, 0.07) 10.1vw 10.25vw),
+        repeating-linear-gradient(0deg, transparent 0 10vw, rgba(255, 105, 126, 0.055) 10.1vw 10.25vw);
+    transform: rotate(-8deg) scale(1.2);
+    animation: creditosMusaGrid 12s linear infinite;
+}
+
+.creditos-musa::after {
+    background: conic-gradient(from 90deg at 50% 50%, transparent, rgba(80, 238, 255, 0.13), transparent 28%, rgba(255, 94, 122, 0.12), transparent 68%);
+    filter: blur(24px);
+    animation: creditosMusaAurora 9s ease-in-out infinite alternate;
+}
+
+.creditos-musa__aurora {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.022) 0 1px, transparent 1px 4px);
+    mix-blend-mode: screen;
+}
+
+.creditos-musa__track {
+    position: absolute;
+    top: 0;
+    width: min(92vw, 36rem);
+    will-change: transform;
+    animation: creditosMusaRoll var(--creditos-musa-duracion, 46s) linear both;
+}
+
+.creditos-musa__content {
+    display: grid;
+    gap: clamp(1.15rem, 4vh, 2rem);
+    padding: 0 0 32vh;
+    color: white;
+}
+
+.creditos-musa__apertura {
+    min-height: 64vh;
+    display: grid;
+    place-content: center;
+    gap: 0.9rem;
+    text-align: center;
+}
+
+.creditos-musa__logo {
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(2.2rem, 12vw, 4.4rem);
+    color: #f8fbff;
+    text-shadow: -0.06em 0 #43eaff, 0.06em 0 #ff596f, 0 0 0.8em rgba(255,255,255,0.34);
+    animation: creditosMusaLogo 1.5s steps(2, end) infinite;
+}
+
+.creditos-musa__apertura p,
+.creditos-musa__cierre {
+    margin: 0;
+    font-family: "Retro-gaming", monospace;
+    letter-spacing: 0.12em;
+    color: #ffd978;
+    text-shadow: 0 0 0.7em rgba(255, 196, 73, 0.62);
+}
+
+.creditos-musa__bloque {
+    position: relative;
+    display: grid;
+    gap: 0.7rem;
+    padding: 1rem;
+    border: 1px solid rgba(126, 237, 255, 0.34);
+    border-radius: 1rem;
+    background: linear-gradient(145deg, rgba(7, 24, 38, 0.76), rgba(31, 10, 27, 0.7));
+    box-shadow: inset 0 0 1.5rem rgba(74, 228, 255, 0.07), 0 0 1.2rem rgba(255, 76, 104, 0.11);
+    backdrop-filter: blur(10px);
+    animation: creditosMusaTarjeta 3.4s ease-in-out infinite alternate;
+}
+
+.creditos-musa__titulo {
+    margin: 0;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(1rem, 5.5vw, 1.45rem);
+    color: #fff0b0;
+    text-align: center;
+    letter-spacing: 0.08em;
+}
+
+.creditos-musa__linea {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 0.65rem;
+    background: rgba(2, 9, 17, 0.48);
+}
+
+.creditos-musa__linea span {
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.55rem, 2.6vw, 0.76rem);
+    color: rgba(195, 241, 255, 0.72);
+}
+
+.creditos-musa__linea strong {
+    font-family: "VT323", monospace;
+    font-size: clamp(1.55rem, 8vw, 2.35rem);
+    line-height: 1;
+    overflow-wrap: anywhere;
+    color: #fff;
+}
+
+.creditos-musa__musas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.creditos-musa__equipo {
+    min-width: 0;
+    padding: 0.7rem;
+    border-radius: 0.7rem;
+    background: rgba(3, 11, 20, 0.58);
+}
+
+.creditos-musa__equipo h4 {
+    margin: 0 0 0.45rem;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.55rem, 2.6vw, 0.72rem);
+}
+
+.creditos-musa__equipo--azul h4 { color: #55efff; }
+.creditos-musa__equipo--rojo h4 { color: #ff7182; }
+
+.creditos-musa__equipo ul {
+    display: grid;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: "VT323", monospace;
+    font-size: clamp(1.15rem, 6vw, 1.7rem);
+    line-height: 1;
+    overflow-wrap: anywhere;
+}
+
+.creditos-musa__agradecimientos {
+    margin: 0;
+    font-family: "VT323", monospace;
+    font-size: clamp(1.45rem, 7vw, 2.1rem);
+    line-height: 1.15;
+    text-align: center;
+}
+
+.creditos-musa__cierre {
+    min-height: 60vh;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    font-size: clamp(0.82rem, 4.5vw, 1.2rem);
+}
+
+/* Temporizador escenico para las musas. */
+.temporizador-musa {
+    --temporizador-progreso: 0deg;
+    position: fixed;
+    inset: 0;
+    z-index: 181000;
+    display: grid;
+    place-items: center;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    box-sizing: border-box;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(255, 191, 73, 0.22), transparent 32%),
+        radial-gradient(circle at 12% 12%, rgba(63, 230, 255, 0.24), transparent 35%),
+        radial-gradient(circle at 88% 88%, rgba(255, 66, 102, 0.24), transparent 36%),
+        linear-gradient(145deg, #061725, #110c1c 52%, #260d19);
+}
+
+.temporizador-musa[hidden] { display: none !important; }
+
+.temporizador-musa__rayos {
+    position: absolute;
+    inset: -25%;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 215, 112, 0.07) 0 5deg, transparent 5deg 19deg);
+    animation: temporizadorMusaRayos 18s linear infinite;
+}
+
+.temporizador-musa__panel {
+    position: relative;
+    width: min(91vw, 34rem);
+    display: grid;
+    place-items: center;
+    gap: clamp(1rem, 4vh, 1.7rem);
+    padding: clamp(1.2rem, 5vw, 2rem);
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 220, 129, 0.56);
+    border-radius: clamp(1.2rem, 6vw, 2rem);
+    background: rgba(3, 10, 19, 0.76);
+    box-shadow: inset 0 0 2rem rgba(255, 194, 83, 0.08), 0 0 2.4rem rgba(255, 169, 58, 0.2);
+    backdrop-filter: blur(10px);
+    animation: temporizadorMusaPanel 1.2s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.temporizador-musa__eyebrow {
+    margin: 0;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.72rem, 3.6vw, 1rem);
+    letter-spacing: 0.14em;
+    color: #ffd66e;
+}
+
+.temporizador-musa__ring {
+    width: min(69vw, 18rem);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    padding: clamp(0.55rem, 2.3vw, 0.85rem);
+    border-radius: 50%;
+    box-sizing: border-box;
+    background: conic-gradient(#51efff 0 var(--temporizador-progreso), rgba(255,255,255,0.09) var(--temporizador-progreso) 360deg);
+    box-shadow: 0 0 2rem rgba(73, 235, 255, 0.26), inset 0 0 1rem rgba(255,255,255,0.14);
+    transition: --temporizador-progreso 0.45s linear;
+}
+
+.temporizador-musa__ring-inner {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-content: center;
+    gap: 0.6rem;
+    border-radius: 50%;
+    text-align: center;
+    background: radial-gradient(circle, #11253a, #050b14 72%);
+    box-shadow: inset 0 0 1.5rem rgba(84, 234, 255, 0.15);
+}
+
+#temporizador_musa_valor {
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(2.5rem, 13vw, 4.2rem);
+    line-height: 1;
+    color: #fff;
+    text-shadow: -0.04em 0 #52eaff, 0.04em 0 #ff5f73, 0 0 0.8em rgba(255,255,255,0.22);
+}
+
+.temporizador-musa__ring small {
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(0.43rem, 2.2vw, 0.63rem);
+    color: rgba(219, 244, 255, 0.72);
+}
+
+.temporizador-musa__mensaje {
+    margin: 0;
+    max-width: 28ch;
+    text-align: center;
+    font-family: "VT323", monospace;
+    font-size: clamp(1.35rem, 6.4vw, 2rem);
+    line-height: 1.06;
+    color: #e8f8ff;
+}
+
+.temporizador-musa.is-urgent .temporizador-musa__ring {
+    background: conic-gradient(#ffcf62 0 var(--temporizador-progreso), rgba(255, 74, 94, 0.16) var(--temporizador-progreso) 360deg);
+    animation: temporizadorMusaUrgente 650ms ease-in-out infinite alternate;
+}
+
+.temporizador-musa.is-finished .temporizador-musa__ring,
+.temporizador-musa.is-finished .temporizador-musa__eyebrow,
+.temporizador-musa.is-finished .temporizador-musa__mensaje {
+    display: none;
+}
+
+.temporizador-musa__final {
+    min-height: min(68vh, 34rem);
+    place-content: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.temporizador-musa__final:not([hidden]) {
+    display: grid;
+    animation: temporizadorMusaFinal 900ms cubic-bezier(.16,1,.3,1) both;
+}
+
+.temporizador-musa__final > span { font-size: clamp(4rem, 24vw, 8rem); }
+.temporizador-musa__final h2 {
+    margin: 0;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(2rem, 11vw, 4rem);
+    color: #ffe278;
+    text-shadow: -0.04em 0 #4cecff, 0.04em 0 #ff5870, 0 0 0.8em rgba(255, 213, 92, 0.6);
+}
+.temporizador-musa__final p {
+    margin: 0;
+    font-family: "VT323", monospace;
+    font-size: clamp(1.7rem, 8vw, 2.6rem);
+    line-height: 1.02;
+    color: white;
+}
+
+@keyframes creditosMusaRoll {
+    from { transform: translate3d(0, 72vh, 0); }
+    to { transform: translate3d(0, calc(-100% - 18vh), 0); }
+}
+@keyframes creditosMusaGrid { to { transform: rotate(-8deg) translate3d(10vw, 10vw, 0) scale(1.2); } }
+@keyframes creditosMusaAurora { to { transform: rotate(12deg) scale(1.12); filter: blur(34px) saturate(1.3); } }
+@keyframes creditosMusaLogo { 50% { transform: translateX(0.04em); filter: brightness(1.25); } }
+@keyframes creditosMusaTarjeta { to { border-color: rgba(255, 111, 132, 0.42); box-shadow: inset 0 0 1.8rem rgba(255, 90, 118, 0.07), 0 0 1.5rem rgba(76, 230, 255, 0.15); } }
+@keyframes temporizadorMusaRayos { to { transform: rotate(360deg); } }
+@keyframes temporizadorMusaPanel { from { opacity: 0; transform: scale(0.84) translateY(2rem); } }
+@keyframes temporizadorMusaUrgente { to { transform: scale(1.025); box-shadow: 0 0 2.6rem rgba(255, 87, 102, 0.48), inset 0 0 1rem rgba(255,255,255,0.2); } }
+@keyframes temporizadorMusaFinal { from { opacity: 0; transform: scale(0.7) rotate(-3deg); } 65% { transform: scale(1.05) rotate(1deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .creditos-musa::before,
+    .creditos-musa::after,
+    .creditos-musa__logo,
+    .creditos-musa__bloque,
+    .temporizador-musa__rayos,
+    .temporizador-musa__panel,
+    .temporizador-musa.is-urgent .temporizador-musa__ring,
+    .temporizador-musa__final:not([hidden]) {
+        animation: none !important;
+    }
+    .creditos-musa__track { animation-duration: 80s; }
+}
+
 .nivel{
     color: white;
 }

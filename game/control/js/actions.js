@@ -2407,6 +2407,17 @@ function activar_temporizador_gigante() {
     socket.emit('activar_temporizador_gigante', { duracion: 10 * 60 });
 }
 
+function actualizarEstadoTemporizadorControl(payload = {}) {
+    temporizador_gigante_activo = Boolean(payload.mostrar && payload.estado !== "oculto");
+    const boton = document.getElementById("boton_temporizador_gigante");
+    if (!boton) return;
+    boton.dataset.active = temporizador_gigante_activo ? "1" : "0";
+    boton.classList.toggle("is-active", temporizador_gigante_activo);
+    boton.setAttribute("aria-pressed", temporizador_gigante_activo ? "true" : "false");
+}
+
+window.actualizarEstadoTemporizadorControl = actualizarEstadoTemporizadorControl;
+
 function pedirFeedbackMusas() {
     if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
         return;

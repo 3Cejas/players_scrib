@@ -112,6 +112,7 @@ function sincronizarControlAutorizado() {
     socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_calentamiento_estado');
     socket.emit('pedir_creditos_estado');
+    socket.emit('pedir_temporizador_gigante_estado');
     socket.emit('pedir_teleprompter_estado');
     socket.emit('pedir_idioma_actual');
     iniciarStatsLiveControl();
@@ -400,6 +401,12 @@ socket.on('resumen_musas_pdf', (payload = {}) => {
 socket.on('creditos_estado', (payload = {}) => {
     if (typeof window.actualizarCreditosControlRemoto === "function") {
         window.actualizarCreditosControlRemoto(payload);
+    }
+});
+
+socket.on('temporizador_gigante_estado', (payload = {}) => {
+    if (typeof window.actualizarEstadoTemporizadorControl === "function") {
+        window.actualizarEstadoTemporizadorControl(payload);
     }
 });
 

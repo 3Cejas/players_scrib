@@ -124,6 +124,9 @@ function registrarMusaEnServidor() {
         }
         ayuda_musa_controlador.setRegistrationReady(true);
         ocultarAvisoConexionMusa();
+        socket.emit('pedir_vista_espectador_modo');
+        socket.emit('pedir_creditos_estado');
+        socket.emit('pedir_temporizador_gigante_estado');
         socket.emit('pedir_pre_show_estado');
         socket.emit('pedir_video_tutorial_estado');
         socket.emit('pedir_narracion_show_estado');
@@ -270,11 +273,23 @@ if (enviar_ventaja) {
 }
 
 socket.on('temporizador_gigante_inicio', (data) => {
-    iniciarTemporizadorLectura(data && data.duracion);
+    iniciarTemporizadorLectura(data && data.duracion, data && data.fin_ts);
 });
 
 socket.on('temporizador_gigante_detener', () => {
     cancelarTemporizadorLectura();
+});
+
+socket.on('temporizador_gigante_estado', (payload = {}) => {
+    aplicarEstadoTemporizadorMusa(payload);
+});
+
+socket.on('temporizador_gigante_final', () => {
+    finalizarTemporizadorLectura();
+});
+
+socket.on('creditos_estado', (payload = {}) => {
+    actualizarCreditosMusa(payload);
 });
 
 function aplicarEstadoBanderasMusaDesdeServidor(payload = {}) {
@@ -331,6 +346,8 @@ socket.on('connect', () => {
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_estado_banderas_musas');
     socket.emit('pedir_estado_regalo_bandera_musas');
+    socket.emit('pedir_creditos_estado');
+    socket.emit('pedir_temporizador_gigante_estado');
     pedirNombreMusa();
     socket.emit('pedir_estado_musa');
     socket.emit('pedir_feedback_musas_estado');
@@ -359,6 +376,7 @@ socket.on('disconnect', () => {
     invalidarContextoDesventajasMusa();
     invalidarContextoCalentamientoMusa();
     suspenderPreShowMusaPorConexion();
+    ocultarCreditosMusa();
 });
 
 socket.on('connect_error', () => {
