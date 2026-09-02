@@ -19,6 +19,7 @@
     function crearEstado(overrides = {}) {
         return {
             visible: false,
+            preparing: false,
             text: "",
             fontSize: 36,
             speed: 25,
@@ -37,6 +38,9 @@
         }
         if (typeof state.visible === "boolean") {
             destino.visible = state.visible;
+        }
+        if (typeof state.preparing === "boolean") {
+            destino.preparing = state.preparing;
         }
         if (typeof state.text === "string") {
             destino.text = state.text;

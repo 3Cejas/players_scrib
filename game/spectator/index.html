@@ -15,7 +15,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260902h">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260902i">
     <link rel="stylesheet" type="text/css" href="../css/level-transition.css?v=20260823a">
     <link rel="stylesheet" type="text/css" href="../css/video-tutorial.css?v=20260829t">
     <link rel="stylesheet" type="text/css" href="../css/show-narration.css?v=20260831g">
@@ -28,7 +28,7 @@
     <script src="../js/runtime.js?v=20260424a"></script>
     <script src="../js/domains/inspiration.js?v=20260824c"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
-    <script src="../js/domains/teleprompter.js?v=20260424a"></script>
+    <script src="../js/domains/teleprompter.js?v=20260902b"></script>
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/domains/pre-show.js?v=20260824b"></script>
@@ -84,6 +84,24 @@
             <div id="teleprompter_text" class="teleprompter-text" lang="es"></div>
         </div>
     </div>
+    <section id="teleprompter_preparing" class="teleprompter-preparing" hidden aria-hidden="true" aria-live="polite">
+        <div class="teleprompter-preparing__ambient" aria-hidden="true">
+            <i></i><i></i><i></i>
+        </div>
+        <div class="teleprompter-preparing__console" aria-hidden="true">
+            <span class="teleprompter-preparing__lamp"></span>
+            <div class="teleprompter-preparing__screen">
+                <b></b><b></b><b></b><b></b>
+                <span class="teleprompter-preparing__cursor"></span>
+            </div>
+            <div class="teleprompter-preparing__reel teleprompter-preparing__reel--left"></div>
+            <div class="teleprompter-preparing__reel teleprompter-preparing__reel--right"></div>
+        </div>
+        <p>REPRESENTACI&Oacute;N EN PREPARACI&Oacute;N</p>
+        <h2>PREPARANDO<br>TELEPROMPTER</h2>
+        <div class="teleprompter-preparing__progress" aria-hidden="true"><span></span></div>
+        <small>Esperando la carga del texto&hellip;</small>
+    </section>
     <div id="spectator_fit_root" align="center">
         <div class="cabecera">
         <pre id="neon" class="neon_espectador">
@@ -333,7 +351,7 @@
     <script src="../js/i18n.js?v=20260902a"></script>
 <script src="../js/domains/final-score.js?v=20260822c"></script>
 <script src="../js/domains/level-transition.js?v=20260823a"></script>
-<script src="./js/state.js?v=20260902f"></script>
+<script src="./js/state.js?v=20260902g"></script>
     <script src="../js/domains/video-tutorial.js?v=20260830b"></script>
     <script src="../js/domains/show-narration.js?v=20260831g"></script>
 <script src="./js/socket-events.js?v=20260902b"></script>

@@ -289,6 +289,7 @@ test("ScribTeleprompter applies bounded state updates", () => {
 
   ScribTeleprompter.aplicarEstado(state, {
     visible: true,
+    preparing: true,
     fontSize: 500,
     speed: -10,
     source: 9,
@@ -302,6 +303,7 @@ test("ScribTeleprompter applies bounded state updates", () => {
   });
 
   assert.equal(state.visible, true);
+  assert.equal(state.preparing, true);
   assert.equal(state.fontSize, 80);
   assert.equal(state.speed, 5);
   assert.equal(state.source, 0);

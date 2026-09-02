@@ -53,6 +53,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(final, /id="boton_banderas_musas_final"[^>]*data-banderas-musas-control/);
   assert.match(final, /id="boton_editar_creditos"[^>]*aria-expanded="false"[^>]*aria-controls="panel_creditos_final"[^>]*onclick="toggleCreditos\(\)"/);
   assert.match(final, /id="panel_creditos_final" class="creditos-host panel-oculto"[^>]*aria-hidden="true"/);
+  assert.match(html, /id="boton_volver_final_creditos"[^>]*onclick="volverMenuFinalCreditos\(\)"[^>]*>[^<]*VOLVER/);
   assert.ok(
     html.indexOf("./js/muse-help-control.js?v=20260830a") < html.lastIndexOf("</body>"),
     "Control interaction modules must execute inside body"
@@ -72,11 +73,13 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /@container tutorial-controls \(max-width: 34rem\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*#boton_nueva_partida\[data-pending="1"\][\s\S]*animation: none;/);
   assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
-  assert.match(css, /control-group--final\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*overflow: auto;/);
+  assert.match(css, /control-group--final\.is-creditos-open[\s\S]*> \.control-group-buttons[\s\S]*display: none !important;/);
+  assert.match(css, /control-group--final\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*display: flex !important;[\s\S]*overflow: hidden;/);
   assert.match(css, /Separacion de capas: escritoras no invaden la navegacion ni Parametros/);
   assert.match(css, /#contenedor\s*\{[\s\S]*flex: 0 0 auto;[\s\S]*position: relative;[\s\S]*z-index: 1;/);
   assert.match(css, /table\.default\s*\{[\s\S]*position: relative;[\s\S]*z-index: 3;[\s\S]*isolation: isolate;/);
   assert.match(css, /> \.creditos-host\s*\{[\s\S]*max-height: 100%;[\s\S]*overscroll-behavior: contain;[\s\S]*contain: layout paint;/);
+  assert.match(css, /\.creditos-host \.creditos-panel\s*\{[\s\S]*height: 100%;[\s\S]*overflow: auto;[\s\S]*overscroll-behavior: contain;/);
   assert.ok(
     html.indexOf('id="boton_colapsar_parametros"') < html.indexOf('id="control_title_parameters_text"'),
     "the Parameters collapse action must be the leftmost item in its header"
@@ -120,6 +123,10 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /function prepararCreditosFinalControl\(\)/);
   assert.match(actions, /activarSeccionControl\("final"\)/);
   assert.match(actions, /panelFinal\.classList\.add\("is-creditos-open"\)/);
+  assert.match(actions, /function volverMenuFinalCreditos\(\)\s*\{\s*aplicarVistaPanelControl\("controles"\);\s*activarSeccionControl\("final"\);\s*\}/);
+  assert.doesNotMatch(actions, /animateCSS\(panelControles, "fadeInLeft"\)/);
+  assert.match(actions, /teleprompter_state\.preparing = true;[\s\S]*emitirTeleprompter\(true\)/);
+  assert.match(actions, /teleprompter_state\.preparing = false;[\s\S]*teleprompter_state\.visible = true;/);
   assert.match(actions, /socket\.emit\("creditos_actualizar", \{ creditos/);
   assert.doesNotMatch(actions, /destino\.textContent\s*=\s*vista_calentamiento\s*\?/);
 });

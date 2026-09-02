@@ -15,7 +15,7 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(html, /id="boton_vista_deliberacion"/);
   assert.match(html, /id="boton_resultado_videojuego"/);
   assert.match(html, /id="boton_resultado_jurado"/);
-  assert.match(actions, /function mostrarVistaDeliberacion\(\)[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
+  assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion"\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
   assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
   assert.match(actions, /function mostrarResultadoJurado\(\)[\s\S]*mostrar_resultado_jurado/);
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);

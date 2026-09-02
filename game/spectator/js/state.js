@@ -351,6 +351,7 @@ function activarFulgorLadoEspectador(playerId, tipo) {
 const teleprompter_overlay = getEl("teleprompter_overlay");
 const teleprompter_screen = getEl("teleprompter_screen");
 const teleprompter_text = getEl("teleprompter_text");
+const teleprompter_preparing = getEl("teleprompter_preparing");
 const TELEPROMPTER_LIMITS_ESPECTADOR = {
     ...window.ScribTeleprompter.LIMITS,
     fontMax: 80,
@@ -535,6 +536,12 @@ const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
     }
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
+    }
+    if (teleprompter_preparing) {
+        const preparando = Boolean(teleprompter_estado.preparing && !teleprompter_estado.visible);
+        teleprompter_preparing.hidden = !preparando;
+        teleprompter_preparing.classList.toggle("activo", preparando);
+        teleprompter_preparing.setAttribute("aria-hidden", preparando ? "false" : "true");
     }
     if (typeof refrescarVisibilidadPreShowEspectador === "function") {
         refrescarVisibilidadPreShowEspectador();
@@ -1311,7 +1318,7 @@ function puedeMostrarPreShowEspectador() {
         && !pre_show_bloqueado_por_tutorial_espectador
         && !vista_calentamiento
         && vista_espectador_modo_resuelta === "tutorial"
-        && !(teleprompter_estado && teleprompter_estado.visible)
+        && !(teleprompter_estado && (teleprompter_estado.visible || teleprompter_estado.preparing))
     );
 }
 

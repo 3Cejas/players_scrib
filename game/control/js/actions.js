@@ -1179,6 +1179,7 @@ function toggleSeccionControl(seccion) {
         }
         teleprompter_visible = false;
         teleprompter_state.visible = false;
+        teleprompter_state.preparing = false;
         teleprompter_state.playing = false;
         marcarCambioTeleprompterLocalControl();
         emitirTeleprompter(true);
@@ -2335,6 +2336,7 @@ function limpiar({ emitirServidor = true } = {}) {
     teleprompter_state.source = 0;
     teleprompter_state.loadId = 0;
     teleprompter_state.visible = false;
+    teleprompter_state.preparing = false;
     teleprompter_state.playing = false;
     panel_control_previo_teleprompter = "controles";
     marcarCambioTeleprompterLocalControl();
@@ -2884,6 +2886,10 @@ window.actualizarEstadoPuntuacionFinalControl = actualizarEstadoPuntuacionFinalC
 window.mostrarFeedbackPuntuacionControl = mostrarFeedbackPuntuacionControl;
 
 function mostrarVistaDeliberacion() {
+    if (vista_espectador_modo === "deliberacion") {
+        actualizarBotonesVistaEspectadorControl();
+        return;
+    }
     cambiar_vista_espectador("deliberacion");
 }
 
@@ -3341,9 +3347,7 @@ function actualizarBotonesPanelSuperiorControl() {
         botonCreditos.dataset.active = creditos_visibles ? "1" : "0";
         botonCreditos.classList.toggle("is-active", creditos_visibles);
         botonCreditos.setAttribute("aria-expanded", creditos_visibles ? "true" : "false");
-        botonCreditos.textContent = creditos_visibles
-            ? tJuego2PControl("control.button.close_credits_editor", {}, "\u2715 CERRAR EDITOR")
-            : tJuego2PControl("control.button.edit_credits", {}, "\u{1F4DD} EDITAR CR\u00c9DITOS");
+        botonCreditos.textContent = tJuego2PControl("control.button.edit_credits", {}, "\u{1F4DD} EDITAR CR\u00c9DITOS");
     }
 }
 
@@ -3395,6 +3399,9 @@ function aplicarVistaPanelControl(vistaDestino) {
     const panelFinal = document.querySelector('[data-control-section="final"]');
 
     if (salirDeTeleprompter) {
+        teleprompter_state.visible = false;
+        teleprompter_state.preparing = false;
+        teleprompter_state.playing = false;
         invalidarContextoTeleprompterControl({ reiniciarEstadoCarga: true });
     }
     if (salirDeCreditos) {
@@ -3456,7 +3463,7 @@ function aplicarVistaPanelControl(vistaDestino) {
         if (panelCreditos) {
             panelCreditos.classList.remove("panel-oculto");
             panelCreditos.setAttribute("aria-hidden", "false");
-            animateCSS(panelCreditos, "fadeInLeft");
+            animateCSS(panelCreditos, "fadeIn");
         }
     } else if (destino === "teleprompter") {
         if (panelControles) {
@@ -3469,14 +3476,13 @@ function aplicarVistaPanelControl(vistaDestino) {
         if (panelTeleprompter) {
             panelTeleprompter.classList.remove("panel-oculto");
             panelTeleprompter.setAttribute("aria-hidden", "false");
-            animateCSS(panelTeleprompter, "fadeInLeft");
+            animateCSS(panelTeleprompter, "fadeIn");
         }
     } else if (panelControles) {
         panelControles.classList.remove("panel-oculto");
         if (panelParametros) {
             panelParametros.classList.remove("panel-oculto");
         }
-        animateCSS(panelControles, "fadeInLeft");
     }
 
     actualizarBotonesPanelSuperiorControl();
@@ -3486,6 +3492,7 @@ function toggleParametros() {
     const teleprompterEstabaActivo = teleprompter_visible;
     if (teleprompterEstabaActivo) {
         teleprompter_state.visible = false;
+        teleprompter_state.preparing = false;
         teleprompter_state.playing = false;
         marcarCambioTeleprompterLocalControl();
     }
@@ -3499,6 +3506,7 @@ function toggleCreditos() {
     const teleprompterEstabaActivo = teleprompter_visible;
     if (teleprompterEstabaActivo) {
         teleprompter_state.visible = false;
+        teleprompter_state.preparing = false;
         teleprompter_state.playing = false;
         marcarCambioTeleprompterLocalControl();
     }
@@ -3510,6 +3518,15 @@ function toggleCreditos() {
     }
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
+}
+
+function volverMenuFinalCreditos() {
+    aplicarVistaPanelControl("controles");
+    activarSeccionControl("final");
+}
+
+if (typeof window !== "undefined") {
+    window.volverMenuFinalCreditos = volverMenuFinalCreditos;
 }
 
 function actualizarTeleprompterUI() {
@@ -3585,7 +3602,7 @@ window.actualizarBotonesTeleprompterCarga = actualizarBotonesTeleprompterCarga;
 function emitirTeleprompter(inmediato = false) {
     if (!socket) return;
     const textoActivo = typeof teleprompter_state.text === "string" && teleprompter_state.text.trim().length > 0;
-    teleprompter_state.visible = teleprompter_visible && textoActivo;
+    teleprompter_state.visible = teleprompter_visible && textoActivo && !teleprompter_state.preparing;
     if (inmediato) {
         if (teleprompter_emit_timeout) {
             clearTimeout(teleprompter_emit_timeout);
@@ -3616,9 +3633,12 @@ function toggleTeleprompter(forzarCerrar = false) {
                 ? "creditos"
                 : "controles";
         aplicarVistaPanelControl("teleprompter");
-        teleprompter_state.visible = true;
+        teleprompter_state.visible = false;
+        teleprompter_state.preparing = true;
+        teleprompter_state.playing = false;
     } else {
         teleprompter_state.visible = false;
+        teleprompter_state.preparing = false;
         teleprompter_state.playing = false;
         const vistaRetorno = (PANEL_CONTROL_MODOS.has(panel_control_previo_teleprompter) && panel_control_previo_teleprompter !== "teleprompter")
             ? panel_control_previo_teleprompter
@@ -3632,6 +3652,7 @@ function toggleTeleprompter(forzarCerrar = false) {
 
 function volverMenuRepresentacionTeleprompter() {
     teleprompter_state.visible = false;
+    teleprompter_state.preparing = false;
     teleprompter_state.playing = false;
     marcarCambioTeleprompterLocalControl();
     aplicarVistaPanelControl("controles");
@@ -3661,6 +3682,7 @@ function teleprompterCargarTexto(jugador) {
     teleprompter_state.scroll = 0;
     teleprompter_state.source = source;
     teleprompter_state.playing = false;
+    teleprompter_state.preparing = false;
     teleprompter_state.visible = true;
     teleprompter_state.loadId = loadId;
     marcarCambioTeleprompterLocalControl();
