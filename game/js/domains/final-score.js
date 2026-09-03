@@ -123,7 +123,7 @@
 
     function normalizarFaseRevelado(valor) {
         const numero = Math.trunc(numeroFinito(valor));
-        return Math.max(0, Math.min(3, numero));
+        return Math.max(0, Math.min(2, numero));
     }
 
     function crearFirmaVista(payload, paso, fase = 0) {

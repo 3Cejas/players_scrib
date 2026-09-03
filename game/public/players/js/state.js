@@ -1596,6 +1596,8 @@ let puntuacion_firma_render_musa = "";
 let jurado_firma_render_musa = "";
 let resultado_final_firma_render_musa = "";
 let puntuacion_timeout_revelado_musa = null;
+let puntuacion_timeout_transferencia_musa = null;
+let puntuacion_raf_totales_musa = [];
 let jurado_timeout_revelado_musa = null;
 
 function normalizarResultadoJuradoMusa(payload = {}) {
@@ -1664,37 +1666,148 @@ function tarjetaApartadoMusa(estado, id, valores, ganador, escala = 10, puntos =
     </article>`;
 }
 
-function marcadorTotalVideojuegoMusa(estado, categoriasReveladas, totalesForzados = null) {
+function proporcionTotalVideojuegoMusa(totales = {}) {
+    const suma = (Number(totales[1]) || 0) + (Number(totales[2]) || 0);
+    return suma > 0 ? Math.max(8, Math.min(92, ((Number(totales[1]) || 0) / suma) * 100)) : 50;
+}
+
+function marcadorTotalVideojuegoMusa(estado, categoriasReveladas, totalesForzados = null, totalesObjetivo = null) {
     const api = window.ScribFinalScore;
     const totales = totalesForzados || (api && typeof api.totalesParciales === "function"
         ? api.totalesParciales(estado, categoriasReveladas)
         : { 1: 0, 2: 0 });
-    const suma = (Number(totales[1]) || 0) + (Number(totales[2]) || 0);
-    const azul = suma > 0 ? Math.max(8, Math.min(92, ((Number(totales[1]) || 0) / suma) * 100)) : 50;
-    return `<section class="resultado-musa__total" style="--resultado-balance:${azul.toFixed(2)}%">
-        <small>MARCADOR TOTAL</small>
-        <div class="resultado-musa__total-valores"><b>${Number(totales[1] || 0).toFixed(1)}</b><span>VS</span><b>${Number(totales[2] || 0).toFixed(1)}</b></div>
-        <div class="resultado-musa__total-barra"><i></i><i></i><em></em></div>
+    const objetivo = totalesObjetivo || totales;
+    const azul = proporcionTotalVideojuegoMusa(totales);
+    return `<section class="resultado-musa__total">
+        <div class="resultado-musa__total-barra" data-total-1="${Number(totales[1]) || 0}" data-total-2="${Number(totales[2]) || 0}" data-target-1="${Number(objetivo[1]) || 0}" data-target-2="${Number(objetivo[2]) || 0}" style="--resultado-balance:${azul.toFixed(2)}%">
+            <i><b data-total-player="1">${Number(totales[1] || 0).toFixed(1)}</b></i>
+            <i><b data-total-player="2">${Number(totales[2] || 0).toFixed(1)}</b></i>
+            <em></em>
+        </div>
     </section>`;
 }
 
 function tarjetaApartadoVideojuegoMusa(estado, categoria, id, fase) {
     const jugador = estado.jugadores[id];
     const revelado = fase >= id;
-    const resultadoRevelado = fase >= 3;
+    const resultadoRevelado = fase >= 2;
     const gana = resultadoRevelado && !categoria.empate && Number(categoria.ganador) === id;
     const valor = Number(categoria.valores[id]) || 0;
     const puntos = Number(categoria.puntos[id]) || 0;
     const peso = Math.max(0, Number(categoria.peso) || 0);
     const altura = peso > 0 ? Math.max(0, Math.min(100, (puntos / peso) * 100)) : 0;
     const recienRevelado = fase === id;
+    if (!revelado) {
+        return `<article class="resultado-musa__card resultado-musa__card--comparativa resultado-musa__card--${id} is-concealed">
+            <h3>${escapeHtml(jugador.nombre)}</h3>
+            <div class="resultado-musa__misterio" aria-label="Puntuaci&oacute;n por desvelar">?</div>
+        </article>`;
+    }
     return `<article class="resultado-musa__card resultado-musa__card--comparativa resultado-musa__card--${id}${gana ? " is-winner" : ""}${revelado ? " is-revealed" : " is-concealed"}${recienRevelado ? " is-newly-revealed" : ""}">
         <small>${revelado ? "DESVELADO" : "EN MISTERIO"}</small>
         <h3>${escapeHtml(jugador.nombre)}</h3>
-        <div class="resultado-musa__dato"><strong>${revelado ? valor.toFixed(1) : "?"}</strong><span>${revelado ? escapeHtml(String(categoria.unidad || "").toUpperCase()) : "POR DESVELAR"}</span></div>
-        <div class="resultado-musa__barra-vertical" aria-hidden="true"><i style="--resultado-fill:${revelado ? altura.toFixed(2) : "0"}%"></i></div>
-        <b>${revelado ? `+${puntos.toFixed(1)} PTS` : "?? PTS"}</b>
+        <div class="resultado-musa__dato"><strong data-score-final="${valor}">${valor.toFixed(1)}</strong><span>${escapeHtml(String(categoria.unidad || "").toUpperCase())}</span></div>
+        <div class="resultado-musa__barra-vertical" data-points-source="${id}"><i style="--resultado-fill:${altura.toFixed(2)}%"></i><b><span data-points-final="${puntos}">+${puntos.toFixed(1)}</span><small>PTS</small></b></div>
     </article>`;
+}
+
+function cancelarTransferenciaPuntuacionMusa() {
+    if (puntuacion_timeout_transferencia_musa) {
+        clearTimeout(puntuacion_timeout_transferencia_musa);
+        puntuacion_timeout_transferencia_musa = null;
+    }
+    puntuacion_raf_totales_musa.forEach((id) => cancelAnimationFrame(id));
+    puntuacion_raf_totales_musa = [];
+    resultado_videojuego_musa?.querySelectorAll(".resultado-musa__puntos-vuelo").forEach((elemento) => elemento.remove());
+}
+
+function animarCifraPuntuacionMusa(elemento, final, prefijo = "") {
+    if (!elemento || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const numeroFinal = Number(final) || 0;
+    const inicio = performance.now();
+    const tick = (ahora) => {
+        if (!elemento.isConnected) return;
+        const progreso = Math.min(1, (ahora - inicio) / 1250);
+        if (progreso < 1) {
+            elemento.textContent = `${prefijo}${(Math.random() * Math.max(4, numeroFinal * 1.55)).toFixed(1)}`;
+            const raf = requestAnimationFrame(tick);
+            puntuacion_raf_totales_musa.push(raf);
+            return;
+        }
+        elemento.textContent = `${prefijo}${numeroFinal.toFixed(1)}`;
+        elemento.classList.remove("is-scrambling");
+    };
+    elemento.classList.add("is-scrambling");
+    const raf = requestAnimationFrame(tick);
+    puntuacion_raf_totales_musa.push(raf);
+}
+
+function iniciarRuletaCategoriaPuntuacionMusa() {
+    const tarjeta = resultado_videojuego_musa_stage?.querySelector(".resultado-musa__card.is-newly-revealed");
+    if (!tarjeta) return;
+    const metrica = tarjeta.querySelector("[data-score-final]");
+    const puntos = tarjeta.querySelector("[data-points-final]");
+    animarCifraPuntuacionMusa(metrica, metrica?.dataset.scoreFinal);
+    animarCifraPuntuacionMusa(puntos, puntos?.dataset.pointsFinal, "+");
+}
+
+function actualizarMarcadorTotalPuntuacionMusa(totalesObjetivo, animar = true) {
+    const barra = resultado_videojuego_musa_stage?.querySelector(".resultado-musa__total-barra");
+    if (!barra) return;
+    const inicio = { 1: Number(barra.dataset.total1) || 0, 2: Number(barra.dataset.total2) || 0 };
+    const objetivo = { 1: Number(totalesObjetivo?.[1]) || 0, 2: Number(totalesObjetivo?.[2]) || 0 };
+    barra.style.setProperty("--resultado-balance", `${proporcionTotalVideojuegoMusa(objetivo).toFixed(2)}%`);
+    barra.dataset.total1 = String(objetivo[1]);
+    barra.dataset.total2 = String(objetivo[2]);
+    const duracion = animar && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 900 : 1;
+    [1, 2].forEach((id) => {
+        const elemento = barra.querySelector(`[data-total-player="${id}"]`);
+        if (!elemento) return;
+        const comienzo = performance.now();
+        const tick = (ahora) => {
+            if (!elemento.isConnected) return;
+            const t = Math.min(1, (ahora - comienzo) / duracion);
+            const valor = inicio[id] + ((objetivo[id] - inicio[id]) * (1 - Math.pow(1 - t, 3)));
+            elemento.textContent = valor.toFixed(1);
+            if (t < 1) {
+                const raf = requestAnimationFrame(tick);
+                puntuacion_raf_totales_musa.push(raf);
+            }
+        };
+        const raf = requestAnimationFrame(tick);
+        puntuacion_raf_totales_musa.push(raf);
+    });
+}
+
+function transferirPuntosAlMarcadorMusa(id, puntos, totalesObjetivo) {
+    const origen = resultado_videojuego_musa_stage?.querySelector(`[data-points-source="${id}"] b`);
+    const destino = resultado_videojuego_musa_stage?.querySelector(`.resultado-musa__total-barra i:nth-child(${id})`);
+    if (!origen || !destino || !resultado_videojuego_musa) {
+        actualizarMarcadorTotalPuntuacionMusa(totalesObjetivo, false);
+        return;
+    }
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+        actualizarMarcadorTotalPuntuacionMusa(totalesObjetivo, false);
+        return;
+    }
+    puntuacion_timeout_transferencia_musa = setTimeout(() => {
+        if (!origen.isConnected || !destino.isConnected) return;
+        const rectOrigen = origen.getBoundingClientRect();
+        const rectDestino = destino.getBoundingClientRect();
+        const vuelo = document.createElement("span");
+        vuelo.className = `resultado-musa__puntos-vuelo equipo-${id}`;
+        vuelo.textContent = `+${Number(puntos || 0).toFixed(1)}`;
+        vuelo.style.left = `${rectOrigen.left + rectOrigen.width / 2}px`;
+        vuelo.style.top = `${rectOrigen.top + rectOrigen.height / 2}px`;
+        vuelo.style.setProperty("--vuelo-x", `${rectDestino.left + rectDestino.width / 2 - (rectOrigen.left + rectOrigen.width / 2)}px`);
+        vuelo.style.setProperty("--vuelo-y", `${rectDestino.top + rectDestino.height / 2 - (rectOrigen.top + rectOrigen.height / 2)}px`);
+        resultado_videojuego_musa.appendChild(vuelo);
+        requestAnimationFrame(() => vuelo.classList.add("is-flying"));
+        vuelo.addEventListener("animationend", () => {
+            vuelo.remove();
+            actualizarMarcadorTotalPuntuacionMusa(totalesObjetivo, true);
+        }, { once: true });
+    }, 1420);
 }
 
 function renderizarPuntuacionFinalMusa(opciones = {}) {
@@ -1712,14 +1825,25 @@ function renderizarPuntuacionFinalMusa(opciones = {}) {
     const firma = `${estado.calculadoEnTs || 0}:${vista.paso}:${vista.tipo}:${fase}`;
     if (firma === puntuacion_firma_render_musa && opciones.forzar !== true) return;
     const pasoAnterior = Number(resultado_videojuego_musa_stage.dataset.step);
+    const faseAnterior = Number(resultado_videojuego_musa_stage.dataset.phase);
     const cambioDeSlide = !Number.isFinite(pasoAnterior) || pasoAnterior !== vista.paso;
+    const revelarEquipo = vista.tipo === "categoria"
+        && pasoAnterior === vista.paso
+        && Number.isFinite(faseAnterior)
+        && fase === faseAnterior + 1
+        && (fase === 1 || fase === 2)
+        ? fase
+        : 0;
+    const totalesAntesDeRevelar = revelarEquipo && api && typeof api.totalesDuranteRevelado === "function"
+        ? api.totalesDuranteRevelado(estado, vista.indiceCategoria, faseAnterior)
+        : null;
     let ganador = 0;
     if (vista.tipo === "intro") {
         const categorias = estado.categorias.map((categoria) => `<li>${escapeHtml(String(categoria.etiqueta || categoria.id).toUpperCase())}</li>`).join("");
         resultado_videojuego_musa_stage.innerHTML = `<div class="resultado-musa__intro"><span aria-hidden="true">&#x1F3AE;</span><small>RESULTADO DEL VIDEOJUEGO</small><h2>&iquest;QUI&Eacute;N JUG&Oacute; MEJOR?</h2><ul>${categorias}</ul>${marcadorTotalVideojuegoMusa(estado, 0)}</div>`;
     } else if (vista.tipo === "categoria") {
         const categoria = vista.categoria;
-        const resultadoRevelado = fase >= 3;
+        const resultadoRevelado = fase >= 2;
         ganador = resultadoRevelado && !categoria.empate ? Number(categoria.ganador) : 0;
         const totalesRevelados = api && typeof api.totalesDuranteRevelado === "function"
             ? api.totalesDuranteRevelado(estado, vista.indiceCategoria, fase)
@@ -1727,7 +1851,7 @@ function renderizarPuntuacionFinalMusa(opciones = {}) {
         const veredicto = resultadoRevelado
             ? (categoria.empate ? "EMPATE" : `${estado.jugadores[ganador].nombre} · GANADOR`)
             : "¿QUIÉN SE LO LLEVA?";
-        resultado_videojuego_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><h2>${escapeHtml(String(categoria.etiqueta || categoria.id).toUpperCase())}</h2><div class="resultado-musa__cards">${tarjetaApartadoVideojuegoMusa(estado, categoria, 1, fase)}${tarjetaApartadoVideojuegoMusa(estado, categoria, 2, fase)}</div><p class="resultado-musa__veredicto">${escapeHtml(veredicto)}</p>${marcadorTotalVideojuegoMusa(estado, vista.indiceCategoria, totalesRevelados)}</div>`;
+        resultado_videojuego_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><h2>${escapeHtml(String(categoria.etiqueta || categoria.id).toUpperCase())}</h2><div class="resultado-musa__cards">${tarjetaApartadoVideojuegoMusa(estado, categoria, 1, fase)}${tarjetaApartadoVideojuegoMusa(estado, categoria, 2, fase)}</div><p class="resultado-musa__veredicto">${escapeHtml(veredicto)}</p>${marcadorTotalVideojuegoMusa(estado, vista.indiceCategoria, totalesAntesDeRevelar || totalesRevelados, totalesRevelados)}</div>`;
     } else {
         ganador = estado.empate ? 0 : estado.ganador;
         resultado_videojuego_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><small>MARCADOR DEL VIDEOJUEGO</small><div class="resultado-musa__cards">${tarjetaResultadoMusa(estado.jugadores[1], 1, ganador, 100)}${tarjetaResultadoMusa(estado.jugadores[2], 2, ganador, 100)}</div><p class="resultado-musa__veredicto">${estado.empate ? "EMPATE" : "GANADOR DEL VIDEOJUEGO"}</p>${marcadorTotalVideojuegoMusa(estado, estado.categorias.length)}</div>`;
@@ -1735,6 +1859,7 @@ function renderizarPuntuacionFinalMusa(opciones = {}) {
     resultado_videojuego_musa_stage.dataset.step = String(vista.paso);
     resultado_videojuego_musa_stage.dataset.phase = String(fase);
     if (puntuacion_timeout_revelado_musa) clearTimeout(puntuacion_timeout_revelado_musa);
+    cancelarTransferenciaPuntuacionMusa();
     resultado_videojuego_musa_stage.classList.remove("is-revealing");
     if (cambioDeSlide) {
         requestAnimationFrame(() => {
@@ -1744,6 +1869,11 @@ function renderizarPuntuacionFinalMusa(opciones = {}) {
                 puntuacion_timeout_revelado_musa = null;
             }, 1250);
         });
+    }
+    if (revelarEquipo) {
+        const totalesObjetivo = api.totalesDuranteRevelado(estado, vista.indiceCategoria, fase);
+        iniciarRuletaCategoriaPuntuacionMusa();
+        transferirPuntosAlMarcadorMusa(revelarEquipo, vista.categoria.puntos?.[revelarEquipo], totalesObjetivo);
     }
     aplicarGanadorLocalMusa(resultado_videojuego_musa, ganador, firma);
     puntuacion_firma_render_musa = firma;
@@ -3590,7 +3720,7 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
         const api = window.ScribFinalScore;
         const siguiente = api && typeof api.normalizarFaseRevelado === "function"
             ? api.normalizarFaseRevelado(payload.puntuacion_reveal_phase)
-            : Math.max(0, Math.min(3, Math.trunc(Number(payload.puntuacion_reveal_phase) || 0)));
+            : Math.max(0, Math.min(2, Math.trunc(Number(payload.puntuacion_reveal_phase) || 0)));
         pasoCambiado = pasoCambiado || siguiente !== puntuacion_reveal_phase_musa;
         puntuacion_reveal_phase_musa = siguiente;
     }

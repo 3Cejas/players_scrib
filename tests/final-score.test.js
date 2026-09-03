@@ -71,7 +71,7 @@ test("visual score signature ignores resync timestamps but changes with visible 
     assert.notEqual(score.crearFirmaVista(original, 0), score.crearFirmaVista(original, 1));
     assert.notEqual(score.crearFirmaVista(original, 1, 0), score.crearFirmaVista(original, 1, 1));
     assert.equal(score.normalizarFaseRevelado(-8), 0);
-    assert.equal(score.normalizarFaseRevelado(99), 3);
+    assert.equal(score.normalizarFaseRevelado(99), 2);
 });
 
 test("final score differentiates a pending result from incomplete final telemetry", () => {
@@ -132,7 +132,7 @@ test("control and spectator wire the final score protocol and accessible present
 
     assert.match(spectatorHtml, /id="puntuacion_espectador"/);
     assert.match(spectatorHtml, /id="puntuacion_stage"[^>]*aria-live="polite"/);
-    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260903d/);
+    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260903e/);
     assert.match(spectatorSockets, /socket\.emit\('pedir_puntuacion_final'\)/);
     assert.match(spectatorSockets, /socket\.on\('puntuacion_final_estado'/);
     assert.match(spectatorState, /classList\.toggle\("vista-puntuacion", modo === "puntuacion"\)/);
@@ -141,8 +141,14 @@ test("control and spectator wire the final score protocol and accessible present
     assert.match(spectatorState, /firma === puntuacion_firma_render_espectador[\s\S]*return/);
     assert.match(spectatorState, /const entrandoEnPuntuacion = modoPrevio !== "puntuacion"/);
     assert.match(spectatorState, /puntuacion_reveal_phase_remoto/);
-    assert.match(spectatorState, /MARCADOR TOTAL/);
+    assert.doesNotMatch(spectatorState, /MARCADOR TOTAL/);
     assert.doesNotMatch(spectatorState, /MARCADOR PROVISIONAL/);
+    assert.match(spectatorState, /class="puntuacion-categoria-misterio"[^>]*><strong>\?<\/strong>/);
+    assert.match(spectatorState, /class="puntuacion-categoria-barra__puntos"/);
+    assert.match(spectatorState, /transferirPuntosAlMarcadorEspectador/);
+    assert.match(spectatorState, /data-total-player="1"/);
+    assert.match(spectatorState, /data-total-player="2"/);
+    assert.doesNotMatch(spectatorState, /fase >= 3/);
     assert.match(spectatorState, /reproducirVictoriaDeliberacionEspectador/);
     const renderPuntuacion = spectatorState.match(/const renderizarPuntuacionFinalEspectador[\s\S]*?\n};\n\nconst actualizarPuntuacionFinalEspectador/)?.[0] || "";
     assert.doesNotMatch(renderPuntuacion, /reproducirVictoriaDeliberacionEspectador/);
@@ -162,12 +168,16 @@ test("control and spectator wire the final score protocol and accessible present
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);
     assert.match(css, /\.puntuacion-categoria-barra\s*\{[\s\S]*align-items:\s*flex-end;[\s\S]*width:\s*clamp\(3rem,/);
-    assert.match(css, /@keyframes puntuacionBarraVerticalReveal[\s\S]*scaleY\(0\)[\s\S]*scaleY\(1\)/);
+    assert.match(css, /@keyframes puntuacionBarraVerticalReveal[\s\S]*scaleY\(\.04\)[\s\S]*scaleY\(1\)/);
+    assert.match(css, /@keyframes puntuacionPuntosVuelan/);
+    assert.match(css, /\.puntuacion-total__azul[\s\S]*width:\s*var\(--puntuacion-balance/);
     assert.match(css, /\.puntuacion-espectador\.is-category-winner-1::after[\s\S]*border-color:\s*var\(--score-blue\)/);
     const museState = read("game/public/players/js/state.js");
     const museCss = read("game/public/players/css/publico.css");
     assert.match(museState, /totalesDuranteRevelado\(estado, vista\.indiceCategoria, fase\)/);
     assert.match(museState, /if \(cambioDeSlide\)/);
+    assert.match(museState, /transferirPuntosAlMarcadorMusa/);
+    assert.doesNotMatch(museState, /MARCADOR TOTAL/);
     assert.match(museCss, /\.resultado-musa__barra-vertical[\s\S]*align-items:\s*flex-end/);
     assert.match(
         controlCss,

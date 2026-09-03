@@ -2783,7 +2783,7 @@ function actualizarBotonesVistaEspectadorControl() {
             const idCategoria = PUNTUACION_CATEGORIAS_CONTROL[puntuacion_slide_step_control - 1];
             etiquetaPaso = tJuego2PControl(`score.category.${idCategoria}.label`, {}, idCategoria.replace(/_/g, " ").toUpperCase());
         }
-        const fases = ["EN MISTERIO", "DESVELAR AZUL", "DESVELAR ROJO", "GANADOR REVELADO"];
+        const fases = ["EN MISTERIO", "DESVELAR AZUL", "DESVELAR ROJO Y GANADOR"];
         const detalle = puntuacion_slide_step_control > 0 && puntuacion_slide_step_control < PUNTUACION_PASO_MAX_CONTROL
             ? fases[puntuacion_reveal_phase_control]
             : "";
@@ -3008,7 +3008,7 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
     if (payload && Object.prototype.hasOwnProperty.call(payload, "puntuacion_reveal_phase")) {
         const fase = Number(payload.puntuacion_reveal_phase);
         puntuacion_reveal_phase_control = Number.isFinite(fase)
-            ? Math.max(0, Math.min(3, Math.trunc(fase)))
+            ? Math.max(0, Math.min(2, Math.trunc(fase)))
             : 0;
     }
     if (payload && Object.prototype.hasOwnProperty.call(payload, "jurado_slide_step")) {
