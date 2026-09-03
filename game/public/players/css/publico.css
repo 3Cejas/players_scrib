@@ -2454,9 +2454,9 @@ th{
 .resultado-musa > div { width: min(94vw, 34rem); }
 .resultado-musa__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; margin-top: 1rem; }
 .resultado-musa__card { min-width: 0; padding: 1rem 0.55rem; border: 1px solid rgba(255,255,255,0.24); border-radius: 1rem; background: rgba(2, 10, 18, 0.77); opacity: 0.72; }
-.resultado-musa__card--1 { border-color: #48e7ff; }
-.resultado-musa__card--2 { border-color: #ff6178; }
-.resultado-musa__card.is-winner { opacity: 1; transform: translateY(-0.35rem); box-shadow: 0 0 1.8rem rgba(255,216,102,0.36); animation: resultadoMusaGanador 1.7s ease-in-out infinite alternate; }
+.resultado-musa__card--1 { --resultado-card-color: #48e7ff; border-color: var(--resultado-card-color); }
+.resultado-musa__card--2 { --resultado-card-color: #ff6178; border-color: var(--resultado-card-color); }
+.resultado-musa__card.is-winner { opacity: 1; transform: translateY(-0.35rem); border-color: var(--resultado-card-color, #ffda73); box-shadow: inset 0 0 1.8rem rgba(255,216,102,.16), 0 0 1rem var(--resultado-card-color, #ffda73), 0 0 2.8rem color-mix(in srgb, var(--resultado-card-color, #ffda73) 68%, transparent); animation: resultadoMusaGanador 1.7s ease-in-out infinite alternate; }
 .resultado-musa__card small { color: #ffdc77; font: 0.48rem/1.4 "Retro-gaming", monospace; }
 .resultado-musa__card h3 { min-height: 2.7em; margin: 0.65rem 0; font: clamp(0.7rem, 3.3vw, 1rem)/1.35 "Retro-gaming", monospace; overflow-wrap: anywhere; }
 .resultado-musa__card strong { font: clamp(2rem, 10vw, 3.3rem)/1 "Retro-gaming", monospace; }
@@ -2508,17 +2508,23 @@ th{
     z-index: 2;
     left: 50%;
     bottom: 50%;
-    display: flex;
-    align-items: baseline;
-    gap: .25rem;
+    display: grid;
+    justify-items: center;
+    gap: .12rem;
+    min-width: calc(100% - .35rem);
+    padding: .26rem .08rem;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,.58);
+    border-radius: .42rem;
     margin: 0;
     color: white;
     font: clamp(.5rem,2.4vw,.72rem)/1 "Retro-gaming", monospace;
     white-space: nowrap;
     text-shadow: 0 0 .65rem #000, 0 2px 2px #000;
-    transform: translate(-50%,50%) rotate(-90deg);
+    background: rgba(1,6,12,.7);
+    transform: translate(-50%,50%);
 }
-.resultado-musa__barra-vertical b small { font-size: .58em; }
+.resultado-musa__barra-vertical b small { font-size: .5em; letter-spacing: .08em; }
 .resultado-musa__card--comparativa.is-newly-revealed .resultado-musa__barra-vertical i {
     animation: resultadoMusaBarraVertical 1.45s cubic-bezier(.12,.76,.2,1) .12s both;
 }
@@ -2598,7 +2604,8 @@ th{
 }
 .resultado-musa__total-barra i:first-child { justify-content: flex-start; width: var(--resultado-balance,50%); padding-left: .55rem; border-radius: 999px 0 0 999px; background: linear-gradient(90deg,#63edff,#087eb8); }
 .resultado-musa__total-barra i:nth-child(2) { justify-content: flex-end; width: calc(100% - var(--resultado-balance,50%)); padding-right: .55rem; border-radius: 0 999px 999px 0; background: linear-gradient(90deg,#ad1739,#ff8b9c); }
-.resultado-musa__total-barra i b { position: relative; z-index: 2; margin: 0; color: white; font: clamp(.55rem,2.8vw,.78rem)/1 "Retro-gaming", monospace; text-shadow: 0 0 .5rem #000; }
+.resultado-musa__total-barra i b { position: relative; z-index: 2; display: inline-flex; align-items: baseline; gap: .28em; margin: 0; color: white; font: clamp(.55rem,2.8vw,.78rem)/1 "Retro-gaming", monospace; text-shadow: 0 0 .5rem #000; }
+.resultado-musa__total-barra i b small { font-size: .48em; letter-spacing: .08em; opacity: .86; }
 .resultado-musa__total-barra em {
     position: absolute;
     top: 50%; left: var(--resultado-balance, 50%);

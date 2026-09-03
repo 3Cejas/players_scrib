@@ -103,8 +103,8 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260829t/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260830b/);
+    assert.match(html, /video-tutorial\.css\?v=20260903u/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260903u/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }

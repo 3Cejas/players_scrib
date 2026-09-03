@@ -1575,8 +1575,10 @@ let jurado_firma_render_espectador = "";
 let resultado_final_firma_render_espectador = "";
 let puntuacion_timeout_revelado_espectador = null;
 let puntuacion_timeout_transferencia_espectador = null;
+let puntuacion_timeout_ganador_espectador = null;
 let puntuacion_raf_totales_espectador = [];
 let jurado_timeout_revelado_espectador = null;
+const PUNTUACION_REVELADO_GANADOR_MS = 1540;
 const stats_timeline_modos_local_espectador = [];
 const STATS_LAYOUT_HEATMAP = [
     [
@@ -3536,9 +3538,9 @@ const construirMarcadorTotalPuntuacionEspectador = (estado, categoriasReveladas,
     return `
         <section class="puntuacion-total" aria-label="Puntuaci&oacute;n acumulada">
             <div class="puntuacion-total__barra" data-total-1="${Number(totales[1]) || 0}" data-total-2="${Number(totales[2]) || 0}" data-target-1="${Number(objetivo[1]) || 0}" data-target-2="${Number(objetivo[2]) || 0}" style="--puntuacion-balance:${proporcionAzul.toFixed(2)}%" aria-label="${escapeHtml(estado.jugadores[1].nombre)}: ${escapeHtml(formatearNumeroPuntuacionEspectador(totales[1]))} puntos; ${escapeHtml(estado.jugadores[2].nombre)}: ${escapeHtml(formatearNumeroPuntuacionEspectador(totales[2]))} puntos">
-                <span class="puntuacion-total__azul"><b data-total-player="1">${escapeHtml(formatearNumeroPuntuacionEspectador(totales[1]))}</b></span>
+                <span class="puntuacion-total__azul"><b><span data-total-player="1">${escapeHtml(formatearNumeroPuntuacionEspectador(totales[1]))}</span><small>PTS</small></b></span>
                 <i aria-hidden="true"></i>
-                <span class="puntuacion-total__rojo"><b data-total-player="2">${escapeHtml(formatearNumeroPuntuacionEspectador(totales[2]))}</b></span>
+                <span class="puntuacion-total__rojo"><b><span data-total-player="2">${escapeHtml(formatearNumeroPuntuacionEspectador(totales[2]))}</span><small>PTS</small></b></span>
             </div>
         </section>
     `;
@@ -3568,7 +3570,7 @@ const construirIntroPuntuacionEspectador = (vista) => {
     `;
 };
 
-const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fase = 0) => {
+const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fase = 0, mostrarGanador = true) => {
     const jugador = estado.jugadores[player];
     const valor = Number(categoria.valores[player]) || 0;
     const puntos = Number(categoria.puntos[player]) || 0;
@@ -3577,7 +3579,7 @@ const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fa
     const clase = player === 1 ? "azul" : "rojo";
     const revelado = fase >= player;
     const resultadoRevelado = fase >= 2;
-    const gana = resultadoRevelado && Number(categoria.ganador) === player;
+    const gana = mostrarGanador && resultadoRevelado && Number(categoria.ganador) === player;
     const empata = categoria.empate === true;
     const recienRevelado = fase === player;
     if (!revelado) {
@@ -3603,7 +3605,7 @@ const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fa
     `;
 };
 
-const construirCategoriaPuntuacionEspectador = (vista, fase = 0, totalesIniciales = null) => {
+const construirCategoriaPuntuacionEspectador = (vista, fase = 0, totalesIniciales = null, mostrarGanador = true) => {
     const estado = vista.estado;
     const categoria = vista.categoria;
     const api = obtenerApiPuntuacionEspectador();
@@ -3613,13 +3615,8 @@ const construirCategoriaPuntuacionEspectador = (vista, fase = 0, totalesIniciale
             ? api.totalesParciales(estado, vista.indiceCategoria + (fase >= 2 ? 1 : 0))
             : { 1: 0, 2: 0 });
     const ganadorCategoria = fase >= 2 && !categoria.empate ? Number(categoria.ganador) : 0;
-    const veredicto = fase >= 2
-        ? (categoria.empate
-            ? tJuego2P("score.category.tie_short", {}, "EMPATE")
-            : `${estado.jugadores[ganadorCategoria].nombre} · GANADOR`)
-        : "";
     return `
-        <article class="puntuacion-panel puntuacion-panel--categoria" data-categoria="${escapeHtml(categoria.id)}">
+        <article class="puntuacion-panel puntuacion-panel--categoria" data-categoria="${escapeHtml(categoria.id)}" data-ganador-categoria="${ganadorCategoria}">
             <header class="puntuacion-categoria-header">
                 <span class="puntuacion-categoria-icono" aria-hidden="true">${PUNTUACION_ICONOS_CATEGORIA[categoria.id] || "\u25C6"}</span>
                 <div>
@@ -3629,11 +3626,10 @@ const construirCategoriaPuntuacionEspectador = (vista, fase = 0, totalesIniciale
                 <strong class="puntuacion-peso">${escapeHtml(tJuego2P("score.category.weight", { weight: formatearNumeroPuntuacionEspectador(categoria.peso) }, `${categoria.peso} PTS`))}</strong>
             </header>
             <div class="puntuacion-categoria-duelo">
-                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 1, fase)}
+                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 1, fase, mostrarGanador)}
                 <span class="puntuacion-vs puntuacion-vs--categoria" aria-hidden="true">VS</span>
-                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 2, fase)}
+                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 2, fase, mostrarGanador)}
             </div>
-            ${veredicto ? `<p class="puntuacion-categoria-veredicto ganador-${ganadorCategoria}">${escapeHtml(veredicto)}</p>` : ""}
             ${construirMarcadorTotalPuntuacionEspectador(estado, vista.indiceCategoria, totalesIniciales || totalesRevelados, totalesRevelados)}
         </article>
     `;
@@ -3736,7 +3732,7 @@ const transferirPuntosAlMarcadorEspectador = (player, puntos, totalesObjetivo) =
         const rectDestino = destino.getBoundingClientRect();
         const vuelo = document.createElement("span");
         vuelo.className = `puntuacion-puntos-vuelo equipo-${player}`;
-        vuelo.textContent = `+${formatearNumeroPuntuacionEspectador(puntos)}`;
+        vuelo.textContent = `+${formatearNumeroPuntuacionEspectador(puntos)} PTS`;
         vuelo.style.setProperty("--vuelo-x", `${rectDestino.left + (rectDestino.width / 2) - (rectOrigen.left + (rectOrigen.width / 2))}px`);
         vuelo.style.setProperty("--vuelo-y", `${rectDestino.top + (rectDestino.height / 2) - (rectOrigen.top + (rectOrigen.height / 2))}px`);
         vuelo.style.left = `${rectOrigen.left + (rectOrigen.width / 2)}px`;
@@ -3829,6 +3825,18 @@ const etiquetaPasoPuntuacionEspectador = (vista) => {
     return tJuego2P("score.step.intro", {}, "INTRO");
 };
 
+const mostrarGanadorCategoriaPuntuacionEspectador = (ganador, celebrar = false) => {
+    const id = Number(ganador);
+    puntuacion_espectador.classList.toggle("is-category-winner-1", id === 1);
+    puntuacion_espectador.classList.toggle("is-category-winner-2", id === 2);
+    if (id !== 1 && id !== 2) return;
+    const clase = id === 1 ? "azul" : "rojo";
+    puntuacion_stage
+        ?.querySelector(`.puntuacion-categoria-equipo--${clase}`)
+        ?.classList.add("is-winner");
+    if (celebrar) activarParticulasPuntuacionEspectador(false, true);
+};
+
 const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     if (!puntuacion_stage) return;
     const api = obtenerApiPuntuacionEspectador();
@@ -3865,15 +3873,21 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     const totalesDespuesDeRevelar = vista.tipo === "categoria" && typeof api.totalesDuranteRevelado === "function"
         ? api.totalesDuranteRevelado(estado, vista.indiceCategoria, fase)
         : null;
+    const reducirMovimiento = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    const diferirGanadorCategoria = Boolean(animar && revelarEquipo === 2 && !reducirMovimiento);
     let html = "";
     if (vista.tipo === "intro") html = construirIntroPuntuacionEspectador(vista);
-    else if (vista.tipo === "categoria") html = construirCategoriaPuntuacionEspectador(vista, fase, totalesAntesDeRevelar);
+    else if (vista.tipo === "categoria") html = construirCategoriaPuntuacionEspectador(vista, fase, totalesAntesDeRevelar, !diferirGanadorCategoria);
     else if (vista.tipo === "final") html = construirFinalPuntuacionEspectador(vista);
     else html = construirEsperaPuntuacionEspectador(vista);
 
     if (puntuacion_timeout_revelado_espectador) {
         clearTimeout(puntuacion_timeout_revelado_espectador);
         puntuacion_timeout_revelado_espectador = null;
+    }
+    if (puntuacion_timeout_ganador_espectador) {
+        clearTimeout(puntuacion_timeout_ganador_espectador);
+        puntuacion_timeout_ganador_espectador = null;
     }
     cancelarTransferenciaPuntuacionEspectador();
     puntuacion_stage.classList.remove("is-revealing", "is-final");
@@ -3883,8 +3897,7 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     const ganadorCategoria = vista.tipo === "categoria" && fase >= 2 && !vista.categoria.empate
         ? Number(vista.categoria.ganador)
         : 0;
-    puntuacion_espectador.classList.toggle("is-category-winner-1", ganadorCategoria === 1);
-    puntuacion_espectador.classList.toggle("is-category-winner-2", ganadorCategoria === 2);
+    mostrarGanadorCategoriaPuntuacionEspectador(diferirGanadorCategoria ? 0 : ganadorCategoria, false);
     if (puntuacion_paso) {
         const etiquetaFase = vista.tipo === "categoria"
             ? (["EN MISTERIO", "EQUIPO AZUL", "EQUIPO ROJO Y GANADOR"][fase] || "")
@@ -3899,8 +3912,7 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
         );
     }
     renderizarDotsPuntuacionEspectador(vista.paso);
-    const resultadoCategoriaRevelado = vista.tipo === "categoria" && fase >= 2;
-    activarParticulasPuntuacionEspectador(vista.tipo === "final", animar && (resultadoCategoriaRevelado || vista.tipo === "final"));
+    activarParticulasPuntuacionEspectador(vista.tipo === "final", animar && vista.tipo === "final");
     sincronizarAudioDeliberacionEspectador("puntuacion");
     if (animar && cambioDeSlide) {
         requestAnimationFrame(() => {
@@ -3920,6 +3932,14 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
             Number(vista.categoria.puntos?.[revelarEquipo]) || 0,
             totalesDespuesDeRevelar
         );
+    }
+    if (diferirGanadorCategoria && ganadorCategoria) {
+        puntuacion_timeout_ganador_espectador = setTimeout(() => {
+            if (vista_espectador_modo_resuelta !== "puntuacion") return;
+            if (Number(puntuacion_stage?.dataset.step) !== vista.paso || Number(puntuacion_stage?.dataset.phase) !== fase) return;
+            mostrarGanadorCategoriaPuntuacionEspectador(ganadorCategoria, true);
+            puntuacion_timeout_ganador_espectador = null;
+        }, PUNTUACION_REVELADO_GANADOR_MS);
     }
     puntuacion_firma_render_espectador = firma;
 };

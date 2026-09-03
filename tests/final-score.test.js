@@ -148,6 +148,11 @@ test("control and spectator wire the final score protocol and accessible present
     assert.match(spectatorState, /transferirPuntosAlMarcadorEspectador/);
     assert.match(spectatorState, /data-total-player="1"/);
     assert.match(spectatorState, /data-total-player="2"/);
+    assert.match(spectatorState, /data-total-player="1">[^<]+<\/span><small>PTS<\/small>/);
+    assert.match(spectatorState, /vuelo\.textContent = `\+\$\{formatearNumeroPuntuacionEspectador\(puntos\)\} PTS`/);
+    assert.doesNotMatch(spectatorState, /puntuacion-categoria-veredicto ganador-/);
+    assert.match(spectatorState, /PUNTUACION_REVELADO_GANADOR_MS = 1540/);
+    assert.match(spectatorState, /setTimeout\(\(\) => \{[\s\S]*mostrarGanadorCategoriaPuntuacionEspectador\(ganadorCategoria, true\)[\s\S]*PUNTUACION_REVELADO_GANADOR_MS/);
     assert.doesNotMatch(spectatorState, /fase >= 3/);
     assert.match(spectatorState, /reproducirVictoriaDeliberacionEspectador/);
     const renderPuntuacion = spectatorState.match(/const renderizarPuntuacionFinalEspectador[\s\S]*?\n};\n\nconst actualizarPuntuacionFinalEspectador/)?.[0] || "";
@@ -167,7 +172,9 @@ test("control and spectator wire the final score protocol and accessible present
 
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);
-    assert.match(css, /\.puntuacion-categoria-barra\s*\{[\s\S]*align-items:\s*flex-end;[\s\S]*width:\s*clamp\(3rem,/);
+    assert.match(css, /\.puntuacion-categoria-barra\s*\{[\s\S]*align-items:\s*flex-end;[\s\S]*width:\s*clamp\(4\.8rem,/);
+    assert.match(css, /\.puntuacion-categoria-barra__puntos\s*\{[\s\S]*transform:\s*translate\(-50%, 50%\);/);
+    assert.match(css, /\.puntuacion-vs--categoria\s*\{[\s\S]*writing-mode:\s*horizontal-tb;/);
     assert.match(css, /@keyframes puntuacionBarraVerticalReveal[\s\S]*scaleY\(\.04\)[\s\S]*scaleY\(1\)/);
     assert.match(css, /@keyframes puntuacionPuntosVuelan/);
     assert.match(css, /\.puntuacion-total__azul[\s\S]*width:\s*var\(--puntuacion-balance/);
@@ -178,7 +185,10 @@ test("control and spectator wire the final score protocol and accessible present
     assert.match(museState, /if \(cambioDeSlide\)/);
     assert.match(museState, /transferirPuntosAlMarcadorMusa/);
     assert.doesNotMatch(museState, /MARCADOR TOTAL/);
+    assert.match(museState, /vuelo\.textContent = `\+\$\{Number\(puntos \|\| 0\)\.toFixed\(1\)\} PTS`/);
+    assert.match(museState, /PUNTUACION_REVELADO_GANADOR_MUSA_MS = 1540/);
     assert.match(museCss, /\.resultado-musa__barra-vertical[\s\S]*align-items:\s*flex-end/);
+    assert.match(museCss, /\.resultado-musa__barra-vertical b\s*\{[\s\S]*transform:\s*translate\(-50%,50%\);/);
     assert.match(
         controlCss,
         /\.control-group--deliberacion:not\(\.is-collapsed\)\s*>\s*\.deliberacion-nav-control:not\(\[hidden\]\)\s*\{[^}]*display:\s*grid\s*!important;/s
