@@ -258,6 +258,9 @@ function iniciarTemporizadorGigante(duracion, finTimestamp = null) {
     temporizador_gigante.classList.remove("fin");
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = true;
+    // El temporizador es una escena prioritaria: si venimos del videotutorial o
+    // de la narración, recupera el volumen antes de seleccionar su música.
+    controlador_audio_vista_espectador?.setDucked(false);
     controlador_audio_vista_espectador?.setMode("temporizador");
     actualizarTemporizadorGigante();
     if (temporizador_gigante_restante <= 0) {
@@ -4721,7 +4724,12 @@ const aplicarModoVistaEspectadorUi = (modo) => {
 };
 const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
-    controlador_audio_vista_espectador?.setMode(modo, {
+    // El temporizador se dibuja por encima de la vista base. Las sincronizaciones
+    // periódicas de esa vista no deben apagar su música mientras siga visible.
+    const modoAudio = temporizador_gigante.classList.contains("activo")
+        ? "temporizador"
+        : modo;
+    controlador_audio_vista_espectador?.setMode(modoAudio, {
         initial: !vista_espectador_ui_inicializada,
         silentTransition: modo === "resultado_jurado" || modo === "resultado_final"
     });

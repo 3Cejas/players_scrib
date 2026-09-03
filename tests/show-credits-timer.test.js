@@ -63,6 +63,7 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
 
 test("giant timer is a dedicated synced scene on spectator and muse screens", () => {
   const spectatorState = read("game/spectator/js/state.js");
+  const spectatorCss = read("game/css/dashboard-players.css");
   const spectatorSockets = read("game/spectator/js/socket-events.js");
   const museHtml = read("game/public/players/index.html");
   const museState = read("game/public/players/js/state.js");
@@ -71,6 +72,11 @@ test("giant timer is a dedicated synced scene on spectator and muse screens", ()
   assert.match(spectatorState, /CUENTA ATR&Aacute;S PARA LA REPRESENTACI&Oacute;N/);
   assert.match(spectatorState, /Es hora de ver la representaci&oacute;n de los textos\./);
   assert.match(spectatorState, /function aplicarEstadoTemporizadorGigante/);
+  assert.match(spectatorState, /controlador_audio_vista_espectador\?\.setDucked\(false\)[\s\S]{0,160}setMode\("temporizador"\)/);
+  assert.match(spectatorState, /const modoAudio = temporizador_gigante\.classList\.contains\("activo"\)[\s\S]{0,120}\? "temporizador"[\s\S]{0,120}: modo/);
+  assert.match(spectatorState, /controlador_audio_vista_espectador\?\.setMode\(modoAudio/);
+  assert.match(spectatorCss, /#temporizador_gigante_valor \{[\s\S]{0,420}font-variant-numeric:\s*tabular-nums;[\s\S]{0,220}white-space:\s*nowrap;/);
+  assert.match(spectatorCss, /\.temporizador-gigante__ring \{[\s\S]{0,180}width:\s*min\(55vh, 40vw, 31rem\)/);
   assert.match(spectatorSockets, /temporizador_gigante_estado/);
   assert.match(museHtml, /id="temporizador_musa"/);
   assert.match(museHtml, /Es hora de ver la representaci&oacute;n de los textos\./);
