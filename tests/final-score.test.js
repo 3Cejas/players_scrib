@@ -68,6 +68,9 @@ test("visual score signature ignores resync timestamps but changes with visible 
     assert.equal(score.crearFirmaVista(original, 0), score.crearFirmaVista(resincronizado, 0));
     assert.notEqual(score.crearFirmaVista(original, 0), score.crearFirmaVista(cambiado, 0));
     assert.notEqual(score.crearFirmaVista(original, 0), score.crearFirmaVista(original, 1));
+    assert.notEqual(score.crearFirmaVista(original, 1, 0), score.crearFirmaVista(original, 1, 1));
+    assert.equal(score.normalizarFaseRevelado(-8), 0);
+    assert.equal(score.normalizarFaseRevelado(99), 3);
 });
 
 test("final score differentiates a pending result from incomplete final telemetry", () => {
@@ -123,7 +126,7 @@ test("control and spectator wire the final score protocol and accessible present
 
     assert.match(spectatorHtml, /id="puntuacion_espectador"/);
     assert.match(spectatorHtml, /id="puntuacion_stage"[^>]*aria-live="polite"/);
-    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260903a/);
+    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260903c/);
     assert.match(spectatorSockets, /socket\.emit\('pedir_puntuacion_final'\)/);
     assert.match(spectatorSockets, /socket\.on\('puntuacion_final_estado'/);
     assert.match(spectatorState, /classList\.toggle\("vista-puntuacion", modo === "puntuacion"\)/);
@@ -131,6 +134,13 @@ test("control and spectator wire the final score protocol and accessible present
     assert.doesNotMatch(spectatorState, /Mide rendimiento de juego; no valora la calidad literaria/);
     assert.match(spectatorState, /firma === puntuacion_firma_render_espectador[\s\S]*return/);
     assert.match(spectatorState, /const entrandoEnPuntuacion = modoPrevio !== "puntuacion"/);
+    assert.match(spectatorState, /puntuacion_reveal_phase_remoto/);
+    assert.match(spectatorState, /MARCADOR TOTAL/);
+    assert.doesNotMatch(spectatorState, /MARCADOR PROVISIONAL/);
+    assert.match(spectatorState, /reproducirVictoriaDeliberacionEspectador/);
+    assert.match(spectatorHtml, /deliberacion-syncopated-clock\.mp3/);
+    assert.match(spectatorHtml, /deliberacion-latido\.wav/);
+    assert.match(spectatorHtml, /deliberacion-victoria\.mp3/);
 
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);

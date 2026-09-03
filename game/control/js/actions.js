@@ -21,6 +21,7 @@ let vista_calentamiento = false;
 let vista_espectador_modo = "tutorial";
 let vista_principal_control = "tutorial";
 let puntuacion_slide_step_control = 0;
+let puntuacion_reveal_phase_control = 0;
 let jurado_slide_step_control = 0;
 let estado_puntuacion_final_control = null;
 let estado_resultado_jurado_control = null;
@@ -2782,7 +2783,11 @@ function actualizarBotonesVistaEspectadorControl() {
             const idCategoria = PUNTUACION_CATEGORIAS_CONTROL[puntuacion_slide_step_control - 1];
             etiquetaPaso = tJuego2PControl(`score.category.${idCategoria}.label`, {}, idCategoria.replace(/_/g, " ").toUpperCase());
         }
-        puntuacionLabel.textContent = `${etiquetaPaso} \u00b7 ${puntuacion_slide_step_control}/${PUNTUACION_PASO_MAX_CONTROL}`;
+        const fases = ["EN MISTERIO", "DESVELAR AZUL", "DESVELAR ROJO", "GANADOR REVELADO"];
+        const detalle = puntuacion_slide_step_control > 0 && puntuacion_slide_step_control < PUNTUACION_PASO_MAX_CONTROL
+            ? fases[puntuacion_reveal_phase_control]
+            : "";
+        puntuacionLabel.textContent = [etiquetaPaso, detalle].filter(Boolean).join(" \u00b7 ");
     }
     if (puntuacionNav) {
         const visible = vista_espectador_modo === "puntuacion";
@@ -2998,6 +3003,12 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
         const paso = Number(payload.puntuacion_slide_step);
         puntuacion_slide_step_control = Number.isFinite(paso)
             ? Math.max(0, Math.min(PUNTUACION_PASO_MAX_CONTROL, Math.trunc(paso)))
+            : 0;
+    }
+    if (payload && Object.prototype.hasOwnProperty.call(payload, "puntuacion_reveal_phase")) {
+        const fase = Number(payload.puntuacion_reveal_phase);
+        puntuacion_reveal_phase_control = Number.isFinite(fase)
+            ? Math.max(0, Math.min(3, Math.trunc(fase)))
             : 0;
     }
     if (payload && Object.prototype.hasOwnProperty.call(payload, "jurado_slide_step")) {

@@ -1252,6 +1252,9 @@ const resultado_jurado_espectador = getEl("resultado_jurado_espectador");
 const resultado_jurado_stage = getEl("resultado_jurado_stage");
 const resultado_final_espectador = getEl("resultado_final_espectador");
 const resultado_final_stage = getEl("resultado_final_stage");
+const deliberacion_audio_espectador = getEl("deliberacion_audio_espectador");
+const deliberacion_latido_espectador = getEl("deliberacion_latido_espectador");
+const deliberacion_victoria_espectador = getEl("deliberacion_victoria_espectador");
 const nube_inspiracion_espectador = getEl("nube_inspiracion_espectador");
 const nube_inspiracion_canvas = getEl("nube_inspiracion_canvas");
 const creditos_espectador = getEl("creditos_espectador");
@@ -1294,6 +1297,75 @@ const controlador_audio_vista_espectador = window.ScribViewTransition
         musicModes: ["tutorial", "calentamiento", "temporizador"]
     })
     : null;
+let audio_deliberacion_modo_espectador = "";
+let audio_deliberacion_victoria_firma = "";
+const audios_deliberacion_pendientes_espectador = new Set();
+
+const pausarAudioDeliberacionEspectador = (audio, reiniciar = false) => {
+    if (!audio) return;
+    audio.pause();
+    if (reiniciar) {
+        try { audio.currentTime = 0; } catch (_error) {}
+    }
+};
+
+const reproducirAudioDeliberacionSeguro = (audio, volumen = 0.78) => {
+    if (!audio) return;
+    audio.volume = Math.max(0, Math.min(1, volumen));
+    const promesa = audio.play();
+    if (promesa && typeof promesa.catch === "function") {
+        promesa
+            .then(() => audios_deliberacion_pendientes_espectador.delete(audio))
+            .catch(() => { audios_deliberacion_pendientes_espectador.add(audio); });
+    }
+};
+
+const reintentarAudioDeliberacionEspectador = () => {
+    if (!audios_deliberacion_pendientes_espectador.size) return;
+    const pendientes = [...audios_deliberacion_pendientes_espectador];
+    audios_deliberacion_pendientes_espectador.clear();
+    pendientes.forEach((audio) => reproducirAudioDeliberacionSeguro(audio, audio.volume));
+};
+document.addEventListener("pointerdown", reintentarAudioDeliberacionEspectador, { passive: true });
+document.addEventListener("keydown", reintentarAudioDeliberacionEspectador);
+
+function sincronizarAudioDeliberacionEspectador(modo) {
+    const siguiente = String(modo || "").trim().toLowerCase();
+    audio_deliberacion_modo_espectador = siguiente;
+    if (siguiente === "resultado_jurado") {
+        pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+        audio_deliberacion_victoria_firma = "";
+        reproducirAudioDeliberacionSeguro(deliberacion_audio_espectador, 0.42);
+        reproducirAudioDeliberacionSeguro(deliberacion_latido_espectador, 0.72);
+        return;
+    }
+    pausarAudioDeliberacionEspectador(deliberacion_latido_espectador, true);
+    if (siguiente === "deliberacion" || siguiente === "puntuacion") {
+        if (siguiente === "puntuacion" && audio_deliberacion_victoria_firma) {
+            pausarAudioDeliberacionEspectador(deliberacion_audio_espectador);
+            return;
+        }
+        pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+        audio_deliberacion_victoria_firma = "";
+        reproducirAudioDeliberacionSeguro(deliberacion_audio_espectador, 0.8);
+        return;
+    }
+    pausarAudioDeliberacionEspectador(deliberacion_audio_espectador);
+    if (siguiente !== "resultado_final") {
+        pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+        audio_deliberacion_victoria_firma = "";
+    }
+}
+
+function reproducirVictoriaDeliberacionEspectador(firma) {
+    const siguienteFirma = String(firma || "victoria");
+    if (audio_deliberacion_victoria_firma === siguienteFirma) return;
+    audio_deliberacion_victoria_firma = siguienteFirma;
+    pausarAudioDeliberacionEspectador(deliberacion_audio_espectador);
+    pausarAudioDeliberacionEspectador(deliberacion_latido_espectador);
+    pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+    reproducirAudioDeliberacionSeguro(deliberacion_victoria_espectador, 0.92);
+}
 let partida_activa_espectador = false;
 let modo_nivel_activo_espectador = "";
 let ultimo_estado_calentamiento = 0;
@@ -1498,6 +1570,7 @@ let estado_puntuacion_final_espectador = null;
 let estado_resultado_jurado_espectador = null;
 let estado_resultado_final_espectador = null;
 let puntuacion_slide_step_remoto = 0;
+let puntuacion_reveal_phase_remoto = 0;
 let jurado_slide_step_remoto = 0;
 let puntuacion_firma_render_espectador = "";
 let jurado_firma_render_espectador = "";
@@ -3463,18 +3536,26 @@ const construirPuntosEquipoPuntuacionEspectador = (estado, totales, player, opci
     `;
 };
 
-const construirMarcadorProvisionalPuntuacionEspectador = (estado, categoriasReveladas) => {
+const construirMarcadorTotalPuntuacionEspectador = (estado, categoriasReveladas) => {
     const api = obtenerApiPuntuacionEspectador();
     const totales = api && typeof api.totalesParciales === "function"
         ? api.totalesParciales(estado, categoriasReveladas)
         : { 1: 0, 2: 0 };
+    const suma = (Number(totales[1]) || 0) + (Number(totales[2]) || 0);
+    const proporcionAzul = suma > 0 ? Math.max(8, Math.min(92, ((Number(totales[1]) || 0) / suma) * 100)) : 50;
+    const lider = Math.abs((Number(totales[1]) || 0) - (Number(totales[2]) || 0)) < 0.01
+        ? 0
+        : ((Number(totales[1]) || 0) > (Number(totales[2]) || 0) ? 1 : 2);
     return `
-        <section class="puntuacion-provisional" aria-label="${escapeHtml(tJuego2P("score.provisional", {}, "MARCADOR PROVISIONAL"))}">
-            <span class="puntuacion-provisional__label">${escapeHtml(tJuego2P("score.provisional", {}, "MARCADOR PROVISIONAL"))}</span>
+        <section class="puntuacion-provisional puntuacion-total" aria-label="MARCADOR TOTAL">
+            <span class="puntuacion-provisional__label">MARCADOR TOTAL</span>
             <div class="puntuacion-provisional__duelo">
-                ${construirPuntosEquipoPuntuacionEspectador(estado, totales, 1)}
+                ${construirPuntosEquipoPuntuacionEspectador(estado, totales, 1, { ganador: lider })}
                 <span class="puntuacion-vs" aria-hidden="true">VS</span>
-                ${construirPuntosEquipoPuntuacionEspectador(estado, totales, 2)}
+                ${construirPuntosEquipoPuntuacionEspectador(estado, totales, 2, { ganador: lider })}
+            </div>
+            <div class="puntuacion-total__barra" style="--puntuacion-balance:${proporcionAzul.toFixed(2)}%" aria-label="${lider ? `${escapeHtml(estado.jugadores[lider].nombre)} va ganando` : "Marcador empatado"}">
+                <span class="puntuacion-total__azul"></span><i aria-hidden="true"></i><span class="puntuacion-total__rojo"></span>
             </div>
         </section>
     `;
@@ -3499,61 +3580,63 @@ const construirIntroPuntuacionEspectador = (vista) => {
                 <strong class="equipo-rojo">${escapeHtml(estado.jugadores[2].nombre)}</strong>
             </div>
             <ul class="puntuacion-categorias-intro">${chips}</ul>
+            ${construirMarcadorTotalPuntuacionEspectador(estado, 0)}
         </article>
     `;
 };
 
-const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player) => {
+const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fase = 0) => {
     const jugador = estado.jugadores[player];
     const valor = Number(categoria.valores[player]) || 0;
     const puntos = Number(categoria.puntos[player]) || 0;
     const peso = Math.max(0, Number(categoria.peso) || 0);
     const porcentaje = peso > 0 ? Math.max(0, Math.min(100, (puntos / peso) * 100)) : 50;
     const clase = player === 1 ? "azul" : "rojo";
-    const gana = Number(categoria.ganador) === player;
+    const revelado = fase >= player;
+    const resultadoRevelado = fase >= 3;
+    const gana = resultadoRevelado && Number(categoria.ganador) === player;
     const empata = categoria.empate === true;
     return `
-        <article class="puntuacion-categoria-equipo puntuacion-categoria-equipo--${clase}${gana ? " is-winner" : ""}${empata ? " is-tie" : ""}">
+        <article class="puntuacion-categoria-equipo puntuacion-categoria-equipo--${clase}${gana ? " is-winner" : ""}${resultadoRevelado && empata ? " is-tie" : ""}${revelado ? " is-revealed" : " is-concealed"}">
             <span class="puntuacion-categoria-equipo__numero">0${player}</span>
             <h4>${escapeHtml(jugador.nombre)}</h4>
             <div class="puntuacion-categoria-equipo__metrica">
-                <strong>${escapeHtml(formatearNumeroPuntuacionEspectador(valor))}</strong>
-                <span>${escapeHtml(traducirUnidadPuntuacionEspectador(categoria))}</span>
+                <strong>${revelado ? escapeHtml(formatearNumeroPuntuacionEspectador(valor)) : "?"}</strong>
+                <span>${revelado ? escapeHtml(traducirUnidadPuntuacionEspectador(categoria)) : "POR DESVELAR"}</span>
             </div>
             <div class="puntuacion-categoria-barra" aria-hidden="true">
-                <span style="--puntuacion-fill:${porcentaje.toFixed(2)}%"></span>
+                <span style="--puntuacion-fill:${revelado ? porcentaje.toFixed(2) : "0"}%"></span>
             </div>
             <div class="puntuacion-categoria-equipo__puntos">
-                <strong>+${escapeHtml(formatearNumeroPuntuacionEspectador(puntos))}</strong>
+                <strong>${revelado ? `+${escapeHtml(formatearNumeroPuntuacionEspectador(puntos))}` : "??"}</strong>
                 <span>PTS</span>
             </div>
             ${gana ? `<span class="puntuacion-categoria-ganador">${escapeHtml(tJuego2P("score.category.leader", {}, "GANA EL APARTADO"))}</span>` : ""}
-            ${empata ? `<span class="puntuacion-categoria-ganador puntuacion-categoria-ganador--empate">${escapeHtml(tJuego2P("score.category.tie", {}, "EMPATE EN EL APARTADO"))}</span>` : ""}
+            ${resultadoRevelado && empata ? `<span class="puntuacion-categoria-ganador puntuacion-categoria-ganador--empate">${escapeHtml(tJuego2P("score.category.tie", {}, "EMPATE EN EL APARTADO"))}</span>` : ""}
         </article>
     `;
 };
 
-const construirCategoriaPuntuacionEspectador = (vista) => {
+const construirCategoriaPuntuacionEspectador = (vista, fase = 0) => {
     const estado = vista.estado;
     const categoria = vista.categoria;
-    const numeroCategoria = vista.indiceCategoria + 1;
+    const categoriasResueltas = vista.indiceCategoria + (fase >= 3 ? 1 : 0);
     return `
         <article class="puntuacion-panel puntuacion-panel--categoria" data-categoria="${escapeHtml(categoria.id)}">
             <header class="puntuacion-categoria-header">
                 <span class="puntuacion-categoria-icono" aria-hidden="true">${PUNTUACION_ICONOS_CATEGORIA[categoria.id] || "\u25C6"}</span>
                 <div>
-                    <span class="puntuacion-kicker">${escapeHtml(tJuego2P("score.category.progress", { current: numeroCategoria, total: estado.categorias.length }, `APARTADO ${numeroCategoria}`))}</span>
                     <h3>${escapeHtml(traducirCategoriaPuntuacionEspectador(categoria))}</h3>
                     <p>${escapeHtml(explicarCategoriaPuntuacionEspectador(categoria))}</p>
                 </div>
                 <strong class="puntuacion-peso">${escapeHtml(tJuego2P("score.category.weight", { weight: formatearNumeroPuntuacionEspectador(categoria.peso) }, `${categoria.peso} PTS`))}</strong>
             </header>
             <div class="puntuacion-categoria-duelo">
-                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 1)}
+                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 1, fase)}
                 <span class="puntuacion-vs puntuacion-vs--categoria" aria-hidden="true">VS</span>
-                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 2)}
+                ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 2, fase)}
             </div>
-            ${construirMarcadorProvisionalPuntuacionEspectador(estado, numeroCategoria)}
+            ${construirMarcadorTotalPuntuacionEspectador(estado, categoriasResueltas)}
         </article>
     `;
 };
@@ -3591,11 +3674,7 @@ const construirFinalPuntuacionEspectador = (vista) => {
             <p class="puntuacion-final-subtitulo">${escapeHtml(subtitulo)}</p>
             <h3>${escapeHtml(tituloResultado)}</h3>
             ${empate ? "" : `<p class="puntuacion-final-margen">${escapeHtml(tJuego2P("score.final.margin", { difference: formatearNumeroPuntuacionEspectador(estado.diferencia) }, `VENTAJA: ${estado.diferencia} PTS`))}</p>`}
-            <div class="puntuacion-final-marcador">
-                ${construirPuntosEquipoPuntuacionEspectador(estado, { 1: estado.jugadores[1].total, 2: estado.jugadores[2].total }, 1, { ganador })}
-                <span class="puntuacion-vs" aria-hidden="true">${empate ? "=" : "VS"}</span>
-                ${construirPuntosEquipoPuntuacionEspectador(estado, { 1: estado.jugadores[1].total, 2: estado.jugadores[2].total }, 2, { ganador })}
-            </div>
+            ${construirMarcadorTotalPuntuacionEspectador(estado, estado.categorias.length)}
             <section class="puntuacion-desglose">
                 <h4>${escapeHtml(tJuego2P("score.final.breakdown", {}, "DUELO POR APARTADOS"))}</h4>
                 <ul>${construirDesgloseFinalPuntuacionEspectador(estado)}</ul>
@@ -3645,17 +3724,20 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     }
     const estado = estado_puntuacion_final_espectador || api.normalizarPayload({});
     const vista = api.obtenerVista(estado, puntuacion_slide_step_remoto);
+    const fase = vista.tipo === "categoria" && typeof api.normalizarFaseRevelado === "function"
+        ? api.normalizarFaseRevelado(puntuacion_reveal_phase_remoto)
+        : 0;
     // La marca temporal puede variar durante una resincronizacion aunque el
     // resultado visible sea identico. La firma de contenido evita volver a
     // montar la slide y relanzar sus particulas en ese caso.
     const firma = typeof api.crearFirmaVista === "function"
-        ? api.crearFirmaVista(estado, vista.paso)
-        : `${vista.paso}:${vista.tipo}`;
+        ? api.crearFirmaVista(estado, vista.paso, fase)
+        : `${vista.paso}:${vista.tipo}:${fase}`;
     if (firma === puntuacion_firma_render_espectador && opciones.forzar !== true) return;
     const animar = opciones.animar === true && firma !== puntuacion_firma_render_espectador;
     let html = "";
     if (vista.tipo === "intro") html = construirIntroPuntuacionEspectador(vista);
-    else if (vista.tipo === "categoria") html = construirCategoriaPuntuacionEspectador(vista);
+    else if (vista.tipo === "categoria") html = construirCategoriaPuntuacionEspectador(vista, fase);
     else if (vista.tipo === "final") html = construirFinalPuntuacionEspectador(vista);
     else html = construirEsperaPuntuacionEspectador(vista);
 
@@ -3667,7 +3749,10 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     puntuacion_stage.innerHTML = html;
     puntuacion_stage.dataset.step = String(vista.paso);
     if (puntuacion_paso) {
-        puntuacion_paso.textContent = `${etiquetaPasoPuntuacionEspectador(vista)} \u00b7 ${vista.paso}/${api.MAX_STEP}`;
+        const etiquetaFase = vista.tipo === "categoria"
+            ? (["EN MISTERIO", "EQUIPO AZUL", "EQUIPO ROJO", "GANADOR"][fase] || "")
+            : "";
+        puntuacion_paso.textContent = [etiquetaPasoPuntuacionEspectador(vista), etiquetaFase].filter(Boolean).join(" \u00b7 ");
     }
     if (puntuacion_formula) {
         puntuacion_formula.textContent = tJuego2P(
@@ -3677,7 +3762,17 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
         );
     }
     renderizarDotsPuntuacionEspectador(vista.paso);
-    activarParticulasPuntuacionEspectador(vista.tipo === "final", animar);
+    const resultadoCategoriaRevelado = vista.tipo === "categoria" && fase >= 3;
+    activarParticulasPuntuacionEspectador(vista.tipo === "final", animar && (resultadoCategoriaRevelado || vista.tipo === "final"));
+    if (vista.tipo === "final") {
+        reproducirVictoriaDeliberacionEspectador(`videojuego:${estado.calculadoEnTs || 0}:${estado.ganador || 0}`);
+    } else {
+        if (audio_deliberacion_victoria_firma) {
+            pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+            audio_deliberacion_victoria_firma = "";
+        }
+        sincronizarAudioDeliberacionEspectador("puntuacion");
+    }
     if (animar) {
         requestAnimationFrame(() => {
             if (vista_espectador_modo_resuelta !== "puntuacion") return;
@@ -3865,6 +3960,7 @@ const renderizarResultadoFinalEspectador = (opciones = {}) => {
     resultado_final_stage.classList.remove("is-celebrating");
     requestAnimationFrame(() => resultado_final_stage.classList.add("is-celebrating"));
     if (!estado.empate && typeof confetti_aux === "function") confetti_aux();
+    reproducirVictoriaDeliberacionEspectador(`final:${estado.ganador || 0}:${estado.jugadores[1].total}:${estado.jugadores[2].total}`);
     resultado_final_firma_render_espectador = firma;
 };
 
@@ -4265,6 +4361,7 @@ const actualizarVisibilidadPanelNivelEspectador = () => {
 const aplicarModoVistaEspectadorUi = (modo) => {
     const modoPrevio = vista_espectador_modo_resuelta;
     vista_espectador_modo_resuelta = modo;
+    sincronizarAudioDeliberacionEspectador(modo);
     if (modo !== "partida") {
         ocultarTransicionNivelEspectador();
     }
@@ -4424,6 +4521,14 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
                 : 0;
             cambioPasoPuntuacion = nuevoPaso !== puntuacion_slide_step_remoto;
             puntuacion_slide_step_remoto = nuevoPaso;
+        }
+        if (Object.prototype.hasOwnProperty.call(payload, "puntuacion_reveal_phase")) {
+            const api = obtenerApiPuntuacionEspectador();
+            const nuevaFase = api && typeof api.normalizarFaseRevelado === "function"
+                ? api.normalizarFaseRevelado(payload.puntuacion_reveal_phase)
+                : Math.max(0, Math.min(3, Math.trunc(Number(payload.puntuacion_reveal_phase) || 0)));
+            cambioPasoPuntuacion = cambioPasoPuntuacion || nuevaFase !== puntuacion_reveal_phase_remoto;
+            puntuacion_reveal_phase_remoto = nuevaFase;
         }
         if (Object.prototype.hasOwnProperty.call(payload, "jurado_slide_step")) {
             const nuevoPaso = Math.max(0, Math.trunc(Number(payload.jurado_slide_step) || 0));

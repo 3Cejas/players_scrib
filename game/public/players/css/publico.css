@@ -2486,6 +2486,62 @@ th{
 .resultado-musa__intro ul { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .5rem; width: 100%; margin: .5rem 0 0; padding: 0; list-style: none; }
 .resultado-musa__intro li { min-width: 0; padding: .72rem .4rem; border: 1px solid rgba(255,220,108,.3); border-radius: .7rem; background: rgba(2,10,18,.7); color: #fff2b1; font: clamp(.45rem,2.3vw,.65rem)/1.25 "Retro-gaming", monospace; overflow-wrap: anywhere; }
 .resultado-musa__card b { display: block; margin: .5rem 0 0; color: #ffdf79; font: clamp(.45rem,2.3vw,.65rem)/1.25 "Retro-gaming", monospace; }
+.resultado-musa__card.is-concealed {
+    position: relative;
+    opacity: .62;
+    border-style: dashed;
+    filter: saturate(.55) brightness(.78);
+}
+.resultado-musa__card.is-concealed::after {
+    content: "?";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    color: rgba(255,255,255,.72);
+    background: repeating-linear-gradient(135deg, rgba(2,8,16,.78) 0 12px, rgba(255,255,255,.025) 13px 24px);
+    font: clamp(3rem,18vw,5rem)/1 "Retro-gaming", monospace;
+    animation: resultadoMusaMisterio 1.4s ease-in-out infinite alternate;
+}
+.resultado-musa__card.is-revealed:not(.is-winner) { animation: resultadoMusaDato .82s cubic-bezier(.16,1,.3,1) both; }
+.resultado-musa__total {
+    display: grid;
+    gap: .5rem;
+    width: 100%;
+    margin-top: .25rem;
+    padding: .75rem;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,220,108,.4);
+    border-radius: .9rem;
+    background: rgba(2,9,17,.8);
+}
+.resultado-musa__total > small { color: #ffe17e; font: .52rem/1.25 "Retro-gaming", monospace; letter-spacing: .08em; }
+.resultado-musa__total-valores { display: grid; grid-template-columns: 1fr auto 1fr; gap: .6rem; align-items: center; }
+.resultado-musa__total-valores b { margin: 0; font: clamp(.85rem,4.8vw,1.25rem)/1 "Retro-gaming", monospace; }
+.resultado-musa__total-valores b:first-child { color: #48e7ff; text-align: right; }
+.resultado-musa__total-valores b:last-child { color: #ff6178; text-align: left; }
+.resultado-musa__total-valores span { color: #ffe17e; font: .55rem/1 "Retro-gaming", monospace; }
+.resultado-musa__total-barra {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--resultado-balance, 50%) 1fr;
+    height: .78rem;
+    overflow: visible;
+    border: 2px solid rgba(255,255,255,.82);
+    border-radius: 999px;
+}
+.resultado-musa__total-barra i:first-child { border-radius: 999px 0 0 999px; background: linear-gradient(90deg,#63edff,#087eb8); }
+.resultado-musa__total-barra i:nth-child(2) { border-radius: 0 999px 999px 0; background: linear-gradient(90deg,#ad1739,#ff8b9c); }
+.resultado-musa__total-barra em {
+    position: absolute;
+    top: 50%; left: var(--resultado-balance, 50%);
+    width: .55rem; aspect-ratio: 1;
+    border: 2px solid white; border-radius: 50%;
+    background: #ffe276; box-shadow: 0 0 .75rem #ffe276;
+    transform: translate(-50%,-50%);
+    transition: left .9s cubic-bezier(.16,1,.3,1);
+}
 .resultado-musa__apartado--final > h2 { color: #ffe47e; font-size: clamp(2rem,10vw,3.6rem); }
 @keyframes resultadoMusaRevelado {
     0% { opacity: 0; transform: scale(.78); filter: blur(12px) brightness(.45); }
@@ -2497,6 +2553,8 @@ th{
     22% { opacity: .96; }
     100% { opacity: 0; transform: scale(1); }
 }
+@keyframes resultadoMusaMisterio { to { opacity: .86; filter: brightness(1.35); transform: scale(1.02); } }
+@keyframes resultadoMusaDato { from { opacity: .18; transform: scale(.78) rotateY(15deg); filter: blur(10px) brightness(1.8); } }
 @keyframes deliberacionMusaEntrada { from { opacity: 0; transform: scale(0.86) translateY(4vh); } }
 @keyframes deliberacionMusaIcono { 50% { transform: rotate(5deg) scale(1.08); } }
 @keyframes resultadoMusaGanador { to { filter: brightness(1.22); transform: translateY(-0.55rem) scale(1.02); } }
@@ -2518,6 +2576,8 @@ th{
     .deliberacion-musa__icon,
     .resultado-musa:not([hidden]),
     .resultado-musa__card.is-winner,
+    .resultado-musa__card.is-concealed::after,
+    .resultado-musa__card.is-revealed,
     .resultado-musa > div.is-revealing,
     .resultado-musa.is-local-winner::before {
         animation: none !important;

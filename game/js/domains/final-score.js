@@ -121,11 +121,17 @@
         };
     }
 
-    function crearFirmaVista(payload, paso) {
+    function normalizarFaseRevelado(valor) {
+        const numero = Math.trunc(numeroFinito(valor));
+        return Math.max(0, Math.min(3, numero));
+    }
+
+    function crearFirmaVista(payload, paso, fase = 0) {
         const vista = obtenerVista(payload, paso);
         const estado = vista.estado;
         return JSON.stringify({
             paso: vista.paso,
+            fase: vista.tipo === "categoria" ? normalizarFaseRevelado(fase) : 0,
             tipo: vista.tipo,
             disponible: estado.disponible,
             datosSuficientes: estado.datosSuficientes,
@@ -166,6 +172,7 @@
         MAX_STEP,
         normalizarPayload,
         normalizarPaso,
+        normalizarFaseRevelado,
         obtenerVista,
         crearFirmaVista,
         redondear,
