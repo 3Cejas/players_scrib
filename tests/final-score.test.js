@@ -102,6 +102,7 @@ test("final comparison preserves and displays weighted inspiration decimals", ()
 
 test("control and spectator wire the final score protocol and accessible presentation", () => {
     const controlHtml = read("game/control/index.html");
+    const controlCss = read("game/control/index.css");
     const controlActions = read("game/control/js/actions.js");
     const controlSockets = read("game/control/js/socket-events.js");
     const spectatorHtml = read("game/spectator/index.html");
@@ -133,6 +134,10 @@ test("control and spectator wire the final score protocol and accessible present
 
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);
+    assert.match(
+        controlCss,
+        /\.control-group--deliberacion:not\(\.is-collapsed\)\s*>\s*\.deliberacion-nav-control:not\(\[hidden\]\)\s*\{[^}]*display:\s*grid\s*!important;/s
+    );
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.puntuacion-espectador/);
     ["es", "en", "fr"].forEach((_idioma) => {
         assert.match(i18n, /"score\.final\.winner"/);

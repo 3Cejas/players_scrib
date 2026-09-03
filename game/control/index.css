@@ -11168,8 +11168,8 @@ table.default {
     font: clamp(0.54rem, 0.75vw, 0.72rem)/1.35 "Retro-gaming", monospace;
 }
 
-#panel_controles .control-group--deliberacion:not(.is-collapsed) > .deliberacion-nav-control {
-    display: grid;
+#panel_controles .control-group--deliberacion:not(.is-collapsed) > .deliberacion-nav-control:not([hidden]) {
+    display: grid !important;
     width: 100%;
     margin-top: 0.15rem;
     border-color: rgba(255, 215, 104, 0.5);
