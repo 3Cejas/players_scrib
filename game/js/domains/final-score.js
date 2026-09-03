@@ -167,6 +167,17 @@
         return salida;
     }
 
+    function totalesDuranteRevelado(estado, indiceCategoria, fase) {
+        const indice = Math.max(0, Math.min(CATEGORY_IDS.length - 1, Math.trunc(numeroFinito(indiceCategoria))));
+        const etapa = normalizarFaseRevelado(fase);
+        const salida = totalesParciales(estado, indice);
+        const categoria = estado && Array.isArray(estado.categorias) ? estado.categorias[indice] : null;
+        if (!categoria) return salida;
+        if (etapa >= 1) salida[1] = redondear(salida[1] + numeroFinito(categoria.puntos && categoria.puntos[1]));
+        if (etapa >= 2) salida[2] = redondear(salida[2] + numeroFinito(categoria.puntos && categoria.puntos[2]));
+        return salida;
+    }
+
     const api = Object.freeze({
         CATEGORY_IDS,
         MAX_STEP,
@@ -176,7 +187,8 @@
         obtenerVista,
         crearFirmaVista,
         redondear,
-        totalesParciales
+        totalesParciales,
+        totalesDuranteRevelado
     });
 
     global.ScribFinalScore = api;

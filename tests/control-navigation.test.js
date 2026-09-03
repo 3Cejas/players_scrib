@@ -46,7 +46,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.doesNotMatch(detonadores, /id="videotutorial_control"/);
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_vista_partida"[^>]*data-vista-principal="partida"[^>]*onclick="mostrar_vista_partida\(\)"/);
   assert.match(html, /id="boton_vista_partida"[^>]*data-active="0"[^>]*aria-pressed="false"/);
-  assert.match(html, /id="boton_vista_puntuacion" class="btn btn-estandar-seccion"/);
+  assert.doesNotMatch(html, /id="boton_vista_puntuacion"/);
+  assert.match(html, /id="boton_resultado_videojuego"/);
   assert.doesNotMatch(representacion, /boton_mostrar_creditos|boton_pedir_feedback|boton_editar_creditos/);
   assert.match(final, /id="boton_mostrar_creditos"/);
   assert.doesNotMatch(final, /boton_pedir_feedback|PEDIR FEEDBACK/);
@@ -72,7 +73,6 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(css, /container-name:\s*tutorial-controls/);
   assert.match(css, /@container tutorial-controls \(max-width: 34rem\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*#boton_nueva_partida\[data-pending="1"\][\s\S]*animation: none;/);
-  assert.match(css, /#boton_vista_puntuacion,[\s\S]*border:\s*1px solid rgba\(69, 243, 255, 0\.56\);[\s\S]*rgba\(4, 11, 19, 0\.92\);/);
   assert.match(css, /control-group--final\.is-creditos-open[\s\S]*> \.control-group-buttons[\s\S]*display: none !important;/);
   assert.match(css, /control-group--final\.is-creditos-open[\s\S]*> \.creditos-host[\s\S]*display: flex !important;[\s\S]*overflow: hidden;/);
   assert.match(css, /Separacion de capas: escritoras no invaden la navegacion ni Parametros/);

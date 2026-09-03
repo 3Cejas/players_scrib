@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 
 const score = require("../game/js/domains/final-score.js");
 
@@ -88,6 +89,10 @@ test("partial totals add only the categories already revealed", () => {
     assert.deepEqual(score.totalesParciales(estado, 1), { 1: 10.71, 2: 9.29 });
     assert.deepEqual(score.totalesParciales(estado, 2), { 1: 17.87, 2: 17.13 });
     assert.deepEqual(score.totalesParciales(estado, 99), { 1: 56.66, 2: 43.34 });
+    assert.deepEqual(score.totalesDuranteRevelado(estado, 0, 0), { 1: 0, 2: 0 });
+    assert.deepEqual(score.totalesDuranteRevelado(estado, 0, 1), { 1: 10.71, 2: 0 });
+    assert.deepEqual(score.totalesDuranteRevelado(estado, 0, 2), { 1: 10.71, 2: 9.29 });
+    assert.deepEqual(score.totalesDuranteRevelado(estado, 1, 1), { 1: 17.87, 2: 9.29 });
 });
 
 test("final comparison preserves and displays weighted inspiration decimals", () => {
@@ -114,7 +119,8 @@ test("control and spectator wire the final score protocol and accessible present
     const css = read("game/css/dashboard-players.css");
     const i18n = read("game/js/i18n.js");
 
-    assert.match(controlHtml, /id="boton_vista_puntuacion"/);
+    assert.doesNotMatch(controlHtml, /id="boton_vista_puntuacion"/);
+    assert.match(controlHtml, /id="boton_resultado_videojuego"/);
     assert.match(controlHtml, /id="puntuacion_nav_prev"[^>]*stats-nav-button--prev/);
     assert.match(controlHtml, /id="puntuacion_nav_next"[^>]*stats-nav-button--next/);
     assert.doesNotMatch(controlHtml, /id="puntuacion_nav_(?:reset|hide)"/);
@@ -126,7 +132,7 @@ test("control and spectator wire the final score protocol and accessible present
 
     assert.match(spectatorHtml, /id="puntuacion_espectador"/);
     assert.match(spectatorHtml, /id="puntuacion_stage"[^>]*aria-live="polite"/);
-    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260903c/);
+    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260903d/);
     assert.match(spectatorSockets, /socket\.emit\('pedir_puntuacion_final'\)/);
     assert.match(spectatorSockets, /socket\.on\('puntuacion_final_estado'/);
     assert.match(spectatorState, /classList\.toggle\("vista-puntuacion", modo === "puntuacion"\)/);
@@ -138,14 +144,31 @@ test("control and spectator wire the final score protocol and accessible present
     assert.match(spectatorState, /MARCADOR TOTAL/);
     assert.doesNotMatch(spectatorState, /MARCADOR PROVISIONAL/);
     assert.match(spectatorState, /reproducirVictoriaDeliberacionEspectador/);
-    assert.match(spectatorState, /resultadoCategoriaRevelado && !vista\.categoria\.empate[\s\S]*`categoria:/);
-    assert.match(spectatorState, /siguiente === "puntuacion" && audio_deliberacion_victoria_firma/);
-    assert.match(spectatorHtml, /deliberacion-syncopated-clock\.mp3/);
+    const renderPuntuacion = spectatorState.match(/const renderizarPuntuacionFinalEspectador[\s\S]*?\n};\n\nconst actualizarPuntuacionFinalEspectador/)?.[0] || "";
+    assert.doesNotMatch(renderPuntuacion, /reproducirVictoriaDeliberacionEspectador/);
+    assert.match(spectatorState, /DELIBERACION_VICTORIA_INICIO_SEGUNDOS = 22\.5/);
+    assert.match(spectatorState, /deliberacion_victoria_espectador\.currentTime = DELIBERACION_VICTORIA_INICIO_SEGUNDOS/);
+    assert.match(spectatorState, /reproducirVictoriaDeliberacionEspectador\(`final:/);
+    assert.match(spectatorState, /totalesDuranteRevelado\(estado, vista\.indiceCategoria, fase\)/);
+    assert.match(spectatorState, /if \(animar && cambioDeSlide\)/);
+    assert.doesNotMatch(spectatorState, /puntuacion-categoria-equipo__numero|puntuacion-marcador-equipo__lado|GANA EL APARTADO/);
+    assert.match(spectatorHtml, /deliberacion-syncopated-clock\.mp3\?v=20260903d/);
     assert.match(spectatorHtml, /deliberacion-latido\.wav/);
     assert.match(spectatorHtml, /deliberacion-victoria\.mp3/);
+    const deliberacionAudio = fs.readFileSync(path.join(root, "game/audio/deliberacion-syncopated-clock.mp3"));
+    assert.equal(deliberacionAudio.length, 700080);
+    assert.equal(crypto.createHash("sha256").update(deliberacionAudio).digest("hex"), "07a0a03af709a017bcab09f9da36b4b356ae1f57c59069c98a55ac07673ddb19");
 
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);
+    assert.match(css, /\.puntuacion-categoria-barra\s*\{[\s\S]*align-items:\s*flex-end;[\s\S]*width:\s*clamp\(3rem,/);
+    assert.match(css, /@keyframes puntuacionBarraVerticalReveal[\s\S]*scaleY\(0\)[\s\S]*scaleY\(1\)/);
+    assert.match(css, /\.puntuacion-espectador\.is-category-winner-1::after[\s\S]*border-color:\s*var\(--score-blue\)/);
+    const museState = read("game/public/players/js/state.js");
+    const museCss = read("game/public/players/css/publico.css");
+    assert.match(museState, /totalesDuranteRevelado\(estado, vista\.indiceCategoria, fase\)/);
+    assert.match(museState, /if \(cambioDeSlide\)/);
+    assert.match(museCss, /\.resultado-musa__barra-vertical[\s\S]*align-items:\s*flex-end/);
     assert.match(
         controlCss,
         /\.control-group--deliberacion:not\(\.is-collapsed\)\s*>\s*\.deliberacion-nav-control:not\(\[hidden\]\)\s*\{[^}]*display:\s*grid\s*!important;/s

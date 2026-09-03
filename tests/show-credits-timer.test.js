@@ -79,11 +79,11 @@ test("credits editor and result use the standard section button style", () => {
   const controlCss = read("game/control/index.css");
   const controlActions = read("game/control/js/actions.js");
 
-  assert.match(controlHtml, /id="boton_vista_puntuacion" class="btn btn-estandar-seccion"/);
+  assert.doesNotMatch(controlHtml, /id="boton_vista_puntuacion"/);
+  assert.match(controlHtml, /id="boton_resultado_videojuego"/);
   assert.match(controlHtml, /id="boton_editar_creditos" class="btn btn-estandar-seccion"/);
   assert.match(controlHtml, /id="boton_banderas_musas_final" class="btn btn-estandar-seccion"/);
   assert.match(controlHtml, /id="boton_mostrar_creditos" class="btn btn-estandar-seccion"[\s\S]{0,220}VISTA CR&Eacute;DITOS/);
-  assert.match(controlCss, /#panel_controles #boton_vista_puntuacion\.btn-estandar-seccion/);
   assert.match(controlCss, /#panel_controles #boton_editar_creditos\.btn-estandar-seccion/);
   assert.match(controlCss, /Ajuste final: las frases no invaden idioma[\s\S]*#boton_banderas_musas_final\[data-active="1"\]/);
   assert.match(controlCss, /control-group--final \.control-group-buttons--final > \.btn \{[\s\S]{0,1200}display:\s*flex;[\s\S]{0,1200}font-family:\s*"Retro-gaming"/);

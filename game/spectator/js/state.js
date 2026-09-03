@@ -1299,6 +1299,7 @@ const controlador_audio_vista_espectador = window.ScribViewTransition
     : null;
 let audio_deliberacion_modo_espectador = "";
 let audio_deliberacion_victoria_firma = "";
+const DELIBERACION_VICTORIA_INICIO_SEGUNDOS = 22.5;
 const audios_deliberacion_pendientes_espectador = new Set();
 
 const pausarAudioDeliberacionEspectador = (audio, reiniciar = false) => {
@@ -1341,10 +1342,6 @@ function sincronizarAudioDeliberacionEspectador(modo) {
     }
     pausarAudioDeliberacionEspectador(deliberacion_latido_espectador, true);
     if (siguiente === "deliberacion" || siguiente === "puntuacion") {
-        if (siguiente === "puntuacion" && audio_deliberacion_victoria_firma) {
-            pausarAudioDeliberacionEspectador(deliberacion_audio_espectador);
-            return;
-        }
         pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
         audio_deliberacion_victoria_firma = "";
         reproducirAudioDeliberacionSeguro(deliberacion_audio_espectador, 0.8);
@@ -1364,6 +1361,7 @@ function reproducirVictoriaDeliberacionEspectador(firma) {
     pausarAudioDeliberacionEspectador(deliberacion_audio_espectador);
     pausarAudioDeliberacionEspectador(deliberacion_latido_espectador);
     pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+    try { deliberacion_victoria_espectador.currentTime = DELIBERACION_VICTORIA_INICIO_SEGUNDOS; } catch (_error) {}
     reproducirAudioDeliberacionSeguro(deliberacion_victoria_espectador, 0.92);
 }
 let partida_activa_espectador = false;
@@ -3528,7 +3526,6 @@ const construirPuntosEquipoPuntuacionEspectador = (estado, totales, player, opci
     const ganador = Number(opciones.ganador) === player;
     return `
         <article class="puntuacion-marcador-equipo puntuacion-marcador-equipo--${clase}${ganador ? " is-winner" : ""}">
-            <span class="puntuacion-marcador-equipo__lado">${player === 1 ? "01" : "02"}</span>
             <strong>${escapeHtml(jugador.nombre)}</strong>
             <span class="puntuacion-marcador-equipo__total">${escapeHtml(formatearNumeroPuntuacionEspectador(total))}</span>
             <small>PTS</small>
@@ -3536,11 +3533,11 @@ const construirPuntosEquipoPuntuacionEspectador = (estado, totales, player, opci
     `;
 };
 
-const construirMarcadorTotalPuntuacionEspectador = (estado, categoriasReveladas) => {
+const construirMarcadorTotalPuntuacionEspectador = (estado, categoriasReveladas, totalesForzados = null) => {
     const api = obtenerApiPuntuacionEspectador();
-    const totales = api && typeof api.totalesParciales === "function"
+    const totales = totalesForzados || (api && typeof api.totalesParciales === "function"
         ? api.totalesParciales(estado, categoriasReveladas)
-        : { 1: 0, 2: 0 };
+        : { 1: 0, 2: 0 });
     const suma = (Number(totales[1]) || 0) + (Number(totales[2]) || 0);
     const proporcionAzul = suma > 0 ? Math.max(8, Math.min(92, ((Number(totales[1]) || 0) / suma) * 100)) : 50;
     const lider = Math.abs((Number(totales[1]) || 0) - (Number(totales[2]) || 0)) < 0.01
@@ -3596,9 +3593,9 @@ const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fa
     const resultadoRevelado = fase >= 3;
     const gana = resultadoRevelado && Number(categoria.ganador) === player;
     const empata = categoria.empate === true;
+    const recienRevelado = fase === player;
     return `
-        <article class="puntuacion-categoria-equipo puntuacion-categoria-equipo--${clase}${gana ? " is-winner" : ""}${resultadoRevelado && empata ? " is-tie" : ""}${revelado ? " is-revealed" : " is-concealed"}">
-            <span class="puntuacion-categoria-equipo__numero">0${player}</span>
+        <article class="puntuacion-categoria-equipo puntuacion-categoria-equipo--${clase}${gana ? " is-winner" : ""}${resultadoRevelado && empata ? " is-tie" : ""}${revelado ? " is-revealed" : " is-concealed"}${recienRevelado ? " is-newly-revealed" : ""}">
             <h4>${escapeHtml(jugador.nombre)}</h4>
             <div class="puntuacion-categoria-equipo__metrica">
                 <strong>${revelado ? escapeHtml(formatearNumeroPuntuacionEspectador(valor)) : "?"}</strong>
@@ -3611,8 +3608,6 @@ const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fa
                 <strong>${revelado ? `+${escapeHtml(formatearNumeroPuntuacionEspectador(puntos))}` : "??"}</strong>
                 <span>PTS</span>
             </div>
-            ${gana ? `<span class="puntuacion-categoria-ganador">${escapeHtml(tJuego2P("score.category.leader", {}, "GANA EL APARTADO"))}</span>` : ""}
-            ${resultadoRevelado && empata ? `<span class="puntuacion-categoria-ganador puntuacion-categoria-ganador--empate">${escapeHtml(tJuego2P("score.category.tie", {}, "EMPATE EN EL APARTADO"))}</span>` : ""}
         </article>
     `;
 };
@@ -3620,7 +3615,18 @@ const construirTarjetaCategoriaEquipoPuntuacion = (estado, categoria, player, fa
 const construirCategoriaPuntuacionEspectador = (vista, fase = 0) => {
     const estado = vista.estado;
     const categoria = vista.categoria;
-    const categoriasResueltas = vista.indiceCategoria + (fase >= 3 ? 1 : 0);
+    const api = obtenerApiPuntuacionEspectador();
+    const totalesRevelados = api && typeof api.totalesDuranteRevelado === "function"
+        ? api.totalesDuranteRevelado(estado, vista.indiceCategoria, fase)
+        : (api && typeof api.totalesParciales === "function"
+            ? api.totalesParciales(estado, vista.indiceCategoria + (fase >= 3 ? 1 : 0))
+            : { 1: 0, 2: 0 });
+    const ganadorCategoria = fase >= 3 && !categoria.empate ? Number(categoria.ganador) : 0;
+    const veredicto = fase >= 3
+        ? (categoria.empate
+            ? tJuego2P("score.category.tie_short", {}, "EMPATE")
+            : `${estado.jugadores[ganadorCategoria].nombre} · GANADOR`)
+        : "";
     return `
         <article class="puntuacion-panel puntuacion-panel--categoria" data-categoria="${escapeHtml(categoria.id)}">
             <header class="puntuacion-categoria-header">
@@ -3636,7 +3642,8 @@ const construirCategoriaPuntuacionEspectador = (vista, fase = 0) => {
                 <span class="puntuacion-vs puntuacion-vs--categoria" aria-hidden="true">VS</span>
                 ${construirTarjetaCategoriaEquipoPuntuacion(estado, categoria, 2, fase)}
             </div>
-            ${construirMarcadorTotalPuntuacionEspectador(estado, categoriasResueltas)}
+            ${veredicto ? `<p class="puntuacion-categoria-veredicto ganador-${ganadorCategoria}">${escapeHtml(veredicto)}</p>` : ""}
+            ${construirMarcadorTotalPuntuacionEspectador(estado, vista.indiceCategoria, totalesRevelados)}
         </article>
     `;
 };
@@ -3735,6 +3742,8 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
         : `${vista.paso}:${vista.tipo}:${fase}`;
     if (firma === puntuacion_firma_render_espectador && opciones.forzar !== true) return;
     const animar = opciones.animar === true && firma !== puntuacion_firma_render_espectador;
+    const pasoAnterior = Number(puntuacion_stage.dataset.step);
+    const cambioDeSlide = !Number.isFinite(pasoAnterior) || pasoAnterior !== vista.paso;
     let html = "";
     if (vista.tipo === "intro") html = construirIntroPuntuacionEspectador(vista);
     else if (vista.tipo === "categoria") html = construirCategoriaPuntuacionEspectador(vista, fase);
@@ -3748,6 +3757,12 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     puntuacion_stage.classList.remove("is-revealing", "is-final");
     puntuacion_stage.innerHTML = html;
     puntuacion_stage.dataset.step = String(vista.paso);
+    puntuacion_stage.dataset.phase = String(fase);
+    const ganadorCategoria = vista.tipo === "categoria" && fase >= 3 && !vista.categoria.empate
+        ? Number(vista.categoria.ganador)
+        : 0;
+    puntuacion_espectador.classList.toggle("is-category-winner-1", ganadorCategoria === 1);
+    puntuacion_espectador.classList.toggle("is-category-winner-2", ganadorCategoria === 2);
     if (puntuacion_paso) {
         const etiquetaFase = vista.tipo === "categoria"
             ? (["EN MISTERIO", "EQUIPO AZUL", "EQUIPO ROJO", "GANADOR"][fase] || "")
@@ -3764,20 +3779,8 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     renderizarDotsPuntuacionEspectador(vista.paso);
     const resultadoCategoriaRevelado = vista.tipo === "categoria" && fase >= 3;
     activarParticulasPuntuacionEspectador(vista.tipo === "final", animar && (resultadoCategoriaRevelado || vista.tipo === "final"));
-    if (vista.tipo === "final") {
-        reproducirVictoriaDeliberacionEspectador(`videojuego:${estado.calculadoEnTs || 0}:${estado.ganador || 0}`);
-    } else if (resultadoCategoriaRevelado && !vista.categoria.empate) {
-        reproducirVictoriaDeliberacionEspectador(
-            `categoria:${estado.calculadoEnTs || 0}:${vista.categoria.id}:${vista.categoria.ganador || 0}`
-        );
-    } else {
-        if (audio_deliberacion_victoria_firma) {
-            pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
-            audio_deliberacion_victoria_firma = "";
-        }
-        sincronizarAudioDeliberacionEspectador("puntuacion");
-    }
-    if (animar) {
+    sincronizarAudioDeliberacionEspectador("puntuacion");
+    if (animar && cambioDeSlide) {
         requestAnimationFrame(() => {
             if (vista_espectador_modo_resuelta !== "puntuacion") return;
             puntuacion_stage.classList.toggle("is-final", vista.tipo === "final");
@@ -3843,7 +3846,7 @@ const tarjetaResultadoJuradoEspectador = (estado, id, valores, ganador, escala =
     const gana = Number(ganador) === id;
     const valor = Number(valores[id]) || 0;
     return `<article class="resultado-jurado-card resultado-jurado-card--${id}${gana ? " is-winner" : ""}">
-        <small>${gana ? "GANA EL APARTADO" : "FINALISTA"}</small>
+        <small>${gana ? "GANADOR" : "FINALISTA"}</small>
         <h3>${escapeHtml(jugador.nombre)}</h3>
         <strong>${valor.toFixed(1)}</strong><span>/ ${escala}</span>
     </article>`;
