@@ -3096,7 +3096,7 @@ body.cursor-control-pluma-activo * {
 
 .puntuacion-nav-control {
     display: grid;
-    grid-template-columns: auto minmax(7.4rem, 1fr) auto auto auto;
+    grid-template-columns: auto minmax(7.4rem, 1fr) auto;
     align-items: center;
     gap: clamp(0.28rem, 0.52vw, 0.58rem);
     margin-top: 0.72rem;
@@ -3128,33 +3128,18 @@ body.cursor-control-pluma-activo * {
     text-shadow: 0 0 0.7em rgba(255, 224, 113, 0.55);
 }
 
-button.btn.puntuacion-nav-button {
-    min-width: 0;
-    width: auto;
-    min-height: 2rem;
-    margin: 0;
-    padding: 0.38rem 0.58rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.52rem;
-    font-size: clamp(0.4rem, 0.62vw, 0.62rem);
-    line-height: 1.08;
-    white-space: nowrap;
+button.btn.stats-nav-button.puntuacion-nav-arrow {
+    border-color: rgba(255, 224, 113, 0.68);
+    color: #fff2ad;
+    background: linear-gradient(180deg, rgba(93, 69, 21, 0.96), rgba(39, 28, 9, 0.98));
+    box-shadow: inset 0 0 0.38rem rgba(255, 224, 113, 0.12), 0 0 0.55rem rgba(255, 208, 71, 0.2);
 }
 
-button.btn.puntuacion-nav-button--next {
-    border-color: rgba(255, 224, 113, 0.72);
-    color: #fff9d5;
-    background: linear-gradient(180deg, #806022, #4c340d);
-    box-shadow: 0 0.16em #ffe071, 0 0 0.62rem rgba(255, 224, 113, 0.22);
+button.btn.stats-nav-button.puntuacion-nav-arrow::before {
+    filter: drop-shadow(0 0 0.22rem rgba(255, 224, 113, 0.72));
 }
 
-button.btn.puntuacion-nav-button--hide {
-    border-color: rgba(255, 102, 113, 0.48);
-    color: #ffdce0;
-    background: linear-gradient(180deg, #55202a, #32131a);
-}
-
-button.btn.puntuacion-nav-button:disabled {
+button.btn.puntuacion-nav-arrow:disabled {
     opacity: 0.35;
     filter: grayscale(0.65);
     cursor: not-allowed;
@@ -3164,17 +3149,7 @@ button.btn.puntuacion-nav-button:disabled {
 
 @media (max-width: 1100px) {
     .puntuacion-nav-control {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .puntuacion-nav-label {
-        grid-column: 1 / -1;
-        grid-row: 1;
-    }
-
-    button.btn.puntuacion-nav-button {
-        font-size: clamp(0.34rem, 0.86vw, 0.52rem);
-        padding-inline: 0.3rem;
+        grid-template-columns: auto minmax(5rem, 1fr) auto;
     }
 }
 

@@ -3645,7 +3645,12 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     }
     const estado = estado_puntuacion_final_espectador || api.normalizarPayload({});
     const vista = api.obtenerVista(estado, puntuacion_slide_step_remoto);
-    const firma = `${estado.calculadoEnTs || 0}:${vista.paso}:${vista.tipo}`;
+    // La marca temporal puede variar durante una resincronizacion aunque el
+    // resultado visible sea identico. La firma de contenido evita volver a
+    // montar la slide y relanzar sus particulas en ese caso.
+    const firma = typeof api.crearFirmaVista === "function"
+        ? api.crearFirmaVista(estado, vista.paso)
+        : `${vista.paso}:${vista.tipo}`;
     if (firma === puntuacion_firma_render_espectador && opciones.forzar !== true) return;
     const animar = opciones.animar === true && firma !== puntuacion_firma_render_espectador;
     let html = "";
@@ -4320,8 +4325,9 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         detenerSlidesStats();
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
-        puntuacion_firma_render_espectador = "";
-        renderizarPuntuacionFinalEspectador({ animar: true });
+        const entrandoEnPuntuacion = modoPrevio !== "puntuacion";
+        if (entrandoEnPuntuacion) puntuacion_firma_render_espectador = "";
+        renderizarPuntuacionFinalEspectador({ animar: entrandoEnPuntuacion });
     } else if (modo === "nube_inspiracion") {
         iniciarAnimacionNubeInspiracion();
         renderizarNubeInspiracion();
@@ -4341,14 +4347,16 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         detenerSlidesStats();
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
-        jurado_firma_render_espectador = "";
-        renderizarResultadoJuradoEspectador({ animar: true });
+        const entrandoEnResultadoJurado = modoPrevio !== "resultado_jurado";
+        if (entrandoEnResultadoJurado) jurado_firma_render_espectador = "";
+        renderizarResultadoJuradoEspectador({ animar: entrandoEnResultadoJurado });
     } else if (modo === "resultado_final") {
         detenerSlidesStats();
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
-        resultado_final_firma_render_espectador = "";
-        renderizarResultadoFinalEspectador({ animar: true });
+        const entrandoEnResultadoFinal = modoPrevio !== "resultado_final";
+        if (entrandoEnResultadoFinal) resultado_final_firma_render_espectador = "";
+        renderizarResultadoFinalEspectador({ animar: entrandoEnResultadoFinal });
     } else {
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();

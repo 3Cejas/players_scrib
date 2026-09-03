@@ -121,6 +121,34 @@
         };
     }
 
+    function crearFirmaVista(payload, paso) {
+        const vista = obtenerVista(payload, paso);
+        const estado = vista.estado;
+        return JSON.stringify({
+            paso: vista.paso,
+            tipo: vista.tipo,
+            disponible: estado.disponible,
+            datosSuficientes: estado.datosSuficientes,
+            formulaVersion: estado.formulaVersion,
+            jugadores: [estado.jugadores[1], estado.jugadores[2]],
+            categorias: estado.categorias.map((categoria) => ({
+                id: categoria.id,
+                etiqueta: categoria.etiqueta,
+                explicacion: categoria.explicacion,
+                peso: categoria.peso,
+                unidad: categoria.unidad,
+                mejor: categoria.mejor,
+                valores: categoria.valores,
+                puntos: categoria.puntos,
+                ganador: categoria.ganador,
+                empate: categoria.empate
+            })),
+            ganador: estado.ganador,
+            empate: estado.empate,
+            diferencia: estado.diferencia
+        });
+    }
+
     function totalesParciales(estado, cantidadCategorias) {
         const limite = Math.max(0, Math.min(CATEGORY_IDS.length, Math.trunc(numeroFinito(cantidadCategorias))));
         const salida = { 1: 0, 2: 0 };
@@ -139,6 +167,7 @@
         normalizarPayload,
         normalizarPaso,
         obtenerVista,
+        crearFirmaVista,
         redondear,
         totalesParciales
     });

@@ -59,6 +59,17 @@ test("final score exposes intro, six reveals and winner as steps 0..7", () => {
     assert.equal(score.obtenerVista(payload, -20).paso, 0);
 });
 
+test("visual score signature ignores resync timestamps but changes with visible results", () => {
+    const original = payloadCompleto();
+    const resincronizado = { ...payloadCompleto(), calculado_en_ts: 999999 };
+    const cambiado = payloadCompleto();
+    cambiado.categorias[0].puntos = { 1: 9, 2: 11 };
+
+    assert.equal(score.crearFirmaVista(original, 0), score.crearFirmaVista(resincronizado, 0));
+    assert.notEqual(score.crearFirmaVista(original, 0), score.crearFirmaVista(cambiado, 0));
+    assert.notEqual(score.crearFirmaVista(original, 0), score.crearFirmaVista(original, 1));
+});
+
 test("final score differentiates a pending result from incomplete final telemetry", () => {
     const pendiente = score.obtenerVista({ disponible: false }, 0);
     const incompleto = score.obtenerVista({ ...payloadCompleto(), datos_suficientes: false }, 0);
@@ -100,7 +111,9 @@ test("control and spectator wire the final score protocol and accessible present
     const i18n = read("game/js/i18n.js");
 
     assert.match(controlHtml, /id="boton_vista_puntuacion"/);
-    assert.match(controlHtml, /id="puntuacion_nav_(?:prev|next|reset|hide)"/);
+    assert.match(controlHtml, /id="puntuacion_nav_prev"[^>]*stats-nav-button--prev/);
+    assert.match(controlHtml, /id="puntuacion_nav_next"[^>]*stats-nav-button--next/);
+    assert.doesNotMatch(controlHtml, /id="puntuacion_nav_(?:reset|hide)"/);
     assert.match(controlActions, /socket\.emit\("mostrar_puntuacion_final"/);
     assert.match(controlActions, /socket\.emit\("capturar_puntuacion_final"\)/);
     assert.match(controlActions, /if\s*\(terminado && terminado1\)/);
@@ -109,13 +122,14 @@ test("control and spectator wire the final score protocol and accessible present
 
     assert.match(spectatorHtml, /id="puntuacion_espectador"/);
     assert.match(spectatorHtml, /id="puntuacion_stage"[^>]*aria-live="polite"/);
-    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260822c/);
+    assert.match(spectatorHtml, /domains\/final-score\.js\?v=20260903a/);
     assert.match(spectatorSockets, /socket\.emit\('pedir_puntuacion_final'\)/);
     assert.match(spectatorSockets, /socket\.on\('puntuacion_final_estado'/);
     assert.match(spectatorState, /classList\.toggle\("vista-puntuacion", modo === "puntuacion"\)/);
     assert.match(spectatorState, /renderizarPuntuacionFinalEspectador\(\{ animar: true \}\)/);
     assert.doesNotMatch(spectatorState, /Mide rendimiento de juego; no valora la calidad literaria/);
     assert.match(spectatorState, /firma === puntuacion_firma_render_espectador[\s\S]*return/);
+    assert.match(spectatorState, /const entrandoEnPuntuacion = modoPrevio !== "puntuacion"/);
 
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260902j">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260903k">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260825a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260903a"></script>
+<script src="./js/actions.js?v=20260903b"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <img class="control-brand-logo" src="../media/scrib-logo-mark.png" alt="&lt;SCRI&gt; B">
@@ -186,11 +186,9 @@
                                 <button id="boton_resultado_jurado" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoJurado()">&#x1F3AD; MOSTRAR RESULTADO JURADO</button>
                             </div>
                             <div id="puntuacion_nav_control" class="puntuacion-nav-control deliberacion-nav-control" hidden aria-hidden="true">
-                                <button id="puntuacion_nav_prev" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--prev" onclick="navegarPuntuacionFinal('anterior')">&#x2190; ATR&Aacute;S</button>
+                                <button id="puntuacion_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev puntuacion-nav-arrow" onclick="navegarPuntuacionFinal('anterior')" aria-label="Revelaci&oacute;n anterior"></button>
                                 <span id="puntuacion_nav_label" class="puntuacion-nav-label" aria-live="polite">PRESENTACI&Oacute;N</span>
-                                <button id="puntuacion_nav_next" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--next" onclick="navegarPuntuacionFinal('siguiente')">REVELAR &#x2192;</button>
-                                <button id="puntuacion_nav_reset" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--reset" onclick="reiniciarPuntuacionFinal()">&#x21BB; REINICIAR</button>
-                                <button id="puntuacion_nav_hide" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--hide" onclick="mostrarVistaDeliberacion()">&#x2696;&#xFE0F; DELIBERACI&Oacute;N</button>
+                                <button id="puntuacion_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next puntuacion-nav-arrow" onclick="navegarPuntuacionFinal('siguiente')" aria-label="Revelar siguiente apartado"></button>
                             </div>
                             <div id="jurado_nav_control" class="puntuacion-nav-control deliberacion-nav-control deliberacion-nav-control--jurado" hidden aria-hidden="true">
                                 <button id="jurado_nav_prev" type="button" class="btn puntuacion-nav-button puntuacion-nav-button--prev" onclick="navegarResultadoJurado('anterior')">&#x2190; ATR&Aacute;S</button>

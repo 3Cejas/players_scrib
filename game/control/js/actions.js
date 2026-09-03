@@ -2691,8 +2691,6 @@ function actualizarBotonesVistaEspectadorControl() {
     const puntuacionLabel = document.getElementById("puntuacion_nav_label");
     const puntuacionPrev = document.getElementById("puntuacion_nav_prev");
     const puntuacionNext = document.getElementById("puntuacion_nav_next");
-    const puntuacionReset = document.getElementById("puntuacion_nav_reset");
-    const puntuacionHide = document.getElementById("puntuacion_nav_hide");
     const juradoNav = document.getElementById("jurado_nav_control");
     const juradoLabel = document.getElementById("jurado_nav_label");
     const juradoPrev = document.getElementById("jurado_nav_prev");
@@ -2767,22 +2765,14 @@ function actualizarBotonesVistaEspectadorControl() {
         statsNav.setAttribute("aria-hidden", visible ? "false" : "true");
     }
     if (puntuacionPrev) {
-        puntuacionPrev.textContent = tJuego2PControl("control.score.back", {}, "\u2190 ATRAS");
+        puntuacionPrev.textContent = "";
         puntuacionPrev.setAttribute("aria-label", tJuego2PControl("control.score.prev_aria", {}, "Revelacion anterior"));
         puntuacionPrev.disabled = puntuacion_slide_step_control <= 0;
     }
     if (puntuacionNext) {
-        puntuacionNext.textContent = tJuego2PControl("control.score.reveal", {}, "REVELAR \u2192");
+        puntuacionNext.textContent = "";
         puntuacionNext.setAttribute("aria-label", tJuego2PControl("control.score.next_aria", {}, "Revelar siguiente apartado"));
         puntuacionNext.disabled = puntuacion_slide_step_control >= PUNTUACION_PASO_MAX_CONTROL;
-    }
-    if (puntuacionReset) {
-        puntuacionReset.textContent = tJuego2PControl("control.score.reset", {}, "\u21BB REINICIAR");
-        puntuacionReset.setAttribute("aria-label", tJuego2PControl("control.score.reset_aria", {}, "Volver a la introduccion"));
-    }
-    if (puntuacionHide) {
-        puntuacionHide.textContent = "\u2696\uFE0F DELIBERACIÓN";
-        puntuacionHide.setAttribute("aria-label", "Volver a la vista de deliberación");
     }
     if (puntuacionLabel) {
         let etiquetaPaso = tJuego2PControl("score.step.intro", {}, "INTRO");
