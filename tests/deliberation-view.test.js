@@ -23,6 +23,10 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
   assert.match(actions, /function mostrarResultadoJurado\(\)[\s\S]*mostrar_resultado_jurado/);
   assert.match(actions, /function navegarResultadoJurado\(direccion\)[\s\S]*jurado_resultado_(?:anterior|siguiente)/);
+  assert.match(actions, /numeroSlide = puntuacion_slide_step_control \+ 1/);
+  assert.match(actions, /totalSlides = PUNTUACION_PASO_MAX_CONTROL \+ 1/);
+  assert.match(actions, /jurado_slide_step_control \+ 1\}\/\$\{JURADO_PASO_MAX_CONTROL \+ 1\}/);
+  assert.match(actions, /jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL[\s\S]*mostrar_resultado_final/);
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
   assert.match(actions, /function mostrarCreditosEspectador\(\)[\s\S]*temporizador_gigante_detener/);
   assert.match(sockets, /socket\.on\('jurado_resultado_estado'/);
@@ -49,8 +53,8 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(spectatorState, /RESULTADO_FINAL_SUSPENSE_MS = 3000/);
   assert.match(spectatorState, /!controlador_transicion_vista_espectador \|\| modo === "resultado_final"/);
   assert.match(spectatorState, /modo === "resultado_final"\) controlador_transicion_vista_espectador\?\.cancel\(\)/);
-  assert.match(spectatorState, /confetti_aux\(\{ silencioso: true \}\)/);
   assert.match(spectatorState, /confetti_aux\(\{ persistente: true, silencioso: true \}\)/);
+  assert.match(spectatorState, /modoPrevio === "resultado_jurado" \|\| modoPrevio === "resultado_final"/);
   assert.match(spectatorSockets, /persistente \? 18/);
   assert.match(spectatorState, /DELIBERACION_VICTORIA_INICIO_SEGUNDOS = 22\.5/);
   assert.match(spectatorState, /firma === puntuacion_firma_render_espectador[\s\S]*return/);
@@ -64,6 +68,7 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(museState, /is-local-loser/);
   assert.doesNotMatch(museState, /DECISI&Oacute;N REVELADA|<small>APARTADO \$\{paso\}<\/small>/);
   assert.match(museState, /confetti_aux\(\{ persistente: true \}\)/);
+  assert.match(museState, /modoAnterior === "resultado_jurado" \|\| modoAnterior === "resultado_final"/);
   assert.match(museState, /resultado-musa__trofeo/);
   assert.match(spectatorState, /resultado-final-trofeo/);
   assert.match(spectatorState, /&#x1F3AE;<\/span> VIDEOJUEGO/);
@@ -75,6 +80,7 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(museSockets, /puntuacion_final_estado/);
   assert.match(museSockets, /jurado_resultado_estado/);
   assert.match(museSockets, /resultado_final_estado/);
+  assert.match(spectatorState, /puntuacion-desglose-puntos--azul"><b>[\s\S]*<small>PTS<\/small>/);
 });
 
 test("credits use the real graphic marks and timer rings count down", () => {

@@ -784,6 +784,7 @@ window.addEventListener("resize", () => {
     }
     if (vista_espectador_modo_resuelta === "creditos") {
         renderizarCreditosEspectador();
+        requestAnimationFrame(reajustarDestinoCreditosEspectador);
     }
     programarAjusteViewportEspectador();
 });
@@ -1919,6 +1920,52 @@ const detenerAnimacionCreditosEspectador = (reiniciar = true) => {
         creditos_sociales_final.setAttribute("aria-hidden", "true");
     }
 };
+const calcularDestinoCreditosEspectador = () => {
+    if (!creditos_track) return 0;
+    const altoViewport = Math.max(window.innerHeight || 0, 1);
+    const centroSocial = creditos_sociales_final
+        ? (creditos_sociales_final.offsetTop + (creditos_sociales_final.offsetHeight * 0.5))
+        : Math.max(
+            Math.ceil(creditos_track.scrollHeight || 0),
+            Math.ceil(creditos_track.getBoundingClientRect().height || 0),
+            1
+        ) + CREDITOS_SCROLL_MARGEN_SALIDA_PX;
+    return Math.round((altoViewport * 0.5) - centroSocial);
+};
+const reajustarDestinoCreditosEspectador = () => {
+    if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") return;
+    const nuevoDestino = calcularDestinoCreditosEspectador();
+    if (creditos_espectador.classList.contains("creditos-finalizados")) {
+        creditos_animacion_y_fin = nuevoDestino;
+        creditos_track.style.transform = `translate3d(-50%, ${nuevoDestino.toFixed(2)}px, 0)`;
+        return;
+    }
+    if (!creditos_animacion_raf) return;
+    const ahora = performance.now();
+    const progreso = Number.isFinite(creditos_animacion_inicio) && creditos_animacion_inicio !== null
+        ? Math.min((ahora - creditos_animacion_inicio) / Math.max(1, creditos_animacion_duracion_ms), 1)
+        : 0;
+    const yActual = creditos_animacion_y_inicio
+        + ((creditos_animacion_y_fin - creditos_animacion_y_inicio) * progreso);
+    creditos_animacion_y_inicio = yActual;
+    creditos_animacion_y_fin = nuevoDestino;
+    creditos_animacion_duracion_ms = Math.max(
+        1000,
+        Math.round((Math.abs(yActual - nuevoDestino) / CREDITOS_SCROLL_VELOCIDAD_PX_S) * 1000)
+    );
+    creditos_animacion_inicio = null;
+    creditos_track.style.transform = `translate3d(-50%, ${yActual.toFixed(2)}px, 0)`;
+};
+let creditos_resize_observer_espectador = null;
+if (creditos_track && typeof ResizeObserver === "function") {
+    creditos_resize_observer_espectador = new ResizeObserver(() => {
+        requestAnimationFrame(reajustarDestinoCreditosEspectador);
+    });
+    creditos_resize_observer_espectador.observe(creditos_track);
+}
+if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
+    document.fonts.ready.then(() => requestAnimationFrame(reajustarDestinoCreditosEspectador));
+}
 const renderizarCreditosEspectador = () => {
     if (!creditos_content) return;
     const data = estado_creditos_espectador && estado_creditos_espectador.creditos
@@ -1972,16 +2019,8 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     creditos_track.style.transform = `translate3d(-50%, ${yInicioVisible}px, 0)`;
     requestAnimationFrame(() => {
         if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") return;
-        const altoViewport = Math.max(window.innerHeight || 0, 1);
         const yInicio = yInicioVisible;
-        const centroSocial = creditos_sociales_final
-            ? (creditos_sociales_final.offsetTop + (creditos_sociales_final.offsetHeight * 0.5))
-            : Math.max(
-                Math.ceil(creditos_track.scrollHeight || 0),
-                Math.ceil(creditos_track.getBoundingClientRect().height || 0),
-                1
-            ) + CREDITOS_SCROLL_MARGEN_SALIDA_PX;
-        const yFin = Math.round((altoViewport * 0.5) - centroSocial);
+        const yFin = calcularDestinoCreditosEspectador();
         const distancia = Math.max(1, yInicio - yFin);
         const duracionMs = Math.max(
             CREDITOS_SCROLL_DURACION_MIN_MS,
@@ -2028,6 +2067,8 @@ const actualizarCreditosEspectador = (payload = {}) => {
     const hayNuevaAnimacion = estado_creditos_espectador.animacion_id !== previoAnimacionId;
     if (vista_espectador_modo_resuelta === "creditos" && hayNuevaAnimacion) {
         iniciarAnimacionCreditosEspectador(true);
+    } else if (vista_espectador_modo_resuelta === "creditos") {
+        requestAnimationFrame(reajustarDestinoCreditosEspectador);
     }
 };
 const normalizarTextoDetonadorHistorial = (valor) => String(valor ?? "")
@@ -3762,9 +3803,9 @@ const construirDesgloseFinalPuntuacionEspectador = (estado) => estado.categorias
         <li class="puntuacion-desglose-fila${ganador === 1 ? " gana-azul" : (ganador === 2 ? " gana-rojo" : " is-tie")}">
             <span class="puntuacion-desglose-icono" aria-hidden="true">${PUNTUACION_ICONOS_CATEGORIA[categoria.id] || "\u25C6"}</span>
             <strong>${escapeHtml(traducirCategoriaPuntuacionEspectador(categoria))}</strong>
-            <span class="puntuacion-desglose-puntos puntuacion-desglose-puntos--azul">${escapeHtml(formatearNumeroPuntuacionEspectador(categoria.puntos[1]))}</span>
+            <span class="puntuacion-desglose-puntos puntuacion-desglose-puntos--azul"><b>${escapeHtml(formatearNumeroPuntuacionEspectador(categoria.puntos[1]))}</b><small>PTS</small></span>
             <span class="puntuacion-desglose-ganador">${escapeHtml(resultado)}</span>
-            <span class="puntuacion-desglose-puntos puntuacion-desglose-puntos--rojo">${escapeHtml(formatearNumeroPuntuacionEspectador(categoria.puntos[2]))}</span>
+            <span class="puntuacion-desglose-puntos puntuacion-desglose-puntos--rojo"><b>${escapeHtml(formatearNumeroPuntuacionEspectador(categoria.puntos[2]))}</b><small>PTS</small></span>
         </li>
     `;
 }).join("");
@@ -4118,7 +4159,9 @@ const revelarResultadoFinalEspectador = (estado, firma) => {
     resultado_final_espectador?.classList.remove("is-winner-1", "is-winner-2", "is-tie");
     resultado_final_espectador?.classList.add(estado.empate ? "is-tie" : `is-winner-${estado.ganador}`);
     requestAnimationFrame(() => resultado_final_stage.classList.add("is-celebrating"));
-    if (!estado.empate && typeof confetti_aux === "function") confetti_aux({ silencioso: true });
+    if (!estado.empate && typeof confetti_aux === "function") {
+        confetti_aux({ persistente: true, silencioso: true });
+    }
     reproducirVictoriaDeliberacionEspectador(`final:${estado.ganador || 0}:${estado.jugadores[1].total}:${estado.jugadores[2].total}`);
 };
 
@@ -4557,7 +4600,11 @@ const actualizarVisibilidadPanelNivelEspectador = () => {
 
 const aplicarModoVistaEspectadorUi = (modo) => {
     const modoPrevio = vista_espectador_modo_resuelta;
-    if (modoPrevio === "resultado_jurado" && modo !== "resultado_jurado" && typeof stopConfetti === "function") {
+    if (
+        (modoPrevio === "resultado_jurado" || modoPrevio === "resultado_final")
+        && modo !== modoPrevio
+        && typeof stopConfetti === "function"
+    ) {
         stopConfetti();
     }
     if (modo !== "resultado_final" && resultado_final_timeout_revelado_espectador) {

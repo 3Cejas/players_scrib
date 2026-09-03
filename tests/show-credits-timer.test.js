@@ -39,6 +39,12 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   assert.match(museCss, /\.creditos-musa--finalizados \.creditos-musa__sociales/);
   assert.match(spectatorCss, /\.creditos-espectador\.creditos-finalizados \.creditos-sociales-final/);
   assert.match(spectatorState, /creditos_sociales_final\.offsetTop[\s\S]{0,320}altoViewport \* 0\.5/);
+  assert.match(spectatorState, /const reajustarDestinoCreditosEspectador = \(\) =>/);
+  assert.match(spectatorState, /creditos-finalizados[\s\S]{0,240}creditos_animacion_y_fin = nuevoDestino/);
+  assert.match(spectatorState, /requestAnimationFrame\(reajustarDestinoCreditosEspectador\)/);
+  assert.match(spectatorState, /new ResizeObserver\(\(\) => \{/);
+  assert.match(spectatorState, /creditos_resize_observer_espectador\.observe\(creditos_track\)/);
+  assert.match(spectatorState, /document\.fonts\.ready\.then/);
   assert.match(museState, /creditos_musa_sociales\.offsetTop[\s\S]{0,320}altoViewport \* 0\.5/);
   assert.doesNotMatch(spectatorCss, /\.creditos-espectador\.creditos-finalizados \.creditos-track \{[^}]*opacity:\s*0/);
   assert.doesNotMatch(museCss, /\.creditos-musa--finalizados \.creditos-musa__track \{[^}]*opacity:\s*0/);

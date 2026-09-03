@@ -412,7 +412,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260902d/);
+  assert.match(html, /musa-selector\.js\?v=20260903e/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -438,6 +438,8 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(selector, /socket\.on\("nombre2"/);
   assert.match(selector, /flujoIntro\.inert = true/);
   assert.match(selector, /meta\.updated && estadoAsignacion === "assigned"/);
+  assert.match(selector, /Preparando tu elección…/);
+  assert.doesNotMatch(selector, /Conectando con \$\{escritorasDisponibles/);
   assert.equal((i18n.match(/"muse\.assignment\.discover_button"/g) || []).length, 3);
   assert.equal((i18n.match(/"muse\.assignment\.reveal_copy"/g) || []).length, 3);
   assert.equal((i18n.match(/"muse\.assignment\.replaced_notice"/g) || []).length, 3);

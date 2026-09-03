@@ -330,7 +330,7 @@ function obtenerTextoEstadoAsignacion() {
   }
   if (estadoAsignacion === "assigning") {
     return seleccionPendiente.assignmentMode === "manual"
-      ? `Conectando con ${escritorasDisponibles[seleccionPendiente.player] || "tu escritxr"}…`
+      ? "Preparando tu elección…"
       : "Buscando tu equipo…";
   }
   if (estadoAsignacion === "error") {

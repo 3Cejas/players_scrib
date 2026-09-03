@@ -1949,7 +1949,7 @@ function revelarResultadoFinalMusa(estado, firma) {
     resultado_final_musa.classList.add(estado.empate ? "winner-tie" : `winner-${ganador}`);
     requestAnimationFrame(() => resultado_final_musa.classList.add("is-final-celebrating"));
     aplicarGanadorLocalMusa(resultado_final_musa, ganador, firma);
-    if (ganador && typeof confetti_aux === "function") confetti_aux();
+    if (ganador && typeof confetti_aux === "function") confetti_aux({ persistente: true });
 }
 
 function renderizarResultadoFinalMusa(opciones = {}) {
@@ -3792,7 +3792,11 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     const modoAnterior = vista_modo_remota_musa;
     const modo = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "";
     vista_modo_remota_musa = modo || "tutorial";
-    if (modoAnterior === "resultado_jurado" && vista_modo_remota_musa !== "resultado_jurado" && typeof stopConfetti === "function") {
+    if (
+        (modoAnterior === "resultado_jurado" || modoAnterior === "resultado_final")
+        && vista_modo_remota_musa !== modoAnterior
+        && typeof stopConfetti === "function"
+    ) {
         stopConfetti();
     }
     let pasoCambiado = false;

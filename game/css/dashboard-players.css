@@ -8603,22 +8603,22 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
 }
 
 .puntuacion-desglose {
-  width: min(100%, 1480px);
+  width: min(100%, 1680px);
   min-height: 0;
 }
 
 .puntuacion-desglose h4 {
-  margin: 0 0 clamp(0.25rem, 0.65vh, 0.55rem);
+  margin: 0 0 clamp(0.35rem, 0.8vh, 0.7rem);
   color: rgba(255, 240, 190, 0.76);
   font-family: "Retro-gaming", "Courier New", monospace;
-  font-size: clamp(0.52rem, 0.78vw, 0.82rem);
+  font-size: clamp(0.72rem, 1.05vw, 1.1rem);
   letter-spacing: 0.1em;
 }
 
 .puntuacion-desglose ul {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(0.22rem, 0.48vw, 0.48rem);
+  gap: clamp(0.34rem, 0.62vw, 0.65rem);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -8630,7 +8630,8 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
   align-items: center;
   gap: clamp(0.25rem, 0.55vw, 0.55rem);
   min-width: 0;
-  padding: clamp(0.3rem, 0.62vw, 0.55rem) clamp(0.38rem, 0.72vw, 0.7rem);
+  min-height: clamp(3rem, 5.35vh, 4.6rem);
+  padding: clamp(0.52rem, 0.88vw, 0.82rem) clamp(0.58rem, 1vw, 1rem);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.58rem;
   background: rgba(8, 12, 21, 0.72);
@@ -8643,14 +8644,32 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
   min-width: 0;
   overflow: hidden;
   font-family: "Retro-gaming", "Courier New", monospace;
-  font-size: clamp(0.42rem, 0.66vw, 0.7rem);
+  font-size: clamp(0.58rem, 0.9vw, 0.95rem);
   letter-spacing: 0.035em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .puntuacion-desglose-icono {
-  font-size: clamp(0.78rem, 1.2vw, 1.2rem);
+  font-size: clamp(1.1rem, 1.65vw, 1.72rem);
+}
+
+.puntuacion-desglose-puntos {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.28em;
+  overflow: visible;
+}
+
+.puntuacion-desglose-puntos b {
+  font: inherit;
+}
+
+.puntuacion-desglose-puntos small {
+  font-size: 0.68em;
+  letter-spacing: 0.08em;
+  opacity: 0.82;
 }
 
 .puntuacion-desglose-puntos--azul {

@@ -108,6 +108,7 @@ test("Control exposes one stateful play-pause button without another interval", 
     assert.match(control, /narracion_show_reproducir/);
     assert.match(control, /narracion_show_detener/);
     assert.match(control, /aria-pressed/);
+    assert.match(control, /state\.active \? "■" : "▶"/);
     assert.match(read("game/control/js/socket-events.js"), /pedir_narracion_show_estado/);
 });
 

@@ -2786,7 +2786,12 @@ function actualizarBotonesVistaEspectadorControl() {
         const detalle = puntuacion_slide_step_control > 0 && puntuacion_slide_step_control < PUNTUACION_PASO_MAX_CONTROL
             ? fases[puntuacion_reveal_phase_control]
             : "";
-        puntuacionLabel.textContent = [etiquetaPaso, detalle].filter(Boolean).join(" \u00b7 ");
+        const numeroSlide = puntuacion_slide_step_control + 1;
+        const totalSlides = PUNTUACION_PASO_MAX_CONTROL + 1;
+        puntuacionLabel.textContent = [
+            `${etiquetaPaso} \u00b7 ${numeroSlide}/${totalSlides}`,
+            detalle
+        ].filter(Boolean).join(" \u00b7 ");
     }
     if (puntuacionNav) {
         const visible = vista_espectador_modo === "puntuacion";
@@ -2794,12 +2799,23 @@ function actualizarBotonesVistaEspectadorControl() {
         puntuacionNav.setAttribute("aria-hidden", visible ? "false" : "true");
     }
     if (juradoPrev) juradoPrev.disabled = jurado_slide_step_control <= 0;
-    if (juradoNext) juradoNext.disabled = jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL;
+    if (juradoNext) {
+        juradoNext.disabled = false;
+        juradoNext.setAttribute(
+            "aria-label",
+            jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL
+                ? "Mostrar ganador final"
+                : "Revelar siguiente resultado"
+        );
+        juradoNext.title = jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL
+            ? "MOSTRAR GANADOR FINAL"
+            : "SIGUIENTE SLIDE";
+    }
     if (juradoLabel) {
         let etiqueta = "PRESENTACIÓN";
         if (jurado_slide_step_control === JURADO_PASO_MAX_CONTROL) etiqueta = "VEREDICTO DEL JURADO";
         else if (jurado_slide_step_control > 0) etiqueta = JURADO_CATEGORIAS_CONTROL[jurado_slide_step_control - 1];
-        juradoLabel.textContent = etiqueta;
+        juradoLabel.textContent = `${etiqueta} \u00b7 ${jurado_slide_step_control + 1}/${JURADO_PASO_MAX_CONTROL + 1}`;
     }
     if (juradoNav) {
         const visible = vista_espectador_modo === "resultado_jurado";
@@ -2969,6 +2985,14 @@ function actualizarResultadoJuradoControl(payload = {}) {
 
 function navegarResultadoJurado(direccion) {
     if (!socket || typeof socket.emit !== "function" || vista_espectador_modo !== "resultado_jurado") return;
+    if (direccion !== "anterior" && jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL) {
+        socket.emit("mostrar_resultado_final", {}, (respuesta = {}) => {
+            if (respuesta.ok === true) return;
+            const estado = document.getElementById("deliberacion_estado_control");
+            if (estado) estado.textContent = "No se pudo mostrar el ganador final.";
+        });
+        return;
+    }
     socket.emit(direccion === "anterior" ? "jurado_resultado_anterior" : "jurado_resultado_siguiente");
 }
 

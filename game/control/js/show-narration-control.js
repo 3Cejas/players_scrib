@@ -52,7 +52,7 @@
             button.setAttribute("aria-label", state.active ? "Pausar narración visual" : "Iniciar narración visual");
             button.classList.toggle("is-playing", state.active);
             const icon = button.querySelector("span");
-            if (icon) icon.textContent = state.active ? "Ⅱ" : "▶";
+            if (icon) icon.textContent = state.active ? "■" : "▶";
         }
         let message = "";
         if (code === "disconnected") message = "SIN CONEXIÓN";
