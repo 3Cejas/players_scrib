@@ -4899,6 +4899,7 @@ let timeout_fallback_countdown_espectador = null;
 let revision_countdown_inicio_espectador = 0;
 let cuenta_atras_activa = false;
 let modo_pendiente = null;
+let post_inicio_pendiente_espectador = null;
 
 function invalidarContextoTransitorioEspectador() {
     revision_contexto_transitorio_espectador += 1;

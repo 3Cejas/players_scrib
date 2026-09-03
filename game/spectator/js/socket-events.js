@@ -718,6 +718,7 @@ function programarAplicacionModoTrasCountdownEspectador(revisionCountdown) {
             modo_pendiente = null;
         }
         vaciarColaPutadasPendientesEspectador();
+        aplicarPostInicioPendienteEspectador();
     }, 1000);
 }
 
@@ -797,6 +798,7 @@ socket.on('inicio', data => {
     actualizarVisibilidadPanelNivelEspectador();
     cuenta_atras_activa = true;
     modo_pendiente = null;
+    post_inicio_pendiente_espectador = null;
     inicio_modo_delay = false;
     reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
     animateCSS(".cabecera", "backOutLeft").then((message) => {
@@ -870,11 +872,12 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
             aplicarModo(modoPendienteInicio);
         }
         vaciarColaPutadasPendientesEspectador();
+        aplicarPostInicioPendienteEspectador();
     }, 12000);
 });
 });
 
-socket.on('post-inicio', data => {
+function aplicarPostInicioEspectador(data = {}) {
     cerrarPreShowEspectadorPorTutorial();
     if (sonido) {
         sonido.pause();
@@ -918,6 +921,22 @@ socket.on('post-inicio', data => {
         aplicarModo(modoPendienteInicio);
     }
     vaciarColaPutadasPendientesEspectador();
+}
+
+function aplicarPostInicioPendienteEspectador() {
+    if (post_inicio_pendiente_espectador === null) return false;
+    const data = post_inicio_pendiente_espectador;
+    post_inicio_pendiente_espectador = null;
+    aplicarPostInicioEspectador(data);
+    return true;
+}
+
+socket.on('post-inicio', data => {
+    if (cuenta_atras_activa || inicio_modo_delay) {
+        post_inicio_pendiente_espectador = data || {};
+        return;
+    }
+    aplicarPostInicioEspectador(data || {});
 });
 
 // Resetea el tablero de juego.
@@ -937,6 +956,7 @@ socket.on('limpiar', data => {
     modo_actual = "";
     setBarraNivelClase("");
     actualizarVisibilidadPanelNivelEspectador();
+    post_inicio_pendiente_espectador = null;
     invalidarCountdownInicioEspectador();
     finalizarIntroCuentaAtrasEspectador();
 

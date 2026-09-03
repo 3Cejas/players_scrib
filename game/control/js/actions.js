@@ -2156,6 +2156,7 @@ function temp() {
     escala_ui_espectador_control = escalaEspectador;
     socket.emit("ajustar_escala_espectador", { valor: escalaEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
+    asegurarVistaPartidaParaInicioControl();
     socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
@@ -2516,9 +2517,22 @@ function mostrar_vista_partida() {
     aplicarVistaPrincipalControl("partida");
 }
 
+function asegurarVistaPartidaParaInicioControl() {
+    const vistaPartidaYaActiva = vista_principal_control === "partida"
+        && vista_espectador_modo === "partida"
+        && vista_calentamiento === false;
+    if (vistaPartidaYaActiva) {
+        actualizarBotonesVistaPrincipalControl();
+        return false;
+    }
+    aplicarVistaPrincipalControl("partida");
+    return true;
+}
+
 window.mostrar_vista_tutorial = mostrar_vista_tutorial;
 window.mostrar_vista_detonadores = mostrar_vista_detonadores;
 window.mostrar_vista_partida = mostrar_vista_partida;
+window.asegurarVistaPartidaParaInicioControl = asegurarVistaPartidaParaInicioControl;
 
 function fin_partida_global() {
     if (!juego_iniciado && !modo_actual) return;

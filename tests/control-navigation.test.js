@@ -102,6 +102,10 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /function mostrar_vista_tutorial\(\)\s*\{\s*aplicarVistaPrincipalControl\("tutorial"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
+  assert.match(actions, /function asegurarVistaPartidaParaInicioControl\(\)[\s\S]*vista_principal_control === "partida"[\s\S]*vista_espectador_modo === "partida"[\s\S]*vista_calentamiento === false/);
+  assert.match(actions, /if \(vistaPartidaYaActiva\)[\s\S]*return false;[\s\S]*aplicarVistaPrincipalControl\("partida"\);/);
+  const inicioPartidaControl = actions.match(/function temp\(\)[\s\S]*?socket\.emit\('inicio',[\s\S]*?\n\}/)?.[0] || "";
+  assert.match(inicioPartidaControl, /asegurarVistaPartidaParaInicioControl\(\);\s*socket\.emit\('inicio'/);
   assert.match(actions, /function nueva_partida\(\)[\s\S]*socket\.timeout\(8000\)\.emit\("nueva_partida"/);
   assert.match(actions, /limpiar\(\{ emitirServidor: false \}\);[\s\S]*mostrar_vista_tutorial\(\)/);
   assert.match(actions, /function limpiar\(\{ emitirServidor = true \} = \{\}\)[\s\S]*if \(emitirServidor\) socket\.emit\('limpiar', false\)/);

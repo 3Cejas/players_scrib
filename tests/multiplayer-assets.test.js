@@ -16,7 +16,7 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260902c";
-const SPECTATOR_STATE_VERSION = "20260902i";
+const SPECTATOR_STATE_VERSION = "20260903a";
 const SPECTATOR_CSS_VERSION = "20260902j";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260902c";
@@ -28,12 +28,12 @@ const LEVEL_TRANSITION_VERSION = "20260823a";
 const PLAYER_ACTIONS_VERSION = WRITER_DELETE_BLOCK_VERSION;
 const PLAYER_STATE_VERSION = WRITER_DELETE_BLOCK_VERSION;
 const PLAYER_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
-const SPECTATOR_SOCKET_EVENTS_VERSION = "20260902c";
+const SPECTATOR_SOCKET_EVENTS_VERSION = "20260903a";
 const JURY_CSS_VERSION = MUSE_AUTHOR_VERSION;
 const JURY_STATE_VERSION = "20260902b";
 const JURY_SOCKET_EVENTS_VERSION = "20260902a";
 const CONTROL_CSS_VERSION = "20260902j";
-const CONTROL_ACTIONS_VERSION = "20260902g";
+const CONTROL_ACTIONS_VERSION = "20260903a";
 const CONTROL_I18N_VERSION = "20260902a";
 const CONTROL_STATE_VERSION = "20260831b";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260902d";
@@ -977,7 +977,9 @@ test("spectator reconnect into active match keeps spectator branding visible", (
   const postInicioStart = socketJs.indexOf("socket.on('post-inicio'");
   const limpiarStart = socketJs.indexOf("socket.on('limpiar'", postInicioStart);
   assert.ok(postInicioStart >= 0 && limpiarStart > postInicioStart, "post-inicio handler should exist");
-  const postInicioBody = socketJs.slice(postInicioStart, limpiarStart);
+  const aplicarPostInicioStart = socketJs.indexOf("function aplicarPostInicioEspectador");
+  assert.ok(aplicarPostInicioStart >= 0 && aplicarPostInicioStart < postInicioStart, "post-inicio implementation should exist");
+  const postInicioBody = socketJs.slice(aplicarPostInicioStart, limpiarStart);
   assert.match(postInicioBody, /partida_activa_espectador = true;[\s\S]*actualizarBrandingPartidaEspectador\(\);/);
   assert.doesNotMatch(postInicioBody, /logo\.style\.display = ""/);
   assert.doesNotMatch(postInicioBody, /neon\.style\.display = ""/);
@@ -1024,6 +1026,20 @@ test("spectator countdown stays viewport anchored and width-capped", () => {
   assert.doesNotMatch(inicioBody, /setInterval\(/);
   assert.doesNotMatch(inicioBody, /appendTo\(\$\(\'\.container\'\)\)/);
   assert.doesNotMatch(inicioBody, /font-size': '40vw'/);
+});
+
+test("spectator defers post-inicio until the complete countdown has finished", () => {
+  const stateJs = read("game/spectator/js/state.js");
+  const socketJs = read("game/spectator/js/socket-events.js");
+
+  assert.match(stateJs, /let post_inicio_pendiente_espectador = null;/);
+  assert.match(socketJs, /function aplicarPostInicioPendienteEspectador\(\)/);
+  assert.match(socketJs, /if \(cuenta_atras_activa \|\| inicio_modo_delay\) \{[\s\S]*post_inicio_pendiente_espectador = data \|\| \{\};[\s\S]*return;/);
+
+  const countdownStart = socketJs.indexOf("function programarAplicacionModoTrasCountdownEspectador");
+  const countdownEnd = socketJs.indexOf("function programarPasoCountdownEspectador", countdownStart);
+  const countdownBody = socketJs.slice(countdownStart, countdownEnd);
+  assert.match(countdownBody, /vaciarColaPutadasPendientesEspectador\(\);[\s\S]*aplicarPostInicioPendienteEspectador\(\);/);
 });
 
 test("live role countdown labels are width-capped before scaling out", () => {
