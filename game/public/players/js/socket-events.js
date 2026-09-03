@@ -1649,9 +1649,10 @@ function randomInRange(min, max) {
     return Math.random() * (max - min) + min;
   }
 
-function confetti_aux() {
+function confetti_aux(opciones = {}) {
     stopConfetti();
     var animationEnd = Date.now() + duration; // Actualiza aquÃ­ dentro de la funciÃ³n
+    var persistente = opciones && opciones.persistente === true;
     isConfettiRunning = true; // Habilita la ejecuciÃ³n de confetti
     console.log(isConfettiRunning);
     
@@ -1663,14 +1664,13 @@ function confetti_aux() {
       }
   
       var timeLeft = animationEnd - Date.now();
-      if (timeLeft <= 0) {
+      if (!persistente && timeLeft <= 0) {
         clearInterval(confettiIntervalMusa);
         confettiIntervalMusa = null;
         return;
       }
   
-      var particleCount = 50 * (timeLeft / duration);
-      console.log("HOLAAAA");
+      var particleCount = persistente ? 14 : 50 * (timeLeft / duration);
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
     }, 250);

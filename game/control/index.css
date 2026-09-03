@@ -11170,7 +11170,12 @@ table.default {
 
 #panel_controles .control-group--deliberacion:not(.is-collapsed) > .deliberacion-nav-control:not([hidden]) {
     display: grid !important;
+    grid-template-columns: minmax(2rem, 2.55rem) minmax(0, 1fr) minmax(2rem, 2.55rem);
+    min-width: 0;
+    max-width: 100%;
     width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
     margin-top: 0.15rem;
     border-color: rgba(255, 215, 104, 0.5);
 }
@@ -11180,11 +11185,13 @@ table.default {
 }
 
 #panel_controles .deliberacion-nav-control--jurado {
-    grid-template-columns: auto minmax(8rem, 1fr) auto;
+    grid-template-columns: minmax(2rem, 2.55rem) minmax(0, 1fr) minmax(2rem, 2.55rem);
     background: linear-gradient(105deg, rgba(44, 23, 62, 0.94), rgba(17, 15, 28, 0.97) 52%, rgba(72, 39, 20, 0.92));
 }
 
 #panel_controles .deliberacion-nav-control--jurado .stats-nav-button {
+    width: 100%;
+    max-width: 2.55rem;
     border-color: rgba(255, 220, 112, 0.72);
     color: #fff0b0;
     background:

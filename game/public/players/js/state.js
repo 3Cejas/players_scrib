@@ -1651,11 +1651,10 @@ function aplicarGanadorLocalMusa(pantalla, ganador, firma) {
     const ganaMusa = Number(ganador) === Number(player);
     pantalla.classList.remove("is-local-winner", "is-local-loser", "team-1", "team-2");
     pantalla.classList.add(`team-${Number(player) === 2 ? 2 : 1}`);
-    pantalla.classList.toggle("is-local-loser", Boolean(ganador) && !ganaMusa);
-    if (!ganaMusa) return;
+    if (!ganador) return;
     pantalla.dataset.revealFirma = firma;
     void pantalla.offsetWidth;
-    pantalla.classList.add("is-local-winner");
+    pantalla.classList.add(ganaMusa ? "is-local-winner" : "is-local-loser");
 }
 
 function tarjetaApartadoMusa(estado, id, valores, ganador, escala = 10, puntos = null, unidad = "") {
@@ -1914,7 +1913,7 @@ function renderizarResultadoJuradoMusa(opciones = {}) {
     } else if (paso <= estado.criterios.length) {
         const criterio = estado.criterios[paso - 1];
         ganador = criterio.empate ? 0 : criterio.ganador;
-        resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><small>APARTADO ${paso}</small><h2>${escapeHtml(criterio.label.toUpperCase())}</h2><div class="resultado-musa__cards">${tarjetaApartadoMusa(estado, 1, criterio.valores, ganador)}${tarjetaApartadoMusa(estado, 2, criterio.valores, ganador)}</div><p class="resultado-musa__veredicto">${criterio.empate ? "EMPATE" : "DECISI&Oacute;N REVELADA"}</p></div>`;
+        resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><h2>${escapeHtml(criterio.label.toUpperCase())}</h2><div class="resultado-musa__cards">${tarjetaApartadoMusa(estado, 1, criterio.valores, ganador)}${tarjetaApartadoMusa(estado, 2, criterio.valores, ganador)}</div>${criterio.empate ? '<p class="resultado-musa__veredicto">EMPATE</p>' : ""}</div>`;
     } else {
         ganador = estado.empate ? 0 : estado.ganador;
         resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><small>VEREDICTO DEL JURADO</small><div class="resultado-musa__cards">${tarjetaResultadoMusa(estado.jugadores[1], 1, ganador, 10)}${tarjetaResultadoMusa(estado.jugadores[2], 2, ganador, 10)}</div><p class="resultado-musa__veredicto">${estado.empate ? "EMPATE DEL JURADO" : "ELECCI&Oacute;N DEL JURADO"}</p></div>`;
@@ -1929,6 +1928,11 @@ function renderizarResultadoJuradoMusa(opciones = {}) {
         }, 1250);
     });
     aplicarGanadorLocalMusa(resultado_jurado_musa, ganador, firma);
+    if (paso === maximo && ganador && typeof confetti_aux === "function") {
+        confetti_aux({ persistente: true });
+    } else if (paso < maximo && typeof stopConfetti === "function") {
+        stopConfetti();
+    }
     jurado_firma_render_musa = firma;
 }
 
@@ -1938,7 +1942,7 @@ function revelarResultadoFinalMusa(estado, firma) {
     const ganador = estado.empate ? 0 : Number(estado.ganador);
     const tarjeta = (id) => {
         const jugador = jugadores[id] || jugadores[String(id)] || {};
-        return `<article class="resultado-musa__card resultado-musa__card--${id}${ganador === id ? " is-winner" : ""}"><small>${ganador === id ? "GANADOR" : "FINALISTA"}</small><h3>${escapeHtml(jugador.nombre || `ESCRITXR ${id}`)}</h3><b>JUEGO ${Number(jugador.juego || 0).toFixed(1)}</b><b>JURADO ${Number(jugador.jurado || 0).toFixed(1)}</b><strong>${Number(jugador.total || 0).toFixed(1)}</strong><span>/ 100</span></article>`;
+        return `<article class="resultado-musa__card resultado-musa__card--${id}${ganador === id ? " is-winner" : ""}">${ganador === id ? '<span class="resultado-musa__trofeo" aria-hidden="true">&#x1F3C6;</span>' : ""}<small>${ganador === id ? "GANADOR" : "FINALISTA"}</small><h3>${escapeHtml(jugador.nombre || `ESCRITXR ${id}`)}</h3><b><span aria-hidden="true">&#x1F3AE;</span> VIDEOJUEGO ${Number(jugador.juego || 0).toFixed(1)}</b><b><span aria-hidden="true">&#x2696;&#xFE0F;</span> JURADO ${Number(jugador.jurado || 0).toFixed(1)}</b><strong>${Number(jugador.total || 0).toFixed(1)}</strong><span>/ 100</span></article>`;
     };
     resultado_final_musa_stage.innerHTML = `<div class="resultado-musa__apartado resultado-musa__apartado--final"><div class="resultado-musa__fiesta" aria-hidden="true">${"<i></i>".repeat(10)}</div><small>GANADOR FINAL</small><h2>${estado.empate ? "EMPATE" : escapeHtml((jugadores[ganador] || jugadores[String(ganador)] || {}).nombre || "")}</h2><div class="resultado-musa__cards">${tarjeta(1)}${tarjeta(2)}</div><p class="resultado-musa__veredicto">${estado.empate ? "DOS EQUIPOS. UN MISMO MARCADOR." : (ganador === Number(player) ? "&iexcl;VUESTRO EQUIPO GANA!" : "&iexcl;TENEMOS GANADOR!")}</p></div>`;
     resultado_final_musa.classList.remove("is-final-suspense", "is-final-celebrating", "winner-1", "winner-2", "winner-tie");
@@ -3788,6 +3792,9 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     const modoAnterior = vista_modo_remota_musa;
     const modo = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "";
     vista_modo_remota_musa = modo || "tutorial";
+    if (modoAnterior === "resultado_jurado" && vista_modo_remota_musa !== "resultado_jurado" && typeof stopConfetti === "function") {
+        stopConfetti();
+    }
     let pasoCambiado = false;
     if (Object.prototype.hasOwnProperty.call(payload, "puntuacion_slide_step")) {
         const api = window.ScribFinalScore;

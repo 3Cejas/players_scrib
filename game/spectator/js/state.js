@@ -3778,14 +3778,13 @@ const construirFinalPuntuacionEspectador = (vista) => {
         : estado.jugadores[ganador].nombre;
     const subtitulo = empate
         ? tJuego2P("score.final.tie_copy", {}, "Los dos equipos terminan con la misma puntuacion.")
-        : tJuego2P("score.final.winner", {}, "GANADOR DE LA PARTIDA");
+        : tJuego2P("score.final.winner", {}, "GANADOR DEL VIDEOJUEGO");
     return `
         <article class="puntuacion-panel puntuacion-panel--final${empate ? " is-tie" : ` ganador-${ganador}`}">
-            <span class="puntuacion-kicker">${escapeHtml(tJuego2P("score.final.kicker", {}, "RESULTADO FINAL"))}</span>
+            <span class="puntuacion-kicker">${escapeHtml(tJuego2P("score.final.kicker", {}, "RESULTADO DEL VIDEOJUEGO"))}</span>
             <div class="puntuacion-corona" aria-hidden="true">${empate ? "\u2696\uFE0F" : "\u{1F451}"}</div>
             <p class="puntuacion-final-subtitulo">${escapeHtml(subtitulo)}</p>
             <h3>${escapeHtml(tituloResultado)}</h3>
-            ${empate ? "" : `<p class="puntuacion-final-margen">${escapeHtml(tJuego2P("score.final.margin", { difference: formatearNumeroPuntuacionEspectador(estado.diferencia) }, `VENTAJA: ${estado.diferencia} PTS`))}</p>`}
             ${construirMarcadorTotalPuntuacionEspectador(estado, estado.categorias.length)}
             <section class="puntuacion-desglose">
                 <h4>${escapeHtml(tJuego2P("score.final.breakdown", {}, "DUELO POR APARTADOS"))}</h4>
@@ -4059,6 +4058,11 @@ const renderizarResultadoJuradoEspectador = (opciones = {}) => {
             jurado_timeout_revelado_espectador = null;
         }, 1250);
     });
+    if (paso === maximo && !estado.empate && typeof confetti_aux === "function") {
+        confetti_aux({ persistente: true, silencioso: true });
+    } else if (paso < maximo && typeof stopConfetti === "function") {
+        stopConfetti();
+    }
     jurado_firma_render_espectador = firma;
 };
 
@@ -4096,8 +4100,9 @@ const revelarResultadoFinalEspectador = (estado, firma) => {
         const jugador = estado.jugadores[id];
         const gana = !estado.empate && estado.ganador === id;
         return `<article class="resultado-final-card resultado-final-card--${id}${gana ? " is-winner" : ""}">
+            ${gana ? '<span class="resultado-final-trofeo" aria-hidden="true">&#x1F3C6;</span>' : ""}
             <h3>${escapeHtml(jugador.nombre)}</h3>
-            <dl><div><dt>VIDEOJUEGO</dt><dd>${jugador.juego.toFixed(1)}</dd></div><div><dt>JURADO</dt><dd>${jugador.jurado.toFixed(1)}</dd></div></dl>
+            <dl><div><dt><span aria-hidden="true">&#x1F3AE;</span> VIDEOJUEGO</dt><dd>${jugador.juego.toFixed(1)}</dd></div><div><dt><span aria-hidden="true">&#x2696;&#xFE0F;</span> JURADO</dt><dd>${jugador.jurado.toFixed(1)}</dd></div></dl>
             <strong>${jugador.total.toFixed(1)}</strong><span>/ 100</span>
         </article>`;
     };
@@ -4552,6 +4557,9 @@ const actualizarVisibilidadPanelNivelEspectador = () => {
 
 const aplicarModoVistaEspectadorUi = (modo) => {
     const modoPrevio = vista_espectador_modo_resuelta;
+    if (modoPrevio === "resultado_jurado" && modo !== "resultado_jurado" && typeof stopConfetti === "function") {
+        stopConfetti();
+    }
     if (modo !== "resultado_final" && resultado_final_timeout_revelado_espectador) {
         clearTimeout(resultado_final_timeout_revelado_espectador);
         resultado_final_timeout_revelado_espectador = null;

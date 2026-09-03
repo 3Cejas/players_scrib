@@ -171,6 +171,9 @@ test("control and spectator wire the final score protocol and accessible present
     assert.equal(crypto.createHash("sha256").update(deliberacionAudio).digest("hex"), "07a0a03af709a017bcab09f9da36b4b356ae1f57c59069c98a55ac07673ddb19");
 
     assert.match(css, /body\.vista-puntuacion \.puntuacion-espectador/);
+    assert.match(spectatorState, /RESULTADO DEL VIDEOJUEGO/);
+    assert.match(spectatorState, /GANADOR DEL VIDEOJUEGO/);
+    assert.doesNotMatch(spectatorState, /puntuacion-final-margen/);
     assert.match(css, /@keyframes puntuacionPanelReveal/);
     assert.match(css, /\.puntuacion-categoria-barra\s*\{[\s\S]*align-items:\s*flex-end;[\s\S]*width:\s*clamp\(4\.8rem,/);
     assert.match(css, /\.puntuacion-categoria-barra__puntos\s*\{[\s\S]*transform:\s*translate\(-50%, 50%\);/);
@@ -193,6 +196,7 @@ test("control and spectator wire the final score protocol and accessible present
         controlCss,
         /\.control-group--deliberacion:not\(\.is-collapsed\)\s*>\s*\.deliberacion-nav-control:not\(\[hidden\]\)\s*\{[^}]*display:\s*grid\s*!important;/s
     );
+    assert.match(controlCss, /\.deliberacion-nav-control:not\(\[hidden\]\)\s*\{[^}]*max-width:\s*100%;[^}]*overflow:\s*hidden;/s);
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.puntuacion-espectador/);
     ["es", "en", "fr"].forEach((_idioma) => {
         assert.match(i18n, /"score\.final\.winner"/);

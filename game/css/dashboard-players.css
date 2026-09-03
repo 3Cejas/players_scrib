@@ -8528,6 +8528,33 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
   text-align: center;
 }
 
+/* El cierre de este recorrido pertenece al marcador del videojuego, no al
+   veredicto combinado. Se amplía para que sea legible en proyección. */
+.puntuacion-stage.is-final {
+  width: min(98vw, 132rem);
+}
+
+.puntuacion-panel--final {
+  gap: clamp(0.4rem, 1vh, 0.9rem);
+}
+
+.puntuacion-panel--final > .puntuacion-kicker {
+  font-size: clamp(0.75rem, 1.15vw, 1.2rem);
+}
+
+.puntuacion-panel--final > .puntuacion-corona {
+  width: clamp(5.2rem, 9.5vw, 9rem);
+  font-size: clamp(2.8rem, 5.4vw, 5.2rem);
+}
+
+.puntuacion-panel--final > .puntuacion-final-subtitulo {
+  font-size: clamp(0.62rem, 1vw, 1.05rem);
+}
+
+.puntuacion-panel--final > h3 {
+  font-size: clamp(2rem, 4.5vw, 5rem);
+}
+
 .puntuacion-panel--final.ganador-1 > h3 {
   color: var(--score-blue);
   text-shadow: 0 0 1.1em rgba(52, 216, 255, 0.48);
@@ -8553,7 +8580,7 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
 }
 
 .puntuacion-final-marcador {
-  width: min(100%, 920px);
+  width: min(100%, 1180px);
   margin: clamp(0.15rem, 0.5vh, 0.45rem) auto;
 }
 
@@ -8576,7 +8603,7 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
 }
 
 .puntuacion-desglose {
-  width: min(100%, 1180px);
+  width: min(100%, 1480px);
   min-height: 0;
 }
 
@@ -8584,7 +8611,7 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
   margin: 0 0 clamp(0.25rem, 0.65vh, 0.55rem);
   color: rgba(255, 240, 190, 0.76);
   font-family: "Retro-gaming", "Courier New", monospace;
-  font-size: clamp(0.38rem, 0.62vw, 0.65rem);
+  font-size: clamp(0.52rem, 0.78vw, 0.82rem);
   letter-spacing: 0.1em;
 }
 
@@ -8616,7 +8643,7 @@ body.vista-puntuacion .puntuacion-espectador.is-category-winner-2::after {
   min-width: 0;
   overflow: hidden;
   font-family: "Retro-gaming", "Courier New", monospace;
-  font-size: clamp(0.3rem, 0.5vw, 0.52rem);
+  font-size: clamp(0.42rem, 0.66vw, 0.7rem);
   letter-spacing: 0.035em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -10925,7 +10952,7 @@ body.vista-resultado-final #resultado_jurado_espectador {
 
 .resultado-final-panel { position: relative; width: 100%; }
 .resultado-final-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 3vw, 3rem); width: 100%; }
-.resultado-final-card { padding: clamp(1.3rem, 2.5vw, 2.6rem); border: 2px solid rgba(255,255,255,.22); border-radius: 1.5rem; background: rgba(3,12,22,.82); opacity: .66; }
+.resultado-final-card { position: relative; padding: clamp(1.3rem, 2.5vw, 2.6rem); border: 2px solid rgba(255,255,255,.22); border-radius: 1.5rem; background: rgba(3,12,22,.82); opacity: .66; }
 .resultado-final-card--1 { border-color: #42dcff; }
 .resultado-final-card--2 { border-color: #ff6078; }
 .resultado-final-card.is-winner { opacity: 1; transform: scale(1.04); box-shadow: 0 0 4rem rgba(255,220,103,.5), inset 0 0 3rem rgba(255,255,255,.07); }
@@ -10935,7 +10962,23 @@ body.vista-resultado-final #resultado_jurado_espectador {
 .resultado-final-card dt { color: rgba(255,255,255,.64); font: clamp(.48rem,.8vw,.78rem)/1.2 "Retro-gaming", monospace; }
 .resultado-final-card dd { margin: 0; color: #ffdd76; font: clamp(1rem,1.7vw,1.8rem)/1 "Retro-gaming", monospace; }
 .resultado-final-card > strong { font: clamp(4rem,8vw,8rem)/1 "Retro-gaming", monospace; }
-.resultado-final-card > span { font: clamp(1rem,1.7vw,1.8rem)/1 "Retro-gaming", monospace; }
+.resultado-final-card > span:not(.resultado-final-trofeo) { font: clamp(1rem,1.7vw,1.8rem)/1 "Retro-gaming", monospace; }
+.resultado-final-card .resultado-final-trofeo {
+  position: absolute;
+  top: clamp(.7rem, 1.5vw, 1.35rem);
+  right: clamp(.7rem, 1.5vw, 1.35rem);
+  display: grid;
+  place-items: center;
+  width: clamp(2.6rem, 4.4vw, 4.5rem);
+  aspect-ratio: 1;
+  border: 2px solid #ffe377;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,231,135,.34), rgba(40,26,4,.92));
+  box-shadow: 0 0 1.4rem #ffd95f, inset 0 0 1rem rgba(255,255,255,.18);
+  font-size: clamp(1.45rem, 2.7vw, 2.8rem);
+  animation: resultadoFinalTrofeo 1.1s cubic-bezier(.16,1,.3,1) both, resultadoFinalTrofeoPulso 1.35s 1.1s ease-in-out infinite alternate;
+}
+.resultado-final-card dt > span { margin-right: .3em; font-size: 1.35em; }
 .resultado-final-formula { margin: 0; color: rgba(255,255,255,.74); font: clamp(1.2rem,2vw,2rem)/1 "VT323", monospace; text-transform: uppercase; }
 .resultado-final-celebracion { margin: 0; color: #ffe179; font: clamp(1rem,2vw,2rem)/1.3 "Retro-gaming", monospace; }
 .resultado-final-stage { position: relative; z-index: 3; }
@@ -11028,6 +11071,8 @@ body.vista-resultado-final #resultado_jurado_espectador {
 @keyframes resultadoFinalHaz { 0% { opacity: 0; transform: rotate(var(--angulo)) translateY(3rem) scaleY(.08); } 26% { opacity: .95; } 100% { opacity: 0; transform: rotate(var(--angulo)) translateY(3rem) scaleY(1.2); } }
 @keyframes resultadoFinalNombre { 0% { opacity: 0; transform: scale(2.3) rotate(-3deg); filter: blur(24px) brightness(3); } 58% { opacity: 1; transform: scale(.88) rotate(1deg); filter: blur(0) brightness(1.7); } 100% { transform: scale(1); filter: none; } }
 @keyframes resultadoFinalNombrePulso { to { transform: scale(1.045); filter: brightness(1.3); } }
+@keyframes resultadoFinalTrofeo { from { opacity: 0; transform: translateY(-2rem) rotate(-24deg) scale(.25); filter: blur(8px); } }
+@keyframes resultadoFinalTrofeoPulso { to { transform: scale(1.12) rotate(4deg); filter: brightness(1.3); } }
 
 @media (max-width: 900px), (max-height: 650px) {
   .puntuacion-categorias-intro li { min-height: 6rem; }
@@ -11050,6 +11095,7 @@ body.vista-resultado-final #resultado_jurado_espectador {
   .resultado-final-espectador::before,
   .resultado-final-espectador::after,
   .resultado-final-fiesta i,
+  .resultado-final-trofeo,
   .deliberacion-espectador__balanza,
   .puntuacion-categoria-misterio,
   .puntuacion-categoria-misterio::before,
