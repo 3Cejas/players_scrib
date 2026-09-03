@@ -16,6 +16,9 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(html, /id="boton_resultado_videojuego"/);
   assert.match(html, /id="boton_resultado_jurado"/);
   assert.match(html, /id="jurado_nav_control"/);
+  assert.doesNotMatch(html, /id="jurado_nav_reset"/);
+  assert.match(html, /id="jurado_nav_prev"[^>]*stats-nav-button--prev[^>]*aria-label="Resultado anterior"/);
+  assert.match(html, /id="jurado_nav_next"[^>]*stats-nav-button--next[^>]*aria-label="Revelar siguiente resultado"/);
   assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion"\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
   assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
   assert.match(actions, /function mostrarResultadoJurado\(\)[\s\S]*mostrar_resultado_jurado/);
@@ -41,6 +44,13 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(spectatorState, /vista-deliberacion/);
   assert.match(spectatorState, /vista-resultado-jurado/);
   assert.match(spectatorState, /vista-resultado-final/);
+  assert.doesNotMatch(spectatorState, /APARTADO \$\{paso\} DE \$\{estado\.criterios\.length\}/);
+  assert.match(spectatorState, /resultado_jurado[\s\S]*pausarAudioDeliberacionEspectador\(deliberacion_audio_espectador, true\)[\s\S]*reproducirAudioDeliberacionSeguro\(deliberacion_latido_espectador/);
+  assert.match(spectatorState, /RESULTADO_FINAL_SUSPENSE_MS = 3000/);
+  assert.match(spectatorState, /!controlador_transicion_vista_espectador \|\| modo === "resultado_final"/);
+  assert.match(spectatorState, /modo === "resultado_final"\) controlador_transicion_vista_espectador\?\.cancel\(\)/);
+  assert.match(spectatorState, /confetti_aux\(\{ silencioso: true \}\)/);
+  assert.match(spectatorState, /DELIBERACION_VICTORIA_INICIO_SEGUNDOS = 22\.5/);
   assert.match(spectatorState, /firma === puntuacion_firma_render_espectador[\s\S]*return/);
   assert.match(spectatorSockets, /pedir_jurado_resultado/);
   assert.match(museHtml, /id="deliberacion_musa"/);
@@ -49,6 +59,9 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(museHtml, /id="resultado_final_musa"/);
   assert.match(museState, /function sincronizarVistaDeliberacionMusa\(opciones = \{\}\)/);
   assert.match(museState, /is-local-winner/);
+  assert.match(museState, /RESULTADO_FINAL_SUSPENSE_MUSA_MS = 3000/);
+  assert.match(museState, /is-final-celebrating/);
+  assert.match(museState, /vista_modo_remota_musa !== "resultado_final"\) \{\s*animarTransicionVistaMusa/);
   assert.match(museSockets, /puntuacion_final_estado/);
   assert.match(museSockets, /jurado_resultado_estado/);
   assert.match(museSockets, /resultado_final_estado/);

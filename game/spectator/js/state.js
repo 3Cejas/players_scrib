@@ -1334,9 +1334,9 @@ function sincronizarAudioDeliberacionEspectador(modo) {
     const siguiente = String(modo || "").trim().toLowerCase();
     audio_deliberacion_modo_espectador = siguiente;
     if (siguiente === "resultado_jurado") {
+        pausarAudioDeliberacionEspectador(deliberacion_audio_espectador, true);
         pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
         audio_deliberacion_victoria_firma = "";
-        reproducirAudioDeliberacionSeguro(deliberacion_audio_espectador, 0.42);
         reproducirAudioDeliberacionSeguro(deliberacion_latido_espectador, 0.72);
         return;
     }
@@ -1578,7 +1578,9 @@ let puntuacion_timeout_transferencia_espectador = null;
 let puntuacion_timeout_ganador_espectador = null;
 let puntuacion_raf_totales_espectador = [];
 let jurado_timeout_revelado_espectador = null;
+let resultado_final_timeout_revelado_espectador = null;
 const PUNTUACION_REVELADO_GANADOR_MS = 1540;
+const RESULTADO_FINAL_SUSPENSE_MS = 3000;
 const stats_timeline_modos_local_espectador = [];
 const STATS_LAYOUT_HEATMAP = [
     [
@@ -4024,7 +4026,6 @@ const renderizarResultadoJuradoEspectador = (opciones = {}) => {
     } else if (paso <= estado.criterios.length) {
         const criterio = estado.criterios[paso - 1];
         html = `<article class="resultado-jurado-panel resultado-jurado-panel--criterio">
-            <span class="resultado-jurado-kicker">APARTADO ${paso} DE ${estado.criterios.length}</span>
             <h2>${escapeHtml(criterio.label.toUpperCase())}</h2>
             <div class="resultado-jurado-cards">
                 ${tarjetaResultadoJuradoEspectador(estado, 1, criterio.valores, criterio.empate ? 0 : criterio.ganador)}
@@ -4089,15 +4090,8 @@ const normalizarResultadoFinalEspectador = (payload = {}) => {
     };
 };
 
-const renderizarResultadoFinalEspectador = (opciones = {}) => {
-    if (!resultado_final_stage) return;
-    const estado = normalizarResultadoFinalEspectador(estado_resultado_final_espectador || {});
-    if (!estado.disponible) {
-        resultado_final_stage.innerHTML = '<p class="resultado-jurado-espera">CALCULANDO EL VEREDICTO FINAL&hellip;</p>';
-        return;
-    }
-    const firma = `${estado.ganador}:${estado.jugadores[1].total}:${estado.jugadores[2].total}`;
-    if (firma === resultado_final_firma_render_espectador && opciones.forzar !== true) return;
+const revelarResultadoFinalEspectador = (estado, firma) => {
+    if (!resultado_final_stage || vista_espectador_modo_resuelta !== "resultado_final") return;
     const tarjeta = (id) => {
         const jugador = estado.jugadores[id];
         const gana = !estado.empate && estado.ganador === id;
@@ -4108,17 +4102,58 @@ const renderizarResultadoFinalEspectador = (opciones = {}) => {
         </article>`;
     };
     resultado_final_stage.innerHTML = `<article class="resultado-final-panel ganador-${estado.ganador || 0}">
+        <div class="resultado-final-fiesta" aria-hidden="true">${"<i></i>".repeat(12)}</div>
         <span class="resultado-final-kicker">GANADOR FINAL</span>
-        <h2>${estado.empate ? "EMPATE" : escapeHtml(estado.jugadores[estado.ganador].nombre)}</h2>
+        <h2 class="resultado-final-nombre">${estado.empate ? "EMPATE" : escapeHtml(estado.jugadores[estado.ganador].nombre)}</h2>
         <p class="resultado-final-formula">${escapeHtml(estado.formula)}</p>
         <div class="resultado-final-cards">${tarjeta(1)}${tarjeta(2)}</div>
         <p class="resultado-final-celebracion">${estado.empate ? "DOS HISTORIAS. UN MISMO MARCADOR." : "&iexcl;ENHORABUENA, EQUIPO GANADOR!"}</p>
     </article>`;
-    resultado_final_stage.classList.remove("is-celebrating");
+    resultado_final_stage.classList.remove("is-suspense", "is-celebrating");
+    resultado_final_espectador?.classList.remove("is-winner-1", "is-winner-2", "is-tie");
+    resultado_final_espectador?.classList.add(estado.empate ? "is-tie" : `is-winner-${estado.ganador}`);
     requestAnimationFrame(() => resultado_final_stage.classList.add("is-celebrating"));
-    if (!estado.empate && typeof confetti_aux === "function") confetti_aux();
+    if (!estado.empate && typeof confetti_aux === "function") confetti_aux({ silencioso: true });
     reproducirVictoriaDeliberacionEspectador(`final:${estado.ganador || 0}:${estado.jugadores[1].total}:${estado.jugadores[2].total}`);
+};
+
+const renderizarResultadoFinalEspectador = (opciones = {}) => {
+    if (!resultado_final_stage) return;
+    const estado = normalizarResultadoFinalEspectador(estado_resultado_final_espectador || {});
+    const reducirMovimiento = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    if (!estado.disponible) {
+        resultado_final_stage.classList.add("is-suspense");
+        resultado_final_stage.innerHTML = `<article class="resultado-final-suspense" aria-label="Preparando el veredicto final">
+            <div class="resultado-final-suspense__duelo" aria-hidden="true"><i></i><b></b><span></span></div>
+            <small>EL VEREDICTO EST&Aacute; SELLADO</small>
+            <h2>&iquest;QUI&Eacute;N HA GANADO?</h2>
+            <p>EL MOMENTO DE LA VERDAD</p>
+        </article>`;
+        return;
+    }
+    const firma = `${estado.ganador}:${estado.jugadores[1].total}:${estado.jugadores[2].total}`;
+    if (firma === resultado_final_firma_render_espectador && opciones.forzar !== true) return;
+    if (resultado_final_timeout_revelado_espectador) {
+        clearTimeout(resultado_final_timeout_revelado_espectador);
+        resultado_final_timeout_revelado_espectador = null;
+    }
     resultado_final_firma_render_espectador = firma;
+    if (opciones.animar === true && !reducirMovimiento) {
+        resultado_final_stage.classList.remove("is-celebrating");
+        resultado_final_stage.classList.add("is-suspense");
+        resultado_final_stage.innerHTML = `<article class="resultado-final-suspense" aria-label="Desvelando el veredicto final">
+            <div class="resultado-final-suspense__duelo" aria-hidden="true"><i></i><b></b><span></span></div>
+            <small>EL VEREDICTO EST&Aacute; SELLADO</small>
+            <h2>&iquest;QUI&Eacute;N HA GANADO?</h2>
+            <p>EL MOMENTO DE LA VERDAD</p>
+        </article>`;
+        resultado_final_timeout_revelado_espectador = setTimeout(() => {
+            resultado_final_timeout_revelado_espectador = null;
+            revelarResultadoFinalEspectador(estado, firma);
+        }, RESULTADO_FINAL_SUSPENSE_MS);
+        return;
+    }
+    revelarResultadoFinalEspectador(estado, firma);
 };
 
 const actualizarResultadoFinalEspectador = (payload = {}) => {
@@ -4517,6 +4552,10 @@ const actualizarVisibilidadPanelNivelEspectador = () => {
 
 const aplicarModoVistaEspectadorUi = (modo) => {
     const modoPrevio = vista_espectador_modo_resuelta;
+    if (modo !== "resultado_final" && resultado_final_timeout_revelado_espectador) {
+        clearTimeout(resultado_final_timeout_revelado_espectador);
+        resultado_final_timeout_revelado_espectador = null;
+    }
     vista_espectador_modo_resuelta = modo;
     sincronizarAudioDeliberacionEspectador(modo);
     if (modo !== "partida") {
@@ -4628,7 +4667,8 @@ const aplicarModoVistaEspectadorUi = (modo) => {
 const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
     const modo = normalizarModoVistaEspectador(modoForzado || resolverModoVistaEspectadorLocal());
     controlador_audio_vista_espectador?.setMode(modo, {
-        initial: !vista_espectador_ui_inicializada
+        initial: !vista_espectador_ui_inicializada,
+        silentTransition: modo === "resultado_jurado" || modo === "resultado_final"
     });
     if (!vista_espectador_ui_inicializada) {
         vista_espectador_ui_inicializada = true;
@@ -4645,7 +4685,10 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         return;
     }
     vista_espectador_modo_solicitada = modo;
-    if (!controlador_transicion_vista_espectador) {
+    // El veredicto ya incluye su propia secuencia de suspense: evita superponer
+    // la cortinilla genérica de cambio de vista, que parecía una recarga.
+    if (!controlador_transicion_vista_espectador || modo === "resultado_final") {
+        if (modo === "resultado_final") controlador_transicion_vista_espectador?.cancel();
         aplicarModoVistaEspectadorUi(modo);
         return;
     }

@@ -2117,14 +2117,16 @@ function randomInRange(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-function confetti_aux() {
+function confetti_aux(opciones = {}) {
     if (vista_espectador_modo_resuelta === "stats") {
         stopConfetti();
         return;
     }
     stopConfetti();
 
-    sonido_confetti = reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3")
+    if (!opciones || opciones.silencioso !== true) {
+        sonido_confetti = reproducirSonido("../../game/audio/CELEBRACION con explosiones.mp3")
+    }
     
   var animationEnd = Date.now() + duration; // Actualiza aquï¿½fÂ­ dentro de la funciï¿½fÂ³n
   isConfettiRunning = true; // Habilita la ejecuciï¿½fÂ³n de confetti

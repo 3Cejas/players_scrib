@@ -2696,7 +2696,6 @@ function actualizarBotonesVistaEspectadorControl() {
     const juradoLabel = document.getElementById("jurado_nav_label");
     const juradoPrev = document.getElementById("jurado_nav_prev");
     const juradoNext = document.getElementById("jurado_nav_next");
-    const juradoReset = document.getElementById("jurado_nav_reset");
     if (botonStats) {
         const activo = vista_espectador_modo === "stats";
         botonStats.dataset.active = activo ? "1" : "0";
@@ -2796,12 +2795,11 @@ function actualizarBotonesVistaEspectadorControl() {
     }
     if (juradoPrev) juradoPrev.disabled = jurado_slide_step_control <= 0;
     if (juradoNext) juradoNext.disabled = jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL;
-    if (juradoReset) juradoReset.disabled = jurado_slide_step_control <= 0;
     if (juradoLabel) {
         let etiqueta = "PRESENTACIÓN";
         if (jurado_slide_step_control === JURADO_PASO_MAX_CONTROL) etiqueta = "VEREDICTO DEL JURADO";
         else if (jurado_slide_step_control > 0) etiqueta = JURADO_CATEGORIAS_CONTROL[jurado_slide_step_control - 1];
-        juradoLabel.textContent = `${etiqueta} · ${jurado_slide_step_control}/${JURADO_PASO_MAX_CONTROL}`;
+        juradoLabel.textContent = etiqueta;
     }
     if (juradoNav) {
         const visible = vista_espectador_modo === "resultado_jurado";
@@ -2974,17 +2972,11 @@ function navegarResultadoJurado(direccion) {
     socket.emit(direccion === "anterior" ? "jurado_resultado_anterior" : "jurado_resultado_siguiente");
 }
 
-function reiniciarResultadoJurado() {
-    if (!socket || typeof socket.emit !== "function") return;
-    socket.emit("mostrar_resultado_jurado");
-}
-
 window.mostrarVistaDeliberacion = mostrarVistaDeliberacion;
 window.mostrarResultadoVideojuego = mostrarResultadoVideojuego;
 window.mostrarResultadoJurado = mostrarResultadoJurado;
 window.actualizarResultadoJuradoControl = actualizarResultadoJuradoControl;
 window.navegarResultadoJurado = navegarResultadoJurado;
-window.reiniciarResultadoJurado = reiniciarResultadoJurado;
 
 function actualizarModoVistaEspectadorControl(payload = {}) {
     const modoServidor = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "tutorial";

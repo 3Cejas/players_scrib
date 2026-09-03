@@ -1600,7 +1600,9 @@ let puntuacion_timeout_transferencia_musa = null;
 let puntuacion_timeout_ganador_musa = null;
 let puntuacion_raf_totales_musa = [];
 let jurado_timeout_revelado_musa = null;
+let resultado_final_timeout_revelado_musa = null;
 const PUNTUACION_REVELADO_GANADOR_MUSA_MS = 1540;
+const RESULTADO_FINAL_SUSPENSE_MUSA_MS = 3000;
 
 function normalizarResultadoJuradoMusa(payload = {}) {
     const jugadores = payload && payload.jugadores && typeof payload.jugadores === "object" ? payload.jugadores : {};
@@ -1930,28 +1932,57 @@ function renderizarResultadoJuradoMusa(opciones = {}) {
     jurado_firma_render_musa = firma;
 }
 
-function renderizarResultadoFinalMusa(opciones = {}) {
-    if (!resultado_final_musa_stage) return;
-    const estado = estado_resultado_final_musa || {};
-    if (!estado.disponible) {
-        resultado_final_musa_stage.innerHTML = '<p class="resultado-musa__espera">CALCULANDO EL GANADOR FINAL&hellip;</p>';
-        return;
-    }
+function revelarResultadoFinalMusa(estado, firma) {
+    if (!resultado_final_musa_stage || vista_modo_remota_musa !== "resultado_final") return;
     const jugadores = estado.jugadores || {};
-    const firma = `${estado.ganador}:${jugadores[1]?.total}:${jugadores[2]?.total}`;
-    if (firma === resultado_final_firma_render_musa && opciones.forzar !== true) return;
     const ganador = estado.empate ? 0 : Number(estado.ganador);
     const tarjeta = (id) => {
         const jugador = jugadores[id] || jugadores[String(id)] || {};
         return `<article class="resultado-musa__card resultado-musa__card--${id}${ganador === id ? " is-winner" : ""}"><small>${ganador === id ? "GANADOR" : "FINALISTA"}</small><h3>${escapeHtml(jugador.nombre || `ESCRITXR ${id}`)}</h3><b>JUEGO ${Number(jugador.juego || 0).toFixed(1)}</b><b>JURADO ${Number(jugador.jurado || 0).toFixed(1)}</b><strong>${Number(jugador.total || 0).toFixed(1)}</strong><span>/ 100</span></article>`;
     };
-    resultado_final_musa_stage.innerHTML = `<div class="resultado-musa__apartado resultado-musa__apartado--final"><small>GANADOR FINAL</small><h2>${estado.empate ? "EMPATE" : escapeHtml((jugadores[ganador] || jugadores[String(ganador)] || {}).nombre || "")}</h2><div class="resultado-musa__cards">${tarjeta(1)}${tarjeta(2)}</div><p class="resultado-musa__veredicto">${estado.empate ? "DOS EQUIPOS. UN MISMO MARCADOR." : (ganador === Number(player) ? "&iexcl;VUESTRO EQUIPO GANA!" : "GRAN PARTIDA")}</p></div>`;
+    resultado_final_musa_stage.innerHTML = `<div class="resultado-musa__apartado resultado-musa__apartado--final"><div class="resultado-musa__fiesta" aria-hidden="true">${"<i></i>".repeat(10)}</div><small>GANADOR FINAL</small><h2>${estado.empate ? "EMPATE" : escapeHtml((jugadores[ganador] || jugadores[String(ganador)] || {}).nombre || "")}</h2><div class="resultado-musa__cards">${tarjeta(1)}${tarjeta(2)}</div><p class="resultado-musa__veredicto">${estado.empate ? "DOS EQUIPOS. UN MISMO MARCADOR." : (ganador === Number(player) ? "&iexcl;VUESTRO EQUIPO GANA!" : "&iexcl;TENEMOS GANADOR!")}</p></div>`;
+    resultado_final_musa.classList.remove("is-final-suspense", "is-final-celebrating", "winner-1", "winner-2", "winner-tie");
+    resultado_final_musa.classList.add(estado.empate ? "winner-tie" : `winner-${ganador}`);
+    requestAnimationFrame(() => resultado_final_musa.classList.add("is-final-celebrating"));
     aplicarGanadorLocalMusa(resultado_final_musa, ganador, firma);
-    if (ganador === Number(player) && typeof confetti_aux === "function") confetti_aux();
+    if (ganador && typeof confetti_aux === "function") confetti_aux();
+}
+
+function renderizarResultadoFinalMusa(opciones = {}) {
+    if (!resultado_final_musa_stage) return;
+    const estado = estado_resultado_final_musa || {};
+    const reducirMovimiento = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    if (!estado.disponible) {
+        resultado_final_musa.classList.add("is-final-suspense");
+        resultado_final_musa_stage.innerHTML = `<div class="resultado-musa__suspense"><span aria-hidden="true">?</span><small>EL VEREDICTO EST&Aacute; SELLADO</small><h2>&iquest;QUI&Eacute;N HA GANADO?</h2></div>`;
+        return;
+    }
+    const jugadores = estado.jugadores || {};
+    const firma = `${estado.ganador}:${jugadores[1]?.total}:${jugadores[2]?.total}`;
+    if (firma === resultado_final_firma_render_musa && opciones.forzar !== true) return;
+    if (resultado_final_timeout_revelado_musa) {
+        clearTimeout(resultado_final_timeout_revelado_musa);
+        resultado_final_timeout_revelado_musa = null;
+    }
     resultado_final_firma_render_musa = firma;
+    if (opciones.animar === true && !reducirMovimiento) {
+        resultado_final_musa.classList.remove("is-final-celebrating", "winner-1", "winner-2", "winner-tie");
+        resultado_final_musa.classList.add("is-final-suspense");
+        resultado_final_musa_stage.innerHTML = `<div class="resultado-musa__suspense"><span aria-hidden="true">?</span><small>EL VEREDICTO EST&Aacute; SELLADO</small><h2>&iquest;QUI&Eacute;N HA GANADO?</h2></div>`;
+        resultado_final_timeout_revelado_musa = setTimeout(() => {
+            resultado_final_timeout_revelado_musa = null;
+            revelarResultadoFinalMusa(estado, firma);
+        }, RESULTADO_FINAL_SUSPENSE_MUSA_MS);
+        return;
+    }
+    revelarResultadoFinalMusa(estado, firma);
 }
 
 function sincronizarVistaDeliberacionMusa(opciones = {}) {
+    if (vista_modo_remota_musa !== "resultado_final" && resultado_final_timeout_revelado_musa) {
+        clearTimeout(resultado_final_timeout_revelado_musa);
+        resultado_final_timeout_revelado_musa = null;
+    }
     const pantallas = [deliberacion_musa, resultado_videojuego_musa, resultado_jurado_musa, resultado_final_musa];
     pantallas.forEach((pantalla) => {
         if (!pantalla) return;
@@ -1971,7 +2002,11 @@ function sincronizarVistaDeliberacionMusa(opciones = {}) {
         activa = resultado_final_musa;
     }
     if (!activa) return false;
-    if (opciones.animarCambioVista !== false) animarTransicionVistaMusa(vista_modo_remota_musa);
+    // El resultado final tiene una revelación propia; la cortinilla genérica
+    // cortaba el suspense y daba la sensación de cargar otra pantalla.
+    if (opciones.animarCambioVista !== false && vista_modo_remota_musa !== "resultado_final") {
+        animarTransicionVistaMusa(vista_modo_remota_musa);
+    }
     activa.hidden = false;
     activa.setAttribute("aria-hidden", "false");
     return true;

@@ -10938,7 +10938,67 @@ body.vista-resultado-final #resultado_jurado_espectador {
 .resultado-final-card > span { font: clamp(1rem,1.7vw,1.8rem)/1 "Retro-gaming", monospace; }
 .resultado-final-formula { margin: 0; color: rgba(255,255,255,.74); font: clamp(1.2rem,2vw,2rem)/1 "VT323", monospace; text-transform: uppercase; }
 .resultado-final-celebracion { margin: 0; color: #ffe179; font: clamp(1rem,2vw,2rem)/1.3 "Retro-gaming", monospace; }
-.resultado-final-stage.is-celebrating .resultado-final-panel { animation: resultadoFinalEstallido 1.3s cubic-bezier(.16,1,.3,1) both; }
+.resultado-final-stage { position: relative; z-index: 3; }
+.resultado-final-stage.is-suspense { width: 100%; }
+.resultado-final-suspense {
+  display: grid;
+  justify-items: center;
+  gap: clamp(1rem, 3vh, 2.4rem);
+  width: min(92vw, 78rem);
+  margin: auto;
+}
+.resultado-final-suspense small {
+  color: #ffe07a;
+  font: clamp(.7rem,1.3vw,1.25rem)/1.4 "Retro-gaming", monospace;
+  letter-spacing: .2em;
+  animation: resultadoFinalTextoTension .75s ease-in-out infinite alternate;
+}
+.resultado-final-suspense h2 {
+  margin: 0;
+  font: clamp(3rem,8vw,8rem)/.96 "Retro-gaming", monospace;
+  text-shadow: -.045em 0 #49e9ff, .045em 0 #ff5c76, 0 0 2rem rgba(255,255,255,.2);
+  animation: resultadoFinalPregunta 1.1s steps(2,end) infinite;
+}
+.resultado-final-suspense p { margin: 0; color: rgba(255,255,255,.68); font: clamp(1rem,2vw,2rem)/1 "VT323", monospace; letter-spacing: .22em; }
+.resultado-final-suspense__duelo {
+  position: relative;
+  width: min(72vw, 54rem);
+  height: clamp(4rem,10vh,7rem);
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,.72);
+  border-radius: 999px;
+  box-shadow: 0 0 2rem rgba(255,255,255,.16), inset 0 0 1.4rem rgba(0,0,0,.8);
+}
+.resultado-final-suspense__duelo i,
+.resultado-final-suspense__duelo b { position: absolute; inset-block: 0; width: 54%; animation: resultadoFinalDuelo 1.35s cubic-bezier(.65,0,.35,1) infinite alternate; }
+.resultado-final-suspense__duelo i { left: 0; background: linear-gradient(90deg,#087eb8,#5be9ff); transform-origin: left; }
+.resultado-final-suspense__duelo b { right: 0; background: linear-gradient(90deg,#ff8b9c,#ad1739); transform-origin: right; animation-direction: alternate-reverse; }
+.resultado-final-suspense__duelo span { position: absolute; z-index: 2; left: 50%; top: 50%; display: grid; place-items: center; width: clamp(3.3rem,6vw,5.5rem); aspect-ratio: 1; border: 2px solid #ffe174; border-radius: 50%; background: #07101a; color: #ffe174; font: clamp(1.5rem,3vw,3rem)/1 "Retro-gaming", monospace; box-shadow: 0 0 1.7rem #ffe174; transform: translate(-50%,-50%); }
+.resultado-final-espectador::before,
+.resultado-final-espectador::after { content: ""; position: absolute; inset: -22vmax; z-index: 1; pointer-events: none; opacity: 0; }
+.resultado-final-espectador.is-winner-1::before { background: repeating-conic-gradient(from 0deg, rgba(77,232,255,.95) 0 7deg, transparent 7deg 17deg); }
+.resultado-final-espectador.is-winner-2::before { background: repeating-conic-gradient(from 0deg, rgba(255,76,111,.95) 0 7deg, transparent 7deg 17deg); }
+.resultado-final-espectador.is-tie::before { background: repeating-conic-gradient(from 0deg, rgba(255,222,112,.85) 0 7deg, transparent 7deg 17deg); }
+.resultado-final-espectador.is-winner-1::after { background: radial-gradient(circle, rgba(83,235,255,.96), rgba(10,91,131,.5) 22%, transparent 58%); }
+.resultado-final-espectador.is-winner-2::after { background: radial-gradient(circle, rgba(255,94,126,.96), rgba(139,12,47,.5) 22%, transparent 58%); }
+.resultado-final-espectador.is-tie::after { background: radial-gradient(circle, rgba(255,225,121,.9), transparent 58%); }
+.resultado-final-espectador.is-winner-1::before,
+.resultado-final-espectador.is-winner-2::before,
+.resultado-final-espectador.is-tie::before { animation: resultadoFinalRayos 3.2s cubic-bezier(.16,1,.3,1) both; }
+.resultado-final-espectador.is-winner-1::after,
+.resultado-final-espectador.is-winner-2::after,
+.resultado-final-espectador.is-tie::after { animation: resultadoFinalAura 2.2s cubic-bezier(.16,1,.3,1) both; }
+.resultado-final-panel > :not(.resultado-final-fiesta) { position: relative; z-index: 3; }
+.resultado-final-fiesta { position: fixed; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+.resultado-final-fiesta i { --angulo: 0deg; position: absolute; left: 50%; top: 50%; width: clamp(.28rem,.6vw,.72rem); height: 48vmax; border-radius: 999px; opacity: 0; background: linear-gradient(to top, rgba(255,255,255,.95), #ffe167 25%, transparent 72%); transform-origin: 50% 0; transform: rotate(var(--angulo)) translateY(3rem) scaleY(.2); animation: resultadoFinalHaz 2.4s cubic-bezier(.16,1,.3,1) both; }
+.resultado-final-fiesta i:nth-child(2) { --angulo:30deg; animation-delay:.04s; }.resultado-final-fiesta i:nth-child(3) { --angulo:60deg; animation-delay:.08s; }.resultado-final-fiesta i:nth-child(4) { --angulo:90deg; animation-delay:.12s; }.resultado-final-fiesta i:nth-child(5) { --angulo:120deg; animation-delay:.16s; }.resultado-final-fiesta i:nth-child(6) { --angulo:150deg; animation-delay:.2s; }.resultado-final-fiesta i:nth-child(7) { --angulo:180deg; animation-delay:.24s; }.resultado-final-fiesta i:nth-child(8) { --angulo:210deg; animation-delay:.28s; }.resultado-final-fiesta i:nth-child(9) { --angulo:240deg; animation-delay:.32s; }.resultado-final-fiesta i:nth-child(10) { --angulo:270deg; animation-delay:.36s; }.resultado-final-fiesta i:nth-child(11) { --angulo:300deg; animation-delay:.4s; }.resultado-final-fiesta i:nth-child(12) { --angulo:330deg; animation-delay:.44s; }
+.resultado-final-panel.ganador-1 .resultado-final-nombre { color: #69efff; text-shadow: -.045em 0 #fff, .045em 0 #087eb8, 0 0 .35em #32dfff, 0 0 1em #087eb8; }
+.resultado-final-panel.ganador-2 .resultado-final-nombre { color: #ff7890; text-shadow: -.045em 0 #fff, .045em 0 #ad1739, 0 0 .35em #ff4c70, 0 0 1em #ad1739; }
+.resultado-final-card.is-winner { border-width: 3px; box-shadow: 0 0 2rem var(--resultado-ganador-color,#ffe067), 0 0 6rem var(--resultado-ganador-color,#ffe067), inset 0 0 3rem rgba(255,255,255,.13); }
+.resultado-final-card--1 { --resultado-ganador-color:#43dcff; }
+.resultado-final-card--2 { --resultado-ganador-color:#ff526e; }
+.resultado-final-stage.is-celebrating .resultado-final-panel { animation: resultadoFinalEstallido 1.8s cubic-bezier(.16,1,.3,1) both; }
+.resultado-final-stage.is-celebrating .resultado-final-nombre { animation: resultadoFinalNombre 1.35s cubic-bezier(.16,1,.3,1) both, resultadoFinalNombrePulso 1.2s 1.35s ease-in-out infinite alternate; }
 
 @keyframes deliberacionTensionFlash {
   0% { opacity: 0; transform: scale(1.08); filter: brightness(.4); }
@@ -10960,6 +11020,14 @@ body.vista-resultado-final #resultado_jurado_espectador {
 }
 @keyframes deliberacionBalanzaEmoji { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) scale(1.05); } }
 @keyframes resultadoFinalEstallido { 0% { opacity: 0; transform: scale(.55); filter: blur(18px) brightness(2.2); } 64% { opacity: 1; transform: scale(1.07); filter: blur(0) brightness(1.35); } 100% { transform: scale(1); filter: none; } }
+@keyframes resultadoFinalDuelo { 0% { width: 34%; filter: brightness(.65); } 55% { width: 68%; filter: brightness(1.8); } 100% { width: 48%; filter: brightness(1.05); } }
+@keyframes resultadoFinalPregunta { 50% { filter: brightness(1.5); letter-spacing: .04em; } }
+@keyframes resultadoFinalTextoTension { to { opacity: .42; text-shadow: 0 0 1.4rem currentColor; } }
+@keyframes resultadoFinalRayos { 0% { opacity: 0; transform: rotate(-18deg) scale(.12); } 35% { opacity: .82; } 100% { opacity: .14; transform: rotate(34deg) scale(1); } }
+@keyframes resultadoFinalAura { 0% { opacity: 0; transform: scale(.12); filter: brightness(3); } 38% { opacity: .94; } 100% { opacity: .28; transform: scale(1.12); filter: brightness(1); } }
+@keyframes resultadoFinalHaz { 0% { opacity: 0; transform: rotate(var(--angulo)) translateY(3rem) scaleY(.08); } 26% { opacity: .95; } 100% { opacity: 0; transform: rotate(var(--angulo)) translateY(3rem) scaleY(1.2); } }
+@keyframes resultadoFinalNombre { 0% { opacity: 0; transform: scale(2.3) rotate(-3deg); filter: blur(24px) brightness(3); } 58% { opacity: 1; transform: scale(.88) rotate(1deg); filter: blur(0) brightness(1.7); } 100% { transform: scale(1); filter: none; } }
+@keyframes resultadoFinalNombrePulso { to { transform: scale(1.045); filter: brightness(1.3); } }
 
 @media (max-width: 900px), (max-height: 650px) {
   .puntuacion-categorias-intro li { min-height: 6rem; }
@@ -10974,6 +11042,14 @@ body.vista-resultado-final #resultado_jurado_espectador {
   .puntuacion-stage.is-revealing .puntuacion-panel,
   .resultado-jurado-stage.is-revealing > article,
   .resultado-final-stage.is-celebrating .resultado-final-panel,
+  .resultado-final-stage.is-celebrating .resultado-final-nombre,
+  .resultado-final-suspense small,
+  .resultado-final-suspense h2,
+  .resultado-final-suspense__duelo i,
+  .resultado-final-suspense__duelo b,
+  .resultado-final-espectador::before,
+  .resultado-final-espectador::after,
+  .resultado-final-fiesta i,
   .deliberacion-espectador__balanza,
   .puntuacion-categoria-misterio,
   .puntuacion-categoria-misterio::before,

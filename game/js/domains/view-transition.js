@@ -137,7 +137,7 @@
             if (mode === currentMode) return false;
             const previous = currentMode;
             currentMode = mode;
-            if (previous && config.initial !== true) playTransition();
+            if (previous && config.initial !== true && config.silentTransition !== true) playTransition();
             fadeMusic(targetMusicVolume(), fadeDurationMs);
             return true;
         };
