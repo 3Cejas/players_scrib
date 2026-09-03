@@ -2653,6 +2653,7 @@ let calentamiento_bloqueado = false;
 let calentamiento_final_actual = null;
 let calentamiento_final_id_previo = "";
 let timeout_animacion_consigna = null;
+let timeout_animacion_primer_detonador = null;
 let ultimo_payload_calentamiento_musa = null;
 const CALENTAMIENTO_MAX_PALABRA = 24;
 const CALENTAMIENTO_MAX_FRASE_FINAL = 48;
@@ -2875,6 +2876,22 @@ const animarCambioConsignaCalentamiento = () => {
     }, 760);
 };
 
+const animarPrimerDetonadorCalentamiento = () => {
+    if (!calentamiento_section) return;
+    calentamiento_section.classList.remove("calentamiento-primer-detonador");
+    void calentamiento_section.offsetWidth;
+    calentamiento_section.classList.add("calentamiento-primer-detonador");
+    if (timeout_animacion_primer_detonador) {
+        clearTimeout(timeout_animacion_primer_detonador);
+    }
+    const revisionContexto = obtenerRevisionContextoCalentamientoMusa();
+    timeout_animacion_primer_detonador = setTimeout(() => {
+        if (!esRevisionContextoCalentamientoMusaActiva(revisionContexto)) return;
+        calentamiento_section?.classList.remove("calentamiento-primer-detonador");
+        timeout_animacion_primer_detonador = null;
+    }, 1450);
+};
+
 function invalidarContextoCalentamientoMusa() {
     revision_contexto_calentamiento_musa += 1;
     calentamiento_envio_pendiente = false;
@@ -2899,6 +2916,10 @@ function invalidarContextoCalentamientoMusa() {
         clearTimeout(timeout_animacion_consigna);
         timeout_animacion_consigna = null;
     }
+    if (timeout_animacion_primer_detonador) {
+        clearTimeout(timeout_animacion_primer_detonador);
+        timeout_animacion_primer_detonador = null;
+    }
     if (calentamiento_feedback) {
         calentamiento_feedback.textContent = "";
         limpiarEstiloFeedbackCalentamiento();
@@ -2907,7 +2928,8 @@ function invalidarContextoCalentamientoMusa() {
         calentamiento_section.classList.remove(
             "destello-equipo-1",
             "destello-equipo-2",
-            "calentamiento-consigna-cambio"
+            "calentamiento-consigna-cambio",
+            "calentamiento-primer-detonador"
         );
     }
     return revision_contexto_calentamiento_musa;
@@ -2985,6 +3007,10 @@ const actualizarCalentamiento = (data = {}) => {
         solicitudAnterior !== "ninguna" &&
         solicitudAnterior !== solicitud
     );
+    const primerDetonador = Boolean(
+        solicitudActiva &&
+        (!solicitudAnterior || solicitudAnterior === "ninguna")
+    );
     const mensajeSolicitud = mensajesCalentamiento[solicitud] || mensajesCalentamiento.ninguna;
     const visible = calentamiento_activo && calentamiento_vista;
 
@@ -3060,6 +3086,8 @@ const actualizarCalentamiento = (data = {}) => {
     }
     if (cambioConsigna) {
         animarCambioConsignaCalentamiento();
+    } else if (primerDetonador) {
+        animarPrimerDetonadorCalentamiento();
     }
     actualizarBloqueoCalentamientoMusa(calentamiento_bloqueado, calentamiento_final_actual);
 };

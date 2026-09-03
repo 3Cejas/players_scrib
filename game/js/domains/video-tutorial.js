@@ -244,7 +244,7 @@
             <div class="scrib-video-tutorial__scene">
                 <div class="scrib-video-tutorial__copy">
                     <h1 data-video-tutorial-title></h1>
-                    <p class="scrib-video-tutorial__access-url">www.scribshow.es/musa</p>
+                    <p class="scrib-video-tutorial__access-url"><span aria-hidden="true">&#x2197;</span><strong>www.scribshow.es/musa</strong></p>
                 </div>
                 <div class="scrib-video-tutorial__visual" aria-hidden="true">
                     <div class="scrib-video-tutorial__welcome-mark">

@@ -171,8 +171,9 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*object-fit:\s*contain/);
   assert.match(css, /scrib-video-tutorial__brand-mark[\s\S]*mix-blend-mode:\s*normal/);
   assert.match(css, /scrib-video-tutorial__welcome-qr[\s\S]*mix-blend-mode:\s*normal/);
-  assert.match(spectatorMarkup, /scrib-video-tutorial__access-url">www\.scribshow\.es\/musa/);
-  assert.match(css, /scrib-video-tutorial__access-url[\s\S]*align-self:\s*start[\s\S]*justify-self:\s*start[\s\S]*font:\s*800 clamp\(1\.45rem,[\s\S]*text-decoration:\s*underline/);
+  assert.match(spectatorMarkup, /scrib-video-tutorial__access-url"><span aria-hidden="true">&#x2197;<\/span><strong>www\.scribshow\.es\/musa<\/strong>/);
+  assert.match(css, /scrib-video-tutorial__copy > \.scrib-video-tutorial__access-url[\s\S]*align-self:\s*start[\s\S]*justify-self:\s*start[\s\S]*display:\s*inline-flex/);
+  assert.match(css, /scrib-video-tutorial__access-url > strong[\s\S]*text-decoration:\s*underline/);
   assert.match(css, /welcome-qr[\s\S]*width:\s*min\(88%,\s*34rem\)/);
   assert.doesNotMatch(brandMarkup, /<b>|MUSA/);
   assert.doesNotMatch(brandMarkup, /<span>&lt;SCRI&gt; B<\/span>/);

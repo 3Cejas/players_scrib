@@ -4475,6 +4475,8 @@ body.musa-postgame-activo {
 
 /* Calentamiento nuevo: envio de palabras a nube */
 .calentamiento.calentamiento--nuevo {
+    position: relative;
+    isolation: isolate;
     display: none;
     margin: 0 auto;
     padding: clamp(14px, 2.8vh, 30px) clamp(12px, 3.2vw, 30px);
@@ -4786,6 +4788,44 @@ body.musa-postgame-activo {
     animation: consignaInputCambio 760ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador::before,
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador::before {
+    inset: clamp(-18px, -2.2vw, -8px);
+    border: 2px solid color-mix(in srgb, var(--musa-progress-color, #7befff), transparent 28%);
+    border-radius: clamp(22px, 4vw, 44px);
+    background:
+        radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--musa-progress-color, #7befff), transparent 76%), transparent 58%),
+        conic-gradient(from 90deg, transparent, color-mix(in srgb, var(--musa-progress-color, #7befff), transparent 62%), transparent 28% 72%, color-mix(in srgb, var(--musa-progress-color, #7befff), transparent 68%), transparent);
+    box-shadow: 0 0 2.4rem color-mix(in srgb, var(--musa-progress-color, #7befff), transparent 58%);
+    animation: primerDetonadorAura 1.4s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador::after {
+    left: 50%;
+    top: 50%;
+    width: min(72vw, 600px);
+    aspect-ratio: 1;
+    border: 2px dashed color-mix(in srgb, var(--musa-progress-color, #7befff), white 18%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: primerDetonadorOnda 1.25s ease-out both;
+}
+
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador > * {
+    animation: primerDetonadorContenido 1.08s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador > :nth-child(2) { animation-delay: 90ms; }
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador > :nth-child(3) { animation-delay: 170ms; }
+.calentamiento.calentamiento--nuevo.calentamiento-primer-detonador > :nth-child(n+4) { animation-delay: 240ms; }
+
 .calentamiento.calentamiento--nuevo.calentamiento-equipo-1 .calentamiento-titulo {
     color: #c7f5ff;
     text-shadow: 0 0 0.8em rgba(0, 225, 255, 0.48);
@@ -4937,6 +4977,33 @@ body.musa-postgame-activo {
         opacity: 1;
         filter: blur(0);
         transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes primerDetonadorAura {
+    0% { opacity: 0; transform: scale(.72) rotate(-7deg); filter: blur(16px); }
+    38% { opacity: 1; transform: scale(1.025) rotate(1deg); filter: blur(0); }
+    72% { opacity: .82; transform: scale(1) rotate(0); }
+    100% { opacity: 0; transform: scale(1.04); }
+}
+
+@keyframes primerDetonadorOnda {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.18); }
+    28% { opacity: .82; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.22); }
+}
+
+@keyframes primerDetonadorContenido {
+    0% { opacity: 0; transform: translateY(28px) scale(.88); filter: blur(10px); }
+    48% { opacity: 1; transform: translateY(-5px) scale(1.025); filter: blur(0); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .calentamiento.calentamiento--nuevo.calentamiento-primer-detonador::before,
+    .calentamiento.calentamiento--nuevo.calentamiento-primer-detonador::after,
+    .calentamiento.calentamiento--nuevo.calentamiento-primer-detonador > * {
+        animation: none !important;
     }
 }
 

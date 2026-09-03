@@ -218,29 +218,56 @@ body.scrib-video-tutorial-active {
         0 0 0.5em color-mix(in srgb, var(--scene-accent), transparent 80%);
 }
 
-.scrib-video-tutorial__access-url {
+.scrib-video-tutorial__copy > .scrib-video-tutorial__access-url {
     display: none;
     align-self: start;
     justify-self: start;
     width: fit-content;
     margin: clamp(1rem, 2.4vh, 1.8rem) 0 0;
-    padding: .42em .72em .5em;
-    border: 1px solid rgba(85, 244, 255, .58);
-    border-radius: .42em;
-    color: var(--vt-cyan);
-    background: rgba(3, 16, 25, .82);
-    box-shadow: 0 0 2rem rgba(85, 244, 255, .18), inset 0 0 1.2rem rgba(85, 244, 255, .06);
+    max-width: min(100%, 30ch);
+    padding: .48em .78em .54em .5em;
+    align-items: center;
+    gap: .52em;
+    border: 2px solid rgba(85, 244, 255, .72);
+    border-radius: .62em;
+    color: #dffcff;
+    background:
+        linear-gradient(105deg, rgba(85, 244, 255, .2), rgba(3, 16, 25, .92) 48%, rgba(255, 213, 103, .13));
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, .08),
+        0 0 2.5rem rgba(85, 244, 255, .28),
+        inset 0 0 1.4rem rgba(85, 244, 255, .08);
     font: 800 clamp(1.45rem, 2.35vw, 2.75rem)/1.1 system-ui, sans-serif;
     letter-spacing: .025em;
-    text-decoration: underline;
-    text-decoration-thickness: .08em;
-    text-underline-offset: .18em;
-    text-align: center;
+    text-align: left;
     text-shadow: 0 0 .8em rgba(85, 244, 255, .42);
 }
 
 .scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__access-url,
-.scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__access-url { display: block; }
+.scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__access-url { display: inline-flex; }
+
+.scrib-video-tutorial__access-url > span {
+    flex: 0 0 auto;
+    width: 1.62em;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: .42em;
+    color: #031019;
+    background: linear-gradient(135deg, #fff29c, var(--vt-cyan));
+    box-shadow: 0 0 1.2rem rgba(85, 244, 255, .46);
+    font-size: .72em;
+    line-height: 1;
+}
+
+.scrib-video-tutorial__access-url > strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-decoration: underline;
+    text-decoration-thickness: .08em;
+    text-underline-offset: .18em;
+    text-decoration-color: var(--vt-cyan);
+}
 
 .scrib-video-tutorial__copy > p {
     max-width: 34ch;
