@@ -138,6 +138,8 @@ test("control and spectator wire the final score protocol and accessible present
     assert.match(spectatorState, /MARCADOR TOTAL/);
     assert.doesNotMatch(spectatorState, /MARCADOR PROVISIONAL/);
     assert.match(spectatorState, /reproducirVictoriaDeliberacionEspectador/);
+    assert.match(spectatorState, /resultadoCategoriaRevelado && !vista\.categoria\.empate[\s\S]*`categoria:/);
+    assert.match(spectatorState, /siguiente === "puntuacion" && audio_deliberacion_victoria_firma/);
     assert.match(spectatorHtml, /deliberacion-syncopated-clock\.mp3/);
     assert.match(spectatorHtml, /deliberacion-latido\.wav/);
     assert.match(spectatorHtml, /deliberacion-victoria\.mp3/);

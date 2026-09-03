@@ -3766,6 +3766,10 @@ const renderizarPuntuacionFinalEspectador = (opciones = {}) => {
     activarParticulasPuntuacionEspectador(vista.tipo === "final", animar && (resultadoCategoriaRevelado || vista.tipo === "final"));
     if (vista.tipo === "final") {
         reproducirVictoriaDeliberacionEspectador(`videojuego:${estado.calculadoEnTs || 0}:${estado.ganador || 0}`);
+    } else if (resultadoCategoriaRevelado && !vista.categoria.empate) {
+        reproducirVictoriaDeliberacionEspectador(
+            `categoria:${estado.calculadoEnTs || 0}:${vista.categoria.id}:${vista.categoria.ganador || 0}`
+        );
     } else {
         if (audio_deliberacion_victoria_firma) {
             pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
