@@ -9376,6 +9376,48 @@ body.vista-resultado-jurado #creditos_espectador {
 .resultado-jurado-card h3 { margin: 1rem 0; font: clamp(1.4rem, 3vw, 3rem)/1 "Retro-gaming", monospace; overflow-wrap: anywhere; }
 .resultado-jurado-card strong { font: clamp(4rem, 9vw, 8rem)/1 "Retro-gaming", monospace; }
 .resultado-jurado-card span { font: clamp(1.2rem, 2vw, 2rem)/1 "Retro-gaming", monospace; }
+.resultado-jurado-card--live {
+  --jury-team: #42dcff;
+  display: grid;
+  align-content: center;
+  min-height: clamp(15rem, 40vh, 28rem);
+}
+.resultado-jurado-card--live.resultado-jurado-card--2 { --jury-team: #ff6078; }
+.resultado-jurado-live-bar {
+  position: relative;
+  width: min(100%, 36rem);
+  height: clamp(3.6rem, 8vh, 6rem);
+  margin: clamp(1rem, 2vh, 2rem) auto 0;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,.72);
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  box-shadow: inset 0 0 1.3rem rgba(0,0,0,.7), 0 0 1.5rem color-mix(in srgb, var(--jury-team), transparent 65%);
+}
+.resultado-jurado-live-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--jury-live-fill, 0%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb,var(--jury-team),black 25%), var(--jury-team));
+  box-shadow: 0 0 2rem var(--jury-team);
+  transition: width .18s linear;
+}
+.resultado-jurado-live-bar b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: white;
+  font: clamp(1.6rem, 4vw, 3.8rem)/1 "Retro-gaming", monospace;
+  text-shadow: 0 0 .45rem #000, 0 0 .9rem #000;
+}
+.resultado-jurado-live-bar em {
+  margin-left: .3em;
+  font-size: .34em;
+  font-style: normal;
+  letter-spacing: .08em;
+}
 .resultado-jurado-veredicto,
 .resultado-jurado-espera { margin: 2rem 0 0; color: #ffe179; font: clamp(1rem, 2.2vw, 2rem)/1.4 "Retro-gaming", monospace; }
 @keyframes deliberacionOrbe { to { transform: translate3d(3vw, -2vh, 0) scale(1.12); } }

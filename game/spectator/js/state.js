@@ -4026,13 +4026,47 @@ const normalizarResultadoJuradoEspectador = (payload = {}) => {
             ganador: empate ? 0 : (valor1 > valor2 ? 1 : 2)
         };
     });
+    const revelacionEntrada = payload && payload.revelacion && typeof payload.revelacion === "object"
+        ? payload.revelacion
+        : {};
+    const criteriosRevelacion = Array.isArray(revelacionEntrada.criterios)
+        ? revelacionEntrada.criterios.map((criterio, indice) => {
+            const valores = criterio && criterio.valores && typeof criterio.valores === "object" ? criterio.valores : {};
+            const referencias = criterio && criterio.referencias && typeof criterio.referencias === "object" ? criterio.referencias : {};
+            return {
+                id: String(criterio && criterio.id || `criterio-${indice + 1}`),
+                valores: {
+                    1: Math.max(0, Math.min(10, Number(valores[1] ?? valores["1"]) || 0)),
+                    2: Math.max(0, Math.min(10, Number(valores[2] ?? valores["2"]) || 0))
+                },
+                referencias: {
+                    1: Math.max(0, Math.min(10, Number(referencias[1] ?? referencias["1"]) || 0)),
+                    2: Math.max(0, Math.min(10, Number(referencias[2] ?? referencias["2"]) || 0))
+                },
+                confirmado: criterio && criterio.confirmado === true,
+                empate: criterio && criterio.empate === true,
+                ganador: Number(criterio && criterio.ganador) || 0
+            };
+        })
+        : [];
     return {
         disponible: Boolean(payload && payload.disponible),
         empate: Boolean(payload && payload.empate),
         ganador: Number(payload && payload.ganador) || 0,
         actualizado_en_ts: Number(payload && payload.actualizado_en_ts) || 0,
         jugadores: { 1: normalizarJugador(1), 2: normalizarJugador(2) },
-        criterios
+        criterios,
+        revelacion: {
+            activa: revelacionEntrada.activa === true,
+            paso: Math.max(0, Math.trunc(Number(revelacionEntrada.paso) || 0)),
+            criterio_indice: revelacionEntrada.criterio_indice !== null
+                && revelacionEntrada.criterio_indice !== undefined
+                && Number.isInteger(Number(revelacionEntrada.criterio_indice))
+                ? Number(revelacionEntrada.criterio_indice)
+                : null,
+            actualizado_en_ts: Number(revelacionEntrada.actualizado_en_ts) || 0,
+            criterios: criteriosRevelacion
+        }
     };
 };
 
@@ -4047,6 +4081,18 @@ const tarjetaResultadoJuradoEspectador = (estado, id, valores, ganador, escala =
     </article>`;
 };
 
+const tarjetaJuradoDirectoEspectador = (estado, id, criterio) => {
+    const jugador = estado.jugadores[id];
+    const valor = Number(criterio.valores?.[id]) || 0;
+    const confirmado = criterio.confirmado === true;
+    const gana = confirmado && Number(criterio.ganador) === id;
+    return `<article class="resultado-jurado-card resultado-jurado-card--live resultado-jurado-card--${id}${gana ? " is-winner" : ""}">
+        <small>${confirmado ? (gana ? "GANADOR" : "PUNTUACI&Oacute;N CONFIRMADA") : "EN DIRECTO"}</small>
+        <h3>${escapeHtml(jugador.nombre)}</h3>
+        <div class="resultado-jurado-live-bar" style="--jury-live-fill:${(valor * 10).toFixed(1)}%"><i></i><b>${valor.toFixed(1)} <em>PTS</em></b></div>
+    </article>`;
+};
+
 const renderizarResultadoJuradoEspectador = (opciones = {}) => {
     if (!resultado_jurado_stage) return;
     const estado = normalizarResultadoJuradoEspectador(estado_resultado_jurado_espectador || {});
@@ -4056,9 +4102,16 @@ const renderizarResultadoJuradoEspectador = (opciones = {}) => {
     }
     const maximo = estado.criterios.length + 1;
     const paso = Math.max(0, Math.min(maximo, Math.trunc(Number(jurado_slide_step_remoto) || 0)));
-    const firma = `${estado.actualizado_en_ts}:${paso}`;
+    const revelacionCriterio = paso > 0 && paso <= estado.criterios.length
+        ? estado.revelacion.criterios[paso - 1] || null
+        : null;
+    const firma = `${estado.actualizado_en_ts}:${estado.revelacion.actualizado_en_ts}:${paso}:${revelacionCriterio?.valores?.[1] ?? ""}:${revelacionCriterio?.valores?.[2] ?? ""}:${revelacionCriterio?.confirmado ? 1 : 0}`;
     if (firma === jurado_firma_render_espectador && opciones.forzar !== true) return;
-    const animar = opciones.animar === true && firma !== jurado_firma_render_espectador;
+    const pasoAnterior = Number(resultado_jurado_stage.dataset.step);
+    const confirmadoAnterior = resultado_jurado_stage.dataset.confirmed === "true";
+    const animar = opciones.animar === true
+        && firma !== jurado_firma_render_espectador
+        && (pasoAnterior !== paso || confirmadoAnterior !== Boolean(revelacionCriterio?.confirmado));
     let html = "";
     if (paso === 0) {
         html = `<article class="resultado-jurado-intro">
@@ -4068,13 +4121,20 @@ const renderizarResultadoJuradoEspectador = (opciones = {}) => {
         </article>`;
     } else if (paso <= estado.criterios.length) {
         const criterio = estado.criterios[paso - 1];
+        const directo = revelacionCriterio || {
+            valores: criterio.valores,
+            confirmado: true,
+            empate: criterio.empate,
+            ganador: criterio.ganador
+        };
+        const ganadorDirecto = directo.confirmado && !directo.empate ? Number(directo.ganador) : 0;
         html = `<article class="resultado-jurado-panel resultado-jurado-panel--criterio">
             <h2>${escapeHtml(criterio.label.toUpperCase())}</h2>
             <div class="resultado-jurado-cards">
-                ${tarjetaResultadoJuradoEspectador(estado, 1, criterio.valores, criterio.empate ? 0 : criterio.ganador)}
-                ${tarjetaResultadoJuradoEspectador(estado, 2, criterio.valores, criterio.empate ? 0 : criterio.ganador)}
+                ${tarjetaJuradoDirectoEspectador(estado, 1, directo)}
+                ${tarjetaJuradoDirectoEspectador(estado, 2, directo)}
             </div>
-            <p class="resultado-jurado-veredicto">${criterio.empate ? "EMPATE EN ESTE APARTADO" : `${escapeHtml(estado.jugadores[criterio.ganador].nombre)} SE LLEVA EL APARTADO`}</p>
+            <p class="resultado-jurado-veredicto">${!directo.confirmado ? "EL JURADO EST&Aacute; MOVIENDO LAS BARRAS" : (directo.empate ? "EMPATE EN ESTE APARTADO" : `${escapeHtml(estado.jugadores[ganadorDirecto].nombre)} SE LLEVA EL APARTADO`)}</p>
         </article>`;
     } else {
         const valores = { 1: estado.jugadores[1].total, 2: estado.jugadores[2].total };
@@ -4095,6 +4155,7 @@ const renderizarResultadoJuradoEspectador = (opciones = {}) => {
     resultado_jurado_stage.classList.remove("is-revealing");
     resultado_jurado_stage.innerHTML = html;
     resultado_jurado_stage.dataset.step = String(paso);
+    resultado_jurado_stage.dataset.confirmed = revelacionCriterio?.confirmado ? "true" : "false";
     if (animar) requestAnimationFrame(() => {
         resultado_jurado_stage.classList.add("is-revealing");
         jurado_timeout_revelado_espectador = setTimeout(() => {

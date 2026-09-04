@@ -36,6 +36,8 @@ let jurado_resultado_emit_timeout = null;
 const estado_jurado = {
     panel: "textos",
     modoActual: "partida",
+    vistaRemota: "tutorial",
+    resultadoServidor: null,
     lastStatsTs: 0,
     writers: {
         1: crearWriterJurado(1),
@@ -185,6 +187,147 @@ function setConexionJurado(conectado, detalle = "") {
 function actualizarModoJurado(modo) {
     const limpio = String(modo || "partida").trim() || "partida";
     estado_jurado.modoActual = limpio;
+}
+
+function numeroPuntuacionJurado(valor) {
+    const numero = Number(valor);
+    return Number.isFinite(numero) ? Math.max(0, Math.min(10, Math.round(numero * 10) / 10)) : 0;
+}
+
+function criterioRevelacionActivoJurado() {
+    const resultado = estado_jurado.resultadoServidor;
+    const revelacion = resultado && resultado.revelacion && typeof resultado.revelacion === "object"
+        ? resultado.revelacion
+        : null;
+    const indiceCrudo = revelacion && revelacion.criterio_indice;
+    const indice = indiceCrudo === null || indiceCrudo === undefined
+        ? Number.NaN
+        : Number(indiceCrudo);
+    const criterios = Array.isArray(revelacion && revelacion.criterios) ? revelacion.criterios : [];
+    return Number.isInteger(indice) && indice >= 0 && indice < criterios.length
+        ? { indice, ...criterios[indice] }
+        : null;
+}
+
+function pintarBarraRevelacionJurado(id, valor, referencia, confirmado) {
+    const input = getEl(`jurado_revelacion_valor_${id}`);
+    const output = getEl(`jurado_revelacion_salida_${id}`);
+    const referenciaEl = getEl(`jurado_revelacion_referencia_${id}`);
+    const tarjeta = document.querySelector(`[data-jury-live-player="${id}"]`);
+    const actual = numeroPuntuacionJurado(valor);
+    const objetivo = numeroPuntuacionJurado(referencia);
+    if (input) {
+        if (document.activeElement !== input) input.value = String(actual);
+        input.disabled = Boolean(confirmado);
+        input.style.setProperty("--fill", `${actual * 10}%`);
+    }
+    if (output) output.textContent = actual.toFixed(1);
+    if (referenciaEl) referenciaEl.textContent = `TU NOTA: ${objetivo.toFixed(1)}`;
+    if (tarjeta) {
+        tarjeta.style.setProperty("--reference", `${objetivo * 10}%`);
+        tarjeta.classList.remove("is-winner");
+    }
+}
+
+function renderizarRevelacionJurado() {
+    const pantalla = getEl("jurado_revelacion");
+    if (!pantalla) return;
+    const visible = estado_jurado.vistaRemota === "resultado_jurado";
+    pantalla.hidden = !visible;
+    pantalla.setAttribute("aria-hidden", visible ? "false" : "true");
+    document.body.classList.toggle("is-live-reveal", visible);
+    if (!visible) return;
+
+    const intro = getEl("jurado_revelacion_intro");
+    const panel = getEl("jurado_revelacion_panel");
+    const criterio = criterioRevelacionActivoJurado();
+    if (!criterio) {
+        if (intro) intro.hidden = false;
+        if (panel) panel.hidden = true;
+        return;
+    }
+    if (intro) intro.hidden = true;
+    if (panel) panel.hidden = false;
+    const clave = `${criterio.scope || "writing"}:${criterio.id || criterio.indice}`;
+    if (panel && panel.dataset.criterio !== clave) {
+        panel.dataset.criterio = clave;
+        panel.classList.remove("is-confirmed");
+        void panel.offsetWidth;
+        panel.classList.add("is-entering");
+        setTimeout(() => panel.classList.remove("is-entering"), 700);
+    }
+    setTextoJurado("jurado_revelacion_titulo", String(criterio.label || `APARTADO ${criterio.indice + 1}`).toUpperCase());
+    [1, 2].forEach((id) => {
+        const jugador = estado_jurado.resultadoServidor?.jugadores?.[id]
+            || estado_jurado.resultadoServidor?.jugadores?.[String(id)]
+            || {};
+        setTextoJurado(`jurado_revelacion_nombre_${id}`, String(jugador.nombre || `ESCRITXR ${id}`));
+        pintarBarraRevelacionJurado(
+            id,
+            criterio.valores?.[id] ?? criterio.valores?.[String(id)],
+            criterio.referencias?.[id] ?? criterio.referencias?.[String(id)],
+            criterio.confirmado
+        );
+    });
+    const confirmar = getEl("jurado_revelacion_confirmar");
+    const estado = getEl("jurado_revelacion_estado");
+    if (confirmar) {
+        confirmar.disabled = Boolean(criterio.confirmado);
+        confirmar.textContent = criterio.confirmado ? "PUNTUACIONES CONFIRMADAS" : "CONFIRMAR PUNTUACIONES";
+    }
+    if (estado) estado.textContent = criterio.confirmado
+        ? (criterio.empate ? "APARTADO CONFIRMADO · EMPATE" : `APARTADO CONFIRMADO · GANA ${estado_jurado.resultadoServidor?.jugadores?.[criterio.ganador]?.nombre || `ESCRITXR ${criterio.ganador}`}`)
+        : "MUEVE LAS BARRAS EN DIRECTO";
+    if (criterio.confirmado) {
+        panel?.classList.add("is-confirmed");
+        document.querySelector(`[data-jury-live-player="${criterio.ganador}"]`)?.classList.add("is-winner");
+    } else {
+        panel?.classList.remove("is-confirmed");
+    }
+}
+
+function actualizarVistaRevelacionJurado(payload = {}) {
+    const modo = payload && typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "";
+    estado_jurado.vistaRemota = modo || "tutorial";
+    if (estado_jurado.vistaRemota === "resultado_jurado" && socket && socket.connected) {
+        socket.emit("pedir_jurado_resultado");
+    }
+    renderizarRevelacionJurado();
+}
+
+function actualizarResultadoServidorJurado(payload = {}) {
+    estado_jurado.resultadoServidor = payload && typeof payload === "object" ? payload : null;
+    renderizarRevelacionJurado();
+}
+
+function emitirValorRevelacionJurado(id, valor) {
+    if (!socket || !socket.connected) return;
+    socket.emit("jurado_revelacion_actualizar", { jugador: id, valor: numeroPuntuacionJurado(valor) });
+}
+
+function inicializarRevelacionJurado() {
+    [1, 2].forEach((id) => {
+        const input = getEl(`jurado_revelacion_valor_${id}`);
+        if (!input) return;
+        input.addEventListener("input", () => {
+            const valor = numeroPuntuacionJurado(input.value);
+            input.style.setProperty("--fill", `${valor * 10}%`);
+            setTextoJurado(`jurado_revelacion_salida_${id}`, valor.toFixed(1));
+            emitirValorRevelacionJurado(id, valor);
+        });
+    });
+    const confirmar = getEl("jurado_revelacion_confirmar");
+    if (confirmar) confirmar.addEventListener("click", () => {
+        if (!socket || !socket.connected || confirmar.disabled) return;
+        confirmar.disabled = true;
+        confirmar.textContent = "CONFIRMANDO...";
+        socket.emit("jurado_revelacion_confirmar", {}, (respuesta = {}) => {
+            if (respuesta.ok) return;
+            confirmar.disabled = false;
+            confirmar.textContent = "CONFIRMAR PUNTUACIONES";
+            setTextoJurado("jurado_revelacion_estado", "NO SE PUDO CONFIRMAR · INTÉNTALO DE NUEVO");
+        });
+    });
 }
 
 function setPanelJurado(panel) {
@@ -792,6 +935,7 @@ function inicializarInterfazJurado() {
     const reset = getEl("jurado_reset_eval");
     if (reset) reset.addEventListener("click", limpiarEvaluacionJurado);
     inicializarNotasJurado();
+    inicializarRevelacionJurado();
     renderEvaluacionJurado();
     actualizarNombreJurado(1, estado_jurado.writers[1].nombre);
     actualizarNombreJurado(2, estado_jurado.writers[2].nombre);
@@ -816,6 +960,8 @@ window.scribJurado = {
 };
 window.setConexionJurado = setConexionJurado;
 window.actualizarModoJurado = actualizarModoJurado;
+window.actualizarVistaRevelacionJurado = actualizarVistaRevelacionJurado;
+window.actualizarResultadoServidorJurado = actualizarResultadoServidorJurado;
 window.actualizarNombreJurado = actualizarNombreJurado;
 window.aplicarTextoJurado = aplicarTextoJurado;
 window.aplicarMusasJurado = aplicarMusasJurado;

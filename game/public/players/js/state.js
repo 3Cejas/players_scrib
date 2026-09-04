@@ -1626,14 +1626,49 @@ function normalizarResultadoJuradoMusa(payload = {}) {
             ganador: empate ? 0 : (valor1 > valor2 ? 1 : 2)
         };
     });
+    const revelacionEntrada = payload && payload.revelacion && typeof payload.revelacion === "object"
+        ? payload.revelacion
+        : {};
+    const criteriosRevelacion = Array.isArray(revelacionEntrada.criterios)
+        ? revelacionEntrada.criterios.map((criterio, indice) => {
+            const valores = criterio && criterio.valores && typeof criterio.valores === "object" ? criterio.valores : {};
+            return {
+                id: String(criterio && criterio.id || `criterio-${indice + 1}`),
+                valores: {
+                    1: Math.max(0, Math.min(10, Number(valores[1] ?? valores["1"]) || 0)),
+                    2: Math.max(0, Math.min(10, Number(valores[2] ?? valores["2"]) || 0))
+                },
+                confirmado: criterio && criterio.confirmado === true,
+                empate: criterio && criterio.empate === true,
+                ganador: Number(criterio && criterio.ganador) || 0
+            };
+        })
+        : [];
     return {
         disponible: Boolean(payload && payload.disponible),
         empate: Boolean(payload && payload.empate),
         ganador: Number(payload && payload.ganador) || 0,
         actualizado_en_ts: Number(payload && payload.actualizado_en_ts) || 0,
         jugadores: { 1: normalizarJugador(1), 2: normalizarJugador(2) },
-        criterios
+        criterios,
+        revelacion: {
+            activa: revelacionEntrada.activa === true,
+            actualizado_en_ts: Number(revelacionEntrada.actualizado_en_ts) || 0,
+            criterios: criteriosRevelacion
+        }
     };
+}
+
+function tarjetaJuradoDirectoMusa(estado, id, criterio) {
+    const jugador = estado.jugadores[id];
+    const valor = Number(criterio.valores?.[id]) || 0;
+    const confirmado = criterio.confirmado === true;
+    const gana = confirmado && Number(criterio.ganador) === id;
+    return `<article class="resultado-musa__card resultado-musa__card--jurado-live resultado-musa__card--${id}${gana ? " is-winner" : ""}">
+        <small>${confirmado ? (gana ? "GANADOR" : "CONFIRMADO") : "EN DIRECTO"}</small>
+        <h3>${escapeHtml(jugador.nombre)}</h3>
+        <div class="resultado-musa__jury-bar" style="--jury-live-fill:${(valor * 10).toFixed(1)}%"><i></i><b>${valor.toFixed(1)} <em>PTS</em></b></div>
+    </article>`;
 }
 
 function tarjetaResultadoMusa(jugador, id, ganador, escala = 100) {
@@ -1905,22 +1940,37 @@ function renderizarResultadoJuradoMusa(opciones = {}) {
     }
     const maximo = estado.criterios.length + 1;
     const paso = Math.max(0, Math.min(maximo, jurado_slide_step_musa));
-    const firma = `${estado.actualizado_en_ts}:${paso}`;
+    const revelacionCriterio = paso > 0 && paso <= estado.criterios.length
+        ? estado.revelacion.criterios[paso - 1] || null
+        : null;
+    const firma = `${estado.actualizado_en_ts}:${estado.revelacion.actualizado_en_ts}:${paso}:${revelacionCriterio?.valores?.[1] ?? ""}:${revelacionCriterio?.valores?.[2] ?? ""}:${revelacionCriterio?.confirmado ? 1 : 0}`;
     if (firma === jurado_firma_render_musa && opciones.forzar !== true) return;
+    const pasoAnterior = Number(resultado_jurado_musa_stage.dataset.step);
+    const confirmadoAnterior = resultado_jurado_musa_stage.dataset.confirmed === "true";
+    const debeAnimar = opciones.animar !== false
+        && (pasoAnterior !== paso || confirmadoAnterior !== Boolean(revelacionCriterio?.confirmado));
     let ganador = 0;
     if (paso === 0) {
         resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__intro"><span aria-hidden="true">&#x2696;&#xFE0F;</span><small>DECISI&Oacute;N FINAL</small><h2>LA DECISI&Oacute;N<br>DEL JURADO</h2></div>`;
     } else if (paso <= estado.criterios.length) {
         const criterio = estado.criterios[paso - 1];
-        ganador = criterio.empate ? 0 : criterio.ganador;
-        resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><h2>${escapeHtml(criterio.label.toUpperCase())}</h2><div class="resultado-musa__cards">${tarjetaApartadoMusa(estado, 1, criterio.valores, ganador)}${tarjetaApartadoMusa(estado, 2, criterio.valores, ganador)}</div>${criterio.empate ? '<p class="resultado-musa__veredicto">EMPATE</p>' : ""}</div>`;
+        const directo = revelacionCriterio || {
+            valores: criterio.valores,
+            confirmado: true,
+            empate: criterio.empate,
+            ganador: criterio.ganador
+        };
+        ganador = directo.confirmado && !directo.empate ? Number(directo.ganador) : 0;
+        resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><h2>${escapeHtml(criterio.label.toUpperCase())}</h2><div class="resultado-musa__cards">${tarjetaJuradoDirectoMusa(estado, 1, directo)}${tarjetaJuradoDirectoMusa(estado, 2, directo)}</div><p class="resultado-musa__veredicto">${!directo.confirmado ? "EL JURADO EST&Aacute; PUNTUANDO" : (directo.empate ? "EMPATE" : "APARTADO CONFIRMADO")}</p></div>`;
     } else {
         ganador = estado.empate ? 0 : estado.ganador;
         resultado_jurado_musa_stage.innerHTML = `<div class="resultado-musa__apartado"><small>VEREDICTO DEL JURADO</small><div class="resultado-musa__cards">${tarjetaResultadoMusa(estado.jugadores[1], 1, ganador, 10)}${tarjetaResultadoMusa(estado.jugadores[2], 2, ganador, 10)}</div><p class="resultado-musa__veredicto">${estado.empate ? "EMPATE DEL JURADO" : "ELECCI&Oacute;N DEL JURADO"}</p></div>`;
     }
+    resultado_jurado_musa_stage.dataset.step = String(paso);
+    resultado_jurado_musa_stage.dataset.confirmed = revelacionCriterio?.confirmado ? "true" : "false";
     if (jurado_timeout_revelado_musa) clearTimeout(jurado_timeout_revelado_musa);
     resultado_jurado_musa_stage.classList.remove("is-revealing");
-    requestAnimationFrame(() => {
+    if (debeAnimar) requestAnimationFrame(() => {
         resultado_jurado_musa_stage.classList.add("is-revealing");
         jurado_timeout_revelado_musa = setTimeout(() => {
             resultado_jurado_musa_stage.classList.remove("is-revealing");

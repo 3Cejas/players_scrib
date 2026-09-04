@@ -6,7 +6,7 @@
     <title>SCRB - Jurado</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <link rel="stylesheet" type="text/css" href="./index.css?v=20260824c" />
+    <link rel="stylesheet" type="text/css" href="./index.css?v=20260904a" />
 </head>
 <body class="page-jurado">
     <main id="jurado_app" class="jury-shell">
@@ -40,6 +40,47 @@
             <button type="button" class="jury-tab" data-jury-panel="notas" aria-selected="false"><span class="jury-tab__icon" aria-hidden="true">&#x1F4DD;</span><span class="jury-tab__label">Notas</span></button>
             <button type="button" class="jury-tab" data-jury-panel="evaluacion" aria-selected="false"><span class="jury-tab__icon" aria-hidden="true">&#x1F3AF;</span><span class="jury-tab__label">Evaluaci&oacute;n</span></button>
         </nav>
+
+        <section id="jurado_revelacion" class="jury-reveal" hidden aria-hidden="true" aria-live="polite">
+            <div class="jury-reveal__ambient" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article id="jurado_revelacion_intro" class="jury-reveal__intro">
+                <span aria-hidden="true">&#x2696;&#xFE0F;</span>
+                <small>RESULTADO DEL JURADO</small>
+                <h1>EL VEREDICTO<br>EST&Aacute; EN TUS MANOS</h1>
+                <p>Espera a que se abra el primer apartado.</p>
+            </article>
+            <article id="jurado_revelacion_panel" class="jury-reveal__panel" hidden>
+                <header class="jury-reveal__heading">
+                    <small>RESULTADO DEL JURADO</small>
+                    <h1 id="jurado_revelacion_titulo">APARTADO</h1>
+                    <p>Ajusta las dos puntuaciones. Tu nota anterior queda marcada como referencia.</p>
+                </header>
+                <div class="jury-live-score jury-live-score--1" data-jury-live-player="1">
+                    <div class="jury-live-score__copy">
+                        <strong id="jurado_revelacion_nombre_1">ESCRITXR 1</strong>
+                        <span id="jurado_revelacion_referencia_1">TU NOTA: 0</span>
+                    </div>
+                    <div class="jury-live-score__control">
+                        <input id="jurado_revelacion_valor_1" type="range" min="0" max="10" step="0.1" value="0" aria-label="Puntuaci&oacute;n del equipo azul">
+                        <i class="jury-live-score__reference" aria-hidden="true"></i>
+                        <output id="jurado_revelacion_salida_1" for="jurado_revelacion_valor_1">0.0</output>
+                    </div>
+                </div>
+                <div class="jury-live-score jury-live-score--2" data-jury-live-player="2">
+                    <div class="jury-live-score__copy">
+                        <strong id="jurado_revelacion_nombre_2">ESCRITXR 2</strong>
+                        <span id="jurado_revelacion_referencia_2">TU NOTA: 0</span>
+                    </div>
+                    <div class="jury-live-score__control">
+                        <input id="jurado_revelacion_valor_2" type="range" min="0" max="10" step="0.1" value="0" aria-label="Puntuaci&oacute;n del equipo rojo">
+                        <i class="jury-live-score__reference" aria-hidden="true"></i>
+                        <output id="jurado_revelacion_salida_2" for="jurado_revelacion_valor_2">0.0</output>
+                    </div>
+                </div>
+                <button type="button" id="jurado_revelacion_confirmar" class="jury-reveal__confirm">CONFIRMAR PUNTUACIONES</button>
+                <p id="jurado_revelacion_estado" class="jury-reveal__status">LAS BARRAS EMPIEZAN EN CERO</p>
+            </article>
+        </section>
 
         <section id="jurado_panel_textos" class="jury-panel is-active" data-jury-panel-target="textos">
             <div class="jury-writer-grid">
@@ -192,8 +233,8 @@
     <script src="../config.js?v=20260829m"></script>
     <script src="../dist/socket.io/socket.io.js"></script>
     <script src="../js/domains/inspiration.js?v=20260824c"></script>
-    <script src="./js/state.js?v=20260902b"></script>
-    <script src="./js/socket-events.js?v=20260902a"></script>
+    <script src="./js/state.js?v=20260904a"></script>
+    <script src="./js/socket-events.js?v=20260904a"></script>
     <script src="./js/index.js?v=20260506a"></script>
 </body>
 </html>

@@ -5,6 +5,8 @@ if (typeof socket !== "undefined" && socket) {
         socket.emit("pedir_stats_live");
         socket.emit("pedir_nube_inspiracion");
         socket.emit("pedir_idioma_actual");
+        socket.emit("pedir_vista_espectador_modo");
+        socket.emit("pedir_jurado_resultado");
         setTimeout(() => window.scribJurado?.emitirResultadoJurado?.(), 0);
     });
 
@@ -52,6 +54,14 @@ if (typeof socket !== "undefined" && socket) {
 
     socket.on("nube_inspiracion_estado", (payload = {}) => {
         aplicarNubeInspiracionJurado(payload);
+    });
+
+    socket.on("vista_espectador_modo", (payload = {}) => {
+        actualizarVistaRevelacionJurado(payload);
+    });
+
+    socket.on("jurado_resultado_estado", (payload = {}) => {
+        actualizarResultadoServidorJurado(payload);
     });
 
     socket.on("modo_actual", (payload = {}) => {

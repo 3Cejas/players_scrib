@@ -83,6 +83,29 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(spectatorState, /puntuacion-desglose-puntos--azul"><b>[\s\S]*<small>PTS<\/small>/);
 });
 
+test("Jury controls the live two-bar reveal while spectator and muses mirror it", () => {
+  const html = read("game/jurado/index.html");
+  const state = read("game/jurado/js/state.js");
+  const sockets = read("game/jurado/js/socket-events.js");
+  const spectatorState = read("game/spectator/js/state.js");
+  const museState = read("game/public/players/js/state.js");
+
+  assert.match(html, /id="jurado_revelacion"/);
+  assert.equal((html.match(/id="jurado_revelacion_valor_[12]"/g) || []).length, 2);
+  assert.equal((html.match(/TU NOTA:/g) || []).length, 2);
+  assert.match(html, /id="jurado_revelacion_confirmar"/);
+  assert.match(state, /jurado_revelacion_actualizar/);
+  assert.match(state, /jurado_revelacion_confirmar/);
+  assert.match(state, /indiceCrudo === null \|\| indiceCrudo === undefined/);
+  assert.match(state, /criterio\.referencias/);
+  assert.match(sockets, /socket\.on\("vista_espectador_modo"/);
+  assert.match(sockets, /socket\.on\("jurado_resultado_estado"/);
+  assert.match(spectatorState, /resultado-jurado-live-bar/);
+  assert.match(spectatorState, /EL JURADO EST&Aacute; MOVIENDO LAS BARRAS/);
+  assert.match(museState, /resultado-musa__jury-bar/);
+  assert.match(museState, /EL JURADO EST&Aacute; PUNTUANDO/);
+});
+
 test("credits use the real graphic marks and timer rings count down", () => {
   const spectatorState = read("game/spectator/js/state.js");
   const museState = read("game/public/players/js/state.js");

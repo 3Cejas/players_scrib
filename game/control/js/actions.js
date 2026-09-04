@@ -2800,14 +2800,21 @@ function actualizarBotonesVistaEspectadorControl() {
     }
     if (juradoPrev) juradoPrev.disabled = jurado_slide_step_control <= 0;
     if (juradoNext) {
-        juradoNext.disabled = false;
+        const criterioActual = estado_resultado_jurado_control?.revelacion?.criterios?.[jurado_slide_step_control - 1];
+        const esperandoJurado = jurado_slide_step_control > 0
+            && jurado_slide_step_control < JURADO_PASO_MAX_CONTROL
+            && criterioActual
+            && criterioActual.confirmado !== true;
+        juradoNext.disabled = Boolean(esperandoJurado);
         juradoNext.setAttribute(
             "aria-label",
             jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL
                 ? "Mostrar ganador final"
                 : "Revelar siguiente resultado"
         );
-        juradoNext.title = jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL
+        juradoNext.title = esperandoJurado
+            ? "EL JURADO DEBE CONFIRMAR ESTE APARTADO"
+            : jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL
             ? "MOSTRAR GANADOR FINAL"
             : "SIGUIENTE SLIDE";
     }
@@ -2976,8 +2983,11 @@ function actualizarResultadoJuradoControl(payload = {}) {
     estado_resultado_jurado_control = payload && typeof payload === "object" ? payload : null;
     const estado = document.getElementById("deliberacion_estado_control");
     if (estado) {
+        const criterioActual = estado_resultado_jurado_control?.revelacion?.criterios?.[jurado_slide_step_control - 1];
         estado.textContent = estado_resultado_jurado_control?.disponible
-            ? "Veredicto del jurado listo para mostrar."
+            ? (criterioActual && criterioActual.confirmado !== true
+                ? "El jurado est\u00e1 ajustando las barras en directo. Confirma para continuar."
+                : "Veredicto del jurado listo para mostrar.")
             : "El resultado del jurado aparecer\u00e1 cuando haya puntuado a ambas escritoras.";
     }
     actualizarBotonesVistaEspectadorControl();
@@ -2993,7 +3003,13 @@ function navegarResultadoJurado(direccion) {
         });
         return;
     }
-    socket.emit(direccion === "anterior" ? "jurado_resultado_anterior" : "jurado_resultado_siguiente");
+    socket.emit(direccion === "anterior" ? "jurado_resultado_anterior" : "jurado_resultado_siguiente", {}, (respuesta = {}) => {
+        if (respuesta.ok !== false) return;
+        const estado = document.getElementById("deliberacion_estado_control");
+        if (estado && respuesta.code === "JURY_CRITERION_NOT_CONFIRMED") {
+            estado.textContent = "El jurado debe confirmar las dos puntuaciones antes de continuar.";
+        }
+    });
 }
 
 window.mostrarVistaDeliberacion = mostrarVistaDeliberacion;
