@@ -18,13 +18,13 @@
 <body>
     <script src="../config.js?v=20260829m"></script>
     <script src="../js/runtime.js?v=20260424a"></script>
-    <script src="../js/domains/inspiration.js?v=20260824c"></script>
+    <script src="../js/domains/inspiration.js?v=20260905a"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260902b"></script>
-    <script src="../js/domains/competition.js?v=20260825a"></script>
+    <script src="../js/domains/competition.js?v=20260905a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260904a"></script>
+<script src="./js/actions.js?v=20260905a"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <img class="control-brand-logo" src="../media/scrib-logo-mark.png" alt="&lt;SCRI&gt; B">
@@ -665,16 +665,17 @@
                 <p id="tiempo_modos_secs" class="tiempo">0 segundos</p>
             </div>
             <button id="boton_fin_partida" class="btn btn-fin" type="button" onclick="fin_partida_global()" aria-label="Finalizar partida" title="Finalizar partida" hidden>&#x23F9;&#xFE0F; FIN</button>
+            <div id="control_competition_slot" class="control-competition-slot" aria-label="Marcador de inspiración de la ronda"></div>
             <div id="level_status_witnesses" class="level-status-witnesses" aria-label="Estado de desventajas e inspiracion de musas">
                 <div id="control_desventaja_activa_j1" class="level-status-witness level-status-witness--disadvantage level-status-witness--j1" data-active="0" data-team="1" aria-label="Desventaja de Escritxr 1">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
                     <span id="control_desventaja_activa_icon_j1" class="level-status-witness__icon" aria-hidden="true">-</span>
-                    <span id="control_desventaja_activa_time_j1" class="level-status-witness__time">--</span>
+                    <span id="control_desventaja_activa_time_j1" class="level-status-witness__time" hidden aria-hidden="true">--</span>
                 </div>
                 <div id="control_desventaja_activa_j2" class="level-status-witness level-status-witness--disadvantage level-status-witness--j2" data-active="0" data-team="2" aria-label="Desventaja de Escritxr 2">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
                     <span id="control_desventaja_activa_icon_j2" class="level-status-witness__icon" aria-hidden="true">-</span>
-                    <span id="control_desventaja_activa_time_j2" class="level-status-witness__time">--</span>
+                    <span id="control_desventaja_activa_time_j2" class="level-status-witness__time" hidden aria-hidden="true">--</span>
                 </div>
                 <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Palabra de musas para Escritxr 1">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>

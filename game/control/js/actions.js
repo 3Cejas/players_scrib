@@ -456,12 +456,12 @@ function pintarTestigoDesventajaControl(playerSolicitado) {
         iconoEl.textContent = activo ? obtenerEmojiDesventajaControl(payload) : "-";
     }
     if (tiempoEl) {
-        tiempoEl.textContent = activo ? formatearTiempoTestigoControl(restanteMs) : "--";
+        tiempoEl.textContent = "";
     }
     const equipo = player === 2 ? "rojo" : "azul";
     const detalle = payload && (payload.putada || payload.seleccion) ? ` - ${payload.putada || payload.seleccion}` : "";
     testigo.title = activo
-        ? `Desventaja ${equipo}${detalle}: ${formatearTiempoTestigoControl(restanteMs)}`
+        ? `Desventaja ${equipo}${detalle}`
         : "Sin desventaja activa";
     return activo;
 }

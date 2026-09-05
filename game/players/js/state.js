@@ -600,7 +600,7 @@ function mostrarFeedbackInspiracionConTiempoEscritora(tiempoFeed, opciones = {})
         tipo: "inspiracion",
         claseExtra: "feedback-tiempo-float--bonus-tiempo"
     });
-    mostrarFeedbackFlotanteEscritora("+insp.", {
+    mostrarFeedbackFlotanteEscritora("+ \u26A1", {
         color: colorInspiracion,
         tipo: "inspiracion",
         claseExtra: "feedback-tiempo-float--musa-inspiracion"
@@ -896,7 +896,7 @@ function formatearTiempoPalabraAsignadaEscritora(data = {}, opciones = {}) {
     const esMusa = Boolean(data && typeof data === "object" && (data.origen_musa || data.musa_nombre || data.musa));
     const valor = Number(((esMusa ? 5 : 1) * factor).toFixed(2));
     const signo = opciones.maldita === true || opciones.modo === "palabras prohibidas" || opciones.tipo === "prohibidas" ? "-" : "+";
-    return `${signo}${valor} insp.`;
+    return `${signo}${valor} \u26A1`;
 }
 
 function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, tipo = "bendita") {

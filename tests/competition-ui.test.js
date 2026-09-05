@@ -31,3 +31,30 @@ test("el HUD usa marcador numerico, reloj global y animaciones sin porcentajes",
     assert.match(html, /domains\/competition\.js/);
   });
 });
+
+test("Control integra un HUD compacto donde antes aparecía la duración de la desventaja", () => {
+  const js = read("game/js/domains/competition.js");
+  const html = read("game/control/index.html");
+  const actions = read("game/control/js/actions.js");
+
+  assert.match(html, /id="control_competition_slot"/);
+  assert.match(html, /control_desventaja_activa_time_j1[^>]+hidden/);
+  assert.match(html, /control_desventaja_activa_time_j2[^>]+hidden/);
+  assert.match(js, /data-role="control"[^}]+position:relative/);
+  assert.match(js, /control-competition-slot \+ \.level-status-witnesses \.level-status-witness--disadvantage\{display:none\}/);
+  assert.doesNotMatch(actions, /Desventaja \$\{equipo\}\$\{detalle\}: \$\{formatearTiempoTestigoControl/);
+});
+
+test("Escritxr oculta los rótulos del nivel, usa el emoji y centra las partículas en el destino real", () => {
+  const js = read("game/js/domains/competition.js");
+  const css = read("game/css/dashboard-players.css");
+  const actions = read("game/players/js/actions.js");
+
+  assert.match(js, /data-role="writer"\] \.scrib-competition-mode/);
+  assert.match(js, /destino\.left \+ destino\.width \/ 2 - mitadTokenX/);
+  assert.match(js, /spectator: player === 1 \? \["#texto1"/);
+  assert.match(js, /requestAnimationFrame\(\(\) => token\.classList\.add\("is-flying"\)\)/);
+  assert.match(css, /partida-intro-escritora #logo[\s\S]*display: none !important/);
+  assert.match(actions, /-0\.05 \\u26A1/);
+  assert.doesNotMatch(actions, /-0\.05 insp\./);
+});

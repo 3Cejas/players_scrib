@@ -191,7 +191,7 @@
         );
         const valor = Number(((esMusa ? 5 : 1) * factor).toFixed(2));
         const signo = esMaldita ? "-" : "+";
-        return `${signo}${valor} insp.`;
+        return `${signo}${valor} \u26A1`;
     }
 
     function esAtajoDescartarInspiracion(evento = {}) {

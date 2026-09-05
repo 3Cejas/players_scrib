@@ -76,9 +76,9 @@ test("writer typing grants a small numeric inspiration bonus after reconnect", (
 
   escribirTresPalabras(context);
 
-  assert.equal(feedback.at(-1).texto, "+0.2 insp.");
+  assert.equal(feedback.at(-1).texto, "+0.2 ⚡");
   assert.deepEqual(cambiosTiempo, []);
-  assert.equal(socketEvents.at(-1).payload.tiempo_feed, "+0.2 insp.");
+  assert.equal(socketEvents.at(-1).payload.tiempo_feed, "+0.2 ⚡");
   assert.equal(socketEvents.at(-1).payload.tipo, "mini_inspiracion");
 });
 
@@ -88,7 +88,7 @@ test("writer strength increases mini inspiration without changing time", () => {
   context.aplicarAtributosEscritora({ fuerza: 10, agilidad: 0, destreza: 0 });
   escribirTresPalabras(context);
 
-  assert.equal(feedback.at(-1).texto, "+0.8 insp.");
+  assert.equal(feedback.at(-1).texto, "+0.8 ⚡");
   assert.deepEqual(cambiosTiempo, []);
 });
 

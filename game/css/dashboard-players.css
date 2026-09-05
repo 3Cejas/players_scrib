@@ -7304,6 +7304,13 @@ body.equipo-rojo .total {
     filter 430ms ease;
 }
 
+/* La cuenta atrás sustituye la cabecera: el logo no debe reaparecer durante sus animaciones. */
+.page-players.partida-intro-escritora .cabecera,
+.page-players.partida-intro-escritora #logo,
+.page-players.partida-intro-escritora #neon {
+  display: none !important;
+}
+
 .page-players.partida-intro-escritora #tiempo {
   transform: translate3d(0, -18px, 0) scale(0.985);
 }

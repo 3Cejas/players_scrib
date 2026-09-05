@@ -2451,7 +2451,7 @@ function modo_palabras_bonus(e) {
                         inspiracion_id: metaConfirmada.inspiracion_id,
                         ...(tipo === "inspiracion" ? {
                             feedback_extra: {
-                                tiempo_feed: "+insp.",
+                                tiempo_feed: "+ \u26A1",
                                 tipo: "inspiracion",
                                 color: "#79ffe1",
                                 claseExtra: "feedback-tiempo-float--musa-inspiracion"
@@ -2627,7 +2627,7 @@ function palabras_musas(e) {
 
         if (coincidenciaMultipalabra || palabraEncontrada) {
             texto.focus();
-            const tiempo_feed = "+insp.";
+            const tiempo_feed = "+ \u26A1";
             const color = "white";
 
             let inicioMarca = startingIndex;
@@ -2739,7 +2739,7 @@ function modo_letra_prohibida(e) {
       emitirCambioTiempoEscritora(secs);
       actualizarPuntosMarcador(puntos_ + " palabras");
       sendText();
-      const tiempo_feed = "-1 insp.";
+      const tiempo_feed = "-1 \u26A1";
       const color = color_negativo;
       mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo: "letra_prohibida" });
       socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "letra_prohibida" });
@@ -2775,7 +2775,7 @@ function modo_letra_bendita(e) {
             secs = -2
             emitirCambioTiempoEscritora(secs); // Emitir el evento de socket
             // Feedback visual
-            const tiempo_feed = "-0.1 insp.";
+            const tiempo_feed = "-0.1 \u26A1";
             mostrarFeedbackFlotanteEscritora(tiempo_feed, { color: color_negativo, tipo: "letra_bendita" });
             socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed, tipo: "letra_bendita" });
         }
@@ -2812,7 +2812,7 @@ function modo_letra_bendita(e) {
             sendText();
 
             // Feedback visual
-            const tiempo_feed = "+mini insp.";
+            const tiempo_feed = "+ \u26A1";
             mostrarFeedbackFlotanteEscritora(tiempo_feed, { color: color_positivo, tipo: "letra_bendita" });
             socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed, tipo: "letra_bendita" });
         } else {
@@ -2862,7 +2862,7 @@ function modo_letra_prohibida(e) {
         console.log(secs);
         emitirCambioTiempoEscritora(secs);
         actualizarPuntosMarcador(puntos_ + " palabras");
-        const tiempo_feed = "-1 insp.";
+        const tiempo_feed = "-1 \u26A1";
         const color = color_negativo;
         mostrarFeedbackFlotanteEscritora(tiempo_feed, { color, tipo: "letra_prohibida" });
         socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "letra_prohibida" });
@@ -2894,7 +2894,7 @@ function modo_letra_bendita(e) {
             e.preventDefault();
             secs = -2;
             emitirCambioTiempoEscritora(secs);
-            const tiempo_feed = "-0.1 insp.";
+            const tiempo_feed = "-0.1 \u26A1";
             mostrarFeedbackFlotanteEscritora(tiempo_feed, { color: color_negativo, tipo: "letra_bendita" });
             socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed, tipo: "letra_bendita" });
         }
@@ -2917,7 +2917,7 @@ function modo_letra_bendita(e) {
         actualizarPuntosMarcador(puntos_ + " palabras");
         console.log(puntos);
 
-        const tiempo_feed = "+mini insp.";
+        const tiempo_feed = "+ \u26A1";
         mostrarFeedbackFlotanteEscritora(tiempo_feed, { color: color_positivo, tipo: "letra_bendita" });
         socket.emit(feedback_de_j_x, { color: color_positivo, tiempo_feed, tipo: "letra_bendita" });
     } else {

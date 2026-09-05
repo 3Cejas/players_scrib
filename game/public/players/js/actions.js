@@ -122,7 +122,7 @@ function actualizarPreviewTiempoPalabraMusa(texto = null, modoForzado = null) {
 
   const value = document.createElement("span");
   value.className = "preview-tiempo-palabra__value";
-  value.textContent = `${signo}5 insp.`;
+  value.textContent = `${signo}5 \u26A1`;
 
   preview.classList.add(clase);
   preview.append(label, value);

@@ -155,18 +155,18 @@ test("ScribInspiration resolves a reconnect word and displays inspiration instea
     modo_actual: "palabras bonus",
     palabra_bonus: [["horizonte"], "musa"],
     tiempo_palabras_bonus: "undefined"
-  }, { modo: "palabras bonus" }), "+1 insp.");
+  }, { modo: "palabras bonus" }), "+1 ⚡");
   assert.equal(ScribInspiration.formatearTiempoPalabraAsignada({
     modo_actual: "palabras prohibidas",
     palabras_var: ["veneno"],
     tiempo_palabras_bonus: undefined
-  }, { modo: "palabras prohibidas" }), "-1 insp.");
+  }, { modo: "palabras prohibidas" }), "-1 ⚡");
   assert.equal(ScribInspiration.formatearTiempoPalabraAsignada({
     palabra: "luz",
     origen_musa: "musa",
     musa_nombre: "ANA",
     valor_inspiracion: 0.5
-  }, { modo: "palabras bonus" }), "+2.5 insp.");
+  }, { modo: "palabras bonus" }), "+2.5 ⚡");
 });
 
 test("i18n normalizes mojibake blessed letters before rendering mode rules", () => {

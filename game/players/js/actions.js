@@ -329,11 +329,11 @@ function borrar(revisionEsperada = revision_borrado_escritora) {
 
     // 2. CÃ³digo existente
 
-    tiempo_feed = "-0.05 insp.";
+    tiempo_feed = "-0.05 \u26A1";
     mostrarFeedbackTiempoEscritora(tiempo_feed, "borrar", color_negativo);
 
     color = color_negativo;
-    tiempo_feed = "-0.05 insp.";
+    tiempo_feed = "-0.05 \u26A1";
     socket.emit(feedback_de_j_x, { color, tiempo_feed, tipo: "borrar" });
     caracteres_seguidos = 0;
 
@@ -424,7 +424,7 @@ function countChars(texto) {
 
   if (caracteres_seguidos == 3 && modo_actual !== "frase final") {
     const miniInspiracion = obtenerSegundosPalabrasEscritora() / 10;
-    tiempo_feed = `+${miniInspiracion.toFixed(1)} insp.`;
+    tiempo_feed = `+${miniInspiracion.toFixed(1)} \u26A1`;
     mostrarFeedbackTiempoEscritora(tiempo_feed, "mini_inspiracion", color_positivo);
     caracteres_seguidos = 0; // Reseteamos el contador de palabras seguidas
     console.log("fuerza: " + miniInspiracion);

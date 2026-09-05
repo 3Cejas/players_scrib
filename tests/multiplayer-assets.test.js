@@ -9,6 +9,7 @@ const CSS_VERSION = "20260505i";
 const PLAYER_DISCARD_VERSION = "20260824a";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
+const GAME_HUD_VERSION = "20260905a";
 const CONTROL_VIDEO_VERSION = "20260829p";
 const CONTROL_HELP_VERSION = "20260824e";
 const CONTROL_HELP_MODULE_VERSION = "20260830a";
@@ -25,19 +26,19 @@ const WRITER_DELETE_BLOCK_VERSION = "20260824g";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260903e";
 const LEVEL_TRANSITION_VERSION = "20260823a";
-const PLAYER_ACTIONS_VERSION = WRITER_DELETE_BLOCK_VERSION;
-const PLAYER_STATE_VERSION = WRITER_DELETE_BLOCK_VERSION;
-const PLAYER_SOCKET_EVENTS_VERSION = MUSE_AUTHOR_VERSION;
+const PLAYER_ACTIONS_VERSION = "20260905a";
+const PLAYER_STATE_VERSION = "20260905a";
+const PLAYER_SOCKET_EVENTS_VERSION = GAME_HUD_VERSION;
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260903c";
 const JURY_CSS_VERSION = "20260904a";
 const JURY_STATE_VERSION = "20260904a";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
 const CONTROL_CSS_VERSION = "20260903n";
-const CONTROL_ACTIONS_VERSION = "20260904a";
+const CONTROL_ACTIONS_VERSION = "20260905a";
 const CONTROL_I18N_VERSION = "20260903a";
 const CONTROL_STATE_VERSION = "20260831b";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260902d";
-const PUBLIC_PLAYER_ACTIONS_VERSION = "20260504f";
+const PUBLIC_PLAYER_ACTIONS_VERSION = "20260905a";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260903e";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
@@ -73,20 +74,20 @@ test("multiplayer html references current changed shared assets", () => {
   ].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "dashboard-players.css", CSS_VERSION);
   });
-  assertIncludesAsset("game/players/index.html", "dashboard-players.css", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/players/index.html", "dashboard-players.css", GAME_HUD_VERSION);
   assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_CSS_VERSION);
 
   ["game/players/index.html"].forEach((htmlRelPath) => {
-    assertIncludesAsset(htmlRelPath, "domains/inspiration.js", MUSE_AUTHOR_VERSION);
+    assertIncludesAsset(htmlRelPath, "domains/inspiration.js", GAME_HUD_VERSION);
     assertIncludesAsset(htmlRelPath, "js/i18n.js", PLAYER_DISCARD_VERSION);
   });
   assertIncludesAsset("game/actors/source/index.html", "domains/inspiration.js");
   assertIncludesAsset("game/actors/source/index.html", "js/i18n.js", LEVEL_TRANSITION_VERSION);
-  assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js", GAME_HUD_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/i18n.js", PUBLIC_PLAYER_I18N_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js", GAME_HUD_VERSION);
   assertIncludesAsset("game/spectator/index.html", "js/i18n.js", SPECTATOR_I18N_VERSION);
-  assertIncludesAsset("game/control/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/control/index.html", "domains/inspiration.js", GAME_HUD_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/inspiration-score.js", PLAYER_DISCARD_VERSION);
   assertIncludesAsset("game/control/index.html", "js/i18n.js", CONTROL_I18N_VERSION);
 

@@ -25,13 +25,25 @@
       .scrib-competition-hud{--azul:#46f0ff;--rojo:#ff5f67;--oro:#ffe475;position:fixed;z-index:2147481200;left:50%;top:clamp(8px,1.4vh,18px);transform:translateX(-50%);width:min(760px,72vw);font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:none;filter:drop-shadow(0 10px 26px #000a);transition:opacity .35s,transform .35s}
       body:has(#scrib_competition_hud) #inspiracion{display:none!important}
       .scrib-competition-hud[data-role="spectator"]{top:clamp(114px,15vh,166px);width:min(940px,72vw)}
+      .scrib-competition-hud[data-role="control"]{position:relative;inset:auto;transform:none;width:100%;filter:none;z-index:2}
       .scrib-competition-hud[data-active="0"][data-clock="0"]{opacity:0;transform:translate(-50%,-20px)}
+      .scrib-competition-hud[data-role="control"][data-active="0"][data-clock="0"]{transform:translateY(-6px)}
       .scrib-competition-shell{position:relative;border:1px solid #ffffff38;border-radius:18px;padding:9px 14px 11px;background:linear-gradient(180deg,#101423f2,#060914ed);box-shadow:inset 0 0 26px #ffffff0b,0 0 0 1px #000}
       .scrib-competition-top{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:7px}
       .scrib-competition-mode{font-size:clamp(10px,.8vw,13px);font-weight:900;letter-spacing:.13em;text-align:left;color:#d7dcf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .scrib-competition-clock{font-variant-numeric:tabular-nums;font-size:clamp(19px,1.8vw,30px);font-weight:1000;letter-spacing:.08em;color:#fff;border:1px solid #ffffff30;border-radius:999px;padding:2px 13px;background:#050711}
       .scrib-competition-clock::before{content:'TIEMPO ';font-size:.44em;color:#abb2cb;vertical-align:middle}
       .scrib-competition-criterion{text-align:right;font-size:clamp(8px,.68vw,11px);font-weight:800;letter-spacing:.07em;color:#abb2cb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-shell{padding:4px 6px;border-radius:8px;background:#050914d9}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-top{display:none}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-scoreline{grid-template-columns:minmax(28px,auto) 1fr minmax(28px,auto);gap:5px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score{min-width:30px;height:25px;border-radius:6px;font-size:15px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-bar{height:18px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-center{height:23px;width:7px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-curse{font-size:15px}
+      .control-competition-slot + .level-status-witnesses .level-status-witness--disadvantage{display:none}
+      .scrib-competition-hud[data-role="writer"] .scrib-competition-mode,.scrib-competition-hud[data-role="writer"] .scrib-competition-criterion,.scrib-competition-hud[data-role="spectator"] .scrib-competition-mode,.scrib-competition-hud[data-role="spectator"] .scrib-competition-criterion{display:none}
+      .scrib-competition-hud[data-role="writer"] .scrib-competition-top,.scrib-competition-hud[data-role="spectator"] .scrib-competition-top{display:flex;justify-content:center;margin-bottom:7px}
       .scrib-competition-scoreline{display:grid;grid-template-columns:minmax(54px,auto) 1fr minmax(54px,auto);gap:9px;align-items:center}
       .scrib-competition-score{position:relative;display:flex;align-items:center;justify-content:center;min-width:58px;height:42px;border-radius:12px;font-size:clamp(22px,2.1vw,36px);font-weight:1000;font-variant-numeric:tabular-nums;background:#090c18;border:1px solid currentColor;transition:transform .2s,box-shadow .25s}
       .scrib-competition-score--1{color:var(--azul);box-shadow:inset 0 0 18px #46f0ff24}
@@ -47,7 +59,8 @@
       .scrib-competition-streak{position:absolute;top:100%;margin-top:7px;padding:4px 9px;border-radius:999px;background:#090c18e8;border:1px solid currentColor;font-size:11px;font-weight:1000;letter-spacing:.08em;opacity:0;transform:translateY(-5px);transition:.2s}
       .scrib-competition-streak[data-active="1"]{opacity:1;transform:none}
       .scrib-competition-streak--1{left:2%;color:var(--azul)}.scrib-competition-streak--2{right:2%;color:var(--rojo)}
-      .scrib-competition-fly{position:fixed;z-index:2147483000;left:0;top:0;padding:5px 10px;border-radius:999px;border:1px solid currentColor;background:#090c18f2;font:1000 16px/1 Inter,system-ui,sans-serif;color:var(--fly-color,#fff);white-space:nowrap;pointer-events:none;animation:scribFly var(--fly-duration,800ms) cubic-bezier(.18,.8,.22,1) forwards}
+      .scrib-competition-fly{position:fixed;z-index:2147483000;left:0;top:0;padding:5px 10px;border-radius:999px;border:1px solid currentColor;background:#090c18f2;font:1000 16px/1 Inter,system-ui,sans-serif;color:var(--fly-color,#fff);white-space:nowrap;pointer-events:none;opacity:0}
+      .scrib-competition-fly.is-flying{animation:scribFly var(--fly-duration,800ms) cubic-bezier(.18,.8,.22,1) forwards}
       .scrib-competition-fly.is-muse{color:var(--oro);box-shadow:0 0 20px #ffe475b0}
       .scrib-competition-change{position:fixed;z-index:2147483100;left:50%;top:43%;transform:translate(-50%,-50%) scale(.7);opacity:0;text-align:center;font:1000 clamp(25px,4vw,64px)/.95 Inter,system-ui,sans-serif;letter-spacing:.04em;color:#fff;text-shadow:0 0 8px #fff,0 0 32px #8b5cff,4px 4px 0 #000;pointer-events:none;animation:scribLeaderChange 1.55s ease-out forwards}
       .scrib-competition-change small{display:block;margin-top:10px;font-size:.3em;letter-spacing:.18em;color:var(--change-color,#fff)}
@@ -57,7 +70,7 @@
       @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-3deg)}18%,65%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(1.1)}}
       @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
       @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"]{width:84vw}}
-      @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly,.scrib-competition-change,.scrib-competition-burst{animation-duration:.01ms!important}}
+      @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly.is-flying,.scrib-competition-change,.scrib-competition-burst{animation-duration:.01ms!important}}
     `;
     document.head.appendChild(style);
   }
@@ -73,6 +86,8 @@
       document.body.appendChild(root);
     }
     root.dataset.role = rol || "game";
+    const slotControl = rol === "control" ? document.getElementById("control_competition_slot") : null;
+    if (slotControl && root.parentElement !== slotControl) slotControl.appendChild(root);
     root.dataset.active = "0";
     root.dataset.clock = "0";
     root.innerHTML = `
@@ -174,9 +189,12 @@
   }
 
   function rectOrigen(player) {
-    const selectores = player === 1
-      ? ["#texto", ".writer-card--j1 .writer-textarea"]
-      : ["#texto1", ".writer-card--j2 .writer-textarea"];
+    const selectoresPorRol = {
+      spectator: player === 1 ? ["#texto1", ".writer-card--j1 .writer-textarea"] : ["#texto2", ".writer-card--j2 .writer-textarea"],
+      control: player === 1 ? ["#texto", ".writer-card--j1 .writer-textarea"] : ["#texto1", ".writer-card--j2 .writer-textarea"],
+      writer: ["#texto", ".writer-textarea"]
+    };
+    const selectores = selectoresPorRol[rolActual] || (player === 1 ? ["#texto"] : ["#texto1"]);
     for (const selector of selectores) {
       const nodo = document.querySelector(selector);
       if (nodo && typeof nodo.getBoundingClientRect === "function") return nodo.getBoundingClientRect();
@@ -232,13 +250,21 @@
     token.className = `scrib-competition-fly${payload.tipo === "inspiracion_musa" ? " is-muse" : ""}`;
     token.innerHTML = `${payload.tipo === "inspiracion_musa" ? "✦ " : ""}${firmaMusa}${htmlSeguro(etiqueta)} <b>${Number(payload.delta) > 0 ? "+" : ""}${numero(payload.delta)}</b>`;
     token.style.setProperty("--fly-color", player === 1 ? "#46f0ff" : "#ff5f67");
-    token.style.setProperty("--x0", `${origen.left + origen.width / 2}px`);
-    token.style.setProperty("--y0", `${origen.top + origen.height / 2}px`);
-    token.style.setProperty("--xm", `${(origen.left + destino.left) / 2}px`);
-    token.style.setProperty("--ym", `${Math.min(origen.top, destino.top) - 70}px`);
-    token.style.setProperty("--x1", `${destino.left + destino.width / 2}px`);
-    token.style.setProperty("--y1", `${destino.top + destino.height / 2}px`);
     document.body.appendChild(token);
+    const tokenRect = token.getBoundingClientRect();
+    const mitadTokenX = tokenRect.width / 2;
+    const mitadTokenY = tokenRect.height / 2;
+    const origenX = origen.left + origen.width / 2 - mitadTokenX;
+    const origenY = origen.top + origen.height / 2 - mitadTokenY;
+    const destinoX = destino.left + destino.width / 2 - mitadTokenX;
+    const destinoY = destino.top + destino.height / 2 - mitadTokenY;
+    token.style.setProperty("--x0", `${origenX}px`);
+    token.style.setProperty("--y0", `${origenY}px`);
+    token.style.setProperty("--xm", `${(origenX + destinoX) / 2}px`);
+    token.style.setProperty("--ym", `${Math.min(origenY, destinoY) - 70}px`);
+    token.style.setProperty("--x1", `${destinoX}px`);
+    token.style.setProperty("--y1", `${destinoY}px`);
+    requestAnimationFrame(() => token.classList.add("is-flying"));
     token.addEventListener("animationend", () => token.remove(), { once: true });
     ui.scores[player].classList.remove("is-hit");
     void ui.scores[player].offsetWidth;
