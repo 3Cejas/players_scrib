@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260903n">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260905c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260905b"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260905b"></script>
+<script src="./js/actions.js?v=20260905c"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <img class="control-brand-logo" src="../media/scrib-logo-mark.png" alt="&lt;SCRI&gt; B">
@@ -83,6 +83,7 @@
                                 <button id="control_title_representation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="representacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_representacion" tabindex="-1" onclick="toggleSeccionControl('representacion')">&#x1F3AD; REPRESENTACI&Oacute;N</button>
                                 <button id="control_title_deliberation" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="deliberacion" aria-selected="false" aria-expanded="false" aria-controls="control_panel_deliberacion" tabindex="-1" onclick="toggleSeccionControl('deliberacion')">&#x2696;&#xFE0F; DELIBERACI&Oacute;N</button>
                                 <button id="control_title_final" class="control-group-title control-collapsible-toggle control-tab" type="button" role="tab" data-control-tab="final" aria-selected="false" aria-expanded="false" aria-controls="control_panel_final" tabindex="-1" onclick="toggleSeccionControl('final')">&#x2728; FINAL</button>
+                                <button id="control_title_debug" class="control-group-title control-collapsible-toggle control-tab control-tab--debug" type="button" role="tab" data-control-tab="debug" aria-selected="false" aria-expanded="false" aria-controls="control_panel_debug" tabindex="-1" onclick="toggleSeccionControl('debug')">&#x1F9EA; DEBUG</button>
                             </div>
                             <button id="control_tabs_next" class="control-tabs-arrow control-tabs-arrow--next" type="button" aria-label="Ver m&aacute;s pesta&ntilde;as" onclick="desplazarPestanasControl('next')" hidden>&#x203A;</button>
                         </nav>
@@ -203,6 +204,29 @@
                                 <button id="boton_banderas_musas_final" class="btn btn-estandar-seccion" type="button" data-banderas-musas-control onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</button>
                             </div>
                             <div id="panel_creditos_final" class="creditos-host panel-oculto" aria-hidden="true"></div>
+                        </div>
+                        <div id="control_panel_debug" class="control-group control-group--debug control-collapsible is-collapsed" data-control-section="debug" role="tabpanel" aria-labelledby="control_title_debug">
+                            <section id="debug_control" class="debug-control" data-active="0" aria-labelledby="debug_control_title">
+                                <header class="debug-control__header">
+                                    <div class="debug-control__copy">
+                                        <strong id="debug_control_title">&#x1F9EA; MODO DEBUG</strong>
+                                        <small>Herramientas temporales para ensayar el flujo del show.</small>
+                                    </div>
+                                    <label class="debug-control__toggle" for="modo_debug_toggle">
+                                        <input id="modo_debug_toggle" type="checkbox" role="switch" aria-describedby="debug_control_warning" onchange="establecerModoDebug(this.checked)" disabled>
+                                        <span class="debug-control__toggle-track" aria-hidden="true"></span>
+                                        <span id="modo_debug_toggle_text">DESACTIVADO</span>
+                                    </label>
+                                </header>
+                                <p id="debug_control_warning" class="debug-control__warning">Al activarlo podr&aacute;s alterar la partida y cargar resultados ficticios.</p>
+                                <div id="debug_control_tools" class="debug-control__tools" hidden aria-hidden="true">
+                                    <button id="debug_cargar_deliberacion" class="btn debug-control__button" type="button" onclick="cargarDatosPruebaDeliberacionDebug()">&#x2696;&#xFE0F; CARGAR DATOS FICTICIOS</button>
+                                    <button id="debug_limpiar_deliberacion" class="btn debug-control__button" type="button" onclick="limpiarDatosPruebaDeliberacionDebug()">&#x1F9F9; LIMPIAR DATOS FICTICIOS</button>
+                                    <button id="debug_siguiente_nivel" class="btn debug-control__button debug-control__button--advance" type="button" onclick="saltarSiguienteNivelDebug()">&#x23ED;&#xFE0F; SIGUIENTE NIVEL</button>
+                                    <button id="debug_finalizar_partida" class="btn debug-control__button debug-control__button--danger" type="button" onclick="finalizarPartidaDebug()">&#x23F9;&#xFE0F; FINALIZAR PARTIDA</button>
+                                </div>
+                                <p id="debug_control_status" class="debug-control__status" role="status" aria-live="polite">Modo Debug desactivado.</p>
+                            </section>
                         </div>
                         <div id="control_panel_asistencia" class="control-group control-group--asistencia control-collapsible is-collapsed" data-control-section="asistencia" role="tabpanel" aria-labelledby="control_title_assistance">
                             <section id="asistencia_control" class="asistencia-control" aria-labelledby="control_title_assistance">
@@ -768,7 +792,7 @@
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260903b"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260902d"></script>
+<script src="./js/socket-events.js?v=20260905c"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

@@ -33,6 +33,8 @@ let regalo_musas_enviado = false;
 let banderas_musas_activas = false;
 let borrar_texto_en_inicio_activo = false;
 let modo_control_activo = "";
+let modo_debug_control_activo = false;
+let accion_debug_control_en_curso = false;
 let segundos_modo_control = 0;
 let revision_temporizadores_control = 0;
 let revision_creditos_emit_control = 0;
@@ -1084,7 +1086,7 @@ function toggleLogsControl() {
 }
 window.toggleLogsControl = toggleLogsControl;
 
-const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "representacion", "deliberacion", "final", "asistencia"]);
+const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "representacion", "deliberacion", "final", "debug", "asistencia"]);
 let dropdown_modos_control_inicializado = false;
 let observer_modos_control = null;
 let frases_finales_control_inicializadas = false;
@@ -2430,6 +2432,151 @@ function saltar_tertulia() {
     detenerCuentaAtrasModoControl();
     clearTimeout(TimeoutTiempoMuerto);
     socket.emit('saltar_tertulia', {});
+}
+
+function textoErrorDebugControl(codigo = "") {
+    const mensajes = {
+        NOT_AUTHORIZED: "Control no est\u00e1 autorizado.",
+        DEBUG_MODE_REQUIRED: "Activa primero el modo Debug.",
+        GAME_NOT_ACTIVE: "No hay una partida en curso.",
+        MODE_TRANSITION_BUSY: "El juego ya est\u00e1 cambiando de nivel. Int\u00e9ntalo de nuevo."
+    };
+    return mensajes[String(codigo || "")] || "No se pudo completar la acci\u00f3n de prueba.";
+}
+
+function actualizarModoDebugControl(payload = {}) {
+    modo_debug_control_activo = payload && payload.activo === true;
+    const contenedor = document.getElementById("debug_control");
+    const toggle = document.getElementById("modo_debug_toggle");
+    const pestana = document.getElementById("control_title_debug");
+    const textoToggle = document.getElementById("modo_debug_toggle_text");
+    const herramientas = document.getElementById("debug_control_tools");
+    const estado = document.getElementById("debug_control_status");
+    if (contenedor) contenedor.dataset.active = modo_debug_control_activo ? "1" : "0";
+    if (pestana) pestana.dataset.enabled = modo_debug_control_activo ? "1" : "0";
+    if (toggle) {
+        toggle.checked = modo_debug_control_activo;
+        toggle.disabled = false;
+    }
+    if (textoToggle) textoToggle.textContent = modo_debug_control_activo ? "ACTIVADO" : "DESACTIVADO";
+    if (herramientas) {
+        herramientas.hidden = !modo_debug_control_activo;
+        herramientas.setAttribute("aria-hidden", modo_debug_control_activo ? "false" : "true");
+    }
+    if (estado && !accion_debug_control_en_curso) {
+        estado.textContent = modo_debug_control_activo
+            ? "Debug activo. Los controles de prueba est\u00e1n disponibles."
+            : "Modo Debug desactivado.";
+        estado.dataset.tone = "neutral";
+    }
+}
+
+function estadoAccionDebugControl(mensaje, tono = "neutral") {
+    const estado = document.getElementById("debug_control_status");
+    if (!estado) return;
+    estado.textContent = String(mensaje || "");
+    estado.dataset.tone = tono;
+}
+
+function bloquearAccionesDebugControl(bloqueadas) {
+    accion_debug_control_en_curso = Boolean(bloqueadas);
+    document.querySelectorAll("#debug_control_tools button").forEach((boton) => {
+        boton.disabled = accion_debug_control_en_curso;
+    });
+}
+
+function establecerModoDebug(activo) {
+    const toggle = document.getElementById("modo_debug_toggle");
+    if (!socket || !socket.connected || typeof socket.emit !== "function") {
+        if (toggle) toggle.checked = modo_debug_control_activo;
+        estadoAccionDebugControl("Servidor no conectado.", "error");
+        return;
+    }
+    if (toggle) toggle.disabled = true;
+    estadoAccionDebugControl(activo ? "Activando modo Debug..." : "Desactivando modo Debug...");
+    socket.emit("modo_debug_establecer", { activo: Boolean(activo) }, (respuesta = {}) => {
+        if (respuesta.ok !== true) {
+            if (toggle) {
+                toggle.checked = modo_debug_control_activo;
+                toggle.disabled = false;
+            }
+            estadoAccionDebugControl(textoErrorDebugControl(respuesta.code), "error");
+            return;
+        }
+        actualizarModoDebugControl(respuesta);
+    });
+}
+
+function ejecutarAccionDebugControl(evento, mensajeEspera, alCompletar) {
+    if (!modo_debug_control_activo) {
+        estadoAccionDebugControl("Activa primero el modo Debug.", "error");
+        return;
+    }
+    if (accion_debug_control_en_curso) return;
+    if (!socket || !socket.connected || typeof socket.emit !== "function") {
+        estadoAccionDebugControl("Servidor no conectado.", "error");
+        return;
+    }
+    bloquearAccionesDebugControl(true);
+    estadoAccionDebugControl(mensajeEspera);
+    socket.emit(evento, {}, (respuesta = {}) => {
+        bloquearAccionesDebugControl(false);
+        if (respuesta.ok !== true) {
+            estadoAccionDebugControl(textoErrorDebugControl(respuesta.code), "error");
+            return;
+        }
+        if (typeof alCompletar === "function") alCompletar(respuesta);
+    });
+}
+
+function cargarDatosPruebaDeliberacionDebug() {
+    ejecutarAccionDebugControl(
+        "cargar_datos_prueba_deliberacion",
+        "Creando resultados ficticios...",
+        () => {
+            socket.emit("pedir_puntuacion_final");
+            socket.emit("pedir_jurado_resultado");
+            estadoAccionDebugControl("Datos ficticios listos en Deliberaci\u00f3n.", "success");
+        }
+    );
+}
+
+function limpiarDatosPruebaDeliberacionDebug() {
+    ejecutarAccionDebugControl(
+        "limpiar_datos_prueba_deliberacion",
+        "Limpiando resultados ficticios...",
+        () => estadoAccionDebugControl("Datos ficticios eliminados.", "success")
+    );
+}
+
+function saltarSiguienteNivelDebug() {
+    ejecutarAccionDebugControl(
+        "debug_siguiente_nivel",
+        "Saltando al siguiente nivel...",
+        (respuesta) => {
+            const modo = respuesta.partida_finalizada
+                ? "Partida finalizada."
+                : `Nivel activo: ${traducirModoControl(respuesta.modo_actual)}.`;
+            estadoAccionDebugControl(modo, "success");
+        }
+    );
+}
+
+function finalizarPartidaDebug() {
+    ejecutarAccionDebugControl(
+        "debug_finalizar_partida",
+        "Finalizando la partida...",
+        () => estadoAccionDebugControl("Partida finalizada. Ya puedes probar la deliberaci\u00f3n.", "success")
+    );
+}
+
+if (typeof window !== "undefined") {
+    window.actualizarModoDebugControl = actualizarModoDebugControl;
+    window.establecerModoDebug = establecerModoDebug;
+    window.cargarDatosPruebaDeliberacionDebug = cargarDatosPruebaDeliberacionDebug;
+    window.limpiarDatosPruebaDeliberacionDebug = limpiarDatosPruebaDeliberacionDebug;
+    window.saltarSiguienteNivelDebug = saltarSiguienteNivelDebug;
+    window.finalizarPartidaDebug = finalizarPartidaDebug;
 }
 
 function cambiar_vista() {

@@ -107,6 +107,7 @@ function sincronizarControlAutorizado() {
     socket.emit('pedir_ayuda_musas_estado');
     iniciarStatusPing();
     socket.emit('pedir_estado_control');
+    socket.emit('pedir_modo_debug_estado');
     socket.emit('pedir_estado_palabras_musas_control');
     socket.emit('pedir_estado_banderas_musas');
     if (!vista_inicial_tutorial_aplicada && typeof mostrar_vista_tutorial === "function") {
@@ -232,6 +233,8 @@ socket.on('connect', () => {
     }
     registro_control_confirmado = false;
     document.body.dataset.controlAccess = "pending";
+    const debugToggle = document.getElementById("modo_debug_toggle");
+    if (debugToggle) debugToggle.disabled = true;
     setEstadoServidor(true);
     if (typeof registrarLogControl === "function") {
         registrarLogControl("info", ["Control conectado al servidor"]);
@@ -260,6 +263,8 @@ socket.on('disconnect', () => {
     }
     detenerStatusPing();
     detenerStatsLiveControl();
+    const debugToggle = document.getElementById("modo_debug_toggle");
+    if (debugToggle) debugToggle.disabled = true;
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
     }
@@ -273,6 +278,12 @@ socket.on('disconnect', () => {
 
 socket.on('control_registro_estado', (payload = {}) => {
     procesarRegistroControl(payload);
+});
+
+socket.on('modo_debug_estado', (payload = {}) => {
+    if (typeof actualizarModoDebugControl === "function") {
+        actualizarModoDebugControl(payload);
+    }
 });
 
 socket.on('connect_error', () => {

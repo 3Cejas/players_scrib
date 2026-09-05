@@ -11513,3 +11513,170 @@ table.default {
         grid-template-columns: minmax(0, 1fr) !important;
     }
 }
+
+/* Herramientas de ensayo protegidas por el modo Debug del servidor. */
+#panel_controles .control-tab--debug {
+    color: #ffd36e;
+    border-color: rgba(255, 184, 61, 0.5);
+}
+
+#panel_controles .control-tab--debug[data-enabled="1"] {
+    color: #1c1203;
+    border-color: #ffe29a;
+    background: linear-gradient(145deg, #fff0aa, #ffb948 58%, #ff813d);
+    box-shadow: 0 0 1rem rgba(255, 184, 61, 0.5);
+    text-shadow: none;
+}
+
+#panel_controles .control-group--debug {
+    border-color: rgba(255, 184, 61, 0.48);
+    background:
+        radial-gradient(circle at 12% 20%, rgba(255, 184, 61, 0.12), transparent 38%),
+        rgba(3, 10, 17, 0.96);
+}
+
+.debug-control {
+    display: grid;
+    gap: 0.8rem;
+    width: 100%;
+    padding: clamp(0.85rem, 1.6vw, 1.35rem);
+    box-sizing: border-box;
+}
+
+#panel_controles .control-group--debug:not(.is-collapsed) > .debug-control {
+    display: grid !important;
+    grid-column: 1 / -1;
+}
+
+.debug-control__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.debug-control__copy {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+    text-align: left;
+}
+
+.debug-control__copy strong {
+    color: #ffd36e;
+    font-size: clamp(0.85rem, 1.15vw, 1.1rem);
+}
+
+.debug-control__copy small,
+.debug-control__warning,
+.debug-control__status {
+    margin: 0;
+    color: rgba(229, 238, 246, 0.74);
+    font-size: clamp(0.56rem, 0.75vw, 0.72rem);
+    line-height: 1.45;
+}
+
+.debug-control__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex: 0 0 auto;
+    color: #aeb9c2;
+    cursor: pointer;
+}
+
+.debug-control__toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.debug-control__toggle-track {
+    position: relative;
+    width: 3.4rem;
+    height: 1.7rem;
+    border: 1px solid rgba(174, 185, 194, 0.6);
+    border-radius: 999px;
+    background: #111a22;
+    transition: 180ms ease;
+}
+
+.debug-control__toggle-track::after {
+    content: "";
+    position: absolute;
+    top: 0.18rem;
+    left: 0.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    background: #9aa8b2;
+    transition: 180ms ease;
+}
+
+.debug-control__toggle input:checked + .debug-control__toggle-track {
+    border-color: #ffd36e;
+    background: rgba(255, 157, 47, 0.28);
+    box-shadow: 0 0 1rem rgba(255, 184, 61, 0.45);
+}
+
+.debug-control__toggle input:checked + .debug-control__toggle-track::after {
+    transform: translateX(1.72rem);
+    background: #ffe8a3;
+    box-shadow: 0 0 0.8rem #ffad3d;
+}
+
+.debug-control__toggle input:focus-visible + .debug-control__toggle-track {
+    outline: 2px solid #fff1b6;
+    outline-offset: 3px;
+}
+
+.debug-control__toggle input:disabled + .debug-control__toggle-track {
+    opacity: 0.45;
+    cursor: wait;
+}
+
+.debug-control[data-active="1"] .debug-control__warning {
+    color: #ffc564;
+}
+
+.debug-control__tools {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.debug-control__tools[hidden] {
+    display: none !important;
+}
+
+#panel_controles .debug-control__button {
+    min-height: 3.25rem;
+    color: #ffe9ad;
+    border-color: rgba(255, 184, 61, 0.58);
+    background: linear-gradient(180deg, rgba(255, 191, 77, 0.13), rgba(7, 14, 21, 0.96));
+    box-shadow: inset 0 0 0 1px rgba(255, 239, 189, 0.035), 0 0 0.65rem rgba(255, 184, 61, 0.12);
+}
+
+#panel_controles .debug-control__button--advance {
+    color: #9ef8ff;
+    border-color: rgba(70, 240, 255, 0.58);
+}
+
+#panel_controles .debug-control__button--danger {
+    color: #ff9aa4;
+    border-color: rgba(255, 84, 99, 0.62);
+}
+
+.debug-control__status[data-tone="success"] { color: #62f9ad; }
+.debug-control__status[data-tone="error"] { color: #ff7d8a; }
+
+@media (max-width: 720px) {
+    .debug-control__header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .debug-control__tools {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
