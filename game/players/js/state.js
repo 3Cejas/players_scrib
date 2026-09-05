@@ -946,10 +946,12 @@ function construirBloqueObjetivoNivelEscritora(palabraTexto, opciones = {}) {
     const tipo = String(opciones.tipo || "bonus").trim().toLowerCase();
     const esMaldita = tipo === "prohibidas";
     const superbonus = normalizarSuperbonusInspiracionEscritora({ superbonus: opciones.superbonus });
-    const tiempoSeguro = resolverTiempoPalabraAsignadaEscritora({
-        tiempo_palabras_bonus: opciones.tiempoSegundos,
-        palabras_var: base
-    });
+    const tiempoSeguro = tipo === "frase-final"
+        ? null
+        : resolverTiempoPalabraAsignadaEscritora({
+            tiempo_palabras_bonus: opciones.tiempoSegundos,
+            palabras_var: base
+        });
     const palabraHtml = tiempoSeguro !== null
         ? construirTextoPalabraConTiempoEscritora(base, tiempoSeguro, esMaldita ? "maldita" : "bendita")
         : escapeHtml(base);

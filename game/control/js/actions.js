@@ -2442,6 +2442,7 @@ function textoErrorDebugControl(codigo = "") {
         NOT_AUTHORIZED: "Control no est\u00e1 autorizado.",
         DEBUG_MODE_REQUIRED: "Activa primero el modo Debug.",
         GAME_NOT_ACTIVE: "No hay una partida en curso.",
+        DEBUG_SKIP_COOLDOWN: "Espera un instante antes de volver a saltar de nivel.",
         MODE_TRANSITION_BUSY: "El juego ya est\u00e1 cambiando de nivel. Int\u00e9ntalo de nuevo."
     };
     return mensajes[String(codigo || "")] || "No se pudo completar la acci\u00f3n de prueba.";

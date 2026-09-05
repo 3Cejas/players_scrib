@@ -73,3 +73,17 @@ test("Escritxr uses team-colored backgrounds and audible inspiration feedback", 
   assert.match(state, /PERDER 2 SEG\.mp3/);
   assert.match(state, /opciones\.sonido !== false/);
 });
+
+test("Frase final keeps only the global clock and removes inspiration scoring", () => {
+  const competition = read("game/js/domains/competition.js");
+  const writerState = read("game/players/js/state.js");
+  const writerEvents = read("game/players/js/socket-events.js");
+  const museEvents = read("game/public/players/js/socket-events.js");
+
+  assert.match(competition, /data-final="1"[^}]+scrib-competition-scoreline/);
+  assert.match(competition, /data-role="control"\]\[data-final="1"\]\{display:none\}/);
+  assert.match(writerState, /tipo === "frase-final"\s*\? null/);
+  assert.match(writerEvents, /actualizarFraseFinalDesdePayloadEscritora\(data\)/);
+  assert.doesNotMatch(museEvents, /modo_actual === "frase final"\s*\|\|/);
+  assert.match(museEvents, /juego\.modo_actual === "frase final"/);
+});

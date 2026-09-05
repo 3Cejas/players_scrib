@@ -406,9 +406,22 @@ function renderizarObjetivoFraseFinalEscritora() {
     const fraseObjetivo = String(frase_final || "").trim();
     const palabraObjetivo = fraseObjetivo ? "\u00AB" + fraseObjetivo + "\u00BB" : "\u00AB-\u00BB";
     renderObjetivoNivelEscritora(palabraObjetivo, {
-        tipo: "frase-final",
-        descripcion: traducirDescripcionModoEscritora("frase final", "ULTIMA RONDA")
+        tipo: "frase-final"
     });
+}
+
+function actualizarFraseFinalDesdePayloadEscritora(data = {}) {
+    if (!data || typeof data !== "object") return;
+    const frases = data.frases_finales && typeof data.frases_finales === "object"
+        ? data.frases_finales
+        : {};
+    const clave = Number(player) === 2 ? "FRASE_FINAL_J2" : "FRASE_FINAL_J1";
+    const candidata = Object.prototype.hasOwnProperty.call(data, clave)
+        ? data[clave]
+        : (frases[player] ?? frases[String(player)]);
+    if (typeof candidata === "string") {
+        frase_final = candidata.trim().toLowerCase();
+    }
 }
 
 function refrescarCabeceraModoActualEscritora() {
@@ -1591,6 +1604,7 @@ socket.on("activar_modo", (data) => {
         return;
     }
     const modoSiguiente = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
+    actualizarFraseFinalDesdePayloadEscritora(data);
     const esReactivacionModoPausado = es_pausa === true && modoSiguiente === modo_actual;
     const saleDePausaHaciaModoEscribible = es_pausa === true && modoSiguiente !== "tertulia";
     animacion_modo();

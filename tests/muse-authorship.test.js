@@ -122,3 +122,13 @@ test("tutorial packing reserves highlighted scale and may skip a box instead of 
     assert.match(source, /slice\(0, 80\)/);
   });
 });
+
+test("the live muse screen keeps writer identity visible and boxes the writer text", () => {
+  const html = read("game/public/players/index.html");
+  const css = read("game/public/players/css/publico.css");
+
+  assert.match(html, /id="musa_escritxr_card"[\s\S]*TU ESCRITXR[\s\S]*id="nombre"/);
+  assert.match(css, /\.musa-escritxr-card\s*\{[\s\S]*border:[\s\S]*background:[\s\S]*box-shadow:/);
+  assert.match(css, /\.textarea\s*\{[\s\S]*border-radius:[\s\S]*box-shadow:/);
+  assert.match(css, /body:not\(\.partida-activa\)[^\n]+#musa_escritxr_card/);
+});

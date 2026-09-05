@@ -713,9 +713,6 @@ socket.on('tecla_jugador_control', data => {
 
 
 socket.on('tiempo_muerto_control', data => {
-    const revisionPartida = (typeof obtenerRevisionTemporizadoresControl === "function")
-        ? obtenerRevisionTemporizadoresControl()
-        : null;
     duracion_modo_actual_control = Number(data && data.duracion_modo_segundos)
         || Number(typeof TIEMPO_CAMBIO_MODOS !== "undefined" ? TIEMPO_CAMBIO_MODOS : 0)
         || Number(typeof DURACION_TIEMPO_MODOS !== "undefined" ? DURACION_TIEMPO_MODOS : 0)
@@ -741,27 +738,16 @@ socket.on('tiempo_muerto_control', data => {
             restante: tiempo_restante_modo_actual_control
         });
     }
-    if (typeof window.actualizarBotonPausaReanudarControl === "function") {
-        boton_pausar_reanudar.dataset.value = 1;
-        window.actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
-    } else {
-        boton_pausar_reanudar.innerHTML = "\u25B6\uFE0F REANUDAR";
-        boton_pausar_reanudar.dataset.value = 1;
-    }
-    pausar({ motivo: "tertulia" });
+    // Tertulia forma parte del reloj normal de la partida. Su avance vive en
+    // el servidor para que una recarga o cierre de Control nunca la congele.
     clearTimeout(TimeoutTiempoMuerto);
-  TimeoutTiempoMuerto = setTimeout(function(){
-    if (revisionPartida !== null
-        && typeof esRevisionTemporizadoresControlActiva === "function"
-        && !esRevisionTemporizadoresControlActiva(revisionPartida)) {
-        return;
-    }
-    if (modo_actual !== "tertulia" || typeof reanudar_modo !== "function") {
-        return;
-    }
     TimeoutTiempoMuerto = null;
-    reanudar_modo();
-  }, Math.max(1, duracion_modo_actual_control) * 1000);
+    if (boton_pausar_reanudar) {
+        boton_pausar_reanudar.dataset.value = 0;
+        if (typeof window.actualizarBotonPausaReanudarControl === "function") {
+            window.actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
+        }
+    }
 });
 
 socket.on('fin_a_control', () => {

@@ -245,10 +245,15 @@ socket.on('modo_actual', (data) => {
     if (
         modo_actual === "palabras bonus" ||
         modo_actual === "tertulia" ||
-        modo_actual === "palabras prohibidas" ||
-        modo_actual === "frase final"
+        modo_actual === "palabras prohibidas"
     ) {
         pedir_inspiracion({ modo_actual });
+    }
+    if (modo_actual === "frase final") {
+        campo_palabra.value = "";
+        enviarPalabra_boton.style.display = "none";
+        campo_palabra.style.display = "none";
+        notificacion.style.display = "none";
     }
 
     sincro = 0;
@@ -1282,6 +1287,13 @@ function convertirASegundos(tiempo) {
   }
 
 function pedir_inspiracion(juego){
+    if (!juego || juego.modo_actual === "frase final") {
+        campo_palabra.value = "";
+        enviarPalabra_boton.style.display = "none";
+        campo_palabra.style.display = "none";
+        notificacion.style.display = "none";
+        return;
+    }
     campo_palabra.value = "";
     enviarPalabra_boton.style.display = "";
     campo_palabra.style.display = "";
@@ -1315,13 +1327,6 @@ function pedir_inspiracion(juego){
         campo_palabra.style.display = "none";
         tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", mira a " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" + nombre1.value + "</span>" + " y " + "<span style='color: #86d0ff;'>CUENTA</span>" + " todo aquello que le has querido decir hasta ahora.";
     
-    }
-
-    if(juego.modo_actual == "frase final") {
-        campo_palabra.value = "none";
-        enviarPalabra_boton.style.display = "none";
-        campo_palabra.style.display = "none";
-        tarea.innerHTML = "<br><br><br>" + etiquetaMusa + ", " + "<span style='" + "color: " + nombre1.style.color + "; text-shadow: " + nombre1.style.textShadow + ";'>" +  nombre1.value + "</span>" + " va a TERMINAR su obra gracias a ti. " + EMOJI_CORAZON_OJOS;
     }
 
     socket.emit("pedir_texto", { musa: player });

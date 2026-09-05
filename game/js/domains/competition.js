@@ -42,6 +42,10 @@
       .scrib-competition-hud[data-role="control"] .scrib-competition-bar{height:18px}
       .scrib-competition-hud[data-role="control"] .scrib-competition-center{height:23px;width:7px}
       .scrib-competition-hud[data-role="control"] .scrib-competition-curse{font-size:15px}
+      .scrib-competition-hud[data-final="1"] .scrib-competition-scoreline,.scrib-competition-hud[data-final="1"] .scrib-competition-streak{display:none}
+      .scrib-competition-hud[data-final="1"] .scrib-competition-shell{width:max-content;min-width:min(230px,88vw);margin:auto;padding:8px 16px}
+      .scrib-competition-hud[data-final="1"] .scrib-competition-top{margin:0}
+      .scrib-competition-hud[data-role="control"][data-final="1"]{display:none}
       .control-competition-slot + .level-status-witnesses .level-status-witness--disadvantage{display:none}
       .scrib-competition-hud[data-role="writer"] .scrib-competition-mode,.scrib-competition-hud[data-role="writer"] .scrib-competition-criterion,.scrib-competition-hud[data-role="spectator"] .scrib-competition-mode,.scrib-competition-hud[data-role="spectator"] .scrib-competition-criterion{display:none}
       .scrib-competition-hud[data-role="writer"] .scrib-competition-top,.scrib-competition-hud[data-role="spectator"] .scrib-competition-top{display:flex;justify-content:center;margin-bottom:7px}
@@ -146,6 +150,7 @@
     const pos = posicionMarcador(marcador[1], marcador[2]);
     const posAnterior = Number(ui.root.dataset.markerPosition);
     ui.root.dataset.active = estado.activa ? "1" : "0";
+    ui.root.dataset.final = String(estado.modo || "").trim().toLowerCase() === "frase final" ? "1" : "0";
     ui.mode.textContent = estado.modo_publico || String(estado.modo || "").toUpperCase() || "ESPERANDO NIVEL";
     ui.criterion.textContent = estado.activa ? (estado.criterio || "MARCADOR DE INSPIRACIÓN") : "COMPETICIÓN EN PAUSA";
     ui.scores[1].textContent = numero(marcador[1]);
