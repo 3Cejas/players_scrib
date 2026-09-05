@@ -51,6 +51,27 @@ body.page-players {
     overflow: hidden;
 }
 
+body.page-players.equipo-azul {
+    background:
+      radial-gradient(circle at 18% 22%, rgba(34, 218, 255, 0.34), transparent 48%),
+      radial-gradient(circle at 78% 84%, rgba(20, 123, 201, 0.22), transparent 54%),
+      linear-gradient(135deg, #062b42 0%, #041522 48%, #020711 100%);
+}
+
+body.page-players.equipo-rojo {
+    background:
+      radial-gradient(circle at 82% 22%, rgba(255, 72, 84, 0.34), transparent 48%),
+      radial-gradient(circle at 22% 84%, rgba(173, 27, 65, 0.24), transparent 54%),
+      linear-gradient(225deg, #48121b 0%, #1f0911 48%, #070309 100%);
+}
+
+body.page-players.equipo-azul .aquarium-glow--red,
+body.page-players.equipo-azul .aquarium-bloom--red,
+body.page-players.equipo-rojo .aquarium-glow--blue,
+body.page-players.equipo-rojo .aquarium-bloom--blue {
+    opacity: 0.025;
+}
+
 body.page-players #background-effects {
     opacity: 0.78;
 }
@@ -4569,6 +4590,39 @@ select {
     flex-direction: row;
     flex-wrap: wrap;
     display: none;   
+}
+
+body.page-players.partida-activa #contenedor {
+    box-sizing: border-box;
+    width: 100%;
+    padding-top: clamp(138px, 18vh, 194px);
+}
+
+body.page-players.partida-activa .cabecera,
+body.page-players.partida-activa #logo,
+body.page-players.partida-activa #neon {
+    display: none !important;
+}
+
+body.page-players.partida-activa #nombre {
+    display: block;
+    position: relative;
+    z-index: 4;
+    width: min(820px, 82vw);
+    margin: 0 auto clamp(24px, 3.2vh, 42px);
+    font-size: clamp(24px, 3vw, 50px);
+    line-height: 1.16;
+    color: var(--equipo-caret-color, #fff);
+    text-shadow: 0 0 18px var(--equipo-caret-glow-soft), 3px 3px 0 rgba(0, 0, 0, 0.72);
+}
+
+body.page-players.partida-activa #nombre + br,
+body.page-players.partida-activa #nombre + br + br {
+    display: none;
+}
+
+body.page-players.partida-activa .textarea-container {
+    margin-top: clamp(14px, 2.2vh, 28px);
 }
 
 #contenedor_espectador {

@@ -35,6 +35,9 @@ let borrar_texto_en_inicio_activo = false;
 let modo_control_activo = "";
 let modo_debug_control_activo = false;
 let accion_debug_control_en_curso = false;
+let clicks_logo_debug_control = 0;
+let timeout_clicks_logo_debug_control = null;
+let timeout_toast_debug_control = null;
 let segundos_modo_control = 0;
 let revision_temporizadores_control = 0;
 let revision_creditos_emit_control = 0;
@@ -1086,7 +1089,7 @@ function toggleLogsControl() {
 }
 window.toggleLogsControl = toggleLogsControl;
 
-const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "representacion", "deliberacion", "final", "debug", "asistencia"]);
+const SECCIONES_BOTONES_CONTROL = new Set(["tutorial", "detonadores", "juego", "representacion", "deliberacion", "final", "asistencia"]);
 let dropdown_modos_control_inicializado = false;
 let observer_modos_control = null;
 let frases_finales_control_inicializadas = false;
@@ -2446,19 +2449,10 @@ function textoErrorDebugControl(codigo = "") {
 
 function actualizarModoDebugControl(payload = {}) {
     modo_debug_control_activo = payload && payload.activo === true;
-    const contenedor = document.getElementById("debug_control");
-    const toggle = document.getElementById("modo_debug_toggle");
-    const pestana = document.getElementById("control_title_debug");
-    const textoToggle = document.getElementById("modo_debug_toggle_text");
+    const disparador = document.getElementById("control_debug_secret_trigger");
     const herramientas = document.querySelectorAll("[data-debug-tools]");
-    const estado = document.getElementById("debug_control_status");
-    if (contenedor) contenedor.dataset.active = modo_debug_control_activo ? "1" : "0";
-    if (pestana) pestana.dataset.enabled = modo_debug_control_activo ? "1" : "0";
-    if (toggle) {
-        toggle.checked = modo_debug_control_activo;
-        toggle.disabled = false;
-    }
-    if (textoToggle) textoToggle.textContent = modo_debug_control_activo ? "ACTIVADO" : "DESACTIVADO";
+    if (disparador) disparador.dataset.debugActive = modo_debug_control_activo ? "1" : "0";
+    if (document.body) document.body.dataset.debugActive = modo_debug_control_activo ? "1" : "0";
     herramientas.forEach((grupo) => {
         grupo.hidden = !modo_debug_control_activo;
         grupo.setAttribute("aria-hidden", modo_debug_control_activo ? "false" : "true");
@@ -2467,19 +2461,30 @@ function actualizarModoDebugControl(payload = {}) {
         estadoContextual.textContent = "";
         estadoContextual.removeAttribute("data-tone");
     });
-    if (estado && !accion_debug_control_en_curso) {
-        estado.textContent = modo_debug_control_activo
-            ? "Debug activo. Los controles de prueba est\u00e1n disponibles."
-            : "Modo Debug desactivado.";
-        estado.dataset.tone = "neutral";
-    }
 }
 
 function estadoAccionDebugControl(mensaje, tono = "neutral") {
-    document.querySelectorAll("#debug_control_status, [data-debug-status]").forEach((estado) => {
+    document.querySelectorAll("[data-debug-status]").forEach((estado) => {
         estado.textContent = String(mensaje || "");
         estado.dataset.tone = tono;
     });
+}
+
+function mostrarToastDebugControl(mensaje, tono = "neutral") {
+    let toast = document.getElementById("control_debug_secret_toast");
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "control_debug_secret_toast";
+        toast.className = "control-debug-secret-toast";
+        toast.setAttribute("role", "status");
+        toast.setAttribute("aria-live", "polite");
+        document.body.appendChild(toast);
+    }
+    toast.textContent = String(mensaje || "");
+    toast.dataset.tone = tono;
+    toast.classList.add("is-visible");
+    clearTimeout(timeout_toast_debug_control);
+    timeout_toast_debug_control = setTimeout(() => toast.classList.remove("is-visible"), 2600);
 }
 
 function bloquearAccionesDebugControl(bloqueadas) {
@@ -2490,25 +2495,49 @@ function bloquearAccionesDebugControl(bloqueadas) {
 }
 
 function establecerModoDebug(activo) {
-    const toggle = document.getElementById("modo_debug_toggle");
     if (!socket || !socket.connected || typeof socket.emit !== "function") {
-        if (toggle) toggle.checked = modo_debug_control_activo;
         estadoAccionDebugControl("Servidor no conectado.", "error");
+        mostrarToastDebugControl("Servidor no conectado.", "error");
         return;
     }
-    if (toggle) toggle.disabled = true;
     estadoAccionDebugControl(activo ? "Activando modo Debug..." : "Desactivando modo Debug...");
     socket.emit("modo_debug_establecer", { activo: Boolean(activo) }, (respuesta = {}) => {
         if (respuesta.ok !== true) {
-            if (toggle) {
-                toggle.checked = modo_debug_control_activo;
-                toggle.disabled = false;
-            }
-            estadoAccionDebugControl(textoErrorDebugControl(respuesta.code), "error");
+            const error = textoErrorDebugControl(respuesta.code);
+            estadoAccionDebugControl(error, "error");
+            mostrarToastDebugControl(error, "error");
             return;
         }
         actualizarModoDebugControl(respuesta);
+        mostrarToastDebugControl(
+            respuesta.activo === true ? "MODO DEBUG ACTIVADO" : "MODO DEBUG DESACTIVADO",
+            "success"
+        );
     });
+}
+
+function inicializarAccesoSecretoDebugControl() {
+    const disparador = document.getElementById("control_debug_secret_trigger");
+    if (!disparador || disparador.dataset.debugSecretReady === "1") return;
+    disparador.dataset.debugSecretReady = "1";
+    disparador.addEventListener("click", () => {
+        clicks_logo_debug_control += 1;
+        clearTimeout(timeout_clicks_logo_debug_control);
+        timeout_clicks_logo_debug_control = setTimeout(() => {
+            clicks_logo_debug_control = 0;
+        }, 2200);
+        if (clicks_logo_debug_control < 5) return;
+        clicks_logo_debug_control = 0;
+        clearTimeout(timeout_clicks_logo_debug_control);
+        timeout_clicks_logo_debug_control = null;
+        establecerModoDebug(!modo_debug_control_activo);
+    });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inicializarAccesoSecretoDebugControl, { once: true });
+} else {
+    inicializarAccesoSecretoDebugControl();
 }
 
 function ejecutarAccionDebugControl(evento, mensajeEspera, alCompletar) {

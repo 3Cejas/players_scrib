@@ -1527,10 +1527,12 @@ function suspenderPreShowEspectadorPorConexion() {
 
 function actualizarBrandingPartidaEspectador(opciones = {}) {
     const modoPartida = vista_espectador_modo_resuelta === "partida";
+    const partidaEnCurso = Boolean(partida_activa_espectador || cuenta_atras_activa || inicio_modo_delay);
+    const mostrarBranding = modoPartida && !partidaEnCurso;
+    const displayBranding = mostrarBranding ? "" : "none";
     if (cabecera) {
-        cabecera.style.display = modoPartida ? (cabecera_display_inicial || "") : "none";
+        cabecera.style.display = mostrarBranding ? (cabecera_display_inicial || "") : "none";
     }
-    const displayBranding = modoPartida ? "" : "none";
     if (logo) {
         logo.style.display = displayBranding;
     }

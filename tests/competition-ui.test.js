@@ -25,6 +25,9 @@ test("el HUD usa marcador numerico, reloj global y animaciones sin porcentajes",
   assert.match(js, /¡CAMBIO DE VENTAJA!/);
   assert.match(js, /scrib-competition-fly/);
   assert.match(js, /scrib-competition-burst/);
+  assert.match(js, /scribCompetitionShift/);
+  assert.match(js, /scribCompetitionCross/);
+  assert.match(js, /numero\(payload\.delta\)} 🎨/);
   assert.match(js, /payload\.animar !== false/);
   assert.doesNotMatch(js, /ui\.scores\[[^\]]+\]\.textContent\s*=\s*[^;\n]*%/);
   [writer, control, spectator].forEach((html) => {
@@ -55,6 +58,18 @@ test("Escritxr oculta los rótulos del nivel, usa el emoji y centra las partícu
   assert.match(js, /spectator: player === 1 \? \["#texto1"/);
   assert.match(js, /requestAnimationFrame\(\(\) => token\.classList\.add\("is-flying"\)\)/);
   assert.match(css, /partida-intro-escritora #logo[\s\S]*display: none !important/);
-  assert.match(actions, /-0\.05 \\u26A1/);
+  assert.match(css, /page-players\.partida-activa #contenedor[\s\S]*padding-top/);
+  assert.match(css, /page-players\.partida-activa #nombre[\s\S]*text-shadow/);
+  assert.match(actions, /-0\.05 🎨/);
   assert.doesNotMatch(actions, /-0\.05 insp\./);
+});
+
+test("Escritxr uses team-colored backgrounds and audible inspiration feedback", () => {
+  const css = read("game/css/dashboard-players.css");
+  const state = read("game/players/js/state.js");
+  assert.match(css, /body\.page-players\.equipo-azul\s*\{[\s\S]*linear-gradient/);
+  assert.match(css, /body\.page-players\.equipo-rojo\s*\{[\s\S]*linear-gradient/);
+  assert.match(state, /GANAR 2 SEG\.mp3/);
+  assert.match(state, /PERDER 2 SEG\.mp3/);
+  assert.match(state, /opciones\.sonido !== false/);
 });

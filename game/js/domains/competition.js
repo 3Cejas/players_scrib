@@ -25,6 +25,7 @@
       .scrib-competition-hud{--azul:#46f0ff;--rojo:#ff5f67;--oro:#ffe475;position:fixed;z-index:2147481200;left:50%;top:clamp(8px,1.4vh,18px);transform:translateX(-50%);width:min(760px,72vw);font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:none;filter:drop-shadow(0 10px 26px #000a);transition:opacity .35s,transform .35s}
       body:has(#scrib_competition_hud) #inspiracion{display:none!important}
       .scrib-competition-hud[data-role="spectator"]{top:clamp(114px,15vh,166px);width:min(940px,72vw)}
+      .scrib-competition-hud[data-role="writer"]{width:min(760px,68vw)}
       .scrib-competition-hud[data-role="control"]{position:relative;inset:auto;transform:none;width:100%;filter:none;z-index:2}
       .scrib-competition-hud[data-active="0"][data-clock="0"]{opacity:0;transform:translate(-50%,-20px)}
       .scrib-competition-hud[data-role="control"][data-active="0"][data-clock="0"]{transform:translateY(-6px)}
@@ -51,6 +52,8 @@
       .scrib-competition-score.is-leading{transform:scale(1.08);box-shadow:0 0 24px currentColor,inset 0 0 18px #ffffff24}
       .scrib-competition-score.is-hit{animation:scribScoreHit .42s ease-out}
       .scrib-competition-bar{position:relative;height:28px;display:flex;overflow:hidden;border:1px solid #fff5;border-radius:999px;background:#060812;box-shadow:inset 0 0 15px #000;isolation:isolate}
+      .scrib-competition-bar.is-shifting{animation:scribCompetitionShift .72s cubic-bezier(.2,.9,.2,1)}
+      .scrib-competition-bar.is-crossing{animation:scribCompetitionCross .82s cubic-bezier(.2,.9,.2,1)}
       .scrib-competition-segment{height:100%;transition:width .65s cubic-bezier(.2,.9,.2,1);position:relative}
       .scrib-competition-segment--1{background:linear-gradient(90deg,#087c9d,var(--azul))}
       .scrib-competition-segment--2{background:linear-gradient(90deg,var(--rojo),#9d1731)}
@@ -66,10 +69,12 @@
       .scrib-competition-change small{display:block;margin-top:10px;font-size:.3em;letter-spacing:.18em;color:var(--change-color,#fff)}
       .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
       @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+      @keyframes scribCompetitionShift{0%{filter:brightness(1)}45%{filter:brightness(1.35);box-shadow:inset 0 0 24px #fff4,0 0 18px #fff3}100%{filter:brightness(1)}}
+      @keyframes scribCompetitionCross{0%{filter:brightness(1)}40%{filter:brightness(1.65);box-shadow:inset 0 0 30px #fff8,0 0 30px #ffe47599}100%{filter:brightness(1)}}
       @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
       @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-3deg)}18%,65%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(1.1)}}
       @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
-      @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"]{width:84vw}}
+      @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"],.scrib-competition-hud[data-role="writer"]{width:84vw}}
       @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly.is-flying,.scrib-competition-change,.scrib-competition-burst{animation-duration:.01ms!important}}
     `;
     document.head.appendChild(style);
@@ -139,6 +144,7 @@
     if (!ui) ui = crearUi(rolActual);
     const marcador = estado.marcador || { 1: 0, 2: 0 };
     const pos = posicionMarcador(marcador[1], marcador[2]);
+    const posAnterior = Number(ui.root.dataset.markerPosition);
     ui.root.dataset.active = estado.activa ? "1" : "0";
     ui.mode.textContent = estado.modo_publico || String(estado.modo || "").toUpperCase() || "ESPERANDO NIVEL";
     ui.criterion.textContent = estado.activa ? (estado.criterio || "MARCADOR DE INSPIRACIÓN") : "COMPETICIÓN EN PAUSA";
@@ -149,6 +155,13 @@
     ui.segments[1].style.width = `${pos}%`;
     ui.segments[2].style.width = `${100 - pos}%`;
     ui.bar.style.setProperty("--marker-position", `${pos}%`);
+    ui.root.dataset.markerPosition = String(pos);
+    if (Number.isFinite(posAnterior) && Math.abs(posAnterior - pos) > 0.05) {
+      const cruzaCentro = (posAnterior < 50 && pos >= 50) || (posAnterior > 50 && pos <= 50);
+      ui.bar.classList.remove("is-shifting", "is-crossing");
+      void ui.bar.offsetWidth;
+      ui.bar.classList.add(cruzaCentro ? "is-crossing" : "is-shifting");
+    }
     const portador = Number(estado.desventaja_player);
     ui.curse.textContent = estado.activa ? String(estado.desventaja || "") : "";
     ui.bar.style.setProperty("--curse-position", portador === 1 ? "11%" : (portador === 2 ? "89%" : "50%"));
@@ -257,7 +270,7 @@
       ? `${htmlSeguro(payload.musa_nombre)} · `
       : "";
     token.className = `scrib-competition-fly${payload.tipo === "inspiracion_musa" ? " is-muse" : ""}`;
-    token.innerHTML = `${payload.tipo === "inspiracion_musa" ? "✦ " : ""}${firmaMusa}${htmlSeguro(etiqueta)} <b>${Number(payload.delta) > 0 ? "+" : ""}${numero(payload.delta)}</b>`;
+    token.innerHTML = `${payload.tipo === "inspiracion_musa" ? "✦ " : ""}${firmaMusa}${htmlSeguro(etiqueta)} <b>${Number(payload.delta) > 0 ? "+" : ""}${numero(payload.delta)} 🎨</b>`;
     token.style.setProperty("--fly-color", player === 1 ? "#46f0ff" : "#ff5f67");
     document.body.appendChild(token);
     const tokenRect = token.getBoundingClientRect();

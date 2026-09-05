@@ -233,8 +233,6 @@ socket.on('connect', () => {
     }
     registro_control_confirmado = false;
     document.body.dataset.controlAccess = "pending";
-    const debugToggle = document.getElementById("modo_debug_toggle");
-    if (debugToggle) debugToggle.disabled = true;
     setEstadoServidor(true);
     if (typeof registrarLogControl === "function") {
         registrarLogControl("info", ["Control conectado al servidor"]);
@@ -263,8 +261,6 @@ socket.on('disconnect', () => {
     }
     detenerStatusPing();
     detenerStatsLiveControl();
-    const debugToggle = document.getElementById("modo_debug_toggle");
-    if (debugToggle) debugToggle.disabled = true;
     if (window && window.ScribVideotutorialControl) {
         window.ScribVideotutorialControl.marcarConexion(false);
     }
