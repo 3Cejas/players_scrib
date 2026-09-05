@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260905c">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260905d">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260905b"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260905c"></script>
+<script src="./js/actions.js?v=20260905d"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <img class="control-brand-logo" src="../media/scrib-logo-mark.png" alt="&lt;SCRI&gt; B">
@@ -161,6 +161,11 @@
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
                                 <span id="boton_skip_tertulia" class='btn btn-skip-tertulia' onclick="saltar_tertulia()">&#x23ED;&#xFE0F; SKIP TERTULIA</span>
                             </div>
+                            <div id="debug_tools_juego" class="debug-context-tools debug-context-tools--game" data-debug-tools hidden aria-hidden="true">
+                                <span class="debug-context-tools__label">&#x1F9EA; DEBUG</span>
+                                <button id="debug_siguiente_nivel" class="btn debug-control__button debug-control__button--advance" data-debug-action type="button" onclick="saltarSiguienteNivelDebug()">&#x23ED;&#xFE0F; SIGUIENTE NIVEL</button>
+                                <p class="debug-context-tools__status" data-debug-status role="status" aria-live="polite"></p>
+                            </div>
                             <div id="stats_nav_control" class="stats-nav-control" hidden aria-hidden="true">
                                 <button id="stats_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev" onclick="navegarSlidesStatsControl('prev')" aria-label="Slide anterior"></button>
                                 <span id="stats_nav_label" class="stats-nav-label">&#x1F4CA; SLIDES STATS</span>
@@ -196,12 +201,23 @@
                                 <button id="jurado_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next puntuacion-nav-arrow" onclick="navegarResultadoJurado('siguiente')" aria-label="Revelar siguiente resultado"></button>
                             </div>
                             <p id="deliberacion_estado_control" class="deliberacion-control__estado" role="status" aria-live="polite">El resultado del jurado aparecer&aacute; cuando haya puntuado a ambas escritoras.</p>
+                            <div id="debug_tools_deliberacion" class="debug-context-tools debug-context-tools--deliberation" data-debug-tools hidden aria-hidden="true">
+                                <span class="debug-context-tools__label">&#x1F9EA; DATOS DE PRUEBA</span>
+                                <button id="debug_cargar_deliberacion" class="btn debug-control__button" data-debug-action type="button" onclick="cargarDatosPruebaDeliberacionDebug()">&#x2696;&#xFE0F; CARGAR DATOS FICTICIOS</button>
+                                <button id="debug_limpiar_deliberacion" class="btn debug-control__button" data-debug-action type="button" onclick="limpiarDatosPruebaDeliberacionDebug()">&#x1F9F9; LIMPIAR DATOS FICTICIOS</button>
+                                <p class="debug-context-tools__status" data-debug-status role="status" aria-live="polite"></p>
+                            </div>
                         </div>
                         <div id="control_panel_final" class="control-group control-group--final control-collapsible is-collapsed" data-control-section="final" role="tabpanel" aria-labelledby="control_title_final">
                             <div class="control-group-buttons control-group-buttons--final">
                                 <button id="boton_mostrar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-pressed="false" onclick="mostrarCreditosEspectador()">&#x2B50; VISTA CR&Eacute;DITOS</button>
                                 <button id="boton_editar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-expanded="false" aria-controls="panel_creditos_final" onclick="toggleCreditos()">&#x1F4DD; EDITAR CR&Eacute;DITOS</button>
                                 <button id="boton_banderas_musas_final" class="btn btn-estandar-seccion" type="button" data-banderas-musas-control onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</button>
+                            </div>
+                            <div id="debug_tools_final" class="debug-context-tools debug-context-tools--final" data-debug-tools hidden aria-hidden="true">
+                                <span class="debug-context-tools__label">&#x1F9EA; DEBUG</span>
+                                <button id="debug_finalizar_partida" class="btn debug-control__button debug-control__button--danger" data-debug-action type="button" onclick="finalizarPartidaDebug()">&#x23F9;&#xFE0F; FINALIZAR PARTIDA</button>
+                                <p class="debug-context-tools__status" data-debug-status role="status" aria-live="polite"></p>
                             </div>
                             <div id="panel_creditos_final" class="creditos-host panel-oculto" aria-hidden="true"></div>
                         </div>
@@ -218,13 +234,7 @@
                                         <span id="modo_debug_toggle_text">DESACTIVADO</span>
                                     </label>
                                 </header>
-                                <p id="debug_control_warning" class="debug-control__warning">Al activarlo podr&aacute;s alterar la partida y cargar resultados ficticios.</p>
-                                <div id="debug_control_tools" class="debug-control__tools" hidden aria-hidden="true">
-                                    <button id="debug_cargar_deliberacion" class="btn debug-control__button" type="button" onclick="cargarDatosPruebaDeliberacionDebug()">&#x2696;&#xFE0F; CARGAR DATOS FICTICIOS</button>
-                                    <button id="debug_limpiar_deliberacion" class="btn debug-control__button" type="button" onclick="limpiarDatosPruebaDeliberacionDebug()">&#x1F9F9; LIMPIAR DATOS FICTICIOS</button>
-                                    <button id="debug_siguiente_nivel" class="btn debug-control__button debug-control__button--advance" type="button" onclick="saltarSiguienteNivelDebug()">&#x23ED;&#xFE0F; SIGUIENTE NIVEL</button>
-                                    <button id="debug_finalizar_partida" class="btn debug-control__button debug-control__button--danger" type="button" onclick="finalizarPartidaDebug()">&#x23F9;&#xFE0F; FINALIZAR PARTIDA</button>
-                                </div>
+                                <p id="debug_control_warning" class="debug-control__warning">Act&iacute;valo para mostrar las herramientas de prueba dentro de Juego, Deliberaci&oacute;n y Final.</p>
                                 <p id="debug_control_status" class="debug-control__status" role="status" aria-live="polite">Modo Debug desactivado.</p>
                             </section>
                         </div>
@@ -792,7 +802,7 @@
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260903b"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260905c"></script>
+<script src="./js/socket-events.js?v=20260905d"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

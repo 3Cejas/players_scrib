@@ -11639,14 +11639,51 @@ table.default {
     color: #ffc564;
 }
 
-.debug-control__tools {
+.debug-context-tools {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: auto repeat(2, minmax(0, 1fr));
+    align-items: center;
     gap: 0.65rem;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 0.7rem;
+    box-sizing: border-box;
+    border: 1px dashed rgba(255, 184, 61, 0.52);
+    border-radius: 0.3rem;
+    background: rgba(255, 184, 61, 0.055);
 }
 
-.debug-control__tools[hidden] {
+.debug-context-tools[hidden] {
     display: none !important;
+}
+
+.debug-context-tools--game,
+.debug-context-tools--final {
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+#panel_controles .control-group:not(.is-collapsed) > .debug-context-tools:not([hidden]) {
+    display: grid !important;
+}
+
+.debug-context-tools__label {
+    color: #ffd36e;
+    font-size: clamp(0.62rem, 0.8vw, 0.76rem);
+    white-space: nowrap;
+}
+
+.debug-context-tools__status {
+    grid-column: 1 / -1;
+    min-height: 0;
+    margin: 0;
+    color: rgba(229, 238, 246, 0.72);
+    font-size: clamp(0.52rem, 0.7vw, 0.68rem);
+    line-height: 1.35;
+    text-align: center;
+}
+
+.debug-context-tools__status:empty {
+    display: none;
 }
 
 #panel_controles .debug-control__button {
@@ -11669,6 +11706,8 @@ table.default {
 
 .debug-control__status[data-tone="success"] { color: #62f9ad; }
 .debug-control__status[data-tone="error"] { color: #ff7d8a; }
+.debug-context-tools__status[data-tone="success"] { color: #62f9ad; }
+.debug-context-tools__status[data-tone="error"] { color: #ff7d8a; }
 
 @media (max-width: 720px) {
     .debug-control__header {
@@ -11676,7 +11715,13 @@ table.default {
         flex-direction: column;
     }
 
-    .debug-control__tools {
+    .debug-context-tools {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .debug-context-tools__label,
+    .debug-context-tools__status {
+        grid-column: 1;
+        text-align: center;
     }
 }

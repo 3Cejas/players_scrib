@@ -2450,7 +2450,7 @@ function actualizarModoDebugControl(payload = {}) {
     const toggle = document.getElementById("modo_debug_toggle");
     const pestana = document.getElementById("control_title_debug");
     const textoToggle = document.getElementById("modo_debug_toggle_text");
-    const herramientas = document.getElementById("debug_control_tools");
+    const herramientas = document.querySelectorAll("[data-debug-tools]");
     const estado = document.getElementById("debug_control_status");
     if (contenedor) contenedor.dataset.active = modo_debug_control_activo ? "1" : "0";
     if (pestana) pestana.dataset.enabled = modo_debug_control_activo ? "1" : "0";
@@ -2459,10 +2459,14 @@ function actualizarModoDebugControl(payload = {}) {
         toggle.disabled = false;
     }
     if (textoToggle) textoToggle.textContent = modo_debug_control_activo ? "ACTIVADO" : "DESACTIVADO";
-    if (herramientas) {
-        herramientas.hidden = !modo_debug_control_activo;
-        herramientas.setAttribute("aria-hidden", modo_debug_control_activo ? "false" : "true");
-    }
+    herramientas.forEach((grupo) => {
+        grupo.hidden = !modo_debug_control_activo;
+        grupo.setAttribute("aria-hidden", modo_debug_control_activo ? "false" : "true");
+    });
+    document.querySelectorAll("[data-debug-status]").forEach((estadoContextual) => {
+        estadoContextual.textContent = "";
+        estadoContextual.removeAttribute("data-tone");
+    });
     if (estado && !accion_debug_control_en_curso) {
         estado.textContent = modo_debug_control_activo
             ? "Debug activo. Los controles de prueba est\u00e1n disponibles."
@@ -2472,15 +2476,15 @@ function actualizarModoDebugControl(payload = {}) {
 }
 
 function estadoAccionDebugControl(mensaje, tono = "neutral") {
-    const estado = document.getElementById("debug_control_status");
-    if (!estado) return;
-    estado.textContent = String(mensaje || "");
-    estado.dataset.tone = tono;
+    document.querySelectorAll("#debug_control_status, [data-debug-status]").forEach((estado) => {
+        estado.textContent = String(mensaje || "");
+        estado.dataset.tone = tono;
+    });
 }
 
 function bloquearAccionesDebugControl(bloqueadas) {
     accion_debug_control_en_curso = Boolean(bloqueadas);
-    document.querySelectorAll("#debug_control_tools button").forEach((boton) => {
+    document.querySelectorAll("[data-debug-action]").forEach((boton) => {
         boton.disabled = accion_debug_control_en_curso;
     });
 }
