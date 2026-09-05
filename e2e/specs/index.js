@@ -580,7 +580,7 @@ async function assertMusaWordInspirationPreview(ctx, roleName, mode, word, expec
       const expectedValue = `${expectedSign}5`;
       return node.classList.contains(expectedClass)
         && text.includes(expectedValue)
-        && /5\s*insp\./i.test(text)
+        && text.includes("\u{1F3A8}")
         ? text
         : false;
     }, {
@@ -742,7 +742,7 @@ async function waitForQuantifiedInspirationFeedback(ctx, roleName, description, 
       const nodes = Array.from(document.querySelectorAll(css))
         .filter((node) => node.isConnected && node.getBoundingClientRect().width > 0);
       if (nodes.some((node) => /undefined/i.test(String(node.textContent || "")))) return false;
-      const inspirationNode = nodes.find((node) => /\+\d+(?:[.,]\d+)?\s*insp\./i.test(String(node.textContent || "")));
+      const inspirationNode = nodes.find((node) => /\+\d+(?:[.,]\d+)?\s*🎨/u.test(String(node.textContent || "")));
       if (!inspirationNode) return false;
       return {
         inspiration: String(inspirationNode.textContent || "").trim(),
@@ -1675,6 +1675,14 @@ const smokeSpecs = [
         blueMuses.map(({ name }) => name),
         "jury cloud identifies both muses"
       );
+      await ctx.waitFor(
+        "spectator cloud marks the queued repeated word as superbonus",
+        async () => ctx.evaluate("spectator", () => {
+          const node = document.querySelector("#nube_inspiracion_canvas .nube-inspiracion-palabra.is-superbonus");
+          return Boolean(node && String(node.textContent || "").toLowerCase().includes("horizonte"));
+        }),
+        10000
+      );
       await assertCardsDoNotOverlap(
         ctx,
         "spectator",
@@ -1705,7 +1713,6 @@ const smokeSpecs = [
         blueMuses.map(({ name }) => name),
         "writer identifies both muses on the delivered word"
       );
-      let superbonusDetected = false;
       try {
         await ctx.waitFor(
           "writer1 marks delivered word as superbonus",
@@ -1716,21 +1723,10 @@ const smokeSpecs = [
           }),
           2500
         );
-        superbonusDetected = true;
       } catch (error) {
         if (ctx.options?.serverSource === "local") {
           throw error;
         }
-      }
-      if (superbonusDetected) {
-        await ctx.waitFor(
-          "spectator cloud marks superbonus",
-          async () => ctx.evaluate("spectator", () => {
-            const node = document.querySelector("#nube_inspiracion_canvas .nube-inspiracion-palabra.is-superbonus");
-            return Boolean(node && String(node.textContent || "").toLowerCase().includes("horizonte"));
-          }),
-          10000
-        );
       }
       await ensureSpectatorView(ctx, "partida");
       await reloadRole(ctx, "spectator");

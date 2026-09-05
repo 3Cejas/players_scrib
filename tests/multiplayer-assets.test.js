@@ -11,6 +11,7 @@ const PLAYER_I18N_VERSION = "20260905b";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
 const GAME_HUD_VERSION = "20260905c";
+const INSPIRATION_VERSION = "20260905d";
 const CONTROL_VIDEO_VERSION = "20260829p";
 const CONTROL_HELP_VERSION = "20260824e";
 const CONTROL_HELP_MODULE_VERSION = "20260830a";
@@ -18,7 +19,7 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260905c";
+const SPECTATOR_STATE_VERSION = "20260905d";
 const SPECTATOR_CSS_VERSION = "20260905c";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260905b";
@@ -39,7 +40,7 @@ const CONTROL_ACTIONS_VERSION = "20260905e";
 const CONTROL_I18N_VERSION = "20260903a";
 const CONTROL_STATE_VERSION = "20260831b";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260905f";
-const PUBLIC_PLAYER_ACTIONS_VERSION = "20260905a";
+const PUBLIC_PLAYER_ACTIONS_VERSION = "20260905b";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260903e";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
@@ -79,16 +80,16 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_CSS_VERSION);
 
   ["game/players/index.html"].forEach((htmlRelPath) => {
-    assertIncludesAsset(htmlRelPath, "domains/inspiration.js", GAME_HUD_VERSION);
+    assertIncludesAsset(htmlRelPath, "domains/inspiration.js", INSPIRATION_VERSION);
     assertIncludesAsset(htmlRelPath, "js/i18n.js", PLAYER_I18N_VERSION);
   });
-  assertIncludesAsset("game/actors/source/index.html", "domains/inspiration.js");
+  assertIncludesAsset("game/actors/source/index.html", "domains/inspiration.js", INSPIRATION_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/i18n.js", LEVEL_TRANSITION_VERSION);
-  assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js", GAME_HUD_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "domains/inspiration.js", INSPIRATION_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/i18n.js", PUBLIC_PLAYER_I18N_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js", GAME_HUD_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "domains/inspiration.js", INSPIRATION_VERSION);
   assertIncludesAsset("game/spectator/index.html", "js/i18n.js", SPECTATOR_I18N_VERSION);
-  assertIncludesAsset("game/control/index.html", "domains/inspiration.js", GAME_HUD_VERSION);
+  assertIncludesAsset("game/control/index.html", "domains/inspiration.js", INSPIRATION_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/inspiration-score.js", PLAYER_DISCARD_VERSION);
   assertIncludesAsset("game/control/index.html", "js/i18n.js", CONTROL_I18N_VERSION);
 
@@ -105,7 +106,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/spectator/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
 
   assertIncludesAsset("game/jurado/index.html", "index.css", JURY_CSS_VERSION);
-  assertIncludesAsset("game/jurado/index.html", "domains/inspiration.js", MUSE_AUTHOR_VERSION);
+  assertIncludesAsset("game/jurado/index.html", "domains/inspiration.js", INSPIRATION_VERSION);
   assertIncludesAsset("game/jurado/index.html", "js/state.js", JURY_STATE_VERSION);
   assertIncludesAsset("game/jurado/index.html", "js/socket-events.js", JURY_SOCKET_EVENTS_VERSION);
 
@@ -989,6 +990,16 @@ test("spectator hides pre-game branding throughout countdown and active match", 
   assert.match(postInicioBody, /partida_activa_espectador = true;[\s\S]*actualizarBrandingPartidaEspectador\(\);/);
   assert.doesNotMatch(postInicioBody, /logo\.style\.display = ""/);
   assert.doesNotMatch(postInicioBody, /neon\.style\.display = ""/);
+});
+
+test("spectator initializes its view only after countdown and score state declarations", () => {
+  const stateJs = read("game/spectator/js/state.js");
+  const initialization = stateJs.lastIndexOf("actualizarModoVistaEspectadorUi();");
+  const countdownState = stateJs.indexOf("let cuenta_atras_activa = false;");
+  const scoreFormatter = stateJs.indexOf("const formatearPuntosMarcador =");
+
+  assert.ok(initialization > countdownState, "view initialization must not read countdown state in its TDZ");
+  assert.ok(initialization > scoreFormatter, "view initialization must not leave score helpers in their TDZ");
 });
 
 test("spectator lightning disadvantage keeps its own timeout and repeats visibly", () => {

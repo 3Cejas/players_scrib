@@ -4935,11 +4935,6 @@ document.addEventListener("scrib:video-tutorial-visibility", (event) => {
     restaurarVistaEspectadorTrasVideoTutorial();
 });
 
-actualizarModoVistaEspectadorUi();
-renderizarCreditosEspectador();
-aplicarEscalaUiEspectador();
-iniciarAjusteViewportEspectador();
-
 const actualizarFinalCardCalentamiento = (equipo, dataEquipo = {}) => {
     const card = equipo === 1 ? calentamiento_final_j1 : calentamiento_final_j2;
     if (!card) return;
@@ -6939,3 +6934,11 @@ function limpiarModoPsicodelicoEspectador(data, playerId) {
         limpieza(data, playerId);
     }
 }
+
+// Inicializa la vista una vez declarados todos los estados que consultan sus
+// renderizadores. Adelantar este bloque deja variables `let`/`const` en su zona
+// temporal muerta y puede impedir que el espectador llegue a conectar el socket.
+actualizarModoVistaEspectadorUi();
+renderizarCreditosEspectador();
+aplicarEscalaUiEspectador();
+iniciarAjusteViewportEspectador();
