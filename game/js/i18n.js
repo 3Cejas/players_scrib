@@ -118,7 +118,7 @@
             "writer.attr.fuerza.name": "Fuerza",
             "writer.attr.fuerza.aria": "\u00bfQue es la fuerza?",
             "writer.attr.fuerza.alt": "Ayuda fuerza",
-            "writer.attr.fuerza.tooltip": "La fuerza aumenta la mini inspiracion que consigues escribiendo.<br><br>Las palabras de las musas siguen teniendo mucho mas peso.",
+            "writer.attr.fuerza.tooltip": "La fuerza aumenta el impulso de inspiracion que consigues escribiendo.<br><br>Las palabras de las musas siguen teniendo mucho mas peso.",
             "writer.attr.agilidad.name": "Agilidad",
             "writer.attr.agilidad.aria": "\u00bfQue es la agilidad?",
             "writer.attr.agilidad.alt": "Ayuda agilidad",

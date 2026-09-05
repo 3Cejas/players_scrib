@@ -57,7 +57,9 @@ const controladorTransicionNivelEspectador = apiTransicionNivelEspectador
         liveRegion: getEl("level_transition_status"),
         translate: tJuego2P,
         windowRef: window,
-        documentRef: document
+        documentRef: document,
+        durationMs: 5200,
+        reducedDurationMs: 3200
     })
     : null;
 const seguimientoTransicionNivelEspectador = apiTransicionNivelEspectador

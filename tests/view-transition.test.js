@@ -154,6 +154,24 @@ test("tutorial and detonator views share looped music with three-second fades an
   assert.equal(music.currentTime, 0, "the final SCRI B card restarts the menu loop from its beginning");
   assert.equal(music.paused, false);
   assert.equal(music.volume, 0.5);
+
+  const clockBeforeFastFade = clock;
+  const transitionPlaysBeforeStart = sound.playCalls;
+  const transitionPausesBeforeStart = sound.pauseCalls;
+  assert.equal(controller.setMode("partida", {
+    force: true,
+    silentTransition: true,
+    stopTransition: true,
+    resetAudioOverrides: true,
+    fadeDurationMs: 220
+  }), true);
+  assert.equal(sound.playCalls, transitionPlaysBeforeStart, "game start must not add the generic view sound");
+  assert.ok(sound.pauseCalls > transitionPausesBeforeStart, "game start stops a transition sound already playing");
+  drainTimers();
+  assert.ok(clock - clockBeforeFastFade <= 250, "the previous music fades before the countdown starts");
+  assert.equal(music.volume, 0);
+  assert.equal(music.paused, true);
+  assert.equal(controller.setMode("partida", { force: true, fadeDurationMs: 220 }), true, "start may reassert the same view");
   controller.destroy();
   assert.equal(documentListeners.has("scrib:video-tutorial-ending"), false);
 });
@@ -164,7 +182,7 @@ test("spectator wires the animated curtain into every resolved view change", () 
   const state = fs.readFileSync(path.join(ROOT, "game/spectator/js/state.js"), "utf8");
 
   assert.match(html, /id="spectator_view_transition"[\s\S]*data-view-transition-label/);
-  assert.match(html, /domains\/view-transition\.js\?v=20260903a/);
+  assert.match(html, /domains\/view-transition\.js\?v=20260905b/);
   assert.match(css, /spectatorViewCoverBlue[\s\S]*spectatorViewRevealRed/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spectator-view-transition/);
   assert.match(state, /controlador_transicion_vista_espectador\.transition\(\{[\s\S]*swap: \(\) => aplicarModoVistaEspectadorUi\(modo\)/);

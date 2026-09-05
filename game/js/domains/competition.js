@@ -237,13 +237,22 @@
     }
   }
 
+  function etiquetaPublicaPunto(payload = {}) {
+    const valor = String(payload.palabra || payload.etiqueta || "").trim();
+    if (!valor) return Number(payload.delta) < 0 ? "BORRADO" : "ESCRITURA";
+    if (/^(?:div|br|p|li)$/i.test(valor) || /mini[\s_-]*insp/i.test(valor)) {
+      return Number(payload.delta) < 0 ? "BORRADO" : "ESCRITURA";
+    }
+    return valor;
+  }
+
   function animarPunto(payload) {
     if (!payload || !ui) return;
     const player = Number(payload.player) === 2 ? 2 : 1;
     const origen = rectOrigen(player);
     const destino = ui.scores[player].getBoundingClientRect();
     const token = document.createElement("span");
-    const etiqueta = payload.palabra || payload.etiqueta || `${Number(payload.delta) > 0 ? "+" : ""}${numero(payload.delta)}`;
+    const etiqueta = etiquetaPublicaPunto(payload);
     const firmaMusa = payload.tipo === "inspiracion_musa" && payload.musa_nombre
       ? `${htmlSeguro(payload.musa_nombre)} · `
       : "";

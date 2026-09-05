@@ -982,6 +982,206 @@ body.page-players #metadatos[data-ganador]::after {
     animation: marcadorGanadorParpadeo 980ms steps(2, end) infinite;
 }
 
+/* Cierre de escritura: ocupa el proyector completo y sustituye la antigua
+   cabecera, que se mezclaba con los marcadores inferiores. */
+.partida-final-espectador {
+    --finish-blue: #45efff;
+    --finish-red: #ff536a;
+    --finish-gold: #ffe278;
+    position: fixed;
+    inset: 0;
+    z-index: 2147482000;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    padding: clamp(1.25rem, 4vw, 4rem);
+    background:
+        radial-gradient(circle at 50% 48%, rgba(255, 226, 120, 0.15), transparent 25%),
+        linear-gradient(110deg, #032435 0%, #050914 46%, #281017 100%);
+    opacity: 0;
+    visibility: hidden;
+}
+
+.partida-final-espectador[hidden] { display: none !important; }
+
+.partida-final-espectador.is-visible {
+    visibility: visible;
+    animation: partidaFinalEntrada 900ms cubic-bezier(.16, .84, .24, 1) forwards;
+}
+
+.partida-final-espectador__aurora,
+.partida-final-espectador__rays,
+.partida-final-espectador__scanlines {
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+}
+
+.partida-final-espectador__aurora {
+    z-index: -3;
+    background:
+        radial-gradient(circle at 18% 50%, rgba(69, 239, 255, .38), transparent 30%),
+        radial-gradient(circle at 82% 50%, rgba(255, 83, 106, .38), transparent 30%);
+    filter: blur(22px);
+    animation: partidaFinalAurora 5s ease-in-out infinite alternate;
+}
+
+.partida-final-espectador__rays {
+    z-index: -2;
+    background: repeating-conic-gradient(from -8deg at 50% 50%, rgba(255,255,255,.08) 0 2deg, transparent 2deg 12deg);
+    mask-image: radial-gradient(circle, #000 0 25%, transparent 72%);
+    animation: partidaFinalGiro 22s linear infinite;
+}
+
+.partida-final-espectador__scanlines {
+    z-index: 4;
+    inset: 0;
+    opacity: .2;
+    background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(255,255,255,.13) 3px 4px);
+    mix-blend-mode: overlay;
+}
+
+.partida-final-espectador__card {
+    position: relative;
+    width: min(74rem, 90vw);
+    padding: clamp(2rem, 4.6vh, 4.2rem) clamp(1.5rem, 5vw, 5rem);
+    text-align: center;
+    border: 1px solid rgba(255, 226, 120, .58);
+    border-radius: clamp(1.5rem, 3vw, 3rem);
+    background: linear-gradient(135deg, rgba(4, 18, 29, .92), rgba(13, 10, 23, .96) 50%, rgba(32, 9, 17, .92));
+    box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 6rem rgba(255, 221, 108, .18), inset 0 0 5rem rgba(255,255,255,.035);
+    animation: partidaFinalCard 1.05s cubic-bezier(.16, .84, .24, 1) both;
+}
+
+.partida-final-espectador__card::before,
+.partida-final-espectador__card::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 28vw;
+    height: 3px;
+    transform: translateY(-50%);
+    box-shadow: 0 0 1.2rem currentColor;
+}
+.partida-final-espectador__card::before { right: calc(100% - 2rem); color: var(--finish-blue); background: linear-gradient(90deg, transparent, currentColor); }
+.partida-final-espectador__card::after { left: calc(100% - 2rem); color: var(--finish-red); background: linear-gradient(90deg, currentColor, transparent); }
+
+.partida-final-espectador__eyebrow,
+.partida-final-espectador__next {
+    margin: 0;
+    font-family: "Retro-gaming", monospace;
+    letter-spacing: .2em;
+}
+
+.partida-final-espectador__eyebrow {
+    color: var(--finish-gold);
+    font-size: clamp(.9rem, 1.45vw, 1.45rem);
+}
+
+.partida-final-espectador__emblem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(.7rem, 2vw, 1.5rem);
+    min-height: clamp(4rem, 10vh, 7.5rem);
+    margin: clamp(.6rem, 1.5vh, 1.2rem) 0 0;
+    font-size: clamp(2.6rem, 5.4vw, 5.2rem);
+}
+
+.partida-final-espectador__emblem b {
+    color: var(--finish-gold);
+    font-size: .72em;
+    text-shadow: 0 0 .35em #fff, 0 0 .8em var(--finish-gold);
+    animation: partidaFinalEstrella 1.15s ease-in-out infinite alternate;
+}
+
+.partida-final-espectador__feather { display: inline-block; filter: drop-shadow(0 0 .35em currentColor); }
+.partida-final-espectador__feather--blue { color: var(--finish-blue); transform: rotate(-28deg); }
+.partida-final-espectador__feather--red { color: var(--finish-red); transform: scaleX(-1) rotate(-28deg); }
+
+.partida-final-espectador h2 {
+    margin: 0;
+    color: #fff;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(3.3rem, 8.2vw, 8.6rem);
+    line-height: .88;
+    letter-spacing: .035em;
+    text-shadow: -.035em 0 var(--finish-blue), .035em 0 var(--finish-red), 0 0 .3em rgba(255,255,255,.45);
+    animation: partidaFinalTitulo 2.1s steps(2, end) infinite;
+}
+
+.partida-final-espectador__duel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(.8rem, 2.5vw, 2.4rem);
+    margin: clamp(1.5rem, 3vh, 2.7rem) auto;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(1rem, 2.1vw, 2rem);
+}
+
+.partida-final-espectador__duel strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: .75em 1em;
+    border-radius: 999px;
+    background: rgba(3, 9, 18, .82);
+}
+.partida-final-espectador__duel strong:first-child { color: var(--finish-blue); border: 1px solid var(--finish-blue); box-shadow: 0 0 1.4rem rgba(69,239,255,.28); }
+.partida-final-espectador__duel strong:last-child { color: var(--finish-red); border: 1px solid var(--finish-red); box-shadow: 0 0 1.4rem rgba(255,83,106,.28); }
+.partida-final-espectador__duel span { color: var(--finish-gold); font-size: .75em; }
+
+.partida-final-espectador__next {
+    color: #dceaff;
+    font-size: clamp(.8rem, 1.25vw, 1.2rem);
+}
+
+.partida-final-espectador__sparks i {
+    position: absolute;
+    left: var(--spark-x);
+    top: 110%;
+    width: clamp(6px, .65vw, 12px);
+    aspect-ratio: 1;
+    background: var(--spark-color);
+    box-shadow: 0 0 1rem var(--spark-color);
+    animation: partidaFinalSpark var(--spark-speed) linear infinite;
+    animation-delay: var(--spark-delay);
+}
+.partida-final-espectador__sparks i:nth-child(1){--spark-x:8%;--spark-color:#45efff;--spark-speed:4.7s;--spark-delay:-1s}
+.partida-final-espectador__sparks i:nth-child(2){--spark-x:20%;--spark-color:#ffe278;--spark-speed:5.2s;--spark-delay:-3.4s}
+.partida-final-espectador__sparks i:nth-child(3){--spark-x:33%;--spark-color:#ff536a;--spark-speed:4.4s;--spark-delay:-2.1s}
+.partida-final-espectador__sparks i:nth-child(4){--spark-x:46%;--spark-color:#fff;--spark-speed:5.6s;--spark-delay:-4.5s}
+.partida-final-espectador__sparks i:nth-child(5){--spark-x:58%;--spark-color:#45efff;--spark-speed:4.2s;--spark-delay:-2.8s}
+.partida-final-espectador__sparks i:nth-child(6){--spark-x:71%;--spark-color:#ff536a;--spark-speed:5s;--spark-delay:-.7s}
+.partida-final-espectador__sparks i:nth-child(7){--spark-x:84%;--spark-color:#ffe278;--spark-speed:4.6s;--spark-delay:-3.9s}
+.partida-final-espectador__sparks i:nth-child(8){--spark-x:93%;--spark-color:#fff;--spark-speed:5.4s;--spark-delay:-2.3s}
+
+@keyframes partidaFinalEntrada { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+@keyframes partidaFinalCard { from { opacity: 0; transform: scale(.72) rotateX(18deg); filter: blur(18px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes partidaFinalAurora { to { transform: scale(1.12) rotate(3deg); filter: blur(35px) saturate(1.35); } }
+@keyframes partidaFinalGiro { to { transform: rotate(360deg); } }
+@keyframes partidaFinalEstrella { to { transform: scale(1.25) rotate(20deg); } }
+@keyframes partidaFinalTitulo { 0%, 92%, 100% { transform: none; } 94% { transform: translateX(-.018em); } 96% { transform: translateX(.018em); } }
+@keyframes partidaFinalSpark { from { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: 1; } to { transform: translateY(-125vh) rotate(420deg); opacity: 0; } }
+
+@media (max-width: 760px) {
+    .partida-final-espectador__duel { grid-template-columns: 1fr; }
+    .partida-final-espectador__duel span { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .partida-final-espectador.is-visible,
+    .partida-final-espectador__card,
+    .partida-final-espectador__aurora,
+    .partida-final-espectador__rays,
+    .partida-final-espectador__emblem b,
+    .partida-final-espectador h2,
+    .partida-final-espectador__sparks i { animation: none !important; }
+}
+
 @keyframes marcadorGanadorParpadeo {
     0%,
     48% {

@@ -2480,7 +2480,7 @@ function actualizarBotonesVistaPrincipalControl() {
     }
 }
 
-function aplicarVistaPrincipalControl(vista) {
+function aplicarVistaPrincipalControl(vista, opciones = {}) {
     if (temporizador_gigante_activo) {
         temporizador_gigante_activo = false;
         socket.emit("temporizador_gigante_detener", {});
@@ -2492,9 +2492,18 @@ function aplicarVistaPrincipalControl(vista) {
     // Cada pulsacion confirma el estado autoritativo. Esto permite reabrir el
     // canal del tutorial aunque Control ya creyera tener seleccionada la vista.
     vista_calentamiento = activarDetonadores;
-    emitirVistaControl("cambiar_vista_calentamiento", { activo: activarDetonadores });
+    emitirVistaControl("cambiar_vista_calentamiento", {
+        activo: activarDetonadores,
+        inicio_partida: opciones.inicioPartida === true
+    });
     vista_espectador_modo = modoEspectador;
-    emitirVistaControl("cambiar_vista_espectador_modo", { modo: modoEspectador });
+    emitirVistaControl("cambiar_vista_espectador_modo", {
+        modo: modoEspectador,
+        inicio_partida: opciones.inicioPartida === true,
+        audio_fade_ms: Number.isFinite(Number(opciones.audioFadeMs))
+            ? Math.max(0, Number(opciones.audioFadeMs))
+            : undefined
+    });
     cerrarVideotutorialDesdeVistaControl();
     actualizarBotonesVistaEspectadorControl();
     if (activarDetonadores) {
@@ -2522,12 +2531,14 @@ function asegurarVistaPartidaParaInicioControl() {
     const vistaPartidaYaActiva = vista_principal_control === "partida"
         && vista_espectador_modo === "partida"
         && vista_calentamiento === false;
-    if (vistaPartidaYaActiva) {
-        actualizarBotonesVistaPrincipalControl();
-        return false;
-    }
-    aplicarVistaPrincipalControl("partida");
-    return true;
+    // ESCRIBIR no alterna la vista: siempre reafirma Partida en el servidor.
+    // Así una reconexión o un estado local atrasado no puede apagarla justo
+    // antes de la cuenta atrás.
+    aplicarVistaPrincipalControl("partida", {
+        inicioPartida: true,
+        audioFadeMs: 220
+    });
+    return !vistaPartidaYaActiva;
 }
 
 window.mostrar_vista_tutorial = mostrar_vista_tutorial;

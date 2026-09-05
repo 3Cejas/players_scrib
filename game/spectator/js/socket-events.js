@@ -242,6 +242,38 @@ function setVisibilidadUiJugadorEspectador(jugadorId, visible) {
     }
 }
 
+function obtenerNombreCierrePartidaEspectador(player) {
+    const input = document.getElementById(Number(player) === 2 ? "nombre1" : "nombre");
+    const fallback = Number(player) === 2 ? "ESCRITXR 2" : "ESCRITXR 1";
+    return String(input && input.value ? input.value : fallback).trim().toUpperCase() || fallback;
+}
+
+function mostrarCierrePartidaEspectador() {
+    const overlay = document.getElementById("partida_final_espectador");
+    if (!overlay) return false;
+    const nombreJ1 = document.getElementById("partida_final_nombre_j1");
+    const nombreJ2 = document.getElementById("partida_final_nombre_j2");
+    if (nombreJ1) nombreJ1.textContent = obtenerNombreCierrePartidaEspectador(1);
+    if (nombreJ2) nombreJ2.textContent = obtenerNombreCierrePartidaEspectador(2);
+    overlay.hidden = false;
+    overlay.setAttribute("aria-hidden", "false");
+    overlay.classList.remove("is-visible");
+    void overlay.offsetWidth;
+    overlay.classList.add("is-visible");
+    document.body.classList.add("partida-final-visible");
+    return true;
+}
+
+function ocultarCierrePartidaEspectador() {
+    const overlay = document.getElementById("partida_final_espectador");
+    document.body.classList.remove("partida-final-visible");
+    if (!overlay) return false;
+    overlay.classList.remove("is-visible");
+    overlay.hidden = true;
+    overlay.setAttribute("aria-hidden", "true");
+    return true;
+}
+
 function reiniciarEstadoCierrePartidaEspectador() {
     frase_final_completada_j1 = false;
     frase_final_completada_j2 = false;
@@ -254,6 +286,7 @@ function reiniciarEstadoCierrePartidaEspectador() {
     setIndicadorGanadorMarcadorEspectador(2, false);
     setVisibilidadUiJugadorEspectador(1, true);
     setVisibilidadUiJugadorEspectador(2, true);
+    ocultarCierrePartidaEspectador();
     reiniciarProgresoFraseFinalEspectador();
 }
 
@@ -352,11 +385,11 @@ function ejecutarCierrePartidaEspectador(data = {}) {
     texto2.style.height = "auto";
     texto1.style.height = (texto1.scrollHeight) + "px";
     texto2.style.height = (texto2.scrollHeight) + "px";
-    animateCSS(".cabecera", "backInLeft").then((message) => {
-        animateCSS("#contenedor_espectador", "pulse");
-    });
-    logo.style.display = "";
-    neon.style.display = "";
+    setIndicadorGanadorMarcadorEspectador(1, false);
+    setIndicadorGanadorMarcadorEspectador(2, false);
+    logo.style.display = "none";
+    neon.style.display = "none";
+    mostrarCierrePartidaEspectador();
     limpiarModoPsicodelicoEspectador("");
     tiempo.style.color = "white";
     tiempo1.style.color = "white";
@@ -780,6 +813,20 @@ socket.on('inicio', data => {
     limpiarAsincroniaVisualEspectador();
     invalidarContextoTransitorioEspectador();
     const revisionCountdown = invalidarCountdownInicioEspectador({ resetFlags: false });
+    // El inicio de partida es autoritativo: aunque faltase o llegase tarde el
+    // cambio de vista anterior, la cuenta atras siempre se presenta en Partida.
+    // La música ambiental y el golpe de cambio de vista se retiran enseguida;
+    // el siguiente audio que entra es el propio de la cuenta atrás.
+    vista_calentamiento = false;
+    vista_espectador_override = "partida";
+    controlador_audio_vista_espectador?.setMode("partida", {
+        force: true,
+        silentTransition: true,
+        stopTransition: true,
+        resetAudioOverrides: true,
+        fadeDurationMs: 220
+    });
+    actualizarModoVistaEspectadorUi("partida");
     if(sonido){
     sonido.pause();
     }

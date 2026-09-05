@@ -134,11 +134,27 @@
 
         const setMode = (value, config = {}) => {
             const mode = normalizeMode(value);
-            if (mode === currentMode) return false;
+            if (mode === currentMode && config.force !== true) return false;
             const previous = currentMode;
             currentMode = mode;
+            if (config.resetAudioOverrides === true) {
+                // La tarjeta final de la narración fuerza la música de menú.
+                // Al comenzar la partida esa excepción debe desaparecer para
+                // que solo se oigan la cuenta atrás y el audio del nivel.
+                forcedMusic = false;
+                ducked = false;
+            }
+            if (config.stopTransition === true && transitionSound) {
+                try {
+                    transitionSound.pause?.();
+                    transitionSound.currentTime = 0;
+                } catch (_error) {}
+            }
             if (previous && config.initial !== true && config.silentTransition !== true) playTransition();
-            fadeMusic(targetMusicVolume(), fadeDurationMs);
+            const transitionFadeMs = Number.isFinite(Number(config.fadeDurationMs))
+                ? Math.max(0, Number(config.fadeDurationMs))
+                : fadeDurationMs;
+            fadeMusic(targetMusicVolume(), transitionFadeMs);
             return true;
         };
 

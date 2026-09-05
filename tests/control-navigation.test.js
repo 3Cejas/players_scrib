@@ -103,7 +103,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
   assert.match(actions, /function asegurarVistaPartidaParaInicioControl\(\)[\s\S]*vista_principal_control === "partida"[\s\S]*vista_espectador_modo === "partida"[\s\S]*vista_calentamiento === false/);
-  assert.match(actions, /if \(vistaPartidaYaActiva\)[\s\S]*return false;[\s\S]*aplicarVistaPrincipalControl\("partida"\);/);
+  assert.match(actions, /aplicarVistaPrincipalControl\("partida", \{[\s\S]*inicioPartida: true,[\s\S]*audioFadeMs: 220[\s\S]*\}\);[\s\S]*return !vistaPartidaYaActiva;/);
+  assert.doesNotMatch(actions, /if \(vistaPartidaYaActiva\)[\s\S]*return false;/);
   const inicioPartidaControl = actions.match(/function temp\(\)[\s\S]*?socket\.emit\('inicio',[\s\S]*?\n\}/)?.[0] || "";
   assert.match(inicioPartidaControl, /asegurarVistaPartidaParaInicioControl\(\);\s*socket\.emit\('inicio'/);
   assert.match(actions, /function nueva_partida\(\)[\s\S]*socket\.timeout\(8000\)\.emit\("nueva_partida"/);
