@@ -24,7 +24,11 @@
     style.textContent = `
       .scrib-competition-hud{--azul:#46f0ff;--rojo:#ff5f67;--oro:#ffe475;position:fixed;z-index:2147481200;left:50%;top:clamp(8px,1.4vh,18px);transform:translateX(-50%);width:min(760px,72vw);font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:none;filter:drop-shadow(0 10px 26px #000a);transition:opacity .35s,transform .35s}
       body:has(#scrib_competition_hud) #inspiracion{display:none!important}
-      .scrib-competition-hud[data-role="spectator"]{top:clamp(114px,15vh,166px);width:min(940px,72vw)}
+      .scrib-competition-hud[data-role="spectator"]{top:clamp(8px,1.4vh,18px);width:min(940px,72vw)}
+      body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(94px,12vh,128px)}
+      body.page-spectator.vista-partida #contenedor_espectador .nombre{position:relative;z-index:2;display:block;min-height:1.18em;margin:0 auto clamp(12px,1.5vh,22px);opacity:1;visibility:visible}
+      body.page-spectator.vista-partida #contenedor_espectador .nombre+br,
+      body.page-spectator.vista-partida #contenedor_espectador .nombre+br+br{display:none}
       .scrib-competition-hud[data-role="writer"]{width:min(760px,68vw)}
       .scrib-competition-hud[data-role="control"]{position:relative;inset:auto;transform:none;width:100%;filter:none;z-index:2}
       .scrib-competition-hud[data-active="0"][data-clock="0"]{opacity:0;transform:translate(-50%,-20px)}

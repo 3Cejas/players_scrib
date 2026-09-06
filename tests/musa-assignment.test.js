@@ -412,7 +412,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260903e/);
+  assert.match(html, /musa-selector\.js\?v=20260906a/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -490,6 +490,9 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.doesNotMatch(html, /Puedes elegir directamente o dejar que el juego equilibre los equipos por ti/);
   assert.doesNotMatch(selector, /Elige una escritora o usa la detección automática para equilibrar los equipos/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.onboarding-game-slide \*/);
+  assert.match(html, /@media \(hover: none\) and \(pointer: coarse\), \(max-width: 600px\)[\s\S]*content-visibility: auto/);
+  assert.match(html, /#background-effects \.aquarium-current,[\s\S]*display: none !important/);
+  assert.match(selector, /navegacionMovil[\s\S]*\? 680 : 1200/);
 });
 
 test("writer choice stays clean and game loading closes the assignment reveal", () => {

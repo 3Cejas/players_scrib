@@ -3700,6 +3700,7 @@ const pre_show_musa_input = getEl("pre_show_musa_input");
 const pre_show_musa_enviar = getEl("pre_show_musa_enviar");
 const pre_show_musa_contador = getEl("pre_show_musa_contador");
 const pre_show_musa_feedback = getEl("pre_show_musa_feedback");
+const pre_show_musa_confirmacion = getEl("pre_show_musa_confirmacion");
 let pre_show_estado_musa = window.ScribPreShow.normalizarEstado({ activo: false });
 let pre_show_bloqueado_por_tutorial_musa = false;
 let vista_tutorial_musa_permitida = true;
@@ -3709,6 +3710,7 @@ let pre_show_cooldown_musa = false;
 let pre_show_cooldown_timer_musa = null;
 let pre_show_timeout_ack_musa = null;
 let pre_show_ime_activo_musa = false;
+let pre_show_confirmacion_timer_musa = null;
 
 function traducirErrorPreShowMusa(respuesta = {}) {
     const code = String(respuesta.code || respuesta.codigo || "").trim().toUpperCase();
@@ -3738,6 +3740,35 @@ function mostrarFeedbackPreShowMusa(mensaje = "", esError = false) {
     if (!pre_show_musa_feedback) return;
     pre_show_musa_feedback.textContent = String(mensaje || "");
     pre_show_musa_feedback.classList.toggle("is-error", Boolean(esError));
+}
+
+function ocultarConfirmacionPreShowMusa() {
+    if (pre_show_confirmacion_timer_musa) {
+        clearTimeout(pre_show_confirmacion_timer_musa);
+        pre_show_confirmacion_timer_musa = null;
+    }
+    if (!pre_show_musa_confirmacion) return;
+    pre_show_musa_confirmacion.classList.remove("is-visible");
+    pre_show_musa_confirmacion.hidden = true;
+    pre_show_musa_confirmacion.setAttribute("aria-hidden", "true");
+}
+
+function animarConfirmacionPreShowMusa(mensaje) {
+    if (!pre_show_musa_confirmacion) return;
+    if (pre_show_confirmacion_timer_musa) clearTimeout(pre_show_confirmacion_timer_musa);
+    const copy = pre_show_musa_confirmacion.querySelector("[data-pre-show-confirmation-copy]");
+    if (copy) copy.textContent = String(mensaje || "");
+    pre_show_musa_confirmacion.hidden = false;
+    pre_show_musa_confirmacion.setAttribute("aria-hidden", "false");
+    pre_show_musa_confirmacion.classList.remove("is-visible");
+    void pre_show_musa_confirmacion.offsetWidth;
+    pre_show_musa_confirmacion.classList.add("is-visible");
+    pre_show_confirmacion_timer_musa = setTimeout(() => {
+        pre_show_confirmacion_timer_musa = null;
+        pre_show_musa_confirmacion.classList.remove("is-visible");
+        pre_show_musa_confirmacion.hidden = true;
+        pre_show_musa_confirmacion.setAttribute("aria-hidden", "true");
+    }, 1650);
 }
 
 function actualizarContadorPreShowMusa() {
@@ -3828,6 +3859,7 @@ function aplicarVisibilidadPreShowMusa() {
     if (!visible) {
         cancelarEnvioPreShowMusa();
         limpiarCooldownPreShowMusa();
+        ocultarConfirmacionPreShowMusa();
         if (pre_show_musa_input) {
             pre_show_musa_input.value = "";
             pre_show_musa_input.blur();
@@ -4015,10 +4047,9 @@ function enviarMensajePreShowMusa() {
                 return;
             }
             if (pre_show_musa_input) pre_show_musa_input.value = "";
-            mostrarFeedbackPreShowMusa(
-                tJuego2P("preshow.muse.feedback.sent", {}, "Mensaje enviado al espectador."),
-                false
-            );
+            const mensajeEnviado = tJuego2P("preshow.muse.feedback.sent", {}, "Mensaje enviado al espectador.");
+            mostrarFeedbackPreShowMusa(mensajeEnviado, false);
+            animarConfirmacionPreShowMusa(mensajeEnviado);
             iniciarCooldownPreShowMusa(pre_show_estado_musa.cooldown_ms);
             return;
         }

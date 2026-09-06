@@ -89,6 +89,7 @@ test("muse wiring is session-bound, IME-safe, acknowledged and tutorial-scoped",
 
   assert.match(html, /id="pre_show_musa"[^>]*hidden[^>]*aria-labelledby/);
   assert.match(html, /id="pre_show_musa_feedback"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(html, /id="pre_show_musa_confirmacion"[^>]*hidden[^>]*aria-hidden="true"/);
   assert.match(html, /domains\/pre-show\.js\?v=20260824b/);
   assert.match(state, /evt\.isComposing[\s\S]*pre_show_ime_activo_musa[\s\S]*evt\.keyCode === 229/);
   assert.match(state, /evt\.shiftKey/);
@@ -99,6 +100,8 @@ test("muse wiring is session-bound, IME-safe, acknowledged and tutorial-scoped",
   assert.match(sockets, /socket\.on\("pre_show_estado"/);
   assert.match(sockets, /socket\.on\("vista_espectador_modo"[\s\S]*actualizarModoVistaMusaRemoto/);
   assert.match(state, /vista_tutorial_musa_permitida = modo === "tutorial"/);
+  assert.match(state, /function animarConfirmacionPreShowMusa[\s\S]*classList\.add\("is-visible"\)/);
+  assert.match(state, /mostrarFeedbackPreShowMusa\(mensajeEnviado, false\);[\s\S]*animarConfirmacionPreShowMusa\(mensajeEnviado\)/);
   assert.match(state, /vista_tutorial_musa_permitida[\s\S]*pre_show_bloqueado_por_tutorial_musa = false/);
   assert.match(state, /scrib:video-tutorial-visibility[\s\S]*restaurarVistaMusaTrasVideoTutorial/);
   assert.match(state, /restaurarVistaMusaTrasVideoTutorial[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);

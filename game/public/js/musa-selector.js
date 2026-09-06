@@ -236,7 +236,8 @@ function scrollToSeccion(objetivo) {
   const inicio = introScroll.scrollTop;
   const destino = objetivo.offsetTop;
   const distancia = destino - inicio;
-  const duracion = usaMovimientoReducido() ? 0 : 1200;
+  const navegacionMovil = window.matchMedia?.("(hover: none) and (pointer: coarse)")?.matches;
+  const duracion = usaMovimientoReducido() ? 0 : (navegacionMovil ? 680 : 1200);
   if (!duracion) {
     introScroll.scrollTop = destino;
     marcarSeccionOnboardingActiva(objetivo);

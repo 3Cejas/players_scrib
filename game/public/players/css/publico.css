@@ -5636,6 +5636,82 @@ body.equipo-rojo .pre-show-musa {
     color: #ff8d96;
 }
 
+.pre-show-musa__confirmation[hidden] {
+    display: none !important;
+}
+
+.pre-show-musa__confirmation {
+    position: absolute;
+    inset: 10px;
+    z-index: 8;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(var(--pre-show-accent-rgb), 0.66);
+    border-radius: calc(clamp(22px, 3.5vw, 38px) - 6px);
+    color: #fff;
+    background:
+        radial-gradient(circle at 50% 47%, rgba(var(--pre-show-accent-rgb), 0.34), transparent 32%),
+        rgba(1, 8, 15, 0.94);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.96);
+}
+
+.pre-show-musa__confirmation.is-visible {
+    animation: preShowMessageSent 1650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pre-show-musa__confirmation-check {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    width: clamp(82px, 24vw, 126px);
+    aspect-ratio: 1;
+    place-items: center;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    color: var(--pre-show-accent);
+    background: rgba(var(--pre-show-accent-rgb), 0.12);
+    box-shadow: 0 0 32px rgba(var(--pre-show-accent-rgb), 0.5), inset 0 0 24px rgba(var(--pre-show-accent-rgb), 0.15);
+    font: 900 clamp(2.8rem, 12vw, 5rem)/1 system-ui, sans-serif;
+    animation: preShowMessageCheck 1650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pre-show-musa__confirmation strong {
+    position: relative;
+    z-index: 2;
+    max-width: min(84%, 520px);
+    color: #fff;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.8rem, 3vw, 1.2rem);
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-shadow: 0 0 18px rgba(var(--pre-show-accent-rgb), 0.72);
+}
+
+.pre-show-musa__confirmation-rings,
+.pre-show-musa__confirmation-rings i {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: min(72vw, 390px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(var(--pre-show-accent-rgb), 0.58);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0.18);
+}
+
+.pre-show-musa__confirmation-rings i {
+    width: 100%;
+    animation: preShowMessageRing 1250ms ease-out both;
+}
+
+.pre-show-musa__confirmation-rings i:nth-child(2) { animation-delay: 120ms; }
+.pre-show-musa__confirmation-rings i:nth-child(3) { animation-delay: 240ms; }
+
 .pre-show-musa__hint {
     margin: 2px 4px 0;
     color: rgba(255, 255, 255, 0.35);
@@ -5661,6 +5737,24 @@ body.equipo-rojo .pre-show-musa {
 @keyframes preShowSignal {
     from { height: 24%; opacity: 0.48; }
     to { height: 100%; opacity: 1; }
+}
+
+@keyframes preShowMessageSent {
+    0% { opacity: 0; transform: scale(0.96); }
+    12%, 82% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.025); }
+}
+
+@keyframes preShowMessageCheck {
+    0% { opacity: 0; transform: scale(0.3) rotate(-24deg); }
+    22%, 78% { opacity: 1; transform: scale(1) rotate(0); }
+    100% { opacity: 0; transform: scale(1.12); }
+}
+
+@keyframes preShowMessageRing {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.18); }
+    18% { opacity: 0.85; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
 }
 
 @media (max-width: 600px), (max-height: 640px) {
@@ -5694,6 +5788,20 @@ body.equipo-rojo .pre-show-musa {
     .pre-show-musa__live > span:first-child,
     .pre-show-musa__signal span {
         animation: none !important;
+    }
+
+    .pre-show-musa__confirmation.is-visible {
+        animation: none !important;
+        opacity: 1;
+        transform: none;
+    }
+
+    .pre-show-musa__confirmation-check {
+        animation: none !important;
+    }
+
+    .pre-show-musa__confirmation-rings {
+        display: none;
     }
 }
 

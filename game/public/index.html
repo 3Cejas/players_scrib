@@ -333,6 +333,7 @@
     padding: clamp(2.2rem, 8vw, 4.5rem) 0;
     position: relative;
     overflow: hidden;
+    contain: paint style;
 }
 
 .intro-panel {
@@ -4790,6 +4791,48 @@ body.musa-boot-activa .intro-flow {
     .onboarding-idea-demo { grid-template-columns: minmax(0, .76fr) 2.7rem minmax(0, 1.2fr); }
 }
 
+/* En móviles mantenemos las animaciones narrativas y retiramos trabajo decorativo caro. */
+@media (hover: none) and (pointer: coarse), (max-width: 600px) {
+    .intro-section:not(.is-onboarding-active) {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 100dvh;
+    }
+
+    #background-effects .aquarium-current,
+    #background-effects .aquarium-shimmer,
+    #background-effects .aquarium-bloom {
+        display: none !important;
+    }
+
+    #background-effects .aquarium-glow {
+        animation: none !important;
+        filter: blur(14px);
+        mix-blend-mode: normal;
+        opacity: 0.11;
+    }
+
+    .intro-spark-stage::before,
+    .intro-spark-stage__orbit,
+    .intro-spark-stage__particle,
+    .onboarding-inspiration-bar::after,
+    .onboarding-writer-window::after {
+        animation: none !important;
+    }
+
+    .onboarding-inspiration-bar::after,
+    .intro-spark-stage__particle {
+        display: none !important;
+    }
+
+    .onboarding-game-card,
+    .onboarding-writer-window,
+    .onboarding-idea-source,
+    .onboarding-idea-story,
+    .onboarding-disadvantage-editor {
+        box-shadow: none;
+    }
+}
+
 @media (max-height: 690px) {
     .intro-spark-stage { width: min(33vh, 9rem); }
     .intro-onboarding-hero { font-size: clamp(2.15rem, 9vh, 3.65rem); }
@@ -5111,5 +5154,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260903e"></script>
+<script src="./js/musa-selector.js?v=20260906a"></script>
 </html>

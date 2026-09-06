@@ -35,6 +35,20 @@ test("el HUD usa marcador numerico, reloj global y animaciones sin porcentajes",
   });
 });
 
+test("Espectador mantiene el marcador arriba y reserva sitio para ambos nombres", () => {
+  const js = read("game/js/domains/competition.js");
+  const html = read("game/spectator/index.html");
+  const sockets = read("game/spectator/js/socket-events.js");
+
+  assert.match(js, /data-role="spectator"\]\{top:clamp\(8px,1\.4vh,18px\)/);
+  assert.match(js, /vista-partida #contenedor_espectador\{[^}]*padding-top:clamp\(94px,12vh,128px\)/);
+  assert.match(js, /#contenedor_espectador \.nombre\{[^}]*visibility:visible/);
+  assert.match(html, /value="ESCRITXR 1"[^>]*id="nombre"/);
+  assert.match(html, /value="ESCRITXR 2"[^>]*id="nombre1"/);
+  assert.match(sockets, /trim\(\) \|\| "ESCRITXR 1"/);
+  assert.match(sockets, /trim\(\) \|\| "ESCRITXR 2"/);
+});
+
 test("Control integra un HUD compacto donde antes aparecía la duración de la desventaja", () => {
   const js = read("game/js/domains/competition.js");
   const html = read("game/control/index.html");

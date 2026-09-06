@@ -1811,12 +1811,12 @@ function manejarScrollSincroEspectador() {
 }
 
 function manejarNombre2Espectador(data) {
-    nombre2.value = data;
+    nombre2.value = String(data || "").replace(/\s+/g, " ").trim() || "ESCRITXR 2";
     actualizarEtiquetasCursorCalentamiento();
 }
 
 function manejarNombre1Espectador(data) {
-    nombre1.value = data;
+    nombre1.value = String(data || "").replace(/\s+/g, " ").trim() || "ESCRITXR 1";
     actualizarEtiquetasCursorCalentamiento();
 }
 
