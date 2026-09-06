@@ -1343,7 +1343,7 @@ function sincronizarAudioDeliberacionEspectador(modo) {
         pausarAudioDeliberacionEspectador(deliberacion_audio_espectador, true);
         pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
         audio_deliberacion_victoria_firma = "";
-        reproducirAudioDeliberacionSeguro(deliberacion_latido_espectador, 0.72);
+        reproducirAudioDeliberacionSeguro(deliberacion_latido_espectador, 1);
         return;
     }
     pausarAudioDeliberacionEspectador(deliberacion_latido_espectador, true);

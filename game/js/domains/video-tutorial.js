@@ -210,6 +210,15 @@
         return Math.abs(current - target) > Math.max(0, asFiniteNumber(maxDriftSeconds, MAX_CONTINUOUS_AUDIO_DRIFT_SECONDS));
     }
 
+    function mediaSynchronizedPosition(clockPosition, audio, durationSeconds = DEFAULT_DURATION_SECONDS) {
+        const duration = Math.max(1, asFiniteNumber(durationSeconds, DEFAULT_DURATION_SECONDS));
+        const fallback = clamp(asFiniteNumber(clockPosition, 0), 0, duration);
+        if (!audio || audio.paused || audio.ended) return fallback;
+        const mediaPosition = Number(audio.currentTime);
+        if (!Number.isFinite(mediaPosition) || mediaPosition < 0) return fallback;
+        return clamp(mediaPosition, 0, duration);
+    }
+
     function requestId(windowRef) {
         try {
             if (windowRef.crypto && typeof windowRef.crypto.randomUUID === "function") {
@@ -594,7 +603,10 @@
         function tick() {
             frameId = null;
             if (!state || !state.visible) return;
-            const position = currentPosition();
+            const clockPosition = currentPosition();
+            const position = role === "spectator"
+                ? mediaSynchronizedPosition(clockPosition, audio, state.config.durationSeconds)
+                : clockPosition;
             if (role === "spectator") {
                 announceMusicPreroll(position);
                 renderSpectator(position);
@@ -729,6 +741,7 @@
         playbackKey,
         continuousPosition,
         shouldSeekAudio,
+        mediaSynchronizedPosition,
         createController
     });
 }));

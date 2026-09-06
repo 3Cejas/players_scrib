@@ -83,6 +83,19 @@
     const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
     const clean = (value, max = 2048) => String(value == null ? "" : value).trim().slice(0, max);
 
+    function mediaSynchronizedPosition(clockPosition, audio, offsetSeconds = 0, mediaDurationSeconds = Infinity) {
+        const fallback = Math.max(0, finite(clockPosition, 0));
+        if (!audio || audio.paused || audio.ended) return fallback;
+        const mediaPosition = Number(audio.currentTime);
+        if (!Number.isFinite(mediaPosition) || mediaPosition < 0) return fallback;
+        const offset = Math.max(0, finite(offsetSeconds, 0));
+        const duration = Number(mediaDurationSeconds);
+        const upperBound = Number.isFinite(duration) && duration > 0
+            ? offset + duration
+            : Infinity;
+        return clamp(offset + mediaPosition, 0, upperBound);
+    }
+
     function versionedAssetUrl(value, fallback, locationRef, extension) {
         let resolved;
         try {
@@ -333,9 +346,17 @@
         const tick = () => {
             frameId = null;
             if (!state || !state.active) return;
-            const position = currentPosition();
+            const clockPosition = currentPosition();
+            const position = role === "spectator"
+                ? mediaSynchronizedPosition(
+                    clockPosition,
+                    audio,
+                    state.config.prerollSeconds,
+                    state.config.audioSeconds
+                )
+                : clockPosition;
             render(position);
-            playNarration(position);
+            playNarration(clockPosition);
             frameId = scheduleFrame(tick);
         };
 
@@ -404,6 +425,7 @@
         SUBTITLES,
         createController,
         normalizeState,
+        mediaSynchronizedPosition,
         sceneAt,
         subtitleAt,
         versionedAssetUrl

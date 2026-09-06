@@ -49,7 +49,7 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(spectatorState, /vista-resultado-jurado/);
   assert.match(spectatorState, /vista-resultado-final/);
   assert.doesNotMatch(spectatorState, /APARTADO \$\{paso\} DE \$\{estado\.criterios\.length\}/);
-  assert.match(spectatorState, /resultado_jurado[\s\S]*pausarAudioDeliberacionEspectador\(deliberacion_audio_espectador, true\)[\s\S]*reproducirAudioDeliberacionSeguro\(deliberacion_latido_espectador/);
+  assert.match(spectatorState, /resultado_jurado[\s\S]*pausarAudioDeliberacionEspectador\(deliberacion_audio_espectador, true\)[\s\S]*reproducirAudioDeliberacionSeguro\(deliberacion_latido_espectador, 1\)/);
   assert.match(spectatorState, /RESULTADO_FINAL_SUSPENSE_MS = 3000/);
   assert.match(spectatorState, /!controlador_transicion_vista_espectador \|\| modo === "resultado_final"/);
   assert.match(spectatorState, /modo === "resultado_final"\) controlador_transicion_vista_espectador\?\.cancel\(\)/);

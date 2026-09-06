@@ -99,12 +99,27 @@ test("verification updates do not rewind or repeatedly seek an active narration"
   assert.equal(tutorial.shouldSeekAudio(true, 138.82, 138.8), true);
 });
 
+test("spectator tutorial scenes and subtitles follow the audio that is actually heard", () => {
+  assert.equal(
+    tutorial.mediaSynchronizedPosition(80, { paused: false, ended: false, currentTime: 61.25 }, 153),
+    61.25
+  );
+  assert.equal(
+    tutorial.mediaSynchronizedPosition(80, { paused: true, ended: false, currentTime: 61.25 }, 153),
+    80
+  );
+  assert.equal(
+    tutorial.mediaSynchronizedPosition(80, { paused: false, ended: true, currentTime: 61.25 }, 153),
+    80
+  );
+});
+
 test("spectator and muse load the synchronized CSS tutorial before socket handlers", () => {
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
     assert.match(html, /video-tutorial\.css\?v=20260903u/);
-    assert.match(html, /domains\/video-tutorial\.js\?v=20260903u/);
+    assert.match(html, /domains\/video-tutorial\.js\?v=20260906b/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
   }
@@ -116,6 +131,7 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
 test("spectator tutorial is live HTML and CSS, with the phone only in practical scenes", () => {
   const css = read("game/css/video-tutorial.css");
   const js = read("game/js/domains/video-tutorial.js");
+  assert.match(js, /mediaSynchronizedPosition\(clockPosition, audio, state\.config\.durationSeconds\)/);
 
   assert.match(js, /<audio class="scrib-video-tutorial__audio"/);
   assert.doesNotMatch(js, /<video\b/);
