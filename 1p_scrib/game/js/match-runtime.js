@@ -385,7 +385,6 @@ function inicio() {
     detenerProgresoNivelBarraEscritora(true);
     reiniciarProgresoFraseFinalEscritora();
     limpiarCountdownInicioEscritora();
-    const revisionCuentaAtras = revision_cuenta_atras_1p;
     post_inicio_pendiente_escritora = null;
     animarCSSJuego1P(".botones", "backOutLeft").then((message) => {
         btnOpciones.style.display = "none";
@@ -401,6 +400,7 @@ function inicio() {
         animarCSSJuego1P(".contenedor", "pulse");
 
     limpieza();
+    const revisionCuentaAtras = revision_cuenta_atras_1p;
     modos_restantes = [...LISTA_MODOS];
     palabras_prohibidas_restantes = [...palabras_prohibidas];
     actualizarDuracionNivelDesdeParametrosEscritora({ TIEMPO_CAMBIO_MODOS });
@@ -1274,4 +1274,3 @@ function convertirASegundos(tiempo) {
     let segundos = parseInt(partes[1], 10); // convertimos los segundos a un número entero
     return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
   }
-

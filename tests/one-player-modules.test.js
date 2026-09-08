@@ -180,7 +180,20 @@ test("1P life bar animates from empty when it becomes visible", () => {
   assert.match(runtime, /if \(elemento\.dataset\) elemento\.dataset\.vidaVisible = "0";/);
   assert.match(runtime, /const animarEntrada = debeAnimarEntradaBarraVida\(elemento, opciones\);/);
   assert.match(runtime, /if \(elemento\.dataset\) elemento\.dataset\.vidaVisible = "1";/);
-  assert.match(html, /\.\/js\/match-runtime\.js\?v=20260504b/);
+  assert.match(html, /\.\/js\/match-runtime\.js\?v=20260908a/);
+});
+
+test("1P countdown captures its revision after match cleanup", () => {
+  const runtime = read("1p_scrib/game/js/match-runtime.js");
+
+  assert.match(
+    runtime,
+    /animarCSSJuego1P\("\.contenedor", "backOutLeft"\)\.then\([\s\S]*?limpieza\(\);\s*const revisionCuentaAtras = revision_cuenta_atras_1p;/
+  );
+  assert.doesNotMatch(
+    runtime,
+    /limpiarCountdownInicioEscritora\(\);\s*const revisionCuentaAtras = revision_cuenta_atras_1p;\s*post_inicio_pendiente_escritora/
+  );
 });
 
 test("1P mode rules compute durations and cycle blessed letters", () => {
