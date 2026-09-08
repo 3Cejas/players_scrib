@@ -23,3 +23,4 @@ Current request (2026-09-08): reparar la versión de un jugador publicada en scr
 - 2026-09-08: Movida la captura de revisión inmediatamente después de `limpieza()` y actualizado el cache-buster de `match-runtime.js`; se añadió una regresión que fija ese orden.
 - 2026-09-08: Verificado en navegador contra la versión local: desaparece la cuenta atrás, el editor pasa a `contenteditable=true`, arranca `LETRA BENDITA`, acepta `gato gris` y no aparecen errores de consola.
 - 2026-09-08: Validación final local: 237/237 pruebas unitarias y E2E `one-player-start-and-write` superado.
+- 2026-09-08: Netlify publicó el arreglo desde `master`. Repetido el flujo en `scribshow.es` con `match-runtime.js?v=20260908a`: cuenta atrás eliminada, editor editable, primer nivel activo y texto `un universo` aceptado sin errores de consola.
