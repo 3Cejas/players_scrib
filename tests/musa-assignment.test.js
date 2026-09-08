@@ -412,7 +412,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260906a/);
+  assert.match(html, /musa-selector\.js\?v=20260908a/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -478,7 +478,9 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.match(html, /\.onboarding-inspiration-head \{[\s\S]{0,180}justify-content: center;[\s\S]{0,180}text-align: center;/);
   assert.match(html, /\.intro-section\.is-onboarding-restarting \*/);
   assert.match(selector, /classList\.add\("is-onboarding-restarting"\)[\s\S]*void objetivo\.offsetWidth[\s\S]*classList\.remove\("is-onboarding-restarting"\)[\s\S]*void objetivo\.offsetWidth[\s\S]*classList\.add\("is-onboarding-active"\)/);
-  assert.match(selector, /function animarTextoOnboarding\(seccion\)[\s\S]*Array\.from[\s\S]*textoRitmo\.textContent = caracteresVisiblesOnboarding[\s\S]*textoDesventaja\.textContent = caracteresVisiblesOnboarding[\s\S]*palabraDesventaja\.textContent = caracteresVisiblesOnboarding/);
+  assert.match(selector, /function animarTextoOnboarding\(seccion\)[\s\S]*estadosTexto = new Map[\s\S]*actualizarCaracteres\(textoRitmo, visibles\)[\s\S]*actualizarCaracteres\(textoDesventaja, visibles\)[\s\S]*actualizarCaracteres\(palabraDesventaja, visibles\)/);
+  assert.match(selector, /cancelAnimationFrame\(onboardingTextFrame\)[\s\S]*onboardingTextFrame = requestAnimationFrame\(actualizar\)/);
+  assert.doesNotMatch(selector, /setTimeout\(actualizar, 60\)/);
   assert.match(html, /@keyframes onboardingRhythmBlue[\s\S]*@keyframes onboardingIdeaBlue[\s\S]*@keyframes onboardingDisadvantageText/);
   assert.match(html, /@keyframes onboardingFeedbackTint[\s\S]*background: #28f083[\s\S]*background: #ff3155/);
   assert.match(html, /@keyframes onboardingWelcomeLogo[\s\S]*@keyframes onboardingNameInput/);
@@ -492,6 +494,7 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.onboarding-game-slide \*/);
   assert.match(html, /@media \(hover: none\) and \(pointer: coarse\), \(max-width: 600px\)[\s\S]*content-visibility: auto/);
   assert.match(html, /#background-effects \.aquarium-current,[\s\S]*display: none !important/);
+  assert.match(html, /En tactil evitamos repintar filtros y sombras de tarjetas completas[\s\S]*\.musa-team-choice,[\s\S]*animation: none;[\s\S]*\.musa-team-choice::after,[\s\S]*animation-timing-function: ease-in-out;/);
   assert.match(selector, /navegacionMovil[\s\S]*\? 680 : 1200/);
 });
 

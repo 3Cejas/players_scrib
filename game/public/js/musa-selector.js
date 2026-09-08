@@ -36,7 +36,7 @@ let seleccionPendiente = { assignmentMode: "automatica", player: null };
 let claveAvisoMusa = "";
 let restaurandoAsignacionPersistida = false;
 let sesionPartidaMusa = "";
-let onboardingTextTimer = null;
+let onboardingTextFrame = null;
 
 const tMusa = (key, variables = {}, fallback = "") => (
   typeof window.scribT2P === "function"
@@ -132,12 +132,8 @@ function pedirOpcionesEquipoMusa() {
 }
 
 function detenerTextoAnimadoOnboarding() {
-  if (onboardingTextTimer) clearTimeout(onboardingTextTimer);
-  onboardingTextTimer = null;
-}
-
-function caracteresVisiblesOnboarding(texto, cantidad) {
-  return Array.from(String(texto || "")).slice(0, Math.max(0, cantidad)).join("");
+  if (onboardingTextFrame !== null) cancelAnimationFrame(onboardingTextFrame);
+  onboardingTextFrame = null;
 }
 
 function cantidadProgresivaOnboarding(progreso, inicio, fin, total, inversa = false) {
@@ -160,6 +156,17 @@ function animarTextoOnboarding(seccion) {
   if (!elementos.length) return;
 
   const textoCompleto = (elemento) => String(elemento?.dataset.fullText || elemento?.textContent || "");
+  const estadosTexto = new Map(elementos.map((elemento) => {
+    const caracteres = Array.from(textoCompleto(elemento));
+    return [elemento, { caracteres, total: caracteres.length, visibles: null }];
+  }));
+  const actualizarCaracteres = (elemento, visibles) => {
+    const estado = estadosTexto.get(elemento);
+    const cantidad = Math.max(0, Math.min(estado.total, visibles));
+    if (estado.visibles === cantidad) return;
+    estado.visibles = cantidad;
+    elemento.textContent = estado.caracteres.slice(0, cantidad).join("");
+  };
   const escribirCompleto = () => elementos.forEach((elemento) => {
     elemento.textContent = textoCompleto(elemento);
   });
@@ -171,41 +178,41 @@ function animarTextoOnboarding(seccion) {
   const duracion = seccion.id === "intro-ritmo" ? 18000 : 20000;
   const inicio = performance.now();
   const actualizar = () => {
-    if (!seccion.classList.contains("is-onboarding-active")) return;
+    if (!seccion.classList.contains("is-onboarding-active")) {
+      onboardingTextFrame = null;
+      return;
+    }
     const progreso = ((performance.now() - inicio) % duracion) / duracion;
 
     if (textoRitmo) {
-      const completo = textoCompleto(textoRitmo);
-      const total = Array.from(completo).length;
+      const total = estadosTexto.get(textoRitmo).total;
       let visibles = 0;
       if (progreso < 0.47) visibles = cantidadProgresivaOnboarding(progreso, 0.09, 0.47, total);
       else if (progreso <= 0.53) visibles = total;
       else if (progreso < 0.94) visibles = cantidadProgresivaOnboarding(progreso, 0.53, 0.94, total, true);
-      textoRitmo.textContent = caracteresVisiblesOnboarding(completo, visibles);
+      actualizarCaracteres(textoRitmo, visibles);
     }
 
     if (textoDesventaja) {
-      const completo = textoCompleto(textoDesventaja);
-      const total = Array.from(completo).length;
+      const total = estadosTexto.get(textoDesventaja).total;
       const visibles = progreso < 0.48
         ? cantidadProgresivaOnboarding(progreso, 0.1, 0.48, total)
         : total;
-      textoDesventaja.textContent = caracteresVisiblesOnboarding(completo, visibles);
+      actualizarCaracteres(textoDesventaja, visibles);
     }
 
     if (palabraDesventaja) {
-      const completo = textoCompleto(palabraDesventaja);
-      const total = Array.from(completo).length;
+      const total = estadosTexto.get(palabraDesventaja).total;
       let visibles = 0;
       if (progreso >= 0.6 && progreso < 0.71) {
         visibles = cantidadProgresivaOnboarding(progreso, 0.6, 0.71, total);
       } else if (progreso >= 0.71 && progreso <= 0.96) {
         visibles = total;
       }
-      palabraDesventaja.textContent = caracteresVisiblesOnboarding(completo, visibles);
+      actualizarCaracteres(palabraDesventaja, visibles);
     }
 
-    onboardingTextTimer = setTimeout(actualizar, 60);
+    onboardingTextFrame = requestAnimationFrame(actualizar);
   };
   actualizar();
 }

@@ -10770,7 +10770,7 @@ table.default {
     flex: 0 0 auto;
     object-fit: contain;
     object-position: center;
-    transform: scale(1.58);
+    transform: none;
     transform-origin: center;
     filter:
         drop-shadow(0 0 0.25rem rgba(105, 243, 255, 0.68))
@@ -10780,17 +10780,17 @@ table.default {
 .control-debug-secret-trigger {
     display: grid;
     place-items: center;
-    width: clamp(2.35rem, 3vw, 2.9rem);
-    height: clamp(1.25rem, 1.7vw, 1.55rem);
+    width: clamp(1.85rem, 2.25vw, 2.2rem);
+    height: clamp(1.85rem, 2.25vw, 2.2rem);
     flex: 0 0 auto;
-    overflow: hidden;
+    overflow: visible;
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
     color: inherit;
     cursor: pointer;
-    border-radius: 10px;
+    border-radius: 0.32rem;
     -webkit-tap-highlight-color: transparent;
 }
 

@@ -4829,7 +4829,51 @@ body.musa-boot-activa .intro-flow {
     .onboarding-idea-source,
     .onboarding-idea-story,
     .onboarding-disadvantage-editor {
-        box-shadow: none;
+        box-shadow: none !important;
+    }
+
+    .intro-onboarding-demo.is-onboarding-active .onboarding-game-slide,
+    .intro-asignacion.is-onboarding-active .musa-team-picker {
+        contain: paint;
+    }
+
+    .intro-onboarding-demo.is-onboarding-active .onboarding-game-slide *,
+    .musa-team-choice::before,
+    .musa-team-choice::after,
+    .musa-team-choice img,
+    .musa-assignment-cta--automatic::before,
+    .musa-assignment-cta--automatic::after {
+        backface-visibility: hidden;
+        will-change: transform, opacity;
+    }
+
+    /* En tactil evitamos repintar filtros y sombras de tarjetas completas. */
+    .musa-team-choice,
+    .musa-assignment-cta--automatic {
+        animation: none;
+        filter: none !important;
+    }
+
+    .musa-team-choice {
+        box-shadow:
+            inset 0 -0.38rem 0 color-mix(in srgb, var(--team-color), black 76%),
+            0 0.34rem 0 color-mix(in srgb, var(--team-color), black 62%) !important;
+    }
+
+    .musa-team-choice img,
+    .musa-team-choice::after {
+        filter: none;
+    }
+
+    .musa-team-choice::after,
+    .musa-assignment-cta--automatic::after {
+        animation-timing-function: ease-in-out;
+    }
+
+    .musa-assignment-cta--automatic {
+        box-shadow:
+            inset 0 -0.42rem 0 #c86616,
+            0 0.36rem 0 #8c450f !important;
     }
 }
 
@@ -5154,5 +5198,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260906a"></script>
+<script src="./js/musa-selector.js?v=20260908a"></script>
 </html>
