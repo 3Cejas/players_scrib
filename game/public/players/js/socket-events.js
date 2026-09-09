@@ -418,6 +418,14 @@ socket.on('connect_error', () => {
     suspenderPreShowMusaPorConexion();
 });
 
+socket.on("debug_detonadores_visual", (payload = {}) => {
+    window.ScribDebugDetonators?.burst(payload);
+});
+
+socket.on("debug_detonadores_detener", () => {
+    window.ScribDebugDetonators?.clear();
+});
+
 socket.on('regalo_pdf_musas', (payload) => {
     if (payload && payload.client_id && window.musa_client_id && String(payload.client_id) !== String(window.musa_client_id)) {
         return;

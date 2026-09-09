@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260908a">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260909a">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260905d"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260420a"></script>
-<script src="./js/actions.js?v=20260905e"></script>
+<script src="./js/actions.js?v=20260909a"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -150,6 +150,15 @@
                                 <span id="boton_solicitud_acciones" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="acciones" onclick="pedir_solicitud_calentamiento('acciones')">&#x1F3C3; PEDIR ACCIONES</span>
                                 <span id="boton_solicitud_frase_final" class='btn btn-calentamiento-solicitud' data-solicitud-calentamiento="frase_final" onclick="pedir_solicitud_calentamiento('frase_final')">&#x1F4AC; PEDIR FRASE FINAL</span>
                             </div>
+                            <div id="debug_tools_detonadores" class="debug-context-tools debug-context-tools--detonators" data-debug-tools hidden aria-hidden="true">
+                                <button id="debug_detonadores_toggle" class="btn debug-control__button" data-debug-action type="button" aria-pressed="false" onclick="toggleLluviaDetonadoresDebug()">&#x1F4A5; PROBAR DETONADORES</button>
+                                <label class="debug-speed-control" for="debug_detonadores_velocidad">
+                                    <span>VELOCIDAD</span>
+                                    <input id="debug_detonadores_velocidad" type="range" min="1" max="10" step="1" value="6" oninput="actualizarVelocidadDetonadoresDebug(this.value)">
+                                    <output id="debug_detonadores_velocidad_valor" for="debug_detonadores_velocidad">6</output>
+                                </label>
+                                <p class="debug-context-tools__status" data-debug-status="detonadores" role="status" aria-live="polite"></p>
+                            </div>
                             <p id="calentamiento_flujo_estado" class="calentamiento-flujo-estado">J1: ABIERTO | J2: ABIERTO</p>
                         </div>
                         <div id="control_panel_juego" class="control-group control-group--juego control-collapsible" data-control-section="juego" role="tabpanel" aria-labelledby="control_title_game">
@@ -163,9 +172,8 @@
                                 <span id="boton_skip_tertulia" class='btn btn-skip-tertulia' onclick="saltar_tertulia()">&#x23ED;&#xFE0F; SKIP TERTULIA</span>
                             </div>
                             <div id="debug_tools_juego" class="debug-context-tools debug-context-tools--game" data-debug-tools hidden aria-hidden="true">
-                                <span class="debug-context-tools__label">&#x1F9EA; DEBUG</span>
                                 <button id="debug_siguiente_nivel" class="btn debug-control__button debug-control__button--advance" data-debug-action type="button" onclick="saltarSiguienteNivelDebug()">&#x23ED;&#xFE0F; SIGUIENTE NIVEL</button>
-                                <p class="debug-context-tools__status" data-debug-status role="status" aria-live="polite"></p>
+                                <p class="debug-context-tools__status" data-debug-status="juego" role="status" aria-live="polite"></p>
                             </div>
                             <div id="stats_nav_control" class="stats-nav-control" hidden aria-hidden="true">
                                 <button id="stats_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev" onclick="navegarSlidesStatsControl('prev')" aria-label="Slide anterior"></button>
@@ -178,6 +186,11 @@
                                 <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x2B07;&#xFE0F; DESCARGAR TEXTOS</span>
                                 <span id="boton_temporizador_gigante" class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
+                            </div>
+                            <div id="debug_tools_representacion" class="debug-context-tools debug-context-tools--representation" data-debug-tools hidden aria-hidden="true">
+                                <button id="debug_cargar_textos" class="btn debug-control__button" data-debug-action type="button" onclick="cargarTextosPruebaRepresentacionDebug()">&#x1F4DD; CARGAR TEXTOS DE PRUEBA</button>
+                                <button id="debug_limpiar_textos" class="btn debug-control__button" data-debug-action type="button" onclick="limpiarTextosPruebaRepresentacionDebug()">&#x1F9F9; LIMPIAR TEXTOS DE PRUEBA</button>
+                                <p class="debug-context-tools__status" data-debug-status="representacion" role="status" aria-live="polite"></p>
                             </div>
                             <div id="panel_teleprompter_representacion" class="teleprompter-host panel-oculto" aria-hidden="true"></div>
                         </div>
@@ -203,10 +216,9 @@
                             </div>
                             <p id="deliberacion_estado_control" class="deliberacion-control__estado" role="status" aria-live="polite">El resultado del jurado aparecer&aacute; cuando haya puntuado a ambas escritoras.</p>
                             <div id="debug_tools_deliberacion" class="debug-context-tools debug-context-tools--deliberation" data-debug-tools hidden aria-hidden="true">
-                                <span class="debug-context-tools__label">&#x1F9EA; DATOS DE PRUEBA</span>
                                 <button id="debug_cargar_deliberacion" class="btn debug-control__button" data-debug-action type="button" onclick="cargarDatosPruebaDeliberacionDebug()">&#x2696;&#xFE0F; CARGAR DATOS FICTICIOS</button>
                                 <button id="debug_limpiar_deliberacion" class="btn debug-control__button" data-debug-action type="button" onclick="limpiarDatosPruebaDeliberacionDebug()">&#x1F9F9; LIMPIAR DATOS FICTICIOS</button>
-                                <p class="debug-context-tools__status" data-debug-status role="status" aria-live="polite"></p>
+                                <p class="debug-context-tools__status" data-debug-status="deliberacion" role="status" aria-live="polite"></p>
                             </div>
                         </div>
                         <div id="control_panel_final" class="control-group control-group--final control-collapsible is-collapsed" data-control-section="final" role="tabpanel" aria-labelledby="control_title_final">
@@ -216,9 +228,8 @@
                                 <button id="boton_banderas_musas_final" class="btn btn-estandar-seccion" type="button" data-banderas-musas-control onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</button>
                             </div>
                             <div id="debug_tools_final" class="debug-context-tools debug-context-tools--final" data-debug-tools hidden aria-hidden="true">
-                                <span class="debug-context-tools__label">&#x1F9EA; DEBUG</span>
                                 <button id="debug_finalizar_partida" class="btn debug-control__button debug-control__button--danger" data-debug-action type="button" onclick="finalizarPartidaDebug()">&#x23F9;&#xFE0F; FINALIZAR PARTIDA</button>
-                                <p class="debug-context-tools__status" data-debug-status role="status" aria-live="polite"></p>
+                                <p class="debug-context-tools__status" data-debug-status="final" role="status" aria-live="polite"></p>
                             </div>
                             <div id="panel_creditos_final" class="creditos-host panel-oculto" aria-hidden="true"></div>
                         </div>
@@ -786,7 +797,7 @@
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260903b"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260905f"></script>
+<script src="./js/socket-events.js?v=20260909a"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

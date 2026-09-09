@@ -8879,9 +8879,13 @@ table.default {
     grid-template-rows: minmax(2.15rem, 1fr) !important;
 }
 
-/* Juego: con cinco acciones, nube ocupa todo el ancho disponible. */
+/* Juego: Stats y Nube de inspiracion comparten la ultima fila. */
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_stats {
+    grid-column: 1;
+}
+
 #panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_nube_inspiracion {
-    grid-column: 1 / -1;
+    grid-column: 2;
 }
 
 /* Frase final: autosave visual y cajas por equipo. */
@@ -10646,6 +10650,397 @@ body.asistencia-modal-abierta {
     }
 }
 
+/* Capa de cierre: cabecera, paneles y herramientas de ensayo sin solapes. */
+body {
+    row-gap: clamp(0.38rem, 0.62vw, 0.68rem);
+}
+
+.remote-status-bar {
+    grid-template-columns: minmax(7rem, 0.72fr) repeat(4, minmax(0, 1fr));
+    gap: clamp(0.3rem, 0.5vw, 0.56rem);
+    width: min(calc(100vw - 0.92rem), 1900px);
+    max-width: min(calc(100vw - 0.92rem), 1900px);
+    height: 2.48rem;
+    min-height: 2.48rem;
+}
+
+.remote-brand-card,
+.remote-status-card {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.remote-brand-card {
+    grid-template-columns: 1.48rem minmax(0, auto);
+    justify-content: start;
+    gap: 0.32rem;
+}
+
+.control-debug-secret-trigger {
+    display: grid;
+    place-items: center;
+    width: 1.48rem;
+    height: 1.48rem;
+    min-width: 1.48rem;
+    min-height: 1.48rem;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0.2rem;
+    background: transparent;
+}
+
+.remote-brand-card .control-brand-logo {
+    display: block;
+    width: 1.32rem;
+    height: 1.32rem;
+    max-width: 1.32rem;
+    max-height: 1.32rem;
+    object-fit: contain;
+    object-position: center;
+    transform: none;
+}
+
+.remote-brand-control-label,
+.remote-status-copy,
+.remote-status-role,
+.remote-status-state {
+    min-width: 0;
+}
+
+.remote-brand-control-label,
+.remote-status-role,
+.remote-status-state {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#contenedor {
+    grid-template-columns: minmax(0, 1fr) minmax(11rem, 0.57fr) minmax(0, 1fr);
+    gap: clamp(0.62rem, 0.86vw, 0.92rem);
+    width: min(calc(100vw - 0.92rem), 1900px);
+    max-width: min(calc(100vw - 0.92rem), 1900px);
+    margin-top: 0;
+}
+
+#contenedor > .writer-card,
+#contenedor > .level-card,
+#contenedor > div {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_stats {
+    grid-column: 1;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_nube_inspiracion {
+    grid-column: 2;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_skip_tertulia.is-visible {
+    grid-column: 1 / -1;
+}
+
+.debug-context-tools,
+.debug-context-tools--game,
+.debug-context-tools--final {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.52rem;
+    width: 100%;
+    padding: 0.52rem;
+    box-sizing: border-box;
+    border: 0;
+    background: transparent;
+}
+
+.debug-context-tools--game,
+.debug-context-tools--final {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.debug-context-tools[hidden] {
+    display: none !important;
+}
+
+#panel_controles .control-group:not(.is-collapsed) > .debug-context-tools:not([hidden]) {
+    display: grid !important;
+}
+
+.debug-context-tools__label {
+    display: none !important;
+}
+
+#panel_controles .debug-control__button {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.35rem;
+    margin: 0;
+    padding: 0.48rem 0.58rem;
+    box-sizing: border-box;
+    border: 2px dotted currentColor;
+    border-radius: 0.28rem;
+    color: aqua;
+    background: #505050;
+    box-shadow: 0 0.2em red;
+    text-shadow: 0.0625em 0.0625em red;
+    font: 700 clamp(0.58rem, 0.76vw, 0.82rem)/1.2 "Retro-gaming", monospace;
+    white-space: normal;
+}
+
+#panel_controles .debug-control__button--advance,
+#panel_controles .debug-control__button--danger {
+    color: aqua;
+    border-color: currentColor;
+}
+
+#panel_controles .debug-control__button[data-active="1"],
+#panel_controles .debug-control__button.is-active {
+    color: #fff4c3;
+    background: linear-gradient(180deg, #80521d, #4b2d10);
+    box-shadow: 0 0.2em #ffb63f, 0 0 0.72rem rgba(255, 182, 63, 0.34);
+}
+
+.debug-speed-control {
+    display: grid;
+    grid-template-columns: auto minmax(4.5rem, 1fr) 1.7rem;
+    align-items: center;
+    gap: 0.46rem;
+    min-width: 0;
+    min-height: 2.35rem;
+    padding: 0.45rem 0.58rem;
+    box-sizing: border-box;
+    border: 2px dotted #ffba54;
+    border-radius: 0.28rem;
+    color: #ffe2a0;
+    background: #505050;
+    box-shadow: 0 0.2em red;
+    font: 700 clamp(0.52rem, 0.7vw, 0.74rem)/1 "Retro-gaming", monospace;
+}
+
+.debug-speed-control input {
+    width: 100%;
+    min-width: 0;
+    accent-color: #ffb347;
+}
+
+.debug-speed-control output {
+    color: #fff;
+    text-align: center;
+}
+
+.debug-context-tools__status {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+    .remote-status-bar {
+        grid-template-columns: minmax(6.2rem, 0.7fr) repeat(4, minmax(0, 1fr));
+        height: 2.48rem;
+        min-height: 2.48rem;
+    }
+
+    .control-debug-secret-trigger {
+        width: 1.42rem;
+        height: 1.42rem;
+        min-width: 1.42rem;
+        min-height: 1.42rem;
+    }
+}
+
+@media (max-width: 760px) {
+    .remote-status-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        height: auto;
+        min-height: 0;
+    }
+
+    .remote-brand-card {
+        grid-column: 1 / -1;
+    }
+
+    #contenedor {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .debug-context-tools,
+    .debug-context-tools--game,
+    .debug-context-tools--final {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .debug-speed-control,
+    .debug-context-tools__status {
+        grid-column: 1;
+    }
+}
+
+/* Ajustes finales del modo de pruebas y de la cabecera compacta. */
+.remote-status-bar {
+    grid-template-columns: minmax(8.75rem, 0.82fr) repeat(4, minmax(0, 1fr));
+    column-gap: clamp(0.34rem, 0.55vw, 0.62rem);
+    max-width: calc(100vw - 0.92rem);
+}
+
+.remote-brand-card,
+.remote-status-card {
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.remote-brand-card {
+    grid-template-columns: 1.64rem minmax(0, auto);
+    justify-content: start;
+    gap: 0.34rem;
+}
+
+.control-debug-secret-trigger {
+    width: 1.64rem;
+    height: 1.64rem;
+    overflow: hidden;
+}
+
+.remote-brand-card .control-brand-logo {
+    width: 1.42rem;
+    height: 1.42rem;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.remote-brand-control-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#contenedor {
+    gap: clamp(0.58rem, 0.8vw, 0.86rem);
+    max-width: calc(100vw - 0.92rem);
+    margin-top: 0.18rem;
+}
+
+#contenedor > .writer-card,
+#contenedor > .level-card {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Juego: Stats y Nube quedan juntos en la misma fila. */
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_stats {
+    grid-column: 1;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_nube_inspiracion {
+    grid-column: 2;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_skip_tertulia.is-visible {
+    grid-column: 1 / -1;
+}
+
+.debug-context-tools,
+.debug-context-tools--game,
+.debug-context-tools--final {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.52rem;
+    padding: 0.52rem;
+    border: 0;
+    background: transparent;
+}
+
+.debug-context-tools--game,
+.debug-context-tools--final {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#panel_controles .debug-control__button {
+    width: 100%;
+    min-height: 2.35rem;
+    margin: 0;
+    padding: 0.48rem 0.58rem;
+    border: 2px dotted currentColor;
+    border-radius: 0.28rem;
+    color: aqua;
+    background: #505050;
+    box-shadow: 0 0.2em red;
+    text-shadow: 0.0625em 0.0625em red;
+    font: 700 clamp(0.58rem, 0.76vw, 0.82rem)/1.2 "Retro-gaming", monospace;
+}
+
+#panel_controles .debug-control__button--advance,
+#panel_controles .debug-control__button--danger {
+    color: aqua;
+    border-color: currentColor;
+}
+
+#panel_controles .debug-control__button[data-active="1"],
+#panel_controles .debug-control__button.is-active {
+    color: #fff4c3;
+    background: linear-gradient(180deg, #80521d, #4b2d10);
+    box-shadow: 0 0.2em #ffb63f, 0 0 0.72rem rgba(255, 182, 63, 0.34);
+}
+
+.debug-context-tools__status {
+    grid-column: 1 / -1;
+}
+
+.debug-speed-control {
+    display: grid;
+    grid-template-columns: auto minmax(5rem, 1fr) 2rem;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.48rem 0.62rem;
+    border: 2px dotted #ffba54;
+    border-radius: 0.28rem;
+    color: #ffe2a0;
+    background: #505050;
+    box-shadow: 0 0.2em red;
+    font: 700 clamp(0.52rem, 0.7vw, 0.74rem)/1 "Retro-gaming", monospace;
+}
+
+.debug-speed-control input {
+    width: 100%;
+    min-width: 0;
+    accent-color: #ffb347;
+}
+
+.debug-speed-control output {
+    color: #fff;
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .remote-status-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        height: auto;
+    }
+
+    .remote-brand-card {
+        grid-column: 1 / -1;
+    }
+
+    .debug-context-tools,
+    .debug-context-tools--game,
+    .debug-context-tools--final {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .debug-speed-control,
+    .debug-context-tools__status {
+        grid-column: 1;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .asistencia-modal__backdrop {
         backdrop-filter: none;
@@ -11701,16 +12096,15 @@ table.default {
 
 .debug-context-tools {
     display: grid;
-    grid-template-columns: auto repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.52rem;
     grid-column: 1 / -1;
     width: 100%;
-    padding: 0.7rem;
+    padding: 0.52rem;
     box-sizing: border-box;
-    border: 1px dashed rgba(255, 184, 61, 0.52);
-    border-radius: 0.3rem;
-    background: rgba(255, 184, 61, 0.055);
+    border: 0;
+    background: transparent;
 }
 
 .debug-context-tools[hidden] {
@@ -11719,7 +12113,7 @@ table.default {
 
 .debug-context-tools--game,
 .debug-context-tools--final {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
 }
 
 #panel_controles .control-group:not(.is-collapsed) > .debug-context-tools:not([hidden]) {
@@ -11727,9 +12121,7 @@ table.default {
 }
 
 .debug-context-tools__label {
-    color: #ffd36e;
-    font-size: clamp(0.62rem, 0.8vw, 0.76rem);
-    white-space: nowrap;
+    display: none !important;
 }
 
 .debug-context-tools__status {
@@ -11747,21 +12139,65 @@ table.default {
 }
 
 #panel_controles .debug-control__button {
-    min-height: 3.25rem;
-    color: #ffe9ad;
-    border-color: rgba(255, 184, 61, 0.58);
-    background: linear-gradient(180deg, rgba(255, 191, 77, 0.13), rgba(7, 14, 21, 0.96));
-    box-shadow: inset 0 0 0 1px rgba(255, 239, 189, 0.035), 0 0 0.65rem rgba(255, 184, 61, 0.12);
+    width: 100%;
+    min-width: 0;
+    min-height: 2.35rem;
+    margin: 0;
+    padding: 0.48rem 0.58rem;
+    box-sizing: border-box;
+    border: 2px dotted currentColor;
+    border-radius: 0.28rem;
+    color: aqua;
+    background: #505050;
+    box-shadow: 0 0.2em red;
+    text-shadow: 0.0625em 0.0625em red;
+    font: 700 clamp(0.58rem, 0.76vw, 0.82rem)/1.2 "Retro-gaming", monospace;
+    white-space: normal;
 }
 
 #panel_controles .debug-control__button--advance {
-    color: #9ef8ff;
-    border-color: rgba(70, 240, 255, 0.58);
+    color: aqua;
+    border-color: currentColor;
 }
 
 #panel_controles .debug-control__button--danger {
-    color: #ff9aa4;
-    border-color: rgba(255, 84, 99, 0.62);
+    color: aqua;
+    border-color: currentColor;
+}
+
+#panel_controles .debug-control__button[data-active="1"],
+#panel_controles .debug-control__button.is-active {
+    color: #fff4c3;
+    background: linear-gradient(180deg, #80521d, #4b2d10);
+    box-shadow: 0 0.2em #ffb63f, 0 0 0.72rem rgba(255, 182, 63, 0.34);
+}
+
+.debug-speed-control {
+    display: grid;
+    grid-template-columns: auto minmax(4.5rem, 1fr) 1.7rem;
+    align-items: center;
+    gap: 0.46rem;
+    min-width: 0;
+    min-height: 2.35rem;
+    padding: 0.45rem 0.58rem;
+    box-sizing: border-box;
+    border: 2px dotted #ffba54;
+    border-radius: 0.28rem;
+    color: #ffe2a0;
+    background: #505050;
+    box-shadow: 0 0.2em red;
+    font: 700 clamp(0.52rem, 0.7vw, 0.74rem)/1 "Retro-gaming", monospace;
+}
+
+.debug-speed-control input {
+    width: 100%;
+    min-width: 0;
+    accent-color: #ffb347;
+}
+
+.debug-speed-control output {
+    color: #fff;
+    text-align: center;
 }
 
 .debug-control__status[data-tone="success"] { color: #62f9ad; }
@@ -11783,5 +12219,145 @@ table.default {
     .debug-context-tools__status {
         grid-column: 1;
         text-align: center;
+    }
+}
+
+/* Autoridad final para la cabecera compacta y la separacion de paneles. */
+body {
+    row-gap: clamp(0.38rem, 0.62vw, 0.68rem);
+}
+
+.remote-status-bar {
+    grid-template-columns: minmax(7rem, 0.72fr) repeat(4, minmax(0, 1fr));
+    gap: clamp(0.3rem, 0.5vw, 0.56rem);
+    width: min(calc(100vw - 0.92rem), 1900px);
+    max-width: min(calc(100vw - 0.92rem), 1900px);
+    height: 2.48rem;
+    min-height: 2.48rem;
+}
+
+.remote-brand-card,
+.remote-status-card {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.remote-brand-card {
+    grid-template-columns: 1.48rem minmax(0, auto);
+    justify-content: start;
+    gap: 0.32rem;
+}
+
+.control-debug-secret-trigger {
+    display: grid;
+    place-items: center;
+    width: 1.48rem;
+    height: 1.48rem;
+    min-width: 1.48rem;
+    min-height: 1.48rem;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0.2rem;
+    background: transparent;
+}
+
+.remote-brand-card .control-brand-logo {
+    display: block;
+    width: 1.32rem;
+    height: 1.32rem;
+    max-width: 1.32rem;
+    max-height: 1.32rem;
+    object-fit: contain;
+    object-position: center;
+    transform: none;
+}
+
+.remote-brand-control-label,
+.remote-status-copy,
+.remote-status-role,
+.remote-status-state {
+    min-width: 0;
+}
+
+.remote-brand-control-label,
+.remote-status-role,
+.remote-status-state {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#contenedor {
+    grid-template-columns: minmax(0, 1fr) minmax(11rem, 0.57fr) minmax(0, 1fr);
+    gap: clamp(0.62rem, 0.86vw, 0.92rem);
+    width: min(calc(100vw - 0.92rem), 1900px);
+    max-width: min(calc(100vw - 0.92rem), 1900px);
+    margin-top: 0;
+}
+
+#contenedor > .writer-card,
+#contenedor > .level-card,
+#contenedor > div {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_stats {
+    grid-column: 1;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_nube_inspiracion {
+    grid-column: 2;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_skip_tertulia.is-visible {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+    .remote-status-bar {
+        grid-template-columns: minmax(6.2rem, 0.7fr) repeat(4, minmax(0, 1fr));
+        height: 2.48rem;
+        min-height: 2.48rem;
+    }
+
+    .control-debug-secret-trigger {
+        width: 1.42rem;
+        height: 1.42rem;
+        min-width: 1.42rem;
+        min-height: 1.42rem;
+    }
+}
+
+@media (max-width: 760px) {
+    .remote-status-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        height: auto;
+        min-height: 0;
+    }
+
+    .remote-brand-card {
+        grid-column: 1 / -1;
+    }
+
+    #contenedor {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .debug-context-tools,
+    .debug-context-tools--game,
+    .debug-context-tools--final {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .debug-speed-control,
+    .debug-context-tools__status {
+        grid-column: 1;
     }
 }

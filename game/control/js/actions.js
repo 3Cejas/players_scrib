@@ -38,6 +38,9 @@ let accion_debug_control_en_curso = false;
 let clicks_logo_debug_control = 0;
 let timeout_clicks_logo_debug_control = null;
 let timeout_toast_debug_control = null;
+let intervalo_detonadores_debug_control = null;
+let velocidad_detonadores_debug_control = 6;
+let secuencia_detonadores_debug_control = 0;
 let segundos_modo_control = 0;
 let revision_temporizadores_control = 0;
 let revision_creditos_emit_control = 0;
@@ -2098,11 +2101,10 @@ function actualizarBotonFinPartidaControl() {
 window.actualizarBotonFinPartidaControl = actualizarBotonFinPartidaControl;
 
 function temp() {
-    console.log(frase_final_j1.value)
+    completarFrasesFinalesDebugControl();
     const fraseJ1 = normalizarFraseFinal(frase_final_j1.value);
     const fraseJ2 = normalizarFraseFinal(frase_final_j2.value);
     var checkboxFraseFinal = document.querySelector('input[type="checkbox"][value="frase final"]');
-    console.log(checkboxFraseFinal)
     if((!fraseJ1 || !fraseJ2) && checkboxFraseFinal && checkboxFraseFinal.checked){
         if(!fraseJ1){
         alert(`Falta introducir una frase inicial para ${nombre1.value}.`)
@@ -2462,10 +2464,16 @@ function actualizarModoDebugControl(payload = {}) {
         estadoContextual.textContent = "";
         estadoContextual.removeAttribute("data-tone");
     });
+    if (!modo_debug_control_activo) {
+        detenerLluviaDetonadoresDebug({ emitir: false });
+    }
 }
 
-function estadoAccionDebugControl(mensaje, tono = "neutral") {
-    document.querySelectorAll("[data-debug-status]").forEach((estado) => {
+function estadoAccionDebugControl(mensaje, tono = "neutral", contexto = "") {
+    const selector = contexto
+        ? `[data-debug-status="${contexto}"]`
+        : "[data-debug-status]";
+    document.querySelectorAll(selector).forEach((estado) => {
         estado.textContent = String(mensaje || "");
         estado.dataset.tone = tono;
     });
@@ -2541,22 +2549,22 @@ if (document.readyState === "loading") {
     inicializarAccesoSecretoDebugControl();
 }
 
-function ejecutarAccionDebugControl(evento, mensajeEspera, alCompletar) {
+function ejecutarAccionDebugControl(evento, mensajeEspera, alCompletar, contexto = "") {
     if (!modo_debug_control_activo) {
-        estadoAccionDebugControl("Activa primero el modo Debug.", "error");
+        estadoAccionDebugControl("Activa primero el modo Debug.", "error", contexto);
         return;
     }
     if (accion_debug_control_en_curso) return;
     if (!socket || !socket.connected || typeof socket.emit !== "function") {
-        estadoAccionDebugControl("Servidor no conectado.", "error");
+        estadoAccionDebugControl("Servidor no conectado.", "error", contexto);
         return;
     }
     bloquearAccionesDebugControl(true);
-    estadoAccionDebugControl(mensajeEspera);
+    estadoAccionDebugControl(mensajeEspera, "neutral", contexto);
     socket.emit(evento, {}, (respuesta = {}) => {
         bloquearAccionesDebugControl(false);
         if (respuesta.ok !== true) {
-            estadoAccionDebugControl(textoErrorDebugControl(respuesta.code), "error");
+            estadoAccionDebugControl(textoErrorDebugControl(respuesta.code), "error", contexto);
             return;
         }
         if (typeof alCompletar === "function") alCompletar(respuesta);
@@ -2570,8 +2578,9 @@ function cargarDatosPruebaDeliberacionDebug() {
         () => {
             socket.emit("pedir_puntuacion_final");
             socket.emit("pedir_jurado_resultado");
-            estadoAccionDebugControl("Datos ficticios listos en Deliberaci\u00f3n.", "success");
-        }
+            estadoAccionDebugControl("Datos ficticios listos en Deliberaci\u00f3n.", "success", "deliberacion");
+        },
+        "deliberacion"
     );
 }
 
@@ -2579,7 +2588,8 @@ function limpiarDatosPruebaDeliberacionDebug() {
     ejecutarAccionDebugControl(
         "limpiar_datos_prueba_deliberacion",
         "Limpiando resultados ficticios...",
-        () => estadoAccionDebugControl("Datos ficticios eliminados.", "success")
+        () => estadoAccionDebugControl("Datos ficticios eliminados.", "success", "deliberacion"),
+        "deliberacion"
     );
 }
 
@@ -2591,8 +2601,9 @@ function saltarSiguienteNivelDebug() {
             const modo = respuesta.partida_finalizada
                 ? "Partida finalizada."
                 : `Nivel activo: ${traducirModoControl(respuesta.modo_actual)}.`;
-            estadoAccionDebugControl(modo, "success");
-        }
+            estadoAccionDebugControl(modo, "success", "juego");
+        },
+        "juego"
     );
 }
 
@@ -2600,8 +2611,132 @@ function finalizarPartidaDebug() {
     ejecutarAccionDebugControl(
         "debug_finalizar_partida",
         "Finalizando la partida...",
-        () => estadoAccionDebugControl("Partida finalizada. Ya puedes probar la deliberaci\u00f3n.", "success")
+        () => estadoAccionDebugControl("Partida finalizada. Ya puedes probar la deliberaci\u00f3n.", "success", "final"),
+        "final"
     );
+}
+
+function completarFrasesFinalesDebugControl() {
+    if (!modo_debug_control_activo) return false;
+    const checkbox = document.querySelector('input[name="modos"][value="frase final"]');
+    if (!checkbox || !checkbox.checked) return false;
+    const frases = {
+        1: "Cuando se apagaron las luces, la historia sigui\u00f3 respirando.",
+        2: "Nadie supo qui\u00e9n hab\u00eda escrito la \u00faltima palabra."
+    };
+    let completada = false;
+    [1, 2].forEach((playerId) => {
+        const input = obtenerInputFraseFinalControl(playerId);
+        if (!input || normalizarFraseFinal(input.value)) return;
+        input.value = frases[playerId];
+        guardarFraseFinalControl(playerId, { normalizar: true });
+        completada = true;
+    });
+    if (completada) {
+        estadoAccionDebugControl("Frases finales de prueba preparadas.", "success", "juego");
+    }
+    return completada;
+}
+
+function obtenerIntervaloDetonadoresDebug() {
+    return Math.max(90, 1020 - (velocidad_detonadores_debug_control * 90));
+}
+
+function actualizarBotonLluviaDetonadoresDebug(activa) {
+    const boton = document.getElementById("debug_detonadores_toggle");
+    if (!boton) return;
+    boton.dataset.active = activa ? "1" : "0";
+    boton.classList.toggle("is-active", activa);
+    boton.setAttribute("aria-pressed", activa ? "true" : "false");
+    boton.innerHTML = activa
+        ? "&#x23F9;&#xFE0F; DETENER DETONADORES"
+        : "&#x1F4A5; PROBAR DETONADORES";
+}
+
+function emitirDetonadoresDebug() {
+    if (!modo_debug_control_activo || !socket || !socket.connected) {
+        detenerLluviaDetonadoresDebug({ emitir: false });
+        return;
+    }
+    secuencia_detonadores_debug_control += 1;
+    socket.emit("debug_detonadores_prueba", {
+        seq: secuencia_detonadores_debug_control,
+        cantidad: 2 + Math.ceil(velocidad_detonadores_debug_control / 3),
+        velocidad: velocidad_detonadores_debug_control
+    });
+}
+
+function programarLluviaDetonadoresDebug() {
+    clearInterval(intervalo_detonadores_debug_control);
+    intervalo_detonadores_debug_control = setInterval(
+        emitirDetonadoresDebug,
+        obtenerIntervaloDetonadoresDebug()
+    );
+}
+
+function detenerLluviaDetonadoresDebug({ emitir = true } = {}) {
+    const estabaActiva = Boolean(intervalo_detonadores_debug_control);
+    clearInterval(intervalo_detonadores_debug_control);
+    intervalo_detonadores_debug_control = null;
+    actualizarBotonLluviaDetonadoresDebug(false);
+    if (emitir && estabaActiva && socket && socket.connected) {
+        socket.emit("debug_detonadores_detener", {});
+    }
+    if (estabaActiva) {
+        estadoAccionDebugControl("Prueba de detonadores detenida.", "neutral", "detonadores");
+    }
+}
+
+function toggleLluviaDetonadoresDebug() {
+    if (!modo_debug_control_activo) return;
+    if (intervalo_detonadores_debug_control) {
+        detenerLluviaDetonadoresDebug();
+        return;
+    }
+    if (!socket || !socket.connected) {
+        estadoAccionDebugControl("Servidor no conectado.", "error", "detonadores");
+        return;
+    }
+    actualizarBotonLluviaDetonadoresDebug(true);
+    estadoAccionDebugControl("Lluvia de detonadores activa.", "success", "detonadores");
+    emitirDetonadoresDebug();
+    programarLluviaDetonadoresDebug();
+}
+
+function actualizarVelocidadDetonadoresDebug(valor) {
+    velocidad_detonadores_debug_control = Math.min(10, Math.max(1, Number(valor) || 1));
+    const salida = document.getElementById("debug_detonadores_velocidad_valor");
+    if (salida) salida.textContent = String(velocidad_detonadores_debug_control);
+    if (intervalo_detonadores_debug_control) programarLluviaDetonadoresDebug();
+}
+
+const TEXTOS_PRUEBA_REPRESENTACION_DEBUG = {
+    1: "La ciudad despert\u00f3 con un volc\u00e1n de palabras bajo las calles. Nadie quiso huir: por primera vez, todas las ventanas estaban escuchando.",
+    2: "Al otro lado del escenario, una pluma azul dibuj\u00f3 una puerta. Tras ella esperaba el final que las musas todav\u00eda no hab\u00edan imaginado."
+};
+
+function aplicarTextoPruebaRepresentacionDebug(playerId, contenido) {
+    const nodo = document.getElementById(Number(playerId) === 2 ? "texto1" : "texto");
+    if (!nodo) return;
+    nodo.textContent = contenido;
+    nodo.style.height = "40px";
+    nodo.style.height = `${nodo.scrollHeight}px`;
+}
+
+function cargarTextosPruebaRepresentacionDebug() {
+    if (!modo_debug_control_activo) return;
+    aplicarTextoPruebaRepresentacionDebug(1, TEXTOS_PRUEBA_REPRESENTACION_DEBUG[1]);
+    aplicarTextoPruebaRepresentacionDebug(2, TEXTOS_PRUEBA_REPRESENTACION_DEBUG[2]);
+    if (window.actualizarBotonesTeleprompterCarga) window.actualizarBotonesTeleprompterCarga();
+    estadoAccionDebugControl("Textos listos para teleprompter y descarga.", "success", "representacion");
+}
+
+function limpiarTextosPruebaRepresentacionDebug() {
+    if (!modo_debug_control_activo) return;
+    aplicarTextoPruebaRepresentacionDebug(1, "");
+    aplicarTextoPruebaRepresentacionDebug(2, "");
+    if (window.actualizarBotonesTeleprompterCarga) window.actualizarBotonesTeleprompterCarga();
+    estadoAccionDebugControl("Textos de prueba retirados.", "neutral", "representacion");
 }
 
 if (typeof window !== "undefined") {
@@ -2611,6 +2746,11 @@ if (typeof window !== "undefined") {
     window.limpiarDatosPruebaDeliberacionDebug = limpiarDatosPruebaDeliberacionDebug;
     window.saltarSiguienteNivelDebug = saltarSiguienteNivelDebug;
     window.finalizarPartidaDebug = finalizarPartidaDebug;
+    window.completarFrasesFinalesDebugControl = completarFrasesFinalesDebugControl;
+    window.toggleLluviaDetonadoresDebug = toggleLluviaDetonadoresDebug;
+    window.actualizarVelocidadDetonadoresDebug = actualizarVelocidadDetonadoresDebug;
+    window.cargarTextosPruebaRepresentacionDebug = cargarTextosPruebaRepresentacionDebug;
+    window.limpiarTextosPruebaRepresentacionDebug = limpiarTextosPruebaRepresentacionDebug;
 }
 
 function cambiar_vista() {
