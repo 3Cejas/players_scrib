@@ -1615,7 +1615,10 @@ const smokeSpecs = [
         modes: ["palabras bonus"]
       });
       await startGame(ctx, { useStateHooks: false });
-      await waitForLocalMode(ctx, "writer1", "palabras bonus", 10000);
+      // El inicio real reserva 7,5 s para la cuenta atrás y 30 s para el
+      // calentamiento previo al primer nivel. La prueba debe validar ese flujo
+      // de espectáculo completo en vez de asumir el antiguo arranque inmediato.
+      await waitForLocalMode(ctx, "writer1", "palabras bonus", 45000);
       await waitForLocalMode(ctx, "musa1", "palabras bonus", 10000);
       await assertMusaWordInspirationPreview(ctx, "musa1", "palabras bonus", "cometa", {
         className: "preview-tiempo-palabra--positivo",
