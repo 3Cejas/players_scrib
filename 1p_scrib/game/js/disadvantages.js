@@ -12,6 +12,30 @@ const DESVENTAJAS_BASE = [
     { emoji: "\uD83D\uDD8A\uFE0F", dificultad: "media", descripcion: "No podras borrar durante unos segundos." }
 ];
 const MAPA_DESVENTAJAS = new Map(DESVENTAJAS_BASE.map((item) => [item.emoji, item]));
+let caret_offset_antes_desventaja_1p = null;
+
+function guardarCaretAntesDesventaja1P() {
+    if (!texto) return null;
+    const offset = typeof obtenerOffsetCaretEnTexto === "function"
+        ? obtenerOffsetCaretEnTexto()
+        : String(texto.textContent || "").length;
+    caret_offset_antes_desventaja_1p = Math.max(0, Number(offset) || 0);
+    return caret_offset_antes_desventaja_1p;
+}
+
+function restaurarCaretTrasDesventaja1P() {
+    if (!texto || caret_offset_antes_desventaja_1p === null) return false;
+    const offset = caret_offset_antes_desventaja_1p;
+    caret_offset_antes_desventaja_1p = null;
+    if (typeof enfocarTextoJuego1PEnOffset === "function") {
+        return enfocarTextoJuego1PEnOffset(offset);
+    }
+    texto.focus();
+    if (typeof colocarCaretEnOffset === "function") {
+        colocarCaretEnOffset(offset);
+    }
+    return true;
+}
 
 function limpiar_bloqueo_putada() {
     bloquear_borrado_putada = false;
@@ -381,7 +405,6 @@ function avanzarModoTrasDesventaja(emoji) {
     duracion_modo_actual_segundos = obtenerDuracionModoActualSegundos();
     if (!terminado) {
         texto.contentEditable = "true";
-        texto.focus();
     }
     aplicarDesventajaSeleccionada(emoji);
 }
@@ -411,14 +434,17 @@ function completarFaseDesventaja(emoji) {
     if (!terminado && !menu_resurreccion_activo && texto && texto.isContentEditable) {
         setPartidaActivaCursorPluma(true);
         requestAnimationFrame(() => {
-            programarActualizacionCaretNeonEscritora();
+            restaurarCaretTrasDesventaja1P();
         });
+    } else {
+        caret_offset_antes_desventaja_1p = null;
     }
     rearmarBorradoTrasEleccionDesventaja();
 }
 
 async function iniciarDesventajaEntreNiveles() {
     if (desventajaEnCurso || terminado) return;
+    guardarCaretAntesDesventaja1P();
     desventajaEnCurso = true;
     pausarBorradoDuranteEleccionDesventaja();
     desventajaSecuenciaId += 1;
@@ -618,4 +644,3 @@ const PUTADAS = {
         }, duracionDesventaja);
     },
 };
-

@@ -91,6 +91,32 @@ test("1P gameplay state exposes shared constants and mutable timers", () => {
   assert.equal(shared.terminado, true);
 });
 
+test("1P word counting handles long Spanish text without forcing layout reads", () => {
+  const context = loadScript("1p_scrib/game/js/editor-progress.js");
+  const paragraph = "Érase una vez, pingüino y corazón. ";
+  const content = paragraph.repeat(5000);
+  const editor = {
+    textContent: content,
+    get innerText() {
+      throw new Error("word counting should not force an innerText layout read");
+    }
+  };
+
+  assert.equal(context.contarPalabrasEditor1P(editor), 30000);
+});
+
+test("1P disadvantage transitions preserve a stable caret offset", () => {
+  const cursor = read("1p_scrib/game/js/writer-cursor.js");
+  const disadvantages = read("1p_scrib/game/js/disadvantages.js");
+
+  assert.match(cursor, /function enfocarTextoJuego1PEnOffset\(offset\)[\s\S]*colocarCaretEnOffset\(destino\)/);
+  assert.doesNotMatch(cursor, /\["focus", "click", "input", "keydown", "keyup"/);
+  assert.match(disadvantages, /function guardarCaretAntesDesventaja1P\(\)[\s\S]*obtenerOffsetCaretEnTexto\(\)/);
+  assert.match(disadvantages, /async function iniciarDesventajaEntreNiveles\(\)[\s\S]*guardarCaretAntesDesventaja1P\(\);[\s\S]*texto\.contentEditable = "false"/);
+  assert.match(disadvantages, /function completarFaseDesventaja\(emoji\)[\s\S]*desventajaEnCurso = false;[\s\S]*restaurarCaretTrasDesventaja1P\(\)/);
+  assert.doesNotMatch(disadvantages, /function avanzarModoTrasDesventaja\(emoji\)[\s\S]{0,700}texto\.focus\(\)/);
+});
+
 test("1P direct game entry receives a valid default skill distribution", () => {
   const context = loadScript("1p_scrib/game/js/attributes-panel.js", {
     LIMITE_TOTAL: 10,

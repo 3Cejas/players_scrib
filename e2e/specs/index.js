@@ -1916,6 +1916,43 @@ const onePlayerSpecs = [
       );
       ctx.assert(protectedDeleteState.protectedCount === 1, "1P protected word should survive Backspace");
 
+      const longText = `${"capítulo largo ".repeat(4000)}FIN`;
+      const longTextPerformance = await ctx.evaluate("onep", (value) => {
+        const editor = document.querySelector("#texto");
+        if (!editor) throw new Error("Missing 1P editor");
+        editor.textContent = value;
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.focus();
+        const started = performance.now();
+        countChars(editor);
+        memorizarOffsetCaretTextoJuego1P();
+        const elapsed = performance.now() - started;
+        guardarCaretAntesDesventaja1P();
+        window.eval("desventajaEnCurso = true");
+        editor.contentEditable = "false";
+        document.body.tabIndex = -1;
+        document.body.focus();
+        window.eval("desventajaEnCurso = false");
+        editor.contentEditable = "true";
+        restaurarCaretTrasDesventaja1P();
+        return { elapsed, length: value.length };
+      }, longText);
+      ctx.assert(
+        longTextPerformance.elapsed < 1500,
+        `1P long-text input work took too long: ${longTextPerformance.elapsed.toFixed(1)}ms`
+      );
+      await ctx.getPageEntry("onep").page.keyboard.type("Z");
+      const restoredLongText = await ctx.readText("onep", "#texto");
+      ctx.assert(
+        restoredLongText.endsWith("FINZ"),
+        "1P disadvantage return should keep the caret at the previous end of a long text"
+      );
+
       const text = "prueba uno dos tres";
       await ctx.setWriterText("onep", text);
       await ctx.waitForText("onep", "#texto", (value) => value.includes(text), "1P editor keeps typed text", 10000);

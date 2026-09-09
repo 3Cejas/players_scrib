@@ -72,6 +72,20 @@ function nodoPerteneceAlEditor1P(nodo) {
   return false;
 }
 
+function obtenerTextoPlanoEditor1P(elemento) {
+  if (!elemento) return "";
+  if (typeof obtenerTextoPlanoConSaltosFraseFinal === "function") {
+    return obtenerTextoPlanoConSaltosFraseFinal(elemento);
+  }
+  return String(elemento.textContent || elemento.innerText || "");
+}
+
+function contarPalabrasEditor1P(elemento) {
+  const contenido = obtenerTextoPlanoEditor1P(elemento);
+  const coincidencias = contenido.match(/[0-9A-Za-zÀ-ÖØ-öø-ÿĀ-ž]+/g);
+  return coincidencias ? coincidencias.length : 0;
+}
+
 function borrar() {
   if (desventajaSeleccionActiva()) {
     clearTimeout(borrado);
@@ -115,14 +129,11 @@ function borrar() {
       tiempo_feed = formatearSegundosJuego1P(1, { signo: "-" });
     }
     caracteres_seguidos = 0;
-    indice_buscar_palabra = texto.innerText.length;
+    const textoPlanoActual = obtenerTextoPlanoEditor1P(texto);
+    indice_buscar_palabra = textoPlanoActual.length;
 
     // 8. Actualizar estado
-    if(texto.innerText.match(/\b\w+\b/g) != null){
-      puntos_ = texto.innerText.match(/\b\w+\b/g).length;
-    } else {
-      puntos_ = 0;
-    }
+    puntos_ = contarPalabrasEditor1P(texto);
     if (typeof actualizarPuntosMarcador === "function") {
       actualizarPuntosMarcador(puntos_);
     } else {
@@ -179,12 +190,7 @@ function getCaretCharacterOffsetWithin(element) {
 function countChars(texto) {
   var lastWordCount = puntos_; // Mantenemos el Ãºltimo recuento de palabras
 
-  if(texto.innerText.match(/\b\w+\b/g) != null){
-  puntos_ = texto.innerText.match(/\b\w+\b/g).length;
-  }
-  else{
-    puntos_ = 0;
-  }
+  puntos_ = contarPalabrasEditor1P(texto);
   if (typeof actualizarPuntosMarcador === "function") {
     actualizarPuntosMarcador(puntos_);
   } else {

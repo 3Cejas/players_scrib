@@ -37,16 +37,23 @@ function memorizarOffsetCaretTextoJuego1P() {
     return true;
 }
 
-function restaurarFocoTextoJuego1P() {
-    if (!debeMantenerFocoTextoJuego1P()) return false;
+function enfocarTextoJuego1PEnOffset(offset) {
+    if (!texto) return false;
+    const destino = Math.max(0, Number(offset) || 0);
     try {
         texto.focus({ preventScroll: true });
     } catch (err) {
         texto.focus();
     }
-    colocarCaretEnOffset(caret_offset_memorizado_juego_1p);
+    colocarCaretEnOffset(destino);
+    caret_offset_memorizado_juego_1p = obtenerOffsetCaretEnTexto();
     programarActualizacionCaretNeonEscritora();
     return true;
+}
+
+function restaurarFocoTextoJuego1P() {
+    if (!debeMantenerFocoTextoJuego1P()) return false;
+    return enfocarTextoJuego1PEnOffset(caret_offset_memorizado_juego_1p);
 }
 
 function programarReenfoqueTextoJuego1P() {
@@ -70,7 +77,9 @@ function inicializarPersistenciaFocoTextoJuego1P() {
         memorizarOffsetCaretTextoJuego1P();
         programarReenfoqueTextoJuego1P();
     });
-    ["focus", "click", "input", "keydown", "keyup", "mouseup", "touchend"].forEach((evento) => {
+    // input y selectionchange ya cubren escritura y navegacion del caret. Evitamos
+    // recorrer una novela completa tambien en keydown y keyup para cada tecla.
+    ["focus", "click", "input", "mouseup", "touchend"].forEach((evento) => {
         texto.addEventListener(evento, memorizarOffsetCaretTextoJuego1P);
     });
     document.addEventListener("mousedown", memorizarOffsetCaretTextoJuego1P, true);

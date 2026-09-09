@@ -150,11 +150,14 @@ function contarCaretConSaltosFraseFinal(elemento, range) {
 
 function obtenerOffsetCaretEnTexto() {
     if (!texto) return 0;
-    const textoPlano = obtenerTextoPlanoConSaltosFraseFinal(texto);
     const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return textoPlano.length;
+    if (!sel || !sel.rangeCount) {
+        return obtenerTextoPlanoConSaltosFraseFinal(texto).length;
+    }
     const range = sel.getRangeAt(0);
-    if (!texto.contains(range.startContainer)) return textoPlano.length;
+    if (!texto.contains(range.startContainer)) {
+        return obtenerTextoPlanoConSaltosFraseFinal(texto).length;
+    }
     return contarCaretConSaltosFraseFinal(texto, range);
 }
 
@@ -350,6 +353,5 @@ function marcarPalabraBenditaRango(inicio, fin) {
     sel.removeAllRanges();
     sel.addRange(nuevoRango);
 }
-
 
 
