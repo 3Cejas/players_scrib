@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test",
     "test:unit": "node --test",
+    "build:archive": "node scripts/generate-archive-pdfs.js",
     "test:e2e": "node e2e/runner/index.js",
     "test:e2e:headed": "node e2e/runner/index.js --headed",
     "test:e2e:1p": "node e2e/runner/index.js --suite 1p --server-source local",

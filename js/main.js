@@ -56,7 +56,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "**Bienvenidx a la página oficial de SCRIB.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
+        welcome: "**Bienvenidx a la página oficial de <SCRI> B.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 archivo\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
@@ -119,6 +119,8 @@ var configs = (function () {
         imagenes_help:"Prensa de SCRIB: álbum por eventos, vídeos y dossier.",
 
         articulos_help:"Artículos de Substack sobre <SCRI> B.",
+
+        archivo_help:"Archivo vivo de textos creados en directo en <SCRI> B.",
 
 		la_compañía_help: "¿Quién es Sutura Teatro?",
         
@@ -340,6 +342,8 @@ var main = (function () {
 
         ARTICULOS: { value: "artículos", help: configs.getInstance().articulos_help},
 
+        ARCHIVO: { value: "archivo", help: configs.getInstance().archivo_help},
+
 		//ATRAS: { value: "atras", help: configs.getInstance().el_proyecto_help},
 
 		LIGA: { value: "liga", help: configs.getInstance().liga_help},
@@ -370,6 +374,7 @@ var main = (function () {
         cmds.FECHAS.value,
         cmds.IMAGENES.value,
         cmds.ARTICULOS.value,
+        cmds.ARCHIVO.value,
         cmds.LA_COMPAÑÍA.value,
         cmds.NEWSLETTER.value,
         cmds.CONTACTO.value,
@@ -2849,6 +2854,13 @@ function log( text ) {
                 this.articulos();
                 break;
 
+            case commandKey(cmds.ARCHIVO.value):
+            case "textos":
+            case "historias":
+                remember(cmds.ARCHIVO.value);
+                this.archivo();
+                break;
+
             case commandKey(cmds.LA_COMPAÑÍA.value):
                 remember(cmds.LA_COMPAÑÍA.value);
                 this.la_compañía();
@@ -3272,6 +3284,14 @@ function log( text ) {
             case "articulos":
 
                 this.articulos();
+
+                break;
+
+            case cmds.ARCHIVO.value:
+            case "textos":
+            case "historias":
+
+                this.archivo();
 
                 break;
 
@@ -3834,6 +3854,14 @@ function log( text ) {
             this.type("Para volver al menú, utiliza el comando «reinicio».", this.unlock.bind(this));
 
         }.bind(this));
+
+    }
+
+    // ARCHIVO VIVO
+
+    Terminal.prototype.archivo = function () {
+
+        window.location.assign("./archivo/");
 
     }
 

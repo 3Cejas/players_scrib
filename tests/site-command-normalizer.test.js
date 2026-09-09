@@ -36,7 +36,7 @@ test("the public terminal normalizes typed, quick-link and history commands", ()
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   const source = fs.readFileSync(path.join(ROOT, "js/main.js"), "utf8");
 
-  assert.match(html, /command-normalizer\.js\?n=1[\s\S]*main\.js\?n=67/);
+  assert.match(html, /command-normalizer\.js\?n=1[\s\S]*main\.js\?n=68/);
   assert.match(source, /handleDirectNavigation = function \(command\)[\s\S]*var normalizedCommand = commandKey\(command\);/);
   assert.match(source, /executeTerminalCommand = function \(command, options\)[\s\S]*var normalizedCommand = commandKey\(command\);/);
   assert.match(source, /handleCmd = function \(\)[\s\S]*var cmdComponents = commandKey\(this\.cmdLine\.value\);/);

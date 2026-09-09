@@ -4,6 +4,11 @@
   status = 301
 
 [[redirects]]
+  from = "/archivo"
+  to = "/archivo/"
+  status = 301
+
+[[redirects]]
   from = "/espectador"
   to = "/game/spectator/"
   status = 301

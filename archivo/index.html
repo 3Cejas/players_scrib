@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#040711">
+  <meta name="description" content="Archivo vivo de textos creados en directo en &lt;SCRI&gt; B, el videojuego-espectáculo de escritura improvisada.">
+  <title>Archivo de textos · &lt;SCRI&gt; B</title>
+  <link rel="icon" href="../img/logo.png" type="image/png">
+  <link rel="stylesheet" href="./archivo.css?v=20260909a">
+</head>
+<body>
+  <div class="archive-atmosphere" aria-hidden="true">
+    <span class="archive-glow archive-glow--blue"></span>
+    <span class="archive-glow archive-glow--red"></span>
+    <span class="archive-grid-lines"></span>
+    <span class="archive-scanlines"></span>
+  </div>
+  <header class="archive-header">
+    <a class="archive-brand" href="../" aria-label="Volver a la página principal de SCRI B">
+      <img src="../img/logo.png" alt="" width="46" height="46">
+      <span><strong>&lt;SCRI&gt; B</strong><small>ARCHIVO VIVO</small></span>
+    </a>
+    <a class="archive-back" href="../"><span aria-hidden="true">←</span> VOLVER AL TERMINAL</a>
+  </header>
+
+  <main>
+    <section class="archive-hero" aria-labelledby="archive-title">
+      <p class="archive-kicker"><span></span> TEXTOS CREADOS EN DIRECTO</p>
+      <h1 id="archive-title">Historias que solo<br>podían pasar <em>una vez.</em></h1>
+      <p class="archive-intro">Cada texto nació frente al público, entre decisiones, accidentes e inspiraciones de las musas. Aquí se conserva tal y como sucedió.</p>
+      <dl class="archive-totals" aria-label="Resumen del archivo">
+        <div><dt id="total-texts">—</dt><dd>textos recuperados</dd></div>
+        <div><dt id="total-words">—</dt><dd>palabras improvisadas</dd></div>
+        <div><dt id="total-authors">—</dt><dd>escritxrs</dd></div>
+      </dl>
+      <div class="archive-scroll-cue" aria-hidden="true"><span></span>ABRIR EL ARCHIVO</div>
+    </section>
+
+    <section class="archive-catalogue" aria-labelledby="catalogue-title">
+      <div class="catalogue-heading">
+        <div>
+          <p class="archive-kicker"><span></span> COLECCIÓN COMPLETA</p>
+          <h2 id="catalogue-title">Expedientes de función</h2>
+        </div>
+        <p id="result-count" class="result-count" aria-live="polite"></p>
+      </div>
+
+      <form class="archive-filters" id="archive-filters" role="search">
+        <label class="search-field">
+          <span class="visually-hidden">Buscar en el archivo</span>
+          <span aria-hidden="true">⌕</span>
+          <input id="archive-search" type="search" autocomplete="off" placeholder="BUSCAR PERSONA, FECHA O PALABRA…">
+        </label>
+        <label>
+          <span class="visually-hidden">Filtrar por escritxr</span>
+          <select id="author-filter"><option value="">TODXS LXS ESCRITXRS</option></select>
+        </label>
+        <label>
+          <span class="visually-hidden">Ordenar los textos</span>
+          <select id="sort-filter">
+            <option value="newest">MÁS RECIENTES</option>
+            <option value="oldest">MÁS ANTIGUOS</option>
+            <option value="author">POR ESCRITXR</option>
+          </select>
+        </label>
+      </form>
+
+      <div id="archive-grid" class="archive-grid" aria-live="polite" aria-busy="true">
+        <div class="archive-loading"><span></span><p>RECUPERANDO MANUSCRITOS…</p></div>
+      </div>
+      <p id="archive-empty" class="archive-empty" hidden>No hemos encontrado ese fragmento en el archivo.</p>
+    </section>
+  </main>
+
+  <dialog id="reader-dialog" class="reader-dialog" aria-labelledby="reader-author">
+    <div class="reader-dialog__backdrop" data-close-reader></div>
+    <article class="reader-shell">
+      <header class="reader-toolbar">
+        <button class="reader-close" type="button" data-close-reader aria-label="Cerrar el texto">← <span>ARCHIVO</span></button>
+        <p>LECTURA EN CURSO <span aria-hidden="true"></span></p>
+        <a id="reader-download-top" class="reader-download reader-download--compact" href="#" download>↓ PDF</a>
+      </header>
+      <div class="reader-layout">
+        <aside class="reader-file">
+          <p class="reader-file__stamp">EXPEDIENTE <span id="reader-number">—</span></p>
+          <div class="reader-file__logo"><img src="../img/logo.png" alt="Logo de SCRI B"></div>
+          <p class="reader-file__eyebrow">ESCRITXR</p>
+          <h2 id="reader-author">—</h2>
+          <time id="reader-date" datetime="">—</time>
+          <dl class="reader-stats">
+            <div><dt>PALABRAS</dt><dd id="reader-words">—</dd></div>
+            <div id="reader-duration-row"><dt>DURACIÓN</dt><dd id="reader-duration">—</dd></div>
+            <div id="reader-rhythm-row"><dt>RITMO</dt><dd id="reader-rhythm">—</dd></div>
+          </dl>
+          <a id="reader-download" class="reader-download" href="#" download><span>↓</span> DESCARGAR EN FORMATO &lt;SCRI&gt; B</a>
+          <p class="reader-file__note">La escritura se conserva como ocurrió en directo: sin correcciones posteriores.</p>
+        </aside>
+        <div class="reader-manuscript">
+          <div class="reader-manuscript__heading">
+            <p>TEXTO ÍNTEGRO</p>
+            <span id="reader-progress-label">0 %</span>
+          </div>
+          <div class="reader-progress" aria-hidden="true"><span id="reader-progress"></span></div>
+          <div id="reader-text" class="reader-text"></div>
+          <footer class="reader-end">
+            <img src="../img/logo_sutura.png" alt="Sutura Teatro">
+            <p>FIN DEL EXPEDIENTE</p>
+            <button type="button" data-close-reader>VOLVER AL ARCHIVO</button>
+          </footer>
+        </div>
+      </div>
+    </article>
+  </dialog>
+
+  <footer class="archive-footer">
+    <img src="../img/logo_sutura.png" alt="Sutura Teatro">
+    <p>Un archivo de escritura viva.</p>
+    <a href="../">scribshow.es</a>
+  </footer>
+
+  <template id="archive-card-template">
+    <article class="archive-card">
+      <span class="archive-card__number"></span>
+      <div class="archive-card__topline"><time></time><span class="archive-card__signal">RECUPERADO</span></div>
+      <h3></h3>
+      <blockquote></blockquote>
+      <div class="archive-card__meta"><span class="archive-card__words"></span><span class="archive-card__duration"></span></div>
+      <div class="archive-card__actions">
+        <button type="button" class="archive-read">LEER EN EL NAVEGADOR <span>↗</span></button>
+        <a class="archive-pdf" href="#" download aria-label="Descargar PDF">↓ PDF</a>
+      </div>
+    </article>
+  </template>
+
+  <script src="./archivo.js?v=20260909a" defer></script>
+</body>
+</html>
