@@ -11,6 +11,7 @@ const PLAYER_I18N_VERSION = "20260905b";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
 const GAME_HUD_VERSION = "20260910e";
+const COMPETITION_VERSION = "20260910f";
 const INSPIRATION_VERSION = "20260905d";
 const CONTROL_VIDEO_VERSION = "20260829p";
 const CONTROL_HELP_VERSION = "20260824e";
@@ -41,13 +42,13 @@ const CONTROL_ACTIONS_VERSION = "20260909a";
 const CONTROL_I18N_VERSION = "20260903a";
 const CONTROL_STATE_VERSION = "20260831b";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260909a";
-const PUBLIC_PLAYER_ACTIONS_VERSION = "20260905b";
+const PUBLIC_PLAYER_ACTIONS_VERSION = "20260910c";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260906a";
-const PUBLIC_PLAYER_CSS_VERSION = "20260906a";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260910f";
+const PUBLIC_PLAYER_STATE_VERSION = "20260910f";
+const PUBLIC_PLAYER_CSS_VERSION = "20260910g";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260910g";
 const PUBLIC_PLAYER_I18N_VERSION = "20260903a";
 const SPECTATOR_I18N_VERSION = "20260903a";
 const ACTOR_SELECTOR_VERSION = "20260505a";
@@ -79,6 +80,9 @@ test("multiplayer html references current changed shared assets", () => {
   });
   assertIncludesAsset("game/players/index.html", "dashboard-players.css", GAME_HUD_VERSION);
   assertIncludesAsset("game/spectator/index.html", "dashboard-players.css", SPECTATOR_CSS_VERSION);
+  ["game/players/index.html", "game/spectator/index.html", "game/control/index.html"].forEach((htmlRelPath) => {
+    assertIncludesAsset(htmlRelPath, "domains/competition.js", COMPETITION_VERSION);
+  });
 
   ["game/players/index.html"].forEach((htmlRelPath) => {
     assertIncludesAsset(htmlRelPath, "domains/inspiration.js", INSPIRATION_VERSION);

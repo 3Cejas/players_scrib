@@ -78,11 +78,15 @@ test("Espectador mantiene una sola desventaja visual y limpia el efecto anterior
   assert.match(sockets, /socket\.on\("desventaja_ronda_limpiar", \(\) => \{\s*limpiarDesventajasVisualesEspectador\(\);/);
 });
 
-test("Escritxr ve el calentamiento previo dentro del HUD de partida", () => {
+test("Escritxr ve el calentamiento previo abajo como presentación de nivel y con progreso", () => {
   const js = read("game/js/domains/competition.js");
   assert.match(js, /socket\.on\("calentamiento_previo_estado", actualizarCalentamiento\)/);
   assert.match(js, /data-role="writer"\]\[data-warmup="1"\][^}]+scrib-competition-warmup\{display:flex\}/);
-  assert.match(js, /CALENTAMIENTO PREVIO · \$\{formatearTiempo\(restante\)\}/);
+  assert.match(js, /data-role="writer"\]\[data-warmup="1"\]\{top:auto;bottom:/);
+  assert.match(js, /scrib-competition-warmup__fill/);
+  assert.match(js, /--warmup-progress/);
+  assert.match(js, /\(\(duracionMs - restante \* 1000\) \/ duracionMs\) \* 100/);
+  assert.match(js, /ui\.warmupTime\.textContent = formatearTiempo\(restante\)/);
 });
 
 test("Escritxr oculta los rótulos del nivel, usa el emoji y centra las partículas en el destino real", () => {

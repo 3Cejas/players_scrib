@@ -211,7 +211,7 @@ socket.on('modo_actual', (data) => {
     const siguiente_modo = data.modo_actual;
     const cambioRealModo = siguiente_modo !== modo_actual;
     console.log("MODO_ACTUAL", siguiente_modo)
-    texto1.style.color = "white";
+    texto1.style.removeProperty("color");
     if (cambioRealModo) {
         limpiarTimersCosmeticosMusa();
         cancelarSincronizacionVisorNivelesMusa();
@@ -926,6 +926,9 @@ if(data.text != null) texto1.innerHTML = data.text;
     }*/
     //texto1.style.height = (texto1.scrollHeight) + "px";
     texto1.scrollTop = texto1.scrollHeight;
+    if (typeof programarLineasTextoMusa === "function") {
+        programarLineasTextoMusa();
+    }
     //window.scrollTo(0, document.body.scrollHeight);
     //focalizador1.scrollIntoView(false);
 }
@@ -1280,7 +1283,11 @@ socket.on("pedir_inspiracion_musa", juego => {
     }
     const es_prohibidas = juego.modo_actual === "palabras prohibidas";
     cambiar_jugadores(es_prohibidas);
-    texto1.style.color = es_prohibidas ? "red" : "white";
+    if (es_prohibidas) {
+        texto1.style.color = "red";
+    } else {
+        texto1.style.removeProperty("color");
+    }
     actualizarNiveles(juego.modo_actual);
     if(sincro == 1 || votando == true){
         return;

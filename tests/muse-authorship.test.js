@@ -126,9 +126,20 @@ test("tutorial packing reserves highlighted scale and may skip a box instead of 
 test("the live muse screen keeps writer identity visible and boxes the writer text", () => {
   const html = read("game/public/players/index.html");
   const css = read("game/public/players/css/publico.css");
+  const state = read("game/public/players/js/state.js");
+  const actions = read("game/public/players/js/actions.js");
 
-  assert.match(html, /id="musa_escritxr_card"[\s\S]*TU ESCRITXR[\s\S]*id="nombre"/);
+  assert.match(html, /id="musa_escritxr_card"[\s\S]*id="nombre"/);
+  assert.doesNotMatch(html, />TU ESCRITXR</);
+  assert.match(html, /id="musa_texto_card"[\s\S]*id="musa_texto_lineas"[\s\S]*id="texto"[\s\S]*id="mostrar_texto"/);
+  assert.ok(html.indexOf('id="texto"') < html.indexOf('id="metadatos"'), "writer text should appear above the metadata");
   assert.match(css, /\.musa-escritxr-card\s*\{[\s\S]*border:[\s\S]*background:[\s\S]*box-shadow:/);
-  assert.match(css, /\.textarea\s*\{[\s\S]*border-radius:[\s\S]*box-shadow:/);
+  assert.match(css, /\.musa-texto-card\s*\{[\s\S]*border:[\s\S]*border-radius:[\s\S]*box-shadow:/);
+  assert.match(css, /\.textarea\s*\{[\s\S]*color: var\(--equipo-color/);
+  assert.match(css, /\.musa-texto-toggle\s*\{/);
   assert.match(css, /body:not\(\.partida-activa\)[^\n]+#musa_escritxr_card/);
+  assert.match(state, /function sincronizarLineasTextoMusa\(\)/);
+  assert.match(state, /new MutationObserver\(programarLineasTextoMusa\)/);
+  assert.match(actions, /musa_texto_card/);
+  assert.match(actions, /aria-expanded/);
 });

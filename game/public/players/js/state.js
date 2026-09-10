@@ -358,10 +358,50 @@ let musa_postgame_tab_rival = getEl("musa_postgame_tab_rival");
 let campo_palabra = getEl("palabra");
 let tarea = getEl("tarea");
 let mostrar_texto = getEl("mostrar_texto");
+let musa_texto_lineas = getEl("musa_texto_lineas");
 let recordatorio = getEl("recordatorio");
 let enviarPalabra_boton = getEl("progressButton");
 let sincro = 0;
 let votando = false;
+
+let musa_numero_lineas_renderizadas = 0;
+let musa_lineas_raf = 0;
+
+function sincronizarLineasTextoMusa() {
+    musa_lineas_raf = 0;
+    if (!texto1 || !musa_texto_lineas) return;
+    const contenido = String(texto1.innerText || "").replace(/\r/g, "");
+    const sinSaltoFinal = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
+    const total = Math.max(1, Math.min(300, sinSaltoFinal.split("\n").length));
+    if (total !== musa_numero_lineas_renderizadas) {
+        const fragmento = document.createDocumentFragment();
+        for (let linea = 1; linea <= total; linea += 1) {
+            const numero = document.createElement("span");
+            numero.textContent = String(linea);
+            fragmento.appendChild(numero);
+        }
+        musa_texto_lineas.replaceChildren(fragmento);
+        musa_numero_lineas_renderizadas = total;
+    }
+    musa_texto_lineas.scrollTop = texto1.scrollTop;
+}
+
+function programarLineasTextoMusa() {
+    if (musa_lineas_raf) return;
+    musa_lineas_raf = requestAnimationFrame(sincronizarLineasTextoMusa);
+}
+
+window.sincronizarLineasTextoMusa = sincronizarLineasTextoMusa;
+if (texto1 && musa_texto_lineas) {
+    new MutationObserver(programarLineasTextoMusa).observe(texto1, {
+        childList: true,
+        subtree: true,
+        characterData: true
+    });
+    texto1.addEventListener("scroll", programarLineasTextoMusa, { passive: true });
+    programarLineasTextoMusa();
+}
+
 const skill = getEl("skill")
 const skill_cancel = getEl("skill_cancel")
 const feedback_texto_editado = getEl("feedback_texto_editado")

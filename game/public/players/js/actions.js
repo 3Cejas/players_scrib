@@ -33,9 +33,12 @@ function refrescarTextosAccionesMusa() {
   const botonTexto = document.getElementById("mostrar_texto");
   if (botonTexto) {
     const activo = String(botonTexto.value) === "1" || botonTexto.dataset.estado === "ON";
-    botonTexto.innerHTML = activo
-      ? tJuego2P("ui.hide_text", {}, "OCULTAR TEXTO")
-      : tJuego2P("ui.text_complete", {}, "👀 TEXTO COMPLETO");
+    const etiqueta = botonTexto.querySelector(".musa-texto-toggle__label");
+    if (etiqueta) {
+      etiqueta.textContent = activo
+        ? tJuego2P("ui.hide_text", {}, "CONTRAER TEXTO")
+        : tJuego2P("ui.text_complete", {}, "DESPLEGAR TEXTO").replace(/^👀\s*/u, "");
+    }
   }
   const botonVolver = document.getElementById("btn_volver");
   if (botonVolver) {
@@ -431,7 +434,10 @@ function enviarPalabra(button) {
 function actualizarEstadoTextoCompleto(boton, activo) {
   boton.classList.toggle("is-on", activo);
   boton.setAttribute("aria-pressed", activo ? "true" : "false");
+  boton.setAttribute("aria-expanded", activo ? "true" : "false");
   boton.dataset.estado = activo ? "ON" : "OFF";
+  const tarjeta = document.getElementById("musa_texto_card");
+  if (tarjeta) tarjeta.classList.toggle("is-expanded", Boolean(activo));
   if (typeof texto1 !== "undefined" && texto1 && texto1.classList) {
     texto1.classList.toggle("textarea--completa", Boolean(activo));
   }
@@ -440,23 +446,26 @@ function actualizarEstadoTextoCompleto(boton, activo) {
 //FunciÃ³n auxiliar que muestra el texto completo del jugador en cuestiÃ³n.
 function mostrarTextoCompleto(boton) {
   if (boton.value == 0) {
-    texto1.style.maxHeight = "none";
-    texto1.style.height = texto1.scrollHeight + "px"; // Reajustamos el tamaÃ±o del Ã¡rea de texto.
+    texto1.style.removeProperty("height");
+    texto1.style.removeProperty("max-height");
     texto1.scrollTop = texto1.scrollHeight;
 
     actualizarEstadoTextoCompleto(boton, true);
     boton.value = 1;
     refrescarTextosAccionesMusa();
-    mostrar_texto.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("musa_texto_card")?.scrollIntoView({ behavior: "smooth", block: "start" });
   } 
   else if (!editando == true) {
-    console.log("ACTIVADO");
-    texto1.style.height = "4.5em"; /* Alto para tres lÃ­neas de texto */
+    texto1.style.removeProperty("height");
+    texto1.style.removeProperty("max-height");
     texto1.scrollTop = texto1.scrollHeight;
 
     actualizarEstadoTextoCompleto(boton, false);
     boton.value = 0;
     refrescarTextosAccionesMusa();
+  }
+  if (typeof window.sincronizarLineasTextoMusa === "function") {
+    requestAnimationFrame(window.sincronizarLineasTextoMusa);
   }
 }
 
