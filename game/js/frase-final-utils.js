@@ -27,9 +27,21 @@
     return texto.endsWith(objetivo);
   }
 
+  function longitudProgresoFraseFinal(textoPlano, fraseObjetivo) {
+    const objetivo = normalizarTextoCierreFraseFinal(fraseObjetivo);
+    if (!objetivo) return 0;
+    const texto = String(textoPlano || "").toLowerCase();
+    const max = Math.min(texto.length, objetivo.length);
+    for (let longitud = max; longitud > 0; longitud -= 1) {
+      if (texto.endsWith(objetivo.slice(0, longitud))) return longitud;
+    }
+    return 0;
+  }
+
   return {
     normalizarFraseFinal,
     normalizarTextoCierreFraseFinal,
-    detectarFraseFinalCompletada
+    detectarFraseFinalCompletada,
+    longitudProgresoFraseFinal
   };
 });

@@ -225,6 +225,7 @@ socket.on('modo_actual', (data) => {
         cambiar_jugadores(false);
     }
     modo_actual = siguiente_modo;
+    window.__scribModoActualMusaPreview = modo_actual;
     niveles_bloqueados = false;
     actualizarNiveles(modo_actual);
     if(sincro == 1 || votando == true){
@@ -1296,6 +1297,8 @@ function convertirASegundos(tiempo) {
 
 function pedir_inspiracion(juego){
     if (!juego || juego.modo_actual === "frase final") {
+        modo_actual = juego && juego.modo_actual ? juego.modo_actual : "";
+        window.__scribModoActualMusaPreview = modo_actual;
         campo_palabra.value = "";
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";

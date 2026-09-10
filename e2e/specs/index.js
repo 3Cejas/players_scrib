@@ -3198,6 +3198,55 @@ const coreSpecs = [
         },
         6000
       );
+
+      await ensureWriterEditableForFullFlow(ctx, "writer1");
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      await ctx.evaluate("writer1", () => {
+        window.eval("frase_final = 'cierre mágico'; terminado = false; partida_global_finalizada = false;");
+        const setup = document.querySelector("#atributos-container");
+        const game = document.querySelector("#contenedor");
+        if (setup) setup.style.display = "none";
+        if (game) game.style.display = "flex";
+        document.body.classList.add("partida-activa");
+        if (typeof function_frase_final === "function") function_frase_final();
+        const editor = document.querySelector("#texto");
+        editor.textContent = "Primera línea";
+        editor.dispatchEvent(new Event("input", { bubbles: true }));
+        editor.focus();
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
+      const writerPage = (await ctx.getPageEntry("writer1")).page;
+      await writerPage.keyboard.press("Enter");
+      await writerPage.keyboard.type("Segunda línea");
+      const enterState = await ctx.evaluate("writer1", () => {
+        const editor = document.querySelector("#texto");
+        return {
+          text: editor?.innerText || "",
+          legacyHighlights: editor?.querySelectorAll(".frase-final-progreso").length || 0,
+          active: document.activeElement?.id || document.activeElement?.tagName || ""
+        };
+      });
+      ctx.assert(
+        enterState.text.includes("Primera línea")
+          && enterState.text.includes("Segunda línea")
+          && /Primera línea\s+Segunda línea/.test(enterState.text),
+        `Enter should remain in the final-phrase contenteditable: ${JSON.stringify(enterState)}`
+      );
+      ctx.assert(enterState.legacyHighlights === 0, "final-phrase highlighting must not wrap editor content");
+
+      await ctx.setWriterText("writer1", "Un cierre mág");
+      const progress = await ctx.evaluate("writer1", () => {
+        const chip = document.querySelector(".objetivo-chip--frase-final");
+        return Number.parseFloat(chip?.style.getPropertyValue("--frase-final-progress") || "0");
+      });
+      ctx.assert(progress > 50 && progress < 100, `final phrase should illuminate progressively, got ${progress}`);
+      await typeInWriter(ctx, "writer1", "ico");
+      await ctx.waitForState("writer final phrase detected", (state) => state.partida.fin_j1 === true, 6000);
     }
   },
   {

@@ -4,12 +4,20 @@ const assert = require("node:assert/strict");
 const {
   normalizarFraseFinal,
   normalizarTextoCierreFraseFinal,
-  detectarFraseFinalCompletada
+  detectarFraseFinalCompletada,
+  longitudProgresoFraseFinal
 } = require("../game/js/frase-final-utils.js");
 
 test("normalizarFraseFinal trims surrounding guillemets and quotes", () => {
   assert.equal(normalizarFraseFinal('  \u00ab"Hola mundo"\u00bb  '), "Hola mundo");
   assert.equal(normalizarFraseFinal(' "Adios" '), "Adios");
+});
+
+test("longitudProgresoFraseFinal tracks partial progress without rewriting the editor", () => {
+  assert.equal(longitudProgresoFraseFinal("texto vc", "«vcxv»"), 2);
+  assert.equal(longitudProgresoFraseFinal("texto vcxv", "vcxv"), 4);
+  assert.equal(longitudProgresoFraseFinal("texto vcx", "vcxv"), 3);
+  assert.equal(longitudProgresoFraseFinal("texto vcx\n", "vcxv"), 0);
 });
 
 test("normalizarTextoCierreFraseFinal lowercases normalized final phrases", () => {

@@ -83,17 +83,23 @@
       .scrib-competition-fly{position:fixed;z-index:2147483000;left:0;top:0;padding:5px 10px;border-radius:999px;border:1px solid currentColor;background:#090c18f2;font:1000 16px/1 Inter,system-ui,sans-serif;color:var(--fly-color,#fff);white-space:nowrap;pointer-events:none;opacity:0}
       .scrib-competition-fly.is-flying{animation:scribFly var(--fly-duration,800ms) cubic-bezier(.18,.8,.22,1) forwards}
       .scrib-competition-fly.is-muse{color:var(--oro);box-shadow:0 0 20px #ffe475b0}
-      .scrib-competition-change{position:fixed;z-index:2147483100;left:50%;top:43%;transform:translate(-50%,-50%) scale(.7);opacity:0;text-align:center;font:1000 clamp(25px,4vw,64px)/.95 Inter,system-ui,sans-serif;letter-spacing:.04em;color:#fff;text-shadow:0 0 8px #fff,0 0 32px #8b5cff,4px 4px 0 #000;pointer-events:none;animation:scribLeaderChange 1.55s ease-out forwards}
-      .scrib-competition-change small{display:block;margin-top:10px;font-size:.3em;letter-spacing:.18em;color:var(--change-color,#fff)}
+      .scrib-competition-change{--change-color:#fff;--change-destination:#fff;position:fixed;z-index:2147483100;left:50%;top:43%;width:min(920px,90vw);box-sizing:border-box;padding:clamp(20px,2.8vw,42px);border:clamp(2px,.22vw,4px) solid var(--change-destination);border-radius:clamp(18px,2vw,34px);transform:translate(-50%,-50%) scale(.72);opacity:0;text-align:center;font:1000 clamp(24px,3.4vw,58px)/1 Inter,system-ui,sans-serif;letter-spacing:.055em;color:#fff;background:linear-gradient(135deg,#07101af5,#13101ff7 48%,#090b13f5);box-shadow:0 0 0 2px #000,0 0 38px color-mix(in srgb,var(--change-destination),transparent 38%),inset 0 0 42px #ffffff12;text-shadow:0 0 7px #fff,3px 3px 0 #000;pointer-events:none;animation:scribLeaderChange 3.4s cubic-bezier(.2,.85,.2,1) forwards}
+      .scrib-competition-change__eyebrow{display:block;margin-bottom:clamp(10px,1.4vw,18px);font-size:.28em;letter-spacing:.22em;color:#ffe475;text-shadow:0 0 14px #ffe47599}
+      .scrib-competition-change__route{display:flex;align-items:center;justify-content:center;gap:clamp(9px,1.5vw,22px);margin-top:clamp(18px,2vw,28px);font-size:.39em;line-height:1.15;letter-spacing:.1em;text-shadow:none}
+      .scrib-competition-change__team{display:inline-flex;align-items:center;justify-content:center;min-width:min(270px,34vw);padding:clamp(10px,1vw,15px) clamp(12px,1.8vw,24px);border:2px solid currentColor;border-radius:999px;background:#050913e8;box-shadow:0 0 24px color-mix(in srgb,currentColor,transparent 48%)}
+      .scrib-competition-change__team--free{color:var(--change-color)}
+      .scrib-competition-change__team--burden{color:var(--change-destination)}
+      .scrib-competition-change__arrow{color:#fff;font-size:1.45em;filter:drop-shadow(0 0 10px #fff)}
+      .scrib-competition-change__curse{display:block;margin-top:clamp(12px,1.5vw,20px);font-size:.29em;letter-spacing:.16em;color:#f3f5ff;text-shadow:none}
       .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
       @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
       @keyframes scribScoreHitControl{0%{transform:translateY(-50%) scale(1)}40%{transform:translateY(-50%) scale(1.16)}100%{transform:translateY(-50%) scale(1)}}
       @keyframes scribCompetitionShift{0%{filter:brightness(1)}45%{filter:brightness(1.35);box-shadow:inset 0 0 24px #fff4,0 0 18px #fff3}100%{filter:brightness(1)}}
       @keyframes scribCompetitionCross{0%{filter:brightness(1)}40%{filter:brightness(1.65);box-shadow:inset 0 0 30px #fff8,0 0 30px #ffe47599}100%{filter:brightness(1)}}
       @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
-      @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-3deg)}18%,65%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(1.1)}}
+      @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-44%) scale(.72)}10%,78%{opacity:1;transform:translate(-50%,-50%) scale(1)}86%{opacity:1;transform:translate(-50%,-52%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-61%) scale(1.06)}}
       @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
-      @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"],.scrib-competition-hud[data-role="writer"]{width:84vw}}
+      @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"],.scrib-competition-hud[data-role="writer"]{width:84vw}.scrib-competition-change__route{flex-direction:column}.scrib-competition-change__arrow{transform:rotate(90deg)}.scrib-competition-change__team{min-width:min(340px,72vw)}}
       @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly.is-flying,.scrib-competition-change,.scrib-competition-burst{animation-duration:.01ms!important}}
     `;
     document.head.appendChild(style);
@@ -366,8 +372,13 @@
     const portador = Number(payload && payload.desventaja_player);
     const aviso = document.createElement("div");
     aviso.className = "scrib-competition-change";
-    aviso.style.setProperty("--change-color", lider === 1 ? "#46f0ff" : "#ff5f67");
-    aviso.innerHTML = `¡CAMBIO DE VENTAJA!<small>${lider ? `ESCRITXR ${lider} SE LIBERA · ${htmlSeguro(payload.desventaja || "")} PASA A ESCRITXR ${portador}` : "EMPATE"}</small>`;
+    const colorLider = lider === 1 ? "#46f0ff" : "#ff5f67";
+    const colorPortador = portador === 1 ? "#46f0ff" : "#ff5f67";
+    aviso.style.setProperty("--change-color", colorLider);
+    aviso.style.setProperty("--change-destination", colorPortador);
+    aviso.innerHTML = lider
+      ? `<span class="scrib-competition-change__eyebrow">¡CAMBIO DE VENTAJA!</span>LA DESVENTAJA CAMBIA DE EQUIPO<div class="scrib-competition-change__route"><span class="scrib-competition-change__team scrib-competition-change__team--free">ESCRITXR ${lider}<br>SE LIBERA</span><span class="scrib-competition-change__arrow">➜</span><span class="scrib-competition-change__team scrib-competition-change__team--burden">PASA A<br>ESCRITXR ${portador}</span></div><small class="scrib-competition-change__curse">${htmlSeguro(payload.desventaja || "DESVENTAJA")}</small>`
+      : `<span class="scrib-competition-change__eyebrow">EMPATE</span>LA DESVENTAJA SE MANTIENE`;
     document.body.appendChild(aviso);
     aviso.addEventListener("animationend", () => aviso.remove(), { once: true });
     if (ui && ui.curse) {

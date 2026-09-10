@@ -641,6 +641,7 @@ const LIMPIEZAS = {
 
     "frase final": function (data) {
         texto.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("input", listener_modo);
         limpiarMarcadoFraseFinal();
     },
 
@@ -3639,24 +3640,22 @@ function function_frase_final() {
     limpiarMarcadoFraseFinal();
 
     texto.removeEventListener("keyup", listener_modo);
+    texto.removeEventListener("input", listener_modo);
     listener_modo = function (e) { modo_frase_final(e) };
-    texto.addEventListener("keyup", listener_modo);
+    texto.addEventListener("input", listener_modo);
 }
 
 function modo_frase_final(e) {
     actualizarProgresoFraseFinal();
-    // Obtenemos el texto completo del elemento
-    let textContent = e.target.innerText;
-    // Convertimos a minÃºsculas y recortamos espacios (opcional pero recomendable):
-    let textLower = textContent.trim().toLowerCase();
-  
-    // Revisamos si el texto termina exactamente con esa frase final:
-    if (textLower.endsWith(frase_final)) {
-      // AquÃ­ va tu lÃ³gica de finalizaciÃ³n
-      final();
-      socket.emit("fin_de_player", player);
+    const utils = window.ScribFraseFinalUtils || {};
+    const completada = typeof utils.detectarFraseFinalCompletada === "function"
+        ? utils.detectarFraseFinalCompletada(e.target.innerText, frase_final)
+        : String(e.target.innerText || "").trim().toLowerCase().endsWith(String(frase_final || "").trim().toLowerCase());
+    if (completada && !terminado && !partida_global_finalizada) {
+        final();
+        socket.emit("fin_de_player", player);
     }
-  }
+}
 
   function ajustarFuerza(secs_base, fuerza) {
     // 1. ValidaciÃ³n de tipos:

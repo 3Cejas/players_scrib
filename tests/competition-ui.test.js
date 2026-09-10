@@ -24,6 +24,9 @@ test("el HUD usa marcador numerico, reloj global y animaciones sin porcentajes",
   assert.match(js, /competicion_ronda_estado/);
   assert.match(js, /reloj_partida_estado/);
   assert.match(js, /¡CAMBIO DE VENTAJA!/);
+  assert.match(js, /LA DESVENTAJA CAMBIA DE EQUIPO/);
+  assert.match(js, /scrib-competition-change__route/);
+  assert.match(js, /animation:scribLeaderChange 3\.4s/);
   assert.match(js, /scrib-competition-fly/);
   assert.match(js, /scrib-competition-burst/);
   assert.match(js, /scribCompetitionShift/);
@@ -122,4 +125,22 @@ test("Frase final keeps only the global clock and removes inspiration scoring", 
   assert.match(writerEvents, /actualizarFraseFinalDesdePayloadEscritora\(data\)/);
   assert.doesNotMatch(museEvents, /modo_actual === "frase final"\s*\|\|/);
   assert.match(museEvents, /juego\.modo_actual === "frase final"/);
+  assert.match(museEvents, /modo_actual = siguiente_modo;\s*window\.__scribModoActualMusaPreview = modo_actual;/);
+});
+
+test("Frase final highlights without mutating the contenteditable or stealing Enter", () => {
+  const writerState = read("game/players/js/state.js");
+  const writerEvents = read("game/players/js/socket-events.js");
+  const css = read("game/css/dashboard-players.css");
+  const inicioProgreso = writerState.indexOf("function actualizarProgresoFraseFinal()");
+  const finProgreso = writerState.indexOf("const VIDA_MAX_SEGUNDOS", inicioProgreso);
+  const actualizadorProgreso = writerState.slice(inicioProgreso, finProgreso);
+
+  assert.match(actualizadorProgreso, /CSS\.highlights\.set\(HIGHLIGHT_PROGRESO_FRASE_FINAL, new Highlight\(rango\)\)/);
+  assert.doesNotMatch(actualizadorProgreso, /rango\.surroundContents\(span\)/);
+  assert.doesNotMatch(actualizadorProgreso, /rango\.extractContents\(\)/);
+  assert.match(writerEvents, /texto\.addEventListener\("input", listener_modo\)/);
+  assert.match(writerEvents, /detectarFraseFinalCompletada\(e\.target\.innerText, frase_final\)/);
+  assert.match(css, /::highlight\(scrib-frase-final-progreso\)/);
+  assert.match(css, /objetivo-chip--frase-final[\s\S]*--frase-final-progress/);
 });

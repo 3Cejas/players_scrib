@@ -3064,6 +3064,7 @@ function detectarInsercionMultipalabra(textoActual) {
 
 let progreso_frase_final_intensidad = 0;
 let progreso_frase_final_ultimo_match = 0;
+const HIGHLIGHT_PROGRESO_FRASE_FINAL = "scrib-frase-final-progreso";
 
 function estiloProgresoFraseFinal(intensidad) {
     const t = Math.max(0, Math.min(1, intensidad));
@@ -3079,6 +3080,9 @@ function estiloProgresoFraseFinal(intensidad) {
 
 function limpiarMarcadoFraseFinal() {
     if (!texto) return;
+    if (window.CSS && CSS.highlights && typeof CSS.highlights.delete === "function") {
+        CSS.highlights.delete(HIGHLIGHT_PROGRESO_FRASE_FINAL);
+    }
     const spans = texto.querySelectorAll(".frase-final-progreso");
     spans.forEach((span) => {
         const parent = span.parentNode;
@@ -3087,8 +3091,13 @@ function limpiarMarcadoFraseFinal() {
             parent.insertBefore(span.firstChild, span);
         }
         parent.removeChild(span);
-        parent.normalize();
     });
+    texto.style.removeProperty("--frase-final-color");
+    texto.style.removeProperty("--frase-final-sombra");
+    const chip = definicion && definicion.querySelector
+        ? definicion.querySelector(".objetivo-chip--frase-final")
+        : null;
+    if (chip) chip.style.setProperty("--frase-final-progress", "0%");
     progreso_frase_final_intensidad = 0;
     progreso_frase_final_ultimo_match = 0;
 }
@@ -3107,85 +3116,74 @@ function animarFalloFraseFinal() {
 
 function obtenerRangoUltimosCaracteres(cantidad) {
     if (!texto || cantidad <= 0) return null;
-    const sel = window.getSelection();
-    if (!sel) return null;
-    const original = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
-    const range = document.createRange();
-    range.selectNodeContents(texto);
-    range.collapse(false);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    let resultado = null;
-    if (typeof sel.modify === "function") {
-        for (let i = 0; i < cantidad; i++) {
-            sel.modify("extend", "backward", "character");
+    const walker = document.createTreeWalker(texto, NodeFilter.SHOW_TEXT, null, false);
+    const nodos = [];
+    while (walker.nextNode()) nodos.push(walker.currentNode);
+    if (!nodos.length) return null;
+    let restante = cantidad;
+    let inicioNodo = null;
+    let inicioOffset = 0;
+    const finNodo = nodos[nodos.length - 1];
+    const finOffset = finNodo.textContent.length;
+    for (let i = nodos.length - 1; i >= 0; i -= 1) {
+        const nodo = nodos[i];
+        const longitud = nodo.textContent.length;
+        if (restante <= longitud) {
+            inicioNodo = nodo;
+            inicioOffset = longitud - restante;
+            break;
         }
-        resultado = sel.getRangeAt(0).cloneRange();
-    } else {
-        const textoPlano = texto.textContent || "";
-        const inicio = Math.max(0, textoPlano.length - cantidad);
-        resultado = obtenerRangoPorOffsets(texto, inicio, inicio + cantidad);
+        restante -= longitud;
     }
-    sel.removeAllRanges();
-    if (original) {
-        sel.addRange(original);
-    }
-    return resultado;
+    if (!inicioNodo || restante > inicioNodo.textContent.length) return null;
+    const rango = document.createRange();
+    rango.setStart(inicioNodo, inicioOffset);
+    rango.setEnd(finNodo, finOffset);
+    return rango;
 }
 
 function actualizarProgresoFraseFinal() {
     if (!texto) return;
-    const objetivo = (frase_final || "").toLowerCase();
+    const utils = window.ScribFraseFinalUtils || {};
+    const objetivo = typeof utils.normalizarTextoCierreFraseFinal === "function"
+        ? utils.normalizarTextoCierreFraseFinal(frase_final)
+        : String(frase_final || "").trim().toLowerCase();
     if (!objetivo) {
         limpiarMarcadoFraseFinal();
         return;
     }
     const textoPlano = (texto.innerText || "").toLowerCase();
-    const max = Math.min(textoPlano.length, objetivo.length);
-    let matchLen = 0;
-    for (let len = max; len > 0; len--) {
-        if (textoPlano.endsWith(objetivo.slice(0, len))) {
-            matchLen = len;
-            break;
-        }
-    }
+    const matchLen = typeof utils.longitudProgresoFraseFinal === "function"
+        ? utils.longitudProgresoFraseFinal(textoPlano, objetivo)
+        : 0;
     if (progreso_frase_final_ultimo_match > 0 && matchLen === 0) {
         animarFalloFraseFinal();
     }
-    const caretOffset = obtenerOffsetCaretEnTexto();
-    limpiarMarcadoFraseFinal();
+    if (window.CSS && CSS.highlights && typeof CSS.highlights.delete === "function") {
+        CSS.highlights.delete(HIGHLIGHT_PROGRESO_FRASE_FINAL);
+    }
+    const chip = definicion && definicion.querySelector
+        ? definicion.querySelector(".objetivo-chip--frase-final")
+        : null;
+    const ratio = Math.max(0, Math.min(1, matchLen / objetivo.length));
+    if (chip) chip.style.setProperty("--frase-final-progress", `${(ratio * 100).toFixed(2)}%`);
     if (matchLen === 0) {
-        colocarCaretEnOffset(caretOffset);
+        texto.style.removeProperty("--frase-final-color");
+        texto.style.removeProperty("--frase-final-sombra");
+        progreso_frase_final_intensidad = 0;
+        progreso_frase_final_ultimo_match = 0;
         return;
     }
     const rango = obtenerRangoUltimosCaracteres(matchLen);
-    if (!rango) {
-        colocarCaretEnOffset(caretOffset);
-        return;
-    }
-    const span = document.createElement("span");
-    span.className = "frase-final-progreso";
-    const ratio = Math.max(0, Math.min(1, matchLen / objetivo.length));
     const intensidadObjetivo = Math.pow(ratio, 1.6);
-    const estiloPrevio = estiloProgresoFraseFinal(progreso_frase_final_intensidad);
     const estiloObjetivo = estiloProgresoFraseFinal(intensidadObjetivo);
-    span.style.color = estiloPrevio.color;
-    span.style.textShadow = estiloPrevio.textShadow;
-    try {
-        rango.surroundContents(span);
-    } catch (err) {
-        const fragmento = rango.extractContents();
-        span.appendChild(fragmento);
-        rango.insertNode(span);
+    texto.style.setProperty("--frase-final-color", estiloObjetivo.color);
+    texto.style.setProperty("--frase-final-sombra", estiloObjetivo.textShadow);
+    if (rango && window.CSS && CSS.highlights && typeof window.Highlight === "function") {
+        CSS.highlights.set(HIGHLIGHT_PROGRESO_FRASE_FINAL, new Highlight(rango));
     }
-    requestAnimationFrame(() => {
-        if (!span.isConnected) return;
-        span.style.color = estiloObjetivo.color;
-        span.style.textShadow = estiloObjetivo.textShadow;
-    });
     progreso_frase_final_intensidad = intensidadObjetivo;
     progreso_frase_final_ultimo_match = matchLen;
-    colocarCaretEnOffset(caretOffset);
 }
 
 const VIDA_MAX_SEGUNDOS = 5 * 60;
