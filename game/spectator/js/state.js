@@ -4804,6 +4804,15 @@ const actualizarModoVistaEspectadorUi = (modoForzado = null) => {
         aplicarModoVistaEspectadorUi(modo);
         return;
     }
+    // Si Partida ya está realmente dibujada no tiene sentido volver a cubrirla
+    // con la cortinilla al pulsar ESCRIBIR. También cancelamos una transición
+    // antigua que pudiera seguir pendiente hacia otra vista.
+    if (modo === vista_espectador_modo_resuelta) {
+        controlador_transicion_vista_espectador?.cancel();
+        vista_espectador_modo_solicitada = modo;
+        actualizarVisibilidadPanelNivelEspectador();
+        return;
+    }
     if (
         modo === vista_espectador_modo_solicitada
         && modo !== vista_espectador_modo_resuelta
@@ -5336,6 +5345,7 @@ let revision_countdown_inicio_espectador = 0;
 let cuenta_atras_activa = false;
 let modo_pendiente = null;
 let post_inicio_pendiente_espectador = null;
+let calentamiento_previo_pendiente_espectador = null;
 
 function invalidarContextoTransitorioEspectador() {
     revision_contexto_transitorio_espectador += 1;
@@ -5430,6 +5440,8 @@ let sonido_confetti;
 let audio_inverso;
 let audio_borroso;
 let sonido_modo;
+let intervalo_calentamiento_previo_espectador = null;
+let firma_calentamiento_previo_espectador = "";
 let intervaloSonidoRayo;
 let timer = null;
 let frase_final_completada_j1 = false;
@@ -5530,6 +5542,7 @@ const BLOQUES_INTRO_CUENTA_ATRAS_ESPECTADOR = [
     { key: "inspiracion", elemento: inspiracion, origen: "down" }
 ];
 const CLASES_BARRA_NIVEL = [
+    "barra-nivel--calentamiento-previo",
     "barra-nivel--bendita",
     "barra-nivel--prohibida",
     "barra-nivel--bonus",
@@ -6688,11 +6701,100 @@ function aplicarPutadaEnEspectador(putada, player, opciones = {}) {
     return false;
 }
 
+const AUDIO_MODO_ESPECTADOR = Object.freeze({
+    "letra bendita": "../../game/audio/5. KEYGEN PRUEBA 1.mp3",
+    "palabras bonus": "../../game/audio/5. KEYGEN PRUEBA 1.mp3",
+    "frase final": "../../game/audio/5. KEYGEN PRUEBA 1.mp3",
+    "letra prohibida": "../../game/audio/6. KEYGEN PRUEBA 2.mp3",
+    "palabras prohibidas": "../../game/audio/6. KEYGEN PRUEBA 2.mp3",
+    "tertulia": "../../game/audio/7. KEYGEN PRUEBA 3.mp3"
+});
+
+function detenerMusicaModoEspectador({ reiniciar = false } = {}) {
+    if (!sonido_modo) return;
+    sonido_modo.pause();
+    if (reiniciar) {
+        try { sonido_modo.currentTime = 0; } catch (_error) {}
+    }
+    sonido_modo = null;
+}
+
+function reproducirMusicaModoEspectador(modo, { reiniciar = true } = {}) {
+    const ruta = AUDIO_MODO_ESPECTADOR[String(modo || "").trim()];
+    if (!ruta) return null;
+    detenerMusicaModoEspectador({ reiniciar });
+    sonido_modo = reproducirSonido(ruta, true);
+    return sonido_modo;
+}
+
+function formatearCuentaCalentamientoPrevioEspectador(segundos) {
+    const total = Math.max(0, Math.ceil(Number(segundos) || 0));
+    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function detenerCalentamientoPrevioEspectador(opciones = {}) {
+    const { limpiarVista = true, detenerAudio = true } = opciones;
+    if (intervalo_calentamiento_previo_espectador) {
+        clearInterval(intervalo_calentamiento_previo_espectador);
+        intervalo_calentamiento_previo_espectador = null;
+    }
+    firma_calentamiento_previo_espectador = "";
+    if (document.body) document.body.classList.remove("nivel-calentamiento-previo");
+    if (limpiarVista && modo_nivel_activo_espectador === "calentamiento previo") {
+        modo_nivel_activo_espectador = "";
+        setBarraNivelClase("");
+        if (palabra1) palabra1.textContent = "";
+        if (explicacion) explicacion.textContent = "";
+        actualizarVisibilidadPanelNivelEspectador();
+    }
+    if (detenerAudio) detenerMusicaModoEspectador({ reiniciar: true });
+}
+
+function iniciarCalentamientoPrevioEspectador(payload = {}) {
+    if (!payload || payload.activo === false) {
+        detenerCalentamientoPrevioEspectador();
+        return false;
+    }
+    const duracionMs = Math.max(1000, Number(payload.duracion_ms) || 30000);
+    const finTs = Number(payload.fin_ts) > 0 ? Number(payload.fin_ts) : Date.now() + duracionMs;
+    const modoSiguiente = String(payload.modo_siguiente || "letra bendita").trim() || "letra bendita";
+    const firma = `${Number(payload.inicio_ts) || finTs - duracionMs}:${finTs}:${modoSiguiente}`;
+    if (firma === firma_calentamiento_previo_espectador && intervalo_calentamiento_previo_espectador) {
+        return false;
+    }
+
+    detenerCalentamientoPrevioEspectador({ limpiarVista: false, detenerAudio: true });
+    firma_calentamiento_previo_espectador = firma;
+    modo_nivel_activo_espectador = "calentamiento previo";
+    if (document.body) document.body.classList.add("nivel-calentamiento-previo");
+    setBarraNivelClase("calentamiento-previo");
+    if (palabra1) palabra1.textContent = "CALENTAMIENTO PREVIO";
+    actualizarVisibilidadPanelNivelEspectador();
+    reproducirMusicaModoEspectador(modoSiguiente);
+
+    const refrescar = () => {
+        const restanteMs = Math.max(0, finTs - Date.now());
+        const progreso = Math.max(0, Math.min(100, ((duracionMs - restanteMs) / duracionMs) * 100));
+        setProgresoNivelBarra(progreso);
+        if (explicacion) {
+            explicacion.textContent = `ESCRITURA LIBRE · PRIMER NIVEL EN ${formatearCuentaCalentamientoPrevioEspectador(restanteMs / 1000)}`;
+            explicacion.style.color = "#ffd978";
+        }
+        if (restanteMs <= 0 && intervalo_calentamiento_previo_espectador) {
+            clearInterval(intervalo_calentamiento_previo_espectador);
+            intervalo_calentamiento_previo_espectador = null;
+        }
+    };
+    refrescar();
+    intervalo_calentamiento_previo_espectador = setInterval(refrescar, 250);
+    return true;
+}
+
 const MODOS = {
 
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
-        sonido_modo = reproducirSonido("../../game/audio/5. KEYGEN PRUEBA 1.mp3", true)
+        reproducirMusicaModoEspectador("palabras bonus")
     reproducirSonido("../../game/audio/FX/12. PALABRAS BONUS.mp3")
         console.log("ALGO")
         aplicarEstiloPalabrasModoLetrasEspectador("bonus");
@@ -6710,7 +6812,7 @@ const MODOS = {
 
     //Recibe y activa el modo letra prohibida.
     'letra prohibida': function (data = {}) {
-        sonido_modo = reproducirSonido("../../game/audio/6. KEYGEN PRUEBA 2.mp3", true)
+        reproducirMusicaModoEspectador("letra prohibida")
         reproducirSonido("../../game/audio/FX/11. LETRA PROHIBIDA.mp3")
         actualizarPalabraConVisibilidad(palabra2, "");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
@@ -6734,7 +6836,7 @@ const MODOS = {
     //Recibe y activa el modo letra bendita.
     'letra bendita': function (data = {}) {
         reproducirSonido("../../game/audio/FX/10. LETRA BENDITA.mp3")
-        sonido_modo = reproducirSonido("../../game/audio/5. KEYGEN PRUEBA 1.mp3", true);
+        reproducirMusicaModoEspectador("letra bendita");
 
         actualizarPalabraConVisibilidad(palabra2, "");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
@@ -6769,7 +6871,7 @@ const MODOS = {
     },
 
     'palabras prohibidas': function (data) {
-        sonido_modo = reproducirSonido("../../game/audio/6. KEYGEN PRUEBA 2.mp3", true)
+        reproducirMusicaModoEspectador("palabras prohibidas")
         reproducirSonido("../../game/audio/FX/13. PALABRAS PROHIBIDAS.mp3")
         aplicarEstiloPalabrasModoLetrasEspectador("prohibidas");
         actualizarPalabraConVisibilidad(palabra2, "");
@@ -6785,7 +6887,7 @@ const MODOS = {
     },
 
     'tertulia': function (socket) {
-        sonido_modo = reproducirSonido("../../game/audio/7. KEYGEN PRUEBA 3.mp3", true)
+        reproducirMusicaModoEspectador("tertulia")
         reproducirSonido("../../game/audio/FX/14. TERTULIA.mp3")
         setBarraNivelClase("tertulia");
         //activar_socket_feedback();
@@ -6796,7 +6898,7 @@ const MODOS = {
     },
 
     'frase final': function (socket) {
-        sonido_modo = reproducirSonido("../../game/audio/5. KEYGEN PRUEBA 1.mp3", true)
+        reproducirMusicaModoEspectador("frase final")
         reproducirSonido("../../game/audio/FX/15. FRASE FINAL.mp3")
         aplicarEstiloPalabrasModoLetrasEspectador("frase-final");
         setBarraNivelClase("frase-final");

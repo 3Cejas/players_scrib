@@ -16,6 +16,33 @@ test("the spectator start is authoritative and silences previous scene audio bef
   assert.ok(start.indexOf('actualizarModoVistaEspectadorUi("partida")') < start.indexOf('reproducirSonido("\.\.\/\.\.\/game\/audio\/5. PREPARADOS 1.mp3")'));
 });
 
+test("spectator countdown starts even after match branding has already been hidden", () => {
+  const js = read("game/spectator/js/socket-events.js");
+  const inicioStart = js.indexOf("socket.on('inicio'");
+  const postInicioStart = js.indexOf("function aplicarPostInicioEspectador", inicioStart);
+  const inicio = js.slice(inicioStart, postInicioStart);
+
+  assert.doesNotMatch(inicio, /animateCSS\("\.cabecera",\s*"backOutLeft"\)\.then/);
+  assert.match(inicio, /reproducirSonido\("\.\.\/\.\.\/game\/audio\/5\. PREPARADOS 1\.mp3"\)/);
+  assert.match(inicio, /crearCountdownEspectador\(tJuego2P\("countdown\.ready"/);
+  assert.match(inicio, /programarPasoCountdownEspectador\(3, revisionCountdown, 0\)/);
+});
+
+test("spectator presents an explicit pre-level warm-up with the first level music", () => {
+  const state = read("game/spectator/js/state.js");
+  const sockets = read("game/spectator/js/socket-events.js");
+  const css = read("game/css/dashboard-players.css");
+
+  assert.match(state, /function iniciarCalentamientoPrevioEspectador\(payload = \{\}\)/);
+  assert.match(state, /palabra1\.textContent = "CALENTAMIENTO PREVIO"/);
+  assert.match(state, /ESCRITURA LIBRE · PRIMER NIVEL EN/);
+  assert.match(state, /reproducirMusicaModoEspectador\(modoSiguiente\)/);
+  assert.match(state, /"letra bendita": "\.\.\/\.\.\/game\/audio\/5\. KEYGEN PRUEBA 1\.mp3"/);
+  assert.match(sockets, /socket\.on\('calentamiento_previo_estado'/);
+  assert.match(sockets, /calentamiento_previo_pendiente_espectador = payload/);
+  assert.match(css, /barra-nivel--calentamiento-previo/);
+});
+
 test("the level introduction lasts long enough to read on the projector", () => {
   const state = read("game/spectator/js/state.js");
   assert.match(state, /createController\(\{[\s\S]*durationMs: 5200,[\s\S]*reducedDurationMs: 3200/);

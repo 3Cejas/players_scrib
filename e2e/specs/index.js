@@ -1601,6 +1601,64 @@ const smokeSpecs = [
     }
   },
   {
+    name: "spectator-start-countdown-and-warmup",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(ctx, ["control", "spectator"], { useStateHooks: false });
+      await configureFastControlPanel(ctx, {
+        tiempo_modos: 10,
+        modes: ["letra bendita"]
+      });
+      await ctx.invoke("control", "cambiar_vista_espectador", "partida");
+      await ctx.waitFor(
+        "spectator game view selected before starting",
+        async () => ctx.evaluate("spectator", () => window.eval("vista_espectador_modo_resuelta") === "partida"),
+        10000
+      );
+      await ctx.fillValue("control", "#frase_final_j1", "cierre azul e2e");
+      await ctx.fillValue("control", "#frase_final_j2", "cierre rojo e2e");
+      await ctx.click("control", "#boton_escribir");
+      await ctx.waitForVisible("spectator", "#countdown", true, "spectator start countdown visible", 4000);
+
+      const transitionHidden = await ctx.evaluate("spectator", () => {
+        const overlay = document.querySelector("#spectator_view_transition");
+        return Boolean(overlay && overlay.hidden && !overlay.classList.contains("is-covering"));
+      });
+      ctx.assert(transitionHidden, "starting from the active game view must not replay the generic view transition");
+
+      await ctx.waitForText(
+        "spectator",
+        "#palabra",
+        (text) => text.includes("CALENTAMIENTO PREVIO"),
+        "spectator enters the explicit pre-level warm-up",
+        12000
+      );
+      await ctx.waitForText(
+        "spectator",
+        "#explicacion",
+        (text) => text.includes("ESCRITURA LIBRE") && text.includes("PRIMER NIVEL EN"),
+        "spectator warm-up explains when the first level begins",
+        4000
+      );
+
+      const warmup = await ctx.evaluate("spectator", () => {
+        const audio = window.eval("sonido_modo");
+        return {
+          active: document.body.classList.contains("nivel-calentamiento-previo"),
+          source: String(audio?.currentSrc || audio?.src || ""),
+          loop: Boolean(audio?.loop),
+          paused: Boolean(audio?.paused)
+        };
+      });
+      ctx.assert(warmup.active, "spectator warm-up styling should be active");
+      ctx.assert(
+        /5\. KEYGEN PRUEBA 1\.mp3(?:$|[?#])/i.test(decodeURIComponent(warmup.source)),
+        "warm-up should use the first level soundtrack"
+      );
+      ctx.assert(warmup.loop === true, "warm-up soundtrack should loop");
+      ctx.assert(warmup.paused === false, "warm-up soundtrack should be playing");
+    }
+  },
+  {
     name: "musa-bonus-delivery",
     run: async (ctx) => {
       const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];

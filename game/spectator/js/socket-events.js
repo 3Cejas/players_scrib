@@ -825,6 +825,10 @@ socket.on('inicio', data => {
     // cambio de vista anterior, la cuenta atras siempre se presenta en Partida.
     // La música ambiental y el golpe de cambio de vista se retiran enseguida;
     // el siguiente audio que entra es el propio de la cuenta atrás.
+    const vistaPartidaYaActiva = vista_espectador_modo_resuelta === "partida";
+    if (vistaPartidaYaActiva) {
+        controlador_transicion_vista_espectador?.cancel();
+    }
     vista_calentamiento = false;
     vista_espectador_override = "partida";
     controlador_audio_vista_espectador?.setMode("partida", {
@@ -854,28 +858,31 @@ socket.on('inicio', data => {
     cuenta_atras_activa = true;
     modo_pendiente = null;
     post_inicio_pendiente_espectador = null;
+    calentamiento_previo_pendiente_espectador = null;
     inicio_modo_delay = false;
     reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
-    animateCSS(".cabecera", "backOutLeft").then((message) => {
-        if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
-            return;
-        }
-        inspiracion.style.display = "block";
-        iniciarIntroCuentaAtrasEspectador();
-        animateCSS("#contenedor_espectador", "pulse");
-        animateCSS(".inspiracion", "pulse");
-        TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR;
-        actualizarDuracionNivelDesdeParametros(data && data.parametros ? data.parametros : {});
-        setProgresoNivelBarra(0);
-        socket.off('vote');
-        socket.off('exit');
-        socket.off('scroll');
-        socket.off('temas_jugadores');
-        //socket.off('recibir_comentario');
-        socket.off('recibir_postgame1');
-        socket.off('recibir_postgame2');
-            logo.style.display = "none";
-            neon.style.display = "none";
+    // La cuenta atrás no puede depender de `animationend` de la cabecera:
+    // al comenzar la partida esa cabecera ya está oculta y el evento nunca se
+    // dispara. La cortinilla de vista, cuando hace falta, corre en paralelo.
+    if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
+        return;
+    }
+    inspiracion.style.display = "block";
+    iniciarIntroCuentaAtrasEspectador();
+    animateCSS("#contenedor_espectador", "pulse");
+    animateCSS(".inspiracion", "pulse");
+    TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR;
+    actualizarDuracionNivelDesdeParametros(data && data.parametros ? data.parametros : {});
+    setProgresoNivelBarra(0);
+    socket.off('vote');
+    socket.off('exit');
+    socket.off('scroll');
+    socket.off('temas_jugadores');
+    //socket.off('recibir_comentario');
+    socket.off('recibir_postgame1');
+    socket.off('recibir_postgame2');
+    logo.style.display = "none";
+    neon.style.display = "none";
 
     // Comprobamos que data.parametros existe y que cada campo es string
 if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
@@ -930,9 +937,12 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
         aplicarPostInicioPendienteEspectador();
     }, 12000);
 });
-});
 
 function aplicarPostInicioEspectador(data = {}) {
+    const calentamientoPrevio = data && data.calentamiento_previo && data.calentamiento_previo.activo
+        ? data.calentamiento_previo
+        : calentamiento_previo_pendiente_espectador;
+    calentamiento_previo_pendiente_espectador = null;
     cerrarPreShowEspectadorPorTutorial();
     if (sonido) {
         sonido.pause();
@@ -975,6 +985,9 @@ function aplicarPostInicioEspectador(data = {}) {
     if (modoPendienteInicio) {
         aplicarModo(modoPendienteInicio);
     }
+    if (calentamientoPrevio && calentamientoPrevio.activo) {
+        iniciarCalentamientoPrevioEspectador(calentamientoPrevio);
+    }
     vaciarColaPutadasPendientesEspectador();
 }
 
@@ -992,6 +1005,26 @@ socket.on('post-inicio', data => {
         return;
     }
     aplicarPostInicioEspectador(data || {});
+});
+
+socket.on('calentamiento_previo_estado', data => {
+    const payload = data && typeof data === "object" ? data : { activo: false };
+    if (payload.activo && (cuenta_atras_activa || inicio_modo_delay)) {
+        calentamiento_previo_pendiente_espectador = payload;
+        return;
+    }
+    if (!payload.activo) {
+        calentamiento_previo_pendiente_espectador = null;
+        detenerCalentamientoPrevioEspectador();
+        return;
+    }
+    if (!partida_activa_espectador) {
+        vista_espectador_override = "partida";
+        actualizarModoVistaEspectadorUi("partida");
+        aplicarPostInicioEspectador({ borrar_texto: false, calentamiento_previo: payload });
+        return;
+    }
+    iniciarCalentamientoPrevioEspectador(payload);
 });
 
 // Resetea el tablero de juego.
@@ -1012,6 +1045,7 @@ socket.on('limpiar', data => {
     setBarraNivelClase("");
     actualizarVisibilidadPanelNivelEspectador();
     post_inicio_pendiente_espectador = null;
+    calentamiento_previo_pendiente_espectador = null;
     invalidarCountdownInicioEspectador();
     finalizarIntroCuentaAtrasEspectador();
 
@@ -1100,9 +1134,13 @@ function aplicarModo(data) {
     invalidarContextoTransitorioEspectador();
     animacion_modo();
     const modoAnterior = modo_actual;
+    const modoEntrante = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
+    if (modoEntrante) {
+        detenerCalentamientoPrevioEspectador({ limpiarVista: false, detenerAudio: false });
+    }
     ejecutarLimpiezaModo(modo_actual, data);
     refrescarEstadoVotacionVentaja();
-    modo_actual = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
+    modo_actual = modoEntrante;
     const cambioRealDeModo = modo_actual !== modoAnterior;
     registrarModoTimelineStatsEspectador(modo_actual);
     ultimo_payload_modo_espectador = data || {};
@@ -2001,6 +2039,7 @@ function cambiar_color_puntuacion() {
 function limpiezas(){
     limpiarAsincroniaVisualEspectador();
     invalidarContextoTransitorioEspectador();
+    detenerCalentamientoPrevioEspectador();
 
     invalidarCountdownInicioEspectador();
     finalizarIntroCuentaAtrasEspectador();

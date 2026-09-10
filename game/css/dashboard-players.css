@@ -1750,6 +1750,40 @@ body.page-spectator #info_general.info-general-panel #palabra.barra-nivel--bendi
     --nivel-chip-glow: rgba(93, 255, 134, 0.3);
 }
 
+body.page-spectator #info_general.info-general-panel #palabra.barra-nivel--calentamiento-previo {
+    --nivel-chip-a: #ffe27a;
+    --nivel-chip-b: #ff9f43;
+    --nivel-chip-borde: #fff5c7;
+    --nivel-chip-glow: rgba(255, 193, 83, 0.42);
+    min-width: clamp(360px, 48vw, 880px);
+}
+
+body.page-spectator.nivel-calentamiento-previo #info_general.info-general-panel {
+    animation: calentamientoPrevioEntrada 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+body.page-spectator.nivel-calentamiento-previo #info_general.info-general-panel #explicacion {
+    color: #ffd978;
+}
+
+@keyframes calentamientoPrevioEntrada {
+    0% {
+        opacity: 0;
+        transform: translateY(-28px) scale(0.94);
+        filter: blur(8px);
+    }
+    65% {
+        opacity: 1;
+        transform: translateY(4px) scale(1.015);
+        filter: blur(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
 body.page-spectator #info_general.info-general-panel #palabra.barra-nivel--prohibida {
     --nivel-chip-a: #ff7f8f;
     --nivel-chip-b: #e53c59;
