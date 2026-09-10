@@ -661,6 +661,9 @@ let inspiration_discard_status = getEl("inspiration_discard_status");
 let meta_inspiracion_activa_escritora = null;
 
 function setIndicadorGanadoraEscritora(visible, texto = TEXTO_GANADOR_ESCRITORA) {
+    if (document.body) {
+        document.body.classList.toggle("partida-finalizada-escritora", Boolean(visible));
+    }
     if (!metadatos) return;
     if (!visible) {
         metadatos.removeAttribute("data-ganador");

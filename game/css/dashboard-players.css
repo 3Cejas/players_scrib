@@ -1003,6 +1003,61 @@ body.page-players #metadatos[data-ganador]::after {
     animation: marcadorGanadorParpadeo 980ms steps(2, end) infinite;
 }
 
+/* Cierre individual de escritora: nombre, estado y estadísticas forman un
+   bloque vertical. El aviso antes flotaba sobre el nombre porque colgaba del
+   marcador sin que el layout reservara espacio para él. */
+body.page-players.partida-activa.partida-finalizada-escritora #contenedor {
+    padding-top: clamp(78px, 12vh, 126px);
+    align-content: flex-start;
+}
+
+body.page-players.partida-finalizada-escritora .jugador {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+body.page-players.partida-finalizada-escritora #nombre {
+    margin-bottom: 0;
+}
+
+body.page-players.partida-finalizada-escritora #alineador1,
+body.page-players.partida-finalizada-escritora .textarea-container {
+    display: none !important;
+}
+
+body.page-players.partida-finalizada-escritora .info-total {
+    margin-top: clamp(88px, 13vh, 126px);
+}
+
+body.page-players.partida-finalizada-escritora #metadatos[data-ganador] {
+    --ganador-badge-offset-y: clamp(16px, 2.4vh, 24px);
+}
+
+body.page-players.partida-finalizada-escritora #metadatos[data-ganador]::after {
+    padding: clamp(7px, 0.65vw, 11px) clamp(16px, 1.4vw, 24px);
+    border-width: 2px;
+    font-size: clamp(13px, 1.25vw, 21px);
+    background:
+        linear-gradient(180deg, rgba(25, 30, 42, 0.98), rgba(7, 12, 22, 0.96));
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--equipo-color, #46f0ff), transparent 65%),
+        0 0 24px color-mix(in srgb, var(--equipo-color, #46f0ff), transparent 58%);
+    animation: escritorFinalBadgeEntrada 680ms cubic-bezier(.16, .84, .24, 1) both;
+}
+
+@keyframes escritorFinalBadgeEntrada {
+    from {
+        opacity: 0;
+        filter: blur(8px);
+        transform: translate(-50%, calc(-100% - var(--ganador-badge-offset-y) + 18px)) scale(0.88);
+    }
+    to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translate(-50%, calc(-100% - var(--ganador-badge-offset-y))) scale(1);
+    }
+}
+
 /* Cierre de escritura: ocupa el proyector completo y sustituye la antigua
    cabecera, que se mezclaba con los marcadores inferiores. */
 .partida-final-espectador {

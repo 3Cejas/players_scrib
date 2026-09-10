@@ -86,3 +86,17 @@ test("the finished-writing scene fully replaces the old spectator HUD", () => {
   assert.match(finish, /logo\.style\.display = "none";[\s\S]*neon\.style\.display = "none";[\s\S]*mostrarCierrePartidaEspectador\(\);/);
   assert.doesNotMatch(finish, /animateCSS\("\.cabecera", "backInLeft"\)/);
 });
+
+test("the finished writer layout reserves a separate row for its status badge", () => {
+  const state = read("game/players/js/state.js");
+  const css = read("game/css/dashboard-players.css");
+
+  assert.match(state, /classList\.toggle\("partida-finalizada-escritora", Boolean\(visible\)\)/);
+  assert.match(css, /page-players\.partida-activa\.partida-finalizada-escritora #contenedor[\s\S]*padding-top:/);
+  assert.match(css, /page-players\.partida-finalizada-escritora \.info-total[\s\S]*margin-top:/);
+  assert.match(css, /page-players\.partida-finalizada-escritora #metadatos\[data-ganador\]::after[\s\S]*escritorFinalBadgeEntrada/);
+  assert.doesNotMatch(
+    css.match(/page-players\.partida-finalizada-escritora #metadatos\[data-ganador\]::after \{[\s\S]*?\n\}/)?.[0] || "",
+    /marcadorGanadorParpadeo/
+  );
+});

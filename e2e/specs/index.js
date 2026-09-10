@@ -2153,6 +2153,48 @@ const visualSpecs = [
 
 const coreSpecs = [
   {
+    name: "writer-finish-layout-core",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(ctx, ["writer1"], { useStateHooks: false });
+      await ctx.getPageEntry("writer1").page.setViewport({ width: 1678, height: 615 });
+      await ctx.evaluate("writer1", () => {
+        window.eval(`
+          asegurarVistaPartidaActivaEscritora();
+          setIndicadorGanadoraEscritora(true, "¡TEXTO TERMINADO!");
+        `);
+      });
+      await ctx.waitFor(
+        "writer finish layout active",
+        async () => ctx.evaluate("writer1", () => (
+          document.body.classList.contains("partida-finalizada-escritora")
+          && Boolean(document.getElementById("metadatos")?.getAttribute("data-ganador"))
+        )),
+        10000
+      );
+      await ctx.sleep(800);
+
+      const layout = await ctx.evaluate("writer1", () => {
+        const name = document.getElementById("nombre")?.getBoundingClientRect();
+        const stats = document.getElementById("metadatos")?.getBoundingClientRect();
+        const badge = window.getComputedStyle(document.getElementById("metadatos"), "::after");
+        return {
+          nameBottom: name?.bottom || 0,
+          statsTop: stats?.top || 0,
+          gap: (stats?.top || 0) - (name?.bottom || 0),
+          badgeText: badge.content,
+          badgeAnimation: badge.animationName,
+          viewportHeight: window.innerHeight
+        };
+      });
+
+      ctx.assert(layout.nameBottom > 0 && layout.statsTop > 0, `writer finish blocks should render (${JSON.stringify(layout)})`);
+      ctx.assert(layout.gap >= 76, `writer finish badge must have its own row, got ${layout.gap}px`);
+      ctx.assert(layout.statsTop < layout.viewportHeight * 0.55, `writer finish stats should stay in the upper half (${JSON.stringify(layout)})`);
+      ctx.assert(/TEXTO TERMINADO/i.test(layout.badgeText), `writer finish status should be visible (${layout.badgeText})`);
+      ctx.assert(layout.badgeAnimation.includes("escritorFinalBadgeEntrada"), `writer finish status should enter once (${layout.badgeAnimation})`);
+    }
+  },
+  {
     name: "musa-postgame-menu-core",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["control", "writer1", "writer2", "musa1"]);
