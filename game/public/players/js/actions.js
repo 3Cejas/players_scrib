@@ -430,6 +430,20 @@ function enviarPalabra(button) {
   }
 }
 
+let timeout_morfologia_texto_musa = null;
+
+function animarMorfologiaTextoMusa(tarjeta) {
+  if (!tarjeta) return;
+  tarjeta.classList.remove("is-morphing");
+  void tarjeta.offsetWidth;
+  tarjeta.classList.add("is-morphing");
+  if (timeout_morfologia_texto_musa) clearTimeout(timeout_morfologia_texto_musa);
+  timeout_morfologia_texto_musa = setTimeout(() => {
+    tarjeta.classList.remove("is-morphing");
+    timeout_morfologia_texto_musa = null;
+  }, 760);
+}
+
 // Actualiza el estado visual del toggle de texto completo.
 function actualizarEstadoTextoCompleto(boton, activo) {
   boton.classList.toggle("is-on", activo);
@@ -437,7 +451,9 @@ function actualizarEstadoTextoCompleto(boton, activo) {
   boton.setAttribute("aria-expanded", activo ? "true" : "false");
   boton.dataset.estado = activo ? "ON" : "OFF";
   const tarjeta = document.getElementById("musa_texto_card");
+  const estadoCambio = tarjeta && tarjeta.classList.contains("is-expanded") !== Boolean(activo);
   if (tarjeta) tarjeta.classList.toggle("is-expanded", Boolean(activo));
+  if (estadoCambio) animarMorfologiaTextoMusa(tarjeta);
   if (typeof texto1 !== "undefined" && texto1 && texto1.classList) {
     texto1.classList.toggle("textarea--completa", Boolean(activo));
   }
@@ -453,7 +469,7 @@ function mostrarTextoCompleto(boton) {
     actualizarEstadoTextoCompleto(boton, true);
     boton.value = 1;
     refrescarTextosAccionesMusa();
-    document.getElementById("musa_texto_card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("musa_texto_card")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } 
   else if (!editando == true) {
     texto1.style.removeProperty("height");

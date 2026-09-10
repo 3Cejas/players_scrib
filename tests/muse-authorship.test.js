@@ -129,17 +129,38 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   const state = read("game/public/players/js/state.js");
   const actions = read("game/public/players/js/actions.js");
 
-  assert.match(html, /id="musa_escritxr_card"[\s\S]*id="nombre"/);
+  assert.match(html, /id="musa_texto_card"[\s\S]*id="musa_escritxr_card"[\s\S]*id="nombre"/);
   assert.doesNotMatch(html, />TU ESCRITXR</);
-  assert.match(html, /id="musa_texto_card"[\s\S]*id="musa_texto_lineas"[\s\S]*id="texto"[\s\S]*id="mostrar_texto"/);
-  assert.ok(html.indexOf('id="texto"') < html.indexOf('id="metadatos"'), "writer text should appear above the metadata");
+  assert.match(html, /id="musa_texto_card"[\s\S]*id="metadatos"[\s\S]*id="musa_texto_lineas"[\s\S]*id="texto"[\s\S]*id="mostrar_texto"[\s\S]*id="btn_bandera"/);
+  assert.ok(html.indexOf('id="metadatos"') < html.indexOf('id="texto"'), "writer identity and metrics should form the text header");
+  assert.ok(html.indexOf('id="texto"') < html.indexOf('id="metadatos_acciones"'), "text actions should stay attached to the writer text");
   assert.match(css, /\.musa-escritxr-card\s*\{[\s\S]*border:[\s\S]*background:[\s\S]*box-shadow:/);
   assert.match(css, /\.musa-texto-card\s*\{[\s\S]*border:[\s\S]*border-radius:[\s\S]*box-shadow:/);
   assert.match(css, /\.textarea\s*\{[\s\S]*color: var\(--equipo-color/);
   assert.match(css, /\.musa-texto-toggle\s*\{/);
+  assert.match(css, /\.musa-texto-card__header\s*\{[\s\S]*grid-template-columns:/);
+  assert.match(css, /\.musa-texto-card__actions\s*\{[\s\S]*grid-template-columns:/);
+  assert.match(css, /body\.equipo-azul\s*\{[\s\S]*background:/);
+  assert.match(css, /body\.equipo-rojo\s*\{[\s\S]*background:/);
+  assert.match(css, /\.musa-texto-card\.is-morphing/);
   assert.match(css, /body:not\(\.partida-activa\)[^\n]+#musa_escritxr_card/);
   assert.match(state, /function sincronizarLineasTextoMusa\(\)/);
   assert.match(state, /new MutationObserver\(programarLineasTextoMusa\)/);
   assert.match(actions, /musa_texto_card/);
   assert.match(actions, /aria-expanded/);
+  assert.match(actions, /function animarMorfologiaTextoMusa\(/);
+});
+
+test("a muse joining mid-match requests the live snapshot after authoritative registration", () => {
+  const events = read("game/public/players/js/socket-events.js");
+
+  assert.match(events, /ayuda_musa_controlador\.setRegistrationReady\(true\);[\s\S]*sincronizarPartidaMusaTrasRegistro\(\)/);
+  assert.match(events, /function sincronizarPartidaMusaTrasRegistro\(\)[\s\S]*socket\.off\(texto_x, handler_recibir_texto_x\)[\s\S]*socket\.on\(texto_x, handler_recibir_texto_x\)/);
+  assert.match(events, /socket\.emit\('pedir_texto', \{ musa: equipoTexto \}\);[\s\S]*socket\.emit\('pedir_estado_musa'\)/);
+  assert.match(events, /setTimeout\(pedirSnapshot, 180\)/);
+});
+
+test("the advantage-change overlay never appears in Control", () => {
+  const competition = read("game/js/domains/competition.js");
+  assert.match(competition, /function animarCambioLider\(payload\) \{\s*if \(rolActual === "control" \|\| !esHudVisibleEnVistaActual\(\)\) return;/);
 });

@@ -6098,3 +6098,259 @@ body.musa-vista-cambiando #contenedor {
         animation: none !important;
     }
 }
+
+/* Panel de partida de la musa: una sola superficie, legible y sin solapes. */
+body.equipo-azul {
+    --equipo-color: #46efff;
+    --equipo-caret-color: #7df6ff;
+    background:
+        radial-gradient(circle at 18% 18%, rgba(25, 205, 255, 0.32), transparent 54%),
+        radial-gradient(circle at 82% 82%, rgba(10, 102, 164, 0.2), transparent 58%),
+        linear-gradient(145deg, #061724, #020711 68%, #03101a);
+    background-attachment: fixed;
+}
+
+body.equipo-rojo {
+    --equipo-color: #ff5f67;
+    --equipo-caret-color: #ff7a86;
+    background:
+        radial-gradient(circle at 82% 18%, rgba(255, 70, 92, 0.32), transparent 54%),
+        radial-gradient(circle at 18% 82%, rgba(135, 18, 48, 0.2), transparent 58%),
+        linear-gradient(215deg, #261019, #08050d 68%, #15060d);
+    background-attachment: fixed;
+}
+
+.musa-texto-card {
+    position: relative;
+    width: min(980px, calc(100vw - 32px));
+    margin: clamp(18px, 3vh, 34px) auto 0;
+    overflow: hidden;
+    border-width: 1px;
+}
+
+.musa-texto-card__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);
+    align-items: stretch;
+    gap: clamp(10px, 1.5vw, 18px);
+    padding: clamp(12px, 2vw, 20px);
+    border-bottom: 1px solid color-mix(in srgb, var(--equipo-color, #46efff), transparent 62%);
+    background:
+        linear-gradient(100deg, color-mix(in srgb, var(--equipo-color, #46efff), transparent 91%), transparent 52%),
+        rgba(2, 8, 16, .76);
+}
+
+.musa-texto-card .musa-escritxr-card {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: clamp(8px, 1.2vw, 12px) clamp(10px, 1.5vw, 16px);
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: .42rem;
+    border: 0;
+    border-left: 3px solid var(--equipo-color, #46efff);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--equipo-color, #46efff), transparent 93%);
+    box-shadow: none;
+}
+
+.musa-panel-label {
+    color: color-mix(in srgb, var(--equipo-color, #46efff), white 20%);
+    font: 700 clamp(9px, 1.5vw, 13px)/1 "Retro-gaming";
+    letter-spacing: .16em;
+}
+
+.musa-texto-card .musa-escritxr-card .nombre {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--equipo-color, #46efff);
+    font-size: clamp(20px, 4.4vw, 38px);
+    line-height: 1.08;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.musa-texto-card #metadatos {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: clamp(8px, 1.2vw, 12px);
+    border: 0;
+    border-radius: 8px;
+    background: rgba(1, 7, 14, .72);
+    box-shadow: inset 0 0 20px color-mix(in srgb, var(--equipo-color, #46efff), transparent 92%);
+}
+
+.musa-texto-card #metadatos .musa-nombre {
+    color: #f7c55f;
+}
+
+.musa-texto-card__viewport {
+    max-height: clamp(180px, 31vh, 310px);
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--equipo-color, #46efff), transparent 95%), transparent 45%),
+        rgba(1, 5, 12, .9);
+    transition: max-height 680ms cubic-bezier(.22, .8, .2, 1), filter 420ms ease;
+}
+
+.musa-texto-card.is-expanded .musa-texto-card__viewport {
+    max-height: min(68vh, 760px);
+}
+
+.musa-texto-card .textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: clamp(180px, 31vh, 310px);
+    height: auto;
+    max-height: none;
+    margin: 0;
+    padding: clamp(22px, 4vw, 38px) clamp(22px, 4vw, 38px) clamp(22px, 4vw, 38px) clamp(68px, 10vw, 94px);
+    overflow: auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: color-mix(in srgb, var(--equipo-color, #46efff), white 66%);
+    line-height: 1.28;
+}
+
+.musa-texto-card__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(180px, .8fr);
+    align-items: stretch;
+    gap: clamp(8px, 1.5vw, 14px);
+    padding: clamp(8px, 1.4vw, 14px);
+    border-top: 1px solid color-mix(in srgb, var(--equipo-color, #46efff), transparent 68%);
+    background: rgba(2, 8, 16, .94);
+}
+
+.musa-texto-card #mostrar_texto {
+    min-height: clamp(48px, 7vw, 62px);
+    border: 1px solid color-mix(in srgb, var(--equipo-color, #46efff), white 8%);
+    border-radius: 9px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--equipo-color, #46efff), transparent 78%), rgba(2, 8, 16, .96));
+}
+
+.musa-texto-card #metadatos_acciones {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
+
+.musa-texto-card #btn_bandera {
+    min-height: clamp(48px, 7vw, 62px);
+    border: 1px solid rgba(255, 221, 117, .8);
+    border-radius: 9px;
+    background: linear-gradient(135deg, rgba(255, 239, 176, .96), rgba(255, 183, 80, .95));
+    color: #160d03;
+    box-shadow: inset 0 1px 0 #fff8d9, 0 0 18px rgba(255, 190, 78, .2);
+}
+
+.musa-texto-card__scan {
+    position: absolute;
+    z-index: 4;
+    inset: 0 auto 0 -18%;
+    display: block;
+    width: 18%;
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.26), transparent);
+    transform: skewX(-12deg);
+}
+
+.musa-texto-card.is-morphing {
+    animation: musaPanelMorph 760ms cubic-bezier(.2, .85, .2, 1);
+}
+
+.musa-texto-card.is-morphing .musa-texto-card__scan {
+    animation: musaPanelScan 720ms ease both;
+}
+
+body.partida-activa .niveles,
+body.partida-finalizada-musa .niveles,
+body.partida-activa .notificacion,
+body.partida-finalizada-musa .notificacion {
+    width: min(980px, calc(100vw - 32px));
+    box-sizing: border-box;
+    border-radius: clamp(12px, 2vw, 20px);
+}
+
+@keyframes musaPanelMorph {
+    0% { transform: scale(.985); filter: brightness(.82); }
+    42% { transform: scale(1.012); filter: brightness(1.3); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes musaPanelScan {
+    0% { left: -18%; opacity: 0; }
+    18% { opacity: 1; }
+    82% { opacity: .8; }
+    100% { left: 100%; opacity: 0; }
+}
+
+@media (max-width: 680px) {
+    .musa-texto-card {
+        width: calc(100vw - 28px);
+        margin-top: calc(env(safe-area-inset-top, 0px) + 88px);
+    }
+
+    .musa-texto-card__header {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .musa-texto-card .musa-escritxr-card {
+        min-height: 58px;
+        padding: 8px 10px;
+    }
+
+    .musa-texto-card .musa-escritxr-card .nombre {
+        font-size: clamp(20px, 7vw, 30px);
+    }
+
+    .musa-texto-card #metadatos {
+        padding: 7px 9px;
+    }
+
+    .musa-texto-card__viewport,
+    .musa-texto-card .textarea {
+        min-height: 170px;
+        max-height: 35vh;
+    }
+
+    .musa-texto-card.is-expanded .musa-texto-card__viewport {
+        max-height: 65vh;
+    }
+
+    .musa-texto-card__actions {
+        grid-template-columns: minmax(0, 1.15fr) minmax(112px, .85fr);
+        gap: 7px;
+        padding: 8px;
+    }
+
+    .musa-texto-card #mostrar_texto,
+    .musa-texto-card #btn_bandera {
+        min-height: 52px;
+        padding-inline: 8px;
+        font-size: clamp(9px, 2.8vw, 12px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .musa-texto-card,
+    .musa-texto-card__viewport,
+    .musa-texto-card__scan {
+        animation: none !important;
+        transition-duration: 1ms !important;
+    }
+}

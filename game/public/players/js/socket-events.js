@@ -124,6 +124,7 @@ function registrarMusaEnServidor() {
         }
         ayuda_musa_controlador.setRegistrationReady(true);
         ocultarAvisoConexionMusa();
+        sincronizarPartidaMusaTrasRegistro();
         socket.emit('pedir_vista_espectador_modo');
         socket.emit('pedir_creditos_estado');
         socket.emit('pedir_puntuacion_final');
@@ -136,6 +137,28 @@ function registrarMusaEnServidor() {
         return true;
     });
     return true;
+}
+
+function sincronizarPartidaMusaTrasRegistro() {
+    const equipoPropio = Number(player) === 2 ? 2 : 1;
+    const equipoTexto = modo_actual === "palabras prohibidas" ? 3 - equipoPropio : equipoPropio;
+
+    // La asignacion autoritativa puede haber cambiado el equipo respecto a la URL.
+    // Reenlazamos el canal antes de pedir el snapshot para no perder el texto actual.
+    if (typeof handler_recibir_texto_x === "function") {
+        socket.off(texto_x, handler_recibir_texto_x);
+        texto_x = `texto${equipoTexto}`;
+        socket.on(texto_x, handler_recibir_texto_x);
+    }
+    pedirNombreMusa(equipoTexto);
+
+    const pedirSnapshot = () => {
+        if (!socket.connected || !musa_registro_confirmado) return;
+        socket.emit('pedir_texto', { musa: equipoTexto });
+        socket.emit('pedir_estado_musa');
+    };
+    pedirSnapshot();
+    setTimeout(pedirSnapshot, 180);
 }
 
 if (musa_aviso_conexion_boton) {

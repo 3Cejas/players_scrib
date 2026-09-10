@@ -412,7 +412,7 @@
   }
 
   function animarCambioLider(payload) {
-    if (!esHudVisibleEnVistaActual()) return;
+    if (rolActual === "control" || !esHudVisibleEnVistaActual()) return;
     if (avisoCambioTimer) {
       clearTimeout(avisoCambioTimer);
       avisoCambioTimer = null;
