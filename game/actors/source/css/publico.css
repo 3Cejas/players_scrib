@@ -1046,6 +1046,159 @@ body.page-actors p[id^="explic"] .explicacion-letra-destacada {
     transform: translateY(0.06em);
 }
 
+/* Técnico: reutiliza la mesa de Actores y añade un teleprompter flotante privado. */
+body.page-technician::after {
+    content: "TÉCNICO · MARCAS SINCRONIZADAS";
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 44;
+    padding: .55rem 1rem;
+    border: 1px solid rgba(255, 209, 102, .72);
+    border-radius: 999px;
+    background: rgba(4, 8, 16, .92);
+    color: #ffd166;
+    font-size: clamp(.56rem, 1vw, .78rem);
+    letter-spacing: .12em;
+    box-shadow: 0 0 1.2rem rgba(255, 209, 102, .22);
+    pointer-events: none;
+}
+
+.technician-teleprompter {
+    --tp-tech: #ffd166;
+    position: fixed;
+    right: clamp(.7rem, 2vw, 1.8rem);
+    bottom: clamp(.7rem, 2vw, 1.8rem);
+    z-index: 80;
+    width: min(52rem, calc(100vw - 1.4rem));
+    height: min(58vh, 38rem);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    border: 1px solid rgba(255, 209, 102, .65);
+    border-radius: 1.1rem;
+    overflow: hidden;
+    background: rgba(2, 6, 13, .97);
+    box-shadow: 0 1.2rem 4rem rgba(0, 0, 0, .65), 0 0 2rem rgba(255, 209, 102, .14);
+    opacity: 0;
+    transform: translateY(1.5rem) scale(.97);
+    visibility: hidden;
+    transition: opacity .28s ease, transform .28s ease, visibility .28s ease, width .3s ease, height .3s ease;
+}
+
+.technician-teleprompter--active {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+}
+
+.technician-teleprompter--expanded {
+    width: calc(100vw - 2rem);
+    height: calc(100vh - 2rem);
+    right: 1rem;
+    bottom: 1rem;
+}
+
+.technician-teleprompter__header,
+.technician-teleprompter__status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .8rem 1rem;
+    background: linear-gradient(90deg, rgba(255, 209, 102, .12), rgba(70, 240, 255, .08));
+    border-bottom: 1px solid rgba(255, 209, 102, .26);
+}
+
+.technician-teleprompter__header > div { display: grid; gap: .28rem; }
+.technician-teleprompter__header strong { color: #fff; font-size: clamp(.8rem, 1.4vw, 1.15rem); }
+.technician-teleprompter__eyebrow { color: var(--tp-tech); font-size: .62rem; letter-spacing: .14em; }
+.technician-teleprompter__header button {
+    width: 2.7rem;
+    height: 2.7rem;
+    border: 1px solid rgba(255, 209, 102, .6);
+    border-radius: .7rem;
+    background: rgba(0, 0, 0, .45);
+    color: var(--tp-tech);
+    font: inherit;
+    cursor: pointer;
+}
+
+.technician-teleprompter__screen {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12vh 1.8rem 18vh;
+    background: linear-gradient(180deg, rgba(0,0,0,.7), rgba(4,10,18,.92));
+}
+
+.technician-teleprompter__screen::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 42%;
+    height: 2px;
+    z-index: 2;
+    background: linear-gradient(90deg, transparent, var(--tp-tech), transparent);
+    box-shadow: 0 0 1rem var(--tp-tech);
+    pointer-events: none;
+}
+
+.technician-teleprompter__text {
+    color: #f7fbff;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    will-change: transform;
+    text-shadow: 0 2px 8px #000;
+}
+
+.technician-mark--underline { text-decoration: underline .12em var(--technician-mark-color, #ffe95c); text-underline-offset: .18em; }
+.technician-mark--note { background: rgba(255, 209, 102, .13); border-radius: .14em; }
+
+.technician-teleprompter__notes {
+    display: flex;
+    gap: .55rem;
+    overflow-x: auto;
+    padding: .65rem .85rem;
+    border-top: 1px solid rgba(70, 240, 255, .18);
+}
+
+.technician-teleprompter__note {
+    flex: 0 0 min(18rem, 72vw);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .55rem;
+    align-items: start;
+    border: 1px solid rgba(255, 209, 102, .35);
+    border-radius: .65rem;
+    padding: .58rem;
+    background: rgba(255, 209, 102, .07);
+    color: #f6f8ff;
+    text-align: left;
+    cursor: pointer;
+}
+.technician-teleprompter__note b { color: var(--tp-tech); }
+.technician-teleprompter__note span { font-size: .68rem; line-height: 1.45; }
+.technician-teleprompter__empty { color: rgba(255,255,255,.5); font-size: .68rem; }
+.technician-teleprompter__status { border-top: 1px solid rgba(255, 209, 102, .22); border-bottom: 0; color: #7fffd0; font-size: .6rem; }
+.technician-teleprompter--preparing .technician-teleprompter__screen::after {
+    content: "CARGANDO TELEPROMPTER";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--tp-tech);
+    letter-spacing: .14em;
+    background: rgba(2,6,13,.86);
+}
+
+@media (max-width: 760px) {
+    .technician-teleprompter { height: min(64vh, 36rem); }
+    .technician-teleprompter__screen { padding-inline: 1rem; }
+}
+
 body.page-actors #palabra {
     --nivel-chip-a: #5dff86;
     --nivel-chip-b: #2ebf5c;

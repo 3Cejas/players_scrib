@@ -2727,6 +2727,7 @@ function cargarTextosPruebaRepresentacionDebug() {
     if (!modo_debug_control_activo) return;
     aplicarTextoPruebaRepresentacionDebug(1, TEXTOS_PRUEBA_REPRESENTACION_DEBUG[1]);
     aplicarTextoPruebaRepresentacionDebug(2, TEXTOS_PRUEBA_REPRESENTACION_DEBUG[2]);
+    socket.emit("debug_cargar_marcas_tecnico");
     if (window.actualizarBotonesTeleprompterCarga) window.actualizarBotonesTeleprompterCarga();
     estadoAccionDebugControl("Textos listos para teleprompter y descarga.", "success", "representacion");
 }
@@ -2735,6 +2736,7 @@ function limpiarTextosPruebaRepresentacionDebug() {
     if (!modo_debug_control_activo) return;
     aplicarTextoPruebaRepresentacionDebug(1, "");
     aplicarTextoPruebaRepresentacionDebug(2, "");
+    socket.emit("debug_limpiar_marcas_tecnico");
     if (window.actualizarBotonesTeleprompterCarga) window.actualizarBotonesTeleprompterCarga();
     estadoAccionDebugControl("Textos de prueba retirados.", "neutral", "representacion");
 }

@@ -1706,6 +1706,32 @@ actualizarColorEquipo();
 inicializarBarraVidaActor();
     
 const socket = io(serverUrl);
+const rolActorSolicitado = String(new URLSearchParams(window.location.search).get("role") || "actor").toLowerCase();
+const esRolTecnico = rolActorSolicitado === "technician";
+
+window.ScribAnnotationTransport = {
+    push(marks) {
+        if (!socket || !socket.connected) return;
+        socket.emit(esRolTecnico ? "tecnico_marcas_actualizar" : "actor_marcas_actualizar", {
+            player,
+            marks: Array.isArray(marks) ? marks : []
+        });
+    }
+};
+
+function aplicarMarcasActorRemotas(payload = {}) {
+    if (Number(payload.player) !== Number(player) || !Array.isArray(payload.marks)) return;
+    window.ScribActorAnnotations?.applyRemoteAnnotations?.(payload.marks);
+    window.ScribTechnicianTeleprompter?.setMarks?.(payload.marks, payload.revision);
+}
+
+socket.on("marcas_actor_estado", (payload = {}) => {
+    if (!esRolTecnico) aplicarMarcasActorRemotas(payload);
+});
+
+socket.on("marcas_tecnico_estado", (payload = {}) => {
+    if (esRolTecnico) aplicarMarcasActorRemotas(payload);
+});
 
 socket.on("idioma_actual", (payload = {}) => {
     if (window && typeof window.scribSetLanguage2P === "function") {
@@ -1724,7 +1750,16 @@ socket.on("connect", () => {
     modo_seq_actual_actor = 0;
     ultimo_count_seq_actor = 0;
     tiempo_seq_actual_actor = 0;
-    socket.emit("registrar_actor", { player });
+    socket.emit(esRolTecnico ? "registrar_tecnico" : "registrar_actor", { player });
+    const eventoEstadoMarcas = esRolTecnico ? "pedir_marcas_tecnico_estado" : "pedir_marcas_actor_estado";
+    socket.emit(eventoEstadoMarcas, {}, (estado = {}) => {
+        const locales = window.ScribActorAnnotations?.getAnnotations?.() || [];
+        if (Array.isArray(estado.marks) && estado.marks.length > 0) {
+            aplicarMarcasActorRemotas(estado);
+        } else if (locales.length > 0) {
+            window.ScribActorAnnotations?.syncRemote?.();
+        }
+    });
     socket.emit("pedir_nombre");
     socket.emit("pedir_idioma_actual");
 });

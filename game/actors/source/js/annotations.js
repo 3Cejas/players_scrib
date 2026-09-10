@@ -29,7 +29,8 @@
         if (storageKey) return storageKey;
         const params = new URLSearchParams(window.location.search);
         const player = params.get("player") || "1";
-        storageKey = `${STORAGE_PREFIX}${player}`;
+        const isTechnician = String(params.get("role") || "").toLowerCase() === "technician";
+        storageKey = `${isTechnician ? "scrib_technician_annotations_v1:" : STORAGE_PREFIX}${player}`;
         return storageKey;
     }
 
@@ -77,7 +78,8 @@
             underlineColor: escapeCssColor(annotation.underlineColor),
             color: escapeCssColor(annotation.color),
             note: String(annotation.note || "").trim(),
-            createdAt: Number(annotation.createdAt) || Date.now()
+            createdAt: Number(annotation.createdAt) || Date.now(),
+            technicianOnly: Boolean(annotation.technicianOnly)
         };
     }
 
@@ -113,6 +115,9 @@
         if (options.broadcast !== false) {
             broadcastAnnotations(json);
         }
+        if (options.remote !== false) {
+            window.ScribAnnotationTransport?.push?.(annotations.map(normalizeAnnotation));
+        }
     }
 
     function applySyncedAnnotations(raw) {
@@ -123,6 +128,22 @@
         }
         annotations = nextAnnotations;
         lastSavedAnnotationsJson = nextJson;
+        hideToolbar();
+        render({ persist: false });
+    }
+
+    function applyRemoteAnnotations(raw) {
+        const next = Array.isArray(raw) ? raw.filter(isUsableAnnotation).map(normalizeAnnotation) : [];
+        const nextJson = JSON.stringify(next);
+        if (nextJson === lastSavedAnnotationsJson) return;
+        annotations = next;
+        lastSavedAnnotationsJson = nextJson;
+        try {
+            window.localStorage.setItem(getStorageKey(), nextJson);
+        } catch (error) {
+            // El servidor conserva el estado aunque el navegador no permita storage.
+        }
+        broadcastAnnotations(nextJson);
         hideToolbar();
         render({ persist: false });
     }
@@ -812,9 +833,12 @@
     }
 
     window.ScribActorAnnotations = {
+        applyRemoteAnnotations,
         setRemoteHtml,
         clear,
         refresh: render,
+        getAnnotations: () => annotations.map(normalizeAnnotation),
+        syncRemote: () => window.ScribAnnotationTransport?.push?.(annotations.map(normalizeAnnotation)),
         hasSelection: () => Boolean(readCurrentSelection())
     };
 

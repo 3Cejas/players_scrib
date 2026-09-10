@@ -38,7 +38,7 @@ const JURY_CSS_VERSION = "20260904a";
 const JURY_STATE_VERSION = "20260904a";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
 const CONTROL_CSS_VERSION = "20260910d";
-const CONTROL_ACTIONS_VERSION = "20260909a";
+const CONTROL_ACTIONS_VERSION = "20260910d";
 const CONTROL_I18N_VERSION = "20260903a";
 const CONTROL_STATE_VERSION = "20260831b";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260909a";
@@ -52,10 +52,10 @@ const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260910h";
 const PUBLIC_PLAYER_I18N_VERSION = "20260903a";
 const SPECTATOR_I18N_VERSION = "20260903a";
 const ACTOR_SELECTOR_VERSION = "20260505a";
-const ACTOR_SOURCE_CSS_VERSION = "20260505f";
+const ACTOR_SOURCE_CSS_VERSION = "20260910a";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
-const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260505c";
-const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = LEVEL_TRANSITION_VERSION;
+const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260910a";
+const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260910a";
 
 function read(relPath) {
   return fs.readFileSync(path.join(ROOT, relPath), "utf8");
@@ -144,6 +144,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/actors/source/index.html", "js/actions.js", ACTOR_SOURCE_ACTIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/annotations.js", ACTOR_SOURCE_ANNOTATIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/socket-events.js", ACTOR_SOURCE_SOCKET_EVENTS_VERSION);
+  assertIncludesAsset("game/actors/source/index.html", "js/technician.js", "20260910a");
   assertIncludesAsset("game/actors/source/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
 });
@@ -1252,7 +1253,7 @@ test("control exposes targeted remote reload buttons and live roles reload on co
   });
 });
 
-test("actor role supports local text annotations without emitting them to writers", () => {
+test("actor annotations stay away from writers and synchronize through the dedicated marks channel", () => {
   const html = read("game/actors/source/index.html");
   const css = read("game/actors/source/css/publico.css");
   const actions = read("game/actors/source/js/actions.js");
@@ -1327,6 +1328,36 @@ test("actor role supports local text annotations without emitting them to writer
   assert.match(socket, /pintarTextoActorLocal\(htmlLocal\);/);
   assert.match(socket, /ScribActorAnnotations\.setRemoteHtml\(contenido\)/);
   assert.match(socket, /limpiarAnotacionesLocalesActor\(\);/);
+  assert.match(socket, /actor_marcas_actualizar/);
+  assert.match(socket, /marcas_actor_estado/);
+  assert.doesNotMatch(socket, /enviar_texto_j[12].*marcas/s);
+});
+
+test("technician reuses the actor desk with editable marks and a synchronized floating teleprompter", () => {
+  const landing = read("game/index.html");
+  const selector = read("game/tecnico/index.html");
+  const html = read("game/actors/source/index.html");
+  const css = read("game/actors/source/css/publico.css");
+  const socket = read("game/actors/source/js/socket-events.js");
+  const technician = read("game/actors/source/js/technician.js");
+  const control = read("game/control/js/actions.js");
+
+  assert.match(landing, /href="\.\/tecnico\/index\.html" data-pass="true"/);
+  assert.match(selector, /actors\/source\/index\.html\?player=1&amp;role=technician/);
+  assert.match(selector, /actors\/source\/index\.html\?player=2&amp;role=technician/);
+  assert.match(html, /id="technician_teleprompter"/);
+  assert.match(html, /id="technician_teleprompter_notes"/);
+  assert.match(css, /\.technician-teleprompter\s*\{/);
+  assert.match(css, /position:\s*fixed/);
+  assert.match(css, /\.technician-teleprompter--expanded/);
+  assert.match(socket, /registrar_tecnico/);
+  assert.match(socket, /tecnico_marcas_actualizar/);
+  assert.match(socket, /marcas_tecnico_estado/);
+  assert.match(technician, /teleprompter_state/);
+  assert.match(technician, /requestAnimationFrame\(loop\)/);
+  assert.match(technician, /ScribTechnicianTeleprompter/);
+  assert.match(control, /debug_cargar_marcas_tecnico/);
+  assert.match(control, /debug_limpiar_marcas_tecnico/);
 });
 
 test("actor fullscreen is selected explicitly instead of toggled by page clicks", () => {

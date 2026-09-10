@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260505f">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260910a">
     <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260823a">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -17,7 +17,7 @@
     <script src="../../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../../js/domains/teleprompter.js?v=20260424a"></script>
     <script src="./js/actions.js?v=20260505c"></script>
-    <script src="./js/annotations.js?v=20260505c"></script>
+    <script src="./js/annotations.js?v=20260910a"></script>
 </head>
 <body class="page-actors">
         <div id="level_transition" class="level-transition level-transition--compact" aria-hidden="true">
@@ -147,9 +147,27 @@
                 </table>
         </div>
         </div>
+        <section id="technician_teleprompter" class="technician-teleprompter" hidden aria-live="polite">
+            <header class="technician-teleprompter__header">
+                <div>
+                    <span class="technician-teleprompter__eyebrow">TELEPROMPTER · TÉCNICO</span>
+                    <strong id="technician_teleprompter_title">Esperando texto</strong>
+                </div>
+                <button id="technician_teleprompter_size" type="button" aria-label="Cambiar tamaño de la ventana">↗</button>
+            </header>
+            <div id="technician_teleprompter_screen" class="technician-teleprompter__screen">
+                <div id="technician_teleprompter_text" class="technician-teleprompter__text"></div>
+            </div>
+            <aside id="technician_teleprompter_notes" class="technician-teleprompter__notes" aria-label="Marcas del texto"></aside>
+            <footer class="technician-teleprompter__status">
+                <span id="technician_teleprompter_play">EN ESPERA</span>
+                <span id="technician_teleprompter_sync">SINCRONIZADO</span>
+            </footer>
+        </section>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
     <script src="../../js/i18n.js?v=20260823a"></script>
 <script src="../../js/domains/level-transition.js?v=20260823a"></script>
-<script src="./js/socket-events.js?v=20260823a"></script>
+<script src="./js/socket-events.js?v=20260910a"></script>
+<script src="./js/technician.js?v=20260910a"></script>
 </html>

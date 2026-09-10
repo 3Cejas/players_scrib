@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SCRB · Técnico</title>
+    <link rel="icon" href="../../img/logo.png" type="image/png" />
+    <link rel="stylesheet" href="../css/dashboard-players.css?v=20260505i" />
+    <style>
+        *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px;color:#f4fbff;font-family:"Retro-gaming",sans-serif;background:linear-gradient(90deg,rgba(0,181,255,.2),rgba(3,7,14,.9) 45% 55%,rgba(255,67,67,.2)),#02040a}.panel{width:min(920px,100%);padding:clamp(20px,4vw,40px);border:1px solid rgba(255,209,102,.55);border-radius:24px;background:rgba(5,10,20,.92);box-shadow:0 0 40px rgba(255,209,102,.13)}h1,p{text-align:center}h1{letter-spacing:.12em;text-shadow:-.07em 0 #ff5050,.07em 0 #46f0ff}p{opacity:.75;line-height:1.6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}.team{appearance:none;min-height:150px;border-radius:18px;border:1px solid var(--c);background:linear-gradient(150deg,color-mix(in srgb,var(--c),transparent 84%),rgba(2,7,14,.96));color:#fff;font:inherit;cursor:pointer;display:grid;place-items:center;gap:8px;padding:20px;box-shadow:0 0 22px color-mix(in srgb,var(--c),transparent 72%);transition:transform .18s ease,box-shadow .18s ease}.team:hover,.team:focus-visible{transform:scale(1.025);box-shadow:0 0 34px color-mix(in srgb,var(--c),transparent 48%);outline:none}.team strong{font-size:clamp(18px,3vw,29px);color:var(--c)}.team span{font-size:12px;opacity:.8}.blue{--c:#46f0ff}.red{--c:#ff646f}@media(max-width:650px){.grid{grid-template-columns:1fr}.team{min-height:115px}}
+    </style>
+</head>
+<body>
+    <main class="panel">
+        <h1>🎛️ TÉCNICO</h1>
+        <p>Elige el texto que vas a preparar. Verás las marcas de interpretación y el teleprompter en tiempo real.</p>
+        <div class="grid">
+            <button class="team blue" data-url="../actors/source/index.html?player=1&amp;role=technician"><strong>ESCRITXR 1</strong><span>MARCAS · TELEPROMPTER</span></button>
+            <button class="team red" data-url="../actors/source/index.html?player=2&amp;role=technician"><strong>ESCRITXR 2</strong><span>MARCAS · TELEPROMPTER</span></button>
+        </div>
+    </main>
+    <script>document.querySelectorAll('[data-url]').forEach((button)=>button.addEventListener('click',()=>{window.location.href=button.dataset.url;}));</script>
+</body>
+</html>
