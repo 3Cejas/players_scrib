@@ -52,6 +52,7 @@
       .scrib-competition-hud[data-role="control"] .scrib-competition-bar{position:absolute;left:48px;right:48px;top:50%;width:auto;height:20px;box-sizing:border-box;transform:translateY(-50%)}
       .scrib-competition-hud[data-role="control"] .scrib-competition-center{height:25px;width:7px}
       .scrib-competition-hud[data-role="control"] .scrib-competition-curse{font-size:14px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-scoreline,.scrib-competition-hud[data-final="1"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-shell{width:max-content;min-width:min(230px,88vw);margin:auto;padding:8px 16px}
       .scrib-competition-hud[data-final="1"] .scrib-competition-top{margin:0}
@@ -312,7 +313,7 @@
   }
 
   function animarPunto(payload) {
-    if (!payload || !ui) return;
+    if (!payload || !ui || rolActual === "control") return;
     const player = Number(payload.player) === 2 ? 2 : 1;
     const origen = rectOrigen(player);
     const destino = ui.scores[player].getBoundingClientRect();

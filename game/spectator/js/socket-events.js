@@ -1706,9 +1706,7 @@ socket.on("desventaja_activa_estado", payload => {
 });
 
 socket.on("desventaja_ronda_limpiar", () => {
-    if (typeof limpiarDesventajasVisualesEspectador === "function") {
-        limpiarDesventajasVisualesEspectador();
-    }
+    limpiarDesventajasVisualesEspectador();
 });
 
 socket.on("pausar_js", () => {

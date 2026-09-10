@@ -61,7 +61,18 @@ test("Control integra un HUD compacto donde antes aparecía la duración de la d
   assert.match(js, /data-role="control"[^}]+position:relative/);
   assert.match(js, /data-role="control"[^}]+scrib-competition-scoreline[^}]+display:block/);
   assert.match(js, /control-competition-slot \+ \.level-status-witnesses \.level-status-witness--disadvantage\{display:none\}/);
+  assert.match(js, /data-role="control"\] \.scrib-competition-streak\{display:none\}/);
+  assert.match(js, /if \(!payload \|\| !ui \|\| rolActual === "control"\) return;/);
   assert.doesNotMatch(actions, /Desventaja \$\{equipo\}\$\{detalle\}: \$\{formatearTiempoTestigoControl/);
+});
+
+test("Espectador mantiene una sola desventaja visual y limpia el efecto anterior", () => {
+  const state = read("game/spectator/js/state.js");
+  const sockets = read("game/spectator/js/socket-events.js");
+
+  assert.match(state, /function limpiarDesventajasVisualesEspectador\(\)[\s\S]*limpiarVisualPutadasEspectador\(\)/);
+  assert.match(state, /const rival = id === 1 \? 2 : 1;[\s\S]*limpiarVisualPutadaEspectador\(rival, \{ limpiarEfecto: true \}\)/);
+  assert.match(sockets, /socket\.on\("desventaja_ronda_limpiar", \(\) => \{\s*limpiarDesventajasVisualesEspectador\(\);/);
 });
 
 test("Escritxr ve el calentamiento previo dentro del HUD de partida", () => {

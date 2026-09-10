@@ -1880,7 +1880,7 @@ body.page-spectator #info_general.info-general-panel #definicion {
 
 .aviso-inverso-escritora {
     position: fixed;
-    top: clamp(12px, 3vh, 42px);
+    top: clamp(190px, 25vh, 280px);
     left: 50%;
     z-index: 24000;
     display: flex;

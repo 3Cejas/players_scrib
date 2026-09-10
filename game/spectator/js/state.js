@@ -6422,6 +6422,10 @@ function limpiarVisualPutadaEspectador(player, opciones = {}) {
     temporizadores_visual_putada_espectador[id] = null;
     estado_visual_putada_espectador[id] = null;
     const raiz = obtenerRaizVisualPutadaEspectador(id);
+    const areaTexto = id === 2 ? texto2 : texto1;
+    if (areaTexto && areaTexto.classList) {
+        areaTexto.classList.remove("rotate-vertical-center", "textarea_blur");
+    }
     if (!raiz) {
         return;
     }
@@ -6434,13 +6438,31 @@ function limpiarVisualPutadasEspectador() {
     limpiarVisualPutadaEspectador(2, { limpiarEfecto: true });
 }
 
+function limpiarDesventajasVisualesEspectador() {
+    limpiarVisualPutadasEspectador();
+    clearTimeout(tempo_rayo_espectador);
+    clearTimeout(tempo_text_inverso1);
+    clearTimeout(tempo_text_inverso2);
+    clearTimeout(tempo_text_borroso1);
+    clearTimeout(tempo_text_borroso2);
+    tempo_rayo_espectador = null;
+    tempo_text_inverso1 = null;
+    tempo_text_inverso2 = null;
+    tempo_text_borroso1 = null;
+    tempo_text_borroso2 = null;
+    detenerSonidosDesventaja();
+    ocultarRayoEspectador();
+}
+
 function activarVisualPutadaEspectador(player, putada, opciones = {}) {
     const id = Number(player) === 2 ? 2 : 1;
+    const rival = id === 1 ? 2 : 1;
     const clave = normalizarPutada(putada);
     const revisionContexto = obtenerRevisionContextoTransitorioEspectador();
     const clase = obtenerClaseVisualPutadaEspectador(clave);
     const etiqueta = obtenerEtiquetaVisualPutadaEspectador(clave);
     const raiz = obtenerRaizVisualPutadaEspectador(id);
+    limpiarVisualPutadaEspectador(rival, { limpiarEfecto: true });
     const activaAnterior = estado_visual_putada_espectador[id];
     if (activaAnterior && activaAnterior.putada) {
         limpiarTemporizadoresEfectoPutadaEspectador(id, activaAnterior.putada);
