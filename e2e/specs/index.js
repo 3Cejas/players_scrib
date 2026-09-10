@@ -1603,7 +1603,7 @@ const smokeSpecs = [
   {
     name: "spectator-start-countdown-and-warmup",
     run: async (ctx) => {
-      await openRolesAndWaitWithOptions(ctx, ["control", "spectator"], { useStateHooks: false });
+      await openRolesAndWaitWithOptions(ctx, ["control", "writer1", "spectator"], { useStateHooks: false });
       await configureFastControlPanel(ctx, {
         tiempo_modos: 10,
         modes: ["letra bendita"]
@@ -1657,6 +1657,16 @@ const smokeSpecs = [
       );
       ctx.assert(warmup.loop === true, "warm-up soundtrack should loop");
       ctx.assert(warmup.paused === false, "warm-up soundtrack should be playing");
+      await ctx.waitFor(
+        "writer warm-up level is visible",
+        async () => ctx.evaluate("writer1", () => {
+          const hud = document.querySelector("#scrib_competition_hud");
+          const label = hud && hud.querySelector(".scrib-competition-warmup");
+          return hud?.dataset.warmup === "1"
+            && /CALENTAMIENTO PREVIO/.test(String(label?.textContent || ""));
+        }),
+        5000
+      );
     }
   },
   {

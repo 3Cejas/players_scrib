@@ -58,8 +58,8 @@ const controladorTransicionNivelEspectador = apiTransicionNivelEspectador
         translate: tJuego2P,
         windowRef: window,
         documentRef: document,
-        durationMs: 5200,
-        reducedDurationMs: 3200
+        durationMs: 7000,
+        reducedDurationMs: 7000
     })
     : null;
 const seguimientoTransicionNivelEspectador = apiTransicionNivelEspectador

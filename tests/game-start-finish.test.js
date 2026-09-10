@@ -63,7 +63,7 @@ test("countdown audio is exclusive, spans the server intro and reveals the HUD b
 
 test("the level introduction lasts long enough to read on the projector", () => {
   const state = read("game/spectator/js/state.js");
-  assert.match(state, /createController\(\{[\s\S]*durationMs: 5200,[\s\S]*reducedDurationMs: 3200/);
+  assert.match(state, /createController\(\{[\s\S]*durationMs: 7000,[\s\S]*reducedDurationMs: 7000/);
 });
 
 test("HTML editor tags never become public competition labels", () => {

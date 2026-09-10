@@ -7,6 +7,8 @@
   let ui = null;
   let relojInterval = null;
   let relojEstado = null;
+  let calentamientoInterval = null;
+  let calentamientoEstado = null;
   let estadoActual = null;
   let rolActual = "";
 
@@ -31,8 +33,8 @@
       body.page-spectator.vista-partida #contenedor_espectador .nombre+br+br{display:none}
       .scrib-competition-hud[data-role="writer"]{width:min(760px,68vw)}
       .scrib-competition-hud[data-role="control"]{position:relative;inset:auto;transform:none;width:100%;filter:none;z-index:2}
-      .scrib-competition-hud[data-active="0"][data-clock="0"]{opacity:0;transform:translate(-50%,-20px)}
-      .scrib-competition-hud[data-role="control"][data-active="0"][data-clock="0"]{transform:translateY(-6px)}
+      .scrib-competition-hud[data-active="0"][data-clock="0"][data-warmup="0"]{opacity:0;transform:translate(-50%,-20px)}
+      .scrib-competition-hud[data-role="control"][data-active="0"][data-clock="0"][data-warmup="0"]{transform:translateY(-6px)}
       .scrib-competition-shell{position:relative;border:1px solid #ffffff38;border-radius:18px;padding:9px 14px 11px;background:linear-gradient(180deg,#101423f2,#060914ed);box-shadow:inset 0 0 26px #ffffff0b,0 0 0 1px #000}
       .scrib-competition-top{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:7px}
       .scrib-competition-mode{font-size:clamp(10px,.8vw,13px);font-weight:900;letter-spacing:.13em;text-align:left;color:#d7dcf4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -41,11 +43,15 @@
       .scrib-competition-criterion{text-align:right;font-size:clamp(8px,.68vw,11px);font-weight:800;letter-spacing:.07em;color:#abb2cb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .scrib-competition-hud[data-role="control"] .scrib-competition-shell{padding:4px 6px;border-radius:8px;background:#050914d9}
       .scrib-competition-hud[data-role="control"] .scrib-competition-top{display:none}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-scoreline{grid-template-columns:minmax(28px,auto) 1fr minmax(28px,auto);gap:5px}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-score{min-width:30px;height:25px;border-radius:6px;font-size:15px}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-bar{height:18px}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-center{height:23px;width:7px}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-curse{font-size:15px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-scoreline{position:relative;display:block;height:32px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score{position:absolute;z-index:6;top:50%;min-width:39px;height:26px;padding:0 4px;border-radius:8px;font-size:13px;background:#050914;box-sizing:border-box}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score--1{left:3px;transform:translateY(-50%)}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score--2{right:3px;transform:translateY(-50%)}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score.is-leading{transform:translateY(-50%);box-shadow:0 0 13px currentColor,inset 0 0 12px #ffffff24}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score.is-hit{animation:scribScoreHitControl .42s ease-out}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-bar{position:absolute;left:48px;right:48px;top:50%;width:auto;height:20px;box-sizing:border-box;transform:translateY(-50%)}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-center{height:25px;width:7px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-curse{font-size:14px}
       .scrib-competition-hud[data-final="1"] .scrib-competition-scoreline,.scrib-competition-hud[data-final="1"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-shell{width:max-content;min-width:min(230px,88vw);margin:auto;padding:8px 16px}
       .scrib-competition-hud[data-final="1"] .scrib-competition-top{margin:0}
@@ -54,6 +60,9 @@
       .scrib-competition-hud[data-role="writer"] .scrib-competition-mode,.scrib-competition-hud[data-role="writer"] .scrib-competition-criterion,.scrib-competition-hud[data-role="spectator"] .scrib-competition-mode,.scrib-competition-hud[data-role="spectator"] .scrib-competition-criterion{display:none}
       .scrib-competition-hud[data-role="writer"] .scrib-competition-top,.scrib-competition-hud[data-role="spectator"] .scrib-competition-top{display:flex;justify-content:center;margin-bottom:7px}
       .scrib-competition-scoreline{display:grid;grid-template-columns:minmax(54px,auto) 1fr minmax(54px,auto);gap:9px;align-items:center}
+      .scrib-competition-warmup{display:none;align-items:center;justify-content:center;min-height:38px;border:1px solid #ffe47588;border-radius:999px;background:linear-gradient(90deg,#32230adf,#111423ed,#32230adf);color:var(--oro);font-size:clamp(13px,1.3vw,20px);font-weight:1000;letter-spacing:.09em;text-align:center;box-shadow:inset 0 0 20px #ffe47518,0 0 20px #ffe47522}
+      .scrib-competition-hud[data-role="writer"][data-warmup="1"] .scrib-competition-top,.scrib-competition-hud[data-role="writer"][data-warmup="1"] .scrib-competition-scoreline,.scrib-competition-hud[data-role="writer"][data-warmup="1"] .scrib-competition-streak{display:none}
+      .scrib-competition-hud[data-role="writer"][data-warmup="1"] .scrib-competition-warmup{display:flex}
       .scrib-competition-score{position:relative;display:flex;align-items:center;justify-content:center;min-width:58px;height:42px;border-radius:12px;font-size:clamp(22px,2.1vw,36px);font-weight:1000;font-variant-numeric:tabular-nums;background:#090c18;border:1px solid currentColor;transition:transform .2s,box-shadow .25s}
       .scrib-competition-score--1{color:var(--azul);box-shadow:inset 0 0 18px #46f0ff24}
       .scrib-competition-score--2{color:var(--rojo);box-shadow:inset 0 0 18px #ff5f6724}
@@ -77,6 +86,7 @@
       .scrib-competition-change small{display:block;margin-top:10px;font-size:.3em;letter-spacing:.18em;color:var(--change-color,#fff)}
       .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
       @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+      @keyframes scribScoreHitControl{0%{transform:translateY(-50%) scale(1)}40%{transform:translateY(-50%) scale(1.16)}100%{transform:translateY(-50%) scale(1)}}
       @keyframes scribCompetitionShift{0%{filter:brightness(1)}45%{filter:brightness(1.35);box-shadow:inset 0 0 24px #fff4,0 0 18px #fff3}100%{filter:brightness(1)}}
       @keyframes scribCompetitionCross{0%{filter:brightness(1)}40%{filter:brightness(1.65);box-shadow:inset 0 0 30px #fff8,0 0 30px #ffe47599}100%{filter:brightness(1)}}
       @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
@@ -103,6 +113,7 @@
     if (slotControl && root.parentElement !== slotControl) slotControl.appendChild(root);
     root.dataset.active = "0";
     root.dataset.clock = "0";
+    root.dataset.warmup = "0";
     root.innerHTML = `
       <div class="scrib-competition-shell">
         <div class="scrib-competition-top">
@@ -110,6 +121,7 @@
           <span class="scrib-competition-clock">00:00</span>
           <span class="scrib-competition-criterion">MARCADOR DE INSPIRACIÓN</span>
         </div>
+        <div class="scrib-competition-warmup">CALENTAMIENTO PREVIO</div>
         <div class="scrib-competition-scoreline">
           <strong class="scrib-competition-score scrib-competition-score--1">0</strong>
           <div class="scrib-competition-bar">
@@ -128,6 +140,7 @@
       mode: root.querySelector(".scrib-competition-mode"),
       clock: root.querySelector(".scrib-competition-clock"),
       criterion: root.querySelector(".scrib-competition-criterion"),
+      warmup: root.querySelector(".scrib-competition-warmup"),
       bar: root.querySelector(".scrib-competition-bar"),
       segments: { 1: root.querySelector(".scrib-competition-segment--1"), 2: root.querySelector(".scrib-competition-segment--2") },
       scores: { 1: root.querySelector(".scrib-competition-score--1"), 2: root.querySelector(".scrib-competition-score--2") },
@@ -208,6 +221,36 @@
     pintarReloj();
     if (relojInterval) clearInterval(relojInterval);
     relojInterval = setInterval(pintarReloj, 250);
+  }
+
+  function pintarCalentamiento() {
+    if (!ui) ui = crearUi(rolActual);
+    const activo = rolActual === "writer" && activoCalentamiento(calentamientoEstado);
+    ui.root.dataset.warmup = activo ? "1" : "0";
+    if (!ui.warmup) return;
+    if (!activo) {
+      ui.warmup.textContent = "CALENTAMIENTO PREVIO";
+      return;
+    }
+    const finTs = Number(calentamientoEstado.fin_ts) || 0;
+    const duracionMs = Math.max(1000, Number(calentamientoEstado.duracion_ms) || 30000);
+    const restante = finTs > 0
+      ? Math.max(0, (finTs - Date.now()) / 1000)
+      : Math.max(0, duracionMs / 1000);
+    ui.warmup.textContent = `CALENTAMIENTO PREVIO · ${formatearTiempo(restante)}`;
+  }
+
+  function actualizarCalentamiento(payload) {
+    calentamientoEstado = payload && typeof payload === "object" ? { ...payload } : null;
+    pintarCalentamiento();
+    if (calentamientoInterval) clearInterval(calentamientoInterval);
+    calentamientoInterval = activoCalentamiento(calentamientoEstado)
+      ? setInterval(pintarCalentamiento, 250)
+      : null;
+  }
+
+  function activoCalentamiento(payload) {
+    return Boolean(payload && payload.activo !== false);
   }
 
   function rectOrigen(player) {
@@ -351,12 +394,14 @@
     });
     socket.on("competicion_cambio_lider", animarCambioLider);
     socket.on("reloj_partida_estado", actualizarReloj);
+    socket.on("calentamiento_previo_estado", actualizarCalentamiento);
     socket.on("desventaja_ronda_limpiar", limpiarDesventaja);
   }
 
   global.ScribCompetitionUI = {
     actualizarEstado,
     actualizarReloj,
+    actualizarCalentamiento,
     conectar,
     formatearTiempo,
     posicionMarcador

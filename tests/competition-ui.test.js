@@ -11,6 +11,7 @@ test("la barra bilateral parte del centro y se desplaza hacia quien lidera", () 
   assert.equal(competition.posicionMarcador(0, 0), 50);
   assert.ok(competition.posicionMarcador(10, 2) > 50);
   assert.ok(competition.posicionMarcador(2, 10) < 50);
+  assert.ok(competition.posicionMarcador(9.95, 2) < competition.posicionMarcador(10, 2));
   assert.equal(competition.formatearTiempo(125), "02:05");
 });
 
@@ -58,8 +59,16 @@ test("Control integra un HUD compacto donde antes aparecía la duración de la d
   assert.match(html, /control_desventaja_activa_time_j1[^>]+hidden/);
   assert.match(html, /control_desventaja_activa_time_j2[^>]+hidden/);
   assert.match(js, /data-role="control"[^}]+position:relative/);
+  assert.match(js, /data-role="control"[^}]+scrib-competition-scoreline[^}]+display:block/);
   assert.match(js, /control-competition-slot \+ \.level-status-witnesses \.level-status-witness--disadvantage\{display:none\}/);
   assert.doesNotMatch(actions, /Desventaja \$\{equipo\}\$\{detalle\}: \$\{formatearTiempoTestigoControl/);
+});
+
+test("Escritxr ve el calentamiento previo dentro del HUD de partida", () => {
+  const js = read("game/js/domains/competition.js");
+  assert.match(js, /socket\.on\("calentamiento_previo_estado", actualizarCalentamiento\)/);
+  assert.match(js, /data-role="writer"\]\[data-warmup="1"\][^}]+scrib-competition-warmup\{display:flex\}/);
+  assert.match(js, /CALENTAMIENTO PREVIO · \$\{formatearTiempo\(restante\)\}/);
 });
 
 test("Escritxr oculta los rótulos del nivel, usa el emoji y centra las partículas en el destino real", () => {
