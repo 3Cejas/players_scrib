@@ -56,6 +56,8 @@ function textoDom(texto) {
 function elementoDom(className = "", hijos = [], attrs = {}) {
   const node = {
     nodeType: 1,
+    tagName: String(attrs.tagName || "DIV").toUpperCase(),
+    nodeName: String(attrs.tagName || "DIV").toUpperCase(),
     className,
     childNodes: hijos,
     parentNode: null,
@@ -231,6 +233,25 @@ test("ScribEditorDeletion skips protected words and keeps deleting behind them",
   assert.equal(ScribEditorDeletion.borrarUltimoCaracterEditable(raiz).deleted, true);
   assert.equal(antes.data, "ab");
   assert.equal(protegidaTexto.data, "BONUS");
+});
+
+test("ScribEditorDeletion atraviesa letras protegidas y saltos de linea", () => {
+  const { ScribEditorDeletion } = cargarDominio("game/js/domains/editor-deletion.js");
+  const antes = textoDom("texto");
+  const letraTexto = textoDom("A");
+  const letraBendita = elementoDom("letra-verde", [letraTexto], { contenteditable: "false" });
+  const salto = elementoDom("", [], { tagName: "br" });
+  const raiz = elementoDom("", [antes, letraBendita, salto]);
+
+  const primerBorrado = ScribEditorDeletion.borrarUltimoCaracterEditable(raiz);
+  assert.equal(primerBorrado.deleted, true);
+  assert.equal(primerBorrado.structuralBreak, true);
+  assert.equal(raiz.childNodes.includes(salto), false);
+  assert.equal(letraTexto.data, "A");
+
+  assert.equal(ScribEditorDeletion.borrarUltimoCaracterEditable(raiz).deleted, true);
+  assert.equal(antes.data, "text");
+  assert.equal(letraTexto.data, "A");
 });
 
 test("ScribEditorDeletion deletes editable text beside protected words in one step", () => {

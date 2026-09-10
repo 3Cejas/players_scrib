@@ -224,7 +224,9 @@ test("spectator and actor expose one accessible, responsive transition driven by
     assert.doesNotMatch(spectatorActivate, /observarModoCanonicoTransicionEspectador/);
     assert.match(spectatorSockets, /socket\.on\('modo_actual'[\s\S]*observarModoCanonicoTransicionEspectador\(payload\)/);
     assert.match(spectatorSockets, /aplazarTransicionNivelEspectador\(observacionTransicion, payload\)/);
-    assert.match(spectatorState, /if \(vista_espectador_modo_resuelta !== "partida"\) return false/);
+    assert.match(spectatorState, /vista_espectador_modo_resuelta !== "partida"\) return false/);
+    assert.match(spectatorState, /firmaUltimaTransicionNivelEspectador/);
+    assert.match(spectatorSockets, /mostrarTransicionNivelForzadaEspectador\(modo_actual, data \|\| \{\}\)/);
     assert.match(spectatorState, /durationMs: 7000,[\s\S]*reducedDurationMs: 7000/);
     assert.match(spectatorState, /if \(modo !== "partida"\)[\s\S]*ocultarTransicionNivelEspectador\(\)/);
     assert.match(

@@ -569,6 +569,7 @@ function reproducirSonidoFeedbackInspiracionEscritora(tipo) {
         if (promesa && typeof promesa.catch === "function") promesa.catch(() => {});
     } catch (_error) {}
 }
+window.reproducirSonidoFeedbackInspiracionEscritora = reproducirSonidoFeedbackInspiracionEscritora;
 
 function mostrarFeedbackFlotanteEscritora(texto, opciones = {}) {
     const contenido = String(texto ?? "").trim();

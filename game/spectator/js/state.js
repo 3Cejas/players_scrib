@@ -66,6 +66,22 @@ const seguimientoTransicionNivelEspectador = apiTransicionNivelEspectador
     ? apiTransicionNivelEspectador.createModeTracker()
     : null;
 let transicionNivelPendienteEspectador = null;
+let firmaUltimaTransicionNivelEspectador = "";
+
+function construirFirmaTransicionNivelEspectador(modo, payload = {}) {
+    const canonico = apiTransicionNivelEspectador?.normalizeMode(modo) || "";
+    const seq = Number(payload && payload.modo_seq);
+    return canonico ? `${canonico}:${Number.isFinite(seq) ? Math.trunc(seq) : "sin-seq"}` : "";
+}
+
+function mostrarTransicionNivelForzadaEspectador(modo, payload = {}) {
+    if (!controladorTransicionNivelEspectador || vista_espectador_modo_resuelta !== "partida") return false;
+    const firma = construirFirmaTransicionNivelEspectador(modo, payload);
+    if (!firma || firma === firmaUltimaTransicionNivelEspectador) return false;
+    const mostrada = controladorTransicionNivelEspectador.show(modo, payload);
+    if (mostrada) firmaUltimaTransicionNivelEspectador = firma;
+    return mostrada;
+}
 
 function observarModoCanonicoTransicionEspectador(payload = {}) {
     if (!seguimientoTransicionNivelEspectador) {
@@ -76,8 +92,7 @@ function observarModoCanonicoTransicionEspectador(payload = {}) {
 
 function mostrarTransicionNivelEspectador(observacion, payload = {}) {
     if (!observacion || !observacion.transition || !controladorTransicionNivelEspectador) return false;
-    if (vista_espectador_modo_resuelta !== "partida") return false;
-    return controladorTransicionNivelEspectador.show(observacion.mode, payload);
+    return mostrarTransicionNivelForzadaEspectador(observacion.mode, payload);
 }
 
 function ocultarTransicionNivelEspectador() {
@@ -106,6 +121,7 @@ function mostrarTransicionNivelPendienteEspectador(modoAplicado) {
 function reiniciarSeguimientoTransicionNivelEspectador(opciones = {}) {
     seguimientoTransicionNivelEspectador?.reset();
     transicionNivelPendienteEspectador = null;
+    firmaUltimaTransicionNivelEspectador = "";
     ocultarTransicionNivelEspectador();
     if (opciones.primeEmpty) {
         seguimientoTransicionNivelEspectador?.observe({ modo_actual: "", modo_seq: 0 });

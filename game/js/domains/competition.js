@@ -11,6 +11,8 @@
   let calentamientoEstado = null;
   let estadoActual = null;
   let rolActual = "";
+  let avisoCambioTimer = null;
+  const DURACION_AVISO_CAMBIO_MS = 5600;
 
   const htmlSeguro = (valor) => String(valor ?? "")
     .replace(/&/g, "&amp;")
@@ -26,6 +28,10 @@
     style.textContent = `
       .scrib-competition-hud{--azul:#46f0ff;--rojo:#ff5f67;--oro:#ffe475;position:fixed;z-index:2147481200;left:50%;top:clamp(8px,1.4vh,18px);transform:translateX(-50%);width:min(760px,72vw);font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:none;filter:drop-shadow(0 10px 26px #000a);transition:opacity .35s,transform .35s}
       body:has(#scrib_competition_hud) #inspiracion{display:none!important}
+      body.page-spectator:not(.vista-partida) #scrib_competition_hud,
+      body.page-players:not(.partida-activa) #scrib_competition_hud,
+      body.page-players.ocultar-marcador-escritora #scrib_competition_hud,
+      body.page-players.vista-calentamiento-escritor #scrib_competition_hud{display:none!important}
       .scrib-competition-hud[data-role="spectator"]{top:clamp(8px,1.4vh,18px);width:min(940px,72vw)}
       body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(94px,12vh,128px)}
       body.page-spectator.vista-partida #contenedor_espectador .nombre{position:relative;z-index:2;display:block;min-height:1.18em;margin:0 auto clamp(12px,1.5vh,22px);opacity:1;visibility:visible}
@@ -89,13 +95,14 @@
       .scrib-competition-fly{position:fixed;z-index:2147483000;left:0;top:0;padding:5px 10px;border-radius:999px;border:1px solid currentColor;background:#090c18f2;font:1000 16px/1 Inter,system-ui,sans-serif;color:var(--fly-color,#fff);white-space:nowrap;pointer-events:none;opacity:0}
       .scrib-competition-fly.is-flying{animation:scribFly var(--fly-duration,800ms) cubic-bezier(.18,.8,.22,1) forwards}
       .scrib-competition-fly.is-muse{color:var(--oro);box-shadow:0 0 20px #ffe475b0}
-      .scrib-competition-change{--change-color:#fff;--change-destination:#fff;position:fixed;z-index:2147483100;left:50%;top:43%;width:min(920px,90vw);box-sizing:border-box;padding:clamp(20px,2.8vw,42px);border:clamp(2px,.22vw,4px) solid var(--change-destination);border-radius:clamp(18px,2vw,34px);transform:translate(-50%,-50%) scale(.72);opacity:0;text-align:center;font:1000 clamp(24px,3.4vw,58px)/1 Inter,system-ui,sans-serif;letter-spacing:.055em;color:#fff;background:linear-gradient(135deg,#07101af5,#13101ff7 48%,#090b13f5);box-shadow:0 0 0 2px #000,0 0 38px color-mix(in srgb,var(--change-destination),transparent 38%),inset 0 0 42px #ffffff12;text-shadow:0 0 7px #fff,3px 3px 0 #000;pointer-events:none;animation:scribLeaderChange 3.4s cubic-bezier(.2,.85,.2,1) forwards}
+      .scrib-competition-change{--change-color:#fff;--change-destination:#fff;position:fixed;z-index:2147483100;left:50%;top:43%;isolation:isolate;width:min(920px,90vw);box-sizing:border-box;padding:clamp(22px,3vw,46px);overflow:hidden;border:clamp(2px,.22vw,4px) solid var(--change-destination);border-radius:clamp(18px,2vw,34px);transform:translate(-50%,-50%) scale(.72);opacity:0;text-align:center;font:1000 clamp(24px,3.4vw,58px)/1 Inter,system-ui,sans-serif;letter-spacing:.055em;color:#fff;background:radial-gradient(circle at 50% 52%,color-mix(in srgb,var(--change-destination),transparent 70%),transparent 38%),linear-gradient(135deg,#07101af7,#13101ffa 48%,#090b13f7);box-shadow:0 0 0 2px #000,0 0 54px color-mix(in srgb,var(--change-destination),transparent 28%),inset 0 0 54px #ffffff15;text-shadow:0 0 7px #fff,3px 3px 0 #000;pointer-events:none;animation:scribLeaderChange 5.6s cubic-bezier(.2,.85,.2,1) forwards}
+      .scrib-competition-change::before{content:'';position:absolute;z-index:-1;inset:-55%;border:3px solid color-mix(in srgb,var(--change-destination),transparent 20%);border-radius:50%;opacity:.55;animation:scribLeaderOrbit 2.2s linear infinite}
       .scrib-competition-change__eyebrow{display:block;margin-bottom:clamp(10px,1.4vw,18px);font-size:.28em;letter-spacing:.22em;color:#ffe475;text-shadow:0 0 14px #ffe47599}
       .scrib-competition-change__route{display:flex;align-items:center;justify-content:center;gap:clamp(9px,1.5vw,22px);margin-top:clamp(18px,2vw,28px);font-size:.39em;line-height:1.15;letter-spacing:.1em;text-shadow:none}
       .scrib-competition-change__team{display:inline-flex;align-items:center;justify-content:center;min-width:min(270px,34vw);padding:clamp(10px,1vw,15px) clamp(12px,1.8vw,24px);border:2px solid currentColor;border-radius:999px;background:#050913e8;box-shadow:0 0 24px color-mix(in srgb,currentColor,transparent 48%)}
       .scrib-competition-change__team--free{color:var(--change-color)}
       .scrib-competition-change__team--burden{color:var(--change-destination)}
-      .scrib-competition-change__arrow{color:#fff;font-size:1.45em;filter:drop-shadow(0 0 10px #fff)}
+      .scrib-competition-change__arrow{color:#fff;font-size:1.45em;filter:drop-shadow(0 0 10px #fff);animation:scribLeaderArrow 1s ease-in-out infinite alternate}
       .scrib-competition-change__curse{display:block;margin-top:clamp(12px,1.5vw,20px);font-size:.29em;letter-spacing:.16em;color:#f3f5ff;text-shadow:none}
       .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
       @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
@@ -103,7 +110,9 @@
       @keyframes scribCompetitionShift{0%{filter:brightness(1)}45%{filter:brightness(1.35);box-shadow:inset 0 0 24px #fff4,0 0 18px #fff3}100%{filter:brightness(1)}}
       @keyframes scribCompetitionCross{0%{filter:brightness(1)}40%{filter:brightness(1.65);box-shadow:inset 0 0 30px #fff8,0 0 30px #ffe47599}100%{filter:brightness(1)}}
       @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
-      @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-44%) scale(.72)}10%,78%{opacity:1;transform:translate(-50%,-50%) scale(1)}86%{opacity:1;transform:translate(-50%,-52%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-61%) scale(1.06)}}
+      @keyframes scribLeaderChange{0%{opacity:0;transform:translate(-50%,-42%) scale(.68) rotateX(14deg)}9%,84%{opacity:1;transform:translate(-50%,-50%) scale(1) rotateX(0)}91%{opacity:1;transform:translate(-50%,-52%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-61%) scale(1.06)}}
+      @keyframes scribLeaderOrbit{from{transform:rotate(0deg) scale(.72)}to{transform:rotate(360deg) scale(1.08)}}
+      @keyframes scribLeaderArrow{from{transform:translateX(-5px) scale(.92);opacity:.65}to{transform:translateX(5px) scale(1.12);opacity:1}}
       @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
       @keyframes scribWarmupEnter{0%{opacity:0;transform:translateX(-50%) translateY(36px) scale(.92)}72%{opacity:1;transform:translateX(-50%) translateY(-4px) scale(1.015)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
       @keyframes scribWarmupSweep{0%,44%{transform:translateX(-120%)}78%,100%{transform:translateX(120%)}}
@@ -290,7 +299,26 @@
     return { left: player === 1 ? 20 : innerWidth - 80, top: innerHeight * .6, width: 40, height: 20 };
   }
 
-  function sonidoPunto(player, racha) {
+  function esHudVisibleEnVistaActual() {
+    if (!document.body) return true;
+    if (rolActual === "spectator") {
+      return document.body.classList.contains("vista-partida");
+    }
+    if (rolActual === "writer") {
+      return document.body.classList.contains("partida-activa")
+        && !document.body.classList.contains("ocultar-marcador-escritora")
+        && !document.body.classList.contains("vista-calentamiento-escritor");
+    }
+    return true;
+  }
+
+  function sonidoPunto(player, racha, delta) {
+    const cambio = Number(delta);
+    if (!Number.isFinite(cambio) || cambio === 0) return;
+    if (rolActual === "writer" && typeof global.reproducirSonidoFeedbackInspiracionEscritora === "function") {
+      global.reproducirSonidoFeedbackInspiracionEscritora(cambio < 0 ? "negativo" : "positivo");
+      return;
+    }
     if (!global.AudioContext && !global.webkitAudioContext) return;
     try {
       const Ctx = global.AudioContext || global.webkitAudioContext;
@@ -335,7 +363,7 @@
   }
 
   function animarPunto(payload) {
-    if (!payload || !ui || rolActual === "control") return;
+    if (!payload || !ui || rolActual === "control" || !esHudVisibleEnVistaActual()) return;
     const player = Number(payload.player) === 2 ? 2 : 1;
     const origen = rectOrigen(player);
     const destino = ui.scores[player].getBoundingClientRect();
@@ -374,7 +402,7 @@
     void ui.scores[player].offsetWidth;
     ui.scores[player].classList.add("is-hit");
     const racha = Math.max(0, Number(payload.racha) || 0);
-    sonidoPunto(player, racha);
+    sonidoPunto(player, racha, payload.delta);
     if (racha >= 3) {
       lanzarParticulas(destino, player);
       if (racha % 3 === 0 && typeof global.confetti === "function") {
@@ -384,6 +412,12 @@
   }
 
   function animarCambioLider(payload) {
+    if (!esHudVisibleEnVistaActual()) return;
+    if (avisoCambioTimer) {
+      clearTimeout(avisoCambioTimer);
+      avisoCambioTimer = null;
+    }
+    document.querySelectorAll(".scrib-competition-change").forEach((nodo) => nodo.remove());
     const lider = Number(payload && payload.lider);
     const portador = Number(payload && payload.desventaja_player);
     const aviso = document.createElement("div");
@@ -393,10 +427,15 @@
     aviso.style.setProperty("--change-color", colorLider);
     aviso.style.setProperty("--change-destination", colorPortador);
     aviso.innerHTML = lider
-      ? `<span class="scrib-competition-change__eyebrow">¡CAMBIO DE VENTAJA!</span>LA DESVENTAJA CAMBIA DE EQUIPO<div class="scrib-competition-change__route"><span class="scrib-competition-change__team scrib-competition-change__team--free">ESCRITXR ${lider}<br>SE LIBERA</span><span class="scrib-competition-change__arrow">➜</span><span class="scrib-competition-change__team scrib-competition-change__team--burden">PASA A<br>ESCRITXR ${portador}</span></div><small class="scrib-competition-change__curse">${htmlSeguro(payload.desventaja || "DESVENTAJA")}</small>`
+      ? `<span class="scrib-competition-change__eyebrow">CAMBIO DE VENTAJA</span>¡LA DESVENTAJA CAMBIA!<div class="scrib-competition-change__route"><span class="scrib-competition-change__team scrib-competition-change__team--free">ESCRITXR ${lider}</span><span class="scrib-competition-change__arrow">✦ ➜ ✦</span><span class="scrib-competition-change__team scrib-competition-change__team--burden">ESCRITXR ${portador}</span></div><small class="scrib-competition-change__curse">${htmlSeguro(payload.desventaja || "DESVENTAJA")}</small>`
       : `<span class="scrib-competition-change__eyebrow">EMPATE</span>LA DESVENTAJA SE MANTIENE`;
     document.body.appendChild(aviso);
-    aviso.addEventListener("animationend", () => aviso.remove(), { once: true });
+    document.body.classList.add("scrib-competition-change-active");
+    avisoCambioTimer = setTimeout(() => {
+      avisoCambioTimer = null;
+      aviso.remove();
+      document.body.classList.remove("scrib-competition-change-active");
+    }, DURACION_AVISO_CAMBIO_MS);
     if (ui && ui.curse) {
       ui.curse.animate([
         { transform: "translate(-50%,-50%) scale(1) rotate(0deg)" },

@@ -74,6 +74,44 @@
         return ultimo;
     }
 
+    function esSaltoEstructuralEditable(nodo, raiz) {
+        if (!nodo || nodo === raiz || nodo.nodeType !== ELEMENT_NODE) return false;
+        const etiqueta = String(nodo.tagName || nodo.nodeName || "").toUpperCase();
+        if (etiqueta === "BR") return true;
+        if (etiqueta !== "DIV" && etiqueta !== "P") return false;
+        return obtenerHijos(nodo).length === 0 && leerTextoNodo(nodo).length === 0;
+    }
+
+    function obtenerUltimaUnidadEditable(raiz, opciones = {}) {
+        if (!raiz) return null;
+        const clasesProtegidas = normalizarClases(opciones.protectedClasses || opciones.clasesProtegidas);
+        let ultima = null;
+
+        const visitar = (nodo, dentroProtegido = false) => {
+            if (!nodo) return;
+            if (nodo.nodeType === TEXT_NODE) {
+                if (!dentroProtegido && leerTextoNodo(nodo).length > 0) {
+                    ultima = { tipo: "texto", nodo };
+                }
+                return;
+            }
+            if (nodo.nodeType !== ELEMENT_NODE && nodo !== raiz) return;
+            const protegido = dentroProtegido || (nodo !== raiz && esNodoProtegido(nodo, clasesProtegidas));
+            if (protegido) return;
+            if (esSaltoEstructuralEditable(nodo, raiz)) {
+                ultima = { tipo: "salto", nodo };
+                return;
+            }
+            obtenerHijos(nodo).forEach((hijo) => visitar(hijo, protegido));
+            if (esSaltoEstructuralEditable(nodo, raiz)) {
+                ultima = { tipo: "salto", nodo };
+            }
+        };
+
+        visitar(raiz, false);
+        return ultima;
+    }
+
     function removerNodoVacio(nodo) {
         if (!nodo || leerTextoNodo(nodo).length > 0) return;
         if (nodo.parentNode && typeof nodo.parentNode.removeChild === "function") {
@@ -84,9 +122,26 @@
     }
 
     function borrarUltimoCaracterEditable(raiz, opciones = {}) {
-        const nodo = obtenerUltimoNodoTextoEditable(raiz, opciones);
-        if (!nodo) {
+        const unidad = obtenerUltimaUnidadEditable(raiz, opciones);
+        if (!unidad) {
             return { deleted: false, node: null, removedNode: false };
+        }
+        const nodo = unidad.nodo;
+        if (unidad.tipo === "salto") {
+            const padre = nodo.parentNode;
+            if (padre && typeof padre.removeChild === "function") {
+                padre.removeChild(nodo);
+            } else if (typeof nodo.remove === "function") {
+                nodo.remove();
+            }
+            if (padre && padre !== raiz && esSaltoEstructuralEditable(padre, raiz)) {
+                if (padre.parentNode && typeof padre.parentNode.removeChild === "function") {
+                    padre.parentNode.removeChild(padre);
+                } else if (typeof padre.remove === "function") {
+                    padre.remove();
+                }
+            }
+            return { deleted: true, node: nodo, removedNode: true, structuralBreak: true };
         }
         const textoActual = leerTextoNodo(nodo);
         if (!textoActual) {
@@ -376,6 +431,7 @@
         esNodoProtegido,
         instalarBloqueoBorradoManual,
         obtenerNodosTextoEditablesAlrededor,
+        obtenerUltimaUnidadEditable,
         obtenerUltimoNodoTextoEditable
     };
 })(window);

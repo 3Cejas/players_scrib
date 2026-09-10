@@ -375,6 +375,7 @@ test("automatic deletion is postponed before mutation and keeps rescheduling", (
     actions,
     /function posponerBorradoAutomaticoBloqueado\(\)[\s\S]*if \(!estaBloqueadoBorradoEscritora\(\)\) return false;[\s\S]*programarBorradoEscritora\(rapidez_borrado,[\s\S]*borrar\(revisionProgramada\);[\s\S]*return true;/
   );
+  assert.match(actions, /document\.body\.classList\.contains\("scrib-competition-change-active"\)/);
   assert.match(
     state,
     /instalarBloqueoBorradoManual\([\s\S]*texto,[\s\S]*\(\) => debeBloquearBorradoPorDestreza\(\)/

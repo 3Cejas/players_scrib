@@ -23,16 +23,21 @@ test("el HUD usa marcador numerico, reloj global y animaciones sin porcentajes",
 
   assert.match(js, /competicion_ronda_estado/);
   assert.match(js, /reloj_partida_estado/);
-  assert.match(js, /¡CAMBIO DE VENTAJA!/);
-  assert.match(js, /LA DESVENTAJA CAMBIA DE EQUIPO/);
+  assert.match(js, /CAMBIO DE VENTAJA/);
+  assert.match(js, /¡LA DESVENTAJA CAMBIA!/);
   assert.match(js, /scrib-competition-change__route/);
-  assert.match(js, /animation:scribLeaderChange 3\.4s/);
+  assert.match(js, /DURACION_AVISO_CAMBIO_MS = 5600/);
+  assert.match(js, /animation:scribLeaderChange 5\.6s/);
+  assert.match(js, /scrib-competition-change-active/);
   assert.match(js, /scrib-competition-fly/);
   assert.match(js, /scrib-competition-burst/);
   assert.match(js, /scribCompetitionShift/);
   assert.match(js, /scribCompetitionCross/);
   assert.match(js, /numero\(payload\.delta\)} 🎨/);
   assert.match(js, /payload\.animar !== false/);
+  assert.match(js, /page-spectator:not\(\.vista-partida\)[^}]+display:none!important/);
+  assert.match(js, /page-players:not\(\.partida-activa\)[^}]+display:none!important/);
+  assert.match(js, /page-players\.ocultar-marcador-escritora[^}]+display:none!important/);
   assert.doesNotMatch(js, /ui\.scores\[[^\]]+\]\.textContent\s*=\s*[^;\n]*%/);
   [writer, control, spectator].forEach((html) => {
     assert.match(html, /domains\/competition\.js/);
@@ -65,7 +70,7 @@ test("Control integra un HUD compacto donde antes aparecía la duración de la d
   assert.match(js, /data-role="control"[^}]+scrib-competition-scoreline[^}]+display:block/);
   assert.match(js, /control-competition-slot \+ \.level-status-witnesses \.level-status-witness--disadvantage\{display:none\}/);
   assert.match(js, /data-role="control"\] \.scrib-competition-streak\{display:none\}/);
-  assert.match(js, /if \(!payload \|\| !ui \|\| rolActual === "control"\) return;/);
+  assert.match(js, /if \(!payload \|\| !ui \|\| rolActual === "control" \|\| !esHudVisibleEnVistaActual\(\)\) return;/);
   assert.doesNotMatch(actions, /Desventaja \$\{equipo\}\$\{detalle\}: \$\{formatearTiempoTestigoControl/);
 });
 
@@ -115,6 +120,8 @@ test("Escritxr uses team-colored backgrounds and audible inspiration feedback", 
   assert.match(state, /GANAR 2 SEG\.mp3/);
   assert.match(state, /PERDER 2 SEG\.mp3/);
   assert.match(state, /opciones\.sonido !== false/);
+  assert.match(state, /window\.reproducirSonidoFeedbackInspiracionEscritora = reproducirSonidoFeedbackInspiracionEscritora/);
+  assert.match(read("game/js/domains/competition.js"), /reproducirSonidoFeedbackInspiracionEscritora\(cambio < 0 \? "negativo" : "positivo"\)/);
 });
 
 test("Frase final keeps only the global clock and removes inspiration scoring", () => {

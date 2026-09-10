@@ -1183,6 +1183,7 @@ function aplicarModo(data) {
     actualizarVisibilidadPanelNivelEspectador();
     if (cambioRealDeModo) {
         vaciarColaPalabrasPendientesEspectador();
+        mostrarTransicionNivelForzadaEspectador(modo_actual, data || {});
     }
     mostrarTransicionNivelPendienteEspectador(modo_actual);
 }
