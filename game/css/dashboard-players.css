@@ -4698,6 +4698,14 @@ body.page-spectator .intro-reveal-bloque.is-intro-hidden[data-intro-from="down"]
     transform: translate3d(0, 26px, 0) scale(0.985);
 }
 
+body.page-spectator #scrib_competition_hud.intro-reveal-bloque {
+    transform: translate3d(-50%, 0, 0) scale(1);
+}
+
+body.page-spectator #scrib_competition_hud.intro-reveal-bloque.is-intro-hidden[data-intro-from="up"] {
+    transform: translate3d(-50%, -26px, 0) scale(0.985);
+}
+
 @media (prefers-reduced-motion: reduce) {
     body.page-spectator .intro-reveal-bloque {
         transition: none;
@@ -7581,6 +7589,7 @@ body.equipo-rojo .total {
 }
 
 .page-players.partida-intro-escritora #tiempo,
+.page-players.partida-intro-escritora #scrib_competition_hud,
 .page-players.partida-intro-escritora #metadatos,
 .page-players.partida-intro-escritora .info-total .info {
   opacity: 0;
@@ -7603,6 +7612,10 @@ body.equipo-rojo .total {
   transform: translate3d(0, -18px, 0) scale(0.985);
 }
 
+.page-players.partida-intro-escritora #scrib_competition_hud {
+  transform: translate3d(-50%, -18px, 0) scale(0.985);
+}
+
 .page-players.partida-intro-escritora #metadatos {
   transform: translate3d(-26px, 0, 0) scale(0.985);
 }
@@ -7612,6 +7625,9 @@ body.equipo-rojo .total {
 }
 
 .page-players.partida-intro-escritora.partida-intro-stage-tiempo-escritora #tiempo,
+.page-players.partida-intro-escritora.partida-intro-stage-tiempo-escritora #scrib_competition_hud,
+.page-players.partida-intro-escritora.partida-intro-stage-marcador-escritora #scrib_competition_hud,
+.page-players.partida-intro-escritora.partida-intro-stage-info-escritora #scrib_competition_hud,
 .page-players.partida-intro-escritora.partida-intro-stage-marcador-escritora #tiempo,
 .page-players.partida-intro-escritora.partida-intro-stage-info-escritora #tiempo,
 .page-players.partida-intro-escritora.partida-intro-stage-marcador-escritora #metadatos,
@@ -7623,8 +7639,15 @@ body.equipo-rojo .total {
   pointer-events: auto;
 }
 
+.page-players.partida-intro-escritora.partida-intro-stage-tiempo-escritora #scrib_competition_hud,
+.page-players.partida-intro-escritora.partida-intro-stage-marcador-escritora #scrib_competition_hud,
+.page-players.partida-intro-escritora.partida-intro-stage-info-escritora #scrib_competition_hud {
+  transform: translate3d(-50%, 0, 0) scale(1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-players.partida-intro-escritora #tiempo,
+  .page-players.partida-intro-escritora #scrib_competition_hud,
   .page-players.partida-intro-escritora #metadatos,
   .page-players.partida-intro-escritora .info-total .info {
     transition: none;

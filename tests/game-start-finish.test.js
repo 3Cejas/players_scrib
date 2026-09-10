@@ -13,7 +13,7 @@ test("the spectator start is authoritative and silences previous scene audio bef
   assert.match(start, /vista_calentamiento = false;/);
   assert.match(start, /vista_espectador_override = "partida";/);
   assert.match(start, /setMode\("partida", \{[\s\S]*force: true,[\s\S]*silentTransition: true,[\s\S]*stopTransition: true,[\s\S]*resetAudioOverrides: true,[\s\S]*fadeDurationMs: 220/);
-  assert.ok(start.indexOf('actualizarModoVistaEspectadorUi("partida")') < start.indexOf('reproducirSonido("\.\.\/\.\.\/game\/audio\/5. PREPARADOS 1.mp3")'));
+  assert.ok(start.indexOf('actualizarModoVistaEspectadorUi("partida")') < start.indexOf('reproducirSonidoCountdownEspectador("../../game/audio/5. PREPARADOS 1.mp3")'));
 });
 
 test("spectator countdown starts even after match branding has already been hidden", () => {
@@ -23,7 +23,7 @@ test("spectator countdown starts even after match branding has already been hidd
   const inicio = js.slice(inicioStart, postInicioStart);
 
   assert.doesNotMatch(inicio, /animateCSS\("\.cabecera",\s*"backOutLeft"\)\.then/);
-  assert.match(inicio, /reproducirSonido\("\.\.\/\.\.\/game\/audio\/5\. PREPARADOS 1\.mp3"\)/);
+  assert.match(inicio, /reproducirSonidoCountdownEspectador\("\.\.\/\.\.\/game\/audio\/5\. PREPARADOS 1\.mp3"\)/);
   assert.match(inicio, /crearCountdownEspectador\(tJuego2P\("countdown\.ready"/);
   assert.match(inicio, /programarPasoCountdownEspectador\(3, revisionCountdown, 0\)/);
 });
@@ -35,12 +35,30 @@ test("spectator presents an explicit pre-level warm-up with the first level musi
 
   assert.match(state, /function iniciarCalentamientoPrevioEspectador\(payload = \{\}\)/);
   assert.match(state, /palabra1\.textContent = "CALENTAMIENTO PREVIO"/);
-  assert.match(state, /ESCRITURA LIBRE · PRIMER NIVEL EN/);
+  assert.doesNotMatch(state, /ESCRITURA LIBRE · PRIMER NIVEL EN/);
+  assert.match(state, /explicacion\.textContent = ""/);
   assert.match(state, /reproducirMusicaModoEspectador\(modoSiguiente\)/);
   assert.match(state, /"letra bendita": "\.\.\/\.\.\/game\/audio\/5\. KEYGEN PRUEBA 1\.mp3"/);
   assert.match(sockets, /socket\.on\('calentamiento_previo_estado'/);
   assert.match(sockets, /calentamiento_previo_pendiente_espectador = payload/);
   assert.match(css, /barra-nivel--calentamiento-previo/);
+});
+
+test("countdown audio is exclusive, spans the server intro and reveals the HUD by stages", () => {
+  const state = read("game/spectator/js/state.js");
+  const sockets = read("game/spectator/js/socket-events.js");
+  const actions = read("game/players/js/actions.js");
+  const competition = read("game/js/domains/competition.js");
+
+  assert.match(sockets, /function detenerSonidoCountdownEspectador\(\)[\s\S]*\.pause\(\)[\s\S]*currentTime = 0/);
+  assert.match(sockets, /RETARDO_PRIMER_PASO_COUNTDOWN_ESPECTADOR_MS = 2400/);
+  assert.match(sockets, /INTERVALO_PASOS_COUNTDOWN_ESPECTADOR_MS = 1150/);
+  assert.match(sockets, /DURACION_ESCRIBE_COUNTDOWN_ESPECTADOR_MS = 1650/);
+  assert.match(state, /document\.getElementById\("scrib_competition_hud"\)/);
+  assert.match(state, /key: "jugadora1"[\s\S]*key: "jugadora2"[\s\S]*key: "nivel"/);
+  assert.doesNotMatch(actions, /mostrarFeedbackTiempoEscritora\(tiempo_feed, "borrar"/);
+  assert.doesNotMatch(actions, /socket\.emit\(feedback_de_j_x, \{ color, tiempo_feed, tipo: "borrar" \}\)/);
+  assert.match(competition, /esCambioPorEscritura[\s\S]*`<b>\$\{cambioFormateado\}<\/b>`/);
 });
 
 test("the level introduction lasts long enough to read on the projector", () => {

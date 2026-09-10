@@ -1632,11 +1632,12 @@ const smokeSpecs = [
         "spectator enters the explicit pre-level warm-up",
         12000
       );
-      await ctx.waitForText(
-        "spectator",
-        "#explicacion",
-        (text) => text.includes("ESCRITURA LIBRE") && text.includes("PRIMER NIVEL EN"),
-        "spectator warm-up explains when the first level begins",
+      await ctx.waitFor(
+        "spectator warm-up omits redundant technical copy",
+        async () => {
+          const text = await ctx.readText("spectator", "#explicacion");
+          return !text.includes("ESCRITURA LIBRE") && !text.includes("PRIMER NIVEL EN");
+        },
         4000
       );
 

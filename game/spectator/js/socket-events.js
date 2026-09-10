@@ -146,6 +146,11 @@ socket.on('creditos_estado', (payload = {}) => {
 });
 
 socket.on('disconnect', () => {
+    if (sonido) {
+        sonido.pause();
+        sonido.currentTime = 0;
+    }
+    detenerSonidoCountdownEspectador();
     ocultarTransicionNivelEspectador();
     limpiarAsincroniaVisualEspectador({ resetViewport: true });
     detenerSlidesStats();
@@ -760,7 +765,7 @@ function programarAplicacionModoTrasCountdownEspectador(revisionCountdown) {
         }
         vaciarColaPutadasPendientesEspectador();
         aplicarPostInicioPendienteEspectador();
-    }, 1000);
+    }, DURACION_ESCRIBE_COUNTDOWN_ESPECTADOR_MS);
 }
 
 function programarPasoCountdownEspectador(paso, revisionCountdown, indiceAudio) {
@@ -783,12 +788,12 @@ function programarPasoCountdownEspectador(paso, revisionCountdown, indiceAudio) 
 
     if (pasoActual === 0) {
         if (siguienteIndiceAudio < audios.length) {
-            reproducirSonido(audios[siguienteIndiceAudio]);
+            reproducirSonidoCountdownEspectador(audios[siguienteIndiceAudio]);
             siguienteIndiceAudio += 1;
         }
         programarAplicacionModoTrasCountdownEspectador(revisionCountdown);
     } else if (siguienteIndiceAudio < audios.length) {
-        reproducirSonido(audios[siguienteIndiceAudio]);
+        reproducirSonidoCountdownEspectador(audios[siguienteIndiceAudio]);
         siguienteIndiceAudio += 1;
     }
 
@@ -803,7 +808,7 @@ function programarPasoCountdownEspectador(paso, revisionCountdown, indiceAudio) 
             }
             timeout_remover_countdown_espectador = null;
             $('#countdown').remove();
-        }, 1000);
+        }, DURACION_ESCRIBE_COUNTDOWN_ESPECTADOR_MS);
         return;
     }
 
@@ -811,7 +816,7 @@ function programarPasoCountdownEspectador(paso, revisionCountdown, indiceAudio) 
     timer = setTimeout(() => {
         timer = null;
         programarPasoCountdownEspectador(pasoActual - 1, revisionCountdown, siguienteIndiceAudio);
-    }, 1000);
+    }, INTERVALO_PASOS_COUNTDOWN_ESPECTADOR_MS);
 }
 
 
@@ -839,9 +844,11 @@ socket.on('inicio', data => {
         fadeDurationMs: 220
     });
     actualizarModoVistaEspectadorUi("partida");
-    if(sonido){
-    sonido.pause();
+    if (sonido) {
+        sonido.pause();
+        sonido.currentTime = 0;
     }
+    detenerSonidoCountdownEspectador();
     reiniciarEstadoCierrePartidaEspectador();
     reiniciarHistorialVidaStatsEspectador();
     reiniciarTimelineModosStatsEspectador();
@@ -860,7 +867,7 @@ socket.on('inicio', data => {
     post_inicio_pendiente_espectador = null;
     calentamiento_previo_pendiente_espectador = null;
     inicio_modo_delay = false;
-    reproducirSonido("../../game/audio/5. PREPARADOS 1.mp3")
+    reproducirSonidoCountdownEspectador("../../game/audio/5. PREPARADOS 1.mp3")
     // La cuenta atrás no puede depender de `animationend` de la cabecera:
     // al comenzar la partida esa cabecera ya está oculta y el evento nunca se
     // dispara. La cortinilla de vista, cuando hace falta, corre en paralelo.
@@ -921,7 +928,7 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
         }
         timeout_timer = null;
         programarPasoCountdownEspectador(3, revisionCountdown, 0);
-    }, 1000);
+    }, RETARDO_PRIMER_PASO_COUNTDOWN_ESPECTADOR_MS);
     timeout_fallback_countdown_espectador = setTimeout(() => {
         if (!esRevisionCountdownInicioEspectadorActiva(revisionCountdown)) {
             return;
@@ -948,6 +955,7 @@ function aplicarPostInicioEspectador(data = {}) {
         sonido.pause();
         sonido.currentTime = 0;
     }
+    detenerSonidoCountdownEspectador();
     partida_activa_espectador = true;
     actualizarBrandingPartidaEspectador();
     const modoPendienteInicio = modo_pendiente;
@@ -1029,6 +1037,7 @@ socket.on('calentamiento_previo_estado', data => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', data => {
+    detenerSonidoCountdownEspectador();
     reiniciarSeguimientoTransicionNivelEspectador({ primeEmpty: true });
     limpiarAsincroniaVisualEspectador();
     detenerTemporizadorGigante();
@@ -1751,6 +1760,27 @@ function reproducirSonido(rutaArchivo, loop = false) {
     });
     return sonido;
   }
+
+const RETARDO_PRIMER_PASO_COUNTDOWN_ESPECTADOR_MS = 2400;
+const INTERVALO_PASOS_COUNTDOWN_ESPECTADOR_MS = 1150;
+const DURACION_ESCRIBE_COUNTDOWN_ESPECTADOR_MS = 1650;
+let sonido_countdown_espectador = null;
+
+function detenerSonidoCountdownEspectador() {
+    if (!sonido_countdown_espectador) return;
+    sonido_countdown_espectador.pause();
+    sonido_countdown_espectador.currentTime = 0;
+    sonido_countdown_espectador = null;
+}
+
+function reproducirSonidoCountdownEspectador(rutaArchivo) {
+    detenerSonidoCountdownEspectador();
+    sonido_countdown_espectador = new Audio(rutaArchivo);
+    sonido_countdown_espectador.play().catch((error) => {
+        console.error('No se pudo reproducir el audio de cuenta atras:', error);
+    });
+    return sonido_countdown_espectador;
+}
 
 // Referencias a los elementos
 // Variables para guardar los IDs de intervalo si es necesario detenerlos despuï¿½fÂ©s

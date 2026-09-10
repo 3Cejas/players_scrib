@@ -71,25 +71,25 @@ function escribirTresPalabras(context) {
   context.window.countChars(editor);
 }
 
-test("writer typing grants a small numeric inspiration bonus after reconnect", () => {
+test("writer typing leaves inspiration feedback to the authoritative round score", () => {
   const { context, feedback, cambiosTiempo, socketEvents } = cargarAccionesEscritora();
 
   escribirTresPalabras(context);
 
-  assert.equal(feedback.at(-1).texto, "+0.2 🎨");
+  assert.deepEqual(feedback, []);
   assert.deepEqual(cambiosTiempo, []);
-  assert.equal(socketEvents.at(-1).payload.tiempo_feed, "+0.2 🎨");
-  assert.equal(socketEvents.at(-1).payload.tipo, "mini_inspiracion");
+  assert.deepEqual(socketEvents, []);
 });
 
-test("writer strength increases mini inspiration without changing time", () => {
-  const { context, feedback, cambiosTiempo } = cargarAccionesEscritora();
+test("writer strength does not resurrect the duplicated local inspiration feedback", () => {
+  const { context, feedback, cambiosTiempo, socketEvents } = cargarAccionesEscritora();
 
   context.aplicarAtributosEscritora({ fuerza: 10, agilidad: 0, destreza: 0 });
   escribirTresPalabras(context);
 
-  assert.equal(feedback.at(-1).texto, "+0.8 🎨");
+  assert.deepEqual(feedback, []);
   assert.deepEqual(cambiosTiempo, []);
+  assert.deepEqual(socketEvents, []);
 });
 
 test("writer restored attributes update the hidden skill menu state", () => {

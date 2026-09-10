@@ -278,9 +278,16 @@
     const firmaMusa = payload.tipo === "inspiracion_musa" && payload.musa_nombre
       ? `${htmlSeguro(payload.musa_nombre)} · `
       : "";
+    const esCambioPorEscritura = payload.tipo === "borrado" || payload.tipo === "mini_inspiracion";
+    const cambioFormateado = `${Number(payload.delta) > 0 ? "+" : ""}${numero(payload.delta)} 🎨`;
     token.className = `scrib-competition-fly${payload.tipo === "inspiracion_musa" ? " is-muse" : ""}`;
-    token.innerHTML = `${payload.tipo === "inspiracion_musa" ? "✦ " : ""}${firmaMusa}${htmlSeguro(etiqueta)} <b>${Number(payload.delta) > 0 ? "+" : ""}${numero(payload.delta)} 🎨</b>`;
-    token.style.setProperty("--fly-color", player === 1 ? "#46f0ff" : "#ff5f67");
+    token.innerHTML = esCambioPorEscritura
+      ? `<b>${cambioFormateado}</b>`
+      : `${payload.tipo === "inspiracion_musa" ? "✦ " : ""}${firmaMusa}${htmlSeguro(etiqueta)} <b>${cambioFormateado}</b>`;
+    const colorFeedback = esCambioPorEscritura
+      ? (Number(payload.delta) < 0 ? "#ff4d67" : "#62ff9d")
+      : (player === 1 ? "#46f0ff" : "#ff5f67");
+    token.style.setProperty("--fly-color", colorFeedback);
     document.body.appendChild(token);
     const tokenRect = token.getBoundingClientRect();
     const mitadTokenX = tokenRect.width / 2;

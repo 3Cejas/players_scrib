@@ -74,7 +74,9 @@ test("Escritxr oculta los rótulos del nivel, usa el emoji y centra las partícu
   assert.match(css, /partida-intro-escritora #logo[\s\S]*display: none !important/);
   assert.match(css, /page-players\.partida-activa #contenedor[\s\S]*padding-top/);
   assert.match(css, /page-players\.partida-activa #nombre[\s\S]*text-shadow/);
-  assert.match(actions, /-0\.05 🎨/);
+  assert.match(js, /cambioFormateado[\s\S]*numero\(payload\.delta\)[\s\S]*🎨/);
+  assert.match(js, /Number\(payload\.delta\) < 0 \? "#ff4d67" : "#62ff9d"/);
+  assert.doesNotMatch(actions, /mostrarFeedbackTiempoEscritora\(tiempo_feed, "borrar"/);
   assert.doesNotMatch(actions, /-0\.05 insp\./);
 });
 

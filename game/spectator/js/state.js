@@ -5535,12 +5535,18 @@ const CLASE_INTRO_OCULTO_ESPECTADOR = "is-intro-hidden";
 const FASE_INTRO_MAX_ESPECTADOR = 3;
 const jugador_intro_1 = contenedor_espectador ? contenedor_espectador.querySelector(".jugador1") : null;
 const jugador_intro_2 = contenedor_espectador ? contenedor_espectador.querySelector(".jugador2") : null;
-const BLOQUES_INTRO_CUENTA_ATRAS_ESPECTADOR = [
-    { key: "nivel", elemento: info_general, origen: "up" },
-    { key: "jugadora1", elemento: jugador_intro_1, origen: "left" },
-    { key: "jugadora2", elemento: jugador_intro_2, origen: "right" },
-    { key: "inspiracion", elemento: inspiracion, origen: "down" }
-];
+function obtenerBloquesIntroCuentaAtrasEspectador() {
+    return [
+        {
+            key: "inspiracion",
+            elemento: document.getElementById("scrib_competition_hud"),
+            origen: "up"
+        },
+        { key: "jugadora1", elemento: jugador_intro_1, origen: "left" },
+        { key: "jugadora2", elemento: jugador_intro_2, origen: "right" },
+        { key: "nivel", elemento: info_general, origen: "down" }
+    ];
+}
 const CLASES_BARRA_NIVEL = [
     "barra-nivel--calentamiento-previo",
     "barra-nivel--bendita",
@@ -5618,7 +5624,7 @@ function vaciarColaPutadasPendientesEspectador() {
 }
 
 function asegurarIntroBloquesEspectador() {
-    BLOQUES_INTRO_CUENTA_ATRAS_ESPECTADOR.forEach((bloque) => {
+    obtenerBloquesIntroCuentaAtrasEspectador().forEach((bloque) => {
         if (!bloque || !bloque.elemento || !bloque.elemento.classList) return;
         bloque.elemento.classList.add(CLASE_INTRO_BLOQUE_ESPECTADOR);
         if (bloque.origen) {
@@ -5647,8 +5653,9 @@ function revelarFaseIntroCuentaAtrasEspectador(faseObjetivo) {
     if (!intro_cuenta_atras_activa) return;
     const fase = Math.max(-1, Math.min(FASE_INTRO_MAX_ESPECTADOR, Number(faseObjetivo)));
     if (!Number.isFinite(fase) || fase <= intro_cuenta_atras_fase) return;
+    const bloques = obtenerBloquesIntroCuentaAtrasEspectador();
     for (let i = intro_cuenta_atras_fase + 1; i <= fase; i += 1) {
-        const bloque = BLOQUES_INTRO_CUENTA_ATRAS_ESPECTADOR[i];
+        const bloque = bloques[i];
         setOcultoIntroBloqueEspectador(bloque, false);
     }
     intro_cuenta_atras_fase = fase;
@@ -5658,7 +5665,7 @@ function iniciarIntroCuentaAtrasEspectador() {
     finalizarIntroCuentaAtrasEspectador();
     if (vista_espectador_modo_resuelta !== "partida") return;
     asegurarIntroBloquesEspectador();
-    BLOQUES_INTRO_CUENTA_ATRAS_ESPECTADOR.forEach((bloque) => {
+    obtenerBloquesIntroCuentaAtrasEspectador().forEach((bloque) => {
         setOcultoIntroBloqueEspectador(bloque, true);
     });
     intro_cuenta_atras_activa = true;
@@ -5676,7 +5683,7 @@ function actualizarIntroCuentaAtrasSegunContador(contador) {
 
 function finalizarIntroCuentaAtrasEspectador() {
     asegurarIntroBloquesEspectador();
-    BLOQUES_INTRO_CUENTA_ATRAS_ESPECTADOR.forEach((bloque) => {
+    obtenerBloquesIntroCuentaAtrasEspectador().forEach((bloque) => {
         setOcultoIntroBloqueEspectador(bloque, false);
     });
     intro_cuenta_atras_activa = false;
@@ -6777,8 +6784,8 @@ function iniciarCalentamientoPrevioEspectador(payload = {}) {
         const progreso = Math.max(0, Math.min(100, ((duracionMs - restanteMs) / duracionMs) * 100));
         setProgresoNivelBarra(progreso);
         if (explicacion) {
-            explicacion.textContent = `ESCRITURA LIBRE · PRIMER NIVEL EN ${formatearCuentaCalentamientoPrevioEspectador(restanteMs / 1000)}`;
-            explicacion.style.color = "#ffd978";
+            explicacion.textContent = "";
+            explicacion.style.removeProperty("color");
         }
         if (restanteMs <= 0 && intervalo_calentamiento_previo_espectador) {
             clearInterval(intervalo_calentamiento_previo_espectador);

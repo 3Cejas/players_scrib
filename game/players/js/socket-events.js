@@ -1335,8 +1335,10 @@ function programarPasoCountdownEscritora(paso, revisionIntro) {
     const textoPaso = pasoActual === 0 ? tJuego2P("countdown.write", {}, "\u00a1ESCRIBE!") : pasoActual;
     crearCountdownEscritora(textoPaso);
     if (pasoActual === 3) {
-        revelarEtapaIntroPartidaEscritora(2);
+        revelarEtapaIntroPartidaEscritora(1);
     } else if (pasoActual === 2) {
+        revelarEtapaIntroPartidaEscritora(2);
+    } else if (pasoActual === 1) {
         revelarEtapaIntroPartidaEscritora(3);
     }
 
@@ -1360,7 +1362,7 @@ function programarPasoCountdownEscritora(paso, revisionIntro) {
             fallback_cuenta_atras_timer = null;
             $('#countdown').remove();
             finalizarSecuenciaIntroPartidaEscritora();
-        }, 1000);
+        }, DURACION_ESCRIBE_COUNTDOWN_ESCRITORA_MS);
         return;
     }
 
@@ -1368,8 +1370,12 @@ function programarPasoCountdownEscritora(paso, revisionIntro) {
     timer = setTimeout(() => {
         timer = null;
         programarPasoCountdownEscritora(pasoActual - 1, revisionIntro);
-    }, 1000);
+    }, INTERVALO_PASOS_COUNTDOWN_ESCRITORA_MS);
 }
+
+const RETARDO_PRIMER_PASO_COUNTDOWN_ESCRITORA_MS = 2400;
+const INTERVALO_PASOS_COUNTDOWN_ESCRITORA_MS = 1150;
+const DURACION_ESCRIBE_COUNTDOWN_ESCRITORA_MS = 1650;
 
 // Inicia el juego.
 socket.on("inicio", (data) => {
@@ -1433,13 +1439,12 @@ socket.on("inicio", (data) => {
     preparados_timer = setTimeout(() => {
         preparados_timer = null;
         aplicarEstiloCountdownEscritora(false);
-        revelarEtapaIntroPartidaEscritora(1);
     }, 20);
 
     listener_cuenta_atras = setTimeout(() => {
         listener_cuenta_atras = null;
         programarPasoCountdownEscritora(3, revisionIntro);
-    }, 1000);
+    }, RETARDO_PRIMER_PASO_COUNTDOWN_ESCRITORA_MS);
 
     // Failsafe: evita que el contador se quede bloqueado en pantalla.
     fallback_cuenta_atras_timer = setTimeout(() => {
