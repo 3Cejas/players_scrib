@@ -1601,12 +1601,12 @@ const smokeSpecs = [
     }
   },
   {
-    name: "spectator-start-countdown-and-warmup",
+    name: "spectator-start-countdown-and-blessed-words",
     run: async (ctx) => {
       await openRolesAndWaitWithOptions(ctx, ["control", "writer1", "spectator"], { useStateHooks: false });
       await configureFastControlPanel(ctx, {
         tiempo_modos: 10,
-        modes: ["letra bendita"]
+        modes: ["palabras bonus", "letra bendita"]
       });
       await ctx.invoke("control", "cambiar_vista_espectador", "partida");
       await ctx.waitFor(
@@ -1625,46 +1625,19 @@ const smokeSpecs = [
       });
       ctx.assert(transitionHidden, "starting from the active game view must not replay the generic view transition");
 
-      await ctx.waitForText(
-        "spectator",
-        "#palabra",
-        (text) => text.includes("CALENTAMIENTO PREVIO"),
-        "spectator enters the explicit pre-level warm-up",
-        12000
-      );
-      await ctx.waitFor(
-        "spectator warm-up omits redundant technical copy",
-        async () => {
-          const text = await ctx.readText("spectator", "#explicacion");
-          return !text.includes("ESCRITURA LIBRE") && !text.includes("PRIMER NIVEL EN");
-        },
-        4000
-      );
+      await waitForLocalMode(ctx, "spectator", "palabras bonus", 12000);
 
-      const warmup = await ctx.evaluate("spectator", () => {
-        const audio = window.eval("sonido_modo");
-        return {
-          active: document.body.classList.contains("nivel-calentamiento-previo"),
-          source: String(audio?.currentSrc || audio?.src || ""),
-          loop: Boolean(audio?.loop),
-          paused: Boolean(audio?.paused)
-        };
-      });
-      ctx.assert(warmup.active, "spectator warm-up styling should be active");
-      ctx.assert(
-        /5\. KEYGEN PRUEBA 1\.mp3(?:$|[?#])/i.test(decodeURIComponent(warmup.source)),
-        "warm-up should use the first level soundtrack"
-      );
-      ctx.assert(warmup.loop === true, "warm-up soundtrack should loop");
-      ctx.assert(warmup.paused === false, "warm-up soundtrack should be playing");
-      await ctx.waitFor(
-        "writer warm-up level is visible",
-        async () => ctx.evaluate("writer1", () => {
-          const hud = document.querySelector("#scrib_competition_hud");
-          const label = hud && hud.querySelector(".scrib-competition-warmup");
-          return hud?.dataset.warmup === "1"
-            && /CALENTAMIENTO PREVIO/.test(String(label?.textContent || ""));
-        }),
+      const firstLevel = await ctx.evaluate("spectator", () => ({
+        mode: window.eval("modo_actual"),
+        freeWarmupActive: document.body.classList.contains("nivel-calentamiento-previo")
+      }));
+      ctx.assert(firstLevel.mode === "palabras bonus", "blessed words should be the first active level");
+      ctx.assert(firstLevel.freeWarmupActive === false, "the removed free warm-up must not be rendered");
+      await ctx.waitForText(
+        "writer1",
+        "#palabra",
+        (text) => text.includes("PALABRAS BENDITAS"),
+        "writer sees blessed words as the first level",
         5000
       );
     }
@@ -1684,10 +1657,8 @@ const smokeSpecs = [
         modes: ["palabras bonus"]
       });
       await startGame(ctx, { useStateHooks: false });
-      // El inicio real reserva 7,5 s para la cuenta atrás y 30 s para el
-      // calentamiento previo al primer nivel. La prueba debe validar ese flujo
-      // de espectáculo completo en vez de asumir el antiguo arranque inmediato.
-      await waitForLocalMode(ctx, "writer1", "palabras bonus", 45000);
+      // Palabras benditas comienza justo al terminar los 7,5 s de cuenta atrás.
+      await waitForLocalMode(ctx, "writer1", "palabras bonus", 15000);
       await waitForLocalMode(ctx, "musa1", "palabras bonus", 10000);
       await assertMusaWordInspirationPreview(ctx, "musa1", "palabras bonus", "cometa", {
         className: "preview-tiempo-palabra--positivo",
