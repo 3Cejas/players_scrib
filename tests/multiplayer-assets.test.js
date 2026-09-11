@@ -511,7 +511,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /id="line_numbers_j2"/);
   assert.match(
     html,
-    /<span data-mode="letra bendita">LB<\/span>\s*<span data-mode="letra prohibida">LM<\/span>\s*<span data-mode="tertulia">T<\/span>\s*<span data-mode="palabras bonus">PB<\/span>\s*<span data-mode="palabras prohibidas">PM<\/span>\s*<span data-mode="frase final">F<\/span>/
+    /<span data-mode="palabras bonus">PB<\/span>\s*<span data-mode="letra bendita">LB<\/span>\s*<span data-mode="letra prohibida">LM<\/span>\s*<span data-mode="tertulia">T<\/span>\s*<span data-mode="palabras prohibidas">PM<\/span>\s*<span data-mode="frase final">F<\/span>/
   );
   assert.match(html, /<span>TIEMPO RESTANTE<\/span>/);
   assert.doesNotMatch(html, /<span>DURACI&Oacute;N<\/span>/);
@@ -634,7 +634,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(actions, /function volverMenuRepresentacionTeleprompter\(\)/);
   assert.match(actions, /window\.volverMenuRepresentacionTeleprompter = volverMenuRepresentacionTeleprompter/);
   assert.match(actions, /function reanudar_modo\(\)\{[\s\S]*if\(modo_actual !== "tertulia"\)\{[\s\S]*return false;/);
-  assert.match(socketEvents, /Tertulia forma parte del reloj normal de la partida/);
+  assert.match(socketEvents, /Tertulia es una pausa sin límite: Control decide cuándo continuar/);
+  assert.match(socketEvents, /socket\.on\('tiempo_muerto_control',[\s\S]*window\.detenerCuentaAtrasModoControl\(\)[\s\S]*TimeoutTiempoMuerto = null/);
   assert.doesNotMatch(socketEvents, /pausar\(\{ motivo: "tertulia" \}\)/);
   assert.match(css, /button\.btn\.stats-nav-button\s*\{[\s\S]*width: clamp\(2rem, 2\.6vw, 2\.55rem\);[\s\S]*font-size: 0;/);
   assert.match(css, /button\.btn\.stats-nav-button::before\s*\{[\s\S]*border-width: 0\.16rem 0\.16rem 0 0;/);
@@ -887,7 +888,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(socketEvents, /socket\.on\('enviar_ventaja_j2', \(payload = \{\}\) => \{[\s\S]*sincronizarDesventajaActivaControl\(payload, \{ player: 2 \}\);/);
   assert.match(socketEvents, /duracion_modo_actual_control = Number\(data && data\.duracion_modo_segundos\)/);
   assert.match(socketEvents, /tiempo_restante_modo_actual_control = Number\(data && data\.tiempo_restante_modo_segundos\)/);
-  assert.match(socketEvents, /window\.iniciarCuentaAtrasModoControl\(\{[\s\S]*modo: modo_actual,[\s\S]*duracion: duracion_modo_actual_control,[\s\S]*restante: tiempo_restante_modo_actual_control/);
+  assert.match(socketEvents, /socket\.on\('tiempo_muerto_control',[\s\S]*window\.detenerCuentaAtrasModoControl\(\)/);
   assert.doesNotMatch(socketEvents, /actualizarModoVistaEspectadorControl\(\{ modo: "partida" \}\)/);
   assert.doesNotMatch(socketEvents, /actualizarSolicitudCalentamientoControl\(\{ tipo: SOLICITUD_CALENTAMIENTO_POR_DEFECTO \}\)/);
   assert.doesNotMatch(socketEvents, /forzar_solicitud_calentamiento_default_pendiente = true/);

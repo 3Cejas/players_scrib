@@ -525,10 +525,10 @@ let niveles_bloqueados = true;
 let listener_modo;
 let jugador_psico;
 const NIVELES_ORDEN = [
+    "palabras bonus",
     "letra bendita",
     "letra prohibida",
     "tertulia",
-    "palabras bonus",
     "palabras prohibidas",
     "frase final"
 ];

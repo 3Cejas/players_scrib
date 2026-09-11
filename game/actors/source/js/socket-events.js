@@ -402,7 +402,7 @@ function renderInfoModoActor(modo, data = {}, opciones = {}) {
         setBarraNivelClaseActor("tertulia");
         aplicarEstiloNivelesActor("tertulia");
         explicación.style.color = "#86d0ff";
-        explicación.innerHTML = traducirDescripcionModoActor("tertulia", "DIALOGA CON TUS MUSAS");
+        explicación.innerHTML = traducirDescripcionModoActor("tertulia", "HABLA EN PERSONA CON TUS MUSAS");
         palabra.innerHTML = traducirTituloModoActor("tertulia", "NIVEL TERTULIA");
         definicion.innerHTML = "";
         return;
@@ -1064,10 +1064,10 @@ function iniciarTemporizadorGiganteActor(duracion) {
 
 let niveles_bloqueados = true;
 const NIVELES_ORDEN = [
+    "palabras bonus",
     "letra bendita",
     "letra prohibida",
     "tertulia",
-    "palabras bonus",
     "palabras prohibidas",
     "frase final"
 ];

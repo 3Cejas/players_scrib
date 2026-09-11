@@ -6937,7 +6937,7 @@ const MODOS = {
         setBarraNivelClase("tertulia");
         //activar_socket_feedback();
         explicacion.style.color = "#86d0ff";
-        explicacion.innerHTML = traducirDescripcionModoEspectador("tertulia", "DIALOGA CON TUS MUSAS");
+        explicacion.innerHTML = traducirDescripcionModoEspectador("tertulia", "HABLA EN PERSONA CON TUS MUSAS");
         palabra1.innerHTML = traducirTituloModoEspectador("tertulia", "NIVEL TERTULIA");
 
     },

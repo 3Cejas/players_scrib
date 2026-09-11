@@ -357,7 +357,7 @@ let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS;
 
 // Lista de modos disponibles (catalogo fijo para que nunca desaparezcan del panel).
-const LISTA_MODOS_DISPONIBLES = ["letra bendita", "letra prohibida", "tertulia", "palabras bonus", "palabras prohibidas", "frase final"];
+const LISTA_MODOS_DISPONIBLES = ["palabras bonus", "letra bendita", "letra prohibida", "tertulia", "palabras prohibidas", "frase final"];
 let LISTA_MODOS = LISTA_MODOS_DISPONIBLES.slice();
 
 // Objeto que asocia cada modo con un color

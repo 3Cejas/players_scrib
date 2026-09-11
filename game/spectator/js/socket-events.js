@@ -1211,7 +1211,7 @@ function refrescarCabeceraModoActualEspectador() {
         return;
     }
     if (modo_actual === "tertulia") {
-        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("tertulia", "DIALOGA CON TUS MUSAS");
+        if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("tertulia", "HABLA EN PERSONA CON TUS MUSAS");
         if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("tertulia", "NIVEL TERTULIA");
         return;
     }

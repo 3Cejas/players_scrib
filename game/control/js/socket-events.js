@@ -731,19 +731,14 @@ socket.on('tiempo_muerto_control', data => {
         display_modo.style.color = COLORES_MODOS[modo_actual];
         display_modo.textContent = modo_actual.toUpperCase();
     }
-    if (typeof window.iniciarCuentaAtrasModoControl === "function") {
-        window.iniciarCuentaAtrasModoControl({
-            modo: modo_actual,
-            duracion: duracion_modo_actual_control,
-            restante: tiempo_restante_modo_actual_control
-        });
+    if (typeof window.detenerCuentaAtrasModoControl === "function") {
+        window.detenerCuentaAtrasModoControl();
     }
-    // Tertulia forma parte del reloj normal de la partida. Su avance vive en
-    // el servidor para que una recarga o cierre de Control nunca la congele.
+    // Tertulia es una pausa sin límite: Control decide cuándo continuar.
     clearTimeout(TimeoutTiempoMuerto);
     TimeoutTiempoMuerto = null;
     if (boton_pausar_reanudar) {
-        boton_pausar_reanudar.dataset.value = 0;
+        boton_pausar_reanudar.dataset.value = 1;
         if (typeof window.actualizarBotonPausaReanudarControl === "function") {
             window.actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
         }

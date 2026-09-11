@@ -446,7 +446,7 @@ function refrescarCabeceraModoActualEscritora() {
     }
     if (modo_actual === "tertulia") {
         explicacion.style.color = "#86d0ff";
-        explicacion.innerHTML = traducirDescripcionModoEscritora("tertulia", "DIALOGA CON TUS MUSAS");
+        explicacion.innerHTML = traducirDescripcionModoEscritora("tertulia", "HABLA EN PERSONA CON TUS MUSAS");
         palabra.innerHTML = traducirTituloModoEscritora("tertulia", "NIVEL TERTULIA");
         return;
     }
@@ -555,7 +555,7 @@ const MODOS = {
         sendText();
         if (explicacion) {
             explicacion.style.color = "#86d0ff";
-            explicacion.innerHTML = traducirDescripcionModoEscritora("tertulia", "DIALOGA CON TUS MUSAS");
+            explicacion.innerHTML = traducirDescripcionModoEscritora("tertulia", "HABLA EN PERSONA CON TUS MUSAS");
         }
         palabra.innerHTML = traducirTituloModoEscritora("tertulia", "NIVEL TERTULIA");
         definicion.innerHTML = "";
