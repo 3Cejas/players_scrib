@@ -644,6 +644,7 @@ function limpiarFeedbackFlotanteEscritora() {
 // COMPONENTES DEL JUGADOR 1
 let nombre;
 let texto = getEl("texto");
+let escritxr_texto_lineas = getEl("escritxr_texto_lineas");
 let puntos = getEl("puntos");
 let feedback = getEl("feedback1");
 let alineador = getEl("alineador1");
@@ -660,6 +661,47 @@ let inspiration_discard_streak = getEl("inspiration_discard_streak");
 let inspiration_discard_effect = getEl("inspiration_discard_effect");
 let inspiration_discard_status = getEl("inspiration_discard_status");
 let meta_inspiracion_activa_escritora = null;
+
+let escritxr_numero_lineas_renderizadas = 0;
+let escritxr_lineas_raf = 0;
+
+function sincronizarLineasTextoEscritora() {
+    escritxr_lineas_raf = 0;
+    if (!texto || !escritxr_texto_lineas) return;
+    const contenido = String(texto.innerText || "").replace(/\r/g, "");
+    const sinSaltoFinal = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
+    const total = Math.max(1, Math.min(500, sinSaltoFinal.split("\n").length));
+    if (total !== escritxr_numero_lineas_renderizadas) {
+        const fragmento = document.createDocumentFragment();
+        for (let linea = 1; linea <= total; linea += 1) {
+            const numero = document.createElement("span");
+            numero.textContent = String(linea);
+            fragmento.appendChild(numero);
+        }
+        escritxr_texto_lineas.replaceChildren(fragmento);
+        escritxr_numero_lineas_renderizadas = total;
+    }
+    escritxr_texto_lineas.scrollTop = texto.scrollTop;
+}
+
+function programarLineasTextoEscritora() {
+    if (escritxr_lineas_raf) return;
+    escritxr_lineas_raf = requestAnimationFrame(sincronizarLineasTextoEscritora);
+}
+
+window.sincronizarLineasTextoEscritora = sincronizarLineasTextoEscritora;
+if (texto && escritxr_texto_lineas) {
+    new MutationObserver(programarLineasTextoEscritora).observe(texto, {
+        childList: true,
+        subtree: true,
+        characterData: true
+    });
+    texto.addEventListener("scroll", () => {
+        programarLineasTextoEscritora();
+        programarActualizacionCaretNeonJuegoEscritora();
+    }, { passive: true });
+    programarLineasTextoEscritora();
+}
 
 function setIndicadorGanadoraEscritora(visible, texto = TEXTO_GANADOR_ESCRITORA) {
     if (document.body) {
@@ -1491,6 +1533,18 @@ const actualizarCaretNeonJuegoEscritora = () => {
     }
     const rect = obtenerRectCaretActualJuegoEscritora();
     if (!rect || rect.height <= 0) {
+        ocultarCaretNeonJuegoEscritora();
+        return;
+    }
+    const editorRect = texto.getBoundingClientRect();
+    const margenVisible = 2;
+    const caretFueraDelEditor = (
+        rect.bottom < editorRect.top + margenVisible ||
+        rect.top > editorRect.bottom - margenVisible ||
+        rect.right < editorRect.left + margenVisible ||
+        rect.left > editorRect.right - margenVisible
+    );
+    if (caretFueraDelEditor) {
         ocultarCaretNeonJuegoEscritora();
         return;
     }

@@ -4711,10 +4711,19 @@ body.page-players.partida-activa #nombre {
     display: block;
     position: relative;
     z-index: 4;
-    width: min(820px, 82vw);
-    margin: 0 auto clamp(24px, 3.2vh, 42px);
-    font-size: clamp(24px, 3vw, 50px);
-    line-height: 1.16;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: clamp(22px, 2.7vw, 42px);
+    font-weight: 800;
+    line-height: 1.08;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
     color: var(--equipo-caret-color, #fff);
     text-shadow: 0 0 18px var(--equipo-caret-glow-soft), 3px 3px 0 rgba(0, 0, 0, 0.72);
 }
@@ -4786,10 +4795,45 @@ body.page-players.partida-activa .escritxr-texto-panel::before {
     background: rgba(var(--escritxr-panel-accent-rgb), 0.065);
     color: var(--escritxr-panel-accent);
     font-family: "Retro-gaming", monospace;
-    font-size: clamp(10px, 0.9vw, 14px);
+    font-size: clamp(16px, 1.7vw, 26px);
     letter-spacing: 0.16em;
     text-align: left;
     text-shadow: 0 0 0.7em rgba(var(--escritxr-panel-accent-rgb), 0.52);
+}
+
+body.page-players.partida-activa .escritxr-texto-panel__viewport {
+    --escritxr-text-size: clamp(26px, 3vw, 48px);
+    --escritxr-text-line: calc(var(--escritxr-text-size) * 1.28);
+    position: relative;
+    display: grid;
+    grid-template-columns: clamp(46px, 5vw, 68px) minmax(0, 1fr);
+    min-height: clamp(210px, 34vh, 390px);
+    max-height: clamp(260px, 44vh, 520px);
+    overflow: hidden;
+    border-top: 1px solid rgba(var(--escritxr-panel-accent-rgb), 0.24);
+    background:
+        linear-gradient(180deg, rgba(var(--escritxr-panel-accent-rgb), 0.045), transparent 44%),
+        rgba(0, 4, 10, 0.72);
+}
+
+body.page-players.partida-activa .escritxr-texto-lineas {
+    box-sizing: border-box;
+    min-height: 100%;
+    padding: clamp(22px, 3vw, 38px) clamp(7px, 1vw, 12px);
+    overflow: hidden;
+    border-right: 1px solid rgba(var(--escritxr-panel-accent-rgb), 0.24);
+    background: rgba(var(--escritxr-panel-accent-rgb), 0.055);
+    color: var(--escritxr-panel-accent);
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(13px, 1.35vw, 21px);
+    line-height: var(--escritxr-text-line);
+    text-align: center;
+    user-select: none;
+}
+
+body.page-players.partida-activa .escritxr-texto-lineas span {
+    display: block;
+    min-height: var(--escritxr-text-line);
 }
 
 body.page-players.partida-activa .escritxr-texto-panel .textarea {
@@ -4802,13 +4846,10 @@ body.page-players.partida-activa .escritxr-texto-panel .textarea {
     overflow-x: hidden;
     overflow-y: auto;
     border: 0;
-    border-top: 1px solid rgba(var(--escritxr-panel-accent-rgb), 0.24);
-    border-radius: 0 0 clamp(9px, 1vw, 14px) clamp(9px, 1vw, 14px);
-    background:
-        linear-gradient(180deg, rgba(var(--escritxr-panel-accent-rgb), 0.045), transparent 44%),
-        rgba(0, 4, 10, 0.72);
+    border-radius: 0;
+    background: transparent;
     color: var(--escritxr-panel-text);
-    font-size: clamp(26px, 3vw, 48px);
+    font-size: var(--escritxr-text-size);
     line-height: 1.28;
     box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.34) !important;
     scrollbar-color: rgba(var(--escritxr-panel-accent-rgb), 0.72) rgba(255, 255, 255, 0.04);
@@ -4901,6 +4942,45 @@ body.page-spectator #scrib_competition_hud.intro-reveal-bloque.is-intro-hidden[d
 @media (prefers-reduced-motion: reduce) {
     body.page-spectator .intro-reveal-bloque {
         transition: none;
+    }
+}
+
+/* Autoridad final: la cabecera, el texto, sus líneas y sus contadores forman una sola consola. */
+body.page-players.partida-activa .escritxr-texto-panel > #metadatos {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: clamp(8px, 1vw, 12px) clamp(10px, 1.25vw, 16px);
+    border: 0;
+    border-top: 1px solid rgba(var(--escritxr-panel-accent-rgb), 0.28);
+    border-radius: 0 0 clamp(9px, 1vw, 14px) clamp(9px, 1vw, 14px);
+    background:
+        linear-gradient(90deg, rgba(var(--escritxr-panel-accent-rgb), 0.075), transparent 48%),
+        rgba(2, 8, 16, 0.94);
+}
+
+body.page-players.partida-activa .escritxr-texto-panel > #metadatos.metadatos-grid--cabecera {
+    margin-bottom: 0;
+}
+
+body.page-players.partida-activa .info-total {
+    margin-top: clamp(8px, 1.2vh, 16px);
+}
+
+@media (max-width: 720px), (max-height: 680px) {
+    body.page-players.partida-activa .escritxr-texto-panel__viewport {
+        --escritxr-text-size: clamp(24px, 5vw, 34px);
+        grid-template-columns: clamp(38px, 9vw, 52px) minmax(0, 1fr);
+        min-height: clamp(170px, 30vh, 250px);
+        max-height: 39vh;
+    }
+
+    body.page-players.partida-activa .escritxr-texto-lineas,
+    body.page-players.partida-activa .escritxr-texto-panel .textarea {
+        min-height: clamp(170px, 30vh, 250px);
+        max-height: 39vh;
+        padding-top: clamp(16px, 3vw, 24px);
+        padding-bottom: clamp(16px, 3vw, 24px);
     }
 }
 
@@ -11464,6 +11544,24 @@ body.page-players .inspiration-discard__status {
   body.page-players .inspiration-discard__button:focus-visible {
     outline: 3px solid Highlight;
   }
+}
+
+/* Autoridad final del panel unificado de Escritxr, después de los estilos compartidos del marcador. */
+body.page-players.partida-activa .escritxr-texto-panel > #metadatos {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: clamp(8px, 1vw, 12px) clamp(10px, 1.25vw, 16px);
+    border: 0;
+    border-top: 1px solid rgba(var(--escritxr-panel-accent-rgb), 0.28);
+    border-radius: 0 0 clamp(9px, 1vw, 14px) clamp(9px, 1vw, 14px);
+    background:
+        linear-gradient(90deg, rgba(var(--escritxr-panel-accent-rgb), 0.075), transparent 48%),
+        rgba(2, 8, 16, 0.94);
+}
+
+body.page-players.partida-activa .escritxr-texto-panel > #metadatos.metadatos-grid--cabecera {
+    margin-bottom: 0;
 }
 
 /* Deliberacion dirigida: cada revelado se dispara una sola vez desde Control. */

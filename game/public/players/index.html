@@ -8,7 +8,7 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260914c">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260914d">
     <link rel="stylesheet" type="text/css" href="../../css/video-tutorial.css?v=20260903u">
     <link rel="stylesheet" type="text/css" href="../../css/show-narration.css?v=20260831g">
     <link rel="stylesheet" type="text/css" href="./css/musa-help.css?v=20260830a">
@@ -23,7 +23,7 @@
     <script src="../../js/domains/credits.js?v=20260902b"></script>
     <script src="../../js/domains/view-transition.js?v=20260905b"></script>
     <script src="../../js/domains/debug-detonators.js?v=20260909a"></script>
-<script src="./js/actions.js?v=20260914b"></script>
+<script src="./js/actions.js?v=20260914d"></script>
 </head>
 <body>
     <div id="musa_view_transition" class="spectator-view-transition musa-view-transition" hidden aria-hidden="true">
@@ -173,25 +173,22 @@
                     <button id="mostrar_texto" class="musa-texto-toggle" type="button" value="0" data-estado="OFF" aria-label="Desplegar texto completo" title="Desplegar texto completo" aria-pressed="false" aria-expanded="false" aria-controls="texto" onclick="mostrarTextoCompleto(this)">
                         <span class="musa-texto-toggle__chevron" aria-hidden="true">&#x2304;</span>
                     </button>
-                    <footer class="musa-texto-card__actions">
-                        <div id="metadatos_acciones" class="metadatos-grid metadatos-grid--acciones">
-                            <div class="meta-item meta-bottom-right marcador-accion marcador-accion--bandera">
-                                <button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">&#x1F3F3;&#xFE0F;&#x200D;&#x1F308; BANDERA</button>
-                                <div id="bandera_regalo_estado" class="bandera-regalo-chip" hidden aria-live="polite">
-                                    <span id="bandera_regalo_titulo" class="bandera-regalo-chip__titulo">APOYO DE MUSAS</span>
-                                    <span id="bandera_regalo_valor" class="bandera-regalo-chip__valor">0/10</span>
-                                    <span class="bandera-regalo-chip__barra"><span id="bandera_regalo_fill" class="bandera-regalo-chip__fill"></span></span>
-                                </div>
-                                <!-- Contenedor de la pantalla superpuesta -->
-                                <div id="overlay">
-                                    <p>&iexcl;MUSA, AGITA TU BANDERA!</p>
-                                    <p id="motion_permiso" class="motion-permiso"></p>
-                                    <button id="btn_volver" class="btn bandera" onclick="desactivarPantalla(this)">&#x2B05;&#xFE0F; VOLVER</button>
-                                </div>
-                            </div>
-                        </div>
-                    </footer>
                     <div class="musa-texto-card__scan" aria-hidden="true"></div>
+                </div>
+                <div id="metadatos_acciones" class="musa-bandera-fab-wrap">
+                    <div class="marcador-accion marcador-accion--bandera">
+                        <button id="btn_bandera" class="btn bandera" type="button" value="0" aria-label="Mostrar bandera" onclick="bandera(this)">&#x1F3F3;&#xFE0F;&#x200D;&#x1F308; BANDERA</button>
+                        <div id="bandera_regalo_estado" class="bandera-regalo-chip" hidden aria-live="polite">
+                            <span id="bandera_regalo_titulo" class="bandera-regalo-chip__titulo">APOYO DE MUSAS</span>
+                            <span id="bandera_regalo_valor" class="bandera-regalo-chip__valor">0/10</span>
+                            <span class="bandera-regalo-chip__barra"><span id="bandera_regalo_fill" class="bandera-regalo-chip__fill"></span></span>
+                        </div>
+                        <div id="overlay">
+                            <p>&iexcl;MUSA, AGITA TU BANDERA!</p>
+                            <p id="motion_permiso" class="motion-permiso"></p>
+                            <button id="btn_volver" class="btn bandera" onclick="desactivarPantalla(this)">&#x2B05;&#xFE0F; VOLVER</button>
+                        </div>
+                    </div>
                 </div>
                 <br>
                 <div align="center">
@@ -237,7 +234,7 @@
                         <p id="pre_show_musa_feedback" class="pre-show-musa__feedback" role="status" aria-live="polite" aria-atomic="true"></p>
                     </section>
                     <section id="calentamiento" class="calentamiento calentamiento--nuevo">
-                        <h2 class="calentamiento-titulo">TUTORIAL</h2>
+                        <h2 class="calentamiento-titulo">DETONADORES</h2>
                         <p id="calentamiento_estado" class="calentamiento-estado">Tutorial inactivo.</p>
                         <div class="calentamiento-input">
                             <input id="calentamiento_input" class="input_publico" maxlength="48" placeholder="Escribe una palabra">

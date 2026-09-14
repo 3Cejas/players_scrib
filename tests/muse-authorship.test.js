@@ -160,6 +160,10 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   assert.equal((events.match(/socket\.on\(nombre/g) || []).length, 1);
   assert.doesNotMatch(html, /musa-texto-toggle__label/);
   assert.match(html, /id="mostrar_texto"[\s\S]*aria-label="Desplegar texto completo"[\s\S]*musa-texto-toggle__chevron/);
+  assert.match(css, /\.musa-texto-card > #mostrar_texto\s*\{[\s\S]*justify-content: center;[\s\S]*width: 100%/);
+  assert.match(css, /body\.musa-bandera-disponible #metadatos_acciones\.musa-bandera-fab-wrap[\s\S]*position: fixed !important;[\s\S]*left:/);
+  assert.match(actions, /BANDERA_DISPONIBLE_SESION/);
+  assert.match(actions, /recordarDisponibilidadBanderaMusa\(activa\)/);
   assert.match(events, /typeof data === "string" \? data : null/);
 });
 
@@ -192,4 +196,16 @@ test("Palabras benditas remains the leftmost level in muse and actor timelines",
     const reorder = source.match(/function aplicarOrdenCircular[\s\S]*?\n\}/)?.[0] || "";
     assert.doesNotMatch(reorder, /style\.order\s*=/);
   });
+
+  const museCss = read("game/public/players/css/publico.css");
+  const actorCss = read("game/actors/source/css/publico.css");
+  [museCss, actorCss].forEach((css) => {
+    assert.match(css, /\.nivel-item\[data-modo="palabras bonus"\]\s*\{\s*order:\s*0;/);
+    assert.match(css, /\.nivel-item\[data-modo="frase final"\]\s*\{\s*order:\s*5;/);
+  });
+});
+
+test("detonator view names itself correctly on the muse screen", () => {
+  const html = read("game/public/players/index.html");
+  assert.match(html, /id="calentamiento"[\s\S]*class="calentamiento-titulo">DETONADORES</);
 });

@@ -1846,6 +1846,42 @@ body.page-actors #definicion .palabra-tiempo--maldita {
     animation: pulsoNivel 1.6s ease-in-out infinite;
 }
 
+/* En móvil conserva visible el inicio real del recorrido: Palabra bendita. */
+@media (max-width: 680px) {
+    .niveles {
+        --nivel-size: clamp(42px, 12vw, 54px);
+        --nivel-gap: 4px;
+        padding-inline: 6px;
+    }
+
+    .niveles-linea {
+        justify-content: flex-start;
+        gap: 4px;
+        width: max-content;
+        min-width: 100%;
+        padding-inline: 8px;
+    }
+
+    .nivel-item {
+        min-width: 72px;
+        max-width: 72px;
+        gap: 6px;
+    }
+
+    .nivel-texto {
+        font-size: 10px;
+        letter-spacing: 0.035em;
+    }
+}
+
+/* Palabras benditas abre siempre el recorrido, también al cambiar de nivel. */
+.niveles-linea > .nivel-item[data-modo="palabras bonus"] { order: 0; }
+.niveles-linea > .nivel-item[data-modo="letra bendita"] { order: 1; }
+.niveles-linea > .nivel-item[data-modo="letra prohibida"] { order: 2; }
+.niveles-linea > .nivel-item[data-modo="tertulia"] { order: 3; }
+.niveles-linea > .nivel-item[data-modo="palabras prohibidas"] { order: 4; }
+.niveles-linea > .nivel-item[data-modo="frase final"] { order: 5; }
+
 .niveles-desactivados .niveles-scroll{
     pointer-events: none;
     opacity: 1;

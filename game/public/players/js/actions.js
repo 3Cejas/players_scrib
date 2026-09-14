@@ -23,6 +23,7 @@ let agitado_prev_ay = null;
 let agitado_prev_az = null;
 let agitado_aviso_timeout = null;
 let bandera_bloqueada_por_control = false;
+const BANDERA_DISPONIBLE_SESION = "scrib_bandera_disponible_sesion";
 const tJuego2P = (clave, variables = {}, fallback = "") => (
   (window && typeof window.scribT2P === "function")
     ? window.scribT2P(clave, variables, fallback)
@@ -57,12 +58,34 @@ function refrescarTextosAccionesMusa() {
   }
 }
 
+function recordarDisponibilidadBanderaMusa(disponible) {
+  if (!document.body) return;
+  if (disponible) {
+    document.body.classList.add("musa-bandera-disponible");
+    try {
+      window.sessionStorage.setItem(BANDERA_DISPONIBLE_SESION, "1");
+    } catch (_error) {
+      // La interfaz sigue funcionando aunque el navegador bloquee sessionStorage.
+    }
+  }
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     refrescarTextosAccionesMusa();
+    try {
+      recordarDisponibilidadBanderaMusa(window.sessionStorage.getItem(BANDERA_DISPONIBLE_SESION) === "1");
+    } catch (_error) {
+      // Sin persistencia, el estado del servidor volverá a mostrarla.
+    }
   }, { once: true });
 } else {
   refrescarTextosAccionesMusa();
+  try {
+    recordarDisponibilidadBanderaMusa(window.sessionStorage.getItem(BANDERA_DISPONIBLE_SESION) === "1");
+  } catch (_error) {
+    // Sin persistencia, el estado del servidor volverá a mostrarla.
+  }
 }
 
 if (window && typeof window.scribOnLanguageChange2P === "function") {
@@ -496,6 +519,7 @@ function mostrarTextoCompleto(boton) {
 
   function aplicarEstadoBanderasControl(payload = {}) {
     const activa = Boolean(payload && payload.activa);
+    recordarDisponibilidadBanderaMusa(activa);
     const bloqueada = activa && Boolean(payload && payload.bloqueado_por_control);
     actualizarBloqueoBanderaControl(bloqueada);
     const boton = document.getElementById('btn_bandera');
