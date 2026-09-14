@@ -7144,6 +7144,14 @@ body.page-spectator .calentamiento-consigna-chip {
   gap: 0.2em;
 }
 
+.detonador-historial-item.is-active {
+    transform: translateY(-4px) scale(1.035);
+    border-color: currentColor;
+    background: color-mix(in srgb, currentColor 17%, rgba(3, 10, 18, .94));
+    box-shadow: 0 0 0 2px currentColor, 0 0 30px color-mix(in srgb, currentColor 58%, transparent);
+    filter: brightness(1.35);
+}
+
 .detonador-historial-caso {
   font-family: "Retro-gaming", monospace;
   font-size: clamp(9px, 0.86vw, 12px);

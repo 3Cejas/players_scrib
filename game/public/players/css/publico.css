@@ -6653,6 +6653,7 @@ body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-b
     display: block !important;
     width: auto !important;
     margin: 0 !important;
+    transition: top .55s cubic-bezier(.2,.85,.2,1), left .55s cubic-bezier(.2,.85,.2,1), transform .55s cubic-bezier(.2,.85,.2,1) !important;
 }
 
 body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera,
@@ -6675,15 +6676,56 @@ body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-b
 
 body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before,
 body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before {
-    content: none !important;
+    content: "" !important;
+    position: absolute !important;
+    width: 4px !important;
+    height: 38px !important;
+    margin-left: -27px !important;
+    border-radius: 99px !important;
+    background: #101820 !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.48) !important;
 }
 
 body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after,
 body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after {
-    content: "🏳️‍🌈";
-    position: static;
-    color: #101010;
-    font: 28px/1 system-ui, sans-serif;
+    content: "" !important;
+    position: absolute !important;
+    width: 34px !important;
+    height: 24px !important;
+    margin-left: 9px !important;
+    background: linear-gradient(145deg, #fff 0 7%, var(--bandera-color) 8% 100%) !important;
+    clip-path: polygon(0 0,100% 13%,78% 52%,100% 88%,0 100%) !important;
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,.4)) !important;
+}
+
+body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap {
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera {
+    width: clamp(132px, 36vw, 174px) !important;
+    min-width: clamp(132px, 36vw, 174px) !important;
+    height: clamp(132px, 36vw, 174px) !important;
+    min-height: clamp(132px, 36vw, 174px) !important;
+    animation: musaBanderaEsperaPulse 1.65s ease-in-out infinite !important;
+}
+
+body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before {
+    width: 7px !important;
+    height: 78px !important;
+    margin-left: -53px !important;
+}
+
+body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after {
+    width: 70px !important;
+    height: 51px !important;
+    margin-left: 18px !important;
+}
+
+@keyframes musaBanderaEsperaPulse {
+    50% { transform: scale(1.07); box-shadow: 0 12px 34px rgba(0,0,0,.62), 0 0 0 8px color-mix(in srgb,var(--bandera-color),transparent 68%), 0 0 42px var(--bandera-color); }
 }
 
 @media (max-width: 680px) {
@@ -6693,6 +6735,13 @@ body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-b
         min-width: 58px !important;
         height: 58px !important;
         min-height: 58px !important;
+    }
+
+    body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera {
+        width: clamp(132px, 36vw, 174px) !important;
+        min-width: clamp(132px, 36vw, 174px) !important;
+        height: clamp(132px, 36vw, 174px) !important;
+        min-height: clamp(132px, 36vw, 174px) !important;
     }
 }
 

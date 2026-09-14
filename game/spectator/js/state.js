@@ -1293,8 +1293,8 @@ const container_general = document.querySelector(".container");
 const cabecera = document.querySelector(".cabecera");
 const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
 const neon_espectador = getEl("neon");
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
-const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
+const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
 let vista_calentamiento = false;
 let vista_espectador_override = "tutorial";
 let vista_espectador_modo_resuelta = "tutorial";
@@ -1316,9 +1316,13 @@ const controlador_audio_vista_espectador = window.ScribViewTransition
         musicUrl: "../audio/1.%20MENU%20DE%20INICIO.mp3",
         transitionUrl: "../audio/FX/cambio-vista.mp3",
         fadeDurationMs: 3000,
-        musicModes: ["tutorial", "calentamiento", "temporizador"]
+        musicModes: ["tutorial", "instrucciones", "calentamiento", "temporizador"]
     })
     : null;
+const instrucciones_espectador = window.ScribInstructions
+    ? window.ScribInstructions.create({ documentRef: document })
+    : null;
+let instrucciones_slide_step_remoto = 0;
 let audio_deliberacion_modo_espectador = "";
 let audio_deliberacion_victoria_firma = "";
 const DELIBERACION_VICTORIA_INICIO_SEGUNDOS = 22.5;
@@ -1844,6 +1848,7 @@ const normalizarOverrideVistaEspectador = (valor) => {
 const resolverModoVistaEspectadorLocal = () => {
     if (
         vista_espectador_override === "tutorial"
+        || vista_espectador_override === "instrucciones"
         || vista_espectador_override === "stats"
         || vista_espectador_override === "puntuacion"
         || vista_espectador_override === "nube_inspiracion"
@@ -2086,6 +2091,12 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
 const actualizarCreditosEspectador = (payload = {}) => {
     const previoAnimacionId = Number(estado_creditos_espectador && estado_creditos_espectador.animacion_id) || 0;
     estado_creditos_espectador = normalizarPayloadCreditosEspectador(payload);
+    instrucciones_espectador?.setState({
+        visible: vista_espectador_modo_resuelta === "instrucciones",
+        step: instrucciones_slide_step_remoto,
+        credits: estado_creditos_espectador.creditos,
+        perspective: "spectator"
+    });
     renderizarCreditosEspectador();
     const hayNuevaAnimacion = estado_creditos_espectador.animacion_id !== previoAnimacionId;
     if (vista_espectador_modo_resuelta === "creditos" && hayNuevaAnimacion) {
@@ -2131,6 +2142,10 @@ const renderizarHistorialDetonadores = () => {
     historial_detonadores_espectador.forEach((entrada) => {
         const item = document.createElement("div");
         item.className = `detonador-historial-item tipo-${entrada.tipo}`;
+        item.classList.toggle(
+            "is-active",
+            solicitud_calentamiento_espectador !== "ninguna" && entrada.tipo === solicitud_calentamiento_espectador
+        );
         const titulo = document.createElement("span");
         titulo.className = "detonador-historial-caso";
         titulo.textContent = traducirSolicitudCalentamientoEspectador(entrada.tipo).toUpperCase();
@@ -2190,11 +2205,10 @@ const registrarDetonadorHistorial = (solicitud, equipos = {}) => {
 };
 const actualizarConsignaCalentamientoEspectador = (solicitud, equipos = {}) => {
     const tipo = normalizarSolicitudCalentamientoVista(solicitud);
+    const tipoAnterior = solicitud_calentamiento_espectador;
+    solicitud_calentamiento_espectador = tipo;
     registrarDetonadorHistorial(tipo, equipos);
-    if (!calentamiento_consigna_espectador) {
-        solicitud_calentamiento_espectador = tipo;
-        return;
-    }
+    if (!calentamiento_consigna_espectador) return;
     const etiquetaActual = traducirSolicitudCalentamientoEspectador(tipo);
     calentamiento_consigna_espectador.textContent = tJuego2P(
         "warmup.request.spectator",
@@ -2203,14 +2217,13 @@ const actualizarConsignaCalentamientoEspectador = (solicitud, equipos = {}) => {
     );
     calentamiento_consigna_espectador.classList.remove("tipo-libre", "tipo-ninguna", "tipo-lugares", "tipo-acciones", "tipo-frase_final");
     calentamiento_consigna_espectador.classList.add(`tipo-${tipo}`);
-    if (solicitud_calentamiento_espectador && solicitud_calentamiento_espectador !== tipo) {
+    if (tipoAnterior && tipoAnterior !== tipo) {
         calentamiento_consigna_espectador.classList.remove("consigna-cambio");
         void calentamiento_consigna_espectador.offsetWidth;
         calentamiento_consigna_espectador.classList.add("consigna-cambio");
     } else {
         calentamiento_consigna_espectador.classList.remove("consigna-cambio");
     }
-    solicitud_calentamiento_espectador = tipo;
 };
 const actualizarEtiquetasCursorCalentamiento = () => {
     if (calentamiento_cursor_label_1) {
@@ -4696,6 +4709,12 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         resultado_final_timeout_revelado_espectador = null;
     }
     vista_espectador_modo_resuelta = modo;
+    instrucciones_espectador?.setState({
+        visible: modo === "instrucciones",
+        step: instrucciones_slide_step_remoto,
+        credits: estado_creditos_espectador.creditos,
+        perspective: "spectator"
+    });
     sincronizarAudioDeliberacionEspectador(modo);
     if (modo !== "partida") {
         ocultarTransicionNivelEspectador();
@@ -4706,6 +4725,7 @@ const aplicarModoVistaEspectadorUi = (modo) => {
     if (document.body) {
         document.body.classList.toggle("vista-partida", modo === "partida");
         document.body.classList.toggle("vista-tutorial", modo === "tutorial");
+        document.body.classList.toggle("vista-instrucciones", modo === "instrucciones");
         document.body.classList.toggle("vista-calentamiento", modo === "calentamiento");
         document.body.classList.toggle("vista-stats", modo === "stats");
         document.body.classList.toggle("vista-puntuacion", modo === "puntuacion");
@@ -4861,11 +4881,19 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     let cambioPasoPuntuacion = false;
     let cambioPasoJurado = false;
     let cambioEscalaUi = false;
+    let cambioPasoInstrucciones = false;
     if (payload && typeof payload === "object") {
         if (Object.prototype.hasOwnProperty.call(payload, "stats_slide_step")) {
             const nuevoPaso = normalizarPasoSlideStatsEspectador(payload.stats_slide_step);
             cambioPasoStats = nuevoPaso !== stats_slide_step_remoto;
             stats_slide_step_remoto = nuevoPaso;
+        }
+        if (Object.prototype.hasOwnProperty.call(payload, "instrucciones_slide_step")) {
+            const nuevoPaso = window.ScribInstructions
+                ? window.ScribInstructions.normalizeStep(payload.instrucciones_slide_step)
+                : Math.max(0, Math.min(6, Math.trunc(Number(payload.instrucciones_slide_step) || 0)));
+            cambioPasoInstrucciones = nuevoPaso !== instrucciones_slide_step_remoto;
+            instrucciones_slide_step_remoto = nuevoPaso;
         }
         if (Object.prototype.hasOwnProperty.call(payload, "puntuacion_slide_step")) {
             const api = obtenerApiPuntuacionEspectador();
@@ -4913,6 +4941,14 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
                 if (modoServidor === "stats" && cambioPasoStats) {
                     aplicarSlideStatsActual();
                 }
+                if (modoServidor === "instrucciones" && cambioPasoInstrucciones) {
+                    instrucciones_espectador?.setState({
+                        visible: true,
+                        step: instrucciones_slide_step_remoto,
+                        credits: estado_creditos_espectador.creditos,
+                        perspective: "spectator"
+                    });
+                }
                 if (modoServidor === "puntuacion" && cambioPasoPuntuacion) {
                     renderizarPuntuacionFinalEspectador({ animar: true });
                 }
@@ -4930,6 +4966,14 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     }
     if (vista_espectador_modo_resuelta === "stats" && cambioPasoStats) {
         aplicarSlideStatsActual();
+    }
+    if (vista_espectador_modo_resuelta === "instrucciones" && cambioPasoInstrucciones) {
+        instrucciones_espectador?.setState({
+            visible: true,
+            step: instrucciones_slide_step_remoto,
+            credits: estado_creditos_espectador.creditos,
+            perspective: "spectator"
+        });
     }
     if (vista_espectador_modo_resuelta === "puntuacion" && cambioPasoPuntuacion) {
         renderizarPuntuacionFinalEspectador({ animar: true });

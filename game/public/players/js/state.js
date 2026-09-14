@@ -1675,6 +1675,10 @@ let estado_creditos_musa = window.ScribCredits
     ? window.ScribCredits.normalizarPayload({})
     : { creditos: {}, mostrar: false, animacion_id: 0 };
 let vista_modo_remota_musa = "tutorial";
+let instrucciones_slide_step_musa = 0;
+const instrucciones_musa = window.ScribInstructions
+    ? window.ScribInstructions.create({ documentRef: document })
+    : null;
 const deliberacion_musa = getEl("deliberacion_musa");
 const resultado_videojuego_musa = getEl("resultado_videojuego_musa");
 const resultado_videojuego_musa_stage = getEl("resultado_videojuego_musa_stage");
@@ -2288,6 +2292,13 @@ function actualizarCreditosMusa(payload = {}) {
     estado_creditos_musa = window.ScribCredits
         ? window.ScribCredits.normalizarPayload(payload)
         : payload;
+    instrucciones_musa?.setState({
+        visible: vista_modo_remota_musa === "instrucciones",
+        step: instrucciones_slide_step_musa,
+        credits: estado_creditos_musa.creditos,
+        perspective: "muse",
+        team: player
+    });
     return sincronizarVisibilidadCreditosMusa(
         Number(estado_creditos_musa.animacion_id) !== animacionPrevia
     );
@@ -3221,6 +3232,7 @@ const actualizarCalentamiento = (data = {}) => {
 
     if (document.body) {
         document.body.classList.toggle("vista-calentamiento-musa", visible);
+        document.body.classList.toggle("musa-bandera-detonador-en-espera", visible && !solicitudActiva);
     }
     if (calentamiento_section) {
         calentamiento_section.classList.toggle("activo", visible);
@@ -3983,6 +3995,13 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
         stopConfetti();
     }
     let pasoCambiado = false;
+    if (Object.prototype.hasOwnProperty.call(payload, "instrucciones_slide_step")) {
+        const siguiente = window.ScribInstructions
+            ? window.ScribInstructions.normalizeStep(payload.instrucciones_slide_step)
+            : Math.max(0, Math.min(6, Math.trunc(Number(payload.instrucciones_slide_step) || 0)));
+        pasoCambiado = pasoCambiado || siguiente !== instrucciones_slide_step_musa;
+        instrucciones_slide_step_musa = siguiente;
+    }
     if (Object.prototype.hasOwnProperty.call(payload, "puntuacion_slide_step")) {
         const api = window.ScribFinalScore;
         const siguiente = api && typeof api.normalizarPaso === "function" ? api.normalizarPaso(payload.puntuacion_slide_step) : 0;
@@ -4008,6 +4027,13 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     }
     aplicarVisibilidadPreShowMusa();
     sincronizarVisibilidadCreditosMusa();
+    instrucciones_musa?.setState({
+        visible: vista_modo_remota_musa === "instrucciones",
+        step: instrucciones_slide_step_musa,
+        credits: estado_creditos_musa.creditos,
+        perspective: "muse",
+        team: player
+    });
     if (modoAnterior !== vista_modo_remota_musa) {
         sincronizarVistaDeliberacionMusa({ animarCambioVista: true });
     } else if (pasoCambiado) {

@@ -20,6 +20,7 @@ let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo l
 let vista_calentamiento = false;
 let vista_espectador_modo = "tutorial";
 let vista_principal_control = "tutorial";
+let instrucciones_slide_step_control = 0;
 let puntuacion_slide_step_control = 0;
 let puntuacion_reveal_phase_control = 0;
 let jurado_slide_step_control = 0;
@@ -2838,7 +2839,8 @@ function cambiar_vista() {
     socket.emit('cambiar_vista', 'nada');
 };
 
-const VISTAS_PRINCIPALES_CONTROL = new Set(["tutorial", "detonadores", "partida"]);
+const VISTAS_PRINCIPALES_CONTROL = new Set(["tutorial", "instrucciones", "detonadores", "partida"]);
+const INSTRUCCIONES_PASO_MAX_CONTROL = 6;
 
 function emitirVistaControl(evento, payload) {
     if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") return;
@@ -2863,8 +2865,8 @@ function cerrarVideotutorialDesdeVistaControl() {
 function actualizarBotonesVistaPrincipalControl() {
     document.querySelectorAll("[data-vista-principal]").forEach((boton) => {
         const destino = boton.dataset.vistaPrincipal;
-        const activa = destino === "tutorial"
-            ? vista_espectador_modo === "tutorial"
+        const activa = destino === "tutorial" || destino === "instrucciones"
+            ? vista_espectador_modo === destino
             : destino === "detonadores"
                 ? vista_espectador_modo === "calentamiento" || vista_calentamiento
                 : vista_espectador_modo === "partida" && destino === vista_principal_control;
@@ -2874,12 +2876,14 @@ function actualizarBotonesVistaPrincipalControl() {
     });
     const botonDetonadores = document.getElementById("boton_vista_calentamiento");
     const botonPartida = document.getElementById("boton_vista_partida");
+    const botonInstrucciones = document.getElementById("boton_vista_instrucciones");
     if (botonDetonadores) {
         botonDetonadores.textContent = tJuego2PControl("control.button.detonators_view", {}, "\u{1F4A5} VISTA DETONADORES");
     }
     if (botonPartida) {
         botonPartida.textContent = tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA");
     }
+    if (botonInstrucciones) botonInstrucciones.textContent = "\u{1F3AC} INSTRUCCIONES";
 }
 
 function aplicarVistaPrincipalControl(vista, opciones = {}) {
@@ -2889,7 +2893,7 @@ function aplicarVistaPrincipalControl(vista, opciones = {}) {
     }
     const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "tutorial";
     const activarDetonadores = destino === "detonadores";
-    const modoEspectador = destino === "tutorial" ? "tutorial" : "partida";
+    const modoEspectador = destino === "detonadores" || destino === "partida" ? "partida" : destino;
     vista_principal_control = destino;
     // Cada pulsacion confirma el estado autoritativo. Esto permite reabrir el
     // canal del tutorial aunque Control ya creyera tener seleccionada la vista.
@@ -2925,6 +2929,17 @@ function mostrar_vista_tutorial() {
     aplicarVistaPrincipalControl("tutorial");
 }
 
+function mostrar_vista_instrucciones() {
+    aplicarVistaPrincipalControl("instrucciones");
+}
+
+function navegarInstruccionesControl(direccion) {
+    if (vista_espectador_modo !== "instrucciones") return;
+    const dir = direccion === "prev" ? "prev" : direccion === "next" ? "next" : "";
+    if (!dir) return;
+    emitirVistaControl("instrucciones_slide_control_navegar", { direccion: dir });
+}
+
 function mostrar_vista_partida() {
     aplicarVistaPrincipalControl("partida");
 }
@@ -2944,6 +2959,8 @@ function asegurarVistaPartidaParaInicioControl() {
 }
 
 window.mostrar_vista_tutorial = mostrar_vista_tutorial;
+window.mostrar_vista_instrucciones = mostrar_vista_instrucciones;
+window.navegarInstruccionesControl = navegarInstruccionesControl;
 window.mostrar_vista_detonadores = mostrar_vista_detonadores;
 window.mostrar_vista_partida = mostrar_vista_partida;
 window.asegurarVistaPartidaParaInicioControl = asegurarVistaPartidaParaInicioControl;
@@ -2974,7 +2991,7 @@ window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl
 // `calentamiento` es un modo resuelto que llega desde el servidor cuando la
 // vista Detonadores está activa. Conservarlo evita confundirlo con Tutorial y,
 // sobre todo, garantiza que al pulsar Tutorial se envíe el cambio autoritativo.
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
 const PUNTUACION_CATEGORIAS_CONTROL = [
     "produccion",
     "ritmo",
@@ -3109,6 +3126,10 @@ function actualizarBotonesVistaEspectadorControl() {
     const juradoLabel = document.getElementById("jurado_nav_label");
     const juradoPrev = document.getElementById("jurado_nav_prev");
     const juradoNext = document.getElementById("jurado_nav_next");
+    const instruccionesNav = document.getElementById("instrucciones_nav_control");
+    const instruccionesLabel = document.getElementById("instrucciones_nav_label");
+    const instruccionesPrev = document.getElementById("instrucciones_nav_prev");
+    const instruccionesNext = document.getElementById("instrucciones_nav_next");
     if (botonStats) {
         const activo = vista_espectador_modo === "stats";
         botonStats.dataset.active = activo ? "1" : "0";
@@ -3176,6 +3197,14 @@ function actualizarBotonesVistaEspectadorControl() {
         const visible = vista_espectador_modo === "stats";
         statsNav.hidden = !visible;
         statsNav.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
+    if (instruccionesLabel) instruccionesLabel.textContent = `INSTRUCCIONES \u00b7 ${instrucciones_slide_step_control + 1}/${INSTRUCCIONES_PASO_MAX_CONTROL + 1}`;
+    if (instruccionesPrev) instruccionesPrev.disabled = instrucciones_slide_step_control <= 0;
+    if (instruccionesNext) instruccionesNext.disabled = instrucciones_slide_step_control >= INSTRUCCIONES_PASO_MAX_CONTROL;
+    if (instruccionesNav) {
+        const visible = vista_espectador_modo === "instrucciones";
+        instruccionesNav.hidden = !visible;
+        instruccionesNav.setAttribute("aria-hidden", visible ? "false" : "true");
     }
     if (puntuacionPrev) {
         puntuacionPrev.textContent = "";
@@ -3437,8 +3466,8 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
     if (Object.prototype.hasOwnProperty.call(payload, "calentamiento_vista")) {
         vista_calentamiento = Boolean(payload.calentamiento_vista);
     }
-    if (modoServidor === "tutorial") {
-        vista_principal_control = "tutorial";
+    if (modoServidor === "tutorial" || modoServidor === "instrucciones") {
+        vista_principal_control = modoServidor;
     } else if (modoServidor === "calentamiento" || vista_calentamiento) {
         vista_principal_control = "detonadores";
     } else if (vista_espectador_modo === "partida") {
@@ -3448,6 +3477,12 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
         const paso = Number(payload.puntuacion_slide_step);
         puntuacion_slide_step_control = Number.isFinite(paso)
             ? Math.max(0, Math.min(PUNTUACION_PASO_MAX_CONTROL, Math.trunc(paso)))
+            : 0;
+    }
+    if (payload && Object.prototype.hasOwnProperty.call(payload, "instrucciones_slide_step")) {
+        const paso = Number(payload.instrucciones_slide_step);
+        instrucciones_slide_step_control = Number.isFinite(paso)
+            ? Math.max(0, Math.min(INSTRUCCIONES_PASO_MAX_CONTROL, Math.trunc(paso)))
             : 0;
     }
     if (payload && Object.prototype.hasOwnProperty.call(payload, "puntuacion_reveal_phase")) {

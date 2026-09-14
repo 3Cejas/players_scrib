@@ -8,12 +8,13 @@
     const COVER_MS = 320;
     const REVEAL_MS = 620;
     const AUDIO_FADE_MS = 3000;
-    const MUSIC_MODES = Object.freeze(["tutorial", "calentamiento"]);
+    const MUSIC_MODES = Object.freeze(["tutorial", "calentamiento", "instrucciones"]);
 
     const VIEW_LABELS = Object.freeze({
         partida: "VISTA PARTIDA",
         tutorial: "VISTA TUTORIAL",
         calentamiento: "VISTA DETONADORES",
+        instrucciones: "INSTRUCCIONES",
         stats: "ESTADÍSTICAS",
         puntuacion: "RESULTADO",
         nube_inspiracion: "NUBE DE INSPIRACIÓN",
@@ -48,6 +49,7 @@
         let ducked = false;
         let forcedMusic = false;
         let blocked = false;
+        let boosted = false;
         let fadeTimer = null;
         let fadeSequence = 0;
 
@@ -129,7 +131,9 @@
         };
 
         const targetMusicVolume = () => (
-            (forcedMusic || musicModes.has(currentMode)) && !ducked ? musicVolume : 0
+            (forcedMusic || musicModes.has(currentMode)) && !ducked
+                ? Math.min(1, musicVolume * (boosted ? 1.65 : 1))
+                : 0
         );
 
         const setMode = (value, config = {}) => {
@@ -199,6 +203,12 @@
             } catch (_error) {}
             fadeMusic(musicVolume, 0);
         };
+        const onMusicIntensity = (event) => {
+            const next = Boolean(event && event.detail && event.detail.boosted);
+            if (next === boosted) return;
+            boosted = next;
+            fadeMusic(targetMusicVolume(), 320);
+        };
         const onPageHide = () => {
             clearFade();
             music?.pause?.();
@@ -211,6 +221,7 @@
         documentRef?.addEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
         documentRef?.addEventListener?.("scrib:show-narration-visibility", onShowNarrationVisibility);
         documentRef?.addEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
+        documentRef?.addEventListener?.("scrib:view-music-intensity", onMusicIntensity);
         windowRef?.addEventListener?.("pagehide", onPageHide);
 
         return {
@@ -229,6 +240,7 @@
                 documentRef?.removeEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
                 documentRef?.removeEventListener?.("scrib:show-narration-visibility", onShowNarrationVisibility);
                 documentRef?.removeEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
+                documentRef?.removeEventListener?.("scrib:view-music-intensity", onMusicIntensity);
                 windowRef?.removeEventListener?.("pagehide", onPageHide);
             }
         };
