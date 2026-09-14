@@ -147,16 +147,16 @@ test("Escritxr oculta los rótulos del nivel, usa el emoji y centra las partícu
   assert.doesNotMatch(actions, /-0\.05 insp\./);
 });
 
-test("Escritxr uses team-colored backgrounds and audible inspiration feedback", () => {
+test("Escritxr uses team-colored backgrounds and game audio is spectator-only", () => {
   const css = read("game/css/dashboard-players.css");
   const state = read("game/players/js/state.js");
+  const competition = read("game/js/domains/competition.js");
   assert.match(css, /body\.page-players\.equipo-azul\s*\{[\s\S]*linear-gradient/);
   assert.match(css, /body\.page-players\.equipo-rojo\s*\{[\s\S]*linear-gradient/);
-  assert.match(state, /GANAR 2 SEG\.mp3/);
-  assert.match(state, /PERDER 2 seg\.mp3/);
-  assert.match(state, /opciones\.sonido !== false/);
-  assert.match(state, /window\.reproducirSonidoFeedbackInspiracionEscritora = reproducirSonidoFeedbackInspiracionEscritora/);
-  assert.match(read("game/js/domains/competition.js"), /reproducirSonidoFeedbackInspiracionEscritora\(cambio < 0 \? "negativo" : "positivo"\)/);
+  assert.doesNotMatch(state, /new Audio\(/);
+  assert.doesNotMatch(state, /reproducirSonidoFeedbackInspiracionEscritora/);
+  assert.match(competition, /if \(rolActual !== "spectator"\) return;/);
+  assert.doesNotMatch(competition, /rolActual === "writer"[\s\S]{0,180}sonidoPunto/);
 });
 
 test("Frase final keeps only the global clock and removes inspiration scoring", () => {

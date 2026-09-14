@@ -315,10 +315,9 @@
   function sonidoPunto(player, racha, delta) {
     const cambio = Number(delta);
     if (!Number.isFinite(cambio) || cambio === 0) return;
-    if (rolActual === "writer" && typeof global.reproducirSonidoFeedbackInspiracionEscritora === "function") {
-      global.reproducirSonidoFeedbackInspiracionEscritora(cambio < 0 ? "negativo" : "positivo");
-      return;
-    }
+    // El Espectador es la única salida de audio del videojuego. El resto de
+    // roles conserva el feedback visual, evitando ecos entre móviles y sala.
+    if (rolActual !== "spectator") return;
     if (!global.AudioContext && !global.webkitAudioContext) return;
     try {
       const Ctx = global.AudioContext || global.webkitAudioContext;

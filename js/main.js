@@ -2646,6 +2646,10 @@ function log( text ) {
 
         switch (normalizedCommand) {
 
+            case "tutorial":
+                location.href = "./tutorial/";
+                return true;
+
             case commandKey(cmds.JUEGO.value):
             case "juego":
                 location.href = "./1p_scrib/index.html";

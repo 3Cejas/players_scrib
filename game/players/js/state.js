@@ -548,34 +548,10 @@ function obtenerTipoFeedbackFlotanteEscritora(texto = "", tipo = "") {
     return "neutro";
 }
 
-function reproducirSonidoFeedbackInspiracionEscritora(tipo) {
-    if (tipo !== "positivo" && tipo !== "negativo") return;
-    const ahora = Date.now();
-    if (ahora - ultimo_sonido_feedback_inspiracion_escritora < 160) return;
-    ultimo_sonido_feedback_inspiracion_escritora = ahora;
-    try {
-        const esNegativo = tipo === "negativo";
-        let audio = esNegativo ? audio_feedback_negativo_escritora : audio_feedback_positivo_escritora;
-        if (!audio) {
-            audio = new Audio(esNegativo ? "../audio/PERDER 2 seg.mp3" : "../audio/GANAR 2 SEG.mp3");
-            audio.preload = "auto";
-            if (esNegativo) audio_feedback_negativo_escritora = audio;
-            else audio_feedback_positivo_escritora = audio;
-        }
-        audio.pause();
-        audio.currentTime = 0;
-        audio.volume = 0.72;
-        const promesa = audio.play();
-        if (promesa && typeof promesa.catch === "function") promesa.catch(() => {});
-    } catch (_error) {}
-}
-window.reproducirSonidoFeedbackInspiracionEscritora = reproducirSonidoFeedbackInspiracionEscritora;
-
 function mostrarFeedbackFlotanteEscritora(texto, opciones = {}) {
     const contenido = String(texto ?? "").trim();
     if (!contenido || !feedback_flotante_escritora) return;
     const tipo = obtenerTipoFeedbackFlotanteEscritora(contenido, opciones.tipo);
-    if (opciones.sonido !== false) reproducirSonidoFeedbackInspiracionEscritora(tipo);
     const nodo = document.createElement("span");
     nodo.className = `feedback-tiempo-float ${tipo}`;
     nodo.textContent = contenido;
@@ -1302,9 +1278,6 @@ let post_inicio_pendiente_escritora = null;
 let raf_ajuste_viewport_escritora = null;
 let timeout_ajuste_viewport_escritora = null;
 let resize_observer_fit_viewport_escritora = null;
-let ultimo_sonido_feedback_inspiracion_escritora = 0;
-let audio_feedback_positivo_escritora = null;
-let audio_feedback_negativo_escritora = null;
 let cursor_pluma_atributos_inicializado = false;
 let cursor_pluma_juego_escritora = null;
 let caret_neon_juego_escritora = null;
