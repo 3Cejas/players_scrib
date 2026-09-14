@@ -463,7 +463,7 @@ function mostrarTextoCompleto(boton) {
   if (boton.value == 0) {
     texto1.style.removeProperty("height");
     texto1.style.removeProperty("max-height");
-    texto1.scrollTop = texto1.scrollHeight;
+    texto1.scrollTop = 0;
 
     actualizarEstadoTextoCompleto(boton, true);
     boton.value = 1;

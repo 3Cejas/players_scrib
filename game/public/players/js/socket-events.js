@@ -285,11 +285,13 @@ socket.on('modo_actual', (data) => {
 });
 
 socket.on('dar_nombre', (nombre) => {
-    if(nombre == "") nombre = "ESCRITXR";
-    console.log("NOMBRE", nombre)
-    nombre1.value = nombre;
     const equipoRecibido = equipo_pendiente_nombre_musa || normalizarEquipoVotacion(player);
-    registrarNombreEscritxrPorEquipo(equipoRecibido, nombre);
+    if (typeof nombre === "string" && nombre.trim()) {
+        registrarNombreEscritxrPorEquipo(equipoRecibido, nombre);
+    }
+    if (equipoRecibido === normalizarEquipoVotacion(player)) {
+        establecerNombreEscritxrMusa(nombre, equipoRecibido);
+    }
     equipo_pendiente_nombre_musa = null;
     if (votacion_ventaja_activa && votacion_ventaja_opciones.length > 0) {
         renderizarModalVotacionVentaja(obtenerOpcionesVentaja(votacion_ventaja_opciones));
@@ -1239,11 +1241,6 @@ socket.on('limpiar', () => {
     }
     skill.style = 'animation: brillo 2s ease-in-out;'
     resetearTemporizadorLectura();
-    // Recibe el nombre del jugador y lo coloca en su sitio.
-    socket.on(nombre, data => {
-        nombre1.value = data;
-    });
-
     limpiezas({ preservarResumenFinal: mantenerResumenPartida });
 
     modo_actual = "";
@@ -1269,8 +1266,7 @@ socket.on('limpiar', () => {
 
 // Recibe el nombre del jugador y lo coloca en su sitio.
 socket.on(nombre, data => {
-    nombre1.value = data;
-    registrarNombreEscritxrPorEquipo(player, data);
+    establecerNombreEscritxrMusa(typeof data === "string" ? data : "", player);
     actualizarNombreRegalo();
 });
 

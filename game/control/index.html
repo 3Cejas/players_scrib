@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260914a">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260914b">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -21,10 +21,10 @@
     <script src="../js/domains/inspiration.js?v=20260905d"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260902b"></script>
-    <script src="../js/domains/competition.js?v=20260910h"></script>
+    <script src="../js/domains/competition.js?v=20260914b"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260910d"></script>
+<script src="./js/actions.js?v=20260914b"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -706,28 +706,30 @@
                     <span id="control_desventaja_activa_icon_j2" class="level-status-witness__icon" aria-hidden="true">-</span>
                     <span id="control_desventaja_activa_time_j2" class="level-status-witness__time" hidden aria-hidden="true">--</span>
                 </div>
-                <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Palabra de musas para Escritxr 1">
+                <div id="control_palabra_musa_j1" class="level-status-witness level-status-witness--muse-word level-status-witness--disadvantage-slot level-status-witness--j1" data-active="0" data-queued="0" data-team="1" aria-label="Sin desventaja para Escritxr 1">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
                     <span class="level-status-witness__icon" aria-hidden="true">&#x1F3A8;</span>
                     <span class="level-status-witness__content">
-                        <span id="control_palabra_musa_j1_word" class="level-status-witness__word">-</span>
+                        <span id="control_palabra_musa_j1_word" class="level-status-witness__word">SIN DESVENTAJA</span>
                         <span id="control_palabra_musa_j1_author" class="level-status-witness__author" hidden></span>
                     </span>
                     <span class="level-status-witness__meta">
-                        <span id="control_palabra_musa_j1_time" class="level-status-witness__time">--</span>
-                        <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j1_queue">0</span></span>
+                        <span id="control_palabra_musa_j1_disadvantage_icon" class="level-status-witness__disadvantage-icon" aria-hidden="true">&mdash;</span>
+                        <span id="control_palabra_musa_j1_time" class="level-status-witness__time" hidden>--</span>
+                        <span class="level-status-witness__queue" hidden aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j1_queue">0</span></span>
                     </span>
                 </div>
-                <div id="control_palabra_musa_j2" class="level-status-witness level-status-witness--muse-word level-status-witness--j2" data-active="0" data-queued="0" data-team="2" aria-label="Palabra de musas para Escritxr 2">
+                <div id="control_palabra_musa_j2" class="level-status-witness level-status-witness--muse-word level-status-witness--disadvantage-slot level-status-witness--j2" data-active="0" data-queued="0" data-team="2" aria-label="Sin desventaja para Escritxr 2">
                     <span class="level-status-witness__dot" aria-hidden="true"></span>
                     <span class="level-status-witness__icon" aria-hidden="true">&#x1F3A8;</span>
                     <span class="level-status-witness__content">
-                        <span id="control_palabra_musa_j2_word" class="level-status-witness__word">-</span>
+                        <span id="control_palabra_musa_j2_word" class="level-status-witness__word">SIN DESVENTAJA</span>
                         <span id="control_palabra_musa_j2_author" class="level-status-witness__author" hidden></span>
                     </span>
                     <span class="level-status-witness__meta">
-                        <span id="control_palabra_musa_j2_time" class="level-status-witness__time">--</span>
-                        <span class="level-status-witness__queue" aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j2_queue">0</span></span>
+                        <span id="control_palabra_musa_j2_disadvantage_icon" class="level-status-witness__disadvantage-icon" aria-hidden="true">&mdash;</span>
+                        <span id="control_palabra_musa_j2_time" class="level-status-witness__time" hidden>--</span>
+                        <span class="level-status-witness__queue" hidden aria-label="Palabras de musas en cola"><span id="control_palabra_musa_j2_queue">0</span></span>
                     </span>
                 </div>
             </div>

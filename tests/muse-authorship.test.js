@@ -150,6 +150,14 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   assert.match(actions, /musa_texto_card/);
   assert.match(actions, /aria-expanded/);
   assert.match(actions, /function animarMorfologiaTextoMusa\(/);
+  assert.match(actions, /texto1\.scrollTop = 0;[\s\S]*actualizarEstadoTextoCompleto\(boton, true\)/);
+  assert.match(css, /\.musa-texto-card\.is-expanded \.musa-texto-card__viewport,[\s\S]*max-height: none;[\s\S]*overflow: visible;/);
+  assert.match(css, /body\.partida-activa \.niveles,[\s\S]*margin-top: clamp\(4px, 1vh, 10px\)/);
+  assert.match(html, /class="musa-tiempo-legacy"\s+aria-hidden="true"/);
+  assert.match(css, /body\.partida-activa \.musa-tiempo-legacy,[\s\S]*display:\s*none\s*!important/);
+  assert.match(state, /function establecerNombreEscritxrMusa\([\s\S]*nombre1\.setAttribute\("value", nombreResuelto\)/);
+  assert.match(events, /socket\.on\(nombre, data => \{\s*establecerNombreEscritxrMusa/);
+  assert.equal((events.match(/socket\.on\(nombre/g) || []).length, 1);
   assert.doesNotMatch(html, /musa-texto-toggle__label/);
   assert.match(html, /id="mostrar_texto"[\s\S]*aria-label="Desplegar texto completo"[\s\S]*musa-texto-toggle__chevron/);
   assert.match(events, /typeof data === "string" \? data : null/);

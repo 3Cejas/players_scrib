@@ -445,12 +445,25 @@ function obtenerEmojiDesventajaControl(payload = {}) {
     return valor;
 }
 
+function obtenerEtiquetaDesventajaControl(payload = {}) {
+    const emoji = obtenerEmojiDesventajaControl(payload);
+    if (window.ScribDisadvantages && typeof window.ScribDisadvantages.etiqueta === "function") {
+        return String(window.ScribDisadvantages.etiqueta(emoji) || "DESVENTAJA")
+            .replace(emoji, "")
+            .trim() || "DESVENTAJA";
+    }
+    return "DESVENTAJA";
+}
+
 function pintarTestigoDesventajaControl(playerSolicitado) {
     const player = normalizarEquipoTestigoControl(playerSolicitado);
     if (!player) return false;
     const testigo = document.getElementById(`control_desventaja_activa_j${player}`);
     const iconoEl = document.getElementById(`control_desventaja_activa_icon_j${player}`);
     const tiempoEl = document.getElementById(`control_desventaja_activa_time_j${player}`);
+    const testigoVisible = document.getElementById(`control_palabra_musa_j${player}`);
+    const iconoVisible = document.getElementById(`control_palabra_musa_j${player}_disadvantage_icon`);
+    const etiquetaVisible = document.getElementById(`control_palabra_musa_j${player}_word`);
     if (!testigo) return false;
     const payload = estado_testigos_desventaja_control[player];
     const restanteMs = obtenerMsTestigoControl(payload);
@@ -471,6 +484,26 @@ function pintarTestigoDesventajaControl(playerSolicitado) {
     testigo.title = activo
         ? `Desventaja ${equipo}${detalle}`
         : "Sin desventaja activa";
+    if (testigoVisible) {
+        testigoVisible.dataset.active = activo ? "1" : "0";
+        testigoVisible.dataset.queued = "0";
+        testigoVisible.dataset.team = String(player);
+        testigoVisible.setAttribute(
+            "aria-label",
+            activo
+                ? `${obtenerEtiquetaDesventajaControl(payload)} para Escritxr ${player}`
+                : `Sin desventaja para Escritxr ${player}`
+        );
+        testigoVisible.title = testigoVisible.getAttribute("aria-label") || "";
+    }
+    if (iconoVisible) {
+        iconoVisible.textContent = activo ? obtenerEmojiDesventajaControl(payload) : "—";
+    }
+    if (etiquetaVisible) {
+        etiquetaVisible.textContent = activo
+            ? obtenerEtiquetaDesventajaControl(payload)
+            : "SIN DESVENTAJA";
+    }
     return activo;
 }
 
@@ -625,6 +658,9 @@ function pintarTestigoPalabraMusaControl(player) {
     const palabraEl = document.getElementById(`control_palabra_musa_j${id}_word`);
     const autorEl = document.getElementById(`control_palabra_musa_j${id}_author`);
     if (!testigo) return false;
+    if (testigo.classList.contains("level-status-witness--disadvantage-slot")) {
+        return pintarTestigoDesventajaControl(id);
+    }
     const payload = estado_testigos_palabras_musas_control[id];
     const restanteMs = obtenerMsTestigoPalabraMusaControl(payload);
     const cola = Math.max(0, Math.trunc(Number(payload && (payload.cola ?? payload.cola_palabras_musas)) || 0));

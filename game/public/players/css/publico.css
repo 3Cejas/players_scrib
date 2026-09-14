@@ -6393,3 +6393,47 @@ body.partida-finalizada-musa .notificacion {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* El desplegable completo crece con el contenido: la lectura usa el scroll de la página. */
+.musa-texto-card.is-expanded .musa-texto-card__viewport,
+.musa-texto-card.is-expanded .textarea {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+}
+
+body.partida-activa #musa_texto_card + br,
+body.partida-finalizada-musa #musa_texto_card + br {
+    display: none;
+}
+
+body.partida-activa .musa-tiempo-legacy,
+body.partida-finalizada-musa .musa-tiempo-legacy,
+body.partida-activa #feedback_texto_editado:empty,
+body.partida-finalizada-musa #feedback_texto_editado:empty {
+    display: none !important;
+    margin: 0 !important;
+}
+
+body.partida-activa #tiempo[hidden],
+body.partida-finalizada-musa #tiempo[hidden] {
+    display: none !important;
+    margin: 0 !important;
+}
+
+body.partida-activa .niveles,
+body.partida-finalizada-musa .niveles {
+    margin-top: clamp(4px, 1vh, 10px);
+}
+
+body.partida-activa .niveles-scroll,
+body.partida-finalizada-musa .niveles-scroll {
+    padding-top: clamp(8px, 1.8vw, 16px);
+    padding-bottom: clamp(8px, 1.8vw, 16px);
+}
+
+body.partida-activa .niveles-linea,
+body.partida-finalizada-musa .niveles-linea {
+    padding-top: clamp(8px, 1.8vw, 16px);
+    padding-bottom: clamp(8px, 1.8vw, 16px);
+}

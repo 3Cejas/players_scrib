@@ -50,7 +50,7 @@ test("Espectador mantiene el marcador arriba y reserva sitio para ambos nombres"
   const sockets = read("game/spectator/js/socket-events.js");
 
   assert.match(js, /data-role="spectator"\]\{top:clamp\(8px,1\.4vh,18px\)/);
-  assert.match(js, /vista-partida #contenedor_espectador\{[^}]*padding-top:clamp\(94px,12vh,128px\)/);
+  assert.match(js, /vista-partida #contenedor_espectador\{[^}]*padding-top:clamp\(154px,19vh,206px\)/);
   assert.match(js, /#contenedor_espectador \.nombre\{[^}]*visibility:visible/);
   assert.match(html, /value="ESCRITXR 1"[^>]*id="nombre"/);
   assert.match(html, /value="ESCRITXR 2"[^>]*id="nombre1"/);
@@ -68,6 +68,7 @@ test("Control integra un HUD compacto donde antes aparecía la duración de la d
   assert.match(html, /control_desventaja_activa_time_j2[^>]+hidden/);
   assert.match(js, /data-role="control"[^}]+position:relative/);
   assert.match(js, /data-role="control"[^}]+scrib-competition-scoreline[^}]+display:block/);
+  assert.match(js, /data-role="control"\] \.scrib-competition-curse\{display:none\}/);
   assert.match(js, /control-competition-slot \+ \.level-status-witnesses \.level-status-witness--disadvantage\{display:none\}/);
   assert.match(js, /data-role="control"\] \.scrib-competition-streak\{display:none\}/);
   assert.match(js, /if \(!payload \|\| !ui \|\| rolActual === "control" \|\| !esHudVisibleEnVistaActual\(\)\) return;/);

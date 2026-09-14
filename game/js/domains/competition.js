@@ -33,7 +33,7 @@
       body.page-players.ocultar-marcador-escritora #scrib_competition_hud,
       body.page-players.vista-calentamiento-escritor #scrib_competition_hud{display:none!important}
       .scrib-competition-hud[data-role="spectator"]{top:clamp(8px,1.4vh,18px);width:min(940px,72vw)}
-      body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(94px,12vh,128px)}
+      body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(154px,19vh,206px)}
       body.page-spectator.vista-partida #contenedor_espectador .nombre{position:relative;z-index:2;display:block;min-height:1.18em;margin:0 auto clamp(12px,1.5vh,22px);opacity:1;visibility:visible}
       body.page-spectator.vista-partida #contenedor_espectador .nombre+br,
       body.page-spectator.vista-partida #contenedor_espectador .nombre+br+br{display:none}
@@ -57,7 +57,7 @@
       .scrib-competition-hud[data-role="control"] .scrib-competition-score.is-hit{animation:scribScoreHitControl .42s ease-out}
       .scrib-competition-hud[data-role="control"] .scrib-competition-bar{position:absolute;left:48px;right:48px;top:50%;width:auto;height:20px;box-sizing:border-box;transform:translateY(-50%)}
       .scrib-competition-hud[data-role="control"] .scrib-competition-center{height:25px;width:7px}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-curse{font-size:14px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-curse{display:none}
       .scrib-competition-hud[data-role="control"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-scoreline,.scrib-competition-hud[data-final="1"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-shell{width:max-content;min-width:min(230px,88vw);margin:auto;padding:8px 16px}

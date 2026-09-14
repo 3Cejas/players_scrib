@@ -8729,6 +8729,38 @@ table.default {
     display: none;
 }
 
+.level-status-witness--disadvantage-slot {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-height: clamp(1.45rem, 2.7vh, 1.8rem);
+    opacity: 0.74;
+}
+
+.level-status-witness--disadvantage-slot .level-status-witness__content {
+    justify-items: start;
+}
+
+.level-status-witness--disadvantage-slot .level-status-witness__word {
+    color: color-mix(in srgb, var(--witness-color), white 28%);
+    font-size: clamp(0.46rem, 0.62vw, 0.68rem);
+    letter-spacing: 0.035em;
+}
+
+.level-status-witness__disadvantage-icon {
+    display: inline-flex;
+    min-width: 1.35em;
+    align-items: center;
+    justify-content: center;
+    font: 700 clamp(0.72rem, 1vw, 1rem)/1 "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    filter: grayscale(1);
+    opacity: 0.5;
+}
+
+.level-status-witness--disadvantage-slot[data-active="1"] .level-status-witness__disadvantage-icon {
+    filter: none;
+    opacity: 1;
+    animation: levelWitnessPulseControl 920ms ease-in-out infinite alternate;
+}
+
 .level-status-witness__content {
     display: inline-grid;
     align-content: center;

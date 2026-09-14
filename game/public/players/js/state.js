@@ -827,11 +827,42 @@ function registrarNombreEscritxrPorEquipo(equipo, nombreValor) {
     const equipoNorm = normalizarEquipoVotacion(equipo);
     if (!equipoNorm) return;
     const nombreNorm = typeof nombreValor === "string" ? nombreValor.trim() : "";
-    nombres_escritxr_por_equipo[equipoNorm] = nombreNorm || `ESCRITXR ${equipoNorm}`;
+    nombres_escritxr_por_equipo[equipoNorm] = nombreNorm
+        || nombres_escritxr_por_equipo[equipoNorm]
+        || `ESCRITXR ${equipoNorm}`;
     if (musa_world_entry_activa) {
         actualizarContenidoEntradaMusa();
     }
 }
+
+function establecerNombreEscritxrMusa(nombreValor, equipoSolicitado = player) {
+    const equipo = normalizarEquipoVotacion(equipoSolicitado)
+        || normalizarEquipoVotacion(player)
+        || 1;
+    const nombreLimpio = typeof nombreValor === "string" ? nombreValor.trim() : "";
+    if (nombreLimpio) {
+        registrarNombreEscritxrPorEquipo(equipo, nombreLimpio);
+    }
+    const nombreGuardado = nombres_escritxr_por_equipo[equipo];
+    const nombreQuery = typeof getParameterByName("escritxr") === "string"
+        ? getParameterByName("escritxr").trim()
+        : "";
+    const nombreAsignado = asignacion_musa_guardada
+        && asignacion_musa_guardada.assignment
+        && asignacion_musa_guardada.assignment.writer;
+    const nombreResuelto = nombreLimpio
+        || nombreGuardado
+        || nombreAsignado
+        || nombreQuery
+        || `ESCRITXR ${equipo}`;
+    registrarNombreEscritxrPorEquipo(equipo, nombreResuelto);
+    if (nombre1 && equipo === (normalizarEquipoVotacion(player) || equipo)) {
+        nombre1.value = nombreResuelto;
+        nombre1.setAttribute("value", nombreResuelto);
+    }
+    return nombreResuelto;
+}
+window.establecerNombreEscritxrMusa = establecerNombreEscritxrMusa;
 
 function obtenerEquipoObjetivoVotacionVentaja() {
     const equipoMusa = normalizarEquipoVotacion(votacion_ventaja_equipo) || normalizarEquipoVotacion(player);
@@ -3434,6 +3465,12 @@ registrarNombreEscritxrPorEquipo(
         || getParameterByName("escritxr")
         || ""
 );
+establecerNombreEscritxrMusa(
+    (asignacion_musa_guardada && asignacion_musa_guardada.assignment.writer)
+        || getParameterByName("escritxr")
+        || "",
+    player
+);
 
 function guardarAsignacionMusaSesion(asignacion) {
     if (!asignacion || asignacion.ok !== true) return;
@@ -3496,8 +3533,7 @@ function aplicarAsignacionAutoritativaMusa(payload) {
         document.body.classList.toggle("equipo-azul", Number(player) !== 2);
         document.body.classList.toggle("equipo-rojo", Number(player) === 2);
     }
-    registrarNombreEscritxrPorEquipo(asignacion.player, asignacion.writer);
-    if (nombre1) nombre1.value = asignacion.writer;
+    establecerNombreEscritxrMusa(asignacion.writer, asignacion.player);
     canonicalizarUrlAsignacionMusa(asignacion);
     return true;
 }
