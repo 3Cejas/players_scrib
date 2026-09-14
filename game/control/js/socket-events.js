@@ -337,6 +337,11 @@ socket.on('desventaja_activa_estado', (payload = {}) => {
         sincronizarDesventajaActivaControl(payload);
     }
 });
+socket.on('votacion_ventaja_estado', (payload = {}) => {
+    if (typeof sincronizarVotacionDesventajaControl === "function") {
+        sincronizarVotacionDesventajaControl(payload);
+    }
+});
 
 socket.on('desventaja_ronda_limpiar', () => {
     if (typeof limpiarTestigosDesventajaControl === "function") {

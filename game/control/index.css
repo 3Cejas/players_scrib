@@ -10889,6 +10889,100 @@ body {
     }
 }
 
+/* Autoridad final de Juego: las parejas solicitadas se mantienen incluso
+   frente a las reglas responsive históricas de este panel. */
+#panel_controles .control-group--juego:not(.is-collapsed) > .control-group-buttons--two {
+    grid-template-rows: none !important;
+    grid-auto-rows: minmax(2.15rem, 1fr) !important;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_partida,
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_stats {
+    grid-column: 1 !important;
+}
+
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_nube_inspiracion,
+#panel_controles .control-group--juego:not(.is-collapsed) #boton_skip_tertulia.is-visible {
+    grid-column: 2 !important;
+}
+
+@media (max-width: 760px) {
+    #panel_controles .control-group--juego:not(.is-collapsed) > .control-group-buttons--two {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    #panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_partida,
+    #panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_stats,
+    #panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_nube_inspiracion,
+    #panel_controles .control-group--juego:not(.is-collapsed) #boton_skip_tertulia.is-visible {
+        grid-column: 1 !important;
+    }
+}
+
+/* Estado legible de la votacion y de la desventaja activa. El texto recorre
+   suavemente el ancho disponible cuando no cabe en la tarjeta central. */
+.level-status-witness--disadvantage-slot .level-status-witness__content {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent 0, #000 0.32rem, #000 calc(100% - 0.32rem), transparent 100%);
+}
+
+.level-status-witness--disadvantage-slot .level-status-witness__word {
+    display: inline-block;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    will-change: transform;
+}
+
+.level-status-witness--disadvantage-slot .level-status-witness__word[data-scroll="1"] {
+    animation: levelWitnessTextSweepControl 4.8s ease-in-out infinite alternate;
+}
+
+.level-status-witness--disadvantage-slot[data-voting="1"] {
+    border-style: dashed;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--witness-color), transparent 84%), transparent 48%, color-mix(in srgb, var(--witness-color), transparent 84%)),
+        rgba(2, 10, 16, 0.88);
+}
+
+.level-status-witness--disadvantage-slot[data-voting="1"] .level-status-witness__word,
+.level-status-witness--disadvantage-slot[data-voting="1"] .level-status-witness__time {
+    color: #fff;
+    text-shadow: 0.06em 0.06em #000, 0 0 0.5rem var(--witness-color);
+}
+
+.level-status-witness--disadvantage-slot .level-status-witness__time:not([hidden]) {
+    display: inline-block;
+    min-width: 3.2em;
+    color: #fff;
+    font-size: clamp(0.46rem, 0.62vw, 0.68rem);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+@keyframes levelWitnessTextSweepControl {
+    0%, 14% { transform: translateX(0); }
+    86%, 100% { transform: translateX(var(--witness-text-shift, 0)); }
+}
+
+/* FIN conserva exactamente la tipografia y acabado de los demas controles. */
+#panel_controles .control-group--juego #boton_fin_partida.btn-game-end {
+    appearance: none;
+    border: 1px solid rgba(69, 243, 255, 0.56);
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-weight: 700;
+    letter-spacing: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .level-status-witness--disadvantage-slot .level-status-witness__word[data-scroll="1"] {
+        animation: none;
+        transform: none;
+    }
+}
+
 /* Distribución final del panel: cada control conserva su caja y nunca invade
    las frases finales ni las acciones inferiores. */
 #panel_parametros:not(.is-side-collapsed) {

@@ -355,6 +355,22 @@ function formatearTiempoTestigoControl(ms) {
     return `${minutos}:${paddedFormat(segundos)}`;
 }
 
+function actualizarOscilacionTextoTestigoControl(elemento) {
+    if (!elemento) return;
+    const medir = () => {
+        const contenedor = elemento.parentElement;
+        if (!contenedor) return;
+        const desborde = Math.max(0, Math.ceil(elemento.scrollWidth - contenedor.clientWidth));
+        elemento.style.setProperty("--witness-text-shift", `${-desborde}px`);
+        elemento.dataset.scroll = desborde > 2 ? "1" : "0";
+    };
+    if (typeof requestAnimationFrame === "function") {
+        requestAnimationFrame(medir);
+    } else {
+        medir();
+    }
+}
+
 function normalizarSegundosModoControl(valor, fallback = 0) {
     if (valor !== null && valor !== undefined && valor !== "") {
         const numero = Number(valor);
@@ -465,6 +481,7 @@ function pintarTestigoDesventajaControl(playerSolicitado) {
     const testigoVisible = document.getElementById(`control_palabra_musa_j${player}`);
     const iconoVisible = document.getElementById(`control_palabra_musa_j${player}_disadvantage_icon`);
     const etiquetaVisible = document.getElementById(`control_palabra_musa_j${player}_word`);
+    const tiempoVisible = document.getElementById(`control_palabra_musa_j${player}_time`);
     if (!testigo) return false;
     const payload = estado_testigos_desventaja_control[player];
     const restanteMs = obtenerMsTestigoControl(payload);
@@ -487,6 +504,7 @@ function pintarTestigoDesventajaControl(playerSolicitado) {
         : "Sin desventaja activa";
     if (testigoVisible) {
         testigoVisible.dataset.active = activo ? "1" : "0";
+        testigoVisible.dataset.voting = "0";
         testigoVisible.dataset.queued = "0";
         testigoVisible.dataset.team = String(player);
         testigoVisible.setAttribute(
@@ -504,33 +522,47 @@ function pintarTestigoDesventajaControl(playerSolicitado) {
         etiquetaVisible.textContent = activo
             ? obtenerEtiquetaDesventajaControl(payload)
             : "SIN DESVENTAJA";
+        actualizarOscilacionTextoTestigoControl(etiquetaVisible);
+    }
+    if (tiempoVisible) {
+        tiempoVisible.textContent = activo ? formatearTiempoTestigoControl(restanteMs) : "";
+        tiempoVisible.hidden = !activo;
     }
     return activo;
 }
 
 function pintarTestigoVotacionDesventajaControl(payload) {
-    const testigo = document.getElementById("control_votacion_desventaja");
-    const tiempoEl = document.getElementById("control_votacion_desventaja_time");
-    if (!testigo) return false;
     const equipo = normalizarEquipoTestigoControl(payload && payload.equipo);
     const restanteMs = obtenerMsTestigoControl(payload);
     const activo = Boolean(payload && payload.activa && equipo && restanteMs > 0);
     if (!activo) {
         estado_testigo_votacion_desventaja_control = null;
+        return false;
     }
-    testigo.dataset.active = activo ? "1" : "0";
-    testigo.dataset.team = activo ? String(equipo) : "";
-    const icono = testigo.querySelector(".level-status-witness__icon");
+    const testigo = document.getElementById(`control_palabra_musa_j${equipo}`);
+    const etiquetaEl = document.getElementById(`control_palabra_musa_j${equipo}_word`);
+    const tiempoEl = document.getElementById(`control_palabra_musa_j${equipo}_time`);
+    const icono = document.getElementById(`control_palabra_musa_j${equipo}_disadvantage_icon`);
+    if (!testigo) return false;
+    const nombreEquipo = equipo === 2 ? "ROJO" : "AZUL";
+    const restanteTexto = formatearTiempoTestigoControl(restanteMs);
+    testigo.dataset.active = "1";
+    testigo.dataset.voting = "1";
+    testigo.dataset.team = String(equipo);
     if (icono) {
         icono.textContent = "\u{1F5F3}\uFE0F";
     }
-    if (tiempoEl) {
-        tiempoEl.textContent = activo ? formatearTiempoTestigoControl(restanteMs) : "--";
+    if (etiquetaEl) {
+        etiquetaEl.textContent = `VOTA EQUIPO ${nombreEquipo}`;
+        actualizarOscilacionTextoTestigoControl(etiquetaEl);
     }
-    testigo.title = activo
-        ? `Votacion de desventaja ${equipo === 2 ? "roja" : "azul"}: ${formatearTiempoTestigoControl(restanteMs)}`
-        : "Sin votacion de desventaja activa";
-    return activo;
+    if (tiempoEl) {
+        tiempoEl.textContent = restanteTexto;
+        tiempoEl.hidden = false;
+    }
+    testigo.setAttribute("aria-label", `Vota el equipo ${nombreEquipo.toLowerCase()}. Quedan ${restanteTexto}`);
+    testigo.title = testigo.getAttribute("aria-label") || "";
+    return true;
 }
 
 function actualizarTestigosDesventajaControl() {

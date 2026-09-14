@@ -75,6 +75,37 @@ test("Control integra un HUD compacto donde antes aparecía la duración de la d
   assert.doesNotMatch(actions, /Desventaja \$\{equipo\}\$\{detalle\}: \$\{formatearTiempoTestigoControl/);
 });
 
+test("Control muestra en el HUD qué equipo vota y las cuentas atrás de voto y desventaja", () => {
+  const html = read("game/control/index.html");
+  const css = read("game/control/index.css");
+  const actions = read("game/control/js/actions.js");
+  const sockets = read("game/control/js/socket-events.js");
+
+  assert.match(html, /id="control_palabra_musa_j1_time"[^>]*hidden/);
+  assert.match(html, /id="control_palabra_musa_j2_time"[^>]*hidden/);
+  assert.match(actions, /const tiempoVisible = document\.getElementById\(`control_palabra_musa_j\$\{player\}_time`\)/);
+  assert.match(actions, /tiempoVisible\.textContent = activo \? formatearTiempoTestigoControl\(restanteMs\) : ""/);
+  assert.match(actions, /etiquetaEl\.textContent = `VOTA EQUIPO \$\{nombreEquipo\}`/);
+  assert.match(actions, /testigo\.dataset\.voting = "1"/);
+  assert.match(actions, /--witness-text-shift/);
+  assert.match(sockets, /socket\.on\('votacion_ventaja_estado'[^]*sincronizarVotacionDesventajaControl\(payload\)/);
+  assert.match(css, /@keyframes levelWitnessTextSweepControl[^]*translateX\(var\(--witness-text-shift/);
+  assert.match(css, /level-status-witness--disadvantage-slot\[data-voting="1"\]/);
+});
+
+test("Control coloca Nube junto a Vista partida y Skip tertulia junto a Stats", () => {
+  const html = read("game/control/index.html");
+  const css = read("game/control/index.css");
+  const panel = html.slice(html.indexOf('id="control_panel_juego"'), html.indexOf('id="control_panel_representacion"'));
+
+  assert.ok(panel.indexOf('id="boton_vista_partida"') < panel.indexOf('id="boton_vista_nube_inspiracion"'));
+  assert.ok(panel.indexOf('id="boton_vista_nube_inspiracion"') < panel.indexOf('id="boton_vista_stats"'));
+  assert.ok(panel.indexOf('id="boton_vista_stats"') < panel.indexOf('id="boton_skip_tertulia"'));
+  assert.match(html, /id="boton_fin_partida" class="btn btn-game-end"/);
+  assert.match(css, /#boton_vista_nube_inspiracion,[^]*#boton_skip_tertulia\.is-visible\s*\{\s*grid-column: 2(?: !important)?;/);
+  assert.match(css, /#boton_fin_partida\.btn-game-end[^]*font-family: "Retro-gaming"/);
+});
+
 test("Espectador mantiene una sola desventaja visual y limpia el efecto anterior", () => {
   const state = read("game/spectator/js/state.js");
   const sockets = read("game/spectator/js/socket-events.js");
