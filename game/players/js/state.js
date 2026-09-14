@@ -557,7 +557,7 @@ function reproducirSonidoFeedbackInspiracionEscritora(tipo) {
         const esNegativo = tipo === "negativo";
         let audio = esNegativo ? audio_feedback_negativo_escritora : audio_feedback_positivo_escritora;
         if (!audio) {
-            audio = new Audio(esNegativo ? "../audio/PERDER 2 SEG.mp3" : "../audio/GANAR 2 SEG.mp3");
+            audio = new Audio(esNegativo ? "../audio/PERDER 2 seg.mp3" : "../audio/GANAR 2 SEG.mp3");
             audio.preload = "auto";
             if (esNegativo) audio_feedback_negativo_escritora = audio;
             else audio_feedback_positivo_escritora = audio;
@@ -645,6 +645,7 @@ function limpiarFeedbackFlotanteEscritora() {
 let nombre;
 let texto = getEl("texto");
 let escritxr_texto_lineas = getEl("escritxr_texto_lineas");
+let escritxr_texto_lineas_inner = getEl("escritxr_texto_lineas_inner") || escritxr_texto_lineas;
 let puntos = getEl("puntos");
 let feedback = getEl("feedback1");
 let alineador = getEl("alineador1");
@@ -664,24 +665,81 @@ let meta_inspiracion_activa_escritora = null;
 
 let escritxr_numero_lineas_renderizadas = 0;
 let escritxr_lineas_raf = 0;
+let escritxr_firma_lineas_renderizadas = "";
+
+function medirAlturasLineasTextoEscritora(lineas) {
+    const estilos = window.getComputedStyle(texto);
+    const anchoContenido = Math.max(
+        1,
+        texto.clientWidth
+            - (parseFloat(estilos.paddingLeft) || 0)
+            - (parseFloat(estilos.paddingRight) || 0)
+    );
+    const espejo = document.createElement("div");
+    Object.assign(espejo.style, {
+        position: "fixed",
+        left: "-100000px",
+        top: "0",
+        width: `${anchoContenido}px`,
+        visibility: "hidden",
+        pointerEvents: "none",
+        fontFamily: estilos.fontFamily,
+        fontSize: estilos.fontSize,
+        fontWeight: estilos.fontWeight,
+        fontStyle: estilos.fontStyle,
+        letterSpacing: estilos.letterSpacing,
+        wordSpacing: estilos.wordSpacing,
+        lineHeight: estilos.lineHeight,
+        whiteSpace: estilos.whiteSpace,
+        wordBreak: estilos.wordBreak,
+        overflowWrap: estilos.overflowWrap
+    });
+    const medidores = lineas.map((linea) => {
+        const medidor = document.createElement("div");
+        medidor.style.display = "block";
+        medidor.style.minHeight = estilos.lineHeight;
+        medidor.textContent = linea || "\u200b";
+        espejo.appendChild(medidor);
+        return medidor;
+    });
+    document.body.appendChild(espejo);
+    const alturas = medidores.map((medidor) => Math.max(
+        parseFloat(estilos.lineHeight) || 1,
+        medidor.getBoundingClientRect().height
+    ));
+    espejo.remove();
+    return alturas;
+}
 
 function sincronizarLineasTextoEscritora() {
     escritxr_lineas_raf = 0;
-    if (!texto || !escritxr_texto_lineas) return;
+    if (!texto || !escritxr_texto_lineas || !escritxr_texto_lineas_inner) return;
     const contenido = String(texto.innerText || "").replace(/\r/g, "");
     const sinSaltoFinal = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
-    const total = Math.max(1, Math.min(500, sinSaltoFinal.split("\n").length));
-    if (total !== escritxr_numero_lineas_renderizadas) {
+    const lineas = sinSaltoFinal.split("\n").slice(0, 500);
+    if (lineas.length === 0) lineas.push("");
+    const total = Math.max(1, lineas.length);
+    const estilosTexto = window.getComputedStyle(texto);
+    const firma = `${contenido}\u0000${texto.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}`;
+    if (total !== escritxr_numero_lineas_renderizadas || firma !== escritxr_firma_lineas_renderizadas) {
+        const alturas = medirAlturasLineasTextoEscritora(lineas);
         const fragmento = document.createDocumentFragment();
         for (let linea = 1; linea <= total; linea += 1) {
             const numero = document.createElement("span");
             numero.textContent = String(linea);
+            numero.style.height = `${alturas[linea - 1]}px`;
+            numero.style.minHeight = `${alturas[linea - 1]}px`;
+            numero.style.flexBasis = `${alturas[linea - 1]}px`;
             fragmento.appendChild(numero);
         }
-        escritxr_texto_lineas.replaceChildren(fragmento);
+        escritxr_texto_lineas_inner.replaceChildren(fragmento);
         escritxr_numero_lineas_renderizadas = total;
+        escritxr_firma_lineas_renderizadas = firma;
     }
-    escritxr_texto_lineas.scrollTop = texto.scrollTop;
+    // El gutter no tiene un rango de scroll propio equivalente al editor. Una
+    // traslación directa evita que el navegador lo limite y mantiene cada
+    // número pegado a su línea incluso tras cambiar el tamaño de pantalla.
+    escritxr_texto_lineas_inner.style.transform = `translate3d(0, -${Math.max(0, texto.scrollTop)}px, 0)`;
 }
 
 function programarLineasTextoEscritora() {
@@ -700,6 +758,18 @@ if (texto && escritxr_texto_lineas) {
         programarLineasTextoEscritora();
         programarActualizacionCaretNeonJuegoEscritora();
     }, { passive: true });
+    window.addEventListener("resize", programarLineasTextoEscritora, { passive: true });
+    document.addEventListener("fullscreenchange", () => {
+        programarLineasTextoEscritora();
+        requestAnimationFrame(programarLineasTextoEscritora);
+    });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", programarLineasTextoEscritora, { passive: true });
+    }
+    if (typeof ResizeObserver === "function") {
+        const observadorTamanoTextoEscritora = new ResizeObserver(programarLineasTextoEscritora);
+        observadorTamanoTextoEscritora.observe(texto);
+    }
     programarLineasTextoEscritora();
 }
 

@@ -133,6 +133,8 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   assert.match(html, /id="musa_texto_card"[\s\S]*id="musa_escritxr_card"[\s\S]*id="nombre"/);
   assert.doesNotMatch(html, />TU ESCRITXR</);
   assert.match(html, /id="musa_texto_card"[\s\S]*id="metadatos"[\s\S]*id="musa_texto_lineas"[\s\S]*id="texto"[\s\S]*id="mostrar_texto"[\s\S]*id="btn_bandera"/);
+  assert.doesNotMatch(html, /🏳️‍🌈/u);
+  assert.doesNotMatch(actions, /🏳️‍🌈 BANDERA/u);
   assert.ok(html.indexOf('id="metadatos"') < html.indexOf('id="texto"'), "writer identity and metrics should form the text header");
   assert.ok(html.indexOf('id="texto"') < html.indexOf('id="metadatos_acciones"'), "text actions should stay attached to the writer text");
   assert.match(css, /\.musa-escritxr-card\s*\{[\s\S]*border:[\s\S]*background:[\s\S]*box-shadow:/);

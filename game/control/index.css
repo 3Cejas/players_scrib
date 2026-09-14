@@ -12039,19 +12039,22 @@ table.default {
 }
 
 /* Ajuste final: las frases no invaden idioma y Final comparte un solo lenguaje visual. */
-#panel_parametros .parametros-top-grid {
-    grid-template-columns: minmax(12rem, 0.52fr) repeat(2, minmax(16rem, 1fr)) !important;
+#panel_parametros:not(.is-side-collapsed) .parametros-top-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     column-gap: clamp(0.85rem, 1.2vw, 1.2rem) !important;
 }
 
-#panel_parametros .control-language,
+#panel_parametros:not(.is-side-collapsed) .control-language,
 #panel_parametros .param-frase-final {
     min-width: 0;
 }
 
-#panel_parametros .control-language {
+#panel_parametros:not(.is-side-collapsed) .control-language {
+    grid-column: 1 / -1;
+    width: min(25rem, 100%);
+    justify-self: start;
     align-self: end;
-    padding-right: clamp(0.35rem, 0.7vw, 0.65rem);
+    padding-right: 0;
 }
 
 #panel_controles .control-group--final .control-group-buttons--final > .btn {
@@ -12471,9 +12474,10 @@ body {
 
 #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row) > td:not(.param-duration) {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-columns: max-content max-content !important;
     grid-template-rows: auto auto !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: .55rem .45rem !important;
     min-width: 0 !important;
     min-height: 5rem;
@@ -12508,8 +12512,17 @@ body {
 #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row) > td:not(.param-duration) > .spinner-container,
 #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row) > td:not(.param-duration) > .spectator-scale-slider-control {
     grid-column: 1;
-    width: 100% !important;
+    width: auto !important;
     min-width: 0 !important;
+    justify-self: center;
+}
+
+#panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row) > td.spectator-scale-param {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+}
+
+#panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row) > td.spectator-scale-param > .spectator-scale-slider-control {
+    width: 100% !important;
     justify-self: stretch;
 }
 

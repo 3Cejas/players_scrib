@@ -6611,9 +6611,25 @@ body.musa-bandera-disponible .musa-bandera-fab-wrap {
     }
 
     .musa-bandera-fab-wrap #btn_bandera::after {
-        content: "🏳️‍🌈";
-        color: #101010;
-        font: 24px/1 system-ui, sans-serif;
+        content: "";
+        position: absolute;
+        width: 25px;
+        height: 17px;
+        margin-left: 7px;
+        background: linear-gradient(145deg, #fff 0 8%, var(--bandera-color) 9% 100%);
+        clip-path: polygon(0 0, 100% 13%, 78% 52%, 100% 88%, 0 100%);
+        filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .32));
+    }
+
+    .musa-bandera-fab-wrap #btn_bandera::before {
+        content: "" !important;
+        position: absolute;
+        width: 3px;
+        height: 30px;
+        margin-left: -22px;
+        border-radius: 99px;
+        background: #161b22;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, .38);
     }
 }
 

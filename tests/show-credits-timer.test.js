@@ -106,6 +106,6 @@ test("credits editor and result use the standard section button style", () => {
 test("parameters reserve independent room for language and both final phrases", () => {
   const controlCss = read("game/control/index.css");
 
-  assert.match(controlCss, /Ajuste final: las frases no invaden idioma[\s\S]*grid-template-columns: minmax\(12rem, 0\.52fr\) repeat\(2, minmax\(16rem, 1fr\)\) !important;/);
+  assert.match(controlCss, /Ajuste final: las frases no invaden idioma[\s\S]*#panel_parametros:not\(\.is-side-collapsed\) \.parametros-top-grid \{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\) !important;[\s\S]*#panel_parametros:not\(\.is-side-collapsed\) \.control-language \{[\s\S]*grid-column: 1 \/ -1;/);
   assert.match(controlCss, /@media \(max-width: 1100px\)[\s\S]*#panel_parametros \.control-language \{[\s\S]*grid-column: 1 \/ -1;/);
 });

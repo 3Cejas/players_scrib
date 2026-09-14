@@ -102,6 +102,8 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /function mostrar_vista_tutorial\(\)\s*\{\s*aplicarVistaPrincipalControl\("tutorial"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
+  assert.match(actions, /function pedir_solicitud_calentamiento\(tipo\)[\s\S]*vista_principal_control !== "detonadores"[\s\S]*aplicarVistaPrincipalControl\("detonadores", \{[\s\S]*omitirSolicitudCalentamientoDefault: true/);
+  assert.match(actions, /activarDetonadores && opciones\.omitirSolicitudCalentamientoDefault !== true/);
   assert.match(actions, /function asegurarVistaPartidaParaInicioControl\(\)[\s\S]*vista_principal_control === "partida"[\s\S]*vista_espectador_modo === "partida"[\s\S]*vista_calentamiento === false/);
   assert.match(actions, /aplicarVistaPrincipalControl\("partida", \{[\s\S]*inicioPartida: true,[\s\S]*audioFadeMs: 220[\s\S]*\}\);[\s\S]*return !vistaPartidaYaActiva;/);
   assert.doesNotMatch(actions, /if \(vistaPartidaYaActiva\)[\s\S]*return false;/);

@@ -150,7 +150,7 @@ test("Escritxr uses team-colored backgrounds and audible inspiration feedback", 
   assert.match(css, /body\.page-players\.equipo-azul\s*\{[\s\S]*linear-gradient/);
   assert.match(css, /body\.page-players\.equipo-rojo\s*\{[\s\S]*linear-gradient/);
   assert.match(state, /GANAR 2 SEG\.mp3/);
-  assert.match(state, /PERDER 2 SEG\.mp3/);
+  assert.match(state, /PERDER 2 seg\.mp3/);
   assert.match(state, /opciones\.sonido !== false/);
   assert.match(state, /window\.reproducirSonidoFeedbackInspiracionEscritora = reproducirSonidoFeedbackInspiracionEscritora/);
   assert.match(read("game/js/domains/competition.js"), /reproducirSonidoFeedbackInspiracionEscritora\(cambio < 0 \? "negativo" : "positivo"\)/);

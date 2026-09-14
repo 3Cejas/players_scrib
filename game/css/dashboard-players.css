@@ -4836,6 +4836,13 @@ body.page-players.partida-activa .escritxr-texto-lineas span {
     min-height: var(--escritxr-text-line);
 }
 
+body.page-players.partida-activa .escritxr-texto-lineas__inner {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    will-change: transform;
+}
+
 body.page-players.partida-activa .escritxr-texto-panel .textarea {
     box-sizing: border-box;
     width: 100%;

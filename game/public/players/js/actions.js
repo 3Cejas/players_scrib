@@ -46,7 +46,7 @@ function refrescarTextosAccionesMusa() {
   }
   const botonBandera = document.getElementById("btn_bandera");
   if (botonBandera) {
-    botonBandera.innerHTML = tJuego2P("ui.flag", {}, "🏳️‍🌈 BANDERA");
+    botonBandera.textContent = tJuego2P("ui.flag", {}, "BANDERA").replace(/^🏳️‍🌈\s*/u, "");
   }
   const overlayMensaje = document.querySelector("#overlay > p");
   if (overlayMensaje) {

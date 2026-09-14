@@ -435,6 +435,27 @@ function evaluarCierrePartidaEspectador(data = {}, opciones = {}) {
     ejecutarCierrePartidaEspectador(data);
 }
 
+let ultimo_sonido_borrado_espectador = 0;
+const decodificador_texto_borrado_espectador = document.createElement("div");
+
+function longitudTextoVisibleEspectador(html) {
+    decodificador_texto_borrado_espectador.innerHTML = String(html || "");
+    return String(decodificador_texto_borrado_espectador.textContent || "")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .length;
+}
+
+function reproducirBorradoTextoEspectador(textoAnterior, textoNuevo) {
+    if (!partida_activa_espectador || vista_espectador_modo_resuelta !== "partida") return;
+    const longitudAnterior = longitudTextoVisibleEspectador(textoAnterior);
+    const longitudNueva = longitudTextoVisibleEspectador(textoNuevo);
+    if (longitudAnterior <= 0 || longitudNueva >= longitudAnterior) return;
+    const ahora = Date.now();
+    if (ahora - ultimo_sonido_borrado_espectador < 90) return;
+    ultimo_sonido_borrado_espectador = ahora;
+    reproducirSonido("../../game/audio/PERDER 2 seg.mp3");
+}
+
 // Recibe los datos del jugador 1 y los coloca.
 socket.on('texto1', data => {
     ultimo_paquete_texto1 = data;
@@ -445,6 +466,7 @@ socket.on('texto1', data => {
         const paquete = ultimo_paquete_texto1;
         if (!paquete) return;
         if (typeof paquete.text === "string" && paquete.text !== ultimo_texto1) {
+            reproducirBorradoTextoEspectador(ultimo_texto1, paquete.text);
             texto1.innerHTML = paquete.text;
             ultimo_texto1 = paquete.text;
         }
@@ -519,6 +541,7 @@ socket.on('texto2', data => {
         const paquete = ultimo_paquete_texto2;
         if (!paquete) return;
         if (typeof paquete.text === "string" && paquete.text !== ultimo_texto2) {
+            reproducirBorradoTextoEspectador(ultimo_texto2, paquete.text);
             texto2.innerHTML = paquete.text;
             ultimo_texto2 = paquete.text;
         }
@@ -959,6 +982,9 @@ function aplicarPostInicioEspectador(data = {}) {
     partida_activa_espectador = true;
     actualizarBrandingPartidaEspectador();
     const modoPendienteInicio = modo_pendiente;
+    const modoRestauradoConexion = data && data.restaurando && ultimo_payload_modo_espectador
+        ? { ...ultimo_payload_modo_espectador }
+        : null;
     invalidarCountdownInicioEspectador();
     finalizarIntroCuentaAtrasEspectador();
     detenerTemporizadorGigante();
@@ -990,8 +1016,8 @@ function aplicarPostInicioEspectador(data = {}) {
     setVisibilidadUiJugadorEspectador(1, true);
     setVisibilidadUiJugadorEspectador(2, true);
     actualizarVisibilidadPanelNivelEspectador();
-    if (modoPendienteInicio) {
-        aplicarModo(modoPendienteInicio);
+    if (modoPendienteInicio || modoRestauradoConexion) {
+        aplicarModo(modoPendienteInicio || modoRestauradoConexion);
     }
     if (calentamientoPrevio && calentamientoPrevio.activo) {
         iniciarCalentamientoPrevioEspectador(calentamientoPrevio);
@@ -1481,7 +1507,7 @@ socket.on('feedback_a_j2', data => {
     console.log(modo_actual)
 
     if (data.tipo == "borrar") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+            reproducirSonido("../../game/audio/PERDER 2 seg.mp3");
 
     }
 
@@ -1508,7 +1534,7 @@ socket.on('feedback_a_j2', data => {
     }
 
     if (data.tipo == "perder_tiempo") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+            reproducirSonido("../../game/audio/PERDER 2 seg.mp3");
 
     }
     // Si empieza por "Ã¢ÂÂ±Ã¯Â¸Â+" (ej.: "Ã¢ÂÂ±Ã¯Â¸Â+2 segs." o "Ã¢ÂÂ±Ã¯Â¸Â+6 segs.")
@@ -1531,7 +1557,7 @@ socket.on('feedback_a_j1', data => {
     console.log(modo_actual)
 
     if (data.tipo == "borrar") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+            reproducirSonido("../../game/audio/PERDER 2 seg.mp3");
 
     }
 
@@ -1558,7 +1584,7 @@ socket.on('feedback_a_j1', data => {
     }
 
     if (data.tipo == "perder_tiempo") {
-            reproducirSonido("../../game/audio/PERDER 2 SEG.mp3");
+            reproducirSonido("../../game/audio/PERDER 2 seg.mp3");
 
     }
     // Si empieza por "Ã¢ÂÂ±Ã¯Â¸Â+" (ej.: "Ã¢ÂÂ±Ã¯Â¸Â+2 segs." o "Ã¢ÂÂ±Ã¯Â¸Â+6 segs.")

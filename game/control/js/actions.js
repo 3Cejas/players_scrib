@@ -2898,7 +2898,7 @@ function aplicarVistaPrincipalControl(vista, opciones = {}) {
     });
     cerrarVideotutorialDesdeVistaControl();
     actualizarBotonesVistaEspectadorControl();
-    if (activarDetonadores) {
+    if (activarDetonadores && opciones.omitirSolicitudCalentamientoDefault !== true) {
         pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
     }
 }
@@ -3615,6 +3615,18 @@ function pedir_solicitud_calentamiento(tipo) {
     )
         ? SOLICITUD_CALENTAMIENTO_POR_DEFECTO
         : tipoSolicitado;
+    // Un detonador solo tiene sentido dentro de su vista. Al lanzarlo desde
+    // cualquier otra escena, la activamos primero sin emitir el detonador
+    // predeterminado para no pisar la petición elegida ni duplicar eventos.
+    if (
+        vista_principal_control !== "detonadores"
+        || vista_espectador_modo !== "partida"
+        || vista_calentamiento !== true
+    ) {
+        aplicarVistaPrincipalControl("detonadores", {
+            omitirSolicitudCalentamientoDefault: true
+        });
+    }
     socket.emit("calentamiento_solicitud", { tipo: destino });
     actualizarSolicitudCalentamientoControl({ tipo: destino });
 }
