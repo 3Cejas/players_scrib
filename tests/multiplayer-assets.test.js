@@ -624,6 +624,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /\.level-status-witness--muse-word \.level-status-witness__dot\s*\{[\s\S]*display: none;/);
   assert.match(css, /\.level-status-witness--muse-word \.level-status-witness__time\s*\{[\s\S]*font-variant-numeric: tabular-nums;/);
   assert.match(css, /\.level-status-witness__queue::before\s*\{[\s\S]*content: "Q";/);
+  assert.match(css, /\.level-status-witness__queue\[hidden\]\s*\{[\s\S]*display: none !important;/);
+  assert.match(css, /\.level-status-witness--disadvantage-slot \.level-status-witness__content\s*\{[\s\S]*mask-image: none;/);
   assert.match(css, /\.level-status-witness--muse-word\[data-queued="1"\]\s*\{[\s\S]*border-color:/);
   assert.match(css, /\.level-status-witness\[data-active="1"\]\s*\{[\s\S]*border-color: color-mix\(in srgb, var\(--witness-color\), transparent 12%\);/);
   assert.match(css, /@keyframes levelWitnessPulseControl/);
@@ -636,6 +638,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(actions, /function volverMenuRepresentacionTeleprompter\(\)/);
   assert.match(actions, /window\.volverMenuRepresentacionTeleprompter = volverMenuRepresentacionTeleprompter/);
   assert.match(actions, /function reanudar_modo\(\)\{[\s\S]*if\(modo_actual !== "tertulia"\)\{[\s\S]*return false;/);
+  assert.match(actions, /function saltar_tertulia\(\)[\s\S]*pausado = false;[\s\S]*socket\.emit\('saltar_tertulia',[\s\S]*resolverContinuacion\);/);
+  assert.match(actions, /timeout_continuar_tertulia_control = setTimeout\([\s\S]*ACK_TIMEOUT[\s\S]*3000\);/);
   assert.match(socketEvents, /Tertulia es una pausa sin límite: Control decide cuándo continuar/);
   assert.match(socketEvents, /socket\.on\('tiempo_muerto_control',[\s\S]*window\.detenerCuentaAtrasModoControl\(\)[\s\S]*TimeoutTiempoMuerto = null/);
   assert.doesNotMatch(socketEvents, /pausar\(\{ motivo: "tertulia" \}\)/);

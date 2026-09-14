@@ -15,6 +15,7 @@ let terminado = false;
 let terminado1 = false;
 let juego_iniciado = false;
 let pausado = false;
+let timeout_continuar_tertulia_control = null;
 let intervalId;  // Guarda el ID del setInterval para poder limpiarlo luego
 let TimeoutTiempoMuerto;  // Guarda el ID del setInterval para poder limpiarlo luego
 let vista_calentamiento = false;
@@ -2516,7 +2517,49 @@ function saltar_tertulia() {
     }
     detenerCuentaAtrasModoControl();
     clearTimeout(TimeoutTiempoMuerto);
-    socket.emit('saltar_tertulia', {});
+    TimeoutTiempoMuerto = null;
+    pausado = false;
+    if (typeof boton_pausar_reanudar !== "undefined" && boton_pausar_reanudar) {
+        boton_pausar_reanudar.dataset.value = 0;
+        actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
+    }
+
+    let respuestaRecibida = false;
+    const resolverContinuacion = (respuesta = {}) => {
+        if (respuestaRecibida) return;
+        respuestaRecibida = true;
+        if (timeout_continuar_tertulia_control) {
+            clearTimeout(timeout_continuar_tertulia_control);
+            timeout_continuar_tertulia_control = null;
+        }
+        const modoServidor = typeof respuesta.modo_actual === "string"
+            ? respuesta.modo_actual.trim()
+            : "";
+        if (modoServidor && modoServidor !== modo_actual) {
+            modo_actual = modoServidor;
+            registrarModoActual(modoServidor);
+        }
+        if (respuesta && respuesta.partida_finalizada === true) {
+            juego_iniciado = false;
+        }
+        actualizarBotonSkipTertuliaControl();
+        if (boton && boton.classList.contains("is-visible")) {
+            boton.classList.remove("is-continuando");
+            boton.removeAttribute("aria-busy");
+            boton.textContent = tJuego2PControl(
+                "control.button.skip_tertulia",
+                {},
+                "\u23ED\uFE0F CONTINUAR PARTIDA"
+            );
+        }
+    };
+
+    // El timeout evita que un corte de red deje el control bloqueado en
+    // "CONTINUANDO…" y permite volver a intentarlo de forma segura.
+    timeout_continuar_tertulia_control = setTimeout(() => {
+        resolverContinuacion({ ok: false, code: "ACK_TIMEOUT", modo_actual });
+    }, 3000);
+    socket.emit('saltar_tertulia', { source: 'control-button' }, resolverContinuacion);
 }
 
 function textoErrorDebugControl(codigo = "") {

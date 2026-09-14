@@ -8846,6 +8846,10 @@ table.default {
     white-space: nowrap;
 }
 
+.level-status-witness__queue[hidden] {
+    display: none !important;
+}
+
 .level-status-witness__queue::before {
     content: "Q";
     font-size: 0.78em;
@@ -10940,7 +10944,8 @@ body {
     position: relative;
     display: block;
     overflow: hidden;
-    mask-image: linear-gradient(90deg, transparent 0, #000 0.32rem, #000 calc(100% - 0.32rem), transparent 100%);
+    /* No recortar el primer carácter: el barrido ya comunica que el texto continúa. */
+    mask-image: none;
 }
 
 .level-status-witness--disadvantage-slot .level-status-witness__word {
