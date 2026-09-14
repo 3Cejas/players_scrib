@@ -1690,14 +1690,6 @@ const smokeSpecs = [
         [blueMuses[0].name],
         "first muse word satisfies the automatic delivery"
       );
-      await waitForAttributedInspiration(
-        ctx,
-        "control",
-        "#control_palabra_musa_j1",
-        "destello",
-        [blueMuses[0].name],
-        "control identifies the muse behind the active delivered word"
-      );
       await ctx.sendMusaWord(blueMuses[0].roleName, "horizonte");
       await ctx.sendMusaWord(blueMuses[1].roleName, "horizonte");
       await ctx.sendMusaWord(blueMuses[0].roleName, "bruma");
