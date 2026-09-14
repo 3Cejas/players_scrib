@@ -10889,6 +10889,44 @@ body {
     }
 }
 
+/* Distribución final del panel: cada control conserva su caja y nunca invade
+   las frases finales ni las acciones inferiores. */
+#panel_parametros:not(.is-side-collapsed) {
+    grid-template-rows: auto auto auto auto auto !important;
+    gap: clamp(.18rem, .32vw, .34rem) !important;
+    align-content: start !important;
+}
+
+#panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row) > td:not(.param-duration) {
+    min-height: 4.15rem !important;
+    padding: .42rem .55rem !important;
+}
+
+#panel_parametros:not(.is-side-collapsed) > tr > td.param-duration {
+    min-height: 3.1rem !important;
+    padding: .38rem .65rem !important;
+}
+
+#panel_parametros:not(.is-side-collapsed) > .parametros-title-row > td,
+#panel_parametros:not(.is-side-collapsed) > .parametros-frase-row > td,
+#panel_parametros:not(.is-side-collapsed) > .parametros-modos-row > td {
+    padding-block: .28rem !important;
+}
+
+#panel_parametros:not(.is-side-collapsed) .parametros-top-grid {
+    grid-template-columns: minmax(9rem, .42fr) repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(.42rem, .65vw, .68rem) !important;
+    align-items: end;
+}
+
+#panel_parametros:not(.is-side-collapsed) .param-frase-final {
+    gap: .16rem !important;
+}
+
+#panel_parametros:not(.is-side-collapsed) .parametros-bottom-actions {
+    min-height: 2.2rem;
+}
+
 /* Ajustes finales del modo de pruebas y de la cabecera compacta. */
 .remote-status-bar {
     grid-template-columns: minmax(8.75rem, 0.82fr) repeat(4, minmax(0, 1fr));
@@ -12331,7 +12369,7 @@ body {
 /* Última autoridad del panel de parámetros. */
 #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row):not(:has(> td.param-duration)) {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     gap: clamp(.55rem, .8vw, .9rem) !important;
     padding: clamp(.35rem, .55vw, .65rem) clamp(.5rem, .7vw, .8rem) !important;
     box-sizing: border-box;
@@ -12349,6 +12387,16 @@ body {
     border: 1px solid rgba(76, 224, 238, .14);
     border-radius: .38rem;
     box-sizing: border-box;
+}
+
+#panel_parametros:not(.is-side-collapsed) {
+    display: grid !important;
+    grid-template-rows: max-content max-content max-content max-content max-content !important;
+    align-content: start !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-gutter: stable;
 }
 
 #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row) > td:not(.param-duration) > br {
@@ -12395,6 +12443,12 @@ body {
 @media (max-width: 1300px) {
     #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row):not(:has(> td.param-duration)) {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1600px) and (min-width: 1301px) {
+    #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row):not(:has(> td.param-duration)) {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
 

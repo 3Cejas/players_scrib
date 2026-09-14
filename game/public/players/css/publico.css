@@ -3725,9 +3725,10 @@ body.partida-finalizada-musa .niveles {
 }
 
 .votacion-ventaja-modal-opciones {
-    display: block;
-    margin-bottom: 0.8vw;
-    text-align: center;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(10px, 1.5vw, 20px);
+    margin-bottom: clamp(12px, 1.4vw, 20px);
 }
 
 .votacion-ventaja-modal-ayuda {
@@ -3738,8 +3739,87 @@ body.partida-finalizada-musa .niveles {
 }
 
 .votacion-ventaja-modal-btn {
+    --opcion-color: #46f0ff;
     width: 100%;
+    min-height: clamp(118px, 19vh, 190px);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    place-items: center;
+    gap: clamp(8px, 1.2vw, 16px);
+    padding: clamp(14px, 2vw, 24px);
+    border: 2px solid color-mix(in srgb, var(--opcion-color), transparent 15%);
+    border-radius: clamp(14px, 1.6vw, 24px);
+    background:
+        radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--opcion-color), transparent 72%), transparent 52%),
+        linear-gradient(155deg, rgba(14, 29, 40, 0.98), rgba(3, 6, 12, 0.99));
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
     touch-action: manipulation;
+    box-shadow:
+        inset 0 0 1.2rem color-mix(in srgb, var(--opcion-color), transparent 88%),
+        0 0.45rem 0 color-mix(in srgb, var(--opcion-color), #000 62%),
+        0 0 1.1rem color-mix(in srgb, var(--opcion-color), transparent 72%);
+    transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.votacion-ventaja-modal-btn--2 { --opcion-color: #ff6b6b; }
+.votacion-ventaja-modal-btn--3 { --opcion-color: #f7d07e; }
+
+.votacion-ventaja-modal-btn:active {
+    transform: translateY(0.38rem) scale(0.98);
+    filter: brightness(1.35);
+    box-shadow:
+        inset 0 0 1.4rem color-mix(in srgb, var(--opcion-color), transparent 70%),
+        0 0.08rem 0 color-mix(in srgb, var(--opcion-color), #000 68%),
+        0 0 1.5rem color-mix(in srgb, var(--opcion-color), transparent 52%);
+}
+
+.votacion-ventaja-modal-btn__emoji {
+    font-size: clamp(42px, 6vw, 82px);
+    filter: drop-shadow(0 0 0.65rem color-mix(in srgb, var(--opcion-color), transparent 35%));
+}
+
+.votacion-ventaja-modal-btn__copy {
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(13px, 1.3vw, 18px);
+    line-height: 1.35;
+    text-wrap: balance;
+}
+
+.votacion-ventaja-modal-kicker {
+    margin: -0.45rem 0 clamp(10px, 1.25vw, 18px);
+    color: #f7d07e;
+    font-family: "Retro-gaming", monospace;
+    font-size: clamp(11px, 1.05vw, 15px);
+    letter-spacing: 0.12em;
+    text-align: center;
+}
+
+@media (max-width: 680px) {
+    .votacion-ventaja-modal {
+        padding: 12px;
+    }
+
+    .votacion-ventaja-modal-card {
+        border-radius: 18px;
+        padding: 15px;
+    }
+
+    .votacion-ventaja-modal-opciones {
+        grid-template-columns: 1fr;
+    }
+
+    .votacion-ventaja-modal-btn {
+        min-height: 88px;
+        grid-template-columns: 72px minmax(0, 1fr);
+        grid-template-rows: auto;
+        text-align: left;
+    }
+
+    .votacion-ventaja-modal-grafico {
+        display: none;
+    }
 }
 
 .votacion-ventaja-modal-explicaciones {

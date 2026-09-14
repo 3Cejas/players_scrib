@@ -324,6 +324,7 @@ let limite_tiempo_inspiracion_input = document.getElementById('limite_tiempo_ins
 let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabras');
 let escala_espectador_input = document.getElementById('escala_espectador');
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
+let tiempo_votacion_input = document.getElementById('tiempo_votacion');
 let duracion_minutos_input = document.getElementById('duracion_minutos');
 let duracion_segundos_input = document.getElementById('duracion_segundos');
 
@@ -346,7 +347,7 @@ let LIMITE_TIEMPO_INSPIRACION = limite_tiempo_inspiracion_input.valueAsNumber;
 let TIEMPO_MODIFICADOR = 24 * 60 * 60 * 1000;
 let TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
 let ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
-let TIEMPO_VOTACION = 0;
+let TIEMPO_VOTACION = Math.max(1000, (Number(tiempo_votacion_input && tiempo_votacion_input.valueAsNumber) || 30) * 1000);
 let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
 let DURACION_PARTIDA = Math.max(1,
     (Number(duracion_minutos_input && duracion_minutos_input.valueAsNumber) || 0) * 60
@@ -447,6 +448,7 @@ function actualizarVariables() {
     TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
     ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
     TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
+    TIEMPO_VOTACION = Math.max(1000, (Number(tiempo_votacion_input && tiempo_votacion_input.valueAsNumber) || 30) * 1000);
     DURACION_PARTIDA = Math.max(1,
         (Number(duracion_minutos_input && duracion_minutos_input.valueAsNumber) || 0) * 60
         + (Number(duracion_segundos_input && duracion_segundos_input.valueAsNumber) || 0)

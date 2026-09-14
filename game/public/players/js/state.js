@@ -1211,7 +1211,24 @@ function obtenerEmojiPorClickPie(pieEl, evt) {
 }
 
 function votarVentajaPorEmoji(emoji) {
-    return false;
+    if (
+        !emoji
+        || !votacion_ventaja_activa
+        || !votacion_ventaja_participo
+        || votacion_ventaja_ya_voto
+        || votacion_ventaja_voto_emitido
+    ) {
+        return false;
+    }
+    votacion_ventaja_voto_emitido = true;
+    socket.emit("enviar_voto_ventaja", {
+        voto: emoji,
+        client_id: window.musa_client_id || ""
+    });
+    window.dispatchEvent(new CustomEvent("musa_voto_ventaja_emitido", {
+        detail: { voto: emoji }
+    }));
+    return true;
 }
 
 function obtenerEquipoEscritxrObjetivo(nombreEscritxr) {
@@ -1246,9 +1263,15 @@ function renderizarModalVotacionVentaja(opciones) {
         );
     }
     if (votacion_ventaja_modal_opciones) {
-        votacion_ventaja_modal_opciones.innerHTML = `<p class="votacion-ventaja-modal-ayuda">${escapeHtml(
-            tJuego2P("vote.chart_help", {}, "Toca un quesito del grafico para votar.")
-        )}</p>`;
+        votacion_ventaja_modal_opciones.innerHTML = opciones.map((opcion, indice) => {
+            const descripcion = String(opcion.descripcion || "DESVENTAJA")
+                .replace(String(opcion.emoji || ""), "")
+                .trim();
+            return `<button class="votacion-ventaja-modal-btn votacion-ventaja-modal-btn--${indice + 1}" type="button" value="${escapeHtml(opcion.emoji)}">
+                <span class="votacion-ventaja-modal-btn__emoji" aria-hidden="true">${escapeHtml(opcion.emoji)}</span>
+                <span class="votacion-ventaja-modal-btn__copy">${escapeHtml(descripcion)}</span>
+            </button>`;
+        }).join("");
     }
     if (votacion_ventaja_modal_explicaciones) {
         votacion_ventaja_modal_explicaciones.innerHTML = "";
@@ -4200,6 +4223,7 @@ refrescarControlesPreShowMusa();
 
 actualizarTemaCalentamiento(player);
 let enviar_ventaja;
+let elegir_ventaja;
 
     if (player == 1) {
         enviar_putada_de_jx = 'enviar_putada_de_j2';
@@ -4211,6 +4235,7 @@ let enviar_ventaja;
         nombre = 'nombre1';
         //nombre1.value = "ESCRITXR 1" 
         enviar_ventaja = "enviar_ventaja_j1";
+        elegir_ventaja = "elegir_ventaja_j1";
         nombre1.style="color:aqua;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;";
         metadatos.style = "color:red; text-shadow: 0.0625em 0.0625em aqua;";
         document.documentElement.style.setProperty("--equipo-color", "aqua");
@@ -4226,6 +4251,7 @@ let enviar_ventaja;
         nombre = 'nombre2';
         //nombre1.value="ESCRITXR 2";
         enviar_ventaja = "enviar_ventaja_j2";
+        elegir_ventaja = "elegir_ventaja_j2";
         nombre1.style="color:red;text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;";
         metadatos.style = "color:aqua; text-shadow: 0.0625em 0.0625em red;";
         document.documentElement.style.setProperty("--equipo-color", "red");

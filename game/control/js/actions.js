@@ -60,6 +60,7 @@ const PARAMETROS_CONTROL_PERSISTENTES = [
     "tiempo_cambio_letra",
     "tiempo_cambio_palabras",
     "limite_tiempo_inspiracion",
+    "tiempo_votacion",
     "escala_espectador"
 ];
 let aplicando_estado_control_persistente = false;
@@ -2201,7 +2202,7 @@ function temp() {
     socket.emit("ajustar_escala_espectador", { valor: escalaEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
     asegurarVistaPartidaParaInicioControl();
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();

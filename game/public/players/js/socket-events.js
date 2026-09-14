@@ -298,6 +298,97 @@ socket.on('dar_nombre', (nombre) => {
     }
 });
 
+if (elegir_ventaja) {
+    socket.on(elegir_ventaja, (data = {}) => {
+        cambiar_jugadores(false);
+        texto1.style.color = "white";
+        const overlay = getEl("overlay");
+        if (overlay && overlay.style.display !== "none") {
+            if (typeof desactivarPantalla === "function") {
+                desactivarPantalla({ forzadoControl: true });
+            } else {
+                overlay.style.display = "none";
+            }
+        }
+        votando = true;
+        confetti_musas();
+        votacion_ventaja_participo = true;
+        votacion_ventaja_activa = true;
+        votacion_ventaja_ya_voto = false;
+        votacion_ventaja_voto_emitido = false;
+        votacion_ventaja_equipo = normalizarEquipoVotacion(data.equipo) || Number(player) || null;
+        pedirNombreMusa(obtenerEquipoObjetivoVotacionVentaja());
+        const opciones = obtenerOpcionesVentaja(data.opciones);
+        votacion_ventaja_opciones = opciones.map((opcion) => opcion.emoji);
+        votacion_ventaja_votos = inicializarVotosVentajaEquilibrado(votacion_ventaja_opciones);
+        aplicarColorTemporizadorVotacionVentaja(votacion_ventaja_equipo);
+        sincronizarTemporizadorVotacionVentaja(data);
+        renderizarModalVotacionVentaja(opciones);
+        actualizarPiesVotacionVentaja();
+        if (votacion_ventaja_duracion_ms > 0 && obtenerMsRestantesVotacionVentaja() <= 0) {
+            manejarFinTiempoVotacionVentaja();
+        } else {
+            mostrarModalVotacionVentaja();
+            ocultarInlineVotacionVentaja();
+        }
+        enviarPalabra_boton.style.display = "none";
+        campo_palabra.style.display = "none";
+        recordatorio.innerHTML = "";
+        notificacion.style.display = "block";
+        animateCSS(".notificacion", "flash");
+    });
+}
+
+socket.on('votacion_ventaja_estado', (data = {}) => {
+    if (!data || typeof data !== "object") return;
+
+    const equipo = normalizarEquipoVotacion(data.equipo);
+    votacion_ventaja_equipo = equipo;
+    aplicarColorTemporizadorVotacionVentaja(equipo || player);
+    const esEquipoActual = Boolean(equipo) && Number(player) === equipo;
+    if (Object.prototype.hasOwnProperty.call(data, "ya_voto")) {
+        votacion_ventaja_ya_voto = Boolean(data.ya_voto);
+        votacion_ventaja_voto_emitido = votacion_ventaja_ya_voto;
+    }
+    if (Array.isArray(data.opciones) && data.opciones.length > 0) {
+        votacion_ventaja_opciones = data.opciones.slice(0, 3);
+    }
+    if (data.votos && typeof data.votos === "object") {
+        votacion_ventaja_votos = { ...data.votos };
+    }
+    if (votacion_ventaja_opciones.length > 0) {
+        renderizarModalVotacionVentaja(obtenerOpcionesVentaja(votacion_ventaja_opciones));
+        actualizarPiesVotacionVentaja();
+    }
+    if (data.activa === true) {
+        votacion_ventaja_activa = true;
+        sincronizarTemporizadorVotacionVentaja(data);
+        votando = Boolean(esEquipoActual);
+        if (esEquipoActual) {
+            votacion_ventaja_participo = true;
+            pedirNombreMusa(obtenerEquipoObjetivoVotacionVentaja());
+            if (votacion_ventaja_ya_voto) {
+                ocultarModalVotacionVentaja();
+                mostrarInlineVotacionVentaja();
+            } else if (votacion_ventaja_duracion_ms > 0 && obtenerMsRestantesVotacionVentaja() <= 0) {
+                manejarFinTiempoVotacionVentaja();
+            } else {
+                votacion_ventaja_voto_emitido = false;
+                mostrarModalVotacionVentaja();
+                ocultarInlineVotacionVentaja();
+            }
+        } else if (!votacion_ventaja_participo) {
+            ocultarModalVotacionVentaja();
+            ocultarInlineVotacionVentaja();
+        }
+        return;
+    }
+    if (data.activa === false) {
+        votando = false;
+        resetearEstadoVotacionVentaja();
+    }
+});
+
 if (enviar_ventaja) {
     socket.on(enviar_ventaja, (ventaja) => {
         if (ventaja === EMOJI_TORTUGA) {

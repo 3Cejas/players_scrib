@@ -37,18 +37,18 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260910e";
 const JURY_CSS_VERSION = "20260904a";
 const JURY_STATE_VERSION = "20260904a";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260914b";
-const CONTROL_ACTIONS_VERSION = "20260914b";
-const CONTROL_I18N_VERSION = "20260903a";
-const CONTROL_STATE_VERSION = "20260831b";
+const CONTROL_CSS_VERSION = "20260914c";
+const CONTROL_ACTIONS_VERSION = "20260914c";
+const CONTROL_I18N_VERSION = "20260914a";
+const CONTROL_STATE_VERSION = "20260914a";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260909a";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260914b";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260914b";
-const PUBLIC_PLAYER_CSS_VERSION = "20260914b";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260914b";
+const PUBLIC_PLAYER_STATE_VERSION = "20260914c";
+const PUBLIC_PLAYER_CSS_VERSION = "20260914c";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260914c";
 const PUBLIC_PLAYER_I18N_VERSION = "20260903a";
 const SPECTATOR_I18N_VERSION = "20260903a";
 const ACTOR_SELECTOR_VERSION = "20260505a";
@@ -1198,6 +1198,21 @@ test("muse gift opens a personalized postgame reader for both final texts", () =
   assert.match(i18n, /"muse\.postgame\.title"/);
 });
 
+test("winning muses can vote between three disadvantages during the final stretch", () => {
+  const html = read("game/public/players/index.html");
+  const css = read("game/public/players/css/publico.css");
+  const state = read("game/public/players/js/state.js");
+  const socketEvents = read("game/public/players/js/socket-events.js");
+
+  assert.match(html, /id="votacion_ventaja_modal"[\s\S]*VUESTRA INSPIRACI&Oacute;N HA GANADO[\s\S]*id="votacion_ventaja_modal_opciones"/);
+  assert.match(html, /id="votacion_ventaja_inline"[\s\S]*id="votacion_ventaja_timer_inline"/);
+  assert.match(css, /\.votacion-ventaja-modal-opciones\s*\{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(state, /function votarVentajaPorEmoji\(emoji\)[\s\S]*socket\.emit\("enviar_voto_ventaja", \{[\s\S]*client_id: window\.musa_client_id/);
+  assert.match(state, /let elegir_ventaja;[\s\S]*elegir_ventaja = "elegir_ventaja_j1";[\s\S]*elegir_ventaja = "elegir_ventaja_j2";/);
+  assert.match(socketEvents, /socket\.on\(elegir_ventaja, \(data = \{\}\) => \{[\s\S]*renderizarModalVotacionVentaja\(opciones\)/);
+  assert.match(socketEvents, /socket\.on\('votacion_ventaja_estado'[\s\S]*const esEquipoActual = Boolean\(equipo\) && Number\(player\) === equipo/);
+});
+
 test("control parameters own spectator scale and removed inserted word goal", () => {
   const html = read("game/control/index.html");
   const css = read("game/control/index.css");
@@ -1208,6 +1223,7 @@ test("control parameters own spectator scale and removed inserted word goal", ()
   assert.match(html, /<td class="spectator-scale-param">[\s\S]*<input type="range" id="escala_espectador"[\s\S]*class="parametro spectator-scale-range"[\s\S]*min="82" max="128" step="1" value="100"/);
   assert.match(html, /id="escala_espectador_valor" class="spectator-scale-value">100%<\/span>/);
   assert.match(html, /data-i18n="control\.param\.spectator_scale"/);
+  assert.match(html, /data-i18n="control\.param\.advantage_vote"[\s\S]*id="tiempo_votacion"[\s\S]*min="1" max="360" step="1" value="30"/);
   assert.doesNotMatch(html, /cambiarValor\('escala_espectador'|type="number" id="escala_espectador"/);
   assert.match(css, /Slider de tamaño de espectador en parametros/);
   assert.match(css, /td\.spectator-scale-param\s*\{[\s\S]*grid-template-columns: minmax\(4\.65rem, 0\.72fr\) minmax\(0, 1fr\);[\s\S]*overflow: hidden;/);
@@ -1219,11 +1235,14 @@ test("control parameters own spectator scale and removed inserted word goal", ()
   assert.doesNotMatch(html, /control\.param\.inserted_goal/);
 
   assert.match(stateJs, /let ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro\(\);/);
+  assert.match(stateJs, /let TIEMPO_VOTACION = Math\.max\(1000,[\s\S]*tiempo_votacion_input/);
   assert.doesNotMatch(stateJs, /PALABRAS_INSERTADAS_META/);
   assert.doesNotMatch(stateJs, /palabras_insertadas_meta/);
 
   assert.match(actionsJs, /socket\.emit\("ajustar_escala_espectador", \{ valor: escalaEspectador \}\);/);
   assert.match(actionsJs, /ESCALA_UI_ESPECTADOR: escalaEspectador/);
+  assert.match(actionsJs, /PARAMETROS_CONTROL_PERSISTENTES[\s\S]*"tiempo_votacion"/);
+  assert.match(actionsJs, /parametros: \{DURACION_PARTIDA,[\s\S]*TIEMPO_VOTACION/);
   assert.match(actionsJs, /const valor = document\.getElementById\("escala_espectador_valor"\);/);
   assert.match(actionsJs, /valor\.textContent = `\$\{porcentaje\}%`;/);
   assert.doesNotMatch(actionsJs, /PALABRAS_INSERTADAS_META/);
