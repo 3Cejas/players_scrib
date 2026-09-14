@@ -128,6 +128,7 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   const css = read("game/public/players/css/publico.css");
   const state = read("game/public/players/js/state.js");
   const actions = read("game/public/players/js/actions.js");
+  const events = read("game/public/players/js/socket-events.js");
 
   assert.match(html, /id="musa_texto_card"[\s\S]*id="musa_escritxr_card"[\s\S]*id="nombre"/);
   assert.doesNotMatch(html, />TU ESCRITXR</);
@@ -149,6 +150,9 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   assert.match(actions, /musa_texto_card/);
   assert.match(actions, /aria-expanded/);
   assert.match(actions, /function animarMorfologiaTextoMusa\(/);
+  assert.doesNotMatch(html, /musa-texto-toggle__label/);
+  assert.match(html, /id="mostrar_texto"[\s\S]*aria-label="Desplegar texto completo"[\s\S]*musa-texto-toggle__chevron/);
+  assert.match(events, /typeof data === "string" \? data : null/);
 });
 
 test("a muse joining mid-match requests the live snapshot after authoritative registration", () => {
@@ -163,4 +167,21 @@ test("a muse joining mid-match requests the live snapshot after authoritative re
 test("the advantage-change overlay never appears in Control", () => {
   const competition = read("game/js/domains/competition.js");
   assert.match(competition, /function animarCambioLider\(payload\) \{\s*if \(rolActual === "control" \|\| !esHudVisibleEnVistaActual\(\)\) return;/);
+});
+
+test("Palabras benditas remains the leftmost level in muse and actor timelines", () => {
+  const museHtml = read("game/public/players/index.html");
+  const actorHtml = read("game/actors/source/index.html");
+  const museEvents = read("game/public/players/js/socket-events.js");
+  const actorEvents = read("game/actors/source/js/socket-events.js");
+
+  [museHtml, actorHtml].forEach((html) => {
+    const blessedWords = html.indexOf('data-modo="palabras bonus"');
+    const blessedLetter = html.indexOf('data-modo="letra bendita"');
+    assert.ok(blessedWords >= 0 && blessedWords < blessedLetter);
+  });
+  [museEvents, actorEvents].forEach((source) => {
+    const reorder = source.match(/function aplicarOrdenCircular[\s\S]*?\n\}/)?.[0] || "";
+    assert.doesNotMatch(reorder, /style\.order\s*=/);
+  });
 });

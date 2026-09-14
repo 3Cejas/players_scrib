@@ -6354,3 +6354,42 @@ body.partida-finalizada-musa .notificacion {
         transition-duration: 1ms !important;
     }
 }
+
+/* Autoridad final para la cabecera y el desplegable del texto de la musa. */
+.musa-texto-card .musa-escritxr-card .nombre {
+    font-size: clamp(30px, 6vw, 54px);
+    font-weight: 800;
+    line-height: 1;
+}
+
+.musa-texto-card > #mostrar_texto {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    min-height: clamp(34px, 6vw, 46px);
+    margin: 0;
+    padding: 0 clamp(14px, 3.4vw, 30px);
+    border: 0;
+    border-top: 1px solid color-mix(in srgb, var(--equipo-color, #46efff), transparent 58%);
+    border-radius: 0;
+    background: linear-gradient(180deg,
+        color-mix(in srgb, var(--equipo-color, #46efff), transparent 88%),
+        rgba(2, 8, 16, .98));
+}
+
+.musa-texto-card > #mostrar_texto .musa-texto-toggle__chevron {
+    font-size: clamp(28px, 7vw, 44px);
+    line-height: 1;
+    filter: drop-shadow(0 0 .36rem currentColor);
+}
+
+.musa-texto-card__actions {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 680px) {
+    .musa-texto-card__actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

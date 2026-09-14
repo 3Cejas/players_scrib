@@ -33,12 +33,11 @@ function refrescarTextosAccionesMusa() {
   const botonTexto = document.getElementById("mostrar_texto");
   if (botonTexto) {
     const activo = String(botonTexto.value) === "1" || botonTexto.dataset.estado === "ON";
-    const etiqueta = botonTexto.querySelector(".musa-texto-toggle__label");
-    if (etiqueta) {
-      etiqueta.textContent = activo
-        ? tJuego2P("ui.hide_text", {}, "CONTRAER TEXTO")
-        : tJuego2P("ui.text_complete", {}, "DESPLEGAR TEXTO").replace(/^👀\s*/u, "");
-    }
+    const etiquetaAccesible = activo
+      ? tJuego2P("ui.hide_text", {}, "Contraer texto")
+      : tJuego2P("ui.text_complete", {}, "Desplegar texto completo").replace(/^👀\s*/u, "");
+    botonTexto.setAttribute("aria-label", etiquetaAccesible);
+    botonTexto.setAttribute("title", etiquetaAccesible);
   }
   const botonVolver = document.getElementById("btn_volver");
   if (botonVolver) {

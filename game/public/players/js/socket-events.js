@@ -850,20 +850,9 @@ function actualizarNiveles(modo) {
 }
 
 function aplicarOrdenCircular(indiceActivo) {
-    if (!nivelesItems.length) return;
-    if (indiceActivo < 0) {
-        nivelesItems.forEach((item) => {
-            item.style.order = "";
-        });
-        return;
-    }
-    const total = nivelesItems.length;
-    const centro = Math.floor(total / 2);
-    nivelesItems.forEach((item, idx) => {
-        const distancia = (idx - indiceActivo + total) % total;
-        const orden = (distancia + centro) % total;
-        item.style.order = orden;
-    });
+    // El recorrido dramatúrgico debe ser estable en todos los roles. Antes se
+    // rotaba la lista alrededor del nivel activo y Palabras benditas dejaba de
+    // ser el primer nivel visual.
 }
 
 function refrescarUiIdiomaMusa() {
@@ -919,10 +908,12 @@ refrescarUiIdiomaMusa();
 
 // Recibe los datos del jugador 1 y los coloca.
 function handler_recibir_texto_x(data) {
-if(data.text != null) texto1.innerHTML = data.text;
-    if (data.points != null && puntos1) {
+    const payload = data && typeof data === "object" ? data : null;
+    const textoRecibido = payload ? payload.text : (typeof data === "string" ? data : null);
+    if (textoRecibido != null) texto1.innerHTML = textoRecibido;
+    if (payload && payload.points != null && puntos1) {
         const puntosAnteriores = puntos1.textContent;
-        const puntosNuevos = formatearPuntos(data.points);
+        const puntosNuevos = formatearPuntos(payload.points);
         puntos1.innerHTML = puntosNuevos;
         if (puntosNuevos !== puntosAnteriores) {
             destacarPuntosMusaHit();

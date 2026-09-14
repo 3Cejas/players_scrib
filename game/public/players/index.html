@@ -8,7 +8,7 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260910h">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260914a">
     <link rel="stylesheet" type="text/css" href="../../css/video-tutorial.css?v=20260903u">
     <link rel="stylesheet" type="text/css" href="../../css/show-narration.css?v=20260831g">
     <link rel="stylesheet" type="text/css" href="./css/musa-help.css?v=20260830a">
@@ -23,7 +23,7 @@
     <script src="../../js/domains/credits.js?v=20260902b"></script>
     <script src="../../js/domains/view-transition.js?v=20260905b"></script>
     <script src="../../js/domains/debug-detonators.js?v=20260909a"></script>
-<script src="./js/actions.js?v=20260910d"></script>
+<script src="./js/actions.js?v=20260914a"></script>
 </head>
 <body>
     <div id="musa_view_transition" class="spectator-view-transition musa-view-transition" hidden aria-hidden="true">
@@ -170,11 +170,10 @@
                         <div id="musa_texto_lineas" class="musa-texto-lineas" aria-hidden="true"><span>1</span></div>
                         <div contenteditable="false" class="textarea" id="texto" spellcheck="false"></div>
                     </div>
+                    <button id="mostrar_texto" class="musa-texto-toggle" type="button" value="0" data-estado="OFF" aria-label="Desplegar texto completo" title="Desplegar texto completo" aria-pressed="false" aria-expanded="false" aria-controls="texto" onclick="mostrarTextoCompleto(this)">
+                        <span class="musa-texto-toggle__chevron" aria-hidden="true">&#x2304;</span>
+                    </button>
                     <footer class="musa-texto-card__actions">
-                        <button id="mostrar_texto" class="musa-texto-toggle" type="button" value="0" data-estado="OFF" aria-pressed="false" aria-expanded="false" aria-controls="texto" onclick="mostrarTextoCompleto(this)">
-                            <span class="musa-texto-toggle__label">DESPLEGAR TEXTO</span>
-                            <span class="musa-texto-toggle__chevron" aria-hidden="true">&#x2304;</span>
-                        </button>
                         <div id="metadatos_acciones" class="metadatos-grid metadatos-grid--acciones">
                             <div class="meta-item meta-bottom-right marcador-accion marcador-accion--bandera">
                                 <button id="btn_bandera" class="btn bandera" value=0 onclick="bandera(this)">&#x1F3F3;&#xFE0F;&#x200D;&#x1F308; BANDERA</button>
@@ -386,6 +385,6 @@
 <script src="../../js/domains/show-narration.js?v=20260906b"></script>
 <script src="../../vendor/html2canvas/html2canvas.min.js?v=1.4.1"></script>
 <script src="./js/musa-help.js?v=20260830a"></script>
-    <script src="./js/socket-events.js?v=20260910h"></script>
+    <script src="./js/socket-events.js?v=20260914a"></script>
 <script src="./js/index.js?v=20260504e"></script>
 </html>

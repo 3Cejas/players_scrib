@@ -1368,20 +1368,8 @@ function actualizarNiveles(modo) {
 }
 
 function aplicarOrdenCircular(indiceActivo) {
-    if (!nivelesItems.length) return;
-    if (indiceActivo < 0) {
-        nivelesItems.forEach((item) => {
-            item.style.order = "";
-        });
-        return;
-    }
-    const total = nivelesItems.length;
-    const centro = Math.floor(total / 2);
-    nivelesItems.forEach((item, idx) => {
-        const distancia = (idx - indiceActivo + total) % total;
-        const orden = (distancia + centro) % total;
-        item.style.order = orden;
-    });
+    // El orden del recorrido es fijo; el nivel activo solo se desplaza dentro
+    // del visor, sin reordenar Palabras benditas ni sus niveles hermanos.
 }
 
 let sincro = 0;
