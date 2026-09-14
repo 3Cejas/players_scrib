@@ -3396,6 +3396,21 @@ button.btn.spectator-scale-button[disabled] {
     display: inline-block;
 }
 
+#boton_skip_tertulia.is-visible {
+    animation: tertuliaContinuePulse 1.8s ease-in-out infinite;
+}
+
+#boton_skip_tertulia.is-continuando {
+    pointer-events: none;
+    opacity: .72;
+    animation: none;
+}
+
+@keyframes tertuliaContinuePulse {
+    0%, 100% { filter: brightness(1); box-shadow: 0 0.2em #4af6ff, 0 0 .6em rgba(74, 246, 255, .35); }
+    50% { filter: brightness(1.22); box-shadow: 0 0.2em #4af6ff, 0 0 1.25em rgba(74, 246, 255, .72); }
+}
+
 
 .panel-oculto {
     display: none;

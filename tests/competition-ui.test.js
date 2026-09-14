@@ -96,6 +96,7 @@ test("Control muestra en el HUD qué equipo vota y las cuentas atrás de voto y 
 test("Control coloca Nube junto a Vista partida y Skip tertulia junto a Stats", () => {
   const html = read("game/control/index.html");
   const css = read("game/control/index.css");
+  const actions = read("game/control/js/actions.js");
   const panel = html.slice(html.indexOf('id="control_panel_juego"'), html.indexOf('id="control_panel_representacion"'));
 
   assert.ok(panel.indexOf('id="boton_vista_partida"') < panel.indexOf('id="boton_vista_nube_inspiracion"'));
@@ -104,6 +105,8 @@ test("Control coloca Nube junto a Vista partida y Skip tertulia junto a Stats", 
   assert.match(html, /id="boton_fin_partida" class="btn btn-game-end"/);
   assert.match(css, /#boton_vista_nube_inspiracion,[^]*#boton_skip_tertulia\.is-visible\s*\{\s*grid-column: 2(?: !important)?;/);
   assert.match(css, /#boton_fin_partida\.btn-game-end[^]*font-family: "Retro-gaming"/);
+  assert.match(html, /id="boton_skip_tertulia"[^>]*>[^<]*CONTINUAR PARTIDA/);
+  assert.match(actions, /boton\.setAttribute\("aria-busy", "true"\)/);
 });
 
 test("Espectador mantiene una sola desventaja visual y limpia el efecto anterior", () => {

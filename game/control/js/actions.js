@@ -2155,8 +2155,12 @@ function actualizarBotonSkipTertuliaControl() {
     const boton = document.getElementById("boton_skip_tertulia");
     if (!boton) return;
     const visible = juego_iniciado === true && modo_actual === "tertulia";
-    boton.textContent = tJuego2PControl("control.button.skip_tertulia", {}, "\u23ED\uFE0F SKIP TERTULIA");
+    boton.textContent = tJuego2PControl("control.button.skip_tertulia", {}, "\u23ED\uFE0F CONTINUAR PARTIDA");
     boton.classList.toggle("is-visible", visible);
+    if (!visible) {
+        boton.classList.remove("is-continuando");
+        boton.removeAttribute("aria-busy");
+    }
 }
 
 function actualizarBotonFinPartidaControl() {
@@ -2502,6 +2506,12 @@ function pedirFeedbackMusas() {
 function saltar_tertulia() {
     if (!juego_iniciado || modo_actual !== "tertulia") {
         return;
+    }
+    const boton = document.getElementById("boton_skip_tertulia");
+    if (boton) {
+        boton.classList.add("is-continuando");
+        boton.setAttribute("aria-busy", "true");
+        boton.textContent = "\u23ED\uFE0F CONTINUANDO\u2026";
     }
     detenerCuentaAtrasModoControl();
     clearTimeout(TimeoutTiempoMuerto);

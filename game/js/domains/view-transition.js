@@ -238,6 +238,8 @@
         const overlay = options.overlay || null;
         const setTimer = options.setTimer || setTimeout;
         const clearTimer = options.clearTimer || clearTimeout;
+        const coverMs = Math.max(0, Number(options.coverMs) || COVER_MS);
+        const revealMs = Math.max(0, Number(options.revealMs) || REVEAL_MS);
         const reducedMotion = typeof options.reducedMotion === "function"
             ? options.reducedMotion
             : () => false;
@@ -298,8 +300,8 @@
                     destination = "";
                     running = false;
                     resetOverlay();
-                }, REVEAL_MS));
-            }, COVER_MS));
+                }, revealMs));
+            }, coverMs));
             return true;
         };
 

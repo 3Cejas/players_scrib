@@ -324,8 +324,6 @@ function borrar(revisionEsperada = revision_borrado_escritora) {
     return;
   }
   if (!desactivar_borrar) {
-    // 1. Guardar la posiciÃ³n del caret usando la funciÃ³n
-    let { caretNode, caretPos } = guardarPosicionCaret();
     const haBorrado = borrarUltimoCaracterEditable();
     if (!haBorrado) {
       cancelarTemporizadorBorradoEscritora();
@@ -354,12 +352,17 @@ function borrar(revisionEsperada = revision_borrado_escritora) {
       console.log(rapidez_borrado, "rapidez_borrado")
     });
 
-    // 9. Reposicionar caret usando la funciÃ³n
-    
-    if (caretNode && nodoPerteneceAlEditor(caretNode)) {
-      restaurarPosicionCaret(caretNode, caretPos);
-    } else if (typeof colocarCursorAlFinalEditor === "function") {
+    // El nodo que contenia el caret puede desaparecer al borrar. Volver a
+    // colocar la seleccion en el ultimo nodo real evita el caret fantasma.
+    if (typeof colocarCursorAlFinalEditor === "function") {
       colocarCursorAlFinalEditor();
+    }
+    if (typeof programarActualizacionCaretNeonJuegoEscritora === "function") {
+      if (typeof requestAnimationFrame === "function") {
+        requestAnimationFrame(programarActualizacionCaretNeonJuegoEscritora);
+      } else {
+        programarActualizacionCaretNeonJuegoEscritora();
+      }
     }
 
   } else {

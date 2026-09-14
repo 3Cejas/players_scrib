@@ -169,6 +169,17 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   assert.match(events, /typeof data === "string" \? data : null/);
 });
 
+test("muse team chrome follows the assigned team and transitions stay GPU friendly", () => {
+  const css = read("game/public/players/css/publico.css");
+  const state = read("game/public/players/js/state.js");
+
+  assert.match(css, /\.musa-world-entry--rojo \.musa-world-entry__bar-fill\s*\{[\s\S]*#ef2447/);
+  assert.match(css, /\.musa-texto-card #metadatos\s*\{[\s\S]*var\(--equipo-color/);
+  assert.match(css, /\.notificacion\s*\{[\s\S]*var\(--equipo-color/);
+  assert.match(css, /#mostrar_texto::before,[\s\S]*#mostrar_texto::after/);
+  assert.match(state, /coverMs: 260,[\s\S]*revealMs: 440/);
+});
+
 test("a muse joining mid-match requests the live snapshot after authoritative registration", () => {
   const events = read("game/public/players/js/socket-events.js");
 

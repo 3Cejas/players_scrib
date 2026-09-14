@@ -113,6 +113,8 @@ let timeout_revelado_vista_musa = null;
 const controlador_transicion_vista_musa = window.ScribViewTransition
     ? window.ScribViewTransition.createController({
         overlay: musa_view_transition,
+        coverMs: 260,
+        revealMs: 440,
         reducedMotion: () => Boolean(
             window.matchMedia
             && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -133,7 +135,7 @@ function animarTransicionVistaMusa(destino) {
         timeout_revelado_vista_musa = setTimeout(() => {
             document.body?.classList.remove("musa-vista-cambiando");
             timeout_revelado_vista_musa = null;
-        }, 980);
+        }, 720);
     }
     if (!controlador_transicion_vista_musa) return false;
     return controlador_transicion_vista_musa.transition({

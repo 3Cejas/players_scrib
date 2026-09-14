@@ -6695,3 +6695,133 @@ body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-b
         min-height: 58px !important;
     }
 }
+
+/* Autoridad final: identidad de equipo y transiciones fluidas en la musa. */
+.musa-world-entry--azul .musa-world-entry__bar-fill {
+    background: linear-gradient(90deg, #075d80 0%, #18c7ef 56%, #83f4ff 100%);
+}
+
+.musa-world-entry--rojo .musa-world-entry__bar-fill {
+    background: linear-gradient(90deg, #6f1022 0%, #ef2447 56%, #ff8996 100%);
+}
+
+.musa-texto-card #metadatos {
+    border: 1px solid color-mix(in srgb, var(--equipo-color, #46efff), transparent 38%);
+    background: linear-gradient(110deg,
+        color-mix(in srgb, var(--equipo-color, #46efff), transparent 82%),
+        rgba(1, 7, 14, .94) 62%);
+    box-shadow:
+        inset 0 0 24px color-mix(in srgb, var(--equipo-color, #46efff), transparent 88%),
+        0 0 16px color-mix(in srgb, var(--equipo-color, #46efff), transparent 90%);
+}
+
+.musa-texto-card #metadatos .meta-icon,
+.musa-texto-card #metadatos .meta-label,
+.musa-texto-card #metadatos .puntos {
+    color: color-mix(in srgb, var(--equipo-color, #46efff), white 20%);
+    text-shadow: 0 0 .45rem color-mix(in srgb, var(--equipo-color, #46efff), transparent 48%);
+}
+
+.notificacion {
+    border-color: color-mix(in srgb, var(--equipo-color, #46efff), white 4%);
+    background:
+        radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--equipo-color, #46efff), transparent 67%), transparent 52%),
+        linear-gradient(145deg,
+            color-mix(in srgb, var(--equipo-color, #46efff), #07101c 84%),
+            rgba(2, 7, 14, .97) 68%);
+    box-shadow:
+        inset 0 0 30px color-mix(in srgb, var(--equipo-color, #46efff), transparent 88%),
+        0 0 22px color-mix(in srgb, var(--equipo-color, #46efff), transparent 76%);
+}
+
+.musa-texto-card > #mostrar_texto {
+    gap: clamp(10px, 3vw, 24px);
+    cursor: pointer;
+    color: color-mix(in srgb, var(--equipo-color, #46efff), white 25%);
+    overflow: hidden;
+    transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease;
+}
+
+.musa-texto-card > #mostrar_texto::before,
+.musa-texto-card > #mostrar_texto::after {
+    content: "";
+    width: min(26%, 150px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--equipo-color, #46efff));
+    box-shadow: 0 0 .55rem var(--equipo-color, #46efff);
+}
+
+.musa-texto-card > #mostrar_texto::after {
+    transform: scaleX(-1);
+}
+
+.musa-texto-card > #mostrar_texto .musa-texto-toggle__chevron {
+    display: grid;
+    flex: 0 0 auto;
+    width: clamp(42px, 9vw, 54px);
+    height: clamp(42px, 9vw, 54px);
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--equipo-color, #46efff), white 20%);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 34%, rgba(255,255,255,.2), transparent 38%),
+        color-mix(in srgb, var(--equipo-color, #46efff), #07111e 72%);
+    box-shadow:
+        inset 0 0 0 3px rgba(2, 8, 16, .72),
+        0 0 1rem color-mix(in srgb, var(--equipo-color, #46efff), transparent 52%);
+    font-size: clamp(28px, 6vw, 38px);
+    transition: transform 260ms cubic-bezier(.2, .85, .2, 1), box-shadow 180ms ease;
+}
+
+.musa-texto-card > #mostrar_texto:active .musa-texto-toggle__chevron {
+    box-shadow:
+        inset 0 0 0 3px rgba(2, 8, 16, .72),
+        0 0 1.5rem color-mix(in srgb, var(--equipo-color, #46efff), transparent 32%);
+}
+
+/* La cortinilla conserva el impacto visual sin filtros costosos por pixel. */
+.spectator-view-transition__half,
+.spectator-view-transition__core,
+body.musa-vista-cambiando #contenedor {
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+}
+
+.spectator-view-transition.is-covering .spectator-view-transition__half--blue,
+.spectator-view-transition.is-covering .spectator-view-transition__half--red,
+.spectator-view-transition.is-covering .spectator-view-transition__scan {
+    animation-duration: 260ms;
+}
+
+.spectator-view-transition.is-revealing .spectator-view-transition__half--blue,
+.spectator-view-transition.is-revealing .spectator-view-transition__half--red {
+    animation-duration: 440ms;
+}
+
+@keyframes musaViewCoreIn {
+    from { opacity: 0; transform: translate3d(0, 10px, 0) scale(.84); }
+    to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+body.musa-vista-cambiando #contenedor {
+    animation: musaViewContentReveal 700ms cubic-bezier(.18, .88, .24, 1) both;
+}
+
+@keyframes musaViewContentReveal {
+    0%, 30% { opacity: 0; transform: translate3d(0, 8px, 0) scale(.99); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@media (max-width: 680px) {
+    .spectator-view-transition__half::before {
+        opacity: .18;
+        background: linear-gradient(115deg, transparent 25%, rgba(255,255,255,.13) 50%, transparent 75%);
+    }
+
+    body.musa-vista-cambiando #background-effects,
+    body.musa-vista-cambiando .aquarium,
+    body.musa-vista-cambiando .particula {
+        animation-play-state: paused !important;
+    }
+}

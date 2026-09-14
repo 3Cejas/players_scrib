@@ -371,6 +371,9 @@ test("automatic deletion is postponed before mutation and keeps rescheduling", (
   assert.ok(start >= 0 && end > start, "automatic deletion function must exist");
   assert.ok(guardIndex >= 0, "automatic deletion must consult the active block");
   assert.ok(mutationIndex > guardIndex, "the block must run before any editor mutation");
+  assert.doesNotMatch(borrarBody, /guardarPosicionCaret\(\)|restaurarPosicionCaret\(/);
+  assert.match(borrarBody, /colocarCursorAlFinalEditor\(\)/);
+  assert.match(borrarBody, /programarActualizacionCaretNeonJuegoEscritora/);
   assert.match(
     actions,
     /function posponerBorradoAutomaticoBloqueado\(\)[\s\S]*if \(!estaBloqueadoBorradoEscritora\(\)\) return false;[\s\S]*programarBorradoEscritora\(rapidez_borrado,[\s\S]*borrar\(revisionProgramada\);[\s\S]*return true;/
