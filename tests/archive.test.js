@@ -47,12 +47,16 @@ test("the archive supports in-browser reading, filtering and direct links", () =
   assert.doesNotMatch(styles, /rgba\(255,255,,/);
 });
 
-test("the main terminal links the archivo command and its aliases", () => {
+test("the archive remains routable but is hidden from the public command menu", () => {
   const source = fs.readFileSync(path.join(ROOT, "js", "main.js"), "utf8");
   const netlify = fs.readFileSync(path.join(ROOT, "netlify.toml"), "utf8");
+  const primaryCommands = source.match(/var primaryCommands = \[([\s\S]*?)\];/);
 
   assert.match(source, /ARCHIVO: \{ value: "archivo"/);
   assert.match(source, /case "textos":[\s\S]*case "historias":/);
   assert.match(source, /window\.location\.assign\("\.\/archivo\/"\)/);
   assert.match(netlify, /from = "\/archivo"[\s\S]*to = "\/archivo\/"/);
+  assert.ok(primaryCommands, "the visible command list should exist");
+  assert.doesNotMatch(primaryCommands[1], /cmds\.ARCHIVO\.value/);
+  assert.doesNotMatch(source.match(/welcome: "([\s\S]*?)",/)[1], /\\u2022 archivo/);
 });

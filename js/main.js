@@ -56,7 +56,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "**Bienvenidx a la página oficial de <SCRI> B.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 archivo\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
+        welcome: "**Bienvenidx a la página oficial de <SCRI> B.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
@@ -374,7 +374,6 @@ var main = (function () {
         cmds.FECHAS.value,
         cmds.IMAGENES.value,
         cmds.ARTICULOS.value,
-        cmds.ARCHIVO.value,
         cmds.LA_COMPAÑÍA.value,
         cmds.NEWSLETTER.value,
         cmds.CONTACTO.value,
