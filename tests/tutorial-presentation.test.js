@@ -23,7 +23,7 @@ test("the show guide is manual, animated, silent and omits slide and timing coun
   const css = read("tutorial/tutorial.css");
   const js = read("tutorial/tutorial.js");
 
-  assert.equal((html.match(/<section class="slide/g) || []).length, 20);
+  assert.equal((html.match(/<section class="slide/g) || []).length, 19);
   assert.doesNotMatch(html, /data-minutes|deck__counter|deck__timing|id="slideTime"|id="totalTime"/);
   assert.doesNotMatch(js, /dataset\.minutes|slideTime|totalTime|INCLUYE PREGUNTAS/);
   assert.match(html, /id="prev"[\s\S]*id="next"/);
@@ -53,7 +53,8 @@ test("the writing and Muse examples explain their cause-and-effect animations", 
   assert.match(css, /inspiration-meter__track\{[^}]*background:var\(--red\)/);
   assert.match(css, /inspiration-meter__track i\{[^}]*background:var\(--cyan\)/);
   assert.match(css, /@keyframes inspirationShift[\s\S]*width:82%[\s\S]*width:12%/);
-  assert.match(css, /@keyframes inspirationBoundary[\s\S]*left:82%[\s\S]*left:12%/);
+  assert.match(css, /inspiration-meter__track i::after\{[^}]*right:0/);
+  assert.doesNotMatch(css, /@keyframes inspirationBoundary/);
   assert.match(html, /muse-phone[\s\S]*idea-path[\s\S]*idea-flight[\s\S]*writer-page/);
   assert.match(css, /@keyframes ideaFlight[\s\S]*left:0[\s\S]*left:calc\(100% - 94px\)/);
   assert.match(css, /@keyframes ideaFlightVertical[\s\S]*top:0[\s\S]*top:calc\(100% - 36px\)/);
@@ -87,6 +88,7 @@ test("the guide covers the complete live workflow with a visual tutorial sample"
   assert.match(html, /tutorial-scene--1[\s\S]*tutorial-scene--4/);
   assert.match(html, /Producción[\s\S]*Ritmo[\s\S]*Riqueza léxica[\s\S]*Inspiración[\s\S]*Precisión[\s\S]*Pulsaciones/);
   assert.match(html, /📝[\s\S]*Producción[\s\S]*💻[\s\S]*Pulsaciones/u);
+  assert.match(html, /Palabras construidas[\s\S]*Pulsaciones por minuto[\s\S]*Palabras diferentes[\s\S]*Ideas de Musas aprovechadas[\s\S]*Menos intentos prohibidos[\s\S]*Total de teclas pulsadas/);
   assert.match(html, /Idea y mundo · Voz · Estructura · Riesgo · Cierre/);
   assert.match(html, /Inspiración útil · Escucha · Ritmo · Cooperación/);
 });
@@ -117,15 +119,24 @@ test("the revised guide clarifies roles, game flow and live staging", () => {
   assert.match(html, /TORTUGA[\s\S]*RAYO[\s\S]*BRUMA[\s\S]*INVERSO[\s\S]*BLOQUEO/);
   assert.match(html, /elige una de las desventajas anteriores entre las tres opciones/);
   assert.match(css, /duel-bar\{[^}]*background:var\(--red\)[\s\S]*@keyframes duelBlueFill[\s\S]*width:72%/);
+  assert.match(css, /duel-bar i::after\{[^}]*right:0/);
+  assert.match(html, /EXCEPCIÓN[\s\S]*80% \/ 20%[\s\S]*Tertulia[\s\S]*Frase final/);
+  assert.match(html, /vote-picks__ray[\s\S]*vote-picks__mist[\s\S]*vote-picks__lock/);
+  assert.match(html, /effect-scene--ray[\s\S]*effect-scene--mist[\s\S]*effect-scene--lock/);
+  assert.doesNotMatch(html.slice(html.indexOf('aria-label="Niveles y desventajas"'), html.indexOf('aria-label="Rol de intérpretes')), />INVERSO</);
+  assert.match(css, /@keyframes pickRay[\s\S]*@keyframes effectLockScene/);
 
   assert.match(html, /actor-console__note[\s\S]*ENTRAR DESDE PLATEA/);
   assert.match(html, /actor-console__toolbar/);
   assert.match(css, /@keyframes actorToolbar[\s\S]*@keyframes actorNote/);
+  assert.match(html, /walkie-talkies[\s\S]*📻 WALKIE · TÉCNICA/u);
   assert.match(html, /Escritxres<\/strong><span>Responder alguna pregunta de última hora de sus intérpretes y sentarse a disfrutar de la representación\./);
 
-  assert.match(html, /teleprompter-demo__scroll[\s\S]*Entonces alguien llama\./);
+  assert.match(html, /teleprompter-demo__scroll[\s\S]*<mark><b>01<\/b>¿Estás segura\?<\/mark>[\s\S]*MARCA 01/);
   assert.doesNotMatch(html, /TEXTO EN CURSO|SINCRONIZADO/);
   assert.match(css, /@keyframes teleprompterScroll[\s\S]*translateY\(250px\)[\s\S]*translateY\(-330px\)/);
+  assert.match(html, /jury-balance__beam[\s\S]*jury-balance__pan--blue[\s\S]*jury-balance__pan--red[\s\S]*jury-balance__pivot/);
+  assert.doesNotMatch(html, /Comprobación de equipo|Lista de comprobación/);
 });
 
 test("the muse dashboard nests its level route and strips the translated flag emoji", () => {
