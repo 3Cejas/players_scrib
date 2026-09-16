@@ -44,7 +44,7 @@ test("the writing and Muse examples explain their cause-and-effect animations", 
   const js = read("tutorial/tutorial.js");
 
   assert.match(html, /ESCRIBIENDO[\s\S]*SE HA DETENIDO[\s\S]*EL VIDEOJUEGO BORRA EL TEXTO/);
-  assert.match(html, /inspiration-meter__track[\s\S]*SUBE[\s\S]*BAJA/);
+  assert.match(html, /BARRA DE INSPIRACIÓN[\s\S]*inspiration-meter__track[\s\S]*AUMENTA[\s\S]*SE RESTA/);
   assert.match(css, /@keyframes writeThenErase[\s\S]*width:28ch[\s\S]*width:0/);
   assert.match(css, /@keyframes inspirationShift[\s\S]*width:82%[\s\S]*width:12%/);
   assert.match(html, /muse-phone[\s\S]*idea-path[\s\S]*idea-flight[\s\S]*writer-page/);
@@ -61,7 +61,7 @@ test("the guide covers the complete live workflow with a visual tutorial sample"
     "Videotutorial del público",
     "Narración de apertura",
     "Presentación de equipos",
-    "Escribir mantiene viva la obra",
+    "Escribir alimenta la inspiración",
     "Una idea utilizada vale más",
     "Batalla, voto y desventaja",
     "Los intérpretes observan y preparan",
@@ -80,6 +80,36 @@ test("the guide covers the complete live workflow with a visual tutorial sample"
   assert.match(html, /Producción[\s\S]*Ritmo[\s\S]*Riqueza léxica[\s\S]*Inspiración[\s\S]*Precisión[\s\S]*Pulsaciones/);
   assert.match(html, /Idea y mundo · Voz · Estructura · Riesgo · Cierre/);
   assert.match(html, /Inspiración útil · Escucha · Ritmo · Cooperación/);
+});
+
+test("the revised guide clarifies roles, game flow and live staging", () => {
+  const html = read("tutorial/index.html");
+  const css = read("tutorial/tutorial.css");
+
+  assert.match(html, /Controla el videojuego, coordina el espectáculo y prepara la propuesta luminotécnica y sonora/);
+  assert.doesNotMatch(html, /REPRODUCCIÓN DE MUESTRA · SIN NARRACIÓN|Cinco segundos de negro/);
+  assert.match(html, /EL PRESENTADOR TOMA EL RELEVO[\s\S]*explica al público y a los equipos cómo se juega/);
+  assert.match(html, /team__roles[\s\S]*ESCRITXR[\s\S]*INTÉRPRETE 1[\s\S]*INTÉRPRETE 2/);
+  assert.match(css, /\.team-reveal__versus\{[^}]*place-items:center[^}]*color:var\(--gold\)/);
+
+  assert.match(html, /Las Musas envían palabras\./);
+  assert.doesNotMatch(html, /Las Musas envían letras o palabras\./);
+  assert.match(html, /muse-balance[\s\S]*PALABRA UTILIZADA · \+ INSPIRACIÓN PARA EL EQUIPO AZUL/);
+  assert.match(css, /@keyframes museBalanceFill[\s\S]*width:50%[\s\S]*width:72%/);
+
+  assert.ok(
+    html.indexOf('aria-label="Recorrido de niveles"') < html.indexOf('aria-label="Niveles y desventajas"'),
+    "the levels overview should precede battle, voting and disadvantages"
+  );
+  assert.match(css, /\.level-ribbon div\{display:flex[\s\S]*align-items:center[\s\S]*justify-content:center/);
+
+  assert.match(html, /actor-console__note[\s\S]*ENTRAR DESDE PLATEA/);
+  assert.match(html, /actor-console__toolbar/);
+  assert.match(css, /@keyframes actorToolbar[\s\S]*@keyframes actorNote/);
+  assert.match(html, /Escritxres: responder alguna pregunta de última hora de sus intérpretes y sentarse a disfrutar de la representación\./);
+
+  assert.match(html, /teleprompter-demo__scroll[\s\S]*Entonces alguien llama\.[\s\S]*SINCRONIZADO/);
+  assert.match(css, /@keyframes teleprompterScroll[\s\S]*translateY\(250px\)[\s\S]*translateY\(-330px\)/);
 });
 
 test("the muse dashboard nests its level route and strips the translated flag emoji", () => {
