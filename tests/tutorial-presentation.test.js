@@ -18,14 +18,14 @@ test("the secret tutorial command opens a hidden animated presentation", () => {
   assert.doesNotMatch(main.match(/welcome: "([\s\S]*?)",/)[1], /tutorial/i);
 });
 
-test("the show guide is manual, animated, silent and fits in thirty minutes", () => {
+test("the show guide is manual, animated, silent and omits slide and timing counters", () => {
   const html = read("tutorial/index.html");
   const css = read("tutorial/tutorial.css");
   const js = read("tutorial/tutorial.js");
-  const slideMinutes = [...html.matchAll(/data-minutes="([\d.]+)"/g)].map((match) => Number(match[1]));
 
   assert.equal((html.match(/<section class="slide/g) || []).length, 19);
-  assert.ok(slideMinutes.reduce((sum, value) => sum + value, 0) <= 30);
+  assert.doesNotMatch(html, /data-minutes|deck__counter|deck__timing|id="slideTime"|id="totalTime"/);
+  assert.doesNotMatch(js, /dataset\.minutes|slideTime|totalTime|INCLUYE PREGUNTAS/);
   assert.match(html, /id="prev"[\s\S]*id="next"/);
   assert.match(js, /ArrowRight[\s\S]*ArrowLeft/);
   assert.match(js, /touchstart[\s\S]*touchend/);
@@ -36,6 +36,22 @@ test("the show guide is manual, animated, silent and fits in thirty minutes", ()
   assert.match(css, /prefers-reduced-motion/);
   assert.doesNotMatch(html, /<audio|<video/i);
   assert.doesNotMatch(js, /speechSynthesis|new Audio/i);
+});
+
+test("the writing and Muse examples explain their cause-and-effect animations", () => {
+  const html = read("tutorial/index.html");
+  const css = read("tutorial/tutorial.css");
+  const js = read("tutorial/tutorial.js");
+
+  assert.match(html, /ESCRIBIENDO[\s\S]*SE HA DETENIDO[\s\S]*EL VIDEOJUEGO BORRA EL TEXTO/);
+  assert.match(html, /inspiration-meter__track[\s\S]*SUBE[\s\S]*BAJA/);
+  assert.match(css, /@keyframes writeThenErase[\s\S]*width:28ch[\s\S]*width:0/);
+  assert.match(css, /@keyframes inspirationShift[\s\S]*width:82%[\s\S]*width:12%/);
+  assert.match(html, /muse-phone[\s\S]*idea-path[\s\S]*idea-flight[\s\S]*writer-page/);
+  assert.match(css, /@keyframes ideaFlight[\s\S]*left:0[\s\S]*left:calc\(100% - 94px\)/);
+  assert.match(css, /@keyframes ideaFlightVertical[\s\S]*top:0[\s\S]*top:calc\(100% - 36px\)/);
+  assert.match(css, /@keyframes wordUsed[\s\S]*72%\{opacity:0\}[\s\S]*opacity:1/);
+  assert.match(js, /slide\.querySelectorAll\("\*"\)/);
 });
 
 test("the guide covers the complete live workflow with a visual tutorial sample", () => {
