@@ -57,6 +57,7 @@
   });
   document.addEventListener("fullscreenchange", () => {
     const isFullscreen = Boolean(document.fullscreenElement);
+    fullscreenToggle.classList.toggle("is-fullscreen", isFullscreen);
     fullscreenLabel.textContent = isFullscreen ? "SALIR" : "PANTALLA COMPLETA";
     fullscreenToggle.setAttribute("aria-label", isFullscreen ? "Salir de pantalla completa" : "Entrar en pantalla completa");
     fullscreenToggle.title = isFullscreen ? "Salir de pantalla completa" : "Entrar en pantalla completa";
