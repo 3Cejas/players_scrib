@@ -4,26 +4,18 @@
   const slides = Array.from(document.querySelectorAll(".slide"));
   const previous = document.getElementById("prev");
   const next = document.getElementById("next");
-  const current = document.getElementById("current");
-  const total = document.getElementById("total");
   const chapter = document.getElementById("chapter");
   const progress = document.getElementById("progress");
-  const slideTime = document.getElementById("slideTime");
-  const totalTime = document.getElementById("totalTime");
   let index = 0;
   let touchStartX = null;
 
-  const minutes = slides.reduce((sum, slide) => sum + (Number(slide.dataset.minutes) || 0), 0);
-  total.textContent = String(slides.length).padStart(2, "0");
-  totalTime.textContent = `${Math.round(minutes)} MIN · INCLUYE PREGUNTAS`;
-
   function resetSlideAnimations(slide) {
-    const animated = Array.from(slide.children);
+    const animated = [slide, ...slide.querySelectorAll("*")];
     animated.forEach((element) => {
       element.style.animation = "none";
-      void element.offsetWidth;
-      element.style.animation = "";
     });
+    void slide.offsetWidth;
+    animated.forEach((element) => element.style.removeProperty("animation"));
   }
 
   function show(target, direction) {
@@ -41,14 +33,11 @@
 
   function update() {
     const slide = slides[index];
-    current.textContent = String(index + 1).padStart(2, "0");
     chapter.textContent = slide.dataset.chapter || "";
     progress.style.width = `${((index + 1) / slides.length) * 100}%`;
-    const value = Number(slide.dataset.minutes) || 0;
-    slideTime.textContent = `${String(value).replace(".", ",")} MIN`;
     previous.disabled = index === 0;
     next.disabled = index === slides.length - 1;
-    document.title = `${index + 1}/${slides.length} · ${slide.getAttribute("aria-label")} · <SCRI> B`;
+    document.title = `${slide.getAttribute("aria-label")} · <SCRI> B`;
   }
 
   previous.addEventListener("click", () => show(index - 1, -1));
