@@ -6,6 +6,8 @@
   const next = document.getElementById("next");
   const chapter = document.getElementById("chapter");
   const progress = document.getElementById("progress");
+  const fullscreenToggle = document.getElementById("fullscreenToggle");
+  const fullscreenLabel = document.getElementById("fullscreenLabel");
   let index = 0;
   let touchStartX = null;
 
@@ -42,7 +44,25 @@
 
   previous.addEventListener("click", () => show(index - 1, -1));
   next.addEventListener("click", () => show(index + 1, 1));
+  fullscreenToggle.addEventListener("click", async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (error) {
+      console.warn("No se pudo cambiar el modo de pantalla completa.", error);
+    }
+  });
+  document.addEventListener("fullscreenchange", () => {
+    const isFullscreen = Boolean(document.fullscreenElement);
+    fullscreenLabel.textContent = isFullscreen ? "SALIR" : "PANTALLA COMPLETA";
+    fullscreenToggle.setAttribute("aria-label", isFullscreen ? "Salir de pantalla completa" : "Entrar en pantalla completa");
+    fullscreenToggle.title = isFullscreen ? "Salir de pantalla completa" : "Entrar en pantalla completa";
+  });
   document.addEventListener("keydown", (event) => {
+    if (event.target.closest("button, input, textarea, select")) return;
     if (["ArrowRight", "PageDown", " "].includes(event.key)) {
       event.preventDefault();
       show(index + 1, 1);

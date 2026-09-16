@@ -7,8 +7,8 @@
   <title>Guía del espectáculo · &lt;SCRI&gt; B</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="../img/logo.png" type="image/png">
-  <link rel="stylesheet" href="./tutorial.css?v=3">
-  <script defer src="./tutorial.js?v=3"></script>
+  <link rel="stylesheet" href="./tutorial.css?v=4">
+  <script defer src="./tutorial.js?v=4"></script>
 </head>
 <body>
   <main class="deck" aria-label="Presentación del espectáculo">
@@ -16,6 +16,7 @@
     <header class="deck__header">
       <div class="brand"><img src="../img/logo.png" alt=""><span>&lt;SCRI&gt; B</span></div>
       <div class="deck__chapter" id="chapter">BIENVENIDA</div>
+      <button class="fullscreen-button" id="fullscreenToggle" type="button" aria-label="Entrar en pantalla completa" title="Entrar en pantalla completa"><span aria-hidden="true">⛶</span><b id="fullscreenLabel">PANTALLA COMPLETA</b></button>
     </header>
 
     <div class="slides" aria-live="polite">
@@ -99,7 +100,7 @@
           <div class="idea-path" aria-hidden="true"><i></i><span class="idea-flight">VOLCÁN</span></div>
           <div class="writer-page"><span>La montaña escondía un </span><b>volcán</b><i>|</i></div>
         </div>
-        <div class="muse-balance" aria-hidden="true"><span>AZUL</span><div class="muse-balance__track"><i></i><b></b></div><span>ROJO</span><em>PALABRA UTILIZADA · + INSPIRACIÓN PARA EL EQUIPO AZUL</em></div>
+        <div class="muse-balance" aria-hidden="true"><span>AZUL</span><div class="muse-balance__track"><i></i><b></b></div><span>ROJO</span></div>
         <div class="slide-title"><p class="eyebrow">LA VICTORIA TAMBIÉN ESTÁ EN EL PÚBLICO</p><h2>Una idea utilizada vale más</h2><p>Las Musas envían palabras. Cuando el equipo escribe una de ellas, la barra de inspiración se inclina a su favor.</p></div>
       </section>
 
@@ -111,12 +112,23 @@
         <p class="center-copy">En Tertulia el videojuego se para: Musas y escritorxs hablan cara a cara. En Frase final, cada obra busca su último golpe.</p>
       </section>
 
+      <section class="slide" data-chapter="Desventajas" aria-label="Catálogo de desventajas">
+        <div class="slide-title"><p class="eyebrow">PODERES CONTRA EL EQUIPO RIVAL</p><h2>¿Qué desventajas pueden elegir?</h2><p>Al ganar una batalla, las Musas reciben tres opciones y eligen una para el equipo rival.</p></div>
+        <div class="disadvantage-grid">
+          <article><i>🐢</i><b>TORTUGA</b><p>El teclado responde más despacio.</p></article>
+          <article><i>⚡</i><b>RAYO</b><p>El borrado empieza antes y acelera.</p></article>
+          <article><i>🌫️</i><b>BRUMA</b><p>El texto se vuelve borroso.</p></article>
+          <article><i>🙃</i><b>INVERSO</b><p>La interfaz gira y cambia la orientación.</p></article>
+          <article><i>🖊️</i><b>BLOQUEO</b><p>No permite borrar.</p></article>
+        </div>
+      </section>
+
       <section class="slide" data-chapter="Videojuego" aria-label="Niveles y desventajas">
         <div class="slide-title"><p class="eyebrow">CADA NIVEL CAMBIA LA REGLA</p><h2>Batalla, voto y desventaja</h2></div>
         <div class="level-flow">
           <article><b>80%</b><h3>BATALLA</h3><p>Los equipos compiten por inspiración.</p><div class="duel-bar"><i></i></div></article>
           <span>→</span>
-          <article><b>VOTO</b><h3>MUSAS</h3><p>El equipo ganador elige entre tres desventajas.</p><div class="vote-picks"><i>⚡</i><i>🙃</i><i>🖊</i></div></article>
+          <article><b>VOTO</b><h3>MUSAS</h3><p>El equipo ganador elige una de las desventajas anteriores entre las tres opciones que aparecen.</p><div class="vote-picks"><i>⚡</i><i>🙃</i><i>🖊️</i></div></article>
           <span>→</span>
           <article><b>20%</b><h3>DESVENTAJA</h3><p>Se aplica al equipo rival hasta el siguiente nivel.</p><div class="glitch-word">INVERSO</div></article>
         </div>
@@ -136,14 +148,14 @@
 
       <section class="slide" data-chapter="Representación" aria-label="Temporizador gigante">
         <div class="giant-timer"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"></circle><circle cx="60" cy="60" r="52"></circle></svg><strong>10:00</strong><span>PREPARAD LA ESCENA</span></div>
-        <div class="slide-title slide-title--right"><p class="eyebrow">CUENTA ATRÁS PARA LA REPRESENTACIÓN</p><h2>Diez minutos que valen oro</h2><ul class="clean-list"><li>Intérpretes: ultimar decisiones y colocar su espacio.</li><li>Técnica: revisar marcas, entradas y necesidades.</li><li>Escritxres: responder alguna pregunta de última hora de sus intérpretes y sentarse a disfrutar de la representación.</li></ul></div>
+        <div class="slide-title slide-title--right"><p class="eyebrow">CUENTA ATRÁS PARA LA REPRESENTACIÓN</p><h2>Diez minutos que valen oro</h2><ul class="clean-list"><li><strong>Intérpretes</strong><span>Ultimar decisiones y colocar su espacio.</span></li><li><strong>Técnica</strong><span>Revisar marcas, entradas y necesidades.</span></li><li><strong>Escritxres</strong><span>Responder alguna pregunta de última hora de sus intérpretes y sentarse a disfrutar de la representación.</span></li></ul></div>
       </section>
 
       <section class="slide" data-chapter="Representación" aria-label="Teleprompter y técnica">
         <div class="slide-title"><p class="eyebrow">EL TEXTO PASA AL ESCENARIO</p><h2>Representación sincronizada</h2></div>
         <div class="teleprompter-demo" aria-hidden="true">
           <div class="teleprompter-demo__screen"><div class="teleprompter-demo__guide"></div><div class="teleprompter-demo__scroll"><p>LA HABITACIÓN ESTÁ VACÍA.</p><p>Una silla mira hacia la puerta.</p><p><mark>¿Estás segura?</mark></p><p>He contado dos respiraciones.</p><p>Entonces alguien llama.</p><p>Y la luz cambia.</p></div></div>
-          <div class="teleprompter-demo__tech"><span>TELEPROMPTER · TÉCNICA</span><b>TEXTO EN CURSO</b><div><strong>MARCA 01</strong><small>LUZ FRÍA · ENTRADA DESDE PLATEA</small></div><i></i><em>● SINCRONIZADO</em></div>
+          <div class="teleprompter-demo__tech"><span>TELEPROMPTER · TÉCNICA</span><div><strong>MARCA 01</strong><small>LUZ FRÍA · ENTRADA DESDE PLATEA</small></div></div>
         </div>
         <p class="center-copy">El texto avanza como un teleprompter mientras los intérpretes actúan. La técnica sigue las marcas y coordina luz y sonido.</p>
       </section>
@@ -151,7 +163,7 @@
       <section class="slide" data-chapter="Deliberación" aria-label="Criterios del videojuego">
         <div class="slide-title"><p class="eyebrow">50% DEL VEREDICTO</p><h2>Lo que mide el videojuego</h2></div>
         <div class="criteria-grid criteria-grid--six">
-          <div><i>✍</i><b>Producción</b></div><div><i>⚡</i><b>Ritmo</b></div><div><i>📚</i><b>Riqueza léxica</b></div><div><i>✨</i><b>Inspiración</b></div><div><i>🎯</i><b>Precisión</b></div><div><i>⌨</i><b>Pulsaciones</b></div>
+          <div><i>📝</i><b>Producción</b></div><div><i>⚡</i><b>Ritmo</b></div><div><i>📚</i><b>Riqueza léxica</b></div><div><i>✨</i><b>Inspiración</b></div><div><i>🎯</i><b>Precisión</b></div><div><i>💻</i><b>Pulsaciones</b></div>
         </div>
         <div class="score-duel"><span>44,5 PTS</span><i></i><span>55,5 PTS</span></div>
       </section>
