@@ -31,9 +31,12 @@ test("the show guide is manual, animated, silent and omits slide and timing coun
   assert.match(js, /touchstart[\s\S]*touchend/);
   assert.match(js, /resetSlideAnimations/);
   assert.match(html, /id="fullscreenToggle"[\s\S]*PANTALLA COMPLETA/);
+  assert.match(html, /fullscreen-button__icon[\s\S]*<i><\/i><i><\/i><i><\/i><i><\/i>/);
   assert.match(js, /requestFullscreen/);
   assert.match(js, /exitFullscreen/);
   assert.match(js, /fullscreenchange/);
+  assert.match(js, /classList\.toggle\("is-fullscreen", isFullscreen\)/);
+  assert.match(css, /fullscreen-button\.is-fullscreen \.fullscreen-button__icon i:nth-child\(1\)[^{]*\{[^}]*rotate\(180deg\)/);
   assert.match(css, /\.slide\.is-active/);
   assert.match(css, /\.slide\.is-exiting-right/);
   assert.match(css, /\.deck\{[^}]*overflow:clip/);
@@ -135,7 +138,9 @@ test("the revised guide clarifies roles, game flow and live staging", () => {
   assert.match(html, /teleprompter-demo__scroll[\s\S]*<mark><b>01<\/b>¿Estás segura\?<\/mark>[\s\S]*MARCA 01/);
   assert.doesNotMatch(html, /TEXTO EN CURSO|SINCRONIZADO/);
   assert.match(css, /@keyframes teleprompterScroll[\s\S]*translateY\(250px\)[\s\S]*translateY\(-330px\)/);
-  assert.match(html, /jury-balance__beam[\s\S]*jury-balance__pan--blue[\s\S]*jury-balance__pan--red[\s\S]*jury-balance__pivot/);
+  assert.match(html, /jury-balance__halo[\s\S]*jury-balance__beam[\s\S]*jury-balance__pan--blue[\s\S]*jury-balance__pan--red[\s\S]*jury-balance__core[\s\S]*VEREDICTO/);
+  assert.doesNotMatch(html, /jury-balance__pivot|<b>50<\/b><span>50<\/span>|EL OTRO 50%/);
+  assert.match(css, /@keyframes balanceHalo[\s\S]*@keyframes balanceCore/);
   assert.doesNotMatch(html, /Comprobación de equipo|Lista de comprobación/);
 });
 
