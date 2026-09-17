@@ -2949,6 +2949,15 @@ function cambiar_vista() {
 
 const VISTAS_PRINCIPALES_CONTROL = new Set(["tutorial", "instrucciones", "detonadores", "partida"]);
 const INSTRUCCIONES_PASO_MAX_CONTROL = 6;
+const INSTRUCCIONES_TITULOS_CONTROL = Object.freeze([
+    "ASÍ NACE UNA HISTORIA",
+    "EQUIPO ROJO",
+    "EQUIPO AZUL",
+    "ESCRITORAS AL OTRO LADO",
+    "EL TEXTO DESAPARECE",
+    "IDEAS DE LAS MUSAS",
+    "PUNTOS DE INSPIRACIÓN"
+]);
 
 function emitirVistaControl(evento, payload) {
     if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") return;
@@ -2973,8 +2982,10 @@ function cerrarVideotutorialDesdeVistaControl() {
 function actualizarBotonesVistaPrincipalControl() {
     document.querySelectorAll("[data-vista-principal]").forEach((boton) => {
         const destino = boton.dataset.vistaPrincipal;
-        const activa = destino === "tutorial" || destino === "instrucciones"
-            ? vista_espectador_modo === destino
+        const activa = destino === "tutorial"
+            ? vista_espectador_modo === "tutorial" || vista_espectador_modo === "instrucciones"
+            : destino === "instrucciones"
+                ? vista_espectador_modo === "instrucciones"
             : destino === "detonadores"
                 ? vista_espectador_modo === "calentamiento" || vista_calentamiento
                 : vista_espectador_modo === "partida" && destino === vista_principal_control;
@@ -2991,7 +3002,11 @@ function actualizarBotonesVistaPrincipalControl() {
     if (botonPartida) {
         botonPartida.textContent = tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA");
     }
-    if (botonInstrucciones) botonInstrucciones.textContent = "\u{1F3AC} INSTRUCCIONES";
+    if (botonInstrucciones) {
+        botonInstrucciones.textContent = vista_espectador_modo === "instrucciones"
+            ? "\u{23F9}\u{FE0F} DESACTIVAR INSTRUCCIONES"
+            : "\u{1F3AC} ACTIVAR INSTRUCCIONES";
+    }
 }
 
 function aplicarVistaPrincipalControl(vista, opciones = {}) {
@@ -3038,7 +3053,7 @@ function mostrar_vista_tutorial() {
 }
 
 function mostrar_vista_instrucciones() {
-    aplicarVistaPrincipalControl("instrucciones");
+    aplicarVistaPrincipalControl(vista_espectador_modo === "instrucciones" ? "tutorial" : "instrucciones");
 }
 
 function navegarInstruccionesControl(direccion) {
@@ -3238,6 +3253,7 @@ function actualizarBotonesVistaEspectadorControl() {
     const instruccionesLabel = document.getElementById("instrucciones_nav_label");
     const instruccionesPrev = document.getElementById("instrucciones_nav_prev");
     const instruccionesNext = document.getElementById("instrucciones_nav_next");
+    const instruccionesViewer = document.getElementById("instrucciones_viewer_control");
     if (botonStats) {
         const activo = vista_espectador_modo === "stats";
         botonStats.dataset.active = activo ? "1" : "0";
@@ -3306,13 +3322,20 @@ function actualizarBotonesVistaEspectadorControl() {
         statsNav.hidden = !visible;
         statsNav.setAttribute("aria-hidden", visible ? "false" : "true");
     }
-    if (instruccionesLabel) instruccionesLabel.textContent = `INSTRUCCIONES \u00b7 ${instrucciones_slide_step_control + 1}/${INSTRUCCIONES_PASO_MAX_CONTROL + 1}`;
-    if (instruccionesPrev) instruccionesPrev.disabled = instrucciones_slide_step_control <= 0;
-    if (instruccionesNext) instruccionesNext.disabled = instrucciones_slide_step_control >= INSTRUCCIONES_PASO_MAX_CONTROL;
+    const instruccionesActivas = vista_espectador_modo === "instrucciones";
+    const tituloInstrucciones = INSTRUCCIONES_TITULOS_CONTROL[instrucciones_slide_step_control]
+        || INSTRUCCIONES_TITULOS_CONTROL[0];
+    if (instruccionesLabel) {
+        instruccionesLabel.textContent = `${tituloInstrucciones} \u00b7 ${instrucciones_slide_step_control + 1}/${INSTRUCCIONES_PASO_MAX_CONTROL + 1}`;
+    }
+    if (instruccionesPrev) instruccionesPrev.disabled = !instruccionesActivas || instrucciones_slide_step_control <= 0;
+    if (instruccionesNext) instruccionesNext.disabled = !instruccionesActivas || instrucciones_slide_step_control >= INSTRUCCIONES_PASO_MAX_CONTROL;
     if (instruccionesNav) {
-        const visible = vista_espectador_modo === "instrucciones";
-        instruccionesNav.hidden = !visible;
-        instruccionesNav.setAttribute("aria-hidden", visible ? "false" : "true");
+        instruccionesNav.hidden = false;
+        instruccionesNav.setAttribute("aria-hidden", "false");
+    }
+    if (instruccionesViewer) {
+        instruccionesViewer.dataset.active = instruccionesActivas ? "1" : "0";
     }
     if (puntuacionPrev) {
         puntuacionPrev.textContent = "";

@@ -49,7 +49,6 @@
                     <span>🎭 ${performers[0]}</span>
                     <span>🎭 ${performers[1]}</span>
                 </div>
-                <p class="scrib-instructions__live-cue">SU TURNO PARA ANIMAR AL EQUIPO</p>
             </div>`;
     };
 

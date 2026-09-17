@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260917a">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260917b">
     <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260823a">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -42,19 +42,67 @@
         <div id="contenedor" class="contenedor">
             <div class="container"></div>
             <p><span id="temas" class="temas"></span></p>
-            <br>
             <div class="jugador">
-                <input disabled id="nombre" class="nombre"></input>
-                <br><br>
                 <p id="alineador1"></p>
-                <div class="actor-annotation-layout">
-                    <div class="actor-text-shell">
-                        <div contenteditable="false" class="textarea" id="texto"
-                        spellcheck="false">
+                <article id="actor_texto_card" class="actor-texto-card">
+                    <header class="actor-texto-card__header">
+                        <div class="actor-escritxr-card" aria-label="Escritxr del equipo">
+                            <span class="actor-panel-label">ESCRITXR</span>
+                            <input disabled id="nombre" class="nombre" aria-label="Nombre de escritxr">
+                        </div>
+                        <div id="metadatos_actor" class="right metadatos-grid metadatos-grid--cabecera marcador-actores marcador-equipo marcador-equipo-1">
+                            <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
+                                <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
+                                <div class="meta-copy">
+                                    <span class="meta-label" data-i18n="score.words_label">Palabras</span>
+                                    <span id="puntos" class="puntos">0 palabras</span>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+                    <div class="tiempo-contenedor actor-texto-card__tiempo">
+                        <p id="tiempo" hidden aria-hidden="true"></p>
                     </div>
+                    <div class="actor-texto-card__viewport">
+                        <div class="actor-annotation-layout">
+                            <div class="actor-text-shell">
+                                <div contenteditable="false" class="textarea" id="texto" spellcheck="false"></div>
+                            </div>
+                            <aside id="actor_annotation_margin" class="actor-annotation-margin" data-actor-annotation-ui aria-label="Anotaciones locales del interprete"></aside>
+                        </div>
                     </div>
-                    <aside id="actor_annotation_margin" class="actor-annotation-margin" data-actor-annotation-ui aria-label="Anotaciones locales del interprete"></aside>
-                </div>
+                    <section class="niveles actor-texto-card__niveles" aria-label="Recorrido de niveles">
+                        <div class="niveles-scroll">
+                            <div class="niveles-linea" role="list" aria-label="Niveles de la partida">
+                                <div class="nivel-item nivel-amarillo" data-modo="palabras bonus" role="listitem">
+                                    <div class="nivel-icono" aria-hidden="true">&#x1F4D6;</div>
+                                    <div class="nivel-texto"><span>PALABRA</span><span>BENDITA</span></div>
+                                </div>
+                                <div class="nivel-item nivel-verde" data-modo="letra bendita" role="listitem">
+                                    <div class="nivel-icono" aria-hidden="true">&#x1F64F;</div>
+                                    <div class="nivel-texto"><span>LETRA</span><span>BENDITA</span></div>
+                                </div>
+                                <div class="nivel-item nivel-azul" data-modo="tertulia" role="listitem">
+                                    <div class="nivel-icono" aria-hidden="true">&#x1F4AC;</div>
+                                    <div class="nivel-texto"><span>TERTULIA</span></div>
+                                </div>
+                                <div class="nivel-item nivel-rojo" data-modo="letra prohibida" role="listitem">
+                                    <div class="nivel-icono" aria-hidden="true">&#x1F608;</div>
+                                    <div class="nivel-texto"><span>LETRA</span><span>MALDITA</span></div>
+                                </div>
+                                <div class="nivel-item nivel-rosa" data-modo="palabras prohibidas" role="listitem">
+                                    <div class="nivel-icono" aria-hidden="true">&#x2694;&#xFE0F;</div>
+                                    <div class="nivel-texto"><span>PALABRA</span><span>MALDITA</span></div>
+                                </div>
+                                <div class="nivel-item nivel-naranja" data-modo="frase final" role="listitem">
+                                    <div class="nivel-icono" aria-hidden="true">&#x1F3C1;</div>
+                                    <div class="nivel-texto"><span>FRASE</span><span>FINAL</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <div class="actor-texto-card__scan" aria-hidden="true"></div>
+                </article>
                 <div id="actor_annotation_toolbar" class="actor-annotation-toolbar" data-actor-annotation-ui role="toolbar" aria-label="Herramientas de anotacion del interprete" hidden>
                     <button type="button" class="actor-annotation-tool actor-annotation-tool--underline" data-annotation-action="underline" aria-label="Subrayar texto">U</button>
                     <button type="button" class="actor-annotation-tool actor-annotation-tool--underline actor-annotation-underline-swatch actor-annotation-underline-swatch--yellow" data-annotation-action="underline" data-underline-color="#ffe95c" aria-label="Subrayar en amarillo">U</button>
@@ -72,69 +120,6 @@
                         <button type="button" id="actor_annotation_note_cancel" class="actor-annotation-note-editor__button">Cancelar</button>
                     </div>
                 </div>
-                <br><br>
-                <div class="tiempo-contenedor">
-                    <p id="tiempo" hidden aria-hidden="true"></p>
-                </div>
-                <div align="center">
-                    <div id="metadatos_actor" class="right metadatos-grid metadatos-grid--cabecera marcador-actores marcador-equipo marcador-equipo-1">
-                        <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
-                            <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
-                            <div class="meta-copy">
-                                <span class="meta-label" data-i18n="score.words_label">Palabras</span>
-                                <span id="puntos" class="puntos">0 palabras</span>
-                            </div>
-                        </div>
-                    </div>
-                    <section class="niveles">
-                        <div class="niveles-scroll">
-                            <div class="niveles-linea" role="list" aria-label="Niveles de la partida">
-                            <div class="nivel-item nivel-amarillo" data-modo="palabras bonus" role="listitem">
-                                <div class="nivel-icono" aria-hidden="true">&#x1F4D6;</div>
-                                <div class="nivel-texto">
-                                    <span>PALABRA</span>
-                                    <span>BENDITA</span>
-                                </div>
-                            </div>
-                            <div class="nivel-item nivel-verde" data-modo="letra bendita" role="listitem">
-                                <div class="nivel-icono" aria-hidden="true">&#x1F64F;</div>
-                                <div class="nivel-texto">
-                                    <span>LETRA</span>
-                                    <span>BENDITA</span>
-                                </div>
-                            </div>
-                            <div class="nivel-item nivel-azul" data-modo="tertulia" role="listitem">
-                                <div class="nivel-icono" aria-hidden="true">&#x1F4AC;</div>
-                                <div class="nivel-texto">
-                                    <span>TERTULIA</span>
-                                </div>
-                            </div>
-                            <div class="nivel-item nivel-rojo" data-modo="letra prohibida" role="listitem">
-                                <div class="nivel-icono" aria-hidden="true">&#x1F608;</div>
-                                <div class="nivel-texto">
-                                    <span>LETRA</span>
-                                    <span>MALDITA</span>
-                                </div>
-                            </div>
-                            <div class="nivel-item nivel-rosa" data-modo="palabras prohibidas" role="listitem">
-                                <div class="nivel-icono" aria-hidden="true">&#x2694;&#xFE0F;</div>
-                                <div class="nivel-texto">
-                                    <span>PALABRA</span>
-                                    <span>MALDITA</span>
-                                </div>
-                            </div>
-                            <div class="nivel-item nivel-naranja" data-modo="frase final" role="listitem">
-                                <div class="nivel-icono" aria-hidden="true">&#x1F3C1;</div>
-                                <div class="nivel-texto">
-                                    <span>FRASE</span>
-                                    <span>FINAL</span>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-                <br>
                 <table class="info">
                     <tr>
                             <p id="explicación" class="explicación"></p>

@@ -10909,6 +10909,100 @@ body {
     }
 }
 
+/* Visor de instrucciones: activación y navegación forman una sola pieza. */
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > .instrucciones-viewer-control {
+    display: block !important;
+    flex: 1 0 100%;
+    min-width: 0;
+    padding: clamp(0.55rem, 0.8vw, 0.8rem);
+    border: 1px solid rgba(255, 178, 73, 0.56);
+    border-radius: 0.72rem;
+    background:
+        linear-gradient(110deg, rgba(255, 178, 73, 0.1), transparent 44%),
+        rgba(3, 10, 18, 0.92);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+        0 0 1rem rgba(255, 178, 73, 0.12);
+    box-sizing: border-box;
+}
+
+.instrucciones-viewer-control__eyebrow {
+    display: block;
+    margin: 0 0 0.45rem 0.15rem;
+    color: #ffd79c;
+    font: 700 clamp(0.48rem, 0.62vw, 0.7rem)/1 "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.13em;
+    text-align: left;
+}
+
+.instrucciones-viewer-control__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(20rem, 0.8fr);
+    align-items: stretch;
+    gap: clamp(0.45rem, 0.72vw, 0.72rem);
+}
+
+#panel_controles .instrucciones-viewer-control__layout > #boton_vista_instrucciones {
+    width: 100%;
+    min-width: 0;
+    min-height: 3.15rem;
+    margin: 0;
+    padding: 0.64rem 0.72rem;
+    white-space: normal;
+}
+
+#panel_controles .instrucciones-viewer-control .instrucciones-nav-control {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-width: 0;
+    min-height: 3.15rem;
+    align-items: center;
+    gap: clamp(0.35rem, 0.55vw, 0.62rem);
+    margin: 0;
+    padding: 0.35rem 0.5rem;
+    border-color: rgba(255, 211, 136, 0.34);
+    border-radius: 0.52rem;
+    background: rgba(3, 11, 20, 0.78);
+    box-sizing: border-box;
+    transition: opacity 160ms ease, filter 160ms ease;
+}
+
+.instrucciones-viewer-control .instrucciones-nav-control .stats-nav-label {
+    min-width: 0;
+    color: #fff0c9;
+    font-size: clamp(0.5rem, 0.66vw, 0.74rem);
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+}
+
+.instrucciones-viewer-control[data-active="0"] .instrucciones-nav-control {
+    opacity: 0.48;
+    filter: saturate(0.55);
+}
+
+#boton_vista_instrucciones[data-active="1"],
+#boton_vista_instrucciones.is-active {
+    border-color: rgba(112, 255, 163, 0.72);
+    color: #eafff1;
+    background: linear-gradient(180deg, rgba(35, 119, 72, 0.94), rgba(15, 69, 43, 0.96));
+    box-shadow: 0 0.22em #70ffa3, 0 0 0.9em rgba(112, 255, 163, 0.34);
+    text-shadow: 0.06em 0.06em #123821;
+}
+
+.instrucciones-viewer-control[data-active="1"] {
+    border-color: rgba(112, 255, 163, 0.58) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.045),
+        0 0 1.2rem rgba(112, 255, 163, 0.16) !important;
+}
+
+@container tutorial-controls (max-width: 48rem) {
+    .instrucciones-viewer-control__layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 /* Duraciones calculadas y validacion de coherencia de la partida. */
 #panel_parametros:not(.is-side-collapsed) > tr.parametros-porcentajes-row {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
