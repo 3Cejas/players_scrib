@@ -812,6 +812,7 @@ input {
 .writer-board--one {
     --writer-accent: var(--jury-blue);
     --writer-accent-soft: rgba(69, 230, 255, 0.12);
+    --writer-text-soft: #c3faff;
     --vida-color: #46f0ff;
     border-color: rgba(69, 230, 255, 0.36);
 }
@@ -819,6 +820,7 @@ input {
 .writer-board--two {
     --writer-accent: var(--jury-red);
     --writer-accent-soft: rgba(255, 90, 100, 0.12);
+    --writer-text-soft: #ffc8cd;
     --vida-color: #ff5f67;
     border-color: rgba(255, 90, 100, 0.36);
 }
@@ -988,7 +990,7 @@ input {
     border: 0;
     border-radius: 0;
     background: transparent;
-    color: #f8fbff;
+    color: var(--writer-text-soft, #f8fbff);
     box-shadow: none;
     font-family: "VT323", "Courier New", monospace;
     font-size: clamp(1.25rem, 1.55vw, 1.9rem);

@@ -1421,12 +1421,12 @@ function aplicarTemaMarcadorActor(equipo) {
         ? {
             color: "#ff6b6b",
             color2: "#46f0ff",
-            texto: "#ffadad"
+            texto: "#ffc8cd"
         }
         : {
             color: "#46f0ff",
             color2: "#ff6b6b",
-            texto: "#9ff8ff"
+            texto: "#c3faff"
         };
 
     metadatos_actor.classList.toggle("marcador-equipo-1", equipoNorm === 1);
@@ -1434,6 +1434,7 @@ function aplicarTemaMarcadorActor(equipo) {
     metadatos_actor.style.setProperty("--equipo-color", tema.color);
     metadatos_actor.style.setProperty("--equipo-color-2", tema.color2);
     metadatos_actor.style.setProperty("--equipo-texto", tema.texto);
+    document.documentElement.style.setProperty("--equipo-texto-suave", tema.texto);
     metadatos_actor.setAttribute("data-equipo", String(equipoNorm));
 }
 

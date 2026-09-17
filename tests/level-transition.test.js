@@ -272,7 +272,7 @@ test("spectator, actor and writer expose one accessible, responsive level transi
     });
 });
 
-test("actor and muse timelines carry authoritative progress while the actor desk stays compact", () => {
+test("actor and muse timelines carry authoritative progress with coherent role text surfaces", () => {
     const actorHtml = read("game/actors/source/index.html");
     const actorCss = read("game/actors/source/css/publico.css");
     const actorSockets = read("game/actors/source/js/socket-events.js");
@@ -281,6 +281,7 @@ test("actor and muse timelines carry authoritative progress while the actor desk
     const museSockets = read("game/public/players/js/socket-events.js");
     const writerHtml = read("game/players/index.html");
     const writerCss = read("game/css/dashboard-players.css");
+    const juryCss = read("game/jurado/index.css");
 
     assert.match(actorHtml, /id="actor_texto_lineas"[\s\S]*id="actor_texto_lineas_inner"/);
     assert.match(actorHtml, /id="tiempo_total_actor"/);
@@ -292,14 +293,26 @@ test("actor and muse timelines carry authoritative progress while the actor desk
     assert.match(actorCss, /\.actor-texto-lineas/);
     assert.match(actorCss, /\.actor-texto-card[\s\S]*conic-gradient/);
     assert.match(actorCss, /font-size:\s*clamp\(25px, 2\.85vw, 48px\)/);
+    assert.match(actorCss, /\.actor-texto-card__viewport\s*\{[\s\S]*max-height:\s*none;[\s\S]*overflow:\s*visible;/);
+    assert.match(actorCss, /\.actor-level-rule\s*\{[\s\S]*border-top:\s*0;/);
+    assert.match(actorCss, /color-mix\(in srgb, var\(--nivel-color\), white 22%\) 0 var\(--nivel-progress-angle\)/);
+    assert.match(actorSockets, /--equipo-texto-suave/);
 
     assert.match(museSockets, /function sincronizarProgresoNivelMusa/);
     assert.match(museSockets, /socket\.on\("temp_modos", sincronizarProgresoNivelMusa\)/);
     assert.match(museCss, /\.musa-texto-card[\s\S]*--nivel-progress-angle[\s\S]*conic-gradient/);
     assert.match(museCss, /#btn_bandera[\s\S]*border-radius:\s*50% !important/);
     assert.match(museCss, /\.musa-bandera-fab-wrap #btn_bandera::before,[\s\S]*\.musa-bandera-fab-wrap #btn_bandera::after[\s\S]*content:\s*none !important/);
-    assert.match(museHtml, /publico\.css\?v=20260918a/);
+    assert.match(museCss, /body\.equipo-azul\s*\{[\s\S]*--equipo-texto-suave:\s*#c3faff/);
+    assert.match(museCss, /body\.equipo-rojo\s*\{[\s\S]*--equipo-texto-suave:\s*#ffc8cd/);
+    assert.match(museHtml, /publico\.css\?v=20260918b/);
 
     assert.doesNotMatch(writerHtml, /escritxr-texto-panel__label[^>]*>[\s\S]{0,80}1F58B/);
     assert.match(writerCss, /\.escritxr-texto-panel\s*\{[\s\S]*width:\s*min\(1440px, 94vw\)/);
+    assert.match(writerCss, /body\.page-spectator \.jugador1 #texto,[\s\S]*border-radius:[\s\S]*--spectator-text-soft/);
+    assert.match(writerCss, /--escritxr-panel-text:\s*#c3faff/);
+    assert.match(writerCss, /--escritxr-panel-text:\s*#ffc8cd/);
+    assert.match(juryCss, /--writer-text-soft:\s*#c3faff/);
+    assert.match(juryCss, /--writer-text-soft:\s*#ffc8cd/);
+    assert.match(juryCss, /color:\s*var\(--writer-text-soft, #f8fbff\)/);
 });

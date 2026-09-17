@@ -6297,7 +6297,7 @@ body.equipo-rojo {
     border: 0;
     border-radius: 0;
     background: transparent;
-    color: color-mix(in srgb, var(--equipo-color, #46efff), white 66%);
+    color: var(--equipo-texto-suave, #c3faff);
     line-height: 1.28;
 }
 
@@ -6809,20 +6809,37 @@ body.partida-finalizada-musa .musa-texto-card > .musa-texto-card__niveles .nivel
     font-size: clamp(8px, 1.9vw, 10px);
 }
 
+.musa-texto-card > .musa-texto-card__niveles .nivel-activo .nivel-icono {
+    border-color: color-mix(in srgb, var(--nivel-color), #07101a 58%);
+    box-shadow:
+        0 0 0 clamp(2px, 0.5vw, 4px) #080d14,
+        inset 0 0 12px color-mix(in srgb, var(--nivel-color), transparent 86%);
+}
+
 .musa-texto-card > .musa-texto-card__niveles .nivel-activo .nivel-icono::before {
     inset: clamp(-9px, -1.4vw, -6px);
     padding: clamp(3px, 0.65vw, 5px);
     border: 0;
     background: conic-gradient(
-        var(--equipo-color, #46efff) 0 var(--nivel-progress-angle),
-        color-mix(in srgb, var(--nivel-color), transparent 78%) var(--nivel-progress-angle) 360deg
+        color-mix(in srgb, var(--nivel-color), white 22%) 0 var(--nivel-progress-angle),
+        rgba(255, 255, 255, 0.1) var(--nivel-progress-angle) 360deg
     );
-    box-shadow: 0 0 14px color-mix(in srgb, var(--equipo-color, #46efff), transparent 45%);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--nivel-color), white 38%),
+        0 0 13px color-mix(in srgb, var(--nivel-color), transparent 48%);
     opacity: 1;
     animation: none;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
+}
+
+body.equipo-azul {
+    --equipo-texto-suave: #c3faff;
+}
+
+body.equipo-rojo {
+    --equipo-texto-suave: #ffc8cd;
 }
 
 .musa-texto-card > #mostrar_texto:active .musa-texto-toggle__chevron {
