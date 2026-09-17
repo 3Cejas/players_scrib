@@ -799,6 +799,7 @@ const CLASES_ESTILO_DEFINICION_NIVEL_ESCRITORA = [
 let DURACION_NIVEL_MS_ESCRITORA = 60000;
 let inicio_nivel_ts_escritora = 0;
 let intervalo_progreso_nivel_escritora = null;
+let progreso_nivel_pausado_ms_escritora = 0;
 let progreso_frase_final_base_segundos_escritora = null;
 
 function normalizarDuracionNivelMsEscritora(valor) {
@@ -809,6 +810,15 @@ function normalizarDuracionNivelMsEscritora(valor) {
 }
 
 function actualizarDuracionNivelDesdeParametrosEscritora(parametros = {}) {
+    const duracionAutoritativaSegundos = Number(
+        parametros.duracion_modo_segundos
+        ?? parametros.duracionModoSegundos
+        ?? parametros.duracion_nivel_segundos
+    );
+    if (Number.isFinite(duracionAutoritativaSegundos) && duracionAutoritativaSegundos > 0) {
+        DURACION_NIVEL_MS_ESCRITORA = Math.round(duracionAutoritativaSegundos * 1000);
+        return;
+    }
     const candidatos = [
         parametros.TIEMPO_MODOS,
         parametros.DURACION_TIEMPO_MODOS,
@@ -837,6 +847,7 @@ function detenerProgresoNivelBarraEscritora(reiniciar = false) {
         intervalo_progreso_nivel_escritora = null;
     }
     inicio_nivel_ts_escritora = 0;
+    progreso_nivel_pausado_ms_escritora = 0;
     if (reiniciar) {
         setProgresoNivelBarraEscritora(0);
     }
@@ -881,6 +892,34 @@ function tickProgresoNivelBarraEscritora() {
     }
 }
 
+function pausarProgresoNivelBarraEscritora() {
+    if (!modo_actual || modo_actual === "frase final") return;
+    if (inicio_nivel_ts_escritora && DURACION_NIVEL_MS_ESCRITORA > 0) {
+        progreso_nivel_pausado_ms_escritora = Math.max(
+            0,
+            Math.min(DURACION_NIVEL_MS_ESCRITORA, Date.now() - inicio_nivel_ts_escritora)
+        );
+    }
+    if (intervalo_progreso_nivel_escritora) {
+        clearInterval(intervalo_progreso_nivel_escritora);
+        intervalo_progreso_nivel_escritora = null;
+    }
+    inicio_nivel_ts_escritora = 0;
+    const pct = DURACION_NIVEL_MS_ESCRITORA > 0
+        ? (progreso_nivel_pausado_ms_escritora / DURACION_NIVEL_MS_ESCRITORA) * 100
+        : 0;
+    setProgresoNivelBarraEscritora(pct);
+}
+
+function reanudarProgresoNivelBarraEscritora() {
+    if (!modo_actual || modo_actual === "frase final" || DURACION_NIVEL_MS_ESCRITORA <= 0) return;
+    inicio_nivel_ts_escritora = Date.now() - Math.max(0, progreso_nivel_pausado_ms_escritora);
+    tickProgresoNivelBarraEscritora();
+    if (!intervalo_progreso_nivel_escritora && progreso_nivel_pausado_ms_escritora < DURACION_NIVEL_MS_ESCRITORA) {
+        intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
+    }
+}
+
 function iniciarProgresoNivelBarraEscritora() {
     if (modo_actual === "frase final") {
         detenerProgresoNivelBarraEscritora(true);
@@ -888,6 +927,7 @@ function iniciarProgresoNivelBarraEscritora() {
         return;
     }
     detenerProgresoNivelBarraEscritora(true);
+    progreso_nivel_pausado_ms_escritora = 0;
     inicio_nivel_ts_escritora = Date.now();
     tickProgresoNivelBarraEscritora();
     intervalo_progreso_nivel_escritora = setInterval(tickProgresoNivelBarraEscritora, 120);
@@ -898,10 +938,19 @@ function sincronizarProgresoNivelBarraEscritora(payload = {}) {
     const data = (payload && typeof payload === "object") ? payload : {};
     const modoEvento = typeof data.modo_actual === "string" ? data.modo_actual : "";
     if (modoEvento && modoEvento !== modo_actual) return false;
-    const segundos = Number(data.segundos_transcurridos);
+    actualizarDuracionNivelDesdeParametrosEscritora(data);
+    let segundos = Number(data.segundos_transcurridos);
+    if (!Number.isFinite(segundos) || segundos < 0) {
+        const duracionSegundos = Number(data.duracion_modo_segundos);
+        const restanteSegundos = Number(data.tiempo_restante_modo_segundos);
+        if (Number.isFinite(duracionSegundos) && Number.isFinite(restanteSegundos)) {
+            segundos = Math.max(0, duracionSegundos - restanteSegundos);
+        }
+    }
     if (!Number.isFinite(segundos) || segundos < 0) return false;
 
     const ms = Math.max(0, Math.min(DURACION_NIVEL_MS_ESCRITORA, Math.round(segundos * 1000)));
+    progreso_nivel_pausado_ms_escritora = ms;
     inicio_nivel_ts_escritora = Date.now() - ms;
     const pct = DURACION_NIVEL_MS_ESCRITORA > 0 ? (ms / DURACION_NIVEL_MS_ESCRITORA) * 100 : 0;
     setProgresoNivelBarraEscritora(pct);

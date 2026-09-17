@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260917e">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260917f">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260917d"></script>
+<script src="./js/actions.js?v=20260917e"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -176,7 +176,7 @@
                             <div class="control-group-buttons control-group-buttons--two">
                                 <span id="boton_escribir" class='btn' onclick="temp()">&#x270E; ESCRIBIR</span>
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
-                                <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
+                                <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn' hidden aria-hidden="true" tabindex="-1">&#x23F8;&#xFE0F; PAUSAR</span>
                                 <button id="boton_fin_partida" class="btn btn-game-end" type="button" onclick="fin_partida_global()" aria-label="Finalizar partida" title="Finalizar partida" hidden>&#x23F9;&#xFE0F; FINALIZAR PARTIDA</button>
                                 <button id="boton_resultado_videojuego" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" aria-hidden="true" onclick="mostrarResultadoVideojuego()" hidden>&#x1F3AE; MOSTRAR RESULTADO VIDEOJUEGO</button>
                                 <button id="boton_vista_partida" class="btn btn-vista-espectador" type="button" data-vista-principal="partida" data-active="0" aria-pressed="false" onclick="mostrar_vista_partida()">&#x1F3AE; VISTA PARTIDA</button>
@@ -849,7 +849,7 @@
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260903b"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260917c"></script>
+<script src="./js/socket-events.js?v=20260917d"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

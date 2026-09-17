@@ -1006,6 +1006,9 @@ function aplicarPostInicioEspectador(data = {}) {
         tiempo1.style.display = DISPLAY_BARRA_VIDA;
         aplicarEstadoBarraVida(tiempo1, 0);
     }
+    if (inspiracion) {
+        inspiracion.style.display = "block";
+    }
 
     texto1.style.display = "";
     texto2.style.display = "";
@@ -1167,7 +1170,22 @@ socket.on("temp_modos", (data = {}) => {
     if (!aceptarEventoModoEspectador(data)) {
         return;
     }
+    const modoSnapshot = typeof data.modo_actual === "string" ? data.modo_actual.trim() : "";
+    if (
+        modoSnapshot
+        && !cuenta_atras_activa
+        && !inicio_modo_delay
+        && (modo_actual !== modoSnapshot || !modo_nivel_activo_espectador)
+    ) {
+        partida_activa_espectador = true;
+        aplicarModo({
+            ...(ultimo_payload_modo_espectador || {}),
+            ...data,
+            modo_actual: modoSnapshot
+        });
+    }
     sincronizarProgresoNivelBarraDesdeSegundos(data);
+    actualizarVisibilidadPanelNivelEspectador();
 });
 
 function aplicarModo(data) {
@@ -1744,12 +1762,14 @@ socket.on("desventaja_ronda_limpiar", () => {
 });
 
 socket.on("pausar_js", () => {
+    if (modo_actual !== "tertulia") pausarProgresoNivelBarra();
     if (typeof pausarDesventajasVisualesEspectador === "function") {
         pausarDesventajasVisualesEspectador();
     }
 });
 
 socket.on("reanudar_js", () => {
+    if (modo_actual !== "tertulia") reanudarProgresoNivelBarra();
     if (typeof reanudarDesventajasVisualesEspectador === "function") {
         reanudarDesventajasVisualesEspectador();
     }

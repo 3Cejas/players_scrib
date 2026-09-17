@@ -8417,7 +8417,8 @@ table.default {
 }
 
 #control_panel_juego #boton_fin_partida[hidden],
-#control_panel_juego #boton_resultado_videojuego[hidden] {
+#control_panel_juego #boton_resultado_videojuego[hidden],
+#control_panel_juego #boton_pausar_reanudar[hidden] {
     display: none !important;
 }
 

@@ -686,6 +686,9 @@ socket.on('temp_modos', data => {
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
     }
+    if (typeof window.actualizarBotonPausaReanudarControl === "function") {
+        window.actualizarBotonPausaReanudarControl(getEl("boton_pausar_reanudar"));
+    }
     segundos_modo_actual_control = Number(data && data.segundos_transcurridos) || 0;
     duracion_modo_actual_control = Number(data && data.duracion_modo_segundos)
         || Number(typeof TIEMPO_CAMBIO_MODOS !== "undefined" ? TIEMPO_CAMBIO_MODOS : 0)
@@ -776,6 +779,9 @@ socket.on('fin_a_control', () => {
     final(2, { emitirConteoFinal: false });
     juego_iniciado = false;
     modo_actual = "";
+    if (typeof window.actualizarBotonPausaReanudarControl === "function") {
+        window.actualizarBotonPausaReanudarControl(getEl("boton_pausar_reanudar"));
+    }
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
     }
@@ -819,6 +825,9 @@ socket.on('activar_modo', (data) => {
     }
     modo_actual = data.modo_actual;
     juego_iniciado = true;
+    if (typeof window.actualizarBotonPausaReanudarControl === "function") {
+        window.actualizarBotonPausaReanudarControl(getEl("boton_pausar_reanudar"));
+    }
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
     }

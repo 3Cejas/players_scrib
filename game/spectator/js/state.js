@@ -5660,6 +5660,7 @@ const CLASES_BARRA_NIVEL = [
 let DURACION_NIVEL_MS = 60000;
 let inicio_nivel_ts = 0;
 let intervalo_progreso_nivel = null;
+let progreso_nivel_pausado_ms = 0;
 let progreso_frase_final_base_j1 = null;
 let progreso_frase_final_base_j2 = null;
 let progreso_frase_final_base_max = 0;
@@ -5798,6 +5799,15 @@ function normalizarDuracionNivelMs(valor) {
 }
 
 function actualizarDuracionNivelDesdeParametros(parametros = {}) {
+    const duracionAutoritativaSegundos = Number(
+        parametros.duracion_modo_segundos
+        ?? parametros.duracionModoSegundos
+        ?? parametros.duracion_nivel_segundos
+    );
+    if (Number.isFinite(duracionAutoritativaSegundos) && duracionAutoritativaSegundos > 0) {
+        DURACION_NIVEL_MS = Math.round(duracionAutoritativaSegundos * 1000);
+        return;
+    }
     const candidatos = [
         parametros.TIEMPO_MODOS,
         parametros.DURACION_TIEMPO_MODOS,
@@ -5826,6 +5836,7 @@ function detenerProgresoNivelBarra(reiniciar = false) {
         intervalo_progreso_nivel = null;
     }
     inicio_nivel_ts = 0;
+    progreso_nivel_pausado_ms = 0;
     if (reiniciar) {
         setProgresoNivelBarra(0);
     }
@@ -5906,6 +5917,34 @@ function tickProgresoNivelBarra() {
     }
 }
 
+function pausarProgresoNivelBarra() {
+    if (!modo_actual || modo_actual === "frase final") return;
+    if (inicio_nivel_ts && DURACION_NIVEL_MS > 0) {
+        progreso_nivel_pausado_ms = Math.max(
+            0,
+            Math.min(DURACION_NIVEL_MS, Date.now() - inicio_nivel_ts)
+        );
+    }
+    if (intervalo_progreso_nivel) {
+        clearInterval(intervalo_progreso_nivel);
+        intervalo_progreso_nivel = null;
+    }
+    inicio_nivel_ts = 0;
+    const pct = DURACION_NIVEL_MS > 0
+        ? (progreso_nivel_pausado_ms / DURACION_NIVEL_MS) * 100
+        : 0;
+    setProgresoNivelBarra(pct);
+}
+
+function reanudarProgresoNivelBarra() {
+    if (!modo_actual || modo_actual === "frase final" || DURACION_NIVEL_MS <= 0) return;
+    inicio_nivel_ts = Date.now() - Math.max(0, progreso_nivel_pausado_ms);
+    tickProgresoNivelBarra();
+    if (!intervalo_progreso_nivel && progreso_nivel_pausado_ms < DURACION_NIVEL_MS) {
+        intervalo_progreso_nivel = setInterval(tickProgresoNivelBarra, 120);
+    }
+}
+
 function iniciarProgresoNivelBarra() {
     if (modo_actual === "frase final") {
         detenerProgresoNivelBarra(true);
@@ -5913,6 +5952,7 @@ function iniciarProgresoNivelBarra() {
         return;
     }
     detenerProgresoNivelBarra(true);
+    progreso_nivel_pausado_ms = 0;
     inicio_nivel_ts = Date.now();
     tickProgresoNivelBarra();
     intervalo_progreso_nivel = setInterval(tickProgresoNivelBarra, 120);
@@ -5923,10 +5963,19 @@ function sincronizarProgresoNivelBarraDesdeSegundos(payload = {}) {
     const data = (payload && typeof payload === "object") ? payload : {};
     const modoEvento = typeof data.modo_actual === "string" ? data.modo_actual : "";
     if (modoEvento && modoEvento !== modo_actual) return false;
-    const segundos = Number(data.segundos_transcurridos);
+    actualizarDuracionNivelDesdeParametros(data);
+    let segundos = Number(data.segundos_transcurridos);
+    if (!Number.isFinite(segundos) || segundos < 0) {
+        const duracionSegundos = Number(data.duracion_modo_segundos);
+        const restanteSegundos = Number(data.tiempo_restante_modo_segundos);
+        if (Number.isFinite(duracionSegundos) && Number.isFinite(restanteSegundos)) {
+            segundos = Math.max(0, duracionSegundos - restanteSegundos);
+        }
+    }
     if (!Number.isFinite(segundos) || segundos < 0) return false;
 
     const ms = Math.max(0, Math.min(DURACION_NIVEL_MS, Math.round(segundos * 1000)));
+    progreso_nivel_pausado_ms = ms;
     inicio_nivel_ts = Date.now() - ms;
     const pct = DURACION_NIVEL_MS > 0 ? (ms / DURACION_NIVEL_MS) * 100 : 0;
     setProgresoNivelBarra(pct);

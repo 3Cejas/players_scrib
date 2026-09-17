@@ -2309,6 +2309,7 @@ function temp() {
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
     actualizarBotonFinPartidaControl();
+    actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
   
     invalidarTemporizadoresPartidaControl();
 }
@@ -2445,6 +2446,7 @@ function limpiar({ emitirServidor = true } = {}) {
     //texto1.innerText = "";
     //texto2.innerText = "";
     juego_iniciado = false;
+    actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     actualizarBotonFinPartidaControl();
     actualizarBotonResultadoVideojuegoControl(false);
     terminado = false;
@@ -3105,6 +3107,10 @@ window.actualizarBotonesVistaPrincipalControl = actualizarBotonesVistaPrincipalC
 
 function actualizarBotonPausaReanudarControl(boton) {
     if (!boton) return;
+    const visible = juego_iniciado === true;
+    boton.hidden = !visible;
+    boton.setAttribute("aria-hidden", visible ? "false" : "true");
+    boton.tabIndex = visible ? 0 : -1;
     boton.innerHTML = boton.dataset.value == 1
         ? tJuego2PControl("control.button.resume", {}, "\u{25B6}\u{FE0F} REANUDAR")
         : tJuego2PControl("control.button.pause", {}, "\u{23F8}\u{FE0F} PAUSAR");

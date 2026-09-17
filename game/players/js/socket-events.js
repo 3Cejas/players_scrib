@@ -1216,6 +1216,54 @@ socket.on("escritor_reemplazado", (payload = {}) => {
     mostrarAvisoEscritoraReemplazada(payload);
 });
 
+let recuperando_sesion_escritora = false;
+let ultimo_payload_texto_enviado_escritora = null;
+
+function construirPayloadTextoEscritora() {
+    capturarTextoGuardadoDesdeEditor();
+    const caretInfo = obtenerCaretInfo(texto);
+    return {
+        text: texto.innerHTML,
+        points: puntos.innerHTML,
+        caretPos: caretInfo.caretPos,
+        caretLine: caretInfo.caretLine,
+        caretRatio: caretInfo.caretRatio,
+        caretPath: caretInfo.caretPath,
+        caretOffset: caretInfo.caretOffset,
+        texto_guardado
+    };
+}
+
+function registrarSesionEscritora(callback) {
+    socket.emit('registrar_escritor', {
+        player,
+        client_id: obtenerClientIdSesionEscritora()
+    }, (respuesta = {}) => {
+        if (typeof callback === "function") callback(respuesta);
+    });
+}
+
+socket.on("escritor_sesion_inactiva", (payload = {}) => {
+    if (Number(payload.player) !== Number(player) || recuperando_sesion_escritora) return;
+    if (payload.mismo_client_id !== true) {
+        mostrarAvisoEscritoraReemplazada(payload);
+        return;
+    }
+
+    recuperando_sesion_escritora = true;
+    const textoPendiente = ultimo_payload_texto_enviado_escritora
+        ? { ...ultimo_payload_texto_enviado_escritora }
+        : construirPayloadTextoEscritora();
+    registrarSesionEscritora((respuesta = {}) => {
+        recuperando_sesion_escritora = false;
+        if (respuesta.ok !== true) return;
+        texto.innerHTML = textoPendiente.text;
+        texto_guardado = normalizarSaltosTextoGuardado(textoPendiente.texto_guardado || "");
+        countChars(texto);
+        socket.emit(texto_x, textoPendiente);
+    });
+});
+
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
@@ -1226,10 +1274,7 @@ socket.on('connect', () => {
     sincronizarEstadoContadorEscritora(null, "");
     limpiarEntregaInspiracionEscritora();
     actualizarEtiquetasCursorCalentamientoEscritor();
-    socket.emit('registrar_escritor', {
-        player,
-        client_id: obtenerClientIdSesionEscritora()
-    });
+    registrarSesionEscritora();
     socket.emit('pedir_atributos');
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');
@@ -1690,6 +1735,7 @@ socket.on(enviar_palabra, data => {
 
 socket.on('pausar_js', data => {
     es_pausa = true;
+    if (modo_actual !== "tertulia") pausarProgresoNivelBarraEscritora();
     LIMPIEZAS[modo_actual](data);
     tiempo_restante = TIEMPO_MODIFICADOR - (new Date().getTime() - tiempo_inicial.getTime());
     pausa();
@@ -1707,6 +1753,7 @@ socket.on('fin', data => {
 });
 
 socket.on('reanudar_js', data => {
+    if (modo_actual !== "tertulia") reanudarProgresoNivelBarraEscritora();
     if (modo_actual === "tertulia") {
         es_pausa = false;
         reanudarDesventajaActivaEscritora();
@@ -2085,20 +2132,9 @@ if (window && typeof window.scribOnLanguageChange2P === "function") {
 refrescarUiIdiomaEscritora();
 
 function sendText() {
-    capturarTextoGuardadoDesdeEditor();
-    let text = texto.innerHTML;
-    let points = puntos.innerHTML;
-    const caretInfo = obtenerCaretInfo(texto);
-    socket.emit(texto_x, {
-        text,
-        points,
-        caretPos: caretInfo.caretPos,
-        caretLine: caretInfo.caretLine,
-        caretRatio: caretInfo.caretRatio,
-        caretPath: caretInfo.caretPath,
-        caretOffset: caretInfo.caretOffset,
-        texto_guardado
-    });
+    const payload = construirPayloadTextoEscritora();
+    ultimo_payload_texto_enviado_escritora = { ...payload };
+    socket.emit(texto_x, payload);
 }
 
 window.sendText = sendText;

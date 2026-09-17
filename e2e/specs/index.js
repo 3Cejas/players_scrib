@@ -1567,6 +1567,7 @@ const smokeSpecs = [
     run: async (ctx) => {
       await openRolesAndWaitWithOptions(ctx, FULL_ROLE_SET, { useStateHooks: false });
       await ctx.waitForVisible("control", "#boton_escribir", true, "control button visible");
+      await ctx.waitForVisible("control", "#boton_pausar_reanudar", false, "pause button hidden without an active match");
       await ctx.waitForVisible("writer1", "#atributos-container", true, "writer1 setup visible");
       await ctx.waitForVisible("musa1", "#musa_help_fab", true, "musa1 help control visible");
       await ctx.waitForVisible("spectator", "#contenedor_espectador", true, "spectator booted");
@@ -1584,6 +1585,7 @@ const smokeSpecs = [
         modes: ["palabras bonus"]
       });
       await startGame(ctx, { useStateHooks: false });
+      await ctx.waitForVisible("control", "#boton_pausar_reanudar", true, "pause button visible during the active match");
       await freezeWriterDecay(ctx, "writer1");
       await freezeWriterDecay(ctx, "writer2");
 
@@ -3146,6 +3148,43 @@ const coreSpecs = [
     }
   },
   {
+    name: "writer-inspiration-both-teams-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator"]);
+      await startGame(ctx);
+      await ctx.waitForVisible("spectator", "#countdown", false, "spectator intro cleared before writer inspiration checks", 10000);
+      await freezeWriterDecay(ctx, "writer1");
+      await freezeWriterDecay(ctx, "writer2");
+
+      await ctx.emitHook("scrib_test:force_mode", { mode: "letra bendita", letra: "Q" });
+      await waitForMode(ctx, "letra bendita", 8000);
+      await waitForLocalMode(ctx, "writer1", "letra bendita", 8000);
+      await waitForLocalMode(ctx, "writer2", "letra bendita", 8000);
+
+      await ctx.setWriterText("writer1", "azul");
+      await ctx.setWriterText("writer2", "rojo");
+      const afterWriting = await ctx.waitForState(
+        "both writers gain inspiration while writing",
+        (state) => Number(state.competicion_ronda.marcador[1]) > 0
+          && Number(state.competicion_ronda.marcador[2]) > 0,
+        10000
+      );
+      const blueBeforeDelete = Number(afterWriting.competicion_ronda.marcador[1]);
+      const redBeforeDelete = Number(afterWriting.competicion_ronda.marcador[2]);
+
+      await focusWriterEditor(ctx, "writer1");
+      await ctx.getPageEntry("writer1").page.keyboard.press("Backspace");
+      await focusWriterEditor(ctx, "writer2");
+      await ctx.getPageEntry("writer2").page.keyboard.press("Backspace");
+      await ctx.waitForState(
+        "both writers lose inspiration while deleting",
+        (state) => Number(state.competicion_ronda.marcador[1]) < blueBeforeDelete
+          && Number(state.competicion_ronda.marcador[2]) < redBeforeDelete,
+        10000
+      );
+    }
+  },
+  {
     name: "final-phrase-core",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["writer1", "spectator", "musa1"]);
@@ -4409,6 +4448,19 @@ const coreSpecs = [
       await ctx.setWriterText("writer2", "actor dos sincronizado");
       await ctx.waitForText("actor1", "#texto", (text) => text.includes("actor uno sincronizado"), "actor1 synced");
       await ctx.waitForText("actor2", "#texto", (text) => text.includes("actor dos sincronizado"), "actor2 synced");
+
+      const actorAudioPolicy = await ctx.evaluate("actor1", async () => {
+        const audio = new Audio();
+        await audio.play();
+        return {
+          disabled: window.SCRIB_AUDIO_DISABLED === true,
+          muted: audio.muted,
+          volume: audio.volume,
+          paused: audio.paused
+        };
+      });
+      ctx.assert(actorAudioPolicy.disabled, "actor role should install its no-audio policy");
+      ctx.assert(actorAudioPolicy.muted && actorAudioPolicy.volume === 0 && actorAudioPolicy.paused, "actor media playback should stay silent");
 
       await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
       await ctx.waitForText("actor1", "#palabra", (text) => text.trim().length > 0, "actor1 mode strip visible");
@@ -5796,6 +5848,33 @@ const coreSpecs = [
       await ctx.waitForText("spectator", "#texto", (text) => text.includes("spectatorazul"), "spectator restored blue text");
       await ctx.waitForText("spectator", "#texto1", (text) => text.includes("spectatorrojo"), "spectator restored red text");
       await ctx.waitForText("spectator", "#palabra", (text) => text.trim().length > 0, "spectator restored mode title");
+      await ctx.waitFor(
+        "spectator restores visible level panel, inspiration HUD and elapsed progress",
+        async () => ctx.evaluate("spectator", () => {
+          const panel = document.querySelector("#info_general");
+          const title = document.querySelector("#palabra");
+          const hud = document.querySelector("#scrib_competition_hud");
+          const progress = Number.parseFloat(title?.style.getPropertyValue("--nivel-progress") || "0");
+          return Boolean(
+            document.body.classList.contains("vista-partida")
+            && panel
+            && !panel.classList.contains("info-general-panel--oculto")
+            && hud?.dataset.active === "1"
+            && progress > 0
+            && progress < 100
+          );
+        }),
+        10000
+      );
+
+      const writerProgressBefore = await ctx.evaluate("writer1", () => Number.parseFloat(
+        document.querySelector("#palabra")?.style.getPropertyValue("--nivel-progress") || "0"
+      ));
+      await ctx.sleep(500);
+      const writerProgressAfter = await ctx.evaluate("writer1", () => Number.parseFloat(
+        document.querySelector("#palabra")?.style.getPropertyValue("--nivel-progress") || "0"
+      ));
+      ctx.assert(writerProgressAfter > writerProgressBefore, "writer level header progress should advance with the round clock");
     }
   },
   {
