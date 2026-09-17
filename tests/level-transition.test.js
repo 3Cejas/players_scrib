@@ -276,6 +276,7 @@ test("actor and muse timelines carry authoritative progress while the actor desk
     const actorHtml = read("game/actors/source/index.html");
     const actorCss = read("game/actors/source/css/publico.css");
     const actorSockets = read("game/actors/source/js/socket-events.js");
+    const museHtml = read("game/public/players/index.html");
     const museCss = read("game/public/players/css/publico.css");
     const museSockets = read("game/public/players/js/socket-events.js");
     const writerHtml = read("game/players/index.html");
@@ -296,7 +297,8 @@ test("actor and muse timelines carry authoritative progress while the actor desk
     assert.match(museSockets, /socket\.on\("temp_modos", sincronizarProgresoNivelMusa\)/);
     assert.match(museCss, /\.musa-texto-card[\s\S]*--nivel-progress-angle[\s\S]*conic-gradient/);
     assert.match(museCss, /#btn_bandera[\s\S]*border-radius:\s*50% !important/);
-    assert.match(museCss, /#btn_bandera::before[\s\S]*content:\s*none !important/);
+    assert.match(museCss, /\.musa-bandera-fab-wrap #btn_bandera::before,[\s\S]*\.musa-bandera-fab-wrap #btn_bandera::after[\s\S]*content:\s*none !important/);
+    assert.match(museHtml, /publico\.css\?v=20260918a/);
 
     assert.doesNotMatch(writerHtml, /escritxr-texto-panel__label[^>]*>[\s\S]{0,80}1F58B/);
     assert.match(writerCss, /\.escritxr-texto-panel\s*\{[\s\S]*width:\s*min\(1440px, 94vw\)/);

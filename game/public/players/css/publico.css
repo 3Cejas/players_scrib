@@ -6610,27 +6610,6 @@ body.musa-bandera-disponible .musa-bandera-fab-wrap {
         font-size: 0;
     }
 
-    .musa-bandera-fab-wrap #btn_bandera::after {
-        content: "";
-        position: absolute;
-        width: 25px;
-        height: 17px;
-        margin-left: 7px;
-        background: linear-gradient(145deg, #fff 0 8%, var(--bandera-color) 9% 100%);
-        clip-path: polygon(0 0, 100% 13%, 78% 52%, 100% 88%, 0 100%);
-        filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .32));
-    }
-
-    .musa-bandera-fab-wrap #btn_bandera::before {
-        content: "" !important;
-        position: absolute;
-        width: 3px;
-        height: 30px;
-        margin-left: -22px;
-        border-radius: 99px;
-        background: #161b22;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, .38);
-    }
 }
 
 /* Orden canónico del recorrido: nunca depende del nivel que esté activo. */
@@ -6674,30 +6653,6 @@ body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-b
     line-height: 1 !important;
 }
 
-body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before,
-body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before {
-    content: "" !important;
-    position: absolute !important;
-    width: 4px !important;
-    height: 38px !important;
-    margin-left: -27px !important;
-    border-radius: 99px !important;
-    background: #101820 !important;
-    box-shadow: 0 0 0 1px rgba(255,255,255,.48) !important;
-}
-
-body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after,
-body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after {
-    content: "" !important;
-    position: absolute !important;
-    width: 34px !important;
-    height: 24px !important;
-    margin-left: 9px !important;
-    background: linear-gradient(145deg, #fff 0 7%, var(--bandera-color) 8% 100%) !important;
-    clip-path: polygon(0 0,100% 13%,78% 52%,100% 88%,0 100%) !important;
-    filter: drop-shadow(0 3px 3px rgba(0,0,0,.4)) !important;
-}
-
 body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap {
     top: 50% !important;
     left: 50% !important;
@@ -6710,18 +6665,6 @@ body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-
     height: clamp(132px, 36vw, 174px) !important;
     min-height: clamp(132px, 36vw, 174px) !important;
     animation: musaBanderaEsperaPulse 1.65s ease-in-out infinite !important;
-}
-
-body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before {
-    width: 7px !important;
-    height: 78px !important;
-    margin-left: -53px !important;
-}
-
-body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after {
-    width: 70px !important;
-    height: 51px !important;
-    margin-left: 18px !important;
 }
 
 @keyframes musaBanderaEsperaPulse {
@@ -6965,12 +6908,15 @@ body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-b
     text-shadow: none !important;
 }
 
-body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before,
-body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after,
-body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::before,
-body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera::after {
+.musa-bandera-fab-wrap #btn_bandera::before,
+.musa-bandera-fab-wrap #btn_bandera::after {
     content: none !important;
     display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: none !important;
+    clip-path: none !important;
+    filter: none !important;
 }
 
 body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera {
