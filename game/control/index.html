@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260917d">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260917e">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -544,6 +544,16 @@
                     </div>
                 </td>
             </tr>
+            <tr class="parametros-analisis-row">
+                <td colspan="5">
+                    <section class="parametros-analisis" aria-labelledby="parametros_duracion_niveles_titulo">
+                        <strong id="parametros_duracion_niveles_titulo" data-i18n="control.param.level_durations">DURACI&Oacute;N POR NIVEL</strong>
+                        <div id="parametros_duracion_niveles" class="parametros-duracion-niveles" aria-live="polite"></div>
+                        <div id="parametros_duracion_total" class="parametros-duracion-total"></div>
+                        <div id="parametros_coherencia" class="parametros-coherencia" role="alert" aria-live="assertive" hidden></div>
+                    </section>
+                </td>
+            </tr>
             <tr>
                 <td colspan="5" class="param-duration">
                     <label for="duracion_minutos" data-i18n="control.param.duration">DURACIÓN</label>
@@ -640,16 +650,6 @@
                                min="82" max="128" step="1" value="100" onchange="actualizarEscalaEspectadorControlDesdeParametro()" oninput="actualizarEscalaEspectadorControlDesdeParametro()">
                         <span id="escala_espectador_valor" class="spectator-scale-value">100%</span>
                     </div>
-                </td>
-            </tr>
-            <tr class="parametros-analisis-row">
-                <td colspan="5">
-                    <section class="parametros-analisis" aria-labelledby="parametros_duracion_niveles_titulo">
-                        <strong id="parametros_duracion_niveles_titulo" data-i18n="control.param.level_durations">DURACI&Oacute;N POR NIVEL</strong>
-                        <div id="parametros_duracion_niveles" class="parametros-duracion-niveles" aria-live="polite"></div>
-                        <div id="parametros_duracion_total" class="parametros-duracion-total"></div>
-                        <div id="parametros_coherencia" class="parametros-coherencia" role="alert" aria-live="assertive" hidden></div>
-                    </section>
                 </td>
             </tr>
             <tr class="parametros-modos-row">
@@ -843,9 +843,9 @@
             </tr>
         </table>
 <script src="../dist/socket.io/socket.io.js"></script>
-    <script src="../js/i18n.js?v=20260917a"></script>
+    <script src="../js/i18n.js?v=20260917b"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
-    <script src="./js/state.js?v=20260917b"></script>
+    <script src="./js/state.js?v=20260917c"></script>
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260903b"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>

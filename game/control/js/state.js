@@ -434,61 +434,126 @@ function traducirModoParametroControl(modo) {
         : String(modo || "").toUpperCase();
 }
 
+let frameDesbordamientoParametrosControl = 0;
+let observadorDesbordamientoParametrosControl = null;
+
+function actualizarDesbordamientoParametrosControl() {
+    document.querySelectorAll("[data-parametros-marquee]").forEach((visor) => {
+        const pista = visor.querySelector(".parametros-marquee-track");
+        if (!pista || visor.hidden) {
+            visor.classList.remove("is-overflowing");
+            return;
+        }
+        const distancia = Math.max(0, Math.ceil(pista.scrollWidth - visor.clientWidth));
+        visor.classList.toggle("is-overflowing", distancia > 2);
+        visor.style.setProperty("--parametros-marquee-distance", `${distancia}px`);
+        visor.style.setProperty(
+            "--parametros-marquee-duration",
+            `${Math.min(18, Math.max(6, distancia / 28))}s`
+        );
+    });
+}
+
+function programarDesbordamientoParametrosControl() {
+    if (frameDesbordamientoParametrosControl) {
+        window.cancelAnimationFrame(frameDesbordamientoParametrosControl);
+    }
+    frameDesbordamientoParametrosControl = window.requestAnimationFrame(() => {
+        frameDesbordamientoParametrosControl = 0;
+        actualizarDesbordamientoParametrosControl();
+    });
+}
+
+function observarDesbordamientoParametrosControl(...elementos) {
+    if (typeof ResizeObserver !== "function") return;
+    if (!observadorDesbordamientoParametrosControl) {
+        observadorDesbordamientoParametrosControl = new ResizeObserver(programarDesbordamientoParametrosControl);
+    }
+    elementos.filter(Boolean).forEach((elemento) => observadorDesbordamientoParametrosControl.observe(elemento));
+}
+
 function construirAdvertenciasParametrosControl(duraciones) {
-    const advertencias = [];
     const cambioLetraSegundos = Math.max(1, Math.ceil(TIEMPO_CAMBIO_LETRA / 1000));
     const cambioPalabraSegundos = Math.max(1, Math.ceil(TIEMPO_CAMBIO_PALABRAS / 1000));
     const limiteMusasSegundos = Math.max(1, Math.ceil(Number(LIMITE_TIEMPO_INSPIRACION) || 0));
     const votacionSegundos = Math.max(1, Math.ceil(TIEMPO_VOTACION / 1000));
 
     if (!duraciones.length) {
-        advertencias.push(tJuego2P(
+        return [tJuego2P(
             "control.param.warning.no_levels",
             {},
             "Activa al menos un nivel para poder iniciar la partida."
-        ));
-        return advertencias;
+        )];
     }
 
-    duraciones.forEach(({ modo, duracion }) => {
-        const nombre = traducirModoParametroControl(modo);
-        if (["letra bendita", "letra prohibida"].includes(modo) && duracion < cambioLetraSegundos) {
-            advertencias.push(tJuego2P(
-                "control.param.warning.shorter_than_letter",
-                { mode: nombre, duration: formatearDuracionParametroControl(duracion), setting: formatearDuracionParametroControl(cambioLetraSegundos) },
-                `${nombre} dura ${formatearDuracionParametroControl(duracion)}, menos que el cambio de letra (${formatearDuracionParametroControl(cambioLetraSegundos)}).`
-            ));
-        }
-        if (["palabras bonus", "palabras prohibidas"].includes(modo) && duracion < cambioPalabraSegundos) {
-            advertencias.push(tJuego2P(
-                "control.param.warning.shorter_than_word",
-                { mode: nombre, duration: formatearDuracionParametroControl(duracion), setting: formatearDuracionParametroControl(cambioPalabraSegundos) },
-                `${nombre} dura ${formatearDuracionParametroControl(duracion)}, menos que el cambio de palabra (${formatearDuracionParametroControl(cambioPalabraSegundos)}).`
-            ));
-        }
-        if (MODOS_COMPETITIVOS_CONTROL.has(modo) && duracion < limiteMusasSegundos) {
-            advertencias.push(tJuego2P(
-                "control.param.warning.shorter_than_muse",
-                { mode: nombre, duration: formatearDuracionParametroControl(duracion), setting: formatearDuracionParametroControl(limiteMusasSegundos) },
-                `${nombre} dura ${formatearDuracionParametroControl(duracion)}, menos que el límite de palabras de musas (${formatearDuracionParametroControl(limiteMusasSegundos)}).`
-            ));
-        }
-        if (MODOS_COMPETITIVOS_CONTROL.has(modo)) {
-            const inicioDesventaja = Math.max(
-                1,
-                Math.ceil(duracion * (1 - (PORCENTAJE_TIEMPO_DESVENTAJA / 100)))
-            );
-            const tramoDesventaja = Math.max(0, duracion - inicioDesventaja);
-            if (tramoDesventaja <= votacionSegundos) {
-                advertencias.push(tJuego2P(
-                    "control.param.warning.vote_too_long",
-                    { mode: nombre, window: formatearDuracionParametroControl(tramoDesventaja), vote: formatearDuracionParametroControl(votacionSegundos) },
-                    `${nombre} reserva ${formatearDuracionParametroControl(tramoDesventaja)} para votar y aplicar la desventaja, pero la votación está en ${formatearDuracionParametroControl(votacionSegundos)}.`
-                ));
-            }
-        }
-    });
-    return advertencias;
+    const competitivos = duraciones.filter(({ modo }) => MODOS_COMPETITIVOS_CONTROL.has(modo));
+    if (!competitivos.length) return [];
+
+    const duracionesCompetitivas = competitivos.map(({ duracion }) => duracion);
+    const duracionMinima = Math.min(...duracionesCompetitivas);
+    const duracionMaxima = Math.max(...duracionesCompetitivas);
+    const duracionGrupo = duracionMinima === duracionMaxima
+        ? formatearDuracionParametroControl(duracionMinima)
+        : `${formatearDuracionParametroControl(duracionMinima)}–${formatearDuracionParametroControl(duracionMaxima)}`;
+    const ajustesIncompatibles = [];
+    const duracionesLetra = competitivos
+        .filter(({ modo }) => ["letra bendita", "letra prohibida"].includes(modo))
+        .map(({ duracion }) => duracion);
+    const duracionesPalabra = competitivos
+        .filter(({ modo }) => ["palabras bonus", "palabras prohibidas"].includes(modo))
+        .map(({ duracion }) => duracion);
+
+    if (duracionesLetra.length && Math.min(...duracionesLetra) < cambioLetraSegundos) {
+        ajustesIncompatibles.push(tJuego2P(
+            "control.param.warning.setting_letter",
+            { duration: formatearDuracionParametroControl(cambioLetraSegundos) },
+            `cambio de letra (${formatearDuracionParametroControl(cambioLetraSegundos)})`
+        ));
+    }
+    if (duracionesPalabra.length && Math.min(...duracionesPalabra) < cambioPalabraSegundos) {
+        ajustesIncompatibles.push(tJuego2P(
+            "control.param.warning.setting_word",
+            { duration: formatearDuracionParametroControl(cambioPalabraSegundos) },
+            `cambio de palabra (${formatearDuracionParametroControl(cambioPalabraSegundos)})`
+        ));
+    }
+    if (duracionMinima < limiteMusasSegundos) {
+        ajustesIncompatibles.push(tJuego2P(
+            "control.param.warning.setting_muse",
+            { duration: formatearDuracionParametroControl(limiteMusasSegundos) },
+            `límite de palabras de musas (${formatearDuracionParametroControl(limiteMusasSegundos)})`
+        ));
+    }
+
+    const tramoDesventajaMinimo = Math.min(...competitivos.map(({ duracion }) => {
+        const inicioDesventaja = Math.max(
+            1,
+            Math.ceil(duracion * (1 - (PORCENTAJE_TIEMPO_DESVENTAJA / 100)))
+        );
+        return Math.max(0, duracion - inicioDesventaja);
+    }));
+    if (tramoDesventajaMinimo <= votacionSegundos) {
+        ajustesIncompatibles.push(tJuego2P(
+            "control.param.warning.setting_vote",
+            {
+                vote: formatearDuracionParametroControl(votacionSegundos),
+                window: formatearDuracionParametroControl(tramoDesventajaMinimo)
+            },
+            `votación (${formatearDuracionParametroControl(votacionSegundos)}; tramo ${formatearDuracionParametroControl(tramoDesventajaMinimo)})`
+        ));
+    }
+
+    if (!ajustesIncompatibles.length) return [];
+    const grupo = tJuego2P(
+        "control.param.warning.writing_levels",
+        {},
+        "NIVELES DE ESCRITURA"
+    );
+    return [tJuego2P(
+        "control.param.warning.compact",
+        { group: grupo, duration: duracionGrupo, settings: ajustesIncompatibles.join(" · ") },
+        `${grupo} (${duracionGrupo}): tiempo insuficiente para ${ajustesIncompatibles.join(" · ")}.`
+    )];
 }
 
 function actualizarAnalisisParametrosControl() {
@@ -503,6 +568,9 @@ function actualizarAnalisisParametrosControl() {
 
     if (resumen) {
         resumen.replaceChildren();
+        resumen.dataset.parametrosMarquee = "";
+        const pista = document.createElement("span");
+        pista.className = "parametros-marquee-track parametros-duracion-track";
         DURACIONES_NIVELES_CONTROL.forEach(({ modo, duracion }) => {
             const chip = document.createElement("span");
             chip.className = "parametros-duracion-chip";
@@ -512,8 +580,9 @@ function actualizarAnalisisParametrosControl() {
             const tiempo = document.createElement("strong");
             tiempo.textContent = formatearDuracionParametroControl(duracion);
             chip.append(nombre, tiempo);
-            resumen.appendChild(chip);
+            pista.appendChild(chip);
         });
+        resumen.appendChild(pista);
     }
 
     if (totalEl) {
@@ -530,11 +599,17 @@ function actualizarAnalisisParametrosControl() {
         avisosEl.replaceChildren();
         advertencias.forEach((advertencia) => {
             const item = document.createElement("p");
-            item.textContent = `⚠ ${advertencia}`;
+            item.dataset.parametrosMarquee = "";
+            const pista = document.createElement("span");
+            pista.className = "parametros-marquee-track";
+            pista.textContent = `⚠ ${advertencia}`;
+            item.appendChild(pista);
             avisosEl.appendChild(item);
         });
         avisosEl.hidden = advertencias.length === 0;
     }
+    observarDesbordamientoParametrosControl(resumen, avisosEl);
+    programarDesbordamientoParametrosControl();
 }
 window.calcularDuracionesNivelesControl = calcularDuracionesNivelesControl;
 window.actualizarAnalisisParametrosControl = actualizarAnalisisParametrosControl;

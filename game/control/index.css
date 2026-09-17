@@ -10909,6 +10909,64 @@ body {
     }
 }
 
+/* El resumen y sus avisos preceden a Duración y ocupan siempre todo el panel. */
+#panel_parametros:not(.is-side-collapsed) > tr.parametros-analisis-row:has(#parametros_duracion_niveles) {
+    display: block !important;
+    grid-template-columns: none !important;
+    width: 100%;
+    padding: clamp(.35rem, .55vw, .65rem) clamp(.5rem, .7vw, .8rem) !important;
+    box-sizing: border-box;
+}
+
+#panel_parametros:not(.is-side-collapsed) > tr.parametros-analisis-row:has(#parametros_duracion_niveles) > td {
+    display: block !important;
+    min-height: 0 !important;
+    width: 100%;
+    padding: clamp(.46rem, .62vw, .68rem) !important;
+    border: 1px solid rgba(69, 243, 255, .2) !important;
+    border-radius: .38rem;
+    box-sizing: border-box;
+}
+
+.parametros-marquee-track {
+    display: inline-block;
+    width: max-content;
+    min-width: max-content;
+    transform: translateX(0);
+    will-change: transform;
+}
+
+.parametros-duracion-track {
+    display: flex;
+    align-items: center;
+    gap: clamp(.22rem, .4vw, .4rem);
+}
+
+[data-parametros-marquee].is-overflowing .parametros-marquee-track {
+    animation: parametros-marquee-ping-pong var(--parametros-marquee-duration, 8s) ease-in-out .7s infinite alternate;
+}
+
+[data-parametros-marquee].is-overflowing:hover .parametros-marquee-track,
+[data-parametros-marquee].is-overflowing:focus-within .parametros-marquee-track {
+    animation-play-state: paused;
+}
+
+@keyframes parametros-marquee-ping-pong {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-1 * var(--parametros-marquee-distance, 0px))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-parametros-marquee].is-overflowing {
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    [data-parametros-marquee].is-overflowing .parametros-marquee-track {
+        animation: none;
+    }
+}
+
 /* Visor de instrucciones: activación y navegación forman una sola pieza. */
 #panel_controles #control_panel_tutorial:not(.is-collapsed) > .instrucciones-viewer-control {
     display: block !important;
@@ -11037,13 +11095,9 @@ body {
 }
 
 .parametros-duracion-niveles {
-    display: flex;
+    display: block;
     min-width: 0;
-    align-items: center;
-    gap: clamp(0.22rem, 0.4vw, 0.4rem);
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(69, 243, 255, 0.35) transparent;
+    overflow: hidden;
 }
 
 .parametros-duracion-chip {
@@ -11073,9 +11127,9 @@ body {
 
 .parametros-coherencia {
     grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.22rem 0.72rem;
+    display: block;
+    min-width: 0;
+    overflow: hidden;
     padding: 0.34rem 0.46rem;
     border: 1px solid rgba(255, 173, 66, 0.48);
     border-radius: 0.22rem;
@@ -11088,6 +11142,11 @@ body {
 }
 
 .parametros-coherencia p {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
     margin: 0;
     color: #ffd28d;
     font: 600 clamp(0.44rem, 0.52vw, 0.6rem)/1.3 "Courier New", monospace;
