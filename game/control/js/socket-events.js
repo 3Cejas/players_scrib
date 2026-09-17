@@ -791,7 +791,7 @@ nombre1.addEventListener("input", evt => {
     actualizarNombresConexiones();
     socket.emit('envÃ­o_nombre1', val_nombre1);
     if (typeof emitirEstadoControlPersistente === "function") {
-        emitirEstadoControlPersistente();
+        emitirEstadoControlPersistente({ inmediato: true });
     }
 });
 
@@ -801,7 +801,7 @@ nombre2.addEventListener("input", evt => {
     actualizarNombresConexiones();
     socket.emit('envÃ­o_nombre2', val_nombre2);
     if (typeof emitirEstadoControlPersistente === "function") {
-        emitirEstadoControlPersistente();
+        emitirEstadoControlPersistente({ inmediato: true });
     }
 });
 

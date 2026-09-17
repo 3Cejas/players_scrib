@@ -205,6 +205,7 @@ let cursor_pluma_control_inicializado = false;
 let timeout_cursor_pluma_control_press = null;
 let selector_idioma_control_inicializado = false;
 let numeros_linea_control_inicializados = false;
+const observadores_tamano_lineas_control = [];
 let logs_control_inicializados = false;
 let reloj_control_interval = null;
 const logs_control_buffer = [];
@@ -1077,14 +1078,32 @@ function inicializarSelectorIdiomaControl() {
     sincronizar();
 }
 
-function extraerLineasTextoControl(elemento) {
-    if (!elemento) return [""]; 
-    const texto = typeof elemento.innerText === "string"
-        ? elemento.innerText
-        : String(elemento.textContent || "");
-    const normalizado = texto.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-    const sinSaltoFinal = normalizado.endsWith("\n") ? normalizado.slice(0, -1) : normalizado;
-    return sinSaltoFinal ? sinSaltoFinal.split("\n") : [""];
+function contarLineasVisualesTextoControl(elemento) {
+    if (!elemento || !document.body) return 1;
+    const estilos = window.getComputedStyle(elemento);
+    const ancho = Math.max(1, elemento.clientWidth || elemento.getBoundingClientRect().width || 1);
+    const medidor = elemento.cloneNode(true);
+    medidor.removeAttribute("id");
+    medidor.setAttribute("aria-hidden", "true");
+    medidor.style.setProperty("position", "fixed", "important");
+    medidor.style.setProperty("left", "-100000px", "important");
+    medidor.style.setProperty("top", "0", "important");
+    medidor.style.setProperty("width", `${ancho}px`, "important");
+    medidor.style.setProperty("height", "auto", "important");
+    medidor.style.setProperty("min-height", "0", "important");
+    medidor.style.setProperty("max-height", "none", "important");
+    medidor.style.setProperty("overflow", "visible", "important");
+    medidor.style.setProperty("visibility", "hidden", "important");
+    medidor.style.setProperty("pointer-events", "none", "important");
+    document.body.appendChild(medidor);
+    const estilosMedidor = window.getComputedStyle(medidor);
+    const tamanoFuente = Number.parseFloat(estilosMedidor.fontSize) || 16;
+    const altoLinea = Number.parseFloat(estilosMedidor.lineHeight) || (tamanoFuente * 1.2);
+    const paddingVertical = (Number.parseFloat(estilos.paddingTop) || 0)
+        + (Number.parseFloat(estilos.paddingBottom) || 0);
+    const altoContenido = Math.max(altoLinea, medidor.scrollHeight - paddingVertical);
+    medidor.remove();
+    return Math.max(1, Math.round(altoContenido / altoLinea));
 }
 
 function actualizarNumerosLineaControl(playerId) {
@@ -1092,7 +1111,7 @@ function actualizarNumerosLineaControl(playerId) {
     const textoEl = document.getElementById(id === 2 ? "texto1" : "texto");
     const lineasEl = document.getElementById(id === 2 ? "line_numbers_j2" : "line_numbers_j1");
     if (!textoEl || !lineasEl) return;
-    const totalLineas = Math.max(1, extraerLineasTextoControl(textoEl).length);
+    const totalLineas = contarLineasVisualesTextoControl(textoEl);
     lineasEl.textContent = Array.from({ length: totalLineas }, (_, index) => String(index + 1)).join("\n");
     lineasEl.scrollTop = textoEl.scrollTop || 0;
 }
@@ -1113,7 +1132,18 @@ function inicializarNumerosLineaControl() {
             const observer = new MutationObserver(() => actualizarNumerosLineaControl(playerId));
             observer.observe(textoEl, { childList: true, characterData: true, subtree: true });
         }
+        if (typeof ResizeObserver !== "undefined") {
+            const observerTamano = new ResizeObserver(() => actualizarNumerosLineaControl(playerId));
+            observerTamano.observe(textoEl);
+            observadores_tamano_lineas_control.push(observerTamano);
+        }
     });
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
+        document.fonts.ready.then(() => {
+            actualizarNumerosLineaControl(1);
+            actualizarNumerosLineaControl(2);
+        });
+    }
 }
 
 function serializarLogControl(valor) {
@@ -2139,17 +2169,18 @@ function inicializarPersistenciaParametrosControl() {
     PARAMETROS_CONTROL_PERSISTENTES.forEach((id) => {
         const input = document.getElementById(id);
         if (!input) return;
-        input.addEventListener("input", () => emitirEstadoControlPersistente());
-        input.addEventListener("change", () => emitirEstadoControlPersistente());
+        input.addEventListener("input", () => emitirEstadoControlPersistente({ inmediato: true }));
+        input.addEventListener("change", () => emitirEstadoControlPersistente({ inmediato: true }));
     });
     const listaModos = document.getElementById("listaModos");
     if (listaModos) {
         listaModos.addEventListener("change", (evento) => {
             if (evento.target && evento.target.matches('input[name="modos"]')) {
-                emitirEstadoControlPersistente();
+                emitirEstadoControlPersistente({ inmediato: true });
             }
         });
     }
+    window.addEventListener("pagehide", () => emitirEstadoControlPersistente({ inmediato: true }));
 }
 window.inicializarPersistenciaParametrosControl = inicializarPersistenciaParametrosControl;
 
@@ -2383,7 +2414,7 @@ function cambiarValor(campoId, incremento) {
     if (typeof actualizarVariables === "function") {
         actualizarVariables();
     }
-    emitirEstadoControlPersistente();
+    emitirEstadoControlPersistente({ inmediato: true });
 }
 
 function vote() {

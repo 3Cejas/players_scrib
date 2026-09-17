@@ -6636,8 +6636,8 @@ body.musa-bandera-disponible .musa-bandera-fab-wrap {
 /* Orden canónico del recorrido: nunca depende del nivel que esté activo. */
 .niveles-linea > .nivel-item[data-modo="palabras bonus"] { order: 0; }
 .niveles-linea > .nivel-item[data-modo="letra bendita"] { order: 1; }
-.niveles-linea > .nivel-item[data-modo="letra prohibida"] { order: 2; }
-.niveles-linea > .nivel-item[data-modo="tertulia"] { order: 3; }
+.niveles-linea > .nivel-item[data-modo="tertulia"] { order: 2; }
+.niveles-linea > .nivel-item[data-modo="letra prohibida"] { order: 3; }
 .niveles-linea > .nivel-item[data-modo="palabras prohibidas"] { order: 4; }
 .niveles-linea > .nivel-item[data-modo="frase final"] { order: 5; }
 
