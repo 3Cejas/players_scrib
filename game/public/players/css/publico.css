@@ -6827,6 +6827,7 @@ body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-
 /* El recorrido forma parte del mismo cuadro de mando que texto y marcador. */
 .musa-texto-card > .musa-texto-card__niveles {
     --nivel-size: clamp(40px, 9vw, 52px);
+    --nivel-progress-angle: 0deg;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 clamp(6px, 1.8vw, 14px) clamp(8px, 1.6vw, 14px);
@@ -6863,6 +6864,22 @@ body.partida-finalizada-musa .musa-texto-card > .musa-texto-card__niveles .nivel
 
 .musa-texto-card > .musa-texto-card__niveles .nivel-texto {
     font-size: clamp(8px, 1.9vw, 10px);
+}
+
+.musa-texto-card > .musa-texto-card__niveles .nivel-activo .nivel-icono::before {
+    inset: clamp(-9px, -1.4vw, -6px);
+    padding: clamp(3px, 0.65vw, 5px);
+    border: 0;
+    background: conic-gradient(
+        var(--equipo-color, #46efff) 0 var(--nivel-progress-angle),
+        color-mix(in srgb, var(--nivel-color), transparent 78%) var(--nivel-progress-angle) 360deg
+    );
+    box-shadow: 0 0 14px color-mix(in srgb, var(--equipo-color, #46efff), transparent 45%);
+    opacity: 1;
+    animation: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
 }
 
 .musa-texto-card > #mostrar_texto:active .musa-texto-toggle__chevron {
@@ -6924,24 +6941,26 @@ body.musa-vista-cambiando #contenedor {
     }
 }
 
-/* La acción de bandera conserva únicamente su banda: sin insignia circular
-   superpuesta sobre la cabecera de la escritora. */
+/* Botón de bandera: conserva el círculo y muestra únicamente la franja del
+   equipo atravesándolo, sin asta ni paño superpuestos. */
 body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera,
 body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera {
     display: inline-flex !important;
-    width: clamp(126px, 18vw, 176px) !important;
-    min-width: clamp(126px, 18vw, 176px) !important;
-    height: 52px !important;
-    min-height: 52px !important;
-    padding: 0 18px !important;
+    width: clamp(62px, 8vw, 78px) !important;
+    min-width: clamp(62px, 8vw, 78px) !important;
+    height: clamp(62px, 8vw, 78px) !important;
+    min-height: clamp(62px, 8vw, 78px) !important;
+    padding: 0 !important;
     align-items: center !important;
     justify-content: center !important;
     overflow: hidden !important;
     border: 2px solid rgba(255, 255, 255, 0.94) !important;
-    border-radius: 9px !important;
-    background-image: var(--bandera-franja), linear-gradient(180deg, #ffffff 0%, #e9f3f5 100%) !important;
-    color: #07131a !important;
-    font-size: clamp(10px, 1.25vw, 13px) !important;
+    border-radius: 50% !important;
+    background-image:
+        var(--bandera-franja),
+        radial-gradient(circle at 38% 30%, #ffffff 0 24%, #edf6f8 58%, #dce9ec 100%) !important;
+    color: transparent !important;
+    font-size: 0 !important;
     line-height: 1 !important;
     text-shadow: none !important;
 }
@@ -6955,30 +6974,30 @@ body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-b
 }
 
 body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera {
-    width: clamp(240px, 58vw, 430px) !important;
-    min-width: clamp(240px, 58vw, 430px) !important;
-    height: clamp(76px, 15vw, 104px) !important;
-    min-height: clamp(76px, 15vw, 104px) !important;
-    border-radius: clamp(11px, 2vw, 18px) !important;
-    font-size: clamp(15px, 3vw, 25px) !important;
+    width: clamp(132px, 22vw, 176px) !important;
+    min-width: clamp(132px, 22vw, 176px) !important;
+    height: clamp(132px, 22vw, 176px) !important;
+    min-height: clamp(132px, 22vw, 176px) !important;
+    border-radius: 50% !important;
+    font-size: 0 !important;
 }
 
 @media (max-width: 680px) {
     body.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera,
     body.vista-calentamiento-musa.musa-bandera-disponible #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera {
-        width: 126px !important;
-        min-width: 126px !important;
-        height: 48px !important;
-        min-height: 48px !important;
-        padding: 0 12px !important;
-        font-size: 10px !important;
+        width: 58px !important;
+        min-width: 58px !important;
+        height: 58px !important;
+        min-height: 58px !important;
+        padding: 0 !important;
+        font-size: 0 !important;
     }
 
     body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-espera #metadatos_acciones.musa-bandera-fab-wrap #btn_bandera {
-        width: min(76vw, 330px) !important;
-        min-width: min(76vw, 330px) !important;
-        height: 82px !important;
-        min-height: 82px !important;
-        font-size: 16px !important;
+        width: 126px !important;
+        min-width: 126px !important;
+        height: 126px !important;
+        min-height: 126px !important;
+        font-size: 0 !important;
     }
 }

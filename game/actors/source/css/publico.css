@@ -1976,10 +1976,10 @@ body.page-actors .jugador {
 
 .actor-texto-card__header {
     display: grid;
-    grid-template-columns: minmax(0, 1.12fr) minmax(260px, 0.88fr);
+    grid-template-columns: minmax(0, 1fr) minmax(330px, 1.2fr);
     align-items: stretch;
-    gap: clamp(10px, 1.4vw, 18px);
-    padding: clamp(12px, 1.6vw, 20px);
+    gap: clamp(8px, 1vw, 13px);
+    padding: clamp(8px, 1vw, 13px);
     border-bottom: 1px solid color-mix(in srgb, var(--actor-card-color), transparent 62%);
     background:
         linear-gradient(100deg, color-mix(in srgb, var(--actor-card-color), transparent 89%), transparent 54%),
@@ -1992,8 +1992,8 @@ body.page-actors .jugador {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 0.42rem;
-    padding: clamp(8px, 1.1vw, 12px) clamp(10px, 1.4vw, 16px);
+    gap: 0.28rem;
+    padding: clamp(6px, 0.8vw, 9px) clamp(9px, 1vw, 12px);
     border-left: 3px solid var(--actor-card-color);
     border-radius: 6px;
     background: color-mix(in srgb, var(--actor-card-color), transparent 93%);
@@ -2010,7 +2010,7 @@ body.page-actors .jugador {
     min-width: 0;
     padding: 0;
     color: var(--actor-card-color);
-    font-size: clamp(28px, 4vw, 52px);
+    font-size: clamp(23px, 3vw, 39px);
     line-height: 1.04;
     text-align: left;
     text-overflow: ellipsis;
@@ -2019,10 +2019,12 @@ body.page-actors .jugador {
 }
 
 .actor-texto-card #metadatos_actor {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(5px, 0.7vw, 9px);
     width: 100%;
     min-width: 0;
     margin: 0;
-    padding: clamp(10px, 1.2vw, 14px);
+    padding: clamp(6px, 0.8vw, 9px);
     border: 1px solid color-mix(in srgb, var(--actor-card-color), transparent 38%);
     border-radius: 8px;
     background: linear-gradient(110deg,
@@ -2034,9 +2036,22 @@ body.page-actors .jugador {
 }
 
 .actor-texto-card #metadatos_actor .meta-item {
-    min-height: 48px;
+    min-height: 38px;
     align-items: center;
     justify-content: flex-start;
+}
+
+.actor-texto-card #metadatos_actor .meta-copy {
+    gap: 0.14rem;
+}
+
+.actor-texto-card #metadatos_actor .meta-label {
+    font-size: clamp(8px, 0.72vw, 11px);
+}
+
+.actor-texto-card #metadatos_actor .puntos,
+.actor-texto-card #metadatos_actor .actor-tiempo-total {
+    font-size: clamp(15px, 1.65vw, 24px);
 }
 
 .actor-texto-card #metadatos_actor .meta-icon,
@@ -2056,7 +2071,7 @@ body.page-actors .jugador {
 }
 
 .actor-texto-card__viewport {
-    max-height: min(55vh, 660px);
+    max-height: min(61vh, 720px);
     overflow: auto;
     background:
         linear-gradient(180deg, color-mix(in srgb, var(--actor-card-color), transparent 95%), transparent 45%),
@@ -2066,31 +2081,58 @@ body.page-actors .jugador {
 
 .actor-texto-card .actor-annotation-layout {
     width: 100%;
-    min-height: clamp(240px, 39vh, 520px);
+    min-height: clamp(220px, 43vh, 570px);
     margin: 0;
-    padding: clamp(22px, 3vw, 38px);
+    padding: clamp(14px, 2vw, 26px);
     box-sizing: border-box;
 }
 
 .actor-texto-card .actor-text-shell {
     min-width: 0;
-    padding-left: clamp(34px, 5vw, 68px);
+    display: grid;
+    grid-template-columns: clamp(38px, 4.2vw, 58px) minmax(0, 1fr);
+    padding-left: 0;
+}
+
+.actor-texto-lineas {
+    min-width: 0;
+    overflow: hidden;
+    border-right: 1px solid color-mix(in srgb, var(--actor-card-color), transparent 72%);
+    color: color-mix(in srgb, var(--actor-card-color), white 18%);
+    font: 700 clamp(11px, 1.15vw, 17px)/1.25 "Retro-gaming", monospace;
+    text-align: center;
+    user-select: none;
+}
+
+.actor-texto-lineas__inner {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+}
+
+.actor-texto-lineas__inner span {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: start center;
+    padding-top: 0.2em;
+    box-sizing: border-box;
 }
 
 .actor-texto-card .textarea {
     width: 100%;
-    min-height: clamp(210px, 34vh, 450px);
+    min-height: clamp(205px, 40vh, 535px);
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 clamp(12px, 1.5vw, 20px);
     overflow: visible;
     color: color-mix(in srgb, var(--actor-card-color), white 68%);
-    font-size: clamp(30px, 3.35vw, 58px);
+    font-size: clamp(25px, 2.85vw, 48px);
     line-height: 1.25;
     text-align: left;
 }
 
 .actor-texto-card > .actor-texto-card__niveles {
     --nivel-size: clamp(40px, 5.3vw, 62px);
+    --nivel-progress-angle: 0deg;
     width: 100%;
     max-width: none;
     margin: 0;
@@ -2124,6 +2166,50 @@ body.page-actors .jugador {
     font-size: clamp(9px, 1vw, 13px);
 }
 
+.actor-texto-card > .actor-texto-card__niveles .nivel-activo .nivel-icono::before {
+    inset: clamp(-9px, -0.85vw, -6px);
+    padding: clamp(3px, 0.38vw, 5px);
+    border: 0;
+    background: conic-gradient(
+        var(--equipo-color, #46f0ff) 0 var(--nivel-progress-angle),
+        color-mix(in srgb, var(--nivel-color), transparent 78%) var(--nivel-progress-angle) 360deg
+    );
+    box-shadow: 0 0 15px color-mix(in srgb, var(--equipo-color, #46f0ff), transparent 45%);
+    opacity: 1;
+    animation: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+.actor-level-rule {
+    min-height: 1.35em;
+    margin: 0 !important;
+    padding: clamp(8px, 1vw, 12px) clamp(12px, 2vw, 24px) 0;
+    border-top: 1px solid color-mix(in srgb, var(--actor-card-color), transparent 82%);
+    font-size: clamp(13px, 1.35vw, 19px) !important;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.actor-level-rule:empty {
+    display: none;
+}
+
+.actor-tiempo-legacy,
+body.page-actors > #tiempo {
+    display: none !important;
+}
+
+.actor-level-detail {
+    width: min(1080px, calc(100vw - 40px));
+    margin: clamp(8px, 1.2vh, 14px) auto 0;
+}
+
+.actor-level-detail:has(#palabra:empty):has(#definicion:empty) {
+    display: none;
+}
+
 .actor-texto-card__scan {
     position: absolute;
     z-index: 4;
@@ -2150,6 +2236,10 @@ body.page-actors .jugador {
         padding: 10px;
     }
 
+    .actor-texto-card #metadatos_actor {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .actor-texto-card .actor-annotation-layout {
         grid-template-columns: minmax(0, 1fr);
         width: 100%;
@@ -2157,11 +2247,12 @@ body.page-actors .jugador {
     }
 
     .actor-texto-card .actor-text-shell {
+        grid-template-columns: clamp(34px, 8vw, 48px) minmax(0, 1fr);
         padding-left: 0;
     }
 
     .actor-texto-card .textarea {
-        font-size: clamp(27px, 7vw, 44px);
+        font-size: clamp(23px, 6vw, 38px);
     }
 
     .actor-texto-card > .actor-texto-card__niveles .niveles-linea {

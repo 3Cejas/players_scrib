@@ -1,5 +1,38 @@
 ﻿window.ScribCompetitionUI?.conectar(socket, { role: "writer" });
 
+const apiTransicionNivelEscritora = window.ScribLevelTransition;
+const controladorTransicionNivelEscritora = apiTransicionNivelEscritora
+    ? apiTransicionNivelEscritora.createController({
+        root: document.getElementById("level_transition"),
+        liveRegion: document.getElementById("level_transition_status"),
+        translate: (clave, variables = {}, fallback = "") => (
+            typeof window.scribT2P === "function"
+                ? window.scribT2P(clave, variables, fallback)
+                : (fallback || clave)
+        ),
+        windowRef: window,
+        documentRef: document
+    })
+    : null;
+const seguimientoTransicionNivelEscritora = apiTransicionNivelEscritora
+    ? apiTransicionNivelEscritora.createModeTracker()
+    : null;
+
+function reiniciarTransicionNivelEscritora() {
+    seguimientoTransicionNivelEscritora?.reset();
+    controladorTransicionNivelEscritora?.hide();
+}
+
+function observarTransicionNivelEscritora(payload = {}) {
+    if (!seguimientoTransicionNivelEscritora) return null;
+    return seguimientoTransicionNivelEscritora.observe(payload);
+}
+
+function mostrarTransicionNivelEscritora(observacion, payload = {}) {
+    if (!observacion?.transition || !controladorTransicionNivelEscritora) return false;
+    return controladorTransicionNivelEscritora.show(observacion.mode, payload);
+}
+
 socket.on("musa_corazon", (data) => {
     const equipo = data && Number(data.equipo);
     if (equipo !== 1 && equipo !== 2) return;
@@ -1266,6 +1299,7 @@ socket.on("escritor_sesion_inactiva", (payload = {}) => {
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
+    reiniciarTransicionNivelEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
     modo_seq_actual = 0;
@@ -1283,12 +1317,14 @@ socket.on('connect', () => {
 });
 
 socket.on('disconnect', () => {
+    controladorTransicionNivelEscritora?.hide();
     limpiarEntregaInspiracionEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
 });
 
 socket.on('connect_error', () => {
+    controladorTransicionNivelEscritora?.hide();
     limpiarEntregaInspiracionEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
@@ -1624,6 +1660,7 @@ function post_inicio(borrar_texto){
 
 // Resetea el tablero de juego.
 socket.on("limpiar", (borrar) => {
+    reiniciarTransicionNivelEscritora();
     partida_global_finalizada = true;
     detenerProgresoNivelBarraEscritora(true);
     if(borrar == false){
@@ -1675,6 +1712,7 @@ socket.on("activar_modo", (data) => {
         return;
     }
     const modoSiguiente = data && typeof data.modo_actual === "string" ? data.modo_actual : "";
+    const observacionTransicionNivel = observarTransicionNivelEscritora(data || {});
     actualizarFraseFinalDesdePayloadEscritora(data);
     const esReactivacionModoPausado = es_pausa === true && modoSiguiente === modo_actual;
     const saleDePausaHaciaModoEscribible = es_pausa === true && modoSiguiente !== "tertulia";
@@ -1718,6 +1756,7 @@ socket.on("activar_modo", (data) => {
     } else {
         detenerProgresoNivelBarraEscritora(true);
     }
+    mostrarTransicionNivelEscritora(observacionTransicionNivel, data || {});
 });
 
 socket.on("temp_modos", (data = {}) => {

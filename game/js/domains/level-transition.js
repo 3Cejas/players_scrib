@@ -7,7 +7,7 @@
             theme: "blessed-letter",
             icon: "\u{1F64F}",
             detailKey: "level.transition.rule.blessed",
-            detailFallback: "Cada palabra debe incluir la letra {letter}."
+            detailFallback: "Introduce palabras que incluyan la letra {letter}."
         }),
         "letra prohibida": Object.freeze({
             suffix: "letra_prohibida",

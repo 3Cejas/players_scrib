@@ -2263,25 +2263,21 @@ const coreSpecs = [
         { mode: "frase final" }
       ];
 
-      for (const item of modes) {
-        if (item.mode === "letra bendita") {
-          await ctx.waitForState(
-            `state already on ${item.mode}`,
-            (state) => state.partida.modo_actual === item.mode,
-            8000
-          );
-        } else {
-          await ctx.emitHook("scrib_test:force_mode", { mode: item.mode, letra: item.letter });
-          await ctx.waitForState(
-            `state switched to ${item.mode}`,
-            (state) => state.partida.modo_actual === item.mode,
-            8000
-          );
-        }
+      for (const [modeIndex, item] of modes.entries()) {
+        await ctx.emitHook("scrib_test:force_mode", { mode: item.mode, letra: item.letter });
+        await ctx.waitForState(
+          `state switched to ${item.mode}`,
+          (state) => state.partida.modo_actual === item.mode,
+          8000
+        );
         await waitForLocalMode(ctx, "writer1", item.mode, 10000);
         await waitForLocalMode(ctx, "actor1", item.mode, 10000);
         await ctx.waitForText("writer1", "#palabra", (text) => text.trim().length > 0, `writer1 title visible for ${item.mode}`);
-        await ctx.waitForText("actor1", "#palabra", (text) => text.trim().length > 0, `actor title visible for ${item.mode}`);
+        await ctx.waitForText("actor1", ".nivel-item.nivel-activo", (text) => text.trim().length > 0, `actor timeline active for ${item.mode}`);
+        await ctx.waitForText("actor1", "#explicación", (text) => text.trim().length > 0, `actor rule visible for ${item.mode}`);
+        if (modeIndex > 0) {
+          await ctx.waitForVisible("writer1", "#level_transition", true, `writer transition visible for ${item.mode}`, 4000);
+        }
       }
     }
   },
@@ -4442,9 +4438,9 @@ const coreSpecs = [
   {
     name: "actors-see-text",
     run: async (ctx) => {
-      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "actor1", "actor2"]);
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "actor1", "actor2", "musa1"]);
       await startGame(ctx);
-      await ctx.setWriterText("writer1", "actor uno sincronizado");
+      await ctx.setWriterText("writer1", "actor uno sincronizado\nsegunda línea\ntercera línea");
       await ctx.setWriterText("writer2", "actor dos sincronizado");
       await ctx.waitForText("actor1", "#texto", (text) => text.includes("actor uno sincronizado"), "actor1 synced");
       await ctx.waitForText("actor2", "#texto", (text) => text.includes("actor dos sincronizado"), "actor2 synced");
@@ -4462,9 +4458,39 @@ const coreSpecs = [
       ctx.assert(actorAudioPolicy.disabled, "actor role should install its no-audio policy");
       ctx.assert(actorAudioPolicy.muted && actorAudioPolicy.volume === 0 && actorAudioPolicy.paused, "actor media playback should stay silent");
 
+      await ctx.waitFor(
+        "actor line gutter follows logical writer lines",
+        async () => ctx.evaluate("actor1", () => {
+          const numeros = Array.from(document.querySelectorAll("#actor_texto_lineas_inner > span"))
+            .map((node) => node.textContent.trim());
+          return numeros.includes("1") && numeros.includes("2") && numeros.includes("3");
+        }),
+        5000
+      );
+      await ctx.waitForText("actor1", "#tiempo_total_actor", (text) => /^\d{2}:\d{2}$/.test(text.trim()), "actor total time visible");
+
       await ctx.emitHook("scrib_test:force_mode", { mode: "palabras bonus" });
-      await ctx.waitForText("actor1", "#palabra", (text) => text.trim().length > 0, "actor1 mode strip visible");
-      await ctx.waitForText("actor2", "#palabra", (text) => text.trim().length > 0, "actor2 mode strip visible");
+      await waitForLocalMode(ctx, "musa1", "palabras bonus", 8000);
+      await ctx.waitForText("actor1", ".nivel-item.nivel-activo", (text) => /PALABRA|BENDITA/i.test(text), "actor1 active level visible");
+      await ctx.waitForText("actor2", ".nivel-item.nivel-activo", (text) => /PALABRA|BENDITA/i.test(text), "actor2 active level visible");
+      await ctx.waitForText("actor1", "#explicación", (text) => text.trim().length > 0, "actor1 rule stays inside level panel");
+      const progresoInicial = await ctx.evaluate("actor1", () => parseFloat(
+        getComputedStyle(document.querySelector(".actor-texto-card__niveles")).getPropertyValue("--nivel-progress-angle")
+      ) || 0);
+      const progresoMusaInicial = await ctx.evaluate("musa1", () => parseFloat(
+        getComputedStyle(document.querySelector(".musa-texto-card__niveles")).getPropertyValue("--nivel-progress-angle")
+      ) || 0);
+      await ctx.sleep(500);
+      const progresoFinal = await ctx.evaluate("actor1", () => parseFloat(
+        getComputedStyle(document.querySelector(".actor-texto-card__niveles")).getPropertyValue("--nivel-progress-angle")
+      ) || 0);
+      const progresoMusaFinal = await ctx.evaluate("musa1", () => parseFloat(
+        getComputedStyle(document.querySelector(".musa-texto-card__niveles")).getPropertyValue("--nivel-progress-angle")
+      ) || 0);
+      ctx.assert(progresoFinal > progresoInicial, "actor active level ring should advance");
+      ctx.assert(progresoMusaFinal > progresoMusaInicial, "muse active level ring should advance");
+      const actorLevelTitle = await ctx.evaluate("actor1", () => document.querySelector("#palabra")?.textContent.trim() || "");
+      ctx.assert(actorLevelTitle === "", "actor should not duplicate the active level in a separate bar");
     }
   },
   {

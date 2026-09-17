@@ -199,21 +199,23 @@ test("controller replaces rapid transitions, announces them, and honors reduced 
     );
 });
 
-test("spectator and actor expose one accessible, responsive transition driven by modo_actual", () => {
+test("spectator, actor and writer expose one accessible, responsive level transition", () => {
     const spectatorHtml = read("game/spectator/index.html");
     const spectatorState = read("game/spectator/js/state.js");
     const spectatorSockets = read("game/spectator/js/socket-events.js");
     const actorHtml = read("game/actors/source/index.html");
     const actorSockets = read("game/actors/source/js/socket-events.js");
+    const writerHtml = read("game/players/index.html");
+    const writerSockets = read("game/players/js/socket-events.js");
     const css = read("game/css/level-transition.css");
     const i18n = read("game/js/i18n.js");
 
-    [spectatorHtml, actorHtml].forEach((html) => {
+    [spectatorHtml, actorHtml, writerHtml].forEach((html) => {
         assert.equal((html.match(/id="level_transition"/g) || []).length, 1);
         assert.equal((html.match(/id="level_transition_status"/g) || []).length, 1);
         assert.match(html, /role="status" aria-live="assertive" aria-atomic="true"/);
-        assert.match(html, /level-transition\.css\?v=20260823a/);
-        assert.match(html, /domains\/level-transition\.js\?v=20260823a/);
+        assert.match(html, /level-transition\.css\?v=20260917b/);
+        assert.match(html, /domains\/level-transition\.js\?v=20260917b/);
     });
     assert.match(actorHtml, /level-transition level-transition--compact/);
 
@@ -246,6 +248,10 @@ test("spectator and actor expose one accessible, responsive transition driven by
         actorSockets,
         /function finalizarCuentaAtrasActor[\s\S]*mostrarTransicionNivelPendienteActor\(modo_actual\)/
     );
+    assert.match(writerHtml, /level-transition level-transition--compact/);
+    assert.match(writerSockets, /createModeTracker\(\)/);
+    assert.match(writerSockets, /socket\.on\("activar_modo"[\s\S]*observarTransicionNivelEscritora\(data \|\| \{\}\)/);
+    assert.match(writerSockets, /mostrarTransicionNivelEscritora\(observacionTransicionNivel, data \|\| \{\}\)/);
 
     assert.match(css, /position: fixed;[\s\S]*pointer-events: none/);
     assert.match(css, /@keyframes scribLevelPanel/);
@@ -264,4 +270,34 @@ test("spectator and actor expose one accessible, responsive transition driven by
     ].forEach((key) => {
         assert.equal((i18n.match(new RegExp(`"${key.replace(/\./g, "\\.")}"`, "g")) || []).length, 3);
     });
+});
+
+test("actor and muse timelines carry authoritative progress while the actor desk stays compact", () => {
+    const actorHtml = read("game/actors/source/index.html");
+    const actorCss = read("game/actors/source/css/publico.css");
+    const actorSockets = read("game/actors/source/js/socket-events.js");
+    const museCss = read("game/public/players/css/publico.css");
+    const museSockets = read("game/public/players/js/socket-events.js");
+    const writerHtml = read("game/players/index.html");
+    const writerCss = read("game/css/dashboard-players.css");
+
+    assert.match(actorHtml, /id="actor_texto_lineas"[\s\S]*id="actor_texto_lineas_inner"/);
+    assert.match(actorHtml, /id="tiempo_total_actor"/);
+    assert.match(actorHtml, /class="niveles actor-texto-card__niveles"[\s\S]*id="explicación"/);
+    assert.doesNotMatch(actorHtml, /actor-texto-card__tiempo/);
+    assert.match(actorSockets, /socket\.on\("reloj_partida_estado", actualizarTiempoTotalActor\)/);
+    assert.match(actorSockets, /--nivel-progress-angle/);
+    assert.match(actorSockets, /socket\.on\("temp_modos"/);
+    assert.match(actorCss, /\.actor-texto-lineas/);
+    assert.match(actorCss, /\.actor-texto-card[\s\S]*conic-gradient/);
+    assert.match(actorCss, /font-size:\s*clamp\(25px, 2\.85vw, 48px\)/);
+
+    assert.match(museSockets, /function sincronizarProgresoNivelMusa/);
+    assert.match(museSockets, /socket\.on\("temp_modos", sincronizarProgresoNivelMusa\)/);
+    assert.match(museCss, /\.musa-texto-card[\s\S]*--nivel-progress-angle[\s\S]*conic-gradient/);
+    assert.match(museCss, /#btn_bandera[\s\S]*border-radius:\s*50% !important/);
+    assert.match(museCss, /#btn_bandera::before[\s\S]*content:\s*none !important/);
+
+    assert.doesNotMatch(writerHtml, /escritxr-texto-panel__label[^>]*>[\s\S]{0,80}1F58B/);
+    assert.match(writerCss, /\.escritxr-texto-panel\s*\{[\s\S]*width:\s*min\(1440px, 94vw\)/);
 });

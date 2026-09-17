@@ -991,7 +991,7 @@ function construirExplicacionNivelLetraEscritora(tipo, letra) {
         return window.scribBuildModeRule2P(tipo, letra);
     }
     const letraDestacada = renderLetraDestacadaNivelEscritora(letra);
-    if (tipo === "bendita") return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+    if (tipo === "bendita") return `INTRODUCE PALABRAS QUE INCLUYAN LA LETRA ${letraDestacada}.`;
     if (tipo === "prohibida") return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
     return "";
 }

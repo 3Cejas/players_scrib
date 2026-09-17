@@ -251,6 +251,12 @@ socket.on('modo_actual', (data) => {
     window.__scribModoActualMusaPreview = modo_actual;
     niveles_bloqueados = false;
     actualizarNiveles(modo_actual);
+    actualizarDuracionNivelDesdeParametrosMusa(data || {});
+    if (cambioRealModo && modo_actual) {
+        iniciarProgresoNivelMusa();
+    } else if (!modo_actual) {
+        detenerProgresoNivelMusa(true);
+    }
     if(sincro == 1 || votando == true){
 
     }
@@ -517,6 +523,7 @@ socket.on('disconnect', () => {
     invalidarContextoCalentamientoMusa();
     suspenderPreShowMusaPorConexion();
     ocultarCreditosMusa();
+    detenerProgresoNivelMusa(false);
 });
 
 socket.on('connect_error', () => {
@@ -533,6 +540,7 @@ socket.on('connect_error', () => {
     invalidarContextoDesventajasMusa();
     invalidarContextoCalentamientoMusa();
     suspenderPreShowMusaPorConexion();
+    detenerProgresoNivelMusa(false);
 });
 
 socket.on("debug_detonadores_visual", (payload = {}) => {
@@ -631,6 +639,148 @@ const nivelesScroll = document.querySelector(".niveles-scroll");
 const nivelesPrev = document.querySelector(".niveles-prev");
 const nivelesNext = document.querySelector(".niveles-next");
 const nivelesContenedor = document.querySelector(".niveles");
+
+let DURACION_NIVEL_MS_MUSA = 60000;
+let inicio_nivel_ts_musa = 0;
+let intervalo_progreso_nivel_musa = null;
+let progreso_nivel_pausado_ms_musa = 0;
+let progreso_frase_final_base_segundos_musa = null;
+
+function actualizarDuracionNivelDesdeParametrosMusa(parametros = {}) {
+    const duracionAutoritativaSegundos = Number(
+        parametros.duracion_modo_segundos
+        ?? parametros.duracionModoSegundos
+        ?? parametros.duracion_nivel_segundos
+    );
+    if (Number.isFinite(duracionAutoritativaSegundos) && duracionAutoritativaSegundos > 0) {
+        DURACION_NIVEL_MS_MUSA = Math.round(duracionAutoritativaSegundos * 1000);
+        return;
+    }
+    const candidatos = [
+        parametros.TIEMPO_MODOS,
+        parametros.DURACION_TIEMPO_MODOS,
+        parametros.TIEMPO_CAMBIO_MODOS,
+        parametros.DURACION_TIEMPO_MUERTO
+    ];
+    for (const candidato of candidatos) {
+        const numero = Number(candidato);
+        if (!Number.isFinite(numero) || numero <= 0) continue;
+        DURACION_NIVEL_MS_MUSA = numero <= 600 ? Math.round(numero * 1000) : Math.round(numero);
+        return;
+    }
+}
+
+function setProgresoNivelMusa(progreso) {
+    if (!nivelesContenedor) return;
+    const valor = Number(progreso);
+    const pct = Math.max(0, Math.min(100, Number.isFinite(valor) ? valor : 0));
+    nivelesContenedor.style.setProperty("--nivel-progress", `${pct.toFixed(2)}%`);
+    nivelesContenedor.style.setProperty("--nivel-progress-angle", `${(pct * 3.6).toFixed(2)}deg`);
+}
+
+function detenerProgresoNivelMusa(reiniciar = false) {
+    if (intervalo_progreso_nivel_musa) {
+        clearInterval(intervalo_progreso_nivel_musa);
+        intervalo_progreso_nivel_musa = null;
+    }
+    inicio_nivel_ts_musa = 0;
+    progreso_nivel_pausado_ms_musa = 0;
+    if (reiniciar) setProgresoNivelMusa(0);
+}
+
+function tickProgresoNivelMusa() {
+    if (!inicio_nivel_ts_musa || DURACION_NIVEL_MS_MUSA <= 0) {
+        setProgresoNivelMusa(0);
+        return;
+    }
+    const transcurrido = Date.now() - inicio_nivel_ts_musa;
+    const pct = Math.min(100, (transcurrido / DURACION_NIVEL_MS_MUSA) * 100);
+    setProgresoNivelMusa(pct);
+    if (pct >= 100) detenerProgresoNivelMusa(false);
+}
+
+function iniciarProgresoNivelMusa() {
+    if (modo_actual === "frase final") {
+        detenerProgresoNivelMusa(true);
+        progreso_frase_final_base_segundos_musa = null;
+        return;
+    }
+    detenerProgresoNivelMusa(true);
+    inicio_nivel_ts_musa = Date.now();
+    tickProgresoNivelMusa();
+    intervalo_progreso_nivel_musa = setInterval(tickProgresoNivelMusa, 120);
+}
+
+function pausarProgresoNivelMusa() {
+    if (!modo_actual || modo_actual === "frase final") return;
+    if (inicio_nivel_ts_musa && DURACION_NIVEL_MS_MUSA > 0) {
+        progreso_nivel_pausado_ms_musa = Math.max(
+            0,
+            Math.min(DURACION_NIVEL_MS_MUSA, Date.now() - inicio_nivel_ts_musa)
+        );
+    }
+    if (intervalo_progreso_nivel_musa) {
+        clearInterval(intervalo_progreso_nivel_musa);
+        intervalo_progreso_nivel_musa = null;
+    }
+    inicio_nivel_ts_musa = 0;
+    setProgresoNivelMusa(
+        DURACION_NIVEL_MS_MUSA > 0
+            ? (progreso_nivel_pausado_ms_musa / DURACION_NIVEL_MS_MUSA) * 100
+            : 0
+    );
+}
+
+function reanudarProgresoNivelMusa() {
+    if (!modo_actual || modo_actual === "frase final" || DURACION_NIVEL_MS_MUSA <= 0) return;
+    inicio_nivel_ts_musa = Date.now() - Math.max(0, progreso_nivel_pausado_ms_musa);
+    tickProgresoNivelMusa();
+    if (!intervalo_progreso_nivel_musa && progreso_nivel_pausado_ms_musa < DURACION_NIVEL_MS_MUSA) {
+        intervalo_progreso_nivel_musa = setInterval(tickProgresoNivelMusa, 120);
+    }
+}
+
+function sincronizarProgresoNivelMusa(payload = {}) {
+    if (!modo_actual || modo_actual === "frase final") return false;
+    const modoEvento = typeof payload.modo_actual === "string" ? payload.modo_actual : "";
+    if (modoEvento && modoEvento !== modo_actual) return false;
+    actualizarDuracionNivelDesdeParametrosMusa(payload);
+    let segundos = Number(payload.segundos_transcurridos);
+    if (!Number.isFinite(segundos) || segundos < 0) {
+        const duracion = Number(payload.duracion_modo_segundos);
+        const restante = Number(payload.tiempo_restante_modo_segundos);
+        if (Number.isFinite(duracion) && Number.isFinite(restante)) {
+            segundos = Math.max(0, duracion - restante);
+        }
+    }
+    if (!Number.isFinite(segundos) || segundos < 0) return false;
+    const ms = Math.max(0, Math.min(DURACION_NIVEL_MS_MUSA, Math.round(segundos * 1000)));
+    progreso_nivel_pausado_ms_musa = ms;
+    inicio_nivel_ts_musa = Date.now() - ms;
+    const pct = DURACION_NIVEL_MS_MUSA > 0 ? (ms / DURACION_NIVEL_MS_MUSA) * 100 : 0;
+    setProgresoNivelMusa(pct);
+    if (pct >= 100) {
+        detenerProgresoNivelMusa(false);
+    } else if (!intervalo_progreso_nivel_musa) {
+        intervalo_progreso_nivel_musa = setInterval(tickProgresoNivelMusa, 120);
+    }
+    return true;
+}
+
+function actualizarProgresoFraseFinalMusa(segundosRestantes) {
+    if (modo_actual !== "frase final") return;
+    const segundos = Number(segundosRestantes);
+    if (!Number.isFinite(segundos) || segundos < 0) return;
+    if (!Number.isFinite(progreso_frase_final_base_segundos_musa) || segundos > progreso_frase_final_base_segundos_musa) {
+        progreso_frase_final_base_segundos_musa = segundos;
+    }
+    const base = Math.max(1, Number(progreso_frase_final_base_segundos_musa) || 1);
+    setProgresoNivelMusa(((base - Math.max(0, segundos)) / base) * 100);
+}
+
+socket.on("temp_modos", sincronizarProgresoNivelMusa);
+socket.on("pausar_js", pausarProgresoNivelMusa);
+socket.on("reanudar_js", reanudarProgresoNivelMusa);
 
 function extraerModoSeqPayloadMusa(payload = {}) {
     const valor = Number(payload && payload.modo_seq);
@@ -1063,6 +1213,9 @@ socket.on("count", data => {
     }
     if(data.player == player){
     const segundosRestantes = extraerSegundosTiempo(data.count);
+    if (Number.isFinite(segundosRestantes) && modo_actual === "frase final") {
+        actualizarProgresoFraseFinalMusa(segundosRestantes);
+    }
     const introEnCurso = secuencia_inicio_musa_activa || (document.body && document.body.classList.contains(CLASE_INTRO_PARTIDA_MUSA));
     if (segundosRestantes !== null && !ui_partida_activa_musa && !introEnCurso) {
         setUiPartidaActivaMusa(true);
@@ -1315,6 +1468,7 @@ socket.on("post-inicio", () => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
+    detenerProgresoNivelMusa(true);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
     invalidarEntradaMundoMusa();
@@ -1575,6 +1729,7 @@ function cambiar_color_puntuacion() {
 }
 
 function limpiezas({ preservarResumenFinal = false } = {}){
+    detenerProgresoNivelMusa(true);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
     invalidarEntradaMundoMusa();
@@ -1621,6 +1776,7 @@ function limpiezas({ preservarResumenFinal = false } = {}){
 }
 
 function limpiezas_final(){
+    detenerProgresoNivelMusa(true);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
     invalidarEntradaMundoMusa();

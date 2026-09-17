@@ -7,8 +7,8 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260917b">
-    <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260823a">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260917c">
+    <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260917b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="../../config.js?v=20260829m"></script>
@@ -59,14 +59,21 @@
                                     <span id="puntos" class="puntos">0 palabras</span>
                                 </div>
                             </div>
+                            <div class="meta-item marcador-chip marcador-chip--tiempo-total">
+                                <span class="meta-icon" aria-hidden="true">&#x23F1;&#xFE0F;</span>
+                                <div class="meta-copy">
+                                    <span class="meta-label">Tiempo total</span>
+                                    <span id="tiempo_total_actor" class="actor-tiempo-total">--:--</span>
+                                </div>
+                            </div>
                         </div>
                     </header>
-                    <div class="tiempo-contenedor actor-texto-card__tiempo">
-                        <p id="tiempo" hidden aria-hidden="true"></p>
-                    </div>
                     <div class="actor-texto-card__viewport">
                         <div class="actor-annotation-layout">
                             <div class="actor-text-shell">
+                                <div id="actor_texto_lineas" class="actor-texto-lineas" aria-hidden="true">
+                                    <div id="actor_texto_lineas_inner" class="actor-texto-lineas__inner"><span>1</span></div>
+                                </div>
                                 <div contenteditable="false" class="textarea" id="texto" spellcheck="false"></div>
                             </div>
                             <aside id="actor_annotation_margin" class="actor-annotation-margin" data-actor-annotation-ui aria-label="Anotaciones locales del interprete"></aside>
@@ -101,6 +108,7 @@
                                 </div>
                             </div>
                         </div>
+                        <p id="explicación" class="explicación actor-level-rule"></p>
                     </section>
                     <div class="actor-texto-card__scan" aria-hidden="true"></div>
                 </article>
@@ -121,18 +129,13 @@
                         <button type="button" id="actor_annotation_note_cancel" class="actor-annotation-note-editor__button">Cancelar</button>
                     </div>
                 </div>
-                <table class="info">
-                    <tr>
-                            <p id="explicación" class="explicación"></p>
-                    </tr>
-                        <p id="palabra" class=palabra></p>
-                    </tr>
-                    <tr>
-                        <p id="definicion" class="definicion"></p>
-                    </tr>
-                </table>
+                <div class="info actor-level-detail">
+                    <p id="palabra" class="palabra"></p>
+                    <p id="definicion" class="definicion"></p>
+                </div>
         </div>
         </div>
+        <p id="tiempo" class="actor-tiempo-legacy" hidden aria-hidden="true"></p>
         <section id="technician_teleprompter" class="technician-teleprompter" hidden aria-live="polite">
             <header class="technician-teleprompter__header">
                 <div>
@@ -152,8 +155,8 @@
         </section>
 </body>
 <script src="../../dist/socket.io/socket.io.js"></script>
-    <script src="../../js/i18n.js?v=20260823a"></script>
-<script src="../../js/domains/level-transition.js?v=20260823a"></script>
-<script src="./js/socket-events.js?v=20260917a"></script>
+    <script src="../../js/i18n.js?v=20260917c"></script>
+<script src="../../js/domains/level-transition.js?v=20260917b"></script>
+<script src="./js/socket-events.js?v=20260917b"></script>
 <script src="./js/technician.js?v=20260910a"></script>
 </html>

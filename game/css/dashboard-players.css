@@ -4775,7 +4775,7 @@ body.page-players.partida-activa .escritxr-texto-panel {
     position: relative;
     isolation: isolate;
     box-sizing: border-box;
-    width: min(1040px, 88vw);
+    width: min(1440px, 94vw);
     margin: clamp(14px, 2.2vh, 28px) auto 0;
     padding: clamp(10px, 1.2vw, 16px);
     overflow: hidden;
@@ -4909,7 +4909,7 @@ body.page-players.partida-activa .escritxr-texto-panel .textarea::-webkit-scroll
 
 @media (max-width: 720px), (max-height: 680px) {
     body.page-players.partida-activa .escritxr-texto-panel {
-        width: min(94vw, 1040px);
+        width: min(96vw, 1440px);
         padding: 8px;
     }
 
@@ -4992,6 +4992,7 @@ body.page-players.partida-activa .escritxr-texto-panel > #metadatos.metadatos-gr
 }
 
 body.page-players.partida-activa .info-total {
+    width: min(1440px, 94vw);
     margin-top: clamp(8px, 1.2vh, 16px);
 }
 

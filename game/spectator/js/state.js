@@ -6031,7 +6031,7 @@ function construirExplicacionNivelLetra(tipo, letra) {
     }
     const letraDestacada = renderLetraDestacadaNivel(letra);
     if (tipo === "bendita") {
-        return `CADA PALABRA DEBE INCLUIR LA LETRA ${letraDestacada}.`;
+        return `INTRODUCE PALABRAS QUE INCLUYAN LA LETRA ${letraDestacada}.`;
     }
     if (tipo === "prohibida") {
         return `NINGUNA PALABRA PUEDE USAR LA LETRA ${letraDestacada}.`;
