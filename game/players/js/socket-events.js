@@ -190,10 +190,26 @@ function restaurarRayoEscritora() {
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     lightning.classList.remove("lightning");
-    if (borrado_cambiado) {
+    const estabaAcelerado = borrado_cambiado;
+    if (estabaAcelerado) {
         borrado_cambiado = false;
         rapidez_borrado = antiguo_rapidez_borrado;
         rapidez_inicio_borrado = antiguo_inicio_borrado;
+    }
+    if (
+        estabaAcelerado
+        && typeof invalidarBorradoEscritora === "function"
+        && typeof programarBorradoEscritora === "function"
+        && typeof borrar === "function"
+        && modo_actual !== "frase final"
+        && modo_actual !== "tertulia"
+        && es_pausa !== true
+        && desactivar_borrar !== true
+    ) {
+        invalidarBorradoEscritora();
+        programarBorradoEscritora(rapidez_inicio_borrado, (revisionProgramada) => {
+            borrar(revisionProgramada);
+        });
     }
 }
 
@@ -206,10 +222,14 @@ function limpiarDesventajasActivasEscritora() {
     setInterfazInversaGlobal(false);
     ocultarAvisoInversoEscritora();
     restaurarRayoEscritora();
-    texto.classList.remove("textarea_blur");
+    texto.classList.remove("rotate-vertical-center", "textarea_blur");
     modo_texto_borroso = 0;
     intensidad_desventaja_escritora = 1;
     texto.style.removeProperty("--desventaja-blur");
+    if (modo_actual && modo_actual !== "tertulia" && modo_actual !== "frase final" && es_pausa !== true) {
+        desactivar_borrar = false;
+        texto.contentEditable = "true";
+    }
     putada_actual = "";
 }
 

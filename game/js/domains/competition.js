@@ -11,6 +11,7 @@
   let calentamientoEstado = null;
   let estadoActual = null;
   let rolActual = "";
+  let jugadorActual = null;
   let avisoCambioTimer = null;
   const DURACION_AVISO_CAMBIO_MS = 5600;
 
@@ -219,7 +220,10 @@
     [1, 2].forEach((player) => {
       const racha = Number(estado.rachas && estado.rachas[player]) || 0;
       ui.streaks[player].dataset.active = racha >= 2 ? "1" : "0";
-      ui.streaks[player].textContent = racha >= 2 ? `RACHA ×${racha}` : "";
+      const etiqueta = rolActual === "writer" && jugadorActual
+        ? (player === jugadorActual ? "TU RACHA" : "RACHA RIVAL")
+        : "RACHA";
+      ui.streaks[player].textContent = racha >= 2 ? `${etiqueta} ×${racha}` : "";
     });
   }
 
@@ -452,7 +456,12 @@
     if (!socket || typeof socket.on !== "function" || conexiones.has(socket)) return;
     conexiones.add(socket);
     rolActual = String(opciones.role || opciones.rol || rolActual || "game");
+    const playerOpcion = Number(opciones.player || opciones.jugador || global.player);
+    jugadorActual = playerOpcion === 1 || playerOpcion === 2 ? playerOpcion : jugadorActual;
     ui = ui || crearUi(rolActual);
+    if (ui && ui.root && jugadorActual) {
+      ui.root.dataset.player = String(jugadorActual);
+    }
     socket.on("competicion_ronda_estado", actualizarEstado);
     socket.on("competicion_ronda_punto", (payload) => {
       if (payload && payload.estado) actualizarEstado(payload.estado);

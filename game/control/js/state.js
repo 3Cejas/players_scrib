@@ -325,6 +325,8 @@ let tiempo_cambio_palabras_input = document.getElementById('tiempo_cambio_palabr
 let escala_espectador_input = document.getElementById('escala_espectador');
 let tiempo_cambio_letra_input = document.getElementById('tiempo_cambio_letra');
 let tiempo_votacion_input = document.getElementById('tiempo_votacion');
+let porcentaje_tiempo_desventaja_input = document.getElementById('porcentaje_tiempo_desventaja');
+let reduccion_tertulia_porcentaje_input = document.getElementById('reduccion_tertulia_porcentaje');
 let duracion_minutos_input = document.getElementById('duracion_minutos');
 let duracion_segundos_input = document.getElementById('duracion_segundos');
 
@@ -349,6 +351,8 @@ let TIEMPO_CAMBIO_PALABRAS = tiempo_cambio_palabras_input.valueAsNumber * 1000;
 let ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
 let TIEMPO_VOTACION = Math.max(1000, (Number(tiempo_votacion_input && tiempo_votacion_input.valueAsNumber) || 30) * 1000);
 let TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
+let PORCENTAJE_TIEMPO_DESVENTAJA = 20;
+let REDUCCION_TERTULIA_PORCENTAJE = 50;
 let DURACION_PARTIDA = Math.max(1,
     (Number(duracion_minutos_input && duracion_minutos_input.valueAsNumber) || 0) * 60
     + (Number(duracion_segundos_input && duracion_segundos_input.valueAsNumber) || 0)
@@ -356,9 +360,10 @@ let DURACION_PARTIDA = Math.max(1,
 let DURACION_TIEMPO_MODOS = Math.max(1, Math.floor(DURACION_PARTIDA / 6));
 let DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
 let TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS;
+let DURACIONES_NIVELES_CONTROL = [];
 
 // Lista de modos disponibles (catalogo fijo para que nunca desaparezcan del panel).
-const LISTA_MODOS_DISPONIBLES = ["palabras bonus", "letra bendita", "letra prohibida", "tertulia", "palabras prohibidas", "frase final"];
+const LISTA_MODOS_DISPONIBLES = ["palabras bonus", "letra bendita", "tertulia", "letra prohibida", "palabras prohibidas", "frase final"];
 let LISTA_MODOS = LISTA_MODOS_DISPONIBLES.slice();
 
 // Objeto que asocia cada modo con un color
@@ -370,6 +375,169 @@ const COLORES_MODOS = {
     "palabras prohibidas": "#ff71c8",
     "frase final": "#ffad42"
 };
+
+const MODOS_COMPETITIVOS_CONTROL = new Set([
+    "palabras bonus",
+    "letra bendita",
+    "letra prohibida",
+    "palabras prohibidas"
+]);
+
+function normalizarPorcentajeParametroControl(input, fallback, min, max) {
+    const valor = input ? Number(input.valueAsNumber) : Number.NaN;
+    const base = Number.isFinite(valor) ? valor : fallback;
+    return Math.min(max, Math.max(min, base));
+}
+
+function repartirDuracionPartidaControl(totalSegundos, cantidadNiveles) {
+    const niveles = Math.max(1, Math.trunc(Number(cantidadNiveles) || 0));
+    const total = Math.max(niveles, Math.trunc(Number(totalSegundos) || 0));
+    const base = Math.floor(total / niveles);
+    const resto = total % niveles;
+    return Array.from({ length: niveles }, (_valor, indice) => base + (indice < resto ? 1 : 0));
+}
+
+function calcularDuracionesNivelesControl(
+    totalSegundos,
+    modos = LISTA_MODOS,
+    reduccionTertuliaPorcentaje = REDUCCION_TERTULIA_PORCENTAJE
+) {
+    const lista = Array.isArray(modos) ? modos : [];
+    const temporizados = lista.filter((modo) => modo !== "tertulia");
+    const reparto = repartirDuracionPartidaControl(totalSegundos, Math.max(1, temporizados.length));
+    const total = Math.max(1, Math.trunc(Number(totalSegundos) || 0));
+    const reduccion = Math.min(95, Math.max(0, Number(reduccionTertuliaPorcentaje) || 0));
+    const referencia = temporizados.length > 0 ? total / temporizados.length : total;
+    const duracionTertulia = Math.max(1, Math.round(referencia * (1 - (reduccion / 100))));
+    let indiceReparto = 0;
+    return lista.map((modo) => {
+        const duracion = modo === "tertulia"
+            ? duracionTertulia
+            : (reparto[indiceReparto++] || 1);
+        return { modo, duracion };
+    });
+}
+
+function formatearDuracionParametroControl(segundos) {
+    const total = Math.max(0, Math.trunc(Number(segundos) || 0));
+    const horas = Math.floor(total / 3600);
+    const minutos = Math.floor((total % 3600) / 60);
+    const resto = total % 60;
+    return horas > 0
+        ? `${horas}:${String(minutos).padStart(2, "0")}:${String(resto).padStart(2, "0")}`
+        : `${String(minutos).padStart(2, "0")}:${String(resto).padStart(2, "0")}`;
+}
+
+function traducirModoParametroControl(modo) {
+    return window && typeof window.scribTranslateModeName2P === "function"
+        ? window.scribTranslateModeName2P(modo)
+        : String(modo || "").toUpperCase();
+}
+
+function construirAdvertenciasParametrosControl(duraciones) {
+    const advertencias = [];
+    const cambioLetraSegundos = Math.max(1, Math.ceil(TIEMPO_CAMBIO_LETRA / 1000));
+    const cambioPalabraSegundos = Math.max(1, Math.ceil(TIEMPO_CAMBIO_PALABRAS / 1000));
+    const limiteMusasSegundos = Math.max(1, Math.ceil(Number(LIMITE_TIEMPO_INSPIRACION) || 0));
+    const votacionSegundos = Math.max(1, Math.ceil(TIEMPO_VOTACION / 1000));
+
+    if (!duraciones.length) {
+        advertencias.push(tJuego2P(
+            "control.param.warning.no_levels",
+            {},
+            "Activa al menos un nivel para poder iniciar la partida."
+        ));
+        return advertencias;
+    }
+
+    duraciones.forEach(({ modo, duracion }) => {
+        const nombre = traducirModoParametroControl(modo);
+        if (["letra bendita", "letra prohibida"].includes(modo) && duracion < cambioLetraSegundos) {
+            advertencias.push(tJuego2P(
+                "control.param.warning.shorter_than_letter",
+                { mode: nombre, duration: formatearDuracionParametroControl(duracion), setting: formatearDuracionParametroControl(cambioLetraSegundos) },
+                `${nombre} dura ${formatearDuracionParametroControl(duracion)}, menos que el cambio de letra (${formatearDuracionParametroControl(cambioLetraSegundos)}).`
+            ));
+        }
+        if (["palabras bonus", "palabras prohibidas"].includes(modo) && duracion < cambioPalabraSegundos) {
+            advertencias.push(tJuego2P(
+                "control.param.warning.shorter_than_word",
+                { mode: nombre, duration: formatearDuracionParametroControl(duracion), setting: formatearDuracionParametroControl(cambioPalabraSegundos) },
+                `${nombre} dura ${formatearDuracionParametroControl(duracion)}, menos que el cambio de palabra (${formatearDuracionParametroControl(cambioPalabraSegundos)}).`
+            ));
+        }
+        if (MODOS_COMPETITIVOS_CONTROL.has(modo) && duracion < limiteMusasSegundos) {
+            advertencias.push(tJuego2P(
+                "control.param.warning.shorter_than_muse",
+                { mode: nombre, duration: formatearDuracionParametroControl(duracion), setting: formatearDuracionParametroControl(limiteMusasSegundos) },
+                `${nombre} dura ${formatearDuracionParametroControl(duracion)}, menos que el límite de palabras de musas (${formatearDuracionParametroControl(limiteMusasSegundos)}).`
+            ));
+        }
+        if (MODOS_COMPETITIVOS_CONTROL.has(modo)) {
+            const inicioDesventaja = Math.max(
+                1,
+                Math.ceil(duracion * (1 - (PORCENTAJE_TIEMPO_DESVENTAJA / 100)))
+            );
+            const tramoDesventaja = Math.max(0, duracion - inicioDesventaja);
+            if (tramoDesventaja <= votacionSegundos) {
+                advertencias.push(tJuego2P(
+                    "control.param.warning.vote_too_long",
+                    { mode: nombre, window: formatearDuracionParametroControl(tramoDesventaja), vote: formatearDuracionParametroControl(votacionSegundos) },
+                    `${nombre} reserva ${formatearDuracionParametroControl(tramoDesventaja)} para votar y aplicar la desventaja, pero la votación está en ${formatearDuracionParametroControl(votacionSegundos)}.`
+                ));
+            }
+        }
+    });
+    return advertencias;
+}
+
+function actualizarAnalisisParametrosControl() {
+    DURACIONES_NIVELES_CONTROL = calcularDuracionesNivelesControl(
+        DURACION_PARTIDA,
+        LISTA_MODOS,
+        REDUCCION_TERTULIA_PORCENTAJE
+    );
+    const resumen = document.getElementById("parametros_duracion_niveles");
+    const totalEl = document.getElementById("parametros_duracion_total");
+    const avisosEl = document.getElementById("parametros_coherencia");
+
+    if (resumen) {
+        resumen.replaceChildren();
+        DURACIONES_NIVELES_CONTROL.forEach(({ modo, duracion }) => {
+            const chip = document.createElement("span");
+            chip.className = "parametros-duracion-chip";
+            chip.style.setProperty("--param-mode-color", COLORES_MODOS[modo] || "#d7e7f1");
+            const nombre = document.createElement("span");
+            nombre.textContent = traducirModoParametroControl(modo);
+            const tiempo = document.createElement("strong");
+            tiempo.textContent = formatearDuracionParametroControl(duracion);
+            chip.append(nombre, tiempo);
+            resumen.appendChild(chip);
+        });
+    }
+
+    if (totalEl) {
+        const totalEstimado = DURACIONES_NIVELES_CONTROL.reduce((total, nivel) => total + nivel.duracion, 0);
+        totalEl.textContent = tJuego2P(
+            "control.param.estimated_total",
+            { duration: formatearDuracionParametroControl(totalEstimado) },
+            `TOTAL ESTIMADO ${formatearDuracionParametroControl(totalEstimado)}`
+        );
+    }
+
+    if (avisosEl) {
+        const advertencias = construirAdvertenciasParametrosControl(DURACIONES_NIVELES_CONTROL);
+        avisosEl.replaceChildren();
+        advertencias.forEach((advertencia) => {
+            const item = document.createElement("p");
+            item.textContent = `⚠ ${advertencia}`;
+            avisosEl.appendChild(item);
+        });
+        avisosEl.hidden = advertencias.length === 0;
+    }
+}
+window.calcularDuracionesNivelesControl = calcularDuracionesNivelesControl;
+window.actualizarAnalisisParametrosControl = actualizarAnalisisParametrosControl;
 
 // Funcion para generar las casillas de verificacion dentro de <td>
 function crearConteoModos(modos) {
@@ -449,13 +617,33 @@ function actualizarVariables() {
     ESCALA_UI_ESPECTADOR = obtenerEscalaUiEspectadorParametro();
     TIEMPO_CAMBIO_LETRA = tiempo_cambio_letra_input.valueAsNumber *1000;
     TIEMPO_VOTACION = Math.max(1000, (Number(tiempo_votacion_input && tiempo_votacion_input.valueAsNumber) || 30) * 1000);
+    PORCENTAJE_TIEMPO_DESVENTAJA = normalizarPorcentajeParametroControl(
+        porcentaje_tiempo_desventaja_input,
+        20,
+        1,
+        90
+    );
+    REDUCCION_TERTULIA_PORCENTAJE = normalizarPorcentajeParametroControl(
+        reduccion_tertulia_porcentaje_input,
+        50,
+        0,
+        95
+    );
     DURACION_PARTIDA = Math.max(1,
         (Number(duracion_minutos_input && duracion_minutos_input.valueAsNumber) || 0) * 60
         + (Number(duracion_segundos_input && duracion_segundos_input.valueAsNumber) || 0)
     );
-    DURACION_TIEMPO_MODOS = Math.max(1, Math.floor(DURACION_PARTIDA / Math.max(1, LISTA_MODOS.length)));
-    DURACION_TIEMPO_MUERTO = DURACION_TIEMPO_MODOS * 1000;
+    DURACIONES_NIVELES_CONTROL = calcularDuracionesNivelesControl(
+        DURACION_PARTIDA,
+        LISTA_MODOS,
+        REDUCCION_TERTULIA_PORCENTAJE
+    );
+    const primeraDuracionEscritura = DURACIONES_NIVELES_CONTROL.find((nivel) => nivel.modo !== "tertulia");
+    const duracionTertulia = DURACIONES_NIVELES_CONTROL.find((nivel) => nivel.modo === "tertulia");
+    DURACION_TIEMPO_MODOS = Math.max(1, Number(primeraDuracionEscritura && primeraDuracionEscritura.duracion) || 1);
+    DURACION_TIEMPO_MUERTO = Math.max(1, Number(duracionTertulia && duracionTertulia.duracion) || DURACION_TIEMPO_MODOS) * 1000;
     TIEMPO_CAMBIO_MODOS = DURACION_TIEMPO_MODOS;
+    actualizarAnalisisParametrosControl();
 
    console.log('LIMITE_TIEMPO_INSPIRACION:', LIMITE_TIEMPO_INSPIRACION);
    console.log('TIEMPO_CAMBIO_PALABRAS:', TIEMPO_CAMBIO_PALABRAS);
@@ -489,6 +677,20 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (error) {
         console.warn("Error al inicializar variables del panel.", error);
     }
+    [
+        duracion_minutos_input,
+        duracion_segundos_input,
+        tiempo_cambio_letra_input,
+        tiempo_cambio_palabras_input,
+        limite_tiempo_inspiracion_input,
+        tiempo_votacion_input,
+        porcentaje_tiempo_desventaja_input,
+        reduccion_tertulia_porcentaje_input
+    ].filter(Boolean).forEach((input) => {
+        input.addEventListener("input", actualizarVariables);
+        input.addEventListener("change", actualizarVariables);
+    });
+    window.addEventListener("scrib:language-changed", actualizarAnalisisParametrosControl);
     inicializarHeatmap();
     const selectorIdioma = getEl("selector_idioma_control");
     window.emitirCambioIdiomaControl = (idioma = "es") => {

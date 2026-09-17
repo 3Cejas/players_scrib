@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260914e">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260917b">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -21,10 +21,10 @@
     <script src="../js/domains/inspiration.js?v=20260905d"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260902b"></script>
-    <script src="../js/domains/competition.js?v=20260914b"></script>
+    <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260914g"></script>
+<script src="./js/actions.js?v=20260917b"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -173,6 +173,7 @@
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn'>&#x23F8;&#xFE0F; PAUSAR</span>
                                 <button id="boton_fin_partida" class="btn btn-game-end" type="button" onclick="fin_partida_global()" aria-label="Finalizar partida" title="Finalizar partida" hidden>&#x23F9;&#xFE0F; FIN</button>
+                                <button id="boton_resultado_videojuego" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" aria-hidden="true" onclick="mostrarResultadoVideojuego()" hidden>&#x1F3AE; MOSTRAR RESULTADO VIDEOJUEGO</button>
                                 <button id="boton_vista_partida" class="btn btn-vista-espectador" type="button" data-vista-principal="partida" data-active="0" aria-pressed="false" onclick="mostrar_vista_partida()">&#x1F3AE; VISTA PARTIDA</button>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
                                 <span id="boton_vista_stats" class='btn' onclick="cambiar_vista_espectador('stats')">&#x1F4CA; STATS</span>
@@ -208,7 +209,6 @@
                             </div>
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--deliberacion">
                                 <button id="boton_vista_deliberacion" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarVistaDeliberacion()">&#x2696;&#xFE0F; VISTA DELIBERACI&Oacute;N</button>
-                                <button id="boton_resultado_videojuego" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoVideojuego()">&#x1F3AE; MOSTRAR RESULTADO VIDEOJUEGO</button>
                                 <button id="boton_resultado_jurado" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoJurado()">&#x1F3AD; MOSTRAR RESULTADO JURADO</button>
                             </div>
                             <div id="puntuacion_nav_control" class="puntuacion-nav-control deliberacion-nav-control" hidden aria-hidden="true">
@@ -564,6 +564,28 @@
                     </div>
                 </td>
             </tr>
+            <tr class="parametros-porcentajes-row">
+                <td>
+                    <label for="porcentaje_tiempo_desventaja" data-i18n="control.param.disadvantage_window">TRAMO DESVENTAJA</label>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button" onclick="cambiarValor('porcentaje_tiempo_desventaja', -5)">-</button>
+                        <input type="number" id="porcentaje_tiempo_desventaja" name="porcentaje_tiempo_desventaja" class="parametro"
+                               min="1" max="90" step="1" value="20" aria-describedby="porcentaje_tiempo_desventaja_ayuda">
+                        <button type="button" class="spinner-button plus-button" onclick="cambiarValor('porcentaje_tiempo_desventaja', 5)">+</button>
+                    </div>
+                    <span id="porcentaje_tiempo_desventaja_ayuda" class="parametro" data-i18n="control.unit.final_percent">% final</span>
+                </td>
+                <td>
+                    <label for="reduccion_tertulia_porcentaje" data-i18n="control.param.tertulia_reduction">TERTULIA M&Aacute;S CORTA</label>
+                    <div class="spinner-container">
+                        <button type="button" class="spinner-button minus-button" onclick="cambiarValor('reduccion_tertulia_porcentaje', -5)">-</button>
+                        <input type="number" id="reduccion_tertulia_porcentaje" name="reduccion_tertulia_porcentaje" class="parametro"
+                               min="0" max="95" step="1" value="50" aria-describedby="reduccion_tertulia_porcentaje_ayuda">
+                        <button type="button" class="spinner-button plus-button" onclick="cambiarValor('reduccion_tertulia_porcentaje', 5)">+</button>
+                    </div>
+                    <span id="reduccion_tertulia_porcentaje_ayuda" class="parametro" data-i18n="control.unit.less_percent">% menos</span>
+                </td>
+            </tr>
             <tr>
                 <td>
                     <br>
@@ -617,6 +639,16 @@
                                min="82" max="128" step="1" value="100" onchange="actualizarEscalaEspectadorControlDesdeParametro()" oninput="actualizarEscalaEspectadorControlDesdeParametro()">
                         <span id="escala_espectador_valor" class="spectator-scale-value">100%</span>
                     </div>
+                </td>
+            </tr>
+            <tr class="parametros-analisis-row">
+                <td colspan="5">
+                    <section class="parametros-analisis" aria-labelledby="parametros_duracion_niveles_titulo">
+                        <strong id="parametros_duracion_niveles_titulo" data-i18n="control.param.level_durations">DURACI&Oacute;N POR NIVEL</strong>
+                        <div id="parametros_duracion_niveles" class="parametros-duracion-niveles" aria-live="polite"></div>
+                        <div id="parametros_duracion_total" class="parametros-duracion-total"></div>
+                        <div id="parametros_coherencia" class="parametros-coherencia" role="alert" aria-live="assertive" hidden></div>
+                    </section>
                 </td>
             </tr>
             <tr class="parametros-modos-row">
@@ -753,8 +785,8 @@
             <div class="level-sequence" aria-label="Secuencia de niveles">
                 <span data-mode="palabras bonus">PB</span>
                 <span data-mode="letra bendita">LB</span>
-                <span data-mode="letra prohibida">LM</span>
                 <span data-mode="tertulia">T</span>
+                <span data-mode="letra prohibida">LM</span>
                 <span data-mode="palabras prohibidas">PM</span>
                 <span data-mode="frase final">F</span>
             </div>
@@ -810,13 +842,13 @@
             </tr>
         </table>
 <script src="../dist/socket.io/socket.io.js"></script>
-    <script src="../js/i18n.js?v=20260914b"></script>
+    <script src="../js/i18n.js?v=20260917a"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
-    <script src="./js/state.js?v=20260914a"></script>
+    <script src="./js/state.js?v=20260917b"></script>
 <script src="./js/videotutorial-control.js?v=20260829p"></script>
 <script src="./js/show-narration-control.js?v=20260903b"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260914d"></script>
+<script src="./js/socket-events.js?v=20260917b"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

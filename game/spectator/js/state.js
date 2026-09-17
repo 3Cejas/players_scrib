@@ -26,7 +26,7 @@ const construirFirmaMusaHtmlEspectador = (payload = {}, clase = "") => {
     const firma = normalizarFirmaMusaEspectador(payload);
     if (!firma.texto) return "";
     const clases = ["inspiration-author", clase].filter(Boolean).join(" ");
-    return `<span class="${clases}" title="${escapeHtml(firma.completo)}"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">${escapeHtml(firma.texto)}</span></span>`;
+    return `<span class="${clases}" title="${escapeHtml(firma.completo)}"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">${escapeHtml(firma.texto)}:</span></span>`;
 };
 const crearNodoFirmaMusaEspectador = (payload = {}, clase = "") => {
     const firma = normalizarFirmaMusaEspectador(payload);
@@ -189,7 +189,45 @@ const aplicarMarqueeSiOverflow = (elemento) => {
     elemento.style.removeProperty("--marquee-duration");
 
     requestAnimationFrame(() => {
-        const distancia = elemento.scrollWidth - elemento.clientWidth;
+        // La firma de la musa funciona como prefijo fijo. Solo la indicación
+        // que viene después entra en el carril desplazable.
+        const autor = elemento.querySelector(":scope > .inspiration-author");
+        let viewport = elemento;
+        if (autor) {
+            const contenidoMovil = document.createDocumentFragment();
+            let hermano = autor.nextSibling;
+            while (hermano) {
+                const siguiente = hermano.nextSibling;
+                contenidoMovil.appendChild(hermano);
+                hermano = siguiente;
+            }
+            const layout = document.createElement("span");
+            layout.className = "definicion-marquee-layout";
+            const prefijo = document.createElement("span");
+            prefijo.className = "definicion-marquee__fixed";
+            const carril = document.createElement("span");
+            carril.className = "definicion-marquee__viewport";
+            const inner = document.createElement("span");
+            inner.className = "definicion-marquee__inner";
+            const anteriores = [];
+            let nodo = elemento.firstChild;
+            while (nodo && nodo !== autor) {
+                anteriores.push(nodo);
+                nodo = nodo.nextSibling;
+            }
+            anteriores.forEach((item) => prefijo.appendChild(item));
+            prefijo.appendChild(autor);
+            inner.appendChild(contenidoMovil);
+            carril.appendChild(inner);
+            layout.append(prefijo, carril);
+            elemento.replaceChildren(layout);
+            viewport = carril;
+        }
+
+        const inner = viewport.querySelector(".definicion-marquee__inner");
+        const distancia = inner
+            ? inner.scrollWidth - viewport.clientWidth
+            : elemento.scrollWidth - elemento.clientWidth;
         if (distancia <= 1) {
             return;
         }
@@ -197,7 +235,9 @@ const aplicarMarqueeSiOverflow = (elemento) => {
         const duracion = Math.max(distancia / velocidad, 6);
         elemento.style.setProperty("--marquee-distance", `${Math.ceil(distancia)}px`);
         elemento.style.setProperty("--marquee-duration", `${duracion.toFixed(2)}s`);
-        elemento.innerHTML = `<span class="definicion-marquee__inner">${contenido}</span>`;
+        if (!inner) {
+            elemento.innerHTML = `<span class="definicion-marquee__inner">${contenido}</span>`;
+        }
         elemento.classList.add("definicion--marquee");
     });
 };
@@ -6164,8 +6204,12 @@ function limpiarEstiloPalabrasModoLetrasEspectador() {
 
 function aplicarEstiloPalabrasModoLetrasEspectador(tipo = "") {
     limpiarEstiloPalabrasModoLetrasEspectador();
-    if (!tipo || tipo === "bendita" || tipo === "prohibida") return;
+    if (!tipo) return;
     setClaseModoLetrasEspectadorBody(tipo);
+    // Los niveles de letras se pintan desde CSS, pero necesitan igualmente
+    // la clase de contexto en <body> para aplicar su paleta a las palabras de
+    // musa y a los dos paneles de inspiración.
+    if (tipo === "bendita" || tipo === "prohibida") return;
     const clasePalabra = `palabra-letras--${tipo}`;
     const claseDefinicion = `definicion-letras--${tipo}`;
     [palabra2, palabra3].forEach((nodo) => {
@@ -6180,6 +6224,16 @@ function aplicarEstiloPalabrasModoLetrasEspectador(tipo = "") {
             aplicarInlineEstiloDefinicionModoLetras(nodo, tipo);
         }
     });
+}
+
+function aplicarEstiloPalabraInspiracionMusaEspectador(nodo) {
+    if (!nodo || !nodo.classList) return;
+    const tipo = modo_actual === "letra bendita"
+        ? "bendita"
+        : (modo_actual === "letra prohibida" ? "prohibida" : "");
+    if (!tipo) return;
+    nodo.classList.add(`palabra-letras--${tipo}`);
+    aplicarInlineEstiloPalabraModoLetras(nodo, tipo);
 }
 
 const CLASES_FX_CAMBIO_LETRA_ESPECTADOR = [
@@ -6884,7 +6938,7 @@ const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         reproducirMusicaModoEspectador("palabras bonus")
-    reproducirSonido("../../game/audio/FX/12. PALABRAS BONUS.mp3")
+        reproducirSonido("../../game/audio/FX/12. PALABRAS BENDITAS.mp3")
         console.log("ALGO")
         aplicarEstiloPalabrasModoLetrasEspectador("bonus");
         actualizarPalabraConVisibilidad(palabra2, "");

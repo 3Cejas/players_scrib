@@ -620,8 +620,8 @@ let jugador_psico;
 const NIVELES_ORDEN = [
     "palabras bonus",
     "letra bendita",
-    "letra prohibida",
     "tertulia",
+    "letra prohibida",
     "palabras prohibidas",
     "frase final"
 ];

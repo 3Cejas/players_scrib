@@ -1017,6 +1017,11 @@ function pintarConteoActor(textoConteo, opciones = {}) {
         tiempo.style.color = "red";
     }
 
+    // El HTML parte con `hidden` para no enseñar una barra vacía. Al llegar el
+    // primer snapshot de tiempo hay que retirar también ese atributo; cambiar
+    // solo `display` no vence la regla nativa de `[hidden]`.
+    tiempo.hidden = false;
+    tiempo.setAttribute("aria-hidden", "false");
     tiempo.style.display = DISPLAY_BARRA_VIDA;
     tiempo.innerHTML = texto;
 
@@ -1066,8 +1071,8 @@ let niveles_bloqueados = true;
 const NIVELES_ORDEN = [
     "palabras bonus",
     "letra bendita",
-    "letra prohibida",
     "tertulia",
+    "letra prohibida",
     "palabras prohibidas",
     "frase final"
 ];

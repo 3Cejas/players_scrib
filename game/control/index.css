@@ -8416,7 +8416,8 @@ table.default {
     position: relative;
 }
 
-#control_panel_juego #boton_fin_partida[hidden] {
+#control_panel_juego #boton_fin_partida[hidden],
+#control_panel_juego #boton_resultado_videojuego[hidden] {
     display: none !important;
 }
 
@@ -10908,11 +10909,128 @@ body {
     }
 }
 
+/* Duraciones calculadas y validacion de coherencia de la partida. */
+#panel_parametros:not(.is-side-collapsed) > tr.parametros-porcentajes-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+#panel_parametros:not(.is-side-collapsed) > tr.parametros-analisis-row {
+    display: block !important;
+}
+
+#panel_parametros > tr.parametros-analisis-row > td {
+    display: block !important;
+    min-height: 0 !important;
+    padding: clamp(0.34rem, 0.52vw, 0.48rem) 0 0 !important;
+    border-top: 1px solid rgba(69, 243, 255, 0.2) !important;
+    border-bottom: 0 !important;
+}
+
+.parametros-analisis {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(0.34rem, 0.62vw, 0.62rem);
+    min-width: 0;
+}
+
+.parametros-analisis > strong {
+    color: #46f3ff;
+    font: 700 clamp(0.48rem, 0.58vw, 0.66rem)/1 "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.055em;
+    white-space: nowrap;
+    text-shadow: 0 0 0.44rem rgba(69, 243, 255, 0.35);
+}
+
+.parametros-duracion-niveles {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: clamp(0.22rem, 0.4vw, 0.4rem);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(69, 243, 255, 0.35) transparent;
+}
+
+.parametros-duracion-chip {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.2rem 0.34rem;
+    border: 1px solid color-mix(in srgb, var(--param-mode-color), transparent 48%);
+    border-radius: 0.2rem;
+    background: color-mix(in srgb, var(--param-mode-color), transparent 91%);
+    color: color-mix(in srgb, var(--param-mode-color), white 18%);
+    font: 600 clamp(0.42rem, 0.5vw, 0.58rem)/1 "Courier New", monospace;
+    white-space: nowrap;
+}
+
+.parametros-duracion-chip > strong {
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.parametros-duracion-total {
+    color: #a9ffc0;
+    font: 700 clamp(0.44rem, 0.52vw, 0.6rem)/1 "Retro-gaming", "Courier New", monospace;
+    white-space: nowrap;
+}
+
+.parametros-coherencia {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.22rem 0.72rem;
+    padding: 0.34rem 0.46rem;
+    border: 1px solid rgba(255, 173, 66, 0.48);
+    border-radius: 0.22rem;
+    background: rgba(74, 34, 4, 0.46);
+    box-shadow: inset 0 0 0.8rem rgba(255, 173, 66, 0.07);
+}
+
+.parametros-coherencia[hidden] {
+    display: none !important;
+}
+
+.parametros-coherencia p {
+    margin: 0;
+    color: #ffd28d;
+    font: 600 clamp(0.44rem, 0.52vw, 0.6rem)/1.3 "Courier New", monospace;
+}
+
+@media (max-width: 1100px) {
+    .parametros-analisis {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .parametros-analisis > strong,
+    .parametros-duracion-niveles,
+    .parametros-coherencia {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 720px) {
+    #panel_parametros:not(.is-side-collapsed) > tr.parametros-porcentajes-row {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .parametros-analisis {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .parametros-duracion-total {
+        white-space: normal;
+    }
+}
+
 /* Autoridad final de Juego: las parejas solicitadas se mantienen incluso
    frente a las reglas responsive históricas de este panel. */
 #panel_controles .control-group--juego:not(.is-collapsed) > .control-group-buttons--two {
     grid-template-rows: none !important;
     grid-auto-rows: minmax(2.15rem, 1fr) !important;
+    grid-auto-flow: row dense !important;
 }
 
 #panel_controles .control-group--juego:not(.is-collapsed) #boton_vista_partida,

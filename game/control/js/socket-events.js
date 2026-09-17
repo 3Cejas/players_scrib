@@ -606,6 +606,9 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
     const hayTextoRemoto = textoRemotoPlano.length > 0;
     const hayGuardadoRemoto = guardadoRemoto.trim().length > 0;
     const jugadorTerminado = esJ2 ? Boolean(terminado1 || fin_j2) : Boolean(terminado || fin_j1);
+    const margenFinal = 8;
+    const estabaAlFinal = (textoEl.scrollHeight - textoEl.scrollTop - textoEl.clientHeight) <= margenFinal;
+    const scrollAnterior = textoEl.scrollTop;
 
     if (hayTextoRemoto) {
         textoEl.innerHTML = htmlRemoto;
@@ -636,6 +639,11 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
         actualizarPuntosMarcadorControl(playerId, data.points);
     }
     textoEl.style.height = (textoEl.scrollHeight) + "px";
+    if (estabaAlFinal) {
+        textoEl.scrollTop = textoEl.scrollHeight;
+    } else {
+        textoEl.scrollTop = scrollAnterior;
+    }
     if (window.actualizarNumerosLineaControl) {
         window.actualizarNumerosLineaControl(playerId);
     }
@@ -736,10 +744,15 @@ socket.on('tiempo_muerto_control', data => {
         display_modo.style.color = COLORES_MODOS[modo_actual];
         display_modo.textContent = modo_actual.toUpperCase();
     }
-    if (typeof window.detenerCuentaAtrasModoControl === "function") {
-        window.detenerCuentaAtrasModoControl();
+    if (typeof window.iniciarCuentaAtrasModoControl === "function") {
+        window.iniciarCuentaAtrasModoControl({
+            modo: modo_actual || "tertulia",
+            duracion: duracion_modo_actual_control,
+            restante: tiempo_restante_modo_actual_control
+        });
     }
-    // Tertulia es una pausa sin límite: Control decide cuándo continuar.
+    // Control puede adelantar la tertulia, pero el servidor la continuará
+    // automáticamente cuando termine su duración configurada.
     clearTimeout(TimeoutTiempoMuerto);
     TimeoutTiempoMuerto = null;
     if (boton_pausar_reanudar) {
@@ -765,6 +778,9 @@ socket.on('fin_a_control', () => {
     modo_actual = "";
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
+    }
+    if (typeof window.actualizarBotonResultadoVideojuegoControl === "function") {
+        window.actualizarBotonResultadoVideojuegoControl(true);
     }
   });
 

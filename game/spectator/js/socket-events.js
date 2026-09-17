@@ -782,12 +782,14 @@ function programarAplicacionModoTrasCountdownEspectador(revisionCountdown) {
         }
         inicio_modo_delay = false;
         timeout_inicio_modo = null;
-        if (modo_pendiente) {
+        // `post-inicio` limpia la escena. Debe ejecutarse antes de pintar el
+        // primer nivel; hacerlo después apagaba su música y vaciaba su título.
+        const aplicoPostInicio = aplicarPostInicioPendienteEspectador();
+        if (!aplicoPostInicio && modo_pendiente) {
             aplicarModo(modo_pendiente);
             modo_pendiente = null;
         }
         vaciarColaPutadasPendientesEspectador();
-        aplicarPostInicioPendienteEspectador();
     }, DURACION_ESCRIBE_COUNTDOWN_ESPECTADOR_MS);
 }
 
@@ -958,13 +960,15 @@ if (data.parametros && typeof data.parametros.FRASE_FINAL_J1 === 'string') {
         }
         timeout_fallback_countdown_espectador = null;
         const modoPendienteInicio = modo_pendiente;
-        invalidarCountdownInicioEspectador();
-        finalizarIntroCuentaAtrasEspectador();
-        if (modoPendienteInicio) {
-            aplicarModo(modoPendienteInicio);
+        const aplicoPostInicio = aplicarPostInicioPendienteEspectador();
+        if (!aplicoPostInicio) {
+            invalidarCountdownInicioEspectador();
+            finalizarIntroCuentaAtrasEspectador();
+            if (modoPendienteInicio) {
+                aplicarModo(modoPendienteInicio);
+            }
         }
         vaciarColaPutadasPendientesEspectador();
-        aplicarPostInicioPendienteEspectador();
     }, 12000);
 });
 
@@ -982,6 +986,7 @@ function aplicarPostInicioEspectador(data = {}) {
     partida_activa_espectador = true;
     actualizarBrandingPartidaEspectador();
     const modoPendienteInicio = modo_pendiente;
+    modo_pendiente = null;
     const modoRestauradoConexion = data && data.restaurando && ultimo_payload_modo_espectador
         ? { ...ultimo_payload_modo_espectador }
         : null;
@@ -1441,6 +1446,7 @@ function recibir_palabra(data, escritxr) {
             actualizarDefinicionConVisibilidad(definicion2, "", false);
             return;
         }
+        aplicarEstiloPalabraInspiracionMusaEspectador(palabra2);
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
             const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";
@@ -1470,6 +1476,7 @@ function recibir_palabra(data, escritxr) {
             actualizarDefinicionConVisibilidad(definicion3, "", false);
             return;
         }
+        aplicarEstiloPalabraInspiracionMusaEspectador(palabra3);
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
             const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";

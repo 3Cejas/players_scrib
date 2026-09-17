@@ -63,6 +63,8 @@ const PARAMETROS_CONTROL_PERSISTENTES = [
     "tiempo_cambio_palabras",
     "limite_tiempo_inspiracion",
     "tiempo_votacion",
+    "porcentaje_tiempo_desventaja",
+    "reduccion_tertulia_porcentaje",
     "escala_espectador"
 ];
 let aplicando_estado_control_persistente = false;
@@ -1431,6 +1433,12 @@ function actualizarResumenModosControl() {
     } else {
         resumen.textContent = `${activas}/${total} activos`;
     }
+    if (typeof rellenarListaModos === "function") {
+        rellenarListaModos();
+    }
+    if (typeof actualizarVariables === "function") {
+        actualizarVariables();
+    }
     actualizarOpcionesFraseFinalControl();
 }
 window.actualizarResumenModosControl = actualizarResumenModosControl;
@@ -2060,10 +2068,16 @@ function aplicarEstadoPersistenteControl(payload = {}) {
 
         const frases = data.frases_finales && typeof data.frases_finales === "object" ? data.frases_finales : {};
         if (frase_final_j1 && Object.prototype.hasOwnProperty.call(frases, 1)) {
-            frase_final_j1.value = String(frases[1] || "");
+            // No reescribimos el campo activo con el eco normalizado del
+            // servidor: recortaria el espacio final antes de la siguiente voz.
+            if (document.activeElement !== frase_final_j1) {
+                frase_final_j1.value = String(frases[1] || "");
+            }
         }
         if (frase_final_j2 && Object.prototype.hasOwnProperty.call(frases, 2)) {
-            frase_final_j2.value = String(frases[2] || "");
+            if (document.activeElement !== frase_final_j2) {
+                frase_final_j2.value = String(frases[2] || "");
+            }
         }
 
         const nombres = data.nombres && typeof data.nombres === "object" ? data.nombres : {};
@@ -2175,8 +2189,28 @@ function actualizarBotonFinPartidaControl() {
 }
 window.actualizarBotonFinPartidaControl = actualizarBotonFinPartidaControl;
 
+function actualizarBotonResultadoVideojuegoControl(disponible) {
+    const boton = document.getElementById("boton_resultado_videojuego");
+    if (!boton) return;
+    const visible = disponible === true;
+    boton.hidden = !visible;
+    boton.setAttribute("aria-hidden", visible ? "false" : "true");
+    boton.tabIndex = visible ? 0 : -1;
+}
+window.actualizarBotonResultadoVideojuegoControl = actualizarBotonResultadoVideojuegoControl;
+
 function temp() {
     completarFrasesFinalesDebugControl();
+    rellenarListaModos();
+    actualizarVariables();
+    if (!Array.isArray(LISTA_MODOS) || LISTA_MODOS.length === 0) {
+        alert(tJuego2PControl(
+            "control.param.warning.no_levels",
+            {},
+            "Activa al menos un nivel para poder iniciar la partida."
+        ));
+        return;
+    }
     const fraseJ1 = normalizarFraseFinal(frase_final_j1.value);
     const fraseJ2 = normalizarFraseFinal(frase_final_j2.value);
     var checkboxFraseFinal = document.querySelector('input[type="checkbox"][value="frase final"]');
@@ -2200,6 +2234,7 @@ function temp() {
     puntuacion_final_captura_solicitada = false;
     fin_j1 = false;
     fin_j2 = false;
+    actualizarBotonResultadoVideojuegoControl(false);
     document.getElementById("palabra").innerHTML = "";
     document.getElementById("definicion").innerHTML = "";
     clearInterval(countInterval);
@@ -2211,8 +2246,6 @@ function temp() {
         boton_pausar_reanudar.dataset.value = 0;
         actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     }
-    rellenarListaModos();
-    actualizarVariables();
     const borrarTextoEnInicio = borrar_texto_en_inicio_activo === true;
     if (borrarTextoEnInicio) {
         texto_guardado1 = "";
@@ -2240,7 +2273,7 @@ function temp() {
     socket.emit("ajustar_escala_espectador", { valor: escalaEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
     asegurarVistaPartidaParaInicioControl();
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, PORCENTAJE_TIEMPO_DESVENTAJA, REDUCCION_TERTULIA_PORCENTAJE, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
@@ -2382,6 +2415,7 @@ function limpiar({ emitirServidor = true } = {}) {
     //texto2.innerText = "";
     juego_iniciado = false;
     actualizarBotonFinPartidaControl();
+    actualizarBotonResultadoVideojuegoControl(false);
     terminado = false;
     terminado1 = false;
     fin_j1 = false;

@@ -2912,6 +2912,27 @@ body.page-spectator #definicion2.fx-definicion-cambio-maldita {
     text-overflow: clip;
 }
 
+.definicion-marquee-layout {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    width: 100%;
+}
+
+.definicion-marquee__fixed {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.definicion-marquee__viewport {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 .definicion--marquee .definicion-marquee__inner {
     display: inline-block;
     white-space: nowrap;
@@ -11910,6 +11931,40 @@ body.vista-resultado-final #resultado_jurado_espectador {
   color: #8dff9d;
   text-decoration: underline;
   text-underline-offset: 0.14em;
+}
+
+/* La palabra propuesta por la musa conserva el aspecto de ficha de las
+   palabras del juego, pero adopta la paleta del nivel de letras activo. */
+body.page-spectator.modo-letra-bendita-espectador .inspiration-guidance__word,
+body.page-spectator.modo-letra-prohibida-espectador .inspiration-guidance__word {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  margin-inline: 0.16em;
+  padding: 0.12em 0.48em 0.18em;
+  border: 0.1em solid var(--inspiration-word-border);
+  border-radius: 0.48em;
+  background: linear-gradient(110deg, var(--inspiration-word-start), var(--inspiration-word-end));
+  color: #f5fbff;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  text-shadow: 0.06em 0.06em 0 rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 -0.14em 0 rgba(0, 0, 0, 0.22),
+    0 0.12em 0 rgba(0, 0, 0, 0.28);
+}
+
+body.page-spectator.modo-letra-bendita-espectador .inspiration-guidance__word {
+  --inspiration-word-border: #5dff86;
+  --inspiration-word-start: #66dc83;
+  --inspiration-word-end: #23984d;
+}
+
+body.page-spectator.modo-letra-prohibida-espectador .inspiration-guidance__word {
+  --inspiration-word-border: #ff6f84;
+  --inspiration-word-start: #f27f94;
+  --inspiration-word-end: #b62e4a;
 }
 
 .inspiration-guidance--enemy {
