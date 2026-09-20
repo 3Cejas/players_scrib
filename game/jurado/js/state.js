@@ -267,9 +267,12 @@ function renderizarRevelacionJurado() {
         confirmar.disabled = Boolean(criterio.confirmado);
         confirmar.textContent = criterio.confirmado ? "PUNTUACIONES CONFIRMADAS" : "CONFIRMAR PUNTUACIONES";
     }
-    if (estado) estado.textContent = criterio.confirmado
-        ? (criterio.empate ? "APARTADO CONFIRMADO · EMPATE" : `APARTADO CONFIRMADO · GANA ${estado_jurado.resultadoServidor?.jugadores?.[criterio.ganador]?.nombre || `ESCRITXR ${criterio.ganador}`}`)
-        : "MUEVE LAS BARRAS EN DIRECTO";
+    if (estado) {
+        estado.textContent = criterio.confirmado
+            ? (criterio.empate ? "APARTADO CONFIRMADO · EMPATE" : `APARTADO CONFIRMADO · GANA ${estado_jurado.resultadoServidor?.jugadores?.[criterio.ganador]?.nombre || `ESCRITXR ${criterio.ganador}`}`)
+            : "";
+        estado.hidden = !estado.textContent;
+    }
     if (criterio.confirmado) {
         panel?.classList.add("is-confirmed");
         document.querySelector(`[data-jury-live-player="${criterio.ganador}"]`)?.classList.add("is-winner");

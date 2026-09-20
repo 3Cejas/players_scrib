@@ -6,7 +6,7 @@
     <title>SCRB - Jurado</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <link rel="stylesheet" type="text/css" href="./index.css?v=20260920c" />
+    <link rel="stylesheet" type="text/css" href="./index.css?v=20260920d" />
 </head>
 <body class="page-jurado">
     <main id="jurado_app" class="jury-shell">
@@ -61,8 +61,10 @@
                         <span id="jurado_revelacion_referencia_1">TU NOTA: 0</span>
                     </div>
                     <div class="jury-live-score__control">
-                        <input id="jurado_revelacion_valor_1" type="range" min="0" max="10" step="0.1" value="0" aria-label="Puntuaci&oacute;n del equipo azul">
-                        <i class="jury-live-score__reference" aria-hidden="true"></i>
+                        <div class="jury-live-score__range-shell">
+                            <input id="jurado_revelacion_valor_1" type="range" min="0" max="10" step="0.1" value="0" aria-label="Puntuaci&oacute;n del equipo azul">
+                            <span class="jury-live-score__reference-lane" aria-hidden="true"><i class="jury-live-score__reference"></i></span>
+                        </div>
                         <output id="jurado_revelacion_salida_1" for="jurado_revelacion_valor_1">0.0</output>
                     </div>
                 </div>
@@ -72,13 +74,15 @@
                         <span id="jurado_revelacion_referencia_2">TU NOTA: 0</span>
                     </div>
                     <div class="jury-live-score__control">
-                        <input id="jurado_revelacion_valor_2" type="range" min="0" max="10" step="0.1" value="0" aria-label="Puntuaci&oacute;n del equipo rojo">
-                        <i class="jury-live-score__reference" aria-hidden="true"></i>
+                        <div class="jury-live-score__range-shell">
+                            <input id="jurado_revelacion_valor_2" type="range" min="0" max="10" step="0.1" value="0" aria-label="Puntuaci&oacute;n del equipo rojo">
+                            <span class="jury-live-score__reference-lane" aria-hidden="true"><i class="jury-live-score__reference"></i></span>
+                        </div>
                         <output id="jurado_revelacion_salida_2" for="jurado_revelacion_valor_2">0.0</output>
                     </div>
                 </div>
                 <button type="button" id="jurado_revelacion_confirmar" class="jury-reveal__confirm">CONFIRMAR PUNTUACIONES</button>
-                <p id="jurado_revelacion_estado" class="jury-reveal__status">LAS BARRAS EMPIEZAN EN CERO</p>
+                <p id="jurado_revelacion_estado" class="jury-reveal__status" hidden></p>
             </article>
         </section>
 
@@ -230,7 +234,7 @@
     <script src="../config.js?v=20260829m"></script>
     <script src="../dist/socket.io/socket.io.js"></script>
     <script src="../js/domains/inspiration.js?v=20260905d"></script>
-    <script src="./js/state.js?v=20260920b"></script>
+    <script src="./js/state.js?v=20260920c"></script>
     <script src="./js/socket-events.js?v=20260904a"></script>
     <script src="./js/index.js?v=20260506a"></script>
 </body>

@@ -1702,7 +1702,7 @@ let puntuacion_raf_totales_musa = [];
 let jurado_timeout_revelado_musa = null;
 let resultado_final_timeout_revelado_musa = null;
 const PUNTUACION_REVELADO_GANADOR_MUSA_MS = 1540;
-const RESULTADO_FINAL_SUSPENSE_MUSA_MS = 3000;
+const RESULTADO_FINAL_SUSPENSE_MUSA_MS = 8000;
 
 function normalizarResultadoJuradoMusa(payload = {}) {
     const jugadores = payload && payload.jugadores && typeof payload.jugadores === "object" ? payload.jugadores : {};

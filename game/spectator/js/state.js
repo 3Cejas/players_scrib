@@ -1366,10 +1366,13 @@ let instrucciones_slide_step_remoto = 0;
 let audio_deliberacion_modo_espectador = "";
 let audio_deliberacion_victoria_firma = "";
 const DELIBERACION_VICTORIA_INICIO_SEGUNDOS = 22.5;
+const DELIBERACION_LATIDO_NORMAL = 1;
+const DELIBERACION_LATIDO_SUSPENSE = 1.65;
 const audios_deliberacion_pendientes_espectador = new Set();
 
 const pausarAudioDeliberacionEspectador = (audio, reiniciar = false) => {
     if (!audio) return;
+    audios_deliberacion_pendientes_espectador.delete(audio);
     audio.pause();
     if (reiniciar) {
         try { audio.currentTime = 0; } catch (_error) {}
@@ -1385,6 +1388,14 @@ const reproducirAudioDeliberacionSeguro = (audio, volumen = 0.78) => {
             .then(() => audios_deliberacion_pendientes_espectador.delete(audio))
             .catch(() => { audios_deliberacion_pendientes_espectador.add(audio); });
     }
+};
+
+const ajustarVelocidadLatidoDeliberacion = (velocidad = DELIBERACION_LATIDO_NORMAL) => {
+    if (!deliberacion_latido_espectador) return;
+    const valor = Number(velocidad);
+    deliberacion_latido_espectador.playbackRate = Number.isFinite(valor) && valor > 0
+        ? valor
+        : DELIBERACION_LATIDO_NORMAL;
 };
 
 const reintentarAudioDeliberacionEspectador = () => {
@@ -1403,9 +1414,24 @@ function sincronizarAudioDeliberacionEspectador(modo) {
         pausarAudioDeliberacionEspectador(deliberacion_audio_espectador, true);
         pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
         audio_deliberacion_victoria_firma = "";
+        ajustarVelocidadLatidoDeliberacion(DELIBERACION_LATIDO_NORMAL);
         reproducirAudioDeliberacionSeguro(deliberacion_latido_espectador, 1);
         return;
     }
+    if (siguiente === "resultado_final") {
+        pausarAudioDeliberacionEspectador(deliberacion_audio_espectador, true);
+        if (audio_deliberacion_victoria_firma) {
+            ajustarVelocidadLatidoDeliberacion(DELIBERACION_LATIDO_NORMAL);
+            pausarAudioDeliberacionEspectador(deliberacion_latido_espectador, true);
+            return;
+        }
+        pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+        audio_deliberacion_victoria_firma = "";
+        ajustarVelocidadLatidoDeliberacion(DELIBERACION_LATIDO_SUSPENSE);
+        reproducirAudioDeliberacionSeguro(deliberacion_latido_espectador, 1);
+        return;
+    }
+    ajustarVelocidadLatidoDeliberacion(DELIBERACION_LATIDO_NORMAL);
     pausarAudioDeliberacionEspectador(deliberacion_latido_espectador, true);
     if (siguiente === "deliberacion" || siguiente === "puntuacion") {
         pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
@@ -1414,10 +1440,8 @@ function sincronizarAudioDeliberacionEspectador(modo) {
         return;
     }
     pausarAudioDeliberacionEspectador(deliberacion_audio_espectador);
-    if (siguiente !== "resultado_final") {
-        pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
-        audio_deliberacion_victoria_firma = "";
-    }
+    pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
+    audio_deliberacion_victoria_firma = "";
 }
 
 function reproducirVictoriaDeliberacionEspectador(firma) {
@@ -1425,7 +1449,8 @@ function reproducirVictoriaDeliberacionEspectador(firma) {
     if (audio_deliberacion_victoria_firma === siguienteFirma) return;
     audio_deliberacion_victoria_firma = siguienteFirma;
     pausarAudioDeliberacionEspectador(deliberacion_audio_espectador);
-    pausarAudioDeliberacionEspectador(deliberacion_latido_espectador);
+    ajustarVelocidadLatidoDeliberacion(DELIBERACION_LATIDO_NORMAL);
+    pausarAudioDeliberacionEspectador(deliberacion_latido_espectador, true);
     pausarAudioDeliberacionEspectador(deliberacion_victoria_espectador, true);
     try { deliberacion_victoria_espectador.currentTime = DELIBERACION_VICTORIA_INICIO_SEGUNDOS; } catch (_error) {}
     reproducirAudioDeliberacionSeguro(deliberacion_victoria_espectador, 0.92);
@@ -1648,7 +1673,7 @@ let puntuacion_raf_totales_espectador = [];
 let jurado_timeout_revelado_espectador = null;
 let resultado_final_timeout_revelado_espectador = null;
 const PUNTUACION_REVELADO_GANADOR_MS = 1540;
-const RESULTADO_FINAL_SUSPENSE_MS = 3000;
+const RESULTADO_FINAL_SUSPENSE_MS = 8000;
 const stats_timeline_modos_local_espectador = [];
 const STATS_LAYOUT_HEATMAP = [
     [

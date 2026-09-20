@@ -40,6 +40,7 @@ let accion_debug_control_en_curso = false;
 let clicks_logo_debug_control = 0;
 let timeout_clicks_logo_debug_control = null;
 let timeout_toast_debug_control = null;
+const timeout_salida_debug_control = new WeakMap();
 let intervalo_detonadores_debug_control = null;
 let velocidad_detonadores_debug_control = 6;
 let secuencia_detonadores_debug_control = 0;
@@ -2222,6 +2223,10 @@ window.actualizarBotonFinPartidaControl = actualizarBotonFinPartidaControl;
 
 function animarEntradaHerramientaDebugControl(elemento) {
     if (!elemento) return;
+    const timeoutSalida = timeout_salida_debug_control.get(elemento);
+    if (timeoutSalida) clearTimeout(timeoutSalida);
+    timeout_salida_debug_control.delete(elemento);
+    elemento.classList.remove("is-debug-leaving");
     elemento.classList.remove("is-debug-entering");
     void elemento.offsetWidth;
     elemento.classList.add("is-debug-entering");
@@ -2230,19 +2235,49 @@ function animarEntradaHerramientaDebugControl(elemento) {
     }, { once: true });
 }
 
+function ocultarHerramientaDebugControl(elemento, { animar = true } = {}) {
+    if (!elemento) return;
+    const timeoutAnterior = timeout_salida_debug_control.get(elemento);
+    if (timeoutAnterior) clearTimeout(timeoutAnterior);
+    timeout_salida_debug_control.delete(elemento);
+    elemento.classList.remove("is-debug-entering");
+    elemento.setAttribute("aria-hidden", "true");
+    elemento.setAttribute("inert", "");
+    if ("tabIndex" in elemento && elemento.matches("button, [href], input, select, textarea")) {
+        elemento.tabIndex = -1;
+    }
+    if (!animar || elemento.hidden === true) {
+        elemento.classList.remove("is-debug-leaving");
+        elemento.hidden = true;
+        return;
+    }
+    elemento.classList.add("is-debug-leaving");
+    const timeout = setTimeout(() => {
+        elemento.classList.remove("is-debug-leaving");
+        elemento.hidden = true;
+        timeout_salida_debug_control.delete(elemento);
+    }, 420);
+    timeout_salida_debug_control.set(elemento, timeout);
+}
+
 function alternarVisibilidadHerramientaDebugControl(elemento, visible, { animar = true } = {}) {
     if (!elemento) return;
     const estabaVisible = elemento.hidden !== true;
-    elemento.hidden = !visible;
-    elemento.setAttribute("aria-hidden", visible ? "false" : "true");
+    if (!visible) {
+        ocultarHerramientaDebugControl(elemento, { animar });
+        return;
+    }
+    const timeoutSalida = timeout_salida_debug_control.get(elemento);
+    if (timeoutSalida) clearTimeout(timeoutSalida);
+    timeout_salida_debug_control.delete(elemento);
+    elemento.classList.remove("is-debug-leaving");
+    elemento.hidden = false;
+    elemento.removeAttribute("inert");
+    elemento.setAttribute("aria-hidden", "false");
     if ("tabIndex" in elemento && elemento.matches("button, [href], input, select, textarea")) {
-        elemento.tabIndex = visible ? 0 : -1;
+        elemento.tabIndex = 0;
     }
-    if (visible && !estabaVisible && animar) {
-        animarEntradaHerramientaDebugControl(elemento);
-    } else if (!visible) {
-        elemento.classList.remove("is-debug-entering");
-    }
+    if (!estabaVisible && animar) animarEntradaHerramientaDebugControl(elemento);
 }
 
 function haySiguienteNivelDebugControl() {
@@ -2695,10 +2730,10 @@ function actualizarModoDebugControl(payload = {}) {
     if (document.body) document.body.dataset.debugActive = modo_debug_control_activo ? "1" : "0";
     herramientas.forEach((grupo) => {
         alternarVisibilidadHerramientaDebugControl(grupo, modo_debug_control_activo, {
-            animar: modo_debug_control_activo && !debugEstabaActivo
+            animar: modo_debug_control_activo !== debugEstabaActivo
         });
     });
-    actualizarBotonSiguienteNivelDebugControl({ animar: modo_debug_control_activo });
+    actualizarBotonSiguienteNivelDebugControl({ animar: modo_debug_control_activo !== debugEstabaActivo });
     document.querySelectorAll("[data-debug-status]").forEach((estadoContextual) => {
         estadoContextual.textContent = "";
         estadoContextual.removeAttribute("data-tone");
@@ -4792,8 +4827,8 @@ function refrescarTextosEstaticosControl() {
         ["boton_solicitud_lugares", "control.button.request_places", "\u{1F4CD} PEDIR LUGARES"],
         ["boton_solicitud_acciones", "control.button.request_actions", "\u{1F3C3} PEDIR ACCIONES"],
         ["boton_solicitud_frase_final", "control.button.request_final_phrase", "\u{1F4AC} PEDIR FRASE FINAL"],
-        ["teleprompter_cargar_j1", "control.button.load_blue", "\u{1F535} CARGAR AZUL"],
-        ["teleprompter_cargar_j2", "control.button.load_red", "\u{1F534} CARGAR ROJO"]
+        ["teleprompter_cargar_j1", "control.button.load", "\u{1F4BE} CARGAR"],
+        ["teleprompter_cargar_j2", "control.button.load", "\u{1F4BE} CARGAR"]
     ];
 
     textos.forEach(([id, clave, fallback]) => {

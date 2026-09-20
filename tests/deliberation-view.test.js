@@ -53,7 +53,9 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(spectatorState, /vista-resultado-final/);
   assert.doesNotMatch(spectatorState, /APARTADO \$\{paso\} DE \$\{estado\.criterios\.length\}/);
   assert.match(spectatorState, /resultado_jurado[\s\S]*pausarAudioDeliberacionEspectador\(deliberacion_audio_espectador, true\)[\s\S]*reproducirAudioDeliberacionSeguro\(deliberacion_latido_espectador, 1\)/);
-  assert.match(spectatorState, /RESULTADO_FINAL_SUSPENSE_MS = 3000/);
+  assert.match(spectatorState, /RESULTADO_FINAL_SUSPENSE_MS = 8000/);
+  assert.match(spectatorState, /DELIBERACION_LATIDO_SUSPENSE = 1\.65/);
+  assert.match(spectatorState, /siguiente === "resultado_final"[\s\S]*ajustarVelocidadLatidoDeliberacion\(DELIBERACION_LATIDO_SUSPENSE\)[\s\S]*reproducirAudioDeliberacionSeguro\(deliberacion_latido_espectador, 1\)/);
   assert.match(spectatorState, /!controlador_transicion_vista_espectador \|\| modo === "resultado_final"/);
   assert.match(spectatorState, /modo === "resultado_final"\) controlador_transicion_vista_espectador\?\.cancel\(\)/);
   assert.match(spectatorState, /confetti_aux\(\{ persistente: true, silencioso: true \}\)/);
@@ -77,7 +79,7 @@ test("spectator and muses render both deliberation outcomes", () => {
   assert.match(spectatorState, /&#x1F3AE;<\/span> VIDEOJUEGO/);
   assert.match(spectatorState, /&#x2696;&#xFE0F;<\/span> JURADO/);
   assert.match(museSockets, /persistente \? 14/);
-  assert.match(museState, /RESULTADO_FINAL_SUSPENSE_MUSA_MS = 3000/);
+  assert.match(museState, /RESULTADO_FINAL_SUSPENSE_MUSA_MS = 8000/);
   assert.match(museState, /is-final-celebrating/);
   assert.match(museState, /vista_modo_remota_musa !== "resultado_final"\) \{\s*animarTransicionVistaMusa/);
   assert.match(museSockets, /puntuacion_final_estado/);
@@ -97,10 +99,13 @@ test("Jury controls the live two-bar reveal while spectator and muses mirror it"
   assert.equal((html.match(/id="jurado_revelacion_valor_[12]"/g) || []).length, 2);
   assert.equal((html.match(/TU NOTA:/g) || []).length, 2);
   assert.match(html, /id="jurado_revelacion_confirmar"/);
+  assert.equal((html.match(/jury-live-score__reference-lane/g) || []).length, 2);
+  assert.doesNotMatch(html, /LAS BARRAS EMPIEZAN EN CERO/);
   assert.match(state, /jurado_revelacion_actualizar/);
   assert.match(state, /jurado_revelacion_confirmar/);
   assert.match(state, /indiceCrudo === null \|\| indiceCrudo === undefined/);
   assert.match(state, /criterio\.referencias/);
+  assert.doesNotMatch(state, /MUEVE LAS BARRAS EN DIRECTO/);
   assert.match(sockets, /socket\.on\("vista_espectador_modo"/);
   assert.match(sockets, /socket\.on\("jurado_resultado_estado"/);
   assert.match(spectatorState, /resultado-jurado-score/);

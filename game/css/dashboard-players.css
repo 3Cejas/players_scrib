@@ -11720,6 +11720,35 @@ body.vista-resultado-final #resultado_jurado_espectador {
   animation: deliberacionBalanzaEmoji 3.2s ease-in-out infinite;
 }
 
+/* Mantiene completa la composicion de deliberacion incluso en pantallas
+   panoramicas con poca altura util. */
+.deliberacion-espectador {
+  height: 100dvh;
+  grid-template-rows: repeat(4, auto);
+  align-content: center;
+  gap: clamp(0.3rem, 1.2vh, 0.85rem);
+  padding: clamp(0.8rem, 2.5vh, 2rem) clamp(1rem, 3vw, 3rem);
+}
+
+.deliberacion-espectador__eyebrow {
+  font-size: clamp(0.65rem, 1.8vh, 1.2rem);
+}
+
+.deliberacion-espectador__balanza {
+  margin: 0;
+  font-size: clamp(5rem, 20vh, 12rem);
+}
+
+.deliberacion-espectador h2 {
+  margin: clamp(0.25rem, 0.9vh, 0.65rem) 0;
+  font-size: clamp(2.8rem, 9.4vh, 6.4rem);
+  line-height: 0.9;
+}
+
+.deliberacion-espectador > p {
+  font-size: clamp(1.35rem, 4.2vh, 2.8rem);
+}
+
 .resultado-jurado-espectador,
 .resultado-final-espectador {
   display: none;

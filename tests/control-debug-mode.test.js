@@ -41,6 +41,8 @@ test("Control requests authoritative Debug state and routes every test action th
   assert.match(actions, /input\[name="modos"\]\[value="frase final"\]/);
   assert.match(actions, /document\.querySelectorAll\("\[data-debug-tools\]"\)/);
   assert.match(actions, /function haySiguienteNivelDebugControl\(\)[\s\S]*juego_iniciado !== true[\s\S]*indiceActual < modos\.length - 1/);
+  assert.match(actions, /function ocultarHerramientaDebugControl[\s\S]*is-debug-leaving[\s\S]*elemento\.hidden = true/);
+  assert.match(actions, /animar: modo_debug_control_activo !== debugEstabaActivo/);
   assert.match(actions, /actualizarBotonSiguienteNivelDebugControl/);
   assert.match(actions, /document\.querySelectorAll\("\[data-debug-action\]"\)/);
 });
@@ -55,6 +57,10 @@ test("Debug contextual controls and secret feedback retain usable responsive lay
   assert.match(css, /@keyframes debugToolsReveal/);
   assert.match(css, /@keyframes debugButtonReveal/);
   assert.match(css, /\.debug-context-tools\.is-debug-entering/);
+  assert.match(css, /@keyframes debugToolsHide/);
+  assert.match(css, /@keyframes debugButtonHide/);
+  assert.match(css, /\.debug-context-tools\.is-debug-leaving/);
+  assert.match(css, /#panel_controles \.debug-control__button\[hidden\][\s\S]*display: none !important/);
   assert.match(css, /@media \(max-width: 720px\)[\s\S]*\.debug-context-tools\s*\{[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
 });
 

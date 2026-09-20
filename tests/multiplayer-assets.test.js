@@ -23,8 +23,8 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260920b";
-const SPECTATOR_CSS_VERSION = "20260920a";
+const SPECTATOR_STATE_VERSION = "20260920c";
+const SPECTATOR_CSS_VERSION = "20260920b";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260920c";
 const DEBUG_DETONATORS_VERSION = "20260909a";
@@ -37,11 +37,11 @@ const PLAYER_ACTIONS_VERSION = "20260914f";
 const PLAYER_STATE_VERSION = "20260917b";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260917c";
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260917b";
-const JURY_CSS_VERSION = "20260920c";
-const JURY_STATE_VERSION = "20260920b";
+const JURY_CSS_VERSION = "20260920d";
+const JURY_STATE_VERSION = "20260920c";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260920h";
-const CONTROL_ACTIONS_VERSION = "20260920g";
+const CONTROL_CSS_VERSION = "20260920i";
+const CONTROL_ACTIONS_VERSION = "20260920h";
 const CONTROL_I18N_VERSION = "20260920a";
 const CONTROL_STATE_VERSION = "20260917c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260920a";
@@ -49,7 +49,7 @@ const PUBLIC_PLAYER_ACTIONS_VERSION = "20260914f";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260920a";
+const PUBLIC_PLAYER_STATE_VERSION = "20260920b";
 const PUBLIC_PLAYER_CSS_VERSION = "20260920a";
 const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260917b";
 const PUBLIC_PLAYER_I18N_VERSION = "20260917c";
@@ -935,12 +935,14 @@ test("control teleprompter identifies each team and confirms spectator loading w
   const actions = read("game/control/js/actions.js");
   const i18n = read("game/js/i18n.js");
 
-  assert.match(html, /id="teleprompter_cargar_j1"[^>]*teleprompter-cargar--j1[^>]*aria-label="Cargar texto del equipo azul"[^>]*>🔵 CARGAR AZUL<\/button>/);
-  assert.match(html, /id="teleprompter_cargar_j2"[^>]*teleprompter-cargar--j2[^>]*aria-label="Cargar texto del equipo rojo"[^>]*>🔴 CARGAR ROJO<\/button>/);
+  assert.match(html, /id="teleprompter_cargar_j1"[^>]*teleprompter-cargar--j1[^>]*aria-label="Cargar texto del equipo azul"[^>]*>💾 CARGAR<\/button>/);
+  assert.match(html, /id="teleprompter_cargar_j2"[^>]*teleprompter-cargar--j2[^>]*aria-label="Cargar texto del equipo rojo"[^>]*>💾 CARGAR<\/button>/);
   assert.match(html, /id="teleprompter_estado_carga"[^>]*teleprompter-status--idle[^>]*data-source="0"[^>]*role="status"[^>]*aria-live="polite"[\s\S]*teleprompter-status__lamp[\s\S]*id="teleprompter_estado_carga_texto"/);
 
   assert.match(css, /\.teleprompter-cargar--j1\s*\{[\s\S]*background: linear-gradient\([\s\S]*rgba\(18, 196, 223/);
   assert.match(css, /\.teleprompter-cargar--j2\s*\{[\s\S]*background: linear-gradient\([\s\S]*rgba\(235, 57, 72/);
+  assert.match(css, /\.teleprompter-cargar--j1\s*\{[\s\S]*color: #8af7ff/);
+  assert.match(css, /\.teleprompter-cargar--j2\s*\{[\s\S]*color: #ff8fa0/);
   assert.match(css, /\.teleprompter-cargar--j1:disabled,[\s\S]*background: linear-gradient\([\s\S]*rgba\(15, 139, 166/);
   assert.match(css, /\.teleprompter-cargar--j2:disabled,[\s\S]*background: linear-gradient\([\s\S]*rgba\(177, 42, 55/);
   assert.match(css, /\.teleprompter-status--info \.teleprompter-status__lamp\s*\{[\s\S]*background: #ff9f1f;[\s\S]*teleprompterLoadingPulse/);
@@ -951,8 +953,8 @@ test("control teleprompter identifies each team and confirms spectator loading w
   assert.match(actions, /Cargando texto \$\{etiqueta\} en espectador[\s\S]*"info", source/);
   assert.match(actions, /if \(!textoRenderizado\)[\s\S]*"error", source[\s\S]*if \(visible\)[\s\S]*"ok", source/);
   assert.match(actions, /if \(!teleprompter_espera_ack\)[\s\S]*hayTextoCargado[\s\S]*"ok", source/);
-  assert.match(i18n, /"control\.button\.load_blue": "\\ud83d\\udd35 CARGAR AZUL"/);
-  assert.match(i18n, /"control\.button\.load_red": "\\ud83d\\udd34 CARGAR ROJO"/);
+  assert.match(actions, /\["teleprompter_cargar_j1", "control\.button\.load", "\\u\{1F4BE\} CARGAR"\]/);
+  assert.match(actions, /\["teleprompter_cargar_j2", "control\.button\.load", "\\u\{1F4BE\} CARGAR"\]/);
 });
 
 test("writer reconnect post-inicio enters match view without skill menu", () => {
