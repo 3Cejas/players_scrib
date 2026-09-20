@@ -23,6 +23,9 @@ let agitado_prev_ay = null;
 let agitado_prev_az = null;
 let agitado_aviso_timeout = null;
 let bandera_bloqueada_por_control = false;
+let bandera_animacion_timeout = null;
+const BANDERA_ENTRADA_MS = 720;
+const BANDERA_SALIDA_MS = 560;
 const BANDERA_DISPONIBLE_SESION = "scrib_bandera_disponible_sesion";
 const tJuego2P = (clave, variables = {}, fallback = "") => (
   (window && typeof window.scribT2P === "function")
@@ -563,12 +566,58 @@ function mostrarTextoCompleto(boton) {
     return overlay;
   }
 
+  function cancelarCierreBanderaAnimado() {
+    if (bandera_animacion_timeout) {
+      clearTimeout(bandera_animacion_timeout);
+      bandera_animacion_timeout = null;
+    }
+  }
+
+  function mostrarBanderaAnimada(overlay) {
+    cancelarCierreBanderaAnimado();
+    overlay.classList.remove('bandera-overlay--saliendo', 'bandera-overlay--entrando');
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+    void overlay.offsetWidth;
+    overlay.classList.add('bandera-overlay--entrando');
+    bandera_animacion_timeout = setTimeout(() => {
+      overlay.classList.remove('bandera-overlay--entrando');
+      bandera_animacion_timeout = null;
+    }, BANDERA_ENTRADA_MS);
+  }
+
+  function ocultarBanderaSinAnimacion(overlay) {
+    overlay.classList.remove('bandera-overlay--entrando', 'bandera-overlay--saliendo');
+    overlay.style.display = 'none';
+    overlay.style.backgroundColor = '';
+    overlay.classList.remove('bright-pulse-background', 'blue-pulse-background');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function ocultarBanderaAnimada(overlay) {
+    cancelarCierreBanderaAnimado();
+    const estabaVisible = overlay.style.display !== 'none'
+      && window.getComputedStyle(overlay).display !== 'none';
+    if (!estabaVisible) {
+      ocultarBanderaSinAnimacion(overlay);
+      return;
+    }
+    overlay.classList.remove('bandera-overlay--entrando', 'bandera-overlay--saliendo');
+    void overlay.offsetWidth;
+    overlay.classList.add('bandera-overlay--saliendo');
+    overlay.setAttribute('aria-hidden', 'true');
+    bandera_animacion_timeout = setTimeout(() => {
+      ocultarBanderaSinAnimacion(overlay);
+      bandera_animacion_timeout = null;
+    }, BANDERA_SALIDA_MS);
+  }
+
   function bandera(boton, _opciones = {}) {
     const forzar = Boolean(_opciones && _opciones.forzar);
     const overlay = asegurarOverlayBanderaVisible();
     if (!overlay) return;
     if (boton.value == 0 || forzar) {
-        overlay.style.display = 'flex';
+        mostrarBanderaAnimada(overlay);
         const equipo = Number(player);
         overlay.classList.remove('bright-pulse-background');
         overlay.classList.remove('blue-pulse-background');
@@ -601,10 +650,9 @@ function mostrarTextoCompleto(boton) {
       return;
     }
     const overlay = document.getElementById('overlay');
-    overlay.style.display = 'none';
-    overlay.style.backgroundColor = '';
-    overlay.classList.remove('bright-pulse-background');
-    overlay.classList.remove('blue-pulse-background');
+    if (overlay) {
+      ocultarBanderaAnimada(overlay);
+    }
 
     const boton = document.getElementById('btn_bandera');
     if (boton) {

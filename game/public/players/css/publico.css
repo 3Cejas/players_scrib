@@ -4140,6 +4140,118 @@ body.partida-finalizada-musa .niveles {
     box-sizing: border-box;
 }
 
+#overlay.bandera-overlay--entrando {
+  display: flex !important;
+  pointer-events: auto;
+  animation: musaBanderaEntrada 680ms cubic-bezier(.16, .82, .2, 1) both;
+}
+
+#overlay.bandera-overlay--saliendo {
+  display: flex !important;
+  pointer-events: none;
+  animation: musaBanderaSalida 520ms cubic-bezier(.55, .02, .82, .42) both;
+}
+
+#overlay.bandera-overlay--entrando::before,
+#overlay.bandera-overlay--saliendo::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: -24%;
+  pointer-events: none;
+  background: linear-gradient(112deg,
+    transparent 28%,
+    rgba(255, 255, 255, .08) 38%,
+    rgba(255, 255, 255, .78) 49%,
+    rgba(255, 255, 255, .12) 59%,
+    transparent 70%);
+  mix-blend-mode: screen;
+}
+
+#overlay.bandera-overlay--entrando::before {
+  animation: musaBanderaBrilloEntrada 720ms cubic-bezier(.16, .82, .2, 1) both;
+}
+
+#overlay.bandera-overlay--saliendo::before {
+  animation: musaBanderaBrilloSalida 520ms ease-in both;
+}
+
+#overlay.bandera-overlay--entrando > p,
+#overlay.bandera-overlay--entrando > .btn {
+  position: relative;
+  z-index: 1;
+  animation: musaBanderaContenidoEntrada 620ms 120ms cubic-bezier(.16, .82, .2, 1) both;
+}
+
+#overlay.bandera-overlay--saliendo > p,
+#overlay.bandera-overlay--saliendo > .btn {
+  position: relative;
+  z-index: 1;
+  animation: musaBanderaContenidoSalida 300ms ease-in both;
+}
+
+@keyframes musaBanderaEntrada {
+  0% {
+    opacity: 0;
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    transform: translate3d(-5vw, 0, 0) scale(1.035);
+  }
+  65% { opacity: 1; }
+  100% {
+    opacity: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes musaBanderaSalida {
+  0% {
+    opacity: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+    transform: translate3d(5vw, 0, 0) scale(.97);
+  }
+}
+
+@keyframes musaBanderaBrilloEntrada {
+  0% { opacity: 0; transform: translate3d(-58%, 0, 0) rotate(-4deg); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(58%, 0, 0) rotate(-4deg); }
+}
+
+@keyframes musaBanderaBrilloSalida {
+  0% { opacity: .55; transform: translate3d(-18%, 0, 0) rotate(-4deg); }
+  100% { opacity: 0; transform: translate3d(58%, 0, 0) rotate(-4deg); }
+}
+
+@keyframes musaBanderaContenidoEntrada {
+  0% { opacity: 0; transform: translate3d(-28px, 0, 0) scale(.94); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes musaBanderaContenidoSalida {
+  0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0; transform: translate3d(24px, 0, 0) scale(.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #overlay.bandera-overlay--entrando,
+  #overlay.bandera-overlay--saliendo,
+  #overlay.bandera-overlay--entrando::before,
+  #overlay.bandera-overlay--saliendo::before,
+  #overlay.bandera-overlay--entrando > p,
+  #overlay.bandera-overlay--entrando > .btn,
+  #overlay.bandera-overlay--saliendo > p,
+  #overlay.bandera-overlay--saliendo > .btn {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+}
+
 #overlay p {
   margin: 2vh 5vw; /* 2vh arriba/abajo y 5vw a los lados */
   font-size: 8vw; /* Tamaño de fuente relativo al ancho de la pantalla */

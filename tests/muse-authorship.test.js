@@ -166,6 +166,13 @@ test("the live muse screen keeps writer identity visible and boxes the writer te
   assert.match(css, /body\.musa-bandera-disponible #metadatos_acciones\.musa-bandera-fab-wrap[\s\S]*position: fixed !important;[\s\S]*left:/);
   assert.match(actions, /BANDERA_DISPONIBLE_SESION/);
   assert.match(actions, /recordarDisponibilidadBanderaMusa\(activa\)/);
+  assert.match(actions, /function mostrarBanderaAnimada\(overlay\)/);
+  assert.match(actions, /function ocultarBanderaAnimada\(overlay\)/);
+  assert.match(actions, /overlay\.classList\.add\('bandera-overlay--entrando'\)/);
+  assert.match(actions, /overlay\.classList\.add\('bandera-overlay--saliendo'\)/);
+  assert.match(css, /@keyframes musaBanderaEntrada/);
+  assert.match(css, /@keyframes musaBanderaSalida/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(events, /typeof data === "string" \? data : null/);
 });
 
