@@ -25,7 +25,7 @@
     const sizeButton = document.getElementById("technician_teleprompter_size");
 
     document.body.classList.add("page-technician");
-    document.title = `SCRB · Técnico ${selectedPlayer}`;
+    document.title = `SCRB · Técnica ${selectedPlayer}`;
     if (overlay) overlay.hidden = false;
 
     const normalizarMarca = (mark = {}) => ({

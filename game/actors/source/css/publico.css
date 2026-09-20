@@ -1057,23 +1057,116 @@ body.page-actors p[id^="explic"] .explicacion-letra-destacada {
     transform: translateY(0.06em);
 }
 
-/* Técnico: reutiliza la mesa de Actores y añade un teleprompter flotante privado. */
-body.page-technician::after {
-    content: "TÉCNICO · MARCAS SINCRONIZADAS";
+/* Técnica: reutiliza la mesa de Intérpretes sin mostrar información de nivel. */
+.technician-role-bar {
+    display: none;
+}
+
+body.page-technician .technician-role-bar {
     position: fixed;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 0.46rem;
+    left: 0.46rem;
     z-index: 44;
-    padding: .55rem 1rem;
-    border: 1px solid rgba(255, 209, 102, .72);
-    border-radius: 999px;
-    background: rgba(4, 8, 16, .92);
-    color: #ffd166;
-    font-size: clamp(.56rem, 1vw, .78rem);
-    letter-spacing: .12em;
-    box-shadow: 0 0 1.2rem rgba(255, 209, 102, .22);
-    pointer-events: none;
+    display: flex;
+    min-height: 2.48rem;
+    align-items: center;
+    padding: 0.42rem 0.55rem;
+    border: 1px solid rgba(111, 238, 255, 0.22);
+    border-radius: 0.32rem;
+    background:
+        linear-gradient(180deg, rgba(7, 17, 25, 0.9), rgba(2, 5, 10, 0.92)),
+        rgba(3, 6, 12, 0.96);
+    box-sizing: border-box;
+}
+
+body.page-technician .technician-role-bar .remote-brand-card {
+    display: grid;
+    grid-template-columns: 1.48rem minmax(0, auto);
+    min-height: 1.94rem;
+    align-items: center;
+    justify-content: start;
+    gap: 0.32rem;
+    min-width: 0;
+    padding: 0.18rem 0.34rem;
+    border-radius: 0.2rem;
+    box-sizing: border-box;
+}
+
+body.page-technician .technician-role-bar .control-debug-secret-trigger {
+    display: grid;
+    width: 1.48rem;
+    min-width: 1.48rem;
+    height: 1.48rem;
+    min-height: 1.48rem;
+    place-items: center;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0.2rem;
+    background: transparent;
+}
+
+body.page-technician .technician-role-bar .control-brand-logo {
+    display: block;
+    width: 1.32rem;
+    max-width: 1.32rem;
+    height: 1.32rem;
+    max-height: 1.32rem;
+    object-fit: contain;
+    object-position: center;
+    filter:
+        drop-shadow(0 0 0.25rem rgba(105, 243, 255, 0.68))
+        drop-shadow(0 0 0.62rem rgba(105, 243, 255, 0.24));
+}
+
+body.page-technician .technician-role-bar .remote-brand-control-label {
+    min-width: 0;
+    align-self: center;
+    overflow: hidden;
+    color: #8ff8ff;
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.94rem, 1.18vw, 1.38rem);
+    line-height: 1;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    text-shadow:
+        0.08em 0.08em #ff2d2d,
+        0 0 0.7rem rgba(69, 243, 255, 0.48);
+    white-space: nowrap;
+}
+
+body.page-technician .actor-texto-card__niveles,
+body.page-technician .actor-level-detail,
+body.page-technician #level_transition,
+body.page-technician #level_transition_status {
+    display: none !important;
+}
+
+body.page-technician .actor-texto-card #metadatos_actor {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+body.page-technician #metadatos_actor .marcador-chip--puntos {
+    display: none !important;
+}
+
+@media (max-width: 1500px) and (min-width: 1101px) {
+    body.page-technician .technician-role-bar .remote-brand-control-label {
+        font-size: clamp(0.68rem, 0.96vw, 0.96rem);
+    }
+}
+
+@media (max-width: 1100px) {
+    body.page-technician .technician-role-bar .remote-brand-control-label {
+        font-size: clamp(0.52rem, 1.35vw, 0.78rem);
+    }
+}
+
+@media (max-width: 860px) {
+    body.page-technician .technician-role-bar .remote-brand-control-label {
+        font-size: clamp(0.42rem, 1.2vw, 0.58rem);
+    }
 }
 
 .technician-teleprompter {

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260918a">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260920a">
     <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260917b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -21,6 +21,14 @@
     <script src="./js/annotations.js?v=20260910a"></script>
 </head>
 <body class="page-actors">
+        <header id="technician_role_bar" class="technician-role-bar" aria-label="Rol de T&eacute;cnica">
+            <div class="remote-brand-card">
+                <span class="control-debug-secret-trigger" aria-hidden="true">
+                    <img class="control-brand-logo" src="../../media/scrib-logo-mark.png" alt="">
+                </span>
+                <span class="remote-brand-control-label">T&Eacute;CNICA</span>
+            </div>
+        </header>
         <div id="level_transition" class="level-transition level-transition--compact" aria-hidden="true">
             <div class="level-transition__backdrop" aria-hidden="true"></div>
             <div class="level-transition__rays" aria-hidden="true"></div>
@@ -139,7 +147,7 @@
         <section id="technician_teleprompter" class="technician-teleprompter" hidden aria-live="polite">
             <header class="technician-teleprompter__header">
                 <div>
-                    <span class="technician-teleprompter__eyebrow">TELEPROMPTER · TÉCNICO</span>
+                    <span class="technician-teleprompter__eyebrow">TELEPROMPTER · T&Eacute;CNICA</span>
                     <strong id="technician_teleprompter_title">Esperando texto</strong>
                 </div>
                 <button id="technician_teleprompter_size" type="button" aria-label="Cambiar tamaño de la ventana">↗</button>
@@ -158,5 +166,5 @@
     <script src="../../js/i18n.js?v=20260917c"></script>
 <script src="../../js/domains/level-transition.js?v=20260917b"></script>
 <script src="./js/socket-events.js?v=20260918a"></script>
-<script src="./js/technician.js?v=20260910a"></script>
+<script src="./js/technician.js?v=20260920a"></script>
 </html>
