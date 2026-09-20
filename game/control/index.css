@@ -5685,8 +5685,8 @@ table.default {
 
 .control-group--final .control-group-buttons--final > .btn {
     min-width: 0;
-    min-height: 3.5rem;
-    padding: 0.65rem 0.55rem;
+    min-height: 2.2rem;
+    padding: 0.48em 0.62em;
     overflow-wrap: normal;
     word-break: normal;
     hyphens: none;
@@ -12634,9 +12634,9 @@ table.default {
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
-    min-height: 3.5rem;
+    min-height: 2.2rem;
     margin: 0;
-    padding: 0.65rem 0.55rem;
+    padding: 0.48em 0.62em;
     border: 1px solid rgba(255, 191, 77, 0.62);
     border-radius: 0.26rem;
     color: #ffe7ae;
@@ -12648,6 +12648,7 @@ table.default {
         0 0 0.7rem rgba(255, 191, 77, 0.18);
     font: inherit;
     font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: 0.68rem !important;
     line-height: 1.22;
     text-align: center;
     white-space: normal;

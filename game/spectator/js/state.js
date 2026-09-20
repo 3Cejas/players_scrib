@@ -4143,14 +4143,23 @@ const normalizarResultadoJuradoEspectador = (payload = {}) => {
     };
 };
 
-const tarjetaResultadoJuradoEspectador = (estado, id, valores, ganador, escala = 10) => {
+const marcadorPuntuacionJuradoEspectador = (valorEntrada) => {
+    const valor = Math.max(0, Math.min(10, Number(valorEntrada) || 0));
+    const porcentaje = valor * 10;
+    const matiz = Math.round(porcentaje * 1.2);
+    return `<div class="resultado-jurado-score" style="--jury-score:${porcentaje.toFixed(1)}%;--jury-score-hue:${matiz}">
+        <div class="resultado-jurado-score__track" aria-hidden="true"><i></i><span></span></div>
+        <b>${valor.toFixed(1)}<em>/10</em></b>
+    </div>`;
+};
+
+const tarjetaResultadoJuradoEspectador = (estado, id, valores) => {
     const jugador = estado.jugadores[id];
-    const gana = Number(ganador) === id;
     const valor = Number(valores[id]) || 0;
-    return `<article class="resultado-jurado-card resultado-jurado-card--${id}${gana ? " is-winner" : ""}">
-        <small>${gana ? "GANADOR" : "FINALISTA"}</small>
+    return `<article class="resultado-jurado-card resultado-jurado-card--${id}">
+        <small>PUNTUACI&Oacute;N MEDIA</small>
         <h3>${escapeHtml(jugador.nombre)}</h3>
-        <strong>${valor.toFixed(1)}</strong><span>/ ${escala}</span>
+        ${marcadorPuntuacionJuradoEspectador(valor)}
     </article>`;
 };
 
@@ -4158,11 +4167,10 @@ const tarjetaJuradoDirectoEspectador = (estado, id, criterio) => {
     const jugador = estado.jugadores[id];
     const valor = Number(criterio.valores?.[id]) || 0;
     const confirmado = criterio.confirmado === true;
-    const gana = confirmado && Number(criterio.ganador) === id;
-    return `<article class="resultado-jurado-card resultado-jurado-card--live resultado-jurado-card--${id}${gana ? " is-winner" : ""}">
-        <small>${confirmado ? (gana ? "GANADOR" : "PUNTUACI&Oacute;N CONFIRMADA") : "EN DIRECTO"}</small>
+    return `<article class="resultado-jurado-card resultado-jurado-card--live resultado-jurado-card--${id}">
+        <small>${confirmado ? "PUNTUACI&Oacute;N CONFIRMADA" : "EN DIRECTO"}</small>
         <h3>${escapeHtml(jugador.nombre)}</h3>
-        <div class="resultado-jurado-live-bar" style="--jury-live-fill:${(valor * 10).toFixed(1)}%"><i></i><b>${valor.toFixed(1)} <em>PTS</em></b></div>
+        ${marcadorPuntuacionJuradoEspectador(valor)}
     </article>`;
 };
 
@@ -4200,25 +4208,24 @@ const renderizarResultadoJuradoEspectador = (opciones = {}) => {
             empate: criterio.empate,
             ganador: criterio.ganador
         };
-        const ganadorDirecto = directo.confirmado && !directo.empate ? Number(directo.ganador) : 0;
         html = `<article class="resultado-jurado-panel resultado-jurado-panel--criterio">
             <h2>${escapeHtml(criterio.label.toUpperCase())}</h2>
             <div class="resultado-jurado-cards">
                 ${tarjetaJuradoDirectoEspectador(estado, 1, directo)}
                 ${tarjetaJuradoDirectoEspectador(estado, 2, directo)}
             </div>
-            <p class="resultado-jurado-veredicto">${!directo.confirmado ? "EL JURADO EST&Aacute; MOVIENDO LAS BARRAS" : (directo.empate ? "EMPATE EN ESTE APARTADO" : `${escapeHtml(estado.jugadores[ganadorDirecto].nombre)} SE LLEVA EL APARTADO`)}</p>
+            <p class="resultado-jurado-veredicto">${!directo.confirmado ? "EL JURADO EST&Aacute; AJUSTANDO LAS PUNTUACIONES" : "PUNTUACIONES DEL APARTADO"}</p>
         </article>`;
     } else {
         const valores = { 1: estado.jugadores[1].total, 2: estado.jugadores[2].total };
         html = `<article class="resultado-jurado-panel resultado-jurado-panel--final">
-            <span class="resultado-jurado-kicker">VEREDICTO DEL JURADO</span>
-            <h2>${estado.empate ? "EMPATE" : escapeHtml(estado.jugadores[estado.ganador].nombre)}</h2>
+            <span class="resultado-jurado-kicker">VALORACI&Oacute;N ESC&Eacute;NICA</span>
+            <h2>PUNTUACIONES DEL JURADO</h2>
             <div class="resultado-jurado-cards">
-                ${tarjetaResultadoJuradoEspectador(estado, 1, valores, estado.empate ? 0 : estado.ganador)}
-                ${tarjetaResultadoJuradoEspectador(estado, 2, valores, estado.empate ? 0 : estado.ganador)}
+                ${tarjetaResultadoJuradoEspectador(estado, 1, valores)}
+                ${tarjetaResultadoJuradoEspectador(estado, 2, valores)}
             </div>
-            <p class="resultado-jurado-veredicto">${estado.empate ? "EL JURADO DECLARA UN EMPATE" : "ELECCI&Oacute;N DEL JURADO"}</p>
+            <p class="resultado-jurado-veredicto">MEDIA DE LOS CRITERIOS ESC&Eacute;NICOS</p>
         </article>`;
     }
     if (jurado_timeout_revelado_espectador) {
@@ -4236,11 +4243,7 @@ const renderizarResultadoJuradoEspectador = (opciones = {}) => {
             jurado_timeout_revelado_espectador = null;
         }, 1250);
     });
-    if (paso === maximo && !estado.empate && typeof confetti_aux === "function") {
-        confetti_aux({ persistente: true, silencioso: true });
-    } else if (paso < maximo && typeof stopConfetti === "function") {
-        stopConfetti();
-    }
+    if (typeof stopConfetti === "function") stopConfetti();
     jurado_firma_render_espectador = firma;
 };
 

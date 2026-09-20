@@ -25,7 +25,10 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /function navegarResultadoJurado\(direccion\)[\s\S]*jurado_resultado_(?:anterior|siguiente)/);
   assert.match(actions, /numeroSlide = puntuacion_slide_step_control \+ 1/);
   assert.match(actions, /totalSlides = PUNTUACION_PASO_MAX_CONTROL \+ 1/);
-  assert.match(actions, /jurado_slide_step_control \+ 1\}\/\$\{JURADO_PASO_MAX_CONTROL \+ 1\}/);
+  assert.match(actions, /JURADO_TOTAL_SLIDES_CONTROL = JURADO_PASO_MAX_CONTROL \+ 2/);
+  assert.match(actions, /etiqueta = "RESULTADO FINAL"[\s\S]*numeroSlide = JURADO_TOTAL_SLIDES_CONTROL/);
+  assert.match(actions, /\$\{numeroSlide\}\/\$\{JURADO_TOTAL_SLIDES_CONTROL\}/);
+  assert.match(actions, /vista_espectador_modo === "resultado_jurado" \|\| juradoEnResultadoFinal/);
   assert.match(actions, /jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL[\s\S]*mostrar_resultado_final/);
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
   assert.match(actions, /function mostrarCreditosEspectador\(\)[\s\S]*temporizador_gigante_detener/);
@@ -100,10 +103,49 @@ test("Jury controls the live two-bar reveal while spectator and muses mirror it"
   assert.match(state, /criterio\.referencias/);
   assert.match(sockets, /socket\.on\("vista_espectador_modo"/);
   assert.match(sockets, /socket\.on\("jurado_resultado_estado"/);
-  assert.match(spectatorState, /resultado-jurado-live-bar/);
-  assert.match(spectatorState, /EL JURADO EST&Aacute; MOVIENDO LAS BARRAS/);
-  assert.match(museState, /resultado-musa__jury-bar/);
+  assert.match(spectatorState, /resultado-jurado-score/);
+  assert.match(spectatorState, /EL JURADO EST&Aacute; AJUSTANDO LAS PUNTUACIONES/);
+  assert.match(museState, /resultado-musa__jury-score/);
   assert.match(museState, /EL JURADO EST&Aacute; PUNTUANDO/);
+});
+
+test("Jury summary stays neutral and uses value-aware x/10 score markers", () => {
+  const spectatorState = read("game/spectator/js/state.js");
+  const spectatorCss = read("game/css/dashboard-players.css");
+  const museState = read("game/public/players/js/state.js");
+  const museCss = read("game/public/players/css/publico.css");
+  const spectatorJury = spectatorState.slice(
+    spectatorState.indexOf("const marcadorPuntuacionJuradoEspectador"),
+    spectatorState.indexOf("const actualizarResultadoJuradoEspectador")
+  );
+  const museJuryCards = museState.slice(
+    museState.indexOf("function marcadorPuntuacionJuradoMusa"),
+    museState.indexOf("function tarjetaResultadoMusa")
+  );
+  const museJuryRender = museState.slice(
+    museState.indexOf("function renderizarResultadoJuradoMusa"),
+    museState.indexOf("function revelarResultadoFinalMusa")
+  );
+  const museJury = `${museJuryCards}\n${museJuryRender}`;
+
+  assert.match(spectatorJury, /PUNTUACIONES DEL JURADO/);
+  assert.match(spectatorJury, /PUNTUACI&Oacute;N MEDIA/);
+  assert.match(spectatorJury, /<em>\/10<\/em>/);
+  assert.match(spectatorJury, /if \(typeof stopConfetti === "function"\) stopConfetti\(\)/);
+  assert.doesNotMatch(spectatorJury, /GANADOR|FINALISTA|is-winner|confetti_aux|SE LLEVA EL APARTADO/);
+  assert.match(spectatorCss, /resultado-jurado-card--1 h3[\s\S]*#73efff/);
+  assert.match(spectatorCss, /resultado-jurado-card--2 h3[\s\S]*#ff8396/);
+  assert.match(spectatorCss, /resultado-jurado-score__track i[\s\S]*linear-gradient\(90deg, #ff4d64[\s\S]*#45e7cb/);
+
+  assert.match(museJury, /PUNTUACIONES DEL JURADO/);
+  assert.match(museJury, /PUNTUACI&Oacute;N MEDIA/);
+  assert.match(museJury, /<em>\/10<\/em>/);
+  assert.match(museJury, /aplicarGanadorLocalMusa\(resultado_jurado_musa, 0, firma\)/);
+  assert.match(museJury, /if \(typeof stopConfetti === "function"\) stopConfetti\(\)/);
+  assert.doesNotMatch(museJury, /GANADOR|FINALISTA|is-winner|confetti_aux/);
+  assert.match(museCss, /resultado-musa__card--jurado-live\.resultado-musa__card--1 h3[\s\S]*#72efff/);
+  assert.match(museCss, /resultado-musa__card--jurado-live\.resultado-musa__card--2 h3[\s\S]*#ff8397/);
+  assert.match(museCss, /resultado-musa__jury-score-track i[\s\S]*linear-gradient\(90deg,#ff4d64[\s\S]*#45e7cb/);
 });
 
 test("Jury evaluates four criteria focused on the stage representation", () => {
