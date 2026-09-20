@@ -46,9 +46,7 @@
                 ? "NO SE PUDO CAMBIAR"
                 : state.pending
                     ? "CAMBIANDO…"
-                    : state.active
-                        ? "ACTIVO"
-                        : "";
+                    : "";
             status.hidden = !status.textContent;
         }
     }

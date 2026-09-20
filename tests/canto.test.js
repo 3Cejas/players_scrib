@@ -40,7 +40,7 @@ test("spectator and muses load the canto scene while only spectator owns its aud
 
   [spectator, muse].forEach((html) => {
     assert.match(html, /css\/canto\.css\?v=20260920a/);
-    assert.match(html, /domains\/canto\.js\?v=20260920a/);
+    assert.match(html, /domains\/canto\.js\?v=20260920b/);
   });
   assert.match(source, /role === "spectator"[\s\S]*createSpectatorOverlay[\s\S]*createMuseOverlay/);
   assert.match(source, /<audio class="scrib-canto__audio"[^>]*loop/);
@@ -58,11 +58,24 @@ test("Control exposes one stateful Canto button and authoritative socket actions
   const sockets = read("game/control/js/socket-events.js");
 
   assert.match(html, /id="boton_canto"[^>]*aria-pressed="false"[^>]*>[^<]*<span[^>]*>[^<]*<\/span> CANTO/);
+  assert.match(html, /id="boton_canto" class="[^"]*btn-vista-espectador[^"]*"/);
   assert.match(controller, /canto_desactivar/);
   assert.match(controller, /canto_activar/);
   assert.match(controller, /data\.activo/);
+  assert.doesNotMatch(controller, /\? "ACTIVO"/);
   assert.match(sockets, /pedir_canto_estado/);
   assert.match(sockets, /socket\.on\('canto_estado'/);
+});
+
+test("canto overlays keep only the requested spectator copy and omit the muse alliance", () => {
+  const source = read("game/js/domains/canto.js");
+
+  assert.match(source, /CÁNTAME A MÍ, MUSA,[\s\S]*LA HISTORIA/);
+  assert.match(source, /AQUELLA QUE ESTÁ A PUNTO DE HACERSE REALIDAD/);
+  assert.doesNotMatch(source, /EL CANTO DE LAS MUSAS/);
+  assert.doesNotMatch(source, /scrib-canto__script/);
+  assert.doesNotMatch(source, /scrib-canto__alliance/);
+  assert.doesNotMatch(source, /CON TU ESCRITORA|CON TU EQUIPO/);
 });
 
 test("spectator crossfades existing music while canto enters and leaves", () => {

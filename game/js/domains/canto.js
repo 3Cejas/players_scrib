@@ -112,14 +112,8 @@
                 <div class="scrib-canto__pages">${"<i></i>".repeat(10)}</div>
             </div>
             <article class="scrib-canto__stage">
-                <p class="scrib-canto__eyebrow">EL CANTO DE LAS MUSAS</p>
-                <div class="scrib-canto__sigil" aria-hidden="true"><i></i><span>Μ</span><i></i></div>
                 <h1><span>CÁNTAME A MÍ, MUSA,</span><strong>LA HISTORIA</strong></h1>
-                <p class="scrib-canto__lead">LAS HISTORIAS ESTÁN A PUNTO DE HACERSE REALIDAD</p>
-                <blockquote class="scrib-canto__script"><b>MC</b><span data-canto-text></span></blockquote>
-                <div class="scrib-canto__alliance" aria-hidden="true">
-                    <span>ESCRITORA</span><i></i><strong>HISTORIA</strong><i></i><span>EQUIPO</span>
-                </div>
+                <p class="scrib-canto__lead">AQUELLA QUE ESTÁ A PUNTO DE HACERSE REALIDAD</p>
             </article>
             <audio class="scrib-canto__audio" preload="auto" loop data-canto-audio></audio>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-canto-live></p>`;
@@ -145,7 +139,6 @@
                     <span class="scrib-canto-flag__mark" aria-hidden="true">Μ</span>
                     <h1>CÁNTAME A MÍ,<br><strong>MUSA</strong></h1>
                     <p>CONTAD UNA HISTORIA</p>
-                    <div><span>CON TU ESCRITORA</span><i></i><span>CON TU EQUIPO</span></div>
                 </div>
             </article>
             <p class="scrib-visually-hidden" role="status" aria-live="assertive" data-canto-live></p>`;

@@ -15,7 +15,8 @@ const COMPETITION_VERSION = "20260917a";
 const INSPIRATION_VERSION = "20260905d";
 const CONTROL_VIDEO_VERSION = "20260920a";
 const CONTROL_NARRATION_VERSION = "20260920a";
-const CANTO_VERSION = "20260920a";
+const CANTO_STYLE_VERSION = "20260920a";
+const CANTO_SCRIPT_VERSION = "20260920b";
 const CONTROL_HELP_VERSION = "20260824e";
 const CONTROL_HELP_MODULE_VERSION = "20260830a";
 const CONTROL_FINISH_VERSION = "20260827d";
@@ -39,7 +40,7 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260917b";
 const JURY_CSS_VERSION = "20260920c";
 const JURY_STATE_VERSION = "20260920b";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260920g";
+const CONTROL_CSS_VERSION = "20260920h";
 const CONTROL_ACTIONS_VERSION = "20260920g";
 const CONTROL_I18N_VERSION = "20260920a";
 const CONTROL_STATE_VERSION = "20260917c";
@@ -112,8 +113,8 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/spectator/index.html", "domains/credits.js", CREDITS_DOMAIN_VERSION);
   assertIncludesAsset("game/spectator/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
   assertIncludesAsset("game/spectator/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "css/canto.css", CANTO_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "domains/canto.js", CANTO_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "css/canto.css", CANTO_STYLE_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "domains/canto.js", CANTO_SCRIPT_VERSION);
 
   assertIncludesAsset("game/jurado/index.html", "index.css", JURY_CSS_VERSION);
   assertIncludesAsset("game/jurado/index.html", "domains/inspiration.js", INSPIRATION_VERSION);
@@ -125,7 +126,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/control/index.html", "js/state.js", CONTROL_STATE_VERSION);
   assertIncludesAsset("game/control/index.html", "js/videotutorial-control.js", CONTROL_VIDEO_VERSION);
   assertIncludesAsset("game/control/index.html", "js/show-narration-control.js", CONTROL_NARRATION_VERSION);
-  assertIncludesAsset("game/control/index.html", "js/canto-control.js", CANTO_VERSION);
+  assertIncludesAsset("game/control/index.html", "js/canto-control.js", CANTO_SCRIPT_VERSION);
   assertIncludesAsset("game/control/index.html", "js/muse-help-control.js", CONTROL_HELP_MODULE_VERSION);
   assertIncludesAsset("game/control/index.html", "js/socket-events.js", CONTROL_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/credits.js", CREDITS_DOMAIN_VERSION);
@@ -144,8 +145,8 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/public/index.html", "js/musa-selector.js", MUSA_SELECTOR_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/musa-assignment.js", MUSA_ASSIGNMENT_VERSION);
   assertIncludesAsset("game/public/players/index.html", "domains/view-transition.js", VIEW_TRANSITION_MODULE_VERSION);
-  assertIncludesAsset("game/public/players/index.html", "css/canto.css", CANTO_VERSION);
-  assertIncludesAsset("game/public/players/index.html", "domains/canto.js", CANTO_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "css/canto.css", CANTO_STYLE_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "domains/canto.js", CANTO_SCRIPT_VERSION);
 
   assertIncludesAsset("game/actors/index.html", "js/actor-selector.js", ACTOR_SELECTOR_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "css/publico.css", ACTOR_SOURCE_CSS_VERSION);

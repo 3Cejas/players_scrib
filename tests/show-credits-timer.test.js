@@ -94,13 +94,13 @@ test("credits editor and result use the standard section button style", () => {
   assert.doesNotMatch(controlHtml, /id="boton_vista_puntuacion"/);
   assert.match(controlHtml, /id="boton_resultado_videojuego"/);
   assert.match(controlHtml, /id="boton_editar_creditos" class="btn btn-estandar-seccion"/);
-  assert.match(controlHtml, /id="boton_banderas_musas_final" class="btn btn-estandar-seccion"/);
+  assert.match(controlHtml, /id="boton_banderas_musas_final" class="[^"]*btn-estandar-seccion[^"]*btn-banderas-musas-control[^"]*"/);
   assert.equal((controlHtml.match(/data-banderas-musas-control[^>]*>\s*&#x1F6A9; BANDERA</g) || []).length, 2);
   assert.doesNotMatch(controlHtml, /BANDERAS (?:DES)?ACTIVADAS/);
   assert.match(controlHtml, /id="boton_mostrar_creditos" class="btn btn-estandar-seccion"[\s\S]{0,220}VISTA CR&Eacute;DITOS/);
   assert.match(controlCss, /#panel_controles #boton_editar_creditos\.btn-estandar-seccion/);
-  assert.match(controlCss, /Ajuste final: las frases no invaden idioma[\s\S]*#boton_banderas_musas_final\[data-active="1"\]/);
   assert.match(controlCss, /data-banderas-musas-control\]\[data-active="1"\][\s\S]*background: linear-gradient\(145deg, #efffae, #66ff8d 52%, #43dfff\)/);
+  assert.match(controlCss, /\.btn-banderas-musas-control\s*\{[\s\S]*\.btn-banderas-musas-control\[data-active="1"\]/);
   assert.match(controlActions, /boton\.textContent = `\\uD83D\\uDEA9 \$\{etiquetaTraducida\}`/);
   assert.match(controlCss, /control-group--final \.control-group-buttons--final > \.btn \{[\s\S]{0,1200}display:\s*flex;[\s\S]{0,1200}font-family:\s*"Retro-gaming"/);
   assert.match(controlCss, /#panel_controles \.control-group--final \.control-group-buttons--final > \.btn \{[\s\S]{0,500}min-height:\s*2\.2rem;[\s\S]{0,500}padding:\s*0\.48em 0\.62em;/);

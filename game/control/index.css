@@ -10610,7 +10610,9 @@ table.default {
 #boton_vista_calentamiento[data-active="1"],
 #boton_vista_calentamiento.is-active,
 #boton_vista_partida[data-active="1"],
-#boton_vista_partida.is-active {
+#boton_vista_partida.is-active,
+#boton_canto[data-active="1"],
+#boton_canto.is-active {
     box-shadow: 0 0.22em #8ef2ff, 0 0 0.9em rgba(142, 242, 255, 0.45);
     color: #f5fdff;
     text-shadow: 0.06em 0.06em #104960;
@@ -10619,13 +10621,6 @@ table.default {
 
 #panel_controles #boton_canto {
     position: relative;
-    overflow: hidden;
-    border-color: rgba(255, 211, 102, 0.52);
-    color: #ffe5a0;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.3)),
-        rgba(26, 18, 7, 0.92);
-    text-shadow: 0.07em 0.07em 0 #000, 0 0 0.45rem rgba(255, 211, 102, 0.38);
 }
 
 #panel_controles #boton_canto small {
@@ -10637,33 +10632,8 @@ table.default {
     letter-spacing: 0.08em;
 }
 
-#panel_controles #boton_canto[data-active="1"] {
-    border-color: #ffe29a;
-    color: #fff8dc;
-    background:
-        linear-gradient(120deg, rgba(255, 226, 154, 0.28), transparent 44%),
-        linear-gradient(180deg, #75531d, #3d290b);
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-        0 0.22em #996a16,
-        0 0 1rem rgba(255, 215, 112, 0.62);
-}
-
-#panel_controles #boton_canto[data-active="1"]::after {
-    content: "";
-    position: absolute;
-    inset: -60% -20%;
-    background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.34) 48%, transparent 60%);
-    animation: cantoControlSweep 1.8s linear infinite;
-}
-
 #panel_controles #boton_canto.is-pending {
     opacity: 0.72;
-}
-
-@keyframes cantoControlSweep {
-    from { transform: translateX(-55%); }
-    to { transform: translateX(55%); }
 }
 
 /* Resultado deja de tener una decoracion propia: se comporta como cualquier
@@ -12412,14 +12382,6 @@ table.default {
     }
 }
 
-#panel_controles .control-group--final #boton_banderas_musas_final[data-active="1"],
-#panel_controles .control-group--final #boton_banderas_musas_final.is-active {
-    color: #09120b;
-    border-color: #85ff9e;
-    background: linear-gradient(145deg, #efffae, #66ff8d 52%, #43dfff);
-    box-shadow: 0 0.2em #2aa95c, 0 0 1rem rgba(102, 255, 141, 0.5);
-}
-
 @container tutorial-controls (max-width: 34rem) {
     #panel_controles .control-group--tutorial:not(.is-collapsed) > .videotutorial-control,
     #panel_controles .control-group--tutorial:not(.is-collapsed) > .show-narration-control {
@@ -12655,13 +12617,39 @@ table.default {
 }
 
 #panel_controles .control-group--final #boton_mostrar_creditos[data-active="1"],
-#panel_controles .control-group--final #boton_mostrar_creditos.is-active,
-#panel_controles .control-group--final #boton_banderas_musas_final[data-active="1"],
-#panel_controles .control-group--final #boton_banderas_musas_final.is-active {
+#panel_controles .control-group--final #boton_mostrar_creditos.is-active {
     color: #241503 !important;
     border-color: #ffd978 !important;
     background: linear-gradient(145deg, #fff1aa, #ffca54 52%, #ff9d4a) !important;
     box-shadow: 0 0.2em #c97920, 0 0 1rem rgba(255, 202, 84, 0.48) !important;
+    text-shadow: none !important;
+}
+
+/* Las dos entradas de Bandera representan el mismo estado global y comparten
+   exactamente su aspecto apagado/encendido, independientemente del panel. */
+#panel_controles .btn-banderas-musas-control {
+    border-color: rgba(255, 176, 74, 0.58) !important;
+    color: #ffd7a0 !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.28)),
+        rgba(4, 11, 19, 0.92) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0.2em #ffb04a,
+        0 0 0.65rem rgba(255, 176, 74, 0.17) !important;
+    text-shadow: 0.07em 0.07em 0 #000, 0 0 0.45rem rgba(255, 176, 74, 0.34) !important;
+    transition: filter 180ms ease, box-shadow 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+#panel_controles .btn-banderas-musas-control[data-active="1"],
+#panel_controles .btn-banderas-musas-control.is-active {
+    color: #07150d !important;
+    border-color: #85ff9e !important;
+    background: linear-gradient(145deg, #efffae, #66ff8d 52%, #43dfff) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 0.2em #2aa95c,
+        0 0 1rem rgba(102, 255, 141, 0.58) !important;
     text-shadow: none !important;
 }
 
