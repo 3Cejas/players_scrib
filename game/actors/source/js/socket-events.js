@@ -1842,9 +1842,15 @@ let jugador1 = document.querySelector('.jugador1');
 let jugador2 = document.querySelector('.jugador2');
 
 
-var player = getParameterByName("player");
+var player = Number(getParameterByName("player")) === 2 ? 2 : 1;
+const cache_textos_actor = { 1: null, 2: null };
+const cache_nombres_actor = { 1: "", 2: "" };
 
-    if (player == 1) {
+function configurarEquipoActor(nextPlayer) {
+    const next = Number(nextPlayer) === 2 ? 2 : 1;
+    player = next;
+
+    if (next === 1) {
         enviar_putada_de_jx = 'enviar_putada_de_j2';
         feedback_a_j_x = 'feedback_a_j1';
         feedback_de_j_x = 'feedback_de_j1';
@@ -1852,14 +1858,11 @@ var player = getParameterByName("player");
         enviar_postgame_x = 'enviar_postgame1';
         recibir_postgame_x = 'recibir_postgame1';
         nombre = 'nombre1';
-        //nombre1.value = "ESCRITXR 1" 
         enviar_palabra = 'enviar_palabra_j1'
         nombre1.style="color:aqua; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em red;"
         aplicarTemaMarcadorActor(1);
         aplicarTemaAlertaTiempoLimiteActor(1);
-
-    } else if (player == 2) {
-        console.log(nombre1.value)
+    } else {
         enviar_putada_de_jx = 'enviar_putada_de_j1';
         feedback_a_j_x = 'feedback_a_j2';
         feedback_de_j_x = 'feedback_de_j2';
@@ -1867,24 +1870,84 @@ var player = getParameterByName("player");
         enviar_postgame_x = 'enviar_postgame2';
         recibir_postgame_x = 'recibir_postgame2';
         nombre = 'nombre2';
-        //nombre1.value="ESCRITXR 2";
         enviar_palabra = 'enviar_palabra_j2'
         nombre1.style="color:red; text-shadow: -0.0625em -0.0625em black, 0.0625em 0.0625em aqua;"
         aplicarTemaMarcadorActor(2);
         aplicarTemaAlertaTiempoLimiteActor(2);
     }
-
-if (player != 1 && player != 2) {
-    aplicarTemaMarcadorActor(1);
-    aplicarTemaAlertaTiempoLimiteActor(1);
+    actualizarColorEquipo();
+    return next;
 }
 
-actualizarColorEquipo();
+configurarEquipoActor(player);
 inicializarBarraVidaActor();
     
 const socket = io(serverUrl);
 const rolActorSolicitado = String(new URLSearchParams(window.location.search).get("role") || "actor").toLowerCase();
 const esRolTecnico = rolActorSolicitado === "technician";
+
+function actualizarNombreActorVisual(valor, playerNombre = player) {
+    const id = Number(playerNombre) === 2 ? 2 : 1;
+    const fallback = tJuego2P("ui.writer_generic", {}, `ESCRITXR ${id}`);
+    const nombreFinal = String(valor || "").trim() || fallback;
+    cache_nombres_actor[id] = nombreFinal;
+    if (id === Number(player) && nombre1) {
+        nombre1.value = nombreFinal;
+    }
+}
+
+function solicitarEstadoEquipoActor() {
+    if (!socket || !socket.connected) return false;
+    socket.emit(esRolTecnico ? "registrar_tecnico" : "registrar_actor", { player });
+    socket.emit("pedir_texto", { player });
+    socket.emit("pedir_nombre", { player });
+    socket.emit(esRolTecnico ? "pedir_marcas_tecnico_estado" : "pedir_marcas_actor_estado");
+    socket.emit("pedir_teleprompter_estado");
+    return true;
+}
+
+function seleccionarEquipoActor(nextPlayer, opciones = {}) {
+    const next = Number(nextPlayer) === 2 ? 2 : 1;
+    const previous = Number(player) === 2 ? 2 : 1;
+    if (next === previous) {
+        if (opciones.solicitarEstado !== false) solicitarEstadoEquipoActor();
+        return { changed: false, player: next, previous };
+    }
+
+    const eventoPalabraAnterior = enviar_palabra;
+    if (eventoPalabraAnterior) socket.off(eventoPalabraAnterior);
+    window.ScribActorAnnotations?.switchPlayer?.(next);
+    configurarEquipoActor(next);
+    limpiarDesventajasActor();
+    ultimo_count_seq_actor = 0;
+    tiempo_seq_actual_actor = 0;
+    ultimo_count_valido_actor = "";
+    ultimo_ts_count_actor = 0;
+    partida_finalizada_actor = false;
+    window.ScribTechnicianTeleprompter?.switchPlayer?.(next);
+
+    const textoCache = cache_textos_actor[next];
+    if (textoCache) {
+        aplicarTextoActor(textoCache);
+    } else {
+        pintarTextoActorLocal("");
+        actualizarPuntosMarcadorActor(0, false);
+    }
+    actualizarNombreActorVisual(cache_nombres_actor[next], next);
+
+    if (modo_actual === "palabras bonus" && enviar_palabra) {
+        socket.off(enviar_palabra);
+        socket.on(enviar_palabra, recibir_palabra);
+    }
+    if (opciones.solicitarEstado !== false) solicitarEstadoEquipoActor();
+    return { changed: true, player: next, previous };
+}
+
+window.ScribActorTeamSelection = {
+    getPlayer: () => Number(player) === 2 ? 2 : 1,
+    select: seleccionarEquipoActor,
+    requestState: solicitarEstadoEquipoActor
+};
 
 window.ScribAnnotationTransport = {
     push(marks) {
@@ -2020,10 +2083,12 @@ socket.on("temp_modos", (data = {}) => {
 });
 
 
-socket.on('dar_nombre', (nombre) => {
-    if(nombre == "") nombre = tJuego2P("ui.writer_generic", {}, "ESCRITXR");
-    nombre1.innerHTML = nombre;
+socket.on('dar_nombre', (nombreActual) => {
+    actualizarNombreActorVisual(nombreActual, player);
 });
+
+socket.on('nombre1', (nombreActual) => actualizarNombreActorVisual(nombreActual, 1));
+socket.on('nombre2', (nombreActual) => actualizarNombreActorVisual(nombreActual, 2));
 
 function normalizarPayloadPutadaActor(playerFallback, payload) {
     const data = (payload && typeof payload === "object") ? payload : { putada: payload };
@@ -2081,9 +2146,7 @@ socket.on("reanudar_js", () => {
     reanudarProgresoNivelBarraActor();
 });
 
-// Recibe los datos del jugador 1 y los coloca.
-socket.on(texto_x, data => {
-    console.log(data)
+function aplicarTextoActor(data = {}) {
     const htmlRemoto = typeof data?.text === "string" ? data.text : "";
     const guardadoRemoto = typeof data?.texto_guardado === "string" ? data.texto_guardado : "";
     let htmlLocal = htmlRemoto;
@@ -2115,7 +2178,17 @@ socket.on(texto_x, data => {
     texto1.scrollTop = texto1.scrollHeight;
     //window.scrollTo(0, document.body.scrollHeight);
     //focalizador1.scrollIntoView(false);
-});
+}
+
+function recibirTextoEquipoActor(playerTexto, data = {}) {
+    const id = Number(playerTexto) === 2 ? 2 : 1;
+    cache_textos_actor[id] = data;
+    if (id !== Number(player)) return;
+    aplicarTextoActor(data);
+}
+
+socket.on('texto1', data => recibirTextoEquipoActor(1, data));
+socket.on('texto2', data => recibirTextoEquipoActor(2, data));
 
 /* 
 Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
@@ -2404,11 +2477,6 @@ socket.on('limpiar', () => {
     texto2.style.height = "40";
     texto2.style.height = (texto2.scrollHeight) + "px";
     */
-});
-
-// Recibe el nombre del jugador y lo coloca en su sitio.
-socket.on(nombre, data => {
-    nombre1.value = data || tJuego2P("ui.writer_generic", {}, "ESCRITXR");
 });
 
 socket.on('activar_modo', data => {

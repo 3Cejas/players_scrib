@@ -24,13 +24,13 @@
     let storageKey = "";
     let lastSavedAnnotationsJson = "";
     let syncChannel = null;
+    let activePlayer = Number(new URLSearchParams(window.location.search).get("player")) === 2 ? 2 : 1;
 
     function getStorageKey() {
         if (storageKey) return storageKey;
         const params = new URLSearchParams(window.location.search);
-        const player = params.get("player") || "1";
         const isTechnician = String(params.get("role") || "").toLowerCase() === "technician";
-        storageKey = `${isTechnician ? "scrib_technician_annotations_v1:" : STORAGE_PREFIX}${player}`;
+        storageKey = `${isTechnician ? "scrib_technician_annotations_v1:" : STORAGE_PREFIX}${activePlayer}`;
         return storageKey;
     }
 
@@ -160,13 +160,21 @@
         applySyncedAnnotations(data.annotationsJson || "[]");
     }
 
-    function setupAnnotationSync() {
-        window.addEventListener("storage", handleStorageSync);
+    function openAnnotationSyncChannel() {
+        if (syncChannel) {
+            syncChannel.close();
+            syncChannel = null;
+        }
         if ("BroadcastChannel" in window) {
             syncChannel = new BroadcastChannel(`${SYNC_CHANNEL_PREFIX}${getStorageKey()}`);
             syncChannel.addEventListener("message", handleBroadcastSync);
-            window.addEventListener("beforeunload", () => syncChannel && syncChannel.close(), { once: true });
         }
+    }
+
+    function setupAnnotationSync() {
+        window.addEventListener("storage", handleStorageSync);
+        openAnnotationSyncChannel();
+        window.addEventListener("beforeunload", () => syncChannel && syncChannel.close(), { once: true });
     }
 
     function createId() {
@@ -776,6 +784,23 @@
         render();
     }
 
+    function switchPlayer(nextPlayer) {
+        const next = Number(nextPlayer) === 2 ? 2 : 1;
+        if (next === activePlayer) return false;
+        saveAnnotations({ broadcast: false, remote: false });
+        activePlayer = next;
+        storageKey = "";
+        baseHtml = "";
+        annotations = loadAnnotations();
+        lastSavedAnnotationsJson = serializeAnnotations();
+        pendingSelection = null;
+        closeNoteEditor();
+        hideToolbar();
+        openAnnotationSyncChannel();
+        render({ persist: false });
+        return true;
+    }
+
     function clear(options = {}) {
         annotations = [];
         if (options && Object.prototype.hasOwnProperty.call(options, "html")) {
@@ -835,6 +860,7 @@
     window.ScribActorAnnotations = {
         applyRemoteAnnotations,
         setRemoteHtml,
+        switchPlayer,
         clear,
         refresh: render,
         getAnnotations: () => annotations.map(normalizeAnnotation),

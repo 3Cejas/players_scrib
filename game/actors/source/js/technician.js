@@ -4,7 +4,15 @@
     const params = new URLSearchParams(window.location.search);
     if (String(params.get("role") || "").toLowerCase() !== "technician") return;
 
-    const selectedPlayer = Number(params.get("player")) === 2 ? 2 : 1;
+    const TEAM_STORAGE_KEY = "scrib_technician_selected_player_v1";
+    const playerFromUrl = Number(params.get("player"));
+    let playerStored = 1;
+    try {
+        playerStored = Number(window.localStorage.getItem(TEAM_STORAGE_KEY)) === 2 ? 2 : 1;
+    } catch (error) {
+        playerStored = 1;
+    }
+    let selectedPlayer = playerFromUrl === 1 || playerFromUrl === 2 ? playerFromUrl : playerStored;
     const state = window.ScribTeleprompter?.crearEstado?.() || {
         visible: false, preparing: false, text: "", fontSize: 44, speed: 35, playing: false,
         scroll: 0, source: 0, loadId: 0, revision: 0
@@ -14,6 +22,9 @@
     let anchorTime = performance.now();
     let anchorScroll = 0;
     let raf = 0;
+    let switchingTeam = false;
+    let switchCommitTimer = 0;
+    let switchEndTimer = 0;
 
     const overlay = document.getElementById("technician_teleprompter");
     const screen = document.getElementById("technician_teleprompter_screen");
@@ -23,10 +34,100 @@
     const play = document.getElementById("technician_teleprompter_play");
     const sync = document.getElementById("technician_teleprompter_sync");
     const sizeButton = document.getElementById("technician_teleprompter_size");
+    const teamSwitch = document.getElementById("technician_team_switch");
+    const teamButtons = Array.from(document.querySelectorAll("[data-technician-player]"));
+    const teamTransition = document.getElementById("technician_team_transition");
+    const teamTransitionLabel = document.getElementById("technician_team_transition_label");
 
     document.body.classList.add("page-technician");
-    document.title = `SCRB · Técnica ${selectedPlayer}`;
     if (overlay) overlay.hidden = false;
+
+    function normalizarPlayer(nextPlayer) {
+        return Number(nextPlayer) === 2 ? 2 : 1;
+    }
+
+    function guardarEquipoSeleccionado() {
+        try {
+            window.localStorage.setItem(TEAM_STORAGE_KEY, String(selectedPlayer));
+        } catch (error) {
+            // La selección persiste cuando el navegador permite almacenamiento local.
+        }
+    }
+
+    function actualizarUrlEquipo() {
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set("role", "technician");
+            url.searchParams.set("player", String(selectedPlayer));
+            window.history.replaceState(window.history.state, "", url);
+        } catch (error) {
+            // El cambio de equipo no depende de que se pueda actualizar la URL.
+        }
+    }
+
+    function renderTeamSwitch() {
+        document.body.dataset.technicianPlayer = String(selectedPlayer);
+        document.title = `SCRB · Técnica ${selectedPlayer}`;
+        teamButtons.forEach((button) => {
+            const active = normalizarPlayer(button.dataset.technicianPlayer) === selectedPlayer;
+            button.classList.toggle("is-active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+            button.disabled = switchingTeam;
+        });
+    }
+
+    function aplicarEquipo(nextPlayer, { requestState = true } = {}) {
+        selectedPlayer = normalizarPlayer(nextPlayer);
+        marks = [];
+        marksRevision = 0;
+        anchorScroll = 0;
+        anchorTime = performance.now();
+        window.ScribActorTeamSelection?.select?.(selectedPlayer, { solicitarEstado: requestState });
+        guardarEquipoSeleccionado();
+        actualizarUrlEquipo();
+        renderTeamSwitch();
+        renderState();
+    }
+
+    function finalizarCambioEquipo() {
+        switchingTeam = false;
+        document.body.classList.remove("technician-team-switching");
+        if (teamTransition) {
+            teamTransition.classList.remove("is-active", "is-team-1", "is-team-2");
+            teamTransition.setAttribute("aria-hidden", "true");
+        }
+        renderTeamSwitch();
+    }
+
+    function cambiarEquipo(nextPlayer) {
+        const next = normalizarPlayer(nextPlayer);
+        if (switchingTeam || next === selectedPlayer) return false;
+        switchingTeam = true;
+        clearTimeout(switchCommitTimer);
+        clearTimeout(switchEndTimer);
+        document.body.classList.add("technician-team-switching");
+        teamButtons.forEach((button) => { button.disabled = true; });
+
+        const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+        if (teamTransition) {
+            teamTransition.classList.remove("is-team-1", "is-team-2");
+            teamTransition.classList.add(`is-team-${next}`, "is-active");
+            teamTransition.setAttribute("aria-hidden", "false");
+        }
+        if (teamTransitionLabel) {
+            teamTransitionLabel.textContent = next === 2 ? "EQUIPO ROJO" : "EQUIPO AZUL";
+        }
+
+        if (reduceMotion) {
+            aplicarEquipo(next);
+            finalizarCambioEquipo();
+            return true;
+        }
+
+        switchCommitTimer = window.setTimeout(() => aplicarEquipo(next), 325);
+        switchEndTimer = window.setTimeout(finalizarCambioEquipo, 800);
+        return true;
+    }
 
     const normalizarMarca = (mark = {}) => ({
         ...mark,
@@ -162,13 +263,26 @@
             renderMarkedText();
             requestAnimationFrame(syncScroll);
         },
+        switchPlayer(nextPlayer) {
+            selectedPlayer = normalizarPlayer(nextPlayer);
+            marks = [];
+            marksRevision = 0;
+            anchorScroll = 0;
+            anchorTime = performance.now();
+            renderTeamSwitch();
+            renderState();
+        },
         applyTeleprompter
     };
 
     socket.on("teleprompter_state", (payload = {}) => applyTeleprompter(payload.state || {}));
     socket.on("connect", () => {
-        socket.emit("pedir_teleprompter_estado");
-        socket.emit("pedir_marcas_tecnico_estado");
+        window.ScribActorTeamSelection?.requestState?.();
+    });
+    teamSwitch?.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-technician-player]");
+        if (!button || !teamSwitch.contains(button)) return;
+        cambiarEquipo(button.dataset.technicianPlayer);
     });
     sizeButton?.addEventListener("click", () => {
         overlay.classList.toggle("technician-teleprompter--expanded");
@@ -176,6 +290,22 @@
         requestAnimationFrame(syncScroll);
     });
     raf = requestAnimationFrame(loop);
-    window.addEventListener("beforeunload", () => cancelAnimationFrame(raf), { once: true });
-    renderState();
+    window.addEventListener("beforeunload", () => {
+        cancelAnimationFrame(raf);
+        clearTimeout(switchCommitTimer);
+        clearTimeout(switchEndTimer);
+    }, { once: true });
+
+    const actorPlayerInicial = window.ScribActorTeamSelection?.getPlayer?.() || 1;
+    if (normalizarPlayer(actorPlayerInicial) !== selectedPlayer) {
+        aplicarEquipo(selectedPlayer, { requestState: false });
+    } else {
+        guardarEquipoSeleccionado();
+        actualizarUrlEquipo();
+        renderTeamSwitch();
+        renderState();
+    }
+    if (socket.connected) {
+        window.ScribActorTeamSelection?.requestState?.();
+    }
 }());

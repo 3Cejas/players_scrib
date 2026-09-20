@@ -52,10 +52,10 @@ const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260917b";
 const PUBLIC_PLAYER_I18N_VERSION = "20260917c";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
-const ACTOR_SOURCE_CSS_VERSION = "20260920a";
+const ACTOR_SOURCE_CSS_VERSION = "20260920b";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
-const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260910a";
-const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260918a";
+const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260920a";
+const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260920a";
 
 function read(relPath) {
   return fs.readFileSync(path.join(ROOT, relPath), "utf8");
@@ -144,7 +144,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/actors/source/index.html", "js/actions.js", ACTOR_SOURCE_ACTIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/annotations.js", ACTOR_SOURCE_ANNOTATIONS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/socket-events.js", ACTOR_SOURCE_SOCKET_EVENTS_VERSION);
-  assertIncludesAsset("game/actors/source/index.html", "js/technician.js", "20260920a");
+  assertIncludesAsset("game/actors/source/index.html", "js/technician.js", "20260920b");
   assertIncludesAsset("game/actors/source/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
 });
@@ -1361,33 +1361,43 @@ test("actor annotations stay away from writers and synchronize through the dedic
   assert.doesNotMatch(socket, /enviar_texto_j[12].*marcas/s);
 });
 
-test("technician reuses the actor desk with editable marks and a synchronized floating teleprompter", () => {
+test("the single technician console switches teams in place with synchronized marks and teleprompter", () => {
   const landing = read("game/index.html");
   const selector = read("game/tecnico/index.html");
   const html = read("game/actors/source/index.html");
   const css = read("game/actors/source/css/publico.css");
+  const annotations = read("game/actors/source/js/annotations.js");
   const socket = read("game/actors/source/js/socket-events.js");
   const technician = read("game/actors/source/js/technician.js");
   const control = read("game/control/js/actions.js");
 
-  assert.match(landing, /href="\.\/tecnico\/index\.html" data-pass="true"/);
-  assert.match(selector, /actors\/source\/index\.html\?player=1&amp;role=technician/);
-  assert.match(selector, /actors\/source\/index\.html\?player=2&amp;role=technician/);
+  assert.match(landing, /href="\.\/actors\/source\/index\.html\?role=technician" data-pass="true"/);
+  assert.match(selector, /window\.location\.replace\(`\.\.\/actors\/source\/index\.html\?role=technician&player=\$\{player\}`\)/);
+  assert.doesNotMatch(selector, /data-url|ESCRITXR 1|ESCRITXR 2/);
   assert.match(html, /id="technician_teleprompter"/);
   assert.match(html, /id="technician_teleprompter_notes"/);
   assert.match(html, /id="technician_role_bar"[\s\S]*scrib-logo-mark\.png[\s\S]*T&Eacute;CNICA/);
+  assert.match(html, /id="technician_team_switch"[\s\S]*data-technician-player="1"[\s\S]*data-technician-player="2"/);
+  assert.match(html, /id="technician_team_transition"/);
   assert.match(css, /\.technician-teleprompter\s*\{/);
   assert.match(css, /position:\s*fixed/);
   assert.match(css, /\.technician-teleprompter--expanded/);
+  assert.match(css, /@keyframes technicianTeamWipe/);
   assert.doesNotMatch(css, /TÉCNICO · MARCAS SINCRONIZADAS/);
   assert.match(css, /body\.page-technician \.actor-texto-card__niveles,[\s\S]*display:\s*none !important/);
   assert.match(css, /body\.page-technician #metadatos_actor \.marcador-chip--puntos\s*\{[\s\S]*display:\s*none !important/);
+  assert.match(annotations, /function switchPlayer\(nextPlayer\)/);
   assert.match(socket, /registrar_tecnico/);
   assert.match(socket, /tecnico_marcas_actualizar/);
   assert.match(socket, /marcas_tecnico_estado/);
+  assert.match(socket, /window\.ScribActorTeamSelection/);
+  assert.match(socket, /socket\.on\('texto1'/);
+  assert.match(socket, /socket\.on\('texto2'/);
   assert.match(technician, /teleprompter_state/);
   assert.match(technician, /requestAnimationFrame\(loop\)/);
   assert.match(technician, /ScribTechnicianTeleprompter/);
+  assert.match(technician, /function cambiarEquipo\(nextPlayer\)/);
+  assert.match(technician, /window\.history\.replaceState/);
   assert.match(control, /debug_cargar_marcas_tecnico/);
   assert.match(control, /debug_limpiar_marcas_tecnico/);
 });

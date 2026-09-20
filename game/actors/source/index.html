@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260920a">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260920b">
     <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260917b">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -18,7 +18,7 @@
     <script src="../../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../../js/domains/teleprompter.js?v=20260424a"></script>
     <script src="./js/actions.js?v=20260505c"></script>
-    <script src="./js/annotations.js?v=20260910a"></script>
+    <script src="./js/annotations.js?v=20260920a"></script>
 </head>
 <body class="page-actors">
         <header id="technician_role_bar" class="technician-role-bar" aria-label="Rol de T&eacute;cnica">
@@ -28,7 +28,25 @@
                 </span>
                 <span class="remote-brand-control-label">T&Eacute;CNICA</span>
             </div>
+            <nav id="technician_team_switch" class="technician-team-switch" aria-label="Cambiar escritxr visible">
+                <button class="technician-team-switch__button technician-team-switch__button--blue is-active" type="button" data-technician-player="1" aria-pressed="true">
+                    <span class="technician-team-switch__dot" aria-hidden="true"></span>
+                    <span>AZUL</span>
+                </button>
+                <button class="technician-team-switch__button technician-team-switch__button--red" type="button" data-technician-player="2" aria-pressed="false">
+                    <span class="technician-team-switch__dot" aria-hidden="true"></span>
+                    <span>ROJO</span>
+                </button>
+            </nav>
         </header>
+        <div id="technician_team_transition" class="technician-team-transition" aria-hidden="true">
+            <div class="technician-team-transition__beam" aria-hidden="true"></div>
+            <div class="technician-team-transition__content">
+                <span>CAMBIANDO A</span>
+                <strong id="technician_team_transition_label">EQUIPO AZUL</strong>
+            </div>
+            <div class="technician-team-transition__scan" aria-hidden="true"></div>
+        </div>
         <div id="level_transition" class="level-transition level-transition--compact" aria-hidden="true">
             <div class="level-transition__backdrop" aria-hidden="true"></div>
             <div class="level-transition__rays" aria-hidden="true"></div>
@@ -165,6 +183,6 @@
 <script src="../../dist/socket.io/socket.io.js"></script>
     <script src="../../js/i18n.js?v=20260917c"></script>
 <script src="../../js/domains/level-transition.js?v=20260917b"></script>
-<script src="./js/socket-events.js?v=20260918a"></script>
-<script src="./js/technician.js?v=20260920a"></script>
+<script src="./js/socket-events.js?v=20260920a"></script>
+<script src="./js/technician.js?v=20260920b"></script>
 </html>
