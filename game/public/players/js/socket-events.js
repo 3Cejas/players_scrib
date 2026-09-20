@@ -560,6 +560,7 @@ socket.on('regalo_pdf_musas', (payload) => {
 
 socket.on('regalo_pdf_musas_reset', () => {
     regalo_pdf_pendiente = null;
+    limpiarMarcaRegaloPdfMusaAbierto();
     ocultarRegaloPdf();
     ocultarPostgameMusa({ limpiar: true });
 });
@@ -2001,6 +2002,48 @@ function stopConfetti() {
       confettiFrameMusa = null;
     }());
     }
+
+function confetti_postgame_musa() {
+    stopConfetti();
+    if (typeof confetti !== "function") return;
+    isConfettiRunning = true;
+    const colores = ["#43eaff", "#ff6578", "#ffe47b", "#ffffff", "#9f7cff"];
+    confetti({
+        particleCount: 86,
+        startVelocity: 52,
+        spread: 76,
+        angle: 58,
+        ticks: 145,
+        gravity: 0.92,
+        scalar: 1.05,
+        origin: { x: 0.02, y: 0.76 },
+        colors: colores,
+        zIndex: CONFETTI_TOP_Z_INDEX
+    });
+    confetti({
+        particleCount: 86,
+        startVelocity: 52,
+        spread: 76,
+        angle: 122,
+        ticks: 145,
+        gravity: 0.92,
+        scalar: 1.05,
+        origin: { x: 0.98, y: 0.76 },
+        colors: colores,
+        zIndex: CONFETTI_TOP_Z_INDEX
+    });
+    confetti({
+        particleCount: 54,
+        startVelocity: 28,
+        spread: 118,
+        ticks: 170,
+        gravity: 0.72,
+        scalar: 0.9,
+        origin: { x: 0.5, y: 0.04 },
+        colors: colores,
+        zIndex: CONFETTI_TOP_Z_INDEX
+    });
+}
 
 function cambiar_jugadores(revertir) {
 

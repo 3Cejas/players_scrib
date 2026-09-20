@@ -44,14 +44,14 @@ const CONTROL_ACTIONS_VERSION = "20260920i";
 const CONTROL_I18N_VERSION = "20260920a";
 const CONTROL_STATE_VERSION = "20260917c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260920b";
-const PUBLIC_PLAYER_ACTIONS_VERSION = "20260920a";
+const PUBLIC_PLAYER_ACTIONS_VERSION = "20260920b";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260920d";
-const PUBLIC_PLAYER_CSS_VERSION = "20260920d";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260920d";
-const PUBLIC_PLAYER_I18N_VERSION = "20260920b";
+const PUBLIC_PLAYER_STATE_VERSION = "20260920e";
+const PUBLIC_PLAYER_CSS_VERSION = "20260920e";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260920e";
+const PUBLIC_PLAYER_I18N_VERSION = "20260920c";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260920b";
@@ -181,6 +181,8 @@ test("muse tutorial localizes server-side offensive-language rejections", () => 
   const socketEvents = read("game/public/players/js/socket-events.js");
 
   assert.equal((i18n.match(/"warmup\.feedback\.inappropriate_language"/g) || []).length, 3);
+  assert.match(i18n, /"warmup\.preview\.if_sent_add": "Sumará si la envías:"/);
+  assert.match(i18n, /"warmup\.preview\.if_sent_subtract": "Restará si la envías:"/);
   assert.match(state, /data && data\.codigo === "CONTENIDO_NO_PERMITIDO"/);
   assert.match(state, /warmup\.feedback\.inappropriate_language/);
   assert.match(state, /let timeoutRespuesta = null/);
@@ -1117,6 +1119,7 @@ test("spectator countdown stays viewport anchored and width-capped", () => {
   assert.match(js, /crearCountdownEspectador\(pasoActual === 0 \? tJuego2P\("countdown\.write", \{\}, "\\u00a1ESCRIBE!"\) : pasoActual\)/);
   assert.match(inicioBody, /programarPasoCountdownEspectador\(3, revisionCountdown, 0\);/);
   assert.match(inicioBody, /RETARDO_PRIMER_PASO_COUNTDOWN_ESPECTADOR_MS/);
+  assert.match(inicioBody, /vista_espectador_modo_resuelta !== "partida"[\s\S]*controlador_transicion_vista_espectador\?\.cancel\(\)[\s\S]*aplicarModoVistaEspectadorUi\("partida"\)/);
   assert.doesNotMatch(inicioBody, /setInterval\(/);
   assert.doesNotMatch(inicioBody, /appendTo\(\$\(\'\.container\'\)\)/);
   assert.doesNotMatch(inicioBody, /font-size': '40vw'/);
@@ -1238,26 +1241,33 @@ test("control PDF generator uses selected language translations", () => {
   assert.doesNotMatch(js, /\["Enviadas",/);
 });
 
-test("muse gift opens a full postgame scene with infographics and both final texts", () => {
+test("muse gift opens a persistent wrapped scene with ranking, confetti and both final texts", () => {
   const html = read("game/public/players/index.html");
   const css = read("game/public/players/css/publico.css");
   const state = read("game/public/players/js/state.js");
   const socketEvents = read("game/public/players/js/socket-events.js");
   const i18n = read("game/js/i18n.js");
 
-  assert.match(html, /id="musa_postgame"[\s\S]*id="musa_postgame_efectividad_ring"[\s\S]*id="musa_postgame_bar_bonus"[\s\S]*id="musa_postgame_card_j1"[\s\S]*id="musa_postgame_card_j2"[\s\S]*id="musa_postgame_texto"[\s\S]*id="musa_postgame_pdf_j1"[\s\S]*id="musa_postgame_pdf_j2"/);
+  assert.match(html, /id="musa_postgame"[\s\S]*id="musa_postgame_efectividad_ring"[\s\S]*id="musa_postgame_bar_bonus"[\s\S]*id="musa_postgame_ranking_lista"[\s\S]*id="musa_postgame_card_j1"[\s\S]*id="musa_postgame_writer_headline"[\s\S]*id="musa_postgame_texto"[\s\S]*id="musa_postgame_pdf_j1"[\s\S]*class="musa-postgame__pdf-icon"[\s\S]*id="musa_postgame_pdf_j2"/);
   assert.doesNotMatch(html, /id="musa_postgame_cerrar"|role="dialog"[^>]*musa-postgame/);
-  assert.match(css, /\.musa-postgame\.musa-postgame--visible[\s\S]*min-height: 100dvh[\s\S]*\.musa-postgame__infographic[\s\S]*\.musa-postgame__writer-cards[\s\S]*\.musa-postgame__text\.is-empty/);
+  assert.match(css, /\.musa-postgame\.musa-postgame--visible[\s\S]*min-height: 100dvh[\s\S]*\.musa-postgame__infographic[\s\S]*\.musa-postgame__ranking[\s\S]*\.musa-postgame__writer-cards[\s\S]*\.musa-postgame__text\.is-empty/);
+  assert.match(css, /body\.musa-postgame-activo \.temporizador-musa:not\(\.is-finished\)[\s\S]*temporizadorPostgameEntrada/);
+  assert.match(css, /\.musa-postgame\.is-celebrating \.musa-postgame__ambient i[\s\S]*musaPostgameConfetti/);
   assert.match(state, /regalo_postgame_data = payload\.postgame/);
   assert.match(state, /function mostrarPostgameMusa\(\)/);
   assert.match(state, /await descargarArchivoRegalo\(regalo_pdf_data, regalo_pdf_filename\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /function pintarTextoPostgameMusa\(playerId\)[\s\S]*escritxr\.texto/);
+  assert.match(state, /function pintarRankingPostgameMusa\(\)[\s\S]*aria-current/);
+  assert.match(state, /sessionStorage\.setItem\(REGALO_MUSA_ABIERTO_STORAGE_KEY/);
+  assert.match(state, /regaloPdfMusaYaAbierto\(payload\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /function descargarPdfEscritxrPostgameMusa\(playerId, boton\)/);
   const controlSockets = read("game/control/js/socket-events.js");
   assert.match(controlSockets, /const pdfsEscritores = \{[\s\S]*docJ1\.output\('datauristring'\)[\s\S]*docJ2\.output\('datauristring'\)/);
   assert.match(controlSockets, /writer_pdfs: pdfsEscritores/);
-  assert.match(socketEvents, /regalo_pdf_musas_reset[\s\S]*ocultarPostgameMusa\(\{ limpiar: true \}\)/);
-  assert.match(i18n, /"muse\.postgame\.title"/);
+  assert.match(socketEvents, /regalo_pdf_musas_reset[\s\S]*limpiarMarcaRegaloPdfMusaAbierto\(\)[\s\S]*ocultarPostgameMusa\(\{ limpiar: true \}\)/);
+  assert.match(socketEvents, /function confetti_postgame_musa\(\)[\s\S]*particleCount: 86/);
+  assert.doesNotMatch(socketEvents.match(/function confetti_postgame_musa\(\)[\s\S]*?\n\}/)?.[0] || "", /shapeFromText|\\u2B50/);
+  assert.match(i18n, /"muse\.postgame\.ranking_title"/);
 });
 
 test("winning muses can vote between three disadvantages during the final stretch", () => {

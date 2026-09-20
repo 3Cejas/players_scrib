@@ -313,7 +313,7 @@ test("actor and muse timelines carry authoritative progress with coherent role t
     assert.match(museCss, /\.musa-bandera-fab-wrap #btn_bandera::before,[\s\S]*\.musa-bandera-fab-wrap #btn_bandera::after[\s\S]*content:\s*none !important/);
     assert.match(museCss, /body\.equipo-azul\s*\{[\s\S]*--equipo-texto-suave:\s*#c3faff/);
     assert.match(museCss, /body\.equipo-rojo\s*\{[\s\S]*--equipo-texto-suave:\s*#ffc8cd/);
-    assert.match(museHtml, /publico\.css\?v=20260920d/);
+    assert.match(museHtml, /publico\.css\?v=20260920e/);
     assert.match(museCss, /textarea:not\(:disabled\):not\(\[readonly\]\)[\s\S]*color: var\(--equipo-texto-suave, #c3faff\)/);
     assert.match(museCss, /\.pre-show-musa__confirmation-rings,[\s\S]*display: none/);
 

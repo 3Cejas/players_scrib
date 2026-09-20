@@ -145,8 +145,8 @@ function actualizarPreviewTiempoPalabraMusa(texto = null, modoForzado = null) {
   const label = document.createElement("span");
   label.className = "preview-tiempo-palabra__label";
   label.textContent = esMaldita
-    ? tJuego2P("warmup.preview.if_sent_subtract", {}, "Restara si la envias:")
-    : tJuego2P("warmup.preview.if_sent_add", {}, "Sumara si la envias:");
+    ? tJuego2P("warmup.preview.if_sent_subtract", {}, "Restará si la envías:")
+    : tJuego2P("warmup.preview.if_sent_add", {}, "Sumará si la envías:");
 
   const value = document.createElement("span");
   value.className = "preview-tiempo-palabra__value";

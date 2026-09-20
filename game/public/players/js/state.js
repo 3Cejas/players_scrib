@@ -415,6 +415,8 @@ let musa_postgame_tab_propio = getEl("musa_postgame_tab_propio");
 let musa_postgame_tab_rival = getEl("musa_postgame_tab_rival");
 let musa_postgame_card_j1 = getEl("musa_postgame_card_j1");
 let musa_postgame_card_j2 = getEl("musa_postgame_card_j2");
+let timeout_confetti_postgame_musa = null;
+const REGALO_MUSA_ABIERTO_STORAGE_KEY = "scrib:musa:regalo-abierto";
 let campo_palabra = getEl("palabra");
 let tarea = getEl("tarea");
 let mostrar_texto = getEl("mostrar_texto");
@@ -1522,6 +1524,42 @@ function puedeMostrarRegaloPdfMusa() {
     return Boolean(terminado || ui_partida_finalizada_musa || temporizador_lectura_activo);
 }
 
+function firmaRegaloPdfMusa(payload = {}) {
+    const data = typeof payload.data === "string" ? payload.data : "";
+    const cola = data ? data.slice(-24) : "";
+    return [
+        String(payload.client_id || window.musa_client_id || ""),
+        Number(payload.player) === 2 ? 2 : 1,
+        String(payload.filename || "regalo.pdf"),
+        data.length,
+        cola
+    ].join("|");
+}
+
+function regaloPdfMusaYaAbierto(payload = {}) {
+    try {
+        return sessionStorage.getItem(REGALO_MUSA_ABIERTO_STORAGE_KEY) === firmaRegaloPdfMusa(payload);
+    } catch (_error) {
+        return false;
+    }
+}
+
+function marcarRegaloPdfMusaAbierto(payload = {}) {
+    try {
+        sessionStorage.setItem(REGALO_MUSA_ABIERTO_STORAGE_KEY, firmaRegaloPdfMusa(payload));
+    } catch (_error) {
+        // La experiencia sigue funcionando aunque el navegador bloquee storage.
+    }
+}
+
+function limpiarMarcaRegaloPdfMusaAbierto() {
+    try {
+        sessionStorage.removeItem(REGALO_MUSA_ABIERTO_STORAGE_KEY);
+    } catch (_error) {
+        // Sin persistencia no hay nada que limpiar.
+    }
+}
+
 function intentarMostrarRegaloPdfPendiente() {
     if (!regalo_pdf_pendiente || !player) {
         return;
@@ -1549,6 +1587,13 @@ function mostrarRegaloPdf(payload) {
     regalo_pdf_ultimo_data = regalo_pdf_data;
     regalo_pdf_ultimo_filename = regalo_pdf_filename;
     regalo_postgame_data = payload.postgame && typeof payload.postgame === "object" ? payload.postgame : null;
+    if (regalo_postgame_data && regaloPdfMusaYaAbierto(payload)) {
+        regalo_pdf_pendiente = null;
+        regalo_pdf.classList.remove("regalo-pdf--visible", "regalo-pdf--claimed");
+        regalo_pdf.setAttribute("aria-hidden", "true");
+        mostrarPostgameMusa();
+        return;
+    }
     regalo_pdf.classList.add("regalo-pdf--visible");
     regalo_pdf.classList.remove("regalo-pdf--claimed");
     regalo_pdf.setAttribute("aria-hidden", "false");
@@ -1617,7 +1662,7 @@ function pintarComparativaEscritoresPostgameMusa() {
         valorPostgameMusa(`musa_postgame_card_ritmo_j${id}`, Math.max(0, Number(stats.ritmo_ppm) || 0));
         valorPostgameMusa(`musa_postgame_card_inspiracion_j${id}`, Math.max(0, Number(stats.inspiracion) || 0));
         fijarBarraPostgameMusa(`musa_postgame_card_bar_j${id}`, (Math.max(0, Number(stats.palabras) || 0) / maxPalabras) * 100);
-        valorPostgameMusa(`musa_postgame_pdf_nombre_j${id}`, `${traducirPostgameMusa("muse.postgame.download", "DESCARGAR")} ${nombre}`);
+        valorPostgameMusa(`musa_postgame_pdf_nombre_j${id}`, nombre);
         const botonPdf = id === 2 ? musa_postgame_pdf_j2 : musa_postgame_pdf_j1;
         if (botonPdf) {
             botonPdf.disabled = !pdfEscritxrPostgameMusa(id);
@@ -1632,30 +1677,29 @@ function pintarTextoPostgameMusa(playerId) {
     const escritxr = escritorPostgameMusa(id);
     const stats = escritxr.stats && typeof escritxr.stats === "object" ? escritxr.stats : {};
     const nombreEscritxr = escritxr.nombre || `ESCRITXR ${id}`;
+    const palabras = Math.max(0, Number(stats.palabras) || 0);
+    const palabrasUnicas = Math.max(0, Number(stats.palabras_unicas) || 0);
+    const ritmo = Math.max(0, Number(stats.ritmo_ppm) || 0);
+    const inspiracion = Math.max(0, Number(stats.inspiracion) || 0);
     valorPostgameMusa("musa_postgame_escritxr_nombre", escritxr.nombre || `ESCRITXR ${id}`);
-    valorPostgameMusa("musa_postgame_palabras", Math.max(0, Number(stats.palabras) || 0));
-    valorPostgameMusa("musa_postgame_unicas", Math.max(0, Number(stats.palabras_unicas) || 0));
+    valorPostgameMusa("musa_postgame_palabras", palabras);
+    valorPostgameMusa("musa_postgame_unicas", palabrasUnicas);
     valorPostgameMusa("musa_postgame_pulsaciones", Math.max(0, Number(stats.pulsaciones) || 0));
-    valorPostgameMusa("musa_postgame_ritmo", Math.max(0, Number(stats.ritmo_ppm) || 0));
-    valorPostgameMusa("musa_postgame_inspiracion", Math.max(0, Number(stats.inspiracion) || 0));
+    valorPostgameMusa("musa_postgame_ritmo", ritmo);
+    valorPostgameMusa("musa_postgame_inspiracion", inspiracion);
     valorPostgameMusa("musa_postgame_retos", Math.max(0, Number(stats.retos) || 0));
     const texto = String(escritxr.texto || "").trim();
     const textoEl = getEl("musa_postgame_texto");
     valorPostgameMusa("musa_postgame_texto", texto || traducirPostgameMusa("muse.postgame.empty_text", "Este texto quedó vacío."));
     if (textoEl) textoEl.classList.toggle("is-empty", !texto);
-    valorPostgameMusa(
-        "musa_postgame_writer_story",
-        traducirPostgameMusa(
-            "muse.postgame.writer_story",
-            `${nombreEscritxr} escribió ${Math.max(0, Number(stats.palabras) || 0)} palabras a ${Math.max(0, Number(stats.ritmo_ppm) || 0)} ppm y convirtió ${Math.max(0, Number(stats.inspiracion) || 0)} inspiraciones en material para la historia.`,
-            {
-                name: nombreEscritxr,
-                words: Math.max(0, Number(stats.palabras) || 0),
-                pace: Math.max(0, Number(stats.ritmo_ppm) || 0),
-                inspiration: Math.max(0, Number(stats.inspiracion) || 0)
-            }
-        )
-    );
+    valorPostgameMusa("musa_postgame_writer_headline", traducirPostgameMusa(
+        "muse.postgame.writer_headline",
+        `${palabras} PALABRAS EN ESCENA`,
+        { count: palabras, name: nombreEscritxr }
+    ));
+    valorPostgameMusa("musa_postgame_writer_pace", ritmo);
+    valorPostgameMusa("musa_postgame_writer_lexicon", palabrasUnicas);
+    valorPostgameMusa("musa_postgame_writer_ideas", inspiracion);
     [musa_postgame_tab_propio, musa_postgame_tab_rival].forEach((tab) => {
         if (!tab) return;
         const tabPlayer = Number(tab.dataset.player);
@@ -1669,6 +1713,70 @@ function pintarTextoPostgameMusa(playerId) {
     if (musa_postgame) {
         musa_postgame.style.setProperty("--postgame-reader-color", colorPostgameEscritxr(id));
     }
+}
+
+function pintarRankingPostgameMusa() {
+    const lista = getEl("musa_postgame_ranking_lista");
+    const resumen = getEl("musa_postgame_ranking_posicion");
+    if (!lista) return;
+    const ranking = Array.isArray(regalo_postgame_data && regalo_postgame_data.ranking)
+        ? regalo_postgame_data.ranking
+        : [];
+    lista.replaceChildren();
+    const actual = ranking.find((entrada) => entrada && entrada.actual) || null;
+    if (resumen) {
+        const posicion = actual ? Math.max(1, Number(actual.posicion) || 1) : 1;
+        const total = Math.max(1, ranking.length);
+        resumen.textContent = traducirPostgameMusa(
+            "muse.postgame.ranking_position",
+            `TU POSICIÓN: #${posicion} DE ${total}`,
+            { position: posicion, total }
+        );
+        resumen.hidden = ranking.length === 0;
+    }
+    ranking.forEach((entrada, indice) => {
+        if (!entrada || typeof entrada !== "object") return;
+        const stats = entrada.stats && typeof entrada.stats === "object" ? entrada.stats : {};
+        const item = document.createElement("li");
+        item.className = `musa-postgame__ranking-item${entrada.actual ? " is-current" : ""}`;
+        item.dataset.player = Number(entrada.player) === 2 ? "2" : "1";
+        if (entrada.actual) item.setAttribute("aria-current", "true");
+
+        const posicion = document.createElement("span");
+        posicion.className = "musa-postgame__ranking-position";
+        posicion.textContent = `#${Math.max(1, Number(entrada.posicion) || (indice + 1))}`;
+
+        const copia = document.createElement("span");
+        copia.className = "musa-postgame__ranking-copy-main";
+        const nombre = document.createElement("strong");
+        nombre.className = "musa-postgame__ranking-name";
+        nombre.textContent = String(entrada.nombre || "MUSA").slice(0, 24);
+        if (entrada.actual) {
+            const tu = document.createElement("em");
+            tu.textContent = traducirPostgameMusa("muse.postgame.ranking_you", "TÚ");
+            nombre.appendChild(tu);
+        }
+        const detalle = document.createElement("small");
+        detalle.className = "musa-postgame__ranking-detail";
+        detalle.textContent = traducirPostgameMusa(
+            "muse.postgame.ranking_detail",
+            `${Math.max(0, Number(stats.introducidas) || 0)} en el texto · ${limitarPostgame(stats.efectividad_pct)}% efectividad`,
+            {
+                used: Math.max(0, Number(stats.introducidas) || 0),
+                effectiveness: limitarPostgame(stats.efectividad_pct)
+            }
+        );
+        copia.append(nombre, detalle);
+
+        const puntuacion = document.createElement("strong");
+        puntuacion.className = "musa-postgame__ranking-score";
+        puntuacion.textContent = String(Math.max(0, Number(stats.introducidas) || 0));
+        const etiqueta = document.createElement("small");
+        etiqueta.textContent = traducirPostgameMusa("muse.postgame.ranking_ideas", "IDEAS");
+        puntuacion.appendChild(etiqueta);
+        item.append(posicion, copia, puntuacion);
+        lista.appendChild(item);
+    });
 }
 
 function pintarPostgameMusa() {
@@ -1713,6 +1821,7 @@ function pintarPostgameMusa() {
     musa_postgame.style.setProperty("--postgame-team-color", equipo === 2 ? "#ff6578" : "#43eaff");
     musa_postgame.style.setProperty("--postgame-rival-color", equipo === 2 ? "#43eaff" : "#ff6578");
     musa_postgame.style.setProperty("--musa-effectiveness-angle", `${efectividad * 3.6}deg`);
+    pintarRankingPostgameMusa();
     pintarComparativaEscritoresPostgameMusa();
     pintarTextoPostgameMusa(equipo);
     return true;
@@ -1723,6 +1832,16 @@ function mostrarPostgameMusa() {
     musa_postgame.classList.add("musa-postgame--visible");
     musa_postgame.setAttribute("aria-hidden", "false");
     document.body.classList.add("musa-postgame-activo");
+    musa_postgame.scrollTop = 0;
+    musa_postgame.classList.remove("is-celebrating");
+    void musa_postgame.offsetWidth;
+    musa_postgame.classList.add("is-celebrating");
+    clearTimeout(timeout_confetti_postgame_musa);
+    timeout_confetti_postgame_musa = setTimeout(() => {
+        timeout_confetti_postgame_musa = null;
+        musa_postgame?.classList.remove("is-celebrating");
+    }, 4800);
+    if (typeof confetti_postgame_musa === "function") confetti_postgame_musa();
 }
 
 function ocultarPostgameMusa({ limpiar = false } = {}) {
@@ -1731,6 +1850,9 @@ function ocultarPostgameMusa({ limpiar = false } = {}) {
         musa_postgame.setAttribute("aria-hidden", "true");
     }
     document.body.classList.remove("musa-postgame-activo");
+    clearTimeout(timeout_confetti_postgame_musa);
+    timeout_confetti_postgame_musa = null;
+    musa_postgame?.classList.remove("is-celebrating");
     if (limpiar) {
         regalo_postgame_data = null;
         regalo_pdf_ultimo_data = null;
@@ -1773,9 +1895,12 @@ async function descargarRegaloPdf() {
     regalo_pdf.classList.add("regalo-pdf--claimed");
     try {
         await descargarArchivoRegalo(regalo_pdf_data, regalo_pdf_filename);
-        if (typeof confetti_musas === "function") {
-            confetti_musas();
-        }
+        marcarRegaloPdfMusaAbierto({
+            data: regalo_pdf_data,
+            filename: regalo_pdf_filename,
+            client_id: window.musa_client_id,
+            player
+        });
     } catch (error) {
         console.error("No se pudo descargar el regalo PDF:", error);
         regalo_pdf.classList.remove("regalo-pdf--claimed");

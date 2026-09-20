@@ -2495,6 +2495,8 @@ th{
 }
 
 .temporizador-musa__final {
+    width: 100%;
+    min-width: 0;
     min-height: min(68vh, 34rem);
     place-content: center;
     gap: 1rem;
@@ -2509,8 +2511,10 @@ th{
 .temporizador-musa__final > span { font-size: clamp(4rem, 24vw, 8rem); }
 .temporizador-musa__final h2 {
     margin: 0;
+    max-width: 100%;
     font-family: "Retro-gaming", monospace;
-    font-size: clamp(2rem, 11vw, 4rem);
+    font-size: clamp(1.65rem, 8.6vw, 4rem);
+    overflow-wrap: anywhere;
     color: #ffe278;
     text-shadow: -0.04em 0 #4cecff, 0.04em 0 #ff5870, 0 0 0.8em rgba(255, 213, 92, 0.6);
 }
@@ -4640,16 +4644,21 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
 }
 
 .regalo-pdf.regalo-pdf--claimed {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.9);
+    opacity: 1;
+    transform: none;
     pointer-events: none;
 }
 
 .regalo-overlay {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.92) 70%);
-    backdrop-filter: blur(3px);
+    background:
+        radial-gradient(circle at 22% 24%, color-mix(in srgb, var(--regalo-color), transparent 58%), transparent 31%),
+        radial-gradient(circle at 82% 76%, rgba(255, 82, 119, .34), transparent 34%),
+        repeating-conic-gradient(from 10deg at 50% 50%, rgba(255,255,255,.035) 0 5deg, transparent 5deg 18deg),
+        rgba(0, 5, 12, 0.94);
+    backdrop-filter: blur(8px);
+    animation: regaloFondoEntrada 900ms ease-out both;
 }
 
 .regalo-card {
@@ -4658,28 +4667,53 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.6rem 0.8rem;
-    border-radius: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    gap: 0.75rem;
+    width: min(88vw, 31rem);
+    padding: clamp(1.5rem, 7vw, 2.7rem) clamp(1rem, 5vw, 2rem);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--regalo-color), white 16%);
+    border-radius: 2rem;
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--regalo-color), transparent 87%), rgba(4, 9, 18, .95) 48%, rgba(32, 7, 22, .94));
+    box-shadow: inset 0 0 2.5rem rgba(255,255,255,.035), 0 1.8rem 5rem rgba(0,0,0,.72), 0 0 3rem color-mix(in srgb, var(--regalo-color), transparent 65%);
+    animation: regaloCardEntrada 850ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.regalo-card::before,
+.regalo-card::after {
+    position: absolute;
+    inset: -55%;
+    z-index: -1;
+    content: "";
+    background: conic-gradient(from 0deg, transparent 0 18deg, color-mix(in srgb, var(--regalo-color), transparent 78%) 18deg 23deg, transparent 23deg 47deg);
+    animation: regaloRayos 16s linear infinite;
+}
+
+.regalo-card::after {
+    background: radial-gradient(circle, rgba(255, 229, 116, .2), transparent 54%);
+    animation: regaloPulsoFondo 2.4s ease-in-out infinite alternate;
+}
+
+.regalo-kicker {
+    color: #ffe87d;
+    font: 700 clamp(.55rem, 2.6vw, .72rem)/1.35 "Retro-gaming", monospace;
+    letter-spacing: .12em;
+    text-shadow: 0 0 1rem rgba(255, 220, 91, .5);
 }
 
 .regalo-boton {
-    width: 96px;
-    height: 96px;
+    width: clamp(126px, 35vw, 174px);
+    height: clamp(126px, 35vw, 174px);
     border-radius: 50%;
     border: none;
     background: transparent;
     color: #fff;
-    font-size: 2.6rem;
+    font-size: 0;
     box-shadow: none;
     cursor: pointer;
     position: relative;
     isolation: isolate;
-    animation: regaloFloat 2.6s ease-in-out infinite, regaloGlow 2.4s ease-in-out infinite;
-    text-shadow: 0 0 12px rgba(0, 0, 0, 0.6), 0 0 16px rgba(53, 240, 255, 0.55);
+    animation: regaloFloat 2.6s ease-in-out infinite;
 }
 
 .regalo-boton::before {
@@ -4687,18 +4721,67 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
     position: absolute;
     inset: -22px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(53, 240, 255, 0.55), rgba(255, 107, 107, 0.18) 50%, rgba(0, 0, 0, 0) 72%);
-    filter: blur(6px);
+    background: radial-gradient(circle, color-mix(in srgb, var(--regalo-color), white 16%), rgba(255, 218, 104, .24) 44%, transparent 72%);
+    filter: blur(10px);
     opacity: 0.9;
     z-index: -1;
 }
+
+.regalo-boton__orbita {
+    position: absolute;
+    inset: 4px;
+    border: 2px dashed color-mix(in srgb, var(--regalo-color), white 42%);
+    border-radius: 50%;
+    box-shadow: 0 0 1.8rem color-mix(in srgb, var(--regalo-color), transparent 44%);
+    animation: regaloOrbita 7s linear infinite;
+}
+
+.regalo-boton__caja {
+    position: relative;
+    display: block;
+    width: 72px;
+    height: 62px;
+    border: 3px solid rgba(255,255,255,.86);
+    border-radius: 8px 8px 12px 12px;
+    background:
+        linear-gradient(90deg, transparent 0 39%, #ffe46f 39% 61%, transparent 61%),
+        linear-gradient(145deg, #ff315f, #ba073a);
+    box-shadow: inset 0 0 1rem rgba(255,255,255,.16), 0 12px 24px rgba(0,0,0,.36), 0 0 1.5rem #ff315f;
+}
+
+.regalo-boton__caja::before {
+    position: absolute;
+    left: -8px;
+    right: -8px;
+    top: -15px;
+    height: 18px;
+    border: 3px solid rgba(255,255,255,.88);
+    border-radius: 8px;
+    content: "";
+    background:
+        linear-gradient(90deg, transparent 0 41%, #ffe46f 41% 59%, transparent 59%),
+        linear-gradient(145deg, #ff5c7c, #d70f49);
+}
+
+.regalo-boton__caja::after,
+.regalo-boton__caja i::before {
+    position: absolute;
+    top: -36px;
+    width: 31px;
+    height: 26px;
+    border: 8px solid #ffe46f;
+    content: "";
+}
+.regalo-boton__caja::after { left: 5px; border-radius: 75% 22% 65% 28%; transform: rotate(24deg); }
+.regalo-boton__caja i::before { right: 5px; border-radius: 22% 75% 28% 65%; transform: rotate(-24deg); }
 
 .regalo-boton:active {
     transform: scale(0.96);
 }
 
 .regalo-texto {
-    font-size: 0.95rem;
+    font-family: "VT323", monospace;
+    font-size: clamp(1.55rem, 7vw, 2.2rem);
     color: #f2f2f2;
     text-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
     letter-spacing: 0.05em;
@@ -4711,9 +4794,10 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
 }
 
 .regalo-subtexto {
-    font-size: 0.75rem;
-    color: #ddd;
-    opacity: 0.9;
+    margin-top: .15rem;
+    color: color-mix(in srgb, var(--regalo-color), white 38%);
+    font: 700 clamp(.5rem, 2.4vw, .68rem)/1.4 "Retro-gaming", monospace;
+    letter-spacing: .08em;
 }
 
 @keyframes regaloFloat {
@@ -4725,6 +4809,21 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
     0%, 100% { box-shadow: 0 0 18px rgba(0, 0, 0, 0.6), 0 0 24px rgba(53, 240, 255, 0.45); }
     50% { box-shadow: 0 0 22px rgba(0, 0, 0, 0.6), 0 0 34px rgba(255, 107, 107, 0.6); }
 }
+
+.regalo-pdf.regalo-pdf--claimed .regalo-card {
+    animation: regaloCardAbierto 820ms cubic-bezier(.2,.78,.18,1) both;
+}
+.regalo-pdf.regalo-pdf--claimed .regalo-boton__caja::before {
+    animation: regaloTapaAbierta 720ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes regaloFondoEntrada { from { opacity: 0; transform: scale(1.08); } }
+@keyframes regaloCardEntrada { from { opacity: 0; transform: translateY(60px) scale(.82) rotate(-2deg); filter: blur(12px); } }
+@keyframes regaloRayos { to { transform: rotate(1turn); } }
+@keyframes regaloPulsoFondo { to { transform: scale(1.18); opacity: .55; } }
+@keyframes regaloOrbita { to { transform: rotate(-1turn); } }
+@keyframes regaloTapaAbierta { to { transform: translate(-18px, -38px) rotate(-28deg); opacity: .2; } }
+@keyframes regaloCardAbierto { 0% { opacity: 1; transform: scale(1); } 42% { opacity: 1; transform: scale(1.08); filter: brightness(1.35); } 100% { opacity: 0; transform: scale(1.34); filter: blur(10px); } }
 
 body.musa-postgame-activo {
     overflow: hidden;
@@ -4774,7 +4873,7 @@ body.musa-postgame-activo {
     width: min(100%, 1120px);
     min-height: 100dvh;
     margin: 0 auto;
-    padding: clamp(28px, 6vw, 72px) clamp(14px, 4.8vw, 58px) clamp(54px, 9vw, 104px);
+    padding: max(clamp(112px, 15vw, 136px), calc(env(safe-area-inset-top) + 96px)) clamp(14px, 4.8vw, 58px) clamp(54px, 9vw, 104px);
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -4796,21 +4895,36 @@ body.musa-postgame-activo {
 .musa-postgame__ambient i {
     position: absolute;
     left: var(--postgame-spark-x, 50%);
-    bottom: -12vh;
-    width: clamp(5px, 1vw, 10px);
-    aspect-ratio: 1;
-    border-radius: 50%;
+    top: -12vh;
+    width: clamp(7px, 1.4vw, 12px);
+    height: clamp(15px, 3vw, 24px);
+    border-radius: 2px;
     background: var(--postgame-spark-color, var(--postgame-team-color));
     box-shadow: 0 0 18px currentColor;
-    animation: musaPostgameSpark var(--postgame-spark-speed, 6s) linear infinite;
-    animation-delay: var(--postgame-spark-delay, 0s);
+    opacity: 0;
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
 }
-.musa-postgame__ambient i:nth-child(1){--postgame-spark-x:6%;--postgame-spark-speed:6.2s;--postgame-spark-delay:-1s}
-.musa-postgame__ambient i:nth-child(2){--postgame-spark-x:23%;--postgame-spark-color:#ffe47b;--postgame-spark-speed:7.4s;--postgame-spark-delay:-4s}
-.musa-postgame__ambient i:nth-child(3){--postgame-spark-x:42%;--postgame-spark-speed:5.8s;--postgame-spark-delay:-2s}
-.musa-postgame__ambient i:nth-child(4){--postgame-spark-x:61%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:7s;--postgame-spark-delay:-5s}
-.musa-postgame__ambient i:nth-child(5){--postgame-spark-x:79%;--postgame-spark-color:#fff;--postgame-spark-speed:6.5s;--postgame-spark-delay:-3s}
-.musa-postgame__ambient i:nth-child(6){--postgame-spark-x:94%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:7.8s;--postgame-spark-delay:-6s}
+.musa-postgame.is-celebrating .musa-postgame__ambient i {
+    animation: musaPostgameConfetti var(--postgame-spark-speed, 3.4s) cubic-bezier(.12,.65,.35,1) var(--postgame-spark-delay, 0s) both;
+}
+.musa-postgame__ambient i:nth-child(1){--postgame-spark-x:4%;--postgame-spark-speed:3.1s;--postgame-spark-delay:.05s}
+.musa-postgame__ambient i:nth-child(2){--postgame-spark-x:10%;--postgame-spark-color:#ffe47b;--postgame-spark-speed:3.7s;--postgame-spark-delay:.28s}
+.musa-postgame__ambient i:nth-child(3){--postgame-spark-x:17%;--postgame-spark-speed:3.3s;--postgame-spark-delay:.12s}
+.musa-postgame__ambient i:nth-child(4){--postgame-spark-x:24%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:3.9s;--postgame-spark-delay:.42s}
+.musa-postgame__ambient i:nth-child(5){--postgame-spark-x:31%;--postgame-spark-color:#fff;--postgame-spark-speed:3.25s;--postgame-spark-delay:.18s}
+.musa-postgame__ambient i:nth-child(6){--postgame-spark-x:38%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:3.55s;--postgame-spark-delay:.62s}
+.musa-postgame__ambient i:nth-child(7){--postgame-spark-x:44%;--postgame-spark-color:#ffe47b;--postgame-spark-speed:3.8s;--postgame-spark-delay:.3s}
+.musa-postgame__ambient i:nth-child(8){--postgame-spark-x:49%;--postgame-spark-speed:3.2s;--postgame-spark-delay:.72s}
+.musa-postgame__ambient i:nth-child(9){--postgame-spark-x:54%;--postgame-spark-color:#fff;--postgame-spark-speed:3.65s;--postgame-spark-delay:.14s}
+.musa-postgame__ambient i:nth-child(10){--postgame-spark-x:59%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:3.35s;--postgame-spark-delay:.52s}
+.musa-postgame__ambient i:nth-child(11){--postgame-spark-x:64%;--postgame-spark-color:#ffe47b;--postgame-spark-speed:3.9s;--postgame-spark-delay:.22s}
+.musa-postgame__ambient i:nth-child(12){--postgame-spark-x:70%;--postgame-spark-speed:3.45s;--postgame-spark-delay:.8s}
+.musa-postgame__ambient i:nth-child(13){--postgame-spark-x:75%;--postgame-spark-color:#fff;--postgame-spark-speed:3.15s;--postgame-spark-delay:.38s}
+.musa-postgame__ambient i:nth-child(14){--postgame-spark-x:80%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:3.75s;--postgame-spark-delay:.08s}
+.musa-postgame__ambient i:nth-child(15){--postgame-spark-x:85%;--postgame-spark-color:#ffe47b;--postgame-spark-speed:3.5s;--postgame-spark-delay:.66s}
+.musa-postgame__ambient i:nth-child(16){--postgame-spark-x:90%;--postgame-spark-speed:3.9s;--postgame-spark-delay:.34s}
+.musa-postgame__ambient i:nth-child(17){--postgame-spark-x:95%;--postgame-spark-color:#fff;--postgame-spark-speed:3.3s;--postgame-spark-delay:.48s}
+.musa-postgame__ambient i:nth-child(18){--postgame-spark-x:98%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:3.7s;--postgame-spark-delay:.16s}
 
 .musa-postgame__panel > :not(.musa-postgame__ambient) {
     position: relative;
@@ -4911,6 +5025,7 @@ body.musa-postgame-activo {
 }
 
 .musa-postgame__infographic,
+.musa-postgame__ranking,
 .musa-postgame__writers {
     margin: clamp(20px, 4vh, 34px) 0;
     padding: clamp(16px, 3.8vw, 28px);
@@ -5002,6 +5117,95 @@ body.musa-postgame-activo {
 .musa-postgame__writer-card.is-active { outline: 2px solid var(--writer-card-color); outline-offset: 2px; transform: translateY(-2px); }
 .musa-postgame__writer-story { margin-bottom: 0; border-left-color: #ffe47b; background: linear-gradient(90deg, rgba(255,228,123,.1), transparent); }
 
+.musa-postgame__writer-story {
+    display: grid;
+    gap: 13px;
+    border: 1px solid rgba(255, 228, 123, .3);
+    border-left: 5px solid #ffe47b;
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 90% 20%, rgba(255,228,123,.16), transparent 36%),
+        linear-gradient(110deg, rgba(255,228,123,.12), rgba(5,10,20,.56));
+}
+.musa-postgame__writer-story > small {
+    color: #ffe47b;
+    font: 700 clamp(.48rem, 1.8vw, .66rem)/1.3 "Retro-gaming", monospace;
+    letter-spacing: .1em;
+}
+.musa-postgame__writer-story > strong {
+    color: #fff;
+    font: 700 clamp(1.5rem, 6vw, 2.8rem)/1 "Retro-gaming", monospace;
+    text-shadow: 0 0 1.2rem color-mix(in srgb, var(--postgame-reader-color), transparent 55%);
+}
+.musa-postgame__writer-pulse {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+.musa-postgame__writer-pulse > span {
+    display: grid;
+    gap: 4px;
+    padding: 10px 6px;
+    border: 1px solid color-mix(in srgb, var(--postgame-reader-color), transparent 70%);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--postgame-reader-color), transparent 94%);
+    text-align: center;
+}
+.musa-postgame__writer-pulse b { color: var(--postgame-reader-color); font: 700 clamp(1rem, 4vw, 1.6rem)/1 "Retro-gaming", monospace; }
+.musa-postgame__writer-pulse i { color: rgba(255,255,255,.65); font: normal clamp(.75rem, 3vw, 1rem)/1 "VT323", monospace; }
+
+.musa-postgame__ranking-copy {
+    margin: -6px 0 14px;
+    color: rgba(231, 247, 255, .68);
+    font: clamp(1rem, 4vw, 1.3rem)/1.2 "VT323", monospace;
+    text-align: left;
+}
+.musa-postgame__ranking-position-summary {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,228,123,.46);
+    border-radius: 14px;
+    background: linear-gradient(90deg, rgba(255,228,123,.18), transparent);
+    color: #ffe47b;
+    font: 700 clamp(.68rem, 2.8vw, .92rem)/1.25 "Retro-gaming", monospace;
+    text-align: left;
+    text-shadow: 0 0 1rem rgba(255,228,123,.42);
+}
+.musa-postgame__ranking-list {
+    display: grid;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.musa-postgame__ranking-item {
+    --ranking-color: #43eaff;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    min-height: 58px;
+    padding: 9px 12px;
+    border: 1px solid color-mix(in srgb, var(--ranking-color), transparent 70%);
+    border-radius: 15px;
+    background: linear-gradient(100deg, color-mix(in srgb, var(--ranking-color), transparent 92%), rgba(255,255,255,.015));
+    text-align: left;
+}
+.musa-postgame__ranking-item[data-player="2"] { --ranking-color: #ff6578; }
+.musa-postgame__ranking-item.is-current {
+    border-color: #ffe47b;
+    background: linear-gradient(100deg, rgba(255,228,123,.18), color-mix(in srgb, var(--ranking-color), transparent 90%));
+    box-shadow: inset 4px 0 0 #ffe47b, 0 0 24px rgba(255,228,123,.13);
+    transform: scale(1.015);
+}
+.musa-postgame__ranking-position { color: #ffe47b; font: 700 1.2rem/1 "Retro-gaming", monospace; text-align: center; }
+.musa-postgame__ranking-copy-main { min-width: 0; }
+.musa-postgame__ranking-name { display: block; overflow: hidden; color: var(--ranking-color); font: 700 clamp(.66rem, 2.7vw, .9rem)/1.2 "Retro-gaming", monospace; text-overflow: ellipsis; white-space: nowrap; }
+.musa-postgame__ranking-name em { margin-left: 7px; padding: 3px 6px; border-radius: 999px; background: #ffe47b; color: #111; font-size: .62em; font-style: normal; vertical-align: .12em; }
+.musa-postgame__ranking-detail { display: block; margin-top: 5px; color: rgba(255,255,255,.58); font: clamp(.82rem, 3.4vw, 1.05rem)/1 "VT323", monospace; }
+.musa-postgame__ranking-score { color: #fff; font: 700 clamp(.72rem, 3vw, 1rem)/1 "Retro-gaming", monospace; text-align: right; }
+.musa-postgame__ranking-score small { display: block; margin-top: 5px; color: rgba(255,255,255,.45); font-size: .55em; letter-spacing: .08em; }
+
 .musa-postgame__reader {
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--postgame-reader-color), transparent 52%);
@@ -5078,25 +5282,50 @@ body.musa-postgame-activo {
 }
 .musa-postgame__pdf {
     width: 100%;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    min-height: 82px;
     margin: 0;
+    padding: 12px 16px;
     border-color: color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 38%);
     color: #fff;
     background: linear-gradient(135deg, color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 72%), rgba(2,8,14,.92));
-    box-shadow: 0 0 18px color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 84%);
+    box-shadow: inset 0 0 24px color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 94%), 0 0 18px color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 84%);
+    text-align: left;
+    cursor: pointer;
 }
 .musa-postgame__pdf--blue { --download-color: #43eaff; }
 .musa-postgame__pdf--red { --download-color: #ff6578; }
-.musa-postgame__pdf > span:first-child { color: var(--download-color); font-size: 1.25em; }
+.musa-postgame__pdf-icon {
+    width: 48px;
+    height: 48px;
+    fill: color-mix(in srgb, var(--download-color), transparent 88%);
+    stroke: var(--download-color);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--download-color), transparent 40%));
+}
+.musa-postgame__pdf > span { display: grid; gap: 6px; min-width: 0; }
+.musa-postgame__pdf small { color: rgba(255,255,255,.55); font: 700 .52rem/1.2 "Retro-gaming", monospace; letter-spacing: .08em; }
+.musa-postgame__pdf strong { overflow: hidden; color: var(--download-color); font: 700 clamp(.62rem, 2.5vw, .84rem)/1.25 "Retro-gaming", monospace; text-overflow: ellipsis; white-space: nowrap; }
+.musa-postgame__pdf:hover { transform: translateY(-2px); filter: brightness(1.12); }
 .musa-postgame button:active { transform: translateY(1px) scale(0.99); }
 .musa-postgame button:disabled { opacity: 0.5; }
 
 @keyframes musaPostgameTileIn { to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes musaPostgameBarIn { to { transform: scaleX(1); } }
 @keyframes musaPostgameRingFloat { to { transform: translateY(-7px) rotate(2deg); filter: brightness(1.12); } }
-@keyframes musaPostgameSpark { 0% { transform: translateY(0) scale(.5); opacity: 0; } 12% { opacity: .85; } 100% { transform: translateY(-118vh) scale(1.3); opacity: 0; } }
+@keyframes musaPostgameConfetti {
+    0% { transform: translate3d(0, -12vh, 0) rotate(0deg); opacity: 0; }
+    8% { opacity: 1; }
+    100% { transform: translate3d(var(--confetti-drift, 28px), 112vh, 0) rotate(760deg); opacity: 0; }
+}
 
 @media (max-width: 520px) {
-    .musa-postgame__panel { padding: 24px 10px 52px; }
+    .musa-postgame__panel { padding: max(108px, calc(env(safe-area-inset-top) + 92px)) 10px 52px; }
     .musa-postgame__header { grid-template-columns: minmax(0, 1fr) 104px; gap: 10px; }
     .musa-postgame__score-ring { width: 104px; }
     .musa-postgame__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -5116,6 +5345,55 @@ body.musa-postgame-activo {
         opacity: 1;
         transform: none;
     }
+}
+
+/* Durante el wrapped el temporizador no sustituye la pantalla: queda como
+   testigo compacto. Al finalizar recupera la escena completa de aviso. */
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) {
+    inset: max(10px, env(safe-area-inset-top)) auto auto 50%;
+    z-index: 2147483634;
+    width: auto;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+    transform: translateX(-50%);
+    background: transparent;
+    pointer-events: none;
+}
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) .temporizador-musa__rayos,
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) .temporizador-musa__eyebrow,
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) .temporizador-musa__mensaje,
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) .temporizador-musa__ring small {
+    display: none;
+}
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) .temporizador-musa__panel {
+    width: auto;
+    min-width: 116px;
+    padding: 7px;
+    border-width: 2px;
+    border-radius: 999px;
+    background: rgba(3,10,19,.94);
+    box-shadow: 0 8px 28px rgba(0,0,0,.62), 0 0 22px rgba(255,205,91,.24);
+    animation: temporizadorPostgameEntrada 520ms cubic-bezier(.16,1,.3,1) both;
+}
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) .temporizador-musa__ring {
+    width: 102px;
+    height: 54px;
+    aspect-ratio: auto;
+    padding: 3px;
+    border-radius: 999px;
+}
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) .temporizador-musa__ring-inner {
+    border-radius: 999px;
+}
+body.musa-postgame-activo .temporizador-musa:not(.is-finished) #temporizador_musa_valor {
+    font-size: 1.18rem;
+}
+body.musa-postgame-activo .temporizador-musa.is-finished {
+    z-index: 2147483640;
+}
+@keyframes temporizadorPostgameEntrada {
+    from { opacity: 0; transform: translateY(-22px) scale(.72); }
 }
 
 /* Calentamiento nuevo: envio de palabras a nube */

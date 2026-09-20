@@ -861,6 +861,14 @@ socket.on('inicio', data => {
         fadeDurationMs: 220
     });
     actualizarModoVistaEspectadorUi("partida");
+    // El inicio de partida no puede esperar a que termine una cortinilla que
+    // venía de la vista anterior. Si LIMPIAR y ESCRIBIR se pulsan seguidos,
+    // esa carrera dejaba la intro sin armar y solo aparecía «¡ESCRIBE!».
+    if (vista_espectador_modo_resuelta !== "partida") {
+        controlador_transicion_vista_espectador?.cancel();
+        vista_espectador_modo_solicitada = "partida";
+        aplicarModoVistaEspectadorUi("partida");
+    }
     if (sonido) {
         sonido.pause();
         sonido.currentTime = 0;

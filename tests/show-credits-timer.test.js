@@ -79,7 +79,8 @@ test("giant timer is a dedicated synced scene on spectator and muse screens", ()
   assert.match(spectatorCss, /\.temporizador-gigante__ring \{[\s\S]{0,180}width:\s*min\(55vh, 40vw, 31rem\)/);
   assert.match(spectatorSockets, /temporizador_gigante_estado/);
   assert.match(museHtml, /id="temporizador_musa"/);
-  assert.match(museHtml, /Es hora de ver la representaci&oacute;n de los textos\./);
+  assert.match(museHtml, /&iexcl;COMIENZA LA REPRESENTACI&Oacute;N!/);
+  assert.match(museHtml, /La historia sale del texto y sube al escenario\./);
   assert.match(museState, /function aplicarEstadoTemporizadorMusa/);
   assert.match(museState, /payload\.fin_ts/);
   assert.match(museState, /forzarRestante !== null[\s\S]*Number\.isFinite\(Number\(forzarRestante\)\)/);
