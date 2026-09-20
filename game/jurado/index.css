@@ -1397,6 +1397,14 @@ input {
     text-shadow: 0 0 0.45rem color-mix(in srgb, var(--criteria-section-accent), transparent 55%);
 }
 
+.criteria-guidance {
+    max-width: 72rem;
+    margin: -0.08rem 0 0;
+    color: color-mix(in srgb, var(--criteria-section-accent), white 52%);
+    font-size: clamp(0.7rem, 0.82vw, 0.9rem);
+    line-height: 1.35;
+}
+
 .criteria-section {
     --criteria-section-accent: var(--panel-accent);
     display: grid;
@@ -1413,12 +1421,8 @@ input {
         0 0 0.62rem color-mix(in srgb, var(--criteria-section-accent), transparent 92%);
 }
 
-.criteria-section[data-eval-scope="writing"] {
-    --criteria-section-accent: #bda2ff;
-}
-
-.criteria-section[data-eval-scope="muses"] {
-    --criteria-section-accent: var(--jury-green);
+.criteria-section[data-eval-scope="scene"] {
+    --criteria-section-accent: #d0a8ff;
 }
 
 .criteria-list {

@@ -6,7 +6,7 @@
     <title>SCRB - Jurado</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <link rel="stylesheet" type="text/css" href="./index.css?v=20260918a" />
+    <link rel="stylesheet" type="text/css" href="./index.css?v=20260920c" />
 </head>
 <body class="page-jurado">
     <main id="jurado_app" class="jury-shell">
@@ -214,13 +214,10 @@
                         </div>
                     </div>
                 </header>
-                <section class="criteria-section" data-eval-scope="writing">
-                    <h2 class="criteria-title">Texto</h2>
-                    <div id="jurado_eval_writing" class="criteria-list criteria-list--comparison" data-eval-scope="writing"></div>
-                </section>
-                <section class="criteria-section" data-eval-scope="muses">
-                    <h2 class="criteria-title">Equipo de musas</h2>
-                    <div id="jurado_eval_muses" class="criteria-list criteria-list--comparison" data-eval-scope="muses"></div>
+                <section class="criteria-section" data-eval-scope="scene">
+                    <h2 class="criteria-title">Representaci&oacute;n esc&eacute;nica</h2>
+                    <p class="criteria-guidance">Valora lo que sucede sobre el escenario: interpretaci&oacute;n, puesta en escena, ritmo y efecto de la pieza.</p>
+                    <div id="jurado_eval_scene" class="criteria-list criteria-list--comparison" data-eval-scope="scene"></div>
                 </section>
             </div>
             <div class="jury-actions">
@@ -233,7 +230,7 @@
     <script src="../config.js?v=20260829m"></script>
     <script src="../dist/socket.io/socket.io.js"></script>
     <script src="../js/domains/inspiration.js?v=20260905d"></script>
-    <script src="./js/state.js?v=20260904a"></script>
+    <script src="./js/state.js?v=20260920a"></script>
     <script src="./js/socket-events.js?v=20260904a"></script>
     <script src="./js/index.js?v=20260506a"></script>
 </body>

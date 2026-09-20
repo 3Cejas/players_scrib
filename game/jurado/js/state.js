@@ -17,18 +17,11 @@ const JURADO_STAT_META = {
     topTeclas: { icon: "\u{1F51D}", label: "Top teclas" },
     graficas: { icon: "\u{1F4C8}", label: "Graficas stats" }
 };
-const JURADO_CRITERIOS_ESCRITURA = [
-    { id: "idea", label: "Idea y mundo" },
-    { id: "voz", label: "Voz" },
-    { id: "estructura", label: "Estructura" },
-    { id: "riesgo", label: "Riesgo" },
-    { id: "cierre", label: "Cierre" }
-];
-const JURADO_CRITERIOS_MUSAS = [
-    { id: "inspiracion", label: "Inspiracion util" },
-    { id: "escucha", label: "Escucha" },
-    { id: "ritmo", label: "Ritmo" },
-    { id: "cooperacion", label: "Cooperacion" }
+const JURADO_CRITERIOS_ESCENA = [
+    { id: "interpretacion", label: "Interpretación y presencia escénica" },
+    { id: "puesta_escena", label: "Puesta en escena y uso del espacio" },
+    { id: "ritmo_dramatico", label: "Ritmo y progresión dramática" },
+    { id: "integracion_impacto", label: "Integración del texto e impacto final" }
 ];
 const JURADO_STATS_HISTORY_MAX = 80;
 let jurado_resultado_emit_timeout = null;
@@ -69,8 +62,8 @@ function crearWriterJurado(id) {
 function crearEvaluacionVaciaJurado() {
     return {
         writers: {
-            1: { notes: "", writing: {}, muses: {} },
-            2: { notes: "", writing: {}, muses: {} }
+            1: { notes: "", scene: {} },
+            2: { notes: "", scene: {} }
         }
     };
 }
@@ -85,8 +78,7 @@ function cargarEstadoGuardadoJurado() {
             const data = parsed && parsed.writers ? parsed.writers[id] || parsed.writers[String(id)] : null;
             if (!data || typeof data !== "object") return;
             base.writers[id].notes = typeof data.notes === "string" ? data.notes : "";
-            base.writers[id].writing = data.writing && typeof data.writing === "object" ? data.writing : {};
-            base.writers[id].muses = data.muses && typeof data.muses === "object" ? data.muses : {};
+            base.writers[id].scene = data.scene && typeof data.scene === "object" ? data.scene : {};
         });
     } catch (error) {
         console.warn("No se pudo cargar evaluacion del jurado", error);
@@ -248,7 +240,7 @@ function renderizarRevelacionJurado() {
     }
     if (intro) intro.hidden = true;
     if (panel) panel.hidden = false;
-    const clave = `${criterio.scope || "writing"}:${criterio.id || criterio.indice}`;
+    const clave = `${criterio.scope || "scene"}:${criterio.id || criterio.indice}`;
     if (panel && panel.dataset.criterio !== clave) {
         panel.dataset.criterio = clave;
         panel.classList.remove("is-confirmed");
@@ -728,9 +720,8 @@ function renderNubeJurado(id) {
 function obtenerEvalWriterJurado(id) {
     const writerId = Number(id);
     const evaluacion = estado_jurado.evaluacion;
-    evaluacion.writers[writerId] = evaluacion.writers[writerId] || { notes: "", writing: {}, muses: {} };
-    evaluacion.writers[writerId].writing = evaluacion.writers[writerId].writing || {};
-    evaluacion.writers[writerId].muses = evaluacion.writers[writerId].muses || {};
+    evaluacion.writers[writerId] = evaluacion.writers[writerId] || { notes: "", scene: {} };
+    evaluacion.writers[writerId].scene = evaluacion.writers[writerId].scene || {};
     return evaluacion.writers[writerId];
 }
 
@@ -751,25 +742,20 @@ function setValorCriterioJurado(id, scope, criterioId, valor) {
 }
 
 function calcularTotalResultadoJurado(id) {
-    const valores = [];
-    JURADO_CRITERIOS_ESCRITURA.forEach((criterio) => valores.push(obtenerValorCriterioJurado(id, "writing", criterio.id)));
-    JURADO_CRITERIOS_MUSAS.forEach((criterio) => valores.push(obtenerValorCriterioJurado(id, "muses", criterio.id)));
+    const valores = JURADO_CRITERIOS_ESCENA.map((criterio) => obtenerValorCriterioJurado(id, "scene", criterio.id));
     return valores.length ? valores.reduce((sum, valor) => sum + valor, 0) / valores.length : 0;
 }
 
 function construirResultadoJurado() {
     const total1 = calcularTotalResultadoJurado(1);
     const total2 = calcularTotalResultadoJurado(2);
-    const criterios = [
-        ...JURADO_CRITERIOS_ESCRITURA.map((criterio) => ({ scope: "writing", ...criterio })),
-        ...JURADO_CRITERIOS_MUSAS.map((criterio) => ({ scope: "muses", ...criterio }))
-    ].map((criterio) => ({
+    const criterios = JURADO_CRITERIOS_ESCENA.map((criterio) => ({
         id: criterio.id,
-        scope: criterio.scope,
+        scope: "scene",
         label: criterio.label,
         valores: {
-            1: obtenerValorCriterioJurado(1, criterio.scope, criterio.id),
-            2: obtenerValorCriterioJurado(2, criterio.scope, criterio.id)
+            1: obtenerValorCriterioJurado(1, "scene", criterio.id),
+            2: obtenerValorCriterioJurado(2, "scene", criterio.id)
         }
     }));
     return {
@@ -827,23 +813,16 @@ function crearFilaCriterioJurado(scope, criterio) {
 }
 
 function renderEvaluacionJurado() {
-    const writing = getEl("jurado_eval_writing");
-    const muses = getEl("jurado_eval_muses");
-    if (writing) {
-        writing.innerHTML = "";
-        JURADO_CRITERIOS_ESCRITURA.forEach((criterio) => writing.appendChild(crearFilaCriterioJurado("writing", criterio)));
-    }
-    if (muses) {
-        muses.innerHTML = "";
-        JURADO_CRITERIOS_MUSAS.forEach((criterio) => muses.appendChild(crearFilaCriterioJurado("muses", criterio)));
+    const escena = getEl("jurado_eval_scene");
+    if (escena) {
+        escena.innerHTML = "";
+        JURADO_CRITERIOS_ESCENA.forEach((criterio) => escena.appendChild(crearFilaCriterioJurado("scene", criterio)));
     }
     [1, 2].forEach(actualizarTotalEvaluacionJurado);
 }
 
 function actualizarTotalEvaluacionJurado(id) {
-    const valores = [];
-    JURADO_CRITERIOS_ESCRITURA.forEach((criterio) => valores.push(obtenerValorCriterioJurado(id, "writing", criterio.id)));
-    JURADO_CRITERIOS_MUSAS.forEach((criterio) => valores.push(obtenerValorCriterioJurado(id, "muses", criterio.id)));
+    const valores = JURADO_CRITERIOS_ESCENA.map((criterio) => obtenerValorCriterioJurado(id, "scene", criterio.id));
     const media = valores.length ? valores.reduce((sum, valor) => sum + valor, 0) / valores.length : 0;
     setTextoJurado(`jurado_eval_total_${id}`, formatearNumeroJurado(media, 1));
 }
@@ -870,13 +849,11 @@ function refrescarDatosJurado() {
 function construirBloqueEvaluacionResumenJurado(id) {
     const writer = estado_jurado.writers[id];
     const evalWriter = obtenerEvalWriterJurado(id);
-    const writing = JURADO_CRITERIOS_ESCRITURA.map((criterio) => `${criterio.label}: ${obtenerValorCriterioJurado(id, "writing", criterio.id)}/10`).join("; ");
-    const muses = JURADO_CRITERIOS_MUSAS.map((criterio) => `${criterio.label}: ${obtenerValorCriterioJurado(id, "muses", criterio.id)}/10`).join("; ");
+    const escena = JURADO_CRITERIOS_ESCENA.map((criterio) => `${criterio.label}: ${obtenerValorCriterioJurado(id, "scene", criterio.id)}/10`).join("; ");
     return [
         `${writer.nombre}`,
         `\u{1F58B}\uFE0F Palabras: ${writer.words} | \u{1F3A8} Musas: ${writer.musas}`,
-        `Texto: ${writing}`,
-        `Musas: ${muses}`,
+        `Representación escénica: ${escena}`,
         `Notas: ${evalWriter.notes || ""}`
     ].join("\n");
 }

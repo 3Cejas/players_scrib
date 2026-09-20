@@ -106,6 +106,22 @@ test("Jury controls the live two-bar reveal while spectator and muses mirror it"
   assert.match(museState, /EL JURADO EST&Aacute; PUNTUANDO/);
 });
 
+test("Jury evaluates four criteria focused on the stage representation", () => {
+  const html = read("game/jurado/index.html");
+  const state = read("game/jurado/js/state.js");
+  const control = read("game/control/js/actions.js");
+
+  [state, control].forEach((source) => {
+    assert.match(source, /INTERPRETACI[ÓO]N|Interpretación/);
+    assert.match(source, /PUESTA EN ESCENA|Puesta en escena/);
+    assert.match(source, /RITMO Y PROGRESI[ÓO]N DRAM[ÁA]TICA|Ritmo y progresión dramática/);
+    assert.match(source, /INTEGRACI[ÓO]N DEL TEXTO E IMPACTO FINAL|Integración del texto e impacto final/);
+  });
+  assert.equal((state.match(/\{ id: "[^"]+", label:/g) || []).length, 4);
+  assert.match(html, /Representaci&oacute;n esc&eacute;nica/);
+  assert.doesNotMatch(state, /Idea y mundo|Inspiracion util|Cooperacion/);
+});
+
 test("credits use the real graphic marks and timer rings count down", () => {
   const spectatorState = read("game/spectator/js/state.js");
   const museState = read("game/public/players/js/state.js");
