@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260920i"></script>
+<script src="./js/actions.js?v=20260920j"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -241,6 +241,10 @@
                                 <button id="boton_mostrar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-pressed="false" onclick="mostrarCreditosEspectador()">&#x2B50; VISTA CR&Eacute;DITOS</button>
                                 <button id="boton_editar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-expanded="false" aria-controls="panel_creditos_final" onclick="toggleCreditos()">&#x1F4DD; EDITAR CR&Eacute;DITOS</button>
                                 <button id="boton_banderas_musas_final" class="btn btn-estandar-seccion btn-vista-espectador btn-banderas-musas-control" type="button" data-banderas-musas-control data-activo="0" data-active="0" aria-pressed="false" onclick="activar_banderas_musas()">&#x1F6A9; BANDERA</button>
+                            </div>
+                            <div id="debug_tools_final" class="debug-context-tools debug-context-tools--final" data-debug-tools hidden aria-hidden="true">
+                                <button id="debug_exportar_iteraciones" class="btn debug-control__button" data-debug-action type="button" onclick="exportarIteracionesPartidaDebug()">&#x2913; EXPORTAR ITERACIONES</button>
+                                <p class="debug-context-tools__status" data-debug-status="final" role="status" aria-live="polite"></p>
                             </div>
                             <div id="panel_creditos_final" class="creditos-host panel-oculto" aria-hidden="true"></div>
                         </div>

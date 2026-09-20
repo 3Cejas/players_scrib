@@ -2715,6 +2715,8 @@ function textoErrorDebugControl(codigo = "") {
         NOT_AUTHORIZED: "Control no est\u00e1 autorizado.",
         DEBUG_MODE_REQUIRED: "Activa primero el modo Debug.",
         GAME_NOT_ACTIVE: "No hay una partida en curso.",
+        NO_MATCH_ITERATIONS: "Todav\u00eda no hay iteraciones de una partida para exportar.",
+        ITERATION_EXPORT_FAILED: "No se pudo preparar el archivo de iteraciones.",
         DEBUG_SKIP_COOLDOWN: "Espera un instante antes de volver a saltar de nivel.",
         MODE_TRANSITION_BUSY: "El juego ya est\u00e1 cambiando de nivel. Int\u00e9ntalo de nuevo."
     };
@@ -2920,6 +2922,55 @@ function finalizarPartidaDebug() {
     );
 }
 
+function exportarIteracionesPartidaDebug() {
+    ejecutarAccionDebugControl(
+        "debug_exportar_iteraciones_partida",
+        "Preparando el archivo de iteraciones...",
+        (respuesta = {}) => {
+            const exportacion = respuesta.exportacion;
+            if (!exportacion || typeof exportacion !== "object") {
+                estadoAccionDebugControl(
+                    "El servidor no devolvi\u00f3 datos para exportar.",
+                    "error",
+                    "final"
+                );
+                return;
+            }
+            try {
+                const contenido = JSON.stringify(exportacion);
+                const blob = new Blob([contenido], { type: "application/json;charset=utf-8" });
+                const enlace = document.createElement("a");
+                const idPartida = String(exportacion.partida?.id || "partida")
+                    .replace(/[^a-z0-9_-]+/gi, "-");
+                const fecha = new Date().toISOString().replace(/[:.]/g, "-");
+                const url = URL.createObjectURL(blob);
+                enlace.href = url;
+                enlace.download = `scrib-iteraciones-${idPartida}-${fecha}.json`;
+                enlace.hidden = true;
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+                const total = Number(exportacion.resumen?.iteraciones) || 0;
+                const tamanoKb = Math.max(1, Math.ceil(blob.size / 1024));
+                estadoAccionDebugControl(
+                    `${total} iteraciones exportadas (${tamanoKb} KB).`,
+                    "success",
+                    "final"
+                );
+            } catch (_error) {
+                estadoAccionDebugControl(
+                    "No se pudo descargar el archivo de iteraciones.",
+                    "error",
+                    "final"
+                );
+            }
+        },
+        "final"
+    );
+}
+
 function completarFrasesFinalesDebugControl() {
     if (!modo_debug_control_activo) return false;
     const checkbox = document.querySelector('input[name="modos"][value="frase final"]');
@@ -3053,6 +3104,7 @@ if (typeof window !== "undefined") {
     window.limpiarDatosPruebaDeliberacionDebug = limpiarDatosPruebaDeliberacionDebug;
     window.saltarSiguienteNivelDebug = saltarSiguienteNivelDebug;
     window.finalizarPartidaDebug = finalizarPartidaDebug;
+    window.exportarIteracionesPartidaDebug = exportarIteracionesPartidaDebug;
     window.completarFrasesFinalesDebugControl = completarFrasesFinalesDebugControl;
     window.toggleLluviaDetonadoresDebug = toggleLluviaDetonadoresDebug;
     window.actualizarVelocidadDetonadoresDebug = actualizarVelocidadDetonadoresDebug;

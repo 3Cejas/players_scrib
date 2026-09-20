@@ -16,6 +16,7 @@ test("Control hides Debug behind five logo clicks and distributes tools by conte
   assert.match(html, /id="control_panel_detonadores"[\s\S]*id="debug_tools_detonadores"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_detonadores_toggle"[\s\S]*id="debug_detonadores_velocidad"/);
   assert.match(html, /id="control_panel_representacion"[\s\S]*id="debug_tools_representacion"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_cargar_textos"[\s\S]*id="debug_limpiar_textos"/);
   assert.match(html, /id="control_panel_deliberacion"[\s\S]*id="debug_tools_deliberacion"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_cargar_deliberacion"/);
+  assert.match(html, /id="control_panel_final"[\s\S]*id="debug_tools_final"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_exportar_iteraciones"/);
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_fin_partida"[^>]*onclick="fin_partida_global\(\)"[^>]*hidden/);
   assert.doesNotMatch(html, /debug-context-tools__label/);
   assert.doesNotMatch(html, /id="debug_control_tools"/);
@@ -35,6 +36,10 @@ test("Control requests authoritative Debug state and routes every test action th
   assert.match(actions, /function cargarPostgameMusasPruebaDebug\(\)[\s\S]*"cargar_datos_prueba_musas"/);
   assert.match(actions, /"debug_siguiente_nivel"/);
   assert.match(actions, /"debug_finalizar_partida"/);
+  assert.match(actions, /"debug_exportar_iteraciones_partida"/);
+  assert.match(actions, /new Blob\(\[contenido\], \{ type: "application\/json;charset=utf-8" \}\)/);
+  assert.match(actions, /JSON\.stringify\(exportacion\)/);
+  assert.doesNotMatch(actions, /JSON\.stringify\(exportacion, null,/);
   assert.match(actions, /"debug_detonadores_prueba"/);
   assert.match(actions, /"debug_detonadores_detener"/);
   assert.match(actions, /TEXTOS_PRUEBA_REPRESENTACION_DEBUG/);
