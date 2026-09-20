@@ -125,6 +125,9 @@ test("monitor bridge passes reads, blocks mutations and reports disconnects", ()
   socket.emit("pedir_texto", { player: 1 });
   assert.equal(socket.sent.some((entry) => entry.eventName === "pedir_texto"), true);
 
+  socket.emit("pedir_canto_estado");
+  assert.equal(socket.sent.some((entry) => entry.eventName === "pedir_canto_estado"), true);
+
   let blockedAck = null;
   socket.emit("texto1", { text: "no debe salir" }, (payload) => {
     blockedAck = payload;

@@ -203,6 +203,14 @@
             } catch (_error) {}
             fadeMusic(musicVolume, 0);
         };
+        const onCantoVisibility = (event) => {
+            const active = Boolean(event && event.detail && event.detail.active);
+            const requestedFade = Number(event && event.detail && event.detail.fadeMs);
+            const duration = Number.isFinite(requestedFade) ? Math.max(0, requestedFade) : fadeDurationMs;
+            forcedMusic = false;
+            ducked = active;
+            fadeMusic(targetMusicVolume(), duration);
+        };
         const onMusicIntensity = (event) => {
             const next = Boolean(event && event.detail && event.detail.boosted);
             if (next === boosted) return;
@@ -221,6 +229,7 @@
         documentRef?.addEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
         documentRef?.addEventListener?.("scrib:show-narration-visibility", onShowNarrationVisibility);
         documentRef?.addEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
+        documentRef?.addEventListener?.("scrib:canto-visibility", onCantoVisibility);
         documentRef?.addEventListener?.("scrib:view-music-intensity", onMusicIntensity);
         windowRef?.addEventListener?.("pagehide", onPageHide);
 
@@ -240,6 +249,7 @@
                 documentRef?.removeEventListener?.("scrib:video-tutorial-ending", onTutorialEnding);
                 documentRef?.removeEventListener?.("scrib:show-narration-visibility", onShowNarrationVisibility);
                 documentRef?.removeEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
+                documentRef?.removeEventListener?.("scrib:canto-visibility", onCantoVisibility);
                 documentRef?.removeEventListener?.("scrib:view-music-intensity", onMusicIntensity);
                 windowRef?.removeEventListener?.("pagehide", onPageHide);
             }

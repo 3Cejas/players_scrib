@@ -5670,6 +5670,52 @@ let intro_cuenta_atras_activa = false;
 let intro_cuenta_atras_fase = -1;
 
 let sonido;
+const volumenes_audio_antes_canto = new Map();
+const fades_audio_canto = new Map();
+
+function fundirAudioExternoCanto(media, volumenDestino, duracionMs, alTerminar = null) {
+    if (!media || typeof media.volume !== "number") return false;
+    const anterior = fades_audio_canto.get(media);
+    if (anterior) clearTimeout(anterior);
+    const inicio = Date.now();
+    const origen = Math.max(0, Math.min(1, Number(media.volume) || 0));
+    const destino = Math.max(0, Math.min(1, Number(volumenDestino) || 0));
+    const duracion = Math.max(0, Number(duracionMs) || 0);
+    const paso = () => {
+        const progreso = duracion > 0 ? Math.min(1, (Date.now() - inicio) / duracion) : 1;
+        media.volume = origen + ((destino - origen) * progreso);
+        if (progreso >= 1) {
+            fades_audio_canto.delete(media);
+            if (typeof alTerminar === "function") alTerminar();
+            return;
+        }
+        fades_audio_canto.set(media, setTimeout(paso, 45));
+    };
+    paso();
+    return true;
+}
+
+function cruzarAudiosPartidaConCanto(evento = {}) {
+    const activo = Boolean(evento && evento.detail && evento.detail.active);
+    const duracion = Math.max(0, Number(evento && evento.detail && evento.detail.fadeMs) || 1800);
+    [sonido, sonido_modo].forEach((media) => {
+        if (!media) return;
+        if (activo) {
+            if (media.paused || volumenes_audio_antes_canto.has(media)) return;
+            const volumenActual = Number(media.volume);
+            volumenes_audio_antes_canto.set(media, Math.max(0, Math.min(1, Number.isFinite(volumenActual) ? volumenActual : 1)));
+            fundirAudioExternoCanto(media, 0, duracion);
+            return;
+        }
+        if (!volumenes_audio_antes_canto.has(media)) return;
+        const volumen = volumenes_audio_antes_canto.get(media);
+        volumenes_audio_antes_canto.delete(media);
+        if (!media.paused) fundirAudioExternoCanto(media, volumen, duracion);
+        else media.volume = volumen;
+    });
+}
+
+document.addEventListener("scrib:canto-visibility", cruzarAudiosPartidaConCanto);
 
 function limpiarColaPalabrasPendientesEspectador() {
     cola_palabras_pendientes_espectador = [];

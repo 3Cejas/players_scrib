@@ -35,6 +35,6 @@ if (
     const monitorScriptBase = document.currentScript && document.currentScript.src
         ? document.currentScript.src
         : `${window.location.origin}/scrib/game/config.js`;
-    const monitorScriptUrl = new URL("./js/monitor-socket.js?v=20260730c", monitorScriptBase).href;
+    const monitorScriptUrl = new URL("./js/monitor-socket.js?v=20260920a", monitorScriptBase).href;
     document.write(`<script src="${monitorScriptUrl}"><\/script>`);
 }

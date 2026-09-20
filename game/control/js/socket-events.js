@@ -99,11 +99,15 @@ function sincronizarControlAutorizado() {
     if (window && window.ScribShowNarrationControl) {
         window.ScribShowNarrationControl.markConnection(true);
     }
+    if (window && window.ScribCantoControl) {
+        window.ScribCantoControl.markConnection(true);
+    }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(true);
     }
     socket.emit('pedir_video_tutorial_estado');
     socket.emit('pedir_narracion_show_estado');
+    socket.emit('pedir_canto_estado');
     socket.emit('pedir_ayuda_musas_estado');
     iniciarStatusPing();
     socket.emit('pedir_estado_control');
@@ -158,6 +162,9 @@ function sincronizarReplicaControlSoloLectura() {
     if (window && window.ScribShowNarrationControl) {
         window.ScribShowNarrationControl.markConnection(false);
     }
+    if (window && window.ScribCantoControl) {
+        window.ScribCantoControl.markConnection(false);
+    }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(false);
     }
@@ -206,6 +213,9 @@ function procesarRegistroControl(payload = {}) {
     }
     if (window && window.ScribShowNarrationControl) {
         window.ScribShowNarrationControl.markConnection(false);
+    }
+    if (window && window.ScribCantoControl) {
+        window.ScribCantoControl.markConnection(false);
     }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(false);
@@ -266,6 +276,9 @@ socket.on('disconnect', () => {
     }
     if (window && window.ScribShowNarrationControl) {
         window.ScribShowNarrationControl.markConnection(false);
+    }
+    if (window && window.ScribCantoControl) {
+        window.ScribCantoControl.markConnection(false);
     }
     if (window && window.ScribMuseHelpControl) {
         window.ScribMuseHelpControl.marcarConexion(false);
@@ -401,6 +414,11 @@ socket.on('video_tutorial_estado', (payload = {}) => {
 socket.on('narracion_show_estado', (payload = {}) => {
     if (window && window.ScribShowNarrationControl) {
         window.ScribShowNarrationControl.applyState(payload);
+    }
+});
+socket.on('canto_estado', (payload = {}) => {
+    if (window && window.ScribCantoControl) {
+        window.ScribCantoControl.applyState(payload);
     }
 });
 socket.on('ayuda_musas_estado', (payload = {}) => {

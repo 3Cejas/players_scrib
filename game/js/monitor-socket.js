@@ -44,6 +44,7 @@
         "health_ping",
         "pedir_atributos",
         "pedir_calentamiento_estado",
+        "pedir_canto_estado",
         "pedir_creditos_estado",
         "pedir_estado_banderas_musas",
         "pedir_estado_control",

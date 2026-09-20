@@ -10525,6 +10525,55 @@ table.default {
     background: linear-gradient(180deg, #1f4763 0%, #123144 100%);
 }
 
+#panel_controles #boton_canto {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(255, 211, 102, 0.52);
+    color: #ffe5a0;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.3)),
+        rgba(26, 18, 7, 0.92);
+    text-shadow: 0.07em 0.07em 0 #000, 0 0 0.45rem rgba(255, 211, 102, 0.38);
+}
+
+#panel_controles #boton_canto small {
+    position: absolute;
+    right: 0.42rem;
+    bottom: 0.24rem;
+    color: #8ff0ff;
+    font-size: 0.38em;
+    letter-spacing: 0.08em;
+}
+
+#panel_controles #boton_canto[data-active="1"] {
+    border-color: #ffe29a;
+    color: #fff8dc;
+    background:
+        linear-gradient(120deg, rgba(255, 226, 154, 0.28), transparent 44%),
+        linear-gradient(180deg, #75531d, #3d290b);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+        0 0.22em #996a16,
+        0 0 1rem rgba(255, 215, 112, 0.62);
+}
+
+#panel_controles #boton_canto[data-active="1"]::after {
+    content: "";
+    position: absolute;
+    inset: -60% -20%;
+    background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.34) 48%, transparent 60%);
+    animation: cantoControlSweep 1.8s linear infinite;
+}
+
+#panel_controles #boton_canto.is-pending {
+    opacity: 0.72;
+}
+
+@keyframes cantoControlSweep {
+    from { transform: translateX(-55%); }
+    to { transform: translateX(55%); }
+}
+
 /* Resultado deja de tener una decoracion propia: se comporta como cualquier
    otro boton de Juego y solo usa el estado activo compartido. */
 #boton_vista_puntuacion,
