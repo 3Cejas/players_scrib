@@ -8,14 +8,6 @@ socket.on("recargar_rol_remoto", () => {
     window.location.reload();
 });
 
-socket.on("debug_detonadores_visual", (payload = {}) => {
-    window.ScribDebugDetonators?.burst(payload);
-});
-
-socket.on("debug_detonadores_detener", () => {
-    window.ScribDebugDetonators?.clear();
-});
-
 window.ScribCompetitionUI?.conectar(socket, { role: "spectator" });
 
 socket.on('connect', () => {

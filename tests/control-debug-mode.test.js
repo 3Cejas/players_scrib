@@ -65,18 +65,14 @@ test("Debug contextual controls and secret feedback retain usable responsive lay
   assert.match(css, /@media \(max-width: 720px\)[\s\S]*\.debug-context-tools\s*\{[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
 });
 
-test("detonator Debug visuals are shared by Spectator and Musas", () => {
-  const visual = read("game/js/domains/debug-detonators.js");
+test("detonator Debug uses the authoritative Muse flow instead of a decorative overlay", () => {
   const spectatorHtml = read("game/spectator/index.html");
   const spectatorSockets = read("game/spectator/js/socket-events.js");
   const museHtml = read("game/public/players/index.html");
   const museSockets = read("game/public/players/js/socket-events.js");
 
-  assert.match(visual, /scrib-debug-detonator/);
-  assert.match(visual, /--debug-size/);
-  assert.match(visual, /numeroAleatorio\(1\.05, 3\.35\)/);
-  assert.match(spectatorHtml, /debug-detonators\.js\?v=/);
-  assert.match(museHtml, /debug-detonators\.js\?v=/);
-  assert.match(spectatorSockets, /socket\.on\("debug_detonadores_visual"[\s\S]*ScribDebugDetonators\?\.burst/);
-  assert.match(museSockets, /socket\.on\("debug_detonadores_visual"[\s\S]*ScribDebugDetonators\?\.burst/);
+  assert.doesNotMatch(spectatorHtml, /debug-detonators\.js\?v=/);
+  assert.doesNotMatch(museHtml, /debug-detonators\.js\?v=/);
+  assert.doesNotMatch(spectatorSockets, /debug_detonadores_visual|ScribDebugDetonators/);
+  assert.doesNotMatch(museSockets, /debug_detonadores_visual|ScribDebugDetonators/);
 });

@@ -55,6 +55,62 @@ const refrescarCountdownMusa = () => {
     }
 };
 
+const apiTransicionNivelMusa = window && window.ScribLevelTransition;
+const controladorTransicionNivelMusa = apiTransicionNivelMusa
+    ? apiTransicionNivelMusa.createController({
+        root: getEl("level_transition"),
+        liveRegion: getEl("level_transition_status"),
+        translate: tJuego2P,
+        windowRef: window,
+        documentRef: document,
+        durationMs: 12000,
+        reducedDurationMs: 12000
+    })
+    : null;
+const seguimientoTransicionNivelMusa = apiTransicionNivelMusa
+    ? apiTransicionNivelMusa.createModeTracker()
+    : null;
+let transicionNivelPendienteMusa = null;
+
+function observarModoCanonicoTransicionMusa(payload = {}) {
+    if (!seguimientoTransicionNivelMusa) {
+        return { accepted: false, baseline: false, transition: false };
+    }
+    return seguimientoTransicionNivelMusa.observe(payload);
+}
+
+function mostrarTransicionNivelMusa(observacion, payload = {}) {
+    if (!observacion || !observacion.transition || !controladorTransicionNivelMusa) return false;
+    if (secuencia_inicio_musa_activa || !ui_partida_activa_musa) {
+        transicionNivelPendienteMusa = {
+            observacion,
+            payload: payload && typeof payload === "object" ? { ...payload } : {}
+        };
+        return false;
+    }
+    transicionNivelPendienteMusa = null;
+    return controladorTransicionNivelMusa.show(observacion.mode, payload);
+}
+
+function mostrarTransicionNivelPendienteMusa(modoAplicado) {
+    if (!transicionNivelPendienteMusa || !controladorTransicionNivelMusa) return false;
+    const pendiente = transicionNivelPendienteMusa;
+    transicionNivelPendienteMusa = null;
+    if (apiTransicionNivelMusa?.normalizeMode(modoAplicado) !== pendiente.observacion.mode) {
+        return false;
+    }
+    return controladorTransicionNivelMusa.show(pendiente.observacion.mode, pendiente.payload);
+}
+
+function reiniciarSeguimientoTransicionNivelMusa(opciones = {}) {
+    seguimientoTransicionNivelMusa?.reset();
+    transicionNivelPendienteMusa = null;
+    controladorTransicionNivelMusa?.hide();
+    if (opciones.primeEmpty) {
+        seguimientoTransicionNivelMusa?.observe({ modo_actual: "", modo_seq: 0 });
+    }
+}
+
 function obtenerMensajesSolicitudCalentamiento() {
     return {
         ninguna: {

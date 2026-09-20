@@ -199,7 +199,7 @@ test("controller replaces rapid transitions, announces them, and honors reduced 
     );
 });
 
-test("spectator, actor and writer expose one accessible, responsive level transition", () => {
+test("spectator, actor, writer and Muse expose one accessible, responsive level transition", () => {
     const spectatorHtml = read("game/spectator/index.html");
     const spectatorState = read("game/spectator/js/state.js");
     const spectatorSockets = read("game/spectator/js/socket-events.js");
@@ -207,10 +207,13 @@ test("spectator, actor and writer expose one accessible, responsive level transi
     const actorSockets = read("game/actors/source/js/socket-events.js");
     const writerHtml = read("game/players/index.html");
     const writerSockets = read("game/players/js/socket-events.js");
+    const museHtml = read("game/public/players/index.html");
+    const museState = read("game/public/players/js/state.js");
+    const museSockets = read("game/public/players/js/socket-events.js");
     const css = read("game/css/level-transition.css");
     const i18n = read("game/js/i18n.js");
 
-    [spectatorHtml, actorHtml, writerHtml].forEach((html) => {
+    [spectatorHtml, actorHtml, writerHtml, museHtml].forEach((html) => {
         assert.equal((html.match(/id="level_transition"/g) || []).length, 1);
         assert.equal((html.match(/id="level_transition_status"/g) || []).length, 1);
         assert.match(html, /role="status" aria-live="assertive" aria-atomic="true"/);
@@ -229,7 +232,7 @@ test("spectator, actor and writer expose one accessible, responsive level transi
     assert.match(spectatorState, /vista_espectador_modo_resuelta !== "partida"\) return false/);
     assert.match(spectatorState, /firmaUltimaTransicionNivelEspectador/);
     assert.match(spectatorSockets, /mostrarTransicionNivelForzadaEspectador\(modo_actual, data \|\| \{\}\)/);
-    assert.match(spectatorState, /durationMs: 7000,[\s\S]*reducedDurationMs: 7000/);
+    assert.match(spectatorState, /durationMs: 12000,[\s\S]*reducedDurationMs: 12000/);
     assert.match(spectatorState, /if \(modo !== "partida"\)[\s\S]*ocultarTransicionNivelEspectador\(\)/);
     assert.match(
         spectatorSockets,
@@ -252,6 +255,11 @@ test("spectator, actor and writer expose one accessible, responsive level transi
     assert.match(writerSockets, /createModeTracker\(\)/);
     assert.match(writerSockets, /socket\.on\("activar_modo"[\s\S]*observarTransicionNivelEscritora\(data \|\| \{\}\)/);
     assert.match(writerSockets, /mostrarTransicionNivelEscritora\(observacionTransicionNivel, data \|\| \{\}\)/);
+    assert.match(museHtml, /level-transition level-transition--compact level-transition--muse/);
+    assert.match(museState, /durationMs: 12000,[\s\S]*reducedDurationMs: 12000/);
+    assert.match(museState, /function mostrarTransicionNivelPendienteMusa/);
+    assert.match(museSockets, /socket\.on\('modo_actual'[\s\S]*observarModoCanonicoTransicionMusa\(data \|\| \{\}\)/);
+    assert.match(museSockets, /function aplicarPostInicioMusa[\s\S]*mostrarTransicionNivelPendienteMusa\(modoAlAplicarPostInicio\)/);
 
     assert.match(css, /position: fixed;[\s\S]*pointer-events: none/);
     assert.match(css, /@keyframes scribLevelPanel/);
@@ -305,7 +313,9 @@ test("actor and muse timelines carry authoritative progress with coherent role t
     assert.match(museCss, /\.musa-bandera-fab-wrap #btn_bandera::before,[\s\S]*\.musa-bandera-fab-wrap #btn_bandera::after[\s\S]*content:\s*none !important/);
     assert.match(museCss, /body\.equipo-azul\s*\{[\s\S]*--equipo-texto-suave:\s*#c3faff/);
     assert.match(museCss, /body\.equipo-rojo\s*\{[\s\S]*--equipo-texto-suave:\s*#ffc8cd/);
-    assert.match(museHtml, /publico\.css\?v=20260920c/);
+    assert.match(museHtml, /publico\.css\?v=20260920d/);
+    assert.match(museCss, /textarea:not\(:disabled\):not\(\[readonly\]\)[\s\S]*color: var\(--equipo-texto-suave, #c3faff\)/);
+    assert.match(museCss, /\.pre-show-musa__confirmation-rings,[\s\S]*display: none/);
 
     assert.doesNotMatch(writerHtml, /escritxr-texto-panel__label[^>]*>[\s\S]{0,80}1F58B/);
     assert.match(writerCss, /\.escritxr-texto-panel\s*\{[\s\S]*width:\s*min\(1440px, 94vw\)/);

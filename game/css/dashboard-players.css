@@ -746,6 +746,7 @@ body.page-spectator:not(.vista-partida) #resucitar_mini_2 {
     --spectator-veil-left: 0px;
     --spectator-veil-right: 0px;
     --spectator-veil-width: 52vw;
+    --spectator-fit-inverse: 1;
     z-index: 1;
     transform-origin: top left;
     will-change: transform;
@@ -5009,7 +5010,7 @@ body.page-players.partida-activa .escritxr-texto-panel .textarea::-webkit-scroll
   align-items: flex-start;
   gap: clamp(20px, 2.5vw, 54px);
   box-sizing: border-box;
-  width: min(96vw, 2500px);
+  width: min(calc(96vw * var(--spectator-fit-inverse, 1)), 3400px);
   margin-inline: auto;
   padding-inline: clamp(12px, 1.5vw, 30px);
 }

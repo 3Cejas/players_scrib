@@ -58,8 +58,8 @@ const controladorTransicionNivelEspectador = apiTransicionNivelEspectador
         translate: tJuego2P,
         windowRef: window,
         documentRef: document,
-        durationMs: 7000,
-        reducedDurationMs: 7000
+        durationMs: 12000,
+        reducedDurationMs: 12000
     })
     : null;
 const seguimientoTransicionNivelEspectador = apiTransicionNivelEspectador
@@ -1828,6 +1828,7 @@ const resetAjusteViewportEspectador = () => {
     spectator_fit_root.style.removeProperty("--spectator-veil-left");
     spectator_fit_root.style.removeProperty("--spectator-veil-right");
     spectator_fit_root.style.removeProperty("--spectator-veil-width");
+    spectator_fit_root.style.removeProperty("--spectator-fit-inverse");
 };
 
 const prepararMedicionViewportEspectador = () => {
@@ -1863,6 +1864,7 @@ const ajustarViewportEspectador = () => {
     const anchoCajaRoot = Math.max(Math.ceil(spectator_fit_root.offsetWidth || 0), 1);
     const offsetRight = Math.max(0, viewportW - (offsetX + (anchoCajaRoot * escala)));
     const escalaSegura = Math.max(escala, 0.0001);
+    spectator_fit_root.style.setProperty("--spectator-fit-inverse", Math.min(1.6, 1 / escalaSegura).toFixed(4));
     spectator_fit_root.style.setProperty("--spectator-veil-left", `${(-offsetX / escalaSegura).toFixed(2)}px`);
     spectator_fit_root.style.setProperty("--spectator-veil-right", `${(-offsetRight / escalaSegura).toFixed(2)}px`);
     spectator_fit_root.style.setProperty("--spectator-veil-width", `${((viewportW * 0.52) / escalaSegura).toFixed(2)}px`);

@@ -231,6 +231,7 @@ socket.on('modo_actual', (data) => {
     if (!aceptarEventoModoMusa(data)) {
         return;
     }
+    const observacionTransicionNivel = observarModoCanonicoTransicionMusa(data || {});
     const siguiente_modo = data.modo_actual;
     const cambioRealModo = siguiente_modo !== modo_actual;
     console.log("MODO_ACTUAL", siguiente_modo)
@@ -288,6 +289,7 @@ socket.on('modo_actual', (data) => {
 
     sincro = 0;
     }
+    mostrarTransicionNivelMusa(observacionTransicionNivel, data || {});
 });
 
 socket.on('dar_nombre', (nombre) => {
@@ -484,6 +486,7 @@ socket.on('connect', () => {
     modo_seq_actual_musa = 0;
     ultimo_count_seq_musa = 0;
     tiempo_seq_actual_musa = 0;
+    reiniciarSeguimientoTransicionNivelMusa();
     if (!nombre_musa) return;
     registrarMusaEnServidor();
     socket.emit('pedir_idioma_actual');
@@ -513,6 +516,7 @@ socket.on('disconnect', () => {
     programarAvisoConexionMusa(1600);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
+    controladorTransicionNivelMusa?.hide();
     if (timeout_pedir_texto_connect_musa) {
         clearTimeout(timeout_pedir_texto_connect_musa);
         timeout_pedir_texto_connect_musa = null;
@@ -541,14 +545,6 @@ socket.on('connect_error', () => {
     invalidarContextoCalentamientoMusa();
     suspenderPreShowMusaPorConexion();
     detenerProgresoNivelMusa(false);
-});
-
-socket.on("debug_detonadores_visual", (payload = {}) => {
-    window.ScribDebugDetonators?.burst(payload);
-});
-
-socket.on("debug_detonadores_detener", () => {
-    window.ScribDebugDetonators?.clear();
 });
 
 socket.on('regalo_pdf_musas', (payload) => {
@@ -1450,6 +1446,7 @@ function aplicarPostInicioMusa() {
         actualizarNiveles(modoAlAplicarPostInicio);
     }
     programarSincronizacionVisorNiveles();
+    mostrarTransicionNivelPendienteMusa(modoAlAplicarPostInicio);
 }
 
 socket.on("post-inicio", () => {
@@ -1468,6 +1465,7 @@ socket.on("post-inicio", () => {
 
 // Resetea el tablero de juego.
 socket.on('limpiar', () => {
+    reiniciarSeguimientoTransicionNivelMusa({ primeEmpty: true });
     detenerProgresoNivelMusa(true);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
