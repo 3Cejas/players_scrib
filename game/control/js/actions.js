@@ -3942,11 +3942,24 @@ function marcarCambioTeleprompterLocalControl() {
     return teleprompter_state.revision;
 }
 
-function actualizarEstadoCargaTeleprompter(mensaje, tipo = "idle") {
+function actualizarEstadoCargaTeleprompter(mensaje, tipo = "idle", source = 0) {
     const estado = document.getElementById("teleprompter_estado_carga");
     if (!estado) return;
-    estado.textContent = mensaje || tJuego2PControl("control.teleprompter.status.empty", {}, "Sin carga en teleprompter");
+    const texto = document.getElementById("teleprompter_estado_carga_texto");
+    const fuente = source === 2 ? 2 : source === 1 ? 1 : 0;
+    const contenido = mensaje || tJuego2PControl(
+        "control.teleprompter.status.empty",
+        {},
+        "APAGADO · Sin texto cargado en espectador"
+    );
+    if (texto) {
+        texto.textContent = contenido;
+    } else {
+        estado.textContent = contenido;
+    }
     estado.className = `teleprompter-status teleprompter-status--${tipo}`;
+    estado.dataset.source = String(fuente);
+    estado.setAttribute("aria-label", contenido);
 }
 
 function reiniciarEstadoCargaTeleprompterControl() {
@@ -3974,8 +3987,9 @@ function iniciarEsperaAckTeleprompter(loadId, source) {
         if (!teleprompter_espera_ack || teleprompter_espera_ack.loadId !== loadId) return;
         if (teleprompter_espera_ack.revision !== revision) return;
         if (obtenerRevisionTeleprompterControlActual() !== revision) return;
-        const etiqueta = teleprompter_espera_ack.source === 2 ? "J2" : "J1";
-        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} enviado, sin confirmaciÃ³n del espectador`, "error");
+        const sourcePendiente = teleprompter_espera_ack.source;
+        const etiqueta = sourcePendiente === 2 ? "ROJO" : "AZUL";
+        actualizarEstadoCargaTeleprompter(`APAGADO · Texto ${etiqueta} enviado sin confirmación del espectador`, "error", sourcePendiente);
     }, TELEPROMPTER_ACK_TIMEOUT_MS);
 }
 
@@ -3985,25 +3999,25 @@ function procesarTeleprompterAckControl(payload = {}) {
     if (!teleprompter_espera_ack || teleprompter_espera_ack.loadId !== loadId) return;
 
     const source = Number(payload.source) === 2 ? 2 : 1;
-    const etiqueta = source === 2 ? "J2" : "J1";
+    const etiqueta = source === 2 ? "ROJO" : "AZUL";
     const textoRenderizado = Boolean(payload.rendered);
     const timerActivo = Boolean(payload.timerActive);
     const visible = Boolean(payload.visible);
 
     limpiarEsperaAckTeleprompter();
     if (!textoRenderizado) {
-        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} no renderizado en espectador`, "error");
+        actualizarEstadoCargaTeleprompter(`APAGADO · Texto ${etiqueta} no renderizado en espectador`, "error", source);
         return;
     }
     if (timerActivo && !visible) {
-        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado (oculto por temporizador de 10 minutos)`, "warn");
+        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado · oculto por temporizador`, "ok", source);
         return;
     }
     if (visible) {
-        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado y visible en espectador`, "ok");
+        actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado y visible en espectador`, "ok", source);
         return;
     }
-    actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado en espectador`, "ok");
+    actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado en espectador`, "ok", source);
 }
 
 function sincronizarTeleprompterEstadoControl(state = {}) {
@@ -4015,6 +4029,16 @@ function sincronizarTeleprompterEstadoControl(state = {}) {
     window.ScribTeleprompter.aplicarEstado(teleprompter_state, state, TELEPROMPTER_LIMITS_CONTROL);
     if (revision !== null) {
         teleprompter_revision_seq = Math.max(teleprompter_revision_seq, revision);
+    }
+    if (!teleprompter_espera_ack) {
+        const source = Number(teleprompter_state.source) === 2 ? 2 : Number(teleprompter_state.source) === 1 ? 1 : 0;
+        const hayTextoCargado = Boolean(String(teleprompter_state.text || "").trim());
+        if (hayTextoCargado && source) {
+            const etiqueta = source === 2 ? "ROJO" : "AZUL";
+            actualizarEstadoCargaTeleprompter(`Texto ${etiqueta} cargado en espectador`, "ok", source);
+        } else {
+            reiniciarEstadoCargaTeleprompterControl();
+        }
     }
     actualizarTeleprompterUI();
 }
@@ -4448,15 +4472,15 @@ if (typeof window !== "undefined") {
 function teleprompterCargarTexto(jugador) {
     const texto = obtenerTextoJugadorParaRepresentacion(jugador === 2 ? 2 : 1);
     if (!texto || !texto.trim()) {
-        const etiqueta = jugador === 2 ? "J2" : "J1";
-        actualizarEstadoCargaTeleprompter(`No hay texto para cargar en ${etiqueta}`, "warn");
+        const etiqueta = jugador === 2 ? "ROJO" : "AZUL";
+        actualizarEstadoCargaTeleprompter(`APAGADO · No hay texto ${etiqueta} para cargar`, "warn");
         if (typeof actualizarBotonesTeleprompterCarga === "function") {
             actualizarBotonesTeleprompterCarga();
         }
         return;
     }
     const source = jugador === 2 ? 2 : 1;
-    const etiqueta = source === 2 ? "J2" : "J1";
+    const etiqueta = source === 2 ? "ROJO" : "AZUL";
     const loadId = ++teleprompter_load_seq;
     teleprompter_state.text = (texto || "").trim();
     teleprompter_state.scroll = 0;
@@ -4469,7 +4493,7 @@ function teleprompterCargarTexto(jugador) {
     if (!teleprompter_visible) {
         aplicarVistaPanelControl("teleprompter");
     }
-    actualizarEstadoCargaTeleprompter(`Cargando texto ${etiqueta} en espectador...`, "info");
+    actualizarEstadoCargaTeleprompter(`Cargando texto ${etiqueta} en espectador...`, "info", source);
     iniciarEsperaAckTeleprompter(loadId, source);
     actualizarTeleprompterUI();
     emitirTeleprompter(true);
@@ -4753,8 +4777,8 @@ function refrescarTextosEstaticosControl() {
         ["boton_solicitud_lugares", "control.button.request_places", "\u{1F4CD} PEDIR LUGARES"],
         ["boton_solicitud_acciones", "control.button.request_actions", "\u{1F3C3} PEDIR ACCIONES"],
         ["boton_solicitud_frase_final", "control.button.request_final_phrase", "\u{1F4AC} PEDIR FRASE FINAL"],
-        ["teleprompter_cargar_j1", "control.button.load", "\u{1F4BE} CARGAR"],
-        ["teleprompter_cargar_j2", "control.button.load", "\u{1F4BE} CARGAR"]
+        ["teleprompter_cargar_j1", "control.button.load_blue", "\u{1F535} CARGAR AZUL"],
+        ["teleprompter_cargar_j2", "control.button.load_red", "\u{1F534} CARGAR ROJO"]
     ];
 
     textos.forEach(([id, clave, fallback]) => {

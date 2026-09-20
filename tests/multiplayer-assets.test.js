@@ -39,9 +39,9 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260917b";
 const JURY_CSS_VERSION = "20260920c";
 const JURY_STATE_VERSION = "20260920b";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260920e";
-const CONTROL_ACTIONS_VERSION = "20260920e";
-const CONTROL_I18N_VERSION = "20260917b";
+const CONTROL_CSS_VERSION = "20260920f";
+const CONTROL_ACTIONS_VERSION = "20260920f";
+const CONTROL_I18N_VERSION = "20260920a";
 const CONTROL_STATE_VERSION = "20260917c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260920a";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260914f";
@@ -926,6 +926,32 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(state, /setBotonReinicioRemoto\("escritxr1", j1\)/);
   assert.match(state, /setEstadoRolRemoto\(estadoActor1Dot, estadoActor1Texto, Boolean\(actors\[1\] && actors\[1\]\.connected\), "actorxs1"\)/);
   assert.match(state, /estado\.palabras_musas_control[\s\S]*window\.sincronizarEstadoPalabrasMusasControl/);
+});
+
+test("control teleprompter identifies each team and confirms spectator loading with a witness", () => {
+  const html = read("game/control/index.html");
+  const css = read("game/control/index.css");
+  const actions = read("game/control/js/actions.js");
+  const i18n = read("game/js/i18n.js");
+
+  assert.match(html, /id="teleprompter_cargar_j1"[^>]*teleprompter-cargar--j1[^>]*aria-label="Cargar texto del equipo azul"[^>]*>🔵 CARGAR AZUL<\/button>/);
+  assert.match(html, /id="teleprompter_cargar_j2"[^>]*teleprompter-cargar--j2[^>]*aria-label="Cargar texto del equipo rojo"[^>]*>🔴 CARGAR ROJO<\/button>/);
+  assert.match(html, /id="teleprompter_estado_carga"[^>]*teleprompter-status--idle[^>]*data-source="0"[^>]*role="status"[^>]*aria-live="polite"[\s\S]*teleprompter-status__lamp[\s\S]*id="teleprompter_estado_carga_texto"/);
+
+  assert.match(css, /\.teleprompter-cargar--j1\s*\{[\s\S]*background: linear-gradient\([\s\S]*rgba\(18, 196, 223/);
+  assert.match(css, /\.teleprompter-cargar--j2\s*\{[\s\S]*background: linear-gradient\([\s\S]*rgba\(235, 57, 72/);
+  assert.match(css, /\.teleprompter-cargar--j1:disabled,[\s\S]*background: linear-gradient\([\s\S]*rgba\(15, 139, 166/);
+  assert.match(css, /\.teleprompter-cargar--j2:disabled,[\s\S]*background: linear-gradient\([\s\S]*rgba\(177, 42, 55/);
+  assert.match(css, /\.teleprompter-status--info \.teleprompter-status__lamp\s*\{[\s\S]*background: #ff9f1f;[\s\S]*teleprompterLoadingPulse/);
+  assert.match(css, /\.teleprompter-status--ok\[data-source="1"\] \.teleprompter-status__lamp\s*\{[\s\S]*background: #24dff7;/);
+  assert.match(css, /\.teleprompter-status--ok\[data-source="2"\] \.teleprompter-status__lamp\s*\{[\s\S]*background: #ff4050;/);
+
+  assert.match(actions, /function actualizarEstadoCargaTeleprompter\(mensaje, tipo = "idle", source = 0\)/);
+  assert.match(actions, /Cargando texto \$\{etiqueta\} en espectador[\s\S]*"info", source/);
+  assert.match(actions, /if \(!textoRenderizado\)[\s\S]*"error", source[\s\S]*if \(visible\)[\s\S]*"ok", source/);
+  assert.match(actions, /if \(!teleprompter_espera_ack\)[\s\S]*hayTextoCargado[\s\S]*"ok", source/);
+  assert.match(i18n, /"control\.button\.load_blue": "\\ud83d\\udd35 CARGAR AZUL"/);
+  assert.match(i18n, /"control\.button\.load_red": "\\ud83d\\udd34 CARGAR ROJO"/);
 });
 
 test("writer reconnect post-inicio enters match view without skill menu", () => {

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260920e">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260920f">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260920e"></script>
+<script src="./js/actions.js?v=20260920f"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -353,10 +353,13 @@
                         </div>
                         <div class="tp-row tp-row--text">
                             <div class="teleprompter-buttons">
-                                <button id="teleprompter_cargar_j1" type="button" class="btn teleprompter-cargar teleprompter-cargar--j1" onclick="teleprompterCargarTexto(1)">💾 CARGAR</button>
-                                <button id="teleprompter_cargar_j2" type="button" class="btn teleprompter-cargar teleprompter-cargar--j2" onclick="teleprompterCargarTexto(2)">💾 CARGAR</button>
+                                <button id="teleprompter_cargar_j1" type="button" class="btn teleprompter-cargar teleprompter-cargar--j1" onclick="teleprompterCargarTexto(1)" aria-label="Cargar texto del equipo azul">🔵 CARGAR AZUL</button>
+                                <button id="teleprompter_cargar_j2" type="button" class="btn teleprompter-cargar teleprompter-cargar--j2" onclick="teleprompterCargarTexto(2)" aria-label="Cargar texto del equipo rojo">🔴 CARGAR ROJO</button>
                             </div>
-                            <div id="teleprompter_estado_carga" class="teleprompter-status teleprompter-status--idle">Sin carga en teleprompter</div>
+                            <div id="teleprompter_estado_carga" class="teleprompter-status teleprompter-status--idle" data-source="0" role="status" aria-live="polite">
+                                <span class="teleprompter-status__lamp" aria-hidden="true"></span>
+                                <span id="teleprompter_estado_carga_texto" class="teleprompter-status__text">APAGADO · Sin texto cargado en espectador</span>
+                            </div>
                         </div>
                         <div class="tp-pad">
                             <div class="tp-top">
@@ -845,7 +848,7 @@
             </tr>
         </table>
 <script src="../dist/socket.io/socket.io.js"></script>
-    <script src="../js/i18n.js?v=20260917b"></script>
+    <script src="../js/i18n.js?v=20260920a"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260917c"></script>
 <script src="./js/videotutorial-control.js?v=20260920a"></script>
