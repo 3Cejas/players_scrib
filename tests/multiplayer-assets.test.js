@@ -48,10 +48,10 @@ const PUBLIC_PLAYER_ACTIONS_VERSION = "20260920b";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260920e";
-const PUBLIC_PLAYER_CSS_VERSION = "20260920e";
+const PUBLIC_PLAYER_STATE_VERSION = "20260921a";
+const PUBLIC_PLAYER_CSS_VERSION = "20260921a";
 const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260920e";
-const PUBLIC_PLAYER_I18N_VERSION = "20260920c";
+const PUBLIC_PLAYER_I18N_VERSION = "20260921a";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260920b";
@@ -1241,22 +1241,28 @@ test("control PDF generator uses selected language translations", () => {
   assert.doesNotMatch(js, /\["Enviadas",/);
 });
 
-test("muse gift opens a persistent wrapped scene with ranking, confetti and both final texts", () => {
+test("muse gift opens a persistent wrapped scene with ranking and a selectable team dashboard", () => {
   const html = read("game/public/players/index.html");
   const css = read("game/public/players/css/publico.css");
   const state = read("game/public/players/js/state.js");
   const socketEvents = read("game/public/players/js/socket-events.js");
   const i18n = read("game/js/i18n.js");
 
-  assert.match(html, /id="musa_postgame"[\s\S]*id="musa_postgame_efectividad_ring"[\s\S]*id="musa_postgame_bar_bonus"[\s\S]*id="musa_postgame_ranking_lista"[\s\S]*id="musa_postgame_card_j1"[\s\S]*id="musa_postgame_writer_headline"[\s\S]*id="musa_postgame_texto"[\s\S]*id="musa_postgame_pdf_j1"[\s\S]*class="musa-postgame__pdf-icon"[\s\S]*id="musa_postgame_pdf_j2"/);
+  assert.match(html, /id="musa_postgame"[\s\S]*id="musa_postgame_efectividad_ring"[\s\S]*id="musa_postgame_bar_bonus"[\s\S]*id="musa_postgame_ranking_lista"[\s\S]*id="musa_postgame_tab_propio"[\s\S]*id="musa_postgame_tab_rival"[\s\S]*id="musa_postgame_game_score"[\s\S]*id="musa_postgame_jury_score"[\s\S]*id="musa_postgame_team_muses"[\s\S]*id="musa_postgame_texto"[\s\S]*id="musa_postgame_pdf_j1"[\s\S]*class="musa-postgame__pdf-icon"[\s\S]*id="musa_postgame_pdf_j2"/);
+  assert.doesNotMatch(html, /regalo-kicker|TU HISTORIA TIENE ALGO PARA TI|DESCUBRIR TU PARTIDA/);
+  assert.match(html, /TOCA EL REGALO PARA DESCUBRIRLO/);
   assert.doesNotMatch(html, /id="musa_postgame_cerrar"|role="dialog"[^>]*musa-postgame/);
-  assert.match(css, /\.musa-postgame\.musa-postgame--visible[\s\S]*min-height: 100dvh[\s\S]*\.musa-postgame__infographic[\s\S]*\.musa-postgame__ranking[\s\S]*\.musa-postgame__writer-cards[\s\S]*\.musa-postgame__text\.is-empty/);
+  assert.match(css, /\.musa-postgame\.musa-postgame--visible[\s\S]*min-height: 100dvh[\s\S]*\.musa-postgame__infographic[\s\S]*\.musa-postgame__ranking[\s\S]*\.musa-postgame__team-panel[\s\S]*\.musa-postgame__results[\s\S]*\.musa-postgame__muse-team[\s\S]*\.musa-postgame__text\.is-empty/);
+  assert.doesNotMatch(css, /@keyframes regaloRayos/);
   assert.match(css, /body\.musa-postgame-activo \.temporizador-musa:not\(\.is-finished\)[\s\S]*temporizadorPostgameEntrada/);
   assert.match(css, /\.musa-postgame\.is-celebrating \.musa-postgame__ambient i[\s\S]*musaPostgameConfetti/);
   assert.match(state, /regalo_postgame_data = payload\.postgame/);
   assert.match(state, /function mostrarPostgameMusa\(\)/);
   assert.match(state, /await descargarArchivoRegalo\(regalo_pdf_data, regalo_pdf_filename\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /function pintarTextoPostgameMusa\(playerId\)[\s\S]*escritxr\.texto/);
+  assert.match(state, /function resumenEquipoMusasPostgameMusa\(playerId\)/);
+  assert.match(state, /function pintarResultadosEquipoPostgameMusa\(playerId\)/);
+  assert.match(state, /musa_postgame_pdf_j1\.hidden = id !== 1/);
   assert.match(state, /function pintarRankingPostgameMusa\(\)[\s\S]*aria-current/);
   assert.match(state, /sessionStorage\.setItem\(REGALO_MUSA_ABIERTO_STORAGE_KEY/);
   assert.match(state, /regaloPdfMusaYaAbierto\(payload\)[\s\S]*mostrarPostgameMusa\(\)/);

@@ -8,7 +8,7 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260920e">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260921a">
     <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260917b">
     <link rel="stylesheet" type="text/css" href="../../css/video-tutorial.css?v=20260920a">
     <link rel="stylesheet" type="text/css" href="../../css/show-narration.css?v=20260831g">
@@ -39,7 +39,7 @@
             <i></i><i></i><i></i>
         </div>
     </div>
-    <div id="level_transition" class="level-transition level-transition--compact level-transition--muse" aria-hidden="true">
+    <div id="level_transition" class="level-transition level-transition--muse" aria-hidden="true">
         <div class="level-transition__backdrop" aria-hidden="true"></div>
         <div class="level-transition__rays" aria-hidden="true"></div>
         <div class="level-transition__burst" aria-hidden="true"></div>
@@ -343,14 +343,13 @@
                     <div id="regalo_pdf" class="regalo-pdf" aria-hidden="true">
                         <div class="regalo-overlay" aria-hidden="true"></div>
                         <div class="regalo-card" role="dialog" aria-live="polite">
-                            <span class="regalo-kicker">TU HISTORIA TIENE ALGO PARA TI</span>
                             <button id="regalo_btn" class="regalo-boton" type="button" aria-label="Descargar regalo">
                                 <span class="regalo-boton__orbita" aria-hidden="true"></span>
                                 <span class="regalo-boton__caja" aria-hidden="true"><i></i></span>
                                 <span class="scrib-visually-hidden">Descargar regalo</span>
                             </button>
                             <div class="regalo-texto"><span id="regalo_nombre" class="regalo-nombre">ESCRITXR</span> quiere regalarte algo.</div>
-                            <div class="regalo-subtexto">TOCA EL REGALO PARA DESCUBRIR TU PARTIDA</div>
+                            <div class="regalo-subtexto">TOCA EL REGALO PARA DESCUBRIRLO</div>
                         </div>
                     </div>
                     <section id="musa_postgame" class="musa-postgame" aria-hidden="true" aria-labelledby="musa_postgame_title">
@@ -371,7 +370,6 @@
                             <div class="musa-postgame__stats" aria-label="Estadísticas personales">
                                 <div class="musa-postgame__stat"><strong id="musa_postgame_enviadas">0</strong><span data-i18n="muse.postgame.sent">INSPIRACIONES</span></div>
                                 <div class="musa-postgame__stat"><strong id="musa_postgame_introducidas">0</strong><span data-i18n="muse.postgame.used">EN EL TEXTO</span></div>
-                                <div class="musa-postgame__stat"><strong id="musa_postgame_efectividad">0%</strong><span data-i18n="muse.postgame.effectiveness">EFECTIVIDAD</span></div>
                                 <div class="musa-postgame__stat"><strong id="musa_postgame_impacto">0</strong><span data-i18n="muse.postgame.impact">IMPACTO</span></div>
                             </div>
                             <section class="musa-postgame__infographic" aria-labelledby="musa_postgame_huella_titulo">
@@ -398,7 +396,7 @@
                                         <h3 id="musa_postgame_ranking_titulo" data-i18n="muse.postgame.ranking_title">RANKING DE MUSAS</h3>
                                     </div>
                                 </div>
-                                <p class="musa-postgame__ranking-copy" data-i18n="muse.postgame.ranking_copy">Ordenado por ideas que llegaron a las historias.</p>
+                                <p class="musa-postgame__ranking-copy" data-i18n="muse.postgame.ranking_copy">Ordenado por inspiraciones que llegaron a las historias.</p>
                                 <p id="musa_postgame_ranking_posicion" class="musa-postgame__ranking-position-summary">TU POSICI&Oacute;N: #1</p>
                                 <ol id="musa_postgame_ranking_lista" class="musa-postgame__ranking-list"></ol>
                             </section>
@@ -407,58 +405,57 @@
                                     <span aria-hidden="true">&#x270D;&#xFE0F;</span>
                                     <div><small data-i18n="muse.postgame.writers_eyebrow">LAS DOS HISTORIAS</small><h3 id="musa_postgame_writers_title" data-i18n="muse.postgame.writers_title">ASÍ ESCRIBIERON</h3></div>
                                 </div>
-                                <div class="musa-postgame__writer-cards">
-                                    <button id="musa_postgame_card_j1" class="musa-postgame__writer-card musa-postgame__writer-card--blue" type="button" data-player="1">
-                                        <span id="musa_postgame_card_nombre_j1">ESCRITXR 1</span>
-                                        <strong><b id="musa_postgame_card_palabras_j1">0</b> <small data-i18n="muse.postgame.words">palabras</small></strong>
-                                        <i><b id="musa_postgame_card_bar_j1"></b></i>
-                                        <em><span id="musa_postgame_card_ritmo_j1">0</span> ppm · <span id="musa_postgame_card_inspiracion_j1">0</span> insp.</em>
-                                    </button>
-                                    <button id="musa_postgame_card_j2" class="musa-postgame__writer-card musa-postgame__writer-card--red" type="button" data-player="2">
-                                        <span id="musa_postgame_card_nombre_j2">ESCRITXR 2</span>
-                                        <strong><b id="musa_postgame_card_palabras_j2">0</b> <small data-i18n="muse.postgame.words">palabras</small></strong>
-                                        <i><b id="musa_postgame_card_bar_j2"></b></i>
-                                        <em><span id="musa_postgame_card_ritmo_j2">0</span> ppm · <span id="musa_postgame_card_inspiracion_j2">0</span> insp.</em>
-                                    </button>
-                                </div>
-                                <div id="musa_postgame_writer_story" class="musa-postgame__writer-story">
-                                    <small data-i18n="muse.postgame.writer_snapshot">SU HISTORIA EN UN VISTAZO</small>
-                                    <strong id="musa_postgame_writer_headline">0 PALABRAS</strong>
-                                    <div class="musa-postgame__writer-pulse">
-                                        <span><b id="musa_postgame_writer_pace">0</b><i data-i18n="muse.postgame.pace">ppm</i></span>
-                                        <span><b id="musa_postgame_writer_lexicon">0</b><i data-i18n="muse.postgame.unique_words">&uacute;nicas</i></span>
-                                        <span><b id="musa_postgame_writer_ideas">0</b><i data-i18n="muse.postgame.inspiration">inspiraci&oacute;n</i></span>
-                                    </div>
-                                </div>
-                            </section>
-                            <div class="musa-postgame__reader">
-                                <div class="musa-postgame__tabs" role="tablist" aria-label="Textos de la partida">
+                                <div class="musa-postgame__tabs" role="tablist" aria-label="Seleccionar equipo">
                                     <button id="musa_postgame_tab_propio" class="musa-postgame__tab is-active" type="button" role="tab" aria-selected="true"></button>
                                     <button id="musa_postgame_tab_rival" class="musa-postgame__tab" type="button" role="tab" aria-selected="false"></button>
                                 </div>
-                                <div class="musa-postgame__writer-head">
-                                    <h3 id="musa_postgame_escritxr_nombre">ESCRITXR</h3>
-                                    <div class="musa-postgame__writer-stats">
-                                        <span><strong id="musa_postgame_palabras">0</strong> <i data-i18n="muse.postgame.words">palabras</i></span>
-                                        <span><strong id="musa_postgame_unicas">0</strong> <i data-i18n="muse.postgame.unique_words">únicas</i></span>
-                                        <span><strong id="musa_postgame_pulsaciones">0</strong> <i data-i18n="muse.postgame.keystrokes">pulsaciones</i></span>
-                                        <span><strong id="musa_postgame_ritmo">0</strong> <i data-i18n="muse.postgame.pace">ppm</i></span>
-                                        <span><strong id="musa_postgame_inspiracion">0</strong> <i data-i18n="muse.postgame.inspiration">inspiración</i></span>
-                                        <span><strong id="musa_postgame_retos">0</strong> <i data-i18n="muse.postgame.challenges">retos</i></span>
+                                <div id="musa_postgame_team_panel" class="musa-postgame__team-panel">
+                                    <header class="musa-postgame__team-header">
+                                        <small data-i18n="muse.postgame.selected_team">EQUIPO SELECCIONADO</small>
+                                        <h3 id="musa_postgame_escritxr_nombre">ESCRITXR</h3>
+                                    </header>
+                                    <div class="musa-postgame__team-metrics" aria-label="Datos del equipo seleccionado">
+                                        <span><small data-i18n="muse.postgame.words">PALABRAS</small><strong id="musa_postgame_palabras">0</strong></span>
+                                        <span><small data-i18n="muse.postgame.unique_words">ÚNICAS</small><strong id="musa_postgame_unicas">0</strong></span>
+                                        <span><small data-i18n="muse.postgame.pace">PPM</small><strong id="musa_postgame_ritmo">0</strong></span>
+                                        <span><small data-i18n="muse.postgame.inspiration">INSPIRACIÓN</small><strong id="musa_postgame_inspiracion">0</strong></span>
+                                    </div>
+                                    <div class="musa-postgame__results" aria-label="Resultados del equipo seleccionado">
+                                        <article class="musa-postgame__result musa-postgame__result--game">
+                                            <span aria-hidden="true">&#x1F3AE;</span>
+                                            <div><small data-i18n="muse.postgame.game_result">RESULTADO DEL VIDEOJUEGO</small><strong id="musa_postgame_game_score">—</strong><em id="musa_postgame_game_status">PENDIENTE</em></div>
+                                        </article>
+                                        <article class="musa-postgame__result musa-postgame__result--jury">
+                                            <span aria-hidden="true">&#x2696;&#xFE0F;</span>
+                                            <div><small data-i18n="muse.postgame.jury_verdict">VEREDICTO DEL JURADO</small><strong id="musa_postgame_jury_score">—</strong><em id="musa_postgame_jury_status">PENDIENTE</em></div>
+                                        </article>
+                                    </div>
+                                    <section class="musa-postgame__muse-team" aria-labelledby="musa_postgame_muse_team_title">
+                                        <div class="musa-postgame__muse-team-heading"><span aria-hidden="true">&#x1F3A8;</span><div><small data-i18n="muse.postgame.team_muses_eyebrow">SUS MUSAS</small><h4 id="musa_postgame_muse_team_title" data-i18n="muse.postgame.team_muses_title">INSPIRACIÓN EN EQUIPO</h4></div></div>
+                                        <div class="musa-postgame__muse-team-metrics">
+                                            <span><strong id="musa_postgame_team_muses">0</strong><small data-i18n="muse.postgame.muses">MUSAS</small></span>
+                                            <span><strong id="musa_postgame_team_sent">0</strong><small data-i18n="muse.postgame.sent">INSPIRACIONES</small></span>
+                                            <span><strong id="musa_postgame_team_used">0</strong><small data-i18n="muse.postgame.used">EN EL TEXTO</small></span>
+                                            <span><strong id="musa_postgame_team_effectiveness">0%</strong><small data-i18n="muse.postgame.effectiveness">EFECTIVIDAD</small></span>
+                                            <span><strong id="musa_postgame_team_impact">0s</strong><small data-i18n="muse.postgame.impact">IMPACTO</small></span>
+                                        </div>
+                                    </section>
+                                    <div class="musa-postgame__reader">
+                                        <div class="musa-postgame__story-label"><span aria-hidden="true">&#x1F4D6;</span><small data-i18n="muse.postgame.story">LA HISTORIA</small></div>
+                                        <div id="musa_postgame_texto" class="musa-postgame__text" tabindex="0"></div>
+                                    </div>
+                                    <div class="musa-postgame__downloads" aria-label="Descargar el texto seleccionado">
+                                        <button id="musa_postgame_pdf_j1" class="musa-postgame__pdf musa-postgame__pdf--blue" type="button">
+                                            <svg class="musa-postgame__pdf-icon" aria-hidden="true" viewBox="0 0 48 48"><path d="M13 5h15l8 8v28H13z"></path><path d="M28 5v9h8M24 19v13m-6-6 6 6 6-6M18 37h12"></path></svg>
+                                            <span><small data-i18n="muse.postgame.download_story">DESCARGAR HISTORIA</small><strong id="musa_postgame_pdf_nombre_j1">ESCRITXR 1</strong></span>
+                                        </button>
+                                        <button id="musa_postgame_pdf_j2" class="musa-postgame__pdf musa-postgame__pdf--red" type="button" hidden>
+                                            <svg class="musa-postgame__pdf-icon" aria-hidden="true" viewBox="0 0 48 48"><path d="M13 5h15l8 8v28H13z"></path><path d="M28 5v9h8M24 19v13m-6-6 6 6 6-6M18 37h12"></path></svg>
+                                            <span><small data-i18n="muse.postgame.download_story">DESCARGAR HISTORIA</small><strong id="musa_postgame_pdf_nombre_j2">ESCRITXR 2</strong></span>
+                                        </button>
                                     </div>
                                 </div>
-                                <div id="musa_postgame_texto" class="musa-postgame__text" tabindex="0"></div>
-                            </div>
-                            <div class="musa-postgame__downloads" aria-label="Descargar los textos de la partida">
-                                <button id="musa_postgame_pdf_j1" class="musa-postgame__pdf musa-postgame__pdf--blue" type="button">
-                                    <svg class="musa-postgame__pdf-icon" aria-hidden="true" viewBox="0 0 48 48"><path d="M13 5h15l8 8v28H13z"></path><path d="M28 5v9h8M24 19v13m-6-6 6 6 6-6M18 37h12"></path></svg>
-                                    <span><small data-i18n="muse.postgame.download_story">DESCARGAR HISTORIA</small><strong id="musa_postgame_pdf_nombre_j1">ESCRITXR 1</strong></span>
-                                </button>
-                                <button id="musa_postgame_pdf_j2" class="musa-postgame__pdf musa-postgame__pdf--red" type="button">
-                                    <svg class="musa-postgame__pdf-icon" aria-hidden="true" viewBox="0 0 48 48"><path d="M13 5h15l8 8v28H13z"></path><path d="M28 5v9h8M24 19v13m-6-6 6 6 6-6M18 37h12"></path></svg>
-                                    <span><small data-i18n="muse.postgame.download_story">DESCARGAR HISTORIA</small><strong id="musa_postgame_pdf_nombre_j2">ESCRITXR 2</strong></span>
-                                </button>
-                            </div>
+                            </section>
                         </article>
                     </section>
                 </div>
@@ -491,11 +488,11 @@
     </section>
 </body>
     <script src="../../dist/socket.io/socket.io.js"></script>
-    <script src="../../js/i18n.js?v=20260920c"></script>
+    <script src="../../js/i18n.js?v=20260921a"></script>
 <script src="../js/musa-assignment.js?v=20260831b"></script>
 <script src="../../js/domains/final-score.js?v=20260903e"></script>
     <script src="../../js/domains/level-transition.js?v=20260917b"></script>
-    <script src="./js/state.js?v=20260920e"></script>
+    <script src="./js/state.js?v=20260921a"></script>
 <script src="../../js/domains/video-tutorial.js?v=20260906b"></script>
 <script src="../../js/domains/show-narration.js?v=20260906b"></script>
 <script src="../../js/domains/canto.js?v=20260920b"></script>
