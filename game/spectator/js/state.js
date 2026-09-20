@@ -5190,10 +5190,113 @@ const CLASES_FADE_TEXTAREA_ESPECTADOR = [
     "textarea-fade-both"
 ];
 const raf_degradado_textarea_espectador = new Map();
+const raf_lineas_texto_espectador = new Map();
+const firma_lineas_texto_espectador = new WeakMap();
 let timeout_degradado_textos_espectador = null;
 let degradado_textarea_espectador_iniciado = false;
 let observadores_mutacion_textarea_espectador = [];
 let observadores_resize_textarea_espectador = [];
+
+const configuracionLineasTextoEspectador = (textarea) => {
+    if (textarea === texto1) {
+        return {
+            gutter: getEl("spectator_line_numbers_j1"),
+            inner: getEl("spectator_line_numbers_inner_j1")
+        };
+    }
+    if (textarea === texto2) {
+        return {
+            gutter: getEl("spectator_line_numbers_j2"),
+            inner: getEl("spectator_line_numbers_inner_j2")
+        };
+    }
+    return { gutter: null, inner: null };
+};
+
+function lineasLogicasTextoEspectador(textarea) {
+    const contenido = String(textarea?.innerText || textarea?.textContent || "").replace(/\r/g, "");
+    if (!contenido.trim()) return [""];
+    const limpio = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
+    const lineas = limpio.split("\n").slice(0, 500);
+    return lineas.length ? lineas : [""];
+}
+
+function medirAlturasLineasTextoEspectador(textarea, lineas) {
+    if (!textarea || !document.body) return lineas.map(() => 1);
+    const estilos = window.getComputedStyle(textarea);
+    const anchoContenido = Math.max(
+        1,
+        textarea.clientWidth
+            - (Number.parseFloat(estilos.paddingLeft) || 0)
+            - (Number.parseFloat(estilos.paddingRight) || 0)
+    );
+    const tamanoFuente = Number.parseFloat(estilos.fontSize) || 16;
+    const altoLinea = Number.parseFloat(estilos.lineHeight) || (tamanoFuente * 1.5);
+    const espejo = document.createElement("div");
+    Object.assign(espejo.style, {
+        position: "fixed",
+        left: "-100000px",
+        top: "0",
+        width: `${anchoContenido}px`,
+        visibility: "hidden",
+        pointerEvents: "none",
+        fontFamily: estilos.fontFamily,
+        fontSize: estilos.fontSize,
+        fontWeight: estilos.fontWeight,
+        fontStyle: estilos.fontStyle,
+        letterSpacing: estilos.letterSpacing,
+        wordSpacing: estilos.wordSpacing,
+        lineHeight: estilos.lineHeight,
+        whiteSpace: estilos.whiteSpace,
+        wordBreak: estilos.wordBreak,
+        overflowWrap: estilos.overflowWrap,
+        hyphens: estilos.hyphens
+    });
+    const medidores = lineas.map((linea) => {
+        const medidor = document.createElement("div");
+        medidor.style.display = "block";
+        medidor.style.minHeight = `${altoLinea}px`;
+        medidor.textContent = linea || "\u200b";
+        espejo.appendChild(medidor);
+        return medidor;
+    });
+    document.body.appendChild(espejo);
+    const alturas = medidores.map((medidor) => Math.max(altoLinea, medidor.getBoundingClientRect().height));
+    espejo.remove();
+    return alturas;
+}
+
+function sincronizarLineasTextoEspectador(textarea) {
+    const { inner } = configuracionLineasTextoEspectador(textarea);
+    if (!textarea || !inner) return;
+    const lineas = lineasLogicasTextoEspectador(textarea);
+    const estilos = window.getComputedStyle(textarea);
+    const firma = `${lineas.join("\u0000")}\u0001${textarea.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
+    if (firma_lineas_texto_espectador.get(textarea) !== firma) {
+        const alturas = medirAlturasLineasTextoEspectador(textarea, lineas);
+        const fragmento = document.createDocumentFragment();
+        lineas.forEach((_linea, indice) => {
+            const numero = document.createElement("span");
+            numero.textContent = String(indice + 1);
+            numero.style.height = `${alturas[indice]}px`;
+            numero.style.minHeight = `${alturas[indice]}px`;
+            numero.style.flexBasis = `${alturas[indice]}px`;
+            fragmento.appendChild(numero);
+        });
+        inner.replaceChildren(fragmento);
+        firma_lineas_texto_espectador.set(textarea, firma);
+    }
+    inner.style.transform = `translate3d(0, ${-Math.max(0, textarea.scrollTop || 0)}px, 0)`;
+}
+
+function programarLineasTextoEspectador(textarea) {
+    if (!textarea || raf_lineas_texto_espectador.has(textarea)) return;
+    const rafId = requestAnimationFrame(() => {
+        raf_lineas_texto_espectador.delete(textarea);
+        sincronizarLineasTextoEspectador(textarea);
+    });
+    raf_lineas_texto_espectador.set(textarea, rafId);
+}
 
 function obtenerTextareasEspectador() {
     return [texto1, texto2].filter((el) => el && el.classList);
@@ -5239,7 +5342,10 @@ function programarActualizacionDegradadoTextareaEspectador(textarea) {
 }
 
 function programarActualizacionDegradadoTextosEspectador() {
-    obtenerTextareasEspectador().forEach(programarActualizacionDegradadoTextareaEspectador);
+    obtenerTextareasEspectador().forEach((textarea) => {
+        programarActualizacionDegradadoTextareaEspectador(textarea);
+        programarLineasTextoEspectador(textarea);
+    });
 }
 
 function iniciarDegradadoDinamicoTextosEspectador() {
@@ -5253,6 +5359,7 @@ function iniciarDegradadoDinamicoTextosEspectador() {
         eventos.forEach((evento) => {
             textarea.addEventListener(evento, () => {
                 programarActualizacionDegradadoTextareaEspectador(textarea);
+                programarLineasTextoEspectador(textarea);
             });
         });
     });
@@ -5263,6 +5370,7 @@ function iniciarDegradadoDinamicoTextosEspectador() {
         observadores_mutacion_textarea_espectador = textareas.map((textarea) => {
             const observer = new MutationObserver(() => {
                 programarActualizacionDegradadoTextareaEspectador(textarea);
+                programarLineasTextoEspectador(textarea);
             });
             observer.observe(textarea, {
                 subtree: true,
@@ -5279,6 +5387,7 @@ function iniciarDegradadoDinamicoTextosEspectador() {
         observadores_resize_textarea_espectador = textareas.map((textarea) => {
             const observer = new ResizeObserver(() => {
                 programarActualizacionDegradadoTextareaEspectador(textarea);
+                programarLineasTextoEspectador(textarea);
             });
             observer.observe(textarea);
             return observer;

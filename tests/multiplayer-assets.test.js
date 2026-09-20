@@ -23,8 +23,8 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260920c";
-const SPECTATOR_CSS_VERSION = "20260920b";
+const SPECTATOR_STATE_VERSION = "20260920d";
+const SPECTATOR_CSS_VERSION = "20260920c";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260920c";
 const DEBUG_DETONATORS_VERSION = "20260909a";
@@ -1024,6 +1024,23 @@ test("spectator viewport fit resets side veil before measuring natural size", ()
   assert.match(helper, /--spectator-veil-left", "0px"/);
   assert.match(helper, /--spectator-veil-right", "0px"/);
   assert.match(helper, /--spectator-veil-width", "52vw"/);
+});
+
+test("spectator texts use the projector width and keep synchronized line numbers", () => {
+  const html = read("game/spectator/index.html");
+  const css = read("game/css/dashboard-players.css");
+  const state = read("game/spectator/js/state.js");
+
+  assert.match(html, /id="spectator_line_numbers_j1"[\s\S]*id="spectator_line_numbers_inner_j1"[\s\S]*id="texto"/);
+  assert.match(html, /id="spectator_line_numbers_j2"[\s\S]*id="spectator_line_numbers_inner_j2"[\s\S]*id="texto1"/);
+  assert.match(css, /#contenedor_espectador\s*\{[\s\S]*flex-wrap: nowrap;[\s\S]*width: min\(96vw, 2500px\)/);
+  assert.match(css, /body\.page-spectator #contenedor_espectador > \.jugador1,[\s\S]*flex: 1 1 0;[\s\S]*margin-inline: 0/);
+  assert.match(css, /\.spectator-text-shell\s*\{[\s\S]*grid-template-columns: clamp\(36px, 2\.8vw, 58px\) minmax\(0, 1fr\)/);
+  assert.match(css, /\.spectator-line-numbers__inner[\s\S]*will-change: transform/);
+  assert.match(state, /function medirAlturasLineasTextoEspectador\(textarea, lineas\)/);
+  assert.match(state, /function sincronizarLineasTextoEspectador\(textarea\)[\s\S]*numero\.textContent = String\(indice \+ 1\)/);
+  assert.match(state, /inner\.style\.transform = `translate3d\(0, \$\{-Math\.max\(0, textarea\.scrollTop \|\| 0\)\}px, 0\)`/);
+  assert.match(state, /MutationObserver[\s\S]*programarLineasTextoEspectador\(textarea\)/);
 });
 
 test("spectator hides pre-game branding throughout countdown and active match", () => {

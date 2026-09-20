@@ -309,7 +309,7 @@ test("actor and muse timelines carry authoritative progress with coherent role t
 
     assert.doesNotMatch(writerHtml, /escritxr-texto-panel__label[^>]*>[\s\S]{0,80}1F58B/);
     assert.match(writerCss, /\.escritxr-texto-panel\s*\{[\s\S]*width:\s*min\(1440px, 94vw\)/);
-    assert.match(writerCss, /body\.page-spectator \.jugador1 #texto,[\s\S]*border-radius:[\s\S]*--spectator-text-soft/);
+    assert.match(writerCss, /body\.page-spectator \.spectator-text-shell\s*\{[\s\S]*border-radius:[\s\S]*--spectator-text-soft/);
     assert.match(writerCss, /--escritxr-panel-text:\s*#c3faff/);
     assert.match(writerCss, /--escritxr-panel-text:\s*#ffc8cd/);
     assert.match(juryCss, /--writer-text-soft:\s*#c3faff/);
