@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260920b">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260920c">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260920b"></script>
+<script src="./js/actions.js?v=20260920c"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -132,15 +132,16 @@
                                     <strong id="show_narration_status_text">ESPERANDO SERVIDOR</strong>
                                 </p>
                             </section>
-                            <div class="control-group-buttons control-group-buttons--two control-group-buttons--tutorial">
+                            <div class="control-group-buttons control-group-buttons--three control-group-buttons--tutorial">
                                 <button id="boton_nueva_partida" class="btn btn-vista-espectador btn-nueva-partida" type="button" onclick="nueva_partida()">&#x2728; NUEVA PARTIDA</button>
                                 <button id="boton_vista_tutorial" class="btn btn-vista-espectador" type="button" data-vista-principal="tutorial" data-active="1" aria-pressed="true" onclick="mostrar_vista_tutorial()">&#x1F4D6; VISTA TUTORIAL</button>
+                                <button id="boton_banderas_musas" class="btn" type="button" data-banderas-musas-control data-activo="0" data-active="0" aria-pressed="false" onclick="activar_banderas_musas()">&#x1F6A9; BANDERA</button>
                             </div>
                             <section id="instrucciones_viewer_control" class="instrucciones-viewer-control" data-active="0" aria-label="Visor de instrucciones">
                                 <span class="instrucciones-viewer-control__eyebrow">VISOR DE INSTRUCCIONES</span>
                                 <div class="instrucciones-viewer-control__layout">
-                                    <button id="boton_vista_instrucciones" class="btn btn-vista-espectador btn-vista-instrucciones" type="button" data-vista-principal="instrucciones" data-active="0" aria-pressed="false" onclick="mostrar_vista_instrucciones()">&#x1F3AC; ACTIVAR INSTRUCCIONES</button>
-                                    <div id="instrucciones_nav_control" class="stats-nav-control instrucciones-nav-control" aria-hidden="false">
+                                    <button id="boton_vista_instrucciones" class="btn btn-vista-espectador btn-vista-instrucciones" type="button" data-vista-principal="instrucciones" data-active="0" aria-pressed="false" aria-label="Activar instrucciones" title="Activar instrucciones" onclick="mostrar_vista_instrucciones()">&#x1F4D6; INSTRUCCIONES</button>
+                                    <div id="instrucciones_nav_control" class="stats-nav-control instrucciones-nav-control" data-visible="0" aria-hidden="true" inert>
                                         <button id="instrucciones_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev" onclick="navegarInstruccionesControl('prev')" aria-label="Escena anterior" disabled></button>
                                         <span id="instrucciones_nav_label" class="stats-nav-label" aria-live="polite">AS&Iacute; NACE UNA HISTORIA &middot; 1/7</span>
                                         <button id="instrucciones_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next" onclick="navegarInstruccionesControl('next')" aria-label="Escena siguiente" disabled></button>
@@ -153,7 +154,6 @@
                                 <button id="boton_vista_calentamiento" class="btn btn-vista-espectador" type="button" data-vista-principal="detonadores" data-active="0" aria-pressed="false" onclick="mostrar_vista_detonadores()">&#x1F4A5; VISTA DETONADORES</button>
                                 <span id="boton_reiniciar_calentamiento" class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_reiniciar_marcador_calentamiento" class='btn' onclick="reiniciar_marcador_calentamiento()">&#x21BB; REINICIAR MARCADOR</span>
-                                <span id="boton_banderas_musas" class='btn' data-banderas-musas-control data-activo="0" data-active="0" aria-pressed="false" onclick="activar_banderas_musas()">&#x1F6A9; BANDERA</span>
                             </div>
                             <div id="control_subtitle_musas" class="control-group-subtitle">DETONADORES PARA MUSAS</div>
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">

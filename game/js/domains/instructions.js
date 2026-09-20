@@ -90,12 +90,19 @@
             return `
                 <div class="scrib-instructions__scene scrib-instructions__scene--ideas">
                     <p class="scrib-instructions__eyebrow">LAS MUSAS ENTRAN EN LA HISTORIA</p>
-                    <h2>ENVÍA UNA LETRA.<br>ENVÍA UNA PALABRA.</h2>
-                    <div class="scrib-instructions__idea-flight" aria-hidden="true">
-                        <span class="is-letter">R</span><span class="is-word">VOLCÁN</span>
-                        <i>✍️</i>
+                    <h2>ENVÍA PALABRAS.<br>INSPIRA A TU ESCRITORA.</h2>
+                    <div class="scrib-instructions__idea-composer" aria-label="Ejemplo bloqueado del envío de palabras">
+                        <label for="scrib_instructions_word">PALABRA PARA TU ESCRITORA</label>
+                        <div class="scrib-instructions__idea-input-row">
+                            <input id="scrib_instructions_word" type="text" value="VOLCÁN" placeholder="ESCRIBE UNA PALABRA" disabled aria-describedby="scrib_instructions_lock">
+                            <button type="button" disabled>INSPIRAR <span aria-hidden="true">🚀</span></button>
+                        </div>
+                        <span id="scrib_instructions_lock" class="scrib-instructions__idea-lock">🔒 SE ACTIVARÁ DURANTE LA PARTIDA</span>
+                        <div class="scrib-instructions__idea-preview" aria-hidden="true">
+                            <span>VOLCÁN</span><i>→</i><b>✍️</b>
+                        </div>
                     </div>
-                    <p class="scrib-instructions__keyline">TUS IDEAS PUEDEN CAMBIAR LA PARTIDA</p>
+                    <p class="scrib-instructions__keyline">TUS PALABRAS PUEDEN CAMBIAR LA PARTIDA</p>
                 </div>`;
         }
         return `
@@ -150,11 +157,15 @@
                 setMusicBoost(false);
                 return;
             }
+            const remaining = Math.max(0, STEP_COUNT - state.step - 1);
             target.innerHTML = `
                 <div class="scrib-instructions__backdrop" aria-hidden="true"><i></i><i></i><i></i></div>
                 <div class="scrib-instructions__stage">${sceneMarkup(state.step, state.credits)}</div>
-                <div class="scrib-instructions__progress" aria-label="Escena ${state.step + 1} de ${STEP_COUNT}">
-                    ${Array.from({ length: STEP_COUNT }, (_, index) => `<i class="${index === state.step ? "is-active" : ""}"></i>`).join("")}
+                <div class="scrib-instructions__progress" aria-label="Escena ${state.step + 1} de ${STEP_COUNT}. Quedan ${remaining} slides">
+                    <span class="scrib-instructions__remaining"><strong>${remaining}</strong> ${remaining === 1 ? "SLIDE" : "SLIDES"} POR VER</span>
+                    <div class="scrib-instructions__progress-dots" aria-hidden="true">
+                        ${Array.from({ length: STEP_COUNT }, (_, index) => `<i class="${index === state.step ? "is-active" : ""}"></i>`).join("")}
+                    </div>
                 </div>`;
             target.classList.remove("is-entering");
             void target.offsetWidth;

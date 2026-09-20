@@ -11015,13 +11015,19 @@ body {
 }
 
 .instrucciones-viewer-control__layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(20rem, 0.8fr);
+    display: flex;
+    flex-wrap: wrap;
     align-items: stretch;
     gap: clamp(0.45rem, 0.72vw, 0.72rem);
+    transition: gap 220ms ease;
+}
+
+.instrucciones-viewer-control[data-active="0"] .instrucciones-viewer-control__layout {
+    gap: 0;
 }
 
 #panel_controles .instrucciones-viewer-control__layout > #boton_vista_instrucciones {
+    flex: 1 1 30rem;
     width: 100%;
     min-width: 0;
     min-height: 3.15rem;
@@ -11032,8 +11038,10 @@ body {
 
 #panel_controles .instrucciones-viewer-control .instrucciones-nav-control {
     display: grid !important;
+    flex: 1 1 20rem;
     grid-template-columns: auto minmax(0, 1fr) auto;
     min-width: 0;
+    max-width: 34rem;
     min-height: 3.15rem;
     align-items: center;
     gap: clamp(0.35rem, 0.55vw, 0.62rem);
@@ -11043,7 +11051,17 @@ body {
     border-radius: 0.52rem;
     background: rgba(3, 11, 20, 0.78);
     box-sizing: border-box;
-    transition: opacity 160ms ease, filter 160ms ease;
+    overflow: hidden;
+    transform-origin: right center;
+    transition:
+        flex-basis 320ms cubic-bezier(.2, .8, .2, 1),
+        max-width 320ms cubic-bezier(.2, .8, .2, 1),
+        min-height 260ms ease,
+        padding 260ms ease,
+        border-color 180ms ease,
+        opacity 180ms ease,
+        transform 320ms cubic-bezier(.2, .8, .2, 1),
+        visibility 0s linear 0s;
 }
 
 .instrucciones-viewer-control .instrucciones-nav-control .stats-nav-label {
@@ -11055,9 +11073,32 @@ body {
     text-align: center;
 }
 
-.instrucciones-viewer-control[data-active="0"] .instrucciones-nav-control {
-    opacity: 0.48;
-    filter: saturate(0.55);
+.instrucciones-viewer-control .instrucciones-nav-control[data-visible="0"] {
+    flex-basis: 0;
+    max-width: 0;
+    min-height: 0;
+    padding-inline: 0;
+    border-color: transparent;
+    opacity: 0;
+    transform: translateX(1rem) scaleX(0.88);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        flex-basis 320ms cubic-bezier(.2, .8, .2, 1),
+        max-width 320ms cubic-bezier(.2, .8, .2, 1),
+        min-height 260ms ease,
+        padding 260ms ease,
+        border-color 180ms ease,
+        opacity 180ms ease,
+        transform 320ms cubic-bezier(.2, .8, .2, 1),
+        visibility 0s linear 320ms;
+}
+
+.instrucciones-viewer-control .instrucciones-nav-control[data-visible="1"] {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 #boton_vista_instrucciones[data-active="1"],
@@ -11078,7 +11119,25 @@ body {
 
 @container tutorial-controls (max-width: 48rem) {
     .instrucciones-viewer-control__layout {
+        display: grid;
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    #panel_controles .instrucciones-viewer-control .instrucciones-nav-control {
+        width: 100%;
+        max-width: none;
+    }
+
+    #panel_controles .instrucciones-viewer-control .instrucciones-nav-control[data-visible="0"] {
+        max-width: none;
+        max-height: 0;
+        min-height: 0;
+        padding-block: 0;
+        transform: translateY(-0.7rem) scaleY(0.88);
+    }
+
+    #panel_controles .instrucciones-viewer-control .instrucciones-nav-control[data-visible="1"] {
+        max-height: 5rem;
     }
 }
 
@@ -12328,7 +12387,7 @@ table.default {
 
 #panel_controles #control_panel_tutorial:not(.is-collapsed) > .control-group-buttons--tutorial {
     flex: 1 0 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     align-self: start;
 }
 

@@ -15,8 +15,38 @@ test("instructions view exposes the complete guided sequence", () => {
   assert.equal(instructions.normalizeStep(99), 6);
 });
 
+test("instructions tell muses to send words through a visible locked composer", () => {
+  const instructions = require("../game/js/domains/instructions.js");
+  const classes = new Set();
+  const container = {
+    hidden: true,
+    dataset: {},
+    innerHTML: "",
+    offsetWidth: 0,
+    setAttribute() {},
+    classList: {
+      add: (...names) => names.forEach((name) => classes.add(name)),
+      remove: (...names) => names.forEach((name) => classes.delete(name))
+    }
+  };
+  const view = instructions.create({ container });
+
+  view.setState({ visible: true, step: 5, perspective: "muse", team: 1 });
+  assert.match(container.innerHTML, /ENVÍA PALABRAS\.<br>INSPIRA A TU ESCRITORA\./);
+  assert.doesNotMatch(container.innerHTML, /ENVÍA UNA LETRA/);
+  assert.match(container.innerHTML, /id="scrib_instructions_word"[^>]*disabled/);
+  assert.match(container.innerHTML, /<button type="button" disabled>INSPIRAR/);
+  assert.match(container.innerHTML, /SE ACTIVARÁ DURANTE LA PARTIDA/);
+  assert.match(container.innerHTML, /<strong>1<\/strong> SLIDE POR VER/);
+
+  view.setState({ step: 6 });
+  assert.match(container.innerHTML, /<strong>0<\/strong> SLIDES POR VER/);
+});
+
 test("control, spectator and muse load the instructions experience", () => {
   const control = read("game/control/index.html");
+  const controlActions = read("game/control/js/actions.js");
+  const controlCss = read("game/control/index.css");
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   const spectatorState = read("game/spectator/js/state.js");
@@ -30,6 +60,24 @@ test("control, spectator and muse load the instructions experience", () => {
   assert.match(muse, /instructions\.js/);
   assert.match(spectatorState, /ScribInstructions\.create/);
   assert.match(museState, /ScribInstructions\.create/);
+  assert.match(control, /id="boton_vista_instrucciones"[^>]*>\s*&#x1F4D6; INSTRUCCIONES<\/button>/);
+  assert.match(control, /id="instrucciones_nav_control"[^>]*data-visible="0"[^>]*aria-hidden="true"[^>]*inert/);
+  assert.match(controlActions, /botonInstrucciones\.textContent = "\\u\{1F4D6\} INSTRUCCIONES"/);
+  assert.match(controlActions, /instruccionesNav\.dataset\.visible = instruccionesActivas \? "1" : "0"/);
+  assert.match(controlActions, /instruccionesNav\.inert = !instruccionesActivas/);
+  assert.match(controlCss, /instrucciones-nav-control\[data-visible="0"\][\s\S]*opacity:\s*0;[\s\S]*visibility:\s*hidden/);
+});
+
+test("control keeps the detonator flag in Tutorial instead of Detonators", () => {
+  const control = read("game/control/index.html");
+  const tutorialStart = control.indexOf('id="control_panel_tutorial"');
+  const detonatorsStart = control.indexOf('id="control_panel_detonadores"');
+  const gameStart = control.indexOf('id="control_panel_juego"');
+  const tutorialPanel = control.slice(tutorialStart, detonatorsStart);
+  const detonatorsPanel = control.slice(detonatorsStart, gameStart);
+
+  assert.match(tutorialPanel, /id="boton_banderas_musas"/);
+  assert.doesNotMatch(detonatorsPanel, /id="boton_banderas_musas"/);
 });
 
 test("detonator presentation highlights only the active request and centers an idle muse flag", () => {

@@ -3005,9 +3005,13 @@ function actualizarBotonesVistaPrincipalControl() {
         botonPartida.textContent = tJuego2PControl("control.button.game_view", {}, "\u{1F3AE} VISTA PARTIDA");
     }
     if (botonInstrucciones) {
-        botonInstrucciones.textContent = vista_espectador_modo === "instrucciones"
-            ? "\u{23F9}\u{FE0F} DESACTIVAR INSTRUCCIONES"
-            : "\u{1F3AC} ACTIVAR INSTRUCCIONES";
+        const instruccionesActivas = vista_espectador_modo === "instrucciones";
+        const etiquetaEstado = instruccionesActivas
+            ? "Desactivar instrucciones"
+            : "Activar instrucciones";
+        botonInstrucciones.textContent = "\u{1F4D6} INSTRUCCIONES";
+        botonInstrucciones.setAttribute("aria-label", etiquetaEstado);
+        botonInstrucciones.title = etiquetaEstado;
     }
 }
 
@@ -3352,8 +3356,9 @@ function actualizarBotonesVistaEspectadorControl() {
     if (instruccionesPrev) instruccionesPrev.disabled = !instruccionesActivas || instrucciones_slide_step_control <= 0;
     if (instruccionesNext) instruccionesNext.disabled = !instruccionesActivas || instrucciones_slide_step_control >= INSTRUCCIONES_PASO_MAX_CONTROL;
     if (instruccionesNav) {
-        instruccionesNav.hidden = false;
-        instruccionesNav.setAttribute("aria-hidden", "false");
+        instruccionesNav.dataset.visible = instruccionesActivas ? "1" : "0";
+        instruccionesNav.setAttribute("aria-hidden", instruccionesActivas ? "false" : "true");
+        instruccionesNav.inert = !instruccionesActivas;
     }
     if (instruccionesViewer) {
         instruccionesViewer.dataset.active = instruccionesActivas ? "1" : "0";
