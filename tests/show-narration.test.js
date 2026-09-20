@@ -2,10 +2,49 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
+const vm = require("node:vm");
 
 const ROOT = path.join(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(ROOT, file), "utf8");
 const narration = require("../game/js/domains/show-narration.js");
+
+function createNarrationControlHarness() {
+    const classes = new Set();
+    const icon = { textContent: "" };
+    const elements = new Map([
+        ["show_narration_control", { dataset: {}, setAttribute(name, value) { this[name] = String(value); } }],
+        ["show_narration_toggle", {
+            dataset: {}, disabled: false, attributes: {},
+            setAttribute(name, value) { this.attributes[name] = String(value); },
+            classList: { toggle(name, active) { active ? classes.add(name) : classes.delete(name); }, contains(name) { return classes.has(name); } },
+            querySelector() { return icon; },
+            addEventListener() {}
+        }],
+        ["show_narration_status", { hidden: false }],
+        ["show_narration_status_text", { textContent: "" }]
+    ]);
+    const emissions = [];
+    const socket = {
+        connected: true,
+        emit(event, payload, ack) { emissions.push({ event, payload, ack }); }
+    };
+    const document = {
+        readyState: "complete",
+        getElementById(id) { return elements.get(id) || null; },
+        addEventListener() {}
+    };
+    const window = {
+        document,
+        setTimeout() { return 1; },
+        clearTimeout() {},
+        tutorialViewActivations: 0,
+        asegurarVistaTutorialBajoOverlayControl() { this.tutorialViewActivations += 1; }
+    };
+    vm.runInNewContext(read("game/control/js/show-narration-control.js"), {
+        window, document, socket, Date, console
+    }, { filename: "game/control/js/show-narration-control.js" });
+    return { api: window.ScribShowNarrationControl, window, elements, emissions, icon };
+}
 
 test("show narration starts with five black seconds and keeps the final scene open", () => {
     assert.equal(narration.DEFAULT_PREROLL_SECONDS, 5);
@@ -125,7 +164,23 @@ test("Control exposes one stateful play-pause button without another interval", 
     assert.match(control, /narracion_show_detener/);
     assert.match(control, /aria-pressed/);
     assert.match(control, /state\.active \? "■" : "▶"/);
+    assert.match(control, /asegurarVistaTutorialBajoOverlayControl/);
+    assert.match(control, /button\.dataset\.playing = state\.active \? "1" : "0"/);
     assert.match(read("game/control/js/socket-events.js"), /pedir_narracion_show_estado/);
+});
+
+test("starting narration selects the tutorial underneath and keeps its own button active", () => {
+    const { api, window, elements, emissions, icon } = createNarrationControlHarness();
+    api.applyState({ activa: false, secuencia: 2 });
+    assert.equal(api.toggle(), true);
+    assert.equal(window.tutorialViewActivations, 1);
+    assert.equal(emissions[0].event, "narracion_show_reproducir");
+    emissions[0].ack({ ok: true, estado: { activa: true, secuencia: 3 } });
+    const button = elements.get("show_narration_toggle");
+    assert.equal(button.attributes["aria-pressed"], "true");
+    assert.equal(button.dataset.playing, "1");
+    assert.equal(button.classList.contains("is-playing"), true);
+    assert.equal(icon.textContent, "■");
 });
 
 test("tutorial music is silent during narration and starts instantly on the final slide", () => {

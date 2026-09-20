@@ -3035,11 +3035,25 @@ function aplicarVistaPrincipalControl(vista, opciones = {}) {
             ? Math.max(0, Number(opciones.audioFadeMs))
             : undefined
     });
-    cerrarVideotutorialDesdeVistaControl();
+    if (opciones.preservarOverlays !== true) {
+        cerrarVideotutorialDesdeVistaControl();
+    }
     actualizarBotonesVistaEspectadorControl();
     if (activarDetonadores && opciones.omitirSolicitudCalentamientoDefault !== true) {
         pedir_solicitud_calentamiento(SOLICITUD_CALENTAMIENTO_POR_DEFECTO);
     }
+}
+
+function asegurarVistaTutorialBajoOverlayControl() {
+    const yaActiva = vista_principal_control === "tutorial"
+        && vista_espectador_modo === "tutorial"
+        && vista_calentamiento === false;
+    if (yaActiva) {
+        actualizarBotonesVistaPrincipalControl();
+        return false;
+    }
+    aplicarVistaPrincipalControl("tutorial", { preservarOverlays: true });
+    return true;
 }
 
 function cambiar_vista_calentamiento() {
@@ -3084,6 +3098,7 @@ function asegurarVistaPartidaParaInicioControl() {
 }
 
 window.mostrar_vista_tutorial = mostrar_vista_tutorial;
+window.asegurarVistaTutorialBajoOverlayControl = asegurarVistaTutorialBajoOverlayControl;
 window.mostrar_vista_instrucciones = mostrar_vista_instrucciones;
 window.navegarInstruccionesControl = navegarInstruccionesControl;
 window.mostrar_vista_detonadores = mostrar_vista_detonadores;

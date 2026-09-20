@@ -16,6 +16,11 @@
     const getEl = (id) => global.document && global.document.getElementById(id);
     const getSocket = () => (typeof socket !== "undefined" ? socket : null);
     const requestId = () => `show_${Date.now().toString(36)}_${(++requestCounter).toString(36)}`;
+    const activateTutorialView = () => {
+        if (typeof global.asegurarVistaTutorialBajoOverlayControl === "function") {
+            global.asegurarVistaTutorialBajoOverlayControl();
+        }
+    };
 
     function normalizeState(payload = {}) {
         const data = payload && payload.estado && typeof payload.estado === "object"
@@ -51,6 +56,7 @@
             button.setAttribute("aria-pressed", state.active ? "true" : "false");
             button.setAttribute("aria-label", state.active ? "Pausar narración visual" : "Iniciar narración visual");
             button.classList.toggle("is-playing", state.active);
+            button.dataset.playing = state.active ? "1" : "0";
             const icon = button.querySelector("span");
             if (icon) icon.textContent = state.active ? "■" : "▶";
         }
@@ -78,6 +84,7 @@
             synced: true,
             error: ""
         };
+        if (state.active) activateTutorialView();
         clearPending();
         updateUI();
         return { ...state };
@@ -115,6 +122,7 @@
             const previous = oldTutorial.obtenerEstado();
             if (previous && (previous.visible || previous.reproduciendo)) oldTutorial.ocultar();
         }
+        activateTutorialView();
         return emitAction("narracion_show_reproducir");
     }
 

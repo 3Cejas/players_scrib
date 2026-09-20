@@ -36,6 +36,11 @@
 
     const getEl = (id) => global.document && global.document.getElementById(id);
     const obtenerSocket = () => (typeof socket !== "undefined" ? socket : null);
+    const activarVistaTutorialSubyacente = () => {
+        if (typeof global.asegurarVistaTutorialBajoOverlayControl === "function") {
+            global.asegurarVistaTutorialBajoOverlayControl();
+        }
+    };
     const limitarSegundos = (valor, fallback = 180) => {
         const numero = Number(valor);
         if (!Number.isFinite(numero)) return fallback;
@@ -246,6 +251,9 @@
             error: "",
             pendiente: null
         };
+        if (estado.reproduciendo || estado.visible) {
+            activarVistaTutorialSubyacente();
+        }
         actualizarUI();
         return { ...estado };
     }
@@ -383,12 +391,15 @@
         session_id: estado.sessionId,
         phase_seq: estado.phaseSeq
     });
-    const mostrar = () => emitirOperacion(
-        "video_tutorial_reproducir",
-        "mostrar",
-        payloadFase(),
-        "Solicitando la reproducción inmediata."
-    );
+    const mostrar = () => {
+        activarVistaTutorialSubyacente();
+        return emitirOperacion(
+            "video_tutorial_reproducir",
+            "mostrar",
+            payloadFase(),
+            "Solicitando la reproducción inmediata."
+        );
+    };
     const ocultar = () => emitirOperacion(
         "video_tutorial_detener",
         "ocultar",

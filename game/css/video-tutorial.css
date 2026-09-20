@@ -666,6 +666,14 @@ body.scrib-video-tutorial-active {
     transform: translateX(-50%);
 }
 
+/* En las escenas con QR, los subtitulos permanecen en la columna de texto. */
+.scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__subtitles p,
+.scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__subtitles p {
+    left: 27%;
+    width: min(46vw, 56rem);
+    max-width: calc(54% - clamp(2rem, 8vw, 8rem));
+}
+
 .scrib-video-tutorial__subtitle-accent {
     display: inline;
     padding: 0 .08em;
@@ -1069,6 +1077,12 @@ body.scrib-video-tutorial-active {
     .scrib-video-tutorial__copy h1 { font-size: clamp(2.5rem, 7vw, 4.5rem); }
     .scrib-video-tutorial__phone { width: min(20rem, 82%); }
     .scrib-video-tutorial__subtitles p { width: calc(100% - 2rem); bottom: 0.8rem; font-size: clamp(1.15rem, 2.7vw, 1.55rem); }
+    .scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__subtitles p,
+    .scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__subtitles p {
+        left: 26%;
+        width: calc(52% - 2rem);
+        max-width: none;
+    }
 }
 
 @media (max-width: 680px), (max-aspect-ratio: 1/1) {
@@ -1082,6 +1096,15 @@ body.scrib-video-tutorial-active {
     .scrib-video-tutorial__color-stage,
     .scrib-video-tutorial__complete-mark { width: min(42vh, 78vw); }
     .scrib-video-tutorial__subtitles p { width: calc(100% - 1.4rem); bottom: max(0.55rem, env(safe-area-inset-bottom)); padding: 0.52em 0.72em 0.58em; font-size: clamp(1.05rem, 4.2vw, 1.35rem); line-height: 1.26; }
+    .scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__subtitles p,
+    .scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__subtitles p {
+        left: 50%;
+        width: calc(100% - 1.4rem);
+    }
+    .scrib-video-tutorial[data-scene="access"] .scrib-video-tutorial__welcome-mark,
+    .scrib-video-tutorial[data-scene="access-wait"] .scrib-video-tutorial__welcome-mark {
+        width: min(34vh, 68vw);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

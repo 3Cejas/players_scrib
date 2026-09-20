@@ -92,6 +92,10 @@ function crearHarness() {
     },
     clearTimeout(id) {
       timers.delete(id);
+    },
+    activacionesVistaTutorial: 0,
+    asegurarVistaTutorialBajoOverlayControl() {
+      this.activacionesVistaTutorial += 1;
     }
   };
   vm.runInNewContext(read("game/control/js/videotutorial-control.js"), {
@@ -102,7 +106,7 @@ function crearHarness() {
     Date,
     console
   }, { filename: "game/control/js/videotutorial-control.js" });
-  return { api: window.ScribVideotutorialControl, elementos, emisiones, timers };
+  return { api: window.ScribVideotutorialControl, elementos, emisiones, timers, window };
 }
 
 test("video tutorial state follows the definitive singular server contract", () => {
@@ -193,8 +197,8 @@ test("control waits for authoritative config and preserves media fields when cha
   assert.equal(api.obtenerEstado().programado, false);
 });
 
-test("the single play control toggles state, serializes ACKs and glows while active", () => {
-  const { api, elementos, emisiones } = crearHarness();
+test("the single play control activates the tutorial view, serializes ACKs and glows while active", () => {
+  const { api, elementos, emisiones, window } = crearHarness();
   api.aplicarEstado({
     activo: true,
     session_id: "video-session",
@@ -211,6 +215,7 @@ test("the single play control toggles state, serializes ACKs and glows while act
   });
 
   assert.equal(api.mostrar(), true);
+  assert.equal(window.activacionesVistaTutorial, 1);
   assert.equal(api.ocultar(), false, "a second action cannot overtake an in-flight ACK");
   assert.equal(emisiones[0].evento, "video_tutorial_reproducir");
   assert.equal(emisiones[0].payload.session_id, "video-session");
@@ -253,6 +258,7 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   const html = read("game/control/index.html");
   const css = read("game/control/index.css");
   const socketEvents = read("game/control/js/socket-events.js");
+  const actions = read("game/control/js/actions.js");
   const moduleSource = read("game/control/js/videotutorial-control.js");
 
   assert.match(html, /id="videotutorial_control"[\s\S]*aria-labelledby="videotutorial_control_title"/);
@@ -266,13 +272,16 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(html, /id="videotutorial_estado"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.doesNotMatch(html, /videotutorial-control__icon/);
   assert.doesNotMatch(html, /id="videotutorial_estado_detalle"/);
-  assert.match(html, /videotutorial-control\.js\?v=20260829p/);
+  assert.match(html, /videotutorial-control\.js\?v=20260920a/);
 
   assert.match(socketEvents, /socket\.emit\('pedir_video_tutorial_estado'\)/);
   assert.match(socketEvents, /socket\.on\('video_tutorial_estado'/);
   assert.match(moduleSource, /"video_tutorial_configurar"/);
   assert.match(moduleSource, /"video_tutorial_reproducir"/);
   assert.match(moduleSource, /"video_tutorial_detener"/);
+  assert.match(moduleSource, /asegurarVistaTutorialBajoOverlayControl/);
+  assert.match(actions, /function asegurarVistaTutorialBajoOverlayControl\(\)[\s\S]*aplicarVistaPrincipalControl\("tutorial", \{ preservarOverlays: true \}\)/);
+  assert.match(actions, /opciones\.preservarOverlays !== true/);
   assert.match(moduleSource, /intervalo_segundos:\s*valor \* 60/);
   assert.match(moduleSource, /session_id:\s*estado\.sessionId/);
   assert.doesNotMatch(moduleSource, /Puedes reproducir ahora o activar la repetición automática/);

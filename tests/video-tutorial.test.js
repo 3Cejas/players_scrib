@@ -118,7 +118,7 @@ test("spectator and muse load the synchronized CSS tutorial before socket handle
   const spectator = read("game/spectator/index.html");
   const muse = read("game/public/players/index.html");
   for (const html of [spectator, muse]) {
-    assert.match(html, /video-tutorial\.css\?v=20260903u/);
+    assert.match(html, /video-tutorial\.css\?v=20260920a/);
     assert.match(html, /domains\/video-tutorial\.js\?v=20260906b/);
     assert.ok(html.indexOf("js/state.js") < html.indexOf("domains/video-tutorial.js"));
     assert.ok(html.indexOf("domains/video-tutorial.js") < html.indexOf("js/socket-events.js"));
@@ -177,6 +177,7 @@ test("spectator tutorial fills the viewport and adds readable synchronized subti
   }
   assert.match(css, /\.scrib-video-tutorial__subtitles\s*\{[\s\S]*?inset:\s*0;[\s\S]*?pointer-events:\s*none/);
   assert.match(css, /\.scrib-video-tutorial__subtitles p\s*\{[\s\S]*?bottom:[\s\S]*?background:\s*rgba\(0, 4, 10, 0\.88\)/);
+  assert.match(css, /data-scene="access"[^\n]+scrib-video-tutorial__subtitles p,[\s\S]*?left:\s*27%;[\s\S]*?width:\s*min\(46vw, 56rem\)/);
   assert.match(css, /\.scrib-video-tutorial \.scrib-visually-hidden,[\s\S]*clip-path:\s*inset\(50%\)/);
   assert.match(css, /@keyframes vtSubtitleIn/);
   assert.doesNotMatch(js, /\bPASO\s+\d|COLOR\s+\d\s+DE\s+4/);
