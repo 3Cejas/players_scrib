@@ -1924,7 +1924,7 @@ async function descargar_textos(opciones = {}) {
         });
     }
 
-    async function emitirPdfMusas(playerId, nombre, documento, datosDocumento) {
+    async function emitirPdfMusas(playerId, nombre, documento, datosDocumento, pdfsEscritores = {}) {
         if (!emitirMusas || !documento) return;
         try {
             const resumenesMusa = obtenerResumenesMusaJugador(playerId);
@@ -1949,7 +1949,8 @@ async function descargar_textos(opciones = {}) {
                         musa_nombre: resumenMusa.nombre || "MUSA",
                         personalizado: true,
                         filename: `${crearBaseArchivoDescargaJugador(`${nombre}_${nombreMusa}_${idMusa}`, fechaDescarga, "MUSA_J" + playerId)}.pdf`,
-                        data: dataUriMusa
+                        data: dataUriMusa,
+                        writer_pdfs: pdfsEscritores
                     });
                     if (!respuesta || respuesta.ok !== true) {
                         console.warn("No se pudo entregar el PDF personalizado a la musa:", resumenMusa.client_id, respuesta);
@@ -1962,7 +1963,8 @@ async function descargar_textos(opciones = {}) {
                 const respuesta = await emitirRegaloPdfMusa({
                     player: playerId,
                     filename: `${crearBaseArchivoDescargaJugador(nombre, fechaDescarga, "JUGADOR_" + playerId)}.pdf`,
-                    data: dataUri
+                    data: dataUri,
+                    writer_pdfs: pdfsEscritores
                 });
                 if (!respuesta || respuesta.ok !== true) {
                     console.warn("No se pudo entregar el PDF del equipo:", playerId, respuesta);
@@ -2039,21 +2041,6 @@ async function descargar_textos(opciones = {}) {
         [70, 240, 255],
         [255, 107, 107]
     );
-    await emitirPdfMusas(1, val_nombre1, docJ1, {
-        contenido: contenidoJ1,
-        palabrasBenditas: palabrasBenditas1,
-        accent: [70, 240, 255],
-        shadow: [255, 107, 107]
-    });
-    // Descargar el primer PDF y TXT
-    if (descargar) {
-        docJ1.save(baseArchivoJ1 + '.pdf');
-    }
-    // Combina el nombre del escritor y el contenido HTML
-    console.log("ES ES FINAAAL", val_nombre1 + "\n" + texto_guardado1);
-    if (descargar) {
-        downloadTxtFile(baseArchivoJ1 + '.txt', val_nombre1 + "\n" + contenidoJ1.textoPlano);
-    }
     const palabrasBenditas2 = extraerPalabrasConClase(contenidoJ2.html || "", CLASES_PALABRAS_DESTACADAS_PDF);
     const docJ2 = construirDocumentoJugador(
         2,
@@ -2063,12 +2050,31 @@ async function descargar_textos(opciones = {}) {
         [255, 107, 107],
         [70, 240, 255]
     );
+    const pdfsEscritores = {
+        1: { data: docJ1.output('datauristring'), filename: `${baseArchivoJ1}.pdf` },
+        2: { data: docJ2.output('datauristring'), filename: `${baseArchivoJ2}.pdf` }
+    };
+    await emitirPdfMusas(1, val_nombre1, docJ1, {
+        contenido: contenidoJ1,
+        palabrasBenditas: palabrasBenditas1,
+        accent: [70, 240, 255],
+        shadow: [255, 107, 107]
+    }, pdfsEscritores);
+    // Descargar el primer PDF y TXT
+    if (descargar) {
+        docJ1.save(baseArchivoJ1 + '.pdf');
+    }
+    // Combina el nombre del escritor y el contenido HTML
+    console.log("ES ES FINAAAL", val_nombre1 + "\n" + texto_guardado1);
+    if (descargar) {
+        downloadTxtFile(baseArchivoJ1 + '.txt', val_nombre1 + "\n" + contenidoJ1.textoPlano);
+    }
     await emitirPdfMusas(2, val_nombre2, docJ2, {
         contenido: contenidoJ2,
         palabrasBenditas: palabrasBenditas2,
         accent: [255, 107, 107],
         shadow: [70, 240, 255]
-    });
+    }, pdfsEscritores);
     // Descargar el segundo PDF y TXT
     if (descargar) {
         docJ2.save(baseArchivoJ2 + '.pdf');

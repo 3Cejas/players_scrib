@@ -1208,7 +1208,21 @@ body.page-players.partida-finalizada-escritora #metadatos[data-ganador]::after {
 }
 .partida-final-espectador__duel strong:first-child { color: var(--finish-blue); border: 1px solid var(--finish-blue); box-shadow: 0 0 1.4rem rgba(69,239,255,.28); }
 .partida-final-espectador__duel strong:last-child { color: var(--finish-red); border: 1px solid var(--finish-red); box-shadow: 0 0 1.4rem rgba(255,83,106,.28); }
-.partida-final-espectador__duel span { color: var(--finish-gold); font-size: .75em; }
+.partida-final-espectador__duel .partida-final-espectador__versus {
+    display: grid;
+    width: clamp(3.4rem, 6vw, 5.4rem);
+    aspect-ratio: 1;
+    place-items: center;
+    border: 2px solid var(--finish-gold);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,226,120,.2), rgba(4,9,17,.96) 68%);
+    color: var(--finish-gold);
+    font-size: clamp(.72rem, 1.3vw, 1.2rem);
+    text-shadow: 0 0 .6em currentColor;
+    box-shadow: 0 0 1.2rem rgba(255,226,120,.52), inset 0 0 1rem rgba(255,226,120,.16);
+    transform: rotate(-5deg);
+    animation: partidaFinalVersus 1.2s ease-in-out infinite alternate;
+}
 
 .partida-final-espectador__next {
     color: #dceaff;
@@ -1241,11 +1255,13 @@ body.page-players.partida-finalizada-escritora #metadatos[data-ganador]::after {
 @keyframes partidaFinalGiro { to { transform: rotate(360deg); } }
 @keyframes partidaFinalEstrella { to { transform: scale(1.25) rotate(20deg); } }
 @keyframes partidaFinalTitulo { 0%, 92%, 100% { transform: none; } 94% { transform: translateX(-.018em); } 96% { transform: translateX(.018em); } }
+@keyframes partidaFinalVersus { to { transform: rotate(5deg) scale(1.08); filter: brightness(1.2); } }
 @keyframes partidaFinalSpark { from { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: 1; } to { transform: translateY(-125vh) rotate(420deg); opacity: 0; } }
 
 @media (max-width: 760px) {
-    .partida-final-espectador__duel { grid-template-columns: 1fr; }
-    .partida-final-espectador__duel span { display: none; }
+    .partida-final-espectador__duel { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .45rem; }
+    .partida-final-espectador__duel strong { padding-inline: .55em; }
+    .partida-final-espectador__duel .partida-final-espectador__versus { width: 2.8rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

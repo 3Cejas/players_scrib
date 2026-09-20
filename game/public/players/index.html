@@ -8,7 +8,7 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260920b">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260920c">
     <link rel="stylesheet" type="text/css" href="../../css/video-tutorial.css?v=20260920a">
     <link rel="stylesheet" type="text/css" href="../../css/show-narration.css?v=20260831g">
     <link rel="stylesheet" type="text/css" href="../../css/canto.css?v=20260920a">
@@ -332,23 +332,64 @@
                             <div class="regalo-subtexto">Pulsa para descargarlo.</div>
                         </div>
                     </div>
-                    <section id="musa_postgame" class="musa-postgame" aria-hidden="true">
+                    <section id="musa_postgame" class="musa-postgame" aria-hidden="true" aria-labelledby="musa_postgame_title">
                         <div class="musa-postgame__backdrop" aria-hidden="true"></div>
-                        <article class="musa-postgame__panel" role="dialog" aria-modal="true" aria-labelledby="musa_postgame_title">
+                        <article class="musa-postgame__panel">
+                            <div class="musa-postgame__ambient" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
                             <header class="musa-postgame__header">
                                 <div>
                                     <span class="musa-postgame__eyebrow" data-i18n="muse.postgame.eyebrow">TU PARTIDA</span>
                                     <h2 id="musa_postgame_title" data-i18n="muse.postgame.title">ASÍ HAS INSPIRADO</h2>
                                     <p id="musa_postgame_musa_nombre">MUSA</p>
                                 </div>
-                                <button id="musa_postgame_cerrar" class="musa-postgame__close" type="button" data-i18n-attr="aria-label:muse.postgame.close">×</button>
+                                <div class="musa-postgame__score-ring" aria-label="Efectividad de la musa">
+                                    <span><strong id="musa_postgame_efectividad_ring">0%</strong><small data-i18n="muse.postgame.effectiveness">EFECTIVIDAD</small></span>
+                                </div>
                             </header>
+                            <p id="musa_postgame_veredicto" class="musa-postgame__verdict"></p>
                             <div class="musa-postgame__stats" aria-label="Estadísticas personales">
                                 <div class="musa-postgame__stat"><strong id="musa_postgame_enviadas">0</strong><span data-i18n="muse.postgame.sent">INSPIRACIONES</span></div>
                                 <div class="musa-postgame__stat"><strong id="musa_postgame_introducidas">0</strong><span data-i18n="muse.postgame.used">EN EL TEXTO</span></div>
                                 <div class="musa-postgame__stat"><strong id="musa_postgame_efectividad">0%</strong><span data-i18n="muse.postgame.effectiveness">EFECTIVIDAD</span></div>
                                 <div class="musa-postgame__stat"><strong id="musa_postgame_impacto">0</strong><span data-i18n="muse.postgame.impact">IMPACTO</span></div>
                             </div>
+                            <section class="musa-postgame__infographic" aria-labelledby="musa_postgame_huella_titulo">
+                                <div class="musa-postgame__section-heading">
+                                    <span aria-hidden="true">&#x2726;</span>
+                                    <div><small data-i18n="muse.postgame.footprint_eyebrow">MAPA DE INSPIRACIÓN</small><h3 id="musa_postgame_huella_titulo" data-i18n="muse.postgame.footprint_title">TU HUELLA EN LA HISTORIA</h3></div>
+                                </div>
+                                <div class="musa-postgame__bars">
+                                    <div class="musa-postgame__bar"><span data-i18n="muse.postgame.blessed_words">PALABRAS BENDITAS</span><i><b id="musa_postgame_bar_bonus"></b></i><strong id="musa_postgame_bonus">0</strong></div>
+                                    <div class="musa-postgame__bar"><span data-i18n="muse.postgame.cursed_words">PALABRAS MALDITAS</span><i><b id="musa_postgame_bar_malditas"></b></i><strong id="musa_postgame_malditas">0</strong></div>
+                                    <div class="musa-postgame__bar"><span data-i18n="muse.postgame.letters">LETRAS</span><i><b id="musa_postgame_bar_letras"></b></i><strong id="musa_postgame_letras">0</strong></div>
+                                </div>
+                                <div class="musa-postgame__details">
+                                    <span><small data-i18n="muse.postgame.superbonus">SUPERBONUS</small><strong id="musa_postgame_superbonus">0</strong></span>
+                                    <span><small data-i18n="muse.postgame.positive_impact">IMPULSO</small><strong id="musa_postgame_impacto_positivo">+0s</strong></span>
+                                    <span><small data-i18n="muse.postgame.negative_impact">RIESGO</small><strong id="musa_postgame_impacto_negativo">-0s</strong></span>
+                                </div>
+                            </section>
+                            <section class="musa-postgame__writers" aria-labelledby="musa_postgame_writers_title">
+                                <div class="musa-postgame__section-heading">
+                                    <span aria-hidden="true">&#x270D;&#xFE0F;</span>
+                                    <div><small data-i18n="muse.postgame.writers_eyebrow">LAS DOS HISTORIAS</small><h3 id="musa_postgame_writers_title" data-i18n="muse.postgame.writers_title">ASÍ ESCRIBIERON</h3></div>
+                                </div>
+                                <div class="musa-postgame__writer-cards">
+                                    <button id="musa_postgame_card_j1" class="musa-postgame__writer-card musa-postgame__writer-card--blue" type="button" data-player="1">
+                                        <span id="musa_postgame_card_nombre_j1">ESCRITXR 1</span>
+                                        <strong><b id="musa_postgame_card_palabras_j1">0</b> <small data-i18n="muse.postgame.words">palabras</small></strong>
+                                        <i><b id="musa_postgame_card_bar_j1"></b></i>
+                                        <em><span id="musa_postgame_card_ritmo_j1">0</span> ppm · <span id="musa_postgame_card_inspiracion_j1">0</span> insp.</em>
+                                    </button>
+                                    <button id="musa_postgame_card_j2" class="musa-postgame__writer-card musa-postgame__writer-card--red" type="button" data-player="2">
+                                        <span id="musa_postgame_card_nombre_j2">ESCRITXR 2</span>
+                                        <strong><b id="musa_postgame_card_palabras_j2">0</b> <small data-i18n="muse.postgame.words">palabras</small></strong>
+                                        <i><b id="musa_postgame_card_bar_j2"></b></i>
+                                        <em><span id="musa_postgame_card_ritmo_j2">0</span> ppm · <span id="musa_postgame_card_inspiracion_j2">0</span> insp.</em>
+                                    </button>
+                                </div>
+                                <p id="musa_postgame_writer_story" class="musa-postgame__writer-story"></p>
+                            </section>
                             <div class="musa-postgame__reader">
                                 <div class="musa-postgame__tabs" role="tablist" aria-label="Textos de la partida">
                                     <button id="musa_postgame_tab_propio" class="musa-postgame__tab is-active" type="button" role="tab" aria-selected="true"></button>
@@ -358,13 +399,19 @@
                                     <h3 id="musa_postgame_escritxr_nombre">ESCRITXR</h3>
                                     <div class="musa-postgame__writer-stats">
                                         <span><strong id="musa_postgame_palabras">0</strong> <i data-i18n="muse.postgame.words">palabras</i></span>
+                                        <span><strong id="musa_postgame_unicas">0</strong> <i data-i18n="muse.postgame.unique_words">únicas</i></span>
                                         <span><strong id="musa_postgame_pulsaciones">0</strong> <i data-i18n="muse.postgame.keystrokes">pulsaciones</i></span>
                                         <span><strong id="musa_postgame_ritmo">0</strong> <i data-i18n="muse.postgame.pace">ppm</i></span>
+                                        <span><strong id="musa_postgame_inspiracion">0</strong> <i data-i18n="muse.postgame.inspiration">inspiración</i></span>
+                                        <span><strong id="musa_postgame_retos">0</strong> <i data-i18n="muse.postgame.challenges">retos</i></span>
                                     </div>
                                 </div>
                                 <div id="musa_postgame_texto" class="musa-postgame__text" tabindex="0"></div>
                             </div>
-                            <button id="musa_postgame_pdf" class="musa-postgame__pdf" type="button" data-i18n="muse.postgame.download_again">DESCARGAR PDF DE NUEVO</button>
+                            <div class="musa-postgame__downloads" aria-label="Descargar los textos de la partida">
+                                <button id="musa_postgame_pdf_j1" class="musa-postgame__pdf musa-postgame__pdf--blue" type="button"><span aria-hidden="true">&#x2B07;</span> <span id="musa_postgame_pdf_nombre_j1">DESCARGAR ESCRITXR 1</span></button>
+                                <button id="musa_postgame_pdf_j2" class="musa-postgame__pdf musa-postgame__pdf--red" type="button"><span aria-hidden="true">&#x2B07;</span> <span id="musa_postgame_pdf_nombre_j2">DESCARGAR ESCRITXR 2</span></button>
+                            </div>
                         </article>
                     </section>
                 </div>
@@ -397,10 +444,10 @@
     </section>
 </body>
     <script src="../../dist/socket.io/socket.io.js"></script>
-    <script src="../../js/i18n.js?v=20260917c"></script>
+    <script src="../../js/i18n.js?v=20260920b"></script>
 <script src="../js/musa-assignment.js?v=20260831b"></script>
 <script src="../../js/domains/final-score.js?v=20260903e"></script>
-    <script src="./js/state.js?v=20260920b"></script>
+    <script src="./js/state.js?v=20260920c"></script>
 <script src="../../js/domains/video-tutorial.js?v=20260906b"></script>
 <script src="../../js/domains/show-narration.js?v=20260906b"></script>
 <script src="../../js/domains/canto.js?v=20260920b"></script>

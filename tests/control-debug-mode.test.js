@@ -12,7 +12,7 @@ test("Control hides Debug behind five logo clicks and distributes tools by conte
   assert.doesNotMatch(html, /data-control-tab="debug"/);
   assert.doesNotMatch(html, /id="modo_debug_toggle"/);
   assert.doesNotMatch(html, /id="control_panel_debug"/);
-  assert.match(html, /id="control_panel_juego"[\s\S]*id="debug_tools_juego"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_siguiente_nivel"[^>]*hidden[^>]*[\s\S]*id="debug_cargar_resultado_videojuego"/);
+  assert.match(html, /id="control_panel_juego"[\s\S]*id="debug_tools_juego"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_siguiente_nivel"[^>]*hidden[^>]*[\s\S]*id="debug_cargar_resultado_videojuego"[\s\S]*id="debug_cargar_postgame_musas"/);
   assert.match(html, /id="control_panel_detonadores"[\s\S]*id="debug_tools_detonadores"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_detonadores_toggle"[\s\S]*id="debug_detonadores_velocidad"/);
   assert.match(html, /id="control_panel_representacion"[\s\S]*id="debug_tools_representacion"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_cargar_textos"[\s\S]*id="debug_limpiar_textos"/);
   assert.match(html, /id="control_panel_deliberacion"[\s\S]*id="debug_tools_deliberacion"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_cargar_deliberacion"/);
@@ -32,6 +32,7 @@ test("Control requests authoritative Debug state and routes every test action th
   assert.match(actions, /establecerModoDebug\(!modo_debug_control_activo\)/);
   assert.match(actions, /"cargar_datos_prueba_deliberacion"/);
   assert.match(actions, /"cargar_datos_prueba_videojuego"/);
+  assert.match(actions, /function cargarPostgameMusasPruebaDebug\(\)[\s\S]*"cargar_datos_prueba_musas"/);
   assert.match(actions, /"debug_siguiente_nivel"/);
   assert.match(actions, /"debug_finalizar_partida"/);
   assert.match(actions, /"debug_detonadores_prueba"/);

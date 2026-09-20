@@ -80,7 +80,8 @@ test("the finished-writing scene fully replaces the old spectator HUD", () => {
   const sockets = read("game/spectator/js/socket-events.js");
   const finish = sockets.slice(sockets.indexOf("function ejecutarCierrePartidaEspectador"), sockets.indexOf("function evaluarCierrePartidaEspectador"));
 
-  assert.match(html, /id="partida_final_espectador"[\s\S]*FIN DE LA ESCRITURA[\s\S]*HISTORIAS[\s\S]*LISTAS[\s\S]*AHORA EMPIEZA LA REPRESENTACI/);
+  assert.match(html, /id="partida_final_espectador"[\s\S]*FIN DE LA ESCRITURA[\s\S]*HISTORIAS[\s\S]*LISTAS[\s\S]*partida-final-espectador__versus[^>]*[\s\S]*VS\./);
+  assert.doesNotMatch(html, /AHORA EMPIEZA LA REPRESENTACI/);
   assert.match(css, /\.partida-final-espectador\s*\{[\s\S]*position: fixed;[\s\S]*inset: 0;[\s\S]*overflow: hidden;/);
   assert.match(css, /@keyframes partidaFinalEntrada[\s\S]*@keyframes partidaFinalSpark/);
   assert.match(finish, /logo\.style\.display = "none";[\s\S]*neon\.style\.display = "none";[\s\S]*mostrarCierrePartidaEspectador\(\);/);

@@ -2875,6 +2875,19 @@ function cargarResultadoVideojuegoPruebaDebug() {
     );
 }
 
+function cargarPostgameMusasPruebaDebug() {
+    ejecutarAccionDebugControl(
+        "cargar_datos_prueba_musas",
+        "Enviando una partida ficticia a las musas...",
+        () => estadoAccionDebugControl(
+            "Partida ficticia enviada. Las musas conectadas verán primero el regalo y después sus resultados.",
+            "success",
+            "juego"
+        ),
+        "juego"
+    );
+}
+
 function limpiarDatosPruebaDeliberacionDebug() {
     ejecutarAccionDebugControl(
         "limpiar_datos_prueba_deliberacion",

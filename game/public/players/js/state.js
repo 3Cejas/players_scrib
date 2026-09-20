@@ -353,10 +353,12 @@ let regalo_pdf_ultimo_filename = null;
 let regalo_postgame_data = null;
 let regalo_postgame_escritxr_activo = 1;
 let musa_postgame = getEl("musa_postgame");
-let musa_postgame_cerrar = getEl("musa_postgame_cerrar");
-let musa_postgame_pdf = getEl("musa_postgame_pdf");
+let musa_postgame_pdf_j1 = getEl("musa_postgame_pdf_j1");
+let musa_postgame_pdf_j2 = getEl("musa_postgame_pdf_j2");
 let musa_postgame_tab_propio = getEl("musa_postgame_tab_propio");
 let musa_postgame_tab_rival = getEl("musa_postgame_tab_rival");
+let musa_postgame_card_j1 = getEl("musa_postgame_card_j1");
+let musa_postgame_card_j2 = getEl("musa_postgame_card_j2");
 let campo_palabra = getEl("palabra");
 let tarea = getEl("tarea");
 let mostrar_texto = getEl("mostrar_texto");
@@ -1481,7 +1483,7 @@ function mostrarRegaloPdf(payload) {
     if (payload.player && player && Number(payload.player) !== Number(player)) {
         return;
     }
-    if (!puedeMostrarRegaloPdfMusa()) {
+    if (!puedeMostrarRegaloPdfMusa() && payload.debug !== true) {
         regalo_pdf_pendiente = payload;
         return;
     }
@@ -1497,8 +1499,8 @@ function mostrarRegaloPdf(payload) {
     regalo_pdf_pendiente = null;
 }
 
-function traducirPostgameMusa(clave, fallback) {
-    return window && typeof window.scribT2P === "function" ? window.scribT2P(clave, {}, fallback) : fallback;
+function traducirPostgameMusa(clave, fallback, variables = {}) {
+    return window && typeof window.scribT2P === "function" ? window.scribT2P(clave, variables, fallback) : fallback;
 }
 
 function valorPostgameMusa(id, valor) {
@@ -1513,20 +1515,91 @@ function escritorPostgameMusa(playerId) {
         : { nombre: `ESCRITXR ${playerId}`, texto: "", stats: {} };
 }
 
+function colorPostgameEscritxr(playerId) {
+    return Number(playerId) === 2 ? "#ff6578" : "#43eaff";
+}
+
+function limitarPostgame(valor, min = 0, max = 100) {
+    return Math.max(min, Math.min(max, Number(valor) || 0));
+}
+
+function fijarBarraPostgameMusa(id, porcentaje) {
+    const barra = getEl(id);
+    if (barra) barra.style.setProperty("--postgame-bar-pct", `${limitarPostgame(porcentaje)}%`);
+}
+
+function pdfEscritxrPostgameMusa(playerId) {
+    const id = Number(playerId) === 2 ? 2 : 1;
+    const escritxr = escritorPostgameMusa(id);
+    const pdf = escritxr && escritxr.pdf && typeof escritxr.pdf === "object" ? escritxr.pdf : null;
+    if (pdf && pdf.data) return pdf;
+    const equipo = Number(regalo_postgame_data && regalo_postgame_data.player) === 2 ? 2 : 1;
+    if (id === equipo && regalo_pdf_ultimo_data) {
+        return { data: regalo_pdf_ultimo_data, filename: regalo_pdf_ultimo_filename };
+    }
+    return null;
+}
+
+function textoVeredictoPostgameMusa(efectividad, introducidas) {
+    if (efectividad >= 70) {
+        return traducirPostgameMusa("muse.postgame.verdict_high", `Tu imaginación entró de lleno en la historia: ${introducidas} ideas llegaron al texto.`, { count: introducidas });
+    }
+    if (efectividad >= 40) {
+        return traducirPostgameMusa("muse.postgame.verdict_mid", `Abriste caminos para la historia: ${introducidas} ideas encontraron su momento.`, { count: introducidas });
+    }
+    return traducirPostgameMusa("muse.postgame.verdict_low", "Sembraste posibilidades: algunas quedaron esperando otra historia en la que aparecer.");
+}
+
+function pintarComparativaEscritoresPostgameMusa() {
+    const escritores = [1, 2].map((id) => ({ id, datos: escritorPostgameMusa(id) }));
+    const maxPalabras = Math.max(1, ...escritores.map(({ datos }) => Math.max(0, Number(datos.stats && datos.stats.palabras) || 0)));
+    escritores.forEach(({ id, datos }) => {
+        const stats = datos.stats && typeof datos.stats === "object" ? datos.stats : {};
+        const nombre = String(datos.nombre || `ESCRITXR ${id}`);
+        valorPostgameMusa(`musa_postgame_card_nombre_j${id}`, nombre);
+        valorPostgameMusa(`musa_postgame_card_palabras_j${id}`, Math.max(0, Number(stats.palabras) || 0));
+        valorPostgameMusa(`musa_postgame_card_ritmo_j${id}`, Math.max(0, Number(stats.ritmo_ppm) || 0));
+        valorPostgameMusa(`musa_postgame_card_inspiracion_j${id}`, Math.max(0, Number(stats.inspiracion) || 0));
+        fijarBarraPostgameMusa(`musa_postgame_card_bar_j${id}`, (Math.max(0, Number(stats.palabras) || 0) / maxPalabras) * 100);
+        valorPostgameMusa(`musa_postgame_pdf_nombre_j${id}`, `${traducirPostgameMusa("muse.postgame.download", "DESCARGAR")} ${nombre}`);
+        const botonPdf = id === 2 ? musa_postgame_pdf_j2 : musa_postgame_pdf_j1;
+        if (botonPdf) {
+            botonPdf.disabled = !pdfEscritxrPostgameMusa(id);
+            botonPdf.setAttribute("aria-label", `${traducirPostgameMusa("muse.postgame.download", "Descargar")} ${nombre}`);
+        }
+    });
+}
+
 function pintarTextoPostgameMusa(playerId) {
     const id = Number(playerId) === 2 ? 2 : 1;
     regalo_postgame_escritxr_activo = id;
     const escritxr = escritorPostgameMusa(id);
     const stats = escritxr.stats && typeof escritxr.stats === "object" ? escritxr.stats : {};
+    const nombreEscritxr = escritxr.nombre || `ESCRITXR ${id}`;
     valorPostgameMusa("musa_postgame_escritxr_nombre", escritxr.nombre || `ESCRITXR ${id}`);
     valorPostgameMusa("musa_postgame_palabras", Math.max(0, Number(stats.palabras) || 0));
+    valorPostgameMusa("musa_postgame_unicas", Math.max(0, Number(stats.palabras_unicas) || 0));
     valorPostgameMusa("musa_postgame_pulsaciones", Math.max(0, Number(stats.pulsaciones) || 0));
     valorPostgameMusa("musa_postgame_ritmo", Math.max(0, Number(stats.ritmo_ppm) || 0));
+    valorPostgameMusa("musa_postgame_inspiracion", Math.max(0, Number(stats.inspiracion) || 0));
+    valorPostgameMusa("musa_postgame_retos", Math.max(0, Number(stats.retos) || 0));
+    const texto = String(escritxr.texto || "").trim();
+    const textoEl = getEl("musa_postgame_texto");
+    valorPostgameMusa("musa_postgame_texto", texto || traducirPostgameMusa("muse.postgame.empty_text", "Este texto quedó vacío."));
+    if (textoEl) textoEl.classList.toggle("is-empty", !texto);
     valorPostgameMusa(
-        "musa_postgame_texto",
-        String(escritxr.texto || "").trim() || traducirPostgameMusa("muse.postgame.empty_text", "Este texto quedó vacío.")
+        "musa_postgame_writer_story",
+        traducirPostgameMusa(
+            "muse.postgame.writer_story",
+            `${nombreEscritxr} escribió ${Math.max(0, Number(stats.palabras) || 0)} palabras a ${Math.max(0, Number(stats.ritmo_ppm) || 0)} ppm y convirtió ${Math.max(0, Number(stats.inspiracion) || 0)} inspiraciones en material para la historia.`,
+            {
+                name: nombreEscritxr,
+                words: Math.max(0, Number(stats.palabras) || 0),
+                pace: Math.max(0, Number(stats.ritmo_ppm) || 0),
+                inspiration: Math.max(0, Number(stats.inspiracion) || 0)
+            }
+        )
     );
-    const propio = Number(regalo_postgame_data && regalo_postgame_data.player) === id;
     [musa_postgame_tab_propio, musa_postgame_tab_rival].forEach((tab) => {
         if (!tab) return;
         const tabPlayer = Number(tab.dataset.player);
@@ -1534,8 +1607,11 @@ function pintarTextoPostgameMusa(playerId) {
         tab.classList.toggle("is-active", activo);
         tab.setAttribute("aria-selected", activo ? "true" : "false");
     });
+    [musa_postgame_card_j1, musa_postgame_card_j2].forEach((card) => {
+        if (card) card.classList.toggle("is-active", Number(card.dataset.player) === id);
+    });
     if (musa_postgame) {
-        musa_postgame.style.setProperty("--postgame-reader-color", propio ? "var(--postgame-team-color)" : "var(--postgame-rival-color)");
+        musa_postgame.style.setProperty("--postgame-reader-color", colorPostgameEscritxr(id));
     }
 }
 
@@ -1548,21 +1624,40 @@ function pintarPostgameMusa() {
         : {};
     const stats = datosMusa.stats && typeof datosMusa.stats === "object" ? datosMusa.stats : {};
     valorPostgameMusa("musa_postgame_musa_nombre", datosMusa.nombre || "MUSA");
-    valorPostgameMusa("musa_postgame_enviadas", Math.max(0, Number(stats.enviadas) || 0));
-    valorPostgameMusa("musa_postgame_introducidas", Math.max(0, Number(stats.introducidas) || 0));
-    valorPostgameMusa("musa_postgame_efectividad", `${Math.max(0, Number(stats.efectividad_pct) || 0)}%`);
+    const enviadas = Math.max(0, Number(stats.enviadas) || 0);
+    const introducidas = Math.max(0, Number(stats.introducidas) || 0);
+    const efectividad = limitarPostgame(stats.efectividad_pct);
+    valorPostgameMusa("musa_postgame_enviadas", enviadas);
+    valorPostgameMusa("musa_postgame_introducidas", introducidas);
+    valorPostgameMusa("musa_postgame_efectividad", `${efectividad}%`);
+    valorPostgameMusa("musa_postgame_efectividad_ring", `${efectividad}%`);
+    valorPostgameMusa("musa_postgame_veredicto", textoVeredictoPostgameMusa(efectividad, introducidas));
     const impacto = Number(stats.impacto_neto) || 0;
-    valorPostgameMusa("musa_postgame_impacto", `${impacto > 0 ? "+" : ""}${impacto}`);
+    valorPostgameMusa("musa_postgame_impacto", `${impacto > 0 ? "+" : ""}${impacto}s`);
+    valorPostgameMusa("musa_postgame_bonus", Math.max(0, Number(stats.bonus) || 0));
+    valorPostgameMusa("musa_postgame_malditas", Math.max(0, Number(stats.malditas) || 0));
+    valorPostgameMusa("musa_postgame_letras", Math.max(0, Number(stats.letras) || 0));
+    valorPostgameMusa("musa_postgame_superbonus", Math.max(0, Number(stats.superbonus) || 0));
+    valorPostgameMusa("musa_postgame_impacto_positivo", `+${Math.max(0, Number(stats.impacto_positivo) || 0)}s`);
+    valorPostgameMusa("musa_postgame_impacto_negativo", `-${Math.max(0, Number(stats.impacto_negativo) || 0)}s`);
+    const totalTipos = Math.max(1, (Number(stats.bonus) || 0) + (Number(stats.malditas) || 0) + (Number(stats.letras) || 0));
+    fijarBarraPostgameMusa("musa_postgame_bar_bonus", ((Number(stats.bonus) || 0) / totalTipos) * 100);
+    fijarBarraPostgameMusa("musa_postgame_bar_malditas", ((Number(stats.malditas) || 0) / totalTipos) * 100);
+    fijarBarraPostgameMusa("musa_postgame_bar_letras", ((Number(stats.letras) || 0) / totalTipos) * 100);
     if (musa_postgame_tab_propio) {
         musa_postgame_tab_propio.dataset.player = String(equipo);
-        musa_postgame_tab_propio.textContent = traducirPostgameMusa("muse.postgame.your_writer", "TU ESCRITXR");
+        musa_postgame_tab_propio.textContent = escritorPostgameMusa(equipo).nombre || `ESCRITXR ${equipo}`;
+        musa_postgame_tab_propio.style.setProperty("--postgame-tab-color", colorPostgameEscritxr(equipo));
     }
     if (musa_postgame_tab_rival) {
         musa_postgame_tab_rival.dataset.player = String(rival);
-        musa_postgame_tab_rival.textContent = traducirPostgameMusa("muse.postgame.other_writer", "OTRX ESCRITXR");
+        musa_postgame_tab_rival.textContent = escritorPostgameMusa(rival).nombre || `ESCRITXR ${rival}`;
+        musa_postgame_tab_rival.style.setProperty("--postgame-tab-color", colorPostgameEscritxr(rival));
     }
     musa_postgame.style.setProperty("--postgame-team-color", equipo === 2 ? "#ff6578" : "#43eaff");
     musa_postgame.style.setProperty("--postgame-rival-color", equipo === 2 ? "#43eaff" : "#ff6578");
+    musa_postgame.style.setProperty("--musa-effectiveness-angle", `${efectividad * 3.6}deg`);
+    pintarComparativaEscritoresPostgameMusa();
     pintarTextoPostgameMusa(equipo);
     return true;
 }
@@ -1647,19 +1742,34 @@ if (musa_postgame_tab_propio) {
 if (musa_postgame_tab_rival) {
     musa_postgame_tab_rival.addEventListener("click", () => pintarTextoPostgameMusa(musa_postgame_tab_rival.dataset.player));
 }
-if (musa_postgame_cerrar) {
-    musa_postgame_cerrar.addEventListener("click", () => ocultarPostgameMusa());
+if (musa_postgame_card_j1) {
+    musa_postgame_card_j1.addEventListener("click", () => pintarTextoPostgameMusa(1));
 }
-if (musa_postgame_pdf) {
-    musa_postgame_pdf.addEventListener("click", async () => {
-        musa_postgame_pdf.disabled = true;
-        try {
-            await descargarArchivoRegalo(regalo_pdf_ultimo_data, regalo_pdf_ultimo_filename);
-        } catch (error) {
-            console.error("No se pudo volver a descargar el PDF:", error);
-        } finally {
-            musa_postgame_pdf.disabled = false;
-        }
+if (musa_postgame_card_j2) {
+    musa_postgame_card_j2.addEventListener("click", () => pintarTextoPostgameMusa(2));
+}
+
+async function descargarPdfEscritxrPostgameMusa(playerId, boton) {
+    const pdf = pdfEscritxrPostgameMusa(playerId);
+    if (!pdf || !boton) return;
+    boton.disabled = true;
+    try {
+        await descargarArchivoRegalo(pdf.data, pdf.filename);
+    } catch (error) {
+        console.error("No se pudo volver a descargar el PDF:", error);
+    } finally {
+        boton.disabled = false;
+    }
+}
+
+if (musa_postgame_pdf_j1) {
+    musa_postgame_pdf_j1.addEventListener("click", async () => {
+        await descargarPdfEscritxrPostgameMusa(1, musa_postgame_pdf_j1);
+    });
+}
+if (musa_postgame_pdf_j2) {
+    musa_postgame_pdf_j2.addEventListener("click", async () => {
+        await descargarPdfEscritxrPostgameMusa(2, musa_postgame_pdf_j2);
     });
 }
 if (window && typeof window.scribOnLanguageChange2P === "function") {

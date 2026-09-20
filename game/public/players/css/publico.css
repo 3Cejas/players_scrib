@@ -4734,61 +4734,97 @@ body.musa-postgame-activo {
     position: fixed;
     inset: 0;
     z-index: 205;
-    display: grid;
-    place-items: center;
-    padding: clamp(12px, 3vw, 28px);
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 320ms ease, visibility 320ms step-end;
+    background: #020811;
+    transition: opacity 440ms ease, visibility 440ms step-end;
     --postgame-team-color: #43eaff;
     --postgame-rival-color: #ff6578;
     --postgame-reader-color: var(--postgame-team-color);
+    --musa-effectiveness-angle: 0deg;
 }
 
 .musa-postgame.musa-postgame--visible {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transition: opacity 320ms ease, visibility 0ms step-start;
+    transition: opacity 440ms ease, visibility 0ms step-start;
 }
 
 .musa-postgame__backdrop {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background:
-        radial-gradient(circle at 16% 12%, color-mix(in srgb, var(--postgame-team-color), transparent 76%), transparent 44%),
-        radial-gradient(circle at 88% 84%, color-mix(in srgb, var(--postgame-rival-color), transparent 82%), transparent 42%),
-        rgba(1, 6, 13, 0.94);
-    backdrop-filter: blur(9px);
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px),
+        radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--postgame-team-color), transparent 70%), transparent 34%),
+        radial-gradient(circle at 92% 68%, color-mix(in srgb, var(--postgame-rival-color), transparent 76%), transparent 38%),
+        linear-gradient(155deg, #03101d 0%, #03070e 48%, #120610 100%);
+    background-size: 34px 34px, 34px 34px, auto, auto, auto;
 }
 
 .musa-postgame__panel {
     position: relative;
     z-index: 1;
-    width: min(100%, 760px);
-    max-height: calc(100dvh - clamp(24px, 6vw, 56px));
-    overflow: auto;
-    padding: clamp(18px, 4vw, 34px);
-    border: 1px solid color-mix(in srgb, var(--postgame-team-color), transparent 48%);
-    border-radius: clamp(22px, 5vw, 38px);
-    background: linear-gradient(155deg, rgba(8, 20, 31, 0.98), rgba(4, 8, 15, 0.98));
-    box-shadow: 0 0 42px color-mix(in srgb, var(--postgame-team-color), transparent 78%);
-    transform: translateY(32px) scale(0.96);
-    transition: transform 420ms cubic-bezier(0.2, 0.85, 0.2, 1);
+    box-sizing: border-box;
+    width: min(100%, 1120px);
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: clamp(28px, 6vw, 72px) clamp(14px, 4.8vw, 58px) clamp(54px, 9vw, 104px);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    transform: translateY(42px);
+    transition: transform 720ms cubic-bezier(0.16, 0.86, 0.22, 1);
 }
 
 .musa-postgame--visible .musa-postgame__panel {
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
+}
+
+.musa-postgame__ambient {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.musa-postgame__ambient i {
+    position: absolute;
+    left: var(--postgame-spark-x, 50%);
+    bottom: -12vh;
+    width: clamp(5px, 1vw, 10px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--postgame-spark-color, var(--postgame-team-color));
+    box-shadow: 0 0 18px currentColor;
+    animation: musaPostgameSpark var(--postgame-spark-speed, 6s) linear infinite;
+    animation-delay: var(--postgame-spark-delay, 0s);
+}
+.musa-postgame__ambient i:nth-child(1){--postgame-spark-x:6%;--postgame-spark-speed:6.2s;--postgame-spark-delay:-1s}
+.musa-postgame__ambient i:nth-child(2){--postgame-spark-x:23%;--postgame-spark-color:#ffe47b;--postgame-spark-speed:7.4s;--postgame-spark-delay:-4s}
+.musa-postgame__ambient i:nth-child(3){--postgame-spark-x:42%;--postgame-spark-speed:5.8s;--postgame-spark-delay:-2s}
+.musa-postgame__ambient i:nth-child(4){--postgame-spark-x:61%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:7s;--postgame-spark-delay:-5s}
+.musa-postgame__ambient i:nth-child(5){--postgame-spark-x:79%;--postgame-spark-color:#fff;--postgame-spark-speed:6.5s;--postgame-spark-delay:-3s}
+.musa-postgame__ambient i:nth-child(6){--postgame-spark-x:94%;--postgame-spark-color:var(--postgame-rival-color);--postgame-spark-speed:7.8s;--postgame-spark-delay:-6s}
+
+.musa-postgame__panel > :not(.musa-postgame__ambient) {
+    position: relative;
+    z-index: 1;
 }
 
 .musa-postgame__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(18px, 4vw, 48px);
     text-align: left;
 }
+.musa-postgame__header > div:first-child { min-width: 0; }
 
 .musa-postgame__eyebrow,
 .musa-postgame__header p {
@@ -4802,22 +4838,39 @@ body.musa-postgame-activo {
 .musa-postgame__header h2 {
     margin: 0.38rem 0 0;
     color: #fff;
-    font-size: clamp(1.55rem, 7vw, 3rem);
+    font-size: clamp(1.65rem, 5vw, 3.25rem);
     line-height: 0.98;
     text-shadow: 0 0 18px color-mix(in srgb, var(--postgame-team-color), transparent 60%);
 }
-.musa-postgame__header p { margin: 0.7rem 0 0; font-size: 0.75rem; }
+.musa-postgame__header p { margin: 0.8rem 0 0; font-size: clamp(.72rem, 2vw, 1rem); }
 
-.musa-postgame__close {
-    flex: 0 0 auto;
-    width: 42px;
-    height: 42px;
-    border: 1px solid color-mix(in srgb, var(--postgame-team-color), transparent 42%);
+.musa-postgame__score-ring {
+    display: grid;
+    width: clamp(118px, 25vw, 190px);
+    aspect-ratio: 1;
+    place-items: center;
     border-radius: 50%;
-    background: rgba(2, 9, 16, 0.82);
-    color: #fff;
-    font-size: 1.7rem;
-    line-height: 1;
+    background:
+        radial-gradient(circle, #06101b 0 57%, transparent 58%),
+        conic-gradient(var(--postgame-team-color) 0 var(--musa-effectiveness-angle), rgba(255,255,255,.09) var(--musa-effectiveness-angle) 360deg);
+    box-shadow: 0 0 38px color-mix(in srgb, var(--postgame-team-color), transparent 66%), inset 0 0 28px rgba(0,0,0,.8);
+    animation: musaPostgameRingFloat 2.4s ease-in-out infinite alternate;
+}
+.musa-postgame__score-ring span { text-align: center; }
+.musa-postgame__score-ring strong { display: block; color: #fff; font-size: clamp(1.6rem, 6vw, 3rem); }
+.musa-postgame__score-ring small { display: block; margin-top: .3rem; color: var(--postgame-team-color); font-size: clamp(.42rem, 1.4vw, .65rem); letter-spacing: .08em; }
+
+.musa-postgame__verdict,
+.musa-postgame__writer-story {
+    margin: clamp(18px, 4vh, 34px) 0;
+    padding: clamp(14px, 3vw, 22px);
+    border-left: 4px solid var(--postgame-team-color);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--postgame-team-color), transparent 87%), transparent);
+    color: #eafcff;
+    font-family: "VT323", monospace;
+    font-size: clamp(1.25rem, 4.6vw, 2rem);
+    line-height: 1.15;
+    text-align: left;
 }
 
 .musa-postgame__stats {
@@ -4834,7 +4887,13 @@ body.musa-postgame-activo {
     border-radius: 16px;
     background: color-mix(in srgb, var(--postgame-team-color), transparent 93%);
     text-align: center;
+    opacity: 0;
+    transform: translateY(18px) scale(.95);
 }
+.musa-postgame--visible .musa-postgame__stat { animation: musaPostgameTileIn 520ms cubic-bezier(.16,.86,.22,1) forwards; }
+.musa-postgame--visible .musa-postgame__stat:nth-child(2) { animation-delay: 90ms; }
+.musa-postgame--visible .musa-postgame__stat:nth-child(3) { animation-delay: 180ms; }
+.musa-postgame--visible .musa-postgame__stat:nth-child(4) { animation-delay: 270ms; }
 .musa-postgame__stat strong {
     display: block;
     color: #fff;
@@ -4850,6 +4909,98 @@ body.musa-postgame-activo {
     font-size: clamp(0.47rem, 1.85vw, 0.68rem);
     letter-spacing: 0.05em;
 }
+
+.musa-postgame__infographic,
+.musa-postgame__writers {
+    margin: clamp(20px, 4vh, 34px) 0;
+    padding: clamp(16px, 3.8vw, 28px);
+    border: 1px solid color-mix(in srgb, var(--postgame-team-color), transparent 64%);
+    border-radius: 22px;
+    background: linear-gradient(145deg, rgba(5,18,29,.9), rgba(5,8,15,.78));
+    box-shadow: inset 0 0 34px color-mix(in srgb, var(--postgame-team-color), transparent 94%);
+}
+
+.musa-postgame__section-heading {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+.musa-postgame__section-heading > span { color: #ffe47b; font-size: 1.7rem; filter: drop-shadow(0 0 10px #ffe47b); }
+.musa-postgame__section-heading small { color: var(--postgame-team-color); font-size: clamp(.5rem, 1.7vw, .68rem); letter-spacing: .12em; }
+.musa-postgame__section-heading h3 { margin: .28rem 0 0; color: #fff; font-size: clamp(.95rem, 3.4vw, 1.45rem); }
+
+.musa-postgame__bars { display: grid; gap: 14px; }
+.musa-postgame__bar {
+    display: grid;
+    grid-template-columns: minmax(110px, .72fr) minmax(90px, 1.5fr) auto;
+    align-items: center;
+    gap: 11px;
+    color: rgba(255,255,255,.75);
+    font-size: clamp(.52rem, 1.8vw, .72rem);
+    text-align: left;
+}
+.musa-postgame__bar > i,
+.musa-postgame__writer-card > i {
+    display: block;
+    height: 11px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 999px;
+    background: rgba(255,255,255,.05);
+}
+.musa-postgame__bar > i > b,
+.musa-postgame__writer-card > i > b {
+    display: block;
+    width: var(--postgame-bar-pct, 0%);
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    border-radius: inherit;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--postgame-team-color), #fff 12%), #ffe47b);
+}
+.musa-postgame--visible .musa-postgame__bar > i > b,
+.musa-postgame--visible .musa-postgame__writer-card > i > b { animation: musaPostgameBarIn 900ms 260ms cubic-bezier(.16,.86,.22,1) forwards; }
+.musa-postgame__bar > strong { min-width: 2ch; color: #fff; font-size: 1rem; text-align: right; }
+
+.musa-postgame__details {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 20px;
+}
+.musa-postgame__details > span { padding: 13px 7px; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: rgba(255,255,255,.025); text-align: center; }
+.musa-postgame__details small { display: block; color: rgba(255,255,255,.58); font-size: clamp(.46rem, 1.6vw, .62rem); }
+.musa-postgame__details strong { display: block; margin-top: .45rem; color: #fff; font-size: clamp(1rem, 3.8vw, 1.55rem); }
+
+.musa-postgame__writer-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+.musa-postgame__writer-card {
+    --writer-card-color: #43eaff;
+    display: grid;
+    gap: 9px;
+    padding: clamp(14px, 3vw, 21px);
+    border: 1px solid color-mix(in srgb, var(--writer-card-color), transparent 46%);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--writer-card-color), transparent 92%);
+    color: #fff;
+    font-family: "Retro-gaming", monospace;
+    text-align: left;
+    box-shadow: 0 0 24px color-mix(in srgb, var(--writer-card-color), transparent 88%);
+    cursor: pointer;
+}
+.musa-postgame__writer-card--red { --writer-card-color: #ff6578; }
+.musa-postgame__writer-card > span { overflow: hidden; color: var(--writer-card-color); font-size: clamp(.66rem, 2.4vw, .98rem); text-overflow: ellipsis; white-space: nowrap; }
+.musa-postgame__writer-card > strong { font-size: clamp(1.05rem, 4vw, 1.6rem); }
+.musa-postgame__writer-card > strong small { font-size: .5em; font-weight: normal; }
+.musa-postgame__writer-card > i > b { background: linear-gradient(90deg, var(--writer-card-color), color-mix(in srgb, var(--writer-card-color), white 54%)); }
+.musa-postgame__writer-card > em { color: rgba(255,255,255,.62); font-size: clamp(.48rem, 1.8vw, .68rem); font-style: normal; }
+.musa-postgame__writer-card.is-active { outline: 2px solid var(--writer-card-color); outline-offset: 2px; transform: translateY(-2px); }
+.musa-postgame__writer-story { margin-bottom: 0; border-left-color: #ffe47b; background: linear-gradient(90deg, rgba(255,228,123,.1), transparent); }
 
 .musa-postgame__reader {
     overflow: hidden;
@@ -4879,10 +5030,10 @@ body.musa-postgame-activo {
     letter-spacing: 0.06em;
 }
 .musa-postgame__tab.is-active {
-    border-color: var(--postgame-reader-color);
+    border-color: var(--postgame-tab-color, var(--postgame-reader-color));
     color: #fff;
-    background: color-mix(in srgb, var(--postgame-reader-color), transparent 84%);
-    box-shadow: inset 0 -3px 0 var(--postgame-reader-color), 0 0 16px color-mix(in srgb, var(--postgame-reader-color), transparent 80%);
+    background: color-mix(in srgb, var(--postgame-tab-color, var(--postgame-reader-color)), transparent 84%);
+    box-shadow: inset 0 -3px 0 var(--postgame-tab-color, var(--postgame-reader-color)), 0 0 16px color-mix(in srgb, var(--postgame-tab-color, var(--postgame-reader-color)), transparent 80%);
 }
 
 .musa-postgame__writer-head { padding: 16px 18px 12px; text-align: left; }
@@ -4902,34 +5053,69 @@ body.musa-postgame-activo {
 .musa-postgame__writer-stats strong { color: #fff; }
 .musa-postgame__writer-stats i { font-style: normal; }
 .musa-postgame__text {
-    max-height: min(34dvh, 330px);
-    min-height: 150px;
+    max-height: min(46dvh, 460px);
+    min-height: 190px;
     overflow: auto;
     padding: 18px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    color: #edf5fa;
-    font-family: system-ui, sans-serif;
-    font-size: clamp(0.94rem, 3.4vw, 1.08rem);
-    line-height: 1.65;
+    color: color-mix(in srgb, var(--postgame-reader-color), white 24%);
+    font-family: "VT323", monospace;
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    font-weight: bold;
+    line-height: 1.32;
     text-align: left;
+    text-shadow: 0 0 12px color-mix(in srgb, var(--postgame-reader-color), transparent 78%);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
+.musa-postgame__text.is-empty { display: grid; place-items: center; color: color-mix(in srgb, var(--postgame-reader-color), white 32%); text-align: center; }
+
+.musa-postgame__downloads {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
 .musa-postgame__pdf {
     width: 100%;
-    margin-top: 14px;
-    border-color: color-mix(in srgb, var(--postgame-team-color), transparent 42%);
+    margin: 0;
+    border-color: color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 38%);
     color: #fff;
-    background: color-mix(in srgb, var(--postgame-team-color), transparent 86%);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 72%), rgba(2,8,14,.92));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--download-color, var(--postgame-team-color)), transparent 84%);
 }
+.musa-postgame__pdf--blue { --download-color: #43eaff; }
+.musa-postgame__pdf--red { --download-color: #ff6578; }
+.musa-postgame__pdf > span:first-child { color: var(--download-color); font-size: 1.25em; }
 .musa-postgame button:active { transform: translateY(1px) scale(0.99); }
 .musa-postgame button:disabled { opacity: 0.5; }
 
+@keyframes musaPostgameTileIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes musaPostgameBarIn { to { transform: scaleX(1); } }
+@keyframes musaPostgameRingFloat { to { transform: translateY(-7px) rotate(2deg); filter: brightness(1.12); } }
+@keyframes musaPostgameSpark { 0% { transform: translateY(0) scale(.5); opacity: 0; } 12% { opacity: .85; } 100% { transform: translateY(-118vh) scale(1.3); opacity: 0; } }
+
 @media (max-width: 520px) {
-    .musa-postgame { padding: 8px; }
-    .musa-postgame__panel { max-height: calc(100dvh - 16px); padding: 18px 12px; border-radius: 24px; }
+    .musa-postgame__panel { padding: 24px 10px 52px; }
+    .musa-postgame__header { grid-template-columns: minmax(0, 1fr) 104px; gap: 10px; }
+    .musa-postgame__score-ring { width: 104px; }
     .musa-postgame__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .musa-postgame__text { max-height: 31dvh; }
+    .musa-postgame__bar { grid-template-columns: minmax(84px, .78fr) minmax(64px, 1.2fr) auto; }
+    .musa-postgame__writer-cards,
+    .musa-postgame__downloads { grid-template-columns: minmax(0, 1fr); }
+    .musa-postgame__text { max-height: 40dvh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .musa-postgame__ambient i,
+    .musa-postgame__score-ring,
+    .musa-postgame--visible .musa-postgame__stat,
+    .musa-postgame--visible .musa-postgame__bar > i > b,
+    .musa-postgame--visible .musa-postgame__writer-card > i > b {
+        animation: none !important;
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* Calentamiento nuevo: envio de palabras a nube */
