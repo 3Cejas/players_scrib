@@ -37,10 +37,10 @@ const PLAYER_STATE_VERSION = "20260917b";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260917c";
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260917b";
 const JURY_CSS_VERSION = "20260920c";
-const JURY_STATE_VERSION = "20260920a";
+const JURY_STATE_VERSION = "20260920b";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260920d";
-const CONTROL_ACTIONS_VERSION = "20260920d";
+const CONTROL_CSS_VERSION = "20260920e";
+const CONTROL_ACTIONS_VERSION = "20260920e";
 const CONTROL_I18N_VERSION = "20260917b";
 const CONTROL_STATE_VERSION = "20260917c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260920a";
@@ -448,7 +448,7 @@ test("writer client blocks stale duplicate writer sessions", () => {
   assert.match(js, /socket\.disconnect\(\)/);
   assert.match(state, /function obtenerClientIdSesionEscritora\(\)/);
   assert.match(state, /window\.sessionStorage\.getItem\(key\)/);
-  assert.match(js, /socket\.emit\('registrar_escritor', \{\s*player,\s*client_id: obtenerClientIdSesionEscritora\(\)\s*\}\);/);
+  assert.match(js, /socket\.emit\('registrar_escritor', \{\s*player,\s*client_id: obtenerClientIdSesionEscritora\(\)\s*\}, \(respuesta = \{\}\) => \{/);
   assert.match(js, /Otra sesi\\u00f3n activa de este rol est\\u00e1 activa/);
 });
 
@@ -517,7 +517,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(html, /id="line_numbers_j2"/);
   assert.match(
     html,
-    /<span data-mode="palabras bonus">PB<\/span>\s*<span data-mode="letra bendita">LB<\/span>\s*<span data-mode="letra prohibida">LM<\/span>\s*<span data-mode="tertulia">T<\/span>\s*<span data-mode="palabras prohibidas">PM<\/span>\s*<span data-mode="frase final">F<\/span>/
+    /<span data-mode="palabras bonus">PB<\/span>\s*<span data-mode="letra bendita">LB<\/span>\s*<span data-mode="tertulia">T<\/span>\s*<span data-mode="letra prohibida">LM<\/span>\s*<span data-mode="palabras prohibidas">PM<\/span>\s*<span data-mode="frase final">F<\/span>/
   );
   assert.match(html, /<span>TIEMPO RESTANTE<\/span>/);
   assert.doesNotMatch(html, /<span>DURACI&Oacute;N<\/span>/);
@@ -646,8 +646,8 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(actions, /function reanudar_modo\(\)\{[\s\S]*if\(modo_actual !== "tertulia"\)\{[\s\S]*return false;/);
   assert.match(actions, /function saltar_tertulia\(\)[\s\S]*pausado = false;[\s\S]*socket\.emit\('saltar_tertulia',[\s\S]*resolverContinuacion\);/);
   assert.match(actions, /timeout_continuar_tertulia_control = setTimeout\([\s\S]*ACK_TIMEOUT[\s\S]*3000\);/);
-  assert.match(socketEvents, /Tertulia es una pausa sin límite: Control decide cuándo continuar/);
-  assert.match(socketEvents, /socket\.on\('tiempo_muerto_control',[\s\S]*window\.detenerCuentaAtrasModoControl\(\)[\s\S]*TimeoutTiempoMuerto = null/);
+  assert.match(socketEvents, /el servidor la continuará[\s\S]*automáticamente cuando termine su duración configurada/);
+  assert.match(socketEvents, /socket\.on\('tiempo_muerto_control',[\s\S]*window\.iniciarCuentaAtrasModoControl\([\s\S]*TimeoutTiempoMuerto = null/);
   assert.doesNotMatch(socketEvents, /pausar\(\{ motivo: "tertulia" \}\)/);
   assert.match(css, /button\.btn\.stats-nav-button\s*\{[\s\S]*width: clamp\(2rem, 2\.6vw, 2\.55rem\);[\s\S]*font-size: 0;/);
   assert.match(css, /button\.btn\.stats-nav-button::before\s*\{[\s\S]*border-width: 0\.16rem 0\.16rem 0 0;/);
@@ -1087,7 +1087,7 @@ test("spectator defers post-inicio until the complete countdown has finished", (
   const countdownStart = socketJs.indexOf("function programarAplicacionModoTrasCountdownEspectador");
   const countdownEnd = socketJs.indexOf("function programarPasoCountdownEspectador", countdownStart);
   const countdownBody = socketJs.slice(countdownStart, countdownEnd);
-  assert.match(countdownBody, /vaciarColaPutadasPendientesEspectador\(\);[\s\S]*aplicarPostInicioPendienteEspectador\(\);/);
+  assert.match(countdownBody, /aplicarPostInicioPendienteEspectador\(\);[\s\S]*vaciarColaPutadasPendientesEspectador\(\);/);
 });
 
 test("live role countdown labels are width-capped before scaling out", () => {

@@ -683,6 +683,10 @@ function rellenarListaModos() {
 
     LISTA_MODOS = Array.from(seleccionados).map(checkbox => checkbox.value);
 
+    if (typeof window.actualizarBotonSiguienteNivelDebugControl === "function") {
+        window.actualizarBotonSiguienteNivelDebugControl();
+    }
+
     // Opcional: Mostrar los resultados en consola para verificar
     console.log('LISTA_MODOS:', LISTA_MODOS);
 }

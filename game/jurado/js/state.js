@@ -18,10 +18,10 @@ const JURADO_STAT_META = {
     graficas: { icon: "\u{1F4C8}", label: "Graficas stats" }
 };
 const JURADO_CRITERIOS_ESCENA = [
-    { id: "interpretacion", label: "Interpretación y presencia escénica" },
-    { id: "puesta_escena", label: "Puesta en escena y uso del espacio" },
-    { id: "ritmo_dramatico", label: "Ritmo y progresión dramática" },
-    { id: "integracion_impacto", label: "Integración del texto e impacto final" }
+    { id: "interpretacion", label: "Interpretación" },
+    { id: "puesta_escena", label: "Puesta en escena" },
+    { id: "ritmo_dramatico", label: "Ritmo" },
+    { id: "integracion_impacto", label: "Integración del texto" }
 ];
 const JURADO_STATS_HISTORY_MAX = 80;
 let jurado_resultado_emit_timeout = null;

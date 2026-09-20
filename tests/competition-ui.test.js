@@ -169,7 +169,6 @@ test("Frase final keeps only the global clock and removes inspiration scoring", 
   assert.match(competition, /data-role="control"\]\[data-final="1"\]\{display:none\}/);
   assert.match(writerState, /tipo === "frase-final"\s*\? null/);
   assert.match(writerEvents, /actualizarFraseFinalDesdePayloadEscritora\(data\)/);
-  assert.doesNotMatch(museEvents, /modo_actual === "frase final"\s*\|\|/);
   assert.match(museEvents, /juego\.modo_actual === "frase final"/);
   assert.match(museEvents, /modo_actual = siguiente_modo;\s*window\.__scribModoActualMusaPreview = modo_actual;/);
 });

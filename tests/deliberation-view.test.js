@@ -109,14 +109,12 @@ test("Jury controls the live two-bar reveal while spectator and muses mirror it"
 test("Jury evaluates four criteria focused on the stage representation", () => {
   const html = read("game/jurado/index.html");
   const state = read("game/jurado/js/state.js");
-  const control = read("game/control/js/actions.js");
 
-  [state, control].forEach((source) => {
-    assert.match(source, /INTERPRETACI[ÓO]N|Interpretación/);
-    assert.match(source, /PUESTA EN ESCENA|Puesta en escena/);
-    assert.match(source, /RITMO Y PROGRESI[ÓO]N DRAM[ÁA]TICA|Ritmo y progresión dramática/);
-    assert.match(source, /INTEGRACI[ÓO]N DEL TEXTO E IMPACTO FINAL|Integración del texto e impacto final/);
-  });
+  assert.match(state, /label: "Interpretación"/);
+  assert.match(state, /label: "Puesta en escena"/);
+  assert.match(state, /label: "Ritmo"/);
+  assert.match(state, /label: "Integración del texto"/);
+  assert.doesNotMatch(state, /presencia escénica|uso del espacio|progresión dramática|impacto final/i);
   assert.equal((state.match(/\{ id: "[^"]+", label:/g) || []).length, 4);
   assert.match(html, /Representaci&oacute;n esc&eacute;nica/);
   assert.doesNotMatch(state, /Idea y mundo|Inspiracion util|Cooperacion/);

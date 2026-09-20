@@ -469,6 +469,9 @@ function aplicarEstadoPausaControlSocket(pausaActiva) {
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
     }
+    if (typeof window.actualizarBotonSiguienteNivelDebugControl === "function") {
+        window.actualizarBotonSiguienteNivelDebugControl();
+    }
     if (pausadoActivo) {
         clearInterval(countInterval);
         clearInterval(countInterval1);
@@ -704,6 +707,9 @@ socket.on('temp_modos', data => {
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
     }
+    if (typeof window.actualizarBotonSiguienteNivelDebugControl === "function") {
+        window.actualizarBotonSiguienteNivelDebugControl();
+    }
     if (typeof window.actualizarBotonPausaReanudarControl === "function") {
         window.actualizarBotonPausaReanudarControl(getEl("boton_pausar_reanudar"));
     }
@@ -803,6 +809,9 @@ socket.on('fin_a_control', () => {
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
     }
+    if (typeof window.actualizarBotonSiguienteNivelDebugControl === "function") {
+        window.actualizarBotonSiguienteNivelDebugControl();
+    }
     if (typeof window.actualizarBotonResultadoVideojuegoControl === "function") {
         window.actualizarBotonResultadoVideojuegoControl(true);
     }
@@ -848,6 +857,9 @@ socket.on('activar_modo', (data) => {
     }
     if (typeof window.actualizarBotonFinPartidaControl === "function") {
         window.actualizarBotonFinPartidaControl();
+    }
+    if (typeof window.actualizarBotonSiguienteNivelDebugControl === "function") {
+        window.actualizarBotonSiguienteNivelDebugControl();
     }
     console.log(modo_actual)
     registrarModoActual(modo_actual);

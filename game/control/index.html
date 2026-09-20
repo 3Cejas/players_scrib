@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260920d">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260920e">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260920d"></script>
+<script src="./js/actions.js?v=20260920e"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -186,7 +186,8 @@
                                 <span id="boton_skip_tertulia" class='btn btn-skip-tertulia' onclick="saltar_tertulia()">&#x23ED;&#xFE0F; CONTINUAR PARTIDA</span>
                             </div>
                             <div id="debug_tools_juego" class="debug-context-tools debug-context-tools--game" data-debug-tools hidden aria-hidden="true">
-                                <button id="debug_siguiente_nivel" class="btn debug-control__button debug-control__button--advance" data-debug-action type="button" onclick="saltarSiguienteNivelDebug()">&#x23ED;&#xFE0F; SIGUIENTE NIVEL</button>
+                                <button id="debug_siguiente_nivel" class="btn debug-control__button debug-control__button--advance" data-debug-action type="button" onclick="saltarSiguienteNivelDebug()" hidden aria-hidden="true" tabindex="-1">&#x23ED;&#xFE0F; SIGUIENTE NIVEL</button>
+                                <button id="debug_cargar_resultado_videojuego" class="btn debug-control__button" data-debug-action type="button" onclick="cargarResultadoVideojuegoPruebaDebug()">&#x1F3AE; CARGAR RESULTADO FICTICIO</button>
                                 <p class="debug-context-tools__status" data-debug-status="juego" role="status" aria-live="polite"></p>
                             </div>
                             <div id="stats_nav_control" class="stats-nav-control" hidden aria-hidden="true">

@@ -11,10 +11,11 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   const css = read("game/control/index.css");
   const actions = read("game/control/js/actions.js");
   const socketEvents = read("game/control/js/socket-events.js");
-  const tutorial = html.match(/<div id="control_panel_tutorial"[\s\S]*?<\/div>\s*<\/div>\s*<div id="control_panel_detonadores"/)?.[0] || "";
-  const detonadores = html.match(/<div id="control_panel_detonadores"[\s\S]*?<\/div>\s*<div id="control_panel_juego"/)?.[0] || "";
-  const representacion = html.match(/<div id="control_panel_representacion"[\s\S]*?<div id="control_panel_deliberacion"/)?.[0] || "";
-  const final = html.match(/<div id="control_panel_final"[\s\S]*?<div id="control_panel_asistencia"/)?.[0] || "";
+  const panel = (inicio, fin) => html.slice(html.indexOf(inicio), html.indexOf(fin));
+  const tutorial = panel('id="control_panel_tutorial"', 'id="control_panel_detonadores"');
+  const detonadores = panel('id="control_panel_detonadores"', 'id="control_panel_juego"');
+  const representacion = panel('id="control_panel_representacion"', 'id="control_panel_deliberacion"');
+  const final = panel('id="control_panel_final"', 'id="control_panel_asistencia"');
 
   assert.match(html, /id="control_tabs_viewport"[^>]*role="tablist"/);
   assert.match(html, /class="control-brand-logo"[^>]*src="\.\.\/media\/scrib-logo-mark\.png"[^>]*alt="&lt;SCRI&gt; B"/);
@@ -38,10 +39,11 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.doesNotMatch(tutorial, /Puedes reproducirlo antes o durante el tutorial\.|VIDEOTUTORIAL PREVIO|INTERVALO AUTOM&Aacute;TICO/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-vista-principal="tutorial"[^>]*onclick="mostrar_vista_tutorial\(\)"[^>]*>[^<]*VISTA TUTORIAL/);
   assert.match(tutorial, /id="boton_vista_tutorial"[^>]*data-active="1"[^>]*aria-pressed="true"/);
-  assert.doesNotMatch(tutorial, /boton_banderas_musas|data-solicitud-calentamiento/);
+  assert.match(tutorial, /id="boton_banderas_musas"/);
+  assert.doesNotMatch(tutorial, /data-solicitud-calentamiento/);
 
   assert.match(detonadores, /id="boton_vista_calentamiento"[^>]*data-vista-principal="detonadores"[^>]*onclick="mostrar_vista_detonadores\(\)"[^>]*>[^<]*VISTA DETONADORES/);
-  assert.match(detonadores, /id="boton_banderas_musas"/);
+  assert.doesNotMatch(detonadores, /id="boton_banderas_musas"/);
   assert.equal((detonadores.match(/data-solicitud-calentamiento=/g) || []).length, 3);
   assert.doesNotMatch(detonadores, /id="videotutorial_control"/);
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_vista_partida"[^>]*data-vista-principal="partida"[^>]*onclick="mostrar_vista_partida\(\)"/);
@@ -100,7 +102,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /viewport\.scrollTo\(\{ left: destino, behavior: "smooth" \}\)/);
   assert.match(actions, /boton\.setAttribute\("aria-selected", activa \? "true" : "false"\)/);
   assert.match(actions, /function mostrar_vista_tutorial\(\)\s*\{\s*aplicarVistaPrincipalControl\("tutorial"\);\s*\}/);
-  assert.match(actions, /function mostrar_vista_instrucciones\(\)\s*\{\s*aplicarVistaPrincipalControl\("instrucciones"\);\s*\}/);
+  assert.match(actions, /function mostrar_vista_instrucciones\(\)\s*\{\s*aplicarVistaPrincipalControl\(vista_espectador_modo === "instrucciones" \? "tutorial" : "instrucciones"\);\s*\}/);
   assert.match(actions, /function navegarInstruccionesControl\(direccion\)[\s\S]*instrucciones_slide_control_navegar/);
   assert.match(actions, /function mostrar_vista_detonadores\(\)\s*\{\s*aplicarVistaPrincipalControl\("detonadores"\);\s*\}/);
   assert.match(actions, /function mostrar_vista_partida\(\)\s*\{\s*aplicarVistaPrincipalControl\("partida"\);\s*\}/);
@@ -122,7 +124,7 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /querySelectorAll\("\[data-banderas-musas-control\]"\)/);
   assert.match(socketEvents, /vista_inicial_tutorial_aplicada = false/);
   assert.match(socketEvents, /!vista_inicial_tutorial_aplicada[\s\S]*vista_inicial_tutorial_aplicada = true;[\s\S]*mostrar_vista_tutorial\(\)/);
-  assert.match(actions, /destino === "tutorial" \|\| destino === "instrucciones"[\s\S]*vista_espectador_modo === destino/);
+  assert.match(actions, /destino === "tutorial"[\s\S]*vista_espectador_modo === "tutorial" \|\| vista_espectador_modo === "instrucciones"[\s\S]*destino === "instrucciones"[\s\S]*vista_espectador_modo === "instrucciones"/);
   assert.match(actions, /destino === "detonadores"[\s\S]*vista_espectador_modo === "calentamiento" \|\| vista_calentamiento/);
   assert.match(actions, /modoServidor === "calentamiento" \|\| vista_calentamiento/);
   assert.match(actions, /function actualizarBotonesVistaPrincipalControl\(\)[\s\S]*document\.querySelectorAll\("\[data-vista-principal\]"\)[\s\S]*aria-pressed/);

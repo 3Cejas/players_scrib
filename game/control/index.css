@@ -10845,7 +10845,6 @@ body {
     background: transparent;
 }
 
-.debug-context-tools--game,
 .debug-context-tools--final {
     grid-template-columns: minmax(0, 1fr);
 }
@@ -10877,6 +10876,55 @@ body {
     text-shadow: 0.0625em 0.0625em red;
     font: 700 clamp(0.58rem, 0.76vw, 0.82rem)/1.2 "Retro-gaming", monospace;
     white-space: normal;
+}
+
+@keyframes debugToolsReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(-0.55rem) scale(0.975);
+        filter: brightness(1.8) blur(0.18rem);
+    }
+    65% {
+        opacity: 1;
+        transform: translateY(0.12rem) scale(1.01);
+        filter: brightness(1.25) blur(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: none;
+    }
+}
+
+@keyframes debugButtonReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(-0.4rem) scale(0.94);
+        box-shadow: 0 0 aqua;
+    }
+    70% {
+        opacity: 1;
+        transform: translateY(0.08rem) scale(1.025);
+        box-shadow: 0 0.2em red, 0 0 1rem rgba(0, 255, 255, 0.46);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: 0 0.2em red;
+    }
+}
+
+.debug-context-tools.is-debug-entering {
+    animation: debugToolsReveal 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.debug-context-tools.is-debug-entering > .debug-control__button,
+#panel_controles .debug-control__button.is-debug-entering {
+    animation: debugButtonReveal 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.debug-context-tools.is-debug-entering > .debug-control__button:nth-of-type(2) {
+    animation-delay: 65ms;
 }
 
 #panel_controles .debug-control__button--advance,
@@ -11304,6 +11352,14 @@ body {
 
     .parametros-duracion-total {
         white-space: normal;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .debug-context-tools.is-debug-entering,
+    .debug-context-tools.is-debug-entering > .debug-control__button,
+    #panel_controles .debug-control__button.is-debug-entering {
+        animation: none;
     }
 }
 

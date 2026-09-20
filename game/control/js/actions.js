@@ -2220,6 +2220,49 @@ function actualizarBotonFinPartidaControl() {
 }
 window.actualizarBotonFinPartidaControl = actualizarBotonFinPartidaControl;
 
+function animarEntradaHerramientaDebugControl(elemento) {
+    if (!elemento) return;
+    elemento.classList.remove("is-debug-entering");
+    void elemento.offsetWidth;
+    elemento.classList.add("is-debug-entering");
+    elemento.addEventListener("animationend", () => {
+        elemento.classList.remove("is-debug-entering");
+    }, { once: true });
+}
+
+function alternarVisibilidadHerramientaDebugControl(elemento, visible, { animar = true } = {}) {
+    if (!elemento) return;
+    const estabaVisible = elemento.hidden !== true;
+    elemento.hidden = !visible;
+    elemento.setAttribute("aria-hidden", visible ? "false" : "true");
+    if ("tabIndex" in elemento && elemento.matches("button, [href], input, select, textarea")) {
+        elemento.tabIndex = visible ? 0 : -1;
+    }
+    if (visible && !estabaVisible && animar) {
+        animarEntradaHerramientaDebugControl(elemento);
+    } else if (!visible) {
+        elemento.classList.remove("is-debug-entering");
+    }
+}
+
+function haySiguienteNivelDebugControl() {
+    if (!modo_debug_control_activo || juego_iniciado !== true || !modo_actual) return false;
+    const modos = typeof LISTA_MODOS !== "undefined" && Array.isArray(LISTA_MODOS)
+        ? LISTA_MODOS
+        : [];
+    const indiceActual = modos.indexOf(modo_actual);
+    return indiceActual >= 0 && indiceActual < modos.length - 1;
+}
+
+function actualizarBotonSiguienteNivelDebugControl({ animar = true } = {}) {
+    alternarVisibilidadHerramientaDebugControl(
+        document.getElementById("debug_siguiente_nivel"),
+        haySiguienteNivelDebugControl(),
+        { animar }
+    );
+}
+window.actualizarBotonSiguienteNivelDebugControl = actualizarBotonSiguienteNivelDebugControl;
+
 function actualizarBotonResultadoVideojuegoControl(disponible) {
     const boton = document.getElementById("boton_resultado_videojuego");
     if (!boton) return;
@@ -2309,6 +2352,7 @@ function temp() {
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
     actualizarBotonFinPartidaControl();
+    actualizarBotonSiguienteNivelDebugControl();
     actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
   
     invalidarTemporizadoresPartidaControl();
@@ -2448,6 +2492,7 @@ function limpiar({ emitirServidor = true } = {}) {
     juego_iniciado = false;
     actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     actualizarBotonFinPartidaControl();
+    actualizarBotonSiguienteNivelDebugControl();
     actualizarBotonResultadoVideojuegoControl(false);
     terminado = false;
     terminado1 = false;
@@ -2610,6 +2655,7 @@ function saltar_tertulia() {
             juego_iniciado = false;
         }
         actualizarBotonSkipTertuliaControl();
+        actualizarBotonSiguienteNivelDebugControl();
         if (boton && boton.classList.contains("is-visible")) {
             boton.classList.remove("is-continuando");
             boton.removeAttribute("aria-busy");
@@ -2641,15 +2687,18 @@ function textoErrorDebugControl(codigo = "") {
 }
 
 function actualizarModoDebugControl(payload = {}) {
+    const debugEstabaActivo = modo_debug_control_activo;
     modo_debug_control_activo = payload && payload.activo === true;
     const disparador = document.getElementById("control_debug_secret_trigger");
     const herramientas = document.querySelectorAll("[data-debug-tools]");
     if (disparador) disparador.dataset.debugActive = modo_debug_control_activo ? "1" : "0";
     if (document.body) document.body.dataset.debugActive = modo_debug_control_activo ? "1" : "0";
     herramientas.forEach((grupo) => {
-        grupo.hidden = !modo_debug_control_activo;
-        grupo.setAttribute("aria-hidden", modo_debug_control_activo ? "false" : "true");
+        alternarVisibilidadHerramientaDebugControl(grupo, modo_debug_control_activo, {
+            animar: modo_debug_control_activo && !debugEstabaActivo
+        });
     });
+    actualizarBotonSiguienteNivelDebugControl({ animar: modo_debug_control_activo });
     document.querySelectorAll("[data-debug-status]").forEach((estadoContextual) => {
         estadoContextual.textContent = "";
         estadoContextual.removeAttribute("data-tone");
@@ -2771,6 +2820,23 @@ function cargarDatosPruebaDeliberacionDebug() {
             estadoAccionDebugControl("Datos ficticios listos en Deliberaci\u00f3n.", "success", "deliberacion");
         },
         "deliberacion"
+    );
+}
+
+function cargarResultadoVideojuegoPruebaDebug() {
+    ejecutarAccionDebugControl(
+        "cargar_datos_prueba_videojuego",
+        "Creando resultado ficticio...",
+        (respuesta = {}) => {
+            actualizarBotonResultadoVideojuegoControl(Boolean(respuesta.puntuacion?.disponible));
+            socket.emit("pedir_puntuacion_final");
+            estadoAccionDebugControl(
+                "Resultado ficticio listo. Ya puedes mostrarlo.",
+                "success",
+                "juego"
+            );
+        },
+        "juego"
     );
 }
 
@@ -2934,6 +3000,7 @@ function limpiarTextosPruebaRepresentacionDebug() {
 if (typeof window !== "undefined") {
     window.actualizarModoDebugControl = actualizarModoDebugControl;
     window.establecerModoDebug = establecerModoDebug;
+    window.cargarResultadoVideojuegoPruebaDebug = cargarResultadoVideojuegoPruebaDebug;
     window.cargarDatosPruebaDeliberacionDebug = cargarDatosPruebaDeliberacionDebug;
     window.limpiarDatosPruebaDeliberacionDebug = limpiarDatosPruebaDeliberacionDebug;
     window.saltarSiguienteNivelDebug = saltarSiguienteNivelDebug;
