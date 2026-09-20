@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260918a">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260920b">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260920a"></script>
+<script src="./js/actions.js?v=20260920b"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -153,7 +153,7 @@
                                 <button id="boton_vista_calentamiento" class="btn btn-vista-espectador" type="button" data-vista-principal="detonadores" data-active="0" aria-pressed="false" onclick="mostrar_vista_detonadores()">&#x1F4A5; VISTA DETONADORES</button>
                                 <span id="boton_reiniciar_calentamiento" class='btn' onclick="reiniciar_calentamiento()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_reiniciar_marcador_calentamiento" class='btn' onclick="reiniciar_marcador_calentamiento()">&#x21BB; REINICIAR MARCADOR</span>
-                                <span id="boton_banderas_musas" class='btn' data-banderas-musas-control onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</span>
+                                <span id="boton_banderas_musas" class='btn' data-banderas-musas-control data-activo="0" data-active="0" aria-pressed="false" onclick="activar_banderas_musas()">&#x1F6A9; BANDERA</span>
                             </div>
                             <div id="control_subtitle_musas" class="control-group-subtitle">DETONADORES PARA MUSAS</div>
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--solicitud">
@@ -237,7 +237,7 @@
                             <div class="control-group-buttons control-group-buttons--final">
                                 <button id="boton_mostrar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-pressed="false" onclick="mostrarCreditosEspectador()">&#x2B50; VISTA CR&Eacute;DITOS</button>
                                 <button id="boton_editar_creditos" class="btn btn-estandar-seccion" type="button" data-active="0" aria-expanded="false" aria-controls="panel_creditos_final" onclick="toggleCreditos()">&#x1F4DD; EDITAR CR&Eacute;DITOS</button>
-                                <button id="boton_banderas_musas_final" class="btn btn-estandar-seccion" type="button" data-banderas-musas-control onclick="activar_banderas_musas()">&#x1F6A9; BANDERAS DESACTIVADAS</button>
+                                <button id="boton_banderas_musas_final" class="btn btn-estandar-seccion" type="button" data-banderas-musas-control data-activo="0" data-active="0" aria-pressed="false" onclick="activar_banderas_musas()">&#x1F6A9; BANDERA</button>
                             </div>
                             <div id="panel_creditos_final" class="creditos-host panel-oculto" aria-hidden="true"></div>
                         </div>

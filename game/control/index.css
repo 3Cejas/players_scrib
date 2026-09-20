@@ -10917,6 +10917,19 @@ body {
     }
 }
 
+/* La etiqueta permanece estable; el color y el relieve comunican el estado. */
+#panel_controles [data-banderas-musas-control][data-active="1"],
+#panel_controles [data-banderas-musas-control].is-active {
+    color: #07150d !important;
+    border-color: #85ff9e !important;
+    background: linear-gradient(145deg, #efffae, #66ff8d 52%, #43dfff) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 0.2em #2aa95c,
+        0 0 1rem rgba(102, 255, 141, 0.58) !important;
+    text-shadow: none !important;
+}
+
 /* El resumen y sus avisos preceden a Duración y ocupan siempre todo el panel. */
 #panel_parametros:not(.is-side-collapsed) > tr.parametros-analisis-row:has(#parametros_duracion_niveles) {
     display: block !important;

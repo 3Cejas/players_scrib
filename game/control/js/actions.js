@@ -4641,14 +4641,20 @@ function reiniciar_marcador_calentamiento() {
 
 function actualizarBotonBanderasMusasControl(estado = banderas_musas_activas) {
     banderas_musas_activas = Boolean(estado);
+    const etiquetaTraducida = tJuego2PControl("ui.flag", {}, "BANDERA")
+        .replace(/^\S+\s+/, "")
+        .trim() || "BANDERA";
+    const etiquetaEstado = banderas_musas_activas
+        ? tJuego2PControl("control.button.flags.on", {}, "BANDERAS ACTIVADAS")
+        : tJuego2PControl("control.button.flags.off", {}, "BANDERAS DESACTIVADAS");
     document.querySelectorAll("[data-banderas-musas-control]").forEach((boton) => {
         boton.dataset.activo = banderas_musas_activas ? "1" : "0";
         boton.dataset.active = banderas_musas_activas ? "1" : "0";
         boton.classList.toggle("is-active", banderas_musas_activas);
         boton.setAttribute("aria-pressed", banderas_musas_activas ? "true" : "false");
-        boton.textContent = banderas_musas_activas
-            ? tJuego2PControl("control.button.flags.on", {}, "\uD83D\uDEA9 BANDERAS ACTIVADAS")
-            : tJuego2PControl("control.button.flags.off", {}, "\uD83D\uDEA9 BANDERAS DESACTIVADAS");
+        boton.setAttribute("aria-label", etiquetaEstado);
+        boton.title = etiquetaEstado;
+        boton.textContent = `\uD83D\uDEA9 ${etiquetaTraducida}`;
     });
 }
 
