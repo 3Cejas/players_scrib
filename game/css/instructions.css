@@ -214,13 +214,6 @@
 .scrib-instructions__scorebar span { color: #62f4ff; animation: instructions-score-pop 1.2s ease-in-out infinite; }
 .scrib-instructions__scorebar strong { color: #ffe282; }
 
-.scrib-instructions__progress { position: fixed; z-index: 6; bottom: max(18px, env(safe-area-inset-bottom)); left: 50%; display: grid; justify-items: center; gap: 9px; transform: translateX(-50%); }
-.scrib-instructions__remaining { padding: .55em .9em; border: 1px solid rgba(255, 215, 102, .44); border-radius: 999px; color: #fff0b3; background: rgba(0, 8, 17, .78); box-shadow: 0 0 18px rgba(255, 215, 102, .14); font-size: clamp(10px, .9vw, 15px); letter-spacing: .1em; white-space: nowrap; }
-.scrib-instructions__remaining strong { color: #ffd766; font-size: 1.18em; }
-.scrib-instructions__progress-dots { display: flex; gap: 10px; }
-.scrib-instructions__progress-dots i { width: 9px; height: 9px; border-radius: 99px; background: rgba(255,255,255,.24); transition: width .3s ease, background .3s ease, box-shadow .3s ease; }
-.scrib-instructions__progress-dots i.is-active { width: 42px; background: #ffd766; box-shadow: 0 0 14px #ffd766; }
-
 .scrib-instructions[data-perspective="muse"] .scrib-instructions__stage { width: calc(100vw - 32px); min-height: calc(100svh - 120px); }
 .scrib-instructions[data-perspective="muse"] h2 { font-size: clamp(32px, 9.5vw, 58px); }
 .scrib-instructions[data-perspective="muse"] .scrib-instructions__process { grid-template-columns: 1fr; gap: 8px; width: min(100%, 410px); margin-top: 26px; }
@@ -242,7 +235,6 @@
 .scrib-instructions[data-perspective="muse"] .scrib-instructions__idea-preview { min-height: 48px; margin-top: 8px; }
 .scrib-instructions[data-perspective="muse"] .scrib-instructions__idea-preview span { font-size: 12px; }
 .scrib-instructions[data-perspective="muse"] .scrib-instructions__idea-preview b { font-size: 38px; }
-.scrib-instructions[data-perspective="muse"] .scrib-instructions__remaining { font-size: 9px; }
 .scrib-instructions[data-perspective="muse"] .scrib-instructions__scorebar { gap: 8px; padding: 14px; font-size: 14px; }
 .scrib-instructions[data-perspective="muse"] .scrib-instructions__keyline { margin-top: 24px; font-size: 12px; }
 

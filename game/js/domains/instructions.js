@@ -157,16 +157,9 @@
                 setFeatureMusic(false);
                 return;
             }
-            const remaining = Math.max(0, STEP_COUNT - state.step - 1);
             target.innerHTML = `
                 <div class="scrib-instructions__backdrop" aria-hidden="true"><i></i><i></i><i></i></div>
-                <div class="scrib-instructions__stage">${sceneMarkup(state.step, state.credits)}</div>
-                <div class="scrib-instructions__progress" aria-label="Escena ${state.step + 1} de ${STEP_COUNT}. Quedan ${remaining} slides">
-                    <span class="scrib-instructions__remaining"><strong>${remaining}</strong> ${remaining === 1 ? "SLIDE" : "SLIDES"} POR VER</span>
-                    <div class="scrib-instructions__progress-dots" aria-hidden="true">
-                        ${Array.from({ length: STEP_COUNT }, (_, index) => `<i class="${index === state.step ? "is-active" : ""}"></i>`).join("")}
-                    </div>
-                </div>`;
+                <div class="scrib-instructions__stage">${sceneMarkup(state.step, state.credits)}</div>`;
             target.classList.remove("is-entering");
             void target.offsetWidth;
             target.classList.add("is-entering");

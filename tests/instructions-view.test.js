@@ -37,10 +37,12 @@ test("instructions tell muses to send words through a visible locked composer", 
   assert.match(container.innerHTML, /id="scrib_instructions_word"[^>]*disabled/);
   assert.match(container.innerHTML, /<button type="button" disabled>INSPIRAR/);
   assert.match(container.innerHTML, /SE ACTIVARÁ DURANTE LA PARTIDA/);
-  assert.match(container.innerHTML, /<strong>1<\/strong> SLIDE POR VER/);
+  assert.doesNotMatch(container.innerHTML, /SLIDES? POR VER/);
+  assert.doesNotMatch(container.innerHTML, /scrib-instructions__progress-dots/);
 
   view.setState({ step: 6 });
-  assert.match(container.innerHTML, /<strong>0<\/strong> SLIDES POR VER/);
+  assert.doesNotMatch(container.innerHTML, /SLIDES? POR VER/);
+  assert.doesNotMatch(container.innerHTML, /scrib-instructions__progress-dots/);
 });
 
 test("control, spectator and muse load the instructions experience", () => {
