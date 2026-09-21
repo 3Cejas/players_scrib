@@ -4863,6 +4863,9 @@ const aplicarModoVistaEspectadorUi = (modo) => {
     if (resultado_final_espectador) {
         resultado_final_espectador.style.display = modo === "resultado_final" ? "grid" : "none";
     }
+    if (typeof window.sincronizarCierrePartidaEspectadorConVista === "function") {
+        window.sincronizarCierrePartidaEspectadorConVista(modo);
+    }
     actualizarBrandingPartidaEspectador({ permitirIntro: true });
     if (modo === "stats") {
         limpiarFeedbackFlotanteEspectador();

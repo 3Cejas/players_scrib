@@ -31,6 +31,7 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(html, /id="jurado_nav_next"[^>]*stats-nav-button--next[^>]*aria-label="Revelar siguiente resultado"/);
   assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion"\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
   assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
+  assert.match(actions, /window\.activarSeccionControl = activarSeccionControl/);
   assert.match(actions, /function mostrarPuntuacionFinal\(\)[\s\S]*boton\.setAttribute\("aria-busy", "true"\)[\s\S]*socket\.emit\("mostrar_puntuacion_final"/);
   assert.match(actions, /function actualizarEstadoPuntuacionFinalControl\(payload = \{\}\)[\s\S]*actualizarBotonResultadoVideojuegoControl\(estado_puntuacion_final_control\?\.disponible === true\)/);
   assert.match(actions, /function mostrarResultadoJurado\(\)[\s\S]*mostrar_resultado_jurado/);
@@ -45,6 +46,7 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
   assert.match(actions, /function mostrarCreditosEspectador\(\)[\s\S]*temporizador_gigante_detener/);
   assert.match(sockets, /socket\.on\('jurado_resultado_estado'/);
+  assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*actualizarBotonResultadoVideojuegoControl\(true\)[\s\S]*activarSeccionControl\("representacion"\)/);
 });
 
 test("spectator and muses render both deliberation outcomes", () => {

@@ -163,6 +163,8 @@ let text_progress = getEl("text-progress");
 let bar_progress = getEl("bar-progress");
 let ui_partida_activa_musa = false;
 let ui_partida_finalizada_musa = false;
+const musa_partida_final = getEl("musa_partida_final");
+const musa_partida_final_escritxr = getEl("musa_partida_final_escritxr");
 const musa_view_transition = getEl("musa_view_transition");
 let vista_visual_musa = "espera";
 let timeout_revelado_vista_musa = null;
@@ -233,6 +235,33 @@ function setUiPartidaFinalizadaMusa(finalizada) {
     }
     refrescarClasesUiPartidaMusa();
 }
+
+function mostrarCierrePartidaMusa() {
+    if (!musa_partida_final) return false;
+    const nombreEscritxr = String(nombre1?.value || `ESCRITXR ${Number(player) === 2 ? 2 : 1}`).trim().toUpperCase();
+    if (musa_partida_final_escritxr) {
+        musa_partida_final_escritxr.textContent = nombreEscritxr || "TU ESCRITXR";
+    }
+    musa_partida_final.hidden = false;
+    musa_partida_final.setAttribute("aria-hidden", "false");
+    musa_partida_final.classList.remove("is-visible");
+    void musa_partida_final.offsetWidth;
+    musa_partida_final.classList.add("is-visible");
+    document.body?.classList.add("musa-partida-final-visible");
+    return true;
+}
+
+function ocultarCierrePartidaMusa() {
+    document.body?.classList.remove("musa-partida-final-visible");
+    if (!musa_partida_final) return false;
+    musa_partida_final.classList.remove("is-visible");
+    musa_partida_final.hidden = true;
+    musa_partida_final.setAttribute("aria-hidden", "true");
+    return true;
+}
+
+window.mostrarCierrePartidaMusa = mostrarCierrePartidaMusa;
+window.ocultarCierrePartidaMusa = ocultarCierrePartidaMusa;
 
 const CLASE_INTRO_PARTIDA_MUSA = "partida-intro-musa";
 const CLASES_ETAPAS_INTRO_PARTIDA_MUSA = [
@@ -1725,6 +1754,7 @@ function mostrarRegaloPdf(payload) {
         regalo_pdf_pendiente = payload;
         return;
     }
+    ocultarCierrePartidaMusa();
     actualizarNombreRegalo();
     regalo_pdf_data = payload.data;
     regalo_pdf_filename = payload.filename || "regalo.pdf";
@@ -2035,6 +2065,7 @@ function pintarPostgameMusa() {
 
 function mostrarPostgameMusa() {
     if (!pintarPostgameMusa()) return;
+    ocultarCierrePartidaMusa();
     musa_postgame.classList.add("musa-postgame--visible");
     musa_postgame.setAttribute("aria-hidden", "false");
     document.body.classList.add("musa-postgame-activo");
@@ -4547,6 +4578,15 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
         perspective: "muse",
         team: player
     });
+    const vistaFinalAlternativa = ["deliberacion", "puntuacion", "resultado_jurado", "resultado_final", "creditos"]
+        .includes(vista_modo_remota_musa);
+    const regaloVisible = Boolean(regalo_pdf?.classList.contains("regalo-pdf--visible"));
+    const postgameVisible = Boolean(musa_postgame?.classList.contains("musa-postgame--visible"));
+    if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida" && !regaloVisible && !postgameVisible) {
+        mostrarCierrePartidaMusa();
+    } else if (vistaFinalAlternativa || vista_modo_remota_musa !== "partida") {
+        ocultarCierrePartidaMusa();
+    }
     if (modoAnterior !== vista_modo_remota_musa) {
         sincronizarVistaDeliberacionMusa({ animarCambioVista: true });
     } else if (pasoCambiado) {

@@ -86,6 +86,28 @@ test("the finished-writing scene fully replaces the old spectator HUD", () => {
   assert.match(css, /@keyframes partidaFinalEntrada[\s\S]*@keyframes partidaFinalSpark/);
   assert.match(finish, /logo\.style\.display = "none";[\s\S]*neon\.style\.display = "none";[\s\S]*mostrarCierrePartidaEspectador\(\);/);
   assert.doesNotMatch(finish, /animateCSS\("\.cabecera", "backInLeft"\)/);
+  assert.match(sockets, /function sincronizarCierrePartidaEspectadorConVista\(modo\)[\s\S]*vista === "partida" && confetti_cierre_partida_disparado[\s\S]*ocultarCierrePartidaEspectador\(\)/);
+  assert.match(read("game/spectator/js/state.js"), /sincronizarCierrePartidaEspectadorConVista\(modo\)/);
+});
+
+test("the spectator header reserves its own compact band above the game cards", () => {
+  const css = read("game/css/dashboard-players.css");
+
+  assert.match(css, /page-spectator\.vista-partida #spectator_fit_root > \.cabecera\s*\{[\s\S]*position:\s*absolute;[\s\S]*height:\s*clamp\(118px, 17vh, 176px\);[\s\S]*overflow:\s*hidden;/);
+  assert.match(css, /page-spectator\.vista-partida #contenedor_espectador\s*\{[\s\S]*padding-top:\s*clamp\(154px, 19vh, 205px\);/);
+});
+
+test("muses receive a full-screen finished-writing state that yields to result views", () => {
+  const html = read("game/public/players/index.html");
+  const css = read("game/public/players/css/publico.css");
+  const state = read("game/public/players/js/state.js");
+  const sockets = read("game/public/players/js/socket-events.js");
+
+  assert.match(html, /id="musa_partida_final"[\s\S]*FIN DE LA ESCRITURA[\s\S]*HISTORIA[\s\S]*LISTA/);
+  assert.match(css, /\.musa-partida-final\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*0;[\s\S]*z-index:\s*190;/);
+  assert.match(state, /function mostrarCierrePartidaMusa\(\)[\s\S]*musa_partida_final\.classList\.add\("is-visible"\)/);
+  assert.match(state, /vistaFinalAlternativa[\s\S]*ocultarCierrePartidaMusa\(\)/);
+  assert.match(sockets, /socket\.on\("fin"[\s\S]*setUiPartidaFinalizadaMusa\(true\)[\s\S]*mostrarCierrePartidaMusa\(\)/);
 });
 
 test("the finished writer layout reserves a separate row for its status badge", () => {

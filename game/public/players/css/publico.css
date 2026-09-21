@@ -62,6 +62,124 @@ body.equipo-rojo {
     --equipo-caret-color: #ff7a86;
 }
 
+.musa-partida-final {
+    --musa-finish-color: var(--equipo-color, #46efff);
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: clamp(1.15rem, 5vw, 2.4rem);
+    isolation: isolate;
+    background:
+        radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--musa-finish-color), transparent 72%), transparent 36%),
+        linear-gradient(145deg, #03141f 0%, #030711 56%, #190b13 100%);
+    opacity: 0;
+    visibility: hidden;
+}
+
+.musa-partida-final[hidden] { display: none !important; }
+
+.musa-partida-final.is-visible {
+    visibility: visible;
+    animation: musaPartidaFinalEntrada 720ms cubic-bezier(.16,.84,.24,1) forwards;
+}
+
+.musa-partida-final__aurora,
+.musa-partida-final__rays,
+.musa-partida-final__scanlines {
+    position: absolute;
+    inset: -24%;
+    pointer-events: none;
+}
+
+.musa-partida-final__aurora {
+    z-index: -3;
+    background: radial-gradient(circle, color-mix(in srgb, var(--musa-finish-color), transparent 52%), transparent 61%);
+    filter: blur(24px);
+    animation: musaPartidaFinalAurora 3.8s ease-in-out infinite alternate;
+}
+
+.musa-partida-final__rays {
+    z-index: -2;
+    background: repeating-conic-gradient(from -7deg, rgba(255,255,255,.07) 0 3deg, transparent 3deg 17deg);
+    mask-image: radial-gradient(circle, #000 0 28%, transparent 72%);
+    animation: musaPartidaFinalGiro 25s linear infinite;
+}
+
+.musa-partida-final__scanlines {
+    z-index: 3;
+    inset: 0;
+    opacity: .16;
+    background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(255,255,255,.16) 3px 4px);
+}
+
+.musa-partida-final__card {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: min(92vw, 650px);
+    justify-items: center;
+    gap: clamp(.75rem, 2.8vh, 1.35rem);
+    box-sizing: border-box;
+    padding: clamp(1.8rem, 7vh, 3.8rem) clamp(1.2rem, 6vw, 3rem);
+    border: 1px solid color-mix(in srgb, var(--musa-finish-color), white 18%);
+    border-radius: clamp(1.4rem, 5vw, 2.5rem);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--musa-finish-color), transparent 91%), rgba(2,8,17,.96) 48%, rgba(23,8,15,.94));
+    box-shadow: 0 0 3.5rem color-mix(in srgb, var(--musa-finish-color), transparent 72%), inset 0 0 3rem rgba(255,255,255,.04);
+    text-align: center;
+    animation: musaPartidaFinalTarjeta 900ms cubic-bezier(.16,.84,.24,1) both;
+}
+
+.musa-partida-final__card p,
+.musa-partida-final__card small {
+    margin: 0;
+    color: #ffe47e;
+    font-size: clamp(.66rem, 2.6vw, .92rem);
+    line-height: 1.55;
+    letter-spacing: .14em;
+}
+
+.musa-partida-final__emblem {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--musa-finish-color);
+    font-size: clamp(2.7rem, 13vw, 5.2rem);
+    filter: drop-shadow(0 0 .42em currentColor);
+}
+
+.musa-partida-final__emblem span:last-child { transform: scaleX(-1); }
+.musa-partida-final__emblem b { color: #ffe47e; font-size: .56em; animation: musaPartidaFinalPulso 1s ease-in-out infinite alternate; }
+
+.musa-partida-final__card h2 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(2.6rem, 12vw, 6rem);
+    line-height: .9;
+    letter-spacing: .025em;
+    text-shadow: -.04em 0 #43eaff, .04em 0 #ff6578, 0 0 .35em rgba(255,255,255,.42);
+}
+
+.musa-partida-final__card strong {
+    color: var(--musa-finish-color);
+    font-size: clamp(1rem, 5vw, 1.6rem);
+    text-shadow: 0 0 .7em currentColor;
+}
+
+@keyframes musaPartidaFinalEntrada { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: none; } }
+@keyframes musaPartidaFinalTarjeta { from { opacity: 0; transform: translateY(30px) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes musaPartidaFinalAurora { to { transform: scale(1.12) translateY(-2%); opacity: .72; } }
+@keyframes musaPartidaFinalGiro { to { transform: rotate(1turn); } }
+@keyframes musaPartidaFinalPulso { to { transform: scale(1.18) rotate(10deg); filter: drop-shadow(0 0 .55em #ffe47e); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .musa-partida-final,
+    .musa-partida-final * { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}
+
 #background-effects {
     position: fixed;
     inset: 0;

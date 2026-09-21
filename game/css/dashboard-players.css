@@ -6592,6 +6592,59 @@ body.vista-calentamiento .calentamiento-espectador {
   --animate-duration: 2s
 }
 
+/* En la vista de partida la marca ocupa una franja propia. El contenedor de
+   juego comienza debajo de ella para que el logotipo nunca quede detrás de
+   los nombres o de los textos, incluso en proyectores de poca altura. */
+body.page-spectator.vista-partida #spectator_fit_root > .cabecera {
+  position: absolute;
+  top: clamp(6px, 1vh, 12px);
+  left: 50%;
+  z-index: 4;
+  display: grid;
+  width: min(54vw, 760px);
+  height: clamp(118px, 17vh, 176px);
+  justify-items: center;
+  align-content: start;
+  overflow: hidden;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+body.page-spectator.vista-partida #spectator_fit_root > .cabecera .neon_espectador {
+  margin: 0;
+  font-size: clamp(6px, .58vw, 11px);
+  line-height: .82;
+  white-space: pre;
+}
+
+body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin-top: -2px;
+}
+
+body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo br {
+  display: none;
+}
+
+body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo .sub {
+  margin: 0;
+  font-size: clamp(7px, .52vw, 10px);
+  line-height: 1;
+}
+
+body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo img {
+  width: clamp(42px, 4.2vw, 68px);
+  max-height: clamp(42px, 6.3vh, 68px);
+  object-fit: contain;
+}
+
+body.page-spectator.vista-partida #contenedor_espectador {
+  padding-top: clamp(154px, 19vh, 205px);
+  padding-bottom: clamp(104px, 12vh, 140px);
+}
+
 .atributos {
   width: min(1200px, 96vw);
   margin: 0 auto clamp(0.75rem, 2.5vw, 1.5rem);

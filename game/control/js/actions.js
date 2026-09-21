@@ -1319,6 +1319,7 @@ function toggleSeccionControl(seccion) {
     }
     activarSeccionControl(seccion);
 }
+window.activarSeccionControl = activarSeccionControl;
 window.toggleSeccionControl = toggleSeccionControl;
 
 let pestanas_control_inicializadas = false;

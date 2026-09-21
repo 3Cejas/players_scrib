@@ -279,6 +279,15 @@ function ocultarCierrePartidaEspectador() {
     return true;
 }
 
+function sincronizarCierrePartidaEspectadorConVista(modo) {
+    const vista = String(modo || "").trim().toLowerCase();
+    if (vista === "partida" && confetti_cierre_partida_disparado) {
+        return mostrarCierrePartidaEspectador();
+    }
+    return ocultarCierrePartidaEspectador();
+}
+window.sincronizarCierrePartidaEspectadorConVista = sincronizarCierrePartidaEspectadorConVista;
+
 function reiniciarEstadoCierrePartidaEspectador() {
     frase_final_completada_j1 = false;
     frase_final_completada_j2 = false;

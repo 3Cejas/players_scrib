@@ -815,6 +815,12 @@ socket.on('fin_a_control', () => {
     if (typeof window.actualizarBotonResultadoVideojuegoControl === "function") {
         window.actualizarBotonResultadoVideojuegoControl(true);
     }
+    // Al terminar, lleva al equipo de control a las herramientas de
+    // representación. Así la descarga de textos no queda escondida en una
+    // pestaña cerrada después de pulsar "Finalizar partida".
+    if (typeof window.activarSeccionControl === "function") {
+        window.activarSeccionControl("representacion");
+    }
   });
 
 

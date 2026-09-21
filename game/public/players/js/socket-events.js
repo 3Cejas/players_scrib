@@ -1292,9 +1292,14 @@ socket.on("count", data => {
 socket.on("fin", (data) => {
     const payload = (data && typeof data === "object") ? data : { player: data };
     if (payload.partida_finalizada !== true || Number(payload.player) !== Number(player)) return;
-    if (terminado) return;
-    confetti_aux();
-    limpiezas_final();
+    if (!terminado) {
+        confetti_aux();
+        limpiezas_final();
+    }
+    setUiPartidaFinalizadaMusa(true);
+    if (typeof window.mostrarCierrePartidaMusa === "function") {
+        window.mostrarCierrePartidaMusa();
+    }
     invalidarContextoDesventajasMusa();
     invalidarContextoCalentamientoMusa();
 });
@@ -1395,6 +1400,9 @@ socket.on('inicio', data => {
     }
     setUiPartidaActivaMusa(false);
     setUiPartidaFinalizadaMusa(false);
+    if (typeof window.ocultarCierrePartidaMusa === "function") {
+        window.ocultarCierrePartidaMusa();
+    }
     post_inicio_pendiente_musa = false;
     LIMITE_TIEMPO_INSPIRACION = data.parametros.LIMITE_TIEMPO_INSPIRACION;
     TIEMPO_MODIFICADOR = data.parametros.TIEMPO_MODIFICADOR || TIEMPO_MODIFICADOR;
