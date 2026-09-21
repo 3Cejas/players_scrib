@@ -71,8 +71,7 @@
                 <div class="scrib-instructions__scene scrib-instructions__scene--veil">
                     <div class="scrib-instructions__veil" aria-hidden="true"><i></i><i></i></div>
                     <p class="scrib-instructions__eyebrow">ESCRITORAS</p>
-                    <h2>AL OTRO LADO<br>DEL VELO</h2>
-                    <p class="scrib-instructions__keyline">OCUPAD VUESTRO LUGAR</p>
+                    <h2>OCUPAD VUESTRO<br>LUGAR</h2>
                 </div>`;
         }
         if (step === 4) {
@@ -81,8 +80,14 @@
                     <p class="scrib-instructions__eyebrow">EL JUEGO NO ESPERA</p>
                     <h2>SI PARAN…<br><em>EL TEXTO DESAPARECE</em></h2>
                     <div class="scrib-instructions__writer-demo" aria-label="Demostración de escritura y borrado automático">
-                        <span class="scrib-instructions__cursor-line">La historia empieza a cobrar vida</span>
-                        <span class="scrib-instructions__eraser" aria-hidden="true">⌫</span>
+                        <div class="scrib-instructions__writer-demo-head" aria-hidden="true">
+                            <span>ESCRITXR</span>
+                            <span class="scrib-instructions__writer-status">
+                                <b class="scrib-instructions__writer-status-write">ESCRIBIENDO ↑</b>
+                                <b class="scrib-instructions__writer-status-rest">SIN ESCRIBIR ↓</b>
+                            </span>
+                        </div>
+                        <p class="scrib-instructions__writer-copy"><span class="scrib-instructions__cursor-line" data-full-text="La historia empieza a cobrar vida">La historia empieza a cobrar vida</span><i aria-hidden="true"></i></p>
                     </div>
                 </div>`;
         }
@@ -94,25 +99,25 @@
                     <div class="scrib-instructions__idea-composer" aria-label="Ejemplo bloqueado del envío de palabras">
                         <label for="scrib_instructions_word">PALABRA PARA TU ESCRITORA</label>
                         <div class="scrib-instructions__idea-input-row">
-                            <input id="scrib_instructions_word" type="text" value="VOLCÁN" placeholder="ESCRIBE UNA PALABRA" disabled aria-describedby="scrib_instructions_lock">
+                            <input id="scrib_instructions_word" type="text" placeholder="ESCRIBE UNA PALABRA" disabled>
                             <button type="button" disabled>INSPIRAR <span aria-hidden="true">🚀</span></button>
                         </div>
-                        <span id="scrib_instructions_lock" class="scrib-instructions__idea-lock">🔒 SE ACTIVARÁ DURANTE LA PARTIDA</span>
-                        <div class="scrib-instructions__idea-preview" aria-hidden="true">
-                            <span>VOLCÁN</span><i>→</i><b>✍️</b>
-                        </div>
                     </div>
-                    <p class="scrib-instructions__keyline">TUS PALABRAS PUEDEN CAMBIAR LA PARTIDA</p>
                 </div>`;
         }
         return `
             <div class="scrib-instructions__scene scrib-instructions__scene--victory">
                 <p class="scrib-instructions__eyebrow">INSPIRAR TAMBIÉN ES JUGAR</p>
                 <h2>CUANTO MÁS Y MEJOR<br>INSPIRÉIS…</h2>
-                <div class="scrib-instructions__scorebar" aria-label="La inspiración da puntos al equipo">
-                    <span>+ ✨</span><i></i><strong>+ PUNTOS</strong>
+                <div class="scrib-instructions__scorebar" aria-label="Marcador de inspiración en movimiento">
+                    <strong class="scrib-instructions__score scrib-instructions__score--blue">24</strong>
+                    <div class="scrib-instructions__score-track" aria-hidden="true">
+                        <span class="scrib-instructions__score-segment scrib-instructions__score-segment--blue"></span>
+                        <span class="scrib-instructions__score-segment scrib-instructions__score-segment--red"></span>
+                        <i class="scrib-instructions__score-center"></i>
+                    </div>
+                    <strong class="scrib-instructions__score scrib-instructions__score--red">18</strong>
                 </div>
-                <p class="scrib-instructions__keyline">LA VICTORIA ESTÁ EN VUESTRAS MANOS</p>
             </div>`;
     };
 
@@ -121,6 +126,7 @@
         let node = options.container || null;
         let state = { visible: false, step: 0, credits: normalizeCredits(), perspective: "spectator", team: 0 };
         let featureMusicActive = false;
+        let writerAnimationFrame = null;
 
         const ensureNode = () => {
             if (node || !documentRef || !documentRef.body) return node;
@@ -145,9 +151,54 @@
             }
         };
 
+        const stopWriterAnimation = () => {
+            if (writerAnimationFrame == null) return;
+            root?.cancelAnimationFrame?.(writerAnimationFrame);
+            writerAnimationFrame = null;
+        };
+
+        const startWriterAnimation = () => {
+            stopWriterAnimation();
+            const textNode = node?.querySelector?.(".scrib-instructions__cursor-line");
+            const requestFrame = root?.requestAnimationFrame?.bind(root);
+            if (!textNode || !requestFrame) return;
+            const characters = Array.from(String(textNode.dataset.fullText || textNode.textContent || ""));
+            if (root?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+                textNode.textContent = characters.join("");
+                return;
+            }
+            const duration = 8000;
+            let startedAt = null;
+            let previousVisible = characters.length;
+            const update = (timestamp) => {
+                if (!state.visible || state.step !== 4) {
+                    writerAnimationFrame = null;
+                    return;
+                }
+                if (startedAt == null) startedAt = timestamp;
+                const progress = ((timestamp - startedAt) % duration) / duration;
+                let visible = 0;
+                if (progress < 0.44) {
+                    visible = Math.floor(Math.max(0, (progress - 0.08) / 0.36) * characters.length);
+                } else if (progress <= 0.56) {
+                    visible = characters.length;
+                } else if (progress < 0.94) {
+                    visible = characters.length - Math.ceil(((progress - 0.56) / 0.38) * characters.length);
+                }
+                visible = Math.max(0, Math.min(characters.length, visible));
+                if (visible !== previousVisible) {
+                    previousVisible = visible;
+                    textNode.textContent = characters.slice(0, visible).join("");
+                }
+                writerAnimationFrame = requestFrame(update);
+            };
+            writerAnimationFrame = requestFrame(update);
+        };
+
         const render = () => {
             const target = ensureNode();
             if (!target) return;
+            stopWriterAnimation();
             target.hidden = !state.visible;
             target.setAttribute("aria-hidden", state.visible ? "false" : "true");
             target.dataset.step = String(state.step);
@@ -160,6 +211,7 @@
             target.innerHTML = `
                 <div class="scrib-instructions__backdrop" aria-hidden="true"><i></i><i></i><i></i></div>
                 <div class="scrib-instructions__stage">${sceneMarkup(state.step, state.credits)}</div>`;
+            if (state.step === 4) startWriterAnimation();
             target.classList.remove("is-entering");
             void target.offsetWidth;
             target.classList.add("is-entering");
@@ -184,6 +236,7 @@
             },
             getState: () => ({ ...state }),
             destroy() {
+                stopWriterAnimation();
                 setFeatureMusic(false);
                 node?.remove?.();
                 node = null;

@@ -15,7 +15,7 @@ test("instructions view exposes the complete guided sequence", () => {
   assert.equal(instructions.normalizeStep(99), 6);
 });
 
-test("instructions tell muses to send words through a visible locked composer", () => {
+test("instructions mirror the real writing, Muse and inspiration interfaces", () => {
   const instructions = require("../game/js/domains/instructions.js");
   const classes = new Set();
   const container = {
@@ -31,18 +31,37 @@ test("instructions tell muses to send words through a visible locked composer", 
   };
   const view = instructions.create({ container });
 
-  view.setState({ visible: true, step: 5, perspective: "muse", team: 1 });
+  view.setState({ visible: true, step: 3, perspective: "muse", team: 1 });
+  assert.match(container.innerHTML, /<h2>OCUPAD VUESTRO<br>LUGAR<\/h2>/);
+  assert.doesNotMatch(container.innerHTML, /AL OTRO LADO|DEL VELO/);
+
+  view.setState({ step: 4 });
+  assert.match(container.innerHTML, /data-full-text="La historia empieza a cobrar vida"/);
+  assert.match(container.innerHTML, /ESCRIBIENDO ↑/);
+  assert.match(container.innerHTML, /SIN ESCRIBIR ↓/);
+
+  view.setState({ step: 5 });
   assert.match(container.innerHTML, /ENVÍA PALABRAS\.<br>INSPIRA A TU ESCRITORA\./);
   assert.doesNotMatch(container.innerHTML, /ENVÍA UNA LETRA/);
   assert.match(container.innerHTML, /id="scrib_instructions_word"[^>]*disabled/);
   assert.match(container.innerHTML, /<button type="button" disabled>INSPIRAR/);
-  assert.match(container.innerHTML, /SE ACTIVARÁ DURANTE LA PARTIDA/);
+  assert.doesNotMatch(container.innerHTML, /VOLCÁN|SE ACTIVARÁ DURANTE LA PARTIDA|TUS PALABRAS PUEDEN CAMBIAR LA PARTIDA/);
+  assert.doesNotMatch(container.innerHTML, /scrib-instructions__idea-preview/);
   assert.doesNotMatch(container.innerHTML, /SLIDES? POR VER/);
   assert.doesNotMatch(container.innerHTML, /scrib-instructions__progress-dots/);
 
   view.setState({ step: 6 });
+  assert.match(container.innerHTML, /scrib-instructions__score-segment--blue/);
+  assert.match(container.innerHTML, /scrib-instructions__score-segment--red/);
+  assert.match(container.innerHTML, /scrib-instructions__score-center/);
+  assert.doesNotMatch(container.innerHTML, /LA VICTORIA ESTÁ EN VUESTRAS MANOS/);
   assert.doesNotMatch(container.innerHTML, /SLIDES? POR VER/);
   assert.doesNotMatch(container.innerHTML, /scrib-instructions__progress-dots/);
+
+  const css = read("game/css/instructions.css");
+  assert.match(css, /@keyframes instructions-score-blue[\s\S]*width:\s*72%/);
+  assert.match(css, /@keyframes instructions-score-red[\s\S]*width:\s*64%/);
+  assert.doesNotMatch(css, /instructions-word-to-writer/);
 });
 
 test("control, spectator and muse load the instructions experience", () => {
@@ -72,6 +91,8 @@ test("control, spectator and muse load the instructions experience", () => {
   assert.match(controlActions, /instruccionesNav\.dataset\.visible = instruccionesActivas \? "1" : "0"/);
   assert.match(controlActions, /instruccionesNav\.inert = !instruccionesActivas/);
   assert.match(controlCss, /instrucciones-nav-control\[data-visible="0"\][\s\S]*opacity:\s*0;[\s\S]*visibility:\s*hidden/);
+  assert.match(controlActions, /"OCUPAD VUESTRO LUGAR"/);
+  assert.doesNotMatch(controlActions, /"ESCRITORAS AL OTRO LADO"/);
 });
 
 test("control keeps the detonator flag in Tutorial instead of Detonators", () => {
