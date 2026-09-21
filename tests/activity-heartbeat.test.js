@@ -213,6 +213,7 @@ test("file, development and duplicate gateway injection do not start network act
 test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
   const config = read("game/config.js");
   assert.match(config, /activity-heartbeat\.js\?v=20260827b/);
+  assert.match(config, /screen-awake\.js\?v=20260921a/);
   assert.match(config, /document\.createElement\("script"\)/);
 
   const multiplayerPages = [
@@ -230,7 +231,7 @@ test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
     "game/spectator/index.html"
   ];
   for (const page of multiplayerPages) {
-    assert.match(read(page), /config\.js\?v=20260829m/, `${page} must refresh the shared loader`);
+    assert.match(read(page), /config\.js\?v=20260921a/, `${page} must refresh the shared loader`);
   }
 
   const standalonePages = {

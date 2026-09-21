@@ -11,8 +11,12 @@ if (typeof document !== "undefined") {
             ? document.currentScript.src
             : `${window.location.origin}/scrib/game/config.js`;
         const activityScriptUrl = new URL("./js/activity-heartbeat.js?v=20260827b", configScriptBase).href;
+        const screenAwakeScriptUrl = new URL("./js/screen-awake.js?v=20260921a", configScriptBase).href;
         const activityScriptLoaded = Array.from(document.scripts || []).some(function (script) {
             return script.src === activityScriptUrl;
+        });
+        const screenAwakeScriptLoaded = Array.from(document.scripts || []).some(function (script) {
+            return script.src === screenAwakeScriptUrl;
         });
 
         if (!activityScriptLoaded) {
@@ -22,8 +26,15 @@ if (typeof document !== "undefined") {
             activityScript.dataset.scribActivityHeartbeat = "true";
             (document.head || document.documentElement).appendChild(activityScript);
         }
+        if (!screenAwakeScriptLoaded) {
+            const screenAwakeScript = document.createElement("script");
+            screenAwakeScript.src = screenAwakeScriptUrl;
+            screenAwakeScript.async = true;
+            screenAwakeScript.dataset.scribScreenAwake = "true";
+            (document.head || document.documentElement).appendChild(screenAwakeScript);
+        }
     } catch (error) {
-        // La carga local (file://) y los navegadores antiguos continúan sin heartbeat.
+        // Los navegadores antiguos continúan sin estas mejoras compartidas.
     }
 }
 
