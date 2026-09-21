@@ -1847,6 +1847,22 @@ const prepararMedicionViewportEspectador = () => {
     spectator_fit_root.style.setProperty("--spectator-veil-width", "52vw");
 };
 
+const actualizarReservaPanelNivelEspectador = () => {
+    if (!spectator_fit_root || !info_general) return;
+    const estilos = window.getComputedStyle(info_general);
+    const visible = estilos.display !== "none"
+        && estilos.visibility !== "hidden"
+        && info_general.getClientRects().length > 0;
+    if (!visible) {
+        spectator_fit_root.style.setProperty("--spectator-level-reserve", "0px");
+        return;
+    }
+    const rect = info_general.getBoundingClientRect();
+    const separacionInferior = Number.parseFloat(estilos.bottom) || 0;
+    const reserva = Math.max(0, Math.ceil(rect.height + separacionInferior));
+    spectator_fit_root.style.setProperty("--spectator-level-reserve", `${reserva}px`);
+};
+
 const ajustarViewportEspectador = () => {
     if (!spectator_fit_root) return;
     const teleprompterActivo = Boolean(teleprompter_estado && teleprompter_estado.visible);
@@ -1859,6 +1875,7 @@ const ajustarViewportEspectador = () => {
     // Medimos siempre el layout natural, nunca el ya escalado. Esto permite
     // encajar elementos nuevos sin acumular una reducción en cada actualización.
     prepararMedicionViewportEspectador();
+    actualizarReservaPanelNivelEspectador();
     const viewportW = Math.max(window.innerWidth || 0, 1);
     const viewportH = Math.max(window.innerHeight || 0, 1);
     const objetivos = [

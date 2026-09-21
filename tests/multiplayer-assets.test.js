@@ -23,8 +23,8 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260921h";
-const SPECTATOR_CSS_VERSION = "20260921g";
+const SPECTATOR_STATE_VERSION = "20260921i";
+const SPECTATOR_CSS_VERSION = "20260921h";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260921a";
 const MUSA_HELP_VERSION = "20260830a";
@@ -1031,6 +1031,7 @@ test("spectator viewport remeasures natural content without cumulative shrink", 
 
   const body = js.slice(start, end);
   assert.match(body, /prepararMedicionViewportEspectador\(\)/);
+  assert.match(body, /actualizarReservaPanelNivelEspectador\(\)/);
   assert.match(body, /scrollWidth|scrollHeight/);
   assert.match(body, /style\.transform = `translate3d/);
   assert.match(body, /Math\.min\(1, viewportW \/ anchoNatural, viewportH \/ altoNatural\)/);
@@ -1048,7 +1049,9 @@ test("spectator texts use the projector width and keep synchronized line numbers
   assert.match(html, /id="spectator_line_numbers_j1"[\s\S]*id="spectator_line_numbers_inner_j1"[\s\S]*id="texto"/);
   assert.match(html, /id="spectator_line_numbers_j2"[\s\S]*id="spectator_line_numbers_inner_j2"[\s\S]*id="texto1"/);
   assert.match(css, /#contenedor_espectador\s*\{[\s\S]*flex-wrap: nowrap;[\s\S]*width: min\(96vw, 2200px\)/);
-  assert.match(css, /@media \(max-height: 920px\) and \(min-width: 900px\)[\s\S]*padding-bottom: clamp\(142px, 21vh, 174px\)[\s\S]*\.spectator-text-shell\s*\{[\s\S]*height: clamp\(132px, min\(21vh, calc\(100dvh - 558px\)\), 190px\)/);
+  assert.match(css, /vista-partida #contenedor_espectador\s*\{[\s\S]*padding-bottom: calc\(var\(--spectator-level-reserve,[\s\S]*align-items: stretch/);
+  assert.match(css, /vista-partida #contenedor_espectador > \.jugador1,[\s\S]*display: flex;[\s\S]*flex-direction: column;[\s\S]*min-height: 0/);
+  assert.match(css, /vista-partida #contenedor_espectador \.spectator-text-shell\s*\{[\s\S]*flex: 1 1 auto;[\s\S]*height: auto;[\s\S]*min-height: clamp\(96px, 12vh, 160px\)/);
   assert.match(css, /#spectator_fit_root\s*\{[\s\S]*transform-origin: top left/);
   assert.match(css, /body\.page-spectator #contenedor_espectador > \.jugador1,[\s\S]*flex: 1 1 0;[\s\S]*margin-inline: 0/);
   assert.match(css, /\.spectator-text-shell\s*\{[\s\S]*grid-template-columns: clamp\(36px, 2\.8vw, 58px\) minmax\(0, 1fr\)/);

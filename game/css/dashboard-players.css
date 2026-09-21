@@ -6642,18 +6642,47 @@ body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo img {
 
 body.page-spectator.vista-partida #contenedor_espectador {
   padding-top: clamp(154px, 19vh, 205px);
-  padding-bottom: clamp(104px, 12vh, 140px);
+  padding-bottom: calc(var(--spectator-level-reserve, 118px) + clamp(16px, 2vh, 28px));
+  align-items: stretch;
+}
+
+/* Las inspiraciones aparecen y desaparecen durante el nivel. Cada columna es
+   una pila flexible: las filas nuevas conservan su espacio y el texto cede
+   altura antes de alcanzar el visor inferior. */
+body.page-spectator.vista-partida #contenedor_espectador > .jugador1,
+body.page-spectator.vista-partida #contenedor_espectador > .jugador2 {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+}
+
+body.page-spectator.vista-partida #contenedor_espectador .spectator-text-shell {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: clamp(96px, 12vh, 160px);
+  max-height: none;
+}
+
+body.page-spectator.vista-partida #contenedor_espectador .right,
+body.page-spectator.vista-partida #contenedor_espectador .info,
+body.page-spectator.vista-partida #contenedor_espectador #palabra1,
+body.page-spectator.vista-partida #contenedor_espectador #palabra2,
+body.page-spectator.vista-partida #contenedor_espectador #definicion1,
+body.page-spectator.vista-partida #contenedor_espectador #definicion2 {
+  flex: 0 0 auto;
 }
 
 /* En una ventana baja reservamos una franja real para el visor de nivel. */
 @media (max-height: 920px) and (min-width: 900px) {
   body.page-spectator.vista-partida #contenedor_espectador {
     padding-top: clamp(126px, 18vh, 150px);
-    padding-bottom: clamp(142px, 21vh, 174px);
+    padding-bottom: calc(var(--spectator-level-reserve, 118px) + clamp(14px, 1.8vh, 22px));
   }
 
   body.page-spectator.vista-partida .spectator-text-shell {
-    height: clamp(132px, min(21vh, calc(100dvh - 558px)), 190px);
+    height: auto;
+    min-height: clamp(88px, min(14vh, calc(100dvh - 558px)), 138px);
   }
 
   body.page-spectator.vista-partida #contenedor_espectador .right {
