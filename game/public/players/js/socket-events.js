@@ -882,13 +882,8 @@ function asegurarNivelActualVisible() {
     const item = nivelesItems[indice];
     const rectScroll = nivelesScroll.getBoundingClientRect();
     const rectItem = item.getBoundingClientRect();
-    const margen = 8;
-    let nuevoScroll = nivelesScroll.scrollLeft;
-    if (rectItem.right > rectScroll.right - margen) {
-        nuevoScroll += rectItem.right - rectScroll.right + margen;
-    } else if (rectItem.left < rectScroll.left + margen) {
-        nuevoScroll -= rectScroll.left - rectItem.left + margen;
-    }
+    const centroItem = nivelesScroll.scrollLeft + rectItem.left - rectScroll.left + (rectItem.width / 2);
+    let nuevoScroll = centroItem - (nivelesScroll.clientWidth / 2);
     const maxScroll = obtenerMaxScrollPermitido();
     nuevoScroll = Math.min(Math.max(0, nuevoScroll), maxScroll);
     if (Math.abs(nuevoScroll - nivelesScroll.scrollLeft) > 1) {
@@ -898,7 +893,11 @@ function asegurarNivelActualVisible() {
 
 function resetearScrollNiveles() {
     if (!nivelesScroll) return;
-    nivelesScroll.scrollTo({ left: 0, behavior: "auto" });
+    if (obtenerIndiceNivelActivo() >= 0) {
+        asegurarNivelActualVisible();
+    } else {
+        nivelesScroll.scrollTo({ left: 0, behavior: "auto" });
+    }
     if (nivelesPrev) {
         nivelesPrev.classList.remove("niveles-flecha--visible");
     }
@@ -908,15 +907,13 @@ function resetearScrollNiveles() {
     limitarScrollNiveles();
     programarSincronizacionNivelesMusa(actualizarFlechasNiveles);
     programarSincronizacionNivelesMusa(() => {
-        if (obtenerIndiceNivelActivo() < 0) {
-            nivelesScroll.scrollLeft = 0;
-        }
+        if (obtenerIndiceNivelActivo() >= 0) asegurarNivelActualVisible();
+        else nivelesScroll.scrollLeft = 0;
         actualizarFlechasNiveles();
     }, 50);
     programarSincronizacionNivelesMusa(() => {
-        if (obtenerIndiceNivelActivo() < 0) {
-            nivelesScroll.scrollLeft = 0;
-        }
+        if (obtenerIndiceNivelActivo() >= 0) asegurarNivelActualVisible();
+        else nivelesScroll.scrollLeft = 0;
         actualizarFlechasNiveles();
     }, 200);
 }
@@ -940,8 +937,9 @@ function programarSincronizacionVisorNiveles() {
 
 function recalcularLineaNiveles() {
     if (!nivelesLinea || !nivelesItems.length) return;
-    const primero = nivelesItems[0];
-    const ultimo = nivelesItems[nivelesItems.length - 1];
+    const itemsVisibles = Array.from(nivelesLinea.querySelectorAll(":scope > .nivel-item"));
+    const primero = itemsVisibles[0] || nivelesItems[0];
+    const ultimo = itemsVisibles[itemsVisibles.length - 1] || nivelesItems[nivelesItems.length - 1];
     const inicio = obtenerCentroItem(primero);
     const fin = obtenerCentroItem(ultimo);
     const longitud = Math.max(0, fin - inicio);
@@ -1036,8 +1034,8 @@ programarSincronizacionNivelesMusa(() => {
 function actualizarNiveles(modo) {
     if (!nivelesItems.length) return;
     const indice = NIVELES_ORDEN.indexOf(modo);
-    aplicarOrdenCircular(indice);
     if (niveles_bloqueados && indice < 0) {
+        aplicarOrdenCircular(indice);
         nivelesItems.forEach((item) => {
             item.classList.remove("nivel-activo", "nivel-pasado");
             item.classList.add("nivel-futuro");
@@ -1068,6 +1066,7 @@ function actualizarNiveles(modo) {
         item.classList.toggle("nivel-futuro", delta > 0);
         item.setAttribute("aria-current", delta === 0 ? "step" : "false");
     });
+    aplicarOrdenCircular(indice);
     if (nivelesLinea) {
         const progreso = indice < 0 || nivelesItems.length <= 1
             ? 0
@@ -1088,13 +1087,40 @@ function actualizarNiveles(modo) {
 }
 
 function aplicarOrdenCircular(indiceActivo) {
-    // El recorrido dramatúrgico debe ser estable en todos los roles. Antes se
-    // rotaba la lista alrededor del nivel activo y Palabras benditas dejaba de
-    // ser el primer nivel visual.
+    if (!nivelesLinea || !nivelesItems.length) return;
+    nivelesLinea.querySelectorAll('[data-circular-clone="true"]').forEach((clon) => clon.remove());
+    nivelesItems.forEach((item) => nivelesLinea.appendChild(item));
+    delete nivelesLinea.dataset.circular;
+    if (!Number.isInteger(indiceActivo) || indiceActivo < 0 || indiceActivo >= nivelesItems.length) return;
+
+    const total = nivelesItems.length;
+    const radio = Math.floor(total / 2);
+    for (let offset = -radio; offset < total - radio; offset += 1) {
+        const indice = (indiceActivo + offset + total) % total;
+        const item = nivelesItems[indice];
+        item.classList.toggle("nivel-pasado", offset < 0);
+        item.classList.toggle("nivel-activo", offset === 0);
+        item.classList.toggle("nivel-futuro", offset > 0);
+        item.setAttribute("aria-current", offset === 0 ? "step" : "false");
+        nivelesLinea.appendChild(item);
+    }
+
+    const fuenteCierre = nivelesItems[(indiceActivo + radio) % total];
+    const clonCierre = fuenteCierre.cloneNode(true);
+    clonCierre.dataset.circularClone = "true";
+    clonCierre.classList.remove("nivel-activo", "nivel-pasado");
+    clonCierre.classList.add("nivel-futuro");
+    clonCierre.removeAttribute("aria-current");
+    clonCierre.setAttribute("aria-hidden", "true");
+    clonCierre.setAttribute("role", "presentation");
+    nivelesLinea.appendChild(clonCierre);
+    nivelesLinea.dataset.circular = "true";
 }
 
 function refrescarUiIdiomaMusa() {
     refrescarEtiquetasNivelesMusa();
+    aplicarOrdenCircular(obtenerIndiceNivelActivo());
+    asegurarNivelActualVisible();
     refrescarCountdownMusa();
 
     if (nombre_musa_label && nombre_musa) {

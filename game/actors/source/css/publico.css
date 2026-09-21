@@ -2189,13 +2189,12 @@ body.page-actors #definicion .palabra-tiempo--maldita {
     }
 }
 
-/* Palabras benditas abre siempre el recorrido, también al cambiar de nivel. */
-.niveles-linea > .nivel-item[data-modo="palabras bonus"] { order: 0; }
-.niveles-linea > .nivel-item[data-modo="letra bendita"] { order: 1; }
-.niveles-linea > .nivel-item[data-modo="tertulia"] { order: 2; }
-.niveles-linea > .nivel-item[data-modo="letra prohibida"] { order: 3; }
-.niveles-linea > .nivel-item[data-modo="palabras prohibidas"] { order: 4; }
-.niveles-linea > .nivel-item[data-modo="frase final"] { order: 5; }
+/* El recorrido se recompone alrededor del nivel activo. El clon de cierre
+   hace visible a la izquierda lo que continúa por la derecha, sin esquinas. */
+.niveles-linea > .nivel-item[data-circular-clone="true"] {
+    pointer-events: none;
+    user-select: none;
+}
 
 .niveles-desactivados .niveles-scroll{
     pointer-events: none;

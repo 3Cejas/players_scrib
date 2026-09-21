@@ -1857,6 +1857,31 @@ function animarCambioEquipoPostgameMusa() {
     panel.classList.add("is-switching");
 }
 
+function actualizarExpansionTextoPostgameMusa(expandido) {
+    const reader = getEl("musa_postgame_reader");
+    const boton = getEl("musa_postgame_text_toggle");
+    const etiqueta = boton ? boton.querySelector("[data-postgame-story-toggle-label]") : null;
+    const estaExpandido = Boolean(expandido);
+    if (reader) {
+        reader.classList.toggle("is-expanded", estaExpandido);
+        reader.classList.toggle("is-collapsed", !estaExpandido);
+    }
+    if (boton) {
+        boton.setAttribute("aria-expanded", estaExpandido ? "true" : "false");
+        boton.setAttribute(
+            "aria-label",
+            estaExpandido
+                ? traducirPostgameMusa("muse.postgame.collapse_story", "Contraer historia")
+                : traducirPostgameMusa("muse.postgame.expand_story", "Expandir historia")
+        );
+    }
+    if (etiqueta) {
+        etiqueta.textContent = estaExpandido
+            ? traducirPostgameMusa("muse.postgame.collapse", "CONTRAER")
+            : traducirPostgameMusa("muse.postgame.expand", "EXPANDIR");
+    }
+}
+
 function pintarTextoPostgameMusa(playerId) {
     const id = Number(playerId) === 2 ? 2 : 1;
     regalo_postgame_escritxr_activo = id;
@@ -1866,7 +1891,6 @@ function pintarTextoPostgameMusa(playerId) {
     const palabrasUnicas = Math.max(0, Number(stats.palabras_unicas) || 0);
     const ritmo = Math.max(0, Number(stats.ritmo_ppm) || 0);
     const inspiracion = Math.max(0, Number(stats.inspiracion) || 0);
-    valorPostgameMusa("musa_postgame_escritxr_nombre", escritxr.nombre || `ESCRITXR ${id}`);
     valorPostgameMusa("musa_postgame_palabras", palabras);
     valorPostgameMusa("musa_postgame_unicas", palabrasUnicas);
     valorPostgameMusa("musa_postgame_ritmo", ritmo);
@@ -1894,6 +1918,7 @@ function pintarTextoPostgameMusa(playerId) {
     if (musa_postgame) {
         musa_postgame.style.setProperty("--postgame-reader-color", colorPostgameEscritxr(id));
     }
+    actualizarExpansionTextoPostgameMusa(false);
     animarCambioEquipoPostgameMusa();
 }
 
@@ -2104,6 +2129,12 @@ if (musa_postgame_tab_propio) {
 }
 if (musa_postgame_tab_rival) {
     musa_postgame_tab_rival.addEventListener("click", () => pintarTextoPostgameMusa(musa_postgame_tab_rival.dataset.player));
+}
+const musa_postgame_text_toggle = getEl("musa_postgame_text_toggle");
+if (musa_postgame_text_toggle) {
+    musa_postgame_text_toggle.addEventListener("click", () => {
+        actualizarExpansionTextoPostgameMusa(musa_postgame_text_toggle.getAttribute("aria-expanded") !== "true");
+    });
 }
 async function descargarPdfEscritxrPostgameMusa(playerId, boton) {
     const pdf = pdfEscritxrPostgameMusa(playerId);

@@ -201,7 +201,7 @@ test("the advantage-change overlay never appears in Control", () => {
   assert.match(competition, /function animarCambioLider\(payload\) \{\s*if \(rolActual === "control" \|\| !esHudVisibleEnVistaActual\(\)\) return;/);
 });
 
-test("Palabras benditas remains the leftmost level in muse and actor timelines", () => {
+test("muse and actor timelines wrap around the current centered level", () => {
   const museHtml = read("game/public/players/index.html");
   const actorHtml = read("game/actors/source/index.html");
   const museEvents = read("game/public/players/js/socket-events.js");
@@ -214,14 +214,17 @@ test("Palabras benditas remains the leftmost level in muse and actor timelines",
   });
   [museEvents, actorEvents].forEach((source) => {
     const reorder = source.match(/function aplicarOrdenCircular[\s\S]*?\n\}/)?.[0] || "";
-    assert.doesNotMatch(reorder, /style\.order\s*=/);
+    assert.match(reorder, /data-circular-clone/);
+    assert.match(reorder, /cloneNode\(true\)/);
+    assert.match(reorder, /offset === 0/);
+    assert.match(source, /centroItem - \(nivelesScroll\.clientWidth \/ 2\)/);
   });
 
   const museCss = read("game/public/players/css/publico.css");
   const actorCss = read("game/actors/source/css/publico.css");
   [museCss, actorCss].forEach((css) => {
-    assert.match(css, /\.nivel-item\[data-modo="palabras bonus"\]\s*\{\s*order:\s*0;/);
-    assert.match(css, /\.nivel-item\[data-modo="frase final"\]\s*\{\s*order:\s*5;/);
+    assert.match(css, /\.nivel-item\[data-circular-clone="true"\]/);
+    assert.doesNotMatch(css, /\.nivel-item\[data-modo="palabras bonus"\]\s*\{\s*order:/);
   });
 });
 
