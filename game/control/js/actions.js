@@ -3754,7 +3754,25 @@ function reiniciarPuntuacionFinal() {
 
 function ocultarPuntuacionFinal() {
     if (!socket || typeof socket.emit !== "function") return;
-    socket.emit("ocultar_puntuacion_final");
+    const boton = document.getElementById("boton_resultado_videojuego");
+    if (boton) {
+        boton.disabled = true;
+        boton.setAttribute("aria-busy", "true");
+    }
+    socket.emit("ocultar_puntuacion_final", {}, (respuesta = {}) => {
+        if (boton) {
+            boton.disabled = false;
+            boton.removeAttribute("aria-busy");
+        }
+        if (respuesta && respuesta.ok === true) {
+            if (respuesta.vista) actualizarModoVistaEspectadorControl(respuesta.vista);
+            return;
+        }
+        mostrarFeedbackPuntuacionControl(
+            tJuego2PControl("control.score.hide_error", {}, "No se pudo ocultar el resultado. Vuelve a intentarlo."),
+            "error"
+        );
+    });
 }
 
 function actualizarEstadoPuntuacionFinalControl(payload = {}) {
@@ -3779,6 +3797,10 @@ function mostrarVistaDeliberacion() {
 }
 
 function mostrarResultadoVideojuego() {
+    if (vista_espectador_modo === "puntuacion") {
+        ocultarPuntuacionFinal();
+        return;
+    }
     mostrarPuntuacionFinal();
 }
 

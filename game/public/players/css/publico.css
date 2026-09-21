@@ -5449,10 +5449,20 @@ body.musa-postgame-activo {
 .musa-postgame__ranking-list {
     display: grid;
     gap: 9px;
+    max-height: min(52dvh, 520px);
     margin: 0;
-    padding: 0;
+    padding: 0 5px 0 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: #ffe47b rgba(255,255,255,.08);
+    scrollbar-width: thin;
     list-style: none;
 }
+.musa-postgame__ranking-list:not(.is-scrollable) { max-height: none; overflow-y: visible; }
+.musa-postgame__ranking-list::-webkit-scrollbar { width: 7px; }
+.musa-postgame__ranking-list::-webkit-scrollbar-track { border-radius: 999px; background: rgba(255,255,255,.08); }
+.musa-postgame__ranking-list::-webkit-scrollbar-thumb { border-radius: 999px; background: linear-gradient(#ffe47b, var(--postgame-team-color)); }
 .musa-postgame__ranking-item {
     --ranking-color: #43eaff;
     display: grid;
@@ -5577,6 +5587,13 @@ body.musa-postgame-activo {
     font-variant-numeric: tabular-nums;
     text-shadow: 0 0 15px color-mix(in srgb, var(--metric-color), transparent 50%);
 }
+.musa-postgame__pace-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 8px; }
+.musa-postgame__pace-value em {
+    color: color-mix(in srgb, var(--metric-color), white 45%);
+    font: normal clamp(.72rem, 2.8vw, .95rem)/1.15 "VT323", monospace;
+    letter-spacing: .02em;
+    text-shadow: none;
+}
 
 .musa-postgame__metric--words,
 .musa-postgame__metric--sent { --metric-color: #49e8ff !important; }
@@ -5587,33 +5604,6 @@ body.musa-postgame-activo {
 .musa-postgame__metric--inspiration { --metric-color: #c58aff !important; }
 .musa-postgame__metric--muses { --metric-color: #65f2a7 !important; }
 .musa-postgame__metric--used { --metric-color: var(--postgame-reader-color) !important; }
-
-.musa-postgame__results {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 18px;
-}
-.musa-postgame__result {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 12px;
-    min-height: 114px;
-    padding: 14px;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--result-color), transparent 62%);
-    border-radius: 17px;
-    background: radial-gradient(circle at 12% 50%, color-mix(in srgb, var(--result-color), transparent 78%), transparent 50%), rgba(255,255,255,.018);
-    text-align: left;
-}
-.musa-postgame__result--game { --result-color: #a978ff; }
-.musa-postgame__result--jury { --result-color: #ffe47b; }
-.musa-postgame__result > span { font-size: clamp(1.8rem, 6vw, 2.8rem); filter: drop-shadow(0 0 12px var(--result-color)); }
-.musa-postgame__result > div { display: grid; min-width: 0; gap: 6px; }
-.musa-postgame__result small { color: var(--result-color); font: 700 clamp(.45rem, 1.55vw, .6rem)/1.3 "Retro-gaming", monospace; }
-.musa-postgame__result strong { color: #fff; font: 700 clamp(1.15rem, 4vw, 1.8rem)/1 "Retro-gaming", monospace; font-variant-numeric: tabular-nums; }
-.musa-postgame__result em { color: rgba(255,255,255,.48); font: normal clamp(.8rem, 3vw, 1rem)/1 "VT323", monospace; letter-spacing: .08em; }
 
 .musa-postgame__muse-team {
     margin: 18px 0;
@@ -5676,12 +5666,10 @@ body.musa-postgame-activo {
 }
 
 .musa-postgame__team-panel.is-switching .musa-postgame__team-metrics > span,
-.musa-postgame__team-panel.is-switching .musa-postgame__result,
 .musa-postgame__team-panel.is-switching .musa-postgame__muse-team-metrics > span {
     animation: musaPostgameDataIn 540ms cubic-bezier(.16,.86,.22,1) both;
 }
 .musa-postgame__team-panel.is-switching .musa-postgame__team-metrics > span:nth-child(2),
-.musa-postgame__team-panel.is-switching .musa-postgame__result:nth-child(2),
 .musa-postgame__team-panel.is-switching .musa-postgame__muse-team-metrics > span:nth-child(2) { animation-delay: 55ms; }
 .musa-postgame__team-panel.is-switching .musa-postgame__team-metrics > span:nth-child(3),
 .musa-postgame__team-panel.is-switching .musa-postgame__muse-team-metrics > span:nth-child(3) { animation-delay: 110ms; }
@@ -5785,7 +5773,6 @@ body.musa-postgame-activo {
     .musa-postgame__stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .musa-postgame__bar { grid-template-columns: minmax(84px, .78fr) minmax(64px, 1.2fr) auto; }
     .musa-postgame__team-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .musa-postgame__results { grid-template-columns: minmax(0, 1fr); }
     .musa-postgame__muse-team-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .musa-postgame__muse-team-metrics > span:last-child { grid-column: 1 / -1; }
     .musa-postgame__text { max-height: 40dvh; }
@@ -5798,7 +5785,6 @@ body.musa-postgame-activo {
     .musa-postgame--visible .musa-postgame__bar > i > b,
     .musa-postgame__team-panel.is-switching,
     .musa-postgame__team-panel.is-switching .musa-postgame__team-metrics > span,
-    .musa-postgame__team-panel.is-switching .musa-postgame__result,
     .musa-postgame__team-panel.is-switching .musa-postgame__muse-team-metrics > span {
         animation: none !important;
         opacity: 1;

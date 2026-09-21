@@ -30,7 +30,7 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(html, /id="jurado_nav_prev"[^>]*stats-nav-button--prev[^>]*aria-label="Resultado anterior"/);
   assert.match(html, /id="jurado_nav_next"[^>]*stats-nav-button--next[^>]*aria-label="Revelar siguiente resultado"/);
   assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion"\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
-  assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
+  assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*vista_espectador_modo === "puntuacion"[\s\S]*ocultarPuntuacionFinal\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
   assert.match(actions, /window\.activarSeccionControl = activarSeccionControl/);
   assert.match(actions, /function mostrarPuntuacionFinal\(\)[\s\S]*boton\.setAttribute\("aria-busy", "true"\)[\s\S]*socket\.emit\("mostrar_puntuacion_final"/);
   assert.match(actions, /function actualizarEstadoPuntuacionFinalControl\(payload = \{\}\)[\s\S]*actualizarBotonResultadoVideojuegoControl\(estado_puntuacion_final_control\?\.disponible === true\)/);
