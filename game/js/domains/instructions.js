@@ -7,6 +7,10 @@
 
     const STEP_MAX = 6;
     const STEP_COUNT = STEP_MAX + 1;
+    const WRITER_DEMO_WRITING_MS = 1800;
+    const WRITER_DEMO_IDLE_MS = 1400;
+    const WRITER_DEMO_DELETE_INTERVAL_MS = 420;
+    const WRITER_DEMO_EMPTY_MS = 1200;
 
     const safeText = (value, fallback) => {
         const text = String(value || "").trim();
@@ -79,7 +83,7 @@
                 <div class="scrib-instructions__scene scrib-instructions__scene--delete">
                     <p class="scrib-instructions__eyebrow">EL JUEGO NO ESPERA</p>
                     <h2>SI PARAN…<br><em>EL TEXTO DESAPARECE</em></h2>
-                    <div class="scrib-instructions__writer-demo" aria-label="Demostración de escritura y borrado automático">
+                    <div class="scrib-instructions__writer-demo" data-state="writing" aria-label="Demostración de escritura y borrado automático">
                         <div class="scrib-instructions__writer-demo-head" aria-hidden="true">
                             <span>ESCRITXR</span>
                             <span class="scrib-instructions__writer-status">
@@ -167,25 +171,34 @@
                 textNode.textContent = characters.join("");
                 return;
             }
-            const duration = 8000;
+            const demo = textNode.closest?.(".scrib-instructions__writer-demo");
+            const deletionDuration = characters.length * WRITER_DEMO_DELETE_INTERVAL_MS;
+            const deletionStartsAt = WRITER_DEMO_WRITING_MS + WRITER_DEMO_IDLE_MS;
+            const deletionEndsAt = deletionStartsAt + deletionDuration;
+            const duration = deletionEndsAt + WRITER_DEMO_EMPTY_MS;
             let startedAt = null;
             let previousVisible = characters.length;
+            let previousState = "writing";
             const update = (timestamp) => {
                 if (!state.visible || state.step !== 4) {
                     writerAnimationFrame = null;
                     return;
                 }
                 if (startedAt == null) startedAt = timestamp;
-                const progress = ((timestamp - startedAt) % duration) / duration;
-                let visible = 0;
-                if (progress < 0.44) {
-                    visible = Math.floor(Math.max(0, (progress - 0.08) / 0.36) * characters.length);
-                } else if (progress <= 0.56) {
-                    visible = characters.length;
-                } else if (progress < 0.94) {
-                    visible = characters.length - Math.ceil(((progress - 0.56) / 0.38) * characters.length);
+                const elapsed = (timestamp - startedAt) % duration;
+                const demoState = elapsed < WRITER_DEMO_WRITING_MS ? "writing" : "resting";
+                let visible = characters.length;
+                if (elapsed >= deletionStartsAt && elapsed < deletionEndsAt) {
+                    const removed = Math.floor((elapsed - deletionStartsAt) / WRITER_DEMO_DELETE_INTERVAL_MS) + 1;
+                    visible = characters.length - removed;
+                } else if (elapsed >= deletionEndsAt) {
+                    visible = 0;
                 }
                 visible = Math.max(0, Math.min(characters.length, visible));
+                if (demo && demoState !== previousState) {
+                    previousState = demoState;
+                    demo.dataset.state = demoState;
+                }
                 if (visible !== previousVisible) {
                     previousVisible = visible;
                     textNode.textContent = characters.slice(0, visible).join("");

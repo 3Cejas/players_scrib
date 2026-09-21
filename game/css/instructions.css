@@ -129,11 +129,15 @@
 .scrib-instructions__writer-demo-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; color: rgba(211, 244, 250, .56); font-size: clamp(11px, 1vw, 17px); letter-spacing: .12em; }
 .scrib-instructions__writer-status { position: relative; min-width: 14em; height: 1.25em; text-align: right; }
 .scrib-instructions__writer-status b { position: absolute; inset: 0 0 auto auto; white-space: nowrap; }
-.scrib-instructions__writer-status-write { color: #72f6bb; animation: instructions-writing-state 8s steps(1, end) infinite; }
-.scrib-instructions__writer-status-rest { color: #ff7186; animation: instructions-rest-state 8s steps(1, end) infinite; }
+.scrib-instructions__writer-status-write,
+.scrib-instructions__writer-status-rest { opacity: 0; transition: opacity .12s steps(1, end); }
+.scrib-instructions__writer-status-write { color: #72f6bb; }
+.scrib-instructions__writer-status-rest { color: #ff7186; }
+.scrib-instructions__writer-demo[data-state="writing"] .scrib-instructions__writer-status-write,
+.scrib-instructions__writer-demo[data-state="resting"] .scrib-instructions__writer-status-rest { opacity: 1; }
 .scrib-instructions__writer-copy { min-height: 1.5em; margin: clamp(28px, 4vh, 48px) 0 0; color: rgba(244, 249, 252, .9); font-size: clamp(20px, 2.6vw, 48px); line-height: 1.45; }
 .scrib-instructions__cursor-line { white-space: pre-wrap; }
-.scrib-instructions__writer-copy i { display: inline-block; width: .13em; height: 1.08em; margin-left: .1em; vertical-align: -.14em; background: #64efff; box-shadow: 0 0 10px #64efff; animation: instructions-writer-caret 8s steps(1, end) infinite; }
+.scrib-instructions__writer-copy i { display: inline-block; width: .13em; height: 1.08em; margin-left: .1em; vertical-align: -.14em; background: #64efff; box-shadow: 0 0 10px #64efff; animation: instructions-writer-caret .78s steps(1, end) infinite; }
 
 .scrib-instructions__scene--ideas h2 { font-size: clamp(36px, 5vw, 92px); }
 .scrib-instructions__idea-composer {
@@ -229,9 +233,7 @@
 @keyframes instructions-feather { 50% { transform: translateY(-12px) rotate(7deg) scale(1.08); } }
 @keyframes instructions-curtain-left { to { transform: translateX(-94%); } }
 @keyframes instructions-curtain-right { to { transform: scaleX(-1) translateX(-94%); } }
-@keyframes instructions-writing-state { 0%, 56% { opacity: 1; } 57%, 100% { opacity: 0; } }
-@keyframes instructions-rest-state { 0%, 56% { opacity: 0; } 57%, 100% { opacity: 1; } }
-@keyframes instructions-writer-caret { 0%, 56% { opacity: 1; } 57%, 100% { opacity: 0; } }
+@keyframes instructions-writer-caret { 0%, 48% { opacity: 1; } 49%, 100% { opacity: .12; } }
 @keyframes instructions-score-blue { 0%, 8%, 100% { width: 50%; } 34%, 43% { width: 72%; } 72%, 81% { width: 36%; } }
 @keyframes instructions-score-red { 0%, 8%, 100% { width: 50%; } 34%, 43% { width: 28%; } 72%, 81% { width: 64%; } }
 @keyframes instructions-score-center { 0%, 8%, 100% { left: 50%; } 34%, 43% { left: 72%; } 72%, 81% { left: 36%; } }

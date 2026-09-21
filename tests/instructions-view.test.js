@@ -37,8 +37,12 @@ test("instructions mirror the real writing, Muse and inspiration interfaces", ()
 
   view.setState({ step: 4 });
   assert.match(container.innerHTML, /data-full-text="La historia empieza a cobrar vida"/);
+  assert.match(container.innerHTML, /data-state="writing"/);
   assert.match(container.innerHTML, /ESCRIBIENDO ↑/);
   assert.match(container.innerHTML, /SIN ESCRIBIR ↓/);
+  const instructionsSource = read("game/js/domains/instructions.js");
+  assert.match(instructionsSource, /WRITER_DEMO_DELETE_INTERVAL_MS = 420/);
+  assert.match(instructionsSource, /Math\.floor\(\(elapsed - deletionStartsAt\) \/ WRITER_DEMO_DELETE_INTERVAL_MS\) \+ 1/);
 
   view.setState({ step: 5 });
   assert.match(container.innerHTML, /ENVÍA PALABRAS\.<br>INSPIRA A TU ESCRITORA\./);
