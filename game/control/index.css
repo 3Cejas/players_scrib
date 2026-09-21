@@ -8517,17 +8517,20 @@ table.default {
 
 #control_panel_juego #boton_fin_partida[hidden],
 #control_panel_juego #boton_resultado_videojuego[hidden],
-#control_panel_juego #boton_descargar_textos[hidden],
 #control_panel_juego #resultado_videojuego_viewer_control[hidden],
 #control_panel_juego #boton_pausar_reanudar[hidden] {
     display: none !important;
 }
 
-/* Resultado del videojuego: acciones y navegación permanecen juntas en Juego. */
+/* Resultado del videojuego: botón y navegación permanecen juntos en Juego. */
 #panel_controles #control_panel_juego:not(.is-collapsed) > .resultado-videojuego-viewer-control {
     display: grid !important;
-    flex: 1 0 100%;
+    grid-column: 1 / -1;
+    flex: 0 1 100%;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
+    overflow: hidden;
     gap: clamp(0.45rem, 0.7vw, 0.72rem);
     padding: clamp(0.58rem, 0.82vw, 0.82rem);
     border: 1px solid rgba(255, 214, 91, 0.58);
@@ -8553,7 +8556,7 @@ table.default {
 
 .resultado-videojuego-viewer-control__actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(0.4rem, 0.68vw, 0.68rem);
     min-width: 0;
 }
@@ -8567,8 +8570,10 @@ table.default {
 
 #panel_controles .resultado-videojuego-nav-control {
     width: 100%;
+    max-width: 100%;
     min-width: 0;
     margin: 0;
+    box-sizing: border-box;
     grid-template-columns: minmax(2rem, 2.55rem) minmax(0, 1fr) minmax(2rem, 2.55rem);
     overflow: hidden;
 }
@@ -8584,12 +8589,6 @@ table.default {
 @keyframes resultadoVideojuegoControlReveal {
     from { opacity: 0; transform: translateY(0.6rem) scale(0.985); }
     to { opacity: 1; transform: none; }
-}
-
-@media (max-width: 760px) {
-    .resultado-videojuego-viewer-control__actions {
-        grid-template-columns: minmax(0, 1fr);
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -12919,6 +12918,7 @@ table.default {
     align-items: center;
     gap: 0.52rem;
     grid-column: 1 / -1;
+    order: 99;
     width: 100%;
     padding: 0.52rem;
     box-sizing: border-box;

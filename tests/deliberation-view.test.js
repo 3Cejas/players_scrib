@@ -8,6 +8,7 @@ const read = (relative) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 
 test("Control exposes exclusive deliberation, game result and jury result views", () => {
   const html = read("game/control/index.html");
+  const css = read("game/control/index.css");
   const actions = read("game/control/js/actions.js");
   const sockets = read("game/control/js/socket-events.js");
   const juego = html.slice(html.indexOf('id="control_panel_juego"'), html.indexOf('id="control_panel_representacion"'));
@@ -17,8 +18,11 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(html, /data-control-tab="deliberacion"/);
   assert.match(html, /id="boton_vista_deliberacion"/);
   assert.match(html, /id="boton_resultado_videojuego"/);
-  assert.match(juego, /id="resultado_videojuego_viewer_control"[\s\S]*id="boton_resultado_videojuego"[\s\S]*id="boton_descargar_textos"[\s\S]*id="puntuacion_nav_control"/);
-  assert.doesNotMatch(representacion, /id="boton_descargar_textos"/);
+  assert.match(juego, /id="resultado_videojuego_viewer_control"[\s\S]*id="boton_resultado_videojuego"[\s\S]*id="puntuacion_nav_control"/);
+  assert.doesNotMatch(juego, /id="boton_descargar_textos"/);
+  assert.match(representacion, /id="boton_descargar_textos"/);
+  assert.match(css, /resultado-videojuego-viewer-control\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*max-width:\s*100%;[^}]*overflow:\s*hidden;/s);
+  assert.match(css, /resultado-videojuego-nav-control\s*\{[^}]*max-width:\s*100%;[^}]*box-sizing:\s*border-box;/s);
   assert.doesNotMatch(deliberacion, /id="puntuacion_nav_control"/);
   assert.match(html, /id="boton_resultado_jurado"/);
   assert.match(html, /id="jurado_nav_control"/);

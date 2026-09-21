@@ -8,6 +8,12 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), "u
 
 test("Control hides Debug behind five logo clicks and distributes tools by context", () => {
   const html = read("game/control/index.html");
+  const css = read("game/control/index.css");
+  const panel = (inicio, fin) => html.slice(html.indexOf(inicio), html.indexOf(fin));
+  const detonadores = panel('id="control_panel_detonadores"', 'id="control_panel_juego"');
+  const juego = panel('id="control_panel_juego"', 'id="control_panel_representacion"');
+  const representacion = panel('id="control_panel_representacion"', 'id="control_panel_deliberacion"');
+  const final = panel('id="control_panel_final"', 'id="control_panel_asistencia"');
   assert.match(html, /id="control_debug_secret_trigger"/);
   assert.doesNotMatch(html, /data-control-tab="debug"/);
   assert.doesNotMatch(html, /id="modo_debug_toggle"/);
@@ -18,6 +24,11 @@ test("Control hides Debug behind five logo clicks and distributes tools by conte
   assert.match(html, /id="control_panel_deliberacion"[\s\S]*id="debug_tools_deliberacion"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_cargar_deliberacion"/);
   assert.match(html, /id="control_panel_final"[\s\S]*id="debug_tools_final"[^>]*data-debug-tools[^>]*hidden[\s\S]*id="debug_exportar_iteraciones"/);
   assert.match(html, /id="control_panel_juego"[\s\S]*id="boton_fin_partida"[^>]*onclick="fin_partida_global\(\)"[^>]*hidden/);
+  assert.ok(detonadores.indexOf('id="debug_tools_detonadores"') > detonadores.indexOf('id="calentamiento_flujo_estado"'));
+  assert.ok(juego.indexOf('id="debug_tools_juego"') > juego.indexOf('id="stats_nav_control"'));
+  assert.ok(representacion.indexOf('id="debug_tools_representacion"') > representacion.indexOf('id="panel_teleprompter_representacion"'));
+  assert.ok(final.indexOf('id="debug_tools_final"') > final.indexOf('id="panel_creditos_final"'));
+  assert.match(css, /\.debug-context-tools\s*\{[^}]*order:\s*99;/s);
   assert.doesNotMatch(html, /debug-context-tools__label/);
   assert.doesNotMatch(html, /id="debug_control_tools"/);
 });

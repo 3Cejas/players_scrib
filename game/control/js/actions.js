@@ -2310,15 +2310,13 @@ window.actualizarBotonFinalizarTemporizadorDebugControl = actualizarBotonFinaliz
 
 function actualizarBotonResultadoVideojuegoControl(disponible) {
     const boton = document.getElementById("boton_resultado_videojuego");
-    const botonDescarga = document.getElementById("boton_descargar_textos");
     const visor = document.getElementById("resultado_videojuego_viewer_control");
     const visible = disponible === true;
-    [boton, botonDescarga].forEach((control) => {
-        if (!control) return;
-        control.hidden = !visible;
-        control.setAttribute("aria-hidden", visible ? "false" : "true");
-        control.tabIndex = visible ? 0 : -1;
-    });
+    if (boton) {
+        boton.hidden = !visible;
+        boton.setAttribute("aria-hidden", visible ? "false" : "true");
+        boton.tabIndex = visible ? 0 : -1;
+    }
     if (visor) {
         visor.hidden = !visible;
         visor.dataset.available = visible ? "1" : "0";
