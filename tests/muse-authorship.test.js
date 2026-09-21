@@ -67,7 +67,7 @@ test("tutorial and final renderers preserve authors and insert names as text nod
   assert.doesNotMatch(publicMuse, /calentamiento_final_musa\.innerHTML\s*=/);
 });
 
-test("main writer and spectator views escape HTML authors and show the compact signature", () => {
+test("main writer and spectator views escape HTML authors and show unified muse feedback", () => {
   const writerState = read("game/players/js/state.js");
   const writerEvents = read("game/players/js/socket-events.js");
   const spectatorState = read("game/spectator/js/state.js");
@@ -75,8 +75,8 @@ test("main writer and spectator views escape HTML authors and show the compact s
 
   assert.match(writerState, /escapeHtml\(firma\.texto\)/);
   assert.match(spectatorState, /escapeHtml\(firma\.texto\)/);
-  assert.match(writerEvents, /construirFirmaMusaHtmlEscritora\(data/);
-  assert.match(spectatorEvents, /construirFirmaMusaHtmlEspectador\(data/);
+  assert.match(writerEvents, /construirSugerenciaMusaHtmlEscritora\(data/);
+  assert.match(spectatorEvents, /construirSugerenciaMusaHtmlEspectador\(data/);
   assert.doesNotMatch(writerEvents, /<span style='color: orange;'>\$\{musaLabel\}/);
   assert.doesNotMatch(spectatorEvents, /<span style="color:lime;">\$\{musaLabel\}/);
 });

@@ -15,7 +15,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260921h">
+    <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260921l">
     <link rel="stylesheet" type="text/css" href="../css/level-transition.css?v=20260921c">
     <link rel="stylesheet" type="text/css" href="../css/video-tutorial.css?v=20260920a">
     <link rel="stylesheet" type="text/css" href="../css/show-narration.css?v=20260831g">
@@ -31,7 +31,7 @@
     <script src="../js/domains/inspiration.js?v=20260905d"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260902b"></script>
-    <script src="../js/domains/competition.js?v=20260921e"></script>
+    <script src="../js/domains/competition.js?v=20260921f"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/domains/instructions.js?v=20260921d"></script>
     <script src="../js/domains/pre-show.js?v=20260824b"></script>
@@ -283,7 +283,7 @@
                     </div>
                 </div>
                 <br><br>
-                <div align="center">
+                <div class="spectator-meta-wrap" align="center">
                                         <div id="metadatos_j1" class="right metadatos-grid metadatos-grid--cabecera marcador-equipo marcador-equipo-1">
                         <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
                             <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
@@ -305,16 +305,11 @@
                     <h2 id="puntuacion_final1"></h1>
                 </div>
                 <br>
-                <table id="info1" class="info">
-                    <tr>
-                        <p id="explicacion1" class="explicación1"></p>
-                    </tr>
-                        <p id="palabra1" class=palabra1></p>
-                    </tr>
-                    <tr>
-                        <p id="definicion1" class="definicion1"></p>
-                    </tr>
-                </table>
+                <div id="info1" class="info spectator-inspiration" aria-live="polite">
+                    <p id="explicacion1" class="explicación1"></p>
+                    <p id="palabra1" class="palabra1"></p>
+                    <p id="definicion1" class="definicion1"></p>
+                </div>
                 <br>
             </div>
                 <div class="jugador2">
@@ -332,7 +327,7 @@
                     </div>
                 </div>
                 <br><br>
-                <div align="center">
+                <div class="spectator-meta-wrap" align="center">
                                         <div id="metadatos_j2" class="right metadatos-grid metadatos-grid--cabecera marcador-equipo marcador-equipo-2">
                         <div class="meta-item meta-top-left marcador-chip marcador-chip--puntos">
                             <span class="meta-icon">&#x1F58B;&#xFE0F;</span>
@@ -354,16 +349,11 @@
                     <h2 id="puntuacion_final2"></h1>
                 </div>
                 <br>
-                <table id="info2" class="info">
-                    <tr>
-                        <p id="explicacion2" class="explicación2"></p>
-                    </tr>
-                        <p id="palabra2" class=palabra2></p>
-                    </tr>
-                    <tr>
-                        <p id="definicion2" class="definicion2"></p>
-                    </tr>
-                </table>
+                <div id="info2" class="info spectator-inspiration" aria-live="polite">
+                    <p id="explicacion2" class="explicación2"></p>
+                    <p id="palabra2" class="palabra2"></p>
+                    <p id="definicion2" class="definicion2"></p>
+                </div>
                 <br>
             </div>
         </div>
@@ -377,11 +367,11 @@
 <script src="../dist/socket.io/socket.io.js"></script>
     <script src="../js/i18n.js?v=20260917c"></script>
 <script src="../js/domains/final-score.js?v=20260903e"></script>
-<script src="../js/domains/level-transition.js?v=20260921b"></script>
-<script src="./js/state.js?v=20260921i"></script>
+<script src="../js/domains/level-transition.js?v=20260921c"></script>
+<script src="./js/state.js?v=20260921j"></script>
     <script src="../js/domains/video-tutorial.js?v=20260906b"></script>
     <script src="../js/domains/show-narration.js?v=20260906b"></script>
     <script src="../js/domains/canto.js?v=20260920b"></script>
-<script src="./js/socket-events.js?v=20260921b"></script>
+<script src="./js/socket-events.js?v=20260921c"></script>
 <script src="./js/index.js?v=20260504e"></script>
 </html>

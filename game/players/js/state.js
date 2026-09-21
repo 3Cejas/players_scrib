@@ -72,6 +72,23 @@ const obtenerContenidoMarqueeDefinicionEscritora = (elemento) => {
 
 const aplicarMarqueeSiOverflowEscritora = (elemento) => {
     if (!elemento) return;
+    const sugerencia = elemento.querySelector(".muse-suggestion");
+    if (sugerencia) {
+        const viewport = sugerencia.querySelector(".muse-suggestion__word-viewport");
+        const palabraMovil = sugerencia.querySelector(".muse-suggestion__word");
+        sugerencia.classList.remove("muse-suggestion--marquee");
+        sugerencia.style.removeProperty("--muse-word-distance");
+        sugerencia.style.removeProperty("--muse-word-duration");
+        requestAnimationFrame(() => {
+            if (!viewport || !palabraMovil) return;
+            const distancia = Math.max(0, palabraMovil.scrollWidth - viewport.clientWidth);
+            if (distancia <= 1) return;
+            sugerencia.style.setProperty("--muse-word-distance", `${Math.ceil(distancia)}px`);
+            sugerencia.style.setProperty("--muse-word-duration", `${Math.max(6, distancia / 35).toFixed(2)}s`);
+            sugerencia.classList.add("muse-suggestion--marquee");
+        });
+        return;
+    }
     const contenido = obtenerContenidoMarqueeDefinicionEscritora(elemento);
     elemento.classList.remove("definicion--marquee");
     elemento.innerHTML = contenido;
@@ -248,7 +265,22 @@ const construirFirmaMusaHtmlEscritora = (payload = {}, clase = "") => {
     const firma = normalizarFirmaMusaEscritora(payload);
     if (!firma.texto) return "";
     const clases = ["inspiration-author", clase].filter(Boolean).join(" ");
-    return `<span class="${clases}" title="${escapeHtml(firma.completo)}"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">${escapeHtml(firma.texto)}</span></span>`;
+    return `<span class="${clases}" title="${escapeHtml(firma.completo)}"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">${escapeHtml(firma.texto)}:</span></span>`;
+};
+const capitalizarPalabraVisibleEscritora = (valor) => {
+    const textoVisible = String(valor || "").trim();
+    if (!textoVisible) return "";
+    const caracteres = Array.from(textoVisible);
+    return `${caracteres[0].toLocaleUpperCase("es-ES")}${caracteres.slice(1).join("")}`;
+};
+const construirSugerenciaMusaHtmlEscritora = (payload = {}, palabraTexto = "", opciones = {}) => {
+    const visible = capitalizarPalabraVisibleEscritora(palabraTexto);
+    if (!visible) return "";
+    const maldita = opciones.maldita === true;
+    const valor = formatearTiempoPalabraAsignadaEscritora(payload, { maldita });
+    const claseAutor = maldita ? "is-enemy" : "";
+    const claseValor = maldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
+    return `<span class="muse-suggestion${maldita ? " muse-suggestion--enemy" : ""}">${construirFirmaMusaHtmlEscritora(payload, claseAutor)}<span class="muse-suggestion__word-viewport"><span class="muse-suggestion__word">${escapeHtml(visible)}</span></span>${valor ? `<span class="palabra-tiempo ${claseValor}">${escapeHtml(valor)}</span>` : ""}</span>`;
 };
 
 const crearNodoFirmaMusaEscritora = (payload = {}, clase = "") => {
@@ -1093,7 +1125,7 @@ function formatearTiempoPalabraAsignadaEscritora(data = {}, opciones = {}) {
 }
 
 function construirTextoPalabraConTiempoEscritora(palabraTexto, tiempoSegundos, tipo = "bendita") {
-    const base = String(palabraTexto || "").trim();
+    const base = capitalizarPalabraVisibleEscritora(palabraTexto);
     if (!base) return "";
     const esMaldita = tipo === "maldita";
     const tiempoTexto = formatearTiempoPalabraAsignadaEscritora(tiempoSegundos, { maldita: esMaldita });
@@ -1110,7 +1142,8 @@ function normalizarTextoPlanoEscritora(texto) {
 }
 
 function construirBloqueObjetivoNivelEscritora(palabraTexto, opciones = {}) {
-    const base = String(palabraTexto || "").trim();
+    const baseOriginal = String(palabraTexto || "").trim();
+    const base = capitalizarPalabraVisibleEscritora(baseOriginal);
     if (!base) return "";
     const tipo = String(opciones.tipo || "bonus").trim().toLowerCase();
     const esMaldita = tipo === "prohibidas";
@@ -1119,7 +1152,7 @@ function construirBloqueObjetivoNivelEscritora(palabraTexto, opciones = {}) {
         ? null
         : resolverTiempoPalabraAsignadaEscritora({
             tiempo_palabras_bonus: opciones.tiempoSegundos,
-            palabras_var: base
+            palabras_var: baseOriginal
         });
     const palabraHtml = tiempoSeguro !== null
         ? construirTextoPalabraConTiempoEscritora(base, tiempoSeguro, esMaldita ? "maldita" : "bendita")
@@ -1405,14 +1438,25 @@ const ajustarViewportEscritora = () => {
     let maxY = viewportH;
     objetivos.forEach((nodo) => {
         const rect = nodo.getBoundingClientRect();
+        const altoContenido = nodo.id === "contenedor"
+            ? Math.max(rect.height, nodo.scrollHeight || 0)
+            : rect.height;
         minX = Math.min(minX, rect.left);
         minY = Math.min(minY, rect.top);
-        maxX = Math.max(maxX, rect.left + Math.max(rect.width, nodo.scrollWidth || 0));
-        maxY = Math.max(maxY, rect.top + Math.max(rect.height, nodo.scrollHeight || 0));
+        // El texto del editor puede tener líneas muy largas. Su scrollWidth no
+        // forma parte del layout visible y no debe encoger toda la interfaz.
+        maxX = Math.max(maxX, rect.right);
+        maxY = Math.max(maxY, rect.top + altoContenido);
     });
     const anchoNatural = Math.max(1, maxX - minX);
     const altoNatural = Math.max(1, maxY - minY);
-    let escala = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
+    // No apuramos el último píxel: los chips de inspiración y las palabras
+    // malditas pueden aparecer después del primer ajuste. Esta reserva evita
+    // que su borde inferior quede cortado y se recalcula desde el tamaño
+    // natural, por lo que no produce el antiguo bucle de encogimiento.
+    const margenVerticalSeguro = Math.min(16, Math.max(8, viewportH * 0.015));
+    const altoDisponible = Math.max(1, viewportH - margenVerticalSeguro);
+    let escala = Math.min(1, viewportW / anchoNatural, altoDisponible / altoNatural);
     if (!Number.isFinite(escala) || escala <= 0) escala = 1;
     const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5) - (minX * escala);
     const offsetY = Math.max(0, -minY * escala);
@@ -1459,7 +1503,6 @@ const iniciarAjusteViewportEscritora = () => {
         mutation_observer_fit_viewport_escritora.observe(players_fit_root, {
             childList: true,
             subtree: true,
-            characterData: true,
             attributes: true,
             attributeFilter: ["class", "hidden", "aria-hidden"]
         });

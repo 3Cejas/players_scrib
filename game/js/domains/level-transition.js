@@ -224,6 +224,8 @@
         const clearTimer = options.clearTimer || (global && global.clearTimeout ? global.clearTimeout.bind(global) : clearTimeout);
         const durationMs = Math.max(1000, Number(options.durationMs) || 2800);
         const reducedDurationMs = Math.max(800, Number(options.reducedDurationMs) || 1700);
+        const onShow = typeof options.onShow === "function" ? options.onShow : function () {};
+        const onHide = typeof options.onHide === "function" ? options.onHide : function () {};
         let hideTimer = null;
         let announceTimer = null;
         let currentMode = "";
@@ -272,6 +274,7 @@
         }
 
         function hide() {
+            const wasVisible = visible;
             clearTimers();
             visible = false;
             if (root) {
@@ -281,6 +284,7 @@
             if (documentRef && documentRef.body) {
                 documentRef.body.classList.remove("level-transition-active");
             }
+            if (wasVisible) onHide({ mode: currentMode, payload: currentPayload });
         }
 
         function show(mode, payload = {}) {
@@ -299,6 +303,7 @@
                 documentRef.body.classList.add("level-transition-active");
             }
             visible = true;
+            onShow({ mode: currentMode, payload: currentPayload, presentation });
             hideTimer = setTimer(hide, prefersReducedMotion() ? reducedDurationMs : durationMs);
             return true;
         }

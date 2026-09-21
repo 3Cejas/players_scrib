@@ -136,6 +136,9 @@ test("writer discard UI is accessible and uses an acknowledged idempotent protoc
   assert.match(socketEvents, /valor_inspiracion: resultadoAck\.valor_inspiracion/g);
   assert.match(socketEvents, /tiempo_otorgado: resultadoAck\.tiempo_otorgado/g);
   assert.match(socketEvents, /meta_inspiracion_activa_escritora\?\.inspiracion_id === meta\.inspiracion_id/);
+  assert.match(socketEvents, /Number\(meta_inspiracion_activa_escritora\?\.modo_seq\) >= modoSeqEntrante/);
+  assert.match(socketEvents, /restaurando_inspiracion === true[\s\S]*definicion\.textContent[\s\S]*!esRestauracionVisualNecesaria/);
+  assert.match(socketEvents, /socket\.on\('reanudar_js'[\s\S]*accion: "solicitar"[\s\S]*nueva_palabra_musa/);
   assert.match(socketEvents, /return false;[\s\S]*resolverDescartePendientePorNuevaEntrega\(meta\)/);
   assert.doesNotMatch(socketEvents, /emitirCambioTiempoEscritora\(segundosBonus\)/);
   assert.match(state, /span\.dataset\.inspirationValue = String/);

@@ -397,23 +397,19 @@ socket.on('votacion_ventaja_estado', (data = {}) => {
 
 if (enviar_ventaja) {
     socket.on(enviar_ventaja, (ventaja) => {
-        if (ventaja === EMOJI_TORTUGA) {
-            activarTecladoLentoMusa();
-            return;
-        }
-        if (ventaja === EMOJI_RAYO) {
-            activarRayoMusa();
-            return;
-        }
-        if (ventaja === EMOJI_ESPEJO) {
-            activarEspejoMusa();
-            return;
-        }
-        if (ventaja === EMOJI_BRUMA) {
-            activarBrumaMusa();
-        }
+        aplicarDesventajaMusa(ventaja);
     });
 }
+
+socket.on("desventaja_activa_estado", (payload = {}) => {
+    const equipoAfectado = Number(payload.player || payload.jugador || payload.target_player);
+    if (equipoAfectado !== Number(player)) return;
+    aplicarDesventajaMusa(payload);
+});
+
+socket.on("desventaja_ronda_limpiar", () => {
+    invalidarContextoDesventajasMusa();
+});
 
 socket.on('temporizador_gigante_inicio', (data) => {
     iniciarTemporizadorLectura(data && data.duracion, data && data.fin_ts);

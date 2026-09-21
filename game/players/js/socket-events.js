@@ -1,5 +1,26 @@
 ﻿window.ScribCompetitionUI?.conectar(socket, { role: "writer" });
 
+let bloqueoTransicionNivelEscritora = false;
+function bloquearEdicionDuranteTransicionNivelEscritora() {
+    bloqueoTransicionNivelEscritora = true;
+    if (typeof invalidarBorradoEscritora === "function") invalidarBorradoEscritora();
+    desactivar_borrar = true;
+    menu_modificador = false;
+    if (texto) {
+        texto.contentEditable = "false";
+        texto.blur();
+    }
+}
+
+function desbloquearEdicionTrasTransicionNivelEscritora() {
+    bloqueoTransicionNivelEscritora = false;
+    if (!texto || terminado || es_pausa || modo_actual === "tertulia" || !modo_actual) return;
+    desactivar_borrar = false;
+    menu_modificador = true;
+    texto.contentEditable = "true";
+    texto.focus({ preventScroll: true });
+}
+
 const apiTransicionNivelEscritora = window.ScribLevelTransition;
 const controladorTransicionNivelEscritora = apiTransicionNivelEscritora
     ? apiTransicionNivelEscritora.createController({
@@ -11,7 +32,11 @@ const controladorTransicionNivelEscritora = apiTransicionNivelEscritora
                 : (fallback || clave)
         ),
         windowRef: window,
-        documentRef: document
+        documentRef: document,
+        durationMs: 7000,
+        reducedDurationMs: 7000,
+        onShow: bloquearEdicionDuranteTransicionNivelEscritora,
+        onHide: desbloquearEdicionTrasTransicionNivelEscritora
     })
     : null;
 const seguimientoTransicionNivelEscritora = apiTransicionNivelEscritora
@@ -863,9 +888,16 @@ function resolverDescartePendientePorNuevaEntrega(metaNueva) {
 
 function registrarEntregaInspiracionEscritora(payload = {}, opciones = {}) {
     const meta = normalizarMetaEntregaInspiracionEscritora(payload);
+    const modoSeqEntrante = Number.isFinite(Number(payload?.modo_seq))
+        ? Math.max(0, Math.trunc(Number(payload.modo_seq)))
+        : modo_seq_actual;
+    const esRestauracionVisualNecesaria = payload?.restaurando_inspiracion === true
+        && (!definicion || !String(definicion.textContent || "").trim());
     if (
         meta.inspiracion_id
         && meta_inspiracion_activa_escritora?.inspiracion_id === meta.inspiracion_id
+        && Number(meta_inspiracion_activa_escritora?.modo_seq) >= modoSeqEntrante
+        && !esRestauracionVisualNecesaria
     ) {
         return false;
     }
@@ -880,9 +912,7 @@ function registrarEntregaInspiracionEscritora(payload = {}, opciones = {}) {
             || payload?.origen_musa === true
             || origenMusa === "musa"
             || origenMusa === "musa_enemiga",
-        modo_seq: Number.isFinite(Number(payload?.modo_seq))
-            ? Math.max(0, Math.trunc(Number(payload.modo_seq)))
-            : modo_seq_actual,
+        modo_seq: modoSeqEntrante,
         tiempo_palabras_bonus: resolverTiempoPalabraAsignadaEscritora(payload)
     };
     if (definicion) definicion.classList.remove("is-discarding");
@@ -1748,6 +1778,14 @@ socket.on("activar_modo", (data) => {
     if (!esReactivacionModoPausado) {
         invalidarEstadoAsincronoEscritora();
         limpiarEntregaInspiracionEscritora();
+        asignada = false;
+        palabra_actual = [];
+        limpiarDeteccionMultipalabraAsignada();
+        if (definicion) {
+            definicion.innerHTML = "";
+            definicion.classList.remove("objetivo-nivel", "definicion-superbonus", "definicion--marquee");
+            establecerContextoMusaDefinicion("");
+        }
     }
     LIMPIEZAS[modo_actual](data);
     if (!esReactivacionModoPausado) {
@@ -1821,6 +1859,16 @@ socket.on('reanudar_js', data => {
     }
     es_pausa = false;
     reanudar();
+    // Pausar limpia la tarjeta transitoria en el navegador, pero la entrega
+    // sigue siendo autoritativa en el servidor. Volvemos a pedirla para no
+    // perder palabras de las musas al reanudar la misma ronda.
+    if (modo_actual === "palabras bonus") {
+        socket.emit("nueva_palabra", { player, accion: "solicitar", modo_seq: modo_seq_actual });
+    } else if (modo_actual === "letra bendita" || modo_actual === "letra prohibida") {
+        socket.emit("nueva_palabra_musa", { player, accion: "solicitar", modo_seq: modo_seq_actual });
+    } else if (modo_actual === "palabras prohibidas") {
+        socket.emit("nueva_palabra_prohibida", { player, accion: "solicitar", modo_seq: modo_seq_actual });
+    }
 });
 
 let inspiracionLetraMusaActual = null;
@@ -1874,7 +1922,7 @@ socket.on(inspirar, data => {
             caduca_en_ts: Number(data && typeof data === "object" ? data.caduca_en_ts : 0) || 0
         };
         palabra_actual = [palabra];
-        definicion.innerHTML = `${construirFirmaMusaHtmlEscritora(data)}<span class="inspiration-guidance">Podr&iacute;as escribir la palabra &laquo;<span class="inspiration-guidance__word">${escapeHtml(palabra)}</span>&raquo;</span>`;
+        definicion.innerHTML = construirSugerenciaMusaHtmlEscritora(data, palabra);
         aplicarMarqueeSiOverflowEscritora(definicion);
         establecerContextoMusaDefinicion("musa", firmaMusa.completo);
         animateCSS(".definicion", "flash");
@@ -1978,16 +2026,8 @@ function recibir_palabra(data) {
     const superbonus = normalizarSuperbonusInspiracionEscritora(data);
     palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BENDITAS");
     if (data.origen_musa === "musa") {
-        const descripcion = superbonus.activo
-            ? `SUPERBONUS x${superbonus.repeticiones} · Podr\u00edas escribir esta palabra`
-            : "Podr\u00edas escribir esta palabra";
-        renderObjetivoNivelEscritora(textoPalabra, {
-            tipo: "bonus",
-            tiempoSegundos: tiempoAsignado,
-            descripcion,
-            superbonus: data.superbonus,
-            autoria: data
-        });
+        definicion.innerHTML = construirSugerenciaMusaHtmlEscritora(data, textoPalabra);
+        aplicarMarqueeSiOverflowEscritora(definicion);
         establecerContextoMusaDefinicion("musa", normalizarFirmaMusaEscritora(data).completo);
     } else {
         const descripcionBase = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[1] : data && data.definicion;
@@ -2034,13 +2074,8 @@ function recibir_palabra_prohibida(data) {
     palabra.innerHTML = traducirTituloModoEscritora("palabras prohibidas", "NIVEL PALABRAS MALDITAS");
 
     if (data.origen_musa === "musa_enemiga") {
-        const descripcion = "Me pega esta palabra";
-        renderObjetivoNivelEscritora(textoPalabra, {
-            tipo: "prohibidas",
-            tiempoSegundos: tiempoAsignado,
-            descripcion,
-            autoria: data
-        });
+        definicion.innerHTML = construirSugerenciaMusaHtmlEscritora(data, textoPalabra, { maldita: true });
+        aplicarMarqueeSiOverflowEscritora(definicion);
         establecerContextoMusaDefinicion("musa_enemiga", normalizarFirmaMusaEscritora(data).completo);
     } else {
         const descripcionBase = Array.isArray(data && data.palabra_bonus) ? data.palabra_bonus[1] : data && data.definicion;
@@ -3237,6 +3272,18 @@ function pausa(){
 }
 
 function reanudar(){
+
+    // El servidor reanuda la ronda justo despues de activar el nivel. Esa
+    // señal no puede deshacer el bloqueo de la presentación de siete
+    // segundos: el controlador de la transición será quien reactive el
+    // editor de forma atómica al ocultarla.
+    if (bloqueoTransicionNivelEscritora === true) {
+        menu_modificador = false;
+        desactivar_borrar = true;
+        texto.contentEditable = "false";
+        texto.blur();
+        return;
+    }
 
     menu_modificador = true;
     texto.contentEditable = "true";

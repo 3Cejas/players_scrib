@@ -8045,3 +8045,31 @@ html body .musa-texto-card.is-expanded .textarea {
     min-width: 0;
     overflow-x: hidden !important;
 }
+
+/* Las desventajas también se leen físicamente en el puesto de la musa. La
+   bruma recorre toda la pantalla sin interceptar pulsaciones y el bloqueo de
+   borrado ilumina el campo para dejar claro que sigue siendo editable. */
+body.musa-bruma-activa::after {
+    content: "";
+    position: fixed;
+    z-index: 2147482500;
+    inset: -18%;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(220, 238, 247, .55), transparent 32%),
+        radial-gradient(ellipse at 76% 58%, rgba(170, 198, 215, .48), transparent 37%),
+        linear-gradient(105deg, transparent 12%, rgba(225, 239, 246, .34) 44%, transparent 72%);
+    filter: blur(22px);
+    mix-blend-mode: screen;
+    animation: musaFogDrift 3.2s ease-in-out infinite alternate;
+}
+
+body.musa-borrado-bloqueado #palabra,
+body.musa-borrado-bloqueado #calentamiento_input {
+    box-shadow: 0 0 0 2px #ffd86f, 0 0 24px rgba(255, 216, 111, .62) !important;
+}
+
+@keyframes musaFogDrift {
+    from { transform: translate3d(-7%, -2%, 0) scale(1); opacity: .55; }
+    to { transform: translate3d(8%, 3%, 0) scale(1.1); opacity: .9; }
+}

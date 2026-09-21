@@ -10,7 +10,6 @@ const CONTROL_ACCESS_REJECTION_CODES = new Set([
 ]);
 let registro_control_confirmado = false;
 let redireccion_acceso_control_pendiente = false;
-let vista_inicial_tutorial_aplicada = false;
 let timeout_renovacion_acceso_control = null;
 
 function obtenerAccessTokenControl() {
@@ -114,12 +113,10 @@ function sincronizarControlAutorizado() {
     socket.emit('pedir_modo_debug_estado');
     socket.emit('pedir_estado_palabras_musas_control');
     socket.emit('pedir_estado_banderas_musas');
-    if (!vista_inicial_tutorial_aplicada && typeof mostrar_vista_tutorial === "function") {
-        vista_inicial_tutorial_aplicada = true;
-        mostrar_vista_tutorial();
-    } else {
-        socket.emit('pedir_vista_espectador_modo');
-    }
+    // Control puede recargarse en mitad de una partida. La vista del servidor
+    // es autoritativa: forzar Tutorial aquí apagaba Partida también en el
+    // Espectador y hacía desaparecer nivel, música e inspiración al refrescar.
+    socket.emit('pedir_vista_espectador_modo');
     socket.emit('pedir_puntuacion_final');
     socket.emit('pedir_jurado_resultado');
     socket.emit('pedir_resultado_final');
@@ -852,11 +849,13 @@ socket.on("recibir_postgame2", (data) => {
     postgame1 = "\n\uD83D\uDD8B\uFE0F Caracteres escritos = " + data.longitud + "\n\uD83D\uDCDA Palabras bonus = " + data.puntos_palabra + "\n\u274C Letra prohibida = " + data.puntos_letra_prohibida + "\n";
 });
 
-socket.on('activar_modo', (data) => {
+function aplicarModoActualControl(data = {}) {
     if (!aceptarEventoModoControl(data)) {
-        return;
+        return false;
     }
-    modo_actual = data.modo_actual;
+    const modoEntrante = typeof data.modo_actual === "string" ? data.modo_actual.trim() : "";
+    if (!modoEntrante) return false;
+    modo_actual = modoEntrante;
     juego_iniciado = true;
     if (typeof window.actualizarBotonPausaReanudarControl === "function") {
         window.actualizarBotonPausaReanudarControl(getEl("boton_pausar_reanudar"));
@@ -878,9 +877,17 @@ socket.on('activar_modo', (data) => {
     if (data && data.letra_prohibida) {
         resumenPartida.letrasMalditas.add(String(data.letra_prohibida).toUpperCase());
     }
-    MODOS[modo_actual]();
+    const activar = MODOS[modo_actual] || MODOS[""];
+    if (typeof activar === "function") activar(data);
     emitirStatsLiveControl();
-});
+    return true;
+}
+
+socket.on('activar_modo', aplicarModoActualControl);
+
+// Al recargar Control, o si se perdió el evento transitorio activar_modo,
+// modo_actual es la fotografía autoritativa que mantiene la cabecera al día.
+socket.on('modo_actual', aplicarModoActualControl);
 
 socket.on('nueva letra', (letra) => {
     if (!aceptarEventoModoControl(letra && typeof letra === "object" ? letra : {})) {

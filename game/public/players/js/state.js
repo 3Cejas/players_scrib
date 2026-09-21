@@ -1625,10 +1625,13 @@ let teclado_lento_putada = false;
 let timeout_teclado_lento = null;
 let TIEMPO_MODIFICADOR = 0;
 let timeout_rayo_musa = null;
+let intervalo_borrado_rayo_musa = null;
 let tempo_text_borroso = null;
 let timeout_bruma_salida_musa = null;
 let lightning_musa = null;
 let timeout_espejo_musa = null;
+let bloqueo_borrado_musa = false;
+let timeout_bloqueo_borrado_musa = null;
 
 let temporizador_lectura_interval = null;
 let temporizador_lectura_restante = 0;
@@ -3026,6 +3029,10 @@ function limpiarRayoMusa() {
         clearTimeout(timeout_rayo_musa);
         timeout_rayo_musa = null;
     }
+    if (intervalo_borrado_rayo_musa) {
+        clearInterval(intervalo_borrado_rayo_musa);
+        intervalo_borrado_rayo_musa = null;
+    }
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
     if (lightning_musa && lightning_musa.classList) {
@@ -3037,14 +3044,19 @@ function activarRayoMusa() {
     limpiarRayoMusa();
     document.body.classList.add("bg");
     document.body.classList.add("rain");
+    intervalo_borrado_rayo_musa = setInterval(() => {
+        if (!campo_palabra || campo_palabra.disabled || !campo_palabra.value) return;
+        const caracteres = Array.from(campo_palabra.value);
+        caracteres.pop();
+        campo_palabra.value = caracteres.join("");
+        campo_palabra.dispatchEvent(new Event("input", { bubbles: true }));
+    }, 240);
     const duracion = obtenerDuracionDesventajaMusa();
     if (duracion > 0) {
         const revisionContexto = obtenerRevisionContextoDesventajasMusa();
         timeout_rayo_musa = setTimeout(() => {
             if (!esRevisionContextoDesventajasMusaActiva(revisionContexto)) return;
-            timeout_rayo_musa = null;
-            document.body.classList.remove("bg");
-            document.body.classList.remove("rain");
+            limpiarRayoMusa();
         }, duracion);
     }
 }
@@ -3058,6 +3070,7 @@ function limpiarBrumaMusa(apagarProgresivo = false) {
         clearTimeout(timeout_bruma_salida_musa);
         timeout_bruma_salida_musa = null;
     }
+    document.body.classList.remove("musa-bruma-activa");
     if (!texto1) return;
     if (apagarProgresivo) {
         const revisionContexto = obtenerRevisionContextoDesventajasMusa();
@@ -3079,6 +3092,7 @@ function limpiarBrumaMusa(apagarProgresivo = false) {
 function activarBrumaMusa() {
     if (!texto1) return;
     limpiarBrumaMusa(false);
+    document.body.classList.add("musa-bruma-activa");
     void texto1.offsetWidth;
     texto1.classList.add("textarea-bruma-musa");
     const duracion = obtenerDuracionDesventajaMusa();
@@ -3115,6 +3129,54 @@ function limpiarEfectosVisualesDesventajaMusa() {
     limpiarRayoMusa();
     limpiarBrumaMusa(false);
     limpiarEspejoMusa();
+    limpiarBloqueoBorradoMusa();
+}
+
+function limpiarBloqueoBorradoMusa() {
+    bloqueo_borrado_musa = false;
+    if (timeout_bloqueo_borrado_musa) {
+        clearTimeout(timeout_bloqueo_borrado_musa);
+        timeout_bloqueo_borrado_musa = null;
+    }
+    document.body.classList.remove("musa-borrado-bloqueado");
+}
+
+function activarBloqueoBorradoMusa() {
+    limpiarBloqueoBorradoMusa();
+    bloqueo_borrado_musa = true;
+    document.body.classList.add("musa-borrado-bloqueado");
+    const revisionContexto = obtenerRevisionContextoDesventajasMusa();
+    timeout_bloqueo_borrado_musa = setTimeout(() => {
+        if (!esRevisionContextoDesventajasMusaActiva(revisionContexto)) return;
+        limpiarBloqueoBorradoMusa();
+    }, obtenerDuracionDesventajaMusa());
+}
+
+function aplicarBloqueoBorradoInputMusa(input) {
+    if (!input) return;
+    input.addEventListener("beforeinput", (evento) => {
+        if (!bloqueo_borrado_musa) return;
+        if (String(evento.inputType || "").startsWith("delete")) evento.preventDefault();
+    });
+    input.addEventListener("keydown", (evento) => {
+        if (!bloqueo_borrado_musa) return;
+        if (evento.key === "Backspace" || evento.key === "Delete") evento.preventDefault();
+    });
+    input.addEventListener("cut", (evento) => {
+        if (bloqueo_borrado_musa) evento.preventDefault();
+    });
+}
+
+function aplicarDesventajaMusa(putada) {
+    const clave = window.ScribDisadvantages.normalizar(putada && typeof putada === "object"
+        ? (putada.putada || putada.desventaja || putada.tipo)
+        : putada);
+    if (!clave) return;
+    if (clave === EMOJI_TORTUGA) activarTecladoLentoMusa();
+    else if (clave === EMOJI_RAYO) activarRayoMusa();
+    else if (clave === EMOJI_ESPEJO) activarEspejoMusa();
+    else if (clave === EMOJI_BRUMA) activarBrumaMusa();
+    else if (clave === EMOJI_BLOQUEO) activarBloqueoBorradoMusa();
 }
 
 function invalidarContextoDesventajasMusa() {
@@ -3419,6 +3481,8 @@ const calentamiento_final_musa = getEl("calentamiento_final_musa");
 
 aplicarTecladoLento(campo_palabra);
 aplicarTecladoLento(calentamiento_input);
+aplicarBloqueoBorradoInputMusa(campo_palabra);
+aplicarBloqueoBorradoInputMusa(calentamiento_input);
 bloquearEspaciosEnInspiracionInput(campo_palabra);
 bloquearEspaciosEnInspiracionInput(calentamiento_input, () => calentamiento_solicitud_actual === "frase_final");
 

@@ -1211,6 +1211,7 @@ function aplicarModo(data) {
     refrescarEstadoVotacionVentaja();
     modo_actual = modoEntrante;
     const cambioRealDeModo = modo_actual !== modoAnterior;
+    actualizarFrasesFinalesDesdePayloadEspectador(data || {});
     registrarModoTimelineStatsEspectador(modo_actual);
     ultimo_payload_modo_espectador = data || {};
     if (data && typeof data.letra_bendita === "string" && data.letra_bendita.trim()) {
@@ -1220,6 +1221,13 @@ function aplicarModo(data) {
         ultima_letra_prohibida_espectador = data.letra_prohibida.trim();
     }
     if (cambioRealDeModo) {
+        // El cambio de nivel manda sobre cualquier entrega tardía de la ronda
+        // anterior. En especial Tertulia y Frase final nunca heredan chips de
+        // inspiración aunque sus eventos de limpieza crucen la red en orden
+        // distinto.
+        [palabra2, palabra3].forEach((nodo) => actualizarPalabraConVisibilidad(nodo, ""));
+        [definicion2, definicion3].forEach((nodo) => actualizarDefinicionConVisibilidad(nodo, "", false));
+        [explicacion1, explicacion2].forEach((nodo) => { if (nodo) nodo.innerHTML = ""; });
         frase_final_completada_j1 = false;
         frase_final_completada_j2 = false;
         fin_ultimo_nivel_por_tiempo = false;
@@ -1246,6 +1254,21 @@ function aplicarModo(data) {
         mostrarTransicionNivelForzadaEspectador(modo_actual, data || {});
     }
     mostrarTransicionNivelPendienteEspectador(modo_actual);
+}
+
+function actualizarFrasesFinalesDesdePayloadEspectador(data = {}) {
+    if (!data || typeof data !== "object") return;
+    const frases = data.frases_finales && typeof data.frases_finales === "object"
+        ? data.frases_finales
+        : {};
+    const candidataJ1 = Object.prototype.hasOwnProperty.call(data, "FRASE_FINAL_J1")
+        ? data.FRASE_FINAL_J1
+        : (frases[1] ?? frases["1"]);
+    const candidataJ2 = Object.prototype.hasOwnProperty.call(data, "FRASE_FINAL_J2")
+        ? data.FRASE_FINAL_J2
+        : (frases[2] ?? frases["2"]);
+    if (typeof candidataJ1 === "string") frase_final_j1 = candidataJ1.trim();
+    if (typeof candidataJ2 === "string") frase_final_j2 = candidataJ2.trim();
 }
 
 function refrescarCabeceraModoActualEspectador() {
@@ -1421,7 +1444,7 @@ function renderInspiracionLetrasEspectador(escritxr, data, definicionElemento, s
     */
     actualizarDefinicionConVisibilidad(
         definicionElemento,
-        `${construirFirmaMusaHtmlEspectador(data)}<span class="inspiration-guidance">Podr&iacute;as escribir la palabra &laquo;<span class="inspiration-guidance__word">${escapeHtml(palabra)}</span>&raquo;</span>`,
+        construirSugerenciaMusaHtmlEspectador(data, palabra),
         true
     );
     animateCSS(selectorAnimacion, "flash");
@@ -1470,20 +1493,23 @@ function recibir_palabra(data, escritxr) {
         const palabraInspiracion = extraerPalabraPrincipalEvento(data);
         const superbonus = normalizarSuperbonusInspiracionEspectador(data);
         if (escritxr == 1) {
-        const hayPalabra = actualizarPalabraConVisibilidad(palabra2, textoPalabra);
+        const esInspiracionMusa = data?.origen_musa === "musa" || data?.origen_musa === "musa_enemiga";
+        const hayPalabra = esInspiracionMusa
+            ? Boolean(palabraInspiracion)
+            : actualizarPalabraConVisibilidad(palabra2, textoPalabra);
         if (!hayPalabra) {
             actualizarDefinicionConVisibilidad(definicion2, "", false);
             return;
         }
-        aplicarEstiloPalabraInspiracionMusaEspectador(palabra2);
+        if (esInspiracionMusa) actualizarPalabraConVisibilidad(palabra2, "", false);
+        else aplicarEstiloPalabraInspiracionMusaEspectador(palabra2);
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
-            const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";
-            definicionHTML = `${superbonusLabel}${construirFirmaMusaHtmlEspectador(data)}<span class="inspiration-guidance">Podr&iacute;as escribir esta palabra</span>`;
+            definicionHTML = construirSugerenciaMusaHtmlEspectador(data, palabraInspiracion);
             aplicarSuperbonusDefinicionEspectador(definicion2, data);
             marcarPalabraInspirandoNube(1, palabraInspiracion, data);
         } else if (data?.origen_musa === "musa_enemiga") {
-            definicionHTML = `${construirFirmaMusaHtmlEspectador(data, "is-enemy")}<span class="inspiration-guidance inspiration-guidance--enemy">Me pega esta palabra</span>`;
+            definicionHTML = construirSugerenciaMusaHtmlEspectador(data, palabraInspiracion, { maldita: true });
             aplicarSuperbonusDefinicionEspectador(definicion2, {});
             marcarPalabraInspirandoNube(2, palabraInspiracion, data);
         } else {
@@ -1500,20 +1526,23 @@ function recibir_palabra(data, escritxr) {
         }
         
     else{
-        const hayPalabra = actualizarPalabraConVisibilidad(palabra3, textoPalabra);
+        const esInspiracionMusa = data?.origen_musa === "musa" || data?.origen_musa === "musa_enemiga";
+        const hayPalabra = esInspiracionMusa
+            ? Boolean(palabraInspiracion)
+            : actualizarPalabraConVisibilidad(palabra3, textoPalabra);
         if (!hayPalabra) {
             actualizarDefinicionConVisibilidad(definicion3, "", false);
             return;
         }
-        aplicarEstiloPalabraInspiracionMusaEspectador(palabra3);
+        if (esInspiracionMusa) actualizarPalabraConVisibilidad(palabra3, "", false);
+        else aplicarEstiloPalabraInspiracionMusaEspectador(palabra3);
         let definicionHTML = "";
         if (data?.origen_musa === "musa") {
-            const superbonusLabel = superbonus.activo ? `<span class="superbonus-label">SUPERBONUS x${superbonus.repeticiones}</span><span style="color: white;"> - </span>` : "";
-            definicionHTML = `${superbonusLabel}${construirFirmaMusaHtmlEspectador(data)}<span class="inspiration-guidance">Podr&iacute;as escribir esta palabra</span>`;
+            definicionHTML = construirSugerenciaMusaHtmlEspectador(data, palabraInspiracion);
             aplicarSuperbonusDefinicionEspectador(definicion3, data);
             marcarPalabraInspirandoNube(2, palabraInspiracion, data);
         } else if (data?.origen_musa === "musa_enemiga") {
-            definicionHTML = `${construirFirmaMusaHtmlEspectador(data, "is-enemy")}<span class="inspiration-guidance inspiration-guidance--enemy">Me pega esta palabra</span>`;
+            definicionHTML = construirSugerenciaMusaHtmlEspectador(data, palabraInspiracion, { maldita: true });
             aplicarSuperbonusDefinicionEspectador(definicion3, {});
             marcarPalabraInspirandoNube(1, palabraInspiracion, data);
         } else {

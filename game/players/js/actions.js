@@ -206,12 +206,15 @@ function programarBorradoEscritora(delayMs, callback) {
 }
 
 function estaBloqueadoBorradoEscritora() {
+  const transicionNivelActiva = typeof bloqueoTransicionNivelEscritora !== "undefined"
+    && bloqueoTransicionNivelEscritora === true;
   const avisoCambioActivo = Boolean(
     document.body
     && document.body.classList
     && document.body.classList.contains("scrib-competition-change-active")
   );
-  return avisoCambioActivo
+  return transicionNivelActiva
+    || avisoCambioActivo
     || (typeof bloquear_borrado_putada !== "undefined" && bloquear_borrado_putada === true);
 }
 

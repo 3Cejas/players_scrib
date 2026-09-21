@@ -7460,6 +7460,10 @@ table.default {
     --level-color: #ffd65a;
     --level-fill: rgba(255, 214, 90, 0.2);
     --level-glow: rgba(255, 214, 90, 0.7);
+    border-color: rgba(255, 214, 90, 0.5);
+    background: rgba(55, 40, 5, 0.62);
+    color: #ffe681;
+    text-shadow: 0 0 0.34rem rgba(255, 214, 90, 0.72), 0.06em 0.06em #000;
 }
 
 .level-sequence span[data-mode="palabras prohibidas"] {

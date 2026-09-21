@@ -28,6 +28,23 @@ const construirFirmaMusaHtmlEspectador = (payload = {}, clase = "") => {
     const clases = ["inspiration-author", clase].filter(Boolean).join(" ");
     return `<span class="${clases}" title="${escapeHtml(firma.completo)}"><span class="inspiration-author__spark" aria-hidden="true">✦</span><span class="inspiration-author__name">${escapeHtml(firma.texto)}:</span></span>`;
 };
+const capitalizarPalabraVisibleEspectador = (valor) => {
+    const texto = String(valor || "").trim();
+    if (!texto) return "";
+    const caracteres = Array.from(texto);
+    return `${caracteres[0].toLocaleUpperCase("es-ES")}${caracteres.slice(1).join("")}`;
+};
+const construirSugerenciaMusaHtmlEspectador = (payload = {}, palabra = "", opciones = {}) => {
+    const visible = capitalizarPalabraVisibleEspectador(palabra);
+    if (!visible) return "";
+    const maldita = opciones.maldita === true;
+    const valor = window.ScribInspiration?.formatearTiempoPalabraAsignada
+        ? window.ScribInspiration.formatearTiempoPalabraAsignada(payload, { maldita })
+        : `${maldita ? "-" : "+"}5 🎨`;
+    const claseAutor = maldita ? "is-enemy" : "";
+    const claseValor = maldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
+    return `<span class="muse-suggestion${maldita ? " muse-suggestion--enemy" : ""}">${construirFirmaMusaHtmlEspectador(payload, claseAutor)}<span class="muse-suggestion__word-viewport"><span class="muse-suggestion__word">${escapeHtml(visible)}</span></span>${valor ? `<span class="palabra-tiempo ${claseValor}">${escapeHtml(valor)}</span>` : ""}</span>`;
+};
 const crearNodoFirmaMusaEspectador = (payload = {}, clase = "") => {
     const firma = normalizarFirmaMusaEspectador(payload);
     if (!firma.texto) return null;
@@ -182,6 +199,23 @@ const obtenerContenidoMarquee = (elemento) => {
 
 const aplicarMarqueeSiOverflow = (elemento) => {
     if (!elemento) return;
+    const sugerencia = elemento.querySelector(".muse-suggestion");
+    if (sugerencia) {
+        const viewport = sugerencia.querySelector(".muse-suggestion__word-viewport");
+        const palabraMovil = sugerencia.querySelector(".muse-suggestion__word");
+        sugerencia.classList.remove("muse-suggestion--marquee");
+        sugerencia.style.removeProperty("--muse-word-distance");
+        sugerencia.style.removeProperty("--muse-word-duration");
+        requestAnimationFrame(() => {
+            if (!viewport || !palabraMovil) return;
+            const distancia = Math.max(0, palabraMovil.scrollWidth - viewport.clientWidth);
+            if (distancia <= 1) return;
+            sugerencia.style.setProperty("--muse-word-distance", `${Math.ceil(distancia)}px`);
+            sugerencia.style.setProperty("--muse-word-duration", `${Math.max(6, distancia / 35).toFixed(2)}s`);
+            sugerencia.classList.add("muse-suggestion--marquee");
+        });
+        return;
+    }
     const contenido = obtenerContenidoMarquee(elemento);
     elemento.classList.remove("definicion--marquee");
     elemento.innerHTML = contenido;
@@ -1872,38 +1906,17 @@ const ajustarViewportEspectador = () => {
         return;
     }
 
-    // Medimos siempre el layout natural, nunca el ya escalado. Esto permite
-    // encajar elementos nuevos sin acumular una reducción en cada actualización.
+    // El grid principal es quien encaja dinámicamente las filas. No se escala
+    // el documento completo: hacerlo convertía cada cambio de contenido en
+    // una nueva referencia de medida y terminaba encogiendo toda la pantalla.
     prepararMedicionViewportEspectador();
     actualizarReservaPanelNivelEspectador();
-    const viewportW = Math.max(window.innerWidth || 0, 1);
     const viewportH = Math.max(window.innerHeight || 0, 1);
-    const objetivos = [
-        spectator_fit_root,
-        document.getElementById("contenedor_espectador"),
-        document.getElementById("info_general"),
-        document.getElementById("scrib_competition_hud")
-    ].filter((nodo) => nodo && nodo.getClientRects().length > 0);
-    let minX = 0;
-    let minY = 0;
-    let maxX = viewportW;
-    let maxY = viewportH;
-    objetivos.forEach((nodo) => {
-        const rect = nodo.getBoundingClientRect();
-        minX = Math.min(minX, rect.left);
-        minY = Math.min(minY, rect.top);
-        maxX = Math.max(maxX, rect.left + Math.max(rect.width, nodo.scrollWidth || 0));
-        maxY = Math.max(maxY, rect.top + Math.max(rect.height, nodo.scrollHeight || 0));
-    });
-    const anchoNatural = Math.max(1, maxX - minX);
-    const altoNatural = Math.max(1, maxY - minY);
-    let escala = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
-    if (!Number.isFinite(escala) || escala <= 0) escala = 1;
-    const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5) - (minX * escala);
-    const offsetY = Math.max(0, -minY * escala);
-    const escalaSegura = Math.max(escala, 0.0001);
-    spectator_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${escala.toFixed(4)})`;
-    spectator_fit_root.style.setProperty("--spectator-fit-inverse", Math.min(1.4, 1 / escalaSegura).toFixed(4));
+    resetAjusteViewportEspectador();
+    if (document.body) {
+        document.body.classList.toggle("spectator-layout-tight", viewportH < 800);
+        document.body.classList.toggle("spectator-layout-very-tight", viewportH < 650);
+    }
 };
 
 const programarAjusteViewportEspectador = () => {
@@ -1946,7 +1959,6 @@ const iniciarAjusteViewportEspectador = () => {
         mutation_observer_fit_viewport_espectador.observe(spectator_fit_root, {
             childList: true,
             subtree: true,
-            characterData: true,
             attributes: true,
             attributeFilter: ["class", "hidden", "aria-hidden"]
         });
@@ -6653,7 +6665,7 @@ function construirTextoPalabraEvento(data = {}) {
         }
     }
     if (!palabra) return "";
-    const palabraSegura = escaparHTML(palabra);
+    const palabraSegura = escaparHTML(capitalizarPalabraVisibleEspectador(palabra));
     const tiempoTexto = window.ScribInspiration && typeof window.ScribInspiration.formatearTiempoPalabraAsignada === "function"
         ? window.ScribInspiration.formatearTiempoPalabraAsignada(data, { modo: modo_actual })
         : "";
@@ -6840,6 +6852,21 @@ function obtenerEtiquetaVisualPutadaEspectador(putada) {
     return window.ScribDisadvantages.etiqueta(normalizarPutada(putada));
 }
 
+function obtenerOCrearBadgePutadaEspectador(player) {
+    const raiz = obtenerRaizVisualPutadaEspectador(player);
+    if (!raiz) return null;
+    let badge = raiz.querySelector(":scope > .putada-visual-badge");
+    if (!badge) {
+        badge = document.createElement("div");
+        badge.className = "putada-visual-badge";
+        badge.setAttribute("role", "status");
+        badge.setAttribute("aria-live", "polite");
+        const textoShell = raiz.querySelector(":scope > .spectator-text-shell");
+        raiz.insertBefore(badge, textoShell || raiz.firstChild);
+    }
+    return badge;
+}
+
 function limpiarVisualPutadaEspectador(player, opciones = {}) {
     const id = Number(player) === 2 ? 2 : 1;
     if (opciones.limpiarEfecto === true) {
@@ -6860,6 +6887,8 @@ function limpiarVisualPutadaEspectador(player, opciones = {}) {
         return;
     }
     raiz.classList.remove(...CLASES_VISUALES_PUTADA_ESPECTADOR);
+    const badge = raiz.querySelector(":scope > .putada-visual-badge");
+    if (badge) badge.remove();
     delete raiz.dataset.putadaVisual;
 }
 
@@ -6904,6 +6933,8 @@ function activarVisualPutadaEspectador(player, putada, opciones = {}) {
     const duracion = obtenerDuracionModificadorEspectador(opciones);
     raiz.dataset.putadaVisual = etiqueta;
     raiz.classList.add("putada-visual-activa", clase);
+    const badge = obtenerOCrearBadgePutadaEspectador(id);
+    if (badge) badge.textContent = `¡DESVENTAJA! · ${etiqueta}`;
     estado_visual_putada_espectador[id] = {
         player: id,
         putada: clave,
@@ -7421,7 +7452,7 @@ const MODOS = {
 
     },
 
-    'frase final': function (socket) {
+    'frase final': function (data = {}) {
         reproducirMusicaModoEspectador("frase final")
         reproducirSonido("../../game/audio/FX/15. FRASE FINAL.mp3")
         aplicarEstiloPalabrasModoLetrasEspectador("frase-final");
@@ -7430,10 +7461,12 @@ const MODOS = {
         explicacion.style.color = "orange";
         explicacion.innerHTML = traducirDescripcionModoEspectador("frase final", "ULTIMA RONDA");
         palabra1.innerHTML = traducirTituloModoEspectador("frase final", "NIVEL FRASE FINAL");
-        actualizarPalabraConVisibilidad(palabra2, "&laquo;" + frase_final_j1 + "&raquo;");
+        const fraseJ1 = typeof frase_final_j1 === "string" ? frase_final_j1.trim() : "";
+        const fraseJ2 = typeof frase_final_j2 === "string" ? frase_final_j2.trim() : "";
+        actualizarPalabraConVisibilidad(palabra2, fraseJ1 ? `&laquo;${escapeHtml(fraseJ1)}&raquo;` : "");
         actualizarDefinicionConVisibilidad(definicion2, tJuego2P("mode.goal.last_one", {}, "Â¡Esta es la ultima!"), false);
         actualizarDefinicionConVisibilidad(definicion3, tJuego2P("mode.goal.last_one", {}, "Â¡Esta es la ultima!"), false);
-        actualizarPalabraConVisibilidad(palabra3, "&laquo;" + frase_final_j2 + "&raquo;");
+        actualizarPalabraConVisibilidad(palabra3, fraseJ2 ? `&laquo;${escapeHtml(fraseJ2)}&raquo;` : "");
         definicion2.style.maxWidth = "100%";
         definicion3.style.maxWidth = "100%";
 

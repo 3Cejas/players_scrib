@@ -33,5 +33,6 @@ test("writer editor uses the same framed team panel language as control and muse
   assert.match(state, /document\.addEventListener\("fullscreenchange"/);
   assert.match(state, /new ResizeObserver\(programarLineasTextoEscritora\)/);
   assert.match(state, /new MutationObserver\(programarLineasTextoEscritora\)/);
+  assert.match(state, /margenVerticalSeguro[\s\S]*altoDisponible[\s\S]*altoDisponible \/ altoNatural/);
   assert.match(state, /caretFueraDelEditor[\s\S]*rect\.bottom < editorRect\.top[\s\S]*ocultarCaretNeonJuegoEscritora\(\)/);
 });

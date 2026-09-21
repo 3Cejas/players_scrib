@@ -35,7 +35,7 @@
       body.page-players.ocultar-marcador-escritora #scrib_competition_hud,
       body.page-players.vista-calentamiento-escritor #scrib_competition_hud{display:none!important}
       .scrib-competition-hud[data-role="spectator"]{top:clamp(8px,1.4vh,18px);width:min(940px,72vw)}
-      body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(174px,21vh,224px)}
+      body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(150px,18.5vh,196px)}
       body.page-spectator.vista-partida #contenedor_espectador .nombre{position:relative;z-index:2;display:block;min-height:1.18em;margin:0 auto clamp(12px,1.5vh,22px);opacity:1;visibility:visible}
       body.page-spectator.vista-partida #contenedor_espectador .nombre+br,
       body.page-spectator.vista-partida #contenedor_espectador .nombre+br+br{display:none}
@@ -63,6 +63,7 @@
       .scrib-competition-hud[data-role="control"] .scrib-competition-streak{display:none}
       .scrib-competition-vote{display:none;position:relative;align-items:center;justify-content:center;gap:.75em;min-height:42px;padding:7px 14px;overflow:hidden;border:1px solid color-mix(in srgb,var(--vote-color,#ffe475),transparent 24%);border-radius:13px;background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--vote-color,#ffe475),transparent 76%),transparent 62%),#070b15;color:#f7fbff;font-size:clamp(12px,1.15vw,19px);font-weight:1000;letter-spacing:.09em;text-align:center;text-transform:uppercase;box-shadow:inset 0 0 22px color-mix(in srgb,var(--vote-color,#ffe475),transparent 88%),0 0 20px color-mix(in srgb,var(--vote-color,#ffe475),transparent 72%)}
       .scrib-competition-vote::before{content:'✦';color:var(--vote-color,#ffe475);font-size:1.35em;text-shadow:0 0 13px currentColor;animation:scribVoteSpark 1s ease-in-out infinite alternate}
+      .scrib-competition-vote::after{content:'';position:absolute;inset:-45% -20%;background:linear-gradient(105deg,transparent 35%,color-mix(in srgb,var(--vote-color,#ffe475),white 35%) 49%,transparent 63%);opacity:.38;transform:translateX(-95%);animation:scribVoteSweep 2.15s ease-in-out infinite;pointer-events:none}
       .scrib-competition-vote strong{color:var(--vote-color,#ffe475);text-shadow:0 0 12px color-mix(in srgb,var(--vote-color,#ffe475),transparent 28%)}
       .scrib-competition-hud[data-voting="1"] .scrib-competition-scoreline,
       .scrib-competition-hud[data-voting="1"] .scrib-competition-streak{display:none}
@@ -78,6 +79,9 @@
       .scrib-competition-hud[data-role="writer"] .scrib-competition-mode,.scrib-competition-hud[data-role="writer"] .scrib-competition-criterion,.scrib-competition-hud[data-role="spectator"] .scrib-competition-mode,.scrib-competition-hud[data-role="spectator"] .scrib-competition-criterion{display:none}
       .scrib-competition-hud[data-role="writer"] .scrib-competition-top,.scrib-competition-hud[data-role="spectator"] .scrib-competition-top{display:flex;justify-content:center;margin-bottom:7px}
       .scrib-competition-scoreline{display:grid;grid-template-columns:minmax(54px,auto) 1fr minmax(54px,auto);gap:9px;align-items:center}
+      .scrib-competition-leader{display:none;margin:7px auto 0;width:max-content;max-width:100%;padding:3px 11px;border:1px solid color-mix(in srgb,var(--leader-color,#ffe475),transparent 45%);border-radius:999px;background:#050914dc;color:var(--leader-color,#ffe475);font-size:clamp(9px,.72vw,12px);font-weight:1000;letter-spacing:.09em;text-align:center;text-transform:uppercase;white-space:nowrap;box-shadow:0 0 13px color-mix(in srgb,var(--leader-color,#ffe475),transparent 72%)}
+      .scrib-competition-hud[data-battle="1"]:not([data-voting="1"]) .scrib-competition-leader{display:block}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-leader{margin-top:4px;font-size:9px;padding-block:2px}
       .scrib-competition-warmup{display:none;position:relative;isolation:isolate;align-items:center;justify-content:center;min-height:clamp(62px,8vh,84px);overflow:hidden;border:2px solid #ffe475b8;border-radius:clamp(13px,1.5vw,21px);background:linear-gradient(180deg,#21180bf2,#080b15f5);color:var(--oro);font-size:clamp(13px,1.3vw,20px);font-weight:1000;letter-spacing:.09em;text-align:center;box-shadow:inset 0 0 26px #ffe47520,0 10px 0 #5d400d,0 0 30px #ffe47536}
       .scrib-competition-warmup::after{content:'';position:absolute;z-index:1;inset:0;background:linear-gradient(105deg,transparent 25%,#fff4 49%,transparent 72%);transform:translateX(-120%);animation:scribWarmupSweep 2.6s ease-in-out infinite;pointer-events:none}
       .scrib-competition-warmup__fill{position:absolute;z-index:0;inset:0 auto 0 0;width:var(--warmup-progress,0%);background:linear-gradient(90deg,#8b5b09e6,#ffd45bd9 72%,#fff0a0ed);box-shadow:0 0 28px #ffe475b8;transition:width .3s linear}
@@ -129,6 +133,7 @@
       @keyframes scribWarmupSweep{0%,44%{transform:translateX(-120%)}78%,100%{transform:translateX(120%)}}
       @keyframes scribVoteEnter{from{opacity:0;transform:scaleX(.72);filter:blur(7px)}to{opacity:1;transform:scaleX(1);filter:none}}
       @keyframes scribVoteSpark{from{opacity:.55;transform:scale(.84)}to{opacity:1;transform:scale(1.14)}}
+      @keyframes scribVoteSweep{0%,18%{transform:translateX(-95%)}70%,100%{transform:translateX(95%)}}
       @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"],.scrib-competition-hud[data-role="writer"]{width:84vw}.scrib-competition-change__route{flex-direction:column}.scrib-competition-change__arrow{transform:rotate(90deg)}.scrib-competition-change__team{min-width:min(340px,72vw)}}
       @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly.is-flying,.scrib-competition-change,.scrib-competition-burst,.scrib-competition-warmup,.scrib-competition-warmup::after{animation-duration:.01ms!important}}
     `;
@@ -175,6 +180,7 @@
           </div>
           <strong class="scrib-competition-score scrib-competition-score--2">0</strong>
         </div>
+        <div class="scrib-competition-leader" role="status" aria-live="polite"></div>
         <div class="scrib-competition-vote" role="status" aria-live="polite"></div>
         <span class="scrib-competition-streak scrib-competition-streak--1"></span>
         <span class="scrib-competition-streak scrib-competition-streak--2"></span>
@@ -189,6 +195,7 @@
       bar: root.querySelector(".scrib-competition-bar"),
       segments: { 1: root.querySelector(".scrib-competition-segment--1"), 2: root.querySelector(".scrib-competition-segment--2") },
       scores: { 1: root.querySelector(".scrib-competition-score--1"), 2: root.querySelector(".scrib-competition-score--2") },
+      leader: root.querySelector(".scrib-competition-leader"),
       vote: root.querySelector(".scrib-competition-vote"),
       streaks: { 1: root.querySelector(".scrib-competition-streak--1"), 2: root.querySelector(".scrib-competition-streak--2") },
       curse: root.querySelector(".scrib-competition-curse")
@@ -229,6 +236,16 @@
     ui.scores[2].textContent = numero(marcador[2]);
     ui.scores[1].classList.toggle("is-leading", Number(estado.lider) === 1);
     ui.scores[2].classList.toggle("is-leading", Number(estado.lider) === 2);
+    if (ui.leader) {
+      const score1 = Number(marcador[1]) || 0;
+      const score2 = Number(marcador[2]) || 0;
+      const diferencia = Math.abs(score1 - score2);
+      const lider = score1 === score2 ? 0 : (score1 > score2 ? 1 : 2);
+      ui.leader.style.setProperty("--leader-color", lider === 1 ? "#46f0ff" : (lider === 2 ? "#ff6672" : "#ffe475"));
+      ui.leader.textContent = lider
+        ? `EN DIRECTO · GANA ESCRITXR ${lider} POR ${numero(diferencia)}`
+        : "EN DIRECTO · EMPATE";
+    }
     ui.segments[1].style.width = `${pos}%`;
     ui.segments[2].style.width = `${100 - pos}%`;
     ui.bar.style.setProperty("--marker-position", `${pos}%`);

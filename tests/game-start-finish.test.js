@@ -94,7 +94,7 @@ test("the spectator header reserves its own compact band above the game cards", 
   const css = read("game/css/dashboard-players.css");
 
   assert.match(css, /page-spectator\.vista-partida #spectator_fit_root > \.cabecera\s*\{[\s\S]*position:\s*absolute;[\s\S]*height:\s*clamp\(118px, 17vh, 176px\);[\s\S]*overflow:\s*hidden;/);
-  assert.match(css, /page-spectator\.vista-partida #contenedor_espectador\s*\{[\s\S]*padding-top:\s*clamp\(154px, 19vh, 205px\);/);
+  assert.match(css, /page-spectator\.vista-partida #contenedor_espectador\s*\{[\s\S]*padding-top:\s*clamp\(150px, 18\.5vh, 196px\);/);
 });
 
 test("muses receive a full-screen finished-writing state that yields to result views", () => {
