@@ -2310,11 +2310,20 @@ window.actualizarBotonFinalizarTemporizadorDebugControl = actualizarBotonFinaliz
 
 function actualizarBotonResultadoVideojuegoControl(disponible) {
     const boton = document.getElementById("boton_resultado_videojuego");
-    if (!boton) return;
+    const botonDescarga = document.getElementById("boton_descargar_textos");
+    const visor = document.getElementById("resultado_videojuego_viewer_control");
     const visible = disponible === true;
-    boton.hidden = !visible;
-    boton.setAttribute("aria-hidden", visible ? "false" : "true");
-    boton.tabIndex = visible ? 0 : -1;
+    [boton, botonDescarga].forEach((control) => {
+        if (!control) return;
+        control.hidden = !visible;
+        control.setAttribute("aria-hidden", visible ? "false" : "true");
+        control.tabIndex = visible ? 0 : -1;
+    });
+    if (visor) {
+        visor.hidden = !visible;
+        visor.dataset.available = visible ? "1" : "0";
+        visor.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
 }
 window.actualizarBotonResultadoVideojuegoControl = actualizarBotonResultadoVideojuegoControl;
 
@@ -3459,6 +3468,7 @@ function actualizarBotonesVistaEspectadorControl() {
     const botonCreditos = document.getElementById("boton_mostrar_creditos");
     const botonDeliberacion = document.getElementById("boton_vista_deliberacion");
     const botonResultadoVideojuego = document.getElementById("boton_resultado_videojuego");
+    const visorResultadoVideojuego = document.getElementById("resultado_videojuego_viewer_control");
     const botonResultadoJurado = document.getElementById("boton_resultado_jurado");
     const statsNav = document.getElementById("stats_nav_control");
     const statsNavLabel = document.getElementById("stats_nav_label");
@@ -3519,6 +3529,7 @@ function actualizarBotonesVistaEspectadorControl() {
         botonResultadoVideojuego.dataset.active = activo ? "1" : "0";
         botonResultadoVideojuego.classList.toggle("is-active", activo);
         botonResultadoVideojuego.setAttribute("aria-pressed", activo ? "true" : "false");
+        if (visorResultadoVideojuego) visorResultadoVideojuego.dataset.active = activo ? "1" : "0";
     }
     if (botonResultadoJurado) {
         const activo = vista_espectador_modo === "resultado_jurado";
@@ -3674,26 +3685,32 @@ function mostrarPuntuacionFinal() {
         temporizador_gigante_activo = false;
         socket.emit("temporizador_gigante_detener", {});
     }
-    if (!estado_puntuacion_final_control || estado_puntuacion_final_control.disponible !== true) {
-        mostrarFeedbackPuntuacionControl(
-            tJuego2PControl("control.score.unavailable", {}, "El resultado estara disponible cuando terminen ambas escritoras."),
-            "pendiente"
-        );
-        socket.emit("pedir_puntuacion_final");
-        return;
-    }
     if (vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
     }
     cerrarVideotutorialDesdeVistaControl();
     vista_principal_control = "partida";
+    const boton = document.getElementById("boton_resultado_videojuego");
+    if (boton) {
+        boton.disabled = true;
+        boton.setAttribute("aria-busy", "true");
+    }
     socket.emit("mostrar_puntuacion_final", {}, (respuesta = {}) => {
-        if (respuesta && respuesta.ok === true) return;
+        if (boton) {
+            boton.disabled = false;
+            boton.removeAttribute("aria-busy");
+        }
+        if (respuesta && respuesta.ok === true) {
+            if (respuesta.puntuacion) actualizarEstadoPuntuacionFinalControl(respuesta.puntuacion);
+            if (respuesta.vista) actualizarModoVistaEspectadorControl(respuesta.vista);
+            return;
+        }
         mostrarFeedbackPuntuacionControl(
             tJuego2PControl("control.score.error", {}, "No se pudo mostrar el resultado. Vuelve a intentarlo."),
             "error"
         );
+        socket.emit("pedir_puntuacion_final");
     });
 }
 
@@ -3743,6 +3760,7 @@ function ocultarPuntuacionFinal() {
 
 function actualizarEstadoPuntuacionFinalControl(payload = {}) {
     estado_puntuacion_final_control = payload && typeof payload === "object" ? payload : null;
+    actualizarBotonResultadoVideojuegoControl(estado_puntuacion_final_control?.disponible === true);
     actualizarBotonesVistaEspectadorControl();
 }
 

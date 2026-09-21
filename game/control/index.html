@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260920i">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260921j">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -21,10 +21,10 @@
     <script src="../js/domains/inspiration.js?v=20260905d"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260902b"></script>
-    <script src="../js/domains/competition.js?v=20260917a"></script>
+    <script src="../js/domains/competition.js?v=20260921d"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260921b"></script>
+<script src="./js/actions.js?v=20260921c"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -178,7 +178,6 @@
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn' hidden aria-hidden="true" tabindex="-1">&#x23F8;&#xFE0F; PAUSAR</span>
                                 <button id="boton_fin_partida" class="btn btn-game-end" type="button" onclick="fin_partida_global()" aria-label="Finalizar partida" title="Finalizar partida" hidden>&#x23F9;&#xFE0F; FINALIZAR PARTIDA</button>
-                                <button id="boton_resultado_videojuego" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" aria-hidden="true" onclick="mostrarResultadoVideojuego()" hidden>&#x1F3AE; MOSTRAR RESULTADO VIDEOJUEGO</button>
                                 <button id="boton_vista_partida" class="btn btn-vista-espectador" type="button" data-vista-principal="partida" data-active="0" aria-pressed="false" onclick="mostrar_vista_partida()">&#x1F3AE; VISTA PARTIDA</button>
                                 <button id="boton_canto" class="btn btn-vista-espectador btn-canto" type="button" data-active="0" aria-pressed="false" aria-disabled="true" disabled><span aria-hidden="true">&#x1F3B5;</span> CANTO <small id="canto_control_status" hidden></small></button>
                                 <span id="boton_vista_nube_inspiracion" class='btn' onclick="cambiar_vista_espectador('nube_inspiracion')">&#x2601;&#xFE0F; NUBE DE INSPIRACI&Oacute;N</span>
@@ -191,6 +190,18 @@
                                 <button id="debug_cargar_postgame_musas" class="btn debug-control__button" data-debug-action type="button" onclick="cargarPostgameMusasPruebaDebug()">&#x1F381; CARGAR PARTIDA DE MUSA</button>
                                 <p class="debug-context-tools__status" data-debug-status="juego" role="status" aria-live="polite"></p>
                             </div>
+                            <section id="resultado_videojuego_viewer_control" class="resultado-videojuego-viewer-control" data-active="0" aria-label="Visor del resultado del videojuego" aria-hidden="true" hidden>
+                                <span class="resultado-videojuego-viewer-control__eyebrow">VISOR DEL RESULTADO DEL VIDEOJUEGO</span>
+                                <div class="resultado-videojuego-viewer-control__actions">
+                                    <button id="boton_resultado_videojuego" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" aria-hidden="true" onclick="mostrarResultadoVideojuego()" hidden>&#x1F3AE; MOSTRAR RESULTADO VIDEOJUEGO</button>
+                                    <button id="boton_descargar_textos" class="btn" type="button" aria-hidden="true" onclick="descargar_textos()" hidden>&#x2B07;&#xFE0F; DESCARGAR TEXTOS</button>
+                                </div>
+                                <div id="puntuacion_nav_control" class="puntuacion-nav-control resultado-videojuego-nav-control" hidden aria-hidden="true">
+                                    <button id="puntuacion_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev puntuacion-nav-arrow" onclick="navegarPuntuacionFinal('anterior')" aria-label="Revelaci&oacute;n anterior"></button>
+                                    <span id="puntuacion_nav_label" class="puntuacion-nav-label" aria-live="polite">PRESENTACI&Oacute;N</span>
+                                    <button id="puntuacion_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next puntuacion-nav-arrow" onclick="navegarPuntuacionFinal('siguiente')" aria-label="Revelar siguiente apartado"></button>
+                                </div>
+                            </section>
                             <div id="stats_nav_control" class="stats-nav-control" hidden aria-hidden="true">
                                 <button id="stats_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev" onclick="navegarSlidesStatsControl('prev')" aria-label="Slide anterior"></button>
                                 <span id="stats_nav_label" class="stats-nav-label">&#x1F4CA; SLIDES STATS</span>
@@ -199,7 +210,6 @@
                         </div>
                         <div id="control_panel_representacion" class="control-group control-group--representacion control-collapsible is-collapsed" data-control-section="representacion" role="tabpanel" aria-labelledby="control_title_representation">
                             <div class="control-group-buttons">
-                                <span id="boton_descargar_textos" class='btn' onclick="descargar_textos()">&#x2B07;&#xFE0F; DESCARGAR TEXTOS</span>
                                 <span id="boton_temporizador_gigante" class='btn' onclick="activar_temporizador_gigante()">&#x23F1;&#xFE0F; TEMPORIZADOR GIGANTE</span>
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
                             </div>
@@ -219,11 +229,6 @@
                             <div class="control-group-buttons control-group-buttons--three control-group-buttons--deliberacion">
                                 <button id="boton_vista_deliberacion" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarVistaDeliberacion()">&#x2696;&#xFE0F; VISTA DELIBERACI&Oacute;N</button>
                                 <button id="boton_resultado_jurado" class="btn btn-vista-espectador" type="button" data-active="0" aria-pressed="false" onclick="mostrarResultadoJurado()">&#x1F3AD; MOSTRAR RESULTADO JURADO</button>
-                            </div>
-                            <div id="puntuacion_nav_control" class="puntuacion-nav-control deliberacion-nav-control" hidden aria-hidden="true">
-                                <button id="puntuacion_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev puntuacion-nav-arrow" onclick="navegarPuntuacionFinal('anterior')" aria-label="Revelaci&oacute;n anterior"></button>
-                                <span id="puntuacion_nav_label" class="puntuacion-nav-label" aria-live="polite">PRESENTACI&Oacute;N</span>
-                                <button id="puntuacion_nav_next" type="button" class="btn stats-nav-button stats-nav-button--next puntuacion-nav-arrow" onclick="navegarPuntuacionFinal('siguiente')" aria-label="Revelar siguiente apartado"></button>
                             </div>
                             <div id="jurado_nav_control" class="puntuacion-nav-control deliberacion-nav-control deliberacion-nav-control--jurado" hidden aria-hidden="true">
                                 <button id="jurado_nav_prev" type="button" class="btn stats-nav-button stats-nav-button--prev puntuacion-nav-arrow" onclick="navegarResultadoJurado('anterior')" aria-label="Resultado anterior"></button>

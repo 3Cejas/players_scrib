@@ -405,7 +405,7 @@ const animateCSS = window.ScribRuntime.animateCSS;
 
 //FunciÃ³n auxiliar que envÃ­a una palabra al servidor.
 function enviarPalabra(button) {
-  if (cooldown || palabra.value == '' || palabra.value == null) {
+  if (votando || votacion_ventaja_activa || cooldown || palabra.value == '' || palabra.value == null) {
     text_progress.classList.add('disabled-click-feedback');
     setTimeout(function () {
       text_progress.classList.remove('disabled-click-feedback');
@@ -430,20 +430,36 @@ function enviarPalabra(button) {
       return;
     }
     if (validacion.ok) {
-      startProgress(button);
+      const textoPendiente = inspiracionTexto;
+      button.disabled = true;
+      let envioResuelto = false;
+      const resolverEnvio = (respuesta = {}) => {
+        if (envioResuelto) return;
+        envioResuelto = true;
+        clearTimeout(timeoutEnvio);
+        button.disabled = false;
+        if (!respuesta || respuesta.ok !== true) {
+          if (!palabra.value) palabra.value = textoPendiente;
+          recordatorio.innerHTML = "<span class='musa-envio-error'>NO SE HA PODIDO ENTREGAR. VUELVE A INTENTARLO.</span>";
+          animateCSS(".recordatorio", "shakeX");
+          return;
+        }
+        startProgress(button);
+        palabra.value = "";
+        actualizarPreviewTiempoPalabraMusa("");
+        recordatorio.innerHTML = `<span class='musa-envio-confirmado'>${tJuego2P("warmup.feedback.word_sent", {}, "Inspiración entregada.")}</span>`;
+        animateCSS(".recordatorio", "flash").then(() => {
+          delay_animacion_recordatorio = setTimeout(function () {
+            recordatorio.innerHTML = "";
+          }, 1200);
+        });
+      };
+      const timeoutEnvio = setTimeout(() => resolverEnvio({ ok: false, code: "ACK_TIMEOUT" }), 5000);
       socket.emit('enviar_inspiracion', {
-        palabra: inspiracionTexto,
+        palabra: textoPendiente,
         nombre: window.nombre_musa || "",
         client_id: window.musa_client_id || ""
-      });
-      palabra.value = "";
-      actualizarPreviewTiempoPalabraMusa("");
-      recordatorio.innerHTML = `<span style='color: green;'>${tJuego2P("warmup.feedback.word_sent", {}, "Has mandado una inspiracion.")}</span>`;
-      animateCSS(".recordatorio", "flash").then(() => {
-        delay_animacion_recordatorio = setTimeout(function () {
-          recordatorio.innerHTML = "";
-        }, 1200);
-      });
+      }, resolverEnvio);
     } else {
       recordatorio.innerHTML = `<span style='color: red;'>${tJuego2P("warmup.feedback.useful_word", {}, "Recuerda que la palabra debe serle util.")}</span>`;
       animateCSS(".recordatorio", "flash").then(() => {

@@ -10,8 +10,8 @@ const PLAYER_DISCARD_VERSION = "20260824a";
 const PLAYER_I18N_VERSION = "20260917c";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
-const GAME_HUD_VERSION = "20260918a";
-const COMPETITION_VERSION = "20260917a";
+const GAME_HUD_VERSION = "20260921d";
+const COMPETITION_VERSION = "20260921d";
 const INSPIRATION_VERSION = "20260905d";
 const CONTROL_VIDEO_VERSION = "20260920a";
 const CONTROL_NARRATION_VERSION = "20260920a";
@@ -23,34 +23,35 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260921a";
-const SPECTATOR_CSS_VERSION = "20260920e";
+const SPECTATOR_STATE_VERSION = "20260921g";
+const SPECTATOR_CSS_VERSION = "20260921d";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260921a";
 const MUSA_HELP_VERSION = "20260830a";
 const WRITER_DELETE_BLOCK_VERSION = "20260910a";
 const I18N_VERSION = "20260822a";
 const SCORE_ASSET_VERSION = "20260903e";
-const LEVEL_TRANSITION_VERSION = "20260917b";
+const LEVEL_TRANSITION_VERSION = "20260921c";
+const LEVEL_TRANSITION_SCRIPT_VERSION = "20260921b";
 const PLAYER_ACTIONS_VERSION = "20260914f";
-const PLAYER_STATE_VERSION = "20260917b";
-const PLAYER_SOCKET_EVENTS_VERSION = "20260917c";
-const SPECTATOR_SOCKET_EVENTS_VERSION = "20260920a";
+const PLAYER_STATE_VERSION = "20260921c";
+const PLAYER_SOCKET_EVENTS_VERSION = "20260921d";
+const SPECTATOR_SOCKET_EVENTS_VERSION = "20260921a";
 const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260920c";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260920i";
-const CONTROL_ACTIONS_VERSION = "20260921b";
+const CONTROL_CSS_VERSION = "20260921j";
+const CONTROL_ACTIONS_VERSION = "20260921c";
 const CONTROL_I18N_VERSION = "20260920a";
 const CONTROL_STATE_VERSION = "20260917c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260920b";
-const PUBLIC_PLAYER_ACTIONS_VERSION = "20260920b";
+const PUBLIC_PLAYER_ACTIONS_VERSION = "20260921c";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260921a";
-const PUBLIC_PLAYER_CSS_VERSION = "20260921a";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260920e";
+const PUBLIC_PLAYER_STATE_VERSION = "20260921c";
+const PUBLIC_PLAYER_CSS_VERSION = "20260921b";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260921f";
 const PUBLIC_PLAYER_I18N_VERSION = "20260921a";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
@@ -110,7 +111,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/spectator/index.html", "domains/view-transition.js", VIEW_TRANSITION_MODULE_VERSION);
   assertIncludesAsset("game/spectator/index.html", "domains/credits.js", CREDITS_DOMAIN_VERSION);
   assertIncludesAsset("game/spectator/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
-  assertIncludesAsset("game/spectator/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
+  assertIncludesAsset("game/spectator/index.html", "domains/level-transition.js", LEVEL_TRANSITION_SCRIPT_VERSION);
   assertIncludesAsset("game/spectator/index.html", "css/canto.css", CANTO_STYLE_VERSION);
   assertIncludesAsset("game/spectator/index.html", "domains/canto.js", CANTO_SCRIPT_VERSION);
 
@@ -135,7 +136,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/public/players/index.html", "js/state.js", PUBLIC_PLAYER_STATE_VERSION);
   assertIncludesAsset("game/public/players/index.html", "domains/credits.js", CREDITS_DOMAIN_VERSION);
   assertIncludesAsset("game/public/players/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
-  assertIncludesAsset("game/public/players/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
+  assertIncludesAsset("game/public/players/index.html", "domains/level-transition.js", LEVEL_TRANSITION_SCRIPT_VERSION);
   assertIncludesAsset("game/public/players/index.html", "vendor/html2canvas/html2canvas.min.js", "1.4.1");
   assertIncludesAsset("game/public/players/index.html", "js/musa-help.js", MUSA_HELP_VERSION);
   assertIncludesAsset("game/public/players/index.html", "js/socket-events.js", PUBLIC_PLAYER_SOCKET_EVENTS_VERSION);
@@ -154,7 +155,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/actors/source/index.html", "js/socket-events.js", ACTOR_SOURCE_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/actors/source/index.html", "js/technician.js", "20260920b");
   assertIncludesAsset("game/actors/source/index.html", "level-transition.css", LEVEL_TRANSITION_VERSION);
-  assertIncludesAsset("game/actors/source/index.html", "domains/level-transition.js", LEVEL_TRANSITION_VERSION);
+  assertIncludesAsset("game/actors/source/index.html", "domains/level-transition.js", LEVEL_TRANSITION_SCRIPT_VERSION);
 });
 
 test("no role loads or waits for the removed resurrection system", () => {
@@ -960,10 +961,26 @@ test("control teleprompter identifies each team and confirms spectator loading w
 
 test("writer reconnect post-inicio enters match view without skill menu", () => {
   const js = read("game/players/js/socket-events.js");
+  const state = read("game/players/js/state.js");
 
   assert.match(js, /function asegurarVistaPartidaActivaEscritora\(\)/);
   assert.match(js, /if \(atributosEl\) atributosEl\.style\.display = "none";/);
   assert.match(js, /function post_inicio\(borrar_texto\)\{[\s\S]*asegurarVistaPartidaActivaEscritora\(\);/);
+  assert.match(js, /socket\.on\('connect'[\s\S]*registrarSesionEscritora[\s\S]*socket\.emit\("pedir_texto", \{ player \}\)/);
+  assert.match(js, /function restaurarTextoEscritoraDesdeServidor[\s\S]*cargarBorradorLocalEscritora\(\)[\s\S]*colocarCursorAlFinalEditor\(\)/);
+  assert.match(state, /function colocarCursorAlFinalEditor\(\)[\s\S]*range\.collapse\(false\)[\s\S]*scrollHeight/);
+  assert.match(state, /window\.sessionStorage\.setItem\(BORRADOR_ESCRITORA_STORAGE_KEY/);
+});
+
+test("writer inspiration matching survives pasted words, accents and forbidden-word payload arrays", () => {
+  const state = read("game/players/js/state.js");
+  const sockets = read("game/players/js/socket-events.js");
+
+  assert.match(state, /function normalizarComparacionInspiracion\(valor\)[\s\S]*normalize\("NFD"\)/);
+  assert.match(state, /function prepararDeteccionMultipalabraAsignada\(\)[\s\S]*obtenerObjetivosPalabraActual\(\)[\s\S]*buscarCoincidenciasMultipalabra/);
+  assert.doesNotMatch(state, /prepararDeteccionMultipalabraAsignada\(\)[\s\S]{0,180}\.filter\(esObjetivoMultipalabra\)/);
+  assert.match(sockets, /palabra_actual = Array\.isArray\(data && data\.palabra_bonus\)[\s\S]*\[data\.palabra_bonus\[0\]\]/);
+  assert.match(sockets, /listener_modo = function \(e\) \{ modo_palabras_prohibidas\(e\) \};\s*texto\.addEventListener\("input", listener_modo\)/);
 });
 
 test("reconnected roles restore elapsed level progress", () => {
@@ -1006,25 +1023,21 @@ test("writer inverse disadvantage shows a clear active warning", () => {
   assert.match(css, /@keyframes avisoInversoEscritoraPulse/);
 });
 
-test("spectator viewport fit resets side veil before measuring natural size", () => {
+test("spectator viewport remeasures natural content without cumulative shrink", () => {
   const js = read("game/spectator/js/state.js");
   const start = js.indexOf("const ajustarViewportEspectador = () => {");
   const end = js.indexOf("const programarAjusteViewportEspectador", start);
   assert.ok(start >= 0 && end > start, "spectator viewport fit function should exist");
 
   const body = js.slice(start, end);
-  const resetCall = body.indexOf("prepararMedicionViewportEspectador();");
-  const scrollRead = body.indexOf("spectator_fit_root.scrollWidth");
-  assert.ok(resetCall >= 0, "viewport fit should reset transform and veil vars before measuring");
-  assert.ok(scrollRead > resetCall, "viewport fit must measure after reset to avoid recursive shrink");
-
-  const helper = js.slice(
-    js.indexOf("const prepararMedicionViewportEspectador = () => {"),
-    start
-  );
-  assert.match(helper, /--spectator-veil-left", "0px"/);
-  assert.match(helper, /--spectator-veil-right", "0px"/);
-  assert.match(helper, /--spectator-veil-width", "52vw"/);
+  assert.match(body, /prepararMedicionViewportEspectador\(\)/);
+  assert.match(body, /scrollWidth|scrollHeight/);
+  assert.match(body, /style\.transform = `translate3d/);
+  assert.match(body, /Math\.min\(1, viewportW \/ anchoNatural, viewportH \/ altoNatural\)/);
+  const initStart = js.indexOf("const iniciarAjusteViewportEspectador = () => {");
+  const initEnd = js.indexOf("const limitarPct", initStart);
+  assert.match(js.slice(initStart, initEnd), /ResizeObserver/);
+  assert.match(js.slice(initStart, initEnd), /MutationObserver/);
 });
 
 test("spectator texts use the projector width and keep synchronized line numbers", () => {
@@ -1034,13 +1047,14 @@ test("spectator texts use the projector width and keep synchronized line numbers
 
   assert.match(html, /id="spectator_line_numbers_j1"[\s\S]*id="spectator_line_numbers_inner_j1"[\s\S]*id="texto"/);
   assert.match(html, /id="spectator_line_numbers_j2"[\s\S]*id="spectator_line_numbers_inner_j2"[\s\S]*id="texto1"/);
-  assert.match(css, /#contenedor_espectador\s*\{[\s\S]*flex-wrap: nowrap;[\s\S]*width: min\(calc\(96vw \* var\(--spectator-fit-inverse, 1\)\), 3400px\)/);
-  assert.match(state, /--spectator-fit-inverse", Math\.min\(1\.6, 1 \/ escalaSegura\)\.toFixed\(4\)/);
+  assert.match(css, /#contenedor_espectador\s*\{[\s\S]*flex-wrap: nowrap;[\s\S]*width: min\(96vw, 2200px\)/);
+  assert.match(css, /#spectator_fit_root\s*\{[\s\S]*transform-origin: top left/);
   assert.match(css, /body\.page-spectator #contenedor_espectador > \.jugador1,[\s\S]*flex: 1 1 0;[\s\S]*margin-inline: 0/);
   assert.match(css, /\.spectator-text-shell\s*\{[\s\S]*grid-template-columns: clamp\(36px, 2\.8vw, 58px\) minmax\(0, 1fr\)/);
   assert.match(css, /\.spectator-line-numbers__inner[\s\S]*will-change: transform/);
   assert.match(state, /function medirAlturasLineasTextoEspectador\(textarea, lineas\)/);
   assert.match(state, /function sincronizarLineasTextoEspectador\(textarea\)[\s\S]*numero\.textContent = String\(indice \+ 1\)/);
+  assert.match(state, /function lineasLogicasTextoEspectador\(textarea\)[\s\S]*nodo\.tagName === "BR"[\s\S]*tagsSalto\.has\(nodo\.tagName\)/);
   assert.match(state, /inner\.style\.transform = `translate3d\(0, \$\{-Math\.max\(0, textarea\.scrollTop \|\| 0\)\}px, 0\)`/);
   assert.match(state, /MutationObserver[\s\S]*programarLineasTextoEspectador\(textarea\)/);
 });
@@ -1286,9 +1300,29 @@ test("winning muses can vote between three disadvantages during the final stretc
   assert.match(html, /id="votacion_ventaja_inline"[\s\S]*id="votacion_ventaja_timer_inline"/);
   assert.match(css, /\.votacion-ventaja-modal-opciones\s*\{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(state, /function votarVentajaPorEmoji\(emoji\)[\s\S]*socket\.emit\("enviar_voto_ventaja", \{[\s\S]*client_id: window\.musa_client_id/);
+  assert.match(state, /function establecerEstadoVotacionInterfazMusa\(activa[\s\S]*campo_palabra\.disabled = estaActiva[\s\S]*campo_palabra\.value = ""/);
+  assert.match(state, /function mostrarGraciasVotoVentaja\(voto\)[\s\S]*VOTO SELLADO/);
   assert.match(state, /let elegir_ventaja;[\s\S]*elegir_ventaja = "elegir_ventaja_j1";[\s\S]*elegir_ventaja = "elegir_ventaja_j2";/);
   assert.match(socketEvents, /socket\.on\(elegir_ventaja, \(data = \{\}\) => \{[\s\S]*renderizarModalVotacionVentaja\(opciones\)/);
   assert.match(socketEvents, /socket\.on\('votacion_ventaja_estado'[\s\S]*const esEquipoActual = Boolean\(equipo\) && Number\(player\) === equipo/);
+  assert.match(socketEvents, /socket\.on\("pedir_inspiracion_musa"[\s\S]*votacion_ventaja_activa === true[\s\S]*return/);
+  assert.match(socketEvents, /socket\.on\("frase_final_completada"[\s\S]*mostrarFraseFinalCompletadaMusa\(payload\)/);
+  assert.match(css, /\.votacion-ventaja-modal\.is-voted[\s\S]*votoSelladoCard/);
+  assert.match(css, /\.frase-final-completada-musa\s*\{[\s\S]*position: fixed;[\s\S]*inset: 0/);
+});
+
+test("muse submissions wait for server acknowledgement and keep failed words", () => {
+  const actions = read("game/public/players/js/actions.js");
+  const css = read("game/public/players/css/publico.css");
+  const sockets = read("game/public/players/js/socket-events.js");
+
+  assert.match(actions, /socket\.emit\('enviar_inspiracion',[\s\S]*resolverEnvio\)/);
+  assert.match(actions, /if \(!respuesta \|\| respuesta\.ok !== true\)[\s\S]*palabra\.value = textoPendiente/);
+  assert.match(actions, /ACK_TIMEOUT/);
+  assert.match(css, /\.notificacion #palabra\s*\{[\s\S]*background: rgba\(1, 7, 14, \.94\)[\s\S]*color: var\(--equipo-texto-suave/);
+  assert.match(css, /body\.equipo-azul\.musa-texto-rival[\s\S]*#ffc8cd/);
+  assert.match(css, /body\.equipo-rojo\.musa-texto-rival[\s\S]*#c3faff/);
+  assert.match(sockets, /document\.body\?\.classList\.toggle\("musa-texto-rival", es_prohibidas\)/);
 });
 
 test("control parameters own spectator scale and removed inserted word goal", () => {

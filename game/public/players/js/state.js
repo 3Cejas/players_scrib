@@ -63,8 +63,8 @@ const controladorTransicionNivelMusa = apiTransicionNivelMusa
         translate: tJuego2P,
         windowRef: window,
         documentRef: document,
-        durationMs: 12000,
-        reducedDurationMs: 12000
+        durationMs: 7000,
+        reducedDurationMs: 7000
     })
     : null;
 const seguimientoTransicionNivelMusa = apiTransicionNivelMusa
@@ -426,23 +426,101 @@ let votando = false;
 
 let musa_numero_lineas_renderizadas = 0;
 let musa_lineas_raf = 0;
+let musa_lineas_firma = "";
+
+function lineasLogicasTextoMusa() {
+    if (!texto1) return [""];
+    const tagsSalto = new Set(["BR", "DIV", "P", "LI"]);
+    let contenido = "";
+    const recorrer = (nodo, esRaiz = false) => {
+        if (nodo.nodeType === Node.TEXT_NODE) {
+            contenido += nodo.textContent || "";
+            return;
+        }
+        if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+        if (nodo.tagName === "BR") {
+            contenido += "\n";
+            return;
+        }
+        const esBloque = !esRaiz && tagsSalto.has(nodo.tagName);
+        if (esBloque && contenido && !contenido.endsWith("\n")) contenido += "\n";
+        Array.from(nodo.childNodes || []).forEach((hijo) => recorrer(hijo, false));
+        if (esBloque && !contenido.endsWith("\n")) contenido += "\n";
+    };
+    recorrer(texto1, true);
+    contenido = contenido.replace(/\r/g, "");
+    if (!contenido.trim()) return [""];
+    const limpio = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
+    return limpio.split("\n").slice(0, 500);
+}
+
+function medirAlturasLineasTextoMusa(lineas) {
+    if (!texto1 || !document.body) return lineas.map(() => 1);
+    const estilos = window.getComputedStyle(texto1);
+    const anchoContenido = Math.max(
+        1,
+        texto1.clientWidth
+            - (Number.parseFloat(estilos.paddingLeft) || 0)
+            - (Number.parseFloat(estilos.paddingRight) || 0)
+    );
+    const tamanoFuente = Number.parseFloat(estilos.fontSize) || 16;
+    const altoLinea = Number.parseFloat(estilos.lineHeight) || (tamanoFuente * 1.28);
+    const espejo = document.createElement("div");
+    Object.assign(espejo.style, {
+        position: "fixed",
+        left: "-100000px",
+        top: "0",
+        width: `${anchoContenido}px`,
+        visibility: "hidden",
+        pointerEvents: "none",
+        fontFamily: estilos.fontFamily,
+        fontSize: estilos.fontSize,
+        fontWeight: estilos.fontWeight,
+        fontStyle: estilos.fontStyle,
+        letterSpacing: estilos.letterSpacing,
+        wordSpacing: estilos.wordSpacing,
+        lineHeight: estilos.lineHeight,
+        whiteSpace: estilos.whiteSpace,
+        wordBreak: estilos.wordBreak,
+        overflowWrap: estilos.overflowWrap,
+        hyphens: estilos.hyphens
+    });
+    const medidores = lineas.map((linea) => {
+        const medidor = document.createElement("div");
+        medidor.style.display = "block";
+        medidor.style.minHeight = `${altoLinea}px`;
+        medidor.textContent = linea || "\u200b";
+        espejo.appendChild(medidor);
+        return medidor;
+    });
+    document.body.appendChild(espejo);
+    const alturas = medidores.map((medidor) => Math.max(altoLinea, medidor.getBoundingClientRect().height));
+    espejo.remove();
+    return alturas;
+}
 
 function sincronizarLineasTextoMusa() {
     musa_lineas_raf = 0;
     if (!texto1 || !musa_texto_lineas) return;
-    const contenido = String(texto1.innerText || "").replace(/\r/g, "");
-    const sinSaltoFinal = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
-    const total = Math.max(1, Math.min(300, sinSaltoFinal.split("\n").length));
-    if (total !== musa_numero_lineas_renderizadas) {
+    const lineas = lineasLogicasTextoMusa();
+    const estilos = window.getComputedStyle(texto1);
+    const firma = `${lineas.join("\u0000")}\u0001${texto1.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
+    if (firma !== musa_lineas_firma) {
+        const alturas = medirAlturasLineasTextoMusa(lineas);
         const fragmento = document.createDocumentFragment();
-        for (let linea = 1; linea <= total; linea += 1) {
+        lineas.forEach((_linea, indice) => {
             const numero = document.createElement("span");
-            numero.textContent = String(linea);
+            numero.textContent = String(indice + 1);
+            numero.style.height = `${alturas[indice]}px`;
+            numero.style.minHeight = `${alturas[indice]}px`;
+            numero.style.flexBasis = `${alturas[indice]}px`;
             fragmento.appendChild(numero);
-        }
+        });
         musa_texto_lineas.replaceChildren(fragmento);
-        musa_numero_lineas_renderizadas = total;
+        musa_numero_lineas_renderizadas = lineas.length;
+        musa_lineas_firma = firma;
     }
+    musa_texto_lineas.style.paddingTop = estilos.paddingTop;
     musa_texto_lineas.scrollTop = texto1.scrollTop;
 }
 
@@ -459,6 +537,10 @@ if (texto1 && musa_texto_lineas) {
         characterData: true
     });
     texto1.addEventListener("scroll", programarLineasTextoMusa, { passive: true });
+    window.addEventListener("resize", programarLineasTextoMusa, { passive: true });
+    if (typeof ResizeObserver === "function") {
+        new ResizeObserver(programarLineasTextoMusa).observe(texto1);
+    }
     programarLineasTextoMusa();
 }
 
@@ -471,6 +553,7 @@ const bandera_regalo_valor = getEl("bandera_regalo_valor");
 const bandera_regalo_fill = getEl("bandera_regalo_fill");
 window.__scribModoActualMusaPreview = "";
 let votacion_ventaja_inline = getEl("votacion_ventaja_inline");
+let votacion_ventaja_inline_header = document.querySelector(".votacion-ventaja-inline-header");
 let votacion_ventaja_pie_inline = getEl("votacion_ventaja_pie_inline");
 let votacion_ventaja_legend_inline = getEl("votacion_ventaja_legend_inline");
 let votacion_ventaja_total_inline = getEl("votacion_ventaja_total_inline");
@@ -1114,6 +1197,62 @@ function mostrarInlineVotacionVentaja() {
     }
 }
 
+let timeout_frase_final_completada_musa = null;
+
+function mostrarFraseFinalCompletadaMusa(payload = {}) {
+    const equipo = normalizarEquipoVotacion(payload.player);
+    if (!equipo || !document.body) return;
+    const anterior = document.getElementById("frase_final_completada_musa");
+    if (anterior) anterior.remove();
+    if (timeout_frase_final_completada_musa) clearTimeout(timeout_frase_final_completada_musa);
+    const nombre = normalizarNombreEscritxrUi(
+        payload.nombre || nombres_escritxr_por_equipo[equipo],
+        `ESCRITXR ${equipo}`
+    );
+    const aviso = document.createElement("section");
+    aviso.id = "frase_final_completada_musa";
+    aviso.className = `frase-final-completada-musa frase-final-completada-musa--${equipo}`;
+    aviso.setAttribute("role", "status");
+    aviso.setAttribute("aria-live", "assertive");
+    aviso.innerHTML = `
+        <span class="frase-final-completada-musa__eyebrow">LA HISTORIA YA TIENE SU ÚLTIMA LÍNEA</span>
+        <strong>${escapeHtml(nombre)}</strong>
+        <span class="frase-final-completada-musa__copy">HA SELLADO SU FRASE FINAL</span>
+        <i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>
+    `;
+    document.body.appendChild(aviso);
+    requestAnimationFrame(() => aviso.classList.add("is-visible"));
+    timeout_frase_final_completada_musa = setTimeout(() => {
+        aviso.classList.add("is-leaving");
+        setTimeout(() => aviso.remove(), 620);
+        timeout_frase_final_completada_musa = null;
+    }, 4400);
+}
+
+function establecerEstadoVotacionInterfazMusa(activa, equipoVota = null, opciones = {}) {
+    const estaActiva = Boolean(activa);
+    votando = estaActiva && Number(equipoVota) === Number(player);
+    document.body?.classList.toggle("votacion-ventaja-activa-musa", estaActiva);
+    if (campo_palabra) {
+        campo_palabra.disabled = estaActiva;
+        campo_palabra.style.display = estaActiva ? "none" : campo_palabra.style.display;
+        if (estaActiva) campo_palabra.value = "";
+    }
+    if (enviarPalabra_boton) {
+        enviarPalabra_boton.disabled = estaActiva;
+        if (estaActiva) enviarPalabra_boton.style.display = "none";
+    }
+    if (tarea && estaActiva) tarea.innerHTML = "";
+    if (recordatorio && estaActiva) recordatorio.innerHTML = "";
+    if (notificacion && estaActiva) notificacion.style.display = "none";
+    if (votacion_ventaja_inline_header && estaActiva) {
+        const equipoTexto = Number(equipoVota) === 2 ? "ROJO" : "AZUL";
+        votacion_ventaja_inline_header.textContent = opciones.yaVoto
+            ? "VOTO SELLADO · RESULTADO EN DIRECTO"
+            : `LAS MUSAS DEL EQUIPO ${equipoTexto} ESTÁN VOTANDO`;
+    }
+}
+
 function construirDatosVotacionVentaja(opciones, votos) {
     const opcionesUsar = Array.isArray(opciones) ? opciones.slice(0, 3) : [];
     return opcionesUsar.map((emoji, idx) => {
@@ -1142,13 +1281,17 @@ function inicializarVotosVentajaEquilibrado(opciones) {
 
 function mostrarGraciasVotoVentaja(voto) {
     votacion_ventaja_ultimo_voto = String(voto || "");
-    if (votacion_ventaja_modal_titulo) {
-        votacion_ventaja_modal_titulo.textContent = tJuego2P("ui.thanks_for_voting", {}, "GRACIAS POR VOTAR");
+    if (votacion_ventaja_modal) {
+        votacion_ventaja_modal.classList.add("is-voted");
     }
-    if (recordatorio) {
-        recordatorio.innerHTML = `<span style='color: green;'>${escapeHtml(
-            tJuego2P("vote.thanks_detail", { vote: voto, voto }, `Gracias por votar ${voto}.`)
-        )}</span>`;
+    if (votacion_ventaja_modal_titulo) {
+        votacion_ventaja_modal_titulo.textContent = "VOTO SELLADO";
+    }
+    if (votacion_ventaja_modal_opciones) {
+        votacion_ventaja_modal_opciones.querySelectorAll(".votacion-ventaja-modal-btn").forEach((boton) => {
+            boton.disabled = true;
+            boton.classList.toggle("is-selected", boton.value === voto);
+        });
     }
 }
 
@@ -1401,6 +1544,8 @@ function resetearEstadoVotacionVentaja() {
     }
     resetearTemporizadorVotacionVentaja();
     aplicarColorTemporizadorVotacionVentaja(player);
+    establecerEstadoVotacionInterfazMusa(false);
+    if (votacion_ventaja_modal) votacion_ventaja_modal.classList.remove("is-voted");
     ocultarModalVotacionVentaja();
     ocultarInlineVotacionVentaja();
 }
@@ -1424,6 +1569,7 @@ window.addEventListener("musa_voto_ventaja_emitido", (evt) => {
     if (votacion_ventaja_gracias_timer) {
         clearTimeout(votacion_ventaja_gracias_timer);
     }
+    establecerEstadoVotacionInterfazMusa(true, votacion_ventaja_equipo, { yaVoto: true });
     votacion_ventaja_gracias_timer = setTimeout(() => {
         ocultarModalVotacionVentaja();
         if (votacion_ventaja_activa) {
@@ -1431,7 +1577,7 @@ window.addEventListener("musa_voto_ventaja_emitido", (evt) => {
         } else {
             ocultarInlineVotacionVentaja();
         }
-    }, 600);
+    }, 1050);
 });
 
 const RETRASO_TECLADO_LENTO_MS = 500;

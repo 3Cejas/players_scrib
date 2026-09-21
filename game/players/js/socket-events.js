@@ -652,6 +652,7 @@ const LIMPIEZAS = {
         asignada = false;
         limpiarDeteccionMultipalabraAsignada();
         texto.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("input", listener_modo);
         definicion.style.fontSize = "1.5vw";
     },
 
@@ -689,6 +690,7 @@ const LIMPIEZAS = {
         asignada = false;
         limpiarDeteccionMultipalabraAsignada();
         texto.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("input", listener_modo);
     },
 
 
@@ -958,8 +960,10 @@ function limpiarObjetivoInspiracionDescartadoEscritora(inspiracionId) {
     limpiarDeteccionMultipalabraAsignada();
     if (modo_actual === "palabras bonus" || modo_actual === "palabras prohibidas") {
         texto.removeEventListener("keyup", listener_modo);
+        texto.removeEventListener("input", listener_modo);
     } else if (modo_actual === "letra bendita" || modo_actual === "letra prohibida") {
         texto.removeEventListener("keyup", listener_modo1);
+        texto.removeEventListener("input", listener_modo1);
         inspiracionLetraMusaActual = null;
     }
     if (definicion) {
@@ -1308,7 +1312,11 @@ socket.on('connect', () => {
     sincronizarEstadoContadorEscritora(null, "");
     limpiarEntregaInspiracionEscritora();
     actualizarEtiquetasCursorCalentamientoEscritor();
-    registrarSesionEscritora();
+    registrarSesionEscritora((respuesta = {}) => {
+        if (respuesta.ok === true) {
+            socket.emit("pedir_texto", { player });
+        }
+    });
     socket.emit('pedir_atributos');
     socket.emit('pedir_idioma_actual');
     socket.emit('pedir_calentamiento_estado');
@@ -1360,11 +1368,17 @@ socket.on('musa_regalo_bandera_estado', (payload = {}) => {
 
 function restaurarTextoEscritoraDesdeServidor(data = {}) {
     const payload = (data && typeof data === "object") ? data : { text: String(data || "") };
-    const htmlRemoto = typeof payload.text === "string" ? payload.text : "";
-    const guardadoRemoto = typeof payload.texto_guardado === "string" ? payload.texto_guardado : "";
+    let htmlRemoto = typeof payload.text === "string" ? payload.text : "";
+    let guardadoRemoto = typeof payload.texto_guardado === "string" ? payload.texto_guardado : "";
     const hayTextoRemoto = htmlRemoto.trim().length > 0 || guardadoRemoto.trim().length > 0;
     if (!hayTextoRemoto) {
-        return false;
+        const borradorLocal = cargarBorradorLocalEscritora();
+        if (!borradorLocal) return false;
+        htmlRemoto = typeof borradorLocal.text === "string" ? borradorLocal.text : "";
+        guardadoRemoto = typeof borradorLocal.texto_guardado === "string" ? borradorLocal.texto_guardado : "";
+        payload.text = htmlRemoto;
+        payload.texto_guardado = guardadoRemoto;
+        if (typeof borradorLocal.points !== "undefined") payload.points = borradorLocal.points;
     }
     if (htmlRemoto.trim().length > 0) {
         texto.innerHTML = htmlRemoto;
@@ -1573,6 +1587,7 @@ socket.on("post-inicio", (data) => {
 
 socket.on("borrar_texto_guardado", () => {
     texto_guardado = "";
+    limpiarBorradorLocalEscritora();
     sendText();
 });
 
@@ -1637,6 +1652,7 @@ function post_inicio(borrar_texto){
         texto.scrollTo(0, texto.scrollHeight);
     } else if (borrar_texto === true) {
         texto_guardado = "";
+        limpiarBorradorLocalEscritora();
         if (texto) {
             texto.innerText = "";
             texto.scrollTo(0, 0);
@@ -1665,6 +1681,10 @@ socket.on("limpiar", (borrar) => {
     detenerProgresoNivelBarraEscritora(true);
     if(borrar == false){
         capturarTextoGuardadoDesdeEditor();
+        guardarBorradorLocalEscritora();
+    } else if (borrar === true || (borrar && borrar.nueva_partida === true)) {
+        texto_guardado = "";
+        limpiarBorradorLocalEscritora();
     }
     limpiarCountdownInicioEscritora();
     limpiarClasesIntroPartidaEscritora();
@@ -1696,6 +1716,7 @@ socket.on("limpiar", (borrar) => {
     neon.style.display = ""; 
     texto.removeEventListener("keyup", listener_modo_psico);
     texto.removeEventListener("keyup", listener_modo1);
+    texto.removeEventListener("input", listener_modo1);
 
     document.body.classList.remove("bg");
     document.body.classList.remove("rain");
@@ -1833,6 +1854,7 @@ function limpiarInspiracionLetraMusa(data = {}) {
     asignada = false;
     limpiarDeteccionMultipalabraAsignada();
     texto.removeEventListener("keyup", listener_modo1);
+    texto.removeEventListener("input", listener_modo1);
     definicion.innerHTML = "";
     aplicarMarqueeSiOverflowEscritora(definicion);
     establecerContextoMusaDefinicion("");
@@ -1860,8 +1882,9 @@ socket.on(inspirar, data => {
         asignada = true;
         actualizarUiDescartarInspiracionEscritora();
         texto.removeEventListener("keyup", listener_modo1);
+        texto.removeEventListener("input", listener_modo1);
         listener_modo1 = function (e) { palabras_musas(e) };
-        texto.addEventListener("keyup", listener_modo1);
+        texto.addEventListener("input", listener_modo1);
     }
 });
 
@@ -1949,8 +1972,8 @@ function recibir_palabra(data) {
     setBarraNivelClaseEscritora("bonus");
     const textoPalabra = extraerTextoPalabraEventoEscritora(data);
     palabra_actual = Array.isArray(data && data.palabra_bonus)
-        ? data.palabra_bonus[0]
-        : (textoPalabra ? [textoPalabra] : "");
+        ? (data.palabra_bonus[0] ? [data.palabra_bonus[0]] : [])
+        : (textoPalabra ? [textoPalabra] : []);
     const tiempoAsignado = resolverTiempoPalabraAsignadaEscritora(data);
     const superbonus = normalizarSuperbonusInspiracionEscritora(data);
     palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BENDITAS");
@@ -1980,12 +2003,14 @@ function recibir_palabra(data) {
 
     tiempo_palabras_bonus = tiempoAsignado;
     texto.removeEventListener("keyup", listener_modo1);
+    texto.removeEventListener("input", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
+    texto.removeEventListener("input", listener_modo);
     prepararDeteccionMultipalabraAsignada();
     asignada = true;
     actualizarUiDescartarInspiracionEscritora();
     listener_modo = function (e) { modo_palabras_bonus(e) };
-    texto.addEventListener("keyup", listener_modo);
+    texto.addEventListener("input", listener_modo);
     if (!es_pausa && modo_actual !== "tertulia") {
         menu_modificador = true;
         desactivar_borrar = false;
@@ -2003,8 +2028,8 @@ function recibir_palabra_prohibida(data) {
     setBarraNivelClaseEscritora("prohibidas");
     const textoPalabra = extraerTextoPalabraEventoEscritora(data);
     palabra_actual = Array.isArray(data && data.palabra_bonus)
-        ? data.palabra_bonus[0]
-        : (textoPalabra ? [textoPalabra] : "");
+        ? (data.palabra_bonus[0] ? [data.palabra_bonus[0]] : [])
+        : (textoPalabra ? [textoPalabra] : []);
     const tiempoAsignado = resolverTiempoPalabraAsignadaEscritora(data);
     palabra.innerHTML = traducirTituloModoEscritora("palabras prohibidas", "NIVEL PALABRAS MALDITAS");
 
@@ -2029,11 +2054,13 @@ function recibir_palabra_prohibida(data) {
     }
     tiempo_palabras_bonus = tiempoAsignado;
     texto.removeEventListener("keyup", listener_modo1);
+    texto.removeEventListener("input", listener_modo1);
     texto.removeEventListener("keyup", listener_modo);
+    texto.removeEventListener("input", listener_modo);
     prepararDeteccionMultipalabraAsignada();
     asignada = true;
     listener_modo = function (e) { modo_palabras_prohibidas(e) };
-    texto.addEventListener("keyup", listener_modo);
+    texto.addEventListener("input", listener_modo);
     if (!es_pausa && modo_actual !== "tertulia") {
         menu_modificador = true;
         desactivar_borrar = false;
@@ -2173,6 +2200,7 @@ refrescarUiIdiomaEscritora();
 function sendText() {
     const payload = construirPayloadTextoEscritora();
     ultimo_payload_texto_enviado_escritora = { ...payload };
+    guardarBorradorLocalEscritora(payload);
     socket.emit(texto_x, payload);
 }
 
@@ -2514,10 +2542,10 @@ function modo_palabras_bonus(e) {
         }
 
         const tokenActual = textContent.substring(startingIndex, endingIndex);
-        const tokenLower = tokenActual.toLowerCase();
+        const tokenLower = normalizarComparacionInspiracion(tokenActual);
         const coincidenciaMultipalabra = detectarInsercionMultipalabra(textContent);
         const palabraDetectadaToken = objetivos.find((objetivo) =>
-            tokenLower.includes((objetivo || "").toLowerCase())
+            tokenLower.includes(normalizarComparacionInspiracion(objetivo))
         );
 
         console.log("Texto seleccionado:", tokenActual); // Debugging
@@ -2610,6 +2638,7 @@ function modo_palabras_prohibidas(e) {
         e.preventDefault();
 
         let selection = document.getSelection();
+            if (!selection || !selection.rangeCount) return;
             let range = selection.getRangeAt(0);
             let preCaretRange = range.cloneRange();
             preCaretRange.selectNodeContents(e.target);
@@ -2639,15 +2668,14 @@ function modo_palabras_prohibidas(e) {
             console.log("Ãndices:", startingIndex, endingIndex); // Debugging
 
         if (
-            palabra_actual.some(palabra => textContent
-                .substring(startingIndex, endingIndex)
-                .toLowerCase().includes(palabra.toLowerCase()))
+            palabra_actual.some(palabra => normalizarComparacionInspiracion(textContent
+                .substring(startingIndex, endingIndex))
+                .includes(normalizarComparacionInspiracion(palabra)))
             ) {
             const palabraEncontrada = Array.isArray(palabra_actual)
-                ? palabra_actual.find(palabra => textContent
-                    .substring(startingIndex, endingIndex)
-                    .toLowerCase()
-                    .includes((palabra || "").toLowerCase()))
+                ? palabra_actual.find(palabra => normalizarComparacionInspiracion(textContent
+                    .substring(startingIndex, endingIndex))
+                    .includes(normalizarComparacionInspiracion(palabra)))
                 : palabra_actual;
             const palabraReportada = palabraEncontrada || textContent.substring(startingIndex, endingIndex);
             texto.focus();
@@ -2730,11 +2758,11 @@ function palabras_musas(e) {
         }
 
         const tokenActual = textContent.substring(startingIndex, endingIndex);
-        const tokenLower = tokenActual.toLowerCase();
+        const tokenLower = normalizarComparacionInspiracion(tokenActual);
         const coincidenciaMultipalabra = detectarInsercionMultipalabra(textContent);
         const palabraEncontrada = coincidenciaMultipalabra
             ? coincidenciaMultipalabra.objetivo
-            : objetivos.find((objetivo) => tokenLower.includes((objetivo || "").toLowerCase()));
+            : objetivos.find((objetivo) => tokenLower.includes(normalizarComparacionInspiracion(objetivo)));
 
         console.log("Texto seleccionado:", tokenActual); // Debugging
         console.log("palabra_actual:", palabra_actual); // Debugging

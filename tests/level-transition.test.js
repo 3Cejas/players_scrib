@@ -217,8 +217,8 @@ test("spectator, actor, writer and Muse expose one accessible, responsive level 
         assert.equal((html.match(/id="level_transition"/g) || []).length, 1);
         assert.equal((html.match(/id="level_transition_status"/g) || []).length, 1);
         assert.match(html, /role="status" aria-live="assertive" aria-atomic="true"/);
-        assert.match(html, /level-transition\.css\?v=20260917b/);
-        assert.match(html, /domains\/level-transition\.js\?v=20260917b/);
+        assert.match(html, /level-transition\.css\?v=20260921c/);
+        assert.match(html, /domains\/level-transition\.js\?v=20260921b/);
     });
     assert.match(actorHtml, /level-transition level-transition--compact/);
 
@@ -232,7 +232,8 @@ test("spectator, actor, writer and Muse expose one accessible, responsive level 
     assert.match(spectatorState, /vista_espectador_modo_resuelta !== "partida"\) return false/);
     assert.match(spectatorState, /firmaUltimaTransicionNivelEspectador/);
     assert.match(spectatorSockets, /mostrarTransicionNivelForzadaEspectador\(modo_actual, data \|\| \{\}\)/);
-    assert.match(spectatorState, /durationMs: 12000,[\s\S]*reducedDurationMs: 12000/);
+    assert.match(spectatorHtml, /level-transition level-transition--extended/);
+    assert.match(spectatorState, /durationMs: 7000,[\s\S]*reducedDurationMs: 7000/);
     assert.match(spectatorState, /if \(modo !== "partida"\)[\s\S]*ocultarTransicionNivelEspectador\(\)/);
     assert.match(
         spectatorSockets,
@@ -255,9 +256,9 @@ test("spectator, actor, writer and Muse expose one accessible, responsive level 
     assert.match(writerSockets, /createModeTracker\(\)/);
     assert.match(writerSockets, /socket\.on\("activar_modo"[\s\S]*observarTransicionNivelEscritora\(data \|\| \{\}\)/);
     assert.match(writerSockets, /mostrarTransicionNivelEscritora\(observacionTransicionNivel, data \|\| \{\}\)/);
-    assert.match(museHtml, /level-transition level-transition--muse/);
+    assert.match(museHtml, /level-transition level-transition--muse level-transition--extended/);
     assert.doesNotMatch(museHtml, /id="level_transition" class="[^"]*level-transition--compact/);
-    assert.match(museState, /durationMs: 12000,[\s\S]*reducedDurationMs: 12000/);
+    assert.match(museState, /durationMs: 7000,[\s\S]*reducedDurationMs: 7000/);
     assert.match(museState, /function mostrarTransicionNivelPendienteMusa/);
     assert.match(museSockets, /socket\.on\('modo_actual'[\s\S]*observarModoCanonicoTransicionMusa\(data \|\| \{\}\)/);
     assert.match(museSockets, /function aplicarPostInicioMusa[\s\S]*mostrarTransicionNivelPendienteMusa\(modoAlAplicarPostInicio\)/);
@@ -265,6 +266,9 @@ test("spectator, actor, writer and Muse expose one accessible, responsive level 
     assert.match(css, /position: fixed;[\s\S]*pointer-events: none/);
     assert.match(css, /@keyframes scribLevelPanel/);
     assert.match(css, /@keyframes scribLevelCompactPanel/);
+    assert.match(css, /\.level-transition--extended\.is-visible[\s\S]*7000ms/);
+    assert.match(css, /\.level-transition--muse \.level-transition__panel::before,[\s\S]*display: none/);
+    assert.match(css, /@keyframes scribLevelExtendedPanel/);
     assert.match(css, /@media \(max-width: 620px\), \(max-height: 560px\)/);
     assert.match(css, /@media \(max-height: 440px\)/);
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
@@ -314,7 +318,7 @@ test("actor and muse timelines carry authoritative progress with coherent role t
     assert.match(museCss, /\.musa-bandera-fab-wrap #btn_bandera::before,[\s\S]*\.musa-bandera-fab-wrap #btn_bandera::after[\s\S]*content:\s*none !important/);
     assert.match(museCss, /body\.equipo-azul\s*\{[\s\S]*--equipo-texto-suave:\s*#c3faff/);
     assert.match(museCss, /body\.equipo-rojo\s*\{[\s\S]*--equipo-texto-suave:\s*#ffc8cd/);
-    assert.match(museHtml, /publico\.css\?v=20260921a/);
+    assert.match(museHtml, /publico\.css\?v=20260921b/);
     assert.match(museCss, /textarea:not\(:disabled\):not\(\[readonly\]\)[\s\S]*color: var\(--equipo-texto-suave, #c3faff\)/);
     assert.match(museCss, /\.pre-show-musa__confirmation-rings,[\s\S]*display: none/);
 

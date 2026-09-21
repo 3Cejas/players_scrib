@@ -1163,6 +1163,7 @@ socket.on('modo_actual', (data = {}) => {
     if (siguienteModo !== modo_actual || !modo_nivel_activo_espectador) {
         aplicarModo({ ...(ultimo_payload_modo_espectador || {}), ...payload, modo_actual: siguienteModo });
     }
+    asegurarMusicaModoEspectador();
     mostrarTransicionNivelEspectador(observacionTransicion, payload);
 });
 
@@ -1186,6 +1187,7 @@ socket.on("temp_modos", (data = {}) => {
     }
     sincronizarProgresoNivelBarraDesdeSegundos(data);
     actualizarVisibilidadPanelNivelEspectador();
+    asegurarMusicaModoEspectador();
 });
 
 function aplicarModo(data) {

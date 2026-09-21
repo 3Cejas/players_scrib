@@ -10,10 +10,16 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   const html = read("game/control/index.html");
   const actions = read("game/control/js/actions.js");
   const sockets = read("game/control/js/socket-events.js");
+  const juego = html.slice(html.indexOf('id="control_panel_juego"'), html.indexOf('id="control_panel_representacion"'));
+  const representacion = html.slice(html.indexOf('id="control_panel_representacion"'), html.indexOf('id="control_panel_deliberacion"'));
+  const deliberacion = html.slice(html.indexOf('id="control_panel_deliberacion"'), html.indexOf('id="control_panel_final"'));
 
   assert.match(html, /data-control-tab="deliberacion"/);
   assert.match(html, /id="boton_vista_deliberacion"/);
   assert.match(html, /id="boton_resultado_videojuego"/);
+  assert.match(juego, /id="resultado_videojuego_viewer_control"[\s\S]*id="boton_resultado_videojuego"[\s\S]*id="boton_descargar_textos"[\s\S]*id="puntuacion_nav_control"/);
+  assert.doesNotMatch(representacion, /id="boton_descargar_textos"/);
+  assert.doesNotMatch(deliberacion, /id="puntuacion_nav_control"/);
   assert.match(html, /id="boton_resultado_jurado"/);
   assert.match(html, /id="jurado_nav_control"/);
   assert.doesNotMatch(html, /id="jurado_nav_reset"/);
@@ -21,6 +27,8 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(html, /id="jurado_nav_next"[^>]*stats-nav-button--next[^>]*aria-label="Revelar siguiente resultado"/);
   assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion"\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
   assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
+  assert.match(actions, /function mostrarPuntuacionFinal\(\)[\s\S]*boton\.setAttribute\("aria-busy", "true"\)[\s\S]*socket\.emit\("mostrar_puntuacion_final"/);
+  assert.match(actions, /function actualizarEstadoPuntuacionFinalControl\(payload = \{\}\)[\s\S]*actualizarBotonResultadoVideojuegoControl\(estado_puntuacion_final_control\?\.disponible === true\)/);
   assert.match(actions, /function mostrarResultadoJurado\(\)[\s\S]*mostrar_resultado_jurado/);
   assert.match(actions, /function navegarResultadoJurado\(direccion\)[\s\S]*jurado_resultado_(?:anterior|siguiente)/);
   assert.match(actions, /numeroSlide = puntuacion_slide_step_control \+ 1/);

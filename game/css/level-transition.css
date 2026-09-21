@@ -316,6 +316,55 @@
 .level-transition.is-visible .level-transition__meter span:nth-child(5) { animation-delay: 280ms; }
 .level-transition.is-visible .level-transition__meter span:nth-child(6) { animation-delay: 350ms; }
 
+/* Espectador y Musas necesitan una lectura pausada. Sus temporizadores de
+   JavaScript mantienen la capa durante 7 s; estas animaciones prolongadas
+   evitan que el contenido se desvanezca antes de que termine ese intervalo. */
+.level-transition--extended.is-visible {
+    animation: scribLevelExtendedCurtain 7000ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.level-transition--extended.is-visible .level-transition__backdrop {
+    animation: scribLevelExtendedBackdrop 7000ms ease both;
+}
+
+.level-transition--extended.is-visible .level-transition__rays {
+    animation: scribLevelExtendedRays 7000ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.level-transition--extended.is-visible .level-transition__panel {
+    animation: scribLevelExtendedPanel 7000ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+
+.level-transition--extended.is-visible .level-transition__icon {
+    animation: scribLevelExtendedIcon 7000ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+
+.level-transition--extended.is-visible .level-transition__meter span {
+    animation: scribLevelExtendedMeter 7000ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+
+/* En Musa las barras decorativas del panel duplicaban las del rótulo y
+   atravesaban visualmente "NUEVO NIVEL" en pantallas estrechas. */
+.level-transition--muse .level-transition__panel::before,
+.level-transition--muse .level-transition__panel::after {
+    display: none;
+}
+
+.level-transition--muse .level-transition__eyebrow {
+    position: relative;
+    z-index: 2;
+    padding: .7em 1em;
+    border: 1px solid color-mix(in srgb, var(--level-accent), transparent 30%);
+    border-radius: 999px;
+    background: rgba(2, 7, 18, .82);
+    box-shadow: inset 0 0 18px var(--level-accent-soft), 0 0 18px var(--level-accent-soft);
+}
+
+.level-transition--muse .level-transition__eyebrow::before,
+.level-transition--muse .level-transition__eyebrow::after {
+    display: none;
+}
+
 /* Intérpretes conservan el texto legible: la misma señal se presenta como
    una banda superior inequívoca y nunca captura interacción. */
 .level-transition--compact {
@@ -454,6 +503,44 @@
 @keyframes scribLevelMeter {
     0% { opacity: 0.15; transform: scaleX(0.22); }
     38%, 78% { opacity: 1; transform: scaleX(1); }
+    100% { opacity: 0.2; transform: scaleX(0.45); }
+}
+
+@keyframes scribLevelExtendedCurtain {
+    0% { opacity: 0; }
+    3%, 96% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes scribLevelExtendedBackdrop {
+    0% { opacity: 0; filter: saturate(0.4); }
+    4%, 96% { opacity: 1; filter: saturate(1); }
+    100% { opacity: 0; filter: saturate(0.7); }
+}
+
+@keyframes scribLevelExtendedRays {
+    0% { opacity: 0; transform: translate(-50%, -50%) rotate(-18deg) scale(0.72); }
+    6% { opacity: 1; }
+    94% { opacity: 0.72; }
+    100% { opacity: 0; transform: translate(-50%, -50%) rotate(20deg) scale(1.16); }
+}
+
+@keyframes scribLevelExtendedPanel {
+    0% { opacity: 0; transform: translate3d(0, 7vh, 0) scale(0.72) rotateX(12deg); filter: blur(16px); }
+    4%, 95% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotateX(0); filter: blur(0); }
+    100% { opacity: 0; transform: translate3d(0, -3vh, 0) scale(1.04); filter: blur(6px); }
+}
+
+@keyframes scribLevelExtendedIcon {
+    0% { opacity: 0; transform: scale(0.22) rotate(-18deg); }
+    5% { opacity: 1; transform: scale(1.08) rotate(3deg); }
+    8%, 95% { opacity: 1; transform: scale(1) rotate(0); }
+    100% { opacity: 0; transform: scale(0.92); }
+}
+
+@keyframes scribLevelExtendedMeter {
+    0% { opacity: 0.15; transform: scaleX(0.22); }
+    5%, 95% { opacity: 1; transform: scaleX(1); }
     100% { opacity: 0.2; transform: scaleX(0.45); }
 }
 

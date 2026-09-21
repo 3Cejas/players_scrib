@@ -50,12 +50,24 @@ test("Espectador mantiene el marcador arriba y reserva sitio para ambos nombres"
   const sockets = read("game/spectator/js/socket-events.js");
 
   assert.match(js, /data-role="spectator"\]\{top:clamp\(8px,1\.4vh,18px\)/);
-  assert.match(js, /vista-partida #contenedor_espectador\{[^}]*padding-top:clamp\(154px,19vh,206px\)/);
+  assert.match(js, /vista-partida #contenedor_espectador\{[^}]*padding-top:clamp\(174px,21vh,224px\)/);
   assert.match(js, /#contenedor_espectador \.nombre\{[^}]*visibility:visible/);
   assert.match(html, /value="ESCRITXR 1"[^>]*id="nombre"/);
   assert.match(html, /value="ESCRITXR 2"[^>]*id="nombre1"/);
   assert.match(sockets, /trim\(\) \|\| "ESCRITXR 1"/);
   assert.match(sockets, /trim\(\) \|\| "ESCRITXR 2"/);
+});
+
+test("la batalla se sustituye por el aviso de votacion y la escritura reproduce su FX", () => {
+  const js = read("game/js/domains/competition.js");
+
+  assert.match(js, /socket\.on\("votacion_ventaja_estado", actualizarVotacion\)/);
+  assert.match(js, /data-voting="1"\] \.scrib-competition-scoreline/);
+  assert.match(js, /LAS MUSAS DEL EQUIPO <strong>\$\{nombreEquipo\}<\/strong> EST&Aacute;N VOTANDO/);
+  assert.match(js, /String\(equipoRaw \|\| ""\)\.trim\(\)\.toLowerCase\(\) === "j2"/);
+  assert.match(js, /payload\.tipo !== "mini_inspiracion"/);
+  assert.match(js, /rolActual !== "spectator"/);
+  assert.match(js, /new Audio\("\.\.\/audio\/GANAR%202%20SEG\.mp3"\)/);
 });
 
 test("Control integra un HUD compacto donde antes aparecía la duración de la desventaja", () => {
@@ -67,7 +79,8 @@ test("Control integra un HUD compacto donde antes aparecía la duración de la d
   assert.match(html, /control_desventaja_activa_time_j1[^>]+hidden/);
   assert.match(html, /control_desventaja_activa_time_j2[^>]+hidden/);
   assert.match(js, /data-role="control"[^}]+position:relative/);
-  assert.match(js, /data-role="control"[^}]+scrib-competition-scoreline[^}]+display:block/);
+  assert.match(js, /data-role="control"[^}]+scrib-competition-scoreline[^}]+display:grid/);
+  assert.match(js, /grid-template-columns:minmax\(58px,max-content\) minmax\(0,1fr\) minmax\(58px,max-content\)/);
   assert.match(js, /data-role="control"\] \.scrib-competition-curse\{display:none\}/);
   assert.match(js, /control-competition-slot \+ \.level-status-witnesses \.level-status-witness--disadvantage\{display:none\}/);
   assert.match(js, /data-role="control"\] \.scrib-competition-streak\{display:none\}/);

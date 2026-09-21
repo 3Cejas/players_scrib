@@ -12,6 +12,7 @@
   let estadoActual = null;
   let rolActual = "";
   let jugadorActual = null;
+  let votacionActual = null;
   let avisoCambioTimer = null;
   const DURACION_AVISO_CAMBIO_MS = 5600;
 
@@ -34,7 +35,7 @@
       body.page-players.ocultar-marcador-escritora #scrib_competition_hud,
       body.page-players.vista-calentamiento-escritor #scrib_competition_hud{display:none!important}
       .scrib-competition-hud[data-role="spectator"]{top:clamp(8px,1.4vh,18px);width:min(940px,72vw)}
-      body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(154px,19vh,206px)}
+      body.page-spectator.vista-partida #contenedor_espectador{box-sizing:border-box;padding-top:clamp(174px,21vh,224px)}
       body.page-spectator.vista-partida #contenedor_espectador .nombre{position:relative;z-index:2;display:block;min-height:1.18em;margin:0 auto clamp(12px,1.5vh,22px);opacity:1;visibility:visible}
       body.page-spectator.vista-partida #contenedor_espectador .nombre+br,
       body.page-spectator.vista-partida #contenedor_espectador .nombre+br+br{display:none}
@@ -50,16 +51,23 @@
       .scrib-competition-criterion{text-align:right;font-size:clamp(8px,.68vw,11px);font-weight:800;letter-spacing:.07em;color:#abb2cb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .scrib-competition-hud[data-role="control"] .scrib-competition-shell{padding:4px 6px;border-radius:8px;background:#050914d9}
       .scrib-competition-hud[data-role="control"] .scrib-competition-top{display:none}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-scoreline{position:relative;display:block;height:32px}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-score{position:absolute;z-index:6;top:50%;min-width:39px;height:26px;padding:0 4px;border-radius:8px;font-size:13px;background:#050914;box-sizing:border-box}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-score--1{left:3px;transform:translateY(-50%)}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-score--2{right:3px;transform:translateY(-50%)}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-score.is-leading{transform:translateY(-50%);box-shadow:0 0 13px currentColor,inset 0 0 12px #ffffff24}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-scoreline{position:relative;display:grid;grid-template-columns:minmax(58px,max-content) minmax(0,1fr) minmax(58px,max-content);gap:7px;align-items:center;height:32px}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score{position:relative;z-index:6;top:auto;min-width:58px;width:auto;height:26px;padding:0 7px;border-radius:8px;font-size:13px;background:#050914;box-sizing:border-box;transform:none}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score--1{left:auto;transform:none}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score--2{right:auto;transform:none}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-score.is-leading{transform:scale(1.03);box-shadow:0 0 13px currentColor,inset 0 0 12px #ffffff24}
       .scrib-competition-hud[data-role="control"] .scrib-competition-score.is-hit{animation:scribScoreHitControl .42s ease-out}
-      .scrib-competition-hud[data-role="control"] .scrib-competition-bar{position:absolute;left:48px;right:48px;top:50%;width:auto;height:20px;box-sizing:border-box;transform:translateY(-50%)}
+      .scrib-competition-hud[data-role="control"] .scrib-competition-bar{position:relative;left:auto;right:auto;top:auto;width:100%;height:20px;box-sizing:border-box;transform:none}
       .scrib-competition-hud[data-role="control"] .scrib-competition-center{height:25px;width:7px}
       .scrib-competition-hud[data-role="control"] .scrib-competition-curse{display:none}
       .scrib-competition-hud[data-role="control"] .scrib-competition-streak{display:none}
+      .scrib-competition-vote{display:none;position:relative;align-items:center;justify-content:center;gap:.75em;min-height:42px;padding:7px 14px;overflow:hidden;border:1px solid color-mix(in srgb,var(--vote-color,#ffe475),transparent 24%);border-radius:13px;background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--vote-color,#ffe475),transparent 76%),transparent 62%),#070b15;color:#f7fbff;font-size:clamp(12px,1.15vw,19px);font-weight:1000;letter-spacing:.09em;text-align:center;text-transform:uppercase;box-shadow:inset 0 0 22px color-mix(in srgb,var(--vote-color,#ffe475),transparent 88%),0 0 20px color-mix(in srgb,var(--vote-color,#ffe475),transparent 72%)}
+      .scrib-competition-vote::before{content:'✦';color:var(--vote-color,#ffe475);font-size:1.35em;text-shadow:0 0 13px currentColor;animation:scribVoteSpark 1s ease-in-out infinite alternate}
+      .scrib-competition-vote strong{color:var(--vote-color,#ffe475);text-shadow:0 0 12px color-mix(in srgb,var(--vote-color,#ffe475),transparent 28%)}
+      .scrib-competition-hud[data-voting="1"] .scrib-competition-scoreline,
+      .scrib-competition-hud[data-voting="1"] .scrib-competition-streak{display:none}
+      .scrib-competition-hud[data-voting="1"] .scrib-competition-vote{display:flex;animation:scribVoteEnter .48s cubic-bezier(.16,.88,.2,1) both}
+      .scrib-competition-hud[data-role="control"][data-voting="1"] .scrib-competition-vote{min-height:28px;padding:3px 8px;border-radius:7px;font-size:11px}
       .scrib-competition-hud[data-final="1"] .scrib-competition-scoreline,.scrib-competition-hud[data-final="1"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-shell{width:max-content;min-width:min(230px,88vw);margin:auto;padding:8px 16px}
       .scrib-competition-hud[data-final="1"] .scrib-competition-top{margin:0}
@@ -107,7 +115,7 @@
       .scrib-competition-change__curse{display:block;margin-top:clamp(12px,1.5vw,20px);font-size:.29em;letter-spacing:.16em;color:#f3f5ff;text-shadow:none}
       .scrib-competition-burst{position:fixed;z-index:2147483050;width:8px;height:8px;border-radius:50%;background:var(--burst-color);pointer-events:none;animation:scribBurst .75s ease-out forwards}
       @keyframes scribScoreHit{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
-      @keyframes scribScoreHitControl{0%{transform:translateY(-50%) scale(1)}40%{transform:translateY(-50%) scale(1.16)}100%{transform:translateY(-50%) scale(1)}}
+      @keyframes scribScoreHitControl{0%{transform:scale(1)}40%{transform:scale(1.16)}100%{transform:scale(1)}}
       @keyframes scribCompetitionShift{0%{filter:brightness(1)}45%{filter:brightness(1.35);box-shadow:inset 0 0 24px #fff4,0 0 18px #fff3}100%{filter:brightness(1)}}
       @keyframes scribCompetitionCross{0%{filter:brightness(1)}40%{filter:brightness(1.65);box-shadow:inset 0 0 30px #fff8,0 0 30px #ffe47599}100%{filter:brightness(1)}}
       @keyframes scribFly{0%{transform:translate(var(--x0),var(--y0)) scale(.7);opacity:0}15%{opacity:1}70%{transform:translate(var(--xm),var(--ym)) scale(1.35)}100%{transform:translate(var(--x1),var(--y1)) scale(.75);opacity:0}}
@@ -117,6 +125,8 @@
       @keyframes scribBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--bx),var(--by)) scale(0)}}
       @keyframes scribWarmupEnter{0%{opacity:0;transform:translateX(-50%) translateY(36px) scale(.92)}72%{opacity:1;transform:translateX(-50%) translateY(-4px) scale(1.015)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
       @keyframes scribWarmupSweep{0%,44%{transform:translateX(-120%)}78%,100%{transform:translateX(120%)}}
+      @keyframes scribVoteEnter{from{opacity:0;transform:scaleX(.72);filter:blur(7px)}to{opacity:1;transform:scaleX(1);filter:none}}
+      @keyframes scribVoteSpark{from{opacity:.55;transform:scale(.84)}to{opacity:1;transform:scale(1.14)}}
       @media (max-width:800px){.scrib-competition-hud{width:94vw}.scrib-competition-criterion{display:none}.scrib-competition-top{grid-template-columns:1fr auto}.scrib-competition-hud[data-role="spectator"],.scrib-competition-hud[data-role="writer"]{width:84vw}.scrib-competition-change__route{flex-direction:column}.scrib-competition-change__arrow{transform:rotate(90deg)}.scrib-competition-change__team{min-width:min(340px,72vw)}}
       @media (prefers-reduced-motion:reduce){.scrib-competition-segment,.scrib-competition-center,.scrib-competition-curse{transition:none}.scrib-competition-fly.is-flying,.scrib-competition-change,.scrib-competition-burst,.scrib-competition-warmup,.scrib-competition-warmup::after{animation-duration:.01ms!important}}
     `;
@@ -139,6 +149,7 @@
     root.dataset.active = "0";
     root.dataset.clock = "0";
     root.dataset.warmup = "0";
+    root.dataset.voting = "0";
     root.innerHTML = `
       <div class="scrib-competition-shell">
         <div class="scrib-competition-top">
@@ -161,6 +172,7 @@
           </div>
           <strong class="scrib-competition-score scrib-competition-score--2">0</strong>
         </div>
+        <div class="scrib-competition-vote" role="status" aria-live="polite"></div>
         <span class="scrib-competition-streak scrib-competition-streak--1"></span>
         <span class="scrib-competition-streak scrib-competition-streak--2"></span>
       </div>`;
@@ -174,6 +186,7 @@
       bar: root.querySelector(".scrib-competition-bar"),
       segments: { 1: root.querySelector(".scrib-competition-segment--1"), 2: root.querySelector(".scrib-competition-segment--2") },
       scores: { 1: root.querySelector(".scrib-competition-score--1"), 2: root.querySelector(".scrib-competition-score--2") },
+      vote: root.querySelector(".scrib-competition-vote"),
       streaks: { 1: root.querySelector(".scrib-competition-streak--1"), 2: root.querySelector(".scrib-competition-streak--2") },
       curse: root.querySelector(".scrib-competition-curse")
     };
@@ -339,6 +352,18 @@
     } catch (_) {}
   }
 
+  function reproducirFxInspiracionEscritura(payload = {}) {
+    if (rolActual !== "spectator") return;
+    if (payload.tipo !== "mini_inspiracion" || Number(payload.delta) <= 0 || payload.animar === false) return;
+    try {
+      const audio = new Audio("../audio/GANAR%202%20SEG.mp3");
+      audio.preload = "auto";
+      audio.volume = 0.9;
+      const promesa = audio.play();
+      if (promesa && typeof promesa.catch === "function") promesa.catch(() => {});
+    } catch (_) {}
+  }
+
   function lanzarParticulas(rect, player) {
     const color = player === 1 ? "#46f0ff" : "#ff5f67";
     for (let i = 0; i < 12; i += 1) {
@@ -406,6 +431,7 @@
     ui.scores[player].classList.add("is-hit");
     const racha = Math.max(0, Number(payload.racha) || 0);
     sonidoPunto(player, racha, payload.delta);
+    reproducirFxInspiracionEscritura(payload);
     if (racha >= 3) {
       lanzarParticulas(destino, player);
       if (racha % 3 === 0 && typeof global.confetti === "function") {
@@ -452,6 +478,25 @@
     if (ui && ui.curse) ui.curse.textContent = "";
   }
 
+  function actualizarVotacion(payload = {}) {
+    votacionActual = payload && typeof payload === "object" ? { ...payload } : null;
+    if (!ui) ui = crearUi(rolActual);
+    const activa = Boolean(votacionActual && votacionActual.activa === true);
+    const equipoRaw = votacionActual && (votacionActual.equipo ?? votacionActual.team);
+    const equipo = Number(equipoRaw) === 2 || String(equipoRaw || "").trim().toLowerCase() === "j2" ? 2 : 1;
+    ui.root.dataset.voting = activa ? "1" : "0";
+    if (!ui.vote) return;
+    if (!activa) {
+      ui.vote.textContent = "";
+      ui.vote.removeAttribute("style");
+      return;
+    }
+    const color = equipo === 2 ? "#ff6672" : "#46f0ff";
+    const nombreEquipo = equipo === 2 ? "ROJO" : "AZUL";
+    ui.vote.style.setProperty("--vote-color", color);
+    ui.vote.innerHTML = `LAS MUSAS DEL EQUIPO <strong>${nombreEquipo}</strong> EST&Aacute;N VOTANDO`;
+  }
+
   function conectar(socket, opciones = {}) {
     if (!socket || typeof socket.on !== "function" || conexiones.has(socket)) return;
     conexiones.add(socket);
@@ -470,6 +515,7 @@
     socket.on("competicion_cambio_lider", animarCambioLider);
     socket.on("reloj_partida_estado", actualizarReloj);
     socket.on("calentamiento_previo_estado", actualizarCalentamiento);
+    socket.on("votacion_ventaja_estado", actualizarVotacion);
     socket.on("desventaja_ronda_limpiar", limpiarDesventaja);
   }
 

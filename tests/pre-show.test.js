@@ -148,7 +148,7 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.match(renderer, /musa\.textContent = mensaje\.nombre_musa/);
   assert.match(renderer, /texto\.textContent = mensaje\.texto/);
   assert.doesNotMatch(renderer, /innerHTML/);
-  assert.match(state, /teleprompter_estado && teleprompter_estado\.visible/);
+  assert.match(state, /teleprompter_estado && \(teleprompter_estado\.visible \|\| teleprompter_estado\.preparing\)/);
   assert.match(html, /id="teleprompter_preparing"[^>]*hidden[^>]*aria-hidden="true"/);
   assert.match(state, /teleprompter_estado\.preparing && !teleprompter_estado\.visible/);
   assert.match(css, /\.teleprompter-preparing\.activo\s*\{[\s\S]*display: grid;/);

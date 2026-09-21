@@ -1039,10 +1039,10 @@ body.musa-borde-fulgor::before {
 
 .musa-texto-lineas span {
     display: flex;
-    height: calc(var(--musa-text-size) * 1.28);
+    min-height: calc(var(--musa-text-size) * 1.28);
     align-items: flex-start;
     justify-content: center;
-    padding-top: .45em;
+    padding-top: .12em;
     box-sizing: border-box;
     opacity: .82;
 }
@@ -3358,6 +3358,112 @@ th{
     }
 }
 
+/* Autoridad final de encaje: el texto puede crecer en vertical, pero nunca
+   ensancha la página ni provoca un desplazamiento lateral del rol de musa. */
+html,
+body,
+#contenedor,
+.jugador,
+.musa-texto-card,
+.musa-texto-card__viewport,
+.musa-texto-card .textarea,
+.notificacion {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#contenedor,
+.jugador,
+.musa-texto-card,
+.musa-texto-card__viewport,
+.musa-texto-card .textarea {
+    overflow-x: hidden !important;
+}
+
+.musa-texto-card .textarea {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+body.equipo-azul.musa-texto-rival .musa-texto-card .textarea {
+    color: #ffc8cd !important;
+    text-shadow: 0 0 .32rem rgba(255, 95, 103, .34);
+}
+
+body.equipo-rojo.musa-texto-rival .musa-texto-card .textarea {
+    color: #c3faff !important;
+    text-shadow: 0 0 .32rem rgba(70, 239, 255, .34);
+}
+
+.notificacion {
+    table-layout: fixed;
+    padding: clamp(18px, 4vw, 34px);
+}
+
+.notificacion th {
+    width: 100%;
+    min-width: 0;
+}
+
+.notificacion #tarea {
+    max-width: 24em;
+    margin: 0 auto clamp(14px, 3vw, 22px);
+    color: var(--equipo-texto-suave, #c3faff);
+    font-size: clamp(20px, 5.4vw, 42px);
+    line-height: 1.24;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    text-shadow: 0 0 .48rem color-mix(in srgb, var(--equipo-color, #46efff), transparent 58%);
+}
+
+.notificacion #palabra {
+    display: block;
+    width: min(100%, 640px);
+    min-height: clamp(58px, 12vw, 82px);
+    margin: 0 auto;
+    padding: .72em 1em;
+    box-sizing: border-box;
+    border: 2px solid color-mix(in srgb, var(--equipo-color, #46efff), white 18%);
+    border-radius: clamp(12px, 2.8vw, 22px);
+    outline: none;
+    background: rgba(1, 7, 14, .94);
+    color: var(--equipo-texto-suave, #c3faff) !important;
+    font: 700 clamp(20px, 5.2vw, 38px)/1.2 "VT323", monospace;
+    text-align: center;
+    box-shadow: inset 0 0 22px color-mix(in srgb, var(--equipo-color, #46efff), transparent 90%);
+}
+
+.notificacion #palabra:focus {
+    border-color: var(--equipo-color, #46efff);
+    box-shadow:
+        inset 0 0 24px color-mix(in srgb, var(--equipo-color, #46efff), transparent 86%),
+        0 0 24px color-mix(in srgb, var(--equipo-color, #46efff), transparent 54%);
+}
+
+.notificacion #progressButton {
+    width: min(100%, 640px);
+    min-height: clamp(58px, 11vw, 76px);
+    margin-inline: auto;
+    border-color: color-mix(in srgb, var(--equipo-color, #46efff), white 20%);
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--equipo-color, #46efff), #08111c 38%),
+        rgba(2, 8, 16, .98));
+    color: #f6fdff;
+    text-shadow: 0 0 .5rem var(--equipo-color, #46efff);
+}
+
+.musa-envio-confirmado {
+    color: #8dffb3;
+    text-shadow: 0 0 .65rem rgba(97, 255, 158, .75);
+}
+
+.musa-envio-error {
+    color: #ff8292;
+    text-shadow: 0 0 .65rem rgba(255, 77, 106, .72);
+}
+
 @media (max-width: 520px) {
     .metadatos-grid--cabecera {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3701,6 +3807,117 @@ body.partida-finalizada-musa .niveles {
     display: flex;
     animation: votacionResultadoReveal 0.5s ease;
     pointer-events: auto;
+}
+
+.votacion-ventaja-modal.is-voted .votacion-ventaja-modal-card {
+    animation: votoSelladoCard 720ms cubic-bezier(.16, .9, .2, 1) both;
+    border-color: #ffe475;
+    box-shadow: 0 0 0 2px #000, 0 0 48px rgba(255, 228, 117, .45), inset 0 0 34px rgba(255, 228, 117, .08);
+}
+
+.votacion-ventaja-modal.is-voted .votacion-ventaja-modal-kicker {
+    color: #ffe475;
+}
+
+.votacion-ventaja-modal-btn.is-selected {
+    transform: translateY(-5px) scale(1.035);
+    opacity: 1 !important;
+    filter: brightness(1.35);
+    box-shadow: 0 0 30px var(--opcion-color), inset 0 0 28px color-mix(in srgb, var(--opcion-color), transparent 78%);
+}
+
+.votacion-ventaja-modal.is-voted .votacion-ventaja-modal-btn:not(.is-selected) {
+    opacity: .28;
+    filter: grayscale(.65);
+}
+
+@keyframes votoSelladoCard {
+    0% { transform: scale(.94) rotateX(8deg); filter: blur(4px); }
+    55% { transform: scale(1.025) rotateX(0); filter: none; }
+    100% { transform: scale(1); filter: none; }
+}
+
+body.votacion-ventaja-activa-musa .notificacion {
+    display: none !important;
+}
+
+body.votacion-ventaja-activa-musa .votacion-ventaja-inline.activa {
+    animation: votacionResultadoReveal 520ms cubic-bezier(.16, .88, .2, 1) both;
+}
+
+.frase-final-completada-musa {
+    --aviso-final-color: #46efff;
+    position: fixed;
+    z-index: 2147482500;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: clamp(12px, 3vw, 24px);
+    padding: clamp(24px, 7vw, 72px);
+    overflow: hidden;
+    color: #f7fbff;
+    text-align: center;
+    background:
+        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--aviso-final-color), transparent 65%), transparent 38%),
+        rgba(1, 5, 13, .96);
+    opacity: 0;
+    transform: scale(1.06);
+    pointer-events: none;
+}
+
+.frase-final-completada-musa--2 { --aviso-final-color: #ff5f67; }
+
+.frase-final-completada-musa.is-visible {
+    animation: fraseFinalMusaEntrada 720ms cubic-bezier(.16, .9, .2, 1) forwards;
+}
+
+.frase-final-completada-musa.is-leaving {
+    animation: fraseFinalMusaSalida 620ms cubic-bezier(.4, 0, .8, .2) forwards;
+}
+
+.frase-final-completada-musa__eyebrow,
+.frase-final-completada-musa__copy {
+    color: color-mix(in srgb, var(--aviso-final-color), white 22%);
+    font-size: clamp(12px, 3vw, 22px);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+}
+
+.frase-final-completada-musa strong {
+    max-width: 92vw;
+    color: var(--aviso-final-color);
+    font-size: clamp(42px, 13vw, 112px);
+    line-height: .98;
+    overflow-wrap: anywhere;
+    text-shadow: .045em .045em 0 #ff334f, 0 0 .5em var(--aviso-final-color);
+}
+
+.frase-final-completada-musa i {
+    position: absolute;
+    width: min(68vw, 620px);
+    aspect-ratio: 1;
+    border: 2px solid color-mix(in srgb, var(--aviso-final-color), transparent 55%);
+    border-radius: 50%;
+    animation: fraseFinalMusaOnda 2.2s ease-out infinite;
+}
+
+.frase-final-completada-musa i:nth-of-type(2) { animation-delay: .55s; }
+.frase-final-completada-musa i:nth-of-type(3) { animation-delay: 1.1s; }
+
+@keyframes fraseFinalMusaEntrada {
+    from { opacity: 0; transform: scale(1.06); filter: blur(12px); }
+    to { opacity: 1; transform: scale(1); filter: none; }
+}
+
+@keyframes fraseFinalMusaSalida {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(.94); filter: blur(10px); }
+}
+
+@keyframes fraseFinalMusaOnda {
+    from { opacity: .75; transform: scale(.32); }
+    to { opacity: 0; transform: scale(1.28); }
 }
 
 .votacion-ventaja-modal-card {
@@ -7534,6 +7751,21 @@ body.musa-vista-cambiando #contenedor {
     animation-duration: 440ms;
 }
 
+/* Última palabra de encaje para navegadores móviles: incluso desplegado, el
+   texto crece hacia abajo y nunca convierte el documento en un lienzo ancho. */
+html body #contenedor,
+html body #contenedor > .jugador,
+html body .musa-texto-card,
+html body .musa-texto-card__viewport,
+html body .musa-texto-card.is-expanded .musa-texto-card__viewport,
+html body .musa-texto-card .textarea,
+html body .musa-texto-card.is-expanded .textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden !important;
+}
+
 @keyframes musaViewCoreIn {
     from { opacity: 0; transform: translate3d(0, 10px, 0) scale(.84); }
     to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
@@ -7623,4 +7855,16 @@ body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-
         min-height: 126px !important;
         font-size: 0 !important;
     }
+}
+
+html body #contenedor,
+html body #contenedor > .jugador,
+html body .musa-texto-card,
+html body .musa-texto-card__viewport,
+html body .musa-texto-card.is-expanded .musa-texto-card__viewport,
+html body .musa-texto-card .textarea,
+html body .musa-texto-card.is-expanded .textarea {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden !important;
 }

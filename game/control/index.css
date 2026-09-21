@@ -8517,8 +8517,85 @@ table.default {
 
 #control_panel_juego #boton_fin_partida[hidden],
 #control_panel_juego #boton_resultado_videojuego[hidden],
+#control_panel_juego #boton_descargar_textos[hidden],
+#control_panel_juego #resultado_videojuego_viewer_control[hidden],
 #control_panel_juego #boton_pausar_reanudar[hidden] {
     display: none !important;
+}
+
+/* Resultado del videojuego: acciones y navegación permanecen juntas en Juego. */
+#panel_controles #control_panel_juego:not(.is-collapsed) > .resultado-videojuego-viewer-control {
+    display: grid !important;
+    flex: 1 0 100%;
+    min-width: 0;
+    gap: clamp(0.45rem, 0.7vw, 0.72rem);
+    padding: clamp(0.58rem, 0.82vw, 0.82rem);
+    border: 1px solid rgba(255, 214, 91, 0.58);
+    border-radius: 0.82rem;
+    box-sizing: border-box;
+    background:
+        radial-gradient(circle at 10% 0%, rgba(69, 243, 255, 0.14), transparent 38%),
+        radial-gradient(circle at 90% 100%, rgba(255, 91, 111, 0.14), transparent 42%),
+        linear-gradient(120deg, rgba(6, 25, 36, 0.97), rgba(19, 15, 27, 0.98) 52%, rgba(45, 16, 23, 0.96));
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 1.2rem rgba(255, 208, 73, 0.16);
+    animation: resultadoVideojuegoControlReveal 420ms cubic-bezier(.2, .85, .2, 1) both;
+}
+
+.resultado-videojuego-viewer-control__eyebrow {
+    color: #ffe798;
+    font: 700 clamp(0.5rem, 0.68vw, 0.72rem)/1.2 "Retro-gaming", "Courier New", monospace;
+    letter-spacing: 0.12em;
+    text-align: center;
+    text-shadow: 0 0 0.65rem rgba(255, 218, 92, 0.45);
+}
+
+.resultado-videojuego-viewer-control__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.4rem, 0.68vw, 0.68rem);
+    min-width: 0;
+}
+
+#panel_controles .resultado-videojuego-viewer-control__actions > .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.8rem;
+    margin: 0;
+}
+
+#panel_controles .resultado-videojuego-nav-control {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    grid-template-columns: minmax(2rem, 2.55rem) minmax(0, 1fr) minmax(2rem, 2.55rem);
+    overflow: hidden;
+}
+
+.resultado-videojuego-viewer-control[data-active="1"] {
+    border-color: rgba(98, 245, 255, 0.75) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.055),
+        0 0 1.35rem rgba(69, 243, 255, 0.2),
+        0 0 1.2rem rgba(255, 91, 111, 0.14) !important;
+}
+
+@keyframes resultadoVideojuegoControlReveal {
+    from { opacity: 0; transform: translateY(0.6rem) scale(0.985); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 760px) {
+    .resultado-videojuego-viewer-control__actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #panel_controles #control_panel_juego:not(.is-collapsed) > .resultado-videojuego-viewer-control {
+        animation: none;
+    }
 }
 
 .level-card-current,

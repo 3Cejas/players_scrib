@@ -24,6 +24,7 @@ let duracion;
 let texto_guardado = "";
 let texto_restaurado_desde_servidor = false;
 let texto_html_restaurado_desde_servidor = "";
+const BORRADOR_ESCRITORA_STORAGE_KEY = `scrib:writer:draft:v2:${playerNumber || "x"}`;
 let pararEscritura = false;
 let inspirar;
 let enviar_palabra;
@@ -157,34 +158,61 @@ function restaurarTextoGuardadoEnEditor() {
     texto.innerText = normalizarSaltosTextoGuardado(texto_guardado);
 }
 
+function guardarBorradorLocalEscritora(payload = null) {
+    try {
+        const datos = payload && typeof payload === "object"
+            ? payload
+            : {
+                text: texto ? texto.innerHTML : "",
+                texto_guardado: texto ? normalizarSaltosTextoGuardado(obtenerTextoPlanoConSaltos(texto)) : "",
+                points: puntos ? puntos.innerHTML : ""
+            };
+        window.sessionStorage.setItem(BORRADOR_ESCRITORA_STORAGE_KEY, JSON.stringify({
+            ...datos,
+            saved_at: Date.now()
+        }));
+    } catch (_error) {}
+}
+
+function cargarBorradorLocalEscritora() {
+    try {
+        const raw = window.sessionStorage.getItem(BORRADOR_ESCRITORA_STORAGE_KEY);
+        if (!raw) return null;
+        const datos = JSON.parse(raw);
+        if (!datos || typeof datos !== "object") return null;
+        const html = typeof datos.text === "string" ? datos.text : "";
+        const plano = typeof datos.texto_guardado === "string" ? datos.texto_guardado : "";
+        return html.trim() || plano.trim() ? datos : null;
+    } catch (_error) {
+        return null;
+    }
+}
+
+function limpiarBorradorLocalEscritora() {
+    try {
+        window.sessionStorage.removeItem(BORRADOR_ESCRITORA_STORAGE_KEY);
+    } catch (_error) {}
+}
+
 function colocarCursorAlFinalEditor() {
     if (!texto) return;
-
+    try {
+        texto.focus({ preventScroll: true });
+    } catch (_error) {
+        texto.focus();
+    }
     const selection = window.getSelection();
-    if (!selection) return;
-
-    const range = document.createRange();
-    let lastNode = texto.lastChild;
-
-    while (lastNode && lastNode.nodeType !== 3 && lastNode.lastChild) {
-        lastNode = lastNode.lastChild;
+    if (selection) {
+        const range = document.createRange();
+        range.selectNodeContents(texto);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
-
-    if (lastNode && lastNode.nodeType === 3) {
-        const offset = lastNode.textContent ? lastNode.textContent.length : 0;
-        range.setStart(lastNode, offset);
-        range.setEnd(lastNode, offset);
-    } else if (texto.lastChild) {
-        range.setStartAfter(texto.lastChild);
-        range.setEndAfter(texto.lastChild);
-    } else {
-        range.setStart(texto, 0);
-        range.setEnd(texto, 0);
-    }
-
-    selection.removeAllRanges();
-    selection.addRange(range);
-    texto.scrollTo(0, texto.scrollHeight);
+    texto.scrollTo({ top: texto.scrollHeight, left: 0, behavior: "auto" });
+    requestAnimationFrame(() => {
+        texto.scrollTo({ top: texto.scrollHeight, left: 0, behavior: "auto" });
+    });
 }
 const normalizarNombreMusaFeedback = (valor) => {
     if (typeof valor !== "string") return "";
@@ -1327,6 +1355,7 @@ let post_inicio_pendiente_escritora = null;
 let raf_ajuste_viewport_escritora = null;
 let timeout_ajuste_viewport_escritora = null;
 let resize_observer_fit_viewport_escritora = null;
+let mutation_observer_fit_viewport_escritora = null;
 let cursor_pluma_atributos_inicializado = false;
 let cursor_pluma_juego_escritora = null;
 let caret_neon_juego_escritora = null;
@@ -1362,24 +1391,32 @@ const resetAjusteViewportEscritora = () => {
 
 const ajustarViewportEscritora = () => {
     if (!players_fit_root) return;
-    if (vista_calentamiento_escritor) {
-        resetAjusteViewportEscritora();
-        return;
-    }
-
     players_fit_root.style.transform = "none";
     const viewportW = Math.max(window.innerWidth || 0, 1);
     const viewportH = Math.max(window.innerHeight || 0, 1);
-    const anchoNatural = Math.max(Math.ceil(players_fit_root.scrollWidth || 0), 1);
-    const altoNatural = Math.max(Math.ceil(players_fit_root.scrollHeight || 0), 1);
-
+    const objetivos = [
+        players_fit_root,
+        document.getElementById("contenedor"),
+        document.getElementById("scrib_competition_hud")
+    ].filter((nodo) => nodo && nodo.getClientRects().length > 0);
+    let minX = 0;
+    let minY = 0;
+    let maxX = viewportW;
+    let maxY = viewportH;
+    objetivos.forEach((nodo) => {
+        const rect = nodo.getBoundingClientRect();
+        minX = Math.min(minX, rect.left);
+        minY = Math.min(minY, rect.top);
+        maxX = Math.max(maxX, rect.left + Math.max(rect.width, nodo.scrollWidth || 0));
+        maxY = Math.max(maxY, rect.top + Math.max(rect.height, nodo.scrollHeight || 0));
+    });
+    const anchoNatural = Math.max(1, maxX - minX);
+    const altoNatural = Math.max(1, maxY - minY);
     let escala = Math.min(1, viewportW / anchoNatural, viewportH / altoNatural);
-    if (!Number.isFinite(escala) || escala <= 0) {
-        escala = 1;
-    }
-
-    const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5);
-    players_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, 0, 0) scale(${escala.toFixed(4)})`;
+    if (!Number.isFinite(escala) || escala <= 0) escala = 1;
+    const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5) - (minX * escala);
+    const offsetY = Math.max(0, -minY * escala);
+    players_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${escala.toFixed(4)})`;
 };
 
 const programarAjusteViewportEscritora = () => {
@@ -1399,12 +1436,6 @@ const iniciarAjusteViewportEscritora = () => {
         document.body.style.overflow = "hidden";
     }
     if (!players_fit_root) return;
-    if (!resize_observer_fit_viewport_escritora && typeof ResizeObserver === "function") {
-        resize_observer_fit_viewport_escritora = new ResizeObserver(() => {
-            programarAjusteViewportEscritora();
-        });
-        resize_observer_fit_viewport_escritora.observe(players_fit_root);
-    }
     programarAjusteViewportEscritora();
     if (timeout_ajuste_viewport_escritora) {
         clearTimeout(timeout_ajuste_viewport_escritora);
@@ -1413,6 +1444,28 @@ const iniciarAjusteViewportEscritora = () => {
         timeout_ajuste_viewport_escritora = null;
         programarAjusteViewportEscritora();
     }, 120);
+    if (typeof ResizeObserver === "function" && !resize_observer_fit_viewport_escritora) {
+        resize_observer_fit_viewport_escritora = new ResizeObserver(programarAjusteViewportEscritora);
+        [players_fit_root, document.getElementById("contenedor")]
+            .filter(Boolean)
+            .forEach((nodo) => resize_observer_fit_viewport_escritora.observe(nodo));
+    }
+    if (typeof MutationObserver === "function" && !mutation_observer_fit_viewport_escritora) {
+        mutation_observer_fit_viewport_escritora = new MutationObserver((registros) => {
+            if (registros.some((registro) => registro.target !== players_fit_root)) {
+                programarAjusteViewportEscritora();
+            }
+        });
+        mutation_observer_fit_viewport_escritora.observe(players_fit_root, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: ["class", "hidden", "aria-hidden"]
+        });
+    }
+    window.addEventListener("resize", programarAjusteViewportEscritora, { passive: true });
+    document.addEventListener("fullscreenchange", programarAjusteViewportEscritora);
 };
 
 const esElementoVisible = (elemento) => {
@@ -3137,6 +3190,13 @@ function obtenerObjetivosPalabraActual() {
     return [];
 }
 
+function normalizarComparacionInspiracion(valor) {
+    const texto = String(valor || "").trim().toLocaleLowerCase("es-ES");
+    return typeof texto.normalize === "function"
+        ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        : texto;
+}
+
 function escaparRegex(valor) {
     return String(valor).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -3146,9 +3206,9 @@ function esObjetivoMultipalabra(objetivo) {
 }
 
 function crearRegexObjetivoMultipalabra(objetivo) {
-    if (!esObjetivoMultipalabra(objetivo)) return null;
-    const partes = String(objetivo).trim().split(/\s+/).map(escaparRegex);
-    if (partes.length < 2) return null;
+    const objetivoNormalizado = normalizarComparacionInspiracion(objetivo);
+    if (!objetivoNormalizado) return null;
+    const partes = objetivoNormalizado.split(/\s+/).map(escaparRegex);
     const cuerpo = partes.join("\\s+");
     const separador = `[^${PATRON_CARACTER_PALABRA}]`;
     return new RegExp(`(^|${separador})(${cuerpo})(?=$|${separador})`, "gi");
@@ -3158,9 +3218,12 @@ function buscarCoincidenciasMultipalabra(textoFuente, objetivo) {
     if (typeof textoFuente !== "string") return [];
     const regex = crearRegexObjetivoMultipalabra(objetivo);
     if (!regex) return [];
+    const fuenteNormalizada = typeof textoFuente.normalize === "function"
+        ? textoFuente.toLocaleLowerCase("es-ES").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        : textoFuente.toLocaleLowerCase("es-ES");
     const coincidencias = [];
     let match;
-    while ((match = regex.exec(textoFuente)) !== null) {
+    while ((match = regex.exec(fuenteNormalizada)) !== null) {
         const prefijo = match[1] || "";
         const contenido = match[2] || "";
         const inicio = match.index + prefijo.length;
@@ -3175,7 +3238,6 @@ function buscarCoincidenciasMultipalabra(textoFuente, objetivo) {
 function prepararDeteccionMultipalabraAsignada() {
     const textoBase = texto?.textContent || "";
     estadoObjetivosMultipalabra = obtenerObjetivosPalabraActual()
-        .filter(esObjetivoMultipalabra)
         .map((objetivo) => ({
             objetivo,
             ocurrenciasBase: buscarCoincidenciasMultipalabra(textoBase, objetivo).length

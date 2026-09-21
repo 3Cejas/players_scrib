@@ -244,10 +244,10 @@ socket.on('modo_actual', (data) => {
     setNivelesDesactivados(false);
     if (siguiente_modo === "palabras prohibidas") {
         cambiar_jugadores(true);
-
     } else {
         cambiar_jugadores(false);
     }
+    document.body?.classList.toggle("musa-texto-rival", siguiente_modo === "palabras prohibidas");
     modo_actual = siguiente_modo;
     window.__scribModoActualMusaPreview = modo_actual;
     niveles_bloqueados = false;
@@ -258,7 +258,7 @@ socket.on('modo_actual', (data) => {
     } else if (!modo_actual) {
         detenerProgresoNivelMusa(true);
     }
-    if(sincro == 1 || votando == true){
+    if(sincro == 1 || votando == true || votacion_ventaja_activa === true){
 
     }
     else{
@@ -309,7 +309,8 @@ socket.on('dar_nombre', (nombre) => {
 if (elegir_ventaja) {
     socket.on(elegir_ventaja, (data = {}) => {
         cambiar_jugadores(false);
-        texto1.style.color = "white";
+        document.body?.classList.remove("musa-texto-rival");
+        texto1.style.removeProperty("color");
         const overlay = getEl("overlay");
         if (overlay && overlay.style.display !== "none") {
             if (typeof desactivarPantalla === "function") {
@@ -330,6 +331,7 @@ if (elegir_ventaja) {
         votacion_ventaja_opciones = opciones.map((opcion) => opcion.emoji);
         votacion_ventaja_votos = inicializarVotosVentajaEquilibrado(votacion_ventaja_opciones);
         aplicarColorTemporizadorVotacionVentaja(votacion_ventaja_equipo);
+        establecerEstadoVotacionInterfazMusa(true, votacion_ventaja_equipo);
         sincronizarTemporizadorVotacionVentaja(data);
         renderizarModalVotacionVentaja(opciones);
         actualizarPiesVotacionVentaja();
@@ -339,11 +341,7 @@ if (elegir_ventaja) {
             mostrarModalVotacionVentaja();
             ocultarInlineVotacionVentaja();
         }
-        enviarPalabra_boton.style.display = "none";
-        campo_palabra.style.display = "none";
-        recordatorio.innerHTML = "";
-        notificacion.style.display = "block";
-        animateCSS(".notificacion", "flash");
+        establecerEstadoVotacionInterfazMusa(true, votacion_ventaja_equipo);
     });
 }
 
@@ -371,7 +369,7 @@ socket.on('votacion_ventaja_estado', (data = {}) => {
     if (data.activa === true) {
         votacion_ventaja_activa = true;
         sincronizarTemporizadorVotacionVentaja(data);
-        votando = Boolean(esEquipoActual);
+        establecerEstadoVotacionInterfazMusa(true, equipo, { yaVoto: votacion_ventaja_ya_voto });
         if (esEquipoActual) {
             votacion_ventaja_participo = true;
             pedirNombreMusa(obtenerEquipoObjetivoVotacionVentaja());
@@ -387,7 +385,7 @@ socket.on('votacion_ventaja_estado', (data = {}) => {
             }
         } else if (!votacion_ventaja_participo) {
             ocultarModalVotacionVentaja();
-            ocultarInlineVotacionVentaja();
+            mostrarInlineVotacionVentaja();
         }
         return;
     }
@@ -1275,6 +1273,10 @@ socket.on("fin", (data) => {
     invalidarContextoCalentamientoMusa();
 });
 
+socket.on("frase_final_completada", (payload = {}) => {
+    mostrarFraseFinalCompletadaMusa(payload);
+});
+
 function calcularFontSizeCountdownMusa(textoCountdown, objetivoVw) {
     const caracteres = Math.max(1, Array.from(String(textoCountdown || "").trim()).length);
     const limitePorAncho = 88 / (caracteres * 0.7);
@@ -1537,13 +1539,10 @@ socket.on("pedir_inspiracion_musa", juego => {
     }
     const es_prohibidas = juego.modo_actual === "palabras prohibidas";
     cambiar_jugadores(es_prohibidas);
-    if (es_prohibidas) {
-        texto1.style.color = "red";
-    } else {
-        texto1.style.removeProperty("color");
-    }
+    document.body?.classList.toggle("musa-texto-rival", es_prohibidas);
+    texto1.style.removeProperty("color");
     actualizarNiveles(juego.modo_actual);
-    if(sincro == 1 || votando == true){
+    if(sincro == 1 || votando == true || votacion_ventaja_activa === true){
         return;
     }
     pedir_inspiracion(juego);
@@ -1557,6 +1556,10 @@ function convertirASegundos(tiempo) {
   }
 
 function pedir_inspiracion(juego){
+    if (votacion_ventaja_activa || votando) {
+        establecerEstadoVotacionInterfazMusa(true, votacion_ventaja_equipo);
+        return;
+    }
     if (!juego || juego.modo_actual === "frase final") {
         modo_actual = juego && juego.modo_actual ? juego.modo_actual : "";
         window.__scribModoActualMusaPreview = modo_actual;
@@ -1589,7 +1592,8 @@ function pedir_inspiracion(juego){
     if(juego.modo_actual == "palabras prohibidas"){
         console.log("REVERTIR", true);
         cambiar_jugadores(true);
-        texto1.style.color = "red";
+        document.body?.classList.add("musa-texto-rival");
+        texto1.style.removeProperty("color");
         tarea.innerHTML = "<span style='color: pink;'>Incordia</span> a mi oponente, " + etiquetaMusa + ", con una palabra que no pueda usar:";
     } 
 
