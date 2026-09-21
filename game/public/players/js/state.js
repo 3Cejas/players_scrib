@@ -1870,9 +1870,8 @@ function resumenEquipoMusasPostgameMusa(playerId) {
         const stats = entrada && entrada.stats && typeof entrada.stats === "object" ? entrada.stats : {};
         acumulado.enviadas += Math.max(0, Number(stats.enviadas) || 0);
         acumulado.introducidas += Math.max(0, Number(stats.introducidas) || 0);
-        acumulado.impacto += Number(stats.impacto_neto) || 0;
         return acumulado;
-    }, { enviadas: 0, introducidas: 0, impacto: 0 });
+    }, { enviadas: 0, introducidas: 0 });
     resumen.musas = musas.length;
     resumen.efectividad = resumen.enviadas > 0
         ? Math.round((resumen.introducidas / resumen.enviadas) * 100)
@@ -1975,7 +1974,6 @@ function pintarTextoPostgameMusa(playerId) {
     valorPostgameMusa("musa_postgame_team_sent", resumenMusas.enviadas);
     valorPostgameMusa("musa_postgame_team_used", resumenMusas.introducidas);
     valorPostgameMusa("musa_postgame_team_effectiveness", `${resumenMusas.efectividad}%`);
-    valorPostgameMusa("musa_postgame_team_impact", `${resumenMusas.impacto > 0 ? "+" : ""}${resumenMusas.impacto}s`);
     pintarResultadosEquipoPostgameMusa(id);
     if (musa_postgame_pdf_j1) musa_postgame_pdf_j1.hidden = id !== 1;
     if (musa_postgame_pdf_j2) musa_postgame_pdf_j2.hidden = id !== 2;
@@ -2067,14 +2065,10 @@ function pintarPostgameMusa() {
     valorPostgameMusa("musa_postgame_introducidas", introducidas);
     valorPostgameMusa("musa_postgame_efectividad_ring", `${efectividad}%`);
     valorPostgameMusa("musa_postgame_veredicto", textoVeredictoPostgameMusa(efectividad, introducidas));
-    const impacto = Number(stats.impacto_neto) || 0;
-    valorPostgameMusa("musa_postgame_impacto", `${impacto > 0 ? "+" : ""}${impacto}s`);
     valorPostgameMusa("musa_postgame_bonus", Math.max(0, Number(stats.bonus) || 0));
     valorPostgameMusa("musa_postgame_malditas", Math.max(0, Number(stats.malditas) || 0));
     valorPostgameMusa("musa_postgame_letras", Math.max(0, Number(stats.letras) || 0));
     valorPostgameMusa("musa_postgame_superbonus", Math.max(0, Number(stats.superbonus) || 0));
-    valorPostgameMusa("musa_postgame_impacto_positivo", `+${Math.max(0, Number(stats.impacto_positivo) || 0)}s`);
-    valorPostgameMusa("musa_postgame_impacto_negativo", `-${Math.max(0, Number(stats.impacto_negativo) || 0)}s`);
     const totalTipos = Math.max(1, (Number(stats.bonus) || 0) + (Number(stats.malditas) || 0) + (Number(stats.letras) || 0));
     fijarBarraPostgameMusa("musa_postgame_bar_bonus", ((Number(stats.bonus) || 0) / totalTipos) * 100);
     fijarBarraPostgameMusa("musa_postgame_bar_malditas", ((Number(stats.malditas) || 0) / totalTipos) * 100);

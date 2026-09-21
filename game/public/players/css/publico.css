@@ -5613,8 +5613,7 @@ body.musa-postgame-activo {
 .musa-postgame__metric--sent { --metric-color: #49e8ff !important; }
 .musa-postgame__metric--unique,
 .musa-postgame__metric--effectiveness { --metric-color: #ffe06b !important; }
-.musa-postgame__metric--pace,
-.musa-postgame__metric--impact { --metric-color: #ff8f62 !important; }
+.musa-postgame__metric--pace { --metric-color: #ff8f62 !important; }
 .musa-postgame__metric--inspiration { --metric-color: #c58aff !important; }
 .musa-postgame__metric--muses { --metric-color: #65f2a7 !important; }
 .musa-postgame__metric--used { --metric-color: var(--postgame-reader-color) !important; }
@@ -5630,7 +5629,7 @@ body.musa-postgame-activo {
 .musa-postgame__muse-team-heading > span { font-size: 1.6rem; filter: drop-shadow(0 0 10px #ffe47b); }
 .musa-postgame__muse-team-heading small { color: #ffe47b; font: 700 .52rem/1.2 "Retro-gaming", monospace; letter-spacing: .12em; }
 .musa-postgame__muse-team-heading h4 { margin: 5px 0 0; color: #fff; font-size: clamp(.8rem, 3vw, 1.1rem); }
-.musa-postgame__muse-team-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; margin-top: 13px; }
+.musa-postgame__muse-team-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin-top: 13px; }
 .musa-postgame__muse-team-metrics > span { min-height: 78px; padding: 10px 7px; }
 .musa-postgame__muse-team-metrics strong { color: color-mix(in srgb, var(--metric-color), white 18%); font-size: clamp(.95rem, 3.4vw, 1.4rem); }
 
@@ -5788,7 +5787,6 @@ body.musa-postgame-activo {
     .musa-postgame__bar { grid-template-columns: minmax(84px, .78fr) minmax(64px, 1.2fr) auto; }
     .musa-postgame__team-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .musa-postgame__muse-team-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .musa-postgame__muse-team-metrics > span:last-child { grid-column: 1 / -1; }
     .musa-postgame__text { max-height: 40dvh; }
 }
 

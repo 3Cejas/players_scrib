@@ -49,10 +49,10 @@ const PUBLIC_PLAYER_ACTIONS_VERSION = "20260921c";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260921h";
-const PUBLIC_PLAYER_CSS_VERSION = "20260921f";
+const PUBLIC_PLAYER_STATE_VERSION = "20260921i";
+const PUBLIC_PLAYER_CSS_VERSION = "20260921g";
 const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260921h";
-const PUBLIC_PLAYER_I18N_VERSION = "20260921d";
+const PUBLIC_PLAYER_I18N_VERSION = "20260921e";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260921a";
@@ -1273,9 +1273,13 @@ test("muse gift opens a persistent wrapped scene with ranking and a selectable t
   assert.doesNotMatch(html, /EQUIPO SELECCIONADO|musa_postgame_escritxr_nombre/);
   assert.match(html, /id="musa_postgame_reader"[^>]*is-collapsed[\s\S]*id="musa_postgame_text_toggle"[\s\S]*data-postgame-story-toggle-label/);
   assert.match(html, /musa-postgame__metric--words[\s\S]*data-icon=[^>]*muse\.postgame\.words/);
+  assert.match(html, /musa-postgame__stats[\s\S]*id="musa_postgame_superbonus"/);
+  assert.doesNotMatch(html, /musa_postgame_(?:impacto|impacto_positivo|impacto_negativo|team_impact)/);
+  assert.doesNotMatch(html, /muse\.postgame\.(?:impact|team_time|positive_impact|negative_impact)/);
   assert.doesNotMatch(html, /id="musa_postgame_cerrar"|role="dialog"[^>]*musa-postgame/);
   assert.match(css, /\.musa-postgame\.musa-postgame--visible[\s\S]*min-height: 100dvh[\s\S]*\.musa-postgame__infographic[\s\S]*\.musa-postgame__ranking[\s\S]*\.musa-postgame__team-panel[\s\S]*\.musa-postgame__pace-value[\s\S]*\.musa-postgame__muse-team[\s\S]*\.musa-postgame__text\.is-empty/);
   assert.match(css, /\.musa-postgame__ranking-list\s*\{[^}]*max-height:[^}]*overflow-y:\s*auto/s);
+  assert.match(css, /\.musa-postgame__muse-team-metrics\s*\{[^}]*grid-template-columns:\s*repeat\(4,/s);
   assert.doesNotMatch(css, /@keyframes regaloRayos/);
   assert.match(css, /\.regalo-boton\s*\{[^}]*display:\s*grid;[^}]*place-items:\s*center;/s);
   assert.doesNotMatch(css, /content:\s*"EQUIPO VISIBLE"/);
@@ -1292,6 +1296,7 @@ test("muse gift opens a persistent wrapped scene with ranking and a selectable t
   assert.match(state, /function pintarTextoPostgameMusa\(playerId\)[\s\S]*escritxr\.texto/);
   assert.match(state, /function actualizarExpansionTextoPostgameMusa\(expandido\)[\s\S]*muse\.postgame\.expand[\s\S]*muse\.postgame\.collapse/);
   assert.match(state, /function resumenEquipoMusasPostgameMusa\(playerId\)/);
+  assert.doesNotMatch(state, /impacto_neto|musa_postgame_team_impact|musa_postgame_impacto/);
   assert.match(state, /function pintarResultadosEquipoPostgameMusa\(playerId\)/);
   assert.match(state, /puntuacionElemento\.dataset\.scoreState = puntuacionDisponible \? "available" : "pending"/);
   assert.match(state, /--game-score-hue/);
@@ -1313,6 +1318,7 @@ test("muse gift opens a persistent wrapped scene with ranking and a selectable t
   assert.match(socketEvents, /function confetti_postgame_musa\(\)[\s\S]*particleCount: 86/);
   assert.doesNotMatch(socketEvents.match(/function confetti_postgame_musa\(\)[\s\S]*?\n\}/)?.[0] || "", /shapeFromText|\\u2B50/);
   assert.match(i18n, /"muse\.postgame\.ranking_title"/);
+  assert.doesNotMatch(i18n, /"muse\.postgame\.(?:impact|team_time|positive_impact|negative_impact)"/);
 });
 
 test("winning muses can vote between three disadvantages during the final stretch", () => {
