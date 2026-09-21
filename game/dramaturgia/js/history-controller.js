@@ -25,7 +25,8 @@
         error: "",
         previewObserver: null,
         previewResizeObserver: null,
-        previewSpecs: new WeakMap()
+        previewSpecs: new WeakMap(),
+        previewHosts: new Set()
     };
 
     function cleanText(value, maxLength = 240) {
@@ -521,13 +522,34 @@
         stage.style.setProperty("--history-scale", String(scale));
     }
 
+    function releasePreviewHost(host) {
+        if (!host) return;
+        archiveState.previewObserver?.unobserve(host);
+        archiveState.previewResizeObserver?.unobserve(host);
+        host.querySelector?.(".history-view__stage")?.remove();
+        archiveState.previewSpecs.delete(host);
+        archiveState.previewHosts.delete(host);
+    }
+
+    function releasePreviews(container) {
+        archiveState.previewHosts.forEach((host) => {
+            if (!host.isConnected || !container || container.contains(host)) {
+                releasePreviewHost(host);
+            }
+        });
+    }
+
     async function loadPreview(host) {
         const spec = archiveState.previewSpecs.get(host);
         if (!spec || spec.loading || host.dataset.historyState === "ready") return;
         spec.loading = true;
         const snapshot = await getSnapshot(spec.checkpointId, spec.screenId).catch(() => null);
         spec.loading = false;
-        if (!host.isConnected || archiveState.previewSpecs.get(host) !== spec) return;
+        if (!host.isConnected) {
+            releasePreviewHost(host);
+            return;
+        }
+        if (archiveState.previewSpecs.get(host) !== spec) return;
         if (!snapshot) {
             host.dataset.historyState = "missing";
             host.classList.add("is-missing");
@@ -571,6 +593,7 @@
         const checkpoint = archiveState.store.getCheckpoint(checkpointId);
         const hash = checkpoint && checkpoint.roles ? checkpoint.roles[screenId] : "";
         archiveState.previewSpecs.set(host, { checkpointId, screenId, loading: false });
+        archiveState.previewHosts.add(host);
         if (!hash) {
             host.dataset.historyState = "missing";
             host.classList.add("is-missing");
@@ -601,6 +624,7 @@
         getSnapshot,
         getStatus,
         mountPreview,
+        releasePreviews,
         openSnapshot,
         get revision() {
             return archiveState.revision;

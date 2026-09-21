@@ -5594,6 +5594,20 @@ body.musa-postgame-activo {
     letter-spacing: .02em;
     text-shadow: none;
 }
+.musa-postgame__pace-value em[data-score-state="available"] {
+    background: linear-gradient(
+        90deg,
+        hsl(var(--game-score-hue, 0) 92% 62%),
+        hsl(calc(var(--game-score-hue, 0) + 18) 96% 74%)
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 7px hsl(var(--game-score-hue, 0) 88% 56% / .48));
+}
+.musa-postgame__pace-value em[data-score-state="pending"] {
+    color: #9ca7b8;
+}
 
 .musa-postgame__metric--words,
 .musa-postgame__metric--sent { --metric-color: #49e8ff !important; }

@@ -3015,7 +3015,7 @@ body.page-players #feedback_tiempo_flotante_root {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 18;
+    z-index: 2147483300;
 }
 
 body.page-spectator .feedback-tiempo-columna,

@@ -1889,12 +1889,25 @@ function pintarResultadosEquipoPostgameMusa(playerId) {
     const totalVideojuego = videojuego && videojuego.jugadores && videojuego.jugadores[id]
         ? Number(videojuego.jugadores[id].total) || 0
         : 0;
+    const puntuacionDisponible = Boolean(videojuego && videojuego.disponible);
+    const puntuacionElemento = getEl("musa_postgame_game_score_inline");
     valorPostgameMusa(
         "musa_postgame_game_score_inline",
-        videojuego && videojuego.disponible
-            ? traducirPostgameMusa("muse.postgame.game_score_inline", `(VIDEOJUEGO: ${totalVideojuego.toFixed(1)} / 100)`, { score: totalVideojuego.toFixed(1) })
-            : traducirPostgameMusa("muse.postgame.game_score_pending", "(VIDEOJUEGO: PENDIENTE)")
+        puntuacionDisponible
+            ? traducirPostgameMusa("muse.postgame.game_score_inline", `(${totalVideojuego.toFixed(1)} / 100)`, { score: totalVideojuego.toFixed(1) })
+            : traducirPostgameMusa("muse.postgame.game_score_pending", "(— / 100)")
     );
+    if (puntuacionElemento) {
+        const puntuacion = Math.max(0, Math.min(100, totalVideojuego));
+        puntuacionElemento.dataset.scoreState = puntuacionDisponible ? "available" : "pending";
+        puntuacionElemento.style.setProperty("--game-score-hue", String(Math.round(puntuacion * 1.2)));
+        puntuacionElemento.setAttribute(
+            "aria-label",
+            puntuacionDisponible
+                ? `Puntuación del videojuego: ${totalVideojuego.toFixed(1)} de 100`
+                : "Puntuación del videojuego pendiente"
+        );
+    }
 }
 
 function animarCambioEquipoPostgameMusa() {

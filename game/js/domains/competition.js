@@ -68,6 +68,8 @@
       .scrib-competition-hud[data-voting="1"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-voting="1"] .scrib-competition-vote{display:flex;animation:scribVoteEnter .48s cubic-bezier(.16,.88,.2,1) both}
       .scrib-competition-hud[data-role="control"][data-voting="1"] .scrib-competition-vote{min-height:28px;padding:3px 8px;border-radius:7px;font-size:11px}
+      .scrib-competition-hud[data-battle="0"] .scrib-competition-scoreline,
+      .scrib-competition-hud[data-battle="0"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-scoreline,.scrib-competition-hud[data-final="1"] .scrib-competition-streak{display:none}
       .scrib-competition-hud[data-final="1"] .scrib-competition-shell{width:max-content;min-width:min(230px,88vw);margin:auto;padding:8px 16px}
       .scrib-competition-hud[data-final="1"] .scrib-competition-top{margin:0}
@@ -150,6 +152,7 @@
     root.dataset.clock = "0";
     root.dataset.warmup = "0";
     root.dataset.voting = "0";
+    root.dataset.battle = "0";
     root.innerHTML = `
       <div class="scrib-competition-shell">
         <div class="scrib-competition-top">
@@ -209,8 +212,17 @@
     const marcador = estado.marcador || { 1: 0, 2: 0 };
     const pos = posicionMarcador(marcador[1], marcador[2]);
     const posAnterior = Number(ui.root.dataset.markerPosition);
+    const modo = String(estado.modo || "").trim().toLowerCase();
+    const esNivelSinBatalla = modo === "tertulia" || modo === "frase final";
+    const batallaActiva = Boolean(
+      estado.activa === true
+      && estado.fase === "batalla"
+      && estado.batalla_activa !== false
+      && !esNivelSinBatalla
+    );
     ui.root.dataset.active = estado.activa ? "1" : "0";
-    ui.root.dataset.final = String(estado.modo || "").trim().toLowerCase() === "frase final" ? "1" : "0";
+    ui.root.dataset.battle = batallaActiva ? "1" : "0";
+    ui.root.dataset.final = modo === "frase final" ? "1" : "0";
     ui.mode.textContent = estado.modo_publico || String(estado.modo || "").toUpperCase() || "ESPERANDO NIVEL";
     ui.criterion.textContent = estado.activa ? (estado.criterio || "MARCADOR DE INSPIRACIÓN") : "COMPETICIÓN EN PAUSA";
     ui.scores[1].textContent = numero(marcador[1]);

@@ -99,6 +99,22 @@ const dramaturgiaUi = {
     staleTimer: null
 };
 
+const DRAMATURGIA_DELTAS_VISUALES = new Set([
+    "competicion_ronda_estado",
+    "competicion_ronda_punto",
+    "competicion_cambio_lider",
+    "desventaja_ronda_limpiar",
+    "reloj_partida_estado",
+    "vista_espectador_modo",
+    "desventaja_activa_estado",
+    "modo_actual",
+    "activar_modo",
+    "temp_modos",
+    "inicio",
+    "fin",
+    "limpiar"
+]);
+
 window.addEventListener("scrib:dramaturgia-reference-ready", () => {
     dramaturgiaUi.graphRenderKey = "";
     renderDramaturgiaGraph();
@@ -297,6 +313,7 @@ function renderDramaturgiaHeader() {
 }
 
 function renderDramaturgiaEmpty(container, message) {
+    dramaturgiaHistory()?.releasePreviews?.(container);
     container.replaceChildren();
     const empty = dramaturgiaCreate("div", "map-empty");
     empty.append(
@@ -537,6 +554,7 @@ function renderShowScore(viewport, score, options = {}) {
     const previousScroll = previousSurface
         ? { left: previousSurface.scrollLeft, top: previousSurface.scrollTop }
         : { left: 0, top: 0 };
+    dramaturgiaHistory()?.releasePreviews?.(viewport);
     const shell = dramaturgiaCreate("div", "show-score");
     shell.style.setProperty("--score-column-count", String(columns.length));
     shell.style.setProperty("--score-role-count", String(rows.length));
@@ -736,7 +754,9 @@ function applyDramaturgiaEvent(event) {
 
 function applyDramaturgiaDelta(eventName, payload) {
     dramaturgiaModel.applyDelta(dramaturgiaStore, eventName, payload);
-    scheduleDramaturgiaRender();
+    if (DRAMATURGIA_DELTAS_VISUALES.has(eventName)) {
+        scheduleDramaturgiaRender();
+    }
 }
 
 function requestDramaturgiaSync() {

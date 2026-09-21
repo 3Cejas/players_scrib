@@ -60,14 +60,21 @@ test("Espectador mantiene el marcador arriba y reserva sitio para ambos nombres"
 
 test("la batalla se sustituye por el aviso de votacion y la escritura reproduce su FX", () => {
   const js = read("game/js/domains/competition.js");
+  const css = read("game/css/dashboard-players.css");
 
   assert.match(js, /socket\.on\("votacion_ventaja_estado", actualizarVotacion\)/);
   assert.match(js, /data-voting="1"\] \.scrib-competition-scoreline/);
+  assert.match(js, /data-battle="0"\] \.scrib-competition-scoreline/);
+  assert.match(js, /estado\.fase === "batalla"/);
+  assert.match(js, /estado\.batalla_activa !== false/);
+  assert.match(js, /modo === "tertulia" \|\| modo === "frase final"/);
+  assert.match(js, /ui\.root\.dataset\.battle = batallaActiva \? "1" : "0"/);
   assert.match(js, /LAS MUSAS DEL EQUIPO <strong>\$\{nombreEquipo\}<\/strong> EST&Aacute;N VOTANDO/);
   assert.match(js, /String\(equipoRaw \|\| ""\)\.trim\(\)\.toLowerCase\(\) === "j2"/);
   assert.match(js, /payload\.tipo !== "mini_inspiracion"/);
   assert.match(js, /rolActual !== "spectator"/);
   assert.match(js, /new Audio\("\.\.\/audio\/GANAR%202%20SEG\.mp3"\)/);
+  assert.match(css, /#feedback_tiempo_flotante_root[^}]+z-index:\s*2147483300/);
 });
 
 test("Control integra un HUD compacto donde antes aparecía la duración de la desventaja", () => {
