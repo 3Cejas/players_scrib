@@ -1354,6 +1354,10 @@ const controlador_audio_vista_espectador = window.ScribViewTransition
         windowRef: window,
         documentRef: document,
         musicUrl: "../audio/1.%20MENU%20DE%20INICIO.mp3",
+        featureMusicUrl: "../audio/neosignal-planet-online.mp3",
+        featureMusicStartSeconds: 60,
+        featureMusicVolume: 0.7,
+        featureMusicFadeDurationMs: 1400,
         transitionUrl: "../audio/FX/cambio-vista.mp3",
         fadeDurationMs: 3000,
         musicModes: ["tutorial", "instrucciones", "calentamiento", "temporizador"]

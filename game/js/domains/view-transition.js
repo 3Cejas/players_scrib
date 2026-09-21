@@ -42,16 +42,24 @@
         const fadeDurationMs = Math.max(0, Number(options.fadeDurationMs) || AUDIO_FADE_MS);
         const musicVolume = Math.max(0, Math.min(1, Number(options.musicVolume) || 0.48));
         const transitionVolume = Math.max(0, Math.min(1, Number(options.transitionVolume) || 0.72));
+        const featureMusicVolume = Math.max(0, Math.min(1, Number(options.featureMusicVolume) || 0.66));
+        const featureMusicStartSeconds = Math.max(0, Number(options.featureMusicStartSeconds) || 0);
+        const featureMusicFadeDurationMs = Math.max(0, Number(options.featureMusicFadeDurationMs) || 1400);
         const musicModes = new Set(Array.isArray(options.musicModes) ? options.musicModes : MUSIC_MODES);
         const music = createAudio(options.musicUrl || "");
         const transitionSound = createAudio(options.transitionUrl || "");
+        const featureMusic = options.featureMusicUrl ? createAudio(options.featureMusicUrl) : null;
         let currentMode = "";
         let ducked = false;
         let forcedMusic = false;
         let blocked = false;
+        let featureBlocked = false;
         let boosted = false;
+        let featureMusicActive = false;
         let fadeTimer = null;
         let fadeSequence = 0;
+        let featureFadeTimer = null;
+        let featureFadeSequence = 0;
 
         if (music) {
             music.loop = true;
@@ -63,6 +71,12 @@
             transitionSound.preload = "auto";
             transitionSound.volume = transitionVolume;
             transitionSound.setAttribute?.("data-spectator-view-sound", "true");
+        }
+        if (featureMusic) {
+            featureMusic.loop = false;
+            featureMusic.preload = "metadata";
+            featureMusic.volume = 0;
+            featureMusic.setAttribute?.("data-spectator-feature-music", "true");
         }
 
         const normalizeMode = (value) => {
@@ -90,6 +104,12 @@
             fadeSequence += 1;
             if (fadeTimer != null) clearTimer(fadeTimer);
             fadeTimer = null;
+        };
+
+        const clearFeatureFade = () => {
+            featureFadeSequence += 1;
+            if (featureFadeTimer != null) clearTimer(featureFadeTimer);
+            featureFadeTimer = null;
         };
 
         const fadeMusic = (targetVolume, durationMs = fadeDurationMs) => {
@@ -120,6 +140,55 @@
             step();
         };
 
+        const playFeatureMusic = () => {
+            if (!featureMusic || typeof featureMusic.play !== "function") return;
+            try {
+                const result = featureMusic.play();
+                if (result && typeof result.catch === "function") {
+                    result.then(() => { featureBlocked = false; }).catch(() => { featureBlocked = true; });
+                }
+            } catch (_error) {
+                featureBlocked = true;
+            }
+        };
+
+        const fadeFeatureMusic = (targetVolume, durationMs = featureMusicFadeDurationMs) => {
+            if (!featureMusic) return;
+            clearFeatureFade();
+            const sequence = featureFadeSequence;
+            const target = Math.max(0, Math.min(1, Number(targetVolume) || 0));
+            const from = Math.max(0, Math.min(1, Number(featureMusic.volume) || 0));
+            const duration = Math.max(0, Number(durationMs) || 0);
+            if (target > 0) playFeatureMusic();
+            if (duration === 0 || Math.abs(target - from) < 0.001) {
+                featureMusic.volume = target;
+                if (target === 0 && typeof featureMusic.pause === "function") featureMusic.pause();
+                return;
+            }
+            const startedAt = now();
+            const step = () => {
+                if (sequence !== featureFadeSequence) return;
+                const progress = Math.max(0, Math.min(1, (now() - startedAt) / duration));
+                featureMusic.volume = from + ((target - from) * progress);
+                if (progress >= 1) {
+                    featureFadeTimer = null;
+                    if (target === 0 && typeof featureMusic.pause === "function") featureMusic.pause();
+                    return;
+                }
+                featureFadeTimer = setTimer(step, 50);
+            };
+            step();
+        };
+
+        const posicionarFeatureMusic = () => {
+            if (!featureMusic) return;
+            const aplicar = () => {
+                try { featureMusic.currentTime = featureMusicStartSeconds; } catch (_error) {}
+            };
+            aplicar();
+            featureMusic.addEventListener?.("loadedmetadata", aplicar, { once: true });
+        };
+
         const playTransition = () => {
             if (!transitionSound) return;
             try {
@@ -131,8 +200,13 @@
         };
 
         const targetMusicVolume = () => (
-            (forcedMusic || musicModes.has(currentMode)) && !ducked
+            (forcedMusic || musicModes.has(currentMode)) && !ducked && !(featureMusicActive && featureMusic)
                 ? Math.min(1, musicVolume * (boosted ? 1.65 : 1))
+                : 0
+        );
+        const targetFeatureMusicVolume = () => (
+            featureMusicActive && featureMusic && musicModes.has(currentMode) && !ducked
+                ? featureMusicVolume
                 : 0
         );
 
@@ -159,6 +233,7 @@
                 ? Math.max(0, Number(config.fadeDurationMs))
                 : fadeDurationMs;
             fadeMusic(targetMusicVolume(), transitionFadeMs);
+            fadeFeatureMusic(targetFeatureMusicVolume(), transitionFadeMs);
             return true;
         };
 
@@ -167,13 +242,19 @@
             if (next === ducked) return false;
             ducked = next;
             fadeMusic(targetMusicVolume(), ducked ? 450 : fadeDurationMs);
+            fadeFeatureMusic(targetFeatureMusicVolume(), ducked ? 450 : featureMusicFadeDurationMs);
             return true;
         };
 
         const retryPlayback = () => {
-            if (!blocked || !music || targetMusicVolume() <= 0) return;
-            blocked = false;
-            fadeMusic(targetMusicVolume(), Math.min(650, fadeDurationMs));
+            if (blocked && music && targetMusicVolume() > 0) {
+                blocked = false;
+                fadeMusic(targetMusicVolume(), Math.min(650, fadeDurationMs));
+            }
+            if (featureBlocked && featureMusic && targetFeatureMusicVolume() > 0) {
+                featureBlocked = false;
+                fadeFeatureMusic(targetFeatureMusicVolume(), Math.min(650, featureMusicFadeDurationMs));
+            }
         };
 
         const onTutorialVisibility = (event) => {
@@ -188,19 +269,23 @@
                 forcedMusic = false;
                 ducked = true;
                 fadeMusic(0, 0);
+                fadeFeatureMusic(0, 0);
                 return;
             }
             forcedMusic = false;
             ducked = false;
             fadeMusic(targetMusicVolume(), fadeDurationMs);
+            fadeFeatureMusic(targetFeatureMusicVolume(), featureMusicFadeDurationMs);
         };
         const onShowNarrationFinal = () => {
             ducked = false;
             forcedMusic = true;
+            featureMusicActive = false;
             try {
                 music?.pause?.();
                 if (music) music.currentTime = 0;
             } catch (_error) {}
+            fadeFeatureMusic(0, 0);
             fadeMusic(musicVolume, 0);
         };
         const onCantoVisibility = (event) => {
@@ -210,6 +295,7 @@
             forcedMusic = false;
             ducked = active;
             fadeMusic(targetMusicVolume(), duration);
+            fadeFeatureMusic(targetFeatureMusicVolume(), duration);
         };
         const onMusicIntensity = (event) => {
             const next = Boolean(event && event.detail && event.detail.boosted);
@@ -217,10 +303,24 @@
             boosted = next;
             fadeMusic(targetMusicVolume(), 320);
         };
+        const onFeatureMusic = (event) => {
+            const next = Boolean(event && event.detail && event.detail.active);
+            if (next === featureMusicActive) return;
+            featureMusicActive = next;
+            if (next) posicionarFeatureMusic();
+            const requestedFade = Number(event && event.detail && event.detail.fadeMs);
+            const duration = Number.isFinite(requestedFade)
+                ? Math.max(0, requestedFade)
+                : featureMusicFadeDurationMs;
+            fadeMusic(targetMusicVolume(), duration);
+            fadeFeatureMusic(targetFeatureMusicVolume(), duration);
+        };
         const onPageHide = () => {
             clearFade();
+            clearFeatureFade();
             music?.pause?.();
             transitionSound?.pause?.();
+            featureMusic?.pause?.();
         };
         ["pointerdown", "touchstart", "keydown"].forEach((eventName) => {
             documentRef?.addEventListener?.(eventName, retryPlayback, { passive: true });
@@ -231,6 +331,7 @@
         documentRef?.addEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
         documentRef?.addEventListener?.("scrib:canto-visibility", onCantoVisibility);
         documentRef?.addEventListener?.("scrib:view-music-intensity", onMusicIntensity);
+        documentRef?.addEventListener?.("scrib:view-feature-music", onFeatureMusic);
         windowRef?.addEventListener?.("pagehide", onPageHide);
 
         return {
@@ -239,6 +340,7 @@
             playTransition,
             getMode: () => currentMode,
             getMusic: () => music,
+            getFeatureMusic: () => featureMusic,
             getTransitionSound: () => transitionSound,
             destroy() {
                 onPageHide();
@@ -251,6 +353,7 @@
                 documentRef?.removeEventListener?.("scrib:show-narration-final", onShowNarrationFinal);
                 documentRef?.removeEventListener?.("scrib:canto-visibility", onCantoVisibility);
                 documentRef?.removeEventListener?.("scrib:view-music-intensity", onMusicIntensity);
+                documentRef?.removeEventListener?.("scrib:view-feature-music", onFeatureMusic);
                 windowRef?.removeEventListener?.("pagehide", onPageHide);
             }
         };

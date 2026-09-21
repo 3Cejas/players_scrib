@@ -120,7 +120,7 @@
         const documentRef = options.documentRef || (root && root.document) || null;
         let node = options.container || null;
         let state = { visible: false, step: 0, credits: normalizeCredits(), perspective: "spectator", team: 0 };
-        let musicBoosted = false;
+        let featureMusicActive = false;
 
         const ensureNode = () => {
             if (node || !documentRef || !documentRef.body) return node;
@@ -133,14 +133,14 @@
             return node;
         };
 
-        const setMusicBoost = (boosted) => {
-            const next = Boolean(boosted);
-            if (next === musicBoosted) return;
-            musicBoosted = next;
+        const setFeatureMusic = (active) => {
+            const next = Boolean(active);
+            if (next === featureMusicActive) return;
+            featureMusicActive = next;
             const EventCtor = root && root.CustomEvent;
             if (documentRef && typeof documentRef.dispatchEvent === "function" && typeof EventCtor === "function") {
-                documentRef.dispatchEvent(new EventCtor("scrib:view-music-intensity", {
-                    detail: { boosted: next, source: "instructions" }
+                documentRef.dispatchEvent(new EventCtor("scrib:view-feature-music", {
+                    detail: { active: next, source: "instructions" }
                 }));
             }
         };
@@ -154,7 +154,7 @@
             target.dataset.perspective = state.perspective;
             target.dataset.team = String(state.team || 0);
             if (!state.visible) {
-                setMusicBoost(false);
+                setFeatureMusic(false);
                 return;
             }
             const remaining = Math.max(0, STEP_COUNT - state.step - 1);
@@ -170,7 +170,9 @@
             target.classList.remove("is-entering");
             void target.offsetWidth;
             target.classList.add("is-entering");
-            setMusicBoost(state.step === 1 || state.step === 2);
+            // Las dos presentaciones de equipo comparten una sola entrada
+            // musical: cambiar de rojo a azul no reinicia la pista.
+            setFeatureMusic(state.step === 1 || state.step === 2);
         };
 
         return {
@@ -189,7 +191,7 @@
             },
             getState: () => ({ ...state }),
             destroy() {
-                setMusicBoost(false);
+                setFeatureMusic(false);
                 node?.remove?.();
                 node = null;
             }

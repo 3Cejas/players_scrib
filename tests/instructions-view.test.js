@@ -60,6 +60,10 @@ test("control, spectator and muse load the instructions experience", () => {
   assert.match(muse, /instructions\.js/);
   assert.match(spectatorState, /ScribInstructions\.create/);
   assert.match(museState, /ScribInstructions\.create/);
+  assert.match(spectatorState, /featureMusicUrl: "\.\.\/audio\/neosignal-planet-online\.mp3"/);
+  assert.doesNotMatch(museState, /createAudioController/);
+  assert.match(read("game/js/domains/instructions.js"), /scrib:view-feature-music/);
+  assert.match(read("game/js/domains/instructions.js"), /state\.step === 1 \|\| state\.step === 2/);
   assert.match(control, /id="boton_vista_instrucciones"[^>]*>\s*&#x1F4D6; INSTRUCCIONES<\/button>/);
   assert.match(control, /id="instrucciones_nav_control"[^>]*data-visible="0"[^>]*aria-hidden="true"[^>]*inert/);
   assert.match(controlActions, /botonInstrucciones\.textContent = "\\u\{1F4D6\} INSTRUCCIONES"/);

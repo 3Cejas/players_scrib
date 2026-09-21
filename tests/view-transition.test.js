@@ -176,20 +176,107 @@ test("tutorial and detonator views share looped music with three-second fades an
   assert.equal(documentListeners.has("scrib:video-tutorial-ending"), false);
 });
 
+test("writer presentation crossfades one continuous feature track and restores prior music", () => {
+  let clock = 0;
+  const timers = [];
+  const media = [];
+  const documentListeners = new Map();
+  const createAudio = (url) => {
+    const audio = {
+      url,
+      volume: 1,
+      currentTime: 0,
+      loop: false,
+      paused: true,
+      playCalls: 0,
+      pauseCalls: 0,
+      setAttribute() {},
+      addEventListener() {},
+      play() { this.paused = false; this.playCalls += 1; },
+      pause() { this.paused = true; this.pauseCalls += 1; }
+    };
+    media.push(audio);
+    return audio;
+  };
+  const setTimer = (callback, delay) => {
+    const timer = { callback, delay, cancelled: false };
+    timers.push(timer);
+    return timer;
+  };
+  const clearTimer = (timer) => { if (timer) timer.cancelled = true; };
+  const drainTimers = () => {
+    while (timers.length) {
+      const timer = timers.shift();
+      if (timer.cancelled) continue;
+      clock += timer.delay;
+      timer.callback();
+    }
+  };
+  const controller = transitions.createAudioController({
+    createAudio,
+    documentRef: {
+      addEventListener(name, listener) { documentListeners.set(name, listener); },
+      removeEventListener(name) { documentListeners.delete(name); }
+    },
+    musicUrl: "menu.mp3",
+    transitionUrl: "view.mp3",
+    featureMusicUrl: "writers.mp3",
+    featureMusicStartSeconds: 60,
+    featureMusicVolume: 0.7,
+    featureMusicFadeDurationMs: 1400,
+    setTimer,
+    clearTimer,
+    now: () => clock,
+    musicVolume: 0.5
+  });
+  const music = media[0];
+  const feature = media[2];
+
+  controller.setMode("instrucciones", { initial: true });
+  drainTimers();
+  music.currentTime = 23;
+  documentListeners.get("scrib:view-feature-music")({ detail: { active: true, source: "instructions" } });
+  assert.equal(feature.currentTime, 60);
+  assert.equal(feature.paused, false);
+  drainTimers();
+  assert.equal(music.volume, 0);
+  assert.equal(music.paused, true);
+  assert.equal(feature.volume, 0.7);
+
+  feature.currentTime = 72;
+  documentListeners.get("scrib:view-feature-music")({ detail: { active: true, source: "instructions" } });
+  assert.equal(feature.currentTime, 72, "the second writer slide must not restart the song");
+
+  documentListeners.get("scrib:view-feature-music")({ detail: { active: false, source: "instructions" } });
+  drainTimers();
+  assert.equal(feature.volume, 0);
+  assert.equal(feature.paused, true);
+  assert.equal(music.currentTime, 23, "the prior background track resumes where it was faded out");
+  assert.equal(music.volume, 0.5);
+  assert.equal(music.paused, false);
+
+  controller.destroy();
+  assert.equal(documentListeners.has("scrib:view-feature-music"), false);
+});
+
 test("spectator wires the animated curtain into every resolved view change", () => {
   const html = fs.readFileSync(path.join(ROOT, "game/spectator/index.html"), "utf8");
   const css = fs.readFileSync(path.join(ROOT, "game/css/dashboard-players.css"), "utf8");
   const state = fs.readFileSync(path.join(ROOT, "game/spectator/js/state.js"), "utf8");
 
   assert.match(html, /id="spectator_view_transition"[\s\S]*data-view-transition-label/);
-  assert.match(html, /domains\/view-transition\.js\?v=20260920c/);
+  assert.match(html, /domains\/view-transition\.js\?v=20260921a/);
   assert.match(css, /spectatorViewCoverBlue[\s\S]*spectatorViewRevealRed/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spectator-view-transition/);
   assert.match(state, /controlador_transicion_vista_espectador\.transition\(\{[\s\S]*swap: \(\) => aplicarModoVistaEspectadorUi\(modo\)/);
   assert.match(state, /musicUrl: "\.\.\/audio\/1\.%20MENU%20DE%20INICIO\.mp3"/);
+  assert.match(state, /featureMusicUrl: "\.\.\/audio\/neosignal-planet-online\.mp3"/);
+  assert.match(state, /featureMusicStartSeconds: 60/);
+  assert.match(state, /featureMusicFadeDurationMs: 1400/);
   assert.match(state, /transitionUrl: "\.\.\/audio\/FX\/cambio-vista\.mp3"/);
   assert.match(state, /fadeDurationMs: 3000/);
   assert.ok(fs.statSync(path.join(ROOT, "game/audio/FX/cambio-vista.mp3")).size > 5_000);
+  assert.ok(fs.statSync(path.join(ROOT, "game/audio/neosignal-planet-online.mp3")).size > 5_000_000);
   assert.equal(transitions.viewLabel("tutorial"), "VISTA TUTORIAL");
 });
 
