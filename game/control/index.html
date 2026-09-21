@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260917a"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260920j"></script>
+<script src="./js/actions.js?v=20260921a"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -204,6 +204,7 @@
                                 <span id="boton_teleprompter" class='btn' onclick="toggleTeleprompter()">&#x1F399;&#xFE0F; TELEPROMPTER</span>
                             </div>
                             <div id="debug_tools_representacion" class="debug-context-tools debug-context-tools--representation" data-debug-tools hidden aria-hidden="true">
+                                <button id="debug_finalizar_temporizador_gigante" class="btn debug-control__button debug-control__button--advance" data-debug-action type="button" onclick="finalizarTemporizadorGiganteDebug()" hidden aria-hidden="true" tabindex="-1">&#x23ED;&#xFE0F; SALTAR TEMPORIZADOR</button>
                                 <button id="debug_cargar_textos" class="btn debug-control__button" data-debug-action type="button" onclick="cargarTextosPruebaRepresentacionDebug()">&#x1F4DD; CARGAR TEXTOS DE PRUEBA</button>
                                 <button id="debug_limpiar_textos" class="btn debug-control__button" data-debug-action type="button" onclick="limpiarTextosPruebaRepresentacionDebug()">&#x1F9F9; LIMPIAR TEXTOS DE PRUEBA</button>
                                 <p class="debug-context-tools__status" data-debug-status="representacion" role="status" aria-live="polite"></p>

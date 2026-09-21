@@ -31,6 +31,7 @@ let puntuacion_final_captura_solicitada = false;
 let timeout_feedback_puntuacion_control = null;
 let escala_ui_espectador_control = 1;
 let temporizador_gigante_activo = false;
+let temporizador_gigante_estado_control = "oculto";
 let regalo_musas_enviado = false;
 let banderas_musas_activas = false;
 let borrar_texto_en_inicio_activo = false;
@@ -2298,6 +2299,15 @@ function actualizarBotonSiguienteNivelDebugControl({ animar = true } = {}) {
 }
 window.actualizarBotonSiguienteNivelDebugControl = actualizarBotonSiguienteNivelDebugControl;
 
+function actualizarBotonFinalizarTemporizadorDebugControl({ animar = true } = {}) {
+    alternarVisibilidadHerramientaDebugControl(
+        document.getElementById("debug_finalizar_temporizador_gigante"),
+        modo_debug_control_activo && temporizador_gigante_estado_control === "activo",
+        { animar }
+    );
+}
+window.actualizarBotonFinalizarTemporizadorDebugControl = actualizarBotonFinalizarTemporizadorDebugControl;
+
 function actualizarBotonResultadoVideojuegoControl(disponible) {
     const boton = document.getElementById("boton_resultado_videojuego");
     if (!boton) return;
@@ -2619,6 +2629,8 @@ function borrar_texto_guardado() {
 function activar_temporizador_gigante() {
     if (temporizador_gigante_activo) {
         temporizador_gigante_activo = false;
+        temporizador_gigante_estado_control = "oculto";
+        actualizarBotonFinalizarTemporizadorDebugControl();
         socket.emit('temporizador_gigante_detener', {});
         return;
     }
@@ -2631,11 +2643,15 @@ function activar_temporizador_gigante() {
     vista_espectador_modo = "partida";
     socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
     temporizador_gigante_activo = true;
+    temporizador_gigante_estado_control = "activo";
+    actualizarBotonFinalizarTemporizadorDebugControl();
     socket.emit('activar_temporizador_gigante', { duracion: 10 * 60 });
 }
 
 function actualizarEstadoTemporizadorControl(payload = {}) {
+    temporizador_gigante_estado_control = String(payload.estado || "oculto");
     temporizador_gigante_activo = Boolean(payload.mostrar && payload.estado !== "oculto");
+    actualizarBotonFinalizarTemporizadorDebugControl();
     const boton = document.getElementById("boton_temporizador_gigante");
     if (!boton) return;
     boton.dataset.active = temporizador_gigante_activo ? "1" : "0";
@@ -2718,7 +2734,9 @@ function textoErrorDebugControl(codigo = "") {
         NO_MATCH_ITERATIONS: "Todav\u00eda no hay iteraciones de una partida para exportar.",
         ITERATION_EXPORT_FAILED: "No se pudo preparar el archivo de iteraciones.",
         DEBUG_SKIP_COOLDOWN: "Espera un instante antes de volver a saltar de nivel.",
-        MODE_TRANSITION_BUSY: "El juego ya est\u00e1 cambiando de nivel. Int\u00e9ntalo de nuevo."
+        MODE_TRANSITION_BUSY: "El juego ya est\u00e1 cambiando de nivel. Int\u00e9ntalo de nuevo.",
+        SHOW_TIMER_UNAVAILABLE: "El temporizador no est\u00e1 disponible.",
+        SHOW_TIMER_NOT_ACTIVE: "El temporizador gigante ya no est\u00e1 en marcha."
     };
     return mensajes[String(codigo || "")] || "No se pudo completar la acci\u00f3n de prueba.";
 }
@@ -2736,6 +2754,7 @@ function actualizarModoDebugControl(payload = {}) {
         });
     });
     actualizarBotonSiguienteNivelDebugControl({ animar: modo_debug_control_activo !== debugEstabaActivo });
+    actualizarBotonFinalizarTemporizadorDebugControl({ animar: modo_debug_control_activo !== debugEstabaActivo });
     document.querySelectorAll("[data-debug-status]").forEach((estadoContextual) => {
         estadoContextual.textContent = "";
         estadoContextual.removeAttribute("data-tone");
@@ -2919,6 +2938,22 @@ function finalizarPartidaDebug() {
         "Finalizando la partida...",
         () => estadoAccionDebugControl("Partida finalizada. Ya puedes probar la deliberaci\u00f3n.", "success", "final"),
         "final"
+    );
+}
+
+function finalizarTemporizadorGiganteDebug() {
+    ejecutarAccionDebugControl(
+        "debug_finalizar_temporizador_gigante",
+        "Saltando al final del temporizador...",
+        (respuesta = {}) => {
+            actualizarEstadoTemporizadorControl(respuesta.temporizador || { estado: "finalizado", mostrar: true });
+            estadoAccionDebugControl(
+                "Temporizador finalizado para todos los roles.",
+                "success",
+                "representacion"
+            );
+        },
+        "representacion"
     );
 }
 
