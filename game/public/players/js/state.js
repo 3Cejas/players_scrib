@@ -232,7 +232,7 @@ function setUiPartidaFinalizadaMusa(finalizada) {
         if (typeof cerrarPreShowMusaPorTutorial === "function") {
             cerrarPreShowMusaPorTutorial();
         }
-        if (regalo_postgame_data && !regalo_postgame_debug) {
+        if (regalo_postgame_data && !regalo_postgame_debug && vista_modo_remota_musa === "partida") {
             marcarRegaloPdfMusaAbierto({
                 data: regalo_pdf_ultimo_data,
                 filename: regalo_pdf_ultimo_filename,
@@ -1773,12 +1773,14 @@ function mostrarRegaloPdf(payload) {
     regalo_pdf_ultimo_filename = regalo_pdf_filename;
     regalo_postgame_data = payload.postgame && typeof payload.postgame === "object" ? payload.postgame : null;
     regalo_postgame_debug = payload.debug === true;
-    if (regalo_postgame_data && ui_partida_finalizada_musa && payload.debug !== true) {
+    if (regalo_postgame_data && payload.debug !== true) {
         marcarRegaloPdfMusaAbierto(payload);
         regalo_pdf_pendiente = null;
         regalo_pdf.classList.remove("regalo-pdf--visible", "regalo-pdf--claimed");
         regalo_pdf.setAttribute("aria-hidden", "true");
-        mostrarPostgameMusa();
+        if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida") {
+            mostrarPostgameMusa();
+        }
         return;
     }
     if (regalo_postgame_data && regaloPdfMusaYaAbierto(payload)) {
@@ -2713,6 +2715,8 @@ function sincronizarVistaDeliberacionMusa(opciones = {}) {
         activa = resultado_final_musa;
     }
     if (!activa) return false;
+    ocultarRegaloPdf();
+    ocultarPostgameMusa();
     // El resultado final tiene una revelación propia; la cortinilla genérica
     // cortaba el suspense y daba la sensación de cargar otra pantalla.
     if (opciones.animarCambioVista !== false && vista_modo_remota_musa !== "resultado_final") {
@@ -4600,7 +4604,8 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     const regaloVisible = Boolean(regalo_pdf?.classList.contains("regalo-pdf--visible"));
     const postgameVisible = Boolean(musa_postgame?.classList.contains("musa-postgame--visible"));
     if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida" && !regaloVisible && !postgameVisible) {
-        mostrarCierrePartidaMusa();
+        if (regalo_postgame_data && !regalo_postgame_debug) mostrarPostgameMusa();
+        else mostrarCierrePartidaMusa();
     } else if (vistaFinalAlternativa || vista_modo_remota_musa !== "partida") {
         ocultarCierrePartidaMusa();
     }

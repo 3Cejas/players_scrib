@@ -33,6 +33,8 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*vista_espectador_modo === "puntuacion"[\s\S]*ocultarPuntuacionFinal\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
   assert.match(actions, /window\.activarSeccionControl = activarSeccionControl/);
   assert.match(actions, /function mostrarPuntuacionFinal\(\)[\s\S]*boton\.setAttribute\("aria-busy", "true"\)[\s\S]*socket\.emit\("mostrar_puntuacion_final"/);
+  assert.match(actions, /function actualizarBotonResultadoVideojuegoControl\(disponible\)[\s\S]*disponible === true && partida_finalizada_control === true/);
+  assert.match(actions, /function navegarPuntuacionFinal\(direccion\)[\s\S]*socket\.emit\(evento, \{\}, \(respuesta = \{\}\)[\s\S]*actualizarModoVistaEspectadorControl\(respuesta\.vista\)/);
   assert.match(actions, /function actualizarEstadoPuntuacionFinalControl\(payload = \{\}\)[\s\S]*actualizarBotonResultadoVideojuegoControl\(estado_puntuacion_final_control\?\.disponible === true\)/);
   assert.match(actions, /function mostrarResultadoJurado\(\)[\s\S]*mostrar_resultado_jurado/);
   assert.match(actions, /function navegarResultadoJurado\(direccion\)[\s\S]*jurado_resultado_(?:anterior|siguiente)/);
@@ -46,7 +48,7 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
   assert.match(actions, /function mostrarCreditosEspectador\(\)[\s\S]*temporizador_gigante_detener/);
   assert.match(sockets, /socket\.on\('jurado_resultado_estado'/);
-  assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*actualizarBotonResultadoVideojuegoControl\(true\)[\s\S]*activarSeccionControl\("representacion"\)/);
+  assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*partida_finalizada_control = true[\s\S]*actualizarBotonResultadoVideojuegoControl\(true\)[\s\S]*activarSeccionControl\("juego"\)/);
 });
 
 test("spectator and muses render both deliberation outcomes", () => {

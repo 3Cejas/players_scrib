@@ -802,6 +802,7 @@ socket.on('fin_a_control', () => {
     final(1, { emitirConteoFinal: false });
     final(2, { emitirConteoFinal: false });
     juego_iniciado = false;
+    partida_finalizada_control = true;
     modo_actual = "";
     if (typeof window.actualizarBotonPausaReanudarControl === "function") {
         window.actualizarBotonPausaReanudarControl(getEl("boton_pausar_reanudar"));
@@ -815,11 +816,10 @@ socket.on('fin_a_control', () => {
     if (typeof window.actualizarBotonResultadoVideojuegoControl === "function") {
         window.actualizarBotonResultadoVideojuegoControl(true);
     }
-    // Al terminar, lleva al equipo de control a las herramientas de
-    // representación. Así la descarga de textos no queda escondida en una
-    // pestaña cerrada después de pulsar "Finalizar partida".
+    // El resultado se activa de forma autoritativa en el servidor. Control
+    // abre Juego para que el visor y su primera slide queden a la vista.
     if (typeof window.activarSeccionControl === "function") {
-        window.activarSeccionControl("representacion");
+        window.activarSeccionControl("juego");
     }
   });
 

@@ -6645,6 +6645,32 @@ body.page-spectator.vista-partida #contenedor_espectador {
   padding-bottom: clamp(104px, 12vh, 140px);
 }
 
+/* En una ventana baja reservamos una franja real para el visor de nivel. */
+@media (max-height: 920px) and (min-width: 900px) {
+  body.page-spectator.vista-partida #contenedor_espectador {
+    padding-top: clamp(126px, 18vh, 150px);
+    padding-bottom: clamp(142px, 21vh, 174px);
+  }
+
+  body.page-spectator.vista-partida .spectator-text-shell {
+    height: clamp(132px, min(21vh, calc(100dvh - 558px)), 190px);
+  }
+
+  body.page-spectator.vista-partida #contenedor_espectador .right {
+    margin-top: clamp(5px, 0.7vh, 9px);
+    padding-block: clamp(4px, 0.55vh, 7px);
+  }
+
+  body.page-spectator.vista-partida #contenedor_espectador .meta-label {
+    font-size: clamp(9px, 0.72vw, 12px);
+  }
+
+  body.page-spectator.vista-partida #contenedor_espectador .puntos,
+  body.page-spectator.vista-partida #contenedor_espectador .musas-total {
+    font-size: clamp(14px, 1.45vw, 23px);
+  }
+}
+
 .atributos {
   width: min(1200px, 96vw);
   margin: 0 auto clamp(0.75rem, 2.5vw, 1.5rem);

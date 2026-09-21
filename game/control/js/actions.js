@@ -24,6 +24,7 @@ let vista_principal_control = "tutorial";
 let instrucciones_slide_step_control = 0;
 let puntuacion_slide_step_control = 0;
 let puntuacion_reveal_phase_control = 0;
+let partida_finalizada_control = false;
 let jurado_slide_step_control = 0;
 let estado_puntuacion_final_control = null;
 let estado_resultado_jurado_control = null;
@@ -2312,7 +2313,7 @@ window.actualizarBotonFinalizarTemporizadorDebugControl = actualizarBotonFinaliz
 function actualizarBotonResultadoVideojuegoControl(disponible) {
     const boton = document.getElementById("boton_resultado_videojuego");
     const visor = document.getElementById("resultado_videojuego_viewer_control");
-    const visible = disponible === true;
+    const visible = disponible === true && partida_finalizada_control === true;
     if (boton) {
         boton.hidden = !visible;
         boton.setAttribute("aria-hidden", visible ? "false" : "true");
@@ -2357,6 +2358,7 @@ function temp() {
     limpiarTestigosDesventajaControl();
     terminado = false;
     terminado1 = false;
+    partida_finalizada_control = false;
     regalo_musas_enviado = false;
     puntuacion_final_captura_solicitada = false;
     fin_j1 = false;
@@ -2543,6 +2545,7 @@ function limpiar({ emitirServidor = true } = {}) {
     //texto1.innerText = "";
     //texto2.innerText = "";
     juego_iniciado = false;
+    partida_finalizada_control = false;
     actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     actualizarBotonFinPartidaControl();
     actualizarBotonSiguienteNivelDebugControl();
@@ -3739,13 +3742,22 @@ function mostrarFeedbackPuntuacionControl(mensaje, tipo = "pendiente") {
 
 function navegarPuntuacionFinal(direccion) {
     if (!socket || typeof socket.emit !== "function" || vista_espectador_modo !== "puntuacion") return;
-    if (direccion === "anterior") {
-        socket.emit("puntuacion_final_anterior");
-        return;
-    }
-    if (direccion === "siguiente") {
-        socket.emit("puntuacion_final_siguiente");
-    }
+    const evento = direccion === "anterior"
+        ? "puntuacion_final_anterior"
+        : direccion === "siguiente"
+            ? "puntuacion_final_siguiente"
+            : "";
+    if (!evento) return;
+    socket.emit(evento, {}, (respuesta = {}) => {
+        if (respuesta.ok === true) {
+            if (respuesta.vista) actualizarModoVistaEspectadorControl(respuesta.vista);
+            return;
+        }
+        mostrarFeedbackPuntuacionControl(
+            tJuego2PControl("control.score.navigation_error", {}, "No se pudo cambiar la slide del resultado."),
+            "error"
+        );
+    });
 }
 
 function reiniciarPuntuacionFinal() {
