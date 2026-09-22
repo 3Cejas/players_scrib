@@ -8,9 +8,14 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" type="text/css" href="../css/dashboard-players.css?v=20260505i">
     <style>
+        :root {
+            --musa-intro-viewport-height: 100dvh;
+            --musa-intro-visible-height: var(--musa-intro-viewport-height);
+        }
+
         html, body {
-            height: 100%;
-            min-height: 100dvh;
+            height: var(--musa-intro-viewport-height);
+            min-height: var(--musa-intro-viewport-height);
         }
 
         body {
@@ -298,8 +303,8 @@
 .intro-flow {
     width: 100vw;
     max-width: 100vw;
-    height: 100dvh;
-    min-height: 100dvh;
+    height: var(--musa-intro-viewport-height);
+    min-height: var(--musa-intro-viewport-height);
     margin: 0;
     overflow: hidden;
 }
@@ -325,8 +330,8 @@
 }
 
 .intro-section {
-    min-height: 100dvh;
-    height: 100dvh;
+    min-height: var(--musa-intro-viewport-height);
+    height: var(--musa-intro-viewport-height);
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -348,7 +353,7 @@
     flex-direction: column;
     align-items: center;
     gap: clamp(0.8rem, 3vw, 1.6rem);
-    min-height: calc(100dvh - (2 * clamp(2.2rem, 8vw, 4.5rem)));
+    min-height: calc(var(--musa-intro-viewport-height) - (2 * clamp(2.2rem, 8vw, 4.5rem)));
     height: 100%;
 }
 
@@ -360,6 +365,21 @@
 #intro-nombre .intro-panel {
     justify-content: center;
     text-align: center;
+}
+
+/* El teclado móvil reduce solo la ventana visual. La altura de las slides se
+   mantiene estable y únicamente el contenido del nombre ocupa el hueco libre. */
+html.musa-nombre-teclado-abierto #intro-nombre {
+    align-items: flex-start;
+    padding-block: 0;
+}
+
+html.musa-nombre-teclado-abierto #intro-nombre .intro-panel {
+    height: var(--musa-intro-visible-height);
+    min-height: var(--musa-intro-visible-height);
+    padding-top: max(env(safe-area-inset-top), 0.65rem);
+    padding-bottom: max(env(safe-area-inset-bottom), 0.65rem);
+    gap: clamp(0.38rem, 1.4vh, 0.8rem);
 }
 
 .intro-title {
@@ -2705,7 +2725,7 @@ body.musa-boot-activa .intro-flow {
     }
 
     .intro-panel {
-        min-height: calc(100dvh - (2 * var(--intro-section-pad)));
+        min-height: calc(var(--musa-intro-viewport-height) - (2 * var(--intro-section-pad)));
         padding-top: clamp(0.5rem, 1.5vh, 0.9rem);
         padding-bottom: clamp(1.4rem, 3.8vh, 2.2rem);
         gap: clamp(0.2rem, 0.65vh, 0.42rem);
@@ -4795,7 +4815,7 @@ body.musa-boot-activa .intro-flow {
 @media (hover: none) and (pointer: coarse), (max-width: 600px) {
     .intro-section:not(.is-onboarding-active) {
         content-visibility: auto;
-        contain-intrinsic-size: auto 100dvh;
+        contain-intrinsic-size: auto var(--musa-intro-viewport-height);
     }
 
     #background-effects .aquarium-current,
@@ -5198,5 +5218,5 @@ body.musa-boot-activa .intro-flow {
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/i18n.js?v=20260831a"></script>
 <script src="./js/musa-assignment.js?v=20260831b"></script>
-<script src="./js/musa-selector.js?v=20260908a"></script>
+<script src="./js/musa-selector.js?v=20260922a"></script>
 </html>

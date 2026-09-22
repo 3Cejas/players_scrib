@@ -412,7 +412,7 @@ test("landing exposes both writers and an accessible, motion-safe automatic fing
   assert.match(html, /id="musa_game_loading"[^>]*hidden/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(html, /musa-assignment\.js\?v=20260831b/);
-  assert.match(html, /musa-selector\.js\?v=20260908a/);
+  assert.match(html, /musa-selector\.js\?v=20260922a/);
   assert.match(selector, /createCoordinator/);
   assert.match(selector, /musaAssignment\.buildGameUrl/);
   assert.match(selector, /ASSIGNMENT_SESSION_KEY/);
@@ -496,6 +496,23 @@ test("muse onboarding separates the three animated rules and keeps the original 
   assert.match(html, /#background-effects \.aquarium-current,[\s\S]*display: none !important/);
   assert.match(html, /En tactil evitamos repintar filtros y sombras de tarjetas completas[\s\S]*\.musa-team-choice,[\s\S]*animation: none;[\s\S]*\.musa-team-choice::after,[\s\S]*animation-timing-function: ease-in-out;/);
   assert.match(selector, /navegacionMovil[\s\S]*\? 680 : 1200/);
+});
+
+test("muse name keyboard keeps every onboarding slide on the stable viewport", () => {
+  const html = read("game/public/index.html");
+  const selector = read("game/public/js/musa-selector.js");
+
+  assert.match(html, /--musa-intro-viewport-height:\s*100dvh/);
+  assert.match(html, /--musa-intro-visible-height:\s*var\(--musa-intro-viewport-height\)/);
+  assert.match(html, /\.intro-flow\s*\{[\s\S]*height:\s*var\(--musa-intro-viewport-height\)/);
+  assert.match(html, /\.intro-section\s*\{[\s\S]*min-height:\s*var\(--musa-intro-viewport-height\);[\s\S]*height:\s*var\(--musa-intro-viewport-height\)/);
+  assert.match(html, /min-height:\s*calc\(var\(--musa-intro-viewport-height\) - \(2 \* var\(--intro-section-pad\)\)\)/);
+  assert.match(selector, /function fijarAlturaViewportIntroMusa\(\)[\s\S]*INTRO_VIEWPORT_CSS_VAR[\s\S]*alturaIntroMusaEstable/);
+  assert.match(selector, /function tecladoNombreMusaAbierto\(\)[\s\S]*document\.activeElement !== nombreMusaInput[\s\S]*viewportIntroMusaContraido\(\)/);
+  assert.match(selector, /window\.visualViewport\?\.addEventListener\("resize", manejarCambioViewportIntroMusa/);
+  assert.match(selector, /nombreMusaInput\?\.addEventListener\("focus"[\s\S]*alinearSlideNombreIntroMusa/);
+  assert.match(selector, /if \(tecladoAbierto\)[\s\S]*requestAnimationFrame\(alinearSlideNombreIntroMusa\);[\s\S]*return;/);
+  assert.match(html, /html\.musa-nombre-teclado-abierto #intro-nombre \.intro-panel\s*\{[\s\S]*height:\s*var\(--musa-intro-visible-height\);[\s\S]*min-height:\s*var\(--musa-intro-visible-height\)/);
 });
 
 test("writer choice stays clean and game loading closes the assignment reveal", () => {

@@ -37,6 +37,111 @@ let claveAvisoMusa = "";
 let restaurandoAsignacionPersistida = false;
 let sesionPartidaMusa = "";
 let onboardingTextFrame = null;
+const INTRO_VIEWPORT_CSS_VAR = "--musa-intro-viewport-height";
+const INTRO_VISIBLE_VIEWPORT_CSS_VAR = "--musa-intro-visible-height";
+const INTRO_KEYBOARD_MIN_DELTA_PX = 96;
+let alturaIntroMusaEstable = 0;
+let anchoIntroMusaEstable = 0;
+let timeoutViewportIntroMusa = null;
+
+function medirAnchoViewportIntroMusa() {
+  return Math.max(
+    1,
+    Number(window.innerWidth) || 0,
+    Number(window.visualViewport?.width) || 0
+  );
+}
+
+function medirAltoBaseViewportIntroMusa() {
+  return Math.max(
+    1,
+    Number(window.innerHeight) || 0,
+    Number(window.visualViewport?.height) || 0
+  );
+}
+
+function medirAltoVisualViewportIntroMusa() {
+  return Math.max(
+    1,
+    Number(window.visualViewport?.height) || Number(window.innerHeight) || 0
+  );
+}
+
+function fijarAlturaViewportIntroMusa() {
+  alturaIntroMusaEstable = medirAltoBaseViewportIntroMusa();
+  anchoIntroMusaEstable = medirAnchoViewportIntroMusa();
+  document.documentElement.style.setProperty(
+    INTRO_VIEWPORT_CSS_VAR,
+    `${Math.round(alturaIntroMusaEstable)}px`
+  );
+  document.documentElement.style.setProperty(
+    INTRO_VISIBLE_VIEWPORT_CSS_VAR,
+    `${Math.round(medirAltoVisualViewportIntroMusa())}px`
+  );
+}
+
+function alinearSlideNombreIntroMusa() {
+  const seccionNombre = document.getElementById("intro-nombre");
+  if (!introScroll || !seccionNombre) return;
+  introScroll.scrollTop = seccionNombre.offsetTop;
+}
+
+function viewportIntroMusaContraido() {
+  if (!alturaIntroMusaEstable) return false;
+  const umbral = Math.max(
+    INTRO_KEYBOARD_MIN_DELTA_PX,
+    alturaIntroMusaEstable * 0.14
+  );
+  return medirAltoVisualViewportIntroMusa() < (alturaIntroMusaEstable - umbral);
+}
+
+function tecladoNombreMusaAbierto() {
+  if (document.activeElement !== nombreMusaInput || !alturaIntroMusaEstable) return false;
+  return viewportIntroMusaContraido();
+}
+
+function programarAlturaViewportIntroMusa({ forzar = false } = {}) {
+  if (timeoutViewportIntroMusa) clearTimeout(timeoutViewportIntroMusa);
+  timeoutViewportIntroMusa = setTimeout(() => {
+    timeoutViewportIntroMusa = null;
+    if (tecladoNombreMusaAbierto()) return;
+    if (!forzar && viewportIntroMusaContraido()) return;
+    fijarAlturaViewportIntroMusa();
+  }, forzar ? 260 : 80);
+}
+
+function manejarCambioViewportIntroMusa() {
+  document.documentElement.style.setProperty(
+    INTRO_VISIBLE_VIEWPORT_CSS_VAR,
+    `${Math.round(medirAltoVisualViewportIntroMusa())}px`
+  );
+  const tecladoAbierto = tecladoNombreMusaAbierto();
+  document.documentElement.classList.toggle("musa-nombre-teclado-abierto", tecladoAbierto);
+  if (tecladoAbierto) {
+    // El teclado solo recorta la ventana visual: la slide conserva su altura y
+    // su offset para que el resto de pantallas no se recoloque por debajo.
+    requestAnimationFrame(alinearSlideNombreIntroMusa);
+    return;
+  }
+  const cambioOrientacion = Math.abs(medirAnchoViewportIntroMusa() - anchoIntroMusaEstable) > 64;
+  if (cambioOrientacion && document.activeElement !== nombreMusaInput) {
+    programarAlturaViewportIntroMusa({ forzar: true });
+  }
+}
+
+fijarAlturaViewportIntroMusa();
+window.addEventListener("resize", manejarCambioViewportIntroMusa, { passive: true });
+window.visualViewport?.addEventListener("resize", manejarCambioViewportIntroMusa, { passive: true });
+window.addEventListener("orientationchange", () => {
+  programarAlturaViewportIntroMusa({ forzar: true });
+}, { passive: true });
+nombreMusaInput?.addEventListener("focus", () => {
+  requestAnimationFrame(alinearSlideNombreIntroMusa);
+});
+nombreMusaInput?.addEventListener("blur", () => {
+  document.documentElement.classList.remove("musa-nombre-teclado-abierto");
+  programarAlturaViewportIntroMusa();
+});
 
 const tMusa = (key, variables = {}, fallback = "") => (
   typeof window.scribT2P === "function"
