@@ -31,6 +31,7 @@ let estado_resultado_jurado_control = null;
 let puntuacion_final_captura_solicitada = false;
 let timeout_feedback_puntuacion_control = null;
 let escala_ui_espectador_control = 1;
+let escala_texto_espectador_control = 1;
 let temporizador_gigante_activo = false;
 let temporizador_gigante_estado_control = "oculto";
 let regalo_musas_enviado = false;
@@ -53,6 +54,8 @@ const count_seq_control = { 1: 0, 2: 0 };
 const tiempo_seq_control = { 1: 0, 2: 0 };
 const ESCALA_UI_ESPECTADOR_CONTROL_MIN = 0.82;
 const ESCALA_UI_ESPECTADOR_CONTROL_MAX = 1.28;
+const ESCALA_TEXTO_ESPECTADOR_CONTROL_MIN = 0.9;
+const ESCALA_TEXTO_ESPECTADOR_CONTROL_MAX = 1.7;
 const EVENTO_CAMBIO_IDIOMA_UI = "scrib:language-changed";
 const BANDERAS_IDIOMA_CONTROL = {
     es: "\uD83C\uDDEA\uD83C\uDDF8",
@@ -68,7 +71,8 @@ const PARAMETROS_CONTROL_PERSISTENTES = [
     "tiempo_votacion",
     "porcentaje_tiempo_desventaja",
     "reduccion_tertulia_porcentaje",
-    "escala_espectador"
+    "escala_espectador",
+    "escala_texto_espectador"
 ];
 let aplicando_estado_control_persistente = false;
 let timeout_emision_estado_control_persistente = null;
@@ -198,14 +202,6 @@ const traducirSolicitudCalentamientoControl = (tipo, opciones = {}) => (
         ? window.scribTranslateWarmupRequest2P(tipo, opciones)
         : String(tipo || "")
 );
-const CLASE_CURSOR_PLUMA_CONTROL = "cursor-control-pluma-activo";
-const SOPORTA_CURSOR_PLUMA_CONTROL = (() => {
-    if (typeof window.matchMedia !== "function") return true;
-    return window.matchMedia("(pointer: fine)").matches;
-})();
-let cursor_pluma_control = null;
-let cursor_pluma_control_inicializado = false;
-let timeout_cursor_pluma_control_press = null;
 let selector_idioma_control_inicializado = false;
 let numeros_linea_control_inicializados = false;
 const observadores_tamano_lineas_control = [];
@@ -839,66 +835,6 @@ function extraerSegundosTiempo(texto) {
     return (minutos * 60) + segundos;
 }
 
-function ocultarCursorPlumaControl() {
-    if (!cursor_pluma_control) return;
-    cursor_pluma_control.classList.remove("activa");
-}
-
-function moverCursorPlumaControl(clientX, clientY) {
-    if (!cursor_pluma_control) return;
-    cursor_pluma_control.style.left = `${clientX}px`;
-    cursor_pluma_control.style.top = `${clientY}px`;
-    cursor_pluma_control.classList.add("activa");
-    cursor_pluma_control.classList.remove("is-hidden");
-}
-
-function pulsarCursorPlumaControl() {
-    if (!cursor_pluma_control) return;
-    cursor_pluma_control.classList.add("is-pressing");
-    clearTimeout(timeout_cursor_pluma_control_press);
-    timeout_cursor_pluma_control_press = setTimeout(() => {
-        timeout_cursor_pluma_control_press = null;
-        if (!cursor_pluma_control) return;
-        cursor_pluma_control.classList.remove("is-pressing");
-    }, 140);
-}
-
-function inicializarCursorPlumaControl() {
-    if (cursor_pluma_control_inicializado) return;
-    cursor_pluma_control_inicializado = true;
-    if (!SOPORTA_CURSOR_PLUMA_CONTROL || !document.body) return;
-
-    let nodo = document.getElementById("control_cursor_pluma");
-    if (!nodo) {
-        nodo = document.createElement("div");
-        nodo.id = "control_cursor_pluma";
-        nodo.className = "control-cursor-pluma";
-        nodo.setAttribute("aria-hidden", "true");
-        document.body.appendChild(nodo);
-    }
-    cursor_pluma_control = nodo;
-    document.body.classList.add(CLASE_CURSOR_PLUMA_CONTROL);
-
-    window.addEventListener("mousemove", (evento) => {
-        if (!document.body || !document.body.classList.contains(CLASE_CURSOR_PLUMA_CONTROL)) return;
-        if (!evento || typeof evento.clientX !== "number" || typeof evento.clientY !== "number") return;
-        moverCursorPlumaControl(evento.clientX, evento.clientY);
-    }, { passive: true });
-    window.addEventListener("pointerdown", (evento) => {
-        if (!document.body || !document.body.classList.contains(CLASE_CURSOR_PLUMA_CONTROL)) return;
-        if (!evento || typeof evento.clientX !== "number" || typeof evento.clientY !== "number") return;
-        moverCursorPlumaControl(evento.clientX, evento.clientY);
-        pulsarCursorPlumaControl();
-    }, { passive: true });
-    window.addEventListener("blur", ocultarCursorPlumaControl);
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-            ocultarCursorPlumaControl();
-        }
-    });
-    document.addEventListener("mouseleave", ocultarCursorPlumaControl);
-}
-
 function inicializarSelectorIdiomaControl() {
     if (selector_idioma_control_inicializado) return;
     const contenedor = document.querySelector(".control-language");
@@ -952,9 +888,6 @@ function inicializarSelectorIdiomaControl() {
     const cerrar = ({ devolverFoco = false } = {}) => {
         contenedor.classList.remove("is-open");
         boton.setAttribute("aria-expanded", "false");
-        if (cursor_pluma_control) {
-            cursor_pluma_control.classList.remove("is-hidden");
-        }
         if (devolverFoco) {
             boton.focus();
         }
@@ -963,9 +896,6 @@ function inicializarSelectorIdiomaControl() {
     const abrir = () => {
         contenedor.classList.add("is-open");
         boton.setAttribute("aria-expanded", "true");
-        if (cursor_pluma_control) {
-            cursor_pluma_control.classList.remove("is-hidden");
-        }
     };
 
     const sincronizar = ({ animar = false } = {}) => {
@@ -1709,7 +1639,6 @@ function inicializarRelojControl() {
 
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
-        inicializarCursorPlumaControl();
         inicializarSelectorIdiomaControl();
         inicializarNumerosLineaControl();
         inicializarLogsControl();
@@ -1718,7 +1647,6 @@ if (document.readyState === "loading") {
         inicializarFrasesFinalesControl();
     }, { once: true });
 } else {
-    inicializarCursorPlumaControl();
     inicializarSelectorIdiomaControl();
     inicializarNumerosLineaControl();
     inicializarLogsControl();
@@ -2138,6 +2066,10 @@ function aplicarEstadoPersistenteControl(payload = {}) {
             escala_ui_espectador_control = obtenerEscalaEspectadorParametroControl();
             actualizarControlesEscalaEspectadorControl();
         }
+        if (typeof actualizarControlesEscalaTextoEspectadorControl === "function") {
+            escala_texto_espectador_control = obtenerEscalaTextoEspectadorParametroControl();
+            actualizarControlesEscalaTextoEspectadorControl();
+        }
         if (typeof rellenarListaModos === "function") {
             rellenarListaModos();
         }
@@ -2400,9 +2332,12 @@ function temp() {
     );
     escala_ui_espectador_control = escalaEspectador;
     socket.emit("ajustar_escala_espectador", { valor: escalaEspectador });
+    const escalaTextoEspectador = obtenerEscalaTextoEspectadorParametroControl();
+    escala_texto_espectador_control = escalaTextoEspectador;
+    socket.emit("ajustar_escala_texto_espectador", { valor: escalaTextoEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
     asegurarVistaPartidaParaInicioControl();
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, PORCENTAJE_TIEMPO_DESVENTAJA, REDUCCION_TERTULIA_PORCENTAJE, ESCALA_UI_ESPECTADOR: escalaEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, PORCENTAJE_TIEMPO_DESVENTAJA, REDUCCION_TERTULIA_PORCENTAJE, ESCALA_UI_ESPECTADOR: escalaEspectador, ESCALA_TEXTO_ESPECTADOR: escalaTextoEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
@@ -2540,8 +2475,8 @@ function limpiar({ emitirServidor = true } = {}) {
         boton_pausar_reanudar.dataset.value = 0;
         actualizarBotonPausaReanudarControl(boton_pausar_reanudar);
     }
-    texto_guardado1 = texto1.innerText;
-    texto_guardado2 = texto2.innerText;
+    conservarTextoJugadorControl(1);
+    conservarTextoJugadorControl(2);
     //texto1.innerText = "";
     //texto2.innerText = "";
     juego_iniciado = false;
@@ -2744,6 +2679,7 @@ function textoErrorDebugControl(codigo = "") {
         GAME_NOT_ACTIVE: "No hay una partida en curso.",
         NO_MATCH_ITERATIONS: "Todav\u00eda no hay iteraciones de una partida para exportar.",
         ITERATION_EXPORT_FAILED: "No se pudo preparar el archivo de iteraciones.",
+        WRITER_SESSIONS_CLOSE_FAILED: "No se pudieron cerrar las sesiones de escritoras.",
         DEBUG_SKIP_COOLDOWN: "Espera un instante antes de volver a saltar de nivel.",
         MODE_TRANSITION_BUSY: "El juego ya est\u00e1 cambiando de nivel. Int\u00e9ntalo de nuevo.",
         SHOW_TIMER_UNAVAILABLE: "El temporizador no est\u00e1 disponible.",
@@ -2919,6 +2855,25 @@ function cargarPostgameMusasPruebaDebug() {
         "juego"
     );
 }
+
+function cerrarSesionesEscritoresDebug() {
+    ejecutarAccionDebugControl(
+        "debug_cerrar_sesiones_escritores",
+        "Cerrando sesiones de escritoras...",
+        (respuesta = {}) => {
+            const cerradas = Math.max(0, Math.trunc(Number(respuesta.cerradas) || 0));
+            estadoAccionDebugControl(
+                cerradas === 1
+                    ? "1 sesi\u00f3n de escritora cerrada."
+                    : `${cerradas} sesiones de escritoras cerradas.`,
+                "success",
+                "juego"
+            );
+        },
+        "juego"
+    );
+}
+window.cerrarSesionesEscritoresDebug = cerrarSesionesEscritoresDebug;
 
 function limpiarDatosPruebaDeliberacionDebug() {
     ejecutarAccionDebugControl(
@@ -3423,6 +3378,40 @@ function actualizarEscalaEspectadorControlDesdeParametro(opciones = {}) {
 }
 window.actualizarEscalaEspectadorControlDesdeParametro = actualizarEscalaEspectadorControlDesdeParametro;
 
+const normalizarEscalaTextoEspectadorControl = (valor) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return 1;
+    return Math.min(
+        ESCALA_TEXTO_ESPECTADOR_CONTROL_MAX,
+        Math.max(ESCALA_TEXTO_ESPECTADOR_CONTROL_MIN, numero)
+    );
+};
+
+function actualizarControlesEscalaTextoEspectadorControl() {
+    const input = document.getElementById("escala_texto_espectador");
+    const valor = document.getElementById("escala_texto_espectador_valor");
+    const porcentaje = Math.round(normalizarEscalaTextoEspectadorControl(escala_texto_espectador_control) * 100);
+    if (input && Number(input.value) !== porcentaje) input.value = String(porcentaje);
+    if (valor) valor.textContent = `${porcentaje}%`;
+}
+
+function obtenerEscalaTextoEspectadorParametroControl() {
+    const input = document.getElementById("escala_texto_espectador");
+    const porcentaje = input ? Number(input.value) : 100;
+    return normalizarEscalaTextoEspectadorControl(Number.isFinite(porcentaje) ? porcentaje / 100 : 1);
+}
+
+function actualizarEscalaTextoEspectadorControlDesdeParametro(opciones = {}) {
+    const emitir = opciones.emitir !== false;
+    escala_texto_espectador_control = obtenerEscalaTextoEspectadorParametroControl();
+    actualizarControlesEscalaTextoEspectadorControl();
+    if (emitir && typeof socket !== "undefined" && socket && typeof socket.emit === "function") {
+        socket.emit("ajustar_escala_texto_espectador", { valor: escala_texto_espectador_control });
+    }
+    emitirEstadoControlPersistente();
+}
+window.actualizarEscalaTextoEspectadorControlDesdeParametro = actualizarEscalaTextoEspectadorControlDesdeParametro;
+
 const ROLES_REINICIO_REMOTO_CONTROL = new Set([
     "escritxr1",
     "escritxr2",
@@ -3923,6 +3912,11 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
     }
     if (payload && Object.prototype.hasOwnProperty.call(payload, "escala_ui")) {
         escala_ui_espectador_control = normalizarEscalaUiEspectadorControl(payload.escala_ui);
+        actualizarControlesEscalaEspectadorControl();
+    }
+    if (payload && Object.prototype.hasOwnProperty.call(payload, "escala_texto")) {
+        escala_texto_espectador_control = normalizarEscalaTextoEspectadorControl(payload.escala_texto);
+        actualizarControlesEscalaTextoEspectadorControl();
     }
     actualizarBotonesVistaEspectadorControl();
 }
@@ -4570,14 +4564,53 @@ function actualizarTeleprompterUI() {
     }
 }
 
-function obtenerTextoJugadorParaRepresentacion(jugador) {
+function leerTextoActualJugadorControl(jugador) {
     const esJ2 = jugador === 2;
     const nodoTexto = esJ2
         ? ((typeof texto2 !== "undefined" && texto2) ? texto2 : null)
         : ((typeof texto1 !== "undefined" && texto1) ? texto1 : null);
-    const textoVisible = nodoTexto ? String(nodoTexto.innerText || "").trim() : "";
-    if (textoVisible) {
-        return textoVisible;
+    if (!nodoTexto) return "";
+
+    const htmlActual = typeof nodoTexto.innerHTML === "string" ? nodoTexto.innerHTML : "";
+    const textoDesdeHtml = typeof extraerTextoPlanoDesdeHtmlControl === "function"
+        ? extraerTextoPlanoDesdeHtmlControl(htmlActual)
+        : "";
+    if (textoDesdeHtml) return textoDesdeHtml;
+
+    // `innerText` devuelve una cadena vacía cuando el marcador queda oculto
+    // por la pantalla de fin. `textContent` conserva el texto aun entonces.
+    return String(nodoTexto.textContent || "").trim();
+}
+
+function conservarTextoJugadorControl(jugador) {
+    const esJ2 = jugador === 2;
+    const textoActual = leerTextoActualJugadorControl(jugador);
+    const textoPrevio = esJ2
+        ? (typeof texto_guardado2 === "string" ? texto_guardado2 : "")
+        : (typeof texto_guardado1 === "string" ? texto_guardado1 : "");
+    const textoConservado = textoActual || String(textoPrevio || "").trim();
+    if (esJ2) {
+        texto_guardado2 = textoConservado;
+    } else {
+        texto_guardado1 = textoConservado;
+    }
+    return textoConservado;
+}
+
+function solicitarTextosRepresentacionControl() {
+    if (typeof socket === "undefined" || !socket || !socket.connected || typeof socket.emit !== "function") {
+        return false;
+    }
+    socket.emit("pedir_texto", { player: 1 });
+    socket.emit("pedir_texto", { player: 2 });
+    return true;
+}
+
+function obtenerTextoJugadorParaRepresentacion(jugador) {
+    const esJ2 = jugador === 2;
+    const textoActual = leerTextoActualJugadorControl(jugador);
+    if (textoActual) {
+        return textoActual;
     }
     const respaldo = esJ2
         ? (typeof texto_guardado2 === "string" ? texto_guardado2 : "")
@@ -4603,6 +4636,7 @@ function actualizarBotonesTeleprompterCarga() {
 }
 
 window.actualizarBotonesTeleprompterCarga = actualizarBotonesTeleprompterCarga;
+window.solicitarTextosRepresentacionControl = solicitarTextosRepresentacionControl;
 
 function emitirTeleprompter(inmediato = false) {
     if (!socket) return;
@@ -4632,6 +4666,7 @@ function toggleTeleprompter(forzarCerrar = false) {
     }
     const abrirTeleprompter = forzarCerrar ? false : !estaVisible;
     if (abrirTeleprompter) {
+        solicitarTextosRepresentacionControl();
         panel_control_previo_teleprompter = parametros_visibles
             ? "parametros"
             : creditos_visibles
@@ -5243,7 +5278,7 @@ function final(player, opciones = {}){
         tiempo.innerHTML = tJuego2PControl("timer.time_up", {}, "Â¡Tiempo!");
         actualizarBarraVida(tiempo, tiempo.innerHTML);
         count = tJuego2PControl("timer.time_up", {}, "Â¡Tiempo!");
-        texto_guardado1 = texto1.innerText;
+        conservarTextoJugadorControl(1);
         terminado = true;
         if (window.registrarTiempoControl) {
             window.registrarTiempoControl(1, 0);
@@ -5265,7 +5300,7 @@ function final(player, opciones = {}){
         if (window.registrarTiempoControl) {
             window.registrarTiempoControl(2, 0);
         }
-        texto_guardado2 = texto2.innerText;
+        conservarTextoJugadorControl(2);
         console.log("texto2", texto_guardado2)
         if (emitirConteoFinal) {
             emitirCountControl({ count: count1, player: 2 });

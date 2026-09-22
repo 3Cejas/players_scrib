@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260921l">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260922o">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -21,10 +21,10 @@
     <script src="../js/domains/inspiration.js?v=20260905d"></script>
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260902b"></script>
-    <script src="../js/domains/competition.js?v=20260921f"></script>
+    <script src="../js/domains/competition.js?v=20260922g"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260921g"></script>
+<script src="./js/actions.js?v=20260922e"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -204,6 +204,7 @@
                                 <button id="debug_siguiente_nivel" class="btn debug-control__button debug-control__button--advance" data-debug-action type="button" onclick="saltarSiguienteNivelDebug()" hidden aria-hidden="true" tabindex="-1">&#x23ED;&#xFE0F; SIGUIENTE NIVEL</button>
                                 <button id="debug_cargar_resultado_videojuego" class="btn debug-control__button" data-debug-action type="button" onclick="cargarResultadoVideojuegoPruebaDebug()">&#x1F3AE; CARGAR RESULTADO FICTICIO</button>
                                 <button id="debug_cargar_postgame_musas" class="btn debug-control__button" data-debug-action type="button" onclick="cargarPostgameMusasPruebaDebug()">&#x1F381; CARGAR PARTIDA DE MUSA</button>
+                                <button id="debug_cerrar_sesiones_escritores" class="btn debug-control__button debug-control__button--danger" data-debug-action type="button" onclick="cerrarSesionesEscritoresDebug()">&#x1F9F9; CERRAR SESIONES DE ESCRITORAS</button>
                                 <p class="debug-context-tools__status" data-debug-status="juego" role="status" aria-live="polite"></p>
                             </div>
                         </div>
@@ -667,9 +668,18 @@
                         <span id="escala_espectador_valor" class="spectator-scale-value">100%</span>
                     </div>
                 </td>
+                <td class="spectator-scale-param spectator-text-scale-param">
+                    <br>
+                    <label for="escala_texto_espectador" data-i18n="control.param.spectator_text_scale">TAMA&Ntilde;O TEXTO</label>
+                    <div class="spectator-scale-slider-control">
+                        <input type="range" id="escala_texto_espectador" name="escala_texto_espectador" class="parametro spectator-scale-range"
+                               min="90" max="170" step="5" value="100" onchange="actualizarEscalaTextoEspectadorControlDesdeParametro()" oninput="actualizarEscalaTextoEspectadorControlDesdeParametro()">
+                        <span id="escala_texto_espectador_valor" class="spectator-scale-value">100%</span>
+                    </div>
+                </td>
             </tr>
             <tr class="parametros-modos-row">
-                <td colspan="5">
+                <td colspan="6">
                     <div class="parametros-bottom-actions">
                         <div id="parametros_modos_dropdown" class="parametros-modos-dropdown">
                             <button
@@ -866,7 +876,7 @@
 <script src="./js/show-narration-control.js?v=20260920a"></script>
 <script src="./js/canto-control.js?v=20260920b"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
-<script src="./js/socket-events.js?v=20260921f"></script>
+<script src="./js/socket-events.js?v=20260922b"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 </body>

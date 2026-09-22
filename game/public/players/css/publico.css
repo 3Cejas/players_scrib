@@ -2199,7 +2199,7 @@ th{
     top: 0;
     width: min(92vw, 36rem);
     will-change: transform;
-    animation: creditosMusaRoll var(--creditos-musa-duracion, 46s) linear both;
+    animation: creditosMusaRoll var(--creditos-musa-duracion, 10s) linear both;
 }
 
 .creditos-musa__content {
@@ -2459,6 +2459,11 @@ th{
     background: linear-gradient(145deg, rgba(27, 102, 125, 0.32), rgba(111, 22, 62, 0.32));
     box-shadow: inset 0 0 1.2rem rgba(255,255,255,0.04), 0 0 1rem rgba(78, 226, 255, 0.11);
     animation: creditosMusaRed 1.9s ease-in-out infinite alternate;
+    animation-play-state: paused;
+}
+
+.creditos-musa--finalizados .creditos-musa__redes a {
+    animation-play-state: running;
 }
 
 .creditos-musa__redes a:nth-child(2) { animation-delay: -0.45s; }
@@ -2649,7 +2654,7 @@ th{
     to { transform: translate3d(0, var(--creditos-musa-y-fin, calc(-100% + 50vh)), 0); }
 }
 @keyframes creditosMusaGrid { to { transform: rotate(-8deg) translate3d(10vw, 10vw, 0) scale(1.2); } }
-@keyframes creditosMusaAurora { to { transform: rotate(12deg) scale(1.12); filter: blur(34px) saturate(1.3); } }
+@keyframes creditosMusaAurora { to { transform: rotate(12deg) scale(1.12); opacity: 0.78; } }
 @keyframes creditosMusaLogo { 50% { transform: translateX(0.04em); filter: brightness(1.25); } }
 @keyframes creditosMusaTarjeta { to { border-color: rgba(255, 111, 132, 0.42); box-shadow: inset 0 0 1.8rem rgba(255, 90, 118, 0.07), 0 0 1.5rem rgba(76, 230, 255, 0.15); } }
 @keyframes creditosMusaSocialesGlow { to { box-shadow: inset 0 0 2.5rem rgba(255,255,255,0.06), 0 0 4rem rgba(73, 232, 255, 0.3), 0 0 2rem rgba(255, 84, 116, 0.23); } }
@@ -3040,7 +3045,7 @@ th{
     .resultado-musa__puntos-vuelo {
         animation: none !important;
     }
-    .creditos-musa__track { animation-duration: 80s; }
+    .creditos-musa__track { animation-duration: 10s; }
 }
 
 .nivel{
@@ -5156,6 +5161,13 @@ body.vista-calentamiento-musa #votacion_ventaja_modal {
 
 body.musa-postgame-activo {
     overflow: hidden;
+}
+
+/* El wrapped es la única capa final visible: evita que el cierre antiguo
+   «Historia lista» o una diapositiva de resultado rezagada se solapen. */
+body.musa-postgame-activo .musa-partida-final,
+body.musa-postgame-activo .resultado-musa {
+    display: none !important;
 }
 
 .musa-postgame {
@@ -7963,6 +7975,31 @@ body.musa-vista-cambiando #contenedor {
         background: linear-gradient(115deg, transparent 25%, rgba(255,255,255,.13) 50%, transparent 75%);
     }
 
+    .spectator-view-transition.is-covering .spectator-view-transition__half--blue,
+    .spectator-view-transition.is-covering .spectator-view-transition__half--red,
+    .spectator-view-transition.is-covering .spectator-view-transition__scan {
+        animation-duration: 140ms;
+    }
+
+    .spectator-view-transition.is-covering .spectator-view-transition__core {
+        animation-duration: 110ms;
+        animation-delay: 45ms;
+    }
+
+    .spectator-view-transition.is-revealing .spectator-view-transition__half--blue,
+    .spectator-view-transition.is-revealing .spectator-view-transition__half--red {
+        animation-duration: 220ms;
+    }
+
+    .spectator-view-transition.is-revealing .spectator-view-transition__scan,
+    .spectator-view-transition.is-revealing .spectator-view-transition__core {
+        animation-duration: 170ms;
+    }
+
+    body.musa-vista-cambiando #contenedor {
+        animation-duration: 380ms;
+    }
+
     body.musa-vista-cambiando #background-effects,
     body.musa-vista-cambiando .aquarium,
     body.musa-vista-cambiando .particula {
@@ -8072,4 +8109,57 @@ body.musa-borrado-bloqueado #calentamiento_input {
 @keyframes musaFogDrift {
     from { transform: translate3d(-7%, -2%, 0) scale(1); opacity: .55; }
     to { transform: translate3d(8%, 3%, 0) scale(1.1); opacity: .9; }
+}
+
+/* Perfil de composicion para moviles. Mantiene las transiciones que comunican
+   cambios de estado, pero evita animar desenfoques, sombras y capas ocultas. */
+@media (pointer: coarse), (max-width: 900px) {
+    .creditos-musa {
+        contain: layout paint style;
+    }
+
+    .creditos-musa::before,
+    .creditos-musa::after,
+    .creditos-musa__logos,
+    .creditos-musa__bloque,
+    .creditos-musa__sociales {
+        animation: none !important;
+    }
+
+    .creditos-musa::after {
+        filter: none;
+        opacity: .5;
+    }
+
+    .creditos-musa__bloque,
+    .creditos-musa__sociales,
+    .temporizador-musa__panel,
+    .regalo-overlay,
+    .musa-connection-notice {
+        backdrop-filter: none !important;
+    }
+
+    .creditos-musa__track {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+    }
+
+    .regalo-card::after,
+    .pre-show-musa__halo,
+    .musa-postgame__score-ring {
+        animation: none !important;
+    }
+
+    .regalo-boton::before {
+        filter: blur(5px);
+    }
+
+    .musa-postgame__ambient i:nth-child(n + 11) {
+        display: none;
+    }
+
+    body.musa-bruma-activa::after {
+        filter: blur(12px);
+        will-change: transform, opacity;
+    }
 }

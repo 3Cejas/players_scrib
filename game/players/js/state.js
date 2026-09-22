@@ -152,6 +152,30 @@ function obtenerClientIdSesionEscritora() {
     return window.__scribWriterClientId;
 }
 
+function extraerInicioDesdeClientIdEscritora(clientId) {
+    const match = String(clientId || "").match(/^writer-(?:1|2|x)-([0-9a-z]+)-/i);
+    if (!match) return 0;
+    const timestamp = parseInt(match[1], 36);
+    return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : 0;
+}
+
+function obtenerInicioSesionEscritora(clientId = obtenerClientIdSesionEscritora()) {
+    const key = `scrib_writer_session_started_at_${player || "x"}`;
+    try {
+        if (window.sessionStorage) {
+            const existente = Number(window.sessionStorage.getItem(key));
+            if (Number.isFinite(existente) && existente > 0) return existente;
+            const nuevo = extraerInicioDesdeClientIdEscritora(clientId) || Date.now();
+            window.sessionStorage.setItem(key, String(nuevo));
+            return nuevo;
+        }
+    } catch (_error) {}
+    if (!Number.isFinite(window.__scribWriterSessionStartedAt) || window.__scribWriterSessionStartedAt <= 0) {
+        window.__scribWriterSessionStartedAt = extraerInicioDesdeClientIdEscritora(clientId) || Date.now();
+    }
+    return window.__scribWriterSessionStartedAt;
+}
+
 function capturarTextoGuardadoDesdeEditor() {
     if (!texto) {
         texto_guardado = "";

@@ -40,7 +40,7 @@ test("spectator and muses load the canto scene while only spectator owns its aud
 
   [spectator, muse].forEach((html) => {
     assert.match(html, /css\/canto\.css\?v=20260920a/);
-    assert.match(html, /domains\/canto\.js\?v=20260920b/);
+    assert.match(html, /domains\/canto\.js\?v=20260922c/);
   });
   assert.match(source, /role === "spectator"[\s\S]*createSpectatorOverlay[\s\S]*createMuseOverlay/);
   assert.match(source, /<audio class="scrib-canto__audio"[^>]*loop/);
@@ -86,4 +86,6 @@ test("spectator crossfades existing music while canto enters and leaves", () => 
   assert.match(spectatorState, /cruzarAudiosPartidaConCanto/);
   assert.match(spectatorState, /\[sonido, sonido_modo\]/);
   assert.match(spectatorState, /fundirAudioExternoCanto\(media, 0, duracion\)/);
+  assert.equal(canto.EXIT_AUDIO_FADE_MULTIPLIER, 2);
+  assert.match(read("game/js/domains/canto.js"), /dispatchAudioState\(false, fadeOutMs\)/);
 });

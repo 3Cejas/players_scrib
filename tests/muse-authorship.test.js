@@ -184,7 +184,8 @@ test("muse team chrome follows the assigned team and transitions stay GPU friend
   assert.match(css, /\.musa-texto-card #metadatos\s*\{[\s\S]*var\(--equipo-color/);
   assert.match(css, /\.notificacion\s*\{[\s\S]*var\(--equipo-color/);
   assert.match(css, /#mostrar_texto::before,[\s\S]*#mostrar_texto::after/);
-  assert.match(state, /coverMs: 260,[\s\S]*revealMs: 440/);
+  assert.match(state, /coverMs: duracion_cobertura_vista_musa,[\s\S]*revealMs: duracion_revelado_vista_musa/);
+  assert.match(state, /transicion_vista_musa_movil[\s\S]*\? 140 : 260[\s\S]*\? 220 : 440/);
 });
 
 test("a muse joining mid-match requests the live snapshot after authoritative registration", () => {

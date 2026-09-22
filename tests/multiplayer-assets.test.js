@@ -10,21 +10,22 @@ const PLAYER_DISCARD_VERSION = "20260824a";
 const PLAYER_I18N_VERSION = "20260917c";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
-const GAME_HUD_VERSION = "20260921f";
-const COMPETITION_VERSION = "20260921f";
+const GAME_HUD_VERSION = "20260922g";
+const COMPETITION_VERSION = "20260922g";
 const INSPIRATION_VERSION = "20260905d";
 const CONTROL_VIDEO_VERSION = "20260920a";
 const CONTROL_NARRATION_VERSION = "20260920a";
 const CANTO_STYLE_VERSION = "20260920a";
-const CANTO_SCRIPT_VERSION = "20260920b";
+const CANTO_SCRIPT_VERSION = "20260922c";
+const CANTO_CONTROL_VERSION = "20260920b";
 const CONTROL_HELP_VERSION = "20260824e";
 const CONTROL_HELP_MODULE_VERSION = "20260830a";
 const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260921j";
-const SPECTATOR_CSS_VERSION = "20260922b";
+const SPECTATOR_STATE_VERSION = "20260922l";
+const SPECTATOR_CSS_VERSION = "20260922g";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260921a";
 const MUSA_HELP_VERSION = "20260830a";
@@ -34,24 +35,24 @@ const SCORE_ASSET_VERSION = "20260903e";
 const LEVEL_TRANSITION_VERSION = "20260921c";
 const LEVEL_TRANSITION_SCRIPT_VERSION = "20260921c";
 const PLAYER_ACTIONS_VERSION = "20260921g";
-const PLAYER_STATE_VERSION = "20260922a";
-const PLAYER_SOCKET_EVENTS_VERSION = "20260922a";
+const PLAYER_STATE_VERSION = "20260922c";
+const PLAYER_SOCKET_EVENTS_VERSION = "20260922d";
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260921c";
 const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260920c";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260921l";
-const CONTROL_ACTIONS_VERSION = "20260921g";
+const CONTROL_CSS_VERSION = "20260922o";
+const CONTROL_ACTIONS_VERSION = "20260922e";
 const CONTROL_I18N_VERSION = "20260920a";
 const CONTROL_STATE_VERSION = "20260917c";
-const CONTROL_SOCKET_EVENTS_VERSION = "20260921f";
+const CONTROL_SOCKET_EVENTS_VERSION = "20260922b";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260921c";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260921j";
-const PUBLIC_PLAYER_CSS_VERSION = "20260921h";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260921i";
+const PUBLIC_PLAYER_STATE_VERSION = "20260922o";
+const PUBLIC_PLAYER_CSS_VERSION = "20260922l";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260922k";
 const PUBLIC_PLAYER_I18N_VERSION = "20260921e";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
@@ -125,7 +126,7 @@ test("multiplayer html references current changed shared assets", () => {
   assertIncludesAsset("game/control/index.html", "js/state.js", CONTROL_STATE_VERSION);
   assertIncludesAsset("game/control/index.html", "js/videotutorial-control.js", CONTROL_VIDEO_VERSION);
   assertIncludesAsset("game/control/index.html", "js/show-narration-control.js", CONTROL_NARRATION_VERSION);
-  assertIncludesAsset("game/control/index.html", "js/canto-control.js", CANTO_SCRIPT_VERSION);
+  assertIncludesAsset("game/control/index.html", "js/canto-control.js", CANTO_CONTROL_VERSION);
   assertIncludesAsset("game/control/index.html", "js/muse-help-control.js", CONTROL_HELP_MODULE_VERSION);
   assertIncludesAsset("game/control/index.html", "js/socket-events.js", CONTROL_SOCKET_EVENTS_VERSION);
   assertIncludesAsset("game/control/index.html", "domains/credits.js", CREDITS_DOMAIN_VERSION);
@@ -450,7 +451,8 @@ test("writer client blocks stale duplicate writer sessions", () => {
   assert.match(js, /socket\.disconnect\(\)/);
   assert.match(state, /function obtenerClientIdSesionEscritora\(\)/);
   assert.match(state, /window\.sessionStorage\.getItem\(key\)/);
-  assert.match(js, /socket\.emit\('registrar_escritor', \{\s*player,\s*client_id: obtenerClientIdSesionEscritora\(\)\s*\}, \(respuesta = \{\}\) => \{/);
+  assert.match(js, /const clientId = obtenerClientIdSesionEscritora\(\)[\s\S]*socket\.emit\('registrar_escritor', \{\s*player,\s*client_id: clientId,\s*session_started_at: obtenerInicioSesionEscritora\(clientId\)/);
+  assert.match(state, /function obtenerInicioSesionEscritora\(clientId = obtenerClientIdSesionEscritora\(\)\)[\s\S]*scrib_writer_session_started_at_/);
   assert.match(js, /Otra sesi\\u00f3n activa de este rol est\\u00e1 activa/);
 });
 
@@ -690,13 +692,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.match(css, /#panel_controles \.control-group:not\(\.is-collapsed\) > \.control-group-buttons--two\s*\{[\s\S]*grid-template-rows: repeat\(3, minmax\(2\.35rem, 1fr\)\);/);
   assert.match(css, /#panel_controles \.control-group:not\(\.is-collapsed\) > \.control-group-buttons #boton_skip_tertulia:not\(\.is-visible\)\s*\{[\s\S]*display: none !important;/);
   assert.match(css, /#panel_controles \.control-group:not\(\.is-collapsed\) > \.control-group-buttons #boton_skip_tertulia\.is-visible\s*\{[\s\S]*display: inline-flex !important;/);
-  assert.match(css, /Cursor retro pixel para control, sin asset de pluma/);
-  assert.match(css, /\.control-cursor-pluma\s*\{[\s\S]*width: 30px;[\s\S]*height: 34px;[\s\S]*transform: translate\(-2px, -2px\);/);
-  assert.match(css, /\.control-cursor-pluma\.activa\s*\{[\s\S]*opacity: 0\.98 !important;/);
-  assert.match(css, /\.control-cursor-pluma::before\s*\{[\s\S]*clip-path: polygon\(0 0, 0 78%, 23% 61%, 38% 100%, 57% 93%, 43% 56%, 76% 56%\);[\s\S]*linear-gradient\(135deg, #f8feff/);
-  assert.match(css, /\.control-cursor-pluma::after\s*\{[\s\S]*clip-path: polygon\(0 0, 0 78%, 23% 61%, 38% 100%, 57% 93%, 43% 56%, 76% 56%\);[\s\S]*background: #ff5f67;/);
-  assert.match(css, /@keyframes controlCursorRetroBlink/);
-  assert.doesNotMatch(css, /pluma_azul\.png|controlCursorPlumaAzulGlow|controlCursorPanelGlow/);
+  assert.doesNotMatch(css, /cursor-control-pluma-activo|control-cursor-pluma|controlCursorRetroBlink/);
   assert.doesNotMatch(css, /calentamiento-solicitud-estado/);
   assert.match(css, /\.btn-calentamiento-solicitud\[data-active="1"\],[\s\S]*\.btn-calentamiento-solicitud\.is-active\s*\{[\s\S]*border-color: rgba\(255, 209, 102, 0\.96\);[\s\S]*filter: brightness\(1\.16\);/);
   assert.match(css, /\.btn-calentamiento-solicitud\[data-active="1"\]::after,[\s\S]*\.btn-calentamiento-solicitud\.is-active::after\s*\{[\s\S]*background: #ffd166;/);
@@ -934,6 +930,7 @@ test("control teleprompter identifies each team and confirms spectator loading w
   const html = read("game/control/index.html");
   const css = read("game/control/index.css");
   const actions = read("game/control/js/actions.js");
+  const socketEvents = read("game/control/js/socket-events.js");
   const i18n = read("game/js/i18n.js");
 
   assert.match(html, /id="teleprompter_cargar_j1"[^>]*teleprompter-cargar--j1[^>]*aria-label="Cargar texto del equipo azul"[^>]*>💾 CARGAR<\/button>/);
@@ -954,6 +951,13 @@ test("control teleprompter identifies each team and confirms spectator loading w
   assert.match(actions, /Cargando texto \$\{etiqueta\} en espectador[\s\S]*"info", source/);
   assert.match(actions, /if \(!textoRenderizado\)[\s\S]*"error", source[\s\S]*if \(visible\)[\s\S]*"ok", source/);
   assert.match(actions, /if \(!teleprompter_espera_ack\)[\s\S]*hayTextoCargado[\s\S]*"ok", source/);
+  assert.match(actions, /function leerTextoActualJugadorControl\(jugador\)[\s\S]*extraerTextoPlanoDesdeHtmlControl\(htmlActual\)[\s\S]*nodoTexto\.textContent/);
+  assert.match(actions, /function conservarTextoJugadorControl\(jugador\)[\s\S]*textoActual \|\| String\(textoPrevio \|\| ""\)\.trim\(\)/);
+  assert.match(actions, /function solicitarTextosRepresentacionControl\(\)[\s\S]*pedir_texto", \{ player: 1 \}[\s\S]*pedir_texto", \{ player: 2 \}/);
+  assert.match(actions, /function final\(player, opciones = \{\}\)[\s\S]*conservarTextoJugadorControl\(1\)[\s\S]*conservarTextoJugadorControl\(2\)/);
+  assert.match(socketEvents, /pedir_teleprompter_estado'[\s\S]*solicitarTextosRepresentacionControl/);
+  assert.match(socketEvents, /const payloadTexto = typeof data === "string" \? \{ text: data \} : data/);
+  assert.match(socketEvents, /TAGS_SALTO\.has\(tag\) && texto && !texto\.endsWith\("\\n"\)/);
   assert.match(actions, /\["teleprompter_cargar_j1", "control\.button\.load", "\\u\{1F4BE\} CARGAR"\]/);
   assert.match(actions, /\["teleprompter_cargar_j2", "control\.button\.load", "\\u\{1F4BE\} CARGAR"\]/);
 });
@@ -1290,8 +1294,10 @@ test("muse gift opens a persistent wrapped scene with ranking and a selectable t
   assert.match(css, /\.musa-postgame\.is-celebrating \.musa-postgame__ambient i[\s\S]*musaPostgameConfetti/);
   assert.match(state, /regalo_postgame_data = payload\.postgame/);
   assert.match(state, /function mostrarPostgameMusa\(\)/);
+  assert.match(state, /function solicitarPostgameMusa\(\)[\s\S]*pedir_postgame_musas/);
+  assert.match(socketEvents, /socket\.on\("postgame_musas_estado"[\s\S]*aplicarPostgameMusaDesdeServidor/);
   assert.match(state, /regalo_postgame_data && payload\.debug !== true[\s\S]*vista_modo_remota_musa === "partida"[\s\S]*mostrarPostgameMusa\(\)/);
-  assert.match(state, /function setUiPartidaFinalizadaMusa\(finalizada\)[\s\S]*regalo_postgame_data && !regalo_postgame_debug && vista_modo_remota_musa === "partida"[\s\S]*mostrarPostgameMusa\(\)/);
+  assert.match(state, /function setUiPartidaFinalizadaMusa\(finalizada\)[\s\S]*regalo_postgame_data && vista_modo_remota_musa === "partida"[\s\S]*ocultarRegaloPdf\(\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /await descargarArchivoRegalo\(regalo_pdf_data, regalo_pdf_filename\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /function pintarTextoPostgameMusa\(playerId\)[\s\S]*escritxr\.texto/);
   assert.match(state, /function actualizarExpansionTextoPostgameMusa\(expandido\)[\s\S]*muse\.postgame\.expand[\s\S]*muse\.postgame\.collapse/);
@@ -1309,7 +1315,7 @@ test("muse gift opens a persistent wrapped scene with ranking and a selectable t
   assert.match(state, /sessionStorage\.setItem\(REGALO_MUSA_ABIERTO_STORAGE_KEY/);
   assert.match(state, /regaloPdfMusaYaAbierto\(payload\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /function sincronizarVistaDeliberacionMusa[\s\S]*ocultarRegaloPdf\(\);[\s\S]*ocultarPostgameMusa\(\);/);
-  assert.match(state, /ui_partida_finalizada_musa && vista_modo_remota_musa === "partida"[\s\S]*regalo_postgame_data && !regalo_postgame_debug[\s\S]*mostrarPostgameMusa\(\)/);
+  assert.match(state, /ui_partida_finalizada_musa && vista_modo_remota_musa === "partida"[\s\S]*if \(regalo_postgame_data\)[\s\S]*ocultarRegaloPdf\(\);[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /function descargarPdfEscritxrPostgameMusa\(playerId, boton\)/);
   const controlSockets = read("game/control/js/socket-events.js");
   assert.match(controlSockets, /const pdfsEscritores = \{[\s\S]*docJ1\.output\('datauristring'\)[\s\S]*docJ2\.output\('datauristring'\)/);
@@ -1365,6 +1371,8 @@ test("control parameters own spectator scale and removed inserted word goal", ()
 
   assert.match(html, /<td class="spectator-scale-param">[\s\S]*<input type="range" id="escala_espectador"[\s\S]*class="parametro spectator-scale-range"[\s\S]*min="82" max="128" step="1" value="100"/);
   assert.match(html, /id="escala_espectador_valor" class="spectator-scale-value">100%<\/span>/);
+  assert.match(html, /id="escala_texto_espectador"[\s\S]*min="90" max="170" step="5" value="100"/);
+  assert.match(html, /id="escala_texto_espectador_valor" class="spectator-scale-value">100%<\/span>/);
   assert.match(html, /data-i18n="control\.param\.spectator_scale"/);
   assert.match(html, /data-i18n="control\.param\.advantage_vote"[\s\S]*id="tiempo_votacion"[\s\S]*min="1" max="360" step="1" value="30"/);
   assert.doesNotMatch(html, /cambiarValor\('escala_espectador'|type="number" id="escala_espectador"/);
@@ -1383,6 +1391,7 @@ test("control parameters own spectator scale and removed inserted word goal", ()
   assert.doesNotMatch(stateJs, /palabras_insertadas_meta/);
 
   assert.match(actionsJs, /socket\.emit\("ajustar_escala_espectador", \{ valor: escalaEspectador \}\);/);
+  assert.match(actionsJs, /socket\.emit\("ajustar_escala_texto_espectador", \{ valor: escalaTextoEspectador \}\);/);
   assert.match(actionsJs, /ESCALA_UI_ESPECTADOR: escalaEspectador/);
   assert.match(actionsJs, /PARAMETROS_CONTROL_PERSISTENTES[\s\S]*"tiempo_votacion"/);
   assert.match(actionsJs, /parametros: \{DURACION_PARTIDA,[\s\S]*TIEMPO_VOTACION/);
@@ -1391,7 +1400,33 @@ test("control parameters own spectator scale and removed inserted word goal", ()
   assert.doesNotMatch(actionsJs, /PALABRAS_INSERTADAS_META/);
 
   assert.match(i18n, /"control\.param\.spectator_scale"/);
+  assert.match(i18n, /"control\.param\.spectator_text_scale"/);
   assert.doesNotMatch(i18n, /"control\.param\.inserted_goal"/);
+});
+
+test("active spectator layout reclaims hidden branding space and keeps compact text cards", () => {
+  const css = read("game/css/dashboard-players.css");
+  const state = read("game/spectator/js/state.js");
+  const competition = read("game/js/domains/competition.js");
+
+  assert.match(state, /classList\.toggle\("partida-en-curso-espectador", modoPartida && partidaEnCurso\)/);
+  assert.match(css, /partida-en-curso-espectador #contenedor_espectador[\s\S]*padding-top:\s*clamp\(108px, 13\.5vh, 148px\)/);
+  assert.match(css, /partida-en-curso-espectador #contenedor_espectador > \.jugador1,[\s\S]*grid-template-rows:\s*auto auto clamp\(118px, 17vh, 180px\) auto auto/);
+  assert.match(competition, /data-role="spectator"\] \.scrib-competition-leader\{display:none!important\}/);
+  assert.match(css, /--spectator-text-effective-scale/);
+  assert.match(state, /payload, "escala_texto"/);
+});
+
+test("spectator detonators are projector-sized and red inspiration keeps strong contrast", () => {
+  const css = read("game/css/dashboard-players.css");
+  assert.match(css, /body\.page-spectator \.calentamiento-palabra\s*\{[\s\S]*font-size:\s*clamp\(22px, calc\(3\.05vw \* var\(--spectator-ui-scale, 1\)\), 58px\)/);
+  assert.match(css, /body\.page-spectator \.calentamiento-palabra\.equipo-2,[\s\S]*body\.page-spectator \.nube-inspiracion-palabra\.equipo-2[\s\S]*color:\s*#ff4964/);
+  assert.match(css, /-webkit-text-stroke:\s*0\.025em[\s\S]*filter:\s*brightness\(1\.12\) saturate\(1\.34\)/);
+});
+
+test("Control level card grows instead of clipping live level information", () => {
+  const css = read("game/control/index.css");
+  assert.match(css, /#contenedor > \.level-card\s*\{[\s\S]*min-height:\s*max-content !important;[\s\S]*overflow:\s*visible !important;/);
 });
 
 test("control exposes targeted remote reload buttons and live roles reload on command", () => {

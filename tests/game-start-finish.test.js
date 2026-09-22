@@ -100,7 +100,7 @@ test("the spectator header stays legible above the HUD and lets text cards yield
   assert.match(css, /grid-template-rows:\s*auto auto minmax\(56px, 1fr\) auto auto;/);
 });
 
-test("muses receive a full-screen finished-writing state that yields to result views", () => {
+test("muses request and show the wrapped instead of the provisional finished-writing card", () => {
   const html = read("game/public/players/index.html");
   const css = read("game/public/players/css/publico.css");
   const state = read("game/public/players/js/state.js");
@@ -110,7 +110,13 @@ test("muses receive a full-screen finished-writing state that yields to result v
   assert.match(css, /\.musa-partida-final\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*0;[\s\S]*z-index:\s*190;/);
   assert.match(state, /function mostrarCierrePartidaMusa\(\)[\s\S]*musa_partida_final\.classList\.add\("is-visible"\)/);
   assert.match(state, /vistaFinalAlternativa[\s\S]*ocultarCierrePartidaMusa\(\)/);
-  assert.match(sockets, /socket\.on\("fin"[\s\S]*setUiPartidaFinalizadaMusa\(true\)[\s\S]*mostrarCierrePartidaMusa\(\)/);
+  assert.match(sockets, /socket\.on\("fin"[\s\S]*setUiPartidaFinalizadaMusa\(true\)[\s\S]*ocultarCierrePartidaMusa\(\)[\s\S]*solicitarPostgameMusa\(\)/);
+  assert.doesNotMatch(sockets, /postgameMostrado[\s\S]*mostrarCierrePartidaMusa\(\)/);
+  assert.match(state, /if \(regalo_pdf_pendiente\)[\s\S]*intentarMostrarRegaloPdfPendiente\(\)/);
+  assert.match(state, /function solicitarPostgameMusa\(\)[\s\S]*socket\.emit\("pedir_postgame_musas"/);
+  assert.match(state, /function aplicarPostgameMusaDesdeServidor\(payload = \{\}\)[\s\S]*ocultarCierrePartidaMusa\(\)[\s\S]*mostrarPostgameMusa\(\)/);
+  assert.match(state, /if \(regalo_postgame_data\) \{[\s\S]*ocultarRegaloPdf\(\);[\s\S]*mostrarPostgameMusa\(\);/);
+  assert.match(state, /function iniciarTemporizadorLectura[\s\S]*ui_partida_finalizada_musa[\s\S]*mostrarPostgameMusa\(\)/);
 });
 
 test("the finished writer layout reserves a separate row for its status badge", () => {

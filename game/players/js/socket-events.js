@@ -1232,6 +1232,12 @@ function crearOverlayEscritoraReemplazada() {
 
 function mostrarAvisoEscritoraReemplazada(payload = {}) {
     const overlay = crearOverlayEscritoraReemplazada();
+    const tituloEl = document.getElementById("escritora_reemplazada_titulo");
+    if (tituloEl) {
+        tituloEl.textContent = typeof payload.titulo === "string" && payload.titulo.trim()
+            ? payload.titulo.trim()
+            : "Sesi\u00f3n reemplazada";
+    }
     const mensaje = typeof payload.mensaje === "string" && payload.mensaje.trim()
         ? payload.mensaje.trim()
         : "Otra sesi\u00f3n activa de este rol est\u00e1 activa. Esta pesta\u00f1a no va a funcionar.";
@@ -1302,9 +1308,11 @@ function construirPayloadTextoEscritora() {
 }
 
 function registrarSesionEscritora(callback) {
+    const clientId = obtenerClientIdSesionEscritora();
     socket.emit('registrar_escritor', {
         player,
-        client_id: obtenerClientIdSesionEscritora()
+        client_id: clientId,
+        session_started_at: obtenerInicioSesionEscritora(clientId)
     }, (respuesta = {}) => {
         if (typeof callback === "function") callback(respuesta);
     });

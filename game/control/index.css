@@ -2766,105 +2766,6 @@ table.default.asistencia-activa #panel_parametros {
     transform: translateY(1px);
 }
 
-body.cursor-control-pluma-activo,
-body.cursor-control-pluma-activo * {
-    cursor: none !important;
-}
-
-.control-cursor-pluma {
-    display: block;
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 30px;
-    height: 34px;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 20000;
-    transform: translate(-2px, -2px);
-    transition: opacity 120ms ease, filter 120ms ease;
-    will-change: left, top, opacity, filter;
-}
-
-.control-cursor-pluma.activa {
-    opacity: 0.98 !important;
-}
-
-/* Cursor retro pixel para control, sin asset de pluma. */
-.control-cursor-pluma::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 1;
-    width: 24px;
-    height: 31px;
-    clip-path: polygon(0 0, 0 78%, 23% 61%, 38% 100%, 57% 93%, 43% 56%, 76% 56%);
-    background:
-        linear-gradient(135deg, #f8feff 0 18%, #8ff8ff 19% 54%, #45f3ff 55% 100%);
-    image-rendering: pixelated;
-    filter:
-        drop-shadow(1px 0 #04131a)
-        drop-shadow(0 1px #04131a)
-        drop-shadow(-1px 0 rgba(69, 243, 255, 0.78))
-        drop-shadow(0 0 0.32rem rgba(69, 243, 255, 0.75));
-    animation: controlCursorRetroBlink 1.2s steps(2, end) infinite;
-    transition: transform 80ms ease, filter 80ms ease;
-}
-
-.control-cursor-pluma::after {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 4px;
-    z-index: 0;
-    width: 24px;
-    height: 31px;
-    clip-path: polygon(0 0, 0 78%, 23% 61%, 38% 100%, 57% 93%, 43% 56%, 76% 56%);
-    background: #ff5f67;
-    opacity: 0.72;
-    image-rendering: pixelated;
-    filter: drop-shadow(0 0 0.42rem rgba(255, 95, 103, 0.58));
-    transition: transform 90ms ease, opacity 90ms ease;
-}
-
-.control-cursor-pluma.is-pressing::before {
-    transform: translate(1px, 1px) scale(0.95);
-    filter:
-        drop-shadow(1px 0 #04131a)
-        drop-shadow(0 1px #04131a)
-        drop-shadow(0 0 0.36rem rgba(255, 95, 103, 0.62));
-}
-
-.control-cursor-pluma.is-pressing::after {
-    opacity: 0.9;
-    transform: translate(-1px, -1px) scale(0.95);
-}
-
-.control-cursor-pluma.is-hidden {
-    opacity: 0 !important;
-}
-
-@keyframes controlCursorRetroBlink {
-    0%, 100% {
-        opacity: 0.92;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-@media (pointer: coarse) {
-    body.cursor-control-pluma-activo,
-    body.cursor-control-pluma-activo * {
-        cursor: auto !important;
-    }
-
-    .control-cursor-pluma {
-        display: none !important;
-    }
-}
-
 .control-groups {
     display: grid;
     grid-template-columns: repeat(3, minmax(16rem, 1fr));
@@ -13150,7 +13051,7 @@ body {
 /* Última autoridad del panel de parámetros. */
 #panel_parametros:not(.is-side-collapsed) > tr:not(.parametros-title-row):not(.parametros-frase-row):not(.parametros-modos-row):not(:has(> td.param-duration)) {
     display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
     gap: clamp(.55rem, .8vw, .9rem) !important;
     padding: clamp(.35rem, .55vw, .65rem) clamp(.5rem, .7vw, .8rem) !important;
     box-sizing: border-box;
@@ -13267,6 +13168,14 @@ body {
         min-width: 1.42rem;
         min-height: 1.42rem;
     }
+}
+
+/* El contenido de la tarjeta central crece con los testigos y la secuencia de
+   niveles. No se recorta cuando los paneles de texto acumulan más líneas. */
+#contenedor > .level-card {
+    height: auto !important;
+    min-height: max-content !important;
+    overflow: visible !important;
 }
 
 @media (max-width: 760px) {

@@ -1655,6 +1655,9 @@ function actualizarBrandingPartidaEspectador(opciones = {}) {
     const modoPartida = vista_espectador_modo_resuelta === "partida";
     const partidaEnCurso = Boolean(partida_activa_espectador || cuenta_atras_activa || inicio_modo_delay);
     const mostrarBranding = modoPartida && !partidaEnCurso;
+    if (document.body) {
+        document.body.classList.toggle("partida-en-curso-espectador", modoPartida && partidaEnCurso);
+    }
     const displayBranding = mostrarBranding ? "" : "none";
     if (cabecera) {
         cabecera.style.display = mostrarBranding ? (cabecera_display_inicial || "") : "none";
@@ -1796,6 +1799,8 @@ const DURACION_USO_NUBE_MS = 1000;
 const PERMITIR_SCROLL_ESPECTADOR = false;
 const ESCALA_UI_ESPECTADOR_MIN = 0.82;
 const ESCALA_UI_ESPECTADOR_MAX = 1.28;
+const ESCALA_TEXTO_ESPECTADOR_MIN = 0.9;
+const ESCALA_TEXTO_ESPECTADOR_MAX = 1.7;
 let raf_ajuste_viewport_espectador = null;
 let timeout_ajuste_viewport_espectador = null;
 let resize_observer_fit_viewport_espectador = null;
@@ -1806,13 +1811,13 @@ let estado_creditos_espectador = {
     animacion_id: 0
 };
 let escala_ui_espectador = ESCALA_UI_ESPECTADOR_MAX;
+let escala_texto_espectador = 1;
 let creditos_animacion_raf = null;
 let creditos_animacion_inicio = null;
 let creditos_animacion_y_inicio = 0;
 let creditos_animacion_y_fin = 0;
 let creditos_animacion_duracion_ms = 0;
-const CREDITOS_SCROLL_VELOCIDAD_PX_S = 34;
-const CREDITOS_SCROLL_DURACION_MIN_MS = 28000;
+const CREDITOS_SCROLL_DURACION_MS = 10000;
 const CREDITOS_SCROLL_MARGEN_SALIDA_PX = 100;
 const reproducirMusicaCreditosEspectador = () => {
     if (!creditos_audio_espectador) return;
@@ -1850,18 +1855,28 @@ const normalizarEscalaUiEspectador = (valor, fallback = ESCALA_UI_ESPECTADOR_MAX
     }
     return Math.max(ESCALA_UI_ESPECTADOR_MIN, Math.min(ESCALA_UI_ESPECTADOR_MAX, numero));
 };
+const normalizarEscalaTextoEspectador = (valor, fallback = 1) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) {
+        return fallback;
+    }
+    return Math.max(ESCALA_TEXTO_ESPECTADOR_MIN, Math.min(ESCALA_TEXTO_ESPECTADOR_MAX, numero));
+};
 const aplicarEscalaUiEspectador = () => {
     const root = document.body && document.body.classList && document.body.classList.contains("page-spectator")
         ? document.body
         : document.documentElement;
     if (!root || !root.style) return;
     const escala = normalizarEscalaUiEspectador(escala_ui_espectador);
+    const escalaTexto = normalizarEscalaTextoEspectador(escala_texto_espectador);
     root.style.setProperty("--spectator-ui-scale", escala.toFixed(3));
     root.style.setProperty("--spectator-name-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.22).toFixed(3));
     root.style.setProperty("--spectator-time-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.18).toFixed(3));
     root.style.setProperty("--spectator-meta-scale", interpolarEscalaUiEspectador(escala, 0.92, 1.2).toFixed(3));
     root.style.setProperty("--spectator-level-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.18).toFixed(3));
     root.style.setProperty("--spectator-text-lines", interpolarEscalaUiEspectador(escala, 8.1, 4.25).toFixed(2));
+    root.style.setProperty("--spectator-text-scale", escalaTexto.toFixed(3));
+    root.style.setProperty("--spectator-text-effective-scale", (escala * escalaTexto).toFixed(3));
 };
 
 const resetAjusteViewportEspectador = () => {
@@ -2105,12 +2120,13 @@ const reajustarDestinoCreditosEspectador = () => {
         : 0;
     const yActual = creditos_animacion_y_inicio
         + ((creditos_animacion_y_fin - creditos_animacion_y_inicio) * progreso);
+    const duracionRestante = Math.max(
+        250,
+        Math.round(creditos_animacion_duracion_ms * (1 - progreso))
+    );
     creditos_animacion_y_inicio = yActual;
     creditos_animacion_y_fin = nuevoDestino;
-    creditos_animacion_duracion_ms = Math.max(
-        1000,
-        Math.round((Math.abs(yActual - nuevoDestino) / CREDITOS_SCROLL_VELOCIDAD_PX_S) * 1000)
-    );
+    creditos_animacion_duracion_ms = duracionRestante;
     creditos_animacion_inicio = null;
     creditos_track.style.transform = `translate3d(-50%, ${yActual.toFixed(2)}px, 0)`;
 };
@@ -2179,11 +2195,7 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
         if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") return;
         const yInicio = yInicioVisible;
         const yFin = calcularDestinoCreditosEspectador();
-        const distancia = Math.max(1, yInicio - yFin);
-        const duracionMs = Math.max(
-            CREDITOS_SCROLL_DURACION_MIN_MS,
-            Math.round((distancia / CREDITOS_SCROLL_VELOCIDAD_PX_S) * 1000)
-        );
+        const duracionMs = CREDITOS_SCROLL_DURACION_MS;
 
         creditos_animacion_y_inicio = yInicio;
         creditos_animacion_y_fin = yFin;
@@ -5018,6 +5030,7 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     let cambioPasoPuntuacion = false;
     let cambioPasoJurado = false;
     let cambioEscalaUi = false;
+    let cambioEscalaTexto = false;
     let cambioPasoInstrucciones = false;
     if (payload && typeof payload === "object") {
         if (Object.prototype.hasOwnProperty.call(payload, "stats_slide_step")) {
@@ -5059,6 +5072,12 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
             escala_ui_espectador = nuevaEscala;
             aplicarEscalaUiEspectador();
         }
+        if (Object.prototype.hasOwnProperty.call(payload, "escala_texto")) {
+            const nuevaEscalaTexto = normalizarEscalaTextoEspectador(payload.escala_texto, escala_texto_espectador);
+            cambioEscalaTexto = nuevaEscalaTexto !== escala_texto_espectador;
+            escala_texto_espectador = nuevaEscalaTexto;
+            aplicarEscalaUiEspectador();
+        }
         if (Object.prototype.hasOwnProperty.call(payload, "calentamiento_vista")) {
             vista_calentamiento = Boolean(payload.calentamiento_vista);
         }
@@ -5092,7 +5111,7 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
                 if (modoServidor === "resultado_jurado" && cambioPasoJurado) {
                     renderizarResultadoJuradoEspectador({ animar: true });
                 }
-                if (cambioEscalaUi) {
+                if (cambioEscalaUi || cambioEscalaTexto) {
                     programarAjusteViewportEspectador();
                 }
                 return;
@@ -5118,7 +5137,7 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     if (vista_espectador_modo_resuelta === "resultado_jurado" && cambioPasoJurado) {
         renderizarResultadoJuradoEspectador({ animar: true });
     }
-    if (cambioEscalaUi || cambioPasoStats || cambioPasoPuntuacion || cambioPasoJurado) {
+    if (cambioEscalaUi || cambioEscalaTexto || cambioPasoStats || cambioPasoPuntuacion || cambioPasoJurado) {
         programarAjusteViewportEspectador();
         return;
     }

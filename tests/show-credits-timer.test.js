@@ -45,7 +45,14 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   assert.match(spectatorState, /new ResizeObserver\(\(\) => \{/);
   assert.match(spectatorState, /creditos_resize_observer_espectador\.observe\(creditos_track\)/);
   assert.match(spectatorState, /document\.fonts\.ready\.then/);
+  assert.match(spectatorState, /const CREDITOS_SCROLL_DURACION_MS = 10000;/);
+  assert.match(spectatorState, /const duracionMs = CREDITOS_SCROLL_DURACION_MS;/);
   assert.match(museState, /creditos_musa_sociales\.offsetTop[\s\S]{0,320}altoViewport \* 0\.5/);
+  assert.match(museState, /--creditos-musa-duracion", "10s"/);
+  assert.match(museState, /new ResizeObserver\(\(\) => \{[\s\S]{0,260}requestAnimationFrame\(configurarTrayectoCreditosMusa\)/);
+  assert.match(museState, /creditos_resize_observer_musa\.observe\(creditos_musa_track\)/);
+  assert.match(museCss, /--creditos-musa-duracion, 10s/);
+  assert.doesNotMatch(museCss, /creditos-musa__track\s*\{[^}]*animation-duration:\s*80s/);
   assert.doesNotMatch(spectatorCss, /\.creditos-espectador\.creditos-finalizados \.creditos-track \{[^}]*opacity:\s*0/);
   assert.doesNotMatch(museCss, /\.creditos-musa--finalizados \.creditos-musa__track \{[^}]*opacity:\s*0/);
   for (const html of [spectatorHtml, museHtml]) {
@@ -59,6 +66,17 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   assert.match(museSockets, /socket\.on\('creditos_estado'/);
   assert.match(museSockets, /socket\.emit\('pedir_creditos_estado'\)/);
   assert.equal(fs.existsSync(path.join(root, "game/audio/3. CREDITOS.mp3")), true);
+});
+
+test("continuous UI motion keeps the standard Control cursor and light mobile effects", () => {
+  const controlActions = read("game/control/js/actions.js");
+  const controlCss = read("game/control/index.css");
+  const museCss = read("game/public/players/css/publico.css");
+
+  assert.doesNotMatch(controlActions, /cursor_pluma_control|inicializarCursorPlumaControl|mousemove/);
+  assert.doesNotMatch(controlCss, /cursor-control-pluma-activo|control-cursor-pluma/);
+  assert.match(museCss, /Perfil de composicion para moviles[\s\S]*\.creditos-musa__bloque[\s\S]*backdrop-filter:\s*none !important/);
+  assert.match(museCss, /\.musa-postgame__ambient i:nth-child\(n \+ 11\)\s*\{[\s\S]*display:\s*none/);
 });
 
 test("giant timer is a dedicated synced scene on spectator and muse screens", () => {

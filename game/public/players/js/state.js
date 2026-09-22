@@ -168,11 +168,18 @@ const musa_partida_final_escritxr = getEl("musa_partida_final_escritxr");
 const musa_view_transition = getEl("musa_view_transition");
 let vista_visual_musa = "espera";
 let timeout_revelado_vista_musa = null;
+const transicion_vista_musa_movil = Boolean(
+    window.matchMedia
+    && window.matchMedia("(max-width: 680px)").matches
+);
+const duracion_cobertura_vista_musa = transicion_vista_musa_movil ? 140 : 260;
+const duracion_revelado_vista_musa = transicion_vista_musa_movil ? 220 : 440;
+const duracion_contenido_vista_musa = transicion_vista_musa_movil ? 380 : 720;
 const controlador_transicion_vista_musa = window.ScribViewTransition
     ? window.ScribViewTransition.createController({
         overlay: musa_view_transition,
-        coverMs: 260,
-        revealMs: 440,
+        coverMs: duracion_cobertura_vista_musa,
+        revealMs: duracion_revelado_vista_musa,
         reducedMotion: () => Boolean(
             window.matchMedia
             && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -193,7 +200,7 @@ function animarTransicionVistaMusa(destino) {
         timeout_revelado_vista_musa = setTimeout(() => {
             document.body?.classList.remove("musa-vista-cambiando");
             timeout_revelado_vista_musa = null;
-        }, 720);
+        }, duracion_contenido_vista_musa);
     }
     if (!controlador_transicion_vista_musa) return false;
     return controlador_transicion_vista_musa.transition({
@@ -226,13 +233,17 @@ function setUiPartidaActivaMusa(activa) {
 }
 
 function setUiPartidaFinalizadaMusa(finalizada) {
+    let postgameMostrado = false;
     ui_partida_finalizada_musa = Boolean(finalizada);
     if (ui_partida_finalizada_musa) {
         ui_partida_activa_musa = false;
         if (typeof cerrarPreShowMusaPorTutorial === "function") {
             cerrarPreShowMusaPorTutorial();
         }
-        if (regalo_postgame_data && !regalo_postgame_debug && vista_modo_remota_musa === "partida") {
+        if (regalo_pdf_pendiente) {
+            intentarMostrarRegaloPdfPendiente();
+        }
+        if (regalo_postgame_data && vista_modo_remota_musa === "partida") {
             marcarRegaloPdfMusaAbierto({
                 data: regalo_pdf_ultimo_data,
                 filename: regalo_pdf_ultimo_filename,
@@ -240,10 +251,16 @@ function setUiPartidaFinalizadaMusa(finalizada) {
                 player
             });
             ocultarRegaloPdf();
-            mostrarPostgameMusa();
+            postgameMostrado = Boolean(
+                musa_postgame?.classList.contains("musa-postgame--visible")
+                || mostrarPostgameMusa() === true
+            );
+        } else if (!regalo_postgame_data) {
+            solicitarPostgameMusa();
         }
     }
     refrescarClasesUiPartidaMusa();
+    return postgameMostrado;
 }
 
 function mostrarCierrePartidaMusa() {
@@ -448,6 +465,9 @@ let regalo_pdf_ultimo_filename = null;
 let regalo_postgame_data = null;
 let regalo_postgame_debug = false;
 let regalo_postgame_escritxr_activo = 1;
+let solicitud_postgame_musa_en_curso = false;
+let solicitud_postgame_musa_intentos = 0;
+let timeout_solicitud_postgame_musa = null;
 let musa_postgame = getEl("musa_postgame");
 let musa_postgame_pdf_j1 = getEl("musa_postgame_pdf_j1");
 let musa_postgame_pdf_j2 = getEl("musa_postgame_pdf_j2");
@@ -1754,6 +1774,74 @@ function intentarMostrarRegaloPdfPendiente() {
     mostrarRegaloPdf(regalo_pdf_pendiente);
 }
 
+function cancelarSolicitudPostgameMusa() {
+    solicitud_postgame_musa_en_curso = false;
+    solicitud_postgame_musa_intentos = 0;
+    if (timeout_solicitud_postgame_musa) {
+        clearTimeout(timeout_solicitud_postgame_musa);
+        timeout_solicitud_postgame_musa = null;
+    }
+}
+
+function aplicarPostgameMusaDesdeServidor(payload = {}) {
+    const postgame = payload && payload.postgame && typeof payload.postgame === "object"
+        ? payload.postgame
+        : null;
+    if (!postgame || !postgame.escritores || typeof postgame.escritores !== "object") return false;
+    regalo_postgame_data = postgame;
+    regalo_postgame_debug = false;
+    cancelarSolicitudPostgameMusa();
+    if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida") {
+        ocultarRegaloPdf();
+        ocultarCierrePartidaMusa();
+        if (musa_postgame?.classList.contains("musa-postgame--visible")) pintarPostgameMusa();
+        else mostrarPostgameMusa();
+    }
+    return true;
+}
+
+function solicitarPostgameMusa() {
+    if (!ui_partida_finalizada_musa) return false;
+    if (regalo_postgame_data) {
+        if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida") mostrarPostgameMusa();
+        return true;
+    }
+    if (solicitud_postgame_musa_en_curso || solicitud_postgame_musa_intentos >= 4) return false;
+    if (typeof socket === "undefined" || !socket || socket.connected === false || !musa_registro_confirmado) {
+        if (!timeout_solicitud_postgame_musa && solicitud_postgame_musa_intentos < 4) {
+            timeout_solicitud_postgame_musa = setTimeout(() => {
+                timeout_solicitud_postgame_musa = null;
+                solicitarPostgameMusa();
+            }, 500);
+        }
+        return false;
+    }
+    solicitud_postgame_musa_en_curso = true;
+    solicitud_postgame_musa_intentos += 1;
+    let respondida = false;
+    const finalizar = (respuesta = {}) => {
+        if (respondida) return;
+        respondida = true;
+        solicitud_postgame_musa_en_curso = false;
+        if (aplicarPostgameMusaDesdeServidor(respuesta)) return;
+        if (solicitud_postgame_musa_intentos < 4 && !timeout_solicitud_postgame_musa) {
+            timeout_solicitud_postgame_musa = setTimeout(() => {
+                timeout_solicitud_postgame_musa = null;
+                solicitarPostgameMusa();
+            }, 650);
+        }
+    };
+    const timeoutRespuesta = setTimeout(() => finalizar({ ok: false, code: "TIMEOUT" }), 1600);
+    socket.emit("pedir_postgame_musas", {}, (respuesta = {}) => {
+        clearTimeout(timeoutRespuesta);
+        finalizar(respuesta);
+    });
+    return true;
+}
+
+window.aplicarPostgameMusaDesdeServidor = aplicarPostgameMusaDesdeServidor;
+window.solicitarPostgameMusa = solicitarPostgameMusa;
+
 function mostrarRegaloPdf(payload) {
     if (!payload || !payload.data || !regalo_pdf) {
         return;
@@ -1782,7 +1870,8 @@ function mostrarRegaloPdf(payload) {
         regalo_pdf.classList.remove("regalo-pdf--visible", "regalo-pdf--claimed");
         regalo_pdf.setAttribute("aria-hidden", "true");
         if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida") {
-            mostrarPostgameMusa();
+            if (musa_postgame?.classList.contains("musa-postgame--visible")) pintarPostgameMusa();
+            else mostrarPostgameMusa();
         }
         return;
     }
@@ -2096,8 +2185,8 @@ function pintarPostgameMusa() {
 }
 
 function mostrarPostgameMusa() {
-    if (!pintarPostgameMusa()) return;
     ocultarCierrePartidaMusa();
+    if (!pintarPostgameMusa()) return false;
     musa_postgame.classList.add("musa-postgame--visible");
     musa_postgame.setAttribute("aria-hidden", "false");
     document.body.classList.add("musa-postgame-activo");
@@ -2112,6 +2201,7 @@ function mostrarPostgameMusa() {
         musa_postgame?.classList.remove("is-celebrating");
     }, 4800);
     if (typeof confetti_postgame_musa === "function") confetti_postgame_musa();
+    return true;
 }
 
 function ocultarPostgameMusa({ limpiar = false } = {}) {
@@ -2124,6 +2214,7 @@ function ocultarPostgameMusa({ limpiar = false } = {}) {
     timeout_confetti_postgame_musa = null;
     musa_postgame?.classList.remove("is-celebrating");
     if (limpiar) {
+        cancelarSolicitudPostgameMusa();
         regalo_postgame_data = null;
         regalo_postgame_debug = false;
         regalo_pdf_ultimo_data = null;
@@ -2816,10 +2907,21 @@ function configurarTrayectoCreditosMusa() {
     const yInicio = altoViewport * 0.72;
     const centroSocial = creditos_musa_sociales.offsetTop + (creditos_musa_sociales.offsetHeight * 0.5);
     const yFin = (altoViewport * 0.5) - centroSocial;
-    const distancia = Math.max(1, yInicio - yFin);
     creditos_musa_track.style.setProperty("--creditos-musa-y-inicio", `${yInicio.toFixed(2)}px`);
     creditos_musa_track.style.setProperty("--creditos-musa-y-fin", `${yFin.toFixed(2)}px`);
-    creditos_musa_track.style.setProperty("--creditos-musa-duracion", `${Math.max(46, distancia / 24).toFixed(2)}s`);
+    creditos_musa_track.style.setProperty("--creditos-musa-duracion", "10s");
+}
+
+let creditos_resize_observer_musa = null;
+if (creditos_musa_track && typeof ResizeObserver === "function") {
+    creditos_resize_observer_musa = new ResizeObserver(() => {
+        if (creditos_musa?.hidden || vista_modo_remota_musa !== "creditos") return;
+        requestAnimationFrame(configurarTrayectoCreditosMusa);
+    });
+    creditos_resize_observer_musa.observe(creditos_musa_track);
+}
+if (document.fonts?.ready && typeof document.fonts.ready.then === "function") {
+    document.fonts.ready.then(() => requestAnimationFrame(configurarTrayectoCreditosMusa));
 }
 
 function ocultarCreditosMusa() {
@@ -3388,6 +3490,14 @@ function actualizarTemporizadorLectura(forzarRestante = null) {
 
 function iniciarTemporizadorLectura(duracion, finTimestamp) {
     resetearTemporizadorLectura();
+    if (
+        ui_partida_finalizada_musa
+        && regalo_postgame_data
+        && !regalo_postgame_debug
+        && vista_modo_remota_musa === "partida"
+    ) {
+        mostrarPostgameMusa();
+    }
     const overlay = getEl("temporizador_musa");
     const final = getEl("temporizador_musa_final");
     temporizador_lectura_duracion = Math.max(1, Number(duracion) || (10 * 60));
@@ -4674,9 +4784,20 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
         .includes(vista_modo_remota_musa);
     const regaloVisible = Boolean(regalo_pdf?.classList.contains("regalo-pdf--visible"));
     const postgameVisible = Boolean(musa_postgame?.classList.contains("musa-postgame--visible"));
-    if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida" && !regaloVisible && !postgameVisible) {
-        if (regalo_postgame_data && !regalo_postgame_debug) mostrarPostgameMusa();
-        else mostrarCierrePartidaMusa();
+    if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida" && !postgameVisible) {
+        if (regalo_postgame_data) {
+            marcarRegaloPdfMusaAbierto({
+                data: regalo_pdf_ultimo_data,
+                filename: regalo_pdf_ultimo_filename,
+                client_id: window.musa_client_id,
+                player
+            });
+            ocultarRegaloPdf();
+            mostrarPostgameMusa();
+        } else {
+            ocultarCierrePartidaMusa();
+            if (!regaloVisible) solicitarPostgameMusa();
+        }
     } else if (vistaFinalAlternativa || vista_modo_remota_musa !== "partida") {
         ocultarCierrePartidaMusa();
     }

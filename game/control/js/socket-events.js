@@ -124,6 +124,12 @@ function sincronizarControlAutorizado() {
     socket.emit('pedir_creditos_estado');
     socket.emit('pedir_temporizador_gigante_estado');
     socket.emit('pedir_teleprompter_estado');
+    if (typeof window.solicitarTextosRepresentacionControl === "function") {
+        window.solicitarTextosRepresentacionControl();
+    } else {
+        socket.emit("pedir_texto", { player: 1 });
+        socket.emit("pedir_texto", { player: 2 });
+    }
     socket.emit('pedir_idioma_actual');
     iniciarStatsLiveControl();
     if (typeof registrarLogControl === "function") {
@@ -573,6 +579,9 @@ function extraerTextoPlanoDesdeHtmlControl(html) {
             texto += "\n";
             return;
         }
+        if (!esRaiz && TAGS_SALTO.has(tag) && texto && !texto.endsWith("\n")) {
+            texto += "\n";
+        }
         const hijos = nodo.childNodes;
         if (!hijos || hijos.length === 0) {
             if (!esRaiz && TAGS_SALTO.has(tag)) {
@@ -617,8 +626,9 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
     const puntosEl = esJ2 ? puntos2 : puntos1;
     if (!textoEl || !data) return;
 
-    const htmlRemoto = typeof data.text === "string" ? data.text : "";
-    const guardadoRemoto = typeof data.texto_guardado === "string" ? data.texto_guardado : "";
+    const payloadTexto = typeof data === "string" ? { text: data } : data;
+    const htmlRemoto = typeof payloadTexto.text === "string" ? payloadTexto.text : "";
+    const guardadoRemoto = typeof payloadTexto.texto_guardado === "string" ? payloadTexto.texto_guardado : "";
     const guardadoLocal = esJ2 ? texto_guardado2 : texto_guardado1;
     const textoRemotoPlano = extraerTextoPlanoDesdeHtmlControl(htmlRemoto);
     const hayTextoRemoto = textoRemotoPlano.length > 0;
@@ -653,8 +663,8 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
         }
     }
 
-    if (puntosEl && typeof data.points !== "undefined") {
-        actualizarPuntosMarcadorControl(playerId, data.points);
+    if (puntosEl && typeof payloadTexto.points !== "undefined") {
+        actualizarPuntosMarcadorControl(playerId, payloadTexto.points);
     }
     textoEl.style.height = (textoEl.scrollHeight) + "px";
     if (estabaAlFinal) {

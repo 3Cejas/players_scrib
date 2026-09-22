@@ -289,6 +289,8 @@ test("muses reuse the curtain for tutorial, detonators, game and result changes"
   assert.match(html, /id="musa_view_transition"[\s\S]*data-view-transition-label/);
   assert.match(css, /musaViewCoverBlue[\s\S]*musaViewRevealRed/);
   assert.match(css, /body\.musa-vista-cambiando #contenedor[\s\S]*musaViewContentReveal/);
+  assert.match(state, /transicion_vista_musa_movil[\s\S]*\? 140 : 260/);
+  assert.match(state, /transicion_vista_musa_movil[\s\S]*\? 220 : 440/);
   assert.match(state, /function animarTransicionVistaMusa\(destino\)/);
   ["tutorial", "calentamiento", "partida", "resultado"].forEach((modo) => {
     assert.match(state, new RegExp(`animarTransicionVistaMusa\\("${modo}"\\)`));

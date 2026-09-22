@@ -225,6 +225,10 @@ socket.on("resultado_final_estado", (payload = {}) => {
     actualizarResultadoFinalMusa(payload);
 });
 
+socket.on("postgame_musas_estado", (payload = {}) => {
+    aplicarPostgameMusaDesdeServidor(payload);
+});
+
 // Recibe el nombre del jugador 1 y lo coloca en su sitio.
 
 socket.on('modo_actual', (data) => {
@@ -1293,9 +1297,8 @@ socket.on("fin", (data) => {
         limpiezas_final();
     }
     setUiPartidaFinalizadaMusa(true);
-    if (typeof window.mostrarCierrePartidaMusa === "function") {
-        window.mostrarCierrePartidaMusa();
-    }
+    ocultarCierrePartidaMusa();
+    solicitarPostgameMusa();
     invalidarContextoDesventajasMusa();
     invalidarContextoCalentamientoMusa();
 });
