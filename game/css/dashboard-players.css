@@ -10129,6 +10129,7 @@ body.vista-creditos .creditos-espectador {
     radial-gradient(circle at 50% 50%, rgba(255, 208, 95, 0.1), transparent 24%),
     linear-gradient(145deg, #061a2a 0%, #100c1b 50%, #2b0d19 100%);
   isolation: isolate;
+  contain: layout paint style;
 }
 
 body.vista-creditos .creditos-espectador::before,
@@ -10190,7 +10191,11 @@ body.vista-creditos .creditos-espectador::after {
   top: 0;
   width: min(98vw, 1680px);
   transform: translate3d(-50%, 140vh, 0);
-  will-change: transform, opacity;
+  transform-origin: 50% 0;
+  will-change: transform;
+  backface-visibility: hidden;
+  contain: layout paint style;
+  isolation: isolate;
 }
 
 .creditos-content {
@@ -10454,7 +10459,10 @@ body.vista-resultado-jurado #creditos_espectador {
   border-radius: clamp(0.8rem, 1.5vw, 1.4rem);
   background: linear-gradient(145deg, rgba(7, 25, 40, 0.66), rgba(35, 10, 29, 0.64));
   box-shadow: inset 0 0 2rem rgba(68, 230, 255, 0.05), 0 0 1.8rem rgba(255, 78, 110, 0.09);
-  backdrop-filter: blur(8px);
+  /* El desenfoque de fondo obligaba a repintar cada tarjeta durante todo el
+     recorrido. El fondo ya es suficientemente opaco y conserva el aspecto. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   animation: creditosBloqueVivo 4.2s ease-in-out infinite alternate;
 }
 
@@ -10657,6 +10665,17 @@ body.vista-resultado-jurado #creditos_espectador {
 @keyframes creditosLogoVivo { 50% { transform: translateX(0.035em); filter: brightness(1.25); } }
 @keyframes creditosBloqueVivo { to { border-color: rgba(255, 100, 126, 0.34); box-shadow: inset 0 0 2.2rem rgba(255, 90, 118, 0.05), 0 0 2rem rgba(72, 231, 255, 0.12); } }
 
+/* El roll principal vive en una capa del compositor. Mientras se desplaza,
+   los adornos quedan estáticos para que no compitan por repintados; vuelven
+   a animarse al llegar a la tarjeta final. */
+body.vista-creditos .creditos-espectador:not(.creditos-finalizados)::before,
+body.vista-creditos .creditos-espectador:not(.creditos-finalizados)::after,
+body.vista-creditos .creditos-espectador:not(.creditos-finalizados) .creditos-ambiente span,
+body.vista-creditos .creditos-espectador:not(.creditos-finalizados) .creditos-apertura__logos,
+body.vista-creditos .creditos-espectador:not(.creditos-finalizados) .creditos-bloque {
+  animation-play-state: paused;
+}
+
 @media (max-width: 760px) {
   .creditos-musas-grid {
     grid-template-columns: 1fr;
@@ -10713,7 +10732,8 @@ body.vista-resultado-jurado #creditos_espectador {
     radial-gradient(circle at 84% 84%, rgba(255, 80, 113, 0.21), transparent 38%),
     rgba(2, 9, 18, 0.88);
   box-shadow: inset 0 0 4rem rgba(255,255,255,0.04), 0 0 5rem rgba(255, 197, 73, 0.22);
-  backdrop-filter: blur(16px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   opacity: 1;
   pointer-events: auto;
   transform: none;

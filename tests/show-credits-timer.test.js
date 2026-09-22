@@ -47,11 +47,17 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   assert.match(spectatorState, /document\.fonts\.ready\.then/);
   assert.match(spectatorState, /const CREDITOS_SCROLL_DURACION_MS = 25000;/);
   assert.match(spectatorState, /const duracionMs = CREDITOS_SCROLL_DURACION_MS;/);
+  assert.match(spectatorState, /typeof creditos_track\.animate === "function"/);
+  assert.match(spectatorState, /creditos_animacion_compositor = animacion/);
+  assert.match(spectatorCss, /\.creditos-track\s*\{[\s\S]*contain:\s*layout paint style;/);
+  assert.match(spectatorCss, /creditos-espectador:not\(\.creditos-finalizados\)[\s\S]*animation-play-state:\s*paused;/);
   assert.match(museState, /creditos_musa_sociales\.offsetTop[\s\S]{0,320}altoViewport \* 0\.5/);
   assert.match(museState, /--creditos-musa-duracion", "25s"/);
   assert.match(museState, /new ResizeObserver\(\(\) => \{[\s\S]{0,260}requestAnimationFrame\(configurarTrayectoCreditosMusa\)/);
   assert.match(museState, /creditos_resize_observer_musa\.observe\(creditos_musa_track\)/);
   assert.match(museCss, /--creditos-musa-duracion, 25s/);
+  assert.match(museCss, /\.creditos-musa__track\s*\{[\s\S]*contain:\s*layout paint style;/);
+  assert.match(museCss, /\.creditos-musa:not\(\.creditos-musa--finalizados\)[\s\S]*animation-play-state:\s*paused;/);
   assert.doesNotMatch(museCss, /creditos-musa__track\s*\{[^}]*animation-duration:\s*80s/);
   assert.doesNotMatch(spectatorCss, /\.creditos-espectador\.creditos-finalizados \.creditos-track \{[^}]*opacity:\s*0/);
   assert.doesNotMatch(museCss, /\.creditos-musa--finalizados \.creditos-musa__track \{[^}]*opacity:\s*0/);

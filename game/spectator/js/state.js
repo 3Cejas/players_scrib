@@ -1813,6 +1813,7 @@ let estado_creditos_espectador = {
 };
 let escala_ui_espectador = ESCALA_UI_ESPECTADOR_MAX;
 let escala_texto_espectador = 1;
+let creditos_animacion_compositor = null;
 let creditos_animacion_raf = null;
 let creditos_animacion_inicio = null;
 let creditos_animacion_y_inicio = 0;
@@ -2108,6 +2109,12 @@ const renderizarMusasCreditosEspectador = (musas = {}) => {
     `;
 };
 const detenerAnimacionCreditosEspectador = (reiniciar = true) => {
+    if (creditos_animacion_compositor) {
+        creditos_animacion_compositor.onfinish = null;
+        creditos_animacion_compositor.oncancel = null;
+        creditos_animacion_compositor.cancel();
+        creditos_animacion_compositor = null;
+    }
     if (creditos_animacion_raf) {
         cancelAnimationFrame(creditos_animacion_raf);
         creditos_animacion_raf = null;
@@ -2139,6 +2146,60 @@ const calcularDestinoCreditosEspectador = () => {
         ) + CREDITOS_SCROLL_MARGEN_SALIDA_PX;
     return Math.round((altoViewport * 0.5) - centroSocial);
 };
+const finalizarRecorridoCreditosEspectador = () => {
+    creditos_animacion_compositor = null;
+    creditos_animacion_raf = null;
+    creditos_animacion_inicio = null;
+    if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") return;
+    creditos_espectador.classList.add("creditos-finalizados");
+    creditos_track.style.transform = `translate3d(-50%, ${creditos_animacion_y_fin.toFixed(2)}px, 0)`;
+};
+const animarSegmentoCreditosEspectador = (yInicio, yFin, duracionMs) => {
+    if (!creditos_track) return;
+    creditos_animacion_y_inicio = yInicio;
+    creditos_animacion_y_fin = yFin;
+    creditos_animacion_duracion_ms = Math.max(1, duracionMs);
+    creditos_animacion_inicio = performance.now();
+    creditos_track.style.transform = `translate3d(-50%, ${yInicio.toFixed(2)}px, 0)`;
+
+    if (typeof creditos_track.animate === "function") {
+        const animacion = creditos_track.animate([
+            { transform: `translate3d(-50%, ${yInicio.toFixed(2)}px, 0)` },
+            { transform: `translate3d(-50%, ${yFin.toFixed(2)}px, 0)` }
+        ], {
+            duration: creditos_animacion_duracion_ms,
+            easing: "linear",
+            fill: "forwards"
+        });
+        creditos_animacion_compositor = animacion;
+        animacion.onfinish = () => {
+            if (creditos_animacion_compositor !== animacion) return;
+            creditos_track.style.transform = `translate3d(-50%, ${yFin.toFixed(2)}px, 0)`;
+            animacion.onfinish = null;
+            animacion.cancel();
+            finalizarRecorridoCreditosEspectador();
+        };
+        return;
+    }
+
+    // Compatibilidad para navegadores antiguos sin Web Animations API.
+    const inicioFallback = performance.now();
+    const step = (ts) => {
+        if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") {
+            creditos_animacion_raf = null;
+            return;
+        }
+        const progreso = Math.min((ts - inicioFallback) / creditos_animacion_duracion_ms, 1);
+        const yActual = yInicio + ((yFin - yInicio) * progreso);
+        creditos_track.style.transform = `translate3d(-50%, ${yActual.toFixed(2)}px, 0)`;
+        if (progreso >= 1) {
+            finalizarRecorridoCreditosEspectador();
+            return;
+        }
+        creditos_animacion_raf = requestAnimationFrame(step);
+    };
+    creditos_animacion_raf = requestAnimationFrame(step);
+};
 const reajustarDestinoCreditosEspectador = () => {
     if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") return;
     const nuevoDestino = calcularDestinoCreditosEspectador();
@@ -2147,22 +2208,33 @@ const reajustarDestinoCreditosEspectador = () => {
         creditos_track.style.transform = `translate3d(-50%, ${nuevoDestino.toFixed(2)}px, 0)`;
         return;
     }
-    if (!creditos_animacion_raf) return;
+    if (!creditos_animacion_compositor && !creditos_animacion_raf) return;
+    const tiempoCompositor = creditos_animacion_compositor
+        ? Number(creditos_animacion_compositor.currentTime)
+        : NaN;
     const ahora = performance.now();
-    const progreso = Number.isFinite(creditos_animacion_inicio) && creditos_animacion_inicio !== null
-        ? Math.min((ahora - creditos_animacion_inicio) / Math.max(1, creditos_animacion_duracion_ms), 1)
-        : 0;
+    const tiempoTranscurrido = Number.isFinite(tiempoCompositor)
+        ? tiempoCompositor
+        : (Number.isFinite(creditos_animacion_inicio) && creditos_animacion_inicio !== null
+            ? ahora - creditos_animacion_inicio
+            : 0);
+    const progreso = Math.min(Math.max(tiempoTranscurrido / Math.max(1, creditos_animacion_duracion_ms), 0), 1);
     const yActual = creditos_animacion_y_inicio
         + ((creditos_animacion_y_fin - creditos_animacion_y_inicio) * progreso);
     const duracionRestante = Math.max(
         250,
         Math.round(creditos_animacion_duracion_ms * (1 - progreso))
     );
-    creditos_animacion_y_inicio = yActual;
-    creditos_animacion_y_fin = nuevoDestino;
-    creditos_animacion_duracion_ms = duracionRestante;
-    creditos_animacion_inicio = null;
-    creditos_track.style.transform = `translate3d(-50%, ${yActual.toFixed(2)}px, 0)`;
+    if (creditos_animacion_compositor) {
+        creditos_animacion_compositor.onfinish = null;
+        creditos_animacion_compositor.cancel();
+        creditos_animacion_compositor = null;
+    }
+    if (creditos_animacion_raf) {
+        cancelAnimationFrame(creditos_animacion_raf);
+        creditos_animacion_raf = null;
+    }
+    animarSegmentoCreditosEspectador(yActual, nuevoDestino, duracionRestante);
 };
 let creditos_resize_observer_espectador = null;
 if (creditos_track && typeof ResizeObserver === "function") {
@@ -2213,7 +2285,7 @@ const renderizarCreditosEspectador = () => {
 };
 const iniciarAnimacionCreditosEspectador = (forzar = false) => {
     if (!creditos_espectador || !creditos_track) return;
-    if (!forzar && (creditos_animacion_raf || creditos_animacion_inicio !== null)) {
+    if (!forzar && (creditos_animacion_compositor || creditos_animacion_raf || creditos_animacion_inicio !== null)) {
         return;
     }
     renderizarCreditosEspectador();
@@ -2230,38 +2302,7 @@ const iniciarAnimacionCreditosEspectador = (forzar = false) => {
         const yInicio = yInicioVisible;
         const yFin = calcularDestinoCreditosEspectador();
         const duracionMs = CREDITOS_SCROLL_DURACION_MS;
-
-        creditos_animacion_y_inicio = yInicio;
-        creditos_animacion_y_fin = yFin;
-        creditos_animacion_duracion_ms = duracionMs;
-        creditos_animacion_inicio = null;
-        creditos_track.style.transform = `translate3d(-50%, ${yInicio.toFixed(2)}px, 0)`;
-
-        const step = (ts) => {
-            if (!creditos_espectador || !creditos_track || vista_espectador_modo_resuelta !== "creditos") {
-                creditos_animacion_raf = null;
-                return;
-            }
-            if (!Number.isFinite(creditos_animacion_inicio) || creditos_animacion_inicio === null) {
-                creditos_animacion_inicio = ts;
-            }
-            const progreso = Math.min(
-                (ts - creditos_animacion_inicio) / Math.max(1, creditos_animacion_duracion_ms),
-                1
-            );
-            const yActual = creditos_animacion_y_inicio + ((creditos_animacion_y_fin - creditos_animacion_y_inicio) * progreso);
-            creditos_track.style.transform = `translate3d(-50%, ${yActual.toFixed(2)}px, 0)`;
-
-            if (progreso >= 1) {
-                creditos_animacion_raf = null;
-                creditos_espectador.classList.add("creditos-finalizados");
-                creditos_track.style.transform = `translate3d(-50%, ${creditos_animacion_y_fin.toFixed(2)}px, 0)`;
-                return;
-            }
-            creditos_animacion_raf = requestAnimationFrame(step);
-        };
-
-        creditos_animacion_raf = requestAnimationFrame(step);
+        animarSegmentoCreditosEspectador(yInicio, yFin, duracionMs);
     });
 };
 const actualizarCreditosEspectador = (payload = {}) => {
