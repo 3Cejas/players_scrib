@@ -28,6 +28,7 @@
     const DEFAULT_AUDIO_URL = "../media/narracion-show.mp3";
     const DEFAULT_SLIDE_URL = "../media/narracion-final.png";
     const NARRATION_FADE_IN_MS = 1800;
+    const NARRATION_FADE_OUT_MS = 1100;
     const ASSET_VERSION = "20260831g";
     const MAX_AUDIO_DRIFT_SECONDS = 1.25;
     const RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
@@ -253,8 +254,11 @@
             audioFadeTimer = null;
         };
 
-        const fadeNarrationAudio = (targetVolume, durationMs = NARRATION_FADE_IN_MS) => {
-            if (!audio) return;
+        const fadeNarrationAudio = (targetVolume, durationMs = NARRATION_FADE_IN_MS, onComplete = null) => {
+            if (!audio) {
+                if (typeof onComplete === "function") onComplete();
+                return;
+            }
             cancelNarrationFade();
             const sequence = audioFadeSequence;
             const from = clamp(finite(audio.volume, 0), 0, 1);
@@ -262,6 +266,7 @@
             const duration = Math.max(0, finite(durationMs, 0));
             if (duration === 0 || Math.abs(target - from) < 0.001) {
                 audio.volume = target;
+                if (typeof onComplete === "function") onComplete();
                 return;
             }
             const startedAt = Date.now();
@@ -272,9 +277,10 @@
                 audio.volume = from + ((target - from) * eased);
                 if (progress >= 1) {
                     audioFadeTimer = null;
+                    if (typeof onComplete === "function") onComplete();
                     return;
                 }
-                audioFadeTimer = windowRef.setTimeout(step, 45);
+                audioFadeTimer = windowRef.setTimeout(step, 24);
             };
             step();
         };
@@ -305,10 +311,18 @@
             root.hidden = true;
             root.dataset.scene = "black";
             documentRef.body.classList.remove("scrib-show-narration-active");
-            pauseAudio(true);
             if (changed) {
                 dispatch("scrib:show-narration-visibility", { visible: false, immediate: false });
                 requestUnderlyingView();
+            }
+            if (role === "spectator" && audio && !audio.paused) {
+                if (changed) {
+                    fadeNarrationAudio(0, NARRATION_FADE_OUT_MS, () => {
+                        if (!state || !state.active) pauseAudio(true);
+                    });
+                }
+            } else if (audioFadeTimer == null) {
+                pauseAudio(true);
             }
             finalAnnounced = false;
             renderedScene = "";
@@ -464,6 +478,7 @@
         DEFAULT_PREROLL_SECONDS,
         DEFAULT_SLIDE_URL,
         NARRATION_FADE_IN_MS,
+        NARRATION_FADE_OUT_MS,
         SCENES,
         SUBTITLES,
         createController,

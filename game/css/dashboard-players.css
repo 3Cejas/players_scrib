@@ -117,6 +117,9 @@ body.page-spectator {
     --spectator-meta-scale: 1;
     --spectator-level-scale: 1;
     --spectator-text-lines: 6;
+    --spectator-detonator-scale: 1;
+    --spectator-detonator-effective-scale: 1;
+    --spectator-detonator-meta-scale: 1;
 }
 
 #background-effects {
@@ -7559,7 +7562,11 @@ body.page-spectator .calentamiento-consigna-chip {
 }
 
 body.page-spectator .detonador-historial-caso {
-  font-size: clamp(9px, calc(0.86vw * var(--spectator-meta-scale, 1)), 14px);
+  font-size: clamp(
+    calc(9px * var(--spectator-detonator-scale, 1)),
+    calc(0.86vw * var(--spectator-detonator-meta-scale, 1)),
+    calc(14px * var(--spectator-detonator-scale, 1))
+  );
 }
 
 .detonador-historial-label {
@@ -7571,7 +7578,11 @@ body.page-spectator .detonador-historial-caso {
 }
 
 body.page-spectator .detonador-historial-label {
-  font-size: clamp(10px, calc(1.02vw * var(--spectator-meta-scale, 1)), 16px);
+  font-size: clamp(
+    calc(10px * var(--spectator-detonator-scale, 1)),
+    calc(1.02vw * var(--spectator-detonator-meta-scale, 1)),
+    calc(16px * var(--spectator-detonator-scale, 1))
+  );
 }
 
 .detonador-historial-item.is-empty .detonador-historial-label {
@@ -12741,7 +12752,11 @@ body.page-players #definicion.objetivo-nivel .objetivo-meta .inspiration-author 
    conserva la escala relativa, pero el equipo rojo gana contraste frente al
    fondo rojo para que sus palabras no se diluyan. */
 body.page-spectator .calentamiento-palabra {
-  font-size: clamp(22px, calc(3.05vw * var(--spectator-ui-scale, 1)), 58px);
+  font-size: clamp(
+    calc(22px * var(--spectator-detonator-scale, 1)),
+    calc(3.05vw * var(--spectator-detonator-effective-scale, 1)),
+    calc(58px * var(--spectator-detonator-scale, 1))
+  );
 }
 
 body.page-spectator .calentamiento-palabra.equipo-2,

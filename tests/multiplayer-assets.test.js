@@ -24,8 +24,8 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260923b";
-const SPECTATOR_CSS_VERSION = "20260923a";
+const SPECTATOR_STATE_VERSION = "20260923c";
+const SPECTATOR_CSS_VERSION = "20260923b";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260922b";
 const MUSA_HELP_VERSION = "20260830a";
@@ -41,9 +41,9 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260923a";
 const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260920c";
 const JURY_SOCKET_EVENTS_VERSION = "20260904a";
-const CONTROL_CSS_VERSION = "20260923a";
-const CONTROL_ACTIONS_VERSION = "20260923a";
-const CONTROL_I18N_VERSION = "20260920a";
+const CONTROL_CSS_VERSION = "20260923b";
+const CONTROL_ACTIONS_VERSION = "20260923b";
+const CONTROL_I18N_VERSION = "20260923a";
 const CONTROL_STATE_VERSION = "20260917c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260923a";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260921c";
@@ -1417,6 +1417,8 @@ test("control parameters own spectator scale and removed inserted word goal", ()
   assert.match(html, /id="escala_espectador_valor" class="spectator-scale-value">100%<\/span>/);
   assert.match(html, /id="escala_texto_espectador"[\s\S]*min="90" max="170" step="5" value="100"/);
   assert.match(html, /id="escala_texto_espectador_valor" class="spectator-scale-value">100%<\/span>/);
+  assert.match(html, /id="escala_detonadores_espectador"[\s\S]*min="70" max="200" step="5" value="100"/);
+  assert.match(html, /id="escala_detonadores_espectador_valor" class="spectator-scale-value">100%<\/span>/);
   assert.match(html, /data-i18n="control\.param\.spectator_scale"/);
   assert.match(html, /data-i18n="control\.param\.advantage_vote"[\s\S]*id="tiempo_votacion"[\s\S]*min="1" max="360" step="1" value="30"/);
   assert.doesNotMatch(html, /cambiarValor\('escala_espectador'|type="number" id="escala_espectador"/);
@@ -1436,6 +1438,7 @@ test("control parameters own spectator scale and removed inserted word goal", ()
 
   assert.match(actionsJs, /socket\.emit\("ajustar_escala_espectador", \{ valor: escalaEspectador \}\);/);
   assert.match(actionsJs, /socket\.emit\("ajustar_escala_texto_espectador", \{ valor: escalaTextoEspectador \}\);/);
+  assert.match(actionsJs, /socket\.emit\("ajustar_escala_detonadores_espectador", \{ valor: escalaDetonadoresEspectador \}\);/);
   assert.match(actionsJs, /ESCALA_UI_ESPECTADOR: escalaEspectador/);
   assert.match(actionsJs, /PARAMETROS_CONTROL_PERSISTENTES[\s\S]*"tiempo_votacion"/);
   assert.match(actionsJs, /parametros: \{DURACION_PARTIDA,[\s\S]*TIEMPO_VOTACION/);
@@ -1445,6 +1448,7 @@ test("control parameters own spectator scale and removed inserted word goal", ()
 
   assert.match(i18n, /"control\.param\.spectator_scale"/);
   assert.match(i18n, /"control\.param\.spectator_text_scale"/);
+  assert.match(i18n, /"control\.param\.spectator_detonator_scale"/);
   assert.doesNotMatch(i18n, /"control\.param\.inserted_goal"/);
 });
 
@@ -1469,7 +1473,9 @@ test("active spectator layout reclaims hidden branding space and keeps compact t
 
 test("spectator detonators are projector-sized and red inspiration keeps strong contrast", () => {
   const css = read("game/css/dashboard-players.css");
-  assert.match(css, /body\.page-spectator \.calentamiento-palabra\s*\{[\s\S]*font-size:\s*clamp\(22px, calc\(3\.05vw \* var\(--spectator-ui-scale, 1\)\), 58px\)/);
+  const state = read("game/spectator/js/state.js");
+  assert.match(css, /body\.page-spectator \.calentamiento-palabra\s*\{[\s\S]*--spectator-detonator-scale[\s\S]*--spectator-detonator-effective-scale/);
+  assert.match(state, /payload, "escala_detonadores"[\s\S]*renderizarPalabrasCalentamiento\(\)/);
   assert.match(css, /body\.page-spectator \.calentamiento-palabra\.equipo-2,[\s\S]*body\.page-spectator \.nube-inspiracion-palabra\.equipo-2[\s\S]*color:\s*#ff4964/);
   assert.match(css, /-webkit-text-stroke:\s*0\.025em[\s\S]*filter:\s*brightness\(1\.12\) saturate\(1\.34\)/);
 });

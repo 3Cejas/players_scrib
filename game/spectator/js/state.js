@@ -1801,6 +1801,8 @@ const ESCALA_UI_ESPECTADOR_MIN = 0.82;
 const ESCALA_UI_ESPECTADOR_MAX = 1.28;
 const ESCALA_TEXTO_ESPECTADOR_MIN = 0.9;
 const ESCALA_TEXTO_ESPECTADOR_MAX = 1.7;
+const ESCALA_DETONADORES_ESPECTADOR_MIN = 0.7;
+const ESCALA_DETONADORES_ESPECTADOR_MAX = 2;
 let raf_ajuste_viewport_espectador = null;
 let timeout_ajuste_viewport_espectador = null;
 let resize_observer_fit_viewport_espectador = null;
@@ -1813,6 +1815,7 @@ let estado_creditos_espectador = {
 };
 let escala_ui_espectador = ESCALA_UI_ESPECTADOR_MAX;
 let escala_texto_espectador = 1;
+let escala_detonadores_espectador = 1;
 let creditos_animacion_compositor = null;
 let creditos_animacion_raf = null;
 let creditos_animacion_inicio = null;
@@ -1864,6 +1867,14 @@ const normalizarEscalaTextoEspectador = (valor, fallback = 1) => {
     }
     return Math.max(ESCALA_TEXTO_ESPECTADOR_MIN, Math.min(ESCALA_TEXTO_ESPECTADOR_MAX, numero));
 };
+const normalizarEscalaDetonadoresEspectador = (valor, fallback = 1) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return fallback;
+    return Math.max(
+        ESCALA_DETONADORES_ESPECTADOR_MIN,
+        Math.min(ESCALA_DETONADORES_ESPECTADOR_MAX, numero)
+    );
+};
 const aplicarEscalaUiEspectador = () => {
     const root = document.body && document.body.classList && document.body.classList.contains("page-spectator")
         ? document.body
@@ -1871,14 +1882,19 @@ const aplicarEscalaUiEspectador = () => {
     if (!root || !root.style) return;
     const escala = normalizarEscalaUiEspectador(escala_ui_espectador);
     const escalaTexto = normalizarEscalaTextoEspectador(escala_texto_espectador);
+    const escalaDetonadores = normalizarEscalaDetonadoresEspectador(escala_detonadores_espectador);
+    const escalaMeta = interpolarEscalaUiEspectador(escala, 0.92, 1.2);
     root.style.setProperty("--spectator-ui-scale", escala.toFixed(3));
     root.style.setProperty("--spectator-name-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.22).toFixed(3));
     root.style.setProperty("--spectator-time-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.18).toFixed(3));
-    root.style.setProperty("--spectator-meta-scale", interpolarEscalaUiEspectador(escala, 0.92, 1.2).toFixed(3));
+    root.style.setProperty("--spectator-meta-scale", escalaMeta.toFixed(3));
     root.style.setProperty("--spectator-level-scale", interpolarEscalaUiEspectador(escala, 0.9, 1.18).toFixed(3));
     root.style.setProperty("--spectator-text-lines", interpolarEscalaUiEspectador(escala, 8.1, 4.25).toFixed(2));
     root.style.setProperty("--spectator-text-scale", escalaTexto.toFixed(3));
     root.style.setProperty("--spectator-text-effective-scale", (escala * escalaTexto).toFixed(3));
+    root.style.setProperty("--spectator-detonator-scale", escalaDetonadores.toFixed(3));
+    root.style.setProperty("--spectator-detonator-effective-scale", (escala * escalaDetonadores).toFixed(3));
+    root.style.setProperty("--spectator-detonator-meta-scale", (escalaMeta * escalaDetonadores).toFixed(3));
 };
 
 const resetAjusteViewportEspectador = () => {
@@ -2531,7 +2547,12 @@ const limitarNumeroCalentamiento = (valor, min, max) => {
 
 const obtenerTamFuentePalabraCalentamientoPx = () => {
     const viewport = Math.max(window.innerWidth || 0, 1);
-    return Math.max(15, Math.min(34, viewport * 0.022));
+    const escalaUi = normalizarEscalaUiEspectador(escala_ui_espectador);
+    const escalaDetonadores = normalizarEscalaDetonadoresEspectador(escala_detonadores_espectador);
+    return Math.max(
+        22 * escalaDetonadores,
+        Math.min(58 * escalaDetonadores, viewport * 0.0305 * escalaUi * escalaDetonadores)
+    );
 };
 
 const medirCajaPalabraCalentamiento = (entrada, maxAnchoPx) => {
@@ -5106,6 +5127,7 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     let cambioPasoJurado = false;
     let cambioEscalaUi = false;
     let cambioEscalaTexto = false;
+    let cambioEscalaDetonadores = false;
     let cambioPasoInstrucciones = false;
     if (payload && typeof payload === "object") {
         if (Object.prototype.hasOwnProperty.call(payload, "stats_slide_step")) {
@@ -5153,6 +5175,18 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
             escala_texto_espectador = nuevaEscalaTexto;
             aplicarEscalaUiEspectador();
         }
+        if (Object.prototype.hasOwnProperty.call(payload, "escala_detonadores")) {
+            const nuevaEscalaDetonadores = normalizarEscalaDetonadoresEspectador(
+                payload.escala_detonadores,
+                escala_detonadores_espectador
+            );
+            cambioEscalaDetonadores = nuevaEscalaDetonadores !== escala_detonadores_espectador;
+            escala_detonadores_espectador = nuevaEscalaDetonadores;
+            aplicarEscalaUiEspectador();
+            if (cambioEscalaDetonadores && typeof renderizarPalabrasCalentamiento === "function") {
+                renderizarPalabrasCalentamiento();
+            }
+        }
         if (Object.prototype.hasOwnProperty.call(payload, "calentamiento_vista")) {
             vista_calentamiento = Boolean(payload.calentamiento_vista);
         }
@@ -5186,7 +5220,7 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
                 if (modoServidor === "resultado_jurado" && cambioPasoJurado) {
                     renderizarResultadoJuradoEspectador({ animar: true });
                 }
-                if (cambioEscalaUi || cambioEscalaTexto) {
+                if (cambioEscalaUi || cambioEscalaTexto || cambioEscalaDetonadores) {
                     programarAjusteViewportEspectador();
                 }
                 return;
@@ -5212,7 +5246,7 @@ const actualizarModoVistaEspectadorRemota = (payload = {}) => {
     if (vista_espectador_modo_resuelta === "resultado_jurado" && cambioPasoJurado) {
         renderizarResultadoJuradoEspectador({ animar: true });
     }
-    if (cambioEscalaUi || cambioEscalaTexto || cambioPasoStats || cambioPasoPuntuacion || cambioPasoJurado) {
+    if (cambioEscalaUi || cambioEscalaTexto || cambioEscalaDetonadores || cambioPasoStats || cambioPasoPuntuacion || cambioPasoJurado) {
         programarAjusteViewportEspectador();
         return;
     }

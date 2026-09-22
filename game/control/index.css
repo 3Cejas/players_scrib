@@ -8502,7 +8502,7 @@ table.default {
 }
 
 /* Resultado del videojuego: botón y navegación permanecen juntos en Juego. */
-#panel_controles #control_panel_juego:not(.is-collapsed) > .resultado-videojuego-viewer-control {
+#panel_controles #control_panel_juego:not(.is-collapsed) > .resultado-videojuego-viewer-control:not([hidden]) {
     display: grid !important;
     grid-column: 1 / -1;
     flex: 0 1 100%;
@@ -8571,7 +8571,7 @@ table.default {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #panel_controles #control_panel_juego:not(.is-collapsed) > .resultado-videojuego-viewer-control {
+    #panel_controles #control_panel_juego:not(.is-collapsed) > .resultado-videojuego-viewer-control:not([hidden]) {
         animation: none;
     }
 }
@@ -13298,4 +13298,34 @@ body {
     .debug-context-tools__status {
         grid-column: 1;
     }
+}
+
+/* La narración carece de configuración lateral. Esta regla final gana a las
+   composiciones generales anteriores y centra título, botón y estado. */
+#panel_controles #control_panel_tutorial.control-group--tutorial:not(.is-collapsed) > #show_narration_control {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: max-content max-content max-content !important;
+    justify-items: center !important;
+    text-align: center;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control .videotutorial-control__header,
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control .videotutorial-control__actions,
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control .videotutorial-control__status:not([hidden]) {
+    grid-column: 1 !important;
+    justify-self: center !important;
+    width: 100%;
+    text-align: center;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control .videotutorial-control__header {
+    grid-row: 1 !important;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control .videotutorial-control__actions {
+    grid-row: 2 !important;
+}
+
+#panel_controles #control_panel_tutorial:not(.is-collapsed) > #show_narration_control .videotutorial-control__status:not([hidden]) {
+    grid-row: 3 !important;
 }

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="index.css?v=20260923a">
+    <link rel="stylesheet" type="text/css" href="index.css?v=20260923b">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
 </head>
@@ -24,7 +24,7 @@
     <script src="../js/domains/competition.js?v=20260922g"></script>
     <script src="../js/domains/credits.js?v=20260902b"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-<script src="./js/actions.js?v=20260923a"></script>
+<script src="./js/actions.js?v=20260923b"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -677,9 +677,18 @@
                         <span id="escala_texto_espectador_valor" class="spectator-scale-value">100%</span>
                     </div>
                 </td>
+                <td class="spectator-scale-param spectator-detonator-scale-param">
+                    <br>
+                    <label for="escala_detonadores_espectador" data-i18n="control.param.spectator_detonator_scale">TAMA&Ntilde;O DETONADORES</label>
+                    <div class="spectator-scale-slider-control">
+                        <input type="range" id="escala_detonadores_espectador" name="escala_detonadores_espectador" class="parametro spectator-scale-range"
+                               min="70" max="200" step="5" value="100" onchange="actualizarEscalaDetonadoresEspectadorControlDesdeParametro()" oninput="actualizarEscalaDetonadoresEspectadorControlDesdeParametro()">
+                        <span id="escala_detonadores_espectador_valor" class="spectator-scale-value">100%</span>
+                    </div>
+                </td>
             </tr>
             <tr class="parametros-modos-row">
-                <td colspan="6">
+                <td colspan="7">
                     <div class="parametros-bottom-actions">
                         <div id="parametros_modos_dropdown" class="parametros-modos-dropdown">
                             <button
@@ -869,7 +878,7 @@
             </tr>
         </table>
 <script src="../dist/socket.io/socket.io.js"></script>
-    <script src="../js/i18n.js?v=20260920a"></script>
+    <script src="../js/i18n.js?v=20260923a"></script>
     <script src="../js/domains/inspiration-score.js?v=20260824a"></script>
     <script src="./js/state.js?v=20260917c"></script>
 <script src="./js/videotutorial-control.js?v=20260923a"></script>

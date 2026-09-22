@@ -21,7 +21,8 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(juego, /id="resultado_videojuego_viewer_control"[\s\S]*id="boton_resultado_videojuego"[\s\S]*id="puntuacion_nav_control"/);
   assert.doesNotMatch(juego, /id="boton_descargar_textos"/);
   assert.match(representacion, /id="boton_descargar_textos"/);
-  assert.match(css, /resultado-videojuego-viewer-control\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*max-width:\s*100%;[^}]*overflow:\s*hidden;/s);
+  assert.match(css, /resultado-videojuego-viewer-control:not\(\[hidden\]\)\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*max-width:\s*100%;[^}]*overflow:\s*hidden;/s);
+  assert.doesNotMatch(css, /> \.resultado-videojuego-viewer-control\s*\{[^}]*display:\s*grid\s*!important;/s);
   assert.match(css, /resultado-videojuego-nav-control\s*\{[^}]*max-width:\s*100%;[^}]*box-sizing:\s*border-box;/s);
   assert.doesNotMatch(deliberacion, /id="puntuacion_nav_control"/);
   assert.match(html, /id="boton_resultado_jurado"/);

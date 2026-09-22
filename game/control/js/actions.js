@@ -32,6 +32,7 @@ let puntuacion_final_captura_solicitada = false;
 let timeout_feedback_puntuacion_control = null;
 let escala_ui_espectador_control = 1;
 let escala_texto_espectador_control = 1;
+let escala_detonadores_espectador_control = 1;
 let temporizador_gigante_activo = false;
 let temporizador_gigante_estado_control = "oculto";
 let regalo_musas_enviado = false;
@@ -56,6 +57,8 @@ const ESCALA_UI_ESPECTADOR_CONTROL_MIN = 0.82;
 const ESCALA_UI_ESPECTADOR_CONTROL_MAX = 1.28;
 const ESCALA_TEXTO_ESPECTADOR_CONTROL_MIN = 0.9;
 const ESCALA_TEXTO_ESPECTADOR_CONTROL_MAX = 1.7;
+const ESCALA_DETONADORES_ESPECTADOR_CONTROL_MIN = 0.7;
+const ESCALA_DETONADORES_ESPECTADOR_CONTROL_MAX = 2;
 const EVENTO_CAMBIO_IDIOMA_UI = "scrib:language-changed";
 const BANDERAS_IDIOMA_CONTROL = {
     es: "\uD83C\uDDEA\uD83C\uDDF8",
@@ -72,7 +75,8 @@ const PARAMETROS_CONTROL_PERSISTENTES = [
     "porcentaje_tiempo_desventaja",
     "reduccion_tertulia_porcentaje",
     "escala_espectador",
-    "escala_texto_espectador"
+    "escala_texto_espectador",
+    "escala_detonadores_espectador"
 ];
 let aplicando_estado_control_persistente = false;
 let timeout_emision_estado_control_persistente = null;
@@ -2070,6 +2074,10 @@ function aplicarEstadoPersistenteControl(payload = {}) {
             escala_texto_espectador_control = obtenerEscalaTextoEspectadorParametroControl();
             actualizarControlesEscalaTextoEspectadorControl();
         }
+        if (typeof actualizarControlesEscalaDetonadoresEspectadorControl === "function") {
+            escala_detonadores_espectador_control = obtenerEscalaDetonadoresEspectadorParametroControl();
+            actualizarControlesEscalaDetonadoresEspectadorControl();
+        }
         if (typeof rellenarListaModos === "function") {
             rellenarListaModos();
         }
@@ -2335,9 +2343,12 @@ function temp() {
     const escalaTextoEspectador = obtenerEscalaTextoEspectadorParametroControl();
     escala_texto_espectador_control = escalaTextoEspectador;
     socket.emit("ajustar_escala_texto_espectador", { valor: escalaTextoEspectador });
+    const escalaDetonadoresEspectador = obtenerEscalaDetonadoresEspectadorParametroControl();
+    escala_detonadores_espectador_control = escalaDetonadoresEspectador;
+    socket.emit("ajustar_escala_detonadores_espectador", { valor: escalaDetonadoresEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
     asegurarVistaPartidaParaInicioControl();
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, PORCENTAJE_TIEMPO_DESVENTAJA, REDUCCION_TERTULIA_PORCENTAJE, ESCALA_UI_ESPECTADOR: escalaEspectador, ESCALA_TEXTO_ESPECTADOR: escalaTextoEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, PORCENTAJE_TIEMPO_DESVENTAJA, REDUCCION_TERTULIA_PORCENTAJE, ESCALA_UI_ESPECTADOR: escalaEspectador, ESCALA_TEXTO_ESPECTADOR: escalaTextoEspectador, ESCALA_DETONADORES_ESPECTADOR: escalaDetonadoresEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
@@ -3456,6 +3467,40 @@ function actualizarEscalaTextoEspectadorControlDesdeParametro(opciones = {}) {
 }
 window.actualizarEscalaTextoEspectadorControlDesdeParametro = actualizarEscalaTextoEspectadorControlDesdeParametro;
 
+const normalizarEscalaDetonadoresEspectadorControl = (valor) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return 1;
+    return Math.min(
+        ESCALA_DETONADORES_ESPECTADOR_CONTROL_MAX,
+        Math.max(ESCALA_DETONADORES_ESPECTADOR_CONTROL_MIN, numero)
+    );
+};
+
+function actualizarControlesEscalaDetonadoresEspectadorControl() {
+    const input = document.getElementById("escala_detonadores_espectador");
+    const valor = document.getElementById("escala_detonadores_espectador_valor");
+    const porcentaje = Math.round(normalizarEscalaDetonadoresEspectadorControl(escala_detonadores_espectador_control) * 100);
+    if (input && Number(input.value) !== porcentaje) input.value = String(porcentaje);
+    if (valor) valor.textContent = `${porcentaje}%`;
+}
+
+function obtenerEscalaDetonadoresEspectadorParametroControl() {
+    const input = document.getElementById("escala_detonadores_espectador");
+    const porcentaje = input ? Number(input.value) : 100;
+    return normalizarEscalaDetonadoresEspectadorControl(Number.isFinite(porcentaje) ? porcentaje / 100 : 1);
+}
+
+function actualizarEscalaDetonadoresEspectadorControlDesdeParametro(opciones = {}) {
+    const emitir = opciones.emitir !== false;
+    escala_detonadores_espectador_control = obtenerEscalaDetonadoresEspectadorParametroControl();
+    actualizarControlesEscalaDetonadoresEspectadorControl();
+    if (emitir && typeof socket !== "undefined" && socket && typeof socket.emit === "function") {
+        socket.emit("ajustar_escala_detonadores_espectador", { valor: escala_detonadores_espectador_control });
+    }
+    emitirEstadoControlPersistente();
+}
+window.actualizarEscalaDetonadoresEspectadorControlDesdeParametro = actualizarEscalaDetonadoresEspectadorControlDesdeParametro;
+
 const ROLES_REINICIO_REMOTO_CONTROL = new Set([
     "escritxr1",
     "escritxr2",
@@ -4023,6 +4068,10 @@ function actualizarModoVistaEspectadorControl(payload = {}) {
     if (payload && Object.prototype.hasOwnProperty.call(payload, "escala_texto")) {
         escala_texto_espectador_control = normalizarEscalaTextoEspectadorControl(payload.escala_texto);
         actualizarControlesEscalaTextoEspectadorControl();
+    }
+    if (payload && Object.prototype.hasOwnProperty.call(payload, "escala_detonadores")) {
+        escala_detonadores_espectador_control = normalizarEscalaDetonadoresEspectadorControl(payload.escala_detonadores);
+        actualizarControlesEscalaDetonadoresEspectadorControl();
     }
     actualizarBotonesVistaEspectadorControl();
 }
