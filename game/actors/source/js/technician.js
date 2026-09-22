@@ -22,6 +22,9 @@
     let anchorTime = performance.now();
     let anchorScroll = 0;
     let raf = 0;
+    let noteTargets = [];
+    let visibleNoteId = "";
+    let lastNoteFollowAt = 0;
     let switchingTeam = false;
     let switchCommitTimer = 0;
     let switchEndTimer = 0;
@@ -164,6 +167,10 @@
         underlineColor: String(mark.underlineColor || "").trim()
     });
 
+    const claveMarca = (mark = {}) => String(
+        mark.id || `${mark.start}:${mark.end}:${mark.createdAt || 0}:${mark.note || ""}`
+    );
+
     function estilosSegmento(inicio, fin) {
         return marks.filter((mark) => mark.start < fin && mark.end > inicio);
     }
@@ -171,6 +178,7 @@
     function renderMarkedText() {
         if (!text) return;
         const contenido = String(state.text || "");
+        const segmentosPorNota = new Map();
         const limites = new Set([0, contenido.length]);
         marks.forEach((mark) => {
             limites.add(Math.max(0, Math.min(contenido.length, mark.start)));
@@ -187,34 +195,43 @@
             const activas = estilosSegmento(inicio, fin);
             const color = activas.map((mark) => mark.color).find(Boolean);
             const subrayada = activas.find((mark) => mark.underline);
-            const conNota = activas.find((mark) => mark.note);
+            const conNotas = activas.filter((mark) => mark.note);
             if (color) segmento.style.color = color;
             if (subrayada) {
                 segmento.classList.add("technician-mark--underline");
                 segmento.style.setProperty("--technician-mark-color", subrayada.underlineColor || "#ffe95c");
             }
-            if (conNota) {
+            if (conNotas.length) {
                 segmento.classList.add("technician-mark--note");
-                segmento.title = conNota.note;
+                segmento.title = conNotas.map((mark) => mark.note).join(" · ");
+                conNotas.forEach((mark) => {
+                    const key = claveMarca(mark);
+                    const segmentos = segmentosPorNota.get(key) || [];
+                    segmentos.push(segmento);
+                    segmentosPorNota.set(key, segmentos);
+                });
             }
             fragment.appendChild(segmento);
         }
         text.replaceChildren(fragment);
         text.style.fontSize = `${Math.max(18, Number(state.fontSize) || 44)}px`;
-        renderNotes();
+        const botonesPorNota = renderNotes();
+        updateNoteTargets(segmentosPorNota, botonesPorNota);
     }
 
     function renderNotes() {
-        if (!notes) return;
+        const botones = new Map();
+        if (!notes) return botones;
         const anotadas = marks.filter((mark) => mark.note);
         if (!anotadas.length) {
             notes.innerHTML = '<span class="technician-teleprompter__empty">Sin notas para este texto</span>';
-            return;
+            return botones;
         }
-        notes.replaceChildren(...anotadas.map((mark, index) => {
+        const items = anotadas.map((mark, index) => {
             const item = document.createElement("button");
             item.type = "button";
             item.className = "technician-teleprompter__note";
+            item.dataset.technicianNoteId = claveMarca(mark);
             item.innerHTML = `<b>${index + 1}</b><span></span>`;
             item.querySelector("span").textContent = mark.note;
             item.addEventListener("click", () => {
@@ -224,8 +241,74 @@
                 anchorTime = performance.now();
                 syncScroll();
             });
+            botones.set(claveMarca(mark), item);
             return item;
-        }));
+        });
+        notes.replaceChildren(...items);
+        return botones;
+    }
+
+    function updateNoteTargets(segmentosPorNota, botonesPorNota) {
+        visibleNoteId = "";
+        lastNoteFollowAt = 0;
+        if (!text || !screen || !notes || !segmentosPorNota.size) {
+            noteTargets = [];
+            return;
+        }
+        const textRect = text.getBoundingClientRect();
+        noteTargets = marks
+            .filter((mark) => mark.note)
+            .map((mark) => {
+                const id = claveMarca(mark);
+                const segmentos = segmentosPorNota.get(id) || [];
+                const rects = segmentos.flatMap((segmento) => Array.from(segmento.getClientRects()));
+                if (!rects.length || !botonesPorNota.has(id)) return null;
+                return {
+                    id,
+                    start: Number(mark.start) || 0,
+                    top: Math.min(...rects.map((rect) => rect.top - textRect.top)),
+                    bottom: Math.max(...rects.map((rect) => rect.bottom - textRect.top)),
+                    button: botonesPorNota.get(id)
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => a.top - b.top || a.start - b.start);
+    }
+
+    function scrollNoteIntoView(target) {
+        if (!notes || !target?.button) return;
+        const notesRect = notes.getBoundingClientRect();
+        const buttonRect = target.button.getBoundingClientRect();
+        const left = notes.scrollLeft + buttonRect.left - notesRect.left;
+        const right = left + buttonRect.width;
+        const visibleLeft = notes.scrollLeft;
+        const visibleRight = visibleLeft + notes.clientWidth;
+        if (left >= visibleLeft && right <= visibleRight) return;
+        const destination = Math.max(0, left - parseFloat(getComputedStyle(notes).paddingLeft || "0"));
+        const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+        if (typeof notes.scrollTo === "function") {
+            notes.scrollTo({ left: destination, behavior: reduceMotion ? "auto" : "smooth" });
+        } else {
+            notes.scrollLeft = destination;
+        }
+    }
+
+    function followFirstVisibleNote(now = performance.now()) {
+        if (!noteTargets.length || !screen || !text || now - lastNoteFollowAt < 120) return;
+        lastNoteFollowAt = now;
+        const screenRect = screen.getBoundingClientRect();
+        const textRect = text.getBoundingClientRect();
+        const target = noteTargets.find((item) => (
+            textRect.top + item.bottom >= screenRect.top
+            && textRect.top + item.top <= screenRect.bottom
+        ));
+        if (!target) {
+            visibleNoteId = "";
+            return;
+        }
+        if (target.id === visibleNoteId) return;
+        visibleNoteId = target.id;
+        scrollNoteIntoView(target);
     }
 
     function currentScroll(now = performance.now()) {
@@ -238,6 +321,7 @@
         const maxScroll = Math.max(0, text.scrollHeight - screen.clientHeight + 4);
         const objetivo = Math.max(0, Math.min(currentScroll(now), maxScroll));
         text.style.transform = `translateY(${-objetivo}px)`;
+        followFirstVisibleNote(now);
     }
 
     function loop(now) {
@@ -292,6 +376,8 @@
             selectedPlayer = normalizarPlayer(nextPlayer);
             marks = [];
             marksRevision = 0;
+            noteTargets = [];
+            visibleNoteId = "";
             anchorScroll = 0;
             anchorTime = performance.now();
             renderTeamSwitch();

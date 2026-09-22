@@ -60,7 +60,7 @@ const ACTOR_SOURCE_CSS_VERSION = "20260923b";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
 const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260923a";
 const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260923b";
-const TECHNICIAN_VERSION = "20260923b";
+const TECHNICIAN_VERSION = "20260923c";
 
 function read(relPath) {
   return fs.readFileSync(path.join(ROOT, relPath), "utf8");
@@ -1649,6 +1649,10 @@ test("the single technician console switches teams in place with synchronized ma
   assert.match(technician, /state\.visible \|\| state\.preparing[\s\S]*source !== selectedPlayer[\s\S]*cambiarEquipo\(source\)/);
   assert.match(technician, /classList\.toggle\("technician-teleprompter--expanded", active\)/);
   assert.match(technician, /setWriterName\(playerId, value\)/);
+  assert.match(technician, /function followFirstVisibleNote\(now/);
+  assert.match(technician, /textRect\.top \+ item\.bottom >= screenRect\.top[\s\S]*textRect\.top \+ item\.top <= screenRect\.bottom/);
+  assert.match(technician, /function scrollNoteIntoView\(target\)/);
+  assert.match(technician, /notes\.scrollTo\(\{ left: destination, behavior:/);
   assert.match(technician, /window\.history\.replaceState/);
   assert.match(control, /debug_cargar_marcas_tecnico/);
   assert.match(control, /debug_limpiar_marcas_tecnico/);
