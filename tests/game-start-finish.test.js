@@ -90,11 +90,14 @@ test("the finished-writing scene fully replaces the old spectator HUD", () => {
   assert.match(read("game/spectator/js/state.js"), /sincronizarCierrePartidaEspectadorConVista\(modo\)/);
 });
 
-test("the spectator header reserves its own compact band above the game cards", () => {
+test("the spectator header stays legible above the HUD and lets text cards yield first", () => {
   const css = read("game/css/dashboard-players.css");
 
-  assert.match(css, /page-spectator\.vista-partida #spectator_fit_root > \.cabecera\s*\{[\s\S]*position:\s*absolute;[\s\S]*height:\s*clamp\(118px, 17vh, 176px\);[\s\S]*overflow:\s*hidden;/);
-  assert.match(css, /page-spectator\.vista-partida #contenedor_espectador\s*\{[\s\S]*padding-top:\s*clamp\(150px, 18\.5vh, 196px\);/);
+  assert.match(css, /page-spectator\.vista-partida #spectator_fit_root > \.cabecera\s*\{[\s\S]*width:\s*min\(68vw, 920px\);[\s\S]*height:\s*clamp\(130px, 18\.5vh, 210px\);[\s\S]*overflow:\s*hidden;/);
+  assert.match(css, /page-spectator\.vista-partida #spectator_fit_root > \.cabecera \.neon_espectador\s*\{[\s\S]*font-size:\s*clamp\(8px, \.78vw, 14px\);/);
+  assert.match(css, /page-spectator\.vista-partida \.scrib-competition-hud\[data-role="spectator"\]\s*\{[\s\S]*top:\s*clamp\(142px, 20vh, 220px\);/);
+  assert.match(css, /page-spectator\.vista-partida #contenedor_espectador\s*\{[\s\S]*padding-top:\s*clamp\(282px, 38vh, 400px\);/);
+  assert.match(css, /grid-template-rows:\s*auto auto minmax\(56px, 1fr\) auto auto;/);
 });
 
 test("muses receive a full-screen finished-writing state that yields to result views", () => {

@@ -6597,10 +6597,10 @@ body.page-spectator.vista-partida #spectator_fit_root > .cabecera {
   position: absolute;
   top: clamp(6px, 1vh, 12px);
   left: 50%;
-  z-index: 4;
+  z-index: 8;
   display: grid;
-  width: min(54vw, 760px);
-  height: clamp(118px, 17vh, 176px);
+  width: min(68vw, 920px);
+  height: clamp(130px, 18.5vh, 210px);
   justify-items: center;
   align-content: start;
   overflow: hidden;
@@ -6610,7 +6610,7 @@ body.page-spectator.vista-partida #spectator_fit_root > .cabecera {
 
 body.page-spectator.vista-partida #spectator_fit_root > .cabecera .neon_espectador {
   margin: 0;
-  font-size: clamp(6px, .58vw, 11px);
+  font-size: clamp(8px, .78vw, 14px);
   line-height: .82;
   white-space: pre;
 }
@@ -6628,18 +6628,25 @@ body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo br {
 
 body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo .sub {
   margin: 0;
-  font-size: clamp(7px, .52vw, 10px);
+  font-size: clamp(8px, .68vw, 12px);
   line-height: 1;
 }
 
 body.page-spectator.vista-partida #spectator_fit_root > .cabecera #logo img {
-  width: clamp(42px, 4.2vw, 68px);
-  max-height: clamp(42px, 6.3vh, 68px);
+  width: clamp(72px, 7vw, 116px);
+  max-height: clamp(44px, 7.2vh, 78px);
   object-fit: contain;
 }
 
+/* La marca y el marcador no compiten por la misma franja. En pantallas bajas
+   conservamos ambos a un tamaño legible y es el área de texto la que cede
+   altura, tal como hace el resto de filas dinámicas de cada equipo. */
+body.page-spectator.vista-partida .scrib-competition-hud[data-role="spectator"] {
+  top: clamp(142px, 20vh, 220px);
+}
+
 body.page-spectator.vista-partida #contenedor_espectador {
-  padding-top: clamp(150px, 18.5vh, 196px);
+  padding-top: clamp(282px, 38vh, 400px);
   padding-bottom: calc(var(--spectator-level-reserve, 118px) + clamp(16px, 2vh, 28px));
   align-items: stretch;
 }
@@ -6656,7 +6663,7 @@ body.page-spectator.vista-partida #contenedor_espectador > .jugador2 {
     "text"
     "meta"
     "inspiration";
-  grid-template-rows: auto auto minmax(72px, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(56px, 1fr) auto auto;
   row-gap: clamp(4px, .65vh, 9px);
   align-content: stretch;
   align-self: stretch;
@@ -6724,11 +6731,11 @@ body.page-spectator.vista-partida #contenedor_espectador .spectator-inspiration:
 }
 
 body.page-spectator.spectator-layout-tight.vista-partida #contenedor_espectador {
-  padding-top: clamp(158px, 20vh, 178px);
+  padding-top: clamp(282px, 38vh, 340px);
 }
 
 body.page-spectator.spectator-layout-very-tight.vista-partida #contenedor_espectador {
-  padding-top: clamp(146px, 24vh, 162px);
+  padding-top: clamp(270px, 43vh, 282px);
   padding-bottom: calc(var(--spectator-level-reserve, 98px) + 8px);
 }
 
@@ -6751,10 +6758,9 @@ body.page-spectator.vista-partida #contenedor_espectador #definicion2 {
 /* En una ventana baja reservamos una franja real para el visor de nivel. */
 @media (max-height: 920px) and (min-width: 900px) {
   body.page-spectator.vista-partida #contenedor_espectador {
-    /* El HUD mide hasta ~145 px en estas proporciones. Reservamos su franja
-       completa para que los nombres nunca queden ocultos al reducir la
-       ventana (el caso de 1280x720 antes los colocaba 20 px por debajo). */
-    padding-top: clamp(158px, 20vh, 178px);
+    /* Cabecera y HUD ocupan dos bandas legibles. Los textos se comprimen en
+       el espacio restante sin invadir el visor inferior. */
+    padding-top: clamp(282px, 38vh, 340px);
     padding-bottom: calc(var(--spectator-level-reserve, 118px) + clamp(14px, 1.8vh, 22px));
   }
 
