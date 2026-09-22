@@ -148,7 +148,9 @@ test("tutorial and detonator views share looped music with three-second fades an
   assert.equal(music.volume, 0.5);
 
   documentListeners.get("scrib:show-narration-visibility")({ detail: { visible: true } });
-  assert.equal(music.paused, true, "opening narration silences the menu loop immediately");
+  assert.equal(music.paused, false, "opening narration lets the current music leave through a fade");
+  drainTimers();
+  assert.equal(music.paused, true, "the previous music stops after its narration crossfade");
   music.currentTime = 37;
   documentListeners.get("scrib:show-narration-final")();
   assert.equal(music.currentTime, 0, "the final SCRI B card restarts the menu loop from its beginning");
@@ -265,7 +267,7 @@ test("spectator wires the animated curtain into every resolved view change", () 
   const state = fs.readFileSync(path.join(ROOT, "game/spectator/js/state.js"), "utf8");
 
   assert.match(html, /id="spectator_view_transition"[\s\S]*data-view-transition-label/);
-  assert.match(html, /domains\/view-transition\.js\?v=20260921a/);
+  assert.match(html, /domains\/view-transition\.js\?v=20260922b/);
   assert.match(css, /spectatorViewCoverBlue[\s\S]*spectatorViewRevealRed/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spectator-view-transition/);
   assert.match(state, /controlador_transicion_vista_espectador\.transition\(\{[\s\S]*swap: \(\) => aplicarModoVistaEspectadorUi\(modo\)/);

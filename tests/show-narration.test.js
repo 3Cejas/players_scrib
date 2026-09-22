@@ -48,6 +48,7 @@ function createNarrationControlHarness() {
 
 test("show narration starts with five black seconds and keeps the final scene open", () => {
     assert.equal(narration.DEFAULT_PREROLL_SECONDS, 5);
+    assert.equal(narration.NARRATION_FADE_IN_MS, 1800);
     assert.equal(narration.sceneAt(0).id, "black");
     assert.equal(narration.sceneAt(4.999).id, "black");
     assert.equal(narration.sceneAt(5).id, "binary");
@@ -121,7 +122,7 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     const muse = read("game/public/players/index.html");
     for (const html of [spectator, muse]) {
         assert.match(html, /show-narration\.css\?v=20260831g/);
-        assert.match(html, /domains\/show-narration\.js\?v=20260906b/);
+        assert.match(html, /domains\/show-narration\.js\?v=20260922c/);
     }
     assert.ok(fs.statSync(path.join(ROOT, "game/media/narracion-show.mp3")).size > 3_000_000);
     const png = fs.readFileSync(path.join(ROOT, "game/media/narracion-final.png"));
@@ -144,6 +145,7 @@ test("the spectator and muse load the synchronized visuals and bundled originals
     assert.doesNotMatch(source, /ORIGEN DEL CÓDIGO/);
     assert.match(source, /subtitleBox\.hidden = !subtitle/);
     assert.match(source, /mediaSynchronizedPosition\([\s\S]*clockPosition,[\s\S]*audio/);
+    assert.match(source, /audio\.volume = shouldFadeIn \? 0 : 1;[\s\S]*fadeNarrationAudio\(1, NARRATION_FADE_IN_MS\)/);
     assert.match(source, /requestUnderlyingView[\s\S]*pedir_vista_espectador_modo[\s\S]*pedir_pre_show_estado/);
     assert.match(source, /root\.dataset\.scene = sceneAt\(syncPosition\)\.id;[\s\S]*setVisible\(state\.active\)/);
     assert.match(source, /root\.hidden = true;[\s\S]{0,180}root\.dataset\.scene = "black";/);

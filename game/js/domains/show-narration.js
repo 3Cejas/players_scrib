@@ -27,6 +27,7 @@
     const DEFAULT_AUDIO_SECONDS = 80.013;
     const DEFAULT_AUDIO_URL = "../media/narracion-show.mp3";
     const DEFAULT_SLIDE_URL = "../media/narracion-final.png";
+    const NARRATION_FADE_IN_MS = 1800;
     const ASSET_VERSION = "20260831g";
     const MAX_AUDIO_DRIFT_SECONDS = 1.25;
     const RETRY_EVENTS = Object.freeze(["pointerdown", "touchstart", "keydown"]);
@@ -228,6 +229,8 @@
         let renderedScene = "";
         let renderedSubtitle = "";
         let finalAnnounced = false;
+        let audioFadeTimer = null;
+        let audioFadeSequence = 0;
 
         const currentPosition = () => state && state.active
             ? Math.max(0, syncPosition + ((Date.now() - syncReceivedAt) / 1000))
@@ -244,8 +247,41 @@
             socketRef.emit("pedir_pre_show_estado");
         };
 
+        const cancelNarrationFade = () => {
+            audioFadeSequence += 1;
+            if (audioFadeTimer != null) windowRef.clearTimeout(audioFadeTimer);
+            audioFadeTimer = null;
+        };
+
+        const fadeNarrationAudio = (targetVolume, durationMs = NARRATION_FADE_IN_MS) => {
+            if (!audio) return;
+            cancelNarrationFade();
+            const sequence = audioFadeSequence;
+            const from = clamp(finite(audio.volume, 0), 0, 1);
+            const target = clamp(finite(targetVolume, 1), 0, 1);
+            const duration = Math.max(0, finite(durationMs, 0));
+            if (duration === 0 || Math.abs(target - from) < 0.001) {
+                audio.volume = target;
+                return;
+            }
+            const startedAt = Date.now();
+            const step = () => {
+                if (sequence !== audioFadeSequence) return;
+                const progress = clamp((Date.now() - startedAt) / duration, 0, 1);
+                const eased = progress * progress * (3 - (2 * progress));
+                audio.volume = from + ((target - from) * eased);
+                if (progress >= 1) {
+                    audioFadeTimer = null;
+                    return;
+                }
+                audioFadeTimer = windowRef.setTimeout(step, 45);
+            };
+            step();
+        };
+
         const pauseAudio = (reset = false) => {
             if (!audio) return;
+            cancelNarrationFade();
             try {
                 audio.pause();
                 if (reset) audio.currentTime = 0;
@@ -287,9 +323,10 @@
                 return;
             }
             const url = versionedAssetUrl(state.config.audioUrl, DEFAULT_AUDIO_URL, windowRef.location, "mp3");
+            const shouldFadeIn = force || audio.paused;
             if (force || audio.src !== url) {
                 audio.src = url;
-                audio.volume = 1;
+                audio.volume = shouldFadeIn ? 0 : 1;
                 audio.muted = false;
                 audio.load();
             }
@@ -302,7 +339,12 @@
                 } catch (_error) {}
                 const attempt = audio.play();
                 if (attempt && typeof attempt.catch === "function") {
-                    attempt.then(() => delete audio.dataset.blocked).catch(() => { audio.dataset.blocked = "true"; });
+                    attempt.then(() => {
+                        delete audio.dataset.blocked;
+                        if (shouldFadeIn) fadeNarrationAudio(1, NARRATION_FADE_IN_MS);
+                    }).catch(() => { audio.dataset.blocked = "true"; });
+                } else if (shouldFadeIn) {
+                    fadeNarrationAudio(1, NARRATION_FADE_IN_MS);
                 }
             };
             if (audio.readyState >= 1) start();
@@ -421,6 +463,7 @@
         DEFAULT_AUDIO_URL,
         DEFAULT_PREROLL_SECONDS,
         DEFAULT_SLIDE_URL,
+        NARRATION_FADE_IN_MS,
         SCENES,
         SUBTITLES,
         createController,

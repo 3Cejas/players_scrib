@@ -268,8 +268,8 @@
             if (visible) {
                 forcedMusic = false;
                 ducked = true;
-                fadeMusic(0, 0);
-                fadeFeatureMusic(0, 0);
+                fadeMusic(0, fadeDurationMs);
+                fadeFeatureMusic(0, featureMusicFadeDurationMs);
                 return;
             }
             forcedMusic = false;
