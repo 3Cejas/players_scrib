@@ -2199,7 +2199,7 @@ th{
     top: 0;
     width: min(92vw, 36rem);
     will-change: transform;
-    animation: creditosMusaRoll var(--creditos-musa-duracion, 10s) linear both;
+    animation: creditosMusaRoll var(--creditos-musa-duracion, 25s) linear both;
 }
 
 .creditos-musa__content {
@@ -3045,7 +3045,7 @@ th{
     .resultado-musa__puntos-vuelo {
         animation: none !important;
     }
-    .creditos-musa__track { animation-duration: 10s; }
+    .creditos-musa__track { animation-duration: 25s; }
 }
 
 .nivel{
@@ -5701,7 +5701,6 @@ body.musa-postgame-activo .resultado-musa {
 .musa-postgame__team-panel.is-switching .musa-postgame__team-metrics > span:nth-child(4),
 .musa-postgame__team-panel.is-switching .musa-postgame__muse-team-metrics > span:nth-child(4) { animation-delay: 165ms; }
 .musa-postgame__team-panel.is-switching .musa-postgame__muse-team-metrics > span:nth-child(5) { animation-delay: 220ms; }
-}
 .musa-postgame__text {
     max-height: min(46dvh, 460px);
     min-height: 190px;

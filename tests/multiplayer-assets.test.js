@@ -10,7 +10,7 @@ const PLAYER_DISCARD_VERSION = "20260824a";
 const PLAYER_I18N_VERSION = "20260917c";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
-const GAME_HUD_VERSION = "20260922g";
+const GAME_HUD_VERSION = "20260922k";
 const COMPETITION_VERSION = "20260922g";
 const INSPIRATION_VERSION = "20260905d";
 const CONTROL_VIDEO_VERSION = "20260920a";
@@ -24,8 +24,8 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260922l";
-const SPECTATOR_CSS_VERSION = "20260922g";
+const SPECTATOR_STATE_VERSION = "20260922n";
+const SPECTATOR_CSS_VERSION = "20260922k";
 const CREDITS_DOMAIN_VERSION = "20260902b";
 const VIEW_TRANSITION_MODULE_VERSION = "20260921a";
 const MUSA_HELP_VERSION = "20260830a";
@@ -35,7 +35,7 @@ const SCORE_ASSET_VERSION = "20260903e";
 const LEVEL_TRANSITION_VERSION = "20260921c";
 const LEVEL_TRANSITION_SCRIPT_VERSION = "20260921c";
 const PLAYER_ACTIONS_VERSION = "20260921g";
-const PLAYER_STATE_VERSION = "20260922c";
+const PLAYER_STATE_VERSION = "20260922d";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260922d";
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260921c";
 const JURY_CSS_VERSION = "20260920d";
@@ -50,8 +50,8 @@ const PUBLIC_PLAYER_ACTIONS_VERSION = "20260921c";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260908a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
-const PUBLIC_PLAYER_STATE_VERSION = "20260922o";
-const PUBLIC_PLAYER_CSS_VERSION = "20260922l";
+const PUBLIC_PLAYER_STATE_VERSION = "20260922q";
+const PUBLIC_PLAYER_CSS_VERSION = "20260922n";
 const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260922k";
 const PUBLIC_PLAYER_I18N_VERSION = "20260921e";
 const SPECTATOR_I18N_VERSION = "20260917c";
@@ -1045,6 +1045,29 @@ test("spectator viewport uses a stable grid without cumulative whole-page scalin
   assert.match(js.slice(initStart, initEnd), /MutationObserver/);
 });
 
+test("writer viewport recalculates around growing text and keeps the complete level on screen", () => {
+  const css = read("game/css/dashboard-players.css");
+  const state = read("game/players/js/state.js");
+  const fitStart = state.indexOf("const ajustarAltoEditorViewportEscritora =");
+  const fitEnd = state.indexOf("const programarAjusteViewportEscritora", fitStart);
+  const initStart = state.indexOf("const iniciarAjusteViewportEscritora =");
+  const initEnd = state.indexOf("const esElementoVisible", initStart);
+
+  assert.ok(fitStart >= 0 && fitEnd > fitStart, "writer viewport fit functions should exist");
+  assert.match(css, /#players_fit_root\s*\{[^}]*overflow:\s*visible;/s);
+  assert.match(css, /escritxr-texto-panel__viewport[\s\S]*--escritxr-editor-base-min:[\s\S]*--escritxr-editor-base-max:/);
+  assert.match(css, /max-height:\s*var\(--escritxr-editor-max-height/);
+  assert.match(state.slice(fitStart, fitEnd), /altoContenedor - rectEditor\.height/);
+  assert.match(state.slice(fitStart, fitEnd), /--escritxr-editor-min-height/);
+  assert.match(state.slice(fitStart, fitEnd), /--escritxr-editor-max-height/);
+  assert.match(state.slice(fitStart, fitEnd), /document\.querySelector\("\.info-total"\)/);
+  assert.match(state.slice(initStart, initEnd), /ResizeObserver/);
+  assert.match(state.slice(initStart, initEnd), /document\.querySelector\("\.escritxr-texto-panel__viewport"\)/);
+  assert.match(state.slice(initStart, initEnd), /document\.querySelector\("\.info-total"\)/);
+  assert.match(state.slice(initStart, initEnd), /orientationchange/);
+  assert.match(state.slice(initStart, initEnd), /document\.fonts\.ready/);
+});
+
 test("spectator texts use the projector width and keep synchronized line numbers", () => {
   const html = read("game/spectator/index.html");
   const css = read("game/css/dashboard-players.css");
@@ -1290,6 +1313,8 @@ test("muse gift opens a persistent wrapped scene with ranking and a selectable t
   assert.match(css, /\.musa-postgame__writers\s*\{[^}]*var\(--postgame-reader-color\)/s);
   assert.match(css, /\.musa-postgame__reader\.is-collapsed \.musa-postgame__text/);
   assert.match(css, /\.musa-postgame__reader\.is-expanded \.musa-postgame__text/);
+  assert.doesNotMatch(css, /nth-child\(5\)[^}]*\}\s*\}\s*\.musa-postgame__text/);
+  assert.match(css, /\.musa-postgame__text\s*\{[^}]*white-space:\s*pre-wrap;/s);
   assert.match(css, /body\.musa-postgame-activo \.temporizador-musa:not\(\.is-finished\)[\s\S]*temporizadorPostgameEntrada/);
   assert.match(css, /\.musa-postgame\.is-celebrating \.musa-postgame__ambient i[\s\S]*musaPostgameConfetti/);
   assert.match(state, /regalo_postgame_data = payload\.postgame/);
@@ -1300,6 +1325,8 @@ test("muse gift opens a persistent wrapped scene with ranking and a selectable t
   assert.match(state, /function setUiPartidaFinalizadaMusa\(finalizada\)[\s\S]*regalo_postgame_data && vista_modo_remota_musa === "partida"[\s\S]*ocultarRegaloPdf\(\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /await descargarArchivoRegalo\(regalo_pdf_data, regalo_pdf_filename\)[\s\S]*mostrarPostgameMusa\(\)/);
   assert.match(state, /function pintarTextoPostgameMusa\(playerId\)[\s\S]*escritxr\.texto/);
+  assert.match(state, /function normalizarTextoWrappedEscritxr\(valor\)[\s\S]*replace\(\/\\r\\n\/g, "\\n"\)[\s\S]*replace\(\/\\r\/g, "\\n"\)/);
+  assert.match(state, /const texto = normalizarTextoWrappedEscritxr\(escritxr\.texto\)/);
   assert.match(state, /function actualizarExpansionTextoPostgameMusa\(expandido\)[\s\S]*muse\.postgame\.expand[\s\S]*muse\.postgame\.collapse/);
   assert.match(state, /function resumenEquipoMusasPostgameMusa\(playerId\)/);
   assert.doesNotMatch(state, /impacto_neto|musa_postgame_team_impact|musa_postgame_impacto/);
@@ -1410,10 +1437,16 @@ test("active spectator layout reclaims hidden branding space and keeps compact t
   const competition = read("game/js/domains/competition.js");
 
   assert.match(state, /classList\.toggle\("partida-en-curso-espectador", modoPartida && partidaEnCurso\)/);
-  assert.match(css, /partida-en-curso-espectador #contenedor_espectador[\s\S]*padding-top:\s*clamp\(108px, 13\.5vh, 148px\)/);
-  assert.match(css, /partida-en-curso-espectador #contenedor_espectador > \.jugador1,[\s\S]*grid-template-rows:\s*auto auto clamp\(118px, 17vh, 180px\) auto auto/);
+  assert.match(state, /const actualizarReservaHudEspectador/);
+  assert.match(state, /--spectator-content-top/);
+  assert.match(css, /partida-en-curso-espectador #contenedor_espectador[\s\S]*padding-top:\s*var\(--spectator-content-top/);
+  assert.match(css, /partida-en-curso-espectador #contenedor_espectador > \.jugador1,[\s\S]*grid-template-rows:\s*auto auto minmax\(0, 1fr\) auto auto/);
+  assert.match(css, /#contenedor_espectador > \.jugador1,[\s\S]*row-gap:\s*clamp\(8px, 1vh, 14px\)/);
+  assert.match(css, /#contenedor_espectador \.spectator-text-shell\s*\{[^}]*grid-area:\s*text;[^}]*margin-top:\s*0;/);
+  assert.match(css, /#contenedor_espectador \.spectator-meta-wrap\s*\{[^}]*grid-area:\s*meta;[^}]*margin-top:\s*0;/);
+  assert.match(css, /spectator-meta-wrap \.marcador-equipo[\s\S]*padding-block:\s*clamp\(8px, 1vh, 12px\)/);
   assert.match(competition, /data-role="spectator"\] \.scrib-competition-leader\{display:none!important\}/);
-  assert.match(css, /--spectator-text-effective-scale/);
+  assert.match(css, /font-size:\s*clamp\([\s\S]{0,180}18px \* var\(--spectator-text-scale[\s\S]{0,180}60px \* var\(--spectator-text-scale/);
   assert.match(state, /payload, "escala_texto"/);
 });
 

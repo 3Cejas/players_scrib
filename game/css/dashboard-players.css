@@ -759,7 +759,9 @@ body.page-spectator:not(.vista-partida) #resucitar_mini_2 {
     inset: 0;
     width: 100vw;
     height: 100dvh;
-    overflow: hidden;
+    /* El contenido puede ser más alto antes de aplicar el ajuste. Si se
+       recorta aquí, la escala posterior no puede recuperar la zona inferior. */
+    overflow: visible;
     z-index: 1;
     transform-origin: top left;
     will-change: transform;
@@ -3127,13 +3129,13 @@ body.page-spectator .feedback-tiempo-float.feedback-tiempo-float--putada {
 
 @keyframes spectatorPutadaBadgePulse {
     0% {
-        transform: translate(-50%, 0) scale(0.98);
+        transform: translateY(0) scale(0.98);
     }
     50% {
-        transform: translate(-50%, -2px) scale(1.02);
+        transform: translateY(-2px) scale(1.02);
     }
     100% {
-        transform: translate(-50%, 0) scale(0.98);
+        transform: translateY(0) scale(0.98);
     }
 }
 
@@ -4456,7 +4458,14 @@ body.page-players.equipo-rojo .escritora-cursor-pluma::before {
       }
 
 body.page-spectator .textarea1 {
-      font-size: clamp(18px, calc(1.55vw * var(--spectator-text-effective-scale, 1)), 46px);
+      /* Escalamos tambien los limites del clamp. Antes el maximo fijo de 46px
+         hacia que el control de TAMANO TEXTO pareciera no responder en
+         proyectores y pantallas anchas. */
+      font-size: clamp(
+          calc(18px * var(--spectator-text-scale, 1)),
+          calc(1.55vw * var(--spectator-text-effective-scale, 1)),
+          calc(60px * var(--spectator-text-scale, 1))
+      );
       line-height: 1.5;
       height: 100%;
       min-height: 100%;
@@ -4507,7 +4516,11 @@ body.page-spectator .spectator-line-numbers {
     border-right: 1px solid color-mix(in srgb, var(--spectator-text-accent), transparent 70%);
     background: color-mix(in srgb, var(--spectator-text-accent), transparent 94%);
     color: color-mix(in srgb, var(--spectator-text-accent), white 22%);
-    font: 700 clamp(11px, calc(0.95vw * var(--spectator-text-effective-scale, 1)), 25px)/1.5 "Retro-gaming", monospace;
+    font: 700 clamp(
+        calc(11px * var(--spectator-text-scale, 1)),
+        calc(0.95vw * var(--spectator-text-effective-scale, 1)),
+        calc(32px * var(--spectator-text-scale, 1))
+    )/1.5 "Retro-gaming", monospace;
     text-align: center;
     user-select: none;
 }
@@ -4928,11 +4941,16 @@ body.page-players.partida-activa .escritxr-texto-panel::before {
 body.page-players.partida-activa .escritxr-texto-panel__viewport {
     --escritxr-text-size: clamp(26px, 3vw, 48px);
     --escritxr-text-line: calc(var(--escritxr-text-size) * 1.28);
+    --escritxr-editor-base-min: clamp(210px, 34vh, 390px);
+    --escritxr-editor-base-max: clamp(260px, 44vh, 520px);
     position: relative;
     display: grid;
     grid-template-columns: clamp(46px, 5vw, 68px) minmax(0, 1fr);
-    min-height: clamp(210px, 34vh, 390px);
-    max-height: clamp(260px, 44vh, 520px);
+    min-height: min(
+        var(--escritxr-editor-min-height, var(--escritxr-editor-base-min)),
+        var(--escritxr-editor-max-height, var(--escritxr-editor-base-max))
+    );
+    max-height: var(--escritxr-editor-max-height, var(--escritxr-editor-base-max));
     overflow: hidden;
     border-top: 1px solid rgba(var(--escritxr-panel-accent-rgb), 0.24);
     background:
@@ -4970,8 +4988,11 @@ body.page-players.partida-activa .escritxr-texto-lineas__inner {
 body.page-players.partida-activa .escritxr-texto-panel .textarea {
     box-sizing: border-box;
     width: 100%;
-    min-height: clamp(210px, 34vh, 390px);
-    max-height: clamp(260px, 44vh, 520px);
+    min-height: min(
+        var(--escritxr-editor-min-height, var(--escritxr-editor-base-min)),
+        var(--escritxr-editor-max-height, var(--escritxr-editor-base-max))
+    );
+    max-height: var(--escritxr-editor-max-height, var(--escritxr-editor-base-max));
     margin: 0;
     padding: clamp(22px, 3vw, 38px);
     overflow-x: hidden;
@@ -5017,8 +5038,6 @@ body.page-players.partida-activa .escritxr-texto-panel .textarea::-webkit-scroll
     }
 
     body.page-players.partida-activa .escritxr-texto-panel .textarea {
-        min-height: clamp(170px, 30vh, 250px);
-        max-height: 39vh;
         padding: clamp(16px, 3vw, 24px);
     }
 }
@@ -5139,15 +5158,13 @@ body.page-players.partida-activa .info-total {
 @media (max-width: 720px), (max-height: 680px) {
     body.page-players.partida-activa .escritxr-texto-panel__viewport {
         --escritxr-text-size: clamp(24px, 5vw, 34px);
+        --escritxr-editor-base-min: clamp(170px, 30vh, 250px);
+        --escritxr-editor-base-max: 39vh;
         grid-template-columns: clamp(38px, 9vw, 52px) minmax(0, 1fr);
-        min-height: clamp(170px, 30vh, 250px);
-        max-height: 39vh;
     }
 
     body.page-players.partida-activa .escritxr-texto-lineas,
     body.page-players.partida-activa .escritxr-texto-panel .textarea {
-        min-height: clamp(170px, 30vh, 250px);
-        max-height: 39vh;
         padding-top: clamp(16px, 3vw, 24px);
         padding-bottom: clamp(16px, 3vw, 24px);
     }
@@ -6664,7 +6681,7 @@ body.page-spectator.vista-partida #contenedor_espectador > .jugador2 {
     "meta"
     "inspiration";
   grid-template-rows: auto auto minmax(56px, 1fr) auto auto;
-  row-gap: clamp(4px, .65vh, 9px);
+  row-gap: clamp(8px, 1vh, 14px);
   align-content: stretch;
   align-self: stretch;
   min-height: 0;
@@ -6682,21 +6699,36 @@ body.page-spectator.vista-partida #contenedor_espectador [id^="alineador"] {
 
 body.page-spectator.vista-partida #contenedor_espectador .putada-visual-badge {
   grid-area: disadvantage;
+  justify-self: center;
+  align-self: center;
+  margin-inline: 0;
 }
 
 body.page-spectator.vista-partida #contenedor_espectador .spectator-text-shell {
   grid-area: text;
+  margin-top: 0;
 }
 
 body.page-spectator.vista-partida #contenedor_espectador .spectator-meta-wrap {
   grid-area: meta;
   min-width: 0;
   width: 100%;
+  margin-top: 0;
 }
 
 body.page-spectator.vista-partida #contenedor_espectador .spectator-meta-wrap .marcador-equipo {
   width: 100%;
   margin: 0;
+  padding-block: clamp(8px, 1vh, 12px);
+  padding-inline: clamp(10px, 1vw, 16px);
+}
+
+body.page-spectator.vista-partida #contenedor_espectador .spectator-meta-wrap .metadatos-grid {
+  column-gap: clamp(10px, 1.25vw, 18px);
+}
+
+body.page-spectator.vista-partida #contenedor_espectador .spectator-meta-wrap .meta-copy {
+  gap: clamp(3px, .4vh, 6px);
 }
 
 body.page-spectator.vista-partida #contenedor_espectador .spectator-inspiration {
@@ -11944,22 +11976,23 @@ body.page-spectator.vista-partida.partida-en-curso-espectador .scrib-competition
 body.page-spectator.vista-partida.partida-en-curso-espectador #contenedor_espectador,
 body.page-spectator.vista-partida.partida-en-curso-espectador.spectator-layout-tight #contenedor_espectador,
 body.page-spectator.vista-partida.partida-en-curso-espectador.spectator-layout-very-tight #contenedor_espectador {
-  padding-top: clamp(108px, 13.5vh, 148px);
-  padding-bottom: calc(var(--spectator-level-reserve, 110px) + clamp(12px, 1.5vh, 20px));
+  padding-top: var(--spectator-content-top, clamp(132px, 15.5vh, 176px));
+  padding-bottom: calc(var(--spectator-level-reserve, 110px) + clamp(4px, .7vh, 9px));
   align-items: start;
 }
 
 body.page-spectator.vista-partida.partida-en-curso-espectador #contenedor_espectador > .jugador1,
 body.page-spectator.vista-partida.partida-en-curso-espectador #contenedor_espectador > .jugador2 {
-  grid-template-rows: auto auto clamp(118px, 17vh, 180px) auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   align-content: start;
   align-self: start;
+  height: 100%;
 }
 
 body.page-spectator.vista-partida.partida-en-curso-espectador #contenedor_espectador .spectator-text-shell {
   height: 100%;
   min-height: 0;
-  max-height: clamp(118px, 17vh, 180px);
+  max-height: none;
   align-self: start;
 }
 
@@ -11972,7 +12005,8 @@ body.page-spectator.vista-partida.partida-en-curso-espectador #contenedor_espect
 
   body.page-spectator.vista-partida.partida-en-curso-espectador #contenedor_espectador > .jugador1,
   body.page-spectator.vista-partida.partida-en-curso-espectador #contenedor_espectador > .jugador2 {
-    grid-template-rows: auto auto clamp(98px, 17vh, 132px) auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    row-gap: clamp(6px, 1vh, 10px);
   }
 }
 

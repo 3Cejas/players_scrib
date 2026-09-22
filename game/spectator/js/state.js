@@ -1805,6 +1805,7 @@ let raf_ajuste_viewport_espectador = null;
 let timeout_ajuste_viewport_espectador = null;
 let resize_observer_fit_viewport_espectador = null;
 let mutation_observer_fit_viewport_espectador = null;
+let hud_competicion_observado_espectador = null;
 let estado_creditos_espectador = {
     creditos: { ...window.ScribCredits.DEFAULT_STATE },
     mostrar: false,
@@ -1817,7 +1818,7 @@ let creditos_animacion_inicio = null;
 let creditos_animacion_y_inicio = 0;
 let creditos_animacion_y_fin = 0;
 let creditos_animacion_duracion_ms = 0;
-const CREDITOS_SCROLL_DURACION_MS = 10000;
+const CREDITOS_SCROLL_DURACION_MS = 25000;
 const CREDITOS_SCROLL_MARGEN_SALIDA_PX = 100;
 const reproducirMusicaCreditosEspectador = () => {
     if (!creditos_audio_espectador) return;
@@ -1912,6 +1913,38 @@ const actualizarReservaPanelNivelEspectador = () => {
     spectator_fit_root.style.setProperty("--spectator-level-reserve", `${reserva}px`);
 };
 
+const actualizarReservaHudEspectador = () => {
+    if (!spectator_fit_root) return;
+    const hud = document.getElementById("scrib_competition_hud");
+    const visible = Boolean(
+        hud
+        && hud.dataset.role === "spectator"
+        && window.getComputedStyle(hud).display !== "none"
+        && hud.getClientRects().length > 0
+    );
+    if (!visible) {
+        spectator_fit_root.style.removeProperty("--spectator-content-top");
+        return;
+    }
+    if (resize_observer_fit_viewport_espectador && hud_competicion_observado_espectador !== hud) {
+        if (hud_competicion_observado_espectador) {
+            resize_observer_fit_viewport_espectador.unobserve(hud_competicion_observado_espectador);
+        }
+        resize_observer_fit_viewport_espectador.observe(hud);
+        hud_competicion_observado_espectador = hud;
+    }
+    const elementosHud = [hud, ...hud.querySelectorAll(".scrib-competition-streak")];
+    const limiteInferior = elementosHud.reduce((maximo, nodo) => {
+        const rect = nodo.getBoundingClientRect();
+        return Math.max(maximo, Number(rect.bottom) || 0);
+    }, 0);
+    const margen = Math.max(20, Math.min(34, (window.innerHeight || 0) * 0.026));
+    spectator_fit_root.style.setProperty(
+        "--spectator-content-top",
+        `${Math.ceil(limiteInferior + margen)}px`
+    );
+};
+
 const ajustarViewportEspectador = () => {
     if (!spectator_fit_root) return;
     const teleprompterActivo = Boolean(teleprompter_estado && teleprompter_estado.visible);
@@ -1926,6 +1959,7 @@ const ajustarViewportEspectador = () => {
     // una nueva referencia de medida y terminaba encogiendo toda la pantalla.
     prepararMedicionViewportEspectador();
     actualizarReservaPanelNivelEspectador();
+    actualizarReservaHudEspectador();
     const viewportH = Math.max(window.innerHeight || 0, 1);
     resetAjusteViewportEspectador();
     if (document.body) {

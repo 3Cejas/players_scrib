@@ -132,10 +132,15 @@ test("Control coloca Nube junto a Vista partida y Skip tertulia junto a Stats", 
 test("Espectador mantiene una sola desventaja visual y limpia el efecto anterior", () => {
   const state = read("game/spectator/js/state.js");
   const sockets = read("game/spectator/js/socket-events.js");
+  const css = read("game/css/dashboard-players.css");
 
   assert.match(state, /function limpiarDesventajasVisualesEspectador\(\)[\s\S]*limpiarVisualPutadasEspectador\(\)/);
   assert.match(state, /const rival = id === 1 \? 2 : 1;[\s\S]*limpiarVisualPutadaEspectador\(rival, \{ limpiarEfecto: true \}\)/);
   assert.match(sockets, /socket\.on\("desventaja_ronda_limpiar", \(\) => \{\s*limpiarDesventajasVisualesEspectador\(\);/);
+  assert.match(css, /#contenedor_espectador \.putada-visual-badge\s*\{[^}]*justify-self:\s*center;[^}]*align-self:\s*center;/);
+  assert.match(css, /@keyframes spectatorPutadaBadgePulse\s*\{[\s\S]*transform:\s*translateY\(0\) scale\(0\.98\);/);
+  assert.doesNotMatch(css, /transform:\s*translate\(-50%, 0\) scale\(0\.98\)/);
+  assert.doesNotMatch(css, /transform:\s*translate\(-50%, -2px\) scale\(1\.02\)/);
 });
 
 test("Escritxr ve el calentamiento previo abajo como presentación de nivel y con progreso", () => {

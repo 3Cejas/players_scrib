@@ -1897,6 +1897,13 @@ function valorPostgameMusa(id, valor) {
     if (elemento) elemento.textContent = String(valor);
 }
 
+function normalizarTextoWrappedEscritxr(valor) {
+    return String(valor ?? "")
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .trim();
+}
+
 function escritorPostgameMusa(playerId) {
     const escritores = regalo_postgame_data && regalo_postgame_data.escritores;
     return escritores && (escritores[playerId] || escritores[String(playerId)])
@@ -2050,7 +2057,7 @@ function pintarTextoPostgameMusa(playerId) {
         traducirPostgameMusa("muse.postgame.pace_value", `${ritmo} PPM`, { pace: ritmo })
     );
     valorPostgameMusa("musa_postgame_inspiracion", inspiracion);
-    const texto = String(escritxr.texto || "").trim();
+    const texto = normalizarTextoWrappedEscritxr(escritxr.texto);
     const textoEl = getEl("musa_postgame_texto");
     valorPostgameMusa("musa_postgame_texto", texto || traducirPostgameMusa("muse.postgame.empty_text", "Este texto quedó vacío."));
     if (textoEl) textoEl.classList.toggle("is-empty", !texto);
@@ -2909,7 +2916,7 @@ function configurarTrayectoCreditosMusa() {
     const yFin = (altoViewport * 0.5) - centroSocial;
     creditos_musa_track.style.setProperty("--creditos-musa-y-inicio", `${yInicio.toFixed(2)}px`);
     creditos_musa_track.style.setProperty("--creditos-musa-y-fin", `${yFin.toFixed(2)}px`);
-    creditos_musa_track.style.setProperty("--creditos-musa-duracion", "10s");
+    creditos_musa_track.style.setProperty("--creditos-musa-duracion", "25s");
 }
 
 let creditos_resize_observer_musa = null;

@@ -1413,6 +1413,7 @@ let raf_ajuste_viewport_escritora = null;
 let timeout_ajuste_viewport_escritora = null;
 let resize_observer_fit_viewport_escritora = null;
 let mutation_observer_fit_viewport_escritora = null;
+const MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA = 132;
 let cursor_pluma_atributos_inicializado = false;
 let cursor_pluma_juego_escritora = null;
 let caret_neon_juego_escritora = null;
@@ -1444,6 +1445,39 @@ const SOPORTA_CURSOR_PLUMA_JUEGO = (() => {
 const resetAjusteViewportEscritora = () => {
     if (!players_fit_root) return;
     players_fit_root.style.removeProperty("transform");
+    players_fit_root.style.removeProperty("--escritxr-editor-min-height");
+    players_fit_root.style.removeProperty("--escritxr-editor-max-height");
+};
+
+const ajustarAltoEditorViewportEscritora = (viewportH, margenVerticalSeguro) => {
+    if (!players_fit_root || !document.body?.classList.contains("partida-activa")) {
+        players_fit_root?.style.removeProperty("--escritxr-editor-min-height");
+        players_fit_root?.style.removeProperty("--escritxr-editor-max-height");
+        return;
+    }
+    const contenedorPartida = getEl("contenedor");
+    const viewportEditor = document.querySelector(".escritxr-texto-panel__viewport");
+    if (!contenedorPartida || !viewportEditor || viewportEditor.getClientRects().length === 0) return;
+
+    players_fit_root.style.removeProperty("--escritxr-editor-min-height");
+    players_fit_root.style.removeProperty("--escritxr-editor-max-height");
+    const estilosEditor = window.getComputedStyle(viewportEditor);
+    const baseMin = Number.parseFloat(estilosEditor.minHeight) || MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA;
+    const baseMaxLeido = Number.parseFloat(estilosEditor.maxHeight);
+    const baseMax = Number.isFinite(baseMaxLeido) && baseMaxLeido > 0 ? baseMaxLeido : viewportH;
+    const rectContenedor = contenedorPartida.getBoundingClientRect();
+    const rectEditor = viewportEditor.getBoundingClientRect();
+    const altoContenedor = Math.max(rectContenedor.height, contenedorPartida.scrollHeight || 0);
+    const altoFueraEditor = Math.max(0, altoContenedor - rectEditor.height);
+    const altoDisponible = viewportH
+        - margenVerticalSeguro
+        - Math.max(0, rectContenedor.top)
+        - altoFueraEditor;
+    const altoMax = Math.min(baseMax, Math.max(MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA, altoDisponible));
+    const altoMin = Math.min(baseMin, altoMax);
+
+    players_fit_root.style.setProperty("--escritxr-editor-min-height", `${altoMin.toFixed(2)}px`);
+    players_fit_root.style.setProperty("--escritxr-editor-max-height", `${altoMax.toFixed(2)}px`);
 };
 
 const ajustarViewportEscritora = () => {
@@ -1451,10 +1485,19 @@ const ajustarViewportEscritora = () => {
     players_fit_root.style.transform = "none";
     const viewportW = Math.max(window.innerWidth || 0, 1);
     const viewportH = Math.max(window.innerHeight || 0, 1);
+    const margenVerticalSeguro = Math.min(16, Math.max(8, viewportH * 0.015));
+    ajustarAltoEditorViewportEscritora(viewportH, margenVerticalSeguro);
+    // Fuerza una única lectura después de aplicar el límite dinámico para que
+    // las medidas siguientes incluyan el nivel, las musas y el texto actuales.
+    void players_fit_root.offsetHeight;
     const objetivos = [
         players_fit_root,
         document.getElementById("contenedor"),
-        document.getElementById("scrib_competition_hud")
+        document.getElementById("scrib_competition_hud"),
+        document.querySelector(".escritxr-texto-panel"),
+        document.querySelector(".info-total"),
+        document.getElementById("palabra"),
+        document.getElementById("definicion")
     ].filter((nodo) => nodo && nodo.getClientRects().length > 0);
     let minX = 0;
     let minY = 0;
@@ -1478,7 +1521,6 @@ const ajustarViewportEscritora = () => {
     // malditas pueden aparecer después del primer ajuste. Esta reserva evita
     // que su borde inferior quede cortado y se recalcula desde el tamaño
     // natural, por lo que no produce el antiguo bucle de encogimiento.
-    const margenVerticalSeguro = Math.min(16, Math.max(8, viewportH * 0.015));
     const altoDisponible = Math.max(1, viewportH - margenVerticalSeguro);
     let escala = Math.min(1, viewportW / anchoNatural, altoDisponible / altoNatural);
     if (!Number.isFinite(escala) || escala <= 0) escala = 1;
@@ -1514,7 +1556,12 @@ const iniciarAjusteViewportEscritora = () => {
     }, 120);
     if (typeof ResizeObserver === "function" && !resize_observer_fit_viewport_escritora) {
         resize_observer_fit_viewport_escritora = new ResizeObserver(programarAjusteViewportEscritora);
-        [players_fit_root, document.getElementById("contenedor")]
+        [
+            players_fit_root,
+            document.getElementById("contenedor"),
+            document.querySelector(".escritxr-texto-panel__viewport"),
+            document.querySelector(".info-total")
+        ]
             .filter(Boolean)
             .forEach((nodo) => resize_observer_fit_viewport_escritora.observe(nodo));
     }
@@ -1532,7 +1579,11 @@ const iniciarAjusteViewportEscritora = () => {
         });
     }
     window.addEventListener("resize", programarAjusteViewportEscritora, { passive: true });
+    window.addEventListener("orientationchange", programarAjusteViewportEscritora, { passive: true });
     document.addEventListener("fullscreenchange", programarAjusteViewportEscritora);
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(programarAjusteViewportEscritora).catch(() => {});
+    }
 };
 
 const esElementoVisible = (elemento) => {
