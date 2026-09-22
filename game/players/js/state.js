@@ -2607,22 +2607,28 @@ const actualizarBotonBloquearCalentamientoEscritor = (activo, bloqueado, selecci
 const actualizarFinalCalentamientoEscritor = (finalPalabra) => {
     if (!calentamiento_final_escritor) return;
     const finalValido = normalizarFinalCalentamientoEscritor(finalPalabra);
+    calentamiento_final_escritor.classList.remove("equipo-1", "equipo-2");
     if (!finalValido) {
         calentamiento_final_escritor.textContent = "";
         calentamiento_final_escritor.classList.remove("activo", "reveal");
         calentamiento_ultimo_final_escritor = "";
         return;
     }
+    calentamiento_final_escritor.classList.add(playerNumber === 2 ? "equipo-2" : "equipo-1");
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "calentamiento-final-chip__label";
+    etiqueta.textContent = tJuego2P("warmup.final_word", { word: "" }, "PALABRA FINAL:")
+        .replace(/\s*:\s*$/, "")
+        .trim();
+    const eleccion = document.createElement("span");
+    eleccion.className = "calentamiento-final-chip__choice";
     const textoFinal = document.createElement("span");
     textoFinal.className = "calentamiento-final-chip__word";
-    textoFinal.textContent = tJuego2P(
-        "warmup.final_word",
-        { word: finalValido.palabra.toUpperCase() },
-        `PALABRA FINAL: ${finalValido.palabra.toUpperCase()}`
-    );
-    calentamiento_final_escritor.replaceChildren(textoFinal);
+    textoFinal.textContent = finalValido.palabra.toUpperCase();
+    eleccion.appendChild(textoFinal);
     const firma = crearNodoFirmaMusaEscritora(finalValido, "inspiration-author--final");
-    if (firma) calentamiento_final_escritor.appendChild(firma);
+    if (firma) eleccion.appendChild(firma);
+    calentamiento_final_escritor.replaceChildren(etiqueta, eleccion);
     calentamiento_final_escritor.classList.add("activo");
     if (calentamiento_ultimo_final_escritor !== finalValido.id) {
         calentamiento_final_escritor.classList.remove("reveal");
@@ -2637,6 +2643,7 @@ const mostrarErrorCalentamientoEscritor = (mensaje) => {
         ? mensaje.trim()
         : tJuego2P("warmup.feedback.generic_error", {}, "No se pudo completar la accion.");
     if (calentamiento_estado_escritor) {
+        calentamiento_estado_escritor.hidden = false;
         calentamiento_estado_escritor.textContent = textoError;
         calentamiento_estado_escritor.classList.add("calentamiento-error");
     }
@@ -2649,6 +2656,10 @@ const mostrarErrorCalentamientoEscritor = (mensaje) => {
     timeout_error_calentamiento_escritor = setTimeout(() => {
         if (calentamiento_estado_escritor) {
             calentamiento_estado_escritor.classList.remove("calentamiento-error");
+            if (calentamiento_estado_equipo_escritor.final) {
+                calentamiento_estado_escritor.textContent = "";
+                calentamiento_estado_escritor.hidden = true;
+            }
         }
         if (calentamiento_bloquear_escritor) {
             calentamiento_bloquear_escritor.classList.remove("is-error");
@@ -2679,6 +2690,7 @@ const actualizarCalentamientoEscritor = (data = {}) => {
     };
     if (calentamiento_estado_escritor) {
         calentamiento_estado_escritor.classList.remove("calentamiento-error");
+        calentamiento_estado_escritor.hidden = Boolean(finalEquipo);
     }
     if (calentamiento_bloquear_escritor) {
         calentamiento_bloquear_escritor.classList.remove("is-error");
@@ -2701,11 +2713,7 @@ const actualizarCalentamientoEscritor = (data = {}) => {
                 "Consigna cerrada. Elige una palabra final de las seleccionadas."
             );
         } else {
-            calentamiento_estado_escritor.textContent = tJuego2P(
-                "warmup.state.final_fixed",
-                { word: finalEquipo.palabra },
-                `Palabra final fijada: ${finalEquipo.palabra}.`
-            );
+            calentamiento_estado_escritor.textContent = "";
         }
     }
     actualizarBotonBloquearCalentamientoEscritor(activo, bloqueado, seleccionadas);

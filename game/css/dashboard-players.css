@@ -12674,6 +12674,129 @@ body.page-players #definicion.objetivo-nivel .objetivo-meta .inspiration-author 
   font-size: clamp(8px, 0.72em, 12px);
 }
 
+body.page-players .calentamiento-final-chip {
+  --final-team-color: #70eeff;
+  --final-team-soft: rgba(112, 238, 255, 0.34);
+  position: relative;
+  isolation: isolate;
+  width: fit-content;
+  max-width: min(92vw, 760px);
+  min-height: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, auto);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.55rem, 1.25vw, 1.15rem);
+  padding: clamp(0.62rem, 1.1vw, 0.92rem) clamp(0.9rem, 1.8vw, 1.55rem);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--final-team-color) 76%, white);
+  border-radius: 999px;
+  background:
+    linear-gradient(105deg, color-mix(in srgb, var(--final-team-color) 15%, rgba(3, 8, 17, 0.96)), rgba(3, 8, 17, 0.94) 58%, rgba(255, 214, 118, 0.08)),
+    rgba(3, 8, 17, 0.94);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 0 1.2rem var(--final-team-soft),
+    0 0 2.8rem color-mix(in srgb, var(--final-team-color) 16%, transparent);
+  text-align: left;
+}
+
+body.page-players .calentamiento-final-chip.equipo-2 {
+  --final-team-color: #ff7e91;
+  --final-team-soft: rgba(255, 92, 119, 0.36);
+}
+
+body.page-players .calentamiento-final-chip::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -80% auto -80% -28%;
+  width: 28%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.24), transparent);
+  animation: calentamientoFinalShimmer 2.8s ease-in-out infinite;
+}
+
+body.page-players .calentamiento-final-chip__label {
+  color: #ffe49a;
+  font-size: clamp(10px, 1vw, 15px);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 0.7em rgba(255, 213, 106, 0.76);
+  white-space: nowrap;
+}
+
+body.page-players .calentamiento-final-chip__choice {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: clamp(0.38rem, 0.75vw, 0.68rem);
+}
+
+body.page-players .calentamiento-final-chip__word {
+  min-width: 0;
+  max-width: min(46vw, 38ch);
+  color: color-mix(in srgb, var(--final-team-color) 76%, white);
+  font-size: clamp(18px, 2.15vw, 36px);
+  line-height: 1.08;
+  letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
+  text-shadow:
+    0 0 0.25em color-mix(in srgb, var(--final-team-color) 88%, transparent),
+    0 0 0.8em var(--final-team-soft);
+}
+
+body.page-players .calentamiento-final-chip .inspiration-author--final {
+  flex: 0 0 auto;
+  max-width: 18ch;
+  margin: 0;
+  border-color: rgba(255, 220, 111, 0.74);
+  background: rgba(55, 42, 9, 0.72);
+  color: #ffe38b;
+  font-size: clamp(9px, 0.8vw, 12px);
+  box-shadow: 0 0 0.75em rgba(255, 211, 88, 0.26);
+}
+
+@keyframes calentamientoFinalShimmer {
+  0%, 55% {
+    left: -34%;
+    opacity: 0;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    left: 122%;
+    opacity: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  body.page-players .calentamiento-final-chip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.42rem;
+    border-radius: 1rem;
+    text-align: center;
+  }
+
+  body.page-players .calentamiento-final-chip__choice {
+    justify-content: center;
+  }
+
+  body.page-players .calentamiento-final-chip__word {
+    max-width: 72vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-players .calentamiento-final-chip::after {
+    animation: none;
+    display: none;
+  }
+}
+
 .calentamiento-final-card .final-word {
   display: flex;
   flex-direction: column;

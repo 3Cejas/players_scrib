@@ -63,6 +63,9 @@ test("tutorial and final renderers preserve authors and insert names as text nod
     assert.match(source, /nombre\.textContent = firma\.texto/);
   });
   assert.match(writer, /palabraTexto\.textContent = entrada\.palabra/);
+  assert.match(writer, /calentamiento-final-chip__choice/);
+  assert.match(writer, /calentamiento_estado_escritor\.hidden = Boolean\(finalEquipo\)/);
+  assert.doesNotMatch(writer, /`Palabra final fijada: \$\{finalEquipo\.palabra\}\.\`/);
   assert.match(spectator, /palabraTexto\.textContent = entrada\.palabra/);
   assert.doesNotMatch(publicMuse, /calentamiento_final_musa\.innerHTML\s*=/);
 });
