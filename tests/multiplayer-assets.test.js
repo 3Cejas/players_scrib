@@ -35,7 +35,7 @@ const SCORE_ASSET_VERSION = "20260903e";
 const LEVEL_TRANSITION_VERSION = "20260921c";
 const LEVEL_TRANSITION_SCRIPT_VERSION = "20260921c";
 const PLAYER_ACTIONS_VERSION = "20260921g";
-const PLAYER_STATE_VERSION = "20260922d";
+const PLAYER_STATE_VERSION = "20260922e";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260922d";
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260921c";
 const JURY_CSS_VERSION = "20260920d";
@@ -1455,6 +1455,15 @@ test("spectator detonators are projector-sized and red inspiration keeps strong 
   assert.match(css, /body\.page-spectator \.calentamiento-palabra\s*\{[\s\S]*font-size:\s*clamp\(22px, calc\(3\.05vw \* var\(--spectator-ui-scale, 1\)\), 58px\)/);
   assert.match(css, /body\.page-spectator \.calentamiento-palabra\.equipo-2,[\s\S]*body\.page-spectator \.nube-inspiracion-palabra\.equipo-2[\s\S]*color:\s*#ff4964/);
   assert.match(css, /-webkit-text-stroke:\s*0\.025em[\s\S]*filter:\s*brightness\(1\.12\) saturate\(1\.34\)/);
+});
+
+test("writer warmup prioritizes its own team detonators before laying out the shared cloud", () => {
+  const html = read("game/players/index.html");
+  const state = read("game/players/js/state.js");
+
+  assert.match(html, /\.\.\/js\/domains\/warmup-writer\.js\?v=20260922a/);
+  assert.match(state, /ScribWarmupWriter\.seleccionarDetonadoresParaEscritora/);
+  assert.match(state, /calentamiento_palabras_escritor,[\s\S]*equipoEscritor,[\s\S]*80/);
 });
 
 test("Control level card grows instead of clipping live level information", () => {

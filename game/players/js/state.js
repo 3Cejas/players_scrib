@@ -2381,11 +2381,18 @@ const renderizarPalabrasCalentamientoEscritor = () => {
     const stageW = Math.max(1, Number(rectStage && rectStage.width) || window.innerWidth || 1);
     const stageH = Math.max(1, Number(rectStage && rectStage.height) || window.innerHeight || 1);
     const ocupadas = [];
-    const entradasVisibles = calentamiento_palabras_escritor.slice().sort((a, b) => {
-        const prioridadA = Number(Boolean(a.esFinal)) * 4 + Number(Boolean(a.destacada)) * 2;
-        const prioridadB = Number(Boolean(b.esFinal)) * 4 + Number(Boolean(b.destacada)) * 2;
-        return prioridadB - prioridadA || (Number(b.ts) || 0) - (Number(a.ts) || 0);
-    }).slice(0, 80);
+    const selectorDetonadores = window.ScribWarmupWriter
+        && typeof window.ScribWarmupWriter.seleccionarDetonadoresParaEscritora === "function"
+        ? window.ScribWarmupWriter.seleccionarDetonadoresParaEscritora
+        : ((entradas, equipo, limite) => entradas
+            .filter((entrada) => equipo === null || entrada.equipo === equipo)
+            .slice(-limite)
+            .reverse());
+    const entradasVisibles = selectorDetonadores(
+        calentamiento_palabras_escritor,
+        equipoEscritor,
+        80
+    );
     entradasVisibles.forEach((entrada) => {
         const posicion = resolverPosicionPalabraCalentamientoEscritor(entrada, ocupadas, stageW, stageH, minY);
         if (!posicion) return;
