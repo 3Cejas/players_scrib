@@ -1382,6 +1382,7 @@ body.technician-team-switching .actor-fullscreen-toggle {
 
 .technician-teleprompter {
     --tp-tech: #ffd166;
+    --tp-team: #46f0ff;
     position: fixed;
     right: clamp(.7rem, 2vw, 1.8rem);
     bottom: clamp(.7rem, 2vw, 1.8rem);
@@ -1389,7 +1390,7 @@ body.technician-team-switching .actor-fullscreen-toggle {
     width: min(52rem, calc(100vw - 1.4rem));
     height: min(58vh, 38rem);
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     border: 1px solid rgba(255, 209, 102, .65);
     border-radius: 1.1rem;
     overflow: hidden;
@@ -1408,35 +1409,38 @@ body.technician-team-switching .actor-fullscreen-toggle {
 }
 
 .technician-teleprompter--expanded {
-    width: calc(100vw - 2rem);
-    height: calc(100vh - 2rem);
-    right: 1rem;
-    bottom: 1rem;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
 }
 
-.technician-teleprompter__header,
-.technician-teleprompter__status {
+.technician-teleprompter[data-player="2"] {
+    --tp-team: #ff6672;
+}
+
+body.technician-teleprompter-visible {
+    overflow: hidden;
+}
+
+.technician-teleprompter__header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 1rem;
-    padding: .8rem 1rem;
-    background: linear-gradient(90deg, rgba(255, 209, 102, .12), rgba(70, 240, 255, .08));
-    border-bottom: 1px solid rgba(255, 209, 102, .26);
+    min-height: clamp(3.2rem, 8vh, 5.8rem);
+    padding: .8rem 1.2rem;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tp-team), transparent 88%), transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--tp-team), transparent 72%);
 }
 
-.technician-teleprompter__header > div { display: grid; gap: .28rem; }
-.technician-teleprompter__header strong { color: #fff; font-size: clamp(.8rem, 1.4vw, 1.15rem); }
-.technician-teleprompter__eyebrow { color: var(--tp-tech); font-size: .62rem; letter-spacing: .14em; }
-.technician-teleprompter__header button {
-    width: 2.7rem;
-    height: 2.7rem;
-    border: 1px solid rgba(255, 209, 102, .6);
-    border-radius: .7rem;
-    background: rgba(0, 0, 0, .45);
-    color: var(--tp-tech);
-    font: inherit;
-    cursor: pointer;
+.technician-teleprompter__header strong {
+    color: color-mix(in srgb, var(--tp-team), white 28%);
+    font: 900 clamp(1.25rem, 3.2vw, 3rem)/1 "Retro-gaming", monospace;
+    letter-spacing: .05em;
+    text-align: center;
+    text-shadow: .06em .06em #02060d, 0 0 .55em color-mix(in srgb, var(--tp-team), transparent 38%);
 }
 
 .technician-teleprompter__screen {
@@ -1448,16 +1452,7 @@ body.technician-team-switching .actor-fullscreen-toggle {
 }
 
 .technician-teleprompter__screen::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 42%;
-    height: 2px;
-    z-index: 2;
-    background: linear-gradient(90deg, transparent, var(--tp-tech), transparent);
-    box-shadow: 0 0 1rem var(--tp-tech);
-    pointer-events: none;
+    content: none;
 }
 
 .technician-teleprompter__text {
@@ -1497,7 +1492,6 @@ body.technician-team-switching .actor-fullscreen-toggle {
 .technician-teleprompter__note b { color: var(--tp-tech); }
 .technician-teleprompter__note span { font-size: .68rem; line-height: 1.45; }
 .technician-teleprompter__empty { color: rgba(255,255,255,.5); font-size: .68rem; }
-.technician-teleprompter__status { border-top: 1px solid rgba(255, 209, 102, .22); border-bottom: 0; color: #7fffd0; font-size: .6rem; }
 .technician-teleprompter--preparing .technician-teleprompter__screen::after {
     content: "CARGANDO TELEPROMPTER";
     position: absolute;
@@ -1510,7 +1504,7 @@ body.technician-team-switching .actor-fullscreen-toggle {
 }
 
 @media (max-width: 760px) {
-    .technician-teleprompter { height: min(64vh, 36rem); }
+    .technician-teleprompter:not(.technician-teleprompter--expanded) { height: min(64vh, 36rem); }
     .technician-teleprompter__screen { padding-inline: 1rem; }
 }
 

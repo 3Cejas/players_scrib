@@ -1918,9 +1918,10 @@ const esRolTecnico = rolActorSolicitado === "technician";
 
 function actualizarNombreActorVisual(valor, playerNombre = player) {
     const id = Number(playerNombre) === 2 ? 2 : 1;
-    const fallback = tJuego2P("ui.writer_generic", {}, `ESCRITXR ${id}`);
+    const fallback = tJuego2P(`ui.writer_${id}`, {}, `ESCRITXR ${id}`);
     const nombreFinal = String(valor || "").trim() || fallback;
     cache_nombres_actor[id] = nombreFinal;
+    window.ScribTechnicianTeleprompter?.setWriterName?.(id, nombreFinal);
     if (id === Number(player) && nombre1) {
         nombre1.value = nombreFinal;
     }
@@ -1975,6 +1976,11 @@ function seleccionarEquipoActor(nextPlayer, opciones = {}) {
 
 window.ScribActorTeamSelection = {
     getPlayer: () => Number(player) === 2 ? 2 : 1,
+    getWriterName: (playerId) => {
+        const id = Number(playerId) === 2 ? 2 : 1;
+        return cache_nombres_actor[id]
+            || tJuego2P(`ui.writer_${id}`, {}, `ESCRITXR ${id}`);
+    },
     select: seleccionarEquipoActor,
     requestState: solicitarEstadoEquipoActor
 };

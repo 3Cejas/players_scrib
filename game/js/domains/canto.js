@@ -25,8 +25,8 @@
     const STATE_EVENT = "canto_estado";
     const DEFAULT_AUDIO_URL = "../media/musica-iliada.mp3";
     const DEFAULT_AUDIO_SECONDS = 32;
-    const DEFAULT_FADE_MS = 1800;
-    const EXIT_AUDIO_FADE_MULTIPLIER = 4;
+    const DEFAULT_FADE_MS = 3600;
+    const EXIT_AUDIO_FADE_MS = 1400;
     const DEFAULT_VOLUME = 0.86;
     const EXIT_MS = 1050;
     const ASSET_VERSION = "20260920a";
@@ -209,7 +209,7 @@
                     if (typeof onDone === "function") onDone();
                     return;
                 }
-                fadeTimer = setTimer(step, 45);
+                fadeTimer = setTimer(step, 20);
             };
             step();
         };
@@ -298,11 +298,7 @@
                 return;
             }
             if (previousActive) {
-                const fadeOutMs = clamp(
-                    state.config.fadeMs * EXIT_AUDIO_FADE_MULTIPLIER,
-                    0,
-                    15000
-                );
+                const fadeOutMs = EXIT_AUDIO_FADE_MS;
                 if (live) live.textContent = "Canto de las musas finalizado.";
                 dispatchAudioState(false, fadeOutMs);
                 if (audio) fadeAudio(0, fadeOutMs, () => {
@@ -358,7 +354,7 @@
         DEFAULT_AUDIO_SECONDS,
         DEFAULT_AUDIO_URL,
         DEFAULT_FADE_MS,
-        EXIT_AUDIO_FADE_MULTIPLIER,
+        EXIT_AUDIO_FADE_MS,
         DEFAULT_TEXT,
         createController,
         normalizeState,

@@ -40,7 +40,7 @@ test("spectator and muses load the canto scene while only spectator owns its aud
 
   [spectator, muse].forEach((html) => {
     assert.match(html, /css\/canto\.css\?v=20260920a/);
-    assert.match(html, /domains\/canto\.js\?v=20260922e/);
+    assert.match(html, /domains\/canto\.js\?v=20260923b/);
   });
   assert.match(source, /role === "spectator"[\s\S]*createSpectatorOverlay[\s\S]*createMuseOverlay/);
   assert.match(source, /<audio class="scrib-canto__audio"[^>]*loop/);
@@ -88,7 +88,8 @@ test("spectator crossfades existing music while canto enters and leaves", () => 
   assert.match(spectatorState, /cruzarAudiosPartidaConCanto/);
   assert.match(spectatorState, /\[sonido, sonido_modo\]/);
   assert.match(spectatorState, /fundirAudioExternoCanto\(media, 0, duracion\)/);
-  assert.equal(canto.EXIT_AUDIO_FADE_MULTIPLIER, 4);
+  assert.equal(canto.DEFAULT_FADE_MS, 3600);
+  assert.equal(canto.EXIT_AUDIO_FADE_MS, 1400);
   assert.match(read("game/js/domains/canto.js"), /Math\.cos\(Math\.PI \* progress\)/);
   assert.match(spectatorState, /Math\.cos\(Math\.PI \* progreso\)/);
   assert.match(read("game/js/domains/canto.js"), /dispatchAudioState\(false, fadeOutMs\)/);
@@ -193,7 +194,7 @@ test("canto audio keeps playing after the visual exit and pauses only when fade-
   assert.equal(audio.pauseCalls, 0);
   assert.ok(audio.volume > 0);
 
-  advance(6100);
+  advance(300);
   assert.equal(audio.volume, 0);
   assert.equal(audio.paused, true);
   assert.equal(audio.pauseCalls, 1);

@@ -6015,7 +6015,7 @@ function fundirAudioExternoCanto(media, volumenDestino, duracionMs, alTerminar =
             if (typeof alTerminar === "function") alTerminar();
             return;
         }
-        fades_audio_canto.set(media, setTimeout(paso, 45));
+        fades_audio_canto.set(media, setTimeout(paso, 20));
     };
     paso();
     return true;
@@ -6024,7 +6024,7 @@ function fundirAudioExternoCanto(media, volumenDestino, duracionMs, alTerminar =
 function cruzarAudiosPartidaConCanto(evento = {}) {
     const activo = Boolean(evento && evento.detail && evento.detail.active);
     canto_audio_activo_espectador = activo;
-    const duracion = Math.max(0, Number(evento && evento.detail && evento.detail.fadeMs) || 1800);
+    const duracion = Math.max(0, Number(evento && evento.detail && evento.detail.fadeMs) || 3600);
     [sonido, sonido_modo].forEach((media) => {
         if (!media) return;
         if (activo) {

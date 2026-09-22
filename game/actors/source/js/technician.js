@@ -25,17 +25,20 @@
     let switchingTeam = false;
     let switchCommitTimer = 0;
     let switchEndTimer = 0;
+    let transitionTargetPlayer = selectedPlayer;
+    const writerNames = {
+        1: "ESCRITXR 1",
+        2: "ESCRITXR 2"
+    };
 
     const overlay = document.getElementById("technician_teleprompter");
     const screen = document.getElementById("technician_teleprompter_screen");
     const text = document.getElementById("technician_teleprompter_text");
     const notes = document.getElementById("technician_teleprompter_notes");
     const title = document.getElementById("technician_teleprompter_title");
-    const play = document.getElementById("technician_teleprompter_play");
-    const sync = document.getElementById("technician_teleprompter_sync");
-    const sizeButton = document.getElementById("technician_teleprompter_size");
     const teamSwitch = document.getElementById("technician_team_switch");
     const teamButtons = Array.from(document.querySelectorAll("[data-technician-player]"));
+    const writerNameLabels = Array.from(document.querySelectorAll("[data-technician-writer-name]"));
     const teamTransition = document.getElementById("technician_team_transition");
     const teamTransitionLabel = document.getElementById("technician_team_transition_label");
 
@@ -44,6 +47,26 @@
 
     function normalizarPlayer(nextPlayer) {
         return Number(nextPlayer) === 2 ? 2 : 1;
+    }
+
+    function normalizarNombreEscritxr(valor, playerId) {
+        const id = normalizarPlayer(playerId);
+        return String(valor || "").replace(/\s+/g, " ").trim() || `ESCRITXR ${id}`;
+    }
+
+    function obtenerNombreEscritxr(playerId) {
+        const id = normalizarPlayer(playerId);
+        return normalizarNombreEscritxr(writerNames[id], id);
+    }
+
+    function renderWriterNames() {
+        writerNameLabels.forEach((label) => {
+            const id = normalizarPlayer(label.dataset.technicianWriterName);
+            label.textContent = obtenerNombreEscritxr(id);
+        });
+        if (teamTransitionLabel && switchingTeam) {
+            teamTransitionLabel.textContent = obtenerNombreEscritxr(transitionTargetPlayer);
+        }
     }
 
     function guardarEquipoSeleccionado() {
@@ -67,7 +90,8 @@
 
     function renderTeamSwitch() {
         document.body.dataset.technicianPlayer = String(selectedPlayer);
-        document.title = `SCRB · Técnica ${selectedPlayer}`;
+        document.title = `SCRB · Técnica · ${obtenerNombreEscritxr(selectedPlayer)}`;
+        renderWriterNames();
         teamButtons.forEach((button) => {
             const active = normalizarPlayer(button.dataset.technicianPlayer) === selectedPlayer;
             button.classList.toggle("is-active", active);
@@ -101,10 +125,12 @@
 
     function cambiarEquipo(nextPlayer) {
         const next = normalizarPlayer(nextPlayer);
-        if (switchingTeam || next === selectedPlayer) return false;
-        switchingTeam = true;
+        if (next === selectedPlayer) return false;
+        if (switchingTeam && next === transitionTargetPlayer) return true;
         clearTimeout(switchCommitTimer);
         clearTimeout(switchEndTimer);
+        switchingTeam = true;
+        transitionTargetPlayer = next;
         document.body.classList.add("technician-team-switching");
         teamButtons.forEach((button) => { button.disabled = true; });
 
@@ -115,7 +141,7 @@
             teamTransition.setAttribute("aria-hidden", "false");
         }
         if (teamTransitionLabel) {
-            teamTransitionLabel.textContent = next === 2 ? "EQUIPO ROJO" : "EQUIPO AZUL";
+            teamTransitionLabel.textContent = obtenerNombreEscritxr(next);
         }
 
         if (reduceMotion) {
@@ -224,18 +250,13 @@
         const sourceMatches = Number(state.source) === selectedPlayer;
         const active = sourceMatches && (state.visible || state.preparing);
         overlay.classList.toggle("technician-teleprompter--active", active);
+        overlay.classList.toggle("technician-teleprompter--expanded", active);
         overlay.classList.toggle("technician-teleprompter--preparing", Boolean(state.preparing));
+        overlay.dataset.player = String(Number(state.source) === 2 ? 2 : selectedPlayer);
+        document.body.classList.toggle("technician-teleprompter-visible", active);
         if (title) {
-            title.textContent = !sourceMatches && (state.visible || state.preparing)
-                ? "Teleprompter del otro equipo"
-                : state.preparing
-                    ? "Preparando texto…"
-                    : state.visible
-                        ? `Texto de ${selectedPlayer === 1 ? "ESCRITXR 1" : "ESCRITXR 2"}`
-                        : "Esperando texto";
+            title.textContent = obtenerNombreEscritxr(Number(state.source) === 2 ? 2 : selectedPlayer);
         }
-        if (play) play.textContent = state.playing && active ? "▶ EN MARCHA" : active ? "❚❚ EN PAUSA" : "EN ESPERA";
-        if (sync) sync.textContent = `SINCRONIZADO · R${Number(state.revision) || 0}`;
         renderMarkedText();
         requestAnimationFrame(syncScroll);
     }
@@ -251,6 +272,10 @@
             });
         } else {
             Object.assign(state, next);
+        }
+        const source = Number(state.source);
+        if ((state.visible || state.preparing) && (source === 1 || source === 2) && source !== selectedPlayer) {
+            cambiarEquipo(source);
         }
         renderState();
     }
@@ -272,6 +297,12 @@
             renderTeamSwitch();
             renderState();
         },
+        setWriterName(playerId, value) {
+            const id = normalizarPlayer(playerId);
+            writerNames[id] = normalizarNombreEscritxr(value, id);
+            renderTeamSwitch();
+            renderState();
+        },
         applyTeleprompter
     };
 
@@ -284,11 +315,6 @@
         if (!button || !teamSwitch.contains(button)) return;
         cambiarEquipo(button.dataset.technicianPlayer);
     });
-    sizeButton?.addEventListener("click", () => {
-        overlay.classList.toggle("technician-teleprompter--expanded");
-        sizeButton.textContent = overlay.classList.contains("technician-teleprompter--expanded") ? "↘" : "↗";
-        requestAnimationFrame(syncScroll);
-    });
     raf = requestAnimationFrame(loop);
     window.addEventListener("beforeunload", () => {
         cancelAnimationFrame(raf);
@@ -296,6 +322,12 @@
         clearTimeout(switchEndTimer);
     }, { once: true });
 
+    [1, 2].forEach((id) => {
+        writerNames[id] = normalizarNombreEscritxr(
+            window.ScribActorTeamSelection?.getWriterName?.(id),
+            id
+        );
+    });
     const actorPlayerInicial = window.ScribActorTeamSelection?.getPlayer?.() || 1;
     if (normalizarPlayer(actorPlayerInicial) !== selectedPlayer) {
         aplicarEquipo(selectedPlayer, { requestState: false });
