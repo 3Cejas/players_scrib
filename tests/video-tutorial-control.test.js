@@ -200,6 +200,33 @@ test("control waits for authoritative config and preserves media fields when cha
   assert.equal(api.obtenerEstado().programado, false);
 });
 
+test("a fresh post-match phase re-enables play without requiring a cleanup", () => {
+  const { api, elementos, emisiones } = crearHarness();
+  const reproducir = elementos.get("videotutorial_reproduccion_toggle");
+
+  api.aplicarEstado({
+    activo: false,
+    session_id: "finished-match-session",
+    phase_seq: 8,
+    configuracion: { intervalo_segundos: 180, habilitado: false }
+  });
+  assert.equal(reproducir.disabled, true);
+
+  api.aplicarEstado({
+    activo: true,
+    session_id: "fresh-post-match-session",
+    phase_seq: 9,
+    visible: false,
+    reproduciendo: false,
+    configuracion: { intervalo_segundos: 180, habilitado: false }
+  });
+  assert.equal(reproducir.disabled, false);
+  assert.equal(api.mostrar(), true);
+  assert.equal(emisiones[0].evento, "video_tutorial_reproducir");
+  assert.equal(emisiones[0].payload.session_id, "fresh-post-match-session");
+  assert.equal(emisiones[0].payload.phase_seq, 9);
+});
+
 test("the single play control activates the tutorial view, serializes ACKs and glows while active", () => {
   const { api, elementos, emisiones, window } = crearHarness();
   api.aplicarEstado({
