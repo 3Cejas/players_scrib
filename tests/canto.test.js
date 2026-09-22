@@ -40,7 +40,7 @@ test("spectator and muses load the canto scene while only spectator owns its aud
 
   [spectator, muse].forEach((html) => {
     assert.match(html, /css\/canto\.css\?v=20260920a/);
-    assert.match(html, /domains\/canto\.js\?v=20260922d/);
+    assert.match(html, /domains\/canto\.js\?v=20260922e/);
   });
   assert.match(source, /role === "spectator"[\s\S]*createSpectatorOverlay[\s\S]*createMuseOverlay/);
   assert.match(source, /<audio class="scrib-canto__audio"[^>]*loop/);
@@ -92,4 +92,110 @@ test("spectator crossfades existing music while canto enters and leaves", () => 
   assert.match(read("game/js/domains/canto.js"), /Math\.cos\(Math\.PI \* progress\)/);
   assert.match(spectatorState, /Math\.cos\(Math\.PI \* progreso\)/);
   assert.match(read("game/js/domains/canto.js"), /dispatchAudioState\(false, fadeOutMs\)/);
+});
+
+test("canto audio keeps playing after the visual exit and pauses only when fade-out ends", () => {
+  let clock = 0;
+  let nextTimerId = 1;
+  const timers = new Map();
+  const setTimeoutFake = (callback, delay = 0) => {
+    const id = nextTimerId++;
+    timers.set(id, { callback, at: clock + Math.max(0, Number(delay) || 0) });
+    return id;
+  };
+  const clearTimeoutFake = (id) => timers.delete(id);
+  const advance = (milliseconds) => {
+    const limit = clock + milliseconds;
+    while (true) {
+      const pending = [...timers.entries()]
+        .filter(([, timer]) => timer.at <= limit)
+        .sort((left, right) => left[1].at - right[1].at)[0];
+      if (!pending) break;
+      const [id, timer] = pending;
+      timers.delete(id);
+      clock = timer.at;
+      timer.callback();
+    }
+    clock = limit;
+  };
+  const classList = () => {
+    const values = new Set();
+    return {
+      add: (...names) => names.forEach((name) => values.add(name)),
+      remove: (...names) => names.forEach((name) => values.delete(name)),
+      contains: (name) => values.has(name)
+    };
+  };
+  const audio = {
+    currentTime: 0,
+    duration: 32,
+    loop: true,
+    muted: false,
+    pauseCalls: 0,
+    paused: true,
+    readyState: 1,
+    src: "",
+    volume: 0.86,
+    load() {},
+    play() {
+      this.paused = false;
+    },
+    pause() {
+      this.pauseCalls += 1;
+      this.paused = true;
+    }
+  };
+  const live = { textContent: "" };
+  const overlay = {
+    classList: classList(),
+    hidden: true,
+    offsetWidth: 1,
+    innerHTML: "",
+    setAttribute() {},
+    remove() {},
+    querySelector(selector) {
+      if (selector === "[data-canto-audio]") return audio;
+      if (selector === "[data-canto-live]") return live;
+      return null;
+    }
+  };
+  const documentRef = {
+    body: { classList: classList(), appendChild() {} },
+    createElement: () => overlay,
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent() {}
+  };
+  const socketRef = { connected: false, on() {}, emit() {} };
+  const windowRef = {
+    CustomEvent: class CustomEvent {},
+    clearTimeout: clearTimeoutFake,
+    location: { href: "http://localhost/game/spectator/index.html", search: "" },
+    setTimeout: setTimeoutFake
+  };
+  const controller = canto.createController({
+    documentRef,
+    now: () => clock,
+    role: "spectator",
+    socketRef,
+    windowRef
+  });
+
+  controller.handleState({ activo: true, session_id: "canto_test", secuencia: 1 });
+  advance(2000);
+  assert.equal(audio.paused, false);
+  assert.equal(audio.pauseCalls, 0);
+
+  controller.handleState({ activo: false, session_id: "canto_test", secuencia: 2 });
+  advance(1100);
+  assert.equal(overlay.hidden, true);
+  assert.equal(audio.paused, false);
+  assert.equal(audio.pauseCalls, 0);
+  assert.ok(audio.volume > 0);
+
+  advance(6100);
+  assert.equal(audio.volume, 0);
+  assert.equal(audio.paused, true);
+  assert.equal(audio.pauseCalls, 1);
+  assert.equal(audio.currentTime, 0);
 });

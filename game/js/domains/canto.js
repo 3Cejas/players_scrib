@@ -162,6 +162,7 @@
         const text = overlay.querySelector("[data-canto-text]");
         const setTimer = windowRef.setTimeout.bind(windowRef);
         const clearTimer = windowRef.clearTimeout.bind(windowRef);
+        const now = typeof options.now === "function" ? options.now : Date.now;
         let state = normalizeState();
         let exitTimer = null;
         let fadeTimer = null;
@@ -189,7 +190,7 @@
             const from = clamp(finite(audio.volume, 0), 0, 1);
             const to = clamp(finite(target, 0), 0, 1);
             const duration = Math.max(0, finite(durationMs, 0));
-            const startedAt = Date.now();
+            const startedAt = now();
             if (!duration || Math.abs(to - from) < 0.001) {
                 audio.volume = to;
                 if (typeof onDone === "function") onDone();
@@ -197,7 +198,7 @@
             }
             const step = () => {
                 if (sequence !== fadeSequence) return;
-                const progress = clamp((Date.now() - startedAt) / duration, 0, 1);
+                const progress = clamp((now() - startedAt) / duration, 0, 1);
                 // Una curva coseno evita el cambio brusco de pendiente que se
                 // percibía al terminar el canto, especialmente al recuperar la
                 // música del nivel en paralelo.
@@ -251,12 +252,6 @@
             if (revision !== activeKey || state.active) return;
             overlay.hidden = true;
             overlay.classList.remove("is-leaving");
-            if (audio) {
-                try {
-                    audio.pause();
-                    audio.currentTime = 0;
-                } catch (_error) {}
-            }
         };
 
         const show = () => {
@@ -312,7 +307,10 @@
                 dispatchAudioState(false, fadeOutMs);
                 if (audio) fadeAudio(0, fadeOutMs, () => {
                     if (!state.active) {
-                        try { audio.pause(); } catch (_error) {}
+                        try {
+                            audio.pause();
+                            audio.currentTime = 0;
+                        } catch (_error) {}
                     }
                 });
                 hide(true);
