@@ -31,7 +31,8 @@
         musasVerificadas: 0,
         mensaje: "",
         error: "",
-        pendiente: null
+        pendiente: null,
+        vistaTutorialActiva: null
     };
 
     const getEl = (id) => global.document && global.document.getElementById(id);
@@ -41,6 +42,11 @@
             global.asegurarVistaTutorialBajoOverlayControl();
         }
     };
+    const estaVistaTutorialActiva = () => (
+        typeof estado.vistaTutorialActiva === "boolean"
+            ? estado.vistaTutorialActiva
+            : Boolean(typeof global.esVistaTutorialActivaControl === "function" && global.esVistaTutorialActivaControl())
+    );
     const limitarSegundos = (valor, fallback = 180) => {
         const numero = Number(valor);
         if (!Number.isFinite(numero)) return fallback;
@@ -175,7 +181,7 @@
         }
         const repeticion = getEl("videotutorial_habilitado");
         if (repeticion && global.document.activeElement !== repeticion) {
-            repeticion.checked = Boolean(estado.programado);
+            repeticion.checked = Boolean(estado.programado && estaVistaTutorialActiva());
         }
         const bloqueado = !estado.conectado || !estado.sincronizado || Boolean(estado.pendiente);
         const accionBloqueada = bloqueado || !estado.faseActiva || !estado.sessionId || estado.phaseSeq <= 0;
@@ -190,8 +196,12 @@
             input.setAttribute("aria-disabled", bloqueado ? "true" : "false");
         }
         if (repeticion) {
-            repeticion.disabled = bloqueado;
-            repeticion.setAttribute("aria-disabled", bloqueado ? "true" : "false");
+            const repeticionBloqueada = bloqueado || !estaVistaTutorialActiva();
+            repeticion.disabled = repeticionBloqueada;
+            repeticion.setAttribute("aria-disabled", repeticionBloqueada ? "true" : "false");
+            repeticion.title = repeticionBloqueada && !bloqueado
+                ? "Activa VISTA TUTORIAL para usar la repetición automática"
+                : "";
         }
 
         ["videotutorial_intervalo_menos", "videotutorial_intervalo_mas"].forEach((id) => {
@@ -270,6 +280,16 @@
             mensaje: siguiente ? "Esperando el estado del servidor." : ""
         };
         actualizarUI();
+    }
+
+    function setVistaTutorialActiva(activa) {
+        estado.vistaTutorialActiva = Boolean(activa);
+        if (!estado.vistaTutorialActiva) {
+            const repeticion = getEl("videotutorial_habilitado");
+            if (repeticion) repeticion.checked = false;
+        }
+        actualizarUI();
+        return estado.vistaTutorialActiva;
     }
 
     function crearRequestId() {
@@ -371,8 +391,16 @@
             return false;
         }
         if (input) input.setCustomValidity("");
+        const repeticionSolicitada = Boolean(repeticion && repeticion.checked);
+        if (repeticionSolicitada && !estaVistaTutorialActiva()) {
+            repeticion.checked = false;
+            estado.programado = false;
+            estado.error = "La repetición automática solo está disponible en VISTA TUTORIAL.";
+            actualizarUI();
+            return false;
+        }
         estado.intervaloSegundos = valor * 60;
-        estado.programado = Boolean(repeticion && repeticion.checked);
+        estado.programado = repeticionSolicitada;
         return emitirOperacion(
             "video_tutorial_configurar",
             "configurar",
@@ -380,7 +408,7 @@
                 video_url: estado.videoUrl,
                 intervalo_segundos: valor * 60,
                 duracion_segundos: estado.duracionSegundos,
-                habilitado: Boolean(repeticion && repeticion.checked),
+                habilitado: repeticionSolicitada,
                 silenciado: estado.silenciado
             },
             "Guardando el intervalo del videotutorial."
@@ -467,6 +495,9 @@
         if (botonMenos) botonMenos.addEventListener("click", () => ajustarIntervalo(-1));
         if (botonMas) botonMas.addEventListener("click", () => ajustarIntervalo(1));
         const socketActual = obtenerSocket();
+        estado.vistaTutorialActiva = typeof global.esVistaTutorialActivaControl === "function"
+            ? Boolean(global.esVistaTutorialActivaControl())
+            : Boolean(global.document.querySelector?.('[data-vista-principal="tutorial"][data-active="1"]'));
         marcarConexion(Boolean(socketActual && socketActual.connected));
     }
 
@@ -477,6 +508,7 @@
         configurar,
         inicializar,
         marcarConexion,
+        setVistaTutorialActiva,
         mostrar,
         normalizarEstado,
         ocultar,

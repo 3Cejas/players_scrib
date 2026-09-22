@@ -124,7 +124,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /querySelectorAll\("\[data-banderas-musas-control\]"\)/);
   assert.doesNotMatch(socketEvents, /mostrar_vista_tutorial\(\)/);
   assert.match(socketEvents, /socket\.emit\('pedir_vista_espectador_modo'\)/);
-  assert.match(actions, /destino === "tutorial"[\s\S]*vista_espectador_modo === "tutorial" \|\| vista_espectador_modo === "instrucciones"[\s\S]*destino === "instrucciones"[\s\S]*vista_espectador_modo === "instrucciones"/);
+  assert.match(actions, /destino === "tutorial"[\s\S]*vista_espectador_modo === "tutorial"[\s\S]*destino === "instrucciones"[\s\S]*vista_espectador_modo === "instrucciones"/);
+  assert.doesNotMatch(actions, /destino === "tutorial"[\s\S]*vista_espectador_modo === "tutorial" \|\| vista_espectador_modo === "instrucciones"/);
+  assert.match(actions, /ScribVideotutorialControl\?\.setVistaTutorialActiva\?\.\(vista_espectador_modo === "tutorial"\)/);
   assert.match(actions, /destino === "detonadores"[\s\S]*vista_espectador_modo === "calentamiento" \|\| vista_calentamiento/);
   assert.match(actions, /modoServidor === "calentamiento" \|\| vista_calentamiento/);
   assert.match(actions, /function actualizarBotonesVistaPrincipalControl\(\)[\s\S]*document\.querySelectorAll\("\[data-vista-principal\]"\)[\s\S]*aria-pressed/);

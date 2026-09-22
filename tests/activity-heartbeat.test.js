@@ -231,7 +231,7 @@ test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
     "game/spectator/index.html"
   ];
   for (const page of multiplayerPages) {
-    assert.match(read(page), /config\.js\?v=20260921a/, `${page} must refresh the shared loader`);
+    assert.match(read(page), /config\.js\?v=20260923a/, `${page} must refresh the shared loader`);
   }
 
   const standalonePages = {

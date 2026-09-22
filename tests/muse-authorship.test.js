@@ -119,8 +119,9 @@ test("tutorial packing reserves highlighted scale and may skip a box instead of 
   [writer, spectator].forEach((source) => {
     assert.match(source, /factorReserva[\s\S]{0,180}1\.34/);
     assert.match(source, /if \(!posicion/);
-    assert.match(source, /slice\(0, 80\)/);
   });
+  assert.match(writer, /seleccionarDetonadoresParaEscritora[\s\S]*calentamiento_palabras_escritor,[\s\S]*equipoEscritor,[\s\S]*80/);
+  assert.match(spectator, /slice\(0, 80\)/);
 });
 
 test("the live muse screen keeps writer identity visible and boxes the writer text", () => {

@@ -3129,6 +3129,47 @@ const INSTRUCCIONES_TITULOS_CONTROL = Object.freeze([
     "PUNTOS DE INSPIRACIÓN"
 ]);
 
+function crearElementoResumenSlideControl(clase, texto) {
+    const elemento = document.createElement("span");
+    elemento.className = clase;
+    elemento.textContent = texto;
+    return elemento;
+}
+
+function pintarResumenSlideControl(elemento, {
+    actual,
+    indice,
+    total,
+    anterior = "",
+    siguiente = "",
+    detalle = ""
+} = {}) {
+    if (!elemento) return;
+    const numero = Math.max(1, Number(indice) || 1);
+    const cantidad = Math.max(numero, Number(total) || numero);
+    const bloqueAnterior = crearElementoResumenSlideControl(
+        "slide-nav-neighbor slide-nav-neighbor--prev",
+        anterior ? `ANTERIOR · ${anterior}` : "INICIO DEL RECORRIDO"
+    );
+    const bloqueSiguiente = crearElementoResumenSlideControl(
+        "slide-nav-neighbor slide-nav-neighbor--next",
+        siguiente ? `SIGUIENTE · ${siguiente}` : "FINAL DEL RECORRIDO"
+    );
+    const centro = document.createElement("span");
+    centro.className = "slide-nav-current";
+    centro.appendChild(crearElementoResumenSlideControl("slide-nav-current__title", actual || "SLIDE"));
+    const contador = document.createElement("span");
+    contador.className = "slide-nav-counter";
+    contador.setAttribute("aria-label", `Slide ${numero} de ${cantidad}`);
+    contador.appendChild(crearElementoResumenSlideControl("slide-nav-counter__current", String(numero)));
+    contador.appendChild(crearElementoResumenSlideControl("slide-nav-counter__separator", "/"));
+    contador.appendChild(crearElementoResumenSlideControl("slide-nav-counter__total", String(cantidad)));
+    centro.appendChild(contador);
+    if (detalle) centro.appendChild(crearElementoResumenSlideControl("slide-nav-current__detail", detalle));
+    elemento.classList.add("slide-nav-summary");
+    elemento.replaceChildren(bloqueAnterior, centro, bloqueSiguiente);
+}
+
 function emitirVistaControl(evento, payload) {
     if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") return;
     socket.emit(evento, payload);
@@ -3153,7 +3194,7 @@ function actualizarBotonesVistaPrincipalControl() {
     document.querySelectorAll("[data-vista-principal]").forEach((boton) => {
         const destino = boton.dataset.vistaPrincipal;
         const activa = destino === "tutorial"
-            ? vista_espectador_modo === "tutorial" || vista_espectador_modo === "instrucciones"
+            ? vista_espectador_modo === "tutorial"
             : destino === "instrucciones"
                 ? vista_espectador_modo === "instrucciones"
             : destino === "detonadores"
@@ -3181,6 +3222,7 @@ function actualizarBotonesVistaPrincipalControl() {
         botonInstrucciones.setAttribute("aria-label", etiquetaEstado);
         botonInstrucciones.title = etiquetaEstado;
     }
+    window.ScribVideotutorialControl?.setVistaTutorialActiva?.(vista_espectador_modo === "tutorial");
 }
 
 function aplicarVistaPrincipalControl(vista, opciones = {}) {
@@ -3239,6 +3281,8 @@ function mostrar_vista_detonadores() {
 function mostrar_vista_tutorial() {
     aplicarVistaPrincipalControl("tutorial");
 }
+
+window.esVistaTutorialActivaControl = () => vista_espectador_modo === "tutorial";
 
 function mostrar_vista_instrucciones() {
     aplicarVistaPrincipalControl(vista_espectador_modo === "instrucciones" ? "tutorial" : "instrucciones");
@@ -3551,10 +3595,26 @@ function actualizarBotonesVistaEspectadorControl() {
     const tituloInstrucciones = INSTRUCCIONES_TITULOS_CONTROL[instrucciones_slide_step_control]
         || INSTRUCCIONES_TITULOS_CONTROL[0];
     if (instruccionesLabel) {
-        instruccionesLabel.textContent = `${tituloInstrucciones} \u00b7 ${instrucciones_slide_step_control + 1}/${INSTRUCCIONES_PASO_MAX_CONTROL + 1}`;
+        pintarResumenSlideControl(instruccionesLabel, {
+            actual: tituloInstrucciones,
+            indice: instrucciones_slide_step_control + 1,
+            total: INSTRUCCIONES_PASO_MAX_CONTROL + 1,
+            anterior: INSTRUCCIONES_TITULOS_CONTROL[instrucciones_slide_step_control - 1] || "",
+            siguiente: INSTRUCCIONES_TITULOS_CONTROL[instrucciones_slide_step_control + 1] || ""
+        });
     }
-    if (instruccionesPrev) instruccionesPrev.disabled = !instruccionesActivas || instrucciones_slide_step_control <= 0;
-    if (instruccionesNext) instruccionesNext.disabled = !instruccionesActivas || instrucciones_slide_step_control >= INSTRUCCIONES_PASO_MAX_CONTROL;
+    if (instruccionesPrev) {
+        const tituloAnterior = INSTRUCCIONES_TITULOS_CONTROL[instrucciones_slide_step_control - 1] || "";
+        instruccionesPrev.disabled = !instruccionesActivas || instrucciones_slide_step_control <= 0;
+        instruccionesPrev.setAttribute("aria-label", tituloAnterior ? `Anterior: ${tituloAnterior}` : "No hay una slide anterior");
+        instruccionesPrev.title = tituloAnterior || "INICIO";
+    }
+    if (instruccionesNext) {
+        const tituloSiguiente = INSTRUCCIONES_TITULOS_CONTROL[instrucciones_slide_step_control + 1] || "";
+        instruccionesNext.disabled = !instruccionesActivas || instrucciones_slide_step_control >= INSTRUCCIONES_PASO_MAX_CONTROL;
+        instruccionesNext.setAttribute("aria-label", tituloSiguiente ? `Siguiente: ${tituloSiguiente}` : "No hay una slide siguiente");
+        instruccionesNext.title = tituloSiguiente || "FINAL";
+    }
     if (instruccionesNav) {
         instruccionesNav.dataset.visible = instruccionesActivas ? "1" : "0";
         instruccionesNav.setAttribute("aria-hidden", instruccionesActivas ? "false" : "true");
@@ -3587,10 +3647,31 @@ function actualizarBotonesVistaEspectadorControl() {
             : "";
         const numeroSlide = puntuacion_slide_step_control + 1;
         const totalSlides = PUNTUACION_PASO_MAX_CONTROL + 1;
-        puntuacionLabel.textContent = [
-            `${etiquetaPaso} \u00b7 ${numeroSlide}/${totalSlides}`,
+        const etiquetasPuntuacion = [
+            tJuego2PControl("score.step.intro", {}, "INTRO"),
+            ...PUNTUACION_CATEGORIAS_CONTROL.map((id) => (
+                tJuego2PControl(`score.category.${id}.label`, {}, id.replace(/_/g, " ").toUpperCase())
+            )),
+            tJuego2PControl("score.step.final", {}, "GANADOR")
+        ];
+        pintarResumenSlideControl(puntuacionLabel, {
+            actual: etiquetaPaso,
+            indice: numeroSlide,
+            total: totalSlides,
+            anterior: etiquetasPuntuacion[puntuacion_slide_step_control - 1] || "",
+            siguiente: etiquetasPuntuacion[puntuacion_slide_step_control + 1] || "",
             detalle
-        ].filter(Boolean).join(" \u00b7 ");
+        });
+        if (puntuacionPrev) {
+            const anterior = etiquetasPuntuacion[puntuacion_slide_step_control - 1] || "";
+            puntuacionPrev.setAttribute("aria-label", anterior ? `Anterior: ${anterior}` : "No hay una slide anterior");
+            puntuacionPrev.title = anterior || "INICIO";
+        }
+        if (puntuacionNext) {
+            const siguiente = etiquetasPuntuacion[puntuacion_slide_step_control + 1] || "";
+            puntuacionNext.setAttribute("aria-label", siguiente ? `Siguiente: ${siguiente}` : "No hay una slide siguiente");
+            puntuacionNext.title = siguiente || "FINAL";
+        }
     }
     if (puntuacionNav) {
         const visible = vista_espectador_modo === "puntuacion";
@@ -3630,7 +3711,32 @@ function actualizarBotonesVistaEspectadorControl() {
             numeroSlide = JURADO_TOTAL_SLIDES_CONTROL;
         } else if (jurado_slide_step_control === JURADO_PASO_MAX_CONTROL) etiqueta = "PUNTUACIONES DEL JURADO";
         else if (jurado_slide_step_control > 0) etiqueta = JURADO_CATEGORIAS_CONTROL[jurado_slide_step_control - 1];
-        juradoLabel.textContent = `${etiqueta} \u00b7 ${numeroSlide}/${JURADO_TOTAL_SLIDES_CONTROL}`;
+        const etiquetasJurado = [
+            "PRESENTACIÓN",
+            ...JURADO_CATEGORIAS_CONTROL,
+            "PUNTUACIONES DEL JURADO",
+            "RESULTADO FINAL"
+        ];
+        const indiceJurado = juradoEnResultadoFinal ? JURADO_TOTAL_SLIDES_CONTROL - 1 : jurado_slide_step_control;
+        pintarResumenSlideControl(juradoLabel, {
+            actual: etiqueta,
+            indice: numeroSlide,
+            total: JURADO_TOTAL_SLIDES_CONTROL,
+            anterior: etiquetasJurado[indiceJurado - 1] || "",
+            siguiente: etiquetasJurado[indiceJurado + 1] || ""
+        });
+        if (juradoPrev) {
+            const anterior = etiquetasJurado[indiceJurado - 1] || "";
+            juradoPrev.setAttribute("aria-label", anterior ? `Anterior: ${anterior}` : "No hay una slide anterior");
+            juradoPrev.title = anterior || "INICIO";
+        }
+        if (juradoNext) {
+            const siguiente = etiquetasJurado[indiceJurado + 1] || "";
+            if (!juradoEnResultadoFinal) {
+                juradoNext.setAttribute("aria-label", siguiente ? `Siguiente: ${siguiente}` : "No hay una slide siguiente");
+                if (!juradoNext.disabled) juradoNext.title = siguiente || "FINAL";
+            }
+        }
     }
     if (juradoNav) {
         const visible = vista_espectador_modo === "resultado_jurado" || juradoEnResultadoFinal;

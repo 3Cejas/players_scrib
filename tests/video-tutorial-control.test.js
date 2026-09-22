@@ -94,6 +94,9 @@ function crearHarness() {
       timers.delete(id);
     },
     activacionesVistaTutorial: 0,
+    esVistaTutorialActivaControl() {
+      return true;
+    },
     asegurarVistaTutorialBajoOverlayControl() {
       this.activacionesVistaTutorial += 1;
     }
@@ -254,6 +257,30 @@ test("interval stepper clamps minute changes and saves them immediately", () => 
   assert.equal(elementos.get("videotutorial_intervalo").value, "1");
 });
 
+test("automatic repetition is disabled outside the tutorial view", () => {
+  const { api, elementos, emisiones } = crearHarness();
+  api.aplicarEstado({
+    activo: true,
+    session_id: "video-session",
+    phase_seq: 3,
+    configuracion: { intervalo_segundos: 180, habilitado: true }
+  });
+  const repeticion = elementos.get("videotutorial_habilitado");
+  assert.equal(repeticion.checked, true);
+  assert.equal(repeticion.disabled, false);
+
+  api.setVistaTutorialActiva(false);
+  assert.equal(repeticion.checked, false);
+  assert.equal(repeticion.disabled, true);
+  repeticion.checked = true;
+  assert.equal(api.configurar(), false);
+  assert.equal(emisiones.length, 0);
+  assert.match(api.obtenerEstado().error, /solo está disponible en VISTA TUTORIAL/);
+
+  api.setVistaTutorialActiva(true);
+  assert.equal(repeticion.disabled, false);
+});
+
 test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe interface", () => {
   const html = read("game/control/index.html");
   const css = read("game/control/index.css");
@@ -272,7 +299,7 @@ test("control HTML, CSS and Socket.IO wiring expose an accessible motion-safe in
   assert.match(html, /id="videotutorial_estado"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
   assert.doesNotMatch(html, /videotutorial-control__icon/);
   assert.doesNotMatch(html, /id="videotutorial_estado_detalle"/);
-  assert.match(html, /videotutorial-control\.js\?v=20260920a/);
+  assert.match(html, /videotutorial-control\.js\?v=20260923a/);
 
   assert.match(socketEvents, /socket\.emit\('pedir_video_tutorial_estado'\)/);
   assert.match(socketEvents, /socket\.on\('video_tutorial_estado'/);

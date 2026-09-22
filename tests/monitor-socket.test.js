@@ -56,6 +56,33 @@ function loadMonitorBridge() {
   };
   originalIo.Manager = function Manager() {};
 
+  class FakeMediaElement {
+    constructor() {
+      this.muted = false;
+      this.volume = 1;
+      this.playCalls = 0;
+    }
+    setAttribute() {}
+    play() {
+      this.playCalls += 1;
+      return Promise.resolve("playing");
+    }
+  }
+  class FakeAudioContext {
+    constructor() {
+      this.suspendCalls = 0;
+      this.resumeCalls = 0;
+    }
+    suspend() {
+      this.suspendCalls += 1;
+      return Promise.resolve();
+    }
+    resume() {
+      this.resumeCalls += 1;
+      return Promise.resolve();
+    }
+  }
+
   const fakeWindow = {
     location: {
       search: "?player=1&dramaturgia_monitor=1&screen_id=writer1",
@@ -68,6 +95,8 @@ function loadMonitorBridge() {
       }
     },
     io: originalIo,
+    HTMLMediaElement: FakeMediaElement,
+    AudioContext: FakeAudioContext,
     setTimeout,
     clearTimeout
   };
@@ -85,8 +114,25 @@ function loadMonitorBridge() {
     console
   };
   vm.runInNewContext(SCRIPT, context, { filename: "monitor-socket.js" });
-  return { calls, messages, socket, window: fakeWindow };
+  return { calls, messages, socket, window: fakeWindow, FakeMediaElement, FakeAudioContext };
 }
+
+test("dramaturgy monitor keeps visual media running but forces every audio path silent", async () => {
+  const { window, FakeMediaElement } = loadMonitorBridge();
+  const media = new FakeMediaElement();
+
+  await media.play();
+  assert.equal(window.__SCRIB_AUDIO_DISABLED__, true);
+  assert.equal(media.playCalls, 1);
+  assert.equal(media.muted, true);
+  assert.equal(media.volume, 0);
+
+  const audioContext = new window.AudioContext();
+  assert.equal(audioContext.suspendCalls >= 1, true);
+  await audioContext.resume();
+  assert.equal(audioContext.resumeCalls, 0);
+  assert.equal(audioContext.suspendCalls >= 2, true);
+});
 
 test("monitor bridge preserves Socket.IO lifecycle and registers a read-only replica", () => {
   const { calls, messages, socket, window } = loadMonitorBridge();

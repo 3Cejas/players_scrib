@@ -371,6 +371,22 @@
         return { start: mapped.start, end: mapped.end };
     }
 
+    function rebaseStoredSelection(selectionInfo, previousText, nextText) {
+        if (!selectionInfo) return null;
+        const resolved = resolveRangeAfterTextChange(selectionInfo, previousText, nextText);
+        if (!resolved) return null;
+        const text = String(nextText || "");
+        return {
+            ...selectionInfo,
+            start: resolved.start,
+            end: resolved.end,
+            quote: text.slice(resolved.start, resolved.end),
+            sourceText: text,
+            prefix: text.slice(Math.max(0, resolved.start - 48), resolved.start),
+            suffix: text.slice(resolved.end, resolved.end + 48)
+        };
+    }
+
     function restoreBrowserSelection(selectionInfo, previousText, nextText) {
         if (!selectionInfo || !textEl || !window.getSelection) return false;
         const resolved = resolveRangeAfterTextChange(selectionInfo, previousText, nextText);
@@ -380,15 +396,7 @@
         const selection = window.getSelection();
         selection.removeAllRanges();
         selection.addRange(range);
-        pendingSelection = {
-            ...selectionInfo,
-            start: resolved.start,
-            end: resolved.end,
-            quote: nextText.slice(resolved.start, resolved.end),
-            sourceText: nextText,
-            prefix: nextText.slice(Math.max(0, resolved.start - 48), resolved.start),
-            suffix: nextText.slice(resolved.end, resolved.end + 48)
-        };
+        pendingSelection = rebaseStoredSelection(selectionInfo, previousText, nextText);
         return true;
     }
 
@@ -738,6 +746,11 @@
         textEl.innerHTML = baseHtml;
 
         const plainText = getPlainText(textEl);
+        // El foco sale del texto mientras se pulsa una herramienta o se escribe una
+        // nota. Esas selecciones lógicas también deben avanzar con cada edición
+        // remota para no terminar anotando una posición antigua.
+        pendingSelection = rebaseStoredSelection(pendingSelection, previousPlainText, plainText);
+        noteEditorSelection = rebaseStoredSelection(noteEditorSelection, previousPlainText, plainText);
         const activeAnnotations = [];
         annotations.forEach((annotation) => {
             const rangeInfo = {

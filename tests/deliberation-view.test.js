@@ -42,13 +42,15 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /totalSlides = PUNTUACION_PASO_MAX_CONTROL \+ 1/);
   assert.match(actions, /JURADO_TOTAL_SLIDES_CONTROL = JURADO_PASO_MAX_CONTROL \+ 2/);
   assert.match(actions, /etiqueta = "RESULTADO FINAL"[\s\S]*numeroSlide = JURADO_TOTAL_SLIDES_CONTROL/);
-  assert.match(actions, /\$\{numeroSlide\}\/\$\{JURADO_TOTAL_SLIDES_CONTROL\}/);
+  assert.match(actions, /pintarResumenSlideControl\(juradoLabel, \{[\s\S]*indice: numeroSlide,[\s\S]*total: JURADO_TOTAL_SLIDES_CONTROL,[\s\S]*anterior: etiquetasJurado\[indiceJurado - 1\][\s\S]*siguiente: etiquetasJurado\[indiceJurado \+ 1\]/);
+  assert.match(actions, /pintarResumenSlideControl\(puntuacionLabel, \{[\s\S]*indice: numeroSlide,[\s\S]*total: totalSlides,[\s\S]*anterior: etiquetasPuntuacion\[puntuacion_slide_step_control - 1\][\s\S]*siguiente: etiquetasPuntuacion\[puntuacion_slide_step_control \+ 1\]/);
   assert.match(actions, /vista_espectador_modo === "resultado_jurado" \|\| juradoEnResultadoFinal/);
   assert.match(actions, /jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL[\s\S]*mostrar_resultado_final/);
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
   assert.match(actions, /function mostrarCreditosEspectador\(\)[\s\S]*temporizador_gigante_detener/);
   assert.match(sockets, /socket\.on\('jurado_resultado_estado'/);
   assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*partida_finalizada_control = true[\s\S]*actualizarBotonResultadoVideojuegoControl\(true\)[\s\S]*activarSeccionControl\("juego"\)/);
+  assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*modo_actual = "";[\s\S]*actualizarCabeceraModoControl\(\{ modo: "", segundos: 0, duracion: 0, restante: 0 \}\)/);
 });
 
 test("spectator and muses render both deliberation outcomes", () => {

@@ -6,6 +6,73 @@
         return;
     }
 
+    function instalarSilencioMonitor() {
+        global.__SCRIB_AUDIO_DISABLED__ = true;
+
+        const silenciarMedio = (medio) => {
+            if (!medio) return;
+            try { medio.muted = true; } catch (_) {}
+            try { medio.volume = 0; } catch (_) {}
+            try { medio.setAttribute?.("muted", ""); } catch (_) {}
+        };
+
+        const MediaElement = global.HTMLMediaElement;
+        if (MediaElement && MediaElement.prototype && !MediaElement.prototype.__scribMonitorMuted) {
+            const reproducirOriginal = MediaElement.prototype.play;
+            Object.defineProperty(MediaElement.prototype, "__scribMonitorMuted", {
+                configurable: true,
+                value: true
+            });
+            if (typeof reproducirOriginal === "function") {
+                MediaElement.prototype.play = function reproducirMonitorSinAudio() {
+                    silenciarMedio(this);
+                    return reproducirOriginal.apply(this, arguments);
+                };
+            }
+        }
+
+        const silenciarDocumento = () => {
+            global.document?.querySelectorAll?.("audio, video").forEach(silenciarMedio);
+        };
+        silenciarDocumento();
+        global.document?.addEventListener?.("play", (evento) => silenciarMedio(evento.target), true);
+        global.document?.addEventListener?.("DOMContentLoaded", silenciarDocumento, { once: true });
+
+        if (typeof global.MutationObserver === "function" && global.document?.documentElement) {
+            const observador = new global.MutationObserver((cambios) => {
+                cambios.forEach((cambio) => {
+                    Array.from(cambio.addedNodes || []).forEach((nodo) => {
+                        if (nodo?.matches?.("audio, video")) silenciarMedio(nodo);
+                        nodo?.querySelectorAll?.("audio, video").forEach(silenciarMedio);
+                    });
+                });
+            });
+            observador.observe(global.document.documentElement, { childList: true, subtree: true });
+        }
+
+        ["AudioContext", "webkitAudioContext"].forEach((nombre) => {
+            const AudioContextOriginal = global[nombre];
+            if (typeof AudioContextOriginal !== "function" || AudioContextOriginal.__scribMonitorMuted) return;
+            function AudioContextMonitorSilencioso() {
+                const contexto = Reflect.construct(AudioContextOriginal, Array.from(arguments), new.target || AudioContextOriginal);
+                try { contexto.suspend?.(); } catch (_) {}
+                try {
+                    contexto.resume = () => {
+                        try { contexto.suspend?.(); } catch (_) {}
+                        return Promise.resolve(contexto);
+                    };
+                } catch (_) {}
+                return contexto;
+            }
+            Object.setPrototypeOf(AudioContextMonitorSilencioso, AudioContextOriginal);
+            AudioContextMonitorSilencioso.prototype = AudioContextOriginal.prototype;
+            Object.defineProperty(AudioContextMonitorSilencioso, "__scribMonitorMuted", { value: true });
+            global[nombre] = AudioContextMonitorSilencioso;
+        });
+    }
+
+    instalarSilencioMonitor();
+
     const PANTALLAS = {
         control: { rol: "control", player: null },
         spectator: { rol: "espectador", player: null },

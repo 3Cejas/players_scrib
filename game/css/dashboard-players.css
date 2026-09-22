@@ -6626,6 +6626,15 @@ body.page-spectator.vista-partida #spectator_fit_root > .cabecera {
   pointer-events: none;
 }
 
+body.page-spectator #spectator_fit_root > .cabecera > .cabecera-marca {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  justify-items: center;
+  align-content: start;
+  transform-origin: 50% 50%;
+}
+
 body.page-spectator.vista-partida #spectator_fit_root > .cabecera .neon_espectador {
   margin: 0;
   font-size: clamp(8px, .78vw, 14px);

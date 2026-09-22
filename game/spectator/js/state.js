@@ -6871,7 +6871,7 @@ function detenerSonidosDesventaja() {
 }
 
 if (typeof animateCSS === "function") {
-    animateCSS(".cabecera", "backInLeft").then(() => {
+    animateCSS(".cabecera-marca", "backInLeft").then(() => {
         animateCSS("#contenedor_espectador", "pulse");
     });
 }

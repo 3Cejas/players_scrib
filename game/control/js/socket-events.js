@@ -811,6 +811,11 @@ socket.on('fin_a_control', () => {
     juego_iniciado = false;
     partida_finalizada_control = true;
     modo_actual = "";
+    if (typeof window.actualizarCabeceraModoControl === "function") {
+        window.actualizarCabeceraModoControl({ modo: "", segundos: 0, duracion: 0, restante: 0 });
+    } else if (typeof window.actualizarNivelActivoControl === "function") {
+        window.actualizarNivelActivoControl("");
+    }
     if (typeof window.actualizarBotonPausaReanudarControl === "function") {
         window.actualizarBotonPausaReanudarControl(getEl("boton_pausar_reanudar"));
     }

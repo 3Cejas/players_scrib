@@ -1125,7 +1125,7 @@ socket.on('limpiar', data => {
 
     tiempo.style.display = "none";
     tiempo1.style.display = "none";
-    animateCSS(".cabecera", "backInLeft").then((message) => {
+    animateCSS(".cabecera-marca", "backInLeft").then((message) => {
         animateCSS("#contenedor_espectador", "pulse");
     });
     logo.style.display = "";
