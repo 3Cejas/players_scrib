@@ -259,8 +259,137 @@
             start: safeStart,
             end: safeEnd,
             quote,
+            sourceText: plainText,
+            prefix: plainText.slice(Math.max(0, safeStart - 48), safeStart),
+            suffix: plainText.slice(safeEnd, safeEnd + 48),
             rect: getVisibleSelectionRect(range)
         };
+    }
+
+    function getCommonTextEdges(previousText, nextText) {
+        const previous = String(previousText || "");
+        const next = String(nextText || "");
+        const sharedLimit = Math.min(previous.length, next.length);
+        let prefix = 0;
+        while (prefix < sharedLimit && previous[prefix] === next[prefix]) {
+            prefix += 1;
+        }
+
+        let suffix = 0;
+        while (
+            suffix < sharedLimit - prefix
+            && previous[previous.length - 1 - suffix] === next[next.length - 1 - suffix]
+        ) {
+            suffix += 1;
+        }
+        return { prefix, suffix };
+    }
+
+    function mapRangeAcrossTextChange(rangeInfo, previousText, nextText) {
+        const previous = String(previousText || "");
+        const next = String(nextText || "");
+        const originalStart = Math.max(0, Math.min(Number(rangeInfo?.start) || 0, previous.length));
+        const originalEnd = Math.max(originalStart, Math.min(Number(rangeInfo?.end) || originalStart, previous.length));
+        if (originalEnd <= originalStart || !next) return null;
+
+        const edges = getCommonTextEdges(previous, next);
+        const previousChangeEnd = previous.length - edges.suffix;
+        const nextChangeEnd = next.length - edges.suffix;
+        const mapBoundary = (offset, isEnd) => {
+            if (offset < edges.prefix) return offset;
+            if (offset > previousChangeEnd) return nextChangeEnd + (offset - previousChangeEnd);
+            if (offset === edges.prefix && previousChangeEnd === edges.prefix) {
+                return isEnd ? nextChangeEnd : edges.prefix;
+            }
+            if (offset === previousChangeEnd) return nextChangeEnd;
+            return isEnd ? nextChangeEnd : edges.prefix;
+        };
+
+        return {
+            start: Math.max(0, Math.min(mapBoundary(originalStart, false), next.length)),
+            end: Math.max(0, Math.min(mapBoundary(originalEnd, true), next.length)),
+            hasStableEdge: edges.prefix > 0 || edges.suffix > 0
+        };
+    }
+
+    function countMatchingSuffix(left, right) {
+        const a = String(left || "");
+        const b = String(right || "");
+        const limit = Math.min(a.length, b.length);
+        let count = 0;
+        while (count < limit && a[a.length - 1 - count] === b[b.length - 1 - count]) {
+            count += 1;
+        }
+        return count;
+    }
+
+    function countMatchingPrefix(left, right) {
+        const a = String(left || "");
+        const b = String(right || "");
+        const limit = Math.min(a.length, b.length);
+        let count = 0;
+        while (count < limit && a[count] === b[count]) {
+            count += 1;
+        }
+        return count;
+    }
+
+    function findBestQuoteRange(rangeInfo, plainText, preferredStart) {
+        const quote = String(rangeInfo?.quote || "");
+        if (!quote) return null;
+        const candidates = [];
+        let index = plainText.indexOf(quote);
+        while (index >= 0) {
+            const prefix = String(rangeInfo?.prefix || "");
+            const suffix = String(rangeInfo?.suffix || "");
+            const before = plainText.slice(Math.max(0, index - prefix.length), index);
+            const after = plainText.slice(index + quote.length, index + quote.length + suffix.length);
+            const contextScore = countMatchingSuffix(prefix, before) + countMatchingPrefix(suffix, after);
+            candidates.push({
+                start: index,
+                end: index + quote.length,
+                contextScore,
+                distance: Math.abs(index - preferredStart)
+            });
+            index = plainText.indexOf(quote, index + 1);
+        }
+        if (!candidates.length) return null;
+        candidates.sort((a, b) => b.contextScore - a.contextScore || a.distance - b.distance);
+        return { start: candidates[0].start, end: candidates[0].end };
+    }
+
+    function resolveRangeAfterTextChange(rangeInfo, previousText, nextText) {
+        const previous = String(previousText || "");
+        const next = String(nextText || "");
+        if (!rangeInfo || !next) return null;
+
+        const mapped = mapRangeAcrossTextChange(rangeInfo, previous, next);
+        const preferredStart = mapped ? mapped.start : Math.max(0, Number(rangeInfo.start) || 0);
+        const quoteRange = findBestQuoteRange(rangeInfo, next, preferredStart);
+        if (quoteRange) return quoteRange;
+        if (!mapped || !mapped.hasStableEdge || mapped.end <= mapped.start) return null;
+        return { start: mapped.start, end: mapped.end };
+    }
+
+    function restoreBrowserSelection(selectionInfo, previousText, nextText) {
+        if (!selectionInfo || !textEl || !window.getSelection) return false;
+        const resolved = resolveRangeAfterTextChange(selectionInfo, previousText, nextText);
+        if (!resolved) return false;
+        const range = createRangeFromOffsets(textEl, resolved.start, resolved.end);
+        if (!range) return false;
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        pendingSelection = {
+            ...selectionInfo,
+            start: resolved.start,
+            end: resolved.end,
+            quote: nextText.slice(resolved.start, resolved.end),
+            sourceText: nextText,
+            prefix: nextText.slice(Math.max(0, resolved.start - 48), resolved.start),
+            suffix: nextText.slice(resolved.end, resolved.end + 48)
+        };
+        return true;
     }
 
     function getVisibleSelectionRect(range) {
@@ -600,15 +729,29 @@
     function render(options = {}) {
         if (!textEl) return;
         const scrollTop = textEl.scrollTop;
+        const previousPlainText = Object.prototype.hasOwnProperty.call(options, "previousPlainText")
+            ? String(options.previousPlainText || "")
+            : getPlainText(textEl);
+        const selectionInfo = options.preserveSelection
+            ? (readCurrentSelection() || options.selectionInfo || null)
+            : null;
         textEl.innerHTML = baseHtml;
 
         const plainText = getPlainText(textEl);
         const activeAnnotations = [];
         annotations.forEach((annotation) => {
-            const range = resolveAnnotationRange(annotation, plainText);
+            const rangeInfo = {
+                ...annotation,
+                prefix: previousPlainText.slice(Math.max(0, annotation.start - 48), annotation.start),
+                suffix: previousPlainText.slice(annotation.end, annotation.end + 48)
+            };
+            const range = options.rebaseAnnotations && previousPlainText
+                ? resolveRangeAfterTextChange(rangeInfo, previousPlainText, plainText)
+                : resolveAnnotationRange(annotation, plainText);
             if (!range) return;
             annotation.start = range.start;
             annotation.end = range.end;
+            annotation.quote = plainText.slice(range.start, range.end);
             activeAnnotations.push(annotation);
         });
 
@@ -626,6 +769,9 @@
             saveAnnotations({ broadcast: options.broadcast !== false });
         }
         textEl.scrollTop = Math.min(scrollTop, textEl.scrollHeight);
+        if (selectionInfo) {
+            restoreBrowserSelection(selectionInfo, previousPlainText, plainText);
+        }
         scheduleSelectionRefresh();
     }
 
@@ -780,8 +926,15 @@
     }
 
     function setRemoteHtml(html) {
+        const previousPlainText = textEl ? getPlainText(textEl) : "";
+        const selectionInfo = readCurrentSelection();
         baseHtml = String(html || "");
-        render();
+        render({
+            previousPlainText,
+            selectionInfo,
+            preserveSelection: true,
+            rebaseAnnotations: true
+        });
     }
 
     function switchPlayer(nextPlayer) {

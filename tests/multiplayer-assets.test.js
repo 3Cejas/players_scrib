@@ -58,7 +58,7 @@ const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260921a";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
-const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260920a";
+const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260922a";
 const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260921a";
 
 function read(relPath) {
@@ -1565,6 +1565,12 @@ test("actor annotations stay away from writers and synchronize through the dedic
   assert.match(annotations, /if \(data\.origin === INSTANCE_ID \|\| data\.key !== getStorageKey\(\)\) return;/);
   assert.match(annotations, /document\.createTreeWalker\(container, NodeFilter\.SHOW_TEXT\)/);
   assert.match(annotations, /resolveAnnotationRange\(annotation, plainText\)/);
+  assert.match(annotations, /function resolveRangeAfterTextChange\(rangeInfo, previousText, nextText\)/);
+  assert.match(annotations, /function restoreBrowserSelection\(selectionInfo, previousText, nextText\)/);
+  assert.match(annotations, /preserveSelection:\s*true/);
+  assert.match(annotations, /rebaseAnnotations:\s*true/);
+  assert.match(annotations, /selection\.removeAllRanges\(\)/);
+  assert.match(annotations, /selection\.addRange\(range\)/);
   assert.match(annotations, /function replaceColorInSelection\(selectionInfo\)/);
   assert.match(annotations, /cloneColorSegment\(annotation/);
   assert.match(annotations, /if \(patch\.color\) \{[\s\S]*replaceColorInSelection\(selectionInfo\);/);
