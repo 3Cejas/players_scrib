@@ -4941,6 +4941,9 @@ body.page-players.partida-activa .escritxr-texto-panel::before {
 body.page-players.partida-activa .escritxr-texto-panel__viewport {
     --escritxr-text-size: clamp(26px, 3vw, 48px);
     --escritxr-text-line: calc(var(--escritxr-text-size) * 1.28);
+    --escritxr-editor-pad-y: clamp(22px, 3vw, 38px);
+    --escritxr-editor-pad-x: clamp(22px, 3vw, 38px);
+    --escritxr-editor-last-line-safe: calc(var(--escritxr-text-line) + clamp(8px, 1.2vh, 16px));
     --escritxr-editor-base-min: clamp(210px, 34vh, 390px);
     --escritxr-editor-base-max: clamp(260px, 44vh, 520px);
     position: relative;
@@ -4961,7 +4964,7 @@ body.page-players.partida-activa .escritxr-texto-panel__viewport {
 body.page-players.partida-activa .escritxr-texto-lineas {
     box-sizing: border-box;
     min-height: 100%;
-    padding: clamp(22px, 3vw, 38px) clamp(7px, 1vw, 12px);
+    padding: var(--escritxr-editor-pad-y) clamp(7px, 1vw, 12px) var(--escritxr-editor-last-line-safe);
     overflow: hidden;
     border-right: 1px solid rgba(var(--escritxr-panel-accent-rgb), 0.24);
     background: rgba(var(--escritxr-panel-accent-rgb), 0.055);
@@ -4994,7 +4997,8 @@ body.page-players.partida-activa .escritxr-texto-panel .textarea {
     );
     max-height: var(--escritxr-editor-max-height, var(--escritxr-editor-base-max));
     margin: 0;
-    padding: clamp(22px, 3vw, 38px);
+    padding: var(--escritxr-editor-pad-y) var(--escritxr-editor-pad-x) var(--escritxr-editor-last-line-safe);
+    scroll-padding-block: var(--escritxr-editor-pad-y) var(--escritxr-editor-last-line-safe);
     overflow-x: hidden;
     overflow-y: auto;
     border: 0;
@@ -5158,15 +5162,12 @@ body.page-players.partida-activa .info-total {
 @media (max-width: 720px), (max-height: 680px) {
     body.page-players.partida-activa .escritxr-texto-panel__viewport {
         --escritxr-text-size: clamp(24px, 5vw, 34px);
+        --escritxr-editor-pad-y: clamp(16px, 3vw, 24px);
+        --escritxr-editor-pad-x: clamp(16px, 3vw, 24px);
+        --escritxr-editor-last-line-safe: calc(var(--escritxr-text-line) + clamp(7px, 1vh, 12px));
         --escritxr-editor-base-min: clamp(170px, 30vh, 250px);
         --escritxr-editor-base-max: 39vh;
         grid-template-columns: clamp(38px, 9vw, 52px) minmax(0, 1fr);
-    }
-
-    body.page-players.partida-activa .escritxr-texto-lineas,
-    body.page-players.partida-activa .escritxr-texto-panel .textarea {
-        padding-top: clamp(16px, 3vw, 24px);
-        padding-bottom: clamp(16px, 3vw, 24px);
     }
 }
 

@@ -733,6 +733,9 @@ texto.addEventListener("input", () => {
     if (restaurando_bendita) return;
     countChars(texto);
     sendText();
+    if (typeof window.asegurarUltimaLineaVisibleEscritora === "function") {
+        window.asegurarUltimaLineaVisibleEscritora();
+    }
 });
 
 // Enviar teclas para el mapa de calor.

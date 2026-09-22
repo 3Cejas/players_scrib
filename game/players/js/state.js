@@ -235,6 +235,61 @@ function limpiarBorradorLocalEscritora() {
     } catch (_error) {}
 }
 
+let raf_ultima_linea_visible_escritora = 0;
+let timeout_ultima_linea_visible_escritora = null;
+
+function caretEstaAlFinalTextoEscritora() {
+    if (!texto) return false;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) return false;
+    const range = selection.getRangeAt(0);
+    if (!texto.contains(range.endContainer)) return false;
+    try {
+        const cola = document.createRange();
+        cola.selectNodeContents(texto);
+        cola.setStart(range.endContainer, range.endOffset);
+        return cola.toString().length === 0;
+    } catch (_error) {
+        return false;
+    }
+}
+
+function asegurarUltimaLineaVisibleEscritora({ forzar = false } = {}) {
+    if (!texto) return;
+    const estilos = window.getComputedStyle(texto);
+    const altoLinea = Number.parseFloat(estilos.lineHeight) || 1;
+    const distanciaAlFinal = Math.max(
+        0,
+        texto.scrollHeight - texto.clientHeight - texto.scrollTop
+    );
+    const estabaSiguiendoElFinal = distanciaAlFinal <= (altoLinea * 2.5);
+    if (!forzar && !estabaSiguiendoElFinal && !caretEstaAlFinalTextoEscritora()) return;
+    if (raf_ultima_linea_visible_escritora) {
+        cancelAnimationFrame(raf_ultima_linea_visible_escritora);
+    }
+    if (timeout_ultima_linea_visible_escritora) {
+        clearTimeout(timeout_ultima_linea_visible_escritora);
+    }
+    const llevarAlFinal = () => {
+        texto.scrollTop = Math.max(0, texto.scrollHeight - texto.clientHeight);
+        if (typeof programarLineasTextoEscritora === "function") {
+            programarLineasTextoEscritora();
+        }
+    };
+    raf_ultima_linea_visible_escritora = requestAnimationFrame(() => {
+        raf_ultima_linea_visible_escritora = 0;
+        llevarAlFinal();
+        requestAnimationFrame(llevarAlFinal);
+    });
+    // El ajuste global de viewport puede terminar después del primer frame.
+    // Esta segunda pasada conserva el final visible tras ese recálculo tardío.
+    timeout_ultima_linea_visible_escritora = setTimeout(() => {
+        timeout_ultima_linea_visible_escritora = null;
+        llevarAlFinal();
+    }, 420);
+}
+window.asegurarUltimaLineaVisibleEscritora = asegurarUltimaLineaVisibleEscritora;
+
 function colocarCursorAlFinalEditor() {
     if (!texto) return;
     try {
@@ -250,10 +305,7 @@ function colocarCursorAlFinalEditor() {
         selection.removeAllRanges();
         selection.addRange(range);
     }
-    texto.scrollTo({ top: texto.scrollHeight, left: 0, behavior: "auto" });
-    requestAnimationFrame(() => {
-        texto.scrollTo({ top: texto.scrollHeight, left: 0, behavior: "auto" });
-    });
+    asegurarUltimaLineaVisibleEscritora({ forzar: true });
 }
 const normalizarNombreMusaFeedback = (valor) => {
     if (typeof valor !== "string") return "";
@@ -809,7 +861,10 @@ function programarLineasTextoEscritora() {
 
 window.sincronizarLineasTextoEscritora = sincronizarLineasTextoEscritora;
 if (texto && escritxr_texto_lineas) {
-    new MutationObserver(programarLineasTextoEscritora).observe(texto, {
+    new MutationObserver(() => {
+        programarLineasTextoEscritora();
+        asegurarUltimaLineaVisibleEscritora();
+    }).observe(texto, {
         childList: true,
         subtree: true,
         characterData: true
@@ -831,6 +886,12 @@ if (texto && escritxr_texto_lineas) {
         observadorTamanoTextoEscritora.observe(texto);
     }
     programarLineasTextoEscritora();
+}
+
+if (texto) {
+    texto.addEventListener("input", () => {
+        asegurarUltimaLineaVisibleEscritora();
+    });
 }
 
 function setIndicadorGanadoraEscritora(visible, texto = TEXTO_GANADOR_ESCRITORA) {
@@ -1414,6 +1475,7 @@ let timeout_ajuste_viewport_escritora = null;
 let resize_observer_fit_viewport_escritora = null;
 let mutation_observer_fit_viewport_escritora = null;
 const MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA = 132;
+const MIN_LINEAS_VISIBLES_EDITOR_ESCRITORA = 2;
 let cursor_pluma_atributos_inicializado = false;
 let cursor_pluma_juego_escritora = null;
 let caret_neon_juego_escritora = null;
@@ -1462,6 +1524,19 @@ const ajustarAltoEditorViewportEscritora = (viewportH, margenVerticalSeguro) => 
     players_fit_root.style.removeProperty("--escritxr-editor-min-height");
     players_fit_root.style.removeProperty("--escritxr-editor-max-height");
     const estilosEditor = window.getComputedStyle(viewportEditor);
+    const estilosTexto = texto ? window.getComputedStyle(texto) : estilosEditor;
+    const altoLineaTexto = Number.parseFloat(estilosTexto.lineHeight) || 1;
+    const paddingSuperiorTexto = Number.parseFloat(estilosTexto.paddingTop) || 0;
+    const paddingInferiorTexto = Number.parseFloat(estilosTexto.paddingBottom) || 0;
+    // El alto dinámico nunca puede comerse la última línea. Conservamos dos
+    // líneas completas entre el relleno superior y la zona segura inferior,
+    // incluso cuando el resto de la interfaz obliga a compactar la pantalla.
+    const altoMinimoLegible = Math.max(
+        MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA,
+        paddingSuperiorTexto
+            + paddingInferiorTexto
+            + (altoLineaTexto * MIN_LINEAS_VISIBLES_EDITOR_ESCRITORA)
+    );
     const baseMin = Number.parseFloat(estilosEditor.minHeight) || MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA;
     const baseMaxLeido = Number.parseFloat(estilosEditor.maxHeight);
     const baseMax = Number.isFinite(baseMaxLeido) && baseMaxLeido > 0 ? baseMaxLeido : viewportH;
@@ -1473,7 +1548,7 @@ const ajustarAltoEditorViewportEscritora = (viewportH, margenVerticalSeguro) => 
         - margenVerticalSeguro
         - Math.max(0, rectContenedor.top)
         - altoFueraEditor;
-    const altoMax = Math.min(baseMax, Math.max(MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA, altoDisponible));
+    const altoMax = Math.min(baseMax, Math.max(altoMinimoLegible, altoDisponible));
     const altoMin = Math.min(baseMin, altoMax);
 
     players_fit_root.style.setProperty("--escritxr-editor-min-height", `${altoMin.toFixed(2)}px`);
