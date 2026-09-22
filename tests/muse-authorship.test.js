@@ -180,7 +180,8 @@ test("muse team chrome follows the assigned team and transitions stay GPU friend
   const css = read("game/public/players/css/publico.css");
   const state = read("game/public/players/js/state.js");
 
-  assert.match(css, /\.musa-world-entry--rojo \.musa-world-entry__bar-fill\s*\{[\s\S]*#ef2447/);
+  assert.match(css, /body\.equipo-rojo \.musa-world-entry\s*,[\s\S]*--world-entry-accent:\s*#ff6262/);
+  assert.match(css, /body\.equipo-rojo \.musa-world-entry__bar-fill\s*,[\s\S]*#ef2447/);
   assert.match(css, /\.musa-texto-card #metadatos\s*\{[\s\S]*var\(--equipo-color/);
   assert.match(css, /\.notificacion\s*\{[\s\S]*var\(--equipo-color/);
   assert.match(css, /#mostrar_texto::before,[\s\S]*#mostrar_texto::after/);

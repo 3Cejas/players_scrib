@@ -7735,10 +7735,22 @@ body.vista-calentamiento-musa.musa-bandera-disponible.musa-bandera-detonador-en-
 }
 
 /* Autoridad final: identidad de equipo y transiciones fluidas en la musa. */
+body.equipo-azul .musa-world-entry,
+.musa-world-entry--azul {
+    --world-entry-accent: #54f0ff;
+}
+
+body.equipo-rojo .musa-world-entry,
+.musa-world-entry--rojo {
+    --world-entry-accent: #ff6262;
+}
+
+body.equipo-azul .musa-world-entry__bar-fill,
 .musa-world-entry--azul .musa-world-entry__bar-fill {
     background: linear-gradient(90deg, #075d80 0%, #18c7ef 56%, #83f4ff 100%);
 }
 
+body.equipo-rojo .musa-world-entry__bar-fill,
 .musa-world-entry--rojo .musa-world-entry__bar-fill {
     background: linear-gradient(90deg, #6f1022 0%, #ef2447 56%, #ff8996 100%);
 }
