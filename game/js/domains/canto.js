@@ -26,7 +26,7 @@
     const DEFAULT_AUDIO_URL = "../media/musica-iliada.mp3";
     const DEFAULT_AUDIO_SECONDS = 32;
     const DEFAULT_FADE_MS = 1800;
-    const EXIT_AUDIO_FADE_MULTIPLIER = 2;
+    const EXIT_AUDIO_FADE_MULTIPLIER = 4;
     const DEFAULT_VOLUME = 0.86;
     const EXIT_MS = 1050;
     const ASSET_VERSION = "20260920a";
@@ -198,7 +198,11 @@
             const step = () => {
                 if (sequence !== fadeSequence) return;
                 const progress = clamp((Date.now() - startedAt) / duration, 0, 1);
-                audio.volume = from + ((to - from) * progress);
+                // Una curva coseno evita el cambio brusco de pendiente que se
+                // percibía al terminar el canto, especialmente al recuperar la
+                // música del nivel en paralelo.
+                const smoothProgress = 0.5 - (Math.cos(Math.PI * progress) / 2);
+                audio.volume = from + ((to - from) * smoothProgress);
                 if (progress >= 1) {
                     fadeTimer = null;
                     if (typeof onDone === "function") onDone();

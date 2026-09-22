@@ -92,7 +92,15 @@
     }
 
     function toggle() {
-        return emitAction(state.active ? "canto_desactivar" : "canto_activar");
+        const activating = !state.active;
+        const emitted = emitAction(activating ? "canto_activar" : "canto_desactivar");
+        if (emitted && activating && typeof global.mostrar_vista_partida === "function") {
+            // El servidor mantiene la autoridad, pero reflejamos la selección
+            // inmediatamente en Control para que Canto y Vista partida nunca
+            // parezcan estados independientes.
+            global.mostrar_vista_partida();
+        }
+        return emitted;
     }
 
     function markConnection(value) {

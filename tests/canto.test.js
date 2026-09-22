@@ -40,7 +40,7 @@ test("spectator and muses load the canto scene while only spectator owns its aud
 
   [spectator, muse].forEach((html) => {
     assert.match(html, /css\/canto\.css\?v=20260920a/);
-    assert.match(html, /domains\/canto\.js\?v=20260922c/);
+    assert.match(html, /domains\/canto\.js\?v=20260922d/);
   });
   assert.match(source, /role === "spectator"[\s\S]*createSpectatorOverlay[\s\S]*createMuseOverlay/);
   assert.match(source, /<audio class="scrib-canto__audio"[^>]*loop/);
@@ -61,6 +61,8 @@ test("Control exposes one stateful Canto button and authoritative socket actions
   assert.match(html, /id="boton_canto" class="[^"]*btn-vista-espectador[^"]*"/);
   assert.match(controller, /canto_desactivar/);
   assert.match(controller, /canto_activar/);
+  assert.match(controller, /emitted && activating && typeof global\.mostrar_vista_partida === "function"/);
+  assert.match(controller, /global\.mostrar_vista_partida\(\)/);
   assert.match(controller, /data\.activo/);
   assert.doesNotMatch(controller, /\? "ACTIVO"/);
   assert.match(sockets, /pedir_canto_estado/);
@@ -86,6 +88,8 @@ test("spectator crossfades existing music while canto enters and leaves", () => 
   assert.match(spectatorState, /cruzarAudiosPartidaConCanto/);
   assert.match(spectatorState, /\[sonido, sonido_modo\]/);
   assert.match(spectatorState, /fundirAudioExternoCanto\(media, 0, duracion\)/);
-  assert.equal(canto.EXIT_AUDIO_FADE_MULTIPLIER, 2);
+  assert.equal(canto.EXIT_AUDIO_FADE_MULTIPLIER, 4);
+  assert.match(read("game/js/domains/canto.js"), /Math\.cos\(Math\.PI \* progress\)/);
+  assert.match(spectatorState, /Math\.cos\(Math\.PI \* progreso\)/);
   assert.match(read("game/js/domains/canto.js"), /dispatchAudioState\(false, fadeOutMs\)/);
 });

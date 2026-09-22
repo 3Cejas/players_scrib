@@ -5967,7 +5967,8 @@ function fundirAudioExternoCanto(media, volumenDestino, duracionMs, alTerminar =
     const duracion = Math.max(0, Number(duracionMs) || 0);
     const paso = () => {
         const progreso = duracion > 0 ? Math.min(1, (Date.now() - inicio) / duracion) : 1;
-        media.volume = origen + ((destino - origen) * progreso);
+        const progresoSuave = 0.5 - (Math.cos(Math.PI * progreso) / 2);
+        media.volume = origen + ((destino - origen) * progresoSuave);
         if (progreso >= 1) {
             fades_audio_canto.delete(media);
             if (typeof alTerminar === "function") alTerminar();
