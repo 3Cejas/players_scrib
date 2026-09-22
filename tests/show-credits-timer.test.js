@@ -50,6 +50,8 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   assert.match(spectatorState, /typeof creditos_track\.animate === "function"/);
   assert.match(spectatorState, /creditos_animacion_compositor = animacion/);
   assert.match(spectatorCss, /\.creditos-track\s*\{[\s\S]*contain:\s*layout paint style;/);
+  assert.match(spectatorCss, /\.creditos-sociales-final__redes a\s*\{[\s\S]{0,240}overflow:\s*hidden;/);
+  assert.match(spectatorCss, /\.creditos-sociales-final__redes small\s*\{[\s\S]{0,320}max-width:\s*100%;[\s\S]{0,320}overflow-wrap:\s*anywhere;/);
   assert.match(spectatorCss, /creditos-espectador:not\(\.creditos-finalizados\)[\s\S]*animation-play-state:\s*paused;/);
   assert.match(museState, /creditos_musa_sociales\.offsetTop[\s\S]{0,320}altoViewport \* 0\.5/);
   assert.match(museState, /--creditos-musa-duracion", "25s"/);

@@ -10765,11 +10765,13 @@ body.vista-creditos .creditos-espectador:not(.creditos-finalizados) .creditos-bl
 
 .creditos-sociales-final__redes a {
   min-width: 0;
+  max-width: 100%;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  column-gap: clamp(0.8rem, 1.5vw, 1.4rem);
-  padding: clamp(1rem, 2vw, 1.8rem);
+  column-gap: clamp(0.55rem, 0.9vw, 0.9rem);
+  padding: clamp(0.8rem, 1.2vw, 1.2rem);
+  overflow: hidden;
   border: 1px solid rgba(115, 235, 255, 0.54);
   border-radius: clamp(0.8rem, 1.5vw, 1.4rem);
   color: #f8fbff;
@@ -10789,7 +10791,7 @@ body.vista-creditos .creditos-espectador:not(.creditos-finalizados) .creditos-bl
 .creditos-sociales-final__redes a:nth-child(3) { animation-delay: -0.9s; }
 .creditos-sociales-final__redes a:nth-child(4) { animation-delay: -1.35s; }
 .creditos-sociales-final__redes svg {
-  width: clamp(2.4rem, 3.8vw, 4.1rem);
+  width: clamp(2rem, 2.8vw, 3rem);
   aspect-ratio: 1;
   fill: none;
   stroke: currentColor;
@@ -10798,7 +10800,15 @@ body.vista-creditos .creditos-espectador:not(.creditos-finalizados) .creditos-bl
   stroke-linejoin: round;
   filter: drop-shadow(0 0 0.7rem currentColor);
 }
-.creditos-sociales-final__redes small { color: rgba(205, 239, 247, 0.72); font: clamp(1.45rem, 2.2vw, 2.25rem)/1 "VT323", monospace; }
+.creditos-sociales-final__redes small {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  color: rgba(205, 239, 247, 0.72);
+  font: clamp(1.1rem, 1.25vw, 1.35rem)/1.05 "VT323", monospace;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
 .creditos-social-card--instagram {
   border-color: rgba(255, 111, 157, 0.72) !important;
   background: linear-gradient(135deg, rgba(73, 65, 186, 0.62), rgba(211, 48, 118, 0.54) 52%, rgba(255, 176, 72, 0.48)) !important;
