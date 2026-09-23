@@ -379,13 +379,17 @@ function aplicarTextoJurado(id, paquete) {
     const data = normalizarPaqueteTextoJurado(paquete);
     const writer = estado_jurado.writers[writerId];
     const html = String(data.text || "");
+    const puntosSiguientes = data.points === null || typeof data.points === "undefined"
+        ? null
+        : Math.max(0, extraerNumeroJurado(data.points, 0));
+    if (writer.html === html && (puntosSiguientes === null || writer.words === puntosSiguientes)) return;
     writer.html = html;
     writer.plain = textoPlanoDesdeHtmlJurado(html);
     const metricas = calcularMetricasTextoJurado(writer.plain);
     writer.chars = metricas.chars;
-    writer.words = data.points === null || typeof data.points === "undefined"
+    writer.words = puntosSiguientes === null
         ? metricas.words
-        : Math.max(0, extraerNumeroJurado(data.points, metricas.words));
+        : puntosSiguientes;
     writer.points = writer.words;
     renderWriterTextoJurado(writerId);
     renderStatsJurado(writerId);

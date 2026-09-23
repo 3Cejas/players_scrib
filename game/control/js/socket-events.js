@@ -637,12 +637,14 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
     const margenFinal = 8;
     const estabaAlFinal = (textoEl.scrollHeight - textoEl.scrollTop - textoEl.clientHeight) <= margenFinal;
     const scrollAnterior = textoEl.scrollTop;
+    const htmlAntes = textoEl.innerHTML || "";
 
-    if (hayTextoRemoto) {
+    if (hayTextoRemoto && htmlRemoto !== htmlAntes) {
         textoEl.innerHTML = htmlRemoto;
-    } else if (hayGuardadoRemoto) {
-        textoEl.innerHTML = convertirTextoPlanoAHtmlControl(guardadoRemoto);
-    } else if (!jugadorTerminado) {
+    } else if (!hayTextoRemoto && hayGuardadoRemoto) {
+        const htmlGuardado = convertirTextoPlanoAHtmlControl(guardadoRemoto);
+        if (htmlGuardado !== htmlAntes) textoEl.innerHTML = htmlGuardado;
+    } else if (!jugadorTerminado && htmlRemoto !== htmlAntes) {
         textoEl.innerHTML = htmlRemoto;
     } else if (!extraerTextoPlanoDesdeHtmlControl(textoEl.innerHTML || "") && String(guardadoLocal || "").trim()) {
         textoEl.innerHTML = convertirTextoPlanoAHtmlControl(guardadoLocal);
@@ -672,28 +674,33 @@ function actualizarTextoJugadorControlDesdeSocket(playerId, data) {
     } else {
         textoEl.scrollTop = scrollAnterior;
     }
-    if (window.actualizarNumerosLineaControl) {
+    if (window.programarNumerosLineaControl) {
+        window.programarNumerosLineaControl(playerId);
+    } else if (window.actualizarNumerosLineaControl) {
         window.actualizarNumerosLineaControl(playerId);
     }
 }
 
-// Recibe los datos del jugador 1 y los coloca.
-socket.on('texto1', data => {
-    actualizarTextoJugadorControlDesdeSocket(1, data);
+function recibirTextoControlOptimizado(playerId, data) {
+    actualizarTextoJugadorControlDesdeSocket(playerId, data);
     if (window.actualizarBotonesTeleprompterCarga) {
         window.actualizarBotonesTeleprompterCarga();
     }
     emitirStatsLiveControl();
-});
+}
 
-socket.on('texto2', data => {
-    actualizarTextoJugadorControlDesdeSocket(2, data);
-    if (window.actualizarBotonesTeleprompterCarga) {
-        window.actualizarBotonesTeleprompterCarga();
-    }
-    emitirStatsLiveControl();
+const receptor_texto_control = window.ScribTextStream
+    ? window.ScribTextStream.crearReceptor({
+        socket,
+        players: [1, 2],
+        onText: recibirTextoControlOptimizado
+    })
+    : null;
 
-});
+if (!receptor_texto_control) {
+    socket.on('texto1', data => recibirTextoControlOptimizado(1, data));
+    socket.on('texto2', data => recibirTextoControlOptimizado(2, data));
+}
 
 socket.on('borrar_texto_guardado', () => {
     texto_guardado1 = "";

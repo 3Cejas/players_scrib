@@ -209,6 +209,8 @@ const traducirSolicitudCalentamientoControl = (tipo, opciones = {}) => (
 let selector_idioma_control_inicializado = false;
 let numeros_linea_control_inicializados = false;
 const observadores_tamano_lineas_control = [];
+const estado_lineas_control = new WeakMap();
+const raf_lineas_control = new Map();
 let logs_control_inicializados = false;
 let reloj_control_interval = null;
 const logs_control_buffer = [];
@@ -1018,29 +1020,12 @@ function inicializarSelectorIdiomaControl() {
 function contarLineasVisualesTextoControl(elemento) {
     if (!elemento || !document.body) return 1;
     const estilos = window.getComputedStyle(elemento);
-    const ancho = Math.max(1, elemento.clientWidth || elemento.getBoundingClientRect().width || 1);
-    const medidor = elemento.cloneNode(true);
-    medidor.removeAttribute("id");
-    medidor.setAttribute("aria-hidden", "true");
-    medidor.style.setProperty("position", "fixed", "important");
-    medidor.style.setProperty("left", "-100000px", "important");
-    medidor.style.setProperty("top", "0", "important");
-    medidor.style.setProperty("width", `${ancho}px`, "important");
-    medidor.style.setProperty("height", "auto", "important");
-    medidor.style.setProperty("min-height", "0", "important");
-    medidor.style.setProperty("max-height", "none", "important");
-    medidor.style.setProperty("overflow", "visible", "important");
-    medidor.style.setProperty("visibility", "hidden", "important");
-    medidor.style.setProperty("pointer-events", "none", "important");
-    document.body.appendChild(medidor);
-    const estilosMedidor = window.getComputedStyle(medidor);
-    const tamanoFuente = Number.parseFloat(estilosMedidor.fontSize) || 16;
-    const altoLinea = Number.parseFloat(estilosMedidor.lineHeight) || (tamanoFuente * 1.2);
+    const tamanoFuente = Number.parseFloat(estilos.fontSize) || 16;
+    const altoLinea = Number.parseFloat(estilos.lineHeight) || (tamanoFuente * 1.2);
     const paddingVertical = (Number.parseFloat(estilos.paddingTop) || 0)
         + (Number.parseFloat(estilos.paddingBottom) || 0);
-    const altoContenido = Math.max(altoLinea, medidor.scrollHeight - paddingVertical);
-    medidor.remove();
-    return Math.max(1, Math.round(altoContenido / altoLinea));
+    const altoContenidoReal = Math.max(altoLinea, elemento.scrollHeight - paddingVertical);
+    return Math.max(1, Math.round(altoContenidoReal / altoLinea));
 }
 
 function actualizarNumerosLineaControl(playerId) {
@@ -1048,11 +1033,27 @@ function actualizarNumerosLineaControl(playerId) {
     const textoEl = document.getElementById(id === 2 ? "texto1" : "texto");
     const lineasEl = document.getElementById(id === 2 ? "line_numbers_j2" : "line_numbers_j1");
     if (!textoEl || !lineasEl) return;
+    const estilos = window.getComputedStyle(textoEl);
+    const firma = `${textoEl.scrollHeight}|${textoEl.clientWidth}|${estilos.fontSize}|${estilos.lineHeight}`;
     const totalLineas = contarLineasVisualesTextoControl(textoEl);
-    lineasEl.textContent = Array.from({ length: totalLineas }, (_, index) => String(index + 1)).join("\n");
+    const previo = estado_lineas_control.get(textoEl);
+    if (!previo || previo.firma !== firma || previo.total !== totalLineas) {
+        lineasEl.textContent = Array.from({ length: totalLineas }, (_, index) => String(index + 1)).join("\n");
+        estado_lineas_control.set(textoEl, { firma, total: totalLineas });
+    }
     lineasEl.scrollTop = textoEl.scrollTop || 0;
 }
 window.actualizarNumerosLineaControl = actualizarNumerosLineaControl;
+
+function programarNumerosLineaControl(playerId) {
+    const id = Number(playerId) === 2 ? 2 : 1;
+    if (raf_lineas_control.has(id)) return;
+    raf_lineas_control.set(id, requestAnimationFrame(() => {
+        raf_lineas_control.delete(id);
+        actualizarNumerosLineaControl(id);
+    }));
+}
+window.programarNumerosLineaControl = programarNumerosLineaControl;
 
 function inicializarNumerosLineaControl() {
     if (numeros_linea_control_inicializados) return;
@@ -1066,11 +1067,11 @@ function inicializarNumerosLineaControl() {
             lineasEl.scrollTop = textoEl.scrollTop || 0;
         }, { passive: true });
         if (typeof MutationObserver !== "undefined") {
-            const observer = new MutationObserver(() => actualizarNumerosLineaControl(playerId));
+            const observer = new MutationObserver(() => programarNumerosLineaControl(playerId));
             observer.observe(textoEl, { childList: true, characterData: true, subtree: true });
         }
         if (typeof ResizeObserver !== "undefined") {
-            const observerTamano = new ResizeObserver(() => actualizarNumerosLineaControl(playerId));
+            const observerTamano = new ResizeObserver(() => programarNumerosLineaControl(playerId));
             observerTamano.observe(textoEl);
             observadores_tamano_lineas_control.push(observerTamano);
         }

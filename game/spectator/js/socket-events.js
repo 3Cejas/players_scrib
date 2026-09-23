@@ -446,10 +446,14 @@ function longitudTextoVisibleEspectador(html) {
         .length;
 }
 
-function reproducirBorradoTextoEspectador(textoAnterior, textoNuevo) {
+function reproducirBorradoTextoEspectador(textoAnterior, textoNuevo, longitudes = null) {
     if (!partida_activa_espectador || vista_espectador_modo_resuelta !== "partida") return;
-    const longitudAnterior = longitudTextoVisibleEspectador(textoAnterior);
-    const longitudNueva = longitudTextoVisibleEspectador(textoNuevo);
+    const longitudAnterior = longitudes && Number.isFinite(longitudes.anterior)
+        ? longitudes.anterior
+        : longitudTextoVisibleEspectador(textoAnterior);
+    const longitudNueva = longitudes && Number.isFinite(longitudes.nueva)
+        ? longitudes.nueva
+        : longitudTextoVisibleEspectador(textoNuevo);
     if (longitudAnterior <= 0 || longitudNueva >= longitudAnterior) return;
     const ahora = Date.now();
     if (ahora - ultimo_sonido_borrado_espectador < 90) return;
@@ -458,7 +462,7 @@ function reproducirBorradoTextoEspectador(textoAnterior, textoNuevo) {
 }
 
 // Recibe los datos del jugador 1 y los coloca.
-socket.on('texto1', data => {
+function recibirTexto1Espectador(data) {
     ultimo_paquete_texto1 = data;
     if (pendiente_texto1) return;
     pendiente_texto1 = true;
@@ -467,9 +471,13 @@ socket.on('texto1', data => {
         const paquete = ultimo_paquete_texto1;
         if (!paquete) return;
         if (typeof paquete.text === "string" && paquete.text !== ultimo_texto1) {
-            reproducirBorradoTextoEspectador(ultimo_texto1, paquete.text);
+            const planoNuevo = typeof paquete.texto_guardado === "string" ? paquete.texto_guardado : "";
+            reproducirBorradoTextoEspectador(ultimo_texto1, paquete.text, planoNuevo || ultimo_texto_plano1
+                ? { anterior: ultimo_texto_plano1.length, nueva: planoNuevo.length }
+                : null);
             texto1.innerHTML = paquete.text;
             ultimo_texto1 = paquete.text;
+            if (typeof paquete.texto_guardado === "string") ultimo_texto_plano1 = paquete.texto_guardado;
         }
         actualizarEstadoFraseFinalEspectadorDesdeTexto(1, texto1 ? texto1.innerText : "");
         evaluarCierrePartidaEspectador(paquete);
@@ -483,12 +491,6 @@ socket.on('texto1', data => {
             : (paquete.caretPos && typeof paquete.caretPos.caretPos === "number" ? paquete.caretPos.caretPos : null);
         const caretPath = Array.isArray(paquete.caretPath) ? paquete.caretPath : null;
         const caretOffset = Number.isInteger(paquete.caretOffset) ? paquete.caretOffset : null;
-        if (caretPos !== null) {
-            if (posicionarScrollPorCaretPosPreciso(texto1, caretPos)) {
-                programarActualizacionDegradadoTextareaEspectador(texto1);
-                return;
-            }
-        }
         if (caretPath && caretOffset !== null) {
             if (posicionarScrollPorCaretPath(texto1, caretPath, caretOffset)) {
                 programarActualizacionDegradadoTextareaEspectador(texto1);
@@ -531,9 +533,9 @@ socket.on('texto1', data => {
         //window.scrollTo(0, document.body.scrollHeight);
         //focalizador1.scrollIntoView(false);
     });
-});
+}
 
-socket.on('texto2', data => {
+function recibirTexto2Espectador(data) {
     ultimo_paquete_texto2 = data;
     if (pendiente_texto2) return;
     pendiente_texto2 = true;
@@ -542,9 +544,13 @@ socket.on('texto2', data => {
         const paquete = ultimo_paquete_texto2;
         if (!paquete) return;
         if (typeof paquete.text === "string" && paquete.text !== ultimo_texto2) {
-            reproducirBorradoTextoEspectador(ultimo_texto2, paquete.text);
+            const planoNuevo = typeof paquete.texto_guardado === "string" ? paquete.texto_guardado : "";
+            reproducirBorradoTextoEspectador(ultimo_texto2, paquete.text, planoNuevo || ultimo_texto_plano2
+                ? { anterior: ultimo_texto_plano2.length, nueva: planoNuevo.length }
+                : null);
             texto2.innerHTML = paquete.text;
             ultimo_texto2 = paquete.text;
+            if (typeof paquete.texto_guardado === "string") ultimo_texto_plano2 = paquete.texto_guardado;
         }
         actualizarEstadoFraseFinalEspectadorDesdeTexto(2, texto2 ? texto2.innerText : "");
         evaluarCierrePartidaEspectador(paquete);
@@ -557,12 +563,6 @@ socket.on('texto2', data => {
             : (paquete.caretPos && typeof paquete.caretPos.caretPos === "number" ? paquete.caretPos.caretPos : null);
         const caretPath = Array.isArray(paquete.caretPath) ? paquete.caretPath : null;
         const caretOffset = Number.isInteger(paquete.caretOffset) ? paquete.caretOffset : null;
-        if (caretPos !== null) {
-            if (posicionarScrollPorCaretPosPreciso(texto2, caretPos)) {
-                programarActualizacionDegradadoTextareaEspectador(texto2);
-                return;
-            }
-        }
         if (caretPath && caretOffset !== null) {
             if (posicionarScrollPorCaretPath(texto2, caretPath, caretOffset)) {
                 programarActualizacionDegradadoTextareaEspectador(texto2);
@@ -606,7 +606,49 @@ socket.on('texto2', data => {
         //window.scrollTo(0, document.body.scrollHeight);
         //focalizador2.scrollIntoView(false);
     });
-});
+}
+
+function recibirCursorTextoEspectador(playerId, paquete = {}) {
+    const contenedor = Number(playerId) === 2 ? texto2 : texto1;
+    if (!contenedor) return;
+    const caretPath = Array.isArray(paquete.caretPath) ? paquete.caretPath : null;
+    const caretOffset = Number.isInteger(paquete.caretOffset) ? paquete.caretOffset : null;
+    const caretPos = Number.isInteger(paquete.caretPos) ? paquete.caretPos : null;
+    const caretLine = Number.isInteger(paquete.caretLine) ? paquete.caretLine : null;
+    const caretRatio = typeof paquete.caretRatio === "number" ? paquete.caretRatio : null;
+    if (caretPath && caretOffset !== null && posicionarScrollPorCaretPath(contenedor, caretPath, caretOffset)) {
+        programarActualizacionDegradadoTextareaEspectador(contenedor);
+        return;
+    }
+    if (caretPos !== null) {
+        const maxPos = obtenerTextoPlanoConSaltos(contenedor).length;
+        if (maxPos > 0 && caretPos >= maxPos - 1) contenedor.scrollTop = contenedor.scrollHeight;
+        else posicionarScrollPorCaretPos(contenedor, Math.max(0, Math.min(caretPos, maxPos)));
+    } else if (caretLine !== null) {
+        posicionarScrollPorLinea(contenedor, caretLine);
+    } else if (caretRatio !== null) {
+        posicionarScrollPorRatio(contenedor, caretRatio);
+    }
+    programarActualizacionDegradadoTextareaEspectador(contenedor);
+}
+
+const receptor_texto_espectador = window.ScribTextStream
+    ? window.ScribTextStream.crearReceptor({
+        socket,
+        players: [1, 2],
+        cursors: true,
+        onText: (playerId, data) => {
+            if (Number(playerId) === 2) recibirTexto2Espectador(data);
+            else recibirTexto1Espectador(data);
+        },
+        onCursor: recibirCursorTextoEspectador
+    })
+    : null;
+
+if (!receptor_texto_espectador) {
+    socket.on('texto1', recibirTexto1Espectador);
+    socket.on('texto2', recibirTexto2Espectador);
+}
 
 activar_sockets_extratextuales()
 

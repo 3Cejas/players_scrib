@@ -487,6 +487,7 @@ let votando = false;
 let musa_numero_lineas_renderizadas = 0;
 let musa_lineas_raf = 0;
 let musa_lineas_firma = "";
+let musa_lineas_geometria = "";
 
 function lineasLogicasTextoMusa() {
     if (!texto1) return [""];
@@ -562,9 +563,15 @@ function medirAlturasLineasTextoMusa(lineas) {
 function sincronizarLineasTextoMusa() {
     musa_lineas_raf = 0;
     if (!texto1 || !musa_texto_lineas) return;
-    const lineas = lineasLogicasTextoMusa();
     const estilos = window.getComputedStyle(texto1);
-    const firma = `${lineas.join("\u0000")}\u0001${texto1.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
+    const geometria = `${texto1.scrollHeight}\u0001${texto1.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
+    if (geometria === musa_lineas_geometria) {
+        musa_texto_lineas.scrollTop = texto1.scrollTop;
+        return;
+    }
+    musa_lineas_geometria = geometria;
+    const lineas = lineasLogicasTextoMusa();
+    const firma = `${lineas.length}\u0001${texto1.scrollHeight}\u0001${texto1.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
     if (firma !== musa_lineas_firma) {
         const alturas = medirAlturasLineasTextoMusa(lineas);
         const fragmento = document.createDocumentFragment();

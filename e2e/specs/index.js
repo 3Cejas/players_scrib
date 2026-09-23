@@ -673,6 +673,11 @@ async function focusWriterEditor(ctx, roleName) {
 }
 
 async function assertWriterNeonCaret(ctx, roleName, expectedAccent) {
+  await ctx.waitFor(
+    `${roleName} editor editable before neon caret assertion`,
+    async () => ctx.evaluate(roleName, () => Boolean(document.querySelector("#texto")?.isContentEditable)),
+    10000
+  );
   await focusWriterEditor(ctx, roleName);
   await ctx.evaluate(roleName, () => {
     const el = document.querySelector("#texto");
@@ -1770,7 +1775,10 @@ const smokeSpecs = [
       await ctx.waitFor(
         "reconnected spectator restores the active word and both muse authors",
         async () => ctx.evaluate("spectator", ({ targetWord, museNames }) => {
-          const wordText = String(document.querySelector("#palabra1")?.textContent || "").toLowerCase();
+          const wordText = [
+            document.querySelector("#palabra1")?.textContent,
+            document.querySelector("#definicion1 .muse-suggestion__word")?.textContent
+          ].map((value) => String(value || "")).join(" ").toLowerCase();
           const authorText = String(document.querySelector("#definicion1 .inspiration-author")?.textContent || "").toUpperCase();
           return wordText.includes(targetWord)
             && museNames.every((name) => authorText.includes(name));

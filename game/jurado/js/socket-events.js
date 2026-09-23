@@ -36,13 +36,17 @@ if (typeof socket !== "undefined" && socket) {
         actualizarNombreJurado(2, nombre);
     });
 
-    socket.on("texto1", (data) => {
-        aplicarTextoJurado(1, data);
-    });
-
-    socket.on("texto2", (data) => {
-        aplicarTextoJurado(2, data);
-    });
+    const receptorTextoJurado = window.ScribTextStream
+        ? window.ScribTextStream.crearReceptor({
+            socket,
+            players: [1, 2],
+            onText: aplicarTextoJurado
+        })
+        : null;
+    if (!receptorTextoJurado) {
+        socket.on("texto1", (data) => aplicarTextoJurado(1, data));
+        socket.on("texto2", (data) => aplicarTextoJurado(2, data));
+    }
 
     socket.on("actualizar_contador_musas", (payload = {}) => {
         aplicarMusasJurado(payload);

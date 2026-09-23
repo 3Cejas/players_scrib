@@ -121,7 +121,7 @@ function pintarTextoActorLocal(html) {
         return;
     }
     if (texto1) {
-        texto1.innerHTML = contenido;
+        if (texto1.innerHTML !== contenido) texto1.innerHTML = contenido;
     }
     programarLineasTextoActor();
 }
@@ -129,6 +129,7 @@ function pintarTextoActorLocal(html) {
 let actor_numero_lineas_renderizadas = 0;
 let actor_lineas_raf = 0;
 let actor_firma_lineas_renderizadas = "";
+let actor_geometria_lineas_renderizada = "";
 
 function medirAlturasLineasTextoActor(lineas) {
     if (!texto1) return lineas.map(() => 1);
@@ -179,12 +180,15 @@ function medirAlturasLineasTextoActor(lineas) {
 function sincronizarLineasTextoActor() {
     actor_lineas_raf = 0;
     if (!texto1 || !actor_texto_lineas || !actor_texto_lineas_inner) return;
+    const estilosTexto = window.getComputedStyle(texto1);
+    const geometria = `${texto1.scrollHeight}\u0000${texto1.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}`;
+    if (geometria === actor_geometria_lineas_renderizada) return;
+    actor_geometria_lineas_renderizada = geometria;
     const contenido = String(texto1.innerText || "").replace(/\r/g, "");
     const sinSaltoFinal = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
     const lineas = sinSaltoFinal.split("\n").slice(0, 500);
     if (!lineas.length) lineas.push("");
-    const estilosTexto = window.getComputedStyle(texto1);
-    const firma = `${contenido}\u0000${texto1.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}`;
+    const firma = `${lineas.length}\u0000${texto1.scrollHeight}\u0000${texto1.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}`;
     if (lineas.length !== actor_numero_lineas_renderizadas || firma !== actor_firma_lineas_renderizadas) {
         const alturas = medirAlturasLineasTextoActor(lineas);
         const fragmento = document.createDocumentFragment();
@@ -1949,6 +1953,7 @@ function seleccionarEquipoActor(nextPlayer, opciones = {}) {
     if (eventoPalabraAnterior) socket.off(eventoPalabraAnterior);
     window.ScribActorAnnotations?.switchPlayer?.(next);
     configurarEquipoActor(next);
+    if (receptor_texto_actor) receptor_texto_actor.subscribe([next]);
     limpiarDesventajasActor();
     ultimo_count_seq_actor = 0;
     tiempo_seq_actual_actor = 0;
@@ -2223,8 +2228,18 @@ function recibirTextoEquipoActor(playerTexto, data = {}) {
     aplicarTextoActor(data);
 }
 
-socket.on('texto1', data => recibirTextoEquipoActor(1, data));
-socket.on('texto2', data => recibirTextoEquipoActor(2, data));
+let receptor_texto_actor = window.ScribTextStream
+    ? window.ScribTextStream.crearReceptor({
+        socket,
+        players: [Number(player) === 2 ? 2 : 1],
+        onText: recibirTextoEquipoActor
+    })
+    : null;
+
+if (!receptor_texto_actor) {
+    socket.on('texto1', data => recibirTextoEquipoActor(1, data));
+    socket.on('texto2', data => recibirTextoEquipoActor(2, data));
+}
 
 /* 
 Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,

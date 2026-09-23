@@ -48,11 +48,11 @@ test("spectator removes a muse suggestion as soon as that word is used", () => {
 test("spectator plays the existing loss sound only when live text gets shorter", () => {
   const sockets = read("game/spectator/js/socket-events.js");
 
-  assert.match(sockets, /function reproducirBorradoTextoEspectador\(textoAnterior, textoNuevo\)/);
+  assert.match(sockets, /function reproducirBorradoTextoEspectador\(textoAnterior, textoNuevo, longitudes = null\)/);
   assert.match(sockets, /vista_espectador_modo_resuelta !== "partida"/);
   assert.match(sockets, /longitudNueva >= longitudAnterior/);
   assert.match(sockets, /PERDER 2 seg\.mp3/);
-  assert.equal((sockets.match(/reproducirBorradoTextoEspectador\(ultimo_texto[12], paquete\.text\)/g) || []).length, 2);
+  assert.equal((sockets.match(/reproducirBorradoTextoEspectador\(ultimo_texto[12], paquete\.text, planoNuevo/g) || []).length, 2);
 });
 
 test("parameter controls keep units adjacent and language clear of final phrases", () => {

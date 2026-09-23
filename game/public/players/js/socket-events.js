@@ -5,6 +5,7 @@
     html2canvas: window.html2canvas
 });
 window.ayudaMusaController = ayuda_musa_controlador;
+let receptor_texto_musa = null;
 
 socket.on("feedback_musa_inspiracion", (payload = {}) => {
     if (!payload || payload.tipo !== "inspiracion") return;
@@ -146,9 +147,13 @@ function sincronizarPartidaMusaTrasRegistro() {
     // La asignacion autoritativa puede haber cambiado el equipo respecto a la URL.
     // Reenlazamos el canal antes de pedir el snapshot para no perder el texto actual.
     if (typeof handler_recibir_texto_x === "function") {
-        socket.off(texto_x, handler_recibir_texto_x);
         texto_x = `texto${equipoTexto}`;
-        socket.on(texto_x, handler_recibir_texto_x);
+        if (receptor_texto_musa) {
+            receptor_texto_musa.subscribe([equipoTexto]);
+        } else {
+            socket.off(`texto${equipoTexto === 1 ? 2 : 1}`, handler_recibir_texto_x);
+            socket.on(texto_x, handler_recibir_texto_x);
+        }
     }
     pedirNombreMusa(equipoTexto);
 
@@ -1174,7 +1179,7 @@ refrescarUiIdiomaMusa();
 function handler_recibir_texto_x(data) {
     const payload = data && typeof data === "object" ? data : null;
     const textoRecibido = payload ? payload.text : (typeof data === "string" ? data : null);
-    if (textoRecibido != null) texto1.innerHTML = textoRecibido;
+    if (textoRecibido != null && texto1.innerHTML !== textoRecibido) texto1.innerHTML = textoRecibido;
     if (payload && payload.points != null && puntos1) {
         const puntosAnteriores = puntos1.textContent;
         const puntosNuevos = formatearPuntos(payload.points);
@@ -1211,7 +1216,14 @@ function handler_recibir_texto_x(data) {
     //focalizador1.scrollIntoView(false);
 }
 
-socket.on(texto_x, handler_recibir_texto_x);
+receptor_texto_musa = window.ScribTextStream
+    ? window.ScribTextStream.crearReceptor({
+        socket,
+        players: [String(texto_x).endsWith("2") ? 2 : 1],
+        onText: (_playerId, data) => handler_recibir_texto_x(data)
+    })
+    : null;
+if (!receptor_texto_musa) socket.on(texto_x, handler_recibir_texto_x);
 
 /* 
 Recibe el tiempo restante de la ronda y lo coloca. Si ha terminado,
@@ -2095,7 +2107,7 @@ function cambiar_jugadores(revertir) {
     console.log("OFF", texto_x);
 
     // 1) Quitar listener anterior
-    socket.off(texto_x, handler_recibir_texto_x);
+    if (!receptor_texto_musa) socket.off(texto_x, handler_recibir_texto_x);
 
     // 2) Nuevo canal de texto
     texto_x = `texto${jugadorTexto}`;
@@ -2103,7 +2115,11 @@ function cambiar_jugadores(revertir) {
     console.log("ON", texto_x);
 
     // 3) Volver a suscribir
-    socket.on(texto_x, handler_recibir_texto_x);
+    if (receptor_texto_musa) {
+        receptor_texto_musa.subscribe([jugadorTexto]);
+    } else {
+        socket.on(texto_x, handler_recibir_texto_x);
+    }
 
     // 4) Aplicar estilos segÃºn el jugador resultante
     if (jugadorEstilo === 1) {

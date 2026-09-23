@@ -1,7 +1,5 @@
 if (typeof dramaturgiaSocket !== "undefined" && dramaturgiaSocket) {
     const dramaturgiaDeltaEvents = [
-        "texto1",
-        "texto2",
         "nombre1",
         "nombre2",
         "stats_live_estado",
@@ -88,6 +86,17 @@ if (typeof dramaturgiaSocket !== "undefined" && dramaturgiaSocket) {
             applyDramaturgiaDelta(eventName, payload);
         });
     });
+
+    if (window.ScribTextStream) {
+        window.ScribTextStream.crearReceptor({
+            socket: dramaturgiaSocket,
+            players: [1, 2],
+            onText: (playerId, payload) => applyDramaturgiaDelta(`texto${playerId}`, payload)
+        });
+    } else {
+        dramaturgiaSocket.on("texto1", (payload = {}) => applyDramaturgiaDelta("texto1", payload));
+        dramaturgiaSocket.on("texto2", (payload = {}) => applyDramaturgiaDelta("texto2", payload));
+    }
 
     dramaturgiaSocket.on("recargar_rol_remoto", () => {
         window.location.reload();

@@ -910,6 +910,7 @@ function registrarEntregaInspiracionEscritora(payload = {}, opciones = {}) {
         : "";
     meta_inspiracion_activa_escritora = {
         ...meta,
+        palabra: extraerTextoPalabraEventoEscritora(payload),
         origen_musa: origenMusa,
         es_musa: opciones.esMusa === true
             || payload?.origen_musa === true
@@ -1294,6 +1295,9 @@ socket.on("escritor_reemplazado", (payload = {}) => {
 
 let recuperando_sesion_escritora = false;
 let ultimo_payload_texto_enviado_escritora = null;
+const emisor_texto_escritora = window.ScribTextStream
+    ? window.ScribTextStream.crearEmisor({ socket, player })
+    : null;
 
 function construirPayloadTextoEscritora() {
     capturarTextoGuardadoDesdeEditor();
@@ -1338,7 +1342,11 @@ socket.on("escritor_sesion_inactiva", (payload = {}) => {
         texto.innerHTML = textoPendiente.text;
         texto_guardado = normalizarSaltosTextoGuardado(textoPendiente.texto_guardado || "");
         countChars(texto);
-        socket.emit(texto_x, textoPendiente);
+        if (emisor_texto_escritora) {
+            emisor_texto_escritora.send(textoPendiente);
+        } else {
+            socket.emit(texto_x, textoPendiente);
+        }
     });
 });
 
@@ -1447,6 +1455,7 @@ function restaurarTextoEscritoraDesdeServidor(data = {}) {
 }
 
 socket.on(texto_x, (data) => {
+    if (emisor_texto_escritora) emisor_texto_escritora.observeSnapshot(data);
     restaurarTextoEscritoraDesdeServidor(data);
 });
 
@@ -1934,6 +1943,7 @@ socket.on(inspirar, data => {
         };
         palabra_actual = [palabra];
         definicion.innerHTML = construirSugerenciaMusaHtmlEscritora(data, palabra);
+        aplicarSuperbonusDefinicionEscritora(data);
         aplicarMarqueeSiOverflowEscritora(definicion);
         establecerContextoMusaDefinicion("musa", firmaMusa.completo);
         animateCSS(".definicion", "flash");
@@ -2038,6 +2048,7 @@ function recibir_palabra(data) {
     palabra.innerHTML = traducirTituloModoEscritora("palabras bonus", "NIVEL PALABRAS BENDITAS");
     if (data.origen_musa === "musa") {
         definicion.innerHTML = construirSugerenciaMusaHtmlEscritora(data, textoPalabra);
+        aplicarSuperbonusDefinicionEscritora(data);
         aplicarMarqueeSiOverflowEscritora(definicion);
         establecerContextoMusaDefinicion("musa", normalizarFirmaMusaEscritora(data).completo);
     } else {
@@ -2247,7 +2258,11 @@ function sendText() {
     const payload = construirPayloadTextoEscritora();
     ultimo_payload_texto_enviado_escritora = { ...payload };
     guardarBorradorLocalEscritora(payload);
-    socket.emit(texto_x, payload);
+    if (emisor_texto_escritora) {
+        emisor_texto_escritora.send(payload);
+    } else {
+        socket.emit(texto_x, payload);
+    }
 }
 
 window.sendText = sendText;
@@ -2395,6 +2410,10 @@ function obtenerCaretInfo(elemento) {
 
 let rafEnvioCaret = null;
 let ultimoCaretRatio = 0;
+let ultimoEnvioCaretTs = 0;
+let ultimaFirmaCaretEnviada = "";
+let timeoutEnvioCaret = null;
+const INTERVALO_ENVIO_CARET_MS = 34;
 
 function obtenerRutaNodo(raiz, nodo) {
     const ruta = [];
@@ -2410,19 +2429,34 @@ function obtenerRutaNodo(raiz, nodo) {
 }
 
 function solicitarEnvioCaret() {
-    if (rafEnvioCaret) return;
+    if (rafEnvioCaret || timeoutEnvioCaret) return;
+    const espera = Math.max(0, INTERVALO_ENVIO_CARET_MS - (Date.now() - ultimoEnvioCaretTs));
+    if (espera > 0) {
+        timeoutEnvioCaret = setTimeout(() => {
+            timeoutEnvioCaret = null;
+            solicitarEnvioCaret();
+        }, espera);
+        return;
+    }
     rafEnvioCaret = requestAnimationFrame(() => {
         rafEnvioCaret = null;
         const caretInfo = obtenerCaretInfo(texto);
-        socket.emit(texto_x, {
-            text: texto.innerHTML,
-            points: puntos.innerHTML,
+        const firma = JSON.stringify([
+            caretInfo.caretPos,
+            caretInfo.caretLine,
+            caretInfo.caretPath,
+            caretInfo.caretOffset
+        ]);
+        if (firma === ultimaFirmaCaretEnviada) return;
+        ultimaFirmaCaretEnviada = firma;
+        ultimoEnvioCaretTs = Date.now();
+        socket.emit("texto_cursor_actualizar", {
+            player: Number(player),
             caretPos: caretInfo.caretPos,
             caretLine: caretInfo.caretLine,
             caretRatio: caretInfo.caretRatio,
             caretPath: caretInfo.caretPath,
-            caretOffset: caretInfo.caretOffset,
-            texto_guardado
+            caretOffset: caretInfo.caretOffset
         });
     });
 }
@@ -2563,7 +2597,11 @@ function modo_palabras_bonus(e) {
         let endingIndex = preCaretRange.toString().length;
         let startingIndex = 0; // Inicializacion
         const textContent = e.target.textContent || "";
-        const objetivos = obtenerObjetivosPalabraActual();
+        const objetivosLocales = obtenerObjetivosPalabraActual();
+        const objetivoMeta = String(meta_inspiracion_activa_escritora?.palabra || "").trim();
+        const objetivos = objetivosLocales.length
+            ? objetivosLocales
+            : (objetivoMeta ? [objetivoMeta] : []);
         const esCaracterPalabra = (ch) => /[A-Za-z0-9\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]/.test(ch || "");
         const esSeparador = (ch) => !esCaracterPalabra(ch);
 
@@ -2785,7 +2823,11 @@ function palabras_musas(e) {
         let endingIndex = preCaretRange.toString().length;
         let startingIndex = 0; // Inicializacion
         const textContent = e.target.textContent || "";
-        const objetivos = obtenerObjetivosPalabraActual();
+        const objetivosLocales = obtenerObjetivosPalabraActual();
+        const objetivoMeta = String(meta_inspiracion_activa_escritora?.palabra || "").trim();
+        const objetivos = objetivosLocales.length
+            ? objetivosLocales
+            : (objetivoMeta ? [objetivoMeta] : []);
 
         // Calcula startingIndex: Retrocede hasta encontrar un delimitador o el inicio del texto
         for (let i = endingIndex - 1; i >= 0; i--) {

@@ -1068,6 +1068,9 @@ resetResumenPartida();
 
 let intervalo_stats_live_control = null;
 const INTERVALO_STATS_LIVE_CONTROL_MS = 1200;
+const INTERVALO_MIN_STATS_LIVE_CONTROL_MS = 250;
+let timeout_stats_live_control = null;
+let ultimo_envio_stats_live_control = 0;
 
 function obtenerConteoPalabrasControl(playerId) {
     const puntosEl = playerId === 2 ? puntos2 : puntos1;
@@ -1200,11 +1203,26 @@ function construirPayloadStatsLiveControl() {
     };
 }
 
-function emitirStatsLiveControl() {
+function ejecutarEnvioStatsLiveControl() {
     if (!socket || !socket.connected) return;
+    timeout_stats_live_control = null;
+    ultimo_envio_stats_live_control = Date.now();
     registrarTiempoEstadoActualControl(1);
     registrarTiempoEstadoActualControl(2);
     socket.emit("stats_live_actualizar", construirPayloadStatsLiveControl());
+}
+
+function emitirStatsLiveControl(opciones = {}) {
+    const inmediato = opciones && opciones.inmediato === true;
+    const espera = Math.max(0, INTERVALO_MIN_STATS_LIVE_CONTROL_MS - (Date.now() - ultimo_envio_stats_live_control));
+    if (inmediato || espera === 0) {
+        if (timeout_stats_live_control) clearTimeout(timeout_stats_live_control);
+        ejecutarEnvioStatsLiveControl();
+        return;
+    }
+    if (!timeout_stats_live_control) {
+        timeout_stats_live_control = setTimeout(ejecutarEnvioStatsLiveControl, espera);
+    }
 }
 
 window.emitirStatsLiveControl = emitirStatsLiveControl;
@@ -1218,9 +1236,10 @@ function iniciarStatsLiveControl() {
 }
 
 function detenerStatsLiveControl() {
-    if (!intervalo_stats_live_control) return;
-    clearInterval(intervalo_stats_live_control);
+    if (intervalo_stats_live_control) clearInterval(intervalo_stats_live_control);
+    if (timeout_stats_live_control) clearTimeout(timeout_stats_live_control);
     intervalo_stats_live_control = null;
+    timeout_stats_live_control = null;
 }
 
 function resetearHeatmap() {

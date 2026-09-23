@@ -942,6 +942,8 @@ let definicion3 = getEl("definicion2");
 let explicacion2 = getEl("explicacion2") || getEl("explicaciï¿½n2");
 let ultimo_texto1 = "";
 let ultimo_texto2 = "";
+let ultimo_texto_plano1 = "";
+let ultimo_texto_plano2 = "";
 let ultimo_paquete_texto1 = null;
 let ultimo_paquete_texto2 = null;
 let pendiente_texto1 = false;
@@ -5389,6 +5391,7 @@ const CLASES_FADE_TEXTAREA_ESPECTADOR = [
 const raf_degradado_textarea_espectador = new Map();
 const raf_lineas_texto_espectador = new Map();
 const firma_lineas_texto_espectador = new WeakMap();
+const geometria_lineas_texto_espectador = new WeakMap();
 let timeout_degradado_textos_espectador = null;
 let degradado_textarea_espectador_iniciado = false;
 let observadores_mutacion_textarea_espectador = [];
@@ -5489,9 +5492,15 @@ function medirAlturasLineasTextoEspectador(textarea, lineas) {
 function sincronizarLineasTextoEspectador(textarea) {
     const { inner } = configuracionLineasTextoEspectador(textarea);
     if (!textarea || !inner) return;
-    const lineas = lineasLogicasTextoEspectador(textarea);
     const estilos = window.getComputedStyle(textarea);
-    const firma = `${lineas.join("\u0000")}\u0001${textarea.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
+    const geometria = `${textarea.scrollHeight}\u0001${textarea.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
+    if (geometria_lineas_texto_espectador.get(textarea) === geometria) {
+        inner.style.transform = `translate3d(0, ${-Math.max(0, textarea.scrollTop || 0)}px, 0)`;
+        return;
+    }
+    geometria_lineas_texto_espectador.set(textarea, geometria);
+    const lineas = lineasLogicasTextoEspectador(textarea);
+    const firma = `${lineas.length}\u0001${textarea.scrollHeight}\u0001${textarea.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
     if (firma_lineas_texto_espectador.get(textarea) !== firma) {
         const alturas = medirAlturasLineasTextoEspectador(textarea, lineas);
         const fragmento = document.createDocumentFragment();

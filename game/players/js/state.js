@@ -199,10 +199,14 @@ function restaurarTextoGuardadoEnEditor() {
     texto.innerText = normalizarSaltosTextoGuardado(texto_guardado);
 }
 
-function guardarBorradorLocalEscritora(payload = null) {
+let timeout_borrador_escritora = null;
+let borrador_pendiente_escritora = null;
+const RETARDO_BORRADOR_ESCRITORA_MS = 350;
+
+function persistirBorradorLocalEscritora() {
     try {
-        const datos = payload && typeof payload === "object"
-            ? payload
+        const datos = borrador_pendiente_escritora && typeof borrador_pendiente_escritora === "object"
+            ? borrador_pendiente_escritora
             : {
                 text: texto ? texto.innerHTML : "",
                 texto_guardado: texto ? normalizarSaltosTextoGuardado(obtenerTextoPlanoConSaltos(texto)) : "",
@@ -213,6 +217,24 @@ function guardarBorradorLocalEscritora(payload = null) {
             saved_at: Date.now()
         }));
     } catch (_error) {}
+    borrador_pendiente_escritora = null;
+    timeout_borrador_escritora = null;
+}
+
+function guardarBorradorLocalEscritora(payload = null, opciones = {}) {
+    borrador_pendiente_escritora = payload && typeof payload === "object"
+        ? { ...payload }
+        : null;
+    if (opciones && opciones.inmediato === true) {
+        if (timeout_borrador_escritora) clearTimeout(timeout_borrador_escritora);
+        persistirBorradorLocalEscritora();
+        return;
+    }
+    if (timeout_borrador_escritora) clearTimeout(timeout_borrador_escritora);
+    timeout_borrador_escritora = setTimeout(
+        persistirBorradorLocalEscritora,
+        RETARDO_BORRADOR_ESCRITORA_MS
+    );
 }
 
 function cargarBorradorLocalEscritora() {
@@ -230,10 +252,21 @@ function cargarBorradorLocalEscritora() {
 }
 
 function limpiarBorradorLocalEscritora() {
+    if (timeout_borrador_escritora) clearTimeout(timeout_borrador_escritora);
+    timeout_borrador_escritora = null;
+    borrador_pendiente_escritora = null;
     try {
         window.sessionStorage.removeItem(BORRADOR_ESCRITORA_STORAGE_KEY);
     } catch (_error) {}
 }
+
+window.addEventListener("pagehide", persistirBorradorLocalEscritora);
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && borrador_pendiente_escritora) {
+        if (timeout_borrador_escritora) clearTimeout(timeout_borrador_escritora);
+        persistirBorradorLocalEscritora();
+    }
+});
 
 let raf_ultima_linea_visible_escritora = 0;
 let timeout_ultima_linea_visible_escritora = null;
@@ -353,10 +386,27 @@ const construirSugerenciaMusaHtmlEscritora = (payload = {}, palabraTexto = "", o
     const visible = capitalizarPalabraVisibleEscritora(palabraTexto);
     if (!visible) return "";
     const maldita = opciones.maldita === true;
+    const superbonus = normalizarSuperbonusInspiracionEscritora(payload);
     const valor = formatearTiempoPalabraAsignadaEscritora(payload, { maldita });
     const claseAutor = maldita ? "is-enemy" : "";
     const claseValor = maldita ? "palabra-tiempo--maldita" : "palabra-tiempo--bendita";
-    return `<span class="muse-suggestion${maldita ? " muse-suggestion--enemy" : ""}">${construirFirmaMusaHtmlEscritora(payload, claseAutor)}<span class="muse-suggestion__word-viewport"><span class="muse-suggestion__word">${escapeHtml(visible)}</span></span>${valor ? `<span class="palabra-tiempo ${claseValor}">${escapeHtml(valor)}</span>` : ""}</span>`;
+    const etiquetaSuperbonus = superbonus.activo
+        ? `<span class="palabra-tiempo palabra-tiempo--bendita superbonus-label">SUPERBONUS ×${superbonus.repeticiones}</span>`
+        : "";
+    return `<span class="muse-suggestion${maldita ? " muse-suggestion--enemy" : ""}${superbonus.activo ? " muse-suggestion--superbonus" : ""}">${construirFirmaMusaHtmlEscritora(payload, claseAutor)}<span class="muse-suggestion__word-viewport"><span class="muse-suggestion__word">${escapeHtml(visible)}</span></span>${etiquetaSuperbonus}${valor ? `<span class="palabra-tiempo ${claseValor}">${escapeHtml(valor)}</span>` : ""}</span>`;
+};
+
+const aplicarSuperbonusDefinicionEscritora = (payload = {}) => {
+    if (!definicion) return;
+    const superbonus = normalizarSuperbonusInspiracionEscritora(payload);
+    definicion.classList.toggle("definicion-superbonus", superbonus.activo);
+    if (superbonus.activo) {
+        definicion.dataset.superbonus = "true";
+        definicion.dataset.superbonusRepeticiones = String(superbonus.repeticiones);
+    } else {
+        delete definicion.dataset.superbonus;
+        delete definicion.dataset.superbonusRepeticiones;
+    }
 };
 
 const crearNodoFirmaMusaEscritora = (payload = {}, clase = "") => {
