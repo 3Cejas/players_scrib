@@ -119,6 +119,18 @@ test("muses request and show the wrapped instead of the provisional finished-wri
   assert.match(state, /function iniciarTemporizadorLectura[\s\S]*ui_partida_finalizada_musa[\s\S]*mostrarPostgameMusa\(\)/);
 });
 
+test("the postgame wrapped stays pinned after leaving the videogame result", () => {
+  const museState = read("game/public/players/js/state.js");
+  const controlActions = read("game/control/js/actions.js");
+
+  assert.match(museState, /postgame_resultado_videojuego_visto_musa/);
+  assert.match(museState, /modoAnterior === "puntuacion"[\s\S]*postgame_wrapped_fijado_musa = true/);
+  assert.match(museState, /ui_partida_finalizada_musa && postgame_wrapped_fijado_musa[\s\S]*mostrarPostgameMusa\(\)/);
+  assert.match(controlActions, /function prepararVistaEspectadorParaTeleprompter\(\)[\s\S]*vista_espectador_modo = "partida"[\s\S]*cambiar_vista_espectador_modo/);
+  assert.match(controlActions, /function toggleTeleprompter[\s\S]*prepararVistaEspectadorParaTeleprompter\(\)/);
+  assert.match(controlActions, /function teleprompterCargarTexto[\s\S]*prepararVistaEspectadorParaTeleprompter\(\)/);
+});
+
 test("the finished writer layout reserves a separate row for its status badge", () => {
   const state = read("game/players/js/state.js");
   const css = read("game/css/dashboard-players.css");

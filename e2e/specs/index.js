@@ -2344,15 +2344,9 @@ const coreSpecs = [
       );
       await ctx.evaluate("musa1", () => {
         window.eval("terminado = true");
-        window.eval("intentarMostrarRegaloPdfPendiente()");
+        window.eval("setUiPartidaFinalizadaMusa(true)");
       });
-      await ctx.waitFor(
-        "completed muse sees the PDF gift",
-        async () => (await readMusaPdfGiftState(ctx, "musa1")).visible,
-        5000
-      );
-      await ctx.click("musa1", "#regalo_btn");
-      await ctx.waitForVisible("musa1", "#musa_postgame", true, "postgame opens after gift download", 5000);
+      await ctx.waitForVisible("musa1", "#musa_postgame", true, "postgame opens when the match finishes", 5000);
       const own = await ctx.evaluate("musa1", () => ({
         sent: Number(document.querySelector("#musa_postgame_enviadas")?.textContent || 0),
         text: document.querySelector("#musa_postgame_texto")?.textContent || ""
@@ -5237,6 +5231,95 @@ const coreSpecs = [
           && state.teleprompter.state.scroll > 0,
         10000
       );
+    }
+  },
+  {
+    name: "postgame-teleprompter-independence-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "musa1"]);
+      await configureFastControlPanel(ctx, {
+        tiempo_modos: 60,
+        tiempo_cambio_palabras: 30,
+        modes: ["palabras bonus"]
+      });
+      await startGame(ctx);
+      await ctx.setWriterText("writer1", "Texto azul listo para el teleprompter postpartida");
+      await ctx.setWriterText("writer2", "Texto rojo listo para el cierre postpartida");
+      await ctx.waitForState(
+        "postgame texts stored before finishing",
+        (state) => state.textos[1].plano.includes("teleprompter postpartida")
+          && state.textos[2].plano.includes("cierre postpartida"),
+        10000
+      );
+
+      const target = await readMusaPdfGiftState(ctx, "musa1");
+      ctx.assert(target.player === 1 || target.player === 2, "postgame muse should have an assigned team");
+      const giftAck = await emitTestSocketAck(ctx, "regalo_pdf_musas", {
+        player: target.player,
+        client_id: target.clientId,
+        musa_nombre: "E2E_POSTGAME",
+        filename: "postgame-view-independence.pdf",
+        data: "data:application/pdf;base64,JVBERi0xLjQKJSVFT0YK"
+      }, 5000);
+      ctx.assert(giftAck?.ok === true, `server should accept the postgame gift (${JSON.stringify(giftAck)})`);
+
+      await ctx.invoke("control", "fin_partida_global");
+      await ctx.waitForState(
+        "finished match automatically opens videogame result",
+        (state) => state.partida.fin_del_juego === true
+          && state.espectador.override === "puntuacion"
+          && state.puntuacion_final?.disponible === true,
+        12000
+      );
+      await ctx.waitForVisible("spectator", "#puntuacion_espectador", true, "spectator videogame result visible", 10000);
+      await ctx.waitForVisible("musa1", "#resultado_videojuego_musa", true, "muse videogame result visible", 10000);
+
+      await ctx.invoke("control", "ocultarPuntuacionFinal");
+      await ctx.waitForState(
+        "leaving videogame result returns spectator base view to match",
+        (state) => state.espectador.override === "partida",
+        8000
+      );
+      await ctx.waitForVisible("musa1", "#musa_postgame", true, "muse wrapped opens after the result", 10000);
+
+      await ctx.invoke("control", "activar_temporizador_gigante");
+      await ctx.waitForVisible("spectator", "#temporizador_gigante", true, "spectator representation timer active", 8000);
+      await ctx.waitForVisible("musa1", "#temporizador_musa", true, "muse compact representation timer active", 8000);
+
+      await ctx.invoke("control", "toggleTeleprompter");
+      await ctx.invoke("control", "teleprompterCargarTexto", 1);
+      await ctx.waitForState(
+        "teleprompter stays loaded after postgame result",
+        (state) => state.espectador.override === "partida"
+          && state.teleprompter.state.visible === true
+          && state.teleprompter.state.text.includes("teleprompter postpartida"),
+        10000
+      );
+      await ctx.waitForVisible("spectator", "#teleprompter_overlay", true, "postgame teleprompter visible", 10000);
+      const spectatorOverlayState = await ctx.evaluate("spectator", () => ({
+        timerActive: document.querySelector("#temporizador_gigante")?.classList.contains("activo") === true,
+        timerCompact: document.querySelector("#temporizador_gigante")?.classList.contains("compacto") === true,
+        scoreVisible: window.getComputedStyle(document.querySelector("#puntuacion_espectador")).display !== "none"
+      }));
+      ctx.assert(spectatorOverlayState.timerActive, "the representation timer must keep running with teleprompter");
+      ctx.assert(spectatorOverlayState.timerCompact, "the spectator timer must become compact over teleprompter");
+      ctx.assert(!spectatorOverlayState.scoreVisible, "videogame result must not return over teleprompter");
+      await ctx.waitForVisible("musa1", "#musa_postgame", true, "muse wrapped persists with teleprompter", 6000);
+      await ctx.waitForVisible("musa1", "#temporizador_musa", true, "muse timer persists with wrapped", 6000);
+
+      await ctx.invoke("control", "toggleTeleprompter");
+      await ctx.invoke("control", "cambiar_vista_espectador", "stats");
+      await ctx.waitForState(
+        "spectator can move to another postgame view",
+        (state) => state.espectador.override === "stats" && state.teleprompter.state.visible === false,
+        8000
+      );
+      await ctx.sleep(1000);
+      const stableState = await ctx.getState();
+      ctx.assert(stableState.espectador.override === "stats", "spectator view must not jump back to videogame result");
+      await ctx.waitForVisible("spectator", "#stats_espectador", true, "postgame stats view remains visible", 8000);
+      await ctx.waitForVisible("musa1", "#musa_postgame", true, "muse wrapped ignores later spectator views", 6000);
+      await ctx.waitForVisible("musa1", "#temporizador_musa", true, "muse timer remains visible on wrapped", 6000);
     }
   },
   {

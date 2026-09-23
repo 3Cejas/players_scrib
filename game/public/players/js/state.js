@@ -163,6 +163,8 @@ let text_progress = getEl("text-progress");
 let bar_progress = getEl("bar-progress");
 let ui_partida_activa_musa = false;
 let ui_partida_finalizada_musa = false;
+let postgame_resultado_videojuego_visto_musa = false;
+let postgame_wrapped_fijado_musa = false;
 const musa_partida_final = getEl("musa_partida_final");
 const musa_partida_final_escritxr = getEl("musa_partida_final_escritxr");
 const musa_view_transition = getEl("musa_view_transition");
@@ -225,6 +227,8 @@ function setUiPartidaActivaMusa(activa) {
     ui_partida_activa_musa = Boolean(activa);
     if (ui_partida_activa_musa) {
         ui_partida_finalizada_musa = false;
+        postgame_resultado_videojuego_visto_musa = false;
+        postgame_wrapped_fijado_musa = false;
         if (typeof cerrarPreShowMusaPorTutorial === "function") {
             cerrarPreShowMusaPorTutorial();
         }
@@ -235,7 +239,14 @@ function setUiPartidaActivaMusa(activa) {
 function setUiPartidaFinalizadaMusa(finalizada) {
     let postgameMostrado = false;
     ui_partida_finalizada_musa = Boolean(finalizada);
+    if (!ui_partida_finalizada_musa) {
+        postgame_resultado_videojuego_visto_musa = false;
+        postgame_wrapped_fijado_musa = false;
+    }
     if (ui_partida_finalizada_musa) {
+        if (vista_modo_remota_musa === "puntuacion") {
+            postgame_resultado_videojuego_visto_musa = true;
+        }
         ui_partida_activa_musa = false;
         if (typeof cerrarPreShowMusaPorTutorial === "function") {
             cerrarPreShowMusaPorTutorial();
@@ -1798,7 +1809,10 @@ function aplicarPostgameMusaDesdeServidor(payload = {}) {
     regalo_postgame_data = postgame;
     regalo_postgame_debug = false;
     cancelarSolicitudPostgameMusa();
-    if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida") {
+    if (
+        ui_partida_finalizada_musa
+        && (postgame_wrapped_fijado_musa || vista_modo_remota_musa === "partida")
+    ) {
         ocultarRegaloPdf();
         ocultarCierrePartidaMusa();
         if (musa_postgame?.classList.contains("musa-postgame--visible")) pintarPostgameMusa();
@@ -1810,7 +1824,10 @@ function aplicarPostgameMusaDesdeServidor(payload = {}) {
 function solicitarPostgameMusa() {
     if (!ui_partida_finalizada_musa) return false;
     if (regalo_postgame_data) {
-        if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida") mostrarPostgameMusa();
+        if (
+            ui_partida_finalizada_musa
+            && (postgame_wrapped_fijado_musa || vista_modo_remota_musa === "partida")
+        ) mostrarPostgameMusa();
         return true;
     }
     if (solicitud_postgame_musa_en_curso || solicitud_postgame_musa_intentos >= 4) return false;
@@ -1876,7 +1893,10 @@ function mostrarRegaloPdf(payload) {
         regalo_pdf_pendiente = null;
         regalo_pdf.classList.remove("regalo-pdf--visible", "regalo-pdf--claimed");
         regalo_pdf.setAttribute("aria-hidden", "true");
-        if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida") {
+        if (
+            ui_partida_finalizada_musa
+            && (postgame_wrapped_fijado_musa || vista_modo_remota_musa === "partida")
+        ) {
             if (musa_postgame?.classList.contains("musa-postgame--visible")) pintarPostgameMusa();
             else mostrarPostgameMusa();
         }
@@ -2817,6 +2837,16 @@ function sincronizarVistaDeliberacionMusa(opciones = {}) {
         pantalla.hidden = true;
         pantalla.setAttribute("aria-hidden", "true");
     });
+    if (ui_partida_finalizada_musa && postgame_wrapped_fijado_musa) {
+        ocultarRegaloPdf();
+        ocultarCreditosMusa();
+        if (regalo_postgame_data) {
+            if (musa_postgame?.classList.contains("musa-postgame--visible")) pintarPostgameMusa();
+            else mostrarPostgameMusa();
+        }
+        else solicitarPostgameMusa();
+        return false;
+    }
     let activa = null;
     if (vista_modo_remota_musa === "deliberacion") activa = deliberacion_musa;
     else if (vista_modo_remota_musa === "puntuacion") {
@@ -2952,6 +2982,7 @@ function sincronizarVisibilidadCreditosMusa(forzarReinicio = false) {
         creditos_musa
         && estado_creditos_musa.mostrar
         && vista_modo_remota_musa === "creditos"
+        && !(ui_partida_finalizada_musa && postgame_wrapped_fijado_musa)
     );
     if (!visible) {
         ocultarCreditosMusa();
@@ -3508,7 +3539,7 @@ function iniciarTemporizadorLectura(duracion, finTimestamp) {
         ui_partida_finalizada_musa
         && regalo_postgame_data
         && !regalo_postgame_debug
-        && vista_modo_remota_musa === "partida"
+        && (postgame_wrapped_fijado_musa || vista_modo_remota_musa === "partida")
     ) {
         mostrarPostgameMusa();
     }
@@ -4747,6 +4778,17 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     const modoAnterior = vista_modo_remota_musa;
     const modo = typeof payload.modo === "string" ? payload.modo.trim().toLowerCase() : "";
     vista_modo_remota_musa = modo || "tutorial";
+    if (ui_partida_finalizada_musa && vista_modo_remota_musa === "puntuacion") {
+        postgame_resultado_videojuego_visto_musa = true;
+    }
+    if (
+        ui_partida_finalizada_musa
+        && postgame_resultado_videojuego_visto_musa
+        && modoAnterior === "puntuacion"
+        && vista_modo_remota_musa !== "puntuacion"
+    ) {
+        postgame_wrapped_fijado_musa = true;
+    }
     if (
         (modoAnterior === "resultado_jurado" || modoAnterior === "resultado_final")
         && vista_modo_remota_musa !== modoAnterior
@@ -4788,7 +4830,8 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
     aplicarVisibilidadPreShowMusa();
     sincronizarVisibilidadCreditosMusa();
     instrucciones_musa?.setState({
-        visible: vista_modo_remota_musa === "instrucciones",
+        visible: vista_modo_remota_musa === "instrucciones"
+            && !(ui_partida_finalizada_musa && postgame_wrapped_fijado_musa),
         step: instrucciones_slide_step_musa,
         credits: estado_creditos_musa.creditos,
         perspective: "muse",
@@ -4798,7 +4841,11 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
         .includes(vista_modo_remota_musa);
     const regaloVisible = Boolean(regalo_pdf?.classList.contains("regalo-pdf--visible"));
     const postgameVisible = Boolean(musa_postgame?.classList.contains("musa-postgame--visible"));
-    if (ui_partida_finalizada_musa && vista_modo_remota_musa === "partida" && !postgameVisible) {
+    if (
+        ui_partida_finalizada_musa
+        && (postgame_wrapped_fijado_musa || vista_modo_remota_musa === "partida")
+        && !postgameVisible
+    ) {
         if (regalo_postgame_data) {
             marcarRegaloPdfMusaAbierto({
                 data: regalo_pdf_ultimo_data,

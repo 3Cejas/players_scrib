@@ -308,6 +308,16 @@ let temporizador_gigante_restante = 0;
 let temporizador_gigante_duracion = 0;
 let temporizador_gigante_fin_ts = 0;
 
+function actualizarPresentacionTemporizadorGiganteEspectador() {
+    const activo = temporizador_gigante.classList.contains("activo");
+    const teleprompterActivo = Boolean(
+        teleprompter_estado
+        && (teleprompter_estado.visible || teleprompter_estado.preparing)
+    );
+    const hayOtraVista = vista_espectador_modo_resuelta !== "partida";
+    temporizador_gigante.classList.toggle("compacto", activo && (teleprompterActivo || hayOtraVista));
+}
+
 function actualizarTemporizadorGigante() {
     if (temporizador_gigante_fin_ts > 0) {
         temporizador_gigante_restante = Math.max(0, Math.ceil((temporizador_gigante_fin_ts - Date.now()) / 1000));
@@ -336,8 +346,10 @@ function detenerTemporizadorGigante() {
     temporizador_gigante.classList.remove("activo");
     temporizador_gigante.classList.remove("fin");
     temporizador_gigante.classList.remove("urgente");
+    temporizador_gigante.classList.remove("compacto");
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = true;
+    actualizarPresentacionTemporizadorGiganteEspectador();
     controlador_audio_vista_espectador?.setMode(vista_espectador_modo_resuelta || "partida");
 }
 
@@ -350,6 +362,7 @@ function iniciarTemporizadorGigante(duracion, finTimestamp = null) {
     temporizador_gigante.classList.remove("fin");
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = true;
+    actualizarPresentacionTemporizadorGiganteEspectador();
     // El temporizador es una escena prioritaria: si venimos del videotutorial o
     // de la narración, recupera el volumen antes de seleccionar su música.
     controlador_audio_vista_espectador?.setDucked(false);
@@ -378,6 +391,7 @@ function finalizarTemporizadorGigante() {
     temporizador_gigante.classList.remove("urgente");
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = false;
+    actualizarPresentacionTemporizadorGiganteEspectador();
 }
 
 function aplicarEstadoTemporizadorGigante(payload = {}) {
@@ -575,7 +589,7 @@ const emitirTeleprompterAck = (loadId) => {
         rendered,
         overlayActive,
         timerActive,
-        visible: overlayActive && !timerActive,
+        visible: overlayActive,
         textLength: String(teleprompter_estado.text || "").length
     });
 };
@@ -632,6 +646,7 @@ const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
     }
+    actualizarPresentacionTemporizadorGiganteEspectador();
     if (teleprompter_preparing) {
         const preparando = Boolean(teleprompter_estado.preparing && !teleprompter_estado.visible);
         teleprompter_preparing.hidden = !preparando;
@@ -4952,6 +4967,7 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         resultado_final_timeout_revelado_espectador = null;
     }
     vista_espectador_modo_resuelta = modo;
+    actualizarPresentacionTemporizadorGiganteEspectador();
     instrucciones_espectador?.setState({
         visible: modo === "instrucciones",
         step: instrucciones_slide_step_remoto,

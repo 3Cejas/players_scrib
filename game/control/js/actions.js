@@ -3238,10 +3238,6 @@ function actualizarBotonesVistaPrincipalControl() {
 }
 
 function aplicarVistaPrincipalControl(vista, opciones = {}) {
-    if (temporizador_gigante_activo) {
-        temporizador_gigante_activo = false;
-        socket.emit("temporizador_gigante_detener", {});
-    }
     const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "tutorial";
     const activarDetonadores = destino === "detonadores";
     const modoEspectador = destino === "detonadores" || destino === "partida" ? "partida" : destino;
@@ -3796,10 +3792,6 @@ function actualizarBotonesVistaEspectadorControl() {
 }
 
 function cambiar_vista_espectador(modo) {
-    if (temporizador_gigante_activo) {
-        temporizador_gigante_activo = false;
-        socket.emit("temporizador_gigante_detener", {});
-    }
     const destino = normalizarModoVistaEspectador(modo);
     const siguiente = vista_espectador_modo === destino ? "partida" : destino;
     if (siguiente !== "partida" && vista_calentamiento) {
@@ -3826,10 +3818,6 @@ function navegarSlidesStatsControl(direccion) {
 
 function mostrarPuntuacionFinal() {
     if (!socket || typeof socket.emit !== "function") return;
-    if (temporizador_gigante_activo) {
-        temporizador_gigante_activo = false;
-        socket.emit("temporizador_gigante_detener", {});
-    }
     if (vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
@@ -3967,10 +3955,6 @@ function mostrarResultadoJurado() {
         socket.emit("pedir_jurado_resultado");
         return;
     }
-    if (temporizador_gigante_activo) {
-        temporizador_gigante_activo = false;
-        socket.emit("temporizador_gigante_detener", {});
-    }
     cerrarVideotutorialDesdeVistaControl();
     socket.emit("mostrar_resultado_jurado", {}, (respuesta = {}) => {
         if (respuesta.ok === true) return;
@@ -4092,10 +4076,6 @@ function mostrarCreditosEspectador() {
         return;
     }
 
-    if (temporizador_gigante_activo) {
-        temporizador_gigante_activo = false;
-        socket.emit("temporizador_gigante_detener", {});
-    }
     if (vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
@@ -4868,6 +4848,20 @@ function emitirTeleprompter(inmediato = false) {
     }, 60);
 }
 
+function prepararVistaEspectadorParaTeleprompter() {
+    if (vista_calentamiento) {
+        vista_calentamiento = false;
+        emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
+    }
+    cerrarVideotutorialDesdeVistaControl();
+    vista_principal_control = "partida";
+    if (vista_espectador_modo !== "partida") {
+        vista_espectador_modo = "partida";
+        actualizarBotonesVistaEspectadorControl();
+        socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
+    }
+}
+
 function toggleTeleprompter(forzarCerrar = false) {
     const estaVisible = teleprompter_visible;
     if (forzarCerrar && !estaVisible) {
@@ -4875,6 +4869,7 @@ function toggleTeleprompter(forzarCerrar = false) {
     }
     const abrirTeleprompter = forzarCerrar ? false : !estaVisible;
     if (abrirTeleprompter) {
+        prepararVistaEspectadorParaTeleprompter();
         solicitarTextosRepresentacionControl();
         panel_control_previo_teleprompter = parametros_visibles
             ? "parametros"
@@ -4927,6 +4922,7 @@ function teleprompterCargarTexto(jugador) {
     const source = jugador === 2 ? 2 : 1;
     const etiqueta = source === 2 ? "ROJO" : "AZUL";
     const loadId = ++teleprompter_load_seq;
+    prepararVistaEspectadorParaTeleprompter();
     teleprompter_state.text = (texto || "").trim();
     teleprompter_state.scroll = 0;
     teleprompter_state.source = source;

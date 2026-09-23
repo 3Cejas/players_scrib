@@ -48,7 +48,9 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /vista_espectador_modo === "resultado_jurado" \|\| juradoEnResultadoFinal/);
   assert.match(actions, /jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL[\s\S]*mostrar_resultado_final/);
   assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
-  assert.match(actions, /function mostrarCreditosEspectador\(\)[\s\S]*temporizador_gigante_detener/);
+  const mostrarCreditos = actions.slice(actions.indexOf("function mostrarCreditosEspectador"), actions.indexOf("function emitirTeleprompter"));
+  assert.doesNotMatch(mostrarCreditos, /temporizador_gigante_detener/);
+  assert.match(actions, /function actualizarPresentacionTemporizadorGiganteEspectador|function prepararVistaEspectadorParaTeleprompter/);
   assert.match(sockets, /socket\.on\('jurado_resultado_estado'/);
   assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*partida_finalizada_control = true[\s\S]*actualizarBotonResultadoVideojuegoControl\(true\)[\s\S]*activarSeccionControl\("juego"\)/);
   assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*modo_actual = "";[\s\S]*actualizarCabeceraModoControl\(\{ modo: "", segundos: 0, duracion: 0, restante: 0 \}\)/);
