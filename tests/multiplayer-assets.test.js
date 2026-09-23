@@ -58,7 +58,7 @@ const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
 const ACTOR_SOURCE_CSS_VERSION = "20260923c";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
-const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260923a";
+const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260923b";
 const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260923d";
 const TECHNICIAN_VERSION = "20260923d";
 
@@ -1583,6 +1583,13 @@ test("actor annotations stay away from writers and synchronize through the dedic
   assert.match(annotations, /resolveAnnotationRange\(annotation, plainText\)/);
   assert.match(annotations, /function resolveRangeAfterTextChange\(rangeInfo, previousText, nextText\)/);
   assert.match(annotations, /function restoreBrowserSelection\(selectionInfo, previousText, nextText\)/);
+  assert.match(annotations, /function beginSelectionGesture\(event\)/);
+  assert.match(annotations, /function endSelectionGesture\(\)/);
+  assert.match(annotations, /selectionGestureActive \|\| selectionReleaseFrame/);
+  assert.match(annotations, /pendingRemoteHtml = contenido;/);
+  assert.match(annotations, /textEl\.addEventListener\("pointerdown", beginSelectionGesture, true\)/);
+  assert.match(annotations, /document\.addEventListener\("pointerup", endSelectionGesture, true\)/);
+  assert.match(annotations, /flushPendingRemoteHtml\(\);/);
   assert.match(annotations, /preserveSelection:\s*true/);
   assert.match(annotations, /rebaseAnnotations:\s*true/);
   assert.match(annotations, /selection\.removeAllRanges\(\)/);

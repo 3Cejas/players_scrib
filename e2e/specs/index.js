@@ -4555,6 +4555,74 @@ const coreSpecs = [
     }
   },
   {
+    name: "actor-selection-survives-live-writing",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "actor1"]);
+      await startGame(ctx);
+      const selectedPhrase = "fragmento seleccionable";
+      const initialText = `Inicio ${selectedPhrase} final`;
+      await ctx.setWriterText("writer1", initialText);
+      await ctx.waitForText("actor1", "#texto", (text) => text.includes(selectedPhrase), "actor sees selectable text");
+
+      await ctx.evaluate("actor1", () => {
+        const text = document.querySelector("#texto");
+        text.dispatchEvent(new PointerEvent("pointerdown", {
+          bubbles: true,
+          button: 0,
+          pointerId: 1,
+          pointerType: "mouse"
+        }));
+      });
+      for (let index = 1; index <= 12; index += 1) {
+        await ctx.setWriterText("writer1", `${initialText} ${index}`);
+      }
+      await ctx.evaluate("actor1", (phrase) => {
+        const text = document.querySelector("#texto");
+        const node = Array.from(text.childNodes).find((item) => item.nodeType === Node.TEXT_NODE);
+        if (!node) throw new Error("Missing actor text node while selecting");
+        const start = node.nodeValue.indexOf(phrase);
+        if (start < 0) throw new Error("Selectable phrase disappeared during pointer drag");
+        const range = document.createRange();
+        range.setStart(node, start);
+        range.setEnd(node, start + phrase.length);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.dispatchEvent(new PointerEvent("pointerup", {
+          bubbles: true,
+          button: 0,
+          pointerId: 1,
+          pointerType: "mouse"
+        }));
+      }, selectedPhrase);
+
+      await ctx.waitForText("actor1", "#texto", (text) => text.endsWith("12"), "actor flushes the newest writer text");
+      await ctx.waitFor(
+        "actor selection survives continuous writer updates",
+        async () => ctx.evaluate("actor1", (phrase) => (
+          window.getSelection()?.toString() === phrase
+          && window.ScribActorAnnotations?.hasSelection?.() === true
+        ), selectedPhrase),
+        5000
+      );
+
+      await ctx.setWriterText("writer1", `${initialText} 12 todavía escribiendo`);
+      await ctx.waitForText("actor1", "#texto", (text) => text.includes("todavía escribiendo"), "actor keeps receiving text after selection");
+      const selectionAfterUpdate = await ctx.evaluate("actor1", () => window.getSelection()?.toString() || "");
+      ctx.assert(selectionAfterUpdate === selectedPhrase, "actor selection should remain stable after another live update");
+
+      await ctx.waitForVisible("actor1", "#actor_annotation_toolbar", true, "actor annotation toolbar stays available");
+      await ctx.click("actor1", '[data-annotation-action="underline"]');
+      await ctx.waitFor(
+        "actor can underline the selected live text",
+        async () => ctx.evaluate("actor1", (phrase) => Array.from(
+          document.querySelectorAll("#texto .actor-annotation-mark--underline")
+        ).some((node) => node.textContent === phrase), selectedPhrase),
+        5000
+      );
+    }
+  },
+  {
     name: "pause-and-tertulia-resume-core",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["control", "writer1", "writer2", "actor1", "actor2"]);

@@ -21,6 +21,9 @@
     let noteEditorSelection = null;
     let noteEditorAnnotationId = "";
     let selectionFrame = 0;
+    let selectionGestureActive = false;
+    let selectionReleaseFrame = 0;
+    let pendingRemoteHtml = null;
     let storageKey = "";
     let lastSavedAnnotationsJson = "";
     let syncChannel = null;
@@ -938,7 +941,7 @@
         }
     }
 
-    function setRemoteHtml(html) {
+    function applyRemoteHtml(html) {
         const previousPlainText = textEl ? getPlainText(textEl) : "";
         const selectionInfo = readCurrentSelection();
         baseHtml = String(html || "");
@@ -948,6 +951,47 @@
             preserveSelection: true,
             rebaseAnnotations: true
         });
+    }
+
+    function flushPendingRemoteHtml() {
+        if (selectionGestureActive || selectionReleaseFrame || pendingRemoteHtml === null) return false;
+        const html = pendingRemoteHtml;
+        pendingRemoteHtml = null;
+        applyRemoteHtml(html);
+        return true;
+    }
+
+    function beginSelectionGesture(event) {
+        if (event && Number.isFinite(Number(event.button)) && Number(event.button) !== 0) return;
+        selectionGestureActive = true;
+        if (selectionReleaseFrame) {
+            window.cancelAnimationFrame(selectionReleaseFrame);
+            selectionReleaseFrame = 0;
+        }
+    }
+
+    function endSelectionGesture() {
+        if (!selectionGestureActive && !selectionReleaseFrame) return;
+        selectionGestureActive = false;
+        if (selectionReleaseFrame) window.cancelAnimationFrame(selectionReleaseFrame);
+        // La selección del navegador se consolida después de pointerup. Esperar
+        // un frame evita que una pulsación remota sustituya los nodos mientras
+        // el intérprete todavía está arrastrando para seleccionar.
+        selectionReleaseFrame = window.requestAnimationFrame(() => {
+            selectionReleaseFrame = 0;
+            flushPendingRemoteHtml();
+            scheduleSelectionRefresh();
+        });
+    }
+
+    function setRemoteHtml(html) {
+        const contenido = String(html || "");
+        if (selectionGestureActive || selectionReleaseFrame) {
+            pendingRemoteHtml = contenido;
+            return false;
+        }
+        applyRemoteHtml(contenido);
+        return true;
     }
 
     function switchPlayer(nextPlayer) {
@@ -1017,6 +1061,19 @@
         if (noteCancelEl) {
             noteCancelEl.addEventListener("click", closeNoteEditor);
         }
+
+        if (typeof window.PointerEvent === "function") {
+            textEl.addEventListener("pointerdown", beginSelectionGesture, true);
+            document.addEventListener("pointerup", endSelectionGesture, true);
+            document.addEventListener("pointercancel", endSelectionGesture, true);
+        } else {
+            textEl.addEventListener("mousedown", beginSelectionGesture, true);
+            document.addEventListener("mouseup", endSelectionGesture, true);
+            textEl.addEventListener("touchstart", beginSelectionGesture, { capture: true, passive: true });
+            document.addEventListener("touchend", endSelectionGesture, true);
+            document.addEventListener("touchcancel", endSelectionGesture, true);
+        }
+        window.addEventListener("blur", endSelectionGesture);
 
         document.addEventListener("selectionchange", scheduleSelectionRefresh);
         window.addEventListener("resize", scheduleSelectionRefresh);
