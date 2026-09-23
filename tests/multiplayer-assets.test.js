@@ -11,7 +11,7 @@ const PLAYER_I18N_VERSION = "20260917c";
 const PRE_SHOW_VERSION = "20260824b";
 const MUSE_AUTHOR_VERSION = "20260824c";
 const GAME_HUD_VERSION = "20260923e";
-const COMPETITION_VERSION = "20260922g";
+const COMPETITION_VERSION = "20260923a";
 const INSPIRATION_VERSION = "20260905d";
 const CONTROL_VIDEO_VERSION = "20260923a";
 const CONTROL_NARRATION_VERSION = "20260920a";
@@ -35,9 +35,9 @@ const SCORE_ASSET_VERSION = "20260903e";
 const LEVEL_TRANSITION_VERSION = "20260921c";
 const LEVEL_TRANSITION_SCRIPT_VERSION = "20260921c";
 const PLAYER_ACTIONS_VERSION = "20260921g";
-const PLAYER_STATE_VERSION = "20260923e";
+const PLAYER_STATE_VERSION = "20260923f";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260923d";
-const SPECTATOR_SOCKET_EVENTS_VERSION = "20260923c";
+const SPECTATOR_SOCKET_EVENTS_VERSION = "20260923d";
 const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260923a";
 const JURY_SOCKET_EVENTS_VERSION = "20260923a";
@@ -1078,7 +1078,8 @@ test("writer viewport recalculates around growing text and keeps the complete le
   assert.match(state, /distanciaAlFinal[\s\S]*altoLinea \* 2\.5/);
   assert.match(state, /new MutationObserver\(\(\) => \{[\s\S]*programarLineasTextoEscritora\(\);[\s\S]*asegurarUltimaLineaVisibleEscritora\(\);/);
   assert.match(state, /texto\.addEventListener\("input"[\s\S]*asegurarUltimaLineaVisibleEscritora\(\)/);
-  assert.match(state, /timeout_ultima_linea_visible_escritora[\s\S]*420/);
+  assert.doesNotMatch(state, /timeout_ultima_linea_visible_escritora/);
+  assert.match(state, /caretRect\.bottom > limiteInferior[\s\S]*texto\.scrollTop \+ \(\(caretRect\.bottom - limiteInferior\) \/ escalaVisual\)/);
   const inputStart = state.indexOf('texto.addEventListener("input"');
   const socketInputStart = read("game/players/js/socket-events.js").indexOf('texto.addEventListener("input"');
   assert.ok(inputStart >= 0 && socketInputStart >= 0);
@@ -1089,6 +1090,7 @@ test("spectator texts use the projector width and keep synchronized line numbers
   const html = read("game/spectator/index.html");
   const css = read("game/css/dashboard-players.css");
   const state = read("game/spectator/js/state.js");
+  const socketEvents = read("game/spectator/js/socket-events.js");
 
   assert.match(html, /id="spectator_line_numbers_j1"[\s\S]*id="spectator_line_numbers_inner_j1"[\s\S]*id="texto"/);
   assert.match(html, /id="spectator_line_numbers_j2"[\s\S]*id="spectator_line_numbers_inner_j2"[\s\S]*id="texto1"/);
@@ -1105,6 +1107,7 @@ test("spectator texts use the projector width and keep synchronized line numbers
   assert.match(state, /function lineasLogicasTextoEspectador\(textarea\)[\s\S]*nodo\.tagName === "BR"[\s\S]*tagsSalto\.has\(nodo\.tagName\)/);
   assert.match(state, /inner\.style\.transform = `translate3d\(0, \$\{-Math\.max\(0, textarea\.scrollTop \|\| 0\)\}px, 0\)`/);
   assert.match(state, /MutationObserver[\s\S]*programarLineasTextoEspectador\(textarea\)/);
+  assert.match(socketEvents, /function ajustarScrollPorRect[\s\S]*contenedor\.scrollTop\s*\+\s*\(\(rect\.top - contRect\.top\) \/ escalaVisual\)/);
 });
 
 test("spectator hides pre-game branding throughout countdown and active match", () => {
@@ -1467,6 +1470,7 @@ test("active spectator layout reclaims hidden branding space and keeps compact t
   assert.match(css, /#contenedor_espectador \.spectator-meta-wrap\s*\{[^}]*grid-area:\s*meta;[^}]*margin-top:\s*0;/);
   assert.match(css, /spectator-meta-wrap \.marcador-equipo[\s\S]*padding-block:\s*clamp\(8px, 1vh, 12px\)/);
   assert.match(competition, /data-role="spectator"\] \.scrib-competition-leader\{display:none!important\}/);
+  assert.match(competition, /data-role="writer"\] \.scrib-competition-leader,[\s\S]*data-role="control"\] \.scrib-competition-leader\{display:none!important\}/);
   assert.match(css, /font-size:\s*clamp\([\s\S]{0,180}18px \* var\(--spectator-text-scale[\s\S]{0,180}60px \* var\(--spectator-text-scale/);
   assert.match(state, /payload, "escala_texto"/);
 });

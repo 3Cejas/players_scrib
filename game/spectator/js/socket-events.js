@@ -2873,7 +2873,15 @@ function ajustarScrollPorRect(contenedor, rect) {
         16
     );
     const padding = lineHeight * 0.2;
-    const target = (rect.top - contRect.top) - (contenedor.clientHeight - lineHeight - padding);
+    // rect ya incluye el desplazamiento visual producido por scrollTop. Para
+    // obtener una posición absoluta dentro del contenido hay que sumar el
+    // scroll actual; sin ello cada actualización alternaba entre dos alturas.
+    const escalaVisual = contenedor.clientHeight > 0
+        ? Math.max(0.01, contRect.height / contenedor.clientHeight)
+        : 1;
+    const target = contenedor.scrollTop
+        + ((rect.top - contRect.top) / escalaVisual)
+        - (contenedor.clientHeight - lineHeight - padding);
     const maxScroll = Math.max(0, contenedor.scrollHeight - contenedor.clientHeight);
     contenedor.scrollTop = Math.max(0, Math.min(target, maxScroll));
 }

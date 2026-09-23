@@ -269,7 +269,6 @@ document.addEventListener("visibilitychange", () => {
 });
 
 let raf_ultima_linea_visible_escritora = 0;
-let timeout_ultima_linea_visible_escritora = null;
 
 function caretEstaAlFinalTextoEscritora() {
     if (!texto) return false;
@@ -300,26 +299,47 @@ function asegurarUltimaLineaVisibleEscritora({ forzar = false } = {}) {
     if (raf_ultima_linea_visible_escritora) {
         cancelAnimationFrame(raf_ultima_linea_visible_escritora);
     }
-    if (timeout_ultima_linea_visible_escritora) {
-        clearTimeout(timeout_ultima_linea_visible_escritora);
-    }
-    const llevarAlFinal = () => {
-        texto.scrollTop = Math.max(0, texto.scrollHeight - texto.clientHeight);
+    raf_ultima_linea_visible_escritora = requestAnimationFrame(() => {
+        raf_ultima_linea_visible_escritora = 0;
+        const maxScroll = Math.max(0, texto.scrollHeight - texto.clientHeight);
+        if (forzar) {
+            texto.scrollTop = maxScroll;
+        } else {
+            const selection = window.getSelection();
+            const range = selection && selection.rangeCount > 0
+                ? selection.getRangeAt(0).cloneRange()
+                : null;
+            const rects = range && range.collapsed && texto.contains(range.startContainer)
+                ? Array.from(range.getClientRects())
+                : [];
+            const caretRect = rects.length > 0 ? rects[rects.length - 1] : null;
+            if (caretRect) {
+                const editorRect = texto.getBoundingClientRect();
+                const escalaVisual = texto.clientHeight > 0
+                    ? Math.max(0.01, editorRect.height / texto.clientHeight)
+                    : 1;
+                const margen = altoLinea * 0.45 * escalaVisual;
+                const limiteSuperior = editorRect.top + margen;
+                const limiteInferior = editorRect.bottom - margen;
+                if (caretRect.bottom > limiteInferior) {
+                    texto.scrollTop = Math.min(
+                        maxScroll,
+                        texto.scrollTop + ((caretRect.bottom - limiteInferior) / escalaVisual)
+                    );
+                } else if (caretRect.top < limiteSuperior) {
+                    texto.scrollTop = Math.max(
+                        0,
+                        texto.scrollTop - ((limiteSuperior - caretRect.top) / escalaVisual)
+                    );
+                }
+            } else if (caretEstaAlFinalTextoEscritora() && distanciaAlFinal > altoLinea) {
+                texto.scrollTop = maxScroll;
+            }
+        }
         if (typeof programarLineasTextoEscritora === "function") {
             programarLineasTextoEscritora();
         }
-    };
-    raf_ultima_linea_visible_escritora = requestAnimationFrame(() => {
-        raf_ultima_linea_visible_escritora = 0;
-        llevarAlFinal();
-        requestAnimationFrame(llevarAlFinal);
     });
-    // El ajuste global de viewport puede terminar después del primer frame.
-    // Esta segunda pasada conserva el final visible tras ese recálculo tardío.
-    timeout_ultima_linea_visible_escritora = setTimeout(() => {
-        timeout_ultima_linea_visible_escritora = null;
-        llevarAlFinal();
-    }, 420);
 }
 window.asegurarUltimaLineaVisibleEscritora = asegurarUltimaLineaVisibleEscritora;
 
@@ -885,9 +905,9 @@ function sincronizarLineasTextoEscritora() {
     if (lineas.length === 0) lineas.push("");
     const total = Math.max(1, lineas.length);
     const estilosTexto = window.getComputedStyle(texto);
-    const firma = `${contenido}\u0000${texto.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}`;
+    const alturas = medirAlturasLineasTextoEscritora(lineas);
+    const firma = `${total}\u0000${texto.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}\u0000${alturas.map((alto) => alto.toFixed(2)).join(",")}`;
     if (total !== escritxr_numero_lineas_renderizadas || firma !== escritxr_firma_lineas_renderizadas) {
-        const alturas = medirAlturasLineasTextoEscritora(lineas);
         const fragmento = document.createDocumentFragment();
         for (let linea = 1; linea <= total; linea += 1) {
             const numero = document.createElement("span");
@@ -1530,7 +1550,6 @@ let post_inicio_pendiente_escritora = null;
 let raf_ajuste_viewport_escritora = null;
 let timeout_ajuste_viewport_escritora = null;
 let resize_observer_fit_viewport_escritora = null;
-let mutation_observer_fit_viewport_escritora = null;
 const MIN_ALTO_EDITOR_AJUSTABLE_ESCRITORA = 132;
 const MIN_LINEAS_VISIBLES_EDITOR_ESCRITORA = 2;
 let cursor_pluma_atributos_inicializado = false;
@@ -1692,23 +1711,14 @@ const iniciarAjusteViewportEscritora = () => {
             players_fit_root,
             document.getElementById("contenedor"),
             document.querySelector(".escritxr-texto-panel__viewport"),
-            document.querySelector(".info-total")
+            document.querySelector(".escritxr-texto-panel"),
+            document.querySelector(".info-total"),
+            document.getElementById("scrib_competition_hud"),
+            document.getElementById("palabra"),
+            document.getElementById("definicion")
         ]
             .filter(Boolean)
             .forEach((nodo) => resize_observer_fit_viewport_escritora.observe(nodo));
-    }
-    if (typeof MutationObserver === "function" && !mutation_observer_fit_viewport_escritora) {
-        mutation_observer_fit_viewport_escritora = new MutationObserver((registros) => {
-            if (registros.some((registro) => registro.target !== players_fit_root)) {
-                programarAjusteViewportEscritora();
-            }
-        });
-        mutation_observer_fit_viewport_escritora.observe(players_fit_root, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ["class", "hidden", "aria-hidden"]
-        });
     }
     window.addEventListener("resize", programarAjusteViewportEscritora, { passive: true });
     window.addEventListener("orientationchange", programarAjusteViewportEscritora, { passive: true });
