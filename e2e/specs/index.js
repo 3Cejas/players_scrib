@@ -1653,7 +1653,7 @@ const smokeSpecs = [
     name: "musa-bonus-delivery",
     run: async (ctx) => {
       const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];
-      await openRolesAndWaitWithOptions(ctx, ["control", "writer1", ...museRoles, "spectator", "jury"], { useStateHooks: false });
+      await openRolesAndWaitWithOptions(ctx, ["control", "writer1", "writer2", ...museRoles, "spectator", "jury"], { useStateHooks: false });
       const museAssignments = await readAuthoritativeMuseAssignments(ctx, museRoles);
       const blueMuses = museAssignments.filter(({ team }) => team === 1);
       const redMuses = museAssignments.filter(({ team }) => team === 2);
@@ -1696,6 +1696,15 @@ const smokeSpecs = [
         "destello",
         [blueMuses[0].name],
         "first muse word satisfies the automatic delivery"
+      );
+      await ctx.sendMusaWord(redMuses[0].roleName, "latido");
+      await waitForAttributedInspiration(
+        ctx,
+        "writer2",
+        "#definicion",
+        "latido",
+        [redMuses[0].name],
+        "red writer receives its own muse word while blue writer is connected"
       );
       await ctx.sendMusaWord(blueMuses[0].roleName, "horizonte");
       await ctx.sendMusaWord(blueMuses[1].roleName, "horizonte");
