@@ -1075,6 +1075,7 @@ function actualizarProgresoFraseFinalEscritora(segundosRestantes) {
 }
 
 function tickProgresoNivelBarraEscritora() {
+    if (window.ScribPerformanceProtection && !window.ScribPerformanceProtection.shouldRun("writer-level-progress")) return;
     if (!inicio_nivel_ts_escritora || DURACION_NIVEL_MS_ESCRITORA <= 0) {
         setProgresoNivelBarraEscritora(0);
         return;

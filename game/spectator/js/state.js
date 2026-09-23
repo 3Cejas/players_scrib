@@ -6319,6 +6319,7 @@ function actualizarProgresoFraseFinalEspectador() {
 }
 
 function tickProgresoNivelBarra() {
+    if (window.ScribPerformanceProtection && !window.ScribPerformanceProtection.shouldRun("spectator-level-progress")) return;
     if (!inicio_nivel_ts || DURACION_NIVEL_MS <= 0) {
         setProgresoNivelBarra(0);
         return;

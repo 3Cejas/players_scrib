@@ -3488,6 +3488,7 @@ function randomInRange(min, max) {
 }
 
 function confetti_aux() {
+  if (window.ScribPerformanceProtection?.isAtLeast(1)) return;
   stopConfetti();
   var animationEnd = Date.now() + duration; // Actualiza aquÃ­ dentro de la funciÃ³n
   isConfettiRunning = true; // Habilita la ejecuciÃ³n de confetti
@@ -3715,6 +3716,7 @@ function detenerEfectoMaquina() {
 
 
 function confetti_musas(){
+    if (window.ScribPerformanceProtection?.isAtLeast(1)) return;
 var scalar = 2;
 var starShape = confetti.shapeFromText({
   text: "\u2B50",
@@ -4029,3 +4031,9 @@ function reduceLog(base, k = 1) {
 if (socket && typeof socket.connect === "function" && !socket.connected) {
     socket.connect();
 }
+
+window.ScribPerformanceProtection?.install({
+    socket,
+    role: "writer",
+    getPlayer: () => player
+});

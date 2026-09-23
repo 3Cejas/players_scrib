@@ -2196,3 +2196,8 @@ const LIMPIEZAS = {
 if (socket && typeof socket.connect === "function" && !socket.connected) {
     socket.connect();
 }
+
+window.ScribPerformanceProtection?.install({
+    socket,
+    role: "control"
+});

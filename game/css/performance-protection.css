@@ -1,0 +1,51 @@
+/* Recortes exclusivamente decorativos. Las señales, textos y temporizadores permanecen activos. */
+html[data-performance-protection="1"] #background-effects > *,
+html[data-performance-protection="1"] .spectator-crt-overlay::before,
+html[data-performance-protection="1"] .spectator-crt-overlay::after,
+html[data-performance-protection="1"] .spectator-crt-overlay i,
+html[data-performance-protection="1"] .puntos-hit,
+html[data-performance-protection="1"] .is-burst,
+html[data-performance-protection="1"] .inspiration-author__spark,
+html[data-performance-protection="1"] .partida-final-espectador__sparks,
+html[data-performance-protection="2"] #background-effects > *,
+html[data-performance-protection="2"] .spectator-crt-overlay::before,
+html[data-performance-protection="2"] .spectator-crt-overlay::after,
+html[data-performance-protection="2"] .spectator-crt-overlay i,
+html[data-performance-protection="2"] .puntos-hit,
+html[data-performance-protection="2"] .is-burst,
+html[data-performance-protection="2"] .inspiration-author__spark,
+html[data-performance-protection="2"] .partida-final-espectador__sparks,
+html[data-performance-protection="2"] .teleprompter-preparing__cursor {
+    animation: none !important;
+    transition: none !important;
+}
+
+html[data-performance-protection="1"] .corazones-flotantes,
+html[data-performance-protection="1"] .corazon-flotante,
+html[data-performance-protection="2"] .corazones-flotantes,
+html[data-performance-protection="2"] .corazon-flotante,
+html[data-performance-protection="2"] .escritora-cursor-pluma,
+html[data-performance-protection="2"] .escritora-caret-neon,
+html[data-performance-protection="2"] .atributos-cursor-pluma {
+    display: none !important;
+}
+
+html[data-performance-protection="2"] #background-effects {
+    visibility: hidden !important;
+}
+
+/* Se congelan barridos y pulsos permanentes, pero no entradas, cambios de vista,
+   avisos de tiempo ni efectos que comuniquen una regla del juego. */
+html[data-performance-protection]:not([data-performance-protection="0"]) .tiempo-vida,
+html[data-performance-protection]:not([data-performance-protection="0"]) .tiempo-vida::after,
+html[data-performance-protection]:not([data-performance-protection="0"]) body.page-spectator #info_general.info-general-panel #palabra,
+html[data-performance-protection]:not([data-performance-protection="0"]) body.page-spectator #info_general.info-general-panel #palabra::after,
+html[data-performance-protection]:not([data-performance-protection="0"]) body.page-spectator #palabra1::after,
+html[data-performance-protection]:not([data-performance-protection="0"]) body.page-spectator #palabra2::after,
+html[data-performance-protection]:not([data-performance-protection="0"]) body.page-actors #palabra,
+html[data-performance-protection]:not([data-performance-protection="0"]) body.page-actors #definicion.objetivo-nivel .objetivo-chip::after,
+html[data-performance-protection]:not([data-performance-protection="0"]) .nivel-activo .nivel-icono::before,
+html[data-performance-protection]:not([data-performance-protection="0"]) .partida-final-espectador__aurora,
+html[data-performance-protection]:not([data-performance-protection="0"]) .partida-final-espectador__rays {
+    animation: none !important;
+}

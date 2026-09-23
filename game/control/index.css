@@ -8154,6 +8154,43 @@ table.default {
     text-shadow: 0 0 0.45rem rgba(255, 211, 105, 0.28);
 }
 
+.remote-status-role-line {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 0.28rem;
+    white-space: nowrap;
+}
+
+.performance-protection-witness {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 0.8rem;
+    padding: 0.08rem 0.28rem;
+    border: 1px solid rgba(255, 205, 74, 0.62);
+    border-radius: 999px;
+    color: #ffe596;
+    background: rgba(77, 48, 0, 0.78);
+    box-shadow: 0 0 0.42rem rgba(255, 183, 0, 0.2);
+    font: 800 clamp(0.42rem, 0.48vw, 0.56rem)/1 system-ui, sans-serif;
+    letter-spacing: 0.025em;
+    text-shadow: none;
+    white-space: nowrap;
+}
+
+.performance-protection-witness[data-level="2"] {
+    border-color: rgba(255, 105, 105, 0.75);
+    color: #ffd2d2;
+    background: rgba(91, 13, 18, 0.88);
+    box-shadow: 0 0 0.5rem rgba(255, 68, 79, 0.3);
+}
+
+.performance-protection-witness[hidden] {
+    display: none !important;
+}
+
 .remote-restart-btn:disabled,
 .remote-restart-btn[aria-disabled="true"] {
     cursor: not-allowed;

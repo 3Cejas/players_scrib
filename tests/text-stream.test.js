@@ -6,10 +6,11 @@ const vm = require("node:vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "..", "game", "js", "text-stream.js"), "utf8");
 
-function crearEntorno() {
+function crearEntorno({ renderDelay = 0, fakeTimers = false } = {}) {
   const handlers = new Map();
   const emitidos = [];
   const frames = [];
+  const timers = [];
   const socket = {
     connected: false,
     on(evento, handler) {
@@ -27,8 +28,16 @@ function crearEntorno() {
     }
   };
   const window = {
-    setTimeout,
+    setTimeout: fakeTimers
+      ? (callback, delay) => {
+          timers.push({ callback, delay });
+          return timers.length;
+        }
+      : setTimeout,
     clearTimeout,
+    ScribPerformanceProtection: renderDelay > 0
+      ? { getRenderDelay: () => renderDelay }
+      : null,
     requestAnimationFrame(callback) {
       frames.push(callback);
       return frames.length;
@@ -41,6 +50,10 @@ function crearEntorno() {
     flushFrames() {
       while (frames.length) frames.shift()();
     },
+    flushTimers() {
+      while (timers.length) timers.shift().callback();
+    },
+    timers,
     socket
   };
 }
@@ -50,6 +63,31 @@ test("text stream patches round-trip rich text", () => {
   const anterior = "<span>hola</span>";
   const siguiente = '<span class="palabra-bendita">hola mundo</span>';
   assert.equal(api.aplicarParcheTexto(anterior, api.crearParcheTexto(anterior, siguiente)), siguiente);
+});
+
+test("receiver batches visual text rendering for 150 ms in N2 without delaying state application", () => {
+  const { api, socket, flushTimers, timers } = crearEntorno({ renderDelay: 150, fakeTimers: true });
+  const renders = [];
+  const receiver = api.crearReceptor({
+    socket,
+    players: [1],
+    onText: (_player, payload) => renders.push(payload.text)
+  });
+  socket.trigger("texto_snapshot", { player: 1, revision: 0, text: "a", plain: "a", payload: { text: "a" } });
+  socket.trigger("texto_delta", {
+    player: 1,
+    baseRevision: 0,
+    revision: 1,
+    htmlPatch: { start: 1, deleteCount: 0, insert: "b" },
+    plainPatch: { start: 1, deleteCount: 0, insert: "b" }
+  });
+
+  assert.equal(receiver.getState(1).text, "ab", "network state remains current immediately");
+  assert.deepEqual(renders, []);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].delay, 150);
+  flushTimers();
+  assert.deepEqual(renders, ["ab"]);
 });
 
 test("receiver applies ordered deltas and renders only the latest state in one frame", () => {

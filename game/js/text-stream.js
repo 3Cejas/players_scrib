@@ -64,7 +64,14 @@
 
         const programar = (player, payload, origen) => {
             pendientes.set(player, { payload, origen, state: { ...estados[player] } });
-            if (!frame) frame = requestFrame(renderPendientes);
+            if (frame) return;
+            const delay = global.ScribPerformanceProtection
+                && typeof global.ScribPerformanceProtection.getRenderDelay === "function"
+                ? global.ScribPerformanceProtection.getRenderDelay()
+                : 0;
+            frame = delay > 0
+                ? global.setTimeout(renderPendientes, delay)
+                : requestFrame(renderPendientes);
         };
 
         const pedirSuscripcion = () => {

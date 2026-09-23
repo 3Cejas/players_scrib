@@ -107,17 +107,24 @@ socket.on('vista_espectador_modo', (payload = {}) => {
 });
 
 socket.on('stats_live_estado', (payload = {}) => {
-    estado_stats_live_espectador = normalizarStatsLiveEspectador(payload);
-    registrarModoTimelineStatsEspectador(
-        estado_stats_live_espectador.modo_actual,
-        Math.max(
-            Number(estado_stats_live_espectador.players[1] && estado_stats_live_espectador.players[1].tiempoTotalMs) || 0,
-            Number(estado_stats_live_espectador.players[2] && estado_stats_live_espectador.players[2].tiempoTotalMs) || 0
-        )
-    );
-    actualizarHistorialVidaDesdeStatsEspectador(estado_stats_live_espectador);
-    if (vista_espectador_modo_resuelta === "stats") {
-        renderizarStatsEspectador();
+    const aplicar = () => {
+        estado_stats_live_espectador = normalizarStatsLiveEspectador(payload);
+        registrarModoTimelineStatsEspectador(
+            estado_stats_live_espectador.modo_actual,
+            Math.max(
+                Number(estado_stats_live_espectador.players[1] && estado_stats_live_espectador.players[1].tiempoTotalMs) || 0,
+                Number(estado_stats_live_espectador.players[2] && estado_stats_live_espectador.players[2].tiempoTotalMs) || 0
+            )
+        );
+        actualizarHistorialVidaDesdeStatsEspectador(estado_stats_live_espectador);
+        if (vista_espectador_modo_resuelta === "stats") {
+            renderizarStatsEspectador();
+        }
+    };
+    if (window.ScribPerformanceProtection) {
+        window.ScribPerformanceProtection.runLatest("spectator-live-stats", aplicar, { 0: 0, 1: 1000, 2: 3000 });
+    } else {
+        aplicar();
     }
 });
 
@@ -2376,6 +2383,7 @@ function randomInRange(min, max) {
 }
 
 function confetti_aux(opciones = {}) {
+    if (window.ScribPerformanceProtection?.isAtLeast(1)) return;
     if (vista_espectador_modo_resuelta === "stats") {
         stopConfetti();
         return;
@@ -2435,6 +2443,7 @@ function convertirASegundos(tiempo) {
   }
 
   function confetti_musas(pos){
+    if (window.ScribPerformanceProtection?.isAtLeast(1)) return;
     if (vista_espectador_modo_resuelta === "stats") {
       stopConfetti();
       return;
@@ -3017,3 +3026,8 @@ function posicionarScrollEnUltimaLinea(node, pos) {
 if (socket && typeof socket.connect === "function" && !socket.connected) {
     socket.connect();
 }
+
+window.ScribPerformanceProtection?.install({
+    socket,
+    role: "spectator"
+});

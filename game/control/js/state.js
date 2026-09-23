@@ -59,6 +59,15 @@ const estadoActor2Dot = getEl("estado_actor_2");
 const estadoActor2Texto = getEl("estado_actor_2_texto");
 const estadoTecnicaDot = getEl("estado_tecnica");
 const estadoTecnicaTexto = getEl("estado_tecnica_texto");
+const testigosProteccionControl = {
+    control: getEl("proteccion_control"),
+    espectador: getEl("proteccion_espectador"),
+    escritxr1: getEl("proteccion_player_1"),
+    escritxr2: getEl("proteccion_player_2"),
+    actorxs1: getEl("proteccion_actor_1"),
+    actorxs2: getEl("proteccion_actor_2"),
+    tecnica: getEl("proteccion_tecnica")
+};
 const botonesReinicioRemotoControl = {
     escritxr1: getEl("boton_reiniciar_escritxr_1"),
     escritxr2: getEl("boton_reiniciar_escritxr_2"),
@@ -168,6 +177,50 @@ const blinkEstadoDot = (el) => {
     el.classList.add("conexion-dot--ping");
 };
 
+const nombresMotivosProteccionControl = {
+    main_thread_lag: "respuesta lenta del navegador",
+    low_fps: "fluidez visual baja",
+    network_rtt: "latencia de red alta",
+    browser_memory: "memoria del navegador alta",
+    missed_heartbeats: "respuestas perdidas",
+    server_lag: "respuesta lenta del servidor",
+    server_memory: "memoria del servidor alta",
+    server_memory_growth: "memoria del servidor en crecimiento"
+};
+
+function combinarResumenesProteccionControl(...resumenes) {
+    const validos = resumenes.filter((item) => item && typeof item === "object");
+    return {
+        level: validos.reduce((maximo, item) => Math.max(maximo, Math.max(0, Math.min(2, Number(item.level) || 0))), 0),
+        reasons: Array.from(new Set(validos.flatMap((item) => Array.isArray(item.reasons) ? item.reasons : [])))
+    };
+}
+
+function actualizarTestigoProteccionControl(rol, resumen, conectado = true) {
+    const elemento = testigosProteccionControl[rol];
+    if (!elemento) return;
+    const nivel = Math.max(0, Math.min(2, Number(resumen && resumen.level) || 0));
+    if (!conectado || nivel === 0) {
+        elemento.hidden = true;
+        elemento.textContent = "";
+        elemento.removeAttribute("data-level");
+        elemento.removeAttribute("title");
+        return;
+    }
+    const motivos = Array.isArray(resumen.reasons)
+        ? resumen.reasons.map((motivo) => nombresMotivosProteccionControl[motivo] || motivo).slice(0, 3)
+        : [];
+    elemento.hidden = false;
+    elemento.dataset.level = String(nivel);
+    elemento.textContent = `\u26A0 N${nivel}`;
+    elemento.title = `Protecci\u00F3n N${nivel} activa${motivos.length ? `: ${motivos.join(", ")}` : ""}. Se restaurar\u00E1 autom\u00E1ticamente al estabilizarse.`;
+}
+
+function limpiarTestigosProteccionControl() {
+    Object.keys(testigosProteccionControl).forEach((rol) => actualizarTestigoProteccionControl(rol, null, false));
+}
+window.limpiarTestigosProteccionControl = limpiarTestigosProteccionControl;
+
 const setEstadoServidor = (conectado) => {
     setEstadoDot(estadoServidorDot, conectado ? "ok" : "off");
     setEstadoTextoConexion(
@@ -175,6 +228,7 @@ const setEstadoServidor = (conectado) => {
         conectado,
         tJuego2P("control.connection.active", {}, "ACTIVO")
     );
+    if (!conectado) limpiarTestigosProteccionControl();
 };
 
 const setEstadoPlayers = (j1, j2) => {
@@ -227,6 +281,20 @@ const procesarEstadoConexiones = (estado) => {
         || (technicians[2] && technicians[2].connected)
     );
     setEstadoRolRemoto(estadoTecnicaDot, estadoTecnicaTexto, tecnicaConectada, "tecnica");
+    const proteccion = estado.performance_protection || {};
+    const rolesProteccion = proteccion.roles || {};
+    const globalProteccion = proteccion.server || { level: proteccion.level || 0, reasons: [] };
+    actualizarTestigoProteccionControl("control", combinarResumenesProteccionControl(globalProteccion, rolesProteccion.control), true);
+    actualizarTestigoProteccionControl("espectador", combinarResumenesProteccionControl(globalProteccion, rolesProteccion.spectator), Boolean(conexiones.spectator && conexiones.spectator.connected));
+    actualizarTestigoProteccionControl("escritxr1", combinarResumenesProteccionControl(globalProteccion, rolesProteccion.writers && rolesProteccion.writers[1]), j1Conectado);
+    actualizarTestigoProteccionControl("escritxr2", combinarResumenesProteccionControl(globalProteccion, rolesProteccion.writers && rolesProteccion.writers[2]), j2Conectado);
+    actualizarTestigoProteccionControl("actorxs1", combinarResumenesProteccionControl(globalProteccion, rolesProteccion.actors && rolesProteccion.actors[1]), Boolean(actors[1] && actors[1].connected));
+    actualizarTestigoProteccionControl("actorxs2", combinarResumenesProteccionControl(globalProteccion, rolesProteccion.actors && rolesProteccion.actors[2]), Boolean(actors[2] && actors[2].connected));
+    actualizarTestigoProteccionControl("tecnica", combinarResumenesProteccionControl(
+        globalProteccion,
+        rolesProteccion.technicians && rolesProteccion.technicians[1],
+        rolesProteccion.technicians && rolesProteccion.technicians[2]
+    ), tecnicaConectada);
     blinkEstadoDot(estadoServidorDot);
     if (j1Conectado) blinkEstadoDot(estadoPlayer1Dot);
     if (j2Conectado) blinkEstadoDot(estadoPlayer2Dot);

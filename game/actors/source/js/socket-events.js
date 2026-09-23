@@ -659,6 +659,7 @@ function actualizarProgresoFraseFinalActor(segundosRestantes) {
 }
 
 function tickProgresoNivelBarraActor() {
+    if (window.ScribPerformanceProtection && !window.ScribPerformanceProtection.shouldRun("actor-level-progress")) return;
     if (!inicio_nivel_ts_actor || DURACION_NIVEL_MS_ACTOR <= 0) {
         setProgresoNivelBarraActor(0);
         return;
@@ -2675,6 +2676,7 @@ function randomInRange(min, max) {
   }
 
 function confetti_aux() {
+    if (window.ScribPerformanceProtection?.isAtLeast(1)) return;
     stopConfetti();
     var animationEnd = Date.now() + duration; // Actualiza aquí dentro de la función
     isConfettiRunning = true; // Habilita la ejecución de confetti
@@ -2738,3 +2740,9 @@ if (window && typeof window.scribOnLanguageChange2P === "function") {
 }
 
 refrescarUiIdiomaActor();
+
+window.ScribPerformanceProtection?.install({
+    socket,
+    role: esRolTecnico ? "technician" : "actor",
+    getPlayer: () => player
+});
