@@ -268,6 +268,7 @@ socket.on('disconnect', () => {
         setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, false, "espectador");
         setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, false, "actorxs1");
         setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, false, "actorxs2");
+        setEstadoRolRemoto(estadoTecnicaDot, estadoTecnicaTexto, false, "tecnica");
     }
     if (typeof registrarLogControl === "function") {
         registrarLogControl("warn", ["Control desconectado del servidor"]);
@@ -308,6 +309,7 @@ socket.on('connect_error', () => {
         setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, false, "espectador");
         setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, false, "actorxs1");
         setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, false, "actorxs2");
+        setEstadoRolRemoto(estadoTecnicaDot, estadoTecnicaTexto, false, "tecnica");
     }
     if (typeof registrarLogControl === "function") {
         registrarLogControl("error", ["Error de conexion con el servidor"]);

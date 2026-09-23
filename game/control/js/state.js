@@ -57,19 +57,23 @@ const estadoActor1Dot = getEl("estado_actor_1");
 const estadoActor1Texto = getEl("estado_actor_1_texto");
 const estadoActor2Dot = getEl("estado_actor_2");
 const estadoActor2Texto = getEl("estado_actor_2_texto");
+const estadoTecnicaDot = getEl("estado_tecnica");
+const estadoTecnicaTexto = getEl("estado_tecnica_texto");
 const botonesReinicioRemotoControl = {
     escritxr1: getEl("boton_reiniciar_escritxr_1"),
     escritxr2: getEl("boton_reiniciar_escritxr_2"),
     espectador: getEl("boton_reiniciar_espectador"),
     actorxs1: getEl("boton_reiniciar_actorxs_1"),
-    actorxs2: getEl("boton_reiniciar_actorxs_2")
+    actorxs2: getEl("boton_reiniciar_actorxs_2"),
+    tecnica: getEl("boton_reiniciar_tecnica")
 };
 const estadoRolesRemotosControl = {
     escritxr1: false,
     escritxr2: false,
     espectador: false,
     actorxs1: false,
-    actorxs2: false
+    actorxs2: false,
+    tecnica: false
 };
 
 const formatearPuntosMarcadorControl = (valor) => {
@@ -207,6 +211,7 @@ const procesarEstadoConexiones = (estado) => {
     const conexiones = estado.connections || {};
     const writers = conexiones.writers || {};
     const actors = conexiones.actors || {};
+    const technicians = conexiones.technicians || {};
     const j1Conectado = writers[1] && typeof writers[1].connected !== "undefined"
         ? Boolean(writers[1].connected)
         : Boolean(estado.players.j1);
@@ -217,12 +222,18 @@ const procesarEstadoConexiones = (estado) => {
     setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, Boolean(conexiones.spectator && conexiones.spectator.connected), "espectador");
     setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, Boolean(actors[1] && actors[1].connected), "actorxs1");
     setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, Boolean(actors[2] && actors[2].connected), "actorxs2");
+    const tecnicaConectada = Boolean(
+        (technicians[1] && technicians[1].connected)
+        || (technicians[2] && technicians[2].connected)
+    );
+    setEstadoRolRemoto(estadoTecnicaDot, estadoTecnicaTexto, tecnicaConectada, "tecnica");
     blinkEstadoDot(estadoServidorDot);
     if (j1Conectado) blinkEstadoDot(estadoPlayer1Dot);
     if (j2Conectado) blinkEstadoDot(estadoPlayer2Dot);
     if (conexiones.spectator && conexiones.spectator.connected) blinkEstadoDot(estadoEspectadorDot);
     if (actors[1] && actors[1].connected) blinkEstadoDot(estadoActor1Dot);
     if (actors[2] && actors[2].connected) blinkEstadoDot(estadoActor2Dot);
+    if (tecnicaConectada) blinkEstadoDot(estadoTecnicaDot);
     if (estado.palabras_musas_control && typeof window.sincronizarEstadoPalabrasMusasControl === "function") {
         window.sincronizarEstadoPalabrasMusasControl(estado.palabras_musas_control);
     }
@@ -248,6 +259,7 @@ const iniciarStatusPing = () => {
             setEstadoRolRemoto(estadoEspectadorDot, estadoEspectadorTexto, false, "espectador");
             setEstadoRolRemoto(estadoActor1Dot, estadoActor1Texto, false, "actorxs1");
             setEstadoRolRemoto(estadoActor2Dot, estadoActor2Texto, false, "actorxs2");
+            setEstadoRolRemoto(estadoTecnicaDot, estadoTecnicaTexto, false, "tecnica");
         }
     }, 1000);
 };

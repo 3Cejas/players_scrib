@@ -41,11 +41,11 @@ const SPECTATOR_SOCKET_EVENTS_VERSION = "20260923b";
 const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260923a";
 const JURY_SOCKET_EVENTS_VERSION = "20260923a";
-const CONTROL_CSS_VERSION = "20260923b";
-const CONTROL_ACTIONS_VERSION = "20260923c";
+const CONTROL_CSS_VERSION = "20260923c";
+const CONTROL_ACTIONS_VERSION = "20260923d";
 const CONTROL_I18N_VERSION = "20260923a";
-const CONTROL_STATE_VERSION = "20260923a";
-const CONTROL_SOCKET_EVENTS_VERSION = "20260923b";
+const CONTROL_STATE_VERSION = "20260923b";
+const CONTROL_SOCKET_EVENTS_VERSION = "20260923c";
 const PUBLIC_PLAYER_ACTIONS_VERSION = "20260921c";
 const MUSA_ASSIGNMENT_VERSION = "20260831b";
 const MUSA_SELECTOR_VERSION = "20260922a";
@@ -1497,6 +1497,7 @@ test("Control level card grows instead of clipping live level information", () =
 test("control exposes targeted remote reload buttons and live roles reload on command", () => {
   const controlHtml = read("game/control/index.html");
   const controlActions = read("game/control/js/actions.js");
+  const controlState = read("game/control/js/state.js");
   const playerSocket = read("game/players/js/socket-events.js");
   const spectatorSocket = read("game/spectator/js/socket-events.js");
   const actorSocket = read("game/actors/source/js/socket-events.js");
@@ -1507,12 +1508,16 @@ test("control exposes targeted remote reload buttons and live roles reload on co
     "reiniciarRolRemoto('escritxr2')",
     "reiniciarRolRemoto('espectador')",
     "reiniciarRolRemoto('actorxs1')",
-    "reiniciarRolRemoto('actorxs2')"
+    "reiniciarRolRemoto('actorxs2')",
+    "reiniciarRolRemoto('tecnica')"
   ].forEach((handler) => {
     assert.match(controlHtml, new RegExp(handler.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   });
 
   assert.match(controlActions, /socket\.emit\("reiniciar_rol_remoto", \{ rol: destino \}\);/);
+  assert.match(controlHtml, /id="estado_tecnica"[\s\S]*id="estado_tecnica_texto"[\s\S]*id="boton_reiniciar_tecnica"/);
+  assert.match(controlState, /const technicians = conexiones\.technicians \|\| \{\};/);
+  assert.match(controlState, /technicians\[1\][\s\S]*technicians\[2\][\s\S]*"tecnica"/);
   [playerSocket, spectatorSocket, actorSocket, jurySocket].forEach((source) => {
     assert.match(source, /socket\.on\("recargar_rol_remoto"/);
     assert.match(source, /window\.location\.reload\(\)/);

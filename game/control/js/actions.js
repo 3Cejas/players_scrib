@@ -3507,7 +3507,8 @@ const ROLES_REINICIO_REMOTO_CONTROL = new Set([
     "escritxr2",
     "espectador",
     "actorxs1",
-    "actorxs2"
+    "actorxs2",
+    "tecnica"
 ]);
 
 function normalizarRolReinicioRemotoControl(rol) {
@@ -3519,6 +3520,7 @@ function normalizarRolReinicioRemotoControl(rol) {
     if (valor === "spectator") return "espectador";
     if (valor === "actores1" || valor === "actor1") return "actorxs1";
     if (valor === "actores2" || valor === "actor2") return "actorxs2";
+    if (valor === "technician" || valor === "technicians" || valor === "tecnico") return "tecnica";
     return ROLES_REINICIO_REMOTO_CONTROL.has(valor) ? valor : "";
 }
 
