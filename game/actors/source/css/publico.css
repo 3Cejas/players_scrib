@@ -1490,7 +1490,17 @@ body.technician-teleprompter-visible {
     cursor: pointer;
 }
 .technician-teleprompter__note b { color: var(--tp-tech); }
-.technician-teleprompter__note span { font-size: .68rem; line-height: 1.45; }
+.technician-teleprompter__note span {
+    display: -webkit-box;
+    max-height: 2.9em;
+    overflow: hidden;
+    font-size: .68rem;
+    line-height: 1.45;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
 .technician-teleprompter__empty { color: rgba(255,255,255,.5); font-size: .68rem; }
 .technician-teleprompter--preparing .technician-teleprompter__screen::after {
     content: "CARGANDO TELEPROMPTER";
@@ -1501,6 +1511,63 @@ body.technician-teleprompter-visible {
     color: var(--tp-tech);
     letter-spacing: .14em;
     background: rgba(2,6,13,.86);
+}
+
+.technician-note-dialog {
+    width: min(42rem, calc(100vw - 2rem));
+    max-height: min(76vh, 42rem);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 209, 102, .72);
+    border-radius: 1rem;
+    color: #f7fbff;
+    background: rgba(2, 6, 13, .98);
+    box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, .78), 0 0 2rem rgba(255, 209, 102, .16);
+}
+
+.technician-note-dialog::backdrop {
+    background: rgba(0, 3, 9, .72);
+    backdrop-filter: blur(3px);
+}
+
+.technician-note-dialog__panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-height: min(76vh, 42rem);
+}
+
+.technician-note-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid rgba(255, 209, 102, .26);
+    color: #ffd166;
+    font: 900 clamp(.78rem, 2vw, 1rem)/1 "Retro-gaming", monospace;
+    letter-spacing: .08em;
+}
+
+.technician-note-dialog__close {
+    width: 2.35rem;
+    height: 2.35rem;
+    border: 1px solid rgba(255, 209, 102, .4);
+    border-radius: 50%;
+    color: #ffd166;
+    background: rgba(255, 209, 102, .08);
+    font: 900 1.35rem/1 sans-serif;
+    cursor: pointer;
+}
+
+.technician-note-dialog__text {
+    margin: 0;
+    padding: clamp(1rem, 3vw, 1.8rem);
+    overflow: auto;
+    color: #f7fbff;
+    font-size: clamp(1rem, 2.2vw, 1.4rem);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 760px) {

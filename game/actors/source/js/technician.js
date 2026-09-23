@@ -44,6 +44,10 @@
     const writerNameLabels = Array.from(document.querySelectorAll("[data-technician-writer-name]"));
     const teamTransition = document.getElementById("technician_team_transition");
     const teamTransitionLabel = document.getElementById("technician_team_transition_label");
+    const noteDialog = document.getElementById("technician_note_dialog");
+    const noteDialogTitle = document.getElementById("technician_note_dialog_title");
+    const noteDialogText = document.getElementById("technician_note_dialog_text");
+    const noteDialogClose = document.getElementById("technician_note_dialog_close");
 
     document.body.classList.add("page-technician");
     if (overlay) overlay.hidden = false;
@@ -104,6 +108,7 @@
     }
 
     function aplicarEquipo(nextPlayer, { requestState = true } = {}) {
+        closeNoteDialog();
         selectedPlayer = normalizarPlayer(nextPlayer);
         marks = [];
         marksRevision = 0;
@@ -171,6 +176,26 @@
         mark.id || `${mark.start}:${mark.end}:${mark.createdAt || 0}:${mark.note || ""}`
     );
 
+    function closeNoteDialog() {
+        if (!noteDialog) return;
+        if (noteDialog.open && typeof noteDialog.close === "function") {
+            noteDialog.close();
+            return;
+        }
+        noteDialog.removeAttribute("open");
+    }
+
+    function showNoteDialog(mark, index) {
+        if (!noteDialog || !noteDialogTitle || !noteDialogText) return;
+        noteDialogTitle.textContent = `MARCA ${index + 1}`;
+        noteDialogText.textContent = String(mark?.note || "").trim();
+        if (typeof noteDialog.showModal === "function") {
+            if (!noteDialog.open) noteDialog.showModal();
+            return;
+        }
+        noteDialog.setAttribute("open", "");
+    }
+
     function estilosSegmento(inicio, fin) {
         return marks.filter((mark) => mark.start < fin && mark.end > inicio);
     }
@@ -232,6 +257,7 @@
             item.type = "button";
             item.className = "technician-teleprompter__note";
             item.dataset.technicianNoteId = claveMarca(mark);
+            item.title = "Leer nota completa";
             item.innerHTML = `<b>${index + 1}</b><span></span>`;
             item.querySelector("span").textContent = mark.note;
             item.addEventListener("click", () => {
@@ -240,6 +266,7 @@
                 anchorScroll = maxScroll * ratio;
                 anchorTime = performance.now();
                 syncScroll();
+                showNoteDialog(mark, index);
             });
             botones.set(claveMarca(mark), item);
             return item;
@@ -338,6 +365,7 @@
         overlay.classList.toggle("technician-teleprompter--preparing", Boolean(state.preparing));
         overlay.dataset.player = String(Number(state.source) === 2 ? 2 : selectedPlayer);
         document.body.classList.toggle("technician-teleprompter-visible", active);
+        if (!active) closeNoteDialog();
         if (title) {
             title.textContent = obtenerNombreEscritxr(Number(state.source) === 2 ? 2 : selectedPlayer);
         }
@@ -400,6 +428,10 @@
         const button = event.target.closest("[data-technician-player]");
         if (!button || !teamSwitch.contains(button)) return;
         cambiarEquipo(button.dataset.technicianPlayer);
+    });
+    noteDialogClose?.addEventListener("click", closeNoteDialog);
+    noteDialog?.addEventListener("click", (event) => {
+        if (event.target === noteDialog) closeNoteDialog();
     });
     raf = requestAnimationFrame(loop);
     window.addEventListener("beforeunload", () => {

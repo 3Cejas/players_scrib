@@ -56,11 +56,11 @@ const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260922k";
 const PUBLIC_PLAYER_I18N_VERSION = "20260921e";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
-const ACTOR_SOURCE_CSS_VERSION = "20260923b";
+const ACTOR_SOURCE_CSS_VERSION = "20260923c";
 const ACTOR_SOURCE_ACTIONS_VERSION = "20260505c";
 const ACTOR_SOURCE_ANNOTATIONS_VERSION = "20260923a";
 const ACTOR_SOURCE_SOCKET_EVENTS_VERSION = "20260923b";
-const TECHNICIAN_VERSION = "20260923c";
+const TECHNICIAN_VERSION = "20260923d";
 
 function read(relPath) {
   return fs.readFileSync(path.join(ROOT, relPath), "utf8");
@@ -1620,6 +1620,7 @@ test("the single technician console switches teams in place with synchronized ma
   assert.doesNotMatch(selector, /data-url|ESCRITXR 1|ESCRITXR 2/);
   assert.match(html, /id="technician_teleprompter"/);
   assert.match(html, /id="technician_teleprompter_notes"/);
+  assert.match(html, /id="technician_note_dialog"[\s\S]*id="technician_note_dialog_text"/);
   assert.match(html, /id="technician_role_bar"[\s\S]*scrib-logo-mark\.png[\s\S]*T&Eacute;CNICA/);
   assert.match(html, /id="technician_team_switch"[\s\S]*data-technician-player="1"[\s\S]*data-technician-player="2"/);
   assert.match(html, /data-technician-writer-name="1">ESCRITXR 1[\s\S]*data-technician-writer-name="2">ESCRITXR 2/);
@@ -1630,6 +1631,8 @@ test("the single technician console switches teams in place with synchronized ma
   assert.match(css, /\.technician-teleprompter--expanded/);
   assert.match(css, /\.technician-teleprompter--expanded\s*\{[\s\S]*inset:\s*0;[\s\S]*width:\s*100vw;[\s\S]*height:\s*100dvh;/);
   assert.match(css, /\.technician-teleprompter__screen::before\s*\{[\s\S]*content:\s*none;/);
+  assert.match(css, /\.technician-teleprompter__note span\s*\{[\s\S]*text-overflow:\s*ellipsis;[\s\S]*-webkit-line-clamp:\s*2;/);
+  assert.match(css, /\.technician-note-dialog::backdrop/);
   assert.match(css, /@keyframes technicianTeamWipe/);
   assert.doesNotMatch(css, /TÉCNICO · MARCAS SINCRONIZADAS/);
   assert.match(css, /body\.page-technician \.actor-texto-card__niveles,[\s\S]*display:\s*none !important/);
@@ -1653,6 +1656,9 @@ test("the single technician console switches teams in place with synchronized ma
   assert.match(technician, /textRect\.top \+ item\.bottom >= screenRect\.top[\s\S]*textRect\.top \+ item\.top <= screenRect\.bottom/);
   assert.match(technician, /function scrollNoteIntoView\(target\)/);
   assert.match(technician, /notes\.scrollTo\(\{ left: destination, behavior:/);
+  assert.match(technician, /function showNoteDialog\(mark, index\)/);
+  assert.match(technician, /noteDialogText\.textContent = String\(mark\?\.note/);
+  assert.match(technician, /noteDialog\.showModal\(\)/);
   assert.match(technician, /window\.history\.replaceState/);
   assert.match(control, /debug_cargar_marcas_tecnico/);
   assert.match(control, /debug_limpiar_marcas_tecnico/);
