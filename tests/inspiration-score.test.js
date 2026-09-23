@@ -58,12 +58,15 @@ test("control HTML extraction queries every highlighted inspiration class", () =
     assert.equal(vistos.selector, ".palabra-bendita,.palabra-musa");
 });
 
-test("control loads the scorer before building and sending live stats", () => {
+test("control delegates document-wide live stats to the server", () => {
     const root = path.resolve(__dirname, "..");
     const html = fs.readFileSync(path.join(root, "game/control/index.html"), "utf8");
     const state = fs.readFileSync(path.join(root, "game/control/js/state.js"), "utf8");
 
     assert.ok(html.indexOf("domains/inspiration-score.js") < html.indexOf("./js/state.js"));
-    assert.match(state, /sumarDesdeHtml\(html, CLASES_PALABRAS_DESTACADAS_PDF\)/);
-    assert.match(state, /valorInspiracion,/);
+    const start = state.indexOf("function obtenerResumenJugadorStatsControl");
+    const end = state.indexOf("function construirPayloadStatsLiveControl", start);
+    const builder = state.slice(start, end);
+    assert.doesNotMatch(builder, /sumarDesdeHtml|extraerTextoPlanoDesdeHtmlControl|obtenerHeatmapCompletoControl/);
+    assert.match(builder, /vida: obtenerResumenVidaControl/);
 });

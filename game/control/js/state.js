@@ -1146,47 +1146,17 @@ function obtenerHeatmapCompletoControl(playerId) {
 }
 
 function obtenerResumenJugadorStatsControl(playerId) {
-    const datosHeatmap = obtenerHeatmapCompletoControl(playerId);
     const tiempoTotalMs = resumenPartida.inicio ? Math.max(0, Date.now() - resumenPartida.inicio) : 0;
     const tiempoEscrituraMs = Math.max(0, Number(obtenerTiempoEscrituraMs()) || 0);
-    const topTeclas = obtenerTopTeclasControl(playerId);
-    const pulsacionesTotal = datosHeatmap.totalPulsaciones;
-    const ritmoPpm = tiempoEscrituraMs > 0
-        ? Math.round(pulsacionesTotal / Math.max(tiempoEscrituraMs / 60000, 0.001))
-        : 0;
-    const textoEl = playerId === 2 ? texto2 : texto1;
-    const html = textoEl && typeof textoEl.innerHTML === "string" ? textoEl.innerHTML : "";
-    const palabrasBenditas = extraerPalabrasConClase(html, CLASES_PALABRAS_DESTACADAS_PDF);
-    const valorInspiracionCalculado = window.ScribInspirationScore
-        ? window.ScribInspirationScore.sumarDesdeHtml(html, CLASES_PALABRAS_DESTACADAS_PDF)
-        : null;
-    const valorInspiracion = Number.isFinite(valorInspiracionCalculado)
-        ? valorInspiracionCalculado
-        : palabrasBenditas.length;
-    const palabrasMalditasMap = resumenPartida.palabrasProhibidasUsadas[playerId];
-    const palabrasMalditas = palabrasMalditasMap && typeof palabrasMalditasMap.keys === "function"
-        ? Array.from(palabrasMalditasMap.keys()).map((valor) => String(valor).toUpperCase()).sort()
-        : [];
-
+    // Texto, nombres, pulsaciones, letras e infracciones ya se calculan de
+    // forma autoritativa en el servidor. Control solo aporta la vida y sus
+    // relojes de escena; así deja de recorrer ambos documentos completos en
+    // cada tick estadístico conforme crecen durante la función.
     return {
         id: playerId,
-        nombre: (playerId === 2 ? val_nombre2 : val_nombre1) || `ESCRITXR ${playerId}`,
-        palabrasTotal: obtenerConteoPalabrasControl(playerId),
-        palabrasUnicas: obtenerPalabrasUnicasControl(playerId),
-        pulsacionesTotal,
-        teclasDistintas: datosHeatmap.teclasDistintas,
-        topTeclas: topTeclas.map((item) => ({ ...item })),
-        heatmap: { ...datosHeatmap.heatmap },
-        ritmoPpm,
         tiempoTotalMs,
         tiempoEscrituraMs,
-        letrasBenditas: Array.from(resumenPartida.letrasBenditas).sort(),
-        letrasMalditas: Array.from(resumenPartida.letrasMalditas).sort(),
-        palabrasBenditas,
-        valorInspiracion,
-        palabrasMalditas,
-        intentosLetraProhibida: Number(resumenPartida.intentosLetraProhibida[playerId] || 0),
-        intentosPalabraProhibida: Number(resumenPartida.intentosPalabraProhibida[playerId] || 0)
+        vida: obtenerResumenVidaControl(resumenPartida.tiempos[playerId])
     };
 }
 
