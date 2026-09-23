@@ -13,6 +13,7 @@ test("writer editor uses the same framed team panel language as control and muse
   const html = read("game/players/index.html");
   const css = read("game/css/dashboard-players.css");
   const state = read("game/players/js/state.js");
+  const socketEvents = read("game/players/js/socket-events.js");
 
   assert.match(html, /class="textarea-container escritxr-texto-panel"/);
   assert.match(html, /class="escritxr-texto-panel__label"[\s\S]*id="nombre"/);
@@ -27,6 +28,11 @@ test("writer editor uses the same framed team panel language as control and muse
   assert.match(css, /body\.page-players\.partida-activa \.escritxr-texto-panel \.textarea \{[\s\S]*overflow-y: auto;[\s\S]*background:[\s\S]*color:/);
   assert.match(css, /\.escritxr-texto-panel:focus-within/);
   assert.match(state, /function sincronizarLineasTextoEscritora\(\)/);
+  assert.match(state, /replace\(\/\\r\\n\?\/g, "\\n"\)/);
+  assert.match(state, /function repararVistaPartidaActivaEscritora\(\)/);
+  assert.match(state, /window\.repararVistaPartidaActivaEscritora = repararVistaPartidaActivaEscritora/);
+  assert.match(socketEvents, /modo_actual = modoSiguiente;[\s\S]*partida_global_finalizada = false;[\s\S]*asegurarVistaPartidaActivaEscritora\(\);/);
+  assert.match(css, /\.page-players \.escritxr-texto-lineas__inner > span \{[\s\S]*display: block;/);
   assert.match(state, /function medirAlturasLineasTextoEscritora\(lineas\)/);
   assert.match(state, /translate3d\(0, -\$\{Math\.max\(0, texto\.scrollTop\)\}px, 0\)/);
   assert.match(state, /window\.addEventListener\("resize", programarLineasTextoEscritora/);

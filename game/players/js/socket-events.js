@@ -1813,6 +1813,13 @@ socket.on("activar_modo", (data) => {
         rapidez_inicio_borrado -= 100;
     }
     modo_actual = modoSiguiente;
+    if (modo_actual) {
+        // activar_modo es el estado autoritativo de la partida. Si una limpieza
+        // tardía o una resincronización quitó la clase visual, reconstruimos la
+        // vista completa antes de volver a habilitar el editor.
+        partida_global_finalizada = false;
+        asegurarVistaPartidaActivaEscritora();
+    }
     actualizarDuracionNivelDesdeParametrosEscritora(data || {});
     if(terminado == false){
     MODOS[modo_actual](data, socket);
@@ -1826,6 +1833,8 @@ socket.on("activar_modo", (data) => {
         menu_modificador = true;
         desactivar_borrar = false;
         texto.contentEditable = "true";
+        programarLineasTextoEscritora();
+        programarAjusteViewportEscritora();
     }
     if (modo_actual !== "frase final") {
         reiniciarProgresoFraseFinalEscritora();

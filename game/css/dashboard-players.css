@@ -4964,6 +4964,20 @@ body.page-players.partida-activa .escritxr-texto-panel__viewport {
         rgba(0, 4, 10, 0.72);
 }
 
+.page-players .escritxr-texto-lineas {
+    display: block;
+    overflow: hidden;
+}
+
+.page-players .escritxr-texto-lineas__inner {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-players .escritxr-texto-lineas__inner > span {
+    display: block;
+}
+
 body.page-players.partida-activa .escritxr-texto-lineas {
     box-sizing: border-box;
     min-height: 100%;
@@ -4980,14 +4994,11 @@ body.page-players.partida-activa .escritxr-texto-lineas {
 }
 
 body.page-players.partida-activa .escritxr-texto-lineas span {
-    display: block;
     min-height: var(--escritxr-text-line);
 }
 
 body.page-players.partida-activa .escritxr-texto-lineas__inner {
-    display: flex;
     min-height: 100%;
-    flex-direction: column;
     will-change: transform;
 }
 

@@ -876,7 +876,10 @@ function medirAlturasLineasTextoEscritora(lineas) {
 function sincronizarLineasTextoEscritora() {
     escritxr_lineas_raf = 0;
     if (!texto || !escritxr_texto_lineas || !escritxr_texto_lineas_inner) return;
-    const contenido = String(texto.innerText || "").replace(/\r/g, "");
+    // Chromium puede representar los saltos de un contenteditable como CR,
+    // CRLF o LF. Normalizarlos a LF conserva cada línea; eliminar los CR hacía
+    // que varias líneas se contabilizasen como una sola en algunos equipos.
+    const contenido = String(texto.innerText || "").replace(/\r\n?/g, "\n");
     const sinSaltoFinal = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
     const lineas = sinSaltoFinal.split("\n").slice(0, 500);
     if (lineas.length === 0) lineas.push("");
@@ -940,6 +943,9 @@ if (texto && escritxr_texto_lineas) {
 
 if (texto) {
     texto.addEventListener("input", () => {
+        if (typeof window.repararVistaPartidaActivaEscritora === "function") {
+            window.repararVistaPartidaActivaEscritora();
+        }
         asegurarUltimaLineaVisibleEscritora();
     });
 }
@@ -2225,6 +2231,12 @@ const limpiarAsincroniaVisualEscritora = ({ resetViewport = false } = {}) => {
 
 const actualizarOcultacionMarcadorEscritora = () => {
     if (!document.body) return;
+    if (
+        window.__scribEstadoPartidaEscritoraListo === true
+        && typeof window.repararVistaPartidaActivaEscritora === "function"
+    ) {
+        window.repararVistaPartidaActivaEscritora();
+    }
     const seleccionAtributosActiva = esSeleccionAtributosActivaEscritora();
     const ocultarMarcador = Boolean(vista_calentamiento_escritor || seleccionAtributosActiva);
     document.body.classList.toggle(CLASE_OCULTAR_MARCADOR_ESCRITORA, ocultarMarcador);
@@ -3870,6 +3882,30 @@ let listener_modo_psico;
 let activado_psico = false;
 let temp_text_inverso_activado = false;
 let revision_contexto_transitorio_escritora = 0;
+window.__scribEstadoPartidaEscritoraListo = true;
+
+function esEstadoPartidaActivaEscritora() {
+    return Boolean(modo_actual && partida_global_finalizada !== true);
+}
+
+function repararVistaPartidaActivaEscritora() {
+    if (
+        window.__scribEstadoPartidaEscritoraListo !== true
+        || !document.body
+        || !esEstadoPartidaActivaEscritora()
+    ) return false;
+    const faltabaVistaPartida = !document.body.classList.contains("partida-activa");
+    if (!faltabaVistaPartida) return false;
+
+    document.body.classList.add("partida-activa");
+    if (contenedor) contenedor.style.display = "flex";
+    programarLineasTextoEscritora();
+    programarAjusteViewportEscritora();
+    return true;
+}
+
+window.esEstadoPartidaActivaEscritora = esEstadoPartidaActivaEscritora;
+window.repararVistaPartidaActivaEscritora = repararVistaPartidaActivaEscritora;
 
 function invalidarContextoTransitorioEscritora() {
     revision_contexto_transitorio_escritora += 1;
