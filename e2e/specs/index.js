@@ -2189,6 +2189,67 @@ const visualSpecs = [
 
 const coreSpecs = [
   {
+    name: "control-credits-editing-core",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(ctx, ["control"], { useStateHooks: false });
+      await ctx.evaluate("control", () => {
+        activarSeccionControl("final");
+        aplicarVistaPanelControl("creditos");
+      });
+      await ctx.waitForVisible("control", "#credito_programacion", true, "credits editor visible");
+
+      const page = ctx.getPageEntry("control").page;
+      const selector = "#credito_programacion";
+      await page.$eval(selector, (input) => {
+        input.focus();
+        input.value = "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      await page.type(selector, "ANA SEMPERE", { delay: 45 });
+      await ctx.sleep(500);
+
+      const firstPass = await ctx.evaluate("control", (css) => {
+        const input = document.querySelector(css);
+        return {
+          value: input?.value || "",
+          start: input?.selectionStart,
+          end: input?.selectionEnd,
+          focused: document.activeElement === input
+        };
+      }, selector);
+      ctx.assert(firstPass.value === "ANA SEMPERE", `credits must preserve spaces while typing (${JSON.stringify(firstPass)})`);
+      ctx.assert(firstPass.start === firstPass.value.length && firstPass.end === firstPass.value.length, "credits caret must remain at the typed position");
+      ctx.assert(firstPass.focused, "credits input must keep focus during server echoes");
+
+      await page.$eval(selector, (input) => input.setSelectionRange(3, 3));
+      await page.keyboard.type(" MARÍA", { delay: 45 });
+      await ctx.sleep(500);
+
+      const edited = await ctx.evaluate("control", (css) => {
+        const input = document.querySelector(css);
+        return {
+          value: input?.value || "",
+          caret: input?.selectionStart
+        };
+      }, selector);
+      ctx.assert(edited.value === "ANA MARÍA SEMPERE", `credits must not delete adjacent characters (${JSON.stringify(edited)})`);
+      ctx.assert(edited.caret === "ANA MARÍA".length, "credits caret must remain after the inserted text");
+
+      await page.$eval(selector, (input) => input.blur());
+      await ctx.sleep(500);
+      await reloadRole(ctx, "control");
+      await ctx.evaluate("control", () => {
+        activarSeccionControl("final");
+        aplicarVistaPanelControl("creditos");
+      });
+      await ctx.waitFor(
+        "credits persisted after reload",
+        async () => ctx.evaluate("control", (css) => document.querySelector(css)?.value === "ANA MARÍA SEMPERE", selector),
+        10000
+      );
+    }
+  },
+  {
     name: "writer-finish-layout-core",
     run: async (ctx) => {
       await openRolesAndWaitWithOptions(ctx, ["writer1"], { useStateHooks: false });

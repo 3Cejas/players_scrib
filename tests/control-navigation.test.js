@@ -141,5 +141,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /teleprompter_state\.preparing = true;[\s\S]*emitirTeleprompter\(true\)/);
   assert.match(actions, /teleprompter_state\.preparing = false;[\s\S]*teleprompter_state\.visible = true;/);
   assert.match(actions, /socket\.emit\("creditos_actualizar", \{ creditos/);
+  assert.match(actions, /const borradores_creditos_control = new Map\(\)/);
+  assert.match(actions, /const estaEditando = document\.activeElement === input/);
+  assert.match(actions, /if \(estaEditando \|\| data\[clave\] !== valorPendiente\)/);
+  assert.match(actions, /registrarBorradorCreditoControl\(el\)[\s\S]{0,160}emitirCreditosControl\(\)/);
   assert.doesNotMatch(actions, /destino\.textContent\s*=\s*vista_calentamiento\s*\?/);
 });

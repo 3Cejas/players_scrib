@@ -4411,21 +4411,70 @@ const animateCSS = window.ScribRuntime.animateCSS;
 const normalizarTextoCreditoControl = window.ScribCredits.normalizarTexto;
 const normalizarTextoAgradecimientosControl = window.ScribCredits.normalizarAgradecimientos;
 const normalizarEstadoCreditosControl = window.ScribCredits.normalizarEstado;
+const borradores_creditos_control = new Map();
+
+function normalizarBorradorCreditoControl(id, valor) {
+    if (id === CAMPO_AGRADECIMIENTOS_CONTROL[1]) {
+        return normalizarTextoAgradecimientosControl(valor, CREDITOS_AGRADECIMIENTOS_MAX);
+    }
+    const configuracion = CAMPOS_CREDITOS_CONTROL.find(([, campoId]) => campoId === id);
+    return normalizarTextoCreditoControl(valor, configuracion ? configuracion[2] : undefined);
+}
+
+function registrarBorradorCreditoControl(elemento) {
+    if (!elemento || !elemento.id) return;
+    borradores_creditos_control.set(
+        elemento.id,
+        normalizarBorradorCreditoControl(elemento.id, elemento.value)
+    );
+}
 
 const aplicarCreditosEnPanelControl = (estado = {}) => {
     const data = normalizarEstadoCreditosControl(estado);
-    creditos_estado_control = { ...data };
+    const estadoLocal = { ...data };
     CAMPOS_CREDITOS_CONTROL.forEach(([clave, id]) => {
         const input = document.getElementById(id);
         if (!input) return;
+        const valorPendiente = borradores_creditos_control.get(id);
+        const estaEditando = document.activeElement === input;
+        if (valorPendiente !== undefined) {
+            if (data[clave] === valorPendiente) {
+                borradores_creditos_control.delete(id);
+            }
+            if (estaEditando || data[clave] !== valorPendiente) {
+                estadoLocal[clave] = valorPendiente;
+                return;
+            }
+        }
+        if (estaEditando) {
+            estadoLocal[clave] = normalizarBorradorCreditoControl(id, input.value);
+            return;
+        }
         if (input.value !== data[clave]) {
             input.value = data[clave];
         }
     });
     const textarea = document.getElementById(CAMPO_AGRADECIMIENTOS_CONTROL[1]);
-    if (textarea && textarea.value !== data.agradecimientos) {
-        textarea.value = data.agradecimientos;
+    if (textarea) {
+        const id = CAMPO_AGRADECIMIENTOS_CONTROL[1];
+        const valorPendiente = borradores_creditos_control.get(id);
+        const estaEditando = document.activeElement === textarea;
+        if (valorPendiente !== undefined) {
+            if (data.agradecimientos === valorPendiente) {
+                borradores_creditos_control.delete(id);
+            }
+            if (estaEditando || data.agradecimientos !== valorPendiente) {
+                estadoLocal.agradecimientos = valorPendiente;
+            } else if (textarea.value !== data.agradecimientos) {
+                textarea.value = data.agradecimientos;
+            }
+        } else if (estaEditando) {
+            estadoLocal.agradecimientos = normalizarBorradorCreditoControl(id, textarea.value);
+        } else if (textarea.value !== data.agradecimientos) {
+            textarea.value = data.agradecimientos;
+        }
     }
+    creditos_estado_control = estadoLocal;
 };
 
 function obtenerCreditosDesdePanelControl() {
@@ -4471,10 +4520,12 @@ function inicializarPanelCreditosControl() {
     listeners_creditos_inicializados = true;
     elementos.forEach((el) => {
         el.addEventListener("input", () => {
+            registrarBorradorCreditoControl(el);
             creditos_estado_control = obtenerCreditosDesdePanelControl();
             emitirCreditosControl();
         });
         el.addEventListener("change", () => {
+            registrarBorradorCreditoControl(el);
             creditos_estado_control = obtenerCreditosDesdePanelControl();
             emitirCreditosControl(true);
         });
