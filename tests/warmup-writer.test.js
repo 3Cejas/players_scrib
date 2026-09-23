@@ -46,3 +46,20 @@ test("la prioridad se aplica simetricamente a la escritora roja", () => {
   assert.equal(visibles.filter(({ equipo }) => equipo === 2).length, 2);
   assert.equal(visibles.length, 80);
 });
+
+test("la escritora acepta el canal dirigido de calentamiento de su propio equipo", () => {
+  const socketEvents = require("node:fs").readFileSync(
+    require("node:path").join(__dirname, "../game/players/js/socket-events.js"),
+    "utf8"
+  );
+  assert.match(socketEvents, /socket\.on\('calentamiento_estado_escritor',[\s\S]*equipo_destino[\s\S]*Number\(player\)[\s\S]*actualizarCalentamientoEscritor/);
+});
+
+test("el calentamiento se resincroniza sin repintar una revision ya aplicada", () => {
+  const state = require("node:fs").readFileSync(
+    require("node:path").join(__dirname, "../game/players/js/state.js"),
+    "utf8"
+  );
+  assert.match(state, /revisionNormalizada <= revision_calentamiento_escritor\) return false/);
+  assert.match(state, /setInterval\([\s\S]*solicitarEstadoCalentamientoEscritor,[\s\S]*1500/);
+});

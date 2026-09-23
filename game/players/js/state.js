@@ -1519,6 +1519,8 @@ let calentamiento_ultimo_final_escritor = "";
 let timeout_error_calentamiento_escritor = null;
 let calentamiento_solicitud_escritor = "ninguna";
 let ultimo_payload_calentamiento_escritor = null;
+let revision_calentamiento_escritor = -1;
+let intervalo_resincronizacion_calentamiento_escritor = null;
 const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
 const VENTANA_ANIMACION_PALABRA_MS = 600;
 const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
@@ -2641,8 +2643,35 @@ const actualizarVistaCalentamientoEscritor = (activa) => {
     }
     if (!vista_calentamiento_escritor) {
         socket.emit("calentamiento_cursor", { visible: false });
+        detenerResincronizacionCalentamientoEscritor();
+    } else {
+        solicitarEstadoCalentamientoEscritor();
+        iniciarResincronizacionCalentamientoEscritor();
     }
     actualizarOcultacionMarcadorEscritora();
+};
+
+const solicitarEstadoCalentamientoEscritor = () => {
+    if (!vista_calentamiento_escritor || !socket || socket.connected === false) return;
+    socket.emit("pedir_calentamiento_estado");
+};
+
+const detenerResincronizacionCalentamientoEscritor = () => {
+    if (!intervalo_resincronizacion_calentamiento_escritor) return;
+    clearInterval(intervalo_resincronizacion_calentamiento_escritor);
+    intervalo_resincronizacion_calentamiento_escritor = null;
+};
+
+const iniciarResincronizacionCalentamientoEscritor = () => {
+    if (
+        intervalo_resincronizacion_calentamiento_escritor
+        || !vista_calentamiento_escritor
+        || revision_calentamiento_escritor < 0
+    ) return;
+    intervalo_resincronizacion_calentamiento_escritor = setInterval(
+        solicitarEstadoCalentamientoEscritor,
+        1500
+    );
 };
 
 iniciarObservadorMarcadorEscritora();
@@ -2742,6 +2771,12 @@ const mostrarErrorCalentamientoEscritor = (mensaje) => {
 };
 
 const actualizarCalentamientoEscritor = (data = {}) => {
+    const revisionEntrante = Number(data && data.revision);
+    if (Number.isFinite(revisionEntrante) && revisionEntrante >= 0) {
+        const revisionNormalizada = Math.trunc(revisionEntrante);
+        if (revisionNormalizada <= revision_calentamiento_escritor) return false;
+        revision_calentamiento_escritor = revisionNormalizada;
+    }
     ultimo_payload_calentamiento_escritor = { ...(data || {}) };
     if (typeof data.vista === "boolean") {
         actualizarVistaCalentamientoEscritor(data.vista);
@@ -2800,6 +2835,8 @@ const actualizarCalentamientoEscritor = (data = {}) => {
     }
     renderizarPalabrasCalentamientoEscritor();
     renderizarCursoresCalentamientoEscritor();
+    iniciarResincronizacionCalentamientoEscritor();
+    return true;
 };
 
 const actualizarCursorCalentamientoEscritor = (payload = {}) => {

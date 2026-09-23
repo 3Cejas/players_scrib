@@ -1352,6 +1352,8 @@ socket.on("escritor_sesion_inactiva", (payload = {}) => {
 
 socket.on('connect', () => {
     console.log("Conectado al servidor por primera vez.");
+    revision_calentamiento_escritor = -1;
+    detenerResincronizacionCalentamientoEscritor();
     reiniciarTransicionNivelEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
@@ -1375,6 +1377,8 @@ socket.on('connect', () => {
 
 socket.on('disconnect', () => {
     controladorTransicionNivelEscritora?.hide();
+    detenerResincronizacionCalentamientoEscritor();
+    revision_calentamiento_escritor = -1;
     limpiarEntregaInspiracionEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
@@ -1382,6 +1386,8 @@ socket.on('disconnect', () => {
 
 socket.on('connect_error', () => {
     controladorTransicionNivelEscritora?.hide();
+    detenerResincronizacionCalentamientoEscritor();
+    revision_calentamiento_escritor = -1;
     limpiarEntregaInspiracionEscritora();
     limpiarAsincroniaVisualEscritora({ resetViewport: true });
     invalidarEstadoAsincronoEscritora();
@@ -1393,6 +1399,12 @@ socket.on('calentamiento_vista', (data) => {
 
 socket.on('calentamiento_estado_espectador', (data) => {
     actualizarCalentamientoEscritor(data || {});
+});
+
+socket.on('calentamiento_estado_escritor', (data = {}) => {
+    const equipoDestino = Number(data.equipo_destino);
+    if (equipoDestino !== Number(player)) return;
+    actualizarCalentamientoEscritor(data);
 });
 
 socket.on('calentamiento_cursor', (payload = {}) => {

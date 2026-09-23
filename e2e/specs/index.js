@@ -1650,6 +1650,50 @@ const smokeSpecs = [
     }
   },
   {
+    name: "warmup-blue-detonator-delivery",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(
+        ctx,
+        ["control", "writer1", "writer2", "spectator", "musa1"],
+        { useStateHooks: false }
+      );
+      const [blueMuse] = await readAuthoritativeMuseAssignments(ctx, ["musa1"]);
+      ctx.assert(blueMuse && blueMuse.team === 1, "the single Muse must be assigned to the blue team");
+
+      await ctx.invoke("control", "mostrar_vista_detonadores");
+      await ctx.waitForState(
+        "detonator view active",
+        (state) => state.tutorial.activo === true && state.tutorial.vista === true,
+        10000
+      );
+      await ctx.invoke("control", "pedir_solicitud_calentamiento", "lugares");
+      await ctx.sendWarmupWord(blueMuse.roleName, "anfiteatro");
+      await ctx.waitForState(
+        "blue detonator stored authoritatively",
+        (state) => state.tutorial.equipos[1].palabras.some((item) => (
+          item.palabra === "anfiteatro" && item.nombre_musa === blueMuse.name
+        )),
+        10000
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "writer1",
+        "#calentamiento_nube_escritor .calentamiento-palabra",
+        "anfiteatro",
+        [blueMuse.name],
+        "blue writer receives the only blue Muse detonator"
+      );
+      await waitForAttributedInspiration(
+        ctx,
+        "spectator",
+        "#calentamiento_nube .calentamiento-palabra",
+        "anfiteatro",
+        [blueMuse.name],
+        "spectator receives the same blue detonator"
+      );
+    }
+  },
+  {
     name: "musa-bonus-delivery",
     run: async (ctx) => {
       const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];
