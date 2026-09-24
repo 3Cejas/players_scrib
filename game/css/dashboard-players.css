@@ -11221,7 +11221,7 @@ body.vista-stats .stats-espectador {
   box-shadow: none;
 }
 
-.stats-slider.stats-slider--tiempo {
+.stats-slider.stats-slider--rendimiento {
   border-color: transparent;
   box-shadow: none;
 }
@@ -11644,6 +11644,283 @@ body.vista-stats .stats-espectador {
   background: rgba(8, 14, 24, 0.55);
 }
 
+/* ===== STATS LIVE: rendimiento real del videojuego ===== */
+.stats-slide-body--rendimiento {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: clamp(0.7rem, 1.2vw, 1.15rem);
+}
+
+.stats-rendimiento-layout {
+  --stats-accent: #49f0ff;
+  --stats-accent-rgb: 73, 240, 255;
+  display: grid;
+  grid-template-columns: minmax(230px, 310px) minmax(0, 1fr);
+  gap: clamp(0.8rem, 1.35vw, 1.35rem);
+  align-items: stretch;
+}
+
+.stats-rendimiento-layout.equipo-2 {
+  --stats-accent: #ff6b7e;
+  --stats-accent-rgb: 255, 107, 126;
+}
+
+.stats-riqueza-panel,
+.stats-rendimiento-grafica,
+.stats-criterios {
+  border: max(1px, 0.08vw) solid rgba(203, 224, 255, 0.2);
+  border-radius: clamp(0.6rem, 1vw, 0.95rem);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(var(--stats-accent-rgb, 73, 240, 255), 0.13), transparent 48%),
+    linear-gradient(150deg, rgba(9, 14, 23, 0.9), rgba(7, 10, 18, 0.75));
+  box-shadow: inset 0 0 0 1px rgba(var(--stats-accent-rgb, 73, 240, 255), 0.08);
+}
+
+.stats-riqueza-panel {
+  padding: clamp(0.75rem, 1vw, 1.05rem);
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(0.32rem, 0.6vw, 0.58rem);
+  text-align: center;
+  border-color: rgba(var(--stats-accent-rgb), 0.42);
+}
+
+.stats-rendimiento-eyebrow {
+  color: var(--stats-accent);
+  font-size: clamp(0.58rem, 0.78vw, 0.75rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: 0 0 0.7em rgba(var(--stats-accent-rgb), 0.62);
+}
+
+.stats-riqueza-panel h4,
+.stats-rendimiento-grafica h4 {
+  margin: 0;
+  font-family: "Retro-gaming", monospace;
+  font-size: clamp(0.86rem, 1.3vw, 1.2rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stats-riqueza-anillo {
+  width: clamp(90px, 9.5vw, 132px);
+  aspect-ratio: 1;
+  margin-block: clamp(0.12rem, 0.35vw, 0.35rem);
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  gap: 0.08rem;
+  position: relative;
+  background: conic-gradient(var(--stats-accent) var(--stats-riqueza, 0deg), rgba(255, 255, 255, 0.1) 0);
+  filter: drop-shadow(0 0 0.7rem rgba(var(--stats-accent-rgb), 0.24));
+}
+
+.stats-riqueza-anillo::before {
+  content: "";
+  position: absolute;
+  inset: clamp(7px, 0.75vw, 11px);
+  border-radius: inherit;
+  background: #080d16;
+  box-shadow: inset 0 0 1.2rem rgba(var(--stats-accent-rgb), 0.09);
+}
+
+.stats-riqueza-anillo strong,
+.stats-riqueza-anillo span {
+  position: relative;
+  z-index: 1;
+}
+
+.stats-riqueza-anillo strong {
+  color: var(--stats-accent);
+  font: clamp(1.35rem, 2.5vw, 2.2rem)/1 "Retro-gaming", monospace;
+  text-shadow: 0 0 0.65em rgba(var(--stats-accent-rgb), 0.55);
+}
+
+.stats-riqueza-anillo span {
+  font-size: clamp(0.52rem, 0.68vw, 0.66rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.stats-riqueza-panel > p {
+  margin: 0;
+  font-size: clamp(0.66rem, 0.88vw, 0.84rem);
+  color: rgba(239, 246, 255, 0.78);
+}
+
+.stats-riqueza-panel > p strong {
+  color: var(--stats-accent);
+}
+
+.stats-inspiracion-actual {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: clamp(0.2rem, 0.45vw, 0.45rem);
+  padding: clamp(0.48rem, 0.65vw, 0.7rem);
+  border: 1px solid rgba(var(--stats-accent-rgb), 0.35);
+  border-radius: clamp(0.42rem, 0.7vw, 0.68rem);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.16rem 0.55rem;
+  text-align: left;
+  background: rgba(var(--stats-accent-rgb), 0.06);
+}
+
+.stats-inspiracion-actual span {
+  font-size: clamp(0.56rem, 0.72vw, 0.7rem);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stats-inspiracion-actual strong {
+  grid-row: span 2;
+  color: #ffe582;
+  font: clamp(1.2rem, 2vw, 1.85rem)/1 "Retro-gaming", monospace;
+  text-shadow: 0 0 0.7em rgba(255, 220, 95, 0.6);
+}
+
+.stats-inspiracion-actual small {
+  font-size: clamp(0.54rem, 0.68vw, 0.66rem);
+  color: rgba(239, 246, 255, 0.62);
+}
+
+.stats-rendimiento-grafica {
+  min-width: 0;
+  padding: clamp(0.65rem, 0.9vw, 0.9rem);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border-color: rgba(var(--stats-accent-rgb), 0.32);
+}
+
+.stats-rendimiento-grafica > header {
+  display: grid;
+  gap: 0.18rem;
+  padding-inline: clamp(0.15rem, 0.4vw, 0.4rem);
+}
+
+.stats-rendimiento-grafica > header p {
+  margin: 0;
+  color: rgba(239, 246, 255, 0.66);
+  font-size: clamp(0.58rem, 0.78vw, 0.75rem);
+}
+
+.stats-rendimiento-grafica .stats-tiempo-board {
+  height: clamp(220px, 31vh, 330px);
+  padding: clamp(0.2rem, 0.5vw, 0.5rem) 0 0;
+}
+
+.stats-rendimiento-grafica .stats-tiempo-area {
+  display: block;
+}
+
+.stats-rendimiento-grafica .stats-tiempo-banda rect {
+  fill-opacity: 0.14;
+}
+
+.stats-rendimiento-grafica .stats-tiempo-linea {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 0.34rem currentColor);
+}
+
+.stats-criterios {
+  --stats-accent-rgb: 255, 221, 112;
+  padding: clamp(0.55rem, 0.85vw, 0.82rem);
+  display: grid;
+  gap: clamp(0.42rem, 0.7vw, 0.65rem);
+  border-color: rgba(255, 221, 112, 0.25);
+}
+
+.stats-criterios > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #ffe58f;
+  font-size: clamp(0.58rem, 0.78vw, 0.75rem);
+  letter-spacing: 0.13em;
+}
+
+.stats-criterios > header small {
+  color: rgba(239, 246, 255, 0.52);
+  letter-spacing: 0.06em;
+}
+
+.stats-criterios-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(0.34rem, 0.58vw, 0.55rem);
+}
+
+.stats-criterio-card {
+  position: relative;
+  min-width: 0;
+  padding: clamp(0.45rem, 0.65vw, 0.65rem);
+  border: 1px solid rgba(73, 240, 255, 0.25);
+  border-radius: clamp(0.4rem, 0.65vw, 0.62rem);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.08rem 0.34rem;
+  background: linear-gradient(145deg, rgba(73, 240, 255, 0.08), rgba(7, 10, 18, 0.78));
+  overflow: hidden;
+}
+
+.stats-criterio-card.equipo-2 {
+  border-color: rgba(255, 107, 126, 0.28);
+  background: linear-gradient(145deg, rgba(255, 107, 126, 0.09), rgba(7, 10, 18, 0.78));
+}
+
+.stats-criterio-icono {
+  grid-row: span 2;
+  font-size: clamp(0.95rem, 1.35vw, 1.3rem);
+}
+
+.stats-criterio-nombre {
+  min-width: 0;
+  font-size: clamp(0.48rem, 0.64vw, 0.62rem);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-criterio-card strong {
+  color: #f8fbff;
+  font: clamp(0.85rem, 1.25vw, 1.18rem)/1 "Retro-gaming", monospace;
+}
+
+.stats-criterio-card small {
+  font-size: clamp(0.48rem, 0.62vw, 0.6rem);
+  color: rgba(239, 246, 255, 0.58);
+}
+
+.stats-criterio-card em {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  padding-left: 0.38rem;
+  border-left: 1px solid rgba(255, 229, 143, 0.24);
+  color: #ffe58f;
+  font: normal clamp(0.5rem, 0.66vw, 0.64rem)/1 "Retro-gaming", monospace;
+  white-space: nowrap;
+}
+
+.stats-criterio-card--inverso::after {
+  content: "MENOS ES MEJOR";
+  position: absolute;
+  right: 0.3rem;
+  bottom: 0.15rem;
+  color: rgba(255, 229, 143, 0.42);
+  font-size: clamp(0.38rem, 0.46vw, 0.44rem);
+  letter-spacing: 0.04em;
+}
+
 body.vista-nube-inspiracion .nube-inspiracion-espectador {
   display: flex;
   align-items: stretch;
@@ -11851,6 +12128,45 @@ body.vista-nube-inspiracion .nube-inspiracion-espectador {
   }
 
   .stats-tiempo-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-rendimiento-layout {
+    grid-template-columns: minmax(190px, 250px) minmax(0, 1fr);
+  }
+
+  .stats-criterios-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .stats-rendimiento-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-riqueza-panel {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-items: start;
+    text-align: left;
+  }
+
+  .stats-riqueza-panel .stats-rendimiento-eyebrow,
+  .stats-riqueza-panel h4,
+  .stats-riqueza-panel > p {
+    grid-column: 2;
+  }
+
+  .stats-riqueza-anillo {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+  }
+
+  .stats-inspiracion-actual {
+    grid-column: 1 / -1;
+  }
+
+  .stats-criterios-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -24,8 +24,8 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260924f";
-const SPECTATOR_CSS_VERSION = "20260924d";
+const SPECTATOR_STATE_VERSION = "20260924g";
+const SPECTATOR_CSS_VERSION = "20260924e";
 const CREDITS_DOMAIN_VERSION = "20260924a";
 const VIEW_TRANSITION_MODULE_VERSION = "20260922b";
 const MUSA_HELP_VERSION = "20260830a";
@@ -37,7 +37,7 @@ const LEVEL_TRANSITION_SCRIPT_VERSION = "20260921c";
 const PLAYER_ACTIONS_VERSION = "20260921g";
 const PLAYER_STATE_VERSION = "20260924a";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260923e";
-const SPECTATOR_SOCKET_EVENTS_VERSION = "20260923d";
+const SPECTATOR_SOCKET_EVENTS_VERSION = "20260924a";
 const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260923a";
 const JURY_SOCKET_EVENTS_VERSION = "20260923a";
@@ -74,6 +74,25 @@ function assertIncludesAsset(htmlRelPath, assetPath, version = ASSET_VERSION) {
     `${htmlRelPath} should load ${assetPath} with current cache-busting version`
   );
 }
+
+test("spectator stats replace obsolete time slides with inspiration and scoring criteria", () => {
+  const state = read("game/spectator/js/state.js");
+  const socketEvents = read("game/spectator/js/socket-events.js");
+  const css = read("game/css/dashboard-players.css");
+
+  assert.match(state, /palabrasUnicas:\s*Math\.max/);
+  assert.match(state, /valorInspiracion:\s*Math\.max/);
+  assert.match(state, /Evolución de la inspiración/);
+  assert.match(state, /Riqueza léxica/);
+  assert.match(state, /CRITERIOS DEL VIDEOJUEGO/);
+  assert.match(state, /Producción[\s\S]*Ritmo[\s\S]*Riqueza léxica[\s\S]*Inspiración[\s\S]*Precisión[\s\S]*Pulsaciones/);
+  assert.match(state, /peso:\s*20[\s\S]*peso:\s*15[\s\S]*peso:\s*15[\s\S]*peso:\s*20[\s\S]*peso:\s*20[\s\S]*peso:\s*10/);
+  assert.doesNotMatch(state, /EVOLUCION DEL TIEMPO|Esperando datos de tiempo en vivo/);
+  assert.match(socketEvents, /actualizarHistorialInspiracionDesdeStatsEspectador/);
+  assert.match(css, /\.stats-rendimiento-layout/);
+  assert.match(css, /\.stats-riqueza-anillo/);
+  assert.match(css, /\.stats-criterios-grid/);
+});
 
 test("control exposes the requested default match duration and muse cooldown", () => {
   const html = read("game/control/index.html");

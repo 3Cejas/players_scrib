@@ -1798,11 +1798,9 @@ const STATS_HEATMAP_LABELS = (() => {
     });
     return mapa;
 })();
-const STATS_HISTORIAL_VIDA_MAX = 320;
-const STATS_HISTORIAL_VIDA_VENTANA_MS = 1000 * 60 * 15;
-const STATS_REINICIO_SUBIDA_BRUSCA_SEGUNDOS = 15;
-const STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS = 8000;
-const stats_historial_vida_espectador = { 1: [], 2: [] };
+const STATS_HISTORIAL_INSPIRACION_MAX = 360;
+const STATS_HISTORIAL_INSPIRACION_VENTANA_MS = 1000 * 60 * 45;
+const stats_historial_inspiracion_espectador = { 1: [], 2: [] };
 let estado_nube_inspiracion_espectador = null;
 const posiciones_nube_inspiracion = new Map();
 const palabras_nube_inspiracion = new Map();
@@ -2768,6 +2766,8 @@ const crearJugadorStatsVacioEspectador = (id) => ({
     id,
     nombre: `ESCRITXR ${id}`,
     palabrasTotal: 0,
+    palabrasUnicas: 0,
+    valorInspiracion: 0,
     pulsacionesTotal: 0,
     teclasDistintas: 0,
     topTeclas: [],
@@ -2825,9 +2825,9 @@ const normalizarHeatmapStatsEspectador = (entrada, topTeclasFallback = []) => {
     }
     return salida;
 };
-const reiniciarHistorialVidaStatsEspectador = () => {
-    stats_historial_vida_espectador[1] = [];
-    stats_historial_vida_espectador[2] = [];
+const reiniciarHistorialInspiracionStatsEspectador = () => {
+    stats_historial_inspiracion_espectador[1] = [];
+    stats_historial_inspiracion_espectador[2] = [];
 };
 const reiniciarTimelineModosStatsEspectador = () => {
     stats_timeline_modos_local_espectador.length = 0;
@@ -2844,7 +2844,7 @@ const obtenerTiempoPartidaReferenciaStatsEspectador = (preferido = null) => {
         return Math.max(0, Number(jugador && jugador.tiempoTotalMs) || 0);
     });
     const tiemposHistorial = [1, 2].map((equipo) => {
-        const serie = Array.isArray(stats_historial_vida_espectador[equipo]) ? stats_historial_vida_espectador[equipo] : [];
+        const serie = Array.isArray(stats_historial_inspiracion_espectador[equipo]) ? stats_historial_inspiracion_espectador[equipo] : [];
         const ultimo = serie.length ? serie[serie.length - 1] : null;
         return Math.max(0, Number(ultimo && ultimo.t) || 0);
     });
@@ -3001,52 +3001,48 @@ const compactarSegmentosModoPorPixelesStatsEspectador = (segmentos = [], opcione
     }
     return suavizarSegmentosModoStatsEspectador(salida, 0);
 };
-const registrarPuntoVidaStatsEspectador = (equipo, ts, valorVida) => {
+const registrarPuntoInspiracionStatsEspectador = (equipo, ts, valorInspiracion) => {
     const id = Number(equipo);
     if (id !== 1 && id !== 2) return;
-    const valor = Number(valorVida);
+    const valor = Number(valorInspiracion);
     if (!Number.isFinite(valor)) return;
     let timestamp = Number(ts);
     if (!Number.isFinite(timestamp)) {
         timestamp = Date.now();
     }
-    const serie = stats_historial_vida_espectador[id];
+    const serie = stats_historial_inspiracion_espectador[id];
     const ultimo = serie.length ? serie[serie.length - 1] : null;
     if (ultimo && timestamp <= ultimo.t) {
         timestamp = ultimo.t + 1;
     }
-    if (ultimo) {
-        const deltaVida = valor - ultimo.v;
-        const deltaMs = timestamp - ultimo.t;
-        const subidaBrusca = deltaVida >= STATS_REINICIO_SUBIDA_BRUSCA_SEGUNDOS
-            && deltaMs >= 0
-            && deltaMs <= STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS;
-        const veniaAgotado = ultimo.v <= 5;
-        const ventanaArranqueMs = Math.min(2500, STATS_REINICIO_SUBIDA_BRUSCA_VENTANA_MS);
-        const pareceArranqueDePartida = ultimo.t <= ventanaArranqueMs
-            && timestamp <= (ventanaArranqueMs * 2);
-        // Solo reinicia al principio real de la partida.
-        if (subidaBrusca && veniaAgotado && pareceArranqueDePartida) {
-            serie.length = 0;
-        }
+    if (!serie.length) {
+        serie.push({ t: 0, v: 0 });
     }
-    if (!serie.length && valor <= 0) return;
     const ultimoActual = serie.length ? serie[serie.length - 1] : null;
-    if (ultimoActual && ultimoActual.v === valor && (timestamp - ultimoActual.t) < 700) return;
+    if (ultimoActual && ultimoActual.v === valor) {
+        if (timestamp <= ultimoActual.t) return;
+        const anterior = serie.length > 1 ? serie[serie.length - 2] : null;
+        if (serie.length === 1 || (anterior && anterior.v !== valor)) {
+            serie.push({ t: timestamp, v: Math.max(0, valor) });
+        } else {
+            ultimoActual.t = timestamp;
+        }
+        return;
+    }
     serie.push({ t: timestamp, v: Math.max(0, valor) });
-    const limiteMin = timestamp - STATS_HISTORIAL_VIDA_VENTANA_MS;
-    while (serie.length > STATS_HISTORIAL_VIDA_MAX || (serie.length > 2 && serie[0].t < limiteMin)) {
+    const limiteMin = timestamp - STATS_HISTORIAL_INSPIRACION_VENTANA_MS;
+    while (serie.length > STATS_HISTORIAL_INSPIRACION_MAX || (serie.length > 2 && serie[1].t < limiteMin)) {
         serie.shift();
     }
 };
-const actualizarHistorialVidaDesdeStatsEspectador = (estado) => {
+const actualizarHistorialInspiracionDesdeStatsEspectador = (estado) => {
     const data = estado && typeof estado === "object" ? estado : {};
     const ts = Number(data.ts) || Date.now();
     [1, 2].forEach((equipo) => {
         const jugador = data.players && data.players[equipo] ? data.players[equipo] : null;
-        const actual = jugador && jugador.vida ? jugador.vida.actual : null;
+        const actual = jugador ? jugador.valorInspiracion : 0;
         const tiempoPartidaMs = jugador ? Number(jugador.tiempoTotalMs) : NaN;
-        registrarPuntoVidaStatsEspectador(
+        registrarPuntoInspiracionStatsEspectador(
             equipo,
             Number.isFinite(tiempoPartidaMs) ? tiempoPartidaMs : ts,
             actual
@@ -3066,6 +3062,8 @@ const normalizarJugadorStatsLiveEspectador = (payload, id) => {
         id,
         nombre: (String(data.nombre ?? "").trim().slice(0, 28) || base.nombre),
         palabrasTotal: Math.max(0, Number(data.palabrasTotal) || 0),
+        palabrasUnicas: Math.max(0, Math.min(Number(data.palabrasTotal) || 0, Number(data.palabrasUnicas) || 0)),
+        valorInspiracion: Math.max(0, Number(data.valorInspiracion) || 0),
         pulsacionesTotal: Math.max(0, Number(data.pulsacionesTotal) || 0),
         teclasDistintas: Math.max(0, Number(data.teclasDistintas) || 0),
         topTeclas: normalizarTopTeclasEspectador(data.topTeclas),
@@ -3248,7 +3246,6 @@ const redondearMaximoEjeVidaStats = (valor) => {
     const paso = normalizarPasoEjeStats(objetivo / 4);
     return Math.max(4, Math.ceil(objetivo / paso) * paso);
 };
-const formatearValorEjeVidaStats = (valor) => `${Math.max(0, Math.round(Number(valor) || 0))} s`;
 const renderizarNombreEquipoStats = (nombre, equipo) => (
     `<span class="stats-slide-player-name equipo-${Number(equipo) === 2 ? 2 : 1}">${escapeHtml(String(nombre || `ESCRITXR ${equipo}`).trim() || `ESCRITXR ${equipo}`)}</span>`
 );
@@ -3446,7 +3443,7 @@ const renderizarHeatmapStatsJugador = (jugador, equipo) => {
         </div>
     `;
 };
-const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
+const construirSerieSvgInspiracionStats = (historial = [], opciones = {}) => {
     const ancho = 1000;
     const alto = 330;
     const padLeft = 92;
@@ -3455,9 +3452,9 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
     const padBottom = 58;
     const usableX = ancho - padLeft - padRight;
     const usableY = alto - padTop - padBottom;
-    const maxVidaHint = Math.max(0, Number(opciones && opciones.maxVidaHint) || 0);
-    const fallbackMaxVida = maxVidaHint > 0 ? maxVidaHint : 120;
-    const serieCruda = Array.isArray(historial) ? historial.slice(-STATS_HISTORIAL_VIDA_MAX) : [];
+    const maxInspiracionHint = Math.max(0, Number(opciones && opciones.maxInspiracionHint) || 0);
+    const fallbackMaxInspiracion = maxInspiracionHint > 0 ? maxInspiracionHint : 4;
+    const serieCruda = Array.isArray(historial) ? historial.slice(-STATS_HISTORIAL_INSPIRACION_MAX) : [];
     const serie = serieCruda
         .map((p) => ({
             t: Number(p && p.t),
@@ -3482,7 +3479,7 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
             linePath: "",
             areaPath: "",
             ultimo: null,
-            maxVida: redondearMaximoEjeVidaStats(fallbackMaxVida),
+            maxVida: redondearMaximoEjeVidaStats(fallbackMaxInspiracion),
             minT: 0,
             maxT: 0,
             spanT: 0
@@ -3514,7 +3511,7 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
             linePath: "",
             areaPath: "",
             ultimo: null,
-            maxVida: redondearMaximoEjeVidaStats(fallbackMaxVida),
+            maxVida: redondearMaximoEjeVidaStats(fallbackMaxInspiracion),
             minT: 0,
             maxT: 0,
             spanT: 0
@@ -3526,7 +3523,7 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
     const usarIndiceEnX = spanT <= 5;
     const divisorIdx = Math.max(1, serieOrdenada.length - 1);
     const maxObservada = serieOrdenada.reduce((acc, punto) => Math.max(acc, Math.max(0, Number(punto.v) || 0)), 0);
-    const maxVida = redondearMaximoEjeVidaStats(Math.max(30, Math.ceil(Math.max(maxObservada, maxVidaHint, fallbackMaxVida) * 1.05)));
+    const maxVida = redondearMaximoEjeVidaStats(Math.max(4, Math.ceil(Math.max(maxObservada, maxInspiracionHint, fallbackMaxInspiracion) * 1.05)));
     const puntos = serieOrdenada.map((punto, idx) => {
         const ratioX = usarIndiceEnX ? (idx / divisorIdx) : ((punto.t - minT) / spanT);
         const x = padLeft + (ratioX * usableX);
@@ -3556,7 +3553,7 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
         plotWidth: usableX,
         plotHeight: usableY,
         linePath,
-        areaPath: "",
+        areaPath: `${linePath} L${puntos[puntos.length - 1].x.toFixed(2)} ${(alto - padBottom).toFixed(2)} L${puntos[0].x.toFixed(2)} ${(alto - padBottom).toFixed(2)} Z`,
         ultimo: puntos[puntos.length - 1],
         maxVida,
         minT,
@@ -3564,15 +3561,25 @@ const construirSerieSvgVidaStats = (historial = [], opciones = {}) => {
         spanT
     };
 };
-const renderizarEvolucionTiempoStatsJugador = (jugador, equipo, timelineModos = [], modoActual = "") => {
-    const historial = stats_historial_vida_espectador[equipo] || [];
-    const vida = jugador && jugador.vida ? jugador.vida : { actual: null, min: null, max: null, media: null };
-    const maxVidaHint = Number.isFinite(Number(vida.max))
-        ? Math.max(0, Number(vida.max))
-        : (Number.isFinite(Number(vida.actual)) ? Math.max(0, Number(vida.actual)) : 0);
-    const serie = construirSerieSvgVidaStats(historial, { maxVidaHint });
-    const valorVida = (valor) => (Number.isFinite(Number(valor)) ? `${Math.max(0, Number(valor))} s` : "--");
+const renderizarRendimientoStatsJugador = (jugador, equipo, timelineModos = [], modoActual = "") => {
+    const totalPalabras = Math.max(0, Math.round(Number(jugador && jugador.palabrasTotal) || 0));
+    const palabrasUnicas = Math.max(0, Math.min(totalPalabras, Math.round(Number(jugador && jugador.palabrasUnicas) || 0)));
+    const riquezaPct = totalPalabras > 0 ? Math.min(100, Math.round((palabrasUnicas / totalPalabras) * 100)) : 0;
+    const inspiracion = Math.max(0, Number(jugador && jugador.valorInspiracion) || 0);
+    const inspiracionesUsadas = Array.isArray(jugador && jugador.palabrasBenditas)
+        ? jugador.palabrasBenditas.length
+        : 0;
+    const fallosPrecision = Math.max(0,
+        Number(jugador && jugador.intentosLetraProhibida) || 0
+    ) + Math.max(0, Number(jugador && jugador.intentosPalabraProhibida) || 0);
+    const historialBase = stats_historial_inspiracion_espectador[equipo] || [];
     const totalMs = Math.max(0, Number(jugador && jugador.tiempoTotalMs) || 0);
+    const historial = historialBase.length >= 2
+        ? historialBase
+        : [{ t: 0, v: 0 }, { t: Math.max(1000, totalMs), v: inspiracion }];
+    const serie = construirSerieSvgInspiracionStats(historial, {
+        maxInspiracionHint: Math.max(inspiracion, inspiracionesUsadas)
+    });
     const inicioTiempoMs = Math.max(0, Math.round(serie.minT || 0));
     const finTiempoMs = Math.max(inicioTiempoMs, Math.max(totalMs, Math.round(serie.maxT || 0)));
     const totalTicks = 4;
@@ -3595,7 +3602,7 @@ const renderizarEvolucionTiempoStatsJugador = (jugador, equipo, timelineModos = 
         `<line x1="${tick.x.toFixed(2)}" y1="${serie.plotTop.toFixed(2)}" x2="${tick.x.toFixed(2)}" y2="${serie.plotBottom.toFixed(2)}"></line>`
     )).join("");
     const labelsY = yTicks.map((tick) => (
-        `<text class="stats-tiempo-axis-label stats-tiempo-axis-label--y" x="${(serie.plotLeft - 12).toFixed(2)}" y="${(tick.y + 4).toFixed(2)}" text-anchor="end">${escapeHtml(formatearValorEjeVidaStats(tick.valor))}</text>`
+        `<text class="stats-tiempo-axis-label stats-tiempo-axis-label--y" x="${(serie.plotLeft - 12).toFixed(2)}" y="${(tick.y + 4).toFixed(2)}" text-anchor="end">${escapeHtml(String(Math.max(0, Math.round(tick.valor))))}</text>`
     )).join("");
     const labelsX = xTicks.map((tick) => (
         `<text class="stats-tiempo-axis-label stats-tiempo-axis-label--x" x="${tick.x.toFixed(2)}" y="${(serie.plotBottom + 24).toFixed(2)}" text-anchor="middle">${escapeHtml(formatearDuracionMsEspectador(tick.valorMs))}</text>`
@@ -3604,13 +3611,13 @@ const renderizarEvolucionTiempoStatsJugador = (jugador, equipo, timelineModos = 
         inicioMs: inicioTiempoMs,
         finMs: finTiempoMs
     }, modoActual);
-    const tituloEjeY = escapeHtml(tJuego2P("stats.axis.y_time_left", {}, "Vida"));
-    const tituloEjeX = escapeHtml(`\u231B\uFE0F ${tJuego2P("stats.axis.x_elapsed", {}, "Tiempo transcurrido")}`);
+    const tituloEjeY = "INSPIRACIÓN";
+    const tituloEjeX = "TIEMPO DE PARTIDA";
     const ejeYTitleX = 20;
     const ejeYTitleY = (serie.plotTop + (serie.plotHeight / 2)).toFixed(2);
     const graficaHtml = serie.linePath
         ? `
-            <svg viewBox="0 0 ${serie.ancho} ${serie.alto}" class="stats-tiempo-svg" role="img" aria-label="Evolucion de la vida">
+            <svg viewBox="0 0 ${serie.ancho} ${serie.alto}" class="stats-tiempo-svg stats-rendimiento-svg" role="img" aria-label="Evolución de la inspiración incorporada">
                 <rect class="stats-tiempo-plot-bg" x="${serie.plotLeft.toFixed(2)}" y="${serie.plotTop.toFixed(2)}" width="${serie.plotWidth.toFixed(2)}" height="${serie.plotHeight.toFixed(2)}"></rect>
                 <g class="stats-tiempo-bandas">${bandasModo}</g>
                 <g class="stats-tiempo-grid">${gridHorizontal}${gridVertical}</g>
@@ -3618,33 +3625,68 @@ const renderizarEvolucionTiempoStatsJugador = (jugador, equipo, timelineModos = 
                     <line x1="${serie.plotLeft.toFixed(2)}" y1="${serie.plotTop.toFixed(2)}" x2="${serie.plotLeft.toFixed(2)}" y2="${serie.plotBottom.toFixed(2)}"></line>
                     <line x1="${serie.plotLeft.toFixed(2)}" y1="${serie.plotBottom.toFixed(2)}" x2="${serie.plotRight.toFixed(2)}" y2="${serie.plotBottom.toFixed(2)}"></line>
                 </g>
+                <path class="stats-tiempo-area equipo-${equipo}" d="${serie.areaPath}"></path>
                 <path class="stats-tiempo-linea equipo-${equipo}" d="${serie.linePath}" fill="none" vector-effect="non-scaling-stroke"></path>
                 ${serie.ultimo ? `<circle class="stats-tiempo-punto equipo-${equipo}" cx="${serie.ultimo.x.toFixed(2)}" cy="${serie.ultimo.y.toFixed(2)}" r="6"></circle>` : ""}
                 <g class="stats-tiempo-axis-labels">${labelsY}${labelsX}</g>
-                <text class="stats-tiempo-axis-title stats-tiempo-axis-title--y" x="${ejeYTitleX}" y="${ejeYTitleY}" text-anchor="middle" transform="rotate(-90 ${ejeYTitleX} ${ejeYTitleY})"><tspan class="stats-tiempo-axis-icon stats-tiempo-axis-icon--vida equipo-${equipo}">&#x2665;</tspan><tspan dx="8">${tituloEjeY}</tspan></text>
+                <text class="stats-tiempo-axis-title stats-tiempo-axis-title--y" x="${ejeYTitleX}" y="${ejeYTitleY}" text-anchor="middle" transform="rotate(-90 ${ejeYTitleX} ${ejeYTitleY})">${tituloEjeY}</text>
                 <text class="stats-tiempo-axis-title stats-tiempo-axis-title--x" x="${(serie.plotLeft + (serie.plotWidth / 2)).toFixed(2)}" y="${(serie.alto - 12).toFixed(2)}" text-anchor="middle">${tituloEjeX}</text>
             </svg>
         `
-        : `<div class="stats-tiempo-vacio">${escapeHtml(tJuego2P("stats.time.waiting", {}, "Esperando datos de tiempo en vivo..."))}</div>`;
-    const tituloPanelVida = escapeHtml(tJuego2P("stats.axis.y_time_left", {}, "Vida")).toUpperCase();
+        : `<div class="stats-tiempo-vacio">Aún no hay inspiración incorporada</div>`;
+    const formatearDecimal = (valor) => {
+        const numero = Math.max(0, Number(valor) || 0);
+        return Number.isInteger(numero) ? String(numero) : numero.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+    };
+    const criterios = [
+        { icono: "&#x270D;&#xFE0F;", nombre: "Producción", valor: totalPalabras, unidad: "palabras", peso: 20 },
+        { icono: "&#x26A1;", nombre: "Ritmo", valor: Math.max(0, Math.round(Number(jugador && jugador.ritmoPpm) || 0)), unidad: "PPM", peso: 15 },
+        { icono: "&#x1F4DA;", nombre: "Riqueza léxica", valor: palabrasUnicas, unidad: "únicas", peso: 15 },
+        { icono: "&#x2728;", nombre: "Inspiración", valor: formatearDecimal(inspiracion), unidad: "puntos", peso: 20 },
+        { icono: "&#x1F3AF;", nombre: "Precisión", valor: fallosPrecision, unidad: fallosPrecision === 1 ? "fallo" : "fallos", peso: 20, inversa: true },
+        { icono: "&#x2328;&#xFE0F;", nombre: "Pulsaciones", valor: Math.max(0, Math.round(Number(jugador && jugador.pulsacionesTotal) || 0)), unidad: "teclas", peso: 10 }
+    ];
+    const criteriosHtml = criterios.map((criterio) => `
+        <article class="stats-criterio-card equipo-${equipo}${criterio.inversa ? " stats-criterio-card--inverso" : ""}">
+            <span class="stats-criterio-icono" aria-hidden="true">${criterio.icono}</span>
+            <span class="stats-criterio-nombre">${criterio.nombre}</span>
+            <strong>${criterio.valor}</strong>
+            <small>${criterio.unidad}</small>
+            <em>${criterio.peso} pts</em>
+        </article>
+    `).join("");
     return `
-        <div class="stats-tiempo-layout equipo-${equipo}">
-            <section class="stats-vida-panel equipo-${equipo}" aria-label="${tituloPanelVida}">
-                <h4 class="stats-vida-panel-title">
-                    <span class="stats-tiempo-axis-icon stats-tiempo-axis-icon--vida equipo-${equipo}">&#x2665;</span>
-                    <span>${tituloPanelVida}</span>
-                </h4>
-                <div class="stats-vida-grid">
-                    <div class="stats-kpi"><span>&#x1F7E2; Actual</span><strong>${valorVida(vida.actual)}</strong></div>
-                    <div class="stats-kpi"><span>&#x1F680; Max</span><strong>${valorVida(vida.max)}</strong></div>
-                    <div class="stats-kpi"><span>&#x1F4C9; Min</span><strong>${valorVida(vida.min)}</strong></div>
-                    <div class="stats-kpi"><span>&#x1F4CA; Media</span><strong>${valorVida(vida.media)}</strong></div>
+        <div class="stats-rendimiento-layout equipo-${equipo}">
+            <section class="stats-riqueza-panel equipo-${equipo}" aria-label="Riqueza léxica">
+                <span class="stats-rendimiento-eyebrow">VOCABULARIO</span>
+                <h4>Riqueza léxica</h4>
+                <div class="stats-riqueza-anillo" style="--stats-riqueza:${riquezaPct * 3.6}deg">
+                    <strong>${riquezaPct}%</strong>
+                    <span>variedad</span>
+                </div>
+                <p><strong>${palabrasUnicas}</strong> palabras únicas de ${totalPalabras}</p>
+                <div class="stats-inspiracion-actual equipo-${equipo}">
+                    <span>&#x2728; Inspiración incorporada</span>
+                    <strong>${formatearDecimal(inspiracion)}</strong>
+                    <small>${inspiracionesUsadas} ${inspiracionesUsadas === 1 ? "aporte detectado" : "aportes detectados"}</small>
                 </div>
             </section>
-            <div class="stats-tiempo-board equipo-${equipo}">
-                ${graficaHtml}
-            </div>
+            <section class="stats-rendimiento-grafica equipo-${equipo}">
+                <header>
+                    <span class="stats-rendimiento-eyebrow">HUELLA DE LAS MUSAS</span>
+                    <h4>Evolución de la inspiración</h4>
+                    <p>Valor de las inspiraciones incorporadas al texto durante cada nivel.</p>
+                </header>
+                <div class="stats-tiempo-board equipo-${equipo}">${graficaHtml}</div>
+            </section>
         </div>
+        <section class="stats-criterios">
+            <header>
+                <span>CRITERIOS DEL VIDEOJUEGO</span>
+                <small>peso máximo de cada categoría</small>
+            </header>
+            <div class="stats-criterios-grid">${criteriosHtml}</div>
+        </section>
     `;
 };
 const construirSlidesStats = (payload) => {
@@ -3654,8 +3696,8 @@ const construirSlidesStats = (payload) => {
     const p2 = estado.players[2];
     const contextoHeatmapP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; MAPA DE CALOR`;
     const contextoHeatmapP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; MAPA DE CALOR`;
-    const contextoTiempoP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; EVOLUCION DEL TIEMPO`;
-    const contextoTiempoP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; EVOLUCION DEL TIEMPO`;
+    const contextoRendimientoP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; RENDIMIENTO EN VIVO`;
+    const contextoRendimientoP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; RENDIMIENTO EN VIVO`;
     return [
         {
             tipo: "heatmap",
@@ -3672,18 +3714,18 @@ const construirSlidesStats = (payload) => {
             html: renderizarHeatmapStatsJugador(p2, 2)
         },
         {
-            tipo: "tiempo",
-            titulo: contextoTiempoP1,
-            contextoCabecera: contextoTiempoP1,
+            tipo: "rendimiento",
+            titulo: contextoRendimientoP1,
+            contextoCabecera: contextoRendimientoP1,
             ocultarTituloEnSlide: true,
-            html: renderizarEvolucionTiempoStatsJugador(p1, 1, timelineModos, estado.modo_actual)
+            html: renderizarRendimientoStatsJugador(p1, 1, timelineModos, estado.modo_actual)
         },
         {
-            tipo: "tiempo",
-            titulo: contextoTiempoP2,
-            contextoCabecera: contextoTiempoP2,
+            tipo: "rendimiento",
+            titulo: contextoRendimientoP2,
+            contextoCabecera: contextoRendimientoP2,
             ocultarTituloEnSlide: true,
-            html: renderizarEvolucionTiempoStatsJugador(p2, 2, timelineModos, estado.modo_actual)
+            html: renderizarRendimientoStatsJugador(p2, 2, timelineModos, estado.modo_actual)
         }
     ];
 };
@@ -3701,9 +3743,9 @@ const aplicarSlideStatsActual = () => {
     stats_slide_index = resolverIndiceSlideStatsEspectador(stats_slide_step_remoto, stats_slide_count);
     stats_slides_track.style.transform = `translateX(-${stats_slide_index * 100}%)`;
     const slide = Array.isArray(stats_slides_actuales) ? stats_slides_actuales[stats_slide_index] : null;
-    const esSlideTiempo = Boolean(slide && slide.tipo === "tiempo");
+    const esSlideRendimiento = Boolean(slide && slide.tipo === "rendimiento");
     const esSlideHeatmap = Boolean(slide && slide.tipo === "heatmap");
-    stats_slider?.classList.toggle("stats-slider--tiempo", esSlideTiempo);
+    stats_slider?.classList.toggle("stats-slider--rendimiento", esSlideRendimiento);
     stats_slider?.classList.toggle("stats-slider--heatmap", esSlideHeatmap);
     actualizarPaginadorStats();
     actualizarCabeceraSlideStats();
@@ -3752,7 +3794,7 @@ const renderizarStatsEspectador = () => {
     stats_slide_count = slides.length;
     aplicarSlideStatsActual();
     const nombreModo = estado.modo_actual ? estado.modo_actual : "partida";
-    stats_estado.textContent = `Modo: ${nombreModo} Â· Heatmap + tiempo live Â· ${stats_slide_count} slides`;
+    stats_estado.textContent = `Modo: ${nombreModo} Â· Heatmap + rendimiento en vivo Â· ${stats_slide_count} slides`;
     stats_timestamp.textContent = `Actualizado: ${formatearHoraEspectador(estado.ts)}`;
     actualizarCabeceraSlideStats();
     renderizarEstadoStatsEspectador(resolverModoActivoStatsEspectador(estado));

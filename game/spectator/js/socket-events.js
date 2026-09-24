@@ -116,7 +116,7 @@ socket.on('stats_live_estado', (payload = {}) => {
                 Number(estado_stats_live_espectador.players[2] && estado_stats_live_espectador.players[2].tiempoTotalMs) || 0
             )
         );
-        actualizarHistorialVidaDesdeStatsEspectador(estado_stats_live_espectador);
+        actualizarHistorialInspiracionDesdeStatsEspectador(estado_stats_live_espectador);
         if (vista_espectador_modo_resuelta === "stats") {
             renderizarStatsEspectador();
         }
@@ -933,7 +933,7 @@ socket.on('inicio', data => {
     }
     detenerSonidoCountdownEspectador();
     reiniciarEstadoCierrePartidaEspectador();
-    reiniciarHistorialVidaStatsEspectador();
+    reiniciarHistorialInspiracionStatsEspectador();
     reiniciarTimelineModosStatsEspectador();
     limpiarColaPalabrasPendientesEspectador();
     limpiarColaPutadasPendientesEspectador();
@@ -1136,7 +1136,7 @@ socket.on('limpiar', data => {
     limpiarColaPalabrasPendientesEspectador();
     limpiarColaPutadasPendientesEspectador();
     reiniciarEstadoCierrePartidaEspectador();
-    reiniciarHistorialVidaStatsEspectador();
+    reiniciarHistorialInspiracionStatsEspectador();
     reiniciarTimelineModosStatsEspectador();
     setPendienteAnimacionEntradaBarraVida(false);
     partida_activa_espectador = false;

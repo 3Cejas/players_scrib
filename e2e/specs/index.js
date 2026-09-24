@@ -467,13 +467,21 @@ async function waitForSpectatorStatsSlides(ctx, description, timeoutMs = 10000) 
       const style = window.getComputedStyle(root);
       if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
       const heatmapBoards = track.querySelectorAll(".stats-heatmap-board").length;
-      const timeBoards = track.querySelectorAll(".stats-tiempo-board").length;
-      const timeLines = Array.from(track.querySelectorAll(".stats-tiempo-linea"))
+      const performanceBoards = track.querySelectorAll(".stats-rendimiento-layout").length;
+      const inspirationLines = Array.from(track.querySelectorAll(".stats-rendimiento-grafica .stats-tiempo-linea"))
         .filter((node) => String(node.getAttribute("d") || "").trim().length > 0).length;
+      const lexicalRings = Array.from(track.querySelectorAll(".stats-riqueza-anillo strong"))
+        .map((node) => String(node.textContent || "").trim());
+      const criteriaCards = track.querySelectorAll(".stats-criterio-card").length;
       const heatmapTotals = Array.from(track.querySelectorAll(".stats-kpis-grid--heatmap .stats-kpi strong"))
         .map((node) => Number(String(node.textContent || "").replace(/[^\d.-]/g, "")) || 0);
       const hasKeyboardData = heatmapTotals.some((value) => value > 0);
-      return heatmapBoards >= 2 && timeBoards >= 2 && timeLines >= 2 && hasKeyboardData;
+      return heatmapBoards >= 2
+        && performanceBoards >= 2
+        && inspirationLines >= 2
+        && lexicalRings.length >= 2
+        && criteriaCards >= 12
+        && hasKeyboardData;
     }),
     timeoutMs
   );
@@ -5784,7 +5792,7 @@ const coreSpecs = [
       );
       await ensureSpectatorView(ctx, "stats");
       await ctx.waitForVisible("spectator", "#stats_espectador", true, "full match spectator stats view visible", 10000);
-      await waitForSpectatorStatsSlides(ctx, "full match spectator stats slides render heatmap and time views", 10000);
+      await waitForSpectatorStatsSlides(ctx, "full match spectator stats slides render heatmap and performance views", 10000);
 
       await ctx.waitForState(
         "full real timeline reached final mode",
