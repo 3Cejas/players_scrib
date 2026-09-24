@@ -263,9 +263,10 @@ function obtenerNombreCierrePartidaEspectador(player) {
 
 function teleprompterActivoEspectador() {
     const teleprompter = document.getElementById("teleprompter_overlay");
+    const preparando = document.getElementById("teleprompter_preparing");
     return Boolean(
-        teleprompter
-        && teleprompter.classList.contains("activo")
+        (teleprompter && teleprompter.classList.contains("activo"))
+        || (preparando && preparando.classList.contains("activo"))
     );
 }
 

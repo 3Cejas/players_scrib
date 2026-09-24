@@ -661,15 +661,19 @@ const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
     }
-    if (typeof window.sincronizarCierrePartidaEspectadorConVista === "function") {
-        window.sincronizarCierrePartidaEspectadorConVista(vista_espectador_modo_resuelta);
-    }
     actualizarPresentacionTemporizadorGiganteEspectador();
     if (teleprompter_preparing) {
         const preparando = Boolean(teleprompter_estado.preparing && !teleprompter_estado.visible);
         teleprompter_preparing.hidden = !preparando;
         teleprompter_preparing.classList.toggle("activo", preparando);
         teleprompter_preparing.setAttribute("aria-hidden", preparando ? "false" : "true");
+    }
+    // La pantalla final tiene una capa propia a pantalla completa. Hay que
+    // actualizar primero tanto el texto como la vista de preparacion para que
+    // "Historias listas" no vuelva a cubrir el teleprompter mientras Control
+    // esta eligiendo que texto cargar.
+    if (typeof window.sincronizarCierrePartidaEspectadorConVista === "function") {
+        window.sincronizarCierrePartidaEspectadorConVista(vista_espectador_modo_resuelta);
     }
     if (typeof refrescarVisibilidadPreShowEspectador === "function") {
         refrescarVisibilidadPreShowEspectador();

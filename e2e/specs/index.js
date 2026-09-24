@@ -5521,6 +5521,20 @@ const coreSpecs = [
       await ctx.waitForVisible("musa1", "#temporizador_musa", true, "muse compact representation timer active", 8000);
 
       await ctx.invoke("control", "toggleTeleprompter");
+      await ctx.waitForVisible(
+        "spectator",
+        "#teleprompter_preparing",
+        true,
+        "postgame teleprompter preparation covers the finished-writing scene",
+        8000
+      );
+      await ctx.waitForVisible(
+        "spectator",
+        "#partida_final_espectador",
+        false,
+        "finished-writing scene stays hidden while selecting a teleprompter text",
+        8000
+      );
       await ctx.invoke("control", "teleprompterCargarTexto", 1);
       await ctx.waitForState(
         "teleprompter stays loaded after postgame result",

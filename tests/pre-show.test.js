@@ -153,7 +153,8 @@ test("spectator renders only recent messages as text and yields to tutorial/tele
   assert.match(state, /teleprompter_estado\.preparing && !teleprompter_estado\.visible/);
   assert.match(css, /\.teleprompter-preparing\.activo\s*\{[\s\S]*display: grid;/);
   assert.doesNotMatch(css, /body\.page-spectator:not\(\.vista-partida\) #teleprompter_overlay/);
-  assert.match(css, /\.teleprompter-overlay\s*\{[\s\S]*z-index: 1900;/);
+  assert.match(css, /\.teleprompter-overlay\s*\{[\s\S]*z-index: 2147483000;/);
+  assert.match(css, /\.teleprompter-preparing\s*\{[\s\S]*z-index: 2147483000;/);
   assert.match(state, /cerrarPreShowEspectadorPorTutorial/);
   assert.match(state, /vista_espectador_modo_resuelta === "tutorial"/);
   assert.match(state, /vista_espectador_override = "tutorial";[\s\S]*vista_espectador_modo_resuelta = "tutorial";[\s\S]*vista_espectador_modo_solicitada = "tutorial";/);

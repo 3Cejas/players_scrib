@@ -8552,7 +8552,7 @@ body.equipo-rojo .total {
   justify-content: center;
   padding: 1.5vh 1.5vw;
   background: #000;
-  z-index: 1900;
+  z-index: 2147483000;
 }
 
 .teleprompter-overlay.activo {
@@ -8562,7 +8562,7 @@ body.equipo-rojo .total {
 .teleprompter-preparing {
   position: fixed;
   inset: 0;
-  z-index: 1900;
+  z-index: 2147483000;
   display: none;
   width: 100vw;
   height: 100vh;
