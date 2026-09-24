@@ -130,6 +130,35 @@ test("receiver applies ordered deltas and renders only the latest state in one f
   assert.equal(renders[0].payload.revision, 2);
 });
 
+test("receiver drops a queued render when the visible writer changes", () => {
+  const { api, socket, flushFrames } = crearEntorno();
+  const renders = [];
+  const receiver = api.crearReceptor({
+    socket,
+    players: [2],
+    onText: (player, payload) => renders.push({ player, text: payload.text })
+  });
+
+  socket.trigger("texto_snapshot", {
+    player: 2,
+    revision: 1,
+    text: "texto rival",
+    plain: "texto rival",
+    payload: { text: "texto rival" }
+  });
+  receiver.subscribe([1]);
+  socket.trigger("texto_snapshot", {
+    player: 1,
+    revision: 2,
+    text: "texto propio",
+    plain: "texto propio",
+    payload: { text: "texto propio" }
+  });
+  flushFrames();
+
+  assert.deepEqual(renders, [{ player: 1, text: "texto propio" }]);
+});
+
 test("sender falls back to snapshots until protocol negotiation and then emits patches", () => {
   const { api, socket, emitidos } = crearEntorno();
   const sender = api.crearEmisor({ socket, player: 1 });

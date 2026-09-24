@@ -146,16 +146,7 @@ function sincronizarPartidaMusaTrasRegistro() {
 
     // La asignacion autoritativa puede haber cambiado el equipo respecto a la URL.
     // Reenlazamos el canal antes de pedir el snapshot para no perder el texto actual.
-    if (typeof handler_recibir_texto_x === "function") {
-        texto_x = `texto${equipoTexto}`;
-        if (receptor_texto_musa) {
-            receptor_texto_musa.subscribe([equipoTexto]);
-        } else {
-            socket.off(`texto${equipoTexto === 1 ? 2 : 1}`, handler_recibir_texto_x);
-            socket.on(texto_x, handler_recibir_texto_x);
-        }
-    }
-    pedirNombreMusa(equipoTexto);
+    cambiar_jugadores(equipoTexto !== equipoPropio, { solicitarTexto: false });
 
     const pedirSnapshot = () => {
         if (!socket.connected || !musa_registro_confirmado) return;
@@ -276,14 +267,9 @@ socket.on('modo_actual', (data) => {
         invalidarContextoDesventajasMusa();
     }
     setNivelesDesactivados(false);
-    if (siguiente_modo === "palabras prohibidas") {
-        cambiar_jugadores(true);
-    } else {
-        cambiar_jugadores(false);
-    }
-    document.body?.classList.toggle("musa-texto-rival", siguiente_modo === "palabras prohibidas");
     modo_actual = siguiente_modo;
     window.__scribModoActualMusaPreview = modo_actual;
+    cambiar_jugadores(modo_actual === "palabras prohibidas", { solicitarTexto: true });
     niveles_bloqueados = false;
     actualizarNiveles(modo_actual);
     actualizarDuracionNivelDesdeParametrosMusa(data || {});
@@ -342,9 +328,7 @@ socket.on('dar_nombre', (nombre) => {
 
 if (elegir_ventaja) {
     socket.on(elegir_ventaja, (data = {}) => {
-        cambiar_jugadores(false);
-        document.body?.classList.remove("musa-texto-rival");
-        texto1.style.removeProperty("color");
+        cambiar_jugadores(false, { solicitarTexto: true });
         const overlay = getEl("overlay");
         if (overlay && overlay.style.display !== "none") {
             if (typeof desactivarPantalla === "function") {
@@ -1608,9 +1592,7 @@ socket.on("pedir_inspiracion_musa", juego => {
         return;
     }
     const es_prohibidas = juego.modo_actual === "palabras prohibidas";
-    cambiar_jugadores(es_prohibidas);
-    document.body?.classList.toggle("musa-texto-rival", es_prohibidas);
-    texto1.style.removeProperty("color");
+    cambiar_jugadores(es_prohibidas, { solicitarTexto: true });
     actualizarNiveles(juego.modo_actual);
     if(sincro == 1 || votando == true || votacion_ventaja_activa === true){
         return;
@@ -2119,23 +2101,27 @@ function confetti_postgame_musa() {
     });
 }
 
-function cambiar_jugadores(revertir) {
+function cambiar_jugadores(revertir, opciones = {}) {
 
     const p = Number(player); // jugador local: 1 o 2
+    const { solicitarTexto = false } = opciones;
 
     // FunciÃ³n de mapeo clara y reversible
     const mapJugador = (j) => revertir ? (3 - j) : j;
 
     const jugadorTexto = mapJugador(p);
     const jugadorEstilo = mapJugador(p);
+    const canalAnterior = texto_x;
+    const canalSiguiente = `texto${jugadorTexto}`;
+    const cambioCanal = canalAnterior !== canalSiguiente;
     console.log("Revertir:", revertir);
-    console.log("OFF", texto_x);
+    console.log("OFF", canalAnterior);
 
     // 1) Quitar listener anterior
-    if (!receptor_texto_musa) socket.off(texto_x, handler_recibir_texto_x);
+    if (!receptor_texto_musa) socket.off(canalAnterior, handler_recibir_texto_x);
 
     // 2) Nuevo canal de texto
-    texto_x = `texto${jugadorTexto}`;
+    texto_x = canalSiguiente;
 
     console.log("ON", texto_x);
 
@@ -2145,6 +2131,17 @@ function cambiar_jugadores(revertir) {
     } else {
         socket.on(texto_x, handler_recibir_texto_x);
     }
+
+    // Nunca dejamos a una musa viendo el texto del equipo anterior mientras llega
+    // el snapshot del nuevo canal (especialmente al pasar de malditas a frase final).
+    if (cambioCanal && texto1) {
+        texto1.innerHTML = "";
+        if (typeof programarLineasTextoMusa === "function") {
+            programarLineasTextoMusa();
+        }
+    }
+    document.body?.classList.toggle("musa-texto-rival", Boolean(revertir));
+    texto1?.style.removeProperty("color");
 
     // 4) Aplicar estilos segÃºn el jugador resultante
     if (jugadorEstilo === 1) {
@@ -2167,6 +2164,10 @@ function cambiar_jugadores(revertir) {
     }
 
     pedirNombreMusa(jugadorTexto);
+
+    if (solicitarTexto && socket.connected) {
+        socket.emit("pedir_texto", { musa: jugadorTexto });
+    }
 
     actualizarColorEquipo();
 

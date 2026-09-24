@@ -52,7 +52,7 @@ const MUSA_SELECTOR_VERSION = "20260922a";
 const MUSA_SELECTOR_I18N_VERSION = "20260831a";
 const PUBLIC_PLAYER_STATE_VERSION = "20260924b";
 const PUBLIC_PLAYER_CSS_VERSION = "20260922p";
-const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260924b";
+const PUBLIC_PLAYER_SOCKET_EVENTS_VERSION = "20260924c";
 const PUBLIC_PLAYER_I18N_VERSION = "20260921e";
 const SPECTATOR_I18N_VERSION = "20260917c";
 const ACTOR_SELECTOR_VERSION = "20260505a";
@@ -1447,7 +1447,7 @@ test("muse submissions wait for server acknowledgement and keep failed words", (
   assert.match(css, /\.notificacion #palabra\s*\{[\s\S]*background: rgba\(1, 7, 14, \.94\)[\s\S]*color: var\(--equipo-texto-suave/);
   assert.match(css, /body\.equipo-azul\.musa-texto-rival[\s\S]*#ffc8cd/);
   assert.match(css, /body\.equipo-rojo\.musa-texto-rival[\s\S]*#c3faff/);
-  assert.match(sockets, /document\.body\?\.classList\.toggle\("musa-texto-rival", es_prohibidas\)/);
+  assert.match(sockets, /document\.body\?\.classList\.toggle\("musa-texto-rival", Boolean\(revertir\)\)/);
 });
 
 test("control parameters own spectator scale and removed inserted word goal", () => {

@@ -166,6 +166,12 @@
             getState: (player) => ({ ...estados[Number(player) === 2 ? 2 : 1] }),
             subscribe(nextPlayers) {
                 suscripciones = normalizarPlayers(nextPlayers);
+                // Un render del canal anterior puede seguir pendiente en el mismo
+                // frame. Lo descartamos al cambiar de equipo para que nunca vuelva
+                // a pintar texto obsoleto después del nuevo snapshot.
+                Array.from(pendientes.keys()).forEach((player) => {
+                    if (!suscripciones.includes(player)) pendientes.delete(player);
+                });
                 protocoloActivo = false;
                 pedirSuscripcion();
             },

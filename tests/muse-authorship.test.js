@@ -197,9 +197,21 @@ test("a muse joining mid-match requests the live snapshot after authoritative re
   const events = read("game/public/players/js/socket-events.js");
 
   assert.match(events, /ayuda_musa_controlador\.setRegistrationReady\(true\);[\s\S]*sincronizarPartidaMusaTrasRegistro\(\)/);
-  assert.match(events, /function sincronizarPartidaMusaTrasRegistro\(\)[\s\S]*socket\.off\(texto_x, handler_recibir_texto_x\)[\s\S]*socket\.on\(texto_x, handler_recibir_texto_x\)/);
+  assert.match(events, /function sincronizarPartidaMusaTrasRegistro\(\)[\s\S]*cambiar_jugadores\(equipoTexto !== equipoPropio, \{ solicitarTexto: false \}\)/);
   assert.match(events, /socket\.emit\('pedir_texto', \{ musa: equipoTexto \}\);[\s\S]*socket\.emit\('pedir_estado_musa'\)/);
   assert.match(events, /setTimeout\(pedirSnapshot, 180\)/);
+});
+
+test("muses restore their own writer text and colour after cursed words", () => {
+  const events = read("game/public/players/js/socket-events.js");
+  const changeHandler = events.match(/function cambiar_jugadores\(revertir, opciones = \{\}\)[\s\S]*?\n\}/)?.[0] || "";
+  const modeHandler = events.match(/socket\.on\('modo_actual'[\s\S]*?mostrarTransicionNivelMusa\(observacionTransicionNivel, data \|\| \{\}\);\n\}\);/)?.[0] || "";
+
+  assert.match(modeHandler, /modo_actual = siguiente_modo;[\s\S]*cambiar_jugadores\(modo_actual === "palabras prohibidas", \{ solicitarTexto: true \}\)/);
+  assert.match(changeHandler, /document\.body\?\.classList\.toggle\("musa-texto-rival", Boolean\(revertir\)\)/);
+  assert.match(changeHandler, /texto1\?\.style\.removeProperty\("color"\)/);
+  assert.match(changeHandler, /if \(cambioCanal && texto1\)[\s\S]*texto1\.innerHTML = ""/);
+  assert.match(changeHandler, /socket\.emit\("pedir_texto", \{ musa: jugadorTexto \}\)/);
 });
 
 test("the advantage-change overlay never appears in Control", () => {
