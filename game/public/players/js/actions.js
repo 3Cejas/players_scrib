@@ -381,11 +381,6 @@ const desactivarAgitado = () => {
   limpiarAvisoMotion();
 };
 
-window.addEventListener('beforeunload', (event) => {
-  socket.emit('disconnect');
-});
-
-
 document.addEventListener('keydown', function (event) {
   const key = event.key;
 

@@ -166,6 +166,31 @@ function sincronizarPartidaMusaTrasRegistro() {
     setTimeout(pedirSnapshot, 180);
 }
 
+function restaurarSesionMusaDesdeHistorial(evento = {}) {
+    if (evento.persisted !== true || window.__scribMusaReplacementInProgress || window.__scribMusaNewMatchInProgress) {
+        return false;
+    }
+
+    // Safari y algunos navegadores móviles restauran esta página desde BFCache.
+    // La interfaz vuelve intacta, pero el transporte anterior puede haber quedado
+    // abierto solo en el cliente o haber sido retirado ya por el servidor.
+    musa_request_id_activo = "";
+    musa_registro_confirmado = false;
+    ayuda_musa_controlador.setRegistrationReady(false);
+    programarAvisoConexionMusa(2600);
+
+    if (socket.connected && typeof socket.disconnect === "function") {
+        socket.disconnect();
+    }
+    if (typeof socket.connect === "function") {
+        socket.connect();
+        return true;
+    }
+    return false;
+}
+
+window.addEventListener("pageshow", restaurarSesionMusaDesdeHistorial);
+
 if (musa_aviso_conexion_boton) {
     musa_aviso_conexion_boton.addEventListener("click", () => {
         musa_aviso_conexion_boton.disabled = true;

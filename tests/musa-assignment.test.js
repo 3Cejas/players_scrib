@@ -572,3 +572,14 @@ test("game reconnects with its assignment mode and never replays the reveal afte
   assert.match(state, /canonicalizarUrlAsignacionMusa\(asignacion\)/);
   assert.doesNotMatch(state, /window\.location\.replace\(destino\)/);
 });
+
+test("muse session revalidates after browser back-forward without restarting onboarding", () => {
+  const actions = read("game/public/players/js/actions.js");
+  const events = read("game/public/players/js/socket-events.js");
+
+  assert.doesNotMatch(actions, /beforeunload[\s\S]{0,180}socket\.emit\(['"]disconnect['"]\)/);
+  assert.match(events, /function restaurarSesionMusaDesdeHistorial\(evento = \{\}\)/);
+  assert.match(events, /evento\.persisted !== true/);
+  assert.match(events, /musa_registro_confirmado = false[\s\S]*socket\.disconnect\(\)[\s\S]*socket\.connect\(\)/);
+  assert.match(events, /window\.addEventListener\("pageshow", restaurarSesionMusaDesdeHistorial\)/);
+});
