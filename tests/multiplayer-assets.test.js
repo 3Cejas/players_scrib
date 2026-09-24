@@ -25,7 +25,7 @@ const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
 const SPECTATOR_STATE_VERSION = "20260924f";
-const SPECTATOR_CSS_VERSION = "20260924c";
+const SPECTATOR_CSS_VERSION = "20260924d";
 const CREDITS_DOMAIN_VERSION = "20260924a";
 const VIEW_TRANSITION_MODULE_VERSION = "20260922b";
 const MUSA_HELP_VERSION = "20260830a";
@@ -42,7 +42,7 @@ const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260923a";
 const JURY_SOCKET_EVENTS_VERSION = "20260923a";
 const CONTROL_CSS_VERSION = "20260923d";
-const CONTROL_ACTIONS_VERSION = "20260924c";
+const CONTROL_ACTIONS_VERSION = "20260924d";
 const CONTROL_I18N_VERSION = "20260923a";
 const CONTROL_STATE_VERSION = "20260923c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260923d";
@@ -968,6 +968,17 @@ test("control teleprompter identifies each team and confirms spectator loading w
   assert.match(socketEvents, /TAGS_SALTO\.has\(tag\) && texto && !texto\.endsWith\("\\n"\)/);
   assert.match(actions, /\["teleprompter_cargar_j1", "control\.button\.load", "\\u\{1F4BE\} CARGAR"\]/);
   assert.match(actions, /\["teleprompter_cargar_j2", "control\.button\.load", "\\u\{1F4BE\} CARGAR"\]/);
+});
+
+test("spectator teleprompter uses the long-distance reading font and multiline debug texts", () => {
+  const css = read("game/css/dashboard-players.css");
+  const actions = read("game/control/js/actions.js");
+  const fixtureBlock = actions.match(/const TEXTOS_PRUEBA_REPRESENTACION_DEBUG\s*=\s*\{[\s\S]*?\n\};/)?.[0] || "";
+
+  assert.match(css, /@font-face\s*\{[\s\S]*font-family:\s*'Atkinson Hyperlegible Next';[\s\S]*font-weight:\s*600;/);
+  assert.match(css, /\.teleprompter-text\s*\{[\s\S]*font-family:\s*"Atkinson Hyperlegible Next"[\s\S]*font-weight:\s*600;[\s\S]*line-height:\s*1\.4;/);
+  assert.match(fixtureBlock, /\]\.join\("\\n"\)[\s\S]*\]\.join\("\\n"\)/);
+  assert.ok((fixtureBlock.match(/"",/g) || []).length >= 10, "debug teleprompter fixtures should preserve paragraph breaks");
 });
 
 test("writer reconnect post-inicio enters match view without skill menu", () => {

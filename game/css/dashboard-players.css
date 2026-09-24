@@ -10,6 +10,14 @@
     src: url('./fonts/VT323-Regular.ttf') format('truetype');
 }
 
+@font-face {
+    font-family: 'Atkinson Hyperlegible Next';
+    src: url('./fonts/AtkinsonHyperlegibleNext-SemiBold.woff2') format('woff2');
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+}
+
 
 html,
 body {
@@ -8753,9 +8761,10 @@ body.equipo-rojo .total {
 }
 
 .teleprompter-text {
-  font-family: "Retro-gaming";
+  font-family: "Atkinson Hyperlegible Next", "Arial", sans-serif;
+  font-weight: 600;
   font-size: 36px;
-  line-height: 1.55;
+  line-height: 1.4;
   color: #f2f6ff;
   text-align: left;
   white-space: pre-wrap;

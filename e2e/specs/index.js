@@ -2191,7 +2191,28 @@ const visualSpecs = [
         window.eval(`
           if (typeof teleprompter_estado !== "undefined") {
             teleprompter_estado.visible = true;
-            teleprompter_estado.text = "Teleprompter visual estable para regresion con una linea larga y legible.";
+            teleprompter_estado.text = [
+              "La ciudad despertó con un volcán de palabras bajo las calles.",
+              "Nadie quiso huir: todas las ventanas estaban escuchando.",
+              "",
+              "ALBA.- ¿Lo oyes? Parece que la ciudad intenta contarnos algo.",
+              "BRUNO.- Entonces sigamos antes de que vuelva a dormirse.",
+              "",
+              "Una luz azul recorre lentamente las fachadas.",
+              "Las puertas se abren una tras otra.",
+              "",
+              "ALBA.- Esta historia todavía no ha llegado a su final.",
+              "BRUNO.- ¿Y si el final no quiere encontrarnos?",
+              "ALBA.- Tendrá que aprender a seguir nuestro ritmo.",
+              "",
+              "Cruzan la avenida mientras las farolas se encienden.",
+              "Desde los balcones, las voces repiten sus palabras.",
+              "",
+              "BRUNO.- La ciudad no estaba dormida.",
+              "ALBA.- Solo esperaba que alguien comenzara a escuchar.",
+              "",
+              "Ambos miran al público antes de continuar."
+            ].join("\\n");
             teleprompter_estado.source = 1;
             teleprompter_estado.fontSize = 48;
             teleprompter_estado.speed = 25;
@@ -2207,7 +2228,7 @@ const visualSpecs = [
       await ctx.waitForText(
         "spectator",
         "#teleprompter_text",
-        (text) => text.includes("Teleprompter visual estable"),
+        (text) => text.includes("La ciudad despertó") && text.includes("comenzara a escuchar"),
         "spectator teleprompter visual text",
         15000
       );
@@ -2230,6 +2251,19 @@ const visualSpecs = [
           }
         `
       });
+      await ctx.evaluate("spectator", () => {
+        window.eval(`
+          teleprompter_estado.scroll = 160;
+          teleprompter_estado.playing = false;
+          aplicarRenderTeleprompterEspectador();
+        `);
+      });
+      await ctx.waitForPageFunction("spectator", () => {
+        const text = document.querySelector("#teleprompter_text");
+        const screen = document.querySelector("#teleprompter_screen");
+        const match = String(text?.style.transform || "").match(/translateY\((-?[0-9.]+)px\)/);
+        return Boolean(screen && text && text.scrollHeight > screen.clientHeight && match && Number(match[1]) < -10);
+      }, 5000);
     }
   }
 ];

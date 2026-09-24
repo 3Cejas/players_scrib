@@ -3082,8 +3082,52 @@ function actualizarVelocidadDetonadoresDebug(valor) {
 }
 
 const TEXTOS_PRUEBA_REPRESENTACION_DEBUG = {
-    1: "La ciudad despert\u00f3 con un volc\u00e1n de palabras bajo las calles. Nadie quiso huir: por primera vez, todas las ventanas estaban escuchando.",
-    2: "Al otro lado del escenario, una pluma azul dibuj\u00f3 una puerta. Tras ella esperaba el final que las musas todav\u00eda no hab\u00edan imaginado."
+    1: [
+        "La ciudad despert\u00f3 con un volc\u00e1n de palabras bajo las calles.",
+        "Nadie quiso huir: por primera vez, todas las ventanas estaban escuchando.",
+        "",
+        "ALBA.- \u00bfLo oyes? Parece que la ciudad intenta contarnos algo.",
+        "BRUNO.- No es la ciudad. Somos nosotros, que por fin hemos dejado de hablar por encima de los dem\u00e1s.",
+        "",
+        "Una luz azul recorre lentamente las fachadas.",
+        "Las puertas se abren una tras otra y el murmullo se convierte en una sola voz.",
+        "",
+        "ALBA.- Entonces sigamos. Esta historia todav\u00eda no ha llegado a su final.",
+        "BRUNO.- \u00bfY si el final no quiere encontrarnos?",
+        "ALBA.- Tendr\u00e1 que aprender a seguir nuestro ritmo.",
+        "",
+        "Cruzan la avenida. Las farolas se encienden a su paso.",
+        "Desde los balcones, las voces repiten las palabras que dejaron atr\u00e1s.",
+        "",
+        "BRUNO.- Ahora lo entiendo: la ciudad no estaba dormida.",
+        "ALBA.- Solo esperaba que alguien comenzara a escuchar.",
+        "",
+        "Ambos miran al p\u00fablico y respiran antes de continuar.",
+        "La luz azul desaparece lentamente."
+    ].join("\n"),
+    2: [
+        "Al otro lado del escenario, una pluma roja dibuj\u00f3 una puerta.",
+        "Tras ella esperaba el final que las musas todav\u00eda no hab\u00edan imaginado.",
+        "",
+        "CLARA.- No cruces todav\u00eda. Primero tenemos que recordar por qu\u00e9 vinimos.",
+        "DARIO.- Vinimos para inventar una salida, no para encontrarla.",
+        "",
+        "El aire queda inm\u00f3vil. A lo lejos se escucha el golpe de un reloj.",
+        "La puerta comienza a cerrarse mientras ambos avanzan hacia ella.",
+        "",
+        "CLARA.- Pase lo que pase al otro lado, lo contaremos juntos.",
+        "DARIO.- Incluso si nadie quiere creernos.",
+        "CLARA.- Sobre todo si nadie quiere creernos.",
+        "",
+        "El reloj vuelve a sonar. Esta vez, la puerta se detiene.",
+        "Una corriente de aire levanta las hojas del suelo.",
+        "",
+        "DARIO.- Parece que nos estaba esperando.",
+        "CLARA.- No hagamos esperar tambi\u00e9n a nuestra historia.",
+        "",
+        "Se dan la mano y atraviesan el umbral.",
+        "La escena queda te\u00f1ida de rojo."
+    ].join("\n")
 };
 
 function aplicarTextoPruebaRepresentacionDebug(playerId, contenido) {
