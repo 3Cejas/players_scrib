@@ -5448,8 +5448,7 @@ const CLASES_FADE_TEXTAREA_ESPECTADOR = [
 ];
 const raf_degradado_textarea_espectador = new Map();
 const raf_lineas_texto_espectador = new Map();
-const firma_lineas_texto_espectador = new WeakMap();
-const geometria_lineas_texto_espectador = new WeakMap();
+const estado_lineas_texto_espectador = new WeakMap();
 let timeout_degradado_textos_espectador = null;
 let degradado_textarea_espectador_iniciado = false;
 let observadores_mutacion_textarea_espectador = [];
@@ -5547,20 +5546,82 @@ function medirAlturasLineasTextoEspectador(textarea, lineas) {
     return alturas;
 }
 
+function claveEstiloLineasTextoEspectador(textarea, estilos) {
+    const anchoContenido = Math.max(
+        1,
+        textarea.clientWidth
+            - (Number.parseFloat(estilos.paddingLeft) || 0)
+            - (Number.parseFloat(estilos.paddingRight) || 0)
+    );
+    return [
+        anchoContenido,
+        estilos.fontFamily,
+        estilos.fontSize,
+        estilos.fontWeight,
+        estilos.fontStyle,
+        estilos.letterSpacing,
+        estilos.wordSpacing,
+        estilos.lineHeight,
+        estilos.whiteSpace,
+        estilos.wordBreak,
+        estilos.overflowWrap,
+        estilos.hyphens
+    ].join("\u0001");
+}
+
+function calcularAlturasLineasTextoEspectador(textarea, lineas, estilos) {
+    const anterior = estado_lineas_texto_espectador.get(textarea);
+    const claveEstilo = claveEstiloLineasTextoEspectador(textarea, estilos);
+    const alturas = new Array(lineas.length);
+    let prefijoComun = 0;
+    let sufijoComun = 0;
+
+    if (anterior && anterior.claveEstilo === claveEstilo) {
+        const limitePrefijo = Math.min(anterior.lineas.length, lineas.length);
+        while (prefijoComun < limitePrefijo
+            && anterior.lineas[prefijoComun] === lineas[prefijoComun]) {
+            alturas[prefijoComun] = anterior.alturas[prefijoComun];
+            prefijoComun += 1;
+        }
+        while (
+            sufijoComun < (anterior.lineas.length - prefijoComun)
+            && sufijoComun < (lineas.length - prefijoComun)
+            && anterior.lineas[anterior.lineas.length - 1 - sufijoComun]
+                === lineas[lineas.length - 1 - sufijoComun]
+        ) {
+            alturas[lineas.length - 1 - sufijoComun]
+                = anterior.alturas[anterior.alturas.length - 1 - sufijoComun];
+            sufijoComun += 1;
+        }
+    }
+
+    const finCambio = lineas.length - sufijoComun;
+    const lineasCambiadas = lineas.slice(prefijoComun, finCambio);
+    const alturasCambiadas = lineasCambiadas.length
+        ? medirAlturasLineasTextoEspectador(textarea, lineasCambiadas)
+        : [];
+    alturasCambiadas.forEach((alto, indice) => {
+        alturas[prefijoComun + indice] = alto;
+    });
+
+    const cambioVisual = !anterior
+        || anterior.alturas.length !== alturas.length
+        || alturas.some((alto, indice) => Math.abs(alto - anterior.alturas[indice]) > 0.5);
+    estado_lineas_texto_espectador.set(textarea, {
+        claveEstilo,
+        lineas: lineas.slice(),
+        alturas
+    });
+    return { alturas, cambioVisual };
+}
+
 function sincronizarLineasTextoEspectador(textarea) {
     const { inner } = configuracionLineasTextoEspectador(textarea);
     if (!textarea || !inner) return;
     const estilos = window.getComputedStyle(textarea);
-    const geometria = `${textarea.scrollHeight}\u0001${textarea.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
-    if (geometria_lineas_texto_espectador.get(textarea) === geometria) {
-        inner.style.transform = `translate3d(0, ${-Math.max(0, textarea.scrollTop || 0)}px, 0)`;
-        return;
-    }
-    geometria_lineas_texto_espectador.set(textarea, geometria);
     const lineas = lineasLogicasTextoEspectador(textarea);
-    const firma = `${lineas.length}\u0001${textarea.scrollHeight}\u0001${textarea.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
-    if (firma_lineas_texto_espectador.get(textarea) !== firma) {
-        const alturas = medirAlturasLineasTextoEspectador(textarea, lineas);
+    const { alturas, cambioVisual } = calcularAlturasLineasTextoEspectador(textarea, lineas, estilos);
+    if (cambioVisual || inner.childElementCount !== lineas.length) {
         const fragmento = document.createDocumentFragment();
         lineas.forEach((_linea, indice) => {
             const numero = document.createElement("span");
@@ -5571,7 +5632,6 @@ function sincronizarLineasTextoEspectador(textarea) {
             fragmento.appendChild(numero);
         });
         inner.replaceChildren(fragmento);
-        firma_lineas_texto_espectador.set(textarea, firma);
     }
     inner.style.transform = `translate3d(0, ${-Math.max(0, textarea.scrollTop || 0)}px, 0)`;
 }

@@ -1146,9 +1146,24 @@ test("spectator texts use the projector width and keep synchronized line numbers
   assert.match(state, /function medirAlturasLineasTextoEspectador\(textarea, lineas\)/);
   assert.match(state, /function sincronizarLineasTextoEspectador\(textarea\)[\s\S]*numero\.textContent = String\(indice \+ 1\)/);
   assert.match(state, /function lineasLogicasTextoEspectador\(textarea\)[\s\S]*nodo\.tagName === "BR"[\s\S]*tagsSalto\.has\(nodo\.tagName\)/);
+  assert.match(state, /function calcularAlturasLineasTextoEspectador\(textarea, lineas, estilos\)[\s\S]*anterior\.lineas\[prefijoComun\] === lineas\[prefijoComun\]/);
+  assert.doesNotMatch(state, /if \(geometria_lineas_texto_espectador\.get\(textarea\) === geometria\)/);
   assert.match(state, /inner\.style\.transform = `translate3d\(0, \$\{-Math\.max\(0, textarea\.scrollTop \|\| 0\)\}px, 0\)`/);
   assert.match(state, /MutationObserver[\s\S]*programarLineasTextoEspectador\(textarea\)/);
   assert.match(socketEvents, /function ajustarScrollPorRect[\s\S]*contenedor\.scrollTop\s*\+\s*\(\(rect\.top - contRect\.top\) \/ escalaVisual\)/);
+});
+
+test("live read-only roles refresh line numbers from text content, not only box geometry", () => {
+  const spectatorState = read("game/spectator/js/state.js");
+  const museState = read("game/public/players/js/state.js");
+  const actorEvents = read("game/actors/source/js/socket-events.js");
+
+  assert.match(spectatorState, /const lineas = lineasLogicasTextoEspectador\(textarea\);[\s\S]*calcularAlturasLineasTextoEspectador\(textarea, lineas, estilos\)/);
+  assert.match(museState, /const lineas = lineasLogicasTextoMusa\(\);[\s\S]*calcularAlturasLineasTextoMusa\(lineas, estilos\)/);
+  assert.match(actorEvents, /const lineas = sinSaltoFinal\.split\("\\n"\)[\s\S]*calcularAlturasLineasTextoActor\(lineas, estilosTexto\)/);
+  assert.doesNotMatch(spectatorState, /geometria_lineas_texto_espectador/);
+  assert.doesNotMatch(museState, /musa_lineas_geometria/);
+  assert.doesNotMatch(actorEvents, /actor_geometria_lineas_renderizada/);
 });
 
 test("spectator hides pre-game branding throughout countdown and active match", () => {

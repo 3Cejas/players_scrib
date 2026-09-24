@@ -126,10 +126,8 @@ function pintarTextoActorLocal(html) {
     programarLineasTextoActor();
 }
 
-let actor_numero_lineas_renderizadas = 0;
 let actor_lineas_raf = 0;
-let actor_firma_lineas_renderizadas = "";
-let actor_geometria_lineas_renderizada = "";
+let actor_estado_lineas_renderizadas = null;
 
 function medirAlturasLineasTextoActor(lineas) {
     if (!texto1) return lineas.map(() => 1);
@@ -177,20 +175,85 @@ function medirAlturasLineasTextoActor(lineas) {
     return alturas;
 }
 
+function claveEstiloLineasTextoActor(estilos) {
+    const anchoContenido = Math.max(
+        1,
+        texto1.clientWidth
+            - (parseFloat(estilos.paddingLeft) || 0)
+            - (parseFloat(estilos.paddingRight) || 0)
+    );
+    return [
+        anchoContenido,
+        estilos.fontFamily,
+        estilos.fontSize,
+        estilos.fontWeight,
+        estilos.fontStyle,
+        estilos.letterSpacing,
+        estilos.wordSpacing,
+        estilos.lineHeight,
+        estilos.whiteSpace,
+        estilos.wordBreak,
+        estilos.overflowWrap,
+        estilos.hyphens
+    ].join("\u0001");
+}
+
+function calcularAlturasLineasTextoActor(lineas, estilos) {
+    const anterior = actor_estado_lineas_renderizadas;
+    const claveEstilo = claveEstiloLineasTextoActor(estilos);
+    const alturas = new Array(lineas.length);
+    let prefijoComun = 0;
+    let sufijoComun = 0;
+
+    if (anterior && anterior.claveEstilo === claveEstilo) {
+        const limitePrefijo = Math.min(anterior.lineas.length, lineas.length);
+        while (prefijoComun < limitePrefijo
+            && anterior.lineas[prefijoComun] === lineas[prefijoComun]) {
+            alturas[prefijoComun] = anterior.alturas[prefijoComun];
+            prefijoComun += 1;
+        }
+        while (
+            sufijoComun < (anterior.lineas.length - prefijoComun)
+            && sufijoComun < (lineas.length - prefijoComun)
+            && anterior.lineas[anterior.lineas.length - 1 - sufijoComun]
+                === lineas[lineas.length - 1 - sufijoComun]
+        ) {
+            alturas[lineas.length - 1 - sufijoComun]
+                = anterior.alturas[anterior.alturas.length - 1 - sufijoComun];
+            sufijoComun += 1;
+        }
+    }
+
+    const finCambio = lineas.length - sufijoComun;
+    const lineasCambiadas = lineas.slice(prefijoComun, finCambio);
+    const alturasCambiadas = lineasCambiadas.length
+        ? medirAlturasLineasTextoActor(lineasCambiadas)
+        : [];
+    alturasCambiadas.forEach((alto, indice) => {
+        alturas[prefijoComun + indice] = alto;
+    });
+
+    const cambioVisual = !anterior
+        || anterior.alturas.length !== alturas.length
+        || alturas.some((alto, indice) => Math.abs(alto - anterior.alturas[indice]) > 0.5);
+    actor_estado_lineas_renderizadas = {
+        claveEstilo,
+        lineas: lineas.slice(),
+        alturas
+    };
+    return { alturas, cambioVisual };
+}
+
 function sincronizarLineasTextoActor() {
     actor_lineas_raf = 0;
     if (!texto1 || !actor_texto_lineas || !actor_texto_lineas_inner) return;
     const estilosTexto = window.getComputedStyle(texto1);
-    const geometria = `${texto1.scrollHeight}\u0000${texto1.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}`;
-    if (geometria === actor_geometria_lineas_renderizada) return;
-    actor_geometria_lineas_renderizada = geometria;
     const contenido = String(texto1.innerText || "").replace(/\r/g, "");
     const sinSaltoFinal = contenido.endsWith("\n") ? contenido.slice(0, -1) : contenido;
     const lineas = sinSaltoFinal.split("\n").slice(0, 500);
     if (!lineas.length) lineas.push("");
-    const firma = `${lineas.length}\u0000${texto1.scrollHeight}\u0000${texto1.clientWidth}\u0000${estilosTexto.fontSize}\u0000${estilosTexto.lineHeight}`;
-    if (lineas.length !== actor_numero_lineas_renderizadas || firma !== actor_firma_lineas_renderizadas) {
-        const alturas = medirAlturasLineasTextoActor(lineas);
+    const { alturas, cambioVisual } = calcularAlturasLineasTextoActor(lineas, estilosTexto);
+    if (cambioVisual || actor_texto_lineas_inner.childElementCount !== lineas.length) {
         const fragmento = document.createDocumentFragment();
         lineas.forEach((_linea, indice) => {
             const numero = document.createElement("span");
@@ -201,8 +264,6 @@ function sincronizarLineasTextoActor() {
             fragmento.appendChild(numero);
         });
         actor_texto_lineas_inner.replaceChildren(fragmento);
-        actor_numero_lineas_renderizadas = lineas.length;
-        actor_firma_lineas_renderizadas = firma;
     }
 }
 

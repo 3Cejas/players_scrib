@@ -495,10 +495,8 @@ let enviarPalabra_boton = getEl("progressButton");
 let sincro = 0;
 let votando = false;
 
-let musa_numero_lineas_renderizadas = 0;
 let musa_lineas_raf = 0;
-let musa_lineas_firma = "";
-let musa_lineas_geometria = "";
+let musa_estado_lineas_renderizadas = null;
 
 function lineasLogicasTextoMusa() {
     if (!texto1) return [""];
@@ -571,20 +569,82 @@ function medirAlturasLineasTextoMusa(lineas) {
     return alturas;
 }
 
+function claveEstiloLineasTextoMusa(estilos) {
+    const anchoContenido = Math.max(
+        1,
+        texto1.clientWidth
+            - (Number.parseFloat(estilos.paddingLeft) || 0)
+            - (Number.parseFloat(estilos.paddingRight) || 0)
+    );
+    return [
+        anchoContenido,
+        estilos.fontFamily,
+        estilos.fontSize,
+        estilos.fontWeight,
+        estilos.fontStyle,
+        estilos.letterSpacing,
+        estilos.wordSpacing,
+        estilos.lineHeight,
+        estilos.whiteSpace,
+        estilos.wordBreak,
+        estilos.overflowWrap,
+        estilos.hyphens
+    ].join("\u0001");
+}
+
+function calcularAlturasLineasTextoMusa(lineas, estilos) {
+    const anterior = musa_estado_lineas_renderizadas;
+    const claveEstilo = claveEstiloLineasTextoMusa(estilos);
+    const alturas = new Array(lineas.length);
+    let prefijoComun = 0;
+    let sufijoComun = 0;
+
+    if (anterior && anterior.claveEstilo === claveEstilo) {
+        const limitePrefijo = Math.min(anterior.lineas.length, lineas.length);
+        while (prefijoComun < limitePrefijo
+            && anterior.lineas[prefijoComun] === lineas[prefijoComun]) {
+            alturas[prefijoComun] = anterior.alturas[prefijoComun];
+            prefijoComun += 1;
+        }
+        while (
+            sufijoComun < (anterior.lineas.length - prefijoComun)
+            && sufijoComun < (lineas.length - prefijoComun)
+            && anterior.lineas[anterior.lineas.length - 1 - sufijoComun]
+                === lineas[lineas.length - 1 - sufijoComun]
+        ) {
+            alturas[lineas.length - 1 - sufijoComun]
+                = anterior.alturas[anterior.alturas.length - 1 - sufijoComun];
+            sufijoComun += 1;
+        }
+    }
+
+    const finCambio = lineas.length - sufijoComun;
+    const lineasCambiadas = lineas.slice(prefijoComun, finCambio);
+    const alturasCambiadas = lineasCambiadas.length
+        ? medirAlturasLineasTextoMusa(lineasCambiadas)
+        : [];
+    alturasCambiadas.forEach((alto, indice) => {
+        alturas[prefijoComun + indice] = alto;
+    });
+
+    const cambioVisual = !anterior
+        || anterior.alturas.length !== alturas.length
+        || alturas.some((alto, indice) => Math.abs(alto - anterior.alturas[indice]) > 0.5);
+    musa_estado_lineas_renderizadas = {
+        claveEstilo,
+        lineas: lineas.slice(),
+        alturas
+    };
+    return { alturas, cambioVisual };
+}
+
 function sincronizarLineasTextoMusa() {
     musa_lineas_raf = 0;
     if (!texto1 || !musa_texto_lineas) return;
     const estilos = window.getComputedStyle(texto1);
-    const geometria = `${texto1.scrollHeight}\u0001${texto1.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
-    if (geometria === musa_lineas_geometria) {
-        musa_texto_lineas.scrollTop = texto1.scrollTop;
-        return;
-    }
-    musa_lineas_geometria = geometria;
     const lineas = lineasLogicasTextoMusa();
-    const firma = `${lineas.length}\u0001${texto1.scrollHeight}\u0001${texto1.clientWidth}\u0001${estilos.fontSize}\u0001${estilos.lineHeight}`;
-    if (firma !== musa_lineas_firma) {
-        const alturas = medirAlturasLineasTextoMusa(lineas);
+    const { alturas, cambioVisual } = calcularAlturasLineasTextoMusa(lineas, estilos);
+    if (cambioVisual || musa_texto_lineas.childElementCount !== lineas.length) {
         const fragmento = document.createDocumentFragment();
         lineas.forEach((_linea, indice) => {
             const numero = document.createElement("span");
@@ -595,8 +655,6 @@ function sincronizarLineasTextoMusa() {
             fragmento.appendChild(numero);
         });
         musa_texto_lineas.replaceChildren(fragmento);
-        musa_numero_lineas_renderizadas = lineas.length;
-        musa_lineas_firma = firma;
     }
     musa_texto_lineas.style.paddingTop = estilos.paddingTop;
     musa_texto_lineas.scrollTop = texto1.scrollTop;
