@@ -23,7 +23,7 @@
     <script src="../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../js/domains/teleprompter.js?v=20260902b"></script>
     <script src="../js/domains/competition.js?v=20260923a"></script>
-    <script src="../js/domains/credits.js?v=20260902b"></script>
+    <script src="../js/domains/credits.js?v=20260924a"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
 <script src="./js/actions.js?v=20260924b"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
@@ -587,7 +587,7 @@
                         <div class="spinner-container">
                             <button type="button" class="spinner-button minus-button" onclick="cambiarValor('duracion_minutos', -1)">-</button>
                             <input type="number" id="duracion_minutos" name="duracion_minutos" class="parametro"
-                                   min="0" max="360" step="1" value="30">
+                                   min="0" max="360" step="1" value="35">
                             <button type="button" class="spinner-button plus-button" onclick="cambiarValor('duracion_minutos', 1)">+</button>
                         </div>
                         <span class="parametro" data-i18n="control.unit.minutes_short">mins.</span>
@@ -652,7 +652,7 @@
                     <div class="spinner-container">
                         <button type="button" class="spinner-button minus-button" onclick="cambiarValor('limite_tiempo_inspiracion', -5)">-</button>
                         <input type="number" id="limite_tiempo_inspiracion" name="limite_tiempo_inspiracion" class="parametro"
-                               min="5" max="120" step="1" value="30">
+                               min="5" max="120" step="1" value="10">
                         <button type="button" class="spinner-button plus-button" onclick="cambiarValor('limite_tiempo_inspiracion', 5)">+</button>
                     </div>
                     <span class="parametro" data-i18n="control.unit.seconds_short">segs.</span>

@@ -26,7 +26,7 @@ const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
 const SPECTATOR_STATE_VERSION = "20260924f";
 const SPECTATOR_CSS_VERSION = "20260924c";
-const CREDITS_DOMAIN_VERSION = "20260902b";
+const CREDITS_DOMAIN_VERSION = "20260924a";
 const VIEW_TRANSITION_MODULE_VERSION = "20260922b";
 const MUSA_HELP_VERSION = "20260830a";
 const WRITER_DELETE_BLOCK_VERSION = "20260910a";
@@ -74,6 +74,13 @@ function assertIncludesAsset(htmlRelPath, assetPath, version = ASSET_VERSION) {
     `${htmlRelPath} should load ${assetPath} with current cache-busting version`
   );
 }
+
+test("control exposes the requested default match duration and muse cooldown", () => {
+  const html = read("game/control/index.html");
+  assert.match(html, /id="duracion_minutos"[\s\S]{0,180}value="35"/);
+  assert.match(html, /id="duracion_segundos"[\s\S]{0,180}value="0"/);
+  assert.match(html, /id="limite_tiempo_inspiracion"[\s\S]{0,180}value="10"/);
+});
 
 test("multiplayer html references current changed shared assets", () => {
   [

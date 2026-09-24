@@ -17,7 +17,13 @@ test("credits are rendered and scored locally on spectator and muse screens", ()
   const creditsDomain = read("game/js/domains/credits.js");
 
   assert.match(spectatorHtml, /id="creditos_audio_espectador"[\s\S]*3\.%20CREDITOS\.mp3/);
-  assert.match(creditsDomain, /dramaturgia:\s*"PABLO PINE\\u00d1O"/);
+  assert.match(creditsDomain, /escritxr_rojo:\s*"PABLO PINE\\u00d1O"/);
+  assert.match(creditsDomain, /escritxr_azul:\s*"ALVARA STRINGANA"/);
+  assert.match(creditsDomain, /interprete_azul_1:\s*"ELENA CONDE"/);
+  assert.match(creditsDomain, /interprete_azul_2:\s*"ANA SEMPERE"/);
+  assert.match(creditsDomain, /interprete_rojo_1:\s*"LAURA ESCOBAR"/);
+  assert.match(creditsDomain, /interprete_rojo_2:\s*"VER\\u00d3NICA ANTONUCCI"/);
+  assert.match(creditsDomain, /dramaturgia:\s*"\\u00c1NGELA BUENO Y PABLO PINE\\u00d1O"/);
   assert.match(spectatorState, /reproducirMusicaCreditosEspectador/);
   assert.match(spectatorState, /creditos-apertura__logo/);
   assert.match(museHtml, /id="creditos_musa"[\s\S]*id="creditos_musa_sociales"/);
