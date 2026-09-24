@@ -5669,6 +5669,45 @@ table.default {
     white-space: normal;
 }
 
+.instagram-export-status {
+    min-height: 1.25rem;
+    margin: 0.55rem 0 0;
+    color: rgba(255, 231, 174, 0.78);
+    font-family: "Retro-gaming", "Courier New", monospace;
+    font-size: clamp(0.54rem, 0.72vw, 0.68rem);
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    text-align: center;
+}
+
+.instagram-export-status:empty {
+    display: none;
+}
+
+.instagram-export-status[data-state="loading"] {
+    color: #ffe79c;
+    animation: instagram-export-pulse 1.1s ease-in-out infinite alternate;
+}
+
+.instagram-export-status[data-state="success"] {
+    color: #72ffb0;
+}
+
+.instagram-export-status[data-state="error"] {
+    color: #ff7187;
+}
+
+@keyframes instagram-export-pulse {
+    from { opacity: 0.55; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .instagram-export-status[data-state="loading"] {
+        animation: none;
+    }
+}
+
 .control-group--representacion .control-group-buttons {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
