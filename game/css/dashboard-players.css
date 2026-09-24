@@ -1491,7 +1491,7 @@ body.page-players.equipo-rojo .tiempo-vida {
         radial-gradient(circle at 90% 85%, rgba(255, 64, 96, 0.28), transparent 35%),
         linear-gradient(145deg, #051827, #100c1c 52%, #2a0d18);
     color: #fff;
-    z-index: 9999;
+    z-index: 2147483000;
     isolation: isolate;
 }
 

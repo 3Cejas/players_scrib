@@ -308,14 +308,23 @@ let temporizador_gigante_restante = 0;
 let temporizador_gigante_duracion = 0;
 let temporizador_gigante_fin_ts = 0;
 
+function temporizadorGiganteActivoEspectador() {
+    return Boolean(
+        temporizador_gigante
+        && temporizador_gigante.classList.contains("activo")
+    );
+}
+
 function actualizarPresentacionTemporizadorGiganteEspectador() {
-    const activo = temporizador_gigante.classList.contains("activo");
+    const activo = temporizadorGiganteActivoEspectador();
     const teleprompterActivo = Boolean(
         teleprompter_estado
         && (teleprompter_estado.visible || teleprompter_estado.preparing)
     );
-    const hayOtraVista = vista_espectador_modo_resuelta !== "partida";
-    temporizador_gigante.classList.toggle("compacto", activo && (teleprompterActivo || hayOtraVista));
+    // En Espectador el temporizador siempre es la escena principal. El modo
+    // compacto queda únicamente como protección durante el instante en que el
+    // teleprompter toma el relevo y el servidor confirma el cierre del timer.
+    temporizador_gigante.classList.toggle("compacto", activo && teleprompterActivo);
 }
 
 function actualizarTemporizadorGigante() {
@@ -350,6 +359,9 @@ function detenerTemporizadorGigante() {
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = true;
     actualizarPresentacionTemporizadorGiganteEspectador();
+    if (typeof window.sincronizarCierrePartidaEspectadorConVista === "function") {
+        window.sincronizarCierrePartidaEspectadorConVista(vista_espectador_modo_resuelta);
+    }
     controlador_audio_vista_espectador?.setMode(vista_espectador_modo_resuelta || "partida");
 }
 
@@ -362,6 +374,9 @@ function iniciarTemporizadorGigante(duracion, finTimestamp = null) {
     temporizador_gigante.classList.remove("fin");
     const final = temporizador_gigante.querySelector(".temporizador-gigante__final");
     if (final) final.hidden = true;
+    if (typeof window.ocultarCierrePartidaEspectador === "function") {
+        window.ocultarCierrePartidaEspectador();
+    }
     actualizarPresentacionTemporizadorGiganteEspectador();
     // El temporizador es una escena prioritaria: si venimos del videotutorial o
     // de la narración, recupera el volumen antes de seleccionar su música.

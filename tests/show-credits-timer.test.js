@@ -108,9 +108,12 @@ test("giant timer is a dedicated synced scene on spectator and muse screens", ()
   assert.match(spectatorState, /const modoAudio = temporizador_gigante\.classList\.contains\("activo"\)[\s\S]{0,120}\? "temporizador"[\s\S]{0,120}: modo/);
   assert.match(spectatorState, /controlador_audio_vista_espectador\?\.setMode\(modoAudio/);
   assert.match(spectatorState, /function actualizarPresentacionTemporizadorGiganteEspectador\(\)[\s\S]*classList\.toggle\("compacto"/);
+  assert.match(spectatorState, /function temporizadorGiganteActivoEspectador\(\)/);
+  assert.match(spectatorState, /iniciarTemporizadorGigante[\s\S]*ocultarCierrePartidaEspectador/);
   assert.match(spectatorState, /visible: overlayActive,/);
   assert.match(spectatorCss, /#temporizador_gigante_valor \{[\s\S]{0,420}font-variant-numeric:\s*tabular-nums;[\s\S]{0,220}white-space:\s*nowrap;/);
   assert.match(spectatorCss, /\.temporizador-gigante\.compacto\s*\{/);
+  assert.match(spectatorCss, /\.temporizador-gigante\s*\{[\s\S]{0,700}z-index:\s*2147483000;/);
   assert.match(spectatorCss, /\.temporizador-gigante__ring \{[\s\S]{0,180}width:\s*min\(55vh, 40vw, 31rem\)/);
   assert.match(spectatorSockets, /temporizador_gigante_estado/);
   assert.match(museHtml, /id="temporizador_musa"/);

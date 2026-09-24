@@ -270,7 +270,7 @@ function teleprompterActivoEspectador() {
 }
 
 function mostrarCierrePartidaEspectador() {
-    if (teleprompterActivoEspectador()) {
+    if (teleprompterActivoEspectador() || temporizadorGiganteActivoEspectador()) {
         return ocultarCierrePartidaEspectador();
     }
     const overlay = document.getElementById("partida_final_espectador");
@@ -300,12 +300,18 @@ function ocultarCierrePartidaEspectador() {
 
 function sincronizarCierrePartidaEspectadorConVista(modo) {
     const vista = String(modo || "").trim().toLowerCase();
-    if (vista === "partida" && confetti_cierre_partida_disparado && !teleprompterActivoEspectador()) {
+    if (
+        vista === "partida"
+        && confetti_cierre_partida_disparado
+        && !teleprompterActivoEspectador()
+        && !temporizadorGiganteActivoEspectador()
+    ) {
         return mostrarCierrePartidaEspectador();
     }
     return ocultarCierrePartidaEspectador();
 }
 window.sincronizarCierrePartidaEspectadorConVista = sincronizarCierrePartidaEspectadorConVista;
+window.ocultarCierrePartidaEspectador = ocultarCierrePartidaEspectador;
 
 function reiniciarEstadoCierrePartidaEspectador() {
     frase_final_completada_j1 = false;

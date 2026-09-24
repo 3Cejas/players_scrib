@@ -2587,10 +2587,9 @@ function borrar_texto_guardado() {
 
 function activar_temporizador_gigante() {
     if (temporizador_gigante_activo) {
-        temporizador_gigante_activo = false;
-        temporizador_gigante_estado_control = "oculto";
-        actualizarBotonFinalizarTemporizadorDebugControl();
-        socket.emit('temporizador_gigante_detener', {});
+        // El temporizador es una escena exclusiva: una segunda pulsación no
+        // puede ocultarlo por accidente. Se cierra al elegir otra vista o al
+        // abrir el teleprompter.
         return;
     }
     if (vista_calentamiento) {
@@ -2598,15 +2597,32 @@ function activar_temporizador_gigante() {
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
     }
     cerrarVideotutorialDesdeVistaControl();
-    vista_principal_control = "partida";
-    vista_espectador_modo = "partida";
-    socket.emit("cambiar_vista_espectador_modo", { modo: "partida" });
     temporizador_gigante_activo = true;
     temporizador_gigante_estado_control = "activo";
     actualizarBotonFinalizarTemporizadorDebugControl();
+    actualizarBotonesVistaEspectadorControl();
     socket.emit('activar_temporizador_gigante', {
         duracion: DURACION_TEMPORIZADOR_REPRESENTACION_SEGUNDOS
     });
+}
+
+function detenerTemporizadorGigantePorCambioEscenaControl() {
+    if (!temporizador_gigante_activo && temporizador_gigante_estado_control === "oculto") {
+        return false;
+    }
+    temporizador_gigante_activo = false;
+    temporizador_gigante_estado_control = "oculto";
+    actualizarBotonFinalizarTemporizadorDebugControl();
+    const boton = document.getElementById("boton_temporizador_gigante");
+    if (boton) {
+        boton.dataset.active = "0";
+        boton.classList.remove("is-active");
+        boton.setAttribute("aria-pressed", "false");
+    }
+    if (typeof socket !== "undefined" && socket && typeof socket.emit === "function") {
+        socket.emit("temporizador_gigante_detener", {});
+    }
+    return true;
 }
 
 function actualizarEstadoTemporizadorControl(payload = {}) {
@@ -2618,6 +2634,7 @@ function actualizarEstadoTemporizadorControl(payload = {}) {
     boton.dataset.active = temporizador_gigante_activo ? "1" : "0";
     boton.classList.toggle("is-active", temporizador_gigante_activo);
     boton.setAttribute("aria-pressed", temporizador_gigante_activo ? "true" : "false");
+    actualizarBotonesVistaPrincipalControl();
 }
 
 window.actualizarEstadoTemporizadorControl = actualizarEstadoTemporizadorControl;
@@ -3252,13 +3269,13 @@ function cerrarVideotutorialDesdeVistaControl() {
 function actualizarBotonesVistaPrincipalControl() {
     document.querySelectorAll("[data-vista-principal]").forEach((boton) => {
         const destino = boton.dataset.vistaPrincipal;
-        const activa = destino === "tutorial"
+        const activa = !temporizador_gigante_activo && (destino === "tutorial"
             ? vista_espectador_modo === "tutorial"
             : destino === "instrucciones"
                 ? vista_espectador_modo === "instrucciones"
             : destino === "detonadores"
                 ? vista_espectador_modo === "calentamiento" || vista_calentamiento
-                : vista_espectador_modo === "partida" && destino === vista_principal_control;
+                : vista_espectador_modo === "partida" && destino === vista_principal_control);
         boton.dataset.active = activa ? "1" : "0";
         boton.classList.toggle("is-active", activa);
         boton.setAttribute("aria-pressed", activa ? "true" : "false");
@@ -3285,6 +3302,7 @@ function actualizarBotonesVistaPrincipalControl() {
 }
 
 function aplicarVistaPrincipalControl(vista, opciones = {}) {
+    detenerTemporizadorGigantePorCambioEscenaControl();
     const destino = VISTAS_PRINCIPALES_CONTROL.has(vista) ? vista : "tutorial";
     const activarDetonadores = destino === "detonadores";
     const modoEspectador = destino === "detonadores" || destino === "partida" ? "partida" : destino;
@@ -3839,8 +3857,11 @@ function actualizarBotonesVistaEspectadorControl() {
 }
 
 function cambiar_vista_espectador(modo) {
+    const temporizadorEstabaActivo = detenerTemporizadorGigantePorCambioEscenaControl();
     const destino = normalizarModoVistaEspectador(modo);
-    const siguiente = vista_espectador_modo === destino ? "partida" : destino;
+    const siguiente = temporizadorEstabaActivo
+        ? destino
+        : vista_espectador_modo === destino ? "partida" : destino;
     if (siguiente !== "partida" && vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
@@ -3865,6 +3886,7 @@ function navegarSlidesStatsControl(direccion) {
 
 function mostrarPuntuacionFinal() {
     if (!socket || typeof socket.emit !== "function") return;
+    detenerTemporizadorGigantePorCambioEscenaControl();
     if (vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
@@ -3944,6 +3966,7 @@ function reiniciarPuntuacionFinal() {
 
 function ocultarPuntuacionFinal() {
     if (!socket || typeof socket.emit !== "function") return;
+    detenerTemporizadorGigantePorCambioEscenaControl();
     const boton = document.getElementById("boton_resultado_videojuego");
     if (boton) {
         boton.disabled = true;
@@ -3979,7 +4002,7 @@ window.actualizarEstadoPuntuacionFinalControl = actualizarEstadoPuntuacionFinalC
 window.mostrarFeedbackPuntuacionControl = mostrarFeedbackPuntuacionControl;
 
 function mostrarVistaDeliberacion() {
-    if (vista_espectador_modo === "deliberacion") {
+    if (vista_espectador_modo === "deliberacion" && !temporizador_gigante_activo) {
         actualizarBotonesVistaEspectadorControl();
         return;
     }
@@ -3987,7 +4010,7 @@ function mostrarVistaDeliberacion() {
 }
 
 function mostrarResultadoVideojuego() {
-    if (vista_espectador_modo === "puntuacion") {
+    if (vista_espectador_modo === "puntuacion" && !temporizador_gigante_activo) {
         ocultarPuntuacionFinal();
         return;
     }
@@ -4002,6 +4025,7 @@ function mostrarResultadoJurado() {
         socket.emit("pedir_jurado_resultado");
         return;
     }
+    detenerTemporizadorGigantePorCambioEscenaControl();
     cerrarVideotutorialDesdeVistaControl();
     socket.emit("mostrar_resultado_jurado", {}, (respuesta = {}) => {
         if (respuesta.ok === true) return;
@@ -4114,6 +4138,7 @@ function mostrarCreditosEspectador() {
     const creditos = obtenerCreditosDesdePanelControl();
     creditos_estado_control = { ...creditos };
     if (vista_espectador_modo === "creditos") {
+        detenerTemporizadorGigantePorCambioEscenaControl();
         actualizarBotonesVistaEspectadorControl();
         return;
     }
@@ -4123,6 +4148,7 @@ function mostrarCreditosEspectador() {
         return;
     }
 
+    detenerTemporizadorGigantePorCambioEscenaControl();
     if (vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
@@ -4896,6 +4922,7 @@ function emitirTeleprompter(inmediato = false) {
 }
 
 function prepararVistaEspectadorParaTeleprompter() {
+    detenerTemporizadorGigantePorCambioEscenaControl();
     if (vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });

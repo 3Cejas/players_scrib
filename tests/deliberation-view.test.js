@@ -30,8 +30,8 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.doesNotMatch(html, /id="jurado_nav_reset"/);
   assert.match(html, /id="jurado_nav_prev"[^>]*stats-nav-button--prev[^>]*aria-label="Resultado anterior"/);
   assert.match(html, /id="jurado_nav_next"[^>]*stats-nav-button--next[^>]*aria-label="Revelar siguiente resultado"/);
-  assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion"\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
-  assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*vista_espectador_modo === "puntuacion"[\s\S]*ocultarPuntuacionFinal\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
+  assert.match(actions, /function mostrarVistaDeliberacion\(\)\s*\{\s*if \(vista_espectador_modo === "deliberacion" && !temporizador_gigante_activo\)[\s\S]*return;[\s\S]*cambiar_vista_espectador\("deliberacion"\)/);
+  assert.match(actions, /function mostrarResultadoVideojuego\(\)[\s\S]*vista_espectador_modo === "puntuacion" && !temporizador_gigante_activo[\s\S]*ocultarPuntuacionFinal\(\)[\s\S]*mostrarPuntuacionFinal\(\)/);
   assert.match(actions, /window\.activarSeccionControl = activarSeccionControl/);
   assert.match(actions, /function mostrarPuntuacionFinal\(\)[\s\S]*boton\.setAttribute\("aria-busy", "true"\)[\s\S]*socket\.emit\("mostrar_puntuacion_final"/);
   assert.match(actions, /function actualizarBotonResultadoVideojuegoControl\(disponible\)[\s\S]*disponible === true && partida_finalizada_control === true/);
@@ -47,11 +47,20 @@ test("Control exposes exclusive deliberation, game result and jury result views"
   assert.match(actions, /pintarResumenSlideControl\(puntuacionLabel, \{[\s\S]*indice: numeroSlide,[\s\S]*total: totalSlides,[\s\S]*anterior: etiquetasPuntuacion\[puntuacion_slide_step_control - 1\][\s\S]*siguiente: etiquetasPuntuacion\[puntuacion_slide_step_control \+ 1\]/);
   assert.match(actions, /vista_espectador_modo === "resultado_jurado" \|\| juradoEnResultadoFinal/);
   assert.match(actions, /jurado_slide_step_control >= JURADO_PASO_MAX_CONTROL[\s\S]*mostrar_resultado_final/);
-  assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*cambiar_vista_espectador_modo", \{ modo: "partida" \}/);
+  const activarTemporizador = actions.slice(
+    actions.indexOf("function activar_temporizador_gigante"),
+    actions.indexOf("function actualizarEstadoTemporizadorControl")
+  );
+  assert.match(activarTemporizador, /if \(temporizador_gigante_activo\) \{[\s\S]*return;/);
+  assert.doesNotMatch(activarTemporizador, /cambiar_vista_espectador_modo/);
+  assert.match(actions, /function detenerTemporizadorGigantePorCambioEscenaControl\(\)[\s\S]*temporizador_gigante_detener/);
+  assert.match(actions, /function aplicarVistaPrincipalControl\(vista, opciones = \{\}\) \{\s*detenerTemporizadorGigantePorCambioEscenaControl\(\)/);
+  assert.match(actions, /const temporizadorEstabaActivo = detenerTemporizadorGigantePorCambioEscenaControl\(\);[\s\S]*const siguiente = temporizadorEstabaActivo[\s\S]*\? destino/);
+  assert.match(actions, /function prepararVistaEspectadorParaTeleprompter\(\) \{\s*detenerTemporizadorGigantePorCambioEscenaControl\(\)/);
   assert.match(actions, /DURACION_TEMPORIZADOR_REPRESENTACION_SEGUNDOS = 10 \* 60/);
   assert.match(actions, /activar_temporizador_gigante'[\s\S]{0,120}duracion: DURACION_TEMPORIZADOR_REPRESENTACION_SEGUNDOS/);
   const mostrarCreditos = actions.slice(actions.indexOf("function mostrarCreditosEspectador"), actions.indexOf("function emitirTeleprompter"));
-  assert.doesNotMatch(mostrarCreditos, /temporizador_gigante_detener/);
+  assert.match(mostrarCreditos, /detenerTemporizadorGigantePorCambioEscenaControl\(\)/);
   assert.match(actions, /function actualizarPresentacionTemporizadorGiganteEspectador|function prepararVistaEspectadorParaTeleprompter/);
   assert.match(sockets, /socket\.on\('jurado_resultado_estado'/);
   assert.match(sockets, /socket\.on\('fin_a_control'[\s\S]*partida_finalizada_control = true[\s\S]*actualizarBotonResultadoVideojuegoControl\(true\)[\s\S]*activarSeccionControl\("juego"\)/);

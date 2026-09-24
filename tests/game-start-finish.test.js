@@ -86,10 +86,10 @@ test("the finished-writing scene fully replaces the old spectator HUD", () => {
   assert.match(css, /@keyframes partidaFinalEntrada[\s\S]*@keyframes partidaFinalSpark/);
   assert.match(finish, /logo\.style\.display = "none";[\s\S]*neon\.style\.display = "none";[\s\S]*mostrarCierrePartidaEspectador\(\);/);
   assert.doesNotMatch(finish, /animateCSS\("\.cabecera", "backInLeft"\)/);
-  assert.match(sockets, /function sincronizarCierrePartidaEspectadorConVista\(modo\)[\s\S]*vista === "partida" && confetti_cierre_partida_disparado[\s\S]*ocultarCierrePartidaEspectador\(\)/);
+  assert.match(sockets, /function sincronizarCierrePartidaEspectadorConVista\(modo\)[\s\S]*vista === "partida"[\s\S]*confetti_cierre_partida_disparado[\s\S]*ocultarCierrePartidaEspectador\(\)/);
   assert.match(sockets, /function teleprompterActivoEspectador\(\)[\s\S]*teleprompter\.classList\.contains\("activo"\)/);
-  assert.match(sockets, /function mostrarCierrePartidaEspectador\(\)[\s\S]*teleprompterActivoEspectador\(\)[\s\S]*ocultarCierrePartidaEspectador\(\)/);
-  assert.match(sockets, /sincronizarCierrePartidaEspectadorConVista\(modo\)[\s\S]*!teleprompterActivoEspectador\(\)/);
+  assert.match(sockets, /function mostrarCierrePartidaEspectador\(\)[\s\S]*teleprompterActivoEspectador\(\) \|\| temporizadorGiganteActivoEspectador\(\)[\s\S]*ocultarCierrePartidaEspectador\(\)/);
+  assert.match(sockets, /sincronizarCierrePartidaEspectadorConVista\(modo\)[\s\S]*!teleprompterActivoEspectador\(\)[\s\S]*!temporizadorGiganteActivoEspectador\(\)/);
   assert.match(read("game/spectator/js/state.js"), /sincronizarCierrePartidaEspectadorConVista\(modo\)/);
   assert.match(read("game/spectator/js/state.js"), /overlay\.classList\.toggle\("activo", teleprompter_estado\.visible\);[\s\S]*sincronizarCierrePartidaEspectadorConVista\(vista_espectador_modo_resuelta\)/);
 });
