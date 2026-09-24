@@ -3639,12 +3639,12 @@ const renderizarRendimientoStatsJugador = (jugador, equipo, timelineModos = [], 
         return Number.isInteger(numero) ? String(numero) : numero.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
     };
     const criterios = [
-        { icono: "&#x270D;&#xFE0F;", nombre: "Producción", valor: totalPalabras, unidad: "palabras", peso: 20 },
-        { icono: "&#x26A1;", nombre: "Ritmo", valor: Math.max(0, Math.round(Number(jugador && jugador.ritmoPpm) || 0)), unidad: "PPM", peso: 15 },
-        { icono: "&#x1F4DA;", nombre: "Riqueza léxica", valor: palabrasUnicas, unidad: "únicas", peso: 15 },
-        { icono: "&#x2728;", nombre: "Inspiración", valor: formatearDecimal(inspiracion), unidad: "puntos", peso: 20 },
-        { icono: "&#x1F3AF;", nombre: "Precisión", valor: fallosPrecision, unidad: fallosPrecision === 1 ? "fallo" : "fallos", peso: 20, inversa: true },
-        { icono: "&#x2328;&#xFE0F;", nombre: "Pulsaciones", valor: Math.max(0, Math.round(Number(jugador && jugador.pulsacionesTotal) || 0)), unidad: "teclas", peso: 10 }
+        { icono: "&#x270D;&#xFE0F;", nombre: "Producción", valor: totalPalabras, unidad: "palabras" },
+        { icono: "&#x26A1;", nombre: "Ritmo", valor: Math.max(0, Math.round(Number(jugador && jugador.ritmoPpm) || 0)), unidad: "PPM" },
+        { icono: "&#x1F4DA;", nombre: "Riqueza léxica", valor: palabrasUnicas, unidad: "únicas" },
+        { icono: "&#x2728;", nombre: "Inspiración", valor: formatearDecimal(inspiracion), unidad: "puntos" },
+        { icono: "&#x1F3AF;", nombre: "Precisión", valor: fallosPrecision, unidad: fallosPrecision === 1 ? "fallo" : "fallos", inversa: true },
+        { icono: "&#x2328;&#xFE0F;", nombre: "Pulsaciones", valor: Math.max(0, Math.round(Number(jugador && jugador.pulsacionesTotal) || 0)), unidad: "teclas" }
     ];
     const criteriosHtml = criterios.map((criterio) => `
         <article class="stats-criterio-card equipo-${equipo}${criterio.inversa ? " stats-criterio-card--inverso" : ""}">
@@ -3652,7 +3652,6 @@ const renderizarRendimientoStatsJugador = (jugador, equipo, timelineModos = [], 
             <span class="stats-criterio-nombre">${criterio.nombre}</span>
             <strong>${criterio.valor}</strong>
             <small>${criterio.unidad}</small>
-            <em>${criterio.peso} pts</em>
         </article>
     `).join("");
     return `
@@ -3673,9 +3672,7 @@ const renderizarRendimientoStatsJugador = (jugador, equipo, timelineModos = [], 
             </section>
             <section class="stats-rendimiento-grafica equipo-${equipo}">
                 <header>
-                    <span class="stats-rendimiento-eyebrow">HUELLA DE LAS MUSAS</span>
                     <h4>Evolución de la inspiración</h4>
-                    <p>Valor de las inspiraciones incorporadas al texto durante cada nivel.</p>
                 </header>
                 <div class="stats-tiempo-board equipo-${equipo}">${graficaHtml}</div>
             </section>
@@ -3683,7 +3680,6 @@ const renderizarRendimientoStatsJugador = (jugador, equipo, timelineModos = [], 
         <section class="stats-criterios">
             <header>
                 <span>CRITERIOS DEL VIDEOJUEGO</span>
-                <small>peso máximo de cada categoría</small>
             </header>
             <div class="stats-criterios-grid">${criteriosHtml}</div>
         </section>
@@ -3696,8 +3692,8 @@ const construirSlidesStats = (payload) => {
     const p2 = estado.players[2];
     const contextoHeatmapP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; MAPA DE CALOR`;
     const contextoHeatmapP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; MAPA DE CALOR`;
-    const contextoRendimientoP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; RENDIMIENTO EN VIVO`;
-    const contextoRendimientoP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; RENDIMIENTO EN VIVO`;
+    const contextoRendimientoP1 = `${renderizarNombreEquipoStats(p1.nombre, 1)} &middot; ESTADÍSTICAS`;
+    const contextoRendimientoP2 = `${renderizarNombreEquipoStats(p2.nombre, 2)} &middot; ESTADÍSTICAS`;
     return [
         {
             tipo: "heatmap",
@@ -3794,7 +3790,7 @@ const renderizarStatsEspectador = () => {
     stats_slide_count = slides.length;
     aplicarSlideStatsActual();
     const nombreModo = estado.modo_actual ? estado.modo_actual : "partida";
-    stats_estado.textContent = `Modo: ${nombreModo} Â· Heatmap + rendimiento en vivo Â· ${stats_slide_count} slides`;
+    stats_estado.textContent = `Modo: ${nombreModo} Â· Heatmap + estadísticas Â· ${stats_slide_count} slides`;
     stats_timestamp.textContent = `Actualizado: ${formatearHoraEspectador(estado.ts)}`;
     actualizarCabeceraSlideStats();
     renderizarEstadoStatsEspectador(resolverModoActivoStatsEspectador(estado));
