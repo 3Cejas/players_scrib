@@ -52,7 +52,8 @@ test("Control exposes exclusive deliberation, game result and jury result views"
     actions.indexOf("function actualizarEstadoTemporizadorControl")
   );
   assert.match(activarTemporizador, /if \(temporizador_gigante_activo\) \{[\s\S]*return;/);
-  assert.doesNotMatch(activarTemporizador, /cambiar_vista_espectador_modo/);
+  assert.match(activarTemporizador, /vista_espectador_modo = "temporizador";[\s\S]*vista_principal_control = "";[\s\S]*cambiar_vista_espectador_modo", \{ modo: "temporizador" \}/);
+  assert.match(actions, /MODOS_VISTA_ESPECTADOR = new Set\([^\n]*"temporizador"/);
   assert.match(actions, /function detenerTemporizadorGigantePorCambioEscenaControl\(\)[\s\S]*temporizador_gigante_detener/);
   assert.match(actions, /function aplicarVistaPrincipalControl\(vista, opciones = \{\}\) \{\s*detenerTemporizadorGigantePorCambioEscenaControl\(\)/);
   assert.match(actions, /const temporizadorEstabaActivo = detenerTemporizadorGigantePorCambioEscenaControl\(\);[\s\S]*const siguiente = temporizadorEstabaActivo[\s\S]*\? destino/);
@@ -210,5 +211,7 @@ test("credits use the real graphic marks and timer rings count down", () => {
   assert.match(museState, /src="\.\.\/\.\.\/img\/logo\.png"/);
   assert.match(museState, /creditos-musa__cierre-sutura-lockup/);
   assert.match(spectatorState, /temporizador_gigante_restante \/ duracion/);
+  assert.match(spectatorState, /MODOS_VISTA_ESPECTADOR = new Set\([^\n]*"temporizador"/);
+  assert.match(spectatorState, /classList\.toggle\("vista-temporizador", modo === "temporizador"\)/);
   assert.match(museState, /temporizador_lectura_restante \/ duracion/);
 });

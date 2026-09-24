@@ -2599,8 +2599,14 @@ function activar_temporizador_gigante() {
     cerrarVideotutorialDesdeVistaControl();
     temporizador_gigante_activo = true;
     temporizador_gigante_estado_control = "activo";
+    // El temporizador no es una capa de Vista partida: es una vista exclusiva.
+    // Publicamos primero el cambio de vista para que el servidor, Control y
+    // Espectador dejen de considerar Partida como activa antes de mostrarlo.
+    vista_espectador_modo = "temporizador";
+    vista_principal_control = "";
     actualizarBotonFinalizarTemporizadorDebugControl();
     actualizarBotonesVistaEspectadorControl();
+    socket.emit("cambiar_vista_espectador_modo", { modo: "temporizador" });
     socket.emit('activar_temporizador_gigante', {
         duracion: DURACION_TEMPORIZADOR_REPRESENTACION_SEGUNDOS
     });
@@ -3424,7 +3430,7 @@ window.actualizarBotonPausaReanudarControl = actualizarBotonPausaReanudarControl
 // `calentamiento` es un modo resuelto que llega desde el servidor cuando la
 // vista Detonadores está activa. Conservarlo evita confundirlo con Tutorial y,
 // sobre todo, garantiza que al pulsar Tutorial se envíe el cambio autoritativo.
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final", "temporizador"]);
 const PUNTUACION_CATEGORIAS_CONTROL = [
     "produccion",
     "ritmo",

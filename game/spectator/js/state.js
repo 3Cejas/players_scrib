@@ -1405,8 +1405,8 @@ const container_general = document.querySelector(".container");
 const cabecera = document.querySelector(".cabecera");
 const cabecera_display_inicial = cabecera ? cabecera.style.display : "";
 const neon_espectador = getEl("neon");
-const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
-const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final"]);
+const MODOS_VISTA_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "calentamiento", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final", "temporizador"]);
+const MODOS_OVERRIDE_ESPECTADOR = new Set(["partida", "tutorial", "instrucciones", "stats", "puntuacion", "nube_inspiracion", "creditos", "deliberacion", "resultado_jurado", "resultado_final", "temporizador"]);
 let vista_calentamiento = false;
 let vista_espectador_override = "tutorial";
 let vista_espectador_modo_resuelta = "tutorial";
@@ -2077,6 +2077,7 @@ const normalizarOverrideVistaEspectador = (valor) => {
 const resolverModoVistaEspectadorLocal = () => {
     if (
         vista_espectador_override === "tutorial"
+        || vista_espectador_override === "temporizador"
         || vista_espectador_override === "instrucciones"
         || vista_espectador_override === "stats"
         || vista_espectador_override === "puntuacion"
@@ -5049,6 +5050,7 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         document.body.classList.toggle("vista-deliberacion", modo === "deliberacion");
         document.body.classList.toggle("vista-resultado-jurado", modo === "resultado_jurado");
         document.body.classList.toggle("vista-resultado-final", modo === "resultado_final");
+        document.body.classList.toggle("vista-temporizador", modo === "temporizador");
     }
     if (calentamiento_espectador) {
         calentamiento_espectador.style.display = modo === "calentamiento" ? "flex" : "none";
