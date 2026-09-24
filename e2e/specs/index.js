@@ -1405,6 +1405,52 @@ async function ensureBonusWordInWriterUi(ctx, roleName, word, musaLabel, options
   }, { nextWord: word, nextMusaLabel: musaLabel, includeTime: options.includeTime !== false });
 }
 
+async function assertWriterViewportStableDuringMuseAnimation(ctx, roleName) {
+  const result = await ctx.evaluate(roleName, async () => {
+    const root = document.querySelector("#players_fit_root");
+    const word = document.querySelector("#palabra");
+    const panel = document.querySelector(".escritxr-texto-panel");
+    if (!root || !word || !panel) {
+      throw new Error("Missing writer viewport nodes");
+    }
+
+    word.classList.remove("animate__animated", "animate__bounceInLeft");
+    void word.offsetWidth;
+    word.classList.add("animate__animated", "animate__bounceInLeft");
+
+    const samples = [];
+    for (let index = 0; index < 14; index += 1) {
+      // Reproduce el recalculo que también provocan el texto, el cambio de
+      // inspiración y el zoom del navegador mientras la palabra está entrando.
+      window.dispatchEvent(new Event("resize"));
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
+      const rootRect = root.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      samples.push({
+        centerError: Math.abs((rootRect.left + (rootRect.width / 2)) - (window.innerWidth / 2)),
+        panelLeft: panelRect.left,
+        panelRight: panelRect.right,
+        viewportWidth: window.innerWidth
+      });
+      await new Promise((resolve) => setTimeout(resolve, 45));
+    }
+
+    word.classList.remove("animate__animated", "animate__bounceInLeft");
+    window.dispatchEvent(new Event("resize"));
+    return {
+      maxCenterError: Math.max(...samples.map((sample) => sample.centerError)),
+      minPanelLeft: Math.min(...samples.map((sample) => sample.panelLeft)),
+      maxPanelRightOverflow: Math.max(...samples.map((sample) => sample.panelRight - sample.viewportWidth))
+    };
+  });
+
+  ctx.assert(result.maxCenterError <= 2, `writer viewport shifted during muse animation: ${JSON.stringify(result)}`);
+  ctx.assert(result.minPanelLeft >= -2, `writer panel left the viewport: ${JSON.stringify(result)}`);
+  ctx.assert(result.maxPanelRightOverflow <= 2, `writer panel overflowed to the right: ${JSON.stringify(result)}`);
+}
+
 async function emitMusaHeartViaClient(ctx, roleName) {
   await ctx.evaluate(roleName, () => {
     if (typeof socket === "undefined" || !socket || typeof socket.emit !== "function") {
@@ -1741,6 +1787,7 @@ const smokeSpecs = [
         [blueMuses[0].name],
         "first muse word satisfies the automatic delivery"
       );
+      await assertWriterViewportStableDuringMuseAnimation(ctx, "writer1");
       await ctx.sendMusaWord(redMuses[0].roleName, "latido");
       await waitForAttributedInspiration(
         ctx,
@@ -2188,6 +2235,33 @@ const visualSpecs = [
 ];
 
 const coreSpecs = [
+  {
+    name: "writer-viewport-muse-animation-core",
+    run: async (ctx) => {
+      await openRolesAndWaitWithOptions(ctx, ["writer1"], { useStateHooks: false });
+      await ctx.getPageEntry("writer1").page.setViewport({ width: 1440, height: 800 });
+      await ctx.evaluate("writer1", () => {
+        window.eval("asegurarVistaPartidaActivaEscritora();");
+        const editor = document.querySelector("#texto");
+        const word = document.querySelector("#palabra");
+        const definition = document.querySelector("#definicion");
+        if (!editor || !word || !definition) {
+          throw new Error("Missing writer game UI");
+        }
+        editor.contentEditable = "true";
+        editor.textContent = Array.from(
+          { length: 22 },
+          (_, index) => `Línea ${index + 1} que mantiene el editor creciendo durante la prueba.`
+        ).join("\n");
+        editor.dispatchEvent(new Event("input", { bubbles: true }));
+        word.textContent = "PALABRAS BENDITAS";
+        definition.textContent = "MUSA: Constelación";
+        window.dispatchEvent(new Event("resize"));
+      });
+      await ctx.sleep(200);
+      await assertWriterViewportStableDuringMuseAnimation(ctx, "writer1");
+    }
+  },
   {
     name: "control-credits-editing-core",
     run: async (ctx) => {

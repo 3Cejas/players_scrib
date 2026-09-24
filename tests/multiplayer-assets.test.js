@@ -35,7 +35,7 @@ const SCORE_ASSET_VERSION = "20260903e";
 const LEVEL_TRANSITION_VERSION = "20260921c";
 const LEVEL_TRANSITION_SCRIPT_VERSION = "20260921c";
 const PLAYER_ACTIONS_VERSION = "20260921g";
-const PLAYER_STATE_VERSION = "20260923g";
+const PLAYER_STATE_VERSION = "20260924a";
 const PLAYER_SOCKET_EVENTS_VERSION = "20260923e";
 const SPECTATOR_SOCKET_EVENTS_VERSION = "20260923d";
 const JURY_CSS_VERSION = "20260920d";
@@ -1046,7 +1046,7 @@ test("spectator viewport uses a stable grid without cumulative whole-page scalin
   assert.match(js.slice(initStart, initEnd), /MutationObserver/);
 });
 
-test("writer viewport recalculates around growing text and keeps the complete level on screen", () => {
+test("writer viewport recalculates vertically without following transient horizontal animations", () => {
   const css = read("game/css/dashboard-players.css");
   const state = read("game/players/js/state.js");
   const fitStart = state.indexOf("const ajustarAltoEditorViewportEscritora =");
@@ -1067,6 +1067,10 @@ test("writer viewport recalculates around growing text and keeps the complete le
   assert.match(state.slice(fitStart, fitEnd), /--escritxr-editor-min-height/);
   assert.match(state.slice(fitStart, fitEnd), /--escritxr-editor-max-height/);
   assert.match(state.slice(fitStart, fitEnd), /document\.querySelector\("\.info-total"\)/);
+  assert.match(state.slice(fitStart, fitEnd), /const anchoNatural = viewportW/);
+  assert.match(state.slice(fitStart, fitEnd), /const offsetX = Math\.max\(0, \(viewportW - \(anchoNatural \* escala\)\) \* 0\.5\)/);
+  assert.doesNotMatch(state.slice(fitStart, fitEnd), /rect\.left|rect\.right|minX|maxX/);
+  assert.doesNotMatch(state.slice(fitStart, fitEnd), /document\.getElementById\("palabra"\)|document\.getElementById\("definicion"\)/);
   assert.match(state.slice(initStart, initEnd), /ResizeObserver/);
   assert.match(state.slice(initStart, initEnd), /document\.querySelector\("\.escritxr-texto-panel__viewport"\)/);
   assert.match(state.slice(initStart, initEnd), /document\.querySelector\("\.info-total"\)/);

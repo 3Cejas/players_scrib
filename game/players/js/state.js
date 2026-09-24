@@ -1643,33 +1643,31 @@ const ajustarViewportEscritora = () => {
     // Fuerza una única lectura después de aplicar el límite dinámico para que
     // las medidas siguientes incluyan el nivel, las musas y el texto actuales.
     void players_fit_root.offsetHeight;
-    const objetivos = [
+    // El ancho natural es siempre el viewport. No se calcula con los hijos:
+    // las palabras de las musas entran con transformaciones (bounceInLeft) y
+    // durante unos fotogramas su rectángulo queda fuera de la pantalla. Usar
+    // ese rectángulo desplazaba todo el rol hacia la derecha y el error podía
+    // quedar fijado hasta que un zoom o un resize forzaban otro ajuste.
+    //
+    // La altura sí debe seguir siendo dinámica para que el nivel completo
+    // quepa cuando crece el editor o aparecen nuevas filas de información.
+    // Solo medimos contenedores de layout estables, nunca sus hijos animados.
+    const objetivosVerticales = [
         players_fit_root,
         document.getElementById("contenedor"),
-        document.getElementById("scrib_competition_hud"),
         document.querySelector(".escritxr-texto-panel"),
-        document.querySelector(".info-total"),
-        document.getElementById("palabra"),
-        document.getElementById("definicion")
+        document.querySelector(".info-total")
     ].filter((nodo) => nodo && nodo.getClientRects().length > 0);
-    let minX = 0;
-    let minY = 0;
-    let maxX = viewportW;
     let maxY = viewportH;
-    objetivos.forEach((nodo) => {
+    objetivosVerticales.forEach((nodo) => {
         const rect = nodo.getBoundingClientRect();
         const altoContenido = nodo.id === "contenedor"
             ? Math.max(rect.height, nodo.scrollHeight || 0)
             : rect.height;
-        minX = Math.min(minX, rect.left);
-        minY = Math.min(minY, rect.top);
-        // El texto del editor puede tener líneas muy largas. Su scrollWidth no
-        // forma parte del layout visible y no debe encoger toda la interfaz.
-        maxX = Math.max(maxX, rect.right);
         maxY = Math.max(maxY, rect.top + altoContenido);
     });
-    const anchoNatural = Math.max(1, maxX - minX);
-    const altoNatural = Math.max(1, maxY - minY);
+    const anchoNatural = viewportW;
+    const altoNatural = Math.max(1, maxY);
     // No apuramos el último píxel: los chips de inspiración y las palabras
     // malditas pueden aparecer después del primer ajuste. Esta reserva evita
     // que su borde inferior quede cortado y se recalcula desde el tamaño
@@ -1677,8 +1675,8 @@ const ajustarViewportEscritora = () => {
     const altoDisponible = Math.max(1, viewportH - margenVerticalSeguro);
     let escala = Math.min(1, viewportW / anchoNatural, altoDisponible / altoNatural);
     if (!Number.isFinite(escala) || escala <= 0) escala = 1;
-    const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5) - (minX * escala);
-    const offsetY = Math.max(0, -minY * escala);
+    const offsetX = Math.max(0, (viewportW - (anchoNatural * escala)) * 0.5);
+    const offsetY = 0;
     players_fit_root.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${escala.toFixed(4)})`;
 };
 
