@@ -463,7 +463,7 @@ const teleprompter_text = getEl("teleprompter_text");
 const teleprompter_preparing = getEl("teleprompter_preparing");
 const TELEPROMPTER_LIMITS_ESPECTADOR = {
     ...window.ScribTeleprompter.LIMITS,
-    fontMax: 80,
+    fontMax: 160,
     speedMax: 200
 };
 const TELEPROMPTER_FONT_MIN = TELEPROMPTER_LIMITS_ESPECTADOR.fontMin;

@@ -4287,7 +4287,7 @@ let listeners_creditos_inicializados = false;
 
 const TELEPROMPTER_LIMITS_CONTROL = {
     ...window.ScribTeleprompter.LIMITS,
-    fontMax: 80,
+    fontMax: 160,
     speedMax: 200
 };
 const TELEPROMPTER_FONT_MIN = TELEPROMPTER_LIMITS_CONTROL.fontMin;

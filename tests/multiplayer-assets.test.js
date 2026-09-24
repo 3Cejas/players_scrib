@@ -24,7 +24,7 @@ const CONTROL_FINISH_VERSION = "20260827d";
 const CONTROL_LAYOUT_VERSION = "20260829p";
 const SPECTATOR_PRE_SHOW_VERSION = "20260827c";
 const SPECTATOR_VIEW_TRANSITION_VERSION = "20260903a";
-const SPECTATOR_STATE_VERSION = "20260924i";
+const SPECTATOR_STATE_VERSION = "20260924j";
 const SPECTATOR_CSS_VERSION = "20260924f";
 const CREDITS_DOMAIN_VERSION = "20260924a";
 const VIEW_TRANSITION_MODULE_VERSION = "20260922b";
@@ -42,7 +42,7 @@ const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260923a";
 const JURY_SOCKET_EVENTS_VERSION = "20260923a";
 const CONTROL_CSS_VERSION = "20260923d";
-const CONTROL_ACTIONS_VERSION = "20260924d";
+const CONTROL_ACTIONS_VERSION = "20260924e";
 const CONTROL_I18N_VERSION = "20260923a";
 const CONTROL_STATE_VERSION = "20260923c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20260923d";
@@ -100,6 +100,18 @@ test("control exposes the requested default match duration and muse cooldown", (
   assert.match(html, /id="duracion_minutos"[\s\S]{0,180}value="35"/);
   assert.match(html, /id="duracion_segundos"[\s\S]{0,180}value="0"/);
   assert.match(html, /id="limite_tiempo_inspiracion"[\s\S]{0,180}value="10"/);
+});
+
+test("teleprompter font controls reach a projector-sized maximum", () => {
+  const controlHtml = read("game/control/index.html");
+  const controlActions = read("game/control/js/actions.js");
+  const spectatorState = read("game/spectator/js/state.js");
+  const teleprompterDomain = read("game/js/domains/teleprompter.js");
+
+  assert.match(controlHtml, /18\s*—\s*160/);
+  assert.match(controlActions, /TELEPROMPTER_LIMITS_CONTROL\s*=\s*\{[\s\S]*fontMax:\s*160/);
+  assert.match(spectatorState, /TELEPROMPTER_LIMITS_ESPECTADOR\s*=\s*\{[\s\S]*fontMax:\s*160/);
+  assert.match(teleprompterDomain, /fontMax:\s*160/);
 });
 
 test("multiplayer html references current changed shared assets", () => {

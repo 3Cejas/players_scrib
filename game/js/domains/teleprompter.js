@@ -1,7 +1,7 @@
 (function initScribTeleprompter(global) {
     const LIMITS = {
         fontMin: 18,
-        fontMax: 96,
+        fontMax: 160,
         speedMin: 5,
         speedMax: 300
     };
