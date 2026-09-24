@@ -84,7 +84,7 @@ test("the finished-writing scene fully replaces the old spectator HUD", () => {
   assert.doesNotMatch(html, /AHORA EMPIEZA LA REPRESENTACI/);
   assert.match(css, /\.partida-final-espectador\s*\{[\s\S]*position: fixed;[\s\S]*inset: 0;[\s\S]*overflow: hidden;/);
   assert.match(css, /@keyframes partidaFinalEntrada[\s\S]*@keyframes partidaFinalSpark/);
-  assert.match(finish, /logo\.style\.display = "none";[\s\S]*neon\.style\.display = "none";[\s\S]*mostrarCierrePartidaEspectador\(\);/);
+  assert.match(finish, /logo\.style\.display = "none";[\s\S]*neon\.style\.display = "none";[\s\S]*sincronizarCierrePartidaEspectadorConVista\(vista_espectador_modo_resuelta\);/);
   assert.doesNotMatch(finish, /animateCSS\("\.cabecera", "backInLeft"\)/);
   assert.match(sockets, /function sincronizarCierrePartidaEspectadorConVista\(modo\)[\s\S]*vista === "partida"[\s\S]*confetti_cierre_partida_disparado[\s\S]*ocultarCierrePartidaEspectador\(\)/);
   assert.match(sockets, /function teleprompterActivoEspectador\(\)[\s\S]*teleprompter\.classList\.contains\("activo"\)/);
@@ -92,6 +92,19 @@ test("the finished-writing scene fully replaces the old spectator HUD", () => {
   assert.match(sockets, /sincronizarCierrePartidaEspectadorConVista\(modo\)[\s\S]*!teleprompterActivoEspectador\(\)[\s\S]*!temporizadorGiganteActivoEspectador\(\)/);
   assert.match(read("game/spectator/js/state.js"), /sincronizarCierrePartidaEspectadorConVista\(modo\)/);
   assert.match(read("game/spectator/js/state.js"), /overlay\.classList\.toggle\("activo", teleprompter_estado\.visible\);[\s\S]*sincronizarCierrePartidaEspectadorConVista\(vista_espectador_modo_resuelta\)/);
+});
+
+test("restoring a finished spectator session never replays celebrations", () => {
+  const sockets = read("game/spectator/js/socket-events.js");
+  const state = read("game/spectator/js/state.js");
+  const finish = sockets.slice(sockets.indexOf("function ejecutarCierrePartidaEspectador"), sockets.indexOf("function evaluarCierrePartidaEspectador"));
+
+  assert.match(finish, /data\.restaurando === true \|\| data\.origen === "restauracion"/);
+  assert.match(finish, /if \(restaurando\) \{\s*stopConfetti\(\);/);
+  assert.match(sockets, /payload\.suprimir_confetti_espectador === true/);
+  assert.match(state, /resultado_final_restaurado_espectador = payload && payload\.restaurando === true/);
+  assert.match(state, /animar: !resultado_final_restaurado_espectador,[\s\S]*celebrar: !resultado_final_restaurado_espectador/);
+  assert.match(state, /if \(celebrar && !estado\.empate && typeof confetti_aux === "function"\)/);
 });
 
 test("the spectator header stays legible above the HUD and lets text cards yield first", () => {

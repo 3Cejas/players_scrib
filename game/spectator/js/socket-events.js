@@ -411,7 +411,13 @@ function ejecutarCierrePartidaEspectador(data = {}) {
     ocultarTransicionNivelEspectador();
     if (confetti_cierre_partida_disparado) return;
     confetti_cierre_partida_disparado = true;
-    if (!suprimir_confetti_cierre_por_fin_control) {
+    const restaurando = Boolean(
+        data
+        && (data.restaurando === true || data.origen === "restauracion")
+    );
+    if (restaurando) {
+        stopConfetti();
+    } else if (!suprimir_confetti_cierre_por_fin_control) {
         confetti_aux();
     } else {
         stopConfetti();
@@ -428,7 +434,7 @@ function ejecutarCierrePartidaEspectador(data = {}) {
     setIndicadorGanadorMarcadorEspectador(2, false);
     logo.style.display = "none";
     neon.style.display = "none";
-    mostrarCierrePartidaEspectador();
+    sincronizarCierrePartidaEspectadorConVista(vista_espectador_modo_resuelta);
     limpiarModoPsicodelicoEspectador("");
     tiempo.style.color = "white";
     tiempo1.style.color = "white";
@@ -1744,11 +1750,13 @@ socket.on('fin', data => {
         const textoEtiqueta = cierreSinPalabras
             ? TEXTO_PERDISTE_SIN_PALABRAS_ESPECTADOR
             : undefined;
-        if (
-            payload &&
-            payload.origen === "control" &&
-            payload.suprimir_confetti_espectador !== false
-        ) {
+        if (payload && (
+            payload.suprimir_confetti_espectador === true
+            || (
+                payload.origen === "control"
+                && payload.suprimir_confetti_espectador !== false
+            )
+        )) {
             suprimir_confetti_cierre_por_fin_control = true;
             stopConfetti();
         }

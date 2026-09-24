@@ -1739,6 +1739,7 @@ let stats_slides_actuales = [];
 let estado_puntuacion_final_espectador = null;
 let estado_resultado_jurado_espectador = null;
 let estado_resultado_final_espectador = null;
+let resultado_final_restaurado_espectador = false;
 let puntuacion_slide_step_remoto = 0;
 let puntuacion_reveal_phase_remoto = 0;
 let jurado_slide_step_remoto = 0;
@@ -4547,8 +4548,9 @@ const normalizarResultadoFinalEspectador = (payload = {}) => {
     };
 };
 
-const revelarResultadoFinalEspectador = (estado, firma) => {
+const revelarResultadoFinalEspectador = (estado, firma, opciones = {}) => {
     if (!resultado_final_stage || vista_espectador_modo_resuelta !== "resultado_final") return;
+    const celebrar = opciones.celebrar !== false;
     const tarjeta = (id) => {
         const jugador = estado.jugadores[id];
         const gana = !estado.empate && estado.ganador === id;
@@ -4571,14 +4573,17 @@ const revelarResultadoFinalEspectador = (estado, firma) => {
     resultado_final_espectador?.classList.remove("is-winner-1", "is-winner-2", "is-tie");
     resultado_final_espectador?.classList.add(estado.empate ? "is-tie" : `is-winner-${estado.ganador}`);
     requestAnimationFrame(() => resultado_final_stage.classList.add("is-celebrating"));
-    if (!estado.empate && typeof confetti_aux === "function") {
+    if (celebrar && !estado.empate && typeof confetti_aux === "function") {
         confetti_aux({ persistente: true, silencioso: true });
     }
-    reproducirVictoriaDeliberacionEspectador(`final:${estado.ganador || 0}:${estado.jugadores[1].total}:${estado.jugadores[2].total}`);
+    if (celebrar) {
+        reproducirVictoriaDeliberacionEspectador(`final:${estado.ganador || 0}:${estado.jugadores[1].total}:${estado.jugadores[2].total}`);
+    }
 };
 
 const renderizarResultadoFinalEspectador = (opciones = {}) => {
     if (!resultado_final_stage) return;
+    const celebrar = opciones.celebrar !== false;
     const estado = normalizarResultadoFinalEspectador(estado_resultado_final_espectador || {});
     const reducirMovimiento = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
     if (!estado.disponible) {
@@ -4609,16 +4614,22 @@ const renderizarResultadoFinalEspectador = (opciones = {}) => {
         </article>`;
         resultado_final_timeout_revelado_espectador = setTimeout(() => {
             resultado_final_timeout_revelado_espectador = null;
-            revelarResultadoFinalEspectador(estado, firma);
+            revelarResultadoFinalEspectador(estado, firma, { celebrar });
         }, RESULTADO_FINAL_SUSPENSE_MS);
         return;
     }
-    revelarResultadoFinalEspectador(estado, firma);
+    revelarResultadoFinalEspectador(estado, firma, { celebrar });
 };
 
 const actualizarResultadoFinalEspectador = (payload = {}) => {
+    resultado_final_restaurado_espectador = payload && payload.restaurando === true;
     estado_resultado_final_espectador = normalizarResultadoFinalEspectador(payload);
-    if (vista_espectador_modo_resuelta === "resultado_final") renderizarResultadoFinalEspectador({ animar: true });
+    if (vista_espectador_modo_resuelta === "resultado_final") {
+        renderizarResultadoFinalEspectador({
+            animar: !resultado_final_restaurado_espectador,
+            celebrar: !resultado_final_restaurado_espectador
+        });
+    }
 };
 
 window.actualizarResultadoFinalEspectador = actualizarResultadoFinalEspectador;
@@ -5128,7 +5139,10 @@ const aplicarModoVistaEspectadorUi = (modo) => {
         detenerAnimacionCreditosEspectador();
         const entrandoEnResultadoFinal = modoPrevio !== "resultado_final";
         if (entrandoEnResultadoFinal) resultado_final_firma_render_espectador = "";
-        renderizarResultadoFinalEspectador({ animar: entrandoEnResultadoFinal });
+        renderizarResultadoFinalEspectador({
+            animar: entrandoEnResultadoFinal && !resultado_final_restaurado_espectador,
+            celebrar: !resultado_final_restaurado_espectador
+        });
     } else {
         detenerAnimacionNubeInspiracion();
         detenerAnimacionCreditosEspectador();
