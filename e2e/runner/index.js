@@ -928,14 +928,25 @@ class E2EHarness {
   }
 
   async clickWarmupWord(roleName, word) {
-    await this.evaluate(roleName, (targetWord) => {
-      const candidates = Array.from(document.querySelectorAll("#calentamiento_nube_escritor *"));
-      const match = candidates.find((node) => String(node.textContent || "").toLowerCase().includes(String(targetWord).toLowerCase()));
-      if (!match) {
-        throw new Error(`Warmup word not found: ${targetWord}`);
+    const page = this.getPageEntry(roleName).page;
+    const point = await page.evaluate((targetWord) => {
+      const cards = Array.from(document.querySelectorAll(
+        "#calentamiento_nube_escritor .calentamiento-palabra-clickable"
+      ));
+      const card = cards.find((node) => String(node.textContent || "")
+        .toLowerCase()
+        .includes(String(targetWord).toLowerCase()));
+      if (!card) throw new Error(`Warmup word not found: ${targetWord}`);
+      const rect = card.getBoundingClientRect();
+      const x = rect.left + (rect.width / 2);
+      const y = rect.top + (rect.height / 2);
+      const hit = document.elementFromPoint(x, y);
+      if (!hit || !card.contains(hit)) {
+        throw new Error(`Warmup word is covered at its click point: ${targetWord}`);
       }
-      match.click();
+      return { x, y };
     }, word);
+    await page.mouse.click(point.x, point.y);
   }
 
   async readText(roleName, selector) {

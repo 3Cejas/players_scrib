@@ -1748,6 +1748,64 @@ const smokeSpecs = [
     }
   },
   {
+    name: "warmup-writer-click-targets",
+    run: async (ctx) => {
+      const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];
+      await openRolesAndWaitWithOptions(
+        ctx,
+        ["control", "writer1", "writer2", ...museRoles],
+        { useStateHooks: false }
+      );
+      const museAssignments = await readAuthoritativeMuseAssignments(ctx, museRoles);
+      const blueMuses = museAssignments.filter(({ team }) => team === 1);
+      const redMuses = museAssignments.filter(({ team }) => team === 2);
+      ctx.assert(blueMuses.length === 2 && redMuses.length === 2, "detonator click test needs two muses per team");
+
+      await ctx.invoke("control", "mostrar_vista_detonadores");
+      await ctx.waitForState(
+        "detonator view active for click targets",
+        (state) => state.tutorial.activo === true && state.tutorial.vista === true,
+        10000
+      );
+      await ctx.invoke("control", "pedir_solicitud_calentamiento", "lugares");
+      await ctx.sendWarmupWord(blueMuses[0].roleName, "biblioteca");
+      await ctx.sendWarmupWord(blueMuses[1].roleName, "azotea");
+      await ctx.sendWarmupWord(redMuses[0].roleName, "teatro");
+      await ctx.sendWarmupWord(redMuses[1].roleName, "anfiteatro");
+      await ctx.waitForState(
+        "four detonators stored for click targets",
+        (state) => state.tutorial.equipos[1].palabras.length >= 2
+          && state.tutorial.equipos[2].palabras.length >= 2,
+        10000
+      );
+      await assertCardsDoNotOverlap(
+        ctx,
+        "writer1",
+        "#calentamiento_nube_escritor .calentamiento-palabra",
+        "blue writer detonator click targets",
+        4
+      );
+      await assertCardsDoNotOverlap(
+        ctx,
+        "writer2",
+        "#calentamiento_nube_escritor .calentamiento-palabra",
+        "red writer detonator click targets",
+        4
+      );
+
+      // clickWarmupWord usa un click fisico en el centro visible y falla si
+      // elementFromPoint devuelve una tarjeta rival superpuesta.
+      await ctx.clickWarmupWord("writer1", "biblioteca");
+      await ctx.clickWarmupWord("writer2", "teatro");
+      await ctx.waitForState(
+        "both writers selected their visible detonator",
+        (state) => state.tutorial.equipos[1].seleccionadas >= 1
+          && state.tutorial.equipos[2].seleccionadas >= 1,
+        10000
+      );
+    }
+  },
+  {
     name: "musa-bonus-delivery",
     run: async (ctx) => {
       const museRoles = ["musa1", "musa1b", "musa2", "musa2b"];

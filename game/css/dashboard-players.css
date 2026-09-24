@@ -8003,6 +8003,17 @@ body.vista-calentamiento-escritor #calentamiento_escritor .calentamiento-palabra
   pointer-events: none;
 }
 
+body.vista-calentamiento-escritor #calentamiento_escritor .calentamiento-palabra-rival,
+body.vista-calentamiento-escritor #calentamiento_escritor .calentamiento-palabra-rival * {
+  z-index: 1;
+  pointer-events: none !important;
+}
+
+body.vista-calentamiento-escritor #calentamiento_escritor .calentamiento-palabra-propia {
+  z-index: 5;
+  isolation: isolate;
+}
+
 body.vista-calentamiento-escritor #calentamiento_escritor .calentamiento-palabra.calentamiento-palabra-clickable {
   pointer-events: auto;
 }

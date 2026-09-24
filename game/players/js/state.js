@@ -2429,7 +2429,7 @@ const contextoMedicionCalentamientoEscritor = (() => {
     return canvas && typeof canvas.getContext === "function" ? canvas.getContext("2d") : null;
 })();
 
-const medirCajaPalabraCalentamientoEscritor = (entrada, maxAnchoPx) => {
+const medirCajaPalabraCalentamientoEscritor = (entrada, maxAnchoPx, interactiva = false) => {
     const textoPalabra = String(entrada && entrada.palabra || "").trim();
     const firma = normalizarFirmaMusaEscritora(entrada || {});
     const tamFuente = Math.max(15, Math.min(34, Math.max(window.innerWidth || 1, 1) * 0.022));
@@ -2450,14 +2450,23 @@ const medirCajaPalabraCalentamientoEscritor = (entrada, maxAnchoPx) => {
     const altoPalabra = (lineas * tamFuente * 1.08) + (tamFuente * 0.56);
     const altoFirma = firma.texto ? (tamFirma * 1.65) + Math.max(2, tamFuente * 0.08) : 0;
     const factorReserva = entrada && (entrada.destacada || entrada.esFinal) ? 1.34 : 1.06;
-    return { ancho: ancho * factorReserva, alto: (altoPalabra + altoFirma) * factorReserva, maxAncho };
+    // El detonador propio dispone de un blanco tactil invisible mayor que su
+    // texto. Reservar tambien esa superficie evita que otro detonador ocupe
+    // el punto desde el que la escritora intenta pulsarlo.
+    const extraTactilX = interactiva ? tamFuente * 1.24 : 0;
+    const extraTactilY = interactiva ? tamFuente * 1.12 : 0;
+    return {
+        ancho: (ancho + extraTactilX) * factorReserva,
+        alto: (altoPalabra + altoFirma + extraTactilY) * factorReserva,
+        maxAncho
+    };
 };
 
-const resolverPosicionPalabraCalentamientoEscritor = (entrada, ocupadas, stageW, stageH, minY) => {
+const resolverPosicionPalabraCalentamientoEscritor = (entrada, ocupadas, stageW, stageH, minY, interactiva = false) => {
     const maxAncho = entrada && entrada.esFinal
         ? Math.max(170, Math.min(stageW * 0.54, 620))
         : Math.max(140, Math.min(stageW * 0.4, 500));
-    const caja = medirCajaPalabraCalentamientoEscritor(entrada, maxAncho);
+    const caja = medirCajaPalabraCalentamientoEscritor(entrada, maxAncho, interactiva);
     const margen = 7;
     const minX = (caja.ancho * 0.5) + margen;
     const maxX = stageW - (caja.ancho * 0.5) - margen;
@@ -2542,11 +2551,20 @@ const renderizarPalabrasCalentamientoEscritor = () => {
         80
     );
     entradasVisibles.forEach((entrada) => {
-        const posicion = resolverPosicionPalabraCalentamientoEscritor(entrada, ocupadas, stageW, stageH, minY);
-        if (!posicion) return;
         const propia = equipoEscritor !== null && entrada.equipo === equipoEscritor;
+        const interactiva = Boolean(propia && entrada.id);
+        const posicion = resolverPosicionPalabraCalentamientoEscritor(
+            entrada,
+            ocupadas,
+            stageW,
+            stageH,
+            minY,
+            interactiva
+        );
+        if (!posicion) return;
         const nodo = document.createElement("span");
         const clases = [`calentamiento-palabra`, `equipo-${entrada.equipo}`];
+        clases.push(propia ? "calentamiento-palabra-propia" : "calentamiento-palabra-rival");
         if (entrada.destacada) clases.push("is-highlighted");
         if (entrada.esFinal) clases.push("is-final-word");
         if (entrada.destacada && entrada.animOnTs && (ahora - entrada.animOnTs) < VENTANA_ANIMACION_PALABRA_MS) {
@@ -2555,7 +2573,7 @@ const renderizarPalabrasCalentamientoEscritor = () => {
         if (!entrada.destacada && entrada.animOffTs && (ahora - entrada.animOffTs) < VENTANA_ANIMACION_PALABRA_MS) {
             clases.push("is-highlight-exit");
         }
-        if (propia && entrada.id) clases.push("calentamiento-palabra-clickable");
+        if (interactiva) clases.push("calentamiento-palabra-clickable");
         nodo.className = clases.join(" ");
         const palabraTexto = document.createElement("span");
         palabraTexto.className = "calentamiento-palabra__texto";
@@ -2571,11 +2589,20 @@ const renderizarPalabrasCalentamientoEscritor = () => {
         const delayMs = entrada.destacada ? 0 : -Math.min(edadMs, duracionMs);
         nodo.style.setProperty("--calentamiento-decay-duration", `${duracionMs}ms`);
         nodo.style.setProperty("--calentamiento-decay-delay", `${delayMs}ms`);
-        if (propia && entrada.id) {
+        if (interactiva) {
             nodo.dataset.id = entrada.id;
-            nodo.addEventListener("click", () => {
+            nodo.setAttribute("role", "button");
+            nodo.setAttribute("tabindex", "0");
+            nodo.setAttribute("aria-label", `Seleccionar detonador ${entrada.palabra}`);
+            const seleccionarDetonador = () => {
                 if (!socket || !socket.connected) return;
                 socket.emit("calentamiento_click_palabra", { id: entrada.id });
+            };
+            nodo.addEventListener("click", seleccionarDetonador);
+            nodo.addEventListener("keydown", (evento) => {
+                if (evento.key !== "Enter" && evento.key !== " ") return;
+                evento.preventDefault();
+                seleccionarDetonador();
             });
         }
         fragment.appendChild(nodo);

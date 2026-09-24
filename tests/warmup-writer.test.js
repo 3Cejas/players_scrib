@@ -63,3 +63,16 @@ test("el calentamiento se resincroniza sin repintar una revision ya aplicada", (
   assert.match(state, /revisionNormalizada <= revision_calentamiento_escritor\) return false/);
   assert.match(state, /setInterval\([\s\S]*solicitarEstadoCalentamientoEscritor,[\s\S]*1500/);
 });
+
+test("los detonadores propios quedan por encima y los rivales no interceptan el puntero", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const state = fs.readFileSync(path.join(__dirname, "../game/players/js/state.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "../game/css/dashboard-players.css"), "utf8");
+
+  assert.match(state, /calentamiento-palabra-propia/);
+  assert.match(state, /calentamiento-palabra-rival/);
+  assert.match(state, /extraTactilX[\s\S]*extraTactilY/);
+  assert.match(css, /\.calentamiento-palabra-rival,[\s\S]*pointer-events:\s*none\s*!important/);
+  assert.match(css, /\.calentamiento-palabra-propia\s*\{[\s\S]*z-index:\s*5/);
+});
