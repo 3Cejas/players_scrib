@@ -138,7 +138,9 @@ test("Control separates Tutorial and Detonadores into accessible scrollable tabs
   assert.match(actions, /panelFinal\.classList\.add\("is-creditos-open"\)/);
   assert.match(actions, /function volverMenuFinalCreditos\(\)\s*\{\s*aplicarVistaPanelControl\("controles"\);\s*activarSeccionControl\("final"\);\s*\}/);
   assert.doesNotMatch(actions, /animateCSS\(panelControles, "fadeInLeft"\)/);
-  assert.match(actions, /teleprompter_state\.preparing = true;[\s\S]*emitirTeleprompter\(true\)/);
+  assert.match(actions, /const hayTextoCargado = Boolean\(String\(teleprompter_state\.text \|\| ""\)\.trim\(\)\)/);
+  assert.match(actions, /teleprompter_state\.visible = hayTextoCargado;[\s\S]*teleprompter_state\.preparing = !hayTextoCargado;[\s\S]*emitirTeleprompter\(true\)/);
+  assert.match(actions, /function activar_temporizador_gigante\(\)[\s\S]*teleprompter_state\.visible = false;[\s\S]*teleprompter_state\.preparing = false;[\s\S]*emitirTeleprompter\(true\)/);
   assert.match(actions, /teleprompter_state\.preparing = false;[\s\S]*teleprompter_state\.visible = true;/);
   assert.match(actions, /socket\.emit\("creditos_actualizar", \{ creditos/);
   assert.match(actions, /const borradores_creditos_control = new Map\(\)/);

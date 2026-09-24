@@ -2592,6 +2592,16 @@ function activar_temporizador_gigante() {
         // abrir el teleprompter.
         return;
     }
+    // Temporizador y teleprompter son escenas exclusivas. Conservamos el
+    // texto cargado para poder recuperarlo despues, pero ocultamos cualquier
+    // proyeccion/preparacion previa antes de publicar el temporizador.
+    if (teleprompter_state.visible || teleprompter_state.preparing || teleprompter_state.playing) {
+        teleprompter_state.visible = false;
+        teleprompter_state.preparing = false;
+        teleprompter_state.playing = false;
+        marcarCambioTeleprompterLocalControl();
+        emitirTeleprompter(true);
+    }
     if (vista_calentamiento) {
         vista_calentamiento = false;
         emitirVistaControl("cambiar_vista_calentamiento", { activo: false });
@@ -4957,8 +4967,12 @@ function toggleTeleprompter(forzarCerrar = false) {
                 ? "creditos"
                 : "controles";
         aplicarVistaPanelControl("teleprompter");
-        teleprompter_state.visible = false;
-        teleprompter_state.preparing = true;
+        const hayTextoCargado = Boolean(String(teleprompter_state.text || "").trim());
+        // El temporizador gigante solo suspende la proyeccion. Si ya habia un
+        // texto cargado, volver a Teleprompter debe recuperarlo directamente;
+        // entrar otra vez en "preparando" dejaba al publico viendo Partida.
+        teleprompter_state.visible = hayTextoCargado;
+        teleprompter_state.preparing = !hayTextoCargado;
         teleprompter_state.playing = false;
     } else {
         teleprompter_state.visible = false;
