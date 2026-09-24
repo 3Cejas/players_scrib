@@ -59,6 +59,7 @@ const ESCALA_TEXTO_ESPECTADOR_CONTROL_MIN = 0.9;
 const ESCALA_TEXTO_ESPECTADOR_CONTROL_MAX = 1.7;
 const ESCALA_DETONADORES_ESPECTADOR_CONTROL_MIN = 0.7;
 const ESCALA_DETONADORES_ESPECTADOR_CONTROL_MAX = 2;
+const DURACION_TEMPORIZADOR_REPRESENTACION_SEGUNDOS = 10 * 60;
 const EVENTO_CAMBIO_IDIOMA_UI = "scrib:language-changed";
 const BANDERAS_IDIOMA_CONTROL = {
     es: "\uD83C\uDDEA\uD83C\uDDF8",
@@ -2603,7 +2604,9 @@ function activar_temporizador_gigante() {
     temporizador_gigante_activo = true;
     temporizador_gigante_estado_control = "activo";
     actualizarBotonFinalizarTemporizadorDebugControl();
-    socket.emit('activar_temporizador_gigante', { duracion: 10 * 60 });
+    socket.emit('activar_temporizador_gigante', {
+        duracion: DURACION_TEMPORIZADOR_REPRESENTACION_SEGUNDOS
+    });
 }
 
 function actualizarEstadoTemporizadorControl(payload = {}) {
