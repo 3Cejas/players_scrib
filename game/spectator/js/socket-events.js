@@ -261,7 +261,18 @@ function obtenerNombreCierrePartidaEspectador(player) {
     return String(input && input.value ? input.value : fallback).trim().toUpperCase() || fallback;
 }
 
+function teleprompterActivoEspectador() {
+    const teleprompter = document.getElementById("teleprompter_overlay");
+    return Boolean(
+        teleprompter
+        && teleprompter.classList.contains("activo")
+    );
+}
+
 function mostrarCierrePartidaEspectador() {
+    if (teleprompterActivoEspectador()) {
+        return ocultarCierrePartidaEspectador();
+    }
     const overlay = document.getElementById("partida_final_espectador");
     if (!overlay) return false;
     const nombreJ1 = document.getElementById("partida_final_nombre_j1");
@@ -289,7 +300,7 @@ function ocultarCierrePartidaEspectador() {
 
 function sincronizarCierrePartidaEspectadorConVista(modo) {
     const vista = String(modo || "").trim().toLowerCase();
-    if (vista === "partida" && confetti_cierre_partida_disparado) {
+    if (vista === "partida" && confetti_cierre_partida_disparado && !teleprompterActivoEspectador()) {
         return mostrarCierrePartidaEspectador();
     }
     return ocultarCierrePartidaEspectador();

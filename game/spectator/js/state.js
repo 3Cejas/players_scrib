@@ -646,6 +646,9 @@ const aplicarRenderTeleprompterEspectador = ({ esNuevaCarga = false } = {}) => {
     if (overlay) {
         overlay.classList.toggle("activo", teleprompter_estado.visible);
     }
+    if (typeof window.sincronizarCierrePartidaEspectadorConVista === "function") {
+        window.sincronizarCierrePartidaEspectadorConVista(vista_espectador_modo_resuelta);
+    }
     actualizarPresentacionTemporizadorGiganteEspectador();
     if (teleprompter_preparing) {
         const preparando = Boolean(teleprompter_estado.preparing && !teleprompter_estado.visible);
