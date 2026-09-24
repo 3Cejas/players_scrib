@@ -2514,6 +2514,66 @@ const coreSpecs = [
     }
   },
   {
+    name: "spectator-level-voice-announces-every-level",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "spectator"]);
+      await startGame(ctx, { requireEditable: false });
+      await ctx.waitForVisible("spectator", "#countdown", false, "spectator intro cleared before voice checks", 10000);
+      await ctx.getPageEntry("spectator").page.click("body");
+
+      const levels = [
+        { mode: "letra bendita", letra: "B", file: "10. LETRA BENDITA.mp3" },
+        { mode: "letra prohibida", letra: "K", file: "11. LETRA PROHIBIDA.mp3" },
+        { mode: "palabras bonus", file: "12. PALABRAS BENDITAS.mp3" },
+        { mode: "palabras prohibidas", file: "13. PALABRAS PROHIBIDAS.mp3" },
+        { mode: "tertulia", file: "14. TERTULIA.mp3" },
+        { mode: "frase final", file: "15. FRASE FINAL.mp3" }
+      ];
+
+      for (const level of levels) {
+        await ctx.emitHook("scrib_test:force_mode", { mode: level.mode, letra: level.letra });
+        await waitForLocalMode(ctx, "spectator", level.mode, 8000);
+        const playing = await ctx.waitFor(
+          `spectator plays ${level.mode} voice`,
+          async () => ctx.evaluate("spectator", ({ expectedMode, expectedFile }) => {
+            const audio = window.eval(
+              "typeof sonido_locucion_nivel_espectador !== 'undefined' ? sonido_locucion_nivel_espectador : null"
+            );
+            const completedKey = String(window.eval(
+              "typeof ultima_locucion_nivel_completada_espectador !== 'undefined' ? ultima_locucion_nivel_completada_espectador : ''"
+            ) || "");
+            if (!audio) {
+              return completedKey.startsWith(`${expectedMode}:`)
+                ? { mode: expectedMode, completed: true, volume: 1 }
+                : false;
+            }
+            const src = String(audio.currentSrc || audio.src || "");
+            const snapshot = {
+              mode: String(audio.dataset?.scribLocucionModo || ""),
+              src,
+              paused: audio.paused,
+              readyState: audio.readyState,
+              currentTime: audio.currentTime,
+              volume: audio.volume,
+              completed: completedKey.startsWith(`${expectedMode}:`)
+            };
+            return snapshot.completed || (
+              snapshot.mode === expectedMode
+              && src.includes(expectedFile)
+              && !snapshot.paused
+              && snapshot.readyState >= 2
+              && snapshot.currentTime >= 0
+            )
+              ? snapshot
+              : false;
+          }, { expectedMode: level.mode, expectedFile: level.file }),
+          2500
+        );
+        ctx.assert(playing.volume === 1, `${level.mode} voice should play at full volume`);
+      }
+    }
+  },
+  {
     name: "musa-flow-core",
     run: async (ctx) => {
       await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "musa1", "musa2"]);

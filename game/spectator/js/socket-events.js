@@ -149,6 +149,7 @@ socket.on('disconnect', () => {
         sonido.pause();
         sonido.currentTime = 0;
     }
+    reiniciarLocucionesNivelEspectador();
     detenerSonidoCountdownEspectador();
     ocultarTransicionNivelEspectador();
     limpiarAsincroniaVisualEspectador({ resetViewport: true });
@@ -931,6 +932,7 @@ socket.on('inicio', data => {
         sonido.pause();
         sonido.currentTime = 0;
     }
+    reiniciarLocucionesNivelEspectador();
     detenerSonidoCountdownEspectador();
     reiniciarEstadoCierrePartidaEspectador();
     reiniciarHistorialInspiracionStatsEspectador();

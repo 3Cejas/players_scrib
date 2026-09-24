@@ -5964,6 +5964,11 @@ let sonido_confetti;
 let audio_inverso;
 let audio_borroso;
 let sonido_modo;
+let sonido_locucion_nivel_espectador = null;
+let objetivo_locucion_nivel_espectador = null;
+let ultima_locucion_nivel_completada_espectador = "";
+let musica_atenuada_por_locucion_espectador = null;
+let volumen_musica_antes_locucion_espectador = 1;
 let modo_musica_objetivo_espectador = "";
 let canto_audio_activo_espectador = false;
 let intervalo_calentamiento_previo_espectador = null;
@@ -7397,6 +7402,154 @@ const AUDIO_MODO_ESPECTADOR = Object.freeze({
     "tertulia": "../../game/audio/7. KEYGEN PRUEBA 3.mp3"
 });
 
+const AUDIO_LOCUCION_NIVEL_ESPECTADOR = Object.freeze({
+    "letra bendita": "../../game/audio/FX/10. LETRA BENDITA.mp3",
+    "letra prohibida": "../../game/audio/FX/11. LETRA PROHIBIDA.mp3",
+    "palabras bonus": "../../game/audio/FX/12. PALABRAS BENDITAS.mp3",
+    "palabras prohibidas": "../../game/audio/FX/13. PALABRAS PROHIBIDAS.mp3",
+    "tertulia": "../../game/audio/FX/14. TERTULIA.mp3",
+    "frase final": "../../game/audio/FX/15. FRASE FINAL.mp3"
+});
+
+function obtenerClaveLocucionNivelEspectador(modo, payload = {}) {
+    const modoNormalizado = String(modo || "").trim();
+    const seqPayload = Number(payload && payload.modo_seq);
+    const seq = Number.isFinite(seqPayload) && seqPayload > 0
+        ? Math.trunc(seqPayload)
+        : Math.max(0, Math.trunc(Number(modo_seq_actual_espectador) || 0));
+    return `${modoNormalizado}:${seq}`;
+}
+
+function restaurarMusicaTrasLocucionNivelEspectador() {
+    const musica = musica_atenuada_por_locucion_espectador;
+    musica_atenuada_por_locucion_espectador = null;
+    if (!musica || typeof musica.volume !== "number") return;
+    if (canto_audio_activo_espectador) return;
+    musica.volume = Math.max(0, Math.min(1, Number(volumen_musica_antes_locucion_espectador) || 0));
+}
+
+function atenuarMusicaDuranteLocucionNivelEspectador() {
+    if (!sonido_modo || typeof sonido_modo.volume !== "number") return;
+    if (musica_atenuada_por_locucion_espectador !== sonido_modo) {
+        restaurarMusicaTrasLocucionNivelEspectador();
+        musica_atenuada_por_locucion_espectador = sonido_modo;
+        const volumenActual = Number(sonido_modo.volume);
+        volumen_musica_antes_locucion_espectador = Number.isFinite(volumenActual)
+            ? Math.max(0, Math.min(1, volumenActual))
+            : 1;
+    }
+    sonido_modo.volume = Math.min(volumen_musica_antes_locucion_espectador, 0.24);
+}
+
+function detenerLocucionNivelEspectador({ olvidarObjetivo = true } = {}) {
+    const audio = sonido_locucion_nivel_espectador;
+    sonido_locucion_nivel_espectador = null;
+    if (audio) {
+        audio.onplaying = null;
+        audio.onpause = null;
+        audio.onended = null;
+        audio.onerror = null;
+        audio.pause();
+        try { audio.currentTime = 0; } catch (_error) {}
+    }
+    restaurarMusicaTrasLocucionNivelEspectador();
+    if (olvidarObjetivo) objetivo_locucion_nivel_espectador = null;
+}
+
+function reiniciarLocucionesNivelEspectador() {
+    detenerLocucionNivelEspectador();
+    ultima_locucion_nivel_completada_espectador = "";
+}
+
+function intentarReproducirLocucionNivelEspectador() {
+    const objetivo = objetivo_locucion_nivel_espectador;
+    const audio = sonido_locucion_nivel_espectador;
+    if (!objetivo || !audio || objetivo.completada) return false;
+    if (
+        !partida_activa_espectador
+        || vista_espectador_modo_resuelta !== "partida"
+        || String(modo_actual || "").trim() !== objetivo.modo
+    ) {
+        return false;
+    }
+    if (!audio.paused && !audio.ended) return true;
+
+    try {
+        const intento = audio.play();
+        if (intento && typeof intento.catch === "function") {
+            intento.catch((error) => {
+                if (
+                    sonido_locucion_nivel_espectador !== audio
+                    || objetivo_locucion_nivel_espectador !== objetivo
+                ) return;
+                restaurarMusicaTrasLocucionNivelEspectador();
+                console.warn("[Espectador] La locución del nivel espera permiso de reproducción:", error);
+            });
+        }
+    } catch (error) {
+        restaurarMusicaTrasLocucionNivelEspectador();
+        console.warn("[Espectador] La locución del nivel espera permiso de reproducción:", error);
+        return false;
+    }
+    return true;
+}
+
+function reproducirLocucionNivelEspectador(modo, payload = {}) {
+    const modoNormalizado = String(modo || "").trim();
+    const ruta = AUDIO_LOCUCION_NIVEL_ESPECTADOR[modoNormalizado];
+    if (!ruta) return null;
+    const clave = obtenerClaveLocucionNivelEspectador(modoNormalizado, payload);
+    if (clave === ultima_locucion_nivel_completada_espectador) return null;
+    if (
+        objetivo_locucion_nivel_espectador
+        && objetivo_locucion_nivel_espectador.clave === clave
+        && sonido_locucion_nivel_espectador
+    ) {
+        intentarReproducirLocucionNivelEspectador();
+        return sonido_locucion_nivel_espectador;
+    }
+
+    detenerLocucionNivelEspectador();
+    const objetivo = {
+        modo: modoNormalizado,
+        ruta,
+        clave,
+        completada: false
+    };
+    objetivo_locucion_nivel_espectador = objetivo;
+    const audio = new Audio(ruta);
+    sonido_locucion_nivel_espectador = audio;
+    audio.preload = "auto";
+    audio.volume = 1;
+    if (audio.dataset) {
+        audio.dataset.scribLocucionModo = modoNormalizado;
+        audio.dataset.scribLocucionClave = clave;
+    }
+    audio.onplaying = () => {
+        if (sonido_locucion_nivel_espectador !== audio) return;
+        atenuarMusicaDuranteLocucionNivelEspectador();
+    };
+    audio.onpause = () => {
+        if (sonido_locucion_nivel_espectador !== audio || audio.ended) return;
+        restaurarMusicaTrasLocucionNivelEspectador();
+    };
+    audio.onended = () => {
+        if (sonido_locucion_nivel_espectador !== audio) return;
+        objetivo.completada = true;
+        ultima_locucion_nivel_completada_espectador = objetivo.clave;
+        sonido_locucion_nivel_espectador = null;
+        objetivo_locucion_nivel_espectador = null;
+        restaurarMusicaTrasLocucionNivelEspectador();
+    };
+    audio.onerror = () => {
+        if (sonido_locucion_nivel_espectador !== audio) return;
+        restaurarMusicaTrasLocucionNivelEspectador();
+        console.error(`[Espectador] No se pudo cargar la locución del nivel ${modoNormalizado}: ${ruta}`);
+    };
+    intentarReproducirLocucionNivelEspectador();
+    return audio;
+}
+
 function detenerMusicaModoEspectador({ reiniciar = false, olvidarModo = false } = {}) {
     if (olvidarModo) modo_musica_objetivo_espectador = "";
     if (!sonido_modo) return;
@@ -7464,7 +7617,10 @@ function asegurarMusicaModoEspectador() {
 }
 
 function instalarRecuperacionMusicaModoEspectador() {
-    const reintentar = () => asegurarMusicaModoEspectador();
+    const reintentar = () => {
+        asegurarMusicaModoEspectador();
+        intentarReproducirLocucionNivelEspectador();
+    };
     ["pointerdown", "mousedown", "touchstart", "keydown", "click"].forEach((evento) => {
         // Captura garantiza que ningún control u overlay pueda consumir antes
         // el primer gesto que desbloquea el audio tras una recarga.
@@ -7547,8 +7703,7 @@ const MODOS = {
     // Recibe y activa la palabra y el modo bonus.
     'palabras bonus': function (data) {
         reproducirMusicaModoEspectador("palabras bonus")
-        reproducirSonido("../../game/audio/FX/12. PALABRAS BENDITAS.mp3")
-        console.log("ALGO")
+        reproducirLocucionNivelEspectador("palabras bonus", data)
         aplicarEstiloPalabrasModoLetrasEspectador("bonus");
         actualizarPalabraConVisibilidad(palabra2, "");
         actualizarPalabraConVisibilidad(palabra3, "");
@@ -7565,7 +7720,7 @@ const MODOS = {
     //Recibe y activa el modo letra prohibida.
     'letra prohibida': function (data = {}) {
         reproducirMusicaModoEspectador("letra prohibida")
-        reproducirSonido("../../game/audio/FX/11. LETRA PROHIBIDA.mp3")
+        reproducirLocucionNivelEspectador("letra prohibida", data)
         aplicarEstiloPalabrasModoLetrasEspectador("prohibida");
         actualizarPalabraConVisibilidad(palabra2, "");
         actualizarDefinicionConVisibilidad(definicion2, "", false);
@@ -7587,8 +7742,8 @@ const MODOS = {
 
     //Recibe y activa el modo letra bendita.
     'letra bendita': function (data = {}) {
-        reproducirSonido("../../game/audio/FX/10. LETRA BENDITA.mp3")
         reproducirMusicaModoEspectador("letra bendita");
+        reproducirLocucionNivelEspectador("letra bendita", data)
 
         aplicarEstiloPalabrasModoLetrasEspectador("bendita");
         actualizarPalabraConVisibilidad(palabra2, "");
@@ -7624,7 +7779,7 @@ const MODOS = {
 
     'palabras prohibidas': function (data) {
         reproducirMusicaModoEspectador("palabras prohibidas")
-        reproducirSonido("../../game/audio/FX/13. PALABRAS PROHIBIDAS.mp3")
+        reproducirLocucionNivelEspectador("palabras prohibidas", data)
         aplicarEstiloPalabrasModoLetrasEspectador("prohibidas");
         actualizarPalabraConVisibilidad(palabra2, "");
         actualizarPalabraConVisibilidad(palabra3, "");
@@ -7638,9 +7793,9 @@ const MODOS = {
         definicion3.style.maxWidth = "100%";
     },
 
-    'tertulia': function (socket) {
+    'tertulia': function (data = {}) {
         reproducirMusicaModoEspectador("tertulia")
-        reproducirSonido("../../game/audio/FX/14. TERTULIA.mp3")
+        reproducirLocucionNivelEspectador("tertulia", data)
         setBarraNivelClase("tertulia");
         //activar_socket_feedback();
         explicacion.style.color = "#86d0ff";
@@ -7651,7 +7806,7 @@ const MODOS = {
 
     'frase final': function (data = {}) {
         reproducirMusicaModoEspectador("frase final")
-        reproducirSonido("../../game/audio/FX/15. FRASE FINAL.mp3")
+        reproducirLocucionNivelEspectador("frase final", data)
         aplicarEstiloPalabrasModoLetrasEspectador("frase-final");
         setBarraNivelClase("frase-final");
         //activar_socket_feedback();
