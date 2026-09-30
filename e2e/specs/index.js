@@ -1,3 +1,5 @@
+const { runControlTabletChecks } = require("./control-tablet");
+
 const FULL_ROLE_SET = [
   "control",
   "writer1",
@@ -2335,6 +2337,17 @@ const visualSpecs = [
 ];
 
 const coreSpecs = [
+  {
+    name: "control-tablet-touch-layout-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1"]);
+      await startGame(ctx);
+      await freezeWriterDecay(ctx, "writer1");
+      await ctx.setWriterText("writer1", "Historia de prueba para tablet\nSegunda línea del teleprompter.");
+      await ctx.waitForState("tablet writer text stored", state => state.textos[1].plano.includes("Historia de prueba para tablet"));
+      await runControlTabletChecks(ctx);
+    }
+  },
   {
     name: "writer-viewport-muse-animation-core",
     run: async (ctx) => {
