@@ -1,4 +1,5 @@
 const { runControlTabletChecks } = require("./control-tablet");
+const { startInspirationFeedbackProbe, readInspirationFeedbackProbe, stopInspirationFeedbackProbe } = require("./inspiration-feedback-probe");
 
 const FULL_ROLE_SET = [
   "control",
@@ -443,6 +444,31 @@ async function configureFastControlPanel(ctx, overrides = {}) {
     if (typeof window.actualizarVariables === "function") {
       window.actualizarVariables();
     }
+    // Los cambios anteriores emiten estado persistente con debounce. Esperar
+    // su confirmación evita que un eco viejo restaure todos los niveles justo
+    // antes de pulsar Escribir y acorte el nivel probado sin darnos cuenta.
+    return new Promise((resolve, reject) => {
+      const pageSocket = window.eval("socket");
+      const expected = window.obtenerEstadoPersistenteControl();
+      const sameModes = (modes) => Array.isArray(modes)
+        && modes.length === expected.modos.length
+        && modes.every((mode, index) => mode === expected.modos[index]);
+      const finish = (error) => {
+        clearTimeout(timer);
+        pageSocket.off("control_estado", onState);
+        if (error) reject(error);
+        else resolve();
+      };
+      const onState = (state = {}) => {
+        if (sameModes(state.modos)
+          && Object.entries(expected.parametros).every(([key, value]) => Number(state.parametros?.[key]) === Number(value))) {
+          finish();
+        }
+      };
+      const timer = setTimeout(() => finish(new Error("Control test parameters were not confirmed")), 8000);
+      pageSocket.on("control_estado", onState);
+      window.emitirEstadoControlPersistente({ inmediato: true });
+    });
   }, config);
 }
 
@@ -751,6 +777,9 @@ async function clearFloatingFeedbacks(ctx, roleName) {
 
 async function waitForQuantifiedInspirationFeedback(ctx, roleName, description, options = {}) {
   const selector = options.selector || "#feedback_tiempo_flotante_root .feedback-tiempo-float";
+  if (options.observed === true) {
+    return ctx.waitFor(description, async () => ctx.evaluate(roleName, readInspirationFeedbackProbe), 5000, 40);
+  }
   return ctx.waitFor(
     description,
     async () => ctx.evaluate(roleName, (css) => {
@@ -1710,9 +1739,21 @@ const smokeSpecs = [
     run: async (ctx) => {
       await openRolesAndWaitWithOptions(
         ctx,
-        ["control", "writer1", "writer2", "spectator", "musa1"],
+        ["control", "writer1", "writer2", "spectator"],
         { useStateHooks: false }
       );
+      // La asignación empatada alterna entre equipos y no se reinicia al
+      // desconectar. Esta regresión necesita una sola musa azul: preparar una
+      // sesión real nueva antes de registrarla, sin forzar el equipo por hooks.
+      await ctx.evaluate("control", () => new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("New match preparation timed out")), 8000);
+        window.eval("socket").emit("nueva_partida", {}, (response) => {
+          clearTimeout(timer);
+          if (response?.ok !== true) reject(new Error("Could not prepare a fresh Muse session"));
+          else resolve(response);
+        });
+      }));
+      await openRolesAndWaitWithOptions(ctx, ["musa1"], { useStateHooks: false });
       const [blueMuse] = await readAuthoritativeMuseAssignments(ctx, ["musa1"]);
       ctx.assert(blueMuse && blueMuse.team === 1, "the single Muse must be assigned to the blue team");
 
@@ -1817,8 +1858,10 @@ const smokeSpecs = [
       const redMuses = museAssignments.filter(({ team }) => team === 2);
       ctx.assert(blueMuses.length === 2 && redMuses.length === 2, "four muses should be balanced two per team");
       await configureFastControlPanel(ctx, {
-        tiempo_modos: 90,
-        tiempo_cambio_palabras: 30,
+        // Se comprueban colas, varias vistas y una reconexión antes de escribir.
+        // No estamos probando caducidad: dar margen también a runners CI lentos.
+        tiempo_modos: 180,
+        tiempo_cambio_palabras: 120,
         modes: ["palabras bonus"]
       });
       await startGame(ctx, { useStateHooks: false });
@@ -1958,18 +2001,35 @@ const smokeSpecs = [
       );
       await clearFloatingFeedbacks(ctx, "writer1");
       await clearFloatingFeedbacks(ctx, "spectator");
-      await typeInWriter(ctx, "writer1", " horizonte");
-      await waitForQuantifiedInspirationFeedback(
-        ctx,
-        "writer1",
-        "writer sees quantified inspiration feedback for musa bonus"
-      );
-      await waitForQuantifiedInspirationFeedback(
-        ctx,
-        "spectator",
-        "spectator sees quantified inspiration feedback for musa bonus",
-        { selector: "#feedback_tiempo_flotante_root .feedback-tiempo-columna.lado-1 .feedback-tiempo-float" }
-      );
+      const activeInspiration = await readWriterInspirationState(ctx, "writer1");
+      ctx.assert(activeInspiration.mode === "palabras bonus"
+        && activeInspiration.meta?.inspiracion_id
+        && activeInspiration.targets.some((word) => word.toLowerCase() === "horizonte"),
+      `Expected an active Horizonte inspiration before typing: ${JSON.stringify(activeInspiration)}`);
+      await installWriterInspirationProbe(ctx, "writer1");
+      // El feedback solo vive ~1 s. Observar ambas páginas antes de teclear
+      // evita perder una animación real mientras se espera la otra página.
+      await ctx.evaluate("writer1", startInspirationFeedbackProbe,
+        "#feedback_tiempo_flotante_root .feedback-tiempo-float");
+      await ctx.evaluate("spectator", startInspirationFeedbackProbe,
+        "#feedback_tiempo_flotante_root .feedback-tiempo-columna.lado-1 .feedback-tiempo-float");
+      try {
+        await typeInWriter(ctx, "writer1", " horizonte");
+        await Promise.all([
+          waitForQuantifiedInspirationFeedback(ctx, "writer1",
+            "writer sees quantified inspiration feedback for musa bonus", { observed: true }),
+          waitForQuantifiedInspirationFeedback(ctx, "spectator",
+            "spectator sees quantified inspiration feedback for musa bonus", { observed: true })
+        ]);
+        const useProbe = await readWriterInspirationProbe(ctx, "writer1");
+        const uses = useProbe.uses.filter(({ payload }) => String(payload.inspiracion_id) === activeInspiration.meta.inspiracion_id);
+        ctx.assert(uses.length === 1 && uses[0].ack?.ok === true
+          && Number(uses[0].ack.valor_inspiracion) > 0,
+        `The server must credit Horizonte exactly once: ${JSON.stringify(uses)}`);
+      } finally {
+        await ctx.evaluate("writer1", stopInspirationFeedbackProbe);
+        await ctx.evaluate("spectator", stopInspirationFeedbackProbe);
+      }
     }
   },
   {

@@ -61,3 +61,27 @@ test("E2E can isolate its socket server from local browser sessions", () => {
   assert.match(runner, /Object\.defineProperty\(window, "SERVER_URL_DEV"/);
   assert.match(runner, /`http:\/\/127\.0\.0\.1:\$\{SOCKET_PORT\}`/);
 });
+
+test("Smoke prepares a fresh session before asserting that its only Muse is blue", () => {
+  const { smokeSpecs } = require("../e2e/specs");
+  const spec = smokeSpecs.find(({ name }) => name === "warmup-blue-detonator-delivery").run.toString();
+  assert.ok(spec.indexOf('emit("nueva_partida"') < spec.indexOf('ctx, ["musa1"]'));
+  assert.match(spec, /response\?\.ok !== true/);
+  assert.match(spec, /blueMuse\.team === 1/);
+  assert.match(spec, /"writer1"[\s\S]*"blue writer receives the only blue Muse detonator"/);
+});
+
+test("Smoke confirms persisted parameters and observes both real point animations", () => {
+  const specs = read("e2e/specs/index.js");
+  const { smokeSpecs } = require("../e2e/specs");
+  const spec = smokeSpecs.find(({ name }) => name === "musa-bonus-delivery").run.toString();
+  const configure = specs.slice(specs.indexOf("async function configureFastControlPanel"), specs.indexOf("async function ensureSpectatorView"));
+  assert.match(configure, /pageSocket\.on\("control_estado", onState\);\s+window\.emitirEstadoControlPersistente\(\{ inmediato: true \}\)/);
+  assert.match(configure, /sameModes\(state\.modos\)/);
+  assert.match(configure, /Object\.entries\(expected\.parametros\)/);
+  assert.match(configure, /pageSocket\.off\("control_estado", onState\)/);
+  assert.ok(spec.indexOf('ctx.evaluate("spectator", startInspirationFeedbackProbe') < spec.indexOf('typeInWriter(ctx, "writer1", " horizonte")'));
+  assert.match(spec, /Promise\.all\(/);
+  assert.match(spec, /uses\.length === 1 && uses\[0\]\.ack\?\.ok === true/);
+  assert.match(spec, /finally[\s\S]*stopInspirationFeedbackProbe/);
+});
