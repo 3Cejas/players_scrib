@@ -2276,7 +2276,10 @@ if (window && typeof window.scribOnLanguageChange2P === "function") {
 refrescarUiIdiomaEscritora();
 
 function sendText() {
-    const payload = construirPayloadTextoEscritora();
+    enviarPayloadTextoEscritora(construirPayloadTextoEscritora());
+}
+
+function enviarPayloadTextoEscritora(payload) {
     ultimo_payload_texto_enviado_escritora = { ...payload };
     guardarBorradorLocalEscritora(payload);
     if (emisor_texto_escritora) {
@@ -3898,7 +3901,17 @@ function modo_frase_final(e) {
         ? utils.detectarFraseFinalCompletada(e.target.innerText, frase_final)
         : String(e.target.innerText || "").trim().toLowerCase().endsWith(String(frase_final || "").trim().toLowerCase());
     if (completada && !terminado && !partida_global_finalizada) {
+        const payloadFinal = construirPayloadTextoEscritora();
+        if (typeof utils.htmlFraseFinalCompletada === "function") {
+            payloadFinal.text = utils.htmlFraseFinalCompletada(texto, frase_final);
+            // Wrapping the snapshot changes DOM paths, but not plain-text offsets.
+            payloadFinal.caretPath = null;
+            payloadFinal.caretOffset = null;
+        }
         final();
+        texto.innerHTML = payloadFinal.text;
+        enviarPayloadTextoEscritora(payloadFinal);
+        // Deliver the closing text before the server marks this writer finished.
         socket.emit("fin_de_player", player);
     }
 }

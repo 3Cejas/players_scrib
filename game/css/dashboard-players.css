@@ -2641,6 +2641,10 @@ body.page-players #definicion.objetivo-nivel .objetivo-chip--prohibidas {
 
 body.page-players #definicion.objetivo-nivel .objetivo-chip--frase-final {
     --objetivo-aro: #ffb675;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+    text-overflow: clip;
 }
 
 body.page-players #definicion.objetivo-nivel .objetivo-def {
@@ -4125,6 +4129,16 @@ button:hover {
 }
 
 ::highlight(scrib-frase-final-progreso) {
+  color: var(--frase-final-color, #ff9d42);
+  text-shadow: var(--frase-final-sombra, 0 0 0.35em rgba(255, 157, 66, 0.65));
+}
+
+::highlight(scrib-frase-final-j1) {
+  color: var(--frase-final-color, #ff9d42);
+  text-shadow: var(--frase-final-sombra, 0 0 0.35em rgba(255, 157, 66, 0.65));
+}
+
+::highlight(scrib-frase-final-j2) {
   color: var(--frase-final-color, #ff9d42);
   text-shadow: var(--frase-final-sombra, 0 0 0.35em rgba(255, 157, 66, 0.65));
 }
@@ -6845,6 +6859,12 @@ body.page-spectator.vista-partida #contenedor_espectador .spectator-inspiration 
   min-width: 0;
   margin-inline: 0 !important;
   box-sizing: border-box;
+}
+
+/* Una frase de cierre no es un chip de inspiración de una sola fila. Su
+   altura completa participa en el grid y el texto de la historia cede sitio. */
+body.page-spectator.vista-partida.modo-frase-final-espectador #contenedor_espectador .spectator-inspiration {
+  max-height: none;
 }
 
 body.page-spectator.vista-partida #contenedor_espectador > .jugador1 > .feedback_tiempo,

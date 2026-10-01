@@ -2,6 +2,7 @@ const { runControlTabletChecks } = require("./control-tablet");
 const { runDramaturgiaLiveCursorChecks } = require("./dramaturgia-live-cursor");
 const { runWarmupClockChecks } = require("./warmup-clock");
 const { runWriterNameLifecycleChecks } = require("./writer-names");
+const { runFinalPhraseLayoutChecks } = require("./final-phrase-layout");
 const { startInspirationFeedbackProbe, readInspirationFeedbackProbe, stopInspirationFeedbackProbe } = require("./inspiration-feedback-probe");
 
 const FULL_ROLE_SET = [
@@ -3638,9 +3639,19 @@ const coreSpecs = [
     }
   },
   {
+    name: "final-phrase-long-layout-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["writer1", "writer2", "spectator", "musa1", "musa2"]);
+      await ctx.emitHook("scrib_test:force_mode", { mode: "frase final" });
+      await ctx.waitForState("long final phrase mode active", (state) => state.partida.modo_actual === "frase final");
+      await ctx.sleep(1200);
+      await runFinalPhraseLayoutChecks(ctx);
+    }
+  },
+  {
     name: "final-phrase-core",
     run: async (ctx) => {
-      await openRolesAndWait(ctx, ["writer1", "spectator", "musa1"]);
+      await openRolesAndWait(ctx, ["writer1", "writer2", "spectator", "musa1"]);
       await ctx.emitHook("scrib_test:force_mode", { mode: "frase final" });
       await ctx.waitForState("frase final active", (state) => state.partida.modo_actual === "frase final");
       await ctx.waitForText("writer1", "#palabra", (text) => text.trim().length > 0, "writer1 shows final phrase title");
@@ -3695,13 +3706,80 @@ const coreSpecs = [
       ctx.assert(enterState.legacyHighlights === 0, "final-phrase highlighting must not wrap editor content");
 
       await ctx.setWriterText("writer1", "Un cierre mág");
+      // Firefox suspends animation frames in background tabs. Inspect each
+      // live role in the foreground, as it is used on its own device.
+      await ctx.getPageEntry("spectator").page.bringToFront();
+      await ctx.evaluate("spectator", () => {
+        window.eval("frase_final_j1 = 'cierre mágico';");
+        actualizarEstadoFraseFinalEspectadorDesdeTexto(1, "Un cierre mág");
+      });
       const progress = await ctx.evaluate("writer1", () => {
         const chip = document.querySelector(".objetivo-chip--frase-final");
         return Number.parseFloat(chip?.style.getPropertyValue("--frase-final-progress") || "0");
       });
       ctx.assert(progress > 50 && progress < 100, `final phrase should illuminate progressively, got ${progress}`);
+      await ctx.waitFor("spectator sees progressive final phrase highlight", async () => ctx.evaluate("spectator", () => {
+        const highlight = window.CSS?.highlights?.get("scrib-frase-final-j1");
+        return highlight && Array.from(highlight)[0]?.toString() === "cierre mág";
+      }));
+      const snapshotChecks = await ctx.evaluate("writer1", () => {
+        const node = document.createElement("div");
+        node.innerHTML = 'Historia<br>Un <b>CIERRE</b> mágico»  ';
+        const before = node.innerHTML;
+        const snapshot = document.createElement("div");
+        snapshot.innerHTML = ScribFraseFinalUtils.htmlFraseFinalCompletada(node, "«cierre mágico»");
+        return {
+          untouched: node.innerHTML === before,
+          highlighted: snapshot.querySelector(".frase-final-progreso")?.textContent,
+          textUnchanged: snapshot.textContent === node.textContent
+        };
+      });
+      ctx.assert(snapshotChecks.untouched && snapshotChecks.textUnchanged && snapshotChecks.highlighted === "CIERRE mágico",
+        `final snapshot must preserve nested markup, suffix quotes and the live editor: ${JSON.stringify(snapshotChecks)}`);
+      await ctx.getPageEntry("writer1").page.bringToFront();
       await typeInWriter(ctx, "writer1", "ico");
-      await ctx.waitForState("writer final phrase detected", (state) => state.partida.fin_j1 === true, 6000);
+      const completed = await ctx.waitForState("writer final phrase detected", (state) => state.partida.fin_j1 === true, 6000);
+      ctx.assert(completed.textos[1].plano.includes("Un cierre mágico"), "last characters must reach the server before finishing");
+      ctx.assert(/frase-final-progreso/.test(completed.textos[1].html?.text || completed.textos[1].html),
+        "completed orange phrase must be saved in the server snapshot");
+      await ctx.getPageEntry("spectator").page.bringToFront();
+      await ctx.waitFor("completed orange phrase appears in spectator", async () => ctx.evaluate("spectator", () => {
+        const span = document.querySelector("#texto .frase-final-progreso");
+        return span?.textContent === "cierre mágico";
+      }));
+      const savedColour = await ctx.evaluate("spectator", () => getComputedStyle(
+        document.querySelector("#texto .frase-final-progreso")
+      ).color);
+      ctx.assert(savedColour === "rgb(255, 157, 66)", `completed phrase must remain orange, got ${savedColour}`);
+      await reloadRole(ctx, "spectator");
+      await ctx.waitFor("orange phrase survives spectator reconnect", async () => ctx.evaluate("spectator", () => (
+        document.querySelector("#texto .frase-final-progreso")?.textContent === "cierre mágico"
+      )));
+      await ensureWriterEditableForFullFlow(ctx, "writer2");
+      await ctx.getPageEntry("writer2").page.bringToFront();
+      await ctx.evaluate("writer2", () => {
+        window.eval("frase_final = 'hasta mañana'; terminado = false; partida_global_finalizada = false; modo_actual = 'frase final'; asegurarVistaPartidaActivaEscritora();");
+        function_frase_final();
+      });
+      await ctx.setWriterText("writer2", "Otro cierre: hasta mañ");
+      const redProgress = await ctx.evaluate("writer2", () => Number.parseFloat(
+        document.querySelector(".objetivo-chip--frase-final")?.style.getPropertyValue("--frase-final-progress")
+      ));
+      ctx.assert(redProgress > 50 && redProgress < 100, "red writer must have progressive final phrase illumination too");
+      await typeInWriter(ctx, "writer2", "ana");
+      const bothFinished = await ctx.waitForState("both final phrases detected", state => state.partida.fin_j1 && state.partida.fin_j2);
+      for (const id of [1, 2]) {
+        ctx.assert(/frase-final-progreso/.test(bothFinished.textos[id].html?.text || bothFinished.textos[id].html),
+          `writer ${id} orange phrase must survive the whole match finishing`);
+      }
+      // The match-ending screen replaces the live text panes. A reconnect
+      // must restore the stored orange markup, not a transient Highlight.
+      await ctx.getPageEntry("spectator").page.bringToFront();
+      await reloadRole(ctx, "spectator");
+      await ctx.waitFor("both saved orange phrases survive match end and reconnect", async () => ctx.evaluate("spectator", () => (
+        document.querySelector("#texto .frase-final-progreso")?.textContent === "cierre mágico"
+        && document.querySelector("#texto1 .frase-final-progreso")?.textContent === "hasta mañana"
+      )));
     }
   },
   {

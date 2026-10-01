@@ -348,10 +348,26 @@ function detectarFraseFinalCompletadaEspectador(textoPlano, fraseObjetivo) {
 }
 
 function actualizarEstadoFraseFinalEspectadorDesdeTexto(jugadorId, textoPlano) {
+    const nodo = Number(jugadorId) === 2 ? texto2 : texto1;
+    const objetivo = Number(jugadorId) === 2 ? frase_final_j2 : frase_final_j1;
+    const utils = window.ScribFraseFinalUtils;
+    const highlightId = `scrib-frase-final-j${jugadorId}`;
+    if (window.CSS?.highlights) CSS.highlights.delete(highlightId);
     if (modo_actual !== "frase final") {
         if (jugadorId === 1) frase_final_completada_j1 = false;
         if (jugadorId === 2) frase_final_completada_j2 = false;
         return;
+    }
+    if (nodo && utils && window.CSS?.highlights && typeof window.Highlight === "function") {
+        const longitud = utils.longitudProgresoFraseFinal(textoPlano, objetivo);
+        const rango = utils.obtenerRangoSufijoTexto(nodo, longitud);
+        if (rango) {
+            const ratio = longitud / utils.normalizarTextoCierreFraseFinal(objetivo).length;
+            const estilo = utils.estiloProgresoFraseFinal(ratio);
+            nodo.style.setProperty("--frase-final-color", estilo.color);
+            nodo.style.setProperty("--frase-final-sombra", estilo.textShadow);
+            CSS.highlights.set(highlightId, new Highlight(rango));
+        }
     }
     if (jugadorId === 1) {
         frase_final_completada_j1 = detectarFraseFinalCompletadaEspectador(textoPlano, frase_final_j1);
@@ -1377,10 +1393,10 @@ function refrescarCabeceraModoActualEspectador() {
         if (explicacion) explicacion.innerHTML = traducirDescripcionModoEspectador("frase final", "ULTIMA RONDA");
         if (palabra1) palabra1.innerHTML = traducirTituloModoEspectador("frase final", "NIVEL FRASE FINAL");
         if (typeof frase_final_j1 === "string") {
-            actualizarPalabraConVisibilidad(palabra2, "&laquo;" + frase_final_j1 + "&raquo;");
+            actualizarPalabraConVisibilidad(palabra2, "&laquo;" + escapeHtml(frase_final_j1) + "&raquo;");
         }
         if (typeof frase_final_j2 === "string") {
-            actualizarPalabraConVisibilidad(palabra3, "&laquo;" + frase_final_j2 + "&raquo;");
+            actualizarPalabraConVisibilidad(palabra3, "&laquo;" + escapeHtml(frase_final_j2) + "&raquo;");
         }
         actualizarDefinicionConVisibilidad(definicion2, tJuego2P("mode.goal.last_one", {}, "Â¡Esta es la ultima!"), false);
         actualizarDefinicionConVisibilidad(definicion3, tJuego2P("mode.goal.last_one", {}, "Â¡Esta es la ultima!"), false);

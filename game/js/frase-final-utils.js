@@ -38,10 +38,69 @@
     return 0;
   }
 
+  function estiloProgresoFraseFinal(ratio) {
+    const t = Math.pow(Math.max(0, Math.min(1, Number(ratio) || 0)), 1.6);
+    return {
+      color: `hsl(32, ${Math.round(t * 100)}%, ${Math.round(96 - t * 40)}%)`,
+      textShadow: `0 0 ${(0.08 + t * 0.6).toFixed(2)}em rgba(255, 140, 0, ${(0.03 + t * 0.6).toFixed(2)})`
+    };
+  }
+
+  function obtenerRangoSufijoTexto(elemento, cantidad, omitirFinal = 0) {
+    if (!elemento || cantidad <= 0) return null;
+    const doc = elemento.ownerDocument;
+    const walker = doc.createTreeWalker(elemento, 4);
+    const nodos = [];
+    let longitud = 0;
+    while (walker.nextNode()) {
+      nodos.push(walker.currentNode);
+      longitud += walker.currentNode.textContent.length;
+    }
+    const fin = longitud - omitirFinal;
+    const inicio = fin - cantidad;
+    if (inicio < 0 || fin <= inicio || !nodos.length) return null;
+    const rango = doc.createRange();
+    let offset = 0;
+    let iniciado = false;
+    for (const nodo of nodos) {
+      const siguiente = offset + nodo.textContent.length;
+      if (!iniciado && inicio <= siguiente) {
+        rango.setStart(nodo, inicio - offset);
+        iniciado = true;
+      }
+      if (fin <= siguiente) {
+        rango.setEnd(nodo, fin - offset);
+        return rango;
+      }
+      offset = siguiente;
+    }
+    return null;
+  }
+
+  function htmlFraseFinalCompletada(elemento, fraseObjetivo) {
+    // Only decorate a detached snapshot: typing and the caret remain untouched.
+    const copia = elemento.cloneNode(true);
+    const objetivo = normalizarTextoCierreFraseFinal(fraseObjetivo);
+    const texto = copia.textContent || "";
+    const finalIgnorado = (texto.match(/[\s"”»]*$/) || [""])[0].length;
+    const cierre = texto.slice(0, texto.length - finalIgnorado).toLowerCase();
+    if (!objetivo || !cierre.endsWith(objetivo)) return copia.innerHTML;
+    const rango = obtenerRangoSufijoTexto(copia, objetivo.length, finalIgnorado);
+    if (!rango) return copia.innerHTML;
+    const marcado = copia.ownerDocument.createElement("span");
+    marcado.className = "frase-final-progreso";
+    marcado.appendChild(rango.extractContents());
+    rango.insertNode(marcado);
+    return copia.innerHTML;
+  }
+
   return {
     normalizarFraseFinal,
     normalizarTextoCierreFraseFinal,
     detectarFraseFinalCompletada,
-    longitudProgresoFraseFinal
+    longitudProgresoFraseFinal,
+    estiloProgresoFraseFinal,
+    obtenerRangoSufijoTexto,
+    htmlFraseFinalCompletada
   };
 });

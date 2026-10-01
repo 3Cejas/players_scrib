@@ -5,7 +5,8 @@ const {
   normalizarFraseFinal,
   normalizarTextoCierreFraseFinal,
   detectarFraseFinalCompletada,
-  longitudProgresoFraseFinal
+  longitudProgresoFraseFinal,
+  estiloProgresoFraseFinal
 } = require("../game/js/frase-final-utils.js");
 
 test("normalizarFraseFinal trims surrounding guillemets and quotes", () => {
@@ -31,4 +32,12 @@ test("detectarFraseFinalCompletada only matches when the target is at the end", 
   assert.equal(detectarFraseFinalCompletada("frase final algo", "frase final"), false);
   assert.equal(detectarFraseFinalCompletada("algo frase final.", "frase final"), false);
   assert.equal(detectarFraseFinalCompletada("cualquier texto", ""), false);
+});
+
+test("final phrase colour moves from near-white to orange with progress", () => {
+  assert.equal(estiloProgresoFraseFinal(0).color, "hsl(32, 0%, 96%)");
+  assert.equal(estiloProgresoFraseFinal(1).color, "hsl(32, 100%, 56%)");
+  assert.notEqual(estiloProgresoFraseFinal(0.5).color, estiloProgresoFraseFinal(0).color);
+  assert.equal(estiloProgresoFraseFinal(2).color, estiloProgresoFraseFinal(1).color);
+  assert.equal(estiloProgresoFraseFinal(-1).color, estiloProgresoFraseFinal(0).color);
 });

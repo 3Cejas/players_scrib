@@ -2001,6 +2001,61 @@ const actualizarReservaHudEspectador = () => {
     );
 };
 
+const ajustarFrasesFinalesViewportEspectador = () => {
+    const contenedor = document.getElementById("contenedor_espectador");
+    if (!contenedor) return;
+    const finalActiva = modo_actual === "frase final" && document.body.classList.contains("vista-partida");
+    const estilosContenedor = window.getComputedStyle(contenedor);
+    const alturaColumna = contenedor.clientHeight
+        - (Number.parseFloat(estilosContenedor.paddingTop) || 0)
+        - (Number.parseFloat(estilosContenedor.paddingBottom) || 0);
+    [1, 2].forEach((id) => {
+        const panel = document.getElementById(`info${id}`);
+        const frase = document.getElementById(`palabra${id}`);
+        if (!panel || !frase) return;
+        panel.style.removeProperty("max-height");
+        panel.style.removeProperty("overflow-y");
+        if (!finalActiva || !frase.textContent.trim() || !panel.getClientRects().length) return;
+        // Start from the same unscaled font on every pass. Only this phrase
+        // adjusts: the whole viewport and its header never shrink recursively.
+        frase.style.setProperty("font-size", "clamp(22px, 1.9vw, 36px)", "important");
+        const columna = panel.parentElement;
+        const gap = Number.parseFloat(window.getComputedStyle(columna).rowGap) || 0;
+        const filasFijas = Array.from(columna.children)
+            .filter((nodo) => nodo.matches(".nombre, .spectator-meta-wrap, .putada-visual-badge"))
+            .reduce((alto, nodo) => {
+                if (!nodo.getClientRects().length) return alto;
+                const estilos = window.getComputedStyle(nodo);
+                return alto + nodo.getBoundingClientRect().height
+                    + (Number.parseFloat(estilos.marginTop) || 0)
+                    + (Number.parseFloat(estilos.marginBottom) || 0);
+            }, 0);
+        const reservaHistoria = Math.max(84, Math.min(160, window.innerHeight * 0.18));
+        const disponible = Math.max(60, alturaColumna - filasFijas - gap * 4 - reservaHistoria);
+        const alturaPanel = () => Math.max(panel.scrollHeight, panel.getBoundingClientRect().height);
+        if (alturaPanel() <= disponible) return;
+        const base = Number.parseFloat(window.getComputedStyle(frase).fontSize);
+        let minimo = 14;
+        let maximo = base;
+        frase.style.setProperty("font-size", `${minimo}px`, "important");
+        if (alturaPanel() <= disponible) {
+            // Six bounded probes, not an observer-driven autoscale loop.
+            for (let paso = 0; paso < 6; paso += 1) {
+                const candidata = (minimo + maximo) / 2;
+                frase.style.setProperty("font-size", `${candidata}px`, "important");
+                if (alturaPanel() <= disponible) minimo = candidata;
+                else maximo = candidata;
+            }
+            frase.style.setProperty("font-size", `${minimo.toFixed(2)}px`, "important");
+        } else {
+            // Exceptionally long paragraphs still remain accessible rather
+            // than being silently cropped by a fixed-height inspiration chip.
+            panel.style.maxHeight = `${disponible}px`;
+            panel.style.overflowY = "auto";
+        }
+    });
+};
+
 const ajustarViewportEspectador = () => {
     if (!spectator_fit_root) return;
     const teleprompterActivo = Boolean(teleprompter_estado && teleprompter_estado.visible);
@@ -2022,6 +2077,7 @@ const ajustarViewportEspectador = () => {
         document.body.classList.toggle("spectator-layout-tight", viewportH < 800);
         document.body.classList.toggle("spectator-layout-very-tight", viewportH < 650);
     }
+    ajustarFrasesFinalesViewportEspectador();
 };
 
 const programarAjusteViewportEspectador = () => {
