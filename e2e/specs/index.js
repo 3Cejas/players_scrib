@@ -1,5 +1,6 @@
 const { runControlTabletChecks } = require("./control-tablet");
 const { runDramaturgiaLiveCursorChecks } = require("./dramaturgia-live-cursor");
+const { runWarmupClockChecks } = require("./warmup-clock");
 const { startInspirationFeedbackProbe, readInspirationFeedbackProbe, stopInspirationFeedbackProbe } = require("./inspiration-feedback-probe");
 
 const FULL_ROLE_SET = [
@@ -2398,6 +2399,16 @@ const visualSpecs = [
 ];
 
 const coreSpecs = [
+  {
+    name: "warmup-clock-skew-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "musa1", "musa2", "spectator"]);
+      await runWarmupClockChecks(ctx, {
+        readAssignments: readAuthoritativeMuseAssignments,
+        waitForAttributedInspiration
+      });
+    }
+  },
   {
     name: "dramaturgia-live-cursor-core",
     run: async (ctx) => {

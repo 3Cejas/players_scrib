@@ -1522,6 +1522,7 @@ let ultimo_payload_calentamiento_escritor = null;
 let revision_calentamiento_escritor = -1;
 let intervalo_resincronizacion_calentamiento_escritor = null;
 const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
+const reloj_calentamiento_escritor = window.ScribWarmupTiming.crearReloj();
 const VENTANA_ANIMACION_PALABRA_MS = 600;
 const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
@@ -2532,7 +2533,6 @@ const renderizarPalabrasCalentamientoEscritor = () => {
     calentamiento_nube_escritor.innerHTML = "";
     const fragment = document.createDocumentFragment();
     const equipoEscritor = playerNumber === 1 || playerNumber === 2 ? playerNumber : null;
-    const ahora = Date.now();
     const minY = obtenerMinYPalabrasCalentamientoEscritor();
     const rectStage = obtenerRectStageCalentamientoEscritor();
     const stageW = Math.max(1, Number(rectStage && rectStage.width) || window.innerWidth || 1);
@@ -2567,10 +2567,10 @@ const renderizarPalabrasCalentamientoEscritor = () => {
         clases.push(propia ? "calentamiento-palabra-propia" : "calentamiento-palabra-rival");
         if (entrada.destacada) clases.push("is-highlighted");
         if (entrada.esFinal) clases.push("is-final-word");
-        if (entrada.destacada && entrada.animOnTs && (ahora - entrada.animOnTs) < VENTANA_ANIMACION_PALABRA_MS) {
+        if (entrada.destacada && entrada.animOnTs && reloj_calentamiento_escritor.edadMs(entrada.animOnTs) < VENTANA_ANIMACION_PALABRA_MS) {
             clases.push("is-highlight-enter");
         }
-        if (!entrada.destacada && entrada.animOffTs && (ahora - entrada.animOffTs) < VENTANA_ANIMACION_PALABRA_MS) {
+        if (!entrada.destacada && entrada.animOffTs && reloj_calentamiento_escritor.edadMs(entrada.animOffTs) < VENTANA_ANIMACION_PALABRA_MS) {
             clases.push("is-highlight-exit");
         }
         if (interactiva) clases.push("calentamiento-palabra-clickable");
@@ -2585,7 +2585,7 @@ const renderizarPalabrasCalentamientoEscritor = () => {
         nodo.style.top = `${posicion.yPct}%`;
         nodo.style.setProperty("--calentamiento-word-max-width", `${Math.round(posicion.maxAncho)}px`);
         const duracionMs = Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS;
-        const edadMs = Math.max(0, Date.now() - (Number(entrada.ts) || Date.now()));
+        const edadMs = reloj_calentamiento_escritor.edadMs(entrada.ts);
         const delayMs = entrada.destacada ? 0 : -Math.min(edadMs, duracionMs);
         nodo.style.setProperty("--calentamiento-decay-duration", `${duracionMs}ms`);
         nodo.style.setProperty("--calentamiento-decay-delay", `${delayMs}ms`);
@@ -2803,6 +2803,7 @@ const actualizarCalentamientoEscritor = (data = {}) => {
         revision_calentamiento_escritor = revisionNormalizada;
     }
     ultimo_payload_calentamiento_escritor = { ...(data || {}) };
+    reloj_calentamiento_escritor.sincronizar(data);
     if (typeof data.vista === "boolean") {
         actualizarVistaCalentamientoEscritor(data.vista);
     }

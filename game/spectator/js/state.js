@@ -1541,6 +1541,7 @@ let ultimo_estado_calentamiento = 0;
 let intervalo_estado_calentamiento = null;
 let palabras_calentamiento = [];
 const DURACION_DECAY_CALENTAMIENTO_MS = 10000;
+const reloj_calentamiento_espectador = window.ScribWarmupTiming.crearReloj();
 const VENTANA_ANIMACION_PALABRA_MS = 600;
 const MARGEN_CABECERA_CALENTAMIENTO_PX = 18;
 const MIN_Y_CALENTAMIENTO_DEFAULT = 26;
@@ -2710,7 +2711,6 @@ const renderizarPalabrasCalentamiento = () => {
     if (!calentamiento_nube) return;
     calentamiento_nube.innerHTML = "";
     const fragment = document.createDocumentFragment();
-    const ahora = Date.now();
     const minY = obtenerMinYPalabrasCalentamiento();
     const rectStage = obtenerRectStageCalentamientoEspectador();
     const stageW = Math.max(1, Number(rectStage && rectStage.width) || window.innerWidth || 1);
@@ -2734,10 +2734,10 @@ const renderizarPalabrasCalentamiento = () => {
         const clases = [`calentamiento-palabra`, `equipo-${entrada.equipo}`];
         if (entrada.destacada) clases.push("is-highlighted");
         if (entrada.esFinal) clases.push("is-final-word");
-        if (entrada.destacada && entrada.animOnTs && (ahora - entrada.animOnTs) < VENTANA_ANIMACION_PALABRA_MS) {
+        if (entrada.destacada && entrada.animOnTs && reloj_calentamiento_espectador.edadMs(entrada.animOnTs) < VENTANA_ANIMACION_PALABRA_MS) {
             clases.push("is-highlight-enter");
         }
-        if (!entrada.destacada && entrada.animOffTs && (ahora - entrada.animOffTs) < VENTANA_ANIMACION_PALABRA_MS) {
+        if (!entrada.destacada && entrada.animOffTs && reloj_calentamiento_espectador.edadMs(entrada.animOffTs) < VENTANA_ANIMACION_PALABRA_MS) {
             clases.push("is-highlight-exit");
         }
         nodo.className = clases.join(" ");
@@ -2751,7 +2751,7 @@ const renderizarPalabrasCalentamiento = () => {
         nodo.style.top = `${posicionSegura.yPct}%`;
         nodo.style.setProperty("--calentamiento-word-max-width", `${Math.round(posicionSegura.maxAncho)}px`);
         const duracionMs = Number(entrada.duracionMs) > 0 ? Number(entrada.duracionMs) : DURACION_DECAY_CALENTAMIENTO_MS;
-        const edadMs = Math.max(0, Date.now() - (Number(entrada.ts) || Date.now()));
+        const edadMs = reloj_calentamiento_espectador.edadMs(entrada.ts);
         const delayMs = entrada.destacada ? 0 : -Math.min(edadMs, duracionMs);
         nodo.style.setProperty("--calentamiento-decay-duration", `${duracionMs}ms`);
         nodo.style.setProperty("--calentamiento-decay-delay", `${delayMs}ms`);
@@ -5417,6 +5417,7 @@ const construirEstadoGlobalCalentamiento = (equipos = {}) => {
 
 const actualizarCalentamientoEspectador = (data) => {
     if (!data) return;
+    reloj_calentamiento_espectador.sincronizar(data);
     ultimo_payload_calentamiento_espectador = data;
     const activoServidor = Boolean(data.activo);
     // La dinamica de detonadores puede seguir activa en segundo plano. Solo su
