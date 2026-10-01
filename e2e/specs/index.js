@@ -2408,7 +2408,6 @@ const coreSpecs = [
       ]);
       await runWriterNameLifecycleChecks(ctx, {
         startGame: () => startGame(ctx),
-        configure: () => configureFastControlPanel(ctx, { tiempo_modos: 120 }),
         openRoles: (roles) => openRolesAndWait(ctx, roles),
         readMuseAssignments: () => readAuthoritativeMuseAssignments(ctx, ["musa1", "musa2"])
       });
