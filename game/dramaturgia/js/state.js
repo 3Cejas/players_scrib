@@ -178,7 +178,7 @@ function setDramaturgiaFilter(filter) {
 }
 
 function setDramaturgiaPhaseFilter(phase) {
-    const allowed = new Set(["todas", "calentamiento", "juego", "representacion", "espera"]);
+    const allowed = new Set(["todas", "calentamiento", "juego", "representacion", "control", "espera"]);
     dramaturgiaUi.phase = allowed.has(phase) ? phase : "todas";
     document.querySelectorAll("[data-phase-filter]").forEach((button) => {
         const active = button.dataset.phaseFilter === dramaturgiaUi.phase;
@@ -397,6 +397,7 @@ function createHistoryView(checkpoint, screen, options = {}) {
 }
 
 function createReferenceView(column, screen, options = {}) {
+    if (column.reference === false) return null;
     const reference = dramaturgiaReferenceShow();
     const milestoneId = column && column.id;
     const source = reference && reference.getView(milestoneId, screen.id);
@@ -426,6 +427,8 @@ function createReferenceView(column, screen, options = {}) {
 
 function shouldRenderRoleView(row, column) {
     if (!row) return false;
+    if (column?.kind === "control-view") return ["control", "spectator"].includes(row.screenId);
+    if (column?.kind === "voting") return true;
     if (column && column.kind === "current") return true;
     const declared = dramaturgiaReferenceShow()?.manifest?.interactionChanges?.[row.screenId];
     const milestones = Array.isArray(declared)
@@ -456,6 +459,7 @@ function showColumnPhase(column) {
     if (column.section === "calentamiento") return "calentamiento";
     if (column.section === "niveles" || column.section === "juego") return "juego";
     if (column.section === "representacion") return "representacion";
+    if (column.section === "control") return "control";
     return checkpointPhase(column.checkpoint);
 }
 
@@ -464,6 +468,7 @@ function showPhaseLabel(phase) {
     if (phase === "calentamiento") return "📖 Calentamiento";
     if (phase === "juego") return "🎮 Niveles";
     if (phase === "representacion") return "🎭 Representación";
+    if (phase === "control") return "🎛️ Vistas de Control · orden libre";
     return "🎬 Transición";
 }
 
@@ -478,6 +483,7 @@ function showColumnMode(column) {
 }
 
 function showColumnVisual(column) {
+    if (column.kind === "control-view") return { emoji: column.emoji, accent: "#c09cff" };
     const mode = showColumnMode(column);
     if (column.kind === "level" && DRAMATURGIA_LEVEL_VISUALS[mode]) {
         const visual = DRAMATURGIA_LEVEL_VISUALS[mode];
@@ -589,7 +595,7 @@ function renderShowScore(viewport, score, options = {}) {
     columns.forEach((column, index) => {
         const checkpoint = column.checkpoint || null;
         const captured = Boolean(checkpoint);
-        const referenced = !captured && Boolean(dramaturgiaReferenceShow()?.hasMilestone(column.id));
+        const referenced = column.reference !== false && !captured && Boolean(dramaturgiaReferenceShow()?.hasMilestone(column.id));
         const state = captured ? "captured" : (referenced ? "reference" : "pending");
         const milestone = dramaturgiaCreate(
             "div",
@@ -638,6 +644,7 @@ function renderShowScore(viewport, score, options = {}) {
             );
             cell.dataset.state = state;
             cell.dataset.milestoneId = column.id || `column-${columnIndex + 1}`;
+            cell.dataset.screenId = row.screenId;
             cell.style.setProperty("--column-accent", showColumnVisual(column).accent);
             cell.style.gridColumn = String(columnIndex + 2);
             cell.style.gridRow = String(gridRow);
@@ -677,13 +684,21 @@ function renderDramaturgiaLiveMoment() {
     const frozen = !dramaturgiaUi.connected;
     if (shell) shell.dataset.liveState = frozen ? "frozen" : "live";
     viewport?.querySelectorAll(".show-score__milestone, .show-score__cell").forEach((node) => {
-        const active = ids.has(node.dataset.milestoneId);
+        const projectionRole = ["control", "spectator"].includes(node.dataset.screenId);
+        const active = ids.has(node.dataset.milestoneId)
+            && !(moment.projectionId && projectionRole)
+            && (moment.phase !== "control" || !node.dataset.screenId || projectionRole);
+        const projected = Boolean(moment.projectionId && node.dataset.milestoneId === moment.projectionId
+            && (!node.dataset.screenId || projectionRole));
         node.classList.toggle("is-current", active);
-        if (active && !frozen) node.setAttribute("aria-current", "step");
+        node.classList.toggle("is-projected", projected);
+        if ((active || projected) && !frozen) node.setAttribute("aria-current", "step");
         else node.removeAttribute("aria-current");
     });
+    const projectionPhase = moment.projectionId?.startsWith("control-") ? "control" : "representacion";
     viewport?.querySelectorAll(".show-score__phase").forEach((node) => {
         node.classList.toggle("is-current", node.dataset.phase === moment.phase);
+        node.classList.toggle("is-projected", Boolean(moment.projectionId && node.dataset.phase === projectionPhase));
     });
     const status = dramaturgiaEl("dramaturgia_map_live");
     const label = dramaturgiaEl("dramaturgia_map_live_label");
@@ -692,19 +707,25 @@ function renderDramaturgiaLiveMoment() {
         status.dataset.state = frozen ? "frozen" : "live";
         status.style.setProperty("--live-accent", dramaturgiaPhase(moment.phase).accent);
     }
-    const hiddenByFilter = dramaturgiaUi.phase !== "todas" && dramaturgiaUi.phase !== moment.phase;
-    const text = `${moment.label}${hiddenByFilter ? " · Fuera del filtro actual" : ""}`;
+    const hiddenByFilter = dramaturgiaUi.phase !== "todas" && (
+        dramaturgiaUi.phase !== moment.phase || (moment.projectionId && dramaturgiaUi.phase !== projectionPhase)
+    );
+    const projectedText = moment.projectionId ? ` · Proyección: ${moment.projectionLabel}` : "";
+    const text = `${moment.label}${projectedText}${hiddenByFilter ? " · Fuera del filtro actual" : ""}`;
     if (label && label.textContent !== text) label.textContent = text;
     const signalText = frozen ? "ÚLTIMO ESTADO" : "EN DIRECTO";
     if (signal && signal.textContent !== signalText) signal.textContent = signalText;
     const currentButton = dramaturgiaEl("dramaturgia_map_current");
-    if (currentButton) currentButton.disabled = ids.size === 0;
+    if (currentButton) currentButton.disabled = ids.size === 0 && !moment.projectionId;
 }
 
 function focusDramaturgiaCurrentMoment() {
     const moment = dramaturgiaModel.currentShowMoment(dramaturgiaStore.current);
-    if (!moment.ids.length) return;
-    if (dramaturgiaUi.phase !== "todas" && dramaturgiaUi.phase !== moment.phase) {
+    if (!moment.ids.length && !moment.projectionId) return;
+    const targetPhase = moment.projectionId
+        ? moment.projectionId.startsWith("control-") ? "control" : "representacion"
+        : moment.phase;
+    if (dramaturgiaUi.phase !== "todas" && dramaturgiaUi.phase !== targetPhase) {
         setDramaturgiaPhaseFilter("todas");
     }
     // Do not steal the user's pan position on each live update. This explicit
@@ -712,7 +733,8 @@ function focusDramaturgiaCurrentMoment() {
     window.requestAnimationFrame(() => {
         const viewport = dramaturgiaEl("dramaturgia_graph_viewport");
         const surface = dramaturgiaMapScrollSurface(viewport);
-        const column = viewport?.querySelector(".show-score__milestone.is-current");
+        const column = viewport?.querySelector(".show-score__milestone.is-projected")
+            || viewport?.querySelector(".show-score__milestone.is-current");
         if (!surface || !column) return;
         const bounds = surface.getBoundingClientRect();
         const target = column.getBoundingClientRect();
@@ -740,7 +762,7 @@ function renderDramaturgiaGraph() {
         return;
     }
     dramaturgiaUi.graphRenderKey = key;
-    const score = showScoreWithObservedSnapshot(dramaturgiaModel.buildShowScore(checkpoints));
+    const score = showScoreWithObservedSnapshot(dramaturgiaModel.buildLiveShowScore(checkpoints));
     renderShowScore(viewport, score);
     renderDramaturgiaLiveMoment();
 }

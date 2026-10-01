@@ -198,6 +198,7 @@ test("finishing clears the old level cursor and follows preparation, projection 
     espectador: { modo: "puntuacion" }
   };
   assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-preparation"]);
+  snapshot.espectador.modo = "partida";
   snapshot.teleprompter = { state: { visible: true } };
   assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-projection"]);
   snapshot.espectador.modo = "creditos";
@@ -242,6 +243,60 @@ test("voting live deltas update the cursor and a new match removes the previous 
   assert.deepEqual(model.currentShowMoment(store.current).ids, ["level-palabras-bonus"]);
   model.applySnapshot(store, { session: { id: "second" }, partida: { modo_actual: "" } });
   assert.deepEqual(model.currentShowMoment(store.current).ids, []);
+});
+
+test("Control projections change independently of the current level and clear on returning to game view", () => {
+  const snapshot = { partida: { modo_actual: "palabras bonus" }, espectador: {} };
+  for (const stage of model.CONTROL_SHOW_VIEWS) {
+    snapshot.espectador.modo = stage.view.replace(/ /g, "_");
+    const moment = model.currentShowMoment(snapshot);
+    assert.deepEqual(moment.ids, ["level-palabras-bonus"]);
+    assert.equal(moment.projectionId, stage.id);
+    assert.ok(moment.projectionLabel.startsWith(stage.label));
+  }
+  snapshot.espectador = { modo: "instrucciones", instrucciones_slide_step: 4 };
+  assert.equal(model.currentShowMoment(snapshot).projectionLabel, "Instrucciones · 5/7");
+  snapshot.espectador = { modo: "partida" };
+  assert.equal(model.currentShowMoment(snapshot).projectionId, "");
+});
+
+test("manual views remain selectable after the game without restarting writer or muse phases", () => {
+  const snapshot = { partida: { fin_del_juego: true }, puntuacion_final: { disponible: true }, espectador: {} };
+  for (const stage of model.CONTROL_SHOW_VIEWS) {
+    snapshot.espectador.modo = stage.view.replace(/ /g, "_");
+    const moment = model.currentShowMoment(snapshot);
+    assert.deepEqual(moment.ids, ["representation-preparation"]);
+    assert.equal(moment.projectionId, stage.id);
+  }
+  snapshot.espectador.modo = "partida";
+  snapshot.teleprompter = { state: { visible: true } };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-projection"]);
+  snapshot.teleprompter.state.visible = false;
+  snapshot.espectador.modo = "creditos";
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-final"]);
+  assert.equal(model.currentShowMoment(snapshot).label, "Créditos");
+});
+
+test("a fresh tutorial is highlighted as a Control view, not a completed game", () => {
+  const snapshot = { partida: { fin_del_juego: true }, puntuacion_final: { disponible: false }, espectador: { modo: "tutorial" } };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["control-tutorial"]);
+  assert.equal(model.currentShowMoment(snapshot).phase, "control");
+});
+
+test("a cached teleprompter never overrides an explicit view selected from Control", () => {
+  const snapshot = {
+    partida: { fin_del_juego: true }, puntuacion_final: { disponible: true },
+    espectador: { modo: "partida" }, teleprompter: { state: { visible: true, preparing: false } }
+  };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-projection"]);
+  for (const view of ["deliberacion", "stats", "temporizador", "instrucciones", "tutorial"]) {
+    snapshot.espectador.modo = view;
+    const moment = model.currentShowMoment(snapshot);
+    assert.deepEqual(moment.ids, ["representation-preparation"]);
+    assert.equal(moment.projectionId, `control-${view}`);
+  }
+  snapshot.espectador.modo = "partida";
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-projection"]);
 });
 
 test("dramaturgy graph layout is deterministic and contains only valid causal edges", () => {
@@ -370,6 +425,30 @@ function historicalCheckpoint(id, seq, eventData, overrides = {}) {
     ...overrides
   };
 }
+
+test("live map adapts old phase labels without changing the archived map or fabricating screenshots", () => {
+  const scoreCheckpoint = historicalCheckpoint("old-score", 1, {
+    tipo: "competicion_ronda", modo: "letra bendita", hechos: { activa: true, fase: "batalla" }
+  });
+  const voteCheckpoint = historicalCheckpoint("real-vote", 2, {
+    tipo: "votacion", modo: "letra bendita", hechos: { activa: true }
+  });
+  const statsCheckpoint = historicalCheckpoint("stats-view", 3, {
+    tipo: "vista_espectador", hechos: { modo: "stats" }
+  });
+  const archive = model.buildShowScore([scoreCheckpoint]);
+  assert.equal(archive.columns.find(c => c.id === "competition-letra-bendita").label, "Marcador · Letra bendita");
+  const live = model.buildLiveShowScore([scoreCheckpoint, voteCheckpoint, statsCheckpoint]);
+  const vote = live.columns.find(c => c.id === "competition-letra-bendita");
+  assert.equal(vote.label, "Votación · Letra bendita");
+  assert.equal(vote.checkpoint, voteCheckpoint);
+  assert.equal(vote.reference, false);
+  assert.equal(live.columns.find(c => c.id === "control-stats").checkpoint, statsCheckpoint);
+  assert.equal(live.columns.find(c => c.id === "control-deliberacion").checkpoint, null);
+  assert.match(live.columns.find(c => c.id === "level-letra-bendita-feedback").label, /^Desventaja activa/);
+  assert.equal(model.buildLiveShowScore([scoreCheckpoint]).columns.find(c => c.id === vote.id).checkpoint, null);
+  assert.equal(live.rows, model.HISTORY_ROLE_ROWS);
+});
 
 test("historical score exposes exactly five canonical single-screen rows", () => {
   assert.deepEqual(

@@ -1807,13 +1807,13 @@ test("dramaturgy map exposes a five-role HTML score for the complete show", () =
   assert.match(html, /data-phase-filter="calentamiento"/);
   assert.match(html, /data-phase-filter="juego"/);
   assert.match(html, /data-phase-filter="representacion"/);
-  assert.match(html, /js\/model\.js\?v=20261001a/);
+  assert.match(html, /js\/model\.js\?v=20261001b/);
   assert.match(html, /js\/history-snapshots\.js\?v=20260731b/);
-  assert.match(html, /index\.css\?v=20261001a/);
+  assert.match(html, /index\.css\?v=20261001b/);
   assert.match(html, /js\/history-controller\.js\?v=20260921a/);
   assert.match(html, /reference-show\/manifest\.js\?v=20260731f/);
   assert.match(html, /js\/reference-show\.js\?v=20260731g/);
-  assert.match(html, /js\/state\.js\?v=20261001a/);
+  assert.match(html, /js\/state\.js\?v=20261001b/);
   assert.match(html, /js\/socket-events\.js\?v=20261001a/);
   assert.match(html, /js\/index\.js\?v=20261001a/);
 
@@ -1865,7 +1865,7 @@ test("dramaturgy map exposes a five-role HTML score for the complete show", () =
   assert.match(state, /"show-score__milestone-emoji", visual\.emoji/);
   assert.match(state, /milestone\.style\.setProperty\("--milestone-accent", visual\.accent\)/);
   assert.match(state, /function showScoreWithObservedSnapshot\(score\)/);
-  assert.match(state, /showScoreWithObservedSnapshot\(dramaturgiaModel\.buildShowScore\(checkpoints\)\)/);
+  assert.match(state, /showScoreWithObservedSnapshot\(dramaturgiaModel\.buildLiveShowScore\(checkpoints\)\)/);
   assert.match(state, /screenById\.get\(row\.screenId\)/);
   assert.doesNotMatch(state, /function eventButton/);
   assert.doesNotMatch(state, /createHistoryCheckpointCard|history-mosaic|CHECKPOINT CAUSAL/);
@@ -2038,7 +2038,7 @@ test("dramaturgy adds a live screen room and an authenticated match laboratory",
   assert.match(html, /id="dramaturgia_sim_step"[^>]*>Siguiente momento<\/button>/);
   assert.match(html, /id="dramaturgia_sim_resume"[^>]*>Continuar<\/button>/);
   assert.match(html, /id="dramaturgia_sim_progress"[\s\S]*role="progressbar"/);
-  assert.match(html, /index\.css\?v=20261001a/);
+  assert.match(html, /index\.css\?v=20261001b/);
   assert.match(html, /js\/tools-model\.js\?v=20260731f/);
   assert.match(html, /js\/tools\.js\?v=20260731g/);
   assert.doesNotMatch(html, /SALA DE PANTALLAS|Los nueve puntos de vista|dramaturgia_screens_live|screens-summary/i);

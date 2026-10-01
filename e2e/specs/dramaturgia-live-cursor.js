@@ -11,10 +11,19 @@ async function runDramaturgiaLiveCursorChecks(ctx, startGame) {
     }, 10000, ids);
     const state = await ctx.evaluate("dramaturgia", () => ({
       cells: document.querySelectorAll(".show-score__cell.is-current").length,
-      markers: document.querySelectorAll('.show-score__milestone[aria-current="step"]').length
+      markers: document.querySelectorAll('.show-score__milestone.is-current[aria-current="step"]').length,
+      projected: Boolean(window.ScribDramaturgiaModel.currentShowMoment(window.scribDramaturgia.store.current).projectionId)
     }));
-    ctx.assert(state.cells === ids.length * 5, "the active column must illuminate every role row");
+    const rolesPerColumn = state.projected ? 3 : ids.every(id => id.startsWith("control-")) ? 2 : 5;
+    ctx.assert(state.cells === ids.length * rolesPerColumn, "the active column must illuminate the roles remaining in that phase");
     ctx.assert(state.markers === ids.length, "live milestones must expose the current step accessibly");
+  };
+  const waitProjection = async (id) => {
+    await ctx.waitForPageFunction("dramaturgia", expected => (
+      document.querySelector(".show-score__milestone.is-projected")?.dataset.milestoneId === expected
+    ), 10000, id);
+    const roles = await ctx.evaluate("dramaturgia", () => [...document.querySelectorAll(".show-score__cell.is-projected")].map(n => n.dataset.screenId));
+    ctx.assert(roles.join(",") === "control,spectator", "manual projection must not move writers, muses or actors out of their phase");
   };
   await ctx.invoke("control", "mostrar_vista_detonadores");
   for (const [request, id] of [
@@ -62,6 +71,18 @@ async function runDramaturgiaLiveCursorChecks(ctx, startGame) {
     return column.left > shell.left && column.right < shell.right;
   }, 6000);
   await ctx.getPageEntry("dramaturgia").page.screenshot({ path: `${ctx.runArtifactsDir}/dramaturgia-live-level.png`, fullPage: true });
+  await ctx.invoke("control", "cambiar_vista_espectador", "stats");
+  await waitProjection("control-stats");
+  await waitMoment("level-palabras-bonus");
+  await ctx.invoke("control", "navegarSlidesStatsControl", "next");
+  await ctx.waitForText("dramaturgia", "#dramaturgia_map_live_label", text => text.includes("Estadísticas · Slide 2"), "slide navigation follows Control live");
+  await ctx.click("dramaturgia", "#dramaturgia_map_current");
+  await ctx.getPageEntry("dramaturgia").page.screenshot({ path: `${ctx.runArtifactsDir}/dramaturgia-control-projection.png`, fullPage: true });
+  await ctx.invoke("control", "cambiar_vista_espectador", "nube_inspiracion");
+  await waitProjection("control-nube-inspiracion");
+  await waitMoment("level-palabras-bonus");
+  await ctx.invoke("control", "cambiar_vista_espectador", "partida");
+  await ctx.waitForPageFunction("dramaturgia", () => !document.querySelector(".show-score__milestone.is-projected"), 6000);
   await ctx.evaluate("dramaturgia", () => {
     window.scribDramaturgia.socket.io.opts.reconnection = false;
     window.scribDramaturgia.socket.disconnect();
@@ -72,13 +93,24 @@ async function runDramaturgiaLiveCursorChecks(ctx, startGame) {
   await waitMoment("level-palabras-bonus");
   await ctx.invoke("control", "fin_partida_global");
   await waitMoment("representation-preparation");
+  await waitProjection("control-puntuacion");
+  await ctx.invoke("control", "activar_temporizador_gigante");
+  await waitProjection("control-temporizador");
+  await waitMoment("representation-preparation");
   await ctx.invoke("control", "toggleTeleprompter");
   await ctx.invoke("control", "teleprompterCargarTexto", 1);
   await waitMoment("representation-projection");
+  await ctx.invoke("control", "cambiar_vista_espectador", "deliberacion");
+  await waitProjection("control-deliberacion");
+  await waitMoment("representation-preparation");
+  await ctx.invoke("control", "cambiar_vista_espectador", "stats");
+  await waitProjection("control-stats");
   await ctx.invoke("control", "mostrarCreditosEspectador");
   await waitMoment("representation-final");
-  await ctx.emitHook("scrib_test:reset", {});
-  await waitMoment();
+  // Use the real Control action: the test-only reset hook does not broadcast
+  // a limpiar event and otherwise leaves clients waiting for periodic resync.
+  await ctx.invoke("control", "limpiar");
+  await waitMoment("control-tutorial");
 }
 
 module.exports = { runDramaturgiaLiveCursorChecks };

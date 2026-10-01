@@ -2655,6 +2655,22 @@ a:focus-visible,
     box-shadow: inset 0 -2px var(--gold);
 }
 
+.show-score__milestone.is-projected,
+.show-score__phase.is-projected {
+    background: #2b213a;
+    box-shadow: inset 0 -3px #c09cff;
+    color: #fff;
+}
+
+.show-score__cell.is-projected {
+    background: #161021;
+    box-shadow: inset 3px 0 #c09cff, inset -3px 0 #c09cff;
+}
+
+.show-score[data-live-state="frozen"] .is-projected {
+    box-shadow: inset 0 -2px var(--gold);
+}
+
 .map-live-state {
     --live-accent: var(--cyan);
     display: flex;

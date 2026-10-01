@@ -22,9 +22,10 @@ function node(dataset = {}) {
 }
 
 test("cached map updates its live highlight without rebuilding archived role views", () => {
-  const milestones = model.SHOW_JOURNEY.map(({ id }) => node({ milestoneId: id }));
-  const cells = model.SHOW_JOURNEY.map(({ id }) => node({ milestoneId: id }));
-  const phases = ["calentamiento", "juego", "representacion"].map(phase => node({ phase }));
+  const stages = [...model.SHOW_JOURNEY, ...model.CONTROL_SHOW_VIEWS];
+  const milestones = stages.map(({ id }) => node({ milestoneId: id }));
+  const cells = stages.flatMap(({ id }) => model.HISTORY_ROLE_ROWS.map(({ screenId }) => node({ milestoneId: id, screenId })));
+  const phases = ["calentamiento", "juego", "representacion", "control"].map(phase => node({ phase }));
   const shell = node();
   const viewport = {
     clientWidth: 1600,
@@ -54,7 +55,16 @@ test("cached map updates its live highlight without rebuilding archived role vie
 
   vm.runInContext(`dramaturgiaStore.current.partida.modo_actual = "tertulia"; renderDramaturgiaGraph();`, context);
   assert.deepEqual(active(), ["level-tertulia"]);
-  assert.equal(cells.filter(n => n.classList.contains("is-current")).length, 1);
+  assert.equal(cells.filter(n => n.classList.contains("is-current")).length, 5);
+  vm.runInContext(`dramaturgiaStore.current.espectador = { modo: "stats" }; renderDramaturgiaGraph();`, context);
+  assert.deepEqual(active(), ["level-tertulia"]);
+  assert.equal(cells.filter(n => n.classList.contains("is-current")).length, 3);
+  assert.deepEqual(cells.filter(n => n.classList.contains("is-projected")).map(n => n.dataset.screenId), ["control", "spectator"]);
+  assert.ok(milestones.find(n => n.dataset.milestoneId === "control-stats").classList.contains("is-projected"));
+  assert.match(elements.get("dramaturgia_map_live_label").textContent, /Tertulia.*Proyección: Estadísticas/);
+  vm.runInContext(`dramaturgiaStore.current.espectador.modo = "partida"; renderDramaturgiaGraph();`, context);
+  assert.equal(cells.filter(n => n.classList.contains("is-current")).length, 5);
+  assert.equal(cells.filter(n => n.classList.contains("is-projected")).length, 0);
   vm.runInContext(`dramaturgiaUi.connected = false; renderDramaturgiaGraph();`, context);
   assert.equal(shell.dataset.liveState, "frozen");
   assert.equal(elements.get("dramaturgia_map_live_signal").textContent, "ÚLTIMO ESTADO");
@@ -62,4 +72,7 @@ test("cached map updates its live highlight without rebuilding archived role vie
 
   vm.runInContext(`dramaturgiaUi.connected = true; dramaturgiaStore.current = {}; renderDramaturgiaGraph();`, context);
   assert.deepEqual(active(), []);
+  vm.runInContext(`dramaturgiaStore.current.espectador = { modo: "tutorial" }; renderDramaturgiaGraph();`, context);
+  assert.deepEqual(active(), ["control-tutorial"]);
+  assert.deepEqual(cells.filter(n => n.classList.contains("is-current")).map(n => n.dataset.screenId), ["control", "spectator"]);
 });

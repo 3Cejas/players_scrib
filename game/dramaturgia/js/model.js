@@ -30,6 +30,7 @@
         calentamiento: { id: "calentamiento", label: "Calentamiento", accent: "#ff9f43" },
         juego: { id: "juego", label: "Juego", accent: "#5b9dff" },
         representacion: { id: "representacion", label: "Representación", accent: "#9d7cff" },
+        control: { id: "control", label: "Vistas de Control", accent: "#c09cff" },
         espera: { id: "espera", label: "En espera", accent: "#8192a5" }
     });
 
@@ -170,6 +171,28 @@
             order: 22
         })
     ]);
+
+    // Control can revisit these projections in any order. Keep them separate
+    // from the archived game journey: changing a view does not advance a level.
+    const CONTROL_SHOW_VIEWS = Object.freeze([
+        ["tutorial", "Tutorial", "📺"],
+        ["instrucciones", "Instrucciones", "📖"],
+        ["puntuacion", "Resultado del videojuego", "🏆"],
+        ["stats", "Estadísticas", "📊"],
+        ["nube inspiracion", "Nube de inspiración", "☁️"],
+        ["temporizador", "Temporizador", "⏱️"],
+        ["deliberacion", "Deliberación", "⚖️"],
+        ["resultado jurado", "Resultado del jurado", "🎭"],
+        ["resultado final", "Resultado final", "✨"]
+    ].map(([view, label, emoji]) => Object.freeze({
+        id: `control-${view.replace(/ /g, "-")}`,
+        section: "control",
+        sectionLabel: "Vistas de Control",
+        kind: "control-view",
+        view,
+        label,
+        emoji
+    })));
 
     function safeText(value, maxLength = 220) {
         const normalized = String(value == null ? "" : value)
@@ -1305,6 +1328,50 @@
         };
     }
 
+    function buildLiveShowScore(checkpoints) {
+        const score = buildShowScore(checkpoints);
+        const descriptors = orderCheckpoints(checkpoints).map(checkpointDescriptor);
+        const columns = score.columns.map((column) => {
+            if (column.id === "representation-final") return { ...column, label: "Créditos" };
+            if (column.id === "representation-projection") return { ...column, label: "Teleprompter" };
+            if (column.kind === "level" && column.moment === "feedback") {
+                return { ...column, label: `Desventaja activa · ${modeLabel(column.mode)}` };
+            }
+            if (column.kind !== "competition") return column;
+            // The old reference used a score snapshot here, not a vote. Never
+            // display that screenshot as if it were a real voting interface.
+            const vote = [...descriptors].reverse().find((descriptor) => (
+                descriptor.modes.has(journeyMode(column.mode))
+                && (votingCheckpoint(descriptor.checkpoint)?.hasOpening
+                    || descriptor.events.some((event) => (
+                        journeyKey(event.tipo || event.kind) === "competicion ronda"
+                        && eventFacts(event).fase === "votacion"
+                    )))
+            ));
+            const checkpoint = vote?.checkpoint || null;
+            return {
+                ...column,
+                kind: "voting",
+                moment: "vote",
+                label: `Votación · ${modeLabel(column.mode)}`,
+                checkpoint,
+                reference: false,
+                ...checkpointStatus(checkpoint)
+            };
+        });
+        CONTROL_SHOW_VIEWS.forEach((stage) => {
+            const descriptor = [...descriptors].reverse().find((candidate) => (
+                candidate.events.some((event) => (
+                    ["vista espectador", "proyeccion"].includes(journeyKey(event.tipo || event.kind))
+                    && journeyKey(eventFacts(event).modo || eventFacts(event).mode) === stage.view
+                ))
+            ));
+            const checkpoint = descriptor?.checkpoint || null;
+            columns.push({ ...stage, expected: false, checkpoint, ...checkpointStatus(checkpoint) });
+        });
+        return { ...score, columns };
+    }
+
     function currentWriter(snapshot = {}, player) {
         const id = player === 2 ? 2 : 1;
         const textos = snapshot.textos && typeof snapshot.textos === "object" ? snapshot.textos : {};
@@ -1386,7 +1453,7 @@
 
     // The live cursor follows authoritative state, never the reference show's
     // fixed order, elapsed time or the most recently archived screenshot.
-    function currentShowMoment(snapshot = {}) {
+    function currentGameShowMoment(snapshot = {}) {
         const partida = snapshot.partida || {};
         const mode = journeyMode(partida.modo_actual);
         const spectator = snapshot.espectador || snapshot.vista_espectador || {};
@@ -1402,10 +1469,10 @@
             || (!score && (mode || (partida.fin_j1 && partida.fin_j2)))
         );
         if (completed) {
-            if (["creditos", "resultado final", "resultado jurado"].includes(view)) {
-                return moment("representacion", ["representation-final"], "Cierre y resultado final");
+            if (view === "creditos") {
+                return moment("representacion", ["representation-final"], "Créditos");
             }
-            if (teleprompter.visible) {
+            if (teleprompter.visible && (!view || view === "partida")) {
                 return moment("representacion", ["representation-projection"], "Representación · Teleprompter");
             }
             return moment("representacion", ["representation-preparation"], "Historias listas · Preparación");
@@ -1455,6 +1522,43 @@
         return moment("espera", [], "En espera · Sin videojuego activo");
     }
 
+    function currentShowMoment(snapshot = {}) {
+        const current = currentGameShowMoment(snapshot);
+        const spectator = snapshot.espectador || snapshot.vista_espectador || {};
+        const teleprompter = snapshot.teleprompter?.state || {};
+        const view = journeyKey(spectator.modo);
+        const stage = CONTROL_SHOW_VIEWS.find((item) => item.view === view);
+        let projectionId = stage?.id || "";
+        let projectionLabel = stage?.label || "";
+        // The teleprompter is an overlay on Vista partida, not a new game mode.
+        const teleprompterView = !view || view === "partida";
+        if (teleprompter.visible && teleprompterView) {
+            projectionId = "representation-projection";
+            projectionLabel = "Teleprompter";
+        } else if (teleprompter.preparing && teleprompterView) {
+            projectionId = "representation-preparation";
+            projectionLabel = "Preparación del teleprompter";
+        } else if (view === "creditos") {
+            projectionId = "representation-final";
+            projectionLabel = "Créditos";
+        }
+        if (stage && view === "instrucciones") {
+            projectionLabel += ` · ${integer(spectator.instrucciones_slide_step, 0) + 1}/7`;
+        } else if (stage && ["puntuacion", "stats", "resultado jurado"].includes(view)) {
+            const key = view === "puntuacion" ? "puntuacion_slide_step"
+                : view === "stats" ? "stats_slide_step" : "jurado_slide_step";
+            projectionLabel += ` · Slide ${integer(spectator[key], 0) + 1}`;
+        }
+        if (!projectionId || current.ids.includes(projectionId)) {
+            return { ...current, projectionId: "", projectionLabel: "" };
+        }
+        if (!current.ids.length && current.phase === "espera") {
+            return { phase: stage?.section || "representacion", ids: [projectionId], label: projectionLabel,
+                projectionId: "", projectionLabel: "" };
+        }
+        return { ...current, projectionId, projectionLabel };
+    }
+
     function formatClock(ts) {
         const date = new Date(timestamp(ts, Date.now()));
         return date.toLocaleTimeString("es-ES", {
@@ -1479,6 +1583,7 @@
         MODE_LABELS,
         PHASES,
         SHOW_JOURNEY,
+        CONTROL_SHOW_VIEWS,
         SPACES,
         SPACE_BY_ID,
         TIMELINE_EVENTS_DEFAULT,
@@ -1486,6 +1591,7 @@
         applySnapshot,
         buildGraphLayout,
         buildShowScore,
+        buildLiveShowScore,
         createStore,
         currentSummary,
         currentShowMoment,
