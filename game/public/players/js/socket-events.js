@@ -269,6 +269,7 @@ socket.on('modo_actual', (data) => {
     setNivelesDesactivados(false);
     modo_actual = siguiente_modo;
     window.__scribModoActualMusaPreview = modo_actual;
+    actualizarReglaLetraInspiracionMusa(data);
     cambiar_jugadores(modo_actual === "palabras prohibidas", { solicitarTexto: true });
     niveles_bloqueados = false;
     actualizarNiveles(modo_actual);
@@ -286,11 +287,11 @@ socket.on('modo_actual', (data) => {
         campo_palabra.style.display = "";
     if(modo_actual == "letra bendita"){
         letra_bendita = normalizarLetraModoMusa(data.letra_bendita);
-        pedir_inspiracion({modo_actual, letra_bendita})
+        pedir_inspiracion({modo_actual, letra_bendita}, { preservarBorrador: !cambioRealModo })
     }
     if(modo_actual == "letra prohibida"){
         letra_prohibida = normalizarLetraModoMusa(data.letra_prohibida);
-        pedir_inspiracion({modo_actual, letra_prohibida})
+        pedir_inspiracion({modo_actual, letra_prohibida}, { preservarBorrador: !cambioRealModo })
     }
 
     if (
@@ -302,6 +303,7 @@ socket.on('modo_actual', (data) => {
     }
     if (modo_actual === "frase final") {
         campo_palabra.value = "";
+        window.editorLetrasInspiracionMusa?.refrescar();
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
         notificacion.style.display = "none";
@@ -1591,13 +1593,14 @@ socket.on("pedir_inspiracion_musa", juego => {
     if (!aceptarEventoModoMusa(juego)) {
         return;
     }
+    actualizarReglaLetraInspiracionMusa(juego);
     const es_prohibidas = juego.modo_actual === "palabras prohibidas";
     cambiar_jugadores(es_prohibidas, { solicitarTexto: true });
     actualizarNiveles(juego.modo_actual);
     if(sincro == 1 || votando == true || votacion_ventaja_activa === true){
         return;
     }
-    pedir_inspiracion(juego);
+    pedir_inspiracion(juego, { preservarBorrador: juego.modo_actual === modo_actual });
 });
 
 function convertirASegundos(tiempo) {
@@ -1607,7 +1610,8 @@ function convertirASegundos(tiempo) {
     return minutos * 60 + segundos; // devolvemos la cantidad total de segundos
   }
 
-function pedir_inspiracion(juego){
+function pedir_inspiracion(juego, { preservarBorrador = false } = {}){
+    actualizarReglaLetraInspiracionMusa(juego || {});
     if (votacion_ventaja_activa || votando) {
         establecerEstadoVotacionInterfazMusa(true, votacion_ventaja_equipo);
         return;
@@ -1616,12 +1620,14 @@ function pedir_inspiracion(juego){
         modo_actual = juego && juego.modo_actual ? juego.modo_actual : "";
         window.__scribModoActualMusaPreview = modo_actual;
         campo_palabra.value = "";
+        window.editorLetrasInspiracionMusa?.refrescar();
         enviarPalabra_boton.style.display = "none";
         campo_palabra.style.display = "none";
         notificacion.style.display = "none";
         return;
     }
-    campo_palabra.value = "";
+    if (!preservarBorrador) campo_palabra.value = "";
+    window.editorLetrasInspiracionMusa?.refrescar();
     enviarPalabra_boton.style.display = "";
     campo_palabra.style.display = "";
     modo_actual = juego.modo_actual;
@@ -1784,6 +1790,7 @@ function cambiar_color_puntuacion() {
 }
 
 function limpiezas({ preservarResumenFinal = false } = {}){
+    actualizarReglaLetraInspiracionMusa();
     detenerProgresoNivelMusa(true);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();
@@ -1831,6 +1838,7 @@ function limpiezas({ preservarResumenFinal = false } = {}){
 }
 
 function limpiezas_final(){
+    actualizarReglaLetraInspiracionMusa();
     detenerProgresoNivelMusa(true);
     limpiarTimersCosmeticosMusa();
     cancelarSincronizacionVisorNivelesMusa();

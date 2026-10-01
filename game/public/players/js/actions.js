@@ -400,6 +400,7 @@ const animateCSS = window.ScribRuntime.animateCSS;
 
 //FunciÃ³n auxiliar que envÃ­a una palabra al servidor.
 function enviarPalabra(button) {
+  window.editorLetrasInspiracionMusa?.refrescar();
   if (votando || votacion_ventaja_activa || cooldown || palabra.value == '' || palabra.value == null) {
     text_progress.classList.add('disabled-click-feedback');
     setTimeout(function () {
@@ -435,12 +436,14 @@ function enviarPalabra(button) {
         button.disabled = false;
         if (!respuesta || respuesta.ok !== true) {
           if (!palabra.value) palabra.value = textoPendiente;
+          window.editorLetrasInspiracionMusa?.refrescar();
           recordatorio.innerHTML = "<span class='musa-envio-error'>NO SE HA PODIDO ENTREGAR. VUELVE A INTENTARLO.</span>";
           animateCSS(".recordatorio", "shakeX");
           return;
         }
         startProgress(button);
         palabra.value = "";
+        window.editorLetrasInspiracionMusa?.refrescar();
         actualizarPreviewTiempoPalabraMusa("");
         recordatorio.innerHTML = `<span class='musa-envio-confirmado'>${tJuego2P("warmup.feedback.word_sent", {}, "Inspiración entregada.")}</span>`;
         animateCSS(".recordatorio", "flash").then(() => {

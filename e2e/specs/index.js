@@ -3,6 +3,7 @@ const { runDramaturgiaLiveCursorChecks } = require("./dramaturgia-live-cursor");
 const { runWarmupClockChecks } = require("./warmup-clock");
 const { runWriterNameLifecycleChecks } = require("./writer-names");
 const { runFinalPhraseLayoutChecks } = require("./final-phrase-layout");
+const { runMuseLetterInputChecks } = require("./muse-letter-input");
 const { startInspirationFeedbackProbe, readInspirationFeedbackProbe, stopInspirationFeedbackProbe } = require("./inspiration-feedback-probe");
 
 const FULL_ROLE_SET = [
@@ -2401,6 +2402,14 @@ const visualSpecs = [
 ];
 
 const coreSpecs = [
+  {
+    name: "muse-letter-input-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "musa1", "musa2"]);
+      await startGame(ctx);
+      await runMuseLetterInputChecks(ctx);
+    }
+  },
   {
     name: "writer-names-match-lifecycle-core",
     run: async (ctx) => {

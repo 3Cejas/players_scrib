@@ -244,6 +244,7 @@ function setUiPartidaFinalizadaMusa(finalizada) {
         postgame_wrapped_fijado_musa = false;
     }
     if (ui_partida_finalizada_musa) {
+        actualizarReglaLetraInspiracionMusa();
         if (vista_modo_remota_musa === "puntuacion") {
             postgame_resultado_videojuego_visto_musa = true;
         }
@@ -742,11 +743,25 @@ let revision_contexto_desventajas_musa = 0;
 let revision_contexto_calentamiento_musa = 0;
 
 if (campo_palabra) {
+    window.editorLetrasInspiracionMusa = window.ScribMuseLetterInput?.createController({
+        input: campo_palabra,
+        root: getEl("musa_inspiration_editor"),
+        mirror: getEl("musa_letter_mirror"),
+        insertText: insertarInspiracionMusaFiltrada
+    });
     campo_palabra.addEventListener("input", () => {
         if (typeof actualizarPreviewTiempoPalabraMusa === "function") {
             actualizarPreviewTiempoPalabraMusa(campo_palabra.value);
         }
     });
+}
+
+function actualizarReglaLetraInspiracionMusa(juego = {}) {
+    const modo = String(juego.modo_actual || "");
+    letra = modo === "letra bendita"
+        ? normalizarLetraModoMusa(juego.letra_bendita)
+        : (modo === "letra prohibida" ? normalizarLetraModoMusa(juego.letra_prohibida) : "");
+    window.editorLetrasInspiracionMusa?.setRule({ modo, letra });
 }
 
 if (typeof actualizarPreviewTiempoPalabraMusa === "function") {
@@ -1372,7 +1387,10 @@ function establecerEstadoVotacionInterfazMusa(activa, equipoVota = null, opcione
     if (campo_palabra) {
         campo_palabra.disabled = estaActiva;
         campo_palabra.style.display = estaActiva ? "none" : campo_palabra.style.display;
-        if (estaActiva) campo_palabra.value = "";
+        if (estaActiva) {
+            campo_palabra.value = "";
+            window.editorLetrasInspiracionMusa?.refrescar();
+        }
     }
     if (enviarPalabra_boton) {
         enviarPalabra_boton.disabled = estaActiva;
@@ -3102,15 +3120,31 @@ function insertarTextoEnInput(input, texto) {
     const inicio = input.selectionStart ?? input.value.length;
     const fin = input.selectionEnd ?? input.value.length;
     const valor = input.value;
-    let insercion = texto;
+    let insercion = input === campo_palabra && window.editorLetrasInspiracionMusa
+        ? window.editorLetrasInspiracionMusa.filtrar(texto)
+        : texto;
     if (input.maxLength > 0) {
         const disponible = input.maxLength - (valor.length - (fin - inicio));
-        insercion = disponible > 0 ? texto.slice(0, disponible) : "";
+        insercion = disponible > 0 ? insercion.slice(0, disponible) : "";
     }
     if (!insercion) return;
     input.value = valor.slice(0, inicio) + insercion + valor.slice(fin);
     const cursor = inicio + insercion.length;
     input.setSelectionRange(cursor, cursor);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function insertarInspiracionMusaFiltrada(texto) {
+    // Filtering a paste must not bypass the active slow-keyboard penalty.
+    if (!teclado_lento_putada) {
+        insertarTextoEnInput(campo_palabra, texto);
+        return;
+    }
+    const revisionContexto = obtenerRevisionContextoDesventajasMusa();
+    setTimeout(() => {
+        if (!teclado_lento_putada || !esRevisionContextoDesventajasMusaActiva(revisionContexto)) return;
+        insertarTextoEnInput(campo_palabra, texto);
+    }, RETRASO_TECLADO_LENTO_MS);
 }
 
 function removerEspaciosInspiracion(texto) {
@@ -3163,7 +3197,7 @@ function mostrarBarraVida() {
 function aplicarTecladoLento(input) {
     if (!input) return;
     input.addEventListener("beforeinput", (e) => {
-        if (!teclado_lento_putada) return;
+        if (!teclado_lento_putada || e.defaultPrevented) return;
         if (e.inputType === "insertText") {
             e.preventDefault();
             const data = e.data ?? "";
@@ -3176,7 +3210,7 @@ function aplicarTecladoLento(input) {
         }
     });
     input.addEventListener("paste", (e) => {
-        if (!teclado_lento_putada) return;
+        if (!teclado_lento_putada || e.defaultPrevented) return;
         const texto = (e.clipboardData || window.clipboardData)?.getData("text");
         if (!texto) return;
         e.preventDefault();

@@ -3581,6 +3581,54 @@ body.equipo-rojo.musa-texto-rival .musa-texto-card .textarea {
         0 0 24px color-mix(in srgb, var(--equipo-color, #46efff), transparent 54%);
 }
 
+/* A native input retains its mobile keyboard, caret and selection. Only its
+   text is mirrored while the blessed letter needs per-character color. */
+.musa-inspiration-editor {
+    position: relative;
+    width: min(100%, 640px);
+    margin-inline: auto;
+}
+
+.notificacion .musa-letter-highlight #palabra {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent;
+}
+
+.musa-letter-mirror {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    border-style: solid;
+    border-color: transparent;
+    pointer-events: none;
+    overflow: hidden;
+    color: var(--equipo-texto-suave, #c3faff);
+}
+
+.musa-letter-mirror[hidden] {
+    display: none;
+}
+
+.musa-letter-mirror__viewport {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+}
+
+.musa-letter-mirror__text {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    white-space: pre;
+}
+
+.musa-letter-mirror__blessed {
+    color: #65ff83;
+    text-shadow: 0 0 .35em rgba(80, 255, 116, .7);
+}
+
 .notificacion #progressButton {
     width: min(100%, 640px);
     min-height: clamp(58px, 11vw, 76px);

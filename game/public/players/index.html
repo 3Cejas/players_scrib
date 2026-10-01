@@ -8,7 +8,7 @@
     <title>SCRB - Musas &#x1F441;&#xFE0F;</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20260922p">
+    <link rel="stylesheet" type="text/css" href="./css/publico.css?v=20261001a">
     <link rel="stylesheet" type="text/css" href="../../css/level-transition.css?v=20260921c">
     <link rel="stylesheet" type="text/css" href="../../css/video-tutorial.css?v=20260920a">
     <link rel="stylesheet" type="text/css" href="../../css/show-narration.css?v=20260831g">
@@ -20,13 +20,14 @@
     <script src="../../config.js?v=20260923a"></script>
     <script src="../../js/runtime.js?v=20260424a"></script>
     <script src="../../js/domains/inspiration.js?v=20260905d"></script>
+    <script src="../../js/domains/muse-letter-input.js?v=20261001a"></script>
     <script src="../../js/domains/disadvantages.js?v=20260424a"></script>
     <script src="../../js/domains/teleprompter.js?v=20260924a"></script>
     <script src="../../js/domains/pre-show.js?v=20260824b"></script>
     <script src="../../js/domains/credits.js?v=20260924a"></script>
     <script src="../../js/domains/instructions.js?v=20260921d"></script>
     <script src="../../js/domains/view-transition.js?v=20260922b"></script>
-<script src="./js/actions.js?v=20260924a"></script>
+<script src="./js/actions.js?v=20261001a"></script>
 </head>
 <body>
     <div id="musa_view_transition" class="spectator-view-transition musa-view-transition" hidden aria-hidden="true">
@@ -316,7 +317,12 @@
                             <th><p id="tarea"></p></th>
                         </tr>
                         <tr>
-                            <th><input id="palabra" maxlength="20" class="input_publico"></input></th>
+                            <th>
+                                <div id="musa_inspiration_editor" class="musa-inspiration-editor">
+                                    <input id="palabra" maxlength="20" class="input_publico" aria-label="Palabra de inspiración">
+                                    <div id="musa_letter_mirror" class="musa-letter-mirror" aria-hidden="true" hidden></div>
+                                </div>
+                            </th>
                         </tr>
                         <tr>
                             <th><p id="preview_tiempo_palabra" class="preview-tiempo-palabra" hidden></p></th>
@@ -491,12 +497,12 @@
 <script src="../js/musa-assignment.js?v=20260831b"></script>
 <script src="../../js/domains/final-score.js?v=20260903e"></script>
     <script src="../../js/domains/level-transition.js?v=20260921c"></script>
-    <script src="./js/state.js?v=20260924b"></script>
+    <script src="./js/state.js?v=20261001a"></script>
 <script src="../../js/domains/video-tutorial.js?v=20260906b"></script>
 <script src="../../js/domains/show-narration.js?v=20260923a"></script>
     <script src="../../js/domains/canto.js?v=20260923b"></script>
 <script src="../../vendor/html2canvas/html2canvas.min.js?v=1.4.1"></script>
 <script src="./js/musa-help.js?v=20260830a"></script>
-    <script src="./js/socket-events.js?v=20260924c"></script>
+    <script src="./js/socket-events.js?v=20261001a"></script>
 <script src="./js/index.js?v=20260504e"></script>
 </html>
