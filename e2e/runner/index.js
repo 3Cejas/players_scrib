@@ -412,6 +412,11 @@ const ROLE_CONFIG = {
     readySelector: "#jurado_app",
     viewport: { width: 1500, height: 1000 }
   },
+  dramaturgia: {
+    url: "/game/dramaturgia/index.html",
+    readySelector: "#dramaturgia_graph_viewport",
+    viewport: { width: 1600, height: 1000 }
+  },
   musa1: {
     url: "/game/public/players/index.html?player=1&name=E2E_Luna",
     readySelector: "#musa_world_entry",

@@ -10,6 +10,7 @@ if (typeof dramaturgiaSocket !== "undefined" && dramaturgiaSocket) {
         "competicion_cambio_lider",
         "desventaja_ronda_limpiar",
         "reloj_partida_estado",
+        "votacion_ventaja_estado",
         "teleprompter_state",
         "teleprompter_ack",
         "vista_espectador_modo",

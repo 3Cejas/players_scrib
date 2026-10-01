@@ -112,7 +112,12 @@ const DRAMATURGIA_DELTAS_VISUALES = new Set([
     "temp_modos",
     "inicio",
     "fin",
-    "limpiar"
+    "limpiar",
+    "calentamiento_estado_espectador",
+    "calentamiento_estado",
+    "votacion_ventaja_estado",
+    "teleprompter_state",
+    "creditos_estado"
 ]);
 
 window.addEventListener("scrib:dramaturgia-reference-ready", () => {
@@ -632,6 +637,7 @@ function renderShowScore(viewport, score, options = {}) {
                 `show-score__cell is-${state}`
             );
             cell.dataset.state = state;
+            cell.dataset.milestoneId = column.id || `column-${columnIndex + 1}`;
             cell.style.setProperty("--column-accent", showColumnVisual(column).accent);
             cell.style.gridColumn = String(columnIndex + 2);
             cell.style.gridRow = String(gridRow);
@@ -663,6 +669,64 @@ function renderShowScore(viewport, score, options = {}) {
     shell.scrollTop = previousScroll.top;
 }
 
+function renderDramaturgiaLiveMoment() {
+    const moment = dramaturgiaModel.currentShowMoment(dramaturgiaStore.current);
+    const ids = new Set(moment.ids);
+    const viewport = dramaturgiaEl("dramaturgia_graph_viewport");
+    const shell = viewport?.querySelector(".show-score");
+    const frozen = !dramaturgiaUi.connected;
+    if (shell) shell.dataset.liveState = frozen ? "frozen" : "live";
+    viewport?.querySelectorAll(".show-score__milestone, .show-score__cell").forEach((node) => {
+        const active = ids.has(node.dataset.milestoneId);
+        node.classList.toggle("is-current", active);
+        if (active && !frozen) node.setAttribute("aria-current", "step");
+        else node.removeAttribute("aria-current");
+    });
+    viewport?.querySelectorAll(".show-score__phase").forEach((node) => {
+        node.classList.toggle("is-current", node.dataset.phase === moment.phase);
+    });
+    const status = dramaturgiaEl("dramaturgia_map_live");
+    const label = dramaturgiaEl("dramaturgia_map_live_label");
+    const signal = dramaturgiaEl("dramaturgia_map_live_signal");
+    if (status) {
+        status.dataset.state = frozen ? "frozen" : "live";
+        status.style.setProperty("--live-accent", dramaturgiaPhase(moment.phase).accent);
+    }
+    const hiddenByFilter = dramaturgiaUi.phase !== "todas" && dramaturgiaUi.phase !== moment.phase;
+    const text = `${moment.label}${hiddenByFilter ? " · Fuera del filtro actual" : ""}`;
+    if (label && label.textContent !== text) label.textContent = text;
+    const signalText = frozen ? "ÚLTIMO ESTADO" : "EN DIRECTO";
+    if (signal && signal.textContent !== signalText) signal.textContent = signalText;
+    const currentButton = dramaturgiaEl("dramaturgia_map_current");
+    if (currentButton) currentButton.disabled = ids.size === 0;
+}
+
+function focusDramaturgiaCurrentMoment() {
+    const moment = dramaturgiaModel.currentShowMoment(dramaturgiaStore.current);
+    if (!moment.ids.length) return;
+    if (dramaturgiaUi.phase !== "todas" && dramaturgiaUi.phase !== moment.phase) {
+        setDramaturgiaPhaseFilter("todas");
+    }
+    // Do not steal the user's pan position on each live update. This explicit
+    // shortcut reveals the current column even when it is outside the viewport.
+    window.requestAnimationFrame(() => {
+        const viewport = dramaturgiaEl("dramaturgia_graph_viewport");
+        const surface = dramaturgiaMapScrollSurface(viewport);
+        const column = viewport?.querySelector(".show-score__milestone.is-current");
+        if (!surface || !column) return;
+        const bounds = surface.getBoundingClientRect();
+        const target = column.getBoundingClientRect();
+        const roleWidth = surface.querySelector(".show-score__role")?.getBoundingClientRect().width || 0;
+        const delta = (target.left + target.width / 2) - (bounds.left + (bounds.width + roleWidth) / 2);
+        surface.scrollTo({
+            left: surface.scrollLeft + delta,
+            // A late archived checkpoint can rebuild the grid while a smooth
+            // scroll is running. Jump atomically so its position is preserved.
+            behavior: "instant"
+        });
+    });
+}
+
 function renderDramaturgiaGraph() {
     const viewport = dramaturgiaEl("dramaturgia_graph_viewport");
     if (!viewport) return;
@@ -671,10 +735,14 @@ function renderDramaturgiaGraph() {
         checkpoints,
         `${dramaturgiaUi.phase}:${viewport.clientWidth}:journey`
     );
-    if (dramaturgiaUi.graphRenderKey === key) return;
+    if (dramaturgiaUi.graphRenderKey === key) {
+        renderDramaturgiaLiveMoment();
+        return;
+    }
     dramaturgiaUi.graphRenderKey = key;
     const score = showScoreWithObservedSnapshot(dramaturgiaModel.buildShowScore(checkpoints));
     renderShowScore(viewport, score);
+    renderDramaturgiaLiveMoment();
 }
 
 function renderDramaturgiaStaleState() {

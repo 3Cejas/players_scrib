@@ -2633,12 +2633,68 @@ a:focus-visible,
         rgba(7, 11, 17, 0.985);
 }
 
-.show-score__milestone[aria-current="true"],
+.show-score__milestone[aria-current="step"],
 .show-score__milestone.is-current {
     background:
-        linear-gradient(180deg, color-mix(in srgb, var(--milestone-accent), transparent 86%), rgba(7, 11, 17, 0.985)),
+        linear-gradient(180deg, color-mix(in srgb, var(--milestone-accent), transparent 55%), rgba(7, 11, 17, 0.985)),
         rgba(7, 11, 17, 0.985);
-    box-shadow: inset 0 -2px var(--milestone-accent);
+    box-shadow: inset 0 -3px var(--milestone-accent), inset 0 0 18px color-mix(in srgb, var(--milestone-accent), transparent 70%);
+}
+
+.show-score__phase.is-current {
+    box-shadow: inset 0 -2px var(--phase-accent);
+    color: #fff;
+}
+
+.show-score__cell.is-current {
+    background: color-mix(in srgb, var(--column-accent), #05080d 88%);
+    box-shadow: inset 3px 0 var(--column-accent), inset -3px 0 var(--column-accent);
+}
+
+.show-score[data-live-state="frozen"] .is-current {
+    box-shadow: inset 0 -2px var(--gold);
+}
+
+.map-live-state {
+    --live-accent: var(--cyan);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--live-accent), #05080d 94%);
+    font-family: "VT323", monospace;
+    font-size: 1.1rem;
+}
+
+.map-live-state__signal {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--live-accent);
+    font-family: "Retro-gaming", monospace;
+    font-size: 0.45rem;
+}
+
+.map-live-state__signal::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0.65rem currentColor;
+}
+
+.map-live-state[data-state="frozen"] .map-live-state__signal {
+    color: var(--gold);
+}
+
+.map-live-state > button {
+    margin-left: auto;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.5rem;
+    border-color: var(--live-accent);
 }
 
 .show-score__role {

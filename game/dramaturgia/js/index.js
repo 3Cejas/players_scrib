@@ -126,6 +126,8 @@ async function initializeDramaturgiaInterface() {
     if (zoomOut) zoomOut.addEventListener("click", () => setDramaturgiaZoom(dramaturgiaUi.graphZoom - 0.1));
     if (zoomIn) zoomIn.addEventListener("click", () => setDramaturgiaZoom(dramaturgiaUi.graphZoom + 0.1));
     if (zoomFit) zoomFit.addEventListener("click", fitDramaturgiaMapZoom);
+    const currentMoment = dramaturgiaEl("dramaturgia_map_current");
+    if (currentMoment) currentMoment.addEventListener("click", focusDramaturgiaCurrentMoment);
 
     const graphViewport = dramaturgiaEl("dramaturgia_graph_viewport");
     bindDramaturgiaMapPan(graphViewport);

@@ -469,6 +469,9 @@
             case "reloj_partida_estado":
                 current.reloj_partida = data;
                 break;
+            case "votacion_ventaja_estado":
+                current.votacion_ventaja = data;
+                break;
             case "teleprompter_state": {
                 const teleprompter = ensureCurrentObject(store, "teleprompter");
                 teleprompter.state = data.state && typeof data.state === "object" ? data.state : data;
@@ -541,19 +544,28 @@
                 break;
             case "fin": {
                 const partida = ensureCurrentObject(store, "partida");
-                partida.fin_del_juego = true;
+                const player = integer(data.player, 0);
+                if (player === 1 || player === 2) partida[`fin_j${player}`] = true;
+                // One writer can finish their last sentence before the other.
+                // Only the global end event closes the whole game.
+                if (data.partida_finalizada === true) {
+                    partida.fin_del_juego = true;
+                    partida.partida_finalizada = true;
+                }
                 break;
             }
             case "inicio": {
                 const partida = ensureCurrentObject(store, "partida");
                 partida.fin_del_juego = false;
+                partida.partida_finalizada = false;
                 break;
             }
             case "limpiar":
                 current.partida = {
                     ...(current.partida && typeof current.partida === "object" ? current.partida : {}),
                     modo_actual: "",
-                    fin_del_juego: false
+                    fin_del_juego: false,
+                    partida_finalizada: false
                 };
                 break;
             default:
@@ -1372,6 +1384,77 @@
         };
     }
 
+    // The live cursor follows authoritative state, never the reference show's
+    // fixed order, elapsed time or the most recently archived screenshot.
+    function currentShowMoment(snapshot = {}) {
+        const partida = snapshot.partida || {};
+        const mode = journeyMode(partida.modo_actual);
+        const spectator = snapshot.espectador || snapshot.vista_espectador || {};
+        const teleprompter = snapshot.teleprompter?.state || {};
+        const view = journeyKey(spectator.modo);
+        const moment = (phase, ids, label) => ({ phase, ids, label });
+        // fin_del_juego is also true in the server's idle/reset state. A final
+        // score or an explicit global end distinguishes an actual finished game.
+        const score = snapshot.puntuacion_final;
+        const completed = partida.fin_del_juego && (
+            partida.partida_finalizada === true
+            || score?.disponible === true
+            || (!score && (mode || (partida.fin_j1 && partida.fin_j2)))
+        );
+        if (completed) {
+            if (["creditos", "resultado final", "resultado jurado"].includes(view)) {
+                return moment("representacion", ["representation-final"], "Cierre y resultado final");
+            }
+            if (teleprompter.visible) {
+                return moment("representacion", ["representation-projection"], "Representación · Teleprompter");
+            }
+            return moment("representacion", ["representation-preparation"], "Historias listas · Preparación");
+        }
+        const level = SHOW_JOURNEY.find((item) => (
+            item.kind === "level" && item.moment === "stable" && item.mode === mode
+        ));
+        if (level) {
+            const seq = integer(partida.modo_seq, 0);
+            const sameSequence = (data) => !seq || !integer(data.modo_seq, 0) || integer(data.modo_seq, 0) === seq;
+            const round = snapshot.competicion_ronda || {};
+            const roundMatches = round.activa && journeyMode(round.modo) === mode && sameSequence(round);
+            const vote = snapshot.votacion_ventaja || {};
+            const voteMode = journeyMode(vote.modo_actual || vote.modo);
+            const voting = (roundMatches && round.fase === "votacion")
+                || (vote.activa && sameSequence(vote) && (!voteMode || voteMode === mode));
+            const competition = SHOW_JOURNEY.find((item) => item.kind === "competition" && item.mode === mode);
+            if (voting && competition) {
+                return moment("juego", [competition.id], `Votación de musas · ${level.label}`);
+            }
+            const feedback = SHOW_JOURNEY.find((item) => (
+                item.kind === "level" && item.moment === "feedback" && item.mode === mode
+            ));
+            if (roundMatches && round.fase === "desventaja" && feedback) {
+                return moment("juego", [feedback.id], `Desventaja activa · ${level.label}`);
+            }
+            return moment("juego", [level.id], level.label);
+        }
+        // Do not light an unrelated level when a new/unknown mode is received.
+        if (mode) return moment("juego", [], modeLabel(mode));
+        const tutorial = snapshot.tutorial || snapshot.calentamiento || {};
+        if (tutorial.activo || tutorial.vista || spectator.calentamiento_vista) {
+            const request = journeyKey(tutorial.solicitud);
+            const stages = SHOW_JOURNEY.filter((item) => (
+                item.kind === "warmup" && journeyKey(item.request) === request
+            ));
+            const teams = [1, 2].map((id) => tutorial.equipos?.[id] || {});
+            const closed = teams.map((team) => Boolean(team.bloqueado && team.final));
+            const ids = stages.filter((item) => (
+                item.moment === "closed" ? closed.some(Boolean) : closed.some((value) => !value)
+            )).map((item) => item.id);
+            const label = stages.length
+                ? `${stages[0].label.split(" · ")[0]} · ${closed.every(Boolean) ? "Cerrado" : "Selección de detonadores"}`
+                : "Esperando un detonador";
+            return moment("calentamiento", ids, label);
+        }
+        return moment("espera", [], "En espera · Sin videojuego activo");
+    }
+
     function formatClock(ts) {
         const date = new Date(timestamp(ts, Date.now()));
         return date.toLocaleTimeString("es-ES", {
@@ -1405,6 +1488,7 @@
         buildShowScore,
         createStore,
         currentSummary,
+        currentShowMoment,
         currentWriter,
         editorPlainText,
         formatClock,

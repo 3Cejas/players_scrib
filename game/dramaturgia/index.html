@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>&lt;SCRI&gt; B · Dramaturgia</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="./index.css?v=20260731r" />
+    <link rel="stylesheet" href="./index.css?v=20261001a" />
 </head>
 <body class="page-dramaturgia">
     <a id="dramaturgia_skip_link" class="skip-link" href="#dramaturgia_map">Saltar al mapa activo</a>
@@ -90,6 +90,11 @@
                 </div>
             </div>
 
+            <div id="dramaturgia_map_live" class="map-live-state" data-state="frozen" role="status" aria-live="polite">
+                <span id="dramaturgia_map_live_signal" class="map-live-state__signal">ÚLTIMO ESTADO</span>
+                <strong id="dramaturgia_map_live_label">Conectando con el videojuego</strong>
+                <button id="dramaturgia_map_current" type="button" disabled>Ver fase actual</button>
+            </div>
             <div class="map-workspace">
                 <div class="map-canvas">
                     <section class="map-panel is-active">
@@ -309,15 +314,15 @@
     <script src="../config.js?v=20260923a"></script>
     <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/text-stream.js?v=20260924a"></script>
-    <script src="./js/model.js?v=20260731c"></script>
+    <script src="./js/model.js?v=20261001a"></script>
     <script src="./js/tools-model.js?v=20260731f"></script>
     <script src="./js/history-snapshots.js?v=20260731b"></script>
     <script src="./js/history-controller.js?v=20260921a"></script>
     <script src="./reference-show/manifest.js?v=20260731f"></script>
     <script src="./js/reference-show.js?v=20260731g"></script>
-    <script src="./js/state.js?v=20260921a"></script>
-    <script src="./js/socket-events.js?v=20260923a"></script>
+    <script src="./js/state.js?v=20261001a"></script>
+    <script src="./js/socket-events.js?v=20261001a"></script>
     <script src="./js/tools.js?v=20260731g"></script>
-    <script src="./js/index.js?v=20260731f"></script>
+    <script src="./js/index.js?v=20261001a"></script>
 </body>
 </html>

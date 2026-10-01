@@ -134,6 +134,116 @@ test("dramaturgy model derives phase from live server state", () => {
   assert.equal(model.phaseFromSnapshot({}), "espera");
 });
 
+test("live show cursor follows every level rather than spectator views or reference order", () => {
+  assert.deepEqual(model.currentShowMoment({}).ids, []);
+  for (const [mode, id] of [
+    ["palabras bonus", "level-palabras-bonus"],
+    ["letra bendita", "level-letra-bendita"],
+    ["tertulia", "level-tertulia"],
+    ["letra prohibida", "level-letra-prohibida"],
+    ["palabras prohibidas", "level-palabras-prohibidas"],
+    ["frase final", "level-frase-final"]
+  ]) {
+    const moment = model.currentShowMoment({
+      partida: { modo_actual: mode, modo_seq: 4 },
+      espectador: { modo: "stats" },
+      teleprompter: { state: { visible: true } }
+    });
+    assert.equal(moment.phase, "juego");
+    assert.deepEqual(moment.ids, [id]);
+  }
+  assert.deepEqual(model.currentShowMoment({ partida: { modo_actual: "desconocido" } }).ids, []);
+});
+
+test("live cursor distinguishes voting and disadvantage and rejects old round state", () => {
+  const snapshot = {
+    partida: { modo_actual: "letra bendita", modo_seq: 6 },
+    competicion_ronda: { activa: true, modo: "letra bendita", modo_seq: 6, fase: "votacion" }
+  };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["competition-letra-bendita"]);
+  snapshot.competicion_ronda.fase = "desventaja";
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["level-letra-bendita-feedback"]);
+  snapshot.competicion_ronda.modo_seq = 5;
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["level-letra-bendita"]);
+  snapshot.competicion_ronda.modo_seq = 6;
+  snapshot.competicion_ronda.modo = "palabras prohibidas";
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["level-letra-bendita"]);
+
+  snapshot.votacion_ventaja = { activa: true, modo_actual: "letra bendita", modo_seq: 6 };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["competition-letra-bendita"]);
+  snapshot.votacion_ventaja.modo_seq = 5;
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["level-letra-bendita"]);
+});
+
+test("live detonator cursor handles both teams and all requests without waiting for screenshots", () => {
+  for (const [request, prefix] of [
+    ["lugares", "warmup-lugares"],
+    ["acciones", "warmup-acciones"],
+    ["frase_final", "warmup-frase-final"]
+  ]) {
+    const snapshot = { tutorial: { activo: true, vista: true, solicitud: request, equipos: {} } };
+    assert.deepEqual(model.currentShowMoment(snapshot).ids, [`${prefix}-open`]);
+    snapshot.tutorial.equipos[1] = { bloqueado: true, final: { palabra: "escena" } };
+    assert.deepEqual(model.currentShowMoment(snapshot).ids, [`${prefix}-open`, prefix]);
+    snapshot.tutorial.equipos[2] = { bloqueado: true, final: { palabra: "teatro" } };
+    assert.deepEqual(model.currentShowMoment(snapshot).ids, [prefix]);
+  }
+  assert.deepEqual(model.currentShowMoment({ tutorial: { activo: true, solicitud: "ninguna" } }).ids, []);
+});
+
+test("finishing clears the old level cursor and follows preparation, projection and closure", () => {
+  const snapshot = {
+    partida: { modo_actual: "frase final", fin_del_juego: true },
+    tutorial: { activo: true, solicitud: "lugares" },
+    espectador: { modo: "puntuacion" }
+  };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-preparation"]);
+  snapshot.teleprompter = { state: { visible: true } };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-projection"]);
+  snapshot.espectador.modo = "creditos";
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-final"]);
+});
+
+test("idle server flags do not disguise new detonators or a cleared match as a finished show", () => {
+  const snapshot = {
+    partida: { modo_actual: "", fin_del_juego: true, fin_j1: true, fin_j2: true },
+    puntuacion_final: { disponible: false }
+  };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, []);
+  snapshot.tutorial = { activo: true, vista: true, solicitud: "lugares", equipos: {} };
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["warmup-lugares-open"]);
+  snapshot.puntuacion_final.disponible = true;
+  assert.deepEqual(model.currentShowMoment(snapshot).ids, ["representation-preparation"]);
+});
+
+test("a single writer finishing does not advance the cursor before the global end", () => {
+  const store = model.createStore();
+  model.applySnapshot(store, {
+    partida: { modo_actual: "frase final", fin_del_juego: false },
+    puntuacion_final: { disponible: false }
+  });
+  model.applyDelta(store, "fin", { player: 1, motivo: "frase_final" });
+  assert.deepEqual(model.currentShowMoment(store.current).ids, ["level-frase-final"]);
+  model.applyDelta(store, "fin", { player: 2, partida_finalizada: true });
+  assert.deepEqual(model.currentShowMoment(store.current).ids, ["representation-preparation"]);
+  model.applyDelta(store, "limpiar");
+  assert.deepEqual(model.currentShowMoment(store.current).ids, []);
+});
+
+test("voting live deltas update the cursor and a new match removes the previous highlight", () => {
+  const store = model.createStore();
+  model.applySnapshot(store, {
+    session: { id: "first" },
+    partida: { modo_actual: "palabras bonus", modo_seq: 2 }
+  });
+  model.applyDelta(store, "votacion_ventaja_estado", { activa: true, modo_actual: "palabras bonus", modo_seq: 2 });
+  assert.deepEqual(model.currentShowMoment(store.current).ids, ["competition-palabras-bonus"]);
+  model.applyDelta(store, "votacion_ventaja_estado", { activa: false });
+  assert.deepEqual(model.currentShowMoment(store.current).ids, ["level-palabras-bonus"]);
+  model.applySnapshot(store, { session: { id: "second" }, partida: { modo_actual: "" } });
+  assert.deepEqual(model.currentShowMoment(store.current).ids, []);
+});
+
 test("dramaturgy graph layout is deterministic and contains only valid causal edges", () => {
   const events = [
     event(1, { id: "mode", tipo: "modo", titulo: "Tertulia" }),

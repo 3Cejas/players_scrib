@@ -1,4 +1,5 @@
 const { runControlTabletChecks } = require("./control-tablet");
+const { runDramaturgiaLiveCursorChecks } = require("./dramaturgia-live-cursor");
 const { startInspirationFeedbackProbe, readInspirationFeedbackProbe, stopInspirationFeedbackProbe } = require("./inspiration-feedback-probe");
 
 const FULL_ROLE_SET = [
@@ -2397,6 +2398,14 @@ const visualSpecs = [
 ];
 
 const coreSpecs = [
+  {
+    name: "dramaturgia-live-cursor-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "dramaturgia", "writer1", "spectator"]);
+      await configureFastControlPanel(ctx, { tiempo_modos: 120 });
+      await runDramaturgiaLiveCursorChecks(ctx, () => startGame(ctx));
+    }
+  },
   {
     name: "control-tablet-touch-layout-core",
     run: async (ctx) => {
