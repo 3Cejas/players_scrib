@@ -40,6 +40,8 @@ var configs = (function () {
 
         help_help: "Imprime este menú.",
 
+        charla_help: "Abre la presentación de Sutura y el videojuego en el espacio escénico.",
+
         clear_help: "Clear the terminal screen.",
 
         reboot_help: "Reinicia el sistema.",
@@ -56,7 +58,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "**Bienvenidx a la página oficial de <SCRI> B.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
+        welcome: "**Bienvenidx a la página oficial de <SCRI> B.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 compañía\n\u2022 charla\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
@@ -366,6 +368,8 @@ var main = (function () {
 
 		HELP: { value: "ayuda", help: configs.getInstance().help_help },
 
+        CHARLA: { value: "charla", help: configs.getInstance().charla_help },
+
     };
 
     var primaryCommands = [
@@ -375,6 +379,7 @@ var main = (function () {
         cmds.IMAGENES.value,
         cmds.ARTICULOS.value,
         cmds.LA_COMPAÑÍA.value,
+        cmds.CHARLA.value,
         cmds.NEWSLETTER.value,
         cmds.CONTACTO.value,
         cmds.REBOOT.value
@@ -2648,6 +2653,10 @@ function log( text ) {
 
             case "tutorial":
                 location.href = "./tutorial/";
+                return true;
+
+            case commandKey(cmds.CHARLA.value):
+                location.href = "./charla/";
                 return true;
 
             case commandKey(cmds.JUEGO.value):
