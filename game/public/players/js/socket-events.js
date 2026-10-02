@@ -28,9 +28,20 @@ function normalizarLetraModoMusa(letra) {
 }
 
 socket.on("idioma_actual", (payload = {}) => {
+    if (window.scribMusePreferences) {
+        window.scribMusePreferences.serverLanguage(payload.idioma);
+        return;
+    }
     if (window && typeof window.scribSetLanguage2P === "function") {
         window.scribSetLanguage2P(payload && payload.idioma ? payload.idioma : "es");
     }
+});
+
+socket.on("musa_nombre_actualizado", aplicarNombreMusaActualizado);
+window.musaOpciones = window.ScribMuseOptions.createController({
+    socket, getName: () => nombre_musa,
+    isReady: () => musa_registro_confirmado,
+    applyName: aplicarNombreMusaActualizado
 });
 
 let musa_request_id_activo = "";
@@ -1994,6 +2005,7 @@ function randomInRange(min, max) {
 
 function confetti_aux(opciones = {}) {
     stopConfetti();
+    if (window.scribMusePreferences?.reducedMotion()) return;
     var animationEnd = Date.now() + duration; // Actualiza aquÃ­ dentro de la funciÃ³n
     var persistente = opciones && opciones.persistente === true;
     isConfettiRunning = true; // Habilita la ejecuciÃ³n de confetti
@@ -2034,6 +2046,7 @@ function stopConfetti() {
 
   function confetti_musas(){
     stopConfetti();
+    if (window.scribMusePreferences?.reducedMotion()) return;
     var scalar = 2;
     var starShape = confetti.shapeFromText({
       text: "\u2B50",
@@ -2069,6 +2082,7 @@ function stopConfetti() {
 
 function confetti_postgame_musa() {
     stopConfetti();
+    if (window.scribMusePreferences?.reducedMotion()) return;
     if (typeof confetti !== "function") return;
     isConfettiRunning = true;
     const colores = ["#43eaff", "#ff6578", "#ffe47b", "#ffffff", "#9f7cff"];

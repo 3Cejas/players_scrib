@@ -182,7 +182,7 @@ const controlador_transicion_vista_musa = window.ScribViewTransition
         overlay: musa_view_transition,
         coverMs: duracion_cobertura_vista_musa,
         revealMs: duracion_revelado_vista_musa,
-        reducedMotion: () => Boolean(
+        reducedMotion: () => window.scribMusePreferences?.reducedMotion() || Boolean(
             window.matchMedia
             && window.matchMedia("(prefers-reduced-motion: reduce)").matches
         )
@@ -2637,7 +2637,7 @@ function cancelarTransferenciaPuntuacionMusa() {
 }
 
 function animarCifraPuntuacionMusa(elemento, final, prefijo = "") {
-    if (!elemento || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (!elemento || window.scribMusePreferences?.reducedMotion()) return;
     const numeroFinal = Number(final) || 0;
     const inicio = performance.now();
     const tick = (ahora) => {
@@ -2674,7 +2674,7 @@ function actualizarMarcadorTotalPuntuacionMusa(totalesObjetivo, animar = true) {
     barra.style.setProperty("--resultado-balance", `${proporcionTotalVideojuegoMusa(objetivo).toFixed(2)}%`);
     barra.dataset.total1 = String(objetivo[1]);
     barra.dataset.total2 = String(objetivo[2]);
-    const duracion = animar && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 900 : 1;
+    const duracion = animar && !window.scribMusePreferences?.reducedMotion() ? 900 : 1;
     [1, 2].forEach((id) => {
         const elemento = barra.querySelector(`[data-total-player="${id}"]`);
         if (!elemento) return;
@@ -2701,7 +2701,7 @@ function transferirPuntosAlMarcadorMusa(id, puntos, totalesObjetivo) {
         actualizarMarcadorTotalPuntuacionMusa(totalesObjetivo, false);
         return;
     }
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    if (window.scribMusePreferences?.reducedMotion()) {
         actualizarMarcadorTotalPuntuacionMusa(totalesObjetivo, false);
         return;
     }
@@ -2752,7 +2752,7 @@ function renderizarPuntuacionFinalMusa(opciones = {}) {
     const totalesAntesDeRevelar = revelarEquipo && api && typeof api.totalesDuranteRevelado === "function"
         ? api.totalesDuranteRevelado(estado, vista.indiceCategoria, faseAnterior)
         : null;
-    const reducirMovimiento = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    const reducirMovimiento = Boolean(window.scribMusePreferences?.reducedMotion());
     const diferirGanadorCategoria = Boolean(revelarEquipo === 2 && !reducirMovimiento);
     let ganador = 0;
     if (vista.tipo === "intro") {
@@ -2875,7 +2875,7 @@ function revelarResultadoFinalMusa(estado, firma) {
 function renderizarResultadoFinalMusa(opciones = {}) {
     if (!resultado_final_musa_stage) return;
     const estado = estado_resultado_final_musa || {};
-    const reducirMovimiento = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    const reducirMovimiento = Boolean(window.scribMusePreferences?.reducedMotion());
     if (!estado.disponible) {
         resultado_final_musa.classList.add("is-final-suspense");
         resultado_final_musa_stage.innerHTML = `<div class="resultado-musa__suspense"><span aria-hidden="true">?</span><small>EL VEREDICTO EST&Aacute; SELLADO</small><h2>&iquest;QUI&Eacute;N HA GANADO?</h2></div>`;
@@ -4352,7 +4352,7 @@ const sesion_partida_musa = window.ScribMusaAssignment.normalizeSessionId(
     (asignacion_musa_guardada && asignacion_musa_guardada.assignment.sessionId)
     || getParameterByName("session_id")
 );
-const nombre_musa = normalizarNombreMusa(
+let nombre_musa = normalizarNombreMusa(
     (asignacion_musa_guardada && asignacion_musa_guardada.name) || nombre_musa_solicitado
 );
 
@@ -4459,6 +4459,27 @@ function aplicarAsignacionAutoritativaMusa(payload) {
 }
 
 window.aplicarAsignacionAutoritativaMusa = aplicarAsignacionAutoritativaMusa;
+
+function aplicarNombreMusaActualizado(payload = {}) {
+    if (!payload.ok || payload.client_id !== musa_client_id
+        || payload.session_id !== window.sesion_partida_musa) return false;
+    const nuevoNombre = normalizarNombreMusa(payload.nombre);
+    if (!nuevoNombre) return false;
+    const anterior = nombre_musa;
+    nombre_musa = nuevoNombre;
+    window.nombre_musa = nuevoNombre;
+    if (nombre_musa_label) nombre_musa_label.textContent = nuevoNombre;
+    const guardada = window.ScribMusaAssignment.readAssignmentSession(window.sessionStorage, musa_client_id);
+    if (guardada) {
+        guardarAsignacionMusaSesion(guardada.assignment);
+        canonicalizarUrlAsignacionMusa(guardada.assignment);
+    }
+    getEl("peticion")?.querySelectorAll("span").forEach((span) => {
+        if (span.textContent === anterior) span.textContent = nuevoNombre;
+    });
+    actualizarContenidoEntradaMusa();
+    return true;
+}
 
 function obtenerNombreEscritxrEntradaMusa() {
     const equipo = normalizarEquipoVotacion(player) || 1;

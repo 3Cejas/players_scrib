@@ -382,6 +382,9 @@ const desactivarAgitado = () => {
 };
 
 document.addEventListener('keydown', function (event) {
+  // Las flechas pertenecen al control enfocado, especialmente al selector de
+  // idioma y a las opciones de accesibilidad, no al scroll de la partida.
+  if (event.target?.closest?.("input, textarea, select, button, dialog, [contenteditable='true']")) return;
   const key = event.key;
 
   if (key === 'ArrowUp') {

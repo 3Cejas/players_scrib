@@ -1,0 +1,63 @@
+/* Controles personales: no reescalan el viewport ni modifican la partida. */
+body { --musa-accessible-text-scale: 1; padding-bottom: max(76px, env(safe-area-inset-bottom)); }
+.musa-options-button {
+    position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
+    z-index: 2147483631; display: flex; align-items: center; gap: 8px; min-height: 46px;
+    padding: 12px 16px; border: 1px solid #ffe388; border-radius: 24px;
+    background: #08161f; color: #ffe388; box-shadow: 0 4px 16px #0008;
+    font: 11px/1.4 "Retro-gaming", monospace; cursor: pointer; touch-action: manipulation;
+}
+.musa-options-button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.musa-options-dialog {
+    box-sizing: border-box; width: min(520px, calc(100vw - 24px)); max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px); margin: auto; padding: 0; overflow: auto;
+    border: 1px solid #ffe388; border-radius: 24px; background: #08121d; color: #f8fafc;
+    text-align: left; font: 16px/1.55 system-ui, sans-serif; color-scheme: dark;
+    box-shadow: 0 18px 60px #000b; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: #ffe388 #08121d;
+}
+.musa-options-dialog::backdrop { background: #000b; }
+.musa-options-dialog header { position: sticky; top: 0; z-index: 1; background: #08121d; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #ffe38855; }
+.musa-options-dialog h2 { margin: 0; color: #ffe388; font: 15px/1.6 "Retro-gaming", monospace; }
+.musa-options-dialog h3 { margin: 0 0 12px; color: #ffe388; font-size: 18px; }
+.musa-options-dialog section { padding: 18px 22px; border-bottom: 1px solid #ffffff25; }
+.musa-options-dialog label { display: block; margin: 0 0 8px; font: inherit; }
+.musa-options-dialog p { margin: 8px 0 0; font: inherit; font-size: 14px; color: #cbd5e1; }
+.musa-options-dialog input:not([type=checkbox]), .musa-options-dialog select {
+    box-sizing: border-box; width: 100%; min-height: 46px; padding: 10px 12px; margin: 0;
+    border: 1px solid #8eabc0; border-radius: 10px; background: #0e2031; color: white; font: inherit;
+}
+.musa-options-dialog button { min-height: 44px; padding: 10px 16px; border: 1px solid #ffe388; border-radius: 10px; background: #ffe388; color: #08121d; font: 700 15px/1.5 system-ui, sans-serif; cursor: pointer; }
+.musa-options-dialog button:disabled { opacity: .6; cursor: wait; }
+.musa-options-dialog #musa_options_close { padding: 4px 12px; font-size: 24px; background: transparent; color: #ffe388; }
+.musa-options-name-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.musa-options-dialog .musa-options-toggle { display: flex; align-items: center; gap: 12px; min-height: 48px; margin: 6px 0; }
+.musa-options-toggle input { flex: 0 0 24px; width: 24px; height: 24px; accent-color: #ffe388; }
+.musa-options-status { min-height: 1.55em; padding: 14px 22px 18px; }
+.musa-options-dialog :focus-visible, .musa-options-button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+body.musa-readable-font #texto, body.musa-readable-font #palabra, body.musa-readable-font #calentamiento_input,
+body.musa-readable-font #peticion, body.musa-readable-font .musa-postgame__text,
+body.musa-readable-font .calentamiento-peticion { font-family: Arial, Helvetica, sans-serif !important; }
+html body.musa-large-text #texto, html body.musa-large-text #palabra, html body.musa-large-text #calentamiento_input,
+html body.musa-large-text #peticion, html body.musa-large-text .calentamiento-peticion, html body.musa-large-text .musa-postgame__text {
+    font-size: calc(var(--musa-accessible-base-size, 24px) * var(--musa-accessible-text-scale)) !important;
+}
+body.musa-high-contrast #texto, body.musa-high-contrast .musa-postgame__text,
+body.musa-high-contrast #peticion { color: #fff !important; text-shadow: none !important; background: #020609 !important; }
+body.musa-high-contrast .musa-texto-card, body.musa-high-contrast #notificacion,
+body.musa-high-contrast .musa-postgame { border-color: #fff !important; background: #020609 !important; }
+body.musa-high-contrast #background-effects { display: none !important; }
+/* No se oculta información o efectos jugables. Se conservan los desplazamientos
+   funcionales de créditos y se desactivan los destellos y movimientos decorativos. */
+body.musa-reduced-motion *, body.musa-reduced-motion *::before, body.musa-reduced-motion *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+}
+body.musa-reduced-motion #background-effects, body.musa-reduced-motion .level-transition__rays,
+body.musa-reduced-motion .level-transition__burst { display: none !important; }
+body.musa-reduced-motion #contenedor { opacity: 1 !important; transform: none !important; }
+body.musa-reduced-motion.musa-bruma-activa::after { animation: none !important; opacity: .55; }
+@media (max-width: 360px) {
+    .musa-options-dialog section, .musa-options-dialog header { padding: 14px 16px; }
+    .musa-options-name-row { grid-template-columns: 1fr; }
+}

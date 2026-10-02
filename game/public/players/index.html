@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="../../css/canto.css?v=20260920a">
     <link rel="stylesheet" type="text/css" href="../../css/instructions.css?v=20260921d">
     <link rel="stylesheet" type="text/css" href="./css/musa-help.css?v=20260830a">
+    <link rel="stylesheet" type="text/css" href="./css/musa-options.css?v=20261002a">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="../../config.js?v=20260923a"></script>
@@ -27,9 +28,38 @@
     <script src="../../js/domains/credits.js?v=20260924a"></script>
     <script src="../../js/domains/instructions.js?v=20260921d"></script>
     <script src="../../js/domains/view-transition.js?v=20260922b"></script>
-<script src="./js/actions.js?v=20261001a"></script>
+<script src="./js/actions.js?v=20261002a"></script>
 </head>
 <body>
+    <button id="musa_options_button" class="musa-options-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="musa_options_dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3-.7 2.1-2 .9-2-.4-1.7 3 1.4 1.7v2.4l-1.4 1.7 1.7 3 2-.4 2 .9.7 2.1h3.5l.7-2.1 2-.9 2 .4 1.7-3-1.4-1.7v-2.4l1.4-1.7-1.7-3-2 .4-2-.9-.7-2.1Z"/><circle cx="10.8" cy="11.5" r="3"/></svg>
+        <span data-i18n="muse.options.title">OPCIONES</span>
+    </button>
+    <dialog id="musa_options_dialog" class="musa-options-dialog" aria-labelledby="musa_options_title">
+        <header><h2 id="musa_options_title" data-i18n="muse.options.title">OPCIONES</h2><button id="musa_options_close" type="button" autofocus data-i18n-attr="aria-label:muse.options.close" aria-label="Cerrar opciones">×</button></header>
+        <section>
+            <form id="musa_options_name_form">
+                <label for="musa_options_name" data-i18n="muse.options.name">Tu nombre de musa</label>
+                <div class="musa-options-name-row"><input id="musa_options_name" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="musa_options_name_hint"><button id="musa_options_save" type="submit" data-i18n="muse.options.save">Guardar</button></div>
+                <p id="musa_options_name_hint" data-i18n="muse.options.name_hint">Hasta 10 caracteres. Conservas tu equipo y tus inspiraciones.</p>
+            </form>
+        </section>
+        <section>
+            <label for="musa_options_language" data-i18n="options.language_label">IDIOMA</label>
+            <select id="musa_options_language"><option value="" data-i18n="muse.options.language_auto">El de la función</option><option value="es">Español</option><option value="en">English</option><option value="fr">Français</option></select>
+            <p data-i18n="muse.options.language_hint">Sólo cambia tu interfaz, no las palabras ni los textos de la partida.</p>
+        </section>
+        <section>
+            <h3 data-i18n="muse.options.accessibility">Accesibilidad</h3>
+            <label for="musa_options_text_size" data-i18n="muse.options.text_size">Tamaño del texto</label>
+            <select id="musa_options_text_size"><option value="1" data-i18n="muse.options.size_normal">Normal</option><option value="1.2" data-i18n="muse.options.size_large">Grande</option><option value="1.4" data-i18n="muse.options.size_larger">Muy grande</option></select>
+            <label class="musa-options-toggle"><input id="musa_options_font" type="checkbox"><span data-i18n="muse.options.readable_font">Fuente más legible</span></label>
+            <label class="musa-options-toggle"><input id="musa_options_contrast" type="checkbox"><span data-i18n="muse.options.high_contrast">Alto contraste</span></label>
+            <label class="musa-options-toggle"><input id="musa_options_motion" type="checkbox"><span data-i18n="muse.options.reduced_motion">Reducir animaciones y destellos</span></label>
+            <p data-i18n="muse.options.personal_hint">Se guardan en este navegador. Se respeta también la reducción de movimiento del dispositivo.</p>
+        </section>
+        <p id="musa_options_status" class="musa-options-status" role="status" aria-live="polite"></p>
+    </dialog>
     <div id="musa_view_transition" class="spectator-view-transition musa-view-transition" hidden aria-hidden="true">
         <div class="spectator-view-transition__half spectator-view-transition__half--blue" aria-hidden="true"></div>
         <div class="spectator-view-transition__half spectator-view-transition__half--red" aria-hidden="true"></div>
@@ -493,16 +523,17 @@
 </body>
     <script src="../../dist/socket.io/socket.io.js"></script>
     <script src="../../js/text-stream.js?v=20260924a"></script>
-    <script src="../../js/i18n.js?v=20260921e"></script>
+    <script src="../../js/i18n.js?v=20261002a"></script>
+    <script src="./js/musa-options.js?v=20261002a"></script>
 <script src="../js/musa-assignment.js?v=20260831b"></script>
 <script src="../../js/domains/final-score.js?v=20260903e"></script>
     <script src="../../js/domains/level-transition.js?v=20260921c"></script>
-    <script src="./js/state.js?v=20261001a"></script>
+    <script src="./js/state.js?v=20261002a"></script>
 <script src="../../js/domains/video-tutorial.js?v=20260906b"></script>
 <script src="../../js/domains/show-narration.js?v=20260923a"></script>
     <script src="../../js/domains/canto.js?v=20260923b"></script>
 <script src="../../vendor/html2canvas/html2canvas.min.js?v=1.4.1"></script>
 <script src="./js/musa-help.js?v=20260830a"></script>
-    <script src="./js/socket-events.js?v=20261001a"></script>
+    <script src="./js/socket-events.js?v=20261002a"></script>
 <script src="./js/index.js?v=20260504e"></script>
 </html>
