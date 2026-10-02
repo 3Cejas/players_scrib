@@ -2833,19 +2833,6 @@ body.page-players #btn_volver {
   gap: clamp(10px, 1vw, 16px);
 }
 
-body.page-players #btn_volver::before {
-  content: "←";
-  position: absolute;
-  left: clamp(14px, 1.35vw, 24px);
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.95em;
-  line-height: 1;
-  color: inherit;
-  text-shadow: inherit;
-  pointer-events: none;
-}
-
 body.page-players.ui-dashboard-only #contenedor,
 body.page-players.ui-dashboard-only #temas,
 body.page-players.ui-dashboard-only .container,
@@ -2903,76 +2890,22 @@ body.page-players.modo-opciones .botones {
   margin-bottom: clamp(18px, 3.2vh, 36px);
 }
 
-body.page-players.modo-opciones #btn_volver {
-  width: min(100%, 540px);
-}
-
-body.page-players #btn_volver::before {
-  content: "\1F519";
-  left: clamp(18px, 1.7vw, 30px);
-  font-size: clamp(20px, 1.55vw, 28px);
-}
-
-body.page-players.modo-opciones .botones {
-  margin-bottom: clamp(42px, 6vh, 78px);
-}
-
-body.page-players.modo-opciones #btn_volver {
-  width: min(100%, 560px);
-  padding-left: clamp(54px, 4.2vw, 84px);
-  padding-right: clamp(20px, 1.8vw, 34px);
-  padding-top: clamp(14px, 1.8vh, 20px);
-  padding-bottom: clamp(6px, 0.75vh, 10px);
-  line-height: 1.18;
-}
-
 body.page-players.modo-opciones #opciones {
   padding-top: clamp(14px, 2.2vh, 28px);
 }
 
 body.page-players #btn_volver::before {
-  content: none !important;
-}
-
-body.page-players.modo-opciones #btn_volver {
-  padding: clamp(10px, 1.2vh, 16px) clamp(12px, 1.6vw, 22px);
-  line-height: 1.05;
+  content: none;
+  display: none;
 }
 
 body.page-players.modo-opciones #btn_silencio {
   display: none !important;
 }
 
-body.page-players #btn_volver {
-  justify-content: center;
-}
-
-body.page-players #btn_volver::before {
-  content: "\2B05\FE0F" !important;
-  position: static !important;
-  left: auto !important;
-  top: auto !important;
-  transform: none !important;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 1.35em;
-  min-width: 1.35em;
-  font-size: clamp(20px, 1.55vw, 28px);
-  line-height: 1;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
-  pointer-events: none;
-}
-
-body.page-players #btn_volver.btn-volver-grid::before {
-  content: none !important;
-  display: none !important;
-}
-
 body.page-players #btn_volver.btn-volver-grid {
-  display: grid !important;
-  grid-template-columns: auto auto auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   justify-content: center;
   column-gap: clamp(10px, 1vw, 16px);
@@ -2984,11 +2917,12 @@ body.page-players #btn_volver .btn-volver-spacer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35em;
-  min-width: 1.35em;
+  width: 1.25em;
+  height: 1.25em;
+  min-width: 1.25em;
   font-size: clamp(20px, 1.55vw, 28px);
   line-height: 1;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  pointer-events: none;
 }
 
 body.page-players #btn_volver .btn-volver-spacer {
@@ -3000,9 +2934,18 @@ body.page-players #btn_volver .btn-volver-label {
   text-align: center;
 }
 
-body.page-players.modo-opciones #btn_volver {
+body.page-players.modo-opciones #btn_volver.btn-volver-grid {
   grid-column: 1 / -1;
   justify-self: center;
+  width: min(100%, 560px);
+  max-height: none;
+  padding: clamp(10px, 1.2vh, 16px) clamp(12px, 1.6vw, 22px);
+  line-height: 1.2;
+}
+
+body.page-players #btn_volver:focus-visible {
+  outline: 2px solid var(--btn-color);
+  outline-offset: 4px;
 }
 
 body.page-players.ui-dashboard-only .botones .btn {

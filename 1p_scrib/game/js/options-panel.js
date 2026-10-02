@@ -34,7 +34,7 @@ function opciones(){
     if (typeof sincronizarVisibilidadBtnVolver1P === "function") {
       sincronizarVisibilidadBtnVolver1P();
     } else if (btnVolverEl) {
-      btnVolverEl.style.setProperty("display", "inline-block", "important");
+      btnVolverEl.style.setProperty("display", "grid", "important");
     }
     if (soporteEl) soporteEl.style.display = "block";
     animateCSS(".botones", "backInLeft")

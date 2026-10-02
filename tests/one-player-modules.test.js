@@ -34,6 +34,24 @@ function read(relPath) {
   return fs.readFileSync(path.join(ROOT, relPath), "utf8");
 }
 
+test("1P options preserve the back button grid and use a keyboard-accessible, encoding-safe arrow", () => {
+  const html = read("1p_scrib/game/index.html");
+  const layout = read("1p_scrib/game/js/layout.js");
+  const options = read("1p_scrib/game/js/options-panel.js");
+  const css = read("1p_scrib/game/css/dashboard-players.css");
+  const button = html.match(/<button id="btn_volver"[\s\S]*?<\/button>/)?.[0];
+  assert.ok(button);
+  assert.match(button, /type="button"/);
+  assert.match(button, /<svg class="btn-volver-icon"/);
+  assert.doesNotMatch(button, /[âð]/);
+  assert.match(layout, /btnVolver\.style\.setProperty\("display", "grid", "important"\)/);
+  assert.match(options, /btnVolverEl\.style\.setProperty\("display", "grid", "important"\)/);
+  assert.match(css, /grid-template-columns: auto minmax\(0, 1fr\) auto/);
+  assert.match(html, /dashboard-players\.css\?v=20261002a/);
+  assert.match(html, /options-panel\.js\?v=20261002a/);
+  assert.match(html, /layout\.js\?v=20261002a/);
+});
+
 function textNode(text) {
   return {
     nodeType: NODE_TYPES.TEXT_NODE,

@@ -233,7 +233,7 @@ function actualizarTextoToggleAccionesPartida1P() {
 function sincronizarVisibilidadBtnVolver1P() {
     if (!btnVolver || !document.body) return;
     if (document.body.classList.contains("modo-opciones")) {
-        btnVolver.style.setProperty("display", "inline-block", "important");
+        btnVolver.style.setProperty("display", "grid", "important");
         return;
     }
     btnVolver.style.setProperty("display", "none", "important");

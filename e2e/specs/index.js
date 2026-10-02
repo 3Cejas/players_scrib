@@ -6,6 +6,7 @@ const { runFinalPhraseLayoutChecks } = require("./final-phrase-layout");
 const { runMuseLetterInputChecks } = require("./muse-letter-input");
 const { runMuseOptionsChecks } = require("./muse-options");
 const { runMuseLiveStatsChecks } = require("./muse-live-stats");
+const { runOnePlayerOptionsChecks } = require("./one-player-options");
 const { startInspirationFeedbackProbe, readInspirationFeedbackProbe, stopInspirationFeedbackProbe } = require("./inspiration-feedback-probe");
 
 const FULL_ROLE_SET = [
@@ -2066,6 +2067,13 @@ const smokeSpecs = [
 ];
 
 const onePlayerSpecs = [
+  {
+    name: "one-player-options-back",
+    run: async (ctx) => {
+      await ctx.openRoles(["onep"]);
+      await runOnePlayerOptionsChecks(ctx);
+    }
+  },
   {
     name: "one-player-start-and-write",
     run: async (ctx) => {
