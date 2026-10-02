@@ -5,6 +5,7 @@ const { runWriterNameLifecycleChecks } = require("./writer-names");
 const { runFinalPhraseLayoutChecks } = require("./final-phrase-layout");
 const { runMuseLetterInputChecks } = require("./muse-letter-input");
 const { runMuseOptionsChecks } = require("./muse-options");
+const { runMuseLiveStatsChecks } = require("./muse-live-stats");
 const { startInspirationFeedbackProbe, readInspirationFeedbackProbe, stopInspirationFeedbackProbe } = require("./inspiration-feedback-probe");
 
 const FULL_ROLE_SET = [
@@ -2403,6 +2404,14 @@ const visualSpecs = [
 ];
 
 const coreSpecs = [
+  {
+    name: "muse-live-stats-core",
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ["control", "writer1", "writer2", "spectator", "musa1", "musa2"]);
+      await startGame(ctx);
+      await runMuseLiveStatsChecks(ctx);
+    }
+  },
   {
     name: "muse-options-core",
     run: async (ctx) => {

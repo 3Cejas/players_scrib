@@ -234,11 +234,13 @@ function setUiPartidaActivaMusa(activa) {
         }
     }
     refrescarClasesUiPartidaMusa();
+    if (window.statsLiveMusa) sincronizarVisibilidadStatsLiveMusa();
 }
 
 function setUiPartidaFinalizadaMusa(finalizada) {
     let postgameMostrado = false;
     ui_partida_finalizada_musa = Boolean(finalizada);
+    if (ui_partida_finalizada_musa) window.statsLiveMusa?.setView({ active: false });
     if (!ui_partida_finalizada_musa) {
         postgame_resultado_videojuego_visto_musa = false;
         postgame_wrapped_fijado_musa = false;
@@ -2437,6 +2439,17 @@ let estado_creditos_musa = window.ScribCredits
     ? window.ScribCredits.normalizarPayload({})
     : { creditos: {}, mostrar: false, animacion_id: 0 };
 let vista_modo_remota_musa = "tutorial";
+let stats_slide_step_musa = 0;
+const stats_live_musa = window.ScribMuseLiveStats.createController({
+    root: getEl("musa_stats_live"), windowRef: window
+});
+window.statsLiveMusa = stats_live_musa;
+function sincronizarVisibilidadStatsLiveMusa() {
+    stats_live_musa.setView({
+        active: vista_modo_remota_musa === "stats" && !ui_partida_finalizada_musa,
+        step: stats_slide_step_musa
+    });
+}
 let instrucciones_slide_step_musa = 0;
 const instrucciones_musa = window.ScribInstructions
     ? window.ScribInstructions.create({ documentRef: document })
@@ -4910,6 +4923,16 @@ function actualizarModoVistaMusaRemoto(payload = {}) {
         stopConfetti();
     }
     let pasoCambiado = false;
+    if (Object.prototype.hasOwnProperty.call(payload, "stats_slide_step")) {
+        stats_slide_step_musa = window.ScribMuseLiveStats.resolveSlide(payload.stats_slide_step);
+    }
+    sincronizarVisibilidadStatsLiveMusa();
+    if (vista_modo_remota_musa === "stats" && modoAnterior !== "stats" && !ui_partida_finalizada_musa) {
+        // Cerramos el teclado móvil, no el borrador de inspiración.
+        getEl("palabra")?.blur();
+        getEl("calentamiento_input")?.blur();
+        socket.emit("pedir_stats_live");
+    }
     if (Object.prototype.hasOwnProperty.call(payload, "instrucciones_slide_step")) {
         const siguiente = window.ScribInstructions
             ? window.ScribInstructions.normalizeStep(payload.instrucciones_slide_step)

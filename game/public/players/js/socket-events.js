@@ -138,6 +138,7 @@ function registrarMusaEnServidor() {
         ocultarAvisoConexionMusa();
         sincronizarPartidaMusaTrasRegistro();
         socket.emit('pedir_vista_espectador_modo');
+        if (vista_modo_remota_musa === "stats") socket.emit('pedir_stats_live');
         socket.emit('pedir_creditos_estado');
         socket.emit('pedir_puntuacion_final');
         socket.emit('pedir_jurado_resultado');
@@ -245,6 +246,10 @@ socket.on("vista_espectador_modo", (payload = {}) => {
     actualizarModoVistaMusaRemoto(payload);
 });
 
+socket.on("stats_live_estado", (payload = {}) => {
+    stats_live_musa.update(payload);
+});
+
 socket.on("puntuacion_final_estado", (payload = {}) => {
     actualizarPuntuacionFinalMusa(payload);
 });
@@ -310,7 +315,7 @@ socket.on('modo_actual', (data) => {
         modo_actual === "tertulia" ||
         modo_actual === "palabras prohibidas"
     ) {
-        pedir_inspiracion({ modo_actual });
+        pedir_inspiracion({ modo_actual }, { preservarBorrador: !cambioRealModo });
     }
     if (modo_actual === "frase final") {
         campo_palabra.value = "";

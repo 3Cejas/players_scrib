@@ -1,0 +1,50 @@
+.musa-live-stats {
+    --stats-accent: #55ebff; position: fixed; inset: 0; z-index: 280;
+    box-sizing: border-box; padding: max(80px, env(safe-area-inset-top)) 16px max(86px, env(safe-area-inset-bottom));
+    overflow: auto; overscroll-behavior: contain; background: #040b14;
+    color: #f8fafc; font: calc(16px * var(--musa-accessible-text-scale, 1))/1.5 system-ui, sans-serif; text-align: left;
+    background-image: radial-gradient(ellipse at 50% 0, #12374455, transparent 65%);
+}
+.musa-live-stats[hidden] { display: none !important; }
+.musa-live-stats[data-team="2"] { --stats-accent: #ff8495; background-image: radial-gradient(ellipse at 50% 0, #65213455, transparent 65%); }
+.musa-live-stats__panel { width: min(100%, 960px); min-width: 0; margin: 0 auto; }
+.musa-live-stats header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding-bottom: 16px; border-bottom: 1px solid var(--stats-accent); }
+.musa-live-stats header small { color: #ffe388; font: .75em/1.5 "Retro-gaming", monospace; }
+.musa-live-stats h2 { margin: 6px 0; font: 1.3em/1.5 "Retro-gaming", monospace; color: var(--stats-accent); overflow-wrap: anywhere; }
+.musa-live-stats header p { margin: 0; font-size: .85em; color: #cbd5e1; }
+.musa-live-stats__counter { align-self: center; padding: 8px 12px; white-space: nowrap; color: #ffe388; background: #ffe38812; border: 1px solid #ffe38877; border-radius: 12px; font-size: .85em; }
+.musa-live-stats h3 { margin: 0 0 12px; font-size: 1em; }
+.musa-stats-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0; }
+.musa-stats-metric { display: grid; gap: 4px; min-width: 0; padding: 14px 10px; border: 1px solid color-mix(in srgb, var(--stats-accent), transparent 60%); background: #0a1924; border-radius: 16px; }
+.musa-stats-metric > span { font-size: 1.2em; }
+.musa-stats-metric small { font-size: .8em; color: #dbe9f3; overflow-wrap: anywhere; }
+.musa-stats-metric strong { font: 1.5em/1.5 "Retro-gaming", monospace; color: var(--stats-accent); overflow-wrap: anywhere; }
+.musa-stats-metric em { font-size: .7em; font-style: normal; color: #94a3b8; }
+.musa-stats-keyboard { padding: 12px 8px; border: 1px solid #62778a; border-radius: 16px; background: #0007; }
+.musa-stats-keyboard-row { display: grid; gap: 4px; margin-bottom: 5px; }
+.musa-stats-key { box-sizing: border-box; display: grid; place-items: center; gap: 2px; min-width: 0; min-height: 45px; padding: 4px 0; border-radius: 5px; border: 1px solid color-mix(in srgb, var(--stats-accent), transparent 55%); background: color-mix(in srgb, var(--stats-accent) calc(var(--key-heat) * 65%), #09131e); font-size: clamp(9px, 2.8vw, 18px); color: #fff; }
+.musa-stats-key small { font-size: .7em; color: #fff; }
+.musa-stats-overview { display: grid; grid-template-columns: 1fr 1.7fr; gap: 16px; margin-top: 20px; }
+.musa-stats-vocabulary, .musa-stats-evolution { min-width: 0; padding: 18px; border: 1px solid #475569; border-radius: 20px; background: #0a1924; }
+.musa-stats-vocabulary p { font-size: .8em; margin: 12px 0 0; }
+.musa-stats-ring { display: grid; place-content: center; width: 120px; height: 120px; border-radius: 50%; margin: 14px auto; text-align: center; background: radial-gradient(circle, #0a1924 60%, transparent 61%), conic-gradient(var(--stats-accent) var(--richness), #263e51 0); }
+.musa-stats-ring strong { font-size: 1.4em; color: var(--stats-accent); }
+.musa-stats-ring span { font-size: .7em; }
+.musa-stats-evolution > strong { color: var(--stats-accent); font-size: 1.4em; }
+.musa-stats-evolution > strong small { font-size: .6em; }
+.musa-stats-chart { display: block; width: 100%; height: auto; margin-top: 16px; overflow: visible; }
+.musa-stats-chart text { fill: #dbe9f3; font: 18px system-ui, sans-serif; }
+.musa-stats-chart__axis { fill: none; stroke: #8c9fac; stroke-width: 1; }
+.musa-stats-chart__grid { fill: none; stroke: #50627366; stroke-width: 1; }
+.musa-stats-chart__line { stroke: var(--stats-accent); stroke-width: 3; }
+.musa-live-stats footer { margin-top: 20px; color: #cbd5e1; font-size: .65em; letter-spacing: .06em; text-align: center; }
+.musa-stats-waiting { padding: 24px 0; }
+body.musa-high-contrast .musa-live-stats { background: #000; }
+body.musa-high-contrast .musa-stats-metric, body.musa-high-contrast .musa-stats-vocabulary, body.musa-high-contrast .musa-stats-evolution { border-color: #fff; background: #000; }
+@media (max-width: 600px) {
+    .musa-stats-overview { grid-template-columns: 1fr; }
+    .musa-stats-metrics--criteria { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .musa-stats-keyboard { padding: 10px 5px; }
+    .musa-stats-keyboard-row { gap: 2px; }
+    .musa-live-stats h2 { font-size: 1.1em; }
+}
