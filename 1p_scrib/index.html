@@ -9,7 +9,7 @@
     <link rel="icon" href="./game/img/logo scrib.png" type="image/png" />
 
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
-    <title>SCRB</title>
+    <title>SCRIB · Un jugador</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <link rel="stylesheet" type="text/css" href="./game/css/dashboard-players.css?v=20260213b">
@@ -2031,9 +2031,10 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="./css/solo-theme.css?v=20261006a">
 </head>
 
-<body>
+<body class="solo-theme solo-intro">
     <main class="intro-flow">
         <div class="intro-scroll">
             <section id="intro-bienvenida" class="intro-section">
@@ -2304,6 +2305,8 @@
         }
 
         function inicializarCursorPlumaIntro() {
+            // La pluma nativa conserva la estética sin seguir el ratón con JS.
+            if (document.body?.classList.contains('solo-theme')) return;
             if (!soportaCursorPlumaIntro || !document.body) return;
             if (!cursorPlumaIntro) {
                 const nodo = document.createElement('div');

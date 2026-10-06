@@ -49,7 +49,7 @@ test("1P options preserve the back button grid and use a keyboard-accessible, en
   assert.match(css, /grid-template-columns: auto minmax\(0, 1fr\) auto/);
   assert.match(html, /dashboard-players\.css\?v=20261002a/);
   assert.match(html, /options-panel\.js\?v=20261002a/);
-  assert.match(html, /layout\.js\?v=20261002a/);
+  assert.match(html, /layout\.js\?v=20261006a/);
 });
 
 function textNode(text) {
@@ -369,6 +369,46 @@ test("1P protected text helpers identify protected nodes and event characters", 
   assert.equal(context.obtenerCaracterEntradaEvento({}), "b");
   assert.equal(context.debeVigilarMutacionProtegida("deleteContentBackward"), true);
   assert.equal(context.debeVigilarMutacionProtegida("formatBold"), false);
+});
+
+test("1P converts beforeinput StaticRange before checking protected text", () => {
+  const protectedNode = { id: "protected" };
+  const start = textNode("a");
+  const end = textNode("b");
+  const boundaries = [];
+  const context = loadScript("1p_scrib/game/js/protected-text.js", {
+    texto: { querySelectorAll: () => [protectedNode] },
+    document: {
+      createRange: () => ({
+        setStart: (node, offset) => boundaries.push(["start", node, offset]),
+        setEnd: (node, offset) => boundaries.push(["end", node, offset]),
+        intersectsNode: node => node === protectedNode
+      })
+    }
+  });
+  assert.equal(context.obtenerNodoProtegidoEnRango({
+    startContainer: start, startOffset: 0, endContainer: end, endOffset: 1
+  }), protectedNode);
+  assert.deepEqual(boundaries, [["start", start, 0], ["end", end, 1]]);
+  assert.equal(context.obtenerNodoProtegidoEnRango({ intersectsNode: () => false }), null);
+  context.document.createRange = () => { throw new Error("Detached selection"); };
+  assert.equal(context.obtenerNodoProtegidoEnRango({ startContainer: start }), null);
+});
+
+test("1P shares a scoped theme across onboarding and game with a framed, independently scrolling editor", () => {
+  const intro = read("1p_scrib/index.html");
+  const html = read("1p_scrib/game/index.html");
+  const css = read("1p_scrib/css/solo-theme.css");
+  const layout = read("1p_scrib/game/js/layout.js");
+  assert.match(intro, /solo-theme\.css\?v=20261006a/);
+  assert.match(html, /solo-theme\.css\?v=20261006a/);
+  assert.match(html, /solo-text-panel__label[\s\S]*id="nombre"[\s\S]*solo-text-panel__viewport[\s\S]*id="texto"[\s\S]*id="metadatos"/);
+  assert.doesNotMatch(html, /<table class="info"/);
+  assert.match(css, /body\.solo-game \.solo-text-panel \{[\s\S]*border:[\s\S]*border-radius:[\s\S]*background:/);
+  assert.match(css, /body\.solo-game \.solo-text-panel \.textarea \{[\s\S]*min-height: 0 !important;[\s\S]*overflow-y: auto;/);
+  assert.match(css, /white-space: pre-wrap;/);
+  assert.match(css, /cursor-pluma\.svg/);
+  assert.match(layout, /classList\.contains\("solo-theme"\)[\s\S]*players_fit_root\.style\.height = `\$\{viewportH\}px`/);
 });
 
 test("1P final phrase helpers clamp styles and preserve plain-text line breaks", () => {

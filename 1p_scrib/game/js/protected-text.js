@@ -35,6 +35,18 @@ function rangoIntersecaPalabraBendita(rango) {
 
 function obtenerNodoProtegidoEnRango(rango) {
     if (!texto || !rango) return null;
+    // beforeinput.getTargetRanges() devuelve StaticRange, sin intersectsNode.
+    // Convertimos sus límites a Range antes de consultar spans protegidos.
+    if (typeof rango.intersectsNode !== "function") {
+        try {
+            const editable = document.createRange();
+            editable.setStart(rango.startContainer, rango.startOffset);
+            editable.setEnd(rango.endContainer, rango.endOffset);
+            rango = editable;
+        } catch (_error) {
+            return null;
+        }
+    }
     const spans = texto.querySelectorAll(SELECTOR_PALABRA_PROTEGIDA);
     for (const span of spans) {
         if (rango.intersectsNode(span)) return span;
@@ -430,5 +442,4 @@ function obtenerRangoPorOffsets(contenedor, inicio, fin) {
     rango.setEnd(endNode, endOffset);
     return rango;
 }
-
 

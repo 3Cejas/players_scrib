@@ -54,6 +54,18 @@ const ajustarViewportEscritora = () => {
     }
 
     players_fit_root.style.transform = "none";
+    // Repartimos el viewport entre vida, texto y nivel, sin escalar toda la
+    // página a cada pulsación. El editor es el único área que crece/scrolla.
+    if (body && body.classList.contains("solo-theme")) {
+        players_fit_root.style.width = `${viewportW}px`;
+        players_fit_root.style.height = `${viewportH}px`;
+        players_fit_root.style.maxHeight = `${viewportH}px`;
+        players_fit_root.style.minHeight = "0";
+        if (body.classList.contains("ui-dashboard-only") && !body.classList.contains("modo-opciones")) {
+            actualizarCentroVerticalDashboard1P();
+        }
+        return;
+    }
     if (body && body.classList.contains("modo-opciones")) {
         players_fit_root.style.width = `${viewportW}px`;
         players_fit_root.style.height = `${viewportH}px`;
@@ -89,6 +101,15 @@ const ajustarViewportEscritora = () => {
 
 const ajustarAlturaEditorEscritora = () => {
     if (!texto || !contenedor_principal_escritora) return;
+    if (document.body && document.body.classList.contains("solo-theme")) {
+        texto.style.removeProperty("min-height");
+        texto.style.removeProperty("max-height");
+        texto.style.removeProperty("height");
+        if (typeof programarActualizacionDegradadoTextoEscritor === "function") {
+            programarActualizacionDegradadoTextoEscritor();
+        }
+        return;
+    }
     if (document.body && (document.body.classList.contains("ui-dashboard-only") || document.body.classList.contains("modo-opciones"))) {
         texto.style.removeProperty("min-height");
         texto.style.removeProperty("max-height");

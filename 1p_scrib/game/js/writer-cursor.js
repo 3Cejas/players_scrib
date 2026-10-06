@@ -10,7 +10,9 @@ let timeout_cursor_pluma_inactivo_escritora = null;
 let timeout_click_cursor_pluma_escritora = null;
 const CURSOR_PLUMA_INACTIVIDAD_MS = 1600;
 const soporta_cursor_pluma_escritora = (() => {
-    return true;
+    // El tema compartido usa cursor y caret nativos; persiste el foco sin una
+    // capa que haya que redibujar al mover el ratón.
+    return !document.body?.classList.contains("solo-theme");
 })();
 
 function seleccionPerteneceATextoJuego1P() {

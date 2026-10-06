@@ -7,6 +7,7 @@
     "test": "node --test",
     "test:unit": "node --test",
     "test:site": "node scripts/profile-site-performance.js current --verify",
+    "test:1p:theme": "node scripts/check-one-player-theme.js",
     "build:archive": "node scripts/generate-archive-pdfs.js",
     "test:e2e": "node e2e/runner/index.js",
     "test:e2e:headed": "node e2e/runner/index.js --headed",
