@@ -39,6 +39,17 @@ async function main() {
             const input = document.getElementById('cmdline');
             return input && !input.disabled && !input.readOnly && document.querySelector('[data-command="prensa"]');
         }, { timeout: 30000 });
+        // Optional read-only isolation when tuning the site's visual layers.
+        const effectSamples = {
+            'background-only': '#containerascii::after,.hero-subtitle__glow{animation:none!important;opacity:0!important}',
+            'headings-only': '#background-effects>*{animation:none!important}',
+            'no-mask': '.aquarium-current{-webkit-mask-image:none!important;mask-image:none!important}',
+            'no-current': '.aquarium-current{display:none!important}'
+        };
+        if (process.env.SITE_EFFECTS_SAMPLE) {
+            assert.ok(effectSamples[process.env.SITE_EFFECTS_SAMPLE]);
+            await page.addStyleTag({ content: effectSamples[process.env.SITE_EFFECTS_SAMPLE] });
+        }
         const menuReadyMs = Date.now() - started;
         await page.mouse.move(100, 700);
         // Let entrance transitions settle before measuring pointer movement.
@@ -81,7 +92,7 @@ async function main() {
             overflow: document.documentElement.scrollWidth > innerWidth,
             strongWelcome: [...document.querySelectorAll('#output strong')].some(node => /Bienvenidx/.test(node.textContent))
         }));
-        const report = { label, browser: firefox ? 'Firefox' : 'Chromium', cpuThrottle: cdp ? 4 : null, deviceScaleFactor: 2, menuReadyMs,
+        const report = { label, effectSample: process.env.SITE_EFFECTS_SAMPLE || 'all', browser: firefox ? 'Firefox' : 'Chromium', cpuThrottle: cdp ? 4 : null, deviceScaleFactor: 2, menuReadyMs,
             sampleMs: Date.now() - measureStart, ...frameResult, ...details, errors };
         for (const key of ['TaskDuration', 'ScriptDuration', 'LayoutDuration', 'RecalcStyleDuration', 'LayoutCount', 'RecalcStyleCount']) {
             if (cdp) report[key] = +(after[key] - before[key]).toFixed(4);
@@ -98,7 +109,8 @@ async function main() {
             assert.equal(details.hyphenatorLoaded, false);
             assert.equal(details.strongWelcome, true);
             assert.equal(details.overflow, false);
-            assert.ok(details.animations <= 2);
+            assert.equal(details.backgroundLayers, 3);
+            assert.ok(details.animations <= 5);
             assert.ok(details.backgroundFilters.every(filter => filter === 'none'));
             await checkNavigation(page, folder, label, !firefox);
             assert.deepEqual(errors, []);
@@ -148,6 +160,33 @@ async function checkNavigation(page, folder, label, canEmulateMedia) {
         await page.keyboard.press('Enter');
         await page.waitForFunction(command => history.state && history.state.terminalCommand === command && !document.getElementById('cmdline').disabled, {}, command);
     };
+    assert.equal(await page.$$eval('.hero-subtitle__glow', layers => layers.length), 1);
+    const cursor = await page.evaluate(() => new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 44;
+            canvas.getContext('2d').drawImage(image, 0, 0);
+            const pixels = canvas.getContext('2d').getImageData(0, 0, 44, 44).data;
+            let visible = 0;
+            for (let index = 3; index < pixels.length; index += 4) if (pixels[index] > 0) visible++;
+            resolve({ width: image.naturalWidth, height: image.naturalHeight, visible });
+        };
+        image.onerror = () => reject(new Error('Native feather cursor failed to load'));
+        image.src = './img/cursor-pluma.svg?n=2';
+    }));
+    assert.equal(cursor.width, 44);
+    assert.equal(cursor.height, 44);
+    assert.ok(cursor.visible > 300);
+    const alignment = await page.evaluate(() => {
+        const original = document.querySelector('#hero-subtitle > .hero-subtitle__word').getBoundingClientRect();
+        const copy = document.querySelector('.hero-subtitle__glow > .hero-subtitle__word').getBoundingClientRect();
+        return { distance: Math.abs(original.top - copy.top) + Math.abs(original.left - copy.left), original: { top: original.top, left: original.left }, copy: { top: copy.top, left: copy.left } };
+    });
+    assert.ok(alignment.distance < 1, 'Decorative heading must exactly overlap the original: ' + JSON.stringify(alignment));
+    await page.evaluate(() => document.documentElement.classList.add('site-paused'));
+    await page.waitForFunction(() => document.getAnimations().every(animation => animation.playState !== 'running'));
+    await page.evaluate(() => document.documentElement.classList.remove('site-paused'));
     await runCommand('prensa');
     await page.click('[data-command="imagenes"]');
     await page.waitForSelector('.output-gallery-image');
@@ -193,32 +232,42 @@ async function checkNavigation(page, folder, label, canEmulateMedia) {
     assert.match(calendar.body, /WE:NOW/);
     assert.match(calendar.body, /Festival MUTIS/);
     assert.doesNotMatch(calendar.body, /undefined|15 de noviembre de 2025/);
+    assert.equal(await page.$$eval('.schedule-section__header', headers => headers.length), 0);
+    assert.equal(await page.$eval('.output-title', title => title.textContent), 'FECHAS');
     await page.evaluate(() => {
         window.scrollTo({ top: 0, behavior: 'instant' });
         document.body.scrollTo({ top: 0, behavior: 'instant' });
     });
     await page.screenshot({ path: path.join(folder, label + '-calendar-desktop.png'), fullPage: true });
-    await captureCalendarSections(page, folder, label + '-desktop');
+    await captureCalendarCards(page, folder, label + '-desktop');
+    await page.waitForFunction(() => document.getElementById('containerascii').classList.contains('site-effect-offscreen'));
+    for (const selector of ['#containerascii', '.hero-subtitle__glow']) {
+        const effect = await page.$eval(selector, node => {
+            const style = getComputedStyle(node, node.id === 'containerascii' ? '::after' : null);
+            return { name: style.animationName, state: style.animationPlayState };
+        });
+        assert.ok(effect.name === 'none' || effect.state === 'paused', 'Offscreen heading must pause or disable its effect');
+    }
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
     await page.waitForFunction(() => document.getAnimations().every(animation => animation.playState !== 'running'), { timeout: 3000 });
     assert.equal(await page.evaluate(() => document.getAnimations().filter(animation => animation.playState === 'running').length), 0);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.screenshot({ path: path.join(folder, label + '-mobile.png'), fullPage: true });
-    await captureCalendarSections(page, folder, label + '-mobile');
+    await captureCalendarCards(page, folder, label + '-mobile');
     await page.setViewport({ width: 320, height: 740, deviceScaleFactor: 1 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     assert.equal(await page.$$eval('.schedule-card', cards => cards.every(card => card.scrollWidth <= card.clientWidth)), true);
 }
 
-async function captureCalendarSections(page, folder, label) {
-    for (let index = 0; index < 4; index++) {
-        await page.evaluate(index => document.querySelectorAll('.schedule-section')[index].scrollIntoView({ block: 'start', behavior: 'instant' }), index);
+async function captureCalendarCards(page, folder, label) {
+    for (const index of [0, 4, 10, 13]) {
+        await page.evaluate(index => document.querySelectorAll('.schedule-card')[index].scrollIntoView({ block: 'start', behavior: 'instant' }), index);
         const bounds = await page.evaluate(index => {
-            const header = document.querySelectorAll('.schedule-section__header')[index].getBoundingClientRect();
+            const header = document.querySelectorAll('.schedule-card__date')[index].getBoundingClientRect();
             return { top: header.top, bottom: header.bottom, width: innerWidth, height: innerHeight };
         }, index);
         assert.ok(bounds.top >= 0 && bounds.bottom <= bounds.height);
-        await page.screenshot({ path: path.join(folder, label + '-calendar-' + (2026 - index) + '.png') });
+        await page.screenshot({ path: path.join(folder, label + '-calendar-card-' + index + '.png') });
     }
 }
 

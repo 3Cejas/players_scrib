@@ -112,7 +112,7 @@ var configs = (function () {
 
 		textos_del_mes_help:"Textos escritos en SCRIB de este mes.",
 
-		fecha_help:"Fechas e histórico de <SCRI> B.",
+		fecha_help:"Fechas de <SCRI> B.",
 		
 		financiación_help:"Cómo financiamos el proyecto.",
 
@@ -864,8 +864,6 @@ function log( text ) {
         {
             tone: "tournament",
             year: 2026,
-            title: "📅 2026",
-            subtitle: "Torneo y funciones en Madrid",
             events: [
                 {
                     date: "9 de abril de 2026",
@@ -903,8 +901,6 @@ function log( text ) {
         {
             tone: "showcase",
             year: 2025,
-            title: "📅 2025",
-            subtitle: "Funciones, festivales y muestras en España y Perú",
             events: [
                 {
                     date: "16 de noviembre de 2025",
@@ -961,8 +957,6 @@ function log( text ) {
         {
             tone: "tournament",
             year: 2024,
-            title: "📅 2024",
-            subtitle: "Arte y ciencia",
             events: [
                 {
                     date: "12 de febrero de 2024",
@@ -976,8 +970,6 @@ function log( text ) {
         {
             tone: "showcase",
             year: 2023,
-            title: "📅 2023",
-            subtitle: "Festival internacional WE:NOW",
             events: [
                 {
                     date: "27 de junio de 2023",
@@ -1107,6 +1099,46 @@ function log( text ) {
         window.scrollTo(0, 0);
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+
+    };
+
+    Terminal.prototype.bindLightweightSiteEffects = function () {
+
+        var header = this.asciiHeader;
+        var subtitle = document.getElementById("hero-subtitle");
+        var glow;
+
+        if (!header || !subtitle || subtitle.dataset.siteEffectsBound === "true") {
+
+            return;
+
+        }
+
+        subtitle.dataset.siteEffectsBound = "true";
+        header.setAttribute("data-glow-text", header.textContent);
+        // One static copy per heading: only the layer opacity animates, not
+        // every letter's colour/shadow. It never intercepts clicks or selection.
+        glow = subtitle.cloneNode(true);
+        glow.removeAttribute("id");
+        glow.className = "hero-subtitle__glow";
+        glow.setAttribute("aria-hidden", "true");
+        subtitle.appendChild(glow);
+
+        if (typeof window.IntersectionObserver === "function") {
+
+            this.siteEffectsObserver = new window.IntersectionObserver(function (entries) {
+
+                entries.forEach(function (entry) {
+
+                    entry.target.classList.toggle("site-effect-offscreen", !entry.isIntersecting);
+
+                });
+
+            });
+            this.siteEffectsObserver.observe(header);
+            this.siteEffectsObserver.observe(subtitle);
+
+        }
 
     };
 
@@ -1295,6 +1327,7 @@ function log( text ) {
 
         this.prepareSideNav();
         this.bindAsciiHeader();
+        this.bindLightweightSiteEffects();
         this.bindOutputOptimizedMedia();
 
         this.lock(); // NECESARIO PARA BLOQUEAR DESDE QUE LOS ELEMENTOS DEL SIDENAV HAN SIDO AÑADIDOS AHORA
@@ -2333,21 +2366,16 @@ function log( text ) {
 
     Terminal.prototype.buildScheduleMarkup = function () {
 
-        return "<div class=\"schedule-layout\">" + scheduleSections.map(function (section) {
+        return "<div class=\"schedule-layout\"><section class=\"schedule-section\"><div class=\"schedule-grid\">" +
+            scheduleSections.map(function (section) {
 
-            return "<section class=\"schedule-section schedule-section--" + section.tone + "\">" +
-                "<div class=\"schedule-section__header\">" +
-                    "<div class=\"schedule-section__title\">" + escapeHTML(section.title) + "</div>" +
-                    "<div class=\"schedule-section__subtitle\">" + escapeHTML(section.subtitle) + "</div>" +
-                "</div>" +
-                "<div class=\"schedule-grid\">" + section.events.map(function (event) {
+                return section.events.map(function (event) {
 
                     return this.buildScheduleCardMarkup(event, section);
 
-                }.bind(this)).join("") + "</div>" +
-            "</section>";
+                }.bind(this)).join("");
 
-        }.bind(this)).join("") + "</div>";
+            }.bind(this)).join("") + "</div></section></div>";
 
     };
 
@@ -3425,7 +3453,7 @@ function log( text ) {
 
         var output = this.output;
 
-        this.type("# FECHAS · HISTÓRICO", function () {
+        this.type("# FECHAS", function () {
 
             output.innerHTML += "<br/>" + this.buildScheduleMarkup() + "<br/><br/>";
             this.type("Para volver al menú, utiliza el comando «reinicio».", this.unlock.bind(this));

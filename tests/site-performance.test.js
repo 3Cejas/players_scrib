@@ -89,8 +89,61 @@ test('the website uses deferred boot and a native cursor instead of tracking the
     assert.match(html, /<script defer src="\.\/js\/main\.js/);
     assert.doesNotMatch(source, /initPenCursor|movePenCursor|penCursorHideTimeout/);
     assert.doesNotMatch(css, /cursor:\s*none|will-change:\s*(?:color|left)|heroSubtitleColorShift/);
-    assert.match(css, /cursor:\s*url\("\.\.\/img\/cursor-pluma\.svg"\)/);
-    assert.match(css, /\.site-paused \.aquarium-glow\s*\{\s*animation-play-state: paused/);
-    assert.equal((html.match(/<span class="aquarium-/g) || []).length, 2);
+    assert.match(css, /--site-feather-cursor:\s*url\("\.\.\/img\/cursor-pluma\.svg\?n=2"\)/);
+    assert.match(css, /\.site-paused #background-effects > \*/);
+    assert.match(css, /animation-play-state: paused/);
+    assert.equal((html.match(/<span class="aquarium-/g) || []).length, 3);
     assert.match(source, /DOMContentLoaded/);
+});
+
+test('the native cursor preserves the original feather instead of drawing a new arrow', () => {
+    const svg = fs.readFileSync(path.join(root, 'img/cursor-pluma.svg'), 'utf8');
+    const original = fs.readFileSync(path.join(root, '1p_scrib/game/img/pluma_azul.png'));
+    assert.match(svg, /width="44" height="44"/);
+    assert.match(svg, /rotate\(-14 22 22\)/);
+    const encoded = svg.match(/href="data:image\/png;base64,([A-Za-z0-9+/=]+)"/)[1];
+    assert.deepEqual(Buffer.from(encoded, 'base64'), original);
+    assert.doesNotMatch(svg, /<animate|<script|https?:\/\/(?!www\.w3\.org)/);
+});
+
+test('heading colour effects create one decorative layer and pause when offscreen', () => {
+    const observed = [];
+    let observerCallback;
+    const header = { textContent: 'ASCII <SCRI> B', attributes: {}, classList: { toggle: (name, value) => { header.offscreen = value; } },
+        setAttribute: (name, value) => { header.attributes[name] = value; } };
+    const subtitle = { dataset: {}, children: [], cloneNode: () => ({ attributes: {}, removeAttribute: name => assert.equal(name, 'id'),
+        setAttribute(name, value) { this.attributes[name] = value; } }), appendChild: child => subtitle.children.push(child),
+        classList: { toggle: (name, value) => { subtitle.offscreen = value; } } };
+    const context = vm.createContext({
+        Terminal: function () {}, document: { getElementById: id => { assert.equal(id, 'hero-subtitle'); return subtitle; } },
+        window: { IntersectionObserver: class {
+            constructor(callback) { observerCallback = callback; }
+            observe(element) { observed.push(element); }
+        } }
+    });
+    vm.runInContext(source.match(/Terminal\.prototype\.bindLightweightSiteEffects = function[\s\S]*?\n    \};/)[0], context);
+    const terminal = new context.Terminal();
+    terminal.asciiHeader = header;
+    terminal.bindLightweightSiteEffects();
+    terminal.bindLightweightSiteEffects();
+    assert.equal(subtitle.children.length, 1);
+    assert.equal(subtitle.children[0].className, 'hero-subtitle__glow');
+    assert.equal(subtitle.children[0].attributes['aria-hidden'], 'true');
+    assert.equal(header.attributes['data-glow-text'], header.textContent);
+    assert.deepEqual(observed, [header, subtitle]);
+    observerCallback([{ target: header, isIntersecting: false }, { target: subtitle, isIntersecting: true }]);
+    assert.equal(header.offscreen, true);
+    assert.equal(subtitle.offscreen, false);
+});
+
+test('persistent visual effects animate only transforms/opacity and are motion-safe', () => {
+    const css = fs.readFileSync(path.join(root, 'css/main.css'), 'utf8');
+    for (const name of ['aquariumDriftBlue', 'aquariumDriftRed', 'aquariumCurrent', 'siteColorCrossfade']) {
+        const rule = css.match(new RegExp('@keyframes ' + name + ' \\{[\\s\\S]*?\\n\\}'))[0];
+        assert.doesNotMatch(rule, /filter:|color:|text-shadow:|background-position:|width:|height:|left:|top:/);
+    }
+    assert.match(css, /#containerascii\.site-effect-offscreen::after/);
+    assert.match(css, /\.site-effect-offscreen \.hero-subtitle__glow/);
+    assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+    assert.doesNotMatch(css, /mix-blend-mode:\s*screen|(?:^|[;\s{])filter:\s*blur/);
 });

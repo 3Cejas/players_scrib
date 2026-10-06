@@ -76,6 +76,9 @@ test('unconfirmed times are omitted without rendering undefined or empty labels'
     assert.equal((markup.match(/<article /g) || []).length, 14);
     assert.match(markup, /Torneo &lt;SCRI&gt; B/);
     assert.doesNotMatch(markup, /Entradas|schedule-card__ticket/);
+    assert.doesNotMatch(markup, /schedule-section__header|schedule-section__title|schedule-section__subtitle/);
+    assert.doesNotMatch(source, /HISTÓRICO|Torneo y funciones en Madrid/);
+    assert.match(source, /this\.type\("# FECHAS",/);
 });
 
 test('past functions never advertise ticket links, while future functions can', () => {
