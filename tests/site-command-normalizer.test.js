@@ -42,3 +42,9 @@ test("the public terminal normalizes typed, quick-link and history commands", ()
   assert.match(source, /handleCmd = function \(\)[\s\S]*var cmdComponents = commandKey\(this\.cmdLine\.value\);/);
   assert.doesNotMatch(source, /normalizedCommand === "(?:imÃ¡genes|vÃ­deos)"/);
 });
+
+test('charla is removed from the public menu, help, autocomplete and command navigation', () => {
+  const source = fs.readFileSync(path.join(ROOT, 'js/main.js'), 'utf8');
+  assert.doesNotMatch(source, /\bcharla\b/i);
+  assert.match(source, /cmds\.LA_COMPAÑÍA\.value,[\s\S]*?cmds\.NEWSLETTER\.value/);
+});

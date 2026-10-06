@@ -40,8 +40,6 @@ var configs = (function () {
 
         help_help: "Imprime este menú.",
 
-        charla_help: "Abre la presentación de Sutura y el videojuego en el espacio escénico.",
-
         clear_help: "Clear the terminal screen.",
 
         reboot_help: "Reinicia el sistema.",
@@ -58,7 +56,7 @@ var configs = (function () {
 
         sudo_help: "Execute a command as the superuser.",
 
-        welcome: "**Bienvenidx a la página oficial de <SCRI> B.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 compañía\n\u2022 charla\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
+        welcome: "**Bienvenidx a la página oficial de <SCRI> B.**\n\nPara navegar, **introduce o pulsa** alguno de los siguientes comandos:\n\n\u2022 videojuego\n\u2022 espectáculo\n\u2022 fechas\n\u2022 prensa\n\u2022 artículos\n\u2022 compañía\n\u2022 newsletter\n\u2022 contacto\n\u2022 reinicio\n\nSi te pierdes en algún momento, utiliza el comando «ayuda».",
 
         internet_explorer_warning: "AVISO: Estás usando Internet Explorer. Es posible que la página no se muestre correctamente.",
 
@@ -368,8 +366,6 @@ var main = (function () {
 
 		HELP: { value: "ayuda", help: configs.getInstance().help_help },
 
-        CHARLA: { value: "charla", help: configs.getInstance().charla_help },
-
     };
 
     var primaryCommands = [
@@ -379,7 +375,6 @@ var main = (function () {
         cmds.IMAGENES.value,
         cmds.ARTICULOS.value,
         cmds.LA_COMPAÑÍA.value,
-        cmds.CHARLA.value,
         cmds.NEWSLETTER.value,
         cmds.CONTACTO.value,
         cmds.REBOOT.value
@@ -1536,7 +1531,7 @@ function log( text ) {
 
         });
 
-        imageCount && metaParts.push(imageCount + " imagen" + (imageCount === 1 ? "" : "es"));
+        imageCount && metaParts.push(imageCount + (imageCount === 1 ? " imagen" : " imágenes"));
         videoCount && metaParts.push(videoCount + " vÃ­deo" + (videoCount === 1 ? "" : "s"));
 
         return metaParts.join(" Â· ");
@@ -1657,7 +1652,7 @@ function log( text ) {
 
         });
 
-        imageCount && metaParts.push(imageCount + " imagen" + (imageCount === 1 ? "" : "es"));
+        imageCount && metaParts.push(imageCount + (imageCount === 1 ? " imagen" : " imágenes"));
         videoCount && metaParts.push(videoCount + " video" + (videoCount === 1 ? "" : "s"));
 
         return metaParts.join(" | ");
@@ -2453,16 +2448,18 @@ function log( text ) {
 
     Terminal.prototype.buildScheduleMarkup = function () {
 
-        return "<div class=\"schedule-layout\"><section class=\"schedule-section\"><div class=\"schedule-grid\">" +
+        return "<div class=\"schedule-layout\">" +
             scheduleSections.map(function (section) {
 
-                return section.events.map(function (event) {
+                return "<section class=\"schedule-section\" aria-label=\"Fechas de " + escapeHTML(String(section.year)) + "\">" +
+                    "<h2 class=\"schedule-section__year\">" + escapeHTML(String(section.year)) + "</h2>" +
+                    "<div class=\"schedule-grid\">" + section.events.map(function (event) {
 
-                    return this.buildScheduleCardMarkup(event, section);
+                        return this.buildScheduleCardMarkup(event, section);
 
-                }.bind(this)).join("");
+                    }.bind(this)).join("") + "</div></section>";
 
-            }.bind(this)).join("") + "</div></section></div>";
+            }.bind(this)).join("") + "</div>";
 
     };
 
@@ -2625,10 +2622,6 @@ function log( text ) {
 
             case "tutorial":
                 location.href = "./tutorial/";
-                return true;
-
-            case commandKey(cmds.CHARLA.value):
-                location.href = "./charla/";
                 return true;
 
             case commandKey(cmds.JUEGO.value):

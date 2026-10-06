@@ -2164,6 +2164,26 @@ body,
 
 }
 
+.schedule-section__year {
+
+    margin: 0 0 1rem;
+
+    padding-bottom: 0.75rem;
+
+    border-bottom: 1px solid rgba(143, 239, 255, 0.2);
+
+    color: #fff0b8;
+
+    font: inherit;
+
+    font-size: clamp(1.4rem, 2vw, 1.9rem);
+
+    font-weight: 700;
+
+    letter-spacing: 0.08em;
+
+}
+
 .schedule-grid {
 
     display: grid;

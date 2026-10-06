@@ -158,3 +158,14 @@ test('reduced-motion CSS disables gallery button movement and transitions', () =
     assert.match(reducedRules, /\.output-album-nav,[\s\S]*?\.output-lightbox__nav,[\s\S]*?\.output-lightbox__close\s*\{\s*transition: none !important/);
     assert.match(reducedRules, /\.output-lightbox__nav\s*\{\s*transform: translateY\(-50%\) !important/);
 });
+
+test('press carousel image counts use the accent in imágenes while singular imagen stays unaccented', () => {
+    const context = vm.createContext({ Terminal: function () {} });
+    for (const method of source.matchAll(/Terminal\.prototype\.buildGalleryEventMeta = function[\s\S]*?\n    \};/g)) {
+        vm.runInContext(method[0], context);
+    }
+    const terminal = new context.Terminal();
+    assert.equal(terminal.buildGalleryEventMeta({ media: [{ type: 'image' }] }), '1 imagen');
+    assert.equal(terminal.buildGalleryEventMeta({ media: [{ type: 'image' }, { type: 'image' }] }), '2 imágenes');
+    assert.equal(terminal.buildGalleryEventMeta({ media: [{ type: 'image' }, { type: 'video' }, { type: 'image' }] }), '2 imágenes | 1 video');
+});

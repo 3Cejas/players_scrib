@@ -92,3 +92,18 @@ test('past functions never advertise ticket links, while future functions can', 
     assert.match(future, /Entradas/);
     assert.doesNotMatch(future, /schedule-card--past/);
 });
+
+test('dates are grouped in separate year sections, newest first, with each function in its own year', () => {
+    const { terminal, sections } = harness();
+    const markup = terminal.buildScheduleMarkup();
+    const groups = [...markup.matchAll(/<section class="schedule-section" aria-label="Fechas de (\d{4})">([\s\S]*?)<\/section>/g)];
+    assert.deepEqual(groups.map(group => Number(group[1])), [2026, 2025, 2024, 2023]);
+    for (let index = 0; index < groups.length; index++) {
+        const [, year, content] = groups[index];
+        assert.ok(content.includes('<h2 class="schedule-section__year">' + year + '</h2>'));
+        assert.equal((content.match(/<article /g) || []).length, sections[index].events.length);
+        const dates = [...content.matchAll(/schedule-card__date">📅 ([^<]+)/g)].map(match => match[1]);
+        assert.deepEqual(dates, sections[index].events.map(event => event.date));
+        assert.ok(dates.every(date => date.endsWith(year)));
+    }
+});
