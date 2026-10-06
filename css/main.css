@@ -2068,7 +2068,7 @@ body,
 
     display: grid;
 
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
 
     gap: 1rem;
 
@@ -2077,6 +2077,10 @@ body,
 .schedule-card {
 
     display: flex;
+
+    min-width: 0;
+
+    overflow-wrap: anywhere;
 
     flex-direction: column;
 
@@ -2104,12 +2108,6 @@ body,
 
 }
 
-.schedule-card--past {
-
-    opacity: 0.58;
-
-}
-
 .schedule-card__body {
 
     display: grid;
@@ -2123,6 +2121,16 @@ body,
     font-size: 1.02rem;
 
     font-weight: 700;
+
+}
+
+.schedule-card__name {
+
+    color: #fff0b8;
+
+    font-weight: 700;
+
+    line-height: 1.45;
 
 }
 

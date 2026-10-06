@@ -176,11 +176,50 @@ async function checkNavigation(page, folder, label, canEmulateMedia) {
         await new Promise(resolve => setTimeout(resolve, 250));
         assert.equal(await page.evaluate(() => document.getAnimations().filter(animation => animation.playState === 'running').length), 0);
     }
+    await runCommand('fechas');
+    await page.waitForSelector('.schedule-card');
+    const calendar = await page.evaluate(() => ({
+        cards: document.querySelectorAll('.schedule-card').length,
+        dates: [...document.querySelectorAll('.schedule-card__date')].map(node => node.textContent),
+        ticketLinks: document.querySelectorAll('.schedule-card__ticket').length,
+        body: document.querySelector('.schedule-layout').textContent,
+        overflow: document.documentElement.scrollWidth > innerWidth
+    }));
+    assert.equal(calendar.cards, 14);
+    assert.equal(calendar.ticketLinks, 0);
+    assert.equal(calendar.overflow, false);
+    assert.ok(calendar.dates.includes('📅 16 de noviembre de 2025'));
+    assert.ok(calendar.dates.includes('📅 17 de enero de 2026'));
+    assert.match(calendar.body, /WE:NOW/);
+    assert.match(calendar.body, /Festival MUTIS/);
+    assert.doesNotMatch(calendar.body, /undefined|15 de noviembre de 2025/);
+    await page.evaluate(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.body.scrollTo({ top: 0, behavior: 'instant' });
+    });
+    await page.screenshot({ path: path.join(folder, label + '-calendar-desktop.png'), fullPage: true });
+    await captureCalendarSections(page, folder, label + '-desktop');
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
     await page.waitForFunction(() => document.getAnimations().every(animation => animation.playState !== 'running'), { timeout: 3000 });
     assert.equal(await page.evaluate(() => document.getAnimations().filter(animation => animation.playState === 'running').length), 0);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-    await page.screenshot({ path: path.join(folder, label + '-mobile.png') });
+    await page.screenshot({ path: path.join(folder, label + '-mobile.png'), fullPage: true });
+    await captureCalendarSections(page, folder, label + '-mobile');
+    await page.setViewport({ width: 320, height: 740, deviceScaleFactor: 1 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    assert.equal(await page.$$eval('.schedule-card', cards => cards.every(card => card.scrollWidth <= card.clientWidth)), true);
+}
+
+async function captureCalendarSections(page, folder, label) {
+    for (let index = 0; index < 4; index++) {
+        await page.evaluate(index => document.querySelectorAll('.schedule-section')[index].scrollIntoView({ block: 'start', behavior: 'instant' }), index);
+        const bounds = await page.evaluate(index => {
+            const header = document.querySelectorAll('.schedule-section__header')[index].getBoundingClientRect();
+            return { top: header.top, bottom: header.bottom, width: innerWidth, height: innerHeight };
+        }, index);
+        assert.ok(bounds.top >= 0 && bounds.bottom <= bounds.height);
+        await page.screenshot({ path: path.join(folder, label + '-calendar-' + (2026 - index) + '.png') });
+    }
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; });

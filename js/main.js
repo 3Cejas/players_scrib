@@ -112,7 +112,7 @@ var configs = (function () {
 
 		textos_del_mes_help:"Textos escritos en SCRIB de este mes.",
 
-		fecha_help:"Próximas fechas de  SCRIB.",
+		fecha_help:"Fechas e histórico de <SCRI> B.",
 		
 		financiación_help:"Cómo financiamos el proyecto.",
 
@@ -860,62 +860,30 @@ function log( text ) {
         }
     ];
 
-    var tournamentTicketsUrl = "https://www.dinaticket.com/es/provider/18142/event/4940616";
-
     var scheduleSections = [
         {
             tone: "tournament",
             year: 2026,
-            title: "🏆 TORNEO <SCRI> B 2026",
-            subtitle: "📅 Calendario de Octavos",
+            title: "📅 2026",
+            subtitle: "Torneo y funciones en Madrid",
             events: [
                 {
-                    date: "19 de marzo",
-                    writers: "Majo vs Pablo",
-                    performers: "Diego · Ana · Laura · Víctor",
-                    time: "20:30 hrs.",
-                    venue: "Espacio Hollywood",
-                    address: "C. del Infante, 3, Madrid",
-                    ticketUrl: tournamentTicketsUrl,
-                    past: false
-                },
-                {
-                    date: "9 de abril",
+                    date: "9 de abril de 2026",
+                    name: "Torneo <SCRI> B · Octavos",
                     writers: "Diego vs Maca",
                     performers: "Ari · Pablo · Judith · Ángela",
                     time: "20:30 hrs.",
                     venue: "Espacio Hollywood",
                     address: "C. del Infante, 3, Madrid",
-                    ticketUrl: tournamentTicketsUrl,
-                    past: false
+                    past: true
                 },
                 {
-                    date: "23 de abril",
-                    writers: "Teresa vs Irene",
-                    performers: "Ari · Pablo · Judith · Diego",
-                    time: "20:30 hrs.",
-                    venue: "Espacio Hollywood",
-                    address: "C. del Infante, 3, Madrid",
-                    ticketUrl: tournamentTicketsUrl,
-                    past: false
+                    date: "27 de marzo de 2026",
+                    time: "20:00 hrs.",
+                    venue: "Sala Exlímite",
+                    address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
+                    past: true
                 },
-                {
-                    date: "7 de mayo",
-                    writers: "Majo vs Paula",
-                    performers: "Ari · Pablo · Judith · Diego",
-                    time: "20:30 hrs.",
-                    venue: "Espacio Hollywood",
-                    address: "C. del Infante, 3, Madrid",
-                    ticketUrl: tournamentTicketsUrl,
-                    past: false
-                }
-            ]
-        },
-        {
-            tone: "showcase",
-            title: "✨ EXHIBICIÓN",
-            subtitle: "Funciones y muestras especiales",
-            events: [
                 {
                     date: "27 de febrero de 2026",
                     time: "20:00 hrs.",
@@ -924,24 +892,98 @@ function log( text ) {
                     past: true
                 },
                 {
-                    date: "27 de marzo de 2026",
+                    date: "17 de enero de 2026",
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
                     address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
-                    ticketUrl: "https://exlimite.com/eventos/scri/",
-                    past: false
-                },
+                    past: true
+                }
+            ]
+        },
+        {
+            tone: "showcase",
+            year: 2025,
+            title: "📅 2025",
+            subtitle: "Funciones, festivales y muestras en España y Perú",
+            events: [
                 {
-                    date: "15 de noviembre de 2025",
+                    date: "16 de noviembre de 2025",
                     time: "19:00 hrs.",
                     venue: "Sala Exlímite",
                     address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
                     past: true
                 },
                 {
+                    date: "21 de octubre de 2025",
+                    name: "XI Jornadas Escénicas INJUVE",
+                    time: "16:30 hrs.",
+                    venue: "Sala Plató · Matadero Madrid",
+                    past: true
+                },
+                {
+                    date: "22 de mayo de 2025",
+                    time: "20:30 hrs.",
+                    venue: "Sala Joven · Teatros Luchana, Madrid",
+                    past: true
+                },
+                {
+                    date: "21 de mayo de 2025",
+                    time: "20:30 hrs.",
+                    venue: "Sala Joven · Teatros Luchana, Madrid",
+                    past: true
+                },
+                {
+                    date: "30 de marzo de 2025",
+                    name: "Festival MUTIS",
+                    venue: "Barcelona",
+                    past: true
+                },
+                {
                     date: "28 de marzo de 2025",
                     time: "19:00 hrs.",
                     venue: "Sala NavelArt",
+                    past: true
+                },
+                {
+                    date: "1 de febrero de 2025",
+                    name: "Extractivismo",
+                    venue: "Casa Darte · Cusco, Perú",
+                    past: true
+                },
+                {
+                    date: "24 de enero de 2025",
+                    name: "Día de la Educación",
+                    venue: "KRACC · Lima, Perú",
+                    past: true
+                }
+            ]
+        },
+        {
+            tone: "tournament",
+            year: 2024,
+            title: "📅 2024",
+            subtitle: "Arte y ciencia",
+            events: [
+                {
+                    date: "12 de febrero de 2024",
+                    name: "Día Internacional de la Niña y la Mujer en la Ciencia",
+                    time: "19:00 hrs.",
+                    venue: "Auditorio Universidad Carlos III de Madrid · Leganés",
+                    past: true
+                }
+            ]
+        },
+        {
+            tone: "showcase",
+            year: 2023,
+            title: "📅 2023",
+            subtitle: "Festival internacional WE:NOW",
+            events: [
+                {
+                    date: "27 de junio de 2023",
+                    name: "WE:NOW",
+                    time: "19:00 hrs.",
+                    venue: "Auditorio TAI · Madrid",
                     past: true
                 }
             ]
@@ -2264,11 +2306,11 @@ function log( text ) {
         var cardClassName = "schedule-card schedule-card--" + section.tone + (isPast ? " schedule-card--past" : "");
         var ticketMarkup = "";
 
-        if (event.ticketUrl) {
+        if (!isPast && event.ticketUrl) {
 
             ticketMarkup = "<a class=\"output-text-link schedule-card__ticket\" href=\"" + event.ticketUrl + "\" target=\"_blank\" rel=\"noreferrer noopener\"><span class=\"schedule-card__ticket-icon\">🎟️</span> <span class=\"schedule-card__ticket-label\">Entradas</span></a>";
 
-        } else if (event.ticketLabel) {
+        } else if (!isPast && event.ticketLabel) {
 
             ticketMarkup = "<div class=\"schedule-card__ticket schedule-card__ticket--pending\">" + escapeHTML(event.ticketLabel) + "</div>";
 
@@ -2277,9 +2319,10 @@ function log( text ) {
         return "<article class=\"" + cardClassName + "\">" +
             "<div class=\"schedule-card__body\">" +
                 "<div class=\"schedule-card__date\">📅 " + escapeHTML(event.date) + "</div>" +
+                (event.name ? "<div class=\"schedule-card__name\">" + escapeHTML(event.name) + "</div>" : "") +
                 (event.writers ? "<div class=\"schedule-card__meta\"><strong>✍️ Escritores/as:</strong> " + escapeHTML(event.writers) + "</div>" : "") +
                 (event.performers ? "<div class=\"schedule-card__meta\"><strong>🎭 Intérpretes:</strong> " + escapeHTML(event.performers) + "</div>" : "") +
-                "<div class=\"schedule-card__meta\"><strong>🕒 Hora:</strong> " + escapeHTML(event.time) + "</div>" +
+                (event.time ? "<div class=\"schedule-card__meta\"><strong>🕒 Hora:</strong> " + escapeHTML(event.time) + "</div>" : "") +
                 "<div class=\"schedule-card__meta\"><strong>📍 Espacio:</strong> " + escapeHTML(event.venue) + "</div>" +
                 (event.address ? "<div class=\"schedule-card__address\">" + escapeHTML(event.address) + "</div>" : "") +
             "</div>" +
@@ -3382,7 +3425,7 @@ function log( text ) {
 
         var output = this.output;
 
-        this.type("# FECHAS", function () {
+        this.type("# FECHAS · HISTÓRICO", function () {
 
             output.innerHTML += "<br/>" + this.buildScheduleMarkup() + "<br/><br/>";
             this.type("Para volver al menú, utiliza el comando «reinicio».", this.unlock.bind(this));
