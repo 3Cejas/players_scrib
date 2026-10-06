@@ -28,7 +28,7 @@ var configs = (function () {
 
     Singleton.defaultOptions = {
 
-        general_help: "**A continuación tienes una lista de comandos que puedes usar.**\n\nPuedes escribirlos o pulsar los comandos disponibles.\n\nPara cargar el texto instantáneamente presiona **ENTER** o haz doble click.",
+        general_help: "**A continuación tienes una lista de comandos que puedes usar.**\n\nPuedes escribirlos o pulsar los comandos disponibles.",
 
 		ls_help: "List information about the files and folders (the current directory by default).",
 
@@ -587,14 +587,6 @@ function log( text ) {
 
         this.galleryLightboxIndex = -1;
 
-        this.penCursor = null;
-
-        this.penCursorHideTimeoutId = null;
-
-        this.penCursorInitialized = false;
-
-        this.penCursorPressTimeoutId = null;
-
         this.asciiHeader = document.getElementById("containerascii");
 
     };
@@ -626,8 +618,6 @@ function log( text ) {
         return values;
 
     };
-
-    var PEN_CURSOR_INACTIVITY_MS = 1600;
 
     var createGalleryMediaFromFiles = function (fileNames) {
 
@@ -1117,182 +1107,7 @@ function log( text ) {
 
     };
 
-    Terminal.prototype.clearPenCursorHideTimer = function () {
 
-        if (this.penCursorHideTimeoutId !== null) {
-
-            clearTimeout(this.penCursorHideTimeoutId);
-            this.penCursorHideTimeoutId = null;
-
-        }
-
-    };
-
-    Terminal.prototype.hidePenCursor = function () {
-
-        if (!this.penCursor) {
-
-            return;
-
-        }
-
-        this.penCursor.classList.remove("activa");
-        this.penCursor.classList.remove("is-pressing");
-
-    };
-
-    Terminal.prototype.scheduleHidePenCursor = function () {
-
-        this.clearPenCursorHideTimer();
-
-        if (!this.penCursor) {
-
-            return;
-
-        }
-
-        this.penCursorHideTimeoutId = window.setTimeout(function () {
-
-            this.penCursorHideTimeoutId = null;
-            this.hidePenCursor();
-
-        }.bind(this), PEN_CURSOR_INACTIVITY_MS);
-
-    };
-
-    Terminal.prototype.movePenCursor = function (clientX, clientY, isPressing) {
-
-        if (!this.penCursor) {
-
-            return;
-
-        }
-
-        this.penCursor.style.left = clientX + "px";
-        this.penCursor.style.top = clientY + "px";
-
-        this.penCursor.classList.add("activa");
-
-        if (isPressing) {
-
-            this.penCursor.classList.add("is-pressing");
-
-            if (this.penCursorPressTimeoutId !== null) {
-
-                clearTimeout(this.penCursorPressTimeoutId);
-
-            }
-
-            this.penCursorPressTimeoutId = window.setTimeout(function () {
-
-                this.penCursorPressTimeoutId = null;
-
-                if (this.penCursor) {
-
-                    this.penCursor.classList.remove("is-pressing");
-
-                }
-
-            }.bind(this), 140);
-
-        }
-
-        this.scheduleHidePenCursor();
-
-    };
-
-    Terminal.prototype.initPenCursor = function () {
-
-        var supportsFinePointer;
-
-        if (this.penCursorInitialized || !document.body) {
-
-            return;
-
-        }
-
-        this.penCursorInitialized = true;
-
-        if (typeof window.matchMedia !== "function") {
-
-            supportsFinePointer = true;
-
-        } else {
-
-            supportsFinePointer = window.matchMedia("(pointer: fine)").matches;
-
-        }
-
-        if (!supportsFinePointer) {
-
-            return;
-
-        }
-
-        this.penCursor = document.createElement("div");
-        this.penCursor.className = "page-cursor-pluma";
-        document.body.appendChild(this.penCursor);
-        document.body.classList.add("page-cursor-pluma-activo");
-
-        document.addEventListener("mousemove", function (event) {
-
-            if (!event || typeof event.clientX !== "number" || typeof event.clientY !== "number") {
-
-                return;
-
-            }
-
-            this.movePenCursor(event.clientX, event.clientY, false);
-
-        }.bind(this), { passive: true });
-
-        document.addEventListener("mousedown", function (event) {
-
-            if (!event || typeof event.clientX !== "number" || typeof event.clientY !== "number") {
-
-                return;
-
-            }
-
-            this.movePenCursor(event.clientX, event.clientY, true);
-
-        }.bind(this), { passive: true });
-
-        document.addEventListener("mouseup", function (event) {
-
-            if (!event || typeof event.clientX !== "number" || typeof event.clientY !== "number") {
-
-                return;
-
-            }
-
-            this.movePenCursor(event.clientX, event.clientY, false);
-
-        }.bind(this), { passive: true });
-
-        document.addEventListener("mouseout", function (event) {
-
-            if (!event.relatedTarget) {
-
-                this.hidePenCursor();
-
-            }
-
-        }.bind(this));
-
-        window.addEventListener("blur", this.hidePenCursor.bind(this));
-
-        document.addEventListener("visibilitychange", function () {
-
-            if (document.hidden) {
-
-                this.hidePenCursor();
-
-            }
-
-        }.bind(this));
-
-    };
 
     Terminal.prototype.bindOutputOptimizedMedia = function () {
 
@@ -1437,7 +1252,6 @@ function log( text ) {
         });
 
         this.prepareSideNav();
-        this.initPenCursor();
         this.bindAsciiHeader();
         this.bindOutputOptimizedMedia();
 
@@ -4195,6 +4009,21 @@ TypeSimulator.prototype.type = function (text, callback) {
 
     };
 
+    // A zero delay means instant text, not hundreds of zero-delay timers and
+    // reparses of all existing content. Keep existing DOM nodes/listeners intact.
+    if (timer <= 0) {
+        var markup = renderMarkupChunk(text);
+        if (boldOpen) {
+            markup += "</strong>";
+        }
+        output.insertAdjacentHTML("beforeend", markup + "<br/>");
+        simulator.no_writing = false;
+        if (callback) {
+            callback();
+        }
+        return;
+    }
+
     
 
     var skip = function () {
@@ -4368,4 +4197,14 @@ TypeSimulator.prototype.type = function (text, callback) {
 
 
 
-window.onload = main.listener;
+// Deferred scripts run after parsing: navigation need not wait for media loads.
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", main.listener, { once: true });
+} else {
+    main.listener();
+}
+
+document.addEventListener("visibilitychange", function () {
+    document.documentElement.classList.toggle("site-paused", document.hidden);
+});
+document.documentElement.classList.toggle("site-paused", document.hidden);
