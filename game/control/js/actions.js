@@ -67,6 +67,7 @@ const BANDERAS_IDIOMA_CONTROL = {
     fr: "\uD83C\uDDEB\uD83C\uDDF7"
 };
 const PARAMETROS_CONTROL_PERSISTENTES = [
+    "pausa_explicacion_niveles",
     "duracion_minutos",
     "duracion_segundos",
     "tiempo_cambio_letra",
@@ -1944,6 +1945,7 @@ function normalizarFraseFinal(valor) {
 function obtenerValorParametroPersistenteControl(id) {
     const input = document.getElementById(id);
     if (!input) return undefined;
+    if (input.type === "checkbox") return input.checked ? 1 : 0;
     const valor = Number(input.value);
     return Number.isFinite(valor) ? Math.trunc(valor) : undefined;
 }
@@ -2019,7 +2021,8 @@ function aplicarEstadoPersistenteControl(payload = {}) {
             const input = document.getElementById(id);
             const valor = Number(parametros[id]);
             if (input && Number.isFinite(valor)) {
-                input.value = String(Math.trunc(valor));
+                if (input.type === "checkbox") input.checked = valor === 1;
+                else input.value = String(Math.trunc(valor));
             }
         });
 
@@ -2350,7 +2353,7 @@ function temp() {
     socket.emit("ajustar_escala_detonadores_espectador", { valor: escalaDetonadoresEspectador });
     emitirEstadoControlPersistente({ inmediato: true });
     asegurarVistaPartidaParaInicioControl();
-    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, PORCENTAJE_TIEMPO_DESVENTAJA, REDUCCION_TERTULIA_PORCENTAJE, ESCALA_UI_ESPECTADOR: escalaEspectador, ESCALA_TEXTO_ESPECTADOR: escalaTextoEspectador, ESCALA_DETONADORES_ESPECTADOR: escalaDetonadoresEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
+    socket.emit('inicio', {count, borrar_texto : borrarTextoEnInicio, parametros: {DURACION_PARTIDA, DURACION_TIEMPO_MODOS, LISTA_MODOS, TIEMPO_CAMBIO_LETRA, TIEMPO_CAMBIO_PALABRAS, TIEMPO_VOTACION, LIMITE_TIEMPO_INSPIRACION, PORCENTAJE_TIEMPO_DESVENTAJA, REDUCCION_TERTULIA_PORCENTAJE, PAUSA_EXPLICACION_NIVELES: obtenerValorParametroPersistenteControl("pausa_explicacion_niveles") === 1, ESCALA_UI_ESPECTADOR: escalaEspectador, ESCALA_TEXTO_ESPECTADOR: escalaTextoEspectador, ESCALA_DETONADORES_ESPECTADOR: escalaDetonadoresEspectador, FRASE_FINAL_J1: fraseJ1, FRASE_FINAL_J2: fraseJ2} });
     juego_iniciado = true;
     modo_actual = "";
     actualizarBotonSkipTertuliaControl();
@@ -2479,6 +2482,7 @@ function temas() {
 };
 
 function limpiar({ emitirServidor = true } = {}) {
+    window.presentacion_nivel_pendiente_control = false;
     //document.getElementById("nombre").value = "ESCRITXR 1";
     //document.getElementById("nombre1").value = "ESCRITXR 2";
     detenerCuentaAtrasModoControl();
@@ -5436,6 +5440,10 @@ function pausar(opciones = {}){
 
 
 function pausar_reanudar(boton) {
+    if (window.presentacion_nivel_pendiente_control === true) {
+        reanudar();
+        return;
+    }
     // Imprimimos en consola para verificar
     console.log(fin_j1, fin_j2);
 
@@ -5462,6 +5470,10 @@ function pausar_reanudar(boton) {
 
 
 function reanudar(){
+    if (window.presentacion_nivel_pendiente_control === true) {
+        socket.emit('reanudar', { motivo: 'presentacion_nivel', modo_seq: modo_seq_actual_control });
+        return;
+    }
     if(modo_actual != "tertulia"){
     pausado = false;
     socket.emit('reanudar', '');

@@ -63,6 +63,8 @@ const controladorTransicionNivelMusa = apiTransicionNivelMusa
         translate: tJuego2P,
         windowRef: window,
         documentRef: document,
+        socket,
+        onRelease: () => { transicionNivelPendienteMusa = null; },
         durationMs: 7000,
         reducedDurationMs: 7000
     })
@@ -80,7 +82,10 @@ function observarModoCanonicoTransicionMusa(payload = {}) {
 }
 
 function mostrarTransicionNivelMusa(observacion, payload = {}) {
-    if (!observacion || !observacion.transition || !controladorTransicionNivelMusa) return false;
+    if (!controladorTransicionNivelMusa || (!observacion?.transition && payload.presentacion_nivel_pendiente !== true)) {
+        controladorTransicionNivelMusa?.sync(payload);
+        return false;
+    }
     if (secuencia_inicio_musa_activa || !ui_partida_activa_musa) {
         transicionNivelPendienteMusa = {
             observacion,
@@ -89,6 +94,7 @@ function mostrarTransicionNivelMusa(observacion, payload = {}) {
         return false;
     }
     transicionNivelPendienteMusa = null;
+    if (controladorTransicionNivelMusa.sync(payload)) return true;
     return controladorTransicionNivelMusa.show(observacion.mode, payload);
 }
 
@@ -99,6 +105,7 @@ function mostrarTransicionNivelPendienteMusa(modoAplicado) {
     if (apiTransicionNivelMusa?.normalizeMode(modoAplicado) !== pendiente.observacion.mode) {
         return false;
     }
+    if (controladorTransicionNivelMusa.sync(pendiente.payload)) return true;
     return controladorTransicionNivelMusa.show(pendiente.observacion.mode, pendiente.payload);
 }
 

@@ -75,6 +75,11 @@ const controladorTransicionNivelEspectador = apiTransicionNivelEspectador
         translate: tJuego2P,
         windowRef: window,
         documentRef: document,
+        socket,
+        onRelease: () => {
+            transicionNivelPendienteEspectador = null;
+            if (ultimo_payload_modo_espectador) ultimo_payload_modo_espectador.presentacion_nivel_pendiente = false;
+        },
         durationMs: 7000,
         reducedDurationMs: 7000
     })
@@ -93,6 +98,7 @@ function construirFirmaTransicionNivelEspectador(modo, payload = {}) {
 
 function mostrarTransicionNivelForzadaEspectador(modo, payload = {}) {
     if (!controladorTransicionNivelEspectador || vista_espectador_modo_resuelta !== "partida") return false;
+    if (controladorTransicionNivelEspectador.sync(payload)) return true;
     const firma = construirFirmaTransicionNivelEspectador(modo, payload);
     if (!firma || firma === firmaUltimaTransicionNivelEspectador) return false;
     const mostrada = controladorTransicionNivelEspectador.show(modo, payload);
@@ -108,7 +114,10 @@ function observarModoCanonicoTransicionEspectador(payload = {}) {
 }
 
 function mostrarTransicionNivelEspectador(observacion, payload = {}) {
-    if (!observacion || !observacion.transition || !controladorTransicionNivelEspectador) return false;
+    if (!controladorTransicionNivelEspectador || (!observacion?.transition && payload.presentacion_nivel_pendiente !== true)) {
+        controladorTransicionNivelEspectador?.sync(payload);
+        return false;
+    }
     return mostrarTransicionNivelForzadaEspectador(observacion.mode, payload);
 }
 
@@ -117,7 +126,7 @@ function ocultarTransicionNivelEspectador() {
 }
 
 function aplazarTransicionNivelEspectador(observacion, payload = {}) {
-    if (!observacion || !observacion.transition) return false;
+    if (!observacion || (!observacion.transition && payload.presentacion_nivel_pendiente !== true)) return false;
     transicionNivelPendienteEspectador = {
         observacion,
         payload: payload && typeof payload === "object" ? { ...payload } : {}
@@ -5105,6 +5114,8 @@ const aplicarModoVistaEspectadorUi = (modo) => {
     sincronizarAudioDeliberacionEspectador(modo);
     if (modo !== "partida") {
         ocultarTransicionNivelEspectador();
+    } else if (!cuenta_atras_activa && !inicio_modo_delay && ultimo_payload_modo_espectador?.presentacion_nivel_pendiente === true) {
+        controladorTransicionNivelEspectador?.sync(ultimo_payload_modo_espectador);
     }
     if (modo === "nube_inspiracion") {
         limpiarFeedbackFlotanteEspectador();

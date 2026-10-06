@@ -33,6 +33,7 @@ const controladorTransicionNivelEscritora = apiTransicionNivelEscritora
         ),
         windowRef: window,
         documentRef: document,
+        socket,
         durationMs: 7000,
         reducedDurationMs: 7000,
         onShow: bloquearEdicionDuranteTransicionNivelEscritora,
@@ -54,6 +55,7 @@ function observarTransicionNivelEscritora(payload = {}) {
 }
 
 function mostrarTransicionNivelEscritora(observacion, payload = {}) {
+    if (controladorTransicionNivelEscritora?.sync(payload)) return true;
     if (!observacion?.transition || !controladorTransicionNivelEscritora) return false;
     return controladorTransicionNivelEscritora.show(observacion.mode, payload);
 }
@@ -1892,6 +1894,7 @@ socket.on('fin', data => {
 });
 
 socket.on('reanudar_js', data => {
+    controladorTransicionNivelEscritora?.sync({ ...data, modo_seq: modo_seq_actual, presentacion_nivel_pendiente: false });
     if (modo_actual !== "tertulia") reanudarProgresoNivelBarraEscritora();
     if (modo_actual === "tertulia") {
         es_pausa = false;

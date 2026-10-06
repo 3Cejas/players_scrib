@@ -509,6 +509,16 @@ socket.on('reanudar_js', () => {
     aplicarEstadoPausaControlSocket(false);
 });
 
+function aplicarPresentacionNivelControl(payload = {}) {
+    if (!aceptarEventoModoControl(payload)) return;
+    window.presentacion_nivel_pendiente_control = payload.presentacion_nivel_pendiente === true;
+    if (window.presentacion_nivel_pendiente_control) {
+        window.detenerCuentaAtrasModoControl?.();
+        aplicarEstadoPausaControlSocket(true);
+    }
+}
+socket.on('presentacion_nivel_estado', aplicarPresentacionNivelControl);
+
 socket.on('reanudar_tertulia_control', () => {
     if (modo_actual !== "tertulia" || typeof reanudar_modo !== "function") {
         return;
@@ -807,6 +817,7 @@ socket.on('tiempo_muerto_control', data => {
 });
 
 socket.on('fin_a_control', () => {
+    window.presentacion_nivel_pendiente_control = false;
     if (typeof window.detenerCuentaAtrasModoControl === "function") {
         window.detenerCuentaAtrasModoControl();
     }
@@ -878,7 +889,10 @@ function aplicarModoActualControl(data = {}) {
         return false;
     }
     const modoEntrante = typeof data.modo_actual === "string" ? data.modo_actual.trim() : "";
-    if (!modoEntrante) return false;
+    if (!modoEntrante) {
+        window.presentacion_nivel_pendiente_control = false;
+        return false;
+    }
     modo_actual = modoEntrante;
     juego_iniciado = true;
     if (typeof window.actualizarBotonPausaReanudarControl === "function") {
@@ -903,6 +917,7 @@ function aplicarModoActualControl(data = {}) {
     }
     const activar = MODOS[modo_actual] || MODOS[""];
     if (typeof activar === "function") activar(data);
+    aplicarPresentacionNivelControl(data);
     emitirStatsLiveControl();
     return true;
 }

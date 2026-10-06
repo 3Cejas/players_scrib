@@ -1,4 +1,5 @@
 const { runControlTabletChecks } = require("./control-tablet");
+const { runHeldLevelIntroChecks } = require("./held-level-intro");
 const { runDramaturgiaLiveCursorChecks } = require("./dramaturgia-live-cursor");
 const { runWarmupClockChecks } = require("./warmup-clock");
 const { runWriterNameLifecycleChecks } = require("./writer-names");
@@ -2412,6 +2413,13 @@ const visualSpecs = [
 ];
 
 const coreSpecs = [
+  {
+    name: 'held-level-intro-core',
+    run: async (ctx) => {
+      await openRolesAndWait(ctx, ['control', 'writer1', 'writer2', 'spectator', 'musa1', 'musa2', 'actor1']);
+      await runHeldLevelIntroChecks(ctx, { reloadRole });
+    }
+  },
   {
     name: "muse-live-stats-core",
     run: async (ctx) => {

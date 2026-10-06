@@ -199,6 +199,38 @@ test("controller replaces rapid transitions, announces them, and honors reduced 
     );
 });
 
+test('a held explanation survives timeouts, duplicate snapshots and reconnects until Control releases it', () => {
+    const root = fakeElement();
+    root.querySelector = () => null;
+    const timers = new Map();
+    let id = 0;
+    let shows = 0;
+    let hides = 0;
+    const controller = levelTransition.createController({
+        root, documentRef: { body: fakeElement(), getElementById: () => null }, windowRef: {},
+        setTimer: (callback, delay) => { timers.set(++id, { callback, delay }); return id; },
+        clearTimer: (timer) => timers.delete(timer),
+        onShow: () => shows++, onHide: () => hides++
+    });
+    const held = { modo_actual: 'letra bendita', modo_seq: 10, letra_bendita: 'R', presentacion_nivel_pendiente: true };
+    assert.equal(controller.sync(held), true);
+    assert.equal(controller.isVisible(), true);
+    assert.equal(root.dataset.levelHeld, "true", 'CSS must hold the rendered card, not just its class');
+    assert.equal(timers.size, 0, 'no automatic hide timer while held');
+    controller.sync(held);
+    assert.equal(shows, 1, 'duplicate state must not restart animation');
+    controller.sync({ ...held, modo_seq: 9, presentacion_nivel_pendiente: false });
+    assert.equal(controller.isVisible(), true, 'old release cannot dismiss the current explanation');
+    controller.sync({ ...held, presentacion_nivel_pendiente: false });
+    assert.equal(controller.isVisible(), false);
+    assert.equal(root.dataset.levelHeld, "false");
+    assert.equal(hides, 1);
+    controller.sync(held);
+    assert.equal(controller.isVisible(), false, 'deferred countdown payload cannot reopen a released explanation');
+    controller.sync({ ...held, modo_seq: 11 });
+    assert.equal(controller.isVisible(), true);
+});
+
 test("spectator, actor, writer and Muse expose one accessible, responsive level transition", () => {
     const spectatorHtml = read("game/spectator/index.html");
     const spectatorState = read("game/spectator/js/state.js");
@@ -217,8 +249,8 @@ test("spectator, actor, writer and Muse expose one accessible, responsive level 
         assert.equal((html.match(/id="level_transition"/g) || []).length, 1);
         assert.equal((html.match(/id="level_transition_status"/g) || []).length, 1);
         assert.match(html, /role="status" aria-live="assertive" aria-atomic="true"/);
-        assert.match(html, /level-transition\.css\?v=20260921c/);
-        assert.match(html, /domains\/level-transition\.js\?v=20260921c/);
+        assert.match(html, /level-transition\.css\?v=20261006a/);
+        assert.match(html, /domains\/level-transition\.js\?v=20261006a/);
     });
     assert.match(actorHtml, /level-transition level-transition--compact/);
 

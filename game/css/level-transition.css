@@ -443,6 +443,45 @@
     animation-name: scribLevelCompactPanel;
 }
 
+/* La espera manual no puede heredar el desvanecimiento al final de las
+   animaciones temporizadas. La entrada termina en un panel estable y visible. */
+.level-transition[data-level-held="true"] {
+    animation: scribLevelHeldFade 400ms ease-out both;
+    pointer-events: auto;
+}
+
+.level-transition[data-level-held="true"] .level-transition__backdrop {
+    animation: scribLevelHeldFade 400ms ease-out both;
+    filter: saturate(1);
+}
+
+.level-transition[data-level-held="true"] .level-transition__panel {
+    animation: scribLevelHeldPanel 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    filter: none;
+}
+
+.level-transition[data-level-held="true"] .level-transition__rays {
+    animation: none;
+    opacity: 0.6;
+    transform: translate(-50%, -50%);
+}
+
+.level-transition[data-level-held="true"] .level-transition__icon,
+.level-transition[data-level-held="true"] .level-transition__meter span {
+    animation: scribLevelHeldFade 450ms ease-out both;
+    transform: none;
+}
+
+@keyframes scribLevelHeldFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scribLevelHeldPanel {
+    from { opacity: 0; transform: translate3d(0, 3vh, 0) scale(0.96); }
+    to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
 @keyframes scribLevelCurtain {
     0% { opacity: 0; }
     8%, 86% { opacity: 1; }

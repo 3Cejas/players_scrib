@@ -231,6 +231,8 @@
         let currentMode = "";
         let currentPayload = null;
         let visible = false;
+        let held = false;
+        let releasedSequence = -1;
 
         function query(selector) {
             return root && typeof root.querySelector === "function" ? root.querySelector(selector) : null;
@@ -277,7 +279,9 @@
             const wasVisible = visible;
             clearTimers();
             visible = false;
+            held = false;
             if (root) {
+                root.dataset.levelHeld = "false";
                 root.classList.remove("is-visible");
                 root.setAttribute("aria-hidden", "true");
             }
@@ -290,9 +294,13 @@
         function show(mode, payload = {}) {
             const presentation = buildPresentation(mode, payload, options);
             if (!root || !presentation) return false;
+            const sequence = normalizeSequence(payload.modo_seq);
+            if (payload.presentacion_nivel_pendiente === true && sequence !== null && sequence <= releasedSequence) return false;
             clearTimers();
             currentMode = presentation.mode;
             currentPayload = payload && typeof payload === "object" ? { ...payload } : {};
+            held = currentPayload.presentacion_nivel_pendiente === true;
+            root.dataset.levelHeld = held ? "true" : "false";
             render(presentation);
             root.classList.remove("is-visible");
             // Reading layout restarts the entrance sequence when levels change quickly.
@@ -304,8 +312,27 @@
             }
             visible = true;
             onShow({ mode: currentMode, payload: currentPayload, presentation });
-            hideTimer = setTimer(hide, prefersReducedMotion() ? reducedDurationMs : durationMs);
+            if (!held) hideTimer = setTimer(hide, prefersReducedMotion() ? reducedDurationMs : durationMs);
             return true;
+        }
+
+        function sync(payload = {}) {
+            if (!Object.prototype.hasOwnProperty.call(payload, "presentacion_nivel_pendiente")) return false;
+            const sequence = normalizeSequence(payload.modo_seq);
+            const currentSequence = normalizeSequence(currentPayload && currentPayload.modo_seq);
+            if (sequence !== null && currentSequence !== null && sequence < currentSequence) return true;
+            if (payload.presentacion_nivel_pendiente === true) {
+                if (sequence !== null && sequence <= releasedSequence) return true;
+                const mode = extractMode(payload);
+                if (held && visible && mode === currentMode && sequence === currentSequence) {
+                    currentPayload = { ...currentPayload, ...payload };
+                    return true;
+                }
+                return show(mode, payload);
+            }
+            if (sequence !== null) releasedSequence = Math.max(releasedSequence, sequence);
+            if (held) hide();
+            return false;
         }
 
         function refresh() {
@@ -318,15 +345,31 @@
         if (windowRef && typeof windowRef.scribOnLanguageChange2P === "function") {
             unsubscribeLanguage = windowRef.scribOnLanguageChange2P(refresh);
         }
+        const onPresentationState = function (payload = {}) {
+            // The canonical mode handler decides when to show (after countdown,
+            // in the game view). Release, however, must reach every role at once.
+            if (payload.presentacion_nivel_pendiente === false) {
+                const sequence = normalizeSequence(payload.modo_seq);
+                const currentSequence = normalizeSequence(currentPayload && currentPayload.modo_seq);
+                if (sequence !== null && currentSequence !== null && sequence < currentSequence) return;
+                sync(payload);
+                if (typeof options.onRelease === "function") options.onRelease(payload);
+            }
+        };
+        if (options.socket && typeof options.socket.on === "function") {
+            options.socket.on("presentacion_nivel_estado", onPresentationState);
+        }
 
         return Object.freeze({
             show,
             hide,
             refresh,
+            sync,
             isVisible: function () { return visible; },
             isReady: function () { return Boolean(root); },
             destroy: function () {
                 hide();
+                if (options.socket && typeof options.socket.off === "function") options.socket.off("presentacion_nivel_estado", onPresentationState);
                 if (typeof unsubscribeLanguage === "function") unsubscribeLanguage();
             }
         });

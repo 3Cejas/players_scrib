@@ -54,12 +54,13 @@ function observarModoCanonicoTransicionActor(payload = {}) {
 }
 
 function mostrarTransicionNivelActor(observacion, payload = {}) {
+    if (controladorTransicionNivelActor?.sync(payload)) return true;
     if (!observacion || !observacion.transition || !controladorTransicionNivelActor) return false;
     return controladorTransicionNivelActor.show(observacion.mode, payload);
 }
 
 function aplazarTransicionNivelActor(observacion, payload = {}) {
-    if (!observacion || !observacion.transition) return false;
+    if (!observacion || (!observacion.transition && payload.presentacion_nivel_pendiente !== true)) return false;
     transicionNivelPendienteActor = {
         observacion: { ...observacion },
         payload: (payload && typeof payload === "object") ? { ...payload } : {}
@@ -1979,6 +1980,11 @@ configurarEquipoActor(player);
 inicializarBarraVidaActor();
     
 const socket = io(serverUrl);
+socket.on('presentacion_nivel_estado', (payload = {}) => {
+    if (payload.presentacion_nivel_pendiente !== false) return;
+    controladorTransicionNivelActor?.sync(payload);
+    transicionNivelPendienteActor = null;
+});
 const rolActorSolicitado = String(new URLSearchParams(window.location.search).get("role") || "actor").toLowerCase();
 const esRolTecnico = rolActorSolicitado === "technician";
 

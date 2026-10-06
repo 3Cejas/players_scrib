@@ -791,6 +791,7 @@ function sincronizarProgresoNivelMusa(payload = {}) {
     } else if (!intervalo_progreso_nivel_musa) {
         intervalo_progreso_nivel_musa = setInterval(tickProgresoNivelMusa, 120);
     }
+    if (payload.presentacion_nivel_pendiente === true) pausarProgresoNivelMusa();
     return true;
 }
 

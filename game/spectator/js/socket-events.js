@@ -1345,6 +1345,7 @@ function aplicarModo(data) {
         mostrarTransicionNivelForzadaEspectador(modo_actual, data || {});
     }
     mostrarTransicionNivelPendienteEspectador(modo_actual);
+    if (data?.presentacion_nivel_pendiente === true) mostrarTransicionNivelForzadaEspectador(modo_actual, data);
 }
 
 function actualizarFrasesFinalesDesdePayloadEspectador(data = {}) {
