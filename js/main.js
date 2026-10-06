@@ -1043,19 +1043,9 @@ function log( text ) {
 
         }
 
-        if (target.closest && target.closest("#containerascii")) {
-
-            return false;
-
-        }
-
-        if (target.closest && target.closest(".output-lightbox__dialog, .output-reading-card, .article-card, .output-video-card")) {
-
-            return false;
-
-        }
-
-        return true;
+        // Reading a section must not focus the terminal at the bottom of the
+        // page (or open the mobile keyboard). Only its own prompt row does so.
+        return !!(target.closest && target.closest("#input-line"));
 
     };
 
@@ -1340,7 +1330,7 @@ function log( text ) {
 
             }
 
-            //Hace que se focalice en la linea de comandos cuando termina de ejecutar el último comando o al empezar
+            // Sólo los clics en la fila de comandos deben enfocar el terminal.
 
 			if (this.shouldAutoFocusCommandLine(event)) {
 
@@ -3915,7 +3905,7 @@ function log( text ) {
 
 		this.no_writing = true;
 
-        this.cmdLine.focus();
+        this.cmdLine.focus({ preventScroll: true });
 
     };
 
