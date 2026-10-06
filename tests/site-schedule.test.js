@@ -107,3 +107,44 @@ test('dates are grouped in separate year sections, newest first, with each funct
         assert.ok(dates.every(date => date.endsWith(year)));
     }
 });
+
+test('each date displays its own researched cast without reusing a generic roster', () => {
+    const { terminal, sections, events } = harness();
+    assert.ok(events.every(event => event.writers || event.performers || event.participants));
+    const onDate = date => events.find(event => event.date === date);
+    assert.equal(onDate('17 de enero de 2026').writers, 'Miriam del Valle · Ángela Bueno');
+    assert.equal(onDate('27 de febrero de 2026').writers, 'Lucía Cerván · Ángela Bueno Harris');
+    assert.equal(onDate('27 de marzo de 2026').writers, 'Ángela Bueno Harris · Pablo Pineño');
+    assert.equal(onDate('21 de octubre de 2025').performers, 'Diego Valverde · Elena Conde');
+    assert.equal(onDate('28 de marzo de 2025').performers, 'Elena Conde · Fabiana Pereira · Pablo Pineño · Diego Valverde');
+    assert.equal(onDate('27 de junio de 2023').writers, 'Álvaro Sandin · Irene Herráez');
+    assert.deepEqual(events.filter(event => event.castPending).map(event => event.date), [
+        '27 de marzo de 2026', '22 de mayo de 2025', '30 de marzo de 2025', '1 de febrero de 2025'
+    ]);
+    for (const section of sections) {
+        for (const event of section.events) {
+            const markup = terminal.buildScheduleCardMarkup(event, section);
+            assert.equal(markup.includes('Elenco pendiente de completar.'), !!event.castPending);
+            assert.equal(markup.includes('Escritores/as:'), !!event.writers);
+            assert.equal(markup.includes('Intérpretes:'), !!event.performers);
+            assert.equal(markup.includes('Participantes:'), !!event.participants);
+        }
+    }
+});
+
+test('mixed-role sources are credited as participants and all cast names are escaped', () => {
+    const { terminal, events } = harness();
+    const lima = events.find(event => event.date === '24 de enero de 2025');
+    assert.equal(lima.writers, undefined);
+    assert.equal(lima.performers, undefined);
+    assert.match(lima.participants, /Conny Betzabé/);
+    assert.match(lima.participants, /Karla Rivera/);
+    const markup = terminal.buildScheduleCardMarkup({
+        date: '1 de febrero de 2025', venue: 'Sala',
+        writers: 'Nombre <uno>', performers: 'Nombre & dos', participants: '<script>tres</script>'
+    }, { tone: 'showcase' });
+    assert.match(markup, /Nombre &lt;uno&gt;/);
+    assert.match(markup, /Nombre &amp; dos/);
+    assert.match(markup, /&lt;script&gt;tres&lt;\/script&gt;/);
+    assert.doesNotMatch(markup, /<script>|undefined|null/);
+});

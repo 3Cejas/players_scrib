@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-10-06",
+  "policy": "Publish only date-specific credits. Do not reuse a generic company roster. A mixed-role source is credited as participants; incomplete casts are explicitly marked. Do not publish contracts, financial records or private personal information.",
+  "dates": [
+    {
+      "date": "2026-04-09",
+      "sources": ["Existing approved Hollywood credits; dated DIEGO_09-04-26.pdf and MACA_09-04-26.pdf in the text archive"],
+      "note": "Existing writers and performers preserved."
+    },
+    {
+      "date": "2026-03-27",
+      "sources": ["https://www.instagram.com/scrib_show/p/DWcUN2VDC7l/"],
+      "note": "March 28 recap explicitly names the two writers from the previous evening. The performer headings contain no names, so the performers remain pending."
+    },
+    {
+      "date": "2026-02-27",
+      "sources": ["https://www.instagram.com/scrib_show/p/DU-9nyCjDpn/", "LUCÍA CERVÁN_27_02_26.pdf in the text archive"],
+      "note": "Date and both team rosters are explicit in the announcement."
+    },
+    {
+      "date": "2026-01-17",
+      "sources": ["https://www.instagram.com/scrib_show/p/DTSsuiIjDov/", "https://www.instagram.com/scrib_show/reel/DTYMIVEjFkS/"],
+      "note": "Date, writer roles and performer roles are explicit."
+    },
+    {
+      "date": "2025-11-16",
+      "sources": ["https://www.instagram.com/scrib_show/p/DQwaV4RDMJm/", "https://www.instagram.com/scrib_show/p/DQ6XuJJDDyJ/", "https://www.instagram.com/stringana/", "MIRIAM DELVALLE_16_11_25.pdf in the text archive"],
+      "note": "The announcement explicitly dates the performance to November 16 and names both writers and four performers. The writer's public profile confirms the spelling Álvaro Stríngana."
+    },
+    {
+      "date": "2025-10-21",
+      "sources": ["https://www.instagram.com/creacioninjuve/p/DPqP2NADdvO/", "PAULA CM_21_10_25.pdf in the text archive"],
+      "note": "The Matadero announcement explicitly lists both writers and the two performers."
+    },
+    {
+      "date": "2025-05-22",
+      "sources": ["IRENE HERRÁEZ_22_05_25.pdf in the text archive"],
+      "note": "Only this writer has been confirmed for this date. Do not reuse the previous night's cast without confirmation."
+    },
+    {
+      "date": "2025-05-21",
+      "sources": ["LUCÍA CERVÁN_21_05_25.pdf and MIRIAM DELVALLE_21_05_25.pdf in the text archive", "Luchana / Documento sin título (feedback created on May 22, 2025 at 10:32 UTC)"],
+      "note": "Both writers are dated by the original texts. The post-show feedback names the same writers and Diego, Elena, Ana and Pablo as performers. Its creation before the May 22 evening show associates it with May 21, not May 22."
+    },
+    {
+      "date": "2025-03-30",
+      "sources": ["MIRIAM DELVALLE_30_03_25.pdf in the text archive"],
+      "note": "Other writer and performers remain pending. MARCOS XALABARDER_30_03_26.pdf has a different year and is not assigned to this date."
+    },
+    {
+      "date": "2025-03-28",
+      "sources": ["https://www.instagram.com/navel.art/p/DHI-Qq5ouVb/", "https://www.instagram.com/navel.art/reel/DHnwMdhCpJ5/", "TERESA SANZ_28_03_25.pdf and MIRIAM DELVALLE_28_03_25.pdf in the text archive"],
+      "note": "The later show-week announcement updates the performers to Elena Conde, Fabiana Pereira, Pablo Pineño and Diego Valverde. Prefer this roster over the earlier announcement."
+    },
+    {
+      "date": "2025-02-01",
+      "sources": ["ADALID_01_02_25.pdf and CESAR_01_02_25.pdf in the text archive", "Peru / DOSSIER DE PRENSA / FUNCIÓN EN CASA DARTE, CUSCO"],
+      "note": "Only the two writers' first names are confirmed. Performer names remain pending."
+    },
+    {
+      "date": "2025-01-24",
+      "sources": ["https://www.instagram.com/kracc._/p/DFCTxSEuz6J/", "https://www.instagram.com/conbetz/", "Peru / DOSSIER DE PRENSA / FUNCIÓN EN KRACC, LIMA"],
+      "note": "The dated poster lists six participants without distinguishing writing from acting. Keep them under Participantes until the roles are confirmed. The public profile confirms the spelling Conny Betzabé."
+    },
+    {
+      "date": "2024-02-12",
+      "sources": ["Día de la mujer y niña en la ciencia / FICHA ARTÍSTICA SCRIB.docx"],
+      "note": "The dedicated artistic sheet lists two scientific writers and six performers. Alejandro has no surname in the source; Vity is credited as written."
+    },
+    {
+      "date": "2023-06-27",
+      "sources": ["WE NOW / Escaleta", "WE NOW / AGRADECIMIENTOS", "https://www.instagram.com/scrib_show/reel/C279zeaqoWR/"],
+      "note": "The show-day documents confirm the two writers and four performers. A generic dossier says Arantxa Fernández, while the specific recap says Arantxa González. Only Arantxa is displayed pending confirmation."
+    }
+  ]
+}

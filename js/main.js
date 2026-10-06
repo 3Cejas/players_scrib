@@ -877,6 +877,8 @@ function log( text ) {
                 },
                 {
                     date: "27 de marzo de 2026",
+                    writers: "Ángela Bueno Harris · Pablo Pineño",
+                    castPending: true,
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
                     address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
@@ -884,6 +886,8 @@ function log( text ) {
                 },
                 {
                     date: "27 de febrero de 2026",
+                    writers: "Lucía Cerván · Ángela Bueno Harris",
+                    performers: "Diego Valverde · Paula CM · Ana Sempere · Pablo Pineño",
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
                     address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
@@ -891,6 +895,8 @@ function log( text ) {
                 },
                 {
                     date: "17 de enero de 2026",
+                    writers: "Miriam del Valle · Ángela Bueno",
+                    performers: "Diego Valverde · Paula CM · Ana Sempere · Pablo Pineño",
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
                     address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
@@ -904,6 +910,8 @@ function log( text ) {
             events: [
                 {
                     date: "16 de noviembre de 2025",
+                    writers: "Álvaro Stríngana · Miriam del Valle",
+                    performers: "Ana Sempere · Pablo Pineño · Elena Conde · Diego Valverde",
                     time: "19:00 hrs.",
                     venue: "Sala Exlímite",
                     address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
@@ -912,18 +920,24 @@ function log( text ) {
                 {
                     date: "21 de octubre de 2025",
                     name: "XI Jornadas Escénicas INJUVE",
+                    writers: "Paula CM · Miriam del Valle",
+                    performers: "Diego Valverde · Elena Conde",
                     time: "16:30 hrs.",
                     venue: "Sala Plató · Matadero Madrid",
                     past: true
                 },
                 {
                     date: "22 de mayo de 2025",
+                    writers: "Irene Herráez",
+                    castPending: true,
                     time: "20:30 hrs.",
                     venue: "Sala Joven · Teatros Luchana, Madrid",
                     past: true
                 },
                 {
                     date: "21 de mayo de 2025",
+                    writers: "Lucía Cerván · Miriam del Valle",
+                    performers: "Diego Valverde · Elena Conde · Ana Sempere · Pablo Pineño",
                     time: "20:30 hrs.",
                     venue: "Sala Joven · Teatros Luchana, Madrid",
                     past: true
@@ -931,11 +945,15 @@ function log( text ) {
                 {
                     date: "30 de marzo de 2025",
                     name: "Festival MUTIS",
+                    writers: "Miriam del Valle",
+                    castPending: true,
                     venue: "Barcelona",
                     past: true
                 },
                 {
                     date: "28 de marzo de 2025",
+                    writers: "Teresa Sanz · Miriam del Valle",
+                    performers: "Elena Conde · Fabiana Pereira · Pablo Pineño · Diego Valverde",
                     time: "19:00 hrs.",
                     venue: "Sala NavelArt",
                     past: true
@@ -943,12 +961,15 @@ function log( text ) {
                 {
                     date: "1 de febrero de 2025",
                     name: "Extractivismo",
+                    writers: "Adalid · César",
+                    castPending: true,
                     venue: "Casa Darte · Cusco, Perú",
                     past: true
                 },
                 {
                     date: "24 de enero de 2025",
                     name: "Día de la Educación",
+                    participants: "Conny Betzabé · Edward Vega · Gabriela del Pilar · Karla Rivera · Viviana Távara · Jorge Palacios",
                     venue: "KRACC · Lima, Perú",
                     past: true
                 }
@@ -961,6 +982,8 @@ function log( text ) {
                 {
                     date: "12 de febrero de 2024",
                     name: "Día Internacional de la Niña y la Mujer en la Ciencia",
+                    writers: "Teresa Sanz · Paula CM",
+                    performers: "Sara Moreno · Paula Solís · Diego Valverde · Vity · Marta Repullés · Alejandro",
                     time: "19:00 hrs.",
                     venue: "Auditorio Universidad Carlos III de Madrid · Leganés",
                     past: true
@@ -974,6 +997,8 @@ function log( text ) {
                 {
                     date: "27 de junio de 2023",
                     name: "WE:NOW",
+                    writers: "Álvaro Sandin · Irene Herráez",
+                    performers: "Ana Sempere · Paula CM · Arantxa · Yulen Jiménez",
                     time: "19:00 hrs.",
                     venue: "Auditorio TAI · Madrid",
                     past: true
@@ -2437,6 +2462,8 @@ function log( text ) {
                 (event.name ? "<div class=\"schedule-card__name\">" + escapeHTML(event.name) + "</div>" : "") +
                 (event.writers ? "<div class=\"schedule-card__meta\"><strong>✍️ Escritores/as:</strong> " + escapeHTML(event.writers) + "</div>" : "") +
                 (event.performers ? "<div class=\"schedule-card__meta\"><strong>🎭 Intérpretes:</strong> " + escapeHTML(event.performers) + "</div>" : "") +
+                (event.participants ? "<div class=\"schedule-card__meta\"><strong>🎭 Participantes:</strong> " + escapeHTML(event.participants) + "</div>" : "") +
+                (event.castPending ? "<div class=\"schedule-card__address\">Elenco pendiente de completar.</div>" : "") +
                 (event.time ? "<div class=\"schedule-card__meta\"><strong>🕒 Hora:</strong> " + escapeHTML(event.time) + "</div>" : "") +
                 "<div class=\"schedule-card__meta\"><strong>📍 Espacio:</strong> " + escapeHTML(event.venue) + "</div>" +
                 (event.address ? "<div class=\"schedule-card__address\">" + escapeHTML(event.address) + "</div>" : "") +
