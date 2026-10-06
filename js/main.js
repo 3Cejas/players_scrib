@@ -587,6 +587,11 @@ function log( text ) {
 
         this.galleryLightboxIndex = -1;
 
+        this.galleryLightboxDisplayedIndex = -1;
+        this.galleryLightboxRequestId = 0;
+        this.galleryLightboxPendingImage = null;
+        this.galleryLightboxAnimation = null;
+
         this.asciiHeader = document.getElementById("containerascii");
 
     };
@@ -2152,11 +2157,34 @@ function log( text ) {
 
     };
 
-    Terminal.prototype.renderGalleryLightboxItem = function (index) {
+    Terminal.prototype.cancelGalleryLightboxTransition = function () {
+
+        this.galleryLightboxRequestId += 1;
+
+        if (this.galleryLightboxPendingImage) {
+            this.galleryLightboxPendingImage.onload = null;
+            this.galleryLightboxPendingImage.onerror = null;
+            this.galleryLightboxPendingImage = null;
+        }
+
+        if (this.galleryLightboxAnimation) {
+            this.galleryLightboxAnimation.cancel();
+            this.galleryLightboxAnimation = null;
+        }
+
+    };
+
+    Terminal.prototype.renderGalleryLightboxItem = function (index, direction) {
 
         var item;
         var isAtStart;
         var isAtEnd;
+        var requestId;
+        var pendingImage;
+        var prefersReducedMotion;
+        var canAnimate;
+        var commitImage;
+        var showLoadedImage;
 
         if (!this.galleryLightboxItems.length || index < 0 || index >= this.galleryLightboxItems.length) {
 
@@ -2164,18 +2192,85 @@ function log( text ) {
 
         }
 
+        this.cancelGalleryLightboxTransition();
+        requestId = this.galleryLightboxRequestId;
         item = this.galleryLightboxItems[index];
         isAtStart = index === 0;
         isAtEnd = index === this.galleryLightboxItems.length - 1;
 
         this.galleryLightboxIndex = index;
-        this.galleryLightboxImage.removeAttribute("src");
-        this.galleryLightboxImage.setAttribute("src", item.src);
-        this.galleryLightboxImage.setAttribute("alt", item.caption || "Imagen ampliada");
-        this.galleryLightboxCaption.textContent = item.caption;
         this.galleryLightboxPrev.disabled = isAtStart;
         this.galleryLightboxNext.disabled = isAtEnd;
         this.galleryLightbox.classList.toggle("output-lightbox--single", this.galleryLightboxItems.length <= 1);
+
+        prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        canAnimate = !!direction && !prefersReducedMotion && typeof this.galleryLightboxImage.animate === "function";
+
+        commitImage = function () {
+            if (requestId !== this.galleryLightboxRequestId) {
+                return;
+            }
+
+            if (this.galleryLightboxAnimation) {
+                this.galleryLightboxAnimation.cancel();
+                this.galleryLightboxAnimation = null;
+            }
+
+            this.galleryLightboxImage.setAttribute("src", item.src);
+            this.galleryLightboxImage.setAttribute("alt", item.caption || "Imagen ampliada");
+            this.galleryLightboxCaption.textContent = item.caption;
+            this.galleryLightboxDisplayedIndex = index;
+
+            if (canAnimate) {
+                this.galleryLightboxAnimation = this.galleryLightboxImage.animate([
+                    { opacity: 0, transform: "translateX(" + (direction * 18) + "px)" },
+                    { opacity: 1, transform: "translateX(0)" }
+                ], { duration: 230, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
+                // Cancellation is expected when navigating quickly or closing the gallery.
+                this.galleryLightboxAnimation.finished.catch(function () {});
+            }
+        }.bind(this);
+
+        if (!direction || !this.galleryLightboxImage.getAttribute("src")) {
+            commitImage();
+            return;
+        }
+
+        // Keep the current photo visible until its replacement has loaded.
+        pendingImage = new Image();
+        this.galleryLightboxPendingImage = pendingImage;
+        showLoadedImage = function () {
+            if (requestId !== this.galleryLightboxRequestId) {
+                return;
+            }
+
+            pendingImage.onload = null;
+            pendingImage.onerror = null;
+            this.galleryLightboxPendingImage = null;
+
+            if (canAnimate) {
+                this.galleryLightboxAnimation = this.galleryLightboxImage.animate([
+                    { opacity: 1, transform: "translateX(0)" },
+                    { opacity: 0, transform: "translateX(" + (direction * -8) + "px)" }
+                ], { duration: 110, easing: "ease-in", fill: "forwards" });
+                this.galleryLightboxAnimation.finished.then(commitImage, function () {});
+            } else {
+                commitImage();
+            }
+        }.bind(this);
+
+        pendingImage.onload = showLoadedImage;
+        pendingImage.onerror = function () {
+            if (requestId !== this.galleryLightboxRequestId) {
+                return;
+            }
+
+            this.cancelGalleryLightboxTransition();
+            this.galleryLightboxIndex = this.galleryLightboxDisplayedIndex;
+            this.galleryLightboxPrev.disabled = this.galleryLightboxIndex === 0;
+            this.galleryLightboxNext.disabled = this.galleryLightboxIndex === this.galleryLightboxItems.length - 1;
+        }.bind(this);
+        pendingImage.src = item.src;
 
     };
 
@@ -2189,7 +2284,7 @@ function log( text ) {
 
         }
 
-        this.renderGalleryLightboxItem(nextIndex);
+        this.renderGalleryLightboxItem(nextIndex, direction);
 
     };
 
@@ -2229,12 +2324,14 @@ function log( text ) {
 
         }
 
+        this.cancelGalleryLightboxTransition();
         this.galleryLightbox.classList.add("output-lightbox--hidden");
         this.galleryLightboxImage.removeAttribute("src");
         this.galleryLightboxImage.setAttribute("alt", "");
         this.galleryLightboxCaption.textContent = "";
         this.galleryLightboxItems = [];
         this.galleryLightboxIndex = -1;
+        this.galleryLightboxDisplayedIndex = -1;
         this.galleryLightboxPrev.disabled = true;
         this.galleryLightboxNext.disabled = true;
         this.galleryLightbox.classList.remove("output-lightbox--single");
