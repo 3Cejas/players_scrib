@@ -160,7 +160,7 @@ test('each date displays its own researched cast without reusing a generic roste
     assert.equal(onDate('28 de marzo de 2025').performers, 'Elena Conde · Fabiana Pereira · Pablo Pineño · Diego Valverde');
     assert.equal(onDate('27 de junio de 2023').writers, 'Álvaro Sandin · Irene Herráez');
     assert.deepEqual(events.filter(event => event.castPending).map(event => event.date), [
-        '27 de marzo de 2026', '1 de febrero de 2025'
+        '1 de febrero de 2025'
     ]);
     for (const section of sections) {
         for (const event of section.events) {
@@ -199,8 +199,13 @@ test('user-confirmed casts retain the writer and performer association for each 
     const mutis = onDate('30 de marzo de 2025');
     assert.equal(mutis.writers, 'Marcos Xalabarder · Miriam del Valle');
     assert.equal(mutis.performers, 'Pablo Pineño · Fabiana Pereira · Diego Valverde · Elena Conde');
-    assert.equal(onDate('27 de marzo de 2026').participants, 'Leire Froufe');
-    assert.equal(onDate('27 de marzo de 2026').performers, undefined);
+    const march27 = onDate('27 de marzo de 2026');
+    assert.equal(march27.participants, undefined);
+    assert.equal(march27.performers, 'Diego Valverde · Leire Froufe · Verónica Antonucci · Ana Sempere');
+    assert.equal(march27.castPending, undefined);
+    const march27Markup = terminal.buildScheduleCardMarkup(march27, sections[0]);
+    assert.match(march27Markup, /Intérpretes:<\/strong> Diego Valverde · Leire Froufe · Verónica Antonucci · Ana Sempere/);
+    assert.doesNotMatch(march27Markup, /Participantes:|pendiente/);
     assert.match(onDate('27 de junio de 2023').performers, /Arantxa González/);
     assert.doesNotMatch(source, /Ángela Bueno Harris/);
 });

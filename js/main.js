@@ -914,8 +914,7 @@ function log( text ) {
                 {
                     date: "27 de marzo de 2026",
                     writers: "Ángela Harris Bueno · Pablo Pineño",
-                    participants: "Leire Froufe",
-                    castPending: true,
+                    performers: "Diego Valverde · Leire Froufe · Verónica Antonucci · Ana Sempere",
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
                     address: "C. Primitiva Gañán, 5, Usera, 28026 Madrid",
