@@ -868,7 +868,10 @@ function log( text ) {
                 {
                     date: "24 de septiembre de 2026",
                     name: "Festival Imparables · X Muestra de Nueva Creación Escénica",
-                    castPending: true,
+                    teams: [
+                        { color: "red", writer: "Pablo Pineño", performers: "Laura Escobar · Verónica Antonucci" },
+                        { color: "blue", writer: "Álvaro Stríngana", performers: "Elena Conde · Ana Sempere" }
+                    ],
                     time: "20:00 hrs.",
                     venue: "Nave 73",
                     address: "C. Palos de la Frontera, 5, 28012 Madrid",
@@ -877,7 +880,10 @@ function log( text ) {
                 {
                     date: "23 de septiembre de 2026",
                     name: "Festival Imparables · X Muestra de Nueva Creación Escénica",
-                    castPending: true,
+                    teams: [
+                        { color: "red", writer: "Ángela Harris Bueno", performers: "Pablo Pineño · Verónica Antonucci" },
+                        { color: "blue", writer: "Elena Conde", performers: "Diego Valverde · Laura Escobar" }
+                    ],
                     time: "20:00 hrs.",
                     venue: "Nave 73",
                     address: "C. Palos de la Frontera, 5, 28012 Madrid",
@@ -886,7 +892,10 @@ function log( text ) {
                 {
                     date: "22 de septiembre de 2026",
                     name: "Festival Imparables · X Muestra de Nueva Creación Escénica",
-                    castPending: true,
+                    teams: [
+                        { color: "red", writer: "Ari", performers: "Ana Sempere · Pablo Pineño" },
+                        { color: "blue", writer: "Alba", performers: "Dani · Elena Conde" }
+                    ],
                     time: "20:00 hrs.",
                     venue: "Nave 73",
                     address: "C. Palos de la Frontera, 5, 28012 Madrid",
@@ -895,8 +904,8 @@ function log( text ) {
                 {
                     date: "9 de abril de 2026",
                     name: "Torneo <SCRI> B · Octavos",
-                    writers: "Diego vs Maca",
-                    performers: "Ari · Pablo · Judith · Ángela",
+                    writers: "Diego Valverde · Macarena Millán",
+                    performers: "Ari · Pablo Pineño · Judith Casariego · Ángela Harris Bueno",
                     time: "20:30 hrs.",
                     venue: "Espacio Hollywood",
                     address: "C. del Infante, 3, Madrid",
@@ -904,7 +913,8 @@ function log( text ) {
                 },
                 {
                     date: "27 de marzo de 2026",
-                    writers: "Ángela Bueno Harris · Pablo Pineño",
+                    writers: "Ángela Harris Bueno · Pablo Pineño",
+                    participants: "Leire Froufe",
                     castPending: true,
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
@@ -913,7 +923,7 @@ function log( text ) {
                 },
                 {
                     date: "27 de febrero de 2026",
-                    writers: "Lucía Cerván · Ángela Bueno Harris",
+                    writers: "Lucía Cerván · Ángela Harris Bueno",
                     performers: "Diego Valverde · Paula CM · Ana Sempere · Pablo Pineño",
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
@@ -922,7 +932,7 @@ function log( text ) {
                 },
                 {
                     date: "17 de enero de 2026",
-                    writers: "Miriam del Valle · Ángela Bueno",
+                    writers: "Miriam del Valle · Ángela Harris Bueno",
                     performers: "Diego Valverde · Paula CM · Ana Sempere · Pablo Pineño",
                     time: "20:00 hrs.",
                     venue: "Sala Exlímite",
@@ -955,8 +965,10 @@ function log( text ) {
                 },
                 {
                     date: "22 de mayo de 2025",
-                    writers: "Irene Herráez",
-                    castPending: true,
+                    teams: [
+                        { writer: "Irene Herráez", performers: "Diego Valverde · Elena Conde" },
+                        { writer: "Paula CM", performers: "Ana Sempere · Pablo Pineño" }
+                    ],
                     time: "20:30 hrs.",
                     venue: "Sala Joven · Teatros Luchana, Madrid",
                     past: true
@@ -972,8 +984,8 @@ function log( text ) {
                 {
                     date: "30 de marzo de 2025",
                     name: "Festival MUTIS",
-                    writers: "Miriam del Valle",
-                    castPending: true,
+                    writers: "Marcos Xalabarder · Miriam del Valle",
+                    performers: "Pablo Pineño · Fabiana Pereira · Diego Valverde · Elena Conde",
                     time: "17:30 hrs.",
                     venue: "Sala la Off · Barcelona",
                     past: true
@@ -989,6 +1001,7 @@ function log( text ) {
                 {
                     date: "1 de febrero de 2025",
                     name: "Extractivismo",
+                    support: "Con el apoyo de INJUVE y AC/E (Acción Cultural Española)",
                     writers: "Adalid · César",
                     castPending: true,
                     venue: "Casa Darte · Cusco, Perú",
@@ -997,6 +1010,7 @@ function log( text ) {
                 {
                     date: "24 de enero de 2025",
                     name: "Día de la Educación",
+                    support: "Con el apoyo de INJUVE y AC/E (Acción Cultural Española)",
                     participants: "Conny Betzabé · Edward Vega · Gabriela del Pilar · Karla Rivera · Viviana Távara · Jorge Palacios",
                     venue: "KRACC · Lima, Perú",
                     past: true
@@ -1026,7 +1040,7 @@ function log( text ) {
                     date: "27 de junio de 2023",
                     name: "WE:NOW",
                     writers: "Álvaro Sandin · Irene Herráez",
-                    performers: "Ana Sempere · Paula CM · Arantxa · Yulen Jiménez",
+                    performers: "Ana Sempere · Paula CM · Arantxa González · Yulen Jiménez",
                     time: "19:00 hrs.",
                     venue: "Auditorio TAI · Madrid",
                     past: true
@@ -2473,6 +2487,16 @@ function log( text ) {
         var isPast = this.isScheduleEventPast(event, section);
         var cardClassName = "schedule-card schedule-card--" + section.tone + (isPast ? " schedule-card--past" : "");
         var ticketMarkup = "";
+        var teamsMarkup = Array.isArray(event.teams) && event.teams.length ?
+            "<div class=\"schedule-card__teams\">" + event.teams.map(function (team) {
+                var isRed = team.color === "red";
+                var hasColor = isRed || team.color === "blue";
+                return "<div class=\"schedule-card__team" + (hasColor ? " schedule-card__team--" + (isRed ? "red" : "blue") : "") + "\">" +
+                    (hasColor ? "<strong class=\"schedule-card__team-label\">" + (isRed ? "🔴 Equipo rojo" : "🔵 Equipo azul") + "</strong>" : "") +
+                    "<div class=\"schedule-card__meta\"><strong>✍️ Escritxr:</strong> " + escapeHTML(team.writer) + "</div>" +
+                    "<div class=\"schedule-card__meta\"><strong>🎭 Intérpretes:</strong> " + escapeHTML(team.performers) + "</div>" +
+                "</div>";
+            }).join("") + "</div>" : "";
 
         if (!isPast && event.ticketUrl) {
 
@@ -2488,6 +2512,7 @@ function log( text ) {
             "<div class=\"schedule-card__body\">" +
                 "<div class=\"schedule-card__date\">📅 " + escapeHTML(event.date) + "</div>" +
                 (event.name ? "<div class=\"schedule-card__name\">" + escapeHTML(event.name) + "</div>" : "") +
+                teamsMarkup +
                 (event.writers ? "<div class=\"schedule-card__meta\"><strong>✍️ Escritores/as:</strong> " + escapeHTML(event.writers) + "</div>" : "") +
                 (event.performers ? "<div class=\"schedule-card__meta\"><strong>🎭 Intérpretes:</strong> " + escapeHTML(event.performers) + "</div>" : "") +
                 (event.participants ? "<div class=\"schedule-card__meta\"><strong>🎭 Participantes:</strong> " + escapeHTML(event.participants) + "</div>" : "") +
@@ -2495,6 +2520,7 @@ function log( text ) {
                 (event.time ? "<div class=\"schedule-card__meta\"><strong>🕒 Hora:</strong> " + escapeHTML(event.time) + "</div>" : "") +
                 "<div class=\"schedule-card__meta\"><strong>📍 Espacio:</strong> " + escapeHTML(event.venue) + "</div>" +
                 (event.address ? "<div class=\"schedule-card__address\">" + escapeHTML(event.address) + "</div>" : "") +
+                (event.support ? "<div class=\"schedule-card__support\">✨ " + escapeHTML(event.support) + "</div>" : "") +
             "</div>" +
             ticketMarkup +
         "</article>";

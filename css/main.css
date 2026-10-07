@@ -2268,6 +2268,42 @@ body,
 
 }
 
+.schedule-card__teams {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.schedule-card__team {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.65rem;
+    border-left: 3px solid currentColor;
+    border-radius: 0.35rem;
+}
+
+.schedule-card__team--red {
+    color: #ff9da8;
+    background: rgba(255, 92, 114, 0.07);
+}
+
+.schedule-card__team--blue {
+    color: #8fefff;
+    background: rgba(99, 231, 255, 0.07);
+}
+
+.schedule-card__team-label {
+    line-height: 1.45;
+}
+
+.schedule-card__support {
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 240, 184, 0.2);
+    color: #fff0b8;
+    line-height: 1.45;
+}
+
 .schedule-card__ticket {
 
     display: inline-flex;

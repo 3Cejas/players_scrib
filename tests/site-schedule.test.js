@@ -57,12 +57,15 @@ test('Imparables includes each Nave 73 performance in September 2026 with its co
         assert.equal(event.time, '20:00 hrs.');
         assert.equal(event.address, 'C. Palos de la Frontera, 5, 28012 Madrid');
         assert.match(event.name, /Festival Imparables/);
-        assert.equal(event.castPending, true);
+        assert.equal(event.castPending, undefined);
+        assert.equal(event.teams.length, 2);
         assert.equal(event.writers, undefined);
         assert.equal(event.performers, undefined);
         const markup = terminal.buildScheduleCardMarkup(event, sections[0]);
         assert.match(markup, /schedule-card--past/);
-        assert.match(markup, /Elenco pendiente de completar/);
+        assert.match(markup, /Equipo rojo/);
+        assert.match(markup, /Equipo azul/);
+        assert.doesNotMatch(markup, /Elenco pendiente de completar/);
         assert.doesNotMatch(markup, /Entradas|schedule-card__ticket/);
     }
 });
@@ -81,7 +84,8 @@ test('Hollywood contains only the April 9 function backed by its liquidation', (
     const hollywood = events.filter(event => event.venue === 'Espacio Hollywood');
     assert.equal(hollywood.length, 1);
     assert.equal(hollywood[0].date, '9 de abril de 2026');
-    assert.equal(hollywood[0].writers, 'Diego vs Maca');
+    assert.equal(hollywood[0].writers, 'Diego Valverde · Macarena Millán');
+    assert.equal(hollywood[0].performers, 'Ari · Pablo Pineño · Judith Casariego · Ángela Harris Bueno');
 });
 
 test('the email review adds the confirmed MUTIS time and excludes the cancelled NavelArt proposal', () => {
@@ -147,27 +151,76 @@ test('dates are grouped in separate year sections, newest first, with each funct
 
 test('each date displays its own researched cast without reusing a generic roster', () => {
     const { terminal, sections, events } = harness();
-    assert.ok(events.every(event => event.writers || event.performers || event.participants || event.castPending));
+    assert.ok(events.every(event => event.writers || event.performers || event.participants || event.teams || event.castPending));
     const onDate = date => events.find(event => event.date === date);
-    assert.equal(onDate('17 de enero de 2026').writers, 'Miriam del Valle · Ángela Bueno');
-    assert.equal(onDate('27 de febrero de 2026').writers, 'Lucía Cerván · Ángela Bueno Harris');
-    assert.equal(onDate('27 de marzo de 2026').writers, 'Ángela Bueno Harris · Pablo Pineño');
+    assert.equal(onDate('17 de enero de 2026').writers, 'Miriam del Valle · Ángela Harris Bueno');
+    assert.equal(onDate('27 de febrero de 2026').writers, 'Lucía Cerván · Ángela Harris Bueno');
+    assert.equal(onDate('27 de marzo de 2026').writers, 'Ángela Harris Bueno · Pablo Pineño');
     assert.equal(onDate('21 de octubre de 2025').performers, 'Diego Valverde · Elena Conde');
     assert.equal(onDate('28 de marzo de 2025').performers, 'Elena Conde · Fabiana Pereira · Pablo Pineño · Diego Valverde');
     assert.equal(onDate('27 de junio de 2023').writers, 'Álvaro Sandin · Irene Herráez');
     assert.deepEqual(events.filter(event => event.castPending).map(event => event.date), [
-        '24 de septiembre de 2026', '23 de septiembre de 2026', '22 de septiembre de 2026',
-        '27 de marzo de 2026', '22 de mayo de 2025', '30 de marzo de 2025', '1 de febrero de 2025'
+        '27 de marzo de 2026', '1 de febrero de 2025'
     ]);
     for (const section of sections) {
         for (const event of section.events) {
             const markup = terminal.buildScheduleCardMarkup(event, section);
             assert.equal(markup.includes('Elenco pendiente de completar.'), !!event.castPending);
             assert.equal(markup.includes('Escritores/as:'), !!event.writers);
-            assert.equal(markup.includes('Intérpretes:'), !!event.performers);
+            assert.equal(markup.includes('Intérpretes:'), !!event.performers || !!event.teams);
             assert.equal(markup.includes('Participantes:'), !!event.participants);
         }
     }
+});
+
+test('user-confirmed casts retain the writer and performer association for each team and date', () => {
+    const { terminal, sections, events } = harness();
+    const onDate = date => events.find(event => event.date === date);
+    assert.deepEqual(onDate('22 de septiembre de 2026').teams, [
+        { color: 'red', writer: 'Ari', performers: 'Ana Sempere · Pablo Pineño' },
+        { color: 'blue', writer: 'Alba', performers: 'Dani · Elena Conde' }
+    ]);
+    assert.deepEqual(onDate('23 de septiembre de 2026').teams, [
+        { color: 'red', writer: 'Ángela Harris Bueno', performers: 'Pablo Pineño · Verónica Antonucci' },
+        { color: 'blue', writer: 'Elena Conde', performers: 'Diego Valverde · Laura Escobar' }
+    ]);
+    assert.deepEqual(onDate('24 de septiembre de 2026').teams, [
+        { color: 'red', writer: 'Pablo Pineño', performers: 'Laura Escobar · Verónica Antonucci' },
+        { color: 'blue', writer: 'Álvaro Stríngana', performers: 'Elena Conde · Ana Sempere' }
+    ]);
+    const luchana = onDate('22 de mayo de 2025');
+    assert.deepEqual(luchana.teams, [
+        { writer: 'Irene Herráez', performers: 'Diego Valverde · Elena Conde' },
+        { writer: 'Paula CM', performers: 'Ana Sempere · Pablo Pineño' }
+    ]);
+    const luchanaMarkup = terminal.buildScheduleCardMarkup(luchana, sections[1]);
+    assert.doesNotMatch(luchanaMarkup, /Equipo rojo|Equipo azul|pendiente/);
+    assert.match(luchanaMarkup, /Irene Herráez<\/div><div[^>]*><strong>🎭 Intérpretes:<\/strong> Diego Valverde · Elena Conde/);
+    const mutis = onDate('30 de marzo de 2025');
+    assert.equal(mutis.writers, 'Marcos Xalabarder · Miriam del Valle');
+    assert.equal(mutis.performers, 'Pablo Pineño · Fabiana Pereira · Diego Valverde · Elena Conde');
+    assert.equal(onDate('27 de marzo de 2026').participants, 'Leire Froufe');
+    assert.equal(onDate('27 de marzo de 2026').performers, undefined);
+    assert.match(onDate('27 de junio de 2023').performers, /Arantxa González/);
+    assert.doesNotMatch(source, /Ángela Bueno Harris/);
+});
+
+test('Peru functions credit their support and team credits safely escape all names', () => {
+    const { terminal, sections, events } = harness();
+    for (const event of events.filter(event => /Perú/.test(event.venue))) {
+        assert.equal(event.support, 'Con el apoyo de INJUVE y AC/E (Acción Cultural Española)');
+        assert.match(terminal.buildScheduleCardMarkup(event, sections[1]), /schedule-card__support/);
+    }
+    const markup = terminal.buildScheduleCardMarkup({
+        date: '22 de septiembre de 2026', venue: 'Sala',
+        teams: [{ color: 'red', writer: '<script>Nombre</script>', performers: 'Nombre & dos' },
+            { color: 'blue" onclick="alert(1)', writer: 'Otra', performers: 'Tres' }],
+        support: '<b>Apoyo</b>'
+    }, { tone: 'showcase' });
+    assert.match(markup, /&lt;script&gt;Nombre&lt;\/script&gt;/);
+    assert.match(markup, /Nombre &amp; dos/);
+    assert.match(markup, /&lt;b&gt;Apoyo&lt;\/b&gt;/);
+    assert.doesNotMatch(markup, /<script>|onclick|undefined|null/);
 });
 
 test('every calendar performance retains a matching evidence record', () => {
