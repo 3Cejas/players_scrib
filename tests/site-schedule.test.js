@@ -42,7 +42,7 @@ test('the historical calendar contains the seventeen approved functions, newest 
     assert.ok(events.some(event => /Matadero/.test(event.venue) && event.date === '21 de octubre de 2025'));
     assert.deepEqual(events.filter(event => /Luchana/.test(event.venue)).map(event => event.date), ['22 de mayo de 2025', '21 de mayo de 2025']);
     assert.deepEqual(events.filter(event => /Perú/.test(event.venue)).map(event => event.date), ['1 de febrero de 2025', '24 de enero de 2025']);
-    assert.ok(events.some(event => event.name === 'Festival MUTIS' && event.date === '30 de marzo de 2025'));
+    assert.ok(events.some(event => event.name === 'Festival MUTIS' && event.date === '30 de marzo de 2025' && event.venue === 'Sala la Off · Barcelona'));
     assert.ok(events.some(event => event.venue === 'Sala NavelArt' && event.date === '28 de marzo de 2025'));
 });
 
