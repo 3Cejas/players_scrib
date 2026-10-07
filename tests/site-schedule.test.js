@@ -84,6 +84,22 @@ test('Hollywood contains only the April 9 function backed by its liquidation', (
     assert.equal(hollywood[0].writers, 'Diego vs Maca');
 });
 
+test('the email review adds the confirmed MUTIS time and excludes the cancelled NavelArt proposal', () => {
+    const { terminal, sections, events } = harness();
+    const mutis = events.find(event => event.name === 'Festival MUTIS');
+    assert.equal(mutis.date, '30 de marzo de 2025');
+    assert.equal(mutis.venue, 'Sala la Off · Barcelona');
+    assert.equal(mutis.time, '17:30 hrs.');
+    assert.match(terminal.buildScheduleCardMarkup(mutis, sections[1]), /17:30 hrs\./);
+    assert.equal(events.some(event => event.date === '7 de junio de 2025'), false);
+    for (const luchana of events.filter(event => /Luchana/.test(event.venue))) {
+        assert.equal(luchana.time, '20:30 hrs.');
+    }
+    const evidence = JSON.parse(fs.readFileSync(path.join(__dirname, '../docs/site-cast-sources.json'), 'utf8'));
+    assert.ok(evidence.emailReview.excludedProposals.some(event => event.date === '2025-06-07' && /cancelled/.test(event.reason)));
+    assert.match(evidence.dates.find(event => event.date === '2025-03-30').note, /17:30/);
+});
+
 test('unconfirmed times are omitted without rendering undefined or empty labels', () => {
     const { terminal, sections } = harness();
     for (const section of sections) {

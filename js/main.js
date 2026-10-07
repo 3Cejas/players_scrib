@@ -974,6 +974,7 @@ function log( text ) {
                     name: "Festival MUTIS",
                     writers: "Miriam del Valle",
                     castPending: true,
+                    time: "17:30 hrs.",
                     venue: "Sala la Off · Barcelona",
                     past: true
                 },

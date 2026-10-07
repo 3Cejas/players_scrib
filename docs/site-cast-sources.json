@@ -1,21 +1,33 @@
 {
   "checkedAt": "2026-10-07",
   "policy": "Publish only date-specific credits. Do not reuse a generic company roster. A mixed-role source is credited as participants; incomplete casts are explicitly marked. Do not publish contracts, financial records or private personal information.",
+  "emailReview": {
+    "checkedAt": "2026-10-07",
+    "scope": "MUTIS, Nave 73 / Imparables, Luchana, Exlímite, Peru and WE:NOW performance dates, times and casts.",
+    "excludedProposals": [
+      {
+        "date": "2025-06-07",
+        "venue": "Sala NavelArt",
+        "sources": ["Email: Función de <SCRI> B en Junio, cancellation on May 27, 2025 and venue acknowledgement on May 28, 2025"],
+        "reason": "The proposed function was explicitly cancelled. Do not add it to the performance calendar."
+      }
+    ]
+  },
   "dates": [
     {
       "date": "2026-09-24",
-      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdejkTis0Vv/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/"],
-      "note": "The official festival programme lists September 22, 23 and 24. SCRIB's September 2026 announcements confirm Nave 73 and 20:00. Exact writing and performing credits for this date remain pending; do not copy the generic company roster."
+      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdejkTis0Vv/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/", "Email: FECHAS IMPARABLES 2026_SCRIB, June 21 and July 4, 2026; FICHA Sutura.docx sent July 14, 2026"],
+      "note": "The programme, announcements and venue email confirm September 22, 23 and 24 at 20:00. The July 4 reply explicitly says the company was planning different casts each day; the July 14 attachment lists a combined roster without dates or writer/performer roles. Exact credits remain pending; do not assign that roster to every date."
     },
     {
       "date": "2026-09-23",
-      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdYlsz9Mi_X/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/"],
-      "note": "The official festival programme lists September 22, 23 and 24. SCRIB's September 2026 announcements confirm Nave 73 and 20:00. Exact writing and performing credits for this date remain pending; do not copy the generic company roster."
+      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdYlsz9Mi_X/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/", "Email: FECHAS IMPARABLES 2026_SCRIB, June 21 and July 4, 2026; FICHA Sutura.docx sent July 14, 2026"],
+      "note": "The programme, announcements and venue email confirm September 22, 23 and 24 at 20:00. The July 4 reply explicitly says the company was planning different casts each day; the July 14 attachment lists a combined roster without dates or writer/performer roles. Exact credits remain pending; do not assign that roster to every date."
     },
     {
       "date": "2026-09-22",
-      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/"],
-      "note": "The official festival programme lists September 22, 23 and 24. The September 15, 2026 SCRIB announcement confirms Nave 73 and 20:00. Exact writing and performing credits for this date remain pending; do not copy the generic company roster."
+      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/", "Email: FECHAS IMPARABLES 2026_SCRIB, June 21 and July 4, 2026; FICHA Sutura.docx sent July 14, 2026"],
+      "note": "The programme, announcements and venue email confirm September 22, 23 and 24 at 20:00. The July 4 reply explicitly says the company was planning different casts each day; the July 14 attachment lists a combined roster without dates or writer/performer roles. Exact credits remain pending; do not assign that roster to every date."
     },
     {
       "date": "2026-04-09",
@@ -49,18 +61,18 @@
     },
     {
       "date": "2025-05-22",
-      "sources": ["IRENE HERRÁEZ_22_05_25.pdf in the text archive"],
-      "note": "Only this writer has been confirmed for this date. Do not reuse the previous night's cast without confirmation."
+      "sources": ["IRENE HERRÁEZ_22_05_25.pdf in the text archive", "Email: Montaje <Scrib>B - Sala Joven, May 6, 2025"],
+      "note": "The venue's technical email explicitly confirms May 21 and 22 at 20:30. Invitations sent May 16 incorrectly say 20:00; keep the venue-confirmed time. Only this writer has been confirmed for May 22. Do not reuse the previous night's cast without confirmation."
     },
     {
       "date": "2025-05-21",
-      "sources": ["LUCÍA CERVÁN_21_05_25.pdf and MIRIAM DELVALLE_21_05_25.pdf in the text archive", "Luchana / Documento sin título (feedback created on May 22, 2025 at 10:32 UTC)"],
-      "note": "Both writers are dated by the original texts. The post-show feedback names the same writers and Diego, Elena, Ana and Pablo as performers. Its creation before the May 22 evening show associates it with May 21, not May 22."
+      "sources": ["LUCÍA CERVÁN_21_05_25.pdf and MIRIAM DELVALLE_21_05_25.pdf in the text archive", "Luchana / Documento sin título (feedback created on May 22, 2025 at 10:32 UTC)", "Email: Montaje <Scrib>B - Sala Joven, May 6, 2025; ticket confirmation dated May 21, 2025 (event time only)"],
+      "note": "The venue's technical email explicitly confirms May 21 and 22 at 20:30, corroborated by the May 21 ticket confirmation. Invitations sent May 16 incorrectly say 20:00; keep the corroborated time. Both writers are dated by the original texts. Post-show feedback names these writers and Diego, Elena, Ana and Pablo as performers; its creation before the May 22 evening show associates it with May 21, not May 22."
     },
     {
       "date": "2025-03-30",
-      "sources": ["MIRIAM DELVALLE_30_03_25.pdf in the text archive", "User-confirmed venue on October 7, 2026: Sala la Off, Barcelona"],
-      "note": "Venue corrected from Barcelona to Sala la Off, Barcelona, as confirmed by the user. Other writer and performers remain pending. MARCOS XALABARDER_30_03_26.pdf has a different year and is not assigned to this date."
+      "sources": ["MIRIAM DELVALLE_30_03_25.pdf in the text archive", "User-confirmed venue on October 7, 2026: Sala la Off, Barcelona", "Email: Enlace a la venta de entradas - <Scri>B, Festival MUTIS, March 22, 2025"],
+      "note": "Venue is Sala la Off, Barcelona, as confirmed by the user. The festival's March 22 promotion email explicitly confirms Sunday March 30 at 17:30. Other writer and performers remain pending. MARCOS XALABARDER_30_03_26.pdf has a different year and is not assigned to this date."
     },
     {
       "date": "2025-03-28",
