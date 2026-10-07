@@ -866,6 +866,33 @@ function log( text ) {
             year: 2026,
             events: [
                 {
+                    date: "24 de septiembre de 2026",
+                    name: "Festival Imparables · X Muestra de Nueva Creación Escénica",
+                    castPending: true,
+                    time: "20:00 hrs.",
+                    venue: "Nave 73",
+                    address: "C. Palos de la Frontera, 5, 28012 Madrid",
+                    past: true
+                },
+                {
+                    date: "23 de septiembre de 2026",
+                    name: "Festival Imparables · X Muestra de Nueva Creación Escénica",
+                    castPending: true,
+                    time: "20:00 hrs.",
+                    venue: "Nave 73",
+                    address: "C. Palos de la Frontera, 5, 28012 Madrid",
+                    past: true
+                },
+                {
+                    date: "22 de septiembre de 2026",
+                    name: "Festival Imparables · X Muestra de Nueva Creación Escénica",
+                    castPending: true,
+                    time: "20:00 hrs.",
+                    venue: "Nave 73",
+                    address: "C. Palos de la Frontera, 5, 28012 Madrid",
+                    past: true
+                },
+                {
                     date: "9 de abril de 2026",
                     name: "Torneo <SCRI> B · Octavos",
                     writers: "Diego vs Maca",

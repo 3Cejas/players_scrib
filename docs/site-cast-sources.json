@@ -1,7 +1,22 @@
 {
-  "checkedAt": "2026-10-06",
+  "checkedAt": "2026-10-07",
   "policy": "Publish only date-specific credits. Do not reuse a generic company roster. A mixed-role source is credited as participants; incomplete casts are explicitly marked. Do not publish contracts, financial records or private personal information.",
   "dates": [
+    {
+      "date": "2026-09-24",
+      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdejkTis0Vv/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/"],
+      "note": "The official festival programme lists September 22, 23 and 24. SCRIB's September 2026 announcements confirm Nave 73 and 20:00. Exact writing and performing credits for this date remain pending; do not copy the generic company roster."
+    },
+    {
+      "date": "2026-09-23",
+      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdYlsz9Mi_X/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/"],
+      "note": "The official festival programme lists September 22, 23 and 24. SCRIB's September 2026 announcements confirm Nave 73 and 20:00. Exact writing and performing credits for this date remain pending; do not copy the generic company roster."
+    },
+    {
+      "date": "2026-09-22",
+      "sources": ["https://nave73.es/imparables/", "https://www.instagram.com/scrib_show/reel/DdUSD_UMKrV/"],
+      "note": "The official festival programme lists September 22, 23 and 24. The September 15, 2026 SCRIB announcement confirms Nave 73 and 20:00. Exact writing and performing credits for this date remain pending; do not copy the generic company roster."
+    },
     {
       "date": "2026-04-09",
       "sources": ["Existing approved Hollywood credits; dated DIEGO_09-04-26.pdf and MACA_09-04-26.pdf in the text archive"],

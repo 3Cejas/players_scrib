@@ -26,17 +26,17 @@ function harness() {
     return { terminal: new context.Terminal(), sections, events: sections.flatMap(section => section.events) };
 }
 
-test('the historical calendar contains the fourteen approved functions, newest first', () => {
+test('the historical calendar contains the seventeen approved functions, newest first', () => {
     const { terminal, sections, events } = harness();
     assert.deepEqual(sections.map(section => section.year), [2026, 2025, 2024, 2023]);
-    assert.equal(events.length, 14);
+    assert.equal(events.length, 17);
     const timestamps = sections.flatMap(section => section.events.map(event => {
         assert.equal(event.past, true);
         assert.equal(terminal.isScheduleEventPast(event, section), true);
         return terminal.parseScheduleEventDate(event, section).getTime();
     }));
     assert.deepEqual(timestamps, [...timestamps].sort((left, right) => right - left));
-    assert.equal(new Set(timestamps).size, 14);
+    assert.equal(new Set(timestamps).size, 17);
     assert.ok(events.some(event => event.name === 'WE:NOW' && event.date === '27 de junio de 2023'));
     assert.ok(events.some(event => /Niña y la Mujer en la Ciencia/.test(event.name) && event.date === '12 de febrero de 2024'));
     assert.ok(events.some(event => /Matadero/.test(event.venue) && event.date === '21 de octubre de 2025'));
@@ -44,6 +44,27 @@ test('the historical calendar contains the fourteen approved functions, newest f
     assert.deepEqual(events.filter(event => /Perú/.test(event.venue)).map(event => event.date), ['1 de febrero de 2025', '24 de enero de 2025']);
     assert.ok(events.some(event => event.name === 'Festival MUTIS' && event.date === '30 de marzo de 2025'));
     assert.ok(events.some(event => event.venue === 'Sala NavelArt' && event.date === '28 de marzo de 2025'));
+});
+
+test('Imparables includes each Nave 73 performance in September 2026 with its confirmed time and venue', () => {
+    const { terminal, sections, events } = harness();
+    const nave73 = events.filter(event => event.venue === 'Nave 73');
+    assert.deepEqual(nave73.map(event => event.date), [
+        '24 de septiembre de 2026', '23 de septiembre de 2026', '22 de septiembre de 2026'
+    ]);
+    assert.deepEqual(events.slice(0, 3), nave73);
+    for (const event of nave73) {
+        assert.equal(event.time, '20:00 hrs.');
+        assert.equal(event.address, 'C. Palos de la Frontera, 5, 28012 Madrid');
+        assert.match(event.name, /Festival Imparables/);
+        assert.equal(event.castPending, true);
+        assert.equal(event.writers, undefined);
+        assert.equal(event.performers, undefined);
+        const markup = terminal.buildScheduleCardMarkup(event, sections[0]);
+        assert.match(markup, /schedule-card--past/);
+        assert.match(markup, /Elenco pendiente de completar/);
+        assert.doesNotMatch(markup, /Entradas|schedule-card__ticket/);
+    }
 });
 
 test('Exlímite includes January and uses the performance date, not the November setup', () => {
@@ -73,7 +94,7 @@ test('unconfirmed times are omitted without rendering undefined or empty labels'
         }
     }
     const markup = terminal.buildScheduleMarkup();
-    assert.equal((markup.match(/<article /g) || []).length, 14);
+    assert.equal((markup.match(/<article /g) || []).length, 17);
     assert.match(markup, /Torneo &lt;SCRI&gt; B/);
     assert.doesNotMatch(markup, /Entradas|schedule-card__ticket/);
     assert.doesNotMatch(markup, /schedule-section__header|schedule-section__title|schedule-section__subtitle/);
@@ -110,7 +131,7 @@ test('dates are grouped in separate year sections, newest first, with each funct
 
 test('each date displays its own researched cast without reusing a generic roster', () => {
     const { terminal, sections, events } = harness();
-    assert.ok(events.every(event => event.writers || event.performers || event.participants));
+    assert.ok(events.every(event => event.writers || event.performers || event.participants || event.castPending));
     const onDate = date => events.find(event => event.date === date);
     assert.equal(onDate('17 de enero de 2026').writers, 'Miriam del Valle · Ángela Bueno');
     assert.equal(onDate('27 de febrero de 2026').writers, 'Lucía Cerván · Ángela Bueno Harris');
@@ -119,6 +140,7 @@ test('each date displays its own researched cast without reusing a generic roste
     assert.equal(onDate('28 de marzo de 2025').performers, 'Elena Conde · Fabiana Pereira · Pablo Pineño · Diego Valverde');
     assert.equal(onDate('27 de junio de 2023').writers, 'Álvaro Sandin · Irene Herráez');
     assert.deepEqual(events.filter(event => event.castPending).map(event => event.date), [
+        '24 de septiembre de 2026', '23 de septiembre de 2026', '22 de septiembre de 2026',
         '27 de marzo de 2026', '22 de mayo de 2025', '30 de marzo de 2025', '1 de febrero de 2025'
     ]);
     for (const section of sections) {
@@ -130,6 +152,17 @@ test('each date displays its own researched cast without reusing a generic roste
             assert.equal(markup.includes('Participantes:'), !!event.participants);
         }
     }
+});
+
+test('every calendar performance retains a matching evidence record', () => {
+    const { terminal, sections } = harness();
+    const evidence = JSON.parse(fs.readFileSync(path.join(__dirname, '../docs/site-cast-sources.json'), 'utf8'));
+    const dates = sections.flatMap(section => section.events.map(event => {
+        const date = terminal.parseScheduleEventDate(event, section);
+        return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    }));
+    assert.deepEqual(evidence.dates.map(record => record.date), dates);
+    assert.ok(evidence.dates.every(record => record.sources.length > 0 && record.note));
 });
 
 test('mixed-role sources are credited as participants and all cast names are escaped', () => {
