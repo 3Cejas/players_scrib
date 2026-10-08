@@ -82,4 +82,15 @@
     applyButton.addEventListener('click', apply);
     socket.on('control_estado', updateState);
     socket.on('bolo_configuracion_cargada', accept);
+    socket.on('bolo_informe_archivo', result => {
+        let node = document.getElementById('bolo_report_archive_status');
+        if (!node) {
+            node = document.createElement('p'); node.id = 'bolo_report_archive_status';
+            node.setAttribute('role', 'status');
+            document.getElementById('bolo_config_active').insertAdjacentElement('afterend', node);
+        }
+        node.textContent = result.status === 'saved' ? '✓ Informe de partida guardado en Mundo SCRIB.'
+            : result.status === 'error' ? '⚠ No se ha podido guardar el informe. Revisa el almacenamiento del servidor.'
+            : 'Informe preparado. Pendiente de confirmar el guardado en Mundo SCRIB; se reintentará automáticamente.';
+    });
 })(window);

@@ -20,6 +20,11 @@ Primero activa y guarda la configuración desde **Editar bolo** en Mundo SCRIB.
 El reparto necesita una persona de Escritura por equipo. La consulta pasa por el
 servidor del videojuego: el navegador no recibe secretos ni datos de contacto.
 
+Al finalizar por reloj o botón, el informe se guarda en la ficha de ese bolo en
+Mundo SCRIB, como documento web (PDF opcional). Control indica «pendiente» o
+«guardado». Si el mundo no responde, el servidor mantiene una cola privada en
+disco y reintenta sin duplicar el informe ni perderlo al iniciar otra partida.
+
 ## Charla
 
 El comando `charla` de la web abre la presentación de Sutura y SCRIB.
