@@ -47,3 +47,10 @@ test("control preserves a writer-name space while that field is being edited", (
   assert.equal(context.nombre1.value, "ANA BUENO");
   assert.equal(context.val_nombre1, "ANA BUENO");
 });
+
+test('an explicit bolo import overrides the focused name while normal echoes do not', () => {
+  const context = loadPersistentStateApplier();
+  context.aplicar({nombres: {1: 'ÁNGELA DEL BOLO', 2: 'PABLO DEL BOLO'}}, {forzar: true});
+  assert.equal(context.nombre1.value, 'ÁNGELA DEL BOLO');
+  assert.equal(context.nombre2.value, 'PABLO DEL BOLO');
+});

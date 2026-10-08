@@ -42,7 +42,7 @@ const JURY_CSS_VERSION = "20260920d";
 const JURY_STATE_VERSION = "20260923a";
 const JURY_SOCKET_EVENTS_VERSION = "20260923a";
 const CONTROL_CSS_VERSION = "20260923d";
-const CONTROL_ACTIONS_VERSION = "20261006a";
+const CONTROL_ACTIONS_VERSION = "20261008a";
 const CONTROL_I18N_VERSION = "20261006a";
 const CONTROL_STATE_VERSION = "20260923c";
 const CONTROL_SOCKET_EVENTS_VERSION = "20261006a";
@@ -873,7 +873,7 @@ test("control dashboard keeps remote bar and final phrase controls in the intend
   assert.doesNotMatch(actions, /calentamiento_solicitud_actual|control\.warmup\.current_trigger|DETONADOR ACTUAL/);
   assert.match(actions, /boton\.classList\.toggle\("is-active", activo\);[\s\S]*boton\.setAttribute\("aria-pressed", activo \? "true" : "false"\);/);
   assert.match(actions, /tipoSolicitado === solicitud_calentamiento_actual[\s\S]*\? SOLICITUD_CALENTAMIENTO_POR_DEFECTO[\s\S]*: tipoSolicitado;/);
-  assert.match(actions, /function aplicarEstadoPersistenteControl\(payload = \{\}\)/);
+  assert.match(actions, /function aplicarEstadoPersistenteControl\(payload = \{\}, opciones = \{\}\)/);
   assert.match(actions, /document\.activeElement !== nombre1[\s\S]*document\.activeElement !== nombre2/);
   assert.match(actions, /socket\.emit\("control_estado_actualizar", obtenerEstadoPersistenteControl\(\)\);/);
   assert.match(actions, /function borrar_texto_guardado\(\)[\s\S]*emitirEstadoControlPersistente\(\{ inmediato: true \}\);/);

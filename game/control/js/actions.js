@@ -2007,7 +2007,7 @@ function emitirEstadoControlPersistente(opciones = {}) {
 }
 window.emitirEstadoControlPersistente = emitirEstadoControlPersistente;
 
-function aplicarEstadoPersistenteControl(payload = {}) {
+function aplicarEstadoPersistenteControl(payload = {}, opciones = {}) {
     const data = payload && typeof payload === "object" ? payload : {};
     aplicando_estado_control_persistente = true;
     try {
@@ -2041,12 +2041,12 @@ function aplicarEstadoPersistenteControl(payload = {}) {
         if (frase_final_j1 && Object.prototype.hasOwnProperty.call(frases, 1)) {
             // No reescribimos el campo activo con el eco normalizado del
             // servidor: recortaria el espacio final antes de la siguiente voz.
-            if (document.activeElement !== frase_final_j1) {
+            if (opciones.forzar === true || document.activeElement !== frase_final_j1) {
                 frase_final_j1.value = String(frases[1] || "");
             }
         }
         if (frase_final_j2 && Object.prototype.hasOwnProperty.call(frases, 2)) {
-            if (document.activeElement !== frase_final_j2) {
+            if (opciones.forzar === true || document.activeElement !== frase_final_j2) {
                 frase_final_j2.value = String(frases[2] || "");
             }
         }
@@ -2056,13 +2056,13 @@ function aplicarEstadoPersistenteControl(payload = {}) {
             // El servidor recorta los espacios de los extremos. Mientras se escribe,
             // no debemos devolver ese valor al campo porque borraria el espacio que
             // separa nombre y apellido antes de que llegue la siguiente letra.
-            if (document.activeElement !== nombre1) {
+            if (opciones.forzar === true || document.activeElement !== nombre1) {
                 nombre1.value = String(nombres[1] || "ESCRITXR 1");
             }
             val_nombre1 = nombre1.value.toUpperCase();
         }
         if (nombre2 && Object.prototype.hasOwnProperty.call(nombres, 2)) {
-            if (document.activeElement !== nombre2) {
+            if (opciones.forzar === true || document.activeElement !== nombre2) {
                 nombre2.value = String(nombres[2] || "ESCRITXR 2");
             }
             val_nombre2 = nombre2.value.toUpperCase();
@@ -4502,14 +4502,14 @@ function registrarBorradorCreditoControl(elemento) {
     );
 }
 
-const aplicarCreditosEnPanelControl = (estado = {}) => {
+const aplicarCreditosEnPanelControl = (estado = {}, opciones = {}) => {
     const data = normalizarEstadoCreditosControl(estado);
     const estadoLocal = { ...data };
     CAMPOS_CREDITOS_CONTROL.forEach(([clave, id]) => {
         const input = document.getElementById(id);
         if (!input) return;
         const valorPendiente = borradores_creditos_control.get(id);
-        const estaEditando = document.activeElement === input;
+        const estaEditando = document.activeElement === input && opciones.forzar !== true;
         if (valorPendiente !== undefined) {
             if (data[clave] === valorPendiente) {
                 borradores_creditos_control.delete(id);
@@ -4531,7 +4531,7 @@ const aplicarCreditosEnPanelControl = (estado = {}) => {
     if (textarea) {
         const id = CAMPO_AGRADECIMIENTOS_CONTROL[1];
         const valorPendiente = borradores_creditos_control.get(id);
-        const estaEditando = document.activeElement === textarea;
+        const estaEditando = document.activeElement === textarea && opciones.forzar !== true;
         if (valorPendiente !== undefined) {
             if (data.agradecimientos === valorPendiente) {
                 borradores_creditos_control.delete(id);
@@ -4548,6 +4548,17 @@ const aplicarCreditosEnPanelControl = (estado = {}) => {
         }
     }
     creditos_estado_control = estadoLocal;
+};
+
+window.aplicarConfiguracionBoloControl = (payload = {}) => {
+    // A deliberate import supersedes local drafts; cancel old debounced sends so
+    // they cannot put the previous function's credits or parameters back.
+    invalidarEmisionCreditosControl();
+    clearTimeout(timeout_emision_estado_control_persistente);
+    timeout_emision_estado_control_persistente = null;
+    borradores_creditos_control.clear();
+    aplicarEstadoPersistenteControl(payload.control || {}, {forzar: true});
+    aplicarCreditosEnPanelControl(payload.creditos || {}, {forzar: true});
 };
 
 function obtenerCreditosDesdePanelControl() {

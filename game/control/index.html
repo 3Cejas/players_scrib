@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.min.css">
     <link rel="stylesheet" href="../dist/datepicker/mtr-datepicker.default-theme.min.css">
     <link rel="stylesheet" href="tablet.css?v=20260930a">
+    <link rel="stylesheet" href="bolo-configuration.css?v=20261008a">
 </head>
 <script src="../dist/datepicker/mtr-datepicker-timezones.min.js"></script>
 <script src="../dist/datepicker/mtr-datepicker.min.js"></script>
@@ -27,7 +28,7 @@
     <script src="../js/domains/credits.js?v=20260924a"></script>
     <script src="../js/domains/instagram-report.js?v=20260924a"></script>
     <script src="../js/frase-final-utils.js?v=20260910e"></script>
-    <script src="./js/actions.js?v=20261006a"></script>
+    <script src="./js/actions.js?v=20261008a"></script>
     <div class="remote-status-bar" aria-label="Conexiones remotas">
         <div class="remote-brand-card">
             <button id="control_debug_secret_trigger" class="control-debug-secret-trigger" type="button" aria-label="Logotipo de Control">
@@ -184,7 +185,9 @@
                             </div>
                         </div>
                         <div id="control_panel_juego" class="control-group control-group--juego control-collapsible" data-control-section="juego" role="tabpanel" aria-labelledby="control_title_game">
+                            <span id="bolo_config_active" class="bolo-config-active" role="status" hidden></span>
                             <div class="control-group-buttons control-group-buttons--two">
+                                <button id="boton_cargar_bolo" class="btn" type="button" onclick="abrirConfiguracionBoloControl()">&#x1F4C5; CARGAR CONFIGURACIÓN DE UN BOLO</button>
                                 <span id="boton_escribir" class='btn' onclick="temp()">&#x270E; ESCRIBIR</span>
                                 <span id="boton_limpiar_juego" class='btn' onclick="limpiar()">&#x1F9F9; LIMPIAR</span>
                                 <span id="boton_pausar_reanudar" data-value="0" onclick="pausar_reanudar(this)" class='btn' hidden aria-hidden="true" tabindex="-1">&#x23F8;&#xFE0F; PAUSAR</span>
@@ -901,6 +904,15 @@
                 </th>
             </tr>
         </table>
+<dialog id="bolo_config_dialog" class="bolo-config-dialog" aria-labelledby="bolo_config_title">
+    <header><h2 id="bolo_config_title">🎮 Preparar videojuego desde un bolo</h2><button id="bolo_config_close" type="button" aria-label="Cerrar">✕</button></header>
+    <p class="bolo-config-muted">Cargar sustituye los nombres, los créditos del elenco y los parámetros. No inicia ni limpia una partida, no cambia la vista del espectador y no se permite durante una partida en curso.</p>
+    <label for="bolo_config_select">Función guardada en Mundo SCRIB</label>
+    <select id="bolo_config_select"><option value="">Selecciona un bolo…</option></select>
+    <div id="bolo_config_preview"></div>
+    <p id="bolo_config_status" role="status" aria-live="polite"></p>
+    <footer><button id="bolo_config_refresh" type="button">↻ Actualizar lista</button><button id="bolo_config_apply" type="button" disabled>Cargar esta configuración</button></footer>
+</dialog>
 <script src="../dist/socket.io/socket.io.js"></script>
 <script src="../js/domains/performance-protection.js?v=20260923a"></script>
 <script src="../js/text-stream.js?v=20260924a"></script>
@@ -912,6 +924,7 @@
 <script src="./js/canto-control.js?v=20260922c"></script>
 <script src="./js/muse-help-control.js?v=20260830a"></script>
 <script src="./js/socket-events.js?v=20261006a"></script>
+<script src="./js/bolo-configuration-control.js?v=20261008a"></script>
 <script src="./js/instagram-export-control.js?v=20260924a"></script>
 <script src="./js/index.js?v=20260504e"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>

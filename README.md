@@ -10,6 +10,16 @@ Aqui viven las vistas y la logica de:
 - `spectator`
 - `actors`
 
+## Cargar un bolo de Mundo SCRIB
+
+En **Control → Juego → Cargar configuración de un bolo**, selecciona la función,
+revisa sus equipos y confirma. Se cargan los nombres, los créditos del elenco y
+los parámetros, niveles, idioma y frases finales opcionales guardados en la ficha.
+No inicia ni limpia una partida; no se permite con una partida en marcha o pausada.
+Primero activa y guarda la configuración desde **Editar bolo** en Mundo SCRIB.
+El reparto necesita una persona de Escritura por equipo. La consulta pasa por el
+servidor del videojuego: el navegador no recibe secretos ni datos de contacto.
+
 ## Charla
 
 El comando `charla` de la web abre la presentación de Sutura y SCRIB.
