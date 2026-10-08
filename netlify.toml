@@ -10,13 +10,27 @@
 
 [[redirects]]
   from = "/tutorial"
-  to = "/tutorial/"
-  status = 301
+  to = "https://sutura-gateway.ddns.net/scrib/#material/tutorial"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/tutorial/*"
+  to = "https://sutura-gateway.ddns.net/scrib/#material/tutorial"
+  status = 302
+  force = true
 
 [[redirects]]
   from = "/charla"
-  to = "/charla/"
-  status = 301
+  to = "https://sutura-gateway.ddns.net/scrib/#material/charla"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/charla/*"
+  to = "https://sutura-gateway.ddns.net/scrib/#material/charla"
+  status = 302
+  force = true
 
 [[redirects]]
   from = "/espectador"
