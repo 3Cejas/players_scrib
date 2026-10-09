@@ -95,13 +95,11 @@ test("ZIP writer stores ordered PNG files in a valid archive structure", () => {
     assert.deepEqual(Array.from(zip.slice(-22, -18)), [0x50, 0x4b, 0x05, 0x06]);
 });
 
-test("Control exposes the final-section export button and composes it from live match data", () => {
+test("Control no longer exposes or loads the Instagram exporter; export lives in saved bolo reports", () => {
     const html = read("game/control/index.html");
     const control = read("game/control/js/instagram-export-control.js");
 
-    assert.match(html, /id="boton_exportar_instagram"/);
-    assert.match(html, /domains\/instagram-report\.js/);
-    assert.match(html, /instagram-export-control\.js/);
+    assert.doesNotMatch(html, /id="boton_exportar_instagram"|instagram_export_status|domains\/instagram-report\.js|instagram-export-control\.js/);
     assert.match(control, /pedirResumenMusasPdfControl\(2500\)/);
     assert.match(control, /estado_puntuacion_final_control/);
     assert.match(control, /report\.generarPngs\(datos/);
