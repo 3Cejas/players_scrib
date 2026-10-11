@@ -38,6 +38,30 @@
   status = 301
 
 [[redirects]]
+  from = "/game/bolzano"
+  to = "https://sutura-gateway.ddns.net/scrib/backstage/laboratory/bolzano/"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/game/bolzano/*"
+  to = "https://sutura-gateway.ddns.net/scrib/backstage/laboratory/bolzano/:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/game/s7"
+  to = "https://sutura-gateway.ddns.net/scrib/#experiment/s7"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/game/s7/*"
+  to = "https://sutura-gateway.ddns.net/scrib/#experiment/s7"
+  status = 302
+  force = true
+
+[[redirects]]
   from = "/control"
   to = "/game/control/"
   status = 301

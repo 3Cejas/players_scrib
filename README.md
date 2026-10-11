@@ -34,6 +34,16 @@ con acceso Sutura/Authentik. Sus fuentes, imágenes y vídeos se sirven desde
 Los enlaces antiguos `/tutorial/` y `/charla/` redirigen al visor protegido.
 El videotutorial del videojuego en `game/media/` sigue disponible sin cambios.
 
+## Laboratorio del equipo
+
+Bolzano y S+7 se han trasladado a
+[Mundo SCRIB → Laboratorio](https://sutura-gateway.ddns.net/scrib/#laboratory).
+Sus juegos completos viven en `server_scrib/tools/scrib-world/laboratory/`;
+ya no se ejecutan mediante comandos ocultos ni se sirven sus motores desde
+scribshow.es. Las páginas antiguas solo redirigen al mundo autenticado,
+conservando los enlaces de equipo de Bolzano. Las pruebas del motor S+7 se han
+trasladado junto a él. Las presentaciones siguen únicamente en Materiales.
+
 ## Testing
 
 La documentacion completa de tests y CI esta en [TESTING.md](./TESTING.md).

@@ -3137,34 +3137,6 @@ function log( text ) {
 
         this.lock();
 
-        if (cmdComponents === "bolzano") {
-
-            this.bolzano();
-            return;
-
-        }
-
-        if (cmdComponents === "bolzano control") {
-
-            this.bolzano_control();
-            return;
-
-        }
-
-        if (cmdComponents === "bolzano musa") {
-
-            this.bolzano_musa();
-            return;
-
-        }
-
-        if (cmdComponents === "s+7" || cmdComponents === "s7" || cmdComponents === "oulipo") {
-
-            this.s7();
-            return;
-
-        }
-
         this.executeTerminalCommand(cmdComponents, { recordHistory: true });
         return;
 
@@ -3173,24 +3145,6 @@ function log( text ) {
 		
 
         switch (cmdComponents) {
-
-            case "bolzano":
-
-                this.bolzano();
-
-                break;
-
-            case "bolzano control":
-
-                this.bolzano_control();
-
-                break;
-
-            case "bolzano musa":
-
-                this.bolzano_musa();
-
-                break;
 
             case cmds.CAT.value:
 
@@ -3507,58 +3461,6 @@ function log( text ) {
 			this.type(result, this.unlock.bind(this));
 			
 			location.href='./game/public/index.html';
-
-    }
-
-    //BOLZANO (COMANDO OCULTO)
-
-        Terminal.prototype.bolzano = function () {
-
-            this.clear();
-
-            var result = "**Abriendo menú oculto BOLZANO.**\n\nElige **CONTROL** o **MUSA**.";
-
-            this.type(result, this.unlock.bind(this));
-
-            location.href='./game/bolzano/index.html';
-
-    }
-
-        Terminal.prototype.bolzano_control = function () {
-
-            this.clear();
-
-            var result = "**Abriendo BOLZANO en modo CONTROL.**";
-
-            this.type(result, this.unlock.bind(this));
-
-            location.href='./game/bolzano/index.html?modo=control';
-
-    }
-
-        Terminal.prototype.bolzano_musa = function () {
-
-            this.clear();
-
-            var result = "**Abriendo BOLZANO en modo MUSA.**";
-
-            this.type(result, this.unlock.bind(this));
-
-            location.href='./game/bolzano/index.html?modo=musa';
-
-    }
-
-    //S+7 OULIPO (COMANDO OCULTO)
-
-        Terminal.prototype.s7 = function () {
-
-            this.clear();
-
-            var result = "**Abriendo laboratorio oculto S+7.**";
-
-            this.type(result, this.unlock.bind(this));
-
-            location.href='./game/s7/index.html';
 
     }
 

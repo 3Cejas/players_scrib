@@ -43,8 +43,8 @@ test("the public terminal normalizes typed, quick-link and history commands", ()
   assert.doesNotMatch(source, /normalizedCommand === "(?:imÃ¡genes|vÃ­deos)"/);
 });
 
-test('charla is removed from the public menu, help, autocomplete and command navigation', () => {
+test('private materials and laboratory commands are removed from the public terminal', () => {
   const source = fs.readFileSync(path.join(ROOT, 'js/main.js'), 'utf8');
-  assert.doesNotMatch(source, /\bcharla\b/i);
+  assert.doesNotMatch(source, /\b(?:charla|tutorial|bolzano|s7|oulipo)\b|s\+7/i);
   assert.match(source, /cmds\.LA_COMPAÑÍA\.value,[\s\S]*?cmds\.NEWSLETTER\.value/);
 });

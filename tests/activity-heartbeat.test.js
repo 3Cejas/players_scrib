@@ -220,8 +220,6 @@ test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
     "game/index.html",
     "game/actors/index.html",
     "game/actors/source/index.html",
-    "game/bolzano/index.html",
-    "game/bolzano/musa.html",
     "game/control/index.html",
     "game/dramaturgia/index.html",
     "game/jurado/index.html",
@@ -238,8 +236,7 @@ test("all real SCRIB screens load one shared cache-busted heartbeat", () => {
     "index.html": "./game/js/activity-heartbeat.js?v=20260827b",
     "1p_scrib/index.html": "../game/js/activity-heartbeat.js?v=20260827b",
     "1p_scrib/game/index.html": "../../game/js/activity-heartbeat.js?v=20260827b",
-    "game/repentizados-demo.html": "./js/activity-heartbeat.js?v=20260827b",
-    "game/s7/index.html": "../js/activity-heartbeat.js?v=20260827b"
+    "game/repentizados-demo.html": "./js/activity-heartbeat.js?v=20260827b"
   };
   for (const [page, asset] of Object.entries(standalonePages)) {
     assert.ok(read(page).includes(asset), `${page} must load ${asset}`);
